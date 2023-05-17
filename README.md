@@ -1,10 +1,20 @@
-# clas12-offline-software
-[![Build Status](https://github.com/jeffersonlab/clas12-offline-software/workflows/Coatjava-CI/badge.svg)](https://github.com/jeffersonlab/clas12-offline-software/actions)
-[![codecov](https://codecov.io/gh/JeffersonLab/clas12-offline-software/branch/development/graph/badge.svg?precision=2)](https://codecov.io/gh/JeffersonLab/clas12-offline-software/branch/development)
+# coatjava
+[![Build Status](https://github.com/jeffersonlab/coatjava/workflows/Coatjava-CI/badge.svg)](https://github.com/jeffersonlab/coatjava/actions)
+[![codecov](https://codecov.io/gh/JeffersonLab/coatjava/branch/development/graph/badge.svg?precision=2)](https://codecov.io/gh/JeffersonLab/coatjava/branch/development)
 
-The original repository, now archived and read-only, [is still here](https://github.com/JeffersonLab/clas12-offline-software) and contains full release notes.  On May 17, 2023, this new repository was created by running BFG Repo Cleaner to get rid of old, large data files, giving 10x reduction in repository size, clone time, etc. 
+The original repository was named "clas12-offline-software" and is [now archived and read-only](https://github.com/JeffersonLab/clas12-offline-software).  On May 17, 2023, this new repository was created by running BFG Repo Cleaner to get rid of old, large data files and things that should never have been in the repository, giving 10x reduction in repository size, clone time, etc.  The most critical, github-specific aspects have been transferred to this new repository:
 
-<!--## Quick Start-->
+* Open issues
+* Branch protection rules
+* User access permission
+
+But some things remain only in the original repository:
+
+* Release notes up to 9.0.1 (probably worth transferring)
+* Closed issues (probably not worth transferring)
+* Wiki (never really utilized and probably worth restarting from scratch)
+
+----
 
 This README fell too far out of date and is undergoing resurrection.  Meanwhile, these bits are still relevant ...
 
