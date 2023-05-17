@@ -2,7 +2,7 @@
 [![Build Status](https://github.com/jeffersonlab/coatjava/workflows/Coatjava-CI/badge.svg)](https://github.com/jeffersonlab/coatjava/actions)
 [![codecov](https://codecov.io/gh/JeffersonLab/coatjava/branch/development/graph/badge.svg?precision=2)](https://codecov.io/gh/JeffersonLab/coatjava/branch/development)
 
-The original repository was named "clas12-offline-software" and is [now archived and read-only](https://github.com/JeffersonLab/clas12-offline-software).  On May 17, 2023, this new repository was created by running BFG Repo Cleaner to get rid of old, large data files and things that should never have been in the repository, giving 10x reduction in repository size, clone time, etc.  The most critical, github-specific aspects have been transferred to this new repository:
+The original repository for COATJAVA was named "clas12-offline-software" and is [now archived and read-only](https://github.com/JeffersonLab/clas12-offline-software).  On May 17, 2023, this new repository was created by running BFG Repo Cleaner to get rid of old, large data files and things that should never have been in the repository, giving 10x reduction in repository size, clone time, etc, and renamed "coatjava".  The most critical, github-specific aspects have been transferred to this new repository:
 
 * Open issues
 * Branch protection rules
@@ -13,6 +13,8 @@ But some things remain only in the original repository:
 * Release notes up to 9.0.1 (probably worth transferring)
 * Closed issues (probably not worth transferring)
 * Wiki (never really utilized and probably worth restarting from scratch)
+
+Due to the cleanup, previously existing forks and local copies of the old repository will not be automatically mergeable.
 
 ----
 
