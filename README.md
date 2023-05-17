@@ -2,6 +2,7 @@
 [![Build Status](https://github.com/jeffersonlab/clas12-offline-software/workflows/Coatjava-CI/badge.svg)](https://github.com/jeffersonlab/clas12-offline-software/actions)
 [![codecov](https://codecov.io/gh/JeffersonLab/clas12-offline-software/branch/development/graph/badge.svg?precision=2)](https://codecov.io/gh/JeffersonLab/clas12-offline-software/branch/development)
 
+The original repository, now archived and read-only, [is still here](https://github.com/JeffersonLab/clas12-offline-software) and contains full release notes.  On May 17, 2023, this new repository was created by running BFG Repo Cleaner to get rid of old, large data files, giving 10x reduction in repository size, clone time, etc. 
 
 <!--## Quick Start-->
 
