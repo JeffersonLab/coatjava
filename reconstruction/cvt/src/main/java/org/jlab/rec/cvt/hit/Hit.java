@@ -30,6 +30,7 @@ public class Hit implements Comparable<Hit> {
     private int _TrkgStatus = -1;           // TrkgStatusFlag factor (-1: no fit; 0: global helical fit; 1: KF fit)
     public double _QualityFac;	            // a quality factor depending on the hit status and goodness of fit
     private int _AssociatedClusterID = -1;  // the cluster ID associated with that hit
+    private int AssociatedSeedID = -1;      // the seed ID associated with that hit
     private int AssociatedTrackID = -1;     // the track ID associated with that hit
 
     public boolean newClustering = false;
@@ -286,24 +287,23 @@ public class Hit implements Comparable<Hit> {
         AssociatedTrackID = associatedTrackID;
     }
 
-    
-    
-    public void settLevel(int level) {
-        this.getStrip().settLevel(level);
+     public int getAssociatedSeedID() {
+        return AssociatedSeedID;
     }
     
-    public void settLevel(int level, Hit h) {
-        h.getStrip().settLevel(level);
+
+    public void setAssociatedSeedID(int associatedSeedID) {
+        AssociatedSeedID = associatedSeedID;
     }
     
-    
+   
     public String toString() {
-        String str = String.format("Hit id=%d, layer=%d, sector=%d, strip=%d, energy=%.3f, time=%.3f, residual=%.3f, clusterID=%d, trackID=%d", 
+        String str = String.format("Hit id=%d, layer=%d, sector=%d, strip=%d, energy=%.3f, time=%.3f, residual=%.3f, clusterID=%d, seedID=%d, trackID=%d", 
                      this.getId(), this.getLayer(), this.getSector(), 
                      this.getStrip().getStrip(), 
                      this.getStrip().getEdep(), 
                      this.getStrip().getTime(),
-                     this.getResidual(), this.getAssociatedClusterID(), this.getAssociatedTrackID());
+                     this.getResidual(), this.getAssociatedClusterID(), this.getAssociatedSeedID(), this.getAssociatedTrackID());
         return str;
     }
 }

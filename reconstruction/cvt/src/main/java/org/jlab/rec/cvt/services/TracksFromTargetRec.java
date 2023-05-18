@@ -161,6 +161,7 @@ public class TracksFromTargetRec {
             seeds.get(i).setId(id);
         //    Track track = new Track(seeds.get(i));
         //    track.update_Crosses(id);
+        
         }
         if(Constants.getInstance().flagSeeds && Constants.getInstance().removeOverlappingSeeds==false) {
             List<Seed> ovlrm = Seed.getOverlapRemovedSeeds(seeds);//seeds flagged for removal have negative ids.
@@ -173,6 +174,7 @@ public class TracksFromTargetRec {
         }
         
         this.CVTseeds = seeds;
+        
         // Got seeds;
         return seeds;
     }
@@ -194,6 +196,11 @@ public class TracksFromTargetRec {
         for (Seed seed : this.CVTseeds) { 
             if(seed.getId()<0) continue;
             int pid = elossPid;
+            for(Cluster cl : seed.getClusters()) {
+                for(Hit h : cl) {
+                    h.setAssociatedSeedID(seed.getId());
+                }
+            }
             //seed.update_Crosses();
             //System.out.println("Seed"+seed.toString());
             List<Surface> surfaces = measure.getMeasurements(seed);
@@ -352,11 +359,13 @@ public class TracksFromTargetRec {
                 c.setAssociatedTrackID(-1);
             }
         }
+        
+        
+            
         if(!tracks.isEmpty()) {
             // do a final cleanup
             //Track.removeOverlappingTracks(tracks); 
-            if(tracks.isEmpty()) System.out.println("Error: no tracks left after overlap remover");
-            
+            //if(tracks.isEmpty()) System.out.println("Error: no tracks left after overlap remover");
             // update crosses and clusters on track
             for(int it = 0; it < tracks.size(); it++) {
                 int id = it + 1;

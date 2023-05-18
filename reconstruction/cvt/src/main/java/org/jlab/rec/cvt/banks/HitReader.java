@@ -12,7 +12,6 @@ import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.cvt.Constants;
 import org.jlab.rec.cvt.Geometry;
-import org.jlab.rec.cvt.bmt.BMTConstants;
 import org.jlab.rec.cvt.bmt.BMTGeometry;
 import org.jlab.rec.cvt.bmt.BMTType;
 import org.jlab.rec.cvt.hit.ADCConvertor;
@@ -349,11 +348,9 @@ public class HitReader {
                 if(hit.getRegion()!=Constants.getInstance().getRmReg()) {     
                     if(Constants.getInstance().useOnlyMCTruthHits() ) {
                         if(hit.MCstatus==0) {
-                            hit.settLevel(0);
                             hits.add(hit);
                         }
                     } else {
-                        hit.settLevel(0);
                         hits.add(hit); 
                     }
                 } 

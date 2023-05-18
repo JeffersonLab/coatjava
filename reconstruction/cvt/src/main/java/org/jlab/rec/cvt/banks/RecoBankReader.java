@@ -57,6 +57,11 @@ public class RecoBankReader {
                 hit.getStrip().setPitch(SVTGeometry.getPitch());
                 hit.getStrip().setStatus(status);
                 hit.setId(id);
+                if (event.hasBank("BST::adc") == true) {
+                    int order   = event.getBank("BST::adc").getByte("order", id-1);
+                    if (Constants.getInstance().flagSeeds)
+                        hit.MCstatus = order; 
+                }
                 hit.setAssociatedClusterID(clusterId);
                 hit.setAssociatedTrackID(trackId);
                 hit.setTrkgStatus(trkStatus);
@@ -90,6 +95,11 @@ public class RecoBankReader {
                 Hit hit = new Hit(DetectorType.BMT, BMTGeometry.getDetectorType(layer), sector, layer, new Strip(strip, energy, time));
                 hit.getStrip().setStatus(status);
                 hit.setId(id);
+                if (event.hasBank("BMT::adc") == true) {
+                    int order   = event.getBank("BMT::adc").getByte("order", id-1);
+                    if (Constants.getInstance().flagSeeds)
+                        hit.MCstatus = order; 
+                }
                 hit.setAssociatedClusterID(clusterId);
                 hit.setAssociatedTrackID(trackId);
                 hit.setTrkgStatus(trkStatus);
@@ -152,10 +162,8 @@ public class RecoBankReader {
                 Hit seedHit = null;
                 double seedE = -1;
                 for(Hit h : svthits) {
-                    h.settLevel(0);
                     if(h.getAssociatedClusterID()==id) {
                         cls.add(h);
-                        h.settLevel(1);
                         if(h.getStrip().getEdep()>seedE) {
                             seedE = h.getStrip().getEdep();
                             seedHit = h;
@@ -244,9 +252,7 @@ public class RecoBankReader {
                 Hit seedHit = null;
                 double seedE = -1;
                 for(Hit h : bmthits) {
-                    h.settLevel(0);
                     if(h.getAssociatedClusterID()==id) {
-                        h.settLevel(1);
                         cls.add(h);
                         if(h.getStrip().getEdep()>seedE) {
                             seedE = h.getStrip().getEdep();

@@ -213,7 +213,29 @@ public class Track extends Trajectory implements Comparable<Track> {
             setP(calcP);
         }
     }
-
+    
+    public final TrackPars trackCartesianPars() {
+        
+        int id = this.getId();
+        int q = this.getQ();
+        double p = this.getP();
+        double pt = this.getPt();
+        Helix helix = this.getHelix();
+        double phi = helix.getPhiAtDCA();
+        double tandip = helix.getTanDip();
+        double d0 = helix.getDCA()/10.;
+        double px =pt*Math.cos(phi);
+        double py =pt*Math.sin(phi);
+        double pz =pt*tandip;
+        double vx = -d0*Math.sin(phi);
+        double vy = d0*Math.cos(phi);
+        double vz = helix.getZ0()/10.;
+        double theta = Math.acos(pz/p);
+        
+        return new TrackPars(id, q, p, theta, phi, 
+                px, py, pz, vx, vy, vz);
+        
+    }
     /**
      * Updates the crosses positions based on trajectories or helix
      * @param trackId
@@ -660,7 +682,191 @@ public class Track extends Trajectory implements Comparable<Track> {
     }
 
     
+  public class TrackPars {
 
+        /**
+         * @return the _id
+         */
+        public int getId() {
+            return _id;
+        }
+
+        /**
+         * @param _id the _id to set
+         */
+        public void setId(int _id) {
+            this._id = _id;
+        }
+
+        /**
+         * @return the _q
+         */
+        public int getQ() {
+            return _q;
+        }
+
+        /**
+         * @param _q the _q to set
+         */
+        public void setQ(int _q) {
+            this._q = _q;
+        }
+
+        /**
+         * @return the _p
+         */
+        public double getP() {
+            return _p;
+        }
+
+        /**
+         * @param _p the _p to set
+         */
+        public void setP(double _p) {
+            this._p = _p;
+        }
+
+        /**
+         * @return the _theta
+         */
+        public double getTheta() {
+            return _theta;
+        }
+
+        /**
+         * @param _theta the _theta to set
+         */
+        public void setTheta(double _theta) {
+            this._theta = _theta;
+        }
+
+        /**
+         * @return the _phi
+         */
+        public double getPhi() {
+            return _phi;
+        }
+
+        /**
+         * @param _phi the _phi to set
+         */
+        public void setPhi(double _phi) {
+            this._phi = _phi;
+        }
+
+        /**
+         * @return the _px
+         */
+        public double getPx() {
+            return _px;
+        }
+
+        /**
+         * @param _px the _px to set
+         */
+        public void setPx(double _px) {
+            this._px = _px;
+        }
+
+        /**
+         * @return the _py
+         */
+        public double getPy() {
+            return _py;
+        }
+
+        /**
+         * @param _py the _py to set
+         */
+        public void setPy(double _py) {
+            this._py = _py;
+        }
+
+        /**
+         * @return the _pz
+         */
+        public double getPz() {
+            return _pz;
+        }
+
+        /**
+         * @param _pz the _pz to set
+         */
+        public void setPz(double _pz) {
+            this._pz = _pz;
+        }
+
+        /**
+         * @return the _vx
+         */
+        public double getVx() {
+            return _vx;
+        }
+
+        /**
+         * @param _vx the _vx to set
+         */
+        public void setVx(double _vx) {
+            this._vx = _vx;
+        }
+
+        /**
+         * @return the _vy
+         */
+        public double getVy() {
+            return _vy;
+        }
+
+        /**
+         * @param _vy the _vy to set
+         */
+        public void setVy(double _vy) {
+            this._vy = _vy;
+        }
+
+        /**
+         * @return the _vz
+         */
+        public double getVz() {
+            return _vz;
+        }
+
+        /**
+         * @param _vz the _vz to set
+         */
+        public void setVz(double _vz) {
+            this._vz = _vz;
+        }
+        private int _id;
+        private int _q;
+        private double _p;
+        private double _theta;
+        private double _phi;
+        private double _px;
+        private double _py;
+        private double _pz;
+        private double _vx;
+        private double _vy;
+        private double _vz;
+      
+        TrackPars(int id, int q, double p, double theta, double phi, 
+                double px, double py, double pz, double vx, double vy, double vz) {
+            _id = id;
+            _q = q;
+            _p = p;
+            _theta = theta;
+            _phi = phi;
+            _px = px;
+            _py = py;
+            _pz = pz;
+            _vx = vx;
+            _vy = vy;
+            _vz = vz;
+            
+        }
+        
+      
+  }
     
 
 }

@@ -23,6 +23,7 @@ import org.jlab.rec.cvt.bmt.BMTType;
 import org.jlab.rec.cvt.hit.Hit;
 import org.jlab.rec.cvt.measurement.MLayer;
 import org.jlab.rec.cvt.track.Seed;
+import org.jlab.rec.cvt.track.Track.TrackPars;
 
 public class RecoBankWriter {
     
@@ -62,26 +63,49 @@ public class RecoBankWriter {
 
     }
 
-    public static DataBank fillSVTHitPosBank(DataEvent event, List<Hit> hitlist, String bankName) {
+    public static DataBank fillSVTHitPosBank(DataEvent event, List<Hit> hitlist, Map<Integer, Track> helicaltracks, 
+            String bankName) {
         if (hitlist == null || hitlist.isEmpty()) return null;
 
         DataBank bank = event.createBank(bankName, hitlist.size());
         
         for (int i = 0; i < hitlist.size(); i++) {
-            if(hitlist.get(i).MCstatus==0) {
-                if(hitlist.get(i).getAssociatedTrackID()!=-1) {
-                    hitlist.get(i).getStrip().setMcStat(new int[]{1,1});
-                    bank.setByte("tlevel", i,(byte)3);
+            bank.setShort("rlevel", i,(short)1000);
+            if(hitlist.get(i).getAssociatedClusterID()!=-1)
+                bank.setShort("rlevel", i,(short)1100);
+            if(hitlist.get(i).getAssociatedSeedID()!=-1)
+                bank.setShort("rlevel", i,(short)1110);
+            if(hitlist.get(i).getAssociatedTrackID()!=-1 && helicaltracks.containsKey(hitlist.get(i).getAssociatedSeedID())) {
+                bank.setShort("rlevel", i,(short)1111);
+                Track t = helicaltracks.get(hitlist.get(i).getAssociatedTrackID());
+                if(t!=null) {
+                    TrackPars pars = t.trackCartesianPars();
+                    bank.setShort("tid", i, (short) pars.getId());
+                    bank.setByte("q", i, (byte) pars.getQ());
+                    bank.setFloat("p", i, (float) pars.getP());
+                    bank.setFloat("theta", i, (float) pars.getTheta());
+                    bank.setFloat("phi", i, (float) pars.getPhi());
+                    bank.setFloat("vx", i, (float) pars.getVx());
+                    bank.setFloat("vy", i, (float) pars.getVy());
+                    bank.setFloat("vz", i, (float) pars.getVz());
                 }
-                if(hitlist.get(i).getAssociatedTrackID()==-1) 
-                    hitlist.get(i).getStrip().setMcStat(new int[]{1,0});
+            }
+            if(hitlist.get(i).MCstatus==0) { 
+                //fill true track pars
+                
+                bank.setByte("tstatus", i, (byte) 1); 
+                if(hitlist.get(i).getAssociatedTrackID()!=-1) {
+                    bank.setByte("rstatus", i, (byte) 1); 
+                } else {
+                    bank.setByte("rstatus", i, (byte) 0); 
+                }
             } else {
+                bank.setByte("tstatus", i, (byte) 0); 
                 if(hitlist.get(i).getAssociatedTrackID()!=-1) {
-                    hitlist.get(i).getStrip().setMcStat(new int[]{0,1});
-                    bank.setByte("tlevel", i,(byte)3);
+                    bank.setByte("rstatus", i, (byte) 1); 
+                } else {
+                    bank.setByte("rstatus", i, (byte) 0); 
                 }
-                if(hitlist.get(i).getAssociatedTrackID()==-1) 
-                    hitlist.get(i).getStrip().setMcStat(new int[]{0,0});
             }
             bank.setShort("ID", i, (short) hitlist.get(i).getId());
             bank.setByte("layer", i, (byte) hitlist.get(i).getLayer());
@@ -94,36 +118,53 @@ public class RecoBankWriter {
             bank.setFloat("r2", i,  (float) hitlist.get(i).getStrip().getSVTStripR2());
             bank.setFloat("theta2", i,  (float) hitlist.get(i).getStrip().getSVTStripTheta2());
             bank.setFloat("phi2", i,  (float) hitlist.get(i).getStrip().getSVTStripPhi2());
-            
-            bank.setByte("tstatus", i, (byte) hitlist.get(i).getStrip().getMcStat()[0]); 
-            bank.setByte("rstatus", i, (byte) hitlist.get(i).getStrip().getMcStat()[1]); 
         }
         //bank.show();
         return bank;
 
     }
     
-    public static DataBank fillBMTHitPosBank(DataEvent event, List<Hit> hitlist, String bankName) {
+    public static DataBank fillBMTHitPosBank(DataEvent event, List<Hit> hitlist, Map<Integer, Track> helicaltracks, 
+            String bankName) {
         if (hitlist == null || hitlist.isEmpty()) return null;
 
         DataBank bank = event.createBank(bankName, hitlist.size());
         
         for (int i = 0; i < hitlist.size(); i++) {
-            if(hitlist.get(i).MCstatus==0) {
+            bank.setShort("rlevel", i,(short)1000);
+            if(hitlist.get(i).getAssociatedClusterID()!=-1)
+                bank.setShort("rlevel", i,(short)1100);
+            if(hitlist.get(i).getAssociatedSeedID()!=-1)
+                bank.setShort("rlevel", i,(short)1110);
+            if(hitlist.get(i).getAssociatedTrackID()!=-1 && helicaltracks.containsKey(hitlist.get(i).getAssociatedTrackID())) {
+                bank.setShort("rlevel", i,(short)1111);
+                Track t = helicaltracks.get(hitlist.get(i).getAssociatedTrackID());
+                if(t!=null) {
+                    TrackPars pars = t.trackCartesianPars();
+                    bank.setShort("tid", i, (short) pars.getId());
+                    bank.setByte("q", i, (byte) pars.getQ());
+                    bank.setFloat("p", i, (float) pars.getP());
+                    bank.setFloat("theta", i, (float) pars.getTheta());
+                    bank.setFloat("phi", i, (float) pars.getPhi());
+                    bank.setFloat("vx", i, (float) pars.getVx());
+                    bank.setFloat("vy", i, (float) pars.getVy());
+                    bank.setFloat("vz", i, (float) pars.getVz());
+                }
+            }
+            if(hitlist.get(i).MCstatus==0) { 
+                bank.setByte("tstatus", i, (byte) 1); 
                 if(hitlist.get(i).getAssociatedTrackID()!=-1) {
-                    hitlist.get(i).getStrip().setMcStat(new int[]{1,1});
-                    bank.setByte("tlevel", i,(byte)3);
+                    bank.setByte("rstatus", i, (byte) 1); 
+                } else {
+                    bank.setByte("rstatus", i, (byte) 0); 
                 }
-                if(hitlist.get(i).getAssociatedTrackID()==-1) {
-                    hitlist.get(i).getStrip().setMcStat(new int[]{1,0});
-                }
-            } else {
+            } else { 
+                bank.setByte("tstatus", i, (byte) 0); 
                 if(hitlist.get(i).getAssociatedTrackID()!=-1) {
-                    hitlist.get(i).getStrip().setMcStat(new int[]{0,1});
-                    bank.setByte("tlevel", i,(byte)3);
+                    bank.setByte("rstatus", i, (byte) 1); 
+                } else {
+                    bank.setByte("rstatus", i, (byte) 0); 
                 }
-                if(hitlist.get(i).getAssociatedTrackID()==-1) 
-                    hitlist.get(i).getStrip().setMcStat(new int[]{0,0});
             }
             bank.setShort("ID", i, (short) hitlist.get(i).getId());
             bank.setByte("layer", i, (byte) hitlist.get(i).getLayer());
@@ -137,8 +178,7 @@ public class RecoBankWriter {
             bank.setFloat("theta2", i,  (float) hitlist.get(i).getStrip().getBMTStripTheta2());
             bank.setFloat("phi2", i,  (float) hitlist.get(i).getStrip().getBMTStripPhi2());
             
-            bank.setByte("tstatus", i, (byte) hitlist.get(i).getStrip().getMcStat()[0]); 
-            bank.setByte("rstatus", i, (byte) hitlist.get(i).getStrip().getMcStat()[1]); 
+            
         }
         //bank.show();
         return bank;

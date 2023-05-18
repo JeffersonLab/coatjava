@@ -148,11 +148,6 @@ public class CosmicTracksRec {
                         cosmic.update(kf);
                     }
                 }
-                for (Cluster cl : cosmic.getClusters()) {
-                    for(Hit h : cl) {
-                        h.settLevel(3);
-                    }
-                }
                 cosmics.add(cosmic);                    
             }
         }

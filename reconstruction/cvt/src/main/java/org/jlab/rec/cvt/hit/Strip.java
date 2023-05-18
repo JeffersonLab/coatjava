@@ -18,8 +18,6 @@ public class Strip {
         this._Strip = strip;
         this._Edep = edep;
         this._Time = time;
-        mcStat[0]=1;
-        mcStat[1]=1;
     }
     
 
@@ -44,12 +42,6 @@ public class Strip {
     private Vector3D _Normal;
     private Transformation3D toLocal;
     private Transformation3D toGlobal;
-    
-    private int[] mcStat = new int[2];
-    private int tLevel =-1; //stage of tracking the hit successfully passed: 0=not in cluster; 
-                                                                      // 1=in cluster, failed pattern recognition;
-                                                                      // 2=passed pattern recognition, rejected by track fitting;
-                                                                      // 3=passed  track fitting.
     
     public int getStrip() {
         return _Strip;
@@ -128,34 +120,6 @@ public class Strip {
         }
     }
     
-    /**
-     * @return the mcStat
-     */
-    public int[] getMcStat() {
-        return mcStat;
-    }
-
-    /**
-     * @return the tLevel
-     */
-    public int gettLevel() {
-        return tLevel;
-    }
-
-    /**
-     * @param tLevel the tLevel to set
-     */
-    public void settLevel(int tLevel) {
-        this.tLevel = tLevel;
-    }
-
-    /**
-     * @param mcStat the mcStat to set: [0][1]=00, if wrong track, not on track; 01, if wrong track, hit-on-track; 10, if right track, not on track; 11, if right track, hit-on-track
-     */
-    public void setMcStat(int[] mcStat) {
-        this.mcStat = mcStat;
-    }
-
     
     public double getPitch() {
         return _Pitch;

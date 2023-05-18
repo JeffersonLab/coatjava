@@ -2,7 +2,9 @@ package org.jlab.rec.cvt.services;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.clas.swimtools.Swim;
@@ -303,21 +305,21 @@ public class CVTEngine extends ReconstructionEngine {
         List<ArrayList<Hit>>         hits = reco.readHits(event, svtStatus, bmtStatus, bmtTime, 
                                                             bmtStripVoltage, bmtStripThreshold);
         List<ArrayList<Cluster>> clusters = reco.findClusters();
+        
         List<ArrayList<Cross>>    crosses = reco.findCrosses();
         
                 
         List<DataBank> banks = new ArrayList<>();
-
+        Map<Integer, Track> helicaltracks = new HashMap<>();
         if(crosses != null) {
             if(Constants.getInstance().isCosmics) {
                 CosmicTracksRec trackFinder = new CosmicTracksRec();
                 List<StraightTrack>  seeds = trackFinder.getSeeds(event, clusters.get(0), clusters.get(1), crosses);
-                reco.setHitsTlevel(seeds,2);
                 
                 List<StraightTrack> tracks = trackFinder.getTracks(event, this.isInitFromMc(), 
                                                                           this.isKfFilterOn(), 
                                                                           this.getKfIterations());
-                reco.setHitsTlevel(tracks,3);
+                
                 if(seeds!=null) banks.add(RecoBankWriter.fillStraightSeedsBank(event, seeds, "CVTRec::CosmicSeeds"));
                 if(tracks!=null) {
                     banks.add(RecoBankWriter.fillStraightTracksBank(event, tracks, "CVTRec::Cosmics"));
@@ -330,13 +332,12 @@ public class CVTEngine extends ReconstructionEngine {
                 TracksFromTargetRec  trackFinder = new TracksFromTargetRec(swimmer, xyBeam);
                 trackFinder.totTruthHits = reco.getTotalNbTruHits();
                 List<Seed>   seeds = trackFinder.getSeeds(clusters, crosses);
-                reco.setHitsTlevel(seeds);
                 
                 List<Track> tracks = trackFinder.getTracks(event, this.isInitFromMc(), 
                                                                   this.isKfFilterOn(), 
                                                                   this.getKfIterations(), 
                                                                   true, this.getPid());
-                reco.setHitsTlevel2(tracks);
+                
                 if(seeds!=null) {
                     banks.add(RecoBankWriter.fillSeedBank(event, seeds, this.getSeedBank()));
                     banks.add(RecoBankWriter.fillSeedClusBank(event, seeds, this.getSeedClusBank()));
@@ -346,13 +347,15 @@ public class CVTEngine extends ReconstructionEngine {
     //                banks.add(RecoBankWriter.fillTrackCovMatBank(event, tracks, this.getCovMat()));
                     banks.add(RecoBankWriter.fillTrajectoryBank(event, tracks, this.getTrajectoryBank()));
                     banks.add(RecoBankWriter.fillKFTrajectoryBank(event, tracks, this.getKFTrajectoryBank()));
+                    for(Track t : tracks)
+                        helicaltracks.put(t.getId(), t);
                 }
             }
         }
         banks.add(RecoBankWriter.fillSVTHitBank(event, hits.get(0), this.getSvtHitBank()));
-        banks.add(RecoBankWriter.fillSVTHitPosBank(event, hits.get(0), this.getSvtHitPosBank()));
+        banks.add(RecoBankWriter.fillSVTHitPosBank(event, hits.get(0), helicaltracks, this.getSvtHitPosBank()));
         banks.add(RecoBankWriter.fillBMTHitBank(event, hits.get(1), this.getBmtHitBank()));
-        banks.add(RecoBankWriter.fillBMTHitPosBank(event, hits.get(1), this.getBmtHitPosBank()));
+        banks.add(RecoBankWriter.fillBMTHitPosBank(event, hits.get(1), helicaltracks, this.getBmtHitPosBank()));
         banks.add(RecoBankWriter.fillSVTClusterBank(event, clusters.get(0), this.getSvtClusterBank()));
         banks.add(RecoBankWriter.fillBMTClusterBank(event, clusters.get(1), this.getBmtClusterBank()));
         banks.add(RecoBankWriter.fillSVTCrossBank(event, crosses.get(0), this.getSvtCrossBank()));
