@@ -15,8 +15,7 @@
         {"name":"trkingStat",     "type":"B", "info":"tracking status"},
         {"name":"clusterID",      "type":"S", "info":"associated cluster ID"},
         {"name":"trkID",          "type":"S", "info":"associated track ID"},
-        {"name":"status",         "type":"B", "info":"status (0=good)"},
-        {"name":"tlevel",         "type":"B", "info":"rec tracking stage)"}
+        {"name":"status",         "type":"B", "info":"status (0=good)"}
         ]
   },
   {
@@ -37,7 +36,15 @@
         {"name":"phi2",           "type":"F", "info":"phi2"},
         {"name":"tstatus",        "type":"B", "info":"mc truth status (1=right track )"},
         {"name":"rstatus",        "type":"B", "info":"rec status (1=right hit on track reconstructed)"},
-        {"name":"tlevel",         "type":"B", "info":"rec tracking stage)"}
+        {"name":"rlevel",         "type":"S", "info":"rec tracking stage"},
+        {"name":"tid",            "type":"S", "info":"track id"},
+        {"name":"q",              "type":"B", "info":"track charge"},
+        {"name":"p",              "type":"F", "info":"track momentum"},
+        {"name":"theta",          "type":"F", "info":"track theta"},
+        {"name":"phi",            "type":"F", "info":"track phi"},
+        {"name":"vx",             "type":"F", "info":"track vx"},
+        {"name":"vy",             "type":"F", "info":"track vy"},
+        {"name":"vz",             "type":"F", "info":"track vz"}
         ]
   },
   {
@@ -163,7 +170,15 @@
         {"name":"phi2",           "type":"F", "info":"phi2"},
         {"name":"tstatus",        "type":"B", "info":"mc truth status (1=good)"},
         {"name":"rstatus",        "type":"B", "info":"rec status (1=good)"},
-        {"name":"tlevel",         "type":"B", "info":"rec tracking stage)"}
+        {"name":"rlevel",         "type":"S", "info":"rec tracking stage"},
+        {"name":"tid",            "type":"S", "info":"track id"},
+        {"name":"q",              "type":"B", "info":"track charge"},
+        {"name":"p",              "type":"F", "info":"track momentum"},
+        {"name":"theta",          "type":"F", "info":"track theta"},
+        {"name":"phi",            "type":"F", "info":"track phi"},
+        {"name":"vx",             "type":"F", "info":"track vx"},
+        {"name":"vy",             "type":"F", "info":"track vy"},
+        {"name":"vz",             "type":"F", "info":"track vz"}
         ]
   },
   {
