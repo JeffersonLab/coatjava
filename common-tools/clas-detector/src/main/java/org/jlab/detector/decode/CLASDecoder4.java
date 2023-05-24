@@ -616,21 +616,31 @@ public class CLASDecoder4 {
                 getConstants(this.detectorDecoder.getRunNumber(),"/runcontrol/slm");
         IndexedTable helTable = this.detectorDecoder.scalerManager.
                 getConstants(this.detectorDecoder.getRunNumber(),"/runcontrol/helicity");
+        IndexedTable dscTable = this.detectorDecoder.scalerManager.
+                getConstants(this.detectorDecoder.getRunNumber(),"/daq/config/scalers/dsc1");
 
-        // get unix event time (in seconds), and convert to Java's date (via milliseconds):
-        Date uet=new Date(configBank.getInt("unixtime",0)*1000L);
+        // if the scaler clock is slow enough, use it for the offset correction:
+        if (dscTable.getIntValue("frequency", 0,0,0) <= 1.2e5) {
+            ret.addAll(DaqScalers.createBanks(schemaFactory,rawScalerBank,fcupTable,slmTable,helTable));
+        }
 
-        // retrieve RCDB run start time:
-        Time rst;
-        try {
-            rst = (Time)this.detectorDecoder.scalerManager.
+        // otherwise use RCDB's run start time: 
+        else {
+            // get unix event time (in seconds), and convert to Java's date (via milliseconds):
+            Date uet=new Date(configBank.getInt("unixtime",0)*1000L);
+
+            // retrieve RCDB run start time:
+            Time rst;
+            try {
+                rst = (Time)this.detectorDecoder.scalerManager.
                     getRcdbConstant(this.detectorDecoder.getRunNumber(),"run_start_time").getValue();
+            }
+            catch (Exception e) {
+                // abort if no RCDB access (e.g. offsite)
+                return ret;
+            }
+            ret.addAll(DaqScalers.createBanks(schemaFactory,rawScalerBank,fcupTable,slmTable,helTable,rst,uet));
         }
-        catch (Exception e) {
-            // abort if no RCDB access (e.g. offsite)
-            return ret;
-        }
-        ret.addAll(DaqScalers.createBanks(schemaFactory,rawScalerBank,fcupTable,slmTable,helTable,rst,uet));
         return ret;
     }
     

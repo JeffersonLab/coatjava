@@ -1129,9 +1129,9 @@ public class CodaEventDecoder {
                             // "type" is TRG-/TDC-gated/TRG-/TDC-ungated = 0/1/2/3 
                             if (type < 4) {
                                 final int channel = dataWordIndex % nChannels;
-                                // The first two channels are the Faraday Cup and SLM:
-                                // (the third channel is a 1 MHz input clock, which we
-                                // now ignore in favor of the scaler's internal clock below)
+                                // The first two channels are the Faraday Cup and SLM.
+                                // The third channel is a 1 MHz input clock, which we
+                                // now ignore in favor of the scaler's internal clock below.
                                 if (channel<2) {
                                     DetectorDataDgtz entry = new DetectorDataDgtz(crate,num,dataWordIndex);
                                     SCALERData scaler = new SCALERData();
@@ -1145,7 +1145,7 @@ public class CodaEventDecoder {
                             // reference clock:
                             else {
                                 if (dataWordIndex == 64 || dataWordIndex == 65) {
-                                    // Define the mangled/magic channels numbers that were
+                                    // Define the mangled, magic channels numbers that were
                                     // previously assigned above to the gated/ungated clock:
                                     final int channel = dataWordIndex == 64 ? 18 : 50;
                                     DetectorDataDgtz entry = new DetectorDataDgtz(crate,num,channel);
