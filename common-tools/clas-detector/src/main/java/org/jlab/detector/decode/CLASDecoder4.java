@@ -620,7 +620,7 @@ public class CLASDecoder4 {
                 getConstants(this.detectorDecoder.getRunNumber(),"/daq/config/scalers/dsc1");
 
         // if the scaler clock is slow enough, use it for the offset correction:
-        if (dscTable.getIntValue("frequency", 0,0,0) <= 1.2e5) {
+        if (dscTable.getIntValue("frequency", 0,0,0) < 2e5) {
             ret.addAll(DaqScalers.createBanks(schemaFactory,rawScalerBank,fcupTable,slmTable,helTable,dscTable));
         }
 
