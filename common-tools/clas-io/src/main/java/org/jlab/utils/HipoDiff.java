@@ -11,20 +11,20 @@ public class HipoDiff {
 
     public static void main(String args[]) {
 
-        OptionParser op = new OptionParser();
-        op.addOption("-r", "0.00001", "resolution");
+        OptionParser op = new OptionParser("hipo-diff");
+        op.addOption("-t", "0.00001", "absolute tolerance for comparisons");
         op.addOption("-n", "-1", "number of events");
         op.addRequired("-b", "name of bank to diff");
         op.setRequiresInputList(true);
         op.parse(args);
         if (op.getInputList().size() != 2) {
-            op.show();
-            System.err.println("ERROR:  Exactly 2 input files are required.");
+            System.out.println(op.getUsageString());
+            System.out.println("ERROR:  Exactly 2 input files are required.");
             System.exit(1);
         }
 
         final String bankName = op.getOption("-b").stringValue();
-        final double resolution = op.getOption("-r").doubleValue();
+        final double tolerance = op.getOption("-t").doubleValue();
         final int nmax = op.getOption("-n").intValue();
 
         HipoReader readerA = new HipoReader();
@@ -97,7 +97,7 @@ public class HipoDiff {
                             case 4:
                                 if ((!Double.isNaN(bankA.getFloat(name, i)) || !Double.isNaN(bankB.getFloat(name, i)))
                                         && (!Double.isInfinite(bankA.getFloat(name, i)) || !Double.isInfinite(bankB.getFloat(name, i)))
-                                        && Math.abs(bankA.getFloat(name, i) - bankB.getFloat(name, i)) > resolution) {
+                                        && Math.abs(bankA.getFloat(name, i) - bankB.getFloat(name, i)) > tolerance) {
                                     element = j;
                                 }
                                 break;
