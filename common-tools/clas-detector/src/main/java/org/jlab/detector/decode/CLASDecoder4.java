@@ -621,7 +621,7 @@ public class CLASDecoder4 {
 
         // if the scaler clock is slow enough, use it for the offset correction:
         if (dscTable.getIntValue("frequency", 0,0,0) <= 1.2e5) {
-            ret.addAll(DaqScalers.createBanks(schemaFactory,rawScalerBank,fcupTable,slmTable,helTable));
+            ret.addAll(DaqScalers.createBanks(schemaFactory,rawScalerBank,fcupTable,slmTable,helTable,dscTable));
         }
 
         // otherwise use RCDB's run start time: 

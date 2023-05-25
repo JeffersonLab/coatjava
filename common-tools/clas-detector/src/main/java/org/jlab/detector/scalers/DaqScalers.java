@@ -127,8 +127,8 @@ public class DaqScalers {
      * @param helTable /runcontrol/helicity from CCDB
      * @return  
      */
-    public static DaqScalers create(Bank rawScalerBank,IndexedTable fcupTable,IndexedTable slmTable,IndexedTable helTable) {
-        Dsc2Scaler dsc2 = new Dsc2Scaler(rawScalerBank,fcupTable,slmTable);
+    public static DaqScalers create(Bank rawScalerBank,IndexedTable fcupTable,IndexedTable slmTable,IndexedTable helTable,IndexedTable dscTable) {
+        Dsc2Scaler dsc2 = new Dsc2Scaler(rawScalerBank,fcupTable,slmTable,dscTable);
         return DaqScalers.create(rawScalerBank,fcupTable,slmTable,helTable,dsc2.getGatedClockSeconds());
     }
 
@@ -170,8 +170,8 @@ public class DaqScalers {
      * @param helTable /runcontrol/helicity CCDB table
      * @return [RUN::scaler,HEL::scaler] banks
      */
-    public static List<Bank> createBanks(SchemaFactory schema,Bank rawScalerBank,IndexedTable fcupTable,IndexedTable slmTable,IndexedTable helTable) {
-        DaqScalers ds = DaqScalers.create(rawScalerBank,fcupTable,slmTable,helTable);
+    public static List<Bank> createBanks(SchemaFactory schema,Bank rawScalerBank,IndexedTable fcupTable,IndexedTable slmTable,IndexedTable helTable,IndexedTable dscTable) {
+        DaqScalers ds = DaqScalers.create(rawScalerBank,fcupTable,slmTable,helTable,dscTable);
         List<Bank> ret = new ArrayList<>();
         // only add the RUN::scaler bank if we actually got a DSC2 readout:
         if (ds.dsc2.getClock()>0 || ds.dsc2.getGatedClock()>0) {
