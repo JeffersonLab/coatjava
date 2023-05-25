@@ -27,6 +27,7 @@ public class RebuildScalers {
     static final String CCDB_FCUP_TABLE="/runcontrol/fcup";
     static final String CCDB_SLM_TABLE="/runcontrol/slm";
     static final String CCDB_HEL_TABLE="/runcontrol/helicity";
+    static final String CCDB_DSC_TABLE="/daq/config/scalers/dsc1";
     
     public static void main(String[] args) {
 
@@ -56,7 +57,7 @@ public class RebuildScalers {
         Bank runConfigBank = new Bank(writer.getSchemaFactory().getSchema("RUN::config"));
             
         ConstantsManager conman = new ConstantsManager();
-        conman.init(Arrays.asList(new String[]{CCDB_FCUP_TABLE,CCDB_SLM_TABLE,CCDB_HEL_TABLE}));
+        conman.init(Arrays.asList(new String[]{CCDB_FCUP_TABLE,CCDB_SLM_TABLE,CCDB_HEL_TABLE,CCDB_DSC_TABLE}));
         
         for (String filename : inputList) {
 
@@ -67,6 +68,7 @@ public class RebuildScalers {
             IndexedTable ccdb_fcup = null;
             IndexedTable ccdb_slm = null;
             IndexedTable ccdb_hel = null;
+            IndexedTable ccdb_dsc = null;
 
             while (reader.hasNext()) {
 
@@ -86,18 +88,25 @@ public class RebuildScalers {
                     ccdb_fcup = conman.getConstants(runConfigBank.getInt("run",0),CCDB_FCUP_TABLE);
                     ccdb_slm = conman.getConstants(runConfigBank.getInt("run",0),CCDB_SLM_TABLE);
                     ccdb_hel = conman.getConstants(runConfigBank.getInt("run",0),CCDB_HEL_TABLE);
+                    ccdb_dsc = conman.getConstants(runConfigBank.getInt("run",0),CCDB_DSC_TABLE);
                     rcdb = conman.getRcdbConstants(runConfigBank.getInt("run",0));
                 }
 
                 // now rebuild the RUN::scaler bank: 
                 if (rcdb!=null && ccdb_fcup !=null && rawScalerBank.getRows()>0) {
-                    
-                    // Inputs for calculation run duration in seconds, since for
-                    // some run periods the DSC2 clock rolls over during a run.
-                    Time rst = rcdb.getTime("run_start_time");
-                    Date uet = new Date(runConfigBank.getInt("unixtime",0)*1000L);
        
-                    DaqScalers ds = DaqScalers.create(rawScalerBank, ccdb_fcup, ccdb_slm, ccdb_hel, rst, uet);
+                    DaqScalers ds;
+                    if (ccdb_dsc.getIntValue("frequency", 0,0,0) < 2e5) {
+                        ds = DaqScalers.create(rawScalerBank, ccdb_fcup, ccdb_slm, ccdb_hel, ccdb_dsc);
+                    }
+                    else {
+                        // Inputs for calculation run duration in seconds, since for
+                        // some run periods the DSC2 clock rolls over during a run.
+                        Time rst = rcdb.getTime("run_start_time");
+                        Date uet = new Date(runConfigBank.getInt("unixtime",0)*1000L);
+                        ds = DaqScalers.create(rawScalerBank, ccdb_fcup, ccdb_slm, ccdb_hel, rst, uet);
+                    }
+
                     runScalerBank = ds.createRunBank(writer.getSchemaFactory());
                     helScalerBank = ds.createHelicityBank(writer.getSchemaFactory());
                    
