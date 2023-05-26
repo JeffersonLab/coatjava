@@ -1,6 +1,5 @@
 package org.jlab.detector.swaps;
 
-import org.jlab.detector.swaps.SwapTable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -47,7 +46,8 @@ public class SwapManager {
         "RTPC"
     };
 
-    private final HashMap<Integer,HashMap<String,SwapTable>> swaps = new HashMap<>();
+    private volatile HashMap<Integer,HashMap<String,SwapTable>> swaps = new HashMap<>();
+
     private final Map<String,String> banksToTables = new HashMap<>();
     private final Map<String,List<String>> detsToBanks = new HashMap<>();
     private final Map<String,String> detsToTables = new HashMap<>();
@@ -163,7 +163,10 @@ public class SwapManager {
         final int sector = bank.getByte("sector", row);
         final int layer = bank.getByte("layer", row);
         final int comp = bank.getShort("component", row);
-        final int order = bank.getByte("order", row);
+        // Get the order that would be in the translation tables:
+        // FIXME:  could use RawDataBank instead of modulus, but this service
+        // should never filter rows and always needs all of them.
+        final int order = bank.getByte("order", row) % 10;
         return this.get(run,banksToTables.get(bank.getDescriptor().getName()),sector,layer,comp,order);
     }
 
@@ -187,12 +190,15 @@ public class SwapManager {
      * Initialize the swaps for a given run number.
      * @param run 
      */
-    private void add(int run) {
-        this.swaps.put(run,new HashMap<>());
-        for (String tableName : this.banksToTables.values()) {
-            IndexedTable prev = prevConman.getConstants(run, tableName);
-            IndexedTable curr = currConman.getConstants(run, tableName);
-            this.swaps.get(run).put(tableName,new SwapTable(prev,curr));
+    synchronized private void add(int run) {
+        if (!this.swaps.containsKey(run)) {
+            HashMap<String, SwapTable> x = new HashMap<>();
+            for (String tableName : this.banksToTables.values()) {
+                IndexedTable prev = prevConman.getConstants(run, tableName);
+                IndexedTable curr = currConman.getConstants(run, tableName);
+                x.put(tableName,new SwapTable(prev,curr));
+            }
+            this.swaps.put(run, x);
         }
     }
 

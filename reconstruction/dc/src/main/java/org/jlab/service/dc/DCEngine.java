@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jlab.clas.reco.ReconstructionEngine;
+import org.jlab.detector.banks.RawBank.OrderType;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.dc.Constants;
@@ -27,9 +28,10 @@ public class DCEngine extends ReconstructionEngine {
     private int        nSuperLayer    = 5;
     private String     geoVariation   = "default";
     private String     bankType       = "HitBasedTrkg";
+    private String     inBankPrefix   = null;
     private String     outBankPrefix  = null;
     private double[][] shifts         = new double[Constants.NREG][6];
-        
+    
     public static final Logger LOGGER = Logger.getLogger(ReconstructionEngine.class.getName());
 
 
@@ -86,7 +88,12 @@ public class DCEngine extends ReconstructionEngine {
             if(!Boolean.valueOf(this.getEngineConfigString("dcFOOST"))) {
                 nSuperLayer =6;
             }    
-                
+                        
+        //Set input bank names
+        if(this.getEngineConfigString("inputBankPrefix")!=null) {
+            inBankPrefix = this.getEngineConfigString("inputBankPrefix");
+        }
+
         //Set output bank names
         if(this.getEngineConfigString("outputBankPrefix")!=null) {
             outBankPrefix = this.getEngineConfigString("outputBankPrefix");
@@ -108,7 +115,7 @@ public class DCEngine extends ReconstructionEngine {
                     shifts[region-1][iaxis] = value;
                 }
             }
-        }
+        }        
     }
 
 
@@ -160,24 +167,23 @@ public class DCEngine extends ReconstructionEngine {
     }
 
     private void initBanks() {
-        if(this.getBankPrefix()!=null) this.getBanks().init(outBankPrefix);
+        if(inBankPrefix==null && outBankPrefix!=null) 
+            this.getBanks().init(outBankPrefix);
+        if(inBankPrefix!=null && outBankPrefix!=null) 
+            this.getBanks().init(inBankPrefix, outBankPrefix);
         LOGGER.log(Level.INFO,"["+this.getName()+"] bank names set for " + this.getBanks().toString());       
     }
 
     public Banks getBanks() {
         return bankNames;
     }
-    
-    public void setBankPrefix(String prefix) {
-        this.outBankPrefix = prefix;
-    }
-
-    public String getBankPrefix() {
-        return this.outBankPrefix;
-    }
-    
+        
     public void setDropBanks() {
         
+    }
+    
+    public OrderType[] getRawBankOrders() {
+        return this.rawBankOrders;
     }
     
     public int getRun(DataEvent event) {

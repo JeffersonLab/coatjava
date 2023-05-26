@@ -115,8 +115,6 @@ public class EventBuilder {
         int np = detectorEvent.getParticles().size();
         for(int n = 0; n < np; n++){
             DetectorParticle  p = this.detectorEvent.getParticle(n);
-
-            double quality = 0.0;
             
             // Matching tracks to detector responses, adding
             // responses to the particle if reasonable match
@@ -151,6 +149,8 @@ public class EventBuilder {
                 findMatchingHit(n,p,detectorResponses,DetectorType.CND,3, this.cndMatcher );
             }
 
+            // set dedx by combining trajectory information with hit energy:
+            p.setDedx();
         }
 
         // Special treatment for HTCC, with coarse resolution.

@@ -1,6 +1,7 @@
 package org.jlab.rec.dc.trajectory;
 
 import Jama.*;
+import org.jlab.clas.clas.math.FastMath;
 import org.jlab.rec.dc.Constants;
 /**
  * Describes a track pars in the DC.  

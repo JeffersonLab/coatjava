@@ -81,11 +81,7 @@ public class TrackCandListWithURWellFinder {
                     cand.set_MissingSuperlayer(c.get_Segment2().get_Superlayer());
                     cand.setSingleSuperlayer(c.get_Segment1());
                 }
-            } else {
-                if ((c.get_Segment1().get_Status() == 1) || (c.get_Segment2().get_Status() == 1)) {
-                    cand.set_Status(1);
-                }
-            }
+            } 
         }
         // if more superlayers are missing than the required number in the analysis - skip the track
         if (NbMissingSl > 6 - Constants.getInstance().NSUPERLAYERTRACKING) {

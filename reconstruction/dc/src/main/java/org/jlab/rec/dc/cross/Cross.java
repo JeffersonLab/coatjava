@@ -46,8 +46,7 @@ public class Cross extends ArrayList<Segment> implements Comparable<Cross> {
     private Point3D _DirErr;
     private Segment _seg1;
     private Segment _seg2;
-    public boolean isPseudoCross = false;    
-    
+    public boolean isPseudoCross = false;        
     public int recalc;
     /**
      *
@@ -367,7 +366,7 @@ public class Cross extends ArrayList<Segment> implements Comparable<Cross> {
     public Point3D getCoordsInTiltedSector(double X, double Y, double Z) {
         double rx = X * Constants.COSSECTORNEG60[this.get_Sector() - 1] - Y * Constants.SINSECTORNEG60[this.get_Sector() - 1];
         double ry = X * Constants.SINSECTORNEG60[this.get_Sector() - 1] + Y * Constants.COSSECTORNEG60[this.get_Sector() - 1];
-       
+
         double rtz = rx * Constants.SIN25 + Z * Constants.COS25;
         double rtx = rx * Constants.COS25 - Z * Constants.SIN25;
          

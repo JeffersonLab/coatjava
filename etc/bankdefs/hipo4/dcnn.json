@@ -124,6 +124,7 @@
     "entries": [
         {"name":"id",            "type":"S", "info":"id of the track"},
         {"name":"status",        "type":"S", "info":"status of the track"},
+        {"name":"status_crossCombo",        "type":"B", "info":"status of cross combo"},
         {"name":"sector",        "type":"B", "info":"sector of the track"},
         {"name":"c1_x",          "type":"F", "info":"Upstream Region 1 cross x-position in the lab (in cm)"},
         {"name":"c1_y",          "type":"F", "info":"Upstream Region 1 cross y-position in the lab (in cm)"},
@@ -356,6 +357,7 @@
     "entries": [
         {"name":"id",            "type":"S", "info":"id of the track"},
         {"name":"status",        "type":"S", "info":"status of the track"},
+        {"name":"status_crossCombo",        "type":"B", "info":"status of cross combo"},
         {"name":"sector",        "type":"B", "info":"sector of the track"},
         {"name":"c1_x",          "type":"F", "info":"Upstream Region 1 cross x-position in the lab (in cm)"},
         {"name":"c1_y",          "type":"F", "info":"Upstream Region 1 cross y-position in the lab (in cm)"},

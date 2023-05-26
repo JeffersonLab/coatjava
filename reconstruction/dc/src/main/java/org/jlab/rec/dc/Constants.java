@@ -11,11 +11,14 @@ import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.base.GeometryFactory;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.detector.geant4.v2.FTOFGeant4Factory;
+import org.jlab.detector.geom.RICH.RICHGeoFactory;
 import org.jlab.geom.base.ConstantProvider;
+import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.geom.base.Detector;
 import org.jlab.rec.dc.trajectory.TrajectorySurfaces;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.clas.clas.math.FastMath;
+import org.jlab.detector.banks.RawBank.OrderType;
 
 /**
  * Constants used in the reconstruction
@@ -143,7 +146,6 @@ public class Constants {
     public static final double TBINITIALSTATETYUNCURNOR3 = 0.0097;
     public static final double TBINITIALSTATEQUNCURNOR3 = 0.071;
     
-
     // PHYSICS CONSTANTS
     public static final double SPEEDLIGHT = 29.97924580;
     public static final double LIGHTVEL = 0.00299792458;        // velocity of light (cm/ns) - conversion factor from radius in cm to momentum in GeV/c
@@ -184,6 +186,7 @@ public class Constants {
     public FTOFGeant4Factory  ftofDetector = null;
     public Detector           ecalDetector = null;
     public Detector           fmtDetector  = null;
+    public RICHGeoFactory     richDetector = null;
     public TrajectorySurfaces trajSurfaces = null;
     
     public static final double HTCCRADIUS = 175;
@@ -429,7 +432,8 @@ public class Constants {
     public void setSWAPDCRBBITS(boolean SWAPDCRBBITS) {
         this.SWAPDCRBBITS = SWAPDCRBBITS;
     }
-    
+   
+
     public synchronized void initialize(String engine,
                                         String variation, 
                                         boolean wireDistortion,
@@ -603,9 +607,11 @@ public class Constants {
         ftofDetector = new FTOFGeant4Factory(providerFTOF);        
         ecalDetector =  GeometryFactory.getDetector(DetectorType.ECAL, 11, geoVariation);
         fmtDetector =  GeometryFactory.getDetector(DetectorType.FMT, 11, geoVariation);
+        ConstantsManager managerRICH = new ConstantsManager(geoVariation);;
+        richDetector = new RICHGeoFactory(0, managerRICH, 11, false);
         // create the surfaces
         trajSurfaces = new TrajectorySurfaces();
-        trajSurfaces.loadSurface(targetPosition, targetLength,dcDetector, ftofDetector, ecalDetector, fmtDetector);        
+        trajSurfaces.loadSurface(targetPosition, targetLength, dcDetector, ftofDetector, ecalDetector, fmtDetector, richDetector);        
     }
    
 

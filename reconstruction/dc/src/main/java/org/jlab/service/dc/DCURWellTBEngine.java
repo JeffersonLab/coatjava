@@ -116,7 +116,7 @@ public class DCURWellTBEngine extends DCEngine {
         //instantiate bank writer
         RecoBankWriter rbc = new RecoBankWriter(this.getBanks());
 
-        HitReader hitRead = new HitReader(this.getBanks(), super.getConstantsManager(), Constants.getInstance().dcDetector); //vz; modified reader to read regular or ai hits
+        HitReader hitRead = new HitReader(this.getBanks(), this.getRawBankOrders(), super.getConstantsManager(), Constants.getInstance().dcDetector); //vz; modified reader to read regular or ai hits
         hitRead.read_HBHits(event, tde);
         //I) get the hits
         List<FittedHit> hits = hitRead.get_HBHits();
@@ -210,8 +210,7 @@ public class DCURWellTBEngine extends DCEngine {
                 }
             }
             TrackArray[HBtrk.get_Id()-1] = HBtrk; 
-            TrackArray[HBtrk.get_Id()-1].set_Status(0);
-            TrackArray[HBtrk.get_Id()-1].set_Status_crossCombo(trkbank.getShort("status", i)/1000);
+            TrackArray[HBtrk.get_Id()-1].set_Status_crossCombo(trkbank.getByte("status_crossCombo", i));
         }
         if(TrackArray==null) {
             return true; // HB tracks not saved correctly
@@ -219,8 +218,6 @@ public class DCURWellTBEngine extends DCEngine {
         for(Segment seg : segments) {
             if(seg.get(0).get_AssociatedHBTrackID()>0) {
                     TrackArray[seg.get(0).get_AssociatedHBTrackID()-1].get_ListOfHBSegments().add(seg); 
-                    if(seg.get_Status()==1)
-                        TrackArray[seg.get(0).get_AssociatedHBTrackID()-1].set_Status(1);
             }
         }
                 

@@ -36,12 +36,35 @@ public class ECEngine extends ReconstructionEngine {
         List<ECPeak>       ecPeaks = ECCommon.processPeaks(ECCommon.createPeaks(ecStrips)); // thresholds, split peaks -> update peak-lines          
         List<ECCluster> ecClusters = new ArrayList<ECCluster>();  
         
-        ecClusters.addAll(ECCommon.createClusters(ecPeaks,1)); //PCAL
-        ecClusters.addAll(ECCommon.createClusters(ecPeaks,4)); //ECinner 
-        ecClusters.addAll(ECCommon.createClusters(ecPeaks,7)); //ECouter
+        List<ECCluster> tmpPCAL  = ECCommon.createClusters(ecPeaks,1);
+        List<ECCluster> tmpECIN  = ECCommon.createClusters(ecPeaks,4);
+        List<ECCluster> tmpECOUT = ECCommon.createClusters(ecPeaks,7);
+        
+        // - Thsi is the part that identifies clusters with 2 views shared,
+        // - and picks the one with best cluster size.
+        
+        
+        //ECPeakAnalysis.doPeakCleanup(ecPeaks);
+        
+        ECPeakAnalysis.doClusterCleanup(tmpPCAL);
+        ECPeakAnalysis.doClusterCleanup(tmpECIN);
+        ECPeakAnalysis.doClusterCleanup(tmpECOUT);
+        
+        
+        // - commented by Gagik - now created clusters for each of sub-modules
+        // - will be analyzed to eliminate clusters that share two views with 
+        // - another cluster. The best matrching cluster will be left 
+        // - after this procedure.
+        //ecClusters.addAll(ECCommon.createClusters(ecPeaks,1)); //PCAL
+        //ecClusters.addAll(ECCommon.createClusters(ecPeaks,4)); //ECinner 
+        //ecClusters.addAll(ECCommon.createClusters(ecPeaks,7)); //ECouter
+        
+        ecClusters.addAll(tmpPCAL); //PCAL
+        ecClusters.addAll(tmpECIN); //ECinner 
+        ecClusters.addAll(tmpECOUT); //ECouter
         
         ECCommon.shareClustersEnergy(ecClusters);  // Repair 2 clusters which share the same peaks
-       
+        
         for (int iCl = 0; iCl < ecClusters.size(); iCl++) {
             // As clusters are already defined at this point, we can fill the clusterID of ECStrips belonging to the given cluster
             // === U strips ===
@@ -139,7 +162,7 @@ public class ECEngine extends ReconstructionEngine {
             bankC.setShort("status", c, (short) clusters.get(c).getStatus());
             bankC.setByte("layer",   c,  (byte) clusters.get(c).clusterPeaks.get(0).getDescriptor().getLayer());
             bankC.setFloat("energy", c, (float) clusters.get(c).getEnergy());           
-            bankC.setFloat("time",   c, (float) clusters.get(c).getTime()); 
+            bankC.setFloat("time",   c, (float) clusters.get(c).getTime());             
             bankC.setByte("idU",     c,  (byte) clusters.get(c).UVIEW_ID);
             bankC.setByte("idV",     c,  (byte) clusters.get(c).VVIEW_ID);
             bankC.setByte("idW",     c,  (byte) clusters.get(c).WVIEW_ID);
@@ -171,9 +194,14 @@ public class ECEngine extends ReconstructionEngine {
         }
          
          DataBank  bankD =  de.createBank("ECAL::calib", clusters.size());
+         
+         //String[] entries = bankD.getDescriptor().getEntryList();
+         //System.out.println(Arrays.toString(entries));
+         
          for(int c = 0; c < clusters.size(); c++){
             bankD.setByte("sector",  c,  (byte) clusters.get(c).clusterPeaks.get(0).getDescriptor().getSector());
             bankD.setByte("layer",   c,  (byte) clusters.get(c).clusterPeaks.get(0).getDescriptor().getLayer());
+            bankD.setFloat("size",   c, (float) clusters.get(c).getClusterSize());
             bankD.setShort("dbstU",  c, (short) clusters.get(c).clusterPeaks.get(0).getDBStatus());
             bankD.setShort("dbstV",  c, (short) clusters.get(c).clusterPeaks.get(1).getDBStatus());
             bankD.setShort("dbstW",  c, (short) clusters.get(c).clusterPeaks.get(2).getDBStatus());
@@ -284,6 +312,11 @@ public class ECEngine extends ReconstructionEngine {
     	ECCommon.usePass2Timing = val;
     }
     
+    public void setUsePass2Energy(boolean val) {
+    	LOGGER.log(Level.INFO,"ECengine: usePass2Energy = "+val);
+    	ECCommon.usePass2Energy = val;
+    }
+    
     public void setUsePass2Recon(boolean val) {
     	LOGGER.log(Level.INFO,"ECengine: usePass2Recon = "+val);
     	ECCommon.usePass2Recon = val;
@@ -367,6 +400,7 @@ public class ECEngine extends ReconstructionEngine {
     	
         String[]  ecTables = new String[]{
                 "/calibration/ec/attenuation", 
+                "/calibration/ec/atten", 
                 "/calibration/ec/gain", 
                 "/calibration/ec/timing",
                 "/calibration/ec/ftime",
@@ -413,8 +447,9 @@ public class ECEngine extends ReconstructionEngine {
         setPeakThresholds(18,20,15);  //pass1 18,20,15
         setClusterThresholds(0,0,0);
         setClusterCuts(7,15,20);      //pass1 7,15,20
-        setDTCorrections(ECCommon.useDTCorrections); //replace missing DSC time with FADC time
-        setUsePass2Timing(ECCommon.usePass2Timing);  //use pass2 CCDB tables for FADC/DSC calibrations        
+        setDTCorrections(ECCommon.useDTCorrections); //replace missing TDC time with FADC time
+        setUsePass2Energy(ECCommon.usePass2Energy);  //use pass2 CCDB tables for attenuation  
+        setUsePass2Timing(ECCommon.usePass2Timing);  //use pass2 CCDB tables for FADC/TDC calibrations        
         setUseFTpcal(ECCommon.useFTpcal);            //use FADC time for all PCAL channels
         setSplitMethod(0);            //pass1 0=gagik method
         setSplitThresh(3,3,3);        //pass1 3,3,3

@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import org.jlab.clas.physics.Particle;
 import org.jlab.detector.base.DetectorType;
-import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Vector3D;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
@@ -278,6 +277,7 @@ public class DetectorData {
             bank.setFloat("recFTU", row, (float)r.getPeakFADCTime().x() );
             bank.setFloat("recFTV", row, (float)r.getPeakFADCTime().y() );
             bank.setFloat("recFTW", row, (float)r.getPeakFADCTime().z() );
+            bank.setFloat("size", row, (float)r.getSize() );
         }
         return bank;
     }
@@ -568,22 +568,9 @@ public class DetectorData {
                 // this could be optimized:
                 if (trajBank != null) {
                     for (int ii = 0; ii < trajBank.rows(); ii++) {
-                        if (trajBank.getInt("id", ii) != trkId) {
-                            continue;
+                        if (trajBank.getInt("id", ii) == trkId) {
+                            track.getTrajectory().add(new DetectorTrack.TrajectoryPoint(trajBank,ii));
                         }
-                        int detId = trajBank.getInt("detector", ii);
-                        int layId = trajBank.getByte("layer", ii);
-                        float bField = trajBank.getFloat("B", ii);
-                        float pathLength = trajBank.getFloat("path", ii);
-                        float edge= trajBank.getFloat("edge", ii);
-                        float xx = trajBank.getFloat("x", ii);
-                        float yy = trajBank.getFloat("y", ii);
-                        float zz = trajBank.getFloat("z", ii);
-                        Line3D traj = new Line3D(xx, yy, zz,
-                                xx + track.getMaxLineLength() * trajBank.getFloat("tx", ii),
-                                yy + track.getMaxLineLength() * trajBank.getFloat("ty", ii),
-                                zz + track.getMaxLineLength() * trajBank.getFloat("tz", ii));
-                        track.addTrajectoryPoint(detId, layId, traj, bField, pathLength, edge);
                     }
                 }
                 if (covBank != null) {
@@ -670,30 +657,9 @@ public class DetectorData {
                 // this could be optimized:
                 if (trajBank != null) {
                     for (int ii = 0; ii < trajBank.rows(); ii++) {
-                        if (trajBank.getInt("id", ii) != trkId) {
-                            continue;
+                        if (trajBank.getInt("id", ii) == trkId) {
+                            track.getTrajectory().add(new DetectorTrack.TrajectoryPoint(trajBank,ii));
                         }
-                        int detId = trajBank.getInt("detector", ii);
-                        int layId = trajBank.getByte("layer", ii);
-                        float pathLength = trajBank.getFloat("path", ii);
-                        float xx = trajBank.getFloat("x", ii);
-                        float yy = trajBank.getFloat("y", ii);
-                        float zz = trajBank.getFloat("z", ii);
-
-                        float theta = trajBank.getFloat("theta", ii);
-                        float phi = trajBank.getFloat("phi", ii);
-
-                        float cz = (float) (Math.cos(theta));
-                        float cx = (float) (Math.sin(theta) * Math.cos(phi));
-                        float cy = (float) (Math.sin(theta) * Math.sin(phi));
-
-                        float edge = trajBank.getFloat("edge", ii);
-
-                        Line3D traj = new Line3D(xx, yy, zz,
-                                xx + track.getMaxLineLength() * cx,
-                                yy + track.getMaxLineLength() * cy,
-                                zz + track.getMaxLineLength() * cz);
-                        track.addTrajectoryPoint(detId, layId, traj, 0, pathLength, edge);
                     }
                 }
 
