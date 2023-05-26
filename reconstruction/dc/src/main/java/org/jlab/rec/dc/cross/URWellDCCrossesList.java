@@ -1,10 +1,16 @@
-package org.jlab.rec.dc.track;
+package org.jlab.rec.dc.cross;
 
 import java.util.List;
 import java.util.ArrayList;
 import org.jlab.rec.dc.cross.CrossList;
 import org.jlab.rec.urwell.reader.URWellCross;
 import org.jlab.rec.dc.cross.Cross;
+
+/**
+ * A class for cross combos with DC crosses and with/without uRWell cross
+ *
+ * @author Tongtong Cao
+ */
 
 public class URWellDCCrossesList{
     private List<URWellDCCrosses> urDCCrossesList = new ArrayList<URWellDCCrosses>();
@@ -35,11 +41,11 @@ public class URWellDCCrossesList{
             this.dcCrosses = dcCrosses;
         }
         
-        URWellCross get_URWellCross(){
+        public URWellCross get_URWellCross(){
             return urCross;
         }
         
-        List<Cross> get_DCCrosses(){
+        public List<Cross> get_DCCrosses(){
             return dcCrosses;
         }
 

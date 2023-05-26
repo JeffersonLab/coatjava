@@ -20,8 +20,8 @@ import org.jlab.rec.dc.nn.PatternRec;
 import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.track.Track;
 import org.jlab.rec.dc.track.TrackCandListWithURWellFinder;
-import org.jlab.rec.dc.track.URWellDCCrossesList;
-import org.jlab.rec.dc.track.URWellDCCrossesListFinder;
+import org.jlab.rec.dc.cross.URWellDCCrossesList;
+import org.jlab.rec.dc.cross.URWellDCCrossesListFinder;
 import org.jlab.rec.urwell.reader.URWellCross;
 import org.jlab.rec.urwell.reader.URWellReader;
 

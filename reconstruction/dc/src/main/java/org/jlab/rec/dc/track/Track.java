@@ -192,6 +192,24 @@ public class Track extends Trajectory implements Comparable<Track>{
     }
     
     /**
+     * Status for different cross combos:
+     * 1: combos from R0R1R2R3
+     * 2: combos from R1R2R3
+     * 3: combos from R0R2R3
+     * 4: combos from R0R1R3
+     * 5: combos from R0R1R2
+    */
+    private int _Status_crossCombo=0;
+
+    public int get_Status_crossCombo() {
+        return _Status_crossCombo;
+    }
+
+    public void set_Status_crossCombo(int _Status) {
+        this._Status_crossCombo = _Status;
+    }
+    
+    /**
      * 
      * @return id of the track
      */
@@ -486,6 +504,20 @@ public class Track extends Trajectory implements Comparable<Track>{
             int ct = this.get(i).get_Id();
             int co = o.get(i).get_Id();
             if(ct!=-1 && ct==co) value = true;
+        }
+        return value;
+    }
+    
+    public boolean overlapsWithURWell(Track o) {
+        boolean value = false;
+        for(int i=0; i<this.size(); i++) {
+            for(int j = 0; j < o.size(); j++){
+                if(this.get(i).get_Region() == o.get(j).get_Region()){
+                    int ct = this.get(i).get_Id();
+                    int co = o.get(j).get_Id();
+                    if(ct!=-1 && ct==co) value = true;
+                }
+            }   
         }
         if(!value && this.get_URWellCross() != null && o.get_URWellCross() != null){
             if(this.get_URWellCross().id() == o.get_URWellCross().id()) value = true;
