@@ -98,8 +98,8 @@ public class Dsc2Scaler extends DaqScaler{
      * @param seconds 
      */
     protected final void calibrate(IndexedTable fcupTable, IndexedTable slmTable, double seconds) {
-        if (this.slm>0) {
-            super.calibrate(fcupTable,slmTable,seconds,seconds*((double)this.gatedSlm)/this.slm);
+        if (this.fcup>0) {
+            super.calibrate(fcupTable,slmTable,seconds,seconds*((double)this.gatedFcup)/this.fcup);
         }
     }
 }
