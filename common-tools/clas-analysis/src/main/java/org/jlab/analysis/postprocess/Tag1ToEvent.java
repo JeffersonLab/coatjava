@@ -140,8 +140,8 @@ public class Tag1ToEvent {
                     // flip the helicity in the HEL::flip bank:
                     if (helFlipBank.getRows()>0) {
                         event.remove(helFlipBank.getSchema());
-                        helFlipBank.setByte("helicity", 0, (byte)-helFlipBank.getByte("helicity",0));
-                        helFlipBank.setByte("helicityRaw", 0, (byte)-helFlipBank.getByte("helicityRaw",0));
+                        helFlipBank.putByte("helicity", 0, (byte)-helFlipBank.getByte("helicity",0));
+                        helFlipBank.putByte("helicityRaw", 0, (byte)-helFlipBank.getByte("helicityRaw",0));
                         event.write(helFlipBank);
                     }
                 }
