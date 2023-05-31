@@ -13,7 +13,3 @@ if [ -z "$COAT_MAGFIELD_SOLENOIDMAP" ]; then
     export COAT_MAGFIELD_SOLENOIDMAP=Symm_solenoid_r601_phi1_z1201_13June2018.dat
 fi
 
-echo +-------------------------------------------------------------------------
-echo "| COATJAVA LIBRARY DIRECTORY = " $CLAS12DIR/lib/clas/
-echo +-------------------------------------------------------------------------
-
