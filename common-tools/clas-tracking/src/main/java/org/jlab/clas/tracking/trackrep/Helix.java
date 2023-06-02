@@ -1,4 +1,6 @@
 package org.jlab.clas.tracking.trackrep;
+import org.jlab.clas.tracking.kalmanfilter.Units;
+import org.jlab.clas.tracking.kalmanfilter.helical.KFitter;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
 
@@ -62,7 +64,7 @@ public class Helix {
     
     public Helix(double x0, double y0, double z0, double px0, double py0, double pz0,
             int q, double B, double xb, double yb, Units unit) {
-        _turningSign = q;
+        _turningSign = q; 
         _B           = B;
         units        = unit;
         double pt    = Math.sqrt(px0*px0 + py0*py0);
@@ -72,7 +74,7 @@ public class Helix {
         _phi0        = Math.atan2(py0, px0);
         _tanL        = pz0/pt;
         _z0          = z0;
-        _omega       = (double) -_turningSign/_R;
+        _omega       = (double) KFitter.polarity*_turningSign/_R ; 
         double S = Math.sin(_phi0);
         double C = Math.cos(_phi0);
         if(Math.abs(S)>=Math.abs(C)) {
@@ -91,7 +93,7 @@ public class Helix {
     }
 
     public final double getLightVelocity() {
-        return LIGHTVEL*units.unit;
+        return LIGHTVEL*units.value();
     }    
         
     public void reset(double d0, double phi0, double omega, double z0, double tanL, double B){
@@ -110,8 +112,8 @@ public class Helix {
         setR(1./Math.abs(getOmega()));
         _xd = -getD0()*getSinphi0()+_xb;
         _yd =  getD0()*getCosphi0()+_yb;
-        _xc = -(_turningSign*_R + _d0)*getSinphi0()+_xb;
-        _yc =  (_turningSign*_R + _d0)*getCosphi0()+_yb;
+        _xc = -(-(double)KFitter.polarity*_turningSign*_R + _d0)*getSinphi0()+_xb; 
+        _yc =  (-(double)KFitter.polarity*_turningSign*_R + _d0)*getCosphi0()+_yb;
         _x  = getX(0);
         _y  = getY(0);
         _z  = getZ(0);
@@ -190,11 +192,13 @@ public class Helix {
     }
     
     public double getX(double l){
-        return getXc() + getTurningSign()*getR()*Math.sin(getPhi(l));
+        double s = (double) -KFitter.polarity; 
+        return getXc() + s*getTurningSign()*getR()*Math.sin(getPhi(l)); 
     }
     
     public double getY(double l){
-        return getYc() - getTurningSign()*getR()*Math.cos(getPhi(l));
+    double s = (double) -KFitter.polarity; 
+        return getYc() - s*getTurningSign()*getR()*Math.cos(getPhi(l));
     }
     
     public double getZ(double l){
@@ -408,30 +412,6 @@ public class Helix {
         return new Vector3D(getPx(getB(),l),getPy(getB(),l),getPz(getB()));
     }
     
-    public enum Units {
-        MM (10.0),
-        CM  (1.0);
-
-        private final double unit;  
-        
-        Units(double unit) {
-            this.unit = unit;
-        }
-        
-        public double unit() { 
-            return unit; 
-        }
-        
-        public static Units getUnit(double value) {
-            for (Units unit : Units.values()) {
-                if (unit.unit == value) {
-                    return unit;
-                }
-            }
-            return Units.CM;
-        }
-    }
-
     @Override
     public String toString() {
         String s = String.format("    drho=%.4f phi0=%.4f radius=%.4f z0=%.4f tanL=%.4f B=%.4f\n", this._d0, this._phi0, this._R, this._z0, this._tanL, this._B);

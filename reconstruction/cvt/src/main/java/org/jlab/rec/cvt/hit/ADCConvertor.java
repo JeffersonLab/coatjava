@@ -11,19 +11,13 @@ public class ADCConvertor {
 
     }
 
-    public double BMTADCtoDAQ(int adc) {
-
-        return adc;
-
-    }
-
     /**
      *
      * @param adc ADC value Converts ADC values to DAQ units -- used for BST
      * test stand analysis
      * @return 
      */
-    public double SVTADCtoDAQ(int adc) {
+    public static double SVTADCtoDAQ(int adc) {
         if (adc == -5) {
             return 1; // this is for running with Geantinos.  Geantinos have adc -5
         }
@@ -42,33 +36,14 @@ public class ADCConvertor {
         Random random = new Random();
         random.setSeed(42);
 
-        int daq = returnRandomInteger(START[adc], END[adc], random);
+        //int daq = returnRandomInteger(START[adc], END[adc], random);
+        //double value = (double) daq;
+        double value = (double) 0.5*(END[adc]+START[adc]);
         
-        double value = (double) daq;
-        /* 
-        if(event.hasBank("MC::Particle")==true) {
-        	//This is how GEMC sets the adc:
-        	// the energy deposited from a mip is 80 KeV
-        	// The max value of the ADC is 2.5V
-        	// We set for now 3 values of mip inside the 2.5V.
-        	// So ~250 KeV = 2.5V, or 0.10 MeV = 1 Volt.
-        	//double maxV = 2.5;
-        	//double etoV = 0.1;
-        	//double vout = tInfos.eTot/etoV;
-        	//double vrat = vout / maxV;
-        	//int adc     = floor(vrat*8);
-        	//if(adc >7) adc = 7;
-        	double maxV = 2.5;
-        	double etoV = 0.1;
-        	
-        	value = ((double)(adc+0.5)*etoV*maxV/8); // center of bin to avoid zero value
-                
-        }  */
-      
         return value;
     }
 
-    private int returnRandomInteger(int aStart, int aEnd, Random aRandom) {
+    private static int returnRandomInteger(int aStart, int aEnd, Random aRandom) {
         if (aStart > aEnd) {
             return 0;
             //throw new IllegalArgumentException("Start cannot exceed End.");
@@ -98,7 +73,7 @@ public class ADCConvertor {
     /// function landau_quantile(x,sigma), which provides
     /// the inverse of the landau cumulative distribution.
     /// landau_quantile has been converted from CERNLIB ranlan(G110).
-    private double randomLandau(double mu, double sigma, Random aRandom) {
+    private static double randomLandau(double mu, double sigma, Random aRandom) {
 
         if (sigma <= 0) {
             return 0;
@@ -108,7 +83,7 @@ public class ADCConvertor {
         return res;
     }
 
-    private double landauQuantile(double z, double xi) {
+    private static double landauQuantile(double z, double xi) {
         // LANDAU quantile : algorithm from CERNLIB G110 ranlan
         // with scale parameter xi
 

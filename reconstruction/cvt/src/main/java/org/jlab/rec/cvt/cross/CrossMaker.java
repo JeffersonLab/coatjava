@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.rec.cvt.Constants;
+import org.jlab.rec.cvt.Geometry;
 import org.jlab.rec.cvt.bmt.BMTConstants;
 
 import org.jlab.rec.cvt.bmt.BMTGeometry;
@@ -41,11 +42,12 @@ public class CrossMaker {
         ArrayList<Cluster> bmt_Zlayrclus = sortedClusters.get(3);
         ArrayList<Cluster> rbmt_Clayrclus = new ArrayList<>();
         ArrayList<Cluster> rbmt_Zlayrclus = new ArrayList<>();
+        ArrayList<Cluster> rsvt_layrclus = new ArrayList<>();
         
         for(Cluster cl : bmt_Zlayrclus) { 
-            if(cl.getLayer()==Constants.getBMTLayerExcld()
-                    && cl.getPhi0()>Math.toRadians(Constants.getBMTPhiZRangeExcld()[0][0])
-                    && cl.getPhi0()<=Math.toRadians(Constants.getBMTPhiZRangeExcld()[0][1]) ) {
+            if(cl.getLayer()==Constants.getInstance().getBMTLayerExcld()
+                    && cl.getPhi0()>Math.toRadians(Constants.getInstance().getBMTPhiZRangeExcld()[0][0])
+                    && cl.getPhi0()<=Math.toRadians(Constants.getInstance().getBMTPhiZRangeExcld()[0][1]) ) {
                 cl.flagForExclusion = true;
                 rbmt_Zlayrclus.add(cl); 
             }
@@ -54,15 +56,47 @@ public class CrossMaker {
             bmt_Zlayrclus.removeAll(rbmt_Zlayrclus);
         }
         for(Cluster cl : bmt_Clayrclus) { 
-            if(cl.getLayer()==Constants.getBMTLayerExcld()
-                    && cl.getZ()>Constants.getBMTPhiZRangeExcld()[1][0]
-                    && cl.getZ()<=Constants.getBMTPhiZRangeExcld()[1][1]) {
+            if(cl.getLayer()==Constants.getInstance().getBMTLayerExcld()
+                    && cl.getZ()>Constants.getInstance().getBMTPhiZRangeExcld()[1][0]
+                    && cl.getZ()<=Constants.getInstance().getBMTPhiZRangeExcld()[1][1]) {
                 cl.flagForExclusion = true;
                 rbmt_Clayrclus.add(cl); 
             }
         }
         if(bmt_Clayrclus.size()>0) {
             bmt_Clayrclus.removeAll(rbmt_Clayrclus);
+        }
+        rbmt_Clayrclus.clear();
+        rbmt_Zlayrclus.clear();
+        
+        for(Cluster cl : bmt_Zlayrclus) { 
+            if(cl.size()>Constants.getInstance().getBmtzmaxclussize()) 
+                rbmt_Zlayrclus.add(cl);
+        }
+        if(bmt_Zlayrclus.size()>0) {
+            bmt_Zlayrclus.removeAll(rbmt_Zlayrclus);
+        }
+        for(Cluster cl : bmt_Clayrclus) { 
+            if(cl.size()>Constants.getInstance().getBmtcmaxclussize()) 
+                rbmt_Clayrclus.add(cl);
+        }
+        if(bmt_Clayrclus.size()>0) {
+            bmt_Clayrclus.removeAll(rbmt_Clayrclus);
+        }
+        for(Cluster cl : svt_innerlayrclus) { 
+            if(cl.size()>Constants.getInstance().getSvtmaxclussize()) 
+                rsvt_layrclus.add(cl);
+        }
+        if(rsvt_layrclus.size()>0) {
+            svt_innerlayrclus.removeAll(rsvt_layrclus);
+        }
+        rsvt_layrclus.clear();
+        for(Cluster cl : svt_outerlayrclus) { 
+            if(cl.size()>Constants.getInstance().getSvtmaxclussize()) 
+                rsvt_layrclus.add(cl);
+        }
+        if(rsvt_layrclus.size()>0) {
+            svt_outerlayrclus.removeAll(rsvt_layrclus);
         }
         // arrays of BMT and SVT crosses
         ArrayList<Cross> BMTCrosses = this.findBMTCrosses(bmt_Clayrclus, bmt_Zlayrclus,1000);
@@ -93,7 +127,7 @@ public class CrossMaker {
         //loop over the clusters
         // inner clusters
         for (Cluster inlayerclus : svt_innerlayrclus) {
-            if(inlayerclus.getTotalEnergy()<SVTParameters.ETOTCUT)
+           if(inlayerclus.getTotalEnergy()<SVTParameters.ETOTCUT)
                 continue;
             // outer clusters
             for (Cluster outlayerclus : svt_outerlayrclus) {
@@ -124,14 +158,20 @@ public class CrossMaker {
                     this_cross.updateSVTCross(null); 
                     // the uncorrected point obtained from default estimate that the track is at 90 deg wrt the module should not be null
                     if (this_cross.getPoint0() != null) {
-                        //pass the cross to the arraylist of crosses
-                        this_cross.setId(crosses.size() + 1);
-                        this_cross.setDetector(DetectorType.BST);
-                        calcCentErr(this_cross, this_cross.getCluster1());
-                        calcCentErr(this_cross, this_cross.getCluster2());
-                        crosses.add(this_cross);
-                    }
+                        double zo = this_cross.getCluster2().getLine().origin().z();
+                        double ze = this_cross.getCluster2().getLine().end().z();
+                        double z = this_cross.getPoint0().z();
+                        double range = Math.abs(ze-zo)+SVTParameters.CROSSZCUT;
+                        if(Math.abs(z-zo)<range && Math.abs(z-ze)<range ) {
+                            //pass the cross to the arraylist of crosses
+                            this_cross.setId(crosses.size() + 1);
+                            this_cross.setDetector(DetectorType.BST);
+                            calcCentErr(this_cross, this_cross.getCluster1());
+                            calcCentErr(this_cross, this_cross.getCluster2());
 
+                            crosses.add(this_cross);
+                        }
+                    }
                 }
             }
         }
@@ -142,8 +182,8 @@ public class CrossMaker {
         return crosses;
     }
 
-    private void calcCentErr(Cross c, Cluster Cluster1) {
-        double Z = Constants.SVTGEOMETRY.toLocal(Cluster1.getLayer(),
+    public void calcCentErr(Cross c, Cluster Cluster1) {
+        double Z = Geometry.getInstance().getSVT().toLocal(Cluster1.getLayer(),
                                                  Cluster1.getSector(),
                                                  c.getPoint()).z();        
         if(Z>SVTGeometry.getModuleLength()) Z=SVTGeometry.getModuleLength();
@@ -202,7 +242,7 @@ public class CrossMaker {
 
         for (Cross c : crosses) {
             int rg  =  3 + 
-                    Constants.BMTGEOMETRY.getLayer( c.getRegion(), c.getType()) ;
+                    Geometry.getInstance().getBMT().getLayer( c.getRegion(), c.getType()) ;
             c.setOrderedRegion(rg);
         }
         return crosses;

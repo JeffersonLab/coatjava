@@ -7,7 +7,7 @@ import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Transformation3D;
 import org.jlab.geom.prim.Vector3D;
-import org.jlab.rec.cvt.Constants;
+import org.jlab.rec.cvt.Geometry;
 import org.jlab.rec.cvt.bmt.BMTGeometry;
 import org.jlab.rec.cvt.bmt.BMTType;
 import org.jlab.rec.cvt.bmt.BMTConstants;
@@ -24,7 +24,7 @@ public class Strip {
     private int _Strip;    	//     strip read from daq 
     private double _Edep;      	//     for simulation this corresponds to the energy deposited on the strip, in data it should be an ADC converted value
     private double _Time;
-    private int _Status;        //     0=good, 1=bad edep, 2=bad tim, 3=dead                
+    private int _Status;        //     0=good, 1=bad edep, 2=bad tim, 3=dead, 4=inefficiency HV, 5=low efficient HV  Hv1 to HV2, 6=low efficient HV2 to HV3              
     
     private int _LCStrip;	//     strip number taking into account Lorentz angle correction (for MM Z detectors)
     private double _Phi;  	//     for MM Z-detectors, the azimuth angle at the strip midwidth after LC
@@ -210,7 +210,7 @@ public class Strip {
      * @param swim
      */
     public void calcBMTStripParams(int sector, int layer, Swim swim) {
-        BMTGeometry geo = Constants.BMTGEOMETRY;
+        BMTGeometry geo = Geometry.getInstance().getBMT();
         
         int region = geo.getRegion(layer); // region index (1...3) 1=layers 1&2, 2=layers 3&4, 3=layers 5&6
         this.setToGlobal(geo.toGlobal(layer, sector));
@@ -244,8 +244,8 @@ public class Strip {
             // get the strip number after correcting for Lorentz angle
             int theLorentzCorrectedStrip = geo.getStrip(layer,  sector, line.midpoint());
             this.setLCStrip(theLorentzCorrectedStrip);
-            // RDV use xyz dependent ThetaLorentz
-            double sigma = BMTConstants.SIGMADRIFT / Math.cos(geo.getThetaLorentz(layer, sector)); // max sigma for drift distance  (HDRIFT) = total gap from top to mesh
+
+            double sigma = BMTConstants.SIGMADRIFT / Math.cos(geo.getThetaLorentz(layer, sector, line.midpoint(), swim)); // max sigma for drift distance  (HDRIFT) = total gap from top to mesh
 
             //max phi err
             double phiErrL = sigma / geo.getRadius(layer);

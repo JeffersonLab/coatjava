@@ -1,6 +1,7 @@
 package org.jlab.rec.cnd.banks;
 
 import java.util.ArrayList;
+import org.jlab.detector.banks.RawDataBank;
 
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
@@ -32,8 +33,12 @@ public class HitReader {
 		} 
 
 
-		DataBank bankADC = event.getBank("CND::adc");
-		DataBank bankTDC = event.getBank("CND::tdc");
+		RawDataBank bankADC = new RawDataBank("CND::adc");
+		RawDataBank bankTDC = new RawDataBank("CND::tdc");
+        bankADC.read(event);
+        bankTDC.read(event);
+		//DataBank bankADC = event.getBank("CND::adc");
+		//DataBank bankTDC = event.getBank("CND::tdc");
 
 		//if(bankADC.rows() != bankTDC.rows()) return new ArrayList<HalfHit>();
 
@@ -49,7 +54,7 @@ public class HitReader {
 		{ 
 			int sector    = bankADC.getByte("sector",i);  // one of the 24 "blocks"
 			int layer     = bankADC.getByte("layer",i);  
-			int order     = bankADC.getByte("order",i);
+			int order     = bankADC.trueOrder(i);
 			int component = order + 1; // get the component 1 is left 2 is right
 			int indextdc = -1;
 			
@@ -69,12 +74,12 @@ public class HitReader {
 				for(int j=0; j<ntdc; j++){
 					int s = bankTDC.getByte("sector", j);
                    			int l = bankTDC.getByte("layer", j);
-                 			int o = bankTDC.getByte("order", j);
+                 			int o = bankTDC.trueOrder(j);
 
 					if(s==sector && l == layer  && o == order+2 ){
 					//System.out.println("s "+ s+" sector "+sector+" l "+l+" layer "+layer+" o "+o+" order "+order);
 					tdc = bankTDC.getInt("TDC",j);
-					indextdc=j;
+					indextdc = bankTDC.trueIndex(j);
 					break;
 					}
 				}
@@ -86,7 +91,7 @@ public class HitReader {
 			// First, carry out checks on the quality of the signals:	    	  
 			if (adc == 0 || tdc == 0 || tdc == Parameters.NullTDC || indextdc==-1 || ccdb.Status_LR[sector-1][layer-1][order]!=0) continue; // require good ADC and TDC values
 
-			newhit = new HalfHit(sector, layer, component, triggerPhase, adc, tdc, i,indextdc, ccdb); 
+			newhit = new HalfHit(sector, layer, component, triggerPhase, adc, tdc, bankADC.trueIndex(i), indextdc, ccdb); 
 
 			halfhits.add(newhit);
 		}

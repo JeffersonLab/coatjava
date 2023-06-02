@@ -10,6 +10,7 @@ import org.jlab.io.base.DataEvent;
 /**
  *
  * @author jnewton
+ * @author baltzell
  */
 public class ScintillatorResponse extends DetectorResponse {
    
@@ -27,7 +28,19 @@ public class ScintillatorResponse extends DetectorResponse {
         super();
     }
     
-   public ScintillatorResponse(int sector, int layer, int component){
+    public ScintillatorResponse(ScintillatorResponse r) {
+        super();
+        this.copy(r);
+    }
+
+    public void copy(ScintillatorResponse r) {
+        super.copy(r);
+        dedx = r.dedx;
+        clusterSize = r.clusterSize;
+        layerMultiplicity = r.layerMultiplicity;
+    }
+
+    public ScintillatorResponse(int sector, int layer, int component){
         this.getDescriptor().setSectorLayerComponent(sector, layer, component);
     }
     
@@ -57,10 +70,10 @@ public class ScintillatorResponse extends DetectorResponse {
                     float dx = bank.getFloat("pathLengthThruBar",row);
                     if (dx>0) response.setDedx(bank.getFloat("energy", row)/dx);
                 }
-		if (type == DetectorType.CTOF || type == DetectorType.FTOF) {
+                if (type == DetectorType.CTOF || type == DetectorType.FTOF) {
                     response.clusterSize = bank.getShort("size",row);
                 }
-		if (type == DetectorType.CND) {
+                if (type == DetectorType.CND) {
                     response.clusterSize = bank.getShort("size",row);
                     response.layerMultiplicity = bank.getByte("layermult",row);
                 }

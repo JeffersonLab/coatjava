@@ -13,32 +13,7 @@
     <version>10.0.0-SNAPSHOT</version>
   </parent>
 
-  <build>
-      <plugins>
-          <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-compiler-plugin</artifactId>
-              <configuration>
-                  <source>1.8</source>
-                  <target>1.8</target>
-              </configuration>
-          </plugin>
-      </plugins>
-  </build>
-
   <dependencies>
-
-    <dependency>
-      <groupId>org.jlab.coda</groupId>
-      <artifactId>jclara</artifactId>
-      <version>4.3-SNAPSHOT</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.jlab</groupId>
-      <artifactId>groot</artifactId>
-      <version>3.0.0-SNAPSHOT</version>
-    </dependency>
 
     <dependency>
       <groupId>org.jlab.coda</groupId>
@@ -69,17 +44,16 @@
       <artifactId>clas-math</artifactId>
       <version>10.0.0-SNAPSHOT</version>
     </dependency>
-<!--
-    <dependency>
-      <groupId>org.jlab.ccdb</groupId>
-      <artifactId>ccdb</artifactId>
-      <version>1.0</version>
-    </dependency>
--->
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-io</artifactId>
+      <version>10.0.0-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jlab.clas</groupId>
+      <artifactId>clas-logging</artifactId>
       <version>10.0.0-SNAPSHOT</version>
     </dependency>
 
@@ -101,19 +75,6 @@
       <version>10.0.0-SNAPSHOT</version>
     </dependency>
 
-<!--
-    <dependency>
-      <groupId>org.jlab.clas</groupId>
-      <artifactId>clas-geometry</artifactId>
-      <version>3.0-SNAPSHOT</version>
-    </dependency>
--->
-
   </dependencies>
-
-  <properties>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
-  </properties>
 
 </project>

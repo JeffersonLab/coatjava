@@ -5,6 +5,7 @@ import java.util.*;
 import javax.vecmath.Vector2d;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.rec.cvt.Constants;
+import org.jlab.rec.cvt.Geometry;
 
 import org.jlab.rec.cvt.cross.Cross;
 
@@ -52,7 +53,7 @@ public class MakerCA {
             // The angles are in degrees
             double R1 = cell.getC1().getRadius();
             double R2 = cell.getC2().getRadius();
-            double angle = 1.75 * (R2 - R1) + 0.551; // in cm; TODO: create setters and getters for the parameters
+            double angle = Constants.CAANGLE1 * (R2 - R1) + Constants.CAANGLE2; // in cm; TODO: create setters and getters for the parameters
 //			if( Math.toDegrees(va.angle(vb)) > this._abCrs ) return false;
             if (Math.toDegrees(va.angle(vb)) > angle) {
                 return false;
@@ -69,14 +70,14 @@ public class MakerCA {
             // and tight selections on BMT
             if (cell.getC1().getDetector() == DetectorType.BST) {
                 if (cell.getC2().getDetector() == DetectorType.BST) {
-                    if (Math.toDegrees(va.angle(vb)) > 30.) {
+                    if (Math.toDegrees(va.angle(vb)) > Constants.CAANGLE3) {
                         return false;
                     }
-                } else if (Math.toDegrees(va.angle(vb)) > 19.) {
+                } else if (Math.toDegrees(va.angle(vb)) > Constants.CAANGLE4) {
                     return false;
                 }
             } else {
-                if (Math.toDegrees(va.angle(vb)) > 3.5) {
+                if (Math.toDegrees(va.angle(vb)) > Constants.CAANGLE5) {
                     return false;
                 }
             }
@@ -98,13 +99,13 @@ public class MakerCA {
             Cross a = crs.get(ic);
             int aReg = a.getRegion();
             if (a.getDetector() == DetectorType.BMT) {
-                aReg = 3 + Constants.BMTGEOMETRY.getLayer(aReg, a.getType());
+                aReg = 3 + Geometry.getInstance().getBMT().getLayer(aReg, a.getType());
             }
 
             if (this._debug) {
                 System.out.println("\n cross a " + a.getId() + " " + a.getDetector().getName() + a.getType().getName() + " sect:" + a.getSector() + " reg:"
                         + aReg + " phi:" + a.getPoint().toVector3D().phi() + " in BMT sector:"
-                        + Constants.BMTGEOMETRY.getSector(1, a.getPoint().toVector3D().phi()));
+                        + Geometry.getInstance().getBMT().getSector(1, a.getPoint().toVector3D().phi()));
             }
 
 //      	  for(int jc=0;jc<crs.size();jc++){
@@ -114,13 +115,13 @@ public class MakerCA {
                 // we skip same region crosses
                 int bReg = b.getRegion();
                 if (b.getDetector() == DetectorType.BMT) {
-                    bReg = 3 + Constants.BMTGEOMETRY.getLayer(bReg, b.getType());
+                    bReg = 3 + Geometry.getInstance().getBMT().getLayer(bReg, b.getType());
                 }
 
                 if (this._debug) {
                     System.out.println(" cross b " + b.getId() + " " + b.getDetector().getName() + b.getType().getName() + " sect:" + b.getSector() + " reg:"
                             + bReg + " phi:" + b.getPoint().toVector3D().phi() + " in BMT sector:"
-                            + Constants.BMTGEOMETRY.getSector(1, b.getPoint().toVector3D().phi()));
+                            + Geometry.getInstance().getBMT().getSector(1, b.getPoint().toVector3D().phi()));
                 }
 
                 if (bReg <= aReg) {
@@ -161,7 +162,7 @@ public class MakerCA {
                     } else {
                         double aphi = a.getPoint().toVector3D().phi();
                         //if( ! bgeom.checkIsInSector( aphi, b.getSector(), 1, Math.toRadians(10) )  ) {
-                        if (Constants.BMTGEOMETRY.getSector(b.getRegion() * 2, aphi) == 0) {
+                        if (Geometry.getInstance().getBMT().getSector(b.getRegion() * 2, aphi) == 0) {
                             if (this._debug) {
                                 System.out.println("cross b and a are not in the same sector");
                             }

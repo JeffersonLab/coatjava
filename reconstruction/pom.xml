@@ -23,11 +23,16 @@
     <module>htcc</module>
     <module>cnd</module>
     <module>rich</module>
-    <module>fvt</module>
+    <module>fmt</module>
     <module>eb</module>
     <module>band</module>
     <module>mc</module>
     <module>rtpc</module>
+    <module>mltn</module>
     <module>swaps</module>
+    <module>raster</module>
+    <module>vtx</module>
+    <module>urwell</module>
+    <module>alert</module>
   </modules>
 </project>
