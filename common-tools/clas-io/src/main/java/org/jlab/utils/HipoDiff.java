@@ -77,21 +77,25 @@ public class HipoDiff {
                         final int type = schema.getType(j);
                         final String name = schema.getElementName(j);
                         int element = -1;
+                        String values = "";
                         nentry++;
                         switch (type) {
                             case 1:
                                 if (bankA.getByte(name, i) != bankB.getByte(name, i)) {
                                     element = j;
+                                    values += bankA.getByte(name, i) + "/" + bankB.getByte(name, i);
                                 }
                                 break;
                             case 2:
                                 if (bankA.getShort(name, i) != bankB.getShort(name, i)) {
                                     element = j;
+                                    values += bankA.getShort(name, i) + "/" + bankB.getShort(name, i);
                                 }
                                 break;
                             case 3:
                                 if (bankA.getInt(name, i) != bankB.getInt(name, i)) {
                                     element = j;
+                                    values += bankA.getInt(name, i) + "/" + bankB.getInt(name, i);
                                 }
                                 break;
                             case 4:
@@ -99,15 +103,15 @@ public class HipoDiff {
                                         && (!Double.isInfinite(bankA.getFloat(name, i)) || !Double.isInfinite(bankB.getFloat(name, i)))
                                         && Math.abs(bankA.getFloat(name, i) - bankB.getFloat(name, i)) > tolerance) {
                                     element = j;
+                                    values += bankA.getFloat(name, i) + "/" + bankB.getFloat(name, i);
                                 }
                                 break;
                         }
                         if (element >= 0) {
                             System.out.println("mismatch at event " + runConfigBank.getInt("event", 0)
-                                    + ", in row " + i + ", s/l/c " + bankA.getByte("sector", i) + "/"
-                                    + bankA.getByte("layer", i) + "/" + bankA.getShort("component", i)
-                                    + " for variable " + name + " with values " + bankA.getByte(name, i) + "/"
-                                    + bankB.getByte(name, i));
+                                    + " in row " + i 
+                                    + " for variable " + name 
+                                    + " with values "  + values);
                             mismatch = true;
                             nbadentry++;
                             if (badEntries.containsKey(schema.getElementName(element))) {
@@ -124,7 +128,7 @@ public class HipoDiff {
                 }
             }
         }
-        System.out.println("Analyzed " + nevent + " with " + nbadevent + " bad banks");
+        System.out.println("\n Analyzed " + nevent + " with " + nbadevent + " bad banks");
         System.out.println(nbadrow + "/" + nrow + " mismatched rows");
         System.out.println(nbadentry + "/" + nentry + " mismatched entry");
         for (String name : badEntries.keySet()) {
