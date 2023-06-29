@@ -1,6 +1,5 @@
 package org.jlab.service.ctof;
 
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -8,12 +7,10 @@ import java.util.List;
 import java.util.Optional;
 
 import org.jlab.clas.reco.ReconstructionEngine;
-import org.jlab.coda.jevio.EvioException;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.base.GeometryFactory;
 import org.jlab.detector.geant4.v2.CTOFGeant4Factory;
 import org.jlab.geom.base.ConstantProvider;
-import org.jlab.geometry.prim.Line3d;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.hipo.HipoDataSource;
@@ -41,7 +38,6 @@ public class CTOFEngine extends ReconstructionEngine {
 
     CTOFGeant4Factory geometry;
 
-    int Run = 0;
     RecoBankWriter rbc;
     
     @Override
@@ -111,8 +107,8 @@ public class CTOFEngine extends ReconstructionEngine {
         TrackReader trkRead = new TrackReader();
         ArrayList<Track> tracks = trkRead.fetch_Trks(event);
         
-        List<Hit> hits = new ArrayList<Hit>(); // all hits
-        List<Cluster> clusters = new ArrayList<Cluster>(); // all clusters
+        List<Hit> hits = new ArrayList<>(); // all hits
+        List<Cluster> clusters = new ArrayList<>(); // all clusters
         // read in the hits for CTOF
         HitReader hitRead = new HitReader();
         hitRead.fetch_Hits(event, timeStamp, geometry, tracks, 
@@ -135,7 +131,7 @@ public class CTOFEngine extends ReconstructionEngine {
             hits.addAll(CTOFHits);
         }
 
-        if (hits.size() == 0) {
+        if (hits.isEmpty()) {
             // System.err.println(" no hits ....");
             return true;
         }
@@ -150,7 +146,7 @@ public class CTOFEngine extends ReconstructionEngine {
         int npanels = 1;
         int nsectors = 1;
         List<Cluster> CTOFClusters = null;
-        if (CTOFHits != null && CTOFHits.size() > 0) {
+        if (CTOFHits != null && !CTOFHits.isEmpty()) {
             CTOFClusters = clusFinder.findClusters(hits, nsectors, npanels,
                     npaddles);
         }
@@ -162,7 +158,7 @@ public class CTOFEngine extends ReconstructionEngine {
         }
 
         // 2.1) exit if cluster list is empty but save the hits
-        if (clusters.size() == 0) {
+        if (clusters.isEmpty()) {
             rbc.appendCTOFBanks(event, hits, null);
             return true;
         }
