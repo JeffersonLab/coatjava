@@ -120,6 +120,7 @@ public class TrajectoryFinder {
                             continue;
                         }
                         
+                        stVec.setSurfaceDetector(DetectorType.BST.getDetectorId());
                         Cluster clsOnTrk = null;
                         if (l % 2 == 0) {
                             clsOnTrk = c.getCluster1(); 
@@ -195,6 +196,7 @@ public class TrajectoryFinder {
                             continue;
                         } 
                         
+                        stVec.setSurfaceDetector(DetectorType.BMT.getDetectorId());
                         if (c.getType()==BMTType.C) { //C-detector measuring Z
                             //if(traj.isFinal) { // reset the cross only for final trajectory
 
@@ -226,9 +228,8 @@ public class TrajectoryFinder {
         }
 
         //Collections.sort(stateVecs);
-        
         stateVecs.sort(Comparator.comparing(StateVec::y));
-        for (int l = 0; l < stateVecs.size(); l++) {
+        for (int l = 0; l < stateVecs.size(); l++) { 
             stateVecs.get(l).setSurfaceDetector(DetectorType.CVT.getDetectorId());
             stateVecs.get(l).setPlaneIdx(l);
         }
