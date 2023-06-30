@@ -229,6 +229,7 @@ public class TrajectoryFinder {
         
         stateVecs.sort(Comparator.comparing(StateVec::y));
         for (int l = 0; l < stateVecs.size(); l++) {
+            stateVecs.get(l).setSurfaceDetector(DetectorType.CVT.getDetectorId());
             stateVecs.get(l).setPlaneIdx(l);
         }
         traj.setTrajectory(stateVecs);
