@@ -86,6 +86,7 @@ public class DictionaryMerger {
                     txtreader.close();
                 }
                 progress.showStatus();
+                bufferedWriter.close();
             } 
             catch (FileNotFoundException e) {
                 e.printStackTrace();
