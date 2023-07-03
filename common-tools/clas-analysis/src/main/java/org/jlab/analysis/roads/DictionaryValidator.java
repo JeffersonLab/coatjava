@@ -306,10 +306,11 @@ public class DictionaryValidator {
         
         DefaultLogger.debug();
 
-        OptionParser parser = new OptionParser("dict-validation");
+        OptionParser parser = new OptionParser("dict-validator");
+        parser.setRequiresInputList(false);
         parser.addRequired("-dict"   , "dictionary file name");
         parser.addRequired("-i"      , "event file for dictionary test");
-        parser.addOption("-pid"      , "0", "select particle PID for new dictonary, 0: no selection,");
+        parser.addOption("-pid"      , "0", "select particle PID for new dictionary, 0: no selection,");
         parser.addOption("-charge"   , "0", "select particle charge for new dictionary, 0: no selection");
         parser.addOption("-wire"     , "1", "dc wire bin size in road finding");
         parser.addOption("-strip"    , "2", "pcal strip bin size in road finding");

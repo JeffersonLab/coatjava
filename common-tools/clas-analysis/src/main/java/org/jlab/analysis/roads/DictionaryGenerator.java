@@ -341,8 +341,8 @@ public class DictionaryGenerator {
 
         DefaultLogger.debug();
 
-        OptionParser parser = new OptionParser("dict-maker");
-
+        OptionParser parser = new OptionParser("dict-generator");
+        parser.setRequiresInputList(false);
         parser.addRequired("-torus",   "torus scale");
         parser.addRequired("-solenoid","solenoid scale");
         parser.addRequired("-charge",  "particle charge");
