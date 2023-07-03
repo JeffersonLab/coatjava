@@ -1,5 +1,6 @@
 ## Trigger Roads Package
 
+### Dictionaries
 Roads are representations of a particle trajectory in the detector, consisting of the sequence of detector element IDs that are crossed by the particle. In the forward detector, they can include elements of HTCC, DC, FTOF, and ECAL. Charged-particle roads are used in the CLAS12 level-1 trigger to select events in which the detected hits are consistent with one or more tracks with hits in FTOF and PCAL, in a selected number of sectors. For this purpose, dictionaries of roads, i.e. list of roads covering the kinematics of interest, are used (see B. Raydo et al., "The CLAS12 Trigger System", Nucl. Inst. and Meth. A 960, 163529 (2020)).
 
 This package contains the tools to generate, validate and manage the so-called roads for L1 trigger in CLAS12. Roads are stored in text files, aka ''dictionaries'', where each line orresponds to a road defined but the following list of quantities:
@@ -16,6 +17,7 @@ This package contains the tools to generate, validate and manage the so-called r
 
 with the convention that detector components are set to 0 if the particle doesn't hit that layer.
 
+### Tools
 The package tools are:
 
 - ```dict-generator```: generates roads in selected kinematics and for a chosen charge and torus solenoid field using a fastMC approach. For each road, the initial particle momentum and vertex are randomly generated and the particle is transported in the magnetic fields using the swimming package to determine the trajectory and the intersections with the relevant detector surfaces. These intersections, obtained using the geometry packages, are used to determine the corresponding detector element. The list of generated roads is saved to a text file, removing duplicates. 
@@ -70,4 +72,10 @@ Roads are stored in the output file with the format outlined above. the HTCC mas
      -wire : dc wire bin size in road finding (default = 1)
 ```
 
-Typically, real data would be used to generate roads if possible. Otherwise, the fastMC option is the preferred one since it is much faster than using GEANT4 simulations and the performance is similar.
+### Generating and validating roads
+Typically, real data would be used to generate roads if possible. Otherwise, the fastMC option is the preferred one since it is much faster than using GEANT4 simulations and the performance is similar. 
+In the following, a summary of the procedure to generate with fastMC and test roads for electron trigger is summarized:
+* run dict-generator for negative charge and the magnetic field and kinematics of interest for the experiment (momentum, angles, and vz selection). Based on past experience, generating 50 M roads is sufficient to obtain a good dictionary. This can quickly be achieved by launching farm jobs, each generating 1 M roads making sure to change the random generator seed from job to job. The output files can be merged into one dictionary using dict-merger or simply concatenating the jobs output files into one (in the first case duplicated roads will be removed in the merge, while in the second case, they won't).
+* test the dictionary on an existing data or MC file by running dict-validator. The data or MC file should contain the event of interest. dict-validator should be run selecting electrons (-pid 11) and setting mode to 2 to test the roads based on DC, FTOF-1b and PCAL-U (this is more stringent than what is currently used in L1 trigger but is a conservative approach in case FTOF and PCAL will be used later on to improve the geometrical selection in the trigger).
+* check the efficiency reported for negative tracks based on the integrated value reported on the prompt and in kinematic-dependent plots shown in the efficiency tab of the GUI: this should be greater than 99%. Lower values in specific kinematics usually indicate the kinematics selected in the dictionary generation is incomplete. An average low value (kinematic independent) may indicate the dictionary is incomplete and more statistics is needed.
+  
