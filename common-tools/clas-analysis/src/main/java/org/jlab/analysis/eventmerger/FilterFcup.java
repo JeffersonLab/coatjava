@@ -17,8 +17,8 @@ import org.jlab.jnp.utils.data.TextHistogram;
 
 public class FilterFcup implements Worker {
 
-    Bank runConfigBank = null;
-    DaqScalersSequence chargeSeq = null;
+    private Bank runConfigBank = null;
+    private DaqScalersSequence chargeSeq = null;
     private double charge  = -1;
     private double current = -1;
     private int[]  currentBuffer = new int[21];

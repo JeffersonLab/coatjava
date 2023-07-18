@@ -29,10 +29,24 @@ public class RandomTriggerFilter {
     
     FilterTrigger triggerFilter = null;
     FilterFcup fcupFilter = null;
+    FilterBank bankFilter = null;
     
     public RandomTriggerFilter(int bit, double current){
         triggerFilter = new FilterTrigger(bit);
         fcupFilter = new FilterFcup(current);
+        bankFilter = new FilterBank("", -1);
+    }
+
+    public RandomTriggerFilter(int bit, String bankName, int nRows){
+        triggerFilter = new FilterTrigger(bit);
+        fcupFilter = new FilterFcup(-1);
+        bankFilter = new FilterBank(bankName, nRows);
+    }
+
+    public RandomTriggerFilter(int bit, double current, String bankName, int nRows){
+        triggerFilter = new FilterTrigger(bit);
+        fcupFilter = new FilterFcup(current);
+        bankFilter = new FilterBank(bankName, nRows);
     }
 
     private FilterTrigger getTriggerFilter() {
@@ -43,14 +57,20 @@ public class RandomTriggerFilter {
         return fcupFilter;
     }
 
+    private FilterBank getBankFilter() {
+        return bankFilter;
+    }
+
     private void init(HipoReader reader) {
         triggerFilter.init(reader);
         fcupFilter.init(reader);
+        bankFilter.init(reader);
     }
     
     public boolean processEvent(Event event) {
         if(triggerFilter.processEvent(event)
-           && fcupFilter.processEvent(event)) {
+           && fcupFilter.processEvent(event)
+           && bankFilter.processEvent(event)) {
             return true;
         }
         else {
@@ -64,11 +84,13 @@ public class RandomTriggerFilter {
      * @param minCurrent
      * @return
      */
-    public JsonObject settingsToJson(int triggerBit, double minCurrent){
+    public JsonObject settingsToJson(int triggerBit, double minCurrent, String bankName, int nRows){
         
         JsonObject filterData = new JsonObject();
         filterData.add("trigger-bit", triggerBit);
         filterData.add("current-threshold", minCurrent); 
+        filterData.add("bank-name", bankName); 
+        filterData.add("bank-size", nRows); 
         JsonObject json = new JsonObject();
         json.add("filter", filterData);
         return json;
@@ -101,6 +123,8 @@ public class RandomTriggerFilter {
         parser.addRequired("-b"    ,"trigger bit (0-63)");
         parser.setRequiresInputList(false);
         parser.addOption("-c"    ,"-1", "minimum beam current");
+        parser.addOption("-e"    ,  "", "filter bank name");
+        parser.addOption("-r"    ,"-1", "minimum number of bank rows");
         parser.addOption("-n"    ,"-1", "maximum number of events to process");
         parser.parse(args);
 
@@ -111,6 +135,9 @@ public class RandomTriggerFilter {
             String outputFile = parser.getOption("-o").stringValue();
             int triggerBit    = parser.getOption("-b").intValue();            
             double minCurrent = parser.getOption("-c").doubleValue();
+            String bankName   = parser.getOption("-e").stringValue();
+            int nRows         = parser.getOption("-r").intValue();            
+
             int maxEvents     = parser.getOption("-n").intValue();
 
             if(inputList.isEmpty()==true){
@@ -126,7 +153,8 @@ public class RandomTriggerFilter {
             }
             
             int counter = 0;
-
+            int filtered = 0;
+            
             DaqScalersSequence chargeSeq = DaqScalersSequence.readSequence(inputList);
 
             //Writer
@@ -135,9 +163,9 @@ public class RandomTriggerFilter {
             writer.setCompressionType(2);
             writer.open(outputFile);
 
-            RandomTriggerFilter filter = new RandomTriggerFilter(triggerBit, minCurrent);
+            RandomTriggerFilter filter = new RandomTriggerFilter(triggerBit, minCurrent, bankName, nRows);
             filter.getFcupFilter().setScalerSequence(chargeSeq);
-
+            
             ProgressPrintout  progress = new ProgressPrintout();
             for(String inputFile : inputList){
 
@@ -152,7 +180,7 @@ public class RandomTriggerFilter {
                 filter.init(reader);
 
                 // create tag 1 event with trigger filter information
-                JsonObject json = filter.settingsToJson(triggerBit, minCurrent);
+                JsonObject json = filter.settingsToJson(triggerBit, minCurrent, bankName, nRows);
                 // write tag-1 event
                 Event  tagEvent = new Event();
                 tagEvent.write(filter.createFilterBank(writer, json));
@@ -170,6 +198,7 @@ public class RandomTriggerFilter {
                     
                     if(filter.processEvent(event)) {
                         writer.addEvent(event, event.getEventTag());
+                        progress.setAsInteger("filtered", ++filtered);
                     }
                     progress.updateStatus();
                     if(maxEvents>0){
@@ -181,6 +210,7 @@ public class RandomTriggerFilter {
             writer.close();
             
             filter.getFcupFilter().showStats();
+            filter.getBankFilter().showStats();
         }
     }
 }
