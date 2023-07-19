@@ -1095,6 +1095,7 @@ public class CodaEventDecoder {
                     int[] intData =  ByteDataTransformer.toIntArray(node.getStructureBuffer(true));
                     for(int loop = 2; loop < intData.length; loop++){
                         int  dataEntry = intData[loop];
+                        // Struck Scaler:
                         if(node.getTag()==57637) {
                             int helicity = DataUtils.getInteger(dataEntry, 31, 31);
                             int quartet  = DataUtils.getInteger(dataEntry, 30, 30);
@@ -1111,15 +1112,48 @@ public class CodaEventDecoder {
                                 scalerEntries.add(entry);
                             }
                         }
+                        // DSC2 Scaler:
+                        // FIXME:  There's serious channel number mangling here
+                        // and inherited in org.jlab.detector.scalers.Dsc2Scaler,
+                        // all scaler words should be decoded but aren't, and the
+                        // preserved slot number is an arbitrary number from Sergey
+                        // and the same for all DSC2s in the crate, instead of being
+                        // parsed from the header or assigned manually based on
+                        // the data length.
                         else if(node.getTag()==57621 && loop>=5) {
-                            int id   = (loop-5)%16;
-                            int slot = (loop-5)/16;
-                            if(id<3 && slot<4) {
-                                DetectorDataDgtz entry = new DetectorDataDgtz(crate,num,loop-5);
-                                SCALERData scaler = new SCALERData();
-                                scaler.setValue(DataUtils.getLongFromInt(dataEntry));
-                                entry.addSCALER(scaler);
-                                scalerEntries.add(entry);
+
+                            final int dataWordIndex = loop-5;
+                            final int nChannels = 16;
+                            final int type = dataWordIndex / nChannels;
+
+                            // "type" is TRG-/TDC-gated/TRG-/TDC-ungated = 0/1/2/3 
+                            if (type < 4) {
+                                final int channel = dataWordIndex % nChannels;
+                                // The first two channels are the Faraday Cup and SLM.
+                                // The third channel is a 1 MHz input clock, which we
+                                // now ignore in favor of the scaler's internal clock below.
+                                if (channel<2) {
+                                    DetectorDataDgtz entry = new DetectorDataDgtz(crate,num,dataWordIndex);
+                                    SCALERData scaler = new SCALERData();
+                                    scaler.setValue(DataUtils.getLongFromInt(dataEntry));
+                                    entry.addSCALER(scaler);
+                                    scalerEntries.add(entry);
+                                }
+                            }
+
+                            // the trailing words contain the scaler's internal
+                            // reference clock:
+                            else {
+                                if (dataWordIndex == 64 || dataWordIndex == 65) {
+                                    // Define the mangled, magic channels numbers that were
+                                    // previously assigned above to the gated/ungated clock:
+                                    final int channel = dataWordIndex == 64 ? 18 : 50;
+                                    DetectorDataDgtz entry = new DetectorDataDgtz(crate,num,channel);
+                                    SCALERData scaler = new SCALERData();
+                                    scaler.setValue(DataUtils.getLongFromInt(dataEntry));
+                                    entry.addSCALER(scaler);
+                                    scalerEntries.add(entry);
+                                }
                             }
                         }
                     }

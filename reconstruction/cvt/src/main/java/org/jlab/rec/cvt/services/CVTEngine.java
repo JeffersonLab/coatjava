@@ -71,7 +71,7 @@ public class CVTEngine extends ReconstructionEngine {
     private boolean elossPrecorrection  = true;
     private boolean svtSeeding          = true;
     private boolean timeCuts            = true;
-    private boolean hvCuts              = false;
+    private boolean hvCuts              = true;
     public boolean useSVTTimingCuts     =  false;
     public boolean removeOverlappingSeeds = true;
     public boolean flagSeeds = true;

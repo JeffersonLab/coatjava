@@ -36,11 +36,42 @@ public class Dsc2Scaler extends DaqScaler{
      * @param seconds dwell time, provided in case the clock rolls over
      */
     public Dsc2Scaler(Bank bank, IndexedTable fcupTable, IndexedTable slmTable, double seconds) {
-
-        // the DSC2's clock is (currently) 1 MHz
-        // FIXME:  use CCDB
         this.clockFreq=1e6;
+        this.read(bank);
+        this.calibrate(fcupTable,slmTable,seconds);
+    }
 
+    /**
+     * @param bank RAW::scaler bank
+     * @param fcupTable /runcontrol/fcup CCDB table
+     * @param slmTable  /runcontrol/slm CCDB table
+     * @param dscTable /daq/config/scalers/dsc1 CCDB table
+     */
+    public Dsc2Scaler(Bank bank, IndexedTable fcupTable, IndexedTable slmTable, IndexedTable dscTable) {
+        this.clockFreq = dscTable.getIntValue("frequency", 0,0,0);
+        this.read(bank);
+        this.calibrate(fcupTable,slmTable);
+    }
+
+    /**
+     * During some run periods, the run-integrating DSC2 scaler's clock frequency
+     * was too large and rolls over during the run.  So here we can pass in seconds
+     * (e.g. based on RCDB run start time) instead.
+     * @param fcupTable /runcontrol/fcup CCDB table
+     * @param slmTable /runcontrol/slm CCDB table
+     * @param seconds 
+     */
+    protected final void calibrate(IndexedTable fcupTable, IndexedTable slmTable, double seconds) {
+        if (this.fcup>0) {
+            super.calibrate(fcupTable,slmTable,seconds,seconds*((double)this.gatedFcup)/this.fcup);
+        }
+    }
+
+    /**
+     * 
+     * @param bank 
+     */
+    public final void read(Bank bank) {
         // this will get the last entries (most recent) in the bank
         for (int k=0; k<bank.getRows(); k++){
 
@@ -75,31 +106,6 @@ public class Dsc2Scaler extends DaqScaler{
             gatedFcup = fcup - gatedFcup;
             gatedClock = clock - gatedClock;
         }
-    
-        this.calibrate(fcupTable,slmTable,seconds);
     }
 
-    /**
-     * @param bank RAW::scaler bank
-     * @param fcupTable /runcontrol/fcup CCDB table
-     * @param slmTable  /runcontrol/slm CCDB table
-     */
-    public Dsc2Scaler(Bank bank, IndexedTable fcupTable, IndexedTable slmTable) {
-        this(bank,fcupTable,slmTable,1);
-        this.calibrate(fcupTable,slmTable);
-    }
-
-    /**
-     * During some run periods, the run-integrating DSC2 scaler's clock frequency
-     * was too large and rolls over during the run.  So here we can pass in seconds
-     * (e.g. based on RCDB run start time) instead.
-     * @param fcupTable /runcontrol/fcup CCDB table
-     * @param slmTable /runcontrol/slm CCDB table
-     * @param seconds 
-     */
-    protected final void calibrate(IndexedTable fcupTable, IndexedTable slmTable, double seconds) {
-        if (this.slm>0) {
-            super.calibrate(fcupTable,slmTable,seconds,seconds*((double)this.gatedSlm)/this.slm);
-        }
-    }
 }
