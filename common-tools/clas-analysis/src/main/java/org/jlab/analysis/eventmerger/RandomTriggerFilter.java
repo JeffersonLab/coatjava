@@ -123,8 +123,8 @@ public class RandomTriggerFilter {
         parser.addRequired("-b"    ,"trigger bit (0-63)");
         parser.setRequiresInputList(false);
         parser.addOption("-c"    ,"-1", "minimum beam current");
-        parser.addOption("-e"    ,  "", "filter bank name");
-        parser.addOption("-r"    ,"-1", "minimum number of bank rows");
+        parser.addOption("-e"    ,  "", "name of required bank, e.g. DC::tdc");
+        parser.addOption("-r"    ,"-1", "minimum number of rows in required bank");
         parser.addOption("-n"    ,"-1", "maximum number of events to process");
         parser.parse(args);
 
