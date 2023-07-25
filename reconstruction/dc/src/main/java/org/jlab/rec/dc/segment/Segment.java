@@ -2,6 +2,7 @@ package org.jlab.rec.dc.segment;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.geom.prim.Plane3D;
 import org.jlab.geom.prim.Point3D;
@@ -19,11 +20,11 @@ import org.jlab.rec.dc.trajectory.SegmentTrajectory;
  * @author ziegler
  *
  */
-public class Segment extends ArrayList<FittedHit> implements Comparable<Segment> {
+public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>,
+        Cloneable {
 
-    /**
-     *
-     */
+    private static final Logger LOGGER = Logger.getLogger(Segment.class.getName());
+
     private static final long serialVersionUID = -997960312423538455L;
     private FittedCluster _fittedCluster;
     public boolean isOnTrack = false;
@@ -39,6 +40,21 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
     private int _Status = 1;
     private double[] _SegmentEndPoints;
     public int associatedCrossId = -1;
+    
+    @Override
+    public Object clone(){  
+        Segment segClone = (Segment)super.clone();
+        segClone._ResiSum = this._ResiSum;                                                   // sum of residuals for hits in segment
+        segClone._TimeSum = this._TimeSum;                                                   // sum of times for hits in segment
+        segClone._fitPlane = this._fitPlane;
+        segClone._Trajectory = this._Trajectory;
+        segClone._Status = this._Status;
+        segClone._SegmentEndPoints = this._SegmentEndPoints;
+        segClone.associatedCrossId = this.associatedCrossId;
+        segClone.isOnTrack = this.isOnTrack;
+        return segClone;
+    }
+	
     /**
      * Construct the segment from the fitted cluster.
      *
@@ -55,15 +71,15 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
         this.set_Status(Status());
     }
     
-    public int Status() {
+    public final int Status() {
         int stat = 0;    
         
         int L[] = new int[6];
-        for(int l = 0; l<this.size(); l++) {
-            L[this.get(l).get_Layer()-1]++;
+        for (FittedHit aThi : this) {
+            L[aThi.get_Layer() - 1]++;
         }
         for(int l = 0; l<6; l++) {
-            if(L[l]==0 || L[l]>2)
+            if(L[l]==0)
                 stat=1;
         }
         return stat;
@@ -81,7 +97,7 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
      *
      * @param _fittedCluster the fitted cluster
      */
-    public void set_fittedCluster(FittedCluster _fittedCluster) {
+    public final void set_fittedCluster(FittedCluster _fittedCluster) {
         this._fittedCluster = _fittedCluster;
     }
 
@@ -196,7 +212,7 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
         /// <center><b>|Xwires<sub>2</sub>-Xwires<sub>1</sub>| = a*Xwires<sub>1</sub> + b</b></center>\n
         /// where a and b are DC parameters set by DC_RSEG_a and DC_RSEG_B .\n\n
         boolean value = false;
-        //System.out.println("in Segment DeltaW "+Math.abs(this.getAvgwire()-otherseg.getAvgwire() )+
+        //LOGGER.log(Level.FINE, "in Segment DeltaW "+Math.abs(this.getAvgwire()-otherseg.getAvgwire() )+
         //	" < ? "+(Constants.DC_RSEG_A * this.getAvgwire() + Constants.DC_RSEG_B));
         if (Math.abs(this.getAvgwire() - otherseg.getAvgwire()) < Constants.DC_RSEG_A * this.getAvgwire() + Constants.DC_RSEG_B) {
             value = true;
@@ -213,7 +229,7 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
         /// <center><b>|Xwires<sub>2</sub>-Xwires<sub>1</sub>| = a*Xwires<sub>1</sub> + b</b></center>\n
         /// where a and b are DC parameters set by DC_RSEG_a and DC_RSEG_B .\n\n
         boolean value = true;
-        //System.out.println("in Segment DeltaW "+Math.abs(this.getAvgwire()-otherseg.getAvgwire() )+
+        //LOGGER.log(Level.FINE, "in Segment DeltaW "+Math.abs(this.getAvgwire()-otherseg.getAvgwire() )+
         //	" < ? "+(Constants.DC_RSEG_A * this.getAvgwire() + Constants.DC_RSEG_B));
         for(Segment otherseg : othersegs) {
             if (Math.abs(this.getAvgwire() - otherseg.getAvgwire()) < Constants.DC_RSEG_A * this.getAvgwire() + Constants.DC_RSEG_B) {
@@ -263,22 +279,23 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
     /**
      * Sets the segment endpoints in the sector coordinate system for ced
      * display
+     * @param DcDetector
      */
     public void set_SegmentEndPointsSecCoordSys(DCGeant4Factory DcDetector) {
 
         //double Z_1 = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(0).getComponent(0).getMidpoint().z();
         double Z_1 = DcDetector.getWireMidpoint(this.get_Sector() - 1, this.get_Superlayer() - 1, 0, 0).z;
         double X_1 = this.get_fittedCluster().get_clusterLineFitSlope() * Z_1 + this.get_fittedCluster().get_clusterLineFitIntercept();
-
-        double x1 = FastMath.cos(Math.toRadians(25.)) * X_1 + FastMath.sin(Math.toRadians(25.)) * Z_1;
-        double z1 = -FastMath.sin(Math.toRadians(25.)) * X_1 + FastMath.cos(Math.toRadians(25.)) * Z_1;
+        
+        double x1 = Constants.COS25 * X_1 + Constants.SIN25 * Z_1;
+        double z1 = -Constants.SIN25 * X_1 + Constants.COS25 * Z_1;
 
         //double Z_2 = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(5).getComponent(0).getMidpoint().z();
         double Z_2 = DcDetector.getWireMidpoint(this.get_Sector() - 1, this.get_Superlayer() - 1, 5, 0).z;
         double X_2 = this.get_fittedCluster().get_clusterLineFitSlope() * Z_2 + this.get_fittedCluster().get_clusterLineFitIntercept();
-
-        double x2 = FastMath.cos(Math.toRadians(25.)) * X_2 + FastMath.sin(Math.toRadians(25.)) * Z_2;
-        double z2 = -FastMath.sin(Math.toRadians(25.)) * X_2 + FastMath.cos(Math.toRadians(25.)) * Z_2;
+        
+        double x2 = Constants.COS25 * X_2 + Constants.SIN25 * Z_2;
+        double z2 = -Constants.SIN25 * X_2 + Constants.COS25 * Z_2;
 
         double[] EndPointsArray = new double[4];
         EndPointsArray[0] = x1;
@@ -291,10 +308,12 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
 
     /**
      * Sets the plane containing the segment fitted-line representation
+     * @param DcDetector
      */
     public void set_fitPlane(DCGeant4Factory DcDetector) {
         if (this.get_fittedCluster().get_clusLine() == null) {
-           // System.err.println(" no clusterline for " + this.get_fittedCluster().printInfo());
+            System.err.println(" no clusterline for " + this.get_fittedCluster().printInfo());
+            
             return;
         }
         this.set_SegmentEndPointsSecCoordSys(DcDetector);
@@ -330,9 +349,9 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
      * by a point on the plane and a unit normal vector.
      */
     private Plane3D calc_fitPlane(Point3D refPoint, Vector3D refDir) {
-
-        double X = Math.pow(-1, (this.get_Superlayer() - 1)) * FastMath.sin(Math.toRadians(6));
-        double Y = FastMath.cos(Math.toRadians(6.));
+        
+        double X = Math.pow(-1, (this.get_Superlayer() - 1)) * Constants.SIN6;
+        double Y = Constants.COS6;
 
         Vector3D plDir = new Vector3D(X, Y, 0);
 
@@ -374,7 +393,7 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
      * 
      * @param _Status segment status word
      */
-    public void set_Status(int _Status) {
+    public final void set_Status(int _Status) {
         this._Status = _Status;
     }
 

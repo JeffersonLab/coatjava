@@ -1,18 +1,13 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.service.ltcc;
 
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.utils.groups.IndexedTable;
-//import org.jMath.Vector.threeVec;
 
 import java.util.LinkedList;
 import java.util.List;
+import org.jlab.detector.banks.RawDataBank;
 import org.jlab.geom.prim.Vector3D;
 
 
@@ -65,15 +60,19 @@ public final class LTCCHit {
         }
         IndexedTable spe = null;
         IndexedTable timing_offset = null;
+        IndexedTable stat = null;
         if (ccdb != null && run > 0) {
-            spe = ccdb.getConstants(run, "/calibration/ltcc/spe");
+            spe  = ccdb.getConstants(run, "/calibration/ltcc/spe");
+            stat = ccdb.getConstants(run, "/calibration/ltcc/status");
             //timing_offset = ccdb.getConstants(run, "/calibration/ltcc/timing_offset");
         }
-        DataBank bank = event.getBank("LTCC::adc");
+        RawDataBank bank = new RawDataBank("LTCC::adc");
+        bank.read(event);
+        //DataBank bank = event.getBank("LTCC::adc");
         
         List<LTCCHit> hits = new LinkedList<>();
         for (int i = 0; i < bank.rows(); ++i) {
-            LTCCHit hit = new LTCCHit(bank, i, spe, timing_offset);
+            LTCCHit hit = new LTCCHit(bank, i, spe, timing_offset, stat);
             if (hit.isGood()) {
                 hits.add(hit);
             }
@@ -84,23 +83,24 @@ public final class LTCCHit {
         return loadHits(event, null);
     }
     
-    LTCCHit(DataBank bank, 
+    LTCCHit(RawDataBank bank, 
             int index, 
             IndexedTable spe, 
-            IndexedTable timing_offset) {
+            IndexedTable timing_offset,
+            IndexedTable status_table) {
        this.sector = bank.getByte("sector", index);
        this.segment = bank.getShort("component", index);
-       this.side = bank.getByte("order", index) + 1;
+       this.side = bank.trueOrder(index) + 1;
        this.adc = bank.getInt("ADC", index);
        this.rawTime = bank.getFloat("time", index);
        //this.pedestal = bank.getShort("ped", index);
        this.nphe = calcNphe(spe);
        this.time = calcTime(timing_offset);
        this.iLTCCPhi = calcLTCCPhiIndex();
-       this.status = calcStatus();
+       this.status = calcStatus(status_table);
     }        
-    LTCCHit(DataBank bank, int index) {
-        this(bank, index, null, null);
+    LTCCHit(RawDataBank bank, int index) {
+        this(bank, index, null, null, null);
     }
    
     public int getThetaIndex() {
@@ -204,9 +204,10 @@ public final class LTCCHit {
       return 2 * (this.sector - 1) + (this.side - 1);
     }
     
-    private Status calcStatus() {
+    private Status calcStatus(IndexedTable status_table) {
+        int ccdb_status = status_table.getIntValue("status", sector, side, segment);
         return 
-            (this.adc >= 0 && this.nphe > NPHE_MIN_HIT && this.nphe < NPHE_MAX_HIT) 
+            (this.adc >= 0 && this.nphe > NPHE_MIN_HIT && this.nphe < NPHE_MAX_HIT && ccdb_status==0) 
                 ? Status.GOOD
                 : Status.BAD;
     }

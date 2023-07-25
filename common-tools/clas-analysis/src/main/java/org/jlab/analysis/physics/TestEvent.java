@@ -52,8 +52,8 @@ public class TestEvent {
                                          ,  154,  292,  351,  192,  266,  249,  209,  336,  163,  395
                                          ,  202,  257,  295,  186,  299,  489,  152,  526,  299,  266
                                          ,  533,  165,  510,  305,  249,  592};
-                
-      
+
+                        
                	Bank DCtdc  = new Bank(schemaFactory.getSchema("DC::tdc"), layer.length);
 			for(int i = 0; i < layer.length; i++) {
 				DCtdc.putByte("sector",     i, (byte) 1);

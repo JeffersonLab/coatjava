@@ -38,15 +38,13 @@ public class Cluster extends ArrayList<AHit> implements Comparable<Cluster> {
     private double _Energy; // the total energy of the cluster
 
     private double _t; // the cluster time
-    private double[] _tCorr; // corrected time using 3 algorithms to compute
-    // deltaR
 
     private double _y_locUnc; // uncertainty in y in the local cluster
     // coordinate system
     private double _EnergyUnc; // uncertainty in total energy of the cluster
     private double _tUn; // uncertainty in cluster time
 
-    private String _StatusWord; // a status word for each hit: 1111 - fully
+    private int _StatusWord; // bitwise-OR of cluster hit status
     
     private double _pathLengthThruBar; // total pathlength of the track throught the bars of the cluster
     
@@ -157,14 +155,6 @@ public class Cluster extends ArrayList<AHit> implements Comparable<Cluster> {
         this._t = _t;
     }
 
-    public double[] get_tCorr() {
-        return _tCorr;
-    }
-
-    public void set_tCorr(double[] _tCorr) {
-        this._tCorr = _tCorr;
-    }
-
     public double get_y_locUnc() {
         return _y_locUnc;
     }
@@ -197,13 +187,9 @@ public class Cluster extends ArrayList<AHit> implements Comparable<Cluster> {
         this._pathLengthThruBar = _pathLengthThruBar;
     }
 
-    /**
-     *
-     * @return the energy-weighted strip number
-     */
     public void calc_Centroids() {
 
-        if (this.size() != 0) {
+        if (!this.isEmpty()) {
 
             double CentX = 0; // Cluster x position
             double CentY = 0; // Cluster y position
@@ -225,22 +211,10 @@ public class Cluster extends ArrayList<AHit> implements Comparable<Cluster> {
             // y
             double errTSq = 0; // contribution factor to uncertainty in time
 
-            String statusWord = ""; // the status word
-            int StWordBt1 = 0;
-            int StWordBt2 = 0;
-            int StWordBt3 = 0;
-            int StWordBt4 = 0;
+            int statusWord = 0;
 
             for (AHit thehit : this) {
 
-                StWordBt1 += Character.getNumericValue(thehit.get_StatusWord()
-                        .charAt(0));
-                StWordBt2 += Character.getNumericValue(thehit.get_StatusWord()
-                        .charAt(1));
-                StWordBt3 += Character.getNumericValue(thehit.get_StatusWord()
-                        .charAt(2));
-                StWordBt4 += Character.getNumericValue(thehit.get_StatusWord()
-                        .charAt(3));
                 // Centroid terms in global coordinate system. The values are
                 // discretized in x and z since the measured values in the local
                 // frame are the center of the bar in local x and the position
@@ -273,6 +247,8 @@ public class Cluster extends ArrayList<AHit> implements Comparable<Cluster> {
                         * thehit.get_t() * thehit.get_EnergyUnc();
                 
                 pathThroughCluster += thehit.get_TrkPathLenThruBar();
+                
+                statusWord |= thehit.get_StatusWord();
 
             }
 
@@ -281,12 +257,6 @@ public class Cluster extends ArrayList<AHit> implements Comparable<Cluster> {
             CentY = weightedY / totEn;
             CentZ = averageZ / Norm;
             CentT = weightedT / totEn;
-            StWordBt1 /= Norm;
-            StWordBt2 /= Norm;
-            StWordBt3 /= Norm;
-            StWordBt4 /= Norm;
-
-            statusWord = (StWordBt1 + "" + StWordBt2 + "" + StWordBt3 + "" + StWordBt4);
 
             this.set_y_loc(CentYLoc);
             this.set_x(CentX);
@@ -304,11 +274,11 @@ public class Cluster extends ArrayList<AHit> implements Comparable<Cluster> {
 
     }
 
-    public String get_StatusWord() {
+    public int get_StatusWord() {
         return _StatusWord;
     }
 
-    public void set_StatusWord(String _StatusWord) {
+    public void set_StatusWord(int _StatusWord) {
         this._StatusWord = _StatusWord;
     }
 
@@ -322,8 +292,6 @@ public class Cluster extends ArrayList<AHit> implements Comparable<Cluster> {
 
         System.out.println(s);
     }
-
-    public int[] indexesClusHitsMatchedToTrk;
 
     public void matchToTrack() {
         double xTrk = 0;
@@ -393,15 +361,12 @@ public class Cluster extends ArrayList<AHit> implements Comparable<Cluster> {
     public int compareTo(Cluster arg) {
 
         // Sort by sector, panel, paddle
-        int return_val = 0;
         int CompSec = this.get_Sector() < arg.get_Sector() ? -1 : this
                 .get_Sector() == arg.get_Sector() ? 0 : 1;
         int CompPan = this.get_Panel() < arg.get_Panel() ? -1 : this
                 .get_Panel() == arg.get_Panel() ? 0 : 1;
 
-        return_val = ((CompSec == 0) ? CompPan : CompSec);
-
-        return return_val;
+        return ((CompSec == 0) ? CompPan : CompSec);
 
     }
 }

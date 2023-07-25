@@ -19,6 +19,9 @@ import org.jlab.clas.detector.DetectorResponse;
 import org.jlab.clas.detector.DetectorTrack;
 import org.jlab.clas.detector.TaggerResponse;
 import org.jlab.clas.detector.CherenkovResponse;
+import org.jlab.clas.detector.DetectorResponseFactory;
+import org.jlab.clas.detector.matching.IMatch;
+import org.jlab.clas.detector.matching.MatchCND;
 import org.jlab.clas.physics.Vector3;
 
 import org.jlab.rec.eb.EBCCDBConstants;
@@ -38,12 +41,19 @@ public class EventBuilder {
     private final List<Map<DetectorType,Integer>> ftIndices = new ArrayList<>();
     private final HashMap<Integer,Integer> pindex_map = new HashMap<>();
     
+    private final IMatch cndMatcher;
+
     private static final int[] TRIGGERLIST = new int[]{11,-11,211,-211,0};
 
     private boolean usePOCA=false;
     
     public EventBuilder(EBCCDBConstants ccdb){
         this.ccdb=ccdb;
+        
+        this.cndMatcher = new MatchCND(
+		    ccdb.getDouble(EBCCDBEnum.CND_DZ),
+		    ccdb.getDouble(EBCCDBEnum.CND_DPHI),
+		    ccdb.getDouble(EBCCDBEnum.CND_DT));
     }
 
     public void setUsePOCA(boolean val) {
@@ -78,7 +88,7 @@ public class EventBuilder {
                 detectorEvent.addParticle(new DetectorParticleTraj(tracks.get(i)));
         }
     }
-    
+
     public void addParticles(List<DetectorParticle> particles) {
         for(int i = 0 ; i < particles.size(); i++){
             detectorEvent.addParticle(particles.get(i));
@@ -105,8 +115,6 @@ public class EventBuilder {
         int np = detectorEvent.getParticles().size();
         for(int n = 0; n < np; n++){
             DetectorParticle  p = this.detectorEvent.getParticle(n);
-
-            double quality = 0.0;
             
             // Matching tracks to detector responses, adding
             // responses to the particle if reasonable match
@@ -125,15 +133,6 @@ public class EventBuilder {
                 findMatchingHit(n,p,detectorResponses,DetectorType.ECAL, 4, ccdb.getDouble(EBCCDBEnum.ECIN_MATCHING));
                 findMatchingHit(n,p,detectorResponses,DetectorType.ECAL, 7, ccdb.getDouble(EBCCDBEnum.ECOUT_MATCHING));
 
-// Treat HTCC specially below, leave this here for now.
-//                // HTCC:
-//                // Find matching cluster for each particle.
-//                int index = p.getCherenkovSignal(this.detectorResponses,DetectorType.HTCC);
-//                if(index>=0){
-//                    p.addResponse(detectorResponses.get(index));
-//                    detectorResponses.get(index).setAssociation(n);
-//                } 
-
                 // LTCC:
                 int index = p.getCherenkovSignal(this.detectorResponses,DetectorType.LTCC);
                 if(index>=0){
@@ -144,11 +143,14 @@ public class EventBuilder {
 
             // only match with CTOF/CND if it's a central track:
             else if (p.getTrackDetectorID()==DetectorType.CVT.getDetectorId()) {
-                // NOTE:  Should we do 2-d matching in cylindrical coordinates for CD?
                 findMatchingHit(n,p,detectorResponses,DetectorType.CTOF,1, ccdb.getDouble(EBCCDBEnum.CTOF_DZ));
-                findMatchingHit(n,p,detectorResponses,DetectorType.CND,-1, ccdb.getDouble(EBCCDBEnum.CND_DZ));
+                findMatchingHit(n,p,detectorResponses,DetectorType.CND,1, this.cndMatcher );
+                findMatchingHit(n,p,detectorResponses,DetectorType.CND,2, this.cndMatcher );
+                findMatchingHit(n,p,detectorResponses,DetectorType.CND,3, this.cndMatcher );
             }
 
+            // set dedx by combining trajectory information with hit energy:
+            p.setDedx();
         }
 
         // Special treatment for HTCC, with coarse resolution.
@@ -174,21 +176,6 @@ public class EventBuilder {
             this.detectorEvent.getParticle(bestPart).addResponse(this.detectorResponses.get(bestRes),true);
             this.detectorResponses.get(bestRes).setAssociation(bestPart);
         }
-       /* 
-        // Special treatment for HTCC, with coarse resolution.
-        // Find matching particle for each cluster.
-        for (int ii=0; ii<this.detectorResponses.size();ii++) {
-            if (this.detectorResponses.get(ii).getAssociation()>=0) continue;
-            if (this.detectorResponses.get(ii) instanceof CherenkovResponse) {
-                CherenkovResponse che = (CherenkovResponse)this.detectorResponses.get(ii);
-                int index = che.findClosestTrack(this.detectorEvent.getParticles());
-                if (index>=0) {
-                    this.detectorEvent.getParticle(index).addResponse(che);
-                    che.setAssociation(index);
-                }
-            }
-        }
-        */
     }
 
 
@@ -208,8 +195,18 @@ public class EventBuilder {
     public boolean findMatchingHit(
             final int pindex, DetectorParticle particle, List<DetectorResponse> responses,
             DetectorType type, final int layer, final double distance) {
-        final int index = particle.getDetectorHit(responses,type,layer,distance);
+        int index = particle.getDetectorHit(responses,type,layer,distance);
         if (index>=0) {
+            // if sharing hits between tracks, duplicate it:
+            if (responses.get(index).getAssociation() >= 0) {
+                //System.out.println(responses.get(index).getClass());
+                //DetectorResponse copy = new DetectorResponse();
+                //copy.copy(responses.get(index));
+                DetectorResponse copy = DetectorResponseFactory.create(responses.get(index));
+                copy.clearAssociations();
+                responses.add(copy);
+                index = responses.size()-1;
+            }
             particle.addResponse(responses.get(index),true);
             responses.get(index).addAssociation(pindex);
             return true;
@@ -217,6 +214,29 @@ public class EventBuilder {
         return false;
     }
     
+    public boolean findMatchingHit(
+            final int pindex, DetectorParticle particle, List<DetectorResponse> responses,
+            DetectorType type, final int layer, IMatch matcher) {
+        int index = matcher.bestMatch(particle, responses, type, layer);
+        if (index>=0) {
+            // if sharing hits between tracks, duplicate it:
+            if (responses.get(index).getAssociation() >= 0) {
+                //System.out.println(responses.get(index).getClass());
+                //DetectorResponse copy = new DetectorResponse();
+                //copy.copy(responses.get(index));
+                DetectorResponse copy = DetectorResponseFactory.create(responses.get(index));
+                copy.clearAssociations();
+                responses.add(copy);
+                index = responses.size()-1;
+            }
+            particle.addResponse(responses.get(index),true);
+            responses.get(index).addAssociation(pindex);
+            return true;
+        }
+        return false;
+    }
+
+
     public void forwardTaggerIDMatching() {
         int np = this.detectorEvent.getParticles().size();
         if(this.ftIndices.size()>0 && this.detectorEvent.getParticles().size()>0) {
