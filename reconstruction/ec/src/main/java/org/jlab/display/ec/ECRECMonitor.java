@@ -29,11 +29,13 @@ public class ECRECMonitor extends ReconstructionEngine {
             DataBank bank = event.getBank("REC::Particle");
             int index1 = this.index(bank, 22, 0);
             int index2 = this.index(bank, 22, 1);
-            LorentzVector vL_g1 = this.getVector(bank, index1, 0.0);
-            LorentzVector vL_g2 = this.getVector(bank, index2, 0.0);
-            if(vL_g1.p()>1.0&&vL_g2.p()>1.0){
-                vL_g1.add(vL_g2);
-                pion.fill(vL_g1.mass());
+            if(index1>0&&index2>0){
+                LorentzVector vL_g1 = this.getVector(bank, index1, 0.0);
+                LorentzVector vL_g2 = this.getVector(bank, index2, 0.0);
+                if(vL_g1.p()>1.0&&vL_g2.p()>1.0){
+                    vL_g1.add(vL_g2);
+                    pion.fill(vL_g1.mass());
+                }
             }
         }
         return true;
