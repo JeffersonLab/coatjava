@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export CLAS12DIR=`dirname $0`/..
+export CLAS12DIR=`dirname $0`/../coatjava
 
 # Set default field maps (but do not override user's env):
 if [ -z "$COAT_MAGFIELD_TORUSMAP" ]; then

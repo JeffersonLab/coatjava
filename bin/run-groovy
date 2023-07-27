@@ -2,8 +2,6 @@
 
 . `dirname $0`/env.sh 
 
-export CLAS12DIR=`dirname $0`/..
- 
 #--------------------------------------------------------------
 # Adding supporting COAT jar files
 for i in `ls -a $CLAS12DIR/lib/clas/*.jar`
