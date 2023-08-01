@@ -313,7 +313,7 @@ public class DictionaryValidator {
         parser.addOption("-pid"      , "0", "select particle PID for new dictionary, 0: no selection,");
         parser.addOption("-charge"   , "0", "select particle charge for new dictionary, 0: no selection");
         parser.addOption("-wire"     , "1", "dc wire bin size in road finding");
-        parser.addOption("-strip"    , "2", "pcal strip bin size in road finding");
+        parser.addOption("-strip"    , "1", "pcal strip bin size in road finding");
         parser.addOption("-sector"   , "0", "sector dependent roads, 0=false, 1=true)");
         parser.addOption("-smear"    , "1", "smearing in wire/paddle/strip matching");
         parser.addOption("-mode"     , "0", "select test mode, " + TestMode.getOptionsString());
