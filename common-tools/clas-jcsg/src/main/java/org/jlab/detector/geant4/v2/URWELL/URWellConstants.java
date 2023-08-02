@@ -10,10 +10,10 @@ public class URWellConstants {
     private final static String CCDBPATH = "/geometry/urwell/";
     
     public final static int NMAXREGIONS = 2;    //max number of regions 
-    public final static int NREGIONS    = 1;    //number of regions 
     public final static int NSECTORS    = 6;    //number of sectors
     public final static int NLAYERS     = 2;    //number of layers
     public final static int NCHAMBERS   = 3;    //number of chambers in a sector
+    public static int NREGIONS    = 1;    //number of regions 
 
     public final static double XENLARGEMENT = 0.5; // cm
     public final static double YENLARGEMENT = 1.;  // cm
@@ -95,11 +95,24 @@ public class URWellConstants {
      * 
      * @return DatabaseConstantProvider the same thing
      */
-    public static DatabaseConstantProvider connect( DatabaseConstantProvider cp )
+    public static DatabaseConstantProvider connect( DatabaseConstantProvider cp)
     {
           //  cp.loadTable( CCDBPATH +"RWELL");
 
-            load(cp  );
+            load(cp, NREGIONS);
+            return cp;
+    }
+
+     /**
+     * Loads the the necessary tables for the URWELL geometry for a given DatabaseConstantProvider.
+     * 
+     * @return DatabaseConstantProvider the same thing
+     */
+    public static DatabaseConstantProvider connect( DatabaseConstantProvider cp, int regions )
+    {
+          //  cp.loadTable( CCDBPATH +"RWELL");
+
+            load(cp, regions);
             return cp;
     }
 
@@ -109,20 +122,21 @@ public class URWellConstants {
      * @param cp a ConstantProvider that has loaded the necessary tables
      */
     
-    public static synchronized void load( DatabaseConstantProvider cp )
+    public static synchronized void load( DatabaseConstantProvider cp , int regions)
     {
-            // read constants from svt table
+        // read constants from svt table
 //            NREGIONS = cp.getInteger( CCDBPATH+"svt/nRegions", 0 );
+        NREGIONS = Math.min(NMAXREGIONS, regions);
+        
+        for (int i = 0; i < NREGIONS; i++) {
 
-             for (int i=0; i<NMAXREGIONS; i++){
-                 
-                URWELL2DC0[NMAXREGIONS-i-1] =  2+i*2;
-                DIST2TGT[NMAXREGIONS-i-1]   = (TGT2DC0-URWELL2DC0[NMAXREGIONS-i-1]);
-                W2TGT[NMAXREGIONS-i-1] = DIST2TGT[NMAXREGIONS-i-1]/Math.cos(Math.toRadians(THTILT-THMIN));
-                YMIN[NMAXREGIONS-i-1]= W2TGT[NMAXREGIONS-i-1]*Math.sin(Math.toRadians(THMIN)); // distance from the base chamber1 and beamline
-                ZMIN[NMAXREGIONS-i-1] = W2TGT[NMAXREGIONS-i-1]*Math.cos(Math.toRadians(THMIN));  
+            URWELL2DC0[NREGIONS - i - 1] = 2 + i * 2;
+            DIST2TGT[NREGIONS - i - 1] = (TGT2DC0 - URWELL2DC0[NREGIONS - i - 1]);
+            W2TGT[NREGIONS - i - 1] = DIST2TGT[NREGIONS - i - 1] / Math.cos(Math.toRadians(THTILT - THMIN));
+            YMIN[NREGIONS - i - 1] = W2TGT[NREGIONS - i - 1] * Math.sin(Math.toRadians(THMIN)); // distance from the base chamber1 and beamline
+            ZMIN[NREGIONS - i - 1] = W2TGT[NREGIONS - i - 1] * Math.cos(Math.toRadians(THMIN));
 
-                }
+        }
 
     
     }

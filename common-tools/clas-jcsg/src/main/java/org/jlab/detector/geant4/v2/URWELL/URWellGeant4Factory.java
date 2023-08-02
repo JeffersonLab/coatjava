@@ -30,7 +30,7 @@ public final class URWellGeant4Factory extends Geant4Factory {
      * @param nRegions
      */
     public URWellGeant4Factory( DatabaseConstantProvider cp, boolean prototype, int nRegions) {
-        URWellConstants.connect(cp );
+        URWellConstants.connect(cp , nRegions);
         this.init(cp, prototype, nRegions);
     }
     
@@ -412,8 +412,6 @@ public final class URWellGeant4Factory extends Geant4Factory {
     
     public static void main(String[] args) {
         DatabaseConstantProvider cp = new DatabaseConstantProvider(11, "default");
-
-        URWellConstants.connect(cp);
         
         URWellGeant4Factory factory = new URWellGeant4Factory(cp, true, 2);
             

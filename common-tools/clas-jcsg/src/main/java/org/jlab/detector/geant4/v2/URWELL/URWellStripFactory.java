@@ -208,7 +208,7 @@ public final class URWellStripFactory {
      
         //strip straight line chamber reference frame -> y = mx +c; 
         double stereoAngle = URWellConstants.STEREOANGLE;
-        if (layer % 2 == 0) {
+        if (layer % 2 != 0) {
             stereoAngle = -URWellConstants.STEREOANGLE;
         }
         double m = Math.tan(Math.toRadians(stereoAngle));
@@ -405,17 +405,19 @@ public final class URWellStripFactory {
     
     
     public static void main(String[] args) {
+    
         DatabaseConstantProvider cp = new DatabaseConstantProvider(11, "default");
-
-        URWellConstants.connect(cp);
 
         URWellGeant4Factory factory = new URWellGeant4Factory(cp,true,2);
 
-        URWellStripFactory factory2 = new URWellStripFactory(cp,false,1);
+        URWellStripFactory factory2 = new URWellStripFactory(cp);
   
         Plane3D plane = factory2.getPlane(6, 1, 200);
         System.out.println(plane.toString());
 
+        for(int istrip=0; istrip<factory2.getNStripSector(); istrip++)  {
+            System.out.println((istrip+1) + " " + factory2.getChamberIndex(istrip+1) + "\n" + factory2.getStrip(1, 1, istrip+1) + "\n" + factory2.getStrip(1, 2, istrip+1));
+        }
         
     }
 
