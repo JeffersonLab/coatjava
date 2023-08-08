@@ -622,7 +622,7 @@ public class DCURWellTBEngine extends DCEngine {
         
         URWellCross urCross = trk.get_URWellCross();
         if(urCross != null){
-            HitOnTrack urhot = new HitOnTrack(urCross.sector(), urCross.local().x(), urCross.local().y(), urCross.local().z(), 0.02, 0.04);
+            HitOnTrack urhot = new HitOnTrack(urCross.sector(), urCross.local().x(), urCross.local().y(), urCross.local().z(), Constants.URWELLXRESOLUTION, Constants.URWELLYRESOLUTION);
             urhot.isDCHit = false;
             hOTS.add(urhot);
         }        
