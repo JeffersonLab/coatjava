@@ -33,7 +33,7 @@ public class HitReader {
     public HitReader() {
         
     }
-
+    public boolean selectTrueTrack = false;
     // the list of BMT hits
     private List<Hit> _BMTHits;
 
@@ -162,7 +162,7 @@ public class HitReader {
                 
                 // add this hit
                 if(hit.getLayer()+3!=Constants.getInstance().getRmReg()) {
-                    if(Constants.getInstance().useOnlyMCTruthHits() ) {
+                    if(Constants.getInstance().useOnlyMCTruthHits() || selectTrueTrack) {
                         if(hit.MCstatus==0)
                             hits.add(hit);
                     } 
@@ -346,7 +346,7 @@ public class HitReader {
                 
                 // add this hit
                 if(hit.getRegion()!=Constants.getInstance().getRmReg()) {     
-                    if(Constants.getInstance().useOnlyMCTruthHits() ) {
+                    if(Constants.getInstance().useOnlyMCTruthHits() || selectTrueTrack) {
                         if(hit.MCstatus==0) {
                             hits.add(hit);
                         }

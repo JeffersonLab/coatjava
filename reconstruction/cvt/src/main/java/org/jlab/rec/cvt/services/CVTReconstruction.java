@@ -39,12 +39,13 @@ public class CVTReconstruction {
     public CVTReconstruction(Swim swimmer) {
         this.swimmer = swimmer;
     }
-    
+    public boolean readTrueTrack = false;
     public List<ArrayList<Hit>> readHits(DataEvent event, IndexedTable svtStatus, 
             IndexedTable bmtStatus, IndexedTable bmtTime, 
             IndexedTable bmtStripVoltage, IndexedTable bmtStripVoltageThresh) {
         
         HitReader hitRead = new HitReader();
+        hitRead.selectTrueTrack = readTrueTrack;
         hitRead.fetch_SVTHits(event, -1, -1, svtStatus);
         if(Constants.getInstance().svtOnly==false)
           hitRead.fetch_BMTHits(event, swimmer, bmtStatus, bmtTime, 
