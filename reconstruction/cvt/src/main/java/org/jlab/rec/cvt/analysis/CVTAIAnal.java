@@ -16,6 +16,7 @@ import org.jlab.io.base.DataEventType;
 import org.jlab.io.hipo.HipoDataEvent;
 import org.jlab.io.task.DataSourceProcessorPane;
 import org.jlab.io.task.IDataEventListener;
+import org.jlab.rec.cvt.bmt.BMTType;
 
 public class CVTAIAnal implements IDataEventListener {
 
@@ -101,21 +102,21 @@ public class CVTAIAnal implements IDataEventListener {
             bmtvspFT.setLineColor(46);
             bmtvspFF.setLineColor(45);
             
-            bstvspTT.setTitleX("Generated p (GeV)");
+            bstvspTT.setTitleX(" p (GeV)");
             bstvspTT.setTitleY("Efficiency");
-            bstvspTF.setTitleX("Generated p (GeV)");
+            bstvspTF.setTitleX(" p (GeV)");
             bstvspTF.setTitleY("Efficiency");
-            bstvspFT.setTitleX("Generated p (GeV)");
+            bstvspFT.setTitleX(" p (GeV)");
             bstvspFT.setTitleY("Efficiency");
-            bstvspFF.setTitleX("Generated p (GeV)");
+            bstvspFF.setTitleX(" p (GeV)");
             bstvspFF.setTitleY("Efficiency");
-            bmtvspTT.setTitleX("Generated p (GeV)");
+            bmtvspTT.setTitleX(" p (GeV)");
             bmtvspTT.setTitleY("Efficiency");
-            bmtvspTF.setTitleX("Generated p (GeV)");
+            bmtvspTF.setTitleX(" p (GeV)");
             bmtvspTF.setTitleY("Efficiency");
-            bmtvspFT.setTitleX("Generated p (GeV)");
+            bmtvspFT.setTitleX(" p (GeV)");
             bmtvspFT.setTitleY("Efficiency");
-            bmtvspFF.setTitleX("Generated p (GeV)");
+            bmtvspFF.setTitleX(" p (GeV)");
             bmtvspFF.setTitleY("Efficiency");
             
             bstvsthTT.setLineColor(39);
@@ -181,9 +182,10 @@ public class CVTAIAnal implements IDataEventListener {
                 for(int i =0; i<nbins; i++) {
                     pAnal.allOnTrack[0][i] = pAnal.truePositives[0][i]+pAnal.falseNegatives[0][i];
                     pAnal.allOffTrack[0][i] = pAnal.falsePositives[0][i]+pAnal.trueNegatives[0][i];
-                    pAnal.allOnTrack[1][i] = pAnal.truePositives[0][i]+pAnal.falseNegatives[1][i];
-                    pAnal.allOffTrack[1][i] = pAnal.falsePositives[0][i]+pAnal.trueNegatives[1][i];
-                    
+                    pAnal.allOnTrack[1][i] = pAnal.truePositives[1][i]+pAnal.falseNegatives[1][i];
+                    pAnal.allOffTrack[1][i] = pAnal.falsePositives[1][i]+pAnal.trueNegatives[1][i];
+                    //System.out.println("p:BST "+i+"] "+pAnal.truePositives[0][i]+"/"+pAnal.allOnTrack[0][i]);
+                    //System.out.println("p:BMT "+i+"] "+pAnal.truePositives[1][i]+"/"+pAnal.allOnTrack[1][i]);
                     double bstTT=100.0*(double)pAnal.truePositives[0][i]/(double)pAnal.allOnTrack[0][i];
                     double bstTF=100.0*(double)pAnal.trueNegatives[0][i]/(double)pAnal.allOffTrack[0][i];
                     double bstFT=100.0*(double)pAnal.falsePositives[0][i]/(double)pAnal.allOffTrack[0][i];
@@ -226,9 +228,10 @@ public class CVTAIAnal implements IDataEventListener {
                 for(int i =0; i<nbins2; i++) {
                     thAnal.allOnTrack[0][i] = thAnal.truePositives[0][i]+thAnal.falseNegatives[0][i];
                     thAnal.allOffTrack[0][i] = thAnal.falsePositives[0][i]+thAnal.trueNegatives[0][i];
-                    thAnal.allOnTrack[1][i] = thAnal.truePositives[0][i]+thAnal.falseNegatives[1][i];
-                    thAnal.allOffTrack[1][i] = thAnal.falsePositives[0][i]+thAnal.trueNegatives[1][i];
-                    
+                    thAnal.allOnTrack[1][i] = thAnal.truePositives[1][i]+thAnal.falseNegatives[1][i];
+                    thAnal.allOffTrack[1][i] = thAnal.falsePositives[1][i]+thAnal.trueNegatives[1][i];
+                    //System.out.println("th:BST "+i+"] "+thAnal.truePositives[0][i]+"/"+thAnal.allOnTrack[0][i]);
+                    //System.out.println("th:BMT "+i+"] "+thAnal.truePositives[1][i]+"/"+thAnal.allOnTrack[1][i]);
                     double bstTT=100.0*(double)thAnal.truePositives[0][i]/(double)thAnal.allOnTrack[0][i];
                     double bstTF=100.0*(double)thAnal.trueNegatives[0][i]/(double)thAnal.allOffTrack[0][i];
                     double bstFT=100.0*(double)thAnal.falsePositives[0][i]/(double)thAnal.allOffTrack[0][i];
@@ -249,23 +252,23 @@ public class CVTAIAnal implements IDataEventListener {
                     double bmtFFE=100.0*calcE((double)thAnal.falseNegatives[1][i],(double)thAnal.allOnTrack[1][i]);
 
 
-                    bstvspTT.setBinContent(i, bstTT);
-                    bstvspTF.setBinContent(i, bstTF);
-                    bstvspFT.setBinContent(i, bstFT);
-                    bstvspFF.setBinContent(i, bstFF);
-                    bmtvspFF.setBinContent(i, bmtFF);
-                    bmtvspFT.setBinContent(i, bmtFT);
-                    bmtvspTF.setBinContent(i, bmtTF);
-                    bmtvspTT.setBinContent(i, bmtTT);
+                    bstvsthTT.setBinContent(i, bstTT);
+                    bstvsthTF.setBinContent(i, bstTF);
+                    bstvsthFT.setBinContent(i, bstFT);
+                    bstvsthFF.setBinContent(i, bstFF);
+                    bmtvsthFF.setBinContent(i, bmtFF);
+                    bmtvsthFT.setBinContent(i, bmtFT);
+                    bmtvsthTF.setBinContent(i, bmtTF);
+                    bmtvsthTT.setBinContent(i, bmtTT);
 
-                    bstvspTT.setBinError(i, bstTTE);
-                    bstvspTF.setBinError(i, bstTFE);
-                    bstvspFT.setBinError(i, bstFTE);
-                    bstvspFF.setBinError(i, bstFFE);
-                    bmtvspFF.setBinError(i, bmtFFE);
-                    bmtvspFT.setBinError(i, bmtFTE);
-                    bmtvspTF.setBinError(i, bmtTFE);
-                    bmtvspTT.setBinError(i, bmtTTE);
+                    bstvsthTT.setBinError(i, bstTTE);
+                    bstvsthTF.setBinError(i, bstTFE);
+                    bstvsthFT.setBinError(i, bstFTE);
+                    bstvsthFF.setBinError(i, bstFFE);
+                    bmtvsthFF.setBinError(i, bmtFFE);
+                    bmtvsthFT.setBinError(i, bmtFTE);
+                    bmtvsthTF.setBinError(i, bmtTFE);
+                    bmtvsthTT.setBinError(i, bmtTTE);
 
                 }
             }
@@ -304,18 +307,23 @@ public class CVTAIAnal implements IDataEventListener {
     private void analyzeEvent(Event ev, List<HitPos> hpl) {
         for(HitPos hp : hpl) {
             if(hp.gettTrack()==null) continue;
-            
+            int d = -1;
+            if(hp.getDetType()==BMTType.UNDEFINED) {
+                d = 0;
+            } else {
+                d = 1;
+            }
             int pbin = this.getBin(hp.gettTrack().p, nbins, mid, width);
-            if(hp.isTruePositive) pAnal.truePositives[0][pbin]++;
-            if(hp.isFalsePositive) pAnal.falsePositives[0][pbin]++;
-            if(hp.isTrueNegative) pAnal.trueNegatives[0][pbin]++;
-            if(hp.isFalseNegative) pAnal.falseNegatives[0][pbin]++;
+            if(hp.isTruePositive) pAnal.truePositives[d][pbin]++;
+            if(hp.isFalsePositive) pAnal.falsePositives[d][pbin]++;
+            if(hp.isTrueNegative) pAnal.trueNegatives[d][pbin]++;
+            if(hp.isFalseNegative) pAnal.falseNegatives[d][pbin]++;
             
             int thbin = this.getBin(hp.gettTrack().theta, nbins2, mid2, width2); 
-            if(hp.isTruePositive) thAnal.truePositives[0][thbin]++;
-            if(hp.isFalsePositive) thAnal.falsePositives[0][thbin]++;
-            if(hp.isTrueNegative) thAnal.trueNegatives[0][thbin]++;
-            if(hp.isFalseNegative) thAnal.falseNegatives[0][thbin]++;
+            if(hp.isTruePositive) thAnal.truePositives[d][thbin]++; 
+            if(hp.isFalsePositive) thAnal.falsePositives[d][thbin]++;
+            if(hp.isTrueNegative) thAnal.trueNegatives[d][thbin]++;
+            if(hp.isFalseNegative) thAnal.falseNegatives[d][thbin]++;
         }
     }
     
