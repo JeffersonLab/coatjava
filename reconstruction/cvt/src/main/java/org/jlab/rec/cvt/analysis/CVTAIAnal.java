@@ -30,10 +30,10 @@ public class CVTAIAnal implements IDataEventListener {
         private EmbeddedCanvas can4 = null;
         private EmbeddedCanvas can5 = null;
         
-	private H1F bsttrue = new H1F("bst", "selected ", 4, -0.5, 3.5);
-        private H1F bstfalse = new H1F("bst", "selected ", 4, -0.5, 3.5);
-        private H1F bmttrue = new H1F("bmt", "selected ", 4, -0.5, 3.5);
-        private H1F bmtfalse = new H1F("bmt", "selected ", 4, -0.5, 3.5);
+	private H1F bsttrue = new H1F("bst", "BST TRACK HIT", 4, -0.5, 3.5);
+        private H1F bstfalse = new H1F("bst", "BST BG HIT ", 4, -0.5, 3.5);
+        private H1F bmttrue = new H1F("bmt", "BMT TRACK HIT ", 4, -0.5, 3.5);
+        private H1F bmtfalse = new H1F("bmt", "BMT BG HIT ", 4, -0.5, 3.5);
         
         int nbins = 13;
         double mid = 0.3;
@@ -310,8 +310,86 @@ public class CVTAIAnal implements IDataEventListener {
             int d = -1;
             if(hp.getDetType()==BMTType.UNDEFINED) {
                 d = 0;
+                if(hp.getTstatus()==1) {
+                    if(hp.getRlevel()==1000) 
+                        bsttrue.fill(0);
+                    if(hp.getRlevel()==1100) {
+                        bsttrue.fill(0);
+                        bsttrue.fill(1);
+                    }
+                    if(hp.getRlevel()==1110) {
+                        bsttrue.fill(0);
+                        bsttrue.fill(1);
+                        bsttrue.fill(2);
+                    }
+                    if(hp.getRlevel()==1111) {
+                        bsttrue.fill(0);
+                        bsttrue.fill(1);
+                        bsttrue.fill(2);
+                        bsttrue.fill(3);
+                    }
+                    
+                }
+                if(hp.getTstatus()==0) {
+                    if(hp.getRlevel()==1000) 
+                        bstfalse.fill(0);
+                    if(hp.getRlevel()==1100) {
+                        bstfalse.fill(0);
+                        bstfalse.fill(1);
+                    }
+                    if(hp.getRlevel()==1110) {
+                        bstfalse.fill(0);
+                        bstfalse.fill(1);
+                        bstfalse.fill(2);
+                    }
+                    if(hp.getRlevel()==1111) {
+                        bstfalse.fill(0);
+                        bstfalse.fill(1);
+                        bstfalse.fill(2);
+                        bstfalse.fill(3);
+                    }
+                }
             } else {
                 d = 1;
+                if(hp.getTstatus()==1) {
+                    if(hp.getRlevel()==1000) 
+                        bmttrue.fill(0);
+                    if(hp.getRlevel()==1100) {
+                        bmttrue.fill(0);
+                        bmttrue.fill(1);
+                    }
+                    if(hp.getRlevel()==1110) {
+                        bmttrue.fill(0);
+                        bmttrue.fill(1);
+                        bmttrue.fill(2);
+                    }
+                    if(hp.getRlevel()==1111) {
+                        bmttrue.fill(0);
+                        bmttrue.fill(1);
+                        bmttrue.fill(2);
+                        bmttrue.fill(3);
+                    }
+                    
+                }
+                if(hp.getTstatus()==0) {
+                    if(hp.getRlevel()==1000) 
+                        bmtfalse.fill(0);
+                    if(hp.getRlevel()==1100) {
+                        bmtfalse.fill(0);
+                        bmtfalse.fill(1);
+                    }
+                    if(hp.getRlevel()==1110) {
+                        bmtfalse.fill(0);
+                        bmtfalse.fill(1);
+                        bmtfalse.fill(2);
+                    }
+                    if(hp.getRlevel()==1111) {
+                        bmtfalse.fill(0);
+                        bmtfalse.fill(1);
+                        bmtfalse.fill(2);
+                        bmtfalse.fill(3);
+                    }
+                }
             }
             int pbin = this.getBin(hp.gettTrack().p, nbins, mid, width);
             if(hp.isTruePositive) pAnal.truePositives[d][pbin]++;
