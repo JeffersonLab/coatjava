@@ -40,13 +40,13 @@ public class HitPos {
         _tstatus    = bank.getByte("tstatus", row);
         _rstatus    = bank.getByte("rstatus", row);
         _rlevel     = bank.getShort("rlevel", row);
-        if(_tstatus ==1) {
-            if(_rstatus ==1) isTruePositive = true;
-            if(_rstatus ==0) isFalseNegative = true;
+        if(_tstatus ==1) { //hit is on-track
+            if(_rstatus ==1) isTruePositive = true; //correctly recognized by tracking as on-track
+            if(_rstatus ==0) isFalseNegative = true;//tracking falsely sets hit as off-track
         }
-        if(_tstatus ==0) {
-            if(_rstatus ==1) isFalsePositive = true;
-            if(_rstatus ==0) isTrueNegative = true;
+        if(_tstatus ==0) { //hit is off-track
+            if(_rstatus ==1) isFalsePositive = true;//tracking falsely sets hit as on-track
+            if(_rstatus ==0) isTrueNegative = true;//correctly recognized by tracking as off-track
         }
         double x1 = bank.getFloat("r1", row)*Math.sin(bank.getFloat("theta1", row))*Math.cos(bank.getFloat("phi1", row));
         double y1 = bank.getFloat("r1", row)*Math.sin(bank.getFloat("theta1", row))*Math.sin(bank.getFloat("phi1", row));

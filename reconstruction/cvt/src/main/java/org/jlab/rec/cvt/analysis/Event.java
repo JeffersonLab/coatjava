@@ -100,12 +100,22 @@ public class Event {
     public List<HitPos> BMTHits;
     public Map<Integer, List<HitPos>> BSTSameSecLyr;
     public Map<Integer, List<HitPos>> BMTSameSecLyr;
+    public Map<Integer, Float> BMTTimes;
+    
     private void getHits(DataEvent event, Map<Integer, Track>  recTrack, Track  bgFreeTrack) {
         BSTHits = new ArrayList<>();
         BMTHits = new ArrayList<>();
         BSTSameSecLyr = new HashMap();
         BMTSameSecLyr = new HashMap();
-        
+        BMTTimes = new HashMap();
+        if(event.hasBank("BMT::Hits")) {
+            DataBank bank = event.getBank("BMT::Hits"); 
+            for(int i =0; i<bank.rows(); i++) { 
+                float t = bank.getFloat("time", i);
+                int id = bank.getInt("ID", i);
+                BMTTimes.put(id, t);
+            }
+        }
         if(event.hasBank("BST::HitsPos")) {
             DataBank bank = event.getBank("BST::HitsPos"); 
             for(int i =0; i<bank.rows(); i++) { 
