@@ -35,23 +35,23 @@ public class CVTAIAnal implements IDataEventListener {
         private EmbeddedCanvas can8 = null;
         private EmbeddedCanvas can9 = null;
         
-	private final H1F bsttrue = new H1F("bst", "BST TRACK HIT REC LEVEL (bin 1:in cluster, 2: in cross, 3: in seed, 4: in track)", 4, -0.5, 3.5);
-        private final H1F bstfalse = new H1F("bst", "BST BG HIT REC LEVEL (bin 1:in cluster, 2: in cross, 3: in seed, 4: in track)", 4, -0.5, 3.5);
-        private final H1F bmttrue = new H1F("bmt", "BMT TRACK HIT REC LEVEL (bin 1:in cluster, 2: in cross, 3: in seed, 4: in track)", 4, -0.5, 3.5);
-        private final H1F bmtfalse = new H1F("bmt", "BMT BG HIT REC LEVEL (bin 1:in cluster, 2: in cross, 3: in seed, 4: in track)", 4, -0.5, 3.5);
+	private final H1F bsttrue = new H1F("bst", "BST TRACK HIT REC LEVEL (bin 1:hit, 2: in cross, 3: in seed, 4: in track)", 4, -0.5, 3.5);
+        private final H1F bstfalse = new H1F("bst", "BST BG HIT REC LEVEL (bin 1:hit, 2: in cross, 3: in seed, 4: in track)", 4, -0.5, 3.5);
+        private final H1F bmttrue = new H1F("bmt", "BMT TRACK HIT REC LEVEL (bin 1:hit, 2: in cross, 3: in seed, 4: in track)", 4, -0.5, 3.5);
+        private final H1F bmtfalse = new H1F("bmt", "BMT BG HIT REC LEVEL (bin 1:hit, 2: in cross, 3: in seed, 4: in track)", 4, -0.5, 3.5);
         
         int nbins = 13;
         double mid = 0.3;
         double width = 0.05;
     
-        private final H1F bstvspTT = new H1F("bstvsp", "BST TRUE POSITIVES ", nbins, mid-width, mid+width*2*(nbins-1));
-        private final H1F bstvspTF = new H1F("bstvsp", "BST FALSE NEGATIVES ", nbins, mid-width, mid+width*2*(nbins-1));
-        private final H1F bstvspFT = new H1F("bstvsp", "BST FALSE POSITIVES ", nbins, mid-width, mid+width*2*(nbins-1));
-        private final H1F bstvspFF = new H1F("bstvsp", "BST TRUE NEGATIVES ", nbins, mid-width, mid+width*2*(nbins-1));
-        private final H1F bmtvspTT = new H1F("bmtvsp", "BMT TRUE POSITIVES", nbins, mid-width, mid+width*2*(nbins-1));
-        private final H1F bmtvspTF = new H1F("bmtvsp", "BMT FALSE NEGATIVES", nbins, mid-width, mid+width*2*(nbins-1));
-        private final H1F bmtvspFT = new H1F("bmtvsp", "BMT FALSE POSITIVES ", nbins, mid-width, mid+width*2*(nbins-1));
-        private final H1F bmtvspFF = new H1F("bmtvsp", "BMT TRUE NEGATIVES ", nbins, mid-width, mid+width*2*(nbins-1));
+        private final H1F bstvspTP = new H1F("bstvsp", "BST TRUE POSITIVES ", nbins, mid-width, mid+width*2*(nbins-1));
+        private final H1F bstvspFN = new H1F("bstvsp", "BST FALSE NEGATIVES ", nbins, mid-width, mid+width*2*(nbins-1));
+        private final H1F bstvspFP = new H1F("bstvsp", "BST FALSE POSITIVES ", nbins, mid-width, mid+width*2*(nbins-1));
+        private final H1F bstvspTN = new H1F("bstvsp", "BST TRUE NEGATIVES ", nbins, mid-width, mid+width*2*(nbins-1));
+        private final H1F bmtvspTP = new H1F("bmtvsp", "BMT TRUE POSITIVES", nbins, mid-width, mid+width*2*(nbins-1));
+        private final H1F bmtvspFN = new H1F("bmtvsp", "BMT FALSE NEGATIVES", nbins, mid-width, mid+width*2*(nbins-1));
+        private final H1F bmtvspFP = new H1F("bmtvsp", "BMT FALSE POSITIVES ", nbins, mid-width, mid+width*2*(nbins-1));
+        private final H1F bmtvspTN = new H1F("bmtvsp", "BMT TRUE NEGATIVES ", nbins, mid-width, mid+width*2*(nbins-1));
        
         int nbins2 = 9;
         double mid2 = 40;
@@ -141,31 +141,31 @@ public class CVTAIAnal implements IDataEventListener {
             bmttrue.setLineColor(4);
             bmtfalse.setLineColor(2);
             
-            bstvspTT.setLineColor(39);
-            bstvspTF.setLineColor(37);
-            bstvspFT.setLineColor(36);
-            bstvspFF.setLineColor(35);
-            bmtvspTT.setLineColor(49);
-            bmtvspTF.setLineColor(47);
-            bmtvspFT.setLineColor(46);
-            bmtvspFF.setLineColor(45);
+            bstvspTP.setLineColor(39);
+            bstvspFN.setLineColor(37);
+            bstvspFP.setLineColor(36);
+            bstvspTN.setLineColor(35);
+            bmtvspTP.setLineColor(49);
+            bmtvspFN.setLineColor(47);
+            bmtvspFP.setLineColor(46);
+            bmtvspTN.setLineColor(45);
             
-            bstvspTT.setTitleX(" p (GeV)");
-            bstvspTT.setTitleY("Efficiency");
-            bstvspTF.setTitleX(" p (GeV)");
-            bstvspTF.setTitleY("Efficiency");
-            bstvspFT.setTitleX(" p (GeV)");
-            bstvspFT.setTitleY("Efficiency");
-            bstvspFF.setTitleX(" p (GeV)");
-            bstvspFF.setTitleY("Efficiency");
-            bmtvspTT.setTitleX(" p (GeV)");
-            bmtvspTT.setTitleY("Efficiency");
-            bmtvspTF.setTitleX(" p (GeV)");
-            bmtvspTF.setTitleY("Efficiency");
-            bmtvspFT.setTitleX(" p (GeV)");
-            bmtvspFT.setTitleY("Efficiency");
-            bmtvspFF.setTitleX(" p (GeV)");
-            bmtvspFF.setTitleY("Efficiency");
+            bstvspTP.setTitleX(" p (GeV)");
+            bstvspTP.setTitleY("Efficiency");
+            bstvspFN.setTitleX(" p (GeV)");
+            bstvspFN.setTitleY("Efficiency");
+            bstvspFP.setTitleX(" p (GeV)");
+            bstvspFP.setTitleY("Efficiency");
+            bstvspTN.setTitleX(" p (GeV)");
+            bstvspTN.setTitleY("Efficiency");
+            bmtvspTP.setTitleX(" p (GeV)");
+            bmtvspTP.setTitleY("Efficiency");
+            bmtvspFN.setTitleX(" p (GeV)");
+            bmtvspFN.setTitleY("Efficiency");
+            bmtvspFP.setTitleX(" p (GeV)");
+            bmtvspFP.setTitleY("Efficiency");
+            bmtvspTN.setTitleX(" p (GeV)");
+            bmtvspTN.setTitleY("Efficiency");
             
             bstvsthTP.setLineColor(39);
             bstvsthFN.setLineColor(37);
@@ -292,23 +292,23 @@ public class CVTAIAnal implements IDataEventListener {
                     double bmtFFE=100.0*calcE((double)pAnal.falseNegatives[1][i],(double)pAnal.allOnTrack[1][i]);
 
 
-                    bstvspTT.setBinContent(i, bstTT);
-                    bstvspTF.setBinContent(i, bstTF);
-                    bstvspFT.setBinContent(i, bstFT);
-                    bstvspFF.setBinContent(i, bstFF);
-                    bmtvspFF.setBinContent(i, bmtFF);
-                    bmtvspFT.setBinContent(i, bmtFT);
-                    bmtvspTF.setBinContent(i, bmtTF);
-                    bmtvspTT.setBinContent(i, bmtTT);
+                    bstvspTP.setBinContent(i, bstTT);
+                    bstvspFN.setBinContent(i, bstFF);
+                    bstvspFP.setBinContent(i, bstFT);
+                    bstvspTN.setBinContent(i, bstTF);
+                    bmtvspTN.setBinContent(i, bmtTF);
+                    bmtvspFP.setBinContent(i, bmtFT);
+                    bmtvspFN.setBinContent(i, bmtFF);
+                    bmtvspTP.setBinContent(i, bmtTT);
 
-                    bstvspTT.setBinError(i, bstTTE);
-                    bstvspTF.setBinError(i, bstTFE);
-                    bstvspFT.setBinError(i, bstFTE);
-                    bstvspFF.setBinError(i, bstFFE);
-                    bmtvspFF.setBinError(i, bmtFFE);
-                    bmtvspFT.setBinError(i, bmtFTE);
-                    bmtvspTF.setBinError(i, bmtTFE);
-                    bmtvspTT.setBinError(i, bmtTTE);
+                    bstvspTP.setBinError(i, bstTTE);
+                    bstvspFN.setBinError(i, bstFFE);
+                    bstvspFP.setBinError(i, bstFTE);
+                    bstvspTN.setBinError(i, bstTFE);
+                    bmtvspTN.setBinError(i, bmtTFE);
+                    bmtvspFP.setBinError(i, bmtFTE);
+                    bmtvspFN.setBinError(i, bmtFFE);
+                    bmtvspTP.setBinError(i, bmtTTE);
 
                 }
                 for(int i =0; i<nbins2; i++) {
@@ -339,21 +339,21 @@ public class CVTAIAnal implements IDataEventListener {
 
 
                     bstvsthTP.setBinContent(i, bstTT);
-                    bstvsthFN.setBinContent(i, bstTF);
+                    bstvsthFN.setBinContent(i, bstFF);
                     bstvsthFP.setBinContent(i, bstFT);
-                    bstvsthTN.setBinContent(i, bstFF);
-                    bmtvsthTN.setBinContent(i, bmtFF);
+                    bstvsthTN.setBinContent(i, bstTF);
+                    bmtvsthTN.setBinContent(i, bmtTF);
                     bmtvsthFP.setBinContent(i, bmtFT);
-                    bmtvsthFN.setBinContent(i, bmtTF);
+                    bmtvsthFN.setBinContent(i, bmtFF);
                     bmtvsthTP.setBinContent(i, bmtTT);
 
                     bstvsthTP.setBinError(i, bstTTE);
-                    bstvsthFN.setBinError(i, bstTFE);
+                    bstvsthFN.setBinError(i, bstFFE);
                     bstvsthFP.setBinError(i, bstFTE);
-                    bstvsthTN.setBinError(i, bstFFE);
-                    bmtvsthTN.setBinError(i, bmtFFE);
+                    bstvsthTN.setBinError(i, bstTFE);
+                    bmtvsthTN.setBinError(i, bmtTFE);
                     bmtvsthFP.setBinError(i, bmtFTE);
-                    bmtvsthFN.setBinError(i, bmtTFE);
+                    bmtvsthFN.setBinError(i, bmtFFE);
                     bmtvsthTP.setBinError(i, bmtTTE);
 
                 }
@@ -573,23 +573,23 @@ public class CVTAIAnal implements IDataEventListener {
         
         can2.divide(2, 2);
         can2.cd(0);
-        can2.draw(bstvspTT, "E");
+        can2.draw(bstvspTP, "E");
         can2.cd(1);
-        can2.draw(bstvspTF, "E");
+        can2.draw(bstvspFN, "E");
         can2.cd(2);
-        can2.draw(bstvspFT, "E");
+        can2.draw(bstvspFP, "E");
         can2.cd(3);
-        can2.draw(bstvspFF, "E");
+        can2.draw(bstvspTN, "E");
         can2.update();
         can3.divide(2, 2);
         can3.cd(0);
-        can3.draw(bmtvspTT, "E");
+        can3.draw(bmtvspTP, "E");
         can3.cd(1);
-        can3.draw(bmtvspTF, "E");
+        can3.draw(bmtvspFN, "E");
         can3.cd(2);
-        can3.draw(bmtvspFT, "E");
+        can3.draw(bmtvspFP, "E");
         can3.cd(3);
-        can3.draw(bmtvspFF, "E");
+        can3.draw(bmtvspTN, "E");
         can3.update();
         
         can4.divide(2, 2);
