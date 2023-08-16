@@ -71,6 +71,7 @@ public class HitPos {
         this.nearestNeighbors = new ArrayList<>();
         for(HitPos hp : insameSecLyr) {
             if(hp.getTstatus()==1) continue; //only consider background hits
+            if(this.getID()==hp.getID()) continue; //neighbor cannot be itself
             Line3D hpnLn = hp.getStripline();
             if(hpLn.distance(hpnLn).length() < docaMax) {
                 this.nearestNeighbors.add(hp);
