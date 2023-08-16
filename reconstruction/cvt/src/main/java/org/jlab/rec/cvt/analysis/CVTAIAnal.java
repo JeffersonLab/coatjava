@@ -29,11 +29,13 @@ public class CVTAIAnal implements IDataEventListener {
         private EmbeddedCanvas can3 = null;
         private EmbeddedCanvas can4 = null;
         private EmbeddedCanvas can5 = null;
+        private EmbeddedCanvas can6 = null;
+        private EmbeddedCanvas can7 = null;
         
-	private H1F bsttrue = new H1F("bst", "BST TRACK HIT", 4, -0.5, 3.5);
-        private H1F bstfalse = new H1F("bst", "BST BG HIT ", 4, -0.5, 3.5);
-        private H1F bmttrue = new H1F("bmt", "BMT TRACK HIT ", 4, -0.5, 3.5);
-        private H1F bmtfalse = new H1F("bmt", "BMT BG HIT ", 4, -0.5, 3.5);
+	private final H1F bsttrue = new H1F("bst", "BST TRACK HIT REC LEVEL (0:in cluster, 1: in cross, 2: in seed, 3: in track)", 4, -0.5, 3.5);
+        private final H1F bstfalse = new H1F("bst", "BST BG HIT REC LEVEL (0:in cluster, 1: in cross, 2: in seed, 3: in track)", 4, -0.5, 3.5);
+        private final H1F bmttrue = new H1F("bmt", "BMT TRACK HIT REC LEVEL (0:in cluster, 1: in cross, 2: in seed, 3: in track)", 4, -0.5, 3.5);
+        private final H1F bmtfalse = new H1F("bmt", "BMT BG HIT REC LEVEL (0:in cluster, 1: in cross, 2: in seed, 3: in track)", 4, -0.5, 3.5);
         
         int nbins = 13;
         double mid = 0.3;
@@ -61,6 +63,15 @@ public class CVTAIAnal implements IDataEventListener {
         private final H1F bmtvsthFT = new H1F("bmtvsth", "BMT FALSE POSITIVES ", nbins2, mid2-width2, mid2+width2*2*(nbins2-1));
         private final H1F bmtvsthFF = new H1F("bmtvsth", "BMT TRUE NEGATIVES ", nbins2, mid2-width2, mid2+width2*2*(nbins2-1));
         
+        private final H1F bstNNTT = new H1F("bstNNTT", "BST TRUE POSITIVES nb BG Nearest Neighbors", 20, 0, 20);
+        private final H1F bstNNTF = new H1F("bstNNTT", "BST FALSE NEGATIVES nb BG Nearest Neighbors", 20, 0, 20);
+        private final H1F bstNNFT = new H1F("bstNNTT", "BST FALSE POSITIVES nb BG Nearest Neighbors", 20, 0, 20);
+        private final H1F bstNNFF = new H1F("bstNNTT", "BST TRUE NEGATIVES nb BG Nearest Neighbors", 20, 0, 20);
+        private final H1F bmtNNTT = new H1F("bmtNNTT", "BMT TRUE POSITIVES nb BG Nearest Neighbors", 20, 0, 20);
+        private final H1F bmtNNTF = new H1F("bmtNNTT", "BMT FALSE NEGATIVES nb BG Nearest Neighbors", 20, 0, 20);
+        private final H1F bmtNNFT = new H1F("bmtNNTT", "BMT FALSE POSITIVES nb BG Nearest Neighbors", 20, 0, 20);
+        private final H1F bmtNNFF = new H1F("bmtNNTT", "BMT TRUE NEGATIVES nb BG Nearest Neighbors", 20, 0, 20);
+        
         int counter = 0;
         int updateTime = 100;
 
@@ -68,7 +79,6 @@ public class CVTAIAnal implements IDataEventListener {
         Analysis thAnal ;
         
         public CVTAIAnal() {
-            
             //init
             pAnal = new Analysis();
             pAnal.init(nbins);
@@ -155,12 +165,14 @@ public class CVTAIAnal implements IDataEventListener {
 	
 
 	private void createCanvas() {
-		can1 = new EmbeddedCanvas(); can1.initTimer(updateTime);
-                can2 = new EmbeddedCanvas(); can2.initTimer(updateTime);
-                can3 = new EmbeddedCanvas(); can3.initTimer(updateTime);
-                can4 = new EmbeddedCanvas(); can4.initTimer(updateTime);
-                can5 = new EmbeddedCanvas(); can5.initTimer(updateTime);
-		//can1.divide(1, 2); 
+            can1 = new EmbeddedCanvas(); can1.initTimer(updateTime);
+            can2 = new EmbeddedCanvas(); can2.initTimer(updateTime);
+            can3 = new EmbeddedCanvas(); can3.initTimer(updateTime);
+            can4 = new EmbeddedCanvas(); can4.initTimer(updateTime);
+            can5 = new EmbeddedCanvas(); can5.initTimer(updateTime);
+            can6 = new EmbeddedCanvas(); can6.initTimer(updateTime);
+            can7 = new EmbeddedCanvas(); can7.initTimer(updateTime);
+		
                 
 	}
 
@@ -310,6 +322,11 @@ public class CVTAIAnal implements IDataEventListener {
             int d = -1;
             if(hp.getDetType()==BMTType.UNDEFINED) {
                 d = 0;
+                if(hp.isTruePositive) bstNNTT.fill(hp.getNearestNeighbors().size());
+                if(hp.isFalsePositive) bstNNFT.fill(hp.getNearestNeighbors().size());
+                if(hp.isTrueNegative) bstNNTF.fill(hp.getNearestNeighbors().size());
+                if(hp.isFalseNegative) bstNNFF.fill(hp.getNearestNeighbors().size());
+                
                 if(hp.getTstatus()==1) {
                     if(hp.getRlevel()==1000) 
                         bsttrue.fill(0);
@@ -328,7 +345,6 @@ public class CVTAIAnal implements IDataEventListener {
                         bsttrue.fill(2);
                         bsttrue.fill(3);
                     }
-                    
                 }
                 if(hp.getTstatus()==0) {
                     if(hp.getRlevel()==1000) 
@@ -351,6 +367,11 @@ public class CVTAIAnal implements IDataEventListener {
                 }
             } else {
                 d = 1;
+                if(hp.isTruePositive) bmtNNTT.fill(hp.getNearestNeighbors().size());
+                if(hp.isFalsePositive) bmtNNFT.fill(hp.getNearestNeighbors().size());
+                if(hp.isTrueNegative) bmtNNTF.fill(hp.getNearestNeighbors().size());
+                if(hp.isFalseNegative) bmtNNFF.fill(hp.getNearestNeighbors().size());
+                
                 if(hp.getTstatus()==1) {
                     if(hp.getRlevel()==1000) 
                         bmttrue.fill(0);
@@ -473,16 +494,37 @@ public class CVTAIAnal implements IDataEventListener {
         can5.cd(3);
         can5.draw(bmtvsthFF, "E");
         can5.update();
+        can6.divide(2, 2);
+        can6.cd(0);
+        can6.draw(bstNNTT, "E");
+        can6.cd(1);
+        can6.draw(bstNNTF, "E");
+        can6.cd(2);
+        can6.draw(bstNNFT, "E");
+        can6.cd(3);
+        can6.draw(bstNNFF, "E");
+        can6.update();
+        can7.divide(2, 2);
+        can7.cd(0);
+        can7.draw(bmtNNTT, "E");
+        can7.cd(1);
+        can7.draw(bmtNNTF, "E");
+        can7.cd(2);
+        can7.draw(bmtNNFT, "E");
+        can7.cd(3);
+        can7.draw(bmtNNFF, "E");
+        can7.update();
         
     }
 
     private void addCanvasToPane() {
-            tabbedPane.add("", can1);
-            tabbedPane.add("", can2);
-            tabbedPane.add("", can3);
-            tabbedPane.add("", can4);
-            tabbedPane.add("", can5);
-
+            tabbedPane.add("REC LEVEL", can1);
+            tabbedPane.add("p BST AI MATRIX", can2);
+            tabbedPane.add("p BMT AI MATRIX", can3);
+            tabbedPane.add("theta BST AI MATRIX", can4);
+            tabbedPane.add("theta BMT AI MATRIX", can5);
+            tabbedPane.add("BST BG Nearest Neighbors", can6);
+            tabbedPane.add("BMT BG Nearest Neighbors", can7);
     }
 
     public static void main(String[] args) {
