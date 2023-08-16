@@ -4,12 +4,18 @@ import java.util.Map;
 import java.io.IOException;
 import java.io.BufferedWriter;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.List;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
+import org.jlab.jnp.hipo4.data.Bank;
+import org.jlab.jnp.hipo4.data.Event;
+import org.jlab.jnp.hipo4.io.HipoReader;
 import org.jlab.jnp.utils.json.JsonArray;
 import org.jlab.jnp.utils.json.JsonObject;
 import org.jlab.jnp.utils.json.JsonValue;
 import org.jlab.jnp.utils.json.PrettyPrint;
+import org.jlab.utils.options.OptionParser;
 import org.json.JSONObject;
 
 /**
@@ -50,6 +56,15 @@ public class JsonUtils {
     }
     
     /**
+     *  Just print it to the screen, nicely.
+     * @param bank
+     * @param varName 
+     */
+    public static void show(Bank bank, String varName) {
+        show(read(bank,varName));
+    }
+
+    /**
      * Convenience method to get a JsonObject from a bank.
      * @param bank bank to read
      * @param varName name of byte variable to read
@@ -57,6 +72,14 @@ public class JsonUtils {
      */
     public static JsonObject read(DataBank bank, String varName) {
         return JsonObject.readFrom(new String(bank.getByte(varName)));
+    }
+    
+    public static JsonObject read(Bank bank, String varName) {
+        byte[] x = new byte[bank.getRows()];
+        for (int i=0; i<bank.getRows(); ++i) {
+            x[i] = bank.getByte(varName,i);
+        }
+        return JsonObject.readFrom(new String(x));
     }
 
     /**
@@ -239,5 +262,28 @@ public class JsonUtils {
         return extend(event, bankName, varName, Map2Json(extension));
     }
 
+    public static void main(String args[]) {
+        OptionParser parser = new OptionParser();
+        parser.addRequired("-b","bank name");
+        parser.addOption("-v", "json", "variable name");
+        parser.setRequiresInputList(true);
+        parser.parse(args);
+        final String bankName = parser.getOption("-b").stringValue();
+        final String varName = parser.getOption("-v").stringValue();
+        for (String filename : parser.getInputList()) {
+            Event event = new Event();     
+            HipoReader reader = new HipoReader();
+            reader.open(filename);
+            Bank bank = reader.getSchemaFactory().getBank(bankName);
+            while (reader.hasNext()) {
+                reader.nextEvent(event);
+                if (event.hasBank(reader.getSchemaFactory().getSchema(bankName))) {
+                    event.read(bank);
+                    JsonUtils.show(bank,varName);
+                }
+            }
+            reader.close();
+        }
+    }
     
 }
