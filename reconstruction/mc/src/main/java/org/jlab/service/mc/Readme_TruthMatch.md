@@ -69,13 +69,12 @@ From the example above, it is obvious that a single cluster (if it
 applies for a given detector) can contain hits originated from more than
 one MC particles.
 
-
-![Fig:Hits](Figs/HitsInCluster.png){
+![Fig:Hits](Figs/HitsInCluster.png)
 *An example cluster containing hits from two different MC particles.
 Numbers in represent the hitID of the hit in the cluster. Hits in cyan
 color were originated from one MC particle, and hits in red are
 originated from another MC
-particle.*}
+particle.*
 
 The figure above shows an example of the cluster with 8
 hits, 2 of them are from one MC particle, let's call it mcp1, and the
@@ -111,6 +110,66 @@ An abstract example is shown in the figure above, when not all recon clusters ma
 to the given MC Particle are matched to the same recon particle. The
 Truth Matching service in such cases chose the recon particle that has
 the highest number of matched clusters to the given MC particle.
+
+# Bank structures
+The TruthMatch service produces two banks **MC::GenMatch** and **MC::RecMatch**.
+
+## **MC::GenMatch**
+Lets start from the **MC::GenMatch** bank.
+The number of entries (columns) in the **MC::GenMatch** is equal to the number of entries in the **MC::Particle** bank.
+Below is the snippet from the json file describing the **MC::GenMatch** structure.
+
+        "name": "MC::GenMatch",
+        "group": 40,
+        "item" : 6,
+        "info": "MC::Particle -> REC::Particle matching",
+        "entries": [
+            {"name":"mcindex",       "type":"S",  "info":"MC::Particle index"},
+            {"name":"pindex",        "type":"S",  "info":"REC::Particle index"},
+            {"name":"mclayer1",      "type":"L",  "info":"layers from the 1st set of detectors hit by MC particle"},
+            {"name":"mclayer2",      "type":"L",  "info":"layers from the 2nd set of detectors hit by MC particle"},
+            {"name":"player1",       "type":"L",  "info":"layers from the 1st set of detectors hit by Recon particle"},
+            {"name":"player2",       "type":"L",  "info":"layers from the 2nd set of detectors hit by Recon particle"},
+            {"name":"quality",       "type":"F",  "info":"matching quality parameter"}
+
+* The **mcindex** is the index of the MC Particle in the **MC::Particle** bank that we want to match to the Rec particle. \
+* The **pindex** is the index of the matched REC particle in the **REC::Particle** bank. \
+* **mclayer1** and **mclayer2**  are 64 bit LONGs, where each bit of those words indicates whether the the given MC particle
+deposited hit in a specific detector/layer of CLAS12. See section [Status word description](#StatWordDescription)
+for details on detector<=>bit correspondence.\
+* **player1** and **player2** are again 64 bit LONG words, however their bits represent detector/layers of the matched Rec Particle,
+ but only those layers which are matched to the given MC particle. In the **MC::GenMatch** bank, set bits of **player1(2)** is always
+ subset of set bits of **mclayer1(2)**.
+
+## **MC::RecMatch**
+The structure of **MC::RecMatch** bank is very similar to **MC::GenMatch** and meanings of variables are
+analogous to those from the **MC::GenMatch** bank..
+The number of entries (columns) in the **MC::RecMatch** is equal to the number of entries in the **REC::Particle** bank.
+Below is the snippet from the json file describing the **MC::RecMatch** structure.
+
+        "name": "MC::RecMatch",
+        "group": 40,
+        "item" : 7,
+        "info": "Rec::Particle -> MC::Particle matching",
+        "entries": [
+            {"name":"pindex",        "type":"S",  "info":"REC::Particle index"},
+            {"name":"mcindex",       "type":"S",  "info":"MC::Particle index"},
+            {"name":"player1",       "type":"L",  "info":"layers from the 1st set of detectors hit by Recon particle"},
+            {"name":"player2",       "type":"L",  "info":"layers from the 1st set of detectors hit by Recon particle"},
+            {"name":"mclayer1",      "type":"L",  "info":"layers from the 1st set of detectors hit by MC particle"},
+            {"name":"mclayer2",      "type":"L",  "info":"layers from the 2nd set of detectors hit by MC particle"},
+            {"name":"quality",       "type":"F",  "info":"matching quality parameter"}
+
+* The **pindex** is the index of the particle in the **REC::Particle** bank that we want to match to MC particle \
+* The **mcindex** is the index of the MC Particle in the **MC::Particle** that is matched to the pindext-th particle in the REC::Particle bank. \
+* **player1** and **player2** as in the case of **MC::GenMatch** bank, are two 64 bit LONG words where each bit indicates
+ presence of the hit of the given REC particle in specific detector bits.
+* **mclayer1** and **mclayer2**  shows which detector/layers the matched MC particle has deposited hits, and here
+ again those detector/layers are not all detectors/layers the matched MC particle has deposited hits, but only those which 
+ are matched to the given Rec particle, in other words set bits of **mclayer1(2)** is always subset of set bits of **player1(2)**
+
+
+### <a name="StatWordDescription"></a>Status word description 
 
 
 
