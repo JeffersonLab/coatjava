@@ -261,7 +261,7 @@ public class JsonUtils {
     }
 
     public static void main(String args[]) {
-        OptionParser parser = new OptionParser();
+        OptionParser parser = new OptionParser("hipo-json");
         parser.addRequired("-b","bank name");
         parser.addOption("-v", "json", "variable name");
         parser.addOption("-i", "1", "ignore parsing errors");
