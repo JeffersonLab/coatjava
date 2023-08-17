@@ -4,8 +4,6 @@ import java.util.Map;
 import java.io.IOException;
 import java.io.BufferedWriter;
 import java.io.OutputStreamWriter;
-import java.util.ArrayList;
-import java.util.List;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.jnp.hipo4.data.Bank;
@@ -266,20 +264,39 @@ public class JsonUtils {
         OptionParser parser = new OptionParser();
         parser.addRequired("-b","bank name");
         parser.addOption("-v", "json", "variable name");
+        parser.addOption("-i", "1", "ignore parsing errors");
         parser.setRequiresInputList(true);
         parser.parse(args);
         final String bankName = parser.getOption("-b").stringValue();
         final String varName = parser.getOption("-v").stringValue();
+        int nerrors = 0;
         for (String filename : parser.getInputList()) {
             Event event = new Event();     
             HipoReader reader = new HipoReader();
             reader.open(filename);
+            if (!reader.getSchemaFactory().hasSchema(bankName)) {
+                System.err.println("\nERROR:  Bank does not exist in file's schema:  "+bankName);
+                System.exit(1);
+            }
+            if (!reader.getSchemaFactory().getSchema(bankName).hasEntry(varName)) {
+                System.err.println("\nERROR:  Variable does not exist in file's schema:  "+bankName+"."+varName);
+                System.exit(1);
+            }
+            System.err.println(reader.getSchemaFactory().getSchema(bankName).getSchemaString());
             Bank bank = reader.getSchemaFactory().getBank(bankName);
             while (reader.hasNext()) {
                 reader.nextEvent(event);
                 if (event.hasBank(reader.getSchemaFactory().getSchema(bankName))) {
                     event.read(bank);
-                    JsonUtils.show(bank,varName);
+                    try {
+                        JsonUtils.show(bank,varName);
+                    }
+                    catch (org.jlab.jnp.utils.json.ParseException e) {
+                        if (++nerrors > 3 && parser.getOption("-i").intValue()!=0) {
+                            System.err.println("\nERROR:  Too many parsing errors.\nAre you sure your variable "+bankName+"."+varName+" is a byte array representing a JSON string?");
+                            System.exit(1);
+                        }    
+                    }
                 }
             }
             reader.close();
