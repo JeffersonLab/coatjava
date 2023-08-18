@@ -1,5 +1,22 @@
 # <p style="text-align: center;"> Truth Matching </p>
 
+<span style="color:red">
+
+# Read this 1^st^
+In order the Truth Matching to work, it is important to invoke specific options when one runs GEMC:
+* -SAVE_ALL_MOTHERS=1  
+* -SKIPREJECTEDHITS=1
+* -INTEGRATEDRAW="*"
+* -NGENP=50 // This is not necessarily needed, if you are sure in LUND file the number of generated particles is always smaller than 10, you can skip this option
+
+If you are not interested how the matching works, but just want to us it as a black-box, then please run GEMC with above mentioned options,
+Below is an example command that will allow the TrutMatching service to work properly.
+
+     gemc det.gcard -SAVE_ALL_MOTHERS=1 -SKIPREJECTEDHITS=1 -NGENP=50 -INTEGRATEDRAW="*" -N=10000 -USE_GUI=0 -INPUT_GEN_FILE="lund, inp_Lund.dat" -RUNNO=11 -OUTPUT="hipo, GEMC_Out.hipo"
+
+</span>
+
+
 # Introduction
 In Monte Carlo (MC) simulations very frequently there is a need to know links between the generated 
 particle and the reconstructed particle. Users usually compare kinematics (momentum and the angle) of 
@@ -111,7 +128,8 @@ to the given MC Particle are matched to the same recon particle. The
 Truth Matching service in such cases chose the recon particle that has
 the highest number of matched clusters to the given MC particle.
 
-# Bank structures
+# <a name="BANK_STRUCTURES"></a>Bank structures
+
 The TruthMatch service produces two banks **MC::GenMatch** and **MC::RecMatch**.
 
 ## **MC::GenMatch**
@@ -170,25 +188,15 @@ Below is the snippet from the json file describing the **MC::RecMatch** structur
 
 
 ### <a name="StatWordDescription"></a>Status word description 
+In [Bank Structures](#BANK_STRUCTURES) it is mentioned that in addition to the index of the matched particle,
+bank provides also status words, which encode list of detector layers the given MC (or Rec) particle deposited hits into.
+![](Figs/Layer_Bits.png)*Representation of status words. Fields in Orange are not implemented yet.*
 
+The figure above describes the mapping between word/bitnumber and detector/layer. Detector acronyms should be
+well known for anyone familiar with CLAS12 detector, except "FTH" which represents Forward tagger Hodoscope, and because
+of space constrains is named "FTH".
 
+In the figure below shown the decoding of an example status word.
+![](Figs/ExampleStatWord.png)*An example of a status word, showing that the given particle deposited hits in all DC layers except 15, 19, 20 and 29.
+Then it deposited hits in first four layers of BST, and in BMT it hit layers 1, 2 and 6*
 
-Take me to [pookie](#pookie)
-
-
-
-<a name="pookie"></a> assad
-
-
-### <a name="tith"></a>This is the Heading
-asdasd
-
-
-"...the **go to** statement should be abolished..." [[1]](#1).
-[[3]]()
-
-## References
-<a id="1">[1]</a> 
-COATJAVA: https://github.com/JeffersonLab/coatjava
-
-<a id="3">[3]</a> asdasdasd \
