@@ -319,12 +319,13 @@ public class DCTBEngine extends DCEngine {
     	List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = new ArrayList<>();
     	
     	for(int i = 0; i < kFZRef.kfStateVecsAlongTrajectory.size(); i++) {
-    		org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec svc = kFZRef.kfStateVecsAlongTrajectory.get(i);
-    		
-    		org.jlab.rec.dc.trajectory.StateVec sv = new org.jlab.rec.dc.trajectory.StateVec(svc.x, svc.y, svc.tx, svc.ty);
+            org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec svc = kFZRef.kfStateVecsAlongTrajectory.get(i);    	
+    	    org.jlab.rec.dc.trajectory.StateVec sv = new org.jlab.rec.dc.trajectory.StateVec(svc.x, svc.y, svc.tx, svc.ty);
             sv.setZ(svc.z);
             sv.setB(svc.B);
-            sv.setPathLength(svc.getPathLength());   
+            sv.setPathLength(svc.getPathLength()); 
+            sv.setProjector(svc.getProjector());
+            sv.setProjectorDoca(svc.getProjectorDoca());
             kfStateVecsAlongTrajectory.add(sv);
     	}
     	
