@@ -47,4 +47,4 @@ echo "*    Running COAT-JAVA JShell Scripts   *"
 echo "*****************************************"
 echo " "
 echo " "
-jshell --class-path "$JYPATH" $*
+jshell --class-path "$JYPATH" "$@"
