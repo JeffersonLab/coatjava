@@ -112,23 +112,23 @@ public class CVTAIAnal implements IDataEventListener {
         private final H1F bmtTZdNNFP = new H1F("bmtTZdNNFT", "BMT-Z FALSE POSITIVES BG Nearest Neighbors ave-TIME DIFFS", 600, -350.0, 250.0);
         private final H1F bmtTZdNNTN = new H1F("bmtTZdNNFF", "BMT-Z TRUE NEGATIVES BG Nearest Neighbors ave-TIME DIFFS", 600, -350.0, 250.0);
         
-        private final H2F bmtEvsTCNNTP = new H2F("bmtEvsTCNNTT", "BMT-C TRUE POSITIVES BG Nearest Neighbors E/T", 500, 0, 500.0, 500, 0, 500.0);
-        private final H2F bmtEvsTCNNFN = new H2F("bmtEvsTCNNTF", "BMT-C FALSE NEGATIVES BG Nearest Neighbors EvsT", 500, 0, 500.0, 500, 0, 500.0);
-        private final H2F bmtEvsTCNNFP = new H2F("bmtEvsTCNNFT", "BMT-C FALSE POSITIVES BG Nearest Neighbors EvsT", 500, 0, 500.0, 500, 0, 500.0);
-        private final H2F bmtEvsTCNNTN = new H2F("bmtEvsTCNNFF", "BMT-C TRUE NEGATIVES BG Nearest Neighbors EvsT", 500, 0, 500.0, 500, 0, 500.0);
-        private final H2F bmtEvsTZNNTP = new H2F("bmtEvsTZNNTT", "BMT-Z TRUE POSITIVES BG Nearest Neighbors EvsT", 500, 0, 500.0, 500, 0, 500.0);
-        private final H2F bmtEvsTZNNFN = new H2F("bmtEvsTZNNTF", "BMT-Z FALSE NEGATIVES BG Nearest Neighbors EvsT", 500, 0, 500.0, 500, 0, 500.0);
-        private final H2F bmtEvsTZNNFP = new H2F("bmtEvsTZNNFT", "BMT-Z FALSE POSITIVES BG Nearest Neighbors EvsT", 500, 0, 500.0, 500, 0, 500.0);
-        private final H2F bmtEvsTZNNTN = new H2F("bmtEvsTZNNFF", "BMT-Z TRUE NEGATIVES BG Nearest Neighbors EvsT", 500, 0, 500.0, 500, 0, 500.0);
+        private final H2F bmtTvsECNNTP = new H2F("bmtTvsECNNTT", "BMT-C TRUE POSITIVES BG Nearest Neighbors TvsE", 500, 0, 500.0, 500, 0, 500.0);
+        private final H2F bmtTvsECNNFN = new H2F("bmtTvsECNNTF", "BMT-C FALSE NEGATIVES BG Nearest Neighbors TvsE", 500, 0, 500.0, 500, 0, 500.0);
+        private final H2F bmtTvsECNNFP = new H2F("bmtTvsECNNFT", "BMT-C FALSE POSITIVES BG Nearest Neighbors TvsE", 500, 0, 500.0, 500, 0, 500.0);
+        private final H2F bmtTvsECNNTN = new H2F("bmtTvsECNNFF", "BMT-C TRUE NEGATIVES BG Nearest Neighbors TvsE", 500, 0, 500.0, 500, 0, 500.0);
+        private final H2F bmtTvsEZNNTP = new H2F("bmtTvsEZNNTT", "BMT-Z TRUE POSITIVES BG Nearest Neighbors TvsE", 500, 0, 500.0, 500, 0, 500.0);
+        private final H2F bmtTvsEZNNFN = new H2F("bmtTvsEZNNTF", "BMT-Z FALSE NEGATIVES BG Nearest Neighbors TvsE", 500, 0, 500.0, 500, 0, 500.0);
+        private final H2F bmtTvsEZNNFP = new H2F("bmtTvsEZNNFT", "BMT-Z FALSE POSITIVES BG Nearest Neighbors TvsE", 500, 0, 500.0, 500, 0, 500.0);
+        private final H2F bmtTvsEZNNTN = new H2F("bmtTvsEZNNFF", "BMT-Z TRUE NEGATIVES BG Nearest Neighbors TvsE", 500, 0, 500.0, 500, 0, 500.0);
         
-        private final H2F bmtEvsTCHTP = new H2F("bmtEvsTCHTT", "BMT-C TRUE POSITIVES  EvsT", 500, 0, 500.0, 500, 0, 500.0);
-        private final H2F bmtEvsTCHFN = new H2F("bmtEvsTCHTF", "BMT-C FALSE NEGATIVES  EvsT", 500, 0, 500.0, 500, 0, 500.0);
-        private final H2F bmtEvsTCHFP = new H2F("bmtEvsTCHFT", "BMT-C FALSE POSITIVES  EvsT", 500, 0, 500.0, 500, 0, 500.0);
-        private final H2F bmtEvsTCHTN = new H2F("bmtEvsTCHFF", "BMT-C TRUE NEGATIVES  EvsT", 500, 0, 500.0, 500, 0, 500.0);
-        private final H2F bmtEvsTZHTP = new H2F("bmtEvsTZHTT", "BMT-Z TRUE POSITIVES  EvsT", 500, 0, 500.0, 500, 0, 500.0);
-        private final H2F bmtEvsTZHFN = new H2F("bmtEvsTZHTF", "BMT-Z FALSE NEGATIVES  EvsT", 500, 0, 500.0, 500, 0, 500.0);
-        private final H2F bmtEvsTZHFP = new H2F("bmtEvsTZHFT", "BMT-Z FALSE POSITIVES  EvsT", 500, 0, 500.0, 500, 0, 500.0);
-        private final H2F bmtEvsTZHTN = new H2F("bmtEvsTZHFF", "BMT-Z TRUE NEGATIVES  EvsT", 500, 0, 500.0, 500, 0, 500.0);
+        private final H2F bmtTvsECHTP = new H2F("bmtTvsECHTT", "BMT-C TRUE POSITIVES  TvsE", 500, 0, 500.0, 500, 0, 500.0);
+        private final H2F bmtTvsECHFN = new H2F("bmtTvsECHTF", "BMT-C FALSE NEGATIVES  TvsE", 500, 0, 500.0, 500, 0, 500.0);
+        private final H2F bmtTvsECHFP = new H2F("bmtTvsECHFT", "BMT-C FALSE POSITIVES  TvsE", 500, 0, 500.0, 500, 0, 500.0);
+        private final H2F bmtTvsECHTN = new H2F("bmtTvsECHFF", "BMT-C TRUE NEGATIVES  TvsE", 500, 0, 500.0, 500, 0, 500.0);
+        private final H2F bmtTvsEZHTP = new H2F("bmtTvsEZHTT", "BMT-Z TRUE POSITIVES  TvsE", 500, 0, 500.0, 500, 0, 500.0);
+        private final H2F bmtTvsEZHFN = new H2F("bmtTvsEZHTF", "BMT-Z FALSE NEGATIVES  TvsE", 500, 0, 500.0, 500, 0, 500.0);
+        private final H2F bmtTvsEZHFP = new H2F("bmtTvsEZHFT", "BMT-Z FALSE POSITIVES  TvsE", 500, 0, 500.0, 500, 0, 500.0);
+        private final H2F bmtTvsEZHTN = new H2F("bmtTvsEZHFF", "BMT-Z TRUE NEGATIVES  TvsE", 500, 0, 500.0, 500, 0, 500.0);
         
         
         int counter = 0;
@@ -470,12 +470,12 @@ public class CVTAIAnal implements IDataEventListener {
                     if(hp.getDetType()==BMTType.C) {
                         bmtCNNTP.fill(hp.getNearestNeighbors().size());
                         this.FillTimes(hp, bmtTCHTP, bmtTCNNTP, bmtTCdNNTP, ev.BMTTimes);
-                        this.FillEnergyvsTime(hp, bmtEvsTCHTP, bmtEvsTCNNTP, ev.BMTEnergies, ev.BMTTimes);
+                        this.FillEnergyvsTime(hp, bmtTvsECHTP, bmtTvsECNNTP, ev.BMTEnergies, ev.BMTTimes);
                     }
                     if(hp.getDetType()==BMTType.Z) {
                         bmtZNNTP.fill(hp.getNearestNeighbors().size());
                         this.FillTimes(hp, bmtTZHTP, bmtTZNNTP, bmtTZdNNTP, ev.BMTTimes);
-                        this.FillEnergyvsTime(hp, bmtEvsTZHTP, bmtEvsTZNNTP, ev.BMTEnergies, ev.BMTTimes);
+                        this.FillEnergyvsTime(hp, bmtTvsEZHTP, bmtTvsEZNNTP, ev.BMTEnergies, ev.BMTTimes);
                     }
                 }
                 if(hp.isFalsePositive) {
@@ -483,12 +483,12 @@ public class CVTAIAnal implements IDataEventListener {
                     if(hp.getDetType()==BMTType.C) {
                         bmtCNNFP.fill(hp.getNearestNeighbors().size());
                         this.FillTimes(hp, bmtTCHFP, bmtTCNNFP, bmtTCdNNFP, ev.BMTTimes);
-                        this.FillEnergyvsTime(hp, bmtEvsTCHFP, bmtEvsTCNNFP, ev.BMTEnergies, ev.BMTTimes);
+                        this.FillEnergyvsTime(hp, bmtTvsECHFP, bmtTvsECNNFP, ev.BMTEnergies, ev.BMTTimes);
                     }
                     if(hp.getDetType()==BMTType.Z) {
                         bmtZNNFP.fill(hp.getNearestNeighbors().size());
                         this.FillTimes(hp, bmtTZHFP, bmtTZNNFP, bmtTZdNNFP, ev.BMTTimes);
-                        this.FillEnergyvsTime(hp, bmtEvsTZHFP, bmtEvsTZNNFP, ev.BMTEnergies, ev.BMTTimes);
+                        this.FillEnergyvsTime(hp, bmtTvsEZHFP, bmtTvsEZNNFP, ev.BMTEnergies, ev.BMTTimes);
                     }
                 }
                 if(hp.isFalseNegative) {
@@ -496,12 +496,12 @@ public class CVTAIAnal implements IDataEventListener {
                     if(hp.getDetType()==BMTType.C) {
                         bmtCNNFN.fill(hp.getNearestNeighbors().size());
                         this.FillTimes(hp, bmtTCHFN, bmtTCNNFN, bmtTCdNNFN, ev.BMTTimes);
-                        this.FillEnergyvsTime(hp, bmtEvsTCHFN, bmtEvsTCNNFN, ev.BMTEnergies, ev.BMTTimes);
+                        this.FillEnergyvsTime(hp, bmtTvsECHFN, bmtTvsECNNFN, ev.BMTEnergies, ev.BMTTimes);
                     }
                     if(hp.getDetType()==BMTType.Z) {
                         bmtZNNFN.fill(hp.getNearestNeighbors().size());
                         this.FillTimes(hp, bmtTZHFN, bmtTZNNFN, bmtTZdNNFN, ev.BMTTimes);
-                        this.FillEnergyvsTime(hp, bmtEvsTZHFN, bmtEvsTZNNFN, ev.BMTEnergies, ev.BMTTimes);
+                        this.FillEnergyvsTime(hp, bmtTvsEZHFN, bmtTvsEZNNFN, ev.BMTEnergies, ev.BMTTimes);
                     }
                 }
                 if(hp.isTrueNegative) {
@@ -509,12 +509,12 @@ public class CVTAIAnal implements IDataEventListener {
                     if(hp.getDetType()==BMTType.C) {
                         bmtCNNTN.fill(hp.getNearestNeighbors().size());
                         this.FillTimes(hp, bmtTCHTN, bmtTCNNTN, bmtTCdNNTN, ev.BMTTimes);
-                        this.FillEnergyvsTime(hp, bmtEvsTCHTN, bmtEvsTCNNTN, ev.BMTEnergies, ev.BMTTimes);
+                        this.FillEnergyvsTime(hp, bmtTvsECHTN, bmtTvsECNNTN, ev.BMTEnergies, ev.BMTTimes);
                     }
                     if(hp.getDetType()==BMTType.Z) {
                         bmtZNNTN.fill(hp.getNearestNeighbors().size());
                         this.FillTimes(hp, bmtTZHTN, bmtTZNNTN, bmtTZdNNTN, ev.BMTTimes);
-                        this.FillEnergyvsTime(hp, bmtEvsTZHTN, bmtEvsTZNNTN, ev.BMTEnergies, ev.BMTTimes);
+                        this.FillEnergyvsTime(hp, bmtTvsEZHTN, bmtTvsEZNNTN, ev.BMTEnergies, ev.BMTTimes);
                     }
                 }
                 
@@ -711,43 +711,23 @@ public class CVTAIAnal implements IDataEventListener {
         can9.draw(bmtTCdNNTN, "");
         can9.draw(bmtTZdNNTN, "same");
         can9.update();        
-        can10.divide(4, 4);
-        //for(int k =0; k<4;k++) {
-        //    can10.getCanvasPads().get(k).getAxisY().getAttributes().setLog(true);
-        //}
+        can10.divide(2, 3);
+        for(int k =0; k<6;k++) {
+            can10.getCanvasPads().get(k).getAxisZ().getAttributes().setLog(true);
+        }
         
         can10.cd(0);
-        can10.draw(bmtEvsTCHTP, "");
+        can10.draw(bmtTvsECHTP, "");
         can10.cd(1);
-        can10.draw(bmtEvsTCNNTP, "");
+        can10.draw(bmtTvsEZHTP, "");
         can10.cd(2);
-        can10.draw(bmtEvsTZHTP, "");
+        can10.draw(bmtTvsECHTN, "");
         can10.cd(3);
-        can10.draw(bmtEvsTZNNTP, "");
+        can10.draw(bmtTvsEZHTN, "");
         can10.cd(4);
-        can10.draw(bmtEvsTCHFN, "");
+        can10.draw(bmtTvsECNNTN, "");
         can10.cd(5);
-        can10.draw(bmtEvsTCNNFN, "");
-        can10.cd(6);
-        can10.draw(bmtEvsTZHFN, "");
-        can10.cd(7);
-        can10.draw(bmtEvsTZNNFN, "");
-        can10.cd(8);
-        can10.draw(bmtEvsTCHFP, "");
-        can10.cd(9);
-        can10.draw(bmtEvsTCNNFP, "");
-        can10.cd(10);
-        can10.draw(bmtEvsTZHFP, "");
-        can10.cd(11);
-        can10.draw(bmtEvsTZNNFP, "");
-        can10.cd(12);
-        can10.draw(bmtEvsTCHTN, "");
-        can10.cd(13);
-        can10.draw(bmtEvsTCNNTN, "");
-        can10.cd(14);
-        can10.draw(bmtEvsTZHTN, "");
-        can10.cd(15);
-        can10.draw(bmtEvsTZNNTN, "");
+        can10.draw(bmtTvsEZNNTN, "");
         can10.update();
     }
 

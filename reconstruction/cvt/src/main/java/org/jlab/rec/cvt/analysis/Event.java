@@ -119,7 +119,7 @@ public class Event {
                 BMTTimes.put(id, t);
                 BMTEnergies.put(id, en);
             }
-        }
+                }
         if(event.hasBank("BST::HitsPos")) {
             DataBank bank = event.getBank("BST::HitsPos"); 
             for(int i =0; i<bank.rows(); i++) { 
