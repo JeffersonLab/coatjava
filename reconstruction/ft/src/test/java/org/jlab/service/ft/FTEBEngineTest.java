@@ -1676,4 +1676,9 @@ public class FTEBEngineTest extends ReconstructionEngine {
         frametrkonlyresVsCoord.setLocationRelativeTo(null);
         frametrkonlyresVsCoord.setVisible(true);
     }
+
+    @Override
+    public void detectorChanged(int runNumber) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

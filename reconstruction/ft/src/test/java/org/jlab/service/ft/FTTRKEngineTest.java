@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.service.ft;
 
 import java.util.ArrayList;
@@ -560,6 +555,11 @@ public class FTTRKEngineTest extends ReconstructionEngine {
         frame3.setLocationRelativeTo(null);
         frame3.setVisible(true); 
         
+    }
+
+    @Override
+    public void detectorChanged(int runNumber) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }
 
