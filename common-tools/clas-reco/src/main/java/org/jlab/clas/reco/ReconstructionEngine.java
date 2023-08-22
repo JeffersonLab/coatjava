@@ -219,8 +219,7 @@ public abstract class ReconstructionEngine implements Engine {
     }
     
     protected String getStringConfigParameter(String jsonString,                                             
-            String key)  throws Exception {
-        Object js;
+                                              String key)  throws Exception {
         String variation = "";
         try {
             JSONObject base = new JSONObject(jsonString);
@@ -230,13 +229,6 @@ public abstract class ReconstructionEngine implements Engine {
             } else {
                 LOGGER.log(Level.WARNING,"[JSON]" + this.getName() + " **** warning **** does not contain key = " + key);
             }
-            /*
-            js = base.get(key);
-            if (js instanceof String) {
-                return (String) js;
-            } else {
-                throw new Exception("JSONObject[" +  "] not a string.");
-            }*/
         } catch (JSONException e) {
             throw new Exception(e.getMessage());
         }
@@ -438,42 +430,6 @@ public abstract class ReconstructionEngine implements Engine {
         }
 
         return input;
-        /*
-        if (!mt.equalsIgnoreCase()) {
-            String msg = String.format("Wrong input type: %s", mt);
-            output.setStatus(EngineStatus.ERROR);
-            output.setDescription(msg);
-            return output;
-        }*/
-        /*
-        EvioDataEvent dataevent = null;
-
-        try {
-            ByteBuffer bb = (ByteBuffer) input.getData();
-            byte[] buffer = bb.array();
-            ByteOrder endianness = bb.order();
-            dataevent = new EvioDataEvent(buffer, endianness, EvioFactory.getDictionary());
-        } catch (Exception e) {
-            String msg = String.format("Error reading input event%n%n%s", ClaraUtil.reportException(e));
-            output.setStatus(EngineStatus.ERROR);
-            output.setDescription(msg);
-            return output;
-        }
-
-        try {
-            this.processDataEvent(dataevent);
-            ByteBuffer  bbo = dataevent.getEventBuffer();
-            //byte[] buffero = bbo.array();
-            output.setData(mt, bbo);
-        } catch (Exception e) {
-            String msg = String.format("Error processing input event%n%n%s", ClaraUtil.reportException(e));
-            output.setStatus(EngineStatus.ERROR);
-            output.setDescription(msg);
-            return output;
-        }
-
-        return output;
-        */
     }
 
     @Override
@@ -578,7 +534,6 @@ public abstract class ReconstructionEngine implements Engine {
                     "\"timestamp\":333\n" +
                     "}";
             System.out.println(json);
-            //json = "{ \"ccdb\":{\"run\":10,\"variation\":\"default\"}, \"variation\":\"cosmic\"}";
             Reco reco = new Reco();
             String variation =  reco.getStringConfigParameter(json, "variation");
             System.out.println(" Variation : " + variation);
