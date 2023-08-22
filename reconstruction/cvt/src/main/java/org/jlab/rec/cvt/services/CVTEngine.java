@@ -28,7 +28,6 @@ import org.jlab.utils.groups.IndexedTable;
  */
 public class CVTEngine extends ReconstructionEngine {
 
-
     /**
      * @param docacutsum the docacutsum to set
      */
@@ -609,6 +608,9 @@ public class CVTEngine extends ReconstructionEngine {
         
     }
 
-    
+    @Override
+    public void detectorChanged(int runNumber) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 
 }

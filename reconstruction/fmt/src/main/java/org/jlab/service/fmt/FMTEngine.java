@@ -233,4 +233,9 @@ public class FMTEngine extends ReconstructionEngine {
         return true;
    }
 
+    @Override
+    public void detectorChanged(int runNumber) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
 }

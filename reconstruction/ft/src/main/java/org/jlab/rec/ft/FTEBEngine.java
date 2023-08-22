@@ -1,6 +1,5 @@
 package org.jlab.rec.ft;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -1005,5 +1004,10 @@ public class FTEBEngine extends ReconstructionEngine {
         frameCALTRK.setLocationRelativeTo(null);
         frameCALTRK.setVisible(true);
             
+    }
+
+    @Override
+    public void detectorChanged(int runNumber) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

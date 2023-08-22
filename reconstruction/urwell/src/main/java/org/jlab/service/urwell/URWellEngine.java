@@ -241,4 +241,9 @@ public class URWellEngine extends ReconstructionEngine {
         frame.setVisible(true);     
 
     }
+
+    @Override
+    public void detectorChanged(int runNumber) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

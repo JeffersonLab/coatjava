@@ -60,6 +60,7 @@ public abstract class ReconstructionEngine implements Engine {
     volatile boolean dropOutputBanks = false;
     private final Set<String> outputBanks = new HashSet<>();
 
+    private volatile int runNumber = 0;
     private boolean ignoreInvalidRunNumbers = true;
 
     volatile long triggerMask = 0xFFFFFFFFFFFFFFFFL;
@@ -329,17 +330,21 @@ public abstract class ReconstructionEngine implements Engine {
             }
         }
     }
+    
+    public abstract void detectorChanged(int runNumber);
 
     public boolean checkRunNumber(DataEvent event) {
-        if (!this.ignoreInvalidRunNumbers) return true;
-        int run = 0;
         if (event.hasBank("RUN::config")) {
-            run = event.getBank("RUN::config").getInt("run",0);
+            int r = event.getBank("RUN::config").getInt("run",0);
+            if (r != this.runNumber) {
+                this.runNumber = r;
+                this.detectorChanged(r);
+            }
         }
-        return run>0;
+        return !this.ignoreInvalidRunNumbers && this.runNumber>0;
     }
     
-    public void filterEvent(DataEvent dataEvent) {
+    public void processEvent(DataEvent dataEvent) {
         if (!this.wroteConfig) {
             this.wroteConfig = true;
             JsonUtils.extend(dataEvent, CONFIG_BANK_NAME, "json", this.generateConfig());
@@ -388,7 +393,7 @@ public abstract class ReconstructionEngine implements Engine {
             }
                     
             try {
-                this.filterEvent(dataEventHipo);
+                this.processEvent(dataEventHipo);
                 output.setData(mt, dataEventHipo.getHipoEvent());
             } catch (Exception e) {
                 String msg = String.format("Error processing input event%n%n%s", ClaraUtil.reportException(e));
@@ -505,15 +510,20 @@ public abstract class ReconstructionEngine implements Engine {
         }
         @Override
         public boolean processDataEvent(DataEvent event) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            throw new UnsupportedOperationException("Not supported yet.");
         }
 
         @Override
         public boolean init() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            throw new UnsupportedOperationException("Not supported yet.");
         }
-    
-}
+
+        @Override
+        public void detectorChanged(int runNumber) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+    }
+
     public static void main(String[] args){
         System.setProperty("CLAS12DIR", "/Users/gavalian/Work/Software/project-3a.0.0/Distribution/clas12-offline-software/coatjava");
         try {

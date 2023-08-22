@@ -7,11 +7,7 @@ import java.util.Optional;
 
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.clas.swimtools.Swim;
-import org.jlab.detector.base.DetectorType;
-import org.jlab.detector.base.GeometryFactory;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
-import org.jlab.geom.base.ConstantProvider;
-import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.vtx.TrackParsHelix;
 import org.jlab.rec.vtx.Vertex;
@@ -110,5 +106,10 @@ public class VTXReconstruction extends ReconstructionEngine {
         super.registerOutputBank("REC::VertDoca");    
     } 
     public static void main(String[] args) {
+    }
+
+    @Override
+    public void detectorChanged(int runNumber) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }
