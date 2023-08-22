@@ -82,13 +82,10 @@ public class FTOFEngine extends ReconstructionEngine {
 
     @Override
     public boolean processDataEvent(DataEvent event) {
-        // System.out.println(" PROCESSING EVENT ....");
-        // Constants.DEBUGMODE = true;
-        //setRunConditionsParameters( event) ;
         if(event.hasBank("RUN::config")==false ) {
-		System.err.println("RUN CONDITIONS NOT READ!");
-		return true;
-	}
+		    System.err.println("RUN CONDITIONS NOT READ!");
+		    return true;
+	    }
 		
         DataBank bank = event.getBank("RUN::config");
 		
@@ -212,23 +209,9 @@ public class FTOFEngine extends ReconstructionEngine {
         
         // 3.4) exit if cluster list is empty but save the hits
         rbc.appendFTOFBanks(event, hits, clusters, matchedClusters, TrkType);
-//            if (event.hasBank("FTOF::adc")) {
-//                if (event.hasBank("FTOF::adc")) {
-//                    event.getBank("FTOF::adc").show();
-//                }
-//                if (event.hasBank("FTOF::tdc")) {
-//                    event.getBank("FTOF::tdc").show();
-//                }
-//                if (event.hasBank("FTOF::hits")) {
-//                    event.getBank("FTOF::hits").show();
-//                }
-//            }
-
 
         return true;
     }
-
-    
 
     public static void main(String arg[]) {
         FTOFHBEngine en = new FTOFHBEngine();
