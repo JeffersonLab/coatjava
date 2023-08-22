@@ -135,6 +135,11 @@ public class CVTEngine extends ReconstructionEngine {
         this.printConfiguration();
         return true;    
     }
+
+    @Override
+    public void detectorChanged(int runNumber) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
     
     public final void setOutputBankPrefix(String prefix) {
         this.bankPrefix = prefix;
@@ -577,7 +582,6 @@ public class CVTEngine extends ReconstructionEngine {
         return cvtCovMatBank;
     }
     
-    
     public void printConfiguration() {            
         
         System.out.println("["+this.getName()+"] run with cosmics setting set to "+Constants.getInstance().isCosmics);        
@@ -610,10 +614,4 @@ public class CVTEngine extends ReconstructionEngine {
         
         
     }
-
-    @Override
-    public void detectorChanged(int runNumber) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
 }

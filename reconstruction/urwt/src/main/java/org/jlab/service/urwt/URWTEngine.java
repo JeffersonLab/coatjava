@@ -51,8 +51,12 @@ public class URWTEngine extends ReconstructionEngine {
         return true;
     }
 
-
-
+    @Override
+    public void detectorChanged(int runNumber) {
+        String variationName = Optional.ofNullable(this.getEngineConfigString("variation")).orElse("default");
+        DatabaseConstantProvider cp = new DatabaseConstantProvider(runNumber, variationName);
+        factory.init(cp, false, URWellConstants.NREGION);
+    }
 
     @Override
     public boolean processDataEvent(DataEvent event) {
@@ -241,10 +245,5 @@ public class URWTEngine extends ReconstructionEngine {
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);     
 
-    }
-
-    @Override
-    public void detectorChanged(int runNumber) {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 }
