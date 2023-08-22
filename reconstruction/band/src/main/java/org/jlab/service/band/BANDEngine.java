@@ -1,11 +1,7 @@
 package org.jlab.service.band;
 
-
 import java.util.ArrayList;
 import java.util.Arrays;
-
-import javax.naming.event.NamingEvent;
-
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
@@ -26,13 +22,11 @@ import org.jlab.rec.band.hit.BandHitFinder;
 
 public class BANDEngine extends ReconstructionEngine {
 
-
 	public BANDEngine() {
 		super("BAND", "hauensteinsegarra", "1.0");
 	}
 
 	int Run = -1;
-
 
 	@Override
 		public boolean processDataEvent(DataEvent event) {
@@ -142,5 +136,10 @@ public class BANDEngine extends ReconstructionEngine {
 
 
 	}
+
+    @Override
+    public void detectorChanged(int runNumber) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 
 }

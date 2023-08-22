@@ -1,6 +1,5 @@
 package org.jlab.rec.ft.hodo;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import javax.swing.JFrame;
@@ -134,4 +133,9 @@ public class FTHODOEngine extends ReconstructionEngine {
         frame.setVisible(true);     
 
 	}		
+
+    @Override
+    public void detectorChanged(int runNumber) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }
