@@ -2,6 +2,7 @@ package org.jlab.clas.reco;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -60,7 +61,8 @@ public abstract class ReconstructionEngine implements Engine {
     volatile boolean dropOutputBanks = false;
     private final Set<String> outputBanks = new HashSet<>();
 
-    private volatile int runNumber = 0;
+    private volatile List<Integer> runNumbers = new ArrayList<>();
+
     private boolean ignoreInvalidRunNumbers = true;
 
     volatile long triggerMask = 0xFFFFFFFFFFFFFFFFL;
@@ -333,15 +335,16 @@ public abstract class ReconstructionEngine implements Engine {
     
     public abstract void detectorChanged(int runNumber);
 
-    public boolean checkRunNumber(DataEvent event) {
+    public synchronized boolean checkRunNumber(DataEvent event) {
+        int r = 0;
         if (event.hasBank("RUN::config")) {
-            int r = event.getBank("RUN::config").getInt("run",0);
-            if (r != this.runNumber) {
-                this.runNumber = r;
+            r = event.getBank("RUN::config").getInt("run",0);
+            if (r != this.runNumbers.get(this.runNumbers.size()-1)) {
+                this.runNumbers.add(r);
                 this.detectorChanged(r);
             }
         }
-        return !this.ignoreInvalidRunNumbers && this.runNumber>0;
+        return !this.ignoreInvalidRunNumbers && r>0;
     }
     
     public void processEvent(DataEvent dataEvent) {
