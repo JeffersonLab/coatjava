@@ -87,4 +87,7 @@ public class SwapEngine extends ReconstructionEngine {
         return true;
     }
 
+    @Override
+    public void detectorChanged(int runNumber) {}
+
 }

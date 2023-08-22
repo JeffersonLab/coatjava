@@ -141,5 +141,10 @@ public class MLTDEngine extends ReconstructionEngine {
         //System.out.println("appending bank");
         event.appendBank(bank);
     }*/
+
+    @Override
+    public void detectorChanged(int runNumber) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
     
 }

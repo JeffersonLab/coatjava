@@ -1,7 +1,8 @@
 package org.jlab.service.cnd;
 
-import java.io.IOException;
+import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.io.base.DataBank;
@@ -15,17 +16,8 @@ import org.jlab.rec.cnd.hit.CndHit;
 import org.jlab.rec.cnd.hit.CvtGetHTrack;
 import org.jlab.rec.cnd.hit.HalfHit;
 import org.jlab.rec.cnd.hit.CndHitFinder;
-
-import java.lang.String;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
-import org.jlab.clas.physics.LorentzVector;
-
 import org.jlab.rec.cnd.cluster.CNDCluster;
 import org.jlab.rec.cnd.cluster.CNDClusterFinder;
-import org.jlab.utils.groups.IndexedTable;
 
 /**
  * Service to return reconstructed CND Hits - the output is in Hipo format
@@ -33,9 +25,7 @@ import org.jlab.utils.groups.IndexedTable;
  *
  *
  */
-
 public class CNDCalibrationEngine extends ReconstructionEngine {
-
 
 	public CNDCalibrationEngine() {
 		super("CND", "chatagnon & WANG", "1.0");
@@ -265,6 +255,11 @@ public class CNDCalibrationEngine extends ReconstructionEngine {
 
 		}		
 	}
+
+    @Override
+    public void detectorChanged(int runNumber) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 
 }
 

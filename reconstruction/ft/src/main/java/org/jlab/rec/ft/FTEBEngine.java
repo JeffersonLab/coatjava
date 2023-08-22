@@ -1,6 +1,5 @@
 package org.jlab.rec.ft;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
