@@ -423,12 +423,8 @@ public class ECEngine extends ReconstructionEngine {
         
         
         requireConstants(Arrays.asList(ecTables));
-        
+
         getConstantsManager().setVariation(ECCommon.variation);
-        String variationName = Optional.ofNullable(this.getEngineConfigString("variation")).orElse("default");
-        if(!(ECCommon.geomVariation.equals("default"))) variationName = ECCommon.geomVariation;
-        LOGGER.log(Level.INFO,"GEOMETRY VARIATION IS "+variationName);
-        ECCommon.ecDetector =  GeometryFactory.getDetector(DetectorType.ECAL,11,variationName);
 
         setConfig("test");
         
@@ -469,7 +465,10 @@ public class ECEngine extends ReconstructionEngine {
 
     @Override
     public void detectorChanged(int runNumber) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        String variationName = Optional.ofNullable(this.getEngineConfigString("variation")).orElse("default");
+        if(!(ECCommon.geomVariation.equals("default"))) variationName = ECCommon.geomVariation;
+        LOGGER.log(Level.INFO,"GEOMETRY VARIATION IS "+variationName);
+        ECCommon.ecDetector =  GeometryFactory.getDetector(DetectorType.ECAL,11,variationName);
     }
     
 }

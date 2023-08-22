@@ -43,13 +43,9 @@ public class CTOFEngine extends ReconstructionEngine {
     
     @Override
     public boolean init() {
-        // Load the Constants
-        // if (Constants.CSTLOADED == false) {
         Constants.Load();
-        // }
         rbc = new RecoBankWriter();
-        // CalibrationConstantsLoader.Load();
-        // }
+
         String[]  ctofTables = new String[]{ 
                     "/calibration/ctof/attenuation",
                     "/calibration/ctof/effective_velocity",
@@ -65,16 +61,17 @@ public class CTOFEngine extends ReconstructionEngine {
                 };
         
         requireConstants(Arrays.asList(ctofTables));
-       
-       // Get the constants for the correct variation
         this.getConstantsManager().setVariation("default");
-        String engineVariation = Optional.ofNullable(this.getEngineConfigString("variation")).orElse("default");
-        ConstantProvider cp = GeometryFactory.getConstants(DetectorType.CTOF, 11, engineVariation);
-        geometry = new CTOFGeant4Factory(cp);
-        
         this.registerOutputBank("CTOF::rawhits","CTOF::hits","CTOF::clusters");
-        
         return true;
+    }
+    
+    
+    @Override
+    public void detectorChanged(int runNumber) {
+        String engineVariation = Optional.ofNullable(this.getEngineConfigString("variation")).orElse("default");
+        ConstantProvider cp = GeometryFactory.getConstants(DetectorType.CTOF, runNumber, engineVariation);
+        geometry = new CTOFGeant4Factory(cp);
     }
 
     @Override
@@ -86,8 +83,6 @@ public class CTOFEngine extends ReconstructionEngine {
         }
 
         DataBank bank = event.getBank("RUN::config");
-//	System.out.println();
-//	System.out.println(bank.getInt("event", 0));
         
         // Load the constants
         //-------------------
@@ -228,10 +223,4 @@ public class CTOFEngine extends ReconstructionEngine {
         System.out.println("TOTAL  PROCESSING TIME = " + t);
         writer.close();
     }
-
-    @Override
-    public void detectorChanged(int runNumber) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
 }

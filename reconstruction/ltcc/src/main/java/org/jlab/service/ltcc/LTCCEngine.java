@@ -17,9 +17,7 @@ public class LTCCEngine extends ReconstructionEngine {
 
     private static final boolean DEBUG = false;
     private static final List<String> CC_TABLES = 
-        Arrays.asList("/calibration/ltcc/spe",
-                      "/calibration/ltcc/status"
-                );
+        Arrays.asList("/calibration/ltcc/spe","/calibration/ltcc/status");
     
     public LTCCEngine() {
     	super("LTCC", "joosten", "1.0");
@@ -27,33 +25,28 @@ public class LTCCEngine extends ReconstructionEngine {
     
     @Override
 	public boolean processDataEvent(DataEvent event) {
-            if (DEBUG) event.show();
-            // only process the event if the LTCC bank is present
-            if (event.hasBank("LTCC::adc")) {
-                if (DEBUG) event.getBank("LTCC::adc").show();
-                List<LTCCHit> hits = 
-                        LTCCHit.loadHits(event, this.getConstantsManager());
-                List<LTCCCluster> clusters =
-                        LTCCClusterFinder.findClusters(hits);
-                LTCCCluster.saveClusters(event, clusters);
-                if (DEBUG) {
-                    event.getBank("LTCC::clusters").show();
-                }
-            }
-            
-            return true;
-        }
+        if (DEBUG) event.show();
+        // only process the event if the LTCC bank is present
+        if (event.hasBank("LTCC::adc")) {
+            if (DEBUG) event.getBank("LTCC::adc").show();
+            List<LTCCHit> hits = 
+                    LTCCHit.loadHits(event, this.getConstantsManager());
+            List<LTCCCluster> clusters =
+                    LTCCClusterFinder.findClusters(hits);
+            LTCCCluster.saveClusters(event, clusters);
+            if (DEBUG) event.getBank("LTCC::clusters").show();
+        }    
+        return true;
+    }
         
     @Override
-        public boolean init() {
-            this.requireConstants(CC_TABLES);            
-            this.registerOutputBank("LTCC::clusters");
-            return true;
-        }
+    public boolean init() {
+        this.requireConstants(CC_TABLES);            
+        this.registerOutputBank("LTCC::clusters");
+        return true;
+    }
 
     @Override
-    public void detectorChanged(int runNumber) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
+    public void detectorChanged(int runNumber) {}
        
 }

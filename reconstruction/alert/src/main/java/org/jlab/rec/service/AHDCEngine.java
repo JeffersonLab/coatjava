@@ -47,6 +47,8 @@ public class AHDCEngine extends ReconstructionEngine {
 		return true;
 	}
 
+    @Override
+    public void detectorChanged(int runNumber) {}
 
 	@Override
 	public boolean processDataEvent(DataEvent event) {
@@ -189,9 +191,4 @@ public class AHDCEngine extends ReconstructionEngine {
 
 		System.out.println("finished " + (System.nanoTime() - starttime) * Math.pow(10, -9));
 	}
-
-    @Override
-    public void detectorChanged(int runNumber) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
 }

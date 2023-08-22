@@ -11,7 +11,7 @@ import org.jlab.io.hipo.HipoDataBank;
 /**
  *
  * @author gavalian
- @deprecated 
+ @Deprecated 
  */
 public class MLTNEngine extends ReconstructionEngine {
     
@@ -27,9 +27,11 @@ public class MLTNEngine extends ReconstructionEngine {
         classifier.setEnvPath("etc/nnet/neuroph");
         classifier.load("trackClassifier.nnet", "trackFixer.nnet");
         System.out.println("Loading neural network files done...");
-        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         return true;
     }
+
+    @Override
+    public void detectorChanged(int runNumber) {}
 
     @Override
     public boolean processDataEvent(DataEvent de) {
@@ -91,10 +93,4 @@ public class MLTNEngine extends ReconstructionEngine {
         //System.out.println("appending bank");
         event.appendBank(bank);
     }*/
-
-    @Override
-    public void detectorChanged(int runNumber) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-    
 }

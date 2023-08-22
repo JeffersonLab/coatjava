@@ -53,11 +53,12 @@ public class FTEBEngine extends ReconstructionEngine {
         };
         requireConstants(Arrays.asList(tables));
         this.getConstantsManager().setVariation("default");
-
         this.registerOutputBank("FT::particles");
-
         return true;
     }
+
+    @Override
+    public void detectorChanged(int runNumber) {}
 
     @Override
     public boolean processDataEvent(DataEvent event) {
@@ -1004,10 +1005,5 @@ public class FTEBEngine extends ReconstructionEngine {
         frameCALTRK.setLocationRelativeTo(null);
         frameCALTRK.setVisible(true);
             
-    }
-
-    @Override
-    public void detectorChanged(int runNumber) {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 }
