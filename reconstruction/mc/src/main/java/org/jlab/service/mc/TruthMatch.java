@@ -234,9 +234,7 @@ public class TruthMatch extends ReconstructionEngine {
     }
 
     @Override
-    public void detectorChanged(int runNumber) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
+    public void detectorChanged(int runNumber) {}
 
     /**
      * ************************************************************************

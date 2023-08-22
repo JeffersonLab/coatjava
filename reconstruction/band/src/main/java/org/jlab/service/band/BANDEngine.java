@@ -55,9 +55,9 @@ public class BANDEngine extends ReconstructionEngine {
 		}
 
 	@Override
-		public boolean init() {
+    public boolean init() {
 			
-			String[]  bandTables = new String[]{
+	    String[]  bandTables = new String[]{
 				"/calibration/band/time_jitter",
 				"/calibration/band/lr_offsets",
 				"/calibration/band/effective_velocity",
@@ -73,14 +73,15 @@ public class BANDEngine extends ReconstructionEngine {
 				"/calibration/band/energy_conversion"
 				//"/calibration/band/time_walk_corr_left",
 				//"/calibration/band/time_walk_corr_right",
-    		};
+        };
     
-			requireConstants(Arrays.asList(bandTables));
-    		
-                        this.registerOutputBank("BAND::hits","BAND::rawhits","BAND::laser");
-		
-			return true;
-		}
+		requireConstants(Arrays.asList(bandTables));
+        this.registerOutputBank("BAND::hits","BAND::rawhits","BAND::laser");
+		return true;
+	}    
+        
+    @Override
+    public void detectorChanged(int runNumber) {}
 
 	public void setRunConditionsParameters(DataEvent event) {
 		if(event.hasBank("RUN::config")==false) {
@@ -136,10 +137,4 @@ public class BANDEngine extends ReconstructionEngine {
 
 
 	}
-
-    @Override
-    public void detectorChanged(int runNumber) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
 }

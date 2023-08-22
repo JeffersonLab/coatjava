@@ -48,9 +48,7 @@ public class HTCCReconstructionService extends ReconstructionEngine{
 
     @Override
     public boolean init() {
-        
-
-            String[]  htccTables = new String[]{
+        String[]  htccTables = new String[]{
             "/calibration/htcc/gain", 
             "/calibration/htcc/time", 
             "/calibration/htcc/ring_time", 
@@ -59,18 +57,12 @@ public class HTCCReconstructionService extends ReconstructionEngine{
             "/geometry/htcc/htcc", 
     
         };
-            
         this.registerOutputBank("HTCC::rec");
-        
         requireConstants(Arrays.asList(htccTables));
         return true;
     }
 
     @Override
-    public void detectorChanged(int runNumber) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-   
+    public void detectorChanged(int runNumber) {}
     
 }

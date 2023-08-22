@@ -26,6 +26,7 @@ import org.jlab.rec.fmt.track.fit.StateVecs.StateVec;
  */
 public class FMTEngine extends ReconstructionEngine {
 
+    String variation = null;
     boolean debug = false;
 
     public FMTEngine() {
@@ -36,7 +37,7 @@ public class FMTEngine extends ReconstructionEngine {
     public boolean init() {
         
         // Get the constants for the correct variation
-        String variation = this.getEngineConfigString("variation");
+        variation = this.getEngineConfigString("variation");
         if (variation!=null) {
             System.out.println("["+this.getName()+"] " +
                     "run with FMT geometry variation based on yaml = " + variation);
@@ -45,7 +46,6 @@ public class FMTEngine extends ReconstructionEngine {
             variation = "default";
             System.out.println("["+this.getName()+"] run with FMT default geometry");
         }
-        
 
         String[] tables = new String[]{
             "/geometry/beam/position",
@@ -55,10 +55,6 @@ public class FMTEngine extends ReconstructionEngine {
         requireConstants(Arrays.asList(tables));
         this.getConstantsManager().setVariation(variation);
 
-        // Load the geometry
-        int run = 10;
-        Constants.setDetector(GeometryFactory.getDetector(DetectorType.FMT,run, variation));
-
         // Register output banks
         super.registerOutputBank("FMT::Hits");
         super.registerOutputBank("FMT::Clusters");
@@ -67,6 +63,12 @@ public class FMTEngine extends ReconstructionEngine {
         super.registerOutputBank("FMT::Trajectory");
         
         return true;
+    }
+
+    @Override
+    public void detectorChanged(int runNumber) {
+        Constants.setDetector(GeometryFactory.getDetector(DetectorType.FMT,runNumber,
+            getConstantsManager().getVariation()));
     }
 
     @Override
@@ -232,10 +234,4 @@ public class FMTEngine extends ReconstructionEngine {
 
         return true;
    }
-
-    @Override
-    public void detectorChanged(int runNumber) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
 }
