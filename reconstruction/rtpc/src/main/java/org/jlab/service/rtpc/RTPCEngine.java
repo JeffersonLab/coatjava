@@ -1,9 +1,6 @@
 package org.jlab.service.rtpc;
 
 import java.io.File;
-
-
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -26,15 +23,11 @@ import org.jlab.rec.rtpc.hit.TrackDisentangler;
 import org.jlab.rec.rtpc.hit.TrackFinder;
 import org.jlab.rec.rtpc.hit.TrackHitReco;
 import org.jlab.rec.rtpc.hit.HelixFitTest;
-import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.utils.groups.IndexedTable;
 
 import org.jlab.clas.tracking.kalmanfilter.Material;
 
-
-
 public class RTPCEngine extends ReconstructionEngine{
-
 
     public RTPCEngine() {
         super("RTPC","davidp","3.0");
@@ -292,5 +285,10 @@ public class RTPCEngine extends ReconstructionEngine{
                 put("BONuS12Gas", BONuS12);
             }
         };
+    }
+
+    @Override
+    public void detectorChanged(int runNumber) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }
