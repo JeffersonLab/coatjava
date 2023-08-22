@@ -1,6 +1,5 @@
 package org.jlab.service.ctof;
 
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -8,12 +7,10 @@ import java.util.List;
 import java.util.Optional;
 
 import org.jlab.clas.reco.ReconstructionEngine;
-import org.jlab.coda.jevio.EvioException;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.base.GeometryFactory;
 import org.jlab.detector.geant4.v2.CTOFGeant4Factory;
 import org.jlab.geom.base.ConstantProvider;
-import org.jlab.geometry.prim.Line3d;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.hipo.HipoDataSource;
@@ -230,6 +227,11 @@ public class CTOFEngine extends ReconstructionEngine {
         double t = System.currentTimeMillis() - t1;
         System.out.println("TOTAL  PROCESSING TIME = " + t);
         writer.close();
+    }
+
+    @Override
+    public void detectorChanged(int runNumber) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
 }
