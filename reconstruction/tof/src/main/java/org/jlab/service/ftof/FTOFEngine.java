@@ -45,9 +45,6 @@ public class FTOFEngine extends ReconstructionEngine {
     
     @Override
     public boolean init() {
-
-        // Load the Constants
-        // if (Constants.CSTLOADED == false) {
         Constants.Load();
         rbc = new RecoBankWriter();
 
@@ -68,19 +65,19 @@ public class FTOFEngine extends ReconstructionEngine {
                  };
         
         requireConstants(Arrays.asList(ftofTables));
-       
-       // Get the constants for the correct variation
         this.getConstantsManager().setVariation("default");
-        
-        // Get geometry database provider, load the geometry tables and create geometry
-        String engineVariation = Optional.ofNullable(this.getEngineConfigString("variation")).orElse("default");
-        ConstantProvider db = GeometryFactory.getConstants(DetectorType.FTOF, 11, engineVariation);
-        geometry = new FTOFGeant4Factory(db);
 
         this.registerOutputBank("FTOF::rawhits","FTOF::hbhits","FTOF::hbclusters");
         this.registerOutputBank("FTOF::hits","FTIF::clusters","FTOF::matchedClusters");
 
         return true;
+    }
+    
+    @Override
+    public void detectorChanged(int runNumber) {
+        String engineVariation = Optional.ofNullable(this.getEngineConfigString("variation")).orElse("default");
+        ConstantProvider db = GeometryFactory.getConstants(DetectorType.FTOF, runNumber, engineVariation);
+        geometry = new FTOFGeant4Factory(db);
     }
 
     @Override
@@ -283,10 +280,5 @@ public class FTOFEngine extends ReconstructionEngine {
         double t = System.currentTimeMillis() - t1;
         System.out.println(t1 + " TOTAL  PROCESSING TIME = "
                 + (t / (float) counter));
-    }
-
-    @Override
-    public void detectorChanged(int runNumber) {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

@@ -30,8 +30,6 @@ public class VTXReconstruction extends ReconstructionEngine {
 
     String FieldsConfig = "";
     private int Run = -1;
-  
- 
 
     public int getRun() {
         return Run;
@@ -55,6 +53,7 @@ public class VTXReconstruction extends ReconstructionEngine {
         requireConstants(Arrays.asList(tables));
         this.getConstantsManager().setVariation("default");
     }
+
     @Override
     public boolean processDataEvent(DataEvent event) {
         this.FieldsConfig = this.getFieldsConfig();
@@ -97,19 +96,10 @@ public class VTXReconstruction extends ReconstructionEngine {
     public boolean init() {
         this.initConstantsTables();
         String variation = Optional.ofNullable(this.getEngineConfigString("variation")).orElse("default");
-        //beam offset table
-        DatabaseConstantProvider dbprovider = new DatabaseConstantProvider(11, variation);
-        dbprovider.loadTable("/geometry/beam/position");
+        registerOutputBank("REC::VertDoca");
         return true;
-    }
-    private void registerBanks() {
-        super.registerOutputBank("REC::VertDoca");    
-    } 
-    public static void main(String[] args) {
     }
 
     @Override
-    public void detectorChanged(int runNumber) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
+    public void detectorChanged(int runNumber) {}
 }

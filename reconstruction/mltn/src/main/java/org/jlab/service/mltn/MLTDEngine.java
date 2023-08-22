@@ -80,6 +80,9 @@ public class MLTDEngine extends ReconstructionEngine {
     }
 
     @Override
+    public void detectorChanged(int runNumber) {}
+
+    @Override
     public boolean processDataEvent(DataEvent de) {
         if(de.hasBank(inputBank)==true){
             DataBank bank = de.getBank(inputBank);
@@ -141,10 +144,4 @@ public class MLTDEngine extends ReconstructionEngine {
         //System.out.println("appending bank");
         event.appendBank(bank);
     }*/
-
-    @Override
-    public void detectorChanged(int runNumber) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-    
 }

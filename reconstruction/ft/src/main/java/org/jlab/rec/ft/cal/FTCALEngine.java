@@ -32,22 +32,23 @@ public class FTCALEngine extends ReconstructionEngine {
 		reco = new FTCALReconstruction();
 		reco.debugMode=0;
 
-                String[]  tables = new String[]{ 
-                    "/calibration/ft/ftcal/charge_to_energy",
-                    "/calibration/ft/ftcal/time_offsets",
-                    "/calibration/ft/ftcal/time_walk",
-                    "/calibration/ft/ftcal/status",
-                    "/calibration/ft/ftcal/thresholds",
-                    "/calibration/ft/ftcal/cluster",
-                    "/calibration/ft/ftcal/energycorr"
-                };
-                requireConstants(Arrays.asList(tables));
-                this.getConstantsManager().setVariation("default");
-
-                this.registerOutputBank("FTCAL::hits","FTCAL::clusters");
-                
-                return true;
+        String[]  tables = new String[]{ 
+            "/calibration/ft/ftcal/charge_to_energy",
+            "/calibration/ft/ftcal/time_offsets",
+            "/calibration/ft/ftcal/time_walk",
+            "/calibration/ft/ftcal/status",
+            "/calibration/ft/ftcal/thresholds",
+            "/calibration/ft/ftcal/cluster",
+            "/calibration/ft/ftcal/energycorr"
+        };
+        requireConstants(Arrays.asList(tables));
+        this.getConstantsManager().setVariation("default");
+        this.registerOutputBank("FTCAL::hits","FTCAL::clusters");       
+        return true;
 	}
+
+    @Override
+    public void detectorChanged(int runNumber) {}
 
 	@Override
 	public boolean processDataEvent(DataEvent event) {
@@ -178,10 +179,4 @@ public class FTCALEngine extends ReconstructionEngine {
         frame.setVisible(true);     
 
 	}	
-
-    @Override
-    public void detectorChanged(int runNumber) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-	
 }
