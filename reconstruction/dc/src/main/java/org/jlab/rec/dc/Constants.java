@@ -18,7 +18,6 @@ import org.jlab.geom.base.Detector;
 import org.jlab.rec.dc.trajectory.TrajectorySurfaces;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.clas.clas.math.FastMath;
-import org.jlab.detector.banks.RawBank.OrderType;
 
 /**
  * Constants used in the reconstruction
@@ -51,6 +50,8 @@ public class Constants {
     
     public static boolean DEBUG = false;
     
+    public static double[][] SHIFTS = null;
+
     // CONSTATNS for TRANSFORMATION
     public static final double SIN25 = FastMath.sin(Math.toRadians(25.));
     public static final double COS25 = FastMath.cos(Math.toRadians(25.));
@@ -349,7 +350,6 @@ public class Constants {
     public void setSWAPDCRBBITS(boolean SWAPDCRBBITS) {
         this.SWAPDCRBBITS = SWAPDCRBBITS;
     }
-   
 
     public synchronized void initialize(String engine,
                                         String variation, 
@@ -377,11 +377,9 @@ public class Constants {
             SWAPDCRBBITS    = swapDCRBBits;
             NSUPERLAYERTRACKING = nSuperLayer;
             SECTORSELECT    = selectedSector;
+            SHIFTS          = shifts;
 
             LoadConstants();
-
-            LoadGeometry(GEOVARIATION, shifts);
-
             ConstantsLoaded = true;
             printConfig(engine);
         }
@@ -393,9 +391,6 @@ public class Constants {
         }
         else {
             LoadConstants();
-
-            LoadGeometry(GEOVARIATION, null);
-
             ConstantsLoaded = true;
             printConfig(engine);
         }
@@ -508,24 +503,24 @@ public class Constants {
         reverseTTs.put(run, reverse);
     }
     
-    private synchronized void LoadGeometry(String geoVariation, double[][] shifts) {
+    public synchronized void LoadGeometry(int runNumber, String geoVariation, double[][] shifts) {
         // Load the geometry
-        ConstantProvider provider = GeometryFactory.getConstants(DetectorType.DC, 11, geoVariation);
+        ConstantProvider provider = GeometryFactory.getConstants(DetectorType.DC, runNumber, geoVariation);
         dcDetector = new DCGeant4Factory(provider, DCGeant4Factory.MINISTAGGERON, ENDPLATESBOWING, shifts);
         for(int l=0; l<6; l++) {
             wpdist[l] = provider.getDouble("/geometry/dc/superlayer/wpdist", l);
         }
         // Load target
-        ConstantProvider providerTG = GeometryFactory.getConstants(DetectorType.TARGET, 11, geoVariation);
+        ConstantProvider providerTG = GeometryFactory.getConstants(DetectorType.TARGET, runNumber, geoVariation);
         double targetPosition = providerTG.getDouble("/geometry/target/position",0);
         double targetLength   = providerTG.getDouble("/geometry/target/length",0);
         // Load other geometries
-        ConstantProvider providerFTOF = GeometryFactory.getConstants(DetectorType.FTOF, 11, geoVariation);
+        ConstantProvider providerFTOF = GeometryFactory.getConstants(DetectorType.FTOF, runNumber, geoVariation);
         ftofDetector = new FTOFGeant4Factory(providerFTOF);        
-        ecalDetector =  GeometryFactory.getDetector(DetectorType.ECAL, 11, geoVariation);
-        fmtDetector =  GeometryFactory.getDetector(DetectorType.FMT, 11, geoVariation);
-        ConstantsManager managerRICH = new ConstantsManager(geoVariation);;
-        richDetector = new RICHGeoFactory(0, managerRICH, 11, false);
+        ecalDetector =  GeometryFactory.getDetector(DetectorType.ECAL, runNumber, geoVariation);
+        fmtDetector =  GeometryFactory.getDetector(DetectorType.FMT, runNumber, geoVariation);
+        ConstantsManager managerRICH = new ConstantsManager(geoVariation);
+        richDetector = new RICHGeoFactory(0, managerRICH, runNumber, false);
         // create the surfaces
         trajSurfaces = new TrajectorySurfaces();
         trajSurfaces.loadSurface(targetPosition, targetLength, dcDetector, ftofDetector, ecalDetector, fmtDetector, richDetector);        

@@ -167,7 +167,7 @@ public class DCEngine extends ReconstructionEngine {
 
     @Override
     public void detectorChanged(int runNumber) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Constants.getInstance().LoadGeometry(runNumber, geoVariation, shifts);
     }
 
     private void initBanks() {
