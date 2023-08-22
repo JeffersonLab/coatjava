@@ -345,10 +345,10 @@ public abstract class ReconstructionEngine implements Engine {
             r = event.getBank("RUN::config").getInt("run",0);
             if (this.runNumbers.isEmpty() || r != this.runNumbers.get(this.runNumbers.size()-1)) {
                 this.runNumbers.add(r);
-                 this.detectorChanged(11);
+                this.detectorChanged(11);
             }
         }
-        return !this.ignoreInvalidRunNumbers && r>0;
+        return !this.ignoreInvalidRunNumbers || r>0;
     }
     
     public void processEvent(DataEvent dataEvent) {
