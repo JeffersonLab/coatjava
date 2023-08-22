@@ -2,14 +2,14 @@
 
 <span style="color:red">
 
-# Read this 1^st^
+# Read this first
 In order the Truth Matching to work, it is important to invoke specific options when one runs GEMC:
 * -SAVE_ALL_MOTHERS=1  
 * -SKIPREJECTEDHITS=1
 * -INTEGRATEDRAW="*"
 * -NGENP=50 // This is not necessarily needed, if you are sure in LUND file the number of generated particles is always smaller than 10, you can skip this option
 
-If you are not interested how the matching works, but just want to us it as a black-box, then please run GEMC with above mentioned options,
+If you are not interested how the matching works, but just want to use it as a black-box, then please run GEMC with above mentioned options,
 Below is an example command that will allow the TrutMatching service to work properly.
 
      gemc det.gcard -SAVE_ALL_MOTHERS=1 -SKIPREJECTEDHITS=1 -NGENP=50 -INTEGRATEDRAW="*" -N=10000 -USE_GUI=0 -INPUT_GEN_FILE="lund, inp_Lund.dat" -RUNNO=11 -OUTPUT="hipo, GEMC_Out.hipo"
@@ -36,9 +36,9 @@ particles from almost all detectors and determining which MC and Recon particle 
 
 ## What kind of information the matching provides
 The service provides two types (one can call directions too) of matching: \
-In the 1^st^ type, for each MC::Particle, it points to the entry in the REC::Particle bank, which it thinks is the
+In the first type, for each MC::Particle, it points to the entry in the REC::Particle bank, which it thinks is the
 **best match** for the given MC particle in the MC::Particle bank.\
-The 2nd type, does the opposite, for each reconstructed particle in the REC::Particle bank it points to the
+The 2nd type does the opposite, for each reconstructed particle in the REC::Particle bank it points to the
 entry in the MC::Particle bank that is the **best matched** to the given reconstructed particle.\
 The service provides also additional **status words** which encode information about what type of detectors (layers of detectors) participated
 in the matching of the given particle. \
@@ -58,8 +58,8 @@ want to know the initial MC particle that generated the hit, and also want to kn
 the reconstructed particle that the given hit belongs to. \
 All MC hits are stored in the "MC::True" bank. The variable **otid**
 shows the index of the original particle that generated the given hit.
-So the first part was quite simple we just need to pick the otid-th
-particle in? the "MC::Particle" bank. Now for the 2nd step, which is to
+So the first part was quite simple we just need to pick the **otid**-th
+particle in the "MC::Particle" bank. Now for the 2nd step, which is to
 find the recon particle that the given hit belongs to, we will use
 another variable **hitn**, which shows the index of the given hit in the
 ADC/TDC bank of the corresponding detector. The path from the ADC bank
@@ -88,7 +88,7 @@ one MC particles.
 
 ![Fig:Hits](Figs/HitsInCluster.png)
 *An example cluster containing hits from two different MC particles.
-Numbers in represent the hitID of the hit in the cluster. Hits in cyan
+Numbers represent the hitID of the hit in the cluster. Hits in cyan
 color were originated from one MC particle, and hits in red are
 originated from another MC
 particle.*
@@ -113,18 +113,18 @@ related to the Recon particle through the response banks
 (e.g. REC::Calorimeter, REC::Scintillator etc). As in the case of the
 cluster, it is not necessarily true that all hits of the cluster will be
 originated from the same MC Particle, here again, all recon clusters
-matched to a given MC Particle will not necessarily be part of the given
-Recon particle, and wise versa, not all clusters of the given recon
-particle will necessarily be originated from the given MC Particle.
+matched to a given MC Particle will not necessarily be part of the same
+recon particle, and wise versa, not all clusters of the given recon
+particle will necessarily be originated from the same MC Particle.
 
 ![](Figs/ClustersInRecParticle.png)*An example illustrating a case when two clusters matched to two MC
 particles end up in opposite Rec Particles. Cluster marked by red
 (orange) rectangle inside the green area, is matched to the MC Particle
-1(2), however Event Builder associated it the the Rec Particle
+1(2), however Event Builder associated it with the Rec Particle
 2(1).*
 
 An abstract example is shown in the figure above, when not all recon clusters matched
-to the given MC Particle are matched to the same recon particle. The
+to the given MC Particle belong to the same recon particle. The
 Truth Matching service in such cases chose the recon particle that has
 the highest number of matched clusters to the given MC particle.
 
@@ -150,13 +150,13 @@ Below is the snippet from the json file describing the **MC::GenMatch** structur
             {"name":"player2",       "type":"L",  "info":"layers from the 2nd set of detectors hit by Recon particle"},
             {"name":"quality",       "type":"F",  "info":"matching quality parameter"}
 
-* The **mcindex** is the index of the MC Particle in the **MC::Particle** bank that we want to match to the Rec particle. \
-* The **pindex** is the index of the matched REC particle in the **REC::Particle** bank. \
+* The **mcindex** is the index of the MC Particle in the **MC::Particle** bank that we want to match to the Rec particle.
+* The **pindex** is the index of the matched REC particle in the **REC::Particle** bank.
 * **mclayer1** and **mclayer2**  are 64 bit LONGs, where each bit of those words indicates whether the the given MC particle
 deposited hit in a specific detector/layer of CLAS12. See section [Status word description](#StatWordDescription)
-for details on detector<=>bit correspondence.\
+for details on detector<=>bit correspondence.
 * **player1** and **player2** are again 64 bit LONG words, however their bits represent detector/layers of the matched Rec Particle,
- but only those layers which are matched to the given MC particle. In the **MC::GenMatch** bank, set bits of **player1(2)** is always
+ but only those layers which are matched to the given MC particle. In the **MC::GenMatch** bank, set bits of **player1(2)** are always
  subset of set bits of **mclayer1(2)**.
 
 ## **MC::RecMatch**
@@ -178,14 +178,15 @@ Below is the snippet from the json file describing the **MC::RecMatch** structur
             {"name":"mclayer2",      "type":"L",  "info":"layers from the 2nd set of detectors hit by MC particle"},
             {"name":"quality",       "type":"F",  "info":"matching quality parameter"}
 
-* The **pindex** is the index of the particle in the **REC::Particle** bank that we want to match to MC particle \
-* The **mcindex** is the index of the MC Particle in the **MC::Particle** that is matched to the pindext-th particle in the REC::Particle bank. \
+* The **pindex** is the index of the particle in the **REC::Particle** bank that we want to match to MC particle
+* The **mcindex** is the index of the MC Particle in the **MC::Particle** bank, that is matched to the pindext-th particle in the REC::Particle bank.
 * **player1** and **player2** as in the case of **MC::GenMatch** bank, are two 64 bit LONG words where each bit indicates
  presence of the hit of the given REC particle in specific detector bits.
-* **mclayer1** and **mclayer2**  shows which detector/layers the matched MC particle has deposited hits, and here
+* **mclayer1** and **mclayer2**  show which detector/layers the matched MC particle has deposited hits, and here
  again those detector/layers are not all detectors/layers the matched MC particle has deposited hits, but only those which 
- are matched to the given Rec particle, in other words set bits of **mclayer1(2)** is always subset of set bits of **player1(2)**
-
+ are matched to the given Rec particle, in other words, set bits of **mclayer1(2)** is always subset of set bits of **player1(2)**
+* The **quality** takes values from 0 to 1, and is defined based on status words. It is just ab auxiliary variable that allows users to match
+particles without the need to decode status words. See section [Description of quality](QualityDescription) for more details
 
 ### <a name="StatWordDescription"></a>Status word description 
 In [Bank Structures](#BANK_STRUCTURES) it is mentioned that in addition to the index of the matched particle,
@@ -200,3 +201,4 @@ In the figure below shown the decoding of an example status word.
 ![](Figs/ExampleStatWord.png)*An example of a status word, showing that the given particle deposited hits in all DC layers except 15, 19, 20 and 29.
 Then it deposited hits in first four layers of BST, and in BMT it hit layers 1, 2 and 6*
 
+### <a name="QualityDescription"></a>Description of quality 
