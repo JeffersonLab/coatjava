@@ -51,11 +51,12 @@ public class FTEBEngine extends ReconstructionEngine {
         };
         requireConstants(Arrays.asList(tables));
         this.getConstantsManager().setVariation("default");
-
         this.registerOutputBank("FT::particles");
-
         return true;
     }
+
+    @Override
+    public void detectorChanged(int runNumber) {}
 
     @Override
     public boolean processDataEvent(DataEvent event) {

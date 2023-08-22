@@ -44,9 +44,7 @@ public class FTTRKEngine extends ReconstructionEngine {
             };
             requireConstants(Arrays.asList(tables));
             this.getConstantsManager().setVariation("default");
-            
-            // use 11 provisionally as run number to download the basic FTTK geometry constants
-            FTTRKConstantsLoader.Load(11, this.getConstantsManager().getVariation());
+
             reco = new FTTRKReconstruction();
 	        reco.debugMode=0;
             
@@ -56,6 +54,11 @@ public class FTTRKEngine extends ReconstructionEngine {
 
             return true;
 	}
+
+    @Override
+    public void detectorChanged(int runNumber) {
+        FTTRKConstantsLoader.Load(runNumber, this.getConstantsManager().getVariation());
+    }
 
 	@Override
 	public boolean processDataEvent(DataEvent event) {
@@ -344,11 +347,6 @@ public class FTTRKEngine extends ReconstructionEngine {
         frame3.setLocationRelativeTo(null);
         frame3.setVisible(true); 
         
-    }
-
-    @Override
-    public void detectorChanged(int runNumber) {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 }
 

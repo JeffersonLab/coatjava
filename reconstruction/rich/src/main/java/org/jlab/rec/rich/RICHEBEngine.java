@@ -10,30 +10,20 @@ public class RICHEBEngine extends ReconstructionEngine {
 
     private int Run = -1;
     private int Ncalls = 0;
-
     private long EBRICH_start_time;
-    
     private RICHGeoFactory       richgeo;
     private RICHTime             richtime = new RICHTime();
     private boolean engineDebug = false;
 
-
-    // ----------------
     public RICHEBEngine() {
-    // ----------------
         super("RICHEB", "mcontalb", "3.0");
-
     }
 
-
     @Override
-    // ----------------
     public boolean init() {
-    // ----------------
 
         int debugMode = 0;
         if(debugMode>=1)System.out.format("I am in RICHEBEngine init \n");
-
 
         String[] richTables = new String[]{
                     "/geometry/rich/setup",
@@ -70,16 +60,15 @@ public class RICHEBEngine extends ReconstructionEngine {
         if(this.getEngineConfigString("debug")!=null) 
             this.engineDebug = Boolean.parseBoolean(this.getEngineConfigString("debug"));
 
-        // Get the constant tables for reconstruction parameters, geometry and optical characterization
-        int run = 11;
-
-        richgeo   = new RICHGeoFactory(1, this.getConstantsManager(), run, engineDebug);
-        richtime.init_ProcessTime();
-
         return true;
 
     }
-
+    
+    @Override
+    public void detectorChanged(int runNumber) {
+        richgeo = new RICHGeoFactory(1, this.getConstantsManager(), runNumber, engineDebug);
+        richtime.init_ProcessTime();
+    }
 
     @Override
     // ----------------
@@ -146,10 +135,4 @@ public class RICHEBEngine extends ReconstructionEngine {
         return true;
 
     }
-
-    @Override
-    public void detectorChanged(int runNumber) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
 }
