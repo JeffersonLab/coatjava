@@ -227,8 +227,7 @@ public abstract class ReconstructionEngine implements Engine {
     }
     
     protected String getStringConfigParameter(String jsonString,                                             
-            String key)  throws Exception {
-        Object js;
+                                              String key)  throws Exception {
         String variation = "";
         try {
             JSONObject base = new JSONObject(jsonString);
@@ -238,13 +237,6 @@ public abstract class ReconstructionEngine implements Engine {
             } else {
                 LOGGER.log(Level.FINE,"[JSON]" + this.getName() + " **** warning **** does not contain key = " + key);
             }
-            /*
-            js = base.get(key);
-            if (js instanceof String) {
-                return (String) js;
-            } else {
-                throw new Exception("JSONObject[" +  "] not a string.");
-            }*/
         } catch (JSONException e) {
             throw new Exception(e.getMessage());
         }
@@ -549,7 +541,6 @@ public abstract class ReconstructionEngine implements Engine {
                     "\"timestamp\":333\n" +
                     "}";
             System.out.println(json);
-            //json = "{ \"ccdb\":{\"run\":10,\"variation\":\"default\"}, \"variation\":\"cosmic\"}";
             Reco reco = new Reco();
             String variation =  reco.getStringConfigParameter(json, "variation");
             System.out.println(" Variation : " + variation);
