@@ -284,4 +284,9 @@ public class FTOFEngine extends ReconstructionEngine {
         System.out.println(t1 + " TOTAL  PROCESSING TIME = "
                 + (t / (float) counter));
     }
+
+    @Override
+    public void detectorChanged(int runNumber) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }

@@ -4,7 +4,6 @@ import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.io.base.DataEvent;
 import java.util.List;
 import java.util.Arrays;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -51,5 +50,10 @@ public class LTCCEngine extends ReconstructionEngine {
             this.registerOutputBank("LTCC::clusters");
             return true;
         }
+
+    @Override
+    public void detectorChanged(int runNumber) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
        
 }

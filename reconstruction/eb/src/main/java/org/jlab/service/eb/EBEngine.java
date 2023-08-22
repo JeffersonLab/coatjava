@@ -1,6 +1,5 @@
 package org.jlab.service.eb;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -367,5 +366,8 @@ public class EBEngine extends ReconstructionEngine {
 
         return true;
     }
+
+    @Override
+    public void detectorChanged(int runNumber) {}
     
 }

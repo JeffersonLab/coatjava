@@ -362,6 +362,11 @@ public class FTTRKEngine extends ReconstructionEngine {
         frame3.setVisible(true); 
         
     }
+
+    @Override
+    public void detectorChanged(int runNumber) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 }
 
         

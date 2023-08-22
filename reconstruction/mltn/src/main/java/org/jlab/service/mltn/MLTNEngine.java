@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.service.mltn;
 
 import j4ml.clas12.Clas12TrackAnalyzer;
@@ -96,5 +91,10 @@ public class MLTNEngine extends ReconstructionEngine {
         //System.out.println("appending bank");
         event.appendBank(bank);
     }*/
+
+    @Override
+    public void detectorChanged(int runNumber) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
     
 }
