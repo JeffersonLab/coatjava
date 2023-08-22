@@ -3,7 +3,7 @@
 <span style="color:red">
 
 # Read this first
-In order the Truth Matching to work, it is important to invoke specific options when one runs GEMC:
+In order the Truth Matching to work, it is important to invoke certain options when one runs GEMC:
 * -SAVE_ALL_MOTHERS=1  
 * -SKIPREJECTEDHITS=1
 * -INTEGRATEDRAW="*"
@@ -15,6 +15,38 @@ Below is an example command that will allow the TrutMatching service to work pro
      gemc det.gcard -SAVE_ALL_MOTHERS=1 -SKIPREJECTEDHITS=1 -NGENP=50 -INTEGRATEDRAW="*" -N=10000 -USE_GUI=0 -INPUT_GEN_FILE="lund, inp_Lund.dat" -RUNNO=11 -OUTPUT="hipo, GEMC_Out.hipo"
 
 </span>
+
+# Read this second
+Here is a simple snippet of the code that shows for the given recon particle how to find the index of the matched MC particle in the MC::Particle bank.
+
+            int nPart = bRecPart.getRows();  // bRecPart is defined in the code as:  hipo::bank bRecPart(factory.getSchema("REC::Particle"));
+            for (int iPart = 0; iPart < nPart; iPart++) {
+
+                float quality = bRecMatch.getFloat("quality", iPart);    // bRecMatch is defined in the code as: hipo::bank bRecMatch(factory.getSchema("MC::RecMatch"));
+                int mcind = bRecMatch.getInt("mcindex", iPart);
+
+		int charge = bRecPart.getInt("charge", iPart);
+		int pid = bRecPart.getInt("pid", iPart);
+
+                /*
+                 * Check for a charged track
+                 */
+                if (recp.charge != 0 && recp.pid != 0 ) {
+			// mcind is the index of MC particle in the MC::Particle bank so you can use it to retrieve any variable from the MC::Particle bank
+			float px_MC_Matched = bMCPart.getFloat("px", mcind); // bMCPart is defined in the code as hipo::bank bMCPart(factory.getSchema("MC::Particle"));
+			...
+			...
+
+			// If you want very good quality matching you can do
+
+			if( quality > 0.98 ){
+				// Do whateever you want
+			}
+		}
+
+The example above should be good for the user to adapt it for their needs without going into details how the matching works, however if you are interested in more details
+about the matching algorithm and bank structures, you can read the rest of this document.
+## 
 
 
 # Introduction
@@ -188,7 +220,7 @@ Below is the snippet from the json file describing the **MC::RecMatch** structur
 * The **quality** takes values from 0 to 1, and is defined based on status words. It is just ab auxiliary variable that allows users to match
 particles without the need to decode status words. See section [Description of quality](QualityDescription) for more details
 
-### <a name="StatWordDescription"></a>Status word description 
+# <a name="StatWordDescription"></a>Status word description 
 In [Bank Structures](#BANK_STRUCTURES) it is mentioned that in addition to the index of the matched particle,
 bank provides also status words, which encode list of detector layers the given MC (or Rec) particle deposited hits into.
 ![](Figs/Layer_Bits.png)*Representation of status words. Fields in Orange are not implemented yet.*
@@ -201,4 +233,25 @@ In the figure below shown the decoding of an example status word.
 ![](Figs/ExampleStatWord.png)*An example of a status word, showing that the given particle deposited hits in all DC layers except 15, 19, 20 and 29.
 Then it deposited hits in first four layers of BST, and in BMT it hit layers 1, 2 and 6*
 
-### <a name="QualityDescription"></a>Description of quality 
+# <a name="QualityDescription"></a>Description of quality
+As it was already mentioned in the "Bank structures" section, both Matching banks **MC::GenMatch** and **MC::RecMatch** have a variable named **quality**.
+It is an auxiliary variable which in many cases might be useful for users to cut on this variable rather than doing complex checks on the status words.
+Below are described what values the **quality** takes for charged tracks, neutron/antineutron, and photons. \
+### Charged particles
+The quality for charged particles is 0, 0.95 or 0.98.
+* **0.95** In this case the
+	* if the charged recon track is in the FD: then it should have at least 5 superlayers, where in each of 5 superlayers at least 4 hits
+	* if the charged recon track is in CVT: then recon particle should have at least one **Z** cluster and two SVT crosses, **OR** at least two **Z** clusters and one **C** cluster and one SVT cross.
+* **0.98** This cases are subset of **0.95** in a sense that the same requirements are also imposed to the matched MC particles as well, or matched REC::Particle (in case of **MC::GenMatch**)
+
+### Neutron or antineutron
+The quality takes values 0.91 or 0.92
+* **0.91** In this case the neutral particle deposits a hit in any layer of EC (includes PCal, EC_in and EC_Out), CND or CTOF
+* **0.92** Those are subset of **0.91** cases, when the matched particle deposits hit in any of EC, CND or CTOF layers.
+### Photons
+The quality for photons are 0.93 or 0.94
+* **0.93** In this case the photon should have deposited hit in PCal **OR** any of CND layers or in CTOF
+* **0.94** Thise are subset of 0.93, when the matched particle has deposited hit in PCal **OR** any of CND layers or in CTOF
+##
+Later based on the feedback of users, some additional values can be implemented for the quality, and/or it's definition can be changed.
+ 
