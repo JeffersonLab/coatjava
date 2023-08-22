@@ -29,19 +29,20 @@ public class FTHODOEngine extends ReconstructionEngine {
 		reco = new FTHODOReconstruction();
 		reco.debugMode=0;
 
-                String[]  tables = new String[]{ 
-                    "/calibration/ft/fthodo/charge_to_energy",
-                    "/calibration/ft/fthodo/time_offsets",
-                    "/calibration/ft/fthodo/status",
-                    "/geometry/ft/fthodo"
-                };
-                requireConstants(Arrays.asList(tables));
-                this.getConstantsManager().setVariation("default");
-
-                this.registerOutputBank("FTHODO::hits","FTHODO::clusters");
-                
-                return true;
+        String[]  tables = new String[]{ 
+            "/calibration/ft/fthodo/charge_to_energy",
+            "/calibration/ft/fthodo/time_offsets",
+            "/calibration/ft/fthodo/status",
+            "/geometry/ft/fthodo"
+        };
+        requireConstants(Arrays.asList(tables));
+        this.getConstantsManager().setVariation("default");
+        this.registerOutputBank("FTHODO::hits","FTHODO::clusters");
+        return true;
 	}
+
+    @Override
+    public void detectorChanged(int runNumber) {}
 
 	@Override
 	public boolean processDataEvent(DataEvent event) {
@@ -133,9 +134,4 @@ public class FTHODOEngine extends ReconstructionEngine {
         frame.setVisible(true);     
 
 	}		
-
-    @Override
-    public void detectorChanged(int runNumber) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
 }
