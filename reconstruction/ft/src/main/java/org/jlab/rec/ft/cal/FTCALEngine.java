@@ -19,7 +19,6 @@ import org.jlab.io.evio.EvioDataBank;
 import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.hipo.HipoDataSource;
 
-
 public class FTCALEngine extends ReconstructionEngine {
 
 	public FTCALEngine() {
@@ -179,5 +178,10 @@ public class FTCALEngine extends ReconstructionEngine {
         frame.setVisible(true);     
 
 	}	
+
+    @Override
+    public void detectorChanged(int runNumber) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 	
 }

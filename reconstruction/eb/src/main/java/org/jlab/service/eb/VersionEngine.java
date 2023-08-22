@@ -44,4 +44,7 @@ public class VersionEngine extends ReconstructionEngine {
         return true;
     }
 
+    @Override
+    public void detectorChanged(int runNumber) {}
+
 }

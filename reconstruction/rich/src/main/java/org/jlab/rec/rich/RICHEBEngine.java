@@ -1,22 +1,9 @@
 package org.jlab.rec.rich;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.JFrame;
-
-import org.jlab.clas.reco.ReconstructionEngine;
-import org.jlab.io.base.DataEvent;
-import org.jlab.io.base.DataBank;
-
-import org.jlab.utils.groups.IndexedTable;
 import java.util.Arrays;
 import java.util.Optional;
-
-import org.jlab.geom.prim.Plane3D;
-import org.jlab.geom.prim.Line3D;
-
+import org.jlab.clas.reco.ReconstructionEngine;
+import org.jlab.io.base.DataEvent;
 import org.jlab.detector.geom.RICH.RICHGeoFactory;
 
 public class RICHEBEngine extends ReconstructionEngine {
@@ -158,6 +145,11 @@ public class RICHEBEngine extends ReconstructionEngine {
 
         return true;
 
+    }
+
+    @Override
+    public void detectorChanged(int runNumber) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
 }
