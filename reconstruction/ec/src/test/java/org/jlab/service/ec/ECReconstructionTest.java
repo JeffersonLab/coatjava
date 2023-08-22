@@ -23,7 +23,7 @@ public class ECReconstructionTest {
     
     ECEngine engineEC = new ECEngine();
     engineEC.init();
-    engineEC.processDataEvent(testEvent);
+    engineEC.processEvent(testEvent);
 
     testEvent.show();
     testEvent.getBank("ECAL::hits").show();
