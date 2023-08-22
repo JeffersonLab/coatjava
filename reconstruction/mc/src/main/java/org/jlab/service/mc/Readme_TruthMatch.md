@@ -31,7 +31,7 @@ Here is a simple snippet of the code that shows for the given recon particle how
                 /*
                  * Check for a charged track
                  */
-                if (recp.charge != 0 && recp.pid != 0 ) {
+                if (charge != 0 && pid != 0 ) {
 			// mcind is the index of MC particle in the MC::Particle bank so you can use it to retrieve any variable from the MC::Particle bank
 			float px_MC_Matched = bMCPart.getFloat("px", mcind); // bMCPart is defined in the code as hipo::bank bMCPart(factory.getSchema("MC::Particle"));
 			...
