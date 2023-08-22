@@ -47,8 +47,7 @@ public class RTPCEngine extends ReconstructionEngine{
         String cosm = this.getEngineConfigString("rtpcCosmic");
         String beamfit = this.getEngineConfigString("rtpcBeamlineFit");
         String disentangler = this.getEngineConfigString("rtpcDisentangler");
-	String chi2cull = this.getEngineConfigString("rtpcChi2Cull");
-        //System.out.println(sim + " " + cosm + " " + beamfit);
+	    String chi2cull = this.getEngineConfigString("rtpcChi2Cull");
         String kfstatus = this.getEngineConfigString("rtpcKF");
 
         if(sim != null){
@@ -91,8 +90,9 @@ public class RTPCEngine extends ReconstructionEngine{
 
         return true;
     }
-
-
+    
+    @Override
+    public void detectorChanged(int runNumber) {}
 
     @Override
     public boolean processDataEvent(DataEvent event) {
@@ -285,10 +285,5 @@ public class RTPCEngine extends ReconstructionEngine{
                 put("BONuS12Gas", BONuS12);
             }
         };
-    }
-
-    @Override
-    public void detectorChanged(int runNumber) {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

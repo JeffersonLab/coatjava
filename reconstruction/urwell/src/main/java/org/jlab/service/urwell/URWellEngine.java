@@ -38,10 +38,6 @@ public class URWellEngine extends ReconstructionEngine {
     @Override
     public boolean init() {
 
-        // init ConstantsManager to read constants from CCDB
-        String variationName = Optional.ofNullable(this.getEngineConfigString("variation")).orElse("default");
-        DatabaseConstantProvider cp = new DatabaseConstantProvider(11, variationName);
-        factory.init(cp);
         // register output banks for drop option        
         this.registerOutputBank("URWELL::hits");
         this.registerOutputBank("URWELL::clusters");
@@ -51,8 +47,12 @@ public class URWellEngine extends ReconstructionEngine {
         return true;
     }
 
-
-
+    @Override
+    public void detectorChanged(int runNumber) {
+        String variationName = Optional.ofNullable(this.getEngineConfigString("variation")).orElse("default");
+        DatabaseConstantProvider cp = new DatabaseConstantProvider(runNumber, variationName);
+        factory.init(cp);
+    }
 
     @Override
     public boolean processDataEvent(DataEvent event) {
@@ -240,10 +240,5 @@ public class URWellEngine extends ReconstructionEngine {
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);     
 
-    }
-
-    @Override
-    public void detectorChanged(int runNumber) {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 }
