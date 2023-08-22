@@ -197,5 +197,4 @@ public class MagFieldsEngine extends ReconstructionEngine {
 
     @Override
     public void detectorChanged(int runNumber) {}
-
 }

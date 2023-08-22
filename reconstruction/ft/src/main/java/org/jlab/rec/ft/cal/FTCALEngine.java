@@ -32,27 +32,28 @@ public class FTCALEngine extends ReconstructionEngine {
         reco.debugMode=0;
 
         String[]  tables = new String[]{ 
-                "/calibration/ft/ftcal/charge_to_energy",
-                "/calibration/ft/ftcal/time_offsets",
-                "/calibration/ft/ftcal/time_walk",
-                "/calibration/ft/ftcal/status",
-                "/calibration/ft/ftcal/thresholds",
-                "/calibration/ft/ftcal/cluster",
-                "/calibration/ft/ftcal/energycorr"
+            "/calibration/ft/ftcal/charge_to_energy",
+            "/calibration/ft/ftcal/time_offsets",
+            "/calibration/ft/ftcal/time_walk",
+            "/calibration/ft/ftcal/status",
+            "/calibration/ft/ftcal/thresholds",
+            "/calibration/ft/ftcal/cluster",
+            "/calibration/ft/ftcal/energycorr"
         };
         requireConstants(Arrays.asList(tables));
         this.getConstantsManager().setVariation("default");
-
-        this.registerOutputBank("FTCAL::hits","FTCAL::clusters");
-
+        this.registerOutputBank("FTCAL::hits","FTCAL::clusters");       
         return true;
-    }
+	}
 
     @Override
-    public boolean processDataEvent(DataEvent event) {
-        List<FTCALHit>     allHits           = new ArrayList();
-        List<FTCALHit>     selectedHits      = new ArrayList();
-        List<FTCALCluster> clusters          = new ArrayList();
+    public void detectorChanged(int runNumber) {}
+
+	@Override
+	public boolean processDataEvent(DataEvent event) {
+            List<FTCALHit>     allHits           = new ArrayList();
+            List<FTCALHit>     selectedHits      = new ArrayList();
+            List<FTCALCluster> clusters          = new ArrayList();
             
         // update calibration constants based on run number if changed
         int run = setRunConditionsParameters(event);
