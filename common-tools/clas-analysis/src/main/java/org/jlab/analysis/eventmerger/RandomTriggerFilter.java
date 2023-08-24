@@ -1,5 +1,6 @@
 package org.jlab.analysis.eventmerger;
 import java.util.List;
+import org.jlab.detector.epics.DaqEpicsSequence;
 import org.jlab.detector.scalers.DaqScalersSequence;
 import org.jlab.jnp.hipo4.data.*;
 import org.jlab.jnp.hipo4.io.HipoReader;
@@ -15,12 +16,22 @@ import org.jlab.utils.system.ClasUtilsFile;
  * Random trigger filtering tool: filters hipo event according to trigger bit 
  * and beam current to create random-trigger files for background merging
  *  
- * Usage: triggerBitFilter -b [trigger bit] -o [output file] 
- * Options: 
- *      -c : minimum beam current (default = -1)
- *      -n : maximum number of events to process (default = -1)
+ * Usage : trigger-filter -b [trigger bit mask (e.g. 0x0000008000000000 to select the FC trigger] -o [output file]
  * 
- *  Event is filtered if selected trigger bit is set and no other bit is
+ * Options :
+ *  -c : minimum beam current (default = -1)
+ *  -e : name of required bank, e.g. DC::tdc (default = )
+ *  -n : maximum number of events to process (default = -1)
+ *  -r : minimum number of rows in required bank (default = -1)
+ *  -s : source of beam current information (scalers or Epics PV name) (default = scalers)
+ *  -v : vetoed trigger bit mask (e.g. 0xFFFFFF7FFFFFFFFF to veto all but the FC trigger (default = 0x0)
+ * 
+ * Event is filtered if trigger word overlaps with the trigger mask and doesn't
+ * overlap with the veto mask. The beam current condition is based by default on 
+ * DSC2 scaler readouts from RUN::scaler or, alternatively, Epics readouts from 
+ * RAW::epics. In the absence of (or in addition to) the current threshold, a 
+ * threshold on raw hit multiplicity can be applied selecting bank and minimum 
+ * number of rows
  * 
  * @author devita
  */
@@ -28,25 +39,25 @@ import org.jlab.utils.system.ClasUtilsFile;
 public class RandomTriggerFilter {
     
     FilterTrigger triggerFilter = null;
-    FilterFcup fcupFilter = null;
-    FilterBank bankFilter = null;
+    FilterFcup  fcupFilter = null;
+    FilterBank  bankFilter = null;
     
-    public RandomTriggerFilter(int bit, double current){
-        triggerFilter = new FilterTrigger(bit);
-        fcupFilter = new FilterFcup(current);
-        bankFilter = new FilterBank("", -1);
+    public RandomTriggerFilter(long bits, long veto, double current){
+        triggerFilter = new FilterTrigger(bits, veto);
+        fcupFilter  = new FilterFcup(current);
+        bankFilter  = new FilterBank("", -1);
     }
 
-    public RandomTriggerFilter(int bit, String bankName, int nRows){
-        triggerFilter = new FilterTrigger(bit);
-        fcupFilter = new FilterFcup(-1);
-        bankFilter = new FilterBank(bankName, nRows);
+    public RandomTriggerFilter(long bits, long veto, String bankName, int nRows){
+        triggerFilter = new FilterTrigger(bits, veto);
+        fcupFilter  = new FilterFcup(-1);
+        bankFilter  = new FilterBank(bankName, nRows);
     }
 
-    public RandomTriggerFilter(int bit, double current, String bankName, int nRows){
-        triggerFilter = new FilterTrigger(bit);
-        fcupFilter = new FilterFcup(current);
-        bankFilter = new FilterBank(bankName, nRows);
+    public RandomTriggerFilter(long bits, long veto, double current, String currentSource, String bankName, int nRows){
+        triggerFilter = new FilterTrigger(bits, veto);
+        fcupFilter  = new FilterFcup(current, currentSource);
+        bankFilter  = new FilterBank(bankName, nRows);
     }
 
     private FilterTrigger getTriggerFilter() {
@@ -80,15 +91,21 @@ public class RandomTriggerFilter {
     
     /**
      * Create Json object with filter settings
-     * @param triggerBit
+     * @param selectedBits
+     * @param vetoedBits
      * @param minCurrent
+     * @param currentSource
+     * @param bankName
+     * @param nRows
      * @return
      */
-    public JsonObject settingsToJson(int triggerBit, double minCurrent, String bankName, int nRows){
+    public JsonObject settingsToJson(long selectedBits, long vetoedBits, double minCurrent, String currentSource, String bankName, int nRows){
         
         JsonObject filterData = new JsonObject();
-        filterData.add("trigger-bit", triggerBit);
+        filterData.add("trigger-mask", Long.toHexString(selectedBits));
+        filterData.add("veto-mask", Long.toHexString(vetoedBits));
         filterData.add("current-threshold", minCurrent); 
+        filterData.add("current-source", currentSource); 
         filterData.add("bank-name", bankName); 
         filterData.add("bank-size", nRows); 
         JsonObject json = new JsonObject();
@@ -114,31 +131,42 @@ public class RandomTriggerFilter {
         return bank;
     }
 
+    public static long readTriggerMask(String mask) {
+        if(mask.startsWith("0x")==true){
+            mask = mask.substring(2);
+        }
+        return Long.parseLong(mask.trim(),16);        
+    }
+    
     public static void main(String[] args){
 
         DefaultLogger.debug();
 
         OptionParser parser = new OptionParser("trigger-filter");
         parser.addRequired("-o"    ,"output file");
-        parser.addRequired("-b"    ,"trigger bit (0-63)");
+        parser.addRequired("-b"    ,"trigger bit mask (e.g. 0x0000008000000000 to select the FC trigger");
         parser.setRequiresInputList(false);
-        parser.addOption("-c"    ,"-1", "minimum beam current");
-        parser.addOption("-e"    ,  "", "name of required bank, e.g. DC::tdc");
-        parser.addOption("-r"    ,"-1", "minimum number of rows in required bank");
-        parser.addOption("-n"    ,"-1", "maximum number of events to process");
+        parser.addOption("-v"    ,  "0x0", "vetoed trigger bit mask (e.g. 0xFFFFFF7FFFFFFFFF to veto all but the FC trigger");
+        parser.addOption("-c"    ,   "-1", "minimum beam current");
+        parser.addOption("-s"    , "DSC2", "source of beam current information (DSC2 scaler or Epics PV name)");
+        parser.addOption("-e"    ,     "", "name of required bank, e.g. DC::tdc");
+        parser.addOption("-r"    ,   "-1", "minimum number of rows in required bank");
+        parser.addOption("-n"    ,   "-1", "maximum number of events to process");
         parser.parse(args);
 
         List<String> inputList = parser.getInputList();
 
         if(parser.hasOption("-o")==true&&parser.hasOption("-b")==true){
 
-            String outputFile = parser.getOption("-o").stringValue();
-            int triggerBit    = parser.getOption("-b").intValue();            
-            double minCurrent = parser.getOption("-c").doubleValue();
-            String bankName   = parser.getOption("-e").stringValue();
-            int nRows         = parser.getOption("-r").intValue();            
+            String outputFile    = parser.getOption("-o").stringValue();
+            long selectedBits    = RandomTriggerFilter.readTriggerMask(parser.getOption("-b").stringValue());            
+            long vetoedBits      = RandomTriggerFilter.readTriggerMask(parser.getOption("-v").stringValue());            
+            double minCurrent    = parser.getOption("-c").doubleValue();
+            String currentSource = parser.getOption("-s").stringValue();
+            String bankName      = parser.getOption("-e").stringValue();
+            int nRows            = parser.getOption("-r").intValue();            
 
-            int maxEvents     = parser.getOption("-n").intValue();
+            int maxEvents        = parser.getOption("-n").intValue();
 
             if(inputList.isEmpty()==true){
                 parser.printUsage();
@@ -146,9 +174,9 @@ public class RandomTriggerFilter {
                 System.exit(0);
             }
             
-            if(triggerBit<0 || triggerBit>63) {
+            if(selectedBits==0L) {
                 parser.printUsage();
-                System.out.println("\n >>>> error : invalid trigger bit....\n");
+                System.out.println("\n >>>> error : invalid trigger bit mask....\n");
                 System.exit(0);
             }
             
@@ -156,6 +184,7 @@ public class RandomTriggerFilter {
             int filtered = 0;
             
             DaqScalersSequence chargeSeq = DaqScalersSequence.readSequence(inputList);
+            DaqEpicsSequence epicsSeq = DaqEpicsSequence.readSequence(inputList);
 
             //Writer
             HipoWriterSorted writer = new HipoWriterSorted();
@@ -163,8 +192,9 @@ public class RandomTriggerFilter {
             writer.setCompressionType(2);
             writer.open(outputFile);
 
-            RandomTriggerFilter filter = new RandomTriggerFilter(triggerBit, minCurrent, bankName, nRows);
+            RandomTriggerFilter filter = new RandomTriggerFilter(selectedBits, vetoedBits, minCurrent, currentSource, bankName, nRows);
             filter.getFcupFilter().setScalerSequence(chargeSeq);
+            filter.getFcupFilter().setEpicsSequence(epicsSeq);
             
             ProgressPrintout  progress = new ProgressPrintout();
             for(String inputFile : inputList){
@@ -180,7 +210,7 @@ public class RandomTriggerFilter {
                 filter.init(reader);
 
                 // create tag 1 event with trigger filter information
-                JsonObject json = filter.settingsToJson(triggerBit, minCurrent, bankName, nRows);
+                JsonObject json = filter.settingsToJson(selectedBits, vetoedBits, minCurrent, currentSource, bankName, nRows);
                 // write tag-1 event
                 Event  tagEvent = new Event();
                 tagEvent.write(filter.createFilterBank(writer, json));
