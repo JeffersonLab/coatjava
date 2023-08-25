@@ -1,6 +1,6 @@
 package org.jlab.analysis.eventmerger;
 import java.util.List;
-import org.jlab.detector.epics.DaqEpicsSequence;
+import org.jlab.detector.epics.EpicsSequence;
 import org.jlab.detector.scalers.DaqScalersSequence;
 import org.jlab.jnp.hipo4.data.*;
 import org.jlab.jnp.hipo4.io.HipoReader;
@@ -184,7 +184,7 @@ public class RandomTriggerFilter {
             int filtered = 0;
             
             DaqScalersSequence chargeSeq = DaqScalersSequence.readSequence(inputList);
-            DaqEpicsSequence epicsSeq = DaqEpicsSequence.readSequence(inputList);
+            EpicsSequence epicsSeq = EpicsSequence.readSequence(inputList);
 
             //Writer
             HipoWriterSorted writer = new HipoWriterSorted();

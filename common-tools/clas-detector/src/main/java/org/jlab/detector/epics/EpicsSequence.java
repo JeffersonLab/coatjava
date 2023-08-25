@@ -20,18 +20,18 @@ import org.jlab.utils.JsonUtils;
  * 
  * @author baltzell, devita
  */
-public class DaqEpicsSequence implements Comparator<DaqEpics>{
+public class EpicsSequence implements Comparator<Epics>{
       
     private final static String EPICS_DEFAULT_PV = "scaler_calc1b";
     private final static int    EPICS_READOUT_PERIOD = 2; // (units are seconds)
     
-    protected final List<DaqEpics> epics=new ArrayList<>();
+    protected final List<Epics> epics=new ArrayList<>();
     
     private Bank rcfgBank=null;
   
 
     @Override
-    public int compare(DaqEpics o1, DaqEpics o2) {
+    public int compare(Epics o1, Epics o2) {
         if     (o1.getUnixTime()<o2.getUnixTime()) return -1;
         else if(o1.getUnixTime()>o2.getUnixTime()) return  1;
         return 0;
@@ -42,20 +42,20 @@ public class DaqEpicsSequence implements Comparator<DaqEpics>{
         if (unixTime < this.epics.get(0).getUnixTime()) return -1;
         if (unixTime > this.epics.get(this.epics.size()-1).getUnixTime()) return -1;
         // make a fake state for timestamp search:
-        DaqEpics de = new DaqEpics();
+        Epics de = new Epics();
         de.setUnixTime(unixTime);
-        final int index=Collections.binarySearch(this.epics,de,new DaqEpicsSequence());
+        final int index=Collections.binarySearch(this.epics,de,new EpicsSequence());
         final int n = index<0 ? -index-2 : index;
         return n;
     }
    
-    protected boolean add(DaqEpics de) {
+    protected boolean add(Epics de) {
         if (this.epics.isEmpty()) {
             this.epics.add(de);
             return true;
         }
         else {
-            final int index=Collections.binarySearch(this.epics,de,new DaqEpicsSequence());
+            final int index=Collections.binarySearch(this.epics,de,new EpicsSequence());
             if (index==this.epics.size()) {
                 // its timestamp is later than the existing sequence:
                 this.epics.add(de);
@@ -75,18 +75,18 @@ public class DaqEpicsSequence implements Comparator<DaqEpics>{
     
     /**
      * @param index
-     * @return the DaqEpics for the given index
+     * @return the Epics for the given index
      */
-    public DaqEpics getElement(int index) {
+    public Epics getElement(int index) {
         if (index>=0 && index<this.size()) return this.epics.get(index);
         return null;
     }
 
     /**
      * @param unixTime (i.e. RUN::config.timestamp)
-     * @return the most recent DaqEpics for the given timestamp
+     * @return the most recent Epics for the given timestamp
      */
-    public DaqEpics get(int unixTime) {
+    public Epics get(int unixTime) {
         final int n=this.findIndex(unixTime);
         if (n>=0) return this.epics.get(n);
         return null;
@@ -94,9 +94,9 @@ public class DaqEpicsSequence implements Comparator<DaqEpics>{
 
     /**
      * @param event 
-     * @return the most recent DaqEpics for the given event
+     * @return the most recent Epics for the given event
      */
-    public DaqEpics get(Event event) {
+    public Epics get(Event event) {
         event.read(this.rcfgBank);
         return this.get(this.rcfgBank.getInt("unixTime", 0));
     }
@@ -106,7 +106,7 @@ public class DaqEpicsSequence implements Comparator<DaqEpics>{
      * @param t2 upper limit of a Unix time interval
      * @return subset of sequence entries in the interval
      */
-    public List<DaqEpics> getSubList(int t1, int t2) {
+    public List<Epics> getSubList(int t1, int t2) {
         int idx1 = this.findIndex(t1);
         int idx2 = this.findIndex(t2);
         if(idx1 > idx2)
@@ -125,14 +125,14 @@ public class DaqEpicsSequence implements Comparator<DaqEpics>{
      * @return integral of the chosen variable in the time interval
      */
     public double getIntegral(String name, double defaultvalue, int t1, int t2) {
-        List<DaqEpics> sublist = this.getSubList(t1, t2);
+        List<Epics> sublist = this.getSubList(t1, t2);
         
         double integral=0;
         
         if(sublist!=null && sublist.size()>1) {
             for(int i=1; i<sublist.size(); i++) {
-                DaqEpics de1 = sublist.get(i);
-                DaqEpics de0 = sublist.get(i-1);
+                Epics de1 = sublist.get(i);
+                Epics de0 = sublist.get(i-1);
                 if(de0.getUnixTime()>0)
                     integral += de1.getDouble(name, defaultvalue)*(de1.getUnixTime()-de0.getUnixTime());
             }
@@ -160,12 +160,12 @@ public class DaqEpicsSequence implements Comparator<DaqEpics>{
      * @return minimum of the chosen variable in the time interval
      */
     public double getMinimum(String name, double defaultvalue, int t1, int t2) {
-        List<DaqEpics> sublist = this.getSubList(t1, t2);
+        List<Epics> sublist = this.getSubList(t1, t2);
                 
         if(sublist!=null && sublist.size()>1) {
             double minimum=Double.MAX_VALUE;
             for(int i=1; i<sublist.size(); i++) {
-                DaqEpics de = sublist.get(i);
+                Epics de = sublist.get(i);
                 if(de.getDouble(name, defaultvalue)<minimum)
                     minimum = de.getDouble(name, defaultvalue);
             }
@@ -188,7 +188,7 @@ public class DaqEpicsSequence implements Comparator<DaqEpics>{
         if(!this.epics.isEmpty()) {
             System.out.println("Index\tTI timestamp\tname");
             for(int i=0; i<this.epics.size(); i++) {
-                DaqEpics de = this.epics.get(i);
+                Epics de = this.epics.get(i);
                 System.out.println(i + "\t" + de.getUnixTime() + "\t" + de.getEpicsReadout().get(name));
             }
             System.out.println("Integral = " + this.getIntegral(name, 0));
@@ -196,15 +196,15 @@ public class DaqEpicsSequence implements Comparator<DaqEpics>{
     }    
     /**
      * This reads tag=1 events for RAW::epics banks, and initializes and returns
-     * a {@link DaqEpicsSequence} that can be used to access the most recent epics
+     * a {@link EpicsSequence} that can be used to access the most recent epics
      * readout for any given event.
      * 
      * @param filenames list of names of HIPO files to read
      * @return  sequence
      */
-    public static DaqEpicsSequence readSequence(List<String> filenames) {
+    public static EpicsSequence readSequence(List<String> filenames) {
        
-        DaqEpicsSequence seq=new DaqEpicsSequence();
+        EpicsSequence seq=new EpicsSequence();
 
         for (String filename : filenames) {
 
@@ -232,7 +232,7 @@ public class DaqEpicsSequence implements Comparator<DaqEpics>{
                 
                 int unixTime=configBank.getInt("unixtime",0);
                 
-                DaqEpics de = new DaqEpics(); 
+                Epics de = new Epics(); 
                 de.setUnixTime(unixTime);
                 de.setEpicsReadout(JsonUtils.read(new HipoDataBank(epicsBank), "json"));
                 if(de.getEpicsReadout().get(EPICS_DEFAULT_PV)!=null) seq.add(de);
@@ -258,7 +258,7 @@ public class DaqEpicsSequence implements Comparator<DaqEpics>{
         else               filenames.add(dir+file);
 
         // 1!!!1 initialize a sequence from tag=1 events: 
-        DaqEpicsSequence seq = DaqEpicsSequence.readSequence(filenames);
+        EpicsSequence seq = EpicsSequence.readSequence(filenames);
         seq.print("scaler_calc1b");
 
         long good=0;
@@ -288,7 +288,7 @@ public class DaqEpicsSequence implements Comparator<DaqEpics>{
                     eventnumber = rcfgBank.getInt("event",0);
                 }
                 // 2!!!2 use the unix to get the most recent epics data:
-                DaqEpics de=seq.get(unixtime);
+                Epics de=seq.get(unixtime);
 
                 if (de==null) {
                     bad++;

@@ -1,8 +1,8 @@
 package org.jlab.analysis.eventmerger;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.jlab.detector.epics.DaqEpics;
-import org.jlab.detector.epics.DaqEpicsSequence;
+import org.jlab.detector.epics.Epics;
+import org.jlab.detector.epics.EpicsSequence;
 import org.jlab.detector.scalers.DaqScalersSequence;
 import org.jlab.jnp.hipo4.data.*;
 import org.jlab.jnp.hipo4.io.HipoReader;
@@ -22,7 +22,7 @@ public class FilterFcup implements Worker {
     public final static String FCUP_SCALER = "DSC2";
     private Bank runConfigBank = null;
     private DaqScalersSequence scalerSeq = null;
-    private DaqEpicsSequence epicsSeq = null;
+    private EpicsSequence epicsSeq = null;
     private double charge  = -1;
     private double current = -1;
     private String source  = null;
@@ -64,7 +64,7 @@ public class FilterFcup implements Worker {
      * 
      * @param sequence
      */
-    public void setEpicsSequence(DaqEpicsSequence sequence) {
+    public void setEpicsSequence(EpicsSequence sequence) {
         this.epicsSeq=sequence;
     }
     
