@@ -6,7 +6,7 @@ import org.jlab.jnp.utils.json.JsonObject;
  * Stores Epics data in Json format and the associated Unix time
  * @author devita
  */
-public class DaqEpics {
+public class Epics {
     
     private JsonObject epicsReadout = null;
     
