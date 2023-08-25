@@ -22,7 +22,8 @@ import org.jlab.utils.JsonUtils;
  */
 public class DaqEpicsSequence implements Comparator<DaqEpics>{
       
-    private final static String EPICS_DEFAULT = "scaler_calc1b";
+    private final static String EPICS_DEFAULT_PV = "scaler_calc1b";
+    private final static int    EPICS_READOUT_PERIOD = 2; // (units are seconds)
     
     protected final List<DaqEpics> epics=new ArrayList<>();
     
@@ -180,7 +181,7 @@ public class DaqEpicsSequence implements Comparator<DaqEpics>{
      * @return minimum of the chosen variable in -2s:+4s around the input time
      */
     public double getMinimum(String name, double defaultvalue, int unixtime) {
-        return this.getMinimum(name, defaultvalue, unixtime-2, unixtime+4);
+        return this.getMinimum(name, defaultvalue, unixtime-EPICS_READOUT_PERIOD, unixtime+EPICS_READOUT_PERIOD*2);
     }
     
     public void print(String name) {
@@ -234,7 +235,7 @@ public class DaqEpicsSequence implements Comparator<DaqEpics>{
                 DaqEpics de = new DaqEpics(); 
                 de.setUnixTime(unixTime);
                 de.setEpicsReadout(JsonUtils.read(new HipoDataBank(epicsBank), "json"));
-                if(de.getEpicsReadout().get(EPICS_DEFAULT)!=null) seq.add(de);
+                if(de.getEpicsReadout().get(EPICS_DEFAULT_PV)!=null) seq.add(de);
             }
 
             reader.close();
