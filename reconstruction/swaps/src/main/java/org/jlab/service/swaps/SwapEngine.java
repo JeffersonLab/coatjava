@@ -37,7 +37,7 @@ public class SwapEngine extends ReconstructionEngine {
     }
 
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         DataBank bank = event.getBank("RUN::config");
         final int run = bank.getInt("run",0);
         for (String detectorName : this.swapman.getDetectors()) {

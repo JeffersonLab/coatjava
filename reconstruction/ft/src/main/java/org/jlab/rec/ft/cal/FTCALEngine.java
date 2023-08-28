@@ -50,7 +50,7 @@ public class FTCALEngine extends ReconstructionEngine {
     public void detectorChanged(int runNumber) {}
 
 	@Override
-	public boolean processDataEvent(DataEvent event) {
+	public boolean processDataEventUser(DataEvent event) {
             List<FTCALHit>     allHits           = new ArrayList();
             List<FTCALHit>     selectedHits      = new ArrayList();
             List<FTCALCluster> clusters          = new ArrayList();

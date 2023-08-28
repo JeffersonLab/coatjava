@@ -45,7 +45,7 @@ public class CNDCalibrationEngine extends ReconstructionEngine {
     private int newRun = 0;
 
 	@Override
-	public boolean processDataEvent(DataEvent event) {
+	public boolean processDataEventUser(DataEvent event) {
 
         if (!event.hasBank("RUN::config")) {
             return true;
@@ -142,7 +142,7 @@ public class CNDCalibrationEngine extends ReconstructionEngine {
 
 			//event.getBank("MC::Particle").show();
 			//if(event.hasBank("CVT::Tracks")){event.getBank("CVT::Tracks").show();};
-			en.processDataEvent(event);
+			en.processDataEventUser(event);
 
 			//			System.out.println("event après process ");
 			//			event.show();

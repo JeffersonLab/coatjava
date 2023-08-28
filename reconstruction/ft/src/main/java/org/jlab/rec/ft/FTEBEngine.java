@@ -59,7 +59,7 @@ public class FTEBEngine extends ReconstructionEngine {
     public void detectorChanged(int runNumber) {}
 
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         
         int run = this.setRunConditionsParameters(event);
         if (run>=0) {

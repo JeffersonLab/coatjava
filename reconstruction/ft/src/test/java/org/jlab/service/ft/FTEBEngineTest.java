@@ -97,7 +97,7 @@ public class FTEBEngineTest extends ReconstructionEngine {
     }
 
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         List<FTParticle> FTparticles = new ArrayList<FTParticle>();
         List<FTResponse> FTresponses = new ArrayList<FTResponse>();
 
