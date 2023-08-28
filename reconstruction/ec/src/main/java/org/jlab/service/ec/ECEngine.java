@@ -30,7 +30,7 @@ public class ECEngine extends ReconstructionEngine {
     }
     
     @Override
-    public boolean processDataEvent(DataEvent de) {
+    public boolean processDataEventUser(DataEvent de) {
                            
         List<ECStrip>     ecStrips = ECCommon.initEC(de, this.getConstantsManager()); // thresholds, ADC/TDC match        
         List<ECPeak>       ecPeaks = ECCommon.processPeaks(ECCommon.createPeaks(ecStrips)); // thresholds, split peaks -> update peak-lines          

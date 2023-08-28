@@ -72,12 +72,12 @@ public class RICHEBEngine extends ReconstructionEngine {
 
     @Override
     // ----------------
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
     // ----------------
 
         int debugMode = 0;
 
-        // create instances of all event-dependent classes in processDataEvent to avoid interferences between different threads when running in clara
+        // create instances of all event-dependent classes in processDataEventUser to avoid interferences between different threads when running in clara
         RICHEvent              richevent = new RICHEvent();
         RICHio                 richio    = new RICHio();
         RICHCalibration        richcal   = new RICHCalibration();

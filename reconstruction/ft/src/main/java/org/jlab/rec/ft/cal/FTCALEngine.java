@@ -51,7 +51,7 @@ public class FTCALEngine extends ReconstructionEngine {
     public void detectorChanged(int runNumber) {}
 
 	@Override
-	public boolean processDataEvent(DataEvent event) {
+	public boolean processDataEventUser(DataEvent event) {
             List<FTCALHit>     allHits           = new ArrayList();
             List<FTCALHit>     selectedHits      = new ArrayList();
             List<FTCALCluster> clusters          = new ArrayList();
@@ -123,7 +123,7 @@ public class FTCALEngine extends ReconstructionEngine {
         while(reader.hasEvent()){
 //        for(int nev=0; nev<2; nev++){
             DataEvent event = (DataEvent) reader.getNextEvent();
-            cal.processDataEvent(event);
+            cal.processDataEventUser(event);
 
             if(event instanceof EvioDataEvent) {
                 GenericKinematicFitter      fitter = new GenericKinematicFitter(11);

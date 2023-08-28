@@ -34,7 +34,7 @@ public class MLTNEngine extends ReconstructionEngine {
     public void detectorChanged(int runNumber) {}
 
     @Override
-    public boolean processDataEvent(DataEvent de) {
+    public boolean processDataEventUser(DataEvent de) {
         if(de.hasBank("HitBasedTrkg::Clusters")==true){
             DataBank bank = de.getBank("HitBasedTrkg::Clusters");
             
