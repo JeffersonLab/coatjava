@@ -214,7 +214,7 @@ public class LayerEfficiencyAnalyzer extends DCEngine implements IDataEventListe
     private final ArrayList<HashMap<Coordinate, H1F>> LayerEffsTrkD = new ArrayList<HashMap<Coordinate, H1F>>();
     
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         
         int run = this.getRun(event);
         if(run==0) return true;
@@ -449,7 +449,7 @@ public class LayerEfficiencyAnalyzer extends DCEngine implements IDataEventListe
             while (reader.hasEvent()) {
                 counter++;
                 DataEvent event = reader.getNextEvent();
-                tm.processDataEvent(event);
+                tm.processDataEventUser(event);
                 tm.ProcessLayerEffs(event);
                 //event.show();
                 if(counter%1000==0) {

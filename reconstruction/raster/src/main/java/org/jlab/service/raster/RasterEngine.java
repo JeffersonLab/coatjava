@@ -53,7 +53,7 @@ public class RasterEngine extends ReconstructionEngine {
     public void detectorChanged(int runNumber) {}
     
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
                
         // Read run number from RUN::config bank
         int run=-1;
@@ -134,7 +134,7 @@ public class RasterEngine extends ReconstructionEngine {
             System.out.print("MC position read : " + MC_Part.getFloat("vx",0) +"\n");
             
             // run the raster engine
-            engine.processDataEvent(event);
+            engine.processDataEventUser(event);
             
             // read the output bank and fill the histograms
             if(event.hasBank("RASTER::position")) {

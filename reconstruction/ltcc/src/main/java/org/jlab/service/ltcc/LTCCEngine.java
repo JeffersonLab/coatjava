@@ -24,7 +24,7 @@ public class LTCCEngine extends ReconstructionEngine {
     }
     
     @Override
-	public boolean processDataEvent(DataEvent event) {
+	public boolean processDataEventUser(DataEvent event) {
         if (DEBUG) event.show();
         // only process the event if the LTCC bank is present
         if (event.hasBank("LTCC::adc")) {
