@@ -55,7 +55,7 @@ public class URWellEngine extends ReconstructionEngine {
     }
 
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         
         List<URWellStrip>     strips = URWellStrip.getStrips(event, factory, this.getConstantsManager());
         List<URWellCluster> clusters = URWellCluster.createClusters(strips);
@@ -179,7 +179,7 @@ public class URWellEngine extends ReconstructionEngine {
         while(reader.hasEvent()) {
             DataEvent event = reader.getNextEvent();
 
-            engine.processDataEvent(event);
+            engine.processDataEventUser(event);
             
             double xtrue = 0;
             double ytrue = 0;

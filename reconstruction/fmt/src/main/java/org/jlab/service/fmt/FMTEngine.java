@@ -72,7 +72,7 @@ public class FMTEngine extends ReconstructionEngine {
     }
 
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         // Initial setup.
         if(debug) System.out.println("\nNew event");
         

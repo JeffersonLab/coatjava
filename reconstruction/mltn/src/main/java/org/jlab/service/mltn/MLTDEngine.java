@@ -83,7 +83,7 @@ public class MLTDEngine extends ReconstructionEngine {
     public void detectorChanged(int runNumber) {}
 
     @Override
-    public boolean processDataEvent(DataEvent de) {
+    public boolean processDataEventUser(DataEvent de) {
         if(de.hasBank(inputBank)==true){
             DataBank bank = de.getBank(inputBank);
                         

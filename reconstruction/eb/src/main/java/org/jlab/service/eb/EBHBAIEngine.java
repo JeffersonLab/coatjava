@@ -18,8 +18,8 @@ public class EBHBAIEngine extends EBEngine {
     }
 
     @Override
-    public boolean processDataEvent(DataEvent de) {
-        return super.processDataEvent(de,ebScalers);
+    public boolean processDataEventUser(DataEvent de) {
+        return super.processDataEventUser(de,ebScalers);
     }
 
     @Override

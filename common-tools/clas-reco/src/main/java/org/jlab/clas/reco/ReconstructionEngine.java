@@ -67,10 +67,14 @@ public abstract class ReconstructionEngine implements Engine {
 
     volatile long triggerMask = 0xFFFFFFFFFFFFFFFFL;
 
-    String             engineName        = "UnknownEngine";
-    String             engineAuthor      = "N.T.";
-    String             engineVersion     = "0.0";
-    String             engineDescription = "CLARA Engine";
+    String engineName        = "UnknownEngine";
+    String engineAuthor      = "N.T.";
+    String engineVersion     = "0.0";
+    String engineDescription = "CLARA Engine";
+
+    abstract public boolean processDataEventUser(DataEvent event);
+    abstract public boolean init();
+    abstract public void detectorChanged(int runNumber);
 
     public ReconstructionEngine(String name, String author, String version){
         engineName    = name;
@@ -107,9 +111,6 @@ public abstract class ReconstructionEngine implements Engine {
         return new RawDataBank(bankName, order);
     }
 
-    abstract public boolean processDataEvent(DataEvent event);
-    abstract public boolean init();
-   
     /**
      * Use a map just to avoid name clash in ConstantsManager.
      * @param tables map of table names to #indices
@@ -333,8 +334,6 @@ public abstract class ReconstructionEngine implements Engine {
         }
     }
     
-    public abstract void detectorChanged(int runNumber);
-
     public synchronized boolean checkRunNumber(DataEvent event) {
         int r = 0;
         if (event.hasBank("RUN::config")) {
@@ -347,7 +346,7 @@ public abstract class ReconstructionEngine implements Engine {
         return !this.ignoreInvalidRunNumbers || r>0;
     }
     
-    public void processEvent(DataEvent dataEvent) {
+    public void processDataEvent(DataEvent dataEvent) {
         if (!this.wroteConfig) {
             this.wroteConfig = true;
             JsonUtils.extend(dataEvent, CONFIG_BANK_NAME, "json", this.generateConfig());
@@ -357,7 +356,7 @@ public abstract class ReconstructionEngine implements Engine {
         }
         if(this.applyTriggerMask(dataEvent)) {
             if (this.checkRunNumber(dataEvent)) {
-                this.processDataEvent(dataEvent);
+                this.processDataEventUser(dataEvent);
             }
         }        
     }
@@ -396,7 +395,7 @@ public abstract class ReconstructionEngine implements Engine {
             }
                     
             try {
-                this.processEvent(dataEventHipo);
+                this.processDataEvent(dataEventHipo);
                 output.setData(mt, dataEventHipo.getHipoEvent());
             } catch (Exception e) {
                 String msg = String.format("Error processing input event%n%n%s", ClaraUtil.reportException(e));
@@ -512,7 +511,7 @@ public abstract class ReconstructionEngine implements Engine {
             super("a","b","c");
         }
         @Override
-        public boolean processDataEvent(DataEvent event) {
+        public boolean processDataEventUser(DataEvent event) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
