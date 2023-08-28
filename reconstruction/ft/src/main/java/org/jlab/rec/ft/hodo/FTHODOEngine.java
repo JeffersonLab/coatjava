@@ -45,7 +45,7 @@ public class FTHODOEngine extends ReconstructionEngine {
     public void detectorChanged(int runNumber) {}
 
 	@Override
-	public boolean processDataEvent(DataEvent event) {
+	public boolean processDataEventUser(DataEvent event) {
 
             // update calibration constants based on run number if changed
             int run = setRunConditionsParameters(event);
@@ -104,7 +104,7 @@ public class FTHODOEngine extends ReconstructionEngine {
 
         while(reader.hasEvent()){
             DataEvent event = (DataEvent) reader.getNextEvent();
-            cal.processDataEvent(event);
+            cal.processDataEventUser(event);
 
             DetectorEvent detectorEvent = DetectorData.readDetectorEvent(event);
             PhysicsEvent            gen = detectorEvent.getGeneratedEvent();

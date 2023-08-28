@@ -75,7 +75,7 @@ public class CTOFEngine extends ReconstructionEngine {
     }
 
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         //setRunConditionsParameters( event) ;
         if(event.hasBank("RUN::config")==false ) {
             System.err.println("RUN CONDITIONS NOT READ!");
@@ -210,7 +210,7 @@ public class CTOFEngine extends ReconstructionEngine {
             counter++;
             DataEvent event = reader.getNextEvent();
            
-            en.processDataEvent(event);
+            en.processDataEventUser(event);
             writer.writeEvent(event);
             if (counter > 3) {
                 break;

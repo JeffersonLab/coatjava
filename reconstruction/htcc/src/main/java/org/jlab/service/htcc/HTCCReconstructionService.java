@@ -20,7 +20,7 @@ public class HTCCReconstructionService extends ReconstructionEngine{
     }
     
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         int runNo = 10;
 
         if(event.hasBank("RUN::config")==true){

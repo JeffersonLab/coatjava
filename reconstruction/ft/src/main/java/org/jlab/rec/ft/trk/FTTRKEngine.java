@@ -61,7 +61,7 @@ public class FTTRKEngine extends ReconstructionEngine {
     }
 
 	@Override
-	public boolean processDataEvent(DataEvent event) {
+	public boolean processDataEventUser(DataEvent event) {
         // update calibration constants based on run number if changed
         int run = setRunConditionsParameters(event);
         if(run>=0) {

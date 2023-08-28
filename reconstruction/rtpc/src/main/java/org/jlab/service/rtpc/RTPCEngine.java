@@ -95,7 +95,7 @@ public class RTPCEngine extends ReconstructionEngine{
     public void detectorChanged(int runNumber) {}
 
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
 
         HitParameters params = new HitParameters();
 
@@ -223,7 +223,7 @@ public class RTPCEngine extends ReconstructionEngine{
         while(reader.hasEvent()){
             DataEvent event = reader.getNextEvent();
             //if(eventcount == eventselect){
-            en.processDataEvent(event);
+            en.processDataEventUser(event);
             writer.writeEvent(event);
             //}else if(eventcount > eventselect) break;
             eventcount ++;
