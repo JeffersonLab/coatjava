@@ -61,7 +61,7 @@ public class FTTRKEngineTest extends ReconstructionEngine {
 	}
 
 	@Override
-	public boolean processDataEvent(DataEvent event) {
+	public boolean processDataEventUser(DataEvent event) {
             List<FTTRKHit> allHits      = new ArrayList();
             ArrayList<FTTRKCluster> clusters = new ArrayList();
             ArrayList<FTTRKCross>   crosses  = new ArrayList();

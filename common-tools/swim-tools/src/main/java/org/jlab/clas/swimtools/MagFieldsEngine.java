@@ -162,7 +162,7 @@ public class MagFieldsEngine extends ReconstructionEngine {
     }
 
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         DataBank bank = event.getBank("RUN::config");
         // Load the constants
         // -------------------
