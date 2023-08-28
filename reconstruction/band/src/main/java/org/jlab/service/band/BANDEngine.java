@@ -29,7 +29,7 @@ public class BANDEngine extends ReconstructionEngine {
 	int Run = -1;
 
 	@Override
-		public boolean processDataEvent(DataEvent event) {
+		public boolean processDataEventUser(DataEvent event) {
 			//System.out.println("**** NEW EVENT ****");
 			// update calibration constants based on run number if changed
 			setRunConditionsParameters(event);
@@ -127,7 +127,7 @@ public class BANDEngine extends ReconstructionEngine {
 			//	event.getBank("band::adc").show();
 			//	event.getBank("band::tdc").show();
 			//}
-			en.processDataEvent(event);
+			en.processDataEventUser(event);
 			writer.writeEvent(event);
 			//event.getBank("band::hits").show();
 			nevent++;
