@@ -42,8 +42,8 @@ public class DCReconstructionTest {
     DCHBPostClusterConv engineHB = new DCHBPostClusterConv();
     engineCL.init();
     engineHB.init();
-    engineCL.processEvent(testEvent); 
-    engineHB.processEvent(testEvent); 
+    engineCL.processDataEvent(testEvent); 
+    engineHB.processDataEvent(testEvent); 
     if(testEvent.hasBank("HitBasedTrkg::HBTracks")) {
         testEvent.getBank("HitBasedTrkg::HBTracks").show();
     }

@@ -81,7 +81,7 @@ public class FTOFEngine extends ReconstructionEngine {
     }
 
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         if(event.hasBank("RUN::config")==false ) {
 		    System.err.println("RUN CONDITIONS NOT READ!");
 		    return true;
@@ -243,11 +243,11 @@ public class FTOFEngine extends ReconstructionEngine {
                 t1 = System.currentTimeMillis();
             }
 
-            //en0.processDataEvent(event);
+            //en0.processDataEventUser(event);
             //	if (counter > 3062)
-            //en0.processDataEvent(event);
-            //en1.processDataEvent(event);
-            en.processDataEvent(event);
+            //en0.processDataEventUser(event);
+            //en1.processDataEventUser(event);
+            en.processDataEventUser(event);
             System.out.println("  EVENT " + counter);
             //if (counter > 3066)
             //	break;
