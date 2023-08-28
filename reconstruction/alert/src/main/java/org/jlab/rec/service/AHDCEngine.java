@@ -103,7 +103,7 @@ public class AHDCEngine extends ReconstructionEngine {
     public void detectorChanged(int runNumber) {}
 
 	@Override
-	public boolean processDataEvent(DataEvent event) {
+	public boolean processDataEventUser(DataEvent event) {
 
 		int    runNo          = 10;
 		int    eventNo        = 777;
@@ -279,7 +279,7 @@ public class AHDCEngine extends ReconstructionEngine {
 			// System.out.println("***********  NEXT EVENT ************");
 			// event.show();
 
-			en.processDataEvent(event);
+			en.processDataEventUser(event);
 			writer.writeEvent(event);
 
 		}
