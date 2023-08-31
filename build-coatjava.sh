@@ -92,8 +92,8 @@ cp -r etc coatjava/
 which python3 >& /dev/null && python=python3 || python=python
 $python etc/bankdefs/util/bankSplit.py coatjava/etc/bankdefs/hipo4 || exit 1
 mkdir -p coatjava/lib/clas
-cp external-dependencies/JEventViewer-1.1.jar coatjava/lib/clas/
-cp external-dependencies/vecmath-1.3.1-2.jar coatjava/lib/clas/
+#cp external-dependencies/JEventViewer-1.1.jar coatjava/lib/clas/
+#cp external-dependencies/vecmath-1.3.1-2.jar coatjava/lib/clas/
 mkdir -p coatjava/lib/utils
 cp external-dependencies/jclara-4.3-SNAPSHOT.jar coatjava/lib/utils
 #cp external-dependencies/jaw-1.0.jar coatjava/lib/utils

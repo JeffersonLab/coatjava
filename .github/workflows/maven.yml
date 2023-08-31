@@ -12,29 +12,64 @@ on:
     #       to the last committer of this file!!!!!
     - cron: '0 22 * * *'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
+
   build:
-
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up JDK
-      uses: actions/setup-java@v1
+      uses: actions/setup-java@v3
       with:
         java-version: 11
+        distribution: zulu
     - name: build
       run: ./build-coatjava.sh --spotbugs --unittests --quiet
-    - name: kpp-test
-      run: cd validation/advanced-tests && ./run-advanced-tests.sh
-    - name: eb-ep-test
-      run: cd validation/advanced-tests && ./run-eb-tests.sh -100 electronproton
-    - name: eb-eg-test
-      run: cd validation/advanced-tests && ./run-eb-tests.sh -100 electrongamma
-    - name: eb-epc-test
-      run: cd validation/advanced-tests && ./run-eb-tests.sh -100 electronprotonC
-    - name: eb-enc-test
-      run: cd validation/advanced-tests && ./run-eb-tests.sh -100 electronneutronC
-    - name: eb-eftpi-test
-      run: cd validation/advanced-tests && ./run-eb-tests.sh -100 electronFTpion
+    - name: tar # tarball to preserve permissions
+      run: tar czvf coatjava.tar.gz coatjava
+    - uses: actions/upload-artifact@v3
+      with:
+        name: build
+        retention-days: 1
+        path: coatjava.tar.gz
 
+  test:
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        id:
+          - kpp
+          - eb-ep
+          - eb-eg
+          - eb-epc
+          - eb-enc
+          - eb-eftpi
+        include:
+          - { id: kpp,      cmd: ./run-advanced-tests.sh }
+          - { id: eb-ep,    cmd: ./run-eb-tests.sh -100 electronproton   }
+          - { id: eb-eg,    cmd: ./run-eb-tests.sh -100 electrongamma    }
+          - { id: eb-epc,   cmd: ./run-eb-tests.sh -100 electronprotonC  }
+          - { id: eb-enc,   cmd: ./run-eb-tests.sh -100 electronneutronC }
+          - { id: eb-eftpi, cmd: ./run-eb-tests.sh -100 electronFTpion   }
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up JDK
+      uses: actions/setup-java@v3
+      with:
+        java-version: 11
+        distribution: zulu
+    - uses: actions/download-artifact@v3
+      with:
+        name: build
+    - name: untar build
+      run: tar xzvf coatjava.tar.gz
+    - name: run test
+      run: |
+        cd validation/advanced-tests
+        ${{matrix.cmd}}
