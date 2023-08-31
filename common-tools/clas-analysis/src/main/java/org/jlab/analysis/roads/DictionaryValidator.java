@@ -183,9 +183,9 @@ public class DictionaryValidator {
         return canvas;
     }
 
-    public void init(String filename, TestMode mode, int wireBin, int stripBin, int sectorDependence) {
+    public void init(String filename, TestMode mode, int wireBin, int stripBin, int sectorDependence, int maxRoads) {
         this.dictionary = new Dictionary();
-        this.dictionary.readDictionary(filename, mode, wireBin, stripBin, sectorDependence);
+        this.dictionary.readDictionary(filename, mode, wireBin, stripBin, sectorDependence, maxRoads);
         this.createHistos(mode, wireBin, stripBin, sectorDependence);
         this.plotRoads();
     }
@@ -313,7 +313,7 @@ public class DictionaryValidator {
         parser.addOption("-pid"      , "0", "select particle PID for new dictionary, 0: no selection,");
         parser.addOption("-charge"   , "0", "select particle charge for new dictionary, 0: no selection");
         parser.addOption("-wire"     , "1", "dc wire bin size in road finding");
-        parser.addOption("-strip"    , "2", "pcal strip bin size in road finding");
+        parser.addOption("-strip"    , "1", "pcal strip bin size in road finding");
         parser.addOption("-sector"   , "0", "sector dependent roads, 0=false, 1=true)");
         parser.addOption("-smear"    , "1", "smearing in wire/paddle/strip matching");
         parser.addOption("-mode"     , "0", "select test mode, " + TestMode.getOptionsString());
@@ -321,6 +321,7 @@ public class DictionaryValidator {
         parser.addOption("-vzmin"  , "-10", "minimum vz (cm)");
         parser.addOption("-vzmax"  ,  "10", "maximum vz (cm)");
         parser.addOption("-n"        ,"-1", "maximum number of events to process for validation");
+        parser.addOption("-r"        ,"-1", "maximum number of roads to use for validation");
         parser.parse(args);
         
         String dictionaryFileName = null;
@@ -362,6 +363,7 @@ public class DictionaryValidator {
             System.exit(1);
         }
         int maxEvents  = parser.getOption("-n").intValue();
+        int maxRoads   = parser.getOption("-r").intValue();
         
         double thrs    = parser.getOption("-threshold").doubleValue();
         double vzmin   = parser.getOption("-vzmin").doubleValue();
@@ -381,9 +383,10 @@ public class DictionaryValidator {
         System.out.println("Smearing for wire/paddle/strip matching set to: " + smear);
         System.out.println("Test mode set to:                               " + mode);
         System.out.println("Maximum number of events to process set to:     " + maxEvents);
+        System.out.println("Maximum number of roads to use set to:          " + maxRoads);
         
         DictionaryValidator validator = new DictionaryValidator();
-        validator.init(dictionaryFileName, mode, wireBin, stripBin, sector);                
+        validator.init(dictionaryFileName, mode, wireBin, stripBin, sector, maxRoads);                
     //        tm.printDictionary();
         validator.processFile(testFileName,wireBin,stripBin,sector,smear,mode,maxEvents,pid,charge,thrs, vzmin, vzmax);
         validator.plotHistos();

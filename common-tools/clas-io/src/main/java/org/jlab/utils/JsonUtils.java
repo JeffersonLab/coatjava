@@ -6,10 +6,14 @@ import java.io.BufferedWriter;
 import java.io.OutputStreamWriter;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
+import org.jlab.jnp.hipo4.data.Bank;
+import org.jlab.jnp.hipo4.data.Event;
+import org.jlab.jnp.hipo4.io.HipoReader;
 import org.jlab.jnp.utils.json.JsonArray;
 import org.jlab.jnp.utils.json.JsonObject;
 import org.jlab.jnp.utils.json.JsonValue;
 import org.jlab.jnp.utils.json.PrettyPrint;
+import org.jlab.utils.options.OptionParser;
 import org.json.JSONObject;
 
 /**
@@ -50,6 +54,15 @@ public class JsonUtils {
     }
     
     /**
+     *  Just print it to the screen, nicely.
+     * @param bank
+     * @param varName 
+     */
+    public static void show(Bank bank, String varName) {
+        show(read(bank,varName));
+    }
+
+    /**
      * Convenience method to get a JsonObject from a bank.
      * @param bank bank to read
      * @param varName name of byte variable to read
@@ -57,6 +70,14 @@ public class JsonUtils {
      */
     public static JsonObject read(DataBank bank, String varName) {
         return JsonObject.readFrom(new String(bank.getByte(varName)));
+    }
+    
+    public static JsonObject read(Bank bank, String varName) {
+        byte[] x = new byte[bank.getRows()];
+        for (int i=0; i<bank.getRows(); ++i) {
+            x[i] = bank.getByte(varName,i);
+        }
+        return JsonObject.readFrom(new String(x));
     }
 
     /**
@@ -239,5 +260,47 @@ public class JsonUtils {
         return extend(event, bankName, varName, Map2Json(extension));
     }
 
+    public static void main(String args[]) {
+        OptionParser parser = new OptionParser("hipo-json");
+        parser.addRequired("-b","bank name");
+        parser.addOption("-v", "json", "variable name");
+        parser.addOption("-i", "1", "ignore parsing errors");
+        parser.setRequiresInputList(true);
+        parser.parse(args);
+        final String bankName = parser.getOption("-b").stringValue();
+        final String varName = parser.getOption("-v").stringValue();
+        int nerrors = 0;
+        for (String filename : parser.getInputList()) {
+            Event event = new Event();     
+            HipoReader reader = new HipoReader();
+            reader.open(filename);
+            if (!reader.getSchemaFactory().hasSchema(bankName)) {
+                System.err.println("\nERROR:  Bank does not exist in file's schema:  "+bankName);
+                System.exit(1);
+            }
+            if (!reader.getSchemaFactory().getSchema(bankName).hasEntry(varName)) {
+                System.err.println("\nERROR:  Variable does not exist in file's schema:  "+bankName+"."+varName);
+                System.exit(1);
+            }
+            System.err.println(reader.getSchemaFactory().getSchema(bankName).getSchemaString());
+            Bank bank = reader.getSchemaFactory().getBank(bankName);
+            while (reader.hasNext()) {
+                reader.nextEvent(event);
+                if (event.hasBank(reader.getSchemaFactory().getSchema(bankName))) {
+                    event.read(bank);
+                    try {
+                        JsonUtils.show(bank,varName);
+                    }
+                    catch (org.jlab.jnp.utils.json.ParseException e) {
+                        if (++nerrors > 3 && parser.getOption("-i").intValue()!=0) {
+                            System.err.println("\nERROR:  Too many parsing errors.\nAre you sure your variable "+bankName+"."+varName+" is a byte array representing a JSON string?");
+                            System.exit(1);
+                        }    
+                    }
+                }
+            }
+            reader.close();
+        }
+    }
     
 }

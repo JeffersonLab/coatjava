@@ -161,7 +161,7 @@ public class Road {
                         }
                     }
                     road.setSector((byte) trackSector);
-                    if(road.getLayerHits(3)<3 || road.getSuperLayers()!=6) continue;
+    //                if(road.getSuperLayerHits(3)<3 || road.getSuperLayers()!=6) continue;
                     // now check other detectors
                      // check FTOF
                     if(recScintillator!=null) {
@@ -578,11 +578,11 @@ public class Road {
         return (byte) sec;
     }
 
-    public int getLayerHits(int layer) {
+    public int getSuperLayerHits(int superlayer) {
         int n=0;
-        if(layer>0  && layer<=6) {
-            for(int isl=0; isl<6; isl++) {
-                if(this.dcWires[layer-1+isl*6]>0) n++;
+        if(superlayer>0  && superlayer<=6) {
+            for(int il=0; il<6; il++) {
+                if(this.dcWires[(superlayer-1)*6+il]>0) n++;
             }
         }
         return n;
@@ -606,7 +606,7 @@ public class Road {
     
     public double getPhi() {
         double phi = Math.toDegrees(particle.phi());
-        if(sector==0)
+        if(this.getSector()==0)
             return (phi+360+30)%60-30;
         else
             return phi;
@@ -618,18 +618,20 @@ public class Road {
     
     public ArrayList<Byte> getKey(TestMode mode) {
         ArrayList<Byte> road = new ArrayList<>();
+        for(int i=0; i<13; i++) {
+            road.add((byte) 0);
+        }
+
         for(int isl=0; isl<6; isl++) {
             for(int il=0; il<6; il++) {
                 int layer = isl*6+il+1;
                 if(this.dcWires[layer-1] != 0) {
-                    road.add(this.getWire(layer));
+                    road.set(isl, this.getWire(layer));
                     break;
                 }
             }
         }
-        for(int i=6; i<13; i++) {
-            road.add((byte) 0);
-        }
+
         if(mode.contains(TestMode.DCPCALU)) {
             road.set(8, this.getStrip(1));
             if(mode.contains(TestMode.DCFTOFPCALU)) {
@@ -684,12 +686,13 @@ public class Road {
         }}}}}}}}}}}
         return keys;
     }
+    
     public final boolean isValid() {
         return this.isValid(TestMode.DC);
     }
 
     public boolean isValid(TestMode mode) {
-        boolean value = this.getLayerHits(3)>=3 && this.getSuperLayers()==6;
+        boolean value = this.getSuperLayerHits(3)>=3 && this.getSuperLayers()==6;
         if(mode.contains(TestMode.DCPCALU)) {
             value = value && this.ecalStrips[0]>0;
             if(mode.contains(TestMode.DCFTOFPCALU)) {
