@@ -39,10 +39,17 @@ public class Dictionary extends HashMap<ArrayList<Byte>, Particle> {
     }
 
     public void readDictionary(String fileName, TestMode mode, int wireBinning, int stripBinning, int sectorDependence) {
+        this.readDictionary(fileName, mode, wireBinning, stripBinning, sectorDependence, -1);
+    }
+        
+    public void readDictionary(String fileName, TestMode mode, int wireBinning, int stripBinning, int sectorDependence, int maxRoads) {
         
         System.out.println("\nReading dictionary from file " + fileName);
+        System.out.println("\nMaximum number of roads set to: " + maxRoads);
         int nFull  = 0;
         int nDupli = 0;
+        
+        if(maxRoads<0) maxRoads = Integer.MAX_VALUE;
         
         File fileDict = new File(fileName);
         
@@ -52,7 +59,7 @@ public class Dictionary extends HashMap<ArrayList<Byte>, Particle> {
             ProgressPrintout progress = new ProgressPrintout();
             
             String line = null;
-            while ((line = txtreader.readLine()) != null) {
+            while ((line = txtreader.readLine()) != null && maxRoads>nFull) {
                 
                 Road road = new Road(line);
                 road.setBinning(wireBinning, stripBinning, sectorDependence);
