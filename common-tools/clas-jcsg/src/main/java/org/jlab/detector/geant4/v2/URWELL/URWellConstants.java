@@ -43,7 +43,7 @@ public class URWellConstants {
            "support_skin1_g10", "support_honeycomb_nomex", "support_skin2_g10"};
 
     // URWELL position in the CLAS12 frame 
-    public final static double TGT2DC0    = 230.078; // cm            
+    public final static double TGT2DC0    = 228.078; // cm            
    // public final static double URWELL2DC0 = 2;       // cm
     public final static double URWELL2DC0[] = new double[NMAXREGIONS];
     public final static double DIST2TGT[] = new double[NMAXREGIONS];
@@ -115,13 +115,14 @@ public class URWellConstants {
 //            NREGIONS = cp.getInteger( CCDBPATH+"svt/nRegions", 0 );
 
              for (int i=0; i<NMAXREGIONS; i++){
-                 
-                URWELL2DC0[NMAXREGIONS-i-1] =  2.2+i*2;
-                DIST2TGT[NMAXREGIONS-i-1]   = (TGT2DC0-URWELL2DC0[NMAXREGIONS-i-1]);
-                W2TGT[NMAXREGIONS-i-1] = DIST2TGT[NMAXREGIONS-i-1]/Math.cos(Math.toRadians(THTILT-THMIN));
-                YMIN[NMAXREGIONS-i-1]= W2TGT[NMAXREGIONS-i-1]*Math.sin(Math.toRadians(THMIN)); // distance from the base chamber1 and beamline
-                ZMIN[NMAXREGIONS-i-1] = W2TGT[NMAXREGIONS-i-1]*Math.cos(Math.toRadians(THMIN));  
-
+                
+                URWELL2DC0[i] =  -2.+i*1.3;
+                DIST2TGT[i]   = (TGT2DC0+URWELL2DC0[i]);
+                W2TGT[i] = DIST2TGT[i]/Math.cos(Math.toRadians(THTILT-THMIN));
+                YMIN[i]= W2TGT[i]*Math.sin(Math.toRadians(THMIN)); // distance from the base chamber1 and beamline
+                ZMIN[i] = W2TGT[i]*Math.cos(Math.toRadians(THMIN));  
+  
+               
                 }
 
     
