@@ -35,9 +35,9 @@ public class EBMatching {
      */
     public void addResponsesFTOF(List <DetectorParticle> parts) {
 
-        List<DetectorResponse> respFTOF1A = eventBuilder.getUnmatchedResponses(null, DetectorType.FTOF, 1);
-        List<DetectorResponse> respFTOF1B = eventBuilder.getUnmatchedResponses(null, DetectorType.FTOF, 2);
-        List<DetectorResponse>  respFTOF2 = eventBuilder.getUnmatchedResponses(null, DetectorType.FTOF, 3);
+        List<DetectorResponse> respFTOF1A = eventBuilder.getUnmatchedResponses(DetectorType.FTOF, 1);
+        List<DetectorResponse> respFTOF1B = eventBuilder.getUnmatchedResponses(DetectorType.FTOF, 2);
+        List<DetectorResponse>  respFTOF2 = eventBuilder.getUnmatchedResponses(DetectorType.FTOF, 3);
 
         for (int ii=0; ii<parts.size(); ii++) {
             
@@ -101,7 +101,7 @@ public class EBMatching {
                         throw new RuntimeException("Invalid ECAL Layer:  "+layer);
                 }
 
-                List<DetectorResponse> respECAL = eventBuilder.getUnmatchedResponses(null, DetectorType.ECAL, layer);
+                List<DetectorResponse> respECAL = eventBuilder.getUnmatchedResponses(DetectorType.ECAL, layer);
 
                 int index = part.getDetectorHit(respECAL, DetectorType.ECAL, layer, matching);
                 if (index>=0) {
@@ -142,7 +142,7 @@ public class EBMatching {
         List<DetectorParticle> parts=new ArrayList<>();
 
         List<DetectorResponse> responsesECAL =
-            eventBuilder.getUnmatchedResponses(null, DetectorType.ECAL, ecalLayer);
+            eventBuilder.getUnmatchedResponses(DetectorType.ECAL, ecalLayer);
 
         Vector3 vertex = new Vector3(0,0,0);
         if (eventBuilder.getEvent().getParticles().size()>0) {
@@ -187,10 +187,10 @@ public class EBMatching {
                 eventBuilder.ccdb.getDouble(EBCCDBEnum.CND_DT));
 
         List<DetectorResponse> cnds =
-                eventBuilder.getUnmatchedResponses(null, DetectorType.CND, 0);
+                eventBuilder.getUnmatchedResponses(DetectorType.CND);
 
         List<DetectorResponse> ctofs =
-                eventBuilder.getUnmatchedResponses(null, DetectorType.CTOF, 0);
+                eventBuilder.getUnmatchedResponses(DetectorType.CTOF);
 
         // Layer-based ordering, with energy-ordering within layers:
         cnds.sort(DetectorResponseComparators.layerEnergy);

@@ -190,6 +190,7 @@ public class EBEngine extends ReconstructionEngine {
                 de.appendBanks(bankCaloExtras);               
             }
             List<DetectorResponse> scintillators = eb.getEvent().getScintillatorResponseList();
+            scintillators.addAll(eb.getUnmatchedResponses(DetectorType.FTOF));
             if(scintillatorBank!=null && !scintillators.isEmpty()) {
                 DataBank bankSci = DetectorData.getScintillatorResponseBank(scintillators, de, scintillatorBank);
                 de.appendBanks(bankSci);               
@@ -197,11 +198,12 @@ public class EBEngine extends ReconstructionEngine {
                 de.appendBanks(eaxtbankSci);               
             }
             List<DetectorResponse> cherenkovs = eb.getEvent().getCherenkovResponseList();
+            scintillators.addAll(eb.getUnmatchedResponses(DetectorType.HTCC));
             if(cherenkovBank!=null && !cherenkovs.isEmpty()) {
                 DataBank bankChe = DetectorData.getCherenkovResponseBank(cherenkovs, de, cherenkovBank);
                 de.appendBanks(bankChe);
             }
-            
+
             List<DetectorResponse> taggers = eb.getEvent().getTaggerResponseList();
             if (ftBank!=null && !taggers.isEmpty()) {
                 DataBank bankForwardTagger = DetectorData.getForwardTaggerBank(taggers, de, ftBank);

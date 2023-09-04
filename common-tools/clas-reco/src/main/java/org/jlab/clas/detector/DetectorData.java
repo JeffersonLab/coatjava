@@ -118,6 +118,7 @@ public class DetectorData {
         }
 
         detectorEvent.getPhysicsEvent().clear();
+        detectorEvent.getGeneratedEvent().clear();
 
         for (DetectorParticle p : particles) {
             if (p.getPid() == 0) {
@@ -138,7 +139,6 @@ public class DetectorData {
 
         if (event.hasBank("MC::Particle") == true) {
             DataBank bank = event.getBank("MC::Particle");
-            detectorEvent.getGeneratedEvent().clear();
             int nrows = bank.rows();
             for (int row = 0; row < nrows; row++) {
                 detectorEvent.getGeneratedEvent().addGeneratedParticle(
