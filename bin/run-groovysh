@@ -1,0 +1,11 @@
+#!/bin/sh
+
+. `dirname $0`/env.sh groovy
+
+echo """
+***************************************
+*    Running COATJAVA Groovy Shell    *
+***************************************
+"""
+
+groovysh -cp "$JYPATH" "$@"
