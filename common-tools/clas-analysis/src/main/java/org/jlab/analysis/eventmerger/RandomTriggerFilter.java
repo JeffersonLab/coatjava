@@ -40,24 +40,24 @@ public class RandomTriggerFilter {
     
     FilterTrigger triggerFilter = null;
     FilterFcup  fcupFilter = null;
-    FilterBank  bankFilter = null;
+    FilterBankSize  bankFilter = null;
     
     public RandomTriggerFilter(long bits, long veto, double current){
         triggerFilter = new FilterTrigger(bits, veto);
         fcupFilter  = new FilterFcup(current);
-        bankFilter  = new FilterBank("", -1);
+        bankFilter  = new FilterBankSize("", -1);
     }
 
     public RandomTriggerFilter(long bits, long veto, String bankName, int nRows){
         triggerFilter = new FilterTrigger(bits, veto);
         fcupFilter  = new FilterFcup(-1);
-        bankFilter  = new FilterBank(bankName, nRows);
+        bankFilter  = new FilterBankSize(bankName, nRows);
     }
 
     public RandomTriggerFilter(long bits, long veto, double current, String currentSource, String bankName, int nRows){
         triggerFilter = new FilterTrigger(bits, veto);
         fcupFilter  = new FilterFcup(current, currentSource);
-        bankFilter  = new FilterBank(bankName, nRows);
+        bankFilter  = new FilterBankSize(bankName, nRows);
     }
 
     private FilterTrigger getTriggerFilter() {
@@ -68,7 +68,7 @@ public class RandomTriggerFilter {
         return fcupFilter;
     }
 
-    private FilterBank getBankFilter() {
+    private FilterBankSize getBankFilter() {
         return bankFilter;
     }
 
