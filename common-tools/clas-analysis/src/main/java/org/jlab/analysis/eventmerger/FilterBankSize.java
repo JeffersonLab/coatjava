@@ -9,11 +9,11 @@ import org.jlab.jnp.utils.data.TextHistogram;
  * Hipo Reduce Worker: filter event based on bank size
  * 
  * Inputs: bank name and number of rows
- * Returns "true" if selected bank size is greater than given value or bank name is an empty string
- * Returns "false" otherwise
+ * Returns "true" if the size of the selected bank is greater than the given 
+ * value or the bank name is an empty string, or "false" otherwise
  * @author devita
  */
-public class FilterBank implements Worker {
+public class FilterBankSize implements Worker {
 
     private Bank filterBank = null;
     private String bankName = null;
@@ -21,7 +21,7 @@ public class FilterBank implements Worker {
     private int[]  rowBuffer = new int[21];
     private int    rowMax    = 500; 
     
-    public FilterBank(String bankName,int nRows){
+    public FilterBankSize(String bankName,int nRows){
         this.bankName = bankName;
         this.nRows  = nRows;
         System.out.println("\nInitializing bank size reduction: bank set to " + this.bankName + " with minimum rows set to " + this.nRows + "\n");
