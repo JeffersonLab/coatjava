@@ -49,6 +49,7 @@ public class EpicsSequence implements Comparator<Epics>{
         return n;
     }
    
+    //FIXME: should switch to use SortedSet
     protected boolean add(Epics de) {
         if (this.epics.isEmpty()) {
             this.epics.add(de);
