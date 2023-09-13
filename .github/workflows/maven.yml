@@ -73,3 +73,16 @@ jobs:
       run: |
         cd validation/advanced-tests
         ${{matrix.cmd}}
+
+  trigger_validation:
+    steps:
+      - uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.CLAS12VALIDATION }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: 'JeffersonLab',
+              repo: 'clas12-validation',
+              workflow_id: 'ci.yml',
+              ref: 'ci-gemc'
+            })
