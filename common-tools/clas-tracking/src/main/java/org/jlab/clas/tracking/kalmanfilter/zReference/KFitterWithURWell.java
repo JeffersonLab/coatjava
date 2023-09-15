@@ -27,6 +27,8 @@ import org.jlab.clas.tracking.kalmanfilter.Type;
 public class KFitterWithURWell extends AKFitter {
     
     private static final Logger LOGGER = Logger.getLogger(KFitter.class.getName());
+    
+    private static final double initialCMBlowupFactor = 70;
 
     private StateVecs sv = new StateVecs();
     private MeasVecs mv = new MeasVecs();
@@ -203,6 +205,19 @@ public class KFitterWithURWell extends AKFitter {
                             break;
                         }
                     } else {
+                        double c00 = this.sv.trackTrajB.get(0).CM.get(0, 0);
+                        double c11 = this.sv.trackTrajB.get(0).CM.get(1, 1);
+                        double c22 = this.sv.trackTrajB.get(0).CM.get(2, 2);
+                        double c33 = this.sv.trackTrajB.get(0).CM.get(3, 3);
+                        double c44 = this.sv.trackTrajB.get(0).CM.get(4, 4);
+                        Matrix newCM = new Matrix();
+                        newCM.set(c00*initialCMBlowupFactor, 0, 0, 0, 0,
+                                    0, c11*initialCMBlowupFactor, 0, 0, 0,
+                                    0, 0, c22*initialCMBlowupFactor, 0, 0,
+                                    0, 0, 0, c33*initialCMBlowupFactor, 0,
+                                    0, 0, 0, 0, c44*initialCMBlowupFactor);
+                        this.sv.trackTrajB.get(0).CM = newCM;
+                        
                         if (!this.sv.transport(sector, 0, 1, this.sv.trackTrajB.get(0), mv, this.getSwimmer(), forward)) {
                             this.stopIteration = true;
                             break;
@@ -233,19 +248,19 @@ public class KFitterWithURWell extends AKFitter {
                 if (this.setFitFailed == false) {
                     if (this.finalStateVec != null) {
                         if (!TBT) {
-                            if (Math.abs(sv.trackTrajF.get(svzLength - 1).Q - this.finalStateVec.Q) < 3.3e-3
-                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).x - this.finalStateVec.x) < 7.3e-2
-                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).y - this.finalStateVec.y) < 4.3e-1
-                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).tx - this.finalStateVec.tx) < 9.2e-4
-                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).ty - this.finalStateVec.ty) < 2.1e-3) {
+                            if (Math.abs(sv.trackTrajF.get(svzLength - 1).Q - this.finalStateVec.Q) < 1.6e-3
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).x - this.finalStateVec.x) < 1.2e-2
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).y - this.finalStateVec.y) < 1.4e-1
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).tx - this.finalStateVec.tx) < 2.5e-4
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).ty - this.finalStateVec.ty) < 1.0e-3) {
                                 i = totNumIter;
                             }
                         } else {
-                            if (Math.abs(sv.trackTrajF.get(svzLength - 1).Q - this.finalStateVec.Q) < 5.5e-5
-                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).x - this.finalStateVec.x) < 5.0e-4
-                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).y - this.finalStateVec.y) < 2.1e-3
-                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).tx - this.finalStateVec.tx) < 8.8e-6
-                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).ty - this.finalStateVec.ty) < 1.4e-5) {
+                            if (Math.abs(sv.trackTrajF.get(svzLength - 1).Q - this.finalStateVec.Q) < 1.1e-5
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).x - this.finalStateVec.x) < 5.5e-5
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).y - this.finalStateVec.y) < 8.0e-4
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).tx - this.finalStateVec.tx) < 2.1e-6
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).ty - this.finalStateVec.ty) < 3.5e-6) {
                                 i = totNumIter;
                             }
                         }
@@ -593,7 +608,7 @@ public class KFitterWithURWell extends AKFitter {
     }
 
     public Matrix propagateToVtx(int sector, double Zf) {
-        return sv.transport(sector, 0, Zf, sv.trackTrajP.get(0), mv, this.getSwimmer());
+        return sv.transport(sector, finalStateVec.k, Zf, finalStateVec, mv, this.getSwimmer());
     }
 
     @Override
