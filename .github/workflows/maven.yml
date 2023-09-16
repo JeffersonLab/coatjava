@@ -78,7 +78,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: dispatch
-      - uses: benc-uk/workflow-dispatch@v1
+        uses: benc-uk/workflow-dispatch@v1
         with:
           repo: JeffersonLab/clas12-validation
           ref: ci-gemc
