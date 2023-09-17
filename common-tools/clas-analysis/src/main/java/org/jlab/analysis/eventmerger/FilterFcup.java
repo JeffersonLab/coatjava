@@ -1,7 +1,6 @@
 package org.jlab.analysis.eventmerger;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.jlab.detector.epics.Epics;
 import org.jlab.detector.epics.EpicsSequence;
 import org.jlab.detector.scalers.DaqScalersSequence;
 import org.jlab.jnp.hipo4.data.*;
@@ -23,21 +22,27 @@ public class FilterFcup implements Worker {
     private Bank runConfigBank = null;
     private DaqScalersSequence scalerSeq = null;
     private EpicsSequence epicsSeq = null;
-    private double charge  = -1;
-    private double current = -1;
+    private double currentMin = -1;
+    private double currentMax = 80; 
     private String source  = null;
-    private int[]  currentBuffer = new int[21];
-    private int    currentMax    = 80; 
+    private int[]  histoBuffer = new int[21];
+    private int    histoMax = 80; 
     
-    public FilterFcup(double current, String source){
-        this.current=current;
+    public FilterFcup(double min, double max, String source){
+        this.currentMin=min;
+        this.currentMax=max;
+        this.histoMax=(int) (2*max);
         this.source=source;
-        System.out.print("\nInitializing Faraday Cup reduction: threshold current set to " + this.current);
+        System.out.print("\nInitializing Faraday Cup reduction: current range set to " + this.currentMin + " - " + this.currentMax);
         System.out.print("\n                                    current source set to " + (this.source.equals(FCUP_SCALER) ? source : "RAW:epics."+source) + "\n");
     }
     
-    public FilterFcup(double current){
-        this(current, FCUP_SCALER);
+    public FilterFcup(double min, double max){
+        this(min, max, FCUP_SCALER);
+    }
+    
+    public FilterFcup(double min){
+        this(min, Double.MAX_VALUE, FCUP_SCALER);
     }
     
     /**
@@ -92,18 +97,18 @@ public class FilterFcup implements Worker {
             }
             
             // fill statistics array
-            int currentBins = currentBuffer.length-1;
-            if(value>currentMax){
-                currentBuffer[currentBins] = currentBuffer[currentBins] + 1;
+            int currentBins = histoBuffer.length-1;
+            if(value>histoMax){
+                histoBuffer[currentBins] = histoBuffer[currentBins] + 1;
             } else if(value<0){
-                currentBuffer[0] = currentBuffer[0];
+                histoBuffer[0] = histoBuffer[0];
             } else{
-                int bin =  (int) (currentBins*value/(currentMax));
-                currentBuffer[bin] = currentBuffer[bin] + 1;
+                int bin =  (int) (currentBins*value/(histoMax));
+                histoBuffer[bin] = histoBuffer[bin] + 1;
             }
             
             // set filter value
-            if(value>current) return true;
+            if(value>currentMin && value<currentMax) return true;
         }
         return false;
     }
@@ -119,13 +124,13 @@ public class FilterFcup implements Worker {
      */
     public Map<String,Double> getCurrentMap(){
         Map<String,Double> sizeMap = new LinkedHashMap<>();
-        int currentBins = currentBuffer.length-1;
+        int currentBins = histoBuffer.length-1;
         double     step =  ((double) currentMax)/currentBins;
         for(int i = 0; i < currentBins; i++){
            String key = String.format("[%6.1f -%6.1f]", (i*step),(i+1)*step);
-           sizeMap.put(key, (double) currentBuffer[i]);
+           sizeMap.put(key, (double) histoBuffer[i]);
         }
-        sizeMap.put("overflow", (double) currentBuffer[currentBins] );
+        sizeMap.put("overflow", (double) histoBuffer[currentBins] );
         return sizeMap;
     }
 
@@ -134,7 +139,7 @@ public class FilterFcup implements Worker {
      */
     public void showStats() {
         System.out.println("\n\n");
-        System.out.println(" BEAM CURRENT HISTOGRAM (ENTRIES ARE EVENTS)\n");        
+        System.out.println(" BEAM CURRENT HISTOGRAM BEFORE FILTER (ENTRIES ARE EVENTS)\n");        
         TextHistogram histo = new TextHistogram();
         Map<String,Double> sizeMap = this.getCurrentMap();
         histo.setPrecision(0);
