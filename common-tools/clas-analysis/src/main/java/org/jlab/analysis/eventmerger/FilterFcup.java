@@ -31,7 +31,8 @@ public class FilterFcup implements Worker {
     public FilterFcup(double min, double max, String source){
         this.currentMin=min;
         this.currentMax=max;
-        this.histoMax=(int) (2*max);
+        if(currentMax < Double.POSITIVE_INFINITY)
+            this.histoMax=(int) (2*max);
         this.source=source;
         System.out.print("\nInitializing Faraday Cup reduction: current range set to " + this.currentMin + " - " + this.currentMax);
         System.out.print("\n                                    current source set to " + (this.source.equals(FCUP_SCALER) ? source : "RAW:epics."+source) + "\n");
@@ -125,7 +126,7 @@ public class FilterFcup implements Worker {
     public Map<String,Double> getCurrentMap(){
         Map<String,Double> sizeMap = new LinkedHashMap<>();
         int currentBins = histoBuffer.length-1;
-        double     step =  ((double) currentMax)/currentBins;
+        double     step =  ((double) histoMax)/currentBins;
         for(int i = 0; i < currentBins; i++){
            String key = String.format("[%6.1f -%6.1f]", (i*step),(i+1)*step);
            sizeMap.put(key, (double) histoBuffer[i]);

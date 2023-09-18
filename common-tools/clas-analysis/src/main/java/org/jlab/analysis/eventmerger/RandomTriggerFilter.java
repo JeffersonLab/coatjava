@@ -105,7 +105,7 @@ public class RandomTriggerFilter {
         filterData.add("trigger-mask", Long.toHexString(selectedBits));
         filterData.add("veto-mask", Long.toHexString(vetoedBits));
         filterData.add("current-threshold", minCurrent); 
-        filterData.add("current-maximum", maxCurrent); 
+        filterData.add("current-maximum", Math.min(maxCurrent, Double.MAX_VALUE)); 
         filterData.add("current-source", currentSource); 
         filterData.add("bank-name", bankName); 
         filterData.add("bank-size", nRows); 
@@ -149,7 +149,7 @@ public class RandomTriggerFilter {
         parser.setRequiresInputList(false);
         parser.addOption("-v"    ,  "0x0", "vetoed trigger bit mask (e.g. 0xFFFFFF7FFFFFFFFF to veto all but the FC trigger");
         parser.addOption("-c"    ,   "-1", "minimum beam current");
-        parser.addOption("-x"    ,   "80", "maximum beam current");
+        parser.addOption("-x"    ,  "inf", "maximum beam current");
         parser.addOption("-s"    , "DSC2", "source of beam current information (DSC2 scaler or Epics PV name)");
         parser.addOption("-e"    ,     "", "name of required bank, e.g. DC::tdc");
         parser.addOption("-r"    ,   "-1", "minimum number of rows in required bank");
@@ -164,7 +164,9 @@ public class RandomTriggerFilter {
             long selectedBits    = RandomTriggerFilter.readTriggerMask(parser.getOption("-b").stringValue());            
             long vetoedBits      = RandomTriggerFilter.readTriggerMask(parser.getOption("-v").stringValue());            
             double minCurrent    = parser.getOption("-c").doubleValue();
-            double maxCurrent    = parser.getOption("-x").doubleValue();
+            double maxCurrent    = Double.POSITIVE_INFINITY;
+            if(!parser.getOption("-x").stringValue().equals("inf"))
+                maxCurrent = parser.getOption("-x").doubleValue();
             String currentSource = parser.getOption("-s").stringValue();
             String bankName      = parser.getOption("-e").stringValue();
             int nRows            = parser.getOption("-r").intValue();            
