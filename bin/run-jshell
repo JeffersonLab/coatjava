@@ -1,50 +1,11 @@
 #!/bin/sh
 
-. `dirname $0`/env.sh 
+. `dirname $0`/env.sh jshell
 
-export CLAS12DIR=`dirname $0`/..
- 
-#--------------------------------------------------------------
-# Adding supporting COAT jar files
-for i in `ls -a $CLAS12DIR/lib/clas/*.jar`
-do  
-#echo "$i"
-if [ -z "${JYPATH}" ] ; then
-JYPATH="$i"
-else
-JYPATH=${JYPATH}:"$i"
-fi
-done 
-#--------------------------------------------------------------
-# Adding supporting plugins directory
-for i in `ls -a $CLAS12DIR/lib/services/*.jar`
-do
-if [ -z "${JYPATH}" ] ; then
-JYPATH="$i"
-else
-JYPATH=${JYPATH}:"$i"
-fi
-done
-#--------------------------------------------------------------
-# Adding supporting plugins directory
-#--------------------------------------------------------------
-# Done loading plugins
-#--------------------------------------------------------------
-# Adding supporting plugins directory 
-for i in `ls -a $CLAS12DIR/lib/utils/*.jar`
-do
-if [ -z "${JYPATH}" ] ; then
-JYPATH="$i"
-else
-JYPATH=${JYPATH}:"$i"
-fi
-done
-#-------------------------------------------------------------
-echo " "
-echo " "
-echo "*****************************************"
-echo "*    Running COAT-JAVA JShell Scripts   *" 
-echo "*****************************************"
-echo " "
-echo " "
+echo """
+*********************************
+*    Running COATJAVA JShell    *
+*********************************
+"""
+
 jshell --class-path "$JYPATH" "$@"
