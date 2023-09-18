@@ -48,7 +48,7 @@ for filename in os.listdir("./"):
 print("Single json files saved in " + workdirectory + singledirectory)
 
 # these should *always* be kept:
-mc = ["MC::Event", "MC::Header", "MC::Lund", "MC::Particle", "MC::True"]
+mc = ["MC::Event", "MC::GenMatch", "MC::Header", "MC::Lund", "MC::Particle", "MC::RecMatch", "MC::True"]
 tag1 = ["RUN::config", "RAW::epics", "RAW::scaler", "RUN::scaler", "COAT::config", "HEL::flip", "HEL::online"]
 
 # these are the output of the event builder:
@@ -84,9 +84,13 @@ mon.extend(calib + rechbai + rechb)
 ebrerun = list(dst)
 ebrerun.extend(["FTOF::clusters","FTOF::hbclusters","TimeBasedTrkg::TBTracks","TimeBasedTrkg::Trajectory","TimeBasedTrkg::TBCovMat","HitBasedTrkg::HBTracks","HitBasedTrkg::Trajectory","ECAL::clusters","ECAL::calib","CTOF::clusters","CND::clusters","HTCC::rec","LTCC::clusters","ECAL::moments","CVTRec::Tracks","CVTRec::Trajectory","FT::particles","FTCAL::clusters","FTHODO::clusters","RUN::rf"])
 
-# EC rerun schema adds ECAL raw banks to the EB rerun scehma:
+# EC rerun schema adds ECAL raw banks to the EB rerun schema:
 ecrerun = list(ebrerun)
 ecrerun.extend(["ECAL::tdc","ECAL::adc"])
+
+# DC alignment and AI-tracking validation schema:
+dcalign = list(dst)
+dcalign.extend(["ai::tracks", "aidn::tracks", "TimeBasedTrkg::AIClusters", "TimeBasedTrkg::AIHits", "TimeBasedTrkg::AITracks", "TimeBasedTrkg::TBClusters", "TimeBasedTrkg::TBHits", "TimeBasedTrkg::TBTracks"])
 
 create("dst/", set(dst))
 create("dsthb/", set(dsthb))
@@ -94,4 +98,5 @@ create("calib/", set(calib))
 create("mon/",  set(mon))
 create("ebrerun/", set(ebrerun))
 create("ecrerun/", set(ecrerun))
+create("dcalign/", set(dcalign))
 
