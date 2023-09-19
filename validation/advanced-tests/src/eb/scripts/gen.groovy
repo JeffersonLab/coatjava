@@ -12,7 +12,7 @@ import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.base.GeometryFactory;
 import org.jlab.physics.io.LundReader;
 
-import groovy.util.CliBuilder
+import groovy.cli.commons.CliBuilder
 import org.apache.commons.cli.HelpFormatter
 
 double torusScale = -1.0;
