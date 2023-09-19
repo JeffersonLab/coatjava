@@ -26,7 +26,6 @@ public class MLTDEngine extends ReconstructionEngine {
     private String      outputBankPrefix = "ai";
     private String             inputBank = null;
     private String            outputBank = null;
-    private ArchiveProvider     provider = null;
 
     public MLTDEngine(){
         super("MLTD","gavalian","1.0");
@@ -52,6 +51,7 @@ public class MLTDEngine extends ReconstructionEngine {
         Map<String,String>  files = new HashMap<>();
         files.put("classifier", "trackClassifier.network");
         files.put("fixer", "trackFixer.network");
+        ArchiveProvider provider = new ArchiveProvider(path);
         int adjustedRun = provider.findEntry(run);
         String directory = String.format("network/%d/%s", adjustedRun, networkFlavor);
         network.initZip(path, directory, files);
