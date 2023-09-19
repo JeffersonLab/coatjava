@@ -72,6 +72,9 @@ calib = ["BAND::adc","BAND::laser","BAND::tdc","BAND::hits","BAND::rawhits","CND
 # additions for the monitoring schema:
 mon = ["BMT::adc","BMTRec::Clusters","BMTRec::Crosses","BMTRec::Hits","BMTRec::LayerEffs","BST::adc","BSTRec::Clusters","BSTRec::Crosses","BSTRec::Hits","BSTRec::LayerEffs","CND::clusters","CVTRec::Trajectory","ECAL::hits","FMT::adc","FTTRK::adc","HEL::adc","HitBasedTrkg::HBTracks","RAW::vtp","TimeBasedTrkg::TBCrosses","TimeBasedTrkg::TBSegments","TimeBasedTrkg::TBSegmentTrajectory","TimeBasedTrkg::Trajectory"]
 
+# trigger validation needs these:
+trig = ["RAW::vtp","HTCC::rec","ECAL::adc","ECAL::calib","ECAL::clusters","ECAL::hits","ECAL::moments","ECAL::peaks","ECAL::tdc","ECAL::trigger"]
+
 # accumulate all the DST banks:
 dst = rectbai + rectb + mc + tag1 + dets
 dsthb = dst + rechbai + rechb
@@ -79,6 +82,8 @@ dsthb = dst + rechbai + rechb
 # generate the calib and mon schema:
 calib.extend(dst)
 mon.extend(calib + rechbai + rechb)
+
+trig.extend(dst)
 
 # EB rerun schema is DSTs plus whatever is necessary to rerun EB:
 ebrerun = list(dst)
@@ -99,4 +104,5 @@ create("mon/",  set(mon))
 create("ebrerun/", set(ebrerun))
 create("ecrerun/", set(ecrerun))
 create("dcalign/", set(dcalign))
+create("trigger/", set(trig))
 
