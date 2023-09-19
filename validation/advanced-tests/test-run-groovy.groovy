@@ -10,7 +10,7 @@
     System.err.println "ERROR: environment variable $name is set, but empty"
     System.exit(100)
   }
-  System.out.println("$name = $val")
+  System.out.println "$name = $val"
 }
 
 // try to import a local package
