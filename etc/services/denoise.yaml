@@ -91,7 +91,7 @@ configuration:
       rawBankGroup: "NODENOISE"
     DCRAI:
       #rawBankGroup: "DEFAULT"
-      #rawBankGroup: "NODENOISE"
+      rawBankGroup: "NOISE1"
       outputBankPrefix: "DN"
     MLTD:
       run: "6302"
