@@ -16,7 +16,7 @@ fi
 # additional environment variables for groovy or interactive use
 # - call as `source $0 groovy` or `source $0 jshell`
 if [ $# -ge 1 ]; then
-  if [ "$1" == "groovy" -o "$1" == "jshell" ]; then
+  if [ "$1" = "groovy" -o "$1" = "jshell" ]; then
 
     # add jar files to class path
     for lib in clas services utils; do
@@ -26,7 +26,7 @@ if [ $# -ge 1 ]; then
     done
 
     # additional variables and settings for groovy
-    if [ "$1" == "groovy" ]; then
+    if [ "$1" = "groovy" ]; then
       JYPATH="${JYPATH:+${JYPATH}:}${CLAS12DIR}/lib/packages"
       export JAVA_OPTS="-Dsun.java2d.pmoffscreen=false -Djava.util.logging.config.file=$CLAS12DIR/etc/logging/debug.properties -Xms1024m -Xmx2048m -XX:+UseSerialGC"
     fi
