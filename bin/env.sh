@@ -2,13 +2,6 @@
 
 thisEnv=${BASH_SOURCE[0]:-$0}
 export CLAS12DIR=$(realpath $(dirname $thisEnv)/..)
-echo """
-BASH_SOURCE[0] = ${BASH_SOURCE[0]}
-0              = $0
-1              = $1
-thisEnv        = $thisEnv
-CLAS12DIR      = $CLAS12DIR
-"""
 
 # Set default field maps (but do not override user's env):
 if [ -z "$COAT_MAGFIELD_TORUSMAP" ]; then
