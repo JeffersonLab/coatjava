@@ -30,8 +30,7 @@ def create(dirname, banklist):
 
 # for each json file in hipo schema folder
 for filename in os.listdir("./"):
-    if filename.endswith(".json"):
-
+    if filename.endswith(".json") and not filename.startswith("clas6"):
         #Read JSON data into the datastore variable
         f = open(filename)
         try:
