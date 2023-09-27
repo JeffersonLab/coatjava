@@ -37,7 +37,7 @@ jobs:
         retention-days: 1
         path: coatjava.tar.gz
 
-  test:
+  test_coatjava:
     needs: [ build ]
     runs-on: ubuntu-latest
     strategy:
@@ -73,3 +73,25 @@ jobs:
       run: |
         cd validation/advanced-tests
         ${{matrix.cmd}}
+
+  test_run-groovy:
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up JDK
+      uses: actions/setup-java@v3
+      with:
+        java-version: 11
+        distribution: zulu
+    - name: setup groovy
+      uses: wtfjoke/setup-groovy@v1
+      with:
+        groovy-version: 4.x
+    - uses: actions/download-artifact@v3
+      with:
+        name: build
+    - name: untar build
+      run: tar xzvf coatjava.tar.gz
+    - name: test run-groovy
+      run: coatjava/bin/run-groovy validation/advanced-tests/test-run-groovy.groovy
