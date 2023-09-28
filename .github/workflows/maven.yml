@@ -19,7 +19,15 @@ concurrency:
 jobs:
 
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        runner:
+          - ubuntu-latest
+          - macos-latest
+    outputs:
+      default_runner: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     steps:
     - uses: actions/checkout@v3
     - name: Set up JDK
@@ -33,16 +41,17 @@ jobs:
       run: tar czvf coatjava.tar.gz coatjava
     - uses: actions/upload-artifact@v3
       with:
-        name: build
+        name: build_${{ matrix.runner }}
         retention-days: 1
         path: coatjava.tar.gz
 
   test_coatjava:
     needs: [ build ]
-    runs-on: ubuntu-latest
     strategy:
       fail-fast: true
       matrix:
+        runner:
+          - ubuntu-latest
         id:
           - kpp
           - eb-ep
@@ -51,12 +60,17 @@ jobs:
           - eb-enc
           - eb-eftpi
         include:
+          # run all tests on ubuntu
           - { id: kpp,      cmd: ./run-advanced-tests.sh }
           - { id: eb-ep,    cmd: ./run-eb-tests.sh -100 electronproton   }
           - { id: eb-eg,    cmd: ./run-eb-tests.sh -100 electrongamma    }
           - { id: eb-epc,   cmd: ./run-eb-tests.sh -100 electronprotonC  }
           - { id: eb-enc,   cmd: ./run-eb-tests.sh -100 electronneutronC }
           - { id: eb-eftpi, cmd: ./run-eb-tests.sh -100 electronFTpion   }
+          # run one macos test
+          - { runner: macos-latest, id: eb-ep, cmd: ./run-eb-tests.sh -100 electronproton }
+
+    runs-on: ${{ matrix.runner }}
     steps:
     - uses: actions/checkout@v3
     - name: Set up JDK
@@ -66,17 +80,18 @@ jobs:
         distribution: zulu
     - uses: actions/download-artifact@v3
       with:
-        name: build
+        name: build_${{ matrix.runner }}
     - name: untar build
       run: tar xzvf coatjava.tar.gz
     - name: run test
       run: |
         cd validation/advanced-tests
-        ${{matrix.cmd}}
+        echo "COMMAND: ${{ matrix.cmd }}"
+        ${{ matrix.cmd }}
 
   test_run-groovy:
     needs: [ build ]
-    runs-on: ubuntu-latest
+    runs-on: ${{ needs.build.outputs.default_runner }}
     steps:
     - uses: actions/checkout@v3
     - name: Set up JDK
@@ -90,7 +105,7 @@ jobs:
         groovy-version: 4.x
     - uses: actions/download-artifact@v3
       with:
-        name: build
+        name: build_${{ needs.build.outputs.default_runner }}
     - name: untar build
       run: tar xzvf coatjava.tar.gz
     - name: test run-groovy
@@ -100,7 +115,7 @@ jobs:
     needs:
       - test_coatjava
       - test_run-groovy
-    runs-on: ubuntu-latest
+    runs-on: ${{ needs.build.outputs.default_runner }}
     if: always()
     steps:
       - name: fail
