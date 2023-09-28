@@ -1,5 +1,9 @@
 #!/bin/bash
 
+set -e
+set -u
+set -o pipefail
+
 usage='build-coatjava.sh [-h] [--quiet] [--spotbugs] [--nomaps] [--unittests]'
 
 quiet="no"
@@ -25,7 +29,7 @@ do
         quiet="yes"
     else
         echo "$usage"
-        exit
+        exit 2
     fi
 done
 
@@ -77,7 +81,7 @@ if [ $downloadMaps == "yes" ]; then
         echo ERROR:::::::::::  Could not download field map:
         echo $webDir/$map
         echo One option is to download manually into etc/data/magfield and then run this build script with --nomaps
-        exit
+        exit 1
     fi
   done
   cd -
