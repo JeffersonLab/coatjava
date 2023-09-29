@@ -1,7 +1,7 @@
 #!/bin/bash
 
 thisEnv=${BASH_SOURCE[0]:-$0}
-export CLAS12DIR=$(realpath $(dirname $thisEnv)/..)
+export CLAS12DIR=$(cd $(dirname $thisEnv)/.. && pwd -P)
 
 # Set default field maps (but do not override user's env):
 if [ -z "${COAT_MAGFIELD_TORUSMAP-}" ]; then
