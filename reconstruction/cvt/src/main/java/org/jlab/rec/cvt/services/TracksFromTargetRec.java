@@ -58,7 +58,7 @@ public class TracksFromTargetRec {
     private double xb; 
     private double yb;
     public int totTruthHits;
-    
+    public boolean oldStraightTrackSeeder=false;
     
     public TracksFromTargetRec(Swim swimmer, double[] beamPos) {
         this.swimmer = swimmer;
@@ -76,7 +76,7 @@ public class TracksFromTargetRec {
         double solenoidValue = Constants.getSolenoidMagnitude(); // already the absolute value
         List<Seed> seeds = new ArrayList<>();
         // make list of crosses consistent with a track candidate
-        if(solenoidValue<0.001) {
+        if(oldStraightTrackSeeder) {
             StraightTrackSeeder trseed = new StraightTrackSeeder(xb, yb);
             seeds = trseed.findSeed(this.SVTcrosses, this.BMTcrosses, Constants.getInstance().svtOnly);
             // RDV, disabled because it seems to create fake tracks, skipping measurement in KF
