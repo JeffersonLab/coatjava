@@ -1,5 +1,7 @@
 package org.jlab.detector.decode;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import org.jlab.detector.scalers.DaqScalers;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,14 +18,18 @@ import org.jlab.detector.helicity.HelicityState;
 import org.jlab.logging.DefaultLogger;
 
 import org.jlab.io.base.DataEvent;
+import org.jlab.io.evio.EvioDataDictionary;
 import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.evio.EvioSource;
 import org.jlab.io.hipo.HipoDataEvent;
 import org.jlab.io.hipo.HipoDataSync;
 
 import org.jlab.jnp.hipo4.data.Bank;
+import org.jlab.jnp.hipo4.data.DataType;
 import org.jlab.jnp.hipo4.data.Event;
+import org.jlab.jnp.hipo4.data.Node;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
+import org.jlab.jnp.hipo4.io.HipoReader;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
 
 import org.jlab.utils.benchmark.ProgressPrintout;
@@ -675,14 +681,186 @@ public class CLASDecoder4 {
     }
     
     
+    public static void decodeEvio2Hipo2Evio(OptionParser parser){
+        
+        
+        System.out.println("###############################################");
+        System.out.println("#  RUNNING EVIO2HIPO2EVIO2HIPO                #");
+        System.out.println("###############################################");
+         List<String> inputList = parser.getInputList();
+         
+         if(inputList.isEmpty()==true){
+            parser.printUsage();
+            System.out.println("\n >>>> error : no input file is specified....\n");
+            System.exit(0);
+        }
+
+        String modeDevel = parser.getOption("-m").stringValue();
+        boolean developmentMode = false;
+        
+       
+
+        if(modeDevel.compareTo("run")!=0&&modeDevel.compareTo("devel")!=0){
+            parser.printUsage();
+            System.out.println("\n >>>> error : mode has to be set to \"run\" or \"devel\" ");
+            System.exit(0);
+        }
+
+        if(modeDevel.compareTo("devel")==0){
+            developmentMode = true;
+        }
+
+        String outputFile = parser.getOption("-o").stringValue();
+        int compression = parser.getOption("-c").intValue();
+        int  recordsize = parser.getOption("-b").intValue();
+        int debug = parser.getOption("-d").intValue();
+
+        CLASDecoder4 decoder = new CLASDecoder4(developmentMode);
+
+        decoder.setDebugMode(debug);
+
+        HipoWriterSorted writer = new HipoWriterSorted();
+        writer.setCompressionType(compression);
+        writer.getSchemaFactory().initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4"));
+
+        Bank   rawScaler = new Bank(writer.getSchemaFactory().getSchema("RAW::scaler"));
+        Bank  rawRunConf = new Bank(writer.getSchemaFactory().getSchema("RUN::config"));
+        Bank  helicityAdc = new Bank(writer.getSchemaFactory().getSchema("HEL::adc"));
+        Event scalerEvent = new Event();
+        
+         int nrun = parser.getOption("-r").intValue();
+        double torus = parser.getOption("-t").doubleValue();
+        double solenoid = parser.getOption("-s").doubleValue();
+
+        writer.open(outputFile);
+        ProgressPrintout progress = new ProgressPrintout();
+        System.out.println("INPUT LIST SIZE = " + inputList.size());
+        int nevents = parser.getOption("-n").intValue();
+        int counter = 0;
+
+        if(nrun>0){
+            decoder.setRunNumber(nrun,true);
+        }
+
+        if (parser.getOption("-x").getValue() != null) {
+            decoder.detectorDecoder.setTimestamp(parser.getOption("-x").stringValue());
+        }
+
+        
+        //Node node = new Node(1,11,DataType.BYTE,200*1024);
+        EvioDataDictionary dict = new EvioDataDictionary();
+        
+        for(String inputFile : inputList){
+            
+            HipoReader hr = new HipoReader();
+            hr.open(inputFile);
+        
+            
+            HelicityState prevHelicity = new HelicityState();
+            Event hevent = new Event();
+            
+            while(hr.hasNext()==true){
+                
+                hr.nextEvent(hevent);
+                
+                Node evn = hevent.read(1, 11);
+                
+                byte[] buffer = evn.getByte();
+                // this next few lines may seem wierd for untrained observer,
+                // however, even when the buffer length matches to the lenght
+                // that is read with EVIO format (which is first 4 bytes of the buffer)
+                // the EventHandler crashes complaining that there is not enough data.
+                // for some reason making the buffer larger works, even though 
+                // it only reads to the bytes that are within the size of the 
+                // initial buffer. (who knows?)
+                byte[] buffer2 = new byte[buffer.length+56];
+                System.arraycopy(buffer, 0, buffer2, 0, buffer.length);
+                
+                ByteBuffer bb = ByteBuffer.wrap(buffer);
+                bb.order(ByteOrder.LITTLE_ENDIAN);
+                
+                
+                //System.out.println("\n\n NODE SIZE = " + buffer.length + "   \n LENGTH = " + bb.getInt(0) + " or " + bb.getInt(0)*4);
+                EvioDataEvent event = new EvioDataEvent(buffer2,ByteOrder.LITTLE_ENDIAN, dict);
+                
+                Event  decodedEvent = decoder.getDataEvent(event);
+                
+                Bank   header = decoder.createHeaderBank( nrun, counter, (float) torus, (float) solenoid);
+                if(header!=null) decodedEvent.write(header);
+                Bank   trigger = decoder.createTriggerBank();
+                if(trigger!=null) decodedEvent.write(trigger);
+                Bank onlineHelicity = decoder.createOnlineHelicityBank();
+                if(onlineHelicity!=null) decodedEvent.write(onlineHelicity);
+                Bank decodedHelicity = decoder.createHelicityDecoderBank(event);
+                if (decodedHelicity!=null) decodedEvent.write(decodedHelicity);
+                
+                Bank epics = decoder.createEpicsBank();
+                
+                decodedEvent.read(rawScaler);
+                decodedEvent.read(rawRunConf);
+                decodedEvent.read(helicityAdc);
+                
+                // check for changes to helicity state:
+                Bank helicityFlip = null;
+                if (helicityAdc.getRows()>0) {
+                    HelicityState thisHelicity = HelicityState.createFromFadcBank(helicityAdc);
+                    if (!thisHelicity.isValid() || !thisHelicity.equals(prevHelicity)) {
+                        helicityFlip = decoder.createHelicityFlipBank(decodedEvent,thisHelicity);
+                        prevHelicity = thisHelicity;
+                    }
+                }
+                
+                if(rawScaler.getRows()>0 || epics!=null || helicityFlip!=null) {
+                    scalerEvent.reset();
+                    
+                    if(rawScaler.getRows()>0) scalerEvent.write(rawScaler);
+                    if(rawRunConf.getRows()>0) scalerEvent.write(rawRunConf);
+
+                    for (Bank b : decoder.createReconScalerBanks(decodedEvent)) {
+                        decodedEvent.write(b);
+                        scalerEvent.write(b);
+                    }
+
+                    if (epics!=null) {
+                        decodedEvent.write(epics);
+                        scalerEvent.write(epics);
+                    }
+                    
+                    if (helicityFlip!=null) {
+                        decodedEvent.write(helicityFlip);
+                        scalerEvent.write(helicityFlip);
+                    }
+                    
+                    writer.addEvent(scalerEvent, 1);
+                }
+                
+                writer.addEvent(decodedEvent,0);
+                
+                counter++;
+                progress.updateStatus();
+                if(counter%25000==0){
+                    System.gc();
+                }
+                if(nevents>0){
+                    if(counter>=nevents) break;
+                }
+            }
+        }
+        writer.close();
+        
+    }
+    
     public static void main(String[] args){
 
         OptionParser parser = new OptionParser("decoder");
+        
         parser.addOption("-n", "-1", "maximum number of events to process");
         parser.addOption("-c", "2", "compression type (0-NONE, 1-LZ4 Fast, 2-LZ4 Best, 3-GZIP)");
         parser.addOption("-d", "0","debug mode, set >0 for more verbose output");
         parser.addOption("-m", "run","translation tables source (use -m devel for development tables)");
         parser.addOption("-b", "16","record buffer size in MB");
+        parser.addOption("-h5", "0","set this option to 1, to run evio2hipo2evio to hipo converter");
+        
         parser.addRequired("-o","output.hipo");
 
 
@@ -693,6 +871,14 @@ public class CLASDecoder4 {
 
         parser.parse(args);
 
+        
+        
+        if(parser.getOption("-h5").intValue()!=0){
+            CLASDecoder4.decodeEvio2Hipo2Evio(parser);
+            return;
+        }
+        
+        
         List<String> inputList = parser.getInputList();
 
         if(inputList.isEmpty()==true){
@@ -751,6 +937,7 @@ public class CLASDecoder4 {
         }
 
         for(String inputFile : inputList){
+            
             EvioSource reader = new EvioSource();
             reader.open(inputFile);
             
