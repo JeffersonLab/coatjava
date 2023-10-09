@@ -16,7 +16,7 @@ jobs:
     name: clas12-validation dispatch
     runs-on: ubuntu-latest
     steps:
-      - name: santize message
+      - name: sanitize message
         id: sanitize
         run: echo title=$(echo "${{ github.event.pull_request.title || github.event.head_commit.message }}" | head -n1 | sed 's;";;g' | sed "s;';;g") >> $GITHUB_OUTPUT
       - name: dispatch
