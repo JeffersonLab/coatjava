@@ -764,6 +764,7 @@ public class CLASDecoder4 {
                 hr.nextEvent(hevent);
                 
                 Node evn = hevent.read(1, 11);
+                Node trg = hevent.read(5,  5);
                 
                 byte[] buffer = evn.getByte();
                 // this next few lines may seem wierd for untrained observer,
@@ -834,6 +835,7 @@ public class CLASDecoder4 {
                     writer.addEvent(scalerEvent, 1);
                 }
                 
+                decodedEvent.write(trg);
                 writer.addEvent(decodedEvent,0);
                 
                 counter++;
