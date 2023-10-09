@@ -10,6 +10,7 @@ import org.jlab.clas.tracking.kalmanfilter.Material;
 import org.jlab.clas.tracking.kalmanfilter.Units;
 
 import org.jlab.clas.tracking.utilities.MatrixOps.Libr;
+import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.rec.cvt.svt.SVTParameters;
 
 public class Constants {
@@ -21,6 +22,39 @@ public class Constants {
     public static double CAANGLE3=30.;
     public static double CAANGLE4=19.;
     public static double CAANGLE5=3.5;
+ 
+    private boolean THRESLOADED = false;
+    private void LoadThresholds() {
+        SVTParameters.THRESHOLDS[0] = 30;
+        for(int i = 1; i<7; i++) {
+            SVTParameters.THRESHOLDS[i] = 30+i*15;
+        }
+    }
+    private void LoadThresholds(String variation, int run) {
+        DatabaseConstantProvider dbprovider = new DatabaseConstantProvider(run, variation);
+        
+        dbprovider.loadTable("/calibration/svt/fssr_thresholds");
+        SVTParameters.THRESHOLDS[0] = dbprovider.getInteger("/calibration/svt/fssr_thresholds/t0", 0);
+        SVTParameters.THRESHOLDS[1] = dbprovider.getInteger("/calibration/svt/fssr_thresholds/t1", 0);
+        SVTParameters.THRESHOLDS[2] = dbprovider.getInteger("/calibration/svt/fssr_thresholds/t2", 0);
+        SVTParameters.THRESHOLDS[3] = dbprovider.getInteger("/calibration/svt/fssr_thresholds/t3", 0);
+        SVTParameters.THRESHOLDS[4] = dbprovider.getInteger("/calibration/svt/fssr_thresholds/t4", 0);
+        SVTParameters.THRESHOLDS[5] = dbprovider.getInteger("/calibration/svt/fssr_thresholds/t5", 0);
+        SVTParameters.THRESHOLDS[6] = dbprovider.getInteger("/calibration/svt/fssr_thresholds/t6", 0);
+        SVTParameters.THRESHOLDS[7] = dbprovider.getInteger("/calibration/svt/fssr_thresholds/t7", 0);
+        
+    }
+    
+    public synchronized void loadThresholds(String variation, int run, boolean newFssrTh) {
+        if(THRESLOADED ) 
+            return;
+        if(newFssrTh==false) {
+            LoadThresholds();
+        } else {
+            LoadThresholds(variation, run);
+        }
+        THRESLOADED = true;
+    }
     public boolean seedingDebugMode =false;
    
     
@@ -610,6 +644,7 @@ public class Constants {
             this.setBmtzmaxclussize(bmtzmaxclussize);
             this.setRCUT(rcut);
             this.setZRANGE(z0cut);
+            
             ConstantsLoaded = true;
         }
     }

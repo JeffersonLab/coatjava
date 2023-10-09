@@ -48,9 +48,9 @@ public class SVTParameters {
     private static double MAXDOCA2STRIP;
     private static double MAXDOCA2STRIPS;
     // THRESHOLDS
-    public static int INITTHRESHOLD = 30;
-    public static int DELTATHRESHOLD = 15;
-
+   
+    public static int[] THRESHOLDS = new int[8];
+    
     // RECONSTRUCTION CONSTANTS
     public static double ETOTCUT = 10.0;
     // cut on Edep min;

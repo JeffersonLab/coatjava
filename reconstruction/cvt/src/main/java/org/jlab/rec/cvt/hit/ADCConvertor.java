@@ -27,10 +27,11 @@ public class ADCConvertor {
 
         int START[] = new int[8];
         int END[] = new int[8];
-        for (int i = 0; i < 8; i++) {
-            START[i] = SVTParameters.INITTHRESHOLD + SVTParameters.DELTATHRESHOLD * i;
-            END[i] = SVTParameters.INITTHRESHOLD + SVTParameters.DELTATHRESHOLD * (i + 1);
+        for (int i = 0; i < 7; i++) {
+            START[i] = SVTParameters.THRESHOLDS[i];
+            END[i] = SVTParameters.THRESHOLDS[i+1];
         }
+        START[7] = SVTParameters.THRESHOLDS[7];
         END[7] = 1000; //overflow
 
         Random random = new Random();

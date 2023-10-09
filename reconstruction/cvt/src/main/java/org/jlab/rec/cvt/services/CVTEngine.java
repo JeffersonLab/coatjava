@@ -52,7 +52,7 @@ public class CVTEngine extends ReconstructionEngine {
     private String cvtKFTrajectoryBank;
     private String cvtCovMatBank;    
     private String bankPrefix = "";
-    
+    private boolean newfssrThresholds=true;
     // run-time options
     private int     pid = 0;
     private int     kfIterations = 5;
@@ -289,9 +289,9 @@ public class CVTEngine extends ReconstructionEngine {
         IndexedTable bmtStripVoltage    = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_strip_voltage");
         IndexedTable bmtStripThreshold  = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_strip_voltage_thresholds");
         IndexedTable beamPos            = this.getConstantsManager().getConstants(run, "/geometry/beam/position");
-        
+        //IndexedTable fssrThreshold      = this.getConstantsManager().getConstants(run, "/calibration/svt/fssr_thresholds");
+        Constants.getInstance().loadThresholds(this.getConstantsManager().getVariation(), run, newfssrThresholds);
         Geometry.initialize(this.getConstantsManager().getVariation(), 11, svtLorentz, bmtVoltage);
-        
         CVTReconstruction reco = new CVTReconstruction(swimmer);
         
         List<ArrayList<Hit>>         hits = reco.readHits(event, svtStatus, bmtStatus, bmtTime, 
@@ -466,7 +466,8 @@ public class CVTEngine extends ReconstructionEngine {
             "/calibration/mvt/bmt_voltage",
             "/calibration/mvt/bmt_strip_voltage",
             "/calibration/mvt/bmt_strip_voltage_thresholds",
-            "/geometry/beam/position"
+            "/geometry/beam/position",
+            "calibration/svt/fssr_thresholds"
         };
         requireConstants(Arrays.asList(tables));
         this.getConstantsManager().setVariation("default");
