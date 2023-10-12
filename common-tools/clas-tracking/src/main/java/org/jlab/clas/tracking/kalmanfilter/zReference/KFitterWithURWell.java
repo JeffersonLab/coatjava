@@ -471,7 +471,7 @@ public class KFitterWithURWell extends AKFitter {
     
     public Matrix filterCovMatURWell(Matrix Ci, double[][] V) {
         double det = Matrix5x5.inverse(Ci, first_inverse, adj);
-        if (Math.abs(det) < 1.e-60) {
+        if (Math.abs(det) < 1.e-40) {
             return null;
         }                 
         
@@ -484,7 +484,7 @@ public class KFitterWithURWell extends AKFitter {
 
         Matrix5x5.add(first_inverse, addition, result);
         double det2 = Matrix5x5.inverse(result, result_inv, adj);
-        if (Math.abs(det2) < 1.e-60) {
+        if (Math.abs(det2) < 1.e-40) {
             return null;
         }
 
@@ -504,7 +504,7 @@ public class KFitterWithURWell extends AKFitter {
     public Matrix filterCovMat(double[] H, Matrix Ci, double V) {
 
         double det = Matrix5x5.inverse(Ci, first_inverse, adj);
-        if (Math.abs(det) < 1.e-60) {
+        if (Math.abs(det) < 1.e-40) {
             return null;
         }
 
@@ -517,7 +517,7 @@ public class KFitterWithURWell extends AKFitter {
 
         Matrix5x5.add(first_inverse, addition, result);
         double det2 = Matrix5x5.inverse(result, result_inv, adj);
-        if (Math.abs(det2) < 1.e-60) {
+        if (Math.abs(det2) < 1.e-40) {
             return null;
         }
 
