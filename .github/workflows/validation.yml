@@ -29,7 +29,8 @@ jobs:
           workflow_file_name: ci.yml
           ref: main
           client_payload: '{
-            "source": "${{ github.repository }}",
+            "actor": "${{ github.actor }}",
+            "source": "${{ github.event.repository.name }}",
             "title": "${{ steps.sanitize.outputs.title }}",
             "source_url": "${{ github.event.pull_request.html_url }}",
             "git_coatjava": "{\"fork\": \"${{ github.repository }}\", \"branch\": \"${{ github.head_ref || github.ref }}\" }"
