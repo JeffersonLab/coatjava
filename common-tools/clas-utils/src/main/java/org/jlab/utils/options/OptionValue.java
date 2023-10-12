@@ -33,6 +33,7 @@ public class OptionValue {
     public String  getDefault() { return this.optionDefault;}
     
     public int     intValue()     { return Integer.parseInt(this.optionValue);}
+    public long    longValue()    { return Long.parseLong(this.optionValue);}
     public double  doubleValue()  { return Double.parseDouble(this.optionValue);}
     public String  stringValue()  { return this.optionValue;}
     
