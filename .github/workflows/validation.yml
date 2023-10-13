@@ -21,7 +21,7 @@ jobs:
         id: sanitize
         run: echo title=$(echo '${{ github.event.pull_request.title || github.event.head_commit.message }}' | head -n1 | sed 's;";;g' | sed "s;';;g") >> $GITHUB_OUTPUT
       - name: dispatch
-        uses: c-dilks/trigger-workflow-and-wait@summarize # convictional/trigger-workflow-and-wait@v1.6.5
+        uses: c-dilks/trigger-workflow-and-wait@master # convictional/trigger-workflow-and-wait@v1.6.5
         with:
           owner: JeffersonLab
           repo: clas12-validation
