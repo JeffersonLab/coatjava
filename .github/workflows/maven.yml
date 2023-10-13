@@ -113,6 +113,7 @@ jobs:
 
   final:
     needs:
+      - build
       - test_coatjava
       - test_run-groovy
     runs-on: ${{ needs.build.outputs.default_runner }}
