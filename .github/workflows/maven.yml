@@ -138,6 +138,8 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: build_${{ needs.build.outputs.default_runner }}
+      - name: untar build
+        run: tar xzvf coatjava.tar.gz
       - name: publish jacoco report
         run: validation/jacoco-aggregate.sh
       - uses: actions/upload-pages-artifact@v2

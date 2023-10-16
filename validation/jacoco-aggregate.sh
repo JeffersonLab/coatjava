@@ -22,7 +22,9 @@ cat << EOF > index.html
 <ul>
 EOF
 
-for indexPage in $(find . -name "index.html" | grep 'jacoco/index'); do
+indexPages=$(find . -name "index.html" | grep 'jacoco/index')
+[ -z "$indexPages" ] && echo "ERROR: no jacoco HTML pages found" >&2 && exit 1
+for indexPage in $indexPages; do
   link=$(echo $indexPage | sed 's;^./;;')
   name=$(echo $link | sed 's;/target/site/.*;;')
   cat << EOF >> index.html
