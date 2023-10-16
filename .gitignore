@@ -2,6 +2,7 @@
 /coatjava
 /myLocalMvnRepo
 target
+/publish
 
 *.class
 *lundfiles*.dat

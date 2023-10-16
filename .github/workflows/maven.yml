@@ -47,6 +47,15 @@ jobs:
           name: build_${{ matrix.runner }}
           retention-days: 1
           path: coatjava.tar.gz
+      - name: publish jacoco report
+        if: matrix.runner == 'ubuntu-latest'
+        run: validation/jacoco-aggregate.sh
+      - uses: actions/upload-artifact@v3
+        if: matrix.runner == 'ubuntu-latest'
+        with:
+          name: jacoco
+          retention-days: 1
+          path: publish/
 
   # tests
   #############################################################################
@@ -134,14 +143,10 @@ jobs:
     needs:
       - build
     steps:
-      - uses: actions/checkout@v3
       - uses: actions/download-artifact@v3
         with:
-          name: build_${{ needs.build.outputs.default_runner }}
-      - name: untar build
-        run: tar xzvf coatjava.tar.gz
-      - name: publish jacoco report
-        run: validation/jacoco-aggregate.sh
+          name: jacoco
+          path: publish/
       - uses: actions/upload-pages-artifact@v2
         with:
           path: publish/
