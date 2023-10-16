@@ -18,6 +18,9 @@ concurrency:
 
 jobs:
 
+  # build
+  #############################################################################
+
   build:
     strategy:
       fail-fast: true
@@ -44,41 +47,9 @@ jobs:
           name: build_${{ matrix.runner }}
           retention-days: 1
           path: coatjava.tar.gz
-      - name: publish jacoco report
-        run: validation/jacoco-aggregate.sh
-      - uses: actions/upload-artifact@v3
-        with:
-          name: jacoco
-          retention-days: 1
-          path: publish/
 
-  collect_pages:
-    runs-on: ubuntu-latest
-    needs:
-      - build
-    steps:
-      - uses: actions/download-artifact@v3
-        with:
-          name: jacoco
-          path: publish/
-      - uses: actions/upload-pages-artifact@v2
-        with:
-          path: publish/
-          retention-days: 7
-
-  deploy_pages:
-    needs: collect_pages
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: deployment
-        id: deployment
-        uses: actions/deploy-pages@v2
+  # tests
+  #############################################################################
 
   test_coatjava:
     needs: [ build ]
@@ -154,3 +125,36 @@ jobs:
     steps:
       - name: pass
         run: exit 0
+
+  # deploy web pages
+  #############################################################################
+
+  collect_pages:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
+        with:
+          name: build_${{ needs.build.outputs.default_runner }}
+      - name: publish jacoco report
+        run: validation/jacoco-aggregate.sh
+      - uses: actions/upload-pages-artifact@v2
+        with:
+          path: publish/
+          retention-days: 7
+
+  deploy_pages:
+    needs: collect_pages
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: deployment
+        id: deployment
+        uses: actions/deploy-pages@v2
