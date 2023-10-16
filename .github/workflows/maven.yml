@@ -29,21 +29,21 @@ jobs:
       default_runner: ubuntu-latest
     runs-on: ${{ matrix.runner }}
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up JDK
-      uses: actions/setup-java@v3
-      with:
-        java-version: 11
-        distribution: zulu
-    - name: build
-      run: ./build-coatjava.sh --spotbugs --unittests --quiet
-    - name: tar # tarball to preserve permissions
-      run: tar czvf coatjava.tar.gz coatjava
-    - uses: actions/upload-artifact@v3
-      with:
-        name: build_${{ matrix.runner }}
-        retention-days: 1
-        path: coatjava.tar.gz
+      - uses: actions/checkout@v3
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: 11
+          distribution: zulu
+      - name: build
+        run: ./build-coatjava.sh --spotbugs --unittests --quiet
+      - name: tar # tarball to preserve permissions
+        run: tar czvf coatjava.tar.gz coatjava
+      - uses: actions/upload-artifact@v3
+        with:
+          name: build_${{ matrix.runner }}
+          retention-days: 1
+          path: coatjava.tar.gz
 
   test_coatjava:
     needs: [ build ]
@@ -69,47 +69,46 @@ jobs:
           - { id: eb-eftpi, cmd: ./run-eb-tests.sh -100 electronFTpion   }
           # run one macos test
           - { runner: macos-latest, id: eb-ep, cmd: ./run-eb-tests.sh -100 electronproton }
-
     runs-on: ${{ matrix.runner }}
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up JDK
-      uses: actions/setup-java@v3
-      with:
-        java-version: 11
-        distribution: zulu
-    - uses: actions/download-artifact@v3
-      with:
-        name: build_${{ matrix.runner }}
-    - name: untar build
-      run: tar xzvf coatjava.tar.gz
-    - name: run test
-      run: |
-        cd validation/advanced-tests
-        echo "COMMAND: ${{ matrix.cmd }}"
-        ${{ matrix.cmd }}
+      - uses: actions/checkout@v3
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: 11
+          distribution: zulu
+      - uses: actions/download-artifact@v3
+        with:
+          name: build_${{ matrix.runner }}
+      - name: untar build
+        run: tar xzvf coatjava.tar.gz
+      - name: run test
+        run: |
+          cd validation/advanced-tests
+          echo "COMMAND: ${{ matrix.cmd }}"
+          ${{ matrix.cmd }}
 
   test_run-groovy:
     needs: [ build ]
     runs-on: ${{ needs.build.outputs.default_runner }}
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up JDK
-      uses: actions/setup-java@v3
-      with:
-        java-version: 11
-        distribution: zulu
-    - name: setup groovy
-      uses: wtfjoke/setup-groovy@v1
-      with:
-        groovy-version: 4.x
-    - uses: actions/download-artifact@v3
-      with:
-        name: build_${{ needs.build.outputs.default_runner }}
-    - name: untar build
-      run: tar xzvf coatjava.tar.gz
-    - name: test run-groovy
-      run: coatjava/bin/run-groovy validation/advanced-tests/test-run-groovy.groovy
+      - uses: actions/checkout@v3
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: 11
+          distribution: zulu
+      - name: setup groovy
+        uses: wtfjoke/setup-groovy@v1
+        with:
+          groovy-version: 4.x
+      - uses: actions/download-artifact@v3
+        with:
+          name: build_${{ needs.build.outputs.default_runner }}
+      - name: untar build
+        run: tar xzvf coatjava.tar.gz
+      - name: test run-groovy
+        run: coatjava/bin/run-groovy validation/advanced-tests/test-run-groovy.groovy
 
   final:
     needs:
