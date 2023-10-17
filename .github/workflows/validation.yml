@@ -35,5 +35,5 @@ jobs:
               "source": "${{ github.event.repository.name }}",
               "title": "${{ steps.sanitize.outputs.title }}",
               "source_url": "${{ github.event.pull_request.html_url || github.event.head_commit.url }}",
-              "git_coatjava": "{\"fork\": \"${{ github.repository }}\", \"branch\": \"${{ github.head_ref || github.ref_name }}\" }"
+              "git_${{ github.event.repository.name }}": "{\"fork\": \"${{ github.repository }}\", \"branch\": \"${{ github.head_ref || github.ref_name }}\" }"
             }
