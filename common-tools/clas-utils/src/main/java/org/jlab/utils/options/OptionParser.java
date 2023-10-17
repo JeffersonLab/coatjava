@@ -127,7 +127,7 @@ public class OptionParser {
         
         if(this.containsOptions(arguments, "-h","-help")==true){
             this.printUsage();
-            System.exit(0);
+            System.exit(101);
         }
 
 //this.show(arguments);
@@ -136,8 +136,8 @@ public class OptionParser {
             if(status==false) { 
                 this.parsedOptions.clear();
                 this.printUsage();
-                System.out.println(" \n*** ERROR *** Missing argument : " + entry.getValue().getOption());
-                System.exit(0);
+                System.err.println(" \n*** ERROR *** Missing argument : " + entry.getValue().getOption());
+                System.exit(100);
                 return;
             }
             this.parsedOptions.put(entry.getValue().getOption(), entry.getValue());

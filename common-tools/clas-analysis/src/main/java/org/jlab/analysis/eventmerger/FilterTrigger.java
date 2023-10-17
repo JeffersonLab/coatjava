@@ -6,20 +6,25 @@ import org.jlab.jnp.utils.data.*;
 
 /**
  * Hipo Reduce Worker: filter event based on trigger bit
- * 
- * Inputs: selected trigger bit (0-63)
- * Returns "true" is selected bit is set in the trigger bit word and no other bits are set
+ 
+ Inputs: selected and vetoed trigger bit masks (64 selectedBits)
+ Returns "true" if one of the bits in the selectedBits mask is set in the trigger 
+ word and none of the bit in the vetoedBits mask is
  * @author devita
  */
 public class FilterTrigger implements Worker {
 
     Bank triggerBank = null;
     DaqScalersSequence chargeSeq = null;
-    int bit = -1;
+    long selectedBits = 0L;
+    long vetoedBits = 0L;
     
-    public FilterTrigger(int bit){
-        this.bit=bit;
-        System.out.println("\nInitializing trigger reduction: bit set to " + this.bit + "\n");
+    public FilterTrigger(long bits, long veto){
+        this.selectedBits=bits;
+        this.vetoedBits=veto;
+        System.out.println("\nInitializing trigger reduction:");
+        System.out.println("\t selected bit mask set to 0x" + Long.toHexString(bits));
+        System.out.println("\t   vetoed bit mask set to 0x" + Long.toHexString(veto));
     }
 
     /**
@@ -43,13 +48,8 @@ public class FilterTrigger implements Worker {
         event.read(triggerBank);
         if(triggerBank.getRows()>0){
             long triggerBit = triggerBank.getLong("trigger",0);
-            long timeStamp  = triggerBank.getLong("timestamp",0);
-            // Value will be >0 if selected bit is 1 in triggerBit
-            int  value    = DataByteUtils.readLong(triggerBit, bit, bit);
-            // Check that no other bit is set
-            long thisBit  = value*((long) Math.pow(2, bit));
             // If returned true, the event will be write to the output
-            if(value>0 && thisBit==triggerBit) return true;
+            if((triggerBit & selectedBits) !=0L && (triggerBit & vetoedBits) == 0L) return true;
             }
         return false;
     }

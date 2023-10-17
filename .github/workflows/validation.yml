@@ -1,0 +1,39 @@
+name: Dispatch Validation
+
+on:
+  pull_request:
+  push:
+    branches: [ development ]
+    tags: [ '*' ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  clas12-validation:
+    name: clas12-validation dispatch
+    runs-on: ubuntu-latest
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository || github.event_name == 'push' }} # not a PR from a fork || is a push
+    steps:
+      - name: sanitize message
+        id: sanitize
+        run: echo title=$(echo '${{ github.event.pull_request.title || github.event.head_commit.message }}' | head -n1 | sed 's;";;g' | sed "s;';;g") >> $GITHUB_OUTPUT
+      - name: dispatch
+        uses: c-dilks/trigger-workflow-and-wait@master # convictional/trigger-workflow-and-wait@v1.6.5
+        with:
+          owner: JeffersonLab
+          repo: clas12-validation
+          summarize: true
+          github_token: ${{ secrets.CLAS12VALIDATION }}
+          workflow_file_name: ci.yml
+          ref: main
+          client_payload: >-
+            {
+              "actor": "${{ github.actor }}",
+              "source": "${{ github.event.repository.name }}",
+              "title": "${{ steps.sanitize.outputs.title }}",
+              "source_url": "${{ github.event.pull_request.html_url || github.event.head_commit.url }}",
+              "git_coatjava": "{\"fork\": \"${{ github.repository }}\", \"branch\": \"${{ github.head_ref || github.ref_name }}\" }"
+            }
