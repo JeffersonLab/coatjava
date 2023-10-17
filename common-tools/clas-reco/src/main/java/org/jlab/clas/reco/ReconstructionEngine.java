@@ -65,6 +65,8 @@ public abstract class ReconstructionEngine implements Engine {
 
     private boolean ignoreInvalidRunNumbers = true;
 
+    private int runNumberOverride = -1;
+
     volatile long triggerMask = 0xFFFFFFFFFFFFFFFFL;
 
     String engineName        = "UnknownEngine";
@@ -183,6 +185,9 @@ public abstract class ReconstructionEngine implements Engine {
           engineDictionary = new SchemaFactory();
       LOGGER.log(Level.INFO,"--- engine configuration is called " + this.getDescription());
       try {
+          if (this.getEngineConfigString("runNumberOverride")!=null) {
+              this.runNumberOverride = Integer.valueOf(this.getEngineConfigString("runNumberOverride"));
+          }
           if (this.getEngineConfigString("rawBankGroup")!=null) {
               this.rawBankOrders = RawBank.getFilterGroup(this.getEngineConfigString("rawBankGroup"));
           }
@@ -335,9 +340,11 @@ public abstract class ReconstructionEngine implements Engine {
     }
     
     public synchronized boolean checkRunNumber(DataEvent event) {
-        int r = 0;
-        if (event.hasBank("RUN::config")) {
+        int r = runNumberOverride;
+        if (r <= 0 && event.hasBank("RUN::config")) {
             r = event.getBank("RUN::config").getInt("run",0);
+        }
+        if (r > 0) {
             if (this.runNumbers.isEmpty() || r != this.runNumbers.get(this.runNumbers.size()-1)) {
                 this.runNumbers.add(r);
                 this.detectorChanged(11);
