@@ -1,8 +1,11 @@
 package org.jlab.analysis.postprocess;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+
 import org.jlab.clas.reco.ReconstructionEngine;
+import org.jlab.detector.calib.utils.ConstantsManager;
 
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
@@ -44,14 +47,18 @@ public class Tag1ToEvent {
     public static final String[] CREATE_TAG1_EVENTS = {
         ReconstructionEngine.CONFIG_BANK_NAME
     };
-    
+
+    public static int getRunNumber(Bank runConfigBank) {
+        if (runConfigBank.getRows() < 1) return -1;
+        return runConfigBank.getInt("run",0);
+    }
+
     public static void main(String[] args) {
 
         DefaultLogger.debug();
 
         OptionParser parser = new OptionParser("postprocess");
         parser.addOption("-q","0","do beam charge and livetime (0/1=false/true)");
-        parser.addOption("-d","0","do delayed helicity (0/1=false/true)");
         parser.addOption("-f","0","do global offline helicity flip (0/1=false/true)");
         parser.addRequired("-o","output.hipo");
         parser.parse(args);
@@ -63,19 +70,16 @@ public class Tag1ToEvent {
             System.err.println("\n >>>> error : no input file is specified....\n");
             System.exit(1);
         }
-        
+
+        ConstantsManager conman = new ConstantsManager();
+        conman.init(Arrays.asList(new String[]{"/runcontrol/helicity"}));
+
         // output file:
         String fileout = parser.getOption("-o").stringValue();
 
         // helicity / beamcharge options:
-        final boolean doHelicityDelay = parser.getOption("-d").intValue() != 0;
         final boolean doBeamCharge = parser.getOption("-q").intValue() != 0;
         final boolean doHelicityFlip = parser.getOption("-f").intValue() != 0;
-        if (!doHelicityDelay && !doBeamCharge && !doHelicityFlip) {
-            parser.printUsage();
-            System.err.println("\n >>>>> error : at least one of -q/-d/-f must be specified\n");
-            System.exit(1);
-        }
 
         HelicitySequenceManager helSeq = new HelicitySequenceManager(8,inputList,doHelicityFlip);
         DaqScalersSequence chargeSeq = DaqScalersSequence.readSequence(inputList);
@@ -95,6 +99,9 @@ public class Tag1ToEvent {
         
         // we're going to modify this bank if doHelicityFlip is set:
         Bank helFlipBank = new Bank(writer.getSchemaFactory().getSchema("HEL::flip"));
+
+        // just for the darn run number:
+        Bank runConfigBank = new Bank(writer.getSchemaFactory().getSchema("RUN::config"));
 
         // we're going to copy these banks to new tag-1 events:
         List<Bank> configBanks = new ArrayList<>();
@@ -118,6 +125,9 @@ public class Tag1ToEvent {
                 event.read(recEventBank);
                 event.read(helFlipBank);
                 event.read(helScalerBank);
+                event.read(runConfigBank);
+                
+                final int runNumber = getRunNumber(runConfigBank);
 
                 event.remove(recEventBank.getSchema());
                 event.remove(helScalerBank.getSchema());
@@ -147,7 +157,7 @@ public class Tag1ToEvent {
                 }
 
                 // write delay-corrected helicty to REC::Event and HEL::scaler:
-                if (doHelicityDelay) {
+                if (runNumber > 0 && 0 != conman.getConstants(runNumber, "/runcontrol/helicity").getIntValue("delay",0,0,0)) {
                     recEventBank.putByte("helicity",0,hb.value());
                     recEventBank.putByte("helicityRaw",0,hbraw.value());
                     RebuildScalers.assignScalerHelicity(event, helScalerBank, helSeq);
