@@ -10,6 +10,11 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+env:
+  # number of events; use 0 for the default in `clas12-validation`
+  num_events_low_stats: 0
+  num_events_high_stats: 10000
+
 jobs:
 
   clas12-validation:
@@ -20,6 +25,12 @@ jobs:
       - name: sanitize message
         id: sanitize
         run: echo title=$(echo '${{ github.event.pull_request.title || github.event.head_commit.message }}' | head -n1 | sed 's;";;g' | sed "s;';;g") >> $GITHUB_OUTPUT
+      - name: set number of events
+        id: num_events
+        run: |
+          # use low stats for PR commits, or high stats for pushes (which should only be PR merges)
+          [ "${{ github.event_name }}" = "push" ] && num_events=${{ env.num_events_high_stats }} || num_events=${{ env.num_events_low_stats }}
+          echo num_events=$num_events >> $GITHUB_OUTPUT
       - name: dispatch
         uses: c-dilks/trigger-workflow-and-wait@master # convictional/trigger-workflow-and-wait@v1.6.5
         with:
@@ -31,6 +42,7 @@ jobs:
           ref: main
           client_payload: >-
             {
+              "num_events": "${{ steps.num_events.outputs.num_events }}",
               "actor": "${{ github.actor }}",
               "source": "${{ github.event.repository.name }}",
               "title": "${{ steps.sanitize.outputs.title }}",
