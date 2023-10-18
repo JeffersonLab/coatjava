@@ -1,51 +1,23 @@
-name: Dispatch Validation
+name: Validation
 
 on:
   pull_request:
   push:
     branches: [ development ]
     tags: [ '*' ]
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
-env:
-  # number of events; use 0 for the default in `clas12-validation`
-  num_events_low_stats: 0
-  num_events_high_stats: 1000
-
 jobs:
-
   clas12-validation:
-    name: clas12-validation dispatch
-    runs-on: ubuntu-latest
-    if: ${{ github.event.pull_request.head.repo.full_name == github.repository || github.event_name == 'push' }} # not a PR from a fork || is a push
-    steps:
-      - name: sanitize message
-        id: sanitize
-        run: echo title=$(echo '${{ github.event.pull_request.title || github.event.head_commit.message }}' | head -n1 | sed 's;";;g' | sed "s;';;g") >> $GITHUB_OUTPUT
-      - name: set number of events
-        id: num_events
-        run: |
-          # use low stats for PR commits, or high stats for pushes (which should only be PR merges)
-          [ "${{ github.event_name }}" = "push" ] && num_events=${{ env.num_events_high_stats }} || num_events=${{ env.num_events_low_stats }}
-          echo num_events=$num_events >> $GITHUB_OUTPUT
-      - name: dispatch
-        uses: c-dilks/trigger-workflow-and-wait@master # convictional/trigger-workflow-and-wait@v1.6.5
-        with:
-          owner: JeffersonLab
-          repo: clas12-validation
-          summarize: true
-          github_token: ${{ secrets.CLAS12VALIDATION }}
-          workflow_file_name: ci.yml
-          ref: main
-          client_payload: >-
-            {
-              "num_events": "${{ steps.num_events.outputs.num_events }}",
-              "actor": "${{ github.actor }}",
-              "source": "${{ github.event.repository.name }}",
-              "title": "${{ steps.sanitize.outputs.title }}",
-              "source_url": "${{ github.event.pull_request.html_url || github.event.head_commit.url }}",
-              "git_${{ github.event.repository.name }}": "{\"fork\": \"${{ github.repository }}\", \"branch\": \"${{ github.head_ref || github.ref_name }}\" }"
-            }
+    name: clas12-validation workflow
+    uses: JeffersonLab/clas12-validation/.github/workflows/ci.yml@reusable-workflow  # FIXME: use `@main`
+    with:
+      # FIXME: drop this after testing
+      git_upstream: >-
+        {
+          "clas12-validation": { "fork": "JeffersonLab/clas12-validation", "branch": "reusable-workflow" }
+        }
