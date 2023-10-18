@@ -13,7 +13,7 @@ concurrency:
 env:
   # number of events; use 0 for the default in `clas12-validation`
   num_events_low_stats: 0
-  num_events_high_stats: 10000
+  num_events_high_stats: 1000
 
 jobs:
 
