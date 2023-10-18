@@ -14,4 +14,5 @@ jobs:
 
   clas12-validation:
     name: clas12-validation workflow
-    uses: JeffersonLab/clas12-validation/.github/workflows/validation.yml@reusable-workflow
+    uses: JeffersonLab/clas12-validation/.github/workflows/validation.yml@reusable-workflow  # FIXME: use `@main`
+    secrets: inherit  # FIXME: may not be needed if we can avoid `trigger-workflow-and-wait`
