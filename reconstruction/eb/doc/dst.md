@@ -229,7 +229,7 @@ group.*
         timing and path length, RF-corrected using this particle's `vz`
 -   `pid`
     -   the particle identification assigned by the Event Builder
-        -   ±11 for $e^-$/$e^+$
+        -   ±11 for $e^-/e^+$
         -   ±211/321/2212/45 for charged hadrons π/K/p/d
         -   2112/22 for neutron/photon
         -   0 for undefined
@@ -237,7 +237,7 @@ group.*
     -   a signed-*N*<sub>*σ*</sub> estimate of particle identification
         quality, based on
         -   momentum-dependent calorimetry sampling fraction and
-            resolution for $e^+$/$e^-$
+            resolution for $e^+/e^-$
         -   vertex time difference and paddle-dependent resolution for
             charged hadrons
             -   *Note, as of

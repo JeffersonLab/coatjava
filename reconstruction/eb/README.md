@@ -138,7 +138,7 @@ particle must have both
 
 Priority is then ordered as $e^-$, $e^+$, $\pi^+$,
 $\pi^-$. In each case, if multiple candidates exist, the one with
-the highest momentum is taken. For $e^+$/$e^-$ the
+the highest momentum is taken. For $e^+/e^-$ the
 ECAL/HTCC criteria discussed in the next section is required, but for
 pions there are no additional requirements (i.e. it's just assumed to be
 a pion).
@@ -160,7 +160,7 @@ a quality factor for that assignment.
 
 ### Electron/Positron
 For charged particles in the forward detectors, the Event Builder first
-assigns $e^-$/$e^+$ (11/-11) if a particle satisfies all
+assigns $e^-/e^+$ (11/-11) if a particle satisfies all
 corresponding HTCC and ECAL requirements (and has an associated FTOF
 hit):
 
@@ -176,8 +176,8 @@ sampling fraction.
 
 ### Charged Hadrons
 For charged particles with an associated TOF hit that do not satisfy
-$e^+$/$e^-$ criteria nor were the start time particle,
-the Event Builder assigns $d$/$p$/$K$/$\pi$ (45/2212/321/211), including both
+$e^+/e^-$ criteria nor were the start time particle,
+the Event Builder assigns $d/p/K/\pi$ (45/2212/321/211), including both
 charge states for the last three. This is based purely on minimizing the
 difference between its vertex time and the event start time (plus
 possible overrides for Cherenkov vetoes).
