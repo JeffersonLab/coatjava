@@ -1,4 +1,4 @@
-name: Dispatch Validation
+name: Validation
 
 on:
   pull_request:
