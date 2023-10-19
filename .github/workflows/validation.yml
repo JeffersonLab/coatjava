@@ -11,8 +11,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-
   clas12-validation:
     name: clas12-validation workflow
-    uses: JeffersonLab/clas12-validation/.github/workflows/validation.yml@reusable-workflow  # FIXME: use `@main`
-    secrets: inherit  # FIXME: may not be needed if we can avoid `trigger-workflow-and-wait`
+    uses: JeffersonLab/clas12-validation/.github/workflows/ci.yml@reusable-workflow  # FIXME: use `@main`
+    with:
+      # num_events: 0 # FIXME test this
+      config_file_versions: >-
+        {
+          "coatjava": "latest",
+          "gemc":     "latest"
+        }
