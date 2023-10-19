@@ -1,9 +1,9 @@
-# coatjava
+# COATJAVA
 [![Build Status](https://github.com/jeffersonlab/coatjava/workflows/Coatjava-CI/badge.svg)](https://github.com/jeffersonlab/coatjava/actions)
 [![Validation Status](https://github.com/JeffersonLab/coatjava/actions/workflows/validation.yml/badge.svg)](https://github.com/JeffersonLab/coatjava/actions/workflows/validation.yml)
 [![codecov](https://codecov.io/gh/JeffersonLab/coatjava/branch/development/graph/badge.svg?precision=2)](https://codecov.io/gh/JeffersonLab/coatjava/branch/development)
 
-The original repository for COATJAVA was named "clas12-offline-software" and is [now archived and read-only](https://github.com/JeffersonLab/clas12-offline-software).  On May 17, 2023, this new repository was created by running BFG Repo Cleaner to get rid of old, large data files and things that should never have been in the repository, giving 10x reduction in repository size, clone time, etc, and renamed "coatjava".  The most critical, github-specific aspects have been transferred to this new repository:
+The original repository for COATJAVA was named "clas12-offline-software" and is [now archived and read-only](https://github.com/JeffersonLab/clas12-offline-software).  On May 17, 2023, this new repository was created by running BFG Repo Cleaner to get rid of old, large data files and things that should never have been in the repository, giving 10x reduction in repository size, clone time, etc, and renamed `coatjava`.  The most critical, GitHub-specific aspects have been transferred to this new repository:
 
 * Open issues
 * Branch protection rules
@@ -21,9 +21,9 @@ Due to the cleanup, previously existing forks and local copies of the old reposi
 
 This README fell too far out of date and is undergoing resurrection.  Meanwhile, these bits are still relevant ...
 
-If you just want to use the software without modifying/building it, you can download a pre-built package from the [github releases](https://github.com/JeffersonLab/clas12-offline-software/releases) page or the corresponding repo at [JLab](https://clasweb.jlab.org/clas12offline/distribution/coatjava/).  Builds on JLab machines are also available, see the [general software wiki](https://clasweb.jlab.org/wiki/index.php/CLAS12_Software_Center) for setting up your environment to use them.
+If you just want to use the software without modifying/building it, you can download a pre-built package from the [GitHub releases](https://github.com/JeffersonLab/clas12-offline-software/releases) page or the corresponding repo at [JLab](https://clasweb.jlab.org/clas12offline/distribution/coatjava/).  Builds on JLab machines are also available, see the [general software wiki](https://clasweb.jlab.org/wiki/index.php/CLAS12_Software_Center) for setting up your environment to use them.
 
-For anything more, see the "General Developer Doucmentation" link on that software wiki, which points [here](https://clasweb.jlab.org/wiki/index.php/COATJAVA_Developer_Docs).
+For anything more, see the "General Developer Documentation" link on that software wiki, which points [here](https://clasweb.jlab.org/wiki/index.php/COATJAVA_Developer_Docs).
 
 The [troubleshooting](https://github.com/JeffersonLab/clas12-offline-software/wiki/Troubleshooting) wiki page may also still be useful but likely outdated.
 

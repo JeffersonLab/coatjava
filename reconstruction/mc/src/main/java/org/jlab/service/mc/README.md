@@ -10,7 +10,7 @@ In order the Truth Matching to work, it is important to invoke certain options w
 * -NGENP=50 // This is not necessarily needed, if you are sure in LUND file the number of generated particles is always smaller than 10, you can skip this option
 
 If you are not interested how the matching works, but just want to use it as a black-box, then please run GEMC with above mentioned options,
-Below is an example command that will allow the TrutMatching service to work properly.
+Below is an example command that will allow the TruthMatching service to work properly.
 
      gemc det.gcard -SAVE_ALL_MOTHERS=1 -SKIPREJECTEDHITS=1 -NGENP=50 -INTEGRATEDRAW="*" -N=10000 -USE_GUI=0 -INPUT_GEN_FILE="lund, inp_Lund.dat" -RUNNO=11 -OUTPUT="hipo, GEMC_Out.hipo"
 
@@ -167,7 +167,7 @@ The TruthMatch service produces two banks **MC::GenMatch** and **MC::RecMatch**.
 ## **MC::GenMatch**
 Lets start from the **MC::GenMatch** bank.
 The number of entries (columns) in the **MC::GenMatch** is equal to the number of entries in the **MC::Particle** bank.
-Below is the snippet from the json file describing the **MC::GenMatch** structure.
+Below is the snippet from the JSON file describing the **MC::GenMatch** structure.
 
         "name": "MC::GenMatch",
         "group": 40,
@@ -184,7 +184,7 @@ Below is the snippet from the json file describing the **MC::GenMatch** structur
 
 * The **mcindex** is the index of the MC Particle in the **MC::Particle** bank that we want to match to the Rec particle.
 * The **pindex** is the index of the matched REC particle in the **REC::Particle** bank.
-* **mclayer1** and **mclayer2**  are 64 bit LONGs, where each bit of those words indicates whether the the given MC particle
+* **mclayer1** and **mclayer2**  are 64 bit LONGs, where each bit of those words indicates whether the given MC particle
 deposited hit in a specific detector/layer of CLAS12. See section [Status word description](#StatWordDescription)
 for details on detector<=>bit correspondence.
 * **player1** and **player2** are again 64 bit LONG words, however their bits represent detector/layers of the matched Rec Particle,
@@ -195,7 +195,7 @@ for details on detector<=>bit correspondence.
 The structure of **MC::RecMatch** bank is very similar to **MC::GenMatch** and meanings of variables are
 analogous to those from the **MC::GenMatch** bank..
 The number of entries (columns) in the **MC::RecMatch** is equal to the number of entries in the **REC::Particle** bank.
-Below is the snippet from the json file describing the **MC::RecMatch** structure.
+Below is the snippet from the JSON file describing the **MC::RecMatch** structure.
 
         "name": "MC::RecMatch",
         "group": 40,
@@ -251,7 +251,7 @@ The quality takes values 0.91 or 0.92
 ### Photons
 The quality for photons are 0.93 or 0.94
 * **0.93** In this case the photon should have deposited hit in PCal **OR** any of CND layers or in CTOF
-* **0.94** Thise are subset of 0.93, when the matched particle has deposited hit in PCal **OR** any of CND layers or in CTOF
+* **0.94** These are subset of 0.93, when the matched particle has deposited hit in PCal **OR** any of CND layers or in CTOF
 ##
 Later based on the feedback of users, some additional values can be implemented for the quality, and/or it's definition can be changed.
  

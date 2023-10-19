@@ -41,20 +41,20 @@ The output data structures of the Event Builder are HIPO banks whose
 names are prefixed with "REC". These banks comprise what is commonly,
 historically called DSTs, or Data Summary Tapes. The true, full
 structure of each bank is always contained in the
-[event.json](../../etc/bankdefs/hipo4/event.json)
+[`event.json`](../../etc/bankdefs/hipo4/event.json)
 file in the offline software repository. Here's the bank listing, and
 for more details on their relationships and contents see [CLAS12
 DSTs](doc/dst.md).
 
--   REC::Event
--   REC::Particle
--   REC::Calorimeter
--   REC::Scintillator
--   REC::Cherenkov
--   REC::Track
--   REC::Traj (track trajectory)
--   REC::CovMat (track covariance matrix)
--   REC::VertDoca (multi-particle vertices, currently unused)
+- `REC::Event`
+- `REC::Particle`
+- `REC::Calorimeter`
+- `REC::Scintillator`
+- `REC::Cherenkov`
+- `REC::Track`
+- `REC::Traj` (track trajectory)
+- `REC::CovMat` (track covariance matrix)
+- `REC::VertDoca` (multi-particle vertices, currently unused)
 
 ## Beam Helicity
 The Event Builder currently only supports direct (not delayed) reporting
@@ -136,9 +136,9 @@ particle must have both
 1.  a track in the DC
 2.  an associated FTOF hit in panel 1B (preferred) or 1A
 
-Priority is then ordered as e<sup>-</sup>, e<sup>+</sup>, π<sup>+</sup>,
-π<sup>-</sup>. In each case, if multiple candidates exist, the one with
-the highest momentum is taken. For e<sup>+</sup>/e<sup>-</sup> the
+Priority is then ordered as $e^-$, $e^+$, $\pi^+$,
+$\pi^-$. In each case, if multiple candidates exist, the one with
+the highest momentum is taken. For $e^+$/$e^-$ the
 ECAL/HTCC criteria discussed in the next section is required, but for
 pions there are no additional requirements (i.e. it's just assumed to be
 a pion).
@@ -160,7 +160,7 @@ a quality factor for that assignment.
 
 ### Electron/Positron
 For charged particles in the forward detectors, the Event Builder first
-assigns e<sup>-</sup>/e<sup>+</sup> (11/-11) if a particle satisfies all
+assigns $e^-$/$e^+$ (11/-11) if a particle satisfies all
 corresponding HTCC and ECAL requirements (and has an associated FTOF
 hit):
 
@@ -171,13 +171,13 @@ hit):
         (PCAL+Inner+Outer) divided by momentum [see details on the parameterization](#ECAL-Sampling-Fraction-Parameterization)
 
 These parameters are stored in CCDB, and the variable
-`REC::Particle.chi2pid` is assigned as the number of σ from the expected
+`REC::Particle.chi2pid` is assigned as the number of $\sigma$ from the expected
 sampling fraction.
 
 ### Charged Hadrons
 For charged particles with an associated TOF hit that do not satisfy
-e<sup>+</sup>/e<sup>-</sup> criteria nor were the start time particle,
-the Event Builder assigns d/p/K/π (45/2212/321/211), including both
+$e^+$/$e^-$ criteria nor were the start time particle,
+the Event Builder assigns $d$/$p$/$K$/$\pi$ (45/2212/321/211), including both
 charge states for the last three. This is based purely on minimizing the
 difference between its vertex time and the event start time (plus
 possible overrides for Cherenkov vetoes).
@@ -193,8 +193,8 @@ is:
 In the central detector, only one CTOF response can be associated and no
 prioritization necessary.
 
-The variable `REC::Particle.chi2pid` is assigned as the number of σ from
-the expected vertex time for the best hypothesis, i.e. Δt/σ.
+The variable `REC::Particle.chi2pid` is assigned as the number of $\sigma$ from
+the expected vertex time for the best hypothesis, i.e. $\Delta t/\sigma$.
 
 Below is an example of FTOF performance as of May 8, 2018, run 3432, 50
 nA, electron inbending, software version 5b.3.3, where the black lines
@@ -243,7 +243,7 @@ neutron's momentum vector is assigned a magnitude of zero.*
 
 #### Central Detector
 For the central detector, CND/CTOF is treated the same as ECAL/FTOF,
-except only neutron pid is assigned and the beta cut is at 0.8.
+except only neutron PID is assigned and the beta cut is at 0.8.
 
 #### Forward Tagger
 Neutrals in the tagger are all assigned as a photon.
@@ -255,7 +255,7 @@ Neutrals in the tagger are all assigned as a photon.
 The Event Builder stores almost all its parameters in CCDB, under
 `calibration/eb`. These parameters are retrieved at runtime based on the
 run number found in the `RUN::config` bank and interpreted and stored in
-the class EBCCDBConstants. The structure of the database can be
+the class `EBCCDBConstants`. The structure of the database can be
 navigated at [this
 website](https://clasweb.jlab.org/cgi-bin/ccdb/objects). Here's an image
 of the Event Builder's table layout in CCDB:
