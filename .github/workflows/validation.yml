@@ -16,12 +16,11 @@ jobs:
     name: clas12-validation workflow
     uses: JeffersonLab/clas12-validation/.github/workflows/ci.yml@reusable-workflow  # FIXME: use `@main`
     with:
-      num_events: 7 # FIXME test this
       # FIXME: drop this after testing
       config_file_versions: >-
         {
-          "coatjava": "latest",
-          "gemc":     "latest"
+          "coatjava": "2",
+          "gemc":     "3"
         }
       # FIXME: drop this after testing
       git_upstream: >-
