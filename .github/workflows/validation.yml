@@ -1,10 +1,10 @@
 name: Validation
 
 on:
-  pull_request:
+  # pull_request: #FIXME: revert
   push:
-    branches: [ development ]
-    tags: [ '*' ]
+    # branches: [ development ]
+    # tags: [ '*' ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
