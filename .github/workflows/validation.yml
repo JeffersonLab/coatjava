@@ -1,10 +1,10 @@
 name: Validation
 
 on:
-  # pull_request: #FIXME: revert
+  pull_request:
   push:
-    # branches: [ development ]
-    # tags: [ '*' ]
+    branches: [ development ]
+    tags: [ '*' ]
   workflow_dispatch:
 
 concurrency:
