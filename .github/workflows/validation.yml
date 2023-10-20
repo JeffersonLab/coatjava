@@ -17,12 +17,6 @@ jobs:
     uses: JeffersonLab/clas12-validation/.github/workflows/ci.yml@reusable-workflow  # FIXME: use `@main`
     with:
       # FIXME: drop this after testing
-      config_file_versions: >-
-        {
-          "coatjava": "2",
-          "gemc":     "3"
-        }
-      # FIXME: drop this after testing
       git_upstream: >-
         {
           "clas12-validation": { "fork": "JeffersonLab/clas12-validation", "branch": "reusable-workflow" }
