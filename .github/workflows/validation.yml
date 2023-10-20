@@ -1,11 +1,11 @@
 name: Validation
 
 on:
-  pull_request:
+  # pull_request:
   push:
-    branches: [ development ]
-    tags: [ '*' ]
-  workflow_dispatch:
+    # branches: [ development ]
+    # tags: [ '*' ]
+  # workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
