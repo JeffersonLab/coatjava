@@ -5,7 +5,7 @@ on:
   push:
     # branches: [ development ]
     # tags: [ '*' ]
-  workflow_dipatch:
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
