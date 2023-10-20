@@ -12,8 +12,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  clas12-validation:
-    name: clas12-validation workflow
+  validation:
     uses: JeffersonLab/clas12-validation/.github/workflows/ci.yml@reusable-workflow  # FIXME: use `@main`
     with:
       # FIXME: drop this after testing
