@@ -13,4 +13,18 @@ concurrency:
 
 jobs:
   validation:
-    uses: JeffersonLab/clas12-validation/.github/workflows/ci.yml@main
+    uses: JeffersonLab/clas12-validation/.github/workflows/ci.yml@matrix-override
+    with:
+      matrix_evgen: >-
+        [
+          "e_K",
+          "e_g"
+        ]
+      matrix_config: >-
+        [
+          "rgb_fall2019"
+        ]
+      git_upstream: >-
+        {
+          "clas12-config": { "fork": "JeffersonLab/clas12-config", "branch": "matrix-override" }
+        }
