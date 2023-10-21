@@ -2,17 +2,17 @@ package cnuphys.rk4;
 
 public class ButcherTableau {
 
-	public static ButcherTableau RK4 = new ButcherTableau("RK4", false, makeRow(0.), makeRow(1. / 2., 1. / 2.),
+	public static final ButcherTableau RK4 = new ButcherTableau("RK4", false, makeRow(0.), makeRow(1. / 2., 1. / 2.),
 			makeRow(1. / 2., 0, 1. / 2), makeRow(1., 0, 0, 1.), makeRow(1. / 6., 1. / 3., 1. / 3., 1. / 6.) // the
 																											// b's
 	);
 
-	public static ButcherTableau RULE38 = new ButcherTableau("RULE38", false, makeRow(0.), makeRow(1. / 3., 1. / 3.),
+	public static final ButcherTableau RULE38 = new ButcherTableau("RULE38", false, makeRow(0.), makeRow(1. / 3., 1. / 3.),
 			makeRow(2. / 3., -1. / 3., 1.), makeRow(1., 1., -1., 1.), makeRow(1. / 8., 3. / 8., 3. / 8., 1. / 8.) // the
 																													// b's
 	);
 
-	public static ButcherTableau FEHLBERG_ORDER5 = new ButcherTableau("FEHLBERG_ORDER5", true, makeRow(0.),
+	public static final ButcherTableau FEHLBERG_ORDER5 = new ButcherTableau("FEHLBERG_ORDER5", true, makeRow(0.),
 			makeRow(1. / 4., 1. / 4.), makeRow(3. / 8., 3. / 32., 9. / 32.),
 			makeRow(12. / 13, 1932. / 2197, -7200. / 2197., 7296. / 2197.),
 			makeRow(1., 439. / 216., -8., 3680. / 513., -845. / 4104.),
@@ -21,7 +21,7 @@ public class ButcherTableau {
 			makeRow(25. / 216., 0., 1408. / 2565., 2197. / 4104., -1. / 5., 0.) // bstars's
 	);
 
-	public static ButcherTableau DORMAND_PRINCE = new ButcherTableau("DORMAND_PRINCE", true, makeRow(0.),
+	public static final ButcherTableau DORMAND_PRINCE = new ButcherTableau("DORMAND_PRINCE", true, makeRow(0.),
 			makeRow(1. / 5., 1. / 5.), makeRow(3. / 10., 3. / 40., 9. / 40.),
 			makeRow(4. / 5., 44. / 45., -56. / 15, 32. / 9.),
 			makeRow(8. / 9., 19372. / 6561., -25360. / 2187., 64448. / 6561., -212. / 729.),
@@ -31,7 +31,7 @@ public class ButcherTableau {
 			makeRow(35. / 384., 0, 500. / 1113., 125. / 192., -2187. / 6784., 11. / 84., 0) // bstars's
 	);
 
-	public static ButcherTableau CASH_KARP = new ButcherTableau("CASH_KARP", true, makeRow(0.),
+	public static final ButcherTableau CASH_KARP = new ButcherTableau("CASH_KARP", true, makeRow(0.),
 			makeRow(1. / 5., 1. / 5.), 
 			makeRow(3. / 10., 3. / 40., 9. / 40.),
 			makeRow(3. / 5, 3. / 10., -9. / 10., 6. / 5.), 

@@ -737,22 +737,24 @@ public class DataSet extends DefaultTableModel {
 	 */
 	public void add(double... vals) throws DataSetException {
 
-		int count = (vals == null) ? 0 : vals.length;
+		synchronized (_columns) {
+			int count = (vals == null) ? 0 : vals.length;
 
-		if (_type == DataSetType.H2D) {
-			if (count == 2) {
-				getColumn(0).histo2DAdd(vals[0], vals[1]);
+			if (_type == DataSetType.H2D) {
+				if (count == 2) {
+					getColumn(0).histo2DAdd(vals[0], vals[1]);
+				}
+				return;
 			}
-			return;
-		}
 
-		if (count > getColumnCount()) {
-			String msg = "Expected " + getColumnCount() + " values in add, but got: " + count;
-			throw new DataSetException(msg);
-		}
+			if (count > getColumnCount()) {
+				String msg = "Expected " + getColumnCount() + " values in add, but got: " + count;
+				throw new DataSetException(msg);
+			}
 
-		for (int i = 0; i < count; i++) {
-			getColumn(i).add(vals[i]);
+			for (int i = 0; i < count; i++) {
+				getColumn(i).add(vals[i]);
+			}
 		}
 
 		notifyListeners();

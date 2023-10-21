@@ -1,7 +1,6 @@
 package cnuphys.swim;
 
 import java.io.PrintStream;
-import java.io.Serializable;
 import java.util.ArrayList;
 
 import cnuphys.adaptiveSwim.AdaptiveSwimUtilities;
@@ -10,6 +9,7 @@ import cnuphys.lund.LundId;
 import cnuphys.magfield.FastMath;
 import cnuphys.magfield.FieldProbe;
 import cnuphys.magfield.RotatedCompositeProbe;
+import cnuphys.swimtest.RandomData;
 
 /**
  * Combines a generated particle record with a path (trajectory). A trajectory
@@ -21,12 +21,8 @@ import cnuphys.magfield.RotatedCompositeProbe;
  * 
  */
 
-public class SwimTrajectory extends ArrayList<double[]>  implements Serializable {
+public class SwimTrajectory extends ArrayList<double[]> {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 3850772573951127304L;
 
 	// the particle that we swam
 	private GeneratedParticleRecord _genPartRec;
@@ -71,7 +67,6 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 	 * Create a swim trajectory with no initial content
 	 */
 	public SwimTrajectory() {
-		super();
 	}
 	
 	/**
@@ -237,12 +232,19 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 		}
 		
 		int dim = u.length;
+		
+		//adds a copy!!
 		double ucopy[] = new double[dim];
 		System.arraycopy(u, 0, ucopy, 0, dim);
 		return super.add(ucopy);
 	}
 	
-	
+	/**
+	 * Add to the trajectory
+	 * @param u the new 6D vector
+	 * @param s the path length
+	 * @return true if add was successful
+	 */
 	public boolean add(double u[], double s) {
 		if (u == null) {
 			return false;
@@ -254,8 +256,7 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 		ucopy[dim] = s;
 		return super.add(ucopy);
 	}
-
-	
+		
 	/**
 	 * @param xo       the x vertex position in m
 	 * @param yo       the y vertex position in m
@@ -282,6 +283,20 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 		add(v);
 	}
 
+	/**
+	 * Replace the last point in the trajectory
+	 * @param u the new last point
+	 * @param s the new last pathlength
+	 */
+	public void replaceLastPoint(double u[], double s) {
+		if (isEmpty()) {
+			return;
+		}
+		
+		remove(size()-1);
+		add(u, s);
+	}
+	
 	/**
 	 * Get the average phi for this trajectory based on positions, not directions
 	 * 
@@ -535,6 +550,10 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 		return z;
 	}
 	
+	/**
+	 * Diagnostic print of entire trajectory
+	 * @param ps the print stream
+	 */
 	public void print(PrintStream ps) {
 		ps.println("Number of trajectory points: " + size());
 		

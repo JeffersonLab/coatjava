@@ -2,7 +2,6 @@ package cnuphys.swimZ;
 
 import java.util.ArrayList;
 
-import Jama.Matrix;
 import cnuphys.magfield.FieldProbe;
 import cnuphys.magfield.IMagField;
 import cnuphys.magfield.MagneticField;
@@ -10,7 +9,6 @@ import cnuphys.magfield.RotatedCompositeProbe;
 import cnuphys.rk4.DefaultStopper;
 import cnuphys.rk4.IRkListener;
 import cnuphys.rk4.IStopper;
-import cnuphys.rk4.RungeKutta;
 import cnuphys.rk4.RungeKuttaException;
 import cnuphys.rk4.RungeKuttaZ;
 
@@ -297,11 +295,6 @@ public class SwimZ {
 			nStep = _rk4.adaptiveStepToTf(yo, start.z, zf, stepSize, zArray, yArray, deriv, _stopper, _absoluteTolerance, hdata);
 		}
 		catch (RungeKuttaException e) {
-//			System.err.println("Integration Failure");
-//			System.err.println("Q = " + Q + "  p = " + p + " zf = " + zf);
-//			int pzSign = (zf < start.z) ? -1 : 1;
-//			System.err.println("Start SV: " + start.normalPrint(p, pzSign));
-			//e.printStackTrace();
 			throw new SwimZException("Runge Kutta Failure in SwimZ sectorAdaptiveRK");
 		}
 
