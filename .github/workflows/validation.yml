@@ -25,5 +25,5 @@ jobs:
         ]
       git_upstream: >-
         {
-          "clas12-validation": { "fork": "JeffersonLab/clas12-config", "branch": "matrix-override" }
+          "clas12-validation": { "fork": "JeffersonLab/clas12-validation", "branch": "matrix-override" }
         }
