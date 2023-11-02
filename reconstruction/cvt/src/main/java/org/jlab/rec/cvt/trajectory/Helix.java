@@ -266,8 +266,8 @@ public class Helix {
         double z0 = _Z0;
 
         if (Math.abs(_curvature)<1E-5) { // R > 100 m, assume it's straight track
-            double x = -d0 * Math.sin(phi0) + r*Math.cos(phi0);
-            double y =  d0 * Math.cos(phi0) + r*Math.sin(phi0);
+            double x = -d0 * Math.sin(phi0) + r*Math.cos(phi0)+xb;
+            double y =  d0 * Math.cos(phi0) + r*Math.sin(phi0)+yb;
             double z =  z0 + r*tandip;
             return new Point3D(x, y, z);
         }
