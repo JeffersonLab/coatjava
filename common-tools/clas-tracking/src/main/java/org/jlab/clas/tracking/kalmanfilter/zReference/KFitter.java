@@ -73,9 +73,8 @@ public class KFitter extends AKFitter {
         this.setFitFailed = false;
         mv.setMeasVecs(measSurfaces);
         for (int i = 0; i < mv.measurements.size(); i++) {
-            if (mv.measurements.get(i).skip == false) {
-                if(TBT) this.NDF++;
-                else this.NDF += mv.measurements.get(i).surface.getNMeas();                                    
+            if (mv.measurements.get(i).skip == false) {                
+                this.NDF += mv.measurements.get(i).surface.getNMeas();                                    
             }
         }
 
@@ -93,8 +92,7 @@ public class KFitter extends AKFitter {
         mv.setMeasVecs(measSurfaces);
         for (int i = 0; i < mv.measurements.size(); i++) {
             if (mv.measurements.get(i).skip == false) {
-                if(TBT) this.NDF++;
-                else this.NDF += mv.measurements.get(i).surface.getNMeas();
+                this.NDF++;                
             }
         }
         sv.initFromHB(initSV, beta);
@@ -328,7 +326,8 @@ public class KFitter extends AKFitter {
         if (Double.isNaN(chi2)) {
             this.setFitFailed = true;
         }
-                
+        
+/*        
         if (TBT == true) {
             if (chi2 > initChi2) { // fit failed                 
                 this.finalStateVec = this.initialStateVec;
@@ -336,6 +335,7 @@ public class KFitter extends AKFitter {
                 this.calcFinalChisqDAF(sector, true);   
             }
         }
+*/
         
     }
     
