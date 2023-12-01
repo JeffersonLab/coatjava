@@ -1205,7 +1205,7 @@ public class TrackCandListFinder {
 
     				double LR = Math.signum(trkcand.get(c).get(s).get(h).get_XWire()-trkcand.get(c).get(s).get(h).get_X());
 
-    				hot._doca[0]*=LR;
+    				hot._doca[0]*=-LR;
     				hot._hitError = trkcand.get(c).get(s).get(h).get_DocaErr()*trkcand.get(c).get(s).get(h).get_DocaErr();
     				//LOGGER.log(Level.FINE, " Z "+Z+" ferr "+(float)(hot._Unc /(hot._hitError/4.)));
     				hot._Unc[0] = hot._hitError;
