@@ -46,7 +46,6 @@ public class DAFilter {
     
     public void calc_effectiveDoca_doubleHits(){        
         if((wireLines_double[0] == wireLines_double[1]) || ((docas_double[0] == docas_double[1]) && !(docas_double[0] == 0 && docas_double[1] == 0))) {
-            //System.out.println((docas[0] != 0) + " " + docas[0]);
             effectiveVar = vars_double[0]/weights_double[0];
             effectiveDoca = docas_double[0];
             indexReferenceWire = 0;
@@ -107,39 +106,12 @@ public class DAFilter {
             } else {
                 effectiveDoca = -effectiveToMid - halfWireDistance;
             }
-        }
-        
-        /*
-        if((docas_double[0] == 0) || (docas_double[1] == 0)){
-        System.out.println("Weights: " + weights_double[0] + "  " + weights_double[1]);
-        System.out.println("docas  : " + docas_double[0] + "  " + docas_double[1]);
-        System.out.println("wireLines_double[0]" + wireLines_double[0]);
-        System.out.println("wireLines_double[1]" + wireLines_double[1]);
-        System.out.println("verticalLine: " + verticalLine.direction());
-        System.out.println("toMids : " + toMids[0] + "  " + toMids[1]);
-        System.out.println("effectiveToMid : " + effectiveToMid);
-        System.out.println("effectiveDoca : " + effectiveDoca);
-        System.out.println("halfWireDistance : " + halfWireDistance);
-        System.out.println("vars : " + vars_double[0] + "  " + vars_double[1]);
-        System.out.println("effectiveVar : " + effectiveVar);
-        
-        System.out.println();
-        System.out.println();
-        
-        }
-*/
-
+        }        
     }
     
     public void calc_effectiveDoca_singleHit(){  
         effectiveVar = var_single/weight_single;
         effectiveDoca = doca_single;
-        
-        /*
-        System.out.println("weight: " + weight_single);
-        System.out.println("var: " + var_single + "  " + effectiveVar);
-        System.out.println("effectiveDoca: " + effectiveDoca);
-        */
     }
     
     public double get_EffectiveDoca(){
@@ -161,20 +133,7 @@ public class DAFilter {
         double Phi = factor * Math.exp(-0.5 / annealingFactor * Chi2);
         double Lambda = factor * Math.exp(-0.5 / annealingFactor * dafChi2Cut);
         double sum = Phi + Lambda;
-
-        double updatedWeight = Phi/sum;
-                
-        /*
-        System.out.println("Residual    : " + "  " + residual);
-        System.out.println("variance    : " + "  " + var_single);
-        System.out.println("annealingFactor: " + "  " + annealingFactor);
-        System.out.println("Chi2         : " + "  " + Chi2);
-        System.out.println("Phi          : " + "  " + Phi);
-        System.out.println("Lambda       : " + "  " + Lambda);
-        System.out.println("updatedWeight: " + "  " + updatedWeight);
-        System.out.println();
-        System.out.println();
-        */
+        double updatedWeight = Phi/sum;        
         
         return updatedWeight;
     }
@@ -198,17 +157,6 @@ public class DAFilter {
             updatedWeights[i] = Phi[i]/sum;
         }
         
-        /*
-        System.out.println("Residuals    : " + "  " + residuals[0] + "  " + residuals[1]);
-        System.out.println("variances    : " + "  " + vars[0] + "  " + vars[1]);
-        System.out.println("annealingFactor: " + "  " + annealingFactor);
-        System.out.println("Chi2         : " + "  " + Chi2[0] + "  " + Chi2[1]);
-        System.out.println("Phi          : " + "  " + Phi[0] + "  " + Phi[1]);
-        System.out.println("Lambda       : " + "  " + Lambda[0] + "  " + Lambda[1]);
-        System.out.println("updatedWeights: " + "  " + updatedWeights[0] + "  " + updatedWeights[1]);
-        System.out.println();
-        System.out.println();
-        */
         return updatedWeights;
     }
     
