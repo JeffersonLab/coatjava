@@ -548,25 +548,49 @@ public class KFitterWithURWell extends AKFitter {
 
             boolean forward = false;
             sv.transport(sector, k, 0, sVec, mv, this.getSwimmer(), forward);
-
             StateVec svc = sv.transported(forward).get(0);
             path += svc.deltaPath;
             svc.setPathLength(path);
-            kfStateVecsAlongTrajectory.add(svc);
+            
+            if (mv.measurements.get(0).surface.type == Type.PLANEURWELL) {
+                kfStateVecsAlongTrajectory.add(svc);
+                
+                double x_err = mv.measurements.get(0).surface.x_err;
+                double y_err = mv.measurements.get(0).surface.y_err;
 
-            double x_err = mv.measurements.get(0).surface.x_err;
-            double y_err = mv.measurements.get(0).surface.y_err;
+                double x_res = mv.measurements.get(0).surface.x - svc.x;
+                double y_res = mv.measurements.get(0).surface.y - svc.y;
 
-            double x_res = mv.measurements.get(0).surface.x - svc.x;
-            double y_res = mv.measurements.get(0).surface.y - svc.y;
-            
-            //System.out.println(x_res + " " + y_res + " " + x_err + " " + y_err);
-            
-            chi2 += (x_res*x_res) / (x_err*x_err);
-            chi2 += (y_res*y_res) / (y_err*y_err);    
-            
-            nRj[mv.measurements.get(0).region] += x_res * x_res / (x_err*x_err);
-            nRj[mv.measurements.get(0).region] += y_res * y_res / (y_err*y_err);
+                chi2 += (x_res*x_res) / (x_err*x_err);
+                chi2 += (y_res*y_res) / (y_err*y_err);    
+
+                nRj[mv.measurements.get(0).region] += x_res * x_res / (x_err*x_err);
+                nRj[mv.measurements.get(0).region] += y_res * y_res / (y_err*y_err);
+            }
+            else if(mv.measurements.get(0).surface.type == Type.LINEDOCA) {
+                double V0 = mv.measurements.get(0).surface.unc[0];
+
+                Point3D point = new Point3D(svc.x, svc.y, mv.measurements.get(0).surface.z);
+                double h0 = mv.hDoca(point, mv.measurements.get(0).surface.wireLine[0]);
+
+                svc.setProjector(mv.measurements.get(0).surface.wireLine[0].origin().x());
+                svc.setProjectorDoca(h0);
+                kfStateVecsAlongTrajectory.add(svc);
+                double res = (mv.measurements.get(0).surface.doca[0] - h0);
+                chi2 += (mv.measurements.get(0).surface.doca[0] - h0) * (mv.measurements.get(0).surface.doca[0] - h0) / V0;
+                nRj[mv.measurements.get(0).region - 1] += res * res / mv.measurements.get(0).error;
+                //USE THE DOUBLE HIT
+                if (mv.measurements.get(0).surface.doca[1] != -99) {
+                    V0 = mv.measurements.get(0).surface.unc[1];
+                    h0 = mv.hDoca(point, mv.measurements.get(0).surface.wireLine[1]);
+                    res = (mv.measurements.get(0).surface.doca[1] - h0);
+                    chi2 += (mv.measurements.get(0).surface.doca[1] - h0) * (mv.measurements.get(0).surface.doca[1] - h0) / V0;
+                    nRj[mv.measurements.get(0).region - 1] += res * res / mv.measurements.get(0).error;
+                    svc.setProjector(mv.measurements.get(0).surface.wireLine[1].origin().x());
+                    svc.setProjectorDoca(h0);
+                    kfStateVecsAlongTrajectory.add(svc);
+                }
+            }            
 
             forward = true;
             for (int k1 = 0; k1 < k; k1++) {
@@ -603,8 +627,6 @@ public class KFitterWithURWell extends AKFitter {
                 }
             }
         }
-        //System.out.println("this.chi2:" + this.chi2);
-
     }
 
     public Matrix propagateToVtx(int sector, double Zf) {
