@@ -89,7 +89,7 @@ public abstract class AMeasVecs {
         WL.copy(wireLine);
         WL.copy(WL.distance(point));
         
-        return WL.length()*Math.signum(-WL.direction().x());
+        return WL.length()*Math.signum(WL.direction().x());
     }
     
     public double dh(int k, StateVec stateVec) {

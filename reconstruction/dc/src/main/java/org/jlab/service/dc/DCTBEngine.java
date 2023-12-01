@@ -465,7 +465,7 @@ public class DCTBEngine extends DCEngine {
                 hot._doca[0] = trk.get_ListOfHBSegments().get(s).get(h).get_Doca();
                 
                 double LR = Math.signum(trk.get_ListOfHBSegments().get(s).get(h).get_XWire()-trk.get_ListOfHBSegments().get(s).get(h).get_X());
-                hot._doca[0]*=LR;
+                hot._doca[0]*=-LR;
                 hot._hitError = trk.get_ListOfHBSegments().get(s).get(h).get_DocaErr()*trk.get_ListOfHBSegments().get(s).get(h).get_DocaErr();
                 //LOGGER.log(Level.FINE, " Z "+Z+" ferr "+(float)(hot._Unc /(hot._hitError/4.)));
                 hot._Unc[0] = hot._hitError;
