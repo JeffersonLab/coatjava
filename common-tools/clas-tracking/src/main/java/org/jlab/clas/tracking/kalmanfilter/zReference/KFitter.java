@@ -825,14 +825,14 @@ public class KFitter extends AKFitter {
                 double res = (effectiveDoca - h);
                 chi2 += res*res / effectiveVar;
                 
-                if(indexReferenceWire == 0) svc.setProjectorDoca(h); 
-                else svc.setProjectorDoca(-999); 
+                h = mv.hDoca(point, mv.measurements.get(0).surface.wireLine[0]);
+                svc.setProjectorDoca(h); 
                 svc.setProjector(mv.measurements.get(0).surface.wireLine[0].origin().x());   
                 kfStateVecsAlongTrajectory.add(svc);
 
                 StateVec svc2 = sv.new StateVec(svc);
-                if(indexReferenceWire == 1) svc2.setProjectorDoca(h); 
-                else svc2.setProjectorDoca(-999); 
+                h = mv.hDoca(point, mv.measurements.get(0).surface.wireLine[1]);
+                svc2.setProjectorDoca(h); 
                 svc2.setProjector(mv.measurements.get(0).surface.wireLine[1].origin().x());
                 kfStateVecsAlongTrajectory.add(svc2);                  
             }
@@ -889,14 +889,14 @@ public class KFitter extends AKFitter {
                     double res = (effectiveDoca - h);
                     chi2 += res*res / effectiveVar;
 
-                    if(indexReferenceWire == 0) svc.setProjectorDoca(h); 
-                    else svc.setProjectorDoca(-999); 
+                    h = mv.hDoca(point, mv.measurements.get(k1 + 1).surface.wireLine[0]);
+                    svc.setProjectorDoca(h); 
                     svc.setProjector(mv.measurements.get(k1 + 1).surface.wireLine[0].origin().x());
                     kfStateVecsAlongTrajectory.add(svc);       
                     
                     StateVec svc2 = sv.new StateVec(svc);
-                    if(indexReferenceWire == 1) svc2.setProjectorDoca(h); 
-                    else svc2.setProjectorDoca(-999); 
+                    h = mv.hDoca(point, mv.measurements.get(k1 + 1).surface.wireLine[1]);
+                    svc2.setProjectorDoca(h); 
                     svc2.setProjector(mv.measurements.get(k1 + 1).surface.wireLine[1].origin().x());
                     kfStateVecsAlongTrajectory.add(svc2);                      
                 }
