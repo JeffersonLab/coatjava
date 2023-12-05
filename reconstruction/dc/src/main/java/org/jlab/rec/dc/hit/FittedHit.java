@@ -1043,7 +1043,7 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 //        this.set_AssociatedHBTrackID(trk.get_Id());
 //        this.set_AssociatedClusterID(this.get_AssociatedClusterID());
         this.setAssociatedStateVec(st);
-        this.set_TrkResid(this.get_Doca() * Math.signum(st.getProjectorDoca()) - st.getProjectorDoca());
+        this.set_TrkResid(this.get_Doca() * this.get_LeftRightAmb() - st.getProjectorDoca());
         this.setB(st.getB());
         this.setSignalPropagTimeAlongWire(st.x(), st.y(), DcDetector);
         this.setSignalTimeOfFlight();
