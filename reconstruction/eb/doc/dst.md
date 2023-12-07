@@ -45,17 +45,17 @@ called Data Summary Tapes or DSTs and will be available for physics
 analyses.
 
 The true, full structure of each bank is always contained in the
-[event.json](../../../etc/bankdefs/hipo4/event.json)
+[`event.json`](../../../etc/bankdefs/hipo4/event.json)
 file in the offline software repository, and below is a more explanatory
 summary of some of the more important information.
 
 The DSTs also include the
-[header.json](../../../etc/bankdefs/hipo4/header.json)
+[`header.json`](../../../etc/bankdefs/hipo4/header.json)
 banks for some global event information unrelated to the detector
 reconstruction, and some special banks from
-[data.json](../../../etc/bankdefs/hipo4/data.json).
+[`data.json`](../../../etc/bankdefs/hipo4/data.json).
 There are also simulation-specific banks in
-[mc.json](../../../etc/bankdefs/hipo4/mc.json)
+[`mc.json`](../../../etc/bankdefs/hipo4/mc.json)
 
 ## Bank List
 Just a listing.  See below for details.
@@ -88,7 +88,7 @@ This is the fundamental link between DST banks, and it serves a flexible
 *many-to-one* relationship to naturally accommodate the CLAS12 design
 without unnecessary data overhead while enforcing a standardized data
 format for detectors of the same type. For example, CLAS12 has many
-layers of scintillator, calorimeter, and cherenkov detectors, some with
+layers of scintillator, calorimeter, and Cherenkov detectors, some with
 different geometric acceptances and multiple layers, many of which can
 be associated with the same particle. Also, "response" banks can then
 later be discarded without keeping dangling links nor changing bank
@@ -113,9 +113,8 @@ Each "response" bank also contains the detector identifier variables
 `detector` and `layer`, whose values determine exactly which detector
 that response came from. The numbering conventions are always contained
 in the
-[DetectorType](../../../common-tools/clas-detector/src/main/java/org/jlab/detector/base/DetectorType.java)
-and [Detector
-Layer](../../../common-tools/clas-detector/src/main/java/org/jlab/detector/base/DetectorLayer.java)
+[`DetectorType`](../../../common-tools/clas-detector/src/main/java/org/jlab/detector/base/DetectorType.java)
+and [`DetectorLayer`](../../../common-tools/clas-detector/src/main/java/org/jlab/detector/base/DetectorLayer.java)
 classes in the offline software repository, and also shown here for
 convenience:
 
@@ -166,9 +165,9 @@ superlayer.*
 
 ## Bank Details
 The true, full structure of each bank is always contained in the
-[event.json](../../../etc/bankdefs/hipo4/event.json)
+[`event.json`](../../../etc/bankdefs/hipo4/event.json)
 and
-[header.json](../../../etc/bankdefs/hipo4/header.json)
+[`header.json`](../../../etc/bankdefs/hipo4/header.json)
 files in the offline software repository. Here are some of the more
 generally useful variables:
 
@@ -223,14 +222,14 @@ group.*
 -   `vx/vy/vz` (cm) and `px/py/pz` (GeV)
     -   the particle's primary vertex position and corresponding
         3-momentum
-    -   *Note, neutrals' momenta are left unassigned (zero) if no pid is
+    -   *Note, neutrals' momenta are left unassigned (zero) if no PID is
         assigned, or a neutron's beta is unphysical.*
 -   `vt` (ns)
     -   this particle's start time, based on the trigger particle's
         timing and path length, RF-corrected using this particle's `vz`
 -   `pid`
     -   the particle identification assigned by the Event Builder
-        -   ±11 for e<sup>-</sup>/e<sup>+</sup>
+        -   ±11 for $e^-/e^+$
         -   ±211/321/2212/45 for charged hadrons π/K/p/d
         -   2112/22 for neutron/photon
         -   0 for undefined
@@ -238,12 +237,12 @@ group.*
     -   a signed-*N*<sub>*σ*</sub> estimate of particle identification
         quality, based on
         -   momentum-dependent calorimetry sampling fraction and
-            resolution for e<sup>+</sup>/e<sup>-</sup>
+            resolution for $e^+/e^-$
         -   vertex time difference and paddle-dependent resolution for
             charged hadrons
             -   *Note, as of
                 [6b.4.0](https://github.com/JeffersonLab/clas12-offline-software/releases/tag/6b.4.0),
-                hadron pid no longer requires FTOF/CTOF, in which case
+                hadron PID no longer requires FTOF/CTOF, in which case
                 `chi2pid` is left undefined.*
         -   otherwise currently undefined with a value of 99.0
 -   `status`
@@ -296,7 +295,7 @@ included in these banks.*
 -   `energy/nphe`
     -   energy of the detector response
     -   MeV for scintillators, GeV for calorimeters, # photoelectrons
-        for cherenkovs
+        for Cherenkovs
 -   `x/y/z` (cm)
     -   the position of the response in the global CLAS12 coordinate
         system
@@ -356,7 +355,7 @@ To extract event-based, delay-corrected helicity from `HEL::flip` banks,
 [this class's main
 method](../../../common-tools/clas-detector/src/main/java/org/jlab/detector/helicity/HelicityAnalysisSimple.java)
 contains a working example (and there's corresponding
-[javadocs](https://clasweb.jlab.org/clas12offline/docs/javadoc/common-tools/clas-detector/org/jlab/detector/helicity/package-summary.html))
+[`javadocs`](https://clasweb.jlab.org/clas12offline/docs/javadoc/common-tools/clas-detector/org/jlab/detector/helicity/package-summary.html))
 and can later be used to populate `REC::Event.helicity` during
 post-processing.
 
@@ -425,7 +424,7 @@ correction without information from any other events. It is still under
 testing.
 
 ### Simulation Banks
-These are contained in the [mc.json](../../../etc/bankdefs/hipo4/mc.json) bank definitions.
+These are contained in the [`mc.json`](../../../etc/bankdefs/hipo4/mc.json) bank definitions.
 #### `MC::Header`
 #### `MC::Event`
 #### `MC::Lund`
@@ -444,7 +443,7 @@ in HIPO banks. The only standard is that zero is good. Here we document
 the other possible values and include the upstream detector bank the DST
 information originates from.
 
-| Type         | DST Bank            | Detectore Bank | Status |
+| Type         | DST Bank            | Detector Bank  | Status |
 | ------------ | ------------------- | -------------- | ------ |
 | Particle     | `REC::Particle`     |                | [See above](#Physics-Banks) |
 | DC Track     | `REC::Track`        | `TimeBasedTrkg::TBTracks` | |

@@ -1,36 +1,16 @@
-name: Dispatch Validation
+name: Validation
 
 on:
   pull_request:
   push:
     branches: [ development ]
     tags: [ '*' ]
+  workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
 jobs:
-
-  clas12-validation:
-    name: clas12-validation dispatch
-    runs-on: ubuntu-latest
-    steps:
-      - name: sanitize message
-        id: sanitize
-        run: echo title=$(echo "${{ github.event.pull_request.title || github.event.head_commit.message }}" | head -n1 | sed 's;";;g' | sed "s;';;g") >> $GITHUB_OUTPUT
-      - name: dispatch
-        uses: c-dilks/trigger-workflow-and-wait@summarize # convictional/trigger-workflow-and-wait@v1.6.5
-        with:
-          owner: JeffersonLab
-          repo: clas12-validation
-          summarize: true
-          github_token: ${{ secrets.CLAS12VALIDATION }}
-          workflow_file_name: ci.yml
-          ref: main
-          client_payload: '{
-            "source": "${{ github.repository }}",
-            "title": "${{ steps.sanitize.outputs.title }}",
-            "source_url": "${{ github.event.pull_request.html_url }}",
-            "git_coatjava": "{\"fork\": \"${{ github.repository }}\", \"branch\": \"${{ github.head_ref || github.ref }}\" }"
-          }'
+  validation:
+    uses: JeffersonLab/clas12-validation/.github/workflows/ci.yml@main
