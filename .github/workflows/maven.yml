@@ -139,7 +139,7 @@ jobs:
   #############################################################################
 
   deploy_web_pages:
-    if: ${{ github.event_name == 'pull_request' }}
+    if: ${{ github.event_name == 'push' }}
     # needs: build
     permissions:
       pages: write
