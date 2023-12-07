@@ -11,6 +11,7 @@ import org.jlab.clas.tracking.kalmanfilter.AStateVecs;
 import org.jlab.clas.tracking.kalmanfilter.Surface;
 import org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec;
 import org.jlab.clas.tracking.kalmanfilter.zReference.MeasVecs;
+import org.jlab.clas.tracking.kalmanfilter.AMeasVecs.MeasVec;
 import org.jlab.clas.tracking.kalmanfilter.zReference.StateVecs;
 import org.jlab.clas.tracking.utilities.RungeKuttaDoca;
 import org.jlab.clas.tracking.utilities.MatrixOps.Libr;
@@ -58,6 +59,10 @@ public class KFitter extends AKFitter {
     Matrix result = new Matrix();
     Matrix result_inv = new Matrix();
     Matrix adj = new Matrix();
+    
+    private int skipSuperlayer = 1;
+    private int skipLayer = 3;
+    private MeasVec skipMeas;
 
     public KFitter(boolean filter, int iterations, int dir, Swim swim, double Z[], Libr mo) {
         super(filter, iterations, dir, swim, mo);
@@ -93,11 +98,25 @@ public class KFitter extends AKFitter {
         for (int i = 0; i < mv.measurements.size(); i++) {
             if (mv.measurements.get(i).skip == false) {
                 this.NDF++;                
-            }
+            }                                   
         }
         sv.initFromHB(initSV, beta);
         sv.Z = Z;
         TBT = true;
+    }
+    
+    public final void initFromHB(List<Surface> measSurfaces, StateVec initSV, double beta, int skipSuperlayer) {
+        initFromHB(measSurfaces, initSV, beta);
+        this.skipSuperlayer = skipSuperlayer;
+        for (int i = 0; i < mv.measurements.size(); i++) {
+            int meas_superlayer = mv.measurements.get(i).superlayer;
+            int meas_layer = mv.measurements.get(i).layer;
+            if((meas_superlayer == skipSuperlayer) && (meas_layer == skipLayer)){
+                skipMeas = mv.measurements.get(i);
+                mv.measurements.remove(i);
+                this.NDF--;
+            } 
+        }
     }
 
     public void runFitter() {
@@ -136,7 +155,7 @@ public class KFitter extends AKFitter {
                     dafAnnealingFactorsIndex++;
                 }
 
-                for (int k = svzLength - 1; k > 0; k--) {
+                for (int k = svzLength - 1; k > 0; k--) {                    
                     boolean forward = false;
                     if (k >= 2) {
 
@@ -218,7 +237,7 @@ public class KFitter extends AKFitter {
                 dafAnnealingFactorsIndex++;
             }
             
-            for (int k = 0; k < svzLength - 1; k++) {
+            for (int k = 0; k < svzLength - 1; k++) {               
                 boolean forward = true;
 
                 if (iterNum == 1 && (k == 0)) {
@@ -322,6 +341,10 @@ public class KFitter extends AKFitter {
 
         if(TBT) this.calcFinalChisqDAF(sector);
         else this.calcFinalChisq(sector);
+        
+        if(TBT && skipMeas != null){ 
+            propagateToSkippedLayer(sector);             
+        }
 
         if (Double.isNaN(chi2)) {
             this.setFitFailed = true;
@@ -903,7 +926,39 @@ public class KFitter extends AKFitter {
             }
         }
     }
+    
+    private void propagateToSkippedLayer(int sector) {
+        double path = 0;
+        mv.measurements.add(skipMeas);        
+        StateVec sVec = sv.transported(true).get(svzLength - 1);
+        
+        boolean forward = false;
+        if(mv.measurements.get(svzLength - 1).surface.z < skipMeas.surface.z) forward = true;
+        
+        sv.transport(sector, svzLength - 1, svzLength, sVec, mv, this.getSwimmer(), forward);
 
+        StateVec svc = sv.transported(forward).get(svzLength);
+        path += svc.deltaPath;
+        svc.setPathLength(path);
+
+        Point3D point = new Point3D(svc.x, svc.y, skipMeas.surface.z);
+        double h0 = mv.hDoca(point, skipMeas.surface.wireLine[0]);
+
+        svc.setProjector(skipMeas.surface.wireLine[0].origin().x());
+        svc.setProjectorDoca(h0);
+        kfStateVecsAlongTrajectory.add(svc);
+
+        //USE THE DOUBLE HIT
+        if (skipMeas.surface.doca[1] != -99) {
+            h0 = mv.hDoca(point, skipMeas.surface.wireLine[1]);
+
+            StateVec svc2 = sv.new StateVec(svc);
+            svc2.setProjector(skipMeas.surface.wireLine[1].origin().x());
+            svc2.setProjectorDoca(h0);
+            kfStateVecsAlongTrajectory.add(svc2);
+        }        
+    }
+    
     public Matrix propagateToVtx(int sector, double Zf) {
         return sv.transport(sector, finalStateVec.k, Zf, finalStateVec, mv, this.getSwimmer());
     }
