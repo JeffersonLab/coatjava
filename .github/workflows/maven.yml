@@ -140,7 +140,7 @@ jobs:
 
   deploy_web_pages:
     if: ${{ github.event_name == 'push' }}
-    # needs: build
+    needs: build
     permissions:
       pages: write
       id-token: write
