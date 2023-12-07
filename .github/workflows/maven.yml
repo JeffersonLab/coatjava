@@ -47,15 +47,15 @@ jobs:
           name: build_${{ matrix.runner }}
           retention-days: 1
           path: coatjava.tar.gz
-      - name: publish jacoco report
-        if: ${{ matrix.runner == 'ubuntu-latest' && ( github.head_ref == 'coverage' || github.ref_name == 'coverage' ) }}
+      - name: collect jacoco report
+        if: ${{ matrix.runner == 'ubuntu-latest' }}
         run: validation/jacoco-aggregate.sh
-      - uses: actions/upload-artifact@v3
-        if: ${{ matrix.runner == 'ubuntu-latest' && ( github.head_ref == 'coverage' || github.ref_name == 'coverage' ) }}
+      - name: publish jacoco report
+        if: ${{ matrix.runner == 'ubuntu-latest' }}
+        uses: actions/upload-pages-artifact@v2
         with:
-          name: jacoco
-          retention-days: 1
           path: publish/
+          retention-days: 1
 
   # tests
   #############################################################################
@@ -138,24 +138,9 @@ jobs:
   # deploy web pages
   #############################################################################
 
-  collect_pages:
+  deploy_web_pages:
     if: ${{ github.head_ref == 'coverage' || github.ref_name == 'coverage' }}
-    runs-on: ubuntu-latest
-    needs:
-      - build
-    steps:
-      - uses: actions/download-artifact@v3
-        with:
-          name: jacoco
-          path: publish/
-      - uses: actions/upload-pages-artifact@v2
-        with:
-          path: publish/
-          retention-days: 7
-
-  deploy_pages:
-    if: ${{ github.head_ref == 'coverage' || github.ref_name == 'coverage' }}
-    needs: collect_pages
+    needs: build
     permissions:
       pages: write
       id-token: write
