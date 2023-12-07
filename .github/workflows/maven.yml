@@ -139,8 +139,8 @@ jobs:
   #############################################################################
 
   deploy_web_pages:
-    if: ${{ github.head_ref == 'coverage' || github.ref_name == 'coverage' }}
-    needs: build
+    if: ${{ github.event_name == 'pull_request' }}
+    # needs: build
     permissions:
       pages: write
       id-token: write
