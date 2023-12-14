@@ -415,7 +415,7 @@ public final class URWellGeant4Factory extends Geant4Factory {
 
         URWellConstants.connect(cp);
         
-        URWellGeant4Factory factory = new URWellGeant4Factory(cp, true, 2);
+        URWellGeant4Factory factory = new URWellGeant4Factory(cp, false, 2);
             
         factory.getAllVolumes().forEach(volume -> {
             System.out.println(volume.gemcString());

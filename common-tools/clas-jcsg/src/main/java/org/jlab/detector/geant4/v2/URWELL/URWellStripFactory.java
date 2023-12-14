@@ -208,7 +208,7 @@ public final class URWellStripFactory {
      
         //strip straight line chamber reference frame -> y = mx +c; 
         double stereoAngle = URWellConstants.STEREOANGLE;
-        if (layer % 2 == 0) {
+        if (layer % 2 != 0) {
             stereoAngle = -URWellConstants.STEREOANGLE;
         }
         double m = Math.tan(Math.toRadians(stereoAngle));
@@ -252,6 +252,32 @@ public final class URWellStripFactory {
         }
     }
 
+     /**
+     * Provides the given strip line in the Chamber local frame
+     * @param region (1-2)
+     * @param sector (1-6)
+     * @param layer (1-4)
+     * @param strip (1-N)
+     * @return the 3D strip line as a Line3d
+     */
+    
+    private Line3d getChamberStrip(int region, int sector, int chamber, int layer, int strip) {
+
+         
+        Line3d globalStrip = createStrip(sector, layer, strip);
+        Geant4Basic chamberVolume = factory.getChamberVolume(sector, chamber, layer, isProto);
+
+        Vector3d origin = chamberVolume.getGlobalTransform().invert().transform(globalStrip.origin());
+        Vector3d end    = chamberVolume.getGlobalTransform().invert().transform(globalStrip.end());
+
+        Line3d localStrip = new Line3d(origin, end);
+
+       
+        return localStrip;
+    }
+
+    
+    
     /**
      * Provides the given strip line in the sector local frame
      * @param sector (1-6)
@@ -411,11 +437,19 @@ public final class URWellStripFactory {
 
         URWellGeant4Factory factory = new URWellGeant4Factory(cp,true,2);
 
-        URWellStripFactory factory2 = new URWellStripFactory(cp,false,1);
+        URWellStripFactory factory2 = new URWellStripFactory(cp,true,1);
   
         Plane3D plane = factory2.getPlane(6, 1, 200);
         System.out.println(plane.toString());
 
+       int strip =20;
+        System.out.println((strip) + " " + factory2.getLocalStripId(strip) + "\n" + factory2.getChamberStrip(1, 6,1,2,strip)) ; 
+        
+        
+    // for(int istrip=0; istrip<factory2.getNStripSector(); istrip++)  {
+        //    System.out.println((istrip+1) + " " + factory2.getChamberIndex(istrip+1) + "\n" + factory2.getStrip(1, 1, istrip+1) + "\n" + factory2.getStrip(1, 2, istrip+1));
+       // }
+        
         
     }
 

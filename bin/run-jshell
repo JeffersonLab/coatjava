@@ -1,0 +1,11 @@
+#!/bin/bash
+
+. `dirname $0`/env.sh jshell
+
+echo """
+*********************************
+*    Running COATJAVA JShell    *
+*********************************
+"""
+
+jshell --class-path "$JYPATH" "$@"
