@@ -310,18 +310,11 @@ public class Hit implements Comparable<Hit> {
         
         private static int regionInOut(int strip_number) { 
             int i = strip_number -1;
-            // To represent the geometry we divide the barrel micromega disk into 3 regions according to the strip numbering system.
-            // Here i = strip_number -1;
-            // Region 1 is the region in the negative x part of reg region: the strips range is from   1 to 320  (   0 <= i < 320)
-            // Region 2 is the region in the negative y part of outer region: the strips range is from 321 to 512  ( 320 <= i < 512)
-            // Region 3 is the region in the positive x part of reg region: the strips range is from 513 to 832  ( 512 <= i < 832)
-            // Region 4 is the region in the positive y part of outer region: the strips range is from 833 to 1024 ( 832 <= i < 1024)
             int reg =0; //2=outer region; true=1 region
-
-            if((i>=0 && i<320) || (i>=512 && i<832) ) {
+            if((i>=Constants.REGIONSTRIPS[0][0] && i<Constants.REGIONSTRIPS[0][1]) || (i>=Constants.REGIONSTRIPS[0][2] && i<Constants.REGIONSTRIPS[0][3]) ) {
                 reg = 1;
             }
-            if((i>=320 && i<512) || (i>=832 && i<1024) ) {
+            if((i>=Constants.REGIONSTRIPS[1][0] && i<Constants.REGIONSTRIPS[1][1]) || (i>=Constants.REGIONSTRIPS[1][2] && i<Constants.REGIONSTRIPS[1][3]) ) {
                 reg = 2;
             }
         
