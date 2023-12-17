@@ -1,4 +1,4 @@
-package cnuphys.dormondPrince;
+package cnuphys.dormandPrince;
 
 /**
  * Interface representing an ordinary differential equation (ODE).

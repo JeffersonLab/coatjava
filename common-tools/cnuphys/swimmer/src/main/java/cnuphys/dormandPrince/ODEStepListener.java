@@ -1,4 +1,4 @@
-package cnuphys.dormondPrince;
+package cnuphys.dormandPrince;
 
 /**
  * Interface for listening to steps taken by an ODE solver.

@@ -1,4 +1,4 @@
-package cnuphys.dormondPrince;
+package cnuphys.dormandPrince;
 
 public class DormandPrince {
 	
