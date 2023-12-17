@@ -79,7 +79,7 @@ public class SwimTrajectory extends ArrayList<double[]> {
 	}
 	
 	/**
-	 * Create a one point trajectory. Used hrn the initial momentum is lower than
+	 * Create a one point trajectory. Used when the initial momentum is lower than
 	 * some minimum value.
 	 * 
 	 * @param charge   the charge of the particle (-1 for electron, +1 for proton,
@@ -269,17 +269,17 @@ public class SwimTrajectory extends ArrayList<double[]> {
 		double thetRad = Math.toRadians(theta);
 		double phiRad = Math.toRadians(phi);
 
-		double pz = Math.cos(thetRad);
+		double tz = Math.cos(thetRad); // pz/p
 		double rho = Math.sin(thetRad);
-		double px = rho * Math.cos(phiRad);
-		double py = rho * Math.sin(phiRad);
+		double tx = rho * Math.cos(phiRad); // px/p
+		double ty = rho * Math.sin(phiRad); // py/p
 		double v[] = new double[6];
 		v[0] = xo;
 		v[1] = yo;
 		v[2] = zo;
-		v[3] = px;
-		v[4] = py;
-		v[5] = pz;
+		v[3] = tx;
+		v[4] = ty;
+		v[5] = tz;
 		add(v);
 	}
 
