@@ -1,5 +1,7 @@
 package cnuphys.dormandPrince;
 
+import java.util.Hashtable;
+
 import cnuphys.magfield.FieldProbe;
 import cnuphys.magfield.IMagField;
 import cnuphys.magfield.MagneticField;
@@ -35,9 +37,23 @@ public class CLAS12Swimmer {
 
 	/** A swim was requested for a neutral particle */
 	public static final int SWIM_NEUTRAL_PARTICLE = 10;
+	
+	public static final Hashtable<Integer, String> resultNames = new Hashtable<Integer, String>();
+	static {
+		resultNames.put(SWIM_SWIMMING, "SWIMMING");
+		resultNames.put(SWIM_SUCCESS, "SWIM_SUCCESS");
+		resultNames.put(SWIM_TARGET_MISSED, "SWIM_TARGET_MISSED");
+		resultNames.put(SWIM_BELOW_MIN_P, "SWIM_BELOW_MIN_P");
+		resultNames.put(SWIM_EXCEED_MAX_TRIES, "SWIM_EXCEED_MAX_TRIES");
+		resultNames.put(SWIM_NEUTRAL_PARTICLE, "SWIM_NEUTRAL_PARTICLE");
+	}
+
 
 	// Minimum momentum to swim in GeV/c
 	public static final double MINMOMENTUM = 5e-05;
+	
+	// Minimum integration step size in meters
+	public static final double MINSTEPSIZE = 1.0e-9; // meters
 
 	// The magnetic field probe.
 	// NOTE: the method of interest in FieldProbe takes a position in cm
@@ -80,6 +96,11 @@ public class CLAS12Swimmer {
 	public CLAS12Swimmer(FieldProbe probe) {
 		_probe = probe;
 	}
+	
+	/**
+	 * The listener that can stop the integration and stores results
+	 */
+	protected CLAS12Listener _listener;
 
 	/**
 	 * Get the probe being used to swim
@@ -107,30 +128,35 @@ public class CLAS12Swimmer {
 	 * @param h         the initial stepsize in meters
 	 * @param tolerance The desired accuracy. The solver will automatically adjust
 	 *                  the step size to meet this tolerance.
-	 * @param minH      The minimum step size to prevent an infinite loop.
-	 * @param listener  An optional listener that will be called after each step.It can also
-	 *                 terminate the integration.
-	 * @return the result of the swim in a SwimResult object
+	 * @param cacheTrajectory whether or not to cache the trajectory
 	 * @throws SwimException
 	 * @see SwimResult
      * @see SwimException
      */
-	public SwimResult swim(int charge, double xo, double yo, double zo, double momentum, double theta, double phi,
-			double sMax, double h, double tolerance, double minH, ODEStepListener listener) throws SwimException {
+	public void  swim(int charge, double xo, double yo, double zo, double momentum, double theta, double phi,
+			double sMax, double h, double tolerance, boolean cacheTrajectory) throws SwimException {
 
-		SwimmerODE ode = initODE(charge, momentum);
-		return null;
+		//create the ODE
+		SwimmerODE ode = new SwimmerODE(charge, momentum, _probe);
+		
+		//create the initial values
+		InitialValues ivals = new InitialValues(charge, xo, yo, zo, momentum, theta, phi);
+		
+		//use the base listener
+		_listener = new CLAS12Listener(ivals, sMax, cacheTrajectory); 
+		
+		//call the basic solver that swims to sMax
+		DormandPrince.solve(ode, ivals.getUo(), 0, sMax, h, tolerance, MINSTEPSIZE, _listener);
 
 	}
 	
 	/**
-	 * Initialize the ODE for swimming
-	 * 
-	 * @param charge    in integer units of e
-	 * @param momentum  the momentum in GeV/c
-	 */
-	private SwimmerODE initODE(int charge, double momentum) {
-		return  new SwimmerODE(charge, momentum, _probe);
-	}
+     * Get the result of the swim
+     * @return the result of the swim in the listener
+     */
+	public CLAS12Listener getListener() {
+		return _listener;
+    }
+
 
 }

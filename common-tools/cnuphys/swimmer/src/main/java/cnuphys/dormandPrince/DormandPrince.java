@@ -79,7 +79,7 @@ public class DormandPrince {
                 double maxError = getMax(error);
                 if (maxError < tolerance) {
                     acceptStep = true;
-                    if (!listener.newStep(t, y, t + h, yTemp)) {
+                    if (!listener.newStep(t + h, yTemp)) {
                         return; // Stop the integration if listener returns false
                     }
                     y = yTemp;
@@ -88,6 +88,7 @@ public class DormandPrince {
 
                 h = adjustStepSize(h, maxError, tolerance, minH);
             }
+            
         }
 
 	    // Return or print the final state of y

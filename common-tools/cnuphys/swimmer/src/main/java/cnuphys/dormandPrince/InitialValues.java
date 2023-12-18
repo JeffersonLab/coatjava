@@ -43,6 +43,33 @@ public class InitialValues {
 		this.theta = theta;
 		this.phi = phi;
 	}
+	
+	/**
+	 * Get the initial values as a state vector
+	 * 
+	 * @return the initial values as a state vector
+	 */
+	public double[] getUo() {
+		double uo[] = new double[6];
+		
+		double thetaRad = Math.toRadians(theta);
+		double phiRad = Math.toRadians(phi);
+		double sinTheta = Math.sin(thetaRad);
+
+		double tx = sinTheta * Math.cos(phiRad); // px/p
+		double ty = sinTheta * Math.sin(phiRad); // py/p
+		double tz = Math.cos(thetaRad); // pz/p
+
+		// set uf to the starting state vector
+		uo[0] = xo;
+		uo[1] = yo;
+		uo[2] = zo;
+		uo[3] = tx;
+		uo[4] = ty;
+		uo[5] = tz;
+		return uo;
+	}
+
 
 	/**
 	 * Copy constructor

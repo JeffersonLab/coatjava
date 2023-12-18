@@ -101,6 +101,9 @@ public class SwimTest {
 
 	private static JMenu adaptiveTestMenu() {
 		JMenu atmenu = new JMenu("Test AdaptiveSwim Package");
+		
+		final JMenuItem baseItem = new JMenuItem("Base test");
+
 
 		final JMenuItem swimZItem = new JMenuItem("Fixed Z test");
 		final JMenuItem rhoItem = new JMenuItem("Rho Test");
@@ -114,7 +117,9 @@ public class SwimTest {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if (e.getSource() == swimZItem) {
+				if (e.getSource() == baseItem) {
+					BaseTest.baseSwimTest(10000, 73557799);
+				} else if (e.getSource() == swimZItem) {
 					ZTest.swimZTest(10000, 73557799);
 				}  else if (e.getSource() == cylinderItem) {
 					CylinderTest.cylinderTest();
@@ -130,6 +135,7 @@ public class SwimTest {
 			}
 		};
 
+		addMenuItem(atmenu, al, baseItem);
 		addMenuItem(atmenu, al, rhoItem);
 		addMenuItem(atmenu, al, planeItem);
 		addMenuItem(atmenu, al, interpPlaneItem);

@@ -31,7 +31,7 @@ public class TestDP {
 
         
         // Create a step listener to compare with the exact solution
-        ODEStepListener listener = (oldT, oldY, newT, newY) -> {
+        ODEStepListener listener = (newT, newY) -> {
             // Exact solution of the damped harmonic oscillator (for specific cases)
             double exact = Math.exp(-(b/(2*m))* newT) * (B*Math.sin(omega*newT) + Math.cos(omega*newT));
             System.out.printf("Time: %.2f, Approx: %.8f, Exact: %.8f%n", newT, newY[0], exact);
