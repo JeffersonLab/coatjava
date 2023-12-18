@@ -196,8 +196,6 @@ public class BaseTest {
 		if (listener.getStatus() == CLAS12Swimmer.SWIM_SUCCESS) {
 			double[] uf = listener.getU();
 			writer.writeStartOfRow(100*uf[0], 100*uf[1], 100*uf[2], 100*listener.getS());
-
-
 		} else {
 			writer.writeStartOfRow(NaN, NaN, NaN, NaN, NaN);
 		}

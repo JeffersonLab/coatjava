@@ -9,7 +9,7 @@ import cnuphys.swim.SwimTrajectory;
  */
 public class CLAS12Listener implements ODEStepListener {
 	
-	private static final double _TINY = 1.0e-10; // meters
+	protected static final double _TINY = 1.0e-10; // meters
 		
 	//the trajectory if cached
 	protected SwimTrajectory _trajectory; //the optional cached trajectory
@@ -18,18 +18,19 @@ public class CLAS12Listener implements ODEStepListener {
 	protected InitialValues _ivals; //initial values
 	
 	//the current state vector
-	private double[] _u;
+	protected double[] _u;
 
 	//the number of integration steps
-	private int _nStep;
+	protected int _nStep;
 
 	//the current path length
-	private double _s;
+	protected double _s;
 
 	//a status, one of the AdaptiveSwimmer class constants
-	private int _status = CLAS12Swimmer.SWIM_SWIMMING;
+	protected int _status = CLAS12Swimmer.SWIM_SWIMMING;
 	
-	private double _sFinal;
+	//the final or maximum path length
+	protected double _sFinal;
 	
 
 	
@@ -79,41 +80,33 @@ public class CLAS12Listener implements ODEStepListener {
      */
 	@Override
 	public boolean newStep(double newS, double[] newU) {
+
+		accept(newS, newU);
 		
-		//TODO: probably unnecessary copy of u fix after testing
-
-		if (accept(newS, newU)) {
-			_nStep++;
-			_s = newS;
-			
-			if (Math.abs(_s - _sFinal) < _TINY) {
-				_status = CLAS12Swimmer.SWIM_SUCCESS;
-			}
-
-			for (int i = 0; i < 6; i++) {
-				_u[i] = newU[i];
-			}
-						
-			_u = _trajectory.lastElement();
+		//if we are done, set the status
+		if (Math.abs(_s - _sFinal) < _TINY) {
+			_status = CLAS12Swimmer.SWIM_SUCCESS;
 		}
-		return !terminate();
-	}
 
-	/**
-	 * Override this if there is the possibility of not accepting a step.
-	 * 
-	 * @return <code>true</code> if the step should be accepted.
-	 */
-	protected boolean accept(double newS, double[] newU) {
+		//base always continues, the solve with integrate to sFinal and stop
 		return true;
 	}
+
 	/**
-	 * Override this to determine if the integration should stop. For the base
-	 * integration always return false. It will stop when max pathlength is reached.
-	 * @return <code>true</code> if the integration should stop.
+	 * Accept the next step.
+     * @param newS The new path length after the step.
+     * @param newU The new state vector after the step.
 	 */
-	protected boolean terminate() {
-		return false;
+	protected void accept(double newS, double[] newU) {
+		_nStep++;
+		_s = newS;
+
+
+		for (int i = 0; i < 6; i++) {
+			_u[i] = newU[i];
+		}
+
+		_u = _trajectory.lastElement();
 	}
 
 	/**

@@ -29,11 +29,6 @@ public class CLAS12Swimmer {
 	/** A swim was requested for a particle with extremely low momentum */
 	public static final int SWIM_BELOW_MIN_P = -2;
 
-	/** A swim was requested exceeded the max number of tries */
-	public static final int SWIM_EXCEED_MAX_TRIES = -3;
-
-	/** A swim crossed a boundary, need to back up and reduce h */
-	public static final int SWIM_CROSSED_BOUNDARY = -4;
 
 	/** A swim was requested for a neutral particle */
 	public static final int SWIM_NEUTRAL_PARTICLE = 10;
@@ -44,7 +39,6 @@ public class CLAS12Swimmer {
 		resultNames.put(SWIM_SUCCESS, "SWIM_SUCCESS");
 		resultNames.put(SWIM_TARGET_MISSED, "SWIM_TARGET_MISSED");
 		resultNames.put(SWIM_BELOW_MIN_P, "SWIM_BELOW_MIN_P");
-		resultNames.put(SWIM_EXCEED_MAX_TRIES, "SWIM_EXCEED_MAX_TRIES");
 		resultNames.put(SWIM_NEUTRAL_PARTICLE, "SWIM_NEUTRAL_PARTICLE");
 	}
 
