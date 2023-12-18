@@ -1,8 +1,5 @@
 package cnuphys.dormandPrince;
 
-import cnuphys.adaptiveSwim.AdaptiveSwimException;
-import cnuphys.adaptiveSwim.AdaptiveSwimResult;
-import cnuphys.adaptiveSwim.IAdaptiveStopper;
 import cnuphys.magfield.FieldProbe;
 import cnuphys.magfield.IMagField;
 import cnuphys.magfield.MagneticField;
@@ -54,7 +51,7 @@ public class CLAS12Swimmer {
 	 */
 	public CLAS12Swimmer() {
 		// make a probe using the current active field
-		_probe = FieldProbe.factory();
+		this(FieldProbe.factory());
 	}
 
 	/**
@@ -63,7 +60,7 @@ public class CLAS12Swimmer {
 	 * @param magneticField the magnetic field
 	 */
 	public CLAS12Swimmer(MagneticField magneticField) {
-		_probe = FieldProbe.factory(magneticField);
+		this(FieldProbe.factory(magneticField));
 	}
 
 	/**
@@ -72,7 +69,16 @@ public class CLAS12Swimmer {
 	 * @param magneticField the magnetic field
 	 */
 	public CLAS12Swimmer(IMagField magneticField) {
-		_probe = FieldProbe.factory(magneticField);
+		this(FieldProbe.factory(magneticField));
+	}
+	
+	/**
+	 * Create a swimmer specific to a magnetic field probe
+	 *
+	 * @param probe the magnetic field probe
+	 */
+	public CLAS12Swimmer(FieldProbe probe) {
+		_probe = probe;
 	}
 
 	/**
@@ -112,8 +118,19 @@ public class CLAS12Swimmer {
 	public SwimResult swim(int charge, double xo, double yo, double zo, double momentum, double theta, double phi,
 			double sMax, double h, double tolerance, double minH, ODEStepListener listener) throws SwimException {
 
+		SwimmerODE ode = initODE(charge, momentum);
 		return null;
 
+	}
+	
+	/**
+	 * Initialize the ODE for swimming
+	 * 
+	 * @param charge    in integer units of e
+	 * @param momentum  the momentum in GeV/c
+	 */
+	private SwimmerODE initODE(int charge, double momentum) {
+		return  new SwimmerODE(charge, momentum, _probe);
 	}
 
 }
