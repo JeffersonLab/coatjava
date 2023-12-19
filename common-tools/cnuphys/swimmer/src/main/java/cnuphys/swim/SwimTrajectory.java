@@ -9,7 +9,6 @@ import cnuphys.lund.LundId;
 import cnuphys.magfield.FastMath;
 import cnuphys.magfield.FieldProbe;
 import cnuphys.magfield.RotatedCompositeProbe;
-import cnuphys.swimtest.RandomData;
 
 /**
  * Combines a generated particle record with a path (trajectory). A trajectory
@@ -25,13 +24,13 @@ public class SwimTrajectory extends ArrayList<double[]> {
 
 
 	// the particle that we swam
-	private GeneratedParticleRecord _genPartRec;
+	protected GeneratedParticleRecord _genPartRec;
 
 	// the lund id, if it is known (i.e. from montecarlo truth)
 	private LundId _lundId;
 
 	// flag indicating whether bdl was computed
-	private boolean _computedBDL;
+	protected boolean _computedBDL;
 
 	/** index for the x component (m) */
 	public static final int X_IDX = 0;
@@ -67,6 +66,7 @@ public class SwimTrajectory extends ArrayList<double[]> {
 	 * Create a swim trajectory with no initial content
 	 */
 	public SwimTrajectory() {
+		super(200);
 	}
 	
 	/**
@@ -296,34 +296,6 @@ public class SwimTrajectory extends ArrayList<double[]> {
 		remove(size()-1);
 		add(u, s);
 	}
-	
-	/**
-	 * Get the average phi for this trajectory based on positions, not directions
-	 * 
-	 * @return the average phi value in degrees
-	 */
-	public double getAveragePhi() {
-
-		double phi = getOriginalPhi();
-		if (size() < 6) {
-			return phi;
-		}
-
-		double count = 1;
-
-		int step = 1;
-		for (int i = step; i < size(); i += step) {
-			double pos[] = get(i);
-			double x = pos[X_IDX];
-			double y = pos[Y_IDX];
-			double tp = FastMath.atan2Deg(y, x);
-
-			phi += tp;
-			count++;
-		}
-
-		return phi / count;
-	}
 
 	/**
 	 * Get the last element
@@ -340,7 +312,7 @@ public class SwimTrajectory extends ArrayList<double[]> {
 	/**
 	 * Get the final radial coordinate
 	 * 
-	 * @return final radial coordinate in meters
+	 * @return final radial coordinate in whatever units x, y, and z are in
 	 */
 	public double getFinalR() {
 		if (isEmpty()) {
@@ -365,7 +337,6 @@ public class SwimTrajectory extends ArrayList<double[]> {
 		}
 		double[] pos = new double[3];
 		double lastQ[] = get(this.size() - 1);
-//		double lastQ[] = lastElement();
 
 		for (int i = 0; i < 3; i++) {
 			pos[i] = lastQ[i];
@@ -383,7 +354,7 @@ public class SwimTrajectory extends ArrayList<double[]> {
 			return Double.NaN;
 		}
 
-		if (this.size() < 1) {
+		if (isEmpty()) {
 			return 0;
 		}
 
@@ -463,7 +434,7 @@ public class SwimTrajectory extends ArrayList<double[]> {
 	// replace the 6D state vector <at the given index with
 	// and 8D vector that appends pathelength (m) and integral
 	// b dot dl (kg-m)
-	private void augment(double p[], double pl, double bdl, int index) {
+	protected void augment(double p[], double pl, double bdl, int index) {
 		double newp[] = new double[8];
 		System.arraycopy(p, 0, newp, 0, 6);
 		newp[PATHLEN_IDX] = pl;

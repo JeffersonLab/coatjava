@@ -7,16 +7,23 @@ import cnuphys.adaptiveSwim.AdaptiveSwimResult;
 import cnuphys.adaptiveSwim.AdaptiveSwimmer;
 import cnuphys.dormandPrince.CLAS12Listener;
 import cnuphys.dormandPrince.CLAS12Swimmer;
-import cnuphys.dormandPrince.SwimException;
+import cnuphys.dormandPrince.DormandPrinceException;
+import cnuphys.magfield.FieldProbe;
 import cnuphys.magfield.MagneticFields;
 import cnuphys.magfield.MagneticFields.FieldType;
 
 
 public class BaseTest {
+	
+	private static FieldProbe _probe;
 
 	//swim to a final path length
 	public static void baseSwimTest(int n, long seed) {
+		
 		MagneticFields.getInstance().setActiveField(FieldType.COMPOSITE);
+		
+		_probe = FieldProbe.factory(MagneticFields.getInstance().getActiveField());
+		
 	    System.err.println("Swim to fixed pathlength test");
 
 	    //for writing results to CSV
@@ -29,8 +36,8 @@ public class BaseTest {
 
 	    //write the header row
 	    writer.writeRow("charge", "xo (m)", "yo (m)", "zo (m)", "p (GeV/c)", "theta (deg)", "phi (deg)",
-	    		"status", "xf_as", "yf_as", "zf_as", "s_as",
-	    		"status", "xf_dp", "yf_dp", "zf_dp", "s_dp");
+	    		"status", "xf_as", "yf_as", "zf_as", "s_as", "bdl_as",
+	    		"status", "xf_dp", "yf_dp", "zf_dp", "s_dp", "bdl_dp");
 
 
 		AdaptiveSwimmer adaptiveSwimmer = new AdaptiveSwimmer(); //new
@@ -42,7 +49,7 @@ public class BaseTest {
 		AdaptiveSwimResult result = new AdaptiveSwimResult(true);
 
 
-		double stepsizeAdaptive = 0.01; // starting
+		double stepsizeAdaptive = 0.01; // starting stepsize in m
 
 		double maxPathLength = 8; // m
 		double eps = 1.0e-6;
@@ -88,9 +95,9 @@ public class BaseTest {
 
 			// DP
 			try {
-				clas12Swimmer.swim(charge, xo, yo, zo, p, theta, phi, s[i], stepsizeAdaptive, eps, true);
+				clas12Swimmer.swim(charge, 100*xo, 100*yo, 100*zo, p, theta, phi, 100*s[i], 100*stepsizeAdaptive, eps);
 				dpSwimResult(writer, clas12Swimmer.getListener());
-			}  catch (SwimException e) {
+			}  catch (DormandPrinceException e) {
 				System.err.println("DP Swimmer Failed.");
 				e.printStackTrace();
 			}
@@ -151,8 +158,8 @@ public class BaseTest {
 
 			// DP Swimmer
 			try {
-				clas12Swimmer.swim(charge, xo, yo, zo, p, theta, phi, s[i], stepsizeAdaptive, eps, true);
-			} catch (SwimException e) {
+				clas12Swimmer.swim(charge, 100*xo, 100*yo, 100*zo, p, theta, phi, s[i], stepsizeAdaptive, eps);
+			} catch (DormandPrinceException e) {
 				System.err.println("DP Swimmer Failed.");
 				e.printStackTrace();
 			}
@@ -180,11 +187,15 @@ public class BaseTest {
 
 		if (result.getStatus() == AdaptiveSwimmer.SWIM_SUCCESS) {
 			double[] uf = result.getU();
-			writer.writeStartOfRow(100*uf[0], 100*uf[1], 100*uf[2], 100*result.getS());
+			
+			result.getTrajectory().computeBDL(_probe);
+			double bdl = result.getTrajectory().getComputedBDL();
+			
+			writer.writeStartOfRow(100*uf[0], 100*uf[1], 100*uf[2], 100*result.getS(), bdl);
 
 
 		} else {
-			writer.writeStartOfRow(NaN, NaN, NaN, NaN, NaN);
+			writer.writeStartOfRow(NaN, NaN, NaN, NaN, NaN, NaN);
 		}
 	}
 	
@@ -195,7 +206,10 @@ public class BaseTest {
 		
 		if (listener.getStatus() == CLAS12Swimmer.SWIM_SUCCESS) {
 			double[] uf = listener.getU();
-			writer.writeStartOfRow(100*uf[0], 100*uf[1], 100*uf[2], 100*listener.getS());
+			listener.getTrajectory().computeBDL(_probe);
+			double bdl = listener.getTrajectory().getComputedBDL();
+
+			writer.writeStartOfRow(uf[0], uf[1], uf[2], listener.getS(), bdl);
 		} else {
 			writer.writeStartOfRow(NaN, NaN, NaN, NaN, NaN);
 		}

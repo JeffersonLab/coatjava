@@ -12,7 +12,7 @@ import cnuphys.magfield.MagneticField;
 public class CLAS12Swimmer {
 	
 	// Speed of light in m/s
-	public static final double C = 299792458.0; // m/s
+	public static final double C = 2.99792458e10; // cm/s
 	
 	/** currently swimming */
 	public static final int SWIM_SWIMMING = 88;
@@ -47,7 +47,7 @@ public class CLAS12Swimmer {
 	public static final double MINMOMENTUM = 5e-05;
 	
 	// Minimum integration step size in meters
-	public static final double MINSTEPSIZE = 1.0e-9; // meters
+	public static final double MINSTEPSIZE = 1.0e-7; // cm
 
 	// The magnetic field probe.
 	// NOTE: the method of interest in FieldProbe takes a position in cm
@@ -110,9 +110,9 @@ public class CLAS12Swimmer {
 	 * Basic swim method. The swim is terminated when the particle reaches the pathlength sMax
 	 * or if the optional listener terminates the swim.
 	 * @param charge    in integer units of e
-	 * @param xo        the x vertex position in meters
-	 * @param yo        the y vertex position in meters
-	 * @param zo        the z vertex position in meters
+	 * @param xo        the x vertex position in cm
+	 * @param yo        the y vertex position in cm
+	 * @param zo        the z vertex position in cm
 	 * @param momentum  the momentum in GeV/c
 	 * @param theta     the initial polar angle in degrees
 	 * @param phi       the initial azimuthal angle in degrees
@@ -122,22 +122,21 @@ public class CLAS12Swimmer {
 	 * @param h         the initial stepsize in meters
 	 * @param tolerance The desired accuracy. The solver will automatically adjust
 	 *                  the step size to meet this tolerance.
-	 * @param cacheTrajectory whether or not to cache the trajectory
-	 * @throws SwimException
+	 * @throws DormandPrinceException
 	 * @see SwimResult
-     * @see SwimException
+     * @see DormandPrinceException
      */
 	public void  swim(int charge, double xo, double yo, double zo, double momentum, double theta, double phi,
-			double sMax, double h, double tolerance, boolean cacheTrajectory) throws SwimException {
+			double sMax, double h, double tolerance) throws DormandPrinceException {
 
 		//create the ODE
-		SwimmerODE ode = new SwimmerODE(charge, momentum, _probe);
+		CLAS12SwimmerODE ode = new CLAS12SwimmerODE(charge, momentum, _probe);
 		
 		//create the initial values
-		InitialValues ivals = new InitialValues(charge, xo, yo, zo, momentum, theta, phi);
+		CLAS12InitialValues ivals = new CLAS12InitialValues(charge, xo, yo, zo, momentum, theta, phi);
 		
 		//use the base listener
-		_listener = new CLAS12Listener(ivals, sMax, cacheTrajectory); 
+		_listener = new CLAS12Listener(ivals, sMax); 
 		
 		//call the basic solver that swims to sMax
 		DormandPrince.solve(ode, ivals.getUo(), 0, sMax, h, tolerance, MINSTEPSIZE, _listener);

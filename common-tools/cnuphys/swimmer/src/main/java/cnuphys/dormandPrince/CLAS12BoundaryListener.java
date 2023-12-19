@@ -7,10 +7,9 @@ public abstract class CLAS12BoundaryListener extends CLAS12Listener {
 	 * 
 	 * @param ivals           the initial values of the swim
 	 * @param sFinal          the final or max path length (m)
-	 * @param cacheTrajectory whether or not to cache the trajectory
 	 */
-	public CLAS12BoundaryListener(InitialValues ivals, double sFinal, boolean cacheTrajectory) {
-		super(ivals, sFinal, cacheTrajectory);
+	public CLAS12BoundaryListener(CLAS12InitialValues ivals, double sFinal) {
+		super(ivals, sFinal);
 	}
 	
 	/**

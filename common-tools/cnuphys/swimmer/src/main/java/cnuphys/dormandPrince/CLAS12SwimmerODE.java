@@ -1,13 +1,12 @@
 package cnuphys.dormandPrince;
 
-import cnuphys.adaptiveSwim.AdaptiveSwimmer;
 import cnuphys.magfield.FieldProbe;
 
 /**
  * Thios is the ODE for swimming particles through a magnetic field
  */
  
-public class SwimmerODE implements ODE {
+public class CLAS12SwimmerODE implements ODE {
 	
 	private FieldProbe _probe;
 
@@ -21,10 +20,7 @@ public class SwimmerODE implements ODE {
 	//for mag field result
 	float b[] = new float[3];
 
-	
-	// Speed of light in m/s
-	public static final double C = 299792458.0; // m/s
-	
+		
 	/**
 	 * The derivative for swimming through a magnetic field
 	 * 
@@ -35,11 +31,11 @@ public class SwimmerODE implements ODE {
 	 * @param field
 	 *            the magnetic field
 	 */
-	public SwimmerODE(int charge, double momentum, FieldProbe field) {
+	public CLAS12SwimmerODE(int charge, double momentum, FieldProbe field) {
 		_probe = field;
 		_momentum = momentum;
-//units of this  alpha are 1/(kG*m)
-		_alpha = 1.0e-10 * charge * AdaptiveSwimmer.C / _momentum;
+//units of this  alpha are 1/(kG*cm)
+		_alpha = 1.0e-14 * charge * CLAS12Swimmer.C / _momentum;
 	}
 
 
@@ -63,13 +59,7 @@ public class SwimmerODE implements ODE {
 		if (_probe != null) {
 
 			float b[] = new float[3];
-
-			// convert to cm
-			double xx = u[0] * 100;
-			double yy = u[1] * 100;
-			double zz = u[2] * 100;
-
-			_probe.field((float) xx, (float) yy, (float) zz, b);
+			_probe.field((float) u[0], (float) u[1], (float) u[2], b);
 			
 			Bx = b[0];
 			By = b[1];

@@ -14,10 +14,9 @@ public class CLAS12ZListener extends CLAS12BoundaryListener {
 	 * @param ivals           the initial values of the swim
 	 * @param zTarget         the target z (m)
 	 * @param sFinal          the final or max path length (m)
-	 * @param cacheTrajectory whether or not to cache the trajectory
 	 */
-	public CLAS12ZListener(InitialValues ivals, double zTarget, double sFinal, boolean cacheTrajectory) {
-		super(ivals, sFinal, cacheTrajectory);
+	public CLAS12ZListener(CLAS12InitialValues ivals, double zTarget, double sFinal) {
+		super(ivals, sFinal);
 		_zTarget = zTarget;
 		_startSign = sign(ivals.zo);
 	}

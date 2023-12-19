@@ -14,7 +14,7 @@ public class DormandPrince {
 	 */
 	public static void solve(ODE ode, double[] y0, double t0, double t1, double h, ODEStepListener listener) {
 		double tolerance = 1e-6; // Desired accuracy default
-		double minH = 1e-10; // Minimum step size to prevent infinite loop default
+		double minH = 1e-8; // Minimum step size to prevent infinite loop default
 		solve(ode, y0, t0, t1, h, tolerance, minH, listener);
 	}
 	

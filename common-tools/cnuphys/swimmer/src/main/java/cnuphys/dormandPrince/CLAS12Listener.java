@@ -1,7 +1,5 @@
 package cnuphys.dormandPrince;
 
-import cnuphys.adaptiveSwim.AdaptiveSwimmer;
-import cnuphys.swim.SwimTrajectory;
 
 /**
  * The most basic CLAS12 listener. It never terminates the integration.
@@ -9,27 +7,18 @@ import cnuphys.swim.SwimTrajectory;
  */
 public class CLAS12Listener implements ODEStepListener {
 	
-	protected static final double _TINY = 1.0e-10; // meters
+	protected static final double _TINY = 1.0e-8; // cm
 		
 	//the trajectory if cached
-	protected SwimTrajectory _trajectory; //the optional cached trajectory
+	protected CLAS12Trajectory _trajectory; //the optional cached trajectory
 	
 	//the initial values
-	protected InitialValues _ivals; //initial values
+	protected CLAS12InitialValues _ivals; //initial values
 	
-	//the current state vector
-	protected double[] _u;
-
-	//the number of integration steps
-	protected int _nStep;
-
-	//the current path length
-	protected double _s;
-
-	//a status, one of the AdaptiveSwimmer class constants
+	//a status, one of the CLAS12Swimmer class constants
 	protected int _status = CLAS12Swimmer.SWIM_SWIMMING;
 	
-	//the final or maximum path length
+	//the final (target) or maximum path length in cm
 	protected double _sFinal;
 	
 
@@ -38,17 +27,13 @@ public class CLAS12Listener implements ODEStepListener {
 	 * Create a CLAS12 listener
 	 * 
 	 * @param ivals           the initial values of the swim
-	 * @param cacheTrajectory whether or not to cache the trajectory
+	 * @param sFinal          the final or max path length (cm)
 	 */
-	public CLAS12Listener(InitialValues ivals, double sFinal, boolean cacheTrajectory) {
+	public CLAS12Listener(CLAS12InitialValues ivals, double sFinal) {
 		_ivals = ivals;
-		_u = new double[6];
 		_sFinal = sFinal;
 		
-		if (cacheTrajectory) {
-			_trajectory = new SwimTrajectory();
-		}
-		
+		_trajectory = new CLAS12Trajectory();
 		reset();
 	}
 	
@@ -56,19 +41,9 @@ public class CLAS12Listener implements ODEStepListener {
 	 * Basic initialization and reset
 	 */
 	public void reset() {
-		_nStep = 0;
-		_s = 0;
-		_status = CLAS12Swimmer.SWIM_SWIMMING;
-		
-		for (int i = 0; i < AdaptiveSwimmer.DIM; i++) {
-			_u[i] = Double.NaN;
-		}
-
-		
-		if (_trajectory != null) {
-			_trajectory.clear();
-			_trajectory.add(_ivals.xo, _ivals.yo, _ivals.zo, _ivals.p, _ivals.theta, _ivals.phi);
-		}
+		_status = CLAS12Swimmer.SWIM_SWIMMING;		
+		_trajectory.clear();
+		_trajectory.add(0., _ivals.getUo());
 	}
 
     /**
@@ -84,7 +59,7 @@ public class CLAS12Listener implements ODEStepListener {
 		accept(newS, newU);
 		
 		//if we are done, set the status
-		if (Math.abs(_s - _sFinal) < _TINY) {
+		if (Math.abs(newS - _sFinal) < _TINY) {
 			_status = CLAS12Swimmer.SWIM_SUCCESS;
 		}
 
@@ -98,15 +73,7 @@ public class CLAS12Listener implements ODEStepListener {
      * @param newU The new state vector after the step.
 	 */
 	protected void accept(double newS, double[] newU) {
-		_nStep++;
-		_s = newS;
-
-
-		for (int i = 0; i < 6; i++) {
-			_u[i] = newU[i];
-		}
-
-		_u = _trajectory.lastElement();
+		_trajectory.add(newS, newU);
 	}
 
 	/**
@@ -114,7 +81,7 @@ public class CLAS12Listener implements ODEStepListener {
 	 * 
 	 * @return the trajectory
 	 */
-	public SwimTrajectory getTrajectory() {
+	public CLAS12Trajectory getTrajectory() {
 		return _trajectory;
 	}
 
@@ -123,7 +90,7 @@ public class CLAS12Listener implements ODEStepListener {
 	 * 
 	 * @return the initial values
 	 */
-	public InitialValues getIvals() {
+	public CLAS12InitialValues getIvals() {
 		return _ivals;
 	}
 
@@ -133,7 +100,7 @@ public class CLAS12Listener implements ODEStepListener {
 	 * @return the current state vector
 	 */
 	public double[] getU() {
-		return _u;
+		return _trajectory.get(_trajectory.size() - 1);
 	}
 
 	/**
@@ -142,7 +109,7 @@ public class CLAS12Listener implements ODEStepListener {
 	 * @return the number of integration steps
 	 */
 	public int getNumStep() {
-		return _nStep;
+		return _trajectory.size();
 	}
 
 	/**
@@ -151,7 +118,7 @@ public class CLAS12Listener implements ODEStepListener {
 	 * @return the current path length in meters
 	 */
 	public double getS() {
-		return _s;
+		return _trajectory.getS(_trajectory.size() - 1);
 	}
 
 	/**

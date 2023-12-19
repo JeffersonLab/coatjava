@@ -1,7 +1,6 @@
 package cnuphys.lund;
 
 import java.io.Serializable;
-import java.util.StringTokenizer;
 
 /**
  * Holds the Lund ID, vertex, momentum, and the initial angles giving the
@@ -32,11 +31,11 @@ public class GeneratedParticleRecord implements Serializable {
 	 * @param charge
 	 *            the charge: -1 for electron, 1 for proton, etc
 	 * @param xo
-	 *            the x vertex position in m
+	 *            the x vertex position in cm or m depending on the swimmer
 	 * @param yo
-	 *            the y vertex position in m
+	 *            the y vertex position in cm or m depending on the swimmer
 	 * @param zo
-	 *            the z vertex position in m
+	 *            the z vertex position in cm or m depending on the swimmer
 	 * @param momentum
 	 *            initial momentum in GeV/c
 	 * @param theta
@@ -64,27 +63,27 @@ public class GeneratedParticleRecord implements Serializable {
 	}
 
 	/**
-	 * Get the the X vertex position in m
+	 * Get the the X vertex position in cm or m depending on the swimmer
 	 * 
-	 * @return the X vertex position in m
+	 * @return the X vertex position in cm or m depending on the swimmer
 	 */
 	public double getVertexX() {
 		return _xo;
 	}
 
 	/**
-	 * Get the the Y vertex position in m
+	 * Get the the Y vertex position in cm or m depending on the swimmer
 	 * 
-	 * @return the Y vertex position in m
+	 * @return the Y vertex position in cm or m depending on the swimmer
 	 */
 	public double getVertexY() {
 		return _yo;
 	}
 
 	/**
-	 * Get the the Z vertex position in m
+	 * Get the the Z vertex position in cm or m depending on the swimmer
 	 * 
-	 * @return the Z vertex position in m
+	 * @return the Z vertex position in cm or m depending on the swimmer
 	 */
 	public double getVertexZ() {
 		return _zo;
@@ -187,7 +186,7 @@ public class GeneratedParticleRecord implements Serializable {
 	@Override
 	public String toString() {
 		return String.format(
-				"Q: %d Vertex: (%-8.5f, %-8.5f, %-8.5f) m  P: %-8.5f GeV/c Theta: %-8.5f deg  Phi: %-8.5f deg", _charge,
+				"Q: %d Vertex: (%-8.5f, %-8.5f, %-8.5f)  P: %-8.5f GeV/c Theta: %-8.5f deg  Phi: %-8.5f deg", _charge,
 				_xo, _yo, _zo, _momentum, _theta, _phi);
 	}
 	
