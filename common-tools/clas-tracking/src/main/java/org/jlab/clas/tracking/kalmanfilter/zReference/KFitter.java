@@ -350,11 +350,7 @@ public class KFitter extends AKFitter {
             return false;
         }
         if (sVec != null && sVec.CM != null
-                && k < mv.measurements.size() && mVec.skip == false) {
-            
-            double signMeas = 1;
-            double sign = 1;
-            
+                && k < mv.measurements.size() && mVec.skip == false) {                        
             double c2 = 0;
             double x_filt = 0;
             double y_filt = 0;
@@ -398,40 +394,24 @@ public class KFitter extends AKFitter {
 
                 Point3D point = new Point3D(sVec.x, sVec.y, mVec.surface.z);
                 double h = mv.hDoca(point, mVec.surface.wireLine[0]);
-                
-                
-                if (Math.abs(effectiveDoca) < 0.5) {
-                    signMeas = Math.signum(h);
-                    sign = Math.signum(h);
-                } else {
-                    signMeas = Math.signum(effectiveDoca);
-                    sign = Math.signum(h);
-                }
-
-                c2 = ((signMeas * Math.abs(effectiveDoca) - sign * Math.abs(h))
-                        * (signMeas * Math.abs(effectiveDoca) - sign * Math.abs(h)) / V);
+                               
+                c2 = (effectiveDoca - h) * (effectiveDoca - h) / V;
 
                 x_filt = sVec.x
-                        + K[0] * (signMeas * Math.abs(effectiveDoca) - sign * Math.abs(h));
+                        + K[0] * (effectiveDoca - h);
                 y_filt = sVec.y
-                        + K[1] * (signMeas * Math.abs(effectiveDoca) - sign * Math.abs(h));
+                        + K[1] * (effectiveDoca - h);
                 tx_filt = sVec.tx
-                        + K[2] * (signMeas * Math.abs(effectiveDoca) - sign * Math.abs(h));
+                        + K[2] * (effectiveDoca - h);
                 ty_filt = sVec.ty
-                        + K[3] * (signMeas * Math.abs(effectiveDoca) - sign * Math.abs(h));
+                        + K[3] * (effectiveDoca - h);
                 Q_filt = sVec.Q
-                        + K[4] * (signMeas * Math.abs(effectiveDoca) - sign * Math.abs(h));
+                        + K[4] * (effectiveDoca - h);
                 
                 Point3D pointFiltered = new Point3D(x_filt, y_filt, mVec.surface.z);
                 double h0 = mv.hDoca(pointFiltered, mVec.surface.wireLine[0]);
-                if (Math.abs(effectiveDoca) < 0.5) {
-                    signMeas = Math.signum(h0);
-                    sign = Math.signum(h0);
-                } else {
-                    signMeas = Math.signum(effectiveDoca);
-                    sign = Math.signum(h0);
-                }
-                double residual = signMeas * Math.abs(effectiveDoca) - sign * Math.abs(h0);
+
+                double residual = effectiveDoca - h0;
                 updatedWeights_singleHit = daf.calc_updatedWeight_singleHit(residual, annealingFactor);                                                 
             }
             else{                                                       
@@ -467,22 +447,18 @@ public class KFitter extends AKFitter {
                 Point3D point = new Point3D(sVec.x, sVec.y, mVec.surface.z);
                 double h = mv.hDoca(point, mVec.surface.wireLine[indexReferenceWire]);
 
-                signMeas = Math.signum(effectiveDoca);
-                sign = Math.signum(h);
-
-                c2 = ((signMeas * Math.abs(effectiveDoca) - sign * Math.abs(h))
-                        * (signMeas * Math.abs(effectiveDoca) - sign * Math.abs(h)) / V);
+                c2 = (effectiveDoca - h) * (effectiveDoca - h) / V;
 
                 x_filt = sVec.x
-                        + K[0] * (signMeas * Math.abs(effectiveDoca) - sign * Math.abs(h));
+                        + K[0] * (effectiveDoca - h);
                 y_filt = sVec.y
-                        + K[1] * (signMeas * Math.abs(effectiveDoca) - sign * Math.abs(h));
+                        + K[1] * (effectiveDoca - h);
                 tx_filt = sVec.tx
-                        + K[2] * (signMeas * Math.abs(effectiveDoca) - sign * Math.abs(h));
+                        + K[2] * (effectiveDoca - h);
                 ty_filt = sVec.ty
-                        + K[3] * (signMeas * Math.abs(effectiveDoca) - sign * Math.abs(h));
+                        + K[3] * (effectiveDoca - h);
                 Q_filt = sVec.Q
-                        + K[4] * (signMeas * Math.abs(effectiveDoca) - sign * Math.abs(h));
+                        + K[4] * (effectiveDoca - h);
 
                 Point3D pointFiltered = new Point3D(x_filt, y_filt, mVec.surface.z);
                 double h0 = mv.hDoca(pointFiltered, mVec.surface.wireLine[0]);
