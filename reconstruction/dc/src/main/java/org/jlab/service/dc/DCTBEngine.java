@@ -227,7 +227,7 @@ public class DCTBEngine extends DCEngine {
                 continue;
             }
             crosses.addAll(TrackArray1);
-            if(Swimmer.getTorScale() < 0.001){
+            if(Math.abs(Swimmer.getTorScale()) < 0.001){
                 KFitterStraight kFZRef = new KFitterStraight(true, 30, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
                 List<Surface> measSurfaces = getMeasSurfaces(TrackArray1, Constants.getInstance().dcDetector);
                 StateVecs svs = new StateVecs();
