@@ -18,6 +18,9 @@ concurrency:
 
 jobs:
 
+  # build
+  #############################################################################
+
   build:
     strategy:
       fail-fast: true
@@ -44,6 +47,18 @@ jobs:
           name: build_${{ matrix.runner }}
           retention-days: 1
           path: coatjava.tar.gz
+      - name: collect jacoco report
+        if: ${{ matrix.runner == 'ubuntu-latest' }}
+        run: validation/jacoco-aggregate.sh
+      - name: publish jacoco report
+        if: ${{ matrix.runner == 'ubuntu-latest' }}
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: publish/
+          retention-days: 1
+
+  # tests
+  #############################################################################
 
   test_coatjava:
     needs: [ build ]
@@ -119,3 +134,21 @@ jobs:
     steps:
       - name: pass
         run: exit 0
+
+  # deploy web pages
+  #############################################################################
+
+  deploy_web_pages:
+    if: ${{ github.event_name == 'push' }}
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: deployment
+        id: deployment
+        uses: actions/deploy-pages@v2

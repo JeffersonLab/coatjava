@@ -33,6 +33,26 @@ public class StateVec extends Matrix {
     public void setPathLength(double _PathLength) {
         this._PathLength = _PathLength;
     }
+    
+    private double _DAFWeight = -999;
+    
+    public double getDAFWeight() {
+        return _DAFWeight;
+    }
+
+    public void setDAFWeight(double weight) {
+        this._DAFWeight = weight;
+    }
+    
+    private int _SorDHit = -1; // 1 : single hit; 0: double hit for DC
+    
+    public int getSorDHit() {
+        return _SorDHit;
+    }
+
+    public void setSorDHit(int SorDHit) {
+        this._SorDHit = SorDHit;
+    }
 
     /**
      * Sets the.

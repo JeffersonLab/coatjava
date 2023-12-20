@@ -227,8 +227,9 @@ public class DCTBEngine extends DCEngine {
                 continue;
             }
             crosses.addAll(TrackArray1);
-            if(Swimmer.getTorScale() < 0.001){
-                KFitterStraight kFZRef = new KFitterStraight(true, 2, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
+
+            if(Math.abs(Swimmer.getTorScale()) < 0.001){
+                KFitterStraight kFZRef = new KFitterStraight(true, 30, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
                 List<Surface> measSurfaces = getMeasSurfaces(TrackArray1, Constants.getInstance().dcDetector);
                 StateVecs svs = new StateVecs();
                 org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
@@ -370,6 +371,8 @@ public class DCTBEngine extends DCEngine {
             sv.setPathLength(svc.getPathLength()); 
             sv.setProjector(svc.getProjector());
             sv.setProjectorDoca(svc.getProjectorDoca());
+            sv.setDAFWeight(svc.getFinalDAFWeight());
+            sv.setSorDHit(svc.getSorDHit());
             kfStateVecsAlongTrajectory.add(sv);
     	}
     	

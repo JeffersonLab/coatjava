@@ -238,6 +238,8 @@
         {"name":"timeResidual", "type":"F", "info":"time residual of the hit (in cm)"},
         {"name":"fitResidual",  "type":"F", "info":"fit residual of the hit (in cm, from KF)"},
         {"name":"dDoca",        "type":"F", "info":"delta Doca correction (cm)"},
+        {"name":"DAFWeight",    "type":"F", "info":"Weight by DAF"},
+        {"name":"SorD",         "type":"B", "info":"1: single hit; 0: double hit"},
         {"name":"LR",           "type":"B", "info":"Left/Right ambiguity of the hit"},
         {"name":"X",            "type":"F", "info":"wire x-coordinate  in tilted-sector"},
         {"name":"Z",            "type":"F", "info":"wire z-coordinate  in tilted-sector"},
