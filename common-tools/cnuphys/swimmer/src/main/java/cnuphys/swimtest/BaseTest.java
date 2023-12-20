@@ -1,13 +1,15 @@
 package cnuphys.swimtest;
 
 import java.io.File;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
 
 import cnuphys.adaptiveSwim.AdaptiveSwimException;
 import cnuphys.adaptiveSwim.AdaptiveSwimResult;
 import cnuphys.adaptiveSwim.AdaptiveSwimmer;
-import cnuphys.dormandPrince.CLAS12Listener;
+import cnuphys.dormandPrince.CLAS12SwimResult;
 import cnuphys.dormandPrince.CLAS12Swimmer;
-import cnuphys.dormandPrince.DormandPrinceException;
+import cnuphys.dormandPrince.CLAS12Values;
 import cnuphys.magfield.FieldProbe;
 import cnuphys.magfield.MagneticFields;
 import cnuphys.magfield.MagneticFields.FieldType;
@@ -45,7 +47,7 @@ public class BaseTest {
 		CLAS12Swimmer clas12Swimmer = new CLAS12Swimmer(); //new
 
 
-		//results for old and new
+		//results for adaptive swimmer
 		AdaptiveSwimResult result = new AdaptiveSwimResult(true);
 
 
@@ -94,29 +96,43 @@ public class BaseTest {
 			result.reset();
 
 			// DP
-			try {
-				clas12Swimmer.swim(charge, 100*xo, 100*yo, 100*zo, p, theta, phi, 100*s[i], 100*stepsizeAdaptive, eps);
-				dpSwimResult(writer, clas12Swimmer.getListener());
-			}  catch (DormandPrinceException e) {
-				System.err.println("DP Swimmer Failed.");
-				e.printStackTrace();
-			}
-
+			CLAS12SwimResult c12res = clas12Swimmer.swim(charge, 100*xo, 100*yo, 100*zo, p, theta, phi, 100*s[i], 100*stepsizeAdaptive, 100*eps);
+			dpSwimResult(writer, c12res);
 
 
 			writer.newLine();
 
+			if (i == 0) {
+				System.err.println("First DP result:  " + c12res.toString() + "\n");
+
+			}
 		}
+		
 
 		writer.close();
 		System.err.println("done with main test. Now timing test.");
+		
+		ThreadMXBean bean = ManagementFactory.getThreadMXBean();
+
+        // Check if CPU time measurement is supported
+        if (!bean.isCurrentThreadCpuTimeSupported()) {
+            System.out.println("CPU time measurement is not supported.");
+            return;
+        }
+        
+
+        // Enable CPU time measurement (if not already enabled)
+        if (!bean.isThreadCpuTimeEnabled()) {
+            bean.setThreadCpuTimeEnabled(true);
+        }     
+        
 
 		//timing test
-		long threadId = Thread.currentThread().getId();
 		long asTime;
 		long dpTime;
 
-		long start = SwimTest.cpuTime(threadId);
+        // Measure CPU time before method execution
+        long start = bean.getCurrentThreadCpuTime();
 
 		for (int i = 0; i < n; i++) {
 
@@ -140,9 +156,9 @@ public class BaseTest {
 				e.printStackTrace();
 			}
 		}
-		asTime = SwimTest.cpuTime(threadId) - start;
+		asTime = bean.getCurrentThreadCpuTime() - start;
 
-		start = SwimTest.cpuTime(threadId);
+		start = bean.getCurrentThreadCpuTime();
 
 		for (int i = 0; i < n; i++) {
 
@@ -157,16 +173,11 @@ public class BaseTest {
 			result.reset();
 
 			// DP Swimmer
-			try {
-				clas12Swimmer.swim(charge, 100*xo, 100*yo, 100*zo, p, theta, phi, s[i], stepsizeAdaptive, eps);
-			} catch (DormandPrinceException e) {
-				System.err.println("DP Swimmer Failed.");
-				e.printStackTrace();
-			}
+			CLAS12SwimResult c12res = clas12Swimmer.swim(charge, 100*xo, 100*yo, 100*zo, p, theta, phi, 100*s[i], 100*stepsizeAdaptive, 100*eps);
 
 		}
 
-		dpTime = SwimTest.cpuTime(threadId) - start;
+		dpTime = bean.getCurrentThreadCpuTime() - start;
 
 
 		System.err.println("as time: " + asTime);
@@ -199,17 +210,17 @@ public class BaseTest {
 		}
 	}
 	
-	private static void dpSwimResult(CSVWriter writer, CLAS12Listener listener) {
+	private static void dpSwimResult(CSVWriter writer, CLAS12SwimResult result) {
         double NaN = Double.NaN;
         
-		writer.writeStartOfRow(listener.statusString());
+		writer.writeStartOfRow(result.statusString());
 		
-		if (listener.getStatus() == CLAS12Swimmer.SWIM_SUCCESS) {
-			double[] uf = listener.getU();
-			listener.getTrajectory().computeBDL(_probe);
-			double bdl = listener.getTrajectory().getComputedBDL();
+		if (result.getStatus() == CLAS12Swimmer.SWIM_SUCCESS) {
+			CLAS12Values finalVals = result.getFinalValues();
+			result.getTrajectory().computeBDL(_probe);
+			double bdl = result.getTrajectory().getComputedBDL();
 
-			writer.writeStartOfRow(uf[0], uf[1], uf[2], listener.getS(), bdl);
+			writer.writeStartOfRow(finalVals.x, finalVals.y, finalVals.z, result.getPathLength(), bdl);
 		} else {
 			writer.writeStartOfRow(NaN, NaN, NaN, NaN, NaN);
 		}

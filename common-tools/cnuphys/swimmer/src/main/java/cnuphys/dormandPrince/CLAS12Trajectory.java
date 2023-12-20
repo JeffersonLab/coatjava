@@ -27,6 +27,22 @@ public class CLAS12Trajectory extends SwimTrajectory {
 	}
 	
 	/**
+	 * Replace the last point in the trajectory with a new point
+	 * 
+	 * @param s the replacement path length in cm
+	 * @param u the replacement state vector
+	 */
+	public void replaceLastPoint(double s, double[] u) {
+		if (size() > 0) {
+			int index = size() - 1;
+			_s.remove(index);
+			remove(index);
+			add(s, u);
+		}
+	}
+	
+	
+	/**
 	 * Get the path length at the given index
 	 * 
 	 * @param index the index

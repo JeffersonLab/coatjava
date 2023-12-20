@@ -42,10 +42,6 @@ import cnuphys.swimZ.SwimZStateVector;
 
 public class SwimTest {
 
-
-	// we only need one swimmer it will adapt to changing fields.
-	private static Swimmer _swimmer;
-
 	private static int _sector = 1;
 	final static MagneticFieldCanvas canvas1 = new MagneticFieldCanvas(_sector, -50, 0, 650, 350.,
 			MagneticFieldCanvas.CSType.XZ);
@@ -415,8 +411,6 @@ public class SwimTest {
 		};
 
 		Swimming.addSwimTrajectoryListener(trajListener);
-
-		_swimmer = new Swimmer();
 
 		javax.swing.SwingUtilities.invokeLater(new Runnable() {
 			@Override

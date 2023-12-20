@@ -26,7 +26,7 @@ public class TestDP {
 
         double B = Math.sqrt(1/3.);
         
-		double tolerance = 1e-7; // Desired accuracy default
+		double tolerance = 1e-5; // Desired accuracy default
 		double minH = 1e-10; // Minimum step size to prevent infinite loop default
 
         
@@ -34,7 +34,8 @@ public class TestDP {
         ODEStepListener listener = (newT, newY) -> {
             // Exact solution of the damped harmonic oscillator (for specific cases)
             double exact = Math.exp(-(b/(2*m))* newT) * (B*Math.sin(omega*newT) + Math.cos(omega*newT));
-            System.out.printf("Time: %.2f, Approx: %.8f, Exact: %.8f%n", newT, newY[0], exact);
+            double diff = Math.abs(exact - newY[0]);
+            System.out.printf("Time: %.2f, Approx: %.8f, Exact: %.8f    Diff: %.8f%n", newT, newY[0], exact, diff);
             return true; // Continue the integration
         };
 

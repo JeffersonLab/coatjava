@@ -10,10 +10,10 @@ public class CLAS12Listener implements ODEStepListener {
 	protected static final double _TINY = 1.0e-8; // cm
 		
 	//the trajectory if cached
-	protected CLAS12Trajectory _trajectory; //the optional cached trajectory
+	protected CLAS12Trajectory _trajectory; //the cached trajectory
 	
 	//the initial values
-	protected CLAS12InitialValues _ivals; //initial values
+	protected CLAS12Values _initialVaues; //initial values
 	
 	//a status, one of the CLAS12Swimmer class constants
 	protected int _status = CLAS12Swimmer.SWIM_SWIMMING;
@@ -29,8 +29,8 @@ public class CLAS12Listener implements ODEStepListener {
 	 * @param ivals           the initial values of the swim
 	 * @param sFinal          the final or max path length (cm)
 	 */
-	public CLAS12Listener(CLAS12InitialValues ivals, double sFinal) {
-		_ivals = ivals;
+	public CLAS12Listener(CLAS12Values ivals, double sFinal) {
+		_initialVaues = ivals;
 		_sFinal = sFinal;
 		
 		_trajectory = new CLAS12Trajectory();
@@ -43,7 +43,7 @@ public class CLAS12Listener implements ODEStepListener {
 	public void reset() {
 		_status = CLAS12Swimmer.SWIM_SWIMMING;		
 		_trajectory.clear();
-		_trajectory.add(0., _ivals.getUo());
+		_trajectory.add(0., _initialVaues.getU());
 	}
 
     /**
@@ -90,8 +90,8 @@ public class CLAS12Listener implements ODEStepListener {
 	 * 
 	 * @return the initial values
 	 */
-	public CLAS12InitialValues getIvals() {
-		return _ivals;
+	public CLAS12Values getIvals() {
+		return _initialVaues;
 	}
 
 	/**
@@ -122,7 +122,7 @@ public class CLAS12Listener implements ODEStepListener {
 	}
 
 	/**
-	 * Get the status
+	 * Get the status of the swim. The values are the CLAS12Swimmer constants: SWIM_SUCCESS or SWIM_TARGET_MISSED.
 	 * 
 	 * @return the status
 	 */
@@ -133,7 +133,7 @@ public class CLAS12Listener implements ODEStepListener {
 	/**
 	 * Set the status
 	 * 
-	 * @param status the status. One of the constants in CLAS12Swimmer.
+	 * @param status the status. The values are the CLAS12Swimmer constants: SWIM_SUCCESS or SWIM_TARGET_MISSED.
 	 * @see CLAS12Swimmer
 	 */
 	public void setStatus(int status) {
