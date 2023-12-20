@@ -545,6 +545,8 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
             bank.setShort("clusterID", i, (short) hitlist.get(i).get_AssociatedClusterID());
             bank.setByte("trkID", i, (byte) hitlist.get(i).get_AssociatedTBTrackID());
             bank.setFloat("timeResidual", i, (float) hitlist.get(i).get_TimeResidual());
+            bank.setFloat("DAFWeight", i, (float) hitlist.get(i).getDAFWeight());
+            bank.setByte("SorD", i, (byte) hitlist.get(i).getSorDHit());
             
             bank.setInt("TDC",i,hitlist.get(i).get_TDC());
             bank.setByte("jitter",i, (byte) hitlist.get(i).getJitter());

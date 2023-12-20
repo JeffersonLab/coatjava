@@ -781,6 +781,8 @@ public class KFitter extends AKFitter {
                 
                 svc.setProjectorDoca(h); 
                 svc.setProjector(mv.measurements.get(0).surface.wireLine[0].origin().x());
+                svc.setFinalDAFWeight(daf_weight);
+                svc.setSorDHit(1);
                 kfStateVecsAlongTrajectory.add(svc);
             }
             else{
@@ -804,12 +806,16 @@ public class KFitter extends AKFitter {
                 h = mv.hDoca(point, mv.measurements.get(0).surface.wireLine[0]);
                 svc.setProjectorDoca(h); 
                 svc.setProjector(mv.measurements.get(0).surface.wireLine[0].origin().x());   
+                svc.setFinalDAFWeight(daf_weights[0]);
+                svc.setSorDHit(0);
                 kfStateVecsAlongTrajectory.add(svc);
 
                 StateVec svc2 = sv.new StateVec(svc);
                 h = mv.hDoca(point, mv.measurements.get(0).surface.wireLine[1]);
                 svc2.setProjectorDoca(h); 
                 svc2.setProjector(mv.measurements.get(0).surface.wireLine[1].origin().x());
+                svc2.setFinalDAFWeight(daf_weights[1]);
+                svc2.setSorDHit(0);
                 kfStateVecsAlongTrajectory.add(svc2);                  
             }
 
@@ -845,6 +851,8 @@ public class KFitter extends AKFitter {
 
                     svc.setProjectorDoca(h);  
                     svc.setProjector(mv.measurements.get(k1 + 1).surface.wireLine[0].origin().x());
+                    svc.setFinalDAFWeight(daf_weight);
+                    svc.setSorDHit(1);
                     kfStateVecsAlongTrajectory.add(svc);                                            
                 }
                 else{
@@ -868,12 +876,16 @@ public class KFitter extends AKFitter {
                     h = mv.hDoca(point, mv.measurements.get(k1 + 1).surface.wireLine[0]);
                     svc.setProjectorDoca(h); 
                     svc.setProjector(mv.measurements.get(k1 + 1).surface.wireLine[0].origin().x());
-                    kfStateVecsAlongTrajectory.add(svc);       
+                    svc.setFinalDAFWeight(daf_weights[0]);
+                    svc.setSorDHit(0);
+                    kfStateVecsAlongTrajectory.add(svc);                         
                     
                     StateVec svc2 = sv.new StateVec(svc);
                     h = mv.hDoca(point, mv.measurements.get(k1 + 1).surface.wireLine[1]);
                     svc2.setProjectorDoca(h); 
                     svc2.setProjector(mv.measurements.get(k1 + 1).surface.wireLine[1].origin().x());
+                    svc2.setFinalDAFWeight(daf_weights[1]);
+                    svc2.setSorDHit(0);
                     kfStateVecsAlongTrajectory.add(svc2);                      
                 }
             }

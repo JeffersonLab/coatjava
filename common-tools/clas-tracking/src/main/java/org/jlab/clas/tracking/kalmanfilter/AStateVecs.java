@@ -281,7 +281,22 @@ public abstract class AStateVecs {
             this.weightDAF_double = weight;
         }
         
+        private double finalDAFWeight = -999;
+        public double getFinalDAFWeight(){
+            return finalDAFWeight;
+        }
+        public void setFinalDAFWeight(double weight){
+            this.finalDAFWeight = weight;
+        }
 
+        private int SorDHit = -1; // 1 : single hit; 0: double hit for DC
+        public int getSorDHit(){
+            return SorDHit;
+        }
+        public void setSorDHit(int SorDHit){
+            this.SorDHit = SorDHit;
+        }
+                        
         public double getPathLength() {
             return _PathLength;
         }

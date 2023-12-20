@@ -370,6 +370,8 @@ public class DCTBEngine extends DCEngine {
             sv.setPathLength(svc.getPathLength()); 
             sv.setProjector(svc.getProjector());
             sv.setProjectorDoca(svc.getProjectorDoca());
+            sv.setDAFWeight(svc.getFinalDAFWeight());
+            sv.setSorDHit(svc.getSorDHit());
             kfStateVecsAlongTrajectory.add(sv);
     	}
     	
