@@ -102,7 +102,8 @@ public class ZTest {
 			result.reset();
 
 			// DP
-			CLAS12SwimResult c12res = clas12Swimmer.swimZ(charge, 100*xo, 100*yo, 100*zo, p, theta, phi, 100*zTarg, 100*maxPathLength, 100*stepsizeAdaptive, 100*eps);
+			CLAS12SwimResult c12res = clas12Swimmer.swimZ(charge, 100*xo, 100*yo, 100*zo, p, theta, phi, 100*zTarg, 
+					100*maxPathLength, 100*accuracy, 100*stepsizeAdaptive, 100*eps);
 			dpSwimResult(writer, 100*zTarg, c12res);
 
 
@@ -183,7 +184,8 @@ public class ZTest {
 
 
 			// DP
-			CLAS12SwimResult c12res = clas12Swimmer.swimZ(charge, 100*xo, 100*yo, 100*zo, p, theta, phi, 100*zTarg, 100*maxPathLength, 100*stepsizeAdaptive, 100*eps);
+			CLAS12SwimResult c12res = clas12Swimmer.swimZ(charge, 100*xo, 100*yo, 100*zo, p, theta, phi, 
+					100*zTarg, 100*maxPathLength, 100*accuracy, 100*stepsizeAdaptive, 100*eps);
 		}
 
 		dpTime = bean.getCurrentThreadCpuTime() - start;

@@ -429,7 +429,7 @@ public class AdaptiveSwimResult {
 	 * @return the final directional theta in degrees
 	 */
 	public double getTheta() {
-		double theta = FastMath.acos2Deg(_u[5]);
+		double theta = FastMath.acosDeg(_u[5]);
 		return theta;
 
 	}
@@ -478,7 +478,7 @@ public class AdaptiveSwimResult {
 		revIv.xo = uf[0];
 		revIv.yo = uf[1];
 		revIv.zo = uf[2];
-		revIv.theta = FastMath.acos2Deg(tzf);
+		revIv.theta = FastMath.acosDeg(tzf);
 		revIv.phi = FastMath.atan2Deg(tyf, txf);
 
 		return revIv;

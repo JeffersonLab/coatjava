@@ -3,6 +3,7 @@ package cnuphys.dormandPrince;
 import java.io.File;
 import java.io.FileNotFoundException;
 
+import cnuphys.magfield.FastMath;
 import cnuphys.magfield.MagneticFieldInitializationException;
 import cnuphys.magfield.MagneticFields;
 import cnuphys.magfield.MagneticFields.FieldType;
@@ -21,9 +22,10 @@ public class CLAS12ZListener extends CLAS12BoundaryListener {
 	 * @param ivals           the initial values of the swim
 	 * @param zTarget         the target z (cm)
 	 * @param sFinal          the final or max path length (cm)
+	 * @param accuracy        the desired accuracy (cm)
 	 */
-	public CLAS12ZListener(CLAS12Values ivals, double zTarget, double sFinal) {
-		super(ivals, sFinal);
+	public CLAS12ZListener(CLAS12Values ivals, double zTarget, double sFinal, double accuracy) {
+		super(ivals, sFinal, accuracy);
 		_zTarget = zTarget;
 		_startSign = sign(ivals.z);
 	}
@@ -35,10 +37,21 @@ public class CLAS12ZListener extends CLAS12BoundaryListener {
 		
 		if (sign != _startSign) {
 			//we crossed
-			handleCrossing(newS, newU);
+			//handleCrossing(newS, newU);
 			return true;
 		}
 		return false;
+	}
+	
+	@Override
+	public boolean accuracyReached(double newS, double[] newU) {
+		double dZ = Math.abs(newU[2] - _zTarget);
+		System.err.println("dZ = " + dZ + " cm    accuracy = " + _accuracy + " cm");
+
+		if (dZ < _accuracy) {
+			System.err.println("ACC REACHED");
+		}
+		return dZ < _accuracy;
 	}
 
 	@Override
@@ -86,6 +99,8 @@ public class CLAS12ZListener extends CLAS12BoundaryListener {
 
 		return sTarget;
 	}
+		
+	
 
 	// used for testing
 	public static void main(String arg[]) {
@@ -113,6 +128,7 @@ public class CLAS12ZListener extends CLAS12BoundaryListener {
 		double yo = 0.02;
 		double zo = -0.01;
 		double ztarget = 575.00067;
+		double accuracy = 0.0001; //cm
 		
 		MagneticFields.getInstance().setActiveField(FieldType.COMPOSITE);
 		CLAS12Swimmer clas12Swimmer = new CLAS12Swimmer(); //new
@@ -122,12 +138,13 @@ public class CLAS12ZListener extends CLAS12BoundaryListener {
 		double maxS = 800; // cm
 		double eps = 1.0e-7;
 
-		CLAS12SwimResult c12res = clas12Swimmer.swimZ(q, xo, yo, zo, p, theta, phi, ztarget, maxS, stepsizeAdaptive, eps);
+		CLAS12SwimResult c12res = clas12Swimmer.swimZ(q, xo, yo, zo, p, theta, phi, ztarget, maxS, accuracy, stepsizeAdaptive, eps);
 		System.out.println("DP result:  " + c12res.toString() + "\n");
 
 
 		
 	}
+
 
 
 }

@@ -21,8 +21,6 @@ public class CLAS12Listener implements ODEStepListener {
 	//the final (target) or maximum path length in cm
 	protected double _sFinal;
 	
-
-	
 	/**
 	 * Create a CLAS12 listener
 	 * 

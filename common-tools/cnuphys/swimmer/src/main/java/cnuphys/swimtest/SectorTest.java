@@ -141,7 +141,7 @@ public class SectorTest {
 			double tzf = -lastY[5];
 
 
-			theta = FastMath.acos2Deg(tzf);
+			theta = FastMath.acosDeg(tzf);
 			phi = FastMath.atan2Deg(tyf, txf);
 
 			traj = swimmer.sectorSwim(1, -charge, x0, y0, z0, pTot, theta, phi, 0, accuracy, 10, 10, stepSize,
@@ -183,7 +183,7 @@ public class SectorTest {
 			double tzf = -lastY[5];
 
 
-			theta = FastMath.acos2Deg(tzf);
+			theta = FastMath.acosDeg(tzf);
 			phi = FastMath.atan2Deg(tyf, txf);
 
 			adaptiveSwimmer.sectorSwimZ(1, -charge, x0, y0, z0, pTot, theta, phi, z, accuracy, 10, stepSize, eps, swimResult);

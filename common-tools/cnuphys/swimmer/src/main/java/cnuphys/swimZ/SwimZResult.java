@@ -363,7 +363,7 @@ public class SwimZResult {
 		if (sv != null) {
 			double p3[] = getThreeMomentum(sv);
 			if (Math.abs(_p) > 1.0e-20) {
-				thetaPhi[0] = FastMath.acos2Deg(p3[2] / _p); // theta
+				thetaPhi[0] = FastMath.acosDeg(p3[2] / _p); // theta
 				thetaPhi[1] = FastMath.atan2Deg(p3[1], p3[0]);
 			}
 		}

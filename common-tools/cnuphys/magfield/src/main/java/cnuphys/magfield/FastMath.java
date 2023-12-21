@@ -43,7 +43,7 @@ public class FastMath {
 	 * @param x the cosine value
 	 * @return acos in degrees
 	 */
-	public static double acos2Deg(double x) {
+	public static double acosDeg(double x) {
 		return Math.toDegrees(acos(x));
 	}
 
@@ -62,7 +62,7 @@ public class FastMath {
 	 * @param x the sine value
 	 * @return asin in degrees
 	 */
-	public static double asin2Deg(double x) {
+	public static double asinDeg(double x) {
 		return Math.toDegrees(asin(x));
 	}
 

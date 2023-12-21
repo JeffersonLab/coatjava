@@ -12,7 +12,7 @@ import cnuphys.swim.SwimTrajectory;
 public class CLAS12Trajectory extends SwimTrajectory {
 	
 	//cache the path length
-	ArrayList<Double> _s = new ArrayList<>(200);
+	public ArrayList<Double> _s = new ArrayList<>(200);
 	
 	/**
 	 * add a new point in the trajectory
@@ -38,6 +38,17 @@ public class CLAS12Trajectory extends SwimTrajectory {
 			_s.remove(index);
 			remove(index);
 			add(s, u);
+		}
+	}
+	
+	/**
+	 * Remove the last point in the trajectory
+	 */
+	public void removeLastPoint() {
+		if (size() > 0) {
+			int index = size() - 1;
+			_s.remove(index);
+			remove(index);
 		}
 	}
 	

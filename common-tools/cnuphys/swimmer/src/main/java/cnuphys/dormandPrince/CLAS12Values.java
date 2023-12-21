@@ -19,7 +19,7 @@ public class CLAS12Values {
 	/** The momentum in GeV/c */
 	public double p;
 
-	/** The polar angle in degrees */
+	/** The DIRECTIONAL polar angle in degrees, i.e. theta component of p */
 	public double theta;
 
 	/** The azimuthal angle in degrees */
@@ -33,8 +33,8 @@ public class CLAS12Values {
 	 * @param yo     The y coordinate of the vertex in cm
 	 * @param zo     The z coordinate of the vertex in cm
 	 * @param p      The momentum in GeV/c
-	 * @param theta  The polar angle in degrees
-	 * @param phi    The azimuthal angle in degrees
+	 * @param theta  The DITECTIONAL polar angle in degrees
+	 * @param phi    The DIRECTIONAL azimuthal angle in degrees
 	 */
 	public CLAS12Values(int charge, double xo, double yo, double zo, double p, double theta, double phi) {
 		this.charge = charge;
@@ -47,8 +47,9 @@ public class CLAS12Values {
 	}
 	
 	/**
-	 * Get the values from a state vector. The state vector is the vector of
-	 * that is the dependent variable in the integration.
+	 * Get the POSITIONAL values from a state vector. The state vector is the vector of
+	 * that is the dependent variable in the integration. The anlges are positional, not the directional
+	 * angles for the momentum.
 	 * @param charge the integer charge. Must be supplied, not part of the state vector. It shouldn't change, but
 	 * we assume this is the original momentum, so we mutliply by the state vector norm of the t components, which
 	 * should be 1 since we have magnetic field only.
@@ -68,7 +69,9 @@ public class CLAS12Values {
 		double r = Math.sqrt(u[0]*u[0] + u[1]*u[1] + u[2]*u[2]);
 		
 		p = norm*momentum;
-		theta = FastMath.acos2Deg(u[2]/r);
+		
+		//positional theta and phi, not directional;
+		theta = FastMath.acosDeg(u[2]/r);
         phi = FastMath.atan2Deg(u[1], u[0]);
     }
 	
