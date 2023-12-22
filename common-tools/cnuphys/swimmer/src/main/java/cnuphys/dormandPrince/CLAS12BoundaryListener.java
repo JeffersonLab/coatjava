@@ -37,7 +37,7 @@ public abstract class CLAS12BoundaryListener extends CLAS12Listener {
 		}
 		
 		//have we reached the max path length?
-		if (Math.abs(newS - _sFinal) < _TINY) {
+		if (Math.abs(newS - _sFinal) < TINY) {
 			_status = CLAS12Swimmer.SWIM_TARGET_MISSED;
 			return false;
 		}
@@ -64,4 +64,14 @@ public abstract class CLAS12BoundaryListener extends CLAS12Listener {
 	public abstract boolean crossedBoundary(double newS, double[] newU);
 	
 
+	/**
+	 * Interpolate between two points, one on each side of the boundary
+	 * @param s1 the path length of the "left" point (cm)
+	 * @param u1 the state vector of the "left" point
+	 * @param s2 the path length of the "right" point (cm)
+	 * @param u2 the state vector of the "right" point
+	 * @param u  will hold the interpolated state vector
+	 * 
+	 */
+	public abstract double interpolate(double s1, double[] u1, double s2, double[] u2, double u[]);
 }

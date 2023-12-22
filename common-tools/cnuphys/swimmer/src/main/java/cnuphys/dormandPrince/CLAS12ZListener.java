@@ -52,6 +52,37 @@ public class CLAS12ZListener extends CLAS12BoundaryListener {
 		return (z < _zTarget) ? -1 : 1;
 	}
 	
+	/**
+	 * Interpolate between two points, one on each side of the boundary
+	 * @param s1 the path length of the "left" point (cm)
+	 * @param u1 the state vector of the "left" point
+	 * @param s2 the path length of the "right" point (cm)
+	 * @param u2 the state vector of the "right" point
+	 * @param u  will hold the interpolated state vector
+	 * 
+	 */
+	public double interpolate(double s1, double[] u1, double s2, double[] u2, double u[]) {
+
+		//simple linear interpolation
+		double z1 = u1[2];
+		double z2 = u2[2];
+
+		// unlikely, but just in case
+		if (Math.abs(z2 - z1) < TINY) {
+			System.arraycopy(u2, 0, u, 0, 6);
+			return s2;
+		}
+
+		double t = (_zTarget - z1) / (z2 - z1);
+		double s = s1 + t * (s2 - s1);
+
+		for (int i = 0; i < 6; i++) {
+			u[i] = u1[i] + t * (u2[i] - u1[i]);
+		}
+
+		return s;
+
+	}
 
 	// used for testing
 	public static void main(String arg[]) {
@@ -92,11 +123,11 @@ public class CLAS12ZListener extends CLAS12BoundaryListener {
 		double xo = 0.01;
 		double yo = 0.02;
 		double zo = -0.01;
-		double ztarget = 575.00067;
-		double accuracy = 0.0001; //cm
-		double stepsizeAdaptive = 0.0001; // starting stepsize in cm
+		double ztarget = 575;
+		double accuracy = 1.0e-5; //cm
+		double stepsizeAdaptive = accuracy/10; // starting stepsize in cm
 		double maxS = 800; // cm
-		double eps = 1.0e-7;
+		double eps = 1.0e-6;
 
 		
 		MagneticFields.getInstance().setActiveField(FieldType.COMPOSITE);
@@ -104,8 +135,12 @@ public class CLAS12ZListener extends CLAS12BoundaryListener {
 		
 
 		CLAS12SwimResult c12res = clas12Swimmer.swimZ(q, xo, yo, zo, p, theta, phi, ztarget, maxS, accuracy, stepsizeAdaptive, eps);
-		System.out.println("DP result:  " + c12res.toString() + "\n");
+		System.out.println("DP ACCURATE result:  " + c12res.toString() + "\n");
 
+// compare to interpolated approx
+		
+		c12res = clas12Swimmer.swimZInterp(q, xo, yo, zo, p, theta, phi, ztarget, maxS, stepsizeAdaptive, eps);
+		System.out.println("DP INTERP result:  " + c12res.toString() + "\n");
 
 		
 	}

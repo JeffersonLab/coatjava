@@ -107,19 +107,19 @@ public class CLAS12SwimResult {
 		sb.append("Status: " + statusString() + "\n");
 		sb.append("Initial values:\n");
 		sb.append("charge = " + ivalues.charge + "\n");
-		sb.append(String.format("vertex = (%.5f, %.5f, %.5f) cm\n", ivalues.x, ivalues.y, ivalues.z));
+		sb.append(String.format("vertex = (%.4f, %.4f, %.4f) cm\n", ivalues.x, ivalues.y, ivalues.z));
 
-		sb.append(String.format("momentum = %.5f GeV/c\n", ivalues.p));
-		sb.append(String.format("theta = %.5f deg\n", ivalues.theta));
-		sb.append(String.format("phi = %.5f deg\n", ivalues.phi));
+		sb.append(String.format("momentum = %.4f GeV/c\n", ivalues.p));
+		sb.append(String.format("theta = %.4f deg\n", ivalues.theta));
+		sb.append(String.format("phi = %.4f deg\n", ivalues.phi));
 		sb.append("--------\nFinal values:\n");
-		sb.append(String.format("location = (%.5f, %.5f, %.5f) cm\n", fvalues.x, fvalues.y, fvalues.z));
-		sb.append(String.format("momentum = %.5f GeV/c\n", fvalues.p));
-		sb.append(String.format("norm = %.5f (should be 1)\n", norm));
-		sb.append(String.format("theta = %.5f deg\n", fvalues.theta));
-		sb.append(String.format("phi = %.5f deg\n", fvalues.phi));
-		sb.append(String.format("rho = %.5f cm\n", Math.hypot(fvalues.x, fvalues.y)));
-		sb.append(String.format("path length = %.5f cm\n", getPathLength()));
+		sb.append(String.format("location = (%.4f, %.4f, %.4f) cm\n", fvalues.x, fvalues.y, fvalues.z));
+		sb.append(String.format("momentum = %.4f GeV/c\n", fvalues.p));
+		sb.append(String.format("norm = %.4f (should be 1)\n", norm));
+		sb.append(String.format("theta = %.4f deg\n", fvalues.theta));
+		sb.append(String.format("phi = %.4f deg\n", fvalues.phi));
+		sb.append(String.format("rho = %.4f cm\n", Math.hypot(fvalues.x, fvalues.y)));
+		sb.append(String.format("path length = %.4f cm\n", getPathLength()));
 		sb.append(String.format("number of steps = %d\n", getNumStep()));
 		
 		return sb.toString();

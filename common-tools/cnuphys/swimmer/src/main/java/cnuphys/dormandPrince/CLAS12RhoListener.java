@@ -62,6 +62,39 @@ public class CLAS12RhoListener extends CLAS12BoundaryListener {
 		return (rho < _rhoTarget) ? -1 : 1;
 	}
 	
+	/**
+	 * Interpolate between two points, one on each side of the boundary
+	 * @param s1 the path length of the "left" point (cm)
+	 * @param u1 the state vector of the "left" point
+	 * @param s2 the path length of the "right" point (cm)
+	 * @param u2 the state vector of the "right" point
+	 * @param u  will hold the interpolated state vector
+	 * 
+	 */
+	public double interpolate(double s1, double[] u1, double s2, double[] u2, double u[]) {
+
+		//simple linear interpolation
+		double rho1 = rho(u1);
+		double rho2 = rho(u2);
+
+		// unlikely, but just in case
+		if (Math.abs(rho2 - rho1) < TINY) {
+			System.arraycopy(u2, 0, u, 0, 6);
+			return s2;
+		}
+
+		double t = (_rhoTarget - rho1) / (rho2 - rho1);
+		double s = s1 + t * (s2 - s1);
+
+		for (int i = 0; i < 6; i++) {
+			u[i] = u1[i] + t * (u2[i] - u1[i]);
+		}
+
+		return s;
+
+	}
+
+	
 
 	// used for testing
 	public static void main(String arg[]) {
@@ -90,20 +123,23 @@ public class CLAS12RhoListener extends CLAS12BoundaryListener {
 		double yo = 0.02;
 		double zo = -0.01;
 		double rhotarget = 300;
-		double accuracy = 0.0001; //cm
-		double stepsizeAdaptive = 0.0001; // starting stepsize in cm
+		double accuracy = 1.0e-5; //cm
+		double stepsizeAdaptive = accuracy/10; // starting stepsize in cm
 		double maxS = 800; // cm
-		double eps = 1.0e-7;
+		double eps = 1.0e-6;
 
-		
 		MagneticFields.getInstance().setActiveField(FieldType.COMPOSITE);
-		CLAS12Swimmer clas12Swimmer = new CLAS12Swimmer(); //new
-		
+		CLAS12Swimmer clas12Swimmer = new CLAS12Swimmer(); // new
 
-		CLAS12SwimResult c12res = clas12Swimmer.swimRho(q, xo, yo, zo, p, theta, phi, rhotarget, maxS, accuracy, stepsizeAdaptive, eps);
-		System.out.println("DP result:  " + c12res.toString() + "\n");
+		CLAS12SwimResult c12res = clas12Swimmer.swimRho(q, xo, yo, zo, p, theta, phi, rhotarget, maxS, accuracy,
+				stepsizeAdaptive, eps);
 
+		System.out.println("DP ACCURATE result:  " + c12res.toString() + "\n");
 
+		// compare to interpolated approx
+
+		c12res = clas12Swimmer.swimRhoInterp(q, xo, yo, zo, p, theta, phi, rhotarget, maxS, stepsizeAdaptive, eps);
+		System.out.println("DP INTERP result:  " + c12res.toString() + "\n");
 		
 	}
 

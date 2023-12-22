@@ -7,7 +7,7 @@ package cnuphys.dormandPrince;
  */
 public class CLAS12Listener implements ODEStepListener {
 	
-	protected static final double _TINY = 1.0e-8; // cm
+	protected static final double TINY = 1.0e-8; // cm
 		
 	//the trajectory if cached
 	protected CLAS12Trajectory _trajectory; //the cached trajectory
@@ -57,7 +57,7 @@ public class CLAS12Listener implements ODEStepListener {
 		accept(newS, newU);
 		
 		//if we are done, set the status
-		if (Math.abs(newS - _sFinal) < _TINY) {
+		if (Math.abs(newS - _sFinal) < TINY) {
 			_status = CLAS12Swimmer.SWIM_SUCCESS;
 		}
 

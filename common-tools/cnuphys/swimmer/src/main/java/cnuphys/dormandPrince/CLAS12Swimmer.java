@@ -122,6 +122,47 @@ public class CLAS12Swimmer {
 
 	}
 
+	/**
+	 * Swim to a target accuracy. The details of the target are in the CLAS12BoundaryListener.
+	 * The "Interp" methods get an approximation to the intersection by interpolating. They
+	 * are faster but less accurate than the corresponding non interp methods.
+	 * 
+	 * @param ode       the ODE to solve
+	 * @param u         the initial state vector (x, y, z, tx, ty, tz) x, y, z in cm
+	 * @param sMin      the initial value of the independent variable (pathlength)
+	 *                  (usually 0)
+	 * @param sMax      the final (max) value of the independent variable
+	 *                  (pathlength) unless the integration is terminated by the
+	 *                  listener
+	 * @param h         the initial stepsize in meters
+	 * @param tolerance The desired tolerance. The solver will automatically adjust
+	 *                  the step size to meet this tolerance.
+	 * @param listener  the specific listener that can terminate the integration
+	 * @return the result of the swim
+	 * @see CLAS12BoundaryListener
+	 */
+	public CLAS12SwimResult swimToAccuracyInterp(CLAS12SwimmerODE ode, double u[], double sMin, double sMax, 
+			double h, double tolerance, CLAS12BoundaryListener listener) {
+
+	
+		CLAS12SwimResult cres = baseSwim(ode, u, sMin, sMax, h, tolerance, listener);
+
+		if (listener.getStatus() == SWIM_SUCCESS) {
+			double u2[] = _listener.getU();
+			double s2 = _listener.getS();
+			_listener.getTrajectory().removeLastPoint();
+			double u1[] = _listener.getU();
+			double s1 = _listener.getS();
+			
+			double uInterp[] = new double[6];
+			
+			double sInterp = listener.interpolate(s1, u1, s2, u2, uInterp);
+			
+			_listener.getTrajectory().add(sInterp, uInterp);
+		}
+		
+		return cres;
+	}
 	
 	/**
 	 * Swim to a target accuracy. The details of the target are in the CLAS12BoundaryListener
@@ -137,7 +178,7 @@ public class CLAS12Swimmer {
 	 * @param h         the initial stepsize in meters
 	 * @param tolerance The desired tolerance. The solver will automatically adjust
 	 *                  the step size to meet this tolerance.
-	 * @param listener  an optional listener that can terminate the integration
+	 * @param listener  the specific listener that can terminate the integration
 	 * @return the result of the swim
 	 * @see CLAS12BoundaryListener
 	 */
@@ -219,6 +260,7 @@ public class CLAS12Swimmer {
 	 * @param sMax      the final (max) value of the independent variable
 	 *                  (pathlength) unless the integration is terminated by the
 	 *                  listener
+	 * @param accuracy  the desired accuracy in cm
 	 * @param h         the initial stepsize in meters
 	 * @param tolerance The desired tolerance. The solver will automatically adjust
 	 *                  the step size to meet this tolerance.
@@ -239,6 +281,39 @@ public class CLAS12Swimmer {
 	}
 	
 	/**
+	 * Swim to a target z in cm using the faster but less accurate interpolation
+	 * @param charge    in integer units of e
+	 * @param xo        the x vertex position in cm
+	 * @param yo        the y vertex position in cm
+	 * @param zo        the z vertex position in cm
+	 * @param momentum  the momentum in GeV/c
+	 * @param theta     the initial polar angle in degrees
+	 * @param phi       the initial azimuthal angle in degrees
+	 * @param zTarget   the target z position in cm
+	 * @param sMax      the final (max) value of the independent variable
+	 *                  (pathlength) unless the integration is terminated by the
+	 *                  listener
+	 * @param h         the initial stepsize in meters
+	 * @param tolerance The desired tolerance. The solver will automatically adjust
+	 *                  the step size to meet this tolerance.
+     */
+	public CLAS12SwimResult  swimZInterp(int charge, double xo, double yo, double zo, double momentum, double theta, double phi,
+			double zTarget, double sMax, double h, double tolerance) {
+		
+
+		//create the ODE
+		CLAS12SwimmerODE ode = new CLAS12SwimmerODE(charge, momentum, _probe);
+		
+		//create the initial values
+		CLAS12Values ivals = new CLAS12Values(charge, xo, yo, zo, momentum, theta, phi);
+		
+		CLAS12ZListener listener = new CLAS12ZListener(ivals, zTarget, sMax, 0);
+		
+		return swimToAccuracyInterp(ode, ivals.getU(), 0, sMax, h, tolerance, listener);
+	}
+
+	
+	/**
 	 * Swim to a target rho (cylindrical r) in cm
 	 * @param charge    in integer units of e
 	 * @param xo        the x vertex position in cm
@@ -251,6 +326,7 @@ public class CLAS12Swimmer {
 	 * @param sMax      the final (max) value of the independent variable
 	 *                  (pathlength) unless the integration is terminated by the
 	 *                  listener
+     * @param accuracy  the desired accuracy in cm
 	 * @param h         the initial stepsize in meters
 	 * @param tolerance The desired tolerance. The solver will automatically adjust
 	 *                  the step size to meet this tolerance.
@@ -269,6 +345,39 @@ public class CLAS12Swimmer {
 		
 		return swimToAccuracy(ode, ivals.getU(), 0, sMax, accuracy, h, tolerance, listener);
 	}
+	
+	/**
+	 * Swim to a target rho (cylindrical r) in cm
+	 * @param charge    in integer units of e
+	 * @param xo        the x vertex position in cm
+	 * @param yo        the y vertex position in cm
+	 * @param zo        the z vertex position in cm
+	 * @param momentum  the momentum in GeV/c
+	 * @param theta     the initial polar angle in degrees
+	 * @param phi       the initial azimuthal angle in degrees
+	 * @param rhoTarget   the target rho position in cm
+	 * @param sMax      the final (max) value of the independent variable
+	 *                  (pathlength) unless the integration is terminated by the
+	 *                  listener
+ 	 * @param h         the initial stepsize in meters
+	 * @param tolerance The desired tolerance. The solver will automatically adjust
+	 *                  the step size to meet this tolerance.
+     */
+	public CLAS12SwimResult  swimRhoInterp(int charge, double xo, double yo, double zo, double momentum, double theta, double phi,
+			double rhoTarget, double sMax, double h, double tolerance) {
+		
+
+		//create the ODE
+		CLAS12SwimmerODE ode = new CLAS12SwimmerODE(charge, momentum, _probe);
+		
+		//create the initial values
+		CLAS12Values ivals = new CLAS12Values(charge, xo, yo, zo, momentum, theta, phi);
+		
+		CLAS12RhoListener listener = new CLAS12RhoListener(ivals, rhoTarget, sMax, 0);
+		
+		return swimToAccuracyInterp(ode, ivals.getU(), 0, sMax, h, tolerance, listener);
+	}
+
 
 		
 	/**
