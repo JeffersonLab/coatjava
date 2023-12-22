@@ -27,14 +27,8 @@ public abstract class CLAS12BoundaryListener extends CLAS12Listener {
 	 */
 	public boolean newStep(double newS, double[] newU) {
 		accept(newS, newU);
-		
-		//have we reached the accuracy?
-//		if (accuracyReached(newS, newU)) {
-//			_status = CLAS12Swimmer.SWIM_SUCCESS;
-//			return false;
-//		}
 
-		//have we crossed the boundary? If so this method should handle the crossing
+		//have we crossed the boundary? If so the CrossedBoundary method should handle the crossing
 		//and return with the "intersection" set as the last point. The status should
 		//be set to SWIM_SUCCESS.
 		if (crossedBoundary(newS, newU)) {
@@ -43,7 +37,7 @@ public abstract class CLAS12BoundaryListener extends CLAS12Listener {
 		}
 		
 		//have we reached the max path length?
-		if (newS > _sFinal) {
+		if (Math.abs(newS - _sFinal) < _TINY) {
 			_status = CLAS12Swimmer.SWIM_TARGET_MISSED;
 			return false;
 		}
@@ -68,13 +62,6 @@ public abstract class CLAS12BoundaryListener extends CLAS12Listener {
 	 * we should terminate and interpolate to the intersection.
 	 */
 	public abstract boolean crossedBoundary(double newS, double[] newU);
-	
-	/**
-	 * Handle the crossing. This is where the interpolation to the intersection is performed
-    * @param newS The new path length after the step.
-     * @param newU The new state vector after the step.
-	 */
-	public abstract void handleCrossing(double newS, double[] newU);
 	
 
 }

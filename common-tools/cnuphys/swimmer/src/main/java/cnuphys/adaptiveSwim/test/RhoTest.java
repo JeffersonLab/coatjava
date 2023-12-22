@@ -1,18 +1,20 @@
 package cnuphys.adaptiveSwim.test;
 
 import java.io.File;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
 import java.util.Random;
 
 import cnuphys.adaptiveSwim.AdaptiveSwimException;
 import cnuphys.adaptiveSwim.AdaptiveSwimResult;
 import cnuphys.adaptiveSwim.AdaptiveSwimmer;
+import cnuphys.dormandPrince.CLAS12SwimResult;
+import cnuphys.dormandPrince.CLAS12Swimmer;
+import cnuphys.dormandPrince.CLAS12Values;
 import cnuphys.magfield.MagneticFields;
 import cnuphys.magfield.MagneticFields.FieldType;
-import cnuphys.rk4.RungeKuttaException;
-import cnuphys.swim.Swimmer;
 import cnuphys.swimtest.CSVWriter;
 import cnuphys.swimtest.RandomData;
-import cnuphys.swimtest.SwimTest;
 
 public class RhoTest {
 
@@ -34,24 +36,23 @@ public class RhoTest {
 	    
 	    //write the header row
 	    writer.writeRow("charge", "rhoTarg", "xo (m)", "yo (m)", "zo (m)", "p (GeV/c)", "theta (deg)", "phi (deg)", 
-	    		"status", "xf_old", "yf_old", "zf_old", "dRho_old", 
-	    		"status", "xf_new", "yf_new", "zf_new", "dRho_new");
+	    		"status", "xf_as", "yf_as", "zf_as", "dRho_as", 
+	    		"status", "xf_dp", "yf_dp", "zf_dp", "dRho_dp");
 	    
 	    
-		Swimmer swimmer = new Swimmer(); //old
-		AdaptiveSwimmer adaptiveSwimmer = new AdaptiveSwimmer(); //new
-		
-		//results for old and new
+		AdaptiveSwimmer adaptiveSwimmer = new AdaptiveSwimmer(); //adaptive
+		CLAS12Swimmer clas12Swimmer = new CLAS12Swimmer(); //DP
+
+		//results for adaptive
 		AdaptiveSwimResult result = new AdaptiveSwimResult(true);
-		
 
 		double stepsizeAdaptive = 0.01; // starting
 
 		double maxPathLength = 10; // m
 		double accuracy = 1e-5; // m
 		double eps = 1.0e-6;
-		
-		//generate some random data			
+
+		//generate some random data
 		RandomData data = new RandomData(n, seed);
 
 		//random target rho im meters
@@ -71,27 +72,12 @@ public class RhoTest {
 			double theta = data.theta[i];
 			double phi = data.phi[i];
 			double rhoTarg = rhoTarget[i];
-			
+
 			result.reset();
 
 			writer.writeStartOfRow(charge, 100*rhoTarg, 100 * xo, 100 * yo, 100 * zo, p, theta, phi);
 			
-			// interp OLD
-			try {
-				swimmer.swimRho(charge, xo, yo, zo, p, theta, phi,
-						rhoTarg, accuracy, maxPathLength, stepsizeAdaptive, Swimmer.CLAS_Tolerance, result);
-				
-				swimRhoSwimResult(writer, rhoTarg, result);
-
-
-			} catch (RungeKuttaException e) {
-				System.err.println("OLD Swimmer Failed." + "  final pathlength = " + result.getFinalS());
-				e.printStackTrace();
-			}
-
-			result.reset();
-			
-			// NEW
+			// Adaptive
 			try {
 				adaptiveSwimmer.swimRho(charge, xo, yo, zo, p, 
 						theta, phi, rhoTarg, accuracy,
@@ -104,20 +90,42 @@ public class RhoTest {
 				e.printStackTrace();
 			}
 
+			result.reset();
 			
-			
+			// DP
+			CLAS12SwimResult c12res = clas12Swimmer.swimRho(charge, 100*xo, 100*yo, 100*zo, p, theta, phi, 100*rhoTarg, 
+					100*maxPathLength, 100*accuracy, 100*stepsizeAdaptive, 100*eps);
+			dpSwimResult(writer, 100*rhoTarg, c12res);
+
+
 			writer.newLine();
 
 		}
 		writer.close();
 		System.err.println("done with main test. Now timing test.");
+		
+		ThreadMXBean bean = ManagementFactory.getThreadMXBean();
+
+        // Check if CPU time measurement is supported
+        if (!bean.isCurrentThreadCpuTimeSupported()) {
+            System.out.println("CPU time measurement is not supported.");
+            return;
+        }
+
+
+        // Enable CPU time measurement (if not already enabled)
+        if (!bean.isThreadCpuTimeEnabled()) {
+            bean.setThreadCpuTimeEnabled(true);
+        }
+
+
 
 		//timing test
-		long threadId = Thread.currentThread().getId();
-		long oldTime;
-		long newTime;
-		
-		long start = SwimTest.cpuTime(threadId);
+		long asTime;
+		long dpTime;
+
+        // Measure CPU time before method execution
+        long start = bean.getCurrentThreadCpuTime();
 		
 		for (int i = 0; i < n; i++) {
 			
@@ -139,14 +147,14 @@ public class RhoTest {
 						maxPathLength, stepsizeAdaptive, eps, result);
 				
 			} catch (AdaptiveSwimException e) {
-				System.err.println("NEW Swimmer Failed." + "  final pathlength = " + result.getS());
+				System.err.println("Adaptive Swimmer Failed." + "  final pathlength = " + result.getS());
 				e.printStackTrace();
 			}
 		}
 		
-		newTime = SwimTest.cpuTime(threadId) - start;
-		
-		start = SwimTest.cpuTime(threadId);
+		asTime = bean.getCurrentThreadCpuTime() - start;
+
+		start = bean.getCurrentThreadCpuTime();
 
 		for (int i = 0; i < n; i++) {
 			
@@ -161,25 +169,18 @@ public class RhoTest {
 			
 			result.reset();
 			
-			// interp OLD
-			try {
-
-				swimmer.swimRho(charge, xo, yo, zo, p, theta, phi,
-						rhoTarg, accuracy, maxPathLength, stepsizeAdaptive, Swimmer.CLAS_Tolerance, result);
-
-			} catch (RungeKuttaException e) {
-				System.err.println("OLD Swimmer Failed." + "  final pathlength = " + result.getS());
-				e.printStackTrace();
-			}
+			// DP
+			CLAS12SwimResult c12res = clas12Swimmer.swimRho(charge, 100*xo, 100*yo, 100*zo, p, theta, phi, 
+					100*rhoTarg, 100*maxPathLength, 100*accuracy, 100*stepsizeAdaptive, 100*eps);
 			
 		}
 		
-		oldTime = SwimTest.cpuTime(threadId) - start;
-		
-		
-		System.err.println("old time: " + oldTime);
-		System.err.println("new time: " + newTime);
-		System.err.println("ratio old/new = " + (double)oldTime/(double)newTime);
+		dpTime = bean.getCurrentThreadCpuTime() - start;
+
+
+		System.err.println("as time: " + asTime);
+		System.err.println("dp time: " + dpTime);
+		System.err.println("ratio as/dp = " + (double)asTime/(double)dpTime);
 
 		System.err.println("done");
 
@@ -204,4 +205,23 @@ public class RhoTest {
 			writer.writeStartOfRow(NaN, NaN, NaN, NaN);
 		}
 	}
+	
+	private static void dpSwimResult(CSVWriter writer, double targetRho, CLAS12SwimResult result) {
+        double NaN = Double.NaN;
+
+		writer.writeStartOfRow(result.statusString());
+
+		if (result.getStatus() == CLAS12Swimmer.SWIM_SUCCESS) {
+			CLAS12Values finalVals = result.getFinalValues();
+			double rho = Math.hypot(finalVals.x, finalVals.y);
+			double dist = Math.abs(rho - targetRho);
+
+
+			writer.writeStartOfRow(finalVals.x, finalVals.y, finalVals.z, dist);
+		} else {
+			writer.writeStartOfRow(NaN, NaN, NaN, NaN);
+		}
+
+	}
+
 }

@@ -39,13 +39,11 @@ public class ZTest {
 	    		"status", "xf_dp", "yf_dp", "zf_dp", "s_dp", "dZ_dp");
 
 
-		AdaptiveSwimmer adaptiveSwimmer = new AdaptiveSwimmer(); //new
+		AdaptiveSwimmer adaptiveSwimmer = new AdaptiveSwimmer(); //adaptive
+		CLAS12Swimmer clas12Swimmer = new CLAS12Swimmer(); //DP
 
-		CLAS12Swimmer clas12Swimmer = new CLAS12Swimmer(); //new
-
-		//results for adaptive and dP
+		//results for adaptive
 		AdaptiveSwimResult result = new AdaptiveSwimResult(true);
-
 
 		double stepsizeAdaptive = 0.01; // starting
 
@@ -78,12 +76,6 @@ public class ZTest {
 
 			result.reset();
 			
-			
-//		    writer.writeRow("charge", "xo (cm)", "yo (cm)", "zo (cm)", "p (GeV/c)", "theta (deg)", "phi (deg)", "zTarg (cm)",
-//		    		"status", "xf_as", "yf_as", "zf_as", "s_as", "dZ_as",
-//		    		"status", "xf_dp", "yf_dp", "zf_dp", "s_dp", "dZ_dp");
-			
-
 			writer.writeStartOfRow(charge, 100 * xo, 100 * yo, 100 * zo, p, theta, phi, 100*zTarg);
 
 			// Adaptive

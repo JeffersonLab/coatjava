@@ -36,7 +36,6 @@ import cnuphys.magfield.MagneticFieldInitializationException;
 import cnuphys.magfield.MagneticFields;
 import cnuphys.swim.SwimMenu;
 import cnuphys.swim.SwimTrajectory;
-import cnuphys.swim.Swimmer;
 import cnuphys.swim.Swimming;
 import cnuphys.swimZ.SwimZStateVector;
 

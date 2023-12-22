@@ -17,10 +17,6 @@ public class CLAS12SwimmerODE implements ODE {
 	// p is in GeV/c
 	private double _alpha;
 	
-	//for mag field result
-	float b[] = new float[3];
-
-		
 	/**
 	 * The derivative for swimming through a magnetic field
 	 * 
@@ -37,7 +33,6 @@ public class CLAS12SwimmerODE implements ODE {
 //units of this  alpha are 1/(kG*cm)
 		_alpha = 1.0e-14 * charge * CLAS12Swimmer.C / _momentum;
 	}
-
 
 
 	/**

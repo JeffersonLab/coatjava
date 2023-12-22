@@ -108,6 +108,7 @@ public class CLAS12SwimResult {
 		sb.append("Initial values:\n");
 		sb.append("charge = " + ivalues.charge + "\n");
 		sb.append(String.format("vertex = (%.5f, %.5f, %.5f) cm\n", ivalues.x, ivalues.y, ivalues.z));
+
 		sb.append(String.format("momentum = %.5f GeV/c\n", ivalues.p));
 		sb.append(String.format("theta = %.5f deg\n", ivalues.theta));
 		sb.append(String.format("phi = %.5f deg\n", ivalues.phi));
@@ -117,6 +118,7 @@ public class CLAS12SwimResult {
 		sb.append(String.format("norm = %.5f (should be 1)\n", norm));
 		sb.append(String.format("theta = %.5f deg\n", fvalues.theta));
 		sb.append(String.format("phi = %.5f deg\n", fvalues.phi));
+		sb.append(String.format("rho = %.5f cm\n", Math.hypot(fvalues.x, fvalues.y)));
 		sb.append(String.format("path length = %.5f cm\n", getPathLength()));
 		sb.append(String.format("number of steps = %d\n", getNumStep()));
 		

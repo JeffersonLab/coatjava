@@ -123,50 +123,57 @@ public class CLAS12Swimmer {
 	}
 
 	
-	public CLAS12SwimResult swimToAccuracy(CLAS12SwimmerODE ode, double u[], double sMin, double sMax, double h,
-			double tolerance, CLAS12BoundaryListener listener) {
+	/**
+	 * Swim to a target accuracy. The details of the target are in the CLAS12BoundaryListener
+	 * 
+	 * @param ode       the ODE to solve
+	 * @param u         the initial state vector (x, y, z, tx, ty, tz) x, y, z in cm
+	 * @param sMin      the initial value of the independent variable (pathlength)
+	 *                  (usually 0)
+	 * @param sMax      the final (max) value of the independent variable
+	 *                  (pathlength) unless the integration is terminated by the
+	 *                  listener
+	 * @param accuracy  the target accuracy in cm
+	 * @param h         the initial stepsize in meters
+	 * @param tolerance The desired tolerance. The solver will automatically adjust
+	 *                  the step size to meet this tolerance.
+	 * @param listener  an optional listener that can terminate the integration
+	 * @return the result of the swim
+	 * @see CLAS12BoundaryListener
+	 */
+	public CLAS12SwimResult swimToAccuracy(CLAS12SwimmerODE ode, double u[], double sMin, double sMax, 
+			double accuracy, double h, double tolerance, CLAS12BoundaryListener listener) {
 
 		double s1 = sMin;
 		double s2 = sMax;
 		
-
+		h = Math.min(h, accuracy/2.);
+		
 		CLAS12SwimResult cres = null;
 		while (true) {
 			cres = baseSwim(ode, u, s1, s2, h, tolerance, listener);
 
 			if (listener.getStatus() == SWIM_SUCCESS) {
-				// crossed boundary
-				// algorithm:
-				// 1. set s2 to the current path length
-				// 2. remove last point (on far side of boundary)
-				// 3. set s1 to the new total path length
-
 				s2 = _listener.getS();
-				double z2 = _listener.getU()[2];
 				_listener.getTrajectory().removeLastPoint();
 				
 				if (listener.accuracyReached(cres.getPathLength(), cres.getFinalU())) {
-System.err.println("HEY");
 					return cres;
 				}
 
 				u = _listener.getU();
 				s1 = _listener.getS();
-				double z1 = _listener.getU()[2];
-
-	//			System.err.println("s1 = " + s1 + "  s2 = " + s2 + " cm");
-				System.err.println("z1 = " + z1 + "  z2 = " + z2 + " cm");
-
-				// remove last point again it will be restored as start of appendend swim
+				
+				// remove last point again it will be restored as start of appended swim
 				_listener.getTrajectory().removeLastPoint();
 
-				h = Math.abs(s2-s1)/100;
 			} else { // failed, reached max path length
 				return cres;
 			}
 		}
 
 	}
+	
 
 	
 	/**
@@ -228,10 +235,41 @@ System.err.println("HEY");
 		
 		CLAS12ZListener listener = new CLAS12ZListener(ivals, zTarget, sMax, accuracy);
 		
-		return swimToAccuracy(ode, ivals.getU(), 0, sMax, h, tolerance, listener);
-//		return baseSwim(ode, ivals.getU(), 0, sMax, h, tolerance, listener);
-
+		return swimToAccuracy(ode, ivals.getU(), 0, sMax, accuracy, h, tolerance, listener);
 	}
+	
+	/**
+	 * Swim to a target rho (cylindrical r) in cm
+	 * @param charge    in integer units of e
+	 * @param xo        the x vertex position in cm
+	 * @param yo        the y vertex position in cm
+	 * @param zo        the z vertex position in cm
+	 * @param momentum  the momentum in GeV/c
+	 * @param theta     the initial polar angle in degrees
+	 * @param phi       the initial azimuthal angle in degrees
+	 * @param rhoTarget   the target rho position in cm
+	 * @param sMax      the final (max) value of the independent variable
+	 *                  (pathlength) unless the integration is terminated by the
+	 *                  listener
+	 * @param h         the initial stepsize in meters
+	 * @param tolerance The desired tolerance. The solver will automatically adjust
+	 *                  the step size to meet this tolerance.
+     */
+	public CLAS12SwimResult  swimRho(int charge, double xo, double yo, double zo, double momentum, double theta, double phi,
+			double rhoTarget, double sMax, double accuracy, double h, double tolerance) {
+		
+
+		//create the ODE
+		CLAS12SwimmerODE ode = new CLAS12SwimmerODE(charge, momentum, _probe);
+		
+		//create the initial values
+		CLAS12Values ivals = new CLAS12Values(charge, xo, yo, zo, momentum, theta, phi);
+		
+		CLAS12RhoListener listener = new CLAS12RhoListener(ivals, rhoTarget, sMax, accuracy);
+		
+		return swimToAccuracy(ode, ivals.getU(), 0, sMax, accuracy, h, tolerance, listener);
+	}
+
 		
 	/**
      * Get the result of the swim

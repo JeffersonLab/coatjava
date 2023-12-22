@@ -8,10 +8,10 @@ import cnuphys.magfield.MagneticFieldInitializationException;
 import cnuphys.magfield.MagneticFields;
 import cnuphys.magfield.MagneticFields.FieldType;
 
-public class CLAS12ZListener extends CLAS12BoundaryListener {
+public class CLAS12RhoListener extends CLAS12BoundaryListener {
 	
-	//the target z (cm)
-	private double _zTarget;
+	//the target rho (cm)
+	private double _rhoTarget;
 	
 	//the starting sign. When this changes we have crossed.
 	private double _startSign;
@@ -20,20 +20,22 @@ public class CLAS12ZListener extends CLAS12BoundaryListener {
 	 * Create a CLAS12 boundary target Z listener, for swimming to a fixed z
 	 * 
 	 * @param ivals           the initial values of the swim
-	 * @param zTarget         the target z (cm)
+	 * @param rhoTarget       the target rho (cylindrical r) (cm)
 	 * @param sFinal          the final or max path length (cm)
 	 * @param accuracy        the desired accuracy (cm)
 	 */
-	public CLAS12ZListener(CLAS12Values ivals, double zTarget, double sFinal, double accuracy) {
+	public CLAS12RhoListener(CLAS12Values ivals, double rhoTarget, double sFinal, double accuracy) {
 		super(ivals, sFinal, accuracy);
-		_zTarget = zTarget;
-		_startSign = sign(ivals.z);
+		_rhoTarget = rhoTarget;
+		
+		double x = ivals.x;
+		double y = ivals.y;
+		_startSign = sign(Math.hypot(x, y));
 	}
 
 	@Override
 	public boolean crossedBoundary(double newS, double[] newU) {
-		double newZ = newU[2];
-		int sign = sign(newZ);
+		int sign = sign(rho(newU));
 		
 		if (sign != _startSign) {
 			return true;
@@ -41,15 +43,23 @@ public class CLAS12ZListener extends CLAS12BoundaryListener {
 		return false;
 	}
 	
+	//the rho (cylindrical r) of the state vector in cm
+	private double rho(double u[]) {
+		double x = u[0];
+		double y = u[1];
+		return FastMath.hypot(x, y);
+	}
+	
 	@Override
 	public boolean accuracyReached(double newS, double[] newU) {
-		double dZ = Math.abs(newU[2] - _zTarget);
-		return dZ < _accuracy;
+		double dRho = Math.abs(rho(newU) - _rhoTarget);
+//		System.err.println("dRho: " + dRho);
+		return dRho < _accuracy;
 	}
 
-	// left or right of the target Z?
-	private int sign(double z) {
-		return (z < _zTarget) ? -1 : 1;
+	// left or right of the target rho?
+	private int sign(double rho) {
+		return (rho < _rhoTarget) ? -1 : 1;
 	}
 	
 
@@ -71,28 +81,15 @@ public class CLAS12ZListener extends CLAS12BoundaryListener {
 
 		System.out.println("Active Field Description: " + MagneticFields.getInstance().getActiveFieldDescription());
 
-//		int q = 1;
-//		double p = 2.369457106003491;
-//		double theta = 32.985153708129516;
-//		double phi = 196.23998861894339;
-//		double xo = -0.2988817577588326;
-//		double yo = 0.1723213641208851;
-//		double zo = -0.3404871441880286;
-//		double ztarget = 549.1227330916572;
-//		double accuracy = 0.001; //cm
-//		double stepsizeAdaptive = 1; // starting stepsize in cm
-//		double maxS = 1000; // cm
-//		double eps = 9.999999999999999E-5;
-
 		
-		int q = -1;
+		int q = 1;
 		double p = 2.0;
 		double theta = 15;
 		double phi = 5;
 		double xo = 0.01;
 		double yo = 0.02;
 		double zo = -0.01;
-		double ztarget = 575.00067;
+		double rhotarget = 300;
 		double accuracy = 0.0001; //cm
 		double stepsizeAdaptive = 0.0001; // starting stepsize in cm
 		double maxS = 800; // cm
@@ -103,7 +100,7 @@ public class CLAS12ZListener extends CLAS12BoundaryListener {
 		CLAS12Swimmer clas12Swimmer = new CLAS12Swimmer(); //new
 		
 
-		CLAS12SwimResult c12res = clas12Swimmer.swimZ(q, xo, yo, zo, p, theta, phi, ztarget, maxS, accuracy, stepsizeAdaptive, eps);
+		CLAS12SwimResult c12res = clas12Swimmer.swimRho(q, xo, yo, zo, p, theta, phi, rhotarget, maxS, accuracy, stepsizeAdaptive, eps);
 		System.out.println("DP result:  " + c12res.toString() + "\n");
 
 
