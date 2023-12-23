@@ -17,7 +17,7 @@ public class TestDP {
         double[] y0 = {1.0, 0.0}; // Initial displacement and velocity
         double t0 = 0.0;          // Initial time
         double t1 = 10.0;         // Final time
-        double h = 0.01;          // Initial step size
+        double h = 0.001;          // Initial step size
 
         // Create an instance of the ODE representing the damped harmonic oscillator
         ODE dampedOscillator = (double t, double[] y) -> new double[] {
@@ -40,6 +40,6 @@ public class TestDP {
         };
 
         // Solve the ODE
-        DormandPrince.solve(dampedOscillator, y0, t0, t1, h, tolerance, minH, listener);
+        DormandPrince.solve(dampedOscillator, y0, t0, t1, h, tolerance, minH, Double.POSITIVE_INFINITY,listener);
     }
 }

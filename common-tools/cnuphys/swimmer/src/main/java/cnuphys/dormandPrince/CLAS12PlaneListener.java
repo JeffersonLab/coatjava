@@ -3,39 +3,36 @@ package cnuphys.dormandPrince;
 import java.io.File;
 import java.io.FileNotFoundException;
 
-import cnuphys.magfield.FastMath;
+import cnuphys.adaptiveSwim.geometry.Plane;
 import cnuphys.magfield.MagneticFieldInitializationException;
 import cnuphys.magfield.MagneticFields;
 import cnuphys.magfield.MagneticFields.FieldType;
 
-public class CLAS12RhoListener extends CLAS12BoundaryListener {
+public class CLAS12PlaneListener extends CLAS12BoundaryListener {
 	
-	//the target rho (cm)
-	private double _rhoTarget;
+	//the target plane
+	private Plane _targetPlane;
 	
 	//the starting sign. When this changes we have crossed.
 	private double _startSign;
 
 	/**
-	 * Create a CLAS12 boundary target Z listener, for swimming to a fixed z
+	 * Create a CLAS12 boundary target plane listener, for swimming to a fixed infinite plane
 	 * 
-	 * @param ivals         the initial values of the swim
-	 * @param rhoTarget     the target rho (cylindrical r) (cm)
-	 * @param sMax          the final or max path length (cm)
-	 * @param accuracy      the desired accuracy (cm)
+	 * @param ivals           the initial values of the swim
+	 * @param targetPlane     the target infinite plane
+	 * @param sMax         the final or max path length (cm)
+	 * @param accuracy        the desired accuracy (cm)
 	 */
-	public CLAS12RhoListener(CLAS12Values ivals, double rhoTarget, double sMax, double accuracy) {
+	public CLAS12PlaneListener(CLAS12Values ivals, Plane targetPlane, double sMax, double accuracy) {
 		super(ivals, sMax, accuracy);
-		_rhoTarget = rhoTarget;
-		
-		double x = ivals.x;
-		double y = ivals.y;
-		_startSign = sign(Math.hypot(x, y));
+		_targetPlane = targetPlane;
+		_startSign = _targetPlane.sign(ivals.x, ivals.y, ivals.z);
 	}
 
 	@Override
 	public boolean crossedBoundary(double newS, double[] newU) {
-		int sign = sign(rho(newU));
+		int sign = _targetPlane.sign(newU[0], newU[1], newU[2]);
 		
 		if (sign != _startSign) {
 			return true;
@@ -43,27 +40,15 @@ public class CLAS12RhoListener extends CLAS12BoundaryListener {
 		return false;
 	}
 	
-	//the rho (cylindrical r) of the state vector in cm
-	private double rho(double u[]) {
-		double x = u[0];
-		double y = u[1];
-		return FastMath.hypot(x, y);
-	}
-	
 	@Override
 	public boolean accuracyReached(double newS, double[] newU) {
-		double dRho = Math.abs(rho(newU) - _rhoTarget);
-//		System.err.println("dRho: " + dRho);
-		return dRho < _accuracy;
+		double distance = _targetPlane.distance(newU[0], newU[1], newU[2]);
+		return distance < _accuracy;
 	}
 
-	// left or right of the target rho?
-	private int sign(double rho) {
-		return (rho < _rhoTarget) ? -1 : 1;
-	}
 	
 	/**
-	 * Interpolate between two points, one on each side of the boundary
+	 * Interpolate between two points, one on each side of the plane
 	 * @param s1 the path length of the "left" point (cm)
 	 * @param u1 the state vector of the "left" point
 	 * @param s2 the path length of the "right" point (cm)
@@ -72,29 +57,16 @@ public class CLAS12RhoListener extends CLAS12BoundaryListener {
 	 * 
 	 */
 	public double interpolate(double s1, double[] u1, double s2, double[] u2, double u[]) {
+		
+		double t = _targetPlane.lineSegmentPlaneIntersection(u1, u2, u);
 
-		//simple linear interpolation
-		double rho1 = rho(u1);
-		double rho2 = rho(u2);
-
-		// unlikely, but just in case
-		if (Math.abs(rho2 - rho1) < TINY) {
-			System.arraycopy(u2, 0, u, 0, 6);
-			return s2;
+		if (Double.isNaN(t)) {
+			return Double.NaN;
 		}
-
-		double t = (_rhoTarget - rho1) / (rho2 - rho1);
-		double s = s1 + t * (s2 - s1);
-
-		for (int i = 0; i < 6; i++) {
-			u[i] = u1[i] + t * (u2[i] - u1[i]);
-		}
-
-		return s;
+		
+		return s1 + t * (s2 - s1);
 
 	}
-
-	
 
 	// used for testing
 	public static void main(String arg[]) {
@@ -113,33 +85,38 @@ public class CLAS12RhoListener extends CLAS12BoundaryListener {
 		}
 
 		System.out.println("Active Field Description: " + MagneticFields.getInstance().getActiveFieldDescription());
-
 		
-		int q = 1;
+		Plane targetPlane = new Plane(1, 1, 1, 1, 1, 1);
+
+		int q = -1;
 		double p = 2.0;
-		double theta = 15;
+		double theta = 25;
 		double phi = 5;
 		double xo = 0.01;
 		double yo = 0.02;
 		double zo = -0.01;
-		double rhotarget = 300;
 		double accuracy = 1.0e-5; //cm
 		double stepsizeAdaptive = accuracy/10; // starting stepsize in cm
 		double maxS = 800; // cm
 		double eps = 1.0e-6;
 
+		
 		MagneticFields.getInstance().setActiveField(FieldType.COMPOSITE);
-		CLAS12Swimmer clas12Swimmer = new CLAS12Swimmer(); // new
+		CLAS12Swimmer clas12Swimmer = new CLAS12Swimmer(); //new
+		
 
-		CLAS12SwimResult c12res = clas12Swimmer.swimRho(q, xo, yo, zo, p, theta, phi, rhotarget, maxS, accuracy,
-				stepsizeAdaptive, eps);
-
+		CLAS12SwimResult c12res = clas12Swimmer.swimPlane(q, xo, yo, zo, p, theta, phi, targetPlane, maxS, accuracy, stepsizeAdaptive, eps);
 		System.out.println("DP ACCURATE result:  " + c12res.toString() + "\n");
+		double[] u = c12res.getFinalU();
+		System.out.println("distance to plane: " + targetPlane.distance(u[0], u[1], u[2]) + " cm");
 
-		// compare to interpolated approx
-
-		c12res = clas12Swimmer.swimRhoInterp(q, xo, yo, zo, p, theta, phi, rhotarget, maxS, stepsizeAdaptive, eps);
+// compare to interpolated approx
+		
+		c12res = clas12Swimmer.swimPlaneInterp(q, xo, yo, zo, p, theta, phi, targetPlane, maxS, stepsizeAdaptive, eps);
 		System.out.println("DP INTERP result:  " + c12res.toString() + "\n");
+		u = c12res.getFinalU();
+		System.out.println("distance to plane: " + targetPlane.distance(u[0], u[1], u[2]) + " cm");
+
 		
 	}
 

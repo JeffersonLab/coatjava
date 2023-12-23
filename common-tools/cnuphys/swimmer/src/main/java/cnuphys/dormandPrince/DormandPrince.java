@@ -2,34 +2,23 @@ package cnuphys.dormandPrince;
 
 public class DormandPrince {
 	
+	
 	/**
 	 * Solves an ordinary differential equation (ODE) using the Dormand-Prince
 	 * method.
 	 * 
-	 * @param ode The ODE to solve.
-	 * @param y0  The initial state vector.
-	 * @param t0  The initial time.
-	 * @param t1  The final time.
-	 * @param h   The initial step size.
-	 */
-	public static void solve(ODE ode, double[] y0, double t0, double t1, double h, ODEStepListener listener) {
-		double tolerance = 1e-6; // Desired accuracy default
-		double minH = 1e-8; // Minimum step size to prevent infinite loop default
-		solve(ode, y0, t0, t1, h, tolerance, minH, listener);
-	}
-	
-	/**
-     * Solves an ordinary differential equation (ODE) using the Dormand-Prince method.
-     * @param ode The ODE to solve.
-     * @param y0 The initial state vector.
-     * @param t0 The initial time.
-     * @param t1 The final time.
-     * @param h The initial step size.
-     * @param tolerance The desired accuracy. The solver will automatically adjust the step size to meet this tolerance.
-     * @param minH The minimum step size to prevent an infinite loop.
+	 * @param ode       The ODE to solve.
+	 * @param y0        The initial state vector.
+	 * @param t0        The initial time.
+	 * @param t1        The final time.
+	 * @param h         The initial step size.
+	 * @param tolerance The desired accuracy. The solver will automatically adjust
+	 *                  the step size to meet this tolerance.
+	 * @param minH      The minimum step size to prevent an infinite loop.
+	 * @param maxH      The maximum step size changed when near boundary, but default is usually infinity.
      * @param listener An optional listener that will be called after each step.
      */
-	public static void solve(ODE ode, double[] y0, double t0, double t1, double h, double tolerance, double minH, ODEStepListener listener) {
+	public static void solve(ODE ode, double[] y0, double t0, double t1, double h, double tolerance, double minH, double maxH, ODEStepListener listener) {
 		
 	      // Dormand-Prince coefficients
         final double[] c = {0, 1.0/5, 3.0/10, 4.0/5, 8.0/9, 1, 1};
@@ -86,7 +75,7 @@ public class DormandPrince {
                     t += h;
                 }
 
-                h = adjustStepSize(h, maxError, tolerance, minH);
+                h = adjustStepSize(h, maxError, tolerance, minH, maxH);
             }
             
         }
@@ -106,7 +95,7 @@ public class DormandPrince {
 	}
 
 	// Method to adjust the step size based on the error
-	private static double adjustStepSize(double h, double error, double tolerance, double minH) {
+	private static double adjustStepSize(double h, double error, double tolerance, double minH, double maxH) {
 	    double safetyFactor = 0.9;
 	    double errorRatio = error / tolerance;
 	    double scale = safetyFactor * Math.pow(errorRatio, -0.25);
@@ -114,7 +103,7 @@ public class DormandPrince {
 	    scale = Math.max(1.0/5, Math.min(5.0, scale)); // Limit scaling to prevent drastic changes
 	    double newH = h * scale;
 
-	    return Math.max(newH, minH);
+	    return Math.min(maxH, Math.max(newH, minH));
 	}
 	
 	

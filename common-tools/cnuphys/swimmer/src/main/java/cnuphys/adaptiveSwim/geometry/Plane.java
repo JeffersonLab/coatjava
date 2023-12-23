@@ -84,6 +84,43 @@ public class Plane extends AGeometric {
 		Line line = new Line(p1, p2);
 		return lineIntersection(line, p);
 	}
+	
+	/**
+	 * Get the intersection of a line segment with the plane
+	 * 
+	 * @param u1     the first point of the line segment
+	 * @param u2     the second point of the line segment
+	 * @param uInter will hold the intersection, NaNs if no intersection
+	 * @return the t parameter. If NaN it means the line is parallel to the plane.
+	 */
+	public double lineSegmentPlaneIntersection(double u1[], double u2[], double uInter[]) {
+
+		double dx = u2[0] - u1[0];
+		double dy = u2[1] - u1[1];
+		double dz = u2[2] - u1[2];
+
+		double denominator = a * dx + b * dy + c * dz;
+
+		// Check if line is parallel to the plane
+		if (Math.abs(denominator) < Constants.TINY) {
+
+			for (int i = 0; i < uInter.length; i++) {
+				uInter[i] = Double.NaN;
+			}
+			return Double.NaN;
+		}
+
+		double t = (d - a * u1[0] - b * u1[1] - c * u1[2]) / denominator;
+
+		// Check if the intersection point lies within the line segment
+		if (t >= 0 && t <= 1) {
+			for (int i = 0; i < uInter.length; i++) {
+				uInter[i] = u1[i] + t * (u2[i] - u1[i]);
+			}
+		}
+		
+		return t;
+	}
 
 	/**
 	 * Signed distance from a point to the plane
@@ -160,6 +197,25 @@ public class Plane extends AGeometric {
 
 		return t;
 	}
+	
+	/**
+	 * Get whether the point is to the left, right or (exactly) on the plane
+	 * @param x the x coordinate
+	 * @param y the y coordinate
+	 * @param z the z coordinate	
+	 * @return +1 if to the left, -1 if to the right, 0 if on the plane
+	 */
+	public int sign(double x, double y, double z) {
+	     double result = a * x + b * y + c * z;
+
+	        if (result > d) {
+	            return +1;
+	        } else if (result < d) {
+	            return -1;
+	        } else {
+	            return 0;
+	        }
+	}
 
 	/**
 	 * Create a plane of constant azimuthal angle phi
@@ -188,66 +244,6 @@ public class Plane extends AGeometric {
 		return pstr + "  p = " + p0 + " norm = " + norm;
 	}
 
-	/**
-	 * Obtain the line resulting from the intersection of this plane and another
-	 * plane
-	 * 
-	 * @param plane the other plane
-	 * @return line formed by the intersection
-	 */
-	public Line planeIntersection(Plane plane) {
-		Vector s = Vector.cross(norm, plane.norm);
-
-		if (s.length() < Constants.TINY) {
-			return null;
-		}
-
-		// need to find one point
-		Point p0 = new Point();
-
-		// try setting z to 0
-		double ans[] = solve(a, b, d, plane.a, plane.b, plane.d);
-		if (ans != null) {
-			p0.set(ans[0], ans[1], 0);
-		} else {// try setting y to 0
-			ans = solve(a, c, d, plane.a, plane.c, plane.d);
-			if (ans != null) {
-				p0.set(ans[0], 0, ans[1]);
-			} else {// try setting x to 0
-				ans = solve(b, c, d, plane.b, plane.c, plane.d);
-				if (ans != null) {
-					p0.set(0, ans[0], ans[1]);
-				} else {// toast
-					return null;
-				}
-
-			}
-
-		}
-
-		Point p1 = new Point(p0.x + s.x, p0.y + s.y, p0.z + s.z);
-		return new Line(p0, p1);
-	}
-
-	// solve simultaneous
-	// a1x + b1y = d1
-	// a2x + b2y = d2
-	// by Cramer's rule
-	private double[] solve(double a1, double b1, double d1, double a2, double b2, double d2) {
-		double deter = a1 * b2 - a2 * b1;
-		if (tiny(deter)) {
-			return null;
-		}
-
-		double ans[] = new double[2];
-
-		double deterx = d1 * b2 - d2 * b1;
-		double detery = a1 * d2 - a2 * d1;
-		ans[0] = deterx / deter;
-		ans[1] = detery / deter;
-		return ans;
-	}
-
 	// is the value essentially 0?
 	private boolean tiny(double v) {
 		return Math.abs(v) < Constants.TINY;
@@ -271,8 +267,6 @@ public class Plane extends AGeometric {
 
 		float[] coords = new float[12];
 
-		// another point in the plane
-		Point p1 = new Point();
 
 		if (tiny(b) && tiny(c)) { // constant x plane
 			float fx = (float) (d / a);

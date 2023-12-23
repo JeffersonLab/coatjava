@@ -3,7 +3,6 @@ package cnuphys.dormandPrince;
 import java.io.File;
 import java.io.FileNotFoundException;
 
-import cnuphys.magfield.FastMath;
 import cnuphys.magfield.MagneticFieldInitializationException;
 import cnuphys.magfield.MagneticFields;
 import cnuphys.magfield.MagneticFields.FieldType;
@@ -21,11 +20,11 @@ public class CLAS12ZListener extends CLAS12BoundaryListener {
 	 * 
 	 * @param ivals           the initial values of the swim
 	 * @param zTarget         the target z (cm)
-	 * @param sFinal          the final or max path length (cm)
+	 * @param sMax            the final or max path length (cm)
 	 * @param accuracy        the desired accuracy (cm)
 	 */
-	public CLAS12ZListener(CLAS12Values ivals, double zTarget, double sFinal, double accuracy) {
-		super(ivals, sFinal, accuracy);
+	public CLAS12ZListener(CLAS12Values ivals, double zTarget, double sMax, double accuracy) {
+		super(ivals, sMax, accuracy);
 		_zTarget = zTarget;
 		_startSign = sign(ivals.z);
 	}
@@ -102,20 +101,6 @@ public class CLAS12ZListener extends CLAS12BoundaryListener {
 
 		System.out.println("Active Field Description: " + MagneticFields.getInstance().getActiveFieldDescription());
 
-//		int q = 1;
-//		double p = 2.369457106003491;
-//		double theta = 32.985153708129516;
-//		double phi = 196.23998861894339;
-//		double xo = -0.2988817577588326;
-//		double yo = 0.1723213641208851;
-//		double zo = -0.3404871441880286;
-//		double ztarget = 549.1227330916572;
-//		double accuracy = 0.001; //cm
-//		double stepsizeAdaptive = 1; // starting stepsize in cm
-//		double maxS = 1000; // cm
-//		double eps = 9.999999999999999E-5;
-
-		
 		int q = -1;
 		double p = 2.0;
 		double theta = 15;

@@ -114,9 +114,9 @@ public class CLAS12Bxdl {
 	}
 
 	/**
-	 * Get the cumulative pathlength in meters
+	 * Get the cumulative pathlength in cm
 	 * 
-	 * @return the cumulative pathlength in meters
+	 * @return the cumulative pathlength in cm
 	 */
 	public double getPathlength() {
 		return _pathlength;
@@ -132,10 +132,10 @@ public class CLAS12Bxdl {
 	}
 
 	/**
-	 * Set the cumulative pathlength in meters
+	 * Set the cumulative pathlength in cm
 	 * 
 	 * @param pathlength
-	 *            the cumulative pathlength in meters
+	 *            the cumulative pathlength in cm
 	 */
 	public void setPathlength(double pathlength) {
 		_pathlength = pathlength;

@@ -19,17 +19,17 @@ public class CLAS12Listener implements ODEStepListener {
 	protected int _status = CLAS12Swimmer.SWIM_SWIMMING;
 	
 	//the final (target) or maximum path length in cm
-	protected double _sFinal;
+	protected double _sMax;
 	
 	/**
 	 * Create a CLAS12 listener
 	 * 
-	 * @param ivals           the initial values of the swim
-	 * @param sFinal          the final or max path length (cm)
+	 * @param ivals         the initial values of the swim
+	 * @param sMax          the final or max path length (cm)
 	 */
-	public CLAS12Listener(CLAS12Values ivals, double sFinal) {
+	public CLAS12Listener(CLAS12Values ivals, double sMax) {
 		_initialVaues = ivals;
-		_sFinal = sFinal;
+		_sMax = sMax;
 		
 		_trajectory = new CLAS12Trajectory();
 		reset();
@@ -57,11 +57,11 @@ public class CLAS12Listener implements ODEStepListener {
 		accept(newS, newU);
 		
 		//if we are done, set the status
-		if (Math.abs(newS - _sFinal) < TINY) {
+		if (Math.abs(newS - _sMax) < TINY) {
 			_status = CLAS12Swimmer.SWIM_SUCCESS;
 		}
 
-		//base always continues, the solve with integrate to sFinal and stop
+		//base always continues, the solve with integrate to sMax and stop
 		return true;
 	}
 
@@ -113,7 +113,7 @@ public class CLAS12Listener implements ODEStepListener {
 	/**
 	 * Get the current path length
 	 * 
-	 * @return the current path length in meters
+	 * @return the current path length in cm
 	 */
 	public double getS() {
 		return _trajectory.getS(_trajectory.size() - 1);
