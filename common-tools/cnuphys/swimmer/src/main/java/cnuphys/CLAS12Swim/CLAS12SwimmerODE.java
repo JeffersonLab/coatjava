@@ -1,4 +1,4 @@
-package cnuphys.dormandPrince;
+package cnuphys.CLAS12Swim;
 
 import cnuphys.magfield.FieldProbe;
 

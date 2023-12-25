@@ -4,12 +4,12 @@ import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 
+import cnuphys.CLAS12Swim.CLAS12SwimResult;
+import cnuphys.CLAS12Swim.CLAS12Swimmer;
+import cnuphys.CLAS12Swim.CLAS12Values;
 import cnuphys.adaptiveSwim.AdaptiveSwimException;
 import cnuphys.adaptiveSwim.AdaptiveSwimResult;
 import cnuphys.adaptiveSwim.AdaptiveSwimmer;
-import cnuphys.dormandPrince.CLAS12SwimResult;
-import cnuphys.dormandPrince.CLAS12Swimmer;
-import cnuphys.dormandPrince.CLAS12Values;
 import cnuphys.magfield.FieldProbe;
 import cnuphys.magfield.MagneticFields;
 import cnuphys.magfield.MagneticFields.FieldType;

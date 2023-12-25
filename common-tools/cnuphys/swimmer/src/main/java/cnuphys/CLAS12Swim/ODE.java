@@ -1,4 +1,4 @@
-package cnuphys.dormandPrince;
+package cnuphys.CLAS12Swim;
 
 /**
  * Interface representing an ordinary differential equation (ODE).

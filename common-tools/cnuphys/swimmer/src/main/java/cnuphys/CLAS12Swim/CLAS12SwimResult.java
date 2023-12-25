@@ -1,4 +1,4 @@
-package cnuphys.dormandPrince;
+package cnuphys.CLAS12Swim;
 
 /**
  * This holds the results of a swim. It gets them from the listener, so in effect this is

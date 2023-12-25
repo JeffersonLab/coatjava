@@ -1,4 +1,4 @@
-package cnuphys.dormandPrince;
+package cnuphys.CLAS12Swim;
 
 public class TestDP {
 
@@ -26,7 +26,7 @@ public class TestDP {
 
         double B = Math.sqrt(1/3.);
         
-		double tolerance = 1e-5; // Desired accuracy default
+		double tolerance = 1e-7; // Desired accuracy default
 		double minH = 1e-10; // Minimum step size to prevent infinite loop default
 
         

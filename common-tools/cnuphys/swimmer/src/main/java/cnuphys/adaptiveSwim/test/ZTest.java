@@ -5,12 +5,12 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.util.Random;
 
+import cnuphys.CLAS12Swim.CLAS12SwimResult;
+import cnuphys.CLAS12Swim.CLAS12Swimmer;
+import cnuphys.CLAS12Swim.CLAS12Values;
 import cnuphys.adaptiveSwim.AdaptiveSwimException;
 import cnuphys.adaptiveSwim.AdaptiveSwimResult;
 import cnuphys.adaptiveSwim.AdaptiveSwimmer;
-import cnuphys.dormandPrince.CLAS12SwimResult;
-import cnuphys.dormandPrince.CLAS12Swimmer;
-import cnuphys.dormandPrince.CLAS12Values;
 import cnuphys.magfield.MagneticFields;
 import cnuphys.magfield.MagneticFields.FieldType;
 import cnuphys.swimtest.CSVWriter;
@@ -45,7 +45,7 @@ public class ZTest {
 		//results for adaptive
 		AdaptiveSwimResult result = new AdaptiveSwimResult(true);
 
-		double stepsizeAdaptive = 0.01; // starting
+		double stepsizeAdaptive = 1.e-5; // starting
 
 		double maxPathLength = 10; // m
 		double accuracy = 1e-5; // m
