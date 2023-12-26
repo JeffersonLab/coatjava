@@ -70,6 +70,15 @@ public class CLAS12SwimResult {
 	}
 	
 	/**
+	 * Get the final rho in cm
+	 * 
+	 * @return the final rho  in cm
+	 */
+	public double getFinalRho() {
+		return Math.hypot(_listener.getU()[0], _listener.getU()[1]);
+	}
+	
+	/**
 	 * Get the status of the swim as a string
 	 * @return the status of the swim as a string
 	 */

@@ -40,6 +40,13 @@ public class TestDP {
         };
 
         // Solve the ODE
+        System.out.println("\n\nDormand-Prince:");
         DormandPrince.solve(dampedOscillator, y0, t0, t1, h, tolerance, minH, Double.POSITIVE_INFINITY,listener);
+        
+        System.out.println("\n\nFehlberg:");
+        Fehlberg.solve(dampedOscillator, y0, t0, t1, h, tolerance, minH, Double.POSITIVE_INFINITY,listener);
+        
+        System.out.println("\n\nCash-Karp:");
+        CashKarp.solve(dampedOscillator, y0, t0, t1, h, tolerance, minH, Double.POSITIVE_INFINITY,listener);
     }
 }

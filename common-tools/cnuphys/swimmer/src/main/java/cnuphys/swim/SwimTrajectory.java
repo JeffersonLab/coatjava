@@ -32,13 +32,13 @@ public class SwimTrajectory extends ArrayList<double[]> {
 	// flag indicating whether bdl was computed
 	protected boolean _computedBDL;
 
-	/** index for the x component (m) */
+	/** index for the x component (cm) */
 	public static final int X_IDX = 0;
 
-	/** index for the y component (m) */
+	/** index for the y component (cm) */
 	public static final int Y_IDX = 1;
 
-	/** index for the z component (m) */
+	/** index for the z component (cm) */
 	public static final int Z_IDX = 2;
 
 	/** index for the px/p direction cosine */
@@ -221,8 +221,7 @@ public class SwimTrajectory extends ArrayList<double[]> {
 		double y = v[1];
 		double z = v[2];
 
-		// convert to cm
-		return Math.sqrt(x * x + y * y + z * z) * 100.;
+		return Math.sqrt(x * x + y * y + z * z);
 	}
 
 	@Override
@@ -493,31 +492,16 @@ public class SwimTrajectory extends ArrayList<double[]> {
 
 	public double[] getX() {
 		double x[] = getArray(X_IDX);
-		if (x != null) {
-			for (int i = 0; i < x.length; i++) {
-				x[i] *= 100.; // convert to cm
-			}
-		}
 		return x;
 	}
 
 	public double[] getY() {
 		double y[] = getArray(Y_IDX);
-		if (y != null) {
-			for (int i = 0; i < y.length; i++) {
-				y[i] *= 100.; // convert to cm
-			}
-		}
 		return y;
 	}
 
 	public double[] getZ() {
 		double z[] = getArray(Z_IDX);
-		if (z != null) {
-			for (int i = 0; i < z.length; i++) {
-				z[i] *= 100.; // convert to cm
-			}
-		}
 		return z;
 	}
 	

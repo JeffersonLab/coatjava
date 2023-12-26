@@ -5,7 +5,6 @@ import java.util.Hashtable;
 import cnuphys.adaptiveSwim.geometry.Plane;
 import cnuphys.magfield.FieldProbe;
 import cnuphys.magfield.IMagField;
-import cnuphys.magfield.MagneticField;
 
 /*
  * A swimmer using the Dormand-Prince 8(5,3) adaptive step size integrator.
@@ -47,23 +46,26 @@ public class CLAS12Swimmer {
 	// NOTE: the method of interest in FieldProbe takes a position in cm
 	// and returns a field in kG.
 	private FieldProbe _probe;
-
 	
+	// which integrator are we using?
+	private EIntegrator _solver = EIntegrator.Fehlberg;
+
 	/**
 	 * Create a swimmer using the current active field
 	 */
 	public CLAS12Swimmer() {
 		// make a probe using the current active field
 		this(FieldProbe.factory());
-	}
-
+	}	
+	
 	/**
-	 * Create a swimmer specific to a magnetic field
-	 *
-	 * @param magneticField the magnetic field
+	 * Create a swimmer using a specific integrator
+	 * 
+	 * @param solver the integrator to use
 	 */
-	public CLAS12Swimmer(MagneticField magneticField) {
-		this(FieldProbe.factory(magneticField));
+	public CLAS12Swimmer(EIntegrator solver) {
+		this();
+		_solver = solver;
 	}
 
 	/**
@@ -82,6 +84,23 @@ public class CLAS12Swimmer {
 	 */
 	public CLAS12Swimmer(FieldProbe probe) {
 		_probe = probe;
+	}
+	
+	/**
+	 * Set the integrator to use
+	 * @param solver the integrator to use
+     */
+	public void setSolver(EIntegrator solver) {
+		_solver = solver;
+	}
+
+
+	/**
+	 * Get the integrator being used
+	 * @return the integrator being used
+	 */
+	public EIntegrator getSolver() {
+		return _solver;
 	}
 	
 	/**
@@ -120,7 +139,22 @@ public class CLAS12Swimmer {
 
 		_listener = listener;
 		//call the basic solver that swims to sMax
-		DormandPrince.solve(ode, u, sMin, sMax, h, tolerance, MINSTEPSIZE, MAXSTEPSIZE, _listener);
+		
+		
+		
+		switch (_solver) {
+		case Fehlberg:
+			Fehlberg.solve(ode, u, sMin, sMax, h, tolerance, MINSTEPSIZE, MAXSTEPSIZE, _listener);
+			break;
+		case DormandPrince:
+			DormandPrince.solve(ode, u, sMin, sMax, h, tolerance, MINSTEPSIZE, MAXSTEPSIZE, _listener);
+			break;
+		case CashKarp:
+			CashKarp.solve(ode, u, sMin, sMax, h, tolerance, MINSTEPSIZE, MAXSTEPSIZE, _listener);
+			break;
+		default:
+			DormandPrince.solve(ode, u, sMin, sMax, h, tolerance, MINSTEPSIZE, MAXSTEPSIZE, _listener);
+		}
 		
 		return new CLAS12SwimResult(_listener);
 

@@ -1,10 +1,9 @@
 package cnuphys.CLAS12Swim;
 
-public class DormandPrince {
-	
+public class CashKarp {
 	
 	/**
-	 * Solves an ordinary differential equation (ODE) using the Dormand-Prince
+	 * Solves an ordinary differential equation (ODE) using the Cash-Karp
 	 * method.
 	 * 
 	 * @param ode       The ODE to solve.
@@ -19,23 +18,22 @@ public class DormandPrince {
      * @param listener An optional listener that will be called after each step.
      */
 	public static void solve(ODE ode, double[] y0, double t0, double t1, double h, double tolerance, double minH, double maxH, ODEStepListener listener) {
-	      // Dormand-Prince coefficients
-        final double[] c = {0, 1.0/5, 3.0/10, 4.0/5, 8.0/9, 1, 1};
+		// Cash-Karp coefficients
+        final double[] c = {0, 1.0/5, 3.0/10, 3.0/5, 1, 7.0/8};
         final double[][] a = {
             {},
             {1.0/5},
             {3.0/40, 9.0/40},
-            {44.0/45, -56.0/15, 32.0/9},
-            {19372.0/6561, -25360.0/2187, 64448.0/6561, -212.0/729},
-            {9017.0/3168, -355.0/33, 46732.0/5247, 49.0/176, -5103.0/18656},
-            {35.0/384, 0, 500.0/1113, 125.0/192, -2187.0/6784, 11.0/84}
+            {3.0/10, -9.0/10, 6.0/5},
+            {-11.0/54, 5.0/2, -70.0/27, 35.0/27},
+            {1631.0/55296, 175.0/512, 575.0/13824, 44275.0/110592, 253.0/4096}
         };
-        final double[] b = {35.0/384, 0, 500.0/1113, 125.0/192, -2187.0/6784, 11.0/84, 0};
-        final double[] bStar = {5179.0/57600, 0, 7571.0/16695, 393.0/640, -92097.0/339200, 187.0/2100, 1.0/40};
+        final double[] b4 = {2825.0/27648, 0, 18575.0/48384, 13525.0/55296, 277.0/14336, 1.0/4}; // 4th order coefficients
+        final double[] b5 = {37.0/378, 0, 250.0/621, 125.0/594, 0, 512.0/1771}; // 5th order coefficients
 
         int n = y0.length;
-        double[] k1, k2, k3, k4, k5, k6, k7, yTemp, yTempStar, error;
- 
+        double[] k1, k2, k3, k4, k5, k6, yTemp, yTemp4, error;
+
         double t = t0;
         double[] y = y0.clone();
 
@@ -52,16 +50,15 @@ public class DormandPrince {
                 k4 = ode.getDerivatives(t + c[3] * h, addVectors(y, scalarMultiply(k1, a[3][0] * h), scalarMultiply(k2, a[3][1] * h), scalarMultiply(k3, a[3][2] * h)));
                 k5 = ode.getDerivatives(t + c[4] * h, addVectors(y, scalarMultiply(k1, a[4][0] * h), scalarMultiply(k2, a[4][1] * h), scalarMultiply(k3, a[4][2] * h), scalarMultiply(k4, a[4][3] * h)));
                 k6 = ode.getDerivatives(t + c[5] * h, addVectors(y, scalarMultiply(k1, a[5][0] * h), scalarMultiply(k2, a[5][1] * h), scalarMultiply(k3, a[5][2] * h), scalarMultiply(k4, a[5][3] * h), scalarMultiply(k5, a[5][4] * h)));
-                k7 = ode.getDerivatives(t + c[6] * h, addVectors(y, scalarMultiply(k1, a[6][0] * h), scalarMultiply(k2, a[6][1] * h), scalarMultiply(k3, a[6][2] * h), scalarMultiply(k4, a[6][3] * h), scalarMultiply(k5, a[6][4] * h), scalarMultiply(k6, a[6][5] * h)));
 
                 yTemp = y.clone();
-                yTempStar = y.clone();
+                yTemp4 = y.clone();
                 error = new double[n];
 
                 for (int i = 0; i < n; i++) {
-                    yTemp[i] += h * (b[0] * k1[i] + b[1] * k2[i] + b[2] * k3[i] + b[3] * k4[i] + b[4] * k5[i] + b[5] * k6[i] + b[6] * k7[i]);
-                    yTempStar[i] += h * (bStar[0] * k1[i] + bStar[1] * k2[i] + bStar[2] * k3[i] + bStar[3] * k4[i] + bStar[4] * k5[i] + bStar[5] * k6[i] + bStar[6] * k7[i]);
-                    error[i] = Math.abs(yTemp[i] - yTempStar[i]);
+                    yTemp[i] += h * (b5[0] * k1[i] + b5[1] * k2[i] + b5[2] * k3[i] + b5[3] * k4[i] + b5[4] * k5[i] + b5[5] * k6[i]);
+                    yTemp4[i] += h * (b4[0] * k1[i] + b4[1] * k2[i] + b4[2] * k3[i] + b4[3] * k4[i] + b4[4] * k5[i] + b4[5] * k6[i]);
+                    error[i] = Math.abs(yTemp[i] - yTemp4[i]);
                 }
 
                 double maxError = getMax(error);
@@ -76,12 +73,10 @@ public class DormandPrince {
 
                 h = adjustStepSize(h, maxError, tolerance, minH, maxH);
             }
-            
         }
-
-	    // Return or print the final state of y
-	}
-
+    }
+	
+	
 	// Helper method to get the maximum value in an array
 	private static double getMax(double[] array) {
 	    double max = array[0];
@@ -93,13 +88,25 @@ public class DormandPrince {
 	    return max;
 	}
 
-	// Method to adjust the step size based on the error
+	
+	// Helper method to adjust the step size based on the error
 	private static double adjustStepSize(double h, double error, double tolerance, double minH, double maxH) {
-	    double safetyFactor = 0.9;
+	    double safetyFactor = 0.9;  // Safety factor to reduce the step size slightly
 	    double errorRatio = error / tolerance;
+
+	    // Avoid division by zero in case of very small error
+	    if (errorRatio == 0) {
+	        errorRatio = 1e-6;
+	    }
+
+	    // Calculate scaling factor for step size adjustment
+	    // The exponent -1/4 is typically used for a 4th order method
 	    double scale = safetyFactor * Math.pow(errorRatio, -0.25);
 
-	    scale = Math.max(1.0/5, Math.min(5.0, scale)); // Limit scaling to prevent drastic changes
+	    // Limit the scaling to prevent excessively large or small step sizes
+	    scale = Math.max(1.0/10.0, Math.min(5.0, scale));
+
+	    // Calculate new step size and ensure it's not smaller than the minimum
 	    double newH = h * scale;
 
 	    return Math.min(maxH, Math.max(newH, minH));
@@ -145,6 +152,6 @@ public class DormandPrince {
 	    }
 	    return result;
 	}
-
+	
 
 }

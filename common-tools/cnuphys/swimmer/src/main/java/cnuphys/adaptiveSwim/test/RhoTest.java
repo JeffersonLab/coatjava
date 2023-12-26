@@ -8,6 +8,7 @@ import java.util.Random;
 import cnuphys.CLAS12Swim.CLAS12SwimResult;
 import cnuphys.CLAS12Swim.CLAS12Swimmer;
 import cnuphys.CLAS12Swim.CLAS12Values;
+import cnuphys.CLAS12Swim.EIntegrator;
 import cnuphys.adaptiveSwim.AdaptiveSwimException;
 import cnuphys.adaptiveSwim.AdaptiveSwimResult;
 import cnuphys.adaptiveSwim.AdaptiveSwimmer;
@@ -41,7 +42,7 @@ public class RhoTest {
 	    
 	    
 		AdaptiveSwimmer adaptiveSwimmer = new AdaptiveSwimmer(); //adaptive
-		CLAS12Swimmer clas12Swimmer = new CLAS12Swimmer(); //DP
+		CLAS12Swimmer clas12Swimmer = new CLAS12Swimmer(EIntegrator.CashKarp); //DP
 
 		//results for adaptive
 		AdaptiveSwimResult result = new AdaptiveSwimResult(true);
@@ -50,7 +51,7 @@ public class RhoTest {
 
 		double maxPathLength = 10; // m
 		double accuracy = 1e-5; // m
-		double eps = 1.0e-6;
+		double eps = 1.0e-8;
 
 		//generate some random data
 		RandomData data = new RandomData(n, seed);

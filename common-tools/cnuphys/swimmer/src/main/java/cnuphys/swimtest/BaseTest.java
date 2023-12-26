@@ -7,6 +7,7 @@ import java.lang.management.ThreadMXBean;
 import cnuphys.CLAS12Swim.CLAS12SwimResult;
 import cnuphys.CLAS12Swim.CLAS12Swimmer;
 import cnuphys.CLAS12Swim.CLAS12Values;
+import cnuphys.CLAS12Swim.EIntegrator;
 import cnuphys.adaptiveSwim.AdaptiveSwimException;
 import cnuphys.adaptiveSwim.AdaptiveSwimResult;
 import cnuphys.adaptiveSwim.AdaptiveSwimmer;
@@ -44,17 +45,17 @@ public class BaseTest {
 
 		AdaptiveSwimmer adaptiveSwimmer = new AdaptiveSwimmer(); //new
 		
-		CLAS12Swimmer clas12Swimmer = new CLAS12Swimmer(); //new
+		CLAS12Swimmer clas12Swimmer = new CLAS12Swimmer(EIntegrator.DormandPrince); //new
 
 
 		//results for adaptive swimmer
 		AdaptiveSwimResult result = new AdaptiveSwimResult(true);
 
 
-		double stepsizeAdaptive = 0.01; // starting stepsize in m
+		double stepsizeAdaptive = 0.0001; // starting stepsize in m
 
 		double maxPathLength = 8; // m
-		double eps = 1.0e-6;
+		double eps = 1.0e-8;
 		
 		//the final pathlengths from the adaptive swimmer
 		//will be used as the target pathlengths for the dp swimmer

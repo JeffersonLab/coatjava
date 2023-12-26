@@ -25,13 +25,10 @@ import javax.swing.JTextField;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 
-import cnuphys.adaptiveSwim.AdaptiveSwimException;
-import cnuphys.adaptiveSwim.AdaptiveSwimResult;
-import cnuphys.adaptiveSwim.AdaptiveSwimmer;
-import cnuphys.magfield.FastMath;
+import cnuphys.CLAS12Swim.CLAS12SwimResult;
+import cnuphys.CLAS12Swim.CLAS12Swimmer;
 import cnuphys.swim.SwimTrajectory;
 import cnuphys.swim.Swimming;
-import cnuphys.swimZ.SwimZResult;
 
 @SuppressWarnings("serial")
 public class LundTrackDialog extends JDialog {
@@ -272,77 +269,62 @@ public class LundTrackDialog extends JDialog {
 	 * Swim the particle
 	 */
 	private void doCommonSwim() {
-		
-		//use the AdaptiveSwimmer exclusively
-		AdaptiveSwimmer swimmer = new AdaptiveSwimmer();
-		
-		try {
-			LundId lid = _lundComboBox.getSelectedId();
 
-			// note xo, yo, zo converted to meters
-			double xo = Double.parseDouble(_vertexX.getText()) / 100.;
-			double yo = Double.parseDouble(_vertexY.getText()) / 100.;
-			double zo = Double.parseDouble(_vertexZ.getText()) / 100.;
-			double momentum = Double.parseDouble(_momentumTextField.getText());
-			double theta = Double.parseDouble(_theta.getText());
-			double phi = Double.parseDouble(_phi.getText());
+		// use the CLAS12Swimmer
+		CLAS12Swimmer swimmer = new CLAS12Swimmer();
+		CLAS12SwimResult result = null;
 
-			double stepSize = 1e-5; // m
-			double maxPathLen = 8.0; // m
+		LundId lid = _lundComboBox.getSelectedId();
 
-			double eps = 1.0e-6;
+		// note entirs are in cm, as they should be
+		double xo = Double.parseDouble(_vertexX.getText());
+		double yo = Double.parseDouble(_vertexY.getText());
+		double zo = Double.parseDouble(_vertexZ.getText());
+		double momentum = Double.parseDouble(_momentumTextField.getText());
+		double theta = Double.parseDouble(_theta.getText());
+		double phi = Double.parseDouble(_phi.getText());
 
-			AdaptiveSwimResult result = new AdaptiveSwimResult(true);
-			SwimTrajectory traj = null;
-			
-			String prompt = "";
+		double stepSize = 1e-4; // cm
+		double sMax = 800; // cm
 
-			switch (_algorithm) {
+		double eps = 1.0e-6;
 
-			case STANDARD:
-				swimmer.swim(lid.getCharge(), xo, yo, zo, momentum, theta, phi, maxPathLen, stepSize, eps, result);
-				prompt = "RESULT from standard swim:\n";
-				break;
+		SwimTrajectory traj = null;
 
-			case FIXEDZ:
-				// convert accuracy from microns to meters
-				double accuracy = Double.parseDouble(_accuracy.getText()) / 1.0e6;
-				double ztarget = Double.parseDouble(_fixedZ.getText()) / 100; // meters
-				swimmer.swimZ(lid.getCharge(), xo, yo, zo, momentum, theta, phi, ztarget, accuracy, maxPathLen,
-						stepSize, eps, result);
-				prompt = "RESULT from fixed Z swim:\n";
-				break;
-				
-			case FIXEDRHO:
-				// convert accuracy from microns to meters
-				accuracy = Double.parseDouble(_accuracy.getText()) / 1.0e6;
-				double rhotarget = Double.parseDouble(_fixedRho.getText()) / 100; // meters
-				
-				
-			//	.swimRho(charge[i], xo[i], yo[i], zo[i], p, theta[i], phi[i], rho, accuracy, sMax, stepSize, eps, result);			
-				
-				swimmer.swimRho(lid.getCharge(), xo, yo, zo, momentum, theta, phi, rhotarget, accuracy, maxPathLen, stepSize, eps, result);
-				prompt = "RESULT from fixed Rho swim:\n";
-				break;
-			} //switch
-			
+		switch (_algorithm) {
+
+		case STANDARD:
+			result = swimmer.swim(lid.getCharge(), xo, yo, zo, momentum, theta, phi, sMax, stepSize, eps);
+			break;
+
+		case FIXEDZ:
+			// convert accuracy from microns to cm
+			double accuracy = Double.parseDouble(_accuracy.getText()) / 1.0e4;
+			double ztarget = Double.parseDouble(_fixedZ.getText()); // cm
+			result = swimmer.swimZ(lid.getCharge(), xo, yo, zo, momentum, theta, phi, ztarget, sMax, accuracy, stepSize,
+					eps);
+			break;
+
+		case FIXEDRHO:
+			// convert accuracy from microns to meters
+			accuracy = Double.parseDouble(_accuracy.getText()) / 1.0e4;
+			double rhotarget = Double.parseDouble(_fixedRho.getText()); // cm
+			result = swimmer.swimRho(lid.getCharge(), xo, yo, zo, momentum, theta, phi, rhotarget, sMax, accuracy, stepSize,
+					eps);
+			break;
+		} // switch
+
+		if (result != null) {
 			traj = result.getTrajectory();
-			if (traj != null) {
-				traj = result.getTrajectory();
-				traj.setLundId(lid);
-				traj.computeBDL(swimmer.getProbe());
-
-				result.printOut(System.out, prompt);
-				Swimming.addMCTrajectory(traj);
-			}
-
+			traj.setLundId(lid);
+			traj.computeBDL(swimmer.getProbe());
+			Swimming.addMCTrajectory(traj);
+			
+			System.out.println(result.toString());
 		}
-		catch (AdaptiveSwimException e) {
-			e.printStackTrace();
-		}
-		
 
 	}
+
 
 
 
