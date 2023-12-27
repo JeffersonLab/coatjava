@@ -2,6 +2,7 @@ package cnuphys.CLAS12Swim;
 
 import java.util.Hashtable;
 
+import cnuphys.adaptiveSwim.geometry.Cylinder;
 import cnuphys.adaptiveSwim.geometry.Plane;
 import cnuphys.magfield.FieldProbe;
 import cnuphys.magfield.IMagField;
@@ -25,15 +26,25 @@ public class CLAS12Swimmer {
 	 * stopped for some other reason
 	 */
 	public static final int SWIM_TARGET_MISSED = -1;
-	
-	
+
+	/** The swim skipped too low momentum */
+	public static final int BELOW_MIN_MOMENTUM = -2;
+
+	/** A swim was requested for a neutral particle */
+	public static final int SWIM_NEUTRAL_PARTICLE = -3;
+
 	public static final Hashtable<Integer, String> resultNames = new Hashtable<Integer, String>();
 	static {
 		resultNames.put(SWIM_SWIMMING, "SWIMMING");
 		resultNames.put(SWIM_SUCCESS, "SWIM_SUCCESS");
 		resultNames.put(SWIM_TARGET_MISSED, "SWIM_TARGET_MISSED");
+		resultNames.put(BELOW_MIN_MOMENTUM, "BELOW_MIN_MOMENTUM");
+		resultNames.put(SWIM_NEUTRAL_PARTICLE, "SWIM_NEUTRAL_PARTICLE");
+		
 	}
 
+	//min momentum in GeV/c
+	private double MINMOMENTUM = 5e-05; // GeV/c
 	
 	// Minimum integration step size in meters
 	private double MINSTEPSIZE = 1.0e-6; // cm
@@ -138,9 +149,23 @@ public class CLAS12Swimmer {
 			double tolerance, CLAS12Listener listener) {
 
 		_listener = listener;
-		//call the basic solver that swims to sMax
+		//all swims pass through here
 		
 		
+		if (_listener.getIvals().p < MINMOMENTUM) {
+			System.err.println("CLAS12Swimmer: skipped below min momentum swim");
+			_listener.setStatus(BELOW_MIN_MOMENTUM);
+			return new CLAS12SwimResult(_listener);
+		}
+		
+		//neutral? Just return a line
+		if (listener.getIvals().charge == 0) {
+			System.err.println("CLAS12Swimmer: neutral particle swimm");
+			listener.straightLine();
+			listener.setStatus(SWIM_NEUTRAL_PARTICLE);
+			return new CLAS12SwimResult(_listener);
+		}
+
 		
 		switch (_solver) {
 		case Fehlberg:
@@ -299,6 +324,68 @@ public class CLAS12Swimmer {
 		CLAS12Listener listener = new CLAS12Listener(ivals, sMax);
 		return baseSwim(ode, ivals.getU(), 0, sMax, h, tolerance, listener);
 	}
+	
+	/**
+	 * Swim to a target cylinder
+	 * @param charge    in integer units of e
+	 * @param xo        the x vertex position in cm
+	 * @param yo        the y vertex position in cm
+	 * @param zo        the z vertex position in cm
+	 * @param momentum  the momentum in GeV/c
+	 * @param theta     the initial polar angle in degrees
+	 * @param phi       the initial azimuthal angle in degrees
+	 * @param p1        the first point on the cylinder axis
+	 * @param p2        the second point on the cylinder axis
+	 * @param r         the radius of the cylinder (cm)
+	 * @param sMax      the final (max) value of the independent variable
+	 *                  (pathlength) unless the integration is terminated by the
+	 *                  listener
+	 * @param accuracy  the desired accuracy in cm
+	 * @param h         the initial stepsize in cm
+	 * @param tolerance The desired tolerance. The solver will automatically adjust
+	 *                  the step size to meet this tolerance.
+     */
+	public CLAS12SwimResult  swimCylinder(int charge, double xo, double yo, double zo, double momentum, double theta, double phi,
+			double p1[], double p2[], double r, double sMax, double accuracy, double h, double tolerance) {
+
+	    Cylinder targetCylinder = new Cylinder(p1, p2, r);
+	    return swimCylinder(charge, xo, yo, zo, momentum, theta, phi, targetCylinder, sMax, accuracy, h, tolerance);
+	}
+	
+	
+	/**
+	 * Swim to a target cylinder
+	 * @param charge    in integer units of e
+	 * @param xo        the x vertex position in cm
+	 * @param yo        the y vertex position in cm
+	 * @param zo        the z vertex position in cm
+	 * @param momentum  the momentum in GeV/c
+	 * @param theta     the initial polar angle in degrees
+	 * @param phi       the initial azimuthal angle in degrees
+	 * @param targetCylinder   the target cylinder
+	 * @param sMax      the final (max) value of the independent variable
+	 *                  (pathlength) unless the integration is terminated by the
+	 *                  listener
+	 * @param accuracy  the desired accuracy in cm
+	 * @param h         the initial stepsize in cm
+	 * @param tolerance The desired tolerance. The solver will automatically adjust
+	 *                  the step size to meet this tolerance.
+     */
+	public CLAS12SwimResult  swimCylinder(int charge, double xo, double yo, double zo, double momentum, double theta, double phi,
+			Cylinder targetCylinder, double sMax, double accuracy, double h, double tolerance) {
+		
+
+		//create the ODE
+		CLAS12SwimmerODE ode = new CLAS12SwimmerODE(charge, momentum, _probe);
+		
+		//create the initial values
+		CLAS12Values ivals = new CLAS12Values(charge, xo, yo, zo, momentum, theta, phi);
+		
+		CLAS12CylinderListener listener = new CLAS12CylinderListener(ivals, targetCylinder, sMax, accuracy);
+		
+		return swimToAccuracy(ode, ivals.getU(), 0, sMax, accuracy, h, tolerance, listener);
+	}
+
 	
 	/**
 	 * Swim to a target plane

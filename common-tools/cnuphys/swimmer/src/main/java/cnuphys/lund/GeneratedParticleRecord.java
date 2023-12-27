@@ -28,20 +28,13 @@ public class GeneratedParticleRecord implements Serializable {
 	private double _phi;
 
 	/**
-	 * @param charge
-	 *            the charge: -1 for electron, 1 for proton, etc
-	 * @param xo
-	 *            the x vertex position in cm or m depending on the swimmer
-	 * @param yo
-	 *            the y vertex position in cm or m depending on the swimmer
-	 * @param zo
-	 *            the z vertex position in cm or m depending on the swimmer
-	 * @param momentum
-	 *            initial momentum in GeV/c
-	 * @param theta
-	 *            initial polar angle in degrees
-	 * @param phi
-	 *            initial azimuthal angle in degrees
+	 * @param charge   the charge: -1 for electron, 1 for proton, etc
+	 * @param xo       the x vertex position in cm
+	 * @param yo       the y vertex position in cm
+	 * @param zo       the z vertex position in cm
+	 * @param momentum initial momentum in GeV/c
+	 * @param theta    initial polar angle in degrees
+	 * @param phi      initial azimuthal angle in degrees
 	 */
 	public GeneratedParticleRecord(int charge, double xo, double yo, double zo, double momentum, double theta,
 			double phi) {
@@ -53,7 +46,7 @@ public class GeneratedParticleRecord implements Serializable {
 		_theta = theta;
 		_phi = phi;
 	}
-	
+
 	/**
 	 * Get the integer charge
 	 * @return the integer charge
@@ -63,27 +56,28 @@ public class GeneratedParticleRecord implements Serializable {
 	}
 
 	/**
-	 * Get the the X vertex position in cm or m depending on the swimmer
+	 * Get the the X vertex position in cm
 	 * 
-	 * @return the X vertex position in cm or m depending on the swimmer
+	 * @return the X vertex position in cm
+	 * 
 	 */
 	public double getVertexX() {
 		return _xo;
 	}
 
 	/**
-	 * Get the the Y vertex position in cm or m depending on the swimmer
+	 * Get the the Y vertex position in cm
 	 * 
-	 * @return the Y vertex position in cm or m depending on the swimmer
+	 * @return the Y vertex position in cm
 	 */
 	public double getVertexY() {
 		return _yo;
 	}
 
 	/**
-	 * Get the the Z vertex position in cm or m depending on the swimmer
+	 * Get the the Z vertex position in cm
 	 * 
-	 * @return the Z vertex position in cm or m depending on the swimmer
+	 * @return the Z vertex position in cm
 	 */
 	public double getVertexZ() {
 		return _zo;
@@ -186,7 +180,7 @@ public class GeneratedParticleRecord implements Serializable {
 	@Override
 	public String toString() {
 		return String.format(
-				"Q: %d Vertex: (%-8.5f, %-8.5f, %-8.5f)  P: %-8.5f GeV/c Theta: %-8.5f deg  Phi: %-8.5f deg", _charge,
+				"Q: %d Vertex: (%-8.5f, %-8.5f, %-8.5f) cm  P: %-8.5f GeV/c Theta: %-8.5f deg  Phi: %-8.5f deg", _charge,
 				_xo, _yo, _zo, _momentum, _theta, _phi);
 	}
 	

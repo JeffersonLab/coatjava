@@ -3,20 +3,18 @@ package cnuphys.adaptiveSwim.test;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Random;
 
-import cnuphys.adaptiveSwim.AdaptiveSwimException;
+import cnuphys.CLAS12Swim.CLAS12SwimResult;
+import cnuphys.CLAS12Swim.CLAS12Swimmer;
 import cnuphys.adaptiveSwim.AdaptiveSwimResult;
 import cnuphys.adaptiveSwim.AdaptiveSwimmer;
 import cnuphys.adaptiveSwim.geometry.Cylinder;
-import cnuphys.lund.AsciiReadSupport;
 import cnuphys.lund.AsciiReader;
 import cnuphys.magfield.MagneticFields;
 import cnuphys.magfield.MagneticFields.FieldType;
 import cnuphys.rk4.RungeKuttaException;
 import cnuphys.swim.Swimmer;
 import cnuphys.swimtest.CSVWriter;
-import cnuphys.swimtest.RandomData;
 import cnuphys.swimtest.SwimTest;
 
 public class CylinderTest {
@@ -46,19 +44,33 @@ public class CylinderTest {
 	    
 	    
 		Swimmer swimmer = new Swimmer(); //old
-		AdaptiveSwimmer adaptiveSwimmer = new AdaptiveSwimmer(); //new
+		CLAS12Swimmer clas12Swimmer = new CLAS12Swimmer(); //new
 		
-		//results for old and new
+		//results for old 
 		AdaptiveSwimResult result = new AdaptiveSwimResult(true);
 		
 
 		double eps = 1.0e-6;
+		
+		double c12p1[] = new double[3];
+		double c12p2[] = new double[3];
+		
+		//create the clas12 cylinders
+		Cylinder c12Cylinder[] = new Cylinder[testData.length];
+		for (int i = 0; i < testData.length; i++) {
+			CylinderTestData data = testData[i];
+			for (int j = 0; j < 3; j++) {
+				c12p1[j] = 100 * data.CLP1[j];
+				c12p2[j] = 100 * data.CLP2[j];
+			}
+			c12Cylinder[i] = new Cylinder(c12p1, c12p2, 100*data.r);
+		}
 
-	    
+		int idx = 0;
 		for (CylinderTestData data : testData) {
 			
 			int charge = data.charge;
-			double xo = data.xo;
+			double xo = data.xo; //these are meters
 			double yo = data.yo;
 			double zo = data.zo;
 			double p = data.p;
@@ -86,23 +98,15 @@ public class CylinderTest {
 
 			result.reset();
 			
-			// NEW
-			try {
-				adaptiveSwimmer.swimCylinder(charge, xo, yo, zo, p, theta, phi,
-						data.CLP1, data.CLP2, data.r,
-						data.accuracy, data.sMax, data.stepSize, eps, result);
-				
-				swimCylinderSwimResult(writer, data, result);
-
-			} catch (AdaptiveSwimException e) {
-				System.err.println("NEW Swimmer Failed." + "  final pathlength = " + result.getS());
-				e.printStackTrace();
-			}
-
+			// CLAS12Swimmer
+			CLAS12SwimResult c12Result = clas12Swimmer.swimCylinder(charge, 100*xo, 100*yo, 100*zo, 
+					p, theta, phi, c12Cylinder[idx], 100*data.sMax, 100*data.accuracy, 100*data.stepSize, 100*eps);
 			
+			swimC12CylinderSwimResult(writer, data, c12Result, c12Cylinder[idx]);
 			
 			writer.newLine();
 
+			idx++;
 		}
 		writer.close();
 		System.err.println("done with main test. Now timing test.");
@@ -115,6 +119,8 @@ public class CylinderTest {
 		int numTestRun = 200;
 
 		long start = SwimTest.cpuTime(threadId);
+		
+		idx = 0;
 		for (int i = 0; i < numTestRun; i++) {
 
 			for (CylinderTestData data : testData) {
@@ -126,20 +132,15 @@ public class CylinderTest {
 				double p = data.p;
 				double theta = data.theta;
 				double phi = data.phi;
+				
+				CLAS12SwimResult c12Result = clas12Swimmer.swimCylinder(charge, 100*xo, 100*yo, 100*zo, 
+						p, theta, phi, c12Cylinder[idx], 100*data.sMax, 100*data.accuracy, 100*data.stepSize, eps);
+				
 
-				result.reset();
-
-				// NEW
-				try {
-					adaptiveSwimmer.swimCylinder(charge, xo, yo, zo, p, theta, phi, 
-							data.CLP1, data.CLP2, data.r, data.accuracy,
-							data.sMax, data.stepSize, eps, result);
-
-				} catch (AdaptiveSwimException e) {
-					System.err.println("NEW Swimmer Failed." + "  final pathlength = " + result.getS());
-					e.printStackTrace();
-				}
 			}
+			
+			idx++;
+
 		}
 		newTime = SwimTest.cpuTime(threadId) - start;
 		
@@ -202,13 +203,37 @@ public class CylinderTest {
 		}
 	}
 	
+	//swimCylinder results
+	private static void swimC12CylinderSwimResult(CSVWriter writer, CylinderTestData data, 
+			CLAS12SwimResult result, Cylinder cylinder) {
+		double NaN = Double.NaN;
+
+		writer.writeStartOfRow(result.statusString()); 
+
+		//uf is NOT the intersection
+		if (result.getStatus() == CLAS12Swimmer.SWIM_SUCCESS) {
+			double[] uf = result.getFinalU();
+			double dist = cylinder.signedDistance(uf[0], uf[1], uf[2]);
+			writer.writeStartOfRow(uf[0], uf[1], uf[2], result.getPathLength(), Math.abs(dist/(100*data.accuracy)));
+
+
+		} else {
+			writer.writeStartOfRow(NaN, NaN, NaN, NaN);
+		}
+	}
+
+	
 	//read a csv data file
 	private static CylinderTestData[] readDataFile() {
 		
 		ArrayList<CylinderTestData> data = new ArrayList<>();
-		File file = new File("./cnuphys/adaptiveSwim/test/cylinderdata.csv");
+		
+		
+		String homeDir = System.getProperty("user.home");
+		File file = new File(homeDir, "swimTestInput/cylinderdata.csv");
+
 		if (file.exists()) {
-			System.out.println("Found cylinder data file");
+			System.err.println("Found cylinder data file");
 			try {
 				AsciiReader reader = new AsciiReader(file) {
 

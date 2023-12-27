@@ -1,5 +1,6 @@
 package cnuphys.adaptiveSwim.geometry;
 
+
 /**
  * An INFINITE cylinder is defined by a centerline and a radius
  * @author heddle
@@ -11,7 +12,7 @@ public class Cylinder {
 	private Line _centerLine;
 	
 	//the radius
-	private double _radius;
+	public double radius;
 	
 	/**
 	 * Create a cylinder
@@ -20,7 +21,7 @@ public class Cylinder {
 	 */
 	public Cylinder(Line centerLine, double radius) {
 		_centerLine = new Line(centerLine);
-		_radius = radius;
+		this.radius = radius;
 	}
 	
 	/**
@@ -42,7 +43,7 @@ public class Cylinder {
 	 */
 	public double signedDistance(Point p) {
 		double lineDist = _centerLine.distance(p);
-		return lineDist - _radius;
+		return lineDist - radius;
 	}
 	
     /**
@@ -53,7 +54,7 @@ public class Cylinder {
      */
 	public double distance(Point p) {
 		double lineDist = _centerLine.distance(p);
-		return lineDist - _radius;
+		return lineDist - radius;
 	}
 	
 	/**
@@ -82,6 +83,16 @@ public class Cylinder {
 		Point p = new Point(x, y, z);
 		return distance(p);
 	}
-
+	
+	/**
+	 * Is the point inside the cylinder?
+	 * @param x the x coordinate
+	 * @param y the y coordinate		
+	 * @param z the z coordinate
+	 * @return <code>true</code> if the point is inside the cylinder.
+	 */
+	public boolean isInside(double x, double y, double z) {
+		return signedDistance(x, y, z) < 0;
+	}
 
 }

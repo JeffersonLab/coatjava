@@ -109,8 +109,37 @@ public class CLAS12Trajectory extends SwimTrajectory {
 	public void add(double xo, double yo, double zo, double momentum, double theta, double phi) {
 		System.err.println("BAD add x, y, z, p, theta, phi called for Full trajectory");
 		System.exit(1);
-
 	}
+	
+	/**
+	 * Add a point to the trajectory.
+	 * @param x the x coordinate in cm
+	 * @param y the y coordinate in cm
+	 * @param z the z coordinate in cm
+	 * @param theta the theta angle in degrees
+	 * @param phi the phi angle in degrees
+	 * @param s the path length in cm
+	 */
+	public void addPoint(double x, double y, double z, double theta, double phi, double s) {
+		double thetaRad = Math.toRadians(theta);
+		double phiRad = Math.toRadians(phi);
+		double sinTheta = Math.sin(thetaRad);
+
+		double tx = sinTheta * Math.cos(phiRad); // px/p
+		double ty = sinTheta * Math.sin(phiRad); // py/p
+		double tz = Math.cos(thetaRad); // pz/p
+
+		double u[] = new double[6];
+		// set uf (in the result container) to the starting state vector
+		u[0] = x;
+		u[1] = y;
+		u[2] = z;
+		u[3] = tx;
+		u[4] = ty;
+		u[5] = tz;
+		add(s, u);
+	}
+
 
 	
 	/**

@@ -1,5 +1,7 @@
 package cnuphys.CLAS12Swim;
 
+import cnuphys.adaptiveSwim.AdaptiveSwimResult;
+import cnuphys.swim.SwimTrajectory;
 
 /**
  * The most basic CLAS12 listener. It never terminates the integration.
@@ -149,5 +151,33 @@ public class CLAS12Listener implements ODEStepListener {
 		}
 		return s;
 	}
+	
+	/**
+	 * Add a second poinr creating a straight line.
+	 * This is only used when "swimming" neutral particles.
+	 * This can be overridden to stop the straigh line at a target.
+	 */
+	public void straightLine() {
+
+		double xo = _initialVaues.x;
+		double yo = _initialVaues.y;
+		double zo = _initialVaues.z;
+		double theta = _initialVaues.theta;
+		double phi = _initialVaues.phi;
+		double sf = _sMax;
+
+		double sintheta = Math.sin(Math.toRadians(theta));
+		double costheta = Math.cos(Math.toRadians(theta));
+		double sinphi = Math.sin(Math.toRadians(phi));
+		double cosphi = Math.cos(Math.toRadians(phi));
+
+		double xf = xo + sf * sintheta * cosphi;
+		double yf = yo + sf * sintheta * sinphi;
+		double zf = zo + sf * costheta;
+
+		_trajectory.addPoint(xf, yf, zf, theta, phi, sf);
+
+	}
+
 
 }

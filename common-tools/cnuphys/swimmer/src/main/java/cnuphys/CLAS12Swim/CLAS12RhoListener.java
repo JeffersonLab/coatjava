@@ -53,7 +53,6 @@ public class CLAS12RhoListener extends CLAS12BoundaryListener {
 	@Override
 	public boolean accuracyReached(double newS, double[] newU) {
 		double dRho = Math.abs(rho(newU) - _rhoTarget);
-//		System.err.println("dRho: " + dRho);
 		return dRho < _accuracy;
 	}
 
@@ -69,7 +68,7 @@ public class CLAS12RhoListener extends CLAS12BoundaryListener {
 	 * @param s2 the path length of the "right" point (cm)
 	 * @param u2 the state vector of the "right" point
 	 * @param u  will hold the interpolated state vector
-	 * 
+	 * @return the interpolated path length
 	 */
 	public double interpolate(double s1, double[] u1, double s2, double[] u2, double u[]) {
 

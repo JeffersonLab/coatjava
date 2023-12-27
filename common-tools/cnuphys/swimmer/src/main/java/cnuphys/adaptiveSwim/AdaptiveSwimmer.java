@@ -4,7 +4,6 @@ import java.util.Hashtable;
 
 import cnuphys.adaptiveSwim.geometry.Cylinder;
 import cnuphys.adaptiveSwim.geometry.Plane;
-import cnuphys.adaptiveSwim.geometry.Point;
 import cnuphys.adaptiveSwim.geometry.Sphere;
 import cnuphys.lund.GeneratedParticleRecord;
 import cnuphys.magfield.FieldProbe;
