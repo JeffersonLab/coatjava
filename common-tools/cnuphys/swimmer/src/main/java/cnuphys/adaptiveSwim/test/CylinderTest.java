@@ -2,18 +2,19 @@ package cnuphys.adaptiveSwim.test;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
 
 import cnuphys.CLAS12Swim.CLAS12SwimResult;
 import cnuphys.CLAS12Swim.CLAS12Swimmer;
+import cnuphys.adaptiveSwim.AdaptiveSwimException;
 import cnuphys.adaptiveSwim.AdaptiveSwimResult;
 import cnuphys.adaptiveSwim.AdaptiveSwimmer;
 import cnuphys.adaptiveSwim.geometry.Cylinder;
 import cnuphys.lund.AsciiReader;
 import cnuphys.magfield.MagneticFields;
 import cnuphys.magfield.MagneticFields.FieldType;
-import cnuphys.rk4.RungeKuttaException;
-import cnuphys.swim.Swimmer;
 import cnuphys.swimtest.CSVWriter;
 import cnuphys.swimtest.SwimTest;
 
@@ -39,18 +40,18 @@ public class CylinderTest {
 	    
 	    //write the header row
 	    writer.writeRow("charge", "xo (cm)", "yo (cm)", "zo (cm)", "p (GeV/c)", "theta (deg)", "phi (deg)", 
-	    		"status", "xf_old", "yf_old", "zf_old", "s_old", "d_old/acc", 
-	    		"status", "xf_new", "yf_new", "zf_new", "s_new", "d_new/acc");
+	    		"status", "xf_as", "yf_as", "zf_as", "s_as", "d_as/acc", 
+	    		"status", "xf_c12", "yf_c12", "zf_c12", "s_c12", "d_c12/acc");
 	    
 	    
-		Swimmer swimmer = new Swimmer(); //old
-		CLAS12Swimmer clas12Swimmer = new CLAS12Swimmer(); //new
+		AdaptiveSwimmer adaptiveSwimmer = new AdaptiveSwimmer(); //AS
+		CLAS12Swimmer clas12Swimmer = new CLAS12Swimmer(); //c12
 		
 		//results for old 
 		AdaptiveSwimResult result = new AdaptiveSwimResult(true);
 		
 
-		double eps = 1.0e-6;
+		double tolerance = 1.0e-6;
 		
 		double c12p1[] = new double[3];
 		double c12p2[] = new double[3];
@@ -81,18 +82,16 @@ public class CylinderTest {
 
 			writer.writeStartOfRow(charge, 100*xo, 100*yo, 100*zo, p, theta, phi);
 			
-			// interp OLD
+			// AS
 			try {
-				
-				swimmer.swimCylinder(charge, xo, yo, zo, p, theta, phi,
-						data.CLP1, data.CLP2,
-						data.r, data.accuracy, data.sMax, data.stepSize, Swimmer.CLAS_Tolerance, result);
+				adaptiveSwimmer.swimCylinder(charge, xo, yo, zo, p, theta, phi,
+						data.CLP1, data.CLP2, data.r,
+						data.accuracy, data.sMax, data.stepSize, tolerance, result);
 				
 				swimCylinderSwimResult(writer, data, result);
 
-
-			} catch (RungeKuttaException e) {
-				System.err.println("OLD Swimmer Failed." + "  final pathlength = " + result.getFinalS());
+			} catch (AdaptiveSwimException e) {
+				System.err.println("AS Swimmer Failed." + "  final pathlength = " + result.getS());
 				e.printStackTrace();
 			}
 
@@ -100,7 +99,7 @@ public class CylinderTest {
 			
 			// CLAS12Swimmer
 			CLAS12SwimResult c12Result = clas12Swimmer.swimCylinder(charge, 100*xo, 100*yo, 100*zo, 
-					p, theta, phi, c12Cylinder[idx], 100*data.accuracy, 100*data.sMax, 100*data.stepSize, 100*eps);
+					p, theta, phi, c12Cylinder[idx], 100*data.accuracy, 100*data.sMax, 100*data.stepSize, 100*tolerance);
 			
 			swimC12CylinderSwimResult(writer, data, c12Result, c12Cylinder[idx]);
 			
@@ -110,44 +109,21 @@ public class CylinderTest {
 		}
 		writer.close();
 		System.err.println("done with main test. Now timing test.");
+		ThreadMXBean bean = ManagementFactory.getThreadMXBean();
+        bean.setThreadCpuTimeEnabled(true);
 
 		//timing test
-		long threadId = Thread.currentThread().getId();
-		long oldTime;
-		long newTime;
+		long c12Time;
+		long asTime;
 		
 		int numTestRun = 200;
 
-		long start = SwimTest.cpuTime(threadId);
 		
-		idx = 0;
+	    long start = bean.getCurrentThreadCpuTime();
+	    
+	    
 		for (int i = 0; i < numTestRun; i++) {
 
-			for (CylinderTestData data : testData) {
-
-				int charge = data.charge;
-				double xo = data.xo;
-				double yo = data.yo;
-				double zo = data.zo;
-				double p = data.p;
-				double theta = data.theta;
-				double phi = data.phi;
-				
-				CLAS12SwimResult c12Result = clas12Swimmer.swimCylinder(charge, 100*xo, 100*yo, 100*zo, 
-						p, theta, phi, c12Cylinder[idx], 100*data.accuracy, 100*data.sMax, 100*data.stepSize, 100*eps);
-				
-
-			}
-			
-			idx++;
-
-		}
-		newTime = SwimTest.cpuTime(threadId) - start;
-		
-		start = SwimTest.cpuTime(threadId);
-		
-	
-		for (int i = 0; i < numTestRun; i++) {
 			for (CylinderTestData data : testData) {
 
 				int charge = data.charge;
@@ -160,25 +136,47 @@ public class CylinderTest {
 
 				result.reset();
 
-				// interp OLD
+				// AS
 				try {
+					adaptiveSwimmer.swimCylinder(charge, xo, yo, zo, p, theta, phi, 
+							data.CLP1, data.CLP2, data.r, data.accuracy,
+							data.sMax, data.stepSize, tolerance, result);
 
-					swimmer.swimCylinder(charge, xo, yo, zo, p, theta, phi, data.CLP1, data.CLP2, data.r, data.accuracy,
-							data.sMax, data.stepSize, Swimmer.CLAS_Tolerance, result);
-
-				} catch (RungeKuttaException e) {
-					System.err.println("OLD Swimmer Failed." + "  final pathlength = " + result.getS());
+				} catch (AdaptiveSwimException e) {
+					System.err.println("AS Swimmer Failed." + "  final pathlength = " + result.getS());
 					e.printStackTrace();
 				}
+			}
+		}
+		asTime = bean.getCurrentThreadCpuTime() - start;
+		
+	    start = bean.getCurrentThreadCpuTime();
+		
+	
+		for (int i = 0; i < numTestRun; i++) {
+			idx = 0;
+			for (CylinderTestData data : testData) {
 
+				int charge = data.charge;
+				double xo = data.xo;
+				double yo = data.yo;
+				double zo = data.zo;
+				double p = data.p;
+				double theta = data.theta;
+				double phi = data.phi;
+
+				CLAS12SwimResult c12Result = clas12Swimmer.swimCylinder(charge, 100*xo, 100*yo, 100*zo, 
+						p, theta, phi, c12Cylinder[idx], 100*data.accuracy, 100*data.sMax, 100*data.stepSize, 100*tolerance);
+
+				idx++;
 			}
 		}
 
-		oldTime = SwimTest.cpuTime(threadId) - start;
+		c12Time = bean.getCurrentThreadCpuTime() - start;
 
-		System.err.println("old time: " + oldTime);
-		System.err.println("new time: " + newTime);
-		System.err.println("ratio old/new = " + (double) oldTime / (double) newTime);
+		System.err.println("as time: " + asTime);
+		System.err.println("c12 time: " + c12Time);
+		System.err.println("ratio as/c12 = " + (double)asTime/(double)c12Time);
 
 		System.err.println("done");
 

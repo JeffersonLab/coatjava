@@ -271,7 +271,7 @@ public class CLAS12Swimmer {
 				sInterp = listener.interpolate(s1, u, s2, u2, uInterp);
 
 				// reduce max size so we don't go way past the target
-				setMaxStepSize((sInterp - s1) / 5.);
+				setMaxStepSize((sInterp - s1) / 2);
 
 				// remove last point again it will be restored as start of appended swim
 				_listener.getTrajectory().removeLastPoint();
@@ -366,6 +366,12 @@ public class CLAS12Swimmer {
 	public CLAS12SwimResult swimCylinder(int q, double xo, double yo, double zo, double p, double theta, double phi,
 			Cylinder targetCylinder, double accuracy, double sMax, double h, double tolerance) {
 
+		//if centered on z, same as a rho swim
+		if (targetCylinder.centeredOnZ()) {
+			return swimRho(q, xo, yo, zo, p, theta, phi, targetCylinder.radius, accuracy, sMax, h, tolerance);
+		}
+		
+		
 		// create the ODE
 		CLAS12SwimmerODE ode = new CLAS12SwimmerODE(q, p, _probe);
 

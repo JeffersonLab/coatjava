@@ -106,24 +106,11 @@ public class RhoTest {
 		System.err.println("done with main test. Now timing test.");
 		
 		ThreadMXBean bean = ManagementFactory.getThreadMXBean();
-
-        // Check if CPU time measurement is supported
-        if (!bean.isCurrentThreadCpuTimeSupported()) {
-            System.out.println("CPU time measurement is not supported.");
-            return;
-        }
-
-
-        // Enable CPU time measurement (if not already enabled)
-        if (!bean.isThreadCpuTimeEnabled()) {
-            bean.setThreadCpuTimeEnabled(true);
-        }
-
-
+        bean.setThreadCpuTimeEnabled(true);
 
 		//timing test
 		long asTime;
-		long dpTime;
+		long c12Time;
 
         // Measure CPU time before method execution
         long start = bean.getCurrentThreadCpuTime();
@@ -176,12 +163,12 @@ public class RhoTest {
 			
 		}
 		
-		dpTime = bean.getCurrentThreadCpuTime() - start;
+		c12Time = bean.getCurrentThreadCpuTime() - start;
 
 
 		System.err.println("as time: " + asTime);
-		System.err.println("dp time: " + dpTime);
-		System.err.println("ratio as/dp = " + (double)asTime/(double)dpTime);
+		System.err.println("c12" + c12Time);
+		System.err.println("ratio as/c12 = " + (double)asTime/(double)c12Time);
 
 		System.err.println("done");
 

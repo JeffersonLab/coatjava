@@ -94,5 +94,17 @@ public class Cylinder {
 	public boolean isInside(double x, double y, double z) {
 		return signedDistance(x, y, z) < 0;
 	}
+	
+	/**
+	 * Is the cylinder centered on the z axis?
+	 * @return <code>true</code> if the cylinder is centered on the z axis.
+	 */
+	public boolean centeredOnZ() {
+		double x0 = _centerLine.getP0().x;
+		double y0 = _centerLine.getP0().y;
+		double x1 = _centerLine.getP1().x;
+		double y1 = _centerLine.getP1().y;
+		return (x0 == 0) && (y0 == 0) && (x1 == 0) && (y1 == 0);
+	}
 
 }
