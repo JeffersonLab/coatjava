@@ -10,25 +10,26 @@ import cnuphys.swim.SwimTrajectory;
  * This trajectory is in cm and has the path length in cm.
  */
 public class CLAS12Trajectory extends SwimTrajectory {
-	
-	//cache the path length
+
+	// cache the path length
 	public ArrayList<Double> _s = new ArrayList<>(200);
-	
+
 	/**
 	 * add a new point in the trajectory
+	 *
 	 * @param s the path length in cm
 	 * @param u the state vector
 	 */
 	public void add(double s, double[] u) {
 		_s.add(s);
-		
-		//this will call the superclass add which adds A COPY of the state vector
-        super.add(u);
+
+		// this will call the superclass add which adds A COPY of the state vector
+		super.add(u);
 	}
-	
+
 	/**
 	 * Replace the last point in the trajectory with a new point
-	 * 
+	 *
 	 * @param s the replacement path length in cm
 	 * @param u the replacement state vector
 	 */
@@ -40,7 +41,7 @@ public class CLAS12Trajectory extends SwimTrajectory {
 			add(s, u);
 		}
 	}
-	
+
 	/**
 	 * Remove the last point in the trajectory
 	 */
@@ -51,36 +52,36 @@ public class CLAS12Trajectory extends SwimTrajectory {
 			remove(index);
 		}
 	}
-	
-	
+
 	/**
 	 * Get the path length at the given index
-	 * 
+	 *
 	 * @param index the index
 	 * @return the path length at the given index
 	 */
 	public double getS(int index) {
 		return _s.get(index);
 	}
-	
+
 	/**
-	 * Get the size of the s collection, which is the same as the size of the trajectory.
-	 * (At least is should be!)
-	 * 
+	 * Get the size of the s collection, which is the same as the size of the
+	 * trajectory. (At least is should be!)
+	 *
 	 * @return the size of the s collection
 	 */
 	public int getSSize() {
 		return _s.size();
 	}
-	
+
 	/**
 	 * Report on the sizes. They should be the same.
+	 *
 	 * @return a report on the sizes
 	 */
 	public String sizeReport() {
 		return String.format("State vector size: %d   Pathlength size: %d", size(), _s.size());
 	}
-	
+
 	/**
 	 * Clear the trajectory
 	 */
@@ -89,36 +90,36 @@ public class CLAS12Trajectory extends SwimTrajectory {
 		super.clear();
 		_s.clear();
 	}
-	
+
 	@Override
 	public boolean add(double u[]) {
 		System.err.println("BAD add double[] called for Full trajectory");
 		System.exit(1);
 		return false;
 	}
-	
+
 	@Override
 	public boolean add(double u[], double s) {
 		System.err.println("BAD add double[], double s called for Full trajectory");
 		System.exit(1);
 		return false;
 	}
-	
-	
+
 	@Override
-	public void add(double xo, double yo, double zo, double momentum, double theta, double phi) {
+	public void add(double xo, double yo, double zo, double p, double theta, double phi) {
 		System.err.println("BAD add x, y, z, p, theta, phi called for Full trajectory");
 		System.exit(1);
 	}
-	
+
 	/**
 	 * Add a point to the trajectory.
-	 * @param x the x coordinate in cm
-	 * @param y the y coordinate in cm
-	 * @param z the z coordinate in cm
+	 *
+	 * @param x     the x coordinate in cm
+	 * @param y     the y coordinate in cm
+	 * @param z     the z coordinate in cm
 	 * @param theta the theta angle in degrees
-	 * @param phi the phi angle in degrees
-	 * @param s the path length in cm
+	 * @param phi   the phi angle in degrees
+	 * @param s     the path length in cm
 	 */
 	public void addPoint(double x, double y, double z, double theta, double phi, double s) {
 		double thetaRad = Math.toRadians(theta);
@@ -140,14 +141,13 @@ public class CLAS12Trajectory extends SwimTrajectory {
 		add(s, u);
 	}
 
-
-	
 	/**
 	 * Get the r coordinate in cm for the given index
-	 * 
+	 *
 	 * @param index the index
 	 * @return the r coordinate
 	 */
+	@Override
 	public double getR(int index) {
 		if ((index < 0) || (index > size())) {
 			return Double.NaN;
@@ -165,15 +165,16 @@ public class CLAS12Trajectory extends SwimTrajectory {
 		// convert to cm
 		return Math.sqrt(x * x + y * y + z * z);
 	}
-	
+
 	/**
 	 * Compute the integral B cross dl. This will cause the state vector arrays to
 	 * expand by two, becoming [x, y, z, px/p, py/p, pz/p, l, bdl] where the 7th
 	 * entry l is cumulative pathlength in cm and the eighth entry bdl is the
 	 * cumulative integral bdl in kG-cm.
-	 * 
+	 *
 	 * @param probe the field getter
 	 */
+	@Override
 	public void computeBDL(FieldProbe probe) {
 		if (_computedBDL) {
 			return;
@@ -210,10 +211,11 @@ public class CLAS12Trajectory extends SwimTrajectory {
 	 * expand by two, becoming [x, y, z, px/p, py/p, pz/p, l, bdl] where the 7th
 	 * entry l is cumulative pathlength in cm and the eighth entry bdl is the
 	 * cumulative integral bdl in kG-cm.
-	 * 
+	 *
 	 * @param sector sector 1..6
 	 * @param probe  the field getter
 	 */
+	@Override
 	public void sectorComputeBDL(int sector, RotatedCompositeProbe probe) {
 		if (_computedBDL) {
 			return;
@@ -236,7 +238,4 @@ public class CLAS12Trajectory extends SwimTrajectory {
 		_computedBDL = true;
 	}
 
-
-	
-	
 }

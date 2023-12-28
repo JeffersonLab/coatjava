@@ -287,30 +287,30 @@ public class LundTrackDialog extends JDialog {
 		double stepSize = 1e-4; // cm
 		double sMax = 800; // cm
 
-		double eps = 1.0e-6;
+		double tolerance = 1.0e-6;
 
 		SwimTrajectory traj = null;
 
 		switch (_algorithm) {
 
 		case STANDARD:
-			result = swimmer.swim(lid.getCharge(), xo, yo, zo, momentum, theta, phi, sMax, stepSize, eps);
+			result = swimmer.swim(lid.getCharge(), xo, yo, zo, momentum, theta, phi, sMax, stepSize, tolerance);
 			break;
 
 		case FIXEDZ:
 			// convert accuracy from microns to cm
 			double accuracy = Double.parseDouble(_accuracy.getText()) / 1.0e4;
 			double ztarget = Double.parseDouble(_fixedZ.getText()); // cm
-			result = swimmer.swimZ(lid.getCharge(), xo, yo, zo, momentum, theta, phi, ztarget, sMax, accuracy, stepSize,
-					eps);
+			result = swimmer.swimZ(lid.getCharge(), xo, yo, zo, momentum, theta, phi, ztarget, accuracy, sMax, stepSize,
+					tolerance);
 			break;
 
 		case FIXEDRHO:
 			// convert accuracy from microns to meters
 			accuracy = Double.parseDouble(_accuracy.getText()) / 1.0e4;
 			double rhotarget = Double.parseDouble(_fixedRho.getText()); // cm
-			result = swimmer.swimRho(lid.getCharge(), xo, yo, zo, momentum, theta, phi, rhotarget, sMax, accuracy, stepSize,
-					eps);
+			result = swimmer.swimRho(lid.getCharge(), xo, yo, zo, momentum, theta, phi, rhotarget, accuracy, sMax, stepSize,
+					tolerance);
 			break;
 		} // switch
 

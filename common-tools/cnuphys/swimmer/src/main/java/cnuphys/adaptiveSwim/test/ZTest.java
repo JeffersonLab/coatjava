@@ -47,9 +47,9 @@ public class ZTest {
 
 		double stepsizeAdaptive = 1.e-5; // starting
 
-		double maxPathLength = 10; // m
+		double sMax = 10; // m
 		double accuracy = 1e-5; // m
-		double eps = 1.0e-6;
+		double tolerance = 1.0e-6;
 
 		//generate some random data
 		RandomData data = new RandomData(n, seed);
@@ -82,7 +82,7 @@ public class ZTest {
 			try {
 				adaptiveSwimmer.swimZ(charge, xo, yo, zo, p,
 						theta, phi, zTarg, accuracy,
-						maxPathLength, stepsizeAdaptive, eps, result);
+						sMax, stepsizeAdaptive, tolerance, result);
 
 				adaptiveSwimResult(writer, zTarg, result);
 
@@ -95,7 +95,7 @@ public class ZTest {
 
 			// DP
 			CLAS12SwimResult c12res = clas12Swimmer.swimZ(charge, 100*xo, 100*yo, 100*zo, p, theta, phi, 100*zTarg, 
-					100*maxPathLength, 100*accuracy, 100*stepsizeAdaptive, 100*eps);
+					100*accuracy, 100*sMax, 100*stepsizeAdaptive, 100*tolerance);
 			dpSwimResult(writer, 100*zTarg, c12res);
 
 
@@ -151,7 +151,7 @@ public class ZTest {
 			try {
 				adaptiveSwimmer.swimZ(charge, xo, yo, zo, p,
 						theta, phi, zTarg, accuracy,
-						maxPathLength, stepsizeAdaptive, eps, result);
+						sMax, stepsizeAdaptive, tolerance, result);
 
 			} catch (AdaptiveSwimException e) {
 				System.err.println("Adaptive Swimmer Failed." + "  final pathlength = " + result.getS());
@@ -177,7 +177,7 @@ public class ZTest {
 
 			// DP
 			CLAS12SwimResult c12res = clas12Swimmer.swimZ(charge, 100*xo, 100*yo, 100*zo, p, theta, phi, 
-					100*zTarg, 100*maxPathLength, 100*accuracy, 100*stepsizeAdaptive, 100*eps);
+					100*zTarg, 100*accuracy, 100*sMax, 100*stepsizeAdaptive, 100*tolerance);
 		}
 
 		dpTime = bean.getCurrentThreadCpuTime() - start;

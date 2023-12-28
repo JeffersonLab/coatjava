@@ -100,7 +100,7 @@ public class CylinderTest {
 			
 			// CLAS12Swimmer
 			CLAS12SwimResult c12Result = clas12Swimmer.swimCylinder(charge, 100*xo, 100*yo, 100*zo, 
-					p, theta, phi, c12Cylinder[idx], 100*data.sMax, 100*data.accuracy, 100*data.stepSize, 100*eps);
+					p, theta, phi, c12Cylinder[idx], 100*data.accuracy, 100*data.sMax, 100*data.stepSize, 100*eps);
 			
 			swimC12CylinderSwimResult(writer, data, c12Result, c12Cylinder[idx]);
 			
@@ -134,7 +134,7 @@ public class CylinderTest {
 				double phi = data.phi;
 				
 				CLAS12SwimResult c12Result = clas12Swimmer.swimCylinder(charge, 100*xo, 100*yo, 100*zo, 
-						p, theta, phi, c12Cylinder[idx], 100*data.sMax, 100*data.accuracy, 100*data.stepSize, eps);
+						p, theta, phi, c12Cylinder[idx], 100*data.accuracy, 100*data.sMax, 100*data.stepSize, eps);
 				
 
 			}
