@@ -9,10 +9,10 @@ public abstract class CLAS12BoundaryListener extends CLAS12Listener {
 	 * Create a CLAS12 boundary crossing listener
 	 *
 	 * @param ivals    the initial values of the swim
-	 * @param sMax     the final or max path length (cm)
 	 * @param accuracy the accuracy (cm)
+	 * @param sMax     the final or max path length (cm)
 	 */
-	public CLAS12BoundaryListener(CLAS12Values ivals, double sMax, double accuracy) {
+	public CLAS12BoundaryListener(CLAS12Values ivals, double accuracy, double sMax) {
 		super(ivals, sMax);
 		_accuracy = accuracy;
 	}

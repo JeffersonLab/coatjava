@@ -21,11 +21,11 @@ public class CLAS12RhoListener extends CLAS12BoundaryListener {
 	 *
 	 * @param ivals     the initial values of the swim
 	 * @param rhoTarget the target rho (cylindrical r) (cm)
-	 * @param sMax      the final or max path length (cm)
 	 * @param accuracy  the desired accuracy (cm)
+	 * @param sMax      the final or max path length (cm)
 	 */
-	public CLAS12RhoListener(CLAS12Values ivals, double rhoTarget, double sMax, double accuracy) {
-		super(ivals, sMax, accuracy);
+	public CLAS12RhoListener(CLAS12Values ivals, double rhoTarget, double accuracy, double sMax) {
+		super(ivals, accuracy, sMax);
 		_rhoTarget = rhoTarget;
 
 		double x = ivals.x;

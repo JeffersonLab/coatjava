@@ -22,11 +22,11 @@ public class CLAS12PlaneListener extends CLAS12BoundaryListener {
 	 *
 	 * @param ivals       the initial values of the swim
 	 * @param targetPlane the target infinite plane
-	 * @param sMax        the final or max path length (cm)
 	 * @param accuracy    the desired accuracy (cm)
+	 * @param sMax        the final or max path length (cm)
 	 */
-	public CLAS12PlaneListener(CLAS12Values ivals, Plane targetPlane, double sMax, double accuracy) {
-		super(ivals, sMax, accuracy);
+	public CLAS12PlaneListener(CLAS12Values ivals, Plane targetPlane, double accuracy, double sMax) {
+		super(ivals, accuracy, sMax);
 		_targetPlane = targetPlane;
 		_startSign = _targetPlane.sign(ivals.x, ivals.y, ivals.z);
 	}

@@ -20,11 +20,11 @@ public class CLAS12ZListener extends CLAS12BoundaryListener {
 	 *
 	 * @param ivals    the initial values of the swim
 	 * @param zTarget  the target z (cm)
-	 * @param sMax     the final or max path length (cm)
 	 * @param accuracy the desired accuracy (cm)
+	 * @param sMax     the final or max path length (cm)
 	 */
-	public CLAS12ZListener(CLAS12Values ivals, double zTarget, double sMax, double accuracy) {
-		super(ivals, sMax, accuracy);
+	public CLAS12ZListener(CLAS12Values ivals, double zTarget, double accuracy, double sMax) {
+		super(ivals, accuracy, sMax);
 		_zTarget = zTarget;
 		_startSign = sign(ivals.z);
 	}

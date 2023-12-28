@@ -372,7 +372,7 @@ public class CLAS12Swimmer {
 		// create the initial values
 		CLAS12Values ivals = new CLAS12Values(q, xo, yo, zo, p, theta, phi);
 
-		CLAS12CylinderListener listener = new CLAS12CylinderListener(ivals, targetCylinder, sMax, accuracy);
+		CLAS12CylinderListener listener = new CLAS12CylinderListener(ivals, targetCylinder, accuracy, sMax);
 
 		return swimToAccuracy(ode, ivals.getU(), 0, h, tolerance, listener);
 	}
@@ -405,7 +405,7 @@ public class CLAS12Swimmer {
 		// create the initial values
 		CLAS12Values ivals = new CLAS12Values(q, xo, yo, zo, p, theta, phi);
 
-		CLAS12PlaneListener listener = new CLAS12PlaneListener(ivals, targetPlane, sMax, accuracy);
+		CLAS12PlaneListener listener = new CLAS12PlaneListener(ivals, targetPlane, accuracy, sMax);
 
 		return swimToAccuracy(ode, ivals.getU(), 0, h, tolerance, listener);
 	}
@@ -437,7 +437,7 @@ public class CLAS12Swimmer {
 		// create the initial values
 		CLAS12Values ivals = new CLAS12Values(q, xo, yo, zo, p, theta, phi);
 
-		CLAS12PlaneListener listener = new CLAS12PlaneListener(ivals, targetPlane, sMax, 0);
+		CLAS12PlaneListener listener = new CLAS12PlaneListener(ivals, targetPlane, 0, sMax);
 
 		return swimToInterp(ode, ivals.getU(), 0, h, tolerance, listener);
 
@@ -471,7 +471,7 @@ public class CLAS12Swimmer {
 		// create the initial values
 		CLAS12Values ivals = new CLAS12Values(q, xo, yo, zo, p, theta, phi);
 
-		CLAS12ZListener listener = new CLAS12ZListener(ivals, zTarget, sMax, accuracy);
+		CLAS12ZListener listener = new CLAS12ZListener(ivals, zTarget, accuracy, sMax);
 
 		return swimToAccuracy(ode, ivals.getU(), 0, h, tolerance, listener);
 	}
@@ -503,7 +503,7 @@ public class CLAS12Swimmer {
 		// create the initial values
 		CLAS12Values ivals = new CLAS12Values(q, xo, yo, zo, p, theta, phi);
 
-		CLAS12ZListener listener = new CLAS12ZListener(ivals, zTarget, sMax, 0);
+		CLAS12ZListener listener = new CLAS12ZListener(ivals, zTarget, 0, sMax);
 
 		return swimToInterp(ode, ivals.getU(), 0, h, tolerance, listener);
 	}
@@ -536,7 +536,7 @@ public class CLAS12Swimmer {
 		// create the initial values
 		CLAS12Values ivals = new CLAS12Values(q, xo, yo, zo, p, theta, phi);
 
-		CLAS12RhoListener listener = new CLAS12RhoListener(ivals, rhoTarget, sMax, accuracy);
+		CLAS12RhoListener listener = new CLAS12RhoListener(ivals, rhoTarget, accuracy, sMax);
 
 		return swimToAccuracy(ode, ivals.getU(), 0, h, tolerance, listener);
 	}
@@ -568,7 +568,7 @@ public class CLAS12Swimmer {
 		// create the initial values
 		CLAS12Values ivals = new CLAS12Values(q, xo, yo, zo, p, theta, phi);
 
-		CLAS12RhoListener listener = new CLAS12RhoListener(ivals, rhoTarget, sMax, 0);
+		CLAS12RhoListener listener = new CLAS12RhoListener(ivals, rhoTarget, 0, sMax);
 
 		return swimToInterp(ode, ivals.getU(), 0, h, tolerance, listener);
 	}

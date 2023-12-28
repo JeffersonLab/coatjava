@@ -16,11 +16,11 @@ public class CLAS12CylinderListener extends CLAS12BoundaryListener {
 	 *
 	 * @param ivals          the initial values of the swim
 	 * @param targetCylinder the target infinite cylinder
-	 * @param sMax           the final or max path length (cm)
 	 * @param accuracy       the desired accuracy (cm)
+	 * @param sMax           the final or max path length (cm)
 	 */
-	public CLAS12CylinderListener(CLAS12Values ivals, Cylinder targetCylinder, double sMax, double accuracy) {
-		super(ivals, sMax, accuracy);
+	public CLAS12CylinderListener(CLAS12Values ivals, Cylinder targetCylinder, double accuracy, double sMax) {
+		super(ivals, accuracy, sMax);
 		_targetCylinder = targetCylinder;
 		_inside = _targetCylinder.isInside(ivals.x, ivals.y, ivals.z);
 //
