@@ -46,6 +46,17 @@ public class CLAS12PlaneListener extends CLAS12BoundaryListener {
 		double distance = _targetPlane.distance(newU[0], newU[1], newU[2]);
 		return distance < _accuracy;
 	}
+	
+	/**
+	 * Get the absolute distance to the target (boundary) in cm.
+	 * @param newS the new path length
+	 * @param newU the new state vector
+	 * @return the distance to the target (boundary) in cm.
+	 */
+	public double distanceToTarget(double newS, double[] newU) {
+		return _targetPlane.distance(newU[0], newU[1], newU[2]);
+	}
+
 
 	/**
 	 * Interpolate between two points, one on each side of the plane

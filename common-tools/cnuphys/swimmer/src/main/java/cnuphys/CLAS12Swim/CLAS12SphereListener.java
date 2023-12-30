@@ -1,39 +1,40 @@
 package cnuphys.CLAS12Swim;
 
 import cnuphys.adaptiveSwim.geometry.Cylinder;
+import cnuphys.adaptiveSwim.geometry.Sphere;
 
-public class CLAS12CylinderListener extends CLAS12BoundaryListener {
+public class CLAS12SphereListener extends CLAS12BoundaryListener {
 
-	// the target cylinder
-	private Cylinder _targetCylinder;
+
+	// the target sphere
+	private Sphere _targetSphere;
 
 	// starting inside or outside
 	private boolean _inside;
-
+	
 	/**
-	 * Create a CLAS12 boundary target cylinder listener, for swimming to a fixed
-	 * infinite cylinder
+	 * Create a CLAS12 boundary target sphere listener, for swimming to a fixed sphere
 	 *
 	 * @param ivals          the initial values of the swim
 	 * @param targetCylinder the target infinite cylinder
 	 * @param accuracy       the desired accuracy (cm)
 	 * @param sMax           the final or max path length (cm)
 	 */
-	public CLAS12CylinderListener(CLAS12Values ivals, Cylinder targetCylinder, double accuracy, double sMax) {
+	public CLAS12SphereListener(CLAS12Values ivals, Sphere targetSphere, double accuracy, double sMax) {
 		super(ivals, accuracy, sMax);
-		_targetCylinder = targetCylinder;
-		_inside = _targetCylinder.isInside(ivals.x, ivals.y, ivals.z);
+		_targetSphere = targetSphere;
+		_inside = targetSphere.isInside(ivals.x, ivals.y, ivals.z);
 	}
 
 	@Override
 	public boolean accuracyReached(double newS, double[] newU) {
-		double dist = _targetCylinder.distance(newU[0], newU[1], newU[2]);
+		double dist = _targetSphere.distance(newU[0], newU[1], newU[2]);
 		return dist < _accuracy;
 	}
 
 	@Override
 	public boolean crossedBoundary(double newS, double[] newU) {
-		boolean newInside = _targetCylinder.isInside(newU[0], newU[1], newU[2]);
+		boolean newInside = _targetSphere.isInside(newU[0], newU[1], newU[2]);
 		return newInside != _inside;
 	}
 	
@@ -44,14 +45,14 @@ public class CLAS12CylinderListener extends CLAS12BoundaryListener {
 	 * @return the distance to the target (boundary) in cm.
 	 */
 	public double distanceToTarget(double newS, double[] newU) {
-		return _targetCylinder.distance(newU[0], newU[1], newU[2]);
+		return _targetSphere.distance(newU[0], newU[1], newU[2]);
 	}
-
+	
 
 	@Override
 	public double interpolate(double s1, double[] u1, double s2, double[] u2, double[] u) {
-		double dist1 = _targetCylinder.signedDistance(u1[0], u1[1], u1[2]);
-		double dist2 = _targetCylinder.signedDistance(u2[0], u2[1], u2[2]);
+		double dist1 = _targetSphere.signedDistance(u1[0], u1[1], u1[2]);
+		double dist2 = _targetSphere.signedDistance(u2[0], u2[1], u2[2]);
 
 		double t = -dist1 / (dist2 - dist1);
 
@@ -63,5 +64,6 @@ public class CLAS12CylinderListener extends CLAS12BoundaryListener {
 
 		return s;
 	}
+
 
 }

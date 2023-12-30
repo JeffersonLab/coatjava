@@ -71,9 +71,7 @@ public class Cylinder {
 	}
 	
 	/**
-	 * Get the shortest distance between the surface of this infinite cylinder and a point.
-	 * If the value is negative, we are inside the cylinder.
-	 * @deprecated Use {@link Cylinder#signedDistance} instead.
+	 * Get the shortest absolute distance between the surface of this infinite cylinder and a point.
 	 * @param x the x coordinate
 	 * @param y the y coordinate
 	 * @param z the z coordinate
@@ -81,7 +79,7 @@ public class Cylinder {
 	 */
 	public double distance(double x, double y, double z) {
 		Point p = new Point(x, y, z);
-		return distance(p);
+		return Math.abs(signedDistance(p));
 	}
 	
 	/**

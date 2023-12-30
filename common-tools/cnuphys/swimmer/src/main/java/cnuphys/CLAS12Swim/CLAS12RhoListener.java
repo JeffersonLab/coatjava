@@ -60,6 +60,17 @@ public class CLAS12RhoListener extends CLAS12BoundaryListener {
 	private int sign(double rho) {
 		return (rho < _rhoTarget) ? -1 : 1;
 	}
+	
+	/**
+	 * Get the absolute distance to the target (boundary) in cm.
+	 * @param newS the new path length
+	 * @param newU the new state vector
+	 * @return the distance to the target (boundary) in cm.
+	 */
+	public double distanceToTarget(double newS, double[] newU) {
+		return Math.abs(rho(newU) - _rhoTarget);
+	}
+
 
 	/**
 	 * Interpolate between two points, one on each side of the boundary

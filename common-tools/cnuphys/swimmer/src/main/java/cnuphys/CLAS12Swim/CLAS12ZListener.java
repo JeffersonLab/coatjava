@@ -50,6 +50,17 @@ public class CLAS12ZListener extends CLAS12BoundaryListener {
 	private int sign(double z) {
 		return (z < _zTarget) ? -1 : 1;
 	}
+	
+	/**
+	 * Get the absolute distance to the target (boundary) in cm.
+	 * @param newS the new path length
+	 * @param newU the new state vector
+	 * @return the distance to the target (boundary) in cm.
+	 */
+	public double distanceToTarget(double newS, double[] newU) {
+		return Math.abs(newU[2] - _zTarget);
+	}
+
 
 	/**
 	 * Interpolate between two points, one on each side of the boundary

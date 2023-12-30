@@ -48,13 +48,21 @@ public abstract class CLAS12BoundaryListener extends CLAS12Listener {
 		}
 
 		// have we reached the max path length?
-		if (Math.abs(newS - _sMax) < TINY) {
+		if (newS >= _sMax) {
 			_status = CLAS12Swimmer.SWIM_TARGET_MISSED;
 			return false;
 		}
 
 		return true;
 	}
+	
+	/**
+	 * Get the absolute distance to the target (boundary) in cm.
+	 * @param newS the new path length
+	 * @param newU the new state vector
+	 * @return the distance to the target (boundary) in cm.
+	 */
+	public abstract double distanceToTarget(double newS, double[] newU);
 
 	/**
 	 * Called when a new step is taken in the ODE solving process.

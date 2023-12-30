@@ -4,6 +4,7 @@ import java.util.Hashtable;
 
 import cnuphys.adaptiveSwim.geometry.Cylinder;
 import cnuphys.adaptiveSwim.geometry.Plane;
+import cnuphys.adaptiveSwim.geometry.Sphere;
 import cnuphys.magfield.FieldProbe;
 import cnuphys.magfield.IMagField;
 
@@ -271,7 +272,9 @@ public class CLAS12Swimmer {
 				sInterp = listener.interpolate(s1, u, s2, u2, uInterp);
 
 				// reduce max size so we don't go way past the target
-				setMaxStepSize((sInterp - s1) / 2);
+				double h1 = (sInterp - s1) / 2;
+				double h2 = listener.distanceToTarget(s1, u) / 2;
+				setMaxStepSize(Math.min(h1, h2));
 
 				// remove last point again it will be restored as start of appended swim
 				_listener.getTrajectory().removeLastPoint();
@@ -343,6 +346,7 @@ public class CLAS12Swimmer {
 		Cylinder targetCylinder = new Cylinder(p1, p2, r);
 		return swimCylinder(q, xo, yo, zo, p, theta, phi, targetCylinder, accuracy, sMax, h, tolerance);
 	}
+	
 
 	/**
 	 * Swim to a target cylinder
@@ -382,6 +386,69 @@ public class CLAS12Swimmer {
 
 		return swimToAccuracy(ode, ivals.getU(), 0, h, tolerance, listener);
 	}
+	
+	/**
+	 * Swim to a target sphere
+	 *
+	 * @param q         in integer units of e
+	 * @param xo        the x vertex position in cm
+	 * @param yo        the y vertex position in cm
+	 * @param zo        the z vertex position in cm
+	 * @param p         the momentum in GeV/c
+	 * @param theta     the initial polar angle in degrees
+	 * @param phi       the initial azimuthal angle in degrees
+	 * @param center    the center of the sphere
+	 * @param r         the radius of the sphere (cm)
+	 * @param accuracy  the desired accuracy in cm
+	 * @param sMax      the final (max) value of the independent variable
+	 *                  (pathlength) unless the integration is terminated by the
+	 *                  listener
+	 * @param h         the initial stepsize in cm
+	 * @param tolerance The desired tolerance. The solver will automatically adjust
+	 *                  the step size to meet this tolerance.
+	 */
+	public CLAS12SwimResult swimSphere(int q, double xo, double yo, double zo, double p, double theta, double phi,
+			double center[], double r, double accuracy, double sMax, double h, double tolerance) {
+
+		Sphere targetSphere = new Sphere(center, r);
+		return swimSphere(q, xo, yo, zo, p, theta, phi, targetSphere, accuracy, sMax, h, tolerance);
+	}
+	
+	/**
+	 * Swim to a target cylinder
+	 *
+	 * @param q              charge in integer units of e
+	 * @param xo             the x vertex position in cm
+	 * @param yo             the y vertex position in cm
+	 * @param zo             the z vertex position in cm
+	 * @param p              the momentum in GeV/c
+	 * @param theta          the initial polar angle in degrees
+	 * @param phi            the initial azimuthal angle in degrees
+	 * @param targetSphere  the target sphere
+	 * @param accuracy       the desired accuracy in cm
+	 * @param sMax           the final (max) value of the independent variable
+	 *                       (pathlength) unless the integration is terminated by
+	 *                       the listener
+	 * @param h              the initial stepsize in cm
+	 * @param tolerance      The desired tolerance. The solver will automatically
+	 *                       adjust the step size to meet this tolerance.
+	 */
+	public CLAS12SwimResult swimSphere(int q, double xo, double yo, double zo, double p, double theta, double phi,
+			Sphere targetSphere, double accuracy, double sMax, double h, double tolerance) {
+
+		
+		// create the ODE
+		CLAS12SwimmerODE ode = new CLAS12SwimmerODE(q, p, _probe);
+
+		// create the initial values
+		CLAS12Values ivals = new CLAS12Values(q, xo, yo, zo, p, theta, phi);
+
+		CLAS12SphereListener listener = new CLAS12SphereListener(ivals, targetSphere, accuracy, sMax);
+
+		return swimToAccuracy(ode, ivals.getU(), 0, h, tolerance, listener);
+	}
+
+
 
 	/**
 	 * Swim to a target plane
