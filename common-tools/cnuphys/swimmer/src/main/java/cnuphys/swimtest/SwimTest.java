@@ -22,7 +22,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
 import cnuphys.adaptiveSwim.test.CylinderTest;
-import cnuphys.adaptiveSwim.test.InterpPlaneTest;
 import cnuphys.adaptiveSwim.test.PlaneTest;
 import cnuphys.adaptiveSwim.test.RhoTest;
 import cnuphys.adaptiveSwim.test.SphereTest;
@@ -103,7 +102,6 @@ public class SwimTest {
 		final JMenuItem swimZItem = new JMenuItem("Fixed Z test");
 		final JMenuItem rhoItem = new JMenuItem("Rho Test");
 		final JMenuItem planeItem = new JMenuItem("Plane Test");
-		final JMenuItem interpPlaneItem = new JMenuItem("Interpolate to Plane Test");
 
 		final JMenuItem cylinderItem = new JMenuItem("Cylinder Test");
 		final JMenuItem sphereItem = new JMenuItem("Sphere Test");
@@ -124,16 +122,13 @@ public class SwimTest {
 					RhoTest.rhoTest(10000, 73557799);
 				} else if (e.getSource() == planeItem) {
 					PlaneTest.planeTest();
-				} else if (e.getSource() == interpPlaneItem) {
-					InterpPlaneTest.interpPlaneTest();
-				}
+				} 
 			}
 		};
 
 		addMenuItem(atmenu, al, baseItem);
 		addMenuItem(atmenu, al, rhoItem);
 		addMenuItem(atmenu, al, planeItem);
-		addMenuItem(atmenu, al, interpPlaneItem);
 		addMenuItem(atmenu, al, swimZItem);
 		addMenuItem(atmenu, al, cylinderItem);
 		addMenuItem(atmenu, al, sphereItem);

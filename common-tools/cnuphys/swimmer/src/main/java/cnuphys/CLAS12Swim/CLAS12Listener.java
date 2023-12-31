@@ -165,7 +165,7 @@ public class CLAS12Listener implements ODEStepListener {
 	}
 
 	/**
-	 * Add a second poinr creating a straight line. This is only used when
+	 * Add a second point creating a straight line. This is only used when
 	 * "swimming" neutral particles. This can be overridden to stop the straigh line
 	 * at a target.
 	 */

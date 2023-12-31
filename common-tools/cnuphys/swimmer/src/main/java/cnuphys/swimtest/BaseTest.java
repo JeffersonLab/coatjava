@@ -40,7 +40,7 @@ public class BaseTest {
 	    //write the header row
 	    writer.writeRow("charge", "xo (m)", "yo (m)", "zo (m)", "p (GeV/c)", "theta (deg)", "phi (deg)",
 	    		"status", "xf_as", "yf_as", "zf_as", "s_as", "bdl_as",
-	    		"status", "xf_dp", "yf_dp", "zf_dp", "s_dp", "bdl_dp");
+	    		"status", "xf_c12", "yf_c12", "zf_c12", "s_c12", "bdl_c12");
 
 
 		AdaptiveSwimmer adaptiveSwimmer = new AdaptiveSwimmer(); //new
@@ -52,10 +52,10 @@ public class BaseTest {
 		AdaptiveSwimResult result = new AdaptiveSwimResult(true);
 
 
-		double stepsizeAdaptive = 0.0001; // starting stepsize in m
+		double h = 1e-5; // starting stepsize in m
 
-		double maxPathLength = 8; // m
-		double eps = 1.0e-8;
+		double sMax = 8; // m
+		double tolerance = 1.0e-6;
 		
 		//the final pathlengths from the adaptive swimmer
 		//will be used as the target pathlengths for the dp swimmer
@@ -83,7 +83,7 @@ public class BaseTest {
 			// Adaptive
 			try {
 				adaptiveSwimmer.swim(charge, xo, yo, zo, p,
-						theta, phi, maxPathLength, stepsizeAdaptive, eps, result);
+						theta, phi, sMax, h, tolerance, result);
 
 				adaptiveSwimResult(writer, result);
 				s[i] = result.getS();
@@ -97,14 +97,14 @@ public class BaseTest {
 			result.reset();
 
 			// DP
-			CLAS12SwimResult c12res = clas12Swimmer.swim(charge, 100*xo, 100*yo, 100*zo, p, theta, phi, 100*s[i], 100*stepsizeAdaptive, 100*eps);
-			dpSwimResult(writer, c12res);
+			CLAS12SwimResult c12res = clas12Swimmer.swim(charge, 100*xo, 100*yo, 100*zo, p, theta, phi, 100*s[i], 100*h, 100*tolerance);
+			c12SwimResult(writer, c12res);
 
 
 			writer.newLine();
 
 			if (i == 0) {
-				System.err.println("First DP result:  " + c12res.toString() + "\n");
+				System.err.println("First C12 result:  " + c12res.toString() + "\n");
 
 			}
 		}
@@ -115,22 +115,9 @@ public class BaseTest {
 		
 		ThreadMXBean bean = ManagementFactory.getThreadMXBean();
 
-        // Check if CPU time measurement is supported
-        if (!bean.isCurrentThreadCpuTimeSupported()) {
-            System.out.println("CPU time measurement is not supported.");
-            return;
-        }
-        
-
-        // Enable CPU time measurement (if not already enabled)
-        if (!bean.isThreadCpuTimeEnabled()) {
-            bean.setThreadCpuTimeEnabled(true);
-        }     
-        
-
 		//timing test
 		long asTime;
-		long dpTime;
+		long c12Time;
 
         // Measure CPU time before method execution
         long start = bean.getCurrentThreadCpuTime();
@@ -150,7 +137,7 @@ public class BaseTest {
 			// Adaptive Swimmer
 			try {
 				adaptiveSwimmer.swim(charge, xo, yo, zo, p,
-						theta, phi, maxPathLength, stepsizeAdaptive, eps, result);
+						theta, phi, sMax, h, tolerance, result);
 
 			} catch (AdaptiveSwimException e) {
 				System.err.println("Adaptive Swimmer Failed.");
@@ -173,17 +160,17 @@ public class BaseTest {
 
 			result.reset();
 
-			// DP Swimmer
-			CLAS12SwimResult c12res = clas12Swimmer.swim(charge, 100*xo, 100*yo, 100*zo, p, theta, phi, 100*s[i], 100*stepsizeAdaptive, 100*eps);
+			// C12 Swimmer
+			clas12Swimmer.swim(charge, 100*xo, 100*yo, 100*zo, p, theta, phi, 100*s[i], 100*h, 100*tolerance);
 
 		}
 
-		dpTime = bean.getCurrentThreadCpuTime() - start;
+		c12Time = bean.getCurrentThreadCpuTime() - start;
 
 
 		System.err.println("as time: " + asTime);
-		System.err.println("dp time: " + dpTime);
-		System.err.println("ratio as/dp = " + (double)asTime/(double)dpTime);
+		System.err.println("c12 time: " + c12Time);
+		System.err.println("ratio as/c12 = " + (double)asTime/(double)c12Time);
 
 		System.err.println("done");
 
@@ -211,7 +198,7 @@ public class BaseTest {
 		}
 	}
 	
-	private static void dpSwimResult(CSVWriter writer, CLAS12SwimResult result) {
+	private static void c12SwimResult(CSVWriter writer, CLAS12SwimResult result) {
         double NaN = Double.NaN;
         
 		writer.writeStartOfRow(result.statusString());

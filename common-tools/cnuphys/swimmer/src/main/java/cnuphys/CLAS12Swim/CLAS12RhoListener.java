@@ -72,39 +72,6 @@ public class CLAS12RhoListener extends CLAS12BoundaryListener {
 	}
 
 
-	/**
-	 * Interpolate between two points, one on each side of the boundary
-	 *
-	 * @param s1 the path length of the "left" point (cm)
-	 * @param u1 the state vector of the "left" point
-	 * @param s2 the path length of the "right" point (cm)
-	 * @param u2 the state vector of the "right" point
-	 * @param u  will hold the interpolated state vector
-	 * @return the interpolated path length
-	 */
-	@Override
-	public double interpolate(double s1, double[] u1, double s2, double[] u2, double u[]) {
-
-		// simple linear interpolation
-		double rho1 = rho(u1);
-		double rho2 = rho(u2);
-
-		// unlikely, but just in case
-		if (Math.abs(rho2 - rho1) < TINY) {
-			System.arraycopy(u2, 0, u, 0, 6);
-			return s2;
-		}
-
-		double t = (_rhoTarget - rho1) / (rho2 - rho1);
-		double s = s1 + t * (s2 - s1);
-
-		for (int i = 0; i < 6; i++) {
-			u[i] = u1[i] + t * (u2[i] - u1[i]);
-		}
-
-		return s;
-
-	}
 
 	// used for testing
 	public static void main(String arg[]) {
@@ -143,13 +110,8 @@ public class CLAS12RhoListener extends CLAS12BoundaryListener {
 		CLAS12SwimResult c12res = clas12Swimmer.swimRho(q, xo, yo, zo, p, theta, phi, rhotarget, accuracy, sMax,
 				stepsizeAdaptive, tolerance);
 
-		System.out.println("DP ACCURATE result:  " + c12res.toString() + "\n");
+		System.out.println("C12 result:  " + c12res.toString() + "\n");
 
-		// compare to interpolated approx
-
-		c12res = clas12Swimmer.swimRhoInterp(q, xo, yo, zo, p, theta, phi, rhotarget, sMax, stepsizeAdaptive,
-				tolerance);
-		System.out.println("DP INTERP result:  " + c12res.toString() + "\n");
 
 	}
 

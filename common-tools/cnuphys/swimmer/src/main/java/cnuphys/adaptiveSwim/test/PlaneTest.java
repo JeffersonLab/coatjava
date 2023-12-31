@@ -2,36 +2,39 @@ package cnuphys.adaptiveSwim.test;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
 
+import cnuphys.CLAS12Swim.CLAS12SwimResult;
+import cnuphys.CLAS12Swim.CLAS12Swimmer;
 import cnuphys.adaptiveSwim.AdaptiveSwimException;
 import cnuphys.adaptiveSwim.AdaptiveSwimResult;
-import cnuphys.adaptiveSwim.AdaptiveSwimUtilities;
 import cnuphys.adaptiveSwim.AdaptiveSwimmer;
 import cnuphys.adaptiveSwim.geometry.Plane;
-import cnuphys.adaptiveSwim.geometry.Point;
-import cnuphys.adaptiveSwim.geometry.Vector;
 import cnuphys.lund.AsciiReader;
 import cnuphys.magfield.MagneticFields;
 import cnuphys.magfield.MagneticFields.FieldType;
-import cnuphys.rk4.RungeKuttaException;
-import cnuphys.swim.Swimmer;
 import cnuphys.swimtest.CSVWriter;
-import cnuphys.swimtest.RandomData;
 import cnuphys.swimtest.SwimTest;
 
 public class PlaneTest {
 
 	//swim to a fixed plane
 	public static void planeTest() {
-		
-		//get data from csv data file
-		PlaneTestData testData[] = readDataFile();
 
-	    
+		//get data from csv data file
+		PlaneTestData testDataCM[] = readDataFile();
+		
+		PlaneTestData testDataMeter[] = new PlaneTestData[testDataCM.length];
+		for (int i = 0; i < testDataCM.length; i++) {
+			testDataMeter[i] = testDataCM[i].toMeters();
+		}
+
+
 		MagneticFields.getInstance().setActiveField(FieldType.COMPOSITE);
 	    System.err.println("Swim to fixed plane test");
-	    
+
 	    //for writing results to CSV
 		String homeDir = System.getProperty("user.home");
 		File file = new File(homeDir, "testResults/swimPlane.csv");
@@ -39,186 +42,161 @@ public class PlaneTest {
 	    CSVWriter writer = new CSVWriter(file);
 	    writer.writeRow("Swim to fixed Plane");
 	    writer.newLine();
-	    
+
 	    //write the header row
-	    writer.writeRow("charge", "xo (m)", "yo (m)", "zo (m)", "p (GeV/c)", "theta (deg)", "phi (deg)", 
-	    		"status", "xf_old", "yf_old", "zf_old", "s_old", "dist_old", 
-	    		"status", "xf_new", "yf_new", "zf_new", "s_new", "dist_new");
-	    
-		Swimmer swimmer = new Swimmer(); //old
+	    writer.writeRow("charge", "xo (cm)", "yo (cm)", "zo (cm)", "p (GeV/c)", "theta (deg)", "phi (deg)",
+	    		"status", "xf_as", "yf_as", "zf_as", "s_as", "dist_as",
+	    		"status", "xf_c12", "yf_c12", "zf_c12", "s_c12", "dist_c12");
+
 		AdaptiveSwimmer adaptiveSwimmer = new AdaptiveSwimmer(); //new
-		
+		CLAS12Swimmer swimmer = new CLAS12Swimmer();
+
+		CLAS12SwimResult c12Result;
+
 		//results for old and new
 		AdaptiveSwimResult result = new AdaptiveSwimResult(true);
-		
-		double eps = 1.0e-6;
-				
 
-		for (PlaneTestData data : testData) {
-			int charge = data.charge;
-			double xo = data.xo;
-			double yo = data.yo;
-			double zo = data.zo;
-			double p = data.p;
-			double theta = data.theta;
-			double phi = data.phi;
-			double nx = data.nx;
-			double ny = data.ny;
-			double nz = data.nz;
-			double px = data.px;
-			double py = data.py;
-			double pz = data.pz;
+		double tolerance = 1.0e-6;
 
+		PlaneTestData data;
+		for (int i = 0; i < testDataCM.length; i++) {
+
+			data = testDataMeter[i];
 			
 			result.reset();
-			writer.writeStartOfRow(charge, 100 * xo, 100 * yo, 100 * zo, p, theta, phi);
+			writer.writeStartOfRow(data.charge, 100*data.xo, 100*data.yo, 100*data.zo, data.p, data.theta, data.phi);
 
-			// OLD
-			
+			// AS
+
 			try {
-				swimmer.swimPlane(charge, xo, yo, zo, p, theta, phi, 
-						nx, ny, nz, px, py, pz, 
-						data.accuracy, data.sMax, data.stepSize, Swimmer.CLAS_Tolerance, result);
-				
+				adaptiveSwimmer.swimPlane(data.charge, data.xo, data.yo, data.zo, data.p,
+						data.theta, data.phi, data.plane, data.accuracy,
+						data.sMax, data.stepSize, tolerance, result);
+
 				planeSwimResult(writer, data.plane, result);
 
-			} catch (RungeKuttaException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
 
-			result.reset();
-
-			// NEW
-			try {
-				adaptiveSwimmer.swimPlane(charge, xo, yo, zo, p, 
-						theta, phi, data.plane, data.accuracy,
-						data.sMax, data.stepSize, eps, result);
-				
-				planeSwimResult(writer, data.plane, result);
-				
-			
 			} catch (AdaptiveSwimException e) {
 				System.err.println("NEW Swimmer Failed." + "  final pathlength = " + result.getFinalS());
 				e.printStackTrace();
 			}
 
+			result.reset();
+
+			data = testDataCM[i];
+			// C12
+			c12Result = swimmer.swimPlane(data.charge, data.xo, data.yo, data.zo, data.p, data.theta,
+					data.phi, data.plane,
+					data.accuracy, data.sMax, data.stepSize, 100*tolerance);
+
+			planeSwimResult(writer, data.plane, c12Result);
+
 			writer.newLine();
 		} //for
-		
+
 		writer.close();
 		System.err.println("done with main test. Now timing test.");
 
 		//timing test
-		long threadId = Thread.currentThread().getId();
-		long oldTime;
-		long newTime;
-		
-		long start = SwimTest.cpuTime(threadId);
+		ThreadMXBean bean = ManagementFactory.getThreadMXBean();
+        bean.setThreadCpuTimeEnabled(true);
+		long c12Time;
+		long asTime;
 
-		for (PlaneTestData data : testData) {
-			
-			int charge = data.charge;
-			double xo = data.xo;
-			double yo = data.yo;
-			double zo = data.zo;
-			double p = data.p;
-			double theta = data.theta;
-			double phi = data.phi;
+		long start = bean.getCurrentThreadCpuTime();
 
-			
+		for (int i = 0; i < testDataCM.length; i++) {
+
+			data = testDataMeter[i];
+
 			result.reset();
 
-			// NEW
 			try {
-				adaptiveSwimmer.swimPlane(charge, xo, yo, zo, p, 
-						theta, phi, data.plane, data.accuracy,
-						data.sMax, data.stepSize, eps, result);
-				
-				
-			
+				adaptiveSwimmer.swimPlane(data.charge, data.xo, data.yo, data.zo, data.p,
+						data.theta, data.phi, data.plane, data.accuracy,
+						data.sMax, data.stepSize, tolerance, result);
+
+
 			} catch (AdaptiveSwimException e) {
-				System.err.println("NEW Swimmer Failed." + "  final pathlength = " + result.getFinalS());
+				System.err.println("AS Swimmer Failed." + "  final pathlength = " + result.getFinalS());
 				e.printStackTrace();
 			}
 		} //for
-		
-		newTime = SwimTest.cpuTime(threadId) - start;
-		
-		start = SwimTest.cpuTime(threadId);
 
-		for (PlaneTestData data : testData) {
-			
-			int charge = data.charge;
-			double xo = data.xo;
-			double yo = data.yo;
-			double zo = data.zo;
-			double p = data.p;
-			double theta = data.theta;
-			double phi = data.phi;
-			double nx = data.nx;
-			double ny = data.ny;
-			double nz = data.nz;
-			double px = data.px;
-			double py = data.py;
-			double pz = data.pz;
+		asTime = bean.getCurrentThreadCpuTime() - start;
 
-			
-			result.reset();
+		start = bean.getCurrentThreadCpuTime();
+
+		for (int i = 0; i < testDataCM.length; i++) {
+
+			data = testDataCM[i];
+
+			// c12
+
+			swimmer.swimPlane(data.charge, data.xo, data.yo, data.zo, data.p, data.theta,
+					data.phi, data.plane,
+					data.accuracy, data.sMax, data.stepSize, 100*tolerance);
 
 
-			// OLD
-			
-			try {
-				swimmer.swimPlane(charge, xo, yo, zo, p, theta, phi, 
-						nx, ny, nz, px, py, pz, 
-						data.accuracy, data.sMax, data.stepSize, Swimmer.CLAS_Tolerance, result);
-				
+		} //for
 
-			} catch (RungeKuttaException e1) {
-				System.err.println("OLD Swimmer Failed." + "  final pathlength = " + result.getFinalS());
-				e1.printStackTrace();
-			}
+		c12Time = bean.getCurrentThreadCpuTime() - start;
 
-	
-		} //for	
-		
-		oldTime = SwimTest.cpuTime(threadId) - start;
-
-		System.err.println("old time: " + oldTime);
-		System.err.println("new time: " + newTime);
-		System.err.println("ratio old/new = " + (double)oldTime/(double)newTime);
+		System.err.println("as time: " + asTime);
+		System.err.println("c12 time: " + c12Time);
+		System.err.println("ratio as/c12 = " + (double)asTime/(double)c12Time);
 
 		System.err.println("done");
 
 	}
-	
-	
+
+
 	private static void planeSwimResult(CSVWriter writer, Plane plane, AdaptiveSwimResult result) {
 		double NaN = Double.NaN;
 
-		writer.writeStartOfRow(result.statusString()); 
+		writer.writeStartOfRow(result.statusString());
 
 		double[] uf = result.getU();
 		int status = result.getStatus();
 		if (status == AdaptiveSwimmer.SWIM_SUCCESS) {
 			double swimDist = plane.distance(uf);
-			writer.writeStartOfRow(uf[0], uf[1], uf[2], result.getS(), swimDist);
+			writer.writeStartOfRow(100*uf[0], 100*uf[1], 100*uf[2], 100*result.getS(), 100*swimDist);
 
 
 		} else {
 			writer.writeStartOfRow(NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN);
 		}
 
-		
+
 	}
+
+	private static void planeSwimResult(CSVWriter writer, Plane plane, CLAS12SwimResult result) {
+		double NaN = Double.NaN;
+
+		writer.writeStartOfRow(result.statusString());
+
+		double[] uf = result.getFinalU();
+		int status = result.getStatus();
+		if (status == CLAS12Swimmer.SWIM_SUCCESS) {
+			double swimDist = plane.distance(uf);
+			writer.writeStartOfRow(uf[0], uf[1], uf[2], result.getPathLength(), swimDist);
+
+
+		} else {
+			writer.writeStartOfRow(NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN, NaN);
+		}
+
+
+	}
+
 
 	//read a csv data file
 	private static PlaneTestData[] readDataFile() {
-		
+
 		ArrayList<PlaneTestData> data = new ArrayList<>();
-		File file = new File("./cnuphys/adaptiveSwim/test/planedata.csv");
-		
+		String homeDir = System.getProperty("user.home");
+		File file = new File(homeDir, "swimTestInput/planedata.csv");
+
 		if (file.exists()) {
 			System.out.println("Found plane data file");
 			try {
@@ -233,7 +211,7 @@ public class PlaneTest {
 					public void done() {
 						System.out.println("Done reading data file.");
 					}
-					
+
 				};
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
@@ -242,9 +220,9 @@ public class PlaneTest {
 		else {
 			System.out.println("Did not find plane data file [" + file.getAbsolutePath() + "]");
 		}
-		
+
 		PlaneTestData array[] = new PlaneTestData[data.size()];
 		return data.toArray(array);
 	}
-	
+
 }

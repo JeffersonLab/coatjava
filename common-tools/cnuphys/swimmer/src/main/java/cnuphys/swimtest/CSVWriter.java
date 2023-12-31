@@ -72,7 +72,7 @@ public class CSVWriter {
 
 		for (int i = 0; i < len; i++) {
 			boolean last = (i == (len-1));
-			sb.append(DoubleFormat.doubleFormat(vals[i], 4, 3));
+			sb.append(DoubleFormat.doubleFormat(vals[i], 3, 3));
 			if (!last) {
 				sb.append(", ");
 			}
@@ -104,7 +104,7 @@ public class CSVWriter {
 		StringBuffer sb = new StringBuffer(guessSize);
 
 		for (int i = 0; i < len; i++) {
-			sb.append(DoubleFormat.doubleFormat(vals[i], 4, 3));
+			sb.append(DoubleFormat.doubleFormat(vals[i], 3, 3));
 			sb.append(", ");
 		}
 
@@ -189,29 +189,6 @@ public class CSVWriter {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	}
-
-	/**
-	 * Main program for testing
-	 * @param arg command line arguments (ignored)
-	 */
-	public static void main(String[] arg) {
-		System.out.println("Testing CSV Writer");
-
-		String homeDir = System.getProperty("user.home");
-		File file = new File(homeDir, "testfile.csv");
-		System.out.println("test file: [" + file.getAbsolutePath() + "]");
-
-		CSVWriter writer =  new CSVWriter(file);
-
-		writer.writeRow("Hey", "Man");
-		writer.writeRow("What's", "\"Up\"", "dude");
-
-		writer.writeRow(Math.PI, Math.E, 6, 6.0e-10, .1, .01, .001, 100, 1000);
-		writer.writeRow(-1, -2, 3, 5, 99, 1023);
-		writer.close();
-
-		System.out.println("Done");
 	}
 
 }

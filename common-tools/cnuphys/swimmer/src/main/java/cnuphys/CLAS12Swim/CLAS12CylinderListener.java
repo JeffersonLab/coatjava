@@ -47,21 +47,4 @@ public class CLAS12CylinderListener extends CLAS12BoundaryListener {
 		return _targetCylinder.distance(newU[0], newU[1], newU[2]);
 	}
 
-
-	@Override
-	public double interpolate(double s1, double[] u1, double s2, double[] u2, double[] u) {
-		double dist1 = _targetCylinder.signedDistance(u1[0], u1[1], u1[2]);
-		double dist2 = _targetCylinder.signedDistance(u2[0], u2[1], u2[2]);
-
-		double t = -dist1 / (dist2 - dist1);
-
-		double s = s1 + t * (s2 - s1);
-
-		for (int i = 0; i < 6; i++) {
-			u[i] = u1[i] + t * (u2[i] - u1[i]);
-		}
-
-		return s;
-	}
-
 }

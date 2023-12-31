@@ -58,29 +58,6 @@ public class CLAS12PlaneListener extends CLAS12BoundaryListener {
 	}
 
 
-	/**
-	 * Interpolate between two points, one on each side of the plane
-	 *
-	 * @param s1 the path length of the "left" point (cm)
-	 * @param u1 the state vector of the "left" point
-	 * @param s2 the path length of the "right" point (cm)
-	 * @param u2 the state vector of the "right" point
-	 * @param u  will hold the interpolated state vector
-	 * @return the interpolated path length (cm)
-	 */
-	@Override
-	public double interpolate(double s1, double[] u1, double s2, double[] u2, double u[]) {
-
-		double t = _targetPlane.lineSegmentPlaneIntersection(u1, u2, u);
-
-		if (Double.isNaN(t)) {
-			return Double.NaN;
-		}
-
-		return s1 + t * (s2 - s1);
-
-	}
-
 	// used for testing
 	public static void main(String arg[]) {
 		final MagneticFields mf = MagneticFields.getInstance();
@@ -101,6 +78,9 @@ public class CLAS12PlaneListener extends CLAS12BoundaryListener {
 
 		Plane targetPlane = new Plane(1, 1, 1, 1, 1, 1);
 
+		double norm[] = {1, 1, 1};
+		double point[] = {1, 1, 1};
+		
 		int q = -1;
 		double p = 2.0;
 		double theta = 25;
@@ -116,17 +96,10 @@ public class CLAS12PlaneListener extends CLAS12BoundaryListener {
 		MagneticFields.getInstance().setActiveField(FieldType.COMPOSITE);
 		CLAS12Swimmer clas12Swimmer = new CLAS12Swimmer(); // new
 
-		CLAS12SwimResult c12res = clas12Swimmer.swimPlane(q, xo, yo, zo, p, theta, phi, targetPlane, accuracy, sMax,
+		CLAS12SwimResult c12res = clas12Swimmer.swimPlane(q, xo, yo, zo, p, theta, phi, norm, point, accuracy, sMax,
 				stepsizeAdaptive, eps);
 		System.out.println("DP ACCURATE result:  " + c12res.toString() + "\n");
 		double[] u = c12res.getFinalU();
-		System.out.println("distance to plane: " + targetPlane.distance(u[0], u[1], u[2]) + " cm");
-
-// compare to interpolated approx
-
-		c12res = clas12Swimmer.swimPlaneInterp(q, xo, yo, zo, p, theta, phi, targetPlane, sMax, stepsizeAdaptive, eps);
-		System.out.println("DP INTERP result:  " + c12res.toString() + "\n");
-		u = c12res.getFinalU();
 		System.out.println("distance to plane: " + targetPlane.distance(u[0], u[1], u[2]) + " cm");
 
 	}

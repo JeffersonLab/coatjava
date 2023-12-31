@@ -36,7 +36,7 @@ public class ZTest {
 	    //write the header row
 	    writer.writeRow("charge", "xo (cm)", "yo (cm)", "zo (cm)", "p (GeV/c)", "theta (deg)", "phi (deg)", "zTarg (cm)",
 	    		"status", "xf_as", "yf_as", "zf_as", "s_as", "dZ_as",
-	    		"status", "xf_dp", "yf_dp", "zf_dp", "s_dp", "dZ_dp");
+	    		"status", "xf_c12", "yf_c12", "zf_c12", "s_c12", "dZ_c12");
 
 
 		AdaptiveSwimmer adaptiveSwimmer = new AdaptiveSwimmer(); //adaptive
@@ -87,22 +87,22 @@ public class ZTest {
 				adaptiveSwimResult(writer, zTarg, result);
 
 			} catch (AdaptiveSwimException e) {
-				System.err.println("NEW Swimmer Failed." + "  final pathlength = " + result.getS());
+				System.err.println("AS Swimmer Failed." + "  final pathlength = " + result.getS());
 				e.printStackTrace();
 			}
 
 			result.reset();
 
-			// DP
+			// C12
 			CLAS12SwimResult c12res = clas12Swimmer.swimZ(charge, 100*xo, 100*yo, 100*zo, p, theta, phi, 100*zTarg, 
 					100*accuracy, 100*sMax, 100*stepsizeAdaptive, 100*tolerance);
-			dpSwimResult(writer, 100*zTarg, c12res);
+			c12SwimResult(writer, 100*zTarg, c12res);
 
 
 			writer.newLine();
 
 			if (i == 0) {
-				System.err.println("First DP result:  " + c12res.toString() + "\n");
+				System.err.println("First C12 result:  " + c12res.toString() + "\n");
 			}
 
 
@@ -114,22 +114,9 @@ public class ZTest {
 
 		ThreadMXBean bean = ManagementFactory.getThreadMXBean();
 
-        // Check if CPU time measurement is supported
-        if (!bean.isCurrentThreadCpuTimeSupported()) {
-            System.out.println("CPU time measurement is not supported.");
-            return;
-        }
-
-
-        // Enable CPU time measurement (if not already enabled)
-        if (!bean.isThreadCpuTimeEnabled()) {
-            bean.setThreadCpuTimeEnabled(true);
-        }
-
-
 		//timing test
 		long asTime;
-		long dpTime;
+		long c12Time;
 
         // Measure CPU time before method execution
         long start = bean.getCurrentThreadCpuTime();
@@ -147,7 +134,7 @@ public class ZTest {
 
 			result.reset();
 
-			// NEW
+			// AS
 			try {
 				adaptiveSwimmer.swimZ(charge, xo, yo, zo, p,
 						theta, phi, zTarg, accuracy,
@@ -175,17 +162,17 @@ public class ZTest {
 			double zTarg = zTarget[i];
 
 
-			// DP
-			CLAS12SwimResult c12res = clas12Swimmer.swimZ(charge, 100*xo, 100*yo, 100*zo, p, theta, phi, 
+			// C12
+			clas12Swimmer.swimZ(charge, 100*xo, 100*yo, 100*zo, p, theta, phi, 
 					100*zTarg, 100*accuracy, 100*sMax, 100*stepsizeAdaptive, 100*tolerance);
 		}
 
-		dpTime = bean.getCurrentThreadCpuTime() - start;
+		c12Time = bean.getCurrentThreadCpuTime() - start;
 
 
 		System.err.println("as time: " + asTime);
-		System.err.println("dp time: " + dpTime);
-		System.err.println("ratio as/dp = " + (double)asTime/(double)dpTime);
+		System.err.println("c12 time: " + c12Time);
+		System.err.println("ratio as/c12 = " + (double)asTime/(double)c12Time);
 
 		System.err.println("done");
 	}
@@ -210,7 +197,7 @@ public class ZTest {
 		}
 	}
 
-	private static void dpSwimResult(CSVWriter writer, double targetZ, CLAS12SwimResult result) {
+	private static void c12SwimResult(CSVWriter writer, double targetZ, CLAS12SwimResult result) {
         double NaN = Double.NaN;
 
 		writer.writeStartOfRow(result.statusString());

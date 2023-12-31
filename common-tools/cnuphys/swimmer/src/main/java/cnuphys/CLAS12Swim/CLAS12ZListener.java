@@ -61,41 +61,6 @@ public class CLAS12ZListener extends CLAS12BoundaryListener {
 		return Math.abs(newU[2] - _zTarget);
 	}
 
-
-	/**
-	 * Interpolate between two points, one on each side of the boundary
-	 *
-	 * @param s1 the path length of the "left" point (cm)
-	 * @param u1 the state vector of the "left" point
-	 * @param s2 the path length of the "right" point (cm)
-	 * @param u2 the state vector of the "right" point
-	 * @param u  will hold the interpolated state vector
-	 * @return the interpolated path length (cm)
-	 */
-	@Override
-	public double interpolate(double s1, double[] u1, double s2, double[] u2, double u[]) {
-
-		// simple linear interpolation
-		double z1 = u1[2];
-		double z2 = u2[2];
-
-		// unlikely, but just in case
-		if (Math.abs(z2 - z1) < TINY) {
-			System.arraycopy(u2, 0, u, 0, 6);
-			return s2;
-		}
-
-		double t = (_zTarget - z1) / (z2 - z1);
-		double s = s1 + t * (s2 - s1);
-
-		for (int i = 0; i < 6; i++) {
-			u[i] = u1[i] + t * (u2[i] - u1[i]);
-		}
-
-		return s;
-
-	}
-
 	// used for testing
 	public static void main(String arg[]) {
 		final MagneticFields mf = MagneticFields.getInstance();
@@ -132,12 +97,7 @@ public class CLAS12ZListener extends CLAS12BoundaryListener {
 
 		CLAS12SwimResult c12res = clas12Swimmer.swimZ(q, xo, yo, zo, p, theta, phi, ztarget, accuracy, sMax,
 				stepsizeAdaptive, tolerance);
-		System.out.println("DP ACCURATE result:  " + c12res.toString() + "\n");
-
-// compare to interpolated approx
-
-		c12res = clas12Swimmer.swimZInterp(q, xo, yo, zo, p, theta, phi, ztarget, sMax, stepsizeAdaptive, tolerance);
-		System.out.println("DP INTERP result:  " + c12res.toString() + "\n");
+		System.out.println("C12 result:  " + c12res.toString() + "\n");
 
 	}
 
