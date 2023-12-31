@@ -137,9 +137,7 @@ public class TestIntegrators {
 
 	public static void main(String[] arg) {
 
-		testBasicSwim(4, 565834934);
-
-		// testSwimRho(100000, 967584934);
+		testSwimRho(100000, 967584934);
 	}
 
 }
