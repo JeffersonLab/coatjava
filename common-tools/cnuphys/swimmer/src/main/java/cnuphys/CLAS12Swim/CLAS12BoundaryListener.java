@@ -1,5 +1,9 @@
 package cnuphys.CLAS12Swim;
 
+/**
+ * This is an abstact class to be extended by classes that swim to a boundary.
+ */
+
 public abstract class CLAS12BoundaryListener extends CLAS12Listener {
 
 	// the requested accuracy in cm

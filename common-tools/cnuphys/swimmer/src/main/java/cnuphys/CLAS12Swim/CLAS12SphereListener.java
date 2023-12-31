@@ -1,7 +1,10 @@
 package cnuphys.CLAS12Swim;
 
-import cnuphys.adaptiveSwim.geometry.Cylinder;
 import cnuphys.adaptiveSwim.geometry.Sphere;
+
+/**
+ * A listener for swimming to the surface of a fixed sphere
+ */
 
 public class CLAS12SphereListener extends CLAS12BoundaryListener {
 
@@ -16,7 +19,7 @@ public class CLAS12SphereListener extends CLAS12BoundaryListener {
 	 * Create a CLAS12 boundary target sphere listener, for swimming to a fixed sphere
 	 *
 	 * @param ivals          the initial values of the swim
-	 * @param targetCylinder the target infinite cylinder
+	 * @param targetSphere   the target infinite sphere
 	 * @param accuracy       the desired accuracy (cm)
 	 * @param sMax           the final or max path length (cm)
 	 */

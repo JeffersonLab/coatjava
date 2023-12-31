@@ -1,5 +1,8 @@
 package cnuphys.CLAS12Swim;
 
+/**
+ * This class implements the Dormand-Prince method for solving ordinary differential equation.
+ */
 public class DormandPrince {
 
 	/**

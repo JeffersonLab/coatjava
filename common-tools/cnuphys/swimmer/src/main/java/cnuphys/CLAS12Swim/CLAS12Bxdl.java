@@ -67,6 +67,7 @@ public class CLAS12Bxdl {
 	/**
 	 * Accumulate the integral of b cross dl
 	 *
+	 * @param sector   the sector [1..6]
 	 * @param previous the previous accumulation
 	 * @param current  the (after returning) current accumulation
 	 * @param p0       the starting [x,y,z] position in cm

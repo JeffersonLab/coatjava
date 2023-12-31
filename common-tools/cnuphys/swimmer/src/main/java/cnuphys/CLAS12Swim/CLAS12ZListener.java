@@ -7,6 +7,9 @@ import cnuphys.magfield.MagneticFieldInitializationException;
 import cnuphys.magfield.MagneticFields;
 import cnuphys.magfield.MagneticFields.FieldType;
 
+/**
+ * A listener for swimming to a fixed value of z
+ */
 public class CLAS12ZListener extends CLAS12BoundaryListener {
 
 	// the target z (cm)

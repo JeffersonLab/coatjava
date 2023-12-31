@@ -1,5 +1,8 @@
 package cnuphys.CLAS12Swim;
 
+/**
+ * This class implements the Cash-Karp method for solving ordinary differential equation.
+ */
 public class CashKarp {
 
 	/**

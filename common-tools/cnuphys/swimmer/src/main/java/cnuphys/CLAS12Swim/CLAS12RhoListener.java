@@ -8,6 +8,9 @@ import cnuphys.magfield.MagneticFieldInitializationException;
 import cnuphys.magfield.MagneticFields;
 import cnuphys.magfield.MagneticFields.FieldType;
 
+/**
+ * A listener for swimming to a fixed cylindrical radius (rho).
+ */
 public class CLAS12RhoListener extends CLAS12BoundaryListener {
 
 	// the target rho (cm)

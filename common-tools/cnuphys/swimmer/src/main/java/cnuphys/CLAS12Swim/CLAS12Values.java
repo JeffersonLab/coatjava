@@ -2,6 +2,9 @@ package cnuphys.CLAS12Swim;
 
 import cnuphys.magfield.FastMath;
 
+/**
+ * A class to hold the initial or final values for a swim.
+ */
 public class CLAS12Values {
 
 	/** The integer charge */
@@ -28,7 +31,7 @@ public class CLAS12Values {
 	/**
 	 * Store the initial conditions of a swim
 	 *
-	 * @param charge The integer charge
+	 * @param q      The integer charge
 	 * @param xo     The x coordinate of the vertex in cm
 	 * @param yo     The y coordinate of the vertex in cm
 	 * @param zo     The z coordinate of the vertex in cm
@@ -51,14 +54,12 @@ public class CLAS12Values {
 	 * of that is the dependent variable in the integration. The anlges are
 	 * positional, not the directional angles for the momentum.
 	 *
-	 * @param charge the integer charge. Must be supplied, not part of the state
+	 * @param q      the integer charge. Must be supplied, not part of the state
 	 *               vector. It shouldn't change, but we assume this is the original
 	 *               momentum, so we mutliply by the state vector norm of the t
 	 *               components, which should be 1 since we have magnetic field
 	 *               only.
-	 *
-	 * @param q      the integer charge
-	 * @param p      the (initial) momentum in GeV/c
+	 * @param p      the momentum in GeV/c
 	 * @param u      the state vector
 	 */
 	public CLAS12Values(int q, double p, double[] u) {

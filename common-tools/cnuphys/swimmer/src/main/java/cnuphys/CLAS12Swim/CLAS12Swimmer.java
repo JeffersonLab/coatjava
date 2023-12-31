@@ -8,8 +8,8 @@ import cnuphys.adaptiveSwim.geometry.Sphere;
 import cnuphys.magfield.FieldProbe;
 import cnuphys.magfield.IMagField;
 
-/*
- * A swimmer using the Dormand-Prince 8(5,3) adaptive step size integrator.
+/**
+ * The adaptive step size swimmer for CLAS12.
  */
 public class CLAS12Swimmer {
 
@@ -259,7 +259,8 @@ public class CLAS12Swimmer {
 	 * @param h         the initial stepsize in cm
 	 * @param tolerance The desired tolerance. The solver will automatically adjust
 	 *                  the step size to meet this tolerance.
-	 */
+	 * @return the result of the swim
+     */
 	public CLAS12SwimResult swim(int q, double xo, double yo, double zo, double p, double theta, double phi,
 			double sMax, double h, double tolerance) {
 

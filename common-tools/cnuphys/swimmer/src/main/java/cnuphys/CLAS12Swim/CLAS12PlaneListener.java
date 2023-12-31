@@ -8,6 +8,10 @@ import cnuphys.magfield.MagneticFieldInitializationException;
 import cnuphys.magfield.MagneticFields;
 import cnuphys.magfield.MagneticFields.FieldType;
 
+/**
+ * A listener for swimming to the surface of a fixed infinite plane
+ */
+
 public class CLAS12PlaneListener extends CLAS12BoundaryListener {
 
 	// the target plane

@@ -2,6 +2,10 @@ package cnuphys.CLAS12Swim;
 
 import cnuphys.adaptiveSwim.geometry.Cylinder;
 
+/**
+ * A listener for swimming to the surface of a fixed infinite cylinder
+ */
+
 public class CLAS12CylinderListener extends CLAS12BoundaryListener {
 
 	// the target cylinder

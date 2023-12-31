@@ -2,6 +2,9 @@ package cnuphys.CLAS12Swim;
 
 import java.util.Random;
 
+/**
+ * A class to generate random test data
+ */
 public class RandomTestData {
 	public int q[];
 	public double xo[]; // vertex x in cm
