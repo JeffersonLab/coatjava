@@ -3,32 +3,25 @@ package cnuphys.CLAS12Swim;
 import cnuphys.magfield.FieldProbe;
 
 /**
- * This is the ODE for swimming particles through a magnetic field
+ * This is the ODE for swimming particles through a magnetic field in a sector system.
  */
 
-public class CLAS12SwimmerODE implements ODE {
+public class CLAS12SectorSwimODE extends CLAS12SwimODE {
+	
+	//the sector [1..6]
+	private int _sector;
 
-	private FieldProbe _probe;
-
-	private double _momentum; // GeV/c
-
-	// alpha is qe/p where q is the integer charge,
-	// e is the electron charge = (10^-9) in GeV/(T*m)
-	// p is in GeV/c
-	private double _alpha;
 
 	/**
 	 * The derivative for swimming through a magnetic field
-	 *
+	 * @param sector the sector [1..6]
 	 * @param q     -1 for electron, +1 for proton, etc.
 	 * @param p     the magnitude of the momentum.
 	 * @param field the magnetic field
 	 */
-	public CLAS12SwimmerODE(int q, double p, FieldProbe field) {
-		_probe = field;
-		_momentum = p;
-//units of this  alpha are 1/(kG*cm)
-		_alpha = 1.0e-14 * q * CLAS12Swimmer.C / _momentum;
+	public CLAS12SectorSwimODE(int sector, int q, double p, FieldProbe field) {
+		super(q, p, field);
+		_sector = sector;
 	}
 
 	/**
@@ -50,7 +43,7 @@ public class CLAS12SwimmerODE implements ODE {
 		if (_probe != null) {
 
 			float b[] = new float[3];
-			_probe.field((float) u[0], (float) u[1], (float) u[2], b);
+			_probe.field(_sector, (float) u[0], (float) u[1], (float) u[2], b);
 
 			Bx = b[0];
 			By = b[1];

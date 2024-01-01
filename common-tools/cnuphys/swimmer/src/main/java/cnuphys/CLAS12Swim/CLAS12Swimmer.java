@@ -7,6 +7,7 @@ import cnuphys.adaptiveSwim.geometry.Plane;
 import cnuphys.adaptiveSwim.geometry.Sphere;
 import cnuphys.magfield.FieldProbe;
 import cnuphys.magfield.IMagField;
+import cnuphys.magfield.RotatedCompositeProbe;
 
 /**
  * The adaptive step size swimmer for CLAS12.
@@ -146,7 +147,7 @@ public class CLAS12Swimmer {
 	 * @param listener  an optional listener that can terminate the integration
 	 * @return the result of the swim
 	 */
-	protected CLAS12SwimResult baseSwim(CLAS12SwimmerODE ode, double u[], double sMin, double sMax, double h,
+	protected CLAS12SwimResult baseSwim(CLAS12SwimODE ode, double u[], double sMin, double sMax, double h,
 			double tolerance, CLAS12Listener listener) {
 
 		_listener = listener;
@@ -201,7 +202,7 @@ public class CLAS12Swimmer {
 	 * @return the result of the swim
 	 * @see CLAS12BoundaryListener
 	 */
-	private CLAS12SwimResult swimToAccuracy(CLAS12SwimmerODE ode, double u[], double sMin, double h, double tolerance,
+	private CLAS12SwimResult swimToAccuracy(CLAS12SwimODE ode, double u[], double sMin, double h, double tolerance,
 			CLAS12BoundaryListener listener) {
 
 		double s1 = sMin;
@@ -265,7 +266,7 @@ public class CLAS12Swimmer {
 			double sMax, double h, double tolerance) {
 
 		// create the ODE
-		CLAS12SwimmerODE ode = new CLAS12SwimmerODE(q, p, _probe);
+		CLAS12SwimODE ode = new CLAS12SwimODE(q, p, _probe);
 
 		// create the initial values
 		CLAS12Values ivals = new CLAS12Values(q, xo, yo, zo, p, theta, phi);
@@ -345,7 +346,7 @@ public class CLAS12Swimmer {
 		
 		
 		// create the ODE
-		CLAS12SwimmerODE ode = new CLAS12SwimmerODE(q, p, _probe);
+		CLAS12SwimODE ode = new CLAS12SwimODE(q, p, _probe);
 
 		// create the initial values
 		CLAS12Values ivals = new CLAS12Values(q, xo, yo, zo, p, theta, phi);
@@ -417,7 +418,7 @@ public class CLAS12Swimmer {
 
 		
 		// create the ODE
-		CLAS12SwimmerODE ode = new CLAS12SwimmerODE(q, p, _probe);
+		CLAS12SwimODE ode = new CLAS12SwimODE(q, p, _probe);
 
 		// create the initial values
 		CLAS12Values ivals = new CLAS12Values(q, xo, yo, zo, p, theta, phi);
@@ -515,7 +516,7 @@ public class CLAS12Swimmer {
 			Plane targetPlane, double accuracy, double sMax, double h, double tolerance) {
 
 		// create the ODE
-		CLAS12SwimmerODE ode = new CLAS12SwimmerODE(q, p, _probe);
+		CLAS12SwimODE ode = new CLAS12SwimODE(q, p, _probe);
 
 		// create the initial values
 		CLAS12Values ivals = new CLAS12Values(q, xo, yo, zo, p, theta, phi);
@@ -526,6 +527,47 @@ public class CLAS12Swimmer {
 	}
 	
 
+	/**
+	 * Swim to a target z in cm in a sector coordinate system.
+	 * THIS IS ONLY VALID IF THE FIELD IS A RotatedCompositeField.
+	 * The swim is terminated when the particle reaches the
+	 * target z or if sMax is reached.
+	 *
+	 * @param sector    the sector [1..6]
+	 * @param q         in integer units of e
+	 * @param xo        the x vertex position in cm
+	 * @param yo        the y vertex position in cm
+	 * @param zo        the z vertex position in cm
+	 * @param p         the momentum in GeV/c
+	 * @param theta     the initial polar angle in degrees
+	 * @param phi       the initial azimuthal angle in degrees
+	 * @param zTarget   the target z position in cm
+	 * @param accuracy  the desired accuracy in cm
+	 * @param sMax      the final (max) value of the independent variable
+	 *                  (pathlength) unless the integration is terminated by the
+	 *                  listener
+	 * @param h         the initial stepsize in cm
+	 * @param tolerance The desired tolerance. The solver will automatically adjust
+	 *                  the step size to meet this tolerance.
+	 * @return the result of the swim
+	 */
+	public CLAS12SwimResult sectorSwimZ(int sector, int q, double xo, double yo, double zo, double p, double theta, double phi,
+			double zTarget, double accuracy, double sMax, double h, double tolerance) {
+
+		if (!(_probe instanceof RotatedCompositeProbe)) {
+            System.err.println("CLAS12Swimmer: sectorSwimZ only valid for the RotatedComposite field.");
+            return null;
+        }
+		// create the ODE
+		CLAS12SectorSwimODE ode = new CLAS12SectorSwimODE(sector, q, p, _probe);
+
+		// create the initial values
+		CLAS12Values ivals = new CLAS12Values(q, xo, yo, zo, p, theta, phi);
+
+		CLAS12ZListener listener = new CLAS12ZListener(ivals, zTarget, accuracy, sMax);
+
+		return swimToAccuracy(ode, ivals.getU(), 0, h, tolerance, listener);
+	}
 
 	/**
 	 * Swim to a target z in cm. The swim is terminated when the particle reaches the
@@ -552,7 +594,7 @@ public class CLAS12Swimmer {
 			double zTarget, double accuracy, double sMax, double h, double tolerance) {
 
 		// create the ODE
-		CLAS12SwimmerODE ode = new CLAS12SwimmerODE(q, p, _probe);
+		CLAS12SwimODE ode = new CLAS12SwimODE(q, p, _probe);
 
 		// create the initial values
 		CLAS12Values ivals = new CLAS12Values(q, xo, yo, zo, p, theta, phi);
@@ -587,7 +629,7 @@ public class CLAS12Swimmer {
 			double rhoTarget, double accuracy, double sMax, double h, double tolerance) {
 
 		// create the ODE
-		CLAS12SwimmerODE ode = new CLAS12SwimmerODE(q, p, _probe);
+		CLAS12SwimODE ode = new CLAS12SwimODE(q, p, _probe);
 
 		// create the initial values
 		CLAS12Values ivals = new CLAS12Values(q, xo, yo, zo, p, theta, phi);
@@ -597,6 +639,7 @@ public class CLAS12Swimmer {
 		return swimToAccuracy(ode, ivals.getU(), 0, h, tolerance, listener);
 	}
 
+	
 
 	/**
 	 * Set the maximum integration step size in cm
