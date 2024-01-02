@@ -6,6 +6,13 @@ package cnuphys.CLAS12Swim;
  * value sMax.
  */
 public class CLAS12Listener implements ODEStepListener {
+	
+	/**
+	 * This parameter controls whether the listener can make a straight line
+	 * to the target for a neutral particle. Some can, like the basic, z, and rho listeners.
+	 * Some, like the cylinder, cannot-- in which case we let the full swim occur.
+     */
+	protected boolean _canMakeStriaghtLine = true;
 
 	protected static final double TINY = 1.0e-8; // cm
 
@@ -33,6 +40,17 @@ public class CLAS12Listener implements ODEStepListener {
 
 		_trajectory = new CLAS12Trajectory();
 		reset();
+	}
+	
+	/**
+	 * This parameter controls whether the listener can make a straight line to the
+	 * target for a neutral particle. Some can, like the basic, z, and rho
+	 * listeners. Some, like the cylinder, cannot-- in which case we let the full
+	 * swim occur.
+	 * @return <code>true</code> if the listener can make a straight line to the target for a neutral particle.
+     */
+	public boolean canMakeStraightLine() {
+		return _canMakeStriaghtLine;
 	}
 
 	/**
@@ -166,7 +184,7 @@ public class CLAS12Listener implements ODEStepListener {
 
 	/**
 	 * Add a second point creating a straight line. This is only used when
-	 * "swimming" neutral particles. This can be overridden to stop the straigh line
+	 * "swimming" neutral particles. This can be overridden to stop the straight line
 	 * at a target.
 	 */
 	public void straightLine() {
@@ -188,6 +206,7 @@ public class CLAS12Listener implements ODEStepListener {
 		double zf = zo + sf * costheta;
 
 		_trajectory.addPoint(xf, yf, zf, theta, phi, sf);
+		_status = CLAS12Swimmer.SWIM_SUCCESS;
 
 	}
 

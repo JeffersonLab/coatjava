@@ -32,17 +32,12 @@ public class CLAS12Swimmer {
 	/** The swim skipped too low momentum */
 	public static final int BELOW_MIN_MOMENTUM = -2;
 
-	/** A swim was requested for a neutral particle */
-	public static final int SWIM_NEUTRAL_PARTICLE = -3;
-
 	public static final Hashtable<Integer, String> resultNames = new Hashtable<>();
 	static {
 		resultNames.put(SWIM_SWIMMING, "SWIMMING");
 		resultNames.put(SWIM_SUCCESS, "SWIM_SUCCESS");
 		resultNames.put(SWIM_TARGET_MISSED, "SWIM_TARGET_MISSED");
 		resultNames.put(BELOW_MIN_MOMENTUM, "BELOW_MIN_MOMENTUM");
-		resultNames.put(SWIM_NEUTRAL_PARTICLE, "SWIM_NEUTRAL_PARTICLE");
-
 	}
 
 	// min momentum in GeV/c
@@ -116,10 +111,6 @@ public class CLAS12Swimmer {
 		return _solver;
 	}
 
-	/**
-	 * The listener that can stop the integration and stores results
-	 */
-	protected CLAS12Listener _listener;
 
 	/**
 	 * Get the magnetic field probe being used to swim
@@ -150,39 +141,55 @@ public class CLAS12Swimmer {
 	protected CLAS12SwimResult baseSwim(CLAS12SwimODE ode, double u[], double sMin, double sMax, double h,
 			double tolerance, CLAS12Listener listener) {
 
-		_listener = listener;
-		// all swims pass through here
-
-		if (_listener.getIvals().p < MINMOMENTUM) {
-			System.err.println("CLAS12Swimmer: skipped below min momentum swim");
-			_listener.setStatus(BELOW_MIN_MOMENTUM);
-			return new CLAS12SwimResult(_listener);
+		if (listener.getIvals().p < MINMOMENTUM) {
+			listener.setStatus(BELOW_MIN_MOMENTUM);
+			return new CLAS12SwimResult(listener);
 		}
 
-		// neutral? Just return a line
-		if (listener.getIvals().q == 0) {
-			System.err.println("CLAS12Swimmer: neutral particle swimm");
+		// neutral? Just return a line if we know how
+		if (listener.canMakeStraightLine() && listener.getIvals().q == 0) {
 			listener.straightLine();
-			listener.setStatus(SWIM_NEUTRAL_PARTICLE);
-			return new CLAS12SwimResult(_listener);
+			return new CLAS12SwimResult(listener);
 		}
+		return atomicSwim(ode, u, sMin, sMax, h, tolerance, listener);
+	}
+	
 
+	
+	/**
+	 * The atomic swim method. The swim is terminated when the particle reaches the
+	 * pathlength sMax or if the optional listener terminates the swim.
+	 *
+	 * @param ode       the ODE to solve
+	 * @param u         the initial state vector (x, y, z, tx, ty, tz) x, y, z in cm
+	 * @param sMin      the initial value of the independent variable (pathlength)
+	 *                  (usually 0)
+	 * @param sMax      the final (max) value of the independent variable
+	 *                  (pathlength) unless the integration is terminated by the
+	 *                  listener
+	 * @param h         the initial stepsize in cm
+	 * @param tolerance The desired tolerance. The solver will automatically adjust
+	 *                  the step size to meet this tolerance.
+	 * @param listener  an optional listener that can terminate the integration
+	 * @return the result of the swim
+	 */
+	private CLAS12SwimResult atomicSwim(CLAS12SwimODE ode, double u[], double sMin, double sMax, double h,
+			double tolerance, CLAS12Listener listener) {
 		switch (_solver) {
 		case Fehlberg:
-			Fehlberg.solve(ode, u, sMin, sMax, h, tolerance, MINSTEPSIZE, MAXSTEPSIZE, _listener);
+			Fehlberg.solve(ode, u, sMin, sMax, h, tolerance, MINSTEPSIZE, MAXSTEPSIZE, listener);
 			break;
 		case DormandPrince:
-			DormandPrince.solve(ode, u, sMin, sMax, h, tolerance, MINSTEPSIZE, MAXSTEPSIZE, _listener);
+			DormandPrince.solve(ode, u, sMin, sMax, h, tolerance, MINSTEPSIZE, MAXSTEPSIZE, listener);
 			break;
 		case CashKarp:
-			CashKarp.solve(ode, u, sMin, sMax, h, tolerance, MINSTEPSIZE, MAXSTEPSIZE, _listener);
+			CashKarp.solve(ode, u, sMin, sMax, h, tolerance, MINSTEPSIZE, MAXSTEPSIZE, listener);
 			break;
 		default:
-			DormandPrince.solve(ode, u, sMin, sMax, h, tolerance, MINSTEPSIZE, MAXSTEPSIZE, _listener);
+			DormandPrince.solve(ode, u, sMin, sMax, h, tolerance, MINSTEPSIZE, MAXSTEPSIZE, listener);
 		}
 
-		return new CLAS12SwimResult(_listener);
-
+		return new CLAS12SwimResult(listener);
 	}
 
 
@@ -204,6 +211,19 @@ public class CLAS12Swimmer {
 	 */
 	private CLAS12SwimResult swimToAccuracy(CLAS12SwimODE ode, double u[], double sMin, double h, double tolerance,
 			CLAS12BoundaryListener listener) {
+		
+		// all swims pass through here
+
+		if (listener.getIvals().p < MINMOMENTUM) {
+			listener.setStatus(BELOW_MIN_MOMENTUM);
+			return new CLAS12SwimResult(listener);
+		}
+
+		// neutral? Just return a line if we know how
+		if (listener.canMakeStraightLine() && listener.getIvals().q == 0) {
+			listener.straightLine();
+			return new CLAS12SwimResult(listener);
+		}
 
 		double s1 = sMin;
 		double s2 = listener.getSMax();
@@ -212,11 +232,11 @@ public class CLAS12Swimmer {
 
 		CLAS12SwimResult cres = null;
 		while (true) {
-			cres = baseSwim(ode, u, s1, s2, h, tolerance, listener);
+			cres = atomicSwim(ode, u, s1, s2, h, tolerance, listener);
 
 			if (listener.getStatus() == SWIM_SUCCESS) {
-				s2 = _listener.getS();
-				_listener.getTrajectory().removeLastPoint();
+				s2 = listener.getS();
+				listener.getTrajectory().removeLastPoint();
 
 				if (listener.accuracyReached(cres.getPathLength(), cres.getFinalU())) {
 					// do NOT forget to reset the max step size
@@ -224,14 +244,14 @@ public class CLAS12Swimmer {
 					return cres;
 				}
 
-				u = _listener.getU();
-				s1 = _listener.getS();
+				u = listener.getU();
+				s1 = listener.getS();
 
 				double newMaxH = listener.distanceToTarget(s1, u) / 2;
 				setMaxStepSize(newMaxH);
 				
 				// remove last point again it will be restored as start of appended swim
-				_listener.getTrajectory().removeLastPoint();
+				listener.getTrajectory().removeLastPoint();
 
 			} else { // failed, reached max path length
 				// do NOT forget to reset the max step size
@@ -655,15 +675,6 @@ public class CLAS12Swimmer {
 	 */
 	protected void resetMaxStepSize() {
 		MAXSTEPSIZE = Double.POSITIVE_INFINITY;
-	}
-
-	/**
-	 * Get the result of the swim
-	 *
-	 * @return the result of the swim in the listener
-	 */
-	public CLAS12Listener getListener() {
-		return _listener;
 	}
 
 }

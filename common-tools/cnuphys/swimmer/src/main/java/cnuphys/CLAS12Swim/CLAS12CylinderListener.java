@@ -27,6 +27,7 @@ public class CLAS12CylinderListener extends CLAS12BoundaryListener {
 		super(ivals, accuracy, sMax);
 		_targetCylinder = targetCylinder;
 		_inside = _targetCylinder.isInside(ivals.x, ivals.y, ivals.z);
+		_canMakeStriaghtLine = false;
 	}
 
 	@Override
