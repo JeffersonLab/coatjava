@@ -287,7 +287,7 @@ public class LundTrackDialog extends JDialog {
 		double stepSize = 1e-4; // cm
 		double sMax = 800; // cm
 
-		double tolerance = 1.0e-6;
+		double tolerance = 1.0e-8;
 
 		SwimTrajectory traj = null;
 

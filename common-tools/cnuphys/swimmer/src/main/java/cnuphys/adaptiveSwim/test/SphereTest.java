@@ -37,8 +37,8 @@ public class SphereTest {
 
 	    //write the header row
 	    writer.writeRow("charge", "xo (m)", "yo (m)", "zo (m)", "p (GeV/c)", "theta (deg)", "phi (deg)",
-	    		"start", "status", "xf_old", "yf_old", "zf_old", "s_old", "bdl_old", "d_old",
-	    		"status", "xf_c12", "yf_c12", "zf_c12", "s_c12", "NumPnt", "bdl_c12", "d_c12");
+	    		"start", "status", "xf_old", "yf_old", "zf_old", "s_old", "bdl_old", "npnt_old", "dist_old",
+	    		"status", "xf_c12", "yf_c12", "zf_c12", "s_c12", "bdl_c12", "npnt_c12", "dist_c12");
 
 		Swimmer swimmer = new Swimmer(); //old
 		CLAS12Swimmer clas12Swimmer = new CLAS12Swimmer(); //c12
@@ -51,7 +51,12 @@ public class SphereTest {
 		}
 
 
-		double eps = 1.0e-6;
+		double c12Tolerance = 1.0e-5;
+	    double delOld = 0;
+	    double delC12 = 0;
+	    int nsOld = 0;
+	    int nsC12 = 0;
+
 
 		int idx = 0;
 
@@ -79,17 +84,19 @@ public class SphereTest {
 
 	        if(traj!=null) {
 	        	traj.computeBDL(swimmer.getProbe());
+	        	nsOld += traj.size();
 	        }
 	        else {
 	        	System.out.println("Bad sphere swim");
 	        }
-	        swimCylinderSwimResult(writer, data, traj);
+	        delOld += swimSphereSwimResult(writer, data, traj);
 
 			// CLAS12Swimmer
-			CLAS12SwimResult c12Result = clas12Swimmer.swimSphere(charge, 100*xo, 100*yo, 100*zo,
-					p, theta, phi, c12Sphere[idx], 100*data.accuracy, 100*data.sMax, 100*data.stepSize, 100*eps);
+			CLAS12SwimResult c12res = clas12Swimmer.swimSphere(charge, 100*xo, 100*yo, 100*zo,
+					p, theta, phi, c12Sphere[idx], 100*data.accuracy, 100*data.sMax, 100*data.stepSize, c12Tolerance);
 
-			swimC12SphereSwimResult(writer, data, c12Result, c12Sphere[idx]);
+			delC12 += swimC12SphereSwimResult(writer, data, c12res, c12Sphere[idx]);
+			nsC12 += c12res.getNStep();
 
 			writer.newLine();
 			idx++;
@@ -99,7 +106,15 @@ public class SphereTest {
 
 
 		writer.close();
-		System.err.println("done with main test. Now timing test.");
+		delOld /=testData.length;
+		delC12 /=testData.length;
+		nsOld = (int)(((double)nsOld)/testData.length);
+		nsC12 = (int)(((double)nsC12)/testData.length);
+
+		System.err.println("done with main test.");
+		System.err.println(String.format("avg delOld = %6.2e cm **  avg delC12 = %6.2e cm  ", delOld, delC12));
+		System.err.println(String.format("avg nsOld = %d **  avg nsC12 = %d  ", nsOld, nsC12));
+		System.err.println("Now timing test.");
 
 		ThreadMXBean bean = ManagementFactory.getThreadMXBean();
         bean.setThreadCpuTimeEnabled(true);
@@ -152,7 +167,7 @@ public class SphereTest {
 
 			// CLAS12Swimmer
 			clas12Swimmer.swimSphere(charge, 100*xo, 100*yo, 100*zo,
-					p, theta, phi, c12Sphere[idx], 100*data.accuracy, 100*data.sMax, 100*data.stepSize, 100*eps);
+					p, theta, phi, c12Sphere[idx], 100*data.accuracy, 100*data.sMax, 100*data.stepSize, c12Tolerance);
 			idx++;
 		}
 
@@ -167,48 +182,65 @@ public class SphereTest {
 
 	}
 
-	//swimCylinder results
-	private static void swimCylinderSwimResult(CSVWriter writer, SphereTestData data, SwimTrajectory traj) {
+	//swimSphere results
+	private static double swimSphereSwimResult(CSVWriter writer, SphereTestData data, SwimTrajectory traj) {
 		double NaN = Double.NaN;
 
-		writer.writeStartOfRow((traj == null) ? "FAIL" : "Traj_NP=" + traj.size());
-
-//	    writer.writeRow("charge", "xo (m)", "yo (m)", "zo (m)", "p (GeV/c)", "theta (deg)", "phi (deg)",
-//	    		"status", "xf_old", "yf_old", "zf_old", "s_old", "bdl_old", "d_old");
+		writer.writeStartOfRow("N/A");
+		double dist = 0;
 
 		if (traj != null) {
 			double[] uf = traj.lastElement();
-			double dist = data.sphere.signedDistance(uf[0], uf[1], uf[2]);
-			writer.writeStartOfRow(100 * uf[0], 100 * uf[1], 100 * uf[2], 100 * uf[6], uf[7],
-					Math.abs(dist));
+			dist = data.sphere.signedDistance(uf[0], uf[1], uf[2]);
+			dist = Math.abs(dist);
+
+			//a big distance indicates a failure for old swimmer
+			if (dist > 1) {
+				writer.writeStartOfRow(100 * uf[0], 100 * uf[1], 100 * uf[2], 100 * uf[6], 100 * uf[7], traj.size(),
+						NaN);
+			} else {
+				writer.writeStartOfRow(100 * uf[0], 100 * uf[1], 100 * uf[2], 100 * uf[6], 100 * uf[7], traj.size(),
+						100 * dist);
+			}
 
 		} else {
-			writer.writeStartOfRow(NaN, NaN, NaN, NaN, NaN, NaN);
+			writer.writeStartOfRow(NaN, NaN, NaN, NaN, NaN, 0, NaN);
 		}
+		
+		//a big distance indicates a failure for old swimmer
+		if (dist > 1) {
+			dist = 0;
+		}
+		
+		return 100*dist;
 	}
 
 	//swimCylinder results
-	private static void swimC12SphereSwimResult(CSVWriter writer, SphereTestData data,
+	private static double swimC12SphereSwimResult(CSVWriter writer, SphereTestData data,
 			CLAS12SwimResult result, Sphere sphere) {
 		double NaN = Double.NaN;
 
 		writer.writeStartOfRow(result.statusString());
+		double dist = 0;
 
 		//uf is NOT the intersection
 		if (result.getStatus() == CLAS12Swimmer.SWIM_SUCCESS) {
 			double[] uf = result.getFinalU();
-			double dist = sphere.signedDistance(uf[0], uf[1], uf[2]);
+			dist = sphere.signedDistance(uf[0], uf[1], uf[2]);
+			dist = Math.abs(dist);
 			
 			result.getTrajectory().computeBDL(FieldProbe.factory());
 			double bdl = result.getTrajectory().getComputedBDL();
 
 			writer.writeStartOfRow(uf[0], uf[1], uf[2], result.getPathLength(), 
-					result.getNumStep(), bdl/100, Math.abs(dist)/100);
+					bdl, result.getNStep(), dist);
 
 
 		} else {
-			writer.writeStartOfRow(NaN, NaN, NaN, NaN, 0, NaN, NaN);
+			writer.writeStartOfRow(NaN, NaN, NaN, NaN, NaN, 0, NaN);
 		}
+		
+		return dist;
 	}
 
 

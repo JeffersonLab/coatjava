@@ -66,7 +66,6 @@ public class SwimTest {
 		JMenu menu = new JMenu("Tests");
 
 		final JMenuItem createTrajItem = new JMenuItem("Create Test Trajectories...");
-		final JMenuItem testSectorItem = new JMenuItem("Test Sector Swim");
 
 		ActionListener al = new ActionListener() {
 
@@ -74,21 +73,17 @@ public class SwimTest {
 			public void actionPerformed(ActionEvent e) {
 				if (e.getSource() == createTrajItem) {
 					CreateTestTrajectories.createTestTraj(3344632211L, 1000);
-				} else if (e.getSource() == testSectorItem) {
-					SectorTest.testSectorSwim(50000);
-				} 
+				}
 
 			}
 
 		};
 
 		createTrajItem.addActionListener(al);
-		testSectorItem.addActionListener(al);
 
 		menu.add(adaptiveTestMenu());
 
 		menu.add(createTrajItem);
-		menu.add(testSectorItem);
 
 		return menu;
 	}
@@ -105,24 +100,31 @@ public class SwimTest {
 
 		final JMenuItem cylinderItem = new JMenuItem("Cylinder Test");
 		final JMenuItem sphereItem = new JMenuItem("Sphere Test");
+		final JMenuItem testSectorItem = new JMenuItem("SectorZ Swim");
+
 
 		ActionListener al = new ActionListener() {
+			
+			long seed = 3344632211L;
+			int count = 40000;
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (e.getSource() == baseItem) {
-					BaseTest.baseSwimTest(10000, 73557799);
+					BaseTest.baseSwimTest(count, seed);
 				} else if (e.getSource() == swimZItem) {
-					ZTest.swimZTest(10000, 73557799);
+					ZTest.swimZTest(count, seed);
 				}  else if (e.getSource() == cylinderItem) {
 					CylinderTest.cylinderTest();
 				} else if (e.getSource() == sphereItem) {
 					SphereTest.sphereTest();
 				} else if (e.getSource() == rhoItem) {
-					RhoTest.rhoTest(10000, 73557799);
+					RhoTest.rhoTest(count, seed);
 				} else if (e.getSource() == planeItem) {
 					PlaneTest.planeTest();
-				} 
+				} else if (e.getSource() == testSectorItem) {
+					SectorZTest.testSectorSwim(count, seed);
+				}
 			}
 		};
 
@@ -132,6 +134,7 @@ public class SwimTest {
 		addMenuItem(atmenu, al, swimZItem);
 		addMenuItem(atmenu, al, cylinderItem);
 		addMenuItem(atmenu, al, sphereItem);
+		addMenuItem(atmenu, al, testSectorItem);
 		return atmenu;
 	}
 

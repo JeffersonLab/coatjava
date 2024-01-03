@@ -39,8 +39,8 @@ public class BaseTest {
 
 	    //write the header row
 	    writer.writeRow("charge", "xo (m)", "yo (m)", "zo (m)", "p (GeV/c)", "theta (deg)", "phi (deg)",
-	    		"status", "xf_as", "yf_as", "zf_as", "s_as", "bdl_as",
-	    		"status", "xf_c12", "yf_c12", "zf_c12", "s_c12", "bdl_c12");
+	    		"status", "xf_as", "yf_as", "zf_as", "s_as", "npnt_as", "bdl_as",
+	    		"status", "xf_c12", "yf_c12", "zf_c12", "s_c12", "npnt_as", "bdl_c12");
 
 
 		AdaptiveSwimmer adaptiveSwimmer = new AdaptiveSwimmer(); //new
@@ -55,7 +55,8 @@ public class BaseTest {
 		double h = 1e-5; // starting stepsize in m
 
 		double sMax = 8; // m
-		double tolerance = 1.0e-6;
+		double asTolerance = 1.0e-6;
+		double c12Tolerance = 1.0e-5;
 		
 		//the final pathlengths from the adaptive swimmer
 		//will be used as the target pathlengths for the dp swimmer
@@ -65,6 +66,10 @@ public class BaseTest {
 
 		//generate some random data
 		RandomData data = new RandomData(n, seed);
+		
+	    int nsAS = 0;
+	    int nsC12 = 0;
+
 
 		for (int i = 0; i < n; i++) {
 
@@ -83,9 +88,11 @@ public class BaseTest {
 			// Adaptive
 			try {
 				adaptiveSwimmer.swim(charge, xo, yo, zo, p,
-						theta, phi, sMax, h, tolerance, result);
+						theta, phi, sMax, h, asTolerance, result);
 
 				adaptiveSwimResult(writer, result);
+				nsAS += result.getNStep();
+
 				s[i] = result.getS();
 
 			} catch (AdaptiveSwimException e) {
@@ -96,22 +103,25 @@ public class BaseTest {
 
 			result.reset();
 
-			// DP
-			CLAS12SwimResult c12res = clas12Swimmer.swim(charge, 100*xo, 100*yo, 100*zo, p, theta, phi, 100*s[i], 100*h, 100*tolerance);
-			c12SwimResult(writer, c12res);
+			// c12
+			CLAS12SwimResult c12Res = clas12Swimmer.swim(charge, 100*xo, 100*yo, 100*zo, p, theta, phi, 100*s[i], 100*h, c12Tolerance);
+			c12SwimResult(writer, c12Res);
+			nsC12 += c12Res.getNStep();
 
 
 			writer.newLine();
 
-			if (i == 0) {
-				System.err.println("First C12 result:  " + c12res.toString() + "\n");
-
-			}
 		}
 		
 
 		writer.close();
-		System.err.println("done with main test. Now timing test.");
+		
+		nsAS = (int)(((double)nsAS)/n);
+		nsC12 = (int)(((double)nsC12)/n);
+
+		System.err.println("done with main test.");
+		System.err.println(String.format("avg nsAS = %d **  avg nsC12 = %d  ", nsAS, nsC12));
+		System.err.println("Now timing test.");
 		
 		ThreadMXBean bean = ManagementFactory.getThreadMXBean();
 
@@ -137,7 +147,7 @@ public class BaseTest {
 			// Adaptive Swimmer
 			try {
 				adaptiveSwimmer.swim(charge, xo, yo, zo, p,
-						theta, phi, sMax, h, tolerance, result);
+						theta, phi, sMax, h, asTolerance, result);
 
 			} catch (AdaptiveSwimException e) {
 				System.err.println("Adaptive Swimmer Failed.");
@@ -161,7 +171,7 @@ public class BaseTest {
 			result.reset();
 
 			// C12 Swimmer
-			clas12Swimmer.swim(charge, 100*xo, 100*yo, 100*zo, p, theta, phi, 100*s[i], 100*h, 100*tolerance);
+			clas12Swimmer.swim(charge, 100*xo, 100*yo, 100*zo, p, theta, phi, 100*s[i], 100*h, c12Tolerance);
 
 		}
 
@@ -190,11 +200,11 @@ public class BaseTest {
 			result.getTrajectory().computeBDL(_probe);
 			double bdl = result.getTrajectory().getComputedBDL();
 			
-			writer.writeStartOfRow(100*uf[0], 100*uf[1], 100*uf[2], 100*result.getS(), bdl);
+			writer.writeStartOfRow(100*uf[0], 100*uf[1], 100*uf[2], 100*result.getS(), result.getNStep(), 100*bdl);
 
 
 		} else {
-			writer.writeStartOfRow(NaN, NaN, NaN, NaN, NaN, NaN);
+			writer.writeStartOfRow(NaN, NaN, NaN, NaN, NaN, 0, NaN);
 		}
 	}
 	
@@ -208,9 +218,9 @@ public class BaseTest {
 			result.getTrajectory().computeBDL(_probe);
 			double bdl = result.getTrajectory().getComputedBDL();
 
-			writer.writeStartOfRow(finalVals.x, finalVals.y, finalVals.z, result.getPathLength(), bdl);
+			writer.writeStartOfRow(finalVals.x, finalVals.y, finalVals.z, result.getPathLength(), result.getNStep(), bdl);
 		} else {
-			writer.writeStartOfRow(NaN, NaN, NaN, NaN, NaN);
+			writer.writeStartOfRow(NaN, NaN, NaN, NaN, 0, NaN);
 		}
 
 	}

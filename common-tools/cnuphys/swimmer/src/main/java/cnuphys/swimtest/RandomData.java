@@ -22,8 +22,36 @@ public class RandomData {
 	 */
 	public RandomData(int n, long seed, int sector) {
 
-		this(n, seed, -0.01, 0.02, -0.01, 0.02, -0.01, 0.02,
-				0.9, 5.0, 25, 20, -30 + (sector-1)*60 + 10, 40);
+		count = n;
+	    rand = new Random(seed);
+
+		//random sector
+
+
+	    charge = new int[n];
+	    xo = new double[n];
+	    yo = new double[n];
+	    zo = new double[n];
+	    p = new double[n];
+	    theta = new double[n];
+	    phi = new double[n];
+	    
+	    double phiMid = (sector-1)*60;
+	    double phiMin = phiMid - 20;
+
+	    for (int i = 0; i < n; i++) {
+
+	    	charge[i] = (rand.nextDouble() < 0.5) ? -1 : 1;
+	    	p[i] = dval(0.9, 5.0); //Gev
+	    	theta[i] = dval(25, 20);
+	    	phi[i] = dval(phiMin, 40);
+
+	    	xo[i] = dval( -0.01, 0.02); //meters
+	    	yo[i] = dval( -0.01, 0.02); //meters
+	    	zo[i] = dval( -0.01, 0.02); //meters
+
+	    }
+
 	}
 
 

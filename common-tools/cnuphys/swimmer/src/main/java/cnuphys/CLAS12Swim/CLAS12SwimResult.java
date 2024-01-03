@@ -98,7 +98,7 @@ public class CLAS12SwimResult {
 	 *
 	 * @return the number of integration steps
 	 */
-	public int getNumStep() {
+	public int getNStep() {
 		return _listener.getNumStep();
 	}
 
@@ -130,7 +130,7 @@ public class CLAS12SwimResult {
 		sb.append(String.format("phi = %.4f deg\n", fvalues.phi));
 		sb.append(String.format("rho = %.4f cm\n", Math.hypot(fvalues.x, fvalues.y)));
 		sb.append(String.format("path length = %.4f cm\n", getPathLength()));
-		sb.append(String.format("number of steps = %d\n", getNumStep()));
+		sb.append(String.format("number of steps = %d\n", getNStep()));
 
 		return sb.toString();
 	}

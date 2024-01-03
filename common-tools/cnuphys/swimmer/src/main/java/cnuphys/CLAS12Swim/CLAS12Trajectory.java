@@ -93,21 +93,21 @@ public class CLAS12Trajectory extends SwimTrajectory {
 
 	@Override
 	public boolean add(double u[]) {
-		System.err.println("BAD add double[] called for Full trajectory");
+		System.err.println("BAD add double[] called for CLAS12Trajectory object");
 		System.exit(1);
 		return false;
 	}
 
 	@Override
 	public boolean add(double u[], double s) {
-		System.err.println("BAD add double[], double s called for Full trajectory");
+		System.err.println("BAD add double[], double s called forCLAS12Trajectory object");
 		System.exit(1);
 		return false;
 	}
 
 	@Override
 	public void add(double xo, double yo, double zo, double p, double theta, double phi) {
-		System.err.println("BAD add x, y, z, p, theta, phi called for Full trajectory");
+		System.err.println("BAD add x, y, z, p, theta, phi called for CLAS12Trajectory object");
 		System.exit(1);
 	}
 
@@ -165,6 +165,23 @@ public class CLAS12Trajectory extends SwimTrajectory {
 		// convert to cm
 		return Math.sqrt(x * x + y * y + z * z);
 	}
+	
+	/**
+	 * Get the total BDL integral if computed
+	 * 
+	 * @return the total BDL integral in kG-m
+	 */
+	public double getComputedBDL() {
+		if (Double.isNaN(_bdlValue)) {
+			computeBDL(FieldProbe.factory());
+		}
+
+		return _bdlValue;
+	}
+
+	
+
+	private double _bdlValue = Double.NaN;
 
 	/**
 	 * Compute the integral B cross dl. This will cause the state vector arrays to
@@ -176,34 +193,54 @@ public class CLAS12Trajectory extends SwimTrajectory {
 	 */
 	@Override
 	public void computeBDL(FieldProbe probe) {
-		if (_computedBDL) {
-			return;
-		}
-
+		
 		if (probe instanceof RotatedCompositeProbe) {
 			System.err.println(
-					"SHOULD NOT HAPPEN. In rotated composite field probe, should not call computeBDL without the sector argument.");
+					"SHOULD NOT HAPPEN. In rotated composite field probe, should not call Bxdl accumlate without the sector argument.");
 
 			(new Throwable()).printStackTrace();
 			System.exit(1);
 
 		}
 
-		CLAS12Bxdl previous = new CLAS12Bxdl();
-		CLAS12Bxdl current = new CLAS12Bxdl();
-		double[] p0 = this.get(0);
-		augment(p0, 0, 0, 0);
-
-		for (int i = 1; i < size(); i++) {
-			double[] p1 = get(i);
-			CLAS12Bxdl.accumulate(previous, current, p0, p1, probe);
-
-			augment(p1, current.getPathlength(), current.getIntegralBxdl(), i);
-			previous.set(current);
-			p0 = p1;
+		if (!Double.isNaN(_bdlValue)) {
+			return;
 		}
+		
+		_bdlValue = 0;
+		if (this.size() < 2) {
+			return;
+		}
+		
+		for (int i = 0; i < size() - 2; i++) {
+			double[] p0 = get(i);
+			double[] p1 = get(i + 1);
+		
+			double dr[] = new double[3];
+			float b[] = new float[3];
 
-		_computedBDL = true;
+			for (int j = 0; j < 3; j++) {
+				dr[j] = p1[j] - p0[j];
+			}
+
+			
+			// use the average position (in cm) to compute B for b cross dl
+			float xavgcm = (float) ((p0[0] + p1[0]) / 2);
+			float yavgcm = (float) ((p0[1] + p1[1]) / 2);
+			float zavgcm = (float) ((p0[2] + p1[2]) / 2);
+			
+			// get the field at the average position
+			probe.field(xavgcm, yavgcm, zavgcm, b);
+
+			for (int j = 0; j < 3; j++) {
+				dr[j] = p1[j] - p0[j];
+			}
+
+			double[] bxdl = cross(b, dr);
+			double magbxdl = vecmag(bxdl);
+			_bdlValue += magbxdl;
+		}
+		
 	}
 
 	/**
@@ -217,25 +254,60 @@ public class CLAS12Trajectory extends SwimTrajectory {
 	 */
 	@Override
 	public void sectorComputeBDL(int sector, RotatedCompositeProbe probe) {
-		if (_computedBDL) {
+
+		if (!Double.isNaN(_bdlValue)) {
 			return;
 		}
-
-		CLAS12Bxdl previous = new CLAS12Bxdl();
-		CLAS12Bxdl current = new CLAS12Bxdl();
-		double[] p0 = get(0);
-		augment(p0, 0, 0, 0);
-
-		for (int i = 1; i < size(); i++) {
-			double[] p1 = get(i);
-			CLAS12Bxdl.sectorAccumulate(sector, previous, current, p0, p1, probe);
-
-			augment(p1, current.getPathlength(), current.getIntegralBxdl(), i);
-
-			previous.set(current);
-			p0 = p1;
+		
+		_bdlValue = 0;
+		if (this.size() < 2) {
+			return;
 		}
-		_computedBDL = true;
+		
+		for (int i = 0; i < size() - 2; i++) {
+			double[] p0 = get(i);
+			double[] p1 = get(i + 1);
+		
+			double dr[] = new double[3];
+			float b[] = new float[3];
+
+			for (int j = 0; j < 3; j++) {
+				dr[j] = p1[j] - p0[j];
+			}
+
+			
+			// use the average position (in cm) to compute B for b cross dl
+			float xavgcm = (float) ((p0[0] + p1[0]) / 2);
+			float yavgcm = (float) ((p0[1] + p1[1]) / 2);
+			float zavgcm = (float) ((p0[2] + p1[2]) / 2);
+			
+			// get the field at the average position
+			probe.field(sector, xavgcm, yavgcm, zavgcm, b);
+
+			for (int j = 0; j < 3; j++) {
+				dr[j] = p1[j] - p0[j];
+			}
+
+			double[] bxdl = cross(b, dr);
+			double magbxdl = vecmag(bxdl);
+			_bdlValue += magbxdl;
+		}
+	}
+	
+
+	// usual cross product used for BDL
+	private static double[] cross(float a[], double b[]) {
+		double c[] = new double[3];
+		c[0] = a[1] * b[2] - a[2] * b[1];
+		c[1] = a[2] * b[0] - a[0] * b[2];
+		c[2] = a[0] * b[1] - a[1] * b[0];
+		return c;
+	}
+
+	// usual vec mag used for BDL
+	private static double vecmag(double a[]) {
+		double asq = a[0] * a[0] + a[1] * a[1] + a[2] * a[2];
+		return Math.sqrt(asq);
 	}
 
 }

@@ -40,8 +40,8 @@ public class CylinderTest {
 	    
 	    //write the header row
 	    writer.writeRow("charge", "xo (cm)", "yo (cm)", "zo (cm)", "p (GeV/c)", "theta (deg)", "phi (deg)", 
-	    		"status", "xf_as", "yf_as", "zf_as", "s_as", "d_as/acc", 
-	    		"status", "xf_c12", "yf_c12", "zf_c12", "s_c12", "d_c12/acc");
+	    		"status", "xf_as", "yf_as", "zf_as", "s_as", "npnt_as", "dist_as", 
+	    		"status", "xf_c12", "yf_c12", "zf_c12", "s_c12", "npnt_c12", "dist_c12");
 	    
 	    
 		AdaptiveSwimmer adaptiveSwimmer = new AdaptiveSwimmer(); //AS
@@ -51,7 +51,8 @@ public class CylinderTest {
 		AdaptiveSwimResult result = new AdaptiveSwimResult(true);
 		
 
-		double tolerance = 1.0e-6;
+		double asTolerance = 1.0e-6;
+		double c12Tolerance = 1.0e-5;
 		
 		double c12p1[] = new double[3];
 		double c12p2[] = new double[3];
@@ -66,6 +67,12 @@ public class CylinderTest {
 			}
 			c12Cylinder[i] = new Cylinder(c12p1, c12p2, 100*data.r);
 		}
+
+	    double delAS = 0;
+	    double delC12 = 0;
+	    int nsAS = 0;
+	    int nsC12 = 0;
+
 
 		int idx = 0;
 		for (CylinderTestData data : testData) {
@@ -86,9 +93,10 @@ public class CylinderTest {
 			try {
 				adaptiveSwimmer.swimCylinder(charge, xo, yo, zo, p, theta, phi,
 						data.CLP1, data.CLP2, data.r,
-						data.accuracy, data.sMax, data.stepSize, tolerance, result);
+						data.accuracy, data.sMax, data.stepSize, asTolerance, result);
 				
-				swimCylinderSwimResult(writer, data, result);
+				delAS += swimCylinderSwimResult(writer, data, result);
+				nsAS += result.getNStep();
 
 			} catch (AdaptiveSwimException e) {
 				System.err.println("AS Swimmer Failed." + "  final pathlength = " + result.getS());
@@ -98,21 +106,31 @@ public class CylinderTest {
 			result.reset();
 			
 			// CLAS12Swimmer
-			CLAS12SwimResult c12Result = clas12Swimmer.swimCylinder(charge, 100*xo, 100*yo, 100*zo, 
-					p, theta, phi, c12Cylinder[idx], 100*data.accuracy, 100*data.sMax, 100*data.stepSize, 100*tolerance);
+			CLAS12SwimResult c12Res = clas12Swimmer.swimCylinder(charge, 100*xo, 100*yo, 100*zo, 
+					p, theta, phi, c12Cylinder[idx], 100*data.accuracy, 100*data.sMax, 100*data.stepSize, c12Tolerance);
 			
-			swimC12CylinderSwimResult(writer, data, c12Result, c12Cylinder[idx]);
+			delC12 += swimC12CylinderSwimResult(writer, data, c12Res, c12Cylinder[idx]);
+			nsC12 += c12Res.getNStep();
 			
 			writer.newLine();
 
 			idx++;
 		}
 		writer.close();
-		System.err.println("done with main test. Now timing test.");
+		delAS /=testData.length;
+		delC12 /=testData.length;
+		nsAS = (int)(((double)nsAS)/testData.length);
+		nsC12 = (int)(((double)nsC12)/testData.length);
+
+		System.err.println("done with main test.");
+		System.err.println(String.format("avg delAS = %6.2e cm **  avg delC12 = %6.2e cm  ", delAS, delC12));
+		System.err.println(String.format("avg nsAS = %d **  avg nsC12 = %d  ", nsAS, nsC12));
+		System.err.println("Now timing test.");
+
+		//timing test
 		ThreadMXBean bean = ManagementFactory.getThreadMXBean();
         bean.setThreadCpuTimeEnabled(true);
 
-		//timing test
 		long c12Time;
 		long asTime;
 		
@@ -140,7 +158,7 @@ public class CylinderTest {
 				try {
 					adaptiveSwimmer.swimCylinder(charge, xo, yo, zo, p, theta, phi, 
 							data.CLP1, data.CLP2, data.r, data.accuracy,
-							data.sMax, data.stepSize, tolerance, result);
+							data.sMax, data.stepSize, asTolerance, result);
 
 				} catch (AdaptiveSwimException e) {
 					System.err.println("AS Swimmer Failed." + "  final pathlength = " + result.getS());
@@ -165,8 +183,8 @@ public class CylinderTest {
 				double theta = data.theta;
 				double phi = data.phi;
 
-				CLAS12SwimResult c12Result = clas12Swimmer.swimCylinder(charge, 100*xo, 100*yo, 100*zo, 
-						p, theta, phi, c12Cylinder[idx], 100*data.accuracy, 100*data.sMax, 100*data.stepSize, 100*tolerance);
+				clas12Swimmer.swimCylinder(charge, 100*xo, 100*yo, 100*zo, 
+						p, theta, phi, c12Cylinder[idx], 100*data.accuracy, 100*data.sMax, 100*data.stepSize, c12Tolerance);
 
 				idx++;
 			}
@@ -184,40 +202,47 @@ public class CylinderTest {
 	
 	
 	//swimCylinder results
-	private static void swimCylinderSwimResult(CSVWriter writer, CylinderTestData data, AdaptiveSwimResult result) {
+	private static double swimCylinderSwimResult(CSVWriter writer, CylinderTestData data, AdaptiveSwimResult result) {
 		double NaN = Double.NaN;
 
 		writer.writeStartOfRow(result.statusString()); 
+		double dist = 0;
 
 		//uf is NOT the intersection
 		if (result.getStatus() == AdaptiveSwimmer.SWIM_SUCCESS) {
 			double[] uf = result.getU();
-			double dist = data.cylinder.signedDistance(uf[0], uf[1], uf[2]);
-			writer.writeStartOfRow(100*uf[0], 100*uf[1], 100*uf[2], 100*result.getS(), Math.abs(dist/data.accuracy));
+			dist = data.cylinder.signedDistance(uf[0], uf[1], uf[2]);
+			dist = Math.abs(dist);
+			writer.writeStartOfRow(100*uf[0], 100*uf[1], 100*uf[2], 100*result.getS(), result.getNStep(), 100*dist);
 
 
 		} else {
-			writer.writeStartOfRow(NaN, NaN, NaN, NaN);
+			writer.writeStartOfRow(NaN, NaN, NaN, 0, NaN);
 		}
+		return 100*dist;
 	}
 	
 	//swimCylinder results
-	private static void swimC12CylinderSwimResult(CSVWriter writer, CylinderTestData data, 
+	private static double swimC12CylinderSwimResult(CSVWriter writer, CylinderTestData data, 
 			CLAS12SwimResult result, Cylinder cylinder) {
 		double NaN = Double.NaN;
 
 		writer.writeStartOfRow(result.statusString()); 
+		double dist = 0;
 
 		//uf is NOT the intersection
 		if (result.getStatus() == CLAS12Swimmer.SWIM_SUCCESS) {
 			double[] uf = result.getFinalU();
-			double dist = cylinder.signedDistance(uf[0], uf[1], uf[2]);
-			writer.writeStartOfRow(uf[0], uf[1], uf[2], result.getPathLength(), Math.abs(dist/(100*data.accuracy)));
+			dist = cylinder.signedDistance(uf[0], uf[1], uf[2]);
+			dist = Math.abs(dist);
+			writer.writeStartOfRow(uf[0], uf[1], uf[2], result.getPathLength(), result.getNStep(), dist);
 
 
 		} else {
-			writer.writeStartOfRow(NaN, NaN, NaN, NaN);
+			writer.writeStartOfRow(NaN, NaN, NaN, 0, NaN);
 		}
+		
+		return dist;
 	}
 
 	
