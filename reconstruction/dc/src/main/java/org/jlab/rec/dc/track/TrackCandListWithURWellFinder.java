@@ -846,7 +846,7 @@ public class TrackCandListWithURWellFinder {
                 c.get_Segment2().isOnTrack=true;
                 for (FittedHit h1 : c.get_Segment1()) {
                     if (Math.abs(st.getZ() - h1.get_Z()) < 0.1 && c.get_Segment1().get_Id() > -1
-                            && (h1.get_XWire() - st.getProjector()) < 0.1) {
+                            && Math.abs(h1.get_XWire() - st.getProjector()) < 0.1) {
 
                         h1.set_AssociatedHBTrackID(trk.get_Id());
                         h1.updateHitfromSV(st, DcDetector);
@@ -855,7 +855,7 @@ public class TrackCandListWithURWellFinder {
                 }
                 for (FittedHit h1 : c.get_Segment2()) {
                     if (Math.abs(st.getZ() - h1.get_Z()) < 0.1 && c.get_Segment2().get_Id() > -1
-                            && (h1.get_XWire() - st.getProjector()) < 0.1) {
+                            && Math.abs(h1.get_XWire() - st.getProjector()) < 0.1) {
 
                         h1.set_AssociatedHBTrackID(trk.get_Id());
                         h1.updateHitfromSV(st, DcDetector);
