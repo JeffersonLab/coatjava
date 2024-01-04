@@ -6,7 +6,7 @@ import java.util.Arrays;
  * This class holds the grid parameters for one direction. The constructor is
  * provided the min, max and number of points (inclusive, i.e., including the
  * end points) and the step is computed.
- * 
+ *
  * @author David Heddle
  * @author Nicole Schumacher
  * @version 1.0
@@ -69,7 +69,7 @@ public class GridCoordinate {
 			_values[i] = _min + i * _delta;
 		}
 	}
-	
+
 	/**
 	 * Get the values of the grid points
 	 * @return the values of the grid points
@@ -77,7 +77,7 @@ public class GridCoordinate {
 	public double[] getValues() {
 		return _values;
 	}
-	
+
 	/**
 	 * Gets the nearest index [0..numPoints-1] for nearest neighbor
 	 * @param val the value
@@ -87,7 +87,7 @@ public class GridCoordinate {
 		int uindex = (int) (((val - _min) / _delta) + 0.5);
 		uindex = Math.max(0, Math.min(uindex, (_numPoints - 1)));
 		return uindex;
-		
+
 	}
 
 	/**
@@ -95,7 +95,7 @@ public class GridCoordinate {
 	 * enclose the value. A return of 0 means the value is between min and min +
 	 * delta; A return of numPoints-2 means the value is between max - delta and
 	 * max. A return value of -1 indicates out of range.
-	 * 
+	 *
 	 * @param val the value to test
 	 * @return an index [0..numPoints-2] such that the grid values index and index+1
 	 *         enclose the value.
@@ -105,17 +105,16 @@ public class GridCoordinate {
 			return -1;
 		}
 
-		//truncates
+		// truncates
 			int uindex = (int) ((val - _min) / _delta);
 		uindex = Math.max(0, Math.min(uindex, (_numPoints - 2)));
-		
-		
+
 			return uindex;
 		}
 
 	/**
 	 * Get the value at a given index.
-	 * 
+	 *
 	 * @param index the index
 	 * @return the value at that index.
 	 */
@@ -132,7 +131,7 @@ public class GridCoordinate {
 
 	/**
 	 * Create a string representation.
-	 * 
+	 *
 	 * @return a string representation.
 	 */
 	@Override
@@ -143,7 +142,7 @@ public class GridCoordinate {
 
 	/**
 	 * Get the number of points on the grid (including endpoints).
-	 * 
+	 *
 	 * @return the number of points on the grid (including endpoints).
 	 */
 	public int getNumPoints() {
@@ -152,7 +151,7 @@ public class GridCoordinate {
 
 	/**
 	 * Get the computed coordinate spacing.
-	 * 
+	 *
 	 * @return the coordinate spacing.
 	 */
 	public double getDelta() {
@@ -181,7 +180,7 @@ public class GridCoordinate {
 
 	/**
 	 * Get the maximum value of the grid coordinate.
-	 * 
+	 *
 	 * @return the maximum value of the grid coordinate.
 	 */
 	public double getMax() {
@@ -190,7 +189,7 @@ public class GridCoordinate {
 
 	/**
 	 * Get the name of the coordinate
-	 * 
+	 *
 	 * @return the name of the coordinate
 	 */
 	public String getName() {
@@ -208,7 +207,7 @@ public class GridCoordinate {
 
 	/**
 	 * Get the minimum for a given index
-	 * 
+	 *
 	 * @param index the index
 	 * @return the min for the given index
 	 */
@@ -218,7 +217,7 @@ public class GridCoordinate {
 
 	/**
 	 * Get the maximum for a given index
-	 * 
+	 *
 	 * @param index the index
 	 * @return the max for the given index
 	 */
@@ -228,7 +227,7 @@ public class GridCoordinate {
 
 	/**
 	 * Check whether a value is in range
-	 * 
+	 *
 	 * @param q the value
 	 * @return <code>true</code> if the value is between min and max
 	 */

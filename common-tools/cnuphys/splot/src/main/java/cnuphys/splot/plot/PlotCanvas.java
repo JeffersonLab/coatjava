@@ -257,18 +257,6 @@ public class PlotCanvas extends JComponent
 		repaint();
 	}
 
-//	/**
-//	 * Clear the plot of all data. It will have a null dataset.
-//	 */
-//	public void clearPlot() {
-//		_dataSet = null;
-//		setWorldSystem();
-//		_parameters.setPlotTitle("No Plot");
-//
-//		firePropertyChange(DATACLEAREDPROP, 0, 1);
-//		repaint();
-//	}
-
 	/**
 	 * Get the underlying dataset
 	 * 

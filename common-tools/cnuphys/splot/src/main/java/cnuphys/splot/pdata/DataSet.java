@@ -737,6 +737,7 @@ public class DataSet extends DefaultTableModel {
 	 */
 	public void add(double... vals) throws DataSetException {
 
+		synchronized (_columns) {
 		int count = (vals == null) ? 0 : vals.length;
 
 		if (_type == DataSetType.H2D) {
@@ -753,6 +754,7 @@ public class DataSet extends DefaultTableModel {
 
 		for (int i = 0; i < count; i++) {
 			getColumn(i).add(vals[i]);
+		}
 		}
 
 		notifyListeners();

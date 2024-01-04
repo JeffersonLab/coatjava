@@ -33,7 +33,7 @@ public class MagneticFieldCanvas extends JComponent implements IComponentZoomabl
 
 	{
 		renderHints.put(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-	};
+	}
 
 	protected AffineTransform _localToWorld;
 	protected AffineTransform _worldToLocal;
@@ -63,7 +63,7 @@ public class MagneticFieldCanvas extends JComponent implements IComponentZoomabl
 	private ColorScaleModel _colorModel;
 
 	// trajectories
-	private Vector<Trajectory> _trajectories = new Vector<Trajectory>(5, 2);
+	private Vector<Trajectory> _trajectories = new Vector<>(5, 2);
 
 	/**
 	 * Create a canvas
@@ -255,11 +255,11 @@ public class MagneticFieldCanvas extends JComponent implements IComponentZoomabl
 
 		// vertical lines
 		wp.y = 0.;
-		for (int i = 0; i < hvals.length; i++) {
-			wp.x = hvals[i];
+		for (double hval : hvals) {
+			wp.x = hval;
 			worldToLocal(pp, wp);
 			g.drawLine(pp.x, bounds.y, pp.x, bounds.y + bounds.height);
-			String s = String.format("%-4.0f", hvals[i]);
+			String s = String.format("%-4.0f", hval);
 
 			int tx = pp.x - fm.stringWidth(s) / 2;
 			int ty = bounds.y + bounds.height - fm.getHeight();

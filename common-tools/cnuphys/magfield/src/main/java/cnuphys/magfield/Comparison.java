@@ -22,6 +22,7 @@ public class Comparison {
 		return cmax;
 	}
 	
+	@Override
 	public String toString() {
 		return String.format("[%d] (%8.4e, %8.4e, %8.4e), old: (%8.4e, %8.4e, %8.4e), new: (%8.4e, %8.4e, %8.4e) [%10.6e]", sect, x, y, z, 
 				oldResult[0], oldResult[1], oldResult[2], 
