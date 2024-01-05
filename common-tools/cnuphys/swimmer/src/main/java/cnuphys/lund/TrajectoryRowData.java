@@ -1,6 +1,12 @@
 package cnuphys.lund;
 
+import cnuphys.adaptiveSwim.SwimType;
+
 public class TrajectoryRowData {
+	
+	/**
+	 * Contains all the data needed to swim a particle
+	 */
 	
 	protected int trackId;  //track id
 	
@@ -30,6 +36,9 @@ public class TrajectoryRowData {
 
 	// source
 	protected String source;
+	
+	//MC or Recon
+	protected SwimType swimType;
 
 	/**
 	 * Create a data row for display in the table.
@@ -50,7 +59,7 @@ public class TrajectoryRowData {
 	 *            the initial azimuthal angle (degrees)
 	 */
 	public TrajectoryRowData(int trackId, LundId lundId, double xo, double yo, double zo, double p, double theta, double phi,
-			int status, String source) {
+			int status, String source, SwimType swimType) {
 		super();
 		this.trackId = trackId;
 		this.lundId = lundId;
@@ -62,10 +71,19 @@ public class TrajectoryRowData {
 		this.phi = phi;
 		this.status = status;
 		this.source = source;
+		this.swimType = swimType;
 
 		if (lundId == null) {
 			lundId = LundSupport.getInstance().get(0);
 		}
+	}
+	
+	/**
+	 * Get the swim type, either MC or REC
+	 * @return the swim type
+	 */
+	public SwimType getSwimType() {
+		return swimType;
 	}
  
 	/**

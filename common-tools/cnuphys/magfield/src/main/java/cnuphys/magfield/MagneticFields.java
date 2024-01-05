@@ -1301,89 +1301,6 @@ public class MagneticFields {
 	}
 
 	/**
-	 * Removes the overlap between the solenoid and the torus. It does this by
-	 * Adding the solenoid field to the torus field cutting of the solenoid in the
-	 * overlap region, then cut off the solenoid at the min Z of the torus. This
-	 * is an experimental method and irreversible. In particular rescaling the torus
-	 * after doing this will cause the solenoid part of the overlap area to be
-	 * scaled too. Which is nonsense.
-	 */
-	public void removeMapOverlap() {
-
-		if ((_torus == null) || (_solenoid == null)) {
-			return;
-		}
-
-		if (_torus.isSolenoidAdded()) {
-			LOGGER.log(Level.SEVERE,"Cannot add solenoid into torus a second time.");
-			return;
-		}
-
-		synchronized (_torus) {
-			synchronized (_solenoid) {
-				// the z and rho solenoid limits
-				double solLimitZ = _solenoid.getZMax() + _solenoid._shiftZ;
-				double solLimitR = _solenoid.getRhoMax();
-
-				int stopIndexR = _torus.getQ2Coordinate().getIndex(solLimitR);
-				int stopIndexZ = _torus.getQ3Coordinate().getIndex(solLimitZ);
-
-				// float tRval = (float)
-				// _torus.getQ2Coordinate().getValue(stopIndexR);
-				// float tZval = (float)
-				// _torus.getQ3Coordinate().getValue(stopIndexZ);
-
-				// System.err.println("tRVal = " + tRval);
-				// System.err.println("tZVal = " + tZval);
-
-				float[] result = new float[3];
-
-				FieldProbe probe = FieldProbe.factory(_solenoid);
-
-				for (int nPhi = 0; nPhi < _torus.getQ1Coordinate().getNumPoints(); nPhi++) {
-					double phi = _torus.getQ1Coordinate().getValue(nPhi);
-
-					//System.err.println("PHI = " + phi);
-					double phiRad = Math.toRadians(phi);
-
-					double cosPhi = Math.cos(phiRad);
-					double sinPhi = Math.sin(phiRad);
-
-					// get the solenoid field
-					for (int nRho = 0; nRho <= stopIndexR; nRho++) {
-						double rho = _torus.getQ2Coordinate().getValue(nRho);
-						// System.err.println("Rho = " + rho);
-
-						float x = (float) (rho * cosPhi);
-						float y = (float) (rho * sinPhi);
-
-						for (int nZ = 0; nZ <= stopIndexZ; nZ++) {
-							double z = _torus.getQ3Coordinate().getValue(nZ);
-							// System.err.println("Z = " + z);
-
-							// get the solenoid field
-							probe.field(x, y, (float) z, result);
-
-							// composite index
-							int index = _torus.getCompositeIndex(nPhi, nRho, nZ);
-							_torus.addToField(index, result);
-
-						}
-
-					}
-
-				}
-
-				// now cutoff the solenoid
-				double zlim = _torus.getZMin();
-				_solenoid.setFakeZMax(zlim);
-			}
-		}
-
-		notifyListeners();
-	}
-
-	/**
 	 * Check whether we have an active torus field
 	 *
 	 * @return <code>true</code> if we have a torus
@@ -1694,14 +1611,6 @@ public class MagneticFields {
 		return maxVal;
 	}
 
-	/**
-	 * For testing and also as an example
-	 *
-	 * @param arg command line arguments
-	 */
-	public static void main(String arg[]) {
-		MagTests.runTests();
-	}
 
 	public String getCurrentConfiguration() {
 		String s = getActiveFieldType().name();
