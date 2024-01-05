@@ -27,7 +27,7 @@ public class CLAS12SphereListener extends CLAS12BoundaryListener {
 		super(ivals, accuracy, sMax);
 		_targetSphere = targetSphere;
 		_inside = targetSphere.isInside(ivals.x, ivals.y, ivals.z);
-		_canMakeStriaghtLine = false;
+		_canMakeStraightLine = false;
 	}
 
 	@Override

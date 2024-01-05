@@ -226,8 +226,7 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 		double y = v[1];
 		double z = v[2];
 
-		// convert to cm
-		return Math.sqrt(x * x + y * y + z * z) * 100.;
+		return Math.sqrt(x * x + y * y + z * z);
 	}
 
 	@Override
@@ -237,12 +236,19 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 		}
 		
 		int dim = u.length;
+		
+		//adds a copy!!
 		double ucopy[] = new double[dim];
 		System.arraycopy(u, 0, ucopy, 0, dim);
 		return super.add(ucopy);
 	}
 	
-	
+	/**
+	 * Add to the trajectory
+	 * @param u the new 6D vector
+	 * @param s the path length
+	 * @return true if add was successful
+	 */
 	public boolean add(double u[], double s) {
 		if (u == null) {
 			return false;
@@ -255,7 +261,6 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 		return super.add(ucopy);
 	}
 
-	
 	/**
 	 * @param xo       the x vertex position in m
 	 * @param yo       the y vertex position in m
@@ -350,7 +355,6 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 		}
 		double[] pos = new double[3];
 		double lastQ[] = get(this.size() - 1);
-//		double lastQ[] = lastElement();
 
 		for (int i = 0; i < 3; i++) {
 			pos[i] = lastQ[i];
@@ -368,7 +372,7 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 			return Double.NaN;
 		}
 
-		if (this.size() < 1) {
+		if (isEmpty()) {
 			return 0;
 		}
 
@@ -507,34 +511,23 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 
 	public double[] getX() {
 		double x[] = getArray(X_IDX);
-		if (x != null) {
-			for (int i = 0; i < x.length; i++) {
-				x[i] *= 100.; // convert to cm
-			}
-		}
 		return x;
 	}
 
 	public double[] getY() {
 		double y[] = getArray(Y_IDX);
-		if (y != null) {
-			for (int i = 0; i < y.length; i++) {
-				y[i] *= 100.; // convert to cm
-			}
-		}
 		return y;
 	}
 
 	public double[] getZ() {
 		double z[] = getArray(Z_IDX);
-		if (z != null) {
-			for (int i = 0; i < z.length; i++) {
-				z[i] *= 100.; // convert to cm
-			}
-		}
 		return z;
 	}
 	
+	/**
+	 * Diagnostic print of entire trajectory
+	 * @param ps the print stream
+	 */
 	public void print(PrintStream ps) {
 		ps.println("Number of trajectory points: " + size());
 		

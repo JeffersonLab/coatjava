@@ -43,12 +43,6 @@ public class SwimTrajectory2D {
 	public SwimTrajectory2D(SwimTrajectory trajectory, IProjector projector) {
 		_trajectory3D = trajectory;
 		
-		if (_trajectory3D.getGeneratedParticleRecord() == null) {
-			System.err.println("NULL GenPart in SwimTrajectory2D (A)");
-			(new Throwable()).printStackTrace();
-			
-		}
-		
 		
 		int size = (trajectory == null) ? 0 : trajectory.size();
 

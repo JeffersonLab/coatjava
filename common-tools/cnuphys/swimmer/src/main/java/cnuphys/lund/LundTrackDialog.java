@@ -25,18 +25,15 @@ import javax.swing.JTextField;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 
-import cnuphys.adaptiveSwim.AdaptiveSwimException;
-import cnuphys.adaptiveSwim.AdaptiveSwimResult;
-import cnuphys.adaptiveSwim.AdaptiveSwimmer;
-import cnuphys.magfield.FastMath;
+import cnuphys.CLAS12Swim.CLAS12SwimResult;
+import cnuphys.CLAS12Swim.CLAS12Swimmer;
 import cnuphys.swim.SwimTrajectory;
 import cnuphys.swim.Swimming;
-import cnuphys.swimZ.SwimZResult;
 
 @SuppressWarnings("serial")
 public class LundTrackDialog extends JDialog {
 	
-	public enum SWIM_ALGORITHM {STANDARD, FIXEDZ, FIXEDS, FIXEDRHO}
+	public enum SWIM_ALGORITHM {STANDARD, FIXEDZ, FIXEDRHO}
 	
 	private SWIM_ALGORITHM _algorithm = SWIM_ALGORITHM.STANDARD;
 
@@ -86,25 +83,16 @@ public class LundTrackDialog extends JDialog {
 
 	// fixed z cutoff
 	private JRadioButton _fixedZRB;
-	
-	// fixed s (pathlength) cutoff
-    private JRadioButton _fixedSRB;
-	
+		
 	// fixed z cutoff
 	private JRadioButton _fixedRhoRB;
 
 	// fixed Rho value
 	private JTextField _fixedRho;
 
-
 	// fixed Z value
 	private JTextField _fixedZ;
 	
-	
-	// fixed S (pathlength) value
-	private JTextField _fixedS;
-	
-
 	// accuracy in fixed z
 	private JTextField _accuracy;
 
@@ -173,10 +161,6 @@ public class LundTrackDialog extends JDialog {
 				else if (_fixedRhoRB.isSelected()) {
 					_algorithm = SWIM_ALGORITHM.FIXEDRHO;
 				}
-				else if (_fixedSRB.isSelected()) {
-					_algorithm = SWIM_ALGORITHM.FIXEDS;
-				}
-
 
 				fixState();
 			}
@@ -185,24 +169,20 @@ public class LundTrackDialog extends JDialog {
 		
 		_standardRB = new JRadioButton("Standard");
 		_fixedZRB = new JRadioButton("Fixed Z");
-		_fixedSRB = new JRadioButton("Fixed S");
 
 		_fixedRhoRB = new JRadioButton("Fixed " + SMALL_RHO);
 		
 		
 		_standardRB.setSelected((_algorithm == SWIM_ALGORITHM.STANDARD));
 		_fixedZRB.setSelected((_algorithm == SWIM_ALGORITHM.FIXEDZ));
-		_fixedSRB.setSelected((_algorithm == SWIM_ALGORITHM.FIXEDS));
 		_fixedRhoRB.setSelected((_algorithm == SWIM_ALGORITHM.FIXEDRHO));
 		
 		_standardRB.addActionListener(al);
 		_fixedZRB.addActionListener(al);
-		_fixedSRB.addActionListener(al);
 		_fixedRhoRB.addActionListener(al);
 		
 		bg.add(_standardRB);
 		bg.add(_fixedZRB);
-		bg.add(_fixedSRB);
 		bg.add(_fixedRhoRB);
 		
 		fixState();
@@ -213,7 +193,6 @@ public class LundTrackDialog extends JDialog {
 	private void fixState() {
 		_fixedZ.setEnabled(_fixedZRB.isSelected());
 		_fixedRho.setEnabled(_fixedRhoRB.isSelected());
-		_fixedS.setEnabled(_fixedSRB.isSelected());
 	}
 
 	/**
@@ -290,87 +269,62 @@ public class LundTrackDialog extends JDialog {
 	 * Swim the particle
 	 */
 	private void doCommonSwim() {
-		
-		//use the AdaptiveSwimmer exclusively
-		AdaptiveSwimmer swimmer = new AdaptiveSwimmer();
-		
-		try {
-			LundId lid = _lundComboBox.getSelectedId();
 
-			// note xo, yo, zo converted to meters
-			double xo = Double.parseDouble(_vertexX.getText()) / 100.;
-			double yo = Double.parseDouble(_vertexY.getText()) / 100.;
-			double zo = Double.parseDouble(_vertexZ.getText()) / 100.;
-			double momentum = Double.parseDouble(_momentumTextField.getText());
-			double theta = Double.parseDouble(_theta.getText());
-			double phi = Double.parseDouble(_phi.getText());
+		// use the CLAS12Swimmer
+		CLAS12Swimmer swimmer = new CLAS12Swimmer();
+		CLAS12SwimResult result = null;
 
-			double stepSize = 1e-5; // m
-			double maxPathLen = 8.0; // m
+		LundId lid = _lundComboBox.getSelectedId();
 
-			double eps = 1.0e-6;
+		// note entirs are in cm, as they should be
+		double xo = Double.parseDouble(_vertexX.getText());
+		double yo = Double.parseDouble(_vertexY.getText());
+		double zo = Double.parseDouble(_vertexZ.getText());
+		double momentum = Double.parseDouble(_momentumTextField.getText());
+		double theta = Double.parseDouble(_theta.getText());
+		double phi = Double.parseDouble(_phi.getText());
 
-			AdaptiveSwimResult result = new AdaptiveSwimResult(true);
-			SwimTrajectory traj = null;
-			
-			String prompt = "";
+		double stepSize = 1e-4; // cm
+		double sMax = 800; // cm
 
-			switch (_algorithm) {
+		double tolerance = 1.0e-8;
 
-			case STANDARD:
-				swimmer.swim(lid.getCharge(), xo, yo, zo, momentum, theta, phi, maxPathLen, stepSize, eps, result);
-				prompt = "RESULT from standard swim:\n";
-				break;
+		SwimTrajectory traj = null;
 
-			case FIXEDZ:
-				// convert accuracy from microns to meters
-				double accuracy = Double.parseDouble(_accuracy.getText()) / 1.0e6;
-				double ztarget = Double.parseDouble(_fixedZ.getText()) / 100; // meters
-				swimmer.swimZ(lid.getCharge(), xo, yo, zo, momentum, theta, phi, ztarget, accuracy, maxPathLen,
-						stepSize, eps, result);
-				prompt = "RESULT from fixed Z swim:\n";
-				break;
-				
-			case FIXEDS:
-				// convert accuracy from microns to meters
-				accuracy = Double.parseDouble(_accuracy.getText()) / 1.0e6;
-				double targetS = Double.parseDouble(_fixedS.getText()) / 100; // meters
-				swimmer.swimS(lid.getCharge(), xo, yo, zo, momentum, theta, phi, accuracy, targetS,
-						stepSize, eps, result);
-				prompt = "RESULT from fixed S swim:\n";
-				break;
+		switch (_algorithm) {
 
+		case STANDARD:
+			result = swimmer.swim(lid.getCharge(), xo, yo, zo, momentum, theta, phi, sMax, stepSize, tolerance);
+			break;
 
-			case FIXEDRHO:
-				// convert accuracy from microns to meters
-				accuracy = Double.parseDouble(_accuracy.getText()) / 1.0e6;
-				double rhotarget = Double.parseDouble(_fixedRho.getText()) / 100; // meters
-				
-				
-			//	.swimRho(charge[i], xo[i], yo[i], zo[i], p, theta[i], phi[i], rho, accuracy, sMax, stepSize, eps, result);			
-				
-				swimmer.swimRho(lid.getCharge(), xo, yo, zo, momentum, theta, phi, rhotarget, accuracy, maxPathLen, stepSize, eps, result);
-				prompt = "RESULT from fixed Rho swim:\n";
-				break;
-			} //switch
-			
+		case FIXEDZ:
+			// convert accuracy from microns to cm
+			double accuracy = Double.parseDouble(_accuracy.getText()) / 1.0e4;
+			double ztarget = Double.parseDouble(_fixedZ.getText()); // cm
+			result = swimmer.swimZ(lid.getCharge(), xo, yo, zo, momentum, theta, phi, ztarget, accuracy, sMax, stepSize,
+					tolerance);
+			break;
+
+		case FIXEDRHO:
+			// convert accuracy from microns to meters
+			accuracy = Double.parseDouble(_accuracy.getText()) / 1.0e4;
+			double rhotarget = Double.parseDouble(_fixedRho.getText()); // cm
+			result = swimmer.swimRho(lid.getCharge(), xo, yo, zo, momentum, theta, phi, rhotarget, accuracy, sMax, stepSize,
+					tolerance);
+			break;
+		} // switch
+
+		if (result != null) {
 			traj = result.getTrajectory();
-			if (traj != null) {
-				traj = result.getTrajectory();
-				traj.setLundId(lid);
-				traj.computeBDL(swimmer.getProbe());
-
-				result.printOut(System.out, prompt + result);
-				Swimming.addMCTrajectory(traj);
-			}
-
+			traj.setLundId(lid);
+			traj.computeBDL(swimmer.getProbe());
+			Swimming.addMCTrajectory(traj);
+			
+			System.out.println(result.toString());
 		}
-		catch (AdaptiveSwimException e) {
-			e.printStackTrace();
-		}
-		
 
 	}
+
 
 
 
@@ -483,13 +437,11 @@ public class LundTrackDialog extends JDialog {
 	private JPanel cutoffPanel() {
 		
 		_fixedZ = new JTextField(8);
-		_fixedS = new JTextField(8);
 		_fixedRho = new JTextField(8);
 
 		_accuracy = new JTextField(8);
 
 		_fixedRho.setText("100.0");
-		_fixedS.setText("29.990");
 		_fixedZ.setText("575.0");
 
 		_accuracy.setText("10");
@@ -501,8 +453,6 @@ public class LundTrackDialog extends JDialog {
 
 		box.add(Box.createVerticalStrut(5));
 		box.add(labeledTextField("      Stopping Z", _fixedZ, "cm", -1));
-		box.add(Box.createVerticalStrut(5));
-		box.add(labeledTextField("      Stopping S", _fixedS, "cm", -1));
 		box.add(Box.createVerticalStrut(5));
 		box.add(labeledTextField("      Stopping " + SMALL_RHO, _fixedRho, "cm", -1));
 		box.add(Box.createVerticalStrut(5));
@@ -523,7 +473,6 @@ public class LundTrackDialog extends JDialog {
 		spanel.setLayout(new FlowLayout(FlowLayout.LEFT, 6, 0));
 		spanel.add(_standardRB);
 		spanel.add(_fixedZRB);
-		spanel.add(_fixedSRB);
 		spanel.add(_fixedRhoRB);
 
 		JPanel panel = new JPanel();

@@ -33,7 +33,7 @@ public class CLAS12PlaneListener extends CLAS12BoundaryListener {
 		super(ivals, accuracy, sMax);
 		_targetPlane = targetPlane;
 		_startSign = _targetPlane.sign(ivals.x, ivals.y, ivals.z);
-		_canMakeStriaghtLine = false;
+		_canMakeStraightLine = false;
 	}
 
 	@Override
