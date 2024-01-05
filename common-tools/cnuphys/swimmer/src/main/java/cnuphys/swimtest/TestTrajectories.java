@@ -28,7 +28,7 @@ public class TestTrajectories implements Serializable {
 	private Vector<TrajectorySummary> summaries;
 
 	public TestTrajectories() {
-		summaries = new Vector<TrajectorySummary>();
+		summaries = new Vector<>();
 	}
 
 	/**
