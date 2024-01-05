@@ -66,6 +66,12 @@ public class PlaneTest {
 
 	    int nsAS = 0;
 	    int nsC12 = 0;
+	    
+	    cnuphys.CLAS12Swim.geometry.Plane c12Plane[] = new cnuphys.CLAS12Swim.geometry.Plane[testDataCM.length];
+		for (int i = 0; i < testDataCM.length; i++) {
+			data = testDataCM[i];
+			c12Plane[i] = new cnuphys.CLAS12Swim.geometry.Plane(data.plane.a, data.plane.b, data.plane.c, data.plane.d);
+		}
 
 		for (int i = 0; i < testDataCM.length; i++) {
 
@@ -95,7 +101,7 @@ public class PlaneTest {
 			data = testDataCM[i];
 			// C12
 			c12Res = swimmer.swimPlane(data.charge, data.xo, data.yo, data.zo, data.p, data.theta,
-					data.phi, data.plane,
+					data.phi, c12Plane[i],
 					data.accuracy, data.sMax, data.stepSize, c12Tolerance);
 
 			delC12 += planeSwimResult(writer, data.plane, c12Res);
@@ -153,7 +159,7 @@ public class PlaneTest {
 
 				// c12
 
-				swimmer.swimPlane(data.charge, data.xo, data.yo, data.zo, data.p, data.theta, data.phi, data.plane,
+				swimmer.swimPlane(data.charge, data.xo, data.yo, data.zo, data.p, data.theta, data.phi, c12Plane[i],
 						data.accuracy, data.sMax, data.stepSize, c12Tolerance);
 
 			} // for

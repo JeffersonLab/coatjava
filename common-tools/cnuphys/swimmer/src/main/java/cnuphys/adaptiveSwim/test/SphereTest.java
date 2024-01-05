@@ -8,7 +8,7 @@ import java.util.ArrayList;
 
 import cnuphys.CLAS12Swim.CLAS12SwimResult;
 import cnuphys.CLAS12Swim.CLAS12Swimmer;
-import cnuphys.adaptiveSwim.geometry.Sphere;
+import cnuphys.CLAS12Swim.geometry.Sphere;
 import cnuphys.lund.AsciiReader;
 import cnuphys.magfield.FieldProbe;
 import cnuphys.magfield.MagneticFields;

@@ -3,7 +3,7 @@ package cnuphys.CLAS12Swim;
 import java.io.File;
 import java.io.FileNotFoundException;
 
-import cnuphys.adaptiveSwim.geometry.Plane;
+import cnuphys.CLAS12Swim.geometry.Plane;
 import cnuphys.magfield.MagneticFieldInitializationException;
 import cnuphys.magfield.MagneticFields;
 import cnuphys.magfield.MagneticFields.FieldType;

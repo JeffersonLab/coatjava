@@ -2,9 +2,9 @@ package cnuphys.CLAS12Swim;
 
 import java.util.Hashtable;
 
-import cnuphys.adaptiveSwim.geometry.Cylinder;
-import cnuphys.adaptiveSwim.geometry.Plane;
-import cnuphys.adaptiveSwim.geometry.Sphere;
+import cnuphys.CLAS12Swim.geometry.Cylinder;
+import cnuphys.CLAS12Swim.geometry.Plane;
+import cnuphys.CLAS12Swim.geometry.Sphere;
 import cnuphys.magfield.FieldProbe;
 import cnuphys.magfield.IMagField;
 import cnuphys.magfield.RotatedCompositeProbe;

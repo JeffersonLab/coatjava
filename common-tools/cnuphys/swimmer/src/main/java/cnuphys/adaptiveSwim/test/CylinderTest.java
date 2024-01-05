@@ -11,12 +11,11 @@ import cnuphys.CLAS12Swim.CLAS12Swimmer;
 import cnuphys.adaptiveSwim.AdaptiveSwimException;
 import cnuphys.adaptiveSwim.AdaptiveSwimResult;
 import cnuphys.adaptiveSwim.AdaptiveSwimmer;
-import cnuphys.adaptiveSwim.geometry.Cylinder;
+import cnuphys.CLAS12Swim.geometry.Cylinder;
 import cnuphys.lund.AsciiReader;
 import cnuphys.magfield.MagneticFields;
 import cnuphys.magfield.MagneticFields.FieldType;
 import cnuphys.swimtest.CSVWriter;
-import cnuphys.swimtest.SwimTest;
 
 public class CylinderTest {
 	

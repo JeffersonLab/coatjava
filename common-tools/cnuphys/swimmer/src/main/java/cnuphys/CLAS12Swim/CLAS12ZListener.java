@@ -119,45 +119,4 @@ public class CLAS12ZListener extends CLAS12BoundaryListener {
 
         return new double[]{x, y, zTarget, tx, ty, tz};
     }
-
-	// used for testing
-	public static void main(String arg[]) {
-		final MagneticFields mf = MagneticFields.getInstance();
-		File mfdir = new File(System.getProperty("user.home"), "magfield");
-		System.out.println("mfdir exists: " + (mfdir.exists() && mfdir.isDirectory()));
-		try {
-			mf.initializeMagneticFields(mfdir.getPath(), "Symm_torus_r2501_phi16_z251_24Apr2018.dat",
-					"Symm_solenoid_r601_phi1_z1201_13June2018.dat");
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-			System.exit(1);
-		} catch (MagneticFieldInitializationException e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
-
-		System.out.println("Active Field Description: " + MagneticFields.getInstance().getActiveFieldDescription());
-
-		int q = -1;
-		double p = 2.0;
-		double theta = 15;
-		double phi = 5;
-		double xo = 0.01;
-		double yo = 0.02;
-		double zo = -0.01;
-		double ztarget = 575;
-		double accuracy = 1.0e-5; // cm
-		double stepsizeAdaptive = accuracy / 10; // starting stepsize in cm
-		double sMax = 800; // cm
-		double tolerance = 1.0e-6;
-
-		MagneticFields.getInstance().setActiveField(FieldType.COMPOSITE);
-		CLAS12Swimmer clas12Swimmer = new CLAS12Swimmer(); // new
-
-		CLAS12SwimResult c12res = clas12Swimmer.swimZ(q, xo, yo, zo, p, theta, phi, ztarget, accuracy, sMax,
-				stepsizeAdaptive, tolerance);
-		System.out.println("C12 result:  " + c12res.toString() + "\n");
-
-	}
-
 }

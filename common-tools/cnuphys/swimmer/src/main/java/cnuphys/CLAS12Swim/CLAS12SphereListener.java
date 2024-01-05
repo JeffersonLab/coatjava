@@ -1,6 +1,6 @@
 package cnuphys.CLAS12Swim;
 
-import cnuphys.adaptiveSwim.geometry.Sphere;
+import cnuphys.CLAS12Swim.geometry.Sphere;
 
 /**
  * A listener for swimming to the surface of a fixed sphere
