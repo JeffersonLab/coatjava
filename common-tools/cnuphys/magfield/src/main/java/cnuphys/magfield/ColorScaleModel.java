@@ -328,11 +328,6 @@ public class ColorScaleModel {
 		int b2 = c2.getBlue();
 		int a2 = c2.getAlpha();
 
-		// int r3 = r1 + (int) (fract * (r2 - r1));
-		// int g3 = g1 + (int) (fract * (g2 - g1));
-		// int b3 = b1 + (int) (fract * (b2 - b1));
-		// int a3 = a1 + (int) (fract * (a2 - a1));
-
 		double f = 1.0 / fract;
 		double h = 1.0 / (1.0 - fract);
 
