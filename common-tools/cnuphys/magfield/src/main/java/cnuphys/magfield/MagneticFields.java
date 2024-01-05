@@ -1609,58 +1609,7 @@ public class MagneticFields {
 
 		return maxVal;
 	}
-	
-	//special values test
-	private static void specialValuesTest() {
-		
-		System.out.println("\nTest at some special value(s)");
 
-		MagneticFields.getInstance().setActiveField(FieldType.COMPOSITE);
-		MagneticFields.getInstance().getTorus().setScaleFactor(1);
-		float result[] = new float[3];
-		IField ifield = FieldProbe.factory();
-		
-//		printFV(fieldValuePtr, -30, 0, 380.0, currentField);
-//	    printFV(fieldValuePtr, -46.5, 0, 380, currentField);
-//	    printFV(fieldValuePtr, 32.8, 32.8, 380, currentField);
-//	    printFV(fieldValuePtr, -32.8, -32.8, 380, currentField);
-//	    printFV(fieldValuePtr, 23.2, 40.2, 380, currentField);
-//	    printFV(fieldValuePtr, -19.2, 31.7, 401.5, currentField);
-//	    printFV(fieldValuePtr, 0, -159.0, 234.0, currentField);
-//	    printFV(fieldValuePtr, 1, -159.0, 234.0, currentField);
-//	    printFV(fieldValuePtr, -1, -159.0, 234.0, currentField);		
-		
-		float x[] = {30f, -30f, -46.5f, 32.8f, -32.8f, 23.2f, -19.2f, 0,     0.01f,  -0.01f};
-		float y[] = {0f, 0f,    0f,    32.8f, -32.8f, 40.2f,  31.7f, -159f, -159f, -159f};
-		float z[] = {380f, 380f, 380f,    380f,   380f,  380f, 401.5f,  234f,  234f,  234f};
-
-		ifield.field(0f, -159f, 234f, result);
-
-
-		for (int i = 0; i < x.length; i++) {
-			ifield.field(x[i], y[i], z[i], result);
-			float mag = ifield.fieldMagnitude(x[i], y[i], z[i]);
-	
-			String s1 = String.format("(%7.1f, %7.1f, %7.1f) cm ", x[i], y[i], z[i]);
-			String s2 = String.format(" (%9.5e, %9.5e, %9.5e) kG  mag: %9.5f", 
-					result[0], result[1], result[2], mag);
-			System.out.println(s1 + s2);
-		}
-
-	//	MagneticFields.getInstance().setActiveField(FieldType.COMPOSITE);
-
-	}
-
-
-	/**
-	 * For testing and also as an example
-	 *
-	 * @param arg command line arguments
-	 */
-	public static void main(String arg[]) {
-		MagTests.runTests();
-		specialValuesTest();
-	}
 
 	public String getCurrentConfiguration() {
 		String s = getActiveFieldType().name();
