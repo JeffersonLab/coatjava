@@ -12,7 +12,7 @@ public class CLAS12Listener implements ODEStepListener {
 	 * to the target for a neutral particle. Some can, like the basic, z, and rho listeners.
 	 * Some, like the cylinder, cannot-- in which case we let the full swim occur.
      */
-	protected boolean _canMakeStriaghtLine = true;
+	protected boolean _canMakeStraightLine = true;
 
 	protected static final double TINY = 1.0e-8; // cm
 
@@ -50,7 +50,7 @@ public class CLAS12Listener implements ODEStepListener {
 	 * @return <code>true</code> if the listener can make a straight line to the target for a neutral particle.
      */
 	public boolean canMakeStraightLine() {
-		return _canMakeStriaghtLine;
+		return _canMakeStraightLine;
 	}
 
 	/**

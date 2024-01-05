@@ -247,7 +247,7 @@ public final class Swimmer {
 				px = uf[3];
 				py = uf[4];
 				pz = uf[5];
-				theta = FastMath.acosDeg(pz);
+				theta = FastMath.acos2Deg(pz);
 				phi = FastMath.atan2Deg(py, px);
 			}
 
@@ -361,7 +361,7 @@ public final class Swimmer {
 				px = uf[3];
 				py = uf[4];
 				pz = uf[5];
-				theta = FastMath.acosDeg(pz);
+				theta = FastMath.acos2Deg(pz);
 				phi = FastMath.atan2Deg(py, px);
 			}
 
@@ -572,7 +572,7 @@ public final class Swimmer {
 				px = uf[3];
 				py = uf[4];
 				pz = uf[5];
-				theta = FastMath.acosDeg(pz);
+				theta = FastMath.acos2Deg(pz);
 				phi = FastMath.atan2Deg(py, px);
 			}
 
@@ -904,7 +904,7 @@ public final class Swimmer {
 			stopper = new DefaultPlaneStopper(finalPathLength, sMax, plane, accuracy, -stopper.getSide());
 
 			// momentum = traj.getFinalMomentum();
-			theta = FastMath.acosDeg(pz);
+			theta = FastMath.acos2Deg(pz);
 			phi = FastMath.atan2Deg(py, px);
 
 			SwimTrajectory addTraj = swim(charge, xo, yo, zo, momentum, theta, phi, stopper, finalPathLength, sMax,
@@ -1129,7 +1129,7 @@ public final class Swimmer {
 			stopper = new DefaultZStopper(finalPathLength, sMax, fixedZ, accuracy, normalDirection);
 
 			// momentum = traj.getFinalMomentum();
-			theta = FastMath.acosDeg(pz);
+			theta = FastMath.acos2Deg(pz);
 			phi = FastMath.atan2Deg(py, px);
 
 			SwimTrajectory addTraj = swim(charge, xo, yo, zo, momentum, theta, phi, stopper, finalPathLength, sMax,
@@ -1412,7 +1412,7 @@ public final class Swimmer {
 			stopper = new DefaultZStopper(finalPathLength, maxRad, sMax, fixedZ, accuracy, normalDirection);
 
 			// momentum = traj.getFinalMomentum();
-			theta = FastMath.acosDeg(pz);
+			theta = FastMath.acos2Deg(pz);
 			phi = FastMath.atan2Deg(py, px);
 
 			SwimTrajectory addTraj = sectorSwimC(sector, charge, xo, yo, zo, momentum, theta, phi, stopper, finalPathLength, sMax,

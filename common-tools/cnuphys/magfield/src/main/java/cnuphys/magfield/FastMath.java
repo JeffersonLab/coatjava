@@ -43,7 +43,7 @@ public class FastMath {
 	 * @param x the cosine value
 	 * @return acos in degrees
 	 */
-	public static double acosDeg(double x) {
+	public static double acos2Deg(double x) {
 		return Math.toDegrees(acos(x));
 	}
 
