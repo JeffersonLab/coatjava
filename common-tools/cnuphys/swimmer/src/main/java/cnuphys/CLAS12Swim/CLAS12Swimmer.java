@@ -192,7 +192,73 @@ public class CLAS12Swimmer {
 		return new CLAS12SwimResult(listener);
 	}
 
+	/**
+	 * Swim to a target accuracy. The details of the target and the accuracy are in
+	 * the CLAS12DOCAListener
+	 *
+	 * @param ode       the ODE to solve
+	 * @param u         the initial state vector (x, y, z, tx, ty, tz) x, y, z in cm
+	 * @param sMin      the initial value of the independent variable (pathlength)
+	 *                  (usually 0)
+	 * @param h         the initial stepsize in cm
+	 * @param tolerance The desired tolerance. The solver will automatically adjust
+	 *                  the step size to meet this tolerance.
+	 * @param listener  the specific listener that can terminate the integration
+	 * @return the result of the swim
+	 * @see CLAS12DOCAListener
+	 */
+	private CLAS12SwimResult swimToDOCA(CLAS12SwimODE ode, double u[], double sMin, double h, double tolerance,
+			CLAS12DOCAListener listener) {
+		
+		if (listener.getIvals().p < MINMOMENTUM) {
+			listener.setStatus(BELOW_MIN_MOMENTUM);
+			return new CLAS12SwimResult(listener);
+		}
+		
+		double s1 = sMin;
+		double s2 = listener.getSMax();
+		double doca = Double.POSITIVE_INFINITY;
 
+		h = Math.min(h, listener.getAccuracy() / 2.);
+
+		CLAS12SwimResult cres = null;
+		while (true) {
+			cres = atomicSwim(ode, u, s1, s2, h, tolerance, listener);
+
+			if (listener.getStatus() == SWIM_SUCCESS) {
+				//this means the last point got farther away
+				double newdoca = listener.getCurrentDistance();
+				
+				//are we done?
+				if (Math.abs(newdoca-doca) < listener.getAccuracy()) {
+					// do NOT forget to reset the max step size
+					resetMaxStepSize();
+					return cres;
+				}
+				
+				doca = newdoca;
+				s2 = listener.getS();
+				listener.getTrajectory().removeLastPoint();
+				
+				//remove another if we can
+				if (listener.getNumStep() > 1) {
+					listener.getTrajectory().removeLastPoint();
+				}
+				
+				u = listener.getU();
+				s1 = listener.getS();
+
+				double newMaxH = Math.max(1e-6, (s2-s1) / 2);
+				setMaxStepSize(newMaxH);
+
+
+			} else { // failed, reached max path length
+				// do NOT forget to reset the max step size
+				resetMaxStepSize();
+				return cres;
+			}
+		}
+	}
 
 	/**
 	 * Swim to a target accuracy. The details of the target and the accuracy are in
@@ -251,7 +317,7 @@ public class CLAS12Swimmer {
 				setMaxStepSize(newMaxH);
 				
 				// remove last point again it will be restored as start of appended swim
-				listener.getTrajectory().removeLastPoint();
+//				listener.getTrajectory().removeLastPoint();
 
 			} else { // failed, reached max path length
 				// do NOT forget to reset the max step size

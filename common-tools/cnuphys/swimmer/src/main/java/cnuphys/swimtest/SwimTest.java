@@ -9,8 +9,6 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.lang.management.ManagementFactory;
-import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -21,6 +19,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
+import cnuphys.adaptiveSwim.test.BeamLineTest;
 import cnuphys.adaptiveSwim.test.CylinderTest;
 import cnuphys.adaptiveSwim.test.PlaneTest;
 import cnuphys.adaptiveSwim.test.RhoTest;
@@ -46,53 +45,11 @@ public class SwimTest {
 
 
 
-	//cpu time
-    public static long cpuTime(long threadID) {
-        ThreadMXBean mxBean = ManagementFactory.getThreadMXBean();
-        if (mxBean.isThreadCpuTimeSupported()) {
-            try {
-                return mxBean.getThreadCpuTime(threadID);
-            } catch (UnsupportedOperationException e) {
-                System.out.println(e.toString());
-            }
-        } else {
-            System.out.println("Not supported");
-        }
-        return 0;
-    }
-
 	// create the test menu
 	private static JMenu getTestMenu() {
 		JMenu menu = new JMenu("Tests");
-
-		final JMenuItem createTrajItem = new JMenuItem("Create Test Trajectories...");
-
-		ActionListener al = new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (e.getSource() == createTrajItem) {
-					CreateTestTrajectories.createTestTraj(3344632211L, 1000);
-				}
-
-			}
-
-		};
-
-		createTrajItem.addActionListener(al);
-
-		menu.add(adaptiveTestMenu());
-
-		menu.add(createTrajItem);
-
-		return menu;
-	}
-
-	private static JMenu adaptiveTestMenu() {
-		JMenu atmenu = new JMenu("Test AdaptiveSwim Package");
 		
 		final JMenuItem baseItem = new JMenuItem("Base test");
-
 
 		final JMenuItem swimZItem = new JMenuItem("Fixed Z test");
 		final JMenuItem rhoItem = new JMenuItem("Rho Test");
@@ -101,6 +58,7 @@ public class SwimTest {
 		final JMenuItem cylinderItem = new JMenuItem("Cylinder Test");
 		final JMenuItem sphereItem = new JMenuItem("Sphere Test");
 		final JMenuItem testSectorItem = new JMenuItem("SectorZ Swim");
+		final JMenuItem beamlineItem = new JMenuItem("Beamline Swim");
 
 
 		ActionListener al = new ActionListener() {
@@ -124,19 +82,24 @@ public class SwimTest {
 					PlaneTest.planeTest();
 				} else if (e.getSource() == testSectorItem) {
 					SectorZTest.testSectorSwim(count, seed);
+				} else if (e.getSource() == beamlineItem) {
+					BeamLineTest.beamLineTest(count, seed);
 				}
 			}
 		};
 
-		addMenuItem(atmenu, al, baseItem);
-		addMenuItem(atmenu, al, rhoItem);
-		addMenuItem(atmenu, al, planeItem);
-		addMenuItem(atmenu, al, swimZItem);
-		addMenuItem(atmenu, al, cylinderItem);
-		addMenuItem(atmenu, al, sphereItem);
-		addMenuItem(atmenu, al, testSectorItem);
-		return atmenu;
+		addMenuItem(menu, al, baseItem);
+		addMenuItem(menu, al, rhoItem);
+		addMenuItem(menu, al, planeItem);
+		addMenuItem(menu, al, swimZItem);
+		addMenuItem(menu, al, cylinderItem);
+		addMenuItem(menu, al, sphereItem);
+		addMenuItem(menu, al, testSectorItem);
+		addMenuItem(menu, al, beamlineItem);
+
+		return menu;
 	}
+
 
 	private static void addMenuItem(JMenu menu, ActionListener al, JMenuItem mitem) {
 		mitem.addActionListener(al);
@@ -155,10 +118,7 @@ public class SwimTest {
 
 		// drawing canvas
 		JPanel magPanel1 = canvas1.getPanelWithStatus(1000, 465);
-//		JPanel magPanel2 = canvas2.getPanelWithStatus(680, 460);
 		canvas1.setExtraText("Field Magnitude (T)");
-//		canvas2.setExtraText("Gradient Magnitude (T/m)");
-//		canvas2.setShowGradient(true);
 
 		// set up what to do if the window is closed
 		WindowAdapter windowAdapter = new WindowAdapter() {
@@ -175,10 +135,6 @@ public class SwimTest {
 			public void magneticFieldChanged() {
 				label.setText(" Torus: " + MagneticFields.getInstance().getTorusPath());
 				System.out.println("Field changed. Torus path: " + MagneticFields.getInstance().getTorusPath());
-//				Swimming.clearAllTrajectories();
-//				canvas1.clearTrajectories();
-//				Swimming.clearAllTrajectories();
-//				canvas2.clearTrajectories();
 			}
 
 		};
@@ -391,8 +347,6 @@ public class SwimTest {
 
 		System.out.println("Active Field Description: " + MagneticFields.getInstance().getActiveFieldDescription());
 
-		// MagneticField.setMathLib(MagneticField.MathLib.DEFAULT);
-		int numTest = 10000;
 
 		JFrame testFrame = createFrame();
 

@@ -15,19 +15,11 @@ public class RandomData {
 	private Random rand;
 
 	/**
-	 * Create some random data within a sector for a swim test
+	 * Base constructor just creates space
 	 * @param n the number of points
-	 * @param seed random number seed
-	 * @param sector the sector [1..6]
 	 */
-	public RandomData(int n, long seed, int sector) {
-
+	public RandomData(int n) {
 		count = n;
-	    rand = new Random(seed);
-
-		//random sector
-
-
 	    charge = new int[n];
 	    xo = new double[n];
 	    yo = new double[n];
@@ -35,6 +27,19 @@ public class RandomData {
 	    p = new double[n];
 	    theta = new double[n];
 	    phi = new double[n];
+	}
+	
+	/**
+	 * Create some random data within a sector for a swim test
+	 * @param n the number of points
+	 * @param seed random number seed
+	 * @param sector the sector [1..6]
+	 */
+	public RandomData(int n, long seed, int sector) {
+
+		this(n);
+	    rand = new Random(seed);
+
 	    
 	    double phiMid = (sector-1)*60;
 	    double phiMin = phiMid - 20;
@@ -62,19 +67,8 @@ public class RandomData {
 	 */
 	public RandomData(int n, long seed) {
 
-		count = n;
+		this(n);
 	    rand = new Random(seed);
-
-		//random sector
-
-
-	    charge = new int[n];
-	    xo = new double[n];
-	    yo = new double[n];
-	    zo = new double[n];
-	    p = new double[n];
-	    theta = new double[n];
-	    phi = new double[n];
 
 	    for (int i = 0; i < n; i++) {
 			int sector = rand.nextInt(5) + 1;
@@ -89,7 +83,6 @@ public class RandomData {
 	    	xo[i] = dval( -0.01, 0.02); //meters
 	    	yo[i] = dval( -0.01, 0.02); //meters
 	    	zo[i] = dval( -0.01, 0.02); //meters
-
 	    }
 
 	}
@@ -98,6 +91,47 @@ public class RandomData {
 	public String toStringRaw(int index) {
 		return String.format("%2d %7.4f  %7.4f  %7.4f   %6.3f   %6.3f  %7.3f",
 				charge[index], xo[index], yo[index], zo[index], p[index], theta[index], phi[index]);
+	}
+	
+	/**
+	 * Create some random data for a swim test
+	 * @param n the number to generate
+	 * @param seed the random number seed
+	 * @param xmin the x vertex minimum meters
+	 * @param dx the spread in x meters
+	 * @param ymin the y vertex minimum meters
+	 * @param dy the spread in y meters
+	 * @param zmin the z vertex minimum meters
+	 * @param dz the spread in z meters
+	 */
+	public RandomData(int n, long seed,
+			double xmin, double dx,
+			double ymin, double dy,
+			double zmin, double dz) {
+		
+		this(n);
+
+		if (seed < 0) {
+			rand = new Random();
+		} else {
+			rand = new Random(seed);
+		}
+
+	    for (int i = 0; i < n; i++) {
+	    	charge[i] = (rand.nextDouble() < 0.5) ? -1 : 1;
+			int sector = rand.nextInt(5) + 1;
+			double phiMin = (sector-1)*60;
+
+
+	    	charge[i] = (rand.nextDouble() < 0.5) ? -1 : 1;
+	    	p[i] = dval(0.9, 5.0); //Gev
+	    	theta[i] = dval(25, 20);
+            phi[i] = dval(phiMin, 40);
+	    	xo[i] = dval(xmin, dx); //meters
+	    	yo[i] = dval(ymin, dy); //meters
+	    	zo[i] = dval(zmin, dz); //meters
+
+	    }
 	}
 
 	/**
@@ -125,22 +159,12 @@ public class RandomData {
 			double thetamin, double dtheta,
 			double phimin, double dphi) {
 
-		System.out.println("phimin: " + phimin);
-		count = n;
-
+		this(n);
 		if (seed < 0) {
 			rand = new Random();
 		} else {
 			rand = new Random(seed);
 		}
-
-		charge = new int[n];
-	    xo = new double[n];
-	    yo = new double[n];
-	    zo = new double[n];
-	    p = new double[n];
-	    theta = new double[n];
-	    phi = new double[n];
 
 	    for (int i = 0; i < n; i++) {
 	    	charge[i] = (rand.nextDouble() < 0.5) ? -1 : 1;

@@ -74,9 +74,9 @@ public class CLAS12Values {
 
 		this.p = norm * p;
 
-		// positional theta and phi, not directional;
-		theta = FastMath.acos2Deg(u[2] / r);
-		phi = FastMath.atan2Deg(u[1], u[0]);
+		// directional theta and phi
+		theta = FastMath.acos2Deg(u[5]);
+		phi = FastMath.atan2Deg(u[4], u[3]);
 	}
 
 	/**

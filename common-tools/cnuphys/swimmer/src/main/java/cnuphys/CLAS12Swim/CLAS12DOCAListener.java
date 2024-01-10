@@ -1,14 +1,19 @@
 package cnuphys.CLAS12Swim;
 
 /**
- * This is an abstract class to be extended by classes that swim to a boundary.
+ * This is an abstract class to be extended by classes that to a distance of closest approach.
+ * The assumption is that the first doca is the only one. i.e. we are not dealing with
+ * low energy particles looping about.
  */
 
-public abstract class CLAS12BoundaryListener extends CLAS12Listener {
-
+public abstract class CLAS12DOCAListener extends CLAS12Listener {
+	
 	// the requested accuracy in cm
 	protected final double _accuracy;
 
+	//current doca
+	protected double _currentDistance = Double.POSITIVE_INFINITY;
+	
 	/**
 	 * Create a CLAS12 boundary crossing listener
 	 *
@@ -16,7 +21,7 @@ public abstract class CLAS12BoundaryListener extends CLAS12Listener {
 	 * @param accuracy the accuracy (cm)
 	 * @param sMax     the final or max path length (cm)
 	 */
-	public CLAS12BoundaryListener(CLAS12Values ivals, double accuracy, double sMax) {
+	public CLAS12DOCAListener(CLAS12Values ivals, double accuracy, double sMax) {
 		super(ivals, sMax);
 		_accuracy = accuracy;
 	}
@@ -29,7 +34,16 @@ public abstract class CLAS12BoundaryListener extends CLAS12Listener {
 	public double getAccuracy() {
 		return _accuracy;
 	}
-
+	
+	/**
+	 * Get the current estimate of the doca
+	 * 
+	 * @return the current doca
+	 */
+	public double getCurrentDistance() {
+		return _currentDistance;
+	}
+	
 	/**
 	 * Called when a new step is taken in the ODE solving process.
 	 *
@@ -42,11 +56,10 @@ public abstract class CLAS12BoundaryListener extends CLAS12Listener {
 	public boolean newStep(double newS, double[] newU) {
 		accept(newS, newU);
 
-		// have we crossed the boundary? If so the CrossedBoundary method should handle
-		// the crossing
-		// and return with the "intersection" set as the last point. The status should
-		// be set to SWIM_SUCCESS.
-		if (crossedBoundary(newS, newU)) {
+		
+		double distance = distance(newS, newU);
+		
+		if (distance > _currentDistance) { //getting farther
 			_status = CLAS12Swimmer.SWIM_SUCCESS;
 			return false;
 		}
@@ -57,8 +70,9 @@ public abstract class CLAS12BoundaryListener extends CLAS12Listener {
 			return false;
 		}
 
+		_currentDistance = distance;
 		return true;
-	}
+	}	
 	
 	/**
 	 * Get the absolute distance to the target (boundary) in cm.
@@ -66,25 +80,8 @@ public abstract class CLAS12BoundaryListener extends CLAS12Listener {
 	 * @param newU the new state vector
 	 * @return the distance to the target (boundary) in cm.
 	 */
-	public abstract double distanceToTarget(double newS, double[] newU);
+	public abstract double distance(double newS, double[] newU);
 
-	/**
-	 * Called when a new step is taken in the ODE solving process.
-	 *
-	 * @param newS The new path length after the step.
-	 * @param newU The new state vector after the step.
-	 * @return A boolean indicating whether the requested accuracy has been reached
-	 */
-	public abstract boolean accuracyReached(double newS, double[] newU);
 
-	/**
-	 * Have we crossed the boundary?
-	 *
-	 * @param newS The new path length after the step.
-	 * @param newU The new state vector after the step.
-	 * @return <code>true</code> if we crossed the boundary, in which case we should
-	 *         terminate and interpolate to the intersection.
-	 */
-	public abstract boolean crossedBoundary(double newS, double[] newU);
 
 }
