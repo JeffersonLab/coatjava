@@ -53,7 +53,26 @@
        {"name":"fitIntercErr", "type":"F", "info":"error on the intercept"},
        {"name":"size",         "type":"B", "info":"cluster size"}
        ]
-  },
+    },
+    {
+	"name": "HitBasedTrkg::Candidates",
+	"group": 20600,
+	"item" : 81,
+	"info": "track candidates from hit based tracking",
+	"entries": [
+	    {"name":"id",     "type":"B", "info":"id of the track"},
+            {"name":"sector", "type":"B", "info":"sector of the track"},
+            {"name":"charge", "type":"B", "info":"charge of the track"},
+	    {"name":"status", "type":"S", "info":"charge of the track"},
+            {"name":"chi2",   "type":"F", "info":"probability of inference"},
+            {"name":"c1",     "type":"S", "info":"cluster ID in superlayer 1"},
+            {"name":"c2",     "type":"S", "info":"cluster ID in superlayer 2"},
+            {"name":"c3",     "type":"S", "info":"cluster ID in superlayer 3"},
+            {"name":"c4",     "type":"S", "info":"cluster ID in superlayer 4"},
+            {"name":"c5",     "type":"S", "info":"cluster ID in superlayer 5"},
+            {"name":"c6",     "type":"S", "info":"cluster ID in superlayer 6"}
+	]
+    },
  {
     "name": "HitBasedTrkg::DNHits",
     "group": 20600,
@@ -395,6 +414,25 @@
         {"name":"size",         "type":"B", "info":"cluster size"}
     ]
   },
+    {
+        "name": "TimeBasedTrkg::Candidates",
+        "group": 20600,
+        "item" : 82,
+        "info": "track candidates from time based tracking",
+        "entries": [
+            {"name":"id",     "type":"B", "info":"id of the track"},
+            {"name":"sector", "type":"B", "info":"sector of the track"},
+            {"name":"charge", "type":"B", "info":"charge of the track"},
+            {"name":"status", "type":"S", "info":"charge of the track"},
+            {"name":"chi2",   "type":"F", "info":"probability of inference"},
+            {"name":"c1",     "type":"S", "info":"cluster ID in superlayer 1"},
+            {"name":"c2",     "type":"S", "info":"cluster ID in superlayer 2"},
+            {"name":"c3",     "type":"S", "info":"cluster ID in superlayer 3"},
+            {"name":"c4",     "type":"S", "info":"cluster ID in superlayer 4"},
+            {"name":"c5",     "type":"S", "info":"cluster ID in superlayer 5"},
+            {"name":"c6",     "type":"S", "info":"cluster ID in superlayer 6"}
+        ]
+    },
   {
     "name": "TimeBasedTrkg::TBSegments",
     "group": 20600,
