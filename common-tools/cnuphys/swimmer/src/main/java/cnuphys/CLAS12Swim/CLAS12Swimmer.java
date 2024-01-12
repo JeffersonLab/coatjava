@@ -1,6 +1,7 @@
 package cnuphys.CLAS12Swim;
 
 import java.util.Hashtable;
+import java.util.Random;
 
 import cnuphys.CLAS12Swim.geometry.Cylinder;
 import cnuphys.CLAS12Swim.geometry.Plane;
@@ -192,6 +193,7 @@ public class CLAS12Swimmer {
 		return new CLAS12SwimResult(listener);
 	}
 
+	Random random = new Random();
 	/**
 	 * Swim to a target accuracy. The details of the target and the accuracy are in
 	 * the CLAS12DOCAListener
@@ -231,13 +233,10 @@ public class CLAS12Swimmer {
 				//this means the last point got farther away
 				double newDOCA = listener.getCurrentDOCA();
 
-//				System.err.println("currentDOCA = " + currentDOCA + "  newDOCA = " + newDOCA + " s = " + listener.getS());
-
 				//are we done?
 				if (Math.abs(newDOCA-currentDOCA) < listener.getAccuracy()) {
 					// do NOT forget to reset the max step size
 					resetMaxStepSize();
-//					System.err.println("*** DOCA swim success");
 					return cres;
 				}
 				
@@ -255,10 +254,20 @@ public class CLAS12Swimmer {
 				
 				u = listener.getU();
 				s1 = listener.getS();
-
-				double newMaxH = Math.max(listener.getAccuracy(), (s2-s1) / 2);
+				double newMaxH;
+				if (listener.getNumStep() > 2) {
+					double s0  = listener.getS(listener.getNumStep()-2);
+					double delS = Math.min(s2-s1, s1-s0);
+					newMaxH = Math.max(listener.getAccuracy(), delS / 10);
+				}
+				else {
+					newMaxH = Math.max(listener.getAccuracy(), (s2-s1) / 10);
+				}
 				
-				System.err.println("newMaxH = " + newMaxH);
+				h *= (1 - 0.1*random.nextDouble());
+
+				
+				
 				setMaxStepSize(newMaxH);
 
 

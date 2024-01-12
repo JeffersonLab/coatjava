@@ -67,29 +67,10 @@ public abstract class CLAS12DOCAListener extends CLAS12Listener {
 	public boolean newStep(double newS, double[] newU) {
 		accept(newS, newU);
 
-		System.err.println("newS: " + newS + " newU: " + newU[0] + " " + newU[1] + " " + newU[2]);
-		
 		double doca = doca(newS, newU);
 		
 		if (doca > _currentDOCA) { //getting farther
 			_status = CLAS12Swimmer.SWIM_SUCCESS;
-			
-			
-			int n = this.getNumStep();
-			double u0[] = this.getU(n-3);
-			double u1[] = this.getU(n-2);
-			double u2[] = this.getU(n-1);
-			
-			Point p0 = new Point(u0);
-			Point p1 = new Point(u1);
-			Point p2 = new Point(u2);
-			
-			Line line = new Line(new Point(0,0,0), new Point(0,0,1));
-			
-			Point tdoca = new Point();
-			double t = QuadraticCurve.findClosestPoint(p0, p1, p2, line, 1.0e-8, tdoca);
-			System.err.println("tdoca: " + tdoca + " t: " + t);
-			
 			return false;
 		}
 

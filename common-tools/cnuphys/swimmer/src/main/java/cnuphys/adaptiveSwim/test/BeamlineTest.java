@@ -8,7 +8,6 @@ import cnuphys.CLAS12Swim.CLAS12Values;
 import cnuphys.magfield.FastMath;
 import cnuphys.magfield.MagneticFields;
 import cnuphys.magfield.MagneticFields.FieldType;
-import cnuphys.swimtest.CSVWriter;
 import cnuphys.swimtest.RandomData;
 
 public class BeamlineTest {
@@ -28,11 +27,11 @@ public class BeamlineTest {
 
 		RandomData forwardData = new RandomData(n, seed, 0, 0, 0, 0, -2, 4); // cm!!
 		RandomData backwardData = new RandomData(n);
-		int bad = 8262;
+		int bad = 21627;
 
 		// generate the backward data
-	//	for (int i = 0; i < n; i++) {
-			for (int i = bad; i < bad+1; i++) {
+		for (int i = 0; i < n; i++) {
+		//	for (int i = bad; i < bad+1; i++) {
 
 			int charge = forwardData.charge[i];
 			double xo = forwardData.xo[i];
@@ -53,40 +52,40 @@ public class BeamlineTest {
 		
 		//test the backward swims
 		
-		double diff[] = new double[n];
-		double diffsq[] = new double[n];
-		
-//		for (int i = 0; i < n; i++) {
-		for (int i = bad; i < bad+1; i++) {
-			//forward data (original vertex
-			double xf = forwardData.xo[i];
-			double yf = forwardData.yo[i];
-			double zf = forwardData.zo[i];
-			
-			//backward data
-			int qb = backwardData.charge[i];
-			double xb = backwardData.xo[i];
-			double yb = backwardData.yo[i];
-			double zb = backwardData.zo[i];
-			double pb = backwardData.p[i];
-			double thetab = backwardData.theta[i];
-			double phib = backwardData.phi[i];
-
-			
-			//backward swim
-			CLAS12SwimResult c12ResB = clas12Swimmer.swim(qb, xb, yb, zb, pb, thetab, phib, sMax, h, c12Tolerance);
-			System.err.println("backward swim \n" + c12ResB);
-
-			double ufb[] = c12ResB.getFinalValues().getU();
-			double dx = xf - ufb[0];
-			double dy = yf - ufb[1];
-			double dz = zf - ufb[2];
-			diffsq[i] = dx*dx + dy*dy + dz*dz;
-			diff[i] = Math.sqrt(diffsq[i]);
-		}
-		
-		statReport("backward swim delta ", diff, diffsq);
-		
+//		double diff[] = new double[n];
+//		double diffsq[] = new double[n];
+//		
+////		for (int i = 0; i < n; i++) {
+//		for (int i = bad; i < bad+1; i++) {
+//			//forward data (original vertex
+//			double xf = forwardData.xo[i];
+//			double yf = forwardData.yo[i];
+//			double zf = forwardData.zo[i];
+//			
+//			//backward data
+//			int qb = backwardData.charge[i];
+//			double xb = backwardData.xo[i];
+//			double yb = backwardData.yo[i];
+//			double zb = backwardData.zo[i];
+//			double pb = backwardData.p[i];
+//			double thetab = backwardData.theta[i];
+//			double phib = backwardData.phi[i];
+//
+//			
+//			//backward swim
+//			CLAS12SwimResult c12ResB = clas12Swimmer.swim(qb, xb, yb, zb, pb, thetab, phib, sMax, h, c12Tolerance);
+//			System.err.println("backward swim \n" + c12ResB);
+//
+//			double ufb[] = c12ResB.getFinalValues().getU();
+//			double dx = xf - ufb[0];
+//			double dy = yf - ufb[1];
+//			double dz = zf - ufb[2];
+//			diffsq[i] = dx*dx + dy*dy + dz*dz;
+//			diff[i] = Math.sqrt(diffsq[i]);
+//		}
+//		
+//		statReport("backward swim delta ", diff, diffsq);
+//		
 		//now the real test
 		System.err.println("\n\n SWIM TO BEAMLINE TEST");
 		
@@ -97,8 +96,8 @@ public class BeamlineTest {
 		int maxIndex = 0;
 		double maxRho = 0;
 		
-	//	for (int i = 0; i < n; i++) {
-		for (int i = bad; i < bad+1; i++) {
+		for (int i = 0; i < n; i++) {
+	//	for (int i = bad; i < bad+1; i++) {
 
 			//backward data
 			int q = backwardData.charge[i];
@@ -111,7 +110,9 @@ public class BeamlineTest {
 
 			CLAS12SwimResult c12res = clas12Swimmer.swimBeamline(q, xo, yo, zo, p, theta, phi, accuracy, 1.2*sMax, h, c12Tolerance);
 
-			System.err.println("*** beamline swim \n" + c12res);
+			if (i == bad) {
+				System.err.println("*** beamline swim \n" + c12res);
+			}
 			
 			
 			double u[] = c12res.getFinalValues().getU();
