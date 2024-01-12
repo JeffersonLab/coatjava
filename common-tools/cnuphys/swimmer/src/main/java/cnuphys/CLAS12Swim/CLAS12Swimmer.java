@@ -217,27 +217,35 @@ public class CLAS12Swimmer {
 		
 		double s1 = sMin;
 		double s2 = listener.getSMax();
-		double doca = Double.POSITIVE_INFINITY;
+		double currentDOCA = Double.POSITIVE_INFINITY;
 
+		//set initial step size
 		h = Math.min(h, listener.getAccuracy() / 2.);
 
 		CLAS12SwimResult cres = null;
 		while (true) {
+			listener.reset();
 			cres = atomicSwim(ode, u, s1, s2, h, tolerance, listener);
 
 			if (listener.getStatus() == SWIM_SUCCESS) {
 				//this means the last point got farther away
-				double newdoca = listener.getCurrentDistance();
-				
+				double newDOCA = listener.getCurrentDOCA();
+
+//				System.err.println("currentDOCA = " + currentDOCA + "  newDOCA = " + newDOCA + " s = " + listener.getS());
+
 				//are we done?
-				if (Math.abs(newdoca-doca) < listener.getAccuracy()) {
+				if (Math.abs(newDOCA-currentDOCA) < listener.getAccuracy()) {
 					// do NOT forget to reset the max step size
 					resetMaxStepSize();
+//					System.err.println("*** DOCA swim success");
 					return cres;
 				}
 				
-				doca = newdoca;
+				//not done, keep going with sub swim
 				s2 = listener.getS();
+				currentDOCA = newDOCA;
+				
+				
 				listener.getTrajectory().removeLastPoint();
 				
 				//remove another if we can
@@ -248,7 +256,9 @@ public class CLAS12Swimmer {
 				u = listener.getU();
 				s1 = listener.getS();
 
-				double newMaxH = Math.max(1e-6, (s2-s1) / 2);
+				double newMaxH = Math.max(listener.getAccuracy(), (s2-s1) / 2);
+				
+				System.err.println("newMaxH = " + newMaxH);
 				setMaxStepSize(newMaxH);
 
 
@@ -725,6 +735,41 @@ public class CLAS12Swimmer {
 		return swimToAccuracy(ode, ivals.getU(), 0, h, tolerance, listener);
 	}
 
+	/**
+	 * Swim to the beamline (defined by rho = 0). That is, 
+	 * find the distance of closest approach to the beamline.
+	 * Swim terminates when successive doca estimates differ by less than accuracy. 
+	 *
+	 * @param q         in integer units of e
+	 * @param xo        the x vertex position in cm
+	 * @param yo        the y vertex position in cm
+	 * @param zo        the z vertex position in cm
+	 * @param p         the momentum in GeV/c
+	 * @param theta     the initial polar angle in degrees
+	 * @param phi       the initial azimuthal angle in degrees
+	 * @param accuracy  the desired accuracy in cm. Swim terminates when 
+     *                  successive doca estimates differ by less than accuracy
+	 * @param sMax      the final (max) value of the independent variable
+	 *                  (pathlength) unless the integration is terminated by the
+	 *                  listener
+	 * @param h         the initial stepsize in cm
+	 * @param tolerance The desired tolerance. The solver will automatically adjust
+	 *                  the step size to meet this tolerance.
+	 * @return the result of the swim
+	 */
+	public CLAS12SwimResult swimBeamline(int q, double xo, double yo, double zo, double p, double theta, double phi,
+			double accuracy, double sMax, double h, double tolerance) {
+
+		// create the ODE
+		CLAS12SwimODE ode = new CLAS12SwimODE(q, p, _probe);
+
+		// create the initial values
+		CLAS12Values ivals = new CLAS12Values(q, xo, yo, zo, p, theta, phi);
+
+		CLAS12BeamlineListener listener = new CLAS12BeamlineListener(ivals, accuracy, sMax);
+
+		return swimToDOCA(ode, ivals.getU(), 0, h, tolerance, listener);
+	}
 	
 
 	/**

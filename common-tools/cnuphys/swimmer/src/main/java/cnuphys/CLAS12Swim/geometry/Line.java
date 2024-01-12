@@ -122,6 +122,18 @@ public class Line {
 		return c.length() / _dpLen;
 	}
 	
+	/**
+	 * Find the point on the line closest to the given point
+	 * @param p the given point
+	 * @return the point on the line closest to the given point
+	 */
+    public Point closestPointOnLine(Point p) {
+        Point pointVec = p.subtract(_po);
+        double t = pointVec.dot(_dp) / _dp.dot(_dp);
+        return _po.add(_dp.scale(t));
+    }
+
+	
 
 	/**
 	 * Get a String representation

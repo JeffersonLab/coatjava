@@ -129,6 +129,16 @@ public class CLAS12Listener implements ODEStepListener {
 	public double[] getU() {
 		return _trajectory.get(_trajectory.size() - 1);
 	}
+	
+	/**
+	 * Get the state vector at the given index
+	 * 
+	 * @param index the index
+	 * @return the state vector
+	 */
+	public double[] getU(int index) {
+		return _trajectory.get(index);
+	}
 
 	/**
 	 * Get the number of integration steps
@@ -146,6 +156,16 @@ public class CLAS12Listener implements ODEStepListener {
 	 */
 	public double getS() {
 		return _trajectory.getS(_trajectory.size() - 1);
+	}
+	
+	/**
+	 * Get the path length at the given index
+	 * 
+	 * @param index the index
+	 * @return the path length in cm
+	 */
+	public double getS(int index) {
+		return _trajectory.getS(index);
 	}
 
 	/**

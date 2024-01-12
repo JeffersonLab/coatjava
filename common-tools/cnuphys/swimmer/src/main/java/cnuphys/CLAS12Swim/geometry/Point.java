@@ -39,7 +39,7 @@ public class Point {
 	}
 	
 	/**
-	 * Create a point
+	 * Create a point from an xyz array
 	 * @param p the point as an xyz array
 	 */
 	public Point(double[] p) {
@@ -47,7 +47,7 @@ public class Point {
 	}
 
 	/**
-	 * Set the components of the vector
+	 * Set the components of the point (vector)
 	 * 
 	 * @param x the x component
 	 * @param y the y component
@@ -57,6 +57,16 @@ public class Point {
 		this.x = x;
 		this.y = y;
 		this.z = z;
+	}
+	
+	/**
+	 * Set the components of the point (vector)
+	 * @param p the point to use to set (e.g., copy)
+	 */
+	public void set(Point p) {
+		this.x = p.x;
+		this.y = p.y;
+		this.z = p.z;
 	}
 
 	/**
@@ -68,6 +78,16 @@ public class Point {
 	 */
 	public static Point difference(Point a, Point b) {
 		return new Point(a.x - b.x, a.y - b.y, a.z - b.z);
+	}
+	
+	/**
+	 * Method to subtract another point from this point
+	 * 
+	 * @param other the point to subtract
+	 * @return the difference between this point and the other point
+	 */
+	public Point subtract(Point other) {
+		return new Point(x - other.x, y - other.y, z - other.z);
 	}
 
 	/**
@@ -134,12 +154,32 @@ public class Point {
 	public double distance(Point p) {
 		return distance(p.x, p.y, p.z);
 	}
-	
-    Point add(Point other) {
+
+    /** Method to calculate distance between two points
+     * 	
+     * @param p1 one point
+     * @param p2 the other point
+     * @return the distance between the two points
+     */
+    public static double distance(Point p1, Point p2) {
+        return p1.distance(p2);
+    }
+
+	/**
+	 * Add another point to this point (i.e., vector addition)
+	 * @param other the other point
+	 * @return the sum of the two points
+	 */
+    public Point add(Point other) {
         return new Point(x + other.x, y + other.y, z + other.z);
     }
     
-    Point scale(double scalar) {
+    /**
+     * Scale this point by a scalar
+     * @param scalar the scalar multiplier
+     * @return the scaled point
+     */
+    public Point scale(double scalar) {
         return new Point(x * scalar, y * scalar, z * scalar);
     }
 

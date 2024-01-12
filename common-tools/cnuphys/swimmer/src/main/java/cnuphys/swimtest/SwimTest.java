@@ -19,7 +19,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
-import cnuphys.adaptiveSwim.test.BeamLineTest;
+import cnuphys.adaptiveSwim.test.BeamlineTest;
 import cnuphys.adaptiveSwim.test.CylinderTest;
 import cnuphys.adaptiveSwim.test.PlaneTest;
 import cnuphys.adaptiveSwim.test.RhoTest;
@@ -83,7 +83,7 @@ public class SwimTest {
 				} else if (e.getSource() == testSectorItem) {
 					SectorZTest.testSectorSwim(count, seed);
 				} else if (e.getSource() == beamlineItem) {
-					BeamLineTest.beamLineTest(count, seed);
+					BeamlineTest.beamLineTest(count, seed);
 				}
 			}
 		};

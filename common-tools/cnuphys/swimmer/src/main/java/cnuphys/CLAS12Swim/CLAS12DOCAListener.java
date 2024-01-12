@@ -1,5 +1,9 @@
 package cnuphys.CLAS12Swim;
 
+import cnuphys.CLAS12Swim.geometry.Line;
+import cnuphys.CLAS12Swim.geometry.Point;
+import cnuphys.CLAS12Swim.geometry.QuadraticCurve;
+
 /**
  * This is an abstract class to be extended by classes that to a distance of closest approach.
  * The assumption is that the first doca is the only one. i.e. we are not dealing with
@@ -12,7 +16,7 @@ public abstract class CLAS12DOCAListener extends CLAS12Listener {
 	protected final double _accuracy;
 
 	//current doca
-	protected double _currentDistance = Double.POSITIVE_INFINITY;
+	protected double _currentDOCA = Double.POSITIVE_INFINITY;
 	
 	/**
 	 * Create a CLAS12 boundary crossing listener
@@ -25,9 +29,16 @@ public abstract class CLAS12DOCAListener extends CLAS12Listener {
 		super(ivals, sMax);
 		_accuracy = accuracy;
 	}
+	
+	/**
+	 * Reset the current DOCA to infinity
+	 */
+	public void reset() {
+		_currentDOCA = Double.POSITIVE_INFINITY;
+	}
 
 	/**
-	 * Get the requested accuracy
+	 * Get the requested accuracy (on on difference in successive docas)in cm.
 	 *
 	 * @return the requested accuracy
 	 */
@@ -40,8 +51,8 @@ public abstract class CLAS12DOCAListener extends CLAS12Listener {
 	 * 
 	 * @return the current doca
 	 */
-	public double getCurrentDistance() {
-		return _currentDistance;
+	public double getCurrentDOCA() {
+		return _currentDOCA;
 	}
 	
 	/**
@@ -56,11 +67,29 @@ public abstract class CLAS12DOCAListener extends CLAS12Listener {
 	public boolean newStep(double newS, double[] newU) {
 		accept(newS, newU);
 
+		System.err.println("newS: " + newS + " newU: " + newU[0] + " " + newU[1] + " " + newU[2]);
 		
-		double distance = distance(newS, newU);
+		double doca = doca(newS, newU);
 		
-		if (distance > _currentDistance) { //getting farther
+		if (doca > _currentDOCA) { //getting farther
 			_status = CLAS12Swimmer.SWIM_SUCCESS;
+			
+			
+			int n = this.getNumStep();
+			double u0[] = this.getU(n-3);
+			double u1[] = this.getU(n-2);
+			double u2[] = this.getU(n-1);
+			
+			Point p0 = new Point(u0);
+			Point p1 = new Point(u1);
+			Point p2 = new Point(u2);
+			
+			Line line = new Line(new Point(0,0,0), new Point(0,0,1));
+			
+			Point tdoca = new Point();
+			double t = QuadraticCurve.findClosestPoint(p0, p1, p2, line, 1.0e-8, tdoca);
+			System.err.println("tdoca: " + tdoca + " t: " + t);
+			
 			return false;
 		}
 
@@ -70,7 +99,7 @@ public abstract class CLAS12DOCAListener extends CLAS12Listener {
 			return false;
 		}
 
-		_currentDistance = distance;
+		_currentDOCA = doca;
 		return true;
 	}	
 	
@@ -80,7 +109,7 @@ public abstract class CLAS12DOCAListener extends CLAS12Listener {
 	 * @param newU the new state vector
 	 * @return the distance to the target (boundary) in cm.
 	 */
-	public abstract double distance(double newS, double[] newU);
+	public abstract double doca(double newS, double[] newU);
 
 
 
