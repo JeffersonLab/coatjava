@@ -13,6 +13,15 @@ public class CLAS12Trajectory extends SwimTrajectory {
 
 	// cache the path length
 	public ArrayList<Double> _s = new ArrayList<>(200);
+	
+	/**
+	 * Create a trajectory with the given initial values
+	 * 
+	 * @param initialValues the initial values
+	 */
+	public CLAS12Trajectory(CLAS12Values initialValues) {
+		super(initialValues.toGeneratedParticleRecord(), 200);
+	}
 
 	/**
 	 * add a new point in the trajectory
@@ -46,11 +55,16 @@ public class CLAS12Trajectory extends SwimTrajectory {
 	 * Remove the last point in the trajectory
 	 */
 	public void removeLastPoint() {
-		if (size() > 0) {
-			int index = size() - 1;
-			_s.remove(index);
-			remove(index);
-		}
+		removePoint(size() - 1);
+	}
+	
+	/**
+	 * Remove the point at the given index
+	 * @param index the index
+	 */
+	public void removePoint(int index) {
+		_s.remove(index);
+		remove(index);
 	}
 
 	/**

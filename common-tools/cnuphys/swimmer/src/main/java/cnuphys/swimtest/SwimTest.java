@@ -21,6 +21,7 @@ import javax.swing.JPanel;
 
 import cnuphys.adaptiveSwim.test.BeamlineTest;
 import cnuphys.adaptiveSwim.test.CylinderTest;
+import cnuphys.adaptiveSwim.test.FixedTest;
 import cnuphys.adaptiveSwim.test.PlaneTest;
 import cnuphys.adaptiveSwim.test.RhoTest;
 import cnuphys.adaptiveSwim.test.SphereTest;
@@ -50,6 +51,7 @@ public class SwimTest {
 		JMenu menu = new JMenu("Tests");
 		
 		final JMenuItem baseItem = new JMenuItem("Base test");
+		final JMenuItem fixedItem = new JMenuItem("Fixed step size test");
 
 		final JMenuItem swimZItem = new JMenuItem("Fixed Z test");
 		final JMenuItem rhoItem = new JMenuItem("Rho Test");
@@ -70,9 +72,11 @@ public class SwimTest {
 			public void actionPerformed(ActionEvent e) {
 				if (e.getSource() == baseItem) {
 					BaseTest.baseSwimTest(count, seed);
+				} else if (e.getSource() == fixedItem) {
+					FixedTest.fixedSwimTest(count, seed);
 				} else if (e.getSource() == swimZItem) {
 					ZTest.swimZTest(count, seed);
-				}  else if (e.getSource() == cylinderItem) {
+				} else if (e.getSource() == cylinderItem) {
 					CylinderTest.cylinderTest();
 				} else if (e.getSource() == sphereItem) {
 					SphereTest.sphereTest();
@@ -89,6 +93,7 @@ public class SwimTest {
 		};
 
 		addMenuItem(menu, al, baseItem);
+		addMenuItem(menu, al, fixedItem);
 		addMenuItem(menu, al, rhoItem);
 		addMenuItem(menu, al, planeItem);
 		addMenuItem(menu, al, swimZItem);

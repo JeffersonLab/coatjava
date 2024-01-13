@@ -20,7 +20,7 @@ public class ZTest {
 
 	//swim to a fixed z
 	public static void swimZTest(int n, long seed) {
-
+		
 		MagneticFields.getInstance().setActiveField(FieldType.COMPOSITE);
 
 	    System.err.println("Swim to fixed z test");
@@ -70,7 +70,7 @@ public class ZTest {
 
 
 		for (int i = 0; i < n; i++) {
-
+	
 			int charge = data.charge[i];
 			double xo = data.xo[i];
 			double yo = data.yo[i];

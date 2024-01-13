@@ -40,12 +40,12 @@ public class BaseTest {
 	    //write the header row
 	    writer.writeRow("charge", "xo (m)", "yo (m)", "zo (m)", "p (GeV/c)", "theta (deg)", "phi (deg)",
 	    		"status", "xf_as", "yf_as", "zf_as", "s_as", "npnt_as", "bdl_as",
-	    		"status", "xf_c12", "yf_c12", "zf_c12", "s_c12", "npnt_as", "bdl_c12");
+	    		"status", "xf_c12", "yf_c12", "zf_c12", "s_c12", "npnt_c12", "bdl_c12");
 
 
 		AdaptiveSwimmer adaptiveSwimmer = new AdaptiveSwimmer(); //new
 		
-		CLAS12Swimmer clas12Swimmer = new CLAS12Swimmer(EIntegrator.DormandPrince); //new
+		CLAS12Swimmer clas12Swimmer = new CLAS12Swimmer(); //new
 
 
 		//results for adaptive swimmer

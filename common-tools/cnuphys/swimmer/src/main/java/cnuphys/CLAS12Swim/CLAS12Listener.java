@@ -38,7 +38,7 @@ public class CLAS12Listener implements ODEStepListener {
 		_initialVaues = ivals;
 		_sMax = sMax;
 
-		_trajectory = new CLAS12Trajectory();
+		_trajectory = new CLAS12Trajectory(ivals);
 		reset();
 	}
 	

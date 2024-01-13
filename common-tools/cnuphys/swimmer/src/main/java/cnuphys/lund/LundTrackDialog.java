@@ -93,6 +93,10 @@ public class LundTrackDialog extends JDialog {
 	// fixed Z value
 	private JTextField _fixedZ;
 	
+	// max S value
+	private JTextField _sMax;
+
+	
 	// accuracy in fixed z
 	private JTextField _accuracy;
 
@@ -285,9 +289,9 @@ public class LundTrackDialog extends JDialog {
 		double phi = Double.parseDouble(_phi.getText());
 
 		double stepSize = 1e-4; // cm
-		double sMax = 800; // cm
+		double sMax = Double.parseDouble(_sMax.getText()); // cm;
 
-		double tolerance = 1.0e-8;
+		double tolerance = 1.0e-6;
 
 		SwimTrajectory traj = null;
 
@@ -438,12 +442,13 @@ public class LundTrackDialog extends JDialog {
 		
 		_fixedZ = new JTextField(8);
 		_fixedRho = new JTextField(8);
+		_sMax = new JTextField(8);
 
 		_accuracy = new JTextField(8);
 
 		_fixedRho.setText("100.0");
 		_fixedZ.setText("575.0");
-
+       _sMax.setText("800.0");
 		_accuracy.setText("10");
 
 		
@@ -455,6 +460,8 @@ public class LundTrackDialog extends JDialog {
 		box.add(labeledTextField("      Stopping Z", _fixedZ, "cm", -1));
 		box.add(Box.createVerticalStrut(5));
 		box.add(labeledTextField("      Stopping " + SMALL_RHO, _fixedRho, "cm", -1));
+		box.add(Box.createVerticalStrut(5));
+		box.add(labeledTextField("            Smax", _sMax, "cm", -1));
 		box.add(Box.createVerticalStrut(5));
 		box.add(labeledTextField("        Accuracy", _accuracy, "microns", -1));
 		box.add(Box.createVerticalStrut(5));

@@ -23,11 +23,11 @@ public class BeamlineTest {
 
 		double sMax = 200; // cm
 		double c12Tolerance = 1.0e-6;
-		double accuracy = 1.0e-6; // cm
+		double accuracy = 1.0e-4; // cm
 
 		RandomData forwardData = new RandomData(n, seed, 0, 0, 0, 0, -2, 4); // cm!!
 		RandomData backwardData = new RandomData(n);
-		int bad = 21627;
+		int bad = -1;
 
 		// generate the backward data
 		for (int i = 0; i < n; i++) {

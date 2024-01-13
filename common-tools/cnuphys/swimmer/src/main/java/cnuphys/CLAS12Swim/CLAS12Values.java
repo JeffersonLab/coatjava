@@ -1,5 +1,6 @@
 package cnuphys.CLAS12Swim;
 
+import cnuphys.lund.GeneratedParticleRecord;
 import cnuphys.magfield.FastMath;
 
 /**
@@ -119,6 +120,14 @@ public class CLAS12Values {
 		return String.format("Q: %d\n", q) + String.format("xo: %10.7e cm\n", x) + String.format("yo: %10.7e cm\n", y)
 				+ String.format("zo: %10.7e cm\n", z) + String.format("p: %10.7e GeV/c\n", p)
 				+ String.format("theta: %10.7f deg\n", theta) + String.format("phi: %10.7f deg", phi);
+	}
+	
+	/**
+	 * Convert to a GeneratedParticleRecord for backwards compatibility
+	 * @return a GeneratedParticleRecord corresponding to this data
+	 */
+	public GeneratedParticleRecord toGeneratedParticleRecord() {
+		return new GeneratedParticleRecord(q, x, y, z, p, theta, phi);
 	}
 
 	/**
