@@ -293,7 +293,7 @@ public class CodaEventDecoder {
      * @param event
      * @return
      */
-    public List<EvioTreeBranch>  getEventBranches(EvioDataEvent event){
+    public static List<EvioTreeBranch>  getEventBranches(EvioDataEvent event){
         ArrayList<EvioTreeBranch>  branches = new ArrayList<>();
         try {
 
@@ -324,7 +324,7 @@ public class CodaEventDecoder {
      * @param tag
      * @return
      */
-    public EvioTreeBranch  getEventBranch(List<EvioTreeBranch> branches, int tag){
+    public static EvioTreeBranch  getEventBranch(List<EvioTreeBranch> branches, int tag){
         for(EvioTreeBranch branch : branches){
             if(branch.getTag()==tag) return branch;
         }
