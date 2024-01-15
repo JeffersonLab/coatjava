@@ -133,12 +133,10 @@ public class EvioSource implements DataSource {
 	}
 
 	public DataEventList getEventList(int start, int stop) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	public DataEventList getEventList(int nrecords) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -147,7 +145,6 @@ public class EvioSource implements DataSource {
 	}
 
 	public int getCurrentIndex() {
-		// TODO Auto-generated method stub
 		return currentEvent;
 	}
 
@@ -208,15 +205,6 @@ public class EvioSource implements DataSource {
 		}
 		return null;
 	}
-	/*
-	 * public Histogram1D scanTree(String path, int maxevents){ currentEvent = 1; int maxestimate = 5000; if(maxestimate>=maxevents){ maxestimate = maxevents-2; }
-	 * 
-	 * DataRangeEstimator datae = new DataRangeEstimator(path,100,maxestimate);
-	 * 
-	 * for(int loop = 0; loop < maxevents; loop++){ DataEvent event = this.getNextEvent(); double[] darray = event.getDouble(path); if(darray!=null){ for(int ndata =
-	 * 0; ndata < darray.length; ndata++){ datae.fill(darray[ndata]); //System.out.println("--> " + darray[ndata]); } } } //= new Histogram1D();
-	 * System.out.println("----> bins  = " + datae.getHistogram().getAxis().getNbins()); return datae.getHistogram(); }
-	 */
 
 	public boolean hasEvent() {
 		if (currentEvent > currentFileEntries)
@@ -235,7 +223,5 @@ public class EvioSource implements DataSource {
 
     @Override
     public void waitForEvents() {
-        // This method does nothing for source associated with
-        // a file.
     }
 }
