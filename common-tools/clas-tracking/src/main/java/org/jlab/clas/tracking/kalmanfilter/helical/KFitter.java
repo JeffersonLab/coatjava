@@ -12,14 +12,15 @@ import org.jlab.clas.tracking.utilities.MatrixOps.Libr;
 
 /**
  *
- * @author ziegler
+ * @author ziegler, Tongtong
  */
 public class KFitter extends AKFitter {
 
     private StateVecs sv = new StateVecs();
     private MeasVecs  mv = new MeasVecs();
     private StateVec finalSmoothedStateVec = null;    
-    private StateVec finalTransportedStateVec = null;    
+    private StateVec finalTransportedStateVec = null;  
+    private double NDFDAF;
     
     
     public KFitter(boolean filter, int iterations, int dir, Swim swim, Libr mo) {
@@ -33,6 +34,7 @@ public class KFitter extends AKFitter {
         finalTransportedStateVec = null; 
         this.NDF0 = -5;
         this.NDF  = -5;
+        this.NDFDAF = -5;
         this.chi2 = Double.POSITIVE_INFINITY;
         this.numIter = 0;
         this.setFitFailed = false;
@@ -83,9 +85,11 @@ public class KFitter extends AKFitter {
             }
         }
         this.chi2 = chisq; 
-    }    
+    }
+    
     public void runFitter() {
-        this.runFitter(sv, mv);
+        if(getUseDAF()) this.runFitterDAF(sv, mv);
+        else this.runFitter(sv, mv);
     }
 
     public double getChi2() {
@@ -106,6 +110,29 @@ public class KFitter extends AKFitter {
         }
         else {
             return this.chi2;
+        }
+    }
+    
+    public double getNDFDAF() {
+        return getNDFDAF(0);
+    }
+    
+    public double getNDFDAF(int mode) {
+        if(mode==1) {
+            double ndf = this.NDF0;
+            for(int k = 1; k< mv.measurements.size(); k++) {
+                if(!mv.measurements.get(k).skip) {
+                    double weight = 1;
+                    if(sv.smoothed().get(k) != null){
+                        weight = sv.smoothed().get(k).getWeightDAF();
+                    }
+                    ndf += weight;
+                }
+            }
+            return ndf;           
+        }
+        else {
+            return this.NDFDAF;
         }
     }
     
@@ -173,7 +200,6 @@ public class KFitter extends AKFitter {
     
     @Override
     public void runFitter(AStateVecs sv, AMeasVecs mv) { 
-        // System.out.println("******************************ITER "+totNumIter);
         StateVec finalSmoothedOnPivot    = null;
         StateVec finalTransportedOnPivot = null;
         
@@ -181,7 +207,6 @@ public class KFitter extends AKFitter {
             this.runFitterIter(sv, mv);
             // chi2
             double newchisq = this.calc_chi2(sv, mv); 
-            //System.out.println("******************************ITER "+(it+1)+" "+ newchisq+" <? "+this.chi2);
             // if curvature is 0, fit failed
             if(Double.isNaN(newchisq) ||
                sv.smoothed().get(0)==null ||
@@ -207,7 +232,80 @@ public class KFitter extends AKFitter {
             finalTransportedStateVec = this.setFinalStateVector(finalTransportedOnPivot);
         }
     }
+    
+    public void runFitterDAF(AStateVecs sv, AMeasVecs mv) { 
+        StateVec finalSmoothedOnPivot    = null;
+        StateVec finalTransportedOnPivot = null;
+        
+        for (int it = 0; it < totNumIter; it++) {
+            this.runFitterIterDAF(sv, mv);
+            // chi2
+            double newchisq = this.calc_chi2DAF(sv, mv); 
+            // if curvature is 0, fit failed
+            if(Double.isNaN(newchisq) ||
+               sv.smoothed().get(0)==null ||
+               sv.smoothed().get(0).kappa==0 || 
+               Double.isNaN(sv.smoothed().get(0).kappa)) {
+                this.setFitFailed = true; 
+                break; 
+            }            
+            else {
+                this.chi2 = newchisq;
+                finalSmoothedOnPivot    = sv.new StateVec(sv.smoothed().get(0));
+                finalTransportedOnPivot = sv.new StateVec(sv.transported(false).get(0));
+                this.setTrajectoryDAF(sv, mv);
+            }
+        }
+        if(!this.setFitFailed) {
+            finalSmoothedStateVec    = this.setFinalStateVector(finalSmoothedOnPivot);
+            finalTransportedStateVec = this.setFinalStateVector(finalTransportedOnPivot);
+        }
+    }
+    
+    public double calc_chi2DAF(AStateVecs sv, AMeasVecs mv) {
+        double chisq = 0;
+        this.NDF = this.NDF0;
+        this.NDFDAF = this.NDF0;
 
+        int k0 = 0;
+        int kf = mv.measurements.size()-1;
+        if(dir<0) {
+            k0 = mv.measurements.size()-1;
+            kf = 0;
+        }
+         
+        if(sv.smoothed().get(k0)!=null && sv.smoothed().get(kf)!=null) {
+            // store trajectory in transport state-vector map
+            sv.transported().put(0, sv.smoothed().get(0).clone());
+
+            for(int k = 0; k< mv.measurements.size(); k++) {
+                if(!mv.measurements.get(k).skip) {
+                    double dh    = mv.dh(k, sv.smoothed().get(k));
+                    double error = mv.measurements.get(k).error;
+                    double V = error*error;
+                    double weight = 1;
+                    if(sv.smoothed().get(k) != null){
+                        weight = sv.smoothed().get(k).getWeightDAF();
+                        DAFilter daf = new DAFilter(V, weight);
+                        V = daf.get_EffectiveVar();                    
+                    }                                        
+                    chisq += dh*dh / V;
+                    this.NDFDAF += weight;
+                    this.NDF++;
+                }
+                if(k< mv.measurements.size()-1) {
+                    sv.transport(k, k+1, mv, this.getSwimmer());
+                    if(sv.transported().get(k+1)==null) {
+                        chisq=Double.NaN;
+                        break;
+                    }
+                }
+            }  
+        }
+        if(chisq==0) chisq=Double.NaN;
+        return chisq;
+    }
+    
     @Override
     public StateVec filter(int k, StateVec vec, AMeasVecs mv) {
         if (vec != null && vec.covMat != null) {
@@ -220,10 +318,72 @@ public class KFitter extends AKFitter {
                 double V = mv.measurements.get(k).error*mv.measurements.get(k).error;
 
                 double dh = mv.dh(k, fVec);
-    //            System.out.println(dh);
-                //get the projector Matrix
+                double[] H = mv.H(fVec, sv,  mv.measurements.get(k), this.getSwimmer());                
+                double[][] CaInv =  this.getMatrixOps().filterCovMat(H, fVec.covMat, V);
+                if (CaInv != null) {
+                        fVec.covMat = CaInv;
+                    } else {
+                        return null;
+                }
+
+                for (int j = 0; j < 5; j++) {
+                    // the gain matrix
+                    K[j] = 0;
+                    for (int i = 0; i < 5; i++) {
+                        K[j] += H[i] * fVec.covMat[j][i] / V; 
+                    } 
+                }
+                if(sv.straight) {
+                        K[2] = 0;
+                }
+
+                //sv.printlnStateVec(fVec);
+                if (!Double.isNaN(dh) ) {
+                    fVec.d_rho -= K[0] * dh;
+                    fVec.phi0  -= K[1] * dh;
+                    fVec.kappa -= K[2] * dh;
+                    fVec.dz    -= K[3] * dh;
+                    fVec.tanL  -= K[4] * dh;
+                }
+    
+                if(this.getSwimmer()!=null && !sv.straight) fVec.rollBack(mv.rollBackAngle);
+                fVec.updateFromHelix();
+                sv.setStateVecPosAtMeasSite(fVec, mv.measurements.get(k), this.getSwimmer()); 
+                fVec.residual = mv.dh(k, fVec); 
+                if (Double.isNaN(fVec.residual) 
+                 || Math.abs(fVec.residual) > Math.max(V, 10*Math.abs(dh))
+                 || Math.abs(fVec.residual)/Math.sqrt(V)>this.getResidualsCut()) { 
+                    this.NDF--;
+                    mv.measurements.get(k).skip = true;
+                    fVec = sv.new StateVec(vec);
+                    if(this.getSwimmer()!=null && !sv.straight) fVec.rollBack(mv.rollBackAngle);
+                    fVec.updateFromHelix();
+                }
+            }
+            return fVec;
+        }
+        return null;
+    }
+    
+    @Override
+    public StateVec filterDAF(int k, StateVec vec, AMeasVecs mv) {
+        if (vec != null && vec.covMat != null) {
+        
+            StateVec fVec = sv.new StateVec(vec);
+            
+            if(mv.measurements.get(k).skip == false && filterOn) {
+
+                double[] K = new double[5];
+                double V = mv.measurements.get(k).error*mv.measurements.get(k).error;
+
+                if(sv.smoothed().get(k) != null){
+                    double weight = sv.smoothed().get(k).getWeightDAF();
+                    DAFilter daf = new DAFilter(V, weight);
+                    V = daf.get_EffectiveVar(); 
+                }
+
+                double dh = mv.dh(k, fVec);
                 double[] H = mv.H(fVec, sv,  mv.measurements.get(k), this.getSwimmer());
-    //            System.out.println(k + " " + mv.measurements.get(k).layer + " " + H[0] + " " + H[1] + " " + H[2] + " " + H[3] + " " + H[4] + " " +dh );
                 
                 double[][] CaInv =  this.getMatrixOps().filterCovMat(H, fVec.covMat, V);
                 if (CaInv != null) {
@@ -245,15 +405,6 @@ public class KFitter extends AKFitter {
 
                 //sv.printlnStateVec(fVec);
                 if (!Double.isNaN(dh) ) {
-    //                for (int j = 0; j < 5; j++) {
-    //                    for (int i = 0; i < 5; i++) {
-    //                        System.out.print(CaInv[j][i] + " ");
-    //                    }
-    //                    System.out.println();
-    //                }
-    //                System.out.println(k + " " + CaInv[0][0] + " " + CaInv[1][1] + " " + CaInv[2][2] + " " + CaInv[3][3] + " " + CaInv[4][4] + " " + V );
-    //                System.out.println(k + " " + H[0] + " " + H[1] + " " + H[2] + " " + H[3] + " " + H[4] + " " +dh );
-    //                System.out.println(k + " " + K[0] + " " + K[1] + " " + K[2] + " " + K[3] + " " + K[4] + " " +dh );
                     fVec.d_rho -= K[0] * dh;
                     fVec.phi0  -= K[1] * dh;
                     fVec.kappa -= K[2] * dh;
@@ -263,11 +414,9 @@ public class KFitter extends AKFitter {
     
                 if(this.getSwimmer()!=null && !sv.straight) fVec.rollBack(mv.rollBackAngle);
                 fVec.updateFromHelix();
-    // sv.printlnStateVec(fVec);
                 sv.setStateVecPosAtMeasSite(fVec, mv.measurements.get(k), this.getSwimmer()); 
-    // sv.printlnStateVec(fVec);
                 fVec.residual = mv.dh(k, fVec); 
-    //            System.out.println(dh_filt + " " + dh);
+
                 if (Double.isNaN(fVec.residual) 
                  || Math.abs(fVec.residual) > Math.max(V, 10*Math.abs(dh))
                  || Math.abs(fVec.residual)/Math.sqrt(V)>this.getResidualsCut()) { 
@@ -396,7 +545,81 @@ public class KFitter extends AKFitter {
             return null;
         }
     }
+    
+    @Override
+    public StateVec smoothDAF(StateVec v1, StateVec v2, double annealingFactor) {        
+        if(v1==null || v2==null) return null;
+        // move pivot of first state vector to match second
+        v1.setPivot(v2.x0, v2.y0, v2.z0);
+        // get covariance matrices and arrays
+        double[][] c1 = v1.covMat;
+        double[][] c2 = v2.covMat;
+        double[]   a1 = v1.getHelixArray();
+        double[]   a2 = v2.getHelixArray();
+        // smooth covariance matrices
+        double[][] c1i = this.getMatrixOps().inverse(c1);
+        double[][] c2i = this.getMatrixOps().inverse(c2);
+        if(c1i == null || c2i == null) return null;
+        double[][]  ci = this.getMatrixOps().mo.MatrixAddition(c1i, c2i);
+        double[][]   c = this.getMatrixOps().inverse(ci);
+        if(c == null) return null;
+        // smooth state vectors
+        double[] a = new double[a1.length];
+        for(int i=0; i<a1.length; i++) {
+            for(int j=0; j<a1.length; j++) {
+                for(int k=0; k<a1.length; k++) {
+                    a[i] += c[i][j]*(c1i[j][k]*a1[k]+c2i[j][k]*a2[k]);
+                }
+            }
+        }
+        // create averaged state vector
+        StateVec vave = sv.new StateVec(v2);
+        vave.d_rho = a[0];
+        vave.phi0  = a[1];
+        vave.kappa = a[2];
+        vave.dz    = a[3];
+        vave.tanL  = a[4];
+        vave.covMat = c;
+        if(this.getSwimmer()!=null && !sv.straight) vave.rollBack(mv.rollBackAngle);
+        vave.updateFromHelix();
 
-
-
+        boolean stateOK = sv.setStateVecPosAtMeasSite(vave, mv.measurements.get(vave.k), this.getSwimmer()); 
+        
+        double V = mv.measurements.get(vave.k).error * mv.measurements.get(vave.k).error;
+        DAFilter daf = new DAFilter(V);
+        double residual = mv.dh(vave.k, vave);
+        
+        int layer = mv.measurements.get(vave.k).layer;
+        int layerType = 2;
+        if(layer == 0) layerType = 1;
+        else if(layer >= 4 && layer <=9) layerType = 2;
+        else if(layer >= 12 && layer <=17) layerType = 3;
+        double weight = daf.calc_updatedWeight(residual, annealingFactor, layerType);
+        vave.setWeightDAF(weight);        
+        
+        if(stateOK) {
+            return vave;
+        }
+        else {
+            return null;
+        }
+    }  
+    
+    @Override
+    public double updateDAFWeight(StateVec vec, double annealingFactor){
+        
+        double V = mv.measurements.get(vec.k).error * mv.measurements.get(vec.k).error;
+        DAFilter daf = new DAFilter(V);
+        double residual = mv.dh(vec.k, vec);
+        
+        int layer = mv.measurements.get(vec.k).layer;
+        int layerType = 2;
+        if(layer == 0) layerType = 1;
+        else if(layer >= 4 && layer <=9) layerType = 2;
+        else if(layer >= 12 && layer <=17) layerType = 3;
+        
+        double weight = daf.calc_updatedWeight(residual, annealingFactor, layerType);
+        
+        return weight;
+    }    
 }

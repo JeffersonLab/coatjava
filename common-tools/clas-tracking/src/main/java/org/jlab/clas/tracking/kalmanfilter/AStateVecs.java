@@ -327,7 +327,16 @@ public abstract class AStateVecs {
         public void setProjectorDoca(double h) {
             this.h = h;
         }
-        /////////////////////// extra variables for forward tracking ///////////////////////
+        
+        /////////////////////// For DAF in helix tracking ///////////////////////
+        private double weightDAF = 1;
+        
+        public double getWeightDAF(){
+            return weightDAF;
+        }
+        public void setWeightDAF(double weight){
+            this.weightDAF = weight;
+        }
 
         public StateVec(int k) {
             this.k = k;
