@@ -6,38 +6,38 @@ import java.util.TreeMap;
 import org.jlab.coda.jevio.ByteDataTransformer;
 import org.jlab.coda.jevio.DataType;
 import org.jlab.coda.jevio.EvioNode;
-import org.jlab.detector.decode.CodaEventDecoder;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.evio.EvioSource;
 import org.jlab.io.evio.EvioTreeBranch;
+import org.jlab.detector.decode.CodaEventDecoder;
 
 /**
- * Just a wrapper to read an EVIO file sorted by event number.
+ * A wrapper to read an EVIO file sorted by CODA event number.
+ * 
  * @author baltzell
  */
 public class EvioSortedSource extends EvioSource {
-    
+  
     public static final int HEAD_BANK_TAG = 57615; // 0xe10f
-    public static final int EVENT_NUMBER_INDEX = 4;
+    public static final int HEAD_BANK_EVENT_INDEX = 4;
 
-    Map<Integer,Integer> eventMap;
-    int localIndex;
+    private final Map<Integer,Integer> map = new TreeMap<>();
+    private int index = 0;
 
     public EvioSortedSource() {
         super();
-        eventMap = new TreeMap<>();
     }
 
     private static int getCodaEventNumber(EvioDataEvent event){
-        if (event.getHandler().getStructure() != null){
+        if (event != null && event.getHandler().getStructure() != null){
             List<EvioTreeBranch> branches = CodaEventDecoder.getEventBranches(event);
             for (EvioTreeBranch branch : branches){
                 EvioTreeBranch cbranch = CodaEventDecoder.getEventBranch(branches, branch.getTag());
                 for (EvioNode node : cbranch.getNodes()) {
                     if (node.getTag() == HEAD_BANK_TAG) {
                         if (node.getDataTypeObj()==DataType.INT32||node.getDataTypeObj()==DataType.UINT32) {
-                            return ByteDataTransformer.toIntArray(node.getStructureBuffer(true))[EVENT_NUMBER_INDEX];
+                            return ByteDataTransformer.toIntArray(node.getStructureBuffer(true))[HEAD_BANK_EVENT_INDEX];
                         }
                     }
                 }
@@ -47,11 +47,15 @@ public class EvioSortedSource extends EvioSource {
     }
 
     private void loadEventMap(String filename) {
-        eventMap.clear();
+        this.index = 0;
+        this.map.clear();
         super.open(filename);
-        while (super.hasEvent()==true){
-            final int eventNumber = getCodaEventNumber((EvioDataEvent)super.getNextEvent());
-            eventMap.put(eventNumber, this.getCurrentIndex());
+        while (super.hasEvent()) {
+            final int coda = getCodaEventNumber((EvioDataEvent)super.getNextEvent());
+            final int evio = this.getCurrentIndex()-1;
+            if (coda > 0) {
+                map.put(coda, evio);
+            }
         }
         this.close();
     }
@@ -59,36 +63,59 @@ public class EvioSortedSource extends EvioSource {
     @Override
     public void open(String filename) {
         this.loadEventMap(filename);
-        this.localIndex = 0;
         super.open(filename);
     }
 
     @Override
     public boolean hasEvent() {
-        return this.localIndex < this.eventMap.keySet().size()-1;
+        return this.index < this.map.keySet().size()-1;
     }
 
     @Override
     public void reset() {
-        this.localIndex = 0;
+        this.index = 0;
     }
 
     @Override
     public DataEvent getNextEvent() {
-        int evioIndex = (int)this.eventMap.values().toArray()[this.localIndex];
-        this.localIndex++;
-        return this.gotoEvent(evioIndex);
+        final int coda = (int)this.map.keySet().toArray()[this.index];
+        final int evio = this.map.get(coda);
+        System.out.println(String.format("LOCAL/EVIO/CODA:  %d %d %d",
+                this.index, evio, coda));
+        this.index++;
+        return this.gotoEvent(evio);
+    }
+
+    public void showMap() {
+        System.out.println("****** MAP ******");
+        for (int index=0; index<this.map.keySet().size(); ++index) {
+            final int coda = (int)this.map.keySet().toArray()[index];
+            final int evio = this.map.get(coda);
+            System.out.println(String.format("LOCAL/EVIO/CODA:  %d %d %d",
+                    index,evio,coda));
+        }
+        System.out.println("****** END MAP ******");
     }
 
     public static void main(String args[]) {
         EvioSortedSource s = new EvioSortedSource();
-        s.open("/Users/baltzell/data/clas_019439/clas_019439.evio.00040");
-        for (int i : s.eventMap.keySet()) {
-            System.out.println(String.format("%d %d",i,s.eventMap.get(i)));
-        }
+        s.open("/Users/baltzell/data/clas_pin_019331.evio.00000");
+        //s.open("/Users/baltzell/data/clas_019349.evio.00040");
+        s.showMap();
+        int previousEventNumber = -999;
+        int previousIndex = -999;
         while (s.hasEvent()) {
             DataEvent e = s.getNextEvent();
-            System.out.println(getCodaEventNumber((EvioDataEvent)e));
+            int thisEventNumber = getCodaEventNumber((EvioDataEvent)e);
+            if (thisEventNumber > 0 && thisEventNumber <= previousEventNumber) {
+                System.out.println(String.format("PREVIOUS:  %d %d",
+                        previousEventNumber, previousIndex));
+                System.out.println(String.format("CURRENT:  %d %d",
+                        thisEventNumber, s.getCurrentIndex()));
+                break;
+            }
+            previousIndex = s.getCurrentIndex();
+            previousEventNumber = thisEventNumber;
         }
     }
 
