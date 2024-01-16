@@ -50,7 +50,7 @@ public class EvioSortedSource extends EvioSource {
     private void loadEventMap(String filename) {
         this.index = 0;
         this.map.clear();
-        this.list.addAll(new ArrayList(map.keySet()));
+        this.list.clear();
         super.open(filename);
         while (super.hasEvent()) {
             final int coda = getCodaEventNumber((EvioDataEvent)super.getNextEvent());
