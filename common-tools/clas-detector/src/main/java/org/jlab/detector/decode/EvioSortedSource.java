@@ -1,4 +1,4 @@
-package org.jlab.analysis.postprocess;
+package org.jlab.detector.decode;
 
 import java.util.List;
 import java.util.Map;
@@ -10,7 +10,6 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.evio.EvioSource;
 import org.jlab.io.evio.EvioTreeBranch;
-import org.jlab.detector.decode.CodaEventDecoder;
 
 /**
  * A wrapper to read an EVIO file sorted by CODA event number.
@@ -99,8 +98,9 @@ public class EvioSortedSource extends EvioSource {
 
     public static void main(String args[]) {
         EvioSortedSource s = new EvioSortedSource();
-        s.open("/Users/baltzell/data/clas_pin_019331.evio.00000");
+        //s.open("/Users/baltzell/data/clas_pin_019331.evio.00000");
         //s.open("/Users/baltzell/data/clas_019349.evio.00040");
+        s.open("/Users/baltzell/data/clas_pin_019331.evio.00000");
         s.showMap();
         int previousEventNumber = -999;
         int previousIndex = -999;
