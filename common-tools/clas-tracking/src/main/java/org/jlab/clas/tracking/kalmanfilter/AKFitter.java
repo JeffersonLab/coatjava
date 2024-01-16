@@ -35,6 +35,8 @@ public abstract class AKFitter {
     
     public Map<Integer, HitOnTrack> trajPoints = new HashMap<>();
     
+    private static final double[] dafAnnealingFactors = {64, 16, 4, 1, 1};
+    
     public AKFitter(boolean filter, int iterations, int dir, Swim swim, Libr m) {
         this.filterOn           = filter;
         this.totNumIter         = iterations;
@@ -119,6 +121,50 @@ public abstract class AKFitter {
         }     
     }
     
+    public void runFitterIterDAF(AStateVecs sv, AMeasVecs mv) {
+        double annealingFactor = dafAnnealingFactors[numIter];
+                
+        this.numIter++;
+        
+        int k0 = 0;
+        int kf = mv.measurements.size() - 1;
+        if(dir<0) {
+            k0 = mv.measurements.size() - 1;
+            kf = 0;
+        }
+        
+        //init for backward filtering
+        if(numIter==1) {
+            boolean init = this.initIter(sv, mv);
+            if(!init) return;
+        }
+               
+        //re-init state vector and cov mat for forward filtering
+        this.initOneWayIter(sv, k0);
+        
+        // filter & transport in forward direction
+        boolean forward = this.runOneWayFitterIterDAF(sv, mv, k0, kf);
+        if (!forward) return;
+        
+        //re-init state vector and cov mat for backward filtering
+        this.initOneWayIter(sv, kf);
+            
+        // filter and transport in backward direction
+        boolean backward = this.runOneWayFitterIterDAF(sv, mv, kf, k0);
+        if (!backward) return;
+
+        // smoothing
+        for (int k = kf; (k-k0)*dir >= 0; k -= dir) {                     
+            if(k==kf) 
+                sv.smoothed().put(k, sv.filtered(true).get(k).clone());
+            else if(k==k0)
+                sv.smoothed().put(k, sv.filtered(false).get(k).clone());
+            else {                
+                sv.smoothed().put(k, this.smoothDAF(sv.filtered(true).get(k), sv.transported(false).get(k), annealingFactor));                          
+            }
+        }     
+    }
+    
     public boolean initIter(AStateVecs sv, AMeasVecs mv) {
         
         if(sv.transported(true).get(0)==null) return false;
@@ -171,6 +217,29 @@ public abstract class AKFitter {
         return true;
     }
     
+    public boolean runOneWayFitterIterDAF(AStateVecs sv, AMeasVecs mv, int k0, int kf) {        
+        int dk = (int) Math.signum(kf-k0);
+        
+        boolean forward = dk*dir>0;
+        
+        for (int k = k0; (k-kf)*dk <= 0; k += dk) {
+            if (sv.transported(forward).get(k)==null || mv.measurements.get(k) == null)
+                return false;
+            
+            
+            sv.filtered(forward).put(k, this.filterDAF(k, sv.transported(forward).get(k), mv));            
+            if(sv.filtered(forward).get(k) == null) 
+                return false;
+            
+            if(k != kf) {
+                sv.transported(forward).put(k+dk, sv.transport(sv.filtered(forward).get(k), k+dk, mv, swimmer));
+                if(sv.transported(forward).get(k+dk) == null) 
+                    return false;            
+            }
+        }   
+        return true;
+    }
+    
     
     public abstract void runFitter(AStateVecs sv, AMeasVecs mv) ;
     
@@ -194,7 +263,29 @@ public abstract class AKFitter {
         } 
     }
     
-    
+    public void setTrajectoryDAF(AStateVecs sv, AMeasVecs mv) {
+        trajPoints = new HashMap<>();
+        for (int k = 0; k < sv.smoothed().size(); k++) {
+            int index   = mv.measurements.get(k).layer;
+            int layer   = mv.measurements.get(k).surface.getLayer();
+            int sector  = mv.measurements.get(k).surface.getSector();
+            double tRes = mv.dh(k, sv.transported().get(k));
+            double fRes = mv.dh(k, sv.filtered(false).get(k));
+            double sRes = mv.dh(k, sv.smoothed().get(k)); 
+            double dafWeight;
+            if(sv.smoothed().get(k) == null) dafWeight = -1;
+            else dafWeight = sv.smoothed().get(k).getWeightDAF();
+            if(!mv.measurements.get(k).surface.passive) {
+                trajPoints.put(index, new HitOnTrack(layer, sector, sv.transported().get(k), tRes, fRes, sRes, dafWeight));
+                if(mv.measurements.get(k).skip)
+                    trajPoints.get(index).isUsed = false;
+            } else {
+                trajPoints.put(index, new HitOnTrack(layer, sector, sv.transported().get(k), -999, -999, -999, -999));
+                trajPoints.get(index).isUsed = false;
+            }            
+        } 
+    }
+        
     public double calc_chi2(AStateVecs sv, AMeasVecs mv) {
         double chisq = 0;
         this.NDF = this.NDF0;
@@ -233,9 +324,19 @@ public abstract class AKFitter {
     
     public abstract StateVec filter(int k, StateVec sv, AMeasVecs mv) ;
     
+    // If the function is applied in a daughter class, the function must be overridden
+    public StateVec filterDAF(int k, StateVec sv, AMeasVecs mv) {
+        return null;
+    }
+    
     public abstract StateVec smooth(int k, AStateVecs sv, AMeasVecs mv) ;
 
     public abstract StateVec smooth(StateVec v1, StateVec v2);
+    
+   // If the function is applied in a daughter class, the function must be overridden
+    public StateVec smoothDAF(StateVec v1, StateVec v2, double annealingFactor){
+        return null;
+    }
     
     /**
      * @return the _Xb
@@ -284,6 +385,7 @@ public abstract class AKFitter {
         public double filteredResidual;
         public double smoothedResidual;
         public boolean isUsed = true;
+        public double dafWeight = -999;
         
         public HitOnTrack(int layer, int sector, double x, double y, double z, 
                           double px, double py, double pz, double path, double dx,
@@ -321,6 +423,25 @@ public abstract class AKFitter {
             this.transportedResidual = tRes;
             this.filteredResidual = fRes;
             this.smoothedResidual = sRes;
+        }
+        
+        public HitOnTrack(int layer, int sector, StateVec sv, double tRes, double fRes, double sRes, double dafWeight) {
+            this.layer = layer;
+            this.sector = sector; 
+            this.x = sv.x;
+            this.y = sv.y;
+            this.z = sv.z;
+            this.px = sv.px;
+            this.py = sv.py;
+            this.pz = sv.pz;
+            this.path = sv.path;
+            this.dx = sv.dx;
+            this.dE = sv.energyLoss;
+            this.residual = sRes;
+            this.transportedResidual = tRes;
+            this.filteredResidual = fRes;
+            this.smoothedResidual = sRes;
+            this.dafWeight = dafWeight;
         }
     }
     
