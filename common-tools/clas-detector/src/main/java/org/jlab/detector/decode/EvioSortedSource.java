@@ -1,5 +1,6 @@
 package org.jlab.detector.decode;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -21,6 +22,7 @@ public class EvioSortedSource extends EvioSource {
     public static final int HEAD_BANK_TAG = 57615; // 0xe10f
     public static final int HEAD_BANK_EVENT_INDEX = 4;
 
+    private final List<Integer> list = new ArrayList<>();
     private final Map<Integer,Integer> map = new TreeMap<>();
     private int index = 0;
 
@@ -48,6 +50,7 @@ public class EvioSortedSource extends EvioSource {
     private void loadEventMap(String filename) {
         this.index = 0;
         this.map.clear();
+        this.list.addAll(new ArrayList(map.keySet()));
         super.open(filename);
         while (super.hasEvent()) {
             final int coda = getCodaEventNumber((EvioDataEvent)super.getNextEvent());
@@ -57,6 +60,7 @@ public class EvioSortedSource extends EvioSource {
             }
         }
         this.close();
+        this.list.addAll(new ArrayList(this.map.keySet()));
     }
 
     @Override
@@ -67,7 +71,7 @@ public class EvioSortedSource extends EvioSource {
 
     @Override
     public boolean hasEvent() {
-        return this.index < this.map.keySet().size()-1;
+        return this.index < this.list.size()-1;
     }
 
     @Override
@@ -77,7 +81,7 @@ public class EvioSortedSource extends EvioSource {
 
     @Override
     public DataEvent getNextEvent() {
-        final int coda = (int)this.map.keySet().toArray()[this.index];
+        final int coda = this.list.get(this.index);
         final int evio = this.map.get(coda);
         System.out.println(String.format("LOCAL/EVIO/CODA:  %d %d %d",
                 this.index, evio, coda));
@@ -87,8 +91,8 @@ public class EvioSortedSource extends EvioSource {
 
     public void showMap() {
         System.out.println("****** MAP ******");
-        for (int index=0; index<this.map.keySet().size(); ++index) {
-            final int coda = (int)this.map.keySet().toArray()[index];
+        for (int index=0; index<this.list.size(); ++index) {
+            final int coda = this.list.get(index);
             final int evio = this.map.get(coda);
             System.out.println(String.format("LOCAL/EVIO/CODA:  %d %d %d",
                     index,evio,coda));
