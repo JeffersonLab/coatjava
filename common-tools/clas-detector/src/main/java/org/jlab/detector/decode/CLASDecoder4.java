@@ -17,7 +17,6 @@ import org.jlab.logging.DefaultLogger;
 
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.evio.EvioDataEvent;
-import org.jlab.io.evio.EvioSource;
 import org.jlab.io.hipo.HipoDataEvent;
 import org.jlab.io.hipo.HipoDataSync;
 
@@ -821,6 +820,7 @@ public class CLASDecoder4 {
                     if(counter>=nevents) break;
                 }
             }
+            reader.close();
         }
         writer.close();
         
