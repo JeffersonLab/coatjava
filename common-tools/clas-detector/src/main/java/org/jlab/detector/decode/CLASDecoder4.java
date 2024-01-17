@@ -751,7 +751,7 @@ public class CLASDecoder4 {
         }
 
         for(String inputFile : inputList){
-            EvioSource reader = new EvioSource();
+            EvioSortedSource reader = new EvioSortedSource();
             reader.open(inputFile);
             
             HelicityState prevHelicity = new HelicityState();
