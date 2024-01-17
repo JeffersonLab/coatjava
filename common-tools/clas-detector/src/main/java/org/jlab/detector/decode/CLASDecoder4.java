@@ -17,6 +17,7 @@ import org.jlab.logging.DefaultLogger;
 
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.evio.EvioDataEvent;
+import org.jlab.io.evio.EvioSource;
 import org.jlab.io.hipo.HipoDataEvent;
 import org.jlab.io.hipo.HipoDataSync;
 
@@ -689,6 +690,7 @@ public class CLASDecoder4 {
         parser.addOption("-t", "-0.5","torus current in the header bank");
         parser.addOption("-s", "0.5","solenoid current in the header bank");
         parser.addOption("-x", null,"CCDB timestamp (MM/DD/YYYY-HH:MM:SS)");
+        parser.addOption("-S", "0", "sort events by CODA event number (0 means no)");
 
         parser.parse(args);
 
@@ -750,7 +752,9 @@ public class CLASDecoder4 {
         }
 
         for(String inputFile : inputList){
-            EvioSortedSource reader = new EvioSortedSource();
+            
+            EvioSource reader = parser.getOption("-S").intValue()==0 ?
+                new EvioSource() : new EvioSortedSource();
             reader.open(inputFile);
             
             HelicityState prevHelicity = new HelicityState();
