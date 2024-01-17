@@ -295,26 +295,27 @@ public class CodaEventDecoder {
      */
     public static List<EvioTreeBranch>  getEventBranches(EvioDataEvent event){
         ArrayList<EvioTreeBranch>  branches = new ArrayList<>();
-        try {
+        if (event != null) {
+            try {
 
-            List<EvioNode>  eventNodes = event.getStructureHandler().getNodes();
-            if(eventNodes==null){
-                return branches;
-            }
-
-            for(EvioNode node : eventNodes){
-                EvioTreeBranch eBranch = new EvioTreeBranch(node.getTag(),node.getNum());
-                List<EvioNode>  childNodes = node.getChildNodes();
-                if(childNodes!=null){
-                    for(EvioNode child : childNodes){
-                        eBranch.addNode(child);
-                    }
-                    branches.add(eBranch);
+                List<EvioNode>  eventNodes = event.getStructureHandler().getNodes();
+                if(eventNodes==null){
+                    return branches;
                 }
+                
+                for(EvioNode node : eventNodes){
+                    EvioTreeBranch eBranch = new EvioTreeBranch(node.getTag(),node.getNum());
+                    List<EvioNode>  childNodes = node.getChildNodes();
+                    if(childNodes!=null){
+                        for(EvioNode child : childNodes){
+                            eBranch.addNode(child);
+                        }
+                        branches.add(eBranch);
+                    }
+                }
+            } catch (EvioException ex) {
+                Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
             }
-
-        } catch (EvioException ex) {
-            Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
         }
         return branches;
     }
