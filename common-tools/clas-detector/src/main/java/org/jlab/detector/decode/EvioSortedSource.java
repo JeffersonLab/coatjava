@@ -1,8 +1,7 @@
 package org.jlab.detector.decode;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.ArrayList;
 import java.util.TreeMap;
 import org.jlab.coda.jevio.ByteDataTransformer;
 import org.jlab.coda.jevio.DataType;
@@ -13,7 +12,7 @@ import org.jlab.io.evio.EvioSource;
 import org.jlab.io.evio.EvioTreeBranch;
 
 /**
- * A wrapper on EvioSource to read one EVIO file sorted by CODA event number.
+ * A wrapper on EvioSource to read one file sorted by CODA event number.
  * 
  * WARNING:  This is strictly for reading sorted events sequentially.  Methods
  * other than the overridden "open", "hasEvent", "getNextEvent", and "reset"
@@ -32,17 +31,21 @@ public class EvioSortedSource extends EvioSource {
     public static final int HEAD_BANK_EVENT_INDEX = 4;
 
     // Ordered map of CODA event number to EVIO event index:
-    private final Map<Integer,Integer> map = new TreeMap<>();
+    private final TreeMap<Integer,Integer> map = new TreeMap<>();
 
     // Ordered list of CODA event numbers (just for map lookup
     // by key index without creating a new object every time): 
-    private final List<Integer> list = new ArrayList<>();
+    private final ArrayList<Integer> list = new ArrayList<>();
 
-    // Current index in the map/list during sorted reading:
+    // Current event index during sorted reading:
     private int index = 0;
 
     public EvioSortedSource() {
         super();
+    }
+
+    public TreeMap<Integer, Integer> getMapping() {
+        return new TreeMap<>(this.map);
     }
 
     /**
@@ -50,7 +53,7 @@ public class EvioSortedSource extends EvioSource {
      * @param event
      * @return the CODA event number
      */
-    private static int getCodaEventNumber(EvioDataEvent event){
+    protected static int getCodaEventNumber(EvioDataEvent event){
         if (event != null && event.getHandler().getStructure() != null){
             List<EvioTreeBranch> branches = CodaEventDecoder.getEventBranches(event);
             for (EvioTreeBranch branch : branches){
