@@ -14,3 +14,8 @@ concurrency:
 jobs:
   validation:
     uses: JeffersonLab/clas12-validation/.github/workflows/ci.yml@main
+    with:
+      git_upstream: >-
+        {
+          "clas12Tags": { "fork": "gemc/clas12Tags", "branch": "8f99566" }
+        }
