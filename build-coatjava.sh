@@ -4,33 +4,28 @@ set -e
 set -u
 set -o pipefail
 
-usage='build-coatjava.sh [-h] [--quiet] [--spotbugs] [--nomaps] [--unittests]'
+usage='''build-coatjava.sh [-h] [--help] [--quiet] [--spotbugs] [--nomaps] [--unittests]
+ - all other arguments will be passed to `mvn`, e.g., -T4 will build with 4 parallel threads'''
 
 quiet="no"
 runSpotBugs="no"
 downloadMaps="yes"
 runUnitTests="no"
+mvnArgs=()
 for xx in $@
 do
-    if [ "$xx" == "--spotbugs" ]
-    then
-        runSpotBugs="yes"
-    elif [ "$xx" == "-n" ]
-    then
-        runSpotBugs="no"
-    elif [ "$xx" == "--nomaps" ]
-    then
-        downloadMaps="no"
-    elif [ "$xx" == "--unittests" ]
-    then
-        runUnitTests="yes"
-    elif [ "$xx" == "--quiet" ]
-    then
-        quiet="yes"
-    else
-        echo "$usage"
-        exit 2
-    fi
+  case $xx in
+    --spotbugs)  runSpotBugs="yes"  ;;
+    -n)          runSpotBugs="no"   ;;
+    --nomaps)    downloadMaps="no"  ;;
+    --unittests) runUnitTests="yes" ;;
+    --quiet)     quiet="yes"        ;;
+    -h|--help)
+      echo "$usage"
+      exit 2
+      ;;
+    *) mvnArgs+=($xx) ;;
+  esac
 done
 
 top="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
@@ -42,6 +37,7 @@ then
     wget='wget --progress=dot:mega'
     mvn="mvn -q -B --settings $top/maven-settings.xml"
 fi
+mvn+=" ${mvnArgs[*]}"
 
 command_exists () {
     type "$1" &> /dev/null
