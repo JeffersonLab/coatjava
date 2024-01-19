@@ -71,9 +71,6 @@ public class SwimMenu extends JMenu implements ActionListener {
 		ButtonGroup bgrecon = new ButtonGroup();
 		_showReconTracks = createRadioMenuItem("Show Reconstructed Tracks", bgrecon, _showRecon);
 		_hideReconTracks = createRadioMenuItem("Hide Reconstructed Tracks", bgrecon, !_showRecon);
-		addSeparator();
-		add(createEpsPanel());
-		add(createMaxSSPanel());
 	}
 
 	/**
@@ -97,112 +94,7 @@ public class SwimMenu extends JMenu implements ActionListener {
 		return mi;
 	}
 
-	// swimming tolerance
-	private JPanel createEpsPanel() {
-		JPanel sp = new JPanel();
-		sp.setBackground(Color.white);
 
-		sp.setLayout(new FlowLayout(FlowLayout.LEFT, 4, 0));
-
-		JLabel label = new JLabel("Swimming Tolerance: ");
-
-		String s = DoubleFormat.doubleFormat(Swimmer.getEps(), 1, true);
-		final JTextField epsTF = new JTextField(s, 10);
-
-		ActionListener al = new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent ae) {
-				double enumber;
-				MenuSelectionManager.defaultManager().clearSelectedPath();
-				try {
-					enumber = Double.parseDouble(epsTF.getText());
-					enumber = Math.min(1.0e-4, Math.max(1.0e-10, enumber));
-					System.err.println("new tolerance: " + enumber);
-					Swimmer.setCLASTolerance(enumber);
-				} catch (Exception e) {
-					// e.printStackTrace();
-					enumber = Swimmer.getEps();
-				}
-				String s = DoubleFormat.doubleFormat(Swimmer.getEps(), 1, true);
-				epsTF.setText(s);
-			}
-
-		};
-
-//		KeyAdapter ka = new KeyAdapter() {
-//			@Override
-//			public void keyReleased(KeyEvent kev) {
-//				if (kev.getKeyCode() == KeyEvent.VK_ENTER) {
-//					double enumber;
-//					MenuSelectionManager.defaultManager().clearSelectedPath();
-//					try {
-//						enumber = Double.parseDouble(epsTF.getText());
-//						enumber = Math.min(1.0e-4, Math.max(1.0e-10, enumber));
-//						System.err.println("new tolerance: " + enumber);
-//						Swimmer.setCLASTolerance(enumber);
-//					} catch (Exception e) {
-//						// e.printStackTrace();
-//						enumber = Swimmer.getEps();
-//					}
-//					String s = DoubleFormat.doubleFormat(Swimmer.getEps(), 1,
-//							true);
-//					epsTF.setText(s);
-//				}
-//			}
-//		};
-//		epsTF.addKeyListener(ka);
-
-		epsTF.addActionListener(al);
-
-		sp.add(label);
-		sp.add(epsTF);
-		epsTF.setEnabled(true);
-		return sp;
-	}
-
-	// step size
-	private JPanel createMaxSSPanel() {
-		JPanel sp = new JPanel();
-		sp.setBackground(Color.white);
-		sp.setLayout(new FlowLayout(FlowLayout.LEFT, 4, 0));
-
-		JLabel label = new JLabel("Max Stepsize (cm): ");
-
-		// convert to cm
-
-//		System.err.println("Current Max Stepsize  (cm): " + 100
-//				* RungeKutta4.getMaxStepSize());
-		String s = DoubleFormat.doubleFormat(100 * RungeKutta.DEFMAXSTEPSIZE, 2, false);
-		final JTextField maxSStf = new JTextField(s, 10);
-
-		KeyAdapter ka = new KeyAdapter() {
-			@Override
-			public void keyReleased(KeyEvent kev) {
-				if (kev.getKeyCode() == KeyEvent.VK_ENTER) {
-					double enumber;
-					MenuSelectionManager.defaultManager().clearSelectedPath();
-					try {
-						enumber = Double.parseDouble(maxSStf.getText());
-						enumber = Math.min(100, Math.max(0.1, enumber));
-						System.err.println("Changing max step size to " + enumber + " cm");
-						RungeKutta.DEFMAXSTEPSIZE = (enumber / 100); // to meters
-					} catch (Exception e) {
-						// e.printStackTrace();
-						enumber = Swimmer.getEps();
-					}
-					String s = DoubleFormat.doubleFormat(100 * RungeKutta.DEFMAXSTEPSIZE, 2, false);
-					maxSStf.setText(s);
-				}
-			}
-		};
-		maxSStf.addKeyListener(ka);
-
-		sp.add(label);
-		sp.add(maxSStf);
-		maxSStf.setEnabled(true);
-		return sp;
-	}
 
 	/**
 	 * Get the menu item for the lund track dialog used to swim a particle
