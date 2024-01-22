@@ -8,6 +8,5 @@
 	</classpathentry>
 	<classpathentry kind="lib" path="/apache/lib/commons-math3-3.6.1.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/magfield"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/splot"/>
 	<classpathentry kind="output" path="cnuphys/bin"/>
 </classpath>
