@@ -1050,18 +1050,25 @@ public class CodaEventDecoder {
                     long[] longData = ByteDataTransformer.toLongArray(node.getStructureBuffer(true));
                     int[]  intData  = ByteDataTransformer.toIntArray(node.getStructureBuffer(true));
 
-//                    // When there are multiple HelicityDecoder banks in an event, there is a BLKHDR work in the data,
-//                    // and when there is one HelicityDecoder bank in an event, it is not there. So we need to
-//                    // detect where the trigger time word is.
+                    // When there are multiple HelicityDecoder banks in an event, there is a BLKHDR work in the data,
+                    // and when there is one HelicityDecoder bank in an event, it is not there. So we need to
+                    // detect where the trigger time word is.
                     int i_data_offset = 2;
-                    while(i_data_offset<intData.length && (intData[i_data_offset] >> 27) != 0x13) i_data_offset++;  // find the trigger time word.
-                    if(i_data_offset%2 == 1){
-                        System.err.println("ERROR:  HelicityDecoder data is corrupted. Trigger word not found.");
+                    int i_data_length = intData.length;
+                    while(i_data_offset<intData.length){
+                        // The following idiotic construction is needed because Java doesn't have unsigned ints,
+                        // and a right shift on a negative int results in a negative number.
+                        int int_test_value = (int) (( ((long)intData[i_data_offset]) & 0x00000000ffffffffL ) >> 27);
+                        if(int_test_value == 0x13) break;
+                        i_data_offset++;
+                    } // find the trigger time word.
+                    if(i_data_offset>=intData.length){
+                        System.err.println("ERROR:  HelicityDecoder data is corrupted. Trigger time word not found.");
                         return null;
                     }
-                    long  timeStamp = longData[(int)(i_data_offset/2)]&0x0000ffffffffffffL;
+                    long  timeStamp = (intData[i_data_offset]&0x00ffffff) + (((long)(intData[i_data_offset+1]&0x00ffffffL))<<24);
                     i_data_offset+=2; // Next word should be "DECODER DATA", with 0x18 in the top 5 bits.
-                    if((intData[i_data_offset] >> 27) != 0x18){
+                    if(((int) (( ((long)intData[i_data_offset]) & 0x00000000ffffffffL ) >> 27)) != 0x18){
                         System.err.println("ERROR:  HelicityDecoder data is corrupted. DECODER BANK not found.");
                         return null;
                     }
