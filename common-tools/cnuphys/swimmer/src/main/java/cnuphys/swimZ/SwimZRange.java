@@ -19,7 +19,7 @@ public class SwimZRange {
 
 	/**
 	 * Get the starting value of z
-	 * 
+	 *
 	 * @return the starting value of z
 	 */
 	public double getZo() {
@@ -28,7 +28,7 @@ public class SwimZRange {
 
 	/**
 	 * Get the final value of z
-	 * 
+	 *
 	 * @return the final value of z
 	 */
 	public double getZf() {
@@ -37,7 +37,7 @@ public class SwimZRange {
 
 	/**
 	 * Get the number of steps
-	 * 
+	 *
 	 * @return the number of steps
 	 */
 	public int getNumStep() {
@@ -48,7 +48,7 @@ public class SwimZRange {
 	 * Get the step size. This is the first stepsize smaller than the one
 	 * provided in the constructor that ensures an integer number of steps takes
 	 * us exactly to zf, i.e. zf = zo + numStep*stepSize
-	 * 
+	 *
 	 * @return the step size in Z
 	 */
 	public double getSetpSize() {
@@ -57,7 +57,7 @@ public class SwimZRange {
 
 	/**
 	 * Create an integration range
-	 * 
+	 *
 	 * @param zo
 	 *            the staring value
 	 * @param zf
@@ -77,7 +77,7 @@ public class SwimZRange {
 
 	/**
 	 * Obtain z for a given step number n [0, numStep]
-	 * 
+	 *
 	 * @param n
 	 *            the value of n
 	 * @return the z value

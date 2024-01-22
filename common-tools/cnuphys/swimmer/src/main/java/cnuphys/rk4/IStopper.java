@@ -8,7 +8,7 @@ public interface IStopper {
 	 * has been exceeded or if the independent variable passes some threshold.
 	 * It won't be precise, because the check may not happen on every step, but
 	 * it should be close.
-	 * 
+	 *
 	 * @param t
 	 *            the current value of the independent variable (typically
 	 *            pathlength)
@@ -20,28 +20,28 @@ public interface IStopper {
 
 	/**
 	 * Get the final independent variable (typically path length in meters)
-	 * 
+	 *
 	 * @return the final independent variable (typically path length in meters)
 	 */
 	public double getFinalT();
 
 	/**
 	 * Set the final independent variable (typically path length in meters)
-	 * 
+	 *
 	 * @param finalT
 	 *            the final independent variable (typically path length in
 	 *               meters)
 	 */
 	public void setFinalT(double finalT);
-	
+
 
 	/**
 	 * Generally this is the same as stop integration. So most
 	 * will just return stopIntegration(). But sometimes
-	 * stop just means we reset and integrate more. For example, with a 
+	 * stop just means we reset and integrate more. For example, with a
 	 * fixed Z integrator we "stop" when we cross the z boundary however
 	 * we are not done unless we are within tolerance. If we are within
-	 * tolerance (on either side) we are really done! 
+	 * tolerance (on either side) we are really done!
 	 * @param t
 	 *            the current value of the independent variable (typically
 	 *            pathlength)

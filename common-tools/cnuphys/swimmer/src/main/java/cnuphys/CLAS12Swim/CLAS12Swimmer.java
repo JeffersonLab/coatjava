@@ -120,7 +120,7 @@ public class CLAS12Swimmer {
 	public FieldProbe getProbe() {
 		return _probe;
 	}
-	
+
 
 	/**
 	 * The basic swim method. The swim is terminated when the particle reaches the
@@ -154,7 +154,7 @@ public class CLAS12Swimmer {
 		}
 		return atomicSwim(ode, u, sMin, sMax, h, tolerance, listener);
 	}
-	
+
 
 	/**
 	 * The basic swim method for fixed step size. The swim is terminated when the particle reaches the
@@ -186,9 +186,9 @@ public class CLAS12Swimmer {
 		}
 		return atomicSwimFixed(ode, u, sMin, sMax, h, listener);
 	}
-	
 
-	
+
+
 	/**
 	 * The atomic swim method. The swim is terminated when the particle reaches the
 	 * pathlength sMax or if the optional listener terminates the swim.
@@ -224,7 +224,7 @@ public class CLAS12Swimmer {
 
 		return new CLAS12SwimResult(listener);
 	}
-	
+
 	/**
 	 * The atomic swim method for the fixed step size integrator. The swim is terminated when the particle reaches the
 	 * pathlength sMax or if the optional listener terminates the swim.
@@ -245,7 +245,7 @@ public class CLAS12Swimmer {
 		FixedStep.solve(ode, u, sMin, sMax, h, listener);
         return new CLAS12SwimResult(listener);
     }
-	
+
 	/**
 	 * An endgame swimmer, for zeroing in on a target when close. It assumes
 	 * that the last two points in the trajectory are close to and bracket the target.
@@ -256,16 +256,16 @@ public class CLAS12Swimmer {
 	 * @return the result of the swim
 	 */
 	private CLAS12SwimResult endGameSwim(CLAS12SwimODE ode, double h, CLAS12Listener listener) {
-		
+
 		CLAS12Trajectory traj = listener.getTrajectory();
 		int np = traj.size();
-		
-		//these should bracket the 
+
+		//these should bracket the
 		double s1 = traj.getS(np-2);
 		double s2 = traj.getS(np-1);
 		double u[] = traj.get(np-2);
 		traj.removeLastPoint();
-		
+
 		return atomicSwimFixed(ode, u, s1, s2, h, listener);
 	}
 
@@ -287,13 +287,13 @@ public class CLAS12Swimmer {
 	 */
 	private CLAS12SwimResult swimToDOCA(CLAS12SwimODE ode, double u[], double sMin, double h, double tolerance,
 			CLAS12DOCAListener listener) {
-		
+
 		// low momentum?
 		if (listener.getIvals().p < MINMOMENTUM) {
 			listener.setStatus(BELOW_MIN_MOMENTUM);
 			return new CLAS12SwimResult(listener);
 		}
-		
+
 		double s1 = sMin;
 		double s2 = listener.getSMax();
 
@@ -309,7 +309,7 @@ public class CLAS12Swimmer {
 		if (listener.getStatus() == SWIM_SUCCESS) {
 			// we are bracketing the DOCA
             // do a fixed step size "endgame" swim to zero in
-			
+
 			h = Double.POSITIVE_INFINITY;
 
 			double hMin = listener.getAccuracy() / 2.;
@@ -337,7 +337,7 @@ public class CLAS12Swimmer {
 			return cres;
 		}
 	}
-	
+
 	/**
 	 * Swim to a target accuracy. The details of the target and the accuracy are in
 	 * the CLAS12BoundaryListener
@@ -355,7 +355,7 @@ public class CLAS12Swimmer {
 	 */
 	private CLAS12SwimResult swimToAccuracy(CLAS12SwimODE ode, double u[], double sMin, double h, double tolerance,
 			CLAS12BoundaryListener listener) {
-		
+
 		//low momentum?
 		if (listener.getIvals().p < MINMOMENTUM) {
 			listener.setStatus(BELOW_MIN_MOMENTUM);
@@ -377,14 +377,14 @@ public class CLAS12Swimmer {
 		CLAS12SwimResult cres = atomicSwim(ode, u, s1, s2, h, tolerance, listener);
 
 		if (listener.getStatus() == SWIM_SUCCESS) {
-			
+
 			// we are bracketing the DOCA
             // do a fixed step size "endgame" swim to zero in
-			
+
 			h = Double.POSITIVE_INFINITY;
 
 			double hMin = listener.getAccuracy() / 2.;
-		
+
 			while (h > hMin) {
 				int ns = listener.getNumStep();
 
@@ -399,7 +399,7 @@ public class CLAS12Swimmer {
 					return cres;
 				}
 			}
-			
+
 			return cres;
 		} else { // failed, reached max path length
 			return cres;
@@ -424,7 +424,7 @@ public class CLAS12Swimmer {
 	 */
 	private CLAS12SwimResult swimToAccuracyDEP(CLAS12SwimODE ode, double u[], double sMin, double h, double tolerance,
 			CLAS12BoundaryListener listener) {
-		
+
 		// all swims pass through here
 
 		if (listener.getIvals().p < MINMOMENTUM) {
@@ -456,15 +456,15 @@ public class CLAS12Swimmer {
 					resetMaxStepSize();
 					return cres;
 				}
-				
-				
+
+
 
 				u = listener.getU();
 				s1 = listener.getS();
 
 				double newMaxH = listener.distanceToTarget(s1, u) / 2;
 				setMaxStepSize(newMaxH);
-				
+
 
 			} else { // failed, reached max path length
 				// do NOT forget to reset the max step size
@@ -477,7 +477,7 @@ public class CLAS12Swimmer {
 
 	/**
 	 * The basic swim method. The swim is terminated when the particle reaches the path
-	 * length sMax or if the optional listener terminates the swim. If not terminated by 
+	 * length sMax or if the optional listener terminates the swim. If not terminated by
 	 * the listener, it will swim exactly to sMax.
 	 *
 	 * @param q         in integer units of e
@@ -507,11 +507,11 @@ public class CLAS12Swimmer {
 		CLAS12Listener listener = new CLAS12Listener(ivals, sMax);
 		return baseSwim(ode, ivals.getU(), 0, sMax, h, tolerance, listener);
 	}
-	
+
 
 	/**
 	 * The basic fixed stepsize swim method. The swim is terminated when the particle reaches the path
-	 * length sMax or if the optional listener terminates the swim. If not terminated by 
+	 * length sMax or if the optional listener terminates the swim. If not terminated by
 	 * the listener, it will swim exactly to sMax.
 	 *
 	 * @param q         in integer units of e
@@ -544,13 +544,13 @@ public class CLAS12Swimmer {
 
 
 	/**
-	 * Swim a particle to the surface of a target cylinder. The cylinder is defined by 
-	 * two points in {x,y,z} array format and a radius. The two points define the 
+	 * Swim a particle to the surface of a target cylinder. The cylinder is defined by
+	 * two points in {x,y,z} array format and a radius. The two points define the
 	 * centerline of the cylinder. The cylinder is infinite in length. If the
 	 * swim starts inside the cylinder, it will terminate when the particle reaches
 	 * the surface or if sMax is reached. If the swim starts outside the cylinder,
 	 * there is some risk (which we try to mitigate) that a large step size will
-	 * cause the swim to jump over the cylinder. 
+	 * cause the swim to jump over the cylinder.
 	 *
 	 * @param q         in integer units of e
 	 * @param xo        the x vertex position in cm
@@ -577,15 +577,15 @@ public class CLAS12Swimmer {
 		Cylinder targetCylinder = new Cylinder(p1, p2, r);
 		return swimCylinder(q, xo, yo, zo, p, theta, phi, targetCylinder, accuracy, sMax, h, tolerance);
 	}
-	
+
 
 	/**
-	 * Swim a particle to the surface of a target cylinder. The cylinder is defined by 
+	 * Swim a particle to the surface of a target cylinder. The cylinder is defined by
 	 * a Cylinder object. The cylinder is infinite in length. If the
 	 * swim starts inside the cylinder, it will terminate when the particle reaches
 	 * the surface or if sMax is reached. If the swim starts outside the cylinder
 	 * there is some risk (which we try to mitigate) that a large step size will
-	 * cause the swim to jump over the cylinder. 
+	 * cause the swim to jump over the cylinder.
 	 *
 	 * @param q              charge in integer units of e
 	 * @param xo             the x vertex position in cm
@@ -611,8 +611,8 @@ public class CLAS12Swimmer {
 		if (targetCylinder.centeredOnZ()) {
 			return swimRho(q, xo, yo, zo, p, theta, phi, targetCylinder.radius, accuracy, sMax, h, tolerance);
 		}
-		
-		
+
+
 		// create the ODE
 		CLAS12SwimODE ode = new CLAS12SwimODE(q, p, _probe);
 
@@ -623,14 +623,14 @@ public class CLAS12Swimmer {
 
 		return swimToAccuracy(ode, ivals.getU(), 0, h, tolerance, listener);
 	}
-	
+
 	/**
-	 * Swim a particle to the surface of a target sphere. The sphere is defined by 
+	 * Swim a particle to the surface of a target sphere. The sphere is defined by
 	 * a center point in {x,y,z} array format and a radius. If the
 	 * swim starts inside the sphere, it will terminate when the particle reaches
 	 * the surface or if sMax is reached. If the swim starts outside the sphere
 	 * there is some risk (which we try to mitigate) that a large step size will
-	 * cause the swim to jump over the sphere. 
+	 * cause the swim to jump over the sphere.
 	 *
 	 * @param q         in integer units of e
 	 * @param xo        the x vertex position in cm
@@ -656,13 +656,13 @@ public class CLAS12Swimmer {
 		Sphere targetSphere = new Sphere(center, r);
 		return swimSphere(q, xo, yo, zo, p, theta, phi, targetSphere, accuracy, sMax, h, tolerance);
 	}
-	
+
 	/**
-	 * Swim a particle to the surface of a target sphere. The sphere is defined by 
-	 * a Sphere object. If the swim starts inside the sphere, it will terminate when 
+	 * Swim a particle to the surface of a target sphere. The sphere is defined by
+	 * a Sphere object. If the swim starts inside the sphere, it will terminate when
 	 * the particle reaches the surface or if sMax is reached. If the swim starts outside
 	 * the sphere there is some risk (which we try to mitigate) that a large step size will
-	 * cause the swim to jump over the sphere. 
+	 * cause the swim to jump over the sphere.
 	 *
 	 * @param q              charge in integer units of e
 	 * @param xo             the x vertex position in cm
@@ -684,7 +684,7 @@ public class CLAS12Swimmer {
 	public CLAS12SwimResult swimSphere(int q, double xo, double yo, double zo, double p, double theta, double phi,
 			Sphere targetSphere, double accuracy, double sMax, double h, double tolerance) {
 
-		
+
 		// create the ODE
 		CLAS12SwimODE ode = new CLAS12SwimODE(q, p, _probe);
 
@@ -695,7 +695,7 @@ public class CLAS12Swimmer {
 
 		return swimToAccuracy(ode, ivals.getU(), 0, h, tolerance, listener);
 	}
-	
+
 	/**
 	 * Swim a particle until it intersects a target plane or until sMax
 	 * is reached. The plane is defined by the components of a normal vector and
@@ -729,7 +729,7 @@ public class CLAS12Swimmer {
 		return swimPlane(q, xo, yo, zo, p, theta, phi, targetPlane, accuracy, sMax, h, tolerance);
 	}
 
-	
+
 	/**
 	 * Swim a particle until it intersects a target plane or until sMax
 	 * is reached. The plane is defined by a a normal vector and a point on the plane,
@@ -793,7 +793,7 @@ public class CLAS12Swimmer {
 
 		return swimToAccuracy(ode, ivals.getU(), 0, h, tolerance, listener);
 	}
-	
+
 
 	/**
 	 * Swim to a target z in cm in a sector coordinate system.
@@ -908,9 +908,9 @@ public class CLAS12Swimmer {
 	}
 
 	/**
-	 * Swim to the beamline (defined by rho = 0). That is, 
+	 * Swim to the beamline (defined by rho = 0). That is,
 	 * find the distance of closest approach to the beamline.
-	 * Swim terminates when successive doca estimates differ by less than accuracy. 
+	 * Swim terminates when successive doca estimates differ by less than accuracy.
 	 *
 	 * @param q         in integer units of e
 	 * @param xo        the x vertex position in cm
@@ -942,7 +942,7 @@ public class CLAS12Swimmer {
 
 		return swimToDOCA(ode, ivals.getU(), 0, h, tolerance, listener);
 	}
-	
+
 
 	/**
 	 * Set the maximum integration step size in cm

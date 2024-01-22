@@ -6,7 +6,7 @@ public class AdaptiveCylinderStopper extends AAdaptiveStopper {
 
 	//the target cylinder
 	private Cylinder _targetCylinder;
-	
+
 	//the newest distance to the cylinder
 	private double _prevDist;
 
@@ -40,7 +40,7 @@ public class AdaptiveCylinderStopper extends AAdaptiveStopper {
 		_prevDist = _targetCylinder.signedDistance(u[0], u[1], u[2]);
 		_newDist = _prevDist;
 
-		_startSign = sign();		
+		_startSign = sign();
 	}
 
 
@@ -59,7 +59,7 @@ public class AdaptiveCylinderStopper extends AAdaptiveStopper {
 		//stop but don't accept new data. We crossed the target  boundary
 		if (sign() != _startSign) {
 			_result.setStatus(AdaptiveSwimmer.SWIM_CROSSED_BOUNDARY);
-			
+
 			//use prev distance to calculate next step
 			_del = Math.abs(_prevDist);
 			return true;

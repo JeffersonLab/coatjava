@@ -1,7 +1,7 @@
 package cnuphys.swimZ;
 
 /**
- * Holds the position and track slopes. The positions (x, y, z) are in 
+ * Holds the position and track slopes. The positions (x, y, z) are in
  * cm, while the track slopes are dimensionless. Note: z is not an actual component of
  * the "true" state vector, it is the independent variable. But it rides
  * along here because we will want to know z at every step.
@@ -35,11 +35,11 @@ public class SwimZStateVector {
 	public SwimZStateVector() {
 		this(Double.NaN,Double.NaN, Double.NaN, Double.NaN, Double.NaN);
 	}
-	
+
 	/**
 	 * Constructor for a state vector for the SwimZ package.
 	 * Note that it uses CM for distance units
-	 * 
+	 *
 	 * @param x
 	 *            the x coordinate (cm)
 	 * @param y
@@ -63,7 +63,7 @@ public class SwimZStateVector {
 
 	/**
 	 * Create a state variable from an array (probably from RK integration)
-	 * 
+	 *
 	 * @param z
 	 *            the value of z in cm. Note: z is not an actual component of
 	 *            the state vector, it is the independent variable. But it rides
@@ -74,10 +74,10 @@ public class SwimZStateVector {
 	public SwimZStateVector(double z, double v[]) {
 		this(v[0], v[1], z, v[2], v[3]);
 	}
-	
+
 	/**
 	 * Create a state variable from another (copy)
-	 * 
+	 *
 	 * @param sv
 	 *            the state vector to copy
 	 * @param v
@@ -86,11 +86,11 @@ public class SwimZStateVector {
 	public SwimZStateVector(SwimZStateVector sv) {
 		this(sv.x, sv.y, sv.z, sv.tx, sv.ty);
 	}
-	
+
 
 	/**
 	 * Constructor
-	 * 
+	 *
 	 * @param x
 	 *            the x coordinate (cm)
 	 * @param y
@@ -129,7 +129,7 @@ public class SwimZStateVector {
 		tx = sv.tx;
 		ty = sv.ty;
 	}
-	
+
 	/**
 	 * Set the state vector
 	 * @param z
@@ -161,7 +161,7 @@ public class SwimZStateVector {
 
 	/**
 	 * Get a string representation
-	 * 
+	 *
 	 * @return a string representation of the state vector
 	 */
 	@Override
@@ -173,11 +173,11 @@ public class SwimZStateVector {
 
 		return sb.toString();
 	}
-	
+
 	public String normalPrint(double p, int pzSign) {
 		StringBuffer sb = new StringBuffer(255);
 		sb.append(String.format("R = [%9.6f, %9.6f, %9.6f] cm", x, y, z));
-		
+
 
 //		int _pzSign = (zf < zo) ? -1 : 1;
 
@@ -190,7 +190,7 @@ public class SwimZStateVector {
 			double theta = Math.toDegrees(Math.acos(pz/p));
 			double phi = Math.toDegrees(Math.atan2(py, px));
 			sb.append(String.format("\nP, theta, phi = [%9.6f, %9.6f, %9.6f] ", p, theta, phi));
-		
+
 			return sb.toString();
 	}
 

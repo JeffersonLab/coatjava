@@ -4,7 +4,7 @@ public interface IRkListener {
 
 	/**
 	 * The integration has advanced one step
-	 * 
+	 *
 	 * @param newT
 	 *            the new value of the independent variable (e.g., time)
 	 * @param newY

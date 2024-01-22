@@ -2,12 +2,12 @@ package cnuphys.CLAS12Swim.geometry;
 
 /**
  * Ordinary 3D vector
- * 
+ *
  * @author heddle
  *
  */
 public class Vector extends Point {
-	
+
 	/** Effectively zero */
 	private static final double TINY = 1.0e-20;
 
@@ -20,7 +20,7 @@ public class Vector extends Point {
 
 	/**
 	 * Create a Vector from a point
-	 * 
+	 *
 	 * @param p the point
 	 */
 	public Vector(Point p) {
@@ -29,7 +29,7 @@ public class Vector extends Point {
 
 	/**
 	 * Create a vector
-	 * 
+	 *
 	 * @param x the x coordinate
 	 * @param y the y coordinate
 	 * @param z the z coordinate
@@ -40,7 +40,7 @@ public class Vector extends Point {
 
 	/**
 	 * The square of the length of the vector
-	 * 
+	 *
 	 * @return the square of the length of the vector
 	 */
 	public double lengthSquared() {
@@ -49,7 +49,7 @@ public class Vector extends Point {
 
 	/**
 	 * The length of the vector
-	 * 
+	 *
 	 * @return the length of the vector
 	 */
 	public double length() {
@@ -58,7 +58,7 @@ public class Vector extends Point {
 
 	/**
 	 * The cross product of two vectors
-	 * 
+	 *
 	 * @param a one vector
 	 * @param b other vector
 	 * @return c = a x b
@@ -71,7 +71,7 @@ public class Vector extends Point {
 
 	/**
 	 * The in-place cross product of two vectors
-	 * 
+	 *
 	 * @param a one vector
 	 * @param b other vector
 	 * @param c on return c = a x b
@@ -85,7 +85,7 @@ public class Vector extends Point {
 
 	/**
 	 * Get a unit vector in the same direction as this
-	 * 
+	 *
 	 * @return a unit vector
 	 */
 	public Vector unitVector() {
@@ -111,7 +111,7 @@ public class Vector extends Point {
 		}
 		return result;
 	}
-	
+
 	/**
 	 * Adds multiple vectors together element-wise.
 	 *

@@ -6,7 +6,7 @@ package cnuphys.adaptiveSwim.swimZ;
  *
  */
 public class SwimZUtil {
-	
+
 	//small number test
 	private static final double TINY = 1e-16;
 
@@ -24,22 +24,22 @@ public class SwimZUtil {
 
 		double thetaR = Math.toRadians(theta);
 		double pz = p*Math.cos(thetaR);
-		
+
 		if (Math.abs(pz) < TINY) {
 			stuffU(Double.NaN, Double.NaN, Double.NaN, Double.NaN, uSwimZ);
 			return;
 		}
-		
+
 		double phiR = Math.toRadians(phi);
 		double pSinTheta = p*Math.sin(thetaR);
 		double px = pSinTheta*Math.cos(phiR);
 		double py = pSinTheta*Math.sin(phiR);
-		
+
 		stuffU(x, y, px/pz, py/pz, uSwimZ);
-		
+
 	}
-	
-	
+
+
 	/**
 	 * Stuff the state vector with the values
 	 * @param x the x coordinate in cm

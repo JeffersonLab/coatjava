@@ -3,13 +3,13 @@ package cnuphys.swim;
 import cnuphys.rk4.IStopper;
 
 public class NumStepStopper implements IStopper {
-	
+
 	private int _maxStep;
 	private int count;
-	
+
 	protected double _finalPathLength = Double.NaN;
 
-	
+
 	public NumStepStopper(int numStep) {
 		_maxStep = numStep;
 	}

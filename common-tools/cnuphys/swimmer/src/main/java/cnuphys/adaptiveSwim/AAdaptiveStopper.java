@@ -38,7 +38,7 @@ public abstract class AAdaptiveStopper implements IAdaptiveStopper {
         	_result.getTrajectory().add(result.getU(), 0);
         }
 	}
-	
+
 	/**
 	 * Get the current path length
 	 * @return the current path length in meters
@@ -58,13 +58,13 @@ public abstract class AAdaptiveStopper implements IAdaptiveStopper {
 	}
 
 	/**
-	 * Accept a new integration step. This is also where the step is optionally added to the 
+	 * Accept a new integration step. This is also where the step is optionally added to the
 	 * trajectory.
 	 * @param snew the new value of s in meters
 	 * @param unew the new state vector
 	 */
 	protected void accept(double snew, double[] unew) {
-		
+
 		_result.setU(unew);
         _result.setS(snew);
 
@@ -118,11 +118,11 @@ public abstract class AAdaptiveStopper implements IAdaptiveStopper {
 			System.err.println("in getNewStepSize, _del is NaN. That's rarely a good sign.");
 			return Math.max(AdaptiveSwimUtilities.MIN_STEPSIZE, h/2);
 		}
-		
+
 		double newH = Math.min(h/2, _del / 5);
 		return Math.max(AdaptiveSwimUtilities.MIN_STEPSIZE, newH);
 	}
-	
+
 	@Override
 	public AdaptiveSwimResult getResult() {
 		return _result;

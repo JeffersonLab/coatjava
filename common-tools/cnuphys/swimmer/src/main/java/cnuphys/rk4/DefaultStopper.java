@@ -2,7 +2,7 @@ package cnuphys.rk4;
 
 /**
  * Default stopper in fact never stops!
- * 
+ *
  * @author heddle
  *
  */

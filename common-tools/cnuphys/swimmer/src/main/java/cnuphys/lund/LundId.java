@@ -12,7 +12,7 @@ import javax.swing.JComponent;
 
 /**
  * Used to store a Lund ID
- * 
+ *
  * @author heddle
  *
  */
@@ -43,7 +43,7 @@ public class LundId implements Comparable<LundId> {
 
 	/**
 	 * Create a Lund ID
-	 * 
+	 *
 	 * @param type
 	 *            "Lepton", "InterBoson", "Nucleus", "Baryon", or "Meson"
 	 * @param name
@@ -70,7 +70,7 @@ public class LundId implements Comparable<LundId> {
 
 	/**
 	 * Get the type, one of {"Lepton","InterBoson", "Nucleus","Baryon", "Meson"}
-	 * 
+	 *
 	 * @return the type
 	 */
 	public String getType() {
@@ -79,7 +79,7 @@ public class LundId implements Comparable<LundId> {
 
 	/**
 	 * Get the name of the particle.
-	 * 
+	 *
 	 * @return the name of the particle.
 	 */
 	public String getName() {
@@ -88,7 +88,7 @@ public class LundId implements Comparable<LundId> {
 
 	/**
 	 * Get the Lund Id of the particle.
-	 * 
+	 *
 	 * @return the Lund id
 	 */
 	public int getId() {
@@ -97,7 +97,7 @@ public class LundId implements Comparable<LundId> {
 
 	/**
 	 * Get the spin of the particle.
-	 * 
+	 *
 	 * @return the spin.
 	 */
 	public double getSpin() {
@@ -107,7 +107,7 @@ public class LundId implements Comparable<LundId> {
 
 	/**
 	 * Get the charge of the particle in e's.
-	 * 
+	 *
 	 * @return the charge of the particle in units of e.
 	 */
 	public int getCharge() {
@@ -117,7 +117,7 @@ public class LundId implements Comparable<LundId> {
 
 	/**
 	 * Get the mass in GeV/c^2
-	 * 
+	 *
 	 * @return the mass in GeV/c^2
 	 */
 	public double getMass() {
@@ -126,7 +126,7 @@ public class LundId implements Comparable<LundId> {
 
 	/**
 	 * Return three times the charge, in units of e.
-	 * 
+	 *
 	 * @return three times the charge, in units of e.
 	 */
 	public int getChargeX3() {
@@ -145,7 +145,7 @@ public class LundId implements Comparable<LundId> {
 
 	/**
 	 * Compare based on Id.
-	 * 
+	 *
 	 * @return -1, 0, or 1 for less than, equal, or greater than.
 	 */
 	@Override
@@ -161,7 +161,7 @@ public class LundId implements Comparable<LundId> {
 
 	/**
 	 * Obtain a small string representation.
-	 * 
+	 *
 	 * @return a small string representation.
 	 */
 	public String smallString() {
@@ -170,7 +170,7 @@ public class LundId implements Comparable<LundId> {
 
 	/**
 	 * Get the momentum from the kinetic energy
-	 * 
+	 *
 	 * @param t
 	 *            the kinetic energy in GeV
 	 * @return the momentum in Gev/c
@@ -182,7 +182,7 @@ public class LundId implements Comparable<LundId> {
 
 	/**
 	 * Get the charge in Coulombs
-	 * 
+	 *
 	 * @return the charge in Coulombs
 	 */
 	public double getChargeCoulombs() {
@@ -191,7 +191,7 @@ public class LundId implements Comparable<LundId> {
 
 	/**
 	 * Get the mass in kilograms
-	 * 
+	 *
 	 * @return the mass in kilograms
 	 */
 	public double getMassKg() {
@@ -200,7 +200,7 @@ public class LundId implements Comparable<LundId> {
 
 	/**
 	 * Get a component to place on a legend.
-	 * 
+	 *
 	 * @return a component for the legend.
 	 */
 	public JComponent getLabelForLegend() {
@@ -216,7 +216,7 @@ public class LundId implements Comparable<LundId> {
 
 	/**
 	 * Obtain a fixed size label to place on a legend.
-	 * 
+	 *
 	 * @param fillColor
 	 *            the fill color
 	 * @param lineColor
@@ -256,7 +256,7 @@ public class LundId implements Comparable<LundId> {
 
 	/**
 	 * Draw a line for use on a toolbar user component, most likely
-	 * 
+	 *
 	 * @param g
 	 *            the graphics context
 	 * @param x
@@ -291,7 +291,7 @@ public class LundId implements Comparable<LundId> {
 
 	/**
 	 * Get the LundStyle for this id
-	 * 
+	 *
 	 * @return the LundStyle for this id
 	 */
 	public LundStyle getStyle() {

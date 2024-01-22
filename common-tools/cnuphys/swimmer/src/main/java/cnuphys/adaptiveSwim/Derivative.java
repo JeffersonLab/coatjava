@@ -2,7 +2,6 @@ package cnuphys.adaptiveSwim;
 
 import cnuphys.magfield.FieldProbe;
 import cnuphys.rk4.IDerivative;
-import cnuphys.swim.Swimmer;
 
 public class Derivative implements IDerivative {
 
@@ -14,13 +13,13 @@ public class Derivative implements IDerivative {
 	// e is the electron charge = (10^-9) in GeV/(T*m)
 	// p is in GeV/c
 	private double _alpha;
-	
+
 	//for mag field result
 	float b[] = new float[3];
 
 	/**
 	 * The derivative for swimming through a magnetic field
-	 * 
+	 *
 	 * @param charge
 	 *            -1 for electron, +1 for proton, etc.
 	 * @param momentum
@@ -34,12 +33,12 @@ public class Derivative implements IDerivative {
 //units of this  alpha are 1/(kG*m)
 		_alpha = 1.0e-10 * charge * AdaptiveSwimmer.C / _momentum;
 	}
-	
+
 
 	/**
 	 * Compute the derivatives given the value of s (path length) and the values
 	 * of the state vector.
-	 * 
+	 *
 	 * @param s    the value of the independent variable path length (input).
 	 * @param u    the values of the state vector ([x,y,z, tx = px/p, ty = py/p, tz = pz/p]) at s
 	 *             (input).
@@ -61,7 +60,7 @@ public class Derivative implements IDerivative {
 			double zz = u[2] * 100;
 
 			_probe.field((float) xx, (float) yy, (float) zz, b);
-			
+
 			Bx = b[0];
 			By = b[1];
 			Bz = b[2];

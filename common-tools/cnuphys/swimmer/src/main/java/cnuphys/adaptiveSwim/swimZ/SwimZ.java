@@ -3,7 +3,6 @@ package cnuphys.adaptiveSwim.swimZ;
 import cnuphys.adaptiveSwim.AdaptiveSwimException;
 import cnuphys.adaptiveSwim.AdaptiveSwimmer;
 import cnuphys.adaptiveSwim.ButcherAdvance;
-import cnuphys.lund.GeneratedParticleRecord;
 import cnuphys.magfield.FieldProbe;
 import cnuphys.magfield.MagneticField;
 import cnuphys.rk4.ButcherTableau;
@@ -32,27 +31,27 @@ import cnuphys.rk4.ButcherTableau;
  * <li>B (mag field) is in kGauss
  * </ul>
  * <p>
- * 
+ *
  * @author heddle
  *
  */
 public class SwimZ {
-	
+
 	/** The speed of light in these units: (GeV/c)(1/kG)(1/cm) */
 	public static final double C = 2.99792458e-04;
-	
+
 	//small number test
 	private static final double TINY = 1e-12;
 
 	//the Cash-Karp advancer
 	private static ButcherAdvance _cashKarpAdvancer;
-	
+
 	// The magnetic field probe.
 	// NOTE: the method of interest in FieldProbe takes a position in cm
 	// and returns a field in kG.
 	private FieldProbe _probe;
-	
-	
+
+
 	/**
 	 * Create a swimmer using the current active field
 	 */
@@ -92,7 +91,7 @@ public class SwimZ {
 
 		//initialization; the initial state vector will  be placed in the result object by init
 		init(charge, xo, yo, zo, p, theta, phi, zf, new SwimZStopper(zf, accuracy, result));
-		
+
 		//we may already have failed if pz is in wrong direction
 		if (result.getStatus() == AdaptiveSwimmer.SWIM_TARGET_MISSED)  {
 			return;
@@ -178,9 +177,9 @@ public class SwimZ {
 		}
 
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param charge
 	 * @param xo
 	 * @param yo
@@ -194,8 +193,8 @@ public class SwimZ {
 	protected void init(int charge, double xo, double yo, double zo, double p,
 			double theta, double phi, double zf, SwimZStopper stopper) {
 
-		
-		
+
+
 //		SwimZResult result = stopper.getResult();
 //		// clear old trajectory
 //		if (result.getTrajectory() != null) {
@@ -210,28 +209,28 @@ public class SwimZ {
 //
 //		stuffU(result.getU(), xo, yo, zo, momentum, theta, phi);
 //
-//		
-//		
-//		
-//		
+//
+//
+//
+//
 //		super.init(charge, xo, yo, zo, p, theta, phi, stopper);
 //		SwimZResult result = (SwimZResult) stopper.getResult();
 //
 //		result.setZf(zf);
 //		result.setSign(sign(zo, zf));
-//		
+//
 //		//quick sign check that pz can get us from zo to zf
 //		//given that pz can't change signs for SwimZ swimming
-//		
+//
 //		double pz = p * Math.cos(Math.toDegrees(theta));
 //		int signpz = ((pz < 0) ? 1 : -1);
-//		
+//
 //		if (result.getSign() != signpz) {
 //			result.setStatus(AdaptiveSwimmer.SWIM_TARGET_MISSED);
 //		}
 
 	}
-	
+
 	/**
 	 * Get the z sign
 	 * @param zo the initial z
@@ -241,21 +240,21 @@ public class SwimZ {
 	private int sign(double zo, double zf) {
 		return (zf < zo) ? 1 : -1;
 	}
-	
-	
-	
+
+
+
 	// create a straight line for neutral particles
 	//the starting point will already be set as the result current statevector
 	protected void straightLine(double xo, double yo, double zo, double momentum, double theta,
 			double phi, double zf, SwimZResult result) {
-		
+
 		//if  here it passed the sign test
 		// probably unnecessary check for vertical track
 		if (Math.abs(theta-90) < TINY) {
 			result.setStatus(AdaptiveSwimmer.SWIM_TARGET_MISSED);
 			return;
 		}
-		
+
 //		//pathlength
 //		double s = Math.abs(zf - zo)/Math.cos(Math.toDegrees(theta));
 //		super.straightLine(xo, yo, zo, momentum, theta, phi, s, result);

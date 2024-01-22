@@ -6,15 +6,15 @@ package cnuphys.adaptiveSwim.geometry;
  *
  */
 public abstract class AGeometric {
-	
+
 	/**
 	 * Often we have geomtric objects centered on the origin
 	 */
 	protected static final Point _origin = new Point(0, 0, 0);
-	
+
 	/**
 	 * Signed distance from a point to the object
-	 * 
+	 *
 	 * @param x the x coordinate
 	 * @param y the y coordinate
 	 * @param z the z coordinate
@@ -33,10 +33,10 @@ public abstract class AGeometric {
 	 */
 	public abstract double interpolate(Point p1, Point p2, Point p);
 
-	
+
 	/**
 	 * Distance from a point to the object
-	 * 
+	 *
 	 * @param x the x coordinate
 	 * @param y the y coordinate
 	 * @param z the z coordinate
@@ -45,30 +45,30 @@ public abstract class AGeometric {
 	public double distance(double x, double y, double z) {
 		return Math.abs(signedDistance(x, y, z));
 	}
-	
+
 	/**
 	 * Distance from a point to the object
-	 * 
+	 *
 	 * @param p the point in question
 	 * @return the distance to the plane
 	 */
 	public double distance(Point p) {
 		return distance(p.x, p.y, p.z);
 	}
-	
+
 	/**
 	 * Distance from a point to the plane
-	 * 
+	 *
 	 * @param u the point in question u[0]=x, u[1]=y, u[2]=z
 	 * @return the distance to the plane
 	 */
 	public double distance(double[] u) {
 		return distance(u[0], u[1], u[2]);
 	}
-	
+
 	/**
 	 * Signed distance from a point to the plane
-	 * 
+	 *
 	 * @param u the point in question u[0]=x, u[1]=y, u[2]=z
 	 * @return the signed distance to the plane
 	 */
@@ -78,7 +78,7 @@ public abstract class AGeometric {
 
 	/**
 	 * Signed distance from a point to the object
-	 * 
+	 *
 	 * @param p the point in question
 	 * @return the signed distance (indicates which side you are on)
 	 */

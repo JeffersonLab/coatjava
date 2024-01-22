@@ -16,7 +16,7 @@ public class AdaptiveRhoStopper extends AAdaptiveStopper {
 
 	//new value
 	private double _newRho;
-	
+
 	private double _prevRho;
 	/**
 	 * Rho  stopper  (does check max path length)
@@ -31,7 +31,7 @@ public class AdaptiveRhoStopper extends AAdaptiveStopper {
 		_targetRho = targetRho;
 	}
 
-	
+
 	/**
 	 * For doing things like setting the initial sign and distance
 	 */
@@ -51,7 +51,7 @@ public class AdaptiveRhoStopper extends AAdaptiveStopper {
 	public boolean stopIntegration(double snew, double[] unew) {
 
 		_newRho = getRho(unew);
-		
+
 		// within accuracy?
 		if (Math.abs(_newRho - _targetRho) < _accuracy) {
 			accept(snew, unew);
@@ -62,7 +62,7 @@ public class AdaptiveRhoStopper extends AAdaptiveStopper {
 		//top but don't accept new data. We crossed the target  boundary
 		if (sign() != _startSign) {
 			_result.setStatus(AdaptiveSwimmer.SWIM_CROSSED_BOUNDARY);
-			
+
 			//use the previous rho to calculate new stepsize
 			_del = Math.abs(_prevRho - _targetRho);
 			return true;

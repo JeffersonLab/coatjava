@@ -12,9 +12,9 @@ import java.util.List;
 /**
  * Static methods for Runge-Kutta 4 integration, including a constant stepsize
  * method and an adaptive stepsize method.
- * 
+ *
  * @author heddle
- * 
+ *
  */
 public class RungeKuttaZ {
 
@@ -24,16 +24,16 @@ public class RungeKuttaZ {
 	//think in cm
 	public static double DEFMINSTEPSIZE = 1.0e-3;
 	public static double DEFMAXSTEPSIZE = 40;
-	
+
 	private double _minStepSize = DEFMINSTEPSIZE;
 	private double _maxStepSize = DEFMAXSTEPSIZE;
 
 	// the max dimension we'll use is probably 6, for state vectors
 	// [x,y,z,vx,vy,vz].
 	private static int MAXDIM = 6; // we'll know if this fails!
-	
+
 	//object cache
-	private ArrayDeque<double []> _workArrayCache = new ArrayDeque<>(); 
+	private ArrayDeque<double []> _workArrayCache = new ArrayDeque<>();
 
 	/**
 	 * Create a RungeKutta object that can be used for integration
@@ -45,14 +45,14 @@ public class RungeKuttaZ {
 	/**
 	 * Integrator that uses the RungeKutta advance with a Butcher Tableau and
 	 * adaptive stepsize and a tolerance vector.
-	 * 
+	 *
 	 * This version uses an IRk4Listener to notify the listener that the next
 	 * step has been advanced.
-	 * 
+	 *
 	 * A very typical case is a 2nd order ODE converted to a 1st order where the
 	 * dependent variables are x, y, z, vx, vy, vz and the independent variable
 	 * is time.
-	 * 
+	 *
 	 * @param yo
 	 *            initial values. Probably something like (xo, yo, zo, vxo, vyo,
 	 *            vzo).
@@ -111,19 +111,19 @@ public class RungeKuttaZ {
 	}
 
 
-	
+
 
 	/**
 	 * Integrator that uses the RungeKutta advance with a Butcher Tableau and
 	 * adaptive stepsize
-	 * 
+	 *
 	 * This version uses an IRk4Listener to notify the listener that the next
 	 * step has been advanced.
-	 * 
+	 *
 	 * A very typical case is a 2nd order ODE converted to a 1st order where the
 	 * dependent variables are x, y, z, vx, vy, vz and the independent variable
 	 * is time.
-	 * 
+	 *
 	 * @param yo
 	 *            initial values. Probably something like (xo, yo, zo, vxo, vyo,
 	 *            vzo).
@@ -182,14 +182,14 @@ public class RungeKuttaZ {
 
 	/**
 	 * Driver that uses the RungeKutta advance with an adaptive step size
-	 * 
+	 *
 	 * This version uses an IRk4Listener to notify the listener that the next
 	 * step has been advanced.
-	 * 
+	 *
 	 * A very typical case is a 2nd order ODE converted to a 1st order where the
 	 * dependent variables are x, y, z, vx, vy, vz and the independent variable
 	 * is time.
-	 * 
+	 *
 	 * @param yo
 	 *            initial values. Probably something like (xo, yo, zo, vxo, vyo,
 	 *            vzo).
@@ -233,7 +233,7 @@ public class RungeKuttaZ {
 
 		//going in the normal direction?
 		boolean normalDir = (tf > to);
-		
+
 		// if our advancer does not compute error we can't use adaptive stepsize
 		if (!advancer.computesError()) {
 			return 0;
@@ -323,7 +323,7 @@ public class RungeKuttaZ {
 				else {
 					t -= h;
 				}
-				
+
 				// System.out.println("z = " + t);
 				nstep++;
 
@@ -357,7 +357,7 @@ public class RungeKuttaZ {
 		return nstep;
 	}
 
-	
+
 	private double [] getWorkArrayFromCache() {
 		double array[];
 		if (_workArrayCache.isEmpty()) {
@@ -385,8 +385,8 @@ public class RungeKuttaZ {
 			// note that dydt (input) is k1
 			double k1[] = dydt; // the current dreivatives
 			// we need some arrays from the pool
-			
-			
+
+
 			double k2[] = getWorkArrayFromCache();
 			double k3[] = getWorkArrayFromCache();
 			double k4[] = getWorkArrayFromCache();
@@ -473,7 +473,7 @@ public class RungeKuttaZ {
 			// compute absolute errors
 			for (int i = 0; i < ndim; i++) {
 				error[i] = Math.abs(yfull[i] - yout[i]);
-				
+
 //				if (error[i] > 1.0e-10) {
 //				error[i] /= Math.max(Math.abs(yfull[i]),  Math.abs(yout[i]));
 //				}
@@ -590,7 +590,7 @@ public class RungeKuttaZ {
 
 	/**
 	 * Set the maximum step size
-	 * 
+	 *
 	 * @param maxSS
 	 *            the maximum stepsize is whatever units you are using
 	 */
@@ -600,7 +600,7 @@ public class RungeKuttaZ {
 
 	/**
 	 * Set the minimum step size
-	 * 
+	 *
 	 * @param maxSS
 	 *            the minimum stepsize is whatever units you are using
 	 */
@@ -610,16 +610,16 @@ public class RungeKuttaZ {
 
 	/**
 	 * Get the maximum step size
-	 * 
+	 *
 	 * @return the maximum stepsize is whatever units you are using
 	 */
 	public double getMaxStepSize() {
 		return _maxStepSize;
 	}
-	
+
 	/**
 	 * Get the minimum step size
-	 * 
+	 *
 	 * @return the minimum stepsize is whatever units you are using
 	 */
 	public double getMinStepSize() {

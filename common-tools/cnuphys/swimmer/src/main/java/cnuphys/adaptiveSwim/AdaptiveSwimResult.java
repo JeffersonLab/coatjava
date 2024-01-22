@@ -141,7 +141,7 @@ public class AdaptiveSwimResult {
 	public double[] getU() {
 		return _u;
 	}
-	
+
 	/**
 	 * Get the current state (i.e., last) vector,[x, y, x, px/p, py/p, pz/p]
 	 * where x, y, z are in meters.
@@ -150,6 +150,7 @@ public class AdaptiveSwimResult {
 	 * @deprecated Use {@link AdaptiveSwimResult#getU} instead.
 	 * @return the current state vector, always with six elements.
 	 */
+	@Deprecated
 	public double[] getUf() {
 		return _u;
 	}
@@ -212,6 +213,7 @@ public class AdaptiveSwimResult {
 	 * @deprecated Use {@link AdaptiveSwimResult#getS} instead.
 	 * @return the path length in meters
 	 */
+	@Deprecated
 	public double getFinalS() {
 		return _s;
 	}
@@ -223,14 +225,15 @@ public class AdaptiveSwimResult {
 	public void setS(double s) {
 		_s = s;
 	}
-	
+
     /**
 	 * Set the path length of the swim
      * @deprecated Use {@link AdaptiveSwimResult#setS} instead.
      * @param s the path length in meters
      */
+	@Deprecated
 	public void setFinalS(double s) {
-		_s = s;		
+		_s = s;
 	}
 
 	/**
@@ -248,7 +251,7 @@ public class AdaptiveSwimResult {
 	public int getStatus() {
 		return _status;
 	}
-	
+
 	/**
 	 * Get the final value of rho
 	 * @return the final value of rho
@@ -543,7 +546,7 @@ public class AdaptiveSwimResult {
 		}
 		return _intersection;
 	}
-	
+
 	/**
 	 * Get the status of the swim as a string
 	 * @return the status of the swim as a string
@@ -555,6 +558,6 @@ public class AdaptiveSwimResult {
 		}
 		return s;
 	}
-	
+
 
 }

@@ -51,13 +51,14 @@ public class CLAS12PlaneListener extends CLAS12BoundaryListener {
 		double distance = _targetPlane.distance(newU[0], newU[1], newU[2]);
 		return distance < _accuracy;
 	}
-	
+
 	/**
 	 * Get the absolute distance to the target (boundary) in cm.
 	 * @param newS the new path length
 	 * @param newU the new state vector
 	 * @return the distance to the target (boundary) in cm.
 	 */
+	@Override
 	public double distanceToTarget(double newS, double[] newU) {
 		return _targetPlane.distance(newU[0], newU[1], newU[2]);
 	}
@@ -85,7 +86,7 @@ public class CLAS12PlaneListener extends CLAS12BoundaryListener {
 
 		double norm[] = {1, 1, 1};
 		double point[] = {1, 1, 1};
-		
+
 		int q = -1;
 		double p = 2.0;
 		double theta = 25;

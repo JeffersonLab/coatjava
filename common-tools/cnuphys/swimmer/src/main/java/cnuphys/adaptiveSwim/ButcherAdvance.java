@@ -29,7 +29,7 @@ public class ButcherAdvance implements IAdaptiveAdvance {
 	private double _uscale[];
 
 	private double _error[];
-	
+
 	//workspaces arrays
 	private double[] _utemp;
 	private double _k[][];
@@ -42,7 +42,7 @@ public class ButcherAdvance implements IAdaptiveAdvance {
 		_tableau = tableau;
 		_uscale = new double[AdaptiveSwimmer.DIM];
 		_error = new double[AdaptiveSwimmer.DIM];
-		
+
 		_utemp = new double[AdaptiveSwimmer.DIM];
 		_k= new double[_tableau.getNumStage() + 1][];
 		_k[0] = null; // not used
@@ -77,7 +77,7 @@ public class ButcherAdvance implements IAdaptiveAdvance {
 		for (int i = 0; i < AdaptiveSwimmer.DIM; i++) {
 			_uscale[i] = Math.abs(u[i]) + Math.abs(h * du[i]) + _tiny;
 		}
-		
+
 		while (!done) {
 
 			AdaptiveSwimUtilities.singleButcherStep(eps, u, du, h, deriv, uf, _error, _tableau, _k, _utemp);

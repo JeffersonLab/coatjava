@@ -4,12 +4,12 @@ package cnuphys.CLAS12Swim.geometry;
  * A plane is defined by the equation (r - ro).norm = 0 Where r is an arbitrary
  * point on the plane, ro is a given point on the plane and norm is the normal
  * to the plane
- * 
+ *
  * @author heddle
  *
  */
 public class Plane {
-	
+
 	/** Effectively zero */
 	private static final double TINY = 1.0e-20;
 
@@ -23,7 +23,7 @@ public class Plane {
 
 	/**
 	 * Create a plane from a normal vector and a point on the plane
-	 * 
+	 *
 	 * @param norm the normal vector
 	 * @param p0   a point in the plane
 	 * @return the plane that contains p and its normal is norm
@@ -39,7 +39,7 @@ public class Plane {
 
 	/**
 	 * Create a plane from the coefficients of the equation ax + by + cz = d
-	 * 
+	 *
 	 * @param a the a coefficient
 	 * @param b the b coefficient
 	 * @param c the c coefficient
@@ -55,7 +55,7 @@ public class Plane {
 	/**
 	 * Create a plane from the normal vector in an array of doubles and a point in
 	 * the plane in an array, both (x, y, z)
-	 * 
+	 *
 	 * @param norm  the normal
 	 * @param point the point in the plane
 	 */
@@ -66,7 +66,7 @@ public class Plane {
 
 	/**
 	 * Create a plane from a normal vector and a point on the plane
-	 * 
+	 *
 	 * @param nx x component of normal vector
 	 * @param ny y component of normal vector
 	 * @param nz z component of normal vector
@@ -81,7 +81,7 @@ public class Plane {
 
 	/**
 	 * Create a line from two points and then get the intersection with the plane
-	 * 
+	 *
 	 * @param p1 one point
 	 * @param p2 another point
 	 * @param p  will hold the intersection, NaNs if no intersection
@@ -93,10 +93,10 @@ public class Plane {
 		Line line = new Line(p1, p2);
 		return lineIntersection(line, p);
 	}
-	
+
 	/**
 	 * Distance from a point to the plane
-	 * 
+	 *
 	 * @param x the x coordinate
 	 * @param y the y coordinate
 	 * @param z the z coordinate
@@ -109,7 +109,7 @@ public class Plane {
 
 	/**
 	 * Signed distance from a point to the plane
-	 * 
+	 *
 	 * @param x the x coordinate
 	 * @param y the y coordinate
 	 * @param z the z coordinate
@@ -125,7 +125,7 @@ public class Plane {
 
 	/**
 	 * Compute the intersection of an infinite line with the plane
-	 * 
+	 *
 	 * @param line         the line
 	 * @param intersection will hold the point of intersection
 	 * @return the t parameter. If NaN it means the line is parallel to the plane.
@@ -154,7 +154,7 @@ public class Plane {
 
 	/**
 	 * Get whether the point is to the left, right or (exactly) on the plane
-	 * 
+	 *
 	 * @param x the x coordinate
 	 * @param y the y coordinate
 	 * @param z the z coordinate
@@ -174,7 +174,7 @@ public class Plane {
 
 	/**
 	 * Create a plane of constant azimuthal angle phi
-	 * 
+	 *
 	 * @param phi the azimuthal angle in degrees
 	 * @return the plane of constant phi
 	 */
@@ -206,7 +206,7 @@ public class Plane {
 
 	/**
 	 * Find some coordinates suitable for drawing the plane as a Quad in 3D
-	 * 
+	 *
 	 * @param scale an arbitrary big number, a couple times bigger than the drawing
 	 *              extent
 	 * @return the jogl coordinates for drawing a Quad

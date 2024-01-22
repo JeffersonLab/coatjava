@@ -10,10 +10,10 @@ public class Bxdl {
 
 	// the cumulative integral B*dl in kiloGauss-meters
 	private double _bxdl;
-	
+
 	/**
 	 * Accumulate the integral of b cross dl
-	 * 
+	 *
 	 * @param previous
 	 *            the previous accumulation
 	 * @param current
@@ -32,7 +32,7 @@ public class Bxdl {
 
 			(new Throwable()).printStackTrace();
 			System.exit(1);
-			
+
 		}
 
 		double dr[] = new double[3];
@@ -63,10 +63,10 @@ public class Bxdl {
 		current._pathlength = pathlength;
 		current._bxdl = magbxdl;
 	}
-	
+
 	/**
 	 * Accumulate the integral of b cross dl
-	 * 
+	 *
 	 * @param previous
 	 *            the previous accumulation
 	 * @param current
@@ -111,7 +111,7 @@ public class Bxdl {
 
 	/**
 	 * Get the cumulative pathlength in meters
-	 * 
+	 *
 	 * @return the cumulative pathlength in meters
 	 */
 	public double getPathlength() {
@@ -120,7 +120,7 @@ public class Bxdl {
 
 	/**
 	 * Get the cumulative integral |b cross dl| in kG-m
-	 * 
+	 *
 	 * @return the cumulative integral b cross dl in kG-m
 	 */
 	public double getIntegralBxdl() {
@@ -129,7 +129,7 @@ public class Bxdl {
 
 	/**
 	 * Set the cumulative pathlength in meters
-	 * 
+	 *
 	 * @param pathlength
 	 *            the cumulative pathlength in meters
 	 */
@@ -139,7 +139,7 @@ public class Bxdl {
 
 	/**
 	 * Set the cumulative integral |b cross dl| in kG-m
-	 * 
+	 *
 	 * @param bxdl
 	 *            the cumulative integral b cross dl in kG-m
 	 */
@@ -149,7 +149,7 @@ public class Bxdl {
 
 	/**
 	 * Set the values based on another object
-	 * 
+	 *
 	 * @param bxdl
 	 *            the other object
 	 */
@@ -170,7 +170,7 @@ public class Bxdl {
 
 //	/**
 //	 * Accumulate the integral of b cross dl
-//	 * 
+//	 *
 //	 * @param previous
 //	 *            the previous accumulation
 //	 * @param current
@@ -189,7 +189,7 @@ public class Bxdl {
 //
 //			(new Throwable()).printStackTrace();
 //			System.exit(1);
-//			
+//
 //		}
 //
 //		double dr[] = new double[3];
@@ -201,31 +201,31 @@ public class Bxdl {
 //
 //		double pathlength = vecmag(dr);
 //		float b[] = new float[3];
-//		
+//
 //		//how many steps?
 //		double minstep = 0.01;  //m
 //		int ns = Math.max(2, (int)(pathlength/minstep));
-//		
+//
 //		double[] dt = new double[3];
-//		
+//
 //		double r0[] = new double[3];
-//		
+//
 //		for (int i = 0; i < 3; i++) {
 //			r0[i] = p0[i];
 //			dt[i] = (p1[i] - p0[i])/ns;
 //		}
-//		
+//
 //		double magbxdl = 0;
-//		
+//
 //		for (int i =  1; i <= ns; i++) {
 //			magbxdl += accumulateBDL(r0, dt, b, bxdl, probe);
-//			
+//
 //			for (int j = 0; j < 3; j++) {
 //				r0[j] += dt[j];
 //			}
 //
 //		}
-//		
+//
 //		// set the current
 //		if (previous != null) {
 //			pathlength += previous._pathlength;
@@ -236,32 +236,32 @@ public class Bxdl {
 //		current._bxdl = magbxdl;
 //
 //	}
-//	
+//
 //	private static double accumulateBDL(double[] p0, double[] dr, float[] b, double[] bxdl, FieldProbe probe) {
 //		float xavgcm = (float) (100. * (p0[0] + dr[0]/2));
 //		float yavgcm = (float) (100. * (p0[1] + dr[1]/2));
 //		float zavgcm = (float) (100. * (p0[2] + dr[2]/2));
-//		 
+//
 //		probe.field(xavgcm, yavgcm, zavgcm, b);
 //
 //		cross(b, dr, bxdl);
 //		return vecmag(bxdl);
 //	}
-//	
+//
 //	private static double sectorAccumulateBDL(int sector, double[] p0, double[] dr, float[] b, double[] bxdl, FieldProbe probe) {
 //		float xavgcm = (float) (100. * (p0[0] + dr[0]/2));
 //		float yavgcm = (float) (100. * (p0[1] + dr[1]/2));
 //		float zavgcm = (float) (100. * (p0[2] + dr[2]/2));
-//		 
+//
 //		probe.field(sector, xavgcm, yavgcm, zavgcm, b);
 //
 //		cross(b, dr, bxdl);
 //		return vecmag(bxdl);
 //	}
-//	
+//
 //	/**
 //	 * Accumulate the integral of b cross dl
-//	 * 
+//	 *
 //	 * @param previous
 //	 *            the previous accumulation
 //	 * @param current
@@ -284,31 +284,31 @@ public class Bxdl {
 //
 //		double pathlength = vecmag(dr);
 //		float b[] = new float[3];
-//		
+//
 //		//how many steps?
 //		double minstep = 0.01;  //m
 //		int ns = Math.max(2, (int)(pathlength/minstep));
-//		
+//
 //		double[] dt = new double[3];
-//		
+//
 //		double r0[] = new double[3];
-//		
+//
 //		for (int i = 0; i < 3; i++) {
 //			r0[i] = p0[i];
 //			dt[i] = (p1[i] - p0[i])/ns;
 //		}
-//		
+//
 //		double magbxdl = 0;
-//		
+//
 //		for (int i =  1; i <= ns; i++) {
 //			magbxdl += sectorAccumulateBDL(sector, r0, dt, b, bxdl, probe);
-//			
+//
 //			for (int j = 0; j < 3; j++) {
 //				r0[j] += dt[j];
 //			}
 //
 //		}
-//		
+//
 //		// set the current
 //		if (previous != null) {
 //			pathlength += previous._pathlength;
@@ -322,7 +322,7 @@ public class Bxdl {
 //
 //	/**
 //	 * Get the cumulative pathlength in meters
-//	 * 
+//	 *
 //	 * @return the cumulative pathlength in meters
 //	 */
 //	public double getPathlength() {
@@ -331,7 +331,7 @@ public class Bxdl {
 //
 //	/**
 //	 * Get the cumulative integral |b cross dl| in kG-m
-//	 * 
+//	 *
 //	 * @return the cumulative integral b cross dl in kG-m
 //	 */
 //	public double getIntegralBxdl() {
@@ -340,7 +340,7 @@ public class Bxdl {
 //
 //	/**
 //	 * Set the cumulative pathlength in meters
-//	 * 
+//	 *
 //	 * @param pathlength
 //	 *            the cumulative pathlength in meters
 //	 */
@@ -350,7 +350,7 @@ public class Bxdl {
 //
 //	/**
 //	 * Set the cumulative integral |b cross dl| in kG-m
-//	 * 
+//	 *
 //	 * @param bxdl
 //	 *            the cumulative integral b cross dl in kG-m
 //	 */
@@ -360,7 +360,7 @@ public class Bxdl {
 //
 //	/**
 //	 * Set the values based on another object
-//	 * 
+//	 *
 //	 * @param bxdl
 //	 *            the other object
 //	 */

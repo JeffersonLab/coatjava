@@ -7,7 +7,7 @@ import cnuphys.adaptiveSwim.geometry.Sphere;
 public class AdaptiveSphereStopper extends AAdaptiveStopper {
 
 	private Sphere _targetSphere;
-	
+
 	//the newest distance to the sphere
 	private double _prevDist;
 
@@ -29,7 +29,7 @@ public class AdaptiveSphereStopper extends AAdaptiveStopper {
 		super(sMax, accuracy, result);
 		_targetSphere = targetSphere;
 	}
-	
+
 	/**
 	 * Sphere  stopper  (does check max path length)
 	 * This assumes a sphere centered on the origin
@@ -42,7 +42,7 @@ public class AdaptiveSphereStopper extends AAdaptiveStopper {
 	public AdaptiveSphereStopper(double sMax, double radius, double accuracy, AdaptiveSwimResult result) {
 		this(sMax, new Sphere(radius), accuracy, result);
 	}
-	
+
 	/**
 	 * For doing things like setting the initial sign and distance
 	 */
@@ -52,7 +52,7 @@ public class AdaptiveSphereStopper extends AAdaptiveStopper {
 		_prevDist = _targetSphere.signedDistance(u[0], u[1], u[2]);
 		_newDist = _prevDist;
 
-		_startSign = sign();		
+		_startSign = sign();
 	}
 
 
@@ -71,7 +71,7 @@ public class AdaptiveSphereStopper extends AAdaptiveStopper {
 		//stop but don't accept new data. We crossed the target  boundary
 		if (sign() != _startSign) {
 			_result.setStatus(AdaptiveSwimmer.SWIM_CROSSED_BOUNDARY);
-			
+
 			//use prev distance to calculate next step
 			_del = Math.abs(_prevDist);
 			return true;
@@ -91,10 +91,10 @@ public class AdaptiveSphereStopper extends AAdaptiveStopper {
 		if (_startSign > 0) {
 			if (_targetSphere.segmentIntersects(unew[0], unew[1], unew[2], _result.getU()[0],
 					_result.getU()[1], _result.getU()[2])) {
-				
+
 				System.out.println("JUMPED OVER SPHERE");
 				_result.setStatus(AdaptiveSwimmer.SWIM_CROSSED_BOUNDARY);
-				
+
 				//use prev distance to calculate next step
 				_del = Math.abs(_prevDist);
 				return true;
@@ -112,7 +112,7 @@ public class AdaptiveSphereStopper extends AAdaptiveStopper {
 	private int sign() {
 		return (_newDist < 0) ? -1 : 1;
 	}
-	
+
 
 
 }

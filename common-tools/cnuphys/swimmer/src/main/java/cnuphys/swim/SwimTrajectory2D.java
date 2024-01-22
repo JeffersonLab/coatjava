@@ -11,9 +11,9 @@ import cnuphys.magfield.FastMath;
 /**
  * A 2D version of the 3D SwimTrajectory where all points have been projected
  * onto a 2D plane.
- * 
+ *
  * @author heddle
- * 
+ *
  */
 public class SwimTrajectory2D {
 
@@ -36,14 +36,14 @@ public class SwimTrajectory2D {
 
 	/**
 	 * Create a 2D trajectory from the 3D trajectory
-	 * 
+	 *
 	 * @param trajectory the 3D trajectory from a swim
 	 * @param projector  projects 3D to 2D
 	 */
 	public SwimTrajectory2D(SwimTrajectory trajectory, IProjector projector) {
 		_trajectory3D = trajectory;
-		
-		
+
+
 		int size = (trajectory == null) ? 0 : trajectory.size();
 
 		if (size > 1) {
@@ -72,7 +72,7 @@ public class SwimTrajectory2D {
 
 	/**
 	 * Get the indices of sector changes
-	 * 
+	 *
 	 * @return the indices of sector changes (or null)
 	 */
 	public int[] sectChangeIndices() {
@@ -98,7 +98,7 @@ public class SwimTrajectory2D {
 
 	/**
 	 * Get the count of sector changes
-	 * 
+	 *
 	 * @return the count of sector changes
 	 */
 	public int sectorChangeCount() {
@@ -115,7 +115,7 @@ public class SwimTrajectory2D {
 
 	/**
 	 * Get the index of the first sector change. If no change, return -1.
-	 * 
+	 *
 	 * @return the index of the first sector
 	 */
 	public int firstSectorChangeIndex() {
@@ -132,7 +132,7 @@ public class SwimTrajectory2D {
 
 	/**
 	 * Get a string describing the sector change
-	 * 
+	 *
 	 * @param index this should be the first index of the new sector
 	 * @return a string describing the sector change
 	 */
@@ -148,7 +148,7 @@ public class SwimTrajectory2D {
 
 	/**
 	 * Get the sector [1..6] from the phi value
-	 * 
+	 *
 	 * @param phi the value of phi in degrees
 	 * @return the sector [1..6]
 	 */
@@ -185,7 +185,7 @@ public class SwimTrajectory2D {
 	/**
 	 * Get the 2D path. This is comprised of all the 3D points in the trajectory
 	 * that came from a swim that have been projected on to 2D.
-	 * 
+	 *
 	 * @return the 2D path
 	 */
 	public Point.Double[] getPath() {
@@ -194,7 +194,7 @@ public class SwimTrajectory2D {
 
 	/**
 	 * Add to the feedback strings
-	 * 
+	 *
 	 * @param feedbackStrings
 	 */
 	public void addToFeedback(List<String> feedbackStrings) {
@@ -211,9 +211,9 @@ public class SwimTrajectory2D {
 		}
 
 		s1 += String.format(" P %-6.2f GeV/c", genPart.getMomentum());
-		
-		String source = getSource(); 
-		
+
+		String source = getSource();
+
 		if (source != null) {
 			s1 += String.format(" [%s]", source);
 		}
@@ -251,20 +251,20 @@ public class SwimTrajectory2D {
 
 		sb.append(String.format("  %-1s %-7.3f  %-1s %-7.3f", SMALL_THETA, genPart.getTheta(), SMALL_PHI,
 				genPart.getPhi()));
-		
-		String source = getSource(); 
-		
+
+		String source = getSource();
+
 		if (source != null) {
 			sb.append(String.format(" [%s]", source));
 		}
-		
+
 
 		return sb.toString();
 	}
 
 	/**
 	 * Get the minimum distance to the trajectory.
-	 * 
+	 *
 	 * @param wp the point in question.
 	 * @return the minimum distance from the point to the trajectory.
 	 */
@@ -303,7 +303,7 @@ public class SwimTrajectory2D {
 	 * Given two points p0 and p1, imagine a line from p0 to p1. Take the line to be
 	 * parameterized by parameter t so that at t = 0 we are at p0 and t = 1 we are
 	 * at p1.
-	 * 
+	 *
 	 * @param p0         start point of main line
 	 * @param p1         end point of main line
 	 * @param wp         the point from which we drop a perpendicular to p0 -> p1
@@ -338,7 +338,7 @@ public class SwimTrajectory2D {
 
 	/**
 	 * Get the source of the trajectory, e.g., hbtracking
-	 * 
+	 *
 	 * @return the source of the trajectory
 	 */
 	public String getSource() {

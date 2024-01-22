@@ -17,7 +17,7 @@ public class LundSupport {
 	private static final String SUPERMINUS = "\u207B";
 	private static final String SUPERZERO = "\u2070";
 	private static final String SUBZERO = "\u2080";
-	
+
 	private static final String BIG_DELTA = "\u0394";
 	private static final String BIG_SIGMA = "\u03A3";
 
@@ -26,16 +26,16 @@ public class LundSupport {
 	private static final String SMALL_MU = "\u03BC";
 	private static final String SMALL_PI = "\u03C0";
 	private static final String SMALL_RHO = "\u03C1";
-	
+
 	private static final String SMALL_ETA = "\u03B7";
 	private static final String SMALL_OMEGA = "\u03C9";
-	
+
 	private static final String OVERLINE = "\u0305";
-	
+
 
 	private static Color brown = X11Colors.getX11Color("Brown");
 	private static Color goldenrod = X11Colors.getX11Color("Dark Goldenrod");
-	
+
 	private static Color darkGreen = X11Colors.getX11Color("Dark Green");
 	private static Color darkOrange = X11Colors.getX11Color("Dark Orange");
 	private static Color wheat = X11Colors.getX11Color("Wheat");
@@ -66,7 +66,7 @@ public class LundSupport {
 
 	/**
 	 * public access to the singleton
-	 * 
+	 *
 	 * @return the singleton object.
 	 */
 	public static LundSupport getInstance() {
@@ -79,7 +79,7 @@ public class LundSupport {
 
 	/**
 	 * Get a string representing a table of Ids.
-	 * 
+	 *
 	 * @return a string representing a table of Ids.
 	 */
 	@Override
@@ -97,7 +97,7 @@ public class LundSupport {
 
 	/**
 	 * Obtain the LundID object for a track based particle
-	 * 
+	 *
 	 * @return the LundID object for an geantino
 	 */
 	public static LundId getTrackbased(int q) {
@@ -113,7 +113,7 @@ public class LundSupport {
 
 	/**
 	 * Obtain the LundID object for a hit based particle
-	 * 
+	 *
 	 * @return the LundID object for a hit based particle
 	 */
 	public static LundId getHitbased(int q) {
@@ -129,7 +129,7 @@ public class LundSupport {
 
 	/**
 	 * Obtain the LundID object for a cvt based particle
-	 * 
+	 *
 	 * @return the LundID object for a hit based particle
 	 */
 	public static LundId getCVTbased(int q) {
@@ -145,7 +145,7 @@ public class LundSupport {
 
 	/**
 	 * Obtain the LundID object for an electron
-	 * 
+	 *
 	 * @return the LundID object for an electron
 	 */
 	public static LundId getElectron() {
@@ -154,7 +154,7 @@ public class LundSupport {
 
 	/**
 	 * Obtain the LundID object for a positron
-	 * 
+	 *
 	 * @return the LundID object for a positron
 	 */
 	public static LundId getPositron() {
@@ -163,7 +163,7 @@ public class LundSupport {
 
 	/**
 	 * Obtain the LundID object for a proton
-	 * 
+	 *
 	 * @return the LundID object for a proton
 	 */
 	public static LundId getProton() {
@@ -174,7 +174,7 @@ public class LundSupport {
 	 * Initialize the Ids. This has been pruned a bit for JLab use.
 	 */
 	private void initialize() {
-		_lundIds = new ArrayList<LundId>(400);
+		_lundIds = new ArrayList<>(400);
 
 		// Geantinos or generic
 		_lundIds.add(unknownPlus);
@@ -725,7 +725,7 @@ public class LundSupport {
 
 	/**
 	 * Finds an LundId object based on the given particle id. Uses a binary search.
-	 * 
+	 *
 	 * @param id the id to look for
 	 * @return the object if found, or <code>null</code>
 	 */
@@ -748,10 +748,10 @@ public class LundSupport {
 			return unknownNeutral;
 		}
 	}
-	
+
 	/**
 	 * Finds an LundId object based on the given particle id. Uses a binary search.
-	 * 
+	 *
 	 * @param id the id to look for
 	 * @return the object if found, or <code>null</code>
 	 */
@@ -772,7 +772,7 @@ public class LundSupport {
 
 	/**
 	 * Finds an LundId object based on the given particle id. Uses a binary search.
-	 * 
+	 *
 	 * @param id the id to look for. This is rounded. This method is to support
 	 *           GEMC.
 	 * @return the object if found, or <code>null</code>
@@ -784,7 +784,7 @@ public class LundSupport {
 
 	/**
 	 * Get the list of lundIds
-	 * 
+	 *
 	 * @return the list of lundIds
 	 */
 	public ArrayList<LundId> getLundIds() {
@@ -793,7 +793,7 @@ public class LundSupport {
 
 	/**
 	 * Convert a geant ID onto a Lund (PDG) id.
-	 * 
+	 *
 	 * @param geantId the geant Id
 	 * @return the lund (pdg) Id.
 	 */
@@ -899,7 +899,7 @@ public class LundSupport {
 
 	/**
 	 * Returns the Lund ID of a particle given the mass and charge.
-	 * 
+	 *
 	 * @param mass   the mass of the particle in GeV
 	 * @param charge the charge of the particle in units of electron charge
 	 * @return the Geant ID
@@ -991,7 +991,7 @@ public class LundSupport {
 		setStyle(1114, X11Colors.getX11Color("dark red")); // Delta-
 		setStyle(2114, X11Colors.getX11Color("coral")); // Delta0
 		setStyle(2214, X11Colors.getX11Color("coral")); // Delta+
-		
+
 		setStyle(3222, X11Colors.getX11Color("dark blue")); // Sigma+
 		setStyle(3212, X11Colors.getX11Color("dark blue")); // Sigma0
 		setStyle(3112, X11Colors.getX11Color("indigo")); // Sigma-
@@ -999,7 +999,7 @@ public class LundSupport {
 		setStyle(3214, X11Colors.getX11Color("dark magenta")); // Sigma*0
 		setStyle(3114, X11Colors.getX11Color("lawn green")); // Sigma*-
 
-		
+
 		setStyle(221, Color.magenta); // eta
 		setStyle(223, orangeRed); // omega
 
@@ -1008,7 +1008,7 @@ public class LundSupport {
 
 	/**
 	 * Set the style for a given lund Id
-	 * 
+	 *
 	 * @param lundId    the id to set the style for.
 	 * @param lineColor the lineColor to use.
 	 * @param darker    if <code>true</code> make line color datker, else make it
@@ -1024,7 +1024,7 @@ public class LundSupport {
 
 	/**
 	 * Main program for testing
-	 * 
+	 *
 	 * @param arg command arguments ignored.
 	 */
 	public static void main(String arg[]) {

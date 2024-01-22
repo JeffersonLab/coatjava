@@ -1,14 +1,13 @@
 package cnuphys.rk4;
 
-import java.util.ArrayDeque;
 import java.util.List;
 
 /**
  * Static methods for Runge-Kutta 4 integration, including a constant stepsize
  * method and an adaptive stepsize method.
- * 
+ *
  * @author heddle
- * 
+ *
  */
 public class RungeKutta {
 
@@ -17,7 +16,7 @@ public class RungeKutta {
 
 	public static double DEFMINSTEPSIZE = 1.0e-5;
 	public static double DEFMAXSTEPSIZE = 0.4;
-	
+
 	private double _minStepSize = DEFMINSTEPSIZE;
 	private double _maxStepSize = DEFMAXSTEPSIZE;
 
@@ -34,15 +33,15 @@ public class RungeKutta {
 	/**
 	 * Driver that uses the RungeKutta advance with a uniform step size. (i.e.,
 	 * this does NOT use an adaptive step size.)
-	 * 
+	 *
 	 * This version stores each step into the arrays t[] and y[][]. An
 	 * alternative does not store the results but instead uses an IRk4Listener
 	 * to notify the listener that the next step has been advanced.
-	 * 
+	 *
 	 * A very typical case is a 2nd order ODE converted to a 1st order where the
 	 * dependent variables are x, y, z, vx, vy, vz and the independent variable
 	 * is time.
-	 * 
+	 *
 	 * @param yo
 	 *            initial values. Probably something like (xo, yo, zo, vxo, vyo,
 	 *                vzo).
@@ -97,7 +96,7 @@ public class RungeKutta {
 
 			@Override
 			public void nextStep(double tNext, double yNext[], double h) {
-				
+
 				if (step < t.length) {
 				t[step] = tNext;
 				for (int i = 0; i < nDim; i++) {
@@ -113,20 +112,20 @@ public class RungeKutta {
 		return uniformStep(yo, to, tf, h, deriv, stopper, listener);
 
 	}
-	
+
 
 
 	/**
 	 * Integrator that uses the standard RK4 advance with a uniform step size.
 	 * (i.e., this does NOT use an adaptive step size.)
-	 * 
+	 *
 	 * This version uses an IRk4Listener to notify the listener that the next
 	 * step has been advanced.
-	 * 
+	 *
 	 * A very typical case is a 2nd order ODE converted to a 1st order where the
 	 * dependent variables are x, y, z, vx, vy, vz and the independent variable
 	 * is time.
-	 * 
+	 *
 	 * @param yo
 	 *            initial values. Probably something like (xo, yo, zo, vxo, vyo,
 	 *            vzo).
@@ -159,14 +158,14 @@ public class RungeKutta {
 	/**
 	 * Integrator that uses the RungeKutta advance with a Butcher Tableau and
 	 * constant stepsize. (i.e., this does NOT use an adaptive step size.)
-	 * 
+	 *
 	 * This version uses an IRk4Listener to notify the listener that the next
 	 * step has been advanced.
-	 * 
+	 *
 	 * A very typical case is a 2nd order ODE converted to a 1st order where the
 	 * dependent variables are x, y, z, vx, vy, vz and the independent variable
 	 * is time.
-	 * 
+	 *
 	 * @param yo
 	 *            initial values. Probably something like (xo, yo, zo, vxo, vyo,
 	 *            vzo).
@@ -203,14 +202,14 @@ public class RungeKutta {
 	/**
 	 * Integrator that uses the RungeKutta advance with a Butcher Tableau and
 	 * adaptive stepsize and a tolerance vector.
-	 * 
+	 *
 	 * This version uses an IRk4Listener to notify the listener that the next
 	 * step has been advanced.
-	 * 
+	 *
 	 * A very typical case is a 2nd order ODE converted to a 1st order where the
 	 * dependent variables are x, y, z, vx, vy, vz and the independent variable
 	 * is time.
-	 * 
+	 *
 	 * @param yo
 	 *            initial values. Probably something like (xo, yo, zo, vxo, vyo,
 	 *            vzo).
@@ -273,20 +272,20 @@ public class RungeKutta {
 
 		return adaptiveStep(yo, to, tf, h, deriv, stopper, listener, tableau, relTolerance, hdata);
 	}
-	
+
 
 
 	/**
 	 * Integrator that uses the RungeKutta advance with a Butcher Tableau and
 	 * adaptive stepsize
-	 * 
+	 *
 	 * This version uses an IRk4Listener to notify the listener that the next
 	 * step has been advanced.
-	 * 
+	 *
 	 * A very typical case is a 2nd order ODE converted to a 1st order where the
 	 * dependent variables are x, y, z, vx, vy, vz and the independent variable
 	 * is time.
-	 * 
+	 *
 	 * @param yo
 	 *            initial values. Probably something like (xo, yo, zo, vxo, vyo,
 	 *            vzo).
@@ -329,14 +328,14 @@ public class RungeKutta {
 	/**
 	 * Integrator that uses the RungeKutta advance with a Butcher Tableau and
 	 * adaptive stepsize
-	 * 
+	 *
 	 * This version uses an IRk4Listener to notify the listener that the next
 	 * step has been advanced.
-	 * 
+	 *
 	 * A very typical case is a 2nd order ODE converted to a 1st order where the
 	 * dependent variables are x, y, z, vx, vy, vz and the independent variable
 	 * is time.
-	 * 
+	 *
 	 * @param yo
 	 *            initial values. Probably something like (xo, yo, zo, vxo, vyo,
 	 *            vzo).
@@ -383,14 +382,14 @@ public class RungeKutta {
 	 * Integrator that uses the RungeKutta advance with a Butcher Tableau and
 	 * adaptive stepsize. This uses an desired absolute error relative to some
 	 * scale (of max values of the dependent variables)
-	 * 
+	 *
 	 * This version uses an IRk4Listener to notify the listener that the next
 	 * step has been advanced.
-	 * 
+	 *
 	 * A very typical case is a 2nd order ODE converted to a 1st order where the
 	 * dependent variables are x, y, z, vx, vy, vz and the independent variable
 	 * is time.
-	 * 
+	 *
 	 * @param yo
 	 *            initial values. Probably something like (xo, yo, zo, vxo, vyo,
 	 *                vzo).
@@ -450,14 +449,14 @@ public class RungeKutta {
 	 * Integrator that uses the RungeKutta advance with a Butcher Tableau and
 	 * adaptive stepsize. This uses an desired absolute error relative to some
 	 * scale (of max values of the dependent variables)
-	 * 
+	 *
 	 * This version uses an IRk4Listener to notify the listener that the next step
 	 * has been advanced.
-	 * 
+	 *
 	 * A very typical case is a 2nd order ODE converted to a 1st order where the
 	 * dependent variables are x, y, z, vx, vy, vz and the independent variable
 	 * is time.
-	 * 
+	 *
 	 * @param yo
 	 *            initial values. Probably something like (xo, yo, zo, vxo, vyo,
 	 *            vzo).
@@ -523,14 +522,14 @@ public class RungeKutta {
 	/**
 	 * Driver that uses the RungeKutta advance with a uniform step size. (I.e.,
 	 * this does NOT use an adaptive step size.)
-	 * 
+	 *
 	 * This version uses an IRk4Listener to notify the listener that the next
 	 * step has been advanced.
-	 * 
+	 *
 	 * A very typical case is a 2nd order ODE converted to a 1st order where the
 	 * dependent variables are x, y, z, vx, vy, vz and the independent variable
 	 * is time.
-	 * 
+	 *
 	 * @param yo
 	 *            initial values. Probably something like (xo, yo, zo, vxo, vyo,
 	 *                vzo).
@@ -597,14 +596,14 @@ public class RungeKutta {
 
 	/**
 	 * Driver that uses the RungeKutta advance with an adaptive step size
-	 * 
+	 *
 	 * This version uses an IRk4Listener to notify the listener that the next
 	 * step has been advanced.
-	 * 
+	 *
 	 * A very typical case is a 2nd order ODE converted to a 1st order where the
 	 * dependent variables are x, y, z, vx, vy, vz and the independent variable
 	 * is time.
-	 * 
+	 *
 	 * @param yo
 	 *            initial values. Probably something like (xo, yo, zo, vxo, vyo,
 	 *            vzo).
@@ -747,22 +746,22 @@ public class RungeKutta {
 		}
 		return nstep;
 	}
-	
+
 
 	/**
 	 * Driver that uses the RungeKutta advance with an adaptive step size
-	 * 
+	 *
 	 * This version uses an IRk4Listener to notify the listener that the next
 	 * step has been advanced.
-	 * 
+	 *
 	 * A very typical case is a 2nd order ODE converted to a 1st order where the
 	 * dependent variables are x, y, z, vx, vy, vz and the independent variable
 	 * is time.
-	 * 
+	 *
 	 * @param uo
 	 *            initial values. Probably something like (xo, yo, zo, vxo, vyo,
 	 *            vzo).
-	 * @param uf  space to hold the final values           
+	 * @param uf  space to hold the final values
 	 * @param to
 	 *            the initial value of the independent variable, e.g., time.
 	 * @param tf
@@ -819,7 +818,7 @@ public class RungeKutta {
 
 		// yf is the current value of the state vector,
 		// typically [x, y, z, vx, vy, vz] and derivative
-		
+
 
 		double yt[] = new double[nDim];
 		double yt2[] = new double[nDim];
@@ -835,7 +834,7 @@ public class RungeKutta {
 		while (t < tf) {
 			// use derivs at previous t
 			deriv.derivative(t, yt, dydt);
-			
+
 			advancer.advance(t, yt, dydt, h, deriv, yt2, error);
 
 			boolean decreaseStep = false;
@@ -843,7 +842,7 @@ public class RungeKutta {
 				decreaseStep = error[i] > relTolerance[i];
 				// System.err.println("error " + error[i] + " reltol: " +
 				// relTolerance[i] + " dec: " + decreaseStep);
-				if (decreaseStep) {			
+				if (decreaseStep) {
 					break;
 				}
 			}
@@ -905,14 +904,14 @@ public class RungeKutta {
 	 * Driver that uses the RungeKutta advance with an adaptive step size. This
 	 * uses an desired absolute error relative to some scale (of max values of
 	 * the dependent variables)
-	 * 
+	 *
 	 * This version uses an IRk4Listener to notify the listener that the next
 	 * step has been advanced.
-	 * 
+	 *
 	 * A very typical case is a 2nd order ODE converted to a 1st order where the
 	 * dependent variables are x, y, z, vx, vy, vz and the independent variable
 	 * is time.
-	 * 
+	 *
 	 * @param yo
 	 *            initial values. Probably something like (xo, yo, zo, vxo, vyo,
 	 *            vzo).
@@ -1156,7 +1155,7 @@ public class RungeKutta {
 			// compute absolute errors
 			for (int i = 0; i < ndim; i++) {
 				error[i] = Math.abs(yfull[i] - yout[i]);
-				
+
 //				if (error[i] > 1.0e-10) {
 //				error[i] /= Math.max(Math.abs(yfull[i]),  Math.abs(yout[i]));
 //				}
@@ -1268,7 +1267,7 @@ public class RungeKutta {
 
 	/**
 	 * Set the maximum step size
-	 * 
+	 *
 	 * @param maxSS
 	 *            the maximum stepsize is whatever units you are using
 	 */
@@ -1278,7 +1277,7 @@ public class RungeKutta {
 
 	/**
 	 * Set the minimum step size
-	 * 
+	 *
 	 * @param maxSS
 	 *            the minimum stepsize is whatever units you are using
 	 */
@@ -1288,16 +1287,16 @@ public class RungeKutta {
 
 	/**
 	 * Get the maximum step size
-	 * 
+	 *
 	 * @return the maximum stepsize is whatever units you are using
 	 */
 	public double getMaxStepSize() {
 		return _maxStepSize;
 	}
-	
+
 	/**
 	 * Get the minimum step size
-	 * 
+	 *
 	 * @return the minimum stepsize is whatever units you are using
 	 */
 	public double getMinStepSize() {

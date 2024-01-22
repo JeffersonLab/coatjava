@@ -121,7 +121,7 @@ public class CLAS12Values {
 				+ String.format("zo: %10.7e cm\n", z) + String.format("p: %10.7e GeV/c\n", p)
 				+ String.format("theta: %10.7f deg\n", theta) + String.format("phi: %10.7f deg", phi);
 	}
-	
+
 	/**
 	 * Convert to a GeneratedParticleRecord for backwards compatibility
 	 * @return a GeneratedParticleRecord corresponding to this data

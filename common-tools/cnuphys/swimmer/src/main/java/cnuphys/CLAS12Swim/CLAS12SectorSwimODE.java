@@ -7,7 +7,7 @@ import cnuphys.magfield.FieldProbe;
  */
 
 public class CLAS12SectorSwimODE extends CLAS12SwimODE {
-	
+
 	//the sector [1..6]
 	private int _sector;
 

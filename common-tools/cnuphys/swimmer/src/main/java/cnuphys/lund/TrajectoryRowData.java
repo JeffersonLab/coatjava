@@ -3,13 +3,13 @@ package cnuphys.lund;
 import cnuphys.adaptiveSwim.SwimType;
 
 public class TrajectoryRowData {
-	
+
 	/**
 	 * Contains all the data needed to swim a particle
 	 */
-	
+
 	protected int trackId;  //track id
-	
+
 	// the lund id
 	protected LundId lundId;
 
@@ -36,13 +36,13 @@ public class TrajectoryRowData {
 
 	// source
 	protected String source;
-	
+
 	//MC or Recon
 	protected SwimType swimType;
 
 	/**
 	 * Create a data row for display in the table.
-	 * 
+	 *
 	 * @param lundId
 	 *            the full lundId object
 	 * @param xo
@@ -77,7 +77,7 @@ public class TrajectoryRowData {
 			lundId = LundSupport.getInstance().get(0);
 		}
 	}
-	
+
 	/**
 	 * Get the swim type, either MC or REC
 	 * @return the swim type
@@ -85,7 +85,7 @@ public class TrajectoryRowData {
 	public SwimType getSwimType() {
 		return swimType;
 	}
- 
+
 	/**
 	 * Get the track id
 	 * @return the track id
@@ -93,7 +93,7 @@ public class TrajectoryRowData {
 	public int getTrackId() {
 		return trackId;
 	}
-	
+
 	/**
 	 * Get the charge in units of e.
 	 * @return the charge. -99 on failure.
@@ -101,7 +101,7 @@ public class TrajectoryRowData {
 	public int getCharge() {
 		return (lundId == null) ? -99 : lundId.getCharge();
 	}
-	
+
 	/**
 	 * Get the source, probably a bank name
 	 * @return the source
@@ -109,7 +109,7 @@ public class TrajectoryRowData {
 	public String getSource() {
 		return source;
 	}
-	
+
 	/**
 	 * Get the status
 	 * @return the status
@@ -120,7 +120,7 @@ public class TrajectoryRowData {
 
 	/**
 	 * The mass in MeV
-	 * 
+	 *
 	 * @return the mass in MeV
 	 */
 	public double getMass() {
@@ -129,7 +129,7 @@ public class TrajectoryRowData {
 
 	/**
 	 * Get the name of the particle
-	 * 
+	 *
 	 * @return the name of the particle
 	 */
 	public String getName() {
@@ -138,7 +138,7 @@ public class TrajectoryRowData {
 
 	/**
 	 * The total energy in MeV
-	 * 
+	 *
 	 * @return the total energy in MeV
 	 */
 	public double getTotalEnergy() {
@@ -148,7 +148,7 @@ public class TrajectoryRowData {
 
 	/**
 	 * Get the polar angle
-	 * 
+	 *
 	 * @return the polar angle in degrees.
 	 */
 	public double getTheta() {
@@ -157,7 +157,7 @@ public class TrajectoryRowData {
 
 	/**
 	 * Get the azimuthal angle
-	 * 
+	 *
 	 * @return the azimuthal angle in degrees.
 	 */
 	public double getPhi() {
@@ -166,7 +166,7 @@ public class TrajectoryRowData {
 
 	/**
 	 * Get the vertex x coordinate
-	 * 
+	 *
 	 * @return the vertex x coordinate in cm
 	 */
 	public double getXo() {
@@ -175,7 +175,7 @@ public class TrajectoryRowData {
 
 	/**
 	 * Get the vertex y coordinate
-	 * 
+	 *
 	 * @return the vertex y coordinate in cm
 	 */
 	public double getYo() {
@@ -184,7 +184,7 @@ public class TrajectoryRowData {
 
 	/**
 	 * Get the vertex z coordinate
-	 * 
+	 *
 	 * @return the vertex z coordinate in cm
 	 */
 	public double getZo() {
@@ -193,7 +193,7 @@ public class TrajectoryRowData {
 
 	/**
 	 * Get the lund (pdg) is for the particle
-	 * 
+	 *
 	 * @return the lund (pdg) is for the particle
 	 */
 	public int getId() {
@@ -202,7 +202,7 @@ public class TrajectoryRowData {
 
 	/**
 	 * Get the lund id
-	 * 
+	 *
 	 * @return the lund id
 	 */
 	public LundId getLundId() {
@@ -211,7 +211,7 @@ public class TrajectoryRowData {
 
 	/**
 	 * Get the momentum in MeV
-	 * 
+	 *
 	 * @return the momentum in MeV
 	 */
 	public double getMomentum() {
@@ -220,7 +220,7 @@ public class TrajectoryRowData {
 
 	/**
 	 * Get the kinetic energy in MeV
-	 * 
+	 *
 	 * @return the kinetic energy in MeV
 	 */
 	public double getKineticEnergy() {

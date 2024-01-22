@@ -1,7 +1,6 @@
 package cnuphys.swimtest;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.util.Random;
@@ -9,13 +8,8 @@ import java.util.Random;
 import cnuphys.CLAS12Swim.CLAS12SwimResult;
 import cnuphys.CLAS12Swim.CLAS12Swimmer;
 import cnuphys.CLAS12Swim.CLAS12Values;
-import cnuphys.adaptiveSwim.test.SphereTestData;
-import cnuphys.magfield.FastMath;
-import cnuphys.magfield.FieldProbe;
-import cnuphys.magfield.MagneticFieldInitializationException;
 import cnuphys.magfield.MagneticFields;
 import cnuphys.magfield.MagneticFields.FieldType;
-import cnuphys.magfield.RotatedCompositeProbe;
 import cnuphys.rk4.RungeKuttaException;
 import cnuphys.swim.SwimTrajectory;
 import cnuphys.swim.Swimmer;
@@ -54,11 +48,11 @@ public class SectorZTest {
 		Swimmer swimmer = new Swimmer(MagneticFields.getInstance().getRotatedCompositeField());
 
 		CLAS12Swimmer c12Swimmer = new CLAS12Swimmer(swimmer.getProbe());
-	
+
 		Random rand = new Random(seed);
-		
+
 		//generate the data
-	
+
 		int q[] = new int[n];
 		int sector[] = new int[n];
 	    double zTarget[] = new double[n];
@@ -72,7 +66,7 @@ public class SectorZTest {
 			q[i] = (rand.nextBoolean()) ? 1 : -1;
 	    	zTarget[i] = 2.5 + 3.5*rand.nextDouble();
 		}
-		
+
 	    double delAS = 0;
 	    double delC12 = 0;
 
@@ -134,7 +128,7 @@ public class SectorZTest {
 		//timing test
 		long asTime;
 		long c12Time;
-       
+
         // Measure CPU time before method execution
         long start = bean.getCurrentThreadCpuTime();
 		for (int i = 0; i < n; i++) {
@@ -186,9 +180,9 @@ public class SectorZTest {
 		System.err.println("ratio as/c12 = " + (double)asTime/(double)c12Time);
 
 		System.err.println("done");
-		
+
 	}
-	
+
 	//old swim results
 	private static double swimResult(CSVWriter writer, double targetZ, SwimTrajectory traj) {
 		double NaN = Double.NaN;
@@ -198,26 +192,26 @@ public class SectorZTest {
 		if (traj != null) {
 			double[] uf = traj.lastElement();
 			dist = Math.abs(uf[2] - targetZ);
-			
-			
+
+
 			if (dist > 0.01) {
 				writer.writeStartOfRow(100 * uf[0], 100 * uf[1], 100 * uf[2], traj.size(), NaN);
 			} else {
 				writer.writeStartOfRow(100 * uf[0], 100 * uf[1], 100 * uf[2], traj.size(), 100 * dist);
-			}		
+			}
 
 		} else {
 			writer.writeStartOfRow(NaN, NaN, NaN, NaN, 0, NaN);
 		}
-		
+
 		//a big distance indicates a failure for old swimmer
 		if (dist > 0.01) {
 			dist = 0;
 		}
-		
+
 		return 100*dist;
 	}
-	
+
 
 	private static double c12SwimResult(CSVWriter writer, double targetZ, CLAS12SwimResult result) {
 		double NaN = Double.NaN;
@@ -239,6 +233,6 @@ public class SectorZTest {
 		return dist;
 
 	}
-	
+
 
 }

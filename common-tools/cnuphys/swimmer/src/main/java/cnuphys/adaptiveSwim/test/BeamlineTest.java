@@ -1,7 +1,5 @@
 package cnuphys.adaptiveSwim.test;
 
-import java.io.File;
-
 import cnuphys.CLAS12Swim.CLAS12SwimResult;
 import cnuphys.CLAS12Swim.CLAS12Swimmer;
 import cnuphys.CLAS12Swim.CLAS12Values;
@@ -48,20 +46,20 @@ public class BeamlineTest {
 			}
 			reverse(c12Res, backwardData, i);
 		}
-		
-		
+
+
 		//test the backward swims
-		
+
 //		double diff[] = new double[n];
 //		double diffsq[] = new double[n];
-//		
+//
 ////		for (int i = 0; i < n; i++) {
 //		for (int i = bad; i < bad+1; i++) {
 //			//forward data (original vertex
 //			double xf = forwardData.xo[i];
 //			double yf = forwardData.yo[i];
 //			double zf = forwardData.zo[i];
-//			
+//
 //			//backward data
 //			int qb = backwardData.charge[i];
 //			double xb = backwardData.xo[i];
@@ -71,7 +69,7 @@ public class BeamlineTest {
 //			double thetab = backwardData.theta[i];
 //			double phib = backwardData.phi[i];
 //
-//			
+//
 //			//backward swim
 //			CLAS12SwimResult c12ResB = clas12Swimmer.swim(qb, xb, yb, zb, pb, thetab, phib, sMax, h, c12Tolerance);
 //			System.err.println("backward swim \n" + c12ResB);
@@ -83,19 +81,19 @@ public class BeamlineTest {
 //			diffsq[i] = dx*dx + dy*dy + dz*dz;
 //			diff[i] = Math.sqrt(diffsq[i]);
 //		}
-//		
+//
 //		statReport("backward swim delta ", diff, diffsq);
-//		
+//
 		//now the real test
 		System.err.println("\n\n SWIM TO BEAMLINE TEST");
-		
-		
+
+
 		double rho[] = new double[n];
 		double rhosq[] = new double[n];
 
 		int maxIndex = 0;
 		double maxRho = 0;
-		
+
 		for (int i = 0; i < n; i++) {
 	//	for (int i = bad; i < bad+1; i++) {
 
@@ -113,11 +111,11 @@ public class BeamlineTest {
 			if (i == bad) {
 				System.err.println("*** beamline swim \n" + c12res);
 			}
-			
-			
+
+
 			double u[] = c12res.getFinalValues().getU();
 			rho[i] = Math.hypot(u[0], u[1]);
-			
+
 			if (rho[i] > maxRho) {
 				maxRho = rho[i];
 				maxIndex = i;
@@ -129,12 +127,12 @@ public class BeamlineTest {
 		System.err.println("max rho = " + maxRho + " at index " + maxIndex);
 
 	}
-	
+
 	static private void statReport(String name, double x[], double xsq[]) {
 		int n = x.length;
 		double xavg = 0;
 		double xavg2 = 0;
-		
+
 		for (int i = 0; i < n; i++) {
 			xavg += x[i];
 			xavg2 += xsq[i];
@@ -144,12 +142,12 @@ public class BeamlineTest {
 		double rms = Math.sqrt(xavg2 - xavg*xavg);
 		System.err.println(name + "avg = " + xavg + " sigma = " + rms);
 	}
-	
+
 	//reverse for backward swim
 	static private void reverse(CLAS12SwimResult c12Res, RandomData backwardData, int index) {
  		CLAS12Values c12Values = c12Res.getFinalValues();
  		double  uf[] = c12Values.getU();
- 		
+
  		backwardData.charge[index] = -c12Values.q;
  		backwardData.xo[index] = uf[0];
  		backwardData.yo[index] = uf[1];
@@ -158,10 +156,10 @@ public class BeamlineTest {
  		double tx = -uf[3];
  		double ty = -uf[4];
  		double tz = -uf[5];
- 		
+
  		backwardData.theta[index] = FastMath.acos2Deg(tz);
  		backwardData.phi[index] = FastMath.atan2Deg(ty, tx);
 
-		
+
 	}
 }

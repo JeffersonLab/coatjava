@@ -2,7 +2,7 @@ package cnuphys.adaptiveSwim;
 
 /**
  * Hold the initial values of a swim
- * 
+ *
  * @author heddle
  *
  */
@@ -38,7 +38,7 @@ public class InitialValues {
 
 	/**
 	 * Store the initial conditions of a swim
-	 * 
+	 *
 	 * @param charge The integer charge
 	 * @param xo     The x coordinate of the vertex in meters
 	 * @param yo     The y coordinate of the vertex in meters
@@ -59,7 +59,7 @@ public class InitialValues {
 
 	/**
 	 * Copy constructor
-	 * 
+	 *
 	 * @param src the source initial values
 	 */
 	public InitialValues(InitialValues src) {

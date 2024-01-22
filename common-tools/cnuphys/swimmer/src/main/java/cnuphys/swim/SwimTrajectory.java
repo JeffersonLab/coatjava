@@ -15,9 +15,9 @@ import cnuphys.magfield.RotatedCompositeProbe;
  * is a collection of state vectors. A state vector is the six component vector:
  * <BR>
  * Q = [x, y, z, px/p, py/p, pz/p] <BR>
- * 
+ *
  * @author heddle
- * 
+ *
  */
 
 public class SwimTrajectory extends ArrayList<double[]> {
@@ -68,7 +68,7 @@ public class SwimTrajectory extends ArrayList<double[]> {
 	public SwimTrajectory() {
 		super(200);
 	}
-	
+
 	/**
 	 * Clear the trajectory
 	 */
@@ -77,11 +77,11 @@ public class SwimTrajectory extends ArrayList<double[]> {
 		super.clear();
 		_computedBDL = false;
 	}
-	
+
 	/**
 	 * Create a one point trajectory. Used when the initial momentum is lower than
 	 * some minimum value.
-	 * 
+	 *
 	 * @param charge   the charge of the particle (-1 for electron, +1 for proton,
 	 *                 etc.)
 	 * @param xo       the x vertex position in m
@@ -133,11 +133,11 @@ public class SwimTrajectory extends ArrayList<double[]> {
 	 */
 	public SwimTrajectory(GeneratedParticleRecord genPartRec, int initialCapacity) {
 		super(initialCapacity);
-		
+
 		if (genPartRec == null) {
 			System.err.println("NULL GEN PART REC (A)");
 		}
-		
+
 		_genPartRec = genPartRec;
 	}
 
@@ -146,19 +146,19 @@ public class SwimTrajectory extends ArrayList<double[]> {
 	 * @param genPart the generated particle record
 	 */
 	public void setGeneratedParticleRecord(GeneratedParticleRecord genPart) {
-		
+
 		if (genPart == null) {
 			System.err.println("NULL GEN PART REC (A)");
 			(new Throwable()).printStackTrace();
 		}
 
-		
+
 		_genPartRec = genPart;
 	}
 	/**
 	 * Set the lund id. This is not needed for swimming, but is useful for ced or
 	 * when MonteCarlo truth is known.
-	 * 
+	 *
 	 * @param lundId the Lund Id.
 	 */
 	public void setLundId(LundId lundId) {
@@ -176,7 +176,7 @@ public class SwimTrajectory extends ArrayList<double[]> {
 
 	/**
 	 * Get the underlying generated particle record
-	 * 
+	 *
 	 * @return the underlying generated particle record
 	 */
 	public GeneratedParticleRecord getGeneratedParticleRecord() {
@@ -185,7 +185,7 @@ public class SwimTrajectory extends ArrayList<double[]> {
 
 	/**
 	 * Get the original theta for this trajectory
-	 * 
+	 *
 	 * @return the original theta for this trajectory in degrees
 	 */
 	public double getOriginalTheta() {
@@ -194,7 +194,7 @@ public class SwimTrajectory extends ArrayList<double[]> {
 
 	/**
 	 * Get the original phi for this trajectory
-	 * 
+	 *
 	 * @return the original phi for this trajectory in degrees
 	 */
 	public double getOriginalPhi() {
@@ -203,7 +203,7 @@ public class SwimTrajectory extends ArrayList<double[]> {
 
 	/**
 	 * Get the r coordinate in cm for the given index
-	 * 
+	 *
 	 * @param index the index
 	 * @return the r coordinate
 	 */
@@ -229,15 +229,15 @@ public class SwimTrajectory extends ArrayList<double[]> {
 		if (u == null) {
 			return false;
 		}
-		
+
 		int dim = u.length;
-		
+
 		//adds a copy!!
 		double ucopy[] = new double[dim];
 		System.arraycopy(u, 0, ucopy, 0, dim);
 		return super.add(ucopy);
 	}
-	
+
 	/**
 	 * Add to the trajectory
 	 * @param u the new 6D vector
@@ -248,14 +248,14 @@ public class SwimTrajectory extends ArrayList<double[]> {
 		if (u == null) {
 			return false;
 		}
-		
+
 		int dim = u.length;
 		double ucopy[] = new double[dim+1];
 		System.arraycopy(u, 0, ucopy, 0, dim);
 		ucopy[dim] = s;
 		return super.add(ucopy);
 	}
-		
+
 	/**
 	 * @param xo       the x vertex position in m
 	 * @param yo       the y vertex position in m
@@ -291,14 +291,14 @@ public class SwimTrajectory extends ArrayList<double[]> {
 		if (isEmpty()) {
 			return;
 		}
-		
+
 		remove(size()-1);
 		add(u, s);
 	}
 
 	/**
 	 * Get the last element
-	 * 
+	 *
 	 * @return the last element
 	 */
 	public double[] lastElement() {
@@ -310,7 +310,7 @@ public class SwimTrajectory extends ArrayList<double[]> {
 
 	/**
 	 * Get the final radial coordinate
-	 * 
+	 *
 	 * @return final radial coordinate in whatever units x, y, and z are in
 	 */
 	public double getFinalR() {
@@ -327,7 +327,7 @@ public class SwimTrajectory extends ArrayList<double[]> {
 
 	/**
 	 * Get the final position
-	 * 
+	 *
 	 * @return the final position in x, y, z
 	 */
 	final double[] getFinalPosition() {
@@ -345,7 +345,7 @@ public class SwimTrajectory extends ArrayList<double[]> {
 
 	/**
 	 * Get the total BDL integral if computed
-	 * 
+	 *
 	 * @return the total BDL integral in kG-m
 	 */
 	public double getComputedBDL() {
@@ -359,13 +359,13 @@ public class SwimTrajectory extends ArrayList<double[]> {
 
 		return this.lastElement()[BXDL_IDX];
 	}
-	
+
 	/**
 	 * Compute the integral B cross dl. This will cause the state vector arrays to
 	 * expand by two, becoming [x, y, z, px/p, py/p, pz/p, l, bdl] where the 7th
 	 * entry l is cumulative pathlength in m and the eighth entry bdl is the
 	 * cumulative integral bdl in kG-m.
-	 * 
+	 *
 	 * @param probe the field getter
 	 */
 	public void computeBDL(FieldProbe probe) {
@@ -404,7 +404,7 @@ public class SwimTrajectory extends ArrayList<double[]> {
 	 * expand by two, becoming [x, y, z, px/p, py/p, pz/p, l, bdl] where the 7th
 	 * entry l is cumulative pathlength in m and the eighth entry bdl is the
 	 * cumulative integral bdl in kG-m.
-	 * 
+	 *
 	 * @param sector sector 1..6
 	 * @param probe  the field getter
 	 */
@@ -444,7 +444,7 @@ public class SwimTrajectory extends ArrayList<double[]> {
 
 	/**
 	 * Check whether the accumulated integral bdl has been computed
-	 * 
+	 *
 	 * @return <code>true</code> if the accumulated integral bdl has been computed
 	 */
 	public boolean isBDLComputed() {
@@ -453,7 +453,7 @@ public class SwimTrajectory extends ArrayList<double[]> {
 
 	/**
 	 * Get the source of the trajectory e.g. hbtracking
-	 * 
+	 *
 	 * @return the source of the trajectory
 	 */
 	public String getSource() {
@@ -462,7 +462,7 @@ public class SwimTrajectory extends ArrayList<double[]> {
 
 	/**
 	 * Set the source of the trajectory e.g. hbtracking
-	 * 
+	 *
 	 * @param source the source of the trajectory
 	 */
 	public void setSource(String source) {
@@ -471,7 +471,7 @@ public class SwimTrajectory extends ArrayList<double[]> {
 
 	/**
 	 * Get an array of elements of the state vector
-	 * 
+	 *
 	 * @param index the desired element index
 	 * @return the array
 	 */
@@ -504,14 +504,14 @@ public class SwimTrajectory extends ArrayList<double[]> {
 		double z[] = getArray(Z_IDX);
 		return z;
 	}
-	
+
 	/**
 	 * Diagnostic print of entire trajectory
 	 * @param ps the print stream
 	 */
 	public void print(PrintStream ps) {
 		ps.println("Number of trajectory points: " + size());
-		
+
 		int i = 0;
 		for (double[] u : this) {
 			++i;

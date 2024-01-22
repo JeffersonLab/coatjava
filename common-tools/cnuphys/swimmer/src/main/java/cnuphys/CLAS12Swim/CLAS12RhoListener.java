@@ -1,12 +1,6 @@
 package cnuphys.CLAS12Swim;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-
 import cnuphys.magfield.FastMath;
-import cnuphys.magfield.MagneticFieldInitializationException;
-import cnuphys.magfield.MagneticFields;
-import cnuphys.magfield.MagneticFields.FieldType;
 
 /**
  * A listener for swimming to a fixed cylindrical radius (rho).
@@ -66,11 +60,12 @@ public class CLAS12RhoListener extends CLAS12BoundaryListener {
 
 	/**
 	 * Get the absolute distance to the target (boundary) in cm.
-	 * 
+	 *
 	 * @param newS the new path length
 	 * @param newU the new state vector
 	 * @return the distance to the target (boundary) in cm.
 	 */
+	@Override
 	public double distanceToTarget(double newS, double[] newU) {
 		return Math.abs(rho(newU) - _rhoTarget);
 	}

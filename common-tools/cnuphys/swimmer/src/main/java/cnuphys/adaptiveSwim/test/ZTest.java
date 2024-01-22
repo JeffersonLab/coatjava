@@ -20,7 +20,7 @@ public class ZTest {
 
 	//swim to a fixed z
 	public static void swimZTest(int n, long seed) {
-		
+
 		MagneticFields.getInstance().setActiveField(FieldType.COMPOSITE);
 
 	    System.err.println("Swim to fixed z test");
@@ -70,7 +70,7 @@ public class ZTest {
 
 
 		for (int i = 0; i < n; i++) {
-	
+
 			int charge = data.charge[i];
 			double xo = data.xo[i];
 			double yo = data.yo[i];
@@ -81,7 +81,7 @@ public class ZTest {
 			double zTarg = zTarget[i];
 
 			result.reset();
-			
+
 			writer.writeStartOfRow(charge, 100 * xo, 100 * yo, 100 * zo, p, theta, phi, 100*zTarg);
 
 			// Adaptive
@@ -102,7 +102,7 @@ public class ZTest {
 			result.reset();
 
 			// C12
-			CLAS12SwimResult c12Res = clas12Swimmer.swimZ(charge, 100*xo, 100*yo, 100*zo, p, theta, phi, 100*zTarg, 
+			CLAS12SwimResult c12Res = clas12Swimmer.swimZ(charge, 100*xo, 100*yo, 100*zo, p, theta, phi, 100*zTarg,
 					100*accuracy, 100*sMax, 100*h, c12Tolerance);
 			delC12 += c12SwimResult(writer, 100*zTarg, c12Res);
 			nsC12 += c12Res.getNStep();
@@ -175,7 +175,7 @@ public class ZTest {
 
 
 			// C12
-			clas12Swimmer.swimZ(charge, 100*xo, 100*yo, 100*zo, p, theta, phi, 
+			clas12Swimmer.swimZ(charge, 100*xo, 100*yo, 100*zo, p, theta, phi,
 					100*zTarg, 100*accuracy, 100*sMax, 100*h, c12Tolerance);
 		}
 

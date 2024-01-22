@@ -1,31 +1,27 @@
 package cnuphys.adaptiveSwim.swimZ;
 
-import cnuphys.adaptiveSwim.AAdaptiveStopper;
-import cnuphys.adaptiveSwim.AdaptiveSwimResult;
-import cnuphys.swim.SwimTrajectory;
-
-/** 
+/**
  * For when we want to swim a precise path length
  * @author heddle
  *
  */
 public class SwimZStopper {
-	
+
 	//previous Z
 	private double _prevZ;
-	
+
 	//new Z
 	private double _newZ;
-	
+
 	//the desired accuracy
 	private double _accuracy;
-	
+
 	//starting sign
 	private int _startSign;
-	
+
 	//the target z
 	private double _zf;
-	
+
 	private SwimZResult _result;
 
 	/**
@@ -41,7 +37,7 @@ public class SwimZStopper {
 		_accuracy = accuracy;
 		_result = result;
 	}
-	
+
 	public SwimZResult getResult() {
 		return _result;
 	}
@@ -53,8 +49,8 @@ public class SwimZStopper {
 	}
 
 	public boolean stopIntegration(double znew, double[] unew) {
-		
-		
+
+
 		// within accuracy? Accept and stop
 		if (Math.abs(znew - _zf) < _accuracy) {
 			accept(znew, unew);
@@ -65,7 +61,7 @@ public class SwimZStopper {
 		if (sign(znew) != _startSign) {
 			return true;
 		}
-				
+
 		//accept new data and continue
 		accept(znew, unew);
 		return false;
@@ -88,7 +84,7 @@ public class SwimZStopper {
 
         //add to trajectory?
         if (_result.shouldUpdateTrajectory()) {
-        	
+
         	_result.getTrajectory().add(unew, znew);
         }
 	}

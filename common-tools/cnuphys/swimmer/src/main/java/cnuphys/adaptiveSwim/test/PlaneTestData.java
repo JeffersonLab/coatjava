@@ -1,11 +1,10 @@
 package cnuphys.adaptiveSwim.test;
 
 import cnuphys.adaptiveSwim.geometry.Plane;
-import cnuphys.adaptiveSwim.geometry.Sphere;
 import cnuphys.lund.AsciiReadSupport;
 
 public class PlaneTestData {
-	
+
 	//usual swim parameters
 	int charge;
 	public double xo;
@@ -14,7 +13,7 @@ public class PlaneTestData {
 	public double p;
 	public double theta;
 	public double phi;
-	
+
 	//for making plane
 	public double nx;
 	public double ny;
@@ -23,17 +22,17 @@ public class PlaneTestData {
 	public double py;
 	public double pz;
 
-	
+
 	public double accuracy;
 	public double sMax;
 	public double stepSize;
-	
+
 	public Plane plane;
-	
+
 	public PlaneTestData() {
-			
+
 	}
-	
+
 	/**
 	 * Will tokenize a string from the csv file
 	 * @param s
@@ -66,20 +65,20 @@ public class PlaneTestData {
 
 			plane = new Plane(nx, ny, nz, px, py, pz);
 		} catch (ArrayIndexOutOfBoundsException e) {
-			
+
 			System.out.println("OOB Bad Line in planedata: [" + s + "]");
 			System.exit(1);
 
 		}catch (NumberFormatException e) {
-			
+
 			System.out.println("NFE Bad Line in planedata: [" + s + "]");
 			System.exit(1);
 
 		}
-		
+
 
 	}
-	
+
 	public PlaneTestData toMeters() {
 		PlaneTestData data = new PlaneTestData();
 		data.charge = charge;
@@ -100,9 +99,9 @@ public class PlaneTestData {
 		data.stepSize = stepSize/100;
 		data.plane = new Plane(data.nx, data.ny, data.nz, data.px, data.py, data.pz);
 		return data;
-			
+
 	}
 
-	
+
 
 }

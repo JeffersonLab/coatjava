@@ -7,7 +7,6 @@ import java.lang.management.ThreadMXBean;
 import cnuphys.CLAS12Swim.CLAS12SwimResult;
 import cnuphys.CLAS12Swim.CLAS12Swimmer;
 import cnuphys.CLAS12Swim.CLAS12Values;
-import cnuphys.CLAS12Swim.EIntegrator;
 import cnuphys.adaptiveSwim.AdaptiveSwimException;
 import cnuphys.adaptiveSwim.AdaptiveSwimResult;
 import cnuphys.adaptiveSwim.AdaptiveSwimmer;
@@ -17,16 +16,16 @@ import cnuphys.magfield.MagneticFields.FieldType;
 
 
 public class BaseTest {
-	
+
 	private static FieldProbe _probe;
 
 	//swim to a final path length
 	public static void baseSwimTest(int n, long seed) {
-		
+
 		MagneticFields.getInstance().setActiveField(FieldType.COMPOSITE);
-		
+
 		_probe = FieldProbe.factory(MagneticFields.getInstance().getActiveField());
-		
+
 	    System.err.println("Swim to fixed pathlength test");
 
 	    //for writing results to CSV
@@ -44,7 +43,7 @@ public class BaseTest {
 
 
 		AdaptiveSwimmer adaptiveSwimmer = new AdaptiveSwimmer(); //new
-		
+
 		CLAS12Swimmer clas12Swimmer = new CLAS12Swimmer(); //new
 
 
@@ -57,16 +56,16 @@ public class BaseTest {
 		double sMax = 8; // m
 		double asTolerance = 1.0e-6;
 		double c12Tolerance = 1.0e-5;
-		
+
 		//the final pathlengths from the adaptive swimmer
 		//will be used as the target pathlengths for the dp swimmer
-		
+
 		double s[] = new double[n];
 
 
 		//generate some random data
 		RandomData data = new RandomData(n, seed);
-		
+
 	    int nsAS = 0;
 	    int nsC12 = 0;
 
@@ -112,17 +111,17 @@ public class BaseTest {
 			writer.newLine();
 
 		}
-		
+
 
 		writer.close();
-		
+
 		nsAS = (int)(((double)nsAS)/n);
 		nsC12 = (int)(((double)nsC12)/n);
 
 		System.err.println("done with main test.");
 		System.err.println(String.format("avg nsAS = %d **  avg nsC12 = %d  ", nsAS, nsC12));
 		System.err.println("Now timing test.");
-		
+
 		ThreadMXBean bean = ManagementFactory.getThreadMXBean();
 
 		//timing test
@@ -187,7 +186,7 @@ public class BaseTest {
 
 
 	}
-		
+
 	//swim results
 	private static void adaptiveSwimResult(CSVWriter writer, AdaptiveSwimResult result) {
 		double NaN = Double.NaN;
@@ -196,10 +195,10 @@ public class BaseTest {
 
 		if (result.getStatus() == AdaptiveSwimmer.SWIM_SUCCESS) {
 			double[] uf = result.getU();
-			
+
 			result.getTrajectory().computeBDL(_probe);
 			double bdl = result.getTrajectory().getComputedBDL();
-			
+
 			writer.writeStartOfRow(100*uf[0], 100*uf[1], 100*uf[2], 100*result.getS(), result.getNStep(), 100*bdl);
 
 
@@ -207,12 +206,12 @@ public class BaseTest {
 			writer.writeStartOfRow(NaN, NaN, NaN, NaN, NaN, 0, NaN);
 		}
 	}
-	
+
 	private static void c12SwimResult(CSVWriter writer, CLAS12SwimResult result) {
         double NaN = Double.NaN;
-        
+
 		writer.writeStartOfRow(result.statusString());
-		
+
 		if (result.getStatus() == CLAS12Swimmer.SWIM_SUCCESS) {
 			CLAS12Values finalVals = result.getFinalValues();
 			result.getTrajectory().computeBDL(_probe);

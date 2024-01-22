@@ -16,7 +16,6 @@ import cnuphys.lund.AsciiReader;
 import cnuphys.magfield.MagneticFields;
 import cnuphys.magfield.MagneticFields.FieldType;
 import cnuphys.swimtest.CSVWriter;
-import cnuphys.swimtest.SwimTest;
 
 public class PlaneTest {
 
@@ -25,7 +24,7 @@ public class PlaneTest {
 
 		//get data from csv data file
 		PlaneTestData testDataCM[] = readDataFile();
-		
+
 		PlaneTestData testDataMeter[] = new PlaneTestData[testDataCM.length];
 		for (int i = 0; i < testDataCM.length; i++) {
 			testDataMeter[i] = testDataCM[i].toMeters();
@@ -60,13 +59,13 @@ public class PlaneTest {
 		double c12Tolerance = 1.0e-5;
 
 		PlaneTestData data;
-		
+
 	    double delAS = 0;
 	    double delC12 = 0;
 
 	    int nsAS = 0;
 	    int nsC12 = 0;
-	    
+
 	    cnuphys.CLAS12Swim.geometry.Plane c12Plane[] = new cnuphys.CLAS12Swim.geometry.Plane[testDataCM.length];
 		for (int i = 0; i < testDataCM.length; i++) {
 			data = testDataCM[i];
@@ -76,7 +75,7 @@ public class PlaneTest {
 		for (int i = 0; i < testDataCM.length; i++) {
 
 			data = testDataMeter[i];
-			
+
 			result.reset();
 			writer.writeStartOfRow(data.charge, 100*data.xo, 100*data.yo, 100*data.zo, data.p, data.theta, data.phi);
 
@@ -126,7 +125,7 @@ public class PlaneTest {
         bean.setThreadCpuTimeEnabled(true);
 		long c12Time;
 		long asTime;
-		
+
 		int numTestRun = 200;
 		long start = bean.getCurrentThreadCpuTime();
 

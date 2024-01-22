@@ -32,7 +32,7 @@ public class AdaptiveSwimmer {
 
 	/** The swim was a success */
 	public static final int SWIM_SUCCESS = 0;
-	
+
 	// Speed of light in m/s
 	public static final double C = 299792458.0; // m/s
 
@@ -53,8 +53,8 @@ public class AdaptiveSwimmer {
 
 	/** A swim was requested for a neutral particle */
 	public static final int SWIM_NEUTRAL_PARTICLE = 10;
-	
-	public static final Hashtable<Integer, String> resultNames = new Hashtable<Integer, String>();
+
+	public static final Hashtable<Integer, String> resultNames = new Hashtable<>();
 	static {
 		resultNames.put(SWIM_SWIMMING, "SWIMMING");
 		resultNames.put(SWIM_SUCCESS, "SWIM_SUCCESS");
@@ -277,7 +277,7 @@ public class AdaptiveSwimmer {
 
 		baseSwim(charge, xo, yo, zo, momentum, theta, phi, sMax, h, eps, result,
 				new AdaptiveZStopper(sMax, targetZ, accuracy, result));
-		
+
 
 	}
 
@@ -352,7 +352,7 @@ public class AdaptiveSwimmer {
 	 * @throws AdaptiveSwimException
 	 */
 	private void swimSignChange(double[] u0, double so, double sf, double h,
-			double eps, final Derivative deriv, ASignChangeStopper stopper, 
+			double eps, final Derivative deriv, ASignChangeStopper stopper,
 			AdaptiveSwimResult result) throws AdaptiveSwimException {
 
 
@@ -363,7 +363,7 @@ public class AdaptiveSwimmer {
 		} catch (AdaptiveSwimException e) {
 			// put in a message that allows us to reproduce the track
 		}
-		
+
 	}
 
 	/**
@@ -403,11 +403,11 @@ public class AdaptiveSwimmer {
 
 		//Step 1
 		swimPlane(charge, xo, yo, zo, momentum, theta, phi, targetPlane, accuracy, sf, h0, eps, result);
-		
+
 		if (result.getStatus() != SWIM_SUCCESS) {
 			return;
 		}
-		
+
 		double[] u = result.getU();
 		double s = result.getS();
 		double signedDist = targetPlane.signedDistance(u);
@@ -429,9 +429,9 @@ public class AdaptiveSwimmer {
 		if (result.getStatus() != SWIM_SUCCESS) {
 			return;
 		}
-		
+
 		//if get here, the next to last point is on the "left" side of
-		//the target, and last is on the right 
+		//the target, and last is on the right
 
 		double[] uf = result.getU();
 		signedDist = targetPlane.signedDistance(uf);
@@ -443,17 +443,17 @@ public class AdaptiveSwimmer {
 
 		intersection.setRight(uf, s);
 		result.computeIntersection(targetPlane);
-		
-		
+
+
 		result.setS(intersection.getS());
 		intersection.setU(result.getU());
-		
+
 		//replace last point in traj (which will be the point on the right) with last point in result
 		if (result.hasTrajectory()) {
 			result.getTrajectory().replaceLastPoint(result.getU(), result.getS());
 		}
 	}
-	
+
 	/**
 	 * Swim to a plane using the current active field. In this case, interpolate the
 	 * last two points (one on each side) so that the final point is right on the
@@ -478,13 +478,13 @@ public class AdaptiveSwimmer {
 	public void swimPlaneInterp(int charge, double xo, double yo, double zo,
 			double p, double theta, double phi, Plane targetPlane, double sf,
 			double h, double eps, AdaptiveSwimResult result) throws AdaptiveSwimException {
-		
-	
+
+
 		Derivative deriv = new Derivative(charge, p, _probe);
 
 		AdaptiveSwimIntersection intersection = result.getIntersection();
 		intersection.reset();
-		
+
 		PlaneSignChangeStopper pscStopper = new PlaneSignChangeStopper(sf, targetPlane, result);
 
 		//initialization; the initial state vector will be placed in the result object by init
@@ -495,19 +495,19 @@ public class AdaptiveSwimmer {
 		if (result.getStatus() != SWIM_SUCCESS) {
 			return;
 		}
-		
+
 		//if get here, the next to last point is on the "left" side of
-		//the target, and last is on the right 
+		//the target, and last is on the right
 
 		//get the interpolated intersection. Note this  will NOT be the last trajectory point.
 		//the last point on the trajectory will be a point on the start side of the intersection that is within the
 		//requested accuracy.
 
 		result.computeIntersection(targetPlane);
-		
+
 		result.setS(intersection.getS());
 		intersection.setU(result.getU());
-		
+
 		//replace last point in traj (which will be the point on the right) with last point in result
 		if (result.hasTrajectory()) {
 			result.getTrajectory().replaceLastPoint(result.getU(), result.getS());
@@ -538,7 +538,7 @@ public class AdaptiveSwimmer {
 	 * @throws AdaptiveSwimException
 	 */
 	public void swimCylinder(int charge, double xo, double yo, double zo, double momentum,
-			double theta, double phi, 
+			double theta, double phi,
 			double centerLineP1[], double centerLineP2[], double radius,
 			double accuracy, double sMax, double h, double eps, AdaptiveSwimResult result)
 			throws AdaptiveSwimException {
@@ -553,7 +553,7 @@ public class AdaptiveSwimmer {
 		baseSwim(charge, xo, yo, zo, momentum, theta, phi, sMax, h, eps, result,
 				new AdaptiveCylinderStopper(sMax, targetCylinder, accuracy, result));
 	}
-	
+
 	/**
 	 * Swim to an arbitrary infinitely long cylinder using the current active field
 	 *
@@ -575,7 +575,7 @@ public class AdaptiveSwimmer {
 	 * @throws AdaptiveSwimException
 	 */
 	public void swimCylinder(int charge, double xo, double yo, double zo, double momentum,
-			double theta, double phi, 
+			double theta, double phi,
 			Cylinder targetCylinder, double accuracy, double sMax, double h, double eps, AdaptiveSwimResult result)
 			throws AdaptiveSwimException {
 		baseSwim(charge, xo, yo, zo, momentum, theta, phi, sMax, h, eps, result,
@@ -604,13 +604,13 @@ public class AdaptiveSwimmer {
 	 * @throws AdaptiveSwimException
 	 */
 	public void swimSphere(int charge, double xo, double yo, double zo, double momentum,
-			double theta, double phi, 
+			double theta, double phi,
 			Sphere targetSphere, double accuracy, double sMax, double h, double eps, AdaptiveSwimResult result)
 			throws AdaptiveSwimException {
 		baseSwim(charge, xo, yo, zo, momentum, theta, phi, sMax, h, eps, result,
 				new AdaptiveSphereStopper(sMax, targetSphere, accuracy, result));
 	}
-	
+
 	/**
 	 * Swim to an arbitrary infinitely long cylinder using the current active field
 	 *
@@ -632,7 +632,7 @@ public class AdaptiveSwimmer {
 	 * @throws AdaptiveSwimException
 	 */
 	public void swimSphere(int charge, double xo, double yo, double zo, double momentum,
-			double theta, double phi, 
+			double theta, double phi,
 			double r, double accuracy, double sMax, double h, double eps, AdaptiveSwimResult result)
 			throws AdaptiveSwimException {
 		baseSwim(charge, xo, yo, zo, momentum, theta, phi, sMax, h, eps, result,
@@ -679,7 +679,7 @@ public class AdaptiveSwimmer {
 
 
 	}
-	
+
 	/**
 	 * Stores the initial variables in the result object, and then
 	 * sets the result object state vector to the corresponding starting state vector
@@ -697,7 +697,7 @@ public class AdaptiveSwimmer {
 
 		//create a swim result
 		AdaptiveSwimResult result = stopper.getResult();
-		
+
 		// clear old trajectory
 		if (result.getTrajectory() != null) {
 			result.getTrajectory().clear();

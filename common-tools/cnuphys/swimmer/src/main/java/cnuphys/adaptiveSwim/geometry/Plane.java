@@ -5,7 +5,7 @@ package cnuphys.adaptiveSwim.geometry;
  * A plane is defined by the equation (r - ro).norm = 0 Where r is an arbitrary
  * point on the plane, ro is a given point on the plane and norm is the normal
  * to the plane
- * 
+ *
  * @author heddle
  *
  */
@@ -27,7 +27,7 @@ public class Plane extends AGeometric {
 
 	/**
 	 * Create a plane from a normal vector and a point on the plane
-	 * 
+	 *
 	 * @param norm the normal vector
 	 * @param p    a point in the plane
 	 * @return the plane that contains p and its normal is norm
@@ -41,7 +41,7 @@ public class Plane extends AGeometric {
 		c = norm.z; // C
 		d = a * p0.x + b * p0.y + c * p0.z; // D
 	}
-	
+
 	/**
 	 * Create a plane from the normal vector in an array of doubles and
 	 * a point in the plane in an array, both (x, y, z)
@@ -49,8 +49,8 @@ public class Plane extends AGeometric {
 	 * @param point the point in the plane
 	 */
 	public Plane(double norm[], double point[]) {
-		
-		this(new Vector(norm[0], norm[1], norm[2]), 
+
+		this(new Vector(norm[0], norm[1], norm[2]),
 				new Point(point[0], point[1], point[2]));
 	}
 
@@ -65,8 +65,8 @@ public class Plane extends AGeometric {
 	 * @param pz z component of point on plane
 	 */
 	public Plane(double nx, double ny, double nz, double px, double py, double pz) {
-		
-		this(new Vector(nx, ny, nz), 
+
+		this(new Vector(nx, ny, nz),
 				new Point(px, py, pz));
 	}
 
@@ -84,10 +84,10 @@ public class Plane extends AGeometric {
 		Line line = new Line(p1, p2);
 		return lineIntersection(line, p);
 	}
-	
+
 	/**
 	 * Get the intersection of a line segment with the plane
-	 * 
+	 *
 	 * @param u1     the first point of the line segment
 	 * @param u2     the second point of the line segment
 	 * @param uInter will hold the intersection, NaNs if no intersection
@@ -118,13 +118,13 @@ public class Plane extends AGeometric {
 				uInter[i] = u1[i] + t * (u2[i] - u1[i]);
 			}
 		}
-		
+
 		return t;
 	}
 
 	/**
 	 * Signed distance from a point to the plane
-	 * 
+	 *
 	 * @param x the x coordinate
 	 * @param y the y coordinate
 	 * @param z the z coordinate
@@ -141,7 +141,7 @@ public class Plane extends AGeometric {
 
 	/**
 	 * Compute the intersection of an infinite line with the plane
-	 * 
+	 *
 	 * @param line         the line
 	 * @param intersection will hold the point of intersection
 	 * @return the t parameter. If NaN it means the line is parallel to the plane.
@@ -175,7 +175,7 @@ public class Plane extends AGeometric {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param line         the line
 	 * @param intersection will hold the point of intersection
 	 * @param lineType     one of the Constants INFINITE or SEGMENT
@@ -197,12 +197,12 @@ public class Plane extends AGeometric {
 
 		return t;
 	}
-	
+
 	/**
 	 * Get whether the point is to the left, right or (exactly) on the plane
 	 * @param x the x coordinate
 	 * @param y the y coordinate
-	 * @param z the z coordinate	
+	 * @param z the z coordinate
 	 * @return +1 if to the left, -1 if to the right, 0 if on the plane
 	 */
 	public int sign(double x, double y, double z) {
@@ -219,7 +219,7 @@ public class Plane extends AGeometric {
 
 	/**
 	 * Create a plane of constant azimuthal angle phi
-	 * 
+	 *
 	 * @param phi the azimuthal angle in degrees
 	 * @return the plane of constant phi
 	 */
@@ -251,7 +251,7 @@ public class Plane extends AGeometric {
 
 	/**
 	 * Find some coordinates suitable for drawing the plane as a Quad in 3D
-	 * 
+	 *
 	 * @param scale an arbitrary big number, a couple times bigger than the drawing
 	 *              extent
 	 * @return the jogl coordinates for drawing a Quad
@@ -350,7 +350,7 @@ public class Plane extends AGeometric {
 			}
 
 		}
-		
+
 		else { //general case, no small constants
 			for (int k = 0; k < 4; k++) {
 				int j = 3 * k;

@@ -27,7 +27,7 @@ import cnuphys.rk4.IDerivative;
  * <li>B (mag field) is in kGauss
  * </ul>
  * <p>
- * 
+ *
  * @author heddle
  *
  */
@@ -48,7 +48,7 @@ public final class SwimZDerivative implements IDerivative {
 
 	/**
 	 * The derivative for swimming through a magnetic field
-	 * 
+	 *
 	 * @param Q     -1 for electron, +1 for proton, etc.
 	 * @param p     the magnitude of the momentum in GeV/c.
 	 * @param probe the magnetic field getter
@@ -62,7 +62,7 @@ public final class SwimZDerivative implements IDerivative {
 	/**
 	 * Compute the derivatives given the value of the independent variable and the
 	 * values of the function.
-	 * 
+	 *
 	 * @param z    the value of the independent variable (the z coordinate) (input).
 	 * @param u    the values of the state vector (x, y, tx, ty, q) at z (input).
 	 *             FOR THIS SWIMMER LENGTH UNITS ARE CM

@@ -1,9 +1,5 @@
 package cnuphys.CLAS12Swim;
 
-import cnuphys.CLAS12Swim.geometry.Line;
-import cnuphys.CLAS12Swim.geometry.Point;
-import cnuphys.CLAS12Swim.geometry.QuadraticCurve;
-
 /**
  * This is an abstract class to be extended by classes that to a distance of closest approach.
  * The assumption is that the first doca is the only one. i.e. we are not dealing with
@@ -11,13 +7,13 @@ import cnuphys.CLAS12Swim.geometry.QuadraticCurve;
  */
 
 public abstract class CLAS12DOCAListener extends CLAS12Listener {
-	
+
 	// the requested accuracy in cm
 	protected final double _accuracy;
 
 	//current doca
 	protected double _currentDOCA = Double.POSITIVE_INFINITY;
-	
+
 	/**
 	 * Create a CLAS12 boundary crossing listener
 	 *
@@ -29,10 +25,11 @@ public abstract class CLAS12DOCAListener extends CLAS12Listener {
 		super(ivals, sMax);
 		_accuracy = accuracy;
 	}
-	
+
 	/**
 	 * Reset the current DOCA to infinity
 	 */
+	@Override
 	public void reset() {
 		_currentDOCA = Double.POSITIVE_INFINITY;
 	}
@@ -45,16 +42,16 @@ public abstract class CLAS12DOCAListener extends CLAS12Listener {
 	public double getAccuracy() {
 		return _accuracy;
 	}
-	
+
 	/**
 	 * Get the current estimate of the doca
-	 * 
+	 *
 	 * @return the current doca
 	 */
 	public double getCurrentDOCA() {
 		return _currentDOCA;
 	}
-	
+
 	/**
 	 * Called when a new step is taken in the ODE solving process.
 	 *
@@ -68,7 +65,7 @@ public abstract class CLAS12DOCAListener extends CLAS12Listener {
 		accept(newS, newU);
 
 		double doca = doca(newS, newU);
-		
+
 		if (doca > _currentDOCA) { //getting farther
 			_status = CLAS12Swimmer.SWIM_SUCCESS;
 			return false;
@@ -82,8 +79,8 @@ public abstract class CLAS12DOCAListener extends CLAS12Listener {
 
 		_currentDOCA = doca;
 		return true;
-	}	
-	
+	}
+
 	/**
 	 * Get the absolute distance to the target (boundary) in cm.
 	 * @param newS the new path length

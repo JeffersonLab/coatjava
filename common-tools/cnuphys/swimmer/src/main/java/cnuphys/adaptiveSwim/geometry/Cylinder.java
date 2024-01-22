@@ -10,10 +10,10 @@ public class Cylinder {
 
 	//the centerline
 	private Line _centerLine;
-	
+
 	//the radius
 	public double radius;
-	
+
 	/**
 	 * Create a cylinder
 	 * @param centerLine the center line
@@ -23,7 +23,7 @@ public class Cylinder {
 		_centerLine = new Line(centerLine);
 		this.radius = radius;
 	}
-	
+
 	/**
 	 * Create a cylinder
 	 * @param p1 one point of center line as an xyz array
@@ -45,18 +45,19 @@ public class Cylinder {
 		double lineDist = _centerLine.distance(p);
 		return lineDist - radius;
 	}
-	
+
     /**
 	 * Set the path length of the swim
      * @deprecated Use {@link Cylinder#signedDistance} instead.
 	 * @param p a point
 	 * @return the perpendicular distance
      */
+	@Deprecated
 	public double distance(Point p) {
 		double lineDist = _centerLine.distance(p);
 		return lineDist - radius;
 	}
-	
+
 	/**
 	 * Get the shortest distance between the surface of this infinite cylinder and a point.
 	 * If the value is negative, we are inside the cylinder.
@@ -69,7 +70,7 @@ public class Cylinder {
 		Point p = new Point(x, y, z);
 		return signedDistance(p);
 	}
-	
+
 	/**
 	 * Get the shortest absolute distance between the surface of this infinite cylinder and a point.
 	 * @param x the x coordinate
@@ -81,18 +82,18 @@ public class Cylinder {
 		Point p = new Point(x, y, z);
 		return Math.abs(signedDistance(p));
 	}
-	
+
 	/**
 	 * Is the point inside the cylinder?
 	 * @param x the x coordinate
-	 * @param y the y coordinate		
+	 * @param y the y coordinate
 	 * @param z the z coordinate
 	 * @return <code>true</code> if the point is inside the cylinder.
 	 */
 	public boolean isInside(double x, double y, double z) {
 		return signedDistance(x, y, z) < 0;
 	}
-	
+
 	/**
 	 * Is the cylinder centered on the z axis?
 	 * @return <code>true</code> if the cylinder is centered on the z axis.

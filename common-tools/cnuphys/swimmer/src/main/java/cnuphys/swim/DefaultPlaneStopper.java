@@ -17,7 +17,7 @@ public class DefaultPlaneStopper implements IStopper {
 
 	/**
 	 * Plane stopper that doesn't check max R (does check max path length)
-	 * 
+	 *
 	 * @param s0       starting path length in meters
 	 * @param sMax     maximal path length in meters
 	 * @param plane    the plane
@@ -34,7 +34,7 @@ public class DefaultPlaneStopper implements IStopper {
 
 	/**
 	 * Plane stopper that checks Rmax (and sMax)
-	 * 
+	 *
 	 * @param s0       starting path length in meters
 	 * @param rMax     maximal radius in meters
 	 * @param sMax     maximal path length in meters
@@ -49,7 +49,7 @@ public class DefaultPlaneStopper implements IStopper {
 
 	/**
 	 * Get the current side
-	 * 
+	 *
 	 * @return the current side
 	 */
 	public int getSide() {
@@ -103,7 +103,7 @@ public class DefaultPlaneStopper implements IStopper {
 	 * For example, with a fixed Z integrator we "stop" when we cross the z boundary
 	 * however we are not done unless we are within tolerance. If we are within
 	 * tolerance (on either side) we are really done!
-	 * 
+	 *
 	 * @param t the current value of the independent variable (typically pathlength)
 	 * @param y the current state vector (typically [x, y, z, vx, vy, vz])
 	 * @return <code>true</code> if we should stop now.

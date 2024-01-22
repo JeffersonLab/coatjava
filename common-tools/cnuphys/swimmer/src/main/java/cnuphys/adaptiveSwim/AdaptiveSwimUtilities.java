@@ -31,7 +31,7 @@ public class AdaptiveSwimUtilities {
 	public static int driver(double h, IDerivative deriv, IAdaptiveStopper stopper,
 			IAdaptiveAdvance advancer, double eps) throws AdaptiveSwimException {
 
-		
+
 		//workspace
 		// ut is the running value of the state vector,
 		// [x, y, z, tx, ty, tz]
@@ -186,7 +186,7 @@ public class AdaptiveSwimUtilities {
 		}
 		return 1;
 	}
-	
+
 	/**
 	 * Get just the x y z location of the state vector in cm
 	 * @param u the state vector
@@ -195,7 +195,7 @@ public class AdaptiveSwimUtilities {
 	public static String uStringXYZ(double u[]) {
 		return String.format("(%11.8f, %11.8f, %11.8f) cm", 100*u[0], 100*u[1], 100*u[2]);
 	}
-	
+
 	/**
 	 * Get just the x y z location of the state vector in cm
 	 * with a prepended message

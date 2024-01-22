@@ -11,9 +11,9 @@ import javax.swing.table.TableCellRenderer;
 
 
 public class SimpleRenderer extends JTextField implements TableCellRenderer {
-	
+
 	Color bgColors[] = {Color.white, new Color(244, 244, 250)};
-	
+
 	public SimpleRenderer() {
 		setEditable(false);
 		setForeground(Color.black);

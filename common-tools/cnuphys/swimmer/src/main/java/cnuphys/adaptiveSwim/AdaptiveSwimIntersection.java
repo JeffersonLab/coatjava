@@ -16,7 +16,7 @@ public class AdaptiveSwimIntersection {
 	//the original side is always called "left"
 	private Point _left = new Point();
 	private double _sLeft;
-	
+
 	private double _txLeft;
 	private double _tyLeft;
 	private double _tzLeft;
@@ -24,7 +24,7 @@ public class AdaptiveSwimIntersection {
 	//closest we get on the "right"
 	private Point _right = new Point();
 	private double _sRight;
-	
+
 	private double _txRight;
 	private double _tyRight;
 	private double _tzRight;
@@ -33,7 +33,7 @@ public class AdaptiveSwimIntersection {
 
 	//The estimate of the xyz intersection
 	private Point _intersection = new Point();
-	
+
 	//interpolated s and t's
 	private double _s;
 	private double _tx;
@@ -84,7 +84,7 @@ public class AdaptiveSwimIntersection {
 		_distance = Double.NaN;
 
 	}
-	
+
 	/**
 	 * Get the point on the "left" side of the intersection
 	 * @return the point on the "left" side of the intersection
@@ -92,7 +92,7 @@ public class AdaptiveSwimIntersection {
 	public Point getLeft() {
 		return _left;
 	}
-	
+
 	/**
 	 * Get the point on the "right" side of the intersection
 	 * @return the point on the "right" side of the intersection
@@ -137,7 +137,7 @@ public class AdaptiveSwimIntersection {
 	public Point getIntersectionPoint() {
 		return _intersection;
 	}
-	
+
 	/**
 	 * Set a u based on interpolated values
 	 * @param u the state vector to fill
@@ -150,7 +150,7 @@ public class AdaptiveSwimIntersection {
 		u[4] = _ty;
 		u[5] = _tz;
 	}
-	
+
 	/**
 	 * Get the interpolated pathlength
 	 * @return the pathlength

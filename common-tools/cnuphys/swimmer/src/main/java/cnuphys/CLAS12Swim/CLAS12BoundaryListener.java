@@ -59,7 +59,7 @@ public abstract class CLAS12BoundaryListener extends CLAS12Listener {
 
 		return true;
 	}
-	
+
 	/**
 	 * Get the absolute distance to the target (boundary) in cm.
 	 * @param newS the new path length

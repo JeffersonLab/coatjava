@@ -5,7 +5,7 @@ import java.io.Serializable;
 /**
  * Holds the Lund ID, vertex, momentum, and the initial angles giving the
  * direction of the particle's momentum.
- * 
+ *
  * @author heddle
  *
  */
@@ -57,9 +57,9 @@ public class GeneratedParticleRecord implements Serializable {
 
 	/**
 	 * Get the the X vertex position in cm
-	 * 
+	 *
 	 * @return the X vertex position in cm
-	 * 
+	 *
 	 */
 	public double getVertexX() {
 		return _xo;
@@ -67,7 +67,7 @@ public class GeneratedParticleRecord implements Serializable {
 
 	/**
 	 * Get the the Y vertex position in cm
-	 * 
+	 *
 	 * @return the Y vertex position in cm
 	 */
 	public double getVertexY() {
@@ -76,7 +76,7 @@ public class GeneratedParticleRecord implements Serializable {
 
 	/**
 	 * Get the the Z vertex position in cm
-	 * 
+	 *
 	 * @return the Z vertex position in cm
 	 */
 	public double getVertexZ() {
@@ -85,7 +85,7 @@ public class GeneratedParticleRecord implements Serializable {
 
 	/**
 	 * Get the momentum in GeV/c
-	 * 
+	 *
 	 * @return the momentum in GeV/c
 	 */
 	public double getMomentum() {
@@ -94,7 +94,7 @@ public class GeneratedParticleRecord implements Serializable {
 
 	/**
 	 * Get the initial polar angle in degrees.
-	 * 
+	 *
 	 * @return the initial polar angle in degrees.
 	 */
 	public double getTheta() {
@@ -103,14 +103,14 @@ public class GeneratedParticleRecord implements Serializable {
 
 	/**
 	 * Get the initial azimuthal angle in degrees.
-	 * 
+	 *
 	 * @return the initial azimuthal angle in degrees.
 	 */
 	public double getPhi() {
 		return _phi;
 	}
-	
-	
+
+
 	/**
 	 * Get the one-based sector
 	 * @return [1..6]
@@ -146,7 +146,7 @@ public class GeneratedParticleRecord implements Serializable {
 	/**
 	 * The total energy in GeV. This requires that we specify what particle this
 	 * is.
-	 * 
+	 *
 	 * @param lundid
 	 *            the lundid of the particle
 	 * @return the total energy in GeV
@@ -159,16 +159,16 @@ public class GeneratedParticleRecord implements Serializable {
 	/**
 	 * Get the kinetic energy in GeV. This requires that we specify what
 	 * particle this is.
-	 * 
+	 *
 	 * @param lundid
 	 *            the lundid of the particle
-	 * 
+	 *
 	 * @return the kinetic energy in GeV
 	 */
 	public double getKineticEnergy(LundId lundId) {
 		return getTotalEnergy(lundId) - lundId.getMass();
 	}
-	
+
 	/**
 	 * Output for including in a csv file
 	 * @return
@@ -183,7 +183,7 @@ public class GeneratedParticleRecord implements Serializable {
 				"Q: %d Vertex: (%-8.5f, %-8.5f, %-8.5f) cm  P: %-8.5f GeV/c Theta: %-8.5f deg  Phi: %-8.5f deg", _charge,
 				_xo, _yo, _zo, _momentum, _theta, _phi);
 	}
-	
+
 
 
 }

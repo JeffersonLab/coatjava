@@ -32,9 +32,9 @@ public class ButcherTableau {
 	);
 
 	public static final ButcherTableau CASH_KARP = new ButcherTableau("CASH_KARP", true, makeRow(0.),
-			makeRow(1. / 5., 1. / 5.), 
+			makeRow(1. / 5., 1. / 5.),
 			makeRow(3. / 10., 3. / 40., 9. / 40.),
-			makeRow(3. / 5, 3. / 10., -9. / 10., 6. / 5.), 
+			makeRow(3. / 5, 3. / 10., -9. / 10., 6. / 5.),
 			makeRow(1., -11. / 54., 5. / 2., -70. / 27., 35. / 27.),
 			makeRow(7. / 8., 1631. / 55296., 175. / 512., 575. / 13824., 44275. / 110592., 253. / 4096.),
 			makeRow(37. / 378., 0, 250. / 621., 125. / 594., 0., 512. / 1771.), // b's
@@ -106,7 +106,7 @@ public class ButcherTableau {
 
 	/**
 	 * Get the number of stages
-	 * 
+	 *
 	 * @return the number of stages
 	 */
 	public int getNumStage() {

@@ -47,12 +47,12 @@ public interface IAdaptiveStopper {
 	 * @return the new (smaller) step size
 	 */
 	public double getNewStepSize(double h);
-	
+
 	/**
 	 * For doing things like setting the initial sign and distance
 	 */
 	public void initialize();
-	
+
 	/**
 	 * Get the result object
 	 * @return the result object

@@ -14,7 +14,7 @@ public class CLAS12SphereListener extends CLAS12BoundaryListener {
 
 	// starting inside or outside
 	private boolean _inside;
-	
+
 	/**
 	 * Create a CLAS12 boundary target sphere listener, for swimming to a fixed sphere
 	 *
@@ -41,16 +41,17 @@ public class CLAS12SphereListener extends CLAS12BoundaryListener {
 		boolean newInside = _targetSphere.isInside(newU[0], newU[1], newU[2]);
 		return newInside != _inside;
 	}
-	
+
 	/**
 	 * Get the absolute distance to the target (boundary) in cm.
 	 * @param newS the new path length
 	 * @param newU the new state vector
 	 * @return the distance to the target (boundary) in cm.
 	 */
+	@Override
 	public double distanceToTarget(double newS, double[] newU) {
 		return _targetSphere.distance(newU[0], newU[1], newU[2]);
 	}
-	
+
 
 }

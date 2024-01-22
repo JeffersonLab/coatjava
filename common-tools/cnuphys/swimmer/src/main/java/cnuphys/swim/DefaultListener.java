@@ -22,7 +22,7 @@ public class DefaultListener implements IRkListener {
 
 	/**
 	 * The integration has advanced one step
-	 * 
+	 *
      * @param newS
      *            the new value of the independent variable (e.g., path length)
      * @param newY
@@ -61,7 +61,7 @@ public class DefaultListener implements IRkListener {
 
 	/**
 	 * Get the independent variable (e.g., path length) for the last step.
-	 * 
+	 *
 	 * @return the independent variable (e.g., path length) at the last step
 	 */
 	public double getIndependentVariable() {
@@ -70,7 +70,7 @@ public class DefaultListener implements IRkListener {
 
 	/**
 	 * Get the last state vector entries (e.g., [x,y,z, px.p, py/p, pz/p])
-	 * 
+	 *
 	 * @return the last state vector
 	 */
 	public double[] getLastStateVector() {
@@ -79,7 +79,7 @@ public class DefaultListener implements IRkListener {
 
 	/**
 	 * Get the number of steps taken
-	 * 
+	 *
 	 * @return the count, i.e., the number of steps taken
 	 */
 	public int getCount() {

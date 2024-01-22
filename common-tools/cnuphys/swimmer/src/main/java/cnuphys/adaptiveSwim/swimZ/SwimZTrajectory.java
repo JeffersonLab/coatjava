@@ -3,11 +3,11 @@ package cnuphys.adaptiveSwim.swimZ;
 import java.util.ArrayList;
 
 public class SwimZTrajectory  extends ArrayList<double[]> {
-	
-	
+
+
 	// the integer charge
 	private final int _charge;
-	
+
 	//the momentum (constant) in GeV/c
 	private final double _p;
 
@@ -20,7 +20,7 @@ public class SwimZTrajectory  extends ArrayList<double[]> {
 		_charge = charge;
 		_p = p;
 	}
-	
+
 	/**
 	 * Clear the trajectory
 	 */
@@ -36,7 +36,7 @@ public class SwimZTrajectory  extends ArrayList<double[]> {
 	public int getCharge() {
 		return _charge;
 	}
-	
+
 	/**
 	 * Get the momentum in GeV/c
 	 * @return the momentum in GeV/c
@@ -44,21 +44,21 @@ public class SwimZTrajectory  extends ArrayList<double[]> {
 	public double getMomentum() {
 		return _p;
 	}
-	
+
 	@Override
 	public boolean add(double u[]) {
 		if (u == null) {
 			return false;
 		}
-		
+
 		int dim = u.length;
-		
+
 		//adds a copy!!
 		double ucopy[] = new double[dim];
 		System.arraycopy(u, 0, ucopy, 0, dim);
 		return super.add(ucopy);
 	}
-	
+
 	/**
 	 * Add to the trajectory
 	 * @param u the new 4D vector
@@ -69,7 +69,7 @@ public class SwimZTrajectory  extends ArrayList<double[]> {
 		if (u == null) {
 			return false;
 		}
-		
+
 		//extra space for z
 		double ucopy[] = new double[5];
 		System.arraycopy(u, 0, ucopy, 0, 4);

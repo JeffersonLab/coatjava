@@ -7,10 +7,10 @@ public class AdaptiveZStopper extends AAdaptiveStopper {
 
 	//is the starting rho bigger or smaller than the target
 	private int _startSign;
-	
+
 	//new value
 	private double _newZ;
-	
+
 	private double _prevZ;
 
 
@@ -27,7 +27,7 @@ public class AdaptiveZStopper extends AAdaptiveStopper {
 		_targetZ = targetZ;
 	}
 
-	
+
 	/**
 	 * For doing things like setting the initial sign and distance
 	 */
@@ -47,9 +47,9 @@ public class AdaptiveZStopper extends AAdaptiveStopper {
 
 	@Override
 	public boolean stopIntegration(double snew, double[] unew) {
-		
+
 		_newZ = getZ(unew);
-				
+
 		// within accuracy? Accept and stop
 		if (Math.abs(unew[2] - _targetZ) < _accuracy) {
 			accept(snew, unew);
@@ -60,7 +60,7 @@ public class AdaptiveZStopper extends AAdaptiveStopper {
 		//stop but don't accept new data. We crossed the target  boundary
 		if (sign() != _startSign) {
 			_result.setStatus(AdaptiveSwimmer.SWIM_CROSSED_BOUNDARY);
-			
+
 			//use the previous z to calculate new stepsize
 			_del = Math.abs(_prevZ - _targetZ);
 			return true;

@@ -3,7 +3,7 @@ package cnuphys.swim;
 import cnuphys.rk4.IStopper;
 
 public class DefaultSphereStopper implements IStopper {
-	
+
     private double _finalPathLength = Double.NaN;
 
     private double _Rad;

@@ -17,10 +17,10 @@ package cnuphys.CLAS12Swim.geometry;
 
 	        p.set(term1.add(term2).add(term3));
 	    }
-	    
+
 
 	    /** Method to find the point on the curve closest to the line (the DOCA)
-	     * 
+	     *
 	     * @param p0 first point used to define the curve
 	     * @param p1 second point used to define the curve
 	     * @param p2 third point used to define the curve
@@ -32,7 +32,7 @@ package cnuphys.CLAS12Swim.geometry;
 	        double lower = 0;
 	        double upper = 1;
 	        double t = (lower + upper) / 2;
-	        
+
 	        Point curvePoint1 = new Point();
 	        Point curvePoint2 = new Point();
 
@@ -63,7 +63,7 @@ package cnuphys.CLAS12Swim.geometry;
 	        Point p0 = new Point(1, 3, 1); // replace with actual values
 	        Point p1 = new Point(2, 2, 2); // replace with actual values
 	        Point p2 = new Point(3, 1, 3); // replace with actual values
-	        
+
 	        Point pointOnCurve = new Point();
 	        Point doca = new Point();
 
@@ -73,7 +73,7 @@ package cnuphys.CLAS12Swim.geometry;
 	        System.out.println("Point on Curve: (" + pointOnCurve.x + ", " + pointOnCurve.y + ", " + pointOnCurve.z + ")");
 
 	        Line line = new Line(new Point(0, 90, 0), new Point(0, 180, 0));
-	        
+
 	        findClosestPoint(p0, p1, p2, line, 1.0e-8, doca);
 	        System.out.println("Closest Point: (" + doca.x + ", " + doca.y + ", " + doca.z + ")");
 	    }

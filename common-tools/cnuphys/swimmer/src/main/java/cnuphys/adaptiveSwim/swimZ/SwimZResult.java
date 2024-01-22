@@ -28,7 +28,7 @@ import cnuphys.adaptiveSwim.AdaptiveSwimmer;
  * <p>
  * **/
 public class SwimZResult {
-	
+
 	//the current 4D state vector
 	private final double[] _u;
 
@@ -55,14 +55,14 @@ public class SwimZResult {
 
 	//the direction, 1 if zf > zo
 	private int _sign;
-	
+
 	// the integer charge
 	private int _charge;
-	
+
 	//the momentum (constant) in GeV/c
 	private double _p;
 
-	
+
 	/**
 	 * Create a container for the swim results for default of 4D state vector
 	 * @param charge the integer charge
@@ -74,7 +74,7 @@ public class SwimZResult {
 		_saveTrajectory = saveTrajectory;
 		reset(charge, p);
 	}
-	
+
 	/**
 	 * Reset so that the object can be reused.
 	 * @param charge the integer charge
@@ -84,7 +84,7 @@ public class SwimZResult {
 
 		_charge = charge;
 		_p = p;
-		
+
 		for (int i = 0; i < 4; i++) {
 			_u[i] = Double.NaN;
 		}
@@ -119,7 +119,7 @@ public class SwimZResult {
 	public void setSign(int sign) {
 		_sign = sign;
 	}
-	
+
 	/**
 	 * Get the swimZ sign, +1 if zf > zo otherwise -1
 	 * @return the swimZ sign
@@ -127,7 +127,7 @@ public class SwimZResult {
 	public int getSign() {
 		return _sign;
 	}
-	
+
 	/**
 	 * Get the current value of the independent variable z
 	 * @return the current value of z in cm
@@ -135,7 +135,7 @@ public class SwimZResult {
 	public double getZ() {
 		return _z;
 	}
-	
+
 	/**
 	 * Set the current value of the independent variable z
 	 * @param z the current value of z in cm
@@ -143,7 +143,7 @@ public class SwimZResult {
 	public void setZ(double z) {
 		_z = z;
 	}
-	
+
 	/**
 	 * Set the current state vector, usually [x, y, tx, ty]
 	 * where x, y are in cm
@@ -154,7 +154,7 @@ public class SwimZResult {
 			_u[i] = u[i];
 		}
 	}
-	
+
 	/**
 	 * Gt the current state vector, usually [x, y, tx, ty]
 	 * where x, y are in cm
@@ -172,7 +172,7 @@ public class SwimZResult {
 	public int getCharge() {
 		return _charge;
 	}
-	
+
 	/**
 	 * Get the momentum in GeV/c
 	 * @return the momentum in GeV/c
@@ -200,7 +200,7 @@ public class SwimZResult {
 		return _trajectory;
 	}
 
-	
+
 	/**
 	 * Set the status of the swim
 	 * @param status the status of the swim

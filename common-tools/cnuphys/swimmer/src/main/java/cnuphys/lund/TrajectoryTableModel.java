@@ -34,7 +34,7 @@ public class TrajectoryTableModel extends DefaultTableModel {
 	};
 
 	// the model data
-	protected Vector<TrajectoryRowData> data = new Vector<TrajectoryRowData>(25);
+	protected Vector<TrajectoryRowData> data = new Vector<>(25);
 
 	/**
 	 * Constructor
@@ -45,7 +45,7 @@ public class TrajectoryTableModel extends DefaultTableModel {
 
 	/**
 	 * Get the number of columns
-	 * 
+	 *
 	 * @return the number of columns
 	 */
 	@Override
@@ -55,7 +55,7 @@ public class TrajectoryTableModel extends DefaultTableModel {
 
 	/**
 	 * Get the number of rows
-	 * 
+	 *
 	 * @return the number of rows
 	 */
 	@Override
@@ -68,7 +68,7 @@ public class TrajectoryTableModel extends DefaultTableModel {
 
 	/**
 	 * Get the value at a given row and column
-	 * 
+	 *
 	 * @return the value at a given row and column
 	 */
 	@Override
@@ -96,7 +96,7 @@ public class TrajectoryTableModel extends DefaultTableModel {
 
 				case 3:
 					return getStr(traj.getMass(), 3);
-					
+
 				case 4:
 					return "" + traj.getCharge();
 
@@ -123,10 +123,10 @@ public class TrajectoryTableModel extends DefaultTableModel {
 
 				case 12:
 					return getStr(traj.getMass() + traj.getKineticEnergy(), 3);
-					
+
 				case 13:
 					return "" + traj.getStatus();
-					
+
 				case 14:
 					return traj.getSource();
 				}

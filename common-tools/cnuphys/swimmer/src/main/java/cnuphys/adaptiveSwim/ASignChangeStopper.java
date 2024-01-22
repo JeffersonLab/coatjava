@@ -3,10 +3,10 @@ package cnuphys.adaptiveSwim;
 import cnuphys.adaptiveSwim.geometry.AGeometric;
 
 public abstract class ASignChangeStopper extends AAdaptiveStopper {
-	
+
 	protected AGeometric _target;
 	protected int _startSign;  //call start side "left" arbitrarily
-	
+
 	protected AdaptiveSwimIntersection _intersection;
 
 
@@ -23,7 +23,7 @@ public abstract class ASignChangeStopper extends AAdaptiveStopper {
 
 		_intersection = result.getIntersection();
 	}
-	
+
 	/**
 	 * For doing things like setting the initial sign and distance
 	 */
@@ -31,7 +31,7 @@ public abstract class ASignChangeStopper extends AAdaptiveStopper {
 	public void initialize() {
 		_startSign = sign(_result.getS(), _result.getU());
 	}
-	
+
 	@Override
 	public boolean stopIntegration(double snew, double[] unew) {
 
@@ -40,7 +40,7 @@ public abstract class ASignChangeStopper extends AAdaptiveStopper {
 		int newSign = sign(snew, unew);
 		if (newSign != _startSign) {
 			//point is on "right" and will be last point accepted
-			
+
 			if (_intersection != null) {
 				_intersection.setRight(unew, snew);
 			}
@@ -55,9 +55,9 @@ public abstract class ASignChangeStopper extends AAdaptiveStopper {
 			_result.setStatus(AdaptiveSwimmer.SWIM_TARGET_MISSED);
 			return true;
 		}
-		
+
 		//point is on "left"
-		
+
 		if (_intersection != null) {
 			_intersection.setLeft(unew, snew);
 		}
@@ -66,7 +66,7 @@ public abstract class ASignChangeStopper extends AAdaptiveStopper {
 	}
 
 
-	/** 
+	/**
 	 * Compute the sign based on the actual geometric object
 	 * @param snew the new value of the pathlength
 	 * @param unew the new state vector

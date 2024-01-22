@@ -8,12 +8,12 @@ public class DoubleFormat {
 	/**
 	 * cache formats which are few and often repeated to avoid recreating
 	 */
-    private static Hashtable<String, DecimalFormat> formats = new Hashtable<String, DecimalFormat>(
+    private static Hashtable<String, DecimalFormat> formats = new Hashtable<>(
 	    143);
 
 	/**
 	 * Format a double
-	 * 
+	 *
      * @param value
      *            the value to format.
      * @param numdec
@@ -25,7 +25,7 @@ public class DoubleFormat {
 
 	/**
 	 * Format a double
-	 * 
+	 *
      * @param value
      *            the value to format.
      * @param numdec
@@ -80,7 +80,7 @@ public class DoubleFormat {
 	 * 1.234567E-6 <br>
 	 * 1.234567E-7 <br>
 	 * </code>
-	 * 
+	 *
      * @param value
      *            the value to format.
      * @param numdec
@@ -111,7 +111,7 @@ public class DoubleFormat {
 
 	/**
 	 * main program for testing.
-	 * 
+	 *
      * @param args
      *            command line arguments (ignored.)
 	 */

@@ -42,7 +42,7 @@ public final class Swimmer {
 
 	// We have different tableaus we can use for RK integration
 	public static final ButcherTableau _defaultTableau = ButcherTableau.DORMAND_PRINCE;
-	
+
     private AdaptiveSwimmer _newSwimmer;
 
 
@@ -405,7 +405,7 @@ public final class Swimmer {
 	}
 
 	/**
-     * 
+     *
      * @param charge               the charge: -1 for electron, 1 for proton, etc
      * @param xo                   the x vertex position in meters
      * @param yo                   the y vertex position in meters
@@ -433,12 +433,12 @@ public final class Swimmer {
             throws AdaptiveSwimException {
         cnuphys.adaptiveSwim.geometry.Plane targetPlane = new cnuphys.adaptiveSwim.geometry.Plane(new Vector(normX,normY,normZ), new Point(pointX,pointY,pointZ));
 
-        swimPlaneInterp(charge, xo, yo, zo, momentum, theta, phi, targetPlane, 
+        swimPlaneInterp(charge, xo, yo, zo, momentum, theta, phi, targetPlane,
                 accuracy, sMax, stepSize, eps, result);
     }
-    
+
     /**
-     * 
+     *
      * @param charge               the charge: -1 for electron, 1 for proton, etc
      * @param xo                   the x vertex position in meters
      * @param yo                   the y vertex position in meters
@@ -458,15 +458,15 @@ public final class Swimmer {
             cnuphys.adaptiveSwim.geometry.Plane targetPlane,
             double accuracy, double sf, double h0, double eps, AdaptiveSwimResult result)
             throws AdaptiveSwimException {
-        
+
         _newSwimmer.swimPlaneInterp(charge, xo, yo, zo,
                 momentum, theta, phi, targetPlane, accuracy, sf, h0, eps, result);
-    
+
     }
-    
+
 
 	/**
-     * 
+     *
      * @param charge               the charge: -1 for electron, 1 for proton, etc
      * @param xo                   the x vertex position in meters
      * @param yo                   the y vertex position in meters
@@ -492,12 +492,12 @@ public final class Swimmer {
             throws AdaptiveSwimException {
         cnuphys.adaptiveSwim.geometry.Plane targetPlane = new cnuphys.adaptiveSwim.geometry.Plane(new Vector(normX,normY,normZ), new Point(pointX,pointY,pointZ));
 
-        swimPlaneInterp(charge, xo, yo, zo, momentum, theta, phi, targetPlane, 
+        swimPlaneInterp(charge, xo, yo, zo, momentum, theta, phi, targetPlane,
                 sMax, stepSize, eps, result);
     }
-    
+
     /**
-     * 
+     *
      * @param charge               the charge: -1 for electron, 1 for proton, etc
      * @param xo                   the x vertex position in meters
      * @param yo                   the y vertex position in meters
@@ -516,12 +516,12 @@ public final class Swimmer {
             cnuphys.adaptiveSwim.geometry.Plane targetPlane,
             double sf, double h0, double eps, AdaptiveSwimResult result)
             throws AdaptiveSwimException {
-        
+
         _newSwimmer.swimPlaneInterp(charge, xo, yo, zo,
                 momentum, theta, phi, targetPlane, sf, h0, eps, result);
-    
+
     }
-    
+
 
 
 	public void swimPlane(int charge, double xo, double yo, double zo, double momentum, double theta, double phi,
@@ -991,7 +991,7 @@ public final class Swimmer {
 			double hdata[]) throws RungeKuttaException {
 		return swim(charge, xo, yo, zo, momentum, theta, phi, fixedZ, accuracy, sMax, stepSize, relTolerance, hdata);
 	}
-	
+
 	/**
 	 * Swims a charged particle. This swims to a fixed z value. This is for the
 	 * trajectory mode, where you want to cache steps along the path. Uses an

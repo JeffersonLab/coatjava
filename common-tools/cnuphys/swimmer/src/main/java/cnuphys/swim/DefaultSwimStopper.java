@@ -11,7 +11,7 @@ public class DefaultSwimStopper implements IStopper {
 	/**
 	 * A default swim stopper that will stop if either a max pathlength is
 	 * exceeded or if a radial coordinate is exceeded
-	 * 
+	 *
 	 * @param maxR
 	 *            the max radial coordinate in meters. Give a negative
 	 */
@@ -32,7 +32,7 @@ public class DefaultSwimStopper implements IStopper {
 
 	/**
 	 * Get the final path length in meters
-	 * 
+	 *
 	 * @return the final path length in meters
 	 */
 	@Override
@@ -42,7 +42,7 @@ public class DefaultSwimStopper implements IStopper {
 
 	/**
 	 * Set the final path length in meters
-	 * 
+	 *
 	 * @param finalPathLength
 	 *            the final path length in meters
 	 */

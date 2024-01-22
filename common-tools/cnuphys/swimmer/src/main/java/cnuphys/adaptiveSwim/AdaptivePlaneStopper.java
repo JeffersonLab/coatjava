@@ -14,7 +14,7 @@ public class AdaptivePlaneStopper extends AAdaptiveStopper {
 
 	//previous distance to the plane
 	protected double _prevDist;
-	
+
 	//the newest distance to the plane
 	protected double _newDist;
 
@@ -34,7 +34,7 @@ public class AdaptivePlaneStopper extends AAdaptiveStopper {
 		super(sMax, accuracy, result);
 		_targetPlane = targetPlane;
 	}
-	
+
 	/**
 	 * For doing things like setting the initial sign and distance
 	 */
@@ -59,7 +59,7 @@ public class AdaptivePlaneStopper extends AAdaptiveStopper {
 	public boolean stopIntegration(double snew, double[] unew) {
 
 		_newDist = signedDistance(unew);
-		
+
 		//stop but don't accept new data. We crossed the target  boundary
 		if (sign() != _startSign) {
 			_result.setStatus(AdaptiveSwimmer.SWIM_CROSSED_BOUNDARY);

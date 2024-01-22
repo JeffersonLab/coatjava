@@ -1,30 +1,20 @@
 package cnuphys.swim;
 
-import java.awt.Color;
-import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 
 import javax.swing.ButtonGroup;
-import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
-import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
-import javax.swing.JTextField;
-import javax.swing.MenuSelectionManager;
 
-import cnuphys.lund.DoubleFormat;
 import cnuphys.lund.LundTrackDialog;
-import cnuphys.rk4.RungeKutta;
 
 /**
  * Create the menu that control swimming (trajectory integration)
- * 
+ *
  * @author DHeddle
- * 
+ *
  */
 @SuppressWarnings("serial")
 public class SwimMenu extends JMenu implements ActionListener {
@@ -48,7 +38,7 @@ public class SwimMenu extends JMenu implements ActionListener {
 
 	/**
 	 * Create a menu for controlling swimming
-	 * 
+	 *
 	 * @param field object that implements the magnetic field interface.
 	 */
 	private SwimMenu() {
@@ -75,7 +65,7 @@ public class SwimMenu extends JMenu implements ActionListener {
 
 	/**
 	 * Accessor for the SwimMenu singleton
-	 * 
+	 *
 	 * @return the SwimMenu singleton
 	 */
 	public static SwimMenu getInstance() {
@@ -98,7 +88,7 @@ public class SwimMenu extends JMenu implements ActionListener {
 
 	/**
 	 * Get the menu item for the lund track dialog used to swim a particle
-	 * 
+	 *
 	 * @return the menu item for the lund track dialog used to swim a particle
 	 */
 	private JMenuItem getLundDialogMenuItem() {
@@ -137,7 +127,7 @@ public class SwimMenu extends JMenu implements ActionListener {
 
 	/**
 	 * Check whether we should show Monte Carlo tracks
-	 * 
+	 *
 	 * @return <code>true</code> if we should show MC tracks
 	 */
 	public boolean showMonteCarloTracks() {
@@ -146,7 +136,7 @@ public class SwimMenu extends JMenu implements ActionListener {
 
 	/**
 	 * Check whether we should showreconstructed tracks
-	 * 
+	 *
 	 * @return <code>true</code> if we should show MC tracks
 	 */
 	public boolean showReconstructedTracks() {

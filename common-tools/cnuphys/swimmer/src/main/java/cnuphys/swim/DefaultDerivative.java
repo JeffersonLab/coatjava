@@ -13,13 +13,13 @@ public class DefaultDerivative implements IDerivative {
 	// e is the electron charge = (10^-9) in GeV/(T*m)
 	// p is in GeV/c
 	private double _alpha;
-	
+
 	//for mag field result
 	float b[] = new float[3];
 
 	/**
 	 * The derivative for swimming through a magnetic field
-	 * 
+	 *
 	 * @param charge
 	 *            -1 for electron, +1 for proton, etc.
 	 * @param momentum
@@ -33,18 +33,18 @@ public class DefaultDerivative implements IDerivative {
 //units of this  alpha are 1/(T*m)
 		_alpha = 1.0e-9 * charge * Swimmer.C / _momentum;
 	}
-	
+
 	public void set(int charge, double momentum, FieldProbe field) {
 		_probe = field;
 		_momentum = momentum;
 //units of this  alpha are 1/(T*m)
-		_alpha = 1.0e-9 * charge * Swimmer.C / _momentum;		
+		_alpha = 1.0e-9 * charge * Swimmer.C / _momentum;
 	}
 
 	/**
 	 * Compute the derivatives given the value of s (path length) and the values
 	 * of the state vector.
-	 * 
+	 *
 	 * @param s    the value of the independent variable path length (input).
 	 * @param u    the values of the state vector ([x,y,z, tx = px/p, ty = py/p, tz = pz/p]) at s
 	 *             (input).

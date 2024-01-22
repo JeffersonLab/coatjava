@@ -4,9 +4,9 @@ import cnuphys.lund.DoubleFormat;
 
 /**
  * Static classes for treating arrays of doubles as 2D or 3D vectors
- * 
+ *
  * @author heddle
- * 
+ *
  */
 public class VectorSupport {
 
@@ -16,7 +16,7 @@ public class VectorSupport {
 
 	/**
 	 * Create a vector as a double array from its components
-	 * 
+	 *
 	 * @param comp
 	 *            an arbitrary number of components
 	 * @return the vector
@@ -27,7 +27,7 @@ public class VectorSupport {
 
 	/**
 	 * Get the square of the magnitude of the vector.
-	 * 
+	 *
 	 * @param v
 	 *            the vector (of any length)
 	 * @return the square of the magnitude of the vector
@@ -38,15 +38,15 @@ public class VectorSupport {
 			return Double.NaN;
 		}
 		double sum = 0;
-		for (int i = 0; i < v.length; i++) {
-			sum += (v[i] * v[i]);
+		for (float element : v) {
+			sum += (element * element);
 		}
 		return sum;
 	}
 
 	/**
 	 * Get the square of the magnitude of the vector.
-	 * 
+	 *
 	 * @param v
 	 *            the vector (of any length)
 	 * @return the square of the magnitude of the vector
@@ -57,15 +57,15 @@ public class VectorSupport {
 			return Double.NaN;
 		}
 		double sum = 0;
-		for (int i = 0; i < v.length; i++) {
-			sum += (v[i] * v[i]);
+		for (double element : v) {
+			sum += (element * element);
 		}
 		return sum;
 	}
 
 	/**
 	 * Get the magnitude of the vector.
-	 * 
+	 *
 	 * @param v
 	 *            the vector (of any length)
 	 * @return the magnitude of the vector
@@ -80,7 +80,7 @@ public class VectorSupport {
 
 	/**
 	 * Get the magnitude of the vector.
-	 * 
+	 *
 	 * @param v
 	 *            the vector (of any length)
 	 * @return the magnitude of the vector
@@ -95,7 +95,7 @@ public class VectorSupport {
 
 	/**
 	 * Set all the components
-	 * 
+	 *
 	 * @param v
 	 *            the vector (of any length)
 	 * @param components
@@ -123,7 +123,7 @@ public class VectorSupport {
 
 	/**
 	 * Scale the vector
-	 * 
+	 *
 	 * @param v
 	 *            the vector
 	 * @param scaleFactor
@@ -148,7 +148,7 @@ public class VectorSupport {
 
 	/**
 	 * Returns a string representation of the form: "(x,y,z)".
-	 * 
+	 *
 	 * @param v
 	 *            the vector (of any length)
 	 * @param numDec
@@ -179,7 +179,7 @@ public class VectorSupport {
 	/**
 	 * Returns a string representation of the form: "(x,y,z)" using three
 	 * decimals points.
-	 * 
+	 *
 	 * @param v
 	 *            the vector (of any length)
 	 * @param numDec
@@ -192,7 +192,7 @@ public class VectorSupport {
 
 	/**
 	 * Obtain a unit vector in the same direction as this vector
-	 * 
+	 *
 	 * @param v
 	 *            the vector (of any length)
 	 * @return a unit vector in the same direction as this vector
@@ -219,7 +219,7 @@ public class VectorSupport {
 
 	/**
 	 * Usual inner product
-	 * 
+	 *
 	 * @param v1
 	 *            one vector on any length
 	 * @param v2
@@ -251,8 +251,8 @@ public class VectorSupport {
 	/**
 	 * Get the vector cross product. The vectors must match and be 2D or 3D. A
 	 * 3D vector is return. For for two 2D inputs, the result look like
-	 * 
-	 * 
+	 *
+	 *
 	 * @param v1
 	 *            one vector
 	 * @param v2
@@ -322,7 +322,7 @@ public class VectorSupport {
 
 	/**
 	 * Get the angle between two vectors
-	 * 
+	 *
 	 * @param v1
 	 *            one vector of any length (2 or 3)
 	 * @param v2
@@ -352,7 +352,7 @@ public class VectorSupport {
 
 	/**
 	 * Project one vector onto another vector
-	 * 
+	 *
 	 * @param v
 	 *            the vector being projected
 	 * @param a
@@ -388,7 +388,7 @@ public class VectorSupport {
 
 	/**
 	 * The vector difference a - b
-	 * 
+	 *
 	 * @param a
 	 *            one vector
 	 * @param b

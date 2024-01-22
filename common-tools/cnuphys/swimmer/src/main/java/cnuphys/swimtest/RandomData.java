@@ -28,7 +28,7 @@ public class RandomData {
 	    theta = new double[n];
 	    phi = new double[n];
 	}
-	
+
 	/**
 	 * Create some random data within a sector for a swim test
 	 * @param n the number of points
@@ -40,7 +40,7 @@ public class RandomData {
 		this(n);
 	    rand = new Random(seed);
 
-	    
+
 	    double phiMid = (sector-1)*60;
 	    double phiMin = phiMid - 20;
 
@@ -92,7 +92,7 @@ public class RandomData {
 		return String.format("%2d %7.4f  %7.4f  %7.4f   %6.3f   %6.3f  %7.3f",
 				charge[index], xo[index], yo[index], zo[index], p[index], theta[index], phi[index]);
 	}
-	
+
 	/**
 	 * Create some random data for a swim test
 	 * @param n the number to generate
@@ -108,7 +108,7 @@ public class RandomData {
 			double xmin, double dx,
 			double ymin, double dy,
 			double zmin, double dz) {
-		
+
 		this(n);
 
 		if (seed < 0) {

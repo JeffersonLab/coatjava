@@ -206,12 +206,12 @@ public class SphereTest {
 		} else {
 			writer.writeStartOfRow(NaN, NaN, NaN, NaN, NaN, 0, NaN);
 		}
-		
+
 		//a big distance indicates a failure for old swimmer
 		if (dist > 1) {
 			dist = 0;
 		}
-		
+
 		return 100*dist;
 	}
 
@@ -228,18 +228,18 @@ public class SphereTest {
 			double[] uf = result.getFinalU();
 			dist = sphere.signedDistance(uf[0], uf[1], uf[2]);
 			dist = Math.abs(dist);
-			
+
 			result.getTrajectory().computeBDL(FieldProbe.factory());
 			double bdl = result.getTrajectory().getComputedBDL();
 
-			writer.writeStartOfRow(uf[0], uf[1], uf[2], result.getPathLength(), 
+			writer.writeStartOfRow(uf[0], uf[1], uf[2], result.getPathLength(),
 					bdl, result.getNStep(), dist);
 
 
 		} else {
 			writer.writeStartOfRow(NaN, NaN, NaN, NaN, NaN, 0, NaN);
 		}
-		
+
 		return dist;
 	}
 

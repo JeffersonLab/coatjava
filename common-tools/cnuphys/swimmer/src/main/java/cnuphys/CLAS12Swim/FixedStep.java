@@ -16,13 +16,13 @@ public class FixedStep {
      */
     public static double[] solve(ODE ode, double[] y0, double t0, double t1, double h, ODEStepListener listener) {
         int n = y0.length;
-        
+
 		double t = t0;
 
         double[] y = y0.clone();
 
 		while (t < t1) {
-        	
+
 			if (t + h > t1) {
 				h = t1 - t;
 			}
@@ -47,6 +47,6 @@ public class FixedStep {
 
         return y;
     }
-    
+
 
 }

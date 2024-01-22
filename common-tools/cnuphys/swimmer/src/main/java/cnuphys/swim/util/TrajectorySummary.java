@@ -3,7 +3,7 @@ package cnuphys.swim.util;
 import java.io.Serializable;
 
 public class TrajectorySummary implements Serializable {
-	
+
 	public int charge; //integer charge
 	public double xo;  //m
 	public double yo;  //m
@@ -35,9 +35,9 @@ public class TrajectorySummary implements Serializable {
 	 *            min stepsize used (m), hdata[1] is the average stepsize used
 	 *            (m), and hdata[2] is the max stepsize (m) used
 	 * @param finalStateVector final state vector from swimmer
-	 * 
+	 *
 	 */
-	public TrajectorySummary(int charge, double xo, double yo, double zo, double momentum, 
+	public TrajectorySummary(int charge, double xo, double yo, double zo, double momentum,
 			double theta, double phi, double hdata[], double[] finalStateVector) {
 		super();
 		this.charge = charge;
@@ -47,12 +47,12 @@ public class TrajectorySummary implements Serializable {
 		this.momentum = momentum;
 		this.theta = theta;
 		this.phi = phi;
-		
+
 		int len = finalStateVector.length;
 		this.finalStateVector = new double[len];
 		System.arraycopy(finalStateVector, 0, this.finalStateVector, 0, len);
 	}
-	
+
 	/**
 	 * Create a summary with vertex at origin
 	 * @param charge
@@ -69,13 +69,13 @@ public class TrajectorySummary implements Serializable {
 	 *            min stepsize used (m), hdata[1] is the average stepsize used
 	 *            (m), and hdata[2] is the max stepsize (m) used
 	 * @param finalStateVector final state vector from swimmer
-	 * 
+	 *
 	 */
 	public TrajectorySummary(int charge, double momentum, double theta, double phi, double hdata[], double[] finalStateVector) {
 		this(charge, 0, 0, 0, momentum, theta, phi, hdata, finalStateVector);
 	}
 
-	
-	
-	
+
+
+
 }

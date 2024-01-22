@@ -1,13 +1,11 @@
 package cnuphys.adaptiveSwim.swimZ;
 
-import cnuphys.adaptiveSwim.InitialValues;
-
 public class SwimZInitialValues {
 
-	
+
 	/** The integer charge */
 	public int charge;
-	
+
 	/** The coordinate x of the vertex in cm */
 	public double xo;
 
@@ -16,24 +14,24 @@ public class SwimZInitialValues {
 
 	/** The z coordinate of the vertex in cm */
     public double zo;
-    
+
     /** The momentum in GeV/c */
 	public double p;
-	
+
 	/** The polar angle in degrees */
 	public double theta;
-	
+
 	/** The azimuthal angle in degrees */
 	public double phi;
-	
+
 	/** The inital 4D state vector (x, y, tx, ty) */
 	public double[] uo = new double[4];
-	
-	
+
+
 	public String toStringRaw() {
 		return String.format("%-7.4f  %-7.4f  %-7.4f %-6.3f %-6.3f %-6.3f", xo, yo, zo, p, theta, phi);
 	}
-	
+
 	/**
 	 * Store the initial conditions of a swim
 	 * @param charge The integer charge
@@ -52,9 +50,9 @@ public class SwimZInitialValues {
 		this.p = p;
 		this.theta = theta;
 		this.phi = phi;
-		SwimZUtil.swimZToSwim(xo, yo, p, theta, phi, uo);;
+		SwimZUtil.swimZToSwim(xo, yo, p, theta, phi, uo);
 	}
-	
 
-	
+
+
 }

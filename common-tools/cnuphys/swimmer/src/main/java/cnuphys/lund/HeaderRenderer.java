@@ -12,7 +12,7 @@ import javax.swing.table.TableCellRenderer;
 
 
 public class HeaderRenderer extends JTextField implements TableCellRenderer {
-	
+
 	public HeaderRenderer() {
 		setBackground(X11Colors.getX11Color("wheat"));
 		setForeground(Color.black);

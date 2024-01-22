@@ -4,7 +4,7 @@ public interface IAdvance {
 
 	/**
 	 * Advance the solution by one step of the independent variable.
-	 * 
+	 *
 	 * @param t
 	 *            the value of the independent variable (e.g., t) (input).
 	 * @param y
@@ -35,7 +35,7 @@ public interface IAdvance {
 
 	/**
 	 * Reports whether this advancer knows how to compute an error array
-	 * 
+	 *
 	 * @return <code>true</code> if this advancer knows how to compute errors
 	 */
 	public boolean computesError();

@@ -3,7 +3,7 @@ package cnuphys.swim.util;
 /**
  * Just what it sounds like, crude 2D (one data set) terminal scatter plot for
  * quick checks and debugging
- * 
+ *
  * @author heddle
  *
  */

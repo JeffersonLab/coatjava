@@ -49,7 +49,7 @@ public class SwimTest {
 	// create the test menu
 	private static JMenu getTestMenu() {
 		JMenu menu = new JMenu("Tests");
-		
+
 		final JMenuItem baseItem = new JMenuItem("Base test");
 		final JMenuItem fixedItem = new JMenuItem("Fixed step size test");
 
@@ -64,7 +64,7 @@ public class SwimTest {
 
 
 		ActionListener al = new ActionListener() {
-			
+
 			long seed = 3344632211L;
 			int count = 40000;
 

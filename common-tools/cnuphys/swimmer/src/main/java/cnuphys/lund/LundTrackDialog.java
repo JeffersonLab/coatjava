@@ -32,9 +32,9 @@ import cnuphys.swim.Swimming;
 
 @SuppressWarnings("serial")
 public class LundTrackDialog extends JDialog {
-	
+
 	public enum SWIM_ALGORITHM {STANDARD, FIXEDZ, FIXEDRHO}
-	
+
 	private SWIM_ALGORITHM _algorithm = SWIM_ALGORITHM.STANDARD;
 
 	private static final int CANCEL_RESPONSE = 1;
@@ -83,7 +83,7 @@ public class LundTrackDialog extends JDialog {
 
 	// fixed z cutoff
 	private JRadioButton _fixedZRB;
-		
+
 	// fixed z cutoff
 	private JRadioButton _fixedRhoRB;
 
@@ -92,11 +92,11 @@ public class LundTrackDialog extends JDialog {
 
 	// fixed Z value
 	private JTextField _fixedZ;
-	
+
 	// max S value
 	private JTextField _sMax;
 
-	
+
 	// accuracy in fixed z
 	private JTextField _accuracy;
 
@@ -148,10 +148,10 @@ public class LundTrackDialog extends JDialog {
 		pack();
 		centerComponent(this);
 	}
-	
+
 	//create the algorithm buttons
 	private void createAlgorithmButtons(ButtonGroup bg) {
-		
+
 		ActionListener al = new ActionListener() {
 
 			@Override
@@ -168,31 +168,31 @@ public class LundTrackDialog extends JDialog {
 
 				fixState();
 			}
-			
+
 		};
-		
+
 		_standardRB = new JRadioButton("Standard");
 		_fixedZRB = new JRadioButton("Fixed Z");
 
 		_fixedRhoRB = new JRadioButton("Fixed " + SMALL_RHO);
-		
-		
+
+
 		_standardRB.setSelected((_algorithm == SWIM_ALGORITHM.STANDARD));
 		_fixedZRB.setSelected((_algorithm == SWIM_ALGORITHM.FIXEDZ));
 		_fixedRhoRB.setSelected((_algorithm == SWIM_ALGORITHM.FIXEDRHO));
-		
+
 		_standardRB.addActionListener(al);
 		_fixedZRB.addActionListener(al);
 		_fixedRhoRB.addActionListener(al);
-		
+
 		bg.add(_standardRB);
 		bg.add(_fixedZRB);
 		bg.add(_fixedRhoRB);
-		
+
 		fixState();
 	}
-	
-	
+
+
 	//fix the state of the dialog
 	private void fixState() {
 		_fixedZ.setEnabled(_fixedZRB.isSelected());
@@ -201,7 +201,7 @@ public class LundTrackDialog extends JDialog {
 
 	/**
 	 * Access to the dialog singleton
-	 * 
+	 *
 	 * @return the dialog (set visible)
 	 */
 	public static LundTrackDialog getInstance() {
@@ -323,7 +323,7 @@ public class LundTrackDialog extends JDialog {
 			traj.setLundId(lid);
 			traj.computeBDL(swimmer.getProbe());
 			Swimming.addMCTrajectory(traj);
-			
+
 			System.out.println(result.toString());
 		}
 
@@ -334,7 +334,7 @@ public class LundTrackDialog extends JDialog {
 
 	/**
 	 * Create a Box that has a prompt, text field, and unit string
-	 * 
+	 *
 	 * @param prompt
 	 * @param tf
 	 * @param units
@@ -376,7 +376,7 @@ public class LundTrackDialog extends JDialog {
 
 	/**
 	 * Create the panel for setting the vertex
-	 * 
+	 *
 	 * @return the panel holding the vertex pane
 	 */
 	private JPanel vertexPanel() {
@@ -439,7 +439,7 @@ public class LundTrackDialog extends JDialog {
 
 	// create the cutoff panel
 	private JPanel cutoffPanel() {
-		
+
 		_fixedZ = new JTextField(8);
 		_fixedRho = new JTextField(8);
 		_sMax = new JTextField(8);
@@ -451,7 +451,7 @@ public class LundTrackDialog extends JDialog {
        _sMax.setText("800.0");
 		_accuracy.setText("10");
 
-		
+
 		JPanel panel = new JPanel();
 		Box box = Box.createVerticalBox();
 		box.add(cutoffType());
@@ -474,7 +474,7 @@ public class LundTrackDialog extends JDialog {
 	private JPanel cutoffType() {
 
 		ButtonGroup bg = new ButtonGroup();
-		
+
 		createAlgorithmButtons(bg);
 		JPanel spanel = new JPanel();
 		spanel.setLayout(new FlowLayout(FlowLayout.LEFT, 6, 0));
@@ -490,7 +490,7 @@ public class LundTrackDialog extends JDialog {
 
 	/**
 	 * Create the panel that allows the user to select the energy
-	 * 
+	 *
 	 * @return the panel for selecting the energy.
 	 */
 	private JPanel energyPanel() {
@@ -565,7 +565,7 @@ public class LundTrackDialog extends JDialog {
 
 	/**
 	 * Create a nice padded panel.
-	 * 
+	 *
 	 * @param hpad      the pixel pad on the left and right
 	 * @param vpad      the pixel pad on the top and bottom
 	 * @param component the main component placed in the center.
@@ -590,15 +590,16 @@ public class LundTrackDialog extends JDialog {
 
 	/**
 	 * Center a component.
-	 * 
+	 *
 	 * @param component The Component to center.
 	 * @param dh        offset from horizontal center.
 	 * @param dv        offset from vertical center.
 	 */
 	public static void centerComponent(Component component) {
 
-		if (component == null)
+		if (component == null) {
 			return;
+		}
 
 		try {
 			Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();

@@ -18,7 +18,7 @@ public class Point {
 
 	/**
 	 * Copy constructor
-	 * 
+	 *
 	 * @param p the point to copy
 	 */
 	public Point(Point p) {
@@ -27,7 +27,7 @@ public class Point {
 
 	/**
 	 * Create a point
-	 * 
+	 *
 	 * @param x the x coordinate
 	 * @param y the y coordinate
 	 * @param z the z coordinate
@@ -37,7 +37,7 @@ public class Point {
 		this.y = y;
 		this.z = z;
 	}
-	
+
 	/**
 	 * Create a point
 	 * @param p the point as an xyz array
@@ -48,7 +48,7 @@ public class Point {
 
 	/**
 	 * Set the components of the vector
-	 * 
+	 *
 	 * @param x the x component
 	 * @param y the y component
 	 * @param z the z component
@@ -61,7 +61,7 @@ public class Point {
 
 	/**
 	 * Get the difference between two points
-	 * 
+	 *
 	 * @param a one point
 	 * @param b the other point
 	 * @return the difference between two points a - b
@@ -72,7 +72,7 @@ public class Point {
 
 	/**
 	 * Get the in-place difference between two points
-	 * 
+	 *
 	 * @param a one point
 	 * @param b the other point
 	 * @param c upon return the difference between two points a - b
@@ -83,7 +83,7 @@ public class Point {
 
 	/**
 	 * The dot product of this "vector" with another vector
-	 * 
+	 *
 	 * @param v the other vector or point
 	 * @return the dot product
 	 */
@@ -93,7 +93,7 @@ public class Point {
 
 	/**
 	 * The dot product of two vectors or points
-	 * 
+	 *
 	 * @param a one vector or point
 	 * @param b the other vector or point
 	 * @return the dot product
@@ -104,14 +104,14 @@ public class Point {
 
 	/**
 	 * Get a string representation of the Point
-	 * 
+	 *
 	 * @return a String representation
 	 */
 	@Override
 	public String toString() {
 		return String.format("(%-10.6f, %-10.6f, %-10.6f)", x, y, z);
 	}
-	
+
 	/**
 	 * Compute the distance to another point
 	 * @param x the x coordinate of the other point
@@ -125,7 +125,7 @@ public class Point {
 		double dz = z - this.z;
 		return Math.sqrt(dx*dx + dy*dy + dz*dz);
 	}
-	
+
 	/**
 	 * Compute the distance to another point
 	 * @param p the other point

@@ -2,7 +2,7 @@ package cnuphys.adaptiveSwim.geometry;
 
 /**
  * A sphere centered at an arbitrary point
- * 
+ *
  * @author heddle
  *
  */
@@ -16,7 +16,7 @@ public class Sphere extends AGeometric {
 
 	/**
 	 * Create a sphere
-	 * 
+	 *
 	 * @param center the center of the sphere
 	 * @param radius the radius of the sphere
 	 */
@@ -24,10 +24,10 @@ public class Sphere extends AGeometric {
 		_center = new Point(center);
 		_radius = radius;
 	}
-	
+
 	/**
 	 * Create a sphere
-	 * 
+	 *
 	 * @param center the center of the sphere as an xyz array
 	 * @param radius the radius of the sphere
 	 */
@@ -37,7 +37,7 @@ public class Sphere extends AGeometric {
 
 	/**
 	 * Create a sphere centered on the origin
-	 * 
+	 *
 	 * @param radius the radius of the sphere
 	 */
 	public Sphere(double radius) {
@@ -46,7 +46,7 @@ public class Sphere extends AGeometric {
 
 	/**
 	 * Get the radius of the sphere
-	 * 
+	 *
 	 * @return the radius of the sphere
 	 */
 	public double getRadius() {
@@ -56,10 +56,11 @@ public class Sphere extends AGeometric {
 	/**
 	 * Get the shortest distance between the surface of this sphere and a point. If
 	 * the value is negative, we are inside the sphere.
-	 * 
+	 *
 	 * @param p a point
 	 * @return the distance to the sphere
 	 */
+	@Override
 	public double signedDistance(Point p) {
 		double centDist = _center.distance(p);
 		return centDist - _radius;
@@ -68,17 +69,18 @@ public class Sphere extends AGeometric {
 	/**
 	 * Get the shortest distance between the surface of this sphere and a point. If
 	 * the value is negative, we are inside the sphere.
-	 * 
+	 *
 	 * @param x the x coordinate
 	 * @param y the y coordinate
 	 * @param z the z coordinate
 	 * @return the distance to the sphere
 	 */
+	@Override
 	public double signedDistance(double x, double y, double z) {
 		Point p = new Point(x, y, z);
 		return signedDistance(p);
 	}
-	
+
 	/**
 	 * Get the shortest absolute distance between the surface of this infinite cylinder and a point.
 	 * @param x the x coordinate
@@ -86,15 +88,16 @@ public class Sphere extends AGeometric {
 	 * @param z the z coordinate
 	 * @return the perpendicular distance
 	 */
+	@Override
 	public double distance(double x, double y, double z) {
 		Point p = new Point(x, y, z);
 		return Math.abs(signedDistance(p));
 	}
-	
+
 	/**
 	 * Is the point inside the sphere?
 	 * @param x the x coordinate
-	 * @param y the y coordinate		
+	 * @param y the y coordinate
 	 * @param z the z coordinate
 	 * @return <code>true</code> if the point is inside the sphere.
 	 */
@@ -109,7 +112,7 @@ public class Sphere extends AGeometric {
 
 	/**
 	 * Check whether a segment intersects the sphere
-	 * 
+	 *
 	 * @param x1 x coordinate of one end of segment
 	 * @param y1 y coordinate of one end of segment
 	 * @param z1 z coordinate of one end of segment
@@ -124,7 +127,7 @@ public class Sphere extends AGeometric {
 
 	/**
 	 * The closest distance of a line segment to a point
-	 * 
+	 *
 	 * @param px x coordinate of point
 	 * @param py y coordinate of point
 	 * @param pz z coordinate of point
