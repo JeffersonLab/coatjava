@@ -1,6 +1,5 @@
 package cnuphys.swimZ;
 
-import cnuphys.magfield.FastMath;
 import cnuphys.magfield.FieldProbe;
 import cnuphys.rk4.IDerivative;
 
@@ -11,7 +10,7 @@ public class SwimZDerivative implements IDerivative {
 
 	// the constant member of the state vector
 	protected double _q;
-	
+
 	//q times v
 	protected double _qv;
 
@@ -21,10 +20,10 @@ public class SwimZDerivative implements IDerivative {
 	public SwimZDerivative() {
 		set(0, Double.NaN, null);
 	}
-	
+
 	/**
 	 * The derivative for swimming through a magnetic field
-	 * 
+	 *
 	 * @param Q
 	 *            -1 for electron, +1 for proton, etc.
 	 * @param p
@@ -35,10 +34,10 @@ public class SwimZDerivative implements IDerivative {
 	public SwimZDerivative(int Q, double p, FieldProbe probe) {
 		set(Q, p, probe);
 	}
-	
+
 	/**
 	 * Set the parameters
-	 * 
+	 *
 	 * @param Q
 	 *            -1 for electron, +1 for proton, etc.
 	 * @param p
@@ -56,7 +55,7 @@ public class SwimZDerivative implements IDerivative {
 	 * Compute the derivatives given the value of the independent variable and
 	 * the values of the function. Think of the Differential Equation as being
 	 * dydt = f[y,t].
-	 * 
+	 *
 	 * @param z
 	 *            the value of the independent variable (the z coordinate)
 	 *            (input).

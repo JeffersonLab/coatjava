@@ -15,6 +15,15 @@ public class CLAS12Trajectory extends SwimTrajectory {
 	public ArrayList<Double> _s = new ArrayList<>(200);
 
 	/**
+	 * Create a trajectory with the given initial values
+	 *
+	 * @param initialValues the initial values
+	 */
+	public CLAS12Trajectory(CLAS12Values initialValues) {
+		super(initialValues.toGeneratedParticleRecord(), 200);
+	}
+
+	/**
 	 * add a new point in the trajectory
 	 *
 	 * @param s the path length in cm
@@ -46,11 +55,16 @@ public class CLAS12Trajectory extends SwimTrajectory {
 	 * Remove the last point in the trajectory
 	 */
 	public void removeLastPoint() {
-		if (size() > 0) {
-			int index = size() - 1;
-			_s.remove(index);
-			remove(index);
-		}
+		removePoint(size() - 1);
+	}
+
+	/**
+	 * Remove the point at the given index
+	 * @param index the index
+	 */
+	public void removePoint(int index) {
+		_s.remove(index);
+		remove(index);
 	}
 
 	/**
@@ -165,12 +179,13 @@ public class CLAS12Trajectory extends SwimTrajectory {
 		// convert to cm
 		return Math.sqrt(x * x + y * y + z * z);
 	}
-	
+
 	/**
 	 * Get the total BDL integral if computed
-	 * 
+	 *
 	 * @return the total BDL integral in kG-m
 	 */
+	@Override
 	public double getComputedBDL() {
 		if (Double.isNaN(_bdlValue)) {
 			computeBDL(FieldProbe.factory());
@@ -179,7 +194,7 @@ public class CLAS12Trajectory extends SwimTrajectory {
 		return _bdlValue;
 	}
 
-	
+
 
 	private double _bdlValue = Double.NaN;
 
@@ -193,7 +208,7 @@ public class CLAS12Trajectory extends SwimTrajectory {
 	 */
 	@Override
 	public void computeBDL(FieldProbe probe) {
-		
+
 		if (probe instanceof RotatedCompositeProbe) {
 			System.err.println(
 					"SHOULD NOT HAPPEN. In rotated composite field probe, should not call Bxdl accumlate without the sector argument.");
@@ -206,16 +221,16 @@ public class CLAS12Trajectory extends SwimTrajectory {
 		if (!Double.isNaN(_bdlValue)) {
 			return;
 		}
-		
+
 		_bdlValue = 0;
 		if (this.size() < 2) {
 			return;
 		}
-		
+
 		for (int i = 0; i < size() - 2; i++) {
 			double[] p0 = get(i);
 			double[] p1 = get(i + 1);
-		
+
 			double dr[] = new double[3];
 			float b[] = new float[3];
 
@@ -223,12 +238,12 @@ public class CLAS12Trajectory extends SwimTrajectory {
 				dr[j] = p1[j] - p0[j];
 			}
 
-			
+
 			// use the average position (in cm) to compute B for b cross dl
 			float xavgcm = (float) ((p0[0] + p1[0]) / 2);
 			float yavgcm = (float) ((p0[1] + p1[1]) / 2);
 			float zavgcm = (float) ((p0[2] + p1[2]) / 2);
-			
+
 			// get the field at the average position
 			probe.field(xavgcm, yavgcm, zavgcm, b);
 
@@ -240,7 +255,7 @@ public class CLAS12Trajectory extends SwimTrajectory {
 			double magbxdl = vecmag(bxdl);
 			_bdlValue += magbxdl;
 		}
-		
+
 	}
 
 	/**
@@ -258,16 +273,16 @@ public class CLAS12Trajectory extends SwimTrajectory {
 		if (!Double.isNaN(_bdlValue)) {
 			return;
 		}
-		
+
 		_bdlValue = 0;
 		if (this.size() < 2) {
 			return;
 		}
-		
+
 		for (int i = 0; i < size() - 2; i++) {
 			double[] p0 = get(i);
 			double[] p1 = get(i + 1);
-		
+
 			double dr[] = new double[3];
 			float b[] = new float[3];
 
@@ -275,12 +290,12 @@ public class CLAS12Trajectory extends SwimTrajectory {
 				dr[j] = p1[j] - p0[j];
 			}
 
-			
+
 			// use the average position (in cm) to compute B for b cross dl
 			float xavgcm = (float) ((p0[0] + p1[0]) / 2);
 			float yavgcm = (float) ((p0[1] + p1[1]) / 2);
 			float zavgcm = (float) ((p0[2] + p1[2]) / 2);
-			
+
 			// get the field at the average position
 			probe.field(sector, xavgcm, yavgcm, zavgcm, b);
 
@@ -293,7 +308,7 @@ public class CLAS12Trajectory extends SwimTrajectory {
 			_bdlValue += magbxdl;
 		}
 	}
-	
+
 
 	// usual cross product used for BDL
 	private static double[] cross(float a[], double b[]) {

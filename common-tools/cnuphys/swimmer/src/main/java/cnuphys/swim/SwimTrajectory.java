@@ -1,7 +1,6 @@
 package cnuphys.swim;
 
 import java.io.PrintStream;
-import java.io.Serializable;
 import java.util.ArrayList;
 
 import cnuphys.adaptiveSwim.AdaptiveSwimUtilities;
@@ -16,34 +15,30 @@ import cnuphys.magfield.RotatedCompositeProbe;
  * is a collection of state vectors. A state vector is the six component vector:
  * <BR>
  * Q = [x, y, z, px/p, py/p, pz/p] <BR>
- * 
+ *
  * @author heddle
- * 
+ *
  */
 
-public class SwimTrajectory extends ArrayList<double[]>  implements Serializable {
+public class SwimTrajectory extends ArrayList<double[]> {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 3850772573951127304L;
 
 	// the particle that we swam
-	private GeneratedParticleRecord _genPartRec;
+	protected GeneratedParticleRecord _genPartRec;
 
 	// the lund id, if it is known (i.e. from montecarlo truth)
 	private LundId _lundId;
 
 	// flag indicating whether bdl was computed
-	private boolean _computedBDL;
+	protected boolean _computedBDL;
 
-	/** index for the x component (m) */
+	/** index for the x component (cm) */
 	public static final int X_IDX = 0;
 
-	/** index for the y component (m) */
+	/** index for the y component (cm) */
 	public static final int Y_IDX = 1;
 
-	/** index for the z component (m) */
+	/** index for the z component (cm) */
 	public static final int Z_IDX = 2;
 
 	/** index for the px/p direction cosine */
@@ -71,9 +66,9 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 	 * Create a swim trajectory with no initial content
 	 */
 	public SwimTrajectory() {
-		super();
+		super(200);
 	}
-	
+
 	/**
 	 * Clear the trajectory
 	 */
@@ -82,11 +77,11 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 		super.clear();
 		_computedBDL = false;
 	}
-	
+
 	/**
-	 * Create a one point trajectory. Used hrn the initial momentum is lower than
+	 * Create a one point trajectory. Used when the initial momentum is lower than
 	 * some minimum value.
-	 * 
+	 *
 	 * @param charge   the charge of the particle (-1 for electron, +1 for proton,
 	 *                 etc.)
 	 * @param xo       the x vertex position in m
@@ -138,11 +133,11 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 	 */
 	public SwimTrajectory(GeneratedParticleRecord genPartRec, int initialCapacity) {
 		super(initialCapacity);
-		
+
 		if (genPartRec == null) {
 			System.err.println("NULL GEN PART REC (A)");
 		}
-		
+
 		_genPartRec = genPartRec;
 	}
 
@@ -151,19 +146,19 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 	 * @param genPart the generated particle record
 	 */
 	public void setGeneratedParticleRecord(GeneratedParticleRecord genPart) {
-		
+
 		if (genPart == null) {
 			System.err.println("NULL GEN PART REC (A)");
 			(new Throwable()).printStackTrace();
 		}
 
-		
+
 		_genPartRec = genPart;
 	}
 	/**
 	 * Set the lund id. This is not needed for swimming, but is useful for ced or
 	 * when MonteCarlo truth is known.
-	 * 
+	 *
 	 * @param lundId the Lund Id.
 	 */
 	public void setLundId(LundId lundId) {
@@ -181,7 +176,7 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 
 	/**
 	 * Get the underlying generated particle record
-	 * 
+	 *
 	 * @return the underlying generated particle record
 	 */
 	public GeneratedParticleRecord getGeneratedParticleRecord() {
@@ -190,7 +185,7 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 
 	/**
 	 * Get the original theta for this trajectory
-	 * 
+	 *
 	 * @return the original theta for this trajectory in degrees
 	 */
 	public double getOriginalTheta() {
@@ -199,7 +194,7 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 
 	/**
 	 * Get the original phi for this trajectory
-	 * 
+	 *
 	 * @return the original phi for this trajectory in degrees
 	 */
 	public double getOriginalPhi() {
@@ -208,7 +203,7 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 
 	/**
 	 * Get the r coordinate in cm for the given index
-	 * 
+	 *
 	 * @param index the index
 	 * @return the r coordinate
 	 */
@@ -234,15 +229,15 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 		if (u == null) {
 			return false;
 		}
-		
+
 		int dim = u.length;
-		
+
 		//adds a copy!!
 		double ucopy[] = new double[dim];
 		System.arraycopy(u, 0, ucopy, 0, dim);
 		return super.add(ucopy);
 	}
-	
+
 	/**
 	 * Add to the trajectory
 	 * @param u the new 6D vector
@@ -253,7 +248,7 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 		if (u == null) {
 			return false;
 		}
-		
+
 		int dim = u.length;
 		double ucopy[] = new double[dim+1];
 		System.arraycopy(u, 0, ucopy, 0, dim);
@@ -273,51 +268,37 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 		double thetRad = Math.toRadians(theta);
 		double phiRad = Math.toRadians(phi);
 
-		double pz = Math.cos(thetRad);
+		double tz = Math.cos(thetRad); // pz/p
 		double rho = Math.sin(thetRad);
-		double px = rho * Math.cos(phiRad);
-		double py = rho * Math.sin(phiRad);
+		double tx = rho * Math.cos(phiRad); // px/p
+		double ty = rho * Math.sin(phiRad); // py/p
 		double v[] = new double[6];
 		v[0] = xo;
 		v[1] = yo;
 		v[2] = zo;
-		v[3] = px;
-		v[4] = py;
-		v[5] = pz;
+		v[3] = tx;
+		v[4] = ty;
+		v[5] = tz;
 		add(v);
 	}
 
 	/**
-	 * Get the average phi for this trajectory based on positions, not directions
-	 * 
-	 * @return the average phi value in degrees
+	 * Replace the last point in the trajectory
+	 * @param u the new last point
+	 * @param s the new last pathlength
 	 */
-	public double getAveragePhi() {
-
-		double phi = getOriginalPhi();
-		if (size() < 6) {
-			return phi;
+	public void replaceLastPoint(double u[], double s) {
+		if (isEmpty()) {
+			return;
 		}
 
-		double count = 1;
-
-		int step = 1;
-		for (int i = step; i < size(); i += step) {
-			double pos[] = get(i);
-			double x = pos[X_IDX];
-			double y = pos[Y_IDX];
-			double tp = FastMath.atan2Deg(y, x);
-
-			phi += tp;
-			count++;
-		}
-
-		return phi / count;
+		remove(size()-1);
+		add(u, s);
 	}
 
 	/**
 	 * Get the last element
-	 * 
+	 *
 	 * @return the last element
 	 */
 	public double[] lastElement() {
@@ -329,8 +310,8 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 
 	/**
 	 * Get the final radial coordinate
-	 * 
-	 * @return final radial coordinate in meters
+	 *
+	 * @return final radial coordinate in whatever units x, y, and z are in
 	 */
 	public double getFinalR() {
 		if (isEmpty()) {
@@ -346,7 +327,7 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 
 	/**
 	 * Get the final position
-	 * 
+	 *
 	 * @return the final position in x, y, z
 	 */
 	final double[] getFinalPosition() {
@@ -364,7 +345,7 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 
 	/**
 	 * Get the total BDL integral if computed
-	 * 
+	 *
 	 * @return the total BDL integral in kG-m
 	 */
 	public double getComputedBDL() {
@@ -378,13 +359,13 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 
 		return this.lastElement()[BXDL_IDX];
 	}
-	
+
 	/**
 	 * Compute the integral B cross dl. This will cause the state vector arrays to
 	 * expand by two, becoming [x, y, z, px/p, py/p, pz/p, l, bdl] where the 7th
 	 * entry l is cumulative pathlength in m and the eighth entry bdl is the
 	 * cumulative integral bdl in kG-m.
-	 * 
+	 *
 	 * @param probe the field getter
 	 */
 	public void computeBDL(FieldProbe probe) {
@@ -423,7 +404,7 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 	 * expand by two, becoming [x, y, z, px/p, py/p, pz/p, l, bdl] where the 7th
 	 * entry l is cumulative pathlength in m and the eighth entry bdl is the
 	 * cumulative integral bdl in kG-m.
-	 * 
+	 *
 	 * @param sector sector 1..6
 	 * @param probe  the field getter
 	 */
@@ -452,7 +433,7 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 	// replace the 6D state vector <at the given index with
 	// and 8D vector that appends pathelength (m) and integral
 	// b dot dl (kg-m)
-	private void augment(double p[], double pl, double bdl, int index) {
+	protected void augment(double p[], double pl, double bdl, int index) {
 		double newp[] = new double[8];
 		System.arraycopy(p, 0, newp, 0, 6);
 		newp[PATHLEN_IDX] = pl;
@@ -463,7 +444,7 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 
 	/**
 	 * Check whether the accumulated integral bdl has been computed
-	 * 
+	 *
 	 * @return <code>true</code> if the accumulated integral bdl has been computed
 	 */
 	public boolean isBDLComputed() {
@@ -472,7 +453,7 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 
 	/**
 	 * Get the source of the trajectory e.g. hbtracking
-	 * 
+	 *
 	 * @return the source of the trajectory
 	 */
 	public String getSource() {
@@ -481,7 +462,7 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 
 	/**
 	 * Set the source of the trajectory e.g. hbtracking
-	 * 
+	 *
 	 * @param source the source of the trajectory
 	 */
 	public void setSource(String source) {
@@ -490,7 +471,7 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 
 	/**
 	 * Get an array of elements of the state vector
-	 * 
+	 *
 	 * @param index the desired element index
 	 * @return the array
 	 */
@@ -523,14 +504,14 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 		double z[] = getArray(Z_IDX);
 		return z;
 	}
-	
+
 	/**
 	 * Diagnostic print of entire trajectory
 	 * @param ps the print stream
 	 */
 	public void print(PrintStream ps) {
 		ps.println("Number of trajectory points: " + size());
-		
+
 		int i = 0;
 		for (double[] u : this) {
 			++i;

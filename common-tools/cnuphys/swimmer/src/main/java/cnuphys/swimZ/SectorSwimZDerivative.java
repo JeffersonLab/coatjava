@@ -1,14 +1,12 @@
 package cnuphys.swimZ;
 
-import cnuphys.magfield.FastMath;
-
 import cnuphys.magfield.FieldProbe;
 import cnuphys.magfield.RotatedCompositeProbe;
 
 public class SectorSwimZDerivative extends SwimZDerivative {
-	
+
 	private int _sector = 0;
-	
+
 	/**
 	 * Set the sector [1..6]
 	 * @param sector the sector [1..6]
@@ -16,7 +14,7 @@ public class SectorSwimZDerivative extends SwimZDerivative {
 	public void setSector(int sector) {
 		_sector = sector;
 	}
-	
+
 	/**
 	 * Set the parameters
 	 * @param sect the sector [1..6]
@@ -38,7 +36,7 @@ public class SectorSwimZDerivative extends SwimZDerivative {
 	 * Compute the derivatives given the value of the independent variable and
 	 * the values of the function. Think of the Differential Equation as being
 	 * dydt = f[y,t].
-	 * 
+	 *
 	 * @param z
 	 *            the value of the independent variable (the z coordinate)
 	 *            (input).

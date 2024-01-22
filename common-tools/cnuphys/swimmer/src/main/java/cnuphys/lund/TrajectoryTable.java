@@ -6,10 +6,11 @@ import java.awt.Font;
 
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.WindowConstants;
 import javax.swing.table.TableColumn;
 
 public class TrajectoryTable extends JTable {
-	
+
 	// a scroll pane for this table
 	private JScrollPane _scrollPane;
 
@@ -36,7 +37,7 @@ public class TrajectoryTable extends JTable {
 
 	/**
 	 * Get the trajectory data model.
-	 * 
+	 *
 	 * @return the trajectory data model.
 	 */
 	public TrajectoryTableModel getTrajectoryModel() {
@@ -68,13 +69,13 @@ public class TrajectoryTable extends JTable {
 
 	/**
 	 * main program for testing.
-	 * 
+	 *
 	 * @param args
 	 */
 	public static void main(String[] args) {
 		javax.swing.JFrame testFrame = new javax.swing.JFrame("test frame");
 		java.awt.Container cp = testFrame.getContentPane();
-		testFrame.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
+		testFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
 		cp.setLayout(new BorderLayout(4, 0));
 

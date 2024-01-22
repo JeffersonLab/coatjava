@@ -6,7 +6,7 @@ package cnuphys.CLAS12Swim;
  * value sMax.
  */
 public class CLAS12Listener implements ODEStepListener {
-	
+
 	/**
 	 * This parameter controls whether the listener can make a straight line
 	 * to the target for a neutral particle. Some can, like the basic, z, and rho listeners.
@@ -38,10 +38,10 @@ public class CLAS12Listener implements ODEStepListener {
 		_initialVaues = ivals;
 		_sMax = sMax;
 
-		_trajectory = new CLAS12Trajectory();
+		_trajectory = new CLAS12Trajectory(ivals);
 		reset();
 	}
-	
+
 	/**
 	 * This parameter controls whether the listener can make a straight line to the
 	 * target for a neutral particle. Some can, like the basic, z, and rho
@@ -131,6 +131,16 @@ public class CLAS12Listener implements ODEStepListener {
 	}
 
 	/**
+	 * Get the state vector at the given index
+	 *
+	 * @param index the index
+	 * @return the state vector
+	 */
+	public double[] getU(int index) {
+		return _trajectory.get(index);
+	}
+
+	/**
 	 * Get the number of integration steps
 	 *
 	 * @return the number of integration steps
@@ -146,6 +156,16 @@ public class CLAS12Listener implements ODEStepListener {
 	 */
 	public double getS() {
 		return _trajectory.getS(_trajectory.size() - 1);
+	}
+
+	/**
+	 * Get the path length at the given index
+	 *
+	 * @param index the index
+	 * @return the path length in cm
+	 */
+	public double getS(int index) {
+		return _trajectory.getS(index);
 	}
 
 	/**

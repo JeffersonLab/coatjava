@@ -1,7 +1,7 @@
 package cnuphys.CLAS12Swim;
 
 /**
- * This is an abstact class to be extended by classes that swim to a boundary.
+ * This is an abstract class to be extended by classes that swim to a boundary.
  */
 
 public abstract class CLAS12BoundaryListener extends CLAS12Listener {
@@ -59,7 +59,7 @@ public abstract class CLAS12BoundaryListener extends CLAS12Listener {
 
 		return true;
 	}
-	
+
 	/**
 	 * Get the absolute distance to the target (boundary) in cm.
 	 * @param newS the new path length

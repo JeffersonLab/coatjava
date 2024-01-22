@@ -1,12 +1,5 @@
 package cnuphys.CLAS12Swim;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-
-import cnuphys.magfield.MagneticFieldInitializationException;
-import cnuphys.magfield.MagneticFields;
-import cnuphys.magfield.MagneticFields.FieldType;
-
 /**
  * A listener for swimming to a fixed value of z
  */
@@ -53,17 +46,18 @@ public class CLAS12ZListener extends CLAS12BoundaryListener {
 	private int sign(double z) {
 		return (z < _zTarget) ? -1 : 1;
 	}
-	
+
 	/**
 	 * Get the absolute distance to the target (boundary) in cm.
 	 * @param newS the new path length
 	 * @param newU the new state vector
 	 * @return the distance to the target (boundary) in cm.
 	 */
+	@Override
 	public double distanceToTarget(double newS, double[] newU) {
 		return Math.abs(newU[2] - _zTarget);
 	}
-	
+
 	/**
 	 * Add a second point creating a straight line to the target z
 	 */
@@ -85,7 +79,7 @@ public class CLAS12ZListener extends CLAS12BoundaryListener {
 
 	}
 
-	
+
 	 /**
      * Finds the point along the line of velocity where the z coordinate reaches zTarget.
      *

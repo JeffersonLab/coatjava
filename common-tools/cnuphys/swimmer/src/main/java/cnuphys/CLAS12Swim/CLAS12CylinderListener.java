@@ -41,13 +41,14 @@ public class CLAS12CylinderListener extends CLAS12BoundaryListener {
 		boolean newInside = _targetCylinder.isInside(newU[0], newU[1], newU[2]);
 		return newInside != _inside;
 	}
-	
+
 	/**
 	 * Get the absolute distance to the target (boundary) in cm.
 	 * @param newS the new path length
 	 * @param newU the new state vector
 	 * @return the distance to the target (boundary) in cm.
 	 */
+	@Override
 	public double distanceToTarget(double newS, double[] newU) {
 		return _targetCylinder.distance(newU[0], newU[1], newU[2]);
 	}

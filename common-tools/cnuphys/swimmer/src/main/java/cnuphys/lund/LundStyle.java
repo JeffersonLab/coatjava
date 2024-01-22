@@ -8,7 +8,7 @@ import java.util.Hashtable;
 public class LundStyle {
 
 	private static final float _LINEWIDTH = 1.5f;
-	
+
 	//default transparent color
 	private static final Color defaultTransColor = new Color(64, 64, 64, 64);
 
@@ -20,7 +20,7 @@ public class LundStyle {
 	/**
 	 * Hashtable of styles.
 	 */
-	protected static Hashtable<LundId, LundStyle> styles = new Hashtable<LundId, LundStyle>(143);
+	protected static Hashtable<LundId, LundStyle> styles = new Hashtable<>(143);
 
 	private Stroke _stroke;
 	private Color _lineColor;
@@ -33,7 +33,7 @@ public class LundStyle {
 
 	/**
 	 * A drawing style for the trajectory
-	 * 
+	 *
 	 * @param lundId the lund particle id
 	 * @param color  the id color
 	 */
@@ -63,7 +63,7 @@ public class LundStyle {
 
 	/**
 	 * Get the line color
-	 * 
+	 *
 	 * @return the line color
 	 */
 	public Color getLineColor() {
@@ -72,13 +72,13 @@ public class LundStyle {
 
 	/**
 	 * Get the fill color
-	 * 
+	 *
 	 * @return the fill color
 	 */
 	public Color getFillColor() {
 		return _fillColor;
 	}
-	
+
 	/**
 	 * Get a transparent version of the fill color.
 	 * @return a transparent version of the fill color.
@@ -95,13 +95,13 @@ public class LundStyle {
 				_transparentFillColor = new Color(r, g, b, 64);
 			}
 		}
-		
+
 		return _transparentFillColor;
 	}
 
 	/**
 	 * Set the line color
-	 * 
+	 *
 	 * @param color the new line color
 	 */
 	public void setLineColor(Color color) {
@@ -110,7 +110,7 @@ public class LundStyle {
 
 	/**
 	 * Set the fill color
-	 * 
+	 *
 	 * @param color the new fill color
 	 */
 	public void setFillColor(Color color) {
@@ -119,7 +119,7 @@ public class LundStyle {
 
 	/**
 	 * Get the stroke
-	 * 
+	 *
 	 * @return the drawing stroke
 	 */
 	public Stroke getStroke() {
@@ -128,7 +128,7 @@ public class LundStyle {
 
 	/**
 	 * Add a lund style into the database
-	 * 
+	 *
 	 * @param lundId    the lund particle id
 	 * @param lineColor the line color
 	 * @return the added style (or if it already existed, taken from the database)
@@ -145,12 +145,12 @@ public class LundStyle {
 	/**
 	 * Get a style for a given lund Id. Returns _unknownStyle if the style hasn't
 	 * been added yet or lundId is null.
-	 * 
+	 *
 	 * @param lundId the Id to match
 	 * @return the style
 	 */
 	public static LundStyle getStyle(LundId lundId) {
-		
+
 		if (lundId == null) {
 			return _unknownStyleZero;
 		}
