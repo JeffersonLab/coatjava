@@ -1049,34 +1049,53 @@ public class CodaEventDecoder {
                     
                     long[] longData = ByteDataTransformer.toLongArray(node.getStructureBuffer(true));
                     int[]  intData  = ByteDataTransformer.toIntArray(node.getStructureBuffer(true));
-                    long  timeStamp = longData[2]&0x0000ffffffffffffL;
-                    
-                    int tsettle  = DataUtils.getInteger(intData[16], 0, 0) > 0 ? 1 : -1;
-                    int pattern  = DataUtils.getInteger(intData[16], 1, 1) > 0 ? 1 : -1;
-                    int pair     = DataUtils.getInteger(intData[16], 2, 2) > 0 ? 1 : -1;
-                    int helicity = DataUtils.getInteger(intData[16], 3, 3) > 0 ? 1 : -1;                             
-                    int start    = DataUtils.getInteger(intData[16], 4, 4) > 0 ? 1 : -1;                             
-                    int polarity = DataUtils.getInteger(intData[16], 5, 5) > 0 ? 1 : -1;                             
-                    int count    = DataUtils.getInteger(intData[16], 8, 11);
+
+//                    // When there are multiple HelicityDecoder banks in an event, there is a BLKHDR work in the data,
+//                    // and when there is one HelicityDecoder bank in an event, it is not there. So we need to
+//                    // detect where the trigger time word is.
+                    int i_data_offset = 2;
+                    while(i_data_offset<intData.length && (intData[i_data_offset] >> 27) != 0x13) i_data_offset++;  // find the trigger time word.
+                    if(i_data_offset%2 == 1){
+                        System.err.println("ERROR:  HelicityDecoder data is corrupted. Trigger word not found.");
+                        return null;
+                    }
+                    long  timeStamp = longData[(int)(i_data_offset/2)]&0x0000ffffffffffffL;
+                    i_data_offset+=2; // Next word should be "DECODER DATA", with 0x18 in the top 5 bits.
+                    if((intData[i_data_offset] >> 27) != 0x18){
+                        System.err.println("ERROR:  HelicityDecoder data is corrupted. DECODER BANK not found.");
+                        return null;
+                    }
+                    int num_data_words = intData[i_data_offset]&0x07ffffff;
+                    if(num_data_words < 14){
+                        System.err.println("ERROR:  HelicityDecoder data is corrupted. Not enough data words.");
+                        return null;
+                    }
+                    int tsettle  = DataUtils.getInteger(intData[i_data_offset+9], 0, 0) > 0 ? 1 : -1;
+                    int pattern  = DataUtils.getInteger(intData[i_data_offset+9], 1, 1) > 0 ? 1 : -1;
+                    int pair     = DataUtils.getInteger(intData[i_data_offset+9], 2, 2) > 0 ? 1 : -1;
+                    int helicity = DataUtils.getInteger(intData[i_data_offset+9], 3, 3) > 0 ? 1 : -1;
+                    int start    = DataUtils.getInteger(intData[i_data_offset+9], 4, 4) > 0 ? 1 : -1;
+                    int polarity = DataUtils.getInteger(intData[i_data_offset+9], 5, 5) > 0 ? 1 : -1;
+                    int count    = DataUtils.getInteger(intData[i_data_offset+9], 8, 11);
                     data = new HelicityDecoderData((byte) helicity, (byte) pair, (byte) pattern);
                     data.setTimestamp(timeStamp);
-                    data.setHelicitySeed(intData[7]);
-                    data.setNTStableRisingEdge(intData[8]);
-                    data.setNTStableFallingEdge(intData[9]);
-                    data.setNPattern(intData[10]);
-                    data.setNPair(intData[11]);
-                    data.setTStableStart(intData[12]);
-                    data.setTStableEnd(intData[13]);
-                    data.setTStableTime(intData[14]);
-                    data.setTSettleTime(intData[15]);
+                    data.setHelicitySeed(intData[i_data_offset]);
+                    data.setNTStableRisingEdge(intData[i_data_offset+1]);
+                    data.setNTStableFallingEdge(intData[i_data_offset+2]);
+                    data.setNPattern(intData[i_data_offset+3]);
+                    data.setNPair(intData[i_data_offset+4]);
+                    data.setTStableStart(intData[i_data_offset+5]);
+                    data.setTStableEnd(intData[i_data_offset+6]);
+                    data.setTStableTime(intData[i_data_offset+7]);
+                    data.setTSettleTime(intData[i_data_offset+8]);
                     data.setTSettle((byte) tsettle);
                     data.setHelicityPattern((byte) start);
                     data.setPolarity((byte) polarity);
                     data.setPatternPhaseCount((byte) count);
-                    data.setPatternWindows(intData[17]);
-                    data.setPairWindows(intData[18]);
-                    data.setHelicityWindows(intData[19]);
-                    data.setHelicityPatternWindows(intData[20]);
+                    data.setPatternWindows(intData[i_data_offset+10]);
+                    data.setPairWindows(intData[i_data_offset+11]);
+                    data.setHelicityWindows(intData[i_data_offset+12]);
+                    data.setHelicityPatternWindows(intData[i_data_offset+13]);
                 }
             }
         }
