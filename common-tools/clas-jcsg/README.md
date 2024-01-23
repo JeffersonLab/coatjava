@@ -3,15 +3,15 @@ JCSG
 
 [![Build Status](https://travis-ci.org/miho/JCSG.png?branch=master)](https://travis-ci.org/miho/JCSG) [ ![Download](https://api.bintray.com/packages/miho/JCSG/jcsg/images/download.svg) ](https://bintray.com/miho/JCSG/jcsg/_latestVersion)
 
-Java implementation of BSP based CSG (Constructive Solid Geometry). It is the only simple and free Java implementation I am aware of. This implementation uses an optimized CSG algorithm based on [csg.js](https://github.com/evanw/csg.js) (see `CSG` and `Node` classes). Thanks to the author for creating the [csg.js](https://github.com/evanw/csg.js) library.
+Java implementation of BSP based CSG (Constructive Solid Geometry). It is the only simple and free Java implementation I am aware of. This implementation uses an optimized CSG algorithm based on [`csg.js`](https://github.com/evanw/csg.js) (see `CSG` and `Node` classes). Thanks to the author for creating the [`csg.js`](https://github.com/evanw/csg.js) library.
 
 In addition to CSG this library provides the following features:
 
 - optimized `difference()` and `union()` operations (many thanks to Sebastian Reiter)
-- extrusion of concave, non-intersecting polygons (uses [Poly2Tri](https://code.google.com/p/poly2tri/) for triangulation)
-- convex hull (uses [QuickHull3D](https://www.cs.ubc.ca/~lloyd/java/quickhull3d.html))
+- extrusion of concave, non-intersecting polygons (uses [`Poly2Tri`](https://code.google.com/p/poly2tri/) for triangulation)
+- convex hull (uses [`QuickHull3D`](https://www.cs.ubc.ca/~lloyd/java/quickhull3d.html))
 - weighted transformations (Scale, Rotation, Translation and Mirror)
-- STL import and export (STLLoader from [Fiji](https://github.com/fiji/fiji/blob/master/src-plugins/3D_Viewer/src/main/java/customnode/STLLoader.java))
+- STL import and export (`STLLoader` from [Fiji](https://github.com/fiji/fiji/blob/master/src-plugins/3D_Viewer/src/main/java/customnode/STLLoader.java))
 - OBJ export including material information (see screenshot below)
 - supports conversion of CSG's to `JavaFX 3D` nodes
 
@@ -19,7 +19,7 @@ In addition to CSG this library provides the following features:
 
 ![](/resources/screenshot2.png)
 
-To see what's possible with JCSG try [JFXScad](https://github.com/miho/JFXScad).
+To see what's possible with JCSG try [`JFXScad`](https://github.com/miho/JFXScad).
 
 ![](https://raw.githubusercontent.com/miho/JFXScad/master/resources/img/screenshot-02.png)
 

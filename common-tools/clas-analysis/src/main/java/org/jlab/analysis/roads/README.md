@@ -3,7 +3,7 @@
 ### Dictionaries
 Roads are representations of a particle trajectory in the detector, consisting of the sequence of detector element IDs that are crossed by the particle. In the forward detector, they can include elements of HTCC, DC, FTOF, and ECAL. Charged-particle roads are used in the CLAS12 level-1 trigger to select events in which the detected hits are consistent with one or more tracks with hits in FTOF and PCAL, in a selected number of sectors. For this purpose, dictionaries of roads, i.e. list of roads covering the kinematics of interest, are used (see B. Raydo et al., "The CLAS12 Trigger System", Nucl. Inst. and Meth. A 960, 163529 (2020)).
 
-This package contains the tools to generate, validate and manage the so-called roads for L1 trigger in CLAS12. Roads are stored in text files, aka ''dictionaries'', where each line orresponds to a road defined but the following list of quantities:
+This package contains the tools to generate, validate and manage the so-called roads for L1 trigger in CLAS12. Roads are stored in text files, aka ''dictionaries'', where each line corresponds to a road defined but the following list of quantities:
 * particle charge, momentum, theta, and phi,
 * list of 36 DC wires,
 * FTOF panel 1B paddle,
