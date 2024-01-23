@@ -39,7 +39,7 @@ jobs:
           java-version: 11
           distribution: zulu
       - name: build
-        run: ./build-coatjava.sh --spotbugs --unittests --quiet
+        run: ./build-coatjava.sh --spotbugs --unittests --quiet -T4
       - name: tar # tarball to preserve permissions
         run: tar czvf coatjava.tar.gz coatjava
       - uses: actions/upload-artifact@v3
