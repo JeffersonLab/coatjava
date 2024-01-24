@@ -49,6 +49,7 @@ public class CLAS12ZListener extends CLAS12BoundaryListener {
 
 	/**
 	 * Get the absolute distance to the target (boundary) in cm.
+	 * 
 	 * @param newS the new path length
 	 * @param newU the new state vector
 	 * @return the distance to the target (boundary) in cm.
@@ -79,38 +80,39 @@ public class CLAS12ZListener extends CLAS12BoundaryListener {
 
 	}
 
+	/**
+	 * Finds the point along the line of velocity where the z coordinate reaches
+	 * zTarget.
+	 *
+	 * @param x0      Starting x coordinate
+	 * @param y0      Starting y coordinate
+	 * @param z0      Starting z coordinate
+	 * @param tx      x component of the unit direction vector
+	 * @param ty      y component of the unit direction vector
+	 * @param tz      z component of the unit direction vector
+	 * @param zTarget The target z coordinate to reach
+	 * @return The point [x, y, z] where the z coordinate reaches zTarget, or null
+	 *         if it never reaches.
+	 */
+	private double[] findPoint(double x0, double y0, double z0, double tx, double ty, double tz, double zTarget) {
+		// Check if the line is parallel to the z-plane (tz = 0)
+		if (tz == 0) {
+			if (z0 == zTarget) {
+				// The entire line is on the plane where z = zTarget
+				return new double[] { x0, y0, zTarget };
+			} else {
+				// The line will never reach zTarget
+				return null;
+			}
+		}
 
-	 /**
-     * Finds the point along the line of velocity where the z coordinate reaches zTarget.
-     *
-     * @param x0 Starting x coordinate
-     * @param y0 Starting y coordinate
-     * @param z0 Starting z coordinate
-     * @param tx x component of the unit direction vector
-     * @param ty y component of the unit direction vector
-     * @param tz z component of the unit direction vector
-     * @param zTarget The target z coordinate to reach
-     * @return The point [x, y, z] where the z coordinate reaches zTarget, or null if it never reaches.
-     */
-    private double[] findPoint(double x0, double y0, double z0, double tx, double ty, double tz, double zTarget) {
-        // Check if the line is parallel to the z-plane (tz = 0)
-        if (tz == 0) {
-            if (z0 == zTarget) {
-                // The entire line is on the plane where z = zTarget
-                return new double[]{x0, y0, zTarget};
-            } else {
-                // The line will never reach zTarget
-                return null;
-            }
-        }
+		// Calculate the parameter (s) at which z coordinate reaches zTarget
+		double t = (zTarget - z0) / tz;
 
-        // Calculate the parameter (s) at which z coordinate reaches zTarget
-        double t = (zTarget - z0) / tz;
+		// Calculate the x and y coordinates at this point
+		double x = x0 + tx * t;
+		double y = y0 + ty * t;
 
-        // Calculate the x and y coordinates at this point
-        double x = x0 + tx * t;
-        double y = y0 + ty * t;
-
-        return new double[]{x, y, zTarget, tx, ty, tz};
-    }
+		return new double[] { x, y, zTarget, tx, ty, tz };
+	}
 }

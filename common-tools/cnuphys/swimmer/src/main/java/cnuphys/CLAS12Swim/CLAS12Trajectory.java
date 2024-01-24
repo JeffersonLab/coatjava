@@ -60,6 +60,7 @@ public class CLAS12Trajectory extends SwimTrajectory {
 
 	/**
 	 * Remove the point at the given index
+	 * 
 	 * @param index the index
 	 */
 	public void removePoint(int index) {
@@ -194,8 +195,6 @@ public class CLAS12Trajectory extends SwimTrajectory {
 		return _bdlValue;
 	}
 
-
-
 	private double _bdlValue = Double.NaN;
 
 	/**
@@ -237,7 +236,6 @@ public class CLAS12Trajectory extends SwimTrajectory {
 			for (int j = 0; j < 3; j++) {
 				dr[j] = p1[j] - p0[j];
 			}
-
 
 			// use the average position (in cm) to compute B for b cross dl
 			float xavgcm = (float) ((p0[0] + p1[0]) / 2);
@@ -290,7 +288,6 @@ public class CLAS12Trajectory extends SwimTrajectory {
 				dr[j] = p1[j] - p0[j];
 			}
 
-
 			// use the average position (in cm) to compute B for b cross dl
 			float xavgcm = (float) ((p0[0] + p1[0]) / 2);
 			float yavgcm = (float) ((p0[1] + p1[1]) / 2);
@@ -308,7 +305,6 @@ public class CLAS12Trajectory extends SwimTrajectory {
 			_bdlValue += magbxdl;
 		}
 	}
-
 
 	// usual cross product used for BDL
 	private static double[] cross(float a[], double b[]) {

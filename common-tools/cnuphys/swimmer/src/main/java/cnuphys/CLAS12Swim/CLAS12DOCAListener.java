@@ -1,9 +1,9 @@
 package cnuphys.CLAS12Swim;
 
 /**
- * This is an abstract class to be extended by classes that to a distance of closest approach.
- * The assumption is that the first doca is the only one. i.e. we are not dealing with
- * low energy particles looping about.
+ * This is an abstract class to be extended by classes that to a distance of
+ * closest approach. The assumption is that the first doca is the only one. i.e.
+ * we are not dealing with low energy particles looping about.
  */
 
 public abstract class CLAS12DOCAListener extends CLAS12Listener {
@@ -11,7 +11,7 @@ public abstract class CLAS12DOCAListener extends CLAS12Listener {
 	// the requested accuracy in cm
 	protected final double _accuracy;
 
-	//current doca
+	// current doca
 	protected double _currentDOCA = Double.POSITIVE_INFINITY;
 
 	/**
@@ -66,7 +66,7 @@ public abstract class CLAS12DOCAListener extends CLAS12Listener {
 
 		double doca = doca(newS, newU);
 
-		if (doca > _currentDOCA) { //getting farther
+		if (doca > _currentDOCA) { // getting farther
 			_status = CLAS12Swimmer.SWIM_SUCCESS;
 			return false;
 		}
@@ -83,12 +83,11 @@ public abstract class CLAS12DOCAListener extends CLAS12Listener {
 
 	/**
 	 * Get the absolute distance to the target (boundary) in cm.
+	 * 
 	 * @param newS the new path length
 	 * @param newU the new state vector
 	 * @return the distance to the target (boundary) in cm.
 	 */
 	public abstract double doca(double newS, double[] newU);
-
-
 
 }

@@ -3,21 +3,22 @@ package cnuphys.CLAS12Swim;
 import cnuphys.magfield.FieldProbe;
 
 /**
- * This is the ODE for swimming particles through a magnetic field in a sector system.
+ * This is the ODE for swimming particles through a magnetic field in a sector
+ * system.
  */
 
 public class CLAS12SectorSwimODE extends CLAS12SwimODE {
-	
-	//the sector [1..6]
-	private int _sector;
 
+	// the sector [1..6]
+	private int _sector;
 
 	/**
 	 * The derivative for swimming through a magnetic field
+	 * 
 	 * @param sector the sector [1..6]
-	 * @param q     -1 for electron, +1 for proton, etc.
-	 * @param p     the magnitude of the momentum.
-	 * @param field the magnetic field
+	 * @param q      -1 for electron, +1 for proton, etc.
+	 * @param p      the magnitude of the momentum.
+	 * @param field  the magnetic field
 	 */
 	public CLAS12SectorSwimODE(int sector, int q, double p, FieldProbe field) {
 		super(q, p, field);

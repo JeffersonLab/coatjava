@@ -1,7 +1,8 @@
 package cnuphys.CLAS12Swim;
 
 /**
- * This class implements the Dormand-Prince method for solving ordinary differential equation.
+ * This class implements the Dormand-Prince method for solving ordinary
+ * differential equation.
  */
 public class DormandPrince {
 
@@ -19,7 +20,7 @@ public class DormandPrince {
 	 * @param minH      The minimum step size to prevent an infinite loop.
 	 * @param maxH      The maximum step size changed when near boundary, but
 	 *                  default is usually infinity.
-	 * @param listener  An optional listener that will be called after each step.
+	 * @param listener  An listener that will be called after each step.
 	 */
 	public static void solve(ODE ode, double[] y0, double t0, double t1, double h, double tolerance, double minH,
 			double maxH, ODEStepListener listener) {

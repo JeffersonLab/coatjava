@@ -32,13 +32,13 @@ public class CLAS12Values {
 	/**
 	 * Store the initial conditions of a swim
 	 *
-	 * @param q      The integer charge
-	 * @param xo     The x coordinate of the vertex in cm
-	 * @param yo     The y coordinate of the vertex in cm
-	 * @param zo     The z coordinate of the vertex in cm
-	 * @param p      The momentum in GeV/c
-	 * @param theta  The DITECTIONAL polar angle in degrees
-	 * @param phi    The DIRECTIONAL azimuthal angle in degrees
+	 * @param q     The integer charge
+	 * @param xo    The x coordinate of the vertex in cm
+	 * @param yo    The y coordinate of the vertex in cm
+	 * @param zo    The z coordinate of the vertex in cm
+	 * @param p     The momentum in GeV/c
+	 * @param theta The DITECTIONAL polar angle in degrees
+	 * @param phi   The DIRECTIONAL azimuthal angle in degrees
 	 */
 	public CLAS12Values(int q, double xo, double yo, double zo, double p, double theta, double phi) {
 		this.q = q;
@@ -55,13 +55,12 @@ public class CLAS12Values {
 	 * of that is the dependent variable in the integration. The anlges are
 	 * positional, not the directional angles for the momentum.
 	 *
-	 * @param q      the integer charge. Must be supplied, not part of the state
-	 *               vector. It shouldn't change, but we assume this is the original
-	 *               momentum, so we mutliply by the state vector norm of the t
-	 *               components, which should be 1 since we have magnetic field
-	 *               only.
-	 * @param p      the momentum in GeV/c
-	 * @param u      the state vector
+	 * @param q the integer charge. Must be supplied, not part of the state vector.
+	 *          It shouldn't change, but we assume this is the original momentum, so
+	 *          we mutliply by the state vector norm of the t components, which
+	 *          should be 1 since we have magnetic field only.
+	 * @param p the momentum in GeV/c
+	 * @param u the state vector
 	 */
 	public CLAS12Values(int q, double p, double[] u) {
 		this.q = q;
@@ -124,6 +123,7 @@ public class CLAS12Values {
 
 	/**
 	 * Convert to a GeneratedParticleRecord for backwards compatibility
+	 * 
 	 * @return a GeneratedParticleRecord corresponding to this data
 	 */
 	public GeneratedParticleRecord toGeneratedParticleRecord() {

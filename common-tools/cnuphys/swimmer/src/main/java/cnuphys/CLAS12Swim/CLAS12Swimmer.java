@@ -111,7 +111,6 @@ public class CLAS12Swimmer {
 		return _solver;
 	}
 
-
 	/**
 	 * Get the magnetic field probe being used to swim
 	 *
@@ -121,10 +120,9 @@ public class CLAS12Swimmer {
 		return _probe;
 	}
 
-
 	/**
 	 * The basic swim method. The swim is terminated when the particle reaches the
-	 * pathlength sMax or if the optional listener terminates the swim.
+	 * pathlength sMax or if the listener terminates the swim.
 	 *
 	 * @param ode       the ODE to solve
 	 * @param u         the initial state vector (x, y, z, tx, ty, tz) x, y, z in cm
@@ -155,20 +153,19 @@ public class CLAS12Swimmer {
 		return atomicSwim(ode, u, sMin, sMax, h, tolerance, listener);
 	}
 
-
 	/**
-	 * The basic swim method for fixed step size. The swim is terminated when the particle reaches the
-	 * pathlength sMax or if the optional listener terminates the swim.
+	 * The basic swim method for fixed step size. The swim is terminated when the
+	 * particle reaches the pathlength sMax or if the listener terminates the swim.
 	 *
-	 * @param ode       the ODE to solve
-	 * @param u         the initial state vector (x, y, z, tx, ty, tz) x, y, z in cm
-	 * @param sMin      the initial value of the independent variable (pathlength)
-	 *                  (usually 0)
-	 * @param sMax      the final (max) value of the independent variable
-	 *                  (pathlength) unless the integration is terminated by the
-	 *                  listener
-	 * @param h         the fixed stepsize in cm
-	 * @param listener  an optional listener that can terminate the integration
+	 * @param ode      the ODE to solve
+	 * @param u        the initial state vector (x, y, z, tx, ty, tz) x, y, z in cm
+	 * @param sMin     the initial value of the independent variable (pathlength)
+	 *                 (usually 0)
+	 * @param sMax     the final (max) value of the independent variable
+	 *                 (pathlength) unless the integration is terminated by the
+	 *                 listener
+	 * @param h        the fixed stepsize in cm
+	 * @param listener an listener that can terminate the integration
 	 * @return the result of the swim
 	 */
 	protected CLAS12SwimResult baseSwimFixed(CLAS12SwimODE ode, double u[], double sMin, double sMax, double h,
@@ -187,11 +184,9 @@ public class CLAS12Swimmer {
 		return atomicSwimFixed(ode, u, sMin, sMax, h, listener);
 	}
 
-
-
 	/**
 	 * The atomic swim method. The swim is terminated when the particle reaches the
-	 * pathlength sMax or if the optional listener terminates the swim.
+	 * pathlength sMax or if the listener terminates the swim.
 	 *
 	 * @param ode       the ODE to solve
 	 * @param u         the initial state vector (x, y, z, tx, ty, tz) x, y, z in cm
@@ -203,7 +198,7 @@ public class CLAS12Swimmer {
 	 * @param h         the initial stepsize in cm
 	 * @param tolerance The desired tolerance. The solver will automatically adjust
 	 *                  the step size to meet this tolerance.
-	 * @param listener  an optional listener that can terminate the integration
+	 * @param listener  a listener that can terminate the integration
 	 * @return the result of the swim
 	 */
 	private CLAS12SwimResult atomicSwim(CLAS12SwimODE ode, double u[], double sMin, double sMax, double h,
@@ -226,32 +221,34 @@ public class CLAS12Swimmer {
 	}
 
 	/**
-	 * The atomic swim method for the fixed step size integrator. The swim is terminated when the particle reaches the
-	 * pathlength sMax or if the optional listener terminates the swim.
+	 * The atomic swim method for the fixed step size integrator. The swim is
+	 * terminated when the particle reaches the pathlength sMax or if the listener
+	 * terminates the swim.
 	 *
-	 * @param ode       the ODE to solve
-	 * @param u         the initial state vector (x, y, z, tx, ty, tz) x, y, z in cm
-	 * @param sMin      the initial value of the independent variable (pathlength)
-	 *                  (usually 0)
-	 * @param sMax      the final (max) value of the independent variable
-	 *                  (pathlength) unless the integration is terminated by the
-	 *                  listener
-	 * @param h         the fixed stepsize in cm
-	 * @param listener  an optional listener that can terminate the integration
+	 * @param ode      the ODE to solve
+	 * @param u        the initial state vector (x, y, z, tx, ty, tz) x, y, z in cm
+	 * @param sMin     the initial value of the independent variable (pathlength)
+	 *                 (usually 0)
+	 * @param sMax     the final (max) value of the independent variable
+	 *                 (pathlength) unless the integration is terminated by the
+	 *                 listener
+	 * @param h        the fixed stepsize in cm
+	 * @param listener a listener that can terminate the integration
 	 * @return the result of the swim
 	 */
 	private CLAS12SwimResult atomicSwimFixed(CLAS12SwimODE ode, double u[], double sMin, double sMax, double h,
 			CLAS12Listener listener) {
 		FixedStep.solve(ode, u, sMin, sMax, h, listener);
-        return new CLAS12SwimResult(listener);
-    }
+		return new CLAS12SwimResult(listener);
+	}
 
 	/**
-	 * An endgame swimmer, for zeroing in on a target when close. It assumes
-	 * that the last two points in the trajectory are close to and bracket the target.
-	 * It uses a fixed step size integrator to home in.
-	 * @param ode the ODE to solve
-	 * @param h the step size in cm
+	 * An endgame swimmer, for zeroing in on a target when close. It assumes that
+	 * the last two points in the trajectory are close to and bracket the target. It
+	 * uses a fixed step size integrator to home in.
+	 *
+	 * @param ode      the ODE to solve
+	 * @param h        the step size in cm
 	 * @param listener a listener that can terminate the integration
 	 * @return the result of the swim
 	 */
@@ -260,15 +257,14 @@ public class CLAS12Swimmer {
 		CLAS12Trajectory traj = listener.getTrajectory();
 		int np = traj.size();
 
-		//these should bracket the
-		double s1 = traj.getS(np-2);
-		double s2 = traj.getS(np-1);
-		double u[] = traj.get(np-2);
+		// these should bracket the
+		double s1 = traj.getS(np - 2);
+		double s2 = traj.getS(np - 1);
+		double u[] = traj.get(np - 2);
 		traj.removeLastPoint();
 
 		return atomicSwimFixed(ode, u, s1, s2, h, listener);
 	}
-
 
 	/**
 	 * Swim to a target accuracy. The details of the target and the accuracy are in
@@ -297,7 +293,7 @@ public class CLAS12Swimmer {
 		double s1 = sMin;
 		double s2 = listener.getSMax();
 
-		//set initial step size
+		// set initial step size
 		h = Math.min(h, listener.getAccuracy() / 2.);
 
 		CLAS12SwimResult cres = null;
@@ -308,7 +304,7 @@ public class CLAS12Swimmer {
 
 		if (listener.getStatus() == SWIM_SUCCESS) {
 			// we are bracketing the DOCA
-            // do a fixed step size "endgame" swim to zero in
+			// do a fixed step size "endgame" swim to zero in
 
 			h = Double.POSITIVE_INFINITY;
 
@@ -356,7 +352,7 @@ public class CLAS12Swimmer {
 	private CLAS12SwimResult swimToAccuracy(CLAS12SwimODE ode, double u[], double sMin, double h, double tolerance,
 			CLAS12BoundaryListener listener) {
 
-		//low momentum?
+		// low momentum?
 		if (listener.getIvals().p < MINMOMENTUM) {
 			listener.setStatus(BELOW_MIN_MOMENTUM);
 			return new CLAS12SwimResult(listener);
@@ -379,7 +375,7 @@ public class CLAS12Swimmer {
 		if (listener.getStatus() == SWIM_SUCCESS) {
 
 			// we are bracketing the DOCA
-            // do a fixed step size "endgame" swim to zero in
+			// do a fixed step size "endgame" swim to zero in
 
 			h = Double.POSITIVE_INFINITY;
 
@@ -387,7 +383,6 @@ public class CLAS12Swimmer {
 
 			while (h > hMin) {
 				int ns = listener.getNumStep();
-
 
 				s1 = listener.getS(ns - 2);
 				s2 = listener.getS();
@@ -457,14 +452,11 @@ public class CLAS12Swimmer {
 					return cres;
 				}
 
-
-
 				u = listener.getU();
 				s1 = listener.getS();
 
 				double newMaxH = listener.distanceToTarget(s1, u) / 2;
 				setMaxStepSize(newMaxH);
-
 
 			} else { // failed, reached max path length
 				// do NOT forget to reset the max step size
@@ -476,9 +468,9 @@ public class CLAS12Swimmer {
 	}
 
 	/**
-	 * The basic swim method. The swim is terminated when the particle reaches the path
-	 * length sMax or if the optional listener terminates the swim. If not terminated by
-	 * the listener, it will swim exactly to sMax.
+	 * The basic swim method. The swim is terminated when the particle reaches the
+	 * path length sMax. If not terminated by the listener, it will swim exactly to
+	 * sMax.
 	 *
 	 * @param q         in integer units of e
 	 * @param xo        the x vertex position in cm
@@ -494,7 +486,7 @@ public class CLAS12Swimmer {
 	 * @param tolerance The desired tolerance. The solver will automatically adjust
 	 *                  the step size to meet this tolerance.
 	 * @return the result of the swim
-     */
+	 */
 	public CLAS12SwimResult swim(int q, double xo, double yo, double zo, double p, double theta, double phi,
 			double sMax, double h, double tolerance) {
 
@@ -508,11 +500,9 @@ public class CLAS12Swimmer {
 		return baseSwim(ode, ivals.getU(), 0, sMax, h, tolerance, listener);
 	}
 
-
 	/**
-	 * The basic fixed stepsize swim method. The swim is terminated when the particle reaches the path
-	 * length sMax or if the optional listener terminates the swim. If not terminated by
-	 * the listener, it will swim exactly to sMax.
+	 * The basic fixed stepsize swim method. The swim is terminated when the
+	 * particle reaches the path length sMax.
 	 *
 	 * @param q         in integer units of e
 	 * @param xo        the x vertex position in cm
@@ -525,10 +515,8 @@ public class CLAS12Swimmer {
 	 *                  (pathlength) unless the integration is terminated by the
 	 *                  listener
 	 * @param h         the fixed stepsize in cm
-	 * @param tolerance The desired tolerance. The solver will automatically adjust
-	 *                  the step size to meet this tolerance.
 	 * @return the result of the swim
-     */
+	 */
 	public CLAS12SwimResult swimFixed(int q, double xo, double yo, double zo, double p, double theta, double phi,
 			double sMax, double h) {
 
@@ -542,15 +530,14 @@ public class CLAS12Swimmer {
 		return baseSwimFixed(ode, ivals.getU(), 0, sMax, h, listener);
 	}
 
-
 	/**
-	 * Swim a particle to the surface of a target cylinder. The cylinder is defined by
-	 * two points in {x,y,z} array format and a radius. The two points define the
-	 * centerline of the cylinder. The cylinder is infinite in length. If the
-	 * swim starts inside the cylinder, it will terminate when the particle reaches
-	 * the surface or if sMax is reached. If the swim starts outside the cylinder,
-	 * there is some risk (which we try to mitigate) that a large step size will
-	 * cause the swim to jump over the cylinder.
+	 * Swim a particle to the surface of a target cylinder. The cylinder is defined
+	 * by two points in {x,y,z} array format and a radius. The two points define the
+	 * centerline of the cylinder. The cylinder is infinite in length. If the swim
+	 * starts inside the cylinder, it will terminate when the particle reaches the
+	 * surface or if sMax is reached. If the swim starts outside the cylinder, there
+	 * is some risk (which we try to mitigate) that a large step size will cause the
+	 * swim to jump over the cylinder.
 	 *
 	 * @param q         in integer units of e
 	 * @param xo        the x vertex position in cm
@@ -578,14 +565,13 @@ public class CLAS12Swimmer {
 		return swimCylinder(q, xo, yo, zo, p, theta, phi, targetCylinder, accuracy, sMax, h, tolerance);
 	}
 
-
 	/**
-	 * Swim a particle to the surface of a target cylinder. The cylinder is defined by
-	 * a Cylinder object. The cylinder is infinite in length. If the
-	 * swim starts inside the cylinder, it will terminate when the particle reaches
-	 * the surface or if sMax is reached. If the swim starts outside the cylinder
-	 * there is some risk (which we try to mitigate) that a large step size will
-	 * cause the swim to jump over the cylinder.
+	 * Swim a particle to the surface of a target cylinder. The cylinder is defined
+	 * by a Cylinder object. The cylinder is infinite in length. If the swim starts
+	 * inside the cylinder, it will terminate when the particle reaches the surface
+	 * or if sMax is reached. If the swim starts outside the cylinder there is some
+	 * risk (which we try to mitigate) that a large step size will cause the swim to
+	 * jump over the cylinder.
 	 *
 	 * @param q              charge in integer units of e
 	 * @param xo             the x vertex position in cm
@@ -607,11 +593,10 @@ public class CLAS12Swimmer {
 	public CLAS12SwimResult swimCylinder(int q, double xo, double yo, double zo, double p, double theta, double phi,
 			Cylinder targetCylinder, double accuracy, double sMax, double h, double tolerance) {
 
-		//if centered on z, same as a rho swim
+		// if centered on z, same as a rho swim
 		if (targetCylinder.centeredOnZ()) {
 			return swimRho(q, xo, yo, zo, p, theta, phi, targetCylinder.radius, accuracy, sMax, h, tolerance);
 		}
-
 
 		// create the ODE
 		CLAS12SwimODE ode = new CLAS12SwimODE(q, p, _probe);
@@ -625,12 +610,12 @@ public class CLAS12Swimmer {
 	}
 
 	/**
-	 * Swim a particle to the surface of a target sphere. The sphere is defined by
-	 * a center point in {x,y,z} array format and a radius. If the
-	 * swim starts inside the sphere, it will terminate when the particle reaches
-	 * the surface or if sMax is reached. If the swim starts outside the sphere
-	 * there is some risk (which we try to mitigate) that a large step size will
-	 * cause the swim to jump over the sphere.
+	 * Swim a particle to the surface of a target sphere. The sphere is defined by a
+	 * center point in {x,y,z} array format and a radius. If the swim starts inside
+	 * the sphere, it will terminate when the particle reaches the surface or if
+	 * sMax is reached. If the swim starts outside the sphere there is some risk
+	 * (which we try to mitigate) that a large step size will cause the swim to jump
+	 * over the sphere.
 	 *
 	 * @param q         in integer units of e
 	 * @param xo        the x vertex position in cm
@@ -658,32 +643,31 @@ public class CLAS12Swimmer {
 	}
 
 	/**
-	 * Swim a particle to the surface of a target sphere. The sphere is defined by
-	 * a Sphere object. If the swim starts inside the sphere, it will terminate when
-	 * the particle reaches the surface or if sMax is reached. If the swim starts outside
-	 * the sphere there is some risk (which we try to mitigate) that a large step size will
-	 * cause the swim to jump over the sphere.
+	 * Swim a particle to the surface of a target sphere. The sphere is defined by a
+	 * Sphere object. If the swim starts inside the sphere, it will terminate when
+	 * the particle reaches the surface or if sMax is reached. If the swim starts
+	 * outside the sphere there is some risk (which we try to mitigate) that a large
+	 * step size will cause the swim to jump over the sphere.
 	 *
-	 * @param q              charge in integer units of e
-	 * @param xo             the x vertex position in cm
-	 * @param yo             the y vertex position in cm
-	 * @param zo             the z vertex position in cm
-	 * @param p              the momentum in GeV/c
-	 * @param theta          the initial polar angle in degrees
-	 * @param phi            the initial azimuthal angle in degrees
-	 * @param targetSphere  the target sphere
-	 * @param accuracy       the desired accuracy in cm
-	 * @param sMax           the final (max) value of the independent variable
-	 *                       (pathlength) unless the integration is terminated by
-	 *                       the listener
-	 * @param h              the initial stepsize in cm
-	 * @param tolerance      The desired tolerance. The solver will automatically
-	 *                       adjust the step size to meet this tolerance.
+	 * @param q            charge in integer units of e
+	 * @param xo           the x vertex position in cm
+	 * @param yo           the y vertex position in cm
+	 * @param zo           the z vertex position in cm
+	 * @param p            the momentum in GeV/c
+	 * @param theta        the initial polar angle in degrees
+	 * @param phi          the initial azimuthal angle in degrees
+	 * @param targetSphere the target sphere
+	 * @param accuracy     the desired accuracy in cm
+	 * @param sMax         the final (max) value of the independent variable
+	 *                     (pathlength) unless the integration is terminated by the
+	 *                     listener
+	 * @param h            the initial stepsize in cm
+	 * @param tolerance    The desired tolerance. The solver will automatically
+	 *                     adjust the step size to meet this tolerance.
 	 * @return the result of the swim
 	 */
 	public CLAS12SwimResult swimSphere(int q, double xo, double yo, double zo, double p, double theta, double phi,
 			Sphere targetSphere, double accuracy, double sMax, double h, double tolerance) {
-
 
 		// create the ODE
 		CLAS12SwimODE ode = new CLAS12SwimODE(q, p, _probe);
@@ -697,60 +681,60 @@ public class CLAS12Swimmer {
 	}
 
 	/**
-	 * Swim a particle until it intersects a target plane or until sMax
-	 * is reached. The plane is defined by the components of a normal vector and
-	 * the components of a point on the plane.
+	 * Swim a particle until it intersects a target plane or until sMax is reached.
+	 * The plane is defined by the components of a normal vector and the components
+	 * of a point on the plane.
 	 *
-	 * @param q           in integer units of e
-	 * @param xo          the x vertex position in cm
-	 * @param yo          the y vertex position in cm
-	 * @param zo          the z vertex position in cm
-	 * @param p           the momentum in GeV/c
-	 * @param theta       the initial polar angle in degrees
-	 * @param phi         the initial azimuthal angle in degrees
-	 * @param nx          the x component of the normal vector to the plane
-	 * @param ny          the y component of the normal vector to the plane
-	 * @param nz          the z component of the normal vector to the plane
-	 * @param px          the x component of a point on the plane
-	 * @param py          the y component of a point on the plane
-	 * @param pz          the z component of a point on the plane
-	 * @param accuracy    the desired accuracy in cm
-	 * @param sMax        the final (max) value of the independent variable
-	 *                    (pathlength) unless the integration is terminated by the
-	 *                    listener
-	 * @param h           the initial stepsize in cm
-	 * @param tolerance   The desired tolerance. The solver will automatically
-	 *                    adjust the step size to meet this tolerance.
+	 * @param q         in integer units of e
+	 * @param xo        the x vertex position in cm
+	 * @param yo        the y vertex position in cm
+	 * @param zo        the z vertex position in cm
+	 * @param p         the momentum in GeV/c
+	 * @param theta     the initial polar angle in degrees
+	 * @param phi       the initial azimuthal angle in degrees
+	 * @param nx        the x component of the normal vector to the plane
+	 * @param ny        the y component of the normal vector to the plane
+	 * @param nz        the z component of the normal vector to the plane
+	 * @param px        the x component of a point on the plane
+	 * @param py        the y component of a point on the plane
+	 * @param pz        the z component of a point on the plane
+	 * @param accuracy  the desired accuracy in cm
+	 * @param sMax      the final (max) value of the independent variable
+	 *                  (pathlength) unless the integration is terminated by the
+	 *                  listener
+	 * @param h         the initial stepsize in cm
+	 * @param tolerance The desired tolerance. The solver will automatically adjust
+	 *                  the step size to meet this tolerance.
 	 * @return the result of the swim
 	 */
 	public CLAS12SwimResult swimPlane(int q, double xo, double yo, double zo, double p, double theta, double phi,
-			double nx, double ny, double nz, double px, double py, double pz, double accuracy, double sMax, double h, double tolerance) {
+			double nx, double ny, double nz, double px, double py, double pz, double accuracy, double sMax, double h,
+			double tolerance) {
 		Plane targetPlane = new Plane(nx, ny, nz, px, py, pz);
 		return swimPlane(q, xo, yo, zo, p, theta, phi, targetPlane, accuracy, sMax, h, tolerance);
 	}
 
-
 	/**
-	 * Swim a particle until it intersects a target plane or until sMax
-	 * is reached. The plane is defined by a a normal vector and a point on the plane,
-	 * both in {x,y,z} array format.
+	 * Swim a particle until it intersects a target plane or until sMax is reached.
+	 * The plane is defined by a a normal vector and a point on the plane, both in
+	 * {x,y,z} array format.
 	 *
-	 * @param q           in integer units of e
-	 * @param xo          the x vertex position in cm
-	 * @param yo          the y vertex position in cm
-	 * @param zo          the z vertex position in cm
-	 * @param p           the momentum in GeV/c
-	 * @param theta       the initial polar angle in degrees
-	 * @param phi         the initial azimuthal angle in degrees
-	 * @param norm        the normal vector to the plane
-	 * @param point       a point on the plane
-	 * @param accuracy    the desired accuracy in cm
-	 * @param sMax        the final (max) value of the independent variable
-	 *                    (pathlength) unless the integration is terminated by the
-	 *                    listener
-	 * @param h           the initial stepsize in cm
-	 * @param tolerance   The desired tolerance. The solver will automatically
-	 *                    adjust the step size to meet this tolerance.
+	 * @param q         in integer units of e
+	 * @param xo        the x vertex position in cm
+	 * @param yo        the y vertex position in cm
+	 * @param zo        the z vertex position in cm
+	 * @param p         the momentum in GeV/c
+	 * @param theta     the initial polar angle in degrees
+	 * @param phi       the initial azimuthal angle in degrees
+	 * @param norm      the normal vector to the plane
+	 * @param point     a point on the plane
+	 * @param accuracy  the desired accuracy in cm
+	 * @param sMax      the final (max) value of the independent variable
+	 *                  (pathlength) unless the integration is terminated by the
+	 *                  listener
+	 * @param h         the initial stepsize in cm
+	 * @param tolerance The desired tolerance. The solver will automatically adjust
+	 *                  the step size to meet this tolerance.
 	 * @return the result of the swim
 	 */
 	public CLAS12SwimResult swimPlane(int q, double xo, double yo, double zo, double p, double theta, double phi,
@@ -760,8 +744,8 @@ public class CLAS12Swimmer {
 	}
 
 	/**
-	 * Swim a particle until it intersects a target plane or until sMax
-	 * is reached. The plane is defined by a Plane object.
+	 * Swim a particle until it intersects a target plane or until sMax is reached.
+	 * The plane is defined by a Plane object.
 	 *
 	 * @param q           in integer units of e
 	 * @param xo          the x vertex position in cm
@@ -794,12 +778,10 @@ public class CLAS12Swimmer {
 		return swimToAccuracy(ode, ivals.getU(), 0, h, tolerance, listener);
 	}
 
-
 	/**
-	 * Swim to a target z in cm in a sector coordinate system.
-	 * THIS IS ONLY VALID IF THE FIELD IS A RotatedCompositeField.
-	 * The swim is terminated when the particle reaches the
-	 * target z or if sMax is reached.
+	 * Swim to a target z in cm in a sector coordinate system. THIS IS ONLY VALID IF
+	 * THE FIELD IS A RotatedCompositeField. The swim is terminated when the
+	 * particle reaches the target z or if sMax is reached.
 	 *
 	 * @param sector    the sector [1..6]
 	 * @param q         in integer units of e
@@ -819,13 +801,13 @@ public class CLAS12Swimmer {
 	 *                  the step size to meet this tolerance.
 	 * @return the result of the swim
 	 */
-	public CLAS12SwimResult sectorSwimZ(int sector, int q, double xo, double yo, double zo, double p, double theta, double phi,
-			double zTarget, double accuracy, double sMax, double h, double tolerance) {
+	public CLAS12SwimResult sectorSwimZ(int sector, int q, double xo, double yo, double zo, double p, double theta,
+			double phi, double zTarget, double accuracy, double sMax, double h, double tolerance) {
 
 		if (!(_probe instanceof RotatedCompositeProbe)) {
-            System.err.println("CLAS12Swimmer: sectorSwimZ only valid for the RotatedComposite field.");
-            return null;
-        }
+			System.err.println("CLAS12Swimmer: sectorSwimZ only valid for the RotatedComposite field.");
+			return null;
+		}
 		// create the ODE
 		CLAS12SectorSwimODE ode = new CLAS12SectorSwimODE(sector, q, p, _probe);
 
@@ -838,8 +820,8 @@ public class CLAS12Swimmer {
 	}
 
 	/**
-	 * Swim to a target z in cm. The swim is terminated when the particle reaches the
-	 * target z or if sMax is reached.
+	 * Swim to a target z in cm. The swim is terminated when the particle reaches
+	 * the target z or if sMax is reached.
 	 *
 	 * @param q         in integer units of e
 	 * @param xo        the x vertex position in cm
@@ -871,7 +853,6 @@ public class CLAS12Swimmer {
 
 		return swimToAccuracy(ode, ivals.getU(), 0, h, tolerance, listener);
 	}
-
 
 	/**
 	 * Swim to a target rho (cylindrical r) in cm
@@ -908,9 +889,9 @@ public class CLAS12Swimmer {
 	}
 
 	/**
-	 * Swim to the beamline (defined by rho = 0). That is,
-	 * find the distance of closest approach to the beamline.
-	 * Swim terminates when successive doca estimates differ by less than accuracy.
+	 * Swim to the beamline (defined by rho = 0). That is, find the distance of
+	 * closest approach to the beamline. Swim terminates when successive doca
+	 * estimates differ by less than accuracy.
 	 *
 	 * @param q         in integer units of e
 	 * @param xo        the x vertex position in cm
@@ -919,8 +900,8 @@ public class CLAS12Swimmer {
 	 * @param p         the momentum in GeV/c
 	 * @param theta     the initial polar angle in degrees
 	 * @param phi       the initial azimuthal angle in degrees
-	 * @param accuracy  the desired accuracy in cm. This is how close you'd like to get to
-	 *                  the true DOCA
+	 * @param accuracy  the desired accuracy in cm. This is how close you'd like to
+	 *                  get to the true DOCA
 	 * @param sMax      the final (max) value of the independent variable
 	 *                  (pathlength) unless the integration is terminated by the
 	 *                  listener
@@ -942,7 +923,6 @@ public class CLAS12Swimmer {
 
 		return swimToDOCA(ode, ivals.getU(), 0, h, tolerance, listener);
 	}
-
 
 	/**
 	 * Set the maximum integration step size in cm

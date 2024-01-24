@@ -1,7 +1,8 @@
 package cnuphys.CLAS12Swim;
 
 /**
- * This class implements the Fehlberg method for solving ordinary differential equation.
+ * This class implements the Fehlberg method for solving ordinary differential
+ * equation.
  */
 public class Fehlberg {
 
