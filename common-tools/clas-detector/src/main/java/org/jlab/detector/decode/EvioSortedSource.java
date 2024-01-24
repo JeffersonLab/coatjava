@@ -13,6 +13,10 @@ import org.jlab.io.evio.EvioTreeBranch;
 
 /**
  * A wrapper on EvioSource to read one file sorted by CODA event number.
+ *
+ * Note, the minimum required for reading the CODA number from each event
+ * was extracted from the standard decoder, to avoid unecessarily reading
+ * the rest of the event.
  * 
  * WARNING:  This is strictly for reading sorted events sequentially.  Methods
  * other than the overridden "open", "hasEvent", "getNextEvent", and "reset"
@@ -53,7 +57,7 @@ public class EvioSortedSource extends EvioSource {
      * @param event
      * @return the CODA event number
      */
-    protected static int getCodaEventNumber(EvioDataEvent event){
+    public static int getCodaEventNumber(EvioDataEvent event){
         if (event != null && event.getHandler().getStructure() != null){
             List<EvioTreeBranch> branches = CodaEventDecoder.getEventBranches(event);
             for (EvioTreeBranch branch : branches){
