@@ -1077,6 +1077,7 @@ public class CodaEventDecoder {
                         System.err.println("ERROR:  HelicityDecoder data is corrupted. Not enough data words.");
                         return null;
                     }
+                    i_data_offset ++; // Point to the first word in the data block.
                     int tsettle  = DataUtils.getInteger(intData[i_data_offset+9], 0, 0) > 0 ? 1 : -1;
                     int pattern  = DataUtils.getInteger(intData[i_data_offset+9], 1, 1) > 0 ? 1 : -1;
                     int pair     = DataUtils.getInteger(intData[i_data_offset+9], 2, 2) > 0 ? 1 : -1;
