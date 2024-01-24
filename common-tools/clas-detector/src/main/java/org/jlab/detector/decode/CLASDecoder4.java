@@ -23,6 +23,7 @@ import org.jlab.io.hipo.HipoDataSync;
 
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
+import org.jlab.jnp.hipo4.data.Schema;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
 
@@ -74,6 +75,10 @@ public class CLASDecoder4 {
     public static CLASDecoder createDecoderDevel(){
         CLASDecoder decoder = new CLASDecoder(true);
         return decoder;
+    }
+
+    public Schema getSchemaCopy(String name) {
+        return this.schemaFactory.getSchema(name).copy();
     }
 
     public void setDebugMode(int mode){
