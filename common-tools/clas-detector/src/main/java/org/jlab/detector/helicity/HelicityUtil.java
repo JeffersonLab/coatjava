@@ -2,6 +2,7 @@ package org.jlab.detector.helicity;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jlab.detector.decode.CLASDecoder4;
 import org.jlab.io.base.DataBank;
@@ -10,7 +11,6 @@ import org.jlab.io.evio.EvioSource;
 import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
-import org.jlab.jnp.hipo4.data.Schema;
 import org.jlab.utils.benchmark.ProgressPrintout;
 
 /**
@@ -30,17 +30,18 @@ public class HelicityUtil {
      * @return list of helicity flips' corresponding HEL::flip and RUN::config banks
      */
     public static List<Bank> getFlips(HipoDataSource r, byte hwp) {
+        Logger.getLogger(HelicityUtil.class.getName()).info("Initializing Helicity Flips");
         List<Bank> flips = new ArrayList<>();
-        Schema s = r.getReader().getSchemaFactory().getSchema("HEL::adc");
-        Bank adc = new Bank(r.getReader().getSchemaFactory().getSchema("HEL::adc"));
         HelicityState prevHelicity = new HelicityState();
         while (r.hasEvent()) {
             DataEvent e = r.getNextEvent();
             if (e.hasBank("HEL::adc")) {
                 DataBank b = e.getBank("HEL::adc");
                 if (b.rows() > 0) {
-                    HelicityState thisHelicity = HelicityState.createFromFadcBank(adc);
+                    HelicityState thisHelicity = HelicityState.createFromFadcBank(b);
                     thisHelicity.setHalfWavePlate(hwp);
+                    System.out.println("prev:  "+prevHelicity);
+                    System.out.println("this:  "+thisHelicity);
                     if (!thisHelicity.isValid() || !thisHelicity.equals(prevHelicity)) {
                         flips.add(thisHelicity.getFlipBank(r.getReader().getSchemaFactory(), e));
                         prevHelicity = thisHelicity;
@@ -49,6 +50,7 @@ public class HelicityUtil {
                 }
             }
         }
+        Logger.getLogger(HelicityUtil.class.getName()).log(Level.INFO, "Found {0} helicity flips", flips.size());
         return flips;
     }
 

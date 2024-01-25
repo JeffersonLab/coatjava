@@ -100,9 +100,9 @@ public class HelicityState implements Comparable<HelicityState>, Comparator<Heli
      * @param adcBank HEL::adc
      * @return state extracted from the bank
      */
-    public static HelicityState createFromFadcBank(Bank adcBank) {
+    public static HelicityState createFromFadcBank(DataBank adcBank) {
         HelicityState state=new HelicityState();
-        for (int ii=0; ii<adcBank.getRows(); ii++) {
+        for (int ii=0; ii<adcBank.rows(); ii++) {
             if (adcBank.getInt("sector",ii) != SECTOR) continue;
             if (adcBank.getInt("layer",ii) != LAYER) continue;
             switch (adcBank.getInt("component",ii)) {
@@ -131,6 +131,10 @@ public class HelicityState implements Comparable<HelicityState>, Comparator<Heli
         state.invert();
 
         return state;
+    }
+
+    public static HelicityState createFromFadcBank(Bank adcBank) {
+        return createFromFadcBank((DataBank)adcBank);
     }
 
     /**
