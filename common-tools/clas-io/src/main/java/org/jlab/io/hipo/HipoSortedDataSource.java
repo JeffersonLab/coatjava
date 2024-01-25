@@ -90,10 +90,8 @@ public class HipoSortedDataSource extends HipoDataSource {
      */
     @Override
     public DataEvent getNextEvent() {
-        final int coda = this.list.get(this.index);
-        final int evio = this.map.get(coda);
-        this.index++;
-        return this.gotoEvent(evio);
+        final int coda = this.list.get(this.index++);
+        return this.gotoEvent(this.map.get(coda));
     }
 
     /**
