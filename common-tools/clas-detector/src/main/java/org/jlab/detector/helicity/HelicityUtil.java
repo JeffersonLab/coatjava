@@ -40,8 +40,6 @@ public class HelicityUtil {
                 if (b.rows() > 0) {
                     HelicityState thisHelicity = HelicityState.createFromFadcBank(b);
                     thisHelicity.setHalfWavePlate(hwp);
-                    System.out.println("prev:  "+prevHelicity);
-                    System.out.println("this:  "+thisHelicity);
                     if (!thisHelicity.isValid() || !thisHelicity.equals(prevHelicity)) {
                         flips.add(thisHelicity.getFlipBank(r.getReader().getSchemaFactory(), e));
                         prevHelicity = thisHelicity;
