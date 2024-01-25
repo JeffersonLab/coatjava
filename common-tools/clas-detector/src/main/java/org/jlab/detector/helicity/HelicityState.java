@@ -5,6 +5,7 @@ import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.jnp.hipo4.data.Bank;
 
 import org.jlab.io.base.DataBank;
+import org.jlab.jnp.hipo4.data.Event;
 
 /**
  *  See:
@@ -226,6 +227,18 @@ public class HelicityState implements Comparable<HelicityState>, Comparator<Heli
         bank.putByte("pattern", 0, this.patternSync.value());
         return bank;
     }
+    
+    public Bank getFlipBank(SchemaFactory schema, Event event) {
+        if(schema.hasSchema("RUN::config")) {
+            Bank configBank = new Bank(schema.getSchema("RUN::config"));
+            event.read(configBank);
+            this.setTimestamp(configBank.getLong("timestamp",0));
+            this.setEvent(configBank.getInt("event",0));
+            this.setRun(configBank.getInt("run",0));
+        }
+        return this.getFlipBank(schema);
+    }
+
 
     /**
      * @return whether any raw values are undefined 
