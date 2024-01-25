@@ -37,7 +37,13 @@ public final class HelicitySequenceManager {
         this.delay=delay;
         initialize(filenames);
     }
-    
+
+    public HelicitySequenceManager(int delay, List<Bank> flips, SchemaFactory schema) {
+        this.delay=delay;
+        this.schema=schema;
+        initializeRaw(flips);
+    }
+
     /**
      * @param delay number of states delayed 
      * @param reader HipoReader to initialize from 
@@ -176,6 +182,14 @@ public final class HelicitySequenceManager {
             initialize(reader);
             reader.close();
         }
+    }
+
+    private void initializeRaw(List<Bank> flips) {
+        for (Bank b : flips) {
+            int run = b.getInt("run",0);
+            this.addState(run, HelicityState.createFromFlipBank(b));
+        }
+        
     }
 
     public boolean analyze() {

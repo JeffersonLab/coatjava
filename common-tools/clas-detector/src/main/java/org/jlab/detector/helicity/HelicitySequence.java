@@ -482,4 +482,11 @@ class HelicitySequence {
             initialize(reader);
         }
     }
+
+    public void initializeRaw(List<Bank> flips) {
+        for (Bank b : flips) {
+            this.addState(HelicityState.createFromFlipBank(b));
+        }
+    }
+
 }
