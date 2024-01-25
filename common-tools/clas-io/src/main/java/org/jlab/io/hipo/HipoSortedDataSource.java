@@ -55,7 +55,7 @@ public class HipoSortedDataSource extends HipoDataSource {
                 if (b.rows() > 0) {
                     int coda = b.getInt("event",0);
                     if (coda > 0) {
-                        int evio = this.currentEventNumber;
+                        int evio = this.currentEventIndex-1;
                         map.put(coda, evio);
                     }
                 }
@@ -103,4 +103,30 @@ public class HipoSortedDataSource extends HipoDataSource {
     public void reset() {
         this.index = 0;
     }
+    
+    public static void main(String args[]) {
+        HipoSortedDataSource s = new HipoSortedDataSource();
+        s.open("/Users/baltzell/Software/coatjava/iss166-eventordering/x.hipo");
+        int previousEventNumber = -999;
+        int previousIndex = -999;
+        while (s.hasEvent()) {
+            DataEvent e = s.getNextEvent();
+            if (e.hasBank("RUN::config")) {
+                DataBank b = e.getBank("RUN::config");
+                if (b.rows() > 0) {
+                    int thisEventNumber = b.getInt("event",0);
+                    if (thisEventNumber > 0 && thisEventNumber < previousEventNumber) {
+                        System.out.println(String.format("PREVIOUS:  %d %d",
+                            previousEventNumber, previousIndex));
+                        System.out.println(String.format("CURRENT:  %d %d",
+                            thisEventNumber, s.getCurrentIndex()));
+                        break;
+                    }
+                    previousIndex = s.getCurrentIndex();
+                    previousEventNumber = thisEventNumber;
+                }
+            }
+        }
+    }
+
 }
