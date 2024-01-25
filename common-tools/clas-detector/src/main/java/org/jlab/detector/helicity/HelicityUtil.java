@@ -28,26 +28,20 @@ public class HelicityUtil {
      * @param hwp half-wave plate status (-1/0/1 = IN/UDF/OUT)
      * @return list of helicity flips' corresponding HEL::flip and RUN::config banks
      */
-    public static List<Event> getFlips(HipoDataSource r, byte hwp) {
-        List<Event> flips = new ArrayList<>();
+    public static List<Bank> getFlips(HipoDataSource r, byte hwp) {
+        List<Bank> flips = new ArrayList<>();
         Schema s = r.getReader().getSchemaFactory().getSchema("HEL::adc");
         Bank adc = new Bank(r.getReader().getSchemaFactory().getSchema("HEL::adc"));
-        Bank cfg = new Bank(r.getReader().getSchemaFactory().getSchema("RUN::config"));
         HelicityState prevHelicity = new HelicityState();
         while (r.hasEvent()) {
             Event e = (Event)r.getNextEvent();
             if (e.hasBank(s)) {
                 e.read(adc);
-                e.read(cfg);
                 if (adc.getRows()>0) {
                     HelicityState thisHelicity = HelicityState.createFromFadcBank(adc);
                     thisHelicity.setHalfWavePlate(hwp);
                     if (!thisHelicity.isValid() || !thisHelicity.equals(prevHelicity)) {
-                        Bank flip = thisHelicity.getFlipBank(r.getReader().getSchemaFactory(), e);
-                        Event x = new Event();
-                        x.write(cfg);
-                        x.write(flip);
-                        flips.add(x);
+                        flips.add(thisHelicity.getFlipBank(r.getReader().getSchemaFactory(), e));
                         prevHelicity = thisHelicity;
                     }
 
@@ -83,27 +77,21 @@ public class HelicityUtil {
      * @param s
      * @return list of helicity flips' corresponding HEL::flip and RUN::config banks
      */
-    public static List<Event> getFlips(EvioSource s) {
+    public static List<Bank> getFlips(EvioSource s) {
+        List<Bank> flips = new ArrayList<>();
         ProgressPrintout progress = new ProgressPrintout();
         Logger.getLogger(HelicityUtil.class.getName()).info("Initializing Helicity Flips");
-        List<Event> flips = new ArrayList<>();
         CLASDecoder4 d = new CLASDecoder4();
         Bank adc = new Bank(d.getSchemaCopy("HEL::adc"));
-        Bank cfg = new Bank(d.getSchemaCopy("RUN::config"));
         HelicityState prevHelicity = new HelicityState();
         while (s.hasEvent()) {
             DataEvent evio = s.getNextEvent();
             Event hipo = d.getDataEvent(evio);
             hipo.read(adc);
-            hipo.read(cfg);
             if (adc.getRows()>0) {
                 HelicityState thisHelicity = HelicityState.createFromFadcBank(adc);
                 if (!thisHelicity.isValid() || !thisHelicity.equals(prevHelicity)) {
-                    Bank flip = d.createHelicityFlipBank(hipo,thisHelicity);
-                    Event e = new Event();
-                    e.write(cfg);
-                    e.write(flip);
-                    flips.add(e);
+                    flips.add(d.createHelicityFlipBank(hipo,thisHelicity));
                     prevHelicity = thisHelicity;
                 }
                 progress.updateStatus();
