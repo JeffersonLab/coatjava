@@ -41,6 +41,7 @@ public final class HelicitySequenceManager {
     public HelicitySequenceManager(int delay, List<Bank> flips, SchemaFactory schema) {
         this.delay=delay;
         this.schema=schema;
+        this.rcfgBank=new Bank(this.schema.getSchema("RUN::config"));
         initializeRaw(flips);
     }
 

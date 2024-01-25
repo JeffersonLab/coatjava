@@ -3,10 +3,8 @@ package org.jlab.io.hipo;
 import java.util.ArrayList;
 import java.util.TreeMap;
 import java.util.logging.Logger;
+import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
-import org.jlab.jnp.hipo4.data.Bank;
-import org.jlab.jnp.hipo4.data.Event;
-import org.jlab.jnp.hipo4.data.Schema;
 
 /**
  *
@@ -49,14 +47,12 @@ public class HipoSortedDataSource extends HipoDataSource {
         this.map.clear();
         this.list.clear();
         super.open(filename);
-        Schema s = this.reader.getSchemaFactory().getSchema("RUN::config");
-        Bank b = new Bank(s);
         while (super.hasEvent()) {
             if (maxEvents>0 && this.map.keySet().size()>maxEvents) break;
-            Event e = (Event)super.getNextEvent();
-            if (e.hasBank(s)) {
-                e.read(b);
-                if (b.getRows() > 0) {
+            DataEvent e = super.getNextEvent();
+            if (e.hasBank("RUN::config")) {
+                DataBank b = e.getBank("RUN::config");
+                if (b.rows() > 0) {
                     int coda = b.getInt("event",0);
                     if (coda > 0) {
                         int evio = this.currentEventNumber;

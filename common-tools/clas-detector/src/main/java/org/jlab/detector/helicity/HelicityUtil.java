@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 import org.jlab.detector.decode.CLASDecoder4;
+import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.evio.EvioSource;
 import org.jlab.io.hipo.HipoDataSource;
@@ -34,10 +35,10 @@ public class HelicityUtil {
         Bank adc = new Bank(r.getReader().getSchemaFactory().getSchema("HEL::adc"));
         HelicityState prevHelicity = new HelicityState();
         while (r.hasEvent()) {
-            Event e = (Event)r.getNextEvent();
-            if (e.hasBank(s)) {
-                e.read(adc);
-                if (adc.getRows()>0) {
+            DataEvent e = r.getNextEvent();
+            if (e.hasBank("HEL::adc")) {
+                DataBank b = e.getBank("HEL::adc");
+                if (b.rows() > 0) {
                     HelicityState thisHelicity = HelicityState.createFromFadcBank(adc);
                     thisHelicity.setHalfWavePlate(hwp);
                     if (!thisHelicity.isValid() || !thisHelicity.equals(prevHelicity)) {
