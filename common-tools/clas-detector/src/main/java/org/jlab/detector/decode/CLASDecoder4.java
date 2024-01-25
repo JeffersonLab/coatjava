@@ -6,12 +6,14 @@ import java.util.List;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 import org.jlab.detector.base.DetectorDescriptor;
 
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.decode.DetectorDataDgtz.HelicityDecoderData;
 import org.jlab.detector.helicity.HelicityBit;
 import org.jlab.detector.helicity.HelicityState;
+import org.jlab.detector.helicity.HelicityUtil;
 
 import org.jlab.logging.DefaultLogger;
 
@@ -695,7 +697,7 @@ public class CLASDecoder4 {
         parser.addOption("-t", "-0.5","torus current in the header bank");
         parser.addOption("-s", "0.5","solenoid current in the header bank");
         parser.addOption("-x", null,"CCDB timestamp (MM/DD/YYYY-HH:MM:SS)");
-        parser.addOption("-S", "0", "sort events by CODA event number (0 means no)");
+        parser.addOption("-S", "0", "sort events by CODA event number during helicity flip detection (0 means no)");
 
         parser.parse(args);
 
@@ -706,6 +708,8 @@ public class CLASDecoder4 {
             System.out.println("\n >>>> error : no input file is specified....\n");
             System.exit(0);
         }
+
+        boolean sorting = parser.getOption("-S").intValue() != 0;
 
         String modeDevel = parser.getOption("-m").stringValue();
         boolean developmentMode = false;
@@ -758,8 +762,7 @@ public class CLASDecoder4 {
 
         for(String inputFile : inputList){
             
-            EvioSource reader = parser.getOption("-S").intValue()==0 ?
-                new EvioSource() : new EvioSortedSource();
+            EvioSource reader = new EvioSource();
             reader.open(inputFile);
             
             HelicityState prevHelicity = new HelicityState();
@@ -810,7 +813,7 @@ public class CLASDecoder4 {
                         scalerEvent.write(epics);
                     }
                     
-                    if (helicityFlip!=null) {
+                    if (!sorting && helicityFlip!=null) {
                         decodedEvent.write(helicityFlip);
                         scalerEvent.write(helicityFlip);
                     }
@@ -830,6 +833,16 @@ public class CLASDecoder4 {
                 }
             }
             reader.close();
+            if (sorting) {
+                EvioSortedSource ess = new EvioSortedSource();
+                ess.open(inputFile);
+                List<Event> flips = HelicityUtil.getFlips(ess);
+                Logger.getLogger(CLASDecoder4.class.getName()).info("Writing HEL::flip banks ...");
+                for (Event e : flips) {
+                    writer.addEvent(e, 1);
+                }
+                ess.close();
+            }
         }
         writer.close();
         
