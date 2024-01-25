@@ -95,7 +95,6 @@ public class Tag1ToEvent {
         Bank recEventBank = new Bank(writer.getSchemaFactory().getSchema("REC::Event"));
         Bank helScalerBank = new Bank(writer.getSchemaFactory().getSchema("HEL::scaler"));
         
-        // we're going to modify this bank if doHelicityFlip is set:
         Bank helFlipBank = new Bank(writer.getSchemaFactory().getSchema("HEL::flip"));
 
         // we're going to copy these banks to new tag-1 events:
@@ -142,18 +141,14 @@ public class Tag1ToEvent {
                 else badHelicity++;
 
                 if (doHelicityFlip) {
-
                     // flip this event's helicity:
                     hb = HelicityBit.getFlipped(hb);
                     hbraw = HelicityBit.getFlipped(hbraw);
-                
-                    // flip the helicity in the HEL::flip bank:
-                    if (helFlipBank.getRows()>0) {
-                        event.remove(helFlipBank.getSchema());
-                        helFlipBank.putByte("helicity", 0, (byte)-helFlipBank.getByte("helicity",0));
-                        helFlipBank.putByte("helicityRaw", 0, (byte)-helFlipBank.getByte("helicityRaw",0));
-                        event.write(helFlipBank);
-                    }
+                }
+
+                // remove any existing HEL::flip banks:
+                if (helFlipBank.getRows()>0) {
+                    event.remove(helFlipBank.getSchema());
                 }
 
                 // write delay-corrected helicty to REC::Event and HEL::scaler:
