@@ -17,6 +17,9 @@ import org.jlab.detector.scalers.DaqScalersSequence;
 
 import org.jlab.detector.helicity.HelicityBit;
 import org.jlab.detector.helicity.HelicitySequenceManager;
+import org.jlab.detector.helicity.HelicityUtil;
+import org.jlab.io.hipo.HipoDataSource;
+import org.jlab.io.hipo.HipoSortedDataSource;
 import org.jlab.logging.DefaultLogger;
 
 import org.jlab.utils.options.OptionParser;
@@ -77,7 +80,6 @@ public class Tag1ToEvent {
             System.exit(1);
         }
 
-        HelicitySequenceManager helSeq = new HelicitySequenceManager(8,inputList,doHelicityFlip);
         DaqScalersSequence chargeSeq = DaqScalersSequence.readSequence(inputList);
 
         HipoWriterSorted writer = new HipoWriterSorted();
@@ -108,6 +110,14 @@ public class Tag1ToEvent {
         long goodHelicity = 0;
 
         for (String filename : inputList) {
+
+            // Detect helicity flips:
+            HipoDataSource hds = new HipoSortedDataSource();
+            hds.open(filename);
+            List<Bank> flips = HelicityUtil.getFlips(hds, (byte)1); 
+            HelicitySequenceManager helSeq = new HelicitySequenceManager(8,
+                flips, writer.getSchemaFactory());
+            hds.close();
 
             HipoReader reader = new HipoReader();
             reader.open(filename);
@@ -186,6 +196,13 @@ public class Tag1ToEvent {
                 writer.addEvent(event, event.getEventTag());
             }
             reader.close();
+
+            // Write new HEL::flip banks to new events:
+            for (Bank b : flips) {
+                Event e = new Event();
+                e.write(b);
+                writer.addEvent(e, 1);
+            }
         }
         writer.close();
 
