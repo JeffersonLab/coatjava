@@ -3,6 +3,7 @@ package org.jlab.detector.decode;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.TreeMap;
+import java.util.logging.Logger;
 import org.jlab.coda.jevio.ByteDataTransformer;
 import org.jlab.coda.jevio.DataType;
 import org.jlab.coda.jevio.EvioNode;
@@ -15,7 +16,7 @@ import org.jlab.io.evio.EvioTreeBranch;
  * A wrapper on EvioSource to read one file sorted by CODA event number.
  *
  * Note, the minimum required for reading the CODA number from each event
- * was extracted from the standard decoder, to avoid unecessarily reading
+ * was extracted from the standard decoder, to avoid unnecessarily reading
  * the rest of the event.
  * 
  * WARNING:  This is strictly for reading sorted events sequentially.  Methods
@@ -79,6 +80,7 @@ public class EvioSortedSource extends EvioSource {
      * @param filename 
      */
     private void load(String filename, int maxEvents) {
+        Logger.getLogger(this.getClass().getName()).info("Initializing EvioSortedSource ...");
         this.map.clear();
         this.list.clear();
         super.open(filename);
