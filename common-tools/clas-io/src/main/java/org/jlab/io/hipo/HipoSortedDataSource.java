@@ -7,7 +7,6 @@ import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 
 /**
- *
  * A wrapper on HipoDataSource to read one file sorted by CODA event number.
  *
  * WARNING:  This is strictly for reading sorted events sequentially.  Methods
@@ -43,7 +42,7 @@ public class HipoSortedDataSource extends HipoDataSource {
      * @param filename 
      */
     private void load(String filename, int maxEvents) {
-        Logger.getLogger(this.getClass().getName()).info("Initializing EvioSortedSource ...");
+        Logger.getLogger(this.getClass().getName()).info("Loading event ordering ...");
         this.map.clear();
         this.list.clear();
         super.open(filename);
@@ -90,7 +89,7 @@ public class HipoSortedDataSource extends HipoDataSource {
      */
     @Override
     public DataEvent getNextEvent() {
-        final int coda = this.list.get(this.index++);
+        int coda = this.list.get(this.index++);
         return this.gotoEvent(this.map.get(coda));
     }
 
