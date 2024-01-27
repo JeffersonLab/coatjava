@@ -37,7 +37,7 @@ then
     wget='wget --progress=dot:mega'
     mvn="mvn -q -B --settings $top/maven-settings.xml"
 fi
-mvn+=" ${mvnArgs[*]}"
+mvn+=" ${mvnArgs[*]:-}"
 
 command_exists () {
     type "$1" &> /dev/null
