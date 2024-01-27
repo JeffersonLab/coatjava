@@ -53,6 +53,7 @@ public class Track extends Trajectory implements Comparable<Track> {
     private Vector3D _trackDirAtCTOF;	        // the direction of the track at the reference point described above.
     private double   _pathToCTOF;       	// the pathlength from the doca of the track to the z axis to the reference point described above
     private int    _NDF;
+    private double _NDFDAF;                     // NDF weighted by DAF
     private double _Chi2;
     private int kfIterations;
     private double[][] trackCovMat;
@@ -60,6 +61,7 @@ public class Track extends Trajectory implements Comparable<Track> {
     private Helix secondaryHelix;                  // for track with no beamSpot information
     private double secondaryChi2;                  // for track with no beamSpot information
     private int    secondaryNDF;                   // for track with no beamSpot information
+    private double secondaryNDFDAF;                   // for track with no beamSpot information
     private int _status = 0;
 
 
@@ -85,9 +87,11 @@ public class Track extends Trajectory implements Comparable<Track> {
         this.setSecondaryHelix(new Helix(kf.getHelix(1), kf.getStateVec(1).covMat));
         this.kfIterations = kf.numIter;
         this.setNDF(kf.getNDF());
+        this.setNDFDAF(kf.getNDFDAF());
         this.setChi2(kf.getChi2(0));
         this.setSecondaryChi2(kf.getChi2(1));
         this.setSecondaryNDF(kf.getNDF(1));
+        this.setSecondaryNDFDAF(kf.getNDFDAF(1));
         this.setSeed(seed);
         this.addAll(seed.getCrosses());
         this.setKFTrajectories(kf.trajPoints);
@@ -180,6 +184,14 @@ public class Track extends Trajectory implements Comparable<Track> {
 
     public void setSecondaryNDF(int secondaryNDF) {
         this.secondaryNDF = secondaryNDF;
+    }
+    
+    public double getSecondaryNDFDAF() {
+        return secondaryNDFDAF;
+    }
+
+    public void setSecondaryNDFDAF(double secondaryNDFDAF) {
+        this.secondaryNDFDAF = secondaryNDFDAF;
     }
 
     public Seed getSeed() {
@@ -404,6 +416,14 @@ public class Track extends Trajectory implements Comparable<Track> {
 
     public final void setNDF(int _NDF) {
         this._NDF = _NDF;
+    }
+    
+    public double getNDFDAF() {
+        return _NDFDAF;
+    }
+
+    public final void setNDFDAF(double _NDFDAF) {
+        this._NDFDAF = _NDFDAF;
     }
 
     public double getChi2() {

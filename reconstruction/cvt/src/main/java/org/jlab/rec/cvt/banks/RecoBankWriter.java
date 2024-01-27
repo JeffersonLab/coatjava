@@ -569,6 +569,7 @@ public class RecoBankWriter {
             bank.setShort("seedID", i, (short) trkcands.get(i).getSeed().getId());
             bank.setFloat("chi2", i,  (float) trkcands.get(i).getChi2());
             bank.setShort("ndf", i, (short) trkcands.get(i).getNDF());
+            bank.setFloat("ndfDAF", i, (float) trkcands.get(i).getNDFDAF());
             bank.setInt("pid", i, trkcands.get(i).getPID());
         }
         //bank.show();
@@ -630,6 +631,7 @@ public class RecoBankWriter {
             bank.setShort("seedID", i, (short) trkcands.get(i).getSeed().getId());
             bank.setFloat("chi2", i,  (float) trkcands.get(i).getSecondaryChi2());
             bank.setShort("ndf", i, (short) trkcands.get(i).getSecondaryNDF());
+            bank.setFloat("ndfDAF", i, (float) trkcands.get(i).getSecondaryNDFDAF());
             bank.setInt("pid", i, trkcands.get(i).getPID());
         }
         //bank.show();

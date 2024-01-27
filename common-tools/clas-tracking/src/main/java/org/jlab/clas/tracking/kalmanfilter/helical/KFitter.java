@@ -19,7 +19,8 @@ public class KFitter extends AKFitter {
     private StateVecs sv = new StateVecs();
     private MeasVecs  mv = new MeasVecs();
     private StateVec finalSmoothedStateVec = null;    
-    private StateVec finalTransportedStateVec = null;    
+    private StateVec finalTransportedStateVec = null;  
+    private double NDFDAF;
     
     
     public KFitter(boolean filter, int iterations, int dir, Swim swim, Libr mo) {
@@ -33,6 +34,7 @@ public class KFitter extends AKFitter {
         finalTransportedStateVec = null; 
         this.NDF0 = -5;
         this.NDF  = -5;
+        this.NDFDAF = -5;
         this.chi2 = Double.POSITIVE_INFINITY;
         this.numIter = 0;
         this.setFitFailed = false;
@@ -106,6 +108,29 @@ public class KFitter extends AKFitter {
         }
         else {
             return this.chi2;
+        }
+    }
+    
+    public double getNDFDAF() {
+        return getNDFDAF(0);
+    }
+    
+    public double getNDFDAF(int mode) {
+        if(mode==1) {
+            double ndf = this.NDF0;
+            for(int k = 1; k< mv.measurements.size(); k++) {
+                if(!mv.measurements.get(k).skip) {
+                    double weight = 1;
+                    if(sv.smoothed().get(k) != null){
+                        weight = sv.smoothed().get(k).getWeightDAF();
+                    }
+                    ndf += weight;
+                }
+            }
+            return ndf;           
+        }
+        else {
+            return this.NDFDAF;
         }
     }
     
@@ -206,6 +231,7 @@ public class KFitter extends AKFitter {
     public double calc_chi2DAF(AStateVecs sv, AMeasVecs mv) {
         double chisq = 0;
         this.NDF = this.NDF0;
+        this.NDFDAF = this.NDF0;
 
         int k0 = 0;
         int kf = mv.measurements.size()-1;
@@ -223,12 +249,14 @@ public class KFitter extends AKFitter {
                     double dh    = mv.dh(k, sv.smoothed().get(k));
                     double error = mv.measurements.get(k).error;
                     double V = error*error;
+                    double weight = 1;
                     if(sv.smoothed().get(k) != null){
-                        double weight = sv.smoothed().get(k).getWeightDAF();
+                        weight = sv.smoothed().get(k).getWeightDAF();
                         DAFilter daf = new DAFilter(V, weight);
                         V = daf.get_EffectiveVar();                    
                     }                                        
                     chisq += dh*dh / V;
+                    this.NDFDAF += weight;
                     this.NDF++;
                 }
                 if(k< mv.measurements.size()-1) {
