@@ -19,6 +19,9 @@ import org.jlab.io.evio.EvioTreeBranch;
  * was extracted from the standard decoder, to avoid unnecessarily reading
  * the rest of the event.
  * 
+ * Note, this would ideally live in the same package as the EvioSource it
+ * extends, but instead it's here to avoid rewriting bits of the standard decoder.
+ * 
  * WARNING:  This is strictly for reading sorted events sequentially.  Methods
  * other than the overridden "open", "hasEvent", "getNextEvent", and "reset"
  * may not work as intended.
