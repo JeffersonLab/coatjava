@@ -27,7 +27,7 @@ public class HelicityUtil {
      * 
      * @param r
      * @param hwp half-wave plate status (-1/0/1 = IN/UDF/OUT)
-     * @return list of helicity flips' corresponding HEL::flip and RUN::config banks
+     * @return list of helicity flips' corresponding HEL::flip banks
      */
     public static List<Bank> getFlips(HipoDataSource r, byte hwp) {
         Logger.getLogger(HelicityUtil.class.getName()).info("Initializing Helicity Flips");
@@ -61,22 +61,21 @@ public class HelicityUtil {
      * This is just the helicity flip detection extracted from the standard
      * decoder, CLASDecoder4, to facilitate using that same decoder on misordered
      * EVIO events, without changing their original order in the output HIPO file.
-     * 
      * The original approach added helicity flip information to events on-the-fly
-     * as the flips were detected.  Here, instead all events are first read for
-     * helicity flip detection, which is currently very inefficient due to reading
-     * far more raw detector data than necessary for flip detection, due to
-     * reusing functionality from the decoder.  A first look suggests that fixing
-     * that, without copy-pasting low-level code around, while still supporting
-     * all the FADC readout modes, would be a significant project and time would
-     * be better spent on a larger rewrite, which is already in independently
+     * as the flips were detected, while here, instead, all events are first read
+     * for helicity flip detection, which is currently very inefficient due to
+     * reading far more raw detector data than necessary, due to reusing
+     * functionality from the decoder.  A first look suggests that fixing that,
+     * without copy-pasting low-level code around, while still supporting all
+     * the FADC readout modes, would be a significant project and time would be
+     * better spent on a larger rewrite, which is already independently in
      * progress but not ready to support the entire CLAS12 data.
      * 
-     * In the big picture, this essentially doubles the CPU time required for
-     * decoding, which is only a ~1 % effect on the total.
+     * This would double the CPU time required for decoding, but in the big 
+     * picture that's only a ~1 % effect on the total.
      * 
      * @param s
-     * @return list of helicity flips' corresponding HEL::flip and RUN::config banks
+     * @return list of helicity flips' corresponding HEL::flip banks
      */
     public static List<Bank> getFlips(EvioSource s) {
         List<Bank> flips = new ArrayList<>();
