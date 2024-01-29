@@ -2,6 +2,7 @@ package org.jlab.detector.helicity;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,7 +47,7 @@ import org.jlab.jnp.hipo4.io.HipoReader;
  * 
  * @author baltzell
  */
-class HelicitySequence {
+public class HelicitySequence {
 
     static final Logger LOGGER = Logger.getLogger(HelicitySequence.class.getName());
     public static final double TIMESTAMP_CLOCK=250.0e6; // Hz
@@ -482,4 +483,21 @@ class HelicitySequence {
             initialize(reader);
         }
     }
+
+    public void initialize(String... filenames) {
+        initialize(Arrays.asList(filenames));
+    }
+
+    public List<HelicityState> getStates() {
+        return new ArrayList<>(this.states);
+    } 
+
+    public List<Bank> getBanks(SchemaFactory schema) {
+        List<Bank> banks = new ArrayList<>();
+        for (HelicityState s : this.states) {
+            banks.add(s.getFlipBank(schema));
+        }
+        return banks;
+    }
+
 }
