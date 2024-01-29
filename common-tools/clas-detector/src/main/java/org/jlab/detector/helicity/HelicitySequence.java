@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -13,6 +14,7 @@ import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.jnp.hipo4.io.HipoReader;
+import org.jlab.jnp.hipo4.io.HipoWriterSorted;
 
 /**
  * Stores a sequence of helicity states and provides timestamp- or state-count-
@@ -492,12 +494,47 @@ public class HelicitySequence {
         return new ArrayList<>(this.states);
     } 
 
+    /**
+     * Get a list of HEL::flip banks corresponding to this sequence
+     * @param schema
+     * @return list of HEL::flip banks
+     */
     public List<Bank> getBanks(SchemaFactory schema) {
         List<Bank> banks = new ArrayList<>();
         for (HelicityState s : this.states) {
             banks.add(s.getFlipBank(schema));
         }
         return banks;
+    }
+
+    /**
+     * Detect and add state changes from a "stream" of measured helicities to
+     * the sequence.
+     * 
+     * WARNING:  Unlike addState, this requires that previously added states are
+     * all earlier in time than the input stream.
+     * 
+     * NOTE:  In order to detect state changes, TreeSet is used to ensure the
+     * input state stream is sorted by timestamp, HelicityState's natural order.
+     * 
+     * @param states stream of states
+     */
+    public void addStream(TreeSet<HelicityState> states) {
+        final long tmin = this.states.isEmpty() ? Long.MIN_VALUE : 
+            this.states.get(this.states.size()-1).getTimestamp();
+        for (HelicityState s : states) {
+            if (this.states.isEmpty()) {
+                this.addState(s);
+            }
+            else if (tmin > s.getTimestamp()) {
+                LOGGER.warning("Ignoring timestamp earlier than previously registered sequence.");
+            }
+            else if (!s.equals(this.states.get(this.states.size()-1))) {
+                this.addState(s);
+            }
+        }
+        LOGGER.log(Level.INFO, "found {0} helicity sequence states in stream.", this.size());
+        this.integrityCheck();
     }
 
 }
