@@ -495,19 +495,6 @@ public class HelicitySequence {
     } 
 
     /**
-     * Get a list of HEL::flip banks corresponding to this sequence
-     * @param schema
-     * @return list of HEL::flip banks
-     */
-    public List<Bank> getBanks(SchemaFactory schema) {
-        List<Bank> banks = new ArrayList<>();
-        for (HelicityState s : this.states) {
-            banks.add(s.getFlipBank(schema));
-        }
-        return banks;
-    }
-
-    /**
      * Detect and add state changes from a "stream" of measured helicities to
      * the sequence.
      * 
@@ -535,6 +522,34 @@ public class HelicitySequence {
         }
         LOGGER.log(Level.INFO, "found {0} helicity sequence states in stream.", this.size());
         this.integrityCheck();
+    }
+
+    /**
+     * Get a list of HEL::flip banks corresponding to this sequence
+     * @param schema
+     * @return list of HEL::flip banks
+     */
+    public List<Bank> getBanks(SchemaFactory schema) {
+        List<Bank> banks = new ArrayList<>();
+        for (HelicityState s : this.states) {
+            banks.add(s.getFlipBank(schema));
+        }
+        return banks;
+    }
+
+    /**
+     * Write all states from this sequence into new HEL::flip banks in new,
+     * tagged events
+     * @param writer
+     * @param tag
+     */
+    public void writeFlips(HipoWriterSorted writer, int tag) {
+        Event e = new Event();
+        for (HelicityState s : this.states) {
+            e.reset();
+            e.write(s.getFlipBank(writer.getSchemaFactory()));
+            writer.addEvent(e, tag);
+        }
     }
 
 }
