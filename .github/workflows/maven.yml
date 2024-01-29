@@ -3,38 +3,152 @@
 name: Coatjava-CI
 
 on:
-  push:
-    branches: [ '**' ]
   pull_request:
-    branches: [ '**' ]
+  push:
+    branches: [ development ]
+    tags: [ '*' ]
   schedule:
     # NOTE: From what I read, the email notification for cron can only go
     #       to the last committer of this file!!!!!
     - cron: '0 22 * * *'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
+
+  # build
+  #############################################################################
+
   build:
-
-    runs-on: ubuntu-latest
-
+    strategy:
+      fail-fast: true
+      matrix:
+        runner:
+          - ubuntu-latest
+          - macos-latest
+    outputs:
+      default_runner: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up JDK
-      uses: actions/setup-java@v1
-      with:
-        java-version: 11
-    - name: build
-      run: ./build-coatjava.sh --spotbugs --unittests --quiet
-    - name: kpp-test
-      run: cd validation/advanced-tests && ./run-advanced-tests.sh
-    - name: eb-ep-test
-      run: cd validation/advanced-tests && ./run-eb-tests.sh -100 electronproton
-    - name: eb-eg-test
-      run: cd validation/advanced-tests && ./run-eb-tests.sh -100 electrongamma
-    - name: eb-epc-test
-      run: cd validation/advanced-tests && ./run-eb-tests.sh -100 electronprotonC
-    - name: eb-enc-test
-      run: cd validation/advanced-tests && ./run-eb-tests.sh -100 electronneutronC
-    - name: eb-eftpi-test
-      run: cd validation/advanced-tests && ./run-eb-tests.sh -100 electronFTpion
+      - uses: actions/checkout@v3
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: 11
+          distribution: zulu
+      - name: build
+        run: ./build-coatjava.sh --spotbugs --unittests --quiet -T4
+      - name: tar # tarball to preserve permissions
+        run: tar czvf coatjava.tar.gz coatjava
+      - uses: actions/upload-artifact@v3
+        with:
+          name: build_${{ matrix.runner }}
+          retention-days: 1
+          path: coatjava.tar.gz
+      - name: collect jacoco report
+        if: ${{ matrix.runner == 'ubuntu-latest' }}
+        run: validation/jacoco-aggregate.sh
+      - name: publish jacoco report
+        if: ${{ matrix.runner == 'ubuntu-latest' }}
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: publish/
+          retention-days: 1
 
+  # tests
+  #############################################################################
+
+  test_coatjava:
+    needs: [ build ]
+    strategy:
+      fail-fast: true
+      matrix:
+        runner:
+          - ubuntu-latest
+        id:
+          - kpp
+          - eb-ep
+          - eb-eg
+          - eb-epc
+          - eb-enc
+          - eb-eftpi
+        include:
+          # run all tests on ubuntu
+          - { id: kpp,      cmd: ./run-advanced-tests.sh }
+          - { id: eb-ep,    cmd: ./run-eb-tests.sh -100 electronproton   }
+          - { id: eb-eg,    cmd: ./run-eb-tests.sh -100 electrongamma    }
+          - { id: eb-epc,   cmd: ./run-eb-tests.sh -100 electronprotonC  }
+          - { id: eb-enc,   cmd: ./run-eb-tests.sh -100 electronneutronC }
+          - { id: eb-eftpi, cmd: ./run-eb-tests.sh -100 electronFTpion   }
+          # run one macos test
+          - { runner: macos-latest, id: eb-ep, cmd: ./run-eb-tests.sh -100 electronproton }
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: 11
+          distribution: zulu
+      - uses: actions/download-artifact@v3
+        with:
+          name: build_${{ matrix.runner }}
+      - name: untar build
+        run: tar xzvf coatjava.tar.gz
+      - name: run test
+        run: |
+          cd validation/advanced-tests
+          echo "COMMAND: ${{ matrix.cmd }}"
+          ${{ matrix.cmd }}
+
+  test_run-groovy:
+    needs: [ build ]
+    runs-on: ${{ needs.build.outputs.default_runner }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: 11
+          distribution: zulu
+      - name: setup groovy
+        uses: wtfjoke/setup-groovy@v1
+        with:
+          groovy-version: 4.x
+      - uses: actions/download-artifact@v3
+        with:
+          name: build_${{ needs.build.outputs.default_runner }}
+      - name: untar build
+        run: tar xzvf coatjava.tar.gz
+      - name: test run-groovy
+        run: coatjava/bin/run-groovy validation/advanced-tests/test-run-groovy.groovy
+
+  final:
+    needs:
+      - build
+      - test_coatjava
+      - test_run-groovy
+    runs-on: ${{ needs.build.outputs.default_runner }}
+    steps:
+      - name: pass
+        run: exit 0
+
+  # deploy web pages
+  #############################################################################
+
+  deploy_web_pages:
+    if: ${{ github.event_name == 'push' }}
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: deployment
+        id: deployment
+        uses: actions/deploy-pages@v2

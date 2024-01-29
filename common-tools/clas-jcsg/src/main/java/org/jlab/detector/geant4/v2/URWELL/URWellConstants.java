@@ -115,13 +115,14 @@ public class URWellConstants {
 //            NREGIONS = cp.getInteger( CCDBPATH+"svt/nRegions", 0 );
 
              for (int i=0; i<NMAXREGIONS; i++){
-                 
-                URWELL2DC0[NMAXREGIONS-i-1] =  2+i*2;
-                DIST2TGT[NMAXREGIONS-i-1]   = (TGT2DC0-URWELL2DC0[NMAXREGIONS-i-1]);
-                W2TGT[NMAXREGIONS-i-1] = DIST2TGT[NMAXREGIONS-i-1]/Math.cos(Math.toRadians(THTILT-THMIN));
-                YMIN[NMAXREGIONS-i-1]= W2TGT[NMAXREGIONS-i-1]*Math.sin(Math.toRadians(THMIN)); // distance from the base chamber1 and beamline
-                ZMIN[NMAXREGIONS-i-1] = W2TGT[NMAXREGIONS-i-1]*Math.cos(Math.toRadians(THMIN));  
-
+                
+                URWELL2DC0[i] =  -2.+i*1.3;
+                DIST2TGT[i]   = (TGT2DC0+URWELL2DC0[i]);
+                W2TGT[i] = DIST2TGT[i]/Math.cos(Math.toRadians(THTILT-THMIN));
+                YMIN[i]= W2TGT[i]*Math.sin(Math.toRadians(THMIN)); // distance from the base chamber1 and beamline
+                ZMIN[i] = W2TGT[i]*Math.cos(Math.toRadians(THMIN));  
+  
+               
                 }
 
     
