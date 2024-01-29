@@ -53,6 +53,7 @@ public class HipoDataSource implements DataSource {
     
     @Override
     public void open(String filename) {
+        this.currentEventNumber = 0;
         this.reader.open(filename);
         LOGGER.log(Level.INFO,"[DataSourceDump] --> opened file with events # " );
     }
@@ -91,6 +92,7 @@ public class HipoDataSource implements DataSource {
         } else {
             hipoEvent.setType(DataEventType.EVENT_STOP);
         }
+        this.currentEventNumber++;
         return hipoEvent;
     }
 
