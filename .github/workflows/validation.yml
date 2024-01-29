@@ -13,41 +13,41 @@ concurrency:
 
 jobs:
 
-  get_gemc_tag:
-    runs-on: ubuntu-latest
-    name: Get highest GEMC tag
-    outputs:
-      tag: ${{ steps.tag.outputs.tag }}
-    steps:
-      - name: checkout clas12-validation
-        uses: actions/checkout@v4
-        with:
-          repository: JeffersonLab/clas12-validation
-          ref: main
-          path: clas12-validation
-      - name: checkout clas12Tags
-        uses: actions/checkout@v4
-        with:
-          repository: gemc/clas12Tags
-          ref: main
-          clean: false
-          fetch-tags: true
-          fetch-depth: 0
-          path: clas12Tags
-      - name: get highest tag
-        id: tag
-        working-directory: clas12Tags
-        run: |
-          tag=$(../clas12-validation/bin/get_highest_tag.rb)
-          echo "Highest \`clas12Tags\` (GEMC) tag: \`$tag\`" >> $GITHUB_STEP_SUMMARY
-          echo '- using this version for `clas12-validation` workflow run' >> $GITHUB_STEP_SUMMARY
-          echo tag=$tag >> $GITHUB_OUTPUT
+  # get_gemc_tag:
+  #   runs-on: ubuntu-latest
+  #   name: Get highest GEMC tag
+  #   outputs:
+  #     tag: ${{ steps.tag.outputs.tag }}
+  #   steps:
+  #     - name: checkout clas12-validation
+  #       uses: actions/checkout@v4
+  #       with:
+  #         repository: JeffersonLab/clas12-validation
+  #         ref: main
+  #         path: clas12-validation
+  #     - name: checkout clas12Tags
+  #       uses: actions/checkout@v4
+  #       with:
+  #         repository: gemc/clas12Tags
+  #         ref: main
+  #         clean: false
+  #         fetch-tags: true
+  #         fetch-depth: 0
+  #         path: clas12Tags
+  #     - name: get highest tag
+  #       id: tag
+  #       working-directory: clas12Tags
+  #       run: |
+  #         tag=$(../clas12-validation/bin/get_highest_tag.rb)
+  #         echo "Highest \`clas12Tags\` (GEMC) tag: \`$tag\`" >> $GITHUB_STEP_SUMMARY
+  #         echo '- using this version for `clas12-validation` workflow run' >> $GITHUB_STEP_SUMMARY
+  #         echo tag=$tag >> $GITHUB_OUTPUT
 
   validation:
-    needs: [ get_gemc_tag ]
+    # needs: [ get_gemc_tag ]
     uses: JeffersonLab/clas12-validation/.github/workflows/ci.yml@main
     with:
       git_upstream: >-
         {
-          "clas12Tags": { "fork": "gemc/clas12Tags", "branch": "${{ needs.get_gemc_tag.outputs.tag }}" }
+          "clas12Tags": { "fork": "gemc/clas12Tags", "ref": "5.4" }
         }
