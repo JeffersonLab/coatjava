@@ -55,8 +55,8 @@ public class DecoderBoardTest {
     }
 
     public static void main(String args[]) {
-        DecoderBoard.INVERTED_CHECK = true;
-        String filename = "/Users/baltzell/Software/coatjava/iss166+167-eventordering+maurik/clas_019349.evio.00040.hipo";
+        DecoderBoardUtil.INVERT_BITS_CHECK = true;
+        String filename = "/Users/baltzell/Software/coatjava/iss166+167-eventordering+maurik/clas_019400.evio.00040.hipo";
         HelicitySequenceManager hsm = new HelicitySequenceManager(8, filename);
         try (HipoWriterSorted writer = new HipoWriterSorted()) {
             writer.getSchemaFactory().initFromDirectory("/Users/baltzell/Software/coatjava/iss171-heldecoder/etc/bankdefs/hipo4");
@@ -77,7 +77,7 @@ public class DecoderBoardTest {
                     event.read(config);
                     event.read(online);
                     decoder.copyTo(compare);
-                    compare.putByte("board", 0, (byte)DecoderBoard.getQuartetWindowHelicity(decoder,8));
+                    compare.putByte("board", 0, (byte)DecoderBoardUtil.getQuartetWindowHelicity(decoder,8));
                     compare.putByte("online", 0, online.getByte("helicityRaw",0));
                     compare.putByte("offline", 0, hsm.search(event).value());
                     compare.putLong("timestamp", 0, config.getLong("timestamp",0));
@@ -85,7 +85,7 @@ public class DecoderBoardTest {
                     e.write(compare);
                     writer.addEvent(e,event.getEventTag());
                     System.out.println(toString(decoder));
-                    if (!DecoderBoard.check(decoder)) break;
+                    if (!DecoderBoardUtil.checkQuartetAll(decoder)) break;
                     //System.out.println(hsm.search(event));
                     //break;
                 }
