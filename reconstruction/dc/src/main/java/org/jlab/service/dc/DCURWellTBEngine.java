@@ -272,6 +272,7 @@ public class DCURWellTBEngine extends DCEngine {
 
                     TrackArray1.set_FitChi2(kFZRef.chi2);
                     TrackArray1.set_FitNDF(kFZRef.NDF);
+                    TrackArray1.set_NDFDAF(kFZRef.getNDFDAF());
                     TrackArray1.setStateVecs(kfStateVecsAlongTrajectory);
                     TrackArray1.set_FitConvergenceStatus(kFZRef.ConvStatus);
                     if (TrackArray1.get_Vtx0().toVector3D().mag() > 500) {
@@ -313,6 +314,7 @@ public class DCURWellTBEngine extends DCEngine {
 
                     TrackArray1.set_FitChi2(kFZRef.chi2);
                     TrackArray1.set_FitNDF(kFZRef.NDF);
+                    TrackArray1.set_NDFDAF(kFZRef.getNDFDAF());
                     TrackArray1.setStateVecs(kfStateVecsAlongTrajectory);
                     TrackArray1.set_FitConvergenceStatus(kFZRef.ConvStatus);
                     if (TrackArray1.get_Vtx0().toVector3D().mag() > 500) {

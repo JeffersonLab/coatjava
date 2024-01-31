@@ -27,6 +27,8 @@ public class KFitter extends AKFitter {
     private int dafAnnealingFactorsIndex = 0;
     private double dafAnnealingFactor = 1;
 
+    private double ndfDAF = -5;
+    
     private static final double initialCMBlowupFactor = 70;
     
     private StateVecs sv = new StateVecs();
@@ -762,6 +764,8 @@ public class KFitter extends AKFitter {
     }
     
     private void calcFinalChisqDAF(int sector, boolean nofilter) {
+        ndfDAF = -5;
+        
         int k = svzLength - 1;
         this.chi2 = 0;
         double path = 0;
@@ -801,7 +805,8 @@ public class KFitter extends AKFitter {
                 
                 double h = mv.hDoca(point, mv.measurements.get(0).surface.wireLine[0]);
                 double res = (effectiveDoca - h);
-                chi2 += res*res / effectiveVar;                               
+                chi2 += res*res / effectiveVar; 
+                ndfDAF += daf_weight;
                 
                 svc.setProjectorDoca(h); 
                 svc.setProjector(mv.measurements.get(0).surface.wireLine[0].origin().x());
@@ -824,6 +829,7 @@ public class KFitter extends AKFitter {
                 double h = mv.hDoca(point, mv.measurements.get(0).surface.wireLine[indexReferenceWire]);
                 double res = (effectiveDoca - h);
                 chi2 += res*res / effectiveVar;
+                ndfDAF += (daf_weights[0] + daf_weights[1]);
                 
                 h = mv.hDoca(point, mv.measurements.get(0).surface.wireLine[0]);
                 svc.setProjectorDoca(h); 
@@ -866,7 +872,8 @@ public class KFitter extends AKFitter {
                     double h = mv.hDoca(point, mv.measurements.get(k1 + 1).surface.wireLine[0]);
                     double res = (effectiveDoca - h);
                     chi2 += res*res / effectiveVar;
-
+                    ndfDAF += daf_weight;
+                    
                     svc.setProjectorDoca(h);  
                     svc.setProjector(mv.measurements.get(k1 + 1).surface.wireLine[0].origin().x());
                     kfStateVecsAlongTrajectory.add(svc);                                            
@@ -888,6 +895,7 @@ public class KFitter extends AKFitter {
                     double h = mv.hDoca(point, mv.measurements.get(k1 + 1).surface.wireLine[indexReferenceWire]);
                     double res = (effectiveDoca - h);
                     chi2 += res*res / effectiveVar;
+                    ndfDAF += (daf_weights[0] + daf_weights[1]);
 
                     h = mv.hDoca(point, mv.measurements.get(k1 + 1).surface.wireLine[0]);
                     svc.setProjectorDoca(h); 
@@ -934,6 +942,10 @@ public class KFitter extends AKFitter {
 
     public StateVecs getStateVecs() {
         return sv;
+    }
+    
+    public double getNDFDAF(){
+        return ndfDAF;
     }
 
     public void printlnMeasVecs() {

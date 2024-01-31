@@ -60,6 +60,7 @@ public class Track extends Trajectory implements Comparable<Track>{
     private Vector3D _pAtOrig_TiltedCS;
     private String _trking;
     private int _FitNDF;
+    private double _NDFDAF;
     private double _fitChisq;
     public boolean fit_Successful;
     private int _missingSuperlayer;
@@ -435,6 +436,22 @@ public class Track extends Trajectory implements Comparable<Track>{
     public void set_FitNDF(int _FitNDF) {
         this._FitNDF = _FitNDF;
     }
+    
+     /**
+     * 
+     * @return Kalman fit NDF weighted DAF
+     */
+    public double get_NDFDAF() {
+        return _NDFDAF;
+    }
+    /**
+     * 
+     * @param _NDFDAF Kalman fit NDF weighted by DAF
+     */
+    public void set_NDFDAF(double _NDFDAF) {
+        this._NDFDAF = _NDFDAF;
+    }    
+    
     /**
      * 
      * @return Kalman fit covariance matrix
