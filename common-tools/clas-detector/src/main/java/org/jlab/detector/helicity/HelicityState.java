@@ -1,10 +1,14 @@
 package org.jlab.detector.helicity;
 
 import java.util.Comparator;
+import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.jnp.hipo4.data.Bank;
 
 import org.jlab.io.base.DataBank;
+import org.jlab.io.base.DataEvent;
+import org.jlab.jnp.hipo4.data.Event;
+import org.jlab.utils.groups.IndexedTable;
 
 /**
  *  See:
@@ -92,12 +96,77 @@ public class HelicityState implements Comparable<HelicityState>, Comparator<Heli
         else                     return HelicityBit.MINUS;
     }
 
+    private void inherit(DataBank bank) {
+        if (bank.rows()>0) {
+            this.timestamp = bank.getLong("timestamp",0);
+            this.event = bank.getInt("event",0);
+            this.run = bank.getInt("run",0);
+        }
+    }
+
+    private void inherit(Bank bank) {
+        if (bank.getRows()>0) {
+            this.timestamp = bank.getLong("timestamp",0);
+            this.event = bank.getInt("event",0);
+            this.run = bank.getInt("run",0);
+        }
+    }
+
+    public static HelicityState createFromFadcBank(DataBank adcBank, DataBank runConfig) {
+        HelicityState s = createFromFadcBank(adcBank);
+        s.inherit(runConfig);
+        return s;
+    }
+
+    public static HelicityState createFromFadcBank(Bank adcBank, Bank runConfig) {
+        HelicityState s = createFromFadcBank(adcBank);
+        s.inherit(runConfig);
+        return s;
+    }
+    
+    public static HelicityState createFromFadcBank(Bank adcBank, Bank runConfig, ConstantsManager c) {
+        HelicityState s = createFromFadcBank(adcBank);
+        s.inherit(runConfig);
+        s.setHalfWavePlate(c.getConstants(runConfig.getInt("run",0),"/runcontrol/hwp"));
+        return s;
+    }
+
+    public static HelicityState createFromFadcBank(DataBank adcBank, DataBank runConfig, ConstantsManager c) {
+        HelicityState s = createFromFadcBank(adcBank);
+        s.inherit(runConfig);
+        s.setHalfWavePlate(c.getConstants(runConfig.getInt("run",0),"/runcontrol/hwp"));
+        return s;
+    }
+
     /**
      * Create a state from a HEL::adc org.jlab.jnp.hipo4.data.Bank
      * 
      * @param adcBank HEL::adc
      * @return state extracted from the bank
      */
+    public static HelicityState createFromFadcBank(DataBank adcBank) {
+        HelicityState state=new HelicityState();
+        for (int ii=0; ii<adcBank.rows(); ii++) {
+            if (adcBank.getInt("sector",ii) != SECTOR) continue;
+            if (adcBank.getInt("layer",ii) != LAYER) continue;
+            switch (adcBank.getInt("component",ii)) {
+                case HELICITY_COMPONENT:
+                    state.helicityRaw = state.getFadcState(adcBank.getShort("ped",ii));
+                    break;
+                case PAIRSYNC_COMPONENT:
+                    state.pairSync = state.getFadcState(adcBank.getShort("ped",ii));
+                    break;
+                case PATTERNSYNC_COMPONENT:
+                    state.patternSync = state.getFadcState(adcBank.getShort("ped",ii));
+                    break;
+                default:
+                    break;
+            }
+        }
+        state.initialize();
+        return state;
+    }
+
     public static HelicityState createFromFadcBank(Bank adcBank) {
         HelicityState state=new HelicityState();
         for (int ii=0; ii<adcBank.getRows(); ii++) {
@@ -117,18 +186,18 @@ public class HelicityState implements Comparable<HelicityState>, Comparator<Heli
                     break;
             }
         }
-
-        state.hwStatus=0;
-        if (state.helicityRaw==HelicityBit.UDF) state.hwStatus |= Mask.HELICITY;
-        if (state.pairSync==HelicityBit.UDF)    state.hwStatus |= Mask.SYNC;
-        if (state.patternSync==HelicityBit.UDF) state.hwStatus |= Mask.PATTERN;
-
-        state.fixMissingReadouts();
-
-        // Fix the overall sign-convention error in the offline helicity:
-        state.invert();
-
+        state.initialize();
         return state;
+    }
+
+    private void initialize() {
+        this.hwStatus=0;
+        if (this.helicityRaw==HelicityBit.UDF) this.hwStatus |= Mask.HELICITY;
+        if (this.pairSync==HelicityBit.UDF)    this.hwStatus |= Mask.SYNC;
+        if (this.patternSync==HelicityBit.UDF) this.hwStatus |= Mask.PATTERN;
+        this.fixMissingReadouts();
+        // Fix the overall sign-convention error in the offline helicity:
+        this.invert();
     }
 
     /**
@@ -226,6 +295,19 @@ public class HelicityState implements Comparable<HelicityState>, Comparator<Heli
         bank.putByte("pattern", 0, this.patternSync.value());
         return bank;
     }
+    public Bank getFlipBank(SchemaFactory schema, DataEvent event) {
+        if(schema.hasSchema("RUN::config")) {
+            DataBank configBank = event.getBank("RUN::config");
+            this.setTimestamp(configBank.getLong("timestamp",0));
+            this.setEvent(configBank.getInt("event",0));
+            this.setRun(configBank.getInt("run",0));
+        }
+        return this.getFlipBank(schema);
+    }
+
+    public Bank getFlipBank(SchemaFactory schema, Event event) {
+        return this.getFlipBank(schema, (DataEvent)event);
+    }
 
     /**
      * @return whether any raw values are undefined 
@@ -252,6 +334,9 @@ public class HelicityState implements Comparable<HelicityState>, Comparator<Heli
      */
     public void setHalfWavePlate(byte hwp) {
         this.helicity = HelicityBit.create((byte)(hwp*this.helicityRaw.value()));
+    }
+    public void setHalfWavePlate(IndexedTable hwp) {
+        this.setHalfWavePlate((byte)hwp.getIntValue("hwp",0,0,0));
     }
     public void setTimestamp(long timestamp) { this.timestamp=timestamp; }
     public void setEvent(int event) { this.event=event; }
