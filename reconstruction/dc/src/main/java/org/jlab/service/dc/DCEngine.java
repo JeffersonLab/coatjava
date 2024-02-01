@@ -31,7 +31,7 @@ public class DCEngine extends ReconstructionEngine {
     private String     inBankPrefix   = null;
     private String     outBankPrefix  = null;
     private double[][] shifts         = new double[Constants.NREG][6];
-    
+    public boolean     newSwim        = false;
     public static final Logger LOGGER = Logger.getLogger(ReconstructionEngine.class.getName());
 
 
@@ -98,6 +98,9 @@ public class DCEngine extends ReconstructionEngine {
         if(this.getEngineConfigString("outputBankPrefix")!=null) {
             outBankPrefix = this.getEngineConfigString("outputBankPrefix");
         }
+        
+        if (this.getEngineConfigString("newSwim")!=null)
+            this.newSwim = (boolean) Boolean.valueOf(this.getEngineConfigString("newSwim"));
         
         // Set geometry shifts for alignment code
         if(this.getEngineConfigString("alignmentShifts")!=null) {

@@ -43,7 +43,7 @@ public class DCHBClustering extends DCEngine {
         
         /* 1 */
         // get Field
-        Swim dcSwim = new Swim();
+        Swim dcSwim = new Swim(this.newSwim);
         /* 2 */
         // init SNR
         Clas12NoiseResult results = new Clas12NoiseResult();
