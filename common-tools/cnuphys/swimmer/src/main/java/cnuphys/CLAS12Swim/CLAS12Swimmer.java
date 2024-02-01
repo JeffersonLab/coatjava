@@ -908,6 +908,45 @@ public class CLAS12Swimmer {
 	}
 
 	/**
+	 * Swim to an "offest beamline" listener. The offset
+	 * beamline is a line parallel to the z-axis, but offset in the x and y
+	 * directions by _xb and _yb. The goal is to swim to the DOCA of this line.
+	 *
+	 * @param q         in integer units of e
+	 * @param xo        the x vertex position in cm
+	 * @param yo        the y vertex position in cm
+	 * @param zo        the z vertex position in cm
+	 * @param p         the momentum in GeV/c
+	 * @param theta     the initial polar angle in degrees
+	 * @param phi       the initial azimuthal angle in degrees
+	 * @param xb        the x offset (cm)
+	 * @param yb        the y offset (cm)
+	 * @param accuracy  the desired accuracy in cm. This is how close you'd like to
+	 *                  get to the true DOCA
+	 * @param sMax      the final (max) value of the independent variable
+	 *                  (pathlength) unless the integration is terminated by the
+	 *                  listener
+	 * @param h         the initial stepsize in cm
+	 * @param tolerance The desired tolerance. The solver will automatically adjust
+	 *                  the step size to meet this tolerance.
+	 * @return the result of the swim
+	 */
+	public CLAS12SwimResult swimZLine(int q, double xo, double yo, double zo, double p, double theta, double phi,
+			double xb, double yb, double accuracy, double sMax, double h, double tolerance) {
+
+		// create the ODE
+		CLAS12SwimODE ode = new CLAS12SwimODE(q, p, _probe);
+
+		// create the initial values
+		CLAS12Values ivals = new CLAS12Values(q, xo, yo, zo, p, theta, phi);
+
+		CLAS12ZLineListener listener = new CLAS12ZLineListener(ivals, xb, yb, accuracy, sMax);
+
+		return swimToDOCA(ode, ivals.getU(), 0, h, tolerance, listener);
+	}
+	
+	
+	/**
 	 * Swim to the beamline (defined by rho = 0). That is,
 	 * find the distance of closest approach to the beamline.
 	 * Swim terminates when successive doca estimates differ by less than accuracy.
@@ -942,7 +981,6 @@ public class CLAS12Swimmer {
 
 		return swimToDOCA(ode, ivals.getU(), 0, h, tolerance, listener);
 	}
-
 
 	/**
 	 * Set the maximum integration step size in cm
