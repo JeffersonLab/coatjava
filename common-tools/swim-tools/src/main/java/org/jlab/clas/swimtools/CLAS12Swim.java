@@ -299,7 +299,7 @@ public class CLAS12Swim  {
          // the new swim to plane in swimmer
         cnuphys.CLAS12Swim.geometry.Plane plane = new cnuphys.CLAS12Swim.geometry.Plane(n.x(), n.y(), n.z(), d_cm);
         if (getpTot() > getSWIMZMINMOM()) {
-            szr = PC.CF_cs.swimPlane(dir, getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), plane, getAccuracy(), getrMax(), getStepSize(), getTolerance());
+            szr = PC.CF_cs.swimPlane(getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), plane, getAccuracy(), getrMax(), getStepSize(), getTolerance());
         }
         if(szr!=null) {
             double bdl = szr.getTrajectory().getComputedBDL();

@@ -16,7 +16,7 @@ import org.jlab.geom.prim.Vector3D;
 public class Swim {
     
     
-    private boolean newSwim = false;
+    private boolean newSwim = true;
 
     private ProbeCollection PC;
     
