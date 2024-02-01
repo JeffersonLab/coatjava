@@ -153,7 +153,7 @@ public class CLAS12Swim  {
         {
             return null;
         }
-
+        
         CLAS12SwimResult szr = null;
         if (getpTot() > getSWIMZMINMOM()) {
              szr = PC.CF_cs.swimCylinder(getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), 
@@ -190,7 +190,7 @@ public class CLAS12Swim  {
         CLAS12SwimResult szr = null;
 
         if (getpTot() > getSWIMZMINMOM()) {
-            szr = PC.RCF_cs.sectorSwimZ(sector, getCharge(), getX0(), getY0(), getZ0(), getX0(), getTheta(), getPhi(), getTheta(), getAccuracy(), getrMax(), getStepSize(), getAccuracy());
+            szr = PC.RCF_cs.sectorSwimZ(sector, getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), z_cm, getAccuracy(), getrMax(), getStepSize(), getAccuracy());
         }
         if(szr!=null) {
             double bdl = szr.getTrajectory().getComputedBDL();
@@ -224,7 +224,7 @@ public class CLAS12Swim  {
         CLAS12SwimResult szr = null;
 
         if (getpTot() > getSWIMZMINMOM()) {
-            szr = PC.CF_cs.swimZ(getCharge(), getX0(), getY0(), getZ0(), getX0(), getTheta(), getPhi(), getTheta(), getAccuracy(), getrMax(), getStepSize(), getTolerance());
+            szr = PC.CF_cs.swimZ(getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), z_cm, getAccuracy(), getrMax(), getStepSize(), getTolerance());
         }
         if(szr!=null) {
             double bdl = szr.getTrajectory().getComputedBDL();
@@ -255,7 +255,7 @@ public class CLAS12Swim  {
         CLAS12SwimResult szr = null;
 
         if (getpTot() > getSWIMZMINMOM()) {
-            szr = PC.CF_cs.swimPlane(getCharge(), getX0(), getY0(), getZ0(), getX0(), getTheta(), getPhi(), 
+            szr = PC.CF_cs.swimPlane(getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), 
                     new double[]{n.x(),n.y(),n.z()}, new double[]{p.x(),p.y(),p.z()}, 
                     accuracy, getrMax(), getStepSize(), getTolerance());
         }
@@ -296,7 +296,7 @@ public class CLAS12Swim  {
          // the new swim to plane in swimmer
         cnuphys.CLAS12Swim.geometry.Plane plane = new cnuphys.CLAS12Swim.geometry.Plane(n.x(), n.y(), n.z(), d_cm);
         if (getpTot() > getSWIMZMINMOM()) {
-            szr = PC.CF_cs.swimPlane(dir, getX0(), getY0(), getZ0(), getX0(), getTheta(), getPhi(), plane, getAccuracy(), getrMax(), getStepSize(), getTolerance());
+            szr = PC.CF_cs.swimPlane(dir, getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), plane, getAccuracy(), getrMax(), getStepSize(), getTolerance());
         }
         if(szr!=null) {
             double bdl = szr.getTrajectory().getComputedBDL();
