@@ -25,6 +25,7 @@ import cnuphys.adaptiveSwim.test.FixedTest;
 import cnuphys.adaptiveSwim.test.PlaneTest;
 import cnuphys.adaptiveSwim.test.RhoTest;
 import cnuphys.adaptiveSwim.test.SphereTest;
+import cnuphys.adaptiveSwim.test.ZLineTest;
 import cnuphys.adaptiveSwim.test.ZTest;
 import cnuphys.lund.LundStyle;
 import cnuphys.lund.SwimTrajectoryListener;
@@ -61,6 +62,7 @@ public class SwimTest {
 		final JMenuItem sphereItem = new JMenuItem("Sphere Test");
 		final JMenuItem testSectorItem = new JMenuItem("SectorZ Swim");
 		final JMenuItem beamlineItem = new JMenuItem("Beamline Swim");
+		final JMenuItem zlineItem = new JMenuItem("Z Line Swim");
 
 
 		ActionListener al = new ActionListener() {
@@ -88,6 +90,8 @@ public class SwimTest {
 					SectorZTest.testSectorSwim(count, seed);
 				} else if (e.getSource() == beamlineItem) {
 					BeamlineTest.beamLineTest(count, seed);
+				} else if (e.getSource() == zlineItem) {
+					ZLineTest.zLineTest(count, seed);
 				}
 			}
 		};
@@ -101,6 +105,7 @@ public class SwimTest {
 		addMenuItem(menu, al, sphereItem);
 		addMenuItem(menu, al, testSectorItem);
 		addMenuItem(menu, al, beamlineItem);
+		addMenuItem(menu, al, zlineItem);
 
 		return menu;
 	}
