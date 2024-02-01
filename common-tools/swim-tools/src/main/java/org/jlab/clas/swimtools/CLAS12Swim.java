@@ -332,7 +332,7 @@ public class CLAS12Swim  {
             if(xB==0 && yB==0) {
                 szr = PC.CF_cs.swimBeamline(getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), getAccuracy(), getrMax(), getStepSize(), getTolerance());
             } else {
-                System.err.println("ERROR: Beam Spot not taken into account in swimming");
+                szr = PC.CF_cs.swimZLine(getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), xB, yB, getAccuracy(), getrMax(), getStepSize(), getTolerance());
             }
         }
         if(szr!=null) {
