@@ -100,6 +100,9 @@ public class CLAS12Swim  {
      * @return state  x,y,z,px,py,pz, pathlength, iBdl at the surface 
      */
     public double[] SwimRho(double radius)  {
+        return SwimRho(radius, getAccuracy());
+    }
+    public double[] SwimRho(double radius, double accuracy)  {
         double[] value = new double[8];
 
         if (getpTot() < getMINTRKMOM() || this.isSwimUnPhys()==true) // fiducial cut
@@ -109,7 +112,7 @@ public class CLAS12Swim  {
 
         CLAS12SwimResult szr = null;
         if (getpTot() > getSWIMZMINMOM()) {
-             szr = PC.CF_cs.swimRho(getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), radius, getAccuracy(), getrMax(), getStepSize(), getTolerance());
+             szr = PC.CF_cs.swimRho(getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), radius, accuracy, getrMax(), getStepSize(), getTolerance());
         }
         if(szr!=null) {
             double bdl = szr.getTrajectory().getComputedBDL();
@@ -136,7 +139,7 @@ public class CLAS12Swim  {
      * @return swam trajectory to the cylinder
      */
     public double[] SwimGenCylinder(Point3D axisPoint1, Point3D axisPoint2, double radius)  {
-        return this.SwimGenCylinder(axisPoint1, axisPoint2, radius, getAccuracy());
+        return SwimGenCylinder(axisPoint1, axisPoint2, radius, getAccuracy());
     }
     /**
      * 
@@ -190,7 +193,7 @@ public class CLAS12Swim  {
         CLAS12SwimResult szr = null;
 
         if (getpTot() > getSWIMZMINMOM()) {
-            szr = PC.RCF_cs.sectorSwimZ(sector, getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), z_cm, getAccuracy(), getrMax(), getStepSize(), getAccuracy());
+            szr = PC.RCF_cs.sectorSwimZ(sector, getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), z_cm, getAccuracy(), getrMax(), getStepSize(), getTolerance());
         }
         if(szr!=null) {
             double bdl = szr.getTrajectory().getComputedBDL();

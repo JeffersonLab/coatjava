@@ -341,6 +341,13 @@ public class Swim {
             return newSwimmer.SwimToCylinder( Rad);
         }
     }
+    public double[] SwimRho(double radius, double accuracy) {
+        if(!this.newSwim) {
+            return oldSwimmer.SwimRho(radius, accuracy);
+        } else {
+            return newSwimmer.SwimRho(radius, accuracy);
+        }
+    }
     public double[] SwimRho(double radius) {
         if(!this.newSwim) {
             return oldSwimmer.SwimRho(radius);
