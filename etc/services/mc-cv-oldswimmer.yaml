@@ -69,17 +69,17 @@ configuration:
       magfieldTorusMap: Symm_torus_r2501_phi16_z251_24Apr2018.dat
     RTPC:
       rtpcSimulation: "true"
-    DCHBClustering:
+    DCCR:
       newSwim: "false"
-    DCHBPostClusterConv:
+    DCHB:
       newSwim: "false"
-    DCTBEngine:
+    DCTB:
       newSwim: "false"
-    FMTEngine:
+    FMT:
       newSwim: "false"
-    CVTEngine:
+    CVTFP:
       newSwim: "false"  
-    CVTSecondPassEngine:
+    CVTSP:
       newSwim: "false"  
 mime-types:
   - binary/data-hipo
