@@ -70,16 +70,16 @@ configuration:
     RTPC:
       rtpcSimulation: "true"
     DCCR:
-      newSwim: "false"
+      newSwim: "true"
     DCHB:
-      newSwim: "false"
+      newSwim: "true"
     DCTB:
-      newSwim: "false"
+      newSwim: "true"
     FMT:
-      newSwim: "false"
+      newSwim: "true"
     CVTFP:
-      newSwim: "false"  
+      newSwim: "true"  
     CVTSP:
-      newSwim: "false" 
+      newSwim: "true" 
 mime-types:
   - binary/data-hipo
