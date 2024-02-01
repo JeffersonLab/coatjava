@@ -456,7 +456,7 @@ public class CVTEngine extends ReconstructionEngine {
             this.z0cut = Double.valueOf(this.getEngineConfigString("z0cut"));
         
         if (this.getEngineConfigString("newSwim")!=null)
-            this.newSwim = Boolean.valueOf(this.getEngineConfigString("newSwim"));
+            this.newSwim = Boolean.parseBoolean(this.getEngineConfigString("newSwim"));
     }
 
 
