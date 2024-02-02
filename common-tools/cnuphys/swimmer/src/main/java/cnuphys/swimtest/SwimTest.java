@@ -19,6 +19,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
+import cnuphys.adaptiveSwim.test.BadCylinderTest;
 import cnuphys.adaptiveSwim.test.BeamlineTest;
 import cnuphys.adaptiveSwim.test.CylinderTest;
 import cnuphys.adaptiveSwim.test.FixedTest;
@@ -63,6 +64,7 @@ public class SwimTest {
 		final JMenuItem testSectorItem = new JMenuItem("SectorZ Swim");
 		final JMenuItem beamlineItem = new JMenuItem("Beamline Swim");
 		final JMenuItem zlineItem = new JMenuItem("Z Line Swim");
+		final JMenuItem badCylinderItem = new JMenuItem("Bad Cylinder Swims");
 
 
 		ActionListener al = new ActionListener() {
@@ -92,7 +94,10 @@ public class SwimTest {
 					BeamlineTest.beamLineTest(count, seed);
 				} else if (e.getSource() == zlineItem) {
 					ZLineTest.zLineTest(count, seed);
+				} else if (e.getSource() == badCylinderItem) {
+					BadCylinderTest.badCylinderTest();
 				}
+				
 			}
 		};
 
@@ -106,6 +111,7 @@ public class SwimTest {
 		addMenuItem(menu, al, testSectorItem);
 		addMenuItem(menu, al, beamlineItem);
 		addMenuItem(menu, al, zlineItem);
+		addMenuItem(menu, al, badCylinderItem);
 
 		return menu;
 	}
