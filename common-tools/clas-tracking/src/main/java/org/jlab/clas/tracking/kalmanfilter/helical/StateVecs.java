@@ -108,7 +108,8 @@ public class StateVecs extends AStateVecs {
                     Point3D point = new Point3D(mv.surface.plane.point().x()/units.value(),
                                                 mv.surface.plane.point().y()/units.value(),
                                                 mv.surface.plane.point().z()/units.value());
-                    double accuracy = mv.surface.swimAccuracy/units.value();
+                    double accuracy = mv.surface.swimAccuracy;
+                    if(!swim.isNewSwim()) accuracy/=units.value(); 
                     swimPars = swim.SwimPlane(norm,point,accuracy);
  //                   swimPars = swim.AdaptiveSwimPlane(point.x(), point.y(), point.z(), norm.x(), norm.y(), norm.z(), accuracy);
                     if(swimPars==null)
@@ -130,7 +131,9 @@ public class StateVecs extends AStateVecs {
                     Point3D p2 = new Point3D(mv.surface.cylinder.getAxis().end().x()/units.value(),
                                              mv.surface.cylinder.getAxis().end().y()/units.value(),
                                              mv.surface.cylinder.getAxis().end().z()/units.value()) ;
-                    double accuracy = mv.surface.swimAccuracy/units.value();
+                    double accuracy = mv.surface.swimAccuracy;
+                    if(!swim.isNewSwim()) accuracy/=units.value(); 
+                    
                     swimPars = swim.SwimGenCylinder(p1, p2, r/units.value(), accuracy);
                     if(swimPars==null)
                         return false;
