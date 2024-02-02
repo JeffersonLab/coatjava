@@ -68,9 +68,12 @@ public class DecoderBoardUtil {
      * @return delay-corrected helicity for the event of interest
      */
     public static byte getWindowHelicity(Bank b, int windowDelay, byte patternLength) {
+        final int phase = b.getInt("phase",0);
+        final int patternDelay = windowDelay/patternLength;
+        final int windowIndex = (windowDelay+phase)%patternLength;
         return getWindowHelicity(
-            getPatternHelicity( b.getInt("helicityPArray",0), windowDelay/patternLength),
-            windowDelay%patternLength );
+            getPatternHelicity( b.getInt("helicityPArray",0), patternDelay),
+            windowIndex );
     }
 
     /**
