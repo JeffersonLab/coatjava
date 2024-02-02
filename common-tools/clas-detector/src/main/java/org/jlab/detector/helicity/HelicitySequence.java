@@ -552,4 +552,15 @@ public class HelicitySequence {
         }
     }
 
+    /**
+     * Write all state changes from a stream into new HEL::flip banks in new,
+     * tagged events
+     * @param writer
+     * @param stream 
+     */
+    public static void writeFlips(HipoWriterSorted writer, TreeSet<HelicityState> stream) {
+        HelicitySequence sequence = new HelicitySequence();
+        sequence.addStream(stream);
+        sequence.writeFlips(writer, 1);
+    }
 }
