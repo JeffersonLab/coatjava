@@ -55,7 +55,7 @@ public class DCHBPostClusterConv extends DCEngine {
         HitReader      reader = new HitReader(this.getBanks(), Constants.getInstance().dcDetector);
         RecoBankWriter writer = new RecoBankWriter(this.getBanks());
         // get Field
-        Swim dcSwim = new Swim();
+        Swim dcSwim = new Swim(this.newSwim);
      
         List<Track> trkcands = null;
         List<Cross> crosses = null;

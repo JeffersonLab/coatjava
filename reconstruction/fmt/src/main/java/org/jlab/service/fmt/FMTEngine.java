@@ -27,7 +27,7 @@ import org.jlab.rec.fmt.track.fit.StateVecs.StateVec;
 public class FMTEngine extends ReconstructionEngine {
 
     boolean debug = false;
-
+    private boolean newSwim = false;
     public FMTEngine() {
         super("FMT", "ziegler", "5.0");
     }
@@ -58,7 +58,9 @@ public class FMTEngine extends ReconstructionEngine {
         // Load the geometry
         int run = 10;
         Constants.setDetector(GeometryFactory.getDetector(DetectorType.FMT,run, variation));
-
+        if (this.getEngineConfigString("newSwim")!=null)
+            this.newSwim = (boolean) Boolean.valueOf(this.getEngineConfigString("newSwim"));
+        
         // Register output banks
         super.registerOutputBank("FMT::Hits");
         super.registerOutputBank("FMT::Clusters");
@@ -80,7 +82,7 @@ public class FMTEngine extends ReconstructionEngine {
         int run         = runConfig.getInt("run", 0);
                 
         // Set swimmer.
-        Swim swimmer = new Swim();
+        Swim swimmer = new Swim(this.newSwim);
 
         // Set beam shift. NOTE: Set to zero for the time being, when beam alignment is done
         //                       uncomment this code.

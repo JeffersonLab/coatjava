@@ -12,13 +12,29 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.rec.dc.track.Track;
 
 public class Vertex {
-
+    private boolean newSwim = true;
+    
     Random rn = new Random();
     public static double SMEARING_FAC = 0;
     Swim swim2 = new Swim();
     
     public Vertex() {
 
+    }
+
+    /**
+     * @return the newSwim
+     */
+    public boolean isNewSwim() {
+        return newSwim;
+    }
+
+    /**
+     * @param newSwim the newSwim to set
+     */
+    public void setNewSwim(boolean newSwim) {
+        this.newSwim = newSwim;
+        swim2 = new Swim(this.newSwim);
     }
     /**
      * 
