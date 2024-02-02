@@ -21,6 +21,9 @@ public class ProbeCollection {
     public final cnuphys.swim.Swimmer RCF;   //  rotated composite field 
     public final cnuphys.swim.Swimmer CF;    //  composite field 
     public final cnuphys.adaptiveSwim.AdaptiveSwimmer AS; // adaptive swimmer
+    public final cnuphys.CLAS12Swim.CLAS12Swimmer RCF_cs; // rotated composite field - for new swimmer
+    public final cnuphys.CLAS12Swim.CLAS12Swimmer CF_cs; // composite field - for new swimmer
+    
     //Probes:
     public final RotatedCompositeProbe RCP;
     public final CompositeProbe CP; 
@@ -36,5 +39,7 @@ public class ProbeCollection {
         RCF     =   new cnuphys.swim.Swimmer(MagneticFields.getInstance().getRotatedCompositeField());
         CF      =   new cnuphys.swim.Swimmer(MagneticFields.getInstance().getCompositeField());
         AS      =   new cnuphys.adaptiveSwim.AdaptiveSwimmer(MagneticFields.getInstance().getCompositeField());
+        RCF_cs  =   new cnuphys.CLAS12Swim.CLAS12Swimmer(MagneticFields.getInstance().getRotatedCompositeField());
+        CF_cs   =   new cnuphys.CLAS12Swim.CLAS12Swimmer(MagneticFields.getInstance().getCompositeField());
     }
 }
