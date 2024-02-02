@@ -70,7 +70,6 @@ public class CLAS12Values {
 
 		// norm should be 1
 		double norm = Math.sqrt(u[3] * u[3] + u[4] * u[4] + u[5] * u[5]);
-		double r = Math.sqrt(u[0] * u[0] + u[1] * u[1] + u[2] * u[2]);
 
 		this.p = norm * p;
 
