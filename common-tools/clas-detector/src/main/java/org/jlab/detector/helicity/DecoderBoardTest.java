@@ -55,7 +55,7 @@ public class DecoderBoardTest {
     }
 
     public static void main(String args[]) {
-        DecoderBoardUtil.INVERT_BITS_CHECK = true;
+        DecoderBoardUtil.INVERT_BITS_CHECK = false;
         String filename = "/Users/baltzell/Software/coatjava/iss166+167-eventordering+maurik/clas_019400.evio.00040.hipo";
         HelicitySequenceManager hsm = new HelicitySequenceManager(8, filename);
         try (HipoWriterSorted writer = new HipoWriterSorted()) {
