@@ -33,7 +33,6 @@ public class Tag1ToEvent {
 
         DefaultLogger.debug();
 
-
         // Parse command-line options:
         OptionParser parser = new OptionParser("postprocess");
         parser.addOption("-q","0","do beam charge and livetime (0/1=false/true)");
@@ -55,10 +54,10 @@ public class Tag1ToEvent {
             System.exit(1);
         }
 
-        long badCharge;
-        long goodCharge;
-        long badHelicity;
-        long goodHelicity;
+        long badCharge = 0;
+        long goodCharge = 0;
+        long badHelicity = 0;
+        long goodHelicity = 0;
 
         try (HipoWriterSorted writer = new HipoWriterSorted()) {
 
@@ -89,12 +88,6 @@ public class Tag1ToEvent {
 
             // Initialize the scaler sequence:
             DaqScalersSequence chargeSeq = DaqScalersSequence.readSequence(parser.getInputList());
-
-            // Initizlie event counters:
-            badCharge = 0;
-            goodCharge = 0;
-            badHelicity = 0;
-            goodHelicity = 0;
 
             // Loop over the input HIPO files:
             for (String filename : parser.getInputList()) {
