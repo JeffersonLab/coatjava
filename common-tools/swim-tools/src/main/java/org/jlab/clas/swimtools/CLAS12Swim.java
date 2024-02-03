@@ -25,7 +25,7 @@ public class CLAS12Swim  {
     private boolean SwimUnPhys = false; //Flag to indicate if track is swimmable
     private int _charge;
 
-    private double SWIMZMINMOM = 0.75; // GeV/c
+    private double SWIMZMINMOM = 0.0; // GeV/c
     private double MINTRKMOM = 0.05; // GeV/c
     private double accuracy = 20e-4; // in cm -->20 microns
     private double tolerance = 1.0e-6;
@@ -44,9 +44,8 @@ public class CLAS12Swim  {
         }
 
         CLAS12SwimResult szr = null;
-        if (getpTot() > getSWIMZMINMOM()) {
-             szr = PC.CF_cs.swimSphere(getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), new double[]{0,0,0}, Rad, getAccuracy(), getrMax(), getStepSize(), getTolerance());
-        }
+        szr = PC.CF_cs.swimSphere(getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), new double[]{0,0,0}, Rad, getAccuracy(), getrMax(), getStepSize(), getTolerance());
+        
         if(szr!=null) {
             double bdl = szr.getTrajectory().getComputedBDL();
             double pathLength = szr.getPathLength();
@@ -74,9 +73,9 @@ public class CLAS12Swim  {
 
         CLAS12SwimResult szr = null;
         cnuphys.CLAS12Swim.geometry.Cylinder targetCylinder = new cnuphys.CLAS12Swim.geometry.Cylinder(new double[]{0,0,-1000}, new double[] {0,0,1000}, Rad);
-        if (getpTot() > getSWIMZMINMOM()) {
-             szr = PC.CF_cs.swimCylinder(getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), targetCylinder, getAccuracy(), getrMax(), getStepSize(), getTolerance());
-        }
+        
+        szr = PC.CF_cs.swimCylinder(getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), targetCylinder, getAccuracy(), getrMax(), getStepSize(), getTolerance());
+        
         if(szr!=null) {
             double bdl = szr.getTrajectory().getComputedBDL();
             double pathLength = szr.getPathLength();
@@ -111,9 +110,9 @@ public class CLAS12Swim  {
         }
 
         CLAS12SwimResult szr = null;
-        if (getpTot() > getSWIMZMINMOM()) {
-             szr = PC.CF_cs.swimRho(getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), radius, accuracy, getrMax(), getStepSize(), getTolerance());
-        }
+        
+        szr = PC.CF_cs.swimRho(getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), radius, accuracy, getrMax(), getStepSize(), getTolerance());
+        
         if(szr!=null) {
             double bdl = szr.getTrajectory().getComputedBDL();
             double pathLength = szr.getPathLength();
@@ -158,13 +157,14 @@ public class CLAS12Swim  {
         }
         
         CLAS12SwimResult szr = null;
-        if (getpTot() > getSWIMZMINMOM()) {
-             szr = PC.CF_cs.swimCylinder(getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), 
+        
+        szr = PC.CF_cs.swimCylinder(getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), 
                      new double[]{axisPoint1.x(),axisPoint1.y(),axisPoint1.z()}, 
                      new double[]{axisPoint2.x(),axisPoint2.y(),axisPoint2.z()}, 
                      radius,
                      accuracy, getrMax(), getStepSize(), getTolerance());
-        }
+        
+        
         if(szr!=null) {
             double bdl = szr.getTrajectory().getComputedBDL();
             double pathLength = szr.getPathLength();
@@ -197,9 +197,8 @@ public class CLAS12Swim  {
 
         CLAS12SwimResult szr = null;
 
-        if (getpTot() > getSWIMZMINMOM()) {
-            szr = PC.RCF_cs.sectorSwimZ(sector, getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), z_cm, getAccuracy(), getrMax(), getStepSize(), getTolerance());
-        }
+        szr = PC.RCF_cs.sectorSwimZ(sector, getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), z_cm, getAccuracy(), getrMax(), getStepSize(), getTolerance());
+        
         if(szr!=null) {
             double bdl = szr.getTrajectory().getComputedBDL();
             double pathLength = szr.getPathLength();
@@ -231,9 +230,8 @@ public class CLAS12Swim  {
 
         CLAS12SwimResult szr = null;
 
-        if (getpTot() > getSWIMZMINMOM()) {
-            szr = PC.CF_cs.swimZ(getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), z_cm, getAccuracy(), getrMax(), getStepSize(), getTolerance());
-        }
+        szr = PC.CF_cs.swimZ(getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), z_cm, getAccuracy(), getrMax(), getStepSize(), getTolerance());
+        
         if(szr!=null) {
             double bdl = szr.getTrajectory().getComputedBDL();
             double pathLength = szr.getPathLength();
@@ -262,11 +260,10 @@ public class CLAS12Swim  {
 
         CLAS12SwimResult szr = null;
 
-        if (getpTot() > getSWIMZMINMOM()) {
-            szr = PC.CF_cs.swimPlane(getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), 
+        szr = PC.CF_cs.swimPlane(getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), 
                     new double[]{n.x(),n.y(),n.z()}, new double[]{p.x(),p.y(),p.z()}, 
                     accuracy, getrMax(), getStepSize(), getTolerance());
-        }
+        
         if(szr!=null) {
             double bdl = szr.getTrajectory().getComputedBDL();
             double pathLength = szr.getPathLength();
@@ -308,9 +305,9 @@ public class CLAS12Swim  {
         CLAS12SwimResult szr = null;
          // the new swim to plane in swimmer
         cnuphys.CLAS12Swim.geometry.Plane plane = new cnuphys.CLAS12Swim.geometry.Plane(n.x(), n.y(), n.z(), d_cm);
-        if (getpTot() > getSWIMZMINMOM()) {
-            szr = PC.CF_cs.swimPlane(getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), plane, getAccuracy(), getrMax(), getStepSize(), getTolerance());
-        }
+        
+        szr = PC.CF_cs.swimPlane(getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), plane, getAccuracy(), getrMax(), getStepSize(), getTolerance());
+        
         if(szr!=null) {
             double bdl = szr.getTrajectory().getComputedBDL();
             double pathLength = szr.getPathLength();
@@ -338,13 +335,13 @@ public class CLAS12Swim  {
         }
 
         CLAS12SwimResult szr = null;
-        if (getpTot() > getSWIMZMINMOM()) {
-            if(xB==0 && yB==0) {
-                szr = PC.CF_cs.swimBeamline(getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), getAccuracy(), getrMax(), getStepSize(), getTolerance());
-            } else {
-                szr = PC.CF_cs.swimZLine(getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), xB, yB, getAccuracy(), getrMax(), getStepSize(), getTolerance());
-            }
+        
+        if(xB==0 && yB==0) {
+            szr = PC.CF_cs.swimBeamline(getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), getAccuracy(), getrMax(), getStepSize(), getTolerance());
+        } else {
+            szr = PC.CF_cs.swimZLine(getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), xB, yB, getAccuracy(), getrMax(), getStepSize(), getTolerance());
         }
+        
         if(szr!=null) {
             double bdl = szr.getTrajectory().getComputedBDL();
             double pathLength = szr.getPathLength();
@@ -504,18 +501,18 @@ public class CLAS12Swim  {
     }
 
     /**
-     * @return the SWIMZMINMOM
-     */
-    public double getSWIMZMINMOM() {
-        return SWIMZMINMOM;
-    }
-
-    /**
-     * @param SWIMZMINMOM the SWIMZMINMOM to set
-     */
-    public void setSWIMZMINMOM(double SWIMZMINMOM) {
-        this.SWIMZMINMOM = SWIMZMINMOM;
-    }
+//     * @return the SWIMZMINMOM
+//     */
+//    public double getSWIMZMINMOM() {
+//        return SWIMZMINMOM;
+//    }
+//
+//    /**
+//     * @param SWIMZMINMOM the SWIMZMINMOM to set
+//     */
+//    public void setSWIMZMINMOM(double SWIMZMINMOM) {
+//        this.SWIMZMINMOM = SWIMZMINMOM;
+//    }
 
     /**
      * @return the MINTRKMOM
