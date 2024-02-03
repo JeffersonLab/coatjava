@@ -25,7 +25,7 @@ public class CLAS12Swim  {
     private boolean SwimUnPhys = false; //Flag to indicate if track is swimmable
     private int _charge;
 
-    private double SWIMZMINMOM = 0.0; // GeV/c
+    private double SWIMZMINMOM = 0.75; // GeV/c
     private double MINTRKMOM = 0.05; // GeV/c
     private double accuracy = 20e-4; // in cm -->20 microns
     private double tolerance = 1.0e-6;
@@ -196,9 +196,9 @@ public class CLAS12Swim  {
         }
 
         CLAS12SwimResult szr = null;
-
-        szr = PC.RCF_cs.sectorSwimZ(sector, getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), z_cm, getAccuracy(), getrMax(), getStepSize(), getTolerance());
-        
+        if (getpTot() > getSWIMZMINMOM()) {
+            szr = PC.RCF_cs.sectorSwimZ(sector, getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), z_cm, getAccuracy(), getrMax(), getStepSize(), getTolerance());
+        }
         if(szr!=null) {
             double bdl = szr.getTrajectory().getComputedBDL();
             double pathLength = szr.getPathLength();
@@ -229,9 +229,9 @@ public class CLAS12Swim  {
         }
 
         CLAS12SwimResult szr = null;
-
-        szr = PC.CF_cs.swimZ(getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), z_cm, getAccuracy(), getrMax(), getStepSize(), getTolerance());
-        
+        if (getpTot() > getSWIMZMINMOM()) {
+            szr = PC.CF_cs.swimZ(getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), z_cm, getAccuracy(), getrMax(), getStepSize(), getTolerance());
+        }
         if(szr!=null) {
             double bdl = szr.getTrajectory().getComputedBDL();
             double pathLength = szr.getPathLength();
@@ -501,18 +501,18 @@ public class CLAS12Swim  {
     }
 
     /**
-//     * @return the SWIMZMINMOM
-//     */
-//    public double getSWIMZMINMOM() {
-//        return SWIMZMINMOM;
-//    }
-//
-//    /**
-//     * @param SWIMZMINMOM the SWIMZMINMOM to set
-//     */
-//    public void setSWIMZMINMOM(double SWIMZMINMOM) {
-//        this.SWIMZMINMOM = SWIMZMINMOM;
-//    }
+     * @return the SWIMZMINMOM
+     */
+    public double getSWIMZMINMOM() {
+        return SWIMZMINMOM;
+    }
+
+    /**
+     * @param SWIMZMINMOM the SWIMZMINMOM to set
+     */
+    public void setSWIMZMINMOM(double SWIMZMINMOM) {
+        this.SWIMZMINMOM = SWIMZMINMOM;
+    }
 
     /**
      * @return the MINTRKMOM

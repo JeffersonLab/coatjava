@@ -54,7 +54,17 @@ public class Swim {
        this.init();
        newSwim = newS;
     }
-
+    /**
+     * 
+     * @param FDpz PDet pz for swimming to a FD fixed plane
+     * @param Ptot total momentum required to swim a track
+     */
+    public void setMinPCuts(double FDpz, double Ptot) {
+        oldSwimmer.setSWIMZMINMOM(FDpz);
+        oldSwimmer.setMINTRKMOM(Ptot);
+        newSwimmer.setSWIMZMINMOM(FDpz);
+        newSwimmer.setMINTRKMOM(Ptot);
+    }
     /**
      * @return the newSwim
      */

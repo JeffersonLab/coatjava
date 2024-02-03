@@ -17,7 +17,6 @@ import org.jlab.geom.prim.Vector3D;
 import org.jlab.geom.prim.Point3D;
 import cnuphys.adaptiveSwim.AdaptiveSwimResult;
 import cnuphys.adaptiveSwim.AdaptiveSwimmer;
-import cnuphys.adaptiveSwim.geometry.Cylinder;
 import cnuphys.adaptiveSwim.geometry.Line;
 import cnuphys.adaptiveSwim.geometry.Point;
 import cnuphys.adaptiveSwim.geometry.Vector;
