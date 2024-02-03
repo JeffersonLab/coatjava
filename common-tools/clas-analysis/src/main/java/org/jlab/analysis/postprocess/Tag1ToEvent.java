@@ -52,7 +52,6 @@ public class Tag1ToEvent {
         OptionParser parser = new OptionParser("postprocess");
         parser.addOption("-q","0","do beam charge and livetime (0/1=false/true)");
         parser.addOption("-d","0","do delayed helicity (0/1=false/true)");
-        parser.addOption("-f","0","do global offline helicity flip (0/1=false/true)");
         parser.addRequired("-o","output.hipo");
         parser.parse(args);
 
@@ -70,14 +69,13 @@ public class Tag1ToEvent {
         // helicity / beamcharge options:
         final boolean doHelicityDelay = parser.getOption("-d").intValue() != 0;
         final boolean doBeamCharge = parser.getOption("-q").intValue() != 0;
-        final boolean doHelicityFlip = parser.getOption("-f").intValue() != 0;
-        if (!doHelicityDelay && !doBeamCharge && !doHelicityFlip) {
+        if (!doHelicityDelay && !doBeamCharge) {
             parser.printUsage();
-            System.err.println("\n >>>>> error : at least one of -q/-d/-f must be specified\n");
+            System.err.println("\n >>>>> error : at least one of -q/-d must be specified\n");
             System.exit(1);
         }
 
-        HelicitySequenceManager helSeq = new HelicitySequenceManager(8,inputList,doHelicityFlip);
+        HelicitySequenceManager helSeq = new HelicitySequenceManager(8,inputList);
         DaqScalersSequence chargeSeq = DaqScalersSequence.readSequence(inputList);
 
         HipoWriterSorted writer = new HipoWriterSorted();
@@ -131,31 +129,11 @@ public class Tag1ToEvent {
                 if (Math.abs(hb.value())==1) goodHelicity++;
                 else badHelicity++;
 
-                if (doHelicityFlip) {
-
-                    // flip this event's helicity:
-                    hb = HelicityBit.getFlipped(hb);
-                    hbraw = HelicityBit.getFlipped(hbraw);
-                
-                    // flip the helicity in the HEL::flip bank:
-                    if (helFlipBank.getRows()>0) {
-                        event.remove(helFlipBank.getSchema());
-                        helFlipBank.putByte("helicity", 0, (byte)-helFlipBank.getByte("helicity",0));
-                        helFlipBank.putByte("helicityRaw", 0, (byte)-helFlipBank.getByte("helicityRaw",0));
-                        event.write(helFlipBank);
-                    }
-                }
-
                 // write delay-corrected helicty to REC::Event and HEL::scaler:
                 if (doHelicityDelay) {
                     recEventBank.putByte("helicity",0,hb.value());
                     recEventBank.putByte("helicityRaw",0,hbraw.value());
                     RebuildScalers.assignScalerHelicity(event, helScalerBank, helSeq);
-                }
-                // flip the non-delay-corrected helicity in place in REC::Event:
-                else if (doHelicityFlip) {
-                    recEventBank.putByte("helicity",0,(byte)-recEventBank.getByte("helicity",0));
-                    recEventBank.putByte("helicityRaw",0,(byte)-recEventBank.getByte("helicityRaw",0));
                 }
 
                 // write beam charge to REC::Event:
