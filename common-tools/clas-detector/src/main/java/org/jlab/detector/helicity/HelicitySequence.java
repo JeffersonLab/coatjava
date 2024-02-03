@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.detector.calib.utils.ConstantsManager;
 
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
@@ -522,6 +523,25 @@ public class HelicitySequence {
         }
         LOGGER.log(Level.INFO, "found {0} helicity sequence states in stream.", this.size());
         this.integrityCheck();
+    }
+
+    public void addStream(SchemaFactory schema, ConstantsManager conman, List<String> filenames) {
+        Bank runConfigBank = new Bank(schema.getSchema("HEL::scaler"));
+        Bank helAdcBank = new Bank(schema.getSchema("HEL::adc"));
+        TreeSet<HelicityState> stream = new TreeSet<>();
+        Event e = new Event();
+        for (String filename : filenames) {
+            HipoReader r = new HipoReader();
+            r.open(filename);
+            while (r.hasNext()) {
+                r.nextEvent(e);
+                e.read(helAdcBank);
+                e.read(runConfigBank);
+                stream.add(HelicityState.createFromFadcBank(
+                        helAdcBank, runConfigBank,conman));
+            }
+        }
+        this.addStream(stream);
     }
 
     /**
