@@ -4,11 +4,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Low-level static methods for delay-correcting and integrity-checking
- * the sequences of the helicity signals, based on basic pattern properties
+ * Low-level, static methods for delay-correcting and integrity-checking the bit
+ * sequences of the JLab helicity signals, based only on basic pattern properties
  * and the pseudorandom generator.
  * 
- * Note, these methods require time-ordered bit sequence integers as inputs,
+ * NOTE:  These methods require time-ordered bit sequence integers as inputs and
+ * are independent of pattern type.
  * 
  * @author baltzell
  */
@@ -17,14 +18,14 @@ public class SequenceUtil {
     // Register size for the pseudorandom helicity generator:
     static final int RNG_REGISTER_SIZE = 30;
 
-    // Number of bits of input helicity windows (32 for the decoder board):
+    // Number of wondows/bits in input sequences:
     static int SEQUENCE_LENGTH = 32;
 
     // Whether to invert the bits during error-checking, for debugging:
     static boolean INVERT_BITS_CHECK = false;
 
     /**
-     * Pattern delay correction.
+     * Pattern delay correction, as specified by JLab's injector group.
      * @param helicities the first helicity of the previous SEQUENCE_LENGTH patterns 
      * @param patternDelay number of patterns
      * @return delay-corrected helicity of the first window in the pattern 

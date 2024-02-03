@@ -4,8 +4,11 @@ import org.jlab.io.base.DataBank;
 import org.jlab.jnp.hipo4.data.Bank;
 
 /**
- * Delay correction and integrity checking for the JLab helicity decoder
- * board's HEL::decoder HIPO bank.
+ * Delay correction and integrity checking for the JLab helicity decoder board's
+ * HEL::decoder HIPO bank.
+ * 
+ * NOTE:  To avoid repetition, generic objects are used to support different
+ * types of HIPO banks.
  * 
  * @author baltzell
  */
@@ -75,7 +78,7 @@ public class DecoderBoardUtil extends SequenceUtil {
      * @param name name of its variable to get
      * @return value of the bank variable
      */
-    private static int getInt(Object bank, String name) {
+    private int getInt(Object bank, String name) {
         if (bank instanceof DataBank)
             return ((DataBank)bank).getInt(name,0);
         else if (bank instanceof Bank)
