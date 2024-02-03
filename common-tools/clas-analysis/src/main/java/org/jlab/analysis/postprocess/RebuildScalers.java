@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.calib.utils.RCDBConstants;
+import org.jlab.detector.helicity.HelicitySequence;
 import org.jlab.detector.scalers.DaqScalers;
 import org.jlab.detector.helicity.HelicitySequenceManager;
 import org.jlab.jnp.hipo4.data.Bank;
@@ -155,4 +156,34 @@ public class RebuildScalers {
         }
     }
 
+    /**
+     * Assign the delay-corrected helicity to the HEL::scaler bank's rows
+     * @param timestamp event TI timestamp, e.g., from RUN::config bank
+     * @param bank the HEL::scaler bank
+     * @param seq previously initialized helicity sequence
+     */
+    public static void assignScalerHelicity(Long timestamp, Bank bank, HelicitySequence seq) {
+
+        // Struck (helicity) scaler readout is always slightly after the helicity
+        // state change, i.e., as registered in the FADCs, so its true helicity
+        // is offset by one state from its event:
+        final int readoutStateOffset = -1;
+
+        // Rows in the HEL::scaler bank correspond to the most recent, consecutive,
+        // time-ordered, T-stable intervals.  The first row is the earliest in
+        // time, and the last row is the latest.  Here we loop over them:
+        for (int row=0; row<bank.getRows(); ++row) {
+
+            // This is the helicity state offset for this HEL::scaler row, where
+            // the last row has an offset of -1:
+            final int offset = bank.getRows() - row - 1 + readoutStateOffset;
+
+            // Assign delay-corrected helicity to this HEL::scaler row:
+            bank.putByte("helicity",row,seq.search(timestamp,offset).value());
+            if (seq.getHalfWavePlate())
+                bank.putByte("helicityRaw",0,(byte)(-1*seq.search(timestamp,offset).value()));
+            else
+                bank.putByte("helicityRaw",0,seq.search(timestamp,offset).value());
+        }
+    }
 }
