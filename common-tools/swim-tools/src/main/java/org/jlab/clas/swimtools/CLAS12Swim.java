@@ -178,12 +178,12 @@ public class CLAS12Swim  {
             value[6] = pathLength;
             value[7] = bdl / 10; // convert from kg*cm to T*cm
         }
-        if(szr==null) {
-            String s= String.format("q=%d \t pos=(%.3f, %.3f, %.3f) \t p=%.3f \t theta=%.3f \t phi=%.3f \t ", getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi());
-            s+= String.format("cyl radius=%.3f \t axis=[(%.3f, %.3f, %.3f),(%.3f, %.3f, %.3f)] \t ", radius, axisPoint1.x(),axisPoint1.y(),axisPoint1.z(), axisPoint2.x(),axisPoint2.y(),axisPoint2.z());
-            s+= String.format("accuracy=%.3f \t sMax=%.3f \t h=%.3f \t", accuracy, getrMax(), getStepSize());
-            System.out.println(s);
-        }
+//        if(szr==null) {
+//            String s= String.format("q=%d \t pos=(%.3f, %.3f, %.3f) \t p=%.3f \t theta=%.3f \t phi=%.3f \t ", getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi());
+//            s+= String.format("cyl radius=%.3f \t axis=[(%.3f, %.3f, %.3f),(%.3f, %.3f, %.3f)] \t ", radius, axisPoint1.x(),axisPoint1.y(),axisPoint1.z(), axisPoint2.x(),axisPoint2.y(),axisPoint2.z());
+//            s+= String.format("accuracy=%.3f \t sMax=%.3f \t h=%.3f \t", accuracy, getrMax(), getStepSize());
+//            System.out.println(s);
+//        }
         return value;
     }
     
@@ -277,12 +277,12 @@ public class CLAS12Swim  {
             value[6] = pathLength;
             value[7] = bdl / 10; // convert from kg*cm to T*cm
         }
-        if(szr==null) {
-            String s= String.format("q=%d \t pos=(%.3f, %.3f, %.3f) \t p=%.3f \t theta=%.3f \t phi=%.3f \t ", getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi());
-            s+= String.format("plane n=(%.3f, %.3f, %.3f) \t p=(%.3f, %.3f, %.3f) \t ", n.x(),n.y(),n.z(), p.x(),p.y(),p.z());
-            s+= String.format("accuracy=%.3f \t sMax=%.3f \t h=%.3f \t", accuracy, getrMax(), getStepSize());
-            System.out.println(s);
-        }
+//        if(szr==null) {
+//            String s= String.format("q=%d \t pos=(%.3f, %.3f, %.3f) \t p=%.3f \t theta=%.3f \t phi=%.3f \t ", getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi());
+//            s+= String.format("plane n=(%.3f, %.3f, %.3f) \t p=(%.3f, %.3f, %.3f) \t ", n.x(),n.y(),n.z(), p.x(),p.y(),p.z());
+//            s+= String.format("accuracy=%.3f \t sMax=%.3f \t h=%.3f \t", accuracy, getrMax(), getStepSize());
+//            System.out.println(s);
+//        }
         return value;
     
     }
