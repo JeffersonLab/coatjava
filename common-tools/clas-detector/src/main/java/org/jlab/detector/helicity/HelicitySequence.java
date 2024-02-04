@@ -526,7 +526,7 @@ public class HelicitySequence {
     }
 
     public void addStream(SchemaFactory schema, ConstantsManager conman, List<String> filenames) {
-        Bank runConfigBank = new Bank(schema.getSchema("HEL::scaler"));
+        Bank runConfigBank = new Bank(schema.getSchema("RUN::config"));
         Bank helAdcBank = new Bank(schema.getSchema("HEL::adc"));
         TreeSet<HelicityState> stream = new TreeSet<>();
         Event e = new Event();
