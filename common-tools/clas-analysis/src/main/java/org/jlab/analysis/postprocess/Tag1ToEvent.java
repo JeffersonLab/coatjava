@@ -70,7 +70,7 @@ public class Tag1ToEvent {
             // Setup event and bank stores:
             Event event = new Event();
             Event configEvent = new Event();
-            Bank runConfigBank = new Bank(writer.getSchemaFactory().getSchema("HEL::scaler"));
+            Bank runConfigBank = new Bank(writer.getSchemaFactory().getSchema("RUN::config"));
             Bank recEventBank = new Bank(writer.getSchemaFactory().getSchema("REC::Event"));
             Bank helScalerBank = new Bank(writer.getSchemaFactory().getSchema("HEL::scaler"));
             Bank helFlipBank = new Bank(writer.getSchemaFactory().getSchema("HEL::flip"));
