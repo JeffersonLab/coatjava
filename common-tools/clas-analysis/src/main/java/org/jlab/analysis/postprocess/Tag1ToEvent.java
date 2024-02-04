@@ -54,6 +54,7 @@ public class Tag1ToEvent {
             System.exit(1);
         }
 
+        // Initialize event counters:
         long badCharge = 0;
         long goodCharge = 0;
         long badHelicity = 0;
@@ -61,10 +62,12 @@ public class Tag1ToEvent {
 
         try (HipoWriterSorted writer = new HipoWriterSorted()) {
 
+            // Setup the output file writer:
             writer.getSchemaFactory().initFromDirectory(ClasUtilsFile.getResourceDir("COATJAVA", "etc/bankdefs/hipo4"));
             writer.setCompressionType(2);
             writer.open(parser.getOption("-o").stringValue());
 
+            // Setup event and bank stores:
             Event event = new Event();
             Event configEvent = new Event();
             Bank runConfigBank = new Bank(writer.getSchemaFactory().getSchema("HEL::scaler"));
@@ -77,6 +80,9 @@ public class Tag1ToEvent {
             ConstantsManager conman = new ConstantsManager();
             conman.init("/runcontrol/hwp");
         
+            // Initialize the scaler sequence from tag-1 events:
+            DaqScalersSequence chargeSeq = DaqScalersSequence.readSequence(parser.getInputList());
+
             // Initialize the helicity sequence:
             HelicitySequenceDelayed helSeq = new HelicitySequenceDelayed(8);
             if (doRebuildFlips)
@@ -85,9 +91,6 @@ public class Tag1ToEvent {
             else
                 // Just read the helicity sequence from existing HEL::flip banks in tag-1 events:
                 helSeq.initialize(parser.getInputList());
-
-            // Initialize the scaler sequence:
-            DaqScalersSequence chargeSeq = DaqScalersSequence.readSequence(parser.getInputList());
 
             // Loop over the input HIPO files:
             for (String filename : parser.getInputList()) {
@@ -106,11 +109,10 @@ public class Tag1ToEvent {
                     // Remove banks to be modified or rebuilt:
                     event.remove(recEventBank.getSchema());
                     event.remove(helScalerBank.getSchema());
-                    if (doRebuildFlips) {
+                    if (doRebuildFlips)
                         event.remove(helFlipBank.getSchema());
-                    }
 
-                    // Do the sequence lookups:
+                    // Do event lookups for helicity and scaler sequences:
                     DaqScalers ds = chargeSeq.get(event);
                     HelicityBit hb = helSeq.search(runConfigBank.getLong("timestamp", 0));
                     HelicityBit hbraw = helSeq.getHalfWavePlate() ? HelicityBit.getFlipped(hb) : hb;
