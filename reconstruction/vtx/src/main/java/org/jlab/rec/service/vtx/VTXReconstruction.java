@@ -7,11 +7,7 @@ import java.util.Optional;
 
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.clas.swimtools.Swim;
-import org.jlab.detector.base.DetectorType;
-import org.jlab.detector.base.GeometryFactory;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
-import org.jlab.geom.base.ConstantProvider;
-import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.vtx.TrackParsHelix;
 import org.jlab.rec.vtx.Vertex;
@@ -34,8 +30,6 @@ public class VTXReconstruction extends ReconstructionEngine {
 
     String FieldsConfig = "";
     private int Run = -1;
-  
- 
 
     public int getRun() {
         return Run;
@@ -59,8 +53,9 @@ public class VTXReconstruction extends ReconstructionEngine {
         requireConstants(Arrays.asList(tables));
         this.getConstantsManager().setVariation("default");
     }
+
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         this.FieldsConfig = this.getFieldsConfig();
         if (event.hasBank("RUN::config") == false) {
             System.err.println("RUN CONDITIONS NOT READ!");
@@ -101,14 +96,10 @@ public class VTXReconstruction extends ReconstructionEngine {
     public boolean init() {
         this.initConstantsTables();
         String variation = Optional.ofNullable(this.getEngineConfigString("variation")).orElse("default");
-        //beam offset table
-        DatabaseConstantProvider dbprovider = new DatabaseConstantProvider(11, variation);
-        dbprovider.loadTable("/geometry/beam/position");
+        registerOutputBank("REC::VertDoca");
         return true;
     }
-    private void registerBanks() {
-        super.registerOutputBank("REC::VertDoca");    
-    } 
-    public static void main(String[] args) {
-    }
+
+    @Override
+    public void detectorChanged(int runNumber) {}
 }

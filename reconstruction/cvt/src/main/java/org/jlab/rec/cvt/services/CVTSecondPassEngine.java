@@ -31,7 +31,7 @@ public class CVTSecondPassEngine extends CVTEngine {
 
     
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
 
         int run = this.getRun(event);
         if(Constants.getInstance().seedingDebugMode)
