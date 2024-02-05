@@ -62,8 +62,6 @@ public class PlotCanvas extends JComponent
 
 	// default values for margins
 	private int _topMargin = 10;
-//	private int _leftMargin = 30;
-//	private int _bottomMargin = 30;
 	private int _rightMargin = 10;
 
 	// for saving files
