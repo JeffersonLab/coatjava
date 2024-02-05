@@ -1,5 +1,6 @@
 package org.jlab.analysis.postprocess;
 
+import java.util.logging.Logger;
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.jnp.hipo4.data.Bank;
@@ -29,6 +30,8 @@ import org.jlab.utils.options.OptionParser;
 
 public class Tag1ToEvent {
 
+    static final Logger LOGGER = Logger.getLogger(Tag1ToEvent.class.getName());
+
     public static void main(String[] args) {
 
         DefaultLogger.debug();
@@ -42,7 +45,7 @@ public class Tag1ToEvent {
         parser.parse(args);
         if (parser.getInputList().isEmpty()) {
             parser.printUsage();
-            System.err.println("\n >>>> error : no input file is specified....\n");
+            LOGGER.severe("No input file(s) specified.");
             System.exit(1);
         }
         final boolean doHelicityDelay = parser.getOption("-d").intValue() != 0;
@@ -50,7 +53,7 @@ public class Tag1ToEvent {
         final boolean doRebuildFlips = parser.getOption("-f").intValue() != 0;
         if (!doHelicityDelay && !doBeamCharge && !doRebuildFlips) {
             parser.printUsage();
-            System.err.println("\n >>>>> error : at least one of -q/-d must be specified\n");
+            LOGGER.severe("At least one of -q/-d/-f is required.");
             System.exit(1);
         }
 
@@ -63,7 +66,7 @@ public class Tag1ToEvent {
         try (HipoWriterSorted writer = new HipoWriterSorted()) {
 
             // Setup the output file writer:
-            writer.getSchemaFactory().initFromDirectory(ClasUtilsFile.getResourceDir("COATJAVA", "etc/bankdefs/hipo4"));
+            writer.getSchemaFactory().initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4"));
             writer.setCompressionType(2);
             writer.open(parser.getOption("-o").stringValue());
 
@@ -79,20 +82,27 @@ public class Tag1ToEvent {
             // Prepare to read from CCDB:
             ConstantsManager conman = new ConstantsManager();
             conman.init("/runcontrol/hwp");
-        
+ 
             // Initialize the scaler sequence from tag-1 events:
+            LOGGER.info("Initializing scaler sequence from RUN/HEL::scaler ...");
             DaqScalersSequence chargeSeq = DaqScalersSequence.readSequence(parser.getInputList());
 
             // Initialize the helicity sequence:
+            // FIXME:  get delay windows from CCDB
             HelicitySequenceDelayed helSeq = new HelicitySequenceDelayed(8);
-            if (doRebuildFlips)
+            if (doRebuildFlips) {
                 // Read all events in all the files once, to rebuild helicity sequence:
+                LOGGER.info("Rebuilding helicity sequence from HEL::adc ...");
                 helSeq.addStream(writer.getSchemaFactory(), conman, parser.getInputList());
-            else
+            }
+            else {
                 // Just read the helicity sequence from existing HEL::flip banks in tag-1 events:
+                LOGGER.info("Initializing helicity sequence from HEL::flip ...");
                 helSeq.initialize(parser.getInputList());
+            }
 
             // Loop over the input HIPO files:
+            LOGGER.info("Starting post-processing ...");
             for (String filename : parser.getInputList()) {
 
                 HipoReader reader = new HipoReader();
@@ -109,8 +119,9 @@ public class Tag1ToEvent {
                     // Remove banks to be modified or rebuilt:
                     event.remove(recEventBank.getSchema());
                     event.remove(helScalerBank.getSchema());
-                    if (doRebuildFlips)
+                    if (doRebuildFlips) {
                         event.remove(helFlipBank.getSchema());
+                    }
 
                     // Do event lookups for helicity and scaler sequences:
                     DaqScalers ds = chargeSeq.get(event);
@@ -123,6 +134,7 @@ public class Tag1ToEvent {
 
                     // Write delay-corrected helicty to REC::Event and HEL::scaler:
                     if (doHelicityDelay) {
+                        System.out.println(runConfigBank.getInt("event",0)+" "+hbraw.value()+"/"+hb.value());
                         recEventBank.putByte("helicity",0,hb.value());
                         recEventBank.putByte("helicityRaw",0,hbraw.value());
                         RebuildScalers.assignScalerHelicity(runConfigBank.getLong("timestamp",0), helScalerBank, helSeq);
@@ -139,7 +151,7 @@ public class Tag1ToEvent {
                     event.write(helScalerBank);
 
                     // Copy config banks to new tag-1 events:
-                    copyConfigBanks(writer, event, configEvent, configBanks);
+                    createTag1Events(writer, event, configEvent, configBanks);
 
                     writer.addEvent(event, event.getEventTag());
                 }
@@ -147,15 +159,18 @@ public class Tag1ToEvent {
                 reader.close();
             }
 
-            // write new HEL::flip banks:
-            if (doRebuildFlips) helSeq.writeFlips(writer, 1);
+            // Write new HEL::flip banks:
+            if (doRebuildFlips) {
+                LOGGER.info("Writing rebuilt HEL::flip banks ...");
+                helSeq.writeFlips(writer, 1);
+            }
         }
 
-        System.out.println(String.format("Tag1ToEvent:  Good Helicity Fraction: %.2f%%",100*(float)goodHelicity/(goodHelicity+badHelicity)));
-        System.out.println(String.format("Tag1ToEvent:  Good Charge   Fraction: %.2f%%",100*(float)goodCharge/(goodCharge+badCharge)));
+        LOGGER.info(String.format("Tag1ToEvent:  Good Helicity Fraction: %.2f%%",100*(float)goodHelicity/(goodHelicity+badHelicity)));
+        LOGGER.info(String.format("Tag1ToEvent:  Good Charge   Fraction: %.2f%%",100*(float)goodCharge/(goodCharge+badCharge)));
     }
 
-    private static void copyConfigBanks(HipoWriterSorted writer, Event source, Event destination, Bank... banks) {
+    private static void createTag1Events(HipoWriterSorted writer, Event source, Event destination, Bank... banks) {
         destination.reset();
         for (Bank bank : banks) {
             source.read(bank);
