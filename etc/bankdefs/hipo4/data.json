@@ -24,7 +24,7 @@
 	  { "name":"layer"     , "type":"B", "info":"layer 1-5"},
 	  { "name":"component" , "type":"S", "info":"wire number"},
 	  { "name":"order"     , "type":"B", "info":"Stereo angle 0 - in, 1 - out"},
-	  { "name":"TDC"       , "type":"I", "info":"TDC value"},
+	  { "name":"TDC"       , "type":"I", "info":"TDC value"}
     ]
   },
   {
