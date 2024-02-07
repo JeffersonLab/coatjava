@@ -80,30 +80,31 @@ public class Tag1ToEvent {
             Bank[] configBanks = new Bank[]{new Bank(schema.getSchema(ReconstructionEngine.CONFIG_BANK_NAME))};
 
             // Prepare to read from CCDB:
+            LOGGER.info("\n>>> Initializing helicity configuration from CCDB ...\n");
             ConstantsManager conman = new ConstantsManager();
             conman.init("/runcontrol/hwp","/runcontrol/helicity");
             final int run = getRunNumber(parser.getInputList().get(0));
             IndexedTable helTable = conman.getConstants(run, "/runcontrol/helicity");
  
             // Initialize the scaler sequence from tag-1 events:
-            LOGGER.info(">>> Initializing scaler sequence from RUN/HEL::scaler ...");
+            LOGGER.info("\n>>> Initializing scaler sequence from RUN/HEL::scaler ...\n");
             DaqScalersSequence chargeSeq = DaqScalersSequence.readSequence(parser.getInputList());
 
             // Initialize the helicity sequence:
             HelicitySequenceDelayed helSeq = new HelicitySequenceDelayed(helTable);
             if (doRebuildFlips) {
                 // Read all events in all the files once, to rebuild helicity sequence:
-                LOGGER.info(">>> Rebuilding helicity sequence from HEL::adc ...");
+                LOGGER.info("\n>>> Rebuilding helicity sequence from HEL::adc ...\n");
                 helSeq.addStream(schema, conman, parser.getInputList());
             }
             else {
                 // Just read the helicity sequence from existing HEL::flip banks in tag-1 events:
-                LOGGER.info(">>> Initializing helicity sequence from HEL::flip ...");
+                LOGGER.info("\n>>> Initializing helicity sequence from HEL::flip ...\n");
                 helSeq.initialize(parser.getInputList());
             }
 
             // Loop over the input HIPO files:
-            LOGGER.info(">>> Starting post-processing ...");
+            LOGGER.info("\n>>> Starting post-processing ...\n");
             for (String filename : parser.getInputList()) {
 
                 HipoReader reader = new HipoReader();
@@ -161,7 +162,7 @@ public class Tag1ToEvent {
 
             // Write new HEL::flip banks:
             if (doRebuildFlips) {
-                LOGGER.info(">>> Writing rebuilt HEL::flip banks ...");
+                LOGGER.info("\n>>> Writing rebuilt HEL::flip banks ...\n");
                 helSeq.writeFlips(writer, 1);
             }
         }
