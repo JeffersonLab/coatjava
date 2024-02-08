@@ -739,13 +739,13 @@ public class CLASDecoder4 {
             decoder.detectorDecoder.setTimestamp(parser.getOption("-x").stringValue());
         }
 
+        // Store all helicity readings, ordered by timestamp:
+        TreeSet<HelicityState> helicityReadings = new TreeSet<>();
+
         for(String inputFile : inputList){
             EvioSource reader = new EvioSource();
             reader.open(inputFile);
            
-            // Store all helicity readings, ordered by timestamp:
-            TreeSet<HelicityState> helicityReadings = new TreeSet<>();
-            
             while(reader.hasEvent()==true){
                 EvioDataEvent event = (EvioDataEvent) reader.getNextEvent();
                 
@@ -800,12 +800,11 @@ public class CLASDecoder4 {
                 }
             }
 
-            // add the helicity flips into new tag-1 events:
-            HelicitySequence sequence = new HelicitySequence();
-            sequence.addStream(helicityReadings);
-            sequence.writeFlips(writer, 1);
         }
+
+        // add the helicity flips into new tag-1 events:
+        HelicitySequence.writeFlips(writer, helicityReadings);
+
         writer.close();
-        
     }
 }

@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.detector.calib.utils.ConstantsManager;
 
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
@@ -524,6 +525,25 @@ public class HelicitySequence {
         this.integrityCheck();
     }
 
+    public void addStream(SchemaFactory schema, ConstantsManager conman, List<String> filenames) {
+        Bank runConfigBank = new Bank(schema.getSchema("RUN::config"));
+        Bank helAdcBank = new Bank(schema.getSchema("HEL::adc"));
+        TreeSet<HelicityState> stream = new TreeSet<>();
+        Event e = new Event();
+        for (String filename : filenames) {
+            HipoReader r = new HipoReader();
+            r.open(filename);
+            while (r.hasNext()) {
+                r.nextEvent(e);
+                e.read(helAdcBank);
+                e.read(runConfigBank);
+                stream.add(HelicityState.createFromFadcBank(
+                        helAdcBank, runConfigBank,conman));
+            }
+        }
+        this.addStream(stream);
+    }
+
     /**
      * Get a list of HEL::flip banks corresponding to this sequence
      * @param schema
@@ -552,4 +572,15 @@ public class HelicitySequence {
         }
     }
 
+    /**
+     * Write all state changes from a stream into new HEL::flip banks in new,
+     * tagged events
+     * @param writer
+     * @param stream 
+     */
+    public static void writeFlips(HipoWriterSorted writer, TreeSet<HelicityState> stream) {
+        HelicitySequence sequence = new HelicitySequence();
+        sequence.addStream(stream);
+        sequence.writeFlips(writer, 1);
+    }
 }
