@@ -1,15 +1,20 @@
 package org.jlab.detector.scalers;
 
+import java.sql.Time;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
+import org.jlab.detector.calib.utils.ConstantsManager;
+import org.jlab.detector.calib.utils.RCDBConstants;
 
 import org.jlab.jnp.hipo4.io.HipoReader;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
+import org.jlab.utils.groups.IndexedTable;
 
 /**
  * For easy access to most recent scaler readout for any given event.
@@ -228,6 +233,76 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
         }
         
         return seq;
+    }
+    
+    public static DaqScalersSequence readSequenceRaw(String... inputFile) {
+        return readSequenceRaw(Arrays.asList(inputFile));        
+    }
+
+    public static DaqScalersSequence readSequenceRaw(List<String> inputFile) {
+
+        DaqScalersSequence sequence = new DaqScalersSequence();
+        ConstantsManager conman = new ConstantsManager();
+        conman.init("/runcontrol/fcup","/runcontrol/slm","/runcontrol/helicity","/daq/config/scalers/dsc1");
+        
+        for (String filename : inputFile) {
+
+            HipoReader reader = new HipoReader();
+            reader.open(filename);
+            reader.setTags(0);
+
+            Event event = new Event();
+            Bank runConfigBank = new Bank(reader.getSchemaFactory().getSchema("RUN::config"));
+            Bank rawScalerBank = new Bank(reader.getSchemaFactory().getSchema("RAW::scaler"));
+            Bank runScalerBank = new Bank(reader.getSchemaFactory().getSchema("RUN::scaler"));
+            
+            RCDBConstants rcdb = null;
+            IndexedTable ccdb_fcup = null;
+            IndexedTable ccdb_slm = null;
+            IndexedTable ccdb_hel = null;
+            IndexedTable ccdb_dsc = null;
+
+            while (reader.hasNext()) {
+
+                // read the event and necessary banks:
+                reader.nextEvent(event);
+                event.read(runConfigBank);
+                event.read(runScalerBank);
+                event.read(rawScalerBank);
+       
+                if (sequence.rcfgBank == null)
+                    sequence.rcfgBank = new Bank(reader.getSchemaFactory().getSchema("RUN::config"));
+
+                // get CCDB/RCDB constants:
+                if (runConfigBank.getInt("run",0) >= 100) {
+                    ccdb_fcup = conman.getConstants(runConfigBank.getInt("run",0),"/runcontrol/fcup");
+                    ccdb_slm = conman.getConstants(runConfigBank.getInt("run",0),"/runcontrol/slm");
+                    ccdb_hel = conman.getConstants(runConfigBank.getInt("run",0),"/runcontrol/helicity");
+                    ccdb_dsc = conman.getConstants(runConfigBank.getInt("run",0),"/daq/config/scalers/dsc1");
+                    rcdb = conman.getRcdbConstants(runConfigBank.getInt("run",0));
+                }
+
+                // now rebuild the RUN::scaler bank: 
+                if (rcdb!=null && ccdb_fcup !=null && rawScalerBank.getRows()>0) {
+       
+                    DaqScalers ds;
+                    if (ccdb_dsc.getIntValue("frequency", 0,0,0) < 2e5) {
+                        ds = DaqScalers.create(rawScalerBank, ccdb_fcup, ccdb_slm, ccdb_hel, ccdb_dsc);
+                    }
+                    else {
+                        // Inputs for calculation run duration in seconds, since for
+                        // some run periods the DSC2 clock rolls over during a run.
+                        Time rst = rcdb.getTime("run_start_time");
+                        Date uet = new Date(runConfigBank.getInt("unixtime",0)*1000L);
+                        ds = DaqScalers.create(rawScalerBank, ccdb_fcup, ccdb_slm, ccdb_hel, rst, uet);
+                    }
+
+                    sequence.add(ds);
+                }
+            }
+            reader.close();
+        }
+        return sequence;
     }
     
     public static void main(String[] args) {

@@ -19,9 +19,10 @@ import org.jlab.utils.options.OptionParser;
 
 /**
  * This is the "postprocessing" used in standard CLAS12 chef workflows.  It 
- * propagates information from tag-1 events into every physics event, which
- * includes beam charge from RUN::scaler and offline, delay-corrected helicity
- * from HEL::flip.
+ * propagates information from tag-1 events into the REC::Event bank, including
+ * beam charge from RUN::scaler and offline, delay-corrected helicity from
+ * HEL::flip.  It also can rebuild the HEL::flip and RUN/HEL::scaler banks from
+ * their origins (HEL::adc, RAW::scaler, and CCDB).
  *
  * WARNING:  Multiple run numbers in the same instance is not supported.
  *
@@ -42,6 +43,7 @@ public class Tag1ToEvent {
         parser.addOption("-q","0","do beam charge and livetime (0/1=false/true)");
         parser.addOption("-d","0","do delayed helicity (0/1=false/true)");
         parser.addOption("-f","0","rebuild the HEL::flip banks (0/1=false/true)");
+        parser.addOption("-r","0","rebuild the RUN::scaler banks (0/1=false/true)");
         parser.addRequired("-o","output.hipo");
         parser.parse(args);
         if (parser.getInputList().isEmpty()) {
@@ -52,6 +54,7 @@ public class Tag1ToEvent {
         final boolean doHelicityDelay = parser.getOption("-d").intValue() != 0;
         final boolean doBeamCharge = parser.getOption("-q").intValue() != 0;
         final boolean doRebuildFlips = parser.getOption("-f").intValue() != 0;
+        final boolean doRebuildCharge = parser.getOption("-r").intValue() != 0;
         if (!doHelicityDelay && !doBeamCharge && !doRebuildFlips) {
             parser.printUsage();
             LOGGER.severe("At least one of -q/-d/-f is required.");
@@ -76,6 +79,8 @@ public class Tag1ToEvent {
             Bank runConfigBank = new Bank(schema.getSchema("RUN::config"));
             Bank recEventBank = new Bank(schema.getSchema("REC::Event"));
             Bank helScalerBank = new Bank(schema.getSchema("HEL::scaler"));
+            Bank runScalerBank = new Bank(schema.getSchema("RUN::scaler"));
+            Bank rawScalerBank = new Bank(schema.getSchema("RAW::scaler"));
             Bank helFlipBank = new Bank(schema.getSchema("HEL::flip"));
             Bank[] configBanks = new Bank[]{new Bank(schema.getSchema(ReconstructionEngine.CONFIG_BANK_NAME))};
 
@@ -87,8 +92,15 @@ public class Tag1ToEvent {
             IndexedTable helTable = conman.getConstants(run, "/runcontrol/helicity");
  
             // Initialize the scaler sequence from tag-1 events:
-            LOGGER.info("\n>>> Initializing scaler sequence from RUN/HEL::scaler ...\n");
-            DaqScalersSequence chargeSeq = DaqScalersSequence.readSequence(parser.getInputList());
+            DaqScalersSequence chargeSeq;
+            if (doRebuildCharge) {
+                LOGGER.info("\n>>> Rebuilding charge sequence and RUN/HEL::scaler from RAW::scaler ...\n");
+                chargeSeq = DaqScalersSequence.readSequenceRaw(parser.getInputList());
+            }
+            else {
+                LOGGER.info("\n>>> Initializing charge sqeuence from RUN::scaler ...\n");
+                chargeSeq = DaqScalersSequence.readSequence(parser.getInputList());
+            }
 
             // Initialize the helicity sequence:
             HelicitySequenceDelayed helSeq = new HelicitySequenceDelayed(helTable);
@@ -117,12 +129,21 @@ public class Tag1ToEvent {
                     event.read(recEventBank);
                     event.read(helScalerBank);
                     event.read(runConfigBank);
+                    event.read(rawScalerBank);
 
                     // Remove banks to be modified or rebuilt:
-                    event.remove(recEventBank.getSchema());
-                    event.remove(helScalerBank.getSchema());
-                    if (doRebuildFlips)
+                    if (doHelicityDelay || doBeamCharge) {
+                        event.remove(recEventBank.getSchema());
+                    }
+                    if (doRebuildCharge || doHelicityDelay) {
+                        event.remove(helScalerBank.getSchema());
+                    }
+                    if (doRebuildFlips) {
                         event.remove(helFlipBank.getSchema());
+                    }
+                    if (doRebuildCharge) {
+                        event.remove(runScalerBank.getSchema());
+                    }
 
                     // Do event lookups for helicity and scaler sequences:
                     DaqScalers ds = chargeSeq.get(event);
@@ -133,11 +154,17 @@ public class Tag1ToEvent {
                     if (Math.abs(hb.value()) == 1) ++goodHelicity; else ++badHelicity;
                     if (ds == null) ++badCharge; else ++goodCharge;
 
+                    // Get new, rebuilt RUN::scaler and HEL::scaler banks:
+                    if (doRebuildCharge && rawScalerBank.getRows()>0 && ds!=null) {
+                        runScalerBank = ds.createRunBank(writer.getSchemaFactory());
+                        helScalerBank = ds.createHelicityBank(writer.getSchemaFactory());
+                    }
+
                     // Write delay-corrected helicty to REC::Event and HEL::scaler:
                     if (doHelicityDelay) {
                         recEventBank.putByte("helicity",0,hb.value());
                         recEventBank.putByte("helicityRaw",0,hbraw.value());
-                        RebuildScalers.assignScalerHelicity(runConfigBank.getLong("timestamp",0), helScalerBank, helSeq);
+                        helSeq.assignScalerHelicity(runConfigBank.getLong("timestamp",0), helScalerBank);
                     }
 
                     // Write beam charge to REC::Event:
@@ -148,6 +175,7 @@ public class Tag1ToEvent {
 
                     // Write the modified banks back to the original event:
                     event.write(recEventBank);
+                    event.write(runScalerBank);
                     event.write(helScalerBank);
 
                     // Write out the original event: 
@@ -167,8 +195,8 @@ public class Tag1ToEvent {
             }
         }
 
-        LOGGER.info(String.format("Tag1ToEvent:  Good Helicity Fraction: %.2f%%",100*(float)goodHelicity/(goodHelicity+badHelicity)));
-        LOGGER.info(String.format("Tag1ToEvent:  Good Charge   Fraction: %.2f%%",100*(float)goodCharge/(goodCharge+badCharge)));
+        LOGGER.info(String.format(">>> Good Helicity Fraction: %.2f%%",100*(float)goodHelicity/(goodHelicity+badHelicity)));
+        LOGGER.info(String.format(">>> Good  Charge  Fraction: %.2f%%",100*(float)goodCharge/(goodCharge+badCharge)));
     }
 
     private static void createTag1Events(HipoWriterSorted writer, Event source, Event destination, Bank... banks) {
