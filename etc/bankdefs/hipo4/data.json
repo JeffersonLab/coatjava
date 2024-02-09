@@ -1,5 +1,33 @@
 [
   {
+	 "name" : "ATOF::adc",
+	 "group": 22500,
+	 "item" : 11,
+	 "info": "ADC bank for the ALERT time-of-flight detector",
+	 "entries":[
+	   { "name":"sector"    , "type":"B", "info":"sector (0-14) clockwise looking downstream, 0 = 12 o'clock"},
+	   { "name":"layer"     , "type":"B", "info":"subsector (0-3) clockwise looking downstream"},
+	   { "name":"component" , "type":"S", "info":"PMT in row (0 = upstream)"},
+	   { "name":"order"     , "type":"B", "info":"order: (0-1), 0 = inner, 1 = outer"},
+	   { "name":"ADC"       , "type":"I", "info":"ADC maximum"},
+	   { "name":"time"      , "type":"F", "info":"time from pulse fit"},
+	   { "name":"ped"       , "type":"S", "info":"pedestal from pulse analysis"}
+	]
+  },
+  {
+    "name" : "AHDC::tdc",
+    "group": 22400,
+    "item" : 12,
+	"info": "TDC bank for the ALERT Wire Chamber",
+	"entries":[
+	  { "name":"sector"    , "type":"B", "info":"sector 1"},
+	  { "name":"layer"     , "type":"B", "info":"layer 1-5"},
+	  { "name":"component" , "type":"S", "info":"wire number"},
+	  { "name":"order"     , "type":"B", "info":"Stereo angle 0 - in, 1 - out"},
+	  { "name":"TDC"       , "type":"I", "info":"TDC value"}
+    ]
+  },
+  {
     "name" : "BMT::adc",
     "group": 20100,
     "item" : 11,
