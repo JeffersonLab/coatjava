@@ -41,31 +41,49 @@ import org.jlab.detector.calib.utils.DatabaseConstantProvider;
  * 
  * @author baltzell
  */
-public class HelicitySequenceDelayed extends HelicitySequence {
-  
+public final class HelicitySequenceDelayed extends HelicitySequence {
+
     private int delay;
 
     public HelicitySequenceDelayed(int delay) {
         this.delay=delay;
     }
 
+    public HelicitySequenceDelayed(IndexedTable t) {
+        this.setParameters(t);
+    }
+
+    /**
+     * Initialize helicity configuration from the CCDB table /runcontrol/helicity 
+     * @param t the table, already retrieved from CCDB
+     * @return whether all seems ok
+     */
+    private boolean setParameters(IndexedTable t) {
+        this.delay = t.getIntValue("delay",0,0,0);
+        this.pattern = HelicityPattern.create((byte)t.getIntValue("pattern",0,0,0));
+        this.helicityClock = t.getDoubleValue("frequency",0,0,0);
+        this.generator.setClock(this.helicityClock);
+        LOGGER.info(String.format("CCDB clock: %.4f seconds",this.helicityClock));
+        LOGGER.info(String.format("CCDB delay: %d windows",this.delay));
+        LOGGER.info(String.format("CCDB pattern: %s",this.pattern));
+        if (this.pattern != HelicityPattern.QUARTET) {
+            LOGGER.severe("Not ready for non-QUARTET pattern");
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Initialize helicity configuration from the CCDB table /runcontrol/helicity 
+     * @param runNumber run number to access in CCDB
+     * @return whether all seems ok
+     */
     public boolean setRunNumber(int runNumber) {
         try {
             DatabaseConstantProvider dcp=new DatabaseConstantProvider(runNumber,"default");
             IndexedTable it=dcp.readTable("/runcontrol/helicity");
-            this.helicityClock=it.getDoubleValue("frequency",0,0,0);
-            this.delay=it.getIntValue("delay",0,0,0);
-            this.pattern=HelicityPattern.create((byte)it.getIntValue("pattern",0,0,0));
-            this.generator.setClock(this.helicityClock);
-            LOGGER.info(String.format("got parameters from CCDB for run %d:",runNumber));
-            LOGGER.info(String.format("CCDB clock: %.4f seconds",this.helicityClock));
-            LOGGER.info(String.format("CCDB delay: %d windows",this.delay));
-            LOGGER.info(String.format("CCDB pattern: %s",this.pattern));
-            if (this.pattern != HelicityPattern.QUARTET) {
-                LOGGER.severe("not ready for non-QUARTET pattern");
-                return false;
-            }
-            return true;
+            LOGGER.info(String.format("Getting parameters from CCDB for run %d:",runNumber));
+            return this.setParameters(it);
         }
         catch (Exception e) {
             LOGGER.severe(String.format("HelicitySequence:  error retrieving clock from ccdb for run %d",runNumber));
