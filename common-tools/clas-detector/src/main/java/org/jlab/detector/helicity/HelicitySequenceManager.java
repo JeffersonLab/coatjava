@@ -1,5 +1,6 @@
 package org.jlab.detector.helicity;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +38,11 @@ public final class HelicitySequenceManager {
         this.delay=delay;
         initialize(filenames);
     }
-    
+
+    public HelicitySequenceManager(int delay,String... filenames) {
+        this(delay, Arrays.asList(filenames));
+    }
+
     /**
      * @param delay number of states delayed 
      * @param reader HipoReader to initialize from 

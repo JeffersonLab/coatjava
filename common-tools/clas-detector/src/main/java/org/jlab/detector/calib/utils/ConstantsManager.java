@@ -11,7 +11,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jlab.geom.base.ConstantProvider;
 import org.jlab.utils.groups.IndexedTable;
 
 /**
@@ -52,6 +51,10 @@ public class ConstantsManager {
         this.timeStamp = timestamp;
     }
 
+    public synchronized void init(String... tables) {
+        this.defaultDescriptor.addTables(tables);
+    }
+    
     public synchronized void init(List<String> tables) {
         this.defaultDescriptor.addTables(tables);
     }

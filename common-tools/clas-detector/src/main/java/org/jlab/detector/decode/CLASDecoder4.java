@@ -6,11 +6,13 @@ import java.util.List;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.TreeSet;
 import org.jlab.detector.base.DetectorDescriptor;
 
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.decode.DetectorDataDgtz.HelicityDecoderData;
 import org.jlab.detector.helicity.HelicityBit;
+import org.jlab.detector.helicity.HelicitySequence;
 import org.jlab.detector.helicity.HelicityState;
 
 import org.jlab.logging.DefaultLogger;
@@ -629,19 +631,6 @@ public class CLASDecoder4 {
         
         return bonusBank;
     }
-    public Bank createHelicityFlipBank(Event event,HelicityState state) {
-        IndexedTable hwpTable=this.detectorDecoder.scalerManager.getConstants(
-                this.detectorDecoder.getRunNumber(),"/runcontrol/hwp");
-        state.setHalfWavePlate((byte)hwpTable.getIntValue("hwp",0,0,0));
-        if(schemaFactory.hasSchema("RUN::config")) {
-            Bank configBank = new Bank(schemaFactory.getSchema("RUN::config"));
-            event.read(configBank);
-            state.setTimestamp(configBank.getLong("timestamp",0));
-            state.setEvent(configBank.getInt("event",0));
-            state.setRun(configBank.getInt("run",0));
-        }
-        return state.getFlipBank(this.schemaFactory);
-    }
 
     public Bank createHelicityDecoderBank(EvioDataEvent event) {
         HelicityDecoderData data = this.codaDecoder.getDataEntries_HelicityDecoder(event);
@@ -750,12 +739,13 @@ public class CLASDecoder4 {
             decoder.detectorDecoder.setTimestamp(parser.getOption("-x").stringValue());
         }
 
+        // Store all helicity readings, ordered by timestamp:
+        TreeSet<HelicityState> helicityReadings = new TreeSet<>();
+
         for(String inputFile : inputList){
             EvioSource reader = new EvioSource();
             reader.open(inputFile);
-            
-            HelicityState prevHelicity = new HelicityState();
-            
+           
             while(reader.hasEvent()==true){
                 EvioDataEvent event = (EvioDataEvent) reader.getNextEvent();
                 
@@ -775,18 +765,11 @@ public class CLASDecoder4 {
                 decodedEvent.read(rawScaler);
                 decodedEvent.read(rawRunConf);
                 decodedEvent.read(helicityAdc);
-                
-                // check for changes to helicity state:
-                Bank helicityFlip = null;
-                if (helicityAdc.getRows()>0) {
-                    HelicityState thisHelicity = HelicityState.createFromFadcBank(helicityAdc);
-                    if (!thisHelicity.isValid() || !thisHelicity.equals(prevHelicity)) {
-                        helicityFlip = decoder.createHelicityFlipBank(decodedEvent,thisHelicity);
-                        prevHelicity = thisHelicity;
-                    }
-                }
-                
-                if(rawScaler.getRows()>0 || epics!=null || helicityFlip!=null) {
+               
+                helicityReadings.add(HelicityState.createFromFadcBank(helicityAdc, rawRunConf,
+                    decoder.detectorDecoder.scalerManager));
+
+                if(rawScaler.getRows()>0 || epics!=null) {
                     scalerEvent.reset();
                     
                     if(rawScaler.getRows()>0) scalerEvent.write(rawScaler);
@@ -801,12 +784,7 @@ public class CLASDecoder4 {
                         decodedEvent.write(epics);
                         scalerEvent.write(epics);
                     }
-                    
-                    if (helicityFlip!=null) {
-                        decodedEvent.write(helicityFlip);
-                        scalerEvent.write(helicityFlip);
-                    }
-                    
+
                     writer.addEvent(scalerEvent, 1);
                 }
                 
@@ -821,8 +799,12 @@ public class CLASDecoder4 {
                     if(counter>=nevents) break;
                 }
             }
+
         }
+
+        // add the helicity flips into new tag-1 events:
+        HelicitySequence.writeFlips(writer, helicityReadings);
+
         writer.close();
-        
     }
 }

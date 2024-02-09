@@ -18,12 +18,14 @@ public class HitReader {
 
 	public void fetch_AHDCHits(DataEvent event) {
 		ArrayList<Hit> hits = new ArrayList<>();
+		
+		if (event.hasBank("AHDC::adc")) {
 
-		RawDataBank bankDGTZ = new RawDataBank("ALRTDC::adc");
-        bankDGTZ.read(event);
+			RawDataBank bankDGTZ = new RawDataBank("AHDC::adc");
+        	bankDGTZ.read(event);
 		//DataBank bankDGTZ = event.getBank("ALRTDC::adc");
 
-		if (event.hasBank("ALRTDC::adc")) {
+		
 			for (int i = 0; i < bankDGTZ.rows(); i++) {
 				int    id         = bankDGTZ.trueIndex(i) + 1;
 				int    number     = bankDGTZ.getByte("layer", i);
@@ -33,6 +35,22 @@ public class HitReader {
 				double doca       = bankDGTZ.getShort("ped", i) / 1000.0;
 
 				hits.add(new Hit(id, superlayer, layer, wire, doca));
+			}
+		}else if(event.hasBank("AHDC::tdc")) {
+			RawDataBank bankDGTZ = new RawDataBank("AHDC::tdc");
+        	bankDGTZ.read(event);
+		//DataBank bankDGTZ = event.getBank("ALRTDC::adc");
+
+		
+			for (int i = 0; i < bankDGTZ.rows(); i++) {
+				int    id         = bankDGTZ.trueIndex(i) + 1;
+				int    number     = bankDGTZ.getByte("layer", i);
+				int    layer      = number % 10;
+				int    superlayer = (int) (number % 100) / 10;
+				int    wire       = bankDGTZ.getShort("component", i);
+				double time       = bankDGTZ.getInt("TDC", i)*1.0;
+
+				hits.add(new Hit(id, superlayer, layer, wire, time));
 			}
 		}
 		this.set_AHDCHits(hits);
