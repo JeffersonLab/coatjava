@@ -17,7 +17,7 @@ public class TableLoader {
 
     private static boolean T2DLOADED = false;
     
-    private static final int NBINST=2000;
+    private static final int NBINST=20000;
     
     public static final double[] BfieldValues = new double[]{0.0000, 1.0000, 1.4142, 1.7321, 2.0000, 2.2361, 2.4495, 2.6458};
     public static int minBinIdxB = 0;
@@ -45,7 +45,7 @@ public class TableLoader {
                                     for(int icosalpha =0; icosalpha<maxBinIdxAlpha+1; icosalpha++) {
                                             //for (int tb = 0; tb< maxBinIdxT[s][r][ibfield][icosalpha]; tb++) {
                                             double Xalpha = -(Math.toDegrees(Math.acos(Math.cos(Math.toRadians(30.)) + (icosalpha)*(1. - Math.cos(Math.toRadians(30.)))/5.)) - 30.);
-                                            double Xtime=(2*tb+1);
+                                            double Xtime=(tb+0.5);
 
                                             //for (int k=0; k<10; k++){
                                             double Bf = (ibfield)*0.5;
@@ -167,7 +167,7 @@ public class TableLoader {
         //CCDBTables 1 =  "/calibration/dc/time_to_distance/t2d";
         //CCDBTables 2 =  "/calibration/dc/time_corrections/T0_correction";	
         
-        double stepSize = 0.0010;
+        double stepSize = 0.00010;
         
         FillAlpha();
         
@@ -193,7 +193,9 @@ public class TableLoader {
                                     double x = (double)(idist+1)*stepSize;
                                     double timebfield = calc_Time( x,  alpha, bfield, s+1, r+1) ;
 
-                                    int tbin = (int) Math.floor(timebfield/2);
+                                    int tbin = (int) Math.round(timebfield*10.);
+                                    boolean flag = true;
+                                    if(timebfield*10. - Math.floor(timebfield*10.) < 0.5) flag = false;
                                     
                                     if(tbin<0 || tbin>NBINST-1) {
                                         //System.err.println("Problem with tbin");
@@ -216,7 +218,7 @@ public class TableLoader {
                                         //    DISTFROMTIME[s][r][ibfield][icosalpha][tbin]=x;
                                         //}
                                         // bincount++;
-                                        DISTFROMTIME[s][r][ibfield][icosalpha][tbin]+=stepSize;
+                                        if(flag) DISTFROMTIME[s][r][ibfield][icosalpha][tbin]+=stepSize;
                                     }
                                     
                                     /* if(timebfield>timebfield_max) {

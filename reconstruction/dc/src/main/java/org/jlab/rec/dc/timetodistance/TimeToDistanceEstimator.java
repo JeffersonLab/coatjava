@@ -46,6 +46,7 @@ public class TimeToDistanceEstimator {
     * @return the distance to the wire in cm
     */
     public double interpolateOnGrid(double Bf, double alpha, double t,  int SecIdx, int SlyrIdx) {
+        t = t * 10.;
         
         double B = Math.abs(Bf);
         
@@ -87,8 +88,8 @@ public class TimeToDistanceEstimator {
                     TableLoader.DISTFROMTIME[SecIdx][SlyrIdx][binlowB][binhighAlpha][this.getTimeNextIdx(t, SecIdx, SlyrIdx, binlowB, binhighAlpha)],
                     TableLoader.DISTFROMTIME[SecIdx][SlyrIdx][binhighB][binhighAlpha][this.getTimeNextIdx(t, SecIdx, SlyrIdx, binhighB, binhighAlpha)]);
          // interpolate in d for 2 values of alpha:		 
-        double f_B_alpha1_t = interpolateLinear(t, this.getTimeIdx(t, SecIdx, SlyrIdx, binlowB, binlowAlpha)*2., this.getTimeNextIdx(t, SecIdx, SlyrIdx, binhighB, binlowAlpha)*2., f_B_alpha1_t1, f_B_alpha1_t2);
-        double f_B_alpha2_t = interpolateLinear(t, this.getTimeIdx(t, SecIdx, SlyrIdx, binlowB, binhighAlpha)*2., this.getTimeNextIdx(t, SecIdx, SlyrIdx, binhighB, binhighAlpha)*2., f_B_alpha2_t1, f_B_alpha2_t2);
+        double f_B_alpha1_t = interpolateLinear(t, this.getTimeIdx(t, SecIdx, SlyrIdx, binlowB, binlowAlpha), this.getTimeNextIdx(t, SecIdx, SlyrIdx, binhighB, binlowAlpha), f_B_alpha1_t1, f_B_alpha1_t2);
+        double f_B_alpha2_t = interpolateLinear(t, this.getTimeIdx(t, SecIdx, SlyrIdx, binlowB, binhighAlpha), this.getTimeNextIdx(t, SecIdx, SlyrIdx, binhighB, binhighAlpha), f_B_alpha2_t1, f_B_alpha2_t2);
         //LOGGER.log(Level.FINE,  TableLoader.DISTFROMTIME[SecIdx][SlyrIdx][binlowB][binlowAlpha][this.getTimeIdx(t, SecIdx, SlyrIdx, binlowB, binlowAlpha)]);
         //LOGGER.log(Level.FINE, SlyrIdx+" binlowB "+binlowB+" binlowAlpha "+binlowAlpha+" t "+this.getTimeIdx(t, SecIdx, SlyrIdx, binlowB, binlowAlpha)+" time "+t);
         //LOGGER.log(Level.FINE, TableLoader.DISTFROMTIME[SecIdx][SlyrIdx][binlowB][binhighAlpha][this.getTimeIdx(t, SecIdx, SlyrIdx, binlowB, binhighAlpha)]);
@@ -155,11 +156,11 @@ public class TimeToDistanceEstimator {
     public int getTimeIdx(double t1, int is, int ir, int ibfield, int icosalpha) {
         
         DecimalFormat df = new DecimalFormat("#");
-        df.setRoundingMode(RoundingMode.CEILING);
+        df.setRoundingMode(RoundingMode.FLOOR);
        
         int binIdx =0;
         try{
-            binIdx = Integer.parseInt(df.format(t1/2.) ) -1; 
+            binIdx = Integer.parseInt(df.format(t1)); 
         } catch (NumberFormatException e) {
             LOGGER.log(Level.WARNING, " time bin error "+t1+" ");
         }
