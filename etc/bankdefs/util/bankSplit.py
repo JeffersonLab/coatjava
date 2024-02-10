@@ -62,7 +62,7 @@ band   = ["BAND::laser","BAND::adc","BAND::tdc","BAND::hits","BAND::rawhits"]
 raster = ["RASTER::position"]
 rich   = ["RICH::tdc","RICH::Ring","RICH::Particle"]
 rtpc   = ["RTPC::hits","RTPC::tracks","RTPC::KFtracks"]
-alert  = ["ALRTDC::Track", "ALRTDC::MC", "ALRTDC::Hits", "ALRTDC::PreClusters", "ALRTDC::Clusters", "ALRTDC::KFTrack"]
+alert  = ["AHDC::Track", "AHDC::MC", "AHTDC::Hits", "AHDC::PreClusters", "AHDC::Clusters", "AHDC::KFTrack"]
 dets   = band + raster + rich + rtpc + alert
 
 # additions for the calibration schema:
@@ -94,7 +94,11 @@ ecrerun.extend(["ECAL::tdc","ECAL::adc"])
 
 # DC alignment and AI-tracking validation schema:
 dcalign = list(dst)
-dcalign.extend(["ai::tracks", "aidn::tracks", "TimeBasedTrkg::AIClusters", "TimeBasedTrkg::AIHits", "TimeBasedTrkg::AITracks", "TimeBasedTrkg::TBClusters", "TimeBasedTrkg::TBHits", "TimeBasedTrkg::TBTracks"])
+dcalign.extend(["ai::tracks", "aidn::tracks", "TimeBasedTrkg::AIClusters", "TimeBasedTrkg::AIHits", "TimeBasedTrkg::AISegments", "TimeBasedTrkg::AISegmentTrajectory", "TimeBasedTrkg::AITracks", "TimeBasedTrkg::TBClusters", "TimeBasedTrkg::TBHits", "TimeBasedTrkg::TBSegments", "TimeBasedTrkg::TBSegmentTrajectory", "TimeBasedTrkg::TBTracks"])
+
+# Level3 validation schema:
+level3 = list(dst)
+level3.extend(["DC::tdc", "ECAL::adc", "HTCC::adc"])
 
 create("dst/", set(dst))
 create("dsthb/", set(dsthb))
@@ -103,5 +107,6 @@ create("mon/",  set(mon))
 create("ebrerun/", set(ebrerun))
 create("ecrerun/", set(ecrerun))
 create("dcalign/", set(dcalign))
+create("level3/", set(level3))
 create("trigger/", set(trig))
 

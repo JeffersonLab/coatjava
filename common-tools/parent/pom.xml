@@ -3,7 +3,7 @@
 
   <groupId>org.jlab.clas</groupId>
   <artifactId>common-tools</artifactId>
-  <version>10.0.4-SNAPSHOT</version>
+  <version>10.0.6-SNAPSHOT</version>
   <packaging>pom</packaging>
 
 
