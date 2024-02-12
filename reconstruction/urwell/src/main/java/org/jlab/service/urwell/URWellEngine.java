@@ -41,7 +41,7 @@ public class URWellEngine extends ReconstructionEngine {
         // init ConstantsManager to read constants from CCDB
         String variationName = Optional.ofNullable(this.getEngineConfigString("variation")).orElse("default");
         DatabaseConstantProvider cp = new DatabaseConstantProvider(11, variationName);
-        factory.init(cp);
+        factory.init(cp, false, 2);
         // register output banks for drop option        
         this.registerOutputBank("URWELL::hits");
         this.registerOutputBank("URWELL::clusters");
