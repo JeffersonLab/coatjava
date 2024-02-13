@@ -8,6 +8,10 @@
 
   <repositories>
     <repository>
+    <id>j4np-maven</id>
+    <url>https://clasweb.jlab.org/clas12maven/j4np/maven</url>
+  </repository>
+  <repository>
       <id>clas12maven</id>
       <url>https://clasweb.jlab.org/clas12maven</url> 
     </repository>
