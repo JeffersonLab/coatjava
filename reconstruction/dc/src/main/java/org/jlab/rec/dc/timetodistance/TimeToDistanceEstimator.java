@@ -46,7 +46,6 @@ public class TimeToDistanceEstimator {
     * @return the distance to the wire in cm
     */
     public double interpolateOnGrid(double Bf, double alpha, double t,  int SecIdx, int SlyrIdx) {
-        t = t * 10.;
         
         double B = Math.abs(Bf);
         

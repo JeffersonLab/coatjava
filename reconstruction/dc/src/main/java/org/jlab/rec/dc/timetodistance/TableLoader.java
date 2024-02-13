@@ -17,7 +17,7 @@ public class TableLoader {
 
     private static boolean T2DLOADED = false;
     
-    private static final int NBINST=20000;
+    private static final int NBINST=2000;
     
     public static final double[] BfieldValues = new double[]{0.0000, 1.0000, 1.4142, 1.7321, 2.0000, 2.2361, 2.4495, 2.6458};
     public static int minBinIdxB = 0;
@@ -167,7 +167,7 @@ public class TableLoader {
         //CCDBTables 1 =  "/calibration/dc/time_to_distance/t2d";
         //CCDBTables 2 =  "/calibration/dc/time_corrections/T0_correction";	
         
-        double stepSize = 0.00010;
+        double stepSize = 0.0010;
         
         FillAlpha();
         
@@ -193,9 +193,9 @@ public class TableLoader {
                                     double x = (double)(idist+1)*stepSize;
                                     double timebfield = calc_Time( x,  alpha, bfield, s+1, r+1) ;
 
-                                    int tbin = (int) Math.round(timebfield*10.);
+                                    int tbin = (int) Math.round(timebfield);
                                     boolean flag = true;
-                                    if(timebfield*10. - Math.floor(timebfield*10.) < 0.5) flag = false;
+                                    if(timebfield - Math.floor(timebfield) < 0.5) flag = false;
                                     
                                     if(tbin<0 || tbin>NBINST-1) {
                                         //System.err.println("Problem with tbin");
