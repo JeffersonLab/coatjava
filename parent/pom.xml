@@ -7,11 +7,18 @@
   <packaging>pom</packaging>
 
   <repositories>
+    <!--
     <repository>
-    <id>j4np-maven</id>
-    <url>https://clasweb.jlab.org/clas12maven/j4np/maven</url>
-  </repository>
-  <repository>
+      <id>maven-central</id>
+      <url>https://mvnrepository.com/</url>
+    </repository>
+    -->
+    <repository>
+      <id>j4np-maven</id>
+      <url>https://clasweb.jlab.org/clas12maven/j4np/maven</url>
+    </repository>
+    
+    <repository>
       <id>clas12maven</id>
       <url>https://clasweb.jlab.org/clas12maven</url> 
     </repository>
@@ -42,7 +49,7 @@
     <dependency>
       <groupId>com.github.spotbugs</groupId>
       <artifactId>spotbugs</artifactId>
-      <version>3.1.12</version>
+      <version>4.2.2</version>
     </dependency>
     
     <dependency>
@@ -74,7 +81,7 @@
       <plugin>
         <groupId>com.github.spotbugs</groupId>
         <artifactId>spotbugs-maven-plugin</artifactId>
-        <version>3.1.12</version>
+        <version>4.2.2</version>
         <configuration>
           <excludeFilterFile>spotbugs-exclude.xml</excludeFilterFile>
         </configuration>
