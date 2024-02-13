@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import javax.swing.JFrame;
+import org.jlab.clas.tracking.kalmanfilter.Material;
 import org.jlab.clas.tracking.kalmanfilter.Surface;
+import org.jlab.clas.tracking.kalmanfilter.Units;
+import org.jlab.clas.tracking.objects.Strip;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.base.GeometryFactory;
 import org.jlab.detector.calib.utils.ConstantsManager;
@@ -14,8 +17,10 @@ import org.jlab.detector.geant4.v2.SVT.SVTStripFactory;
 import org.jlab.geom.base.ConstantProvider;
 import org.jlab.geom.base.Detector;
 import org.jlab.geom.prim.Arc3D;
+import org.jlab.geom.prim.Cylindrical3D;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
+import org.jlab.geom.prim.Vector3D;
 import org.jlab.groot.base.GStyle;
 import org.jlab.groot.data.GraphErrors;
 import org.jlab.groot.graphics.EmbeddedCanvasTabbed;
@@ -39,11 +44,35 @@ public class Geometry {
     private BMTGeometry       bmtGeometry  = null;
     private CTOFGeant4Factory ctofGeometry = null;
     private Detector          cndGeometry  = null;
-    private List<Surface>     cvtSurfaces  = null;
     private List<Surface>   outerSurfaces  = null;
+
+    // tungsten shield
+    public static double TSHIELDRMIN    = 51;
+    public static double TSHIELDRMAX    = 51.051;
+    public static double TSHIELDLENGTH  = 360;
+    public static double TSHIELDZPOS    = -50;
+    public static double TSHIELDRADLEN  = 6.76/19.3 *10; // X0(g/cm2) / density(g/cm3) * 10; 
+    public static double TSHIELDZOVERA  = 0.40252;
+    public static double TSHIELDRHO     = 19.3E-3; // g/mm3
+    public static double TSHIELDI       = 727;     // eV
+
     private double zTarget = 0;  
     private double zLength = 0;  
-
+    
+    private List<Material> targetMaterials = null;
+    private Surface scatteringChamberSurface = null;
+    private Surface targetShieldSurface = null;
+    
+    // cryogenic target
+    private static final Material CRYOLH2 = new Material("LH2", 8.85, 0.0708E-3, 0.99212, 8904.0, 21.8, Units.MM);
+    private static final Material CRYOLD2 = new Material("LD2", 8.85, 0.1638E-3, 0.49650, 7691.0, 21.8, Units.MM);
+    private static final Material CRYOTARGETKAPTON = new Material("Kapton", 50E-3, 1.42E-3, 0.501, 285.7, 79.6, Units.MM);
+    private static final Material CRYOTARGETRHOACELL = new Material("Rhoacell", 10.4, 0.1E-3, 0.5392, 1000, 93.0, Units.MM);
+    
+    // other materials
+    public  static final Material SCINTILLATOR = new Material("Scintillator", 1, 1.03E-3, 0.54141, 439.0, 64.7, Units.MM);
+    public  static final Material VACUUM = new Material("Vacuum", 1, 0, 1, Double.POSITIVE_INFINITY, 100, Units.MM);
+    
     private static boolean LOADED;
     
     // private constructor for a singleton
@@ -78,7 +107,8 @@ public class Geometry {
         ConstantProvider providerTG = GeometryFactory.getConstants(DetectorType.TARGET, run, variation);
         this.zTarget = providerTG.getDouble("/geometry/target/position",0)*10;
         this.zLength = providerTG.getDouble("/geometry/target/length",0)*10;
-                         
+        this.initTarget();
+        
         ConstantProvider providerCTOF = GeometryFactory.getConstants(DetectorType.CTOF, run, variation);
         ctofGeometry = new CTOFGeant4Factory(providerCTOF);        
         cndGeometry  =  GeometryFactory.getDetector(DetectorType.CND, run, variation);
@@ -89,10 +119,6 @@ public class Geometry {
         svtGeometry  = new SVTGeometry(svtFac, svtLorentz);
         bmtGeometry  = new BMTGeometry(bmtVoltage);
         
-        cvtSurfaces = new ArrayList<>();
-        cvtSurfaces.addAll(svtGeometry.getSurfaces());
-        cvtSurfaces.addAll(bmtGeometry.getSurfaces());
-        
         outerSurfaces = Measurements.getOuters();
     }
     
@@ -102,6 +128,59 @@ public class Geometry {
 
     public double getZlength() {
         return zLength;
+    }
+    
+    public void initTarget() {
+        if("LH2".equals(Constants.getInstance().getTargetType()) ||
+           "LD2".equals(Constants.getInstance().getTargetType()))
+            this.loadCryoTarget();
+        else
+            this.loadCryoTarget();
+    }
+    
+    public void loadCryoTarget() {
+        targetMaterials = new ArrayList<>();
+        if("LH2".equals(Constants.getInstance().getTargetType())) 
+            targetMaterials.add(CRYOLH2);
+        else if("LD2".equals(Constants.getInstance().getTargetType())) 
+            targetMaterials.add(CRYOLD2);
+        targetMaterials.add(CRYOTARGETKAPTON);
+        
+        Point3D  chamberCenter = new Point3D(0, 0, this.getZoffset()-100);
+        Point3D  chamberOrigin = new Point3D(39.5, 0, this.getZoffset()-100);
+        Vector3D chamberAxis   = new Vector3D(0,0,1);
+        Arc3D chamberBase = new Arc3D(chamberOrigin, chamberCenter, chamberAxis, 2*Math.PI);
+        Cylindrical3D chamber = new Cylindrical3D(chamberBase, 200);
+        scatteringChamberSurface = new Surface(chamber, new Strip(0, 0, 0), Constants.DEFAULTSWIMACC);
+        scatteringChamberSurface.addMaterial(CRYOTARGETRHOACELL);
+        scatteringChamberSurface.passive=true;
+        
+        Point3D  center = new Point3D(0,           0, Geometry.getInstance().getZoffset()+TSHIELDZPOS-TSHIELDLENGTH/2);
+        Point3D  origin = new Point3D(TSHIELDRMAX, 0, Geometry.getInstance().getZoffset()+TSHIELDZPOS-TSHIELDLENGTH/2);
+        Vector3D axis   = new Vector3D(0,0,1);
+        Arc3D base = new Arc3D(origin, center, axis, 2*Math.PI);
+        Cylindrical3D shieldCylinder = new Cylindrical3D(base, TSHIELDLENGTH);
+        targetShieldSurface = new Surface(shieldCylinder, new Strip(0, 0, 0), Constants.DEFAULTSWIMACC);
+        targetShieldSurface.addMaterial("TungstenShield",
+                                  TSHIELDRMAX-TSHIELDRMIN,
+                                  TSHIELDRHO,
+                                  TSHIELDZOVERA,
+                                  TSHIELDRADLEN,
+                                  TSHIELDI,
+                                  Units.MM);
+        targetShieldSurface.passive=true;
+    }
+
+    public List<Material> getTargetMaterials() {
+        return targetMaterials;
+    }
+
+    public Surface getScatteringChamber() {
+        return scatteringChamberSurface;
+    }
+    
+    public Surface getTargetShield() {
+        return targetShieldSurface;
     }
     
     public SVTGeometry getSVT() {
@@ -121,9 +200,9 @@ public class Geometry {
         return cndGeometry;
     }
 
-    public List<Surface> getCVTSurfaces() {
-        return cvtSurfaces;
-    }
+//    public List<Surface> getCVTSurfaces() {
+//        return cvtSurfaces;
+//    }
 
     public List<Surface> geOuterSurfaces() {
         return outerSurfaces;
