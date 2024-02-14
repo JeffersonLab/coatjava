@@ -111,14 +111,14 @@ else
 	if [ $? != 0 ] ; then echo "mvn install failure" ; exit 1 ; fi
 fi
 
-if [ $runSpotBugs == "yes" ]; then
+#if [ $runSpotBugs == "yes" ]; then
 	# mvn com.github.spotbugs:spotbugs-maven-plugin:spotbugs # spotbugs goal produces a report target/spotbugsXml.xml for each module
         #--comented by Gagik to be able to compile with JDK17-- $mvn com.github.spotbugs:spotbugs-maven-plugin:check # check bugs
-    	$mvn # check goal produces a report and produces build failed if bugs
+    	#$mvn # check goal produces a report and produces build failed if bugs
 	# the spotbugsXml.xml file is easiest read in a web browser
 	# see http://spotbugs.readthedocs.io/en/latest/maven.html and https://spotbugs.github.io/spotbugs-maven-plugin/index.html for more info
-	if [ $? != 0 ] ; then echo "spotbugs failure" ; exit 1 ; fi
-fi
+#	if [ $? != 0 ] ; then echo "spotbugs failure" ; exit 1 ; fi
+#fi
 
 cd common-tools/coat-lib
 $mvn package
