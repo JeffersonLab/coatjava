@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.jlab.clas.tracking.kalmanfilter.Material;
 import org.jlab.clas.tracking.kalmanfilter.Surface;
+import org.jlab.clas.tracking.kalmanfilter.Type;
 import org.jlab.clas.tracking.kalmanfilter.Units;
 import org.jlab.clas.tracking.objects.Strip;
 import org.jlab.detector.base.DetectorType;
@@ -101,7 +102,18 @@ public class Measurements {
         Vector3D u = new Vector3D(0,0,1);
         Point3D  p = new Point3D(xbeam, ybeam, 0);
         Line3D   l = new Line3D(p, u);
-        Surface target = new Surface(l.origin(), l.end(), Constants.getInstance().DEFAULTSWIMACC);
+        Surface target = null;
+        if(Geometry.getInstance().getTargetCenter()!=null) {
+            Point3D  center = new Point3D(Geometry.getInstance().getTargetCenter());
+            center.setZ(-1000);
+            Point3D  origin = new Point3D(Geometry.getInstance().getTargetMaterials().get(0).getThickness()+center.x(), center.y(), center.z());
+            Arc3D    base   = new Arc3D(origin, center, u, 2*Math.PI);
+            Cylindrical3D cell = new Cylindrical3D(base, 2000);
+            target = new Surface(l.origin(), l.end(), cell, Constants.DEFAULTSWIMACC);
+        }
+        else {
+            target = new Surface(l.origin(), l.end(), Constants.DEFAULTSWIMACC);
+        }
         for(Material m : Geometry.getInstance().getTargetMaterials())
             target.addMaterial(m);
         target.setError(Constants.getInstance().getBeamRadius());

@@ -6,6 +6,7 @@ import java.util.List;
 import javax.swing.JFrame;
 import org.jlab.clas.tracking.kalmanfilter.Material;
 import org.jlab.clas.tracking.kalmanfilter.Surface;
+import org.jlab.clas.tracking.kalmanfilter.Type;
 import org.jlab.clas.tracking.kalmanfilter.Units;
 import org.jlab.clas.tracking.objects.Strip;
 import org.jlab.detector.base.DetectorType;
@@ -60,6 +61,7 @@ public class Geometry {
     private double zLength = 0;  
     
     private List<Material> targetMaterials = null;
+    private Point3D targetCenter = null;
     private Surface scatteringChamberSurface = null;
     private Surface targetShieldSurface = null;
     
@@ -190,6 +192,7 @@ public class Geometry {
             targetMaterials.add(POLTARNH3);
         else if("ND2".equals(Constants.getInstance().getTargetType())) 
             targetMaterials.add(POLTARND3);
+        targetCenter = new Point3D(0, 0, zTarget);
         
         Point3D  chamberCenter = new Point3D(0, 0, this.getZoffset()-100);
         Point3D  chamberOrigin = new Point3D(30, 0, this.getZoffset()-100);
@@ -214,6 +217,10 @@ public class Geometry {
     }
     public List<Material> getTargetMaterials() {
         return targetMaterials;
+    }
+
+    public Point3D getTargetCenter() {
+        return targetCenter;
     }
 
     public Surface getScatteringChamber() {

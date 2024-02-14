@@ -7,6 +7,7 @@ import org.jlab.geom.prim.Plane3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Arc3D;
 import org.jlab.geom.prim.Cylindrical3D;
+import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Transformation3D;
 import org.jlab.geom.prim.Vector3D;
 
@@ -24,6 +25,7 @@ public class Surface implements Comparable<Surface> {
     public Point3D finitePlaneCorner1;
     public Point3D finitePlaneCorner2;
     public Cylindrical3D cylinder;
+    public Cylindrical3D lineTube;
     private Transformation3D toGlobal = new Transformation3D();
     private Transformation3D toLocal  = new Transformation3D();
     public Arc3D arc;
@@ -111,11 +113,19 @@ public class Surface implements Comparable<Surface> {
         swimAccuracy = accuracy;
     }
 
+    public Surface(Point3D endPoint1, Point3D endPoint2, Cylindrical3D tube, double accuracy) {
+        type = Type.LINE;
+        lineEndPoint1 = endPoint1;
+        lineEndPoint2 = endPoint2;
+        lineTube = tube;
+        swimAccuracy = accuracy;
+    }
+    
     @Override
     public String toString() {
         String s = "Surface: ";
-        s = s + String.format("Type=%s Index=%d  Layer=%d  Sector=%d  Emisphere=%.1f X0=%.4f  Z/A=%.4f  Error=%.4f Passive=%b",
-                               this.type.name(), this.getIndex(),this.getLayer(),this.getSector(),this.hemisphere,this.getToverX0(),
+        s = s + String.format("Type=%s Index=%d  Layer=%d  Sector=%d  Emisphere=%.1f X0=%.4f  thickness=%.4f  Z/A=%.4f  Error=%.4f Passive=%b",
+                               this.type.name(), this.getIndex(),this.getLayer(),this.getSector(),this.hemisphere,this.getThickness(),this.getToverX0(),
                                this.getZoverA(),this.getError(), this.passive);
         if(type==Type.PLANEWITHSTRIP) {
             s = s + "\n\t" + this.plane.toString();
@@ -126,6 +136,11 @@ public class Surface implements Comparable<Surface> {
         else if(type==Type.CYLINDERWITHSTRIP) {
             s = s + "\n\t" + this.cylinder.toString();
             s = s + "\n\t" + this.strip.toString();
+        }
+        else if(type==Type.CYLINDERWITHLINE) {
+            s = s + "\n\t" + this.cylinder.toString();
+            s = s + "\n\t" + this.lineEndPoint1.toString();
+            s = s + "\n\t" + this.lineEndPoint2.toString();
         }
         else if(type==Type.LINE) {
             s = s + "\n\t" + this.lineEndPoint1.toString();
@@ -237,9 +252,20 @@ public class Surface implements Comparable<Surface> {
                 return Math.abs(dir.mag());
             }
             else if(this.type==Type.LINE) {
-                Vector3D axis = this.lineEndPoint1.vectorTo(this.lineEndPoint2).asUnit();
-                dir.sub(dir.projection(axis));
-                return Math.abs(dir.mag());
+                Vector3D line = this.lineEndPoint1.vectorTo(this.lineEndPoint2).asUnit();
+                if(this.lineTube!=null) {
+                    Line3D track = new Line3D(this.lineEndPoint1.midpoint(this.lineEndPoint2), dir);
+                    List<Point3D> intersections = new ArrayList<>();
+                    int ninters = this.lineTube.intersectionRay(track, intersections);
+                    if(ninters>0) {
+                        double trackLength = intersections.get(0).distance(track.origin());
+                        return this.getThickness()/trackLength;
+                    }
+                }
+                else {
+                    dir.sub(dir.projection(line));
+                    return Math.abs(dir.mag());
+                }
             }
             return 0;
         }
