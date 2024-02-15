@@ -236,7 +236,7 @@ public class Surface implements Comparable<Surface> {
         return ZA/RhoX;
     }
     
-    public double getLocalDir(Vector3D dir) {
+    public double getLocalDir(Point3D pos, Vector3D dir) {
         if(this.type!=Type.PLANEWITHSTRIP && 
            this.type!=Type.CYLINDERWITHSTRIP && 
            this.type!=Type.LINE) 
@@ -254,12 +254,15 @@ public class Surface implements Comparable<Surface> {
             else if(this.type==Type.LINE) {
                 Vector3D line = this.lineEndPoint1.vectorTo(this.lineEndPoint2).asUnit();
                 if(this.lineTube!=null) {
-                    Line3D track = new Line3D(this.lineEndPoint1.midpoint(this.lineEndPoint2), dir);
+                    Line3D track = new Line3D(pos, dir);
+//                    Line3D track = new Line3D(new Point3D(lineEndPoint1.x(), lineEndPoint1.y(),pos.z()), dir);
                     List<Point3D> intersections = new ArrayList<>();
-                    int ninters = this.lineTube.intersectionRay(track, intersections);
-                    if(ninters>0) {
-                        double trackLength = intersections.get(0).distance(track.origin());
+                    double trackLength = this.lineTube.intersectionLength(track, intersections);
+                    if(trackLength>0) { 
                         return this.getThickness()/trackLength;
+                    }
+                    else {
+                        return Double.MAX_VALUE;
                     }
                 }
                 else {
@@ -279,8 +282,8 @@ public class Surface implements Comparable<Surface> {
         return dE;
     }
     
-    public double getEloss(Vector3D mom, double mass, int dir) {
-        double cosDir = this.getLocalDir(mom.asUnit());
+    public double getEloss(Point3D pos, Vector3D mom, double mass, int dir) {
+        double cosDir = this.getLocalDir(pos, mom.asUnit());
         double scale = 0;
         if(cosDir!=0) {
             double dE = -dir*this.getEloss(mom.mag(), mass)/cosDir;
@@ -291,8 +294,8 @@ public class Surface implements Comparable<Surface> {
         return scale;
     }
     
-    public double getDx(Vector3D mom) {
-        double cosDir = this.getLocalDir(mom.asUnit());
+    public double getDx(Point3D pos, Vector3D mom) {
+        double cosDir = this.getLocalDir(pos, mom.asUnit());
         if(cosDir!=0)
           return this.getThickness()/cosDir;
         else

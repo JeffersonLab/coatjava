@@ -47,6 +47,14 @@ public class Geometry {
     private Detector          cndGeometry  = null;
     private List<Surface>   outerSurfaces  = null;
 
+    private double targetPosition = 0;  
+    private double targetHalfLength = 0;  
+    private double targetRadius = 0;  
+    
+    private List<Material> targetMaterials = null;
+    private Surface scatteringChamberSurface = null;
+    private Surface targetShieldSurface = null;
+
     // tungsten shield
     public static double TSHIELDRMIN    = 51;
     public static double TSHIELDRMAX    = 51.051;
@@ -57,14 +65,6 @@ public class Geometry {
     public static double TSHIELDRHO     = 19.3E-3; // g/mm3
     public static double TSHIELDI       = 727;     // eV
 
-    private double zTarget = 0;  
-    private double zLength = 0;  
-    
-    private List<Material> targetMaterials = null;
-    private Point3D targetCenter = null;
-    private Surface scatteringChamberSurface = null;
-    private Surface targetShieldSurface = null;
-    
     // cryogenic target
     private static final Material CRYOLH2 = new Material("LH2", 8.85, 0.0708E-3, 0.99212, 8904.0, 21.8, Units.MM);
     private static final Material CRYOLD2 = new Material("LD2", 8.85, 0.1638E-3, 0.49650, 7691.0, 21.8, Units.MM);
@@ -72,7 +72,8 @@ public class Geometry {
     private static final Material CRYOTARGETRHOACELL = new Material("Rhoacell", 10.4, 0.1E-3, 0.5392, 1000, 93.0, Units.MM);
     
     // polarized target
-
+    private static double POLTARBATHRADIUS = 30;
+    private static double POLTARRADIUS     = 45;
     private static final Material POLTARNH3 = new Material("NH3", 7.5, 0.5782E-3, 0.55, 450.0, 65, Units.MM);
     private static final Material POLTARND3 = new Material("ND3", 10.0, 0.6622E-3, 0.5, 450.0, 65, Units.MM);
     private static final Material POLTARCUP = new Material("PCTFE", 0.1, 2.135E-3, 0.5, 450.0, 65, Units.MM);
@@ -117,8 +118,8 @@ public class Geometry {
         
         // Load target
         ConstantProvider providerTG = GeometryFactory.getConstants(DetectorType.TARGET, run, variation);
-        this.zTarget = providerTG.getDouble("/geometry/target/position",0)*10;
-        this.zLength = providerTG.getDouble("/geometry/target/length",0)*10;
+        this.targetPosition = providerTG.getDouble("/geometry/target/position",0)*10;
+        this.targetHalfLength = providerTG.getDouble("/geometry/target/length",0)*10;
         this.initTarget();
         
         ConstantProvider providerCTOF = GeometryFactory.getConstants(DetectorType.CTOF, run, variation);
@@ -134,12 +135,16 @@ public class Geometry {
         outerSurfaces = Measurements.getOuters();
     }
     
-    public double getZoffset() {
-        return zTarget;
+    public double getTargetZOffset() {
+        return targetPosition;
     }
 
-    public double getZlength() {
-        return zLength;
+    public double getTargetHalfLength() {
+        return targetHalfLength;
+    }
+
+    public double getTargetRadius() {
+        return targetRadius;
     }
     
     private void initTarget() {
@@ -161,8 +166,8 @@ public class Geometry {
             targetMaterials.add(CRYOLD2);
         targetMaterials.add(CRYOTARGETKAPTON);
         
-        Point3D  chamberCenter = new Point3D(0, 0, this.getZoffset()-100);
-        Point3D  chamberOrigin = new Point3D(39.5, 0, this.getZoffset()-100);
+        Point3D  chamberCenter = new Point3D(0, 0, this.getTargetZOffset()-100);
+        Point3D  chamberOrigin = new Point3D(39.5, 0, this.getTargetZOffset()-100);
         Vector3D chamberAxis   = new Vector3D(0,0,1);
         Arc3D chamberBase = new Arc3D(chamberOrigin, chamberCenter, chamberAxis, 2*Math.PI);
         Cylindrical3D chamber = new Cylindrical3D(chamberBase, 200);
@@ -170,8 +175,8 @@ public class Geometry {
         scatteringChamberSurface.addMaterial(CRYOTARGETRHOACELL);
         scatteringChamberSurface.passive=true;
         
-        Point3D  shieldCenter = new Point3D(0,           0, Geometry.getInstance().getZoffset()+TSHIELDZPOS-TSHIELDLENGTH/2);
-        Point3D  shieldOrigin = new Point3D(TSHIELDRMAX, 0, Geometry.getInstance().getZoffset()+TSHIELDZPOS-TSHIELDLENGTH/2);
+        Point3D  shieldCenter = new Point3D(0,           0, this.getTargetZOffset()+TSHIELDZPOS-TSHIELDLENGTH/2);
+        Point3D  shieldOrigin = new Point3D(TSHIELDRMAX, 0, this.getTargetZOffset()+TSHIELDZPOS-TSHIELDLENGTH/2);
         Vector3D shieldAxis   = new Vector3D(0,0,1);
         Arc3D shieldBase = new Arc3D(shieldOrigin, shieldCenter, shieldAxis, 2*Math.PI);
         Cylindrical3D shieldCylinder = new Cylindrical3D(shieldBase, TSHIELDLENGTH);
@@ -190,12 +195,12 @@ public class Geometry {
         targetMaterials = new ArrayList<>();
         if("NH3".equals(Constants.getInstance().getTargetType())) 
             targetMaterials.add(POLTARNH3);
-        else if("ND2".equals(Constants.getInstance().getTargetType())) 
+        else if("ND3".equals(Constants.getInstance().getTargetType())) 
             targetMaterials.add(POLTARND3);
-        targetCenter = new Point3D(0, 0, zTarget);
+        targetRadius = targetMaterials.get(0).getThickness();
         
-        Point3D  chamberCenter = new Point3D(0, 0, this.getZoffset()-100);
-        Point3D  chamberOrigin = new Point3D(30, 0, this.getZoffset()-100);
+        Point3D  chamberCenter = new Point3D(0, 0, this.getTargetZOffset()-100);
+        Point3D  chamberOrigin = new Point3D(POLTARBATHRADIUS, 0, this.getTargetZOffset()-100);
         Vector3D chamberAxis   = new Vector3D(0,0,1);
         Arc3D chamberBase = new Arc3D(chamberOrigin, chamberCenter, chamberAxis, 2*Math.PI);
         Cylindrical3D chamber = new Cylindrical3D(chamberBase, 200);
@@ -205,8 +210,8 @@ public class Geometry {
         scatteringChamberSurface.addMaterial(POLTARBATH);
         scatteringChamberSurface.passive=true;
         
-        Point3D  shieldCenter = new Point3D(0,  0, this.getZoffset()-100);
-        Point3D  shieldOrigin = new Point3D(45, 0, this.getZoffset()-100);
+        Point3D  shieldCenter = new Point3D(0,  0, this.getTargetZOffset()-100);
+        Point3D  shieldOrigin = new Point3D(POLTARRADIUS, 0, this.getTargetZOffset()-100);
         Vector3D shieldAxis   = new Vector3D(0,0,1);
         Arc3D shieldBase = new Arc3D(shieldOrigin, shieldCenter, shieldAxis, 2*Math.PI);
         Cylindrical3D shieldCylinder = new Cylindrical3D(shieldBase, 200);
@@ -217,10 +222,6 @@ public class Geometry {
     }
     public List<Material> getTargetMaterials() {
         return targetMaterials;
-    }
-
-    public Point3D getTargetCenter() {
-        return targetCenter;
     }
 
     public Surface getScatteringChamber() {

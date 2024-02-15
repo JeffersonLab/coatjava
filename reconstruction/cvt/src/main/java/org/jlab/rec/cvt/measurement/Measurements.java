@@ -102,17 +102,13 @@ public class Measurements {
         Vector3D u = new Vector3D(0,0,1);
         Point3D  p = new Point3D(xbeam, ybeam, 0);
         Line3D   l = new Line3D(p, u);
-        Surface target = null;
-        if(Geometry.getInstance().getTargetCenter()!=null) {
-            Point3D  center = new Point3D(Geometry.getInstance().getTargetCenter());
-            center.setZ(-1000);
-            Point3D  origin = new Point3D(Geometry.getInstance().getTargetMaterials().get(0).getThickness()+center.x(), center.y(), center.z());
+        Surface target =  new Surface(l.origin(), l.end(), Constants.DEFAULTSWIMACC);
+        if(Geometry.getInstance().getTargetRadius()>0) {
+            Point3D  center = new Point3D(0, 0, Geometry.getInstance().getTargetZOffset()-Geometry.getInstance().getTargetHalfLength());
+            Point3D  origin = new Point3D(Geometry.getInstance().getTargetRadius()+center.x(), center.y(), center.z());
             Arc3D    base   = new Arc3D(origin, center, u, 2*Math.PI);
-            Cylindrical3D cell = new Cylindrical3D(base, 2000);
-            target = new Surface(l.origin(), l.end(), cell, Constants.DEFAULTSWIMACC);
-        }
-        else {
-            target = new Surface(l.origin(), l.end(), Constants.DEFAULTSWIMACC);
+            Cylindrical3D cell = new Cylindrical3D(base, Geometry.getInstance().getTargetHalfLength()*2);
+            target.lineTube = cell;
         }
         for(Material m : Geometry.getInstance().getTargetMaterials())
             target.addMaterial(m);
