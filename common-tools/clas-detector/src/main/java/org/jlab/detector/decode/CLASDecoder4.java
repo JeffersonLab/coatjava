@@ -4,15 +4,15 @@ import org.jlab.detector.scalers.DaqScalers;
 import java.util.ArrayList;
 import java.util.List;
 
-import java.sql.Time;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.TreeSet;
 import org.jlab.detector.base.DetectorDescriptor;
 
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.decode.DetectorDataDgtz.HelicityDecoderData;
 import org.jlab.detector.helicity.HelicityBit;
+import org.jlab.detector.helicity.HelicitySequence;
 import org.jlab.detector.helicity.HelicityState;
 
 import org.jlab.logging.DefaultLogger;
@@ -577,63 +577,20 @@ public class CLASDecoder4 {
     }
 
     /**
-     * create the RUN::scaler bank
-     *
+     * Create the RUN::scaler and HEL::scaler banks
      * Requires:
-     *   RAW::scaler
-     *   event unix time from RUN::config
-     *   fcup calibrations from CCDB
-     *   run start time from RCDB
-     * Otherwise returns null
-     *
-     * FIXME:  refactor this out more cleanly
+     *   - RAW::scaler
+     *   - fcup/slm/hel/dsc calibrations from CCDB
+     *   - event unix time from RUN::config and run start time from RCDB,
+     *     or a good clock frequency from CCDB
      * @param event
      * @return 
      */
     public List<Bank> createReconScalerBanks(Event event){
-
-        List<Bank> ret = new ArrayList<>();
-
-        // abort if run number corresponds to simulation:
-        if (this.detectorDecoder.getRunNumber() < 1000) return ret;
-
-        // abort if we don't know about the required banks:
-        if(schemaFactory.hasSchema("RUN::config")==false) return ret;
-        if(schemaFactory.hasSchema("RAW::scaler")==false) return ret;
-        if(schemaFactory.hasSchema("RUN::scaler")==false) return ret;
-
-        // retrieve necessary input banks, else abort:
-        Bank configBank = new Bank(schemaFactory.getSchema("RUN::config"),1);
-        Bank rawScalerBank = new Bank(schemaFactory.getSchema("RAW::scaler"),1);
-        event.read(configBank);
-        event.read(rawScalerBank);
-        if (configBank.getRows()<1 || rawScalerBank.getRows()<1) return ret;
-
-        // retrieve fcup/slm calibrations from slm:
-        IndexedTable fcupTable = this.detectorDecoder.scalerManager.
-                getConstants(this.detectorDecoder.getRunNumber(),"/runcontrol/fcup");
-        IndexedTable slmTable = this.detectorDecoder.scalerManager.
-                getConstants(this.detectorDecoder.getRunNumber(),"/runcontrol/slm");
-        IndexedTable helTable = this.detectorDecoder.scalerManager.
-                getConstants(this.detectorDecoder.getRunNumber(),"/runcontrol/helicity");
-
-        // get unix event time (in seconds), and convert to Java's date (via milliseconds):
-        Date uet=new Date(configBank.getInt("unixtime",0)*1000L);
-
-        // retrieve RCDB run start time:
-        Time rst;
-        try {
-            rst = (Time)this.detectorDecoder.scalerManager.
-                    getRcdbConstant(this.detectorDecoder.getRunNumber(),"run_start_time").getValue();
-        }
-        catch (Exception e) {
-            // abort if no RCDB access (e.g. offsite)
-            return ret;
-        }
-        ret.addAll(DaqScalers.createBanks(schemaFactory,rawScalerBank,fcupTable,slmTable,helTable,rst,uet));
-        return ret;
+        return DaqScalers.createBanks(detectorDecoder.getRunNumber(),
+                schemaFactory, event, detectorDecoder.scalerManager);
     }
-    
+
     public Bank createBonusBank(){
         if(schemaFactory.hasSchema("RTPC::adc")==false) return null;
         List<DetectorDataDgtz> bonusData = this.getEntriesADC(DetectorType.RTPC);
@@ -673,19 +630,6 @@ public class CLASDecoder4 {
         }
         
         return bonusBank;
-    }
-    public Bank createHelicityFlipBank(Event event,HelicityState state) {
-        IndexedTable hwpTable=this.detectorDecoder.scalerManager.getConstants(
-                this.detectorDecoder.getRunNumber(),"/runcontrol/hwp");
-        state.setHalfWavePlate((byte)hwpTable.getIntValue("hwp",0,0,0));
-        if(schemaFactory.hasSchema("RUN::config")) {
-            Bank configBank = new Bank(schemaFactory.getSchema("RUN::config"));
-            event.read(configBank);
-            state.setTimestamp(configBank.getLong("timestamp",0));
-            state.setEvent(configBank.getInt("event",0));
-            state.setRun(configBank.getInt("run",0));
-        }
-        return state.getFlipBank(this.schemaFactory);
     }
 
     public Bank createHelicityDecoderBank(EvioDataEvent event) {
@@ -795,12 +739,13 @@ public class CLASDecoder4 {
             decoder.detectorDecoder.setTimestamp(parser.getOption("-x").stringValue());
         }
 
+        // Store all helicity readings, ordered by timestamp:
+        TreeSet<HelicityState> helicityReadings = new TreeSet<>();
+
         for(String inputFile : inputList){
             EvioSource reader = new EvioSource();
             reader.open(inputFile);
-            
-            HelicityState prevHelicity = new HelicityState();
-            
+           
             while(reader.hasEvent()==true){
                 EvioDataEvent event = (EvioDataEvent) reader.getNextEvent();
                 
@@ -820,18 +765,11 @@ public class CLASDecoder4 {
                 decodedEvent.read(rawScaler);
                 decodedEvent.read(rawRunConf);
                 decodedEvent.read(helicityAdc);
-                
-                // check for changes to helicity state:
-                Bank helicityFlip = null;
-                if (helicityAdc.getRows()>0) {
-                    HelicityState thisHelicity = HelicityState.createFromFadcBank(helicityAdc);
-                    if (!thisHelicity.isValid() || !thisHelicity.equals(prevHelicity)) {
-                        helicityFlip = decoder.createHelicityFlipBank(decodedEvent,thisHelicity);
-                        prevHelicity = thisHelicity;
-                    }
-                }
-                
-                if(rawScaler.getRows()>0 || epics!=null || helicityFlip!=null) {
+               
+                helicityReadings.add(HelicityState.createFromFadcBank(helicityAdc, rawRunConf,
+                    decoder.detectorDecoder.scalerManager));
+
+                if(rawScaler.getRows()>0 || epics!=null) {
                     scalerEvent.reset();
                     
                     if(rawScaler.getRows()>0) scalerEvent.write(rawScaler);
@@ -846,12 +784,7 @@ public class CLASDecoder4 {
                         decodedEvent.write(epics);
                         scalerEvent.write(epics);
                     }
-                    
-                    if (helicityFlip!=null) {
-                        decodedEvent.write(helicityFlip);
-                        scalerEvent.write(helicityFlip);
-                    }
-                    
+
                     writer.addEvent(scalerEvent, 1);
                 }
                 
@@ -866,8 +799,12 @@ public class CLASDecoder4 {
                     if(counter>=nevents) break;
                 }
             }
+
         }
+
+        // add the helicity flips into new tag-1 events:
+        HelicitySequence.writeFlips(writer, helicityReadings);
+
         writer.close();
-        
     }
 }

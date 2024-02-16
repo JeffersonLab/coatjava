@@ -283,9 +283,9 @@ public final class HelicityGenerator implements Comparable<HelicityGenerator>, C
                         this.timestamp += timestamps.get(kk);
                     }
                     this.timestamp /= timestamps.size();
-                    LOGGER.log(Level.INFO, "raw timestamps:  {0}", timestampsRaw);
-                    LOGGER.log(Level.INFO, "timestamps:      {0}", timestamps);
-                    LOGGER.log(Level.INFO, "modulo-corrected timestamp:  {0}", this.timestamp);
+                    LOGGER.log(Level.FINE, "raw timestamps:  {0}", timestampsRaw);
+                    LOGGER.log(Level.FINE, "timestamps:      {0}", timestamps);
+                    LOGGER.log(Level.FINE, "modulo-corrected timestamp:  {0}", this.timestamp);
                     break;
                 }
 
@@ -303,7 +303,7 @@ public final class HelicityGenerator implements Comparable<HelicityGenerator>, C
                     double corr=(jj-this.offset)/this.clock*HelicitySequence.TIMESTAMP_CLOCK;
                     timestamps.add(timeStamp-corr);
                     timestampsRaw.add((double)timeStamp);
-                    LOGGER.info(String.format("HelicityGenerator:  timestamp = %d/%.1f/%.2f",
+                    LOGGER.fine(String.format("HelicityGenerator:  timestamp = %d/%.1f/%.2f",
                                 timeStamp,corr,timeStamp-corr));
                 }
             }

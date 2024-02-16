@@ -1,6 +1,7 @@
 package org.jlab.analysis.roads;
 
 import java.util.ArrayList;
+import java.util.List;
 import org.jlab.analysis.roads.Dictionary.TestMode;
 import org.jlab.clas.physics.Particle;
 import org.jlab.detector.base.DetectorLayer;
@@ -21,7 +22,8 @@ public class Road {
     private final byte[]   ecalStrips  = new byte[3];
     private byte     htccMask = 0;
     private Particle particle = null;
-    private final byte[] binning = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    private final byte[] binning  = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    private final byte[] smearing = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0};  
 
     public Road() {
         this.init();
@@ -159,7 +161,7 @@ public class Road {
                         }
                     }
                     road.setSector((byte) trackSector);
-                    if(road.getLayerHits(3)<3 || road.getSuperLayers()!=6) continue;
+    //                if(road.getSuperLayerHits(3)<3 || road.getSuperLayers()!=6) continue;
                     // now check other detectors
                      // check FTOF
                     if(recScintillator!=null) {
@@ -193,7 +195,6 @@ public class Road {
                     }
                    // check HTCC
                     if (recCherenkov != null && htccRec != null && htccADC != null && false) {
-                        int htcc_event;
 //                                recCherenkov.show(); htccADC.show();
                         for (int j = 0; j < recCherenkov.rows(); j++) {
                             if (recCherenkov.getShort("pindex", j) == pindex) {
@@ -211,7 +212,7 @@ public class Road {
                                     if(phiCC<0) phiCC +=360;
                                     double thetaCC = ((double) Math.round(thetaCheren*100))/100.;
                                     ArrayList<int[]> htccPMTs        = htccPMT(thetaCC, phiCC);
-                                    ArrayList<int[]> htccPMTsMatched = new ArrayList<int[]>();
+                                    ArrayList<int[]> htccPMTsMatched = new ArrayList<>();
 //                                            System.out.println(thetaCheren + " " + thetaCC + " " + phiCheren + " " + phiCC + " " + htccPMTs.size());
                                     //The special case of 4 hits, where we need to check if the hits were not in fact only 3
                                     for(int iPMT = 0; iPMT < htccPMTs.size(); iPMT++) {
@@ -573,16 +574,15 @@ public class Road {
 
     public byte getSector() {
         if(sector==0) return sector;
-        int bin = this.binning[12];
-        int sec = ((int) ((sector-1)/bin))*bin + 1;
+        int sec = this.binning[12]==6 ? 0 : sector;
         return (byte) sec;
     }
 
-    public int getLayerHits(int layer) {
+    public int getSuperLayerHits(int superlayer) {
         int n=0;
-        if(layer>0  && layer<=6) {
-            for(int isl=0; isl<6; isl++) {
-                if(this.dcWires[layer-1+isl*6]>0) n++;
+        if(superlayer>0  && superlayer<=6) {
+            for(int il=0; il<6; il++) {
+                if(this.dcWires[(superlayer-1)*6+il]>0) n++;
             }
         }
         return n;
@@ -603,6 +603,14 @@ public class Road {
     public Particle getParticle() {
         return particle;
     }
+    
+    public double getPhi() {
+        double phi = Math.toDegrees(particle.phi());
+        if(this.getSector()==0)
+            return (phi+360+30)%60-30;
+        else
+            return phi;
+    }
 
     public ArrayList<Byte> getKey() {
         return this.getKey(TestMode.DCFTOFPCALUVWHTCC);
@@ -610,45 +618,90 @@ public class Road {
     
     public ArrayList<Byte> getKey(TestMode mode) {
         ArrayList<Byte> road = new ArrayList<>();
+        for(int i=0; i<13; i++) {
+            road.add((byte) 0);
+        }
+
         for(int isl=0; isl<6; isl++) {
             for(int il=0; il<6; il++) {
                 int layer = isl*6+il+1;
                 if(this.dcWires[layer-1] != 0) {
-                    road.add(this.getWire(layer));
+                    road.set(isl, this.getWire(layer));
                     break;
                 }
             }
         }
-        for(int i=6; i<13; i++) {
-            road.add((byte) 0);
-        }
-        if(mode.contains(TestMode.DCFTOFPCALU)) {
-            road.set(6, this.getPaddle(2));
-            road.set(7, this.getPaddle(3));
+
+        if(mode.contains(TestMode.DCPCALU)) {
             road.set(8, this.getStrip(1));
-            if(mode.contains(TestMode.DCFTOFPCALUVW)) {
-                road.set(9,  this.getStrip(2));
-                road.set(10, this.getStrip(3));
-                if(mode.contains(TestMode.DCFTOFPCALUVWHTCC))
-                    road.set(11, this.htccMask);
+            if(mode.contains(TestMode.DCFTOFPCALU)) {
+                road.set(6, this.getPaddle(2));
+                if(mode.contains(TestMode.DCFTOFPCALUVW)) {
+                    road.set(9,  this.getStrip(2));
+                    road.set(10, this.getStrip(3));
+                    if(mode.contains(TestMode.DCFTOFPCALUVWHTCC))
+                        road.set(11, this.htccMask);
+                }
             }
         }
         road.set(12, this.getSector());
         return road;
     }
     
-    public boolean isValid() {
+    public List<ArrayList<Byte>> getKeys(TestMode mode, int width) {
+        List<ArrayList<Byte>> keys = new ArrayList<>();
+        
+        ArrayList<Byte> key   = this.getKey(mode);
+        ArrayList<Byte> smear = new ArrayList<>();
+        for(int i=0; i<key.size(); i++) {
+            byte smearingSize = (byte) (smearing[i]*width);
+            smear.add(key.get(i)!=0 ? smearingSize : 0);
+        }
+        for(int k0 =-smear.get(0);  k0 <=smear.get(0);  k0++) {
+        for(int k1 =-smear.get(1);  k1 <=smear.get(1);  k1++) {
+        for(int k2 =-smear.get(2);  k2 <=smear.get(2);  k2++) {
+        for(int k3 =-smear.get(3);  k3 <=smear.get(3);  k3++) {
+        for(int k4 =-smear.get(4);  k4 <=smear.get(4);  k4++) {
+        for(int k5 =-smear.get(5);  k5 <=smear.get(5);  k5++) {
+        for(int k6 =-smear.get(6);  k6 <=smear.get(6);  k6++) {
+        for(int k7 =-smear.get(7);  k7 <=smear.get(7);  k7++) {
+        for(int k8 =-smear.get(8);  k8 <=smear.get(8);  k8++) {
+        for(int k9 =-smear.get(9);  k9 <=smear.get(9);  k9++) {
+        for(int k10=-smear.get(10); k10<=smear.get(10); k10++) {
+            ArrayList<Byte> keyCopy = new ArrayList<>();
+            keyCopy.add((byte) (key.get(0)  + k0*binning[0]));
+            keyCopy.add((byte) (key.get(1)  + k1*binning[1]));
+            keyCopy.add((byte) (key.get(2)  + k2*binning[2]));
+            keyCopy.add((byte) (key.get(3)  + k3*binning[3]));
+            keyCopy.add((byte) (key.get(4)  + k4*binning[4]));
+            keyCopy.add((byte) (key.get(5)  + k5*binning[5]));
+            keyCopy.add((byte) (key.get(6)  + k6*binning[6]));
+            keyCopy.add((byte) (key.get(7)  + k7*binning[7]));
+            keyCopy.add((byte) (key.get(8)  + k8*binning[8]));
+            keyCopy.add((byte) (key.get(9)  + k9*binning[9]));
+            keyCopy.add((byte) (key.get(10) + k10*binning[10]));
+            keyCopy.add((byte) (key.get(11)));
+            keyCopy.add((byte) (key.get(12)));
+            keys.add(keyCopy);
+        }}}}}}}}}}}
+        return keys;
+    }
+    
+    public final boolean isValid() {
         return this.isValid(TestMode.DC);
     }
 
     public boolean isValid(TestMode mode) {
-        boolean value = this.getLayerHits(3)>=3 && this.getSuperLayers()==6;
-        if(mode == TestMode.DCFTOFPCALU) {
-            value = value && this.ftofPaddles[1]>0 && this.ecalStrips[0]>0;
-            if(mode == TestMode.DCFTOFPCALUVW) {
-                value = value && this.ecalStrips[1]>0 && this.ecalStrips[2]>0;
-                if(mode == TestMode.DCFTOFPCALUVWHTCC) {
-                    value = value && this.htccMask>0;
+        boolean value = this.getSuperLayerHits(3)>=3 && this.getSuperLayers()==6;
+        if(mode.contains(TestMode.DCPCALU)) {
+            value = value && this.ecalStrips[0]>0;
+            if(mode.contains(TestMode.DCFTOFPCALU)) {
+                value = value && this.ftofPaddles[1]>0;
+                if(mode.contains(TestMode.DCFTOFPCALUVW)) {
+                    value = value && this.ecalStrips[1]>0 && this.ecalStrips[2]>0;
+                    if(mode.contains(TestMode.DCFTOFPCALUVWHTCC)) {
+                        value = value && this.htccMask>0;
+                    }
                 }
             }
         }

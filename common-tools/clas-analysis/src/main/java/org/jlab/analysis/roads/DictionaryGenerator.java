@@ -191,7 +191,7 @@ public class DictionaryGenerator {
 
         Line3d trkLine = new Line3d(ftof,ecal);
         List<DetHit> ftofHits  = ftofDetector.getIntersections(trkLine);
-        if (ftofHits != null && ftofHits.size() > 0) {
+        if (ftofHits != null && !ftofHits.isEmpty()) {
             for (DetHit hit : ftofHits) {
                 FTOFDetHit fhit = new FTOFDetHit(hit);
                 road.setPaddle(fhit.getLayer(), (byte) fhit.getPaddle());
@@ -202,7 +202,7 @@ public class DictionaryGenerator {
         List<DetectorHit> ecalHits = ecalDetector.getHits(path);
 
         int pcalU=0; int pcalV=0; int pcalW=0;
-        if (ecalHits != null && ecalHits.size() > 0) {
+        if (ecalHits != null && !ecalHits.isEmpty()) {
             for (DetectorHit ehit : ecalHits) {
                 if(ehit.getSuperlayerId()+1==1) {
                     if(ehit.getLayerId()+1==1 && pcalU==0) 
@@ -341,8 +341,8 @@ public class DictionaryGenerator {
 
         DefaultLogger.debug();
 
-        OptionParser parser = new OptionParser("dict-maker");
-
+        OptionParser parser = new OptionParser("dict-generator");
+        parser.setRequiresInputList(false);
         parser.addRequired("-torus",   "torus scale");
         parser.addRequired("-solenoid","solenoid scale");
         parser.addRequired("-charge",  "particle charge");

@@ -191,6 +191,7 @@ public class StraightTrack extends Trajectory{
                     stVec.setTrkThetaAtSurface(ThetaTrackIntersPlane);
                     stVec.setTrkToModuleAngle(trkToMPlnAngl);
                     stVec.setCalcCentroidStrip(CalcCentroidStrip);
+                    stVec.setSurfaceDetector(DetectorType.BST.getDetectorId()); 
                     if(stateVecs.size()>0 
                             && stateVecs.get(stateVecs.size()-1).x()==stVec.x()
                             && stateVecs.get(stateVecs.size()-1).y()==stVec.y()
@@ -230,7 +231,8 @@ public class StraightTrack extends Trajectory{
                     stVec.setTrkThetaAtSurface(ThetaTrackIntersSurf);
                     stVec.setTrkToModuleAngle(trkToMPlnAngl);
                     stVec.setCalcCentroidStrip(CalcCentroidStrip); 
-                     if(stateVecs.size()>0 
+                    stVec.setSurfaceDetector(DetectorType.BMT.getDetectorId()); 
+                    if(stateVecs.size()>0 
                             && stateVecs.get(stateVecs.size()-1).x()==stVec.x()
                             && stateVecs.get(stateVecs.size()-1).y()==stVec.y()
                             && stateVecs.get(stateVecs.size()-1).z()==stVec.z()) {

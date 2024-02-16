@@ -22,6 +22,12 @@ public class Dictionary extends HashMap<ArrayList<Byte>, Particle> {
     public Dictionary() {
     }
     
+    public Road getRoad(ArrayList<Byte> key) {
+        if(this.containsKey(key))
+            return new Road(key, this.get(key));
+        else
+            return null;
+    }
         
     public void printDictionary() {
         for(Map.Entry<ArrayList<Byte>, Particle> entry : this.entrySet()) {
@@ -33,10 +39,17 @@ public class Dictionary extends HashMap<ArrayList<Byte>, Particle> {
     }
 
     public void readDictionary(String fileName, TestMode mode, int wireBinning, int stripBinning, int sectorDependence) {
+        this.readDictionary(fileName, mode, wireBinning, stripBinning, sectorDependence, -1);
+    }
+        
+    public void readDictionary(String fileName, TestMode mode, int wireBinning, int stripBinning, int sectorDependence, int maxRoads) {
         
         System.out.println("\nReading dictionary from file " + fileName);
+        System.out.println("\nMaximum number of roads set to: " + maxRoads);
         int nFull  = 0;
         int nDupli = 0;
+        
+        if(maxRoads<0) maxRoads = Integer.MAX_VALUE;
         
         File fileDict = new File(fileName);
         
@@ -46,7 +59,7 @@ public class Dictionary extends HashMap<ArrayList<Byte>, Particle> {
             ProgressPrintout progress = new ProgressPrintout();
             
             String line = null;
-            while ((line = txtreader.readLine()) != null) {
+            while ((line = txtreader.readLine()) != null && maxRoads>nFull) {
                 
                 Road road = new Road(line);
                 road.setBinning(wireBinning, stripBinning, sectorDependence);
@@ -59,9 +72,9 @@ public class Dictionary extends HashMap<ArrayList<Byte>, Particle> {
                 else {
                     this.put(road.getKey(mode), road.getParticle());
                 }
+                progress.setAsInteger("roads",      nFull);
                 progress.setAsInteger("duplicates", nDupli);
-                progress.setAsInteger("good", this.size());
-                progress.setAsInteger("roads", nFull);
+                progress.setAsInteger("good",       this.size());
                 progress.updateStatus();
             }
             txtreader.close();
@@ -97,9 +110,10 @@ public class Dictionary extends HashMap<ArrayList<Byte>, Particle> {
             
         UDF(-1,                      "Undefined"),
         DC(0,                               "DC"),
-        DCFTOFPCALU(1,             "DCFTOFPCALU"),
-        DCFTOFPCALUVW(2,         "DCFTOFPCALUVW"),
-        DCFTOFPCALUVWHTCC(3, "DCFTOFPCALUVWHTCC");
+        DCPCALU(1,                     "DCPCALU"),
+        DCFTOFPCALU(2,             "DCFTOFPCALU"),
+        DCFTOFPCALUVW(3,         "DCFTOFPCALUVW"),
+        DCFTOFPCALUVWHTCC(4, "DCFTOFPCALUVWHTCC");
 
         private int mode;
         private String name;
@@ -132,10 +146,12 @@ public class Dictionary extends HashMap<ArrayList<Byte>, Particle> {
                 case 0:
                     return TestMode.DC;
                 case 1:
-                    return TestMode.DCFTOFPCALU;
+                    return TestMode.DCPCALU;
                 case 2:
-                    return TestMode.DCFTOFPCALUVW;
+                    return TestMode.DCFTOFPCALU;
                 case 3:
+                    return TestMode.DCFTOFPCALUVW;
+                case 4:
                     return TestMode.DCFTOFPCALUVWHTCC;
                 default:
                     return TestMode.UDF;
