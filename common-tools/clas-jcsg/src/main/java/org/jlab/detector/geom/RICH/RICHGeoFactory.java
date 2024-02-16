@@ -38,7 +38,6 @@ public class RICHGeoFactory{
 
     private RICHGeant4Factory richfactory = new RICHGeant4Factory();
     private RICHPixelMap pixelmap = new RICHPixelMap();
-    private RICHPixel pmtpixels  = null; 
     private RICHGeoParameters    geopar  = new RICHGeoParameters();
     private RICHGeoCalibration   geocal  = new RICHGeoCalibration();
 
@@ -87,7 +86,7 @@ public class RICHGeoFactory{
         geocal.load_CCDB(manager, run, Ncalls, geopar);
 
         if(FactoryMode>0){
-            // global pixel coordinate indexes
+            // global pixel coordinate indexes (obsolete)
             pixelmap.init_GlobalPixelGeo();
 
             // RICH survey (obsolete)
@@ -577,15 +576,16 @@ public class RICHGeoFactory{
 
 
     //------------------------------
-    public Vector3d GetPixelCenter(int ipmt, int anode){
+    /*public Vector3d GetPixelCenter(int ipmt, int anode){
     //------------------------------
 
+        // obsolete as refers to un-aligned richfactory
         Vector3d Vertex = richfactory.GetPhotocatode(ipmt).getVertex(2);
         Vector3d VPixel = Vertex.plus(pmtpixels.GetPixelCenter(anode));
         //System.out.format("Std  vtx %8.3f %8.3f %8.3f \n",Vertex.x, Vertex.y, Vertex.z);
         return new Vector3d (VPixel.x, -VPixel.y, VPixel.z);
 
-    }
+    }*/
 
 
     //------------------------------
@@ -598,7 +598,7 @@ public class RICHGeoFactory{
             Face3D compo_face = get_Layer(isec, ilay).get_CompoFace(ipmt-1, 0);
             Vector3d Vertex = toVector3d( compo_face.point(1) );
         
-            Vector3d VPixel = Vertex.plus(pmtpixels.GetPixelCenter(anode));
+            Vector3d VPixel = Vertex.plus(get_Layer(isec, ilay).get_PMTPixels().GetPixelCenter(anode));
             return new Point3D (VPixel.x, -VPixel.y, VPixel.z);
         }
 
@@ -1347,7 +1347,8 @@ public class RICHGeoFactory{
             }
 
             if(downversor!=null && rightversor!= null) {
-                pmtpixels = new RICHPixel(new Vector3d(0.,0.,0.), downversor, rightversor);
+                RICHPixel pmtpixels = new RICHPixel(new Vector3d(0.,0.,0.), downversor, rightversor);
+                layer.set_PMTPixels(pmtpixels);
                 if(debugMode>=1){
                     pmtpixels.show_Pixels( vertex );
                     vertex = toVector3d( layer.get_CompoFace(5,0).point(1) );
