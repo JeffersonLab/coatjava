@@ -71,9 +71,6 @@ services:
   - class: org.jlab.service.rtpc.RTPCEngine
     name: RTPC
 configuration:
-  io-services:
-    writer:
-      compression: 2
   services:
     MAGFIELDS:
       magfieldSolenoidMap: Symm_solenoid_r601_phi1_z1201_13June2018.dat
@@ -92,7 +89,7 @@ configuration:
 #    EBTB:
 #      variation: default
 #      timestamp: 08/22/2018
-    DCRC:
+    DCCR:
       dcT2DFunc: "Exponential"  
     DCHB:
       dcT2DFunc: "Exponential"  

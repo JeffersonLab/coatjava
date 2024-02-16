@@ -17,7 +17,12 @@ import org.jlab.clara.engine.Engine;
 import org.jlab.clara.engine.EngineData;
 import org.jlab.clara.engine.EngineDataType;
 import org.jlab.clara.engine.EngineStatus;
+import org.jlab.detector.banks.RawBank;
+import org.jlab.detector.banks.RawDataBank;
+import org.jlab.detector.banks.RawBank.OrderGroups;
+import org.jlab.detector.banks.RawBank.OrderType;
 import org.jlab.detector.calib.utils.ConstantsManager;
+import org.jlab.io.base.DataBank;
 
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.evio.EvioDataEvent;
@@ -45,13 +50,19 @@ public abstract class ReconstructionEngine implements Engine {
 
     volatile ConcurrentMap<String,String>           engineConfigMap;
     volatile String                                 engineConfiguration = null;
-  
+ 
+    protected OrderType[] rawBankOrders = OrderGroups.DEFAULT;
+    
     volatile private boolean fatalError = false;
     
     volatile boolean wroteConfig = false;
 
     volatile boolean dropOutputBanks = false;
-    private final Set<String> outputBanks = new HashSet<String>();
+    private final Set<String> outputBanks = new HashSet<>();
+
+    private boolean ignoreInvalidRunNumbers = true;
+
+    volatile long triggerMask = 0xFFFFFFFFFFFFFFFFL;
 
     String             engineName        = "UnknownEngine";
     String             engineAuthor      = "N.T.";
@@ -81,8 +92,16 @@ public abstract class ReconstructionEngine implements Engine {
     public void registerOutputBank(String... bankName) {
         outputBanks.addAll(Arrays.asList(bankName));
         if (this.dropOutputBanks) {
-            System.out.println(String.format("[%s]  dropping banks:  %s",this.getName(), Arrays.toString(bankName)));
+            LOGGER.log(Level.INFO, String.format("[%s]  dropping banks:  %s",this.getName(), Arrays.toString(bankName)));
         }
+    }
+
+    protected RawBank getRawBankReader(String bankName) {
+        return new RawDataBank(bankName, this.rawBankOrders);
+    }
+
+    protected RawBank getRawBankReader(String bankName, OrderType... order) {
+        return new RawDataBank(bankName, order);
     }
 
     abstract public boolean processDataEvent(DataEvent event);
@@ -94,7 +113,7 @@ public abstract class ReconstructionEngine implements Engine {
      */
     public void requireConstants(Map<String,Integer> tables){
         if(constManagerMap.containsKey(this.getClass().getName())==false){
-            System.out.println("[ConstantsManager] ---> create a new one for module : " + this.getClass().getName());
+            LOGGER.log(Level.INFO,"[ConstantsManager] ---> create a new one for module : " + this.getClass().getName());
             ConstantsManager manager = new ConstantsManager();
             manager.init(tables);
             constManagerMap.put(this.getClass().getName(), manager);
@@ -160,16 +179,25 @@ public abstract class ReconstructionEngine implements Engine {
           engineDictionary = new SchemaFactory();
       LOGGER.log(Level.INFO,"--- engine configuration is called " + this.getDescription());
       try {
+          if (this.getEngineConfigString("rawBankGroup")!=null) {
+              this.rawBankOrders = RawBank.getFilterGroup(this.getEngineConfigString("rawBankGroup"));
+          }
           if (this.getEngineConfigString("dropBanks")!=null &&
                   this.getEngineConfigString("dropBanks").equals("true")) {
               dropOutputBanks=true;
+          }
+          if (this.getEngineConfigString("ignoreInvalidRunNumbers")!=null &&
+                  this.getEngineConfigString("ignoreInvalidRunNumbers").equals("false")) {
+              ignoreInvalidRunNumbers=false;
+          }
+          if (this.getEngineConfigString("triggerMask")!=null) {
+              this.setTriggerMask(this.getEngineConfigString("triggerMask"));
           }
           this.init();
       } catch (Exception e){
           LOGGER.log(Level.SEVERE,"[Wooops] ---> something went wrong with " + this.getDescription());
           e.printStackTrace();
       }
-      System.out.println("----> I am doing nothing");
         
         try {
             if(engineConfiguration.length()>2){
@@ -251,7 +279,7 @@ public abstract class ReconstructionEngine implements Engine {
     
     public void setTimeStamp(String timestamp){
         for(Map.Entry<String,ConstantsManager> entry : constManagerMap.entrySet()){
-            LOGGER.log(Level.INFO,"[MAP MANAGER][" + this.getName() + "] ---> Setting " + entry.getKey() + " : variation = "
+            LOGGER.log(Level.INFO,"[MAP MANAGER][" + this.getName() + "] ---> Setting " + entry.getKey() + " : timestamp = "
                    + timestamp );
            entry.getValue().setTimeStamp(timestamp);
        }
@@ -264,6 +292,24 @@ public abstract class ReconstructionEngine implements Engine {
         return true;
     }
   
+    private void setTriggerMask(String mask) {
+        if(mask.startsWith("0x")==true){
+            mask = mask.substring(2);
+        }
+        triggerMask = Long.parseLong(mask,16);
+        LOGGER.log(Level.INFO, String.format("[CONFIGURE][%s] Trigger mask set to : 0x%016x", this.getName(), triggerMask));
+    }
+
+    public final boolean applyTriggerMask(DataEvent event) {
+        boolean triggerStatus = true;
+        if(event.hasBank("RUN::config")) {
+            DataBank configBank = event.getBank("RUN::config");
+            long triggerWord  = configBank.getLong("trigger", 0);
+            if(triggerWord!=0) triggerStatus = (triggerWord&triggerMask)!=0L;
+        }
+        return triggerStatus;          
+    }
+    
     /**
      * Generate a configuration section to drop in a HIPO bank, as the
      * engineConfigMap appended with the software version.  Here the top level
@@ -291,7 +337,30 @@ public abstract class ReconstructionEngine implements Engine {
             }
         }
     }
+
+    public boolean checkRunNumber(DataEvent event) {
+        if (!this.ignoreInvalidRunNumbers) return true;
+        int run = 0;
+        if (event.hasBank("RUN::config")) {
+            run = event.getBank("RUN::config").getInt("run",0);
+        }
+        return run>0;
+    }
     
+    public void filterEvent(DataEvent dataEvent) {
+        if (!this.wroteConfig) {
+            this.wroteConfig = true;
+            JsonUtils.extend(dataEvent, CONFIG_BANK_NAME, "json", this.generateConfig());
+        }
+        if (this.dropOutputBanks) {
+            this.dropBanks(dataEvent);
+        }
+        if(this.applyTriggerMask(dataEvent)) {
+            if (this.checkRunNumber(dataEvent)) {
+                this.processDataEvent(dataEvent);
+            }
+        }        
+    }
     
     @Override
     public EngineData execute(EngineData input) {
@@ -327,14 +396,7 @@ public abstract class ReconstructionEngine implements Engine {
             }
                     
             try {
-                if (!this.wroteConfig) {
-                    this.wroteConfig = true;
-                    JsonUtils.extend(dataEventHipo, CONFIG_BANK_NAME, "json", this.generateConfig());
-                }
-                if (this.dropOutputBanks) {
-                    this.dropBanks(dataEventHipo);
-                }
-                this.processDataEvent(dataEventHipo);
+                this.filterEvent(dataEventHipo);
                 output.setData(mt, dataEventHipo.getHipoEvent());
             } catch (Exception e) {
                 String msg = String.format("Error processing input event%n%n%s", ClaraUtil.reportException(e));

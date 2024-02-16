@@ -72,11 +72,10 @@ services:
     name: RTPC
 configuration:
   global:
-    variation: rga_fall2018
+    variation: rgb_spring2019
 #      timestamp: 12/31/2020-00:00:00
-  io-services:
-    writer:
-      compression: 2
+#  io-services:
+#    writer:
 #      schema_dir: "absolute-path-to-schema-folder"
 #      for example:
 #      schema_dir: "/home/clas12-1/chef/myClara/plugins/clas12/etc/bankdefs/dst"
@@ -84,20 +83,12 @@ configuration:
     MAGFIELDS:
       magfieldSolenoidMap: Symm_solenoid_r601_phi1_z1201_13June2018.dat
       magfieldTorusMap: Full_torus_r251_phi181_z251_25Jan2021.dat
-    DCCR:
-      dcWireDistortion: "true" 
-    DCHB:
-      dcWireDistortion: "true" 
     DCHAI:
-      dcWireDistortion: "true" 
       outputBankPrefix: "AI"
-    DCTB:
-      dcWireDistortion: "true" 
     DCTAI:
-      dcWireDistortion: "true"
       outputBankPrefix: "AI"
     MLTD:
-      run: "5038"
+      run: "6302"
     EBTAI:
       outputBankPrefix: "RECAI"
       

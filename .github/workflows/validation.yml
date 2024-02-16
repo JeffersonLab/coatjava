@@ -1,0 +1,12 @@
+name: Validation
+
+on:
+  pull_request:
+  push:
+    branches: [ development ]
+    tags: [ '*' ]
+  workflow_dispatch:
+
+jobs:
+  validation:
+    uses: JeffersonLab/clas12-validation/.github/workflows/ci.yml@main

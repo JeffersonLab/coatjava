@@ -11,7 +11,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jlab.geom.base.ConstantProvider;
 import org.jlab.utils.groups.IndexedTable;
 
 /**
@@ -52,6 +51,10 @@ public class ConstantsManager {
         this.timeStamp = timestamp;
     }
 
+    public synchronized void init(String... tables) {
+        this.defaultDescriptor.addTables(tables);
+    }
+    
     public synchronized void init(List<String> tables) {
         this.defaultDescriptor.addTables(tables);
     }
@@ -129,6 +132,7 @@ public class ConstantsManager {
                 desc.getMap().put(tk.get(i), table);
                 LOGGER.log(Level.INFO, String.format("***** >>> adding : %14s / table = %s", tk.get(i), tableName));
             } catch (Exception e) {
+                LOGGER.log(Level.SEVERE, e.getMessage());
                 LOGGER.log(Level.SEVERE, "[ConstantsManager] ---> error reading table : " + tableName);
                 // This happens if missing table or variation. No point in trying
                 // again, just set error status to trigger abort.

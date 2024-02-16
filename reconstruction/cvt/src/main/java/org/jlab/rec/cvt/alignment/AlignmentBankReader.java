@@ -33,12 +33,24 @@ public class AlignmentBankReader {
     public List<StraightTrack> getCosmics(DataEvent event) {
 
         
-        _SVTclusters = RecoBankReader.readBSTClusterBank(event, "BSTRec::Clusters");
-        _BMTclusters = RecoBankReader.readBMTClusterBank(event, "BMTRec::Clusters");
+        SVThits = RecoBankReader.readBSTHitBank(event, "BST::Hits");
+        BMThits = RecoBankReader.readBMTHitBank(event, "BMT::Hits");
+        if(SVThits!= null) {
+            Collections.sort(SVThits);
+        }
+        if(BMThits!=null) {
+            for(Hit hit : BMThits) {
+                hit.getStrip().calcBMTStripParams(hit.getSector(), hit.getLayer(), swimmer);
+            }
+            Collections.sort(BMThits);
+        }
+
+        _SVTclusters = RecoBankReader.readBSTClusterBank(event, SVThits, "BSTRec::Clusters");
+        _BMTclusters = RecoBankReader.readBMTClusterBank(event, BMThits, "BMTRec::Clusters");
         
         
-        _SVTcrosses = RecoBankReader.readBSTCrossBank(event, "BSTRec::Crosses");
-        _BMTcrosses = RecoBankReader.readBMTCrossBank(event, "BMTRec::Crosses");
+        _SVTcrosses = RecoBankReader.readBSTCrossBank(event, _SVTclusters, "BSTRec::Crosses");
+        _BMTcrosses = RecoBankReader.readBMTCrossBank(event, _BMTclusters, "BMTRec::Crosses");
         if(_SVTcrosses!=null) {
             for(Cross cross : _SVTcrosses) {
                 cross.setCluster1(_SVTclusters.get(cross.getCluster1().getId()-1));
@@ -82,12 +94,24 @@ public class AlignmentBankReader {
     public List<Track> getTracks(DataEvent event) {
 
         
-        _SVTclusters = RecoBankReader.readBSTClusterBank(event, "BSTRec::Clusters");
-        _BMTclusters = RecoBankReader.readBMTClusterBank(event, "BMT::Clusters");
+        SVThits = RecoBankReader.readBSTHitBank(event, "BST::Hits");
+        BMThits = RecoBankReader.readBMTHitBank(event, "BMT::Hits");
+        if(SVThits!= null) {
+            Collections.sort(SVThits);
+        }
+        if(BMThits!=null) {
+            for(Hit hit : BMThits) {
+                hit.getStrip().calcBMTStripParams(hit.getSector(), hit.getLayer(), swimmer);
+            }
+            Collections.sort(BMThits);
+        }
+
+        _SVTclusters = RecoBankReader.readBSTClusterBank(event, SVThits, "BSTRec::Clusters");
+        _BMTclusters = RecoBankReader.readBMTClusterBank(event, BMThits, "BMT::Clusters");
         
         
-        _SVTcrosses = RecoBankReader.readBSTCrossBank(event, "BSTRec::Crosses");
-        _BMTcrosses = RecoBankReader.readBMTCrossBank(event, "BMTRec::Crosses");
+        _SVTcrosses = RecoBankReader.readBSTCrossBank(event, _SVTclusters, "BSTRec::Crosses");
+        _BMTcrosses = RecoBankReader.readBMTCrossBank(event, _BMTclusters, "BMTRec::Crosses");
         if(_SVTcrosses!=null) {
             for(Cross cross : _SVTcrosses) {
                 cross.setCluster1(_SVTclusters.get(cross.getCluster1().getId()-1));
@@ -99,8 +123,11 @@ public class AlignmentBankReader {
                 cross.setCluster1(_BMTclusters.get(cross.getCluster1().getId()-1));
             }
         }
+        double xb = 0.0;  /////// FIXME
+        double yb = 0.0;  /////// FIXME
+        _CVTseeds = RecoBankReader.readCVTSeedsBank(event, xb, yb, _SVTcrosses, _BMTcrosses, "CVT::Seeds");
                        
-        List<Track> tracks = RecoBankReader.readCVTTracksBank(event, "CVTRec::Tracks");
+        List<Track> tracks = RecoBankReader.readCVTTracksBank(event, xb, yb, _CVTseeds, _SVTcrosses, _BMTcrosses, "CVTRec::Tracks");
         if(tracks == null) 
             return null;
         

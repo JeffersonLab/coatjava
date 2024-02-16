@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.hipo.HipoDataSource;
+import org.jlab.logging.DefaultLogger;
 import org.jlab.utils.benchmark.ProgressPrintout;
 
 import org.jlab.utils.options.OptionParser;
@@ -69,10 +70,13 @@ public class DictionaryCreator {
 
     public static void main(String[] args) {
         
-        OptionParser parser = new OptionParser("dict-validation");
+        DefaultLogger.debug();
+
+        OptionParser parser = new OptionParser("dict-maker");
+        parser.setRequiresInputList(false);
         parser.addRequired("-o"      , "dictionary file name");
         parser.addRequired("-i"      , "event file");
-        parser.addOption("-pid"      , "0", "select particle PID for new dictonary, 0: no selection,");
+        parser.addOption("-pid"      , "0", "select particle PID for new dictionary, 0: no selection,");
         parser.addOption("-charge"   , "0", "select particle charge for new dictionary, 0: no selection");
         parser.addOption("-threshold", "1", "select roads momentum threshold in GeV");
         parser.addOption("-vzmin"  , "-10", "minimum vz (cm)");
@@ -80,9 +84,6 @@ public class DictionaryCreator {
         parser.addOption("-n"        ,"-1", "maximum number of events to process for validation");
         parser.addOption("-dupli"    , "1", "remove duplicates in dictionary creation, 0=false, 1=true");
         parser.parse(args);
-        
-        List<String> arguments = new ArrayList<String>();
-        for(String item : args){ arguments.add(item); }
         
         String dictionaryFileName = null;
         if(parser.hasOption("-o")==true) dictionaryFileName = parser.getOption("-o").stringValue();

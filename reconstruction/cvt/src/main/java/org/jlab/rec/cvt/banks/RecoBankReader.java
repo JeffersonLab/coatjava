@@ -1,7 +1,9 @@
 package org.jlab.rec.cvt.banks;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.geom.prim.Arc3D;
 import org.jlab.geom.prim.Line3D;
@@ -101,12 +103,12 @@ public class RecoBankReader {
         }
     }
                         
-    public static List<Cluster> readBSTClusterBank(DataEvent event, String bankname) {
+    public static Map<Integer, Cluster> readBSTClusterBank(DataEvent event, List<Hit> svthits, String bankname) {
         
         if(!event.hasBank(bankname))
             return null;
         else {
-            List<Cluster> clusters = new ArrayList<>();        
+            Map<Integer, Cluster> clusters = new HashMap<>();        
             
             DataBank bank = event.getBank(bankname);
             for(int i = 0; i < bank.rows(); i++) {
@@ -150,19 +152,31 @@ public class RecoBankReader {
                 cls.setS(new Vector3D(sx,sy,sz));
                 cls.setPhi(Math.atan2(cy,cx));
                 cls.setPhi0(Math.atan2(cy,cx));
-                clusters.add(cls);
+                Hit seedHit = null;
+                double seedE = -1;
+                for(Hit h : svthits) {
+                    if(h.getAssociatedClusterID()==id) {
+                        cls.add(h);
+                        if(h.getStrip().getEdep()>seedE) {
+                            seedE = h.getStrip().getEdep();
+                            seedHit = h;
+                        }
+                    }
+                }
+                cls.setSeed(seedHit);
+                clusters.put(id, cls);
             }
             return clusters;
         }
     }
         
         
-    public static List<Cluster> readBMTClusterBank(DataEvent event, String bankname) {
+    public static Map<Integer, Cluster> readBMTClusterBank(DataEvent event, List<Hit> bmthits, String bankname) {
         
         if(!event.hasBank(bankname))
             return null;
         else {
-            List<Cluster> clusters = new ArrayList<>();        
+            Map<Integer, Cluster> clusters = new HashMap<>();       
             
             DataBank bank = event.getBank(bankname);
             for(int i = 0; i < bank.rows(); i++) {
@@ -228,7 +242,19 @@ public class RecoBankReader {
                 cls.setL(new Vector3D(lx,ly,lz));
                 cls.setN(new Vector3D(nx,ny,nz));
                 cls.setS(new Vector3D(sx,sy,sz));
-                clusters.add(cls);
+                Hit seedHit = null;
+                double seedE = -1;
+                for(Hit h : bmthits) {
+                    if(h.getAssociatedClusterID()==id) {
+                        cls.add(h);
+                        if(h.getStrip().getEdep()>seedE) {
+                            seedE = h.getStrip().getEdep();
+                            seedHit = h;
+                        }
+                    }
+                }
+                cls.setSeed(seedHit);
+                clusters.put(id, cls);
             }
             return clusters;
         }
@@ -236,12 +262,12 @@ public class RecoBankReader {
 
     
     
-    public static List<Cross> readBSTCrossBank(DataEvent event, String bankname) {
+    public static Map<Integer, Cross> readBSTCrossBank(DataEvent event, Map<Integer, Cluster> bstClusters, String bankname) {
         
         if(!event.hasBank(bankname))
             return null;
         else {
-            List<Cross> crosses = new ArrayList<>();        
+            Map<Integer, Cross> crosses = new HashMap<>();        
     
             DataBank bank = event.getBank(bankname);        
             for(int i = 0; i < bank.rows(); i++) {
@@ -275,20 +301,20 @@ public class RecoBankReader {
                 cr.setPoint0(new Point3D(x0,y0,z0));
                 cr.setPointErr0(new Point3D(err_x0,err_y0,err_z0));
                 cr.setOrderedRegion(region);
-                cr.setCluster1(new Cluster(DetectorType.BST, BMTType.UNDEFINED, sector, 2*region-1, clid1));
-                cr.setCluster2(new Cluster(DetectorType.BST, BMTType.UNDEFINED, sector, 2*region  , clid2));
-                crosses.add(cr);
+                cr.setCluster1(bstClusters.get(clid1));
+                cr.setCluster2(bstClusters.get(clid2));
+                crosses.put(id,cr);
             }
             return crosses;
         }
     }
         
-    public static List<Cross> readBMTCrossBank(DataEvent event, String bankname) {
+    public static Map<Integer, Cross> readBMTCrossBank(DataEvent event, Map<Integer, Cluster> bmtClusters, String bankname) {
         
         if(!event.hasBank(bankname))
             return null;
         else {
-            List<Cross> crosses = new ArrayList<>();        
+            Map<Integer, Cross> crosses = new HashMap<>();         
     
             DataBank bank = event.getBank(bankname);
             for(int i = 0; i < bank.rows(); i++) {
@@ -323,19 +349,19 @@ public class RecoBankReader {
                 cr.setPoint0(new Point3D(x0,y0,z0));
                 cr.setPointErr0(new Point3D(err_x0,err_y0,err_z0));
                 cr.setOrderedRegion(Geometry.getInstance().getBMT().getLayer(region, cr.getType())+SVTGeometry.NREGIONS); // RDV check if is used and fix definition here and in CrossMaker
-                cr.setCluster1(new Cluster(DetectorType.BMT, cr.getType(), sector, Geometry.getInstance().getBMT().getLayer(region, cr.getType()), clid1));
-                crosses.add(cr);
+                cr.setCluster1(bmtClusters.get(clid1));
+                crosses.put(id, cr);
             }
             return crosses;
         }
     }
-    
-    public static List<Seed> readCVTSeedsBank(DataEvent event, String bankname) {
+    //sets seeds from first pass tracks
+    public static Map<Integer, Seed> readCVTSeedsBank(DataEvent event, double xb, double yb, Map<Integer, Cross> svtCrosses, Map<Integer, Cross> bmtCrosses, String bankname) {
         
-        if(!event.hasBank(bankname))
+        if(!event.hasBank(bankname) || svtCrosses==null)
             return null;
         else {
-            List<Seed> seeds = new ArrayList<>();        
+            Map<Integer, Seed> seeds = new HashMap<>();        
     
             DataBank bank = event.getBank(bankname);
             for(int i = 0; i < bank.rows(); i++) {
@@ -347,9 +373,9 @@ public class RecoBankReader {
                 double d0     = bank.getFloat("d0", i)*10;
                 int    q      = bank.getByte("q", i);
                 int    type   = bank.getByte("fittingMethod", i);
-                double xb     = bank.getFloat("xb", i)*10;
-                double yb     = bank.getFloat("yb", i)*10;
-                Helix helix = new Helix( pt, d0, phi0, z0, tandip, q, xb, yb, Constants.getSolenoidMagnitude());
+//                double xb     = bank.getFloat("xb", i);
+//                double yb     = bank.getFloat("yb", i);
+                Helix helix = new Helix( pt, d0, phi0, z0, tandip, q, xb, yb);
                 double[][] covmatrix = new double[5][5];
                 covmatrix[0][0] = bank.getFloat("cov_d02", i)*10*10;
                 covmatrix[0][1] = bank.getFloat("cov_d0phi0", i)*10 ;
@@ -377,18 +403,41 @@ public class RecoBankReader {
                 seed.setLineFitChi2PerNDF(lineChi2);
                 seed.setChi2(chi2);
                 seed.setNDF(ndf);
-                seeds.add(seed);
+                seed.percentTruthMatch = bank.getFloat("fracmctru", i);
+                seed.totpercentTruthMatch = bank.getFloat("fracmcmatch", i);
+                
+                List<Cross> crossesOnTrk = new ArrayList<>();
+                for (int j = 0; j < 9; j++) {
+                    String hitStrg = "Cross";
+                    hitStrg += (j + 1);
+                    hitStrg += "_ID";  
+                    int cid = (int) bank.getShort(hitStrg, i);
+                    if(svtCrosses.containsKey(cid)) { 
+                        crossesOnTrk.add(svtCrosses.get(cid));
+                        
+                    }
+                    if(bmtCrosses!=null) {
+                        if(bmtCrosses.containsKey(cid)) { 
+                            crossesOnTrk.add(bmtCrosses.get(cid));
+                        }        
+                    }
+                }
+                
+                seed.setCrosses(crossesOnTrk);
+               
+                seeds.put(tid, seed);
             }
             return seeds;
         }
     }    
     
-    public static List<Track> readCVTTracksBank(DataEvent event, String bankname) {
+    public static Map<Integer, Seed> readCVTTracksBank(DataEvent event, double xb, double yb, Map<Integer, Seed> cvtSeeds,
+            Map<Integer, Cross> svtCrosses, Map<Integer, Cross> bmtCrosses, String bankname) {
         
         if(!event.hasBank(bankname))
             return null;
         else {
-            List<Track> tracks = new ArrayList<>();        
+            Map<Integer, Seed> seeds = new HashMap<>();          
     
             DataBank bank = event.getBank(bankname);
             for(int i = 0; i < bank.rows(); i++) {
@@ -399,9 +448,9 @@ public class RecoBankReader {
                 double z0     = bank.getFloat("z0", i)*10;
                 double d0     = bank.getFloat("d0", i)*10;
                 int    q      = bank.getByte("q", i);
-                double xb     = bank.getFloat("xb", i)*10;
-                double yb     = bank.getFloat("yb", i)*10;
-                Helix helix = new Helix( pt, d0, phi0, z0, tandip, q, xb, yb, Constants.getSolenoidMagnitude());
+//                double xb     = bank.getFloat("xb", i);
+//                double yb     = bank.getFloat("yb", i);
+                Helix helix = new Helix( pt, d0, phi0, z0, tandip, q, xb, yb);
                 double[][] covmatrix = new double[5][5];
                 covmatrix[0][0] = bank.getFloat("cov_d02", i)*10*10;
                 covmatrix[0][1] = bank.getFloat("cov_d0phi0", i)*10 ;
@@ -416,33 +465,120 @@ public class RecoBankReader {
                 covmatrix[3][4] = bank.getFloat("cov_z0tandip", i)*10;
                 covmatrix[4][3] = bank.getFloat("cov_z0tandip", i)*10;
                 covmatrix[4][4] = bank.getFloat("cov_tandip2", i);
-                int    status   = bank.getShort("status", i);
-                double chi2     = bank.getFloat("chi2", i);
-                int    ndf      = bank.getShort("ndf", i);
-                int    pid      = bank.getInt("pid", i);
+            //    int    status   = bank.getShort("status", i);
+            //    double chi2     = bank.getFloat("chi2", i);
+            //    int    ndf      = bank.getShort("ndf", i);
+            //    int    pid      = bank.getInt("pid", i);
                 int    seedId   = bank.getShort("seedID", i);
-                int    type   = bank.getByte("fittingMethod", i);
-                Seed seed = new Seed();
-                seed.setId(seedId);
+                int    status   = Math.abs(bank.getShort("status", i));
+                int type = status - (int) (status/10) * 10; 
+                Seed seed = cvtSeeds.get(seedId);
+                seed.setId(tid);
+                //seed.setHelix(seed.getHelix());
+                //seed.getHelix().setCovMatrix(seed.getHelix().getCovMatrix());
+                seed.setHelix(helix);
+                seed.getHelix().setCovMatrix(covmatrix);
                 seed.setStatus(type);
-                Track track = new Track(helix);
-                track.setId(tid);
-                track.getHelix().setCovMatrix(covmatrix);
-                track.setChi2(chi2);
-                track.setNDF(ndf);
-                track.setPID(pid);
-                track.setKFIterations((int) status/1000);
-                track.setSeed(seed);
+                seed.FirstPassIdx = i;
+                List<Cross> crossesOnTrk = new ArrayList<>();
                 for (int j = 0; j < 9; j++) {
-                    int crossId = bank.getShort("Cross"+(j+1)+"_ID", i);
-                    DetectorType det = crossId>1000 ? DetectorType.BMT : DetectorType.BST;
-                    if(crossId>0) track.add(new Cross(det, BMTType.UNDEFINED, 0, 0, crossId));
+                    String hitStrg = "Cross";
+                    hitStrg += (j + 1);
+                    hitStrg += "_ID";  
+                    int cid = (int) bank.getShort(hitStrg, i);
+                    if(svtCrosses.containsKey(cid)) { 
+                        crossesOnTrk.add(svtCrosses.get(cid));
+                        
+                    }
+                    if(bmtCrosses!=null) {
+                        if(bmtCrosses.containsKey(cid)) { 
+                            crossesOnTrk.add(bmtCrosses.get(cid));
+                        }        
+                    }
                 }
-                tracks.add(track);
+                
+                seed.setCrosses(crossesOnTrk);
+                if(Constants.getInstance().seedingDebugMode) 
+                    System.out.println("Recompose seed "+seed.toString());
+                seeds.put(tid, seed);
             }
-            return tracks;
+            return seeds;
         }
     }
+    
+    /*
+    public static Map<Integer, Seed> readCVTTracksBank(DataEvent event, double xb, double yb, Map<Integer, Seed> cvtSeeds,
+            Map<Integer, Cross> svtCrosses, Map<Integer, Cross> bmtCrosses) {
+        
+        if(!event.hasBank("CVT::Tracks"))
+            return null;
+        else {
+            Map<Integer, Seed> seeds = new HashMap<>();          
+    
+            DataBank bank = event.getBank("CVT::Tracks");
+            for(int i = 0; i < bank.rows(); i++) {
+                int    tid    = bank.getShort("ID", i);
+                double pt     = bank.getFloat("pt", i);
+                double phi0   = bank.getFloat("phi0", i);
+                double tandip = bank.getFloat("tandip", i);
+                double z0     = bank.getFloat("z0", i)*10;
+                double d0     = bank.getFloat("d0", i)*10;
+                int    q      = bank.getByte("q", i);
+//                double xb     = bank.getFloat("xb", i);
+//                double yb     = bank.getFloat("yb", i);
+                Helix helix = new Helix( pt, d0, phi0, z0, tandip, q, xb, yb);
+                double[][] covmatrix = new double[5][5];
+                covmatrix[0][0] = bank.getFloat("cov_d02", i)*10*10;
+                covmatrix[0][1] = bank.getFloat("cov_d0phi0", i)*10 ;
+                covmatrix[0][2] = bank.getFloat("cov_d0rho", i);
+                covmatrix[1][0] = bank.getFloat("cov_d0phi0", i)*10 ;
+                covmatrix[1][1] = bank.getFloat("cov_phi02", i);
+                covmatrix[1][2] = bank.getFloat("cov_phi0rho", i)/10 ;
+                covmatrix[2][0] = bank.getFloat("cov_d0rho", i);
+                covmatrix[2][1] = bank.getFloat("cov_phi0rho", i)/10 ;
+                covmatrix[2][2] = bank.getFloat("cov_rho2", i)/10/10;
+                covmatrix[3][3] = bank.getFloat("cov_z02", i)*10*10;
+                covmatrix[3][4] = bank.getFloat("cov_z0tandip", i)*10;
+                covmatrix[4][3] = bank.getFloat("cov_z0tandip", i)*10;
+                covmatrix[4][4] = bank.getFloat("cov_tandip2", i);
+            //    int    status   = bank.getShort("status", i);
+            //    double chi2     = bank.getFloat("chi2", i);
+            //    int    ndf      = bank.getShort("ndf", i);
+            //    int    pid      = bank.getInt("pid", i);
+                int    seedId   = bank.getShort("seedID", i);
+                int    type   = bank.getByte("fittingMethod", i);
+                
+                Seed seed = cvtSeeds.get(seedId);
+                seed.setId(tid);
+                seed.setHelix(helix);
+                seed.getHelix().setCovMatrix(covmatrix);
+                seed.setStatus(type);
+                seed.FirstPassIdx = i;
+                List<Cross> crossesOnTrk = new ArrayList<>();
+                for (int j = 0; j < 9; j++) {
+                    String hitStrg = "Cross";
+                    hitStrg += (j + 1);
+                    hitStrg += "_ID";  
+                    int cid = (int) bank.getShort(hitStrg, i);
+                    if(svtCrosses.containsKey(cid)) { 
+                        crossesOnTrk.add(svtCrosses.get(cid));
+                        
+                    }
+                    if(bmtCrosses!=null) {
+                        if(bmtCrosses.containsKey(cid)) { 
+                            crossesOnTrk.add(bmtCrosses.get(cid));
+                        }        
+                    }
+                }
+                
+                seed.setCrosses(crossesOnTrk);
+               
+                seeds.put(tid, seed);
+            }
+            return seeds;
+        }
+    }
+    */
     
     public static List<StraightTrack> readCVTCosmicsBank(DataEvent event, String bankname) {
         
@@ -450,7 +586,7 @@ public class RecoBankReader {
             return null;
         else {
             List<StraightTrack> tracks = new ArrayList<>();        
-    
+
             DataBank bank = event.getBank(bankname);
             for(int i = 0; i < bank.rows(); i++) {
                 int    tid      = bank.getShort("ID", i);
