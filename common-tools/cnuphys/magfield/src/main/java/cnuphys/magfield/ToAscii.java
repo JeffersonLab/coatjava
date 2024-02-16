@@ -13,7 +13,7 @@ public class ToAscii {
 	
 	private static boolean _csv;
 
-	
+	// convert the transverse solenoid to ascii
 	private static void transverseToAscii(TransverseSolenoid transSol, String path) {
 		File asciiFile = new File(path);
 
@@ -21,6 +21,8 @@ public class ToAscii {
 		try {
 			DataOutputStream dos = new DataOutputStream(new FileOutputStream(asciiFile));
 			writeAsciiHeader(dos, transSol);
+			writeTransverseData(dos, transSol);
+			dos.close();
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -81,6 +83,49 @@ public class ToAscii {
 			e.printStackTrace();
 		}
 		System.out.println("done");
+	}
+
+	private static void writeTransverseData(DataOutputStream dos, TransverseSolenoid transSol) {
+		//needed from torus
+		GridCoordinate xCoord = transSol.getXCoordinate();
+		GridCoordinate yCoord = transSol.getYCoordinate();
+		GridCoordinate zCoord = transSol.getZCoordinate();
+		
+		for (int xidx = 0; xidx < xCoord.getNumPoints(); xidx++) {			
+			double x = 10*xCoord.getValue(xidx);
+			
+			System.out.println("x = " + x);
+			
+			for (int yidx = 0; yidx < yCoord.getNumPoints(); yidx++) {
+				double y = 10*yCoord.getValue(yidx);
+
+				for (int zidx = 0; zidx < zCoord.getNumPoints(); zidx++) {
+					double z = 10*zCoord.getValue(zidx);
+					
+					int compositeIndex = transSol.getCompositeIndex(xidx, yidx, zidx);
+					
+					float bx = transSol.getB1(compositeIndex)/10f;
+					float by = transSol.getB2(compositeIndex)/10f;
+					float bz = transSol.getB3(compositeIndex)/10f;
+					
+					String s = null;
+					
+					s = String.format("%-3.0f %-3.0f %-3.0f %s %s %s", 
+							x, y, z, vStr(bx), vStr(by), vStr(bz));
+					
+					s = s.replace("   ", " ");
+					s = s.replace("  ", " ");		
+					s = s.replace("0E", "E");		
+					s = s.replace("0E", "E");		
+					s = s.replace("0E", "E");		
+					s = s.replace("0E", "E");		
+					s = s.replace("E+00", "");		
+					
+					stringLn(dos, 0, s);
+				}
+			}
+		}
+
 	}
 
 	
@@ -367,6 +412,8 @@ public class ToAscii {
 				String path = homeDir + "/transverse/transverseSolenoidMarch2021.txt";
 				
 				transverseToAscii(solenoid, path);
+				
+				System.out.println("Done.");
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			}
