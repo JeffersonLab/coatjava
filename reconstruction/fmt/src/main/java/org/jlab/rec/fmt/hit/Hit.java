@@ -258,7 +258,8 @@ public class Hit implements Comparable<Hit> {
             this._ClusterIndex = _AssociatedClusterIndex;
         }
 
-        public static List<Hit> fetchHits(DataEvent event, IndexedTable timecuts, IndexedTable statuses) {
+        public static List<Hit> fetchHits(DataEvent event, IndexedTable timecuts, IndexedTable statuses,
+                IndexedTable fmtStripVoltage,  IndexedTable fmtStripVoltageThresh) {
 
             List<Hit> hits = new ArrayList<>();
 
@@ -283,6 +284,21 @@ public class Hit implements Comparable<Hit> {
                     hit.setStatus(statuses.getIntValue("status", sector, layer, strip));
                     
                     if(time!=0 && (time<tmin || time>tmax)) hit.setStatus(2); // exclude time==0 hits for MC
+                    int r = regionInOut(strip);
+                    if(fmtStripVoltage!=null && fmtStripVoltage.hasEntry(r,layer,0) && 
+                            fmtStripVoltageThresh!=null && fmtStripVoltageThresh.hasEntry(r,layer,0)) {
+                        double hv  = fmtStripVoltage.getDoubleValue("HV", r,layer,0); 
+                        double hv1 = fmtStripVoltageThresh.getDoubleValue("HV1", r,layer,0); 
+                        double hv2 = fmtStripVoltageThresh.getDoubleValue("HV2", r,layer,0); 
+                        double hv3 = fmtStripVoltageThresh.getDoubleValue("HV3", r,layer,0); 
+
+                        if(hv<hv1) 
+                            hit.setStatus(4);
+                        if(hv>=hv1 && hv<hv2) 
+                            hit.setStatus(5);
+                        if(hv>=hv2 && hv<hv3) 
+                            hit.setStatus(6);
+                    }
                     
                     hits.add(hit);
                 }
@@ -292,6 +308,18 @@ public class Hit implements Comparable<Hit> {
             return hits;
         }
         
+        private static int regionInOut(int strip_number) { 
+            int i = strip_number -1;
+            int reg =0; //2=outer region; true=1 region
+            if((i>=Constants.REGIONSTRIPS[0][0] && i<Constants.REGIONSTRIPS[0][1]) || (i>=Constants.REGIONSTRIPS[0][2] && i<Constants.REGIONSTRIPS[0][3]) ) {
+                reg = 1;
+            }
+            if((i>=Constants.REGIONSTRIPS[1][0] && i<Constants.REGIONSTRIPS[1][1]) || (i>=Constants.REGIONSTRIPS[1][2] && i<Constants.REGIONSTRIPS[1][3]) ) {
+                reg = 2;
+            }
+        
+            return reg;
+	}
         /**
          *
          * @return print statement with hit information

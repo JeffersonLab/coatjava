@@ -27,8 +27,17 @@ public class Constants {
     public static int MAX_NB_CROSSES = 30;
     
     private static Detector fmtDetector = null;
-
     
+    // To represent the geometry we divide the barrel micromega disk into 3 regions according to the strip numbering system.
+    // Here i = strip_number -1;
+    // Region 1 is the region in the negative x part of reg region: the strips range is from   1 to 320  (   0 <= i < 320)
+    // Region 2 is the region in the negative y part of outer region: the strips range is from 321 to 512  ( 320 <= i < 512)
+    // Region 1 is the region in the positive x part of reg region: the strips range is from 513 to 832  ( 512 <= i < 832)
+    // Region 2 is the region in the positive y part of outer region: the strips range is from 833 to 1024 ( 832 <= i < 1024)
+    public static int[][] REGIONSTRIPS= new int[][]{
+            {0, 320, 512, 832},
+            {320, 512, 832, 1024}
+        };
     
     public static void setDetector(Detector detector) {
         Constants.fmtDetector = detector;
