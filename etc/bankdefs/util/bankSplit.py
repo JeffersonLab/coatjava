@@ -94,7 +94,7 @@ ecrerun.extend(["ECAL::tdc","ECAL::adc"])
 
 # DC alignment and AI-tracking validation schema:
 dcalign = list(dst)
-dcalign.extend(["ai::tracks", "aidn::tracks", "TimeBasedTrkg::AIClusters", "TimeBasedTrkg::AIHits", "TimeBasedTrkg::AISegments", "TimeBasedTrkg::AISegmentTrajectory", "TimeBasedTrkg::AITracks", "TimeBasedTrkg::TBClusters", "TimeBasedTrkg::TBHits", "TimeBasedTrkg::TBSegments", "TimeBasedTrkg::TBSegmentTrajectory", "TimeBasedTrkg::TBTracks"])
+dcalign.extend(["ai::tracks", "aidn::tracks", "TimeBasedTrkg::AIClusters", "TimeBasedTrkg::AIHits", "TimeBasedTrkg::AISegments", "TimeBasedTrkg::AITrajectory", "TimeBasedTrkg::AITracks", "TimeBasedTrkg::TBClusters", "TimeBasedTrkg::TBHits", "TimeBasedTrkg::TBSegments", "TimeBasedTrkg::TBSegmentTrajectory", "TimeBasedTrkg::TBTracks"])
 
 # Level3 validation schema:
 level3 = list(dst)
