@@ -74,13 +74,13 @@ public class Geometry {
     // polarized target
     private static double POLTARBATHRADIUS = 30;
     private static double POLTARRADIUS     = 45;
-    private static final Material POLTARNH3 = new Material("NH3", 7.5, 0.5782E-3, 0.55, 450.0, 65, Units.MM);
-    private static final Material POLTARND3 = new Material("ND3", 10.0, 0.6622E-3, 0.5, 450.0, 65, Units.MM);
-    private static final Material POLTARCUP = new Material("PCTFE", 0.1, 2.135E-3, 0.5, 450.0, 65, Units.MM);
-    private static final Material POLTARLHE = new Material("LHE", 20.0, 0.147E-3, 0.5, 6400.0, 22, Units.MM);
-    private static final Material POLTARBATH = new Material("BATH", 0.76, 2.135E-3, 0.5, 450.0, 65, Units.MM);
-    private static final Material POLTARAL = new Material("Al", 1.63, 2.7E-3, 0.48181, 397.0, 166, Units.MM);
-    private static final Material POLTARCF = new Material("CarbonFiber", 1.0, 1.75E-3, 0.51342, 250.0,   78, Units.MM);
+    private static final Material POLTARNH3 = new Material("NH3", 7.5, 0.5782E-3, 0.55, 916.6, 47.9, Units.MM);
+    private static final Material POLTARND3 = new Material("ND3", 10.0, 0.6622E-3, 0.5, 893.7, 47.9, Units.MM);
+    private static final Material POLTARCUP = new Material("PCTFE", 0.1, 2.135E-3, 0.5, 134.2, 120.7, Units.MM);
+    private static final Material POLTARLHE = new Material("LHE", 20.0, 0.147E-3, 0.5, 6689.4, 41.8, Units.MM);
+    private static final Material POLTARBATH = new Material("BATH", 0.76, 2.135E-3, 0.5, 134.2, 120.7, Units.MM);
+    private static final Material POLTARAL = new Material("Al", 1.63, 2.7E-3, 0.48181, 88.9, 166, Units.MM);
+    private static final Material POLTARCF = new Material("CarbonFiber", 1.0, 1.75E-3, 0.51342, 246.9, 78, Units.MM);
 
     // other materials
     public  static final Material SCINTILLATOR = new Material("Scintillator", 1, 1.03E-3, 0.54141, 439.0, 64.7, Units.MM);
