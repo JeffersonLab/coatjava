@@ -108,6 +108,7 @@ public class GeometryFactory {
 
         if(type==DetectorType.TARGET){
             provider.loadTable("/geometry/target");
+            provider.loadTable("/geometry/materials/target");
         }
 
         if(type==DetectorType.FMT){

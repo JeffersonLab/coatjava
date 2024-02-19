@@ -32,6 +32,7 @@ import org.jlab.rec.cvt.bmt.BMTType;
 import org.jlab.rec.cvt.bmt.CCDBConstantsLoader;
 import org.jlab.rec.cvt.measurement.Measurements;
 import org.jlab.rec.cvt.svt.SVTGeometry;
+import org.jlab.utils.groups.IndexedList;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.options.OptionParser;
 
@@ -46,7 +47,8 @@ public class Geometry {
     private CTOFGeant4Factory ctofGeometry = null;
     private Detector          cndGeometry  = null;
     private List<Surface>   outerSurfaces  = null;
-
+    
+    private IndexedList<Material> targetMaterialsTable = new IndexedList<>(3);
     private double targetPosition = 0;  
     private double targetHalfLength = 0;  
     private double targetRadius = 0;  
@@ -120,7 +122,7 @@ public class Geometry {
         ConstantProvider providerTG = GeometryFactory.getConstants(DetectorType.TARGET, run, variation);
         this.targetPosition = providerTG.getDouble("/geometry/target/position",0)*10;
         this.targetHalfLength = providerTG.getDouble("/geometry/target/length",0)*10;
-        this.initTarget();
+        this.initTarget(providerTG);
         
         ConstantProvider providerCTOF = GeometryFactory.getConstants(DetectorType.CTOF, run, variation);
         ctofGeometry = new CTOFGeant4Factory(providerCTOF);        
@@ -147,7 +149,7 @@ public class Geometry {
         return targetRadius;
     }
     
-    private void initTarget() {
+    private void initTarget(ConstantProvider provider) {
         if("LH2".equals(Constants.getInstance().getTargetType()) ||
            "LD2".equals(Constants.getInstance().getTargetType()))
             this.loadCryoTarget();
@@ -189,6 +191,24 @@ public class Geometry {
                                   TSHIELDI,
                                   Units.MM);
         targetShieldSurface.passive=true;
+    }
+
+    private void loadPolTarget(ConstantProvider provider) {
+        for(int i=0; i<provider.length("/geometry/material/target"); i++)  {
+            int sector    = provider.getInteger("/geometry/materials/sector", i);
+            int layer     = provider.getInteger("/geometry/materials/layer", i);
+            int component = provider.getInteger("/geometry/materials/component", i);
+            if(layer>0 && layer<4) {
+                targetMaterialsTable.add(new Material("L"+layer+"C"+component,
+                                                      provider.getDouble("/geometry/material/target/thickness", i),
+                                                      provider.getDouble("/geometry/material/target/density", i),
+                                                      provider.getDouble("/geometry/material/target/ZoverA", i),
+                                                      provider.getDouble("/geometry/material/target/X0", i),
+                                                      provider.getDouble("/geometry/material/target/i", i),
+                                                      Units.CM),
+                                        sector, layer, component);
+            }
+        }
     }
 
     private void loadPolTarget() {
