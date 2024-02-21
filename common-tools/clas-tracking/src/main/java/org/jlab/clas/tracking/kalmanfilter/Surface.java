@@ -124,7 +124,7 @@ public class Surface implements Comparable<Surface> {
     @Override
     public String toString() {
         String s = "Surface: ";
-        s = s + String.format("Type=%s Index=%d  Layer=%d  Sector=%d  Emisphere=%.1f X0=%.4f  thickness=%.4f  Z/A=%.4f  Error=%.4f Passive=%b",
+        s = s + String.format("Type=%s Index=%d  Layer=%d  Sector=%d  Emisphere=%.1f thickness=%.4f X0=%.4f Z/A=%.4f Error=%.4f Passive=%b",
                                this.type.name(), this.getIndex(),this.getLayer(),this.getSector(),this.hemisphere,this.getThickness(),this.getToverX0(),
                                this.getZoverA(),this.getError(), this.passive);
         if(type==Type.PLANEWITHSTRIP) {
@@ -145,6 +145,7 @@ public class Surface implements Comparable<Surface> {
         else if(type==Type.LINE) {
             s = s + "\n\t" + this.lineEndPoint1.toString();
             s = s + "\n\t" + this.lineEndPoint2.toString();
+            if(this.lineTube!=null) s = s + "\n\t" + this.lineTube.toString();
         }
         return s;
     }
@@ -208,6 +209,19 @@ public class Surface implements Comparable<Surface> {
     
     public void addMaterial(String name, double thickness, double density, double ZoverA, double X0, double IeV, Units unit) {
         this.materials.add(new Material(name, thickness, density, ZoverA, X0, IeV, unit));
+    }
+    
+    public double getRadius() {
+        if(this.cylinder!=null)
+            return this.cylinder.baseArc().radius();
+        else if(this.lineTube!=null) 
+            return this.lineTube.baseArc().radius();
+        else
+            return 0;
+    }
+    
+    public double getLength() {
+        return this.cylinder.height();
     }
     
     public double getThickness() {

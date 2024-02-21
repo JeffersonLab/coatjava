@@ -2,11 +2,15 @@ package org.jlab.rec.cvt;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JFrame;
 import org.jlab.clas.tracking.kalmanfilter.Material;
 import org.jlab.clas.tracking.kalmanfilter.Surface;
-import org.jlab.clas.tracking.kalmanfilter.Type;
 import org.jlab.clas.tracking.kalmanfilter.Units;
 import org.jlab.clas.tracking.objects.Strip;
 import org.jlab.detector.base.DetectorType;
@@ -32,7 +36,6 @@ import org.jlab.rec.cvt.bmt.BMTType;
 import org.jlab.rec.cvt.bmt.CCDBConstantsLoader;
 import org.jlab.rec.cvt.measurement.Measurements;
 import org.jlab.rec.cvt.svt.SVTGeometry;
-import org.jlab.utils.groups.IndexedList;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.options.OptionParser;
 
@@ -48,12 +51,13 @@ public class Geometry {
     private Detector          cndGeometry  = null;
     private List<Surface>   outerSurfaces  = null;
     
-    private IndexedList<Material> targetMaterialsTable = new IndexedList<>(3);
+    private Map<Integer, List<Surface>> targetSurfaces = new LinkedHashMap<>();
     private double targetPosition = 0;  
     private double targetHalfLength = 0;  
     private double targetRadius = 0;  
     
     private List<Material> targetMaterials = null;
+    private Surface targetCellSurface = null;
     private Surface scatteringChamberSurface = null;
     private Surface targetShieldSurface = null;
 
@@ -90,6 +94,9 @@ public class Geometry {
     
     private static boolean LOADED;
     
+    private final static Logger LOGGER = Logger.getLogger(Geometry.class.getName());
+    
+    
     // private constructor for a singleton
     private Geometry() {
     }
@@ -115,7 +122,7 @@ public class Geometry {
             LOADED = true;
         }
     }
- 
+        
     private synchronized void load(String variation, int run, IndexedTable svtLorentz, IndexedTable bmtVoltage) {
         
         // Load target
@@ -137,25 +144,15 @@ public class Geometry {
         outerSurfaces = Measurements.getOuters();
     }
     
-    public double getTargetZOffset() {
-        return targetPosition;
-    }
-
-    public double getTargetHalfLength() {
-        return targetHalfLength;
-    }
-
-    public double getTargetRadius() {
-        return targetRadius;
-    }
-    
     private void initTarget(ConstantProvider provider) {
         if("LH2".equals(Constants.getInstance().getTargetType()) ||
            "LD2".equals(Constants.getInstance().getTargetType()))
             this.loadCryoTarget();
         else if("NH3".equals(Constants.getInstance().getTargetType()) ||
-           "ND3".equals(Constants.getInstance().getTargetType()))
+           "ND3".equals(Constants.getInstance().getTargetType())) {
             this.loadPolTarget();
+            this.loadPolTarget(provider);
+        }
         else
             this.loadCryoTarget();
     }
@@ -194,23 +191,132 @@ public class Geometry {
     }
 
     private void loadPolTarget(ConstantProvider provider) {
-        for(int i=0; i<provider.length("/geometry/material/target"); i++)  {
-            int sector    = provider.getInteger("/geometry/materials/sector", i);
-            int layer     = provider.getInteger("/geometry/materials/layer", i);
-            int component = provider.getInteger("/geometry/materials/component", i);
+        for(int i=0; i<provider.length("/geometry/materials/target/layer"); i++)  {
+            int sector    = provider.getInteger("/geometry/materials/target/sector", i);
+            int layer     = provider.getInteger("/geometry/materials/target/layer", i);
+            int component = provider.getInteger("/geometry/materials/target/component", i);
             if(layer>0 && layer<4) {
-                targetMaterialsTable.add(new Material("L"+layer+"C"+component,
-                                                      provider.getDouble("/geometry/material/target/thickness", i),
-                                                      provider.getDouble("/geometry/material/target/density", i),
-                                                      provider.getDouble("/geometry/material/target/ZoverA", i),
-                                                      provider.getDouble("/geometry/material/target/X0", i),
-                                                      provider.getDouble("/geometry/material/target/i", i),
-                                                      Units.CM),
-                                        sector, layer, component);
+                if(!targetSurfaces.containsKey(layer))
+                    targetSurfaces.put(layer, new ArrayList<>());
+                double thickness = provider.getDouble("/geometry/materials/target/thickness", i)*10;
+                double rmin      = provider.getDouble("/geometry/materials/target/radius", i)*10;
+                double rmax      = rmin+thickness;
+                double length    = provider.getDouble("/geometry/materials/target/length", i)*10;
+                Point3D  center = new Point3D(0, 0, this.getTargetZOffset()-length/2);
+                Vector3D axis   = new Vector3D(0,0,1);
+                Surface surface = null;
+                if(layer==1 && component==1 && rmin==0) { // this is the target cell, assume the volume is a bulk cylinder
+                    Point3D       origin   = new Point3D(rmax, 0, this.getTargetZOffset()-length/2);
+                    Arc3D         arc      = new Arc3D(origin, center, axis, 2*Math.PI);
+                    Cylindrical3D cylinder = new Cylindrical3D(arc, length);
+                    surface = new Surface(center, cylinder.highArc().center(), Constants.DEFAULTSWIMACC);
+                    surface.lineTube = cylinder;
+                }
+                else {                                    // use min radius for other surfaces
+                    Point3D       origin   = new Point3D(rmin, 0, this.getTargetZOffset()-length/2);
+                    Arc3D         arc      = new Arc3D(origin, center, axis, 2*Math.PI);
+                    Cylindrical3D cylinder = new Cylindrical3D(arc, length);
+                    surface = new Surface(cylinder, new Strip(0, 0, 0), Constants.DEFAULTSWIMACC);
+                }
+                surface.addMaterial("L"+layer+"C"+component,
+                                  provider.getDouble("/geometry/materials/target/thickness", i)*10,
+                                  provider.getDouble("/geometry/materials/target/density", i)/1000,
+                                  provider.getDouble("/geometry/materials/target/ZoverA", i),
+                                  provider.getDouble("/geometry/materials/target/X0", i)*10,
+                                  provider.getDouble("/geometry/materials/target/I", i),
+                                  Units.MM);
+                surface.setIndex(component);
+                surface.passive=true;
+                System.out.println(layer + " " + surface);
+                targetSurfaces.get(layer).add(surface);
+            }
+            else if(layer!=0) {
+                LOGGER.log(Level.WARNING, "Invalid target layer = " + layer + ": will be ignored");
             }
         }
+        // reorder surfaces
+        for(int layer : targetSurfaces.keySet()) {
+            List<Surface> surfaces = targetSurfaces.get(layer);
+            Collections.sort(surfaces);
+        }
+        // check consistency
+        double r=0;
+        for(int il=0; il<3; il++) {
+            int layer = il+1;
+            if(!targetSurfaces.containsKey(layer)) {
+                LOGGER.log(Level.SEVERE, "Target layer " + layer + " is undefined");
+                System.exit(1);
+            }
+            else if(layer==1 && targetSurfaces.get(layer).get(0).getIndex()!=1) {
+                LOGGER.log(Level.SEVERE, "Target cell is undefined");
+                System.exit(1);
+            }
+            else if(layer==1 && targetSurfaces.get(layer).get(0).lineTube!=null && targetSurfaces.get(layer).get(0).getMaterials().size()>1) {
+                LOGGER.log(Level.SEVERE, "Handling of multiple materials with bulk target not implemented yet");
+                System.exit(1);
+            }
+            else {
+                for(Surface s : targetSurfaces.get(layer)) {
+                    if(s.getRadius()<r) {
+                        LOGGER.log(Level.SEVERE, "Radius of target surface for layer=" + layer + " component=" + s.getIndex() + " is smaller than inner surface");
+                        System.exit(1);
+                    }
+                    else {
+                        r = s.getRadius();
+                    }
+                }
+            }
+        }
+        targetCellSurface = this.getTargetCell();
+        System.out.println(targetRadius);
+        targetRadius = this.getTargetCell().getRadius();
+        System.out.println(targetRadius);
+        for(Material m : this.targetMaterials)
+            System.out.println(m);
+        targetMaterials=this.targetCellSurface.getMaterials();
+        for(Material m : this.targetMaterials) {
+            System.out.println(m);
+        }
+        scatteringChamberSurface = this.getTargetSurface(2);
+        targetShieldSurface = this.getTargetSurface(3);
     }
 
+    private Surface getTargetCell() {
+        if(!targetSurfaces.containsKey(1) || 
+            targetSurfaces.get(1).isEmpty()) {
+            LOGGER.log(Level.SEVERE,"Target cell is undefined");            
+        }
+        Surface cell = targetSurfaces.get(1).get(0);
+        for(int i=1; i<targetSurfaces.get(1).size(); i++) {
+            for(Material m : targetSurfaces.get(1).get(i).getMaterials())
+                cell.addMaterial(m);
+        }
+        cell.setIndex(0);
+        return cell;
+    }
+    
+    private Surface getTargetSurface(int layer) {
+        // calculate cylinder dimensions based on largest dimensions
+        double radius = 0;
+        double length = 0;
+        for(Surface s : this.targetSurfaces.get(layer)) {
+            if(radius<s.getRadius()) radius = s.getRadius();
+            if(length<s.getLength()) length = s.getLength();
+        }
+        Point3D  center = new Point3D(0, 0, this.getTargetZOffset()-length/2);
+        Point3D  origin = new Point3D(radius, 0, this.getTargetZOffset()-length/2);
+        Vector3D axis   = new Vector3D(0,0,1);
+        Arc3D arc = new Arc3D(origin, center, axis, 2*Math.PI);
+        Cylindrical3D cylinder = new Cylindrical3D(arc, length);
+        Surface surface = new Surface(cylinder, new Strip(0, 0, 0), Constants.DEFAULTSWIMACC);
+        for(Surface s : this.targetSurfaces.get(layer)) {
+            for(Material m : s.getMaterials())
+                surface.addMaterial(m);
+        }
+        surface.passive=true;
+        return surface;
+    }
+    
     private void loadPolTarget() {
         targetMaterials = new ArrayList<>();
         if("NH3".equals(Constants.getInstance().getTargetType())) 
@@ -240,6 +346,19 @@ public class Geometry {
         targetShieldSurface.addMaterial(POLTARCF);
         targetShieldSurface.passive=true;
     }
+
+    public double getTargetZOffset() {
+        return targetPosition;
+    }
+
+    public double getTargetHalfLength() {
+        return targetHalfLength;
+    }
+
+    public double getTargetRadius() {
+        return targetRadius;
+    }
+    
     public List<Material> getTargetMaterials() {
         return targetMaterials;
     }
