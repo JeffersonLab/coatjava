@@ -24,7 +24,11 @@ def create(dirname, banklist):
     os.mkdir(workdirectory + dirname)
     os.chdir(workdirectory + dirname)
     for bank in banklist:
-        os.symlink("../" + singledirectory + bank + ".json", bank + ".json")
+        src = "../" + singledirectory + bank + ".json"
+        if not os.path.exists(src):
+            print('ERROR:  Bank not found:  '+bank)
+            sys.exit(1)
+        os.symlink(src, bank + ".json")
     os.chdir("../../")
     print("Json file links created in " + workdirectory + dirname)
 
@@ -62,7 +66,7 @@ band   = ["BAND::laser","BAND::adc","BAND::tdc","BAND::hits","BAND::rawhits"]
 raster = ["RASTER::position"]
 rich   = ["RICH::tdc","RICH::Ring","RICH::Particle"]
 rtpc   = ["RTPC::hits","RTPC::tracks","RTPC::KFtracks"]
-alert  = ["AHDC::Track", "AHDC::MC", "AHTDC::Hits", "AHDC::PreClusters", "AHDC::Clusters", "AHDC::KFTrack"]
+alert  = ["AHDC::Track", "AHDC::MC", "AHDC::Hits", "AHDC::PreClusters", "AHDC::Clusters", "AHDC::KFTrack"]
 dets   = band + raster + rich + rtpc + alert
 
 # additions for the calibration schema:
@@ -94,7 +98,7 @@ ecrerun.extend(["ECAL::tdc","ECAL::adc"])
 
 # DC alignment and AI-tracking validation schema:
 dcalign = list(dst)
-dcalign.extend(["ai::tracks", "aidn::tracks", "TimeBasedTrkg::AIClusters", "TimeBasedTrkg::AIHits", "TimeBasedTrkg::AISegments", "TimeBasedTrkg::AISegmentTrajectory", "TimeBasedTrkg::AITracks", "TimeBasedTrkg::TBClusters", "TimeBasedTrkg::TBHits", "TimeBasedTrkg::TBSegments", "TimeBasedTrkg::TBSegmentTrajectory", "TimeBasedTrkg::TBTracks"])
+dcalign.extend(["ai::tracks", "aidn::tracks", "TimeBasedTrkg::AIClusters", "TimeBasedTrkg::AIHits", "TimeBasedTrkg::AISegments", "TimeBasedTrkg::AITracks", "TimeBasedTrkg::TBClusters", "TimeBasedTrkg::TBHits", "TimeBasedTrkg::TBSegments", "TimeBasedTrkg::TBSegmentTrajectory", "TimeBasedTrkg::TBTracks"])
 
 # Level3 validation schema:
 level3 = list(dst)

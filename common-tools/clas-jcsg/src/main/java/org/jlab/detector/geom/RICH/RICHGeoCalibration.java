@@ -89,7 +89,7 @@ public class RICHGeoCalibration {
 
                 if((debugMode>=1 || geopar.DEBUG_GEO_CONSTS>=1) && ncalls<Math.max(1,geopar.DEBUG_GEO_CONSTS)) {
                         System.out.format("------------------------------------------------------------- \n");
-                        System.out.format("RICH: Load ALI Calibration from local TxT file for RICH 4d  sector %4d  run %6d \n", irich, isec, run);
+                        System.out.format("RICH: Load ALI Calibration from local TxT file for RICH %4d  sector %4d  run %6d \n", irich, isec, run);
                         System.out.format("------------------------------------------------------------- \n");
 
                         dump_AliCalibration(isec, "TXT  ");
@@ -102,7 +102,7 @@ public class RICHGeoCalibration {
 
                 if((debugMode>=1 || geopar.DEBUG_GEO_CONSTS>=1) && ncalls<=Math.max(1,geopar.DEBUG_GEO_CONSTS)) {
                         System.out.format("------------------------------------------------------------- \n");
-                        System.out.format("RICH: Load AER Calibration from local TxT file for RICH 4d  sector %4d  run %6d \n", irich, isec, run);
+                        System.out.format("RICH: Load AER Calibration from local TxT file for RICH %4d  sector %4d  run %6d \n", irich, isec, run);
                         System.out.format("------------------------------------------------------------- \n");
 
                         dump_AerCalibration(isec, "TXT  ");
