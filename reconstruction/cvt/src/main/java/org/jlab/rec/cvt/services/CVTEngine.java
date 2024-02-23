@@ -67,7 +67,7 @@ public class CVTEngine extends ReconstructionEngine {
     private int     removeRegion        = 0;
     private int     beamSpotConstraint  = 2;
     private double  beamSpotRadius      = 0.3;
-    private String  targetMaterial      = "LH2";
+    private String  targetMaterial      = "";
     private boolean elossPrecorrection  = true;
     private boolean svtSeeding          = true;
     private boolean timeCuts            = true;

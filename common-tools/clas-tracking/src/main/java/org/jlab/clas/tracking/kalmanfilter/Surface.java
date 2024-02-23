@@ -25,7 +25,7 @@ public class Surface implements Comparable<Surface> {
     public Point3D finitePlaneCorner1;
     public Point3D finitePlaneCorner2;
     public Cylindrical3D cylinder;
-    public Cylindrical3D lineTube;
+    public Cylindrical3D lineVolume;
     private Transformation3D toGlobal = new Transformation3D();
     private Transformation3D toLocal  = new Transformation3D();
     public Arc3D arc;
@@ -113,11 +113,11 @@ public class Surface implements Comparable<Surface> {
         swimAccuracy = accuracy;
     }
 
-    public Surface(Point3D endPoint1, Point3D endPoint2, Cylindrical3D tube, double accuracy) {
+    public Surface(Point3D endPoint1, Point3D endPoint2, Cylindrical3D volume, double accuracy) {
         type = Type.LINE;
         lineEndPoint1 = endPoint1;
         lineEndPoint2 = endPoint2;
-        lineTube = tube;
+        lineVolume = volume;
         swimAccuracy = accuracy;
     }
     
@@ -145,7 +145,7 @@ public class Surface implements Comparable<Surface> {
         else if(type==Type.LINE) {
             s = s + "\n\t" + this.lineEndPoint1.toString();
             s = s + "\n\t" + this.lineEndPoint2.toString();
-            if(this.lineTube!=null) s = s + "\n\t" + this.lineTube.toString();
+            if(this.lineVolume!=null) s = s + "\n\t" + this.lineVolume.toString();
         }
         return s;
     }
@@ -214,8 +214,8 @@ public class Surface implements Comparable<Surface> {
     public double getRadius() {
         if(this.cylinder!=null)
             return this.cylinder.baseArc().radius();
-        else if(this.lineTube!=null) 
-            return this.lineTube.baseArc().radius();
+        else if(this.lineVolume!=null) 
+            return this.lineVolume.baseArc().radius();
         else
             return 0;
     }
@@ -250,38 +250,48 @@ public class Surface implements Comparable<Surface> {
         return ZA/RhoX;
     }
     
-    public double getLocalDir(Point3D pos, Vector3D dir) {
+    public double getTrackLength(Point3D pos, Vector3D dir) {
+        return this.getTrackLength(pos, dir, 0);
+    }
+    
+    public double getTrackLength(Point3D pos, Vector3D dir, int materialIndex) {
         if(this.type!=Type.PLANEWITHSTRIP && 
            this.type!=Type.CYLINDERWITHSTRIP && 
            this.type!=Type.LINE) 
-           return 1;
+           return this.getMaterials().get(materialIndex).getThickness();
         else {
             if(this.type==Type.PLANEWITHSTRIP) {
                 Vector3D norm = this.plane.normal();
-                return Math.abs(norm.dot(dir));
+                return this.getMaterials().get(materialIndex).getThickness()/Math.abs(norm.dot(dir));
             }
             else if(this.type==Type.CYLINDERWITHSTRIP) {
                 Vector3D axis = this.cylinder.getAxis().direction().asUnit();
                 dir.sub(dir.projection(axis));
-                return Math.abs(dir.mag());
+                return this.getMaterials().get(materialIndex).getThickness()/Math.abs(dir.mag());
             }
             else if(this.type==Type.LINE) {
-                Vector3D line = this.lineEndPoint1.vectorTo(this.lineEndPoint2).asUnit();
-                if(this.lineTube!=null) {
+                if(this.lineVolume==null) {
+                    Vector3D line = this.lineEndPoint1.vectorTo(this.lineEndPoint2).asUnit();
+                    dir.sub(dir.projection(line));
+                    return this.getMaterials().get(materialIndex).getThickness()/Math.abs(dir.mag());
+                }
+                else {  
                     Line3D track = new Line3D(pos, dir);
-//                    Line3D track = new Line3D(new Point3D(lineEndPoint1.x(), lineEndPoint1.y(),pos.z()), dir);
                     List<Point3D> intersections = new ArrayList<>();
-                    double trackLength = this.lineTube.intersectionLength(track, intersections);
-                    if(trackLength>0) { 
-                        return this.getThickness()/trackLength;
+                    double trackLength = this.lineVolume.intersectionLength(track, intersections);
+                    if(materialIndex==0) { 
+                        return trackLength;
                     }
                     else {
-                        return Double.MAX_VALUE;
+                        for(Point3D p : intersections) {
+                            if(this.lineVolume.isOnSurface(p)){
+                                Vector3D axis = this.lineVolume.getAxis().direction().asUnit();
+                                dir.sub(dir.projection(axis));
+                                return this.getMaterials().get(materialIndex).getThickness()/Math.abs(dir.mag());
+                            }
+                        }
+                        return 0;
                     }
-                }
-                else {
-                    dir.sub(dir.projection(line));
-                    return Math.abs(dir.mag());
                 }
             }
             return 0;
@@ -289,31 +299,40 @@ public class Surface implements Comparable<Surface> {
     }    
     
     public double getEloss(double p, double mass) {
-        double dE=0;
-        for(Material m : this.materials) {
+        double dE = 0;
+        for(int im=0; im<this.getMaterials().size(); im++) {
+            Material m = this.getMaterials().get(im);
             dE += m.getEloss(p, mass);
-        }
+        }    
         return dE;
     }
     
-    public double getEloss(Point3D pos, Vector3D mom, double mass, int dir) {
-        double cosDir = this.getLocalDir(pos, mom.asUnit());
+    public double getEloss(Point3D pos, Vector3D mom, double mass) {
+        double dE = 0;
+        double p = mom.mag();
+        for(int im=0; im<this.getMaterials().size(); im++) {
+            Material m = this.getMaterials().get(im);
+            dE += m.getEloss(p, mass)*this.getTrackLength(pos, mom.asUnit(), im)/m.getThickness();
+        }    
+        return dE;
+    }
+     
+    public double getElossScale(Point3D pos, Vector3D mom, double mass, int dir) {
         double scale = 0;
-        if(cosDir!=0) {
-            double dE = -dir*this.getEloss(mom.mag(), mass)/cosDir;
-            double Ecorr = Math.sqrt(mom.mag2() + mass*mass) + dE;
-            if(Ecorr>mass) scale = Math.sqrt(Ecorr*Ecorr - mass*mass)/mom.mag();
-            mom.scale(scale);
-        }
+        double dE = -dir*this.getEloss(pos, mom, mass);
+        double Ecorr = Math.sqrt(mom.mag2() + mass*mass) + dE;
+        if(Ecorr>mass) scale = Math.sqrt(Ecorr*Ecorr - mass*mass)/mom.mag();
+        mom.scale(scale);
         return scale;
     }
     
     public double getDx(Point3D pos, Vector3D mom) {
-        double cosDir = this.getLocalDir(pos, mom.asUnit());
-        if(cosDir!=0)
-          return this.getThickness()/cosDir;
-        else
-            return 0;
+        double dx = 0;
+        for(int im=0; im<this.getMaterials().size(); im ++) {
+            Material m = this.getMaterials().get(im);
+            dx += this.getTrackLength(pos, mom.asUnit(), im);
+        }
+        return dx;
     }
     
     public double getThetaMS(double p, double mass, double cosEntranceAngle) {

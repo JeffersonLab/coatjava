@@ -439,10 +439,9 @@ public final class Cylindrical3D implements Face3D {
             else if(count==1) {
                 return line.origin().distance(intersections.get(0));
             }
-            if(count>2) System.out.println("aaaaaaaaaaa");
         }
-            return 0;
-        }
+        return 0;
+    }
 
     /**
      * Returns true if the given point is on the surface of this cylindrical 

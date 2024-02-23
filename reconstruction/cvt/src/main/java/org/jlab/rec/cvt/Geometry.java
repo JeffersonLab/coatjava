@@ -77,16 +77,16 @@ public class Geometry {
     private static final Material CRYOTARGETKAPTON = new Material("Kapton", 50E-3, 1.42E-3, 0.501, 285.7, 79.6, Units.MM);
     private static final Material CRYOTARGETRHOACELL = new Material("Rhoacell", 10.4, 0.1E-3, 0.5392, 1000, 93.0, Units.MM);
     
-    // polarized target
-    private static double POLTARBATHRADIUS = 30;
-    private static double POLTARRADIUS     = 45;
-    private static final Material POLTARNH3 = new Material("NH3", 7.5, 0.5782E-3, 0.55, 916.6, 47.9, Units.MM);
-    private static final Material POLTARND3 = new Material("ND3", 10.0, 0.6622E-3, 0.5, 893.7, 47.9, Units.MM);
-    private static final Material POLTARCUP = new Material("PCTFE", 0.1, 2.135E-3, 0.5, 134.2, 120.7, Units.MM);
-    private static final Material POLTARLHE = new Material("LHE", 20.0, 0.147E-3, 0.5, 6689.4, 41.8, Units.MM);
-    private static final Material POLTARBATH = new Material("BATH", 0.76, 2.135E-3, 0.5, 134.2, 120.7, Units.MM);
-    private static final Material POLTARAL = new Material("Al", 1.63, 2.7E-3, 0.48181, 88.9, 166, Units.MM);
-    private static final Material POLTARCF = new Material("CarbonFiber", 1.0, 1.75E-3, 0.51342, 246.9, 78, Units.MM);
+//    // polarized target
+//    private static double POLTARBATHRADIUS = 30;
+//    private static double POLTARRADIUS     = 45;
+//    private static final Material POLTARNH3 = new Material("NH3", 7.5, 0.5782E-3, 0.55, 916.6, 47.9, Units.MM);
+//    private static final Material POLTARND3 = new Material("ND3", 10.0, 0.6622E-3, 0.5, 893.7, 47.9, Units.MM);
+//    private static final Material POLTARCUP = new Material("PCTFE", 0.1, 2.135E-3, 0.5, 134.2, 120.7, Units.MM);
+//    private static final Material POLTARLHE = new Material("LHE", 20.0, 0.147E-3, 0.5, 6689.4, 41.8, Units.MM);
+//    private static final Material POLTARBATH = new Material("BATH", 0.76, 2.135E-3, 0.5, 134.2, 120.7, Units.MM);
+//    private static final Material POLTARAL = new Material("Al", 1.63, 2.7E-3, 0.48181, 88.9, 166, Units.MM);
+//    private static final Material POLTARCF = new Material("CarbonFiber", 1.0, 1.75E-3, 0.51342, 246.9, 78, Units.MM);
 
     // other materials
     public  static final Material SCINTILLATOR = new Material("Scintillator", 1, 1.03E-3, 0.54141, 439.0, 64.7, Units.MM);
@@ -148,13 +148,9 @@ public class Geometry {
         if("LH2".equals(Constants.getInstance().getTargetType()) ||
            "LD2".equals(Constants.getInstance().getTargetType()))
             this.loadCryoTarget();
-        else if("NH3".equals(Constants.getInstance().getTargetType()) ||
-           "ND3".equals(Constants.getInstance().getTargetType())) {
-            this.loadPolTarget();
-            this.loadPolTarget(provider);
+        else {
+            this.loadTarget(provider);
         }
-        else
-            this.loadCryoTarget();
     }
     
     private void loadCryoTarget() {
@@ -190,7 +186,17 @@ public class Geometry {
         targetShieldSurface.passive=true;
     }
 
-    private void loadPolTarget(ConstantProvider provider) {
+    /**
+     * Creates target surfaces reading the /geometry/materials/target table from CCDB
+     *  Here are the rules:
+     *  - surfaces are identified by layer and should be defined for layer = 1, 2, and 3
+     *  - multiple sublayers, identified by component, can be added with different materials
+     *  - layer=1 component=1 is the target material and should always be present
+     *  - the target material is assumed to be a full cylinder  while the other surfaces are "tubes"
+     *  - for layer 1, the target material volume is created and any additional sublayer is assumed to be a equivalent to the target cell walls
+     *  - for layer 2 and 3, when multiple sublayers are defined, the surface radius and length are set to the largest values among the sublayers
+    */
+    private void loadTarget(ConstantProvider provider) {
         for(int i=0; i<provider.length("/geometry/materials/target/layer"); i++)  {
             int sector    = provider.getInteger("/geometry/materials/target/sector", i);
             int layer     = provider.getInteger("/geometry/materials/target/layer", i);
@@ -198,9 +204,8 @@ public class Geometry {
             if(layer>0 && layer<4) {
                 if(!targetSurfaces.containsKey(layer))
                     targetSurfaces.put(layer, new ArrayList<>());
-                double thickness = provider.getDouble("/geometry/materials/target/thickness", i)*10;
-                double rmin      = provider.getDouble("/geometry/materials/target/radius", i)*10;
-                double rmax      = rmin+thickness;
+                double rmin      = provider.getDouble("/geometry/materials/target/rmin", i)*10;
+                double rmax      = provider.getDouble("/geometry/materials/target/rmax", i)*10;
                 double length    = provider.getDouble("/geometry/materials/target/length", i)*10;
                 Point3D  center = new Point3D(0, 0, this.getTargetZOffset()-length/2);
                 Vector3D axis   = new Vector3D(0,0,1);
@@ -210,7 +215,7 @@ public class Geometry {
                     Arc3D         arc      = new Arc3D(origin, center, axis, 2*Math.PI);
                     Cylindrical3D cylinder = new Cylindrical3D(arc, length);
                     surface = new Surface(center, cylinder.highArc().center(), Constants.DEFAULTSWIMACC);
-                    surface.lineTube = cylinder;
+                    surface.lineVolume = cylinder;
                 }
                 else {                                    // use min radius for other surfaces
                     Point3D       origin   = new Point3D(rmin, 0, this.getTargetZOffset()-length/2);
@@ -251,7 +256,7 @@ public class Geometry {
                 LOGGER.log(Level.SEVERE, "Target cell is undefined");
                 System.exit(1);
             }
-            else if(layer==1 && targetSurfaces.get(layer).get(0).lineTube!=null && targetSurfaces.get(layer).get(0).getMaterials().size()>1) {
+            else if(layer==1 && targetSurfaces.get(layer).get(0).lineVolume!=null && targetSurfaces.get(layer).get(0).getMaterials().size()>1) {
                 LOGGER.log(Level.SEVERE, "Handling of multiple materials with bulk target not implemented yet");
                 System.exit(1);
             }
@@ -267,85 +272,76 @@ public class Geometry {
                 }
             }
         }
-        targetCellSurface = this.getTargetCell();
-        System.out.println(targetRadius);
-        targetRadius = this.getTargetCell().getRadius();
-        System.out.println(targetRadius);
-        for(Material m : this.targetMaterials)
-            System.out.println(m);
-        targetMaterials=this.targetCellSurface.getMaterials();
-        for(Material m : this.targetMaterials) {
-            System.out.println(m);
-        }
+        targetCellSurface = this.getTargetSurface(1);
         scatteringChamberSurface = this.getTargetSurface(2);
         targetShieldSurface = this.getTargetSurface(3);
+        targetRadius = this.targetCellSurface.getRadius();
+        targetMaterials = this.getTargetCellSurface().getMaterials();
     }
 
-    private Surface getTargetCell() {
-        if(!targetSurfaces.containsKey(1) || 
-            targetSurfaces.get(1).isEmpty()) {
-            LOGGER.log(Level.SEVERE,"Target cell is undefined");            
-        }
-        Surface cell = targetSurfaces.get(1).get(0);
-        for(int i=1; i<targetSurfaces.get(1).size(); i++) {
-            for(Material m : targetSurfaces.get(1).get(i).getMaterials())
-                cell.addMaterial(m);
-        }
-        cell.setIndex(0);
-        return cell;
-    }
-    
     private Surface getTargetSurface(int layer) {
-        // calculate cylinder dimensions based on largest dimensions
-        double radius = 0;
-        double length = 0;
-        for(Surface s : this.targetSurfaces.get(layer)) {
-            if(radius<s.getRadius()) radius = s.getRadius();
-            if(length<s.getLength()) length = s.getLength();
+        Surface surface = null;
+        // target cell
+        if(layer==1) {
+            surface = targetSurfaces.get(1).get(0);
+            for(int is=1; is<this.targetSurfaces.get(1).size(); is++) {
+                for(Material m : this.targetSurfaces.get(1).get(is).getMaterials())
+                    surface.addMaterial(m);
+            }
         }
-        Point3D  center = new Point3D(0, 0, this.getTargetZOffset()-length/2);
-        Point3D  origin = new Point3D(radius, 0, this.getTargetZOffset()-length/2);
-        Vector3D axis   = new Vector3D(0,0,1);
-        Arc3D arc = new Arc3D(origin, center, axis, 2*Math.PI);
-        Cylindrical3D cylinder = new Cylindrical3D(arc, length);
-        Surface surface = new Surface(cylinder, new Strip(0, 0, 0), Constants.DEFAULTSWIMACC);
-        for(Surface s : this.targetSurfaces.get(layer)) {
-            for(Material m : s.getMaterials())
-                surface.addMaterial(m);
+        // for other layers calculate cylinder dimensions based on largest dimensions
+        else {
+            double radius = 0;
+            double length = 0;
+            for(Surface s : this.targetSurfaces.get(layer)) {
+                if(radius<s.getRadius()) radius = s.getRadius();
+                if(length<s.getLength()) length = s.getLength();
+            }
+            Point3D  center = new Point3D(0, 0, this.getTargetZOffset()-length/2);
+            Point3D  origin = new Point3D(radius, 0, this.getTargetZOffset()-length/2);
+            Vector3D axis   = new Vector3D(0,0,1);
+            Arc3D arc = new Arc3D(origin, center, axis, 2*Math.PI);
+            Cylindrical3D cylinder = new Cylindrical3D(arc, length);
+            surface = new Surface(cylinder, new Strip(0, 0, 0), Constants.DEFAULTSWIMACC);
+            for(Surface s : this.targetSurfaces.get(layer)) {
+                for(Material m : s.getMaterials())
+                    surface.addMaterial(m);
+            }
         }
+        surface.setIndex(0);
         surface.passive=true;
         return surface;
     }
     
-    private void loadPolTarget() {
-        targetMaterials = new ArrayList<>();
-        if("NH3".equals(Constants.getInstance().getTargetType())) 
-            targetMaterials.add(POLTARNH3);
-        else if("ND3".equals(Constants.getInstance().getTargetType())) 
-            targetMaterials.add(POLTARND3);
-        targetRadius = targetMaterials.get(0).getThickness();
-        
-        Point3D  chamberCenter = new Point3D(0, 0, this.getTargetZOffset()-100);
-        Point3D  chamberOrigin = new Point3D(POLTARBATHRADIUS, 0, this.getTargetZOffset()-100);
-        Vector3D chamberAxis   = new Vector3D(0,0,1);
-        Arc3D chamberBase = new Arc3D(chamberOrigin, chamberCenter, chamberAxis, 2*Math.PI);
-        Cylindrical3D chamber = new Cylindrical3D(chamberBase, 200);
-        scatteringChamberSurface = new Surface(chamber, new Strip(0, 0, 0), Constants.DEFAULTSWIMACC);
-        scatteringChamberSurface.addMaterial(POLTARCUP);
-        scatteringChamberSurface.addMaterial(POLTARLHE);
-        scatteringChamberSurface.addMaterial(POLTARBATH);
-        scatteringChamberSurface.passive=true;
-        
-        Point3D  shieldCenter = new Point3D(0,  0, this.getTargetZOffset()-100);
-        Point3D  shieldOrigin = new Point3D(POLTARRADIUS, 0, this.getTargetZOffset()-100);
-        Vector3D shieldAxis   = new Vector3D(0,0,1);
-        Arc3D shieldBase = new Arc3D(shieldOrigin, shieldCenter, shieldAxis, 2*Math.PI);
-        Cylindrical3D shieldCylinder = new Cylindrical3D(shieldBase, 200);
-        targetShieldSurface = new Surface(shieldCylinder, new Strip(0, 0, 0), Constants.DEFAULTSWIMACC);
-        targetShieldSurface.addMaterial(POLTARAL);
-        targetShieldSurface.addMaterial(POLTARCF);
-        targetShieldSurface.passive=true;
-    }
+//    private void loadPolTarget() {
+//        targetMaterials = new ArrayList<>();
+//        if("NH3".equals(Constants.getInstance().getTargetType())) 
+//            targetMaterials.add(POLTARNH3);
+//        else if("ND3".equals(Constants.getInstance().getTargetType())) 
+//            targetMaterials.add(POLTARND3);
+//        targetRadius = targetMaterials.get(0).getThickness();
+//        
+//        Point3D  chamberCenter = new Point3D(0, 0, this.getTargetZOffset()-100);
+//        Point3D  chamberOrigin = new Point3D(POLTARBATHRADIUS, 0, this.getTargetZOffset()-100);
+//        Vector3D chamberAxis   = new Vector3D(0,0,1);
+//        Arc3D chamberBase = new Arc3D(chamberOrigin, chamberCenter, chamberAxis, 2*Math.PI);
+//        Cylindrical3D chamber = new Cylindrical3D(chamberBase, 200);
+//        scatteringChamberSurface = new Surface(chamber, new Strip(0, 0, 0), Constants.DEFAULTSWIMACC);
+//        scatteringChamberSurface.addMaterial(POLTARCUP);
+//        scatteringChamberSurface.addMaterial(POLTARLHE);
+//        scatteringChamberSurface.addMaterial(POLTARBATH);
+//        scatteringChamberSurface.passive=true;
+//        
+//        Point3D  shieldCenter = new Point3D(0,  0, this.getTargetZOffset()-100);
+//        Point3D  shieldOrigin = new Point3D(POLTARRADIUS, 0, this.getTargetZOffset()-100);
+//        Vector3D shieldAxis   = new Vector3D(0,0,1);
+//        Arc3D shieldBase = new Arc3D(shieldOrigin, shieldCenter, shieldAxis, 2*Math.PI);
+//        Cylindrical3D shieldCylinder = new Cylindrical3D(shieldBase, 200);
+//        targetShieldSurface = new Surface(shieldCylinder, new Strip(0, 0, 0), Constants.DEFAULTSWIMACC);
+//        targetShieldSurface.addMaterial(POLTARAL);
+//        targetShieldSurface.addMaterial(POLTARCF);
+//        targetShieldSurface.passive=true;
+//    }
 
     public double getTargetZOffset() {
         return targetPosition;
@@ -363,6 +359,10 @@ public class Geometry {
         return targetMaterials;
     }
 
+    public Surface getTargetCellSurface() {
+        return this.targetCellSurface;
+    }
+    
     public Surface getScatteringChamber() {
         return scatteringChamberSurface;
     }

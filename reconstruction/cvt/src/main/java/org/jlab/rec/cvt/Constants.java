@@ -61,7 +61,7 @@ public class Constants {
     public boolean   useOnlyBMTC50PercTruthHits = false;
     public boolean   useOnlyBMTZ50PercTruthHits = false;
     public boolean   preElossCorrection = true;
-    private String   targetType = "LH2";
+    private String   targetType = "";
     public Libr      KFMatrixLibrary;
     private int svtmaxclussize = 30;
     private int bmtcmaxclussize =30;

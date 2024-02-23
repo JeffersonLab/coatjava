@@ -101,11 +101,11 @@ public class Measurements {
         Line3D   l = new Line3D(p, u);
         Surface target =  new Surface(l.origin(), l.end(), Constants.DEFAULTSWIMACC);
         if(Geometry.getInstance().getTargetRadius()>0) {
-            Point3D  center = new Point3D(0, 0, Geometry.getInstance().getTargetZOffset()-Geometry.getInstance().getTargetHalfLength());
-            Point3D  origin = new Point3D(Geometry.getInstance().getTargetRadius()+center.x(), center.y(), center.z());
-            Arc3D    base   = new Arc3D(origin, center, u, 2*Math.PI);
-            Cylindrical3D cell = new Cylindrical3D(base, Geometry.getInstance().getTargetHalfLength()*2);
-            target.lineTube = cell;
+//            Point3D  center = new Point3D(0, 0, Geometry.getInstance().getTargetZOffset()-Geometry.getInstance().getTargetHalfLength());
+//            Point3D  origin = new Point3D(Geometry.getInstance().getTargetRadius()+center.x(), center.y(), center.z());
+//            Arc3D    base   = new Arc3D(origin, center, u, 2*Math.PI);
+//            Cylindrical3D cell = new Cylindrical3D(base, Geometry.getInstance().getTargetHalfLength()*2);
+            target.lineVolume = Geometry.getInstance().getTargetCellSurface().lineVolume;
         }
         for(Material m : Geometry.getInstance().getTargetMaterials())
             target.addMaterial(m);
