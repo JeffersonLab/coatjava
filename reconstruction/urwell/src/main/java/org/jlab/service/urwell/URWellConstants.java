@@ -9,7 +9,8 @@ public class URWellConstants {
     
     // geometry
     public final static int NSECTOR  = 6;
-    public final static int NLAYER   = 2;
+    public final static int NLAYER   = 4;
+    public final static int NREGION  = 2;
     public final static int NCHAMBER = 3;
     public final static int[] NSTRIPS  = { 542,   628, 714}; // number of strips for the three chambers
     public final static int[] STRIPMIN = {   1,  543, 1171}; // lower strip number

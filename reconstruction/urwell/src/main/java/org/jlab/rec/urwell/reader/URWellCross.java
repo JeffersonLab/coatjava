@@ -15,6 +15,7 @@ public class URWellCross {
     private DetectorDescriptor desc = new DetectorDescriptor(DetectorType.URWELL);
     private Point3D global;
     private Point3D local;
+    private int region;
     private double energy = 0;
     private double time = 0;
     private int id = -1;
@@ -23,9 +24,10 @@ public class URWellCross {
     private int status = -1;
     private int tid = -1; // Track id;
 
-    public URWellCross(int id, int sector, double x, double y, double z, double energy, double time, int cluster1, int cluster2, int status) {
+    public URWellCross(int id, int sector, int region, double x, double y, double z, double energy, double time, int cluster1, int cluster2, int status) {
         this.id = id;
         this.desc.setSectorLayerComponent(sector, 0, 0);
+        this.region = region;
         this.global = new Point3D(x, y, z);
         this.local = new Point3D(x, y, z);
         local.rotateZ(Math.toRadians(-60 * (sector - 1)));
@@ -37,10 +39,11 @@ public class URWellCross {
         this.status =  status;
     }
     
-    public URWellCross(int id, int tid, int sector, double x, double y, double z, double x_local, double y_local, double z_local, double energy, double time, int cluster1, int cluster2, int status) {
+    public URWellCross(int id, int tid, int sector, int region, double x, double y, double z, double x_local, double y_local, double z_local, double energy, double time, int cluster1, int cluster2, int status) {
         this.id = id;
         this.tid = tid;
         this.desc.setSectorLayerComponent(sector, 0, 0);
+        this.region = region;
         this.global = new Point3D(x, y, z);
         this.local = new Point3D(x_local, y_local, z_local);
         this.energy = energy;
@@ -72,6 +75,10 @@ public class URWellCross {
     
     public int sector() {
         return this.desc.getSector();
+    }
+    
+    public int region() {
+        return this.region;
     }
 
     public Point3D position() {
