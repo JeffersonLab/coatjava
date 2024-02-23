@@ -338,6 +338,7 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
             bank.setShort("id",       i, (short) urCrosses.get(i).id());
             bank.setShort("tid",      i, (short) urCrosses.get(i).get_tid());
             bank.setByte("sector",    i,  (byte) urCrosses.get(i).sector());
+            bank.setByte("region",    i,  (byte) urCrosses.get(i).region());
             bank.setFloat("energy",   i, (float) urCrosses.get(i).energy());
             bank.setFloat("time",     i, (float) urCrosses.get(i).time());
             bank.setFloat("x",        i, (float) urCrosses.get(i).position().x());
@@ -758,6 +759,7 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
             bank.setShort("id",       i, (short) urCrosses.get(i).id());
             bank.setShort("tid",      i, (short) urCrosses.get(i).get_tid());
             bank.setByte("sector",    i,  (byte) urCrosses.get(i).sector());
+            bank.setByte("region",    i,  (byte) urCrosses.get(i).region());
             bank.setFloat("energy",   i, (float) urCrosses.get(i).energy());
             bank.setFloat("time",     i, (float) urCrosses.get(i).time());
             bank.setFloat("x",        i, (float) urCrosses.get(i).position().x());

@@ -88,6 +88,7 @@ public class URWellReader{
         for(int i=0; i<bank.rows(); i++) {
             int id = bank.getShort("id", i);
             int    sector = bank.getByte("sector", i);
+            int    region = bank.getByte("region", i);
             double x      = bank.getFloat("x", i);
             double y      = bank.getFloat("y", i);
             double z      = bank.getFloat("z", i);                        
@@ -96,7 +97,7 @@ public class URWellReader{
             int  cluster1 = bank.getShort("cluster1", i);
             int  cluster2 = bank.getShort("cluster2", i); 
             int status = bank.getShort("status", i); 
-            URWellCross cross = new URWellCross(id, sector, x, y, z, energy, time, cluster1, cluster2, status);
+            URWellCross cross = new URWellCross(id, sector, region, x, y, z, energy, time, cluster1, cluster2, status);
             cross.setClusterIndex1(cluster1);
             cross.setClusterIndex2(cluster2);
             if(cluster1<=urClusters.size()) urClusters.get(cluster1-1).setCrossIndex(i);
@@ -113,6 +114,7 @@ public class URWellReader{
             int id = bank.getShort("id", i);
             int tid = bank.getShort("tid", i);    
             int    sector = bank.getByte("sector", i);
+            int    region = bank.getByte("region", i);
             double x      = bank.getFloat("x", i);
             double y      = bank.getFloat("y", i);
             double z      = bank.getFloat("z", i);
@@ -124,7 +126,7 @@ public class URWellReader{
             int  cluster1 = bank.getShort("cluster1", i);
             int  cluster2 = bank.getShort("cluster2", i); 
             int status = bank.getShort("status", i); 
-            URWellCross cross = new URWellCross(id, tid, sector, x, y, z, x_local, y_local, z_local, energy, time, cluster1, cluster2, status);
+            URWellCross cross = new URWellCross(id, tid, sector, region, x, y, z, x_local, y_local, z_local, energy, time, cluster1, cluster2, status);
             urCrosses.add(cross);
         }
     }
