@@ -111,9 +111,9 @@ final class DCdatabase {
                                                    scaleTest*cp.getDouble(dcdbpath + "alignment/dy",irow),
                                                    scaleTest*cp.getDouble(dcdbpath + "alignment/dz",irow));
             align_position = align_position.rotateZ(-isec*Math.toRadians(60));
-            align_position = align_position.rotateY(-thtilt[ireg]);
             align_position = align_position.add(align_delta);
-            align_position = align_position.rotateY(thtilt[ireg]);
+//            align_position = align_position.rotateY(-thtilt[ireg]);
+//            align_position = align_position.rotateY(thtilt[ireg]);
             align_position = align_position.rotateZ(isec*Math.toRadians(60));
             align_dx[isec][ireg]=align_position.x;
             align_dy[isec][ireg]=align_position.y;
