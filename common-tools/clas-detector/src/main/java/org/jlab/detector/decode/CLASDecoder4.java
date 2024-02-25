@@ -112,7 +112,7 @@ public class CLASDecoder4 {
                     // Then unpacks into Detector Digigitized data, and appends to existing buffer
                     // Modified on 9/5/2018
                     //-----------------------------------------------------------------------------
-                    
+/*    
                     List<FADCData>  fadcPacked = codaDecoder.getADCEntries((EvioDataEvent) event);
                     
                     if(fadcPacked!=null){
@@ -128,9 +128,10 @@ public class CLASDecoder4 {
                             System.out.println(data);
                         }
                     }
+*/
                     int runNumberCoda = codaDecoder.getRunNumber();
                     this.setRunNumber(runNumberCoda);
-                    
+/*                    
                     detectorDecoder.translate(dataList);
                     detectorDecoder.fitPulses(dataList);
                     if(this.decoderDebugMode>0){
@@ -139,6 +140,7 @@ public class CLASDecoder4 {
                             System.out.println(data);
                         }
                     }
+*/
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -389,16 +391,10 @@ public class CLASDecoder4 {
 
         Event event = new Event();
 
-        String[]        adcBankNames = new String[]{"FTOF::adc","ECAL::adc","FTCAL::adc","FTHODO::adc","FTTRK::adc",
-                                                    "HTCC::adc","BST::adc","CTOF::adc","CND::adc","LTCC::adc","BMT::adc",
-                                                    "FMT::adc","HEL::adc","RF::adc","BAND::adc","RASTER::adc"};
-        DetectorType[]  adcBankTypes = new DetectorType[]{DetectorType.FTOF,DetectorType.ECAL,DetectorType.FTCAL,DetectorType.FTHODO,DetectorType.FTTRK,
-                                                          DetectorType.HTCC,DetectorType.BST,DetectorType.CTOF,DetectorType.CND,DetectorType.LTCC,DetectorType.BMT,
-                                                          DetectorType.FMT,DetectorType.HEL,DetectorType.RF,DetectorType.BAND, DetectorType.RASTER};
-
+        String[]        adcBankNames = new String[]{"HEL::adc"};
+        DetectorType[]  adcBankTypes = new DetectorType[]{DetectorType.HEL};
         String[]        tdcBankNames = new String[]{"FTOF::tdc","ECAL::tdc","DC::tdc","HTCC::tdc","LTCC::tdc","CTOF::tdc","CND::tdc","RF::tdc","RICH::tdc","BAND::tdc"};
-        DetectorType[]  tdcBankTypes = new DetectorType[]{DetectorType.FTOF,DetectorType.ECAL,
-            DetectorType.DC,DetectorType.HTCC,DetectorType.LTCC,DetectorType.CTOF,DetectorType.CND,DetectorType.RF,DetectorType.RICH,DetectorType.BAND};
+        DetectorType[]  tdcBankTypes = new DetectorType[]{DetectorType.FTOF,DetectorType.ECAL,DetectorType.DC,DetectorType.HTCC,DetectorType.LTCC,DetectorType.CTOF,DetectorType.CND,DetectorType.RF,DetectorType.RICH,DetectorType.BAND};
 
         for(int i = 0; i < adcBankTypes.length; i++){
             Bank adcBank = getDataBankADC(adcBankNames[i],adcBankTypes[i]);
@@ -408,7 +404,7 @@ public class CLASDecoder4 {
                 }
             }
         }
-
+/*
         for(int i = 0; i < tdcBankTypes.length; i++){
             Bank tdcBank = getDataBankTDC(tdcBankNames[i],tdcBankTypes[i]);
             if(tdcBank!=null){
@@ -417,7 +413,6 @@ public class CLASDecoder4 {
                 }
             }
         }
-
         try {
             Bank tsBank = getDataBankTimeStamp("DC::jitter", DetectorType.DC);
             if(tsBank != null) {
@@ -428,10 +423,11 @@ public class CLASDecoder4 {
         } catch(Exception e) {
             e.printStackTrace();
         }
+*/
         /**
          * Adding un-decoded banks to the event
          */
-
+/*
         try {
             Bank adcBankUD = this.getDataBankUndecodedADC("RAW::adc", DetectorType.UNDEFINED);
             if(adcBankUD!=null){
@@ -468,7 +464,7 @@ public class CLASDecoder4 {
         } catch(Exception e) {
             e.printStackTrace();
         }
-
+*/
         try {
             Bank scalerBankUD = this.getDataBankUndecodedSCALER("RAW::scaler", DetectorType.UNDEFINED);
             if(scalerBankUD!=null){
@@ -479,6 +475,8 @@ public class CLASDecoder4 {
         } catch(Exception e) {
             e.printStackTrace();
         }
+
+/*
         //-----------------------------------------------------
         // CREATING BONUS BANK --------------------------------
         //-----------------------------------------------------
@@ -493,6 +491,7 @@ public class CLASDecoder4 {
         } catch(Exception e) {
             e.printStackTrace();
         }
+*/
         return event;
     }
 
@@ -753,8 +752,8 @@ public class CLASDecoder4 {
                 
                 Bank   header = decoder.createHeaderBank( nrun, counter, (float) torus, (float) solenoid);
                 if(header!=null) decodedEvent.write(header);
-                Bank   trigger = decoder.createTriggerBank();
-                if(trigger!=null) decodedEvent.write(trigger);
+//                Bank   trigger = decoder.createTriggerBank();
+//                if(trigger!=null) decodedEvent.write(trigger);
                 Bank onlineHelicity = decoder.createOnlineHelicityBank();
                 if(onlineHelicity!=null) decodedEvent.write(onlineHelicity);
                 Bank decodedHelicity = decoder.createHelicityDecoderBank(event);
