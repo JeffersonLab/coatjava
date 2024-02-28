@@ -13,6 +13,9 @@ import cnuphys.magfield.RotatedCompositeProbe;
  * The adaptive step size swimmer for CLAS12.
  */
 public class CLAS12Swimmer {
+	
+	// debugging flag
+	public static boolean DEBUG = false;
 
 	// Speed of light in m/s
 	public static final double C = 2.99792458e10; // cm/s
