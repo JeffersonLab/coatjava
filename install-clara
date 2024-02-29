@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Default software versions:
+# Default versions:
 grapes=2.17
 clara=5.0.2
 coatjava=10.0.8
@@ -15,7 +15,7 @@ function error() {
 
 function get() {
     [ "$debug" -eq 0 ] && wopts="--no-verbose" || wopts=""
-    [ "$#" -gt 1 ]     && topts="-C $2 -xz"   || topts="-xz"
+    [ "$#" -gt 1 ]     && topts="-C $2 -xz"    || topts="-xz"
     [ "$debug" -gt 0 ] && topts+="v"
     wget $wopts $1
     tar $topts -f $(basename $1)
@@ -36,8 +36,7 @@ function litter() {
         then
             echo -e "\nSee temporary build directory for more info:\n\t$tmp_dir"
         else
-            rm -r $tmp_dir
-            echo -e "\nRemoved temporary build directory:\n\t$tmp_dir"
+            rm -r $tmp_dir && echo -e "\nRemoved temporary build directory:\n\t$tmp_dir"
         fi
     fi
 }
@@ -97,7 +96,7 @@ then
     echo -e "\nUsing local COATJAVA installation:\n\t$coatjava"
 elif ! [[ "$coatjava" =~ ^[0-9]+\.[0-9]\.[0-9]$ ]]
 then
-    echo -e "$usage\n\nWARNING:  COATJAVA doesn't look like a local installation nor version number:  $coatjava"
+    echo -e "\n\nWARNING:  COATJAVA doesn't look like a local installation nor version number:  $coatjava"
 fi
 
 # Do everything inside a new, temporary directory:
