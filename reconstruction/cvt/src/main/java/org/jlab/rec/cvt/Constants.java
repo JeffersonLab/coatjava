@@ -125,9 +125,7 @@ public class Constants {
     
     public void setTargetMaterial(String material) {
         if(!material.equalsIgnoreCase("LH2") &&
-           !material.equalsIgnoreCase("LD2") &&
-           !material.equalsIgnoreCase("NH3") &&
-           !material.equalsIgnoreCase("ND3") )
+           !material.equalsIgnoreCase("LD2") )
             System.out.println("Unknown target material " + material + ", keeping current setting " + targetType);
         else
             targetType = material;
