@@ -77,7 +77,7 @@ public class Geometry {
     private static final Material CRYOTARGETKAPTON = new Material("Kapton", 50E-3, 1.42E-3, 0.501, 285.7, 79.6, Units.MM);
     private static final Material CRYOTARGETRHOACELL = new Material("Rhoacell", 10.4, 0.1E-3, 0.5392, 1000, 93.0, Units.MM);
     
-//    // polarized target
+//    // polarized target NOW in CCDB
 //    private static double POLTARBATHRADIUS = 30;
 //    private static double POLTARRADIUS     = 45;
 //    private static final Material POLTARNH3 = new Material("NH3", 7.5, 0.5782E-3, 0.55, 916.6, 47.9, Units.MM);
@@ -192,7 +192,7 @@ public class Geometry {
      *  - surfaces are identified by layer and should be defined for layer = 1, 2, and 3
      *  - multiple sublayers, identified by component, can be added with different materials
      *  - layer=1 component=1 is the target material and should always be present
-     *  - the target material is assumed to be a full cylinder  while the other surfaces are "tubes"
+     *  - the target material is assumed to be a full cylinder (rmin=0) while the other surfaces are "tubes"
      *  - for layer 1, the target material volume is created and any additional sublayer is assumed to be a equivalent to the target cell walls
      *  - for layer 2 and 3, when multiple sublayers are defined, the surface radius and length are set to the largest values among the sublayers
     */
@@ -232,7 +232,6 @@ public class Geometry {
                                   Units.MM);
                 surface.setIndex(component);
                 surface.passive=true;
-                System.out.println(layer + " " + surface);
                 targetSurfaces.get(layer).add(surface);
             }
             else if(layer!=0) {
@@ -312,36 +311,6 @@ public class Geometry {
         surface.passive=true;
         return surface;
     }
-    
-//    private void loadPolTarget() {
-//        targetMaterials = new ArrayList<>();
-//        if("NH3".equals(Constants.getInstance().getTargetType())) 
-//            targetMaterials.add(POLTARNH3);
-//        else if("ND3".equals(Constants.getInstance().getTargetType())) 
-//            targetMaterials.add(POLTARND3);
-//        targetRadius = targetMaterials.get(0).getThickness();
-//        
-//        Point3D  chamberCenter = new Point3D(0, 0, this.getTargetZOffset()-100);
-//        Point3D  chamberOrigin = new Point3D(POLTARBATHRADIUS, 0, this.getTargetZOffset()-100);
-//        Vector3D chamberAxis   = new Vector3D(0,0,1);
-//        Arc3D chamberBase = new Arc3D(chamberOrigin, chamberCenter, chamberAxis, 2*Math.PI);
-//        Cylindrical3D chamber = new Cylindrical3D(chamberBase, 200);
-//        scatteringChamberSurface = new Surface(chamber, new Strip(0, 0, 0), Constants.DEFAULTSWIMACC);
-//        scatteringChamberSurface.addMaterial(POLTARCUP);
-//        scatteringChamberSurface.addMaterial(POLTARLHE);
-//        scatteringChamberSurface.addMaterial(POLTARBATH);
-//        scatteringChamberSurface.passive=true;
-//        
-//        Point3D  shieldCenter = new Point3D(0,  0, this.getTargetZOffset()-100);
-//        Point3D  shieldOrigin = new Point3D(POLTARRADIUS, 0, this.getTargetZOffset()-100);
-//        Vector3D shieldAxis   = new Vector3D(0,0,1);
-//        Arc3D shieldBase = new Arc3D(shieldOrigin, shieldCenter, shieldAxis, 2*Math.PI);
-//        Cylindrical3D shieldCylinder = new Cylindrical3D(shieldBase, 200);
-//        targetShieldSurface = new Surface(shieldCylinder, new Strip(0, 0, 0), Constants.DEFAULTSWIMACC);
-//        targetShieldSurface.addMaterial(POLTARAL);
-//        targetShieldSurface.addMaterial(POLTARCF);
-//        targetShieldSurface.passive=true;
-//    }
 
     public double getTargetZOffset() {
         return targetPosition;
