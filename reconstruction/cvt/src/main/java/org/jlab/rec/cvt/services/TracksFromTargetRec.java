@@ -201,7 +201,6 @@ public class TracksFromTargetRec {
             Point3D  v = seed.getHelix().getVertex();
             Vector3D p = seed.getHelix().getPXYZ(solenoidValue);
             if(Constants.getInstance().preElossCorrection && pid!=Constants.DEFAULTPID) {
-//                double pcorr = measure.getELoss(v, p, PDGDatabase.getParticleMass(pid));
                 double pcorr = measure.getELoss(p.mag(), PDGDatabase.getParticleMass(pid));
                 p.scale(pcorr/p.mag());
             }
