@@ -6,8 +6,6 @@ import java.util.Map;
 import java.util.logging.Logger;
 import org.jlab.clas.pdg.PhysicsConstants;
 import org.jlab.clas.swimtools.Swim;
-import org.jlab.clas.tracking.kalmanfilter.Material;
-import org.jlab.clas.tracking.kalmanfilter.Units;
 
 import org.jlab.clas.tracking.utilities.MatrixOps.Libr;
 import org.jlab.rec.cvt.svt.SVTParameters;
@@ -63,7 +61,7 @@ public class Constants {
     public boolean   useOnlyBMTC50PercTruthHits = false;
     public boolean   useOnlyBMTZ50PercTruthHits = false;
     public boolean   preElossCorrection = true;
-    private Material targetMaterial = LH2;
+    private String   targetType = "";
     public Libr      KFMatrixLibrary;
     private int svtmaxclussize = 30;
     private int bmtcmaxclussize =30;
@@ -100,14 +98,7 @@ public class Constants {
     public static final double COSMICSMINRESIDUALZ =  12; // in mm
     
     public static final int SEEDFITITERATIONS = 5;
-    
-    private static final Material LH2 = new Material("LH2", 8.85, 0.0708E-3, 0.99212, 8904.0, 21.8, Units.MM);
-    private static final Material LD2 = new Material("LD2", 8.85, 0.1638E-3, 0.49650, 7691.0, 21.8, Units.MM);
-    public  static final Material TARGETKAPTON = new Material("Kapton", 50E-3, 1.42E-3, 0.501, 285.7, 79.6, Units.MM);
-    public  static final Material TARGETRHOACELL = new Material("Rhoacell", 10.4, 0.1E-3, 0.5392, 1000, 93.0, Units.MM);
-    public  static final Material SCINTILLATOR = new Material("Scintillator", 1, 1.03E-3, 0.54141, 439.0, 64.7, Units.MM);
-    public  static final Material VACUUM = new Material("Vacuum", 1, 0, 1, Double.POSITIVE_INFINITY, 100, Units.MM);
-    
+        
     public static boolean KFFILTERON = true;
     public static boolean INITFROMMC = false;
     public static int     KFITERATIONS = 5;
@@ -133,16 +124,15 @@ public class Constants {
     }
     
     public void setTargetMaterial(String material) {
-        if(material.equalsIgnoreCase("LH2"))
-            targetMaterial = LH2;
-        else if(material.equalsIgnoreCase("LD2") )
-            targetMaterial = LD2;
+        if(!material.equalsIgnoreCase("LH2") &&
+           !material.equalsIgnoreCase("LD2") )
+            System.out.println("Unknown target material " + material + ", keeping current setting " + targetType);
         else
-            System.out.println("Unknown target material " + material + ", keeping current setting " + targetMaterial.getName());
+            targetType = material;
     }
 
-    public Material getTargetMaterial() {
-        return targetMaterial;
+    public String getTargetType() {
+        return targetType;
     }
     
     public int getRmReg() {

@@ -67,7 +67,7 @@ public class CVTEngine extends ReconstructionEngine {
     private int     removeRegion        = 0;
     private int     beamSpotConstraint  = 2;
     private double  beamSpotRadius      = 0.3;
-    private String  targetMaterial      = "LH2";
+    private String  targetMaterial      = "";
     private boolean elossPrecorrection  = true;
     private boolean svtSeeding          = true;
     private boolean timeCuts            = true;
@@ -290,7 +290,7 @@ public class CVTEngine extends ReconstructionEngine {
         IndexedTable bmtStripThreshold  = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_strip_voltage_thresholds");
         IndexedTable beamPos            = this.getConstantsManager().getConstants(run, "/geometry/beam/position");
         
-        Geometry.initialize(this.getConstantsManager().getVariation(), 11, svtLorentz, bmtVoltage);
+        Geometry.getInstance().initialize(this.getConstantsManager().getVariation(), run, svtLorentz, bmtVoltage);
         
         CVTReconstruction reco = new CVTReconstruction(swimmer);
         
@@ -588,7 +588,7 @@ public class CVTEngine extends ReconstructionEngine {
             System.out.println("["+this.getName()+"] run with region "+this.getEngineConfigString("removeRegion")+" removed");
         System.out.println("["+this.getName()+"] run with beamSpotConst set to "+Constants.getInstance().beamSpotConstraint+ " (0=no-constraint, 1=seed only, 2=seed and KF)");        
         System.out.println("["+this.getName()+"] run with beam spot size set to "+Constants.getInstance().getBeamRadius());                
-        System.out.println("["+this.getName()+"] Target material set to "+ Constants.getInstance().getTargetMaterial().getName());
+        System.out.println("["+this.getName()+"] Target material set to "+ Constants.getInstance().getTargetType());
         System.out.println("["+this.getName()+"] Pre-Eloss correction set to " + Constants.getInstance().preElossCorrection);
         System.out.println("["+this.getName()+"] run SVT-based seeding set to "+ Constants.getInstance().svtSeeding);
         System.out.println("["+this.getName()+"] run BMT timing cuts set to "+ Constants.getInstance().timeCuts);

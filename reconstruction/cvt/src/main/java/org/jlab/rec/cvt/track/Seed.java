@@ -437,7 +437,7 @@ public class Seed implements Comparable<Seed>{
             System.out.println("Pass SSA , c2 ok "+(this.getChi2() <= Constants.CHI2CUTSSA * (this.getNDF() + 5)) 
                     +" ndf ok "+ (this.getNDF() >= Constants.NDFCUT) 
                     +" r ok "+ (this.getHelix().radius() >= Constants.getInstance().getRCUT()) 
-                    +" dz ok "+ (Math.abs(Geometry.getInstance().getZoffset()-this.getHelix().getZ0()) <= Geometry.getInstance().getZlength()+Constants.getInstance().getZRANGE()) 
+                    +" dz ok "+ (Math.abs(Geometry.getInstance().getTargetZOffset()-this.getHelix().getZ0()) <= Geometry.getInstance().getTargetHalfLength()+Constants.getInstance().getZRANGE()) 
                     +" ");
         }
         boolean pass = true;
@@ -449,7 +449,7 @@ public class Seed implements Comparable<Seed>{
             pass = false;
         if(this.getHelix().radius() < Constants.getInstance().getRCUT()) 
             pass = false;
-        if(Math.abs(Geometry.getInstance().getZoffset()-this.getHelix().getZ0()) > Geometry.getInstance().getZlength()+Constants.getInstance().getZRANGE()+Constants.DZCUTBUFFEESSA) 
+        if(Math.abs(Geometry.getInstance().getTargetZOffset()-this.getHelix().getZ0()) > Geometry.getInstance().getTargetHalfLength()+Constants.getInstance().getZRANGE()+Constants.DZCUTBUFFEESSA) 
             pass = false;
         return pass;
     }
