@@ -127,8 +127,6 @@ public class Geometry {
         
         // Load target
         ConstantProvider providerTG = GeometryFactory.getConstants(DetectorType.TARGET, run, variation);
-        this.targetPosition = providerTG.getDouble("/geometry/target/position",0)*10;
-        this.targetHalfLength = providerTG.getDouble("/geometry/target/length",0)*10;
         this.initTarget(providerTG);
         
         ConstantProvider providerCTOF = GeometryFactory.getConstants(DetectorType.CTOF, run, variation);
@@ -145,6 +143,12 @@ public class Geometry {
     }
     
     private void initTarget(ConstantProvider provider) {
+        // get target position and half-length from old table 
+        // half-length used for track candidates vertex cut
+        this.targetPosition = provider.getDouble("/geometry/target/position",0)*10;
+        this.targetHalfLength = provider.getDouble("/geometry/target/length",0)*10;
+        // load target geometry and material, using CCDB table if targetMat yaml 
+        // variable is not specified or differs from LH2/LD2
         if("LH2".equals(Constants.getInstance().getTargetType()) ||
            "LD2".equals(Constants.getInstance().getTargetType()))
             this.loadCryoTarget();
