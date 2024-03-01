@@ -16,6 +16,11 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
+env:
+  java_version: 11
+  java_distribution: zulu
+  groovy_version: 4.x
+
 jobs:
 
   # build
@@ -36,8 +41,8 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
-          java-version: 11
-          distribution: zulu
+          java-version: ${{ env.java_version }}
+          distribution: ${{ env.java_distribution }}
       - name: build
         run: ./build-coatjava.sh --spotbugs --unittests --quiet -T4
       - name: tar # tarball to preserve permissions
@@ -90,8 +95,8 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
-          java-version: 11
-          distribution: zulu
+          java-version: ${{ env.java_version }}
+          distribution: ${{ env.java_distribution }}
       - uses: actions/download-artifact@v4
         with:
           name: build_${{ matrix.runner }}
@@ -111,12 +116,12 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
-          java-version: 11
-          distribution: zulu
+          java-version: ${{ env.java_version }}
+          distribution: ${{ env.java_distribution }}
       - name: setup groovy
         uses: wtfjoke/setup-groovy@v2
         with:
-          groovy-version: 4.x
+          groovy-version: ${{ env.groovy_version }}
       - uses: actions/download-artifact@v4
         with:
           name: build_${{ needs.build.outputs.default_runner }}
