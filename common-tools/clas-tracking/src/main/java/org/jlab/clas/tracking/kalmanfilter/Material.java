@@ -74,5 +74,12 @@ public class Material {
         return dE;
     }
 
-        
+    @Override
+    public String toString() {
+        String s = "Material: ";
+        s = s + String.format("Name=%s thickness=%.9f density=%.9f Z/A=%.6f x0=%9f IeV=%.9f",
+                               this.getName(), this.getThickness(),this.getDensity(),
+                               this.getZoverA(),this.getX0(), this.getIeV());
+        return s;
+    }
 }
