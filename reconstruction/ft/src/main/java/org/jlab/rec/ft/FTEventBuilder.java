@@ -113,13 +113,13 @@ public class FTEventBuilder {
     }
     
     public List<FTParticle> initFTparticles(List<FTResponse> responses, ConstantsManager manager, int run) {
-        IndexedTable target = manager.getConstants(run, "/geometry/target");
+        IndexedTable target = manager.getConstants(run, "/geometry/shifts/target");
 
         List<FTParticle> particles = new ArrayList<>();
         for (int i = 0; i < responses.size(); i++) {
             if (responses.get(i).getType()==DetectorType.FTCAL) {
                 // start assuming the cluster to be associated to a photon
-                FTParticle track = new FTParticle(i, 0, this.solenoidField, responses.get(i), 0, 0, target.getDoubleValue("position", 0,0,0));
+                FTParticle track = new FTParticle(i, 0, this.solenoidField, responses.get(i), 0, 0, target.getDoubleValue("z", 0,0,0));
                 particles.add(track);
                 responses.get(i).setAssociation(particles.size()-1);
             }

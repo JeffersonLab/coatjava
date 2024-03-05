@@ -88,7 +88,7 @@ public class GeometryFactory {
         if(type==DetectorType.CTOF){
             provider.loadTable("/geometry/ctof/ctof");
             provider.loadTable("/geometry/ctof/cad");
-            provider.loadTable("/geometry/target");
+            provider.loadTable("/geometry/shifts/solenoid");
         }
         
         if(type==DetectorType.FTCAL){
@@ -107,8 +107,12 @@ public class GeometryFactory {
         }
 
         if(type==DetectorType.TARGET){
-            provider.loadTable("/geometry/target");
+            provider.loadTable("/geometry/shifts/target");
             provider.loadTable("/geometry/materials/target");
+        }
+
+        if(type==DetectorType.MAGNETS){
+            provider.loadTable("/geometry/shifts/solenoid");
         }
 
         if(type==DetectorType.FMT){
