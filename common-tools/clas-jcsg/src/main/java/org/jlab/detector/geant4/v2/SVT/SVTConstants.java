@@ -147,8 +147,6 @@ public class SVTConstants {
                 cp.loadTable( ccdbPath +"material/peeksupport");
                 cp.loadTable( ccdbPath +"layeralignment");
                 cp.loadTable( ccdbPath +"position");
-                //shift by target
-//                cp.loadTable("/geometry/target");
                 
 		//if( loadAlignmentTables ) cp.loadTable( ccdbPath +"alignment/sector"); // possible future tables
 		//if( loadAlignmentTables ) cp.loadTable( ccdbPath +"alignment/layer");
