@@ -316,8 +316,7 @@ public class RecUtilities {
                 // calculate trajectory
                 Point3D traj = null;
                 double accuracy = Constants.SWIMACCURACYBMT/10;
-                if(swimmer.isNewSwim()) 
-                    accuracy*=100;
+                
                 inters = swimmer.SwimRho(radius/10, accuracy);
                 
                 if(inters!=null) {

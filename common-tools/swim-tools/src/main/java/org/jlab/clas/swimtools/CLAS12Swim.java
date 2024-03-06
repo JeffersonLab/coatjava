@@ -10,6 +10,8 @@ import org.jlab.geom.prim.Vector3D;
  */
 public class CLAS12Swim  {
     private ProbeCollection PC;
+    public boolean debug = false;
+    
     public CLAS12Swim(ProbeCollection pC) {
         PC = pC;
     }
@@ -30,12 +32,25 @@ public class CLAS12Swim  {
     private double accuracy = 20e-4; // in cm -->20 microns
     private double tolerance = 1.0e-6;
     private double stepSize = 5.00 * 1.e-2; // in cm -->500 microns
+    
+    public void printInput() {
+        String str = String.format("charge=%d xo=%.3f yo=%.3f zo=%.3f phi=%.3f theta=%.3f p=%.3f maxpath=%d", 
+                                    _charge, _x0, _y0, _z0, _phi, _theta, _pTot, (int)_maxPathLength);
+        System.out.println(str);
+    }
+    public void printInput(String method) {
+        String str = String.format("charge=%d xo=%.3f yo=%.3f zo=%.3f phi=%.3f theta=%.3f p=%.3f maxpath=%d", 
+                                    _charge, _x0, _y0, _z0, _phi, _theta, _pTot, (int)_maxPathLength);
+        System.out.println("IN METHOD "+method);
+        System.out.println(str);
+    }
     /**
      * 
      * @param Rad
      * @return state  x,y,z,px,py,pz, pathlength, iBdl at the surface 
      */
     public double[] SwimToSphere(double Rad) {
+        if(this.debug) printInput("swimSphere");
         double[] value = new double[8];
 
         if (getpTot() < getMINTRKMOM() || this.isSwimUnPhys()==true) // fiducial cut
@@ -64,6 +79,7 @@ public class CLAS12Swim  {
     }
     
     public double[] SwimToCylinder(double Rad) {
+        if(this.debug) printInput("swimCylinder"); 
         double[] value = new double[8];
 
         if (getpTot() < getMINTRKMOM() || this.isSwimUnPhys()==true) // fiducial cut
@@ -102,6 +118,7 @@ public class CLAS12Swim  {
         return SwimRho(radius, getAccuracy());
     }
     public double[] SwimRho(double radius, double accuracy)  {
+        if(this.debug) printInput("swimRho");
         double[] value = new double[8];
 
         if (getpTot() < getMINTRKMOM() || this.isSwimUnPhys()==true) // fiducial cut
@@ -149,7 +166,8 @@ public class CLAS12Swim  {
      * @return swam trajectory to the cylinder
      */
     public double[] SwimGenCylinder(Point3D axisPoint1, Point3D axisPoint2, double radius, double accuracy)  {
-       double[] value = new double[8];
+        if(this.debug) printInput("swimCylinder");
+        double[] value = new double[8];
 
         if (getpTot() < getMINTRKMOM() || this.isSwimUnPhys()==true) // fiducial cut
         {
@@ -188,6 +206,7 @@ public class CLAS12Swim  {
     }
     
     public double[] SwimToPlaneTiltSecSys(int sector, double z_cm) {
+        if(this.debug) printInput("sectorSwimZ");
         double[] value = new double[8];
 
         if (getpTot() < getMINTRKMOM() || this.isSwimUnPhys()==true) // fiducial cut
@@ -221,6 +240,7 @@ public class CLAS12Swim  {
      * @return state  x,y,z,px,py,pz, pathlength, iBdl at the plane surface
      */
     public double[] SwimToPlaneLab(double z_cm) {
+        if(this.debug) printInput("swimZ");
         double[] value = new double[8];
 
         if (getpTot() < getMINTRKMOM() || this.isSwimUnPhys()==true) // fiducial cut
@@ -251,6 +271,7 @@ public class CLAS12Swim  {
     }
     
     public double[] SwimPlane(Vector3D n, Point3D p, double accuracy)  {
+        if(this.debug) printInput("swimPlane");
         double[] value = new double[8];
 
         if (getpTot() < getMINTRKMOM() || this.isSwimUnPhys()==true) // fiducial cut
@@ -295,6 +316,7 @@ public class CLAS12Swim  {
      * @return return state  x,y,z,px,py,pz, pathlength, iBdl at the plane surface in the lab frame
      */
     public double[] SwimToPlaneBoundary(double d_cm, Vector3D n, int dir) {
+        if(this.debug) printInput("swimPlane");
         double[] value = new double[8];
 
         if (getpTot() < getMINTRKMOM() || this.isSwimUnPhys()==true) // fiducial cut
@@ -337,8 +359,10 @@ public class CLAS12Swim  {
         CLAS12SwimResult szr = null;
         
         if(xB==0 && yB==0) {
+            if(this.debug) printInput("swimBeamLine");
             szr = PC.CF_cs.swimBeamline(getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), getAccuracy(), getrMax(), getStepSize(), getTolerance());
         } else {
+            if(this.debug) printInput("swimZLine");
             szr = PC.CF_cs.swimZLine(getCharge(), getX0(), getY0(), getZ0(), getpTot(), getTheta(), getPhi(), xB, yB, getAccuracy(), getrMax(), getStepSize(), getTolerance());
         }
         

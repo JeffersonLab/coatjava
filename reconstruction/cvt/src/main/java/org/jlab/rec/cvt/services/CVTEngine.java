@@ -328,7 +328,7 @@ public class CVTEngine extends ReconstructionEngine {
                                                                   this.isKfFilterOn(), 
                                                                   this.getKfIterations(), 
                                                                   true, this.getPid());
-                
+               
                 if(seeds!=null) {
                     banks.add(RecoBankWriter.fillSeedBank(event, seeds, this.getSeedBank()));
                     banks.add(RecoBankWriter.fillSeedClusBank(event, seeds, this.getSeedClusBank()));

@@ -84,6 +84,20 @@ public class Swim {
         double r = Math.sqrt(x * x + y * y + z * z);
         System.out.println(String.format("%s: (%-8.5f, %-8.5f, %-8.5f) R: %-8.5f", pfx, z, y, z, r));
     }
+    
+    private boolean inputParsOK(double ... vars) {
+        boolean areOK = true;
+        int n = vars.length;
+        for(int i =0; i < n; i++) {
+            if(Double.isNaN(vars[i])) {
+                newSwimmer.setSwimUnPhys(true);
+                oldSwimmer.setSwimUnPhys(true);
+                areOK=false;
+            }
+        }
+        return areOK;
+    }
+    
     /**
      *
      * @param direction
@@ -98,6 +112,7 @@ public class Swim {
      */
     public void SetSwimParameters(int direction, double x0, double y0, double z0, double thx, double thy, double p,
                     int charge) {
+        if(!inputParsOK(x0, y0, z0, thx, thy, p)) return;
         if(this.isNewSwim()) {
             newSwimmer.setX0(x0);
             newSwimmer.setY0(y0);
@@ -145,7 +160,8 @@ public class Swim {
      */
     public void SetSwimParameters(int superlayerIdx, int layerIdx, double x0, double y0, double z0, double thx,
                     double thy, double p, int charge) {
-        // z at a given DC plane in the tilted coordinate system
+        if(!inputParsOK(x0, y0, z0, thx, thy, p)) return;            
+// z at a given DC plane in the tilted coordinate system
         // x,y,z in m = swimmer units
         if(this.isNewSwim()) {
             newSwimmer.setX0(x0);
@@ -190,6 +206,7 @@ public class Swim {
      * @param charge
      */
     public void SetSwimParameters(double x0, double y0, double z0, double px, double py, double pz, int charge) {
+        if(!inputParsOK(x0, y0, z0, px, py, pz)) return;
         if(this.isNewSwim()) {
             newSwimmer.setX0(x0);
             newSwimmer.setY0(y0);
@@ -228,7 +245,7 @@ public class Swim {
      */
     public void SetSwimParameters(double xcm, double ycm, double zcm, double phiDeg, double thetaDeg, double p,
                     int charge, double maxPathLength) {
-        
+        if(!inputParsOK(xcm, ycm, zcm, phiDeg, thetaDeg, p)) return;
         if(this.isNewSwim()) {
             newSwimmer.setX0(xcm);
             newSwimmer.setY0(ycm);
@@ -238,7 +255,7 @@ public class Swim {
             newSwimmer.setpTot(p);
             newSwimmer.setTheta(thetaDeg);
             newSwimmer.setCharge(charge);
-            newSwimmer.setMaxPathLength(maxPathLength);
+            newSwimmer.setMaxPathLength(maxPathLength*100);
         } else {
             // x,y,z in m = swimmer units
             //_x0 = x0 / 100;
@@ -271,7 +288,7 @@ public class Swim {
      */
     public void SetSwimParameters(double xcm, double ycm, double zcm, double phiDeg, double thetaDeg, double p,
                     int charge, double maxPathLength, double Accuracy, double StepSize) {
-
+        if(!inputParsOK(xcm, ycm, zcm, phiDeg, thetaDeg, p)) return;
         if(this.isNewSwim()) {
             newSwimmer.setX0(xcm);
             newSwimmer.setY0(ycm);

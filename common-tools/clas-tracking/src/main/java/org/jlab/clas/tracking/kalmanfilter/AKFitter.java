@@ -90,14 +90,12 @@ public abstract class AKFitter {
                
         //re-init state vector and cov mat for forward filtering
         this.initOneWayIter(sv, k0);
-        
         // filter & transport in forward direction
         boolean forward = this.runOneWayFitterIter(sv, mv, k0, kf);
         if (!forward) return;
         
         //re-init state vector and cov mat for backward filtering
         this.initOneWayIter(sv, kf);
-            
         // filter and transport in backward direction
         boolean backward = this.runOneWayFitterIter(sv, mv, kf, k0);
         if (!backward) return;

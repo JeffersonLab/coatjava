@@ -26,6 +26,7 @@ import org.jlab.rec.cvt.banks.RecoBankReader;
 import org.jlab.rec.cvt.measurement.Measurements;
 import org.jlab.rec.cvt.track.Seed;
 import org.jlab.rec.cvt.track.Seed.Key;
+import static org.jlab.rec.cvt.track.Seed.filterSeeds;
 import org.jlab.rec.cvt.track.StraightTrackSeeder;
 import org.jlab.rec.cvt.track.Track;
 import org.jlab.rec.cvt.track.TrackSeeder;
@@ -129,9 +130,12 @@ public class TracksFromTargetRec {
             }
             //} //mv bracket
         }
+        
+        int seedcounter =0;
+        Seed.filterSeeds(seeds);
         for(Seed s : seeds) { 
             if(Constants.getInstance().seedingDebugMode) {
-                System.out.println("Before overlap remover");
+                System.out.println("Before overlap remover seed nb "+seedcounter++);
                 System.out.println(s.toString());
             }       
             s.setKey(s.new Key(s));

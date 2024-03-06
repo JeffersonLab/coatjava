@@ -539,7 +539,7 @@ public class Track extends Trajectory implements Comparable<Track> {
                                       mom.mag(), this.getQ(), maxPathLength);                
                 double   r = surface.cylinder.baseArc().radius(); 
                 double accuracy = Constants.SWIMACCURACYCD/10;
-                if(swimmer.isNewSwim()) accuracy*=100;
+                
                 double[] inters = swimmer.SwimGenCylinder(new Point3D(0, 0, 0), new Point3D(0, 0, 1), r/10, accuracy);                
                 if(inters==null) break;
                 pos.set(inters[0]*10, inters[1]*10, inters[2]*10);
