@@ -12,7 +12,7 @@ import cnuphys.magfield.RotatedCompositeProbe;
 /**
  * The adaptive step size swimmer for CLAS12.
  */
-public class CLAS12Swimmer {
+public final class CLAS12Swimmer {
 	
 	// debugging flag
 	public static boolean DEBUG = false;
