@@ -113,6 +113,29 @@ public class KFitterWithURWell extends AKFitter {
         sv.Z = Z;
         TBT = true;
     }
+    
+    public final void initFromHBNoDAF(List<Surface> measSurfaces, StateVec initSV, double beta) {
+        finalSmoothedStateVec = null;
+        finalTransportedStateVec = null;
+        this.NDF0 = -5;
+        this.NDF = -5;
+        this.chi2 = Double.POSITIVE_INFINITY;
+        this.numIter = 0;
+        this.setFitFailed = false;
+        mv.setMeasVecs(measSurfaces);
+        for (int i = 0; i < mv.measurements.size(); i++) {
+            if (mv.measurements.get(i).skip == false) {
+                if(mv.measurements.get(i).surface.type == Type.LINEDOCA)
+                    this.NDF += mv.measurements.get(i).surface.getNMeas();
+                else if(mv.measurements.get(i).surface.type == Type.PLANEURWELL)
+                    this.NDF += 2;
+            }
+        }
+
+        sv.initFromHB(initSV, beta);
+        sv.Z = Z;
+        TBT = true;
+    }
 
     public void runFitter() {
         this.chi2 = Double.POSITIVE_INFINITY;
@@ -342,18 +365,193 @@ public class KFitterWithURWell extends AKFitter {
         if (Double.isNaN(chi2)) {
             this.setFitFailed = true;
         }
+    }
+    
+    public void runFitterNoDAF() {
+        this.chi2 = Double.POSITIVE_INFINITY;
+        double initChi2 = Double.POSITIVE_INFINITY;
+        // this.NDF = mv.ndf;
+        this.svzLength = this.mv.measurements.size();
 
-/*        
+        int sector = this.mv.measurements.get(0).sector;
+
         if (TBT == true) {
-            if (chi2 > initChi2) { // fit failed                 
-                this.finalStateVec = this.initialStateVec;
-                sv.trackTrajT.put(svzLength - 1, this.initialStateVec);
-                this.calcFinalChisqDAF(sector, true);   
+            this.chi2kf = 0;
+            // Get the input parameters
+            for (int k = 0; k < svzLength - 1; k++) {
+                sv.transport(sector, k, k + 1, this.sv.trackTrajT.get(k), mv, this.getSwimmer(), true);
+            }
+            this.calcFinalChisq(sector, true);
+            this.initialStateVec = sv.trackTrajT.get(svzLength - 1);
+            this.finalStateVec = sv.trackTrajT.get(svzLength - 1);
+            initChi2 = this.chi2;
+            if (Double.isNaN(chi2)) {
+                this.setFitFailed = true;
+                return;
             }
         }
-*/
 
-    }
+        for (int i = 1; i <= totNumIter; i++) {
+            iterNum = i;
+            this.chi2kf = 0;
+
+            if (i > 1) {
+
+                for (int k = svzLength - 1; k > 0; k--) {
+                    boolean forward = false;
+                    if (k >= 2) {
+
+                        // Not backward transport and filter states for the last measurement layer
+                        if (k == svzLength - 1) {
+                            if (!sv.transport(sector, k, k - 2, this.sv.trackTrajF.get(k), mv, this.getSwimmer(), forward)) {
+                                this.stopIteration = true;
+                                break;
+                            }
+                        } else {
+                            if (!sv.transport(sector, k, k - 2, this.sv.trackTrajB.get(k), mv, this.getSwimmer(), forward)) {
+                                this.stopIteration = true;
+                                break;
+                            }
+                        }
+
+                        if (!this.filter(k - 2, forward)) {
+                            this.stopIteration = true;
+                            break;
+                        }
+
+                        if (!sv.transport(sector, k - 2, k - 1, this.sv.trackTrajB.get(k - 2), mv, this.getSwimmer(), forward)) {
+                            this.stopIteration = true;
+                            break;
+                        }
+
+                        if (!this.filter(k - 1, forward)) {
+                            this.stopIteration = true;
+                            break;
+                        }
+                    } else {
+                        if (!sv.transport(sector, 1, 0, this.sv.trackTrajB.get(1), mv, this.getSwimmer(), forward)) {
+                            this.stopIteration = true;
+                            break;
+                        }
+
+                        if (!this.filter(0, forward)) {
+                            this.stopIteration = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (this.stopIteration) {
+                break;
+            }
+
+            for (int k = 0; k < svzLength - 1; k++) {
+                boolean forward = true;
+
+                if (iterNum == 1 && (k == 0)) {
+                    if (TBT == true) {
+                        this.sv.transported(true).put(0, this.sv.transported(false).get(0)); // For TBT, calcFinalChisq() is called previously.				
+                    }
+                }
+
+                if (k == 0) {
+                    if (i == 1) {
+                        if (!this.sv.transport(sector, 0, 1, this.sv.trackTrajT.get(0), mv, this.getSwimmer(), forward)) {
+                            this.stopIteration = true;
+                            break;
+                        }
+                    } else {
+                        double c00 = this.sv.trackTrajB.get(0).CM.get(0, 0);
+                        double c11 = this.sv.trackTrajB.get(0).CM.get(1, 1);
+                        double c22 = this.sv.trackTrajB.get(0).CM.get(2, 2);
+                        double c33 = this.sv.trackTrajB.get(0).CM.get(3, 3);
+                        double c44 = this.sv.trackTrajB.get(0).CM.get(4, 4);
+                        Matrix newCM = new Matrix();
+                        newCM.set(c00*initialCMBlowupFactor, 0, 0, 0, 0,
+                                    0, c11*initialCMBlowupFactor, 0, 0, 0,
+                                    0, 0, c22*initialCMBlowupFactor, 0, 0,
+                                    0, 0, 0, c33*initialCMBlowupFactor, 0,
+                                    0, 0, 0, 0, c44*initialCMBlowupFactor);
+                        this.sv.trackTrajB.get(0).CM = newCM;
+                        
+                        if (!this.sv.transport(sector, 0, 1, this.sv.trackTrajB.get(0), mv, this.getSwimmer(), forward)) {
+                            this.stopIteration = true;
+                            break;
+                        }
+                    }
+                } else {
+                    if (!this.sv.transport(sector, k, k + 1, this.sv.trackTrajF.get(k), mv, this.getSwimmer(), forward)) {
+                        this.stopIteration = true;
+                        break;
+                    }
+
+                }
+
+                if (!this.filter(k + 1, forward)) {
+                    this.stopIteration = true;
+                    break;
+                }
+            }
+
+            if (this.stopIteration) {
+                break;
+            }
+
+            if (i > 1) {
+                if (this.setFitFailed == true) {
+                    i = totNumIter;
+                }
+                if (this.setFitFailed == false) {
+                    if (this.finalStateVec != null) {
+                        if (!TBT) {
+                            if (Math.abs(sv.trackTrajF.get(svzLength - 1).Q - this.finalStateVec.Q) < 1.6e-3
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).x - this.finalStateVec.x) < 1.2e-2
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).y - this.finalStateVec.y) < 1.4e-1
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).tx - this.finalStateVec.tx) < 2.5e-4
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).ty - this.finalStateVec.ty) < 1.0e-3) {
+                                i = totNumIter;
+                            }
+                        } else {
+                            if (Math.abs(sv.trackTrajF.get(svzLength - 1).Q - this.finalStateVec.Q) < 1.1e-5
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).x - this.finalStateVec.x) < 5.5e-5
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).y - this.finalStateVec.y) < 8.0e-4
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).tx - this.finalStateVec.tx) < 2.1e-6
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).ty - this.finalStateVec.ty) < 3.5e-6) {
+                                i = totNumIter;
+                            }
+                        }
+                    }
+                    this.finalStateVec = sv.trackTrajF.get(svzLength - 1);
+
+                } else {
+                    this.ConvStatus = 1; // Should be 0???
+                }
+            }
+
+        }
+
+        if (totNumIter == 1) {
+            if (this.setFitFailed == false && this.stopIteration == false) {
+                this.finalStateVec = sv.trackTrajF.get(svzLength - 1);
+            }
+        }
+
+        this.calcFinalChisq(sector);
+
+        if (Double.isNaN(chi2)) {
+            this.setFitFailed = true;
+        }
+
+        if (TBT == true) {
+            if (chi2 > initChi2) { // fit failed            	
+                this.finalStateVec = this.initialStateVec;
+                sv.trackTrajT.put(svzLength - 1, this.initialStateVec);
+                this.calcFinalChisq(sector, true);
+            }
+        }
+
+    }    
     
     private boolean filter(int k, boolean forward, double annealingFactor) {
         StateVec sVec = sv.transported(forward).get(k);

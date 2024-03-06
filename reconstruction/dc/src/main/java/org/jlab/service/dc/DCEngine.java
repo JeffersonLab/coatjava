@@ -31,6 +31,7 @@ public class DCEngine extends ReconstructionEngine {
     private String     inBankPrefix   = null;
     private String     outBankPrefix  = null;
     private double[][] shifts         = new double[Constants.NREG][6];
+    protected boolean  useDAF         = true;
     
     public static final Logger LOGGER = Logger.getLogger(ReconstructionEngine.class.getName());
 
@@ -98,6 +99,10 @@ public class DCEngine extends ReconstructionEngine {
         if(this.getEngineConfigString("outputBankPrefix")!=null) {
             outBankPrefix = this.getEngineConfigString("outputBankPrefix");
         }
+        
+        //Set if use DAF
+        if(this.getEngineConfigString("useDAF")!=null) 
+            useDAF=Boolean.valueOf(this.getEngineConfigString("useDAF"));
         
         // Set geometry shifts for alignment code
         if(this.getEngineConfigString("alignmentShifts")!=null) {
