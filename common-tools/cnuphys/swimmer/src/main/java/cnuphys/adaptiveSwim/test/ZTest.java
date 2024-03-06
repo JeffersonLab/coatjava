@@ -57,7 +57,7 @@ public class ZTest {
 
 		//random target z in meters
 	    double zTarget[] = new double[n];
-	    Random rand = new Random(seed);
+	    Random rand = data.getRand();
 	    for (int i= 0; i < n; i++) {
 	    	zTarget[i] = 2.5 + 3.5*rand.nextDouble();
 	    }

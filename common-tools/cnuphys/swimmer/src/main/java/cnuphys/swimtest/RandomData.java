@@ -180,6 +180,15 @@ public class RandomData {
 
 
 	}
+	
+	/**
+	 * Get the random number generator
+	 * 
+	 * @return the random number generator
+	 */
+	public Random getRand() {
+		return rand;
+	}
 
 	//get a random value in a range
 	private double dval(double min, double dv) {

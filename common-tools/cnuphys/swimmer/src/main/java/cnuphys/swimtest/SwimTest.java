@@ -26,6 +26,7 @@ import cnuphys.adaptiveSwim.test.FixedTest;
 import cnuphys.adaptiveSwim.test.PlaneTest;
 import cnuphys.adaptiveSwim.test.RhoTest;
 import cnuphys.adaptiveSwim.test.SphereTest;
+import cnuphys.adaptiveSwim.test.ThreadTest;
 import cnuphys.adaptiveSwim.test.ZLineTest;
 import cnuphys.adaptiveSwim.test.ZTest;
 import cnuphys.lund.LundStyle;
@@ -64,7 +65,7 @@ public class SwimTest {
 		final JMenuItem testSectorItem = new JMenuItem("SectorZ Swim");
 		final JMenuItem beamlineItem = new JMenuItem("Beamline Swim");
 		final JMenuItem zlineItem = new JMenuItem("Z Line Swim");
-		final JMenuItem badCylinderItem = new JMenuItem("Bad Cylinder Swims");
+		final JMenuItem threadTestItem = new JMenuItem("Thread Test");
 
 
 		ActionListener al = new ActionListener() {
@@ -94,8 +95,8 @@ public class SwimTest {
 					BeamlineTest.beamLineTest(count, seed);
 				} else if (e.getSource() == zlineItem) {
 					ZLineTest.zLineTest(count, seed);
-				} else if (e.getSource() == badCylinderItem) {
-					BadCylinderTest.badCylinderTest();
+				} else if (e.getSource() == threadTestItem) {
+					ThreadTest.threadTest(10, seed);
 				}
 				
 			}
@@ -111,7 +112,7 @@ public class SwimTest {
 		addMenuItem(menu, al, testSectorItem);
 		addMenuItem(menu, al, beamlineItem);
 		addMenuItem(menu, al, zlineItem);
-		addMenuItem(menu, al, badCylinderItem);
+		addMenuItem(menu, al, threadTestItem);
 
 		return menu;
 	}
