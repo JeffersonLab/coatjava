@@ -173,7 +173,7 @@ public class MagFieldsEngine extends ReconstructionEngine {
         if (solShift == null) { // if no shift is set in the yaml file or environment, read from CCDB
             // will read target position and assume that is representative of the shift of
             // the whole CD
-            IndexedTable targetPosition = this.getConstantsManager().getConstants(newRun, "/geometry/shift/solenoid");
+            IndexedTable targetPosition = this.getConstantsManager().getConstants(newRun, "/geometry/shifts/solenoid");
             Swimmer.set_zShift((float) targetPosition.getDoubleValue("z", 0, 0, 0));
         }
 

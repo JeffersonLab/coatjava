@@ -100,7 +100,8 @@ public class Measurements {
         Point3D  p = new Point3D(xbeam, ybeam, 0);
         Line3D   l = new Line3D(p, u);
         Surface target =  new Surface(l.origin(), l.end(), Constants.DEFAULTSWIMACC);
-        if(Geometry.getInstance().getTargetCellSurface().lineVolume!=null) {
+        if(Geometry.getInstance().getTargetCellSurface()!=null &&
+           Geometry.getInstance().getTargetCellSurface().lineVolume!=null) {
             target.lineVolume = Geometry.getInstance().getTargetCellSurface().lineVolume;
         }
         for(Material m : Geometry.getInstance().getTargetMaterials())
