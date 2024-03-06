@@ -103,7 +103,6 @@ public class GeometryFactory {
             provider.loadTable("/geometry/cvt/svt/material/box");
             provider.loadTable("/geometry/cvt/svt/material/tube");
             provider.loadTable("/geometry/cvt/svt/alignment");
-            provider.loadTable("/geometry/target");
         }
 
         if(type==DetectorType.TARGET){

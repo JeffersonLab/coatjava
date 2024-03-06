@@ -387,7 +387,7 @@ public class SVTConstants {
                 // |			  | radius					  | radius
                 // |			  | 						  |
                 // o==============v===========================v===================================-> z (beamline)
-//                System.out.println("SVT READ Z SHIFT VALUE "+cp.getDouble("/geometry/target/position", 0));
+
                 // LAYERRADIUS and ZSTARTACTIVE are used primarily by the Reconstruction and getStrip()
                 for( int region = 0; region < NREGIONS; region++ )
                 {
