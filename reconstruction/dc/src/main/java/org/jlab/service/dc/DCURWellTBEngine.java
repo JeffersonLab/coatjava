@@ -253,7 +253,7 @@ public class DCURWellTBEngine extends DCEngine {
                 org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
                 getInitState(TrackArray1, measSurfaces.get(0).z, initSV, kFZRef, dcSwim, new float[3]);
                 if(useDAF){
-                    kFZRef.initFromHB(measSurfaces, initSV, TrackArray1.get(0).get(0).get(0).get_Beta());
+                    kFZRef.initFromHB(measSurfaces, initSV, TrackArray1.get(0).get(0).get(0).get_Beta(), dafChi2Cut, dafAnnealingFactorsTB);
                     kFZRef.runFitter();
                 }
                 else{
@@ -301,7 +301,7 @@ public class DCURWellTBEngine extends DCEngine {
                 org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
                 getInitState(TrackArray1, measSurfaces.get(0).z, initSV, kFZRef, dcSwim, new float[3]);
                 if(useDAF){
-                    kFZRef.initFromHB(measSurfaces, initSV, TrackArray1.get(0).get(0).get(0).get_Beta());
+                    kFZRef.initFromHB(measSurfaces, initSV, TrackArray1.get(0).get(0).get(0).get_Beta(), dafChi2Cut, dafAnnealingFactorsTB);
                     kFZRef.runFitter();
                 }
                 else{

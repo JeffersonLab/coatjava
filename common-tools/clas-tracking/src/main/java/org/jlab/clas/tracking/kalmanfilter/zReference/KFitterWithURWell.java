@@ -26,7 +26,7 @@ import org.jlab.clas.tracking.kalmanfilter.Type;
  */
 public class KFitterWithURWell extends AKFitter {
     
-    private static final double[] dafAnnealingFactorsTB={64, 16, 4, 1};  
+    private ArrayList<Double> dafAnnealingFactorsTB = new ArrayList<>();  
     private int dafAnnealingFactorsIndex = 0;
     private double dafAnnealingFactor = 1;
     
@@ -92,7 +92,23 @@ public class KFitterWithURWell extends AKFitter {
         sv.Z = Z;
     }
 
-    public final void initFromHB(List<Surface> measSurfaces, StateVec initSV, double beta) {
+    public final void initFromHB(List<Surface> measSurfaces, StateVec initSV, double beta, String strDAFChi2Cut, String strDAFAnnealingFactorsTB) {
+        if(strDAFChi2Cut != null){
+            DAFilter.dafChi2Cut = Double.valueOf(strDAFChi2Cut);
+        }
+        
+        if(strDAFAnnealingFactorsTB != null){
+            String strs[] = strDAFAnnealingFactorsTB.split(",");
+            for(int i = 0; i < strs.length; i++)
+                dafAnnealingFactorsTB.add(Double.valueOf(strs[i]));
+        }
+        else{
+            dafAnnealingFactorsTB.add(64.);
+            dafAnnealingFactorsTB.add(16.);
+            dafAnnealingFactorsTB.add(4.);
+            dafAnnealingFactorsTB.add(1.);
+        }        
+        
         finalSmoothedStateVec = null;
         finalTransportedStateVec = null;
         this.NDF = -5;
@@ -166,8 +182,8 @@ public class KFitterWithURWell extends AKFitter {
             this.chi2kf = 0;
 
             if (i > 1) {
-                if (dafAnnealingFactorsIndex < dafAnnealingFactorsTB.length) {
-                    dafAnnealingFactor = dafAnnealingFactorsTB[dafAnnealingFactorsIndex];
+                if (dafAnnealingFactorsIndex < dafAnnealingFactorsTB.size()) {
+                    dafAnnealingFactor = dafAnnealingFactorsTB.get(dafAnnealingFactorsIndex);
                     dafAnnealingFactorsIndex++;
                 } else {
                     dafAnnealingFactor = 1;
@@ -249,8 +265,8 @@ public class KFitterWithURWell extends AKFitter {
                 break;
             }
             
-            if (dafAnnealingFactorsIndex < dafAnnealingFactorsTB.length) {
-                dafAnnealingFactor = dafAnnealingFactorsTB[dafAnnealingFactorsIndex];
+            if (dafAnnealingFactorsIndex < dafAnnealingFactorsTB.size()) {
+                dafAnnealingFactor = dafAnnealingFactorsTB.get(dafAnnealingFactorsIndex);
                 dafAnnealingFactorsIndex++;
             } else {
                 dafAnnealingFactor = 1;

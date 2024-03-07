@@ -9,7 +9,7 @@ import org.jlab.geom.prim.Line3D;
  */
 public class DAFilter {
     
-    private static final double dafChi2Cut = 8;
+    protected static double dafChi2Cut = 8;
     
     // For double hits
     private double[] docas_double;

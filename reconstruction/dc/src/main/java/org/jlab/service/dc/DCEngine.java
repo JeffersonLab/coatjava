@@ -32,6 +32,8 @@ public class DCEngine extends ReconstructionEngine {
     private String     outBankPrefix  = null;
     private double[][] shifts         = new double[Constants.NREG][6];
     protected boolean  useDAF         = true;
+    protected String   dafChi2Cut     = null;
+    protected String   dafAnnealingFactorsTB = null;
     
     public static final Logger LOGGER = Logger.getLogger(ReconstructionEngine.class.getName());
 
@@ -103,6 +105,12 @@ public class DCEngine extends ReconstructionEngine {
         //Set if use DAF
         if(this.getEngineConfigString("useDAF")!=null) 
             useDAF=Boolean.valueOf(this.getEngineConfigString("useDAF"));
+        
+        if(this.getEngineConfigString("dafChi2Cut")!=null) 
+            dafChi2Cut=this.getEngineConfigString("dafChi2Cut");
+        
+        if(this.getEngineConfigString("dafAnnealingFactorsTB")!=null) 
+            dafAnnealingFactorsTB=this.getEngineConfigString("dafAnnealingFactorsTB");
         
         // Set geometry shifts for alignment code
         if(this.getEngineConfigString("alignmentShifts")!=null) {
