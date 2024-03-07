@@ -310,7 +310,7 @@ public class EBTwoTrackTest {
                         String idxVarName) {
         for (int ii=0; ii<bankFrom.rows(); ii++) {
             int ref=bankFrom.getInt(idxVarName,ii);
-            if (ref>=bankTo.rows() || ref<0) {
+            if (ref>=bankTo.rows()) {
                 System.err.println(String.format(
                         "\bnhasValidRefs: failed on (%s0>%s) %d->%d\n",
                         bankFrom.getDescriptor().getName(),

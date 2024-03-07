@@ -382,9 +382,8 @@ public class EventBuilder {
         return this.pindex_map;
     }
     
-    public List<DetectorResponse> getUnmatchedResponses(List<DetectorResponse> list, DetectorType type, int layer){
-        if (list==null) list=detectorResponses;
-        List<DetectorResponse>  responses = new ArrayList<>();
+    public static List<DetectorResponse> getUnmatchedResponses(List<DetectorResponse> list, DetectorType type, int layer){
+        List<DetectorResponse> responses = new ArrayList<>();
         for(DetectorResponse r : list){
             if(r.getDescriptor().getType()==type &&
                (r.getDescriptor().getLayer()==layer || layer<=0) &&
@@ -394,9 +393,15 @@ public class EventBuilder {
         }
         return responses;
     }
-    
+ 
+    public List<DetectorResponse> getUnmatchedResponses(DetectorType type, int layer){
+        return getUnmatchedResponses(this.detectorResponses, type, layer);
+    }
 
-        
+    public List<DetectorResponse> getUnmatchedResponses(DetectorType type){
+        return getUnmatchedResponses(this.detectorResponses, type, -1);
+    }
+
     public void assignTrigger()  {
         int i = 0;
         boolean hasTrigger=false;
