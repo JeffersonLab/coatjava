@@ -88,16 +88,17 @@ public class HelicitySequence {
         
         LOGGER.log(Level.FINE, "HelicitySequence:  adding state:  {0}", state);
 
-        // terminate if trying to add more than one run number:
+        // ignore states from other run numbers:
         for (HelicityState hs : this.states) {
-            if (hs.getRun()!=state.getRun()) {
-                throw new RuntimeException("Run number mismatch:  "+state.getRun()+"/"+state.getRun());
+            if (hs.getRun() != state.getRun()) {
+                LOGGER.log(Level.WARNING, "HelicitySequence:  run number mismatch (OLD/NEW = {0},{1}), ignoring state", new Object[]{hs.getRun(), state.getRun()});
+                return false;
             }
         }
-        
+
         // mark that we'll need to redo the analysis:
         this.analyzed=false;
-        
+
         // FIXME:  should we be using a SortedSet instead?
         // Looks like SortedList doesn't exist until java 10,
         // and SortedSet doesn't give easy access by index?
