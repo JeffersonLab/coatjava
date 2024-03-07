@@ -62,6 +62,10 @@ public class FittedHit extends Hit implements Comparable<Hit> {
     private double _tProp;
     private double _tStart;   // The event start time
     private double _Time;     //Time = TDC - tFlight - tProp - T0 - TStart
+    
+    private double _DAFWeight = -999; // Weight by DAF
+    private int _SorDHit = -1; // 1 : single hit; 0: double hit for DC
+    
     /**
      * identifying outoftimehits;
      */
@@ -1037,6 +1041,28 @@ public class FittedHit extends Hit implements Comparable<Hit> {
         return beta;
     }
     
+    /**
+     * @return the _DAFWeight
+     */
+    public double getDAFWeight() {
+        return _DAFWeight;
+    }
+
+    /**
+     * @param weight the _DAFWeight to set
+     */
+    public void setDAFWeight(double weight) {
+        this._DAFWeight = weight;
+    }
+    
+    public int getSorDHit() {
+        return _SorDHit;
+    }
+
+    public void setSorDHit(int SorDHit) {
+        this._SorDHit = SorDHit;
+    }
+
     public void updateHitfromSV(StateVec st, DCGeant4Factory DcDetector) {
 //        this.set_Id(this.get_Id());
 //        this.set_TDC(this.get_TDC());
@@ -1044,6 +1070,8 @@ public class FittedHit extends Hit implements Comparable<Hit> {
 //        this.set_AssociatedClusterID(this.get_AssociatedClusterID());
         this.setAssociatedStateVec(st);
         this.set_TrkResid(this.get_Doca() * this.get_LeftRightAmb() - st.getProjectorDoca());
+        this.setDAFWeight(st.getDAFWeight());
+        this.setSorDHit(st.getSorDHit());
         this.setB(st.getB());
         this.setSignalPropagTimeAlongWire(st.x(), st.y(), DcDetector);
         this.setSignalTimeOfFlight();

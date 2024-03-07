@@ -304,7 +304,8 @@
         {"name":"q",        	 "type":"B", "info":"charge of the track"},
         {"name":"pathlength",    "type":"F", "info":"pathlength of the track"},
         {"name":"chi2",          "type":"F", "info":"fit chi2 of the track"},
-        {"name":"ndf",           "type":"S", "info":"fit ndf of the track"}
+        {"name":"ndf",           "type":"S", "info":"fit ndf of the track"},
+        {"name":"ndfDAF",        "type":"F", "info":"fit ndf of the track weighted by DAF"}
     ]
   }, 
   {
@@ -361,6 +362,8 @@
         {"name":"trkDoca",      "type":"F", "info":"track doca of the hit (in cm)"},
         {"name":"timeResidual", "type":"F", "info":"time residual of the hit (in cm)"},
         {"name":"fitResidual",  "type":"F", "info":"fit residual of the hit (in cm, from KF)"},
+        {"name":"DAFWeight",    "type":"F", "info":"Weight by DAF"},
+        {"name":"SorD",         "type":"B", "info":"1: single hit; 0: double hit"},
         {"name":"LR",           "type":"B", "info":"Left/Right ambiguity of the hit"},
         {"name":"X",            "type":"F", "info":"wire x-coordinate  in tilted-sector"},
         {"name":"Z",            "type":"F", "info":"wire z-coordinate  in tilted-sector"},
@@ -546,7 +549,8 @@
         {"name":"q",        	 "type":"B", "info":"charge of the track"},
         {"name":"pathlength",    "type":"F", "info":"pathlength of the track"},
         {"name":"chi2",          "type":"F", "info":"fit chi2 of the track"},
-        {"name":"ndf",           "type":"S", "info":"fit ndf of the track"}
+        {"name":"ndf",           "type":"S", "info":"fit ndf of the track"},
+        {"name":"ndfDAF",        "type":"F", "info":"fit ndf of the track weighted by DAF"}
     ]
   },
   {

@@ -274,8 +274,15 @@ public class DCTBEngine extends DCEngine {
                 StateVecs svs = new StateVecs();
                 org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
                 getInitState(TrackArray1, measSurfaces.get(0).z, initSV, kFZRef, dcSwim, new float[3]);
-                kFZRef.initFromHB(measSurfaces, initSV, TrackArray1.get(0).get(0).get(0).get_Beta());
-                kFZRef.runFitter();
+            if(useDAF){
+                    kFZRef.initFromHB(measSurfaces, initSV, TrackArray1.get(0).get(0).get(0).get_Beta(), dafChi2Cut, dafAnnealingFactorsTB);
+                    kFZRef.runFitter();
+                }
+                else{                  
+                    kFZRef.initFromHBNoDAF(measSurfaces, initSV, TrackArray1.get(0).get(0).get(0).get_Beta());
+                    kFZRef.runFitterNoDAF();
+                }
+                
                 List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
 
                 StateVec fn = new StateVec();
@@ -294,6 +301,7 @@ public class DCTBEngine extends DCEngine {
 
                     TrackArray1.set_FitChi2(kFZRef.chi2);
                     TrackArray1.set_FitNDF(kFZRef.NDF);
+                    TrackArray1.set_NDFDAF(kFZRef.getNDFDAF());
                     TrackArray1.setStateVecs(kfStateVecsAlongTrajectory);
                     TrackArray1.set_FitConvergenceStatus(kFZRef.ConvStatus);
                     if (TrackArray1.get_Vtx0().toVector3D().mag() > 500) {
@@ -358,7 +366,7 @@ public class DCTBEngine extends DCEngine {
 
         return true;
     }
-
+    
     public List<org.jlab.rec.dc.trajectory.StateVec> setKFStateVecsAlongTrajectory(KFitter kFZRef) {
     	List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = new ArrayList<>();
     	
@@ -370,6 +378,8 @@ public class DCTBEngine extends DCEngine {
             sv.setPathLength(svc.getPathLength()); 
             sv.setProjector(svc.getProjector());
             sv.setProjectorDoca(svc.getProjectorDoca());
+            sv.setDAFWeight(svc.getFinalDAFWeight());
+            sv.setSorDHit(svc.getSorDHit());
             kfStateVecsAlongTrajectory.add(sv);
     	}
     	

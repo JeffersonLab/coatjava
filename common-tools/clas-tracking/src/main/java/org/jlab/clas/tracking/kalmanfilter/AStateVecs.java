@@ -262,7 +262,41 @@ public abstract class AStateVecs {
         public double deltaPath;   
         public Matrix CM = new Matrix();;
         private double _PathLength;
+        
+        /////////////////////// For DAF ///////////////////////
+        private double weightDAF_single = 1;
+        private double[] weightDAF_double = {0.5, 0.5};
+        
+        public double getWeightDAF_singleHit(){
+            return weightDAF_single;
+        }
+        public void setWeightDAF_singleHit(double weight){
+            this.weightDAF_single = weight;
+        }
 
+        public double[] getWeightDAF_doubleHits(){
+            return weightDAF_double;
+        }
+        public void setWeightDAF_doubleHits(double[] weight){
+            this.weightDAF_double = weight;
+        }
+        
+        private double finalDAFWeight = -999;
+        public double getFinalDAFWeight(){
+            return finalDAFWeight;
+        }
+        public void setFinalDAFWeight(double weight){
+            this.finalDAFWeight = weight;
+        }
+
+        private int SorDHit = -1; // 1 : single hit; 0: double hit for DC
+        public int getSorDHit(){
+            return SorDHit;
+        }
+        public void setSorDHit(int SorDHit){
+            this.SorDHit = SorDHit;
+        }
+                        
         public double getPathLength() {
             return _PathLength;
         }
@@ -351,6 +385,8 @@ public abstract class AStateVecs {
             this.deltaPath = s.deltaPath;
             if(s.CM != null)
             	Matrix5x5.copy(s.CM, this.CM);
+            this.weightDAF_single = s.weightDAF_single;
+            this.weightDAF_double = s.weightDAF_double;
         }
 
         public void copyCovMat(double[][] c) {

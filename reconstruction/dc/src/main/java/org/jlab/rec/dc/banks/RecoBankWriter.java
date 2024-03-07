@@ -439,6 +439,7 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
                 
             bank.setFloat("chi2", i, (float) candlist.get(i).get_FitChi2());
             bank.setShort("ndf", i, (short) candlist.get(i).get_FitNDF());
+            bank.setFloat("ndfDAF", i, (float) candlist.get(i).get_NDFDAF());
             bank.setFloat("x", i, (float) candlist.get(i).getFinalStateVec().x());
             bank.setFloat("y", i, (float) candlist.get(i).getFinalStateVec().y());
             bank.setFloat("z", i, (float) candlist.get(i).getFinalStateVec().getZ());
@@ -546,6 +547,8 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
             bank.setShort("clusterID", i, (short) hitlist.get(i).get_AssociatedClusterID());
             bank.setByte("trkID", i, (byte) hitlist.get(i).get_AssociatedTBTrackID());
             bank.setFloat("timeResidual", i, (float) hitlist.get(i).get_TimeResidual());
+            bank.setFloat("DAFWeight", i, (float) hitlist.get(i).getDAFWeight());
+            bank.setByte("SorD", i, (byte) hitlist.get(i).getSorDHit());
             
             bank.setInt("TDC",i,hitlist.get(i).get_TDC());
             bank.setByte("jitter",i, (byte) hitlist.get(i).getJitter());
@@ -864,6 +867,7 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
             }
             bank.setFloat("chi2", i, (float) candlist.get(i).get_FitChi2());
             bank.setShort("ndf", i, (short) candlist.get(i).get_FitNDF());
+            bank.setFloat("ndfDAF", i, (float) candlist.get(i).get_NDFDAF());
         }
         return bank;
 
