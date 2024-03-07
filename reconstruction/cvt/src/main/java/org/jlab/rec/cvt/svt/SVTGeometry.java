@@ -223,7 +223,6 @@ public class SVTGeometry {
     
     public List<Surface> getSurfaces() {
         List<Surface> surfaces = new ArrayList<>();
-        surfaces.add(this.getShieldSurface());
         surfaces.add(this.getFaradayCageSurfaces(0));
         for(int i=1; i<=NLAYERS; i++) {
             surfaces.add(this.getSurface(i, 1, new Strip(0,0,0)));
@@ -254,24 +253,6 @@ public class SVTGeometry {
         }
         surface.passive=false;
         return surface;
-    }
-    
-    public Surface getShieldSurface() {
-        Point3D  center = new Point3D(0,                        0, Geometry.getInstance().getZoffset()+SVTConstants.TSHIELDZPOS-SVTConstants.TSHIELDLENGTH/2);
-        Point3D  origin = new Point3D(SVTConstants.TSHIELDRMAX, 0, Geometry.getInstance().getZoffset()+SVTConstants.TSHIELDZPOS-SVTConstants.TSHIELDLENGTH/2);
-        Vector3D axis   = new Vector3D(0,0,1);
-        Arc3D base = new Arc3D(origin, center, axis, 2*Math.PI);
-        Cylindrical3D shieldCylinder = new Cylindrical3D(base, SVTConstants.TSHIELDLENGTH);
-        Surface shieldSurface = new Surface(shieldCylinder, new Strip(0, 0, 0), Constants.DEFAULTSWIMACC);
-        shieldSurface.addMaterial("TungstenShield",
-                                  SVTConstants.TSHIELDRMAX-SVTConstants.TSHIELDRMIN,
-                                  SVTConstants.TSHIELDRHO,
-                                  SVTConstants.TSHIELDZOVERA,
-                                  SVTConstants.TSHIELDRADLEN,
-                                  SVTConstants.TSHIELDI,
-                                  Units.MM);
-        shieldSurface.passive=true;
-        return shieldSurface;
     }
 
     public Surface getFaradayCageSurfaces(int i) {

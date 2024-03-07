@@ -108,17 +108,7 @@ public class SVTConstants {
 	public static double SECTORLEN;
          public static final double SIDETOL   = 1.0;  // extra width used in defining the module corners
 	public static final double LENGTHTOL = 10.0; // extra length for track intersection
-    
-        // tungsten shield
-        public static double TSHIELDRMIN    = 51;
-        public static double TSHIELDRMAX    = 51.051;
-        public static double TSHIELDLENGTH  = 360;
-        public static double TSHIELDZPOS    = -50;
-        public static double TSHIELDRADLEN  = 6.76/19.3 *10; // X0(g/cm2) / density(g/cm3) * 10; 
-        public static double TSHIELDZOVERA  = 0.40252;
-        public static double TSHIELDRHO     = 19.3E-3; // g/mm3
-        public static double TSHIELDI       = 727;     // eV
-        
+            
          // faraday cup cage
          public static double[] FARADAYCAGERMIN    = new double[4];
          public static double[] FARADAYCAGERMAX    = new double[4];
