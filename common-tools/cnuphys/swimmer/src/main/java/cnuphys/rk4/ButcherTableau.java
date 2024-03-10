@@ -2,24 +2,6 @@ package cnuphys.rk4;
 
 public class ButcherTableau {
 
-	public static final ButcherTableau RK4 = new ButcherTableau("RK4", false, makeRow(0.), makeRow(1. / 2., 1. / 2.),
-			makeRow(1. / 2., 0, 1. / 2), makeRow(1., 0, 0, 1.), makeRow(1. / 6., 1. / 3., 1. / 3., 1. / 6.) // the
-																											// b's
-	);
-
-	public static final ButcherTableau RULE38 = new ButcherTableau("RULE38", false, makeRow(0.), makeRow(1. / 3., 1. / 3.),
-			makeRow(2. / 3., -1. / 3., 1.), makeRow(1., 1., -1., 1.), makeRow(1. / 8., 3. / 8., 3. / 8., 1. / 8.) // the
-																													// b's
-	);
-
-	public static final ButcherTableau FEHLBERG_ORDER5 = new ButcherTableau("FEHLBERG_ORDER5", true, makeRow(0.),
-			makeRow(1. / 4., 1. / 4.), makeRow(3. / 8., 3. / 32., 9. / 32.),
-			makeRow(12. / 13, 1932. / 2197, -7200. / 2197., 7296. / 2197.),
-			makeRow(1., 439. / 216., -8., 3680. / 513., -845. / 4104.),
-			makeRow(1. / 2., -8. / 27., 2., -3544. / 2565, 1859. / 4104., -11. / 40.),
-			makeRow(16. / 135., 0., 6656. / 12825., 28561. / 56430., -9. / 50., 2. / 55.), // b's
-			makeRow(25. / 216., 0., 1408. / 2565., 2197. / 4104., -1. / 5., 0.) // bstars's
-	);
 
 	public static final ButcherTableau DORMAND_PRINCE = new ButcherTableau("DORMAND_PRINCE", true, makeRow(0.),
 			makeRow(1. / 5., 1. / 5.), makeRow(3. / 10., 3. / 40., 9. / 40.),
@@ -47,12 +29,10 @@ public class ButcherTableau {
 	private double c[];
 	private boolean _augmented;
 	private double bdiff[];
-	private String _name;
 
 	private int s; // number of stages
 
 	private ButcherTableau(String name, boolean augmented, double[]... rows) {
-		_name = name;
 		_augmented = augmented;
 		if (augmented) {
 			s = rows.length - 2;
@@ -148,46 +128,5 @@ public class ButcherTableau {
 			sum += a[index][j];
 		}
 		return sum;
-	}
-
-	private void printSumStr(int index) {
-		double sum = asum(index);
-		double c = c(index);
-		double diff = Math.abs(sum - c);
-		System.out.println("consistency sum check [" + index + "] sum: " + sum + "  c: " + c + " diff: " + diff + "  "
-				+ ((Math.abs(diff) < 1.0e-15) ? "PASS" : "FAIL"));
-	}
-
-	public void report() {
-		System.out.println("=============");
-		System.out.println(_name);
-		System.out.println("augmented: " + isAugmented());
-		System.out.println("s = " + getNumStage());
-
-		int s = getNumStage();
-		for (int row = 2; row <= s; row++) {
-			for (int col = 1; col < row; col++) {
-				printVal(row, col);
-			}
-			System.out.println();
-		}
-
-		for (int i = 2; i <= s; i++) {
-			printSumStr(i);
-		}
-
-	}
-
-	private void printVal(int i, int j) {
-		String s = String.format("a[%d][%d] = %-12.5f ", i, j, a[i][j]);
-		System.out.print(s);
-	}
-
-	public static void main(String arg[]) {
-		RK4.report();
-		RULE38.report();
-		FEHLBERG_ORDER5.report();
-		DORMAND_PRINCE.report();
-		CASH_KARP.report();
 	}
 }

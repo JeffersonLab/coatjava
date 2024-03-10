@@ -502,7 +502,6 @@ public class RungeKutta {
 			double yscale[],
 			double hdata[]) throws RungeKuttaException {
 
-		// ButcherTableauAdvance advancer = new ButcherTableauAdvance(tableau);
 		// use a simple half-step advance
 		IAdvance advancer = new HalfStepAdvance();
 		return driver(yo, to, tf, h, deriv, stopper, listener, advancer, eps, yscale, hdata);
@@ -512,10 +511,6 @@ public class RungeKutta {
 	private double[] copy(double v[]) {
 		double w[] = new double[v.length];
 		System.arraycopy(v, 0, w, 0, v.length);
-
-		// for (int i = 0; i < v.length; i++) {
-		// w[i] = v[i];
-		// }
 		return w;
 	}
 

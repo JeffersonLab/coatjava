@@ -448,86 +448,6 @@ public class SwimZ {
 	}
 
 
-
-	/**
-	 * Swim to a fixed z over short distances using a parabolic estimate
-	 *
-	 * @param Q
-	 *            the integer charge of the particle (-1 for electron)
-	 * @param p
-	 *            the momentum in GeV/c
-	 * @param start
-	 *            the starting state vector
-	 * @param zf
-	 *            the final z value (cm)
-	 * @param stepSize
-	 *            the step size
-	 * @return the swim result
-	 * @throws SwimZException
-	 */
-
-	public SwimZResult parabolicEstimate(int Q, double p, SwimZStateVector start, double zf, double stepSize)
-			throws SwimZException {
-
-		if (start == null) {
-			throw new SwimZException("Null starting state vector.");
-		}
-
-		// straight line?
-		if (Q == 0) {
-			return straightLineResult(Q, p, start, zf);
-		}
-
-		double q = Q / p;
-
-		// obtain a range
-		SwimZRange swimZrange = new SwimZRange(start.z, zf, stepSize);
-
-		// storage for results
-		SwimZResult result = new SwimZResult(Q, p, start.z, zf, swimZrange.getNumStep() + 1);
-		result.add(start);
-		SwimZStateVector v0 = start;
-
-		for (int i = 0; i < swimZrange.getNumStep(); i++) {
-			// get the field
-			float B[] = new float[3];
-			double x0 = v0.x;
-			double y0 = v0.y;
-			double z0 = v0.z;
-			double tx0 = v0.tx;
-			double ty0 = v0.ty;
-
-			_probe.field((float) x0, (float) y0, (float) z0, B);
-
-			// some needed factors
-			double txsq = tx0 * tx0;
-			double tysq = ty0 * ty0;
-			double fact = Math.sqrt(1 + txsq + tysq);
-			double Ax = fact * (ty0 * (tx0 * B[0] + B[2]) - (1 + txsq) * B[1]);
-			double Ay = fact * (-tx0 * (ty0 * B[1] + B[2]) + (1 + tysq) * B[0]);
-
-			double s = stepSize;
-			double qvs = q * C * s;
-			double qvsq = 0.5 * qvs * s;
-
-			double x1 = x0 + tx0 * s + qvsq * Ax;
-			double y1 = y0 + ty0 * s + qvsq * Ay;
-			double tx1 = tx0 + qvs * Ax;
-			double ty1 = ty0 + qvs * Ay;
-			// public SwimZStateVector(double x, double y, double z, double tx,
-			// double ty,
-			// double q) {
-
-			SwimZStateVector v1 = new SwimZStateVector(x1, y1, swimZrange.z(i + 1), tx1, ty1);
-
-			// add to the resuts
-			result.add(v1);
-			v0 = v1;
-		}
-
-		return result;
-	}
-
 	// straight line
 	private SwimZResult straightLineResult(int Q, double p, SwimZStateVector start, double zf) {
 		SwimZResult result = new SwimZResult(Q, p, start.z, zf, 2);
@@ -550,27 +470,4 @@ public class SwimZ {
 		stop.ty = start.ty;
 	}
 
-	private double[] A(double tx, double ty, double Bx, double By, double Bz) {
-
-		double C = Math.sqrt(1 + tx * tx + ty * ty);
-		double Ax = C * (ty * (tx * Bx + Bz) - (1 + tx * tx) * By);
-		double Ay = C * (-tx * (ty * By + Bz) + (1 + ty * ty) * Bx);
-
-		return new double[] { Ax, Ay };
-	}
-
-	private double[] delA_delt(double tx, double ty, double Bx, double By, double Bz) {
-
-		double C2 = 1 + tx * tx + ty * ty;
-		double C = Math.sqrt(C2);
-		double Ax = C * (ty * (tx * Bx + Bz) - (1 + tx * tx) * By);
-		double Ay = C * (-tx * (ty * By + Bz) + (1 + ty * ty) * Bx);
-
-		double delAx_deltx = tx * Ax / C2 + C * (ty * Bx - 2 * tx * By);
-		double delAx_delty = ty * Ax / C2 + C * (tx * Bx + Bz);
-		double delAy_deltx = tx * Ay / C2 + C * (-ty * By - Bz);
-		double delAy_delty = ty * Ay / C2 + C * (-tx * By + 2 * ty * Bx);
-
-		return new double[] { delAx_deltx, delAx_delty, delAy_deltx, delAy_delty };
-	}
 }

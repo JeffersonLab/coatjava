@@ -1,17 +1,29 @@
 package cnuphys.adaptiveSwim.test;
 
 import java.io.File;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
 import java.util.Random;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import cnuphys.CLAS12Swim.CLAS12SwimResult;
 import cnuphys.CLAS12Swim.CLAS12Swimmer;
 import cnuphys.CLAS12Swim.CLAS12Values;
+
 import cnuphys.magfield.MagneticFields;
 import cnuphys.magfield.MagneticFields.FieldType;
 import cnuphys.swimtest.CSVWriter;
 import cnuphys.swimtest.RandomData;
 
 public class ThreadTest {
+	
+	static final double sMax = 1000; // cm
+	static final double accuracy = 1e-3; // cm
+	static final double c12Tolerance = 1.0e-5;
+	static final double h = 1.e-5; // starting
+
 
 	public static void threadTest(int n, long seed) {
 		System.out.println("Thread test using fixed z test data");
@@ -33,11 +45,7 @@ public class ThreadTest {
 		// create the swimmer
 		CLAS12Swimmer clas12Swimmer = new CLAS12Swimmer();
 
-		double h = 1.e-5; // starting
 
-		double sMax = 1000; // cm
-		double accuracy = 1e-3; // cm
-		double c12Tolerance = 1.0e-5;
 
 		System.out.println("generate random data");
 		double zTarget[] = new double[n];
@@ -46,6 +54,15 @@ public class ThreadTest {
 		CLAS12SwimResult c12ResST[] = new CLAS12SwimResult[n];
 
 		// single threaded
+		ThreadMXBean bean = ManagementFactory.getThreadMXBean();
+
+		//timing test
+		long stTime;
+//		long mtTime;
+		long exTime;
+
+	    long start = bean.getCurrentThreadCpuTime();
+
 		for (int i = 0; i < n; i++) {
 
 			int charge = data.charge[i];
@@ -63,59 +80,78 @@ public class ThreadTest {
 					sMax, h, c12Tolerance);
 			
 		}
+		stTime = bean.getCurrentThreadCpuTime() - start;
+
+
+		System.out.println("Single thread test done");
+
+
+//		SwimThread threads[] = new SwimThread[n];
+//		// multithreaded
+//		for (int i = 0; i < n; i++) {
+//			int charge = data.charge[i];
+//			double xo = data.xo[i];
+//			double yo = data.yo[i];
+//			double zo = data.zo[i];
+//			double p = data.p[i];
+//			double theta = data.theta[i];
+//			double phi = data.phi[i];
+//			double zTarg = zTarget[i];
+//			
+//			threads[i] = new SwimThread(clas12Swimmer, i, charge, xo, yo, zo, p, theta, phi, zTarg, accuracy,
+//					sMax, h, c12Tolerance);
+//		}
+//		
+//		start = bean.getCurrentThreadCpuTime();
+//		for (int i = n-1; i >= 0; i--) {
+//			threads[i].start();
+//		}
+//		
+//		System.out.println("Threads started");
+//		// Wait for all threads to finish
+//		for (int i = 0; i < n; i++) {
+//		    try {
+//		        threads[i].join(); // Waits for this thread to die
+//		        System.out.println("Thread " + i + " done");
+//		    } catch (InterruptedException e) {
+//		        // Handle interruption (e.g., consider whether to break the loop)
+//		        Thread.currentThread().interrupt(); // Restore the interrupted status
+//		        System.out.println("Thread was interrupted, failed to complete execution");
+//		    }
+//		}
+//		
+//		mtTime = bean.getCurrentThreadCpuTime() - start;
+//		
+//		//output results
+//		for (int i = 0; i < n; i++) {
+//			int charge = data.charge[i];
+//			double xo = data.xo[i];
+//			double yo = data.yo[i];
+//			double zo = data.zo[i];
+//			double p = data.p[i];
+//			double theta = data.theta[i];
+//			double phi = data.phi[i];
+//			double zTarg = zTarget[i];
+//
+//			writer.writeStartOfRow(charge, xo, yo, zo, p, theta, phi, zTarg);
+//			
+//			c12SwimResult(writer, zTarget[i], c12ResST[i]);
+//			c12SwimResult(writer, zTarget[i], threads[i].result);
+//			writer.newLine();
+//		}
 		
 
-		SwimThread threads[] = new SwimThread[n];
-		// multithreaded
-		for (int i = 0; i < n; i++) {
-			int charge = data.charge[i];
-			double xo = data.xo[i];
-			double yo = data.yo[i];
-			double zo = data.zo[i];
-			double p = data.p[i];
-			double theta = data.theta[i];
-			double phi = data.phi[i];
-			double zTarg = zTarget[i];
-			
-			threads[i] = new SwimThread(i, clas12Swimmer, charge, xo, yo, zo, p, theta, phi, zTarg, accuracy,
-					sMax, h, c12Tolerance);
-		}
+//		System.out.println("Thread test done");
 		
-		for (int i = 0; i < n; i++) {
-			threads[i].start();
-		}
-		
-		System.out.println("Threads started");
-		// Wait for all threads to finish
-		for (int i = 0; i < n; i++) {
-		    try {
-		        threads[i].join(); // Waits for this thread to die
-		        System.out.println("Thread " + i + " done");
-		    } catch (InterruptedException e) {
-		        // Handle interruption (e.g., consider whether to break the loop)
-		        Thread.currentThread().interrupt(); // Restore the interrupted status
-		        System.out.println("Thread was interrupted, failed to complete execution");
-		    }
-		}
-		
-		//output results
-		for (int i = 0; i < n; i++) {
-			int charge = data.charge[i];
-			double xo = data.xo[i];
-			double yo = data.yo[i];
-			double zo = data.zo[i];
-			double p = data.p[i];
-			double theta = data.theta[i];
-			double phi = data.phi[i];
-			double zTarg = zTarget[i];
+		start = bean.getCurrentThreadCpuTime();
+		executorTest(clas12Swimmer, data, zTarget, n, writer);
+		exTime = bean.getCurrentThreadCpuTime() - start;
 
-			writer.writeStartOfRow(charge, xo, yo, zo, p, theta, phi, zTarg);
-			
-			c12SwimResult(writer, zTarget[i], c12ResST[i]);
-	//		c12SwimResult(writer, zTarget[i], c12ResMT[i]);
-			writer.newLine();
-		}
-		System.out.println("Thread test done");
+		writer.close();
+
+		System.err.println("st time: " + stTime);
+//		System.err.println("mt time: " + mtTime);
+        System.err.println("ex time: " + exTime);
 	}
 
 	private static RandomData generateRandomData(int n, long seed, double ztarg[]) {
@@ -159,7 +195,61 @@ public class ThreadTest {
 	}
 	
 
+	public static void main(String arg[]) {
+		threadTest(1000, 1234567890);
+	}
+	
+
+
+	private static void executorTest(CLAS12Swimmer swimmer, RandomData data, double zTarget[], final int numberOfTasks,
+			CSVWriter writer) {
+	        
+	        // Create a CountDownLatch initialized with the number of tasks
+	        CountDownLatch latch = new CountDownLatch(numberOfTasks);
+	        
+	        // Create an ExecutorService with a fixed thread pool size
+	        int cores = Runtime.getRuntime().availableProcessors();
+	        System.out.println("Number of cores: " + cores);
+	        ExecutorService executor = Executors.newFixedThreadPool(cores); // Adjust the pool size as needed
+	        
+	        // Submit tasks to the ExecutorService, passing the parameters from the arrays
+	        for (int i = 0; i < numberOfTasks; i++) {
+	        	final int charge = data.charge[i];
+	            final double x = data.xo[i];
+	            final double y = data.yo[i];
+	            final double z = data.zo[i];
+	            final double p = data.p[i];
+	            final double theta = data.theta[i];
+	            final double phi = data.phi[i];
+	            final double zTarg = zTarget[i];
+	            
+	            executor.submit(() -> {
+	                try {
+	                	CLAS12SwimResult result = swimmer.swimZ(charge, x, y, z, p, theta, phi, zTarg, accuracy, sMax, h, c12Tolerance);
+	                } finally {
+	                    latch.countDown();
+	                    System.out.println("Task completed.");
+	                }
+	            });
+	        }
+
+	        
+	        // Wait for all tasks to complete
+	        try {
+	            latch.await();
+	            System.out.println("All tasks completed.");
+	        } catch (InterruptedException e) {
+	            Thread.currentThread().interrupt(); // Set the interrupt flag
+	            System.out.println("Interrupted while waiting for completion.");
+	        }
+	        
+	        // Shutdown the ExecutorService gracefully
+	        executor.shutdown();
+	}
+
 }
+
+
 
 class SwimThread extends Thread {
 	
@@ -170,10 +260,10 @@ class SwimThread extends Thread {
 	double accuracy, sMax, h, c12Tolerance;
 	public CLAS12SwimResult result;
 
-	public SwimThread(int index, CLAS12Swimmer swimmer, int charge, double xo, double yo, double zo, double p,
+	public SwimThread(CLAS12Swimmer swimmer, int index, int charge, double xo, double yo, double zo, double p,
 			double theta, double phi, double zTarg, double accuracy, double sMax, double h, double c12Tolerance) {
 		this.index = index;
-		this.swimmer = new CLAS12Swimmer();
+		this.swimmer = (swimmer != null) ? swimmer : new CLAS12Swimmer();
 		this.charge = charge;
 		this.xo = xo;
 		this.yo = yo;
@@ -188,9 +278,13 @@ class SwimThread extends Thread {
 		this.c12Tolerance = c12Tolerance;
 	}
 	
+	
 	public void run() {
 		result = swimmer.swimZ(charge, xo, yo, zo, p, theta, phi, zTarg, accuracy, sMax, h,
 				c12Tolerance);
 	}
+	
+	
 }
+
 

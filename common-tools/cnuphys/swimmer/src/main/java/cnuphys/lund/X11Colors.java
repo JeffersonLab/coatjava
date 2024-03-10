@@ -1,12 +1,12 @@
 package cnuphys.lund;
 
 import java.awt.Color;
-import java.util.Hashtable;
+import java.util.HashMap;
 
 public class X11Colors {
 
 	// hash of the X11 colors, filled as requested.
-    private static Hashtable<String, Color> x11colors = new Hashtable<>(
+    private static HashMap<String, Color> x11colors = new HashMap<>(
 	    521);
 
 	/**

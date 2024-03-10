@@ -19,7 +19,6 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
-import cnuphys.adaptiveSwim.test.BadCylinderTest;
 import cnuphys.adaptiveSwim.test.BeamlineTest;
 import cnuphys.adaptiveSwim.test.CylinderTest;
 import cnuphys.adaptiveSwim.test.FixedTest;
@@ -96,7 +95,7 @@ public class SwimTest {
 				} else if (e.getSource() == zlineItem) {
 					ZLineTest.zLineTest(count, seed);
 				} else if (e.getSource() == threadTestItem) {
-					ThreadTest.threadTest(10, seed);
+					ThreadTest.threadTest(1000, seed);
 				}
 				
 			}

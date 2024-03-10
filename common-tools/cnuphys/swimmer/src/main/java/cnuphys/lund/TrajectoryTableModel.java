@@ -1,6 +1,7 @@
 package cnuphys.lund;
 
-import java.util.Vector;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.table.DefaultTableModel;
 
@@ -34,7 +35,7 @@ public class TrajectoryTableModel extends DefaultTableModel {
 	};
 
 	// the model data
-	protected Vector<TrajectoryRowData> data = new Vector<>(25);
+	protected List<TrajectoryRowData> data = new ArrayList<>(25);
 
 	/**
 	 * Constructor
@@ -154,7 +155,7 @@ public class TrajectoryTableModel extends DefaultTableModel {
 	 * @param data
 	 *            the data to set
 	 */
-	public void setData(Vector<TrajectoryRowData> data) {
+	public void setData(List<TrajectoryRowData> data) {
 		this.data = data;
 		fireTableDataChanged();
 	}
