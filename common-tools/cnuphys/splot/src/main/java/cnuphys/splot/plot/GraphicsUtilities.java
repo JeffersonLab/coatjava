@@ -32,10 +32,6 @@ import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
 import javax.swing.SwingUtilities;
-import javax.swing.UIDefaults;
-import javax.swing.UIManager;
-import javax.swing.UIManager.LookAndFeelInfo;
-import javax.swing.plaf.metal.MetalIconFactory;
 
 import cnuphys.splot.style.LineStyle;
 
@@ -1382,46 +1378,7 @@ public class GraphicsUtilities {
 		return null;
 	}
 
-	/**
-	 * Initialize the look and feel.
-	 * 
-	 * @param desiredLnf the desired look and feel.
-	 */
 
-	public static void initializeLookAndFeel() {
-
-		LookAndFeelInfo[] lnfinfo = UIManager.getInstalledLookAndFeels();
-
-		String preferredLnF[] = { "Mac OS X", "Windows", "Nimbus", "CDE/Motif", "Metal",
-				UIManager.getCrossPlatformLookAndFeelClassName() };
-
-		if ((lnfinfo == null) || (lnfinfo.length < 1)) {
-			return;
-		}
-
-		for (String targetLnF : preferredLnF) {
-			for (int i = 0; i < lnfinfo.length; i++) {
-				if (lnfinfo[i].getName().indexOf(targetLnF) >= 0) {
-					try {
-						UIManager.setLookAndFeel(lnfinfo[i].getClassName());
-						UIDefaults defaults = UIManager.getDefaults();
-
-						// replace the horrible windows check icon
-						if ("Windows".equalsIgnoreCase(lnfinfo[i].getName())) {
-							// defaults.put("RadioButtonMenuItem.checkIcon",
-							// defaults.get("RadioButton.icon"));
-							defaults.put("RadioButtonMenuItem.checkIcon",
-									MetalIconFactory.getRadioButtonMenuItemIcon());
-						}
-						return;
-					}
-					catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-			}
-		}
-	}
 
 	public static void main(String arg[]) {
 		Color colors[] = { Color.red, Color.blue, Color.green, new Color(16, 32, 64, 128) };
