@@ -600,8 +600,8 @@ public class Constants {
         }
         // Load target
         ConstantProvider providerTG = GeometryFactory.getConstants(DetectorType.TARGET, 11, geoVariation);
-        double targetPosition = providerTG.getDouble("/geometry/target/position",0);
-        double targetLength   = providerTG.getDouble("/geometry/target/length",0);
+        double targetPosition = providerTG.getDouble("/geometry/shifts/target/z",0);
+        double targetLength   = providerTG.getDouble("/geometry/materials/target/length",0);
         // Load other geometries
         ConstantProvider providerFTOF = GeometryFactory.getConstants(DetectorType.FTOF, 11, geoVariation);
         ftofDetector = new FTOFGeant4Factory(providerFTOF);        

@@ -56,7 +56,7 @@ public class HelixFitJava {
 
 
 	    // --------- Loop begins ----------
-	    nrank = n - ni;
+	    nrank = 0;
 	    
 	    for (i=1; i<=ni; i++)
 	    {

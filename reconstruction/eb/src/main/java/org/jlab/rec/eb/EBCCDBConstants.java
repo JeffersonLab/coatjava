@@ -42,7 +42,7 @@ public class EBCCDBConstants {
         "/runcontrol/fcup",
         "/runcontrol/hwp",
         "/runcontrol/helicity",
-        "/geometry/target",
+        "/geometry/shifts/solenoid",
         "/calibration/ftof/tres",
         //"/calibration/ctof/tres"
     };
@@ -275,7 +275,7 @@ public class EBCCDBConstants {
 
         loadDouble(EBCCDBEnum.NEUTRON_maxBeta,"neutron_beta","neutron_beta",0,0,0);
         
-        loadDouble(EBCCDBEnum.TARGET_POSITION,"/geometry/target","position",0,0,0);
+        loadDouble(EBCCDBEnum.SOLENOID_POSITION,"/geometry/shifts/solenoid","z",0,0,0);
    
         loadDouble(EBCCDBEnum.FCUP_slope,"/runcontrol/fcup","slope",0,0,0);
         loadDouble(EBCCDBEnum.FCUP_offset,"/runcontrol/fcup","offset",0,0,0);

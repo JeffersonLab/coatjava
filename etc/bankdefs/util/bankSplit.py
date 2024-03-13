@@ -52,10 +52,9 @@ print("Single json files saved in " + workdirectory + singledirectory)
 
 # these should *always* be kept:
 mc = ["MC::Event", "MC::GenMatch", "MC::Header", "MC::Lund", "MC::Particle", "MC::RecMatch", "MC::True"]
-tag1 = ["RUN::config", "RAW::epics", "RAW::scaler", "RUN::scaler", "COAT::config", "HEL::flip", "HEL::online"]
+tag1 = ["RUN::config", "RAW::epics", "RAW::scaler", "RUN::scaler", "COAT::config", "HEL::flip", "HEL::online", "HEL::decoder"]
 
 # these are the output of the event builder:
-# FIXME:  this should be using wildcards or something!
 rectb   = ["REC::Event","REC::Particle","REC::Calorimeter","REC::CaloExtras","REC::Cherenkov","REC::CovMat","REC::ForwardTagger","REC::Scintillator","REC::ScintExtras","REC::Track","REC::UTrack","REC::Traj","RECFT::Event","RECFT::Particle"]
 rechb   = ["RECHB::Event","RECHB::Particle","RECHB::Calorimeter","RECHB::CaloExtras","RECHB::Cherenkov","RECHB::ForwardTagger","RECHB::Scintillator","RECHB::ScintExtras","RECHB::Track"]
 rectbai = ["RECAI::Event","RECAI::Particle","RECAI::Calorimeter","RECAI::CaloExtras","RECAI::Cherenkov","RECAI::CovMat","RECAI::ForwardTagger","RECAI::Scintillator","RECAI::ScintExtras","RECAI::Track","RECAI::Traj","RECAIFT::Event","RECAIFT::Particle"]
