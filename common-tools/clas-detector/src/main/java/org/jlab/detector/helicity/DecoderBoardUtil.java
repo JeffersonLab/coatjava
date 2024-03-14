@@ -87,4 +87,45 @@ public class DecoderBoardUtil extends SequenceUtil {
             throw new IllegalArgumentException();
     }
 
+    /**
+     * Get a string representation of a HEL::decoder bank for human consumption.
+     * @param b the HEL::decoder bank to stringify
+     * @return 
+     */
+    public static String toString(Bank b) {
+        StringBuilder s = new StringBuilder();
+        s.append("Timestamp/nPair/seed: ");
+        s.append(b.getLong("timestamp",0));
+        s.append("/");
+        s.append(b.getInt("nPair",0));
+        s.append("/");
+        s.append(b.getInt("helicitySeed",0));
+        s.append("\nPair:      ");
+        s.append(toString(b.getInt("pairArray",0)));
+        s.append("\nPattern:   ");
+        s.append(toString(b.getInt("patternArray",0)));
+        s.append("\nHelicity:  ");
+        s.append(toString(b.getInt("helicityArray",0)));
+        s.append("\nHelicityP: ");
+        s.append(toString(b.getInt("helicityPArray",0)));
+        s.append("\nHelicityP0:");
+        StringBuilder s3 = new StringBuilder();
+        for (int i=31; i>=0; --i) {
+            if (((b.getInt("patternArray",0)>>i)&1) == 1) {
+                 s3.append((b.getInt("helicityArray",0)>>i)&1); 
+            }
+        }
+        s.append(String.format("%32s",s3));
+        s.append("\nHelicityP1:");
+        StringBuilder s2 = new StringBuilder();
+        for (int i=31; i>=0; --i) {
+            if (((b.getInt("patternArray",0)>>i)&1) == 0) {
+                 s2.append((b.getInt("helicityArray",0)>>i)&1); 
+            }
+        }
+        s.append(String.format("%32s",s2));
+        s.append("\n");
+        return s.toString();
+    }
+
 }
