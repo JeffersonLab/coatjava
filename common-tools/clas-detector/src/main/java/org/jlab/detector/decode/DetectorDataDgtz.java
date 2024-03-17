@@ -331,15 +331,22 @@ public class DetectorDataDgtz implements Comparable<DetectorDataDgtz> {
     
     public static class TDCData implements Comparable<TDCData>{
         
-        private int   tdcOrder = 0;
-        private int tdcTime = 0;
+        private int tdcOrder = 0;
+        private int tdcTime  = 0;
+        private int tdcWidth = 0;
         
         public TDCData() {}
         public TDCData(int time) { this.tdcTime = time;}
-        public int getTime() { return this.tdcTime;}
-        public int   getOrder() { return tdcOrder;}
-        public TDCData  setOrder(int order) { tdcOrder = order;return this;}
-        public TDCData  setTime(short time) { tdcTime = time;return this;}
+        public TDCData(int time, int width) { 
+            this.tdcTime = time;
+            this.tdcWidth = width;
+        }
+        public int getTime()  { return this.tdcTime;}
+        public int getWidth() { return this.tdcWidth;}
+        public int getOrder() { return tdcOrder;}
+        public TDCData  setOrder(int order)   { tdcOrder = order;return this;}
+        public TDCData  setTime(short time)   { tdcTime = time;return this;}
+        public TDCData  setWidth(short width) { tdcWidth = width;return this;}
         
         @Override
         public String toString(){

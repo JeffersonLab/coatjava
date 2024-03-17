@@ -126,7 +126,8 @@
       { "name":"layer"     , "type":"B", "info":"layer (1..36)"},
       { "name":"component" , "type":"S", "info":"wire number (1..112)"},
       { "name":"order"     , "type":"B", "info":"order: 2 - TDCL , 3 - TDCR"},
-      { "name":"TDC"       , "type":"I", "info":"TDC value"}
+      { "name":"TDC"       , "type":"I", "info":"TDC value"},
+      { "name":"width"     , "type":"S", "info":"pulse width"}
     ]
   },
   {

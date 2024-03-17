@@ -282,6 +282,8 @@ public class CLASDecoder4 {
             tdcBANK.putShort("component", i, (short) tdcDGTZ.get(i).getDescriptor().getComponent());
             tdcBANK.putByte("order", i, (byte) tdcDGTZ.get(i).getDescriptor().getOrder());
             tdcBANK.putInt("TDC", i, tdcDGTZ.get(i).getTDCData(0).getTime());
+            if(name == "DC::tdc")
+                tdcBANK.putShort("width", i, (short) tdcDGTZ.get(i).getTDCData(0).getWidth());
         }
         return tdcBANK;
     }
