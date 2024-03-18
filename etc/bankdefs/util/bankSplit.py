@@ -101,7 +101,7 @@ dcalign.extend(["ai::tracks", "aidn::tracks", "TimeBasedTrkg::AIClusters", "Time
 
 # Level3 validation schema:
 level3 = list(dst)
-level3.extend(["DC::tdc", "ECAL::adc", "HTCC::adc"])
+level3.extend(["DC::tdc", "ECAL::adc", "HTCC::adc", "FTOF::adc", "TimeBasedTrkg::TBClusters", "TimeBasedTrkg::TBTracks", "HitBasedTrkg::HBClusters", "HitBasedTrkg::HBTracks", "ECAL::clusters"])
 
 create("dst/", set(dst))
 create("dsthb/", set(dsthb))
