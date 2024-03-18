@@ -147,8 +147,6 @@ public class SVTConstants {
                 cp.loadTable( ccdbPath +"material/peeksupport");
                 cp.loadTable( ccdbPath +"layeralignment");
                 cp.loadTable( ccdbPath +"position");
-                //shift by target
-//                cp.loadTable("/geometry/target");
                 
 		//if( loadAlignmentTables ) cp.loadTable( ccdbPath +"alignment/sector"); // possible future tables
 		//if( loadAlignmentTables ) cp.loadTable( ccdbPath +"alignment/layer");
@@ -389,7 +387,7 @@ public class SVTConstants {
                 // |			  | radius					  | radius
                 // |			  | 						  |
                 // o==============v===========================v===================================-> z (beamline)
-//                System.out.println("SVT READ Z SHIFT VALUE "+cp.getDouble("/geometry/target/position", 0));
+
                 // LAYERRADIUS and ZSTARTACTIVE are used primarily by the Reconstruction and getStrip()
                 for( int region = 0; region < NREGIONS; region++ )
                 {
