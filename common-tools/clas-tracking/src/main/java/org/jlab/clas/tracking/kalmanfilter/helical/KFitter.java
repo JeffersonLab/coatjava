@@ -12,7 +12,7 @@ import org.jlab.clas.tracking.utilities.MatrixOps.Libr;
 
 /**
  *
- * @author ziegler
+ * @author ziegler, Tongtong
  */
 public class KFitter extends AKFitter {
 
@@ -200,7 +200,6 @@ public class KFitter extends AKFitter {
     
     @Override
     public void runFitter(AStateVecs sv, AMeasVecs mv) { 
-        // System.out.println("******************************ITER "+totNumIter);
         StateVec finalSmoothedOnPivot    = null;
         StateVec finalTransportedOnPivot = null;
         
@@ -208,7 +207,6 @@ public class KFitter extends AKFitter {
             this.runFitterIter(sv, mv);
             // chi2
             double newchisq = this.calc_chi2(sv, mv); 
-            //System.out.println("******************************ITER "+(it+1)+" "+ newchisq+" <? "+this.chi2);
             // if curvature is 0, fit failed
             if(Double.isNaN(newchisq) ||
                sv.smoothed().get(0)==null ||
@@ -236,7 +234,6 @@ public class KFitter extends AKFitter {
     }
     
     public void runFitterDAF(AStateVecs sv, AMeasVecs mv) { 
-        // System.out.println("******************************ITER "+totNumIter);
         StateVec finalSmoothedOnPivot    = null;
         StateVec finalTransportedOnPivot = null;
         
@@ -321,11 +318,7 @@ public class KFitter extends AKFitter {
                 double V = mv.measurements.get(k).error*mv.measurements.get(k).error;
 
                 double dh = mv.dh(k, fVec);
-    //            System.out.println(dh);
-                //get the projector Matrix
-                double[] H = mv.H(fVec, sv,  mv.measurements.get(k), this.getSwimmer());
-    //            System.out.println(k + " " + mv.measurements.get(k).layer + " " + H[0] + " " + H[1] + " " + H[2] + " " + H[3] + " " + H[4] + " " +dh );
-                
+                double[] H = mv.H(fVec, sv,  mv.measurements.get(k), this.getSwimmer());                
                 double[][] CaInv =  this.getMatrixOps().filterCovMat(H, fVec.covMat, V);
                 if (CaInv != null) {
                         fVec.covMat = CaInv;
@@ -346,15 +339,6 @@ public class KFitter extends AKFitter {
 
                 //sv.printlnStateVec(fVec);
                 if (!Double.isNaN(dh) ) {
-    //                for (int j = 0; j < 5; j++) {
-    //                    for (int i = 0; i < 5; i++) {
-    //                        System.out.print(CaInv[j][i] + " ");
-    //                    }
-    //                    System.out.println();
-    //                }
-    //                System.out.println(k + " " + CaInv[0][0] + " " + CaInv[1][1] + " " + CaInv[2][2] + " " + CaInv[3][3] + " " + CaInv[4][4] + " " + V );
-    //                System.out.println(k + " " + H[0] + " " + H[1] + " " + H[2] + " " + H[3] + " " + H[4] + " " +dh );
-    //                System.out.println(k + " " + K[0] + " " + K[1] + " " + K[2] + " " + K[3] + " " + K[4] + " " +dh );
                     fVec.d_rho -= K[0] * dh;
                     fVec.phi0  -= K[1] * dh;
                     fVec.kappa -= K[2] * dh;
@@ -364,11 +348,8 @@ public class KFitter extends AKFitter {
     
                 if(this.getSwimmer()!=null && !sv.straight) fVec.rollBack(mv.rollBackAngle);
                 fVec.updateFromHelix();
-    // sv.printlnStateVec(fVec);
                 sv.setStateVecPosAtMeasSite(fVec, mv.measurements.get(k), this.getSwimmer()); 
-    // sv.printlnStateVec(fVec);
                 fVec.residual = mv.dh(k, fVec); 
-    //            System.out.println(dh_filt + " " + dh);
                 if (Double.isNaN(fVec.residual) 
                  || Math.abs(fVec.residual) > Math.max(V, 10*Math.abs(dh))
                  || Math.abs(fVec.residual)/Math.sqrt(V)>this.getResidualsCut()) { 
