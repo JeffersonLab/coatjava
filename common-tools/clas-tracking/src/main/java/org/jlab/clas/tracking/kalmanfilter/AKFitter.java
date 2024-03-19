@@ -35,7 +35,9 @@ public abstract class AKFitter {
     
     public Map<Integer, HitOnTrack> trajPoints = new HashMap<>();
     
-    private static final double[] dafAnnealingFactors = {64, 16, 4, 1, 1};
+    private static boolean useDAF = true;
+    
+    private static double[] dafAnnealingFactors = {64, 16, 4, 1, 1};
     
     public AKFitter(boolean filter, int iterations, int dir, Swim swim, Libr m) {
         this.filterOn           = filter;
@@ -43,6 +45,18 @@ public abstract class AKFitter {
         this.dir                = dir;
         this.swimmer            = swim;
         this.setMatrixLibrary(m);
+    }
+    
+    public static void setUseDAF(boolean appliyDaf){
+        useDAF = appliyDaf;        
+    }
+    
+    public static boolean getUseDAF(){
+        return useDAF;        
+    }
+    
+    public static void setDafAnnealingFactors(double[] annealingFactors){
+        dafAnnealingFactors = annealingFactors;        
     }
     
     public final void setMatrixLibrary(Libr ml) {
@@ -123,7 +137,7 @@ public abstract class AKFitter {
     
     public void runFitterIterDAF(AStateVecs sv, AMeasVecs mv) {
         double annealingFactor = dafAnnealingFactors[numIter];
-                
+             
         this.numIter++;
         
         int k0 = 0;

@@ -6,7 +6,7 @@ package org.jlab.clas.tracking.kalmanfilter.helical;
  */
 public class DAFilter {
     
-    private static final double dafChi2Cut = 9;
+    private static double dafChi2Cut = 4;
          
     private double _var;
     private double _weight;
@@ -22,12 +22,15 @@ public class DAFilter {
         this._weight = weight;
     }          
     
+    public static void setDafChi2Cut(double chi2Cut){
+        dafChi2Cut = chi2Cut;
+    }
     
     public double get_EffectiveVar(){
         return _var/_weight;
     }
         
-    public double calc_updatedWeight(double residual, double annealingFactor){
+    public double calc_updatedWeight(double residual, double annealingFactor){        
        double factor = 1/Math.sqrt(2 * Math.PI * annealingFactor * _var);
         
         double Chi2 = residual * residual/_var;

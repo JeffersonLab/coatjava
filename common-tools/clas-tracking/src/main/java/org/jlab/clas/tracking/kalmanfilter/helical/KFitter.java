@@ -85,9 +85,11 @@ public class KFitter extends AKFitter {
             }
         }
         this.chi2 = chisq; 
-    }    
+    }
+    
     public void runFitter() {
-        this.runFitter(sv, mv);
+        if(getUseDAF()) this.runFitterDAF(sv, mv);
+        else this.runFitter(sv, mv);
     }
 
     public double getChi2() {
@@ -203,10 +205,45 @@ public class KFitter extends AKFitter {
         StateVec finalTransportedOnPivot = null;
         
         for (int it = 0; it < totNumIter; it++) {
+            this.runFitterIter(sv, mv);
+            // chi2
+            double newchisq = this.calc_chi2(sv, mv); 
+            //System.out.println("******************************ITER "+(it+1)+" "+ newchisq+" <? "+this.chi2);
+            // if curvature is 0, fit failed
+            if(Double.isNaN(newchisq) ||
+               sv.smoothed().get(0)==null ||
+               sv.smoothed().get(0).kappa==0 || 
+               Double.isNaN(sv.smoothed().get(0).kappa)) {
+                this.setFitFailed = true; 
+                break; 
+            }            
+            // if chi2 improved and curvature is non-zero, save fit results but continue iterating
+            else if(newchisq < this.chi2) {
+                this.chi2 = newchisq;
+                finalSmoothedOnPivot    = sv.new StateVec(sv.smoothed().get(0));
+                finalTransportedOnPivot = sv.new StateVec(sv.transported(false).get(0));
+                this.setTrajectory(sv, mv);
+            }
+            // stop if chi2 got worse
+            else {
+                break;
+            }
+        }
+        if(!this.setFitFailed) {
+            finalSmoothedStateVec    = this.setFinalStateVector(finalSmoothedOnPivot);
+            finalTransportedStateVec = this.setFinalStateVector(finalTransportedOnPivot);
+        }
+    }
+    
+    public void runFitterDAF(AStateVecs sv, AMeasVecs mv) { 
+        // System.out.println("******************************ITER "+totNumIter);
+        StateVec finalSmoothedOnPivot    = null;
+        StateVec finalTransportedOnPivot = null;
+        
+        for (int it = 0; it < totNumIter; it++) {
             this.runFitterIterDAF(sv, mv);
             // chi2
             double newchisq = this.calc_chi2DAF(sv, mv); 
-            //System.out.println("******************************ITER "+(it+1)+" "+ newchisq+" <? "+this.chi2);
             // if curvature is 0, fit failed
             if(Double.isNaN(newchisq) ||
                sv.smoothed().get(0)==null ||

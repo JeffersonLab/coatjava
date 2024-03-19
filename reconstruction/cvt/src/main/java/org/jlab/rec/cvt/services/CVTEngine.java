@@ -18,6 +18,8 @@ import org.jlab.rec.cvt.track.Seed;
 import org.jlab.rec.cvt.track.StraightTrack;
 import org.jlab.rec.cvt.track.Track;
 import org.jlab.utils.groups.IndexedTable;
+import org.jlab.clas.tracking.kalmanfilter.AKFitter;
+import org.jlab.clas.tracking.kalmanfilter.helical.DAFilter;
 
 /**
  * Service to return reconstructed TRACKS
@@ -88,6 +90,9 @@ public class CVTEngine extends ReconstructionEngine {
     private int bmtzmaxclussize = 100;
     private double rcut = 120.0;
     private double z0cut = 10;
+    private boolean  useDAF         = true;
+    private String   dafChi2Cut     = null;
+    private String   dafAnnealingFactors = null;
     
     public CVTEngine(String name) {
         super(name, "ziegler", "6.0");
@@ -454,9 +459,27 @@ public class CVTEngine extends ReconstructionEngine {
         if (this.getEngineConfigString("z0cut")!=null)
             this.z0cut = Double.valueOf(this.getEngineConfigString("z0cut"));
         
+        //Set if use DAF
+        if(this.getEngineConfigString("useDAF")!=null) {
+            useDAF=Boolean.valueOf(this.getEngineConfigString("useDAF"));
+            AKFitter.setUseDAF(Boolean.valueOf(useDAF));
+        }
+                
+        if(this.getEngineConfigString("dafChi2Cut")!=null) {
+            dafChi2Cut=this.getEngineConfigString("dafChi2Cut");
+            DAFilter.setDafChi2Cut(Double.valueOf(dafChi2Cut));            
+        }        
+
+        if(this.getEngineConfigString("dafAnnealingFactors")!=null){ 
+            dafAnnealingFactors=this.getEngineConfigString("dafAnnealingFactors");
+            double[] annealingFactors = new double[]{64, 16, 4, 1, 1};
+            String strs[] = dafAnnealingFactors.split(",");
+            for(int i = 0; i < 5; i++)
+                annealingFactors[i] = Double.valueOf(strs[i]);
+            AKFitter.setDafAnnealingFactors(annealingFactors);           
+        }
     }
-
-
+    
     public void initConstantsTables() {
         String[] tables = new String[]{
             "/calibration/svt/status",
