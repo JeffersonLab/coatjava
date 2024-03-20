@@ -1,10 +1,24 @@
 #!/bin/bash
 
-. `dirname $0`/env.sh 
+. `dirname $0`/env.sh
 
 export MALLOC_ARENA_MAX=1
 
-java -Xmx2048m -Xms1024m -XX:+UseSerialGC \
-    -cp "$CLAS12DIR/lib/clas/*:$CLAS12DIR/lib/plugins/*" \
-    org.jlab.jnp.hipo4.utils.HipoUtilities \
-    $*
+cmd() {
+  java -Xmx2048m -Xms1024m -XX:+UseSerialGC \
+      -cp "$CLAS12DIR/lib/clas/*:$CLAS12DIR/lib/plugins/*" \
+      org.jlab.jnp.hipo4.utils.HipoUtilities \
+      $*
+}
+
+help=false
+[ $# -eq 0 ] && help=true
+for arg in $*; do
+  [ "$arg" = "-h" -o "$arg" = "--help" ] && help=true
+done
+if $help; then
+  cmd | sed "s;hipo4utils;$(basename $0);g" | sed 's;commands:$;&\n        -h, --help :  show this usage guide;'
+  exit 2
+else
+  cmd $*
+fi
