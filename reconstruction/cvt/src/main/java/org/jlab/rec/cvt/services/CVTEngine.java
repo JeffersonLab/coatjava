@@ -91,7 +91,9 @@ public class CVTEngine extends ReconstructionEngine {
     private double rcut = 120.0;
     private double z0cut = 10;
     private boolean  useDAF         = true;
-    private String   dafChi2Cut     = null;
+    private String   dafChi2CutTarget     = null;
+    private String   dafChi2CutBST     = null;
+    private String   dafChi2CutBMT     = null;
     private String   dafAnnealingFactors = null;
     
     public CVTEngine(String name) {
@@ -465,10 +467,20 @@ public class CVTEngine extends ReconstructionEngine {
             AKFitter.setUseDAF(Boolean.valueOf(useDAF));
         }
                 
-        if(this.getEngineConfigString("dafChi2Cut")!=null) {
-            dafChi2Cut=this.getEngineConfigString("dafChi2Cut");
-            DAFilter.setDafChi2Cut(Double.valueOf(dafChi2Cut));            
-        }        
+        if(this.getEngineConfigString("dafChi2CutTarget")!=null) {
+            dafChi2CutTarget=this.getEngineConfigString("dafChi2CutTarget");
+            DAFilter.setDafChi2CutTarget(Double.valueOf(dafChi2CutTarget));            
+        }  
+        
+        if(this.getEngineConfigString("dafChi2CutBST")!=null) {
+            dafChi2CutBST=this.getEngineConfigString("dafChi2CutBST");
+            DAFilter.setDafChi2CutBST(Double.valueOf(dafChi2CutBST));            
+        }  
+        
+        if(this.getEngineConfigString("dafChi2CutBMT")!=null) {
+            dafChi2CutBMT=this.getEngineConfigString("dafChi2CutBMT");
+            DAFilter.setDafChi2CutBMT(Double.valueOf(dafChi2CutBMT));            
+        }  
 
         if(this.getEngineConfigString("dafAnnealingFactors")!=null){ 
             dafAnnealingFactors=this.getEngineConfigString("dafAnnealingFactors");

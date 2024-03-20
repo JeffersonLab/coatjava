@@ -375,11 +375,11 @@ public class KFitter extends AKFitter {
 
                 double[] K = new double[5];
                 double V = mv.measurements.get(k).error*mv.measurements.get(k).error;
-                
+
                 if(sv.smoothed().get(k) != null){
                     double weight = sv.smoothed().get(k).getWeightDAF();
                     DAFilter daf = new DAFilter(V, weight);
-                    V = daf.get_EffectiveVar();                          
+                    V = daf.get_EffectiveVar(); 
                 }
 
                 double dh = mv.dh(k, fVec);
@@ -588,7 +588,13 @@ public class KFitter extends AKFitter {
         double V = mv.measurements.get(vave.k).error * mv.measurements.get(vave.k).error;
         DAFilter daf = new DAFilter(V);
         double residual = mv.dh(vave.k, vave);
-        double weight = daf.calc_updatedWeight(residual, annealingFactor);
+        
+        int layer = mv.measurements.get(vave.k).layer;
+        int layerType = 2;
+        if(layer == 0) layerType = 1;
+        else if(layer >= 4 && layer <=9) layerType = 2;
+        else if(layer >= 12 && layer <=17) layerType = 3;
+        double weight = daf.calc_updatedWeight(residual, annealingFactor, layerType);
         vave.setWeightDAF(weight);        
         
         if(stateOK) {
@@ -597,6 +603,23 @@ public class KFitter extends AKFitter {
         else {
             return null;
         }
-    }    
+    }  
     
+    @Override
+    public double updateDAFWeight(StateVec vec, double annealingFactor){
+        
+        double V = mv.measurements.get(vec.k).error * mv.measurements.get(vec.k).error;
+        DAFilter daf = new DAFilter(V);
+        double residual = mv.dh(vec.k, vec);
+        
+        int layer = mv.measurements.get(vec.k).layer;
+        int layerType = 2;
+        if(layer == 0) layerType = 1;
+        else if(layer >= 4 && layer <=9) layerType = 2;
+        else if(layer >= 12 && layer <=17) layerType = 3;
+        
+        double weight = daf.calc_updatedWeight(residual, annealingFactor, layerType);
+        
+        return weight;
+    }    
 }

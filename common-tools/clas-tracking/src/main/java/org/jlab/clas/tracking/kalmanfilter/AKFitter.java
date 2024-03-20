@@ -169,15 +169,21 @@ public abstract class AKFitter {
 
         // smoothing
         for (int k = kf; (k-k0)*dir >= 0; k -= dir) {                     
-            if(k==kf) 
+            if(k==kf) {
                 sv.smoothed().put(k, sv.filtered(true).get(k).clone());
-            else if(k==k0)
+                sv.smoothed().get(k).setWeightDAF(updateDAFWeight(sv.filtered(true).get(k), annealingFactor));
+            }
+            else if(k==k0){
                 sv.smoothed().put(k, sv.filtered(false).get(k).clone());
+                sv.smoothed().get(k).setWeightDAF(updateDAFWeight(sv.filtered(false).get(k), annealingFactor));
+            }
             else {                
                 sv.smoothed().put(k, this.smoothDAF(sv.filtered(true).get(k), sv.transported(false).get(k), annealingFactor));                          
             }
         }     
     }
+    
+    public double updateDAFWeight(StateVec vec, double annealingFactor){ return 1;}
     
     public boolean initIter(AStateVecs sv, AMeasVecs mv) {
         
