@@ -274,15 +274,9 @@ public class DCTBEngine extends DCEngine {
                 StateVecs svs = new StateVecs();
                 org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
                 getInitState(TrackArray1, measSurfaces.get(0).z, initSV, kFZRef, dcSwim, new float[3]);
-            if(useDAF){
-                    kFZRef.initFromHB(measSurfaces, initSV, TrackArray1.get(0).get(0).get(0).get_Beta(), dafChi2Cut, dafAnnealingFactorsTB);
-                    kFZRef.runFitter();
-                }
-                else{                  
-                    kFZRef.initFromHBNoDAF(measSurfaces, initSV, TrackArray1.get(0).get(0).get(0).get_Beta());
-                    kFZRef.runFitterNoDAF();
-                }
-                
+                kFZRef.initFromHB(measSurfaces, initSV, TrackArray1.get(0).get(0).get(0).get_Beta(), useDAF);
+                kFZRef.runFitter(useDAF);    
+                               
                 List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
 
                 StateVec fn = new StateVec();

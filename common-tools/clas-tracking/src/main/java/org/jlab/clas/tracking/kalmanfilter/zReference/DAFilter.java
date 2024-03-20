@@ -9,7 +9,7 @@ import org.jlab.geom.prim.Line3D;
  */
 public class DAFilter {
     
-    protected static double dafChi2Cut = 8;
+    private static double dafChi2Cut = 8;
     
     // For double hits
     private double[] docas_double;
@@ -42,7 +42,11 @@ public class DAFilter {
         this.doca_single = doca;
         this.var_single = var;
         this.weight_single = weight;
-    }  
+    }
+    
+    public static void setDafChi2Cut(double chi2Cut){
+        dafChi2Cut = chi2Cut;
+    }
     
     public void calc_effectiveDoca_doubleHits(){        
         if((wireLines_double[0] == wireLines_double[1]) || ((docas_double[0] == docas_double[1]) && !(docas_double[0] == 0 && docas_double[1] == 0))) {
@@ -134,7 +138,7 @@ public class DAFilter {
         double Lambda = factor * Math.exp(-0.5 / annealingFactor * dafChi2Cut);
         double sum = Phi + Lambda;
         double updatedWeight = Phi/sum;        
-        
+
         return updatedWeight;
     }
     

@@ -1,6 +1,7 @@
 package org.jlab.clas.tracking.kalmanfilter.zReference;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.logging.Level;
@@ -26,7 +27,7 @@ import org.jlab.clas.tracking.kalmanfilter.Type;
  */
 public class KFitterWithURWell extends AKFitter {
     
-    private ArrayList<Double> dafAnnealingFactorsTB = new ArrayList<>();  
+    private static List<Double> dafAnnealingFactorsTB = new ArrayList<>(Arrays.asList(64., 16., 4., 1.));       
     private int dafAnnealingFactorsIndex = 0;
     private double dafAnnealingFactor = 1;
     
@@ -70,6 +71,12 @@ public class KFitterWithURWell extends AKFitter {
         super(filter, iterations, dir, swim, mo);
         this.Z = Z;
     }
+    
+    public static void setDafAnnealingFactorsTB(String strDAFAnnealingFactorsTB){
+            String strs[] = strDAFAnnealingFactorsTB.split(",");
+            for(int i = 0; i < strs.length; i++)
+                dafAnnealingFactorsTB.add(Double.valueOf(strs[i]));       
+    }
 
     public final void init(List<Surface> measSurfaces, StateVec initSV) {
         finalSmoothedStateVec = null;
@@ -91,24 +98,13 @@ public class KFitterWithURWell extends AKFitter {
         sv.init(initSV);
         sv.Z = Z;
     }
+    
+    public final void initFromHB(List<Surface> measSurfaces, StateVec initSV, double beta, boolean useDAF) {
+        if(useDAF) initFromHB(measSurfaces, initSV, beta);
+        else initFromHBNoDAF(measSurfaces, initSV, beta);
+    }
 
-    public final void initFromHB(List<Surface> measSurfaces, StateVec initSV, double beta, String strDAFChi2Cut, String strDAFAnnealingFactorsTB) {
-        if(strDAFChi2Cut != null){
-            DAFilter.dafChi2Cut = Double.valueOf(strDAFChi2Cut);
-        }
-        
-        if(strDAFAnnealingFactorsTB != null){
-            String strs[] = strDAFAnnealingFactorsTB.split(",");
-            for(int i = 0; i < strs.length; i++)
-                dafAnnealingFactorsTB.add(Double.valueOf(strs[i]));
-        }
-        else{
-            dafAnnealingFactorsTB.add(64.);
-            dafAnnealingFactorsTB.add(16.);
-            dafAnnealingFactorsTB.add(4.);
-            dafAnnealingFactorsTB.add(1.);
-        }        
-        
+    public final void initFromHB(List<Surface> measSurfaces, StateVec initSV, double beta) {                       
         finalSmoothedStateVec = null;
         finalTransportedStateVec = null;
         this.NDF = -5;
@@ -151,6 +147,11 @@ public class KFitterWithURWell extends AKFitter {
         sv.initFromHB(initSV, beta);
         sv.Z = Z;
         TBT = true;
+    }
+    
+    public void runFitter(boolean useDAF) {
+        if(useDAF) runFitter();
+        else runFitterNoDAF();
     }
 
     public void runFitter() {
