@@ -30,9 +30,11 @@ import trackfitter.fitter.LineFitter;
 import org.jlab.clas.tracking.kalmanfilter.Surface;
 import org.jlab.clas.tracking.kalmanfilter.zReference.KFitter;
 import org.jlab.clas.tracking.kalmanfilter.zReference.KFitterStraight;
+import org.jlab.clas.tracking.kalmanfilter.zReference.KFitterStraightFourParameters;
 import org.jlab.clas.tracking.kalmanfilter.zReference.StateVecs;
 import org.jlab.clas.tracking.utilities.MatrixOps.Libr;
 import org.jlab.clas.tracking.utilities.RungeKuttaDoca;
+import org.ejml.simple.SimpleMatrix;
 
 /**
  * A class with a method implementing an algorithm that finds lists of track
@@ -891,11 +893,11 @@ public class TrackCandListFinder {
 
                     LOGGER.log(Level.FINE, "Kalman fitter - 2 = " + (System.currentTimeMillis() - startTime));
 
-                    KFitterStraight kFZRef = new KFitterStraight(true, 1, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
+                    KFitterStraightFourParameters kFZRef = new KFitterStraightFourParameters(true, 1, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
                     List<Surface> measSurfaces = getMeasSurfaces(cand, DcDetector);
                     StateVecs svs = new StateVecs();
                     org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
-                    getInitState(cand, measSurfaces.get(0).z, 0, initSV, dcSwim, new float[3]);
+                    getInitStateStraight(cand, measSurfaces.get(0).z, 1, initSV);
                     kFZRef.init(measSurfaces, initSV);
 
                     kFZRef.runFitter();
@@ -913,8 +915,6 @@ public class TrackCandListFinder {
                         cand.setFinalStateVec(fn);
 
                         // set the track parameters
-                        cand.set_P(1. / Math.abs(kFZRef.finalStateVec.Q));
-                        cand.set_Q((int) Math.signum(kFZRef.finalStateVec.Q));
                         this.setTrackPars(cand, traj, trjFind, fn, kFZRef.finalStateVec.z, DcDetector, dcSwim);
 
                         if (cand.fit_Successful == true) {
@@ -923,7 +923,7 @@ public class TrackCandListFinder {
                             cand.set_FitNDF(kFZRef.NDF);
                             cand.set_FitConvergenceStatus(kFZRef.ConvStatus);
                             cand.set_Id(cands.size() + 1);
-                            cand.set_CovMat(kFZRef.finalStateVec.CM);
+                            cand.set_CovMat4(kFZRef.finalStateVec.CM4);
                             cand.setStateVecs(kfStateVecsAlongTrajectory);
 
                             // add candidate to list of tracks	
@@ -1131,15 +1131,15 @@ public class TrackCandListFinder {
     	return kfStateVecsAlongTrajectory;
     }
     
-        public List<org.jlab.rec.dc.trajectory.StateVec> setKFStateVecsAlongTrajectory(KFitterStraight kFZRef) {
+        public List<org.jlab.rec.dc.trajectory.StateVec> setKFStateVecsAlongTrajectory(KFitterStraightFourParameters kFZRef) {
     	List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = new ArrayList<>();
     	
     	for(int i = 0; i < kFZRef.kfStateVecsAlongTrajectory.size(); i++) {
             org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec svc = kFZRef.kfStateVecsAlongTrajectory.get(i);    		
             org.jlab.rec.dc.trajectory.StateVec sv = new org.jlab.rec.dc.trajectory.StateVec(svc.x, svc.y, svc.tx, svc.ty);
             sv.setZ(svc.z);
-            sv.setB(svc.B);
-            sv.setPathLength(svc.getPathLength());  
+            sv.setB(0);
+            sv.setPathLength(svc.getPathLength()); 
             sv.setProjector(svc.getProjector());
             sv.setProjectorDoca(svc.getProjectorDoca());
             kfStateVecsAlongTrajectory.add(sv);
@@ -1147,6 +1147,35 @@ public class TrackCandListFinder {
     	
     	return kfStateVecsAlongTrajectory;
     }
+        
+    public void getInitStateStraight(Track trkcand, double z0, int c, org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initStateVec) {
+
+    	Point3D trkCrs = trkcand.get(c).get_Point();
+    	Point3D trkCrsD = trkcand.get(c).get_Dir();
+
+    	initStateVec.x = trkCrs.x();
+    	initStateVec.y = trkCrs.y();
+    	initStateVec.z = z0;
+    	initStateVec.tx = trkCrsD.x()/trkCrsD.z();
+    	initStateVec.ty = trkCrsD.y()/trkCrsD.z();
+        
+        double deltaZ = z0 - initStateVec.z;
+        initStateVec.x += initStateVec.tx * deltaZ;
+        initStateVec.y += initStateVec.ty * deltaZ;      
+        
+        double ex = Constants.HBINITIALSTATEUNCSCALE * Constants.HBINITIALSTATEXUNC;
+        double ey = Constants.HBINITIALSTATEUNCSCALE * Constants.HBINITIALSTATEYUNC;
+        double etx = Constants.HBINITIALSTATEUNCSCALE * Constants.HBINITIALSTATETXUNC;
+        double ety = Constants.HBINITIALSTATEUNCSCALE * Constants.HBINITIALSTATETYUNC;
+        
+        double[][] values = {
+            {ex * ex, 0, 0, 0},
+            {0, ey * ey, 0, 0},
+            {0, 0, etx * etx, 0},
+            {0, 0, 0, ety * ety}};
+        
+    	initStateVec.CM4 = new SimpleMatrix(values);           
+    }          
 
     public void getInitState(Track trkcand, double z0, int c, org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initStateVec, Swim dcSwim, float[] bf) {
 

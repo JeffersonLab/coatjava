@@ -12,6 +12,7 @@ import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.trajectory.StateVec;
 import org.jlab.rec.dc.trajectory.Trajectory;
 import org.jlab.rec.urwell.reader.URWellCross;
+import org.ejml.simple.SimpleMatrix;
 
 /**
  * A class representing track candidates in the DC.  A track has a trajectory represented by an ensemble of geometrical state vectors along its path, 
@@ -43,6 +44,7 @@ public class Track extends Trajectory implements Comparable<Track>{
     private int _Q;
     private double _P;
     private Matrix _CovMat;
+    private SimpleMatrix _CovMat4;
 
     private Point3D _Region3CrossPoint;
     private Point3D _Region3CrossDir;
@@ -465,6 +467,21 @@ public class Track extends Trajectory implements Comparable<Track>{
      */
     public void set_CovMat(Matrix _CovMat) {
         this._CovMat = _CovMat;
+    }
+    
+    /**
+     * 
+     * @return Kalman fit covariance matrix
+     */
+    public SimpleMatrix get_CovMat4() {
+        return _CovMat4;
+    }
+    /**
+     * 
+     * @param _CovMat Kalman fit covariance matrix
+     */
+    public void set_CovMat4(SimpleMatrix _CovMat4) {
+        this._CovMat4 = _CovMat4;
     }
     
     /**

@@ -16,6 +16,7 @@ import org.jlab.geom.prim.Vector3D;
 import org.jlab.jnp.matrix.Matrix5x5;
 import org.jlab.clas.tracking.utilities.RungeKuttaDoca;
 import org.jlab.jnp.matrix.Matrix;
+import org.ejml.simple.SimpleMatrix;
 
 /**
  *
@@ -38,6 +39,7 @@ public class StateVecs extends AStateVecs {
     // For hit-based tracking
     public void init(StateVec initSV) {
         this.initSV = initSV;
+        
         this.trackTrajT.clear();
         this.trackTrajF.clear();
         this.trackTrajP.clear();
@@ -56,6 +58,91 @@ public class StateVecs extends AStateVecs {
         this.trackTrajB.clear();
         this.trackTrajS.clear();
         this.trackTrajT.put(0, new StateVec(initSV));
+    }
+    
+        /**
+     *
+     * @param sector
+     * @param i initial state vector index
+     * @param f final state vector index
+     * @param iVec state vector at the initial index
+     * @param mv measurements
+     */
+    public SimpleMatrix transportStraight(int sector, int i, double Zf, StateVec iVec, AMeasVecs mv) {
+        
+        MatrixOps mo = new MatrixOps(MatrixOps.Libr.EJML);
+        
+        double deltaZ = Zf - iVec.z;
+        double[][] F = {{1, 0, deltaZ, 0}, 
+                        {0, 1, 0, deltaZ}, 
+                        {0, 0, 1, 0},
+                        {0, 0, 0, 1}
+                        };
+        double[][] FT = mo.MatrixTranspose(F);
+        double[][] iCM = {
+            {iVec.CM4.get(0, 0), iVec.CM4.get(0, 1), iVec.CM4.get(0, 2), iVec.CM4.get(0, 3)},
+            {iVec.CM4.get(1, 0), iVec.CM4.get(1, 1), iVec.CM4.get(1, 2), iVec.CM4.get(1, 3)},
+            {iVec.CM4.get(2, 0), iVec.CM4.get(2, 1), iVec.CM4.get(2, 2), iVec.CM4.get(2, 3)},
+            {iVec.CM4.get(3, 0), iVec.CM4.get(3, 1), iVec.CM4.get(3, 2), iVec.CM4.get(3, 3)}};
+        double[][] calcCM1 = mo.MatrixMultiplication(F, iCM);
+        double[][] calcCM2 = mo.MatrixMultiplication(calcCM1, FT);             
+        
+        return new SimpleMatrix(calcCM2);
+    }
+    
+    /**
+     *
+     * @param sector
+     * @param i initial state vector index
+     * @param f final state vector index
+     * @param iVec state vector at the initial index
+     * @param mv measurements
+     * @param forward forward or backward tracking
+     */
+    public boolean transportStraight(int sector, int i, int f, StateVec iVec, AMeasVecs mv, boolean forward) {
+        if (iVec == null) {
+            return false;
+        }
+        
+        StateVec fVec = new StateVec(f);
+        fVec.tx = iVec.tx;
+        fVec.ty = iVec.ty;
+        fVec.z = mv.measurements.get(f).surface.z;
+        
+        double deltaZ = fVec.z - iVec.z;
+        fVec.x = iVec.x + iVec.tx * deltaZ;
+        fVec.y = iVec.y + iVec.ty * deltaZ;
+        fVec.deltaPath = Math.sqrt(iVec.tx*iVec.tx + iVec.ty*iVec.ty + 1) * Math.abs(deltaZ);
+        
+        MatrixOps mo = new MatrixOps(MatrixOps.Libr.EJML);
+        double[][] F = {{1, 0, deltaZ, 0}, 
+                        {0, 1, 0, deltaZ}, 
+                        {0, 0, 1, 0},
+                        {0, 0, 0, 1}
+                        };
+        double[][] FT = mo.MatrixTranspose(F);
+        double[][] iCM = {
+            {iVec.CM4.get(0, 0), iVec.CM4.get(0, 1), iVec.CM4.get(0, 2), iVec.CM4.get(0, 3)},
+            {iVec.CM4.get(1, 0), iVec.CM4.get(1, 1), iVec.CM4.get(1, 2), iVec.CM4.get(1, 3)},
+            {iVec.CM4.get(2, 0), iVec.CM4.get(2, 1), iVec.CM4.get(2, 2), iVec.CM4.get(2, 3)},
+            {iVec.CM4.get(3, 0), iVec.CM4.get(3, 1), iVec.CM4.get(3, 2), iVec.CM4.get(3, 3)}};
+        double[][] calcCM1 = mo.MatrixMultiplication(F, iCM);
+        double[][] calcCM2 = mo.MatrixMultiplication(calcCM1, FT);
+        fVec.covMat = calcCM2;
+                
+        fVec.CM4 = new SimpleMatrix(calcCM2);    
+                
+        if (forward) {
+            this.trackTrajT.put(f, fVec);
+        } else {
+            this.trackTrajP.put(f, fVec);
+        }
+        
+        if (Double.isNaN(fVec.x) || Double.isNaN(fVec.y) || Double.isNaN(fVec.tx) || Double.isNaN(fVec.ty) || Double.isNaN(fVec.Q)) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
     /**

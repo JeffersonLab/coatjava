@@ -12,6 +12,7 @@ import org.jlab.clas.tracking.trackrep.Helix;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.jnp.matrix.Matrix;
 import org.jlab.jnp.matrix.Matrix5x5;
+import org.ejml.simple.SimpleMatrix;
 
 /**
  *
@@ -260,7 +261,8 @@ public abstract class AStateVecs {
         public double Q; //q/p
         public double B;
         public double deltaPath;   
-        public Matrix CM = new Matrix();;
+        public Matrix CM = new Matrix();
+        public SimpleMatrix CM4 = new SimpleMatrix(4, 4);
         private double _PathLength;
         
         /////////////////////// For DAF ///////////////////////
@@ -382,9 +384,11 @@ public abstract class AStateVecs {
             this.ty = s.ty;
             this.Q = s.Q;
             this.B = s.B;
-            this.deltaPath = s.deltaPath;
+            this.deltaPath = s.deltaPath;            
             if(s.CM != null)
-            	Matrix5x5.copy(s.CM, this.CM);
+                Matrix5x5.copy(s.CM, this.CM);
+            if(s.CM4 != null)
+                this.CM4 = s.CM4.copy();
             this.weightDAF_single = s.weightDAF_single;
             this.weightDAF_double = s.weightDAF_double;
         }

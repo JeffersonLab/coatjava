@@ -494,6 +494,24 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
                 bank.setFloat("C54", i, (float) candlist.get(i).get_CovMat().get(4, 3));
                 bank.setFloat("C55", i, (float) candlist.get(i).get_CovMat().get(4, 4));
             }
+            else if(candlist.get(i).get_CovMat4()!=null){
+                bank.setFloat("C11", i, (float) candlist.get(i).get_CovMat4().get(0, 0));
+                bank.setFloat("C12", i, (float) candlist.get(i).get_CovMat4().get(0, 1));
+                bank.setFloat("C13", i, (float) candlist.get(i).get_CovMat4().get(0, 2));
+                bank.setFloat("C14", i, (float) candlist.get(i).get_CovMat4().get(0, 3));
+                bank.setFloat("C21", i, (float) candlist.get(i).get_CovMat4().get(1, 0));
+                bank.setFloat("C22", i, (float) candlist.get(i).get_CovMat4().get(1, 1));
+                bank.setFloat("C23", i, (float) candlist.get(i).get_CovMat4().get(1, 2));
+                bank.setFloat("C24", i, (float) candlist.get(i).get_CovMat4().get(1, 3));
+                bank.setFloat("C31", i, (float) candlist.get(i).get_CovMat4().get(2, 0));
+                bank.setFloat("C32", i, (float) candlist.get(i).get_CovMat4().get(2, 1));
+                bank.setFloat("C33", i, (float) candlist.get(i).get_CovMat4().get(2, 2));
+                bank.setFloat("C34", i, (float) candlist.get(i).get_CovMat4().get(2, 3));
+                bank.setFloat("C41", i, (float) candlist.get(i).get_CovMat4().get(3, 0));
+                bank.setFloat("C42", i, (float) candlist.get(i).get_CovMat4().get(3, 1));
+                bank.setFloat("C43", i, (float) candlist.get(i).get_CovMat4().get(3, 2));
+                bank.setFloat("C44", i, (float) candlist.get(i).get_CovMat4().get(3, 3));
+            }
         }
         //bank.show();
         return bank;

@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
+import org.ejml.simple.SimpleMatrix;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.clas.swimtools.Swimmer;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
@@ -39,7 +40,7 @@ import org.jlab.utils.groups.IndexedTable;
 
 import org.jlab.clas.tracking.kalmanfilter.Surface;
 import org.jlab.clas.tracking.kalmanfilter.zReference.KFitter;
-import org.jlab.clas.tracking.kalmanfilter.zReference.KFitterStraight;
+import org.jlab.clas.tracking.kalmanfilter.zReference.KFitterStraightFourParameters;
 import org.jlab.clas.tracking.kalmanfilter.zReference.StateVecs;
 import org.jlab.clas.tracking.utilities.MatrixOps.Libr;
 import org.jlab.clas.tracking.utilities.RungeKuttaDoca;
@@ -228,11 +229,11 @@ public class DCTBEngine extends DCEngine {
             }
             crosses.addAll(TrackArray1);
             if(Math.abs(Swimmer.getTorScale()) < 0.001){
-                KFitterStraight kFZRef = new KFitterStraight(true, 30, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
+                KFitterStraightFourParameters kFZRef = new KFitterStraightFourParameters(true, 30, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
                 List<Surface> measSurfaces = getMeasSurfaces(TrackArray1, Constants.getInstance().dcDetector);
                 StateVecs svs = new StateVecs();
                 org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
-                getInitState(TrackArray1, measSurfaces.get(0).z, initSV, kFZRef, dcSwim, new float[3]);
+                getInitStateStraight(TrackArray1, measSurfaces.get(0).z, initSV, kFZRef);
                 kFZRef.initFromHB(measSurfaces, initSV, TrackArray1.get(0).get(0).get(0).get_Beta());
                 kFZRef.runFitter();
                 List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
@@ -240,11 +241,7 @@ public class DCTBEngine extends DCEngine {
                 StateVec fn = new StateVec();
                 if (kFZRef.setFitFailed==false && kFZRef.finalStateVec!=null) { 
                     // set the state vector at the last measurement site
-                    fn.set(kFZRef.finalStateVec.x, kFZRef.finalStateVec.y, kFZRef.finalStateVec.tx, kFZRef.finalStateVec.ty); 
-                    //set the track parameters if the filter does not fail
-                    TrackArray1.set_P(1./Math.abs(kFZRef.finalStateVec.Q));
-                    TrackArray1.set_Q((int)Math.signum(kFZRef.finalStateVec.Q));                
-
+                    fn.set(kFZRef.finalStateVec.x, kFZRef.finalStateVec.y, kFZRef.finalStateVec.tx, kFZRef.finalStateVec.ty);               
                     trkcandFinder.setTrackPars(TrackArray1, new Trajectory(), trjFind, fn, kFZRef.finalStateVec.z, Constants.getInstance().dcDetector, dcSwim, beamXoffset, beamYoffset);
                     // candidate parameters are set from the state vector
                     if (TrackArray1.fit_Successful == false) {
@@ -261,7 +258,7 @@ public class DCTBEngine extends DCEngine {
 
                     // get CovMat at vertex
                     Point3D VTCS = crosses.get(0).getCoordsInSector(TrackArray1.get_Vtx0().x(), TrackArray1.get_Vtx0().y(), TrackArray1.get_Vtx0().z());
-                    TrackArray1.set_CovMat(kFZRef.propagateToVtx(crosses.get(0).get_Sector(), VTCS.z()));
+                    TrackArray1.set_CovMat4(kFZRef.propagateToVtx(crosses.get(0).get_Sector(), VTCS.z()));
 
                     if (TrackArray1.isGood()) {
                         trkcands.add(TrackArray1);
@@ -380,14 +377,14 @@ public class DCTBEngine extends DCEngine {
     	return kfStateVecsAlongTrajectory;
     }
     
-    public List<org.jlab.rec.dc.trajectory.StateVec> setKFStateVecsAlongTrajectory(KFitterStraight kFZRef) {
+    public List<org.jlab.rec.dc.trajectory.StateVec> setKFStateVecsAlongTrajectory(KFitterStraightFourParameters kFZRef) {
     	List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = new ArrayList<>();
     	
     	for(int i = 0; i < kFZRef.kfStateVecsAlongTrajectory.size(); i++) {
             org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec svc = kFZRef.kfStateVecsAlongTrajectory.get(i);    	
     	    org.jlab.rec.dc.trajectory.StateVec sv = new org.jlab.rec.dc.trajectory.StateVec(svc.x, svc.y, svc.tx, svc.ty);
             sv.setZ(svc.z);
-            sv.setB(svc.B);
+            sv.setB(0);
             sv.setPathLength(svc.getPathLength()); 
             sv.setProjector(svc.getProjector());
             sv.setProjectorDoca(svc.getProjectorDoca());
@@ -431,34 +428,31 @@ public class DCTBEngine extends DCEngine {
 
     }
     
-    public void getInitState(Track trkcand, double z0, org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initStateVec, KFitterStraight kf, Swim dcSwim, float[] bf) {
+    public void getInitStateStraight(Track trkcand, double z0, org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initStateVec, KFitterStraightFourParameters kf) {
         if (trkcand != null && trkcand.getFinalStateVec()!=null ) {
+            
             initStateVec.x = trkcand.getFinalStateVec().x();
             initStateVec.y = trkcand.getFinalStateVec().y();
-            initStateVec.z = trkcand.getFinalStateVec().getZ();
+            initStateVec.z = z0;
             initStateVec.tx = trkcand.getFinalStateVec().tanThetaX();
-            initStateVec.ty = trkcand.getFinalStateVec().tanThetaY();
-            initStateVec.Q = ((double) trkcand.get_Q())/trkcand.get_P();
-
-            RungeKuttaDoca rk = new RungeKuttaDoca();
-            rk.SwimToZ(trkcand.get(0).get_Sector(), initStateVec, dcSwim, z0, bf);
+            initStateVec.ty = trkcand.getFinalStateVec().tanThetaY();  
+            
+            double deltaZ = z0 - initStateVec.z;
+            initStateVec.x += initStateVec.tx * deltaZ;
+            initStateVec.y += initStateVec.ty * deltaZ;                        
             
             double ex = Constants.TBINITIALSTATEUNCSCALE * Constants.TBINITIALSTATEXUNC;
             double ey = Constants.TBINITIALSTATEUNCSCALE * Constants.TBINITIALSTATEYUNC;
             double etx = Constants.TBINITIALSTATEUNCSCALE * Constants.TBINITIALSTATETXUNC;
             double ety = Constants.TBINITIALSTATEUNCSCALE * Constants.TBINITIALSTATETYUNC;
-            double eQ = Constants.TBINITIALSTATEUNCSCALE * Constants.TBINITIALSTATEQUNC;
-
-            //Matrix initCMatrix = new Matrix(FTF);
-            Matrix initCMatrix = new Matrix();
-            initCMatrix.set(ex * ex, 0, 0, 0, 0,
-                    0, ey * ey, 0, 0, 0,
-                    0, 0, etx * etx, 0, 0,
-                    0, 0, 0, ety * ety, 0,
-                    0, 0, 0, 0, eQ * eQ
-            );
-            initStateVec.CM = initCMatrix;
             
+            double[][] values = {
+            {ex * ex, 0, 0, 0},
+            {0, ey * ey, 0, 0},
+            {0, 0, etx * etx, 0},
+            {0, 0, 0, ety * ety}};
+            
+            initStateVec.CM4 = new SimpleMatrix(values);                         
         } else {
             kf.setFitFailed = true;
         }
