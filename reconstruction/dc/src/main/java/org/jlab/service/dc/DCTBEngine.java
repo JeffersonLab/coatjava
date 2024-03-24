@@ -437,14 +437,14 @@ public class DCTBEngine extends DCEngine {
             initStateVec.tx = trkcand.getFinalStateVec().tanThetaX();
             initStateVec.ty = trkcand.getFinalStateVec().tanThetaY();  
             
-            double deltaZ = z0 - initStateVec.z;
+            double deltaZ = z0 - trkcand.getFinalStateVec().getZ();
             initStateVec.x += initStateVec.tx * deltaZ;
             initStateVec.y += initStateVec.ty * deltaZ;                        
             
-            double ex = Constants.TBINITIALSTATEUNCSCALE * Constants.TBINITIALSTATEXUNC;
-            double ey = Constants.TBINITIALSTATEUNCSCALE * Constants.TBINITIALSTATEYUNC;
-            double etx = Constants.TBINITIALSTATEUNCSCALE * Constants.TBINITIALSTATETXUNC;
-            double ety = Constants.TBINITIALSTATEUNCSCALE * Constants.TBINITIALSTATETYUNC;
+            double ex = Constants.TBINITIALSTATEUNCSCALE * Constants.TBINITIALSTATEXUNCStraight;
+            double ey = Constants.TBINITIALSTATEUNCSCALE * Constants.TBINITIALSTATEYUNCStraight;
+            double etx = Constants.TBINITIALSTATEUNCSCALE * Constants.TBINITIALSTATETXUNCStraight;
+            double ety = Constants.TBINITIALSTATEUNCSCALE * Constants.TBINITIALSTATETYUNCStraight;
             
             double[][] values = {
             {ex * ex, 0, 0, 0},

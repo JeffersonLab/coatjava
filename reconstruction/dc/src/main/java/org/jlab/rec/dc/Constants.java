@@ -75,12 +75,23 @@ public class Constants {
     public static final double HBINITIALSTATETYUNC = 0.036;
     public static final double HBINITIALSTATEQUNC = 0.13;
     
+    public static final double HBINITIALSTATEXUNCStraight = 8.2;
+    public static final double HBINITIALSTATEYUNCStraight = 4.5;
+    public static final double HBINITIALSTATETXUNCStraight = 0.058;
+    public static final double HBINITIALSTATETYUNCStraight = 0.025;
+    
+    
     public static final double TBINITIALSTATEUNCSCALE = 1.5;
     public static final double TBINITIALSTATEXUNC = 0.14;
     public static final double TBINITIALSTATEYUNC = 1.03;
     public static final double TBINITIALSTATETXUNC = 0.0025;
     public static final double TBINITIALSTATETYUNC = 0.0091;
     public static final double TBINITIALSTATEQUNC = 0.0084;
+    
+    public static final double TBINITIALSTATEXUNCStraight = 0.11;
+    public static final double TBINITIALSTATEYUNCStraight = 0.92;
+    public static final double TBINITIALSTATETXUNCStraight = 0.0011;
+    public static final double TBINITIALSTATETYUNCStraight = 0.0081;
     
     ////// With uRWell
     public static final double HBINITIALSTATEUNCSCALEUR = 2;

@@ -1159,14 +1159,14 @@ public class TrackCandListFinder {
     	initStateVec.tx = trkCrsD.x()/trkCrsD.z();
     	initStateVec.ty = trkCrsD.y()/trkCrsD.z();
         
-        double deltaZ = z0 - initStateVec.z;
+        double deltaZ = z0 - trkCrs.z();
         initStateVec.x += initStateVec.tx * deltaZ;
         initStateVec.y += initStateVec.ty * deltaZ;      
         
-        double ex = Constants.HBINITIALSTATEUNCSCALE * Constants.HBINITIALSTATEXUNC;
-        double ey = Constants.HBINITIALSTATEUNCSCALE * Constants.HBINITIALSTATEYUNC;
-        double etx = Constants.HBINITIALSTATEUNCSCALE * Constants.HBINITIALSTATETXUNC;
-        double ety = Constants.HBINITIALSTATEUNCSCALE * Constants.HBINITIALSTATETYUNC;
+        double ex = Constants.HBINITIALSTATEUNCSCALE * Constants.HBINITIALSTATEXUNCStraight;
+        double ey = Constants.HBINITIALSTATEUNCSCALE * Constants.HBINITIALSTATEYUNCStraight;
+        double etx = Constants.HBINITIALSTATEUNCSCALE * Constants.HBINITIALSTATETXUNCStraight;
+        double ety = Constants.HBINITIALSTATEUNCSCALE * Constants.HBINITIALSTATETYUNCStraight;
         
         double[][] values = {
             {ex * ex, 0, 0, 0},

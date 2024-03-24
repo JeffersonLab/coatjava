@@ -211,11 +211,20 @@ public class KFitterStraightFourParameters extends AKFitter {
                 }
                 if (this.setFitFailed == false) {
                     if (this.finalStateVec != null) {
-                        if (Math.abs(sv.trackTrajF.get(svzLength - 1).x - this.finalStateVec.x) < 1.e-4
-                                && Math.abs(sv.trackTrajF.get(svzLength - 1).y - this.finalStateVec.y) < 1.e-4
-                                && Math.abs(sv.trackTrajF.get(svzLength - 1).tx - this.finalStateVec.tx) < 1.e-6
-                                && Math.abs(sv.trackTrajF.get(svzLength - 1).ty - this.finalStateVec.ty) < 1.e-6) {
-                            i = totNumIter;
+                        if (!TBT) {
+                            if (Math.abs(sv.trackTrajF.get(svzLength - 1).x - this.finalStateVec.x) < 1.3e-06
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).y - this.finalStateVec.y) < 3.3e-5
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).tx - this.finalStateVec.tx) < 6.5e-9
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).ty - this.finalStateVec.ty) < 1.6e-7) {
+                                i = totNumIter;
+                            }
+                        } else {
+                            if (Math.abs(sv.trackTrajF.get(svzLength - 1).x - this.finalStateVec.x) < 5.5e-5
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).y - this.finalStateVec.y) < 5.3e-4
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).tx - this.finalStateVec.tx) < 5.1e-8
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).ty - this.finalStateVec.ty) < 5.0e-7) {
+                                i = totNumIter;
+                            }
                         }
                     }
                     this.finalStateVec = sv.trackTrajF.get(svzLength - 1);
