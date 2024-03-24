@@ -1,6 +1,7 @@
 package org.jlab.clas.tracking.kalmanfilter.zReference;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.jlab.clas.clas.math.FastMath;
@@ -22,6 +23,11 @@ import org.ejml.simple.SimpleMatrix;
  * @author Tongtong Cao
  */
 public class KFitterStraightFourParameters extends AKFitter {
+    private static List<Double> dafAnnealingFactorsTB = new ArrayList<>(Arrays.asList(64., 16., 4., 1.)); 
+    private int dafAnnealingFactorsIndex = 0;
+    private double dafAnnealingFactor = 1;
+    
+    private double ndfDAF = -4;
     
     private static final double initialCMBlowupFactor = 70;
 
@@ -53,6 +59,12 @@ public class KFitterStraightFourParameters extends AKFitter {
         super(filter, iterations, dir, swim, mo);
         this.Z = Z;
     }
+    
+    public static void setDafAnnealingFactorsTB(String strDAFAnnealingFactorsTB){
+            String strs[] = strDAFAnnealingFactorsTB.split(",");
+            for(int i = 0; i < strs.length; i++)
+                dafAnnealingFactorsTB.add(Double.valueOf(strs[i]));       
+    }
 
     public final void init(List<Surface> measSurfaces, StateVec initSV) {
         finalSmoothedStateVec = null;
@@ -71,8 +83,32 @@ public class KFitterStraightFourParameters extends AKFitter {
         sv.init(initSV);
         sv.Z = Z;
     }
-
+    
+    public final void initFromHB(List<Surface> measSurfaces, StateVec initSV, double beta, boolean useDAF) {
+        if(useDAF) initFromHB(measSurfaces, initSV, beta);
+        else initFromHBNoDAF(measSurfaces, initSV, beta);
+    }
+    
     public final void initFromHB(List<Surface> measSurfaces, StateVec initSV, double beta) {
+        finalSmoothedStateVec = null;
+        finalTransportedStateVec = null;
+        this.NDF = -4;
+        this.chi2 = Double.POSITIVE_INFINITY;
+        this.numIter = 0;
+        this.setFitFailed = false;
+        mv.setMeasVecs(measSurfaces);
+        for (int i = 0; i < mv.measurements.size(); i++) {
+            if (mv.measurements.get(i).skip == false) {
+                this.NDF ++;
+            }
+        }
+
+        sv.initFromHB(initSV, beta);
+        sv.Z = Z;
+        TBT = true;        
+    }
+
+    public final void initFromHBNoDAF(List<Surface> measSurfaces, StateVec initSV, double beta) {
         finalSmoothedStateVec = null;
         finalTransportedStateVec = null;
         this.NDF = -4;
@@ -90,8 +126,202 @@ public class KFitterStraightFourParameters extends AKFitter {
         sv.Z = Z;
         TBT = true;        
     }
+    
+    public void runFitter(boolean useDAF) {
+        if(useDAF) runFitter();
+        else runFitterNoDAF();
+    }
 
     public void runFitter() {
+        this.chi2 = Double.POSITIVE_INFINITY;
+        double initChi2 = Double.POSITIVE_INFINITY;
+        // this.NDF = mv.ndf;
+        this.svzLength = this.mv.measurements.size();
+
+        int sector = this.mv.measurements.get(0).sector;
+
+        if (TBT == true) {
+            this.chi2kf = 0;
+            // Get the input parameters
+            for (int k = 0; k < svzLength - 1; k++) {               
+                sv.transportStraight(sector, k, k + 1, this.sv.trackTrajT.get(k), mv, true);
+            }
+            this.calcFinalChisqDAF(sector, true);
+            this.initialStateVec = sv.trackTrajT.get(svzLength - 1);
+            this.finalStateVec = sv.trackTrajT.get(svzLength - 1);            
+            
+            initChi2 = this.chi2;
+            if (Double.isNaN(chi2)) {
+                this.setFitFailed = true;
+                return;
+            }
+        }
+
+        for (int i = 1; i <= totNumIter; i++) {
+            interNum = i;
+            this.chi2kf = 0;
+
+            if (i > 1) {
+                if (dafAnnealingFactorsIndex < dafAnnealingFactorsTB.size()) {
+                    dafAnnealingFactor = dafAnnealingFactorsTB.get(dafAnnealingFactorsIndex);
+                    dafAnnealingFactorsIndex++;
+                } else {
+                    dafAnnealingFactor = 1;
+                    dafAnnealingFactorsIndex++;
+                }
+                
+                for (int k = svzLength - 1; k > 0; k--) {
+                    boolean forward = false;
+                    // Not backward transport and filter states for the last measurement layer
+                    if (k == svzLength - 1) {
+                        if (!sv.transportStraight(sector, k, k - 1, this.sv.trackTrajF.get(k), mv, forward)) {
+                            this.stopIteration = true;
+                            break;
+                        }
+                    } else {
+                        if (!sv.transportStraight(sector, k, k - 1, this.sv.trackTrajB.get(k), mv, forward)) {
+                            this.stopIteration = true;
+                            break;
+                        }
+                    }
+                    
+                    if(TBT){
+                        if (!this.filter(k - 1, forward, dafAnnealingFactor)) {
+                            this.stopIteration = true;
+                            break;
+                        }
+                    }
+                    else{
+                        if (!this.filter(k - 1, forward)) {
+                            this.stopIteration = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (this.stopIteration) {
+                break;
+            }
+            
+            if (dafAnnealingFactorsIndex < dafAnnealingFactorsTB.size()) {
+                dafAnnealingFactor = dafAnnealingFactorsTB.get(dafAnnealingFactorsIndex);
+                dafAnnealingFactorsIndex++;
+            } else {
+                dafAnnealingFactor = 1;
+                dafAnnealingFactorsIndex++;
+            }
+
+            for (int k = 0; k < svzLength - 1; k++) {
+                boolean forward = true;
+
+                if (interNum == 1 && (k == 0)) {
+                    if (TBT == true) {
+                        this.sv.transported(true).put(0, this.sv.transported(false).get(0)); // For TBT, calcFinalChisq() is called previously.				
+                    }
+                }
+
+                if (k == 0) {
+                    if (i == 1) {
+                        if (!this.sv.transportStraight(sector, 0, 1, this.sv.trackTrajT.get(0), mv, forward)) {
+                            this.stopIteration = true;
+                            break;
+                        }
+                    } else {
+                        //Inflat initial covariance matrix from the second iteration
+                        double c00 = this.sv.trackTrajB.get(0).CM4.get(0, 0);
+                        double c11 = this.sv.trackTrajB.get(0).CM4.get(1, 1);
+                        double c22 = this.sv.trackTrajB.get(0).CM4.get(2, 2);
+                        double c33 = this.sv.trackTrajB.get(0).CM4.get(3, 3);
+                        double newCMArr[][] = {
+                            {c00*initialCMBlowupFactor, 0, 0, 0},
+                            {0, c11*initialCMBlowupFactor, 0, 0},
+                            {0, 0, c22*initialCMBlowupFactor, 0},
+                            {0, 0, 0, c33*initialCMBlowupFactor}};
+                        SimpleMatrix newCM = new SimpleMatrix(newCMArr);
+
+                        this.sv.trackTrajB.get(0).covMat = newCMArr;
+                        this.sv.trackTrajB.get(0).CM4 = newCM;
+                        
+                        this.sv.transported(forward).put(0, this.sv.trackTrajB.get(0));
+                        this.sv.filtered(forward).put(0, this.sv.trackTrajB.get(0));
+                        
+                        if (!this.sv.transportStraight(sector, 0, 1, this.sv.trackTrajB.get(0), mv, forward)) {
+                            this.stopIteration = true;
+                            break;
+                        }
+                    }
+                } else {
+                    if (!this.sv.transportStraight(sector, k, k + 1, this.sv.trackTrajF.get(k), mv, forward)) {
+                        this.stopIteration = true;
+                        break;
+                    }
+
+                }
+
+                if(TBT){
+                    if (!this.filter(k + 1, forward, dafAnnealingFactor)) {
+                        this.stopIteration = true;
+                        break;
+                    }   
+                }
+                else{
+                    if (!this.filter(k + 1, forward)) {
+                        this.stopIteration = true;
+                        break;
+                    }                       
+                }
+            }
+
+            if (this.stopIteration) {
+                break;
+            }
+
+            if (i > 1) {
+                if (this.setFitFailed == true) {
+                    i = totNumIter;
+                }
+                if (this.setFitFailed == false) {
+                    if (this.finalStateVec != null) {
+                        if (!TBT) {
+                            if (Math.abs(sv.trackTrajF.get(svzLength - 1).x - this.finalStateVec.x) < 1.3e-06
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).y - this.finalStateVec.y) < 3.3e-5
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).tx - this.finalStateVec.tx) < 6.5e-9
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).ty - this.finalStateVec.ty) < 1.6e-7) {
+                                i = totNumIter;
+                            }
+                        } else {
+                            if (Math.abs(sv.trackTrajF.get(svzLength - 1).x - this.finalStateVec.x) < 5.5e-5
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).y - this.finalStateVec.y) < 5.3e-4
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).tx - this.finalStateVec.tx) < 5.1e-8
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).ty - this.finalStateVec.ty) < 5.0e-7) {
+                                i = totNumIter;
+                            }
+                        }
+                    }
+                    this.finalStateVec = sv.trackTrajF.get(svzLength - 1);
+
+                } else {
+                    this.ConvStatus = 1; // Should be 0???
+                }
+            }
+        }
+
+        if (totNumIter == 1) {
+            if (this.setFitFailed == false && this.stopIteration == false) {
+                this.finalStateVec = sv.trackTrajF.get(svzLength - 1);
+            }
+        }
+
+        if(TBT) this.calcFinalChisqDAF(sector);
+        else this.calcFinalChisq(sector);
+
+        if (Double.isNaN(chi2)) {
+            this.setFitFailed = true;
+        }
+    }
+    
+        public void runFitterNoDAF() {
         this.chi2 = Double.POSITIVE_INFINITY;
         double initChi2 = Double.POSITIVE_INFINITY;
         // this.NDF = mv.ndf;
@@ -257,7 +487,156 @@ public class KFitterStraightFourParameters extends AKFitter {
 
     }
 
-	private boolean filter(int k, boolean forward) {
+    private boolean filter(int k, boolean forward, double annealingFactor) {
+        StateVec sVec = sv.transported(forward).get(k);
+        org.jlab.clas.tracking.kalmanfilter.AMeasVecs.MeasVec mVec = mv.measurements.get(k);
+
+        if (Double.isNaN(sVec.x) || Double.isNaN(sVec.y)
+                || Double.isNaN(sVec.tx) || Double.isNaN(sVec.ty)
+                || Double.isNaN(sVec.Q)) {
+            this.setFitFailed = true;
+            return false;
+        }
+        if (sVec != null && sVec.CM4 != null
+                && k < mv.measurements.size() && mVec.skip == false) {                        
+            double c2 = 0;
+            double x_filt = 0;
+            double y_filt = 0;
+            double tx_filt = 0;
+            double ty_filt = 0;
+            SimpleMatrix cMat = new SimpleMatrix(4, 4);
+            
+            double updatedWeights_singleHit = 1;
+            double[] updatedWeights_doubleHits = {0.5, 0.5};
+
+            if (mVec.surface.doca[1] == -99) {
+                StateVec sVecPreviousFiltered = sv.filtered(!forward).get(k);
+                double daf_weight = 1;
+                if (sVecPreviousFiltered != null) {
+                    daf_weight = sVecPreviousFiltered.getWeightDAF_singleHit();
+                }
+                double var = mVec.surface.unc[0] * KFScale;
+                DAFilter daf = new DAFilter(mVec.surface.doca[0], var, daf_weight);
+                daf.calc_effectiveDoca_singleHit();
+
+                double effectiveDoca = daf.get_EffectiveDoca();
+                double effectiveVar = daf.get_EffectiveVar();
+                
+                
+                double[] K = new double[4];
+                double V = effectiveVar;
+                double[] H = mv.H(sVec.x, sVec.y, mVec.surface.z, mVec.surface.wireLine[0]);
+                SimpleMatrix CaInv = this.filterCovMat(H, sVec.CM4, V);
+                if (CaInv != null) {
+                    cMat = CaInv.copy();
+                } else {
+                    return false;
+                }
+
+                for (int j = 0; j < 4; j++) {
+                    // the gain matrix
+                    K[j] = (H[0] * cMat.get(j, 0)
+                            + H[1] * cMat.get(j, 1)) / V;
+                }
+
+                Point3D point = new Point3D(sVec.x, sVec.y, mVec.surface.z);
+                double h = mv.hDoca(point, mVec.surface.wireLine[0]);
+                               
+                c2 = (effectiveDoca - h) * (effectiveDoca - h) / V;
+
+                x_filt = sVec.x
+                        + K[0] * (effectiveDoca - h);
+                y_filt = sVec.y
+                        + K[1] * (effectiveDoca - h);
+                tx_filt = sVec.tx
+                        + K[2] * (effectiveDoca - h);
+                ty_filt = sVec.ty
+                        + K[3] * (effectiveDoca - h);
+                
+                Point3D pointFiltered = new Point3D(x_filt, y_filt, mVec.surface.z);
+                double h0 = mv.hDoca(pointFiltered, mVec.surface.wireLine[0]);
+
+                double residual = effectiveDoca - h0;
+                updatedWeights_singleHit = daf.calc_updatedWeight_singleHit(residual, annealingFactor);                                                 
+            }
+            else{                                                       
+                StateVec sVecPreviousFiltered = sv.filtered(!forward).get(k);
+                double[] daf_weights = {0.5, 0.5};
+                if (sVecPreviousFiltered != null) {
+                    daf_weights = sVecPreviousFiltered.getWeightDAF_doubleHits();
+                }
+                double[] vars = {mVec.surface.unc[0] * KFScale, mVec.surface.unc[1] * KFScale};
+                DAFilter daf = new DAFilter(mVec.surface.doca, vars, daf_weights, mVec.surface.wireLine);
+                daf.calc_effectiveDoca_doubleHits();
+
+                double effectiveDoca = daf.get_EffectiveDoca();
+                double effectiveVar = daf.get_EffectiveVar();
+                int indexReferenceWire = daf.get_IndexReferenceWire();
+
+                double[] K = new double[5];
+                double V = effectiveVar;
+                double[] H = mv.H(sVec.x, sVec.y, mVec.surface.z, mVec.surface.wireLine[indexReferenceWire]);
+                SimpleMatrix CaInv = this.filterCovMat(H, sVec.CM4, V);
+                if (CaInv != null) {
+                    cMat = CaInv.copy();
+                } else {
+                    return false;
+                }
+
+                for (int j = 0; j < 4; j++) {
+                    // the gain matrix
+                    K[j] = (H[0] * cMat.get(j, 0)
+                            + H[1] * cMat.get(j, 1)) / V;
+                }
+
+                Point3D point = new Point3D(sVec.x, sVec.y, mVec.surface.z);
+                double h = mv.hDoca(point, mVec.surface.wireLine[indexReferenceWire]);
+
+                c2 = (effectiveDoca - h) * (effectiveDoca - h) / V;
+
+                x_filt = sVec.x
+                        + K[0] * (effectiveDoca - h);
+                y_filt = sVec.y
+                        + K[1] * (effectiveDoca - h);
+                tx_filt = sVec.tx
+                        + K[2] * (effectiveDoca - h);
+                ty_filt = sVec.ty
+                        + K[3] * (effectiveDoca - h);
+
+                Point3D pointFiltered = new Point3D(x_filt, y_filt, mVec.surface.z);
+                double h0 = mv.hDoca(pointFiltered, mVec.surface.wireLine[0]);
+                double h1 = mv.hDoca(pointFiltered, mVec.surface.wireLine[1]);
+                double[] residuals = {mVec.surface.doca[0] - h0, mVec.surface.doca[1] - h1};
+                updatedWeights_doubleHits = daf.calc_updatedWeights_doubleHits(residuals, annealingFactor);                               
+            }
+            
+            chi2kf += c2;
+            if (filterOn) {
+                StateVec filteredVec = sv.new StateVec(k);
+                filteredVec.x = x_filt;
+                filteredVec.y = y_filt;
+                filteredVec.tx = tx_filt;
+                filteredVec.ty = ty_filt;
+                filteredVec.z = sVec.z;
+                filteredVec.B = sVec.B;
+                filteredVec.deltaPath = sVec.deltaPath;
+
+                filteredVec.CM4 = cMat;
+                filteredVec.setWeightDAF_singleHit(updatedWeights_singleHit);
+                filteredVec.setWeightDAF_doubleHits(updatedWeights_doubleHits);
+
+                sv.filtered(forward).put(k, filteredVec);
+            } else {
+                return false;
+            }
+
+            return true;
+        } else {
+            return false;
+        }
+    }        
+        
+    private boolean filter(int k, boolean forward) {
 		StateVec sVec = sv.transported(forward).get(k);
 		org.jlab.clas.tracking.kalmanfilter.AMeasVecs.MeasVec mVec = mv.measurements.get(k);					
 
@@ -499,11 +878,174 @@ public class KFitterStraightFourParameters extends AKFitter {
                     kfStateVecsAlongTrajectory.add(svc2); 
                 }
             } 
-        } 
-        
+        }         
     }
-	
-	
+        
+    private void calcFinalChisqDAF(int sector) {
+        calcFinalChisqDAF(sector, false);
+    }
+    
+    private void calcFinalChisqDAF(int sector, boolean nofilter) {
+        ndfDAF = -4;
+        
+        int k = svzLength - 1;
+        this.chi2 = 0;
+        double path = 0;
+
+        StateVec sVec;
+
+        // To be changed: to match wit the old package, we make the following codes. Could be changed when other codes for application of calcFinalChisq are changed.
+        if (nofilter || (sv.trackTrajF.get(k) == null)) {
+            sVec = sv.trackTrajT.get(k);
+        } else {
+            sVec = sv.trackTrajF.get(k);
+        }
+
+        kfStateVecsAlongTrajectory = new ArrayList<>();
+        if (sVec != null && sVec.CM4 != null) {
+                        
+            boolean forward = false;
+            sv.transport(sector, k, 0, sVec, mv, this.getSwimmer(), forward);
+
+            StateVec svc = sv.transported(forward).get(0);
+            path += svc.deltaPath;
+            svc.setPathLength(path);
+            
+            Point3D point = new Point3D(svc.x, svc.y, mv.measurements.get(0).surface.z);
+            if(mv.measurements.get(0).surface.doca[1] == -99) {
+                StateVec sVecPreviousFiltered = sv.filtered(true).get(0);
+                double daf_weight = 1;
+                if (sVecPreviousFiltered != null) {
+                    daf_weight = sVecPreviousFiltered.getWeightDAF_singleHit();
+                }
+                double V0 = mv.measurements.get(0).surface.unc[0];
+                DAFilter daf = new DAFilter(mv.measurements.get(0).surface.doca[0], V0, daf_weight);
+                daf.calc_effectiveDoca_singleHit();
+
+                double effectiveDoca = daf.get_EffectiveDoca();
+                double effectiveVar = daf.get_EffectiveVar();
+                
+                double h = mv.hDoca(point, mv.measurements.get(0).surface.wireLine[0]);
+                double res = (effectiveDoca - h);
+                chi2 += res*res / effectiveVar; 
+                ndfDAF += daf_weight;
+                
+                svc.setProjectorDoca(h); 
+                svc.setProjector(mv.measurements.get(0).surface.wireLine[0].origin().x());
+                svc.setFinalDAFWeight(daf_weight);
+                svc.setSorDHit(1);
+                kfStateVecsAlongTrajectory.add(svc);
+            }
+            else{
+                StateVec sVecPreviousFiltered = sv.filtered(true).get(0);
+                double[] daf_weights = {0.5, 0.5};
+                if (sVecPreviousFiltered != null) {
+                    daf_weights = sVecPreviousFiltered.getWeightDAF_doubleHits();
+                }
+                double[] vars = {mv.measurements.get(0).surface.unc[0], mv.measurements.get(0).surface.unc[1]};
+                DAFilter daf = new DAFilter(mv.measurements.get(0).surface.doca, vars, daf_weights, mv.measurements.get(0).surface.wireLine);
+                daf.calc_effectiveDoca_doubleHits();
+
+                double effectiveDoca = daf.get_EffectiveDoca();
+                double effectiveVar = daf.get_EffectiveVar();
+                int indexReferenceWire = daf.get_IndexReferenceWire(); 
+                
+                double h = mv.hDoca(point, mv.measurements.get(0).surface.wireLine[indexReferenceWire]);
+                double res = (effectiveDoca - h);
+                chi2 += res*res / effectiveVar;
+                ndfDAF += (daf_weights[0] + daf_weights[1]);
+                
+                h = mv.hDoca(point, mv.measurements.get(0).surface.wireLine[0]);
+                svc.setProjectorDoca(h); 
+                svc.setProjector(mv.measurements.get(0).surface.wireLine[0].origin().x());   
+                svc.setFinalDAFWeight(daf_weights[0]);
+                svc.setSorDHit(0);
+                kfStateVecsAlongTrajectory.add(svc);
+
+                StateVec svc2 = sv.new StateVec(svc);
+                h = mv.hDoca(point, mv.measurements.get(0).surface.wireLine[1]);
+                svc2.setProjectorDoca(h); 
+                svc2.setProjector(mv.measurements.get(0).surface.wireLine[1].origin().x());
+                svc2.setFinalDAFWeight(daf_weights[1]);
+                svc2.setSorDHit(0);
+                kfStateVecsAlongTrajectory.add(svc2);                  
+            }
+
+            forward = true;
+            for (int k1 = 0; k1 < k; k1++) {
+                if (k1 == 0) {
+                    sv.transport(sector, k1, k1 + 1, svc, mv, this.getSwimmer(), forward);
+                } else {
+                    sv.transport(sector, k1, k1 + 1, sv.transported(forward).get(k1), mv, this.getSwimmer(), forward);
+                }
+                
+                svc = sv.transported(forward).get(k1 + 1);
+                path += svc.deltaPath;
+                svc.setPathLength(path);
+                
+                point = new Point3D(sv.transported(forward).get(k1 + 1).x, sv.transported(forward).get(k1 + 1).y, mv.measurements.get(k1 + 1).surface.z);
+                if(mv.measurements.get(k1 + 1).surface.doca[1] == -99) {
+                    StateVec sVecPreviousFiltered = sv.filtered(true).get(k1 + 1);
+                    double daf_weight = 1;
+                    if (sVecPreviousFiltered != null) {
+                        daf_weight = sVecPreviousFiltered.getWeightDAF_singleHit();
+                    }
+                    double V0 = mv.measurements.get(k1 + 1).surface.unc[0];
+                    DAFilter daf = new DAFilter(mv.measurements.get(k1 + 1).surface.doca[0], V0, daf_weight);
+                    daf.calc_effectiveDoca_singleHit();
+
+                    double effectiveDoca = daf.get_EffectiveDoca();
+                    double effectiveVar = daf.get_EffectiveVar();
+
+                    double h = mv.hDoca(point, mv.measurements.get(k1 + 1).surface.wireLine[0]);
+                    double res = (effectiveDoca - h);
+                    chi2 += res*res / effectiveVar;
+                    ndfDAF += daf_weight;
+                    
+                    svc.setProjectorDoca(h);  
+                    svc.setProjector(mv.measurements.get(k1 + 1).surface.wireLine[0].origin().x());
+                    svc.setFinalDAFWeight(daf_weight);
+                    svc.setSorDHit(1);
+                    kfStateVecsAlongTrajectory.add(svc);                                            
+                }
+                else{
+                    StateVec sVecPreviousFiltered = sv.filtered(true).get(k1 + 1);
+                    double[] daf_weights = {0.5, 0.5};
+                    if (sVecPreviousFiltered != null) {
+                        daf_weights = sVecPreviousFiltered.getWeightDAF_doubleHits();
+                    }
+                    double[] vars = {mv.measurements.get(k1 + 1).surface.unc[0], mv.measurements.get(k1 + 1).surface.unc[1]};
+                    DAFilter daf = new DAFilter(mv.measurements.get(k1 + 1).surface.doca, vars, daf_weights, mv.measurements.get(k1 + 1).surface.wireLine);
+                    daf.calc_effectiveDoca_doubleHits();
+
+                    double effectiveDoca = daf.get_EffectiveDoca();
+                    double effectiveVar = daf.get_EffectiveVar();
+                    int indexReferenceWire = daf.get_IndexReferenceWire(); 
+
+                    double h = mv.hDoca(point, mv.measurements.get(k1 + 1).surface.wireLine[indexReferenceWire]);
+                    double res = (effectiveDoca - h);
+                    chi2 += res*res / effectiveVar;
+                    ndfDAF += (daf_weights[0] + daf_weights[1]);
+
+                    h = mv.hDoca(point, mv.measurements.get(k1 + 1).surface.wireLine[0]);
+                    svc.setProjectorDoca(h); 
+                    svc.setProjector(mv.measurements.get(k1 + 1).surface.wireLine[0].origin().x());
+                    svc.setFinalDAFWeight(daf_weights[0]);
+                    svc.setSorDHit(0);
+                    kfStateVecsAlongTrajectory.add(svc);                         
+                    
+                    StateVec svc2 = sv.new StateVec(svc);
+                    h = mv.hDoca(point, mv.measurements.get(k1 + 1).surface.wireLine[1]);
+                    svc2.setProjectorDoca(h); 
+                    svc2.setProjector(mv.measurements.get(k1 + 1).surface.wireLine[1].origin().x());
+                    svc2.setFinalDAFWeight(daf_weights[1]);
+                    svc2.setSorDHit(0);
+                    kfStateVecsAlongTrajectory.add(svc2);                      
+                }
+            }
+        }
+    }        
+		
     public SimpleMatrix propagateToVtx(int sector, double Zf) {
         return sv.transportStraight(sector, finalStateVec.k, Zf, finalStateVec, mv);
     }

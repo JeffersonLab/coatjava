@@ -234,8 +234,8 @@ public class DCTBEngine extends DCEngine {
                 StateVecs svs = new StateVecs();
                 org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
                 getInitStateStraight(TrackArray1, measSurfaces.get(0).z, initSV, kFZRef);
-                kFZRef.initFromHB(measSurfaces, initSV, TrackArray1.get(0).get(0).get(0).get_Beta());
-                kFZRef.runFitter();
+                kFZRef.initFromHB(measSurfaces, initSV, TrackArray1.get(0).get(0).get(0).get_Beta(), useDAF);
+                kFZRef.runFitter(useDAF);
                 List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
 
                 StateVec fn = new StateVec();
