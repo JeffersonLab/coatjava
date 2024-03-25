@@ -58,6 +58,8 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
 
     private double _SeedResidual;               // residual is doca to seed strip from trk intersection with module plane
     private double _CentroidResidual;           // residual is doca to centroid of cluster to trk inters with module plane
+    
+    private double _dafWeight = -999;                  // Weight from DAF
 
     private Vector3D _l; //svt vector along cluster pseudo-strip direction or bmt vector along cluster pseudo-strip direction in the middle of the arc
     private Vector3D _s; //svt vector perpendicular to cluster pseudo-strip direction in the module plane or bmt vector perpendicular to cluster pseudo-strip in direction tangential to the cluster surface in the middle of the arc
@@ -676,6 +678,14 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
     public void setCentroidResidual(double _CentroidResidual) {
         this._CentroidResidual = _CentroidResidual;
     }
+    
+    public double getDAFWeight() {
+        return _dafWeight;
+    }
+
+    public void setDAFWeight(double dafWeight) {
+        this._dafWeight = dafWeight;
+    }
 
     /**
      * @return the _TrakInters
@@ -841,6 +851,7 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
                 
         this.setAssociatedTrackID(trackId);
         this.setCentroidResidual(traj.residual);
+        this.setDAFWeight(traj.dafWeight);
         this.setSeedResidual(trackPos); 
         this.setTrakInters(trackPos);
 

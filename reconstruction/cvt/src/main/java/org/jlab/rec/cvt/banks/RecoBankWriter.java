@@ -91,6 +91,7 @@ public class RecoBankWriter {
             bank.setFloat("seedE", i,  (float) cluslist.get(i).getSeedStrip().getEdep());
             bank.setFloat("centroidError", i,  (float) cluslist.get(i).getResolution()/10);
             bank.setFloat("centroidResidual", i,  (float) cluslist.get(i).getCentroidResidual()/10);
+            bank.setFloat("DAFWeight", i,  (float) cluslist.get(i).getDAFWeight());
             bank.setFloat("seedResidual", i,  (float) cluslist.get(i).getSeedResidual()/10); 
             bank.setShort("trkID", i, (short) cluslist.get(i).getAssociatedTrackID());
 
@@ -249,6 +250,7 @@ public class RecoBankWriter {
                 bank.setFloat("centroidError", i,  (float) cluslist.get(i).getCentroidError());                
             }
             bank.setFloat("centroidResidual", i,  (float) cluslist.get(i).getCentroidResidual()/10);
+            bank.setFloat("DAFWeight", i,  (float) cluslist.get(i).getDAFWeight());
             bank.setFloat("seedResidual", i,  (float) cluslist.get(i).getSeedResidual()/10); 
             bank.setFloat("seedE", i,  (float) cluslist.get(i).getSeedStrip().getEdep());
             bank.setShort("trkID", i, (short) cluslist.get(i).getAssociatedTrackID());
@@ -567,6 +569,7 @@ public class RecoBankWriter {
             bank.setShort("seedID", i, (short) trkcands.get(i).getSeed().getId());
             bank.setFloat("chi2", i,  (float) trkcands.get(i).getChi2());
             bank.setShort("ndf", i, (short) trkcands.get(i).getNDF());
+            bank.setFloat("ndfDAF", i, (float) trkcands.get(i).getNDFDAF());
             bank.setInt("pid", i, trkcands.get(i).getPID());
         }
         //bank.show();
@@ -628,6 +631,7 @@ public class RecoBankWriter {
             bank.setShort("seedID", i, (short) trkcands.get(i).getSeed().getId());
             bank.setFloat("chi2", i,  (float) trkcands.get(i).getSecondaryChi2());
             bank.setShort("ndf", i, (short) trkcands.get(i).getSecondaryNDF());
+            bank.setFloat("ndfDAF", i, (float) trkcands.get(i).getSecondaryNDFDAF());
             bank.setInt("pid", i, trkcands.get(i).getPID());
         }
         //bank.show();
