@@ -3,7 +3,7 @@
 
   <groupId>org.jlab.clas</groupId>
   <artifactId>clas12rec</artifactId>
-  <version>10.0.8-SNAPSHOT</version>
+  <version>10.0.11-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <repositories>
@@ -89,7 +89,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.8.0</version>
+        <version>3.12.1</version>
         <configuration>
             <release>11</release>
             <encoding>UTF-8</encoding>

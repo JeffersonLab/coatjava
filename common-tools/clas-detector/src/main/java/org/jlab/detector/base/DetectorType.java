@@ -30,6 +30,7 @@ public enum DetectorType {
     RASTER    (22, "RASTER"),
     URWELL    (23, "URWELL"),
     TARGET    (100, "TARGET"),
+    MAGNETS   (101, "MAGNETS"),
     ECIN      (110, "ECIN"),
     ECOUT     (111, "ECOUT"),
     ECTOT     (112, "ECTOT"),
