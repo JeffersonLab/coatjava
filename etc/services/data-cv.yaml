@@ -45,7 +45,9 @@ services:
 # DC regular TB tracking    
   - class: org.jlab.service.dc.DCTBEngine
     name: DCTB
-  - class: org.jlab.service.fmt.FMTEngine
+  - class: org.jlab.service.mltn.MLCLEngine
+    name: MLCL
+- class: org.jlab.service.fmt.FMTEngine
     name: FMT
   - class: org.jlab.rec.cvt.services.CVTSecondPassEngine
     name: CVTSP

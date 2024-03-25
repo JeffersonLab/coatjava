@@ -1,5 +1,23 @@
 [ 
     {
+	"name": "MLTR::Clusters",
+        "group": 4200,
+        "item" : 21,
+        "info": "track clusters for AI trainning and Validation",
+        "entries": [
+            {"name":"byte",   "type":"B",  "info":"packed information 11 - means sector 1 superlayer 1, folowed by 2 bytes cluster position byte2+byte3/100.0"}
+	]
+    },
+    {
+        "name": "MLTR::Tracks",
+        "group": 4200,
+        "item" : 22,
+        "info": "track clusters for AI trainning and Validation",
+        "entries": [
+            {"name":"short",   "type":"S",  "info":"each 6 numbers is average cluster position for tracks *100."}
+	]
+    },
+    {
         "name": "nn::tracks",
         "group": 4200,
         "item" : 1,
