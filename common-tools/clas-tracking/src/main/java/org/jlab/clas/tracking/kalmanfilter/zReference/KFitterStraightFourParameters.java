@@ -185,7 +185,7 @@ public class KFitterStraightFourParameters extends AKFitter {
                         }
                     }
                     
-                    if(TBT){
+                    if(TBT){                       
                         if (!this.filter(k - 1, forward, dafAnnealingFactor)) {
                             this.stopIteration = true;
                             break;
@@ -259,7 +259,7 @@ public class KFitterStraightFourParameters extends AKFitter {
 
                 }
 
-                if(TBT){
+                if(TBT){                    
                     if (!this.filter(k + 1, forward, dafAnnealingFactor)) {
                         this.stopIteration = true;
                         break;
@@ -321,7 +321,7 @@ public class KFitterStraightFourParameters extends AKFitter {
         }
     }
     
-        public void runFitterNoDAF() {
+    public void runFitterNoDAF() {
         this.chi2 = Double.POSITIVE_INFINITY;
         double initChi2 = Double.POSITIVE_INFINITY;
         // this.NDF = mv.ndf;
@@ -492,8 +492,7 @@ public class KFitterStraightFourParameters extends AKFitter {
         org.jlab.clas.tracking.kalmanfilter.AMeasVecs.MeasVec mVec = mv.measurements.get(k);
 
         if (Double.isNaN(sVec.x) || Double.isNaN(sVec.y)
-                || Double.isNaN(sVec.tx) || Double.isNaN(sVec.ty)
-                || Double.isNaN(sVec.Q)) {
+                || Double.isNaN(sVec.tx) || Double.isNaN(sVec.ty)) {
             this.setFitFailed = true;
             return false;
         }
@@ -521,14 +520,13 @@ public class KFitterStraightFourParameters extends AKFitter {
 
                 double effectiveDoca = daf.get_EffectiveDoca();
                 double effectiveVar = daf.get_EffectiveVar();
-                
-                
+                                                
                 double[] K = new double[4];
                 double V = effectiveVar;
                 double[] H = mv.H(sVec.x, sVec.y, mVec.surface.z, mVec.surface.wireLine[0]);
                 SimpleMatrix CaInv = this.filterCovMat(H, sVec.CM4, V);
                 if (CaInv != null) {
-                    cMat = CaInv.copy();
+                    cMat = CaInv.copy();                                       
                 } else {
                     return false;
                 }
@@ -557,7 +555,7 @@ public class KFitterStraightFourParameters extends AKFitter {
                 double h0 = mv.hDoca(pointFiltered, mVec.surface.wireLine[0]);
 
                 double residual = effectiveDoca - h0;
-                updatedWeights_singleHit = daf.calc_updatedWeight_singleHit(residual, annealingFactor);                                                 
+                updatedWeights_singleHit = daf.calc_updatedWeight_singleHit(residual, annealingFactor);
             }
             else{                                                       
                 StateVec sVecPreviousFiltered = sv.filtered(!forward).get(k);
@@ -573,7 +571,7 @@ public class KFitterStraightFourParameters extends AKFitter {
                 double effectiveVar = daf.get_EffectiveVar();
                 int indexReferenceWire = daf.get_IndexReferenceWire();
 
-                double[] K = new double[5];
+                double[] K = new double[4];
                 double V = effectiveVar;
                 double[] H = mv.H(sVec.x, sVec.y, mVec.surface.z, mVec.surface.wireLine[indexReferenceWire]);
                 SimpleMatrix CaInv = this.filterCovMat(H, sVec.CM4, V);
@@ -607,7 +605,7 @@ public class KFitterStraightFourParameters extends AKFitter {
                 double h0 = mv.hDoca(pointFiltered, mVec.surface.wireLine[0]);
                 double h1 = mv.hDoca(pointFiltered, mVec.surface.wireLine[1]);
                 double[] residuals = {mVec.surface.doca[0] - h0, mVec.surface.doca[1] - h1};
-                updatedWeights_doubleHits = daf.calc_updatedWeights_doubleHits(residuals, annealingFactor);                               
+                updatedWeights_doubleHits = daf.calc_updatedWeights_doubleHits(residuals, annealingFactor);                                   
             }
             
             chi2kf += c2;
@@ -641,8 +639,7 @@ public class KFitterStraightFourParameters extends AKFitter {
 		org.jlab.clas.tracking.kalmanfilter.AMeasVecs.MeasVec mVec = mv.measurements.get(k);					
 
 		if (Double.isNaN(sVec.x) || Double.isNaN(sVec.y)
-				|| Double.isNaN(sVec.tx) || Double.isNaN(sVec.ty)
-				|| Double.isNaN(sVec.Q)) {	
+				|| Double.isNaN(sVec.tx) || Double.isNaN(sVec.ty)) {	
 			this.setFitFailed = true;
 			return false;
 		}
@@ -780,16 +777,15 @@ public class KFitterStraightFourParameters extends AKFitter {
 
         if(fCInv == null)
             return null;  
-        
-                
+                        
         return new SimpleMatrix(fCInv);
     }
 	
-	private void calcFinalChisq(int sector) {
-		calcFinalChisq(sector, false);
-	}
+    private void calcFinalChisq(int sector) {
+	calcFinalChisq(sector, false);
+    }
     
-	private void calcFinalChisq(int sector, boolean nofilter) {
+    private void calcFinalChisq(int sector, boolean nofilter) {
         int k = svzLength - 1;
         this.chi2 = 0;
         double path = 0;
@@ -905,7 +901,7 @@ public class KFitterStraightFourParameters extends AKFitter {
         if (sVec != null && sVec.CM4 != null) {
                         
             boolean forward = false;
-            sv.transport(sector, k, 0, sVec, mv, this.getSwimmer(), forward);
+            sv.transportStraight(sector, k, 0, sVec, mv, forward);
 
             StateVec svc = sv.transported(forward).get(0);
             path += svc.deltaPath;
@@ -974,9 +970,9 @@ public class KFitterStraightFourParameters extends AKFitter {
             forward = true;
             for (int k1 = 0; k1 < k; k1++) {
                 if (k1 == 0) {
-                    sv.transport(sector, k1, k1 + 1, svc, mv, this.getSwimmer(), forward);
+                    sv.transportStraight(sector, k1, k1 + 1, svc, mv, forward);
                 } else {
-                    sv.transport(sector, k1, k1 + 1, sv.transported(forward).get(k1), mv, this.getSwimmer(), forward);
+                    sv.transportStraight(sector, k1, k1 + 1, sv.transported(forward).get(k1), mv, forward);
                 }
                 
                 svc = sv.transported(forward).get(k1 + 1);
@@ -1076,6 +1072,10 @@ public class KFitterStraightFourParameters extends AKFitter {
 
     public StateVecs getStateVecs() {
         return sv;
+    }
+    
+    public double getNDFDAF(){
+        return ndfDAF;
     }
 
     public void printlnMeasVecs() {

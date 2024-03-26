@@ -250,6 +250,7 @@ public class DCTBEngine extends DCEngine {
 
                     TrackArray1.set_FitChi2(kFZRef.chi2);
                     TrackArray1.set_FitNDF(kFZRef.NDF);
+                    TrackArray1.set_NDFDAF(kFZRef.getNDFDAF());
                     TrackArray1.setStateVecs(kfStateVecsAlongTrajectory);
                     TrackArray1.set_FitConvergenceStatus(kFZRef.ConvStatus);
                     if (TrackArray1.get_Vtx0().toVector3D().mag() > 500) {
@@ -263,7 +264,7 @@ public class DCTBEngine extends DCEngine {
                     if (TrackArray1.isGood()) {
                         trkcands.add(TrackArray1);
                     }
-                }                
+                }               
             }
             else{           
                 KFitter kFZRef = new KFitter(true, 30, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
