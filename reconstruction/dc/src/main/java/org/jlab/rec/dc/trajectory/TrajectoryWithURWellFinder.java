@@ -9,14 +9,15 @@ import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.cross.Cross;
 import trackfitter.fitter.LineFitter;
 import Jama.Matrix;
-
+import org.jlab.rec.urwell.reader.URWellCross;
 /**
  * A driver class to find the trajectory of a track candidate.  NOTE THAT THE PATH TO FIELD MAPS IS SET BY THE CLARA_SERVICES ENVIRONMENT VAR.
  *
- * @author ziegler
+ * @author Tongtong Cao
  *
  */
-public class TrajectoryFinder {
+
+public class TrajectoryWithURWellFinder {
 
 	private LineFitter lineFit;
 
@@ -48,19 +49,21 @@ public class TrajectoryFinder {
      * @param dcSwim
      * @return a trajectory object
      */
-    public Trajectory findTrajectory(List<Cross> candCrossList, DCGeant4Factory DcDetector, Swim dcSwim) {
+    public Trajectory findTrajectory(List<Cross> candCrossList, URWellCross urCross, DCGeant4Factory DcDetector, Swim dcSwim) {
         Trajectory traj = new Trajectory();
         if (candCrossList.isEmpty()) {
             return traj;
-        }
+        }       
+        
         traj.addAll(candCrossList);
+        traj.set_URWellCross(urCross);
         traj.setSector(candCrossList.get(0).get_Sector());
-        fitTrajectory(traj);
+        fitTrajectory(candCrossList, urCross);
         if (this.TrajChisqProbFitXZ<Constants.TCHISQPROBFITXZ) {            
             return null;
         }
         traj.setStateVecs(getStateVecsAlongTrajectory(DcDetector));
-        traj.setIntegralBdl(integralBdl(candCrossList.get(0).get_Sector(), DcDetector, dcSwim));
+        traj.setIntegralBdl(integralBdl(candCrossList.get(0).get_Sector(), candCrossList.get(0).get_Region(), candCrossList.get(candCrossList.size() - 1).get_Region(),  DcDetector, dcSwim));
         traj.setPathLength(PathLength);
         traj.setA(x_fitCoeff[0]);
         
@@ -74,27 +77,27 @@ public class TrajectoryFinder {
      * @param dcSwim
      * @return integral Bdl
      */
-    public double integralBdl(int sector, DCGeant4Factory DcDetector, Swim dcSwim) {
+    public double integralBdl(int sector, int firstDCRegion, int lastDCRegion, DCGeant4Factory DcDetector, Swim dcSwim) {
 
-        double z1 = DcDetector.getRegionMidpoint(0).z;
-        double z3 = DcDetector.getRegionMidpoint(2).z;
+        double z_init = DcDetector.getRegionMidpoint(firstDCRegion - 1).z;
+        double z_final = DcDetector.getRegionMidpoint(lastDCRegion - 1).z;
 
-        double z = z1;
+        double z = z_init;
 
         double intBdl = 0;
         double pathLen =0;
-        double x0 = x_fitCoeff[0]*z1*z1+x_fitCoeff[1]*z1+x_fitCoeff[2];
-        double y0 = y_fitCoeff[0]*z1*z1+y_fitCoeff[1]*z1+y_fitCoeff[2];
-        double z0 = z1;
+        double x0 = x_fitCoeff[0]*z_init*z_init+x_fitCoeff[1]*z_init+x_fitCoeff[2];
+        double y0 = y_fitCoeff[0]*z_init*z_init+y_fitCoeff[1]*z_init+y_fitCoeff[2];
+        double z0 = z_init;
 
 
-        while(z<z3) {
+        while(z<z_final) {
             counter++;
             
-            if(z3 - z < mmStepSizeForIntBdl/10)
+            if(z_final - z < mmStepSizeForIntBdl/10)
                 z+=mmStepSizeForIntBdl/10.;
             else 
-                z = z3;
+                z = z_final;
             
             double x = x_fitCoeff[0]*z*z+x_fitCoeff[1]*z+x_fitCoeff[2];
             double y = y_fitCoeff[0]*z*z+y_fitCoeff[1]*z+y_fitCoeff[2];
@@ -143,43 +146,124 @@ public class TrajectoryFinder {
      * and constraining the quadratic parameters of the function describing the position values of the state vecs.
      * @param candCrossList list of crosses used in the fit
      */
-    public void fitTrajectory(List<Cross> candCrossList) {             
+    public void fitTrajectory(List<Cross> candCrossList, URWellCross urCross) {             
         x_fitCoeff = new double[3];
         y_fitCoeff = new double[3];
         
-        double[] theta_x = new double[3];
-        double[] theta_x_err = new double[3];
-
-        double[] x = new double[3];
-        double[] y = new double[3];
-        double[] z = new double[3];
-
-        double[] x_err = new double[3];
-        double[] y_err = new double[3];
-
-        for (int i = 0; i < 3; i++) {
-            // make sure that the track direction makes sense
-            if (candCrossList.get(i).get_Dir().z() == 0) {
-                return;
+        if(candCrossList.size() == 3){
+            double[] theta_x = new double[3];
+            double[] theta_x_err = new double[3];
+            
+            double[] z = new double[3];
+            
+            for (int i = 0; i < 3; i++) {
+                // make sure that the track direction makes sense
+                if (candCrossList.get(i).get_Dir().z() == 0) {
+                    return;
+                }
+                
+                theta_x[i] = candCrossList.get(i).get_Dir().x() / candCrossList.get(i).get_Dir().z();
+                theta_x_err[i] = calcTanErr(candCrossList.get(i).get_Dir().x(), candCrossList.get(i).get_Dir().z(), candCrossList.get(i).get_DirErr().x(), candCrossList.get(i).get_DirErr().z());
             }
 
-            x[i] = candCrossList.get(i).get_Point().x();
-            y[i] = candCrossList.get(i).get_Point().y();
-            z[i] = candCrossList.get(i).get_Point().z();
-
-            x_err[i] = candCrossList.get(i).get_PointErr().x();
-            y_err[i] = candCrossList.get(i).get_PointErr().x();
-
-            theta_x[i] = candCrossList.get(i).get_Dir().x() / candCrossList.get(i).get_Dir().z();
-            theta_x_err[i] = calcTanErr(candCrossList.get(i).get_Dir().x(), candCrossList.get(i).get_Dir().z(), candCrossList.get(i).get_DirErr().x(), candCrossList.get(i).get_DirErr().z());
+            lineFit = new LineFitter();
+            boolean linefitstatusOK = lineFit.fitStatus(z, theta_x, new double[3], theta_x_err, 3);
+            TrajChisqProbFitXZ = lineFit.getFit().getProb();
         }
+        else{
+            TrajChisqProbFitXZ = Double.POSITIVE_INFINITY;
+        }
+        
+        if(urCross == null && candCrossList.size() == 3){
+            double[] x = new double[3];
+            double[] y = new double[3];
+            double[] z = new double[3];
 
-        lineFit = new LineFitter();
-        boolean linefitstatusOK = lineFit.fitStatus(z, theta_x, new double[3], theta_x_err, 3);
-        TrajChisqProbFitXZ = lineFit.getFit().getProb();
+            double[] x_err = new double[3];
+            double[] y_err = new double[3];
 
-        x_fitCoeff = quadraticLRFit(z, x, x_err);
-        y_fitCoeff = quadraticLRFit(z, y, y_err);                  
+            for (int i = 0; i < 3; i++) {
+                // make sure that the track direction makes sense
+                if (candCrossList.get(i).get_Dir().z() == 0) {
+                    return;
+                }
+
+                x[i] = candCrossList.get(i).get_Point().x();
+                y[i] = candCrossList.get(i).get_Point().y();
+                z[i] = candCrossList.get(i).get_Point().z();
+
+                x_err[i] = candCrossList.get(i).get_PointErr().x();
+                y_err[i] = candCrossList.get(i).get_PointErr().x();
+
+            }
+
+            x_fitCoeff = quadraticLRFit(z, x, x_err);
+            y_fitCoeff = quadraticLRFit(z, y, y_err); 
+        }
+        else if(urCross != null && candCrossList.size() == 2){            
+            double[] x = new double[3];
+            double[] y = new double[3];
+            double[] z = new double[3];
+
+            double[] x_err = new double[3];
+            double[] y_err = new double[3];
+
+            for (int i = 0; i < 2; i++) {
+                // make sure that the track direction makes sense
+                if (candCrossList.get(i).get_Dir().z() == 0) {
+                    return;
+                }
+
+                x[i] = candCrossList.get(i).get_Point().x();
+                y[i] = candCrossList.get(i).get_Point().y();
+                z[i] = candCrossList.get(i).get_Point().z();
+
+                x_err[i] = candCrossList.get(i).get_PointErr().x();
+                y_err[i] = candCrossList.get(i).get_PointErr().x();
+            }
+            
+            x[2] = urCross.local().x();
+            y[2] = urCross.local().y();
+            z[2] = urCross.local().z();
+            
+            x_err[2] = Constants.URWELLXRESOLUTION;
+            y_err[2] = Constants.URWELLYRESOLUTION;
+
+            x_fitCoeff = quadraticLRFit(z, x, x_err);
+            y_fitCoeff = quadraticLRFit(z, y, y_err); 
+        }
+        else if(urCross != null && candCrossList.size() == 3){
+            double[] x = new double[4];
+            double[] y = new double[4];
+            double[] z = new double[4];
+
+            double[] x_err = new double[4];
+            double[] y_err = new double[4];
+
+            for (int i = 0; i < 3; i++) {
+                // make sure that the track direction makes sense
+                if (candCrossList.get(i).get_Dir().z() == 0) {
+                    return;
+                }
+
+                x[i] = candCrossList.get(i).get_Point().x();
+                y[i] = candCrossList.get(i).get_Point().y();
+                z[i] = candCrossList.get(i).get_Point().z();
+
+                x_err[i] = candCrossList.get(i).get_PointErr().x();
+                y_err[i] = candCrossList.get(i).get_PointErr().x();
+            }
+            
+            x[3] = urCross.local().x();
+            y[3] = urCross.local().y();
+            z[3] = urCross.local().z();
+            
+            x_err[3] = Constants.URWELLXRESOLUTION;
+            y_err[3] = Constants.URWELLYRESOLUTION;
+
+            x_fitCoeff = quadraticLRFit(z, x, x_err);
+            y_fitCoeff = quadraticLRFit(z, y, y_err); 
+        }
     }
     
     private double[] quadraticLRFit(double[] x, double[] y, double[] err) {
