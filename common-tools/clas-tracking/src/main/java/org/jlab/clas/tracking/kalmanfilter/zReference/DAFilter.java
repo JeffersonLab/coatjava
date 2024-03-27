@@ -138,7 +138,8 @@ public class DAFilter {
         double Lambda = factor * Math.exp(-0.5 / annealingFactor * dafChi2Cut);
         double sum = Phi + Lambda;
         double updatedWeight = Phi/sum;        
-
+        
+        if(updatedWeight < 1.e-100) updatedWeight = 1.e-100;        
         return updatedWeight;
     }
     
@@ -159,6 +160,7 @@ public class DAFilter {
         double[] updatedWeights = {0.5, 0.5};
         for(int i = 0; i < 2; i++){
             updatedWeights[i] = Phi[i]/sum;
+            if(updatedWeights[i] < 1.e-100) updatedWeights[i] = 1.e-100;
         }
         
         return updatedWeights;

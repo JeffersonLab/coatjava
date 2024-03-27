@@ -68,6 +68,7 @@ public class KFitter extends AKFitter {
     }
     
     public static void setDafAnnealingFactorsTB(String strDAFAnnealingFactorsTB){
+            dafAnnealingFactorsTB.clear();
             String strs[] = strDAFAnnealingFactorsTB.split(",");
             for(int i = 0; i < strs.length; i++)
                 dafAnnealingFactorsTB.add(Double.valueOf(strs[i]));       
