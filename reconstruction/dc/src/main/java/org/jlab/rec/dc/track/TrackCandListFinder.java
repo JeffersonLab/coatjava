@@ -893,7 +893,7 @@ public class TrackCandListFinder {
 
                     LOGGER.log(Level.FINE, "Kalman fitter - 2 = " + (System.currentTimeMillis() - startTime));
 
-                    KFitterStraightFourParameters kFZRef = new KFitterStraightFourParameters(true, 1, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
+                    KFitterStraightFourParameters kFZRef = new KFitterStraightFourParameters(true, 2, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
                     List<Surface> measSurfaces = getMeasSurfaces(cand, DcDetector);
                     StateVecs svs = new StateVecs();
                     org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
