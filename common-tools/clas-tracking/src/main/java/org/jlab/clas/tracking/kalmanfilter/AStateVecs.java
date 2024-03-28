@@ -10,6 +10,14 @@ import org.jlab.clas.tracking.kalmanfilter.AMeasVecs.MeasVec;
 import org.jlab.clas.tracking.kalmanfilter.helical.KFitter;
 import org.jlab.clas.tracking.trackrep.Helix;
 import org.jlab.geom.prim.Point3D;
+import org.jlab.jnp.matrix.Matrix;
+import org.jlab.jnp.matrix.Matrix5x5;
+
+/**
+ *
+ * @author ziegler
+ * @author Tongtong Cao
+ */
 
 public abstract class AStateVecs {
 
@@ -245,6 +253,79 @@ public abstract class AStateVecs {
         public double energyLoss;
         public double dx;
         public double path;
+        
+        /////////////////////// extra variables for forward tracking ///////////////////////
+        // tx = px/pz
+        public double ty; //=py/pz
+        public double Q; //q/p
+        public double B;
+        public double deltaPath;   
+        public Matrix CM = new Matrix();;
+        private double _PathLength;
+        
+        /////////////////////// For DAF ///////////////////////
+        private double weightDAF_single = 1;
+        private double[] weightDAF_double = {0.5, 0.5};
+        
+        public double getWeightDAF_singleHit(){
+            return weightDAF_single;
+        }
+        public void setWeightDAF_singleHit(double weight){
+            this.weightDAF_single = weight;
+        }
+
+        public double[] getWeightDAF_doubleHits(){
+            return weightDAF_double;
+        }
+        public void setWeightDAF_doubleHits(double[] weight){
+            this.weightDAF_double = weight;
+        }
+        
+        private double finalDAFWeight = -999;
+        public double getFinalDAFWeight(){
+            return finalDAFWeight;
+        }
+        public void setFinalDAFWeight(double weight){
+            this.finalDAFWeight = weight;
+        }
+
+        private int SorDHit = -1; // 1 : single hit; 0: double hit for DC
+        public int getSorDHit(){
+            return SorDHit;
+        }
+        public void setSorDHit(int SorDHit){
+            this.SorDHit = SorDHit;
+        }
+                        
+        public double getPathLength() {
+            return _PathLength;
+        }
+
+        public void setPathLength(double _PathLength) {
+            this._PathLength = _PathLength;
+        }
+        
+        // KF projector --> get Wire midPoint match
+        private double hw;
+
+        public double getProjector() {
+            return hw;
+        }
+
+        public void setProjector(double h) {
+            this.hw = h;
+        }
+        // KF projector --> get fit doca
+        private double h;
+
+        public double getProjectorDoca() {
+            return h;
+        }
+
+        public void setProjectorDoca(double h) {
+            this.h = h;
+        }
+        /////////////////////// extra variables for forward tracking ///////////////////////
 
         public StateVec(int k) {
             this.k = k;
@@ -294,8 +375,18 @@ public abstract class AStateVecs {
             this.energyLoss = s.energyLoss;
             this.dx = s.dx;
             this.path = s.path;
-            this.covMat = this.copyMatrix(s.covMat);
-            this.F = this.copyMatrix(s.F);
+            if(s.covMat != null)
+            	this.covMat = this.copyMatrix(s.covMat);
+            if(s.F != null)
+            	this.F = this.copyMatrix(s.F);            
+            this.ty = s.ty;
+            this.Q = s.Q;
+            this.B = s.B;
+            this.deltaPath = s.deltaPath;
+            if(s.CM != null)
+            	Matrix5x5.copy(s.CM, this.CM);
+            this.weightDAF_single = s.weightDAF_single;
+            this.weightDAF_double = s.weightDAF_double;
         }
 
         public void copyCovMat(double[][] c) {
@@ -414,8 +505,7 @@ public abstract class AStateVecs {
             if (Math.abs(phi0) > Math.PI) phi0 -= Math.signum(phi0) * 2 * Math.PI;
             double tanDip   = vec.tanL;
             double z0       = vec.z0 + vec.dz;
-            //double omega    = turningSign * KFitter.polarity / R;  
-            double omega    = Math.signum(vec.kappa) / R;  
+            double omega    = -turningSign / R;
             double d0       = -vec.d_rho;
             
             Helix helix = new Helix(d0, phi0, omega, z0, tanDip, turningSign, bfield, xref, yref, units);

@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import org.jlab.clas.swimtools.Swim;
-import org.jlab.clas.swimtools.Swimmer;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
@@ -31,28 +30,35 @@ import org.jlab.rec.dc.segment.SegmentFinder;
 import org.jlab.rec.dc.timetodistance.TableLoader;
 import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
 import org.jlab.rec.dc.track.Track;
-import org.jlab.rec.dc.track.TrackCandListFinder;
 import org.jlab.rec.dc.trajectory.StateVec;
 import org.jlab.rec.dc.trajectory.Trajectory;
-import org.jlab.rec.dc.trajectory.TrajectoryFinder;
+import org.jlab.rec.dc.trajectory.TrajectoryWithURWellFinder;
 import org.jlab.utils.groups.IndexedTable;
 
 import org.jlab.clas.tracking.kalmanfilter.Surface;
+import org.jlab.clas.tracking.kalmanfilter.zReference.KFitterWithURWell;
 import org.jlab.clas.tracking.kalmanfilter.zReference.KFitter;
-import org.jlab.clas.tracking.kalmanfilter.zReference.KFitterStraight;
 import org.jlab.clas.tracking.kalmanfilter.zReference.StateVecs;
 import org.jlab.clas.tracking.utilities.MatrixOps.Libr;
 import org.jlab.clas.tracking.utilities.RungeKuttaDoca;
+import org.jlab.rec.dc.track.TrackCandListWithURWellFinder;
+import org.jlab.rec.urwell.reader.URWellCross;
+import org.jlab.rec.urwell.reader.URWellReader;
 
-public class DCTBEngine extends DCEngine {
+/**
+ *
+ * @author Tongtong Cao
+ */
+
+public class DCURWellTBEngine extends DCEngine {
     
     private TimeToDistanceEstimator tde = null;
 
-    public DCTBEngine(String trking) {
+    public DCURWellTBEngine(String trking) {
         super(trking);
         tde = new TimeToDistanceEstimator();
     }
-    public DCTBEngine() {
+    public DCURWellTBEngine() {
         super("DCTB");
         this.getBanks().init("TimeBasedTrkg", "HB", "TB");
         tde = new TimeToDistanceEstimator();
@@ -172,6 +178,10 @@ public class DCTBEngine extends DCEngine {
             return true;
         }
         
+        // Read urwell crosses on HB tracks
+        URWellReader uRWellReader = new URWellReader(event, this.getBanks().getPrefix());
+        List<URWellCross> urCrosses = uRWellReader.getUrwellCrosses();
+        
         DataBank trkbank = event.getBank(this.getBanks().getInputTracksBank());
         //DataBank trkcovbank = event.getBank("TimeBasedTrkg::TBCovMat");
         int trkrows = trkbank.rows();
@@ -189,8 +199,18 @@ public class DCTBEngine extends DCEngine {
                     trkbank.getFloat("tx", i), trkbank.getFloat("ty", i));
             HBFinalSV.setZ(trkbank.getFloat("z", i));
             HBtrk.setFinalStateVec(HBFinalSV);
+            
+            int urcross_id =  trkbank.getShort("URWellCross_ID", i);
+            if(urcross_id > 0){
+                for(int j = 0; j < urCrosses.size(); j++){
+                    if(urCrosses.get(j).id() == urcross_id){
+                        HBtrk.set_URWellCross(urCrosses.get(j));                
+                        break;
+                    }
+                }
+            }
             TrackArray[HBtrk.get_Id()-1] = HBtrk; 
-//            TrackArray[HBtrk.get_Id()-1].set_Status(0);
+            TrackArray[HBtrk.get_Id()-1].set_Status_crossCombo(trkbank.getByte("status_crossCombo", i));
         }
         if(TrackArray==null) {
             return true; // HB tracks not saved correctly
@@ -198,11 +218,9 @@ public class DCTBEngine extends DCEngine {
         for(Segment seg : segments) {
             if(seg.get(0).get_AssociatedHBTrackID()>0) {
                     TrackArray[seg.get(0).get_AssociatedHBTrackID()-1].get_ListOfHBSegments().add(seg); 
-                    //if(seg.get_Status()==1)
-                    //    TrackArray[seg.get(0).get_AssociatedHBTrackID()-1].set_Status(1);
             }
         }
-        
+                
         //6) find the list of  track candidates
         // read beam offsets from database
         double beamXoffset, beamYoffset;
@@ -214,11 +232,11 @@ public class DCTBEngine extends DCEngine {
             beamXoffset += raster_bank.getFloat("x", 0);
             beamYoffset += raster_bank.getFloat("y", 0);
         }
-	TrackCandListFinder trkcandFinder = new TrackCandListFinder("TimeBased");
-        TrajectoryFinder trjFind = new TrajectoryFinder();
+	TrackCandListWithURWellFinder trkcandFinder = new TrackCandListWithURWellFinder("TimeBased");
+        TrajectoryWithURWellFinder trjFind = new TrajectoryWithURWellFinder();
 
         for (Track TrackArray1 : TrackArray) {
-            if (TrackArray1 == null || TrackArray1.get_ListOfHBSegments() == null || TrackArray1.get_ListOfHBSegments().size() < 5) {
+            if (TrackArray1 == null || TrackArray1.get_ListOfHBSegments() == null || TrackArray1.get_ListOfHBSegments().size() < 3) {
                 continue;
             }
             TrackArray1.set_MissingSuperlayer(get_Status(TrackArray1));
@@ -226,57 +244,17 @@ public class DCTBEngine extends DCEngine {
             if (TrackArray1.size() < 1) {
                 continue;
             }
+            
             crosses.addAll(TrackArray1);
-            if(Math.abs(Swimmer.getTorScale()) < 0.001){
-                KFitterStraight kFZRef = new KFitterStraight(true, 30, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
-                List<Surface> measSurfaces = getMeasSurfaces(TrackArray1, Constants.getInstance().dcDetector);
-                StateVecs svs = new StateVecs();
-                org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
-                getInitState(TrackArray1, measSurfaces.get(0).z, initSV, kFZRef, dcSwim, new float[3]);
-                kFZRef.initFromHB(measSurfaces, initSV, TrackArray1.get(0).get(0).get(0).get_Beta());
-                kFZRef.runFitter();
-                List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
-
-                StateVec fn = new StateVec();
-                if (kFZRef.setFitFailed==false && kFZRef.finalStateVec!=null) { 
-                    // set the state vector at the last measurement site
-                    fn.set(kFZRef.finalStateVec.x, kFZRef.finalStateVec.y, kFZRef.finalStateVec.tx, kFZRef.finalStateVec.ty); 
-                    //set the track parameters if the filter does not fail
-                    TrackArray1.set_P(1./Math.abs(kFZRef.finalStateVec.Q));
-                    TrackArray1.set_Q((int)Math.signum(kFZRef.finalStateVec.Q));                
-
-                    trkcandFinder.setTrackPars(TrackArray1, new Trajectory(), trjFind, fn, kFZRef.finalStateVec.z, Constants.getInstance().dcDetector, dcSwim, beamXoffset, beamYoffset);
-                    // candidate parameters are set from the state vector
-                    if (TrackArray1.fit_Successful == false) {
-                        continue;
-                    }                
-
-                    TrackArray1.set_FitChi2(kFZRef.chi2);
-                    TrackArray1.set_FitNDF(kFZRef.NDF);
-                    TrackArray1.setStateVecs(kfStateVecsAlongTrajectory);
-                    TrackArray1.set_FitConvergenceStatus(kFZRef.ConvStatus);
-                    if (TrackArray1.get_Vtx0().toVector3D().mag() > 500) {
-                        continue;
-                    }
-
-                    // get CovMat at vertex
-                    Point3D VTCS = crosses.get(0).getCoordsInSector(TrackArray1.get_Vtx0().x(), TrackArray1.get_Vtx0().y(), TrackArray1.get_Vtx0().z());
-                    TrackArray1.set_CovMat(kFZRef.propagateToVtx(crosses.get(0).get_Sector(), VTCS.z()));
-
-                    if (TrackArray1.isGood()) {
-                        trkcands.add(TrackArray1);
-                    }
-                }                
-            }
-            else{           
-                KFitter kFZRef = new KFitter(true, 30, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
+            if(TrackArray1.get_URWellCross() != null){
+                KFitterWithURWell kFZRef = new KFitterWithURWell(true, 30, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
                 List<Surface> measSurfaces = getMeasSurfaces(TrackArray1, Constants.getInstance().dcDetector);
                 StateVecs svs = new StateVecs();
                 org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
                 getInitState(TrackArray1, measSurfaces.get(0).z, initSV, kFZRef, dcSwim, new float[3]);
                 kFZRef.initFromHB(measSurfaces, initSV, TrackArray1.get(0).get(0).get(0).get_Beta(), useDAF);
-                kFZRef.runFitter(useDAF);    
-                               
+                kFZRef.runFitter(useDAF);
+                    
                 List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
 
                 StateVec fn = new StateVec();
@@ -309,12 +287,53 @@ public class DCTBEngine extends DCEngine {
                     if (TrackArray1.isGood()) {
                         trkcands.add(TrackArray1);
                     }
-
                 }
             }
-              		
-        }        
-    	
+            else{
+                KFitter kFZRef = new KFitter(true, 30, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
+                List<Surface> measSurfaces = getMeasSurfaces(TrackArray1, Constants.getInstance().dcDetector);
+                StateVecs svs = new StateVecs();
+                org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
+                getInitState(TrackArray1, measSurfaces.get(0).z, initSV, kFZRef, dcSwim, new float[3]);
+                kFZRef.initFromHB(measSurfaces, initSV, TrackArray1.get(0).get(0).get(0).get_Beta(), useDAF);
+                kFZRef.runFitter(useDAF);
+
+                List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
+
+                StateVec fn = new StateVec();
+                if (kFZRef.setFitFailed==false && kFZRef.finalStateVec!=null) { 
+                    // set the state vector at the last measurement site
+                    fn.set(kFZRef.finalStateVec.x, kFZRef.finalStateVec.y, kFZRef.finalStateVec.tx, kFZRef.finalStateVec.ty); 
+                    //set the track parameters if the filter does not fail
+                    TrackArray1.set_P(1./Math.abs(kFZRef.finalStateVec.Q));
+                    TrackArray1.set_Q((int)Math.signum(kFZRef.finalStateVec.Q));                
+
+                    trkcandFinder.setTrackPars(TrackArray1, new Trajectory(), trjFind, fn, kFZRef.finalStateVec.z, Constants.getInstance().dcDetector, dcSwim, beamXoffset, beamYoffset);
+                    // candidate parameters are set from the state vector
+                    if (TrackArray1.fit_Successful == false) {
+                        continue;
+                    }                
+
+                    TrackArray1.set_FitChi2(kFZRef.chi2);
+                    TrackArray1.set_FitNDF(kFZRef.NDF);
+                    TrackArray1.set_NDFDAF(kFZRef.getNDFDAF());
+                    TrackArray1.setStateVecs(kfStateVecsAlongTrajectory);
+                    TrackArray1.set_FitConvergenceStatus(kFZRef.ConvStatus);
+                    if (TrackArray1.get_Vtx0().toVector3D().mag() > 500) {
+                        continue;
+                    }
+
+                    // get CovMat at vertex
+                    Point3D VTCS = crosses.get(0).getCoordsInSector(TrackArray1.get_Vtx0().x(), TrackArray1.get_Vtx0().y(), TrackArray1.get_Vtx0().z());
+                    TrackArray1.set_CovMat(kFZRef.propagateToVtx(crosses.get(0).get_Sector(), VTCS.z()));
+
+                    if (TrackArray1.isGood()) {
+                        trkcands.add(TrackArray1);
+                    }
+                }
+            }		
+        }            
+        
         if(!trkcands.isEmpty()) {
             //trkcandFinder.removeOverlappingTracks(trkcands);		// remove overlaps        	        	
             for(Track trk: trkcands) {
@@ -354,14 +373,14 @@ public class DCTBEngine extends DCEngine {
 
             rbc.fillAllTBBanks(event, fhits, clusters, segments, crosses, null); // no cand found, stop here and save the hits, the clusters, the segments, the crosses
             return true;
-        }
+        }        
         
-        rbc.fillAllTBBanks(event, fhits, clusters, segments, crosses, trkcands);
+        rbc.fillAllTBBanks(event, fhits, clusters, segments, crosses, urCrosses, trkcands);
 
         return true;
     }
-    
-    public List<org.jlab.rec.dc.trajectory.StateVec> setKFStateVecsAlongTrajectory(KFitter kFZRef) {
+
+    public List<org.jlab.rec.dc.trajectory.StateVec> setKFStateVecsAlongTrajectory(KFitterWithURWell kFZRef) {
     	List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = new ArrayList<>();
     	
     	for(int i = 0; i < kFZRef.kfStateVecsAlongTrajectory.size(); i++) {
@@ -380,24 +399,26 @@ public class DCTBEngine extends DCEngine {
     	return kfStateVecsAlongTrajectory;
     }
     
-    public List<org.jlab.rec.dc.trajectory.StateVec> setKFStateVecsAlongTrajectory(KFitterStraight kFZRef) {
+    public List<org.jlab.rec.dc.trajectory.StateVec> setKFStateVecsAlongTrajectory(KFitter kFZRef) {
     	List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = new ArrayList<>();
     	
     	for(int i = 0; i < kFZRef.kfStateVecsAlongTrajectory.size(); i++) {
-            org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec svc = kFZRef.kfStateVecsAlongTrajectory.get(i);    	
-    	    org.jlab.rec.dc.trajectory.StateVec sv = new org.jlab.rec.dc.trajectory.StateVec(svc.x, svc.y, svc.tx, svc.ty);
+            org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec svc = kFZRef.kfStateVecsAlongTrajectory.get(i);    		
+            org.jlab.rec.dc.trajectory.StateVec sv = new org.jlab.rec.dc.trajectory.StateVec(svc.x, svc.y, svc.tx, svc.ty);            
             sv.setZ(svc.z);
             sv.setB(svc.B);
             sv.setPathLength(svc.getPathLength()); 
             sv.setProjector(svc.getProjector());
             sv.setProjectorDoca(svc.getProjectorDoca());
+            sv.setDAFWeight(svc.getFinalDAFWeight());
+            sv.setSorDHit(svc.getSorDHit());
             kfStateVecsAlongTrajectory.add(sv);
     	}
     	
     	return kfStateVecsAlongTrajectory;
     }
     
-    public void getInitState(Track trkcand, double z0, org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initStateVec, KFitter kf, Swim dcSwim, float[] bf) {
+    public void getInitState(Track trkcand, double z0, org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initStateVec, KFitterWithURWell kf, Swim dcSwim, float[] bf) {
         if (trkcand != null && trkcand.getFinalStateVec()!=null ) {
             initStateVec.x = trkcand.getFinalStateVec().x();
             initStateVec.y = trkcand.getFinalStateVec().y();
@@ -409,11 +430,41 @@ public class DCTBEngine extends DCEngine {
             RungeKuttaDoca rk = new RungeKuttaDoca();
             rk.SwimToZ(trkcand.get(0).get_Sector(), initStateVec, dcSwim, z0, bf);
             
-            double ex = Constants.TBINITIALSTATEUNCSCALE * Constants.TBINITIALSTATEXUNC;
-            double ey = Constants.TBINITIALSTATEUNCSCALE * Constants.TBINITIALSTATEYUNC;
-            double etx = Constants.TBINITIALSTATEUNCSCALE * Constants.TBINITIALSTATETXUNC;
-            double ety = Constants.TBINITIALSTATEUNCSCALE * Constants.TBINITIALSTATETYUNC;
-            double eQ = Constants.TBINITIALSTATEUNCSCALE * Constants.TBINITIALSTATEQUNC;
+            double ex = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEXUNCUR;
+            double ey = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEYUNCUR;
+            double etx = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATETXUNCUR;
+            double ety = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATETYUNCUR;
+            double eQ = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEQUNCUR;
+            
+            if (trkcand.get_URWellCross() == null) {
+                ex = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEXUNCURNOR0;
+                ey = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEYUNCURNOR0;
+                etx = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATETXUNCURNOR0;
+                ety = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATETYUNCURNOR0;
+                eQ = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEQUNCURNOR0;
+            } else {
+                if (trkcand.size() == 2) {
+                    if (trkcand.get(0).get_Region() == 2 && trkcand.get(1).get_Region() == 3) {
+                        ex = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEXUNCURNOR1;
+                        ey = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEYUNCURNOR1;
+                        etx = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATETXUNCURNOR1;
+                        ety = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATETYUNCURNOR1;
+                        eQ = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEQUNCURNOR1;
+                    } else if (trkcand.get(0).get_Region() == 1 && trkcand.get(1).get_Region() == 3) {
+                        ex = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEXUNCURNOR2;
+                        ey = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEYUNCURNOR2;
+                        etx = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATETXUNCURNOR2;
+                        ety = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATETYUNCURNOR2;
+                        eQ = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEQUNCURNOR2;
+                    } else if (trkcand.get(0).get_Region() == 1 && trkcand.get(1).get_Region() == 2) {
+                        ex = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEXUNCURNOR3;
+                        ey = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEYUNCURNOR3;
+                        etx = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATETXUNCURNOR3;
+                        ety = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATETYUNCURNOR3;
+                        eQ = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEQUNCURNOR3;
+                    }
+                }
+            }
 
             //Matrix initCMatrix = new Matrix(FTF);
             Matrix initCMatrix = new Matrix();
@@ -431,7 +482,7 @@ public class DCTBEngine extends DCEngine {
 
     }
     
-    public void getInitState(Track trkcand, double z0, org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initStateVec, KFitterStraight kf, Swim dcSwim, float[] bf) {
+    public void getInitState(Track trkcand, double z0, org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initStateVec, KFitter kf, Swim dcSwim, float[] bf) {
         if (trkcand != null && trkcand.getFinalStateVec()!=null ) {
             initStateVec.x = trkcand.getFinalStateVec().x();
             initStateVec.y = trkcand.getFinalStateVec().y();
@@ -443,11 +494,41 @@ public class DCTBEngine extends DCEngine {
             RungeKuttaDoca rk = new RungeKuttaDoca();
             rk.SwimToZ(trkcand.get(0).get_Sector(), initStateVec, dcSwim, z0, bf);
             
-            double ex = Constants.TBINITIALSTATEUNCSCALE * Constants.TBINITIALSTATEXUNC;
-            double ey = Constants.TBINITIALSTATEUNCSCALE * Constants.TBINITIALSTATEYUNC;
-            double etx = Constants.TBINITIALSTATEUNCSCALE * Constants.TBINITIALSTATETXUNC;
-            double ety = Constants.TBINITIALSTATEUNCSCALE * Constants.TBINITIALSTATETYUNC;
-            double eQ = Constants.TBINITIALSTATEUNCSCALE * Constants.TBINITIALSTATEQUNC;
+            double ex = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEXUNCUR;
+            double ey = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEYUNCUR;
+            double etx = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATETXUNCUR;
+            double ety = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATETYUNCUR;
+            double eQ = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEQUNCUR;
+            
+            if (trkcand.get_URWellCross() == null) {
+                ex = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEXUNCURNOR0;
+                ey = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEYUNCURNOR0;
+                etx = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATETXUNCURNOR0;
+                ety = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATETYUNCURNOR0;
+                eQ = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEQUNCURNOR0;
+            } else {
+                if (trkcand.size() == 2) {
+                    if (trkcand.get(0).get_Region() == 2 && trkcand.get(1).get_Region() == 3) {
+                        ex = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEXUNCURNOR1;
+                        ey = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEYUNCURNOR1;
+                        etx = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATETXUNCURNOR1;
+                        ety = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATETYUNCURNOR1;
+                        eQ = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEQUNCURNOR1;
+                    } else if (trkcand.get(0).get_Region() == 1 && trkcand.get(1).get_Region() == 3) {
+                        ex = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEXUNCURNOR2;
+                        ey = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEYUNCURNOR2;
+                        etx = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATETXUNCURNOR2;
+                        ety = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATETYUNCURNOR2;
+                        eQ = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEQUNCURNOR2;
+                    } else if (trkcand.get(0).get_Region() == 1 && trkcand.get(1).get_Region() == 2) {
+                        ex = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEXUNCURNOR3;
+                        ey = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEYUNCURNOR3;
+                        etx = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATETXUNCURNOR3;
+                        ety = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATETYUNCURNOR3;
+                        eQ = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEQUNCURNOR3;
+                    }
+                }
+            }
 
             //Matrix initCMatrix = new Matrix(FTF);
             Matrix initCMatrix = new Matrix();
@@ -546,6 +627,14 @@ public class DCTBEngine extends DCEngine {
     public List<Surface> getMeasSurfaces(Track trk, DCGeant4Factory DcDetector) { 
         List<HitOnTrack> hOTS = new ArrayList<>(); // the list of hits on track		
         FittedHit hitOnTrk;
+        
+        URWellCross urCross = trk.get_URWellCross();
+        if(urCross != null){
+            HitOnTrack urhot = new HitOnTrack(urCross.sector(), urCross.local().x(), urCross.local().y(), urCross.local().z(), Constants.URWELLXRESOLUTION, Constants.URWELLYRESOLUTION);
+            urhot.isDCHit = false;
+            hOTS.add(urhot);
+        }        
+        
         for(int s = 0; s < trk.get_ListOfHBSegments().size(); s++) {
             for(int h = 0; h < trk.get_ListOfHBSegments().get(s).size(); h++) { 
                 trk.get_ListOfHBSegments().get(s).get(h).calc_CellSize(DcDetector);
@@ -593,6 +682,13 @@ public class DCTBEngine extends DCEngine {
         List<Surface> surfaces = new ArrayList<>(hOTS.size());
         
     	for (int i = 0; i < hOTS.size(); i++) {
+            if(!hOTS.get(i).isDCHit){
+                Surface surf = new Surface(hOTS.get(i).sector, hOTS.get(i)._X, hOTS.get(i)._Y, hOTS.get(i)._Z, hOTS.get(i)._X_err, hOTS.get(i)._Y_err);
+                surf.region = 0;
+    		surf.setLayer(1);
+                surfaces.add(i, surf);
+            }
+            else{
     		Surface surf = new Surface(hOTS.get(i).region, hOTS.get(i)._Z, hOTS.get(i)._X, hOTS.get(i)._tilt, hOTS.get(i)._wireMaxSag, 
     				hOTS.get(i)._doca, hOTS.get(i)._Unc, hOTS.get(i)._hitError, hOTS.get(i)._wireLine);
     		surf.setSector(hOTS.get(i).sector);
@@ -600,6 +696,7 @@ public class DCTBEngine extends DCEngine {
     		surf.setLayer(hOTS.get(i).layer);
     		surf.setNMeas(hOTS.get(i).nMeas);
     		surfaces.add(i, surf);
+            }
     	}
 
     	return surfaces;
@@ -621,6 +718,20 @@ public class DCTBEngine extends DCEngine {
     	public int layer;
     	public int nMeas = 1;
 
+        // For URWell
+        public double _Y;   
+        public double _X_err;
+        public double _Y_err;          
+        public boolean isDCHit = true;
+
+        public HitOnTrack(int sector, double X, double Y, double Z, double X_err, double Y_err) {
+                this.sector = sector;
+    		_X = X;
+                _Y = Y;
+    		_Z = Z;
+                _X_err = X_err;
+                _Y_err = Y_err;
+    	}
 
     	public HitOnTrack(int superlayer, double X, double Z, double wiremaxsag, Line3D wireLine) {
     		_X = X;
@@ -659,6 +770,15 @@ public class DCTBEngine extends DCEngine {
             L[track.get_ListOfHBSegments().get(l).get_Superlayer()-1]++;
             SegMap.put(track.get_ListOfHBSegments().get(l).get_Superlayer(), track.get_ListOfHBSegments().get(l));
         }
+        
+        // In case that a cross is missed
+        for(int l = 0; l < 3; l++){
+            if(L[2*l] == 0 && L[2*l+1] == 0){
+               L[2*l] = -1; 
+               L[2*l+1] = -1;
+            }
+        }
+        
         for(int l = 0; l<6; l++) {
             if(L[l]==0){
                 miss=l+1;

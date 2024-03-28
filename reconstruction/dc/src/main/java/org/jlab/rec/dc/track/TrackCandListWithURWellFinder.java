@@ -22,28 +22,30 @@ import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.trajectory.StateVec;
 import org.jlab.rec.dc.trajectory.Trajectory;
-import org.jlab.rec.dc.trajectory.TrajectoryFinder;
+import org.jlab.rec.dc.trajectory.TrajectoryWithURWellFinder;
 
 import trackfitter.fitter.LineFitPars;
 import trackfitter.fitter.LineFitter;
 
 import org.jlab.clas.tracking.kalmanfilter.Surface;
 import org.jlab.clas.tracking.kalmanfilter.zReference.KFitter;
-import org.jlab.clas.tracking.kalmanfilter.zReference.KFitterStraight;
+import org.jlab.clas.tracking.kalmanfilter.zReference.KFitterWithURWell;
 import org.jlab.clas.tracking.kalmanfilter.zReference.StateVecs;
 import org.jlab.clas.tracking.utilities.MatrixOps.Libr;
 import org.jlab.clas.tracking.utilities.RungeKuttaDoca;
+import org.jlab.rec.urwell.reader.URWellCross;
+import org.jlab.rec.dc.cross.URWellDCCrossesList;
 
 /**
  * A class with a method implementing an algorithm that finds lists of track
  * candidates in the DC
  *
- * @author ziegler, tongtong
+ * @author Tongtong Cao
  */
 
-public class TrackCandListFinder {
+public class TrackCandListWithURWellFinder {
 
-    private static final Logger LOGGER = Logger.getLogger(TrackCandListFinder.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(TrackCandListWithURWellFinder.class.getName());
 
     long startTime, startTime2 = 0;
 
@@ -55,7 +57,7 @@ public class TrackCandListFinder {
     /**
      * @param stat the tracking status Hit-based or Time-based
      */
-    public TrackCandListFinder(String stat) {
+    public TrackCandListWithURWellFinder(String stat) {
         trking = stat;
     }
 
@@ -80,11 +82,6 @@ public class TrackCandListFinder {
                     cand.setSingleSuperlayer(c.get_Segment1());
                 }
             } 
-//            else {
-//                if ((c.get_Segment1().get_Status() == 1) || (c.get_Segment2().get_Status() == 1)) {
-//                    cand.set_Status(1);
-//                }
-//            }
         }
         // if more superlayers are missing than the required number in the analysis - skip the track
         if (NbMissingSl > 6 - Constants.getInstance().NSUPERLAYERTRACKING) {
@@ -134,7 +131,7 @@ public class TrackCandListFinder {
 
         return chi2;
     }
-
+    
     private double[] getTrackInitFit(int sector, double x1, double y1, double z1,
             double x2, double y2, double z2, double x3, double y3, double z3,
             double ux, double uy, double uz, double thX, double thY,
@@ -179,9 +176,44 @@ public class TrackCandListFinder {
 
         return pars;
     }
+    
+    private double[] getTrackInitFit(int sector, double x_first, double y_first, double z_first,
+            double x_last, double y_last, double z_last,
+            double ux, double uy, double uz, double thX, double thY,
+            double theta_first, double theta_last, double a,
+            double iBdl, double TORSCALE, Swim dcSwim) {
+        if (theta_first < -998 || theta_last < -998) {
+            return new double[]{Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY};
+        }
+        double[] pars = new double[2];
 
-    private double calcInitTrkP(double thX, double thY, double theta1, double theta3, double iBdl) {
-        double deltaTheta = theta3 - theta1;
+        double chi2 = 0; // assume err =1 on points 
+        double intBdl = 0;
+
+        double p = calcInitTrkP(thX, thY, theta_first, theta_last, iBdl);
+        double p_x = ux * p;
+        double p_y = uy * p;
+        double p_z = uz * p;
+
+        int q = calcInitTrkQ(a, TORSCALE);
+
+        dcSwim.SetSwimParameters(x_first, y_first, z_first, p_x, p_y, p_z, q);
+        double[] R = dcSwim.SwimToPlaneTiltSecSysBdlXZPlane(sector, z_last);
+        if (R == null) {
+            return new double[]{Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY};
+        }
+
+        chi2 += (R[0] - x_last) * (R[0] - x_last) + (R[1] - y_last) * (R[1] - y_last);
+        intBdl += R[7];
+
+        pars[0] = chi2;
+        pars[1] = intBdl;
+
+        return pars;
+    }
+
+    private double calcInitTrkP(double thX, double thY, double theta_first, double theta_last, double iBdl) {
+        double deltaTheta = theta_last - theta_first;
         if (deltaTheta == 0) {
             return Double.POSITIVE_INFINITY;
         }
@@ -210,13 +242,34 @@ public class TrackCandListFinder {
      * @param donotapplyCuts
      * @return a list of track candidates in the DC
      */
-    public List<Track> getTrackCands(CrossList crossList, DCGeant4Factory DcDetector, double TORSCALE, Swim dcSwim,
+    public List<Track> getTrackCands(URWellDCCrossesList urDCCrossesList, DCGeant4Factory DcDetector, double TORSCALE, Swim dcSwim,
             boolean donotapplyCuts) {
+        
         List<Track> cands = null;
         if (Math.abs(TORSCALE) < 0.001) {
-            cands = this.findStraightTracks(crossList, DcDetector, TORSCALE, dcSwim);
+            cands = this.findStraightTracks(urDCCrossesList, DcDetector, TORSCALE, dcSwim);
         } else {
-            cands = this.findCurvedTracks(crossList, DcDetector, TORSCALE, dcSwim, donotapplyCuts);
+            cands = this.findCurvedTracks(urDCCrossesList, DcDetector, TORSCALE, dcSwim, donotapplyCuts);
+        }
+        return cands;
+    }
+    
+     /**
+     * @param crossList the input list of crosses
+     * @param DcDetector
+     * @param TORSCALE
+     * @param dcSwim
+     * @param donotapplyCuts
+     * @return a list of track candidates in the DC
+     */
+    public List<Track> getTrackCands3URDCCrosses(URWellDCCrossesList urDCCrossesList, DCGeant4Factory DcDetector, double TORSCALE, Swim dcSwim,
+            boolean donotapplyCuts) {
+        
+        List<Track> cands = null;
+        if (Math.abs(TORSCALE) < 0.001) {
+            return null;
+        } else {
+            cands = this.findCurvedTracks3URDCCrosses(urDCCrossesList, DcDetector, TORSCALE, dcSwim, donotapplyCuts);
         }
         return cands;
     }
@@ -341,7 +394,7 @@ public class TrackCandListFinder {
      */
     public void setTrackPars(Track cand,
             Trajectory traj,
-            TrajectoryFinder trjFind,
+            TrajectoryWithURWellFinder trjFind,
             StateVec stateVec, double z,
             DCGeant4Factory getDcDetector,
             Swim dcSwim) {
@@ -351,7 +404,7 @@ public class TrackCandListFinder {
         //LOGGER.log(Level.FINE, "Setting track params for ");stateVec.printInfo();
         dcSwim.SetSwimParameters(stateVec.x(), stateVec.y(), z,
                 pz * stateVec.tanThetaX(), pz * stateVec.tanThetaY(), pz,
-                cand.get_Q());
+                cand.get_Q());        
 
         // swimming to a ref points outside of the last DC region
         double[] VecAtTarOut = dcSwim.SwimToPlaneTiltSecSys(cand.get(0).get_Sector(), 592);
@@ -391,7 +444,7 @@ public class TrackCandListFinder {
             cand.fit_Successful = false;
             return;
         }
-
+               
         double xOr = VecAtTarIn[0];
         double yOr = VecAtTarIn[1];
         double zOr = VecAtTarIn[2];
@@ -405,6 +458,17 @@ public class TrackCandListFinder {
         Point3D trkR1P = C.getCoordsInLab(pxOr, pyOr, pzOr);
         cand.set_Region1TrackX(new Point3D(trkR1X.x(), trkR1X.y(), trkR1X.z()));
         cand.set_Region1TrackP(new Point3D(trkR1P.x(), trkR1P.y(), trkR1P.z()));
+                
+        double[] VecAtURWell = dcSwim.SwimToPlaneTiltSecSys(cand.get(0).get_Sector(), Constants.URWELLLOCALZ);
+        Point3D uRWellPointLocal = new Point3D(VecAtURWell[0], VecAtURWell[1], VecAtURWell[2]);
+        Point3D uRWellPLocal = new Point3D(-VecAtURWell[3], -VecAtURWell[4], -VecAtURWell[5]);
+        Point3D uRWellPointGlobal = C.getCoordsInLab(VecAtURWell[0], VecAtURWell[1], VecAtURWell[2]);
+        Point3D uRWellPGlobal = C.getCoordsInLab(-VecAtURWell[3], -VecAtURWell[4], -VecAtURWell[5]);
+        cand.set_URWellPointLocal(uRWellPointLocal);
+        cand.set_URWellPLocal(uRWellPLocal);
+        cand.set_URWellPointGlobal(uRWellPointGlobal);
+        cand.set_URWellPGlobal(uRWellPGlobal);
+        
 
         Point3D R3TrkPoint = C.getCoordsInLab(stateVec.x(), stateVec.y(), z);
         Point3D R3TrkMomentum = C.getCoordsInLab(pz * stateVec.tanThetaX(),
@@ -478,7 +542,7 @@ public class TrackCandListFinder {
 
     public void setTrackPars(Track cand,
             Trajectory traj,
-            TrajectoryFinder trjFind,
+            TrajectoryWithURWellFinder trjFind,
             StateVec stateVec, double z,
             DCGeant4Factory getDcDetector,
             Swim dcSwim, double xB, double yB) {
@@ -542,6 +606,16 @@ public class TrackCandListFinder {
         Point3D trkR1P = C.getCoordsInLab(pxOr, pyOr, pzOr);
         cand.set_Region1TrackX(new Point3D(trkR1X.x(), trkR1X.y(), trkR1X.z()));
         cand.set_Region1TrackP(new Point3D(trkR1P.x(), trkR1P.y(), trkR1P.z()));
+        
+        double[] VecAtURWell = dcSwim.SwimToPlaneTiltSecSys(cand.get(0).get_Sector(), Constants.URWELLLOCALZ);
+        Point3D uRWellPointLocal = new Point3D(VecAtURWell[0], VecAtURWell[1], VecAtURWell[2]);
+        Point3D uRWellPLocal = new Point3D(-VecAtURWell[3], -VecAtURWell[4], -VecAtURWell[5]);
+        Point3D uRWellPointGlobal = C.getCoordsInLab(VecAtURWell[0], VecAtURWell[1], VecAtURWell[2]);
+        Point3D uRWellPGlobal = C.getCoordsInLab(-VecAtURWell[3], -VecAtURWell[4], -VecAtURWell[5]);
+        cand.set_URWellPointLocal(uRWellPointLocal);
+        cand.set_URWellPLocal(uRWellPLocal);
+        cand.set_URWellPointGlobal(uRWellPointGlobal);
+        cand.set_URWellPGlobal(uRWellPGlobal);
 
         Point3D R3TrkPoint = C.getCoordsInLab(stateVec.x(), stateVec.y(), z);
         Point3D R3TrkMomentum = C.getCoordsInLab(pz * stateVec.tanThetaX(),
@@ -679,7 +753,7 @@ public class TrackCandListFinder {
                 Track t2 = trkcands.get(j);
 //                LOGGER.log(Level.FINE, "Checking overlaps for tracks ");
 //                t1.printInfo();t2.printInfo();
-                if(i!=j && t1.overlaps(t2)) {
+                if(i!=j && t1.overlapsWithURWell(t2)) {
                     if(t1.get_FitChi2()/t1.get_FitNDF()>t2.get_FitChi2()/t2.get_FitNDF())
                         overlap=true;
                     else if(t1.get_FitChi2()/t1.get_FitNDF()==t2.get_FitChi2()/t2.get_FitNDF() && i>j)
@@ -692,7 +766,7 @@ public class TrackCandListFinder {
         trkcands.removeAll(trkcands);
         trkcands.addAll(selectedTracks);
     }
-    
+        
     /**
      * @param selectedTracks the list of selected tracks
      * @param selectedTrk the selected track
@@ -847,26 +921,29 @@ public class TrackCandListFinder {
         return Math.signum(ycen);
     }
 
-    private List<Track> findStraightTracks(CrossList crossList, DCGeant4Factory DcDetector, double TORSCALE, Swim dcSwim) {
+    private List<Track> findStraightTracks(URWellDCCrossesList urDCCrossesList, DCGeant4Factory DcDetector, double TORSCALE, Swim dcSwim) {
 
         if(LOGGER.getLevel()==Level.FINE) {
             startTime2 = System.currentTimeMillis();
         }
 
         List<Track> cands = new ArrayList<>();
-        if (crossList.isEmpty()) {
+        if (urDCCrossesList.get_URWellDCCrossesList().isEmpty()) {
             return cands;
         }
 
-        for (List<Cross> aCrossList : crossList) {
+        for (int i = 0; i < urDCCrossesList.get_URWellDCCrossesList().size(); i++) {
+            
+            List<Cross> aCrossList = urDCCrossesList.get_URWellDCCrossesList().get(i).get_DCCrosses();
+            URWellCross urCross = urDCCrossesList.get_URWellDCCrossesList().get(i).get_URWellCross();
             //initialize
             Track cand = new Track();
-            TrajectoryFinder trjFind = new TrajectoryFinder();
+            TrajectoryWithURWellFinder trjFind = new TrajectoryWithURWellFinder();
 
             if(LOGGER.getLevel()==Level.FINE) {
                 startTime = System.currentTimeMillis();
             }
-            Trajectory traj = trjFind.findTrajectory(aCrossList, DcDetector, dcSwim);
+            Trajectory traj = trjFind.findTrajectory(aCrossList, urCross, DcDetector, dcSwim);
             LOGGER.log(Level.FINE, "Trajectory finding = " + (System.currentTimeMillis() - startTime));
             
 
@@ -888,10 +965,12 @@ public class TrackCandListFinder {
                             cand.get(0).get_Dir().x() / cand.get(0).get_Dir().z(),
                             cand.get(0).get_Dir().y() / cand.get(0).get_Dir().z());
                     cand.set_StateVecAtReg1MiddlePlane(VecAtReg1MiddlePlane);
+                    
+                    cand.set_URWellCross(urCross);      
 
                     LOGGER.log(Level.FINE, "Kalman fitter - 2 = " + (System.currentTimeMillis() - startTime));
 
-                    KFitterStraight kFZRef = new KFitterStraight(true, 1, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
+                    KFitterWithURWell kFZRef = new KFitterWithURWell(true, 1, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
                     List<Surface> measSurfaces = getMeasSurfaces(cand, DcDetector);
                     StateVecs svs = new StateVecs();
                     org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
@@ -936,32 +1015,36 @@ public class TrackCandListFinder {
         return cands;
     }
 
-    private List<Track> findCurvedTracks(CrossList crossList, DCGeant4Factory DcDetector, double TORSCALE, Swim dcSwim,
+    private List<Track> findCurvedTracks(URWellDCCrossesList urDCCrossesList, DCGeant4Factory DcDetector, double TORSCALE, Swim dcSwim,
             boolean donotapplyCuts) {
-    	    	
-    	
+        
         if(LOGGER.getLevel()==Level.FINE) {
             startTime2 = System.currentTimeMillis();
         }
 
-        List<Track> cands = new ArrayList<>();
-        if (crossList.isEmpty()) {
+        List<Track> cands = new ArrayList<Track>();
+        if (urDCCrossesList.get_URWellDCCrossesList().isEmpty()) {
             return cands;
         }
-        for (List<Cross> aCrossList : crossList) {
+        for (int i = 0; i < urDCCrossesList.get_URWellDCCrossesList().size(); i++) {
+            
+            List<Cross> aCrossList = urDCCrossesList.get_URWellDCCrossesList().get(i).get_DCCrosses();
             aCrossList.sort(Comparator.comparing(Cross::get_Sector).thenComparing(Cross::get_Region));
             if (aCrossList.size() < 3) {
                // return cands;
                continue;
             }
+            
+            URWellCross urCross = urDCCrossesList.get_URWellDCCrossesList().get(i).get_URWellCross();
+            
             //initialize
             Track cand = new Track();
-            TrajectoryFinder trjFind = new TrajectoryFinder();
+            TrajectoryWithURWellFinder trjFind = new TrajectoryWithURWellFinder();
 
             if(LOGGER.getLevel()==Level.FINE) {
                 startTime = System.currentTimeMillis();
             }
-            Trajectory traj = trjFind.findTrajectory(aCrossList, DcDetector, dcSwim);
+            Trajectory traj = trjFind.findTrajectory(aCrossList, urCross,  DcDetector, dcSwim);
             
             LOGGER.log(Level.FINE, "Trajectory finding = " + (System.currentTimeMillis() - startTime));
             
@@ -1015,7 +1098,7 @@ public class TrackCandListFinder {
                     
                     double chi2 = pars[0];
                     double iBdl = pars[1];  
-
+                    
                     if (chi2 > Constants.SEEDCUT && donotapplyCuts == false) {
                         continue;
                     }
@@ -1049,7 +1132,8 @@ public class TrackCandListFinder {
                                 cand.get(0).get_Dir().x() / cand.get(0).get_Dir().z(),
                                 cand.get(0).get_Dir().y() / cand.get(0).get_Dir().z());
                         cand.set_StateVecAtReg1MiddlePlane(VecAtReg1MiddlePlane);
-                        
+                                                
+                        cand.set_URWellCross(urCross);                        
                         
                         StateVec fitStateVec = null;
                         // prefer to initialize the seed with region 2 cross due to higher background in region 1
@@ -1060,12 +1144,12 @@ public class TrackCandListFinder {
 
                         LOGGER.log(Level.FINE, "Kalman fitter - 2 = " + (System.currentTimeMillis() - startTime));
 
-                        KFitter kFZRef = new KFitter(true, 10, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
+                        KFitterWithURWell kFZRef = new KFitterWithURWell(true, 10, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
                         List<Surface> measSurfaces = getMeasSurfaces(cand, DcDetector);
                         StateVecs svs = new StateVecs();
                         org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
                         getInitState(cand, measSurfaces.get(0).z, crossIdxinList, initSV, dcSwim, new float[3]);
-                        kFZRef.init(measSurfaces, initSV);						
+                        kFZRef.init(measSurfaces, initSV);	                        
 						
                         kFZRef.runFitter();
                         List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
@@ -1094,7 +1178,8 @@ public class TrackCandListFinder {
                                 cand.setStateVecs(kfStateVecsAlongTrajectory);                                    							
 
                                 cand.setFinalStateVec(fitStateVec);
-                                cand.set_Id(cands.size() + 1);
+                                cand.set_Id(cands.size() + 1);   
+                                cand.set_Status_crossCombo(1);
                                 this.setTrackPars(cand, traj,
                                         trjFind, fitStateVec,
                                         fitStateVec.getZ(),
@@ -1104,12 +1189,300 @@ public class TrackCandListFinder {
                                     cands.add(cand);                                    
                                 }
                             }
-                        }
-                                          
-
+                        }                                          
                     }
                 }
             }
+        }
+        return cands;
+    }
+    
+    
+    private List<Track> findCurvedTracks3URDCCrosses(URWellDCCrossesList urDCCrossesList, DCGeant4Factory DcDetector, double TORSCALE, Swim dcSwim,
+            boolean donotapplyCuts) {
+        
+        if(LOGGER.getLevel()==Level.FINE) {
+            startTime2 = System.currentTimeMillis();
+        }
+
+        List<Track> cands = new ArrayList<Track>();
+        if (urDCCrossesList.get_URWellDCCrossesList().isEmpty()) {
+            return cands;
+        }
+        for (int i = 0; i < urDCCrossesList.get_URWellDCCrossesList().size(); i++) {
+            
+            List<Cross> aCrossList = urDCCrossesList.get_URWellDCCrossesList().get(i).get_DCCrosses();
+            aCrossList.sort(Comparator.comparing(Cross::get_Sector).thenComparing(Cross::get_Region));
+            if (aCrossList.size() < 2) {
+               // return cands;
+               continue;
+            }
+            
+            URWellCross urCross = urDCCrossesList.get_URWellDCCrossesList().get(i).get_URWellCross();
+            
+            //initialize
+            Track cand = new Track();
+            TrajectoryWithURWellFinder trjFind = new TrajectoryWithURWellFinder();
+
+            if(LOGGER.getLevel()==Level.FINE) {
+                startTime = System.currentTimeMillis();
+            }
+            Trajectory traj = trjFind.findTrajectory(aCrossList, urCross,  DcDetector, dcSwim);
+            
+            LOGGER.log(Level.FINE, "Trajectory finding = " + (System.currentTimeMillis() - startTime));
+            
+
+            if (traj == null) {
+                continue;
+            }
+
+            cand.addAll(aCrossList);
+            cand.setSector(aCrossList.get(0).get_Sector());
+
+            // set the candidate trajectory using the parametrization of the track trajectory
+            // and estimate intefral Bdl along that path
+            cand.setStateVecs(traj.getStateVecs());
+            cand.setIntegralBdl(traj.getIntegralBdl());
+
+            //require 3 crosses to make a track (allows for 1 pseudo-cross)
+            if (urCross == null && aCrossList.size() == 3) {
+            //    LOGGER.log(Level.FINE, "---- cand in sector " + aCrossList.get(0).getSector());
+            //    LOGGER.log(Level.FINE, aCrossList.get(0).printInfo());
+            //    LOGGER.log(Level.FINE, aCrossList.get(1).printInfo());
+            //    LOGGER.log(Level.FINE, aCrossList.get(2).printInfo());
+            //    LOGGER.log(Level.FINE, "---------------");
+                double x1 = aCrossList.get(0).get_Point().x();
+                double y1 = aCrossList.get(0).get_Point().y();
+                double z1 = aCrossList.get(0).get_Point().z();
+                double x2 = aCrossList.get(1).get_Point().x();
+                double y2 = aCrossList.get(1).get_Point().y();
+                double z2 = aCrossList.get(1).get_Point().z();
+                double x3 = aCrossList.get(2).get_Point().x();
+                double y3 = aCrossList.get(2).get_Point().y();
+                double z3 = aCrossList.get(2).get_Point().z();
+                double ux = aCrossList.get(0).get_Dir().x();
+                double uy = aCrossList.get(0).get_Dir().y();
+                double uz = aCrossList.get(0).get_Dir().z();
+                double thX = ux / uz;
+                double thY = uy / uz;
+                double theta3s2 = Math.atan(cand.get(2).get_Segment2().get_fittedCluster().get_clusterLineFitSlope());
+                double theta1s2 = Math.atan(cand.get(0).get_Segment2().get_fittedCluster().get_clusterLineFitSlope());
+                double theta3s1 = Math.atan(cand.get(2).get_Segment1().get_fittedCluster().get_clusterLineFitSlope());
+                double theta1s1 = Math.atan(cand.get(0).get_Segment1().get_fittedCluster().get_clusterLineFitSlope());
+
+                double theta1 = 0.5 * (theta1s1 + theta1s2);
+                double theta3 = 0.5 * (theta3s1 + theta3s2);                     
+
+                double[] pars = getTrackInitFit(cand.get(0).get_Sector(), x1, y1, z1, x2, y2, z2, x3, y3, z3,
+                        ux, uy, uz, thX, thY,
+                        theta1, theta3, traj.getA(), 
+                        traj.getIntegralBdl(), TORSCALE, dcSwim);
+
+                double chi2 = pars[0];
+                double iBdl = pars[1];  
+
+                if (chi2 > Constants.SEEDCUT && donotapplyCuts == false) {
+                    continue;
+                }
+                // compute delta theta using the non-pseudo segments in region 1 and 3
+
+                // get integral Bdl from the swimmer trajectory
+                //double iBdl = traj.getIntegralBdl(); 
+                if (iBdl != 0) {
+                    // momentum estimate if Bdl is non zero and the track has curvature  
+                    double p = calcInitTrkP(thX, thY, theta1, theta3, iBdl);
+                    if(LOGGER.getLevel()==Level.FINE) {
+                        startTime = System.currentTimeMillis();
+                    }
+                    int q = this.calcInitTrkQ(traj.getA(), TORSCALE);
+
+                    LOGGER.log(Level.FINE, "calcInitTrkQ = " + (System.currentTimeMillis() - startTime));
+
+                    if (p > 11) {
+                        p = 11;
+                    }
+                    //if(p>Constants.MAXTRKMOM || p< Constants.MINTRKMOM)
+                    //  continue;
+
+                    cand.set_Q(q);
+                    // momentum correction using the swam trajectory iBdl
+                    cand.set_P(p);                                                                   
+
+                    StateVec fitStateVec = null;
+                    // prefer to initialize the seed with region 2 cross due to higher background in region 1
+                    int crossIdxinList = 1;
+
+                    LOGGER.log(Level.FINE, "Kalman fitter - 2 = " + (System.currentTimeMillis() - startTime));
+
+                    KFitter kFZRef = new KFitter(true, 10, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
+                    List<Surface> measSurfaces = getMeasSurfaces(cand, DcDetector);
+                    StateVecs svs = new StateVecs();
+                    org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
+                    getInitState(cand, measSurfaces.get(0).z, crossIdxinList, initSV, dcSwim, new float[3]);
+                    kFZRef.init(measSurfaces, initSV);	                        
+
+                    kFZRef.runFitter();
+                    List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
+
+                    if (kFZRef.finalStateVec == null) {
+                        continue;
+                    } else {
+                        if (kFZRef.chi2 < Constants.MAXCHI2) {
+
+                            fitStateVec = new StateVec(kFZRef.finalStateVec.x,
+                                            kFZRef.finalStateVec.y, kFZRef.finalStateVec.tx, kFZRef.finalStateVec.ty);
+                            q = (int) Math.signum(kFZRef.finalStateVec.Q);
+                            p = 1. / Math.abs(kFZRef.finalStateVec.Q);
+                            fitStateVec.setZ(kFZRef.finalStateVec.z);
+
+                            //set the track parameters 
+                            cand.set_P(p);
+                            cand.set_Q(q);
+
+                            // candidate parameters 
+                            cand.set_FitChi2(kFZRef.chi2);
+                            cand.set_FitNDF(kFZRef.NDF);
+                            cand.set_FitConvergenceStatus(kFZRef.ConvStatus);
+
+                            cand.set_CovMat(kFZRef.finalStateVec.CM);
+                            cand.setStateVecs(kfStateVecsAlongTrajectory);                                    							
+
+                            cand.setFinalStateVec(fitStateVec);
+                            cand.set_Id(cands.size() + 1); 
+                            cand.set_Status_crossCombo(2);
+                            this.setTrackPars(cand, traj,
+                                    trjFind, fitStateVec,
+                                    fitStateVec.getZ(),
+                                    DcDetector, dcSwim);
+                            // add candidate to list of tracks
+                            if (cand.fit_Successful = true) {
+                                cands.add(cand);                                    
+                            }
+                        }
+                    }                                          
+                }
+            }
+            if (urCross != null && aCrossList.size() == 2) {
+                double x_first = aCrossList.get(0).get_Point().x();
+                double y_first = aCrossList.get(0).get_Point().y();
+                double z_first = aCrossList.get(0).get_Point().z();
+                double x_last = aCrossList.get(1).get_Point().x();
+                double y_last = aCrossList.get(1).get_Point().y();
+                double z_last = aCrossList.get(1).get_Point().z();
+                double ux = aCrossList.get(0).get_Dir().x();
+                double uy = aCrossList.get(0).get_Dir().y();
+                double uz = aCrossList.get(0).get_Dir().z();
+                double thX = ux / uz;
+                double thY = uy / uz;
+                double thetaLasts2 = Math.atan(cand.get(1).get_Segment2().get_fittedCluster().get_clusterLineFitSlope());
+                double thetaFirsts2 = Math.atan(cand.get(0).get_Segment2().get_fittedCluster().get_clusterLineFitSlope());
+                double thetaLasts1 = Math.atan(cand.get(1).get_Segment1().get_fittedCluster().get_clusterLineFitSlope());
+                double thetaFirsts1 = Math.atan(cand.get(0).get_Segment1().get_fittedCluster().get_clusterLineFitSlope());
+
+                double theta_first = 0.5 * (thetaFirsts1 + thetaFirsts2);
+                double theta_last = 0.5 * (thetaLasts1 + thetaLasts2);                     
+
+                double[] pars = getTrackInitFit(cand.get(0).get_Sector(), x_first, y_first, z_first, x_last, y_last, z_last,
+                        ux, uy, uz, thX, thY,
+                        theta_first, theta_last, traj.getA(), 
+                        traj.getIntegralBdl(), TORSCALE, dcSwim);
+
+                double chi2 = pars[0];
+                double iBdl = pars[1];  
+
+                if (chi2 > Constants.SEEDCUT && donotapplyCuts == false) {
+                    continue;
+                }
+                // compute delta theta using the non-pseudo segments in region 1 and 3
+
+                // get integral Bdl from the swimmer trajectory
+                //double iBdl = traj.getIntegralBdl(); 
+                if (iBdl != 0) {
+                    // momentum estimate if Bdl is non zero and the track has curvature  
+                    double p = calcInitTrkP(thX, thY, theta_first, theta_last, iBdl);
+                    if(LOGGER.getLevel()==Level.FINE) {
+                        startTime = System.currentTimeMillis();
+                    }
+                    int q = this.calcInitTrkQ(traj.getA(), TORSCALE);
+
+                    LOGGER.log(Level.FINE, "calcInitTrkQ = " + (System.currentTimeMillis() - startTime));
+
+                    if (p > 11) {
+                        p = 11;
+                    }
+                    //if(p>Constants.MAXTRKMOM || p< Constants.MINTRKMOM)
+                    //  continue;
+
+                    cand.set_Q(q);
+                    // momentum correction using the swam trajectory iBdl
+                    cand.set_P(p);
+
+                    cand.set_URWellCross(urCross);                        
+
+                    StateVec fitStateVec = null;
+                    // prefer to initialize the seed with region 2;
+                    // if no region 2, then region 3
+                    int crossIdxinList = 1; // the latter DC cross
+                    if(cand.get(0).get_Region() == 2) crossIdxinList = 0;
+
+                    LOGGER.log(Level.FINE, "Kalman fitter - 2 = " + (System.currentTimeMillis() - startTime));
+
+                    KFitterWithURWell kFZRef = new KFitterWithURWell(true, 10, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
+                    List<Surface> measSurfaces = getMeasSurfaces(cand, DcDetector);
+                    StateVecs svs = new StateVecs();
+                    org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
+                    getInitState(cand, measSurfaces.get(0).z, crossIdxinList, initSV, dcSwim, new float[3]);
+                    kFZRef.init(measSurfaces, initSV);	                        
+
+                    kFZRef.runFitter();
+                    List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
+
+                    if (kFZRef.finalStateVec == null) {
+                        continue;
+                    } else {
+                        if (kFZRef.chi2 < Constants.MAXCHI2) {
+
+                            fitStateVec = new StateVec(kFZRef.finalStateVec.x,
+                                            kFZRef.finalStateVec.y, kFZRef.finalStateVec.tx, kFZRef.finalStateVec.ty);
+                            q = (int) Math.signum(kFZRef.finalStateVec.Q);
+                            p = 1. / Math.abs(kFZRef.finalStateVec.Q);
+                            fitStateVec.setZ(kFZRef.finalStateVec.z);
+
+                            //set the track parameters 
+                            cand.set_P(p);
+                            cand.set_Q(q);
+
+                            // candidate parameters 
+                            cand.set_FitChi2(kFZRef.chi2);
+                            cand.set_FitNDF(kFZRef.NDF);
+                            cand.set_FitConvergenceStatus(kFZRef.ConvStatus);
+
+                            cand.set_CovMat(kFZRef.finalStateVec.CM);
+                            cand.setStateVecs(kfStateVecsAlongTrajectory);                                    							
+
+                            cand.setFinalStateVec(fitStateVec);
+                            cand.set_Id(cands.size() + 1);  
+                            if(cand.get(0).get_Region() == 2 && cand.get(1).get_Region() == 3)
+                                cand.set_Status_crossCombo(3);
+                            else if(cand.get(0).get_Region() == 1 && cand.get(1).get_Region() == 3)
+                                cand.set_Status_crossCombo(4);
+                            else if(cand.get(0).get_Region() == 1 && cand.get(1).get_Region() == 2)
+                                cand.set_Status_crossCombo(5);
+                            this.setTrackPars(cand, traj,
+                                    trjFind, fitStateVec,
+                                    fitStateVec.getZ(),
+                                    DcDetector, dcSwim);
+                            // add candidate to list of tracks
+                            if (cand.fit_Successful = true) {
+                                cands.add(cand);                                    
+                            }
+                        }
+                    }                                          
+                }                                                                                                                        
+            }
+
+                
+                
         }
         return cands;
     }
@@ -1131,7 +1504,7 @@ public class TrackCandListFinder {
     	return kfStateVecsAlongTrajectory;
     }
     
-        public List<org.jlab.rec.dc.trajectory.StateVec> setKFStateVecsAlongTrajectory(KFitterStraight kFZRef) {
+    public List<org.jlab.rec.dc.trajectory.StateVec> setKFStateVecsAlongTrajectory(KFitterWithURWell kFZRef) {
     	List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = new ArrayList<>();
     	
     	for(int i = 0; i < kFZRef.kfStateVecsAlongTrajectory.size(); i++) {
@@ -1162,12 +1535,45 @@ public class TrackCandListFinder {
 
     	RungeKuttaDoca rk = new RungeKuttaDoca();
     	rk.SwimToZ(trkcand.get(0).get_Sector(), initStateVec, dcSwim, z0, bf);        
+
+        double ex = Constants.HBINITIALSTATEUNCSCALEUR * Constants.HBINITIALSTATEXUNCUR;
+        double ey = Constants.HBINITIALSTATEUNCSCALEUR * Constants.HBINITIALSTATEYUNCUR;
+        double etx = Constants.HBINITIALSTATEUNCSCALEUR * Constants.HBINITIALSTATETXUNCUR;
+        double ety = Constants.HBINITIALSTATEUNCSCALEUR * Constants.HBINITIALSTATETYUNCUR;
+        double eQ = Constants.HBINITIALSTATEUNCSCALEUR * Constants.HBINITIALSTATEQUNCUR;
         
-        double ex = Constants.HBINITIALSTATEUNCSCALE * Constants.HBINITIALSTATEXUNC;
-        double ey = Constants.HBINITIALSTATEUNCSCALE * Constants.HBINITIALSTATEYUNC;
-        double etx = Constants.HBINITIALSTATEUNCSCALE * Constants.HBINITIALSTATETXUNC;
-        double ety = Constants.HBINITIALSTATEUNCSCALE * Constants.HBINITIALSTATETYUNC;
-        double eQ = Constants.HBINITIALSTATEUNCSCALE * Constants.HBINITIALSTATEQUNC;
+        if(trkcand.get_URWellCross() == null){
+            ex = Constants.HBINITIALSTATEUNCSCALEUR * Constants.HBINITIALSTATEXUNCURNOR0;
+            ey = Constants.HBINITIALSTATEUNCSCALEUR * Constants.HBINITIALSTATEYUNCURNOR0;
+            etx = Constants.HBINITIALSTATEUNCSCALEUR * Constants.HBINITIALSTATETXUNCURNOR0;
+            ety = Constants.HBINITIALSTATEUNCSCALEUR * Constants.HBINITIALSTATETYUNCURNOR0;
+            eQ = Constants.HBINITIALSTATEUNCSCALEUR * Constants.HBINITIALSTATEQUNCURNOR0;            
+        }
+        else{
+            if(trkcand.size() == 2){
+                if(trkcand.get(0).get_Region() == 2 && trkcand.get(1).get_Region() == 3){
+                    ex = Constants.HBINITIALSTATEUNCSCALEUR * Constants.HBINITIALSTATEXUNCURNOR1;
+                    ey = Constants.HBINITIALSTATEUNCSCALEUR * Constants.HBINITIALSTATEYUNCURNOR1;
+                    etx = Constants.HBINITIALSTATEUNCSCALEUR * Constants.HBINITIALSTATETXUNCURNOR1;
+                    ety = Constants.HBINITIALSTATEUNCSCALEUR * Constants.HBINITIALSTATETYUNCURNOR1;
+                    eQ = Constants.HBINITIALSTATEUNCSCALEUR * Constants.HBINITIALSTATEQUNCURNOR1;
+                }
+                else if(trkcand.get(0).get_Region() == 1 && trkcand.get(1).get_Region() == 3){
+                    ex = Constants.HBINITIALSTATEUNCSCALEUR * Constants.HBINITIALSTATEXUNCURNOR2;
+                    ey = Constants.HBINITIALSTATEUNCSCALEUR * Constants.HBINITIALSTATEYUNCURNOR2;
+                    etx = Constants.HBINITIALSTATEUNCSCALEUR * Constants.HBINITIALSTATETXUNCURNOR2;
+                    ety = Constants.HBINITIALSTATEUNCSCALEUR * Constants.HBINITIALSTATETYUNCURNOR2;
+                    eQ = Constants.HBINITIALSTATEUNCSCALEUR * Constants.HBINITIALSTATEQUNCURNOR2;
+                }
+                else if(trkcand.get(0).get_Region() == 1 && trkcand.get(1).get_Region() == 2){
+                    ex = Constants.HBINITIALSTATEUNCSCALEUR * Constants.HBINITIALSTATEXUNCURNOR3;
+                    ey = Constants.HBINITIALSTATEUNCSCALEUR * Constants.HBINITIALSTATEYUNCURNOR3;
+                    etx = Constants.HBINITIALSTATEUNCSCALEUR * Constants.HBINITIALSTATETXUNCURNOR3;
+                    ety = Constants.HBINITIALSTATEUNCSCALEUR * Constants.HBINITIALSTATETYUNCURNOR3;
+                    eQ = Constants.HBINITIALSTATEUNCSCALEUR * Constants.HBINITIALSTATEQUNCURNOR3;
+                }
+            }
+        }
     	
         Matrix initCMatrix = new Matrix();
         initCMatrix.set(ex * ex, 0, 0, 0, 0,
@@ -1176,15 +1582,23 @@ public class TrackCandListFinder {
             0, 0, 0, ety * ety, 0,
             0, 0, 0, 0, eQ * eQ
         );                       
-    	initStateVec.CM = initCMatrix;          
+    	initStateVec.CM = initCMatrix;           
     }    
 
     public List<Surface> getMeasSurfaces(Track trkcand, DCGeant4Factory DcDetector) {
-
+        
     	List<HitOnTrack> hOTS = new ArrayList<>(); // the list of hits on track                
     	FittedHit hitOnTrk;
-    	// loops over the regions (1 to 3) and the superlayers in a region (1 to 2) and obtains the hits on track
-    	for (int c = 0; c < 3; c++) {
+        
+        URWellCross urCross = trkcand.get_URWellCross();
+        if(urCross != null){
+            HitOnTrack urhot = new HitOnTrack(urCross.sector(), urCross.local().x(), urCross.local().y(), urCross.local().z(), Constants.URWELLXRESOLUTION, Constants.URWELLYRESOLUTION);
+            urhot.isDCHit = false;
+            hOTS.add(urhot);
+        }
+        
+    	// loops over the regions and the superlayers in a region (1 to 2) and obtains the hits on track
+    	for (int c = 0; c < trkcand.size(); c++) {
     		for (int s = 0; s < 2; s++) {
     			for (int h = 0; h < trkcand.get(c).get(s).size(); h++) {
     				//                    if (trkcand.get(c).get(s).get(h).get_Id() == -1 /*|| trkcand.get(c).get(s).get(h).get_Id() == 0*/) { //PASS1
@@ -1248,13 +1662,21 @@ public class TrackCandListFinder {
 
     	List<Surface> surfaces =  new ArrayList<>(hOTS.size());
     	for (int i = 0; i < hOTS.size(); i++) {
-    		Surface surf = new Surface(hOTS.get(i).region, hOTS.get(i)._Z, hOTS.get(i)._X, hOTS.get(i)._tilt, hOTS.get(i)._wireMaxSag, 
+            if(!hOTS.get(i).isDCHit){
+                Surface surf = new Surface(hOTS.get(i).sector, hOTS.get(i)._X, hOTS.get(i)._Y, hOTS.get(i)._Z, hOTS.get(i)._X_err, hOTS.get(i)._Y_err);
+                surf.region = 0;
+    		surf.setLayer(1);
+                surfaces.add(i, surf);
+            }
+            else{	
+                Surface surf = new Surface(hOTS.get(i).region, hOTS.get(i)._Z, hOTS.get(i)._X, hOTS.get(i)._tilt, hOTS.get(i)._wireMaxSag, 
     				hOTS.get(i)._doca, hOTS.get(i)._Unc, hOTS.get(i)._hitError, hOTS.get(i)._wireLine);
     		surf.setSector(hOTS.get(i).sector);
     		surf.setSuperLayer(hOTS.get(i).superlayer);
     		surf.setLayer(hOTS.get(i).layer);
     		surf.setNMeas(hOTS.get(i).nMeas);
     		surfaces.add(i, surf);
+            }
     	}
 
     	return surfaces;
@@ -1275,7 +1697,21 @@ public class TrackCandListFinder {
     	public int sector;
     	public int layer;
     	public int nMeas = 1;
+        
+        // For URWell
+        public double _Y;   
+        public double _X_err;
+        public double _Y_err;          
+        public boolean isDCHit = true;
 
+        public HitOnTrack(int sector, double X, double Y, double Z, double X_err, double Y_err) {
+                this.sector = sector;
+    		_X = X;
+                _Y = Y;
+    		_Z = Z;
+                _X_err = X_err;
+                _Y_err = Y_err;
+    	}
 
     	public HitOnTrack(int superlayer, double X, double Z, double wiremaxsag, Line3D wireLine) {
     		_X = X;
