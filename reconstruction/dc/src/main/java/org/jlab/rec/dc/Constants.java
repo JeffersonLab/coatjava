@@ -17,7 +17,6 @@ import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.geom.base.Detector;
 import org.jlab.rec.dc.trajectory.TrajectorySurfaces;
 import org.jlab.utils.groups.IndexedTable;
-import org.jlab.clas.clas.math.FastMath;
 import org.jlab.detector.banks.RawBank.OrderType;
 
 /**
@@ -52,18 +51,18 @@ public class Constants {
     public static boolean DEBUG = false;
     
     // CONSTATNS for TRANSFORMATION
-    public static final double SIN25 = FastMath.sin(Math.toRadians(25.));
-    public static final double COS25 = FastMath.cos(Math.toRadians(25.));
-    public static final double COS30 = FastMath.cos(Math.toRadians(30.)); 
-    public static final double SIN6 = FastMath.sin(Math.toRadians(6.));
-    public static final double COS6 = FastMath.cos(Math.toRadians(6.));
+    public static final double SIN25 = Math.sin(Math.toRadians(25.));
+    public static final double COS25 = Math.cos(Math.toRadians(25.));
+    public static final double COS30 = Math.cos(Math.toRadians(30.)); 
+    public static final double SIN6 = Math.sin(Math.toRadians(6.));
+    public static final double COS6 = Math.cos(Math.toRadians(6.));
     public static final double TAN6 = Math.tan(Math.toRadians(6.));
     public static final double CTAN6 = 1/TAN6;
-    public static final double[] SINSECTOR60 = {0, FastMath.sin(Math.toRadians(60.)), FastMath.sin(Math.toRadians(120.)), 0, 
-        FastMath.sin(Math.toRadians(240.)), FastMath.sin(Math.toRadians(300.))};
+    public static final double[] SINSECTOR60 = {0, Math.sin(Math.toRadians(60.)), Math.sin(Math.toRadians(120.)), 0, 
+        Math.sin(Math.toRadians(240.)), Math.sin(Math.toRadians(300.))};
     public static final double[] COSSECTOR60 = {1, 0.5, -0.5, -1, -0.5, 0.5};
-    public static final double[] SINSECTORNEG60 = {0, FastMath.sin(Math.toRadians(-60.)), FastMath.sin(Math.toRadians(-120.)), 0, 
-        FastMath.sin(Math.toRadians(-240.)), FastMath.sin(Math.toRadians(-300.))};
+    public static final double[] SINSECTORNEG60 = {0, Math.sin(Math.toRadians(-60.)), Math.sin(Math.toRadians(-120.)), 0, 
+        Math.sin(Math.toRadians(-240.)), Math.sin(Math.toRadians(-300.))};
     public static final double[] COSSECTORNEG60 = {1, 0.5, -0.5, -1, -0.5, 0.5};
     
     ////////////// Uncertainties for initial state
@@ -203,6 +202,7 @@ public class Constants {
     public static final double HTCCRADIUS = 175;
     public static final double LTCCPLANE  = 653.09;
     
+    //Todo: Should come from uRWell geometry package
     public static final double URWELLLOCALZ  = 226.0464; // cm
     public static final double URWELLXRESOLUTION = 0.01; // cm
     public static final double URWELLYRESOLUTION = 0.04; // cm

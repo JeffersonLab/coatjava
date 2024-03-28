@@ -328,19 +328,19 @@ public class KFitter extends AKFitter {
                 if (this.setFitFailed == false) {
                     if (this.finalStateVec != null) {
                         if (!TBT) {
-                            if (Math.abs(sv.trackTrajF.get(svzLength - 1).Q - this.finalStateVec.Q) < 1.6e-3
-                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).x - this.finalStateVec.x) < 1.2e-2
-                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).y - this.finalStateVec.y) < 1.4e-1
-                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).tx - this.finalStateVec.tx) < 2.5e-4
-                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).ty - this.finalStateVec.ty) < 1.0e-3) {
+                            if (Math.abs(sv.trackTrajF.get(svzLength - 1).Q - this.finalStateVec.Q) < Constants.ITERSTOPQHB
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).x - this.finalStateVec.x) < Constants.ITERSTOPXHB
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).y - this.finalStateVec.y) < Constants.ITERSTOPYHB
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).tx - this.finalStateVec.tx) < Constants.ITERSTOPTXHB
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).ty - this.finalStateVec.ty) < Constants.ITERSTOPYHB) {
                                 i = totNumIter;
                             }
                         } else {
-                            if (Math.abs(sv.trackTrajF.get(svzLength - 1).Q - this.finalStateVec.Q) < 1.1e-5
-                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).x - this.finalStateVec.x) < 5.5e-5
-                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).y - this.finalStateVec.y) < 8.0e-4
-                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).tx - this.finalStateVec.tx) < 2.1e-6
-                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).ty - this.finalStateVec.ty) < 3.5e-6) {
+                            if (Math.abs(sv.trackTrajF.get(svzLength - 1).Q - this.finalStateVec.Q) < Constants.ITERSTOPQTB
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).x - this.finalStateVec.x) < Constants.ITERSTOPXTB
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).y - this.finalStateVec.y) < Constants.ITERSTOPYTB
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).tx - this.finalStateVec.tx) < Constants.ITERSTOPTXTB
+                                    && Math.abs(sv.trackTrajF.get(svzLength - 1).ty - this.finalStateVec.ty) < Constants.ITERSTOPTYTB) {
                                 i = totNumIter;
                             }
                         }
@@ -593,7 +593,7 @@ public class KFitter extends AKFitter {
                 
                 double[] K = new double[5];
                 double V = effectiveVar;
-                double[] H = mv.H(sVec.x, sVec.y, mVec.surface.z, mVec.surface.wireLine[0]);
+                double[] H = mv.H(sVec.x, sVec.y, mVec.surface.measPoint.z(), mVec.surface.wireLine[0]);
                 Matrix CaInv = this.filterCovMat(H, sVec.CM, V);
                 if (CaInv != null) {
                     Matrix5x5.copy(CaInv, cMat);
@@ -607,7 +607,7 @@ public class KFitter extends AKFitter {
                             + H[1] * cMat.get(j, 1)) / V;
                 }
 
-                Point3D point = new Point3D(sVec.x, sVec.y, mVec.surface.z);
+                Point3D point = new Point3D(sVec.x, sVec.y, mVec.surface.measPoint.z());
                 double h = mv.hDoca(point, mVec.surface.wireLine[0]);
                                
                 c2 = (effectiveDoca - h) * (effectiveDoca - h) / V;
@@ -623,7 +623,7 @@ public class KFitter extends AKFitter {
                 Q_filt = sVec.Q
                         + K[4] * (effectiveDoca - h);
                 
-                Point3D pointFiltered = new Point3D(x_filt, y_filt, mVec.surface.z);
+                Point3D pointFiltered = new Point3D(x_filt, y_filt, mVec.surface.measPoint.z());
                 double h0 = mv.hDoca(pointFiltered, mVec.surface.wireLine[0]);
 
                 double residual = effectiveDoca - h0;
@@ -645,7 +645,7 @@ public class KFitter extends AKFitter {
 
                 double[] K = new double[5];
                 double V = effectiveVar;
-                double[] H = mv.H(sVec.x, sVec.y, mVec.surface.z, mVec.surface.wireLine[indexReferenceWire]);
+                double[] H = mv.H(sVec.x, sVec.y, mVec.surface.measPoint.z(), mVec.surface.wireLine[indexReferenceWire]);
                 Matrix CaInv = this.filterCovMat(H, sVec.CM, V);
                 if (CaInv != null) {
                     Matrix5x5.copy(CaInv, cMat);
@@ -659,7 +659,7 @@ public class KFitter extends AKFitter {
                             + H[1] * cMat.get(j, 1)) / V;
                 }
 
-                Point3D point = new Point3D(sVec.x, sVec.y, mVec.surface.z);
+                Point3D point = new Point3D(sVec.x, sVec.y, mVec.surface.measPoint.z());
                 double h = mv.hDoca(point, mVec.surface.wireLine[indexReferenceWire]);
 
                 c2 = (effectiveDoca - h) * (effectiveDoca - h) / V;
@@ -675,7 +675,7 @@ public class KFitter extends AKFitter {
                 Q_filt = sVec.Q
                         + K[4] * (effectiveDoca - h);
 
-                Point3D pointFiltered = new Point3D(x_filt, y_filt, mVec.surface.z);
+                Point3D pointFiltered = new Point3D(x_filt, y_filt, mVec.surface.measPoint.z());
                 double h0 = mv.hDoca(pointFiltered, mVec.surface.wireLine[0]);
                 double h1 = mv.hDoca(pointFiltered, mVec.surface.wireLine[1]);
                 double[] residuals = {mVec.surface.doca[0] - h0, mVec.surface.doca[1] - h1};
@@ -724,7 +724,7 @@ public class KFitter extends AKFitter {
 
             double[] K = new double[5];
             double V = mVec.surface.unc[0] * KFScale;
-            double[] H = mv.H(sVec.x, sVec.y, mVec.surface.z, mVec.surface.wireLine[0]);
+            double[] H = mv.H(sVec.x, sVec.y, mVec.surface.measPoint.z(), mVec.surface.wireLine[0]);
             Matrix CaInv = this.filterCovMat(H, sVec.CM, V);
             Matrix cMat = new Matrix();
             if (CaInv != null) {
@@ -739,7 +739,7 @@ public class KFitter extends AKFitter {
                         + H[1] * cMat.get(j, 1)) / V;
             }
 
-            Point3D point = new Point3D(sVec.x, sVec.y, mVec.surface.z);
+            Point3D point = new Point3D(sVec.x, sVec.y, mVec.surface.measPoint.z());
             double h = mv.hDoca(point, mVec.surface.wireLine[0]);
 
             double signMeas = 1;
@@ -773,7 +773,7 @@ public class KFitter extends AKFitter {
             if (mVec.surface.doca[1] != -99) {
                 // now filter using the other Hit
                 V = mVec.surface.unc[1] * KFScale;
-                H = mv.H(x_filt, y_filt, mVec.surface.z,
+                H = mv.H(x_filt, y_filt, mVec.surface.measPoint.z(),
                         mVec.surface.wireLine[1]);
                 CaInv = this.filterCovMat(H, cMat, V);
                 if (CaInv != null) {
@@ -789,7 +789,7 @@ public class KFitter extends AKFitter {
                             + H[1] * cMat.get(j, 1)) / V;
                 }
 
-                Point3D point2 = new Point3D(x_filt, y_filt, mVec.surface.z);
+                Point3D point2 = new Point3D(x_filt, y_filt, mVec.surface.measPoint.z());
 
                 h = mv.hDoca(point2, mVec.surface.wireLine[1]);
 
@@ -885,7 +885,7 @@ public class KFitter extends AKFitter {
 
             double V0 = mv.measurements.get(0).surface.unc[0];
 
-            Point3D point = new Point3D(svc.x, svc.y, mv.measurements.get(0).surface.z);
+            Point3D point = new Point3D(svc.x, svc.y, mv.measurements.get(0).surface.measPoint.z());
             double h0 = mv.hDoca(point, mv.measurements.get(0).surface.wireLine[0]);
 
             svc.setProjector(mv.measurements.get(0).surface.wireLine[0].origin().x());
@@ -918,7 +918,7 @@ public class KFitter extends AKFitter {
 
                 double V = mv.measurements.get(k1 + 1).surface.unc[0];
 
-                point = new Point3D(sv.transported(forward).get(k1 + 1).x, sv.transported(forward).get(k1 + 1).y, mv.measurements.get(k1 + 1).surface.z);
+                point = new Point3D(sv.transported(forward).get(k1 + 1).x, sv.transported(forward).get(k1 + 1).y, mv.measurements.get(k1 + 1).surface.measPoint.z());
 
                 double h = mv.hDoca(point, mv.measurements.get(k1 + 1).surface.wireLine[0]);
                 svc = sv.transported(forward).get(k1 + 1);
@@ -978,7 +978,7 @@ public class KFitter extends AKFitter {
             path += svc.deltaPath;
             svc.setPathLength(path);
             
-            Point3D point = new Point3D(svc.x, svc.y, mv.measurements.get(0).surface.z);
+            Point3D point = new Point3D(svc.x, svc.y, mv.measurements.get(0).surface.measPoint.z());
             if(mv.measurements.get(0).surface.doca[1] == -99) {
                 StateVec sVecPreviousFiltered = sv.filtered(true).get(0);
                 double daf_weight = 1;
@@ -1000,7 +1000,6 @@ public class KFitter extends AKFitter {
                 svc.setProjectorDoca(h); 
                 svc.setProjector(mv.measurements.get(0).surface.wireLine[0].origin().x());
                 svc.setFinalDAFWeight(daf_weight);
-                svc.setSorDHit(1);
                 kfStateVecsAlongTrajectory.add(svc);
             }
             else{
@@ -1026,7 +1025,6 @@ public class KFitter extends AKFitter {
                 svc.setProjectorDoca(h); 
                 svc.setProjector(mv.measurements.get(0).surface.wireLine[0].origin().x());   
                 svc.setFinalDAFWeight(daf_weights[0]);
-                svc.setSorDHit(0);
                 kfStateVecsAlongTrajectory.add(svc);
 
                 StateVec svc2 = sv.new StateVec(svc);
@@ -1034,7 +1032,6 @@ public class KFitter extends AKFitter {
                 svc2.setProjectorDoca(h); 
                 svc2.setProjector(mv.measurements.get(0).surface.wireLine[1].origin().x());
                 svc2.setFinalDAFWeight(daf_weights[1]);
-                svc2.setSorDHit(0);
                 kfStateVecsAlongTrajectory.add(svc2);                  
             }
 
@@ -1050,7 +1047,7 @@ public class KFitter extends AKFitter {
                 path += svc.deltaPath;
                 svc.setPathLength(path);
                 
-                point = new Point3D(sv.transported(forward).get(k1 + 1).x, sv.transported(forward).get(k1 + 1).y, mv.measurements.get(k1 + 1).surface.z);
+                point = new Point3D(sv.transported(forward).get(k1 + 1).x, sv.transported(forward).get(k1 + 1).y, mv.measurements.get(k1 + 1).surface.measPoint.z());
                 if(mv.measurements.get(k1 + 1).surface.doca[1] == -99) {
                     StateVec sVecPreviousFiltered = sv.filtered(true).get(k1 + 1);
                     double daf_weight = 1;
@@ -1072,7 +1069,6 @@ public class KFitter extends AKFitter {
                     svc.setProjectorDoca(h);  
                     svc.setProjector(mv.measurements.get(k1 + 1).surface.wireLine[0].origin().x());
                     svc.setFinalDAFWeight(daf_weight);
-                    svc.setSorDHit(1);
                     kfStateVecsAlongTrajectory.add(svc);                                            
                 }
                 else{
@@ -1098,7 +1094,6 @@ public class KFitter extends AKFitter {
                     svc.setProjectorDoca(h); 
                     svc.setProjector(mv.measurements.get(k1 + 1).surface.wireLine[0].origin().x());
                     svc.setFinalDAFWeight(daf_weights[0]);
-                    svc.setSorDHit(0);
                     kfStateVecsAlongTrajectory.add(svc);                         
                     
                     StateVec svc2 = sv.new StateVec(svc);
@@ -1106,7 +1101,6 @@ public class KFitter extends AKFitter {
                     svc2.setProjectorDoca(h); 
                     svc2.setProjector(mv.measurements.get(k1 + 1).surface.wireLine[1].origin().x());
                     svc2.setFinalDAFWeight(daf_weights[1]);
-                    svc2.setSorDHit(0);
                     kfStateVecsAlongTrajectory.add(svc2);                      
                 }
             }
@@ -1117,11 +1111,13 @@ public class KFitter extends AKFitter {
         return sv.transport(sector, finalStateVec.k, Zf, finalStateVec, mv, this.getSwimmer());
     }
 
+    //Todo: apply the common funciton to replace current function above
     @Override
     public void runFitter(AStateVecs sv, AMeasVecs mv) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    //Todo: apply the common funciton to replace current function above
     @Override
     public StateVec filter(int k, StateVec vec, AMeasVecs mv) {
         throw new UnsupportedOperationException("Not supported yet.");
@@ -1154,12 +1150,11 @@ public class KFitter extends AKFitter {
             org.jlab.clas.tracking.kalmanfilter.AMeasVecs.MeasVec measvec = mv.measurements.get(i);
             String s = String.format("k=%d region=%d superlayer=%d layer=%d error=%.4f", measvec.k, measvec.region, measvec.superlayer,
                     measvec.layer, measvec.error);
-            s += String.format(" Surface: index=%d x=%.4f z=%.4f tilt=%.4f wireMaxSag=%.4f", measvec.surface.getIndex(),
-                    measvec.surface.x, measvec.surface.z, measvec.surface.tilt, measvec.surface.wireMaxSag, measvec.surface.unc[1]);
+            s += String.format(" Surface: index=%d ", measvec.surface.getIndex());
             s += String.format(
                     " Surface line 0: doca=%.4f unc=%.4f origin_x =%.4f, origin_y =%.4f, origin_z =%.4f, end_x=%.4f, end_y=%.4f, end_z=%.4f",
                     measvec.surface.doca[0], measvec.surface.unc[0], measvec.surface.wireLine[0].origin().x(),
-                    measvec.surface.wireLine[0].origin().y(), measvec.surface.wireLine[0].origin().z(),
+                    measvec.surface.wireLine[0].origin().y(), measvec.surface.measPoint.z(),
                     measvec.surface.wireLine[0].end().x(), measvec.surface.wireLine[0].end().y(),
                     measvec.surface.wireLine[0].end().z());
             if (measvec.surface.wireLine[1] != null) {

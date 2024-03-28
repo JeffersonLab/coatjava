@@ -1053,15 +1053,7 @@ public class FittedHit extends Hit implements Comparable<Hit> {
      */
     public void setDAFWeight(double weight) {
         this._DAFWeight = weight;
-    }
-    
-    public int getSorDHit() {
-        return _SorDHit;
-    }
-
-    public void setSorDHit(int SorDHit) {
-        this._SorDHit = SorDHit;
-    }
+    }    
 
     public void updateHitfromSV(StateVec st, DCGeant4Factory DcDetector) {
 //        this.set_Id(this.get_Id());
@@ -1071,7 +1063,6 @@ public class FittedHit extends Hit implements Comparable<Hit> {
         this.setAssociatedStateVec(st);
         this.set_TrkResid(this.get_Doca() * this.get_LeftRightAmb() - st.getProjectorDoca());
         this.setDAFWeight(st.getDAFWeight());
-        this.setSorDHit(st.getSorDHit());
         this.setB(st.getB());
         this.setSignalPropagTimeAlongWire(st.x(), st.y(), DcDetector);
         this.setSignalTimeOfFlight();

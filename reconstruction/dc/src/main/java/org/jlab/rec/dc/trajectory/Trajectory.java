@@ -57,7 +57,8 @@ public class Trajectory extends ArrayList<Cross> {
     public void setA(double a){
         this.a = a;
     }
-   
+
+    // Return parameter a for fitting function f(x) = a*z^2 + b*z + c in xz plane
     public double getA(){
         return a;
     }

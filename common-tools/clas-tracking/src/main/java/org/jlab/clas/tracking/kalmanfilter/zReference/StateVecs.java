@@ -28,10 +28,6 @@ public class StateVecs extends AStateVecs {
     private final Matrix fMS = new Matrix();
     private final Matrix copyMatrix = new Matrix();
 
-    final double ARGONRADLEN = 14;  // radiation length in Argon is 14 cm
-
-    final double AIRRADLEN = 30400; // radiation length in cm
-
     public double Z[];
 
     private double beta = 1.0; // beta depends on mass hypothesis
@@ -107,7 +103,7 @@ public class StateVecs extends AStateVecs {
         StateVec fVec = new StateVec(f);
         fVec.tx = iVec.tx;
         fVec.ty = iVec.ty;
-        fVec.z = mv.measurements.get(f).surface.z;
+        fVec.z = mv.measurements.get(f).surface.measPoint.z();
         
         double deltaZ = fVec.z - iVec.z;
         fVec.x = iVec.x + iVec.tx * deltaZ;
@@ -167,7 +163,7 @@ public class StateVecs extends AStateVecs {
         Matrix5x5.copy(iVec.CM, fVec.CM);
 
         double s = 0;
-        double zInit = mv.measurements.get(i).surface.z;
+        double zInit = mv.measurements.get(i).surface.measPoint.z();
         double BatMeas = iVec.B;
 
         double z = zInit;
@@ -199,7 +195,7 @@ public class StateVecs extends AStateVecs {
             // Q  process noise matrix estimate            
             double p = Math.abs(1. / iVec.Q);
 
-            double X0 = this.getX0(z, Z);
+            double X0 = this.getX0(mv.measurements.get(i).surface, z, Z);
             double t_ov_X0 = Math.abs(s) / X0;//path length in radiation length units = t/X0 [true path length/ X0] ; Ar radiation length = 14 cm
 
             double beta = this.beta;
@@ -209,6 +205,9 @@ public class StateVecs extends AStateVecs {
 
             double sctRMS = 0;
 
+            ////// Todo: Modify multi-scattering or remove it; After update, some parameters, like iteration termintion chonditions, may need to be updated.
+            // Speed of light should be 1
+            // From one measurement site to another, F and Q should be calculated separaetely with multiple steps; and then C' = FTCF + Q
             if (Math.abs(s) > 0) {
                 sctRMS = ((0.0136) / (beta * PhysicsConstants.speedOfLight() * p)) * Math.sqrt(t_ov_X0)
                         * (1 + 0.038 * Math.log(t_ov_X0));
@@ -264,11 +263,11 @@ public class StateVecs extends AStateVecs {
         Matrix5x5.copy(iVec.CM, fVec.CM);
 
         double s = 0;
-        double zInit = mv.measurements.get(i).surface.z;
+        double zInit = mv.measurements.get(i).surface.measPoint.z();
         double BatMeas = iVec.B;
 
         double z = zInit;
-        double zFinal = mv.measurements.get(f).surface.z;
+        double zFinal = mv.measurements.get(f).surface.measPoint.z();
 
         while (Math.signum(zFinal - zInit) * z < Math.signum(zFinal - zInit) * zFinal) {
             z = fVec.z;
@@ -297,7 +296,7 @@ public class StateVecs extends AStateVecs {
             // Q  process noise matrix estimate            
             double p = Math.abs(1. / iVec.Q);
 
-            double X0 = this.getX0(z, Z);
+            double X0 = this.getX0(mv.measurements.get(i).surface, z, Z);
             double t_ov_X0 = Math.abs(s) / X0;//path length in radiation length units = t/X0 [true path length/ X0] ; Ar radiation length = 14 cm
 
             double beta = this.beta;
@@ -307,6 +306,9 @@ public class StateVecs extends AStateVecs {
 
             double sctRMS = 0;
 
+            ////// Todo: Modify multi-scattering or remove it; After update, some parameters, like iteration termintion chonditions, may need to be updated.
+            // Speed of light should be 1
+            // From one measurement site to another, F and Q should be calculated separaetely with multiple steps; and then C' = FTCF + Q
             if (Math.abs(s) > 0) {
                 sctRMS = ((0.0136) / (beta * PhysicsConstants.speedOfLight() * p)) * Math.sqrt(t_ov_X0)
                         * (1 + 0.038 * Math.log(t_ov_X0));
@@ -348,8 +350,9 @@ public class StateVecs extends AStateVecs {
 
     }
 
-    public double getX0(double z, double Z[]) {
-        double X0 = AIRRADLEN;
+    //Todo: update it when updating multi-scattering
+    public double getX0(Surface surface, double z, double Z[]) {
+        double X0 = surface.getMaterials().get(0).getX0();
         double tolerance = 0.01;
 
         for (int i = 1; i < Z.length; i++) {
@@ -357,7 +360,7 @@ public class StateVecs extends AStateVecs {
                 continue;
             }
             if (z >= Z[i] - tolerance && z <= Z[i + 1] + tolerance) {
-                return ARGONRADLEN;
+                return surface.getMaterials().get(1).getX0();
             }
         }
         return X0;

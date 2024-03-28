@@ -283,20 +283,13 @@ public abstract class AStateVecs {
             this.weightDAF_double = weight;
         }
         
+        // Todo: move variables finalDAFWeight, _PathLength, hw, and h from AStateVecs to AMeasVecs
         private double finalDAFWeight = -999;
         public double getFinalDAFWeight(){
             return finalDAFWeight;
         }
         public void setFinalDAFWeight(double weight){
             this.finalDAFWeight = weight;
-        }
-
-        private int SorDHit = -1; // 1 : single hit; 0: double hit for DC
-        public int getSorDHit(){
-            return SorDHit;
-        }
-        public void setSorDHit(int SorDHit){
-            this.SorDHit = SorDHit;
         }
                         
         public double getPathLength() {
@@ -509,7 +502,8 @@ public abstract class AStateVecs {
             if (Math.abs(phi0) > Math.PI) phi0 -= Math.signum(phi0) * 2 * Math.PI;
             double tanDip   = vec.tanL;
             double z0       = vec.z0 + vec.dz;
-            double omega    = -turningSign / R;
+            //double omega    = turningSign * KFitter.polarity / R;  
+            double omega    = Math.signum(vec.kappa) / R;  
             double d0       = -vec.d_rho;
             
             Helix helix = new Helix(d0, phi0, omega, z0, tanDip, turningSign, bfield, xref, yref, units);

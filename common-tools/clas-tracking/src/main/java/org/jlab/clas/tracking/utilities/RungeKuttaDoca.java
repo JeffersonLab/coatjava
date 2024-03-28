@@ -1,5 +1,6 @@
 package org.jlab.clas.tracking.utilities;
 
+import org.jlab.clas.pdg.PhysicsConstants;
 import org.jlab.jnp.matrix.*;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec;;
@@ -12,7 +13,7 @@ import org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec;;
  */
 public class RungeKuttaDoca {
     private final float[] _b = new float[3];
-    final double v = 0.0029979245;
+    final double v =  PhysicsConstants.speedOfLight() * 0.0001;
 
     public RungeKuttaDoca() {}
 
