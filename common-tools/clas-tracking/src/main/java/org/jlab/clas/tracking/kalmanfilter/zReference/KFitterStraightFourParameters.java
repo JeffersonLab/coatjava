@@ -814,7 +814,7 @@ public class KFitterStraightFourParameters extends AKFitter {
             
             double V0 = mv.measurements.get(0).surface.unc[0];
             
-			Point3D point = new Point3D(svc.x, svc.y, mv.measurements.get(0).surface.measPoint.z());            
+            Point3D point = new Point3D(svc.x, svc.y, mv.measurements.get(0).surface.measPoint.z());            
             double h0 = mv.hDoca(point, mv.measurements.get(0).surface.wireLine[0]);
             
             svc.setProjector(mv.measurements.get(0).surface.wireLine[0].origin().x());
