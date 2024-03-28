@@ -974,7 +974,7 @@ public class TrackCandListWithURWellFinder {
                     List<Surface> measSurfaces = getMeasSurfaces(cand, DcDetector);
                     StateVecs svs = new StateVecs();
                     org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
-                    getInitState(cand, measSurfaces.get(0).z, 0, initSV, dcSwim, new float[3]);
+                    getInitState(cand, measSurfaces.get(0).measPoint.z(), 0, initSV, dcSwim, new float[3]);
                     kFZRef.init(measSurfaces, initSV);
 
                     kFZRef.runFitter();
@@ -1148,7 +1148,7 @@ public class TrackCandListWithURWellFinder {
                         List<Surface> measSurfaces = getMeasSurfaces(cand, DcDetector);
                         StateVecs svs = new StateVecs();
                         org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
-                        getInitState(cand, measSurfaces.get(0).z, crossIdxinList, initSV, dcSwim, new float[3]);
+                        getInitState(cand, measSurfaces.get(0).measPoint.z(), crossIdxinList, initSV, dcSwim, new float[3]);
                         kFZRef.init(measSurfaces, initSV);	                        
 						
                         kFZRef.runFitter();
@@ -1318,7 +1318,7 @@ public class TrackCandListWithURWellFinder {
                     List<Surface> measSurfaces = getMeasSurfaces(cand, DcDetector);
                     StateVecs svs = new StateVecs();
                     org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
-                    getInitState(cand, measSurfaces.get(0).z, crossIdxinList, initSV, dcSwim, new float[3]);
+                    getInitState(cand, measSurfaces.get(0).measPoint.z(), crossIdxinList, initSV, dcSwim, new float[3]);
                     kFZRef.init(measSurfaces, initSV);	                        
 
                     kFZRef.runFitter();
@@ -1431,7 +1431,7 @@ public class TrackCandListWithURWellFinder {
                     List<Surface> measSurfaces = getMeasSurfaces(cand, DcDetector);
                     StateVecs svs = new StateVecs();
                     org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
-                    getInitState(cand, measSurfaces.get(0).z, crossIdxinList, initSV, dcSwim, new float[3]);
+                    getInitState(cand, measSurfaces.get(0).measPoint.z(), crossIdxinList, initSV, dcSwim, new float[3]);
                     kFZRef.init(measSurfaces, initSV);	                        
 
                     kFZRef.runFitter();
@@ -1669,8 +1669,7 @@ public class TrackCandListWithURWellFinder {
                 surfaces.add(i, surf);
             }
             else{	
-                Surface surf = new Surface(hOTS.get(i).region, hOTS.get(i)._Z, hOTS.get(i)._X, hOTS.get(i)._tilt, hOTS.get(i)._wireMaxSag, 
-    				hOTS.get(i)._doca, hOTS.get(i)._Unc, hOTS.get(i)._hitError, hOTS.get(i)._wireLine);
+                Surface surf = new Surface(hOTS.get(i).region,  hOTS.get(i)._doca, hOTS.get(i)._Unc, hOTS.get(i)._hitError, hOTS.get(i)._wireLine);
     		surf.setSector(hOTS.get(i).sector);
     		surf.setSuperLayer(hOTS.get(i).superlayer);
     		surf.setLayer(hOTS.get(i).layer);

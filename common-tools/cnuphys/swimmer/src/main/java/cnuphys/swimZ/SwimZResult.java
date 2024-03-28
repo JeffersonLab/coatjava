@@ -211,7 +211,7 @@ public class SwimZResult {
 	}
         
     /**
-     * Get the approximate integral |B x dL|
+     * Get the approximate integral |B x dL| in the middle plane
      *
      * @param sector sector 1..6
      * @param probe the probe use to compute this result trajectory

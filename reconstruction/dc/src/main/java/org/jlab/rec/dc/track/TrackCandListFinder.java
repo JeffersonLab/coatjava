@@ -135,6 +135,9 @@ public class TrackCandListFinder {
         return chi2;
     }
 
+    /*
+    ** a: parameter a for fitting function f(x) = a*z^2 + b*z + c in xz plane
+    */
     private double[] getTrackInitFit(int sector, double x1, double y1, double z1,
             double x2, double y2, double z2, double x3, double y3, double z3,
             double ux, double uy, double uz, double thX, double thY,
@@ -895,7 +898,7 @@ public class TrackCandListFinder {
                     List<Surface> measSurfaces = getMeasSurfaces(cand, DcDetector);
                     StateVecs svs = new StateVecs();
                     org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
-                    getInitState(cand, measSurfaces.get(0).z, 0, initSV, dcSwim, new float[3]);
+                    getInitState(cand, measSurfaces.get(0).measPoint.z(), 0, initSV, dcSwim, new float[3]);
                     kFZRef.init(measSurfaces, initSV);
 
                     kFZRef.runFitter();
@@ -1064,7 +1067,7 @@ public class TrackCandListFinder {
                         List<Surface> measSurfaces = getMeasSurfaces(cand, DcDetector);
                         StateVecs svs = new StateVecs();
                         org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
-                        getInitState(cand, measSurfaces.get(0).z, crossIdxinList, initSV, dcSwim, new float[3]);
+                        getInitState(cand, measSurfaces.get(0).measPoint.z(), crossIdxinList, initSV, dcSwim, new float[3]);
                         kFZRef.init(measSurfaces, initSV);						
 						
                         kFZRef.runFitter();
@@ -1248,8 +1251,7 @@ public class TrackCandListFinder {
 
     	List<Surface> surfaces =  new ArrayList<>(hOTS.size());
     	for (int i = 0; i < hOTS.size(); i++) {
-    		Surface surf = new Surface(hOTS.get(i).region, hOTS.get(i)._Z, hOTS.get(i)._X, hOTS.get(i)._tilt, hOTS.get(i)._wireMaxSag, 
-    				hOTS.get(i)._doca, hOTS.get(i)._Unc, hOTS.get(i)._hitError, hOTS.get(i)._wireLine);
+    		Surface surf = new Surface(hOTS.get(i).region, hOTS.get(i)._doca, hOTS.get(i)._Unc, hOTS.get(i)._hitError, hOTS.get(i)._wireLine);
     		surf.setSector(hOTS.get(i).sector);
     		surf.setSuperLayer(hOTS.get(i).superlayer);
     		surf.setLayer(hOTS.get(i).layer);

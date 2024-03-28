@@ -232,7 +232,7 @@ public class DCTBEngine extends DCEngine {
                 List<Surface> measSurfaces = getMeasSurfaces(TrackArray1, Constants.getInstance().dcDetector);
                 StateVecs svs = new StateVecs();
                 org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
-                getInitState(TrackArray1, measSurfaces.get(0).z, initSV, kFZRef, dcSwim, new float[3]);
+                getInitState(TrackArray1, measSurfaces.get(0).measPoint.z(), initSV, kFZRef, dcSwim, new float[3]);
                 kFZRef.initFromHB(measSurfaces, initSV, TrackArray1.get(0).get(0).get(0).get_Beta());
                 kFZRef.runFitter();
                 List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
@@ -273,7 +273,7 @@ public class DCTBEngine extends DCEngine {
                 List<Surface> measSurfaces = getMeasSurfaces(TrackArray1, Constants.getInstance().dcDetector);
                 StateVecs svs = new StateVecs();
                 org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
-                getInitState(TrackArray1, measSurfaces.get(0).z, initSV, kFZRef, dcSwim, new float[3]);
+                getInitState(TrackArray1, measSurfaces.get(0).measPoint.z(), initSV, kFZRef, dcSwim, new float[3]);
                 kFZRef.initFromHB(measSurfaces, initSV, TrackArray1.get(0).get(0).get(0).get_Beta(), useDAF);
                 kFZRef.runFitter(useDAF);    
                                
@@ -373,7 +373,6 @@ public class DCTBEngine extends DCEngine {
             sv.setProjector(svc.getProjector());
             sv.setProjectorDoca(svc.getProjectorDoca());
             sv.setDAFWeight(svc.getFinalDAFWeight());
-            sv.setSorDHit(svc.getSorDHit());
             kfStateVecsAlongTrajectory.add(sv);
     	}
     	
@@ -593,8 +592,7 @@ public class DCTBEngine extends DCEngine {
         List<Surface> surfaces = new ArrayList<>(hOTS.size());
         
     	for (int i = 0; i < hOTS.size(); i++) {
-    		Surface surf = new Surface(hOTS.get(i).region, hOTS.get(i)._Z, hOTS.get(i)._X, hOTS.get(i)._tilt, hOTS.get(i)._wireMaxSag, 
-    				hOTS.get(i)._doca, hOTS.get(i)._Unc, hOTS.get(i)._hitError, hOTS.get(i)._wireLine);
+    		Surface surf = new Surface(hOTS.get(i).region, hOTS.get(i)._doca, hOTS.get(i)._Unc, hOTS.get(i)._hitError, hOTS.get(i)._wireLine);
     		surf.setSector(hOTS.get(i).sector);
     		surf.setSuperLayer(hOTS.get(i).superlayer);
     		surf.setLayer(hOTS.get(i).layer);
