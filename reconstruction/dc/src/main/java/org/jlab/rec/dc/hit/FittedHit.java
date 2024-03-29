@@ -64,7 +64,6 @@ public class FittedHit extends Hit implements Comparable<Hit> {
     private double _Time;     //Time = TDC - tFlight - tProp - T0 - TStart
     
     private double _DAFWeight = -999; // Weight by DAF
-    private int _SorDHit = -1; // 1 : single hit; 0: double hit for DC
     
     /**
      * identifying outoftimehits;
@@ -1042,7 +1041,7 @@ public class FittedHit extends Hit implements Comparable<Hit> {
     }
     
     /**
-     * @return the _DAFWeight
+     * @return _DAFWeight
      */
     public double getDAFWeight() {
         return _DAFWeight;
@@ -1053,7 +1052,7 @@ public class FittedHit extends Hit implements Comparable<Hit> {
      */
     public void setDAFWeight(double weight) {
         this._DAFWeight = weight;
-    }    
+    }     
 
     public void updateHitfromSV(StateVec st, DCGeant4Factory DcDetector) {
 //        this.set_Id(this.get_Id());
@@ -1063,6 +1062,8 @@ public class FittedHit extends Hit implements Comparable<Hit> {
         this.setAssociatedStateVec(st);
         this.set_TrkResid(this.get_Doca() * this.get_LeftRightAmb() - st.getProjectorDoca());
         this.setDAFWeight(st.getDAFWeight());
+        //Set the first bit of TB hit status to indicate that a hit is belong to single or double
+        if(st.getIsDoubleHit() == 1) this.set_QualityFac(1);
         this.setB(st.getB());
         this.setSignalPropagTimeAlongWire(st.x(), st.y(), DcDetector);
         this.setSignalTimeOfFlight();

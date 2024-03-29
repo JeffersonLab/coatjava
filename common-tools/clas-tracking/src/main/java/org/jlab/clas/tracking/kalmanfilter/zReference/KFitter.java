@@ -1000,6 +1000,7 @@ public class KFitter extends AKFitter {
                 svc.setProjectorDoca(h); 
                 svc.setProjector(mv.measurements.get(0).surface.wireLine[0].origin().x());
                 svc.setFinalDAFWeight(daf_weight);
+                svc.setIsDoubleHit(false);
                 kfStateVecsAlongTrajectory.add(svc);
             }
             else{
@@ -1025,6 +1026,7 @@ public class KFitter extends AKFitter {
                 svc.setProjectorDoca(h); 
                 svc.setProjector(mv.measurements.get(0).surface.wireLine[0].origin().x());   
                 svc.setFinalDAFWeight(daf_weights[0]);
+                svc.setIsDoubleHit(true);
                 kfStateVecsAlongTrajectory.add(svc);
 
                 StateVec svc2 = sv.new StateVec(svc);
@@ -1032,6 +1034,7 @@ public class KFitter extends AKFitter {
                 svc2.setProjectorDoca(h); 
                 svc2.setProjector(mv.measurements.get(0).surface.wireLine[1].origin().x());
                 svc2.setFinalDAFWeight(daf_weights[1]);
+                svc2.setIsDoubleHit(true);
                 kfStateVecsAlongTrajectory.add(svc2);                  
             }
 
@@ -1069,6 +1072,7 @@ public class KFitter extends AKFitter {
                     svc.setProjectorDoca(h);  
                     svc.setProjector(mv.measurements.get(k1 + 1).surface.wireLine[0].origin().x());
                     svc.setFinalDAFWeight(daf_weight);
+                    svc.setIsDoubleHit(false);
                     kfStateVecsAlongTrajectory.add(svc);                                            
                 }
                 else{
@@ -1094,6 +1098,7 @@ public class KFitter extends AKFitter {
                     svc.setProjectorDoca(h); 
                     svc.setProjector(mv.measurements.get(k1 + 1).surface.wireLine[0].origin().x());
                     svc.setFinalDAFWeight(daf_weights[0]);
+                    svc.setIsDoubleHit(true);
                     kfStateVecsAlongTrajectory.add(svc);                         
                     
                     StateVec svc2 = sv.new StateVec(svc);
@@ -1101,6 +1106,7 @@ public class KFitter extends AKFitter {
                     svc2.setProjectorDoca(h); 
                     svc2.setProjector(mv.measurements.get(k1 + 1).surface.wireLine[1].origin().x());
                     svc2.setFinalDAFWeight(daf_weights[1]);
+                    svc2.setIsDoubleHit(true);
                     kfStateVecsAlongTrajectory.add(svc2);                      
                 }
             }

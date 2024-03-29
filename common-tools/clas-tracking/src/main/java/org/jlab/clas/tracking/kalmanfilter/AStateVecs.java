@@ -289,6 +289,15 @@ public abstract class AStateVecs {
         public void setFinalDAFWeight(double weight){
             this.finalDAFWeight = weight;
         }
+        
+        boolean isDoubleHit = false;
+        
+        public boolean getIsDoubleHit(){
+            return isDoubleHit;
+        }
+        public void setIsDoubleHit(boolean isDoubleHit){
+            this.isDoubleHit = isDoubleHit;
+        }
                         
         public double getPathLength() {
             return _PathLength;

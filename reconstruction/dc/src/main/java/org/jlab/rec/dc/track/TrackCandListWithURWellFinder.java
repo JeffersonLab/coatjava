@@ -884,7 +884,7 @@ public class TrackCandListWithURWellFinder {
                             h.setB(o.getB());
                             h.setTProp(o.getTProp());
                             h.setTFlight(o.getTFlight());
-                            h.set_QualityFac(1);
+                            //h.set_QualityFac(1);
                         }
                     }
                 }
