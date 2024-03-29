@@ -118,14 +118,10 @@ then
     get https://clasweb.jlab.org/clas12offline/distribution/coatjava/coatjava-$coatjava.tar.gz
     coatjava=./coatjava
 fi
-mkdir -p clara-cre/plugins/clas12/lib/clas
-mkdir -p clara-cre/plugins/clas12/lib/services
 mkdir -p clara-cre/plugins/clas12/config
 cp -Lr $coatjava/etc clara-cre/plugins/clas12/.
 cp -Lr $coatjava/bin clara-cre/plugins/clas12/.
-cp -Lr $coatjava/lib/utils clara-cre/plugins/clas12/lib/.
-cp -Lr $coatjava/lib/clas/* clara-cre/plugins/clas12/lib/clas/.
-cp -Lr $coatjava/lib/services/* clara-cre/plugins/clas12/lib/services/.
+cp -Lr $coatjava/lib clara-cre/plugins/clas12/.
 
 # GRAPES:
 echo -e "\nRetrieving GRAPES version $grapes ..."
