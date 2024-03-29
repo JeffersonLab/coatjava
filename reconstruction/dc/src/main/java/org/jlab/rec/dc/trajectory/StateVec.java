@@ -42,7 +42,17 @@ public class StateVec extends Matrix {
 
     public void setDAFWeight(double weight) {
         this._DAFWeight = weight;
-    }    
+    } 
+    
+    private int _isDoubleHit = -1;
+    
+    public int getIsDoubleHit() {
+        return _isDoubleHit;
+    }
+
+    public void setIsDoubleHit(int _isDoubleHit) {
+        this._isDoubleHit = _isDoubleHit;
+    } 
     
     /**
      * Sets the.

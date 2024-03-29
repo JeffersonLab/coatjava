@@ -362,7 +362,7 @@
         {"name":"trkDoca",      "type":"F", "info":"track doca of the hit (in cm)"},
         {"name":"timeResidual", "type":"F", "info":"time residual of the hit (in cm)"},
         {"name":"fitResidual",  "type":"F", "info":"fit residual of the hit (in cm, from KF)"},
-        {"name":"DAFWeight",    "type":"F", "info":"Weight by DAF; The first bit of status points out a hit is belong to singlet or doublet"},
+        {"name":"DAFWeight",    "type":"F", "info":"Weight by DAF; the 1st bit of status indicates that a hit is belong to single or double"},
         {"name":"LR",           "type":"B", "info":"Left/Right ambiguity of the hit"},
         {"name":"X",            "type":"F", "info":"wire x-coordinate  in tilted-sector"},
         {"name":"Z",            "type":"F", "info":"wire z-coordinate  in tilted-sector"},
