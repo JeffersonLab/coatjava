@@ -6,6 +6,8 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.TimerTask;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
@@ -37,7 +39,6 @@ public class DataSourceProcessorPane extends JPanel implements ActionListener {
 
     private DataSourceProcessor  dataProcessor = new DataSourceProcessor();
     private String               dataFile      = null;
-    private int                  dataPaneStyle = DataSourceProcessorPane.TOOLBAR;
     private JLabel               statusLabel   = null;    
     private java.util.Timer      processTimer  = null;
     private JButton              mediaPause    = null;
@@ -49,18 +50,25 @@ public class DataSourceProcessorPane extends JPanel implements ActionListener {
     private int                  eventDelay    = 0;
     public boolean               isHipo3Event  = false;          
     private String               defaultHost   = null;
-    private String               defaultIp     = null;    
+    private String               defaultIp     = null;
+    private List<String>         filenames     = new ArrayList<>();
 
     public DataSourceProcessorPane(){
         super();
         initUI();
     }
 
+
     public DataSourceProcessorPane(String host, String ip){
         super();
         initUI();
         this.defaultHost = host;
         this.defaultIp   = ip;
+    }
+
+    public void addInputFiles(List<String> filenames) {
+        this.filenames.addAll(filenames);
+        
     }
 
     private void initUI(){
@@ -206,6 +214,10 @@ public class DataSourceProcessorPane extends JPanel implements ActionListener {
         mediaNext.setEnabled(true);
         mediaPrev.setEnabled(true);
         this.startProcessorTimer();
+    }
+
+    public void openAndRun() {
+        this.openAndRun(this.filenames.remove(0));
     }
 
     public void openAndRun(String filename) {
@@ -367,10 +379,13 @@ public class DataSourceProcessorPane extends JPanel implements ActionListener {
                     }
                 }
                 statusLabel.setText(dataProcessor.getStatusString());
+                if (hasFinished && !filenames.isEmpty()) {
+                    openAndRun(filenames.remove(0));
+                }
             }
         }
         processTimer = new java.util.Timer();
-        processTimer.schedule(new CrunchifyReminder(),1,1);        
+        processTimer.schedule(new CrunchifyReminder(),1,1);
     }
     
     public String getDataFile() {
