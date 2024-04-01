@@ -439,7 +439,6 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
                 
             bank.setFloat("chi2", i, (float) candlist.get(i).get_FitChi2());
             bank.setShort("ndf", i, (short) candlist.get(i).get_FitNDF());
-            bank.setFloat("ndfDAF", i, (float) candlist.get(i).get_NDFDAF());
             bank.setFloat("x", i, (float) candlist.get(i).getFinalStateVec().x());
             bank.setFloat("y", i, (float) candlist.get(i).getFinalStateVec().y());
             bank.setFloat("z", i, (float) candlist.get(i).getFinalStateVec().getZ());
@@ -865,8 +864,17 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
                         i, (short) candlist.get(i).getSingleSuperlayer().get_fittedCluster().get_Id());
             }
             bank.setFloat("chi2", i, (float) candlist.get(i).get_FitChi2());
-            bank.setShort("ndf", i, (short) candlist.get(i).get_FitNDF());
-            bank.setFloat("ndfDAF", i, (float) candlist.get(i).get_NDFDAF());
+            // To not interrupt current type of ndf, ndf weighted by DAF is converted from float to interger
+            int ndfDAF = 999;
+            if(candlist.get(i).get_NDFDAF() > 0){
+                ndfDAF = (int) Math.ceil(candlist.get(i).get_NDFDAF());
+            }
+            else if (candlist.get(i).get_NDFDAF() < 0){
+                ndfDAF = (int) Math.floor(candlist.get(i).get_NDFDAF());
+            }
+            bank.setShort("ndf", i, (short) ndfDAF);
+            // ndf0 is for traditional ndf for the track; # of hits can be obtained through it
+            bank.setShort("ndf0", i, (short) candlist.get(i).get_FitNDF());
         }
         return bank;
 

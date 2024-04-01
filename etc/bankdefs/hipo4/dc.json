@@ -304,8 +304,7 @@
         {"name":"q",        	 "type":"B", "info":"charge of the track"},
         {"name":"pathlength",    "type":"F", "info":"pathlength of the track"},
         {"name":"chi2",          "type":"F", "info":"fit chi2 of the track"},
-        {"name":"ndf",           "type":"S", "info":"fit ndf of the track"},
-        {"name":"ndfDAF",        "type":"F", "info":"fit ndf of the track weighted by DAF"}
+        {"name":"ndf",           "type":"S", "info":"fit ndf of the track"}
     ]
   }, 
   {
@@ -548,8 +547,8 @@
         {"name":"q",        	 "type":"B", "info":"charge of the track"},
         {"name":"pathlength",    "type":"F", "info":"pathlength of the track"},
         {"name":"chi2",          "type":"F", "info":"fit chi2 of the track"},
-        {"name":"ndf",           "type":"S", "info":"fit ndf of the track"},
-        {"name":"ndfDAF",        "type":"F", "info":"fit ndf of the track weighted by DAF"}
+        {"name":"ndf",           "type":"S", "info":"fit ndf weightd by DAF for the track"},
+        {"name":"ndf0",          "type":"S", "info":"traditional ndf for the track"}
     ]
   },
   {
