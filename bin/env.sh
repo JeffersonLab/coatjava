@@ -18,7 +18,7 @@ fi
 # /tmp is often mounted "noexec" these days.  Various things don't
 # like that, including jdbc's sqlite library.  Here we manually find
 # a suitable replacement directory:
-for x in /scratch/slurm/$SLURM_JOB_ID /scratch/$USER . /tmp; do
+for x in /scratch/slurm/${SLURM_JOB_ID-DNE} /scratch/${USER-DNE} . /tmp; do
     [ -w "$x" ] && CLAS12TMPDIR=$x && break
 done
 export CLAS12TMPDIR
