@@ -5,6 +5,7 @@
 export MALLOC_ARENA_MAX=1
 
 java -Xmx1536m -Xms1024m -XX:+UseSerialGC \
+    -Djava.io.tmpdir=$CLAS12TMPDIR -Dorg.sqlite.tmpdir=$CLAS12TMPDIR \
     -cp "$CLAS12DIR/lib/clas/*:$CLAS12DIR/lib/plugins/*" \
     org.jlab.detector.decode.CLASDecoder4 \
     $*
