@@ -15,6 +15,14 @@ if [ -z "${COAT_MAGFIELD_SOLENOIDMAP-}" ]; then
     export COAT_MAGFIELD_SOLENOIDMAP=Symm_solenoid_r601_phi1_z1201_13June2018.dat
 fi
 
+# /tmp is often mounted "noexec" these days.  Various things don't
+# like that, including jdbc's sqlite library.  Here we manually find
+# a suitable replacement directory:
+for x in /scratch/slurm/$SLURM_JOB_ID /scratch/$USER . /tmp; do
+    [ -w "$x" ] && CLAS12TMPDIR=$x && break
+done
+export CLAS12TMPDIR
+
 # additional environment variables for groovy or interactive use
 # - call as `source $0 groovy` or `source $0 jshell`
 if [ $# -ge 1 ]; then
