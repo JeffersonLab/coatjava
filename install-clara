@@ -25,6 +25,8 @@ function install() {
     find clara-cre -exec touch {} +
     chmod -R a+r clara-cre
     chmod a+x clara-cre/bin/*
+    find clara-cre -type d -exec chmod 755 {} +
+    find clara-cre -type f -name '*.so' -exec chmod +x {} +
     mv clara-cre $clara_home
 }
 
