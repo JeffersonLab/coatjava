@@ -105,7 +105,7 @@ dchv.extend(["DC::tdc", "HitBasedTrkg::HBClusters", "HitBasedTrkg::HBHitTrkId", 
 
 # Level3 validation schema:
 level3 = list(dst)
-level3.extend(["DC::tdc", "ECAL::adc", "ECAL::clusters", "FTOF::tdc", "FTOF::adc", "HitBasedTrkg::HBClusters", "HitBasedTrkg::HBTracks", "HTCC::adc", "TimeBasedTrkg::TBClusters", "TimeBasedTrkg::TBTracks"])
+level3.extend(["DC::tdc", "ECAL::adc", "ECAL::clusters", "FTOF::tdc", "FTOF::adc", "HitBasedTrkg::HBClusters", "HitBasedTrkg::HBTracks", "HTCC::adc", "RF::adc", "RF::tdc", "RUN::rf", "TimeBasedTrkg::TBClusters", "TimeBasedTrkg::TBTracks"])
 
 create("dst/", set(dst))
 create("dsthb/", set(dsthb))
