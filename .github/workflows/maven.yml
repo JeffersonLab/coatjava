@@ -79,7 +79,7 @@ jobs:
           sudo apt -y install xrootd-client
       - name: ls
         run: |
-          xrdfs xroot://sci-xrootd.jlab.org ls -R /osgpool/hallb/clas12
+          xrdfs xroot://sci-xrootd.jlab.org ls -R /osgpool/hallb/clas12/validation
 
   # tests
   #############################################################################
