@@ -7,8 +7,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.text.StringSubstitutor;
 
-import org.jlab.logging.DefaultLogger;
-
 /**
  * Find a location for a usable temporary directory, on a filesystem mounted
  * without noexec, and set a system property accordingly.
@@ -77,7 +75,6 @@ public class FileSystemExecScan {
     }
 
     public static void main(String[] args){
-        DefaultLogger.debug();
         FileSystemExecScan scan = new FileSystemExecScan("java.io.tmpdir");
         scan.scan("/usr/bin","/sbin");
         scan.scan("/tmp",".");

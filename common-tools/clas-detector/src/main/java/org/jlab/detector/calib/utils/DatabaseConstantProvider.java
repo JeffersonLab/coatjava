@@ -21,6 +21,7 @@ import org.rcdb.RCDB;
 import org.jlab.geom.base.ConstantProvider;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.groups.IndexedTableViewer;
+import org.jlab.utils.system.FileSystemExecScan;
 
 /**
  *
@@ -135,6 +136,12 @@ public class DatabaseConstantProvider implements ConstantProvider {
     }
     
     private void initialize(String address){
+
+        FileSystemExecScan fses = new FileSystemExecScan("java.io.tmpdir");
+        if (!fses.scan()) {
+            LOGGER.severe("*** Unable to find good /tmp directory.  SQLite may not work. ***");
+        }
+        
         provider = CCDB.createProvider(address);
 
         LOGGER.log(Level.INFO, "[DB] --->  open connection with : {0}", address);
