@@ -42,7 +42,7 @@ public class FileSystemExecScan {
         for(String dir : dirs){
             if (checkDirectory(dir)) {
                 LOGGER.info(String.format("Setting property : %s to %s",systemProperty,dir));
-                System.setProperty(systemProperty, dir);
+                System.setProperty(systemProperty, SUBSTITUTOR.replace(dir));
                 return true;
             }
         }
