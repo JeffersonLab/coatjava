@@ -1,0 +1,130 @@
+##################################################################################
+# | Name                  | GitHub Handle    |
+# | ----                  | -------------    |
+# | Adam Hobart           | ajhobart         |
+# | Alessandra Filippi    | afilippi67       |
+# | Andrey Kim            | drewkenjo        |
+# | Blake Huck            | huckb            |
+# | Bruno Benkel          | bleaktwig        |
+# | Christopher Dilks     | c-dilks          |
+# | Cole Smith            | forcar           |
+# | Connor Pecar          | cpecar           |
+# | David Heddle          | heddle           |
+# | Silvia Niccolai       | silvianic        |
+# | David Payette         | dpayette         |
+# | Felix Touchte Codjo   | ftouchte         |
+# | Florian Hauenstein    | hauenst          |
+# | Francesco Bossu       | fbossu           |
+# | Francois-Xavier Girod | fxgirod          |
+# | Gagik Gavalian        | gavalian         |
+# | Giovanni Angelini     | gangel85         |
+# | Guillaume Christiaens | Guillaum-C       |
+# | Joseph Newton         | josnewton        |
+# | L Smith               | forcar           |
+# | Latif Kabir           | latifkabir       |
+# | Marco Contalbrigo     | mcontalb         |
+# | Mathieu Ouillon       | mathieuouillon   |
+# | Maurik Holtrop        | mholtrop         |
+# | Maxime Defurne        | mdefurne         |
+# | Michael Hoffer        | miho             |
+# | Nathan Baltzell       | baltzell         |
+# | Nathan Harrison       | naharrison       |
+# | Nick Markov           | markovnick       |
+# | Noemie Pilleux-LOCAL  | N-Plx            |
+# | Pierre Chatagnon      | PChatagnon       |
+# | Rafayel Paremuzyan    | rafopar          |
+# | Raffaella De Vita     | raffaelladevita  |
+# | Sylvester Joosten     | sly2j            |
+# | Tongtong Cao          | tongtongcao      |
+# | Vardan Gyurjyan       | gurjyan          |
+# | Veronique Ziegler     | zieglerv         |
+# | Whitney Armstrong     | whit2333         |
+# | ajhobart              | ajhobart         |
+# | colesmith             | forcar           |
+# | cqplatt               | cqplatt          |
+# | dcpayette             | dcpayette        |
+# | efuchey               | efuchey          |
+# | hattawy               | Hattawy          |
+# | huckb                 | huckb            |
+# | jwgibbs               | jwgibbs          |
+# | mariangela-bondi      | mariangela-bondi |
+# | marmstr4              | marmstr4         |
+# | mcontalb              | mcontalb         |
+# | mpaolone              | mpaolone         |
+# | rtysonCLAS12          | rtysonCLAS12     |
+# | tongtongcao           | tongtongcao      |
+# | veronique             | zieglerv         |
+##################################################################################
+
+# primary (default) maintainers
+* @baltzell @raffaelladevita @c-dilks
+
+# infrastructure
+.github/* @baltzell @raffaelladevita @c-dilks
+.gitlab-ci.yml @baltzell @raffaelladevita @c-dilks
+bin/* @baltzell @raffaelladevita @c-dilks
+docs/* @baltzell @raffaelladevita @c-dilks
+external-dependencies/* @baltzell @raffaelladevita @c-dilks
+libexec/* @baltzell @raffaelladevita @c-dilks
+
+# POMs
+/**/pom.xml @c-dilks @baltzell @raffaelladevita
+
+# common-tools
+common-tools/clara-io/* @baltzell @raffaelladevita
+common-tools/clas-analysis/* @raffaelladevita @baltzell @naharrison @zieglerv @marmstr4
+common-tools/clas-decay-tools/* @baltzell @raffaelladevita @zieglerv
+common-tools/clas-detector/* @baltzell @raffaelladevita @zieglerv
+common-tools/clas-geometry/* @baltzell @raffaelladevita @zieglerv @mathieuouillon
+common-tools/clas-io/* @raffaelladevita @baltzell @gavalian @naharrison @zieglerv @forcar @drewkenjo @huckb
+common-tools/clas-jcsg/* @drewkenjo @naharrison @raffaelladevita @baltzell @zieglerv @gangel85 @mcontalb @cqplatt @mariangela-bondi @gavalian @cpecar
+common-tools/clas-logging/* @baltzell @raffaelladevita
+common-tools/clas-math/* @raffaelladevita @baltzell @zieglerv @tongtongcao
+common-tools/clas-physics/* @raffaelladevita @baltzell @naharrison @zieglerv @drewkenjo @gavalian @fxgirod
+common-tools/clas-reco/* @raffaelladevita @baltzell @naharrison @zieglerv @josnewton @mcontalb @gavalian @afilippi67 @N-Plx @drewkenjo @rafopar @gurjyan @dcpayette @hauenst
+common-tools/clas-tracking/* @zieglerv @baltzell @raffaelladevita @tongtongcao
+common-tools/clas-utils/* @raffaelladevita @baltzell @naharrison @zieglerv @gavalian
+common-tools/swim-tools/* @raffaelladevita @baltzell @zieglerv @heddle @tongtongcao @gurjyan
+
+# coat-libs
+common-tools/coat-libs/* @raffaelladevita @baltzell @c-dilks
+
+# common-tools / cnuphys
+common-tools/cnuphys/* @heddle @naharrison @raffaelladevita @baltzell @zieglerv @tongtongcao
+
+# reconstruction
+reconstruction/alert/* @baltzell @raffaelladevita @mathieuouillon @mpaolone @efuchey @whit2333 @ftouchte
+reconstruction/band/* @raffaelladevita @baltzell @zieglerv @hauenst
+reconstruction/bg/* @baltzell @raffaelladevita
+reconstruction/cnd/* @raffaelladevita @baltzell @naharrison @zieglerv @PChatagnon @ajhobart @silvianic
+reconstruction/cvt/* @zieglerv @raffaelladevita @baltzell @naharrison @drewkenjo @fbossu @N-Plx @Guillaum-C
+reconstruction/dc/* @naharrison @raffaelladevita @baltzell @zieglerv @drewkenjo @tongtongcao @gurjyan @mcontalb @hauenst @latifkabir @gavalian @bleaktwig @N-Plx @marmstr4
+reconstruction/eb/* @baltzell @naharrison @raffaelladevita @sly2j @zieglerv @josnewton
+reconstruction/ec/* @naharrison @raffaelladevita @baltzell @zieglerv @forcar @gavalian @rafopar
+reconstruction/ec/src/* @forcar @naharrison @raffaelladevita @baltzell @gavalian @rafopar
+reconstruction/fmt/* @baltzell @raffaelladevita
+reconstruction/ft/* @naharrison @raffaelladevita @baltzell @zieglerv @afilippi67
+reconstruction/htcc/* @raffaelladevita @baltzell @naharrison @zieglerv @markovnick
+reconstruction/ltcc/* @naharrison @raffaelladevita @baltzell @zieglerv @sly2j
+reconstruction/mc/* @baltzell @raffaelladevita @rafopar @zieglerv
+reconstruction/mltn/* @baltzell @raffaelladevita @gavalian
+reconstruction/postproc/* @baltzell
+reconstruction/raster/* @baltzell @raffaelladevita @N-Plx
+reconstruction/rich/* @drewkenjo @raffaelladevita @baltzell @naharrison @zieglerv @mcontalb
+reconstruction/rtpc/* @dcpayette @raffaelladevita @baltzell @mathieuouillon @zieglerv @Hattawy @dpayette
+reconstruction/swaps/* @baltzell @raffaelladevita
+reconstruction/tof/* @naharrison @zieglerv @raffaelladevita @baltzell @drewkenjo @gavalian
+reconstruction/urwell/* @baltzell @raffaelladevita @tongtongcao
+reconstruction/vtx/* @baltzell @raffaelladevita @zieglerv
+
+# etc
+etc/bankdefs/* @baltzell @raffaelladevita @c-dilks
+etc/benchmarks/* @naharrison
+etc/data/* @drewkenjo @baltzell
+etc/ejml/* @raffaelladevita @gavalian
+etc/logging/* @baltzell
+etc/nnet/* @gavalian
+etc/services/* @baltzell @raffaelladevita @zieglerv
+
+# validation
+validation/* @baltzell @raffaelladevita @c-dilks
