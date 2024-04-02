@@ -31,6 +31,7 @@ jobs:
   #############################################################################
 
   build:
+    name: build coatjava
     strategy:
       fail-fast: true
       matrix:
@@ -69,6 +70,7 @@ jobs:
   #############################################################################
 
   get_validation_data:
+    name: get validation data
     runs-on: ubuntu-latest
     steps:
       - run: apt search xrootd
@@ -84,7 +86,35 @@ jobs:
   # tests
   #############################################################################
 
-  test_coatjava:
+  test_recon-util:
+    name: test recon-util
+    needs: [ build, get_validation_data ]
+    strategy:
+      fail-fast: true
+      matrix:
+        runner:
+          - ubuntu-latest
+          - macos-latest
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.java_version }}
+          distribution: ${{ env.java_distribution }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: build_${{ matrix.runner }}
+      - name: untar build
+        run: tar xzvf coatjava.tar.gz
+      - name: run test
+        working-directory: coatjava
+        run: |
+          coatjava/bin/recon-util
+
+  test_advanced:
+    name: test advanced tests
     needs: [ build ]
     strategy:
       fail-fast: true
@@ -128,6 +158,7 @@ jobs:
           ${{ matrix.cmd }}
 
   test_run-groovy:
+    name: test run-groovy
     needs: [ build ]
     runs-on: ubuntu-latest
     steps:
@@ -152,7 +183,8 @@ jobs:
   final:
     needs:
       - build
-      - test_coatjava
+      - test_recon-util
+      - test_advanced
       - test_run-groovy
     runs-on: ubuntu-latest
     steps:
@@ -185,6 +217,7 @@ jobs:
   #############################################################################
 
   collect_webpages:
+    name: collect web pages
     if: ${{ github.ref == 'refs/heads/development' }}
     needs: [ build, generate_documentation ]
     runs-on: ubuntu-latest
@@ -206,6 +239,7 @@ jobs:
           path: pages/
 
   deploy_web_pages:
+    name: deploy web pages
     if: ${{ github.ref == 'refs/heads/development' }}
     needs: collect_webpages
     permissions:
