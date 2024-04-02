@@ -1,8 +1,10 @@
 .github/dependabot.yml <Christopher Dilks>
+.github/generate-codeowners.rb <Christopher Dilks>
 .github/workflows/maven.yml <Christopher Dilks> <Nathan Baltzell>
 .github/workflows/validation.yml <Christopher Dilks> <Nathan Baltzell>
 .gitignore <Nathan Baltzell> <Nathan Harrison> <Andrey Kim> <Peter EJ Davies> <Christopher Dilks> <Michael Hoffer> <dcpayette>
 .mailmap <Nathan Baltzell>
+CODEOWNERS <Christopher Dilks>
 README.md <Nathan Harrison> <Christopher Dilks> <Nathan Baltzell>
 bin/bg-merger <Nathan Baltzell> <Christopher Dilks> <Raffaella De Vita>
 bin/bos2hipo <Nathan Baltzell> <Christopher Dilks> <Nathan Harrison>
@@ -78,7 +80,7 @@ common-tools/clas-analysis/src/main/java/org/jlab/analysis/roads/DictionaryMerge
 common-tools/clas-analysis/src/main/java/org/jlab/analysis/roads/DictionaryValidator.java <Raffaella De Vita> <Nathan Baltzell>
 common-tools/clas-analysis/src/main/java/org/jlab/analysis/roads/README.md <Raffaella De Vita> <Christopher Dilks>
 common-tools/clas-analysis/src/main/java/org/jlab/analysis/roads/Road.java <Raffaella De Vita>
-common-tools/clas-detector/doc/Scaler information in CLAS12 2018 data.docx <Nathan Baltzell>
+common-tools/clas-detector/doc/Scaler\ information\ in\ CLAS12\ 2018\ data.docx <Nathan Baltzell>
 common-tools/clas-detector/pom.xml <Raffaella De Vita> <Nathan Baltzell> <Nathan Harrison> <Gagik Gavalian> <Veronique Ziegler>
 common-tools/clas-detector/src/main/java/org/jlab/detector/banks/FilteredBank.java <Nathan Baltzell>
 common-tools/clas-detector/src/main/java/org/jlab/detector/banks/RawBank.java <Nathan Baltzell> <Raffaella De Vita>
@@ -1651,7 +1653,7 @@ common-tools/cnuphys/numRec/test/com/nr/test/test_chapter9/Test_zroots.java <Chr
 common-tools/cnuphys/parent/pom.xml <Nathan Baltzell> <dependabot[bot]> <Nathan Harrison> <David Heddle> <Christopher Dilks>
 common-tools/cnuphys/pom.xml <David Heddle> <Nathan Baltzell> <Nathan Harrison> <Christopher Dilks>
 common-tools/cnuphys/snr/build.xml <Christopher Dilks> <David Heddle> <Nathan Harrison>
-common-tools/cnuphys/snr/doc/The Simple Noise Removal.docx <David Heddle> <Christopher Dilks> <Nathan Harrison>
+common-tools/cnuphys/snr/doc/The\ Simple\ Noise\ Removal.docx <David Heddle> <Christopher Dilks> <Nathan Harrison>
 common-tools/cnuphys/snr/doc/snr.pdf <David Heddle> <Christopher Dilks> <Nathan Harrison>
 common-tools/cnuphys/snr/pom.xml <David Heddle> <Nathan Baltzell> <Christopher Dilks> <Nathan Harrison>
 common-tools/cnuphys/snr/src/main/java/.classpath <Christopher Dilks> <David Heddle>

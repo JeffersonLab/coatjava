@@ -12,7 +12,7 @@ file_list.each_with_index do |file,i|
     "<" + line.split(' ')[1..-1].join(' ') + ">"
   end
   unique_authors += authors
-  codeowners.puts "#{file} #{authors.join(' ')}"
+  codeowners.puts "#{file.gsub(' ','\ ')} #{authors.join(' ')}"
 end
 
 unique_authors.uniq.each do |name|
