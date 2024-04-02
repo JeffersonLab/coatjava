@@ -2,7 +2,7 @@
 
 # Default versions:
 grapes=2.17
-clara=5.0.2
+clara=v0
 coatjava=10.0.8
 
 # Abort on any non-zero exit codes:
