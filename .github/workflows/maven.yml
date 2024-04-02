@@ -71,11 +71,12 @@ jobs:
   get_validation_data:
     runs-on: ubuntu-latest
     steps:
+      - run: apt search xrootd
       - name: install dependencies
         run: |
           sudo apt -y update
           sudo apt -y upgrade
-          sudo apt -y install xrootd client
+          sudo apt -y install xrootd-client
       - name: ls
         run: |
           xrdfs xroot://sci-xrootd.jlab.org ls osgpool
