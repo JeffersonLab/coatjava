@@ -3,6 +3,9 @@ package org.jlab.utils.system;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.text.StringSubstitutor;
@@ -28,10 +31,11 @@ public class FileSystemExecScan {
         "${HOME}",
     };
 
-    String systemProperty;
+    List<String> systemProperties;
     
-    public FileSystemExecScan(String prop){
-        systemProperty = prop;
+    public FileSystemExecScan(String... prop){
+        systemProperties = new ArrayList<>();
+        systemProperties.addAll(Arrays.asList(prop));
     }
     
     public boolean scan() {
@@ -41,8 +45,10 @@ public class FileSystemExecScan {
     public boolean scan(String... dirs){
         for(String dir : dirs){
             if (checkDirectory(dir)) {
-                LOGGER.info(String.format("Setting property : %s to %s",systemProperty,dir));
-                System.setProperty(systemProperty, SUBSTITUTOR.replace(dir));
+                for (String s : systemProperties) {
+                    LOGGER.info(String.format("Setting property : %s to %s",s,dir));
+                    System.setProperty(s, SUBSTITUTOR.replace(dir));
+                }
                 return true;
             }
         }
