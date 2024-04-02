@@ -109,7 +109,7 @@ cd $tmp_dir
 
 # CLARA:
 echo -e "\nRetrieving CLARA version $clara ..."
-get https://userweb.jlab.org/~gurjyan/clara-cre/clara-cre-$clara.tar.gz
+get https://clasweb.jlab.org/clas12offline/distribution/clara/clara-cre-$clara.tar.gz
 
 # COATJAVA:
 if ! compgen -G "$coatjava/lib/clas/coat-libs-*.jar" > /dev/null
