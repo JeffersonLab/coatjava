@@ -1,14 +1,7 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.utils.groups;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.TreeMap;
 
 /**
  *
@@ -17,12 +10,10 @@ import java.util.TreeMap;
  */
 public class IndexedList<T> {
 
-    private final Map<Long,T>  collection = new LinkedHashMap<Long,T>();
+    private final Map<Long,T>  collection = new LinkedHashMap<>();
     private int                indexSize = 3;
     
-    public IndexedList(){
-        
-    }
+    public IndexedList(){}
     
     public IndexedList(int indsize){
         this.indexSize = indsize;
