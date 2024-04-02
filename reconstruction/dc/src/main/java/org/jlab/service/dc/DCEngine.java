@@ -13,6 +13,7 @@ import org.jlab.rec.dc.banks.Banks;
 import org.jlab.clas.tracking.kalmanfilter.zReference.KFitter;
 import org.jlab.clas.tracking.kalmanfilter.zReference.KFitterWithURWell;
 import org.jlab.clas.tracking.kalmanfilter.zReference.DAFilter;
+import org.jlab.rec.dc.track.TrackCandListWithURWellFinder;
 
 public class DCEngine extends ReconstructionEngine {
 
@@ -38,6 +39,7 @@ public class DCEngine extends ReconstructionEngine {
     private String   dafChi2Cut     = null;
     private String   dafAnnealingFactorsTB = null;
     private String   dafAnnealingFactorsTBWithURWell = null;
+    private double maxChi2OverNDFFullCrossesHB = 15;
     
     public static final Logger LOGGER = Logger.getLogger(ReconstructionEngine.class.getName());
 
@@ -123,6 +125,11 @@ public class DCEngine extends ReconstructionEngine {
         if(this.getEngineConfigString("dafAnnealingFactorsTBWithURWell")!=null){ 
             dafAnnealingFactorsTBWithURWell=this.getEngineConfigString("dafAnnealingFactorsTBWithURWell");
             KFitterWithURWell.setDafAnnealingFactorsTB(dafAnnealingFactorsTBWithURWell);
+        }
+        
+        if(this.getEngineConfigString("maxChi2OverNDFFullCrossesHB")!=null) {
+            maxChi2OverNDFFullCrossesHB=Double.valueOf(this.getEngineConfigString("maxChi2OverNDFFullCrossesHB"));
+            TrackCandListWithURWellFinder.setMaxChi2OverNDFFullCrossesHB(maxChi2OverNDFFullCrossesHB);
         }
         
         // Set geometry shifts for alignment code

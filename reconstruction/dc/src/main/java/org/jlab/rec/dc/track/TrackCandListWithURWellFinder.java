@@ -1156,8 +1156,8 @@ public class TrackCandListWithURWellFinder {
                         
                         if (kFZRef.finalStateVec == null) {
                             continue;
-                        } else {
-                            if (kFZRef.chi2 < Constants.MAXCHI2) {
+                        } else {                            
+                            if (kFZRef.chi2 < Constants.MAXCHI2 &&  kFZRef.chi2/kFZRef.NDF< maxChi2OverNDFFullCrossesHB) {
                                 
                                 fitStateVec = new StateVec(kFZRef.finalStateVec.x,
                                 		kFZRef.finalStateVec.y, kFZRef.finalStateVec.tx, kFZRef.finalStateVec.ty);
@@ -1197,6 +1197,10 @@ public class TrackCandListWithURWellFinder {
         return cands;
     }
     
+    private static double maxChi2OverNDFFullCrossesHB = Double.POSITIVE_INFINITY;    
+    public static void setMaxChi2OverNDFFullCrossesHB(double maxChi2OverNDF){
+        maxChi2OverNDFFullCrossesHB = maxChi2OverNDF;        
+    }
     
     private List<Track> findCurvedTracks3URDCCrosses(URWellDCCrossesList urDCCrossesList, DCGeant4Factory DcDetector, double TORSCALE, Swim dcSwim,
             boolean donotapplyCuts) {
