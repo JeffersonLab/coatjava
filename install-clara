@@ -94,7 +94,7 @@ if compgen -G "$coatjava/lib/clas/coat-libs-*.jar" > /dev/null
 then
     coatjava=$(cd $coatjava && pwd)
     echo -e "\nUsing local COATJAVA installation:\n\t$coatjava"
-elif ! [[ "$coatjava" =~ ^[0-9]+\.[0-9]\.[0-9]$ ]]
+elif ! [[ "$coatjava" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
 then
     echo -e "\n\nWARNING:  COATJAVA doesn't look like a local installation nor version number:  $coatjava"
 fi
