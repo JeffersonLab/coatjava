@@ -3,7 +3,7 @@
 
   <groupId>org.jlab.clas</groupId>
   <artifactId>clas12rec</artifactId>
-  <version>8.5.0-SNAPSHOT</version>
+  <version>10.0.11-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <repositories>
@@ -23,7 +23,7 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.13.1</version>
+      <version>4.13.2</version>
       <scope>test</scope>
     </dependency>
 
@@ -44,7 +44,14 @@
     <dependency>
       <groupId>org.jlab</groupId>
       <artifactId>groot</artifactId>
-      <version>4.0.3</version>
+      <version>4.1.0</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.jacoco/jacoco-maven-plugin -->
+    <dependency>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.10</version>
     </dependency>
 
   </dependencies>
@@ -59,23 +66,11 @@
     </extensions>
 
     <plugins>
-      <plugin> <!-- for codecov -->
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>cobertura-maven-plugin</artifactId>
-        <version>2.7</version>
-        <configuration>
-          <formats>
-            <format>html</format>
-            <format>xml</format>
-          </formats>
-          <check />
-        </configuration>
-      </plugin>
 
       <plugin>
         <groupId>com.github.spotbugs</groupId>
         <artifactId>spotbugs-maven-plugin</artifactId>
-        <version>3.1.12</version>
+        <version>4.8.3.1</version>
         <configuration>
           <excludeFilterFile>spotbugs-exclude.xml</excludeFilterFile>
         </configuration>
@@ -94,7 +89,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.8.0</version>
+        <version>3.12.1</version>
         <configuration>
             <release>11</release>
             <encoding>UTF-8</encoding>
@@ -104,7 +99,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
-        <version>3.2.0</version>
+        <version>3.3.1</version>
         <configuration>
           <encoding>UTF-8</encoding>
         </configuration>
@@ -132,6 +127,26 @@
                   </manifestSections>
               </archive>
           </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.10</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>report</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
 
     </plugins>

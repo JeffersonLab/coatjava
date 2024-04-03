@@ -2,6 +2,7 @@ package org.jlab.rec.ft.trk;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.jlab.detector.banks.RawDataBank;
 import org.jlab.detector.base.DetectorLayer;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.io.base.DataBank;
@@ -399,12 +400,12 @@ public class FTTRKReconstruction {
         
         List<FTTRKHit> hits = new ArrayList<>();
         if (event.hasBank("FTTRK::adc") == true) {
-            DataBank bankDGTZ = event.getBank("FTTRK::adc");
+            RawDataBank bankDGTZ = new RawDataBank("FTTRK::adc");
+            bankDGTZ.read(event);
             int nrows = bankDGTZ.rows();
             if (nrows > FTConstants.TRK_MAXNUMBEROFHITS) {
                 return hits;   // if too many hits skip the event
             }
-            int hitId = -1;
             for (int row = 0; row < nrows; row++) {
                 int isector = bankDGTZ.getInt("sector", row);
                 int ilayer = bankDGTZ.getInt("layer", row);
@@ -422,7 +423,7 @@ public class FTTRKReconstruction {
                 }
 
                 if (adc > FTConstants.TRK_ADC_MINIMUM && adc < FTConstants.TRK_ADC_MAXIMUM && time != -1 && icomponent != -1) {
-                    FTTRKHit hit = new FTTRKHit(isector, ilayer, icomponent, (double) adc, (double) time, ++hitId);
+                    FTTRKHit hit = new FTTRKHit(isector, ilayer, icomponent, (double) adc, (double) time, bankDGTZ.trueIndex(row));
 
 //////////////////////////////////////////////////////// insert here possible operations selecting strips or groups of strips
                     // select only one sector at a time, for instance

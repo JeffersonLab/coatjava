@@ -6,10 +6,12 @@ import java.util.List;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
 import org.jlab.rec.dc.Constants;
+import org.jlab.rec.dc.cross.Cross;
 import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.trajectory.StateVec;
 import org.jlab.rec.dc.trajectory.Trajectory;
+import org.jlab.rec.urwell.reader.URWellCross;
 
 /**
  * A class representing track candidates in the DC.  A track has a trajectory represented by an ensemble of geometrical state vectors along its path, 
@@ -58,6 +60,7 @@ public class Track extends Trajectory implements Comparable<Track>{
     private Vector3D _pAtOrig_TiltedCS;
     private String _trking;
     private int _FitNDF;
+    private double _NDFDAF;
     private double _fitChisq;
     public boolean fit_Successful;
     private int _missingSuperlayer;
@@ -65,9 +68,92 @@ public class Track extends Trajectory implements Comparable<Track>{
     private int _fitConvergenceStatus;
     private StateVec finalStateVec ;
     
+    private URWellCross urCross;
+    private Point3D _URWellPointGlobal;
+    private Point3D _URWellPGlobal;
+    private Point3D _URWellPointLocal;
+    private Point3D _URWellPLocal;
+    
     
     public Track() {
     }
+    
+    /**
+     * 
+     * @return URWell point on track in global coordinates
+     */
+    public Point3D get_URWellPointGlobal() {
+        return _URWellPointGlobal;
+    }
+    /**
+     * 
+     * @param uRWellPointGlobal URWell point on track in global coordinates
+     */
+    public void set_URWellPointGlobal(Point3D uRWellPointGlobal) {
+        this._URWellPointGlobal = uRWellPointGlobal;
+    }
+    
+        /**
+     * 
+     * @return URWell Momentum at URWell point on track in global coordinates
+     */
+    public Point3D get_URWellPGlobal() {
+        return _URWellPGlobal;
+    }
+    /**
+     * 
+     * @param uRWellDirGlobal Momentum at URWell point on track in global coordinates
+     */
+    public void set_URWellPGlobal(Point3D uRWellPGlobal) {
+        this._URWellPGlobal = uRWellPGlobal;
+    }
+    
+        
+    /**
+     * 
+     * @return URWell point on track in local coordinates
+     */
+    public Point3D get_URWellPointLocal() {
+        return _URWellPointLocal;
+    }
+    /**
+     * 
+     * @param uRWellPointLocal URWell point on track in local coordinates
+     */
+    public void set_URWellPointLocal(Point3D uRWellPointLocal) {
+        this._URWellPointLocal = uRWellPointLocal;
+    }
+    
+        /**
+     * 
+     * @return URWell Omentum at URWell point on track in local coordinates
+     */
+    public Point3D get_URWellPLocal() {
+        return _URWellPLocal;
+    }
+    /**
+     * 
+     * @param uRWellPLocal Momentum at URWell point on track in local coordinates
+     */
+    public void set_URWellPLocal(Point3D uRWellPLocal) {
+        this._URWellPLocal = uRWellPLocal;
+    }
+    
+    /**
+     * 
+     * @return URWell cross of track
+     */
+    public URWellCross get_URWellCross() {
+        return urCross;
+    }
+    /**
+     * 
+     * @param urCross URWell cross
+     */
+    public void set_URWellCross(URWellCross urCross) {
+        this.urCross = urCross;
+    }
+    
     /**
      * 
      * @return missing superlayer of the track
@@ -96,15 +182,47 @@ public class Track extends Trajectory implements Comparable<Track>{
     public void setSingleSuperlayer(Segment _singleSuperlayer) {
         this._singleSuperlayer = _singleSuperlayer;
     }
+        
+    public int getBitStatus() { 
+        int status = 0;
+        int[] segmentStatus = {2, 2, 2, 2, 2, 2};//[slyr]-->0: OK; 1:missing layers; 2 missing
+        for (Cross c : this) {
+            if (c.get_Segment1() != null && c.get_Segment1().get_Id()>0) {
+                int isl = c.get_Segment1().get_Superlayer() - 1;
+                segmentStatus[isl] = c.get_Segment1().get_Status();
+            }
+            if (c.get_Segment2() != null && c.get_Segment2().get_Id()>0) {
+                int isl = c.get_Segment2().get_Superlayer() - 1;
+                segmentStatus[isl] = c.get_Segment2().get_Status();
+            } 
+        }
+        if(this.getSingleSuperlayer() !=null) {
+            int isl = this.getSingleSuperlayer().get_Superlayer()-1;
+            segmentStatus[isl] = this.getSingleSuperlayer().get_Status();
+        }
+        for(int isl = 0; isl <6; isl++) {
+            status |= segmentStatus[isl] << isl*2;
+        }
+        return status;
+    }
     
-    private int _Status=0;
+        
+    /**
+     * Status for different cross combos:
+     * 1: combos from R0R1R2R3
+     * 2: combos from R1R2R3
+     * 3: combos from R0R2R3
+     * 4: combos from R0R1R3
+     * 5: combos from R0R1R2
+    */
+    private int _Status_crossCombo=0;
 
-    public int get_Status() {
-        return _Status;
+    public int get_Status_crossCombo() {
+        return _Status_crossCombo;
     }
 
-    public void set_Status(int _Status) {
-        this._Status = _Status;
+    public void set_Status_crossCombo(int _Status) {
+        this._Status_crossCombo = _Status;
     }
     
     /**
@@ -318,6 +436,22 @@ public class Track extends Trajectory implements Comparable<Track>{
     public void set_FitNDF(int _FitNDF) {
         this._FitNDF = _FitNDF;
     }
+    
+     /**
+     * 
+     * @return Kalman fit NDF weighted DAF
+     */
+    public double get_NDFDAF() {
+        return _NDFDAF;
+    }
+    /**
+     * 
+     * @param _NDFDAF Kalman fit NDF weighted by DAF
+     */
+    public void set_NDFDAF(double _NDFDAF) {
+        this._NDFDAF = _NDFDAF;
+    }    
+    
     /**
      * 
      * @return Kalman fit covariance matrix
@@ -406,14 +540,31 @@ public class Track extends Trajectory implements Comparable<Track>{
         return value;
     }
     
+    public boolean overlapsWithURWell(Track o) {
+        boolean value = false;
+        for(int i=0; i<this.size(); i++) {
+            for(int j = 0; j < o.size(); j++){
+                if(this.get(i).get_Region() == o.get(j).get_Region()){
+                    int ct = this.get(i).get_Id();
+                    int co = o.get(j).get_Id();
+                    if(ct!=-1 && ct==co) value = true;
+                }
+            }   
+        }
+        if(!value && this.get_URWellCross() != null && o.get_URWellCross() != null){
+            if(this.get_URWellCross().id() == o.get_URWellCross().id()) value = true;
+        }
+        return value;
+    }
+    
     public boolean bestChi2(Track o) {
         return this.get_FitChi2()<o.get_FitChi2();
     }
     
     public boolean isGood() {
-        boolean isGood=true;
-        if(this._trakOrig.distance(0, 0, 0)>Constants.HTCCRADIUS && this._trakOrig.z()>0) isGood=false;
-        return isGood;
+        if(this._trakOrig==null) return false;
+        if(this._trakOrig.distance(0, 0, 0)>Constants.HTCCRADIUS && this._trakOrig.z()>0) return false;
+        return true;
     }
     /**
      * Basic track info

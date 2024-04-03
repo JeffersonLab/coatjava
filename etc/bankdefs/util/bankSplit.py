@@ -24,14 +24,17 @@ def create(dirname, banklist):
     os.mkdir(workdirectory + dirname)
     os.chdir(workdirectory + dirname)
     for bank in banklist:
-        os.symlink("../" + singledirectory + bank + ".json", bank + ".json")
+        src = "../" + singledirectory + bank + ".json"
+        if not os.path.exists(src):
+            print('ERROR:  Bank not found:  '+bank)
+            sys.exit(1)
+        os.symlink(src, bank + ".json")
     os.chdir("../../")
     print("Json file links created in " + workdirectory + dirname)
 
 # for each json file in hipo schema folder
 for filename in os.listdir("./"):
-    if filename.endswith(".json"):
-
+    if filename.endswith(".json") and not filename.startswith("clas6"):
         #Read JSON data into the datastore variable
         f = open(filename)
         try:
@@ -48,8 +51,8 @@ for filename in os.listdir("./"):
 print("Single json files saved in " + workdirectory + singledirectory)
 
 # these should *always* be kept:
-mc = ["MC::Event", "MC::Header", "MC::Lund", "MC::Particle", "MC::True"]
-tag1 = ["RUN::config", "RAW::epics", "RAW::scaler", "RUN::scaler", "COAT::config", "HEL::flip", "HEL::online"]
+mc = ["MC::Event", "MC::GenMatch", "MC::Header", "MC::Lund", "MC::Particle", "MC::RecMatch", "MC::True"]
+tag1 = ["RUN::config", "RAW::epics", "RAW::scaler", "RUN::scaler", "COAT::config", "HEL::flip", "HEL::online", "HEL::decoder"]
 
 # these are the output of the event builder:
 rectb   = ["REC::Event","REC::Particle","REC::Calorimeter","REC::CaloExtras","REC::Cherenkov","REC::CovMat","REC::ForwardTagger","REC::Scintillator","REC::ScintExtras","REC::Track","REC::UTrack","REC::Traj","RECFT::Event","RECFT::Particle"]
@@ -58,11 +61,11 @@ rectbai = ["RECAI::Event","RECAI::Particle","RECAI::Calorimeter","RECAI::CaloExt
 rechbai = ["RECHBAI::Event","RECHBAI::Particle","RECHBAI::Calorimeter","RECHBAI::CaloExtras","RECHBAI::Cherenkov","RECHBAI::ForwardTagger","RECHBAI::Scintillator","RECHBAI::ScintExtras","RECHBAI::Track"]
 
 # special, detector-specific raw banks that are kept in DSTs (for now):
-band   = ["BAND::laser"]
+band   = ["BAND::laser","BAND::adc","BAND::tdc","BAND::hits","BAND::rawhits"]
 raster = ["RASTER::position"]
 rich   = ["RICH::tdc","RICH::Ring","RICH::Particle"]
 rtpc   = ["RTPC::hits","RTPC::tracks","RTPC::KFtracks"]
-alert  = ["ALRTDC::Track", "ALRTDC::MC", "ALRTDC::Hits", "ALRTDC::PreClusters", "ALRTDC::Clusters", "ALRTDC::KFTrack"]
+alert  = ["AHDC::Track", "AHDC::MC", "AHDC::Hits", "AHDC::PreClusters", "AHDC::Clusters", "AHDC::KFTrack"]
 dets   = band + raster + rich + rtpc + alert
 
 # additions for the calibration schema:
@@ -71,18 +74,47 @@ calib = ["BAND::adc","BAND::laser","BAND::tdc","BAND::hits","BAND::rawhits","CND
 # additions for the monitoring schema:
 mon = ["BMT::adc","BMTRec::Clusters","BMTRec::Crosses","BMTRec::Hits","BMTRec::LayerEffs","BST::adc","BSTRec::Clusters","BSTRec::Crosses","BSTRec::Hits","BSTRec::LayerEffs","CND::clusters","CVTRec::Trajectory","ECAL::hits","FMT::adc","FTTRK::adc","HEL::adc","HitBasedTrkg::HBTracks","RAW::vtp","TimeBasedTrkg::TBCrosses","TimeBasedTrkg::TBSegments","TimeBasedTrkg::TBSegmentTrajectory","TimeBasedTrkg::Trajectory"]
 
-#ebrerun = list(dst)
-#ebrerun.extend(["FTOF::hits","TimeBasedTrkg::TBTracks","TimeBasedTrkg::Trajectory","TimeBasedTrkg::TBCovMat","HitBasedTrkg::HBTracks","FTOF::hbhits","ECAL::clusters","CTOF::hits","CND::clusters","HTCC::rec","LTCC::clusters","ECAL::moments","CVTRec::Tracks","CVTRec::Trajectory","FT::particles","FTCAL::clusters","FTHODO::clusters","RUN:rf"])
+# trigger validation needs these:
+trig = ["RAW::vtp","HTCC::rec","ECAL::adc","ECAL::calib","ECAL::clusters","ECAL::hits","ECAL::moments","ECAL::peaks","ECAL::tdc","ECAL::trigger"]
 
+# accumulate all the DST banks:
 dst = rectbai + rectb + mc + tag1 + dets
 dsthb = dst + rechbai + rechb
 
+# generate the calib and mon schema:
 calib.extend(dst)
 mon.extend(calib + rechbai + rechb)
+
+trig.extend(dst)
+
+# EB rerun schema is DSTs plus whatever is necessary to rerun EB:
+ebrerun = list(dst)
+ebrerun.extend(["FTOF::clusters","FTOF::hbclusters","TimeBasedTrkg::TBTracks","TimeBasedTrkg::Trajectory","TimeBasedTrkg::TBCovMat","HitBasedTrkg::HBTracks","HitBasedTrkg::Trajectory","ECAL::clusters","ECAL::calib","CTOF::clusters","CND::clusters","HTCC::rec","LTCC::clusters","ECAL::moments","CVTRec::Tracks","CVTRec::Trajectory","FT::particles","FTCAL::clusters","FTHODO::clusters","RUN::rf"])
+
+# EC rerun schema adds ECAL raw banks to the EB rerun schema:
+ecrerun = list(ebrerun)
+ecrerun.extend(["ECAL::tdc","ECAL::adc"])
+
+# DC alignment and AI-tracking validation schema:
+dcalign = list(dst)
+dcalign.extend(["ai::tracks", "aidn::tracks", "TimeBasedTrkg::AIClusters", "TimeBasedTrkg::AIHits", "TimeBasedTrkg::AISegments", "TimeBasedTrkg::AITracks", "TimeBasedTrkg::TBClusters", "TimeBasedTrkg::TBHits", "TimeBasedTrkg::TBSegments", "TimeBasedTrkg::TBSegmentTrajectory", "TimeBasedTrkg::TBTracks"])
+
+# DC HV studies schema:
+dchv = list(dst)
+dchv.extend(["DC::tdc", "HitBasedTrkg::HBClusters", "HitBasedTrkg::HBHitTrkId", "HitBasedTrkg::HBHits", "HitBasedTrkg::HBSegmentTrajectory", "HitBasedTrkg::HBSegments", "HitBasedTrkg::HBTracks", "HitBasedTrkg::Hits", "HitBasedTrkg::Trajectory", "TimeBasedTrkg::TBClusters", "TimeBasedTrkg::TBHits", "TimeBasedTrkg::TBSegments", "TimeBasedTrkg::TBSegmentTrajectory", "TimeBasedTrkg::TBTracks"])
+
+# Level3 validation schema:
+level3 = list(dst)
+level3.extend(["DC::tdc", "ECAL::adc", "ECAL::clusters", "FTOF::tdc", "FTOF::adc", "HitBasedTrkg::HBClusters", "HitBasedTrkg::HBTracks", "HTCC::adc", "TimeBasedTrkg::TBClusters", "TimeBasedTrkg::TBTracks"])
 
 create("dst/", set(dst))
 create("dsthb/", set(dsthb))
 create("calib/", set(calib))
 create("mon/",  set(mon))
-#create("ebrerun/", setebrerun))
+create("ebrerun/", set(ebrerun))
+create("ecrerun/", set(ecrerun))
+create("dcalign/", set(dcalign))
+create("dchv/", set(dchv))
+create("level3/", set(level3))
+create("trigger/", set(trig))
 

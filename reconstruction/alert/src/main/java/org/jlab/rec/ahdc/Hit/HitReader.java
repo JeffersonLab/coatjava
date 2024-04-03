@@ -1,9 +1,10 @@
 package org.jlab.rec.ahdc.Hit;
 
+import java.util.ArrayList;
+
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
-
-import java.util.ArrayList;
+import org.jlab.detector.banks.RawDataBank;
 
 public class HitReader {
 
@@ -17,12 +18,16 @@ public class HitReader {
 
 	public void fetch_AHDCHits(DataEvent event) {
 		ArrayList<Hit> hits = new ArrayList<>();
+		
+		if (event.hasBank("AHDC::adc")) {
 
-		DataBank bankDGTZ = event.getBank("ALRTDC::adc");
+			RawDataBank bankDGTZ = new RawDataBank("AHDC::adc");
+        	bankDGTZ.read(event);
+		//DataBank bankDGTZ = event.getBank("ALRTDC::adc");
 
-		if (event.hasBank("ALRTDC::adc")) {
+		
 			for (int i = 0; i < bankDGTZ.rows(); i++) {
-				int    id         = i + 1;
+				int    id         = bankDGTZ.trueIndex(i) + 1;
 				int    number     = bankDGTZ.getByte("layer", i);
 				int    layer      = number % 10;
 				int    superlayer = (int) (number % 100) / 10;
@@ -30,6 +35,22 @@ public class HitReader {
 				double doca       = bankDGTZ.getShort("ped", i) / 1000.0;
 
 				hits.add(new Hit(id, superlayer, layer, wire, doca));
+			}
+		}else if(event.hasBank("AHDC::tdc")) {
+			RawDataBank bankDGTZ = new RawDataBank("AHDC::tdc");
+        	bankDGTZ.read(event);
+		//DataBank bankDGTZ = event.getBank("ALRTDC::adc");
+
+		
+			for (int i = 0; i < bankDGTZ.rows(); i++) {
+				int    id         = bankDGTZ.trueIndex(i) + 1;
+				int    number     = bankDGTZ.getByte("layer", i);
+				int    layer      = number % 10;
+				int    superlayer = (int) (number % 100) / 10;
+				int    wire       = bankDGTZ.getShort("component", i);
+				double time       = bankDGTZ.getInt("TDC", i)*1.0;
+
+				hits.add(new Hit(id, superlayer, layer, wire, time));
 			}
 		}
 		this.set_AHDCHits(hits);

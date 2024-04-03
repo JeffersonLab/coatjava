@@ -3,6 +3,7 @@ package org.jlab.service.ec;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.jlab.detector.banks.RawDataBank;
 
 import org.jlab.detector.base.DetectorCollection;
 import org.jlab.detector.base.DetectorLayer;
@@ -335,7 +336,9 @@ public class ECCommon {
         }
 
         if(event.hasBank("ECAL::tdc")==true){
-            DataBank  bank = event.getBank("ECAL::tdc");
+            RawDataBank  bank = new RawDataBank("ECAL::tdc");
+            bank.read(event);
+            //DataBank  bank = event.getBank("ECAL::tdc");
             for(int i = 0; i < bank.rows(); i++){
                 int  is = bank.getByte("sector",i);
                 int  il = bank.getByte("layer",i);
@@ -352,7 +355,9 @@ public class ECCommon {
         }        
         
         if(event.hasBank("ECAL::adc")==true){
-            DataBank bank = event.getBank("ECAL::adc");
+            RawDataBank bank = new RawDataBank("ECAL::adc");
+            bank.read(event);
+            //DataBank bank = event.getBank("ECAL::adc");
             for(int i = 0; i < bank.rows(); i++){
                 int  is = bank.getByte("sector", i);
                 int  il = bank.getByte("layer", i); 
@@ -368,7 +373,7 @@ public class ECCommon {
                 strip.setStatus(status.getIntValue("status",is,il,ip));                
                 strip.setADC(adc);
                 strip.setTriggerPhase(triggerPhase);
-                strip.setID(i+1);
+                strip.setID(bank.trueIndex(i)+1);
 
                 if(!isGoodStrip(strip)) continue;
                 
@@ -419,10 +424,16 @@ public class ECCommon {
        
     public static List<ECPeak>  processPeaks(List<ECPeak> peaks){
     	
+        //System.out.println("processing peaks");
+        
         List<ECPeak> peakList = new ArrayList<ECPeak>();
         
         for(ECPeak p : peaks) if(isGoodPeak(p)) peakList.add(p);
-        ECPeakAnalysis.splitPeaks(peakList);       //Split peak if strip members have an adc valley       
+        //ECPeakAnalysis.splitPeaks(peakList);       //Split peak if strip members have an adc valley   
+        ECPeakAnalysis.splitPeaksAlternative5(peakList);    // new Way of splitting the peaks as of 2/20/2023 
+                                                //Split peak if strip members have an adc valley
+                                                
+        //ECPeakAnalysis.doPeakCleanup(peaks);
         for(ECPeak p : peakList) p.redoPeakLine(); //Find new peak lines after splitPeaks
                 
         return peakList;

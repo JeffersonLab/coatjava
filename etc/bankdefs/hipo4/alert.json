@@ -1,6 +1,6 @@
 [
 	{
-		"name": "ALRTDC::Hits",
+		"name": "AHDC::Hits",
 		"group": 23000,
 		"item": 23,
 		"info": "Raw Hits",
@@ -28,7 +28,7 @@
 			}
 		]
 	}, {
-	"name": "ALRTDC::PreClusters",
+	"name": "AHDC::PreClusters",
 	"group": 23000,
 	"item": 24,
 	"info": "Pre Clusters info",
@@ -44,7 +44,7 @@
 		}
 	]
 }, {
-	"name": "ALRTDC::Clusters",
+	"name": "AHDC::Clusters",
 	"group": 23000,
 	"item": 25,
 	"info": "Clusters info",
@@ -64,7 +64,7 @@
 		}
 	]
 }, {
-	"name": "ALRTDC::Track",
+	"name": "AHDC::Track",
 	"group": 23000,
 	"item": 21,
 	"info": "Reco Tracks",
@@ -96,7 +96,7 @@
 		}
 	]
 }, {
-	"name": "ALRTDC::KFTrack",
+	"name": "AHDC::KFTrack",
 	"group": 23000,
 	"item": 26,
 	"info": "Reco Kalman Filter Tracks",
@@ -128,7 +128,7 @@
 		}
 	]
 }, {
-	"name": "ALRTDC::MC",
+	"name": "AHDC::MC",
 	"group": 23000,
 	"item": 22,
 	"info": "MC Tracks",

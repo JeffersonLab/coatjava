@@ -2,12 +2,12 @@ package org.jlab.service.urwell;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.jlab.detector.banks.RawDataBank;
 import org.jlab.detector.base.DetectorDescriptor;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.geant4.v2.URWELL.URWellStripFactory;
 import org.jlab.geom.prim.Line3D;
-import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 
 /**
@@ -166,18 +166,20 @@ public class URWellStrip implements Comparable {
         List<URWellStrip> strips = new ArrayList<>();
         
         if(event.hasBank("URWELL::adc")){
-            DataBank bank = event.getBank("URWELL::adc");
+            RawDataBank bank = new RawDataBank("URWELL::adc");
+            bank.read(event);
+            //DataBank bank = event.getBank("URWELL::adc");
             for(int i = 0; i < bank.rows(); i++){
                 int  sector = bank.getByte("sector", i);
                 int   layer = bank.getByte("layer", i); 
                 int    comp = bank.getShort("component", i);
                 int     adc = bank.getInt("ADC", i);
                 double time = bank.getFloat("time", i);
-                if(comp==0) continue; // should not happen, should be fixed in simulations
-                        
-                URWellStrip  strip = new URWellStrip(sector,  layer,   comp);
-
-                strip.setId(i+1);
+                
+                URWellStrip  strip = new URWellStrip(sector,  layer,   comp);                 
+                
+//                strip.setTriggerPhase(triggerPhase);
+                strip.setId(bank.trueIndex(i)+1);
                 strip.setADC(adc);
                 strip.setTDC((int) time);
                 strip.setEnergy(strip.ADC*URWellConstants.ADCTOENERGY);

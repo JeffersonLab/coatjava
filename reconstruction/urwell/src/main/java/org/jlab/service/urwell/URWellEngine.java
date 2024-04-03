@@ -41,7 +41,7 @@ public class URWellEngine extends ReconstructionEngine {
         // init ConstantsManager to read constants from CCDB
         String variationName = Optional.ofNullable(this.getEngineConfigString("variation")).orElse("default");
         DatabaseConstantProvider cp = new DatabaseConstantProvider(11, variationName);
-        factory.init(cp);
+        factory.init(cp, false, URWellConstants.NREGION);
         // register output banks for drop option        
         this.registerOutputBank("URWELL::hits");
         this.registerOutputBank("URWELL::clusters");
@@ -106,6 +106,7 @@ public class URWellEngine extends ReconstructionEngine {
         for(int c = 0; c < crosses.size(); c++){
             bankX.setShort("id",       c, (short) crosses.get(c).getId());
             bankX.setByte("sector",    c,  (byte) crosses.get(c).getSector());
+            bankX.setByte("region",    c,  (byte) crosses.get(c).getRegion());
             bankX.setFloat("energy",   c, (float) crosses.get(c).getEnergy());
             bankX.setFloat("time",     c, (float) crosses.get(c).getTime());
             bankX.setFloat("x",        c, (float) crosses.get(c).point().x());

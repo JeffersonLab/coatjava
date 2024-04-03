@@ -2,16 +2,20 @@ package org.jlab.detector.helicity;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.detector.calib.utils.ConstantsManager;
 
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.jnp.hipo4.io.HipoReader;
+import org.jlab.jnp.hipo4.io.HipoWriterSorted;
 
 /**
  * Stores a sequence of helicity states and provides timestamp- or state-count-
@@ -46,7 +50,7 @@ import org.jlab.jnp.hipo4.io.HipoReader;
  * 
  * @author baltzell
  */
-class HelicitySequence {
+public class HelicitySequence {
 
     static final Logger LOGGER = Logger.getLogger(HelicitySequence.class.getName());
     public static final double TIMESTAMP_CLOCK=250.0e6; // Hz
@@ -84,16 +88,17 @@ class HelicitySequence {
         
         LOGGER.log(Level.FINE, "HelicitySequence:  adding state:  {0}", state);
 
-        // terminate if trying to add more than one run number:
+        // ignore states from other run numbers:
         for (HelicityState hs : this.states) {
-            if (hs.getRun()!=state.getRun()) {
-                throw new RuntimeException("Run number mismatch:  "+state.getRun()+"/"+state.getRun());
+            if (hs.getRun() != state.getRun()) {
+                LOGGER.log(Level.WARNING, "HelicitySequence:  run number mismatch (OLD/NEW = {0},{1}), ignoring state", new Object[]{hs.getRun(), state.getRun()});
+                return false;
             }
         }
-        
+
         // mark that we'll need to redo the analysis:
         this.analyzed=false;
-        
+
         // FIXME:  should we be using a SortedSet instead?
         // Looks like SortedList doesn't exist until java 10,
         // and SortedSet doesn't give easy access by index?
@@ -481,5 +486,102 @@ class HelicitySequence {
             reader.open(filename);
             initialize(reader);
         }
+    }
+
+    public void initialize(String... filenames) {
+        initialize(Arrays.asList(filenames));
+    }
+
+    public List<HelicityState> getStates() {
+        return new ArrayList<>(this.states);
+    } 
+
+    /**
+     * Detect and add state changes from a "stream" of measured helicities to
+     * the sequence.
+     * 
+     * WARNING:  Unlike addState, this requires that previously added states are
+     * all earlier in time than the input stream.
+     * 
+     * NOTE:  In order to detect state changes, TreeSet is used to ensure the
+     * input state stream is sorted by timestamp, HelicityState's natural order.
+     * 
+     * @param states stream of states
+     */
+    public void addStream(TreeSet<HelicityState> states) {
+        final long tmin = this.states.isEmpty() ? Long.MIN_VALUE : 
+            this.states.get(this.states.size()-1).getTimestamp();
+        for (HelicityState s : states) {
+            if (this.states.isEmpty()) {
+                this.addState(s);
+            }
+            else if (tmin > s.getTimestamp()) {
+                LOGGER.warning("Ignoring timestamp earlier than previously registered sequence.");
+            }
+            else if (!s.equals(this.states.get(this.states.size()-1))) {
+                this.addState(s);
+            }
+        }
+        LOGGER.log(Level.INFO, "found {0} helicity sequence states in stream.", this.size());
+        this.integrityCheck();
+    }
+
+    public void addStream(SchemaFactory schema, ConstantsManager conman, List<String> filenames) {
+        Bank runConfigBank = new Bank(schema.getSchema("RUN::config"));
+        Bank helAdcBank = new Bank(schema.getSchema("HEL::adc"));
+        TreeSet<HelicityState> stream = new TreeSet<>();
+        Event e = new Event();
+        for (String filename : filenames) {
+            HipoReader r = new HipoReader();
+            r.open(filename);
+            while (r.hasNext()) {
+                r.nextEvent(e);
+                e.read(helAdcBank);
+                e.read(runConfigBank);
+                stream.add(HelicityState.createFromFadcBank(
+                        helAdcBank, runConfigBank,conman));
+            }
+        }
+        this.addStream(stream);
+    }
+
+    /**
+     * Get a list of HEL::flip banks corresponding to this sequence
+     * @param schema
+     * @return list of HEL::flip banks
+     */
+    public List<Bank> getBanks(SchemaFactory schema) {
+        List<Bank> banks = new ArrayList<>();
+        for (HelicityState s : this.states) {
+            banks.add(s.getFlipBank(schema));
+        }
+        return banks;
+    }
+
+    /**
+     * Write all states from this sequence into new HEL::flip banks in new,
+     * tagged events
+     * @param writer
+     * @param tag
+     */
+    public void writeFlips(HipoWriterSorted writer, int tag) {
+        Event e = new Event();
+        for (HelicityState s : this.states) {
+            e.reset();
+            e.write(s.getFlipBank(writer.getSchemaFactory()));
+            writer.addEvent(e, tag);
+        }
+    }
+
+    /**
+     * Write all state changes from a stream into new HEL::flip banks in new,
+     * tagged events
+     * @param writer
+     * @param stream 
+     */
+    public static void writeFlips(HipoWriterSorted writer, TreeSet<HelicityState> stream) {
+        HelicitySequence sequence = new HelicitySequence();
+        sequence.addStream(stream);
+        sequence.writeFlips(writer, 1);
     }
 }

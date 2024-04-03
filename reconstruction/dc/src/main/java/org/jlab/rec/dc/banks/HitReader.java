@@ -17,9 +17,13 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jlab.clas.swimtools.Swimmer;
+import org.jlab.detector.banks.RawBank.OrderGroups;
+import org.jlab.detector.banks.RawBank.OrderType;
+import org.jlab.detector.banks.RawDataBank;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.rec.dc.Constants;
+import org.jlab.utils.groups.IndexedList;
 import org.jlab.utils.groups.IndexedTable;
 
 /**
@@ -32,9 +36,10 @@ import org.jlab.utils.groups.IndexedTable;
  */
 public class HitReader {
 
-    private Banks bankNames          = null;
-    private DCGeant4Factory detector = null;
-    private ConstantsManager manager = null;
+    private Banks bankNames           = null;
+    private DCGeant4Factory detector  = null;
+    private ConstantsManager manager  = null;
+    private OrderType[] rawBankOrders = null;
     
     private int run = 0;
     private long tiTimeStamp = 0;
@@ -65,10 +70,11 @@ public class HitReader {
         this.detector = detector;            
     }
     
-    public HitReader(Banks names, ConstantsManager manager, DCGeant4Factory detector) {
+    public HitReader(Banks names, OrderType[] rawBankOrders, ConstantsManager manager, DCGeant4Factory detector) {
         this.bankNames= names;
         this.manager = manager;
         this.detector = detector;            
+        this.rawBankOrders = rawBankOrders;        
     }
     
    public void initialize(DataEvent event) {
@@ -203,15 +209,16 @@ public class HitReader {
                              NoiseReductionParameters parameters,
                              Clas12NoiseResult results) {
         this.initialize(event);
-        this.fetch_DCHits(false, false, noiseAnalysis, parameters, results);
+        this.fetch_DCHits(false, noiseAnalysis, parameters, results);
     }
         
-    public void fetch_DCHits(DataEvent event, boolean filterOnOrder, boolean filterOnUrwell, Clas12NoiseAnalysis noiseAnalysis,
+    public void fetch_DCHits(DataEvent event, boolean filterOnUrwell, Clas12NoiseAnalysis noiseAnalysis,
                              NoiseReductionParameters parameters,
                              Clas12NoiseResult results) {
         this.initialize(event);
-        this.fetch_DCHits(filterOnOrder, filterOnUrwell, noiseAnalysis, parameters, results);
+        this.fetch_DCHits(filterOnUrwell, noiseAnalysis, parameters, results);
     }
+
      /**
      * reads the hits using clas-io methods to get the EvioBank for the DC and
      * fill the values to instantiate the DChit and MChit classes.This methods
@@ -221,45 +228,43 @@ public class HitReader {
      * @param parameters
      * @param results
      */
-    private void fetch_DCHits(boolean filterOnOrder, boolean filterOnUrwell, Clas12NoiseAnalysis noiseAnalysis,
+    private void fetch_DCHits(boolean filterOnUrwell, Clas12NoiseAnalysis noiseAnalysis,
                              NoiseReductionParameters parameters,
                              Clas12NoiseResult results) {
 
         _DCHits = new ArrayList<>();
 
+        IndexedList<Boolean> noise = new IndexedList<>(4);
+        
+        RawDataBank bankDGTZ = new RawDataBank(bankNames.getTdcBank(), OrderGroups.NODENOISE);
+        bankDGTZ.read(event);
+        int rows = bankDGTZ.rows();
+
         // event selection, including cut on max number of hits
         if( run <= 0 ||
             tiTimeStamp < 0 ||
-            !event.hasBank(bankNames.getTdcBank()) ||
-            event.getBank(bankNames.getTdcBank()).rows()>Constants.MAXHITS ) {
+            bankDGTZ.rows()==0 || bankDGTZ.rows()>Constants.MAXHITS ) {
             return;
         }
-        
-        this.getDCRBJitters(Constants.getInstance().isSWAPDCRBBITS());
-        
-        DataBank bankDGTZ = event.getBank(bankNames.getTdcBank());
-
-        int rows = bankDGTZ.rows();
-        int[] sector = new int[rows];
-        int[] layer = new int[rows];
-        int[] superlayer = new int[rows];
-        int[] wire = new int[rows];
-        int[] order = new int[rows];
-        int[] tdc = new int[rows];
-        int[] jitter = new int[rows];
-        int[] urwmatch = new int[rows];
-        int[] useMChit = new int[rows];
-
-        for (int i = 0; i < rows; i++) {
-            sector[i]     = bankDGTZ.getByte("sector", i);
-            layer[i]      = (bankDGTZ.getByte("layer", i)-1)%6 + 1;
-            superlayer[i] = (bankDGTZ.getByte("layer", i)-1)/6 + 1;
-            wire[i]       = bankDGTZ.getShort("component", i);
-            order[i]      = bankDGTZ.getByte("order", i);
-            jitter[i]     = this.getJitter(sector[i], bankDGTZ.getByte("layer", i), wire[i], order[i]%10);
-            tdc[i]        = bankDGTZ.getInt("TDC", i) - jitter[i];
+        else {            
+            int[] sector = new int[rows];
+            int[] layer = new int[rows];
+            int[] superlayer = new int[rows];
+            int[] wire = new int[rows];
+            for (int i = 0; i < rows; i++) {
+                sector[i]     = bankDGTZ.getByte("sector", i);
+                layer[i]      = (bankDGTZ.getByte("layer", i)-1)%6 + 1;
+                superlayer[i] = (bankDGTZ.getByte("layer", i)-1)/6 + 1;
+                wire[i]       = bankDGTZ.getShort("component", i);
+            }
+            results.clear();
+            noiseAnalysis.clear();
+            noiseAnalysis.findNoise(sector, superlayer, layer, wire, results);
+            for(int i=0; i<rows; i++)
+                noise.add(results.noise[i], sector[i], superlayer[i], layer[i], wire[i]);
         }
-
+        
+        int[] urwmatch = new int[rows];
         if(event.hasBank(bankNames.getUrwellMatchBank())) {
             DataBank bankMATCH = event.getBank(bankNames.getUrwellMatchBank());
             if(bankMATCH.rows()==urwmatch.length) {
@@ -271,40 +276,45 @@ public class HitReader {
                         bankNames.getTdcBank(), bankDGTZ.rows(), bankNames.getUrwellMatchBank(), bankMATCH.rows()));
             }
         }
-        
-        if (event.hasBank(bankNames.getDocaBank())) {
-            DataBank bankD = event.getBank(bankNames.getDocaBank());
-            int bd_rows = bankD.rows();
-            for (int i = 0; i < bd_rows; i++) {
-                if (bankD.getFloat("stime", i) < 0) {
-                    useMChit[i] = -1;
-                }
-            }
-        }
+       
+//        DataBank bankDGTZ = event.getBank(bankNames.getTdcBank());
 
-        results.clear();
-        noiseAnalysis.clear();
+        this.getDCRBJitters(Constants.getInstance().isSWAPDCRBBITS());
 
-
-        noiseAnalysis.findNoise(sector, superlayer, layer, wire, results);
-
-        for (int i = 0; i < rows; i++) {
+        RawDataBank bankFiltered = new RawDataBank(bankNames.getTdcBank(), rawBankOrders);
+        bankFiltered.read(event);
+        for (int i = 0; i < bankFiltered.rows(); i++) {
+            int sector     = bankFiltered.getByte("sector", i);
+            int layer      = (bankFiltered.getByte("layer", i)-1)%6 + 1;
+            int superlayer = (bankFiltered.getByte("layer", i)-1)/6 + 1;
+            int wire       = bankFiltered.getShort("component", i);
+            int order      = bankFiltered.trueOrder(i);
+            int jitter     = this.getJitter(sector, bankFiltered.getByte("layer", i), wire, order);
+            int tdc        = bankFiltered.getInt("TDC", i) - jitter;
+            int index      = bankFiltered.trueIndex(i);
+            
             boolean passHit = true;
-            if(filterOnOrder && order[i]!=0)
-                passHit = false;
+
             if(filterOnUrwell && urwmatch[i]!=0)
                 passHit = false;
+            
             if (wirestat != null) {
-                if (wirestat.getIntValue("status", sector[i], layer[i]+(superlayer[i]-1)*6, wire[i]) != 0)
+                if (wirestat.getIntValue("status", sector, layer+(superlayer-1)*6, wire) != 0)
                     passHit = false;
             }
-            if (passHit && wire[i] != -1 && !results.noise[i] && useMChit[i] != -1 && !(superlayer[i] == 0)) {
+            
+            if(noise.hasItem(sector, superlayer, layer, wire)) {
+                if(noise.getItem(sector, superlayer, layer, wire))
+                    passHit = false;
+            }
+            
+            if (passHit && wire != -1 && !(superlayer == 0)) {
 
                 double timeCutMin = 0;
                 double timeCutMax = 0;
                 double timeCutLC = 0;
 
-                int region = ((superlayer[i] + 1) / 2);
+                int region = ((superlayer + 1) / 2);
 
                 switch (region) {
                     case 1:
@@ -312,12 +322,12 @@ public class HitReader {
                         timeCutMax = tdccuts.getIntValue("MaxEdge", 0, region, 0);
                         break;
                     case 2:
-                        if (wire[i] <= 56) {
+                        if (wire <= 56) {
                             timeCutLC = tdccuts.getIntValue("LinearCoeff", 0, region, 1);
                             timeCutMin = tdccuts.getIntValue("MinEdge", 0, region, 1);
                             timeCutMax = tdccuts.getIntValue("MaxEdge", 0, region, 1);
                         }
-                        if (wire[i] > 56) {
+                        if (wire > 56) {
                             timeCutLC = tdccuts.getIntValue("LinearCoeff", 0, region, 56);
                             timeCutMin = tdccuts.getIntValue("MinEdge", 0, region, 56);
                             timeCutMax = tdccuts.getIntValue("MaxEdge", 0, region, 56);
@@ -330,27 +340,26 @@ public class HitReader {
                 }
                 boolean passTimingCut = false;
 
-                if (region == 1 && tdc[i] > timeCutMin && tdc[i] < timeCutMax)
+                if (region == 1 && tdc > timeCutMin && tdc < timeCutMax)
                     passTimingCut = true;
                 if (region == 2) {
                     double Bscale = Swimmer.getTorScale() * Swimmer.getTorScale();
-                    if (wire[i] >= 56) {
-                        if (tdc[i] > timeCutMin &&
-                                tdc[i] < timeCutMax + timeCutLC * (double) (112 - wire[i] / 56) * Bscale)
+                    if (wire >= 56) {
+                        if (tdc > timeCutMin &&
+                                tdc < timeCutMax + timeCutLC * (double) (112 - wire / 56) * Bscale)
                             passTimingCut = true;
                     } else {
-                        if (tdc[i] > timeCutMin &&
-                                tdc[i] < timeCutMax + timeCutLC * (double) (56 - wire[i] / 56) * Bscale)
+                        if (tdc > timeCutMin &&
+                                tdc < timeCutMax + timeCutLC * (double) (56 - wire / 56) * Bscale)
                             passTimingCut = true;
                     }
                 }
-                if (region == 3 && tdc[i] > timeCutMin && tdc[i] < timeCutMax)
+                if (region == 3 && tdc > timeCutMin && tdc < timeCutMax)
                     passTimingCut = true;
 
                 if (passTimingCut) { // cut on spurious hits
-                    //Hit hit = new Hit(sector[i], superlayer[i], layer[i], wire[i], smearedTime[i], 0, 0, hitno[i]);			
-                    Hit hit = new Hit(sector[i], superlayer[i], layer[i], wire[i], tdc[i], jitter[i], (i + 1));
-                    hit.set_Id(i + 1);
+                    //Hit hit = new Hit(sector, superlayer, layer, wire, smearedTime, 0, 0, hitno);			
+                    Hit hit = new Hit(sector, superlayer, layer, wire, tdc, jitter, (index + 1));
                     hit.calc_CellSize(detector);
                     double posError = hit.get_CellSize() / Math.sqrt(12.);
                     hit.set_DocaErr(posError);

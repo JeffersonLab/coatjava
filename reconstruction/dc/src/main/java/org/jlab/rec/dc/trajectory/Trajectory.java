@@ -9,6 +9,7 @@ import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.cross.Cross;
+import org.jlab.rec.urwell.reader.URWellCross;
 
 
 /**
@@ -31,9 +32,37 @@ public class Trajectory extends ArrayList<Cross> {
     private double pathLength;
     private List<StateVec> stateVecs;
     private List<TrajectoryStateVec> trajStateVecs = new ArrayList<>();
-
+    
     private final static double TOLERANCE = 0.1; // trajectory toleerance (cm)
-   
+    
+    private URWellCross urCross;
+    
+    /**
+     * 
+     * @return URWell cross of track
+     */
+    public URWellCross get_URWellCross() {
+        return urCross;
+    }
+    /**
+     * 
+     * @param urCross URWell cross
+     */
+    public void set_URWellCross(URWellCross urCross) {
+        this.urCross = urCross;
+    }
+    
+    private double a; // Parameter a for fitting function in xz plane: f(x) = a*z^2 + b*z + c
+    
+    public void setA(double a){
+        this.a = a;
+    }
+
+    // Return parameter a for fitting function f(x) = a*z^2 + b*z + c in xz plane
+    public double getA(){
+        return a;
+    }
+    
     public List<StateVec> getStateVecs() {
         return stateVecs;
     }
@@ -197,7 +226,7 @@ public class Trajectory extends ArrayList<Cross> {
         double[] htccPars = dcSwim.SwimToSphere(Constants.HTCCRADIUS);
         if(htccPars==null) return;
         this.addTrajectoryPoint(htccPars[0], htccPars[1], htccPars[2], htccPars[3], htccPars[4], htccPars[5], htccPars[6], htccPars[7], DetectorType.HTCC, 1); 
-
+        
         //Swim to planes
         for(int j = 0; j<Constants.getInstance().trajSurfaces.getDetectorPlanes().get(is).size(); j++) {
             

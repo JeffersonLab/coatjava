@@ -55,12 +55,9 @@ configuration:
   global:
     variation: rgb_spring2019
 #      timestamp: 12/31/2020-00:00:00
-  io-services:
-    writer:
-      compression: 2
-#      schema_dir: "absolute-path-to-schema-folder"
-#      for example:
-#      schema_dir: "/home/clas12-1/chef/myClara/plugins/clas12/etc/bankdefs/dst"
+#  io-services:
+#    writer:
+#      schema_dir: "absolute-path-to-distribution/etc/bankdefs/hipo4/singles/dcalign"
   services:
     MAGFIELDS:
       magfieldSolenoidMap: Symm_solenoid_r601_phi1_z1201_13June2018.dat

@@ -18,9 +18,11 @@ import org.jlab.jnp.hipo4.io.HipoReader;
  */
 public class FilteredBank {
 
-    private final String filterVar;
-    private Bank dataBank = null;
-    private final List<Integer> indexList = new ArrayList<>();
+    public static final int DEFAULT_ALLOC = 40;
+
+    protected final String filterVar;
+    protected Bank bank = null;
+    protected final List<Integer> indexList = new ArrayList<>();
     protected final Set<Integer> filterList = new HashSet<>();
 
     /**
@@ -29,7 +31,17 @@ public class FilteredBank {
      * @param variableName name of the variable to filter on 
      */
     public FilteredBank(Schema schema, int allocate, String variableName){
-        dataBank = new Bank(schema, allocate);
+        if (schema != null) bank = new Bank(schema, allocate);
+        filterVar = variableName;
+    }
+
+
+    /**
+     * @param schema schema for the bank to filter
+     * @param variableName name of the variable to filter on 
+     */
+    public FilteredBank(Schema schema, String variableName){
+        if (schema != null) bank = new Bank(schema, DEFAULT_ALLOC);
         filterVar = variableName;
     }
 
@@ -45,9 +57,10 @@ public class FilteredBank {
 
     /**
      * Read the bank and prepare filtering
+     * @param evt
      */ 
     public void read(Event evt){
-        evt.read(dataBank);        
+        evt.read(bank);        
         this.notifyRead();
     }
 
@@ -56,9 +69,9 @@ public class FilteredBank {
      */
     protected void notifyRead(){
         indexList.clear();
-        int rows = dataBank.getRows();
+        int rows = bank.getRows();
         for(int i = 0; i < rows; i++){
-            int value = dataBank.getInt(filterVar, i);
+            int value = bank.getInt(filterVar, i);
             if (filterList.contains(value)) indexList.add(i);
         }
     }
@@ -66,17 +79,15 @@ public class FilteredBank {
     /**
      * @return number of bank rows that satisfy filtering criteria
      */
-    public int size(){ 
+    public int rows(){ 
         return this.indexList.size();
     }
 
     /**
-     * @param varName name of the bank variable
-     * @param index filtered index to retrieve
-     * @return value for the filtered index
+     * @return number of bank rows that satisfy filtering criteria
      */
-    public int intValue(String varName, int index ){
-        return dataBank.getInt(varName, indexList.get(index));
+    public int getRows(){ 
+        return this.rows();
     }
 
     /**
@@ -84,8 +95,8 @@ public class FilteredBank {
      * @param index filtered index to retrieve
      * @return value for the filtered index
      */
-    public long longValue(String varName, int index ){
-        return dataBank.getLong(varName, indexList.get(index));
+    public int getByte(String varName, int index ){
+        return bank.getByte(varName, indexList.get(index));
     }
 
     /**
@@ -93,8 +104,35 @@ public class FilteredBank {
      * @param index filtered index to retrieve
      * @return value for the filtered index
      */
-    public float floatValue(String varName, int index ){
-        return dataBank.getFloat(varName, indexList.get(index));
+    public int getShort(String varName, int index ){
+        return bank.getShort(varName, indexList.get(index));
+    }
+
+    /**
+     * @param varName name of the bank variable
+     * @param index filtered index to retrieve
+     * @return value for the filtered index
+     */
+    public int getInt(String varName, int index ){
+        return bank.getInt(varName, indexList.get(index));
+    }
+
+    /**
+     * @param varName name of the bank variable
+     * @param index filtered index to retrieve
+     * @return value for the filtered index
+     */
+    public long getLong(String varName, int index ){
+        return bank.getLong(varName, indexList.get(index));
+    }
+
+    /**
+     * @param varName name of the bank variable
+     * @param index filtered index to retrieve
+     * @return value for the filtered index
+     */
+    public float getFloat(String varName, int index ){
+        return bank.getFloat(varName, indexList.get(index));
     }
 
     /**
@@ -104,7 +142,7 @@ public class FilteredBank {
     public int trueIndex(int index){
         return this.indexList.get(index);
     }
-    
+
     public static void main(String[] args){
 
         String file = "/Users/gavalian/Work/DataSpace/rga/rec_005988.00005.00009.hipo";
@@ -123,14 +161,14 @@ public class FilteredBank {
             // bank has to read initialize
             ftof.read(e);
 	        System.out.println("\n============================= event");
-            System.out.printf("FTOF ADC size %8d, filtered size = %8d\n",fadc.getRows(),ftof.size());
+            System.out.printf("FTOF ADC size %8d, filtered size = %8d\n",fadc.getRows(),ftof.rows());
 	        fadc.show();
-	        for(int j = 0; j < ftof.size(); j++){
+	        for(int j = 0; j < ftof.rows(); j++){
 		        System.out.printf("%3d %3d %3d %4d, order = %5d, true index = %4d\n",j,
-				  ftof.intValue("sector",j),
-                  ftof.intValue("layer",j),
-                  ftof.intValue("component",j),
-                  ftof.intValue("order",j),
+				  ftof.getInt("sector",j),
+                  ftof.getInt("layer",j),
+                  ftof.getInt("component",j),
+                  ftof.getInt("order",j),
                   ftof.trueIndex(j));
 	        }
         }

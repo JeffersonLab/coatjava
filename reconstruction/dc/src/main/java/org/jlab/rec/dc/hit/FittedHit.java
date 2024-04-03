@@ -62,6 +62,9 @@ public class FittedHit extends Hit implements Comparable<Hit> {
     private double _tProp;
     private double _tStart;   // The event start time
     private double _Time;     //Time = TDC - tFlight - tProp - T0 - TStart
+    
+    private double _DAFWeight = -999; // Weight by DAF
+    
     /**
      * identifying outoftimehits;
      */
@@ -666,7 +669,7 @@ public class FittedHit extends Hit implements Comparable<Hit> {
                 throw new RuntimeException("invalid region");
         }    
         
-        double MaxSag = Constants.getInstance().getWIREDIST()*A*C*wire*wire*FastMath.cos(Math.toRadians(25.))*FastMath.cos(Math.toRadians(30.));
+        double MaxSag = Constants.getInstance().getWIREDIST()*A*C*wire*wire*Constants.COS25*Constants.COS30;
 
         double delta_x = MaxSag*(1.-Math.abs(y)/(0.5*wireLen))*(1.-Math.abs(y)/(0.5*wireLen));
         
@@ -1037,13 +1040,30 @@ public class FittedHit extends Hit implements Comparable<Hit> {
         return beta;
     }
     
+    /**
+     * @return _DAFWeight
+     */
+    public double getDAFWeight() {
+        return _DAFWeight;
+    }
+
+    /**
+     * @param weight the _DAFWeight to set
+     */
+    public void setDAFWeight(double weight) {
+        this._DAFWeight = weight;
+    }     
+
     public void updateHitfromSV(StateVec st, DCGeant4Factory DcDetector) {
 //        this.set_Id(this.get_Id());
 //        this.set_TDC(this.get_TDC());
 //        this.set_AssociatedHBTrackID(trk.get_Id());
 //        this.set_AssociatedClusterID(this.get_AssociatedClusterID());
         this.setAssociatedStateVec(st);
-        this.set_TrkResid(this.get_Doca() * Math.signum(st.getProjectorDoca()) - st.getProjectorDoca());
+        this.set_TrkResid(this.get_Doca() * this.get_LeftRightAmb() - st.getProjectorDoca());
+        this.setDAFWeight(st.getDAFWeight());
+        //Set the first bit of TB hit status to indicate that a hit is belong to single or double
+        if(st.getIsDoubleHit() == 1) this.set_QualityFac(1);
         this.setB(st.getB());
         this.setSignalPropagTimeAlongWire(st.x(), st.y(), DcDetector);
         this.setSignalTimeOfFlight();

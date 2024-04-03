@@ -15,6 +15,7 @@ public class URWellCross {
     private int id;
     
     private int sector;
+    private int region;
     private int chamber;
     
     private int cluster1;
@@ -35,6 +36,7 @@ public class URWellCross {
         int nint = plane.intersectionSegment(c2.getLine(), point);
         if(nint==1) {
             this.sector = c1.getSector();
+            this.region = (c1.getLayer()-1)/(URWellConstants.NLAYER/URWellConstants.NREGION)+1;
             this.cross  = point;
             this.energy = c1.getEnergy() + c2.getEnergy();
             this.time   = (c1.getTime() + c2.getTime())/2;
@@ -70,6 +72,10 @@ public class URWellCross {
         return this.sector;
     }
     
+    public int getRegion() {
+        return this.region;
+    }
+    
     public int getChamber() {
         return this.chamber;
     }
@@ -103,9 +109,9 @@ public class URWellCross {
         List<URWellCross> crosses = new ArrayList<>();
         
         for(int is=0; is<URWellConstants.NSECTOR; is++) {
-            for(int il=0; il<URWellConstants.NLAYER/2; il++) {
-                List<URWellCluster> clustersV = URWellCluster.getClusters(clusters, is+1, il+1);
-                List<URWellCluster> clustersW = URWellCluster.getClusters(clusters, is+1, il+2);
+            for(int ir=0; ir<URWellConstants.NREGION; ir++) {
+                List<URWellCluster> clustersV = URWellCluster.getClusters(clusters, is+1, (URWellConstants.NLAYER/URWellConstants.NREGION)*ir+1);
+                List<URWellCluster> clustersW = URWellCluster.getClusters(clusters, is+1, (URWellConstants.NLAYER/URWellConstants.NREGION)*ir+2);
                 
                 for(URWellCluster v : clustersV) {
                     for(URWellCluster w : clustersW) {
