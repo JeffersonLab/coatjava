@@ -137,11 +137,9 @@ public class DatabaseConstantProvider implements ConstantProvider {
     
     private void initialize(String address){
 
-        FileSystemExecScan fses = new FileSystemExecScan("java.io.tmpdir","org.sqlite.tmpdir");
-        if (!fses.scan()) {
-            LOGGER.severe("*** Unable to find good /tmp directory.  SQLite may not work. ***");
-        }
-        
+        // choose /tmp directory:
+        FileSystemExecScan.scan();
+
         provider = CCDB.createProvider(address);
 
         LOGGER.log(Level.INFO, "[DB] --->  open connection with : {0}", address);

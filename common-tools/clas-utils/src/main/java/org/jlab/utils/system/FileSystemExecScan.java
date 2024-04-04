@@ -5,7 +5,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.text.StringSubstitutor;
@@ -23,7 +25,7 @@ public class FileSystemExecScan {
 
     static final StringSubstitutor SUBSTITUTOR = new StringSubstitutor(System.getenv());
 
-    static final String[] DEFAULT_TMPDIRS = new String[] {
+    public static final String[] DEFAULT_TMPDIRS = new String[] {
         "/scratch/slurm/${SLURM_JOB_ID}",
         "/scratch/${USER}",
         "/tmp",
@@ -31,15 +33,23 @@ public class FileSystemExecScan {
         "${HOME}",
     };
 
+    public static final String[] DEFAULT_TMPDIR_PROPS = new String[] {
+        "java.io.tmpdir",
+        "org.sqlite.tmpdir",
+    };
+
+    Map<String,Boolean> cache;
     List<String> systemProperties;
+    static FileSystemExecScan singleton = new FileSystemExecScan(DEFAULT_TMPDIR_PROPS);
     
     public FileSystemExecScan(String... prop){
+        cache = new HashMap<>();
         systemProperties = new ArrayList<>();
         systemProperties.addAll(Arrays.asList(prop));
     }
-    
-    public boolean scan() {
-        return scan(DEFAULT_TMPDIRS);
+
+    public static boolean scan() {
+        return singleton.scan(DEFAULT_TMPDIRS);
     }
     
     public boolean scan(String... dirs){
@@ -52,12 +62,18 @@ public class FileSystemExecScan {
                 return true;
             }
         }
-        LOGGER.log(Level.SEVERE, "No suitable tmp dir found in:  {0}", String.join(":", dirs));
+        LOGGER.log(Level.SEVERE, "No suitable tmp dir found in:  {0}.  SQLite may not work", String.join(":", dirs));
         return false;
     }
+
+    public synchronized boolean checkDirectory(String dir) {
+        if (!cache.containsKey(dir)) {
+            cache.put(dir,check(SUBSTITUTOR.replace(dir)));
+        }
+        return cache.get(dir);
+    }
     
-    public boolean checkDirectory(String dir){
-        dir = SUBSTITUTOR.replace(dir);
+    public boolean check(String dir){
         LOGGER.config(String.format("Checking directory:  "+dir));
         File f = new File(dir);
         if (!f.canWrite()) return false;
