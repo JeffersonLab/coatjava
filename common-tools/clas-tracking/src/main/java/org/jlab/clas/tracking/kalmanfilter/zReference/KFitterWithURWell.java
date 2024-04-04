@@ -747,10 +747,20 @@ public class KFitterWithURWell extends AKFitter {
                 }
             }
             
-            else if (mVec.surface.type == Type.PLANEWITHPOINT) {
+            else if (mVec.surface.type == Type.PLANEWITHPOINT) {                
+                StateVec sVecPreviousFiltered = sv.filtered(!forward).get(k);
+                double daf_weight = 1;
+                if (sVecPreviousFiltered != null) {
+                    daf_weight = sVecPreviousFiltered.getWeightDAF_singleHit();
+                }
                 
+                double [] measXYVars = {mVec.surface.measPoint_err.x() * mVec.surface.measPoint_err.x(), mVec.surface.measPoint_err.y() * mVec.surface.measPoint_err.y()};
+                DAFilter daf = new DAFilter(measXYVars, daf_weight);
+                daf.calc_effectiveMeasVars_uRWell();
 
-                double V[][] = {{mVec.surface.measPoint_err.x() * mVec.surface.measPoint_err.x(), 0}, {0, mVec.surface.measPoint_err.y() * mVec.surface.measPoint_err.y()}};
+                double[] effectiveVar = daf.get_EffectiveXYVars_uRWell();
+                               
+                double V[][] = {{effectiveVar[0], 0}, {0, effectiveVar[1]}};
                 
                 if(V[0][0] == 0 || V[1][1] == 0 )
                     LOGGER.log(Level.SEVERE, "Resolution for URWell is 0.");
@@ -768,9 +778,7 @@ public class KFitterWithURWell extends AKFitter {
                     }
                 }
                 
-                double c2 = res[0]*res[0]/V[0][0] + res[1]/V[1][1];
-                
-                //System.out.println("mVec.surface.x: " + mVec.surface.x + ";  sVec.x: " + sVec.x + " " +  "mVec.surface.y: " + mVec.surface.y + ";  sVec.y: " + sVec.y + "res[0]: " + res[0] + "; res[1]: " + res[1]);
+                double c2 = res[0]*res[0]/V[0][0] + res[1]/V[1][1];                                
                 
                 chi2kf += c2;
                 if (filterOn) {
@@ -783,12 +791,13 @@ public class KFitterWithURWell extends AKFitter {
                     filteredVec.z = sVec.z;
                     filteredVec.B = sVec.B;
                     filteredVec.deltaPath = sVec.deltaPath;
-
                     filteredVec.CM = cMat;
-
-                    sv.filtered(forward).put(k, filteredVec);
-                    //sv.filtered(forward).put(k, sVec);
                     
+                    double [] residuals = {mVec.surface.measPoint.x() - filteredVec.x, mVec.surface.measPoint.y() - filteredVec.y};
+                    double updatedWeight_uRWell= daf.calc_updatedWeight_uRWell(residuals, annealingFactor);  
+                    filteredVec.setWeightDAF_singleHit(updatedWeight_uRWell);
+                    
+                    sv.filtered(forward).put(k, filteredVec);                    
                 } else {
                     return false;
                 }                                
@@ -1168,15 +1177,24 @@ public class KFitterWithURWell extends AKFitter {
             svc.setPathLength(path);
             
             if(mv.measurements.get(0).surface.type == Type.PLANEWITHPOINT){
-                double x_err = mv.measurements.get(0).surface.measPoint_err.x();
-                double y_err = mv.measurements.get(0).surface.measPoint_err.y();
+                StateVec sVecPreviousFiltered = sv.filtered(true).get(0);
+                double daf_weight = 1;
+                if (sVecPreviousFiltered != null) {
+                    daf_weight = sVecPreviousFiltered.getWeightDAF_singleHit();
+                }
+                
+                double [] measXYVars = {mv.measurements.get(0).surface.measPoint_err.x() * mv.measurements.get(0).surface.measPoint_err.x(), 
+                     mv.measurements.get(0).surface.measPoint_err.y() * mv.measurements.get(0).surface.measPoint_err.y()};
+                DAFilter daf = new DAFilter(measXYVars, daf_weight);
+                daf.calc_effectiveMeasVars_uRWell();
+                double[] effectiveVar = daf.get_EffectiveXYVars_uRWell();
 
                 double x_res = mv.measurements.get(0).surface.measPoint.x() - svc.x;
                 double y_res = mv.measurements.get(0).surface.measPoint.y() - svc.y;
 
-                chi2 += (x_res*x_res) / (x_err*x_err);
-                chi2 += (y_res*y_res) / (y_err*y_err);    
-                ndfDAF += 2;
+                chi2 += (x_res*x_res) / effectiveVar[0];
+                chi2 += (y_res*y_res) / effectiveVar[1];    
+                ndfDAF += 2*daf_weight;
             }
             else if(mv.measurements.get(0).surface.type == Type.LINEDOCA){                          
                 Point3D point = new Point3D(svc.x, svc.y, mv.measurements.get(0).surface.measPoint.z());

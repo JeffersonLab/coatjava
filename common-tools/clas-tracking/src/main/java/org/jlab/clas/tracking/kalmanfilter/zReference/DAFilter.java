@@ -27,7 +27,13 @@ public class DAFilter {
     // Effective doca
     private double effectiveDoca;
     private double effectiveVar;
-    private int indexReferenceWire = 0;   
+    private int indexReferenceWire = 0;  
+    
+    // For uRWell
+    private double[] xyVars_uRWell;
+    private double weight_uRWell;
+    private double[] effectiveXYVars_uRWell;
+    
     
     public DAFilter(double[] docas, double[] vars,  double[] weights, Line3D[] wireLines) {
         this.docas_double = docas;
@@ -43,6 +49,11 @@ public class DAFilter {
         this.var_single = var;
         this.weight_single = weight;
     }
+    
+    public DAFilter(double[] xyVars,  double weight) {
+        this.xyVars_uRWell = xyVars;
+        this.weight_uRWell = weight;              
+    } 
     
     public static void setDafChi2Cut(double chi2Cut){
         dafChi2Cut = chi2Cut;
@@ -118,12 +129,22 @@ public class DAFilter {
         effectiveDoca = doca_single;
     }
     
+    public void calc_effectiveMeasVars_uRWell(){
+        effectiveXYVars_uRWell = new double[]{10., 10.};
+        for(int i = 0; i < 2; i++)
+            effectiveXYVars_uRWell[i] = xyVars_uRWell[i]/weight_uRWell;
+    }
+    
     public double get_EffectiveDoca(){
         return effectiveDoca;
     }
     
     public double get_EffectiveVar(){
         return effectiveVar;
+    }
+    
+    public double[] get_EffectiveXYVars_uRWell(){
+        return effectiveXYVars_uRWell;
     }
     
     public int get_IndexReferenceWire(){
@@ -164,6 +185,20 @@ public class DAFilter {
         }
         
         return updatedWeights;
+    }
+    
+    public double calc_updatedWeight_uRWell(double[] residuals, double annealingFactor){
+        double factor = 1/(2 * Math.PI) / Math.sqrt( annealingFactor * xyVars_uRWell[0] * xyVars_uRWell[1]);
+        
+        double Chi2 = residuals[0] * residuals[0]/xyVars_uRWell[0] + residuals[1] * residuals[1]/xyVars_uRWell[1];
+        double Phi = factor * Math.exp(-0.5 / annealingFactor * Chi2);
+        double Lambda = factor * Math.exp(-0.5 / annealingFactor * dafChi2Cut);
+        double sum = Phi + Lambda;
+        double updatedWeight = Phi/sum;        
+        
+        if(updatedWeight < 1.e-100) updatedWeight = 1.e-100;        
+        return updatedWeight;
+        
     }
     
 }
