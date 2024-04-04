@@ -187,10 +187,11 @@ public class URWellMatchEngine extends ReconstructionEngine {
 
     private DataEvent writeMatchBank(DataEvent event, List<DCHit> hits) {
 
+
         String name = "URWELL::match";
         event.removeBank(name);
         
-        if(hits.isEmpty()) {
+        if(!hits.isEmpty()) {
             DataBank bank = event.createBank(name, hits.size());
             for(int i=0; i<hits.size(); i++) {
 
