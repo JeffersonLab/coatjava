@@ -123,11 +123,17 @@ public class DCURWellHBPostClusterAI extends DCEngine {
         URWellReader uRWellReader = new URWellReader(event, "HB");
         List<URWellCross> urCrosses = uRWellReader.getUrwellCrosses();        
         URWellDCCrossesListFinder uRWellDCCrossListLister = new URWellDCCrossesListFinder();        
-        URWellDCCrossesList urDCCrossesList = uRWellDCCrossListLister.candURWellDCCrossLists(urCrosses, crosslist);
+        URWellDCCrossesList urDC4CrossesList = uRWellDCCrossListLister.candURWellDCCrossesLists(event, crosses, urCrosses,
+                false,
+                null,
+                Constants.getInstance().dcDetector,
+                null,
+                dcSwim, false, 4
+        );
         
-        //find the list of  track candidates
+        //Build tracks for 4-crosses combos
         TrackCandListWithURWellFinder trkcandFinder = new TrackCandListWithURWellFinder(Constants.HITBASE);
-        trkcands = trkcandFinder.getTrackCands(urDCCrossesList,
+        trkcands = trkcandFinder.getTrackCands(urDC4CrossesList,
             Constants.getInstance().dcDetector,
             Swimmer.getTorScale(),
             dcSwim, true);
@@ -145,32 +151,81 @@ public class DCURWellHBPostClusterAI extends DCEngine {
                 trkcandFinder.matchHits(trk.getStateVecs(),
                         trk,
                         Constants.getInstance().dcDetector,
-                        dcSwim);
-                for (Cross c : trk) {
-                    c.set_CrossDirIntersSegWires();
-                    clusters.add(c.get_Segment1().get_fittedCluster());
-                    clusters.add(c.get_Segment2().get_fittedCluster());
-                    trkcandFinder.setHitDoubletsInfo(c.get_Segment1());
-                    trkcandFinder.setHitDoubletsInfo(c.get_Segment2());
-                    for (FittedHit h1 : c.get_Segment1()) {
-                        if(h1.get_AssociatedHBTrackID()>0) fhits.add(h1);
-                    }
-                    for (FittedHit h2 : c.get_Segment2()) {
-                        if(h2.get_AssociatedHBTrackID()>0) fhits.add(h2);
-                    }
-                }
-                
+                        dcSwim);                
                 if(trk.get_URWellCross() != null){
-                urCrossesOnTrks.add(trk.get_URWellCross()); 
-                trk.get_URWellCross().set_tid(trk.get_Id());
+                    urCrossesOnTrks.add(trk.get_URWellCross()); 
+                    trk.get_URWellCross().set_tid(trk.get_Id());
                 }
-                trk.calcTrajectory(trk.getId(), dcSwim, trk.get_Vtx0(), trk.get_pAtOrig(), trk.get_Q());
                 trkId++;
             }
         }
         
-                // no candidate found, stop here and save the hits,
+        ////// Tracking for 3-URDCCrosses combos
+        // Add real dc crosses into crossesOnTrack list
+        List<Cross> dcCrossesOnTrack = new ArrayList();
+        for(Cross dcCross : crosses){
+            Segment seg1 = dcCross.get_Segment1();
+            Segment seg2 = dcCross.get_Segment2();
+            if(seg1.isOnTrack==true && seg2.isOnTrack==true && seg1.associatedCrossId==seg2.associatedCrossId){
+                dcCrossesOnTrack.add(dcCross);
+            }
+        }
+        
+        // Remove real dc crosses on tracks
+        crosses.removeAll(dcCrossesOnTrack);
+        // Further remove uRWell crosses on tracks with pseudo-segment
+        urCrosses.removeAll(urCrossesOnTrks); 
+        // Build 3-crosses combos from any of 3 regions
+        URWellDCCrossesList urDC3CrossesList = uRWellDCCrossListLister.candURWellDCCrossesLists(event, crosses, urCrosses,
+                false,
+                null,
+                Constants.getInstance().dcDetector,
+                null,
+                dcSwim, false, 3
+        );
+        // Build tracks for 3-crosses combos       
+        List<Track> trkcands3URDCCrosses = trkcandFinder.getTrackCands3URDCCrosses(urDC3CrossesList,
+                Constants.getInstance().dcDetector,
+                Swimmer.getTorScale(),
+                dcSwim, false);
+        if (!trkcands3URDCCrosses.isEmpty()) {
+            trkcandFinder.removeOverlappingTracks(trkcands3URDCCrosses);
+            for (Track trk : trkcands3URDCCrosses) {
+                
+                // reset the id
+                trk.set_Id(trkId);
+                trkcandFinder.matchHits(trk.getStateVecs(),
+                        trk,
+                        Constants.getInstance().dcDetector,
+                        dcSwim);              
+                if(trk.get_URWellCross() != null){                    
+                    urCrossesOnTrks.add(trk.get_URWellCross()); 
+                    trk.get_URWellCross().set_tid(trk.get_Id());
+                }
+                trkId++;
+            }
+        }
+        
+        trkcands.addAll(trkcands3URDCCrosses);
+        
+                //gather all the hits and URWell crosses for pointer bank creation        
+        for (Track trk : trkcands) {
+            trk.calcTrajectory(trk.getId(), dcSwim, trk.get_Vtx0(), trk.get_pAtOrig(), trk.get_Q());
+            for (Cross c : trk) {
+                c.set_CrossDirIntersSegWires();
+                trkcandFinder.setHitDoubletsInfo(c.get_Segment1());
+                trkcandFinder.setHitDoubletsInfo(c.get_Segment2());
+                for (FittedHit h1 : c.get_Segment1()) {
+                    if(h1.get_AssociatedHBTrackID()>0) fhits.add(h1);
+                }
+                for (FittedHit h2 : c.get_Segment2()) {
+                    if(h2.get_AssociatedHBTrackID()>0) fhits.add(h2);
+                }
+            }
+        }        
+        // no candidate found, stop here and save the hits,
         // the clusters, the segments, the crosses
+        crosses.addAll(dcCrossesOnTrack);
         if (trkcands.isEmpty()) {
             event.appendBanks(
                     writer.fillHBHitsBank(event, fhits),    
