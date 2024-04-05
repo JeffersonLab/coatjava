@@ -346,10 +346,16 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
             bank.setFloat("z",        i, (float) urCrosses.get(i).position().z());
             bank.setFloat("x_local",  i, (float) urCrosses.get(i).local().x());
             bank.setFloat("y_local",  i, (float) urCrosses.get(i).local().y());
-            bank.setFloat("z_local",  i, (float) urCrosses.get(i).local().z());
+            bank.setFloat("z_local",  i, (float) urCrosses.get(i).local().z());        
             bank.setShort("cluster1", i, (short) urCrosses.get(i).cluster1()); 
             bank.setShort("cluster2", i, (short) urCrosses.get(i).cluster2()); 
-            bank.setShort("status",   i, (short) urCrosses.get(i).status());         
+            bank.setShort("status",   i, (short) urCrosses.get(i).status()); 
+            if(urCrosses.get(i).getURWellStateVec() != null){
+                bank.setFloat("x_state",        i, (float) urCrosses.get(i).getURWellStateVec().x());
+                bank.setFloat("y_state",        i, (float) urCrosses.get(i).getURWellStateVec().y());
+                bank.setFloat("B",        i, (float) urCrosses.get(i).getURWellStateVec().getB());
+                bank.setFloat("pathLength",        i, (float) urCrosses.get(i).getURWellStateVec().getPathLength());  
+            }
         }
         
         return bank;        
@@ -768,7 +774,14 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
             bank.setFloat("z_local",  i, (float) urCrosses.get(i).local().z());
             bank.setShort("cluster1", i, (short) urCrosses.get(i).cluster1()); 
             bank.setShort("cluster2", i, (short) urCrosses.get(i).cluster2()); 
-            bank.setShort("status",   i, (short) urCrosses.get(i).status());         
+            bank.setShort("status",   i, (short) urCrosses.get(i).status());  
+            if(urCrosses.get(i).getURWellStateVec() != null){
+                bank.setFloat("x_state",        i, (float) urCrosses.get(i).getURWellStateVec().x());
+                bank.setFloat("y_state",        i, (float) urCrosses.get(i).getURWellStateVec().y());
+                bank.setFloat("B",        i, (float) urCrosses.get(i).getURWellStateVec().getB());
+                bank.setFloat("pathLength",       i, (float) urCrosses.get(i).getURWellStateVec().getPathLength());  
+                bank.setFloat("DAFWeight",        i, (float) urCrosses.get(i).getURWellStateVec().getDAFWeight());
+            }
         }
         
         return bank;        

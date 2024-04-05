@@ -45,6 +45,7 @@ public class KFitterWithURWell extends AKFitter {
     public StateVec finalStateVec = null;
     public StateVec initialStateVec = null;
     public List<StateVec> kfStateVecsAlongTrajectory;
+    public StateVec kfStateVecURWell = null;
 
     private int iterNum;
 
@@ -1065,9 +1066,7 @@ public class KFitterWithURWell extends AKFitter {
             path += svc.deltaPath;
             svc.setPathLength(path);
             
-            if (mv.measurements.get(0).surface.type == Type.PLANEWITHPOINT) {
-                kfStateVecsAlongTrajectory.add(svc);
-                
+            if (mv.measurements.get(0).surface.type == Type.PLANEWITHPOINT) {                
                 double x_err = mv.measurements.get(0).surface.measPoint_err.x();
                 double y_err = mv.measurements.get(0).surface.measPoint_err.y();
 
@@ -1078,7 +1077,9 @@ public class KFitterWithURWell extends AKFitter {
                 chi2 += (y_res*y_res) / (y_err*y_err);    
 
                 nRj[mv.measurements.get(0).region] += x_res * x_res / (x_err*x_err);
-                nRj[mv.measurements.get(0).region] += y_res * y_res / (y_err*y_err);
+                nRj[mv.measurements.get(0).region] += y_res * y_res / (y_err*y_err); 
+                
+                kfStateVecURWell = svc;
             }
             else if(mv.measurements.get(0).surface.type == Type.LINEDOCA) {
                 double V0 = mv.measurements.get(0).surface.unc[0];
@@ -1195,6 +1196,9 @@ public class KFitterWithURWell extends AKFitter {
                 chi2 += (x_res*x_res) / effectiveVar[0];
                 chi2 += (y_res*y_res) / effectiveVar[1];    
                 ndfDAF += 2*daf_weight;
+                
+                svc.setFinalDAFWeight(daf_weight);
+                kfStateVecURWell = svc;
             }
             else if(mv.measurements.get(0).surface.type == Type.LINEDOCA){                          
                 Point3D point = new Point3D(svc.x, svc.y, mv.measurements.get(0).surface.measPoint.z());

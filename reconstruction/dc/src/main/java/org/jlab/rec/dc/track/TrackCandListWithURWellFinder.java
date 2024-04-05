@@ -34,6 +34,7 @@ import org.jlab.clas.tracking.kalmanfilter.zReference.StateVecs;
 import org.jlab.clas.tracking.utilities.MatrixOps.Libr;
 import org.jlab.clas.tracking.utilities.RungeKuttaDoca;
 import org.jlab.rec.urwell.reader.URWellCross;
+import org.jlab.rec.urwell.reader.URWellStateVec;
 import org.jlab.rec.dc.cross.URWellDCCrossesList;
 
 /**
@@ -1153,6 +1154,7 @@ public class TrackCandListWithURWellFinder {
 						
                         kFZRef.runFitter();
                         List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
+                        URWellStateVec kfStateVecURWell = setKFStateVecURWell(kFZRef);
                         
                         if (kFZRef.finalStateVec == null) {
                             continue;
@@ -1175,7 +1177,8 @@ public class TrackCandListWithURWellFinder {
                                 cand.set_FitConvergenceStatus(kFZRef.ConvStatus);
 
                                 cand.set_CovMat(kFZRef.finalStateVec.CM);
-                                cand.setStateVecs(kfStateVecsAlongTrajectory);                                    							
+                                cand.setStateVecs(kfStateVecsAlongTrajectory);
+                                cand.get_URWellCross().setURWellStateVec(kfStateVecURWell);
 
                                 cand.setFinalStateVec(fitStateVec);
                                 cand.set_Id(cands.size() + 1);   
@@ -1436,6 +1439,7 @@ public class TrackCandListWithURWellFinder {
 
                     kFZRef.runFitter();
                     List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
+                    URWellStateVec kfStateVecURWell = setKFStateVecURWell(kFZRef);
 
                     if (kFZRef.finalStateVec == null) {
                         continue;
@@ -1458,7 +1462,8 @@ public class TrackCandListWithURWellFinder {
                             cand.set_FitConvergenceStatus(kFZRef.ConvStatus);
 
                             cand.set_CovMat(kFZRef.finalStateVec.CM);
-                            cand.setStateVecs(kfStateVecsAlongTrajectory);                                    							
+                            cand.setStateVecs(kfStateVecsAlongTrajectory);
+                            cand.get_URWellCross().setURWellStateVec(kfStateVecURWell);
 
                             cand.setFinalStateVec(fitStateVec);
                             cand.set_Id(cands.size() + 1);  
@@ -1503,7 +1508,18 @@ public class TrackCandListWithURWellFinder {
     	
     	return kfStateVecsAlongTrajectory;
     }
-    
+
+    public URWellStateVec setKFStateVecURWell(KFitterWithURWell kFZRef) {
+        if (kFZRef.kfStateVecURWell != null) {
+            org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec svc = kFZRef.kfStateVecURWell;
+            URWellStateVec sv = new URWellStateVec(svc.x, svc.y, svc.z, svc.tx, svc.ty, svc.Q, svc.B, svc.getPathLength());
+
+            return sv;
+        } else {
+            return null;
+        }
+    }
+
     public List<org.jlab.rec.dc.trajectory.StateVec> setKFStateVecsAlongTrajectory(KFitterWithURWell kFZRef) {
     	List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = new ArrayList<>();
     	

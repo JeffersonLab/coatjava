@@ -52,6 +52,16 @@ public class URWellCross {
         this.cluster2 = cluster2;
         this.status =  status;
     }
+    
+    URWellStateVec stateVec = null;
+    
+    public void setURWellStateVec(URWellStateVec svc){
+        stateVec = svc;
+    }
+    
+    public URWellStateVec getURWellStateVec(){
+        return stateVec;
+    }
 
     /**
     * return track id

@@ -36,6 +36,7 @@ public class DCEngine extends ReconstructionEngine {
     private double[][] shifts         = new double[Constants.NREG][6];
     protected boolean  useDAF         = true;
     private String   dafChi2Cut     = null;
+    private String   dafChi2CutURWell     = null;
     private String   dafAnnealingFactorsTB = null;
     private String   dafAnnealingFactorsTBWithURWell = null;
     
@@ -113,6 +114,11 @@ public class DCEngine extends ReconstructionEngine {
         if(this.getEngineConfigString("dafChi2Cut")!=null) {
             dafChi2Cut=this.getEngineConfigString("dafChi2Cut");
             DAFilter.setDafChi2Cut(Double.valueOf(dafChi2Cut));
+        }
+        
+        if(this.getEngineConfigString("dafChi2CutURWell")!=null) {
+            dafChi2CutURWell=this.getEngineConfigString("dafChi2CutURWell");
+            DAFilter.setDafChi2CutURWell(Double.valueOf(dafChi2CutURWell));
         }
         
         if(this.getEngineConfigString("dafAnnealingFactorsTB")!=null){ 

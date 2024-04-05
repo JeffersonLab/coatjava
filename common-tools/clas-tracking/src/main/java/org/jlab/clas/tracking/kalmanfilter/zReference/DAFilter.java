@@ -10,6 +10,7 @@ import org.jlab.geom.prim.Line3D;
 public class DAFilter {
     
     private static double dafChi2Cut = 8;
+    private static double dafChi2CutURWell = 100;
     
     // For double hits
     private double[] docas_double;
@@ -57,6 +58,10 @@ public class DAFilter {
     
     public static void setDafChi2Cut(double chi2Cut){
         dafChi2Cut = chi2Cut;
+    }
+    
+    public static void setDafChi2CutURWell(double chi2Cut){
+        dafChi2CutURWell = chi2Cut;
     }
     
     public void calc_effectiveDoca_doubleHits(){        
@@ -192,7 +197,7 @@ public class DAFilter {
         
         double Chi2 = residuals[0] * residuals[0]/xyVars_uRWell[0] + residuals[1] * residuals[1]/xyVars_uRWell[1];
         double Phi = factor * Math.exp(-0.5 / annealingFactor * Chi2);
-        double Lambda = factor * Math.exp(-0.5 / annealingFactor * dafChi2Cut);
+        double Lambda = factor * Math.exp(-0.5 / annealingFactor * dafChi2CutURWell);
         double sum = Phi + Lambda;
         double updatedWeight = Phi/sum;        
         

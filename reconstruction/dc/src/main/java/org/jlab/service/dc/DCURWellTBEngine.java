@@ -44,6 +44,7 @@ import org.jlab.clas.tracking.utilities.RungeKuttaDoca;
 import org.jlab.rec.dc.track.TrackCandListWithURWellFinder;
 import org.jlab.rec.urwell.reader.URWellCross;
 import org.jlab.rec.urwell.reader.URWellReader;
+import org.jlab.rec.urwell.reader.URWellStateVec;
 
 /**
  *
@@ -256,6 +257,7 @@ public class DCURWellTBEngine extends DCEngine {
                 kFZRef.runFitter(useDAF);
                     
                 List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
+                URWellStateVec kfStateVecURWell = setKFStateVecURWell(kFZRef);
 
                 StateVec fn = new StateVec();
                 if (kFZRef.setFitFailed==false && kFZRef.finalStateVec!=null) { 
@@ -275,6 +277,7 @@ public class DCURWellTBEngine extends DCEngine {
                     TrackArray1.set_FitNDF(kFZRef.NDF);
                     TrackArray1.set_NDFDAF(kFZRef.getNDFDAF());
                     TrackArray1.setStateVecs(kfStateVecsAlongTrajectory);
+                    TrackArray1.get_URWellCross().setURWellStateVec(kfStateVecURWell);
                     TrackArray1.set_FitConvergenceStatus(kFZRef.ConvStatus);
                     if (TrackArray1.get_Vtx0().toVector3D().mag() > 500) {
                         continue;
@@ -397,6 +400,18 @@ public class DCURWellTBEngine extends DCEngine {
     	}
     	
     	return kfStateVecsAlongTrajectory;
+    }
+    
+    public URWellStateVec setKFStateVecURWell(KFitterWithURWell kFZRef) {
+        if (kFZRef.kfStateVecURWell != null) {
+            org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec svc = kFZRef.kfStateVecURWell;
+            URWellStateVec sv = new URWellStateVec(svc.x, svc.y, svc.z, svc.tx, svc.ty, svc.Q, svc.B, svc.getPathLength());
+            sv.setDAFWeight(svc.getFinalDAFWeight());
+
+            return sv;
+        } else {
+            return null;
+        }
     }
     
     public List<org.jlab.rec.dc.trajectory.StateVec> setKFStateVecsAlongTrajectory(KFitter kFZRef) {
