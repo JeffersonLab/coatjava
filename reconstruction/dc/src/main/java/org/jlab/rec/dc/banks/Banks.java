@@ -120,11 +120,7 @@ public class Banks {
 
     public String getCrossesBank() {
         return this.getOutputBank("Crosses");
-    }
-    
-    public String getURWellCrossesBank() {
-        return this.getOutputBank("URWellCrosses");
-    }
+    }    
 
     public String getTracksBank() {
         return this.getOutputBank("Tracks");

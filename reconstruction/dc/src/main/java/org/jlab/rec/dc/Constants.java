@@ -80,71 +80,7 @@ public class Constants {
     public static final double TBINITIALSTATETXUNC = 0.0025;
     public static final double TBINITIALSTATETYUNC = 0.0091;
     public static final double TBINITIALSTATEQUNC = 0.0084;
-    
-    ////// With uRWell
-    public static final double HBINITIALSTATEUNCSCALEUR = 2;
-    public static final double TBINITIALSTATEUNCSCALEUR = 2;
-    
-    // R0R1R2R3
-    public static final double HBINITIALSTATEXUNCUR = 6.5;
-    public static final double HBINITIALSTATEYUNCUR = 3.1;
-    public static final double HBINITIALSTATETXUNCUR = 0.05;
-    public static final double HBINITIALSTATETYUNCUR = 0.019;
-    public static final double HBINITIALSTATEQUNCUR = 0.15;    
-    public static final double TBINITIALSTATEXUNCUR = 0.0095;
-    public static final double TBINITIALSTATEYUNCUR = 0.043;
-    public static final double TBINITIALSTATETXUNCUR = 0.0014;
-    public static final double TBINITIALSTATETYUNCUR = 0.0056;
-    public static final double TBINITIALSTATEQUNCUR = 0.0089;
-    
-    // R1R2R3; no R0
-    public static final double HBINITIALSTATEXUNCURNOR0 = 6.4;
-    public static final double HBINITIALSTATEYUNCURNOR0 = 3.1;
-    public static final double HBINITIALSTATETXUNCURNOR0 = 0.05;
-    public static final double HBINITIALSTATETYUNCURNOR0 = 0.018;
-    public static final double HBINITIALSTATEQUNCURNOR0 = 0.15;    
-    public static final double TBINITIALSTATEXUNCURNOR0 = 0.08;
-    public static final double TBINITIALSTATEYUNCURNOR0 = 0.72;
-    public static final double TBINITIALSTATETXUNCURNOR0 = 0.0017;
-    public static final double TBINITIALSTATETYUNCURNOR0 = 0.0068;
-    public static final double TBINITIALSTATEQUNCURNOR0 = 0.0092;
-    
-    // R0R2R3; no R1
-    public static final double HBINITIALSTATEXUNCURNOR1 = 7.5;
-    public static final double HBINITIALSTATEYUNCURNOR1 = 3.1;
-    public static final double HBINITIALSTATETXUNCURNOR1 = 0.061;
-    public static final double HBINITIALSTATETYUNCURNOR1 = 0.020;
-    public static final double HBINITIALSTATEQUNCURNOR1 = 0.2;    
-    public static final double TBINITIALSTATEXUNCURNOR1 = 0.0093;
-    public static final double TBINITIALSTATEYUNCURNOR1 = 0.042;
-    public static final double TBINITIALSTATETXUNCURNOR1 = 0.0014;
-    public static final double TBINITIALSTATETYUNCURNOR1 = 0.0056;
-    public static final double TBINITIALSTATEQUNCURNOR1 = 0.009;
-    
-    // R0R1R3; no R2
-    public static final double HBINITIALSTATEXUNCURNOR2 = 10;
-    public static final double HBINITIALSTATEYUNCURNOR2 = 4.4;
-    public static final double HBINITIALSTATETXUNCURNOR2 = 0.046;
-    public static final double HBINITIALSTATETYUNCURNOR2 = 0.021;
-    public static final double HBINITIALSTATEQUNCURNOR2 = 0.15;    
-    public static final double TBINITIALSTATEXUNCURNOR2 = 0.0088;
-    public static final double TBINITIALSTATEYUNCURNOR2 = 0.042;
-    public static final double TBINITIALSTATETXUNCURNOR2 = 0.0053;
-    public static final double TBINITIALSTATETYUNCURNOR2 = 0.0076;
-    public static final double TBINITIALSTATEQUNCURNOR2 = 0.038;
-    
-    // R0R1R2; no R3
-    public static final double HBINITIALSTATEXUNCURNOR3 = 5.4;
-    public static final double HBINITIALSTATEYUNCURNOR3 = 2.9;
-    public static final double HBINITIALSTATETXUNCURNOR3 = 0.047;
-    public static final double HBINITIALSTATETYUNCURNOR3 = 0.019;
-    public static final double HBINITIALSTATEQUNCURNOR3 = 0.3;    
-    public static final double TBINITIALSTATEXUNCURNOR3 = 0.0085;
-    public static final double TBINITIALSTATEYUNCURNOR3 = 0.042;
-    public static final double TBINITIALSTATETXUNCURNOR3 = 0.0047;
-    public static final double TBINITIALSTATETYUNCURNOR3 = 0.0097;
-    public static final double TBINITIALSTATEQUNCURNOR3 = 0.071;
-    
+        
     // PHYSICS CONSTANTS
     public static final double SPEEDLIGHT = 29.97924580;
     public static final double LIGHTVEL = 0.00299792458;        // velocity of light (cm/ns) - conversion factor from radius in cm to momentum in GeV/c
@@ -191,10 +127,6 @@ public class Constants {
     public static final double HTCCRADIUS = 175;
     public static final double LTCCPLANE  = 653.09;
     
-    //Todo: Should come from uRWell geometry package
-    public static final double URWELLLOCALZ  = 226.0464; // cm
-    public static final double URWELLXRESOLUTION = 0.01; // cm
-    public static final double URWELLYRESOLUTION = 0.04; // cm
     // other CLAS12 parameters
     public static final  int NSECT  = 6;
     public static final  int NSLAY  = 6;

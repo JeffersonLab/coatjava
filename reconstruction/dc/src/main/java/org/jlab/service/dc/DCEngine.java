@@ -11,7 +11,6 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.banks.Banks;
 import org.jlab.clas.tracking.kalmanfilter.zReference.KFitter;
-import org.jlab.clas.tracking.kalmanfilter.zReference.KFitterWithURWell;
 import org.jlab.clas.tracking.kalmanfilter.zReference.DAFilter;
 
 public class DCEngine extends ReconstructionEngine {
@@ -37,7 +36,6 @@ public class DCEngine extends ReconstructionEngine {
     protected boolean  useDAF         = true;
     private String   dafChi2Cut     = null;
     private String   dafAnnealingFactorsTB = null;
-    private String   dafAnnealingFactorsTBWithURWell = null;
     
     public static final Logger LOGGER = Logger.getLogger(ReconstructionEngine.class.getName());
 
@@ -119,12 +117,7 @@ public class DCEngine extends ReconstructionEngine {
             dafAnnealingFactorsTB=this.getEngineConfigString("dafAnnealingFactorsTB");
             KFitter.setDafAnnealingFactorsTB(dafAnnealingFactorsTB);
         }
-        
-        if(this.getEngineConfigString("dafAnnealingFactorsTBWithURWell")!=null){ 
-            dafAnnealingFactorsTBWithURWell=this.getEngineConfigString("dafAnnealingFactorsTBWithURWell");
-            KFitterWithURWell.setDafAnnealingFactorsTB(dafAnnealingFactorsTBWithURWell);
-        }
-        
+               
         // Set geometry shifts for alignment code
         if(this.getEngineConfigString("alignmentShifts")!=null) {
             String[] alignmentShift = this.getEngineConfigString("alignmentShifts").split(",");
