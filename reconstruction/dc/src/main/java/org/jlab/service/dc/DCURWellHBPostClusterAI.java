@@ -242,7 +242,7 @@ public class DCURWellHBPostClusterAI extends DCEngine {
         }
         // find segments and clusters exist in convential reconstruction, but does not exit in AI-assisted reconstruction
         List<Segment> segmentsConvOnly = get_segments_convOnly(segments, segmentsConv);  
-        List<FittedCluster> clustersConvOnly = get_clusters_convOnly(clustersConv, segmentsConvOnly);
+        segments.addAll(segmentsConvOnly);
        // Find crosses exist in convential reconstruction, but does not exit in AI-assisted reconstruction
         CrossMaker crossMake = new CrossMaker();
         List<Cross> crossesConvOnly = crossMake.find_Crosses(segmentsConvOnly, Constants.getInstance().dcDetector);
@@ -317,8 +317,11 @@ public class DCURWellHBPostClusterAI extends DCEngine {
         // the clusters, the segments, the crosses
         crosses.addAll(dcCrossesOnTrack);
         crosses.addAll(dcCrossesOnTrack2);
-        segments.addAll(segmentsConvOnly);
-        clusters.addAll(clustersConvOnly);
+        for (Cross c : crosses) {
+            c.set_CrossDirIntersSegWires();
+            clusters.add(c.get_Segment1().get_fittedCluster());
+            clusters.add(c.get_Segment2().get_fittedCluster());
+        }
         if (trkcands.isEmpty()) {
             event.appendBanks(
                     writer.fillHBHitsBank(event, fhits),    
@@ -356,21 +359,5 @@ public class DCURWellHBPostClusterAI extends DCEngine {
         segmentsConvOnly.removeAll(segmentsShare);            
         
         return segmentsConvOnly;        
-    }
-    
-    
-   public List<FittedCluster> get_clusters_convOnly(List<FittedCluster> clustersConv, List<Segment> segmentsConvOnly){
-       List<FittedCluster> clustersConvOnly = new ArrayList<>();
-       for(Segment seg : segmentsConvOnly){
-           for(FittedCluster cl: clustersConv){
-               if(cl.get_Id() == seg.get_Id()){
-                   clustersConvOnly.add(cl);
-                   break;
-               }
-           }
-       }
-              
-       return clustersConvOnly;       
-   }
-    
+    }            
 }
