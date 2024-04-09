@@ -25,6 +25,7 @@ if [ $# -ge 1 ]; then
         JYPATH="${JYPATH:+${JYPATH}:}${jars}"
       done
     done
+    unset lib jars
 
     # additional variables and settings for groovy
     if [ "$1" = "groovy" ]; then
