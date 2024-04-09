@@ -145,12 +145,12 @@ public class URWellCross {
 
     public boolean isGood(List<URWellCluster> urClusters) {
         if(this.getCluster1(urClusters) != null && this.getCluster2(urClusters)!= null)
-            return Math.abs(this.getCluster1(urClusters).energy() - this.getCluster2(urClusters).energy()) < URWellConstants.deltaE
-                    && Math.abs(this.getCluster1(urClusters).time() - this.getCluster2(urClusters).time()) < URWellConstants.deltaT;
+            return Math.abs(this.getCluster1(urClusters).energy() - this.getCluster2(urClusters).energy()) < URWellConstants.DELTAE
+                    && Math.abs(this.getCluster1(urClusters).time() - this.getCluster2(urClusters).time()) < URWellConstants.DELTAT;
         else return false;
     }
 
     public boolean isInTime() {
-        return Math.abs(this.time() - URWellConstants.meanT) < 1.2 * URWellConstants.deltaT;
+        return Math.abs(this.time() - URWellConstants.MEANT) < 1.2 * URWellConstants.DELTAT;
     }
 }

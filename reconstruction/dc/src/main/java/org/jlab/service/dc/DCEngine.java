@@ -30,6 +30,7 @@ public class DCEngine extends ReconstructionEngine {
     private int        t2d            = 1;
     private int        nSuperLayer    = 5;
     private String     geoVariation   = "default";
+    private boolean    urwmatch       = false;
     private String     bankType       = "HitBasedTrkg";
     private String     inBankPrefix   = null;
     private String     outBankPrefix  = null;
@@ -95,8 +96,12 @@ public class DCEngine extends ReconstructionEngine {
         if(this.getEngineConfigString("dcFOOST")!=null)
             if(!Boolean.valueOf(this.getEngineConfigString("dcFOOST"))) {
                 nSuperLayer =6;
-            }    
-                        
+            }                            
+
+        // set flag for Urwell match support (Engine dependent)
+        if(this.getEngineConfigString("urwmatch")!=null)       
+            urwmatch = Boolean.valueOf(this.getEngineConfigString("urwmatch"));
+
         //Set input bank names
         if(this.getEngineConfigString("inputBankPrefix")!=null) {
             inBankPrefix = this.getEngineConfigString("inputBankPrefix");
@@ -216,6 +221,10 @@ public class DCEngine extends ReconstructionEngine {
     
     public OrderType[] getRawBankOrders() {
         return this.rawBankOrders;
+    }
+    
+    public boolean matchToUrwell() {
+        return this.urwmatch;
     }
     
     public int getRun(DataEvent event) {

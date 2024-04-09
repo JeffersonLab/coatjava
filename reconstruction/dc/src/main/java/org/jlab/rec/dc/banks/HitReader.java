@@ -209,9 +209,16 @@ public class HitReader {
                              NoiseReductionParameters parameters,
                              Clas12NoiseResult results) {
         this.initialize(event);
-        this.fetch_DCHits(noiseAnalysis, parameters, results);
+        this.fetch_DCHits(false, noiseAnalysis, parameters, results);
     }
         
+    public void fetch_DCHits(DataEvent event, boolean filterOnUrwell, Clas12NoiseAnalysis noiseAnalysis,
+                             NoiseReductionParameters parameters,
+                             Clas12NoiseResult results) {
+        this.initialize(event);
+        this.fetch_DCHits(filterOnUrwell, noiseAnalysis, parameters, results);
+    }
+
      /**
      * reads the hits using clas-io methods to get the EvioBank for the DC and
      * fill the values to instantiate the DChit and MChit classes.This methods
@@ -221,7 +228,7 @@ public class HitReader {
      * @param parameters
      * @param results
      */
-    private void fetch_DCHits(Clas12NoiseAnalysis noiseAnalysis,
+    private void fetch_DCHits(boolean filterOnUrwell, Clas12NoiseAnalysis noiseAnalysis,
                              NoiseReductionParameters parameters,
                              Clas12NoiseResult results) {
 
@@ -231,6 +238,7 @@ public class HitReader {
         
         RawDataBank bankDGTZ = new RawDataBank(bankNames.getTdcBank(), OrderGroups.NODENOISE);
         bankDGTZ.read(event);
+        int rows = bankDGTZ.rows();
 
         // event selection, including cut on max number of hits
         if( run <= 0 ||
@@ -238,8 +246,7 @@ public class HitReader {
             bankDGTZ.rows()==0 || bankDGTZ.rows()>Constants.MAXHITS ) {
             return;
         }
-        else {
-            int rows = bankDGTZ.rows();
+        else {            
             int[] sector = new int[rows];
             int[] layer = new int[rows];
             int[] superlayer = new int[rows];
@@ -255,6 +262,19 @@ public class HitReader {
             noiseAnalysis.findNoise(sector, superlayer, layer, wire, results);
             for(int i=0; i<rows; i++)
                 noise.add(results.noise[i], sector[i], superlayer[i], layer[i], wire[i]);
+        }
+        
+        int[] urwmatch = new int[rows];
+        if(event.hasBank(bankNames.getUrwellMatchBank())) {
+            DataBank bankMATCH = event.getBank(bankNames.getUrwellMatchBank());
+            if(bankMATCH.rows()==urwmatch.length) {
+                for(int i=0; i<bankMATCH.rows(); i++)
+                    urwmatch[i] = bankMATCH.getByte("status",i);
+            }
+            else {
+                LOGGER.log(Level.SEVERE, String.format("Mismatch between number of entries in %s(%d) and %s(%d)", 
+                        bankNames.getTdcBank(), bankDGTZ.rows(), bankNames.getUrwellMatchBank(), bankMATCH.rows()));
+            }
         }
        
 //        DataBank bankDGTZ = event.getBank(bankNames.getTdcBank());
@@ -274,6 +294,10 @@ public class HitReader {
             int index      = bankFiltered.trueIndex(i);
             
             boolean passHit = true;
+
+            if(filterOnUrwell && urwmatch[i]!=0)
+                passHit = false;
+            
             if (wirestat != null) {
                 if (wirestat.getIntValue("status", sector, layer+(superlayer-1)*6, wire) != 0)
                     passHit = false;

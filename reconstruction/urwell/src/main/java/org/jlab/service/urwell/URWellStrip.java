@@ -175,8 +175,8 @@ public class URWellStrip implements Comparable {
                 int    comp = bank.getShort("component", i);
                 int     adc = bank.getInt("ADC", i);
                 double time = bank.getFloat("time", i);
-                        
-                URWellStrip  strip = new URWellStrip(sector,  layer,   comp); 
+                
+                URWellStrip  strip = new URWellStrip(sector,  layer,   comp);                 
                 
 //                strip.setTriggerPhase(triggerPhase);
                 strip.setId(bank.trueIndex(i)+1);
