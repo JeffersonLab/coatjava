@@ -92,7 +92,7 @@ public class Constants {
     public static final double CIRCLEFIT_MAXCHI2 = 100;
 
     public static final double DEFAULTSWIMACC  = 0.020; // in mm
-    public static final double SWIMACCURACYSVT = 0.010; // in mm
+    public static final double SWIMACCURACYSVT = 0.0050; // in mm
     public static final double SWIMACCURACYBMT = 0.020; // in mm
     public static final double SWIMACCURACYCD  = 0.500; // in mm
     

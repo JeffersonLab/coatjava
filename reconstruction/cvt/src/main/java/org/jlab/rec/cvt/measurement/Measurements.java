@@ -36,7 +36,7 @@ public class Measurements {
     private boolean cosmic   = false;
     private Surface[] cvtSurfaces;
     private boolean debug = false;
-    
+    private Seed _seed;
     public Measurements(double xbeam, double ybeam, boolean beamSpot) {
         this.initTargetSurfaces(xbeam, ybeam, beamSpot);
     }
@@ -304,7 +304,15 @@ public class Measurements {
             if(cluster.getDetector()!=type) continue;
             int layer = MLayer.getType(type, cluster.getLayer()).getCVTLayer();
             Surface measure = cluster.measurement();
-            measure.hemisphere = Math.signum(cluster.center().y());
+            if(cluster.getDetector()==DetectorType.BMT) {
+                if(this.getSeed()!=null) {
+                    double r = cluster.getRadius();
+                    Point3D vAtR = this.getSeed().getHelix().getPointAtRadius(r);
+                    measure.hemisphere = Math.signum(vAtR.y());
+                }
+            } else {
+                measure.hemisphere = Math.signum(cluster.center().y());
+            }
             if((int)Constants.getInstance().getUsedLayers().get(layer)<1)
                 measure.passive=true;
             surfaces.add(measure);
@@ -456,5 +464,19 @@ public class Measurements {
                 if(debug) System.out.println("Resetting surface with index " + i + " in hemisphere " + hemisphere + " with id " + id + " and DetectorType " + type.getName());
             }
         }
+    }
+
+    /**
+     * @return the _seed
+     */
+    public Seed getSeed() {
+        return _seed;
+}
+
+    /**
+     * @param _seed the _seed to set
+     */
+    public void setSeed(Seed _seed) {
+        this._seed = _seed;
     }
 }
