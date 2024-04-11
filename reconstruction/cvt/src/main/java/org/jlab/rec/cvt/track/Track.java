@@ -677,7 +677,7 @@ public class Track extends Trajectory implements Comparable<Track> {
                      Math.toDegrees(this.getHelix().getPhiAtDCA()), this.getHelix().getZ0(), this.getHelix().getTanDip(),
                      this.getNDF(), this.getChi2(), this.getSeed().getStatus(), this.getKFIterations(), this.getStatus());
         for(Cross c: this) str = str + c.toString() + "\n";
-        for(Cluster c: this.getSeed().getClusters()) str = str + c.toString() + "\n";
+        for(Cluster c: this.getSeed().getClusters()) str = str + c.toString()+ "\n";
         return str;
     }
 

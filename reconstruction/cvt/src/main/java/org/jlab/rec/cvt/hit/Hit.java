@@ -32,6 +32,7 @@ public class Hit implements Comparable<Hit> {
     private int _AssociatedClusterID = -1;  // the cluster ID associated with that hit
     private int AssociatedSeedID = -1;      // the seed ID associated with that hit
     private int AssociatedTrackID = -1;     // the track ID associated with that hit
+    private int TrueAssociatedTrackID = -1;     // the mc track ID associated with that hit
 
     public boolean newClustering = false;
     public int MCstatus = -1;
@@ -285,6 +286,15 @@ public class Hit implements Comparable<Hit> {
 
     public void setAssociatedTrackID(int associatedTrackID) {
         AssociatedTrackID = associatedTrackID;
+    }
+    
+    public int getTrueAssociatedTrackID() {
+        return TrueAssociatedTrackID;
+    }
+    
+
+    public void setTrueAssociatedTrackID(int associatedTrackID) {
+        TrueAssociatedTrackID = associatedTrackID;
     }
 
      public int getAssociatedSeedID() {

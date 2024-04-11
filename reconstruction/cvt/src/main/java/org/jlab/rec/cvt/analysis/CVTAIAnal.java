@@ -36,6 +36,7 @@ public class CVTAIAnal implements IDataEventListener {
         private EmbeddedCanvas can8 = null;
         private EmbeddedCanvas can9 = null;
         private EmbeddedCanvas can10 = null;
+        private EmbeddedCanvas can11 = null;
         
 	private final H1F bsttrue = new H1F("bst", "BST TRACK HIT REC LEVEL (bin 1:hit, 2: in cross, 3: in seed, 4: in track)", 4, -0.5, 3.5);
         private final H1F bstfalse = new H1F("bst", "BST BG HIT REC LEVEL (bin 1:hit, 2: in cross, 3: in seed, 4: in track)", 4, -0.5, 3.5);
@@ -130,6 +131,23 @@ public class CVTAIAnal implements IDataEventListener {
         private final H2F bmtTvsEZHFP = new H2F("bmtTvsEZHFT", "BMT-Z FALSE POSITIVES  TvsE", 500, 0, 500.0, 500, 0, 500.0);
         private final H2F bmtTvsEZHTN = new H2F("bmtTvsEZHFF", "BMT-Z TRUE NEGATIVES  TvsE", 500, 0, 500.0, 500, 0, 500.0);
         
+        private final H1F bmtTovECHTP = new H1F("bmtTovECHTT", "BMT-C TRUE POSITIVES  T/E", 500, 0, 500.0);
+        private final H1F bmtTovECHFN = new H1F("bmtTovECHTF", "BMT-C FALSE NEGATIVES  T/E", 500, 0, 500.0);
+        private final H1F bmtTovECHFP = new H1F("bmtTovECHFT", "BMT-C FALSE POSITIVES  T/E", 500, 0, 500.0);
+        private final H1F bmtTovECHTN = new H1F("bmtTovECHFF", "BMT-C TRUE NEGATIVES  T/E", 500, 0, 500.0);
+        private final H1F bmtTovEZHTP = new H1F("bmtTovEZHTT", "BMT-Z TRUE POSITIVES  T/E", 500, 0, 500.0);
+        private final H1F bmtTovEZHFN = new H1F("bmtTovEZHTF", "BMT-Z FALSE NEGATIVES  T/E", 500, 0, 500.0);
+        private final H1F bmtTovEZHFP = new H1F("bmtTovEZHFT", "BMT-Z FALSE POSITIVES  T/E", 500, 0, 500.0);
+        private final H1F bmtTovEZHTN = new H1F("bmtTovEZHFF", "BMT-Z TRUE NEGATIVES  T/E", 500, 0, 500.0);
+        
+        private final H1F bmtTovECNNTP = new H1F("bmtTovECHTT", "BMT-C TRUE POSITIVES  BG Nearest Neighbors T/E", 500, 0, 500.0);
+        private final H1F bmtTovECNNFN = new H1F("bmtTovECHTF", "BMT-C FALSE NEGATIVES  BG Nearest Neighbors T/E", 500, 0, 500.0);
+        private final H1F bmtTovECNNFP = new H1F("bmtTovECHFT", "BMT-C FALSE POSITIVES  BG Nearest Neighbors T/E", 500, 0, 500.0);
+        private final H1F bmtTovECNNTN = new H1F("bmtTovECHFF", "BMT-C TRUE NEGATIVES  BG Nearest Neighbors T/E", 500, 0, 500.0);
+        private final H1F bmtTovEZNNTP = new H1F("bmtTovEZHTT", "BMT-Z TRUE POSITIVES  BG Nearest Neighbors T/E", 500, 0, 500.0);
+        private final H1F bmtTovEZNNFN = new H1F("bmtTovEZHTF", "BMT-Z FALSE NEGATIVES  BG Nearest Neighbors T/E", 500, 0, 500.0);
+        private final H1F bmtTovEZNNFP = new H1F("bmtTovEZHFT", "BMT-Z FALSE POSITIVES  BG Nearest Neighbors T/E", 500, 0, 500.0);
+        private final H1F bmtTovEZNNTN = new H1F("bmtTovEZHFF", "BMT-Z TRUE NEGATIVES  BG Nearest Neighbors T/E", 500, 0, 500.0);
         
         int counter = 0;
         int updateTime = 100;
@@ -271,7 +289,8 @@ public class CVTAIAnal implements IDataEventListener {
             can7 = new EmbeddedCanvas(); can7.initTimer(updateTime);
             can8 = new EmbeddedCanvas(); can8.initTimer(updateTime);
             can9 = new EmbeddedCanvas(); can9.initTimer(updateTime);  
-            can10 = new EmbeddedCanvas(); can10.initTimer(updateTime);    
+            can10 = new EmbeddedCanvas(); can10.initTimer(updateTime);
+            can11 = new EmbeddedCanvas(); can11.initTimer(updateTime);    
 	}
 
 	private void init() {
@@ -471,11 +490,13 @@ public class CVTAIAnal implements IDataEventListener {
                         bmtCNNTP.fill(hp.getNearestNeighbors().size());
                         this.FillTimes(hp, bmtTCHTP, bmtTCNNTP, bmtTCdNNTP, ev.BMTTimes);
                         this.FillEnergyvsTime(hp, bmtTvsECHTP, bmtTvsECNNTP, ev.BMTEnergies, ev.BMTTimes);
+                        this.FillEnergyovTime(hp, bmtTovECHTP, bmtTovECNNTP, ev.BMTEnergies, ev.BMTTimes);
                     }
                     if(hp.getDetType()==BMTType.Z) {
                         bmtZNNTP.fill(hp.getNearestNeighbors().size());
                         this.FillTimes(hp, bmtTZHTP, bmtTZNNTP, bmtTZdNNTP, ev.BMTTimes);
                         this.FillEnergyvsTime(hp, bmtTvsEZHTP, bmtTvsEZNNTP, ev.BMTEnergies, ev.BMTTimes);
+                        this.FillEnergyovTime(hp, bmtTovEZHTP, bmtTovEZNNTP, ev.BMTEnergies, ev.BMTTimes);
                     }
                 }
                 if(hp.isFalsePositive) {
@@ -484,11 +505,13 @@ public class CVTAIAnal implements IDataEventListener {
                         bmtCNNFP.fill(hp.getNearestNeighbors().size());
                         this.FillTimes(hp, bmtTCHFP, bmtTCNNFP, bmtTCdNNFP, ev.BMTTimes);
                         this.FillEnergyvsTime(hp, bmtTvsECHFP, bmtTvsECNNFP, ev.BMTEnergies, ev.BMTTimes);
+                        this.FillEnergyovTime(hp, bmtTovECHFP, bmtTovECNNFP, ev.BMTEnergies, ev.BMTTimes);
                     }
                     if(hp.getDetType()==BMTType.Z) {
                         bmtZNNFP.fill(hp.getNearestNeighbors().size());
                         this.FillTimes(hp, bmtTZHFP, bmtTZNNFP, bmtTZdNNFP, ev.BMTTimes);
                         this.FillEnergyvsTime(hp, bmtTvsEZHFP, bmtTvsEZNNFP, ev.BMTEnergies, ev.BMTTimes);
+                        this.FillEnergyovTime(hp, bmtTovEZHFP, bmtTovEZNNFP, ev.BMTEnergies, ev.BMTTimes);
                     }
                 }
                 if(hp.isFalseNegative) {
@@ -497,11 +520,13 @@ public class CVTAIAnal implements IDataEventListener {
                         bmtCNNFN.fill(hp.getNearestNeighbors().size());
                         this.FillTimes(hp, bmtTCHFN, bmtTCNNFN, bmtTCdNNFN, ev.BMTTimes);
                         this.FillEnergyvsTime(hp, bmtTvsECHFN, bmtTvsECNNFN, ev.BMTEnergies, ev.BMTTimes);
+                        this.FillEnergyovTime(hp, bmtTovECHFN, bmtTovECNNFN, ev.BMTEnergies, ev.BMTTimes);
                     }
                     if(hp.getDetType()==BMTType.Z) {
                         bmtZNNFN.fill(hp.getNearestNeighbors().size());
                         this.FillTimes(hp, bmtTZHFN, bmtTZNNFN, bmtTZdNNFN, ev.BMTTimes);
                         this.FillEnergyvsTime(hp, bmtTvsEZHFN, bmtTvsEZNNFN, ev.BMTEnergies, ev.BMTTimes);
+                        this.FillEnergyovTime(hp, bmtTovEZHFN, bmtTovEZNNFN, ev.BMTEnergies, ev.BMTTimes);
                     }
                 }
                 if(hp.isTrueNegative) {
@@ -510,11 +535,13 @@ public class CVTAIAnal implements IDataEventListener {
                         bmtCNNTN.fill(hp.getNearestNeighbors().size());
                         this.FillTimes(hp, bmtTCHTN, bmtTCNNTN, bmtTCdNNTN, ev.BMTTimes);
                         this.FillEnergyvsTime(hp, bmtTvsECHTN, bmtTvsECNNTN, ev.BMTEnergies, ev.BMTTimes);
+                        this.FillEnergyovTime(hp, bmtTovECHTN, bmtTovECNNTN, ev.BMTEnergies, ev.BMTTimes);
                     }
                     if(hp.getDetType()==BMTType.Z) {
                         bmtZNNTN.fill(hp.getNearestNeighbors().size());
                         this.FillTimes(hp, bmtTZHTN, bmtTZNNTN, bmtTZdNNTN, ev.BMTTimes);
                         this.FillEnergyvsTime(hp, bmtTvsEZHTN, bmtTvsEZNNTN, ev.BMTEnergies, ev.BMTTimes);
+                        this.FillEnergyovTime(hp, bmtTovEZHTN, bmtTovEZNNTN, ev.BMTEnergies, ev.BMTTimes);
                     }
                 }
                 
@@ -729,6 +756,25 @@ public class CVTAIAnal implements IDataEventListener {
         can10.cd(5);
         can10.draw(bmtTvsEZNNTN, "");
         can10.update();
+        
+        can11.divide(2, 3);
+        for(int k =0; k<6;k++) {
+            can11.getCanvasPads().get(k).getAxisY().getAttributes().setLog(true);
+        }
+        
+        can11.cd(0);
+        can11.draw(bmtTovECHTP, "");
+        can11.cd(1);
+        can11.draw(bmtTovEZHTP, "");
+        can11.cd(2);
+        can11.draw(bmtTovECHTN, "");
+        can11.cd(3);
+        can11.draw(bmtTovEZHTN, "");
+        can11.cd(4);
+        can11.draw(bmtTovECNNTN, "");
+        can11.cd(5);
+        can11.draw(bmtTovEZNNTN, "");
+        can11.update();
     }
 
     private void addCanvasToPane() {
@@ -741,7 +787,8 @@ public class CVTAIAnal implements IDataEventListener {
             tabbedPane.add("BMT BG Nearest Neighbors", can7);
             tabbedPane.add("BMT BG Nearest Neighbors T", can8);
             tabbedPane.add("BMT BG Nearest Neighbors T Diff", can9);
-            tabbedPane.add("BMT BG Nearest Neighbors E/T", can10);
+            tabbedPane.add("BMT BG Nearest Neighbors E/T", can11);
+            tabbedPane.add("BMT BG Nearest Neighbors E vs T", can10);
     }
 
     public static void main(String[] args) {
@@ -798,6 +845,22 @@ public class CVTAIAnal implements IDataEventListener {
         bmtEovTCH.fill(he,ht);
     }
 
+    private void FillEnergyovTime(HitPos h, H1F bmtEovTCH, H1F bmtEovTCNN, Map<Integer, Float> BMTEnergies, Map<Integer, Float> BMTTimes) {
+        
+        for(HitPos hp : h.getNearestNeighbors()) {
+            if(BMTEnergies.containsKey(hp.getID()) && BMTTimes.containsKey(hp.getID())) {
+                double e = (double) BMTEnergies.get(hp.getID());
+                double t = (double) BMTTimes.get(hp.getID());
+                bmtEovTCNN.fill(e/t);
+            } else {
+                System.out.println("missing id "+hp.getID());
+            }
+        }
+        double ht = (double) BMTTimes.get(h.getID());
+        double he = (double) BMTEnergies.get(h.getID());
+        
+        bmtEovTCH.fill(he/ht);
+    }
 }
 		
 

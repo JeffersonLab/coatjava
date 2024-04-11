@@ -58,6 +58,7 @@ public class TracksFromTargetRec {
     private double xb; 
     private double yb;
     public int totTruthHits;
+    public boolean use6LayerSVT=false;
     
     
     public TracksFromTargetRec(Swim swimmer, double[] beamPos) {
@@ -165,10 +166,10 @@ public class TracksFromTargetRec {
         }
         if(Constants.getInstance().flagSeeds && Constants.getInstance().removeOverlappingSeeds==false) {
             List<Seed> ovlrm = Seed.getOverlapRemovedSeeds(seeds);//seeds flagged for removal have negative ids.
-            for(Seed s : seeds) {
+            for(Seed s : seeds) { 
                 s.setId(s.getId()*-1);
             }
-            for(Seed s : ovlrm) {
+            for(Seed s : ovlrm) { 
                 s.setId(s.getId()*-1);
             }
         }
@@ -196,6 +197,14 @@ public class TracksFromTargetRec {
         for (Seed seed : this.CVTseeds) { 
             if(seed.getId()<0) continue;
             int pid = elossPid;
+            if(this.use6LayerSVT) {
+                List<Cross> svtcrosses = new ArrayList<>();
+                for(Cross c : seed.getCrosses()) {
+                        if(c.getDetector()==DetectorType.BST)
+                            svtcrosses.add(c);
+                }
+                if(svtcrosses.size()<3) continue;
+            }
             for(Cluster cl : seed.getClusters()) {
                 for(Hit h : cl) {
                     h.setAssociatedSeedID(seed.getId());

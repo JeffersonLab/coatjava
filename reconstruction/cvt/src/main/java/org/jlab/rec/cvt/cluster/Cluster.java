@@ -46,10 +46,11 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
     private double _PhiErr0;                    // RDV could be removed                                    
     private double _Z;    			// local Z and correspondng error for BMT-C
     private double _ZErr;                       
-    private Line3D _Line;                     // 3D line for SVT and BMT-Z
-    private Arc3D  _Arc;                      // 3D Arc for BMT-C
-    private Point3D _TrakInters;              //track intersection with the cluster
-    private int AssociatedTrackID = -1;       // the track ID associated with that hit
+    private Line3D _Line;                       // 3D line for SVT and BMT-Z
+    private Arc3D  _Arc;                        // 3D Arc for BMT-C
+    private Point3D _TrakInters;                //track intersection with the cluster
+    private int AssociatedTrackID = -1;         // the track ID associated with that hit
+    private int trueAssociatedTrackID = -1;       // true track ID associated with that hit
 
 
     private int _MinStrip;			// the min strip number in the cluster
@@ -63,6 +64,8 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
     private Vector3D _s; //svt vector perpendicular to cluster pseudo-strip direction in the module plane or bmt vector perpendicular to cluster pseudo-strip in direction tangential to the cluster surface in the middle of the arc
     private Vector3D _n; //svt vector normal to the cluster module plane or bmt vector normal to the cluster surface in the middle of the arc
     public boolean flagForExclusion = false;
+    public int BG=0;
+    public int associatedTrueTrkId=-1;
     
 
     public Cluster(DetectorType detector, BMTType type, int sector, int layer, int cid) {
@@ -758,6 +761,14 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
         AssociatedTrackID = associatedTrackID;
     }
 
+    public int getTrueAssociatedTrackID() {
+        return trueAssociatedTrackID;
+    }
+
+    public void setTrueAssociatedTrackID(int associatedTrackID) {
+        trueAssociatedTrackID = associatedTrackID;
+    }
+    
     @Override
     public int compareTo(Cluster arg) {
             

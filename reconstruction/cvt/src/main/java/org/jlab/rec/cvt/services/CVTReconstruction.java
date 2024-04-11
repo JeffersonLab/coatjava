@@ -122,7 +122,15 @@ public class CVTReconstruction {
         }
         return crosses;
     }
-        
+    public List<ArrayList<Cross>> findCrosses(List<Cluster> clusters) {
+       
+        CrossMaker crossMake = new CrossMaker();
+        List<ArrayList<Cross>> crosses = crossMake.findCrosses(clusters);
+        if(crosses.get(0).size() > SVTParameters.MAXSVTCROSSES ) {
+            crosses.get(0).clear();
+        }
+        return crosses;
+    }    
     
     public int getRun(DataEvent event) {
                 

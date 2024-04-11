@@ -16,7 +16,7 @@
                 <Env.SOLENOIDMAP>Symm_solenoid_r601_phi1_z1201_13June2018.dat</Env.SOLENOIDMAP>
                 <exec.vmArgs>-DCLAS12DIR=/Users/veronique/Work/git/Sandbox/AI/coatjava/coatjava</exec.vmArgs>
                 <exec.appArgs></exec.appArgs>
-                <exec.mainClass>org.jlab.rec.cvt.analysis.CVTAIAnal</exec.mainClass>
+                <exec.mainClass>org.jlab.rec.cvt.analysis.AIHitInfoEngine</exec.mainClass>
             </properties>
         </action>
         <action>
@@ -34,7 +34,7 @@
                 <jpda.listen>true</jpda.listen>
                 <exec.vmArgs>-DCLAS12DIR=/Users/veronique/Work/git/Sandbox/AI/coatjava/coatjava -agentlib:jdwp=transport=dt_socket,server=n,address=${jpda.address}</exec.vmArgs>
                 <exec.appArgs></exec.appArgs>
-                <exec.mainClass>org.jlab.rec.cvt.analysis.CVTAIAnal</exec.mainClass>
+                <exec.mainClass>org.jlab.rec.cvt.analysis.AIHitInfoEngine</exec.mainClass>
             </properties>
         </action>
         <action>
@@ -51,7 +51,7 @@
                 <exec.executable>java</exec.executable>
                 <exec.vmArgs>-DCLAS12DIR=/Users/veronique/Work/git/Sandbox/AI/coatjava/coatjava</exec.vmArgs>
                 <exec.appArgs></exec.appArgs>
-                <exec.mainClass>org.jlab.rec.cvt.analysis.CVTAIAnal</exec.mainClass>
+                <exec.mainClass>org.jlab.rec.cvt.analysis.AIHitInfoEngine</exec.mainClass>
             </properties>
         </action>
     </actions>

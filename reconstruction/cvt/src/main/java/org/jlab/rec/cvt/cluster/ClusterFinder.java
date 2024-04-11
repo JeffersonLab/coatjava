@@ -33,7 +33,7 @@ public class ClusterFinder {
         // initializing non-zero Hit Array entries
         // with valid hits
         for (Hit hit : hits2) {
-
+            
             if (hit.getStrip().getStrip() == -1) {
                 continue;
             }
