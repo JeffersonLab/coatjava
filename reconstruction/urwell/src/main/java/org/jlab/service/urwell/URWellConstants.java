@@ -25,5 +25,5 @@ public class URWellConstants {
 
     // cluster
     public final static double COINCTIME = 100;
-
+    
 }
