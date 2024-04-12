@@ -260,7 +260,7 @@ public abstract class AStateVecs {
         public double Q; //q/p
         public double B;
         public double deltaPath;   
-        public Matrix CM = new Matrix();;
+        public Matrix CM = new Matrix(); // Todo: unify covMat and CM
         private double _PathLength;
         
         /////////////////////// For DAF ///////////////////////
