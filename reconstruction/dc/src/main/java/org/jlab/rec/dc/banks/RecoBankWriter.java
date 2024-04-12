@@ -1117,5 +1117,5 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
         if (fhits != null && clusters == null) {
             event.appendBanks(this.fillTBHitsBank(event, fhits));
         }
-    }
+    }    
 }
