@@ -35,7 +35,7 @@ public abstract class AMeasVecs {
             mvec.skip = mvec.surface.passive;
             mvec.hemisphere = measSurfaces.get(i).hemisphere;
             measurements.add(mvec);
-            if(measSurfaces.get(i).type == Type.LINEDOCA) {
+            if(measSurfaces.get(i).type == Type.LINEDOCA) { //Todo: assign a value to the Surface index and use that as the identifier
             	mvec.region = measSurfaces.get(i).region;
             	mvec.sector = measSurfaces.get(i).getSector();
             	mvec.superlayer = measSurfaces.get(i).getSuperLayer();
