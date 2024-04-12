@@ -3,17 +3,27 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jlab.clas</groupId>
   <artifactId>clas-utils</artifactId>
-  <version>10.0.9-SNAPSHOT</version>
+  <version>10.0.11-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <parent>
     <groupId>org.jlab.clas</groupId>
     <artifactId>clas12rec</artifactId>
     <relativePath>../../parent/pom.xml</relativePath>
-    <version>10.0.9-SNAPSHOT</version>
+    <version>10.0.11-SNAPSHOT</version>
   </parent>
 
   <dependencies>
+    <dependency>
+      <groupId>org.jlab.clas</groupId>
+      <artifactId>clas-logging</artifactId>
+      <version>10.0.11-SNAPSHOT</version>
+    </dependency> 
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-text</artifactId>
+      <version>1.11.0</version>
+    </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-math3</artifactId>
