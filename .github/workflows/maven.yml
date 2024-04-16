@@ -165,7 +165,7 @@ jobs:
   collect_webpages:
     # if: ${{ github.head_ref == 'development' || github.ref_name == 'development' }}  ###########FIXME
     if: ${{ github.head_ref == 'deploy-javadocs' || github.ref_name == 'deploy-javadocs' }}  ###########FIXME
-    needs: build
+    needs: [ build, generate_documentation ]
     runs-on: ubuntu-latest
     steps:
       - name: download jacoco report
