@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # surely this should be done more properly with only maven, meanwhile ...
 #
