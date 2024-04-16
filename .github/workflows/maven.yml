@@ -151,6 +151,8 @@ jobs:
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
+      - name: build
+        run: ./build-coatjava.sh
       - name: generate documentation
         run: ./build-javadocs.sh
       - uses: actions/upload-artifact@v4
