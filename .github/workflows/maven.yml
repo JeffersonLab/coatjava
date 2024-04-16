@@ -16,6 +16,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
+defaults:
+  run:
+    shell: bash
+
 env:
   java_version: 11
   java_distribution: zulu
