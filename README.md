@@ -3,7 +3,7 @@
 [![Validation Status](https://github.com/JeffersonLab/coatjava/actions/workflows/validation.yml/badge.svg)](https://github.com/JeffersonLab/coatjava/actions/workflows/validation.yml)
 [![Coverage](https://badgen.net/static/JaCoCo/coverage/purple)](https://jeffersonlab.github.io/coatjava/jacoco)
 
-- [API Documentation (Javadocs)](https://jeffersonlab.github.io/coatjava/javadocs)
+- [API Documentation (Javadoc)](https://jeffersonlab.github.io/coatjava/javadoc)
 
 ----
 

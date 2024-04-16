@@ -157,7 +157,7 @@ jobs:
         run: ./build-javadocs.sh
       - uses: actions/upload-artifact@v4
         with:
-          name: javadocs
+          name: javadoc
           path: docs/javadoc/
           retention-days: 1
 
@@ -174,11 +174,11 @@ jobs:
         with:
           name: jacoco_report
           path: pages/jacoco
-      - name: download javadocs
+      - name: download javadoc documentation
         uses: actions/download-artifact@v4
         with:
-          name: javadocs
-          path: pages/javadocs
+          name: javadoc
+          path: pages/javadoc
       - run: tree pages
       - uses: actions/upload-pages-artifact@v3
         with:
