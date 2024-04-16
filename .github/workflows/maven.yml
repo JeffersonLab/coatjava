@@ -57,8 +57,9 @@ jobs:
         run: validation/jacoco-aggregate.sh
       - name: publish jacoco report
         if: ${{ matrix.runner == 'ubuntu-latest' }}
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
+          name: jacoco_report
           path: publish/
           retention-days: 1
 
@@ -140,11 +141,53 @@ jobs:
       - name: pass
         run: exit 0
 
+  # generate documentation
+  #############################################################################
+
+  generate_documentation:
+    runs-on: ${{ needs.build.outputs.default_runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.java_version }}
+          distribution: ${{ env.java_distribution }}
+      - name: generate documentation
+        run: ./build-javadocs.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: javadocs
+          path: docs/javadoc/
+          retention-days: 1
+
   # deploy web pages
   #############################################################################
 
+  collect_webpages:
+    # if: ${{ github.head_ref == 'development' || github.ref_name == 'development' }}  ###########FIXME
+    if: ${{ github.head_ref == 'deploy-javadocs' || github.ref_name == 'deploy-javadocs' }}  ###########FIXME
+    runs-on: ${{ needs.build.outputs.default_runner }}
+    steps:
+      - name: download jacoco report
+        uses: actions/download-artifact@v4
+        with:
+          name: jacoco_report
+          path: pages/jacoco
+      - name: download javadocs
+        uses: actions/download-artifact@v4
+        with:
+          name: javadocs
+          path: pages/javadocs
+      - run: tree pages
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          retention-days: 1
+          path: pages/
+
   deploy_web_pages:
-    if: ${{ github.event_name == 'push' }}
+    # if: ${{ github.head_ref == 'development' || github.ref_name == 'development' }}  ###########FIXME
+    if: ${{ github.head_ref == 'deploy-javadocs' || github.ref_name == 'deploy-javadocs' }}  ###########FIXME
     needs: build
     permissions:
       pages: write
