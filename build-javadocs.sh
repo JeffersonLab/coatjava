@@ -3,6 +3,8 @@
 # surely this should be done more properly with only maven, meanwhile ...
 #
 
+set -e
+
 mvn javadoc:javadoc -Ddoclint=none 
 
 src=target/site/apidocs
