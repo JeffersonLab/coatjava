@@ -155,6 +155,7 @@ public class AIHitSelector {
         return this.selectedHits(trkHits);
         
     }
+    public int[] svtTrkSectors = new int[3];
     public Map<Double, List<ArrayList<Hit>>> getHitsWithBg(DataEvent event, CVTReconstruction reco, 
             IndexedTable svtStatus, IndexedTable bmtStatus, IndexedTable bmtTime, 
             IndexedTable bmtStripVoltage, IndexedTable bmtStripThreshold) {
@@ -171,7 +172,7 @@ public class AIHitSelector {
         if(bstHits.isEmpty()) return null;
         
         Map<Double, Integer> trkIds = new HashMap<>();
-        int tid =0;
+        int tid =1;
         for(Double i : phiMapBST.keySet()) { 
             trkIds.put(i, tid++);
         }
@@ -184,6 +185,8 @@ public class AIHitSelector {
                 for(int k =0; k<bstHits.size(); k++) {
                     if(bstHits.get(k).getId()==sid) {
                         bstHits.get(k).setTrueAssociatedTrackID(trkIds.get(i)); 
+                        int regIdx = bstHits.get(k).getRegion()-1;
+                        svtTrkSectors[regIdx]=bstHits.get(k).getSector();
                         sbstHits.add(bstHits.get(k));
                     }
                 }

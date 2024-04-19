@@ -71,7 +71,7 @@ public class AIHitInfoEngine extends ReconstructionEngine {
     
     // yaml setting passed to Constants class
     private boolean isCosmics           = false;
-    private boolean svtOnly             = false;
+    private boolean svtOnly             = true;
     private String  excludeLayers       = null;
     private String  excludeBMTLayers    = null;
     private int     removeRegion        = 0;
@@ -111,11 +111,11 @@ public class AIHitInfoEngine extends ReconstructionEngine {
     @Override
     public boolean init() { 
         try {
-            pw = new PrintWriter("/Users/veronique/Work/"+fileName);
-            String s = "event   layer  component    xo  yo  zo  xe  ye  ze  type (BG=0 or Signal=1) Track number\n";
+            pw = new PrintWriter("/Users/ziegler/BASE/Files/CVTDEBUG/AI/"+fileName);
+            String s = "event   layer  component    xo  yo  zo  xe  ye  ze  p theta phi type (BG=0 or Signal=1) On-Trk(rec) (no=0,yes=1) On-Trk(MC) (no=0,yes=1)\n";
             pw.print(s);
-            pw2 = new PrintWriter("/Users/veronique/Work/"+fileName2);
-            String s2 = "event   layer  component    xo  yo  zo  xe  ye  ze  type (BG=0 or Signal=1) Track number\n";
+            pw2 = new PrintWriter("/Users/ziegler/BASE/Files/CVTDEBUG/AI/"+fileName2);
+            String s2 = "event   layer  component    xo  yo  zo  xe  ye  ze  type (BG=0 or Signal=1) On-Trk(rec) (no=0,yes=1) On-Trk(MC) (no=0,yes=1)\n";
             pw2.print(s2);
         } catch (FileNotFoundException ex) {
             Logger.getLogger(AIHitInfoEngine.class.getName()).log(Level.SEVERE, null, ex);
@@ -321,8 +321,12 @@ public class AIHitInfoEngine extends ReconstructionEngine {
     }
     
     private void PrintClustersToFile(int evNb, org.jlab.rec.cvt.track.Track t, 
+            double mcPtk, double mcThetatk, double mcPhitk,
             PrintWriter pw, PrintWriter pw2) {
         //event layer	component	xo	yo	zo	xe	ye	ze	type (BG=0 or Signal=1)	Track number
+        double mcP=999;
+        double mcTheta=999;
+        double mcPhi=999;
         boolean tGood=true;
         for(Cluster c: t.getSeed().getClusters()) {
             double isnotBG = 0;
@@ -360,23 +364,35 @@ public class AIHitInfoEngine extends ReconstructionEngine {
                 ep2 = c.getLine().end();
             }
             if(c.getDetector()==DetectorType.BST) {
-                String str = String.format("%d %d %d %.3f %.3f %.3f %.3f %.3f %.3f %d %d %d", 
-                                        evNb, layr, (int)c.getCentroid(), ep1.x(), ep1.y(), ep1.z(), ep2.x(), ep2.y(), ep2.z(), c.BG, t.getId(), c.associatedTrueTrkId);
-                str+="\n";
-
-                if(tGood) { 
-                    pw.print(str); 
-                } else {
-                    pw2.print(str);
+                int onTrk = c.associatedTrueTrkId;
+                if(onTrk==-1) onTrk=0;
+                if(onTrk==1) {
+                     mcP=mcPtk;
+                     mcTheta=mcThetatk;
+                     mcPhi=mcPhitk;
                 }
+                String str = String.format("%d %d %d %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f %d %d %d", 
+                                        evNb, layr, (int)c.getCentroid(), ep1.x(), ep1.y(), ep1.z(), ep2.x(), ep2.y(), ep2.z(), 
+                                        mcP, mcTheta, mcPhi,
+                                        c.BG, t.getId(), onTrk);
+                str+="\n";
+                pw.print(str); 
+//                if(tGood) { 
+//                    pw.print(str); 
+//                } else {
+//                    pw2.print(str);
+//                }
             }
         }
     }
     
     private void PrintUnmatchedClustersToFile(int evNb, Cluster c, 
+            double mcPtk, double mcThetatk, double mcPhitk,
             PrintWriter pw, PrintWriter pw2) {
         //event layer	component	xo	yo	zo	xe	ye	ze	type (BG=0 or Signal=1)	Track number
-        
+        double mcP=999;
+        double mcTheta=999;
+        double mcPhi=999;
         int layr = c.getLayer();
         if(c.getDetector()==DetectorType.BMT)
                 layr+=6;
@@ -389,12 +405,22 @@ public class AIHitInfoEngine extends ReconstructionEngine {
             ep1 = c.getLine().origin();
             ep2 = c.getLine().end();
         }
-
-        String str = String.format("%d %d %d %.3f %.3f %.3f %.3f %.3f %.3f %d %d %d", 
-                                evNb, layr, (int)c.getCentroid(), ep1.x(), ep1.y(), ep1.z(), ep2.x(), ep2.y(), ep2.z(), c.BG, -1, c.associatedTrueTrkId);
+        int onTrk = c.associatedTrueTrkId;
+        if(onTrk==-1) onTrk=0;
+        if(onTrk==1) {
+            mcP=mcPtk;
+            mcTheta=mcThetatk;
+            mcPhi=mcPhitk;
+       }
+        String str = String.format("%d %d %d %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f %d %d %d", 
+                                evNb, layr, (int)c.getCentroid(), ep1.x(), ep1.y(), ep1.z(), ep2.x(), ep2.y(), ep2.z(), 
+                                 mcP, mcTheta, mcPhi,
+                                c.BG, 0, onTrk);
         str+="\n";
-        pw.print(str);
-        pw2.print(str);
+        //if(onTrk==1)
+            pw.print(str);
+        //if(onTrk==1)
+            //pw2.print(str);
             
     }
     
@@ -603,33 +629,46 @@ public class AIHitInfoEngine extends ReconstructionEngine {
             if(c.getDetector()==DetectorType.BMT)
                 useClustersSplit.get(1).add(c);
         }
-            if(crosses != null) {
+        
+        if(crosses == null) return false;
             
-            double[] xyBeam = CVTReconstruction.getBeamSpot(event, beamPos);
-            TracksFromTargetRec  trackFinder = new TracksFromTargetRec(swimmer, xyBeam);
-            //trackFinder.totTruthHits = reco.getTotalNbTruHits();
-            trackFinder.use6LayerSVT=true;
-            List<Seed>   seeds = trackFinder.getSeeds(useClustersSplit, crosses);
-            
-            List<org.jlab.rec.cvt.track.Track> tracks = trackFinder.getTracks(event, this.isInitFromMc(), 
-                                                              this.isKfFilterOn(), 
-                                                              this.getKfIterations(), 
-                                                              true, this.getPid());
-            
-            if(tracks==null) return false;
-            
-            int ta =1;
-            
+        double[] xyBeam = CVTReconstruction.getBeamSpot(event, beamPos);
+        TracksFromTargetRec  trackFinder = new TracksFromTargetRec(swimmer, xyBeam);
+        //trackFinder.totTruthHits = reco.getTotalNbTruHits();
+        trackFinder.use6LayerSVT=true;
+        List<Seed>   seeds = trackFinder.getSeeds(useClustersSplit, crosses);
+
+        List<org.jlab.rec.cvt.track.Track> tracks = trackFinder.getTracks(event, this.isInitFromMc(), 
+                                                          this.isKfFilterOn(), 
+                                                          this.getKfIterations(), 
+                                                          true, this.getPid());
+
+        
+       if (event.hasBank("MC::Particle") == false) return false;
+        DataBank bank = event.getBank("MC::Particle");
+        if(bank==null) return false;
+        
+        double mcPx = (double) bank.getFloat("px", 0);
+        double mcPy = (double) bank.getFloat("py", 0);
+        double mcPz = (double) bank.getFloat("pz", 0);
+        
+        double mcP = Math.sqrt(mcPx*mcPx+mcPy*mcPy+mcPz*mcPz);
+        double mcTheta = Math.acos(mcPz/mcP);
+        double mcPhi = Math.atan2(mcPy,mcPx);
+        
+        int ta =1;
+        if(tracks!=null) {
+            if(tracks.size()>1) return false;
             for(org.jlab.rec.cvt.track.Track t : tracks) {
                 t.setId(ta);
                 t.getSeed().getClusters().sort(Comparator.comparing(Cluster::getTlayer));
                 //this.PrintHitsToFile(ev, t,pw);
-                
-                this.PrintClustersToFile(ev, t, pw, pw2);
+                //System.out.println(ev+"; " +t.toString());
+                this.PrintClustersToFile(ev, t, mcP, mcTheta, mcPhi, pw, pw2);
                 ta++;
             }
-            
         }
+        //System.out.println(aihs.svtTrkSectors[0]+" "+aihs.svtTrkSectors[1]+" "+aihs.svtTrkSectors[2] );
         //
         
         for(Cluster c : useClusters) { 
@@ -654,11 +693,17 @@ public class AIHitInfoEngine extends ReconstructionEngine {
                     c.BG=0;
                     c.associatedTrueTrkId = -1;
                 }
-                //this.PrintUnmatchedClustersToFile(ev, c, pw, pw2);
+                if(c.getSector()==aihs.svtTrkSectors[c.getRegion()-1] 
+                        || c.getSector()-1==aihs.svtTrkSectors[c.getRegion()-1]
+                        || c.getSector()+1==aihs.svtTrkSectors[c.getRegion()-1]) {
+                    
+                    //System.out.println(c.toString());
+                    this.PrintUnmatchedClustersToFile(ev, c,  mcP, mcTheta, mcPhi, pw, pw2);
+                }
             }
         }
-        if(selectedHits.size()>0)
-            this.nevts++;
+        
+        this.nevts++;
         
         return true;
     }
@@ -828,11 +873,11 @@ public class AIHitInfoEngine extends ReconstructionEngine {
             }
         });
     }
-   
+    
     public static void main(String[] args) {
-        //String input = "/Volumes/WD_BLACK/MC/gen_cvt";
-        String inputFile = "/Users/veronique/Work/muon_1track_no_secondaries_rgbbg50na.hipo";
-        System.setProperty("CLAS12DIR", "/Users/veronique/Work/git/Sandbox/AI/coatjava/coatjava/");
+        //String inputFile = "/Users/ziegler/BASE/Files/CVTDEBUG/AI/skim3svtcrosses-norecotracks.hipo";
+        //String inputFile = "/Users/ziegler/BASE/Files/CVTDEBUG/AI/skim2_rgbbg50na.hipo";
+        System.setProperty("CLAS12DIR", "/Users/ziegler/BASE/Tracking/CVT-Issues/AI/coatjava/coatjava");
         String mapDir = CLASResources.getResourcePath("etc")+"/data/magfield";
         System.out.println(mapDir);
         try {
@@ -853,7 +898,8 @@ public class AIHitInfoEngine extends ReconstructionEngine {
 
         AIHitInfoEngine en = new AIHitInfoEngine();
         en.setVariation(var);
-        en.fileName = "goodtrksmunosecSVT.txt";
+        en.fileName = "munosecSVT4.txt";
+        //en.fileName = "goodtrksmunosecSVT.txt";
         en.fileName2 = "wrongtrksmunosecSVT.txt";
         en.init();
 
@@ -861,31 +907,38 @@ public class AIHitInfoEngine extends ReconstructionEngine {
 
         
         long t1 = 0;
+        List<String> inputList = new ArrayList<>();
+        //inputList.add("/Users/ziegler/BASE/Files/CVTDEBUG/AI/skim1_rgbbg50na.hipo");
+        //inputList.add("/Users/ziegler/BASE/Files/CVTDEBUG/AI/skim2_rgbbg50na.hipo");
+        //inputList.add("/Users/ziegler/BASE/Files/CVTDEBUG/AI/skim3_rgbbg50na.hipo");
+        inputList.add("/Users/ziegler/BASE/Files/CVTDEBUG/AI/skim4_rgbbg50na.hipo");
         
-        HipoDataSource reader = new HipoDataSource();
-        reader.open(inputFile);
+        // org.jlab.clas.analysis.event.Reader ereader = new org.jlab.clas.analysis.event.Reader();
+        
+        for(String inputFile :  inputList) {
+            HipoDataSource reader = new HipoDataSource();
+            reader.open(inputFile);
+        
+            while (reader.hasEvent()) {
 
+                counter++;
+                DataEvent event = reader.getNextEvent();
+                if (counter > 0) {
+                    t1 = System.currentTimeMillis();
+                }
+                enf.processDataEvent(event);
+                en.processDataEvent(event);
+                if(counter%1000==0) 
+                    System.out.println("PROCESSED "+counter+" EVENTS "+ "GOT "+en.nevts+" SELECTED EVENTS");
 
-        while (reader.hasEvent()) {
-
-            counter++;
-            DataEvent event = reader.getNextEvent();
-            if (counter > 0) {
-                t1 = System.currentTimeMillis();
             }
-            enf.processDataEvent(event);
-            en.processDataEvent(event);
-            if(counter%1000==0) 
-                System.out.println("PROCESSED "+counter+" EVENTS "+ "GOT "+en.nevts+" SELECTED EVENTS");
 
+            en.pw.close();
+            en.pw2.close();
+            double t = System.currentTimeMillis() - t1;
+            System.out.println(t1 + " TOTAL  PROCESSING TIME = " + (t / (float) counter));
         }
-        
-        en.pw.close();
-        en.pw2.close();
-        double t = System.currentTimeMillis() - t1;
-        System.out.println(t1 + " TOTAL  PROCESSING TIME = " + (t / (float) counter));
+
     }
-
-
 
 }
