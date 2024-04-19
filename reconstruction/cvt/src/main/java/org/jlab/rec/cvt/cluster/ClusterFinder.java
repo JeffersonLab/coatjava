@@ -117,7 +117,6 @@ public class ClusterFinder {
     }
 
     private void updateClustersUsingTime(Cluster this_cluster) {
-        Collections.reverse(this_cluster);
         List<Hit> newCluster = new ArrayList<>();
         int max = this_cluster.size();
         if(max>Constants.getInstance().bmtClusterSize)
