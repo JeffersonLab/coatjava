@@ -72,7 +72,9 @@ public class Constants {
     public boolean KFfailRecovery = true;
     public boolean KFfailRecovMisCls = true;
     public boolean gemcIgnBMT0ADC = false;
-     
+    public boolean bmtClustering = false;
+    public int bmtClusterSize = 2;
+    
     // CONSTANTS USED IN RECONSTRUCTION
     //---------------------------------    
     public static final double LIGHTVEL = PhysicsConstants.speedOfLight()*1e-5;  // velocity of light (mm/ns) - conversion factor from radius in mm to momentum in GeV/c 
@@ -570,7 +572,9 @@ public class Constants {
                                         int bmtcmaxclussize,
                                         int bmtzmaxclussize,
                                         double rcut,
-                                        double z0cut) {
+                                        double z0cut,
+                                        boolean bmtClustering,
+                                        int bmtClusterSize) {
         if (!ConstantsLoaded) {
             this.isCosmics = isCosmics;
             this.svtOnly      = svtOnly;
@@ -600,6 +604,8 @@ public class Constants {
             this.setBmtzmaxclussize(bmtzmaxclussize);
             this.setRCUT(rcut);
             this.setZRANGE(z0cut);
+            this.bmtClustering = bmtClustering;
+            this.bmtClusterSize = bmtClusterSize;
             ConstantsLoaded = true;
         }
     }

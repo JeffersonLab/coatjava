@@ -3,6 +3,7 @@ package org.jlab.rec.cvt.hit;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
+import org.jlab.rec.cvt.Constants;
 import org.jlab.rec.cvt.bmt.BMTType;
 
 /**
@@ -31,7 +32,6 @@ public class Hit implements Comparable<Hit> {
     private int _AssociatedClusterID = -1;  // the cluster ID associated with that hit
     private int AssociatedTrackID = -1;     // the track ID associated with that hit
 
-    public boolean newClustering = false;
     public int MCstatus = -1;
 
     // constructor
@@ -143,7 +143,7 @@ public class Hit implements Comparable<Hit> {
      */
     @Override
     public int compareTo(Hit arg) {
-        if(this.newClustering) {
+        if(this.getDetector()==DetectorType.BMT && Constants.getInstance().bmtClustering) {
             //sort by layer, then time, then edep
             int CompLyr = this.getLayer() < arg.getLayer() ? -1 : this.getLayer() == arg.getLayer() ? 0 : 1;
             int CompStr = this.getStrip().getStrip() < arg.getStrip().getStrip()? -1 : this.getStrip().getStrip() == arg.getStrip().getStrip() ? 0 : 1;

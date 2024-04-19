@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.jlab.detector.base.DetectorType;
+import org.jlab.rec.cvt.Constants;
 import org.jlab.rec.cvt.hit.Hit;
 
 /**
@@ -89,19 +90,19 @@ public class ClusterFinder {
                                 }
                             }
                         }
+                       
                         for (Hit h : hits) {
                             h.setAssociatedClusterID(this_cluster.getId());
-                            //h.newClustering = true; //RDV fix me!
+                        }
+                        
+                        Collections.sort(this_cluster);
+                        
+                        if(this_cluster.get(0).getDetector()==DetectorType.BMT && Constants.getInstance().bmtClustering) {
+                            this.updateClustersUsingTime(this_cluster);
                         }
                         
                         this_cluster.calc_CentroidParams();
-                        //if(this_cluster.getDetector()==DetectorType.BST) {
-                        //    for (Hit h : this_cluster) {
-                        //        h.newClustering = false;
-                        //    }
-                        //}
-                        Collections.sort(this_cluster);
-                       
+                        
                         //make list of clusters
                         clusters.add(this_cluster);
                     }
@@ -115,4 +116,18 @@ public class ClusterFinder {
 
     }
 
+    private void updateClustersUsingTime(Cluster this_cluster) {
+        Collections.reverse(this_cluster);
+        List<Hit> newCluster = new ArrayList<>();
+        int max = this_cluster.size();
+        if(max>Constants.getInstance().bmtClusterSize)
+            max = Constants.getInstance().bmtClusterSize;
+        
+        for(int i = 0; i < max; i++)
+            newCluster.add(this_cluster.get(i));
+        
+        this_cluster.clear();
+        this_cluster.addAll(newCluster);
+    }
+    
 }

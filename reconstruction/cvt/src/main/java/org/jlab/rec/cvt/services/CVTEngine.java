@@ -88,6 +88,8 @@ public class CVTEngine extends ReconstructionEngine {
     private int bmtzmaxclussize = 100;
     private double rcut = 120.0;
     private double z0cut = 10;
+    private boolean bmtClustering = false;
+    private int bmtClusterSize = 2;
     
     public CVTEngine(String name) {
         super(name, "ziegler", "6.0");
@@ -129,7 +131,9 @@ public class CVTEngine extends ReconstructionEngine {
                                            bmtcmaxclussize, 
                                            bmtzmaxclussize,
                                            rcut,
-                                           z0cut);
+                                           z0cut,
+                                           bmtClustering,
+                                           bmtClusterSize);
 
         this.initConstantsTables();
         this.registerBanks();
@@ -453,6 +457,12 @@ public class CVTEngine extends ReconstructionEngine {
         
         if (this.getEngineConfigString("z0cut")!=null)
             this.z0cut = Double.valueOf(this.getEngineConfigString("z0cut"));
+        
+        if (this.getEngineConfigString("bmtClustering")!=null)
+            this.bmtClustering = Boolean.valueOf(this.getEngineConfigString("bmtClustering"));
+        
+        if (this.getEngineConfigString("bmtClusterSize")!=null)
+            this.bmtClusterSize = Integer.valueOf(this.getEngineConfigString("bmtClusterSize"));
         
     }
 

@@ -276,10 +276,6 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
                     stCent0 = thehit.getStrip().getLine().midpoint();                
                }
                 else if (this.getDetector()==DetectorType.BMT) { 
-                    
-//                    if(thehit.newClustering && nbhits>BMTConstants.MAXCLUSSIZE && i>BMTConstants.MAXCLUSSIZE-1) 
-//                        continue;
-
                     // for the BMT the analysis distinguishes between C and Z type detectors
                     if (this.getType()==BMTType.C) { // C-detectors
                         //strpEn = Math.sqrt(thehit.getStrip().getEdep());
