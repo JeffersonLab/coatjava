@@ -36,7 +36,7 @@ public class CVTSecondPassEngine extends CVTEngine {
         if(Constants.getInstance().seedingDebugMode)
             System.out.println("SECOND PASS TRACKING...................");
         
-        Swim swimmer = new Swim();
+        Swim swimmer = new Swim(this.newSwim);
 
         IndexedTable svtLorentz = this.getConstantsManager().getConstants(run, "/calibration/svt/lorentz_angle");
         IndexedTable bmtVoltage = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_voltage");

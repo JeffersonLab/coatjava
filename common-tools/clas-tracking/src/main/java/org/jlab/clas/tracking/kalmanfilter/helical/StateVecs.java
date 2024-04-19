@@ -9,6 +9,7 @@ import org.jlab.clas.tracking.kalmanfilter.Units;
 import org.jlab.clas.tracking.trackrep.Helix;
 import org.jlab.clas.tracking.utilities.MatrixOps;
 import org.jlab.geom.prim.Line3D;
+import org.jlab.geom.prim.Plane3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
 
@@ -108,7 +109,7 @@ public class StateVecs extends AStateVecs {
                     Point3D point = new Point3D(mv.surface.plane.point().x()/units.value(),
                                                 mv.surface.plane.point().y()/units.value(),
                                                 mv.surface.plane.point().z()/units.value());
-                    double accuracy = mv.surface.swimAccuracy/units.value();
+                    double accuracy = mv.surface.swimAccuracy/units.value(); 
                     swimPars = swim.SwimPlane(norm,point,accuracy);
  //                   swimPars = swim.AdaptiveSwimPlane(point.x(), point.y(), point.z(), norm.x(), norm.y(), norm.z(), accuracy);
                     if(swimPars==null)
@@ -120,6 +121,14 @@ public class StateVecs extends AStateVecs {
                     sv.px = swimPars[3]*dir;
                     sv.py = swimPars[4]*dir;
                     sv.pz = swimPars[5]*dir;
+                    //put sv on the plane
+                    double d = point.toVector3D().dot(norm)*units.value(); 
+                    double dp = new Vector3D(sv.x,sv.y,sv.z).dot(norm); 
+                    double dv = new Vector3D(sv.px,sv.py,sv.pz).dot(norm);
+                    double scale = (d-dp)/dv;
+                    sv.x+=scale*sv.px;
+                    sv.y+=scale*sv.py;
+                    sv.z+=scale*sv.pz;
                     sv.path = swimPars[6]*units.value();
                 }
                 else   {
@@ -130,7 +139,8 @@ public class StateVecs extends AStateVecs {
                     Point3D p2 = new Point3D(mv.surface.cylinder.getAxis().end().x()/units.value(),
                                              mv.surface.cylinder.getAxis().end().y()/units.value(),
                                              mv.surface.cylinder.getAxis().end().z()/units.value()) ;
-                    double accuracy = mv.surface.swimAccuracy/units.value();
+                    double accuracy = mv.surface.swimAccuracy/units.value(); 
+                    
                     swimPars = swim.SwimGenCylinder(p1, p2, r/units.value(), accuracy);
                     if(swimPars==null)
                         return false;

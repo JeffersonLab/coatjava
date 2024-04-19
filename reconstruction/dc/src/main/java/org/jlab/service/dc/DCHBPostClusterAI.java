@@ -57,7 +57,7 @@ public class DCHBPostClusterAI extends DCEngine {
         reader.initialize(event);
         RecoBankWriter writer = new RecoBankWriter(this.getBanks());
         // get Field
-        Swim dcSwim = new Swim();
+        Swim dcSwim = new Swim(this.newSwim);
         /* 2 */
         
         /* 5 */

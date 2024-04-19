@@ -315,7 +315,9 @@ public class RecUtilities {
                  
                 // calculate trajectory
                 Point3D traj = null;
-                inters = swimmer.SwimRho(radius/10, Constants.SWIMACCURACYBMT/10);
+                double accuracy = Constants.SWIMACCURACYBMT/10;
+                
+                inters = swimmer.SwimRho(radius/10, accuracy);
                 
                 if(inters!=null) {
                     traj = new Point3D(inters[0]*10, inters[1]*10, inters[2]*10);

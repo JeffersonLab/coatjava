@@ -25,6 +25,7 @@ import org.jlab.rec.cvt.banks.RecoBankReader;
 import org.jlab.rec.cvt.measurement.Measurements;
 import org.jlab.rec.cvt.track.Seed;
 import org.jlab.rec.cvt.track.Seed.Key;
+import static org.jlab.rec.cvt.track.Seed.filterSeeds;
 import org.jlab.rec.cvt.track.StraightTrackSeeder;
 import org.jlab.rec.cvt.track.Track;
 import org.jlab.rec.cvt.track.TrackSeeder;
@@ -57,6 +58,7 @@ public class TracksFromTargetRec {
     private double xb; 
     private double yb;
     public int totTruthHits;
+    public boolean oldStraightTrackSeeder=false;
     
     
     public TracksFromTargetRec(Swim swimmer, double[] beamPos) {
@@ -75,7 +77,7 @@ public class TracksFromTargetRec {
         double solenoidValue = Constants.getSolenoidMagnitude(); // already the absolute value
         List<Seed> seeds = new ArrayList<>();
         // make list of crosses consistent with a track candidate
-        if(solenoidValue<0.001) {
+        if(oldStraightTrackSeeder) {
             StraightTrackSeeder trseed = new StraightTrackSeeder(xb, yb);
             seeds = trseed.findSeed(this.SVTcrosses, this.BMTcrosses, Constants.getInstance().svtOnly);
             // RDV, disabled because it seems to create fake tracks, skipping measurement in KF
@@ -128,9 +130,12 @@ public class TracksFromTargetRec {
             }
             //} //mv bracket
         }
+        
+        int seedcounter =0;
+        Seed.filterSeeds(seeds);
         for(Seed s : seeds) { 
             if(Constants.getInstance().seedingDebugMode) {
-                System.out.println("Before overlap remover");
+                System.out.println("Before overlap remover seed nb "+seedcounter++);
                 System.out.println(s.toString());
             }       
             s.setKey(s.new Key(s));
@@ -384,7 +389,7 @@ public class TracksFromTargetRec {
                 }
             }
         }
-
+        
 //        //------------------------ RDV check with Veronique
 //        // set index associations
 //        if (tracks.size() > 0) {

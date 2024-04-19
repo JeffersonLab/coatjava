@@ -87,7 +87,7 @@ public class DCTBEngine extends DCEngine {
             }
         }
         // get Field
-        Swim dcSwim = new Swim();        
+        Swim dcSwim = new Swim(this.newSwim);        
        
         // fill T2D table
         if(Constants.getInstance().getT2D()==0) {

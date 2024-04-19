@@ -33,6 +33,7 @@ public class DCEngine extends ReconstructionEngine {
     private String     inBankPrefix   = null;
     private String     outBankPrefix  = null;
     private double[][] shifts         = new double[Constants.NREG][6];
+    public boolean     newSwim        = false;
     protected boolean  useDAF         = true;
     private String   dafChi2Cut     = null;
     private String   dafAnnealingFactorsTB = null;
@@ -103,6 +104,9 @@ public class DCEngine extends ReconstructionEngine {
         if(this.getEngineConfigString("outputBankPrefix")!=null) {
             outBankPrefix = this.getEngineConfigString("outputBankPrefix");
         }
+        
+        if (this.getEngineConfigString("newSwim")!=null)
+            this.newSwim = (boolean) Boolean.valueOf(this.getEngineConfigString("newSwim"));
         
         //Set if use DAF
         if(this.getEngineConfigString("useDAF")!=null) 

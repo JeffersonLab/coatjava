@@ -1,6 +1,7 @@
 package org.jlab.rec.cvt.services;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.detector.base.DetectorType;
@@ -199,6 +200,6 @@ public class CVTReconstruction {
         totalNbTruHits = aTotalNbTruHits;
     }
 
-
     
+
 }

@@ -838,10 +838,20 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
         
         Point3D  trackPos = new Point3D(traj.x, traj.y, traj.z);
         Vector3D trackDir = new Vector3D(traj.px, traj.py, traj.pz).asUnit();
-                
         this.setAssociatedTrackID(trackId);
         this.setCentroidResidual(traj.residual);
-        this.setSeedResidual(trackPos); 
+        if(this.getDetector()==DetectorType.BST) {
+            Strip st = this.getSeed().getStrip();
+            Line3D stl = null;
+            if(st.getLine()==null) {
+                st.setLine(Geometry.getInstance().getSVT().getStrip(this.getLayer(), this.getSector(), st.getStrip())); 
+            } 
+            stl = st.getLine();
+
+            Line3D dist = this.getSeed().getStrip().getLine().distance(trackPos);
+            double side = -Math.signum(stl.direction().cross(dist.direction()).dot(this.getN()));
+            this.setSeedResidual(dist.length()*side); 
+        }
         this.setTrakInters(trackPos);
 
         

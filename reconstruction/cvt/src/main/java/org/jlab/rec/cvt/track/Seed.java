@@ -2,6 +2,7 @@ package org.jlab.rec.cvt.track;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -529,14 +530,44 @@ public class Seed implements Comparable<Seed>{
         }
     }
     
+    /**
+     * Filter out seeds with same z0 parameters
+     * @param seeds 
+     */
+    public static void filterSeeds(List<Seed> seeds) {
+        Map<Double, List<Seed>> z0lists = new HashMap<>();
+        List<Seed> seedsToDelete = new ArrayList<>();
+        for(Seed s : seeds) {
+            if(s.getHelix()==null) {
+                seedsToDelete.add(s);
+                continue;
+            }
+            if(z0lists.containsKey(s.getHelix().getZ0())) {
+                z0lists.get(s.getHelix().getZ0()).add(s);
+            } else {
+                z0lists.put(s.getHelix().getZ0(), new ArrayList<>());
+                z0lists.get(s.getHelix().getZ0()).add(s);
+            }
+        }
+        for(Double i : z0lists.keySet()) {
+            List<Seed> seedsToSort = z0lists.get(i);
+            if(seedsToSort.size()<3) continue;
+            seedsToSort.sort(Comparator.comparing(Seed::getCircleFitChi2PerNDF));
+            seedsToSort.remove(0);
+            seedsToSort.remove(1);
+            seedsToDelete.addAll(seedsToSort);
+        }
+        seeds.removeAll(seedsToDelete);
+    }
+    
     public static void removeOverlappingSeeds(List<Seed> seeds) {
         if(seeds==null)
             return;
         for(Seed s : seeds) {
             s.setClusters();
         }
-        List<Seed> ovlrem = getOverlapRemovedSeeds(seeds);
-        if(ovlrem!=null) {
+        List<Seed> ovlrem = getOverlapRemovedSeeds(seeds); 
+        if(ovlrem!=null) { 
             seeds.clear();
             seeds.addAll(ovlrem);
         }
