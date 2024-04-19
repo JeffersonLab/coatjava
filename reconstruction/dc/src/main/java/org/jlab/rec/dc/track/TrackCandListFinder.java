@@ -159,7 +159,7 @@ public class TrackCandListFinder {
         int q = calcInitTrkQ(a, TORSCALE);
 
         dcSwim.SetSwimParameters(x1, y1, z1, p_x, p_y, p_z, q);
-        double[] R = dcSwim.SwimToPlaneTiltSecSysBdlXZPlane(sector, z2);
+        double[] R = dcSwim.SwimToPlaneTiltSecSys(sector, z2);
         if (R == null) {
             return new double[]{Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY};
         }
@@ -169,7 +169,7 @@ public class TrackCandListFinder {
         dcSwim.SetSwimParameters(R[0], R[1], R[2],
                 R[3], R[4], R[5],
                 q);
-        R = dcSwim.SwimToPlaneTiltSecSysBdlXZPlane(sector, z3);
+        R = dcSwim.SwimToPlaneTiltSecSys(sector, z3);
         if (R == null) {
             return new double[]{Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY};
         }
