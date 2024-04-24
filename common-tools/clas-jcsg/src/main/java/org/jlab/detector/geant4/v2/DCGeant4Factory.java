@@ -718,7 +718,7 @@ public final class DCGeant4Factory extends Geant4Factory {
         double lay_dy = Math.sqrt(Math.pow(midline.magnitude(), 2.0) - Math.pow(midline.dot(lw0.dir()), 2.0)) / 2.0;
         double lay_dx0 = lw0.length() / 2.0;
         double lay_dx1 = lw1.length() / 2.0;
-        double lay_dz = dbref.cellthickness(isuper) * dbref.wpdist(isuper) * (nsglayers -2) / 2.0 - microgap;
+        double lay_dz = (dbref.cellthickness(isuper)*dbref.nsenselayers(isuper)+1) * dbref.wpdist(isuper) / 2.0;
         double lay_skew = lw0.center().minus(lw1.center()).angle(lw1.dir()) - Math.toRadians(90.0);
 
         Vector3d lcent = lw0.center().plus(lw1.center()).dividedBy(2.0);
