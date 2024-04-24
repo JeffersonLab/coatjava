@@ -2,8 +2,8 @@
 
 # Default versions:
 grapes=2.17
-clara=v0
-coatjava=10.0.8
+clara=5.0.2
+coatjava=10.1.0
 
 # Abort on any non-zero exit codes:
 set -e
