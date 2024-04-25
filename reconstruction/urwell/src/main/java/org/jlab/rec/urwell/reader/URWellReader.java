@@ -102,7 +102,7 @@ public class URWellReader{
             cross.setClusterIndex2(cluster2);
             if(cluster1<=urClusters.size()) urClusters.get(cluster1-1).setCrossIndex(i);
             if(cluster2<=urClusters.size()) urClusters.get(cluster2-1).setCrossIndex(i);           
-            if(cross.isGood(urClusters) && cross.isInTime())            
+            if(status == 0)            
                 urCrosses.add(cross);
         }
     } 
