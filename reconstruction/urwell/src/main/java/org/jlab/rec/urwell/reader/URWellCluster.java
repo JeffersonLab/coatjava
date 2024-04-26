@@ -9,20 +9,26 @@ import org.jlab.detector.base.DetectorType;
  */
 
 public class URWellCluster {
-
+    
+    private int id = -1;
     private DetectorDescriptor desc = new DetectorDescriptor(DetectorType.URWELL);
     private int size = 0;
     private double energy = 0;
     private double time = 0;
     private int crossIndex = -1;
 
-    public URWellCluster(int sector, int layer, int component, int size, double energy, double time) {
+    public URWellCluster(int id, int sector, int layer, int component, int size, double energy, double time) {
+        this.id = id;
         this.desc.setSectorLayerComponent(sector, layer, component);
         this.size = size;
         this.energy = energy;
         this.time = time;
     }
-
+    
+    public int id() {
+        return this.id;
+    }
+    
     public int sector() {
         return this.desc.getSector();
     }

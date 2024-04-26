@@ -128,18 +128,28 @@ public class URWellCross {
     }
 
     public URWellCluster getCluster1(List<URWellCluster> urClusters) {
-        if (cluster1 > 0 && cluster1 <= urClusters.size()) {
-            return urClusters.get(cluster1 - 1);
-        } else {
-            return null;
+        URWellCluster cluster = null;
+        
+        for (URWellCluster cl : urClusters) {
+            if (cl.id() == cluster1) {
+                cluster = cl;
+                break;
+            }
         }
+        
+        return cluster;
     }
 
     public URWellCluster getCluster2(List<URWellCluster> urClusters) {
-        if (cluster2 > 0 && cluster2 <= urClusters.size()) {
-            return urClusters.get(cluster2 - 1);
-        } else {
-            return null;
+        URWellCluster cluster = null;
+        
+        for (URWellCluster cl : urClusters) {
+            if (cl.id() == cluster2) {
+                cluster = cl;
+                break;
+            }
         }
+        
+        return cluster;
     }
 }

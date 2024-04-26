@@ -28,8 +28,6 @@ public class URWellReader{
     
     public URWellReader(DataEvent event, String type) {
         if(type == "HB"){            
-            if(event.hasBank("URWELL::clusters"))
-                this.readClusters(event.getBank("URWELL::clusters"));
             if(event.hasBank("URWELL::crosses"))
                 this.readCrosses(event.getBank("URWELL::crosses"));
         }
@@ -71,13 +69,14 @@ public class URWellReader{
     public final void readClusters(DataBank bank) {
 
         for(int i=0; i<bank.rows(); i++) {
+            int    id = bank.getShort("id", i);
             int    sector = bank.getByte("sector", i);
             int    layer  = bank.getByte("layer", i);
             int    strip  = bank.getShort("strip", i);
             int    size   = bank.getShort("size", i);
             double energy = bank.getFloat("energy", i);
             double time   = bank.getFloat("time", i);
-            URWellCluster cluster = new URWellCluster(sector, layer, strip, size, energy, time);
+            URWellCluster cluster = new URWellCluster(id, sector, layer, strip, size, energy, time);
             urClusters.add(cluster);
         }
     }
