@@ -72,16 +72,20 @@ jobs:
   get_validation_data:
     name: get validation data
     runs-on: ubuntu-latest
+    env:
+      xroot_host: xroot://sci-xrootd.jlab.org
+      xroot_dir:  /osgpool/hallb/clas12
+      xroot_file: validation/clas_005197_benchmark.h5
     steps:
       - name: install dependencies
         run: |
           sudo apt -y update
-          sudo apt -y upgrade
+          # sudo apt -y upgrade
           sudo apt -y install xrootd-client
       - name: ls
-        run: xrdfs xroot://sci-xrootd.jlab.org ls -R /osgpool/hallb/clas12
+        run: xrdfs ${{ env.xroot_host }} ls -R ${{ env.xroot_dir }}
       - name: download
-        run: xrdcp xroot://sci-xrootd.jlab.org/osgpool/hallb/clas12/backgroundfiles/rga_fall2018/tor+1.00_sol-1.00/40nA_10604MeV/10k/00001.hipo ./
+        run: xrdcp ${{ env.xrootd_host }}/${{ env.xrootd_dir }}/${{ env.xrootd_file }} ./
       - run: ls -lh .
 
   # tests
