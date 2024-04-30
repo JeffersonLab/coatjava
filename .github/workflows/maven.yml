@@ -73,9 +73,9 @@ jobs:
     name: get validation data
     runs-on: ubuntu-latest
     env:
-      xroot_host: xroot://sci-xrootd.jlab.org
-      xroot_dir:  /osgpool/hallb/clas12
-      xroot_file: validation/clas_005197_benchmark.h5
+      xrootd_host: xroot://sci-xrootd.jlab.org
+      xrootd_dir:  /osgpool/hallb/clas12
+      xrootd_file: validation/clas_005197_benchmark.h5
     steps:
       - name: install dependencies
         run: |
@@ -83,7 +83,7 @@ jobs:
           # sudo apt -y upgrade
           sudo apt -y install xrootd-client
       - name: ls
-        run: xrdfs ${{ env.xroot_host }} ls -R ${{ env.xroot_dir }}
+        run: xrdfs ${{ env.xrootd_host }} ls -R ${{ env.xrootd_dir }}
       - name: download
         run: xrdcp ${{ env.xrootd_host }}/${{ env.xrootd_dir }}/${{ env.xrootd_file }} ./
       - run: ls -lh .
