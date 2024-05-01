@@ -63,13 +63,17 @@ public class ClusterFinder {
                 // looping over all strips
                 while (si < nstrip) {
                     // if there's a hit, it's a cluster candidate
-                    if (HitArray[si][l][s] != null || (si < nstrip - 1 && HitArray[si + 1][l][s] != null)) { 
+                    if (HitArray[si][l][s] != null 
+                            //|| (si < nstrip - 1 && HitArray[si + 1][l][s] != null)
+                            ) { 
                         // vector of hits in the cluster candidate
                         ArrayList<Hit> hits = new ArrayList<>();
 
                         // adding all hits in this and all the subsequent
                         // strip until there's a strip with no hit
-                        while ((si < nstrip - 1 && HitArray[si + 1][l][s] != null) || (HitArray[si][l][s] != null && si < nstrip)) {
+                        while (
+                                //(si < nstrip - 1 && HitArray[si + 1][l][s] != null) || 
+                                (HitArray[si][l][s] != null && si < nstrip)) {
                             if (HitArray[si][l][s] != null) { // continue clustering skipping over bad hit
                                 hits.add(HitArray[si][l][s]);
                             }

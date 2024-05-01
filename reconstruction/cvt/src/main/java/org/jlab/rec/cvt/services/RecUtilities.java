@@ -419,6 +419,60 @@ public class RecUtilities {
         }
     }
     
+    public boolean fitSeedLayerExcluded(Seed seed, double xbeam, double ybeam, double bfield)  {
+        List<Cluster> clusters = seed.getClusters();
+        clusters.sort(Comparator.comparing(Cluster::getTlayer));
+        int[] L = new int[clusters.size()];
+        for(int l =0; l<clusters.size(); l++) {
+            L[l] = clusters.get(l).getTlayer();
+        }
+        Seed testSeed = new Seed(seed.getCrosses());
+        double chi2_Circ = seed.getCircleFitChi2PerNDF();
+        double chi2_Line = seed.getLineFitChi2PerNDF();
+        int exclLy = -1;
+        for(int l =0; l<clusters.size(); l++) {
+            boolean fitStatus = testSeed.fit(3, xbeam, ybeam, bfield, L[l], true);
+            if(fitStatus) {
+                double chi2_Circ_test = testSeed.getCircleFitChi2PerNDF();
+                double chi2_Line_test = testSeed.getLineFitChi2PerNDF();
+                if(chi2_Circ_test<=chi2_Circ && chi2_Line_test<chi2_Line || 
+                        chi2_Circ_test<chi2_Circ && chi2_Line_test<=chi2_Line ) {
+                    exclLy = L[l];
+                }
+            }
+        }
+        List<Cross> rmCrosses = new ArrayList<>();
+        List<Cluster> rmClusters = new ArrayList<>();
+        
+        for(Cross c : seed.getCrosses()) {
+            if(c.getDetector()==DetectorType.BST) {
+                if(c.getCluster1().getTlayer()==exclLy) {
+                    rmCrosses.add(c);
+                    rmClusters.add(c.getCluster1());
+                }
+                if(c.getCluster2().getTlayer()==exclLy) {
+                    rmCrosses.add(c);
+                    rmClusters.add(c.getCluster1());
+                } 
+            }
+             if(c.getDetector()==DetectorType.BMT) {
+                if(c.getCluster1().getTlayer()==exclLy) {
+                    rmCrosses.add(c);
+                    rmClusters.add(c.getCluster1());
+                }
+            }
+        }
+        
+        boolean fitStatus = testSeed.fit(3, xbeam, ybeam, bfield, true);
+        
+        if(seed.getChi2()>=testSeed.getChi2()+0.5) {
+            seed.getCrosses().removeAll(rmCrosses);
+            seed.getClusters().removeAll(rmClusters);
+        }
+        
+        
+        return fitStatus;
+    }
     
     public List<Seed> reFit(List<Seed> seedlist, Swim swimmer,  StraightTrackSeeder trseed) {
         List<Seed> filtlist = new ArrayList<>();
@@ -899,7 +953,7 @@ public class RecUtilities {
         //Collections.sort(seed.getClusters());
         //Collections.sort(seed.getCrosses());
 
-        seed.fit(3, xb, yb, solenoidValue);
+        seed.fit(3, xb, yb, solenoidValue, true);
 
         //reset pars
         Point3D v = seed.getHelix().getVertex();

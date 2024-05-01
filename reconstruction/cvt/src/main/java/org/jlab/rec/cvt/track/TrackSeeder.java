@@ -217,6 +217,7 @@ public class TrackSeeder {
     public List<Seed> findSeed(List<Cross> bst_crosses, List<Cross> bmt_crosses) {
         
         List<Seed> seedlist = new ArrayList<>();
+        List<Seed> SSAseedlist = new ArrayList<>();
 
         List<Cross> crosses = new ArrayList<>();
         List<Cross> svt_crosses = new ArrayList<>();
@@ -314,21 +315,22 @@ public class TrackSeeder {
         for(Seed mseed : getSeedScan()) { 
             boolean fitStatus = false;
             if(mseed.getCrosses().size()>2) {
-                fitStatus = mseed.fit(Constants.SEEDFITITERATIONS, xbeam, ybeam, bfield);
+                fitStatus = mseed.fit(Constants.SEEDFITITERATIONS, xbeam, ybeam, bfield, true);
             }
-            if (fitStatus) { 
+            if (fitStatus && mseed.isGood()) { 
                 List<Cross> sameSectorCrosses = this.findCrossesInSameSectorAsSVTTrk(mseed, bmtC_crosses);
+                SSAseedlist.add(mseed);
                 BMTmatches.clear();
                 if (sameSectorCrosses.size() >= 0) {
                     BMTmatches = this.findCandUsingMicroMegas(mseed, sameSectorCrosses);
                 } 
                 
                 Seed bestSeed = null;
-                double chi2_Circ = Double.POSITIVE_INFINITY;
-                double chi2_Line = Double.POSITIVE_INFINITY;
+                double chi2_Circ = mseed.getCircleFitChi2PerNDF();
+                double chi2_Line = mseed.getLineFitChi2PerNDF();
                 for (Seed bseed : BMTmatches) {
                     //refit using the BMT
-                    fitStatus = bseed.fit(Constants.SEEDFITITERATIONS, xbeam, ybeam, bfield);
+                    fitStatus = bseed.fit(Constants.SEEDFITITERATIONS, xbeam, ybeam, bfield, true);
 
                     if (fitStatus && bseed.getCircleFitChi2PerNDF()<chi2_Circ
                                   && bseed.getLineFitChi2PerNDF()<chi2_Line
@@ -355,6 +357,16 @@ public class TrackSeeder {
                 }
                 bseed.setStatus(2);
             }
+        } else {
+            if(Constants.getInstance().removeOverlappingSeeds)
+                Seed.removeOverlappingSeeds(SSAseedlist);
+            for (Seed bseed : SSAseedlist) { 
+                for(Cross c : bseed.getCrosses()) {
+                    c.isInSeed = true;
+                }
+                bseed.setStatus(2);
+            }
+            seedlist.addAll(SSAseedlist);
         }
         return seedlist;
     }

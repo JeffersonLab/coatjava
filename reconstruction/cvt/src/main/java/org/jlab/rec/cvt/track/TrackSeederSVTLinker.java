@@ -121,11 +121,7 @@ public class TrackSeederSVTLinker {
                 seedlist.add(seed);
         }
         
-        for (Seed bseed : seedlist) {
-            //for (Cross c : bseed.getCrosses()) {
-                //c.isInSeed = true;
-            //}
-        }
+        
         return seedlist;
     }
 
@@ -229,8 +225,8 @@ public class TrackSeederSVTLinker {
                 for(Seed s : myseeds) { 
                     s.getCrosses().addAll(zrcross);
                     s.setCrosses(s.getCrosses()) ;
-                    s.fit(Constants.SEEDFITITERATIONS, xbeam, ybeam, bfield);
-                   
+                    s.fit(Constants.SEEDFITITERATIONS, xbeam, ybeam, bfield, true);
+                    
                     if(s.getChi2()<Constants.CHI2CUT*s.getCrosses().size()) {
                         s.setStatus(3);
                         for(Cross c : s.getCrosses()) {

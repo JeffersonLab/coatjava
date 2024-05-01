@@ -130,7 +130,7 @@ public class TrackSeederCA {
                 if (cand.get(0).getPlane().equalsIgnoreCase("XY")) {
                     if (candlen > 2) {
                         Seed seed = new Seed(getCrossFromCells(cand));
-                        if (seed.fit(2, xbeam, ybeam, bfield)) {
+                        if (seed.fit(2, xbeam, ybeam, bfield, true)) {
                             cellCands.add(cand);
 
                             for (Cell n : cand) {
@@ -248,7 +248,7 @@ public class TrackSeederCA {
 //	    	Collections.sort(seedCrosses.get(s));      // TODO: check why sorting matters
 //                Track cand = fit(seedCrosses.get(s), svt_geo, bmt_geo, Constants.SEEDFITITERATIONS, false, swimmer);
             Seed candSeed = new Seed(seedCrosses.get(s));
-            boolean fitStatus = candSeed.fit(Constants.SEEDFITITERATIONS, xbeam, ybeam, bfield);
+            boolean fitStatus = candSeed.fit(Constants.SEEDFITITERATIONS, xbeam, ybeam, bfield, true);
             if (fitStatus && candSeed.isGood()) {
                 cands.add(candSeed);
             }

@@ -258,7 +258,11 @@ public class Seed implements Comparable<Seed>{
         return value;
     }
 
-    public boolean fit(int fitIter, double xb, double yb, double bfield) {
+    public boolean fit(int fitIter, double xb, double yb, double bfield, boolean resetCrosses) {
+        return this.fit(fitIter, xb, yb, bfield,-1, resetCrosses);
+    }
+    
+    public boolean fit(int fitIter, double xb, double yb, double bfield, double excludeLayer, boolean resetCrosses) {
         
         List<Double> X = new ArrayList<>();
         List<Double> Y = new ArrayList<>();
@@ -280,13 +284,13 @@ public class Seed implements Comparable<Seed>{
         for (Cross c : this.getCrosses()) {
             // reset cross to clear previous track settings on direction and Point
             c.reset();
-            if (c.getDetector()==DetectorType.BST) {
+            if (c.getDetector()==DetectorType.BST && !(c.getCluster1().getTlayer()==excludeLayer || c.getCluster2().getTlayer()==excludeLayer)) {
                 SVTCrosses.add(c);
             }
-            else if (c.getDetector()==DetectorType.BMT && c.getType()==BMTType.C ) {
+            else if (c.getDetector()==DetectorType.BMT && c.getType()==BMTType.C && !(c.getCluster1().getTlayer()==excludeLayer) ) {
                 BMTCrossesC.add(c);
             }
-            else if (c.getDetector()==DetectorType.BMT && c.getType()==BMTType.Z ) {
+            else if (c.getDetector()==DetectorType.BMT && c.getType()==BMTType.Z && !(c.getCluster1().getTlayer()==excludeLayer)) {
                 BMTCrossesZ.add(c);
             }
         }
@@ -356,6 +360,11 @@ public class Seed implements Comparable<Seed>{
             Y.add(yb);
             ErrRt.add((double) 0.1);
             
+            if(X.size()<4) 
+                return false;
+            if(Z.size()<2) 
+                return false;
+            
             FitStatus fitStatus = fitTrk.fit(X, Y, Z, Rho, ErrRt, ErrRho, ErrZ, xb, yb);
             
             if (fitStatus!=FitStatus.Successful || fitTrk.gethelix() == null) { 
@@ -388,10 +397,14 @@ public class Seed implements Comparable<Seed>{
                 }
             }
         }
+        if(resetCrosses) {
+            for(Cross c : this.getCrosses()) {
+                c.reset();
+            }
+        }
         return true;
     }
 
-    
     /**
      * Updates the crosses positions based on trajectories or helix
      */
@@ -437,7 +450,7 @@ public class Seed implements Comparable<Seed>{
             System.out.println("Pass SSA , c2 ok "+(this.getChi2() <= Constants.CHI2CUTSSA * (this.getNDF() + 5)) 
                     +" ndf ok "+ (this.getNDF() >= Constants.NDFCUT) 
                     +" r ok "+ (this.getHelix().radius() >= Constants.getInstance().getRCUT()) 
-                    +" dz ok "+ (Math.abs(Geometry.getInstance().getTargetZOffset()-this.getHelix().getZ0()) <= Geometry.getInstance().getTargetHalfLength()+Constants.getInstance().getZRANGE()) 
+                    +" dz ok "+ (Math.abs(Geometry.getInstance().getTargetZOffset()-this.getHelix().getZ0()) <= Geometry.getInstance().getTargetHalfLength()+Constants.getInstance().getZRANGE()+Constants.DZCUTBUFFEESSA) 
                     +" ");
         }
         boolean pass = true;

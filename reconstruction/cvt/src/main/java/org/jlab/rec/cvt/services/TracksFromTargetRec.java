@@ -105,15 +105,23 @@ public class TracksFromTargetRec {
 //                        seeds = recUtil.reFit(seeds, swimmer, trseed, trseed2);
 //                    }
                 }
-            } //mv bracket
+            } 
             List<Seed> failed = new ArrayList<>();
             for(Seed s : seeds) { 
+                boolean fitStatus = recUtil.fitSeedLayerExcluded(s, xb, yb, solenoidValue);
+                if(!fitStatus)
+                    failed.add(s);
                 if(Constants.getInstance().seedingDebugMode) {
                     System.out.println("Before chi2 cut");
                     System.out.println(s.toString());
                 }  
-                if(s.getChi2()>Constants.CHI2CUT*s.getCrosses().size())
-                    failed.add(s);
+                double chi2Cut = Constants.CHI2CUT;
+                if(s.getStatus()==2)
+                    chi2Cut = Constants.CHI2CUTSSA;
+                if(s.getChi2()>chi2Cut*s.getCrosses().size()) {
+                    if(Constants.getInstance().seedingDebugMode) 
+                        System.out.println("Failed chi2 cut of "+(Constants.CHI2CUT*s.getCrosses().size()));
+                }
                 if(s.getHelix()==null)
                     failed.add(s);
             }

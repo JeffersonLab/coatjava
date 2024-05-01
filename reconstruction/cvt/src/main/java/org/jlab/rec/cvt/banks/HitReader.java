@@ -9,6 +9,7 @@ import org.jlab.clas.swimtools.Swim;
 import org.jlab.detector.banks.RawDataBank;
 import org.jlab.detector.base.DetectorDescriptor;
 import org.jlab.detector.base.DetectorType;
+import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.cvt.Constants;
 import org.jlab.rec.cvt.Geometry;
@@ -31,7 +32,6 @@ import org.jlab.utils.groups.IndexedTable;
 public class HitReader {
 
     public HitReader() {
-        
     }
 
     // the list of BMT hits
@@ -163,6 +163,7 @@ public class HitReader {
                 
                 // add this hit
                 if(hit.getLayer()+3!=Constants.getInstance().getRmReg()) {
+                    if(this.matchToMC(1, i)) hit.MCstatus=0;
                     if(Constants.getInstance().useOnlyMCTruthHits() ) {
                         if(hit.MCstatus==0)
                             hits.add(hit);
@@ -270,6 +271,7 @@ public class HitReader {
                 if (bankDGTZ.getInt("ADC", i) < 0) {
                     continue; // ignore hits TDC hits with ADC==-1 
                 }
+                
                 int order   = bankDGTZ.getByte("order", i);
                 int id      = i + 1;
                 int sector  = bankDGTZ.getByte("sector", i);
@@ -345,9 +347,10 @@ public class HitReader {
                 hit.setId(id);
                 if (Constants.getInstance().flagSeeds)
                     hit.MCstatus = order;
-                
+                     
                 // add this hit
-                if(hit.getRegion()!=Constants.getInstance().getRmReg()) {     
+                if(hit.getRegion()!=Constants.getInstance().getRmReg()) {   
+                    if(this.matchToMC(2, i)) hit.MCstatus=0;
                     if(Constants.getInstance().useOnlyMCTruthHits() ) {
                         if(hit.MCstatus==0)
                             hits.add(hit);
@@ -377,5 +380,29 @@ public class HitReader {
     
         return pass;   
     }
-
+    
+    private Map<Integer, Integer> MCMap = new HashMap<>();
+    public void fillMCMap(DataEvent event) {
+        if (event.hasBank("MC::True") == true) {
+            DataBank bank = event.getBank("MC::True");
+        
+            for (int i = 0; i < bank.rows(); i++) {
+                int hitn   = bank.getInt("hitn", i);
+                int det    = bank.getByte("detector", i);
+                int mtid = bank.getInt("mtid", i);
+                int mpid = bank.getInt("mpid", i);
+                if(mtid==0 && mpid==0)
+                    MCMap.put(hitn, det);
+            }
+        }
+    }
+    public boolean matchToMC(int detector, int i) {
+        boolean matched = false;
+        int hitn = i+1;
+        if(MCMap.isEmpty()) return matched;
+        if(MCMap.containsKey(hitn) && MCMap.get(hitn).intValue()==detector)
+            matched = true;
+        
+        return matched;
+    }
 }

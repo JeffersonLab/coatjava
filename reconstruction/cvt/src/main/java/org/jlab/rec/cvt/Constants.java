@@ -54,7 +54,7 @@ public class Constants {
     public boolean   svtLinkerSeeding = false;
     public boolean   timeCuts = false;
     public boolean   bmtHVCuts = true;
-    public boolean   useOnlyTruthHits = false;
+    public boolean   useOnlyTruthHits = true;
     public boolean   useOnlyBMTTruthHits = false;
     public boolean   useOnlyBMTCTruthHits = false;
     public boolean   useOnlyBMTZTruthHits = false;
@@ -282,6 +282,7 @@ public class Constants {
     }
     
     public static void setZRANGE(double zr) {
+        System.out.println("Setting Z Range to "+zr);
         ZRANGE = zr;
     }
     
@@ -570,7 +571,8 @@ public class Constants {
                                         int bmtcmaxclussize,
                                         int bmtzmaxclussize,
                                         double rcut,
-                                        double z0cut) {
+                                        double z0cut,
+                                        boolean seedingDebugMode) {
         if (!ConstantsLoaded) {
             this.isCosmics = isCosmics;
             this.svtOnly      = svtOnly;
@@ -600,6 +602,7 @@ public class Constants {
             this.setBmtzmaxclussize(bmtzmaxclussize);
             this.setRCUT(rcut);
             this.setZRANGE(z0cut);
+            this.seedingDebugMode=seedingDebugMode;
             ConstantsLoaded = true;
         }
     }

@@ -170,7 +170,7 @@ public class HelixCrossListFinder {
             //this.MatchBMTC(s, theListsByRegionBMTC.get(1), svt_geo); // match the seed to each BMT region
             //this.MatchBMTC(s, theListsByRegionBMTC.get(2), svt_geo); // match the seed to each BMT region
            
-            boolean fitStatus = s.fit(3, xb, yb, bz);
+            boolean fitStatus = s.fit(3, xb, yb, bz, true);
             if(!fitStatus)
                 continue;
             //match to r1
@@ -433,7 +433,7 @@ public class HelixCrossListFinder {
         
         if(s==null)
             return;
-        boolean fitStatus = s.fit(3, xb, yb, bz);
+        boolean fitStatus = s.fit(3, xb, yb, bz, true);
         if(!fitStatus)
             return;
          
@@ -467,7 +467,7 @@ public class HelixCrossListFinder {
 
     private void MatchBMTC(Seed s, ArrayList<Cross> BMTCrosses, double xb, double yb, double bz) {
         
-        boolean fitStatus = s.fit(3, xb, yb, bz);
+        boolean fitStatus = s.fit(3, xb, yb, bz, true);
         if(!fitStatus)
             return;
         double maxChi2 = Double.POSITIVE_INFINITY;
@@ -477,7 +477,7 @@ public class HelixCrossListFinder {
             continue; 
         } else {
             s.getCrosses().add(BMTCrosses.get(i));
-            fitStatus = s.fit(3, xb, yb, bz);
+            fitStatus = s.fit(3, xb, yb, bz, true);
             if(!fitStatus)
                 continue;
             double linechi2perndf = s.getLineFitChi2PerNDF();

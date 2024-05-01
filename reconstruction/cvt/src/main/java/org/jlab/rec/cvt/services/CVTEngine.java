@@ -88,6 +88,7 @@ public class CVTEngine extends ReconstructionEngine {
     private int bmtzmaxclussize = 100;
     private double rcut = 120.0;
     private double z0cut = 10;
+    private boolean seedingDebugMode = false;
     
     public CVTEngine(String name) {
         super(name, "ziegler", "6.0");
@@ -129,13 +130,15 @@ public class CVTEngine extends ReconstructionEngine {
                                            bmtcmaxclussize, 
                                            bmtzmaxclussize,
                                            rcut,
-                                           z0cut);
+                                           z0cut,
+                                           seedingDebugMode);
 
         this.initConstantsTables();
         this.registerBanks();
         this.printConfiguration();
         return true;    
     }
+    
     
     public final void setOutputBankPrefix(String prefix) {
         this.bankPrefix = prefix;
@@ -453,6 +456,9 @@ public class CVTEngine extends ReconstructionEngine {
         
         if (this.getEngineConfigString("z0cut")!=null)
             this.z0cut = Double.valueOf(this.getEngineConfigString("z0cut"));
+        
+        if (this.getEngineConfigString("seedingDebugMode")!=null)
+            this.seedingDebugMode = Boolean.valueOf(this.getEngineConfigString("seedingDebugMode"));
         
     }
 

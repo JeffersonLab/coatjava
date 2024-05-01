@@ -188,7 +188,7 @@ public class TrackSeederRZ {
         if(Math.abs(targetCen-in)<targetLen+Constants.getInstance().getZRANGE())
            value = true;
         if(Constants.getInstance().seedingDebugMode) 
-            System.out.println("Passing: "+ value);
+            System.out.println("Passing : "+in+" is "+ value+" for target at center z = "+targetCen+" and target length "+targetLen);
         return value;
     }
 
@@ -200,8 +200,11 @@ public class TrackSeederRZ {
             System.out.println(c3.printInfo());
         }
         boolean value = false;
-        if(interceptOK(c1,c3)==false)
+        if(interceptOK(c1,c3)==false) {
+            if(Constants.getInstance().seedingDebugMode) 
+                System.out.println("Passing intercept: "+ value);
             return value;
+        }
         double sl = (c1.getPoint().z() - c3.getPoint().z())/(c1.getPoint().toVector3D().rho() - c3.getPoint().toVector3D().rho());
         double in = -sl*c1.getPoint().toVector3D().rho()+c1.getPoint().z();
         
@@ -209,6 +212,8 @@ public class TrackSeederRZ {
         double Zm = c2.getPoint().z();
         double Zc = sl*Rm +in;
         double Zerr = c2.getPointErr().z(); 
+        if(Constants.getInstance().seedingDebugMode) 
+            System.out.println("Passing: cut "+ Math.abs(Zc-Zm)+" ?< "+Zerr*5);
         if(Math.abs(Zc-Zm)<Zerr*5) {
             value = true;  
         } 

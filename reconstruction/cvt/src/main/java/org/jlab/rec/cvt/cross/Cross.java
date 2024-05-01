@@ -2,6 +2,7 @@ package org.jlab.rec.cvt.cross;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.geom.prim.Line3D;
 
@@ -11,6 +12,7 @@ import org.jlab.rec.cvt.Constants;
 import org.jlab.rec.cvt.Geometry;
 import org.jlab.rec.cvt.bmt.BMTType;
 import org.jlab.rec.cvt.cluster.Cluster;
+import org.jlab.rec.cvt.hit.Hit;
 import org.jlab.rec.cvt.svt.SVTGeometry;
 
 /**
@@ -592,7 +594,16 @@ public class Cross extends ArrayList<Cluster> implements Comparable<Cross> {
                 + " Region " + this.getRegion() + " sort "+this.getOrderedRegion()+" cosmic region "+this.getSVTCosmicsRegion();
         if(this.getPoint0()!=null) s += " Point " + this.getPoint().toString();
         if(this.getPoint0()!=null) s += " Point0 " + this.getPoint0().toString();
-        if(this.getDir()!=null)    s += " Direction "+ this.getDir().toString();
+        if(this.getDir()!=null)    s += " Direction "+ this.getDir().toString()+" \n";
+        s+="Hits: \n";
+        for(Hit h : this.getCluster1()) {
+            s+="Detector "+h.getDetector()+" Sector "+h.getSector()+" Layer "+h.getLayer()+" Strip "+h.getStrip().getStrip()+" MCT "+(h.MCstatus==0)+" \n";
+        }
+        if(this.getDetector()==DetectorType.BST) {
+            for(Hit h : this.getCluster2()) {
+                s+="Detector "+h.getDetector()+" Sector "+h.getSector()+" Layer "+h.getLayer()+" Strip "+h.getStrip().getStrip()+" MCT "+(h.MCstatus==0)+" \n";
+            }
+        }
         return s;
     }
 

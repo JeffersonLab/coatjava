@@ -66,8 +66,8 @@ public class HelicalTrackFitter {
         _circlefitpars = null;
         _linefitpars = null;
         _helicalfitoutput = null;
-        _chisq[0] = 0;
-        _chisq[1] = 0;
+        _chisq[0] = Double.POSITIVE_INFINITY;
+        _chisq[1] = Double.POSITIVE_INFINITY;
         W.clear();
         ((ArrayList<Double>) W).ensureCapacity(X.size());
 

@@ -43,6 +43,7 @@ public class CVTReconstruction {
             IndexedTable bmtStripVoltage, IndexedTable bmtStripVoltageThresh) {
         
         HitReader hitRead = new HitReader();
+        hitRead.fillMCMap(event);
         hitRead.fetch_SVTHits(event, -1, -1, svtStatus);
         if(Constants.getInstance().svtOnly==false)
           hitRead.fetch_BMTHits(event, swimmer, bmtStatus, bmtTime, 
