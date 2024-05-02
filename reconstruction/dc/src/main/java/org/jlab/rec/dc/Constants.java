@@ -54,9 +54,10 @@ public class Constants {
     public static final double SIN25 = Math.sin(Math.toRadians(25.));
     public static final double COS25 = Math.cos(Math.toRadians(25.));
     public static final double COS30 = Math.cos(Math.toRadians(30.)); 
-    public static final double SIN6 = Math.sin(Math.toRadians(6.));
-    public static final double COS6 = Math.cos(Math.toRadians(6.));
-    public static final double TAN6 = Math.tan(Math.toRadians(6.));
+    public static final double STEREOANGLE = 6.;
+    public static final double SIN6 = Math.sin(Math.toRadians(STEREOANGLE));
+    public static final double COS6 = Math.cos(Math.toRadians(STEREOANGLE));
+    public static final double TAN6 = Math.tan(Math.toRadians(STEREOANGLE));
     public static final double CTAN6 = 1/TAN6;
     public static final double[] SINSECTOR60 = {0, Math.sin(Math.toRadians(60.)), Math.sin(Math.toRadians(120.)), 0, 
         Math.sin(Math.toRadians(240.)), Math.sin(Math.toRadians(300.))};
