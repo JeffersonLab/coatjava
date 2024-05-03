@@ -62,7 +62,9 @@ public class TrackSeeder {
             double d = seed.getDoca();
             double r = seed.getRho();
             double f = seed.getPhi();
-
+            //System.out.println("SVTSEED "+seed.toString());
+            boolean fitStatus = seed.fit(Constants.SEEDFITITERATIONS, xbeam, ybeam, bfield, true);
+            //System.out.println(seed.toString()+" "+seed.isGood());
             for (Cross c : othercrs ) { 
                 if(this.inSamePhiRange(seed, c)== true) {
                     double xi = c.getPoint().x(); 
@@ -72,8 +74,14 @@ public class TrackSeeder {
 
                     double res = this.calcResi(r, ri, d, f, fi);
                     if(Math.abs(res)<SVTParameters.RESIMAX) { 
-                        // add to seed    
                         seed.getCrosses().add(c);
+                        fitStatus = seed.fit(Constants.SEEDFITITERATIONS, xbeam, ybeam, bfield, true);
+                        // add to seed   
+                        //System.out.println("SVTSEED test "+seed.toString());
+                        if(!seed.isGood()) {
+                            seed.getCrosses().remove(c);
+                            //System.out.println("REMOVED "+c.printInfo());
+                        }
                     }
                 }
             }
@@ -317,6 +325,8 @@ public class TrackSeeder {
             if(mseed.getCrosses().size()>2) {
                 fitStatus = mseed.fit(Constants.SEEDFITITERATIONS, xbeam, ybeam, bfield, true);
             }
+            //System.out.println("CHECKING SSA SEED WOUT BMT-C");
+            //for(Cross c : mseed.getCrosses()) System.out.println(c.printInfo());
             if (fitStatus && mseed.isGood()) { 
                 List<Cross> sameSectorCrosses = this.findCrossesInSameSectorAsSVTTrk(mseed, bmtC_crosses);
                 SSAseedlist.add(mseed);
@@ -324,12 +334,13 @@ public class TrackSeeder {
                 if (sameSectorCrosses.size() >= 0) {
                     BMTmatches = this.findCandUsingMicroMegas(mseed, sameSectorCrosses);
                 } 
-                
+                //System.out.println("BMT Matches "+BMTmatches.size());
                 Seed bestSeed = null;
                 double chi2_Circ = mseed.getCircleFitChi2PerNDF();
                 double chi2_Line = mseed.getLineFitChi2PerNDF();
                 for (Seed bseed : BMTmatches) {
                     //refit using the BMT
+                    //System.out.println("CHECKING SSA SEED WITH BMT-C");
                     fitStatus = bseed.fit(Constants.SEEDFITITERATIONS, xbeam, ybeam, bfield, true);
 
                     if (fitStatus && bseed.getCircleFitChi2PerNDF()<chi2_Circ

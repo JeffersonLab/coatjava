@@ -44,7 +44,8 @@ public class Seed implements Comparable<Seed>{
     public double percentTruthMatch;
     public double totpercentTruthMatch;
     public int FirstPassIdx;
-    
+    private int MINXYMEAS4FIT=3;
+    private int MINRZMEAS4FIT=2;
     public Seed() {
     }
 
@@ -360,9 +361,9 @@ public class Seed implements Comparable<Seed>{
             Y.add(yb);
             ErrRt.add((double) 0.1);
             
-            if(X.size()<4) 
+            if(X.size()<this.MINXYMEAS4FIT) 
                 return false;
-            if(Z.size()<2) 
+            if(Z.size()<this.MINRZMEAS4FIT) 
                 return false;
             
             FitStatus fitStatus = fitTrk.fit(X, Y, Z, Rho, ErrRt, ErrRho, ErrZ, xb, yb);
