@@ -136,6 +136,7 @@ public class TracksFromTargetRec {
             }
             //} //mv bracket
         }
+        Seed.filterSeeds(seeds);
         for(Seed s : seeds) { 
             if(Constants.getInstance().seedingDebugMode) {
                 System.out.println("Before overlap remover");
