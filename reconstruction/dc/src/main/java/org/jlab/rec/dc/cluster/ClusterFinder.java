@@ -109,7 +109,7 @@ public class ClusterFinder {
         Collections.sort(allhits);
 
         List<Cluster> clumps = new ArrayList<>();
-
+        
         // looping over each superlayer in each sector
         // each superlayer is treated independently
         int cid = 1;  // cluster id, will increment with each new good cluster
@@ -143,15 +143,15 @@ public class ClusterFinder {
                         wi++;
 
                     }
-
-                    // Need at least MIN_NLAYERS
-                    if (ct.count_nlayers_in_cluster(hits) >= Constants.DC_MIN_NLAYERS) {
-
-                        // cluster constructor DCCluster(hit.sector,hit.superlayer, cid)
+                    
+                    // Need at least DC_MIN_NLAYERS layers if no skipped layer or at meast DC_MIN_NLAYERS - 1 layers if with skipped layer
+                    if ((!ct.isExceptionalCluster(hits) && ct.count_nlayers_in_cluster(hits) >= Constants.DC_MIN_NLAYERS) 
+                            || (ct.isExceptionalCluster(hits) && ct.count_nlayers_in_cluster(hits) >= Constants.DC_MIN_NLAYERS - 1)) {
+                                            // cluster constructor DCCluster(hit.sector,hit.superlayer, cid)
                         Cluster this_cluster = new Cluster((int) (ssl / nsect) + 1, (int) (ssl % nsect) + 1, cid++);
                         //LOGGER.log(Level.FINER, " created cluster "+this_cluster.printInfo());
                         this_cluster.addAll(hits);
-
+                        
                         clumps.add(this_cluster);
 
                     }
@@ -161,7 +161,7 @@ public class ClusterFinder {
                 wi++;
 
             }
-        }
+        }        
         return clumps;
     }
 
@@ -182,6 +182,7 @@ public class ClusterFinder {
         //find clumps of hits init
         List<Cluster> clusters = this.findClumps(allhits, ct);
        
+        /*
         allhits.clear();
         
         for (Cluster clus : clusters) {
@@ -192,12 +193,19 @@ public class ClusterFinder {
         this.fillHitArray(allhits, 0);
         clusters.clear();
         clusters = this.findClumps(allhits, ct);
+        */
+        
+        //Sort hits in clusters
+        for (Cluster clus : clusters) {
+            Collections.sort(clus);
+        }
         
         // create cluster list to be fitted
         List<FittedCluster> selectedClusList = new ArrayList<>();
 
-        for (Cluster clus : clusters) {
-            if(clus.size()<Constants.DC_MIN_NLAYERS)
+        for (Cluster clus : clusters) {            
+            if((!ct.isExceptionalCluster(clus) && clus.size()<Constants.DC_MIN_NLAYERS) 
+                    || (ct.isExceptionalCluster(clus) && clus.size()<Constants.DC_MIN_NLAYERS - 1))
                 continue;
             //LOGGER.log(Level.FINER, " I passed this cluster "+clus.printInfo());
             FittedCluster fClus = new FittedCluster(clus);
@@ -209,7 +217,8 @@ public class ClusterFinder {
             //	ct.outOfTimersRemover(fClus, false); // correct outoftimers
             //}
             // add cluster
-            if(fClus.size()<Constants.DC_MIN_NLAYERS)
+            if((!ct.isExceptionalFittedCluster(fClus) && fClus.size()<Constants.DC_MIN_NLAYERS) 
+                    ||(ct.isExceptionalFittedCluster(fClus) && fClus.size()<Constants.DC_MIN_NLAYERS-1))
                 continue;
             selectedClusList.add(fClus); 
         }
@@ -226,7 +235,7 @@ public class ClusterFinder {
 
             cf.SetFitArray(clus, "LC"); 
             cf.Fit(clus, true);
-            if(clus.get_fitProb()<Constants.HITBASEDTRKGMINFITHI2PROB) { 
+            if(!ct.isExceptionalFittedCluster(clus) && clus.get_fitProb()<Constants.HITBASEDTRKGMINFITHI2PROB) { 
                 ct.IsolatedHitsPruner(clus);
                 //Refit
                 cf.SetFitArray(clus, "LC"); 
@@ -245,7 +254,8 @@ public class ClusterFinder {
         
         ArrayList rmHits = new ArrayList<FittedHit>();
         for (FittedCluster clus : fittedClusList) {
-            if (clus != null && clus.size() > 3 && clus.get_fitProb()>Constants.HITBASEDTRKGMINFITHI2PROB) {
+            if (clus != null && ((!ct.isExceptionalFittedCluster(clus) && clus.size() >= Constants.DC_MIN_NLAYERS) || 
+                    (ct.isExceptionalFittedCluster(clus) && clus.size() >= Constants.DC_MIN_NLAYERS-1)) && clus.get_fitProb()>Constants.HITBASEDTRKGMINFITHI2PROB) {
                 
                 // update the hits
                 for (FittedHit fhit : clus) {
@@ -283,9 +293,12 @@ public class ClusterFinder {
 
     }
 
-    public List<FittedCluster> RecomposeClusters(Map<Integer, ArrayList<FittedHit>> grpHits, 
+    public List<FittedCluster> RecomposeClusters(Map<Integer, ArrayList<FittedHit>> grpHits,
             DCGeant4Factory dcDetector, ClusterFitter cf) {
         cf.reset();
+        
+        ClusterCleanerUtilities ct = new ClusterCleanerUtilities();
+        
         List<FittedCluster> clusters = new ArrayList<>();
         
         // using iterators 
@@ -294,7 +307,8 @@ public class ClusterFinder {
         while(itr.hasNext()) {
             Map.Entry<Integer, ArrayList<FittedHit>> entry = itr.next(); 
              
-            if(entry.getValue().size()>3) {
+            if((!ct.isExceptionalFittedCluster(entry.getValue()) && entry.getValue().size() >= Constants.DC_MIN_NLAYERS) 
+                    || (ct.isExceptionalFittedCluster(entry.getValue()) && entry.getValue().size() >= Constants.DC_MIN_NLAYERS-1)) {
                 Cluster cluster = new Cluster(entry.getValue().get(0).get_Sector(), 
                         entry.getValue().get(0).get_Superlayer(), entry.getValue().get(0).get_AssociatedClusterID());
                 FittedCluster fcluster = new FittedCluster(cluster);
@@ -328,7 +342,7 @@ public class ClusterFinder {
         return clusters;
     }
     
-    private List<FittedCluster> RecomposeTrackClusters(DataEvent event, List<FittedHit> fhits, IndexedTable tab, DCGeant4Factory DcDetector, TimeToDistanceEstimator tde) {
+    private List<FittedCluster> RecomposeTrackClusters(DataEvent event, List<FittedHit> fhits, ClusterCleanerUtilities ct, IndexedTable tab, DCGeant4Factory DcDetector, TimeToDistanceEstimator tde) {
         Map<Integer, ArrayList<FittedHit>> grpHits = new HashMap<>();
         List<FittedCluster> clusters = new ArrayList<>();
         
@@ -354,8 +368,9 @@ public class ClusterFinder {
           
         while(itr.hasNext()) {
             Map.Entry<Integer, ArrayList<FittedHit>> entry = itr.next(); 
-             
-            if(entry.getValue().size()>3) {
+            
+            if((!ct.isExceptionalFittedCluster(entry.getValue()) && entry.getValue().size() >= Constants.DC_MIN_NLAYERS) 
+                    || (ct.isExceptionalFittedCluster(entry.getValue()) && entry.getValue().size() >= Constants.DC_MIN_NLAYERS-1)){
                 Cluster cluster = new Cluster(entry.getValue().get(0).get_Sector(), 
                         entry.getValue().get(0).get_Superlayer(), entry.getValue().get(0).get_AssociatedClusterID());
                 FittedCluster fcluster = new FittedCluster(cluster);
@@ -389,7 +404,7 @@ public class ClusterFinder {
 
         List<FittedCluster> clusters = new ArrayList<>();
 
-        List<FittedCluster> rclusters = RecomposeTrackClusters(event, fhits, tab, DcDetector, tde);
+        List<FittedCluster> rclusters = RecomposeTrackClusters(event, fhits, ct, tab, DcDetector, tde);
         //LOGGER.log(Level.FINER, " Clusters TimeBased Step 1");
         //     for(FittedCluster c : rclusters)
         //    	for(FittedHit h : c)
@@ -616,5 +631,5 @@ public class ClusterFinder {
         }
         return bank;
 
-    }
+    }    
 }

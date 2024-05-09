@@ -137,7 +137,7 @@ public class ClusterCleanerUtilities {
         // loop over accumulator array to find peaks (allows for more than one peak for multiple tracks)
         // The accumulator cell count must be at least half the total number of hits
         // Make binrMax, bintMax arrays to allow for more than one peak
-        int threshold = Constants.DC_MIN_NLAYERS;
+        int threshold = Constants.DC_MIN_NLAYERS-1;
         int nbPeaksR_Phi = 0;
 
         // 1st find the peaks in the R_Phi accumulator array
@@ -145,7 +145,7 @@ public class ClusterCleanerUtilities {
             for (int ibint1 = 0; ibint1 < N_t; ibint1++) {
                 //find the peak
 
-                if (R_Phi_Accumul[ibinr1][ibint1] >= Constants.DC_MIN_NLAYERS) {
+                if (R_Phi_Accumul[ibinr1][ibint1] >= Constants.DC_MIN_NLAYERS-1) {
 
                     if (R_Phi_Accumul[ibinr1][ibint1] > threshold) {
                         threshold = R_Phi_Accumul[ibinr1][ibint1];
@@ -171,7 +171,7 @@ public class ClusterCleanerUtilities {
             //remove all existing hits and add only the ones passing the criteria below
             //newClus.removeAll(clus);
             for (int i = 0; i < clus.size(); i++) {
-                double rho = clus.get(i).get_X();
+                double rho = clus.get(i).get_lX();
                 double phi = clus.get(i).get_lY();
 
                 for (int j_t = 0; j_t < N_t; j_t++) {
@@ -205,7 +205,8 @@ public class ClusterCleanerUtilities {
                 }
             }
             //require 4 layers to make a cluster
-            if (count_nlayers_in_cluster(contigArrayOfHits) < Constants.DC_MIN_NLAYERS) {
+            if ((!isExceptionalCluster(contigArrayOfHits) && count_nlayers_in_cluster(contigArrayOfHits) < Constants.DC_MIN_NLAYERS) 
+                    || (isExceptionalCluster(contigArrayOfHits) && count_nlayers_in_cluster(contigArrayOfHits) < Constants.DC_MIN_NLAYERS - 1)) {
                 passCluster = false;
             }
 
@@ -731,7 +732,8 @@ public class ClusterCleanerUtilities {
                     passCls = false;
                 }
             }
-            if (hitOvrl.size() < 3) {
+            if((!isExceptionalFittedCluster(cls) && hitOvrl.size() < 3) 
+                    || (isExceptionalFittedCluster(cls) && hitOvrl.size() < 2)) {
                 passCls = false;
             }
 
@@ -977,6 +979,97 @@ public class ClusterCleanerUtilities {
         //for(FittedHit h : BestCluster)
         //	LOGGER.log(Level.INFO, h.printInfo());
         return BestCluster;
+    }
+    
+        /**
+     *
+     * @param hitsInClus the hits in a cluster
+     * @return if one or more layers are skipped in the cluster
+     */
+    public boolean isExceptionalCluster(List<Hit> hitsInClus){        
+        // count hits in each layer
+        int nlayr = 6;
+        int[] nlayers = new int[nlayr];
+        for (int l = 0; l < nlayr; l++) {
+            nlayers[l] = 0;
+            for (int h = 0; h < hitsInClus.size(); h++) {
+                if (hitsInClus.get(h).get_Layer() == l + 1) {
+                    nlayers[l]++;
+                }
+            }
+        }
+
+        boolean flag_hasSkippedLayer = false;
+        if((nlayers[0] == 0 && nlayers[1] == 0) || (nlayers[4] == 0 && nlayers[5] == 0)){
+            flag_hasSkippedLayer = true;
+        }
+        else{
+            for (int l = 0; l < 4; l++) {
+                if (nlayers[l] > 0 && nlayers[l+1] == 0) {
+                    flag_hasSkippedLayer = true;
+                    break;
+                }
+            }
+        }
+        
+        return flag_hasSkippedLayer;        
+    }
+    
+    /*
+     * @param hitsInClus the hits in a cluster
+     * @return if one or more layers are skipped in the cluster
+     */
+    public boolean isExceptionalFittedCluster(List<FittedHit> hitsInClus){        
+        // count hits in each layer
+        int nlayr = 6;
+        int[] nlayers = new int[nlayr];
+        for (int l = 0; l < nlayr; l++) {
+            nlayers[l] = 0;
+            for (int h = 0; h < hitsInClus.size(); h++) {
+                if (hitsInClus.get(h).get_Layer() == l + 1) {
+                    nlayers[l]++;
+                }
+            }
+        }
+
+        boolean flag_hasSkippedLayer = false;
+        if((nlayers[0] == 0 && nlayers[1] == 0) || (nlayers[4] == 0 && nlayers[5] == 0)){
+            flag_hasSkippedLayer = true;
+        }
+        else{
+            for (int l = 0; l < 4; l++) {
+                if (nlayers[l] > 0 && nlayers[l+1] == 0) {
+                    flag_hasSkippedLayer = true;
+                    break;
+                }
+            }
+        }
+        
+        return flag_hasSkippedLayer;       
+    }
+    
+    public Cluster ClusterSticher(Cluster thisclus, Cluster nextclus, int cid){
+        ClusterFitter cf = new ClusterFitter();
+        
+        // Two clusters must be in the same sector and the same superlayer
+        if((thisclus.get_Sector() != nextclus.get_Sector()) || (thisclus.get_Superlayer() != nextclus.get_Superlayer())) return null;
+        
+        // Dont take stiching if number of layers in two clusters less than 3
+        if((count_nlayers_in_cluster(thisclus) + count_nlayers_in_cluster(nextclus)) < 3) return null;
+        
+        // Only allow one-wire skipped        
+        if((nextclus.get_MinWire() - thisclus.get_MaxWire() != 2)) return null;
+            
+        Cluster stichedcluster = new Cluster(thisclus.get_Sector(), thisclus.get_Superlayer(), cid);
+        stichedcluster.addAll(thisclus);
+        stichedcluster.addAll(nextclus);       
+         
+        if ((!isExceptionalCluster(stichedcluster) && count_nlayers_in_cluster(stichedcluster) < Constants.DC_MIN_NLAYERS) 
+                || (isExceptionalCluster(stichedcluster) && count_nlayers_in_cluster(stichedcluster) < Constants.DC_MIN_NLAYERS - 1)) 
+            return null;
+        
+        return stichedcluster;
+        
     }
 
 }
