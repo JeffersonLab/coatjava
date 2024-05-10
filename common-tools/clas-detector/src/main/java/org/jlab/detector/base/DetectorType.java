@@ -29,6 +29,8 @@ public enum DetectorType {
     BAND      (21, "BAND"),
     RASTER    (22, "RASTER"),
     URWELL    (23, "URWELL"),
+    AHDC      (24, "AHDC"),
+    ATOF      (25, "ATOF"),
     TARGET    (100, "TARGET"),
     MAGNETS   (101, "MAGNETS"),
     ECIN      (110, "ECIN"),
