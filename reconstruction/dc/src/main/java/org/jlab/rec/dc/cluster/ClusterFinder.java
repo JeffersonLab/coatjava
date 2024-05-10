@@ -177,24 +177,10 @@ public class ClusterFinder {
 
         //fill array of hit
         this.fillHitArray(allhits, 0);
-        //prune noise
-        //ct.HitListPruner(allhits, HitArray);
+
         //find clumps of hits init
         List<Cluster> clusters = this.findClumps(allhits, ct);
-       
-        /*
-        allhits.clear();
-        
-        for (Cluster clus : clusters) {
-            Collections.sort(clus);
-            allhits.addAll(ct.HitListPruner(clus));
-        }
-        
-        this.fillHitArray(allhits, 0);
-        clusters.clear();
-        clusters = this.findClumps(allhits, ct);
-        */
-        
+               
         //Sort hits in clusters
         for (Cluster clus : clusters) {
             Collections.sort(clus);
@@ -209,24 +195,13 @@ public class ClusterFinder {
                 continue;
             //LOGGER.log(Level.FINER, " I passed this cluster "+clus.printInfo());
             FittedCluster fClus = new FittedCluster(clus);
-            //FittedCluster fClus = ct.IsolatedHitsPruner(fclus);
-            // Flag out-of-timers
-            //if(Constants.isSimulation==true) {
             ct.outOfTimersRemover(fClus, true); // remove outoftimers
-            //} else {
-            //	ct.outOfTimersRemover(fClus, false); // correct outoftimers
-            //}
-            // add cluster
             if((!ct.isExceptionalFittedCluster(fClus) && fClus.size()<Constants.DC_MIN_NLAYERS) 
                     ||(ct.isExceptionalFittedCluster(fClus) && fClus.size()<Constants.DC_MIN_NLAYERS-1))
                 continue;
             selectedClusList.add(fClus); 
         }
         
-        //LOGGER.log(Level.FINER, " Clusters Step 2");
-        // for(FittedCluster c : selectedClusList)
-        //	for(FittedHit h : c)
-        //		LOGGER.log(Level.FINER, h.printInfo());
         // create list of fitted clusters
         List<FittedCluster> fittedClusList = new ArrayList<>();
         List<FittedCluster> refittedClusList = new ArrayList<>();
@@ -241,9 +216,7 @@ public class ClusterFinder {
                 cf.SetFitArray(clus, "LC"); 
                 cf.Fit(clus, true);
             }
-            if (clus.get_fitProb() > Constants.HITBASEDTRKGMINFITHI2PROB  ){
-                //    || 
-                //    (clus.size() < Constants.HITBASEDTRKGNONSPLITTABLECLSSIZE && clus.get_fitProb()!=0) ){            
+            if (clus.get_fitProb() > Constants.HITBASEDTRKGMINFITHI2PROB  ){         
                 fittedClusList.add(clus); //if the chi2 prob is good enough, then just add the cluster, or if the cluster is not split-able because it has too few hits                
             } else {  
                 
@@ -284,11 +257,7 @@ public class ClusterFinder {
             }
 
         }
-
-        //LOGGER.log(Level.FINER, " Clusters Step 4");
-        //for(FittedCluster c : refittedClusList)
-        //	for(FittedHit h : c)
-        //		LOGGER.log(Level.FINER, h.printInfo());
+        
         return refittedClusList;
 
     }
