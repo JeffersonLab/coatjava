@@ -180,11 +180,24 @@ public class ClusterFinder {
 
         //find clumps of hits init
         List<Cluster> clusters = this.findClumps(allhits, ct);
-               
+        
+        allhits.clear();
+        
+        for (Cluster clus : clusters) {
+            Collections.sort(clus);
+            allhits.addAll(ct.HitListPruner(clus));
+        }
+        
+        this.fillHitArray(allhits, 0);
+        clusters.clear();
+        clusters = this.findClumps(allhits, ct);
+         
+        /*
         //Sort hits in clusters
         for (Cluster clus : clusters) {
             Collections.sort(clus);
         }
+        */
         
         // create cluster list to be fitted
         List<FittedCluster> selectedClusList = new ArrayList<>();
