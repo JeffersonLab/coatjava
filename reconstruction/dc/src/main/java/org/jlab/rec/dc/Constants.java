@@ -277,6 +277,7 @@ public class Constants {
     // ----- cut based cand select
 
     public static final double TRACKDIRTOCROSSDIRCOSANGLE =0.85;//= 0.95;
+    public static final double TRACKDIRTOCROSSDIRCOSANGLESTRAIGHT =0.9962; // cos(5 deg)
 
     public static double CROSSLISTSELECTQFMINCHSQ=2000; //was 2000
 

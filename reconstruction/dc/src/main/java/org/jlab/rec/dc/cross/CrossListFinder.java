@@ -4,6 +4,7 @@ import Jama.Matrix;
 import java.util.ArrayList;
 import java.util.List;
 import org.jlab.clas.swimtools.Swim;
+import org.jlab.clas.swimtools.Swimmer;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
@@ -122,8 +123,15 @@ public class CrossListFinder  {
                             //    continue;
                             //}
                             // require that the cross direction estimate be in the direction of the trajectory
-                            if(cosTh1<Constants.TRACKDIRTOCROSSDIRCOSANGLE || cosTh2<Constants.TRACKDIRTOCROSSDIRCOSANGLE || cosTh3<Constants.TRACKDIRTOCROSSDIRCOSANGLE) {
-                                continue;
+                            if(Math.abs(Swimmer.getTorScale()) < 0.001 ) { // Straight
+                                if(cosTh1<Constants.TRACKDIRTOCROSSDIRCOSANGLESTRAIGHT || cosTh2<Constants.TRACKDIRTOCROSSDIRCOSANGLESTRAIGHT || cosTh3<Constants.TRACKDIRTOCROSSDIRCOSANGLESTRAIGHT) {
+                                    continue;
+                                }
+                            }
+                            else {
+                                if(cosTh1<Constants.TRACKDIRTOCROSSDIRCOSANGLE || cosTh2<Constants.TRACKDIRTOCROSSDIRCOSANGLE || cosTh3<Constants.TRACKDIRTOCROSSDIRCOSANGLE) {
+                                    continue;
+                                }
                             }
 
                             double fitchsq=0;
