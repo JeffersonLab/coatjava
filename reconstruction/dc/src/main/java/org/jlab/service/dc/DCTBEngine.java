@@ -221,98 +221,108 @@ public class DCTBEngine extends DCEngine {
             if (TrackArray1 == null || TrackArray1.get_ListOfHBSegments() == null || TrackArray1.get_ListOfHBSegments().size() < 5) {
                 continue;
             }
+            
             TrackArray1.set_MissingSuperlayer(get_Status(TrackArray1));
-            TrackArray1.addAll(crossMake.find_Crosses(TrackArray1.get_ListOfHBSegments(), Constants.getInstance().dcDetector));
-            if (TrackArray1.size() < 1) {
-                continue;
-            }
-            crosses.addAll(TrackArray1);
-            if(Math.abs(Swimmer.getTorScale()) < 0.001){
-                KFitterStraight kFZRef = new KFitterStraight(true, 30, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
-                List<Surface> measSurfaces = getMeasSurfaces(TrackArray1, Constants.getInstance().dcDetector);
-                StateVecs svs = new StateVecs();
-                org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
-                getInitState(TrackArray1, measSurfaces.get(0).measPoint.z(), initSV, kFZRef, dcSwim, new float[3]);
-                kFZRef.initFromHB(measSurfaces, initSV, TrackArray1.get(0).get(0).get(0).get_Beta());
-                kFZRef.runFitter();
-                List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
-
-                StateVec fn = new StateVec();
-                if (kFZRef.setFitFailed==false && kFZRef.finalStateVec!=null) { 
-                    // set the state vector at the last measurement site
-                    fn.set(kFZRef.finalStateVec.x, kFZRef.finalStateVec.y, kFZRef.finalStateVec.tx, kFZRef.finalStateVec.ty); 
-                    //set the track parameters if the filter does not fail
-                    TrackArray1.set_P(1./Math.abs(kFZRef.finalStateVec.Q));
-                    TrackArray1.set_Q((int)Math.signum(kFZRef.finalStateVec.Q));                
-
-                    trkcandFinder.setTrackPars(TrackArray1, new Trajectory(), trjFind, fn, kFZRef.finalStateVec.z, Constants.getInstance().dcDetector, dcSwim, beamXoffset, beamYoffset);
-                    // candidate parameters are set from the state vector
-                    if (TrackArray1.fit_Successful == false) {
-                        continue;
-                    }                
-
-                    TrackArray1.set_FitChi2(kFZRef.chi2);
-                    TrackArray1.set_FitNDF(kFZRef.NDF);
-                    TrackArray1.setStateVecs(kfStateVecsAlongTrajectory);
-                    TrackArray1.set_FitConvergenceStatus(kFZRef.ConvStatus);
-                    if (TrackArray1.get_Vtx0().toVector3D().mag() > 500) {
-                        continue;
-                    }
-
-                    // get CovMat at vertex
-                    Point3D VTCS = crosses.get(0).getCoordsInSector(TrackArray1.get_Vtx0().x(), TrackArray1.get_Vtx0().y(), TrackArray1.get_Vtx0().z());
-                    TrackArray1.set_CovMat(kFZRef.propagateToVtx(crosses.get(0).get_Sector(), VTCS.z()));
-
-                    if (TrackArray1.isGood()) {
-                        trkcands.add(TrackArray1);
-                    }
-                }                
-            }
-            else{           
-                KFitter kFZRef = new KFitter(true, 30, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
-                List<Surface> measSurfaces = getMeasSurfaces(TrackArray1, Constants.getInstance().dcDetector);
-                StateVecs svs = new StateVecs();
-                org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
-                getInitState(TrackArray1, measSurfaces.get(0).measPoint.z(), initSV, kFZRef, dcSwim, new float[3]);
-                kFZRef.initFromHB(measSurfaces, initSV, TrackArray1.get(0).get(0).get(0).get_Beta(), useDAF);
-                kFZRef.runFitter(useDAF);    
-                               
-                List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
-
-                StateVec fn = new StateVec();
-                if (kFZRef.setFitFailed==false && kFZRef.finalStateVec!=null) { 
-                    // set the state vector at the last measurement site
-                    fn.set(kFZRef.finalStateVec.x, kFZRef.finalStateVec.y, kFZRef.finalStateVec.tx, kFZRef.finalStateVec.ty); 
-                    //set the track parameters if the filter does not fail
-                    TrackArray1.set_P(1./Math.abs(kFZRef.finalStateVec.Q));
-                    TrackArray1.set_Q((int)Math.signum(kFZRef.finalStateVec.Q));                
-
-                    trkcandFinder.setTrackPars(TrackArray1, new Trajectory(), trjFind, fn, kFZRef.finalStateVec.z, Constants.getInstance().dcDetector, dcSwim, beamXoffset, beamYoffset);
-                    // candidate parameters are set from the state vector
-                    if (TrackArray1.fit_Successful == false) {
-                        continue;
-                    }                
-
-                    TrackArray1.set_FitChi2(kFZRef.chi2);
-                    TrackArray1.set_FitNDF(kFZRef.NDF);
-                    TrackArray1.set_NDFDAF(kFZRef.getNDFDAF());
-                    TrackArray1.setStateVecs(kfStateVecsAlongTrajectory);
-                    TrackArray1.set_FitConvergenceStatus(kFZRef.ConvStatus);
-                    if (TrackArray1.get_Vtx0().toVector3D().mag() > 500) {
-                        continue;
-                    }
-
-                    // get CovMat at vertex
-                    Point3D VTCS = crosses.get(0).getCoordsInSector(TrackArray1.get_Vtx0().x(), TrackArray1.get_Vtx0().y(), TrackArray1.get_Vtx0().z());
-                    TrackArray1.set_CovMat(kFZRef.propagateToVtx(crosses.get(0).get_Sector(), VTCS.z()));
-
-                    if (TrackArray1.isGood()) {
-                        trkcands.add(TrackArray1);
-                    }
-
+            
+            if(!HasTwoFoldLRClusters(TrackArray1)){                        
+                TrackArray1.addAll(crossMake.find_Crosses(TrackArray1.get_ListOfHBSegments(), Constants.getInstance().dcDetector));
+                if (TrackArray1.size() < 1) {
+                    continue;
                 }
-            }
-              		
+                crosses.addAll(TrackArray1);
+                if(Math.abs(Swimmer.getTorScale()) < 0.001){
+                    KFitterStraight kFZRef = new KFitterStraight(true, 30, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
+                    List<Surface> measSurfaces = getMeasSurfaces(TrackArray1, Constants.getInstance().dcDetector);
+                    StateVecs svs = new StateVecs();
+                    org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
+                    getInitState(TrackArray1, measSurfaces.get(0).measPoint.z(), initSV, kFZRef, dcSwim, new float[3]);
+                    kFZRef.initFromHB(measSurfaces, initSV, TrackArray1.get(0).get(0).get(0).get_Beta());
+                    kFZRef.runFitter();
+                    List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
+
+                    StateVec fn = new StateVec();
+                    if (kFZRef.setFitFailed==false && kFZRef.finalStateVec!=null) { 
+                        // set the state vector at the last measurement site
+                        fn.set(kFZRef.finalStateVec.x, kFZRef.finalStateVec.y, kFZRef.finalStateVec.tx, kFZRef.finalStateVec.ty); 
+                        //set the track parameters if the filter does not fail
+                        TrackArray1.set_P(1./Math.abs(kFZRef.finalStateVec.Q));
+                        TrackArray1.set_Q((int)Math.signum(kFZRef.finalStateVec.Q));                
+
+                        trkcandFinder.setTrackPars(TrackArray1, new Trajectory(), trjFind, fn, kFZRef.finalStateVec.z, Constants.getInstance().dcDetector, dcSwim, beamXoffset, beamYoffset);
+                        // candidate parameters are set from the state vector
+                        if (TrackArray1.fit_Successful == false) {
+                            continue;
+                        }                
+
+                        TrackArray1.set_FitChi2(kFZRef.chi2);
+                        TrackArray1.set_FitNDF(kFZRef.NDF);
+                        TrackArray1.setStateVecs(kfStateVecsAlongTrajectory);
+                        TrackArray1.set_FitConvergenceStatus(kFZRef.ConvStatus);
+                        if (TrackArray1.get_Vtx0().toVector3D().mag() > 500) {
+                            continue;
+                        }
+
+                        // get CovMat at vertex
+                        Point3D VTCS = crosses.get(0).getCoordsInSector(TrackArray1.get_Vtx0().x(), TrackArray1.get_Vtx0().y(), TrackArray1.get_Vtx0().z());
+                        TrackArray1.set_CovMat(kFZRef.propagateToVtx(crosses.get(0).get_Sector(), VTCS.z()));
+
+                        if (TrackArray1.isGood()) {
+                            trkcands.add(TrackArray1);
+                        }
+                    }                
+                }
+                else{           
+                    KFitter kFZRef = new KFitter(true, 30, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
+                    List<Surface> measSurfaces = getMeasSurfaces(TrackArray1, Constants.getInstance().dcDetector);
+                    StateVecs svs = new StateVecs();
+                    org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
+                    getInitState(TrackArray1, measSurfaces.get(0).measPoint.z(), initSV, kFZRef, dcSwim, new float[3]);
+                    kFZRef.initFromHB(measSurfaces, initSV, TrackArray1.get(0).get(0).get(0).get_Beta(), useDAF);
+                    kFZRef.runFitter(useDAF);    
+
+                    List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
+
+                    StateVec fn = new StateVec();
+                    if (kFZRef.setFitFailed==false && kFZRef.finalStateVec!=null) { 
+                        // set the state vector at the last measurement site
+                        fn.set(kFZRef.finalStateVec.x, kFZRef.finalStateVec.y, kFZRef.finalStateVec.tx, kFZRef.finalStateVec.ty); 
+                        //set the track parameters if the filter does not fail
+                        TrackArray1.set_P(1./Math.abs(kFZRef.finalStateVec.Q));
+                        TrackArray1.set_Q((int)Math.signum(kFZRef.finalStateVec.Q));                
+
+                        trkcandFinder.setTrackPars(TrackArray1, new Trajectory(), trjFind, fn, kFZRef.finalStateVec.z, Constants.getInstance().dcDetector, dcSwim, beamXoffset, beamYoffset);
+                        // candidate parameters are set from the state vector
+                        if (TrackArray1.fit_Successful == false) {
+                            continue;
+                        }                
+
+                        TrackArray1.set_FitChi2(kFZRef.chi2);
+                        TrackArray1.set_FitNDF(kFZRef.NDF);
+                        TrackArray1.set_NDFDAF(kFZRef.getNDFDAF());
+                        TrackArray1.setStateVecs(kfStateVecsAlongTrajectory);
+                        TrackArray1.set_FitConvergenceStatus(kFZRef.ConvStatus);
+                        if (TrackArray1.get_Vtx0().toVector3D().mag() > 500) {
+                            continue;
+                        }
+
+                        // get CovMat at vertex
+                        Point3D VTCS = crosses.get(0).getCoordsInSector(TrackArray1.get_Vtx0().x(), TrackArray1.get_Vtx0().y(), TrackArray1.get_Vtx0().z());
+                        TrackArray1.set_CovMat(kFZRef.propagateToVtx(crosses.get(0).get_Sector(), VTCS.z()));
+
+                        if (TrackArray1.isGood()) {
+                            trkcands.add(TrackArray1);
+                        }
+
+                    }
+                }
+            } else{
+                Track bestTrk = findBestTrackwithTwoFoldClusters(TrackArray1, crossMake, dcSwim, trkcandFinder, trjFind, beamXoffset, beamYoffset);
+                if(bestTrk != null){
+                    bestTrk.set_MissingSuperlayer(get_Status(bestTrk));
+                    trkcands.add(bestTrk);
+                    crosses.addAll(bestTrk);
+                }                
+            }                                                              		
         }        
     	
         if(!trkcands.isEmpty()) {
@@ -758,4 +768,197 @@ public class DCTBEngine extends DCEngine {
         }
         
     }
+    
+    /*
+    * Check if a track candidate inlcues clusters with the same id.
+    * If so, there is at least one two-fold clusters since LR ambiguity
+    */
+    private boolean HasTwoFoldLRClusters(Track trackCand){
+        for(int i = 0; i < trackCand.get_ListOfHBSegments().size() - 1; i++){
+            for(int j = i+1; j < trackCand.get_ListOfHBSegments().size(); j++){
+                if(trackCand.get_ListOfHBSegments().get(j).get_Id() == trackCand.get_ListOfHBSegments().get(i).get_Id()) 
+                    return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    
+    private Track findBestTrackwithTwoFoldClusters(Track trackCand, CrossMaker crossMake, Swim dcSwim, TrackCandListFinder trkcandFinder, 
+            TrajectoryFinder trjFind, double beamXoffset, double beamYoffset){
+        
+        List<Segment> segmentList = trackCand.get_ListOfHBSegments(); 
+        
+        // Make list for two-fold segments
+        List<Segment> oneSegmentList = new ArrayList<>();
+        List<Segment> theOtherSegmentList = new ArrayList<>();        
+        for(int i = 0; i < segmentList.size() - 1; i++){
+            for(int j = i+1; j < segmentList.size(); j++){
+                if(trackCand.get_ListOfHBSegments().get(j).get_Id() == trackCand.get_ListOfHBSegments().get(i).get_Id()){
+                    oneSegmentList.add(segmentList.get(i));
+                    theOtherSegmentList.add(segmentList.get(j));
+                } 
+            }
+        }
+        
+        // Remove two-fold segments from original segment list
+        segmentList.removeAll(oneSegmentList);
+        segmentList.removeAll(theOtherSegmentList);
+        
+
+        // Make combos with two-fold segments list
+        List<List<Segment>> HBSegmentListList = new ArrayList<>();
+        HBSegmentListList.add(oneSegmentList);
+        HBSegmentListList.add(theOtherSegmentList);        
+        for(int i = 0; i < oneSegmentList.size()-1; i++){
+            List<List<Segment>> newHBSegmentListList = new ArrayList<>();
+            
+            for(List<Segment> HBSegmentList : HBSegmentListList){
+                List<Segment> newHBSegmentList = new ArrayList(HBSegmentList);                
+                if(newHBSegmentList.contains(oneSegmentList.get(i))){
+                    newHBSegmentList.remove(oneSegmentList.get(i));
+                    newHBSegmentList.add(theOtherSegmentList.get(i));
+                    newHBSegmentListList.add(newHBSegmentList);
+                } 
+                else if(newHBSegmentList.contains(theOtherSegmentList.get(i))){
+                    newHBSegmentList.remove(theOtherSegmentList.get(i));
+                    newHBSegmentList.add(oneSegmentList.get(i));
+                    newHBSegmentListList.add(newHBSegmentList);
+                }
+            }            
+            
+            HBSegmentListList.addAll(newHBSegmentListList);                                    
+        }
+        
+        // Add single segments into each segment combo by two-fold segments and then sort segments
+        for(List<Segment> HBSegmentList : HBSegmentListList){
+            HBSegmentList.addAll(segmentList);
+            Collections.sort(HBSegmentList);
+        }
+                                     
+        // Process tracking for all candidates
+        List<Track> trkCandList = new ArrayList<>();
+        for(int i = 0; i < HBSegmentListList.size(); i++){            
+            Track trkCand = new Track();
+            trkCand.set_Id(trackCand.getId());
+            trkCand.setSector(trackCand.getSector());
+            trkCand.set_Q(trackCand.get_Q());
+            trkCand.set_pAtOrig(trackCand.get_pAtOrig());                    
+            trkCand.set_P(trackCand.get_pAtOrig().mag());
+            trkCand.set_Vtx0(trackCand.get_Vtx0());
+            trkCand.set_FitChi2(trackCand.get_FitChi2());
+            trkCand.setFinalStateVec(trackCand.getFinalStateVec());
+            
+            trkCand.set_ListOfHBSegments(HBSegmentListList.get(i));                        
+            trkCand.addAll(crossMake.find_Crosses(trkCand.get_ListOfHBSegments(), Constants.getInstance().dcDetector));
+            
+            if (trkCand.size() < 1) {
+               continue;
+            }
+            
+            if(Math.abs(Swimmer.getTorScale()) < 0.001){
+                    KFitterStraight kFZRef = new KFitterStraight(true, 30, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
+                    List<Surface> measSurfaces = getMeasSurfaces(trkCand, Constants.getInstance().dcDetector);
+                    StateVecs svs = new StateVecs();
+                    org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
+                    getInitState(trkCand, measSurfaces.get(0).measPoint.z(), initSV, kFZRef, dcSwim, new float[3]);
+                    kFZRef.initFromHB(measSurfaces, initSV, trkCand.get(0).get(0).get(0).get_Beta());
+                    kFZRef.runFitter();
+                    List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
+
+                    StateVec fn = new StateVec();
+                    if (kFZRef.setFitFailed==false && kFZRef.finalStateVec!=null) { 
+                        // set the state vector at the last measurement site
+                        fn.set(kFZRef.finalStateVec.x, kFZRef.finalStateVec.y, kFZRef.finalStateVec.tx, kFZRef.finalStateVec.ty); 
+                        //set the track parameters if the filter does not fail
+                        trkCand.set_P(1./Math.abs(kFZRef.finalStateVec.Q));
+                        trkCand.set_Q((int)Math.signum(kFZRef.finalStateVec.Q));                
+
+                        trkcandFinder.setTrackPars(trkCand, new Trajectory(), trjFind, fn, kFZRef.finalStateVec.z, Constants.getInstance().dcDetector, dcSwim, beamXoffset, beamYoffset);
+                        // candidate parameters are set from the state vector
+                        if (trkCand.fit_Successful == false) {
+                            continue;
+                        }                
+
+                        trkCand.set_FitChi2(kFZRef.chi2);
+                        trkCand.set_FitNDF(kFZRef.NDF);
+                        trkCand.setStateVecs(kfStateVecsAlongTrajectory);
+                        trkCand.set_FitConvergenceStatus(kFZRef.ConvStatus);
+                        if (trkCand.get_Vtx0().toVector3D().mag() > 500) {
+                            continue;
+                        }
+
+                        // get CovMat at vertex
+                        Point3D VTCS = trkCand.get(0).getCoordsInSector(trkCand.get_Vtx0().x(), trkCand.get_Vtx0().y(), trkCand.get_Vtx0().z());
+                        trkCand.set_CovMat(kFZRef.propagateToVtx(trkCand.get(0).get_Sector(), VTCS.z()));
+
+                        if (trkCand.isGood()) {
+                            trkCandList.add(trkCand);
+                        }
+                    }                
+                }
+                else{           
+                    KFitter kFZRef = new KFitter(true, 30, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
+                    List<Surface> measSurfaces = getMeasSurfaces(trkCand, Constants.getInstance().dcDetector);
+                    StateVecs svs = new StateVecs();
+                    org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
+                    getInitState(trkCand, measSurfaces.get(0).measPoint.z(), initSV, kFZRef, dcSwim, new float[3]);
+                    kFZRef.initFromHB(measSurfaces, initSV, trkCand.get(0).get(0).get(0).get_Beta(), useDAF);
+                    kFZRef.runFitter(useDAF);    
+
+                    List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
+
+                    StateVec fn = new StateVec();
+                    if (kFZRef.setFitFailed==false && kFZRef.finalStateVec!=null) { 
+                        // set the state vector at the last measurement site
+                        fn.set(kFZRef.finalStateVec.x, kFZRef.finalStateVec.y, kFZRef.finalStateVec.tx, kFZRef.finalStateVec.ty); 
+                        //set the track parameters if the filter does not fail
+                        trkCand.set_P(1./Math.abs(kFZRef.finalStateVec.Q));
+                        trkCand.set_Q((int)Math.signum(kFZRef.finalStateVec.Q));                
+
+                        trkcandFinder.setTrackPars(trkCand, new Trajectory(), trjFind, fn, kFZRef.finalStateVec.z, Constants.getInstance().dcDetector, dcSwim, beamXoffset, beamYoffset);
+                        // candidate parameters are set from the state vector
+                        if (trkCand.fit_Successful == false) {
+                            continue;
+                        }                
+
+                        trkCand.set_FitChi2(kFZRef.chi2);
+                        trkCand.set_FitNDF(kFZRef.NDF);
+                        trkCand.set_NDFDAF(kFZRef.getNDFDAF());
+                        trkCand.setStateVecs(kfStateVecsAlongTrajectory);
+                        trkCand.set_FitConvergenceStatus(kFZRef.ConvStatus);
+                        if (trkCand.get_Vtx0().toVector3D().mag() > 500) {
+                            continue;
+                        }
+
+                        // get CovMat at vertex
+                        Point3D VTCS = trkCand.get(0).getCoordsInSector(trkCand.get_Vtx0().x(), trkCand.get_Vtx0().y(), trkCand.get_Vtx0().z());
+                        trkCand.set_CovMat(kFZRef.propagateToVtx(trkCand.get(0).get_Sector(), VTCS.z()));
+
+                        if (trkCand.isGood()) {
+                            trkCandList.add(trkCand);
+                        }
+
+                    }
+                }                                                     
+        }
+        
+        // Choose the best track
+        if(!trkCandList.isEmpty()){
+            // Choose the best track
+            int indexBestTrack = 0;
+            double chi2overndf = trkCandList.get(0).get_FitChi2()/trkCandList.get(0).get_FitNDF();
+            for(int i = 0; i < trkCandList.size(); i++){
+                if(trkCandList.get(i).get_FitChi2()/trkCandList.get(i).get_FitNDF() < chi2overndf){
+                    chi2overndf = trkCandList.get(i).get_FitChi2()/trkCandList.get(i).get_FitNDF();
+                    indexBestTrack = i;
+                }
+            } 
+            return trkCandList.get(indexBestTrack);
+        }            
+        else        
+            return null;            
+    }
+    
 }
