@@ -784,6 +784,9 @@ public class DCTBEngine extends DCEngine {
         return false;
     }
     
+    /*
+    * For cases with two-fold clusters since LR ambiguity, try all cluster combos and choose the track with the best quality
+    */
     
     private Track findBestTrackwithTwoFoldClusters(Track trackCand, CrossMaker crossMake, Swim dcSwim, TrackCandListFinder trkcandFinder, 
             TrajectoryFinder trjFind, double beamXoffset, double beamYoffset){
@@ -948,10 +951,10 @@ public class DCTBEngine extends DCEngine {
         if(!trkCandList.isEmpty()){
             // Choose the best track
             int indexBestTrack = 0;
-            double chi2overndf = trkCandList.get(0).get_FitChi2()/trkCandList.get(0).get_FitNDF();
+            double abschi2overndf = Math.abs(trkCandList.get(0).get_FitChi2()/trkCandList.get(0).get_FitNDF());
             for(int i = 0; i < trkCandList.size(); i++){
-                if(trkCandList.get(i).get_FitChi2()/trkCandList.get(i).get_FitNDF() < chi2overndf){
-                    chi2overndf = trkCandList.get(i).get_FitChi2()/trkCandList.get(i).get_FitNDF();
+                if(Math.abs(trkCandList.get(i).get_FitChi2()/trkCandList.get(i).get_FitNDF()) < abschi2overndf){
+                    abschi2overndf = trkCandList.get(i).get_FitChi2()/trkCandList.get(i).get_FitNDF();
                     indexBestTrack = i;
                 }
             } 
