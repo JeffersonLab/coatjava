@@ -220,11 +220,10 @@ public class DCTBEngine extends DCEngine {
         for (Track TrackArray1 : TrackArray) {
             if (TrackArray1 == null || TrackArray1.get_ListOfHBSegments() == null || TrackArray1.get_ListOfHBSegments().size() < 5) {
                 continue;
-            }
-            
-            TrackArray1.set_MissingSuperlayer(get_Status(TrackArray1));
+            }                        
             
             if(!HasTwoFoldLRClusters(TrackArray1)){                        
+                TrackArray1.set_MissingSuperlayer(get_Status(TrackArray1));
                 TrackArray1.addAll(crossMake.find_Crosses(TrackArray1.get_ListOfHBSegments(), Constants.getInstance().dcDetector));
                 if (TrackArray1.size() < 1) {
                     continue;
@@ -789,29 +788,31 @@ public class DCTBEngine extends DCEngine {
     */
     
     private Track findBestTrackwithTwoFoldClusters(Track trackCand, CrossMaker crossMake, Swim dcSwim, TrackCandListFinder trkcandFinder, 
-            TrajectoryFinder trjFind, double beamXoffset, double beamYoffset){
+            TrajectoryFinder trjFind, double beamXoffset, double beamYoffset){        
         
-        List<Segment> segmentList = trackCand.get_ListOfHBSegments(); 
+        List<List<Segment>> HBSegmentListList = new ArrayList<>();
+        
+        
+        List<Segment> segmentList = trackCand.get_ListOfHBSegments();                
+        List<Segment> originalSegmentList = new ArrayList<>(segmentList);
         
         // Make list for two-fold segments
         List<Segment> oneSegmentList = new ArrayList<>();
         List<Segment> theOtherSegmentList = new ArrayList<>();        
-        for(int i = 0; i < segmentList.size() - 1; i++){
-            for(int j = i+1; j < segmentList.size(); j++){
-                if(trackCand.get_ListOfHBSegments().get(j).get_Id() == trackCand.get_ListOfHBSegments().get(i).get_Id()){
-                    oneSegmentList.add(segmentList.get(i));
-                    theOtherSegmentList.add(segmentList.get(j));
+        for(int i = 0; i < originalSegmentList.size() - 1; i++){
+            for(int j = i+1; j < originalSegmentList.size(); j++){
+                if(originalSegmentList.get(j).get_Id() == originalSegmentList.get(i).get_Id()){
+                    oneSegmentList.add(originalSegmentList.get(i));
+                    theOtherSegmentList.add(originalSegmentList.get(j));
                 } 
             }
         }
         
         // Remove two-fold segments from original segment list
-        segmentList.removeAll(oneSegmentList);
-        segmentList.removeAll(theOtherSegmentList);
+        originalSegmentList.removeAll(oneSegmentList);
+        originalSegmentList.removeAll(theOtherSegmentList);
         
-
         // Make combos with two-fold segments list
-        List<List<Segment>> HBSegmentListList = new ArrayList<>();
         HBSegmentListList.add(oneSegmentList);
         HBSegmentListList.add(theOtherSegmentList);        
         for(int i = 0; i < oneSegmentList.size()-1; i++){
@@ -835,25 +836,20 @@ public class DCTBEngine extends DCEngine {
         }
         
         // Add single segments into each segment combo by two-fold segments and then sort segments
-        for(List<Segment> HBSegmentList : HBSegmentListList){
-            HBSegmentList.addAll(segmentList);
-            Collections.sort(HBSegmentList);
-        }
-                                     
+        for(List<Segment> segment : HBSegmentListList){
+            segment.addAll(originalSegmentList);
+            Collections.sort(segment);
+        }        
+        
+        // Also take all-segment combo as a track candidate
+        //HBSegmentListList.add(segmentList);
+        
         // Process tracking for all candidates
         List<Track> trkCandList = new ArrayList<>();
         for(int i = 0; i < HBSegmentListList.size(); i++){            
             Track trkCand = new Track();
-            trkCand.set_Id(trackCand.getId());
-            trkCand.setSector(trackCand.getSector());
-            trkCand.set_Q(trackCand.get_Q());
-            trkCand.set_pAtOrig(trackCand.get_pAtOrig());                    
-            trkCand.set_P(trackCand.get_pAtOrig().mag());
-            trkCand.set_Vtx0(trackCand.get_Vtx0());
-            trkCand.set_FitChi2(trackCand.get_FitChi2());
-            trkCand.setFinalStateVec(trackCand.getFinalStateVec());
-            
-            trkCand.set_ListOfHBSegments(HBSegmentListList.get(i));                        
+            trkCand = trackCand;                         
+            trkCand.set_ListOfHBSegments(HBSegmentListList.get(i));              
             trkCand.addAll(crossMake.find_Crosses(trkCand.get_ListOfHBSegments(), Constants.getInstance().dcDetector));
             
             if (trkCand.size() < 1) {
@@ -901,50 +897,50 @@ public class DCTBEngine extends DCEngine {
                         }
                     }                
                 }
-                else{           
-                    KFitter kFZRef = new KFitter(true, 30, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
-                    List<Surface> measSurfaces = getMeasSurfaces(trkCand, Constants.getInstance().dcDetector);
-                    StateVecs svs = new StateVecs();
-                    org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
-                    getInitState(trkCand, measSurfaces.get(0).measPoint.z(), initSV, kFZRef, dcSwim, new float[3]);
-                    kFZRef.initFromHB(measSurfaces, initSV, trkCand.get(0).get(0).get(0).get_Beta(), useDAF);
-                    kFZRef.runFitter(useDAF);    
+            else {
+                KFitter kFZRef = new KFitter(true, 30, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
+                List<Surface> measSurfaces = getMeasSurfaces(trkCand, Constants.getInstance().dcDetector);
+                StateVecs svs = new StateVecs();
+                org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
+                getInitState(trkCand, measSurfaces.get(0).measPoint.z(), initSV, kFZRef, dcSwim, new float[3]);
+                kFZRef.initFromHB(measSurfaces, initSV, trkCand.get(0).get(0).get(0).get_Beta(), useDAF);
+                kFZRef.runFitter(useDAF);
 
-                    List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
+                List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
 
-                    StateVec fn = new StateVec();
-                    if (kFZRef.setFitFailed==false && kFZRef.finalStateVec!=null) { 
-                        // set the state vector at the last measurement site
-                        fn.set(kFZRef.finalStateVec.x, kFZRef.finalStateVec.y, kFZRef.finalStateVec.tx, kFZRef.finalStateVec.ty); 
-                        //set the track parameters if the filter does not fail
-                        trkCand.set_P(1./Math.abs(kFZRef.finalStateVec.Q));
-                        trkCand.set_Q((int)Math.signum(kFZRef.finalStateVec.Q));                
+                StateVec fn = new StateVec();
+                if (kFZRef.setFitFailed == false && kFZRef.finalStateVec != null) {
+                    // set the state vector at the last measurement site
+                    fn.set(kFZRef.finalStateVec.x, kFZRef.finalStateVec.y, kFZRef.finalStateVec.tx, kFZRef.finalStateVec.ty);
+                    //set the track parameters if the filter does not fail
+                    trkCand.set_P(1. / Math.abs(kFZRef.finalStateVec.Q));
+                    trkCand.set_Q((int) Math.signum(kFZRef.finalStateVec.Q));
 
-                        trkcandFinder.setTrackPars(trkCand, new Trajectory(), trjFind, fn, kFZRef.finalStateVec.z, Constants.getInstance().dcDetector, dcSwim, beamXoffset, beamYoffset);
-                        // candidate parameters are set from the state vector
-                        if (trkCand.fit_Successful == false) {
-                            continue;
-                        }                
-
-                        trkCand.set_FitChi2(kFZRef.chi2);
-                        trkCand.set_FitNDF(kFZRef.NDF);
-                        trkCand.set_NDFDAF(kFZRef.getNDFDAF());
-                        trkCand.setStateVecs(kfStateVecsAlongTrajectory);
-                        trkCand.set_FitConvergenceStatus(kFZRef.ConvStatus);
-                        if (trkCand.get_Vtx0().toVector3D().mag() > 500) {
-                            continue;
-                        }
-
-                        // get CovMat at vertex
-                        Point3D VTCS = trkCand.get(0).getCoordsInSector(trkCand.get_Vtx0().x(), trkCand.get_Vtx0().y(), trkCand.get_Vtx0().z());
-                        trkCand.set_CovMat(kFZRef.propagateToVtx(trkCand.get(0).get_Sector(), VTCS.z()));
-
-                        if (trkCand.isGood()) {
-                            trkCandList.add(trkCand);
-                        }
-
+                    trkcandFinder.setTrackPars(trkCand, new Trajectory(), trjFind, fn, kFZRef.finalStateVec.z, Constants.getInstance().dcDetector, dcSwim, beamXoffset, beamYoffset);
+                    // candidate parameters are set from the state vector
+                    if (trkCand.fit_Successful == false) {
+                        continue;
                     }
-                }                                                     
+
+                    trkCand.set_FitChi2(kFZRef.chi2);
+                    trkCand.set_FitNDF(kFZRef.NDF);
+                    trkCand.set_NDFDAF(kFZRef.getNDFDAF());
+                    trkCand.setStateVecs(kfStateVecsAlongTrajectory);
+                    trkCand.set_FitConvergenceStatus(kFZRef.ConvStatus);
+                    if (trkCand.get_Vtx0().toVector3D().mag() > 500) {
+                        continue;
+                    }
+
+                    // get CovMat at vertex
+                    Point3D VTCS = trkCand.get(0).getCoordsInSector(trkCand.get_Vtx0().x(), trkCand.get_Vtx0().y(), trkCand.get_Vtx0().z());
+                    trkCand.set_CovMat(kFZRef.propagateToVtx(trkCand.get(0).get_Sector(), VTCS.z()));
+
+                    if (trkCand.isGood()) {
+                        trkCandList.add(trkCand);
+                    }
+
+                }
+            }                                                     
         }
         
         // Choose the best track
