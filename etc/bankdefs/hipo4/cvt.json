@@ -537,6 +537,42 @@
         {"name":"Clus12_ID",      "type":"S", "info":"ID of cluster on track in layer 12"},
         {"name":"prob",           "type":"F", "info":"AI seed probability"}
     ]
+  },
+  {
+    "name": "cvtml::clusters",
+    "group": 20500,
+    "item" : 45,
+    "info" : "bank containing the cluster information from CVT",
+    "entries": [
+        {"name":"id",     "type":"S", "info":"cluster id pointing to another bank possibly"},
+        {"name":"status", "type":"S", "info":"status indicate if the cluster is noise or used for a track"},
+        {"name":"sector", "type":"B", "info":""},
+        {"name":"layer" , "type":"S", "info":""},
+        {"name":"xo",     "type":"F", "info":"x origin coordinate of the cluster"},
+        {"name":"yo",     "type":"F", "info":"y origin coordinate of the cluster"},
+        {"name":"zo",     "type":"F", "info":"z origin coordinate of the cluster"},
+        {"name":"xe",     "type":"F", "info":"x    end coordinate of the cluster"},
+        {"name":"ye",     "type":"F", "info":"x    end coordinate of the cluster"},
+        {"name":"ze",     "type":"F", "info":"x    end coordinate of the cluster"},
+        {"name":"x",      "type":"F", "info":"vertex x, of associated track"},
+        {"name":"y",      "type":"F", "info":"vertex y, of associated track"},
+        {"name":"z",      "type":"F", "info":"vertex y, of associated track"},
+        {"name":"p",      "type":"F", "info":"associated track momentum"},
+        {"name":"th",     "type":"F", "info":"associated track theta (rad)"},
+        {"name":"fi",     "type":"F", "info":"associated track phi (rad)"}
+    ]
+  },
+  {
+    "name": "cvtml::hits",
+    "group": 20500,
+    "item" : 46,
+    "info" : "bank containing the hit information from BST and BMT",
+    "entries": [
+        {"name":"id",     "type":"S", "info":"hit id"},
+        {"name":"status", "type":"S", "info":"status indicate if the hiy is noise or used for a track"},
+        {"name":"truetid" , "type":"S", "info":"mc true track id"},
+        {"name":"tid" , "type":"S", "info":"reco track id"}
+    ]
   }
   
  ]
