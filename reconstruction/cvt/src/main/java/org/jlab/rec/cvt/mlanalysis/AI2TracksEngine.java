@@ -1,32 +1,40 @@
-package org.jlab.rec.cvt.analysis;
+package org.jlab.rec.cvt.mlanalysis;
 
 import cnuphys.magfield.MagneticFields;
+import java.io.FileNotFoundException;
 import org.jlab.rec.cvt.services.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import java.io.PrintWriter;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.clas.swimtools.MagFieldsEngine;
 import org.jlab.clas.swimtools.Swim;
+import org.jlab.detector.base.DetectorType;
+import org.jlab.geom.prim.Plane3D;
+import org.jlab.geom.prim.Point3D;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.rec.cvt.Constants;
 import org.jlab.rec.cvt.Geometry;
-import static org.jlab.rec.cvt.analysis.RansacLineFitting.fitLineRANSAC;
-import static org.jlab.rec.cvt.analysis.RansacCircleFitting.fitCircleRANSAC;
-import static org.jlab.rec.cvt.analysis.RansacCircleFitting.residuals;
 import org.jlab.rec.cvt.banks.RecoBankWriter;
+import org.jlab.rec.cvt.bmt.BMTGeometry;
 import org.jlab.rec.cvt.bmt.BMTType;
 import org.jlab.rec.cvt.cluster.Cluster;
+import org.jlab.rec.cvt.cluster.ClusterFinder;
 import org.jlab.rec.cvt.cross.Cross;
-import org.jlab.rec.cvt.fit.CircleFitPars;
-import org.jlab.rec.cvt.fit.CircleFitter;
 import org.jlab.rec.cvt.hit.Hit;
+import org.jlab.rec.cvt.svt.SVTGeometry;
+import org.jlab.rec.cvt.track.Seed;
+import org.jlab.rec.cvt.track.Track;
 import org.jlab.utils.CLASResources;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.system.ClasUtilsFile;
@@ -38,9 +46,11 @@ import org.jlab.utils.system.ClasUtilsFile;
  * @author ziegler
  *
  */
-public class CVTCosmicsEngine extends ReconstructionEngine {
+public class AI2TracksEngine extends ReconstructionEngine {
 
-
+    public PrintWriter pw = null;
+    public int nevts =0;
+    public String fileName = "clusters.txt";
     /**
      * @param docacutsum the docacutsum to set
      */
@@ -50,23 +60,6 @@ public class CVTCosmicsEngine extends ReconstructionEngine {
 
     private int Run = -1;
 
-    private String svtHitBank;
-    private String svtHitPosBank;
-    private String bmtHitPosBank;
-    private String svtClusterBank;
-    private String svtCrossBank;
-    private String bmtHitBank;
-    private String bmtClusterBank;
-    private String bmtCrossBank;
-    private String cvtSeedBank;
-    private String cvtSeedClusBank;
-    private String cvtTrackBank;
-    private String cvtUTrackBank;
-    private String cvtTrajectoryBank;
-    private String cvtKFTrajectoryBank;
-    private String cvtCovMatBank;    
-    private String bankPrefix = "";
-    
     // run-time options
     private int     pid = 0;
     private int     kfIterations = 5;
@@ -87,7 +80,7 @@ public class CVTCosmicsEngine extends ReconstructionEngine {
     private boolean timeCuts            = true;
     private boolean hvCuts              = false;
     public boolean useSVTTimingCuts     =  false;
-    public boolean removeOverlappingSeeds = true;
+    public boolean removeOverlappingSeeds = false;
     public boolean flagSeeds = true;
     public boolean gemcIgnBMT0ADC = false;
     public boolean KFfailRecovery = true;
@@ -103,17 +96,22 @@ public class CVTCosmicsEngine extends ReconstructionEngine {
     private double rcut = 120.0;
     private double z0cut = 10;
     
-    public CVTCosmicsEngine(String name) {
+    public AI2TracksEngine(String name) {
         super(name, "ziegler", "6.0");
     }
 
-    public CVTCosmicsEngine() {
+    public AI2TracksEngine() {
         super("CVTEngine", "ziegler", "6.0");
     }
 
     
     @Override
-    public boolean init() {        
+    public boolean init() { 
+        try {
+            pw = new PrintWriter("/Users/veronique/Work/"+fileName);
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(AI2TracksEngine.class.getName()).log(Level.SEVERE, null, ex);
+        }
         this.loadConfiguration();
         Constants.getInstance().initialize(this.getName(),
                                            isCosmics,
@@ -146,49 +144,12 @@ public class CVTCosmicsEngine extends ReconstructionEngine {
                                            z0cut);
 
         this.initConstantsTables();
-        this.registerBanks();
         this.printConfiguration();
         return true;    
     }
     
-    public final void setOutputBankPrefix(String prefix) {
-        this.bankPrefix = prefix;
-    }
-
-    public void registerBanks() {
-        String prefix = bankPrefix;
-        if(Constants.getInstance().isCosmics) prefix = "Rec";
-        this.setBmtHitBank("BMT" + prefix + "::Hits");
-        this.setBmtClusterBank("BMT" + prefix + "::Clusters");
-        this.setBmtCrossBank("BMT" + prefix + "::Crosses");
-        this.setSvtHitBank("BST" + prefix + "::Hits");
-        this.setSvtHitPosBank("BST" + prefix + "::HitsPos");
-        this.setBmtHitPosBank("BMT" + prefix + "::HitsPos");
-        this.setSvtClusterBank("BST" + prefix + "::Clusters");
-        this.setSvtCrossBank("BST" + prefix + "::Crosses");
-        this.setSeedBank("CVT" + prefix + "::Seeds");
-        this.setSeedClusBank("CVT" + prefix + "::SeedClusters");
-        this.setTrackBank("CVT" + prefix + "::Tracks");
-        this.setUTrackBank("CVT" + prefix + "::UTracks");
-        this.setCovMatBank("CVT" + prefix + "::TrackCovMat");
-        this.setTrajectoryBank("CVT" + prefix + "::Trajectory");
-        this.setKFTrajectoryBank("CVT" + prefix + "::KFTrajectory");
-        super.registerOutputBank(this.bmtHitBank);
-        super.registerOutputBank(this.bmtClusterBank);
-        super.registerOutputBank(this.bmtCrossBank);
-        super.registerOutputBank(this.svtHitBank);
-        super.registerOutputBank(this.svtHitPosBank);
-        super.registerOutputBank(this.bmtHitPosBank);
-        super.registerOutputBank(this.svtClusterBank);
-        super.registerOutputBank(this.svtCrossBank);
-        super.registerOutputBank(this.cvtSeedBank);
-        super.registerOutputBank(this.cvtSeedClusBank);
-        super.registerOutputBank(this.cvtTrackBank);
-        super.registerOutputBank(this.cvtUTrackBank);
-        super.registerOutputBank(this.cvtCovMatBank);                
-        super.registerOutputBank(this.cvtTrajectoryBank); 
-        super.registerOutputBank(this.cvtKFTrajectoryBank); 
-    }
+    
+   
     
     public int getRun(DataEvent event) {
     
@@ -292,12 +253,227 @@ public class CVTCosmicsEngine extends ReconstructionEngine {
         this.bmtzmaxclussize = bmtzmaxclussize;
     }
     
+    private String PrintToFile(int evNb, org.jlab.rec.cvt.track.Track t, Cluster c) {
+        //eventnumber  tracknumber x y covxx covxy covyy z angle time 
+        double phi = t.getHelix().getPhiAtDCA();
+        
+        String s = "";
+        s+=evNb;
+        s+="\t";
+        s+=t.getId();
+        s+="\t";
+        s+=(float) c.center().x()/10;
+        s+="\t";
+        s+=(float) c.center().y()/10;
+        s+="\t";
+        s+=(float) phi;
+        s+="\t";
+        s+=(float) 0.0;
+        s+="\t";
+        s+=(float) 0.0;
+        s+="\t";
+        s+=(float) 0.0;
+        s+="\t";
+        s+=(float) c.center().z()/10;
+        s+="\t";
+        s+=(float) c.getTime();
+        s+="\n";
+        //System.out.println(s);
+        return s;
+    }
+    
+    private String PrintHitsToFile(int evNb, org.jlab.rec.cvt.track.Track t, Cluster c) {
+        //eventnumber  tracknumber x y covxx covxy covyy z angle time 
+        double phi = t.getHelix().getPhiAtDCA();
+        
+        String s = "";
+        s+=evNb;
+        s+="\t";
+        s+=t.getId();
+        s+="\t";
+        s+=(float) c.center().x()/10;
+        s+="\t";
+        s+=(float) c.center().y()/10;
+        s+="\t";
+        s+=(float) phi;
+        s+="\t";
+        s+=(float) 0.0;
+        s+="\t";
+        s+=(float) 0.0;
+        s+="\t";
+        s+=(float) 0.0;
+        s+="\t";
+        s+=(float) c.center().z()/10;
+        s+="\t";
+        s+=(float) c.getTime();
+        s+="\n";
+        //System.out.println(s);
+        return s;
+    }
+    
+    private double PidToCharge(int pid) {
+        
+        if(Math.abs(pid)>44) {
+            return (int) Math.signum(pid);
+        } else {
+            return (int) -Math.signum(pid);
+        }
+    }
+    private Cluster getClosestCluster(double x, double y, double z, List<Cluster> closestClusters) {
+        Cluster select = null;
+        double doca = Double.POSITIVE_INFINITY;
+        for(Cluster cl : closestClusters) {
+            if(cl.getType() == BMTType.C) {
+                double d = Math.abs(cl.getZ()-z);
+                if(d<doca) {
+                    doca = d;
+                    select = cl;
+                }
+            } else {
+                double d = cl.getLine().distance(new Point3D(x,y,z)).length();
+                if(d<doca) {
+                    doca = d;
+                    select = cl;
+                }
+            }
+        }
+        return select;
+    }
+    
+    private List<Cluster> findListofClosestBSTClusters(int layer, double x, double y, double z, List<Cluster> clusters,
+            SVTGeometry geo) {
+        List<Cluster> matched = new ArrayList<>();
+        int trkSecAtLayer = geo.getSector(layer, new Point3D(x, y, z));
+        for(Cluster cl : clusters) {
+            if(cl.getSector()==trkSecAtLayer) {
+                matched.add(cl);
+            }
+        }
+        return matched;
+    }
+    
+    private List<Cluster> findListofClosestBMTClusters(int layer, double x, double y, double z, List<Cluster> clusters,
+            BMTGeometry bgeo) {
+        List<Cluster> matched = new ArrayList<>();
+        int trkSecAtLayer = bgeo.getSector(layer, new Point3D(x,y,z));
+        for(Cluster cl : clusters) {
+            if(cl.getSector()==trkSecAtLayer) {
+                matched.add(cl);
+            }
+        }
+        return matched;
+    }
+    
+    private Map<Integer, List<Cluster>> clusterMap(List<ArrayList<Cluster>> clusters, 
+            List<double[]> mcTrks, Swim swimmer, SVTGeometry geo, BMTGeometry bgeo) {
+        Map<Integer, List<Cluster>> BSTClustersByLayer = new HashMap<>();
+        Map<Integer, List<Cluster>> BMTClustersByLayer = new HashMap<>();
+        for(Cluster cl : clusters.get(0)) {
+            if(BSTClustersByLayer.containsKey(cl.getLayer())) {
+                BSTClustersByLayer.get(cl.getLayer()).add(cl);
+            } else {
+                BSTClustersByLayer.put(cl.getLayer(), new ArrayList<>());
+                BSTClustersByLayer.get(cl.getLayer()).add(cl);
+            }
+        }
+        for(Cluster cl : clusters.get(1)) {
+            if(BMTClustersByLayer.containsKey(cl.getLayer())) {
+                BMTClustersByLayer.get(cl.getLayer()).add(cl);
+            } else {
+                BMTClustersByLayer.put(cl.getLayer(), new ArrayList<>());
+                BMTClustersByLayer.get(cl.getLayer()).add(cl);
+            }
+        }
+        Map<Integer, List<Cluster>> map = new HashMap<>();
+        Map<Integer, List<Cluster>> goodTracks = new HashMap<>();
+        int tidx=0;
+        for(double[] t : mcTrks) {
+            tidx++;
+            swimmer.SetSwimParameters(t[0], t[1], t[2], t[3], t[4], t[5], (int) t[6]);
+            for(int l =0; l<6; l++) {
+                double r = SVTGeometry.getLayerRadius(l+1);
+                double[] st = swimmer.SwimRho(r);
+                if(BSTClustersByLayer.containsKey(l+1)) {
+                    List<Cluster> closestClusters = this.findListofClosestBSTClusters(l+1, 
+                            st[0]*10, st[1]*10, st[2]*10, 
+                            BSTClustersByLayer.get(l+1),
+                            geo);
+                    if(!closestClusters.isEmpty()) {
+                        int sec = closestClusters.get(0).getSector();
+                        Plane3D pl = geo.getPlane(l+1, sec);
+                        double d = pl.normal().dot(pl.point().toVector3D())/10;
+                        st = swimmer.SwimToPlaneBoundary(d, pl.normal(), 1);
+                        Cluster match = this.getClosestCluster(st[0]*10, st[1]*10, st[2]*10, closestClusters);
+                        if(map.containsKey(tidx)) {
+                            map.get(tidx).add(match);
+                        } else {
+                            map.put(tidx, new ArrayList<>());
+                            map.get(tidx).add(match);
+                        }
+                    }
+                }
+            }
+            for(int l =0; l < 6; l++) {
+                double r = bgeo.getRadiusMidDrift(l+1);
+                double[] st = swimmer.SwimRho(r);
+                if(BMTClustersByLayer.containsKey(l+1)) {
+                    List<Cluster> closestClusters = this.findListofClosestBMTClusters(l+1, 
+                            st[0]*10, st[1]*10, st[2]*10, 
+                            BMTClustersByLayer.get(l+1),
+                            bgeo);
+                    if(!closestClusters.isEmpty()) {
+                        Cluster match = this.getClosestCluster(st[0]*10, st[1]*10, st[2]*10, closestClusters);
+                        if(map.containsKey(tidx)) {
+                            map.get(tidx).add(match);
+                        } else {
+                            map.put(tidx, new ArrayList<>());
+                            map.get(tidx).add(match);
+                        }
+                    }
+                }
+            }
+        }
+        for(Integer i : map.keySet()) {
+            if(map.get(i).size()>9)  {
+                goodTracks.put(i, map.get(i));
+            }
+        }
+        return goodTracks;
+    }
+    
+    private List<double[]> mcTrackPars(DataEvent event) {
+        List<double[]> result = new ArrayList<>();
+        if (event.hasBank("MC::Particle") == false) {
+            return result;
+        }
+        DataBank bank = event.getBank("MC::Particle");
+        
+        // fills the arrays corresponding to the variables
+        if(bank!=null) {
+            for(int i = 0; i < bank.rows(); i++) {
+                double[] value = new double[7];
+                value[0] = (double) bank.getFloat("vx", i);
+                value[1] = (double) bank.getFloat("vy", i);
+                value[2] = (double) bank.getFloat("vz", i);
+                value[3] = (double) bank.getFloat("px", i);
+                value[4] = (double) bank.getFloat("py", i);
+                value[5] = (double) bank.getFloat("pz", i);
+                value[6] = this.PidToCharge(bank.getInt("pid", i));
+                
+                result.add(value);
+            }
+        }
+        return result;
+    }
+   
+
+    
     @Override
     public boolean processDataEvent(DataEvent event) {
         
         Swim swimmer = new Swim();
         
-        int run = this.getRun(event); 
+        int run = 11; 
         
         IndexedTable svtStatus          = this.getConstantsManager().getConstants(run, "/calibration/svt/status");
         IndexedTable svtLorentz         = this.getConstantsManager().getConstants(run, "/calibration/svt/lorentz_angle");
@@ -310,99 +486,96 @@ public class CVTCosmicsEngine extends ReconstructionEngine {
         
         Geometry.initialize(this.getConstantsManager().getVariation(), 11, svtLorentz, bmtVoltage);
         
+        int ev  = event.getBank("RUN::config").getInt("event", 0);
         CVTReconstruction reco = new CVTReconstruction(swimmer);
-        
-        List<ArrayList<Hit>>         hits = reco.readHits(event, svtStatus, bmtStatus, bmtTime, 
-                                                            bmtStripVoltage, bmtStripThreshold);
-        List<ArrayList<Cluster>> clusters = reco.findClusters();
-        
-        List<ArrayList<Cross>>    crosses = reco.findCrosses();
-        
-                
-        List<DataBank> banks = new ArrayList<>();
-        if(crosses != null) {
-            List<Point> points = new ArrayList<>();
-            for(Cross c : crosses.get(0)) {
-                if(c.getPoint().y()>0)
-                    points.add(new Point(c.getPoint().x(),c.getPoint().y()));
-            }
-            for(Cross c : crosses.get(1)) {
-                if(c.getType() == BMTType.Z && c.getPoint().y()>0)
-                    points.add(new Point(c.getPoint().x(),c.getPoint().y()));
-            }
+        AIHitSelector aihs = new AIHitSelector();
+        Map<Double, List<ArrayList<Hit>>> selectedHits = aihs.getHits(event, reco, svtStatus, 
+                bmtStatus, bmtTime, bmtStripVoltage, bmtStripThreshold);
+        if(selectedHits==null) 
+            return false;
+        ClusterFinder clf = new ClusterFinder();
+        int atid=0;
+        List<Cluster> useClusters = new ArrayList<>();
+        List<org.jlab.rec.cvt.track.Track> tracks1=new ArrayList<>();
+        for(Double d : selectedHits.keySet()) {
             
-            int numIterations = 1000;
-            double tolerance = 0.1; // Adjust this tolerance as needed
+            List<Cluster> cl1=clf.findClusters(selectedHits.get(d).get(0));
+            List<Cluster> cl2=clf.findClusters(selectedHits.get(d).get(1));
+            
+            
+            org.jlab.rec.cvt.track.Track trk = this.findTrack(cl1,cl2,reco,swimmer,beamPos,event);
+            //tracks1.add(trk);
+            if(trk!=null) {
+                atid++;
+                trk.setId(atid);
+                tracks1.add(trk);
+            }
+            if(atid>2) break;
+        }
+        
+        if(tracks1.size()<2) return false;
+        
+        for(org.jlab.rec.cvt.track.Track t : tracks1) {
+            t.getSeed().getClusters().sort(Comparator.comparing(Cluster::getTlayer));
+        
+            for(Cluster c : t.getSeed().getClusters()) {
+                c.setTrueAssociatedTrackID(t.getId());
+                useClusters.add(c);
+                String st = this.PrintToFile(ev, t, c);
+                pw.print(st);
+            }
+                
+        }
+        //
+        List<ArrayList<Cross>>    crosses = reco.findCrosses(useClusters);
+        List<ArrayList<Cluster>> useClustersSplit = new ArrayList<>();
+        useClustersSplit.add(new ArrayList<>());
+        useClustersSplit.add(new ArrayList<>());
+        for(Cluster c : useClusters) {
+            if(c.getDetector()==DetectorType.BST)
+                useClustersSplit.get(0).add(c);
+            if(c.getDetector()==DetectorType.BMT)
+                useClustersSplit.get(1).add(c);
+        }
+            if(crosses != null) {
+            
+            double[] xyBeam = CVTReconstruction.getBeamSpot(event, beamPos);
+            TracksFromTargetRec  trackFinder = new TracksFromTargetRec(swimmer, xyBeam);
+            //trackFinder.totTruthHits = reco.getTotalNbTruHits();
+            List<Seed>   seeds = trackFinder.getSeeds(useClustersSplit, crosses);
 
-            Circle bestCircle = fitCircleRANSAC(points, numIterations, tolerance);
-
-            if (bestCircle != null) {
-                System.out.println("Best Fitted Circle:");
-                System.out.println("Center: (" + bestCircle.center.x+", "+bestCircle.center.y+")");
-                System.out.println("radius: " + bestCircle.radius);
-                List<Double> Xs = new ArrayList<>();
-                List<Double> Ys = new ArrayList<>();
-                List<Double> Ws = new ArrayList<>();
-                System.out.println("Points within the circle:");
-                for (Point point : points) {
-                    if (bestCircle.contains(point, tolerance)) {
-                        Xs.add(point.x);
-                        Ys.add(point.y);
-                        Ws.add(1.0);
-                        System.out.println("(" + point.x + ", " + point.y + ") ");
+            List<org.jlab.rec.cvt.track.Track> tracks = trackFinder.getTracks(event, this.isInitFromMc(), 
+                                                              this.isKfFilterOn(), 
+                                                              this.getKfIterations(), 
+                                                              true, this.getPid());
+            if(tracks==null) return false;
+            int rid=2;
+            for(org.jlab.rec.cvt.track.Track t : tracks) {
+                int tid = 0;
+                for(Cluster c: t.getSeed().getClusters()) { 
+                    if(tid==0) 
+                        tid=c.getTrueAssociatedTrackID();
+                    if(tid!=0 && c.getTrueAssociatedTrackID()!=tid && t.getId()>0) {
+                        t.setId(-t.getId());
                     }
-                }
-                CircleFitter circlefit = new CircleFitter(0.0, 0.0);
-                boolean circlefitstatusOK = circlefit.fitStatus(Xs, Ys, Ws, Xs.size());
-                CircleFitPars pars = circlefit.getFit(); 
-                if(circlefitstatusOK!=false ) {
-                   
-                    double d = pars.doca();
-                    double r = pars.rho();
-                    double f = pars.phi();
                     
-                    System.out.println("d "+d+" rho "+r+" phi "+f+" pt "+(Constants.LIGHTVEL /r * 5.0));
                 }
-                
-                
-            } else {
-                System.out.println("No circle found.");
-            }
-            List<Pointl> pointsl = new ArrayList<>();
-            for(Cross c : crosses.get(1)) {
-                if(c.getType() == BMTType.C)
-                    pointsl.add(new Pointl(c.getPoint().x(),c.getPoint().y()));
-            }
-            //int numIterations = 1000;
-            //double tolerance = 0.1; // Adjust this tolerance as needed
+                if(t.getId()<0) {
+                    rid++;
+                    t.setId(-rid);
+                    t.getSeed().getClusters().sort(Comparator.comparing(Cluster::getTlayer));
+        
+                    for(Cluster c: t.getSeed().getClusters()) {
+                        String st = this.PrintToFile(ev, t, c);
+                        pw.print(st);
 
-            Line bestLine = fitLineRANSAC(pointsl, numIterations, tolerance);
-
-            if (bestLine != null) {
-                System.out.println("Best Fitted Line:");
-                System.out.println("Slope: " + bestLine.slope);
-                System.out.println("Intercept: " + bestLine.intercept);
-
-                System.out.println("Points within the line:");
-                for (Pointl point : pointsl) {
-                    if (bestLine.contains(point, tolerance)) {
-                        System.out.println("(" + point.x + ", " + point.y + ")");
                     }
                 }
-            } else {
-                System.out.println("No line found.");
             }
-            
-            //
-            banks.add(RecoBankWriter.fillSVTHitBank(event, hits.get(0), this.getSvtHitBank()));
-            banks.add(RecoBankWriter.fillBMTHitBank(event, hits.get(1), this.getBmtHitBank()));
-            banks.add(RecoBankWriter.fillSVTClusterBank(event, clusters.get(0), this.getSvtClusterBank()));
-            banks.add(RecoBankWriter.fillBMTClusterBank(event, clusters.get(1), this.getBmtClusterBank()));
-            banks.add(RecoBankWriter.fillSVTCrossBank(event, crosses.get(0), this.getSvtCrossBank()));
-            banks.add(RecoBankWriter.fillBMTCrossBank(event, crosses.get(1), this.getBmtCrossBank()));
 
-            event.appendBanks(banks.toArray(new DataBank[0]));
-        }    
+        }   // 
+        if(selectedHits.size()>0)
+            this.nevts++;
         
         return true;
     }
@@ -526,124 +699,6 @@ public class CVTCosmicsEngine extends ReconstructionEngine {
         this.getConstantsManager().setVariation("default");
     }
     
-    public void setSvtHitBank(String bstHitBank) {
-        this.svtHitBank = bstHitBank;
-    }
-    
-    public void setSvtHitPosBank(String bstHitPosBank) {
-        this.svtHitPosBank = bstHitPosBank;
-    }
-
-    public void setBmtHitPosBank(String bmtHitPosBank) {
-        this.bmtHitPosBank = bmtHitPosBank;
-    }
-    
-    public void setSvtClusterBank(String bstClusterBank) {
-        this.svtClusterBank = bstClusterBank;
-    }
-
-    public void setSvtCrossBank(String bstCrossBank) {
-        this.svtCrossBank = bstCrossBank;
-    }
-
-    public void setBmtHitBank(String bmtHitBank) {
-        this.bmtHitBank = bmtHitBank;
-    }
-
-    public void setBmtClusterBank(String bmtClusterBank) {
-        this.bmtClusterBank = bmtClusterBank;
-    }
-
-    public void setBmtCrossBank(String bmtCrossBank) {
-        this.bmtCrossBank = bmtCrossBank;
-    }
-
-    public void setSeedBank(String cvtSeedBank) {
-        this.cvtSeedBank = cvtSeedBank;
-    }
-    
-    public void setSeedClusBank(String cvtSeedClusBank) {
-        this.cvtSeedClusBank = cvtSeedClusBank;
-    }
-
-    public void setTrackBank(String cvtTrackBank) {
-        this.cvtTrackBank = cvtTrackBank;
-    }
-
-    public void setUTrackBank(String cvtTrack0Bank) {
-        this.cvtUTrackBank = cvtTrack0Bank;
-    }
-
-    public void setTrajectoryBank(String cvtTrajectoryBank) {
-        this.cvtTrajectoryBank = cvtTrajectoryBank;
-    }
-
-    public void setCovMatBank(String cvtTrackCovMat) {
-        this.cvtCovMatBank = cvtTrackCovMat;
-    }
-    
-    public void setKFTrajectoryBank(String cvtKFTrajectoryBank) {
-        this.cvtKFTrajectoryBank = cvtKFTrajectoryBank;
-    }
-    
-    public String getSvtHitBank() {
-        return svtHitBank;
-    }
-    
-    public String getSvtHitPosBank() {
-        return svtHitPosBank;
-    }
-
-    public String getBmtHitPosBank() {
-        return bmtHitPosBank;
-    }
-        
-    public String getSvtClusterBank() {
-        return svtClusterBank;
-    }
-
-    public String getSvtCrossBank() {
-        return svtCrossBank;
-    }
-
-    public String getBmtHitBank() {
-        return bmtHitBank;
-    }
-
-    public String getBmtClusterBank() {
-        return bmtClusterBank;
-    }
-
-    public String getBmtCrossBank() {
-        return bmtCrossBank;
-    }
-
-    public String getSeedBank() {
-        return cvtSeedBank;
-    }
-    
-    public String getSeedClusBank() {
-        return cvtSeedClusBank;
-    }
-    public String getTrackBank() {
-        return cvtTrackBank;
-    }
-
-    public String getUTrackBank() {
-        return cvtUTrackBank;
-    }
-
-    public String getTrajectoryBank() {
-        return cvtTrajectoryBank;
-    }
-
-    public String getKFTrajectoryBank() {
-        return cvtKFTrajectoryBank;
-    }
-
-    public String getCovMat() {
-        return cvtCovMatBank;
-    }
     
     
     public void printConfiguration() {            
@@ -676,11 +731,83 @@ public class CVTCosmicsEngine extends ReconstructionEngine {
         System.out.println("["+this.getName()+"] helix radius cut (mm) "+this.rcut);
         System.out.println("["+this.getName()+"] z0 cut (mm from target edges) "+this.z0cut); 
         
-        
     }
 
+   
+    private Track findTrack(List<Cluster> cl1, List<Cluster> cl2, CVTReconstruction reco,
+            Swim swimmer, IndexedTable beamPos, DataEvent event) {
+     // 
+        List<Cluster> cl = new ArrayList<>();
+        cl.addAll(cl1);
+        cl.addAll(cl2);
+        List<ArrayList<Cross>>    crosses = reco.findCrosses(cl);
+        List<ArrayList<Cluster>> useClustersSplit = new ArrayList<>();
+        useClustersSplit.add(new ArrayList<>());
+        useClustersSplit.add(new ArrayList<>());
+        for(Cluster c : cl) {
+            if(c.getDetector()==DetectorType.BST)
+                useClustersSplit.get(0).add(c);
+            if(c.getDetector()==DetectorType.BMT)
+                useClustersSplit.get(1).add(c);
+        }
+            if(crosses != null) {
+            
+            double[] xyBeam = CVTReconstruction.getBeamSpot(event, beamPos);
+            TracksFromTargetRec  trackFinder = new TracksFromTargetRec(swimmer, xyBeam);
+            //trackFinder.totTruthHits = reco.getTotalNbTruHits();
+            List<Seed>   seeds = trackFinder.getSeeds(useClustersSplit, crosses);
+
+            List<org.jlab.rec.cvt.track.Track> tracks = trackFinder.getTracks(event, this.isInitFromMc(), 
+                                                              this.isKfFilterOn(), 
+                                                              this.getKfIterations(), 
+                                                              true, this.getPid());
+            if(tracks==null) return null;
+            if(tracks.isEmpty()) return null;
+            //save the one with the largest number of clusters
+            this.sortTracksByClusterCount(tracks);
+            if(tracks.get(0).getSeed().getClusters().size()<8)
+                return null; //at least 9 out of 12 hits on track needed
+            return tracks.get(0);
+        }      
+        return null;
+    }
+    private void sortTracksByClusterCount(List<Track> tracks) {
+        Collections.sort(tracks, new Comparator<Track>() {
+            @Override
+            public int compare(Track track1, Track track2) {
+                int clusterCount1 = track1.getSeed().getClusters().size();
+                int clusterCount2 = track2.getSeed().getClusters().size();
+                return Integer.compare(clusterCount2, clusterCount1); // Compare in reverse order
+            }
+        });
+    }
+   class TrackPair implements Comparable<TrackPair> {
+    int tid1;
+    int tid2;
+    List<Cluster> clustersOnTrk1;
+    List<Cluster> clustersOnTrk2;
+        int numOvl;
+        int numSameHits;
+
+    TrackPair(int tid1, int tid2, List<Cluster> clustersOnTrk1, List<Cluster> clustersOnTrk2) {
+        this.tid1 = tid1;
+        this.tid2 = tid2;
+        this.clustersOnTrk1 = clustersOnTrk1;
+        this.clustersOnTrk2 = clustersOnTrk2;
+    }
+
+        @Override
+        public int compareTo(TrackPair o) {
+            int compNO = this.numOvl < o.numOvl ? -1 : this.numOvl == o.numOvl ? 0 : 1;
+            int compClSize = this.clustersOnTrk1.size()+this.clustersOnTrk2.size()< this.clustersOnTrk1.size()+this.clustersOnTrk2.size() ? 1 :
+                    this.clustersOnTrk1.size()+this.clustersOnTrk2.size()== this.clustersOnTrk1.size()+this.clustersOnTrk2.size()? 0 : 1;
+            return ((compNO == 0) ? compClSize : compNO);
+            
+        }
+    }
     public static void main(String[] args) {
-        String inputFile = "/Users/veronique/Work/out_gen_cvt.hipo";
+        String input = "/Volumes/WD_BLACK/MC/gen_cvt";
+        //String inputFile = "/Users/veronique/Work/gen_cvt.hipo";
         System.setProperty("CLAS12DIR", "/Users/veronique/Work/git/Sandbox/AI/coatjava/coatjava/");
         String mapDir = CLASResources.getResourcePath("etc")+"/data/magfield";
         System.out.println(mapDir);
@@ -698,33 +825,44 @@ public class CVTCosmicsEngine extends ReconstructionEngine {
         MagFieldsEngine enf = new MagFieldsEngine();
         enf.init();
 
-        CVTCosmicsEngine en = new CVTCosmicsEngine();
+        AI2TracksEngine en = new AI2TracksEngine();
+        //en.fileName = "clusters_test.txt";
+        //en.fileName = "clusters_1.txt";
+        en.fileName = "clusters_2.txt";
         en.init();
 
         int counter = 0;
 
         
         long t1 = 0;
-        HipoDataSource reader = new HipoDataSource();
-        reader.open(inputFile);
+        //for(int i =1; i<26; i++) {
+        for(int i =26; i<51; i++) {
+            String inputFile=input;
+            inputFile+=i;
+            inputFile+=".hipo";
+            HipoDataSource reader = new HipoDataSource();
+            reader.open(inputFile);
 
+            
+            while (reader.hasEvent()) {
 
-        while (reader.hasEvent()) {
+                counter++;
+                DataEvent event = reader.getNextEvent();
+                if (counter > 0) {
+                    t1 = System.currentTimeMillis();
+                }
+                enf.processDataEvent(event);
+                en.processDataEvent(event);
+                if(counter%1000==0) 
+                    System.out.println("PROCESSED "+counter+" EVENTS "+ "GOT "+en.nevts+" SELECTED EVENTS");
 
-            counter++;
-            DataEvent event = reader.getNextEvent();
-            if (counter > 0) {
-                t1 = System.currentTimeMillis();
             }
-            enf.processDataEvent(event);
-            en.processDataEvent(event);
-            if(counter%1000==0) 
-                System.out.println("PROCESSED "+counter+" EVENTS ");
-
         }
-       
+        en.pw.close();
         double t = System.currentTimeMillis() - t1;
         System.out.println(t1 + " TOTAL  PROCESSING TIME = " + (t / (float) counter));
     }
+
+
 
 }

@@ -1,4 +1,4 @@
-package org.jlab.rec.cvt.analysis;
+package org.jlab.rec.cvt.mlanalysis;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;

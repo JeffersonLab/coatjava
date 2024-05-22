@@ -1,6 +1,7 @@
 package org.jlab.rec.cvt.banks;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +13,7 @@ import org.jlab.geom.prim.Vector3D;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.cvt.Constants;
-import org.jlab.rec.cvt.Geometry;
+import org.jlab.rec.cvt.Geometry;     
 import org.jlab.rec.cvt.bmt.BMTGeometry;
 import org.jlab.rec.cvt.bmt.BMTType;
 import org.jlab.rec.cvt.cluster.Cluster;
@@ -117,7 +118,7 @@ public class RecoBankReader {
         else {
             Map<Integer, Cluster> clusters = new HashMap<>();        
             
-            DataBank bank = event.getBank("BST::Clusters");
+            DataBank bank = event.getBank("BST::Clusters"); 
             for(int i = 0; i < bank.rows(); i++) {
                 int id     = bank.getShort("ID", i);
                 int tid    = bank.getShort("trkID", i);
@@ -161,15 +162,22 @@ public class RecoBankReader {
                 cls.setPhi0(Math.atan2(cy,cx));
                 Hit seedHit = null;
                 double seedE = -1;
+                int minStrip = 99999;
+                int maxStrip = -99999;
                 for(Hit h : svthits) {
                     if(h.getAssociatedClusterID()==id) {
-                        cls.add(h);
+                        cls.add(h); 
+                        if(h.getStrip().getStrip()>maxStrip) maxStrip = h.getStrip().getStrip();
+                        if(h.getStrip().getStrip()<minStrip) minStrip = h.getStrip().getStrip();
                         if(h.getStrip().getEdep()>seedE) {
                             seedE = h.getStrip().getEdep();
                             seedHit = h;
                         }
                     }
                 }
+                cls.setMinStrip(minStrip);
+                cls.setMaxStrip(maxStrip);
+                
                 cls.setSeed(seedHit);
                 clusters.put(id, cls);
             }
@@ -183,7 +191,7 @@ public class RecoBankReader {
         if(!event.hasBank("BMT::Clusters"))
             return null;
         else {
-            Map<Integer, Cluster> clusters = new HashMap<>();       
+            Map<Integer, Cluster> clusters = new HashMap<>();    
             
             DataBank bank = event.getBank("BMT::Clusters");
             for(int i = 0; i < bank.rows(); i++) {
@@ -251,15 +259,21 @@ public class RecoBankReader {
                 cls.setS(new Vector3D(sx,sy,sz));
                 Hit seedHit = null;
                 double seedE = -1;
+                int minStrip = 99999;
+                int maxStrip = -99999;
                 for(Hit h : bmthits) {
                     if(h.getAssociatedClusterID()==id) {
-                        cls.add(h);
+                        cls.add(h); 
+                        if(h.getStrip().getStrip()>maxStrip) maxStrip = h.getStrip().getStrip();
+                        if(h.getStrip().getStrip()<minStrip) minStrip = h.getStrip().getStrip();
                         if(h.getStrip().getEdep()>seedE) {
                             seedE = h.getStrip().getEdep();
                             seedHit = h;
                         }
                     }
                 }
+                cls.setMinStrip(minStrip);
+                cls.setMaxStrip(maxStrip);
                 cls.setSeed(seedHit);
                 clusters.put(id, cls);
             }

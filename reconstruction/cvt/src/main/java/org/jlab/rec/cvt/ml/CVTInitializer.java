@@ -1,25 +1,12 @@
-package org.jlab.rec.cvt.services;
-
-import java.util.ArrayList;
+package org.jlab.rec.cvt.ml;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.cvt.Constants;
 import org.jlab.rec.cvt.Geometry;
-import org.jlab.rec.cvt.banks.RecoBankWriter;
-import org.jlab.rec.cvt.cluster.Cluster;
-import org.jlab.rec.cvt.cross.Cross;
-import org.jlab.rec.cvt.hit.Hit;
-import org.jlab.rec.cvt.mlanalysis.AIClusterReader;
-import org.jlab.rec.cvt.track.Seed;
-import org.jlab.rec.cvt.track.StraightTrack;
-import org.jlab.rec.cvt.track.Track;
+import org.jlab.rec.cvt.services.CVTReconstruction;
 import org.jlab.utils.groups.IndexedTable;
 
 /**
@@ -29,16 +16,7 @@ import org.jlab.utils.groups.IndexedTable;
  * @author ziegler
  *
  */
-public class CVTEngine extends ReconstructionEngine {
-
-
-    /**
-     * @param docacutsum the docacutsum to set
-     */
-    public void setDocacutsum(double docacutsum) {
-        this.docacutsum = docacutsum;
-    }
-
+public class CVTInitializer extends ReconstructionEngine {
     private int Run = -1;
 
     private String svtHitBank;
@@ -93,13 +71,13 @@ public class CVTEngine extends ReconstructionEngine {
     private int bmtzmaxclussize = 100;
     private double rcut = 120.0;
     private double z0cut = 10;
-    public boolean runML =false;
+    public boolean useMCTruth =true;
     
-    public CVTEngine(String name) {
+    public CVTInitializer(String name) {
         super(name, "ziegler", "6.0");
     }
 
-    public CVTEngine() {
+    public CVTInitializer() {
         super("CVTEngine", "ziegler", "6.0");
     }
 
@@ -284,101 +262,47 @@ public class CVTEngine extends ReconstructionEngine {
         this.bmtzmaxclussize = bmtzmaxclussize;
     }
     
+    /**
+     * @param docacutsum the docacutsum to set
+     */
+    public void setDocacutsum(double docacutsum) {
+        this.docacutsum = docacutsum;
+    }
+
+    IndexedTable svtStatus;
+    IndexedTable svtLorentz;
+    IndexedTable bmtStatus;
+    IndexedTable bmtTime;
+    IndexedTable bmtVoltage;
+    IndexedTable bmtStripVoltage;
+    IndexedTable bmtStripThreshold;
+    IndexedTable beamPos;  
+    
+    CVTReconstruction reco;
+    double[] xyBeam;
+    Swim swimmer ;
+        
     @Override
     public boolean processDataEvent(DataEvent event) {
         
-        Swim swimmer = new Swim();
-        
+        return true;
+    }
+
+    public void initialize(DataEvent event) {
         int run = this.getRun(event); 
         
-        IndexedTable svtStatus          = this.getConstantsManager().getConstants(run, "/calibration/svt/status");
-        IndexedTable svtLorentz         = this.getConstantsManager().getConstants(run, "/calibration/svt/lorentz_angle");
-        IndexedTable bmtStatus          = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_status");
-        IndexedTable bmtTime            = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_time");
-        IndexedTable bmtVoltage         = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_voltage");
-        IndexedTable bmtStripVoltage    = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_strip_voltage");
-        IndexedTable bmtStripThreshold  = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_strip_voltage_thresholds");
-        IndexedTable beamPos            = this.getConstantsManager().getConstants(run, "/geometry/beam/position");
-        
+        svtStatus          = this.getConstantsManager().getConstants(run, "/calibration/svt/status");
+        svtLorentz         = this.getConstantsManager().getConstants(run, "/calibration/svt/lorentz_angle");
+        bmtStatus          = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_status");
+        bmtTime            = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_time");
+        bmtVoltage         = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_voltage");
+        bmtStripVoltage    = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_strip_voltage");
+        bmtStripThreshold  = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_strip_voltage_thresholds");
+        beamPos            = this.getConstantsManager().getConstants(run, "/geometry/beam/position");
+        swimmer = new Swim();
         Geometry.initialize(this.getConstantsManager().getVariation(), 11, svtLorentz, bmtVoltage);
-        
-        CVTReconstruction reco = new CVTReconstruction(swimmer);
-        
-        List<ArrayList<Hit>>         hits = reco.readHits(event, svtStatus, bmtStatus, bmtTime, 
-                                                            bmtStripVoltage, bmtStripThreshold);
-        List<ArrayList<Cluster>> clusters = reco.findClusters();
-        
-        if(runML) {
-            AIClusterReader aicr = new AIClusterReader();
-            List<Cluster> svtCls = aicr.selectAIClusters(event, reco.getCVTclusters().get(0));
-            List<Cluster> bmtCls = aicr.selectAIClusters(event, reco.getCVTclusters().get(1));
-            reco.getCVTclusters().get(0).clear();
-            reco.getCVTclusters().get(1).clear();
-            if(!svtCls.isEmpty())
-                reco.getCVTclusters().get(0).addAll(svtCls);
-            if(!bmtCls.isEmpty())
-                reco.getCVTclusters().get(1).addAll(bmtCls);
-        }
-        
-        List<ArrayList<Cross>>    crosses = reco.findCrosses();
-        
-                
-        List<DataBank> banks = new ArrayList<>();
-        Map<Integer, Track> helicaltracks = new HashMap<>();
-        if(crosses != null) {
-            if(Constants.getInstance().isCosmics) {
-                CosmicTracksRec trackFinder = new CosmicTracksRec();
-                List<StraightTrack>  seeds = trackFinder.getSeeds(event, clusters.get(0), clusters.get(1), crosses);
-                
-                List<StraightTrack> tracks = trackFinder.getTracks(event, this.isInitFromMc(), 
-                                                                          this.isKfFilterOn(), 
-                                                                          this.getKfIterations());
-                
-                if(seeds!=null) banks.add(RecoBankWriter.fillStraightSeedsBank(event, seeds, "CVTRec::CosmicSeeds"));
-                if(tracks!=null) {
-                    banks.add(RecoBankWriter.fillStraightTracksBank(event, tracks, "CVTRec::Cosmics"));
-                    banks.add(RecoBankWriter.fillStraightTracksTrajectoryBank(event, tracks, "CVTRec::Trajectory"));
-                    banks.add(RecoBankWriter.fillStraightTrackKFTrajectoryBank(event, tracks, "CVTRec::KFTrajectory"));
-                }            
-            } 
-            else {
-                double[] xyBeam = CVTReconstruction.getBeamSpot(event, beamPos);
-                TracksFromTargetRec  trackFinder = new TracksFromTargetRec(swimmer, xyBeam);
-                trackFinder.totTruthHits = reco.getTotalNbTruHits();
-                List<Seed>   seeds = trackFinder.getSeeds(clusters, crosses);
-                
-                List<Track> tracks = trackFinder.getTracks(event, this.isInitFromMc(), 
-                                                                  this.isKfFilterOn(), 
-                                                                  this.getKfIterations(), 
-                                                                  true, this.getPid());
-                
-                if(seeds!=null) {
-                    banks.add(RecoBankWriter.fillSeedBank(event, seeds, this.getSeedBank()));
-                    banks.add(RecoBankWriter.fillSeedClusBank(event, seeds, this.getSeedClusBank()));
-                }
-                if(tracks!=null) {
-                    banks.add(RecoBankWriter.fillTrackBank(event, tracks, this.getTrackBank()));
-    //                banks.add(RecoBankWriter.fillTrackCovMatBank(event, tracks, this.getCovMat()));
-                    banks.add(RecoBankWriter.fillTrajectoryBank(event, tracks, this.getTrajectoryBank()));
-                    banks.add(RecoBankWriter.fillKFTrajectoryBank(event, tracks, this.getKFTrajectoryBank()));
-                    for(Track t : tracks)
-                        helicaltracks.put(t.getId(), t);
-                }
-            }
-        }
-        banks.add(RecoBankWriter.fillSVTHitBank(event, hits.get(0), this.getSvtHitBank()));
-        banks.add(RecoBankWriter.fillSVTHitPosBank(event, hits.get(0), helicaltracks, this.getSvtHitPosBank()));
-        banks.add(RecoBankWriter.fillBMTHitBank(event, hits.get(1), this.getBmtHitBank()));
-        banks.add(RecoBankWriter.fillBMTHitPosBank(event, hits.get(1), helicaltracks, this.getBmtHitPosBank()));
-        banks.add(RecoBankWriter.fillSVTClusterBank(event, clusters.get(0), this.getSvtClusterBank()));
-        banks.add(RecoBankWriter.fillBMTClusterBank(event, clusters.get(1), this.getBmtClusterBank()));
-        banks.add(RecoBankWriter.fillSVTCrossBank(event, crosses.get(0), this.getSvtCrossBank()));
-        banks.add(RecoBankWriter.fillBMTCrossBank(event, crosses.get(1), this.getBmtCrossBank()));
-
-        event.appendBanks(banks.toArray(new DataBank[0]));
-            
-        
-        return true;
+        xyBeam = CVTReconstruction.getBeamSpot(event, beamPos);
+        reco = new CVTReconstruction(swimmer);
     }
 
          

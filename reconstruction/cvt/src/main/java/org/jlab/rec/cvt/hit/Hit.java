@@ -168,7 +168,7 @@ public class Hit implements Comparable<Hit> {
     
     public void printInfo() {
         String s = " Hit: Detector " + this.getDetector() + "ID " + this.getId() + " Sector " + this.getSector() + " Layer " + this.getLayer() + " Strip " + this.getStrip().getStrip() 
-                + " Edep " + this.getStrip().getEdep()+ " Time " + this.getStrip().getTime();
+                + " Edep " + this.getStrip().getEdep()+ " Time " + this.getStrip().getTime()+" cid "+this.getAssociatedClusterID();
         System.out.println(s);
     }
 

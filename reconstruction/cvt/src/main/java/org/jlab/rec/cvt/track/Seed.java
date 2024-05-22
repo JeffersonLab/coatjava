@@ -184,6 +184,15 @@ public class Seed implements Comparable<Seed>{
         this._Crosses = crosses;
         this.setClusters();
     }
+    
+    public final void setCVTCrosses(List<ArrayList<Cross>> cvtcrosses) {
+        List<Cross> crosses = new ArrayList<>();
+        crosses.addAll(cvtcrosses.get(0));
+        crosses.addAll(cvtcrosses.get(1));
+        Collections.sort(crosses);
+        this._Crosses = crosses;
+        this.setClusters();
+    }
 
     public double getCircleFitChi2PerNDF() {
         return _circleFitChi2PerNDF;

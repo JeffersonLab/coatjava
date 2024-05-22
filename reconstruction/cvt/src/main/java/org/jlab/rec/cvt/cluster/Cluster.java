@@ -16,6 +16,7 @@ import org.jlab.geom.prim.Transformation3D;
 import org.jlab.rec.cvt.Geometry;
 import org.jlab.rec.cvt.bmt.BMTType;
 import org.jlab.rec.cvt.hit.Strip;
+import org.jlab.rec.cvt.mlanalysis.AIObject;
 /**
  * A cluster in the BST consists of an array of hits that are grouped together
  * according to the algorithm of the ClusterFinder class
@@ -66,7 +67,10 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
     public boolean flagForExclusion = false;
     public int BG=0;
     public int associatedTrueTrkId=-1;
+    private int _mlStatus=0;
     
+    private AIObject associateAIObject;
+    private double[] _AssociatedTrackPars = new double[]{999,999,999,999,999,999};
 
     public Cluster(DetectorType detector, BMTType type, int sector, int layer, int cid) {
         this._Detector = detector;
@@ -88,6 +92,34 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
      */
     public Cluster newCluster(Hit hit, int cid) {
         return new Cluster(hit.getDetector(), hit.getType(), hit.getSector(), hit.getLayer(), cid);
+    }
+
+    /**
+     * @return the _mlStatus
+     */
+    public int getMLStatus() {
+        return _mlStatus;
+    }
+
+    /**
+     * @param _mlStatus the _mlStatus to set
+     */
+    public void setMLStatus(int _mlStatus) {
+        this._mlStatus = _mlStatus;
+    }
+
+    /**
+     * @return the _AssociatedTrackPars
+     */
+    public double[] getAssociatedTrackPars() {
+        return _AssociatedTrackPars;
+    }
+
+    /**
+     * @param _AssociatedTrackPars the _AssociatedTrackPars to set
+     */
+    public void setAssociatedTrackPars(double[] _AssociatedTrackPars) {
+        this._AssociatedTrackPars = _AssociatedTrackPars;
     }
 
     public DetectorType getDetector() {
@@ -759,6 +791,11 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
 
     public void setAssociatedTrackID(int associatedTrackID) {
         AssociatedTrackID = associatedTrackID;
+        if(associatedTrackID!=-1) {
+            _mlStatus = 1;
+        } else {
+            _mlStatus = 0;
+        }
     }
 
     public int getTrueAssociatedTrackID() {
@@ -767,6 +804,20 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
 
     public void setTrueAssociatedTrackID(int associatedTrackID) {
         trueAssociatedTrackID = associatedTrackID;
+    }
+
+    /**
+     * @return the associateAIObject
+     */
+    public AIObject getAssociateAIObject() {
+        return associateAIObject;
+    }
+
+    /**
+     * @param associateAIObject the associateAIObject to set
+     */
+    public void setAssociateAIObject(AIObject associateAIObject) {
+        this.associateAIObject = associateAIObject;
     }
     
     @Override
@@ -845,12 +896,13 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
         this._n = _n;
     }
 
-    public void update(int trackId, HitOnTrack traj) {
+    public void update(int trackId, HitOnTrack traj, double ... trkpars) {
         
         Point3D  trackPos = new Point3D(traj.x, traj.y, traj.z);
         Vector3D trackDir = new Vector3D(traj.px, traj.py, traj.pz).asUnit();
                 
         this.setAssociatedTrackID(trackId);
+        this.setAssociatedTrackPars(trkpars);
         this.setCentroidResidual(traj.residual);
         this.setSeedResidual(trackPos); 
         this.setTrakInters(trackPos);

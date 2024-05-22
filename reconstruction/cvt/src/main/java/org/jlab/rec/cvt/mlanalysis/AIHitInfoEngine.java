@@ -1,4 +1,4 @@
-package org.jlab.rec.cvt.analysis;
+package org.jlab.rec.cvt.mlanalysis;
 
 import cnuphys.magfield.MagneticFields;
 import java.io.FileNotFoundException;
@@ -321,12 +321,13 @@ public class AIHitInfoEngine extends ReconstructionEngine {
     }
     
     private void PrintClustersToFile(int evNb, org.jlab.rec.cvt.track.Track t, 
-            double mcPtk, double mcThetatk, double mcPhitk,
+            double mcPtk, double mcThetatk, double mcPhitk, double mcVztk,
             PrintWriter pw, PrintWriter pw2) {
         //event layer	component	xo	yo	zo	xe	ye	ze	type (BG=0 or Signal=1)	Track number
         double mcP=999;
         double mcTheta=999;
         double mcPhi=999;
+        double mcVz=999;
         boolean tGood=true;
         for(Cluster c: t.getSeed().getClusters()) {
             double isnotBG = 0;
@@ -370,13 +371,17 @@ public class AIHitInfoEngine extends ReconstructionEngine {
                      mcP=mcPtk;
                      mcTheta=mcThetatk;
                      mcPhi=mcPhitk;
+                     mcVz = mcVztk;
                 }
-                String str = String.format("%d %d %d %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f %d %d %d", 
+                String str = String.format("%d %d %d %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f %d %d %d", 
                                         evNb, layr, (int)c.getCentroid(), ep1.x(), ep1.y(), ep1.z(), ep2.x(), ep2.y(), ep2.z(), 
-                                        mcP, mcTheta, mcPhi,
+                                        mcP, mcTheta, mcPhi, mcVz,
                                         c.BG, t.getId(), onTrk);
                 str+="\n";
-                pw.print(str); 
+                if(c.BG==1 &&  t.getId()==1 && onTrk==1) {
+                    pw.print(str); 
+                    System.out.println(str);
+                }
 //                if(tGood) { 
 //                    pw.print(str); 
 //                } else {
@@ -387,12 +392,13 @@ public class AIHitInfoEngine extends ReconstructionEngine {
     }
     
     private void PrintUnmatchedClustersToFile(int evNb, Cluster c, 
-            double mcPtk, double mcThetatk, double mcPhitk,
+            double mcPtk, double mcThetatk, double mcVztk, double mcPhitk,
             PrintWriter pw, PrintWriter pw2) {
         //event layer	component	xo	yo	zo	xe	ye	ze	type (BG=0 or Signal=1)	Track number
         double mcP=999;
         double mcTheta=999;
         double mcPhi=999;
+        double mcVz=999;
         int layr = c.getLayer();
         if(c.getDetector()==DetectorType.BMT)
                 layr+=6;
@@ -411,13 +417,15 @@ public class AIHitInfoEngine extends ReconstructionEngine {
             mcP=mcPtk;
             mcTheta=mcThetatk;
             mcPhi=mcPhitk;
+            mcVz=mcVztk;
        }
-        String str = String.format("%d %d %d %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f %d %d %d", 
+        String str = String.format("%d %d %d %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f %.3f %d %d %d", 
                                 evNb, layr, (int)c.getCentroid(), ep1.x(), ep1.y(), ep1.z(), ep2.x(), ep2.y(), ep2.z(), 
-                                 mcP, mcTheta, mcPhi,
+                                 mcP, mcTheta, mcPhi, mcVz,
                                 c.BG, 0, onTrk);
         str+="\n";
         //if(onTrk==1)
+        if(c.BG==0 && onTrk==0)
             pw.print(str);
         //if(onTrk==1)
             //pw2.print(str);
@@ -651,6 +659,7 @@ public class AIHitInfoEngine extends ReconstructionEngine {
         double mcPx = (double) bank.getFloat("px", 0);
         double mcPy = (double) bank.getFloat("py", 0);
         double mcPz = (double) bank.getFloat("pz", 0);
+        double mcVz = (double) bank.getFloat("vz", 0);
         
         double mcP = Math.sqrt(mcPx*mcPx+mcPy*mcPy+mcPz*mcPz);
         double mcTheta = Math.acos(mcPz/mcP);
@@ -664,7 +673,7 @@ public class AIHitInfoEngine extends ReconstructionEngine {
                 t.getSeed().getClusters().sort(Comparator.comparing(Cluster::getTlayer));
                 //this.PrintHitsToFile(ev, t,pw);
                 //System.out.println(ev+"; " +t.toString());
-                this.PrintClustersToFile(ev, t, mcP, mcTheta, mcPhi, pw, pw2);
+                this.PrintClustersToFile(ev, t, mcP, mcTheta, mcPhi, mcVz, pw, pw2);
                 ta++;
             }
         }
@@ -698,7 +707,7 @@ public class AIHitInfoEngine extends ReconstructionEngine {
                         || c.getSector()+1==aihs.svtTrkSectors[c.getRegion()-1]) {
                     
                     //System.out.println(c.toString());
-                    this.PrintUnmatchedClustersToFile(ev, c,  mcP, mcTheta, mcPhi, pw, pw2);
+                    this.PrintUnmatchedClustersToFile(ev, c,  mcP, mcTheta, mcPhi, mcVz, pw, pw2);
                 }
             }
         }
@@ -898,7 +907,7 @@ public class AIHitInfoEngine extends ReconstructionEngine {
 
         AIHitInfoEngine en = new AIHitInfoEngine();
         en.setVariation(var);
-        en.fileName = "munosecSVT4.txt";
+        en.fileName = "munosecSVTVz.txt";
         //en.fileName = "goodtrksmunosecSVT.txt";
         en.fileName2 = "wrongtrksmunosecSVT.txt";
         en.init();

@@ -370,6 +370,7 @@ public class Cross extends ArrayList<Cluster> implements Comparable<Cross> {
             this.updateBMTCross(null, null);
     }
 
+    boolean positionUpdated = false;
     public void update(Point3D trackPos, Vector3D trackDir) {
         if(this.getDetector()==DetectorType.BST)
             this.updateSVTCross(trackDir);

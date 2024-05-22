@@ -36,7 +36,7 @@ public class CrossMaker {
         // fill the sorted list
         sortedClusters = this.sortClusterByDetectorAndIO(clusters);
         // array indexes: array index 0 (1) = svt inner (outer) layer clusters, 2 (3) = bmt inner (outer) layers
-        ArrayList<Cluster> svt_innerlayrclus = sortedClusters.get(0);
+        ArrayList<Cluster> svt_innerlayrclus = sortedClusters.get(0); 
         ArrayList<Cluster> svt_outerlayrclus = sortedClusters.get(1);
         ArrayList<Cluster> bmt_Clayrclus = sortedClusters.get(2);
         ArrayList<Cluster> bmt_Zlayrclus = sortedClusters.get(3);
@@ -100,7 +100,7 @@ public class CrossMaker {
         }
         // arrays of BMT and SVT crosses
         ArrayList<Cross> BMTCrosses = this.findBMTCrosses(bmt_Clayrclus, bmt_Zlayrclus,1000);
-        ArrayList<Cross> SVTCrosses = this.findSVTCrosses(svt_innerlayrclus, svt_outerlayrclus);
+        ArrayList<Cross> SVTCrosses = this.findSVTCrosses(svt_innerlayrclus, svt_outerlayrclus); 
         
         // instantiate the arraylists of sorted Crosses by detector type
         ArrayList<ArrayList<Cross>> sortedCrosses = new ArrayList<ArrayList<Cross>>();
@@ -126,11 +126,11 @@ public class CrossMaker {
         int rid = 0; // cross id
         //loop over the clusters
         // inner clusters
-        for (Cluster inlayerclus : svt_innerlayrclus) {
+        for (Cluster inlayerclus : svt_innerlayrclus) { 
            if(inlayerclus.getTotalEnergy()<SVTParameters.ETOTCUT)
                 continue;
             // outer clusters
-            for (Cluster outlayerclus : svt_outerlayrclus) {
+            for (Cluster outlayerclus : svt_outerlayrclus) { 
                 if(outlayerclus.getTotalEnergy()<SVTParameters.ETOTCUT)
                     continue;
                 // the diffence in layers between outer and inner is 1 for a double layer
@@ -141,7 +141,6 @@ public class CrossMaker {
                 if (outlayerclus.getSector() != inlayerclus.getSector()) {
                     continue;
                 }
-                
                     // define new cross ))
                 // a cut to avoid looping over all strips - from geometry there is a minimum (maximum) strip sum of inner and outer layers that can give a strip intersection
                 if ((inlayerclus.getMinStrip() + outlayerclus.getMinStrip() > SVTParameters.MINSTRIPSUM)
@@ -153,7 +152,7 @@ public class CrossMaker {
                     this_cross.setCluster1(inlayerclus);
                     // cluster2 is the outer layer cluster
                     this_cross.setCluster2(outlayerclus);
-                    this_cross.setId(rid);
+                    this_cross.setId(rid); 
                     // sets the cross parameters (point3D and associated error) from the SVT geometry
                     this_cross.updateSVTCross(null); 
                     // the uncorrected point obtained from default estimate that the track is at 90 deg wrt the module should not be null

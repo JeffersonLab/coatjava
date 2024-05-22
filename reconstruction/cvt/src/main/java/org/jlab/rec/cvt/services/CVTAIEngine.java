@@ -1,5 +1,6 @@
 package org.jlab.rec.cvt.services;
 
+import cnuphys.magfield.MagneticFields;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -7,20 +8,29 @@ import java.util.List;
 import java.util.Map;
 
 import org.jlab.clas.reco.ReconstructionEngine;
+import org.jlab.clas.swimtools.MagFieldsEngine;
 import org.jlab.clas.swimtools.Swim;
+import org.jlab.clas.tracking.kalmanfilter.helical.KFitter;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
+import org.jlab.io.hipo.HipoDataEvent;
+import org.jlab.io.hipo.HipoDataSource;
+import org.jlab.io.hipo.HipoDataSync;
+import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.rec.cvt.Constants;
 import org.jlab.rec.cvt.Geometry;
 import org.jlab.rec.cvt.banks.RecoBankWriter;
+import org.jlab.rec.cvt.ml.MLClusterBankIO;
 import org.jlab.rec.cvt.cluster.Cluster;
 import org.jlab.rec.cvt.cross.Cross;
-import org.jlab.rec.cvt.hit.Hit;
-import org.jlab.rec.cvt.mlanalysis.AIClusterReader;
+import org.jlab.rec.cvt.measurement.Measurements;
+import org.jlab.rec.cvt.mlanalysis.AIHitInfo2BankEngine;
 import org.jlab.rec.cvt.track.Seed;
 import org.jlab.rec.cvt.track.StraightTrack;
 import org.jlab.rec.cvt.track.Track;
+import org.jlab.utils.CLASResources;
 import org.jlab.utils.groups.IndexedTable;
+import org.jlab.utils.system.ClasUtilsFile;
 
 /**
  * Service to return reconstructed TRACKS
@@ -29,7 +39,7 @@ import org.jlab.utils.groups.IndexedTable;
  * @author ziegler
  *
  */
-public class CVTEngine extends ReconstructionEngine {
+public class CVTAIEngine extends ReconstructionEngine {
 
 
     /**
@@ -95,11 +105,11 @@ public class CVTEngine extends ReconstructionEngine {
     private double z0cut = 10;
     public boolean runML =false;
     
-    public CVTEngine(String name) {
+    public CVTAIEngine(String name) {
         super(name, "ziegler", "6.0");
     }
 
-    public CVTEngine() {
+    public CVTAIEngine() {
         super("CVTEngine", "ziegler", "6.0");
     }
 
@@ -148,8 +158,7 @@ public class CVTEngine extends ReconstructionEngine {
     }
 
     public void registerBanks() {
-        String prefix = bankPrefix;
-        if(Constants.getInstance().isCosmics) prefix = "Rec";
+        String prefix = "Rec";
         this.setBmtHitBank("BMT" + prefix + "::Hits");
         this.setBmtClusterBank("BMT" + prefix + "::Clusters");
         this.setBmtCrossBank("BMT" + prefix + "::Crosses");
@@ -165,13 +174,6 @@ public class CVTEngine extends ReconstructionEngine {
         this.setCovMatBank("CVT" + prefix + "::TrackCovMat");
         this.setTrajectoryBank("CVT" + prefix + "::Trajectory");
         this.setKFTrajectoryBank("CVT" + prefix + "::KFTrajectory");
-        super.registerOutputBank(this.bmtHitBank);
-        super.registerOutputBank(this.bmtClusterBank);
-        super.registerOutputBank(this.bmtCrossBank);
-        super.registerOutputBank(this.svtHitBank);
-        super.registerOutputBank(this.svtHitPosBank);
-        super.registerOutputBank(this.bmtHitPosBank);
-        super.registerOutputBank(this.svtClusterBank);
         super.registerOutputBank(this.svtCrossBank);
         super.registerOutputBank(this.cvtSeedBank);
         super.registerOutputBank(this.cvtSeedClusBank);
@@ -301,77 +303,48 @@ public class CVTEngine extends ReconstructionEngine {
         IndexedTable beamPos            = this.getConstantsManager().getConstants(run, "/geometry/beam/position");
         
         Geometry.initialize(this.getConstantsManager().getVariation(), 11, svtLorentz, bmtVoltage);
+        double[] xyBeam = CVTReconstruction.getBeamSpot(event, beamPos);
         
         CVTReconstruction reco = new CVTReconstruction(swimmer);
+        TracksFromTargetRec  trackFinder = new TracksFromTargetRec(swimmer, xyBeam);
+        trackFinder.totTruthHits = reco.getTotalNbTruHits();
         
-        List<ArrayList<Hit>>         hits = reco.readHits(event, svtStatus, bmtStatus, bmtTime, 
-                                                            bmtStripVoltage, bmtStripThreshold);
-        List<ArrayList<Cluster>> clusters = reco.findClusters();
+        MLClusterBankIO aicr = new MLClusterBankIO();
         
-        if(runML) {
-            AIClusterReader aicr = new AIClusterReader();
-            List<Cluster> svtCls = aicr.selectAIClusters(event, reco.getCVTclusters().get(0));
-            List<Cluster> bmtCls = aicr.selectAIClusters(event, reco.getCVTclusters().get(1));
-            reco.getCVTclusters().get(0).clear();
-            reco.getCVTclusters().get(1).clear();
-            if(!svtCls.isEmpty())
-                reco.getCVTclusters().get(0).addAll(svtCls);
-            if(!bmtCls.isEmpty())
-                reco.getCVTclusters().get(1).addAll(bmtCls);
-        }
-        
-        List<ArrayList<Cross>>    crosses = reco.findCrosses();
-        
-                
         List<DataBank> banks = new ArrayList<>();
+        List<Cluster> aicls = aicr.getClusters(event, swimmer);
+        List<ArrayList<Cluster>>    clusters = new ArrayList<>();
+        clusters.add(aicr.getSVTClusters());
+        clusters.add(aicr.getBMTClusters());
+        
+        List<ArrayList<Cross>>    crosses = reco.findCrosses(aicls);
+        
         Map<Integer, Track> helicaltracks = new HashMap<>();
         if(crosses != null) {
-            if(Constants.getInstance().isCosmics) {
-                CosmicTracksRec trackFinder = new CosmicTracksRec();
-                List<StraightTrack>  seeds = trackFinder.getSeeds(event, clusters.get(0), clusters.get(1), crosses);
-                
-                List<StraightTrack> tracks = trackFinder.getTracks(event, this.isInitFromMc(), 
-                                                                          this.isKfFilterOn(), 
-                                                                          this.getKfIterations());
-                
-                if(seeds!=null) banks.add(RecoBankWriter.fillStraightSeedsBank(event, seeds, "CVTRec::CosmicSeeds"));
-                if(tracks!=null) {
-                    banks.add(RecoBankWriter.fillStraightTracksBank(event, tracks, "CVTRec::Cosmics"));
-                    banks.add(RecoBankWriter.fillStraightTracksTrajectoryBank(event, tracks, "CVTRec::Trajectory"));
-                    banks.add(RecoBankWriter.fillStraightTrackKFTrajectoryBank(event, tracks, "CVTRec::KFTrajectory"));
-                }            
-            } 
-            else {
-                double[] xyBeam = CVTReconstruction.getBeamSpot(event, beamPos);
-                TracksFromTargetRec  trackFinder = new TracksFromTargetRec(swimmer, xyBeam);
-                trackFinder.totTruthHits = reco.getTotalNbTruHits();
-                List<Seed>   seeds = trackFinder.getSeeds(clusters, crosses);
-                
-                List<Track> tracks = trackFinder.getTracks(event, this.isInitFromMc(), 
-                                                                  this.isKfFilterOn(), 
-                                                                  this.getKfIterations(), 
-                                                                  true, this.getPid());
-                
-                if(seeds!=null) {
-                    banks.add(RecoBankWriter.fillSeedBank(event, seeds, this.getSeedBank()));
-                    banks.add(RecoBankWriter.fillSeedClusBank(event, seeds, this.getSeedClusBank()));
-                }
-                if(tracks!=null) {
-                    banks.add(RecoBankWriter.fillTrackBank(event, tracks, this.getTrackBank()));
-    //                banks.add(RecoBankWriter.fillTrackCovMatBank(event, tracks, this.getCovMat()));
-                    banks.add(RecoBankWriter.fillTrajectoryBank(event, tracks, this.getTrajectoryBank()));
-                    banks.add(RecoBankWriter.fillKFTrajectoryBank(event, tracks, this.getKFTrajectoryBank()));
-                    for(Track t : tracks)
-                        helicaltracks.put(t.getId(), t);
-                }
+            
+            trackFinder.totTruthHits = reco.getTotalNbTruHits();
+            List<Seed>   seeds = trackFinder.getSeeds(clusters, crosses);
+
+            List<Track> tracks = trackFinder.getTracks(event, this.isInitFromMc(), 
+                                                              this.isKfFilterOn(), 
+                                                              this.getKfIterations(), 
+                                                              true, this.getPid());
+
+            if(seeds!=null) {
+                banks.add(RecoBankWriter.fillSeedBank(event, seeds, this.getSeedBank()));
+                banks.add(RecoBankWriter.fillSeedClusBank(event, seeds, this.getSeedClusBank()));
             }
+            if(tracks!=null) {
+                banks.add(RecoBankWriter.fillTrackBank(event, tracks, this.getTrackBank()));
+//                banks.add(RecoBankWriter.fillTrackCovMatBank(event, tracks, this.getCovMat()));
+                banks.add(RecoBankWriter.fillTrajectoryBank(event, tracks, this.getTrajectoryBank()));
+                banks.add(RecoBankWriter.fillKFTrajectoryBank(event, tracks, this.getKFTrajectoryBank()));
+                for(Track t : tracks)
+                    helicaltracks.put(t.getId(), t);
+            }
+        
         }
-        banks.add(RecoBankWriter.fillSVTHitBank(event, hits.get(0), this.getSvtHitBank()));
-        banks.add(RecoBankWriter.fillSVTHitPosBank(event, hits.get(0), helicaltracks, this.getSvtHitPosBank()));
-        banks.add(RecoBankWriter.fillBMTHitBank(event, hits.get(1), this.getBmtHitBank()));
-        banks.add(RecoBankWriter.fillBMTHitPosBank(event, hits.get(1), helicaltracks, this.getBmtHitPosBank()));
-        banks.add(RecoBankWriter.fillSVTClusterBank(event, clusters.get(0), this.getSvtClusterBank()));
-        banks.add(RecoBankWriter.fillBMTClusterBank(event, clusters.get(1), this.getBmtClusterBank()));
+    
         banks.add(RecoBankWriter.fillSVTCrossBank(event, crosses.get(0), this.getSvtCrossBank()));
         banks.add(RecoBankWriter.fillBMTCrossBank(event, crosses.get(1), this.getBmtCrossBank()));
 
@@ -653,5 +626,79 @@ public class CVTEngine extends ReconstructionEngine {
         
     }
 
+    public static void main(String[] args) {
+        //String inputFile = "/Users/ziegler/BASE/Files/CVTDEBUG/AI/skim3svtcrosses-norecotracks.hipo";
+        //String inputFile = "/Users/ziegler/BASE/Files/CVTDEBUG/AI/skim2_rgbbg50na.hipo";
+        System.setProperty("CLAS12DIR", "/Users/ziegler/BASE/Tracking/CVT-Issues/AI/coatjava/coatjava");
+        String mapDir = CLASResources.getResourcePath("etc")+"/data/magfield";
+        System.out.println(mapDir);
+        try {
+            MagneticFields.getInstance().initializeMagneticFields(mapDir,
+                    "Symm_torus_r2501_phi16_z251_24Apr2018.dat","Symm_solenoid_r601_phi1_z1201_13June2018.dat");
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        String var = "fall2018_bg";
+        String dir = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4");
+        //SchemaFactory schemaFactory = new SchemaFactory();
+        //schemaFactory.initFromDirectory(dir);
+        MagFieldsEngine enf = new MagFieldsEngine();
+        enf.setVariation(var); 
+
+        enf.init();
+
+        CVTClusterEngine en = new CVTClusterEngine();
+        en.setVariation(var);
+        en.init();
+
+        CVTAIEngine ena = new CVTAIEngine();
+        ena.setVariation(var);
+        ena.init();
+        
+        int counter = 0;
+
+        SchemaFactory schemaFactory = new SchemaFactory();
+    
+        System.out.println("dir "+dir);
+        schemaFactory.initFromDirectory(dir);
+        if(schemaFactory.hasSchema("cvtml::clusters")) {
+            System.out.println(" BANK FOUND........");
+        } else {
+            System.out.println(" BANK NOT FOUND........");
+        }
+        HipoDataSync writer = new HipoDataSync(schemaFactory);
+        writer.setCompressionType(2);
+        writer.open("/Users/ziegler/BASE/Files/CVTDEBUG/AI/MLSample2_rec.hipo");
+        long t1 = 0;
+        List<String> inputList = new ArrayList<>();
+        inputList.add("/Users/ziegler/BASE/Files/CVTDEBUG/AI/MLSample2_reduced.hipo");
+        
+        // org.jlab.clas.analysis.event.Reader ereader = new org.jlab.clas.analysis.event.Reader();
+        
+        for(String inputFile :  inputList) {
+            HipoDataSource reader = new HipoDataSource();
+            reader.open(inputFile);
+            while (reader.hasEvent() && counter<1001) {
+
+                counter++;
+                DataEvent event = reader.getNextEvent();
+                if (counter > 0) {
+                    t1 = System.currentTimeMillis();
+                }
+                enf.processDataEvent(event);
+                en.processDataEvent(event);
+                //ena.processDataEvent(event);
+                if(counter%1000==0) 
+                    System.out.println("PROCESSED "+counter+" EVENTS ");
+                writer.writeEvent(event);
+            }
+            
+            double t = System.currentTimeMillis() - t1;
+            System.out.println(t1 + " TOTAL  PROCESSING TIME = " + (t / (float) counter));
+        }
+        writer.close();
+
+    }
 
 }

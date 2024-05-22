@@ -264,7 +264,7 @@ public class Track extends Trajectory implements Comparable<Track> {
     }    
     
 
-    public void update_Clusters(int trackId) {        
+    public void update_Clusters(int trackId, double ... trkpars) {        
         if(this.getKFTrajectories()!=null) {
             for (int i = 0; i < this.getSeed().getClusters().size(); i++) {
                 Cluster cluster = this.getSeed().getClusters().get(i);
@@ -273,7 +273,7 @@ public class Track extends Trajectory implements Comparable<Track> {
                 int index = MLayer.getType(cluster.getDetector(), layer).getIndex();
                 
                 if(this.getKFTrajectories().get(index)!=null) // RDV check why it is necessary
-                    cluster.update(trackId, this.getKFTrajectories().get(index));
+                    cluster.update(trackId, this.getKFTrajectories().get(index), trkpars);
             }
         }
     }

@@ -15,9 +15,6 @@ import org.jlab.rec.cvt.cross.Cross;
 import org.jlab.rec.cvt.cross.CrossMaker;
 import org.jlab.rec.cvt.hit.Hit;
 import org.jlab.rec.cvt.svt.SVTParameters;
-import org.jlab.rec.cvt.track.Seed;
-import org.jlab.rec.cvt.track.StraightTrack;
-import org.jlab.rec.cvt.track.Track;
 import org.jlab.utils.groups.IndexedTable;
 
 /**
@@ -126,6 +123,7 @@ public class CVTReconstruction {
        
         CrossMaker crossMake = new CrossMaker();
         List<ArrayList<Cross>> crosses = crossMake.findCrosses(clusters);
+        
         if(crosses.get(0).size() > SVTParameters.MAXSVTCROSSES ) {
             crosses.get(0).clear();
         }
