@@ -54,7 +54,6 @@ public class AlertDCFactory implements Factory<AlertDCDetector, AlertDCSector, A
 
 	@Override
 	public AlertDCSector createSector(ConstantProvider cp, int sectorId) {
-		if (!(0 <= sectorId && sectorId < nsectors)) throw new IllegalArgumentException("Error: invalid sector=" + sectorId);
 		AlertDCSector sector = new AlertDCSector(sectorId);
 		for (int superlayerId = 0; superlayerId < nsuperl; superlayerId++)
 		     sector.addSuperlayer(createSuperlayer(cp, sectorId, superlayerId));
@@ -64,8 +63,6 @@ public class AlertDCFactory implements Factory<AlertDCDetector, AlertDCSector, A
 
 	@Override
 	public AlertDCSuperlayer createSuperlayer(ConstantProvider cp, int sectorId, int superlayerId) {
-		if (!(0 <= sectorId && sectorId < nsectors)) throw new IllegalArgumentException("Error: invalid sector=" + sectorId);
-		if (!(0 <= superlayerId && superlayerId < nsuperl)) throw new IllegalArgumentException("Error: invalid superlayer=" + superlayerId);
 		AlertDCSuperlayer superlayer = new AlertDCSuperlayer(sectorId, superlayerId);
 
 		for (int layerId = 0; layerId < nlayers; layerId++)
