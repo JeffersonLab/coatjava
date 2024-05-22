@@ -57,10 +57,10 @@ public class PreClusterFinder {
 					hit.setUse(true);
 					int expected_wire_plus  = hit.getWireId() + 1;
 					int expected_wire_minus = hit.getWireId() - 1;
-					if (hit.getWireId() - 1 == 0) {
+					if (hit.getWireId() == 1) {
 						expected_wire_minus = hit.getNbOfWires();
 					}
-					if (hit.getWireId() + 1 == hit.getNbOfWires() + 1) {
+					if (hit.getWireId() == hit.getNbOfWires() ) {
 						expected_wire_plus = 1;
 					}
 
