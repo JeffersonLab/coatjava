@@ -107,8 +107,6 @@ public class AlertTOFFactory implements Factory<AlertTOFDetector, AlertTOFSector
 
 		AlertTOFLayer layer = new AlertTOFLayer(sectorId, superlayerId, layerId);
 
-		List<Plane3D> planes = new ArrayList<>();
-
 		double len_b   = layerId * pad_z + layerId * gap_pad_z; // back paddle plan
 		double len_f   = len_b + pad_z; // front paddle plan
 		double Rl      = R0;
@@ -152,7 +150,6 @@ public class AlertTOFFactory implements Factory<AlertTOFDetector, AlertTOFSector
 
 		Plane3D plane = new Plane3D(0, Rl, 0, 0, 1, 0);
 		plane.rotateZ(sectorId * openAng_sector_rad - Math.toRadians(90));
-		planes.add(plane);
 
 		return layer;
 	}
