@@ -948,9 +948,12 @@ public class DCTBEngine extends DCEngine {
             // Choose the best track
             int indexBestTrack = 0;
             double abschi2overndf = Math.abs(trkCandList.get(0).get_FitChi2()/trkCandList.get(0).get_FitNDF());
+            if(useDAF) abschi2overndf = Math.abs(trkCandList.get(0).get_FitChi2()/trkCandList.get(0).get_NDFDAF()); 
             for(int i = 0; i < trkCandList.size(); i++){
-                if(Math.abs(trkCandList.get(i).get_FitChi2()/trkCandList.get(i).get_FitNDF()) < abschi2overndf){
-                    abschi2overndf = trkCandList.get(i).get_FitChi2()/trkCandList.get(i).get_FitNDF();
+                double compValue = Math.abs(trkCandList.get(i).get_FitChi2()/trkCandList.get(i).get_FitNDF());
+                if(useDAF) compValue = Math.abs(trkCandList.get(i).get_FitChi2()/trkCandList.get(i).get_NDFDAF());
+                if(compValue < abschi2overndf){
+                    abschi2overndf = compValue;
                     indexBestTrack = i;
                 }
             } 
