@@ -60,7 +60,6 @@ public class AlertTOFFactory implements Factory<AlertTOFDetector, AlertTOFSector
 
 	@Override
 	public AlertTOFSector createSector(ConstantProvider cp, int sectorId) {
-		if (!(0 <= sectorId && sectorId < nsectors)) throw new IllegalArgumentException("Error: invalid sector=" + sectorId);
 		AlertTOFSector sector = new AlertTOFSector(sectorId);
 		for (int superlayerId = 0; superlayerId < nsuperl; superlayerId++)
 		     sector.addSuperlayer(createSuperlayer(cp, sectorId, superlayerId));
@@ -69,8 +68,6 @@ public class AlertTOFFactory implements Factory<AlertTOFDetector, AlertTOFSector
 
 	@Override
 	public AlertTOFSuperlayer createSuperlayer(ConstantProvider cp, int sectorId, int superlayerId) {
-		if (!(0 <= sectorId && sectorId < nsectors)) throw new IllegalArgumentException("Error: invalid sector=" + sectorId);
-		if (!(0 <= superlayerId && superlayerId < nsuperl)) throw new IllegalArgumentException("Error: invalid superlayer=" + superlayerId);
 		AlertTOFSuperlayer superlayer = new AlertTOFSuperlayer(sectorId, superlayerId);
 
 		if (superlayerId == 0) {
