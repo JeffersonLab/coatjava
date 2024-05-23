@@ -16,7 +16,7 @@ public class ClusterFinder {
 		if (precluster.get_Super_layer() == super_layer && precluster.get_Layer() == layer && !precluster.is_Used()) {
 			ArrayList<PreCluster> possible_precluster_list = new ArrayList<>();
 
-			double phi_mean = precluster.get_Phi() + 0.1 * Math.pow(-1, precluster.get_Super_layer());
+			double phi_mean = precluster.get_Phi() + 0.1 * Math.pow(-1, precluster.get_Super_layer()-1);
 			double x        = -precluster.get_Radius() * Math.sin(phi_mean);
 			double y        = -precluster.get_Radius() * Math.cos(phi_mean);
 			for (PreCluster other_precluster : AHDC_precluster_list) {
@@ -67,10 +67,10 @@ public class ClusterFinder {
 		// Collections.sort(AHDC_precluster_list);
 
 		for (PreCluster precluster : AHDC_precluster_list) {
-			find_associate_cluster(precluster, AHDC_precluster_list, window, minimal_distance, 0, 0, 1);
 			find_associate_cluster(precluster, AHDC_precluster_list, window, minimal_distance, 1, 1, 2);
-			find_associate_cluster(precluster, AHDC_precluster_list, window, minimal_distance, 2, 1, 3);
-			find_associate_cluster(precluster, AHDC_precluster_list, window, minimal_distance, 3, 1, 4);
+			find_associate_cluster(precluster, AHDC_precluster_list, window, minimal_distance, 2, 2, 3);
+			find_associate_cluster(precluster, AHDC_precluster_list, window, minimal_distance, 3, 2, 4);
+			find_associate_cluster(precluster, AHDC_precluster_list, window, minimal_distance, 4, 2, 5);
 		}
 
 		for (Cluster cluster : _list_with_maybe_same_cluster) {
