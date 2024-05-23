@@ -21,7 +21,6 @@ import org.jlab.rec.cvt.mlanalysis.AIHitSelector;
  */
 public class CVTClustering extends CVTInitializer {
     
-    private final boolean isMC=true;
     public static boolean useMC;
     @Override
     public boolean processDataEvent(DataEvent event) {

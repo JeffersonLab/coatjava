@@ -305,9 +305,11 @@ public class CVTInitializer extends ReconstructionEngine {
         reco = new CVTReconstruction(swimmer);
     }
 
-         
+    public boolean isMC = false;     
     public void loadConfiguration() {            
-        
+        if (this.getEngineConfigString("isMC")!=null) 
+            isMC = Boolean.valueOf(this.getEngineConfigString("isMC"));
+         
         // general (pass-independent) settings
         if (this.getEngineConfigString("cosmics")!=null) 
             this.isCosmics = Boolean.valueOf(this.getEngineConfigString("cosmics"));
