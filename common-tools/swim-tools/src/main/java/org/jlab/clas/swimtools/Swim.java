@@ -903,6 +903,86 @@ public class Swim {
 
     }
 
+    //
+    
+    private class LineSwimStopper implements IStopper {
+
+        private double _finalPathLength = Double.NaN;
+
+        private Line3D _l;
+        private Point3D _p;
+        double min = 999;
+        private LineSwimStopper(Line3D l) {
+                // DC reconstruction units are cm. Swim units are m. Hence scale by
+                // 100
+                _l =l;
+                _p = new Point3D();
+        }
+
+        @Override
+        public boolean stopIntegration(double t, double[] y) {
+            _p.set(y[0]* 100.0, y[1]* 100.0, y[2]* 100.0);
+            double doca = _l.distance(_p).length();
+            if(doca<min) {
+                min = doca;
+            }
+            return (doca > min );
+            
+        }
+
+        /**
+         * Get the final path length in meters
+         *
+         * @return the final path length in meters
+         */
+        @Override
+        public double getFinalT() {
+                return _finalPathLength;
+        }
+
+        /**
+         * Set the final path length in meters
+         *
+         * @param finalPathLength
+         *            the final path length in meters
+         */
+        @Override
+        public void setFinalT(double finalPathLength) {
+                _finalPathLength = finalPathLength;
+        }
+    }
+    
+    public double[] SwimToLine(Line3D l) {
+
+        double[] value = new double[8];
+        
+        if(this.SwimUnPhys==true)
+            return null;
+        LineSwimStopper stopper = new LineSwimStopper(l);
+
+        SwimTrajectory st = PC.CF.swim(_charge, _x0, _y0, _z0, _pTot, _theta, _phi, stopper, _maxPathLength, stepSize,
+                        0.0005);
+        if(st==null)
+            return null;
+        st.computeBDL(PC.CP);
+        // st.computeBDL(compositeField);
+
+        double[] lastY = st.lastElement();
+
+        value[0] = lastY[0] * 100; // convert back to cm
+        value[1] = lastY[1] * 100; // convert back to cm
+        value[2] = lastY[2] * 100; // convert back to cm
+        value[3] = lastY[3] * _pTot; // normalized values
+        value[4] = lastY[4] * _pTot;
+        value[5] = lastY[5] * _pTot;
+        value[6] = lastY[6] * 100;
+        value[7] = lastY[7] * 10; // Conversion from kG.m to T.cm
+
+        return value;
+
+    }
+
+    //
     
     
     private void printV(String pfx, double v[]) {
