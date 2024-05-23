@@ -8,13 +8,13 @@ io-services:
 services:
   - class: org.jlab.clas.swimtools.MagFieldsEngine
     name: MAGFIELDS
-  - class: org.jlab.rec.cvt.services.CVTInitializer
+  - class:  org.jlab.rec.cvt.ml.CVTInitializer
     name: CVTMLINIT
-  - class: org.jlab.rec.cvt.services.CVTClustering
+  - class:  org.jlab.rec.cvt.ml.CVTClustering
     name: CVTMLCLUSTER
-  - class: org.jlab.rec.cvt.services.ConvResolver
+  - class:  org.jlab.rec.cvt.ml.ConvResolver
     name: CVTMLCONVRESOLV
-  - class: org.jlab.rec.cvt.services.MLTracking
+  - class:  org.jlab.rec.cvt.ml.MLTracking
     name: CVTMLTRKG
   - class: org.jlab.service.ctof.CTOFEngine
     name: CTOF
