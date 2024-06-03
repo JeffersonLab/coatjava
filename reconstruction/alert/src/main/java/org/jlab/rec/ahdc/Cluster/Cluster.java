@@ -27,7 +27,9 @@ public class Cluster {
 		_PreClusters_list.add(precluster);
 		_PreClusters_list.add(other_precluster);
 		this._Radius = (precluster.get_Radius() + other_precluster.get_Radius()) / 2;
-		this._Z      = ((other_precluster.get_Phi() - precluster.get_Phi()) / (Math.toRadians(20) * Math.pow(-1, precluster.get_Super_layer()) - Math.toRadians(20) * Math.pow(-1, other_precluster.get_Super_layer()))) * 300 - 150;
+
+		this._Z      = ((other_precluster.get_Phi() - precluster.get_Phi()) / (Math.toRadians(20) * Math.pow(-1, precluster.get_Super_layer()-1) - Math.toRadians(20) * Math.pow(-1, other_precluster.get_Super_layer()-1))) * 300 - 150;
+
 		double x1     = -precluster.get_Radius() * Math.sin(precluster.get_Phi());
 		double y1     = -precluster.get_Radius() * Math.cos(precluster.get_Phi());
 		double x2     = -other_precluster.get_Radius() * Math.sin(other_precluster.get_Phi());

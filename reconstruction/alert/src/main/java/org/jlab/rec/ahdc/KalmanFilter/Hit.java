@@ -23,7 +23,7 @@ public class Hit implements Comparable<Hit> {
 	public Hit(int superLayer, int layer, int wire, int numWire, double r, double doca) {
 		this.superLayer = superLayer;
 		this.layer      = layer;
-		this.wire       = wire - 1;
+		this.wire       = wire;
 		this.r          = r;
 		this.doca       = doca;
 		this.numWires = numWire;
@@ -51,35 +51,35 @@ public class Hit implements Comparable<Hit> {
 		Plane3D rPlane = new Plane3D(p2, n2);
 
 		switch (this.superLayer) {
-			case 0:
+			case 1:
 				numWires = 47.0;
 				R_layer = 32.0;
 				break;
-			case 1:
+			case 2:
 				numWires = 56.0;
 				R_layer = 38.0;
 				break;
-			case 2:
+			case 3:
 				numWires = 72.0;
 				R_layer = 48.0;
 				break;
-			case 3:
+			case 4:
 				numWires = 87.0;
 				R_layer = 58.0;
 				break;
-			case 4:
+			case 5:
 				numWires = 99.0;
 				R_layer = 68.0;
 				break;
 		}
 
-		R_layer = R_layer + DR_layer * this.layer;
+		R_layer = R_layer + DR_layer * (this.layer-1);
 		double alphaW_layer = Math.toRadians(round / (numWires));
-		double wx           = -R_layer * Math.sin(alphaW_layer * this.wire);
-		double wy           = -R_layer * Math.cos(alphaW_layer * this.wire);
+		double wx           = -R_layer * Math.sin(alphaW_layer * (this.wire-1));
+		double wy           = -R_layer * Math.cos(alphaW_layer * (this.wire-1));
 
-		double wx_end = -R_layer * Math.sin(alphaW_layer * this.wire + thster * (Math.pow(-1, this.superLayer)));
-		double wy_end = -R_layer * Math.cos(alphaW_layer * this.wire + thster * (Math.pow(-1, this.superLayer)));
+		double wx_end = -R_layer * Math.sin(alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)));
+		double wy_end = -R_layer * Math.cos(alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)));
 
 		Line3D line = new Line3D(wx, wy, -150, wx_end, wy_end, zl/2);
 
