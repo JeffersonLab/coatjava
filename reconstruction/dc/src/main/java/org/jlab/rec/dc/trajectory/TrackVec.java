@@ -228,7 +228,7 @@ public class TrackVec extends Matrix {
      * @param t <0 going to lab, >0 going to tilted system
      * @return 
      */
-    public double[] tilt(double X, double Z, int t) {        
+    public double[] tilt(double X, double Z, int t) {
         double rz = (double)t *X * Constants.SIN25 + Z * Constants.COS25;
         double rx = X * Constants.COS25 -(double)t* Z * Constants.SIN25;
         
@@ -244,15 +244,16 @@ public class TrackVec extends Matrix {
      */
     public double[] rotateToSec(int sector, double x, double y, int t) {
         if(sector>0 && sector<7) {
-            if (t == 1) {
+            if(t == 1){
                 double rx = x * Constants.COSSECTOR60[sector - 1] - y * Constants.SINSECTOR60[sector - 1];
                 double ry = x * Constants.SINSECTOR60[sector - 1] + y * Constants.COSSECTOR60[sector - 1];
-                return new double[]{rx, ry};
-            } else {
+                return new double[] {rx, ry};
+            }
+            else{
                 double rx = x * Constants.COSSECTORNEG60[sector - 1] - y * Constants.SINSECTORNEG60[sector - 1];
                 double ry = x * Constants.SINSECTORNEG60[sector - 1] + y * Constants.COSSECTORNEG60[sector - 1];
-                return new double[]{rx, ry};
-            }            
+                return new double[] {rx, ry};
+            }
         } else {
             return null;
         }

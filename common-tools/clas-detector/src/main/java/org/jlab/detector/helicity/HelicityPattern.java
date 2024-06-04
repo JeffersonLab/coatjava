@@ -17,7 +17,7 @@ public enum HelicityPattern {
 
     private final int value;
 
-    HelicityPattern(int value) {
+    private HelicityPattern(int value) {
         this.value=value;
     }
 
