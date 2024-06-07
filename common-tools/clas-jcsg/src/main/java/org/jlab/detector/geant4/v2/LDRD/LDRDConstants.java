@@ -1,22 +1,22 @@
-package org.jlab.detector.geant4.v2.URWELL;
+package org.jlab.detector.geant4.v2.LDRD;
 
 
+import org.jlab.detector.geant4.v2.URWELL.*;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider; 
 import org.jlab.geom.prim.Point3D;
 
 
-public class URWellConstants {
+public class LDRDConstants {
 
     private final static String CCDBPATH = "/geometry/urwell/";
     
-    public final static int NMAXREGIONS = 2;    //max number of regions 
-    public final static int NREGIONS    = 1;    //number of regions 
-    public final static int NSECTORS    = 6;    //number of sectors
+    public final static int NREGIONS    = 6;    //number of regions 
+    public final static int NSECTORS    = 1;    //number of sectors
     public final static int NLAYERS     = 2;    //number of layers
-    public final static int NCHAMBERS   = 3;    //number of chambers in a sector
+    public final static int NCHAMBERS   = 1;    //number of chambers in a sector
 
-    public final static double XENLARGEMENT = 0.5; // cm
-    public final static double YENLARGEMENT = 1.;  // cm
+    public final static double XENLARGEMENT = 0.1; // cm
+    public final static double YENLARGEMENT = 0.1;  // cm
     public final static double ZENLARGEMENT = 0.1; // cm
    
     // Sector geometrical parameters
@@ -45,11 +45,11 @@ public class URWellConstants {
     // URWELL position in the CLAS12 frame 
     public final static double TGT2DC0    = 228.078; // cm            
    // public final static double URWELL2DC0 = 2;       // cm
-    public final static double URWELL2DC0[] = new double[NMAXREGIONS];
-    public final static double DIST2TGT[] = new double[NMAXREGIONS];
-    public final static double W2TGT[] = new double[NMAXREGIONS];; 
-    public final static double YMIN[] = new double[NMAXREGIONS];
-    public final static double ZMIN[] = new double[NMAXREGIONS];
+    public final static double URWELL2DC0[] = new double[NREGIONS];
+    public final static double DIST2TGT[] = new double[NREGIONS];
+    public final static double W2TGT[] = new double[NREGIONS];; 
+    public final static double YMIN[] = new double[NREGIONS];
+    public final static double ZMIN[] = new double[NREGIONS];
     
   //  public final static double DIST2TGT   = (TGT2DC0-URWELL2DC0);
    // public final static double W2TGT = DIST2TGT/Math.cos(Math.toRadians(THTILT-THMIN));
@@ -114,7 +114,7 @@ public class URWellConstants {
             // read constants from svt table
 //            NREGIONS = cp.getInteger( CCDBPATH+"svt/nRegions", 0 );
 
-             for (int i=0; i<NMAXREGIONS; i++){
+             for (int i=0; i<NREGIONS; i++){
                 
                 URWELL2DC0[i] =  -2.+i*1.3;
                 DIST2TGT[i]   = (TGT2DC0+URWELL2DC0[i]);

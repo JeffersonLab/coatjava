@@ -1,4 +1,4 @@
-package org.jlab.detector.geant4.v2.URWELL;
+package org.jlab.detector.geant4.v2.LDRD;
 
 
 import eu.mihosoft.vrl.v3d.Vector3d;
@@ -19,9 +19,9 @@ import org.jlab.utils.groups.IndexedList;
  * 
  * @author bondi
  */
-public final class URWellStripFactory {
+public final class LDRDStripFactory {
 
-    private URWellGeant4Factory factory;
+    private LDRDGeant4Factory factory;
     private IndexedList<Line3D>  globalStrips = new IndexedList(3);
     private IndexedList<Line3D>  localStrips  = new IndexedList(3);
     private IndexedList<Plane3D> planeStrips  = new IndexedList(3);
@@ -31,7 +31,7 @@ public final class URWellStripFactory {
     private int nLayers;
     private boolean isProto;
     
-    public URWellStripFactory() {
+    public LDRDStripFactory() {
     }
     
     /**
@@ -40,7 +40,7 @@ public final class URWellStripFactory {
      * They will be moved to CCDB when finalized).
      * @param cp database provide
      */
-    public URWellStripFactory(DatabaseConstantProvider cp) {
+    public LDRDStripFactory(DatabaseConstantProvider cp) {
         this.init(cp);
     }
     
@@ -60,7 +60,7 @@ public final class URWellStripFactory {
      * @param prototype
      * @param regions
      */
-    public URWellStripFactory(DatabaseConstantProvider cp, boolean prototype, int regions) {
+    public LDRDStripFactory(DatabaseConstantProvider cp, boolean prototype, int regions) {
         this.init(cp, prototype, regions);
     }
     
@@ -71,19 +71,19 @@ public final class URWellStripFactory {
      * @param regions
      */
     public void init(DatabaseConstantProvider cp, boolean prototype, int regions) {
-        factory = new URWellGeant4Factory(cp, prototype, regions);
+        factory = new LDRDGeant4Factory(cp, prototype, regions);
         isProto = prototype;
         if(!isProto){
-            nRegions  = Math.min(URWellConstants.NMAXREGIONS, regions);
-            nSectors  = URWellConstants.NSECTORS;
-            nChambers = URWellConstants.NCHAMBERS;
-            nLayers   = URWellConstants.NLAYERS;
+            nRegions  = Math.min(LDRDConstants.NREGIONS, regions);
+            nSectors  = LDRDConstants.NSECTORS;
+            nChambers = LDRDConstants.NCHAMBERS;
+            nLayers   = LDRDConstants.NLAYERS;
         }
         else {
-            nRegions  = URWellConstants.NREGIONS_PROTO;
-            nSectors  = URWellConstants.NSECTORS_PROTO;
-            nChambers = URWellConstants.NCHAMBERS_PROTO;
-            nLayers   = URWellConstants.NLAYERS;
+            nRegions  = LDRDConstants.NREGIONS_PROTO;
+            nSectors  = LDRDConstants.NSECTORS_PROTO;
+            nChambers = LDRDConstants.NCHAMBERS_PROTO;
+            nLayers   = LDRDConstants.NLAYERS;
         }
         this.fillStripLists();
         this.fillPlaneLists();
@@ -123,13 +123,13 @@ public final class URWellStripFactory {
         /**
          * * number of strip in AB**
          */
-        int nAB = (int) (2 * xHalfSmallBase / (URWellConstants.PITCH
-                  / Math.sin(Math.toRadians(URWellConstants.STEREOANGLE))));
+        int nAB = (int) (2 * xHalfSmallBase / (LDRDConstants.PITCH
+                  / Math.sin(Math.toRadians(LDRDConstants.STEREOANGLE))));
 
         double AC = Math.sqrt((Math.pow((xHalfSmallBase - xHalfLargeBase), 2) + Math.pow((2 * yHalf), 2)));
         double theta = Math.acos(2 * yHalf / AC);
-        int nAC = (int) (AC / (URWellConstants.PITCH
-                / Math.cos(theta - Math.toRadians(URWellConstants.STEREOANGLE))));
+        int nAC = (int) (AC / (LDRDConstants.PITCH
+                / Math.cos(theta - Math.toRadians(LDRDConstants.STEREOANGLE))));
 
         int nStrips = nAB + nAC +1 ;
 
@@ -200,19 +200,19 @@ public final class URWellStripFactory {
         
         // Y coordinate of the intersection point between the x=0 and the strip line crossing for B
 
-        double DY = -yHalf - Math.tan(Math.toRadians(URWellConstants.STEREOANGLE)) *xHalfSmallBase;
+        double DY = -yHalf - Math.tan(Math.toRadians(LDRDConstants.STEREOANGLE)) *xHalfSmallBase;
        
         // ID of the strip 
-        int nS = (int) (DY * Math.cos(Math.toRadians(URWellConstants.STEREOANGLE)) / URWellConstants.PITCH);
+        int nS = (int) (DY * Math.cos(Math.toRadians(LDRDConstants.STEREOANGLE)) / LDRDConstants.PITCH);
         int nCStrip = nS + (cStrip - 1);
      
         //strip straight line chamber reference frame -> y = mx +c; 
-        double stereoAngle = URWellConstants.STEREOANGLE;
+        double stereoAngle = LDRDConstants.STEREOANGLE;
         if (layer % 2 != 0) {
-            stereoAngle = -URWellConstants.STEREOANGLE;
+            stereoAngle = -LDRDConstants.STEREOANGLE;
         }
         double m = Math.tan(Math.toRadians(stereoAngle));
-        double c = nCStrip * URWellConstants.PITCH / Math.cos(Math.toRadians(stereoAngle));
+        double c = nCStrip * LDRDConstants.PITCH / Math.cos(Math.toRadians(stereoAngle));
    
         // Take 2 points in the strip straight line. They needs to define Line object 
         double oX = -xHalfLargeBase;
@@ -340,7 +340,7 @@ public final class URWellStripFactory {
         local.copy(global);
   
         local.rotateZ(Math.toRadians(-60*(sector-1)));
-        local.rotateY(Math.toRadians(-URWellConstants.THTILT));
+        local.rotateY(Math.toRadians(-LDRDConstants.THTILT));
 
         
         return local;
@@ -433,11 +433,11 @@ public final class URWellStripFactory {
     public static void main(String[] args) {
         DatabaseConstantProvider cp = new DatabaseConstantProvider(11, "default");
 
-        URWellConstants.connect(cp);
+        LDRDConstants.connect(cp);
 
-        URWellGeant4Factory factory = new URWellGeant4Factory(cp,true,2);
+        LDRDGeant4Factory factory = new LDRDGeant4Factory(cp,true,2);
 
-        URWellStripFactory factory2 = new URWellStripFactory(cp,true,1);
+        LDRDStripFactory factory2 = new LDRDStripFactory(cp,true,1);
   
         Plane3D plane = factory2.getPlane(6, 1, 200);
         System.out.println(plane.toString());
