@@ -192,7 +192,12 @@ public class FittedCluster extends ArrayList<FittedHit> implements Comparable<Fi
     public int compareTo(FittedCluster o) {
         if (this.size() > o.size()) {
             return 1;
-        } else {
+        } 
+        else if(this.size() == o.size()){
+            if(this.get_fitProb() > o.get_fitProb()) return 1;
+            else return 0;
+        }
+        else {
             return 0;
         }
     }

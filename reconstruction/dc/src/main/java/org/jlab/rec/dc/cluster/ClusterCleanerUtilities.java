@@ -727,10 +727,10 @@ public class ClusterCleanerUtilities {
                     continue;
                 }
                 //ensure that the lines are consistent
-
-                if (Math.abs(ovr.get_clusterLineFitSlope() - cls.get_clusterLineFitSlope()) > 0.2) {
-                    passCls = false;
-                }
+                
+                //if (Math.abs(ovr.get_clusterLineFitSlope() - cls.get_clusterLineFitSlope()) > 0.2) {
+                  //  passCls = false;
+                //}
             }
             if((!isExceptionalFittedCluster(cls) && hitOvrl.size() < 3) 
                     || (isExceptionalFittedCluster(cls) && hitOvrl.size() < 2)) {
