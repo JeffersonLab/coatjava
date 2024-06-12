@@ -398,7 +398,7 @@ final class Wire {
         // hh: wire distance in the wire plane
         double hh = (wire-1 + ((double)(layer % 2)) / 2.0) * dw2;
         if(ireg==2 && isSensitiveWire(isuper, layer, wire) && dbref.getMinistaggerStatus())
-                hh += ((layer%2)*2-1)*dbref.ministagger();
+                hh += ((layer%2)*2)*dbref.ministagger();
 
         // ll: layer distance
         double tt = dbref.cellthickness(isuper) * dbref.wpdist(isuper);
