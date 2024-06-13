@@ -624,6 +624,7 @@ public class HitReader {
             tPars[2] = (double)bankAI.getFloat("phi", j);
             tPars[3] = (double)bankAI.getByte("id", j);
             
+            aimatch.clear();
             for (int k = 0; k < 6; k++) {
                 aimatch.put(Ids[k], tPars); 
             }
