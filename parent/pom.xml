@@ -3,7 +3,7 @@
 
   <groupId>org.jlab.clas</groupId>
   <artifactId>clas12rec</artifactId>
-  <version>10.0.11-SNAPSHOT</version>
+  <version>10.1.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <repositories>
@@ -36,7 +36,7 @@
     <dependency>
       <groupId>org.jlab</groupId>
       <artifactId>groot</artifactId>
-      <version>4.1.0</version>
+      <version>4.0.5</version>
     </dependency>
 
     <!-- https://mvnrepository.com/artifact/org.jacoco/jacoco-maven-plugin -->
@@ -100,7 +100,7 @@
       <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
-          <version>3.2.2</version>
+          <version>3.4.1</version>
           <configuration>
               <archive>
                   <manifest>
