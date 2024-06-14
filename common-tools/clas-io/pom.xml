@@ -34,7 +34,20 @@
       <artifactId>jaxb-runtime</artifactId>
       <version>4.0.5</version>
     </dependency>
-        
+
+    <!-- Unnecessary prior to Java 11 -->
+    <dependency>
+        <groupId>jakarta.xml.bind</groupId>
+        <artifactId>jakarta.xml.bind-api</artifactId>
+        <version>4.0.0</version>
+    </dependency>
+    <dependency>
+        <groupId>com.sun.xml.bind</groupId>
+        <artifactId>jaxb-impl</artifactId>
+        <version>4.0.0</version>
+        <scope>runtime</scope>
+    </dependency>
+ 
     <dependency>
       <groupId>org.jlab.coda</groupId>
       <artifactId>jevio</artifactId>
