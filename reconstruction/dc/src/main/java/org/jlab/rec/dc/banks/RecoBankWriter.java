@@ -36,22 +36,24 @@ public class RecoBankWriter {
 
     public void updateListsWithClusterInfo(List<FittedHit> fhits,
             List<FittedCluster> clusters) {
-        
+        ArrayList rmHits = new ArrayList<FittedHit>();
+        ArrayList addHits = new ArrayList<FittedHit>();
         for (int i = 0; i < clusters.size(); i++) {
             clusters.get(i).set_Id(i + 1);
             for (int j = 0; j < clusters.get(i).size(); j++) {
 
                 clusters.get(i).get(j).set_AssociatedClusterID(clusters.get(i).get_Id());
+                addHits.add(clusters.get(i).get(j));
                 for (int k = 0; k < fhits.size(); k++) {
                     if (fhits.get(k).get_Id() == clusters.get(i).get(j).get_Id()) {
-                        fhits.remove(k);
-                        fhits.add(clusters.get(i).get(j));
-
+                        rmHits.add(fhits.get(k));
+                    }
                 }
             }
         }
-        }
-
+        
+        fhits.removeAll(rmHits);
+        fhits.addAll(addHits);
     }
 
     public DataBank fillHBHitsBank(DataEvent event, List<FittedHit> hitlist) {

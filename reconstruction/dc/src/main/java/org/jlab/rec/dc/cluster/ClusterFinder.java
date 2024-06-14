@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.io.base.DataEvent;
@@ -170,10 +171,11 @@ public class ClusterFinder {
      * @param ct
      * @param cf
      * @param DcDetector
+     * @param numTDCBankRows
      * @return clusters of hits. Hit-based tracking linear fits to the wires are
      * done to determine the clusters. The result is a fitted cluster
      */
-    public List<FittedCluster> FindHitBasedClusters(List<Hit> allhits, ClusterCleanerUtilities ct, ClusterFitter cf, DCGeant4Factory DcDetector) {
+    public List<FittedCluster> FindHitBasedClusters(List<Hit> allhits, ClusterCleanerUtilities ct, ClusterFitter cf, DCGeant4Factory DcDetector, int numTDCBankRows) {
 
         //fill array of hit
         this.fillHitArray(allhits, 0);
@@ -238,7 +240,7 @@ public class ClusterFinder {
             }
         }
         
-        ArrayList rmHits = new ArrayList<FittedHit>();
+        int idSharedHits = numTDCBankRows + 10000;
         for (FittedCluster clus : fittedClusList) {
             if (clus != null && ((!ct.isExceptionalFittedCluster(clus) && clus.size() >= Constants.DC_MIN_NLAYERS) || 
                     (ct.isExceptionalFittedCluster(clus) && clus.size() >= Constants.DC_MIN_NLAYERS-1)) && clus.get_fitProb()>Constants.HITBASEDTRKGMINFITHI2PROB) {
@@ -256,13 +258,31 @@ public class ClusterFinder {
                 
                 clus = ct.ClusterCleaner(clus, cf, DcDetector);
                 // update the hits
+                ArrayList rmHits = new ArrayList<FittedHit>();
+                ArrayList addHits = new ArrayList<FittedHit>();
+                //System.out.print(clus.size() + "  ");
                 for (FittedHit fhit : clus) {
-                    fhit.set_AssociatedClusterID(clus.get_Id());
+                    if(fhit.get_AssociatedClusterID() <= 0) 
+                        fhit.set_AssociatedClusterID(clus.get_Id());
+                    else{
+                        try{
+                            FittedHit newHit = fhit.clone();                        
+                            newHit.set_Id(idSharedHits++);
+                            newHit.set_AssociatedClusterID(clus.get_Id());
+                            rmHits.add(fhit);
+                            addHits.add(newHit);
+                            
+                        } catch (CloneNotSupportedException ex) {
+                            Logger.getLogger(FittedHit.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
                 }
+                clus.removeAll(rmHits);
+                clus.addAll(addHits);
                 cf.SetFitArray(clus, "TSC");
                 cf.Fit(clus, false);
                 cf.SetSegmentLineParameters(clus.get(0).get_Z(), clus);
-               
+               //System.out.println(clus.size());
                 if (clus != null ) {
                     refittedClusList.add(clus);
                 }

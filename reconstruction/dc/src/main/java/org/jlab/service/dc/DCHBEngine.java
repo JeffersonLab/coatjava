@@ -104,7 +104,7 @@ public class DCHBEngine extends DCEngine {
         List<FittedCluster> clusters = clusFinder.FindHitBasedClusters(hits,
                 ct,
                 cf,
-                Constants.getInstance().dcDetector);
+                Constants.getInstance().dcDetector, hitRead.get_NumTDCBankRows());
         if (clusters.isEmpty()) {
             return true;
         }

@@ -141,10 +141,22 @@ public class PatternRec {
             Map.Entry<Integer, ArrayList<Hit>> entry = itr.next(); 
              
             if(entry.getValue().size()>=15) {// 3 or 4 layers per superlayer, 5 out of six superlayer tracking
-                // find clusters
-                 //fill array of hit
-                clf.fillHitArray(entry.getValue(), 0);        //find clumps of hits init
-                List<Cluster> clusters = clf.findClumps(entry.getValue(), ct);
+                // Construct clusters
+                Map<Integer, Cluster> clusterMap = new HashMap<>();
+                for(Hit hit : entry.getValue()){
+                    int index = hit.NNClusId;
+                    if(clusterMap.get(index)==null) { // if the list not yet created make it
+                        clusterMap.put(index, new Cluster(hit.get_Sector(), hit.get_Superlayer(), index)); 
+                        clusterMap.get(index).add(hit); // append hit
+                    } else {
+                        clusterMap.get(index).add(hit); // append hit
+                    }
+                }
+                List<Cluster> clusters = new ArrayList();
+                for(Cluster clus : clusterMap.values()){
+                    Collections.sort(clus);
+                    clusters.add(clus);
+                }
                 for (Cluster clus : clusters) {
                     FittedCluster fclus = new FittedCluster(clus);
                     clus.set_Id(clus.get(0).NNClusId);

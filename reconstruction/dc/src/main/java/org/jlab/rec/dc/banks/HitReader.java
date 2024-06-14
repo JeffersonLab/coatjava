@@ -54,7 +54,8 @@ public class HitReader {
     private IndexedTable docares     = null;
     private IndexedTable time2dist   = null;
     private IndexedTable t0s         = null;
-
+    
+    private int numTDCBankRows = -1;
     private List<Hit> _DCHits;
     private List<FittedHit> _HBHits; //hit-based tracking hit information
     private List<FittedHit> _TBHits; //time-based tracking hit information
@@ -263,6 +264,7 @@ public class HitReader {
 
         RawDataBank bankFiltered = new RawDataBank(bankNames.getTdcBank(), rawBankOrders);
         bankFiltered.read(event);
+        this.set_NumTDCBankRows(bankFiltered.rows());
         for (int i = 0; i < bankFiltered.rows(); i++) {
             int sector     = bankFiltered.getByte("sector", i);
             int layer      = (bankFiltered.getByte("layer", i)-1)%6 + 1;
@@ -915,5 +917,21 @@ public class HitReader {
             }
             return list;
         }
+    }
+    
+    /**
+     *
+     * @param num # of rows in DC::TDC bank
+     */
+    public void set_NumTDCBankRows(int num){
+        this.numTDCBankRows = num;
+    }
+    
+    /**
+     *
+     * @return # of rows in DC::TDC bank
+     */
+    public int get_NumTDCBankRows(){
+        return numTDCBankRows;
     }
 }
