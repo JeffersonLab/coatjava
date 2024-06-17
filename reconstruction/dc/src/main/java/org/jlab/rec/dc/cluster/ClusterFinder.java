@@ -260,7 +260,6 @@ public class ClusterFinder {
                 // update the hits
                 ArrayList rmHits = new ArrayList<FittedHit>();
                 ArrayList addHits = new ArrayList<FittedHit>();
-                //System.out.print(clus.size() + "  ");
                 for (FittedHit fhit : clus) {
                     if(fhit.get_AssociatedClusterID() <= 0) 
                         fhit.set_AssociatedClusterID(clus.get_Id());
@@ -282,7 +281,6 @@ public class ClusterFinder {
                 cf.SetFitArray(clus, "TSC");
                 cf.Fit(clus, false);
                 cf.SetSegmentLineParameters(clus.get(0).get_Z(), clus);
-               //System.out.println(clus.size());
                 if (clus != null ) {
                     refittedClusList.add(clus);
                 }
