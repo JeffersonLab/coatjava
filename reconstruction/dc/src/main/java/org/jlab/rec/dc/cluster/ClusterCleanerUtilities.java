@@ -704,7 +704,7 @@ public class ClusterCleanerUtilities {
      * @return the selected cluster
      */
     public FittedCluster OverlappingClusterResolver(FittedCluster thisclus, List<FittedCluster> clusters) {
-
+        // Get list for overlapped clusters
         List<FittedCluster> overlapingClusters = new ArrayList<>();
 
         for (FittedCluster cls : clusters) {
@@ -742,7 +742,19 @@ public class ClusterCleanerUtilities {
             }
 
         }
-        Collections.sort(overlapingClusters);
+        
+        // Remove clusters in R1&R2 from lists, whose slope is out of limit
+        // If slope for all of clusters is out of limit, keep all
+        if(overlapingClusters.size() > 1){
+            List<FittedCluster> rmClusters = new ArrayList<>();
+            for(FittedCluster overlapingCls : overlapingClusters){
+                if(overlapingCls.get_Superlayer() <=4 && Math.abs(overlapingCls.get_clusterLineFitSlope()) > 0.578) //tan(30 deg) 
+                    rmClusters.add(overlapingCls);
+            }
+            if(overlapingClusters.size() > rmClusters.size()) overlapingClusters.removeAll(rmClusters);
+        }
+        
+        Collections.sort(overlapingClusters); // Order overlapping clusters; 1st priortiy: cluster size; 2nd priority if same cluster size : fitting quality
 
         // return the largest cluster.
         return overlapingClusters.get(0);
