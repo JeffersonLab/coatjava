@@ -1112,6 +1112,7 @@ public class FittedHit extends Hit implements Comparable<Hit> {
             hitClone.set_CellSize(this.get_CellSize());
             hitClone.set_AssociatedClusterID(this.get_AssociatedClusterID());
             hitClone.set_AssociatedHBTrackID(this.get_AssociatedHBTrackID());
+            hitClone.set_IndexTDC(this.get_IndexTDC());
             hitClone.betaFlag = this.betaFlag;
             
         return hitClone;

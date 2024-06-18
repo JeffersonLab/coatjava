@@ -44,7 +44,7 @@ public class HitReader {
     private int run = 0;
     private long tiTimeStamp = 0;
     private DataEvent event = null;
-    
+        
     private IndexedTable tt          = null;
     private IndexedTable reverseTT   = null;
     private IndexedTable dcrbjitters = null;
@@ -341,6 +341,7 @@ public class HitReader {
                     hit.calc_CellSize(detector);
                     double posError = hit.get_CellSize() / Math.sqrt(12.);
                     hit.set_DocaErr(posError);
+                    hit.set_IndexTDC(index);
                     this._DCHits.add(hit);
                 }
             }

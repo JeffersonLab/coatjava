@@ -265,7 +265,8 @@ public class ClusterFinder {
                         fhit.set_AssociatedClusterID(clus.get_Id());
                     else{
                         try{
-                            FittedHit newHit = fhit.clone();                        
+                            FittedHit newHit = fhit.clone();
+                            newHit.set_IndexTDC(fhit.get_IndexTDC());
                             newHit.set_Id(idSharedHits++);
                             newHit.set_AssociatedClusterID(clus.get_Id());
                             rmHits.add(fhit);

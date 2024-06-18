@@ -35,6 +35,7 @@ public class FittedCluster extends ArrayList<FittedHit> implements Comparable<Fi
             fhit.set_DocaErr(rawCluster.get(i).get_DocaErr());
             fhit.set_CellSize(rawCluster.get(i).get_CellSize());
             fhit.set_Id(rawCluster.get(i).get_Id());
+            fhit.set_IndexTDC(rawCluster.get(i).get_IndexTDC());
             
             this.add(fhit);
         }
