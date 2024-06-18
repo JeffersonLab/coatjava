@@ -1,11 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
-//package clas12vis;
-
 package org.jlab.geom.detector.alert.ATOF;
 
 import org.jlab.geom.base.ConstantProvider;
@@ -15,9 +7,6 @@ import org.jlab.geom.component.ScintillatorPaddle;
 import org.jlab.geom.prim.Plane3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Transformation3D;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author viktoriya
@@ -60,8 +49,7 @@ public class AlertTOFFactory implements Factory<AlertTOFDetector, AlertTOFSector
 
 	@Override
 	public AlertTOFSector createSector(ConstantProvider cp, int sectorId) {
-		if (!(0 <= sectorId && sectorId < nsectors)) throw new IllegalArgumentException("Error: invalid sector=" + sectorId);
-		AlertTOFSector sector = new AlertTOFSector(sectorId);
+		AlertTOFSector sector = new AlertTOFSector(sectorId+1);
 		for (int superlayerId = 0; superlayerId < nsuperl; superlayerId++)
 		     sector.addSuperlayer(createSuperlayer(cp, sectorId, superlayerId));
 		return sector;
@@ -69,9 +57,7 @@ public class AlertTOFFactory implements Factory<AlertTOFDetector, AlertTOFSector
 
 	@Override
 	public AlertTOFSuperlayer createSuperlayer(ConstantProvider cp, int sectorId, int superlayerId) {
-		if (!(0 <= sectorId && sectorId < nsectors)) throw new IllegalArgumentException("Error: invalid sector=" + sectorId);
-		if (!(0 <= superlayerId && superlayerId < nsuperl)) throw new IllegalArgumentException("Error: invalid superlayer=" + superlayerId);
-		AlertTOFSuperlayer superlayer = new AlertTOFSuperlayer(sectorId, superlayerId);
+		AlertTOFSuperlayer superlayer = new AlertTOFSuperlayer(sectorId+1, superlayerId+1);
 
 		if (superlayerId == 0) {
 			int nlayers0 = 1;
@@ -108,9 +94,7 @@ public class AlertTOFFactory implements Factory<AlertTOFDetector, AlertTOFSector
 
 		double gap_pad_z = 0.3d; // mm, gap between paddles in z
 
-		AlertTOFLayer layer = new AlertTOFLayer(sectorId, superlayerId, layerId);
-
-		List<Plane3D> planes = new ArrayList<>();
+		AlertTOFLayer layer = new AlertTOFLayer(sectorId+1, superlayerId+1, layerId+1);
 
 		double len_b   = layerId * pad_z + layerId * gap_pad_z; // back paddle plan
 		double len_f   = len_b + pad_z; // front paddle plan
@@ -155,7 +139,6 @@ public class AlertTOFFactory implements Factory<AlertTOFDetector, AlertTOFSector
 
 		Plane3D plane = new Plane3D(0, Rl, 0, 0, 1, 0);
 		plane.rotateZ(sectorId * openAng_sector_rad - Math.toRadians(90));
-		planes.add(plane);
 
 		return layer;
 	}

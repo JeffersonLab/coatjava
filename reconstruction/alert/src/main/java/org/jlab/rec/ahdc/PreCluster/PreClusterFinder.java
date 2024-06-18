@@ -23,21 +23,21 @@ public class PreClusterFinder {
 
 	public void findPreCluster(List<Hit> AHDC_hits) {
 		ArrayList<Hit> s0l0 = new ArrayList<Hit>();
-		fill_list(AHDC_hits, s0l0, 0, 0);
+		fill_list(AHDC_hits, s0l0, 1, 1);
 		ArrayList<Hit> s1l0 = new ArrayList<Hit>();
-		fill_list(AHDC_hits, s1l0, 1, 0);
+		fill_list(AHDC_hits, s1l0, 2, 1);
 		ArrayList<Hit> s1l1 = new ArrayList<Hit>();
-		fill_list(AHDC_hits, s1l1, 1, 1);
+		fill_list(AHDC_hits, s1l1, 3, 2);
 		ArrayList<Hit> s2l0 = new ArrayList<Hit>();
-		fill_list(AHDC_hits, s2l0, 2, 0);
+		fill_list(AHDC_hits, s2l0, 4, 1);
 		ArrayList<Hit> s2l1 = new ArrayList<Hit>();
-		fill_list(AHDC_hits, s2l1, 2, 1);
+		fill_list(AHDC_hits, s2l1, 5, 2);
 		ArrayList<Hit> s3l0 = new ArrayList<Hit>();
-		fill_list(AHDC_hits, s3l0, 3, 0);
+		fill_list(AHDC_hits, s3l0, 6, 1);
 		ArrayList<Hit> s3l1 = new ArrayList<Hit>();
-		fill_list(AHDC_hits, s3l1, 3, 1);
+		fill_list(AHDC_hits, s3l1, 7, 2);
 		ArrayList<Hit> s4l0 = new ArrayList<Hit>();
-		fill_list(AHDC_hits, s4l0, 4, 0);
+		fill_list(AHDC_hits, s4l0, 8, 1);
 
 		ArrayList<ArrayList<Hit>> all_super_layer = new ArrayList<>();
 		all_super_layer.add(s0l0);
@@ -57,10 +57,10 @@ public class PreClusterFinder {
 					hit.setUse(true);
 					int expected_wire_plus  = hit.getWireId() + 1;
 					int expected_wire_minus = hit.getWireId() - 1;
-					if (hit.getWireId() - 1 == 0) {
+					if (hit.getWireId() == 1) {
 						expected_wire_minus = hit.getNbOfWires();
 					}
-					if (hit.getWireId() + 1 == hit.getNbOfWires() + 1) {
+					if (hit.getWireId() == hit.getNbOfWires() ) {
 						expected_wire_plus = 1;
 					}
 

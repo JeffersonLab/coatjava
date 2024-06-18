@@ -15,19 +15,6 @@
 	]
   },
   {
-    "name" : "AHDC::tdc",
-    "group": 22400,
-    "item" : 12,
-	"info": "TDC bank for the ALERT Wire Chamber",
-	"entries":[
-	  { "name":"sector"    , "type":"B", "info":"sector 1"},
-	  { "name":"layer"     , "type":"B", "info":"layer 1-5"},
-	  { "name":"component" , "type":"S", "info":"wire number"},
-	  { "name":"order"     , "type":"B", "info":"Stereo angle 0 - in, 1 - out"},
-	  { "name":"TDC"       , "type":"I", "info":"TDC value"}
-    ]
-  },
-  {
     "name" : "BMT::adc",
     "group": 20100,
     "item" : 11,
