@@ -9,10 +9,10 @@ public class LMUConstants {
     private final static String CCDBPATH = "/geometry/urwell/";
     
     public final static int NREGIONS    = 6;    //number of regions 
-    public final static int NLAYERS     = 2;    //number of layers per region
+    public final static int NLAYERS     = 2;    //number of layers per region (SHOULD BE AN ARRAY)
 
-    public final static double XSIZE = 5;
-    public final static double YSIZE = 5;
+    public final static double XSIZE = 10;
+    public final static double YSIZE = 10;
     
     public final static double XENLARGEMENT = 0.1; // cm
     public final static double YENLARGEMENT = 0.1;  // cm

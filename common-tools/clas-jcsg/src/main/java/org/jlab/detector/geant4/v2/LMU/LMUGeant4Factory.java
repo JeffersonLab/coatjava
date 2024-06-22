@@ -134,7 +134,7 @@ public final class LMUGeant4Factory extends Geant4Factory {
         double chamberDY    = this.getChamberDimensions()[1];
         double chamberDZ    = this.getChamberDimensions()[2];        
 
-        Geant4Basic chamberVolume = new G4Box("r" + (iRegion + 1) + "_c" + 1, chamberDX, chamberDY, chamberDZ);
+        Geant4Basic chamberVolume = new G4Box("region" + (iRegion + 1), chamberDX, chamberDY, chamberDZ);
 
         double daughterDX  = this.getDaughterChamberDimensions()[0];
         double daughterDY  = this.getDaughterChamberDimensions()[1];
@@ -153,7 +153,7 @@ public final class LMUGeant4Factory extends Geant4Factory {
             Geant4Basic daughterVolume = new G4Box("daughter_volume", daughterDX, daughterDY,
                 LMUConstants.CHAMBERVOLUMESTHICKNESS[i]/2);
             
-            daughterVolume.setName("rg" + (iRegion + 1) + "_c" + 1 +"_"+LMUConstants.CHAMBERVOLUMESNAME[i] );
+            daughterVolume.setName("region" + (iRegion + 1) +"_"+LMUConstants.CHAMBERVOLUMESNAME[i] );
             
             
             daughterVolume.setMother(chamberVolume);
