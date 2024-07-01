@@ -90,7 +90,7 @@
     <dependency>
       <groupId>org.jlab.coda</groupId>
       <artifactId>xmsg</artifactId>
-      <version>2.3-SNAPSHOT</version>
+      <version>2.3</version>
     </dependency>
 
     <dependency>
