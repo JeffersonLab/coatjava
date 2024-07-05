@@ -60,7 +60,14 @@ final class DCdatabase {
     private final String dcdbpath = "/geometry/dc/";
     private static DCdatabase instance = null;
 
-    private DCdatabase() {
+    public final double[] xdistBob = {8.250, 16.970, 18.054};
+    public final double[] feedThroughExt = {0.55, 0.1, 0.55};
+    public final double feedThroughLength = 0.2;
+    public final double feedThroughRmin = 0.065;
+    public final double feedThroughRmax = 0.137;
+    public final double feedThroughRcurv = (Math.pow(feedThroughRmax-feedThroughRmin, 2)+Math.pow(feedThroughLength, 2))/(feedThroughRmax-feedThroughRmin)/2;
+
+        private DCdatabase() {
     }
 
     public static DCdatabase getInstance() {
@@ -264,9 +271,9 @@ final class Wire {
     private final int wire;
     private final DCdatabase dbref = DCdatabase.getInstance();
 
-    private final Vector3d midpoint;
-    private final Vector3d center;
-    private final Vector3d direction;
+    private Vector3d midpoint;
+    private Vector3d center;
+    private Vector3d direction;
     private Vector3d leftend;
     private Vector3d rightend;
 
@@ -306,14 +313,15 @@ final class Wire {
     }
 
     private void findEnds() {
-        // define vector from wire midpoint to chamber tip (z is wrong!!)
-        Vector3d vnum = new Vector3d(0, dbref.xdist(ireg), 0);
-        vnum.sub(midpoint);
 
         double copen = Math.cos(dbref.thopen(ireg) / 2.0);
         double sopen = Math.sin(dbref.thopen(ireg) / 2.0);
 
-        // define unit vector normal to the sides of the chamber and pointing inside
+        // define vector from wire midpoint to chamber tip projectedonto the z=0 plane
+        Vector3d vnum = new Vector3d(0, dbref.xdistBob[ireg]+dbref.feedThroughExt[ireg]/copen, 0);
+        vnum.sub(midpoint);
+
+        // define unit vector normal to the sides of the chamber and pointing inside, projected onto the z=0 plane
         Vector3d rnorm = new Vector3d(copen, sopen, 0);
         Vector3d lnorm = new Vector3d(-copen, sopen, 0);
 
@@ -322,6 +330,28 @@ final class Wire {
 
         double wlenr = vnum.dot(rnorm) / direction.dot(rnorm);
         rightend = direction.times(wlenr).add(midpoint);
+
+        // define unit vector parallel to the sides of the chamber and pointing to the chamber tip, projected onto the z=0 plane
+        Vector3d rpar  = new Vector3d(sopen, -copen, 0);
+        Vector3d lpar  = new Vector3d(-sopen, -copen, 0);
+
+        // define the center of the circles that describe the trumpet-like part of the feedthrough
+        Vector3d rcirc = rnorm.times(-dbref.feedThroughLength).add(rpar.times(dbref.feedThroughRmin+dbref.feedThroughRcurv)).add(rightend);
+        Vector3d lcirc = lnorm.times(-dbref.feedThroughLength).add(lpar.times(dbref.feedThroughRmin+dbref.feedThroughRcurv)).add(leftend);
+        
+        // recalculate the wire direction assuming the wire is tangent to the left and right circles
+        direction = lcirc.minus(rcirc).normalized();
+        
+        // realculate the wire end point
+        Vector3d rtang = lpar.times(-dbref.feedThroughRcurv).rotateZ(Math.atan2(direction.y, direction.x)).add(rcirc);
+        midpoint = rtang.plus(direction.times(-rtang.x/direction.x));
+        
+        wlenl = vnum.dot(lnorm) / direction.dot(lnorm);
+        leftend = direction.times(wlenl).add(midpoint);
+
+        wlenr = vnum.dot(rnorm) / direction.dot(rnorm);
+        rightend = direction.times(wlenr).add(midpoint);
+//if(sector==1)System.out.println( this.sector + " " + this.layer + " " + this.wire + " " + this.midpoint + " " +this.direction + " " + this.leftend + " " + this.rightend);
     }
 
     /**
