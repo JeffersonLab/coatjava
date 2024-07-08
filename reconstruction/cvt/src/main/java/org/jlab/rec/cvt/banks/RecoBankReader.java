@@ -112,12 +112,9 @@ public class RecoBankReader {
     }
                         
     public static Map<Integer, Cluster> readBSTClusterBank(DataEvent event, List<Hit> svthits) {
-        
-        if(!event.hasBank("BST::Clusters"))
-            return null;
-        else {
-            Map<Integer, Cluster> clusters = new HashMap<>();        
+        Map<Integer, Cluster> clusters = new HashMap<>();        
             
+        if(event.hasBank("BST::Clusters")) {
             DataBank bank = event.getBank("BST::Clusters"); 
             for(int i = 0; i < bank.rows(); i++) {
                 int id     = bank.getShort("ID", i);
@@ -181,18 +178,15 @@ public class RecoBankReader {
                 cls.setSeed(seedHit);
                 clusters.put(id, cls);
             }
-            return clusters;
         }
+        return clusters;
     }
         
         
     public static Map<Integer, Cluster> readBMTClusterBank(DataEvent event, List<Hit> bmthits) {
-        
-        if(!event.hasBank("BMT::Clusters"))
-            return null;
-        else {
-            Map<Integer, Cluster> clusters = new HashMap<>();    
+         Map<Integer, Cluster> clusters = new HashMap<>();    
             
+        if(event.hasBank("BMT::Clusters")) {
             DataBank bank = event.getBank("BMT::Clusters");
             for(int i = 0; i < bank.rows(); i++) {
                 int id     = bank.getShort("ID", i);
@@ -277,8 +271,8 @@ public class RecoBankReader {
                 cls.setSeed(seedHit);
                 clusters.put(id, cls);
             }
-            return clusters;
         }
+        return clusters;
     }
 
     

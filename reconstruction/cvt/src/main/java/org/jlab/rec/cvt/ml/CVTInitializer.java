@@ -126,7 +126,7 @@ public class CVTInitializer extends ReconstructionEngine {
     }
 
     public void registerBanks() {
-        String prefix = bankPrefix;
+        String prefix = bankPrefix; System.out.println("INITIALIZING BANKS "+prefix);
         if(Constants.getInstance().isCosmics) prefix = "Rec";
         this.setBmtHitBank("BMT" + prefix + "::Hits");
         this.setBmtClusterBank("BMT" + prefix + "::Clusters");
@@ -269,6 +269,21 @@ public class CVTInitializer extends ReconstructionEngine {
         this.docacutsum = docacutsum;
     }
 
+    private double[] aistatus = new double[]{1};
+    /**
+     * @return the aistatus
+     */
+    public double[] getAistatus() {
+        return aistatus;
+    }
+
+    /**
+     * @param aistatus the aistatus to set
+     */
+    public void setAistatus(double[] aistatus) {  System.out.println("AISTATUS CUT = "+aistatus[0]);
+        this.aistatus = aistatus;
+    }
+    
     IndexedTable svtStatus;
     IndexedTable svtLorentz;
     IndexedTable bmtStatus;
@@ -305,7 +320,7 @@ public class CVTInitializer extends ReconstructionEngine {
         reco = new CVTReconstruction(swimmer);
     }
 
-    public boolean isMC = false;     
+    public boolean isMC = true;     
     public void loadConfiguration() {            
         if (this.getEngineConfigString("isMC")!=null) 
             isMC = Boolean.valueOf(this.getEngineConfigString("isMC"));

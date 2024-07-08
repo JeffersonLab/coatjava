@@ -160,12 +160,14 @@ public class AIHitSelector {
             IndexedTable svtStatus, IndexedTable bmtStatus, IndexedTable bmtTime, 
             IndexedTable bmtStripVoltage, IndexedTable bmtStripThreshold) {
         this.getListHitsOnTrack(event);
+       
         if(pidMapBST.isEmpty()) return null;
-        
+   
         Map<Double, List<ArrayList<Hit>>> trkHits = new HashMap<>();
         
         List<ArrayList<Hit>>  hits = reco.readHits(event, svtStatus, bmtStatus, bmtTime, 
                                                           bmtStripVoltage, bmtStripThreshold);
+        
         List<Hit> bstHits = hits.get(0);
         List<Hit> bmtHits = hits.get(1);
         
@@ -181,9 +183,9 @@ public class AIHitSelector {
             ArrayList<Hit> sbstHits = new ArrayList<>();
             ArrayList<Hit> sbmtHits = new ArrayList<>();
             for(int j = 0; j<phiMapBST.get(i).size(); j++) {
-                int sid = phiMapBST.get(i).get(j);
+                int sid = phiMapBST.get(i).get(j); 
                 for(int k =0; k<bstHits.size(); k++) {
-                    if(bstHits.get(k).getId()==sid) {
+                    if(bstHits.get(k).getId()==sid) { 
                         bstHits.get(k).setTrueAssociatedTrackID(trkIds.get(i)); 
                         int regIdx = bstHits.get(k).getRegion()-1;
                         svtTrkSectors[regIdx]=bstHits.get(k).getSector();
@@ -208,7 +210,7 @@ public class AIHitSelector {
            
            trkHits.put(i, selectedhits);
         }
-        List<ArrayList<Hit>> selectedhits = new ArrayList<>();  
+        List<ArrayList<Hit>> rejectedhits = new ArrayList<>();  
         ArrayList<Hit> sbstHits = new ArrayList<>();
         ArrayList<Hit> sbmtHits = new ArrayList<>();
         for(int k =0; k<bmtHits.size(); k++) { 
@@ -221,10 +223,16 @@ public class AIHitSelector {
                 sbstHits.add(bstHits.get(k));
             }
         } 
-        selectedhits.add(sbstHits);
-        selectedhits.add(sbmtHits);
-
-        trkHits.put(999.0, selectedhits);
+        rejectedhits.add(sbstHits);
+        rejectedhits.add(sbmtHits);
+        
+        trkHits.put(999.0, rejectedhits);
+        
+        int id=1; //reorder hits
+        for(int i = 0; i<2; i++) {
+            for(Hit h : hits.get(i))
+                h.setId(id++);
+        }
         
         return trkHits;
         
@@ -247,6 +255,8 @@ public class AIHitSelector {
         
         for(int i = 0; i < mcTrueBank.rows(); i++) {
             int pid = mcTrueBank.getInt("pid", i);
+            int mtid = mcTrueBank.getInt("mtid", i);
+            if(mtid!=0) continue;
             int hitn = mcTrueBank.getInt("hitn", i);
             int det = mcTrueBank.getInt("detector", i);
             if(det==2) {

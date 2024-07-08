@@ -327,7 +327,6 @@ public class RecoBankWriter {
             bank.setFloat("time", i,  (float) hitlist.get(i).getStrip().getTime());
             bank.setFloat("fitResidual", i,  (float) hitlist.get(i).getResidual()/10);
             bank.setByte("trkingStat", i, (byte) hitlist.get(i).getTrkgStatus());
-
             bank.setShort("clusterID", i, (short) hitlist.get(i).getAssociatedClusterID());
             bank.setShort("trkID", i, (short) hitlist.get(i).getAssociatedTrackID());
             bank.setByte("status", i, (byte) hitlist.get(i).getStrip().getStatus());  

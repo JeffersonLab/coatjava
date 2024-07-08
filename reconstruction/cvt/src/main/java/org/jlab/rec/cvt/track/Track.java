@@ -20,6 +20,7 @@ import org.jlab.rec.cvt.Constants;
 import org.jlab.rec.cvt.Geometry;
 import org.jlab.rec.cvt.bmt.BMTType;
 import org.jlab.rec.cvt.cluster.Cluster;
+import org.jlab.rec.cvt.hit.Hit;
 import org.jlab.rec.cvt.measurement.MLayer;
 import org.jlab.rec.cvt.trajectory.Helix;
 import org.jlab.rec.cvt.trajectory.StateVec;
@@ -680,6 +681,20 @@ public class Track extends Trajectory implements Comparable<Track> {
         for(Cluster c: this.getSeed().getClusters()) str = str + c.toString()+ "\n";
         return str;
     }
+
+    public void resetIds(int id) {
+        for(Cross c : this) {
+            c.setAssociatedTrackID(id);
+            c.getCluster1().setAssociatedTrackID(id);
+            for(Hit h : c.getCluster1()) 
+                h.setAssociatedTrackID(id);
+            if(c.getDetector()==DetectorType.BST) {
+                c.getCluster2().setAssociatedTrackID(id);
+                for(Hit h : c.getCluster2()) 
+                    h.setAssociatedTrackID(id);
+            }
+        }
+    } 
 
     
   public class TrackPars {

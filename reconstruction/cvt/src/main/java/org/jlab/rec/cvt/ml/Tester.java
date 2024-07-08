@@ -41,6 +41,7 @@ public class Tester {
         enmf.init();
        
         CVTInitializer eni = new CVTInitializer();
+        eni.setVariation(var);
         eni.init();
          
         CVTClustering enc = new CVTClustering();
@@ -51,7 +52,7 @@ public class Tester {
         enr.setVariation(var);
         enr.init();
         
-        MLTracking ent = new MLTracking();
+        ConvTracking ent = new ConvTracking();
         ent.setVariation(var);
         ent.init();
         
@@ -69,12 +70,14 @@ public class Tester {
         }
         HipoDataSync writer = new HipoDataSync(schemaFactory);
         writer.setCompressionType(2);
-        String outputFileName = "/Users/ziegler/BASE/Files/CVTDEBUG/AI/MLSample_test1.hipo";
+        String outputFileName = "/Users/ziegler/BASE/Files/CVTDEBUG/AI/MLSample_1.hipo";
+        //String outputFileName = "/Users/ziegler/BASE/Files/CVTDEBUG/AI/reduced-cvt-airec.hipo";
         checkFile(outputFileName);
         writer.open(outputFileName);
         long t1 = 0;
         List<String> inputList = new ArrayList<>();
         inputList.add("/Users/ziegler/BASE/Files/CVTDEBUG/AI/skim1_rgbbg50na.hipo");
+        //inputList.add("/Users/ziegler/BASE/Files/CVTDEBUG/AI/reduced-cvt.hipo");
         
         int counter = 0;
         for(String inputFile :  inputList) {
@@ -82,7 +85,7 @@ public class Tester {
             reader.open(inputFile);
             reader.getReader().getSchemaFactory().addSchema(schemaFactory.getSchema("cvtml::hits"));
             reader.getReader().getSchemaFactory().addSchema(schemaFactory.getSchema("cvtml::clusters"));
-            while (reader.hasEvent() && counter<1001) {
+            while (reader.hasEvent() && counter<9) {
 
                 counter++;
                 DataEvent event = reader.getNextEvent();
@@ -94,7 +97,7 @@ public class Tester {
                 enr.processDataEvent(event);
                 ent.processDataEvent(event);
                 writer.writeEvent(event);
-                if(counter%1000==0) 
+                if(counter%1==0) 
                     System.out.println("PROCESSED "+counter+" EVENTS ");
                 
             }

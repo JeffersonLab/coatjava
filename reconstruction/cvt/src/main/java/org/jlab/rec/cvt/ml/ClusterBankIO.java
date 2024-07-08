@@ -22,7 +22,7 @@ import org.jlab.rec.cvt.mlanalysis.AIObject;
  *
  * @author ziegler
  */
-public class MLClusterBankIO {
+public class ClusterBankIO {
 
     
     private List<Cluster> SVTClusters;
@@ -30,7 +30,7 @@ public class MLClusterBankIO {
     private List<Hit> SVTHits;
     private List<Hit> BMTHits;
     
-    public List<Cluster> getClusters(DataEvent event, Swim swimmer, double ... stats) {
+    public List<Cluster> getMLClusters(DataEvent event, Swim swimmer, double ... stats) {
         setSVTClusters(new ArrayList<>());
         setBMTClusters(new ArrayList<>());
         List<Hit> SVThits = RecoBankReader.readBSTHitBank(event);
@@ -56,12 +56,11 @@ public class MLClusterBankIO {
         for(int i = 0; i < aibank.rows(); i++) { 
             boolean pass = false;
             int status = aibank.getShort("status", i);
-            for(int j =0; j<n; j++) {
-                if(status==stats[j])
+            for(int j =0; j<n; j++) { 
+                if(status>=stats[j])
                     pass = true;
             }
-            
-            int id     = aibank.getShort("id", i); 
+            int id   = aibank.getShort("id", i); 
             double x = aibank.getFloat("x", i);
             double y = aibank.getFloat("y", i);
             double z = aibank.getFloat("z", i);
@@ -71,17 +70,68 @@ public class MLClusterBankIO {
             double pars[] = new double[]{x,y,z,p,th,fi};//to be used later
             
             if(SVTclusters.containsKey(id)) { 
-                if(pass) SVTclusters.get(id).setAssociatedTrackPars(pars);
-                getSVTClusters().add(SVTclusters.get(id)); 
+                if(pass) { 
+                    SVTclusters.get(id).setAssociatedTrackPars(pars);
+                    getSVTClusters().add(SVTclusters.get(id));
+                }
             }  
             if(BMTclusters.containsKey(id)) {
-                if(pass) BMTclusters.get(id).setAssociatedTrackPars(pars);
-                getBMTClusters().add(BMTclusters.get(id)); 
+                if(pass) {
+                    BMTclusters.get(id).setAssociatedTrackPars(pars);
+                    getBMTClusters().add(BMTclusters.get(id)); 
+                }
             }  
         }
+       
         seeds.addAll(getSVTClusters());
         seeds.addAll(getBMTClusters());
+        return seeds;
+    }
+    
+    public List<Cluster> getClusters(DataEvent event, Swim swimmer) { //Conventional
+        setSVTClusters(new ArrayList<>());
+        setBMTClusters(new ArrayList<>());
+        List<Hit> SVThits = RecoBankReader.readBSTHitBank(event);
+        List<Hit> BMThits = RecoBankReader.readBMTHitBank(event);
+        setSVTHits(SVThits);
+        setBMTHits(BMThits);
+        if(SVThits!= null) {
+            Collections.sort(SVThits);
+        }
+        if(BMThits!=null) {
+            for(Hit hit : BMThits) { 
+                hit.getStrip().calcBMTStripParams(hit.getSector(), hit.getLayer(), swimmer);
+            }
+            Collections.sort(BMThits);
+        }
         
+        Map<Integer, Cluster> SVTclusters = RecoBankReader.readBSTClusterBank(event, SVThits);
+        Map<Integer, Cluster> BMTclusters = RecoBankReader.readBMTClusterBank(event, BMThits);
+        DataBank aibank = event.getBank("cvtml::clusters");
+        
+        List<Cluster> seeds = new ArrayList<>();
+        for(int i = 0; i < aibank.rows(); i++) { 
+            boolean pass = false;
+            int status = aibank.getShort("status", i);
+            if(status>=0) { 
+                    pass = true;
+            }
+            
+            int id   = aibank.getShort("id", i); 
+            if(SVTclusters.containsKey(id)) { 
+                if(pass) { 
+                    getSVTClusters().add(SVTclusters.get(id));
+                }
+            }  
+            if(BMTclusters.containsKey(id)) {
+                if(pass) {
+                    getBMTClusters().add(BMTclusters.get(id)); 
+                }
+            }  
+        }
+       
+        seeds.addAll(getSVTClusters());
+        seeds.addAll(getBMTClusters());
         return seeds;
     }
     

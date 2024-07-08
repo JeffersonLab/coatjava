@@ -16,7 +16,6 @@ import org.jlab.rec.cvt.banks.RecoBankWriter;
 import org.jlab.rec.cvt.cluster.Cluster;
 import org.jlab.rec.cvt.cross.Cross;
 import org.jlab.rec.cvt.hit.Hit;
-import org.jlab.rec.cvt.mlanalysis.AIClusterReader;
 import org.jlab.rec.cvt.track.Seed;
 import org.jlab.rec.cvt.track.StraightTrack;
 import org.jlab.rec.cvt.track.Track;
@@ -93,7 +92,6 @@ public class CVTEngine extends ReconstructionEngine {
     private int bmtzmaxclussize = 100;
     private double rcut = 120.0;
     private double z0cut = 10;
-    public boolean runML =false;
     
     public CVTEngine(String name) {
         super(name, "ziegler", "6.0");
@@ -307,19 +305,7 @@ public class CVTEngine extends ReconstructionEngine {
         List<ArrayList<Hit>>         hits = reco.readHits(event, svtStatus, bmtStatus, bmtTime, 
                                                             bmtStripVoltage, bmtStripThreshold);
         List<ArrayList<Cluster>> clusters = reco.findClusters();
-        
-        if(runML) {
-            AIClusterReader aicr = new AIClusterReader();
-            List<Cluster> svtCls = aicr.selectAIClusters(event, reco.getCVTclusters().get(0));
-            List<Cluster> bmtCls = aicr.selectAIClusters(event, reco.getCVTclusters().get(1));
-            reco.getCVTclusters().get(0).clear();
-            reco.getCVTclusters().get(1).clear();
-            if(!svtCls.isEmpty())
-                reco.getCVTclusters().get(0).addAll(svtCls);
-            if(!bmtCls.isEmpty())
-                reco.getCVTclusters().get(1).addAll(bmtCls);
-        }
-        
+      
         List<ArrayList<Cross>>    crosses = reco.findCrosses();
         
                 

@@ -132,29 +132,35 @@ public class MCMLTracking {
             mcVy=mcVytk;
             mcVz=mcVztk;
        }
-       
-        if(c.BG!=0){
-            AIObject aio = new AIObject();
-            aio.id=(short) c.getId();
-            aio.status=(short) c.BG;
-            aio.sector=(byte)c.getSector();
-            aio.layer=(byte)layr;
-            aio.xo=(float)ep1.x();
-            aio.yo=(float)ep1.y();
-            aio.zo=(float)ep1.z();
-            aio.xe=(float)ep2.x();
-            aio.ye=(float)ep2.y();
-            aio.ze=(float)ep2.z();
-            aio.x=(float)mcVx;
-            aio.y=(float)mcVy;
-            aio.z=(float)mcVz;
-            aio.p=(float)mcP;
-            aio.th=(float)mcTheta;
-            aio.fi=(float)mcPhi;
-           return aio;
+        if(c.BG==0){
+            mcP=999;
+            mcTheta=999;
+            mcPhi=999;
+            mcVx=999;
+            mcVy=999;
+            mcVz=999;
         }
-        return null;
-
+        AIObject aio = new AIObject();
+        aio.id=(short) c.getId();
+        aio.status=(short) c.BG;
+        aio.sector=(byte)c.getSector();
+        aio.layer=(byte)layr;
+        aio.xo=(float)ep1.x();
+        aio.yo=(float)ep1.y();
+        aio.zo=(float)ep1.z();
+        aio.xe=(float)ep2.x();
+        aio.ye=(float)ep2.y();
+        aio.ze=(float)ep2.z();
+        aio.x=(float)mcVx;
+        aio.y=(float)mcVy;
+        aio.z=(float)mcVz;
+        aio.p=(float)mcP;
+        aio.th=(float)mcTheta;
+        aio.fi=(float)mcPhi;
+        
+        return aio;
+        
+        
     }
     
     private static int PidToCharge(int pid) {

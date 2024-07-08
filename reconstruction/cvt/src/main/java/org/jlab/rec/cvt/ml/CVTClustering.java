@@ -52,7 +52,7 @@ public class CVTClustering extends CVTInitializer {
         //create structure for ml bank
         DataBank aibank = event.createBank("cvtml::clusters", clusters.get(0).size()+clusters.get(1).size());   
         
-        MLClusterBankIO.fillBank(aibank, clusters.get(0), clusters.get(1));
+        ClusterBankIO.fillBank(aibank, clusters.get(0), clusters.get(1));
         
         banks.add(aibank);
         
@@ -60,7 +60,6 @@ public class CVTClustering extends CVTInitializer {
     }
     
     private void processMC(DataEvent event) {
-        
         AIHitSelector aihs = new AIHitSelector();
         Map<Double, List<ArrayList<Hit>>> selectedHits = aihs.getHitsWithBg(event, reco, svtStatus, 
                 bmtStatus, bmtTime, bmtStripVoltage, bmtStripThreshold);
@@ -81,15 +80,18 @@ public class CVTClustering extends CVTInitializer {
         for(Cluster c : cl1) {
             cid++;
             c.setId(cid);
-            for(Hit h: c) 
+            for(Hit h: c) {
                 h.setAssociatedClusterID(cid);
+            }
         }
         for(Cluster c : cl2) {
             cid++;
             c.setId(cid);
-            for(Hit h: c) 
-                h.setAssociatedClusterID(cid);
+            for(Hit h: c) {
+                h.setAssociatedClusterID(cid); 
+            }
         }
+        
         List<DataBank> banks = new ArrayList<>();
         banks.add(RecoBankWriter.fillSVTHitBank(event, hl1, this.getSvtHitBank()));
         banks.add(RecoBankWriter.fillBMTHitBank(event, hl2, this.getBmtHitBank()));
@@ -98,7 +100,7 @@ public class CVTClustering extends CVTInitializer {
 
         //create structure for ml bank
         DataBank aibank = event.createBank("cvtml::clusters", cl1.size()+cl2.size());   
-        MLClusterBankIO.fillBank(aibank, cl1, cl2);
+        ClusterBankIO.fillBank(aibank, cl1, cl2);
         
         banks.add(aibank);
         

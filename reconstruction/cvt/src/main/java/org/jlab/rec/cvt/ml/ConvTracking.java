@@ -4,24 +4,13 @@
  */
 package org.jlab.rec.cvt.ml;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
-import org.jlab.rec.cvt.banks.RecoBankWriter;
-import org.jlab.rec.cvt.cluster.Cluster;
-import org.jlab.rec.cvt.cross.Cross;
-import org.jlab.rec.cvt.services.TracksFromTargetRec;
-import org.jlab.rec.cvt.track.Seed;
-import org.jlab.rec.cvt.track.Track;
 
 /**
  *
  * @author ziegler
  */
-public class MLTracking extends CVTInitializer {
+public class ConvTracking extends Tracking {
    
     @Override
     public boolean processDataEvent(DataEvent event) {
@@ -32,12 +21,11 @@ public class MLTracking extends CVTInitializer {
     @Override
     public boolean init() {
         super.setOutputBankPrefix("Rec");
-        double[] aistatus = new double[]{10};
+        double[] aistatus = new double[]{0};
         super.setAistatus(aistatus);
         super.init();
         return true;
     }
-    
     
     
 }
