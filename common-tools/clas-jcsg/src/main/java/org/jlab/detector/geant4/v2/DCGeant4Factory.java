@@ -330,20 +330,27 @@ final class Wire {
 
         double wlenr = vnum.dot(rnorm) / direction.dot(rnorm);
         rightend = direction.times(wlenr).add(midpoint);
-
+        
         // define unit vector parallel to the sides of the chamber and pointing to the chamber tip, projected onto the z=0 plane
         Vector3d rpar  = new Vector3d(sopen, -copen, 0);
         Vector3d lpar  = new Vector3d(-sopen, -copen, 0);
 
         // define the center of the circles that describe the trumpet-like part of the feedthrough
-        Vector3d rcirc = rnorm.times(-dbref.feedThroughLength).add(rpar.times(dbref.feedThroughRmin+dbref.feedThroughRcurv)).add(rightend);
-        Vector3d lcirc = lnorm.times(-dbref.feedThroughLength).add(lpar.times(dbref.feedThroughRmin+dbref.feedThroughRcurv)).add(leftend);
+        Vector3d rcirc = rnorm.times(-dbref.feedThroughLength).add(rpar.times(dbref.feedThroughRmin+dbref.feedThroughRcurv)).rotateX(-dbref.thtilt(ireg)).add(rightend);
+        Vector3d lcirc = lnorm.times(-dbref.feedThroughLength).add(lpar.times(dbref.feedThroughRmin+dbref.feedThroughRcurv)).rotateX(-dbref.thtilt(ireg)).add(leftend);
         
         // recalculate the wire direction assuming the wire is tangent to the left and right circles
         direction = lcirc.minus(rcirc).normalized();
         
         // realculate the wire end point
-        Vector3d rtang = lpar.times(-dbref.feedThroughRcurv).rotateZ(Math.atan2(direction.y, direction.x)).add(rcirc);
+        Vector3d vperp = rnorm.cross(rpar).rotateX(-dbref.thtilt(ireg));
+        Vector3d rperp = rnorm.clone().rotateX(-dbref.thtilt(ireg));
+        double ttang = direction.angle(rperp);
+        Vector3d rtang = rpar.times(-dbref.feedThroughRcurv).rotateX(-dbref.thtilt(ireg));
+//        if(sector==1) System.out.println(ttang + " " + rtang);
+        vperp.rotate(rtang,ttang);
+//        if(sector==1) System.out.println(ttang + " " + rtang);
+        rtang.add(rcirc);
         midpoint = rtang.plus(direction.times(-rtang.x/direction.x));
         
         wlenl = vnum.dot(lnorm) / direction.dot(lnorm);
@@ -351,7 +358,7 @@ final class Wire {
 
         wlenr = vnum.dot(rnorm) / direction.dot(rnorm);
         rightend = direction.times(wlenr).add(midpoint);
-//if(sector==1)System.out.println( this.sector + " " + this.layer + " " + this.wire + " " + this.midpoint + " " +this.direction + " " + this.leftend + " " + this.rightend);
+//if(sector==1)System.out.println( this.sector + " " + this.layer + " " + this.wire + " " + this.midpoint + " " + Math.toDegrees(Math.atan2(direction.y, direction.x)) + " " + this.direction + " " + this.leftend + " " + this.rightend);
     }
 
     /**
