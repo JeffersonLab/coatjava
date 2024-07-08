@@ -14,14 +14,14 @@ services:
     name: CVTMLCLUSTER
   - class:  org.jlab.rec.cvt.ml.ConvResolver
     name: CVTMLCONVRESOLV
-  - class:  org.jlab.rec.cvt.ml.MLTracking
-    name: CVTMLTRKG
-  - class: org.jlab.service.ctof.CTOFEngine
-    name: CTOF
-  - class: org.jlab.service.cnd.CNDCalibrationEngine
-    name: CND
-  - class: org.jlab.service.eb.EBHBEngine
-    name: EBHB
+  - class:  org.jlab.rec.cvt.ml.ConvTracking
+    name: CVTTRKG
+#  - class: org.jlab.service.ctof.CTOFEngine
+#    name: CTOF
+#  - class: org.jlab.service.cnd.CNDCalibrationEngine
+#    name: CND
+#  - class: org.jlab.service.eb.EBHBEngine
+#    name: EBHB
 configuration:
   global:
     variation: rga_fall2018_bg
