@@ -31,31 +31,31 @@ public class Hit implements Comparable<Hit> {
 
 		double numWires = 32.0;
 		double R_layer  = 47.0;
-
+		
 		switch (this.superLayerId) {
-			case 0:
+			case 1:
 				numWires = 47.0;
 				R_layer = 32.0;
 				break;
-			case 1:
+			case 2:
 				numWires = 56.0;
 				R_layer = 38.0;
 				break;
-			case 2:
+			case 3:
 				numWires = 72.0;
 				R_layer = 48.0;
 				break;
-			case 3:
+			case 4:
 				numWires = 87.0;
 				R_layer = 58.0;
 				break;
-			case 4:
+			case 5:
 				numWires = 99.0;
 				R_layer = 68.0;
 				break;
 		}
 
-		R_layer = R_layer + DR_layer * this.layerId;
+		R_layer = R_layer + DR_layer * (this.layerId-1);
 		double alphaW_layer = Math.toRadians(round / (numWires));
 		double wx           = -R_layer * Math.sin(alphaW_layer * this.wireId);
 		double wy           = -R_layer * Math.cos(alphaW_layer * this.wireId);

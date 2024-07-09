@@ -75,17 +75,20 @@ public class AHDCEngine extends ReconstructionEngine {
 
 			ArrayList<Hit>     AHDC_Hits     = hitRead.get_AHDCHits();
 			ArrayList<TrueHit> TrueAHDC_Hits = hitRead.get_TrueAHDCHits();
-
+			//System.out.println("AHDC_Hits size " + AHDC_Hits.size());
+			
 			// II) Create PreCluster
 			PreClusterFinder preclusterfinder = new PreClusterFinder();
 			preclusterfinder.findPreCluster(AHDC_Hits);
 			ArrayList<PreCluster> AHDC_PreClusters = preclusterfinder.get_AHDCPreClusters();
+			//System.out.println("AHDC_PreClusters size " + AHDC_PreClusters.size());
 
 			// III) Create Cluster
 			ClusterFinder clusterfinder = new ClusterFinder();
 			clusterfinder.findCluster(AHDC_PreClusters);
 			ArrayList<Cluster> AHDC_Clusters = clusterfinder.get_AHDCClusters();
-
+			//System.out.println("AHDC_Clusters size " + AHDC_Clusters.size());
+			
 			// IV) Track Finder
 			ArrayList<Track> AHDC_Tracks = new ArrayList<>();
 			if (findingMethod.equals("distance")) {

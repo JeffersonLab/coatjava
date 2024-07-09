@@ -27,17 +27,17 @@ public class PreClusterFinder {
 		ArrayList<Hit> s1l0 = new ArrayList<Hit>();
 		fill_list(AHDC_hits, s1l0, 2, 1);
 		ArrayList<Hit> s1l1 = new ArrayList<Hit>();
-		fill_list(AHDC_hits, s1l1, 3, 2);
+		fill_list(AHDC_hits, s1l1, 2, 2);
 		ArrayList<Hit> s2l0 = new ArrayList<Hit>();
-		fill_list(AHDC_hits, s2l0, 4, 1);
+		fill_list(AHDC_hits, s2l0, 3, 1);
 		ArrayList<Hit> s2l1 = new ArrayList<Hit>();
-		fill_list(AHDC_hits, s2l1, 5, 2);
+		fill_list(AHDC_hits, s2l1, 3, 2);
 		ArrayList<Hit> s3l0 = new ArrayList<Hit>();
-		fill_list(AHDC_hits, s3l0, 6, 1);
+		fill_list(AHDC_hits, s3l0, 4, 1);
 		ArrayList<Hit> s3l1 = new ArrayList<Hit>();
-		fill_list(AHDC_hits, s3l1, 7, 2);
+		fill_list(AHDC_hits, s3l1, 4, 2);
 		ArrayList<Hit> s4l0 = new ArrayList<Hit>();
-		fill_list(AHDC_hits, s4l0, 8, 1);
+		fill_list(AHDC_hits, s4l0, 5, 1);
 
 		ArrayList<ArrayList<Hit>> all_super_layer = new ArrayList<>();
 		all_super_layer.add(s0l0);
