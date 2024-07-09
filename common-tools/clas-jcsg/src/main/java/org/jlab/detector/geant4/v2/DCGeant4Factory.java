@@ -330,6 +330,7 @@ final class Wire {
 
         double wlenr = vnum.dot(rnorm) / direction.dot(rnorm);
         rightend = direction.times(wlenr).add(midpoint);
+//if(sector==1)System.out.println( this.sector + " " + this.layer + " " + this.wire + " " + this.midpoint + " " + Math.toDegrees(Math.acos(direction.x))*Math.signum(direction.y) + " " + this.direction + " " + this.leftend + " " + this.rightend);
         
         // define unit vector parallel to the sides of the chamber and pointing to the chamber tip, projected onto the z=0 plane
         Vector3d rpar  = new Vector3d(sopen, -copen, 0);
@@ -345,12 +346,14 @@ final class Wire {
         // realculate the wire end point
         Vector3d vperp = rnorm.cross(rpar).rotateX(-dbref.thtilt(ireg));
         Vector3d rperp = rnorm.clone().rotateX(-dbref.thtilt(ireg));
-        double ttang = direction.angle(rperp);
+        Vector3d lperp = lnorm.clone().rotateX(-dbref.thtilt(ireg));
         Vector3d rtang = rpar.times(-dbref.feedThroughRcurv).rotateX(-dbref.thtilt(ireg));
-//        if(sector==1) System.out.println(ttang + " " + rtang);
-        vperp.rotate(rtang,ttang);
-//        if(sector==1) System.out.println(ttang + " " + rtang);
-        rtang.add(rcirc);
+        double rangle = direction.angle(rperp);
+        double langle = direction.negated().angle(lperp);
+//        if(sector==1) System.out.println(Math.toDegrees(langle) + " " + Math.toDegrees(rangle) + " " + rtang);
+        vperp.rotate(rtang,rangle);
+//        if(sector==1) System.out.println(Math.toDegrees(langle) + " " + Math.toDegrees(rangle) + " " + rtang);
+        rtang = rtang.add(rcirc);
         midpoint = rtang.plus(direction.times(-rtang.x/direction.x));
         
         wlenl = vnum.dot(lnorm) / direction.dot(lnorm);
@@ -358,7 +361,7 @@ final class Wire {
 
         wlenr = vnum.dot(rnorm) / direction.dot(rnorm);
         rightend = direction.times(wlenr).add(midpoint);
-//if(sector==1)System.out.println( this.sector + " " + this.layer + " " + this.wire + " " + this.midpoint + " " + Math.toDegrees(Math.atan2(direction.y, direction.x)) + " " + this.direction + " " + this.leftend + " " + this.rightend);
+//if(sector==1)System.out.println( this.sector + " " + this.layer + " " + this.wire + " " + this.midpoint + " " + Math.toDegrees(Math.acos(direction.x))*Math.signum(direction.y) + " " + this.direction + " " + this.leftend + " " + this.rightend);
     }
 
     /**
