@@ -330,7 +330,7 @@ final class Wire {
 
         double wlenr = vnum.dot(rnorm) / direction.dot(rnorm);
         rightend = direction.times(wlenr).add(midpoint);
-//if(sector==1)System.out.println( this.sector + " " + this.layer + " " + this.wire + " " + this.midpoint + " " + Math.toDegrees(Math.acos(direction.x))*Math.signum(direction.y) + " " + this.direction + " " + this.leftend + " " + this.rightend);
+//if(sector==1)System.out.println( this.sector + " " + this.layer + " " + this.wire + " " + this.midpoint.clone().rotateX(dbref.thtilt(ireg)) + " " + Math.toDegrees(Math.acos(direction.x))*Math.signum(direction.y) + " " + this.direction.clone().rotateX(dbref.thtilt(ireg)) + " " + this.leftend.clone().rotateX(dbref.thtilt(ireg)) + " " + this.rightend.clone().rotateX(dbref.thtilt(ireg)));
         
         // define unit vector parallel to the sides of the chamber and pointing to the chamber tip, projected onto the z=0 plane
         Vector3d rpar  = new Vector3d(sopen, -copen, 0);
@@ -341,27 +341,27 @@ final class Wire {
         Vector3d lcirc = lnorm.times(-dbref.feedThroughLength).add(lpar.times(dbref.feedThroughRmin+dbref.feedThroughRcurv)).rotateX(-dbref.thtilt(ireg)).add(leftend);
         
         // recalculate the wire direction assuming the wire is tangent to the left and right circles
-        direction = lcirc.minus(rcirc).normalized();
+        Vector3d direction1 = lcirc.minus(rcirc).normalized();
         
         // realculate the wire end point
         Vector3d vperp = rnorm.cross(rpar).rotateX(-dbref.thtilt(ireg));
         Vector3d rperp = rnorm.clone().rotateX(-dbref.thtilt(ireg));
         Vector3d lperp = lnorm.clone().rotateX(-dbref.thtilt(ireg));
         Vector3d rtang = rpar.times(-dbref.feedThroughRcurv).rotateX(-dbref.thtilt(ireg));
-        double rangle = direction.angle(rperp);
-        double langle = direction.negated().angle(lperp);
+        double rangle = direction1.angle(rperp);
+        double langle = direction1.negated().angle(lperp);
 //        if(sector==1) System.out.println(Math.toDegrees(langle) + " " + Math.toDegrees(rangle) + " " + rtang);
         vperp.rotate(rtang,rangle);
 //        if(sector==1) System.out.println(Math.toDegrees(langle) + " " + Math.toDegrees(rangle) + " " + rtang);
         rtang = rtang.add(rcirc);
-        midpoint = rtang.plus(direction.times(-rtang.x/direction.x));
+        midpoint = rtang.plus(direction1.times(-rtang.x/direction1.x));
         
         wlenl = vnum.dot(lnorm) / direction.dot(lnorm);
         leftend = direction.times(wlenl).add(midpoint);
 
         wlenr = vnum.dot(rnorm) / direction.dot(rnorm);
         rightend = direction.times(wlenr).add(midpoint);
-//if(sector==1)System.out.println( this.sector + " " + this.layer + " " + this.wire + " " + this.midpoint + " " + Math.toDegrees(Math.acos(direction.x))*Math.signum(direction.y) + " " + this.direction + " " + this.leftend + " " + this.rightend);
+//if(sector==1)System.out.println( this.sector + " " + this.layer + " " + this.wire + " " + this.midpoint.clone().rotateX(dbref.thtilt(ireg)) + " " + Math.toDegrees(Math.acos(direction.x))*Math.signum(direction.y) + " " + this.direction.clone().rotateX(dbref.thtilt(ireg)) + " " + this.leftend.clone().rotateX(dbref.thtilt(ireg)) + " " + this.rightend.clone().rotateX(dbref.thtilt(ireg)));
     }
 
     /**
