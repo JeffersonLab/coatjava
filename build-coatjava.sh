@@ -31,11 +31,11 @@ done
 top="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 
 wget='wget'
-mvn="mvn --settings $top/maven-settings.xml"
+mvn="mvn"
 if [ "$quiet" == "yes" ]
 then
     wget='wget --progress=dot:mega'
-    mvn="mvn -q -B --settings $top/maven-settings.xml"
+    mvn="mvn -q -B"
 fi
 mvn+=" ${mvnArgs[*]:-}"
 

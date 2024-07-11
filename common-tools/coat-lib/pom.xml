@@ -16,8 +16,8 @@
       <url>https://clasweb.jlab.org/jhep/maven</url>
     </repository>
     <repository>
-     <id>freehep-repo-public</id>
-     <url>https://srs.slac.stanford.edu/nexus/content/groups/freehep-maven2-public/</url>
+      <id>mvnrepository</id>
+      <url>http://central.maven.org/maven2/</url>
     </repository>
   </repositories>
 
@@ -158,8 +158,8 @@
 
     <dependency>
       <groupId>org.freehep</groupId>
-      <artifactId>jminuit</artifactId>
-      <version>1.0</version>
+      <artifactId>freehep-jminuit</artifactId>
+      <version>1.0.2</version>
     </dependency>
 
     <dependency>
