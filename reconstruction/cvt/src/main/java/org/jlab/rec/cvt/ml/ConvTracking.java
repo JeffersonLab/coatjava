@@ -20,7 +20,7 @@ public class ConvTracking extends Tracking {
 
     @Override
     public boolean init() {
-        super.setOutputBankPrefix("Rec");
+        super.setOutputBankPrefix("");
         double[] aistatus = new double[]{0};
         super.setAistatus(aistatus);
         super.init();
