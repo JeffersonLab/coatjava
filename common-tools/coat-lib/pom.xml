@@ -14,11 +14,12 @@
     <repository>
       <id>jnp-build</id>
       <url>https://clasweb.jlab.org/jhep/maven</url>
-    </repository>
+  </repository>
     <repository>
      <id>freehep-repo-public</id>
-     <url>https://srs.slac.stanford.edu/nexus/content/groups/freehep-maven2-public/</url>
-    </repository>
+     <url>https://clasweb.jlab.org/clas12maven/</url>
+     <!--<url>https://srs.slac.stanford.edu/nexus/content/groups/freehep-maven2-public/</url>-->
+  </repository>
   </repositories>
 
   <dependencies>
