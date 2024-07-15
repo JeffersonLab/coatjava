@@ -25,7 +25,7 @@ public class LMUConstants {
                                                             0.0005, 0.005, 0.0005,                             // Capacitive sharing layer1
                                                             0.0005, 0.005, 0.0005,                             // Capacitive sharing layer2
                                                             0.005,  0.0005,0.005, 0.005,  0.0005,0.005, 0.005, // Readout
-                                                            0.0127, 0.3, 0.0125};                              // support
+                                                            0.0127, 0.128, 0.0125};                              // support
     public final static String[] CHAMBERVOLUMESNAME = {"window_kapton", "window_Al", "window_gas",
            "cathode_kapton", "cathode_Al", "cathode_gas",
            "muRwell_Cu", "muRwell_kapton", "muRwell_dlc", 
@@ -82,7 +82,7 @@ public class LMUConstants {
 
              for (int i=0; i<NREGIONS; i++){
                 
-                DIST2TGT[i] = 10 + 10*i;  
+                DIST2TGT[i] = 10 + 9*i;  
   
             }
 
