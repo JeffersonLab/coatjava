@@ -2,6 +2,8 @@ package org.jlab.detector.geant4.v2;
 
 import eu.mihosoft.vrl.v3d.Vector3d;
 import java.util.HashMap;
+import org.jlab.detector.base.DetectorType;
+import org.jlab.detector.base.GeometryFactory;
 import org.jlab.detector.units.SystemOfUnits.Length;
 import org.jlab.detector.volume.G4Trap;
 import org.jlab.detector.volume.G4World;
@@ -61,11 +63,12 @@ final class DCdatabase {
     private static DCdatabase instance = null;
 
     public final double[] xdistBob = {8.250, 16.970, 18.054};
-    public final double[] feedThroughExt = {0.55, 0.1, 0.55};
-    public final double feedThroughLength = 0.2;
-    public final double feedThroughRmin = 0.065;
-    public final double feedThroughRmax = 0.137;
-    public final double feedThroughRcurv = (Math.pow(feedThroughRmax-feedThroughRmin, 2)+Math.pow(feedThroughLength, 2))/(feedThroughRmax-feedThroughRmin)/2;
+    private final double[][] feedThroughExt = new double[nSectors][nSupers];
+    private final double[][] feedThroughLength = new double[nSectors][nSupers];
+    private final double[][] feedThroughRmin = new double[nSectors][nSupers];
+    private final double[][] feedThroughRmax = new double[nSectors][nSupers];
+    private final double[][] feedThroughRcurv = new double[nSectors][nSupers];//(Math.pow(feedThroughRmax-feedThroughRmin, 2)+Math.pow(feedThroughLength, 2))/(feedThroughRmax-feedThroughRmin)/2;
+    private int feedthroughsStatus = 1;
 
         private DCdatabase() {
     }
@@ -106,6 +109,17 @@ final class DCdatabase {
             nfieldlayers[isuper] = cp.getInteger(dcdbpath + "superlayer/nfieldlayers", isuper);
 
             superwidth[isuper] = wpdist[isuper] * (nsenselayers[isuper] + nguardlayers[isuper] - 1) * cellthickness[isuper];
+        }
+        int feedthroughrows = cp.length(dcdbpath+"feedthroughs/sector");
+        for(int irow = 0; irow< feedthroughrows; irow++) {
+               int isec = cp.getInteger(dcdbpath + "feedthroughs/sector",irow)-1;
+               int isl  = cp.getInteger(dcdbpath + "feedthroughs/superlayer",irow)-1;
+               feedThroughExt[isec][isl]    = cp.getDouble(dcdbpath + "feedthroughs/extension", irow);
+               feedThroughLength[isec][isl] = cp.getDouble(dcdbpath + "feedthroughs/length", irow);
+               feedThroughRmin[isec][isl]   = cp.getDouble(dcdbpath + "feedthroughs/rmin", irow);
+               feedThroughRmax[isec][isl]   = cp.getDouble(dcdbpath + "feedthroughs/rmax", irow);
+               feedThroughRcurv[isec][isl]  = (Math.pow(feedThroughRmax[isec][isl]-feedThroughRmin[isec][isl], 2)+Math.pow(feedThroughLength[isec][isl], 2))
+                                            /(feedThroughRmax[isec][isl]-feedThroughRmin[isec][isl])/2;
         }
         double scaleTest=1;
         int alignrows = cp.length(dcdbpath+"alignment/dx");
@@ -244,6 +258,34 @@ final class DCdatabase {
     public boolean getEndPlatesStatus(){
         return endplatesStatus;
     }
+
+    public int feedthroughsStatus() {
+        return feedthroughsStatus;
+    }
+
+    public void setFeedthroughsStatus(int feedthroughsStatus) {
+        this.feedthroughsStatus = feedthroughsStatus;
+    }
+
+    public double feedThroughExt(int isec, int isl) {
+        return feedThroughExt[isec][isl];
+    }
+
+    public double feedThroughLength(int isec, int isl) {
+        return feedThroughLength[isec][isl];
+    }
+
+    public double feedThroughRmin(int isec, int isl) {
+        return feedThroughRmin[isec][isl];
+    }
+
+    public double feedThroughRmax(int isec, int isl) {
+        return feedThroughRmax[isec][isl];
+    }
+
+    public double feedThroughRcurv(int isec, int isl) {
+        return feedThroughRcurv[isec][isl];
+    }
     
     public double getAlignmentThetaX(int isec, int ireg) {
         return align_dthetax[isec][ireg];
@@ -318,7 +360,7 @@ final class Wire {
         double sopen = Math.sin(dbref.thopen(ireg) / 2.0);
 
         // define vector from wire midpoint to chamber tip projectedonto the z=0 plane
-        Vector3d vnum = new Vector3d(0, dbref.xdistBob[ireg]+dbref.feedThroughExt[ireg]/copen, 0);
+        Vector3d vnum = new Vector3d(0, dbref.xdist(ireg)+dbref.feedThroughExt(sector-1,isuper)/copen, 0);
         vnum.sub(midpoint);
 
         // define unit vector normal to the sides of the chamber and pointing inside, projected onto the z=0 plane
@@ -330,29 +372,32 @@ final class Wire {
 
         double wlenr = vnum.dot(rnorm) / direction.dot(rnorm);
         rightend = direction.times(wlenr).add(midpoint);
-//if(sector==1)System.out.println( this.sector + " " + this.layer + " " + this.wire + " " + this.midpoint.clone().rotateX(dbref.thtilt(ireg)) + " " + Math.toDegrees(Math.acos(direction.x))*Math.signum(direction.y) + " " + this.direction.clone().rotateX(dbref.thtilt(ireg)) + " " + this.leftend.clone().rotateX(dbref.thtilt(ireg)) + " " + this.rightend.clone().rotateX(dbref.thtilt(ireg)));
+
+        if(dbref.feedthroughsStatus()==0) return;
         
         // define unit vector parallel to the sides of the chamber and pointing to the chamber tip, projected onto the z=0 plane
         Vector3d rpar  = new Vector3d(sopen, -copen, 0);
         Vector3d lpar  = new Vector3d(-sopen, -copen, 0);
 
         // define the center of the circles that describe the trumpet-like part of the feedthrough
-        Vector3d rcirc = rnorm.times(-dbref.feedThroughLength).add(rpar.times(dbref.feedThroughRmin+dbref.feedThroughRcurv)).rotateX(-dbref.thtilt(ireg)).add(rightend);
-        Vector3d lcirc = lnorm.times(-dbref.feedThroughLength).add(lpar.times(dbref.feedThroughRmin+dbref.feedThroughRcurv)).rotateX(-dbref.thtilt(ireg)).add(leftend);
-        
+        Vector3d rcirc = rnorm.times(-dbref.feedThroughLength(sector-1, isuper)).add(rpar.times(dbref.feedThroughRmin(sector-1, isuper)+dbref.feedThroughRcurv(sector-1, isuper))).rotateX(-dbref.thtilt(ireg)).add(rightend);
+        Vector3d lcirc = lnorm.times(-dbref.feedThroughLength(sector-1, isuper)).add(lpar.times(dbref.feedThroughRmin(sector-1, isuper)+dbref.feedThroughRcurv(sector-1, isuper))).rotateX(-dbref.thtilt(ireg)).add(leftend);
+
         // recalculate the wire direction assuming the wire is tangent to the left and right circles
         Vector3d direction1 = lcirc.minus(rcirc).normalized();
+
+        if(dbref.feedthroughsStatus()!=1)
+            direction = direction1;
         
-        // realculate the wire end point
+        // recalculate the wire end point
         Vector3d vperp = rnorm.cross(rpar).rotateX(-dbref.thtilt(ireg));
         Vector3d rperp = rnorm.clone().rotateX(-dbref.thtilt(ireg));
         Vector3d lperp = lnorm.clone().rotateX(-dbref.thtilt(ireg));
-        Vector3d rtang = rpar.times(-dbref.feedThroughRcurv).rotateX(-dbref.thtilt(ireg));
+        Vector3d rtang = rpar.times(-dbref.feedThroughRcurv(sector-1, isuper)).rotateX(-dbref.thtilt(ireg));
         double rangle = direction1.angle(rperp);
         double langle = direction1.negated().angle(lperp);
-//        if(sector==1) System.out.println(Math.toDegrees(langle) + " " + Math.toDegrees(rangle) + " " + rtang);
+//        System.out.println(lcirc + " " + rcirc + direction1 + " " + rangle + " " +  rtang);
         vperp.rotate(rtang,rangle);
-//        if(sector==1) System.out.println(Math.toDegrees(langle) + " " + Math.toDegrees(rangle) + " " + rtang);
         rtang = rtang.add(rcirc);
         midpoint = rtang.plus(direction1.times(-rtang.x/direction1.x));
         
@@ -361,7 +406,15 @@ final class Wire {
 
         wlenr = vnum.dot(rnorm) / direction.dot(rnorm);
         rightend = direction.times(wlenr).add(midpoint);
-//if(sector==1)System.out.println( this.sector + " " + this.layer + " " + this.wire + " " + this.midpoint.clone().rotateX(dbref.thtilt(ireg)) + " " + Math.toDegrees(Math.acos(direction.x))*Math.signum(direction.y) + " " + this.direction.clone().rotateX(dbref.thtilt(ireg)) + " " + this.leftend.clone().rotateX(dbref.thtilt(ireg)) + " " + this.rightend.clone().rotateX(dbref.thtilt(ireg)));
+//        if(sector==1&&(wire==0||wire==112)) {
+//            System.out.println( this.sector + " " + (this.layer+this.isuper*6) + " " + this.wire + " " + 
+//                    Math.toDegrees(Math.acos(direction.x))*Math.signum(direction.y) + " " + 
+//                    this.midpoint.clone().rotateX(dbref.thtilt(ireg)) + " " + 
+//                    this.direction.clone().rotateX(dbref.thtilt(ireg)) + " " + 
+//                    this.leftend.clone().rotateX(dbref.thtilt(ireg)) + " " + 
+//                    this.rightend.clone().rotateX(dbref.thtilt(ireg)));
+//            System.out.println();
+//        }
     }
 
     /**
@@ -534,20 +587,33 @@ public final class DCGeant4Factory extends Geant4Factory {
 
     ///////////////////////////////////////////////////
     public DCGeant4Factory(ConstantProvider provider) {
-        this(provider, MINISTAGGEROFF, ENDPLATESBOWOFF, null);
+        this(provider, MINISTAGGEROFF, 0, ENDPLATESBOWOFF, null);
     }
 
     ///////////////////////////////////////////////////
     public DCGeant4Factory(ConstantProvider provider, boolean ministaggerStatus,
             boolean endplatesStatus) {
-        this(provider, ministaggerStatus, endplatesStatus, null);
+        this(provider, ministaggerStatus, 0, endplatesStatus, null);
+    }
+    
+    ///////////////////////////////////////////////////
+    public DCGeant4Factory(ConstantProvider provider, boolean ministaggerStatus,
+            int feedthroughsStatus) {
+        this(provider, ministaggerStatus, feedthroughsStatus, false, null);
     }
     
     ///////////////////////////////////////////////////
     public DCGeant4Factory(ConstantProvider provider, boolean ministaggerStatus,
             boolean endplatesStatus, double[][] shifts) {
+        this(provider, ministaggerStatus, 1, endplatesStatus, null);
+    }
+    
+    ///////////////////////////////////////////////////
+    public DCGeant4Factory(ConstantProvider provider, boolean ministaggerStatus,
+            int feedthroughStatus, boolean endplatesStatus, double[][] shifts) {
         dbref.setMinistaggerStatus(ministaggerStatus);
         dbref.setEndPlatesStatus(endplatesStatus);
+        dbref.setFeedthroughsStatus(feedthroughStatus);
         
         motherVolume = new G4World("fc");
 
@@ -810,4 +876,39 @@ public final class DCGeant4Factory extends Geant4Factory {
             }
     }
     */
+    
+    public static void main(String[] args) {
+        
+        ConstantProvider provider = GeometryFactory.getConstants(DetectorType.DC, 11, "rgd_fall2023");
+        DCGeant4Factory dc0 = new DCGeant4Factory(provider, DCGeant4Factory.MINISTAGGERON, 0);
+        DCGeant4Factory dc1 = new DCGeant4Factory(provider, DCGeant4Factory.MINISTAGGERON, 1);
+        DCGeant4Factory dc2 = new DCGeant4Factory(provider, DCGeant4Factory.MINISTAGGERON, 2);
+        
+        for(int il=0; il<36; il++) {
+            for(int iw=0; iw<112; iw=iw+111) {
+                int sector = 1;
+                int layer = il+1;
+                int wire = iw+1;
+                int isuper = il/6;
+                int ilayer = il%6;
+
+
+                System.out.println(sector + " " + layer + " " + wire + " " +
+                                   dc0.getWireMidpoint(isuper, ilayer, iw) + " " +
+                                   dc0.getWireDirection(isuper, ilayer, iw) + " " +
+                                   dc0.getWireLeftend(isuper, ilayer, iw) + " " +
+                                   dc0.getWireRightend(isuper, ilayer, iw) + " ");
+                System.out.println(sector + " " + layer + " " + wire + " " +
+                                   dc1.getWireMidpoint(isuper, ilayer, iw) + " " +
+                                   dc1.getWireDirection(isuper, ilayer, iw) + " " +
+                                   dc1.getWireLeftend(isuper, ilayer, iw) + " " +
+                                   dc1.getWireRightend(isuper, ilayer, iw) + " ");
+                System.out.println(sector + " " + layer + " " + wire + " " +
+                                   dc2.getWireMidpoint(isuper, ilayer, iw) + " " +
+                                   dc2.getWireDirection(isuper, ilayer, iw) + " " +
+                                   dc2.getWireLeftend(isuper, ilayer, iw) + " " +
+                                   dc2.getWireRightend(isuper, ilayer, iw) + " ");
+            }
+        }
+    }
 }
