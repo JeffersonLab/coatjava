@@ -43,6 +43,11 @@ public class StruckScaler extends DaqScaler {
     private static final int CHAN_CLOCK_B=34;
 
     protected Interval interval;
+    
+    // Configurable, but should always be set to the max of 1 MHz:
+    public double clockFreq = 1e6; // MHz
+
+    public StruckScaler() {}
 
     public void setInterval(Interval intvl) {
         this.interval = intvl;
@@ -163,10 +168,6 @@ public class StruckScaler extends DaqScaler {
         return Interval.UDF;
     }
 
-    public StruckScaler() {
-        this.clockFreq = 1e6;
-    }
-
     /**
      * This made sense when we only had one tsettle+tstable in each readout. 
      * @param bank a RAW::scaler bank
@@ -176,9 +177,6 @@ public class StruckScaler extends DaqScaler {
      */
     @Deprecated
     public StruckScaler(Bank bank,IndexedTable fcupTable, IndexedTable slmTable, IndexedTable helTable) {
-
-        // the STRUCK's clock is 1 MHz
-        this.clockFreq = 1e6;
 
         // Here we're going to assume the stable period is the same Struck
         // period throughout a single readout.  Almost always correct ...
