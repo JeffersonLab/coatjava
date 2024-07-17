@@ -62,13 +62,12 @@ final class DCdatabase {
     private final String dcdbpath = "/geometry/dc/";
     private static DCdatabase instance = null;
 
-//    public final double[] xdistBob = {8.250, 16.970, 18.054};
-    private final double[][] feedThroughExt = new double[nSectors][nSupers];
-    private final double[][] feedThroughLength = new double[nSectors][nSupers];
-    private final double[][] feedThroughRmin = new double[nSectors][nSupers];
-    private final double[][] feedThroughRmax = new double[nSectors][nSupers];
-    private final double[][] feedThroughRcurv = new double[nSectors][nSupers];
-    private int feedthroughsStatus = 1;
+    private final double[][] feedThroughExt = new double[nSectors][nSupers];    // extension from the endplate, inside the chamber volume
+    private final double[][] feedThroughLength = new double[nSectors][nSupers]; // length of the curved, trumpet-like, part of the feedthrough
+    private final double[][] feedThroughRmin = new double[nSectors][nSupers];   // inner radius at the beginning of the curved part
+    private final double[][] feedThroughRmax = new double[nSectors][nSupers];   // inner radius at the end of the curved part, i.e. on the surface
+    private final double[][] feedThroughRcurv = new double[nSectors][nSupers];  // curvature radius of the trumpet-like part
+    private int feedthroughsStatus = 1; // 0-ignore the feedthrough, 1-sccount for the shift of the wire midpoint, 2-acccount for both shift and tilt
 
         private DCdatabase() {
     }
@@ -359,17 +358,18 @@ final class Wire {
         double copen = Math.cos(dbref.thopen(ireg) / 2.0);
         double sopen = Math.sin(dbref.thopen(ireg) / 2.0);
 
-        // define vector from wire midpoint to chamber tip projectedonto the z=0 plane
+        // define vector from wire midpoint to chamber tip projected onto the z=0 plane
         Vector3d vnum = new Vector3d(0, dbref.xdist(ireg)+dbref.feedThroughExt(sector-1,isuper)/copen, 0);
         vnum.sub(midpoint);
 
-        // define unit vector normal to the sides of the chamber and pointing inside, projected onto the z=0 plane
+        // define unit vector normal to the endplates of the chamber and pointing inside, projected onto the z=0 plane
         Vector3d rnorm = new Vector3d(copen, sopen, 0);
         Vector3d lnorm = new Vector3d(-copen, sopen, 0);
 
+        // calculate the end points, exploiting the identity between the component perpendicular to the end plates 
+        // of the vector connecting the chamber tip to the midpoint and the vector connecting the midpoint annd the endpoint 
         double wlenl = vnum.dot(lnorm) / direction.dot(lnorm);
         leftend = direction.times(wlenl).add(midpoint);
-
         double wlenr = vnum.dot(rnorm) / direction.dot(rnorm);
         rightend = direction.times(wlenr).add(midpoint);
 
@@ -384,37 +384,32 @@ final class Wire {
         Vector3d lcirc = lnorm.times(-dbref.feedThroughLength(sector-1, isuper)).add(lpar.times(dbref.feedThroughRmin(sector-1, isuper)+dbref.feedThroughRcurv(sector-1, isuper))).rotateX(-dbref.thtilt(ireg)).add(leftend);
 
         // recalculate the wire direction assuming the wire is tangent to the left and right circles
-        Vector3d direction1 = lcirc.minus(rcirc).normalized();
+        Vector3d newDirection = lcirc.minus(rcirc).normalized();
 
-        if(dbref.feedthroughsStatus()!=1)
-            direction = direction1;
+        // update the wire direction only if the flag is >1
+        if(dbref.feedthroughsStatus()>1)
+            direction = newDirection;
         
-        // recalculate the wire end point
-        Vector3d vperp = rnorm.cross(rpar).rotateX(-dbref.thtilt(ireg));
-        Vector3d rperp = rnorm.clone().rotateX(-dbref.thtilt(ireg));
-        Vector3d lperp = lnorm.clone().rotateX(-dbref.thtilt(ireg));
-        Vector3d rtang = rpar.times(-dbref.feedThroughRcurv(sector-1, isuper)).rotateX(-dbref.thtilt(ireg));
-        double rangle = direction1.angle(rperp);
-        double langle = direction1.negated().angle(lperp);
-//        System.out.println(lcirc + " " + rcirc + direction1 + " " + rangle + " " +  rtang);
+        // recalculate the wire end point in the sector frame
+        Vector3d vperp = rnorm.cross(rpar).rotateX(-dbref.thtilt(ireg)); // unit vector perpendicular to the layer plane, pointing downstream
+        Vector3d rperp = rnorm.clone().rotateX(-dbref.thtilt(ireg));     // unit vector perpendicular to the right endplate
+        Vector3d lperp = lnorm.clone().rotateX(-dbref.thtilt(ireg));     // unit vector perpendicular to the left endplate
+        Vector3d rtang = rpar.times(-dbref.feedThroughRcurv(sector-1, isuper)).rotateX(-dbref.thtilt(ireg)); // vector connecting the circle center and the point at the beginning of the trumpet-like part
+        double rangle = newDirection.angle(rperp);
+        double langle = newDirection.negated().angle(lperp);
+        // rotate rtang to get to the point where the wire is tangent to the circle
         vperp.rotate(rtang,rangle);
         rtang = rtang.add(rcirc);
-        midpoint = rtang.plus(direction1.times(-rtang.x/direction1.x));
+        // recalculate the wire midpoint
+        midpoint = rtang.plus(newDirection.times(-rtang.x/newDirection.x));
         
+        // recalculate the wire endpoints
+        vnum = new Vector3d(0, dbref.xdist(ireg)+dbref.feedThroughExt(sector-1,isuper)/copen, 0);
+        vnum.sub(midpoint);
         wlenl = vnum.dot(lnorm) / direction.dot(lnorm);
         leftend = direction.times(wlenl).add(midpoint);
-
         wlenr = vnum.dot(rnorm) / direction.dot(rnorm);
         rightend = direction.times(wlenr).add(midpoint);
-//        if(sector==1&&(wire==0||wire==112)) {
-//            System.out.println( this.sector + " " + (this.layer+this.isuper*6) + " " + this.wire + " " + 
-//                    Math.toDegrees(Math.acos(direction.x))*Math.signum(direction.y) + " " + 
-//                    this.midpoint.clone().rotateX(dbref.thtilt(ireg)) + " " + 
-//                    this.direction.clone().rotateX(dbref.thtilt(ireg)) + " " + 
-//                    this.leftend.clone().rotateX(dbref.thtilt(ireg)) + " " + 
-//                    this.rightend.clone().rotateX(dbref.thtilt(ireg)));
-//            System.out.println();
-//        }
     }
 
     /**
@@ -866,8 +861,13 @@ public final class DCGeant4Factory extends Geant4Factory {
     
     public static void main(String[] args) {
         
-        ConstantProvider provider = GeometryFactory.getConstants(DetectorType.DC, 11, "rgd_fall2023");
+        ConstantProvider provider = GeometryFactory.getConstants(DetectorType.DC, 11, "default");
+        DCdatabase.getInstance().setFeedthroughsStatus(0);
         DCGeant4Factory dc0 = new DCGeant4Factory(provider, DCGeant4Factory.MINISTAGGERON, false);
+        DCdatabase.getInstance().setFeedthroughsStatus(1);
+        DCGeant4Factory dc1 = new DCGeant4Factory(provider, DCGeant4Factory.MINISTAGGERON, false);
+        DCdatabase.getInstance().setFeedthroughsStatus(2);
+        DCGeant4Factory dc2 = new DCGeant4Factory(provider, DCGeant4Factory.MINISTAGGERON, false);
         
         for(int il=0; il<36; il++) {
             for(int iw=0; iw<112; iw=iw+111) {
@@ -879,10 +879,23 @@ public final class DCGeant4Factory extends Geant4Factory {
 
 
                 System.out.println(sector + " " + layer + " " + wire + " " +
+                                   Math.toDegrees(Math.acos(-dc0.getWireDirection(isuper, ilayer, iw).y))*Math.signum(dc0.getWireDirection(isuper, ilayer, iw).x) + " " + 
                                    dc0.getWireMidpoint(isuper, ilayer, iw) + " " +
                                    dc0.getWireDirection(isuper, ilayer, iw) + " " +
                                    dc0.getWireLeftend(isuper, ilayer, iw) + " " +
                                    dc0.getWireRightend(isuper, ilayer, iw) + " ");
+                System.out.println(sector + " " + layer + " " + wire + " " +
+                                   Math.toDegrees(Math.acos(-dc1.getWireDirection(isuper, ilayer, iw).y))*Math.signum(dc1.getWireDirection(isuper, ilayer, iw).x) + " " + 
+                                   dc1.getWireMidpoint(isuper, ilayer, iw) + " " +
+                                   dc1.getWireDirection(isuper, ilayer, iw) + " " +
+                                   dc1.getWireLeftend(isuper, ilayer, iw) + " " +
+                                   dc1.getWireRightend(isuper, ilayer, iw) + " ");
+                System.out.println(sector + " " + layer + " " + wire + " " +
+                                   Math.toDegrees(Math.acos(-dc2.getWireDirection(isuper, ilayer, iw).y))*Math.signum(dc2.getWireDirection(isuper, ilayer, iw).x) + " " + 
+                                   dc2.getWireMidpoint(isuper, ilayer, iw) + " " +
+                                   dc2.getWireDirection(isuper, ilayer, iw) + " " +
+                                   dc2.getWireLeftend(isuper, ilayer, iw) + " " +
+                                   dc2.getWireRightend(isuper, ilayer, iw) + " ");
             }
         }
     }
