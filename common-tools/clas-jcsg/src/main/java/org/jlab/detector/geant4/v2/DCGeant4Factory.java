@@ -62,12 +62,12 @@ final class DCdatabase {
     private final String dcdbpath = "/geometry/dc/";
     private static DCdatabase instance = null;
 
-    public final double[] xdistBob = {8.250, 16.970, 18.054};
+//    public final double[] xdistBob = {8.250, 16.970, 18.054};
     private final double[][] feedThroughExt = new double[nSectors][nSupers];
     private final double[][] feedThroughLength = new double[nSectors][nSupers];
     private final double[][] feedThroughRmin = new double[nSectors][nSupers];
     private final double[][] feedThroughRmax = new double[nSectors][nSupers];
-    private final double[][] feedThroughRcurv = new double[nSectors][nSupers];//(Math.pow(feedThroughRmax-feedThroughRmin, 2)+Math.pow(feedThroughLength, 2))/(feedThroughRmax-feedThroughRmin)/2;
+    private final double[][] feedThroughRcurv = new double[nSectors][nSupers];
     private int feedthroughsStatus = 1;
 
         private DCdatabase() {
@@ -587,33 +587,20 @@ public final class DCGeant4Factory extends Geant4Factory {
 
     ///////////////////////////////////////////////////
     public DCGeant4Factory(ConstantProvider provider) {
-        this(provider, MINISTAGGEROFF, 0, ENDPLATESBOWOFF, null);
+        this(provider, MINISTAGGEROFF, ENDPLATESBOWOFF, null);
     }
 
     ///////////////////////////////////////////////////
     public DCGeant4Factory(ConstantProvider provider, boolean ministaggerStatus,
             boolean endplatesStatus) {
-        this(provider, ministaggerStatus, 0, endplatesStatus, null);
-    }
-    
-    ///////////////////////////////////////////////////
-    public DCGeant4Factory(ConstantProvider provider, boolean ministaggerStatus,
-            int feedthroughsStatus) {
-        this(provider, ministaggerStatus, feedthroughsStatus, false, null);
+        this(provider, ministaggerStatus, endplatesStatus, null);
     }
     
     ///////////////////////////////////////////////////
     public DCGeant4Factory(ConstantProvider provider, boolean ministaggerStatus,
             boolean endplatesStatus, double[][] shifts) {
-        this(provider, ministaggerStatus, 1, endplatesStatus, null);
-    }
-    
-    ///////////////////////////////////////////////////
-    public DCGeant4Factory(ConstantProvider provider, boolean ministaggerStatus,
-            int feedthroughStatus, boolean endplatesStatus, double[][] shifts) {
         dbref.setMinistaggerStatus(ministaggerStatus);
         dbref.setEndPlatesStatus(endplatesStatus);
-        dbref.setFeedthroughsStatus(feedthroughStatus);
         
         motherVolume = new G4World("fc");
 
@@ -880,9 +867,7 @@ public final class DCGeant4Factory extends Geant4Factory {
     public static void main(String[] args) {
         
         ConstantProvider provider = GeometryFactory.getConstants(DetectorType.DC, 11, "rgd_fall2023");
-        DCGeant4Factory dc0 = new DCGeant4Factory(provider, DCGeant4Factory.MINISTAGGERON, 0);
-        DCGeant4Factory dc1 = new DCGeant4Factory(provider, DCGeant4Factory.MINISTAGGERON, 1);
-        DCGeant4Factory dc2 = new DCGeant4Factory(provider, DCGeant4Factory.MINISTAGGERON, 2);
+        DCGeant4Factory dc0 = new DCGeant4Factory(provider, DCGeant4Factory.MINISTAGGERON, false);
         
         for(int il=0; il<36; il++) {
             for(int iw=0; iw<112; iw=iw+111) {
@@ -898,16 +883,6 @@ public final class DCGeant4Factory extends Geant4Factory {
                                    dc0.getWireDirection(isuper, ilayer, iw) + " " +
                                    dc0.getWireLeftend(isuper, ilayer, iw) + " " +
                                    dc0.getWireRightend(isuper, ilayer, iw) + " ");
-                System.out.println(sector + " " + layer + " " + wire + " " +
-                                   dc1.getWireMidpoint(isuper, ilayer, iw) + " " +
-                                   dc1.getWireDirection(isuper, ilayer, iw) + " " +
-                                   dc1.getWireLeftend(isuper, ilayer, iw) + " " +
-                                   dc1.getWireRightend(isuper, ilayer, iw) + " ");
-                System.out.println(sector + " " + layer + " " + wire + " " +
-                                   dc2.getWireMidpoint(isuper, ilayer, iw) + " " +
-                                   dc2.getWireDirection(isuper, ilayer, iw) + " " +
-                                   dc2.getWireLeftend(isuper, ilayer, iw) + " " +
-                                   dc2.getWireRightend(isuper, ilayer, iw) + " ");
             }
         }
     }
