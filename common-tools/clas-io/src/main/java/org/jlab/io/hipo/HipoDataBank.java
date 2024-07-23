@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.io.hipo;
 
 import javax.swing.table.TableModel;
@@ -28,34 +23,14 @@ public class HipoDataBank implements DataBank  {
     
     public HipoDataBank(HipoDataDescriptor desc, int size){        
         hipoGroup = new Bank( desc.getSchema(),size);
-        //Map<Integer,HipoNode>  nodes = desc.getSchema();
         this.descriptor = desc;
-        //hipoGroup = new HipoGroup(nodes,this.descriptor.getSchema());
     }
-    /*
-    public HipoDataBank(Map<Integer,HipoNode> nodes, Schema desc){
-        descriptor = new HipoDataDescriptor();
-        descriptor.init(desc);
-        hipoGroup = new HipoGroup(nodes,this.descriptor.getSchema());
-    }
-    
-    public HipoDataBank(HipoGroup group){
-        this.hipoGroup = group;
-        descriptor = new HipoDataDescriptor();
-        descriptor.init(this.hipoGroup.getSchema());
-    }
-    */
     
     public Bank getBank(){
         return hipoGroup;
     }
     
-    /*public HipoGroup getGroup(){
-        return this.hipoGroup;
-    }*/
-    
     public String[] getColumnList() {
-
         String[] columns = new String[descriptor.getSchema().getElements()];
         for(int i = 0; i < columns.length; i++) columns[i] = descriptor.getSchema().getElementName(i);
         return columns;
@@ -71,28 +46,23 @@ public class HipoDataBank implements DataBank  {
         double[] result = new double[nrows];
         for(int i = 0; i < nrows; i++) result[i] = hipoGroup.getDouble(path, i);
         return result;
-        //return this.hipoGroup.getNode(path).getDouble();
-        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
     public double getDouble(String path, int index) {
         return this.hipoGroup.getDouble(path, index);
-        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     public void setDouble(String path, double[] arr) {
-        //this.getNode(path).setDouble(index, value);
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public void setDouble(String path, int row, double value) {
         hipoGroup.putDouble(path,row,value);
-        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     public void appendDouble(String path, double[] arr) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public float[] getFloat(String path) {
@@ -100,8 +70,6 @@ public class HipoDataBank implements DataBank  {
         float[] result = new float[nrows];
         for(int i = 0; i < nrows; i++) result[i] = hipoGroup.getFloat(path, i);
         return result;
-        //return this.hipoGroup.getNode(path).getFloat();
-        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     public float getFloat(String path, int index) {
@@ -109,7 +77,7 @@ public class HipoDataBank implements DataBank  {
     }
 
     public void setFloat(String path, float[] arr) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public void setFloat(String path, int row, float value) {
@@ -117,7 +85,7 @@ public class HipoDataBank implements DataBank  {
     }
 
     public void appendFloat(String path, float[] arr) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public int[] getInt(String path) {
@@ -125,8 +93,6 @@ public class HipoDataBank implements DataBank  {
         int[] result = new int[nrows];
         for(int i = 0; i < nrows; i++) result[i] = hipoGroup.getInt(path, i);
         return result;
-        //return this.getGroup().getNode(path).getInt();
-        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     public int getInt(String path, int index) {
@@ -134,7 +100,7 @@ public class HipoDataBank implements DataBank  {
     }
 
     public void setInt(String path, int[] arr) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public void setInt(String path, int row, int value) {
@@ -142,7 +108,7 @@ public class HipoDataBank implements DataBank  {
     }
 
     public void appendInt(String path, int[] arr) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public short[] getShort(String path) {
@@ -150,8 +116,6 @@ public class HipoDataBank implements DataBank  {
         short[] result = new short[nrows];
         for(int i = 0; i < nrows; i++) result[i] = hipoGroup.getShort(path, i);
         return result;
-        //return this.hipoGroup.getNode(path).getShort();
-        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     public short getShort(String path, int index) {
@@ -159,7 +123,7 @@ public class HipoDataBank implements DataBank  {
     }
 
     public void setShort(String path, short[] arr) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public void setShort(String path, int row, short value) {
@@ -167,7 +131,7 @@ public class HipoDataBank implements DataBank  {
     }
 
     public void appendShort(String path, short[] arr) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public long[] getLong(String path) {
@@ -175,7 +139,6 @@ public class HipoDataBank implements DataBank  {
         long[] result = new long[nrows];
         for(int i = 0; i < nrows; i++) result[i] = hipoGroup.getLong(path, i);
         return result;
-        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     public long getLong(String path, int index) {
@@ -183,7 +146,7 @@ public class HipoDataBank implements DataBank  {
     }
 
     public void setLong(String path, long[] arr) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public void setLong(String path, int row, long value) {
@@ -191,7 +154,7 @@ public class HipoDataBank implements DataBank  {
     }
 
     public void appendLong(String path, long[] arr) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
     
     public byte[] getByte(String path) {
@@ -199,8 +162,6 @@ public class HipoDataBank implements DataBank  {
         byte[] result = new byte[nrows];
         for(int i = 0; i < nrows; i++) result[i] = hipoGroup.getByte(path, i);
         return result;
-        //return this.hipoGroup.getNode(path).getByte();
-        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     public byte getByte(String path, int index) {
@@ -208,7 +169,7 @@ public class HipoDataBank implements DataBank  {
     }
 
     public void setByte(String path, byte[] arr) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public void setByte(String path, int row, byte value) {
@@ -216,7 +177,7 @@ public class HipoDataBank implements DataBank  {
     }
 
     public void appendByte(String path, byte[] arr) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public int columns() {

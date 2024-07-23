@@ -17,7 +17,7 @@ import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.geom.base.Detector;
 import org.jlab.rec.dc.trajectory.TrajectorySurfaces;
 import org.jlab.utils.groups.IndexedTable;
-import org.jlab.clas.clas.math.FastMath;
+import org.jlab.detector.banks.RawBank.OrderType;
 
 /**
  * Constants used in the reconstruction
@@ -53,20 +53,37 @@ public class Constants {
     public static double[][] SHIFTS = null;
 
     // CONSTATNS for TRANSFORMATION
-    public static final double SIN25 = FastMath.sin(Math.toRadians(25.));
-    public static final double COS25 = FastMath.cos(Math.toRadians(25.));
-    public static final double COS30 = FastMath.cos(Math.toRadians(30.));
-    public static final double SIN6 = FastMath.sin(Math.toRadians(6.));
-    public static final double COS6 = FastMath.cos(Math.toRadians(6.));
-    public static final double TAN6 = Math.tan(Math.toRadians(6.));
-    public static final double CTAN6 = 1 / TAN6;
-    public static final double[] SINSECTOR60 = {0, FastMath.sin(Math.toRadians(60.)), FastMath.sin(Math.toRadians(120.)), 0,
-        FastMath.sin(Math.toRadians(240.)), FastMath.sin(Math.toRadians(300.))};
+    public static final double SIN25 = Math.sin(Math.toRadians(25.));
+    public static final double COS25 = Math.cos(Math.toRadians(25.));
+    public static final double COS30 = Math.cos(Math.toRadians(30.)); 
+    public static final double STEREOANGLE = 6.;
+    public static final double SIN6 = Math.sin(Math.toRadians(STEREOANGLE));
+    public static final double COS6 = Math.cos(Math.toRadians(STEREOANGLE));
+    public static final double TAN6 = Math.tan(Math.toRadians(STEREOANGLE));
+    public static final double CTAN6 = 1/TAN6;
+    public static final double[] SINSECTOR60 = {0, Math.sin(Math.toRadians(60.)), Math.sin(Math.toRadians(120.)), 0, 
+        Math.sin(Math.toRadians(240.)), Math.sin(Math.toRadians(300.))};
     public static final double[] COSSECTOR60 = {1, 0.5, -0.5, -1, -0.5, 0.5};
-    public static final double[] SINSECTORNEG60 = {0, FastMath.sin(Math.toRadians(-60.)), FastMath.sin(Math.toRadians(-120.)), 0,
-        FastMath.sin(Math.toRadians(-240.)), FastMath.sin(Math.toRadians(-300.))};
+    public static final double[] SINSECTORNEG60 = {0, Math.sin(Math.toRadians(-60.)), Math.sin(Math.toRadians(-120.)), 0, 
+        Math.sin(Math.toRadians(-240.)), Math.sin(Math.toRadians(-300.))};
     public static final double[] COSSECTORNEG60 = {1, 0.5, -0.5, -1, -0.5, 0.5};
-       
+    
+    ////////////// Uncertainties for initial state
+    ////// DC only
+    public static final double HBINITIALSTATEUNCSCALE = 1.5;
+    public static final double HBINITIALSTATEXUNC = 7.8;
+    public static final double HBINITIALSTATEYUNC = 5.7;
+    public static final double HBINITIALSTATETXUNC = 0.063;
+    public static final double HBINITIALSTATETYUNC = 0.036;
+    public static final double HBINITIALSTATEQUNC = 0.13;
+    
+    public static final double TBINITIALSTATEUNCSCALE = 1.5;
+    public static final double TBINITIALSTATEXUNC = 0.14;
+    public static final double TBINITIALSTATEYUNC = 1.03;
+    public static final double TBINITIALSTATETXUNC = 0.0025;
+    public static final double TBINITIALSTATETYUNC = 0.0091;
+    public static final double TBINITIALSTATEQUNC = 0.0084;
+        
     // PHYSICS CONSTANTS
     public static final double SPEEDLIGHT = 29.97924580;
     public static final double LIGHTVEL = 0.00299792458;        // velocity of light (cm/ns) - conversion factor from radius in cm to momentum in GeV/c
@@ -512,8 +529,8 @@ public class Constants {
         }
         // Load target
         ConstantProvider providerTG = GeometryFactory.getConstants(DetectorType.TARGET, runNumber, geoVariation);
-        double targetPosition = providerTG.getDouble("/geometry/target/position",0);
-        double targetLength   = providerTG.getDouble("/geometry/target/length",0);
+        double targetPosition = providerTG.getDouble("/geometry/shifts/target/z",0);
+        double targetLength   = providerTG.getDouble("/geometry/materials/target/length",0);
         // Load other geometries
         ConstantProvider providerFTOF = GeometryFactory.getConstants(DetectorType.FTOF, runNumber, geoVariation);
         ftofDetector = new FTOFGeant4Factory(providerFTOF);        

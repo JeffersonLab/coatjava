@@ -76,6 +76,7 @@ public class PDGDatabase {
 		particleMap.put(321, new PDGParticle("K+", 321, 11, 0.49367716, 1));
 		particleMap.put(-321, new PDGParticle("K-", -321, 12, 0.49367716, -1));
 		particleMap.put(311, new PDGParticle("K0", 311, 10, 0.49761424, 0));
+		particleMap.put(-311, new PDGParticle("antiK0", -311, 10, 0.49761424, 0));
 		particleMap.put(130, new PDGParticle("K0L", 130, 10, 0.49761424, 0));
 		particleMap.put(310, new PDGParticle("K0S", 310, 10, 0.49761424, 0));
 		particleMap.put(2212, new PDGParticle("p", 2212, 14, 0.938272046, 1));

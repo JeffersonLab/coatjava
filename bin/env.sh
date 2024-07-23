@@ -1,7 +1,6 @@
 #!/bin/bash
 
-thisEnv=${BASH_SOURCE[0]:-$0}
-CLAS12DIR=$(cd $(dirname $thisEnv)/.. && pwd -P)
+CLAS12DIR=$(cd $(dirname ${BASH_SOURCE[0]:-$0})/.. && pwd -P)
 export CLAS12DIR
 
 # Set default field maps (but do not override user's env):
@@ -26,6 +25,7 @@ if [ $# -ge 1 ]; then
         JYPATH="${JYPATH:+${JYPATH}:}${jars}"
       done
     done
+    unset lib jars
 
     # additional variables and settings for groovy
     if [ "$1" = "groovy" ]; then

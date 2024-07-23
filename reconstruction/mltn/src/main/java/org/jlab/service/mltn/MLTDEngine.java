@@ -51,10 +51,19 @@ public class MLTDEngine extends ReconstructionEngine {
         Map<String,String>  files = new HashMap<>();
         files.put("classifier", "trackClassifier.network");
         files.put("fixer", "trackFixer.network");
-        ArchiveProvider provider = new ArchiveProvider(path);
+        ArchiveProvider provider = new ArchiveProvider(path.trim());
+        //----- This will find in the archive the last run number closest
+        //----- to provided run number that contains trained network.
+        //----- it works similar to CCDB, but not exatly, for provided 
+        //----- run number it looks for run that has smaller number,
+        //----- however it the provided run # it lower than anything 
+        //----- existing in the arhive, it will return the closest run 
+        //----- number entry.
         int adjustedRun = provider.findEntry(run);
         String directory = String.format("network/%d/%s", adjustedRun, networkFlavor);
-        network.initZip(path, directory, files);
+        network.initZip(path.trim(),directory, files);
+        System.out.println("[neural-network] info : Loading neural network files done...");
+        System.out.println("[neural-network] info : Only network is initialized...");
         return true;
     }
 

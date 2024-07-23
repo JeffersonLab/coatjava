@@ -1,39 +1,29 @@
 package org.jlab.analysis.postprocess;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.logging.Logger;
 import org.jlab.clas.reco.ReconstructionEngine;
-
+import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
-
 import org.jlab.jnp.hipo4.io.HipoReader;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
-
 import org.jlab.utils.system.ClasUtilsFile;
-
 import org.jlab.detector.scalers.DaqScalers;
 import org.jlab.detector.scalers.DaqScalersSequence;
-
 import org.jlab.detector.helicity.HelicityBit;
-import org.jlab.detector.helicity.HelicitySequenceManager;
+import org.jlab.detector.helicity.HelicitySequenceDelayed;
+import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.logging.DefaultLogger;
-
+import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.options.OptionParser;
 
 /**
- * Calls routines to do analysis and per-event lookup of delayed helicity
- * and beam charge from tag-1 events, and outputs a file with modified
- * REC::Event.helicity/beamCharge/liveTime.
- * 
- * Also, adds tag-1 events for configuration banks (e.g. SOFT::config)
- * 
- * Usage: Tag1ToEvent outputFile inputFile1 [inputFile2 [inputFile3 [...]]]
- * 
- * FIXME:  DaqScalersSequence doesn't manage run numbers.  Until then, we
- * cannot mix run numbers here.
- * 
- * FIXME:  delay=8 is hardcoded below, should come from CCDB.  
+ * This is the "postprocessing" used in standard CLAS12 chef workflows.  It 
+ * propagates information from tag-1 events into every physics event, which
+ * includes beam charge from RUN::scaler and offline, delay-corrected helicity
+ * from HEL::flip.
+ *
+ * WARNING:  Multiple run numbers in the same instance is not supported.
  *
  * @author wphelps
  * @author baltzell
@@ -41,155 +31,172 @@ import org.jlab.utils.options.OptionParser;
 
 public class Tag1ToEvent {
 
-    public static final String[] CREATE_TAG1_EVENTS = {
-        ReconstructionEngine.CONFIG_BANK_NAME
-    };
-    
+    static final Logger LOGGER = Logger.getLogger(Tag1ToEvent.class.getName());
+
     public static void main(String[] args) {
 
         DefaultLogger.debug();
 
+        // Parse command-line options:
         OptionParser parser = new OptionParser("postprocess");
         parser.addOption("-q","0","do beam charge and livetime (0/1=false/true)");
         parser.addOption("-d","0","do delayed helicity (0/1=false/true)");
-        parser.addOption("-f","0","do global offline helicity flip (0/1=false/true)");
+        parser.addOption("-f","0","rebuild the HEL::flip banks (0/1=false/true)");
         parser.addRequired("-o","output.hipo");
         parser.parse(args);
-
-        // input files:
-        List<String> inputList = parser.getInputList();
-        if(inputList.isEmpty()==true){
+        if (parser.getInputList().isEmpty()) {
             parser.printUsage();
-            System.err.println("\n >>>> error : no input file is specified....\n");
+            LOGGER.severe("No input file(s) specified.");
             System.exit(1);
         }
-        
-        // output file:
-        String fileout = parser.getOption("-o").stringValue();
-
-        // helicity / beamcharge options:
         final boolean doHelicityDelay = parser.getOption("-d").intValue() != 0;
         final boolean doBeamCharge = parser.getOption("-q").intValue() != 0;
-        final boolean doHelicityFlip = parser.getOption("-f").intValue() != 0;
-        if (!doHelicityDelay && !doBeamCharge && !doHelicityFlip) {
+        final boolean doRebuildFlips = parser.getOption("-f").intValue() != 0;
+        if (!doHelicityDelay && !doBeamCharge && !doRebuildFlips) {
             parser.printUsage();
-            System.err.println("\n >>>>> error : at least one of -q/-d/-f must be specified\n");
+            LOGGER.severe("At least one of -q/-d/-f is required.");
             System.exit(1);
         }
 
-        HelicitySequenceManager helSeq = new HelicitySequenceManager(8,inputList,doHelicityFlip);
-        DaqScalersSequence chargeSeq = DaqScalersSequence.readSequence(inputList);
+        // Initialize event counters:
+        long badCharge=0, goodCharge=0;
+        long badHelicity=0, goodHelicity=0;
 
-        HipoWriterSorted writer = new HipoWriterSorted();
-        writer.getSchemaFactory().initFromDirectory(ClasUtilsFile.getResourceDir("COATJAVA", "etc/bankdefs/hipo4"));
-        writer.setCompressionType(2);
-        writer.open(fileout);
-			
-        Event event = new Event();
+        try (HipoWriterSorted writer = new HipoWriterSorted()) {
+            
+            // Setup the output file writer:
+            SchemaFactory schema = writer.getSchemaFactory();
+            schema.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4"));
+            writer.setCompressionType(2);
+            writer.open(parser.getOption("-o").stringValue());
 
-        Event configEvent = new Event();
-        
-        // we're going to modify these banks:
-        Bank recEventBank = new Bank(writer.getSchemaFactory().getSchema("REC::Event"));
-        Bank helScalerBank = new Bank(writer.getSchemaFactory().getSchema("HEL::scaler"));
-        
-        // we're going to modify this bank if doHelicityFlip is set:
-        Bank helFlipBank = new Bank(writer.getSchemaFactory().getSchema("HEL::flip"));
+            // Setup event and bank stores:
+            Event event = new Event();
+            Event configEvent = new Event();
+            Bank runConfigBank = new Bank(schema.getSchema("RUN::config"));
+            Bank recEventBank = new Bank(schema.getSchema("REC::Event"));
+            Bank helScalerBank = new Bank(schema.getSchema("HEL::scaler"));
+            Bank helFlipBank = new Bank(schema.getSchema("HEL::flip"));
+            Bank[] configBanks = new Bank[]{new Bank(schema.getSchema(ReconstructionEngine.CONFIG_BANK_NAME))};
 
-        // we're going to copy these banks to new tag-1 events:
-        List<Bank> configBanks = new ArrayList<>();
-        for (String bankName : CREATE_TAG1_EVENTS) {
-            configBanks.add(new Bank(writer.getSchemaFactory().getSchema(bankName)));
-        }
-        
-        long badCharge = 0;
-        long goodCharge = 0;
-        long badHelicity = 0;
-        long goodHelicity = 0;
+            // Prepare to read from CCDB:
+            LOGGER.info("\n>>> Initializing helicity configuration from CCDB ...\n");
+            ConstantsManager conman = new ConstantsManager();
+            conman.init("/runcontrol/hwp","/runcontrol/helicity");
+            final int run = getRunNumber(parser.getInputList().get(0));
+            IndexedTable helTable = conman.getConstants(run, "/runcontrol/helicity");
+ 
+            // Initialize the scaler sequence from tag-1 events:
+            LOGGER.info("\n>>> Initializing scaler sequence from RUN/HEL::scaler ...\n");
+            DaqScalersSequence chargeSeq = DaqScalersSequence.readSequence(parser.getInputList());
 
-        for (String filename : inputList) {
+            // Initialize the helicity sequence:
+            HelicitySequenceDelayed helSeq = new HelicitySequenceDelayed(helTable);
+            if (doRebuildFlips) {
+                // Read all events in all the files once, to rebuild helicity sequence:
+                LOGGER.info("\n>>> Rebuilding helicity sequence from HEL::adc ...\n");
+                helSeq.addStream(schema, conman, parser.getInputList());
+            }
+            else {
+                // Just read the helicity sequence from existing HEL::flip banks in tag-1 events:
+                LOGGER.info("\n>>> Initializing helicity sequence from HEL::flip ...\n");
+                helSeq.initialize(parser.getInputList());
+            }
 
-            HipoReader reader = new HipoReader();
-            reader.open(filename);
+            // Loop over the input HIPO files:
+            LOGGER.info("\n>>> Starting post-processing ...\n");
+            for (String filename : parser.getInputList()) {
 
-            while (reader.hasNext()) {
+                HipoReader reader = new HipoReader();
+                reader.open(filename);
 
-                reader.nextEvent(event);
-                event.read(recEventBank);
-                event.read(helFlipBank);
-                event.read(helScalerBank);
+                while (reader.hasNext()) {
 
-                event.remove(recEventBank.getSchema());
-                event.remove(helScalerBank.getSchema());
+                    // Read banks:
+                    reader.nextEvent(event);
+                    event.read(recEventBank);
+                    event.read(helScalerBank);
+                    event.read(runConfigBank);
 
-                // do the sequence lookups:
-                HelicityBit hb = helSeq.search(event);
-                DaqScalers ds = chargeSeq.get(event);
-                HelicityBit hbraw = helSeq.getHalfWavePlate(event) ? HelicityBit.getFlipped(hb) : hb;
-
-                // count helicity good/bad;
-                if (Math.abs(hb.value())==1) goodHelicity++;
-                else badHelicity++;
-
-                if (doHelicityFlip) {
-
-                    // flip this event's helicity:
-                    hb = HelicityBit.getFlipped(hb);
-                    hbraw = HelicityBit.getFlipped(hbraw);
-                
-                    // flip the helicity in the HEL::flip bank:
-                    if (helFlipBank.getRows()>0) {
+                    // Remove banks to be modified or rebuilt:
+                    event.remove(recEventBank.getSchema());
+                    event.remove(helScalerBank.getSchema());
+                    if (doRebuildFlips)
                         event.remove(helFlipBank.getSchema());
-                        helFlipBank.putByte("helicity", 0, (byte)-helFlipBank.getByte("helicity",0));
-                        helFlipBank.putByte("helicityRaw", 0, (byte)-helFlipBank.getByte("helicityRaw",0));
-                        event.write(helFlipBank);
+
+                    // Do event lookups for helicity and scaler sequences:
+                    DaqScalers ds = chargeSeq.get(event);
+                    HelicityBit hb = helSeq.search(runConfigBank.getLong("timestamp", 0));
+                    HelicityBit hbraw = helSeq.getHalfWavePlate() ? HelicityBit.getFlipped(hb) : hb;
+
+                    // Increment event counters:
+                    if (Math.abs(hb.value()) == 1) ++goodHelicity; else ++badHelicity;
+                    if (ds == null) ++badCharge; else ++goodCharge;
+
+                    // Write delay-corrected helicty to REC::Event and HEL::scaler:
+                    if (doHelicityDelay) {
+                        recEventBank.putByte("helicity",0,hb.value());
+                        recEventBank.putByte("helicityRaw",0,hbraw.value());
+                        RebuildScalers.assignScalerHelicity(runConfigBank.getLong("timestamp",0), helScalerBank, helSeq);
                     }
-                }
 
-                // write delay-corrected helicty to REC::Event and HEL::scaler:
-                if (doHelicityDelay) {
-                    recEventBank.putByte("helicity",0,hb.value());
-                    recEventBank.putByte("helicityRaw",0,hbraw.value());
-                    RebuildScalers.assignScalerHelicity(event, helScalerBank, helSeq);
-                }
-                // flip the non-delay-corrected helicity in place in REC::Event:
-                else if (doHelicityFlip) {
-                    recEventBank.putByte("helicity",0,(byte)-recEventBank.getByte("helicity",0));
-                    recEventBank.putByte("helicityRaw",0,(byte)-recEventBank.getByte("helicityRaw",0));
-                }
-
-                // write beam charge to REC::Event:
-                if (ds==null) badCharge++;
-                else {
-                    goodCharge++;
-                    if (doBeamCharge) {
+                    // Write beam charge to REC::Event:
+                    if (doBeamCharge && ds!=null) {
                         recEventBank.putFloat("beamCharge",0, (float) ds.dsc2.getBeamChargeGated());
                         recEventBank.putDouble("liveTime",0,ds.dsc2.getLivetime());
                     }
+
+                    // Write the modified banks back to the original event:
+                    event.write(recEventBank);
+                    event.write(helScalerBank);
+
+                    // Write out the original event: 
+                    writer.addEvent(event, event.getEventTag());
+
+                    // Copy config banks to new, tag-1 events:
+                    createTag1Events(writer, event, configEvent, configBanks);
                 }
 
-                // copy config banks to new tag-1 events:
-                configEvent.reset();
-                for (Bank bank : configBanks) {
-                    event.read(bank);
-                    if (bank.getRows()>0) {
-                        configEvent.write(bank);
-                    }
-                }
-                if (!configEvent.isEmpty()) {
-                    writer.addEvent(configEvent,1);
-                }
-
-                // update the output file:
-                event.write(recEventBank);
-                event.write(helScalerBank);
-                writer.addEvent(event, event.getEventTag());
+                reader.close();
             }
-            reader.close();
-        }
-        writer.close();
 
-        System.out.println(String.format("Tag1ToEvent:  Good Helicity Fraction: %.2f%%",100*(float)goodHelicity/(goodHelicity+badHelicity)));
-        System.out.println(String.format("Tag1ToEvent:  Good Charge   Fraction: %.2f%%",100*(float)goodCharge/(goodCharge+badCharge)));
+            // Write new HEL::flip banks:
+            if (doRebuildFlips) {
+                LOGGER.info("\n>>> Writing rebuilt HEL::flip banks ...\n");
+                helSeq.writeFlips(writer, 1);
+            }
+        }
+
+        LOGGER.info(String.format("Tag1ToEvent:  Good Helicity Fraction: %.2f%%",100*(float)goodHelicity/(goodHelicity+badHelicity)));
+        LOGGER.info(String.format("Tag1ToEvent:  Good Charge   Fraction: %.2f%%",100*(float)goodCharge/(goodCharge+badCharge)));
     }
+
+    private static void createTag1Events(HipoWriterSorted writer, Event source, Event destination, Bank... banks) {
+        destination.reset();
+        for (Bank bank : banks) {
+            source.read(bank);
+            if (bank.getRows()>0)
+                destination.write(bank);
+        }
+        if (!destination.isEmpty())
+            writer.addEvent(destination,1);
+    }
+
+    private static int getRunNumber(String... filenames) {
+        Event event = new Event();
+        for (String filename : filenames) {
+            HipoReader reader = new HipoReader();
+            reader.open(filename);
+            Bank bank = new Bank(reader.getSchemaFactory().getSchema("RUN::config"));
+            while (reader.hasNext()) {
+                reader.nextEvent(event);
+                event.read(bank);
+                if (bank.getRows()>0 && bank.getInt("run",0)>0)
+                    return bank.getInt("run",0);
+            }
+        }
+        return -1;
+    }
+
 }
+

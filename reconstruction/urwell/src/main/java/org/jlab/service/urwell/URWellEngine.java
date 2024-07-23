@@ -51,7 +51,7 @@ public class URWellEngine extends ReconstructionEngine {
     public void detectorChanged(int runNumber) {
         String variationName = Optional.ofNullable(this.getEngineConfigString("variation")).orElse("default");
         DatabaseConstantProvider cp = new DatabaseConstantProvider(runNumber, variationName);
-        factory.init(cp);
+        factory.init(cp, false, URWellConstants.NREGION);
     }
 
     @Override
@@ -86,7 +86,7 @@ public class URWellEngine extends ReconstructionEngine {
         
         DataBank bankC = de.createBank("URWELL::clusters", clusters.size());        
         for(int c = 0; c < clusters.size(); c++){
-            bankS.setShort("id",       c, (short) clusters.get(c).getId());
+            bankC.setShort("id",       c, (short) clusters.get(c).getId());
             bankC.setByte("sector",    c,  (byte) clusters.get(c).get(0).getDescriptor().getSector());
             bankC.setByte("layer",     c,  (byte) clusters.get(c).get(0).getDescriptor().getLayer());
             bankC.setShort("strip",    c, (short) clusters.get(c).getMaxStrip());
@@ -106,6 +106,7 @@ public class URWellEngine extends ReconstructionEngine {
         for(int c = 0; c < crosses.size(); c++){
             bankX.setShort("id",       c, (short) crosses.get(c).getId());
             bankX.setByte("sector",    c,  (byte) crosses.get(c).getSector());
+            bankX.setByte("region",    c,  (byte) crosses.get(c).getRegion());
             bankX.setFloat("energy",   c, (float) crosses.get(c).getEnergy());
             bankX.setFloat("time",     c, (float) crosses.get(c).getTime());
             bankX.setFloat("x",        c, (float) crosses.get(c).point().x());

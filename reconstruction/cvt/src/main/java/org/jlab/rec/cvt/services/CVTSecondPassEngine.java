@@ -3,7 +3,6 @@ package org.jlab.rec.cvt.services;
 import java.util.ArrayList;
 import java.util.List;
 import org.jlab.clas.swimtools.Swim;
-import org.jlab.detector.base.DetectorType;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.cvt.Constants;
@@ -43,7 +42,7 @@ public class CVTSecondPassEngine extends CVTEngine {
         IndexedTable bmtVoltage = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_voltage");
         IndexedTable beamPos    = this.getConstantsManager().getConstants(run, "/geometry/beam/position");
         
-        Geometry.initialize(this.getConstantsManager().getVariation(), 11, svtLorentz, bmtVoltage);
+        Geometry.getInstance().initialize(this.getConstantsManager().getVariation(), run, svtLorentz, bmtVoltage);
         
         if(Constants.getInstance().isCosmics) {
             return true;

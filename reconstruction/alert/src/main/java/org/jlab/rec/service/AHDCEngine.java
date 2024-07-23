@@ -71,7 +71,8 @@ public class AHDCEngine extends ReconstructionEngine {
 
 		magfield = 50 * magfieldfactor;
 
-		if (event.hasBank("ALRTDC::adc")) {
+		//if (event.hasBank("AHDC::tdc")) {
+		if (event.hasBank("AHDC::adc")) {
 
 			// I) Read raw hit
 			HitReader hitRead = new HitReader(event, simulation);
