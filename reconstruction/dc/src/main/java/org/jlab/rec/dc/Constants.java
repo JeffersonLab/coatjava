@@ -17,7 +17,6 @@ import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.geom.base.Detector;
 import org.jlab.rec.dc.trajectory.TrajectorySurfaces;
 import org.jlab.utils.groups.IndexedTable;
-import org.jlab.detector.banks.RawBank.OrderType;
 
 /**
  * Constants used in the reconstruction
@@ -88,6 +87,8 @@ public class Constants {
 
     // CONFIGURABLE PARAMETERS
     private String  GEOVARIATION = "default";    
+    public  String  MINISTAGGERSTATUS = "ON";
+    public  String  FEEDTHROUGHSSTATUS = "SHIFT";
     private boolean ENDPLATESBOWING = false;
     private double  WIREDIST = 0.0;
     public  int     SECTORSELECT = 0;
@@ -369,6 +370,8 @@ public class Constants {
 
     public synchronized void initialize(String engine,
                                         String variation, 
+                                        String ministaggerStatus,
+                                        String feedthroughsStatus,
                                         boolean wireDistortion,
                                         boolean useStartTime,
                                         boolean useBetaCut,
@@ -384,6 +387,10 @@ public class Constants {
         }
         else {
             GEOVARIATION    = variation;
+            if(ministaggerStatus!=null)
+                MINISTAGGERSTATUS = ministaggerStatus;
+            if(feedthroughsStatus!=null)
+                FEEDTHROUGHSSTATUS = feedthroughsStatus;
             ENDPLATESBOWING = wireDistortion;
             USETSTART       = useStartTime;
             CHECKBETA       = useBetaCut;
@@ -421,6 +428,8 @@ public class Constants {
         LOGGER.log(Level.INFO, "["+engine+"] run with variation = " + GEOVARIATION);
         LOGGER.log(Level.INFO, "["+engine+"] run with sector selection = " + SECTORSELECT);
         LOGGER.log(Level.INFO, "["+engine+"] run with start time option = " + USETSTART);
+        LOGGER.log(Level.INFO, "["+engine+"] run with wire ministagger = " + MINISTAGGERSTATUS);
+        LOGGER.log(Level.INFO, "["+engine+"] run with wire feedthroughs = " + FEEDTHROUGHSSTATUS);
         LOGGER.log(Level.INFO, "["+engine+"] run with wire distortions = " + ENDPLATESBOWING);
         LOGGER.log(Level.INFO, "["+engine+"] run with with time Beta correction (is false for doca Beta correction) = " + USETIMETBETA);
         LOGGER.log(Level.INFO, "["+engine+"] run with with Beta cut = " + CHECKBETA);
@@ -527,7 +536,7 @@ public class Constants {
     private synchronized void LoadGeometry(String geoVariation, double[][] shifts) {
         // Load the geometry
         ConstantProvider provider = GeometryFactory.getConstants(DetectorType.DC, 11, geoVariation);
-        dcDetector = new DCGeant4Factory(provider, DCGeant4Factory.MINISTAGGERON, ENDPLATESBOWING, shifts);
+        dcDetector = new DCGeant4Factory(provider, MINISTAGGERSTATUS, FEEDTHROUGHSSTATUS, ENDPLATESBOWING, shifts);
         for(int l=0; l<6; l++) {
             wpdist[l] = provider.getDouble("/geometry/dc/superlayer/wpdist", l);
         }

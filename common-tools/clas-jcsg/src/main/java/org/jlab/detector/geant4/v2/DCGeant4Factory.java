@@ -54,7 +54,7 @@ final class DCdatabase {
     private int nsensewires;
     private int nguardwires;
 
-    private boolean ministaggerStatus = false;
+    private DCGeant4Factory.MinistaggerStatus ministaggerStatus = DCGeant4Factory.MinistaggerStatus.ON;
     private double ministagger ;
 
     private boolean endplatesStatus = false;
@@ -67,10 +67,10 @@ final class DCdatabase {
     private final double[][] feedThroughRmin = new double[nSectors][nSupers];   // inner radius at the beginning of the curved part
     private final double[][] feedThroughRmax = new double[nSectors][nSupers];   // inner radius at the end of the curved part, i.e. on the surface
     private final double[][] feedThroughRcurv = new double[nSectors][nSupers];  // curvature radius of the trumpet-like part
-    private int feedthroughsStatus = 1; // 0-ignore the feedthrough, 1-sccount for the shift of the wire midpoint, 2-acccount for both shift and tilt
-
-        private DCdatabase() {
-    }
+    private DCGeant4Factory.FeedthroughsStatus feedthroughsStatus = DCGeant4Factory.FeedthroughsStatus.SHIFT;
+    
+        
+    private DCdatabase() {}
 
     public static DCdatabase getInstance() {
         if (instance == null) {
@@ -238,11 +238,11 @@ final class DCdatabase {
         return ministagger;
     }
     
-    public void setMinistaggerStatus(boolean ministaggerStatus) {
+    public void setMinistaggerType(DCGeant4Factory.MinistaggerStatus ministaggerStatus) {
         this.ministaggerStatus = ministaggerStatus;
     }
 
-    public boolean getMinistaggerStatus(){
+    public DCGeant4Factory.MinistaggerStatus getMinistaggerStatus(){
         return ministaggerStatus;
     }
     
@@ -258,11 +258,11 @@ final class DCdatabase {
         return endplatesStatus;
     }
 
-    public int feedthroughsStatus() {
+    public DCGeant4Factory.FeedthroughsStatus feedthroughsStatus() {
         return feedthroughsStatus;
     }
 
-    public void setFeedthroughsStatus(int feedthroughsStatus) {
+    public void setFeedthroughsStatus(DCGeant4Factory.FeedthroughsStatus feedthroughsStatus) {
         this.feedthroughsStatus = feedthroughsStatus;
     }
 
@@ -373,7 +373,7 @@ final class Wire {
         double wlenr = vnum.dot(rnorm) / direction.dot(rnorm);
         rightend = direction.times(wlenr).add(midpoint);
 
-        if(dbref.feedthroughsStatus()==0) return;
+        if(dbref.feedthroughsStatus()==DCGeant4Factory.FeedthroughsStatus.OFF) return;
         
         // define unit vector parallel to the sides of the chamber and pointing to the chamber tip, projected onto the z=0 plane
         Vector3d rpar  = new Vector3d(sopen, -copen, 0);
@@ -387,7 +387,7 @@ final class Wire {
         Vector3d newDirection = lcirc.minus(rcirc).normalized();
 
         // update the wire direction only if the flag is >1
-        if(dbref.feedthroughsStatus()>1)
+        if(dbref.feedthroughsStatus()==DCGeant4Factory.FeedthroughsStatus.SHIFTANDDIR)
             direction = newDirection;
         
         // recalculate the wire end point in the sector frame
@@ -485,8 +485,13 @@ final class Wire {
 
         // hh: wire distance in the wire plane
         double hh = (wire-1 + ((double)(layer % 2)) / 2.0) * dw2;
-        if(ireg==2 && isSensitiveWire(isuper, layer, wire) && dbref.getMinistaggerStatus())
+        if(ireg==2) {
+            if(dbref.getMinistaggerStatus()==DCGeant4Factory.MinistaggerStatus.ON)
                 hh += ((layer%2)*2)*dbref.ministagger();
+            else if(dbref.getMinistaggerStatus()==DCGeant4Factory.MinistaggerStatus.SENSEWIRES && isSensitiveWire(isuper, layer, wire))
+                hh += ((layer%2)*2-1)*dbref.ministagger();
+        }
+                
 
         // ll: layer distance
         double tt = dbref.cellthickness(isuper) * dbref.wpdist(isuper);
@@ -573,28 +578,101 @@ public final class DCGeant4Factory extends Geant4Factory {
     private final Wire[][][][] wires;
     private final Vector3d[][][] layerMids;
     private final Vector3d[][] regionMids;
-
-    public static boolean MINISTAGGERON=true;
-    public static boolean MINISTAGGEROFF=false;
     
+    public static enum MinistaggerStatus {
+        OFF         ( 0, "OFF"),         // no ministagger
+        SENSEWIRES  ( 1, "SENSEWIRES"),  // ministagger is applied only to sense wires
+        ON          ( 2, "OFF");         // ministagger applied to both sense and guard wires (default)
+        
+        private final int id;
+        private final String name;
+        
+        private MinistaggerStatus(int id, String name) { 
+            this.id = id; 
+            this.name = name;
+        }
+        
+        public int getId() { return id; }
+        public String getName() { return name; }
+        
+        public static MinistaggerStatus getStatus(String name) {
+            name = name.trim();
+            for(MinistaggerStatus status: MinistaggerStatus.values())
+                if (status.getName().equalsIgnoreCase(name)) 
+                    return status;
+            return ON;
+        }    
+    
+        public static MinistaggerStatus getStatus(boolean status) {
+            return status ? ON : OFF;
+        }    
+    }
+
+    public static enum FeedthroughsStatus {
+        OFF         ( 0, "OFF"),         // do not account for the feedthroughs
+        SHIFT       ( 1, "SHIFT"),       // account for wire midpoint shift only (default)
+        SHIFTANDDIR ( 2, "SHIFTANDDIR"); // account for wire shift and tilt
+        
+        private final int id;
+        private final String name;
+        
+        private FeedthroughsStatus(int id, String name) { 
+            this.id = id; 
+            this.name = name;
+        }
+        
+        public int getId() { return id; }
+        public String getName() { return name; }
+        
+        public static FeedthroughsStatus getStatus(String name) {
+            name = name.trim();
+            for(FeedthroughsStatus status: FeedthroughsStatus.values())
+                if (status.getName().equalsIgnoreCase(name)) 
+                    return status;
+            return SHIFT;
+        }    
+    }
+
     public static boolean ENDPLATESBOWON=true;
     public static boolean ENDPLATESBOWOFF=false;
 
     ///////////////////////////////////////////////////
     public DCGeant4Factory(ConstantProvider provider) {
-        this(provider, MINISTAGGEROFF, ENDPLATESBOWOFF, null);
+        this(provider, MinistaggerStatus.OFF, FeedthroughsStatus.SHIFT, ENDPLATESBOWOFF, null);
     }
 
     ///////////////////////////////////////////////////
-    public DCGeant4Factory(ConstantProvider provider, boolean ministaggerStatus,
-            boolean endplatesStatus) {
-        this(provider, ministaggerStatus, endplatesStatus, null);
+    public DCGeant4Factory(ConstantProvider provider, 
+                        boolean ministaggerStatus,
+                        boolean endplatesStatus) {
+        this(provider, MinistaggerStatus.getStatus(ministaggerStatus), FeedthroughsStatus.SHIFT, endplatesStatus, null);
+    }
+        
+    ///////////////////////////////////////////////////
+    public DCGeant4Factory(ConstantProvider provider, 
+                        boolean ministaggerStatus,
+                        boolean endplatesStatus, 
+                        double[][] shifts) { 
+        this(provider, MinistaggerStatus.getStatus(ministaggerStatus), FeedthroughsStatus.SHIFT, endplatesStatus, shifts);
     }
     
     ///////////////////////////////////////////////////
-    public DCGeant4Factory(ConstantProvider provider, boolean ministaggerStatus,
-            boolean endplatesStatus, double[][] shifts) {
-        dbref.setMinistaggerStatus(ministaggerStatus);
+    public DCGeant4Factory(ConstantProvider provider, 
+                           String ministaggerStatus,
+                           String feedthroughsStatus,
+                           boolean endplatesStatus, 
+                           double[][] shifts) {
+        this(provider, MinistaggerStatus.getStatus(ministaggerStatus), FeedthroughsStatus.getStatus(feedthroughsStatus), endplatesStatus, shifts);        
+    }
+    
+    ///////////////////////////////////////////////////
+    public DCGeant4Factory(ConstantProvider provider, 
+                           MinistaggerStatus ministaggerStatus,
+                           FeedthroughsStatus feedthroughsStatus,
+                           boolean endplatesStatus, 
+                           double[][] shifts) {
+        dbref.setMinistaggerType(ministaggerStatus);
+        dbref.setFeedthroughsStatus(feedthroughsStatus);
         dbref.setEndPlatesStatus(endplatesStatus);
         
         motherVolume = new G4World("fc");
@@ -862,12 +940,9 @@ public final class DCGeant4Factory extends Geant4Factory {
     public static void main(String[] args) {
         
         ConstantProvider provider = GeometryFactory.getConstants(DetectorType.DC, 11, "default");
-        DCdatabase.getInstance().setFeedthroughsStatus(0);
-        DCGeant4Factory dc0 = new DCGeant4Factory(provider, DCGeant4Factory.MINISTAGGERON, false);
-        DCdatabase.getInstance().setFeedthroughsStatus(1);
-        DCGeant4Factory dc1 = new DCGeant4Factory(provider, DCGeant4Factory.MINISTAGGERON, false);
-        DCdatabase.getInstance().setFeedthroughsStatus(2);
-        DCGeant4Factory dc2 = new DCGeant4Factory(provider, DCGeant4Factory.MINISTAGGERON, false);
+        DCGeant4Factory dc0 = new DCGeant4Factory(provider, MinistaggerStatus.ON, FeedthroughsStatus.OFF, false, null);
+        DCGeant4Factory dc1 = new DCGeant4Factory(provider, MinistaggerStatus.ON, FeedthroughsStatus.SHIFT, false, null);
+        DCGeant4Factory dc2 = new DCGeant4Factory(provider, MinistaggerStatus.ON, FeedthroughsStatus.SHIFTANDDIR, false, null);
         
         for(int il=0; il<36; il++) {
             for(int iw=0; iw<112; iw=iw+111) {
