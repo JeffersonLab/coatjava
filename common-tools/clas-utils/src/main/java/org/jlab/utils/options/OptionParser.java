@@ -127,7 +127,7 @@ public class OptionParser {
         
         if(this.containsOptions(arguments, "-h","-help")==true){
             this.printUsage();
-            System.exit(101);
+            System.exit(0);
         }
 
 //this.show(arguments);
