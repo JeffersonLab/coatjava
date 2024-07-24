@@ -584,7 +584,7 @@ public final class DCGeant4Factory extends Geant4Factory {
     public static enum MinistaggerStatus {
         OFF         ( 0, "OFF"),         // no ministagger
         SENSEWIRES  ( 1, "SENSEWIRES"),  // ministagger is applied only to sense wires
-        ON          ( 2, "OFF");         // ministagger applied to both sense and guard wires (default)
+        ON          ( 2, "ON");          // ministagger applied to both sense and guard wires (default)
         
         private final int id;
         private final String name;
