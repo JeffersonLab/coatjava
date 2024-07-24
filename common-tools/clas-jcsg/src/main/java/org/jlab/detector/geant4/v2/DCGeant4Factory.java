@@ -359,7 +359,9 @@ final class Wire {
         double sopen = Math.sin(dbref.thopen(ireg) / 2.0);
 
         // define vector from wire midpoint to chamber tip projected onto the z=0 plane
-        Vector3d vnum = new Vector3d(0, dbref.xdist(ireg)+dbref.feedThroughExt(sector-1,isuper)/copen, 0);
+        Vector3d vnum = new Vector3d(0, dbref.xdist(ireg), 0);
+        if(dbref.feedthroughsStatus()!=DCGeant4Factory.FeedthroughsStatus.OFF)
+            vnum.add(0, dbref.feedThroughExt(sector-1,isuper)/copen, 0);
         vnum.sub(midpoint);
 
         // define unit vector normal to the endplates of the chamber and pointing inside, projected onto the z=0 plane
@@ -596,10 +598,12 @@ public final class DCGeant4Factory extends Geant4Factory {
         public String getName() { return name; }
         
         public static MinistaggerStatus getStatus(String name) {
-            name = name.trim();
-            for(MinistaggerStatus status: MinistaggerStatus.values())
-                if (status.getName().equalsIgnoreCase(name)) 
-                    return status;
+            if(name!=null) {
+                name = name.trim();
+                for(MinistaggerStatus status: MinistaggerStatus.values())
+                    if (status.getName().equalsIgnoreCase(name)) 
+                        return status;
+            }
             return ON;
         }    
     
@@ -625,10 +629,12 @@ public final class DCGeant4Factory extends Geant4Factory {
         public String getName() { return name; }
         
         public static FeedthroughsStatus getStatus(String name) {
-            name = name.trim();
-            for(FeedthroughsStatus status: FeedthroughsStatus.values())
-                if (status.getName().equalsIgnoreCase(name)) 
-                    return status;
+            if(name!=null) {
+                name = name.trim();
+                for(FeedthroughsStatus status: FeedthroughsStatus.values())
+                    if (status.getName().equalsIgnoreCase(name)) 
+                        return status;
+            }
             return SHIFT;
         }    
     }
@@ -654,15 +660,6 @@ public final class DCGeant4Factory extends Geant4Factory {
                         boolean endplatesStatus, 
                         double[][] shifts) { 
         this(provider, MinistaggerStatus.getStatus(ministaggerStatus), FeedthroughsStatus.SHIFT, endplatesStatus, shifts);
-    }
-    
-    ///////////////////////////////////////////////////
-    public DCGeant4Factory(ConstantProvider provider, 
-                           String ministaggerStatus,
-                           String feedthroughsStatus,
-                           boolean endplatesStatus, 
-                           double[][] shifts) {
-        this(provider, MinistaggerStatus.getStatus(ministaggerStatus), FeedthroughsStatus.getStatus(feedthroughsStatus), endplatesStatus, shifts);        
     }
     
     ///////////////////////////////////////////////////

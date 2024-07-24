@@ -87,8 +87,8 @@ public class Constants {
 
     // CONFIGURABLE PARAMETERS
     private String  GEOVARIATION = "default";    
-    public  String  MINISTAGGERSTATUS = "ON";
-    public  String  FEEDTHROUGHSSTATUS = "SHIFT";
+    public  DCGeant4Factory.MinistaggerStatus  MINISTAGGERSTATUS = null;
+    public  DCGeant4Factory.FeedthroughsStatus FEEDTHROUGHSSTATUS = null;
     private boolean ENDPLATESBOWING = false;
     private double  WIREDIST = 0.0;
     public  int     SECTORSELECT = 0;
@@ -386,20 +386,18 @@ public class Constants {
             printConfig(engine);
         }
         else {
-            GEOVARIATION    = variation;
-            if(ministaggerStatus!=null)
-                MINISTAGGERSTATUS = ministaggerStatus;
-            if(feedthroughsStatus!=null)
-                FEEDTHROUGHSSTATUS = feedthroughsStatus;
-            ENDPLATESBOWING = wireDistortion;
-            USETSTART       = useStartTime;
-            CHECKBETA       = useBetaCut;
-            T2D             = t2d;
-            USEDOUBLETS     = useDoublets;
-            DCRBJITTER      = dcrbJitter;  
-            SWAPDCRBBITS    = swapDCRBBits;
+            GEOVARIATION        = variation;
+            MINISTAGGERSTATUS   = DCGeant4Factory.MinistaggerStatus.getStatus(ministaggerStatus);
+            FEEDTHROUGHSSTATUS  = DCGeant4Factory.FeedthroughsStatus.getStatus(feedthroughsStatus);
+            ENDPLATESBOWING     = wireDistortion;
+            USETSTART           = useStartTime;
+            CHECKBETA           = useBetaCut;
+            T2D                 = t2d;
+            USEDOUBLETS         = useDoublets;
+            DCRBJITTER          = dcrbJitter;  
+            SWAPDCRBBITS        = swapDCRBBits;
             NSUPERLAYERTRACKING = nSuperLayer;
-            SECTORSELECT    = selectedSector;
+            SECTORSELECT        = selectedSector;
 
             LoadConstants();
 
@@ -428,8 +426,8 @@ public class Constants {
         LOGGER.log(Level.INFO, "["+engine+"] run with variation = " + GEOVARIATION);
         LOGGER.log(Level.INFO, "["+engine+"] run with sector selection = " + SECTORSELECT);
         LOGGER.log(Level.INFO, "["+engine+"] run with start time option = " + USETSTART);
-        LOGGER.log(Level.INFO, "["+engine+"] run with wire ministagger = " + MINISTAGGERSTATUS);
-        LOGGER.log(Level.INFO, "["+engine+"] run with wire feedthroughs = " + FEEDTHROUGHSSTATUS);
+        LOGGER.log(Level.INFO, "["+engine+"] run with wire ministagger = "  + MINISTAGGERSTATUS.getName());
+        LOGGER.log(Level.INFO, "["+engine+"] run with wire feedthroughs = " + FEEDTHROUGHSSTATUS.getName());
         LOGGER.log(Level.INFO, "["+engine+"] run with wire distortions = " + ENDPLATESBOWING);
         LOGGER.log(Level.INFO, "["+engine+"] run with with time Beta correction (is false for doca Beta correction) = " + USETIMETBETA);
         LOGGER.log(Level.INFO, "["+engine+"] run with with Beta cut = " + CHECKBETA);
