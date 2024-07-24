@@ -245,6 +245,14 @@ public class ClusterFinder {
             if (clus != null && ((!ct.isExceptionalFittedCluster(clus) && clus.size() >= Constants.DC_MIN_NLAYERS) || 
                     (ct.isExceptionalFittedCluster(clus) && clus.size() >= Constants.DC_MIN_NLAYERS-1)) && clus.get_fitProb()>Constants.HITBASEDTRKGMINFITHI2PROB) {
                 
+                // See conversion between wire and LY in org.jlab.rec.dc.hit.Hit::calcLocY()
+                double lyL1 = clus.get_clusterLineFitSlope() + clus.get_clusterLineFitIntercept();
+                double wireL1 = (lyL1 - Math.tan(Math.PI / 6.))/2./Math.tan(Math.PI / 6.);
+                double lyL6 = clus.get_clusterLineFitSlope() * 6 + clus.get_clusterLineFitIntercept();
+                double wireL6 = (lyL6 - Math.tan(Math.PI / 6.))/2./Math.tan(Math.PI / 6.);
+                clus.setWireL1(wireL1);
+                clus.setWireL6(wireL6);
+                
                 // update the hits
                 for (FittedHit fhit : clus) {
                     fhit.set_TrkgStatus(0);

@@ -193,6 +193,74 @@ public class RecoBankWriter {
     return bank;
 
 }
+    
+    /**
+     *
+     * @param event the EvioEvent
+     * @param cluslist
+     * @return clusters bank
+     */
+    public DataBank fillClustersBank(DataEvent event, List<FittedCluster> cluslist) {
+        String name = bankNames.getClustersBank();
+        DataBank bank = event.createBank(name, cluslist.size());
+
+        int[] hitIdxArray = new int[12];
+        if (cluslist == null) {
+            return bank;
+        }
+        for (int i = 0; i < cluslist.size(); i++) {
+            if (cluslist.get(i) == null || cluslist.get(i).get_Id() == -1) {
+                continue;
+            }
+            for (int j = 0; j < hitIdxArray.length; j++) {
+                hitIdxArray[j] = -1;
+            }
+            double chi2 = 0;
+
+            bank.setShort("id", i, (short) cluslist.get(i).get_Id());
+            int status = 0;
+            if (cluslist.get(i).size() < 6) {
+                status = 1;
+            }
+            bank.setShort("status", i, (short) status);
+            bank.setByte("superlayer", i, (byte) cluslist.get(i).get_Superlayer());
+            bank.setByte("sector", i, (byte) cluslist.get(i).get_Sector());
+
+            bank.setFloat("avgWire", i, (float) cluslist.get(i).getAvgwire());
+            bank.setByte("size", i, (byte) cluslist.get(i).size());
+
+            double fitSlope = cluslist.get(i).get_clusterLineFitSlope();
+            double fitInterc = cluslist.get(i).get_clusterLineFitIntercept();
+
+            bank.setFloat("fitSlope", i, (float) fitSlope);
+            bank.setFloat("fitSlopeErr", i, (float) cluslist.get(i).get_clusterLineFitSlopeErr());
+            bank.setFloat("fitInterc", i, (float) fitInterc);
+            bank.setFloat("fitIntercErr", i, (float) cluslist.get(i).get_clusterLineFitInterceptErr());
+
+            for (int j = 0; j < cluslist.get(i).size(); j++) {
+                if (j < hitIdxArray.length) {
+                    hitIdxArray[j] = cluslist.get(i).get(j).get_Id();
+                }
+
+                double residual = cluslist.get(i).get(j).get_ClusFitDoca() / (cluslist.get(i).get(j).get_CellSize() / Math.sqrt(12.));
+                chi2 += residual * residual;
+            }
+            bank.setFloat("fitChisqProb", i, (float) ProbChi2perNDF.prob(chi2, cluslist.get(i).size() - 2));
+            bank.setFloat("wireL1", i, (float) cluslist.get(i).getWireL1());
+            bank.setFloat("wireL6", i, (float) cluslist.get(i).getWireL6());
+
+            for (int j = 0; j < hitIdxArray.length; j++) {
+                String hitStrg = "Hit";
+                hitStrg += (j + 1);
+                hitStrg += "_ID";
+                bank.setShort(hitStrg, i, (short) hitIdxArray[j]);
+            }
+        }
+
+        return bank;
+
+    } 
+    
 /**
  *
  * @param event the EvioEvent

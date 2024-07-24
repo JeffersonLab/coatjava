@@ -62,6 +62,10 @@ public class FittedCluster extends ArrayList<FittedHit> implements Comparable<Fi
     private double _clusterLineFitInterceptErrMP;
 
     private int[][] _Status;
+    
+    // In LC, wire at L1 and L6 after linear fitting
+    private double _wireL1 = -1;
+    private double _wireL6 = -1;
 
     /**
      *
@@ -370,6 +374,38 @@ public class FittedCluster extends ArrayList<FittedHit> implements Comparable<Fi
         Cluster baseClus = new Cluster(this.get_Sector(), this.get_Superlayer(), this.get_Id());
 
         return baseClus;
+    }
+    
+    /**
+     *
+     * @param _wireL1 wire at L1 in LC after linear fitting
+     */
+    public void setWireL1(double _wireL1){
+        this._wireL1 = _wireL1;
+    }
+    
+     /**
+     *
+     * @return wire at L1 in LC after linear fitting
+     */
+    public double getWireL1(){
+        return _wireL1;
+    }
+    
+    /**
+     *
+     * @param _wireL6 wire at L6 in LC after linear fitting
+     */
+    public void setWireL6(double _wireL6){
+        this._wireL6 = _wireL6;
+    }
+    
+     /**
+     *
+     * @return wire at L6 in LC after linear fitting
+     */
+    public double getWireL6(){
+        return _wireL6;
     }
 
 }

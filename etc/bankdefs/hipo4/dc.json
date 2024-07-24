@@ -52,7 +52,9 @@
        {"name":"fitSlopeErr",  "type":"F", "info":"error on slope"},
        {"name":"fitInterc",    "type":"F", "info":"line fit intercept"},
        {"name":"fitIntercErr", "type":"F", "info":"error on the intercept"},
-       {"name":"size",         "type":"B", "info":"cluster size"}
+       {"name":"size",         "type":"B", "info":"cluster size"},
+       {"name":"wireL1",       "type":"F", "info":"wire at layer 1 calculated by linear fitting function in LC"},
+       {"name":"wireL6",       "type":"F", "info":"wire at layer 6 calculated by linear fitting function in LC"}
        ]
   },
  {

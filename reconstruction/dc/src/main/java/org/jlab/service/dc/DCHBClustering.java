@@ -87,7 +87,7 @@ public class DCHBClustering extends DCEngine {
             /* 13 */
             rbc.updateListsWithClusterInfo(fhits, clusters);
             event.appendBanks(rbc.fillHitsBank(event, fhits),
-                    rbc.fillHBClustersBank(event, clusters)
+                    rbc.fillClustersBank(event, clusters)
             );
         }
         
