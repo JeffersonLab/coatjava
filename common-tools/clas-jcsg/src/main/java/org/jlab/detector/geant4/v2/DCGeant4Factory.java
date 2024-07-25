@@ -490,7 +490,7 @@ final class Wire {
         if(ireg==2 && isSensitiveWire(isuper, layer, wire)) {   // apply the ministagger only to sense wires because guard wires are actually used to define the geant4 volumes
             if(dbref.getMinistaggerStatus()==DCGeant4Factory.MinistaggerStatus.ON) 
                 hh += ((layer%2)*2)*dbref.ministagger();
-            else if(dbref.getMinistaggerStatus()==DCGeant4Factory.MinistaggerStatus.SENSEWIRES)
+            else if(dbref.getMinistaggerStatus()==DCGeant4Factory.MinistaggerStatus.NOTONREFWIRE)
                 hh += ((layer%2)*2-1)*dbref.ministagger();
         }
                 
@@ -582,9 +582,9 @@ public final class DCGeant4Factory extends Geant4Factory {
     private final Vector3d[][] regionMids;
     
     public static enum MinistaggerStatus {
-        OFF         ( 0, "OFF"),         // no ministagger
-        SENSEWIRES  ( 1, "SENSEWIRES"),  // ministagger is applied assuming the reference wire, whose position is defined by dist2tgt and themin, has no ministagger
-        ON          ( 2, "ON");          // ministagger is applied assuming the reference wire, whose position is defined by dist2tgt and themin, HAS ministagger (default)
+        OFF          ( 0, "OFF"),          // no ministagger
+        NOTONREFWIRE ( 1, "NOTONREFWIRE"), // ministagger is applied assuming the reference wire position, defined by dist2tgt and thmin, has no ministagger
+        ON           ( 2, "ON");           // ministagger is applied assuming the reference wire position, defined by dist2tgt and thmin, HAS ministagger (default)
         
         private final int id;
         private final String name;
