@@ -487,10 +487,10 @@ final class Wire {
 
         // hh: wire distance in the wire plane
         double hh = (wire-1 + ((double)(layer % 2)) / 2.0) * dw2;
-        if(ireg==2) {
-            if(dbref.getMinistaggerStatus()==DCGeant4Factory.MinistaggerStatus.ON)
+        if(ireg==2 && isSensitiveWire(isuper, layer, wire)) {   // apply the ministagger only to sense wires because guard wires are actually used to define the geant4 volumes
+            if(dbref.getMinistaggerStatus()==DCGeant4Factory.MinistaggerStatus.ON) 
                 hh += ((layer%2)*2)*dbref.ministagger();
-            else if(dbref.getMinistaggerStatus()==DCGeant4Factory.MinistaggerStatus.SENSEWIRES && isSensitiveWire(isuper, layer, wire))
+            else if(dbref.getMinistaggerStatus()==DCGeant4Factory.MinistaggerStatus.SENSEWIRES)
                 hh += ((layer%2)*2-1)*dbref.ministagger();
         }
                 
@@ -583,8 +583,8 @@ public final class DCGeant4Factory extends Geant4Factory {
     
     public static enum MinistaggerStatus {
         OFF         ( 0, "OFF"),         // no ministagger
-        SENSEWIRES  ( 1, "SENSEWIRES"),  // ministagger is applied only to sense wires
-        ON          ( 2, "ON");          // ministagger applied to both sense and guard wires (default)
+        SENSEWIRES  ( 1, "SENSEWIRES"),  // ministagger is applied assuming the reference wire, whose position is defined by dist2tgt and themin, has no ministagger
+        ON          ( 2, "ON");          // ministagger is applied assuming the reference wire, whose position is defined by dist2tgt and themin, HAS ministagger (default)
         
         private final int id;
         private final String name;
@@ -751,7 +751,7 @@ public final class DCGeant4Factory extends Geant4Factory {
                         wires[isec][isuper][ilayer][iwire].rotateX(Math.toRadians(dbref.getAlignmentThetaX(isec, isuper/2)));
                         wires[isec][isuper][ilayer][iwire].rotateY(Math.toRadians(dbref.getAlignmentThetaY(isec, isuper/2)));
                         wires[isec][isuper][ilayer][iwire].translate(regionMids[isec][isuper/2]);
-                   }
+                    }
                 }
 
             }
