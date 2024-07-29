@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. `dirname $0`/env.sh jshell
+. `dirname $0`/../libexec/env.sh jshell
 
 echo """
 *********************************
