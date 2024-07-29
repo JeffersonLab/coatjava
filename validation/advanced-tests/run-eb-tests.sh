@@ -87,7 +87,7 @@ esac
 if [ $useClara -eq 0 ]
 then
     COAT=../../coatjava
-    source $COAT/bin/env.sh
+    source $COAT/libexec/env.sh
 else
     CLARA_HOME=$PWD/clara_installation/
     COAT=$CLARA_HOME/plugins/clas12/
