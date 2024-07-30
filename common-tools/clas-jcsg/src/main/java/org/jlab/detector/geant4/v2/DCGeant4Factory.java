@@ -605,8 +605,9 @@ public final class DCGeant4Factory extends Geant4Factory {
                         return status;
             }
             return ON;
-        }    
+        }   
     
+        // this method is to support the old API that was accepting booleans as inputs
         public static MinistaggerStatus getStatus(boolean status) {
             return status ? ON : OFF;
         }    
@@ -671,6 +672,10 @@ public final class DCGeant4Factory extends Geant4Factory {
         dbref.setMinistaggerType(ministaggerStatus);
         dbref.setFeedthroughsStatus(feedthroughsStatus);
         dbref.setEndPlatesStatus(endplatesStatus);
+        System.out.print("DC Geometry Factory configured with:" + 
+                         "\n\t ministagger: " + dbref.getMinistaggerStatus().getName() +
+                         "\n\t feedthroughs: " + dbref.feedthroughsStatus().getName() +
+                         "\n\t endplates bow: " + dbref.getEndPlatesStatus());
         
         motherVolume = new G4World("fc");
 
