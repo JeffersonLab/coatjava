@@ -22,13 +22,13 @@
         <dependency>
             <groupId>j4ml</groupId>
             <artifactId>j4ml-neuroph</artifactId>
-            <version>1.0</version>
+            <version>0.9-SNAPSHOT</version>
         </dependency>
 
         <dependency>
             <groupId>j4ml</groupId>
             <artifactId>j4ml-clas12</artifactId>
-            <version>1.0</version>
+            <version>0.9-SNAPSHOT</version>
         </dependency>
 	
         <dependency>
