@@ -31,6 +31,7 @@ esac
 chmod +x install-claracre-clas.sh
 echo Y | ./install-claracre-clas.sh -f 5.0.2 -j 11 -l local
 if [ $? != 0 ] ; then echo "clara installation error" ; exit 1 ; fi
+cp -rp ../../coatjava/libexec $CLARA_HOME/plugins/clas12/ # FIXME: should go in `install-claracre-clas.sh`, or can we use `../../install-clara` instead?
 rm install-claracre-clas.sh
 
 # download test files
