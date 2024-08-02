@@ -48,7 +48,7 @@ public class MeasVecsDoca {
         
         //LOGGER.log(Level.FINE, Math.signum(-WL.direction().x())+
         //        wireLine.origin().toString()+WL.toString()+" "+stateV[0]+" ,"+stateV[1]);
-        return WL.length()*Math.signum(-WL.direction().x());
+        return WL.length()*Math.signum(WL.direction().x());
     }
 
     public void setMeasVecs(Track trkcand, DCGeant4Factory DcDetector) {

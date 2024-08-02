@@ -10,6 +10,8 @@ import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.banks.Banks;
+import org.jlab.clas.tracking.kalmanfilter.zReference.KFitter;
+import org.jlab.clas.tracking.kalmanfilter.zReference.DAFilter;
 
 public class DCEngine extends ReconstructionEngine {
 
@@ -31,6 +33,9 @@ public class DCEngine extends ReconstructionEngine {
     private String     inBankPrefix   = null;
     private String     outBankPrefix  = null;
     private double[][] shifts         = new double[Constants.NREG][6];
+    protected boolean  useDAF         = true;
+    private String   dafChi2Cut     = null;
+    private String   dafAnnealingFactorsTB = null;
     
     public static final Logger LOGGER = Logger.getLogger(ReconstructionEngine.class.getName());
 
@@ -99,6 +104,20 @@ public class DCEngine extends ReconstructionEngine {
             outBankPrefix = this.getEngineConfigString("outputBankPrefix");
         }
         
+        //Set if use DAF
+        if(this.getEngineConfigString("useDAF")!=null) 
+            useDAF=Boolean.valueOf(this.getEngineConfigString("useDAF"));
+        
+        if(this.getEngineConfigString("dafChi2Cut")!=null) {
+            dafChi2Cut=this.getEngineConfigString("dafChi2Cut");
+            DAFilter.setDafChi2Cut(Double.valueOf(dafChi2Cut));
+        }
+        
+        if(this.getEngineConfigString("dafAnnealingFactorsTB")!=null){ 
+            dafAnnealingFactorsTB=this.getEngineConfigString("dafAnnealingFactorsTB");
+            KFitter.setDafAnnealingFactorsTB(dafAnnealingFactorsTB);
+        }
+               
         // Set geometry shifts for alignment code
         if(this.getEngineConfigString("alignmentShifts")!=null) {
             String[] alignmentShift = this.getEngineConfigString("alignmentShifts").split(",");

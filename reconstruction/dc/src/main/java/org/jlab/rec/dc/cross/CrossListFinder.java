@@ -356,7 +356,7 @@ public class CrossListFinder  {
                     double tiltSysZterm = x[i];
                     
                     double dl = 0.01;
-                    double dQ = 2.*ret[0]*x[i]*dl+ret[0]+ret[1]*dl;
+                    double dQ = 2.*ret[0]*x[i]*dl+ret[1]*dl;
                     double dL = linefit.getFit().slope()*dl;
                     double Len = Math.sqrt(dl*dl + dQ*dQ + dL*dL) ;
                     

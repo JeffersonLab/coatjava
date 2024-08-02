@@ -6,6 +6,7 @@ import static org.junit.Assert.*;
 import org.jlab.analysis.physics.TestEvent;
 import org.jlab.analysis.math.ClasMath;
 import org.jlab.clas.swimtools.MagFieldsEngine;
+import cnuphys.magfield.MagneticFields;
 
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
@@ -17,6 +18,8 @@ import org.jlab.service.ec.ECEngine;
 import org.jlab.service.ftof.FTOFTBEngine;
 import org.jlab.service.htcc.HTCCReconstructionService;
 import org.jlab.service.ltcc.LTCCEngine;
+
+import org.jlab.utils.CLASResources;
 import org.jlab.utils.system.ClasUtilsFile;
 
 /**
@@ -26,9 +29,20 @@ import org.jlab.utils.system.ClasUtilsFile;
 public class EBReconstructionTest {
 
     public void processAllEngines(DataEvent ev) {
+    
+        String mapDir = CLASResources.getResourcePath("etc")+"/data/magfield";
+        try {
+            MagneticFields.getInstance().initializeMagneticFields(mapDir,
+                    "Symm_torus_r2501_phi16_z251_24Apr2018.dat","Symm_solenoid_r601_phi1_z1201_13June2018.dat");
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
         MagFieldsEngine enf = new MagFieldsEngine();
         enf.init();
         enf.processDataEvent(ev);
+
         DCHBEngine engineDCHB = new DCHBEngine();
         engineDCHB.init();
         engineDCHB.processDataEvent(ev);

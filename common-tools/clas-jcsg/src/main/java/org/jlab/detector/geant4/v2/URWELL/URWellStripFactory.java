@@ -74,7 +74,7 @@ public final class URWellStripFactory {
         factory = new URWellGeant4Factory(cp, prototype, regions);
         isProto = prototype;
         if(!isProto){
-            nRegions  = URWellConstants.NREGIONS;
+            nRegions  = Math.min(URWellConstants.NMAXREGIONS, regions);
             nSectors  = URWellConstants.NSECTORS;
             nChambers = URWellConstants.NCHAMBERS;
             nLayers   = URWellConstants.NLAYERS;
