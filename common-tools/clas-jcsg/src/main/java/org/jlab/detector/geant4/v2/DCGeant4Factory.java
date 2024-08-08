@@ -361,27 +361,26 @@ final class Wire {
         double copen = Math.cos(dbref.thopen(ireg) / 2.0);
         double sopen = Math.sin(dbref.thopen(ireg) / 2.0);
 
-        // define unit vector normal to the endplates of the chamber and pointing inside (sector frame)
+        // define unit vector normal to the endplates of the chamber and pointing inside, projected onto the z=0 plane in the sector frame
         Vector3d rnorm = new Vector3d(copen, sopen, 0);
         Vector3d lnorm = new Vector3d(-copen, sopen, 0);
-        // define unit vector parallel to the sides of the chamber and pointing to the chamber tip (sector frame)
+        // define unit vector parallel to the sides of the chamber and pointing to the chamber tip, projected onto the z=0 plane in the sector frame
         Vector3d rpar  = new Vector3d(sopen, -copen, 0);
         Vector3d lpar  = new Vector3d(-sopen, -copen, 0);
-        // define unit vector perpendicular to the layer plane, pointing downstream (sector frame)
-        Vector3d vperp = rnorm.cross(rpar).rotateX(-dbref.thtilt(ireg)); 
-        // define unit vectors perpendicular to the end plates in the tilted sector frame
+        // define unit vector perpendicular to the layer plane, pointing upstream in the sector frame
+        Vector3d vperp = rnorm.cross(rpar).rotateX(-dbref.thtilt(ireg));
+        // define unit vectors perpendicular to the end plates in the sector frame
         Vector3d rperp = rnorm.clone().rotateX(-dbref.thtilt(ireg));
         Vector3d lperp = lnorm.clone().rotateX(-dbref.thtilt(ireg));
-        
-        // define vector from wire midpoint to chamber tip in the sector frame
-        // note that the z coordinate should not be zero but it is set to zero for simplicity since it doesn't affect the following calculations
+
+        // define vector from wire midpoint to chamber tip in the sector frame, projected onto the z=0 plane
         Vector3d vnum = new Vector3d(0, dbref.xdist(ireg), 0);
         if(dbref.feedthroughsStatus()!=DCGeant4Factory.FeedthroughsStatus.OFF)
             vnum.add(0, dbref.feedThroughExt(sector-1,isuper)/copen, 0);
         vnum.sub(midpoint);
 
-        // calculate the end points, exploiting the identity between the component perpendicular to the end plates 
-        // of the vector connecting the chamber tip to the midpoint and the vector connecting the midpoint annd the endpoint 
+        // calculate the end points, exploiting the identity between the component perpendicular to the end plates, projected onto the z=0 plane, 
+        // of the vector connecting the chamber tip to the midpoint and the vector connecting the midpoint and the endpoint 
         double wlenl = vnum.dot(lnorm) / direction.dot(lnorm);
         leftend = direction.times(wlenl).add(midpoint);
         double wlenr = vnum.dot(rnorm) / direction.dot(rnorm);
