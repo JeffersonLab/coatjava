@@ -16,6 +16,15 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
+defaults:
+  run:
+    shell: bash
+
+env:
+  java_version: 11
+  java_distribution: zulu
+  groovy_version: 4.0.3
+
 jobs:
 
   # build
@@ -28,16 +37,14 @@ jobs:
         runner:
           - ubuntu-latest
           - macos-latest
-    outputs:
-      default_runner: ubuntu-latest
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
-          java-version: 11
-          distribution: zulu
+          java-version: ${{ env.java_version }}
+          distribution: ${{ env.java_distribution }}
       - name: build
         run: ./build-coatjava.sh --spotbugs --unittests --quiet -T4
       - name: tar # tarball to preserve permissions
@@ -52,8 +59,9 @@ jobs:
         run: validation/jacoco-aggregate.sh
       - name: publish jacoco report
         if: ${{ matrix.runner == 'ubuntu-latest' }}
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
+          name: jacoco_report
           path: publish/
           retention-days: 1
 
@@ -90,8 +98,8 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
-          java-version: 11
-          distribution: zulu
+          java-version: ${{ env.java_version }}
+          distribution: ${{ env.java_distribution }}
       - uses: actions/download-artifact@v4
         with:
           name: build_${{ matrix.runner }}
@@ -105,21 +113,21 @@ jobs:
 
   test_run-groovy:
     needs: [ build ]
-    runs-on: ${{ needs.build.outputs.default_runner }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
-          java-version: 11
-          distribution: zulu
+          java-version: ${{ env.java_version }}
+          distribution: ${{ env.java_distribution }}
       - name: setup groovy
         uses: wtfjoke/setup-groovy@v2
         with:
-          groovy-version: 4.x
+          groovy-version: ${{ env.groovy_version }}
       - uses: actions/download-artifact@v4
         with:
-          name: build_${{ needs.build.outputs.default_runner }}
+          name: build_ubuntu-latest
       - name: untar build
         run: tar xzvf coatjava.tar.gz
       - name: test run-groovy
@@ -130,17 +138,60 @@ jobs:
       - build
       - test_coatjava
       - test_run-groovy
-    runs-on: ${{ needs.build.outputs.default_runner }}
+    runs-on: ubuntu-latest
     steps:
       - name: pass
         run: exit 0
 
+  # generate documentation
+  #############################################################################
+
+  generate_documentation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.java_version }}
+          distribution: ${{ env.java_distribution }}
+      - name: build
+        run: ./build-coatjava.sh
+      - name: generate documentation
+        run: ./build-javadocs.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: javadoc
+          path: docs/javadoc/
+          retention-days: 1
+
   # deploy web pages
   #############################################################################
 
+  collect_webpages:
+    if: ${{ github.ref == 'refs/heads/development' }}
+    needs: [ build, generate_documentation ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: download jacoco report
+        uses: actions/download-artifact@v4
+        with:
+          name: jacoco_report
+          path: pages/jacoco
+      - name: download javadoc documentation
+        uses: actions/download-artifact@v4
+        with:
+          name: javadoc
+          path: pages/javadoc
+      - run: tree pages
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          retention-days: 1
+          path: pages/
+
   deploy_web_pages:
-    if: ${{ github.event_name == 'push' }}
-    needs: build
+    if: ${{ github.ref == 'refs/heads/development' }}
+    needs: collect_webpages
     permissions:
       pages: write
       id-token: write

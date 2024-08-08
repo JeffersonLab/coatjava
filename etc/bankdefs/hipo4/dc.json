@@ -266,7 +266,7 @@
         {"name":"t1_z",          "type":"F", "info":"Upstream Region 1 track z-position in the lab (in cm)"},
         {"name":"t1_px",         "type":"F", "info":"Upstream Region 1 track unit x-momentum vector in the lab"},
         {"name":"t1_py",         "type":"F", "info":"Upstream Region 1 track unit y-momentum vector in the lab"},
-        {"name":"t1_pz",         "type":"F", "info":"Upstream Region 1 track unit z-momentum vector in the lab"},
+        {"name":"t1_pz",         "type":"F", "info":"Upstream Region 1 track unit z-momentum vector in the lab"},		
         {"name":"Vtx0_x",        "type":"F", "info":"Vertex x-position of the swam track to the DOCA to the beamline (in cm)"},
         {"name":"Vtx0_y",        "type":"F", "info":"Vertex y-position of the swam track to the DOCA to the beamline (in cm)"},
         {"name":"Vtx0_z",        "type":"F", "info":"Vertex z-position of the swam track to the DOCA to the beamline (in cm)"},
@@ -347,6 +347,7 @@
         {"name":"trkDoca",      "type":"F", "info":"track doca of the hit (in cm)"},
         {"name":"timeResidual", "type":"F", "info":"time residual of the hit (in cm)"},
         {"name":"fitResidual",  "type":"F", "info":"fit residual of the hit (in cm, from KF)"},
+        {"name":"DAFWeight",    "type":"F", "info":"Weight by DAF; the 1st bit of status indicates that a hit is belong to single or double"},
         {"name":"LR",           "type":"B", "info":"Left/Right ambiguity of the hit"},
         {"name":"X",            "type":"F", "info":"wire x-coordinate  in tilted-sector"},
         {"name":"Z",            "type":"F", "info":"wire z-coordinate  in tilted-sector"},
@@ -499,7 +500,7 @@
         {"name":"t1_z",          "type":"F", "info":"Upstream Region 1 track z-position in the lab (in cm)"},
         {"name":"t1_px",         "type":"F", "info":"Upstream Region 1 track unit x-momentum vector in the lab"},
         {"name":"t1_py",         "type":"F", "info":"Upstream Region 1 track unit y-momentum vector in the lab"},
-        {"name":"t1_pz",         "type":"F", "info":"Upstream Region 1 track unit z-momentum vector in the lab"},
+        {"name":"t1_pz",         "type":"F", "info":"Upstream Region 1 track unit z-momentum vector in the lab"},	
         {"name":"Vtx0_x",        "type":"F", "info":"Vertex x-position of the swam track to the DOCA to the beamline (in cm)"},
         {"name":"Vtx0_y",        "type":"F", "info":"Vertex y-position of the swam track to the DOCA to the beamline (in cm)"},
         {"name":"Vtx0_z",        "type":"F", "info":"Vertex z-position of the swam track to the DOCA to the beamline (in cm)"},
@@ -518,7 +519,8 @@
         {"name":"q",        	 "type":"B", "info":"charge of the track"},
         {"name":"pathlength",    "type":"F", "info":"pathlength of the track"},
         {"name":"chi2",          "type":"F", "info":"fit chi2 of the track"},
-        {"name":"ndf",           "type":"S", "info":"fit ndf of the track"}
+        {"name":"ndf",           "type":"S", "info":"fit ndf weightd by DAF for the track"},
+        {"name":"ndf0",          "type":"S", "info":"traditional ndf for the track"}
     ]
   },
   {

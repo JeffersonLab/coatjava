@@ -244,7 +244,7 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
         boolean value = false;
 
         if (this.get_fitPlane() != null && otherseg.get_fitPlane() != null) { 
-            if (Math.abs(Math.toDegrees(Math.acos(this.get_fitPlane().normal().dot(otherseg.get_fitPlane().normal()))) - 12.) < Constants.SEGMENTPLANESANGLE) // the angle between the plane normals is 12 degrees with some tolerance
+            if (Math.abs(Math.toDegrees(Math.acos(this.get_fitPlane().normal().dot(otherseg.get_fitPlane().normal()))) - 2*Constants.STEREOANGLE) < Constants.SEGMENTPLANESANGLE) // the angle between the plane normals is 2*Constants.STEREOANGLE degrees with some tolerance
             {
                 value = true;
             }
@@ -286,14 +286,14 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
         //double Z_1 = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(0).getComponent(0).getMidpoint().z();
         double Z_1 = DcDetector.getWireMidpoint(this.get_Sector() - 1, this.get_Superlayer() - 1, 0, 0).z;
         double X_1 = this.get_fittedCluster().get_clusterLineFitSlope() * Z_1 + this.get_fittedCluster().get_clusterLineFitIntercept();
-        
+
         double x1 = Constants.COS25 * X_1 + Constants.SIN25 * Z_1;
         double z1 = -Constants.SIN25 * X_1 + Constants.COS25 * Z_1;
 
         //double Z_2 = GeometryLoader.dcDetector.getSector(0).getSuperlayer(this.get_Superlayer()-1).getLayer(5).getComponent(0).getMidpoint().z();
         double Z_2 = DcDetector.getWireMidpoint(this.get_Sector() - 1, this.get_Superlayer() - 1, 5, 0).z;
         double X_2 = this.get_fittedCluster().get_clusterLineFitSlope() * Z_2 + this.get_fittedCluster().get_clusterLineFitIntercept();
-        
+
         double x2 = Constants.COS25 * X_2 + Constants.SIN25 * Z_2;
         double z2 = -Constants.SIN25 * X_2 + Constants.COS25 * Z_2;
 
@@ -349,7 +349,6 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
      * by a point on the plane and a unit normal vector.
      */
     private Plane3D calc_fitPlane(Point3D refPoint, Vector3D refDir) {
-        
         double X = Math.pow(-1, (this.get_Superlayer() - 1)) * Constants.SIN6;
         double Y = Constants.COS6;
 
