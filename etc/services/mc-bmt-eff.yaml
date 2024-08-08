@@ -1,0 +1,39 @@
+io-services:
+  reader:
+    class: org.jlab.io.clara.HipoToHipoReader
+    name: HipoToHipoReader
+  writer:
+    class: org.jlab.io.clara.HipoToHipoWriter
+    name: HipoToHipoWriter
+services:
+  - class: org.jlab.clas.swimtools.MagFieldsEngine
+    name: MAGFIELDS
+  - class: org.jlab.rec.cvt.services.CVTEngine
+    name: CVTFP
+  - class: org.jlab.service.ctof.CTOFEngine
+    name: CTOF
+  - class: org.jlab.service.eb.EBHBEngine
+    name: EBHB
+  - class: org.jlab.rec.cvt.services.CVTSecondPassEngine
+    name: CVTSP
+  - class: org.jlab.service.eb.EBTBEngine
+    name: EBTB
+configuration:
+  global:
+    variation: rga_fall2018_mc
+#  io-services:
+#    writer:
+#      schema_dir: "absolute-path-to-schema-folder"
+  services:
+    MAGFIELDS:
+      magfieldSolenoidMap: Symm_solenoid_r601_phi1_z1201_13June2018.dat
+      magfieldTorusMap: Symm_torus_r2501_phi16_z251_24Apr2018.dat
+    CVTFP:
+      mcbmteff: "true"
+      run4Eff: "17408"
+    CVTSP:
+      mcbmteff: "true"
+      run4Eff: "17408"
+      
+mime-types:
+  - binary/data-hipo
