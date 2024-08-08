@@ -361,15 +361,24 @@ final class Wire {
         double copen = Math.cos(dbref.thopen(ireg) / 2.0);
         double sopen = Math.sin(dbref.thopen(ireg) / 2.0);
 
-        // define vector from wire midpoint to chamber tip projected onto the z=0 plane
+        // define unit vector normal to the endplates of the chamber and pointing inside (sector frame)
+        Vector3d rnorm = new Vector3d(copen, sopen, 0);
+        Vector3d lnorm = new Vector3d(-copen, sopen, 0);
+        // define unit vector parallel to the sides of the chamber and pointing to the chamber tip (sector frame)
+        Vector3d rpar  = new Vector3d(sopen, -copen, 0);
+        Vector3d lpar  = new Vector3d(-sopen, -copen, 0);
+        // define unit vector perpendicular to the layer plane, pointing downstream (sector frame)
+        Vector3d vperp = rnorm.cross(rpar).rotateX(-dbref.thtilt(ireg)); 
+        // define unit vectors perpendicular to the end plates in the tilted sector frame
+        Vector3d rperp = rnorm.clone().rotateX(-dbref.thtilt(ireg));
+        Vector3d lperp = lnorm.clone().rotateX(-dbref.thtilt(ireg));
+        
+        // define vector from wire midpoint to chamber tip in the sector frame
+        // note that the z coordinate should not be zero but it is set to zero for simplicity since it doesn't affect the following calculations
         Vector3d vnum = new Vector3d(0, dbref.xdist(ireg), 0);
         if(dbref.feedthroughsStatus()!=DCGeant4Factory.FeedthroughsStatus.OFF)
             vnum.add(0, dbref.feedThroughExt(sector-1,isuper)/copen, 0);
         vnum.sub(midpoint);
-
-        // define unit vector normal to the endplates of the chamber and pointing inside, projected onto the z=0 plane
-        Vector3d rnorm = new Vector3d(copen, sopen, 0);
-        Vector3d lnorm = new Vector3d(-copen, sopen, 0);
 
         // calculate the end points, exploiting the identity between the component perpendicular to the end plates 
         // of the vector connecting the chamber tip to the midpoint and the vector connecting the midpoint annd the endpoint 
@@ -380,15 +389,11 @@ final class Wire {
 
         if(dbref.feedthroughsStatus()==DCGeant4Factory.FeedthroughsStatus.OFF) return;
         
-        // define unit vector parallel to the sides of the chamber and pointing to the chamber tip, projected onto the z=0 plane
-        Vector3d rpar  = new Vector3d(sopen, -copen, 0);
-        Vector3d lpar  = new Vector3d(-sopen, -copen, 0);
-
-        // define the center of the circles that describe the trumpet-like part of the feedthrough
+        // define the center of the circles that describe the trumpet-like part of the feedthrough in the sector frame
         Vector3d rcirc = rnorm.times(-dbref.feedThroughLength(sector-1, isuper)).add(rpar.times(dbref.feedThroughRmin(sector-1, isuper)+dbref.feedThroughRcurv(sector-1, isuper))).rotateX(-dbref.thtilt(ireg)).add(rightend);
         Vector3d lcirc = lnorm.times(-dbref.feedThroughLength(sector-1, isuper)).add(lpar.times(dbref.feedThroughRmin(sector-1, isuper)+dbref.feedThroughRcurv(sector-1, isuper))).rotateX(-dbref.thtilt(ireg)).add(leftend);
 
-        // recalculate the wire direction assuming the wire is tangent to the left and right circles
+        // recalculate the wire direction assuming the wire is tangent to the left and right circles in the sector frame
         Vector3d newDirection = lcirc.minus(rcirc).normalized();
 
         // update the wire direction only if the flag is >1
@@ -396,16 +401,15 @@ final class Wire {
             direction = newDirection;
         
         // recalculate the wire end point in the sector frame
-        Vector3d vperp = rnorm.cross(rpar).rotateX(-dbref.thtilt(ireg)); // unit vector perpendicular to the layer plane, pointing downstream
-        Vector3d rperp = rnorm.clone().rotateX(-dbref.thtilt(ireg));     // unit vector perpendicular to the right endplate
-        Vector3d lperp = lnorm.clone().rotateX(-dbref.thtilt(ireg));     // unit vector perpendicular to the left endplate
-        Vector3d rtang = rpar.times(-dbref.feedThroughRcurv(sector-1, isuper)).rotateX(-dbref.thtilt(ireg)); // vector connecting the circle center and the point at the beginning of the trumpet-like part
-        double rangle = newDirection.angle(rperp);
-        double langle = newDirection.negated().angle(lperp);
-        // rotate rtang to get to the point where the wire is tangent to the circle
+        // first define a vector parallel to the one connecting the circle center and the point at the beginning of the trumpet-like part
+        Vector3d rtang = rpar.times(-dbref.feedThroughRcurv(sector-1, isuper)).rotateX(-dbref.thtilt(ireg)); 
+        // rotate rtang to be parallel to the vector connecting the circle center to the point where the wire is tangent to the circle
+        double rangle = newDirection.angle(rperp); 
+        double langle = newDirection.negated().angle(lperp); //not used but kept for reference
         vperp.rotate(rtang,rangle);
+        // shift the origin to coincide with the circle center so that the end point is where the wire is tangent to the circle
         rtang = rtang.add(rcirc);
-        // recalculate the wire midpoint
+        // recalculate the wire midpoint as the point on the wire line defined by rtang and newDirection with x=0
         midpoint = rtang.plus(newDirection.times(-rtang.x/newDirection.x));
         
         // recalculate the wire endpoints
