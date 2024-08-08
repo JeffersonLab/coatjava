@@ -2,6 +2,8 @@ package org.jlab.detector.geant4.v2;
 
 import eu.mihosoft.vrl.v3d.Vector3d;
 import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.base.GeometryFactory;
 import org.jlab.detector.units.SystemOfUnits.Length;
@@ -12,6 +14,7 @@ import org.jlab.geom.base.ConstantProvider;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Trap3D;
+import org.jlab.logging.DefaultLogger;
 
 /**
  *
@@ -568,8 +571,9 @@ final class Wire {
 ///////////////////////////////////////////////////
 public final class DCGeant4Factory extends Geant4Factory {
 
-    DCdatabase dbref = DCdatabase.getInstance();
-
+    private static final Logger LOGGER = Logger.getLogger("DCGeant4Factory");
+    DCdatabase dbref = null;
+    
     private final HashMap<String, String> properties = new HashMap<>();
     private int nsgwires;
 
@@ -588,6 +592,7 @@ public final class DCGeant4Factory extends Geant4Factory {
         
         private final int id;
         private final String name;
+        private final static MinistaggerStatus DEFAULT = ON;
         
         private MinistaggerStatus(int id, String name) { 
             this.id = id; 
@@ -604,7 +609,8 @@ public final class DCGeant4Factory extends Geant4Factory {
                     if (status.getName().equalsIgnoreCase(name)) 
                         return status;
             }
-            return ON;
+            LOGGER.log(Level.WARNING, "Invalid MinistaggerStatus value, setting default status " + DEFAULT.getName());
+            return DEFAULT;
         }   
     
         // this method is to support the old API that was accepting booleans as inputs
@@ -620,6 +626,7 @@ public final class DCGeant4Factory extends Geant4Factory {
         
         private final int id;
         private final String name;
+        private final static FeedthroughsStatus DEFAULT = SHIFT;
         
         private FeedthroughsStatus(int id, String name) { 
             this.id = id; 
@@ -636,7 +643,8 @@ public final class DCGeant4Factory extends Geant4Factory {
                     if (status.getName().equalsIgnoreCase(name)) 
                         return status;
             }
-            return SHIFT;
+            LOGGER.log(Level.WARNING, "Invalid FeedthroughsStatus value, setting default status " + DEFAULT.getName());
+            return DEFAULT;
         }    
     }
 
@@ -669,10 +677,12 @@ public final class DCGeant4Factory extends Geant4Factory {
                            FeedthroughsStatus feedthroughsStatus,
                            boolean endplatesStatus, 
                            double[][] shifts) {
+        DefaultLogger.debug();
+        dbref = DCdatabase.getInstance();
         dbref.setMinistaggerType(ministaggerStatus);
         dbref.setFeedthroughsStatus(feedthroughsStatus);
         dbref.setEndPlatesStatus(endplatesStatus);
-        System.out.print("DC Geometry Factory configured with:" + 
+        LOGGER.log(Level.INFO, "DC Geometry Factory configured with:" + 
                          "\n\t ministagger: " + dbref.getMinistaggerStatus().getName() +
                          "\n\t feedthroughs: " + dbref.feedthroughsStatus().getName() +
                          "\n\t endplates bow: " + dbref.getEndPlatesStatus());
