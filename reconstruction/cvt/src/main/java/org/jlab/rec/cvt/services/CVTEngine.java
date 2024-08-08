@@ -14,6 +14,7 @@ import org.jlab.rec.cvt.banks.RecoBankWriter;
 import org.jlab.rec.cvt.cluster.Cluster;
 import org.jlab.rec.cvt.cross.Cross;
 import org.jlab.rec.cvt.hit.Hit;
+import org.jlab.rec.cvt.hit.LayerEfficiency;
 import org.jlab.rec.cvt.track.Seed;
 import org.jlab.rec.cvt.track.StraightTrack;
 import org.jlab.rec.cvt.track.Track;
@@ -88,6 +89,8 @@ public class CVTEngine extends ReconstructionEngine {
     private int bmtzmaxclussize = 100;
     private double rcut = 120.0;
     private double z0cut = 10;
+    private boolean mcbmteff=false;
+    private int run4Eff = 11;
     
     public CVTEngine(String name) {
         super(name, "ziegler", "6.0");
@@ -129,7 +132,8 @@ public class CVTEngine extends ReconstructionEngine {
                                            bmtcmaxclussize, 
                                            bmtzmaxclussize,
                                            rcut,
-                                           z0cut);
+                                           z0cut,
+                                           mcbmteff);
 
         this.initConstantsTables();
         this.registerBanks();
@@ -278,9 +282,9 @@ public class CVTEngine extends ReconstructionEngine {
     public boolean processDataEvent(DataEvent event) {
         
         Swim swimmer = new Swim();
-        
+        LayerEfficiency le = new LayerEfficiency();
         int run = this.getRun(event); 
-        
+        int run4Eff = this.getRun4Eff();
         IndexedTable svtStatus          = this.getConstantsManager().getConstants(run, "/calibration/svt/status");
         IndexedTable svtLorentz         = this.getConstantsManager().getConstants(run, "/calibration/svt/lorentz_angle");
         IndexedTable bmtStatus          = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_status");
@@ -289,13 +293,13 @@ public class CVTEngine extends ReconstructionEngine {
         IndexedTable bmtStripVoltage    = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_strip_voltage");
         IndexedTable bmtStripThreshold  = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_strip_voltage_thresholds");
         IndexedTable beamPos            = this.getConstantsManager().getConstants(run, "/geometry/beam/position");
-        
+        IndexedTable bmtEff             = this.getConstantsManager().getConstants(run4Eff, "/calibration/mvt/bmt_hit_efficiency");
         Geometry.initialize(this.getConstantsManager().getVariation(), 11, svtLorentz, bmtVoltage);
         
         CVTReconstruction reco = new CVTReconstruction(swimmer);
         
         List<ArrayList<Hit>>         hits = reco.readHits(event, svtStatus, bmtStatus, bmtTime, 
-                                                            bmtStripVoltage, bmtStripThreshold);
+                                                            bmtStripVoltage, bmtStripThreshold, bmtEff, le);
         List<ArrayList<Cluster>> clusters = reco.findClusters();
         List<ArrayList<Cross>>    crosses = reco.findCrosses();
         
@@ -454,6 +458,12 @@ public class CVTEngine extends ReconstructionEngine {
         if (this.getEngineConfigString("z0cut")!=null)
             this.z0cut = Double.valueOf(this.getEngineConfigString("z0cut"));
         
+        if (this.getEngineConfigString("mcbmteff")!=null)
+            this.mcbmteff = Boolean.valueOf(this.getEngineConfigString("mcbmteff"));
+        
+        if (this.getEngineConfigString("run4Eff")!=null)
+            this.run4Eff = (int) Integer.valueOf(this.getEngineConfigString("run4Eff"));
+        
     }
 
 
@@ -466,7 +476,8 @@ public class CVTEngine extends ReconstructionEngine {
             "/calibration/mvt/bmt_voltage",
             "/calibration/mvt/bmt_strip_voltage",
             "/calibration/mvt/bmt_strip_voltage_thresholds",
-            "/geometry/beam/position"
+            "/geometry/beam/position",
+            "/calibration/mvt/bmt_hit_efficiency"
         };
         requireConstants(Arrays.asList(tables));
         this.getConstantsManager().setVariation("default");
@@ -607,6 +618,10 @@ public class CVTEngine extends ReconstructionEngine {
         System.out.println("["+this.getName()+"] z0 cut (mm from target edges) "+this.z0cut); 
         
         
+    }
+
+    private int getRun4Eff() {
+       return this.run4Eff;  
     }
 
     

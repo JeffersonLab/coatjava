@@ -16,6 +16,7 @@ import org.jlab.rec.cvt.bmt.BMTGeometry;
 import org.jlab.rec.cvt.bmt.BMTType;
 import org.jlab.rec.cvt.hit.ADCConvertor;
 import org.jlab.rec.cvt.hit.Hit;
+import org.jlab.rec.cvt.hit.LayerEfficiency;
 import org.jlab.rec.cvt.hit.Strip;
 import org.jlab.rec.cvt.svt.SVTGeometry;
 import org.jlab.utils.groups.IndexedTable;
@@ -82,7 +83,8 @@ public class HitReader {
      * @param timeCuts
      */
     public void fetch_BMTHits(DataEvent event, Swim swim, IndexedTable status, 
-            IndexedTable timeCuts, IndexedTable bmtStripVoltage, IndexedTable bmtStripVoltageThresh) {
+            IndexedTable timeCuts, IndexedTable bmtStripVoltage, IndexedTable bmtStripVoltageThresh, 
+            IndexedTable bmtEff, LayerEfficiency le) {
 
         // return if there is no BMT bank
         if (event.hasBank("BMT::adc") == false) {
@@ -130,6 +132,15 @@ public class HitReader {
                 if(strip<1) {
                     continue;
                 }
+                //Disgard according to efficiency
+                boolean pass = true;
+                if(Constants.getInstance().mcbmteff) {
+                    double eff  = bmtEff.getDoubleValue("efficiency", sector,layer, 0);
+                    le.setEfficiency(eff);
+                    pass = le.passHit();
+                }
+                if(!pass) 
+                    continue;
                 // create the strip object for the BMT
                 Strip BmtStrip = new Strip(strip, ADCtoEdep, time);
                 BmtStrip.setStatus(status.getIntValue("status", sector, layer, strip));

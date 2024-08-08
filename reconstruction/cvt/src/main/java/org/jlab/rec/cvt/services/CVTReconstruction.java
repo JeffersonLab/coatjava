@@ -14,6 +14,7 @@ import org.jlab.rec.cvt.cluster.ClusterFinder;
 import org.jlab.rec.cvt.cross.Cross;
 import org.jlab.rec.cvt.cross.CrossMaker;
 import org.jlab.rec.cvt.hit.Hit;
+import org.jlab.rec.cvt.hit.LayerEfficiency;
 import org.jlab.rec.cvt.svt.SVTParameters;
 import org.jlab.utils.groups.IndexedTable;
 
@@ -40,13 +41,14 @@ public class CVTReconstruction {
     
     public List<ArrayList<Hit>> readHits(DataEvent event, IndexedTable svtStatus, 
             IndexedTable bmtStatus, IndexedTable bmtTime, 
-            IndexedTable bmtStripVoltage, IndexedTable bmtStripVoltageThresh) {
+            IndexedTable bmtStripVoltage, IndexedTable bmtStripVoltageThresh, 
+            IndexedTable bmtEff, LayerEfficiency le) {
         
         HitReader hitRead = new HitReader();
         hitRead.fetch_SVTHits(event, -1, -1, svtStatus);
         if(Constants.getInstance().svtOnly==false)
           hitRead.fetch_BMTHits(event, swimmer, bmtStatus, bmtTime, 
-                  bmtStripVoltage, bmtStripVoltageThresh);
+                  bmtStripVoltage, bmtStripVoltageThresh, bmtEff, le);
 
         //I) get the hits
         List<Hit> SVThits = hitRead.getSVTHits();
