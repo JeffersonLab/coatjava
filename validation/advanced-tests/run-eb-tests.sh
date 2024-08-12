@@ -117,11 +117,7 @@ then
         # install clara
         if ! [ -d clara_installation ]
         then
-            wget --no-check-certificate https://claraweb.jlab.org/clara/_downloads/install-claracre-clas.sh
-            chmod +x install-claracre-clas.sh
-            ./install-claracre-clas.sh -l local
-            if [ $? != 0 ] ; then echo "clara installation error" ; exit 1 ; fi
-            rm install-claracre-clas.sh
+            ../../install-clara clara_installation
         fi
     fi
 
