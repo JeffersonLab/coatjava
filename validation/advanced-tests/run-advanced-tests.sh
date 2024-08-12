@@ -15,7 +15,7 @@ mv coatjava-local.tar.gz validation/advanced-tests/
 cd -
 
 # install clara
-../../install-clara -f 5.0.2 -j 11 -l $CLARA_HOME
+../../install-clara -f 5.0.2 -j 11 $CLARA_HOME
 if [ $? != 0 ] ; then echo "clara installation error" ; exit 1 ; fi
 
 # download test files
