@@ -15,27 +15,10 @@ mv coatjava-local.tar.gz validation/advanced-tests/
 cd -
 
 # install clara
-
-case $OS in
-    'Linux')
-       wget --no-check-certificate https://claraweb.jlab.org/clara/_downloads/install-claracre-clas.sh
-     ;;
-     'Darwin')
-       echo "Getting Clara..."
-       curl -OL "https://claraweb.jlab.org/clara/_downloads/install-claracre-clas.sh" -o install-claracre-clas.sh
-     ;;
-     *) ;;
-esac
-
-
-chmod +x install-claracre-clas.sh
-echo Y | ./install-claracre-clas.sh -f 5.0.2 -j 11 -l local
+../../install-clara -f 5.0.2 -j 11 -l $CLARA_HOME
 if [ $? != 0 ] ; then echo "clara installation error" ; exit 1 ; fi
-cp -rp ../../coatjava/libexec $CLARA_HOME/plugins/clas12/ # FIXME: should go in `install-claracre-clas.sh`, or can we use `../../install-clara` instead?
-rm install-claracre-clas.sh
 
 # download test files
-
 case $OS in
     'Linux')
        wget --no-check-certificate http://clasweb.jlab.org/clas12offline/distribution/coatjava/validation_files/twoTrackEvents_809_raw.evio.tar.gz
