@@ -706,7 +706,7 @@ public class ClusterCleanerUtilities {
     public FittedCluster OverlappingClusterResolver(FittedCluster thisclus, List<FittedCluster> clusters) {
         // Get list for overlapped clusters
         List<FittedCluster> overlapingClusters = new ArrayList<>();
-
+        
         for (FittedCluster cls : clusters) {
 
             List<FittedHit> hitOvrl = new ArrayList<>();
@@ -722,7 +722,7 @@ public class ClusterCleanerUtilities {
             //test
             boolean passCls = true;
             for (FittedCluster ovr : overlapingClusters) {
-                if (ovr.get_Id() == cls.get_Id()) {
+                if (ovr.equals(cls)) {
                     passCls = false;
                     continue;
                 }
@@ -755,7 +755,7 @@ public class ClusterCleanerUtilities {
         }
         
         Collections.sort(overlapingClusters); // Order overlapping clusters; 1st priortiy: cluster size; 2nd priority if same cluster size : fitting quality
-
+         
         // return the largest cluster.
         return overlapingClusters.get(0);
 
