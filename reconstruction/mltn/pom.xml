@@ -25,6 +25,12 @@
             <version>0.9-SNAPSHOT</version>
         </dependency>
 
+	<dependency>
+	  <groupId>j4np</groupId>
+            <artifactId>j4np-instarec</artifactId>
+            <version>1.1.0</version>
+	</dependency>
+	
         <dependency>
             <groupId>j4ml</groupId>
             <artifactId>j4ml-clas12</artifactId>

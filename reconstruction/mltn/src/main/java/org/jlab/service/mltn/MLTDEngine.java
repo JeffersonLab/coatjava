@@ -34,7 +34,7 @@ public class MLTDEngine extends ReconstructionEngine {
     
     @Override
     public boolean init() {
-        
+      
         //Set bank names
         inputBankPrefix  = Optional.ofNullable(this.getEngineConfigString("inputBankPrefix")).orElse("");
         outputBankPrefix = Optional.ofNullable(this.getEngineConfigString("outputBankPrefix")).orElse("ai");

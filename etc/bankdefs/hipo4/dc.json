@@ -51,7 +51,9 @@
        {"name":"fitSlopeErr",  "type":"F", "info":"error on slope"},
        {"name":"fitInterc",    "type":"F", "info":"line fit intercept"},
        {"name":"fitIntercErr", "type":"F", "info":"error on the intercept"},
-       {"name":"size",         "type":"B", "info":"cluster size"}
+	{"name":"size",        "type":"B", "info":"cluster size"},
+	{"name":"wireL1",      "type":"F", "info":"cluster size"},
+	{"name":"wireL6",      "type":"F", "info":"cluster size"}
        ]
   },
  {
