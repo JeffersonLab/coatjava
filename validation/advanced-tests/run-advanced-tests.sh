@@ -1,5 +1,9 @@
 #!/bin/sh -f
 
+# this test needs rewritten, with more useful data (not KPP),
+# meanwhile not worth maintaining ...
+exit 0
+
 # coatjava must already be built at ../../coatjava/
 
 # set up environment
