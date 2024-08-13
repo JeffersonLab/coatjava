@@ -8,14 +8,8 @@ CLARA_HOME=$PWD/clara_installation/ ; export CLARA_HOME
 COAT=$CLARA_HOME/plugins/clas12/
 classPath="$COAT/lib/services/*:$COAT/lib/clas/*:$COAT/lib/utils/*:../lib/*:src/"
 
-# tar the local coatjava build so it can be installed with clara
-cd ../..
-tar -zcvf coatjava-local.tar.gz coatjava
-mv coatjava-local.tar.gz validation/advanced-tests/
-cd -
-
 # install clara
-../../install-clara -f 5.0.2 -j 11 $CLARA_HOME
+../../install-clara -c ../../coatjava $CLARA_HOME
 if [ $? != 0 ] ; then echo "clara installation error" ; exit 1 ; fi
 
 # download test files

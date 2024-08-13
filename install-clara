@@ -119,7 +119,7 @@ then
     coatjava=./coatjava
 fi
 mkdir -p clara-cre/plugins/clas12/config
-cp -Lr $coatjava/etc $coatjava/bin $coatjava/lib clara-cre/plugins/clas12
+cp -Lr $coatjava/etc $coatjava/bin $coatjava/lib $coatjava/libexec clara-cre/plugins/clas12
 
 # GRAPES:
 echo -e "\nRetrieving GRAPES version $grapes ..."
