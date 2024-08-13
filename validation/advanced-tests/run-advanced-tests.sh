@@ -1,7 +1,6 @@
 #!/bin/sh -f
 
 # coatjava must already be built at ../../coatjava/
-OS=$(uname)
 
 # set up environment
 CLARA_HOME=$PWD/clara_installation/ ; export CLARA_HOME
@@ -13,17 +12,7 @@ classPath="$COAT/lib/services/*:$COAT/lib/clas/*:$COAT/lib/utils/*:../lib/*:src/
 if [ $? != 0 ] ; then echo "clara installation error" ; exit 1 ; fi
 
 # download test files
-case $OS in
-    'Linux')
-       wget --no-check-certificate http://clasweb.jlab.org/clas12offline/distribution/coatjava/validation_files/twoTrackEvents_809_raw.evio.tar.gz
-     ;;
-     'Darwin')
-       curl -OL "http://clasweb.jlab.org/clas12offline/distribution/coatjava/validation_files/twoTrackEvents_809_raw.evio.tar.gz" -o twoTrackEvents_809_raw.evio.tar.gz
-     ;;
-     *) ;;
-esac
-
-
+wget --no-check-certificate http://clasweb.jlab.org/clas12offline/distribution/coatjava/validation_files/twoTrackEvents_809_raw.evio.tar.gz
 
 if [ $? != 0 ] ; then echo "wget validation files failure" ; exit 1 ; fi
 tar -zxvf twoTrackEvents_809_raw.evio.tar.gz
