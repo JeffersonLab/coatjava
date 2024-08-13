@@ -2,7 +2,7 @@
 
 # this test needs rewritten, with more useful data (not KPP),
 # meanwhile not worth maintaining ...
-exit 0
+#exit 0
 
 # coatjava must already be built at ../../coatjava/
 
@@ -35,7 +35,7 @@ echo "set session s_cook" >> cook.clara
 echo "set description d_cook" >> cook.clara
 ls twoTrackEvents_809.hipo > files.list
 echo "set fileList $PWD/files.list" >> cook.clara
-echo "set servicesFile $CLARA_HOME/plugins/clas12/config/kpp.yaml" >> cook.clara
+echo "set servicesFile $COAT/etc/services/kpp.yaml" >> cook.clara
 echo "run local" >> cook.clara
 echo "exit" >> cook.clara
 $CLARA_HOME/bin/clara-shell cook.clara
