@@ -34,5 +34,6 @@
     <module>vtx</module>
     <module>urwell</module>
     <module>alert</module>
+    <module>bg</module>
   </modules>
 </project>
