@@ -12,6 +12,8 @@ public class Banks {
     
     private String aiBank     = "ai::tracks";
     
+    private String instarecBank = "instarec::tracks";
+    
     private final String inBankType = "HitBasedTrkg";
     private String outBankType      = "HitBasedTrkg";
     private String inPrefix         = "";
@@ -73,8 +75,8 @@ public class Banks {
     
     public String getInstarecBank() {
         if(inPrefix!=null && !inPrefix.isBlank())
-            aiBank = "instarec" + inPrefix.toLowerCase() +"::tracks";
-        return aiBank;
+            instarecBank = "instarec" + inPrefix.toLowerCase() +"::tracks";
+        return instarecBank;
     }
     
     private String getRecBank(String item) {
