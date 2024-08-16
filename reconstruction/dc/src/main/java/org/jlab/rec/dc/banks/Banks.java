@@ -71,6 +71,12 @@ public class Banks {
         return aiBank;
     }
     
+    public String getInstarecBank() {
+        if(inPrefix!=null && !inPrefix.isBlank())
+            aiBank = "instarec" + inPrefix.toLowerCase() +"::tracks";
+        return aiBank;
+    }
+    
     private String getRecBank(String item) {
         String bank = "RECHB";
         if(!bank.endsWith(inPrefix)) bank = bank + this.inPrefix;

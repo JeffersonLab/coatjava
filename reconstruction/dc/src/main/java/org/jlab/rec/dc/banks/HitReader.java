@@ -593,9 +593,10 @@ public class HitReader {
         return pass;
     }
     //new way of fetching ai id'ed hits
-    public void read_NNHits(DataEvent event) {
+    public void read_NNHits(DataEvent event, String aiModel) {
         this.initialize(event);
-        this.read_NNHits();
+        if(aiModel.equals("AIModel1")) this.read_NNHits();
+        else if(aiModel.equals("AIModel2")) this.read_NNHits2();
     }
 
     private void read_NNHits() {
@@ -608,6 +609,64 @@ public class HitReader {
         }
         
         DataBank bankAI = event.getBank(bankNames.getAiBank());
+        DataBank bank = event.getBank(bankNames.getInputHitsBank());
+
+        int[] Ids  ;     //  1-6 = cluster ids for slyrs 1 - 6
+        double[] tPars ; // NN trk pars p, theta, phi ; last idx = track id;
+        for (int j = 0; j < bankAI.rows(); j++) {
+            Ids  = new int[6];
+            tPars = new double[4];
+            Ids[0] = (int)bankAI.getShort("c1", j); // clusId in superlayer 1
+            Ids[1] = (int)bankAI.getShort("c2", j);
+            Ids[2] = (int)bankAI.getShort("c3", j);
+            Ids[3] = (int)bankAI.getShort("c4", j);
+            Ids[4] = (int)bankAI.getShort("c5", j);
+            Ids[5] = (int)bankAI.getShort("c6", j); // clusId in superlayer 6
+            
+            tPars[0] = (double)bankAI.getFloat("p", j);
+            tPars[1] = (double)bankAI.getFloat("theta", j);
+            tPars[2] = (double)bankAI.getFloat("phi", j);
+            tPars[3] = (double)bankAI.getByte("id", j);
+            
+            aimatch.clear();
+            for (int k = 0; k < 6; k++) {
+                aimatch.put(Ids[k], tPars); 
+            }
+        
+            for (int i = 0; i < bank.rows(); i++) {
+                int clusterID = bank.getShort("clusterID", i);
+
+                if(clusterID>0) {
+                    if(this.aimatch.containsKey(clusterID)) { 
+                        Hit hit = new Hit(bank.getByte("sector", i), bank.getByte("superlayer", i), 
+                            bank.getByte("layer", i), bank.getShort("wire", i), bank.getInt("TDC", i), bank.getByte("jitter", i), bank.getShort("id", i));
+                        hit.set_Id(bank.getShort("id", i));
+                        hit.calc_CellSize(detector);
+                        double posError = hit.get_CellSize() / Math.sqrt(12.);
+                        hit.set_DocaErr(posError);
+                        hit.NNTrkId  = (int) this.aimatch.get(clusterID)[3];
+                        hit.NNClusId = clusterID;
+                        hit.NNTrkP      = this.aimatch.get(clusterID)[0];
+                        hit.NNTrkTheta  = this.aimatch.get(clusterID)[1];
+                        hit.NNTrkPhi    = this.aimatch.get(clusterID)[2];
+                        LOGGER.log(Level.FINE, "NN"+hit.printInfo());
+                        this._DCHits.add(hit);
+                    }
+                }
+            }
+        }
+    }
+    
+    private void read_NNHits2() {
+        _DCHits = new ArrayList<>();
+
+        if (!(event.hasBank(bankNames.getInputHitsBank()) 
+           && event.hasBank(bankNames.getInputClustersBank())
+           && event.hasBank(bankNames.getInstarecBank())  )) {
+            return;
+        }
+        
+        DataBank bankAI = event.getBank(bankNames.getInstarecBank());
         DataBank bank = event.getBank(bankNames.getInputHitsBank());
 
         int[] Ids  ;     //  1-6 = cluster ids for slyrs 1 - 6

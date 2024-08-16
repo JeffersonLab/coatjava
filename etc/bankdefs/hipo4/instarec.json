@@ -1,0 +1,39 @@
+[
+    {
+        "name": "instarec::tracks",
+        "group": 32600,
+        "item" : 5,
+        "info" : "tracks identified with AI",
+        "entries": [
+            {"name":"status",     "type":"S", "info":"status of the track"},
+            {"name":"prob"  ,     "type":"F", "info":"AI/ML probability"},
+            {"name":"sector",     "type":"S", "info":"sector of the track"},
+            {"name":"charge",     "type":"S", "info":"charge of the particle"},
+            {"name":"chi2"  ,     "type":"F", "info":"chi square from the fit" },
+            {"name":"px"    ,     "type":"F", "info":"x-component momentum" },
+            {"name":"py"    ,     "type":"F", "info":"y-component" },
+            {"name":"pz"    ,     "type":"F", "info":"z-component" },
+            {"name":"vx"    ,     "type":"F", "info":"x-component vertex" },
+            {"name":"vy"    ,     "type":"F", "info":"y-component" },
+            {"name":"vz"    ,     "type":"F", "info":"z-component" },
+            {"name":"c1"    ,     "type":"I", "info":"cluster ID in superlayer 1"},
+            {"name":"c2"    ,     "type":"I", "info":"cluster ID in superlayer 2"},
+            {"name":"c3"    ,     "type":"I", "info":"cluster ID in superlayer 3"},
+            {"name":"c4"    ,     "type":"I", "info":"cluster ID in superlayer 4"},
+            {"name":"c5"    ,     "type":"I", "info":"cluster ID in superlayer 5"},
+            {"name":"c6"    ,     "type":"I", "info":"cluster ID in superlayer 6"},
+            {"name":"w11"   ,     "type":"F", "info":"cluster position at wire 1"},
+            {"name":"w12"   ,     "type":"F", "info":"cluster position at wire 1"},
+            {"name":"w13"   ,     "type":"F", "info":"cluster position at wire 1"},
+            {"name":"w14"   ,     "type":"F", "info":"cluster position at wire 1"},
+            {"name":"w15"   ,     "type":"F", "info":"cluster position at wire 1"},
+            {"name":"w16"   ,     "type":"F", "info":"cluster position at wire 1"},
+            {"name":"w61"   ,     "type":"F", "info":"cluster position at wire 6"},
+            {"name":"w62"   ,     "type":"F", "info":"cluster position at wire 6"},
+            {"name":"w63"   ,     "type":"F", "info":"cluster position at wire 6"},
+            {"name":"w64"   ,     "type":"F", "info":"cluster position at wire 6"},
+            {"name":"w65"   ,     "type":"F", "info":"cluster position at wire 6"},
+            {"name":"w66"   ,     "type":"F", "info":"cluster position at wire 6"}
+        ]
+    }
+]
