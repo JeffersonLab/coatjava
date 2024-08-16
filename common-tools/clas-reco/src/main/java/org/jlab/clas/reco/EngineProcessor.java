@@ -98,7 +98,7 @@ public class EngineProcessor {
     public void initAll(){
 
         String[] names = new String[]{
-            "MAGFIELDS",
+            "MAGFIELDS","BG",
             "FTCAL", "FTHODO", "FTTRK", "FTEB",
             "URWELL", "DCCR", "DCHB","FTOFHB","EC","RASTER",
             "CVTFP","CTOF","CND","BAND",
@@ -109,6 +109,7 @@ public class EngineProcessor {
 
         String[] services = new String[]{
             "org.jlab.clas.swimtools.MagFieldsEngine",
+            "org.jlab.service.bg.BackgroundEngine",
             "org.jlab.rec.ft.cal.FTCALEngine",
             "org.jlab.rec.ft.hodo.FTHODOEngine",
             "org.jlab.rec.ft.trk.FTTRKEngine",
@@ -324,7 +325,7 @@ public class EngineProcessor {
         parser.addOption("-u","true","update dictionary from writer ? ");
         parser.addOption("-d","1","Debug level [0 - OFF, 1 - ON/default]");
         parser.addOption("-S",null,"schema directory");
-        parser.setDescription("previously known as notsouseful-util");
+        parser.addOption("-B",null,"background file");
 
         parser.parse(args);
 
@@ -379,6 +380,17 @@ public class EngineProcessor {
         // command-line schema overrides YAML:
         if (parser.getOption("-S").stringValue() != null)
             proc.setBanksToKeep(parser.getOption("-S").stringValue());
+
+        // command-line filename for background merging overrides YAML:
+        if (parser.getOption("-B").stringValue() != null) {
+            if (proc.processorEngines.containsKey("org.jlab.service.bg.BackgroundEngine")) {
+                proc.processorEngines.get("org.jlab.service.bg.BackgroundEngine")
+                    .engineConfigMap.put("filename", parser.getOption("-B").stringValue());
+            } else {
+                LOGGER.severe("ERROR:  -B background file specified without BackgroundEngine.");
+                System.exit(11);
+            }
+        }
 
         proc.processFile(inputFile,outputFile,nskip,nevents);
     }
