@@ -33,25 +33,26 @@ public class BackgroundEngine extends ReconstructionEngine {
 
     @Override
     public boolean init() {
-        String filename = getEngineConfigString(CONF_FILENAME);
-        if (filename == null) {
-            logger.severe("BackgroundEngine::  filename undefined.");
-            return false;
+        init(getEngineConfigString(CONF_FILENAME));
+    }
+
+    public boolean init(String filename) {
+        if (filename != null) {
+            File f = new File(filename);
+            if (!f.exists() || !f.isFile() || !f.canRead()) {
+                logger.log(Level.SEVERE,"BackgroundEngine:: filename {} invalid:  ",filename);
+                return false;
+            }
+            filenames.add(filename);
+            String detectors = getEngineConfigString(CONF_DETECTORS,"DC,FTOF");
+            String orders = getEngineConfigString(CONF_ORDERS,"NOMINAL");
+            Boolean suppressDoubles = Boolean.getBoolean(getEngineConfigString(CONF_SUPPRESS_DOUBLES,"true"));
+            Boolean preserveOrder = Boolean.getBoolean(getEngineConfigString(CONF_PRESERVE_ORDER,"true"));
+            logger.log(Level.INFO,"BackgroundEngine::  reading {0}",filename);
+            merger = new EventMerger(detectors.split(","), orders.split(","), suppressDoubles, preserveOrder);
+            reader = new HipoDataSource();
+            reader.open(getEngineConfigString(CONF_FILENAME));
         }
-        File f = new File(filename);
-        if (!f.exists() || !f.isFile() || !f.canRead()) {
-            logger.log(Level.SEVERE,"BackgroundEngine:: filename {} invalid:  ",filename);
-            return false;
-        }
-        filenames.add(filename);
-        String detectors = getEngineConfigString(CONF_DETECTORS,"DC,FTOF");
-        String orders = getEngineConfigString(CONF_ORDERS,"NOMINAL");
-        Boolean suppressDoubles = Boolean.getBoolean(getEngineConfigString(CONF_SUPPRESS_DOUBLES,"true"));
-        Boolean preserveOrder = Boolean.getBoolean(getEngineConfigString(CONF_PRESERVE_ORDER,"true"));
-        logger.log(Level.INFO,"BackgroundEngine::  reading {0}",filename);
-        merger = new EventMerger(detectors.split(","), orders.split(","), suppressDoubles, preserveOrder);
-        reader = new HipoDataSource();
-        reader.open(getEngineConfigString(CONF_FILENAME));
         return true;
     }
 
@@ -66,9 +67,11 @@ public class BackgroundEngine extends ReconstructionEngine {
 
     @Override
     public boolean processDataEvent(DataEvent event) {
-        DataEvent a = getBackgroundEvent();
-        DataEvent b = getBackgroundEvent();
-        merger.mergeEvents(event, a, b);
+        if (filenames.size() > 0) {
+            DataEvent a = getBackgroundEvent();
+            DataEvent b = getBackgroundEvent();
+            merger.mergeEvents(event, a, b);
+        }
         return true;
     }
 
