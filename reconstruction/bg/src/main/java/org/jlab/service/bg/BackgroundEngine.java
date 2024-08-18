@@ -33,7 +33,7 @@ public class BackgroundEngine extends ReconstructionEngine {
 
     @Override
     public boolean init() {
-        init(getEngineConfigString(CONF_FILENAME));
+        return init(getEngineConfigString(CONF_FILENAME));
     }
 
     public boolean init(String filename) {
