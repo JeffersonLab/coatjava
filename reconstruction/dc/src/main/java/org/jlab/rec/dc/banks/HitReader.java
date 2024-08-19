@@ -669,46 +669,129 @@ public class HitReader {
         DataBank bankAI = event.getBank(bankNames.getInstarecBank());
         DataBank bank = event.getBank(bankNames.getInputHitsBank());
 
+        // Read clusterIDs and prob into maps with index
+        Map<Integer,int[]>   map_index_clsIDs   = new HashMap<>();
+        Map<Integer,Float>   map_index_prob   = new HashMap<>();        
+        for (int j = 0; j < bankAI.rows(); j++) {
+            int[] Ids  = new int[6];
+            Ids[0] = (int)bankAI.getInt("c1", j); // clusId in superlayer 1
+            Ids[1] = (int)bankAI.getInt("c2", j);
+            Ids[2] = (int)bankAI.getInt("c3", j);
+            Ids[3] = (int)bankAI.getInt("c4", j);
+            Ids[4] = (int)bankAI.getInt("c5", j);
+            Ids[5] = (int)bankAI.getInt("c6", j); // clusId in superlayer 6 
+            float prob = (float)bankAI.getFloat("prob", j);
+
+            map_index_clsIDs.put(j, Ids);   
+            map_index_prob.put(j, prob);
+        }
+        
+        // Make lists for AI tracks with overlapping clusters
+        ArrayList<Map<Integer, int[]>> list_map_index_clsIDs_clsOverlapping = new ArrayList<>();
+        ArrayList<Map<Integer, Float>> list_map_index_prob_clsOverlapping = new ArrayList<>();
+        for (Map.Entry<Integer,int[]> entry : map_index_clsIDs.entrySet()) {
+            int[] clsIDs = entry.getValue();
+            float prob = map_index_prob.get(entry.getKey());
+            
+            boolean flag_pushed = false;
+            for(int i = 0; i < list_map_index_clsIDs_clsOverlapping.size(); i++){
+                for(Map.Entry<Integer,int[]> entry_comp : list_map_index_clsIDs_clsOverlapping.get(i).entrySet()){   
+                    if(entry.getKey() != entry_comp.getKey()){
+                        boolean flag = false;
+                        int[] clsIDs_comp = entry_comp.getValue();
+                        for(int j = 0; j < 6; j++){
+                            if(clsIDs[j]!= -1 && clsIDs[j] == clsIDs_comp[j]) {
+                                flag = true;
+                                break;
+                            }
+                        }
+                        if(flag) {
+                            list_map_index_clsIDs_clsOverlapping.get(i).put(entry.getKey(), clsIDs);
+                            list_map_index_prob_clsOverlapping.get(i).put(entry.getKey(), prob);
+                            flag_pushed = true;
+                        }                        
+                    }
+                    if(flag_pushed) break;
+                }
+                if(flag_pushed) break;
+            }
+            if(!flag_pushed) {
+                Map<Integer, int[]> map_index_clsIDs_clsOverlapping = new HashMap<>();
+                map_index_clsIDs_clsOverlapping.put(entry.getKey(), clsIDs);
+                list_map_index_clsIDs_clsOverlapping.add(map_index_clsIDs_clsOverlapping);
+                
+                Map<Integer, Float> map_index_prob_clsOverlapping = new HashMap<>();
+                map_index_prob_clsOverlapping.put(entry.getKey(), prob);
+                list_map_index_prob_clsOverlapping.add(map_index_prob_clsOverlapping);
+            }             
+        }
+        
+        // Choose a track with the best prob for overlapping tracks, and make a list for index of the chosen tracks
+        ArrayList<Integer> list_indexBestProb = new ArrayList<>();
+        for(Map<Integer, Float> map_index_prob_clsOverlapping: list_map_index_prob_clsOverlapping){            
+            float prob = 0;
+            int index = 0;
+            for(Map.Entry<Integer,Float> entry : map_index_prob_clsOverlapping.entrySet()){
+                if(entry.getValue() > prob) {
+                    prob = entry.getValue();
+                    index = entry.getKey();
+                }
+            }
+            list_indexBestProb.add(index);
+        }        
+                
+        // Read hit information from chosen AI tracks        
         int[] Ids  ;     //  1-6 = cluster ids for slyrs 1 - 6
         double[] tPars ; // NN trk pars p, theta, phi ; last idx = track id;
+        int trkId = 0;
         for (int j = 0; j < bankAI.rows(); j++) {
-            Ids  = new int[6];
-            tPars = new double[4];
-            Ids[0] = (int)bankAI.getShort("c1", j); // clusId in superlayer 1
-            Ids[1] = (int)bankAI.getShort("c2", j);
-            Ids[2] = (int)bankAI.getShort("c3", j);
-            Ids[3] = (int)bankAI.getShort("c4", j);
-            Ids[4] = (int)bankAI.getShort("c5", j);
-            Ids[5] = (int)bankAI.getShort("c6", j); // clusId in superlayer 6
-            
-            tPars[0] = (double)bankAI.getFloat("p", j);
-            tPars[1] = (double)bankAI.getFloat("theta", j);
-            tPars[2] = (double)bankAI.getFloat("phi", j);
-            tPars[3] = (double)bankAI.getByte("id", j);
-            
-            aimatch.clear();
-            for (int k = 0; k < 6; k++) {
-                aimatch.put(Ids[k], tPars); 
-            }
-        
-            for (int i = 0; i < bank.rows(); i++) {
-                int clusterID = bank.getShort("clusterID", i);
+            if(list_indexBestProb.contains(j)){
+                trkId++;
+                        
+                Ids  = new int[6];
+                tPars = new double[7];
+                Ids[0] = (int)bankAI.getInt("c1", j); // clusId in superlayer 1
+                Ids[1] = (int)bankAI.getInt("c2", j);
+                Ids[2] = (int)bankAI.getInt("c3", j);
+                Ids[3] = (int)bankAI.getInt("c4", j);
+                Ids[4] = (int)bankAI.getInt("c5", j);
+                Ids[5] = (int)bankAI.getInt("c6", j); // clusId in superlayer 6
 
-                if(clusterID>0) {
-                    if(this.aimatch.containsKey(clusterID)) { 
-                        Hit hit = new Hit(bank.getByte("sector", i), bank.getByte("superlayer", i), 
-                            bank.getByte("layer", i), bank.getShort("wire", i), bank.getInt("TDC", i), bank.getByte("jitter", i), bank.getShort("id", i));
-                        hit.set_Id(bank.getShort("id", i));
-                        hit.calc_CellSize(detector);
-                        double posError = hit.get_CellSize() / Math.sqrt(12.);
-                        hit.set_DocaErr(posError);
-                        hit.NNTrkId  = (int) this.aimatch.get(clusterID)[3];
-                        hit.NNClusId = clusterID;
-                        hit.NNTrkP      = this.aimatch.get(clusterID)[0];
-                        hit.NNTrkTheta  = this.aimatch.get(clusterID)[1];
-                        hit.NNTrkPhi    = this.aimatch.get(clusterID)[2];
-                        LOGGER.log(Level.FINE, "NN"+hit.printInfo());
-                        this._DCHits.add(hit);
+                tPars[0] = (double)bankAI.getShort("charge", j);
+                tPars[1] = (double)bankAI.getFloat("px", j);
+                tPars[2] = (double)bankAI.getFloat("py", j);
+                tPars[3] = (double)bankAI.getFloat("pz", j);
+                tPars[4] = (double)bankAI.getFloat("vx", j);
+                tPars[5] = (double)bankAI.getFloat("vy", j);
+                tPars[6] = (double)bankAI.getFloat("vz", j);
+
+                aimatch.clear();
+                for (int k = 0; k < 6; k++) {
+                    aimatch.put(Ids[k], tPars); 
+                }
+
+                for (int i = 0; i < bank.rows(); i++) {
+                    int clusterID = bank.getShort("clusterID", i);
+
+                    if(clusterID>0) {
+                        if(this.aimatch.containsKey(clusterID)) { 
+                            Hit hit = new Hit(bank.getByte("sector", i), bank.getByte("superlayer", i), 
+                                bank.getByte("layer", i), bank.getShort("wire", i), bank.getInt("TDC", i), bank.getByte("jitter", i), bank.getShort("id", i));
+                            hit.set_Id(bank.getShort("id", i));
+                            hit.calc_CellSize(detector);
+                            double posError = hit.get_CellSize() / Math.sqrt(12.);
+                            hit.set_DocaErr(posError);
+                            hit.NNTrkId  = trkId;
+                            hit.NNClusId = clusterID;                            
+                            hit.NNTrkP = Math.sqrt(this.aimatch.get(clusterID)[1] * this.aimatch.get(clusterID)[1] + 
+                                    this.aimatch.get(clusterID)[2]* this.aimatch.get(clusterID)[2] + this.aimatch.get(clusterID)[3] * this.aimatch.get(clusterID)[3]);
+                            if(hit.NNTrkP != 0) hit.NNTrkTheta  = Math.acos(this.aimatch.get(clusterID)[3]/hit.NNTrkP);
+                            else hit.NNTrkTheta = 0;
+                            if(this.aimatch.get(clusterID)[1] != 0) hit.NNTrkPhi = Math.atan2(this.aimatch.get(clusterID)[2], this.aimatch.get(clusterID)[1]);
+                            else hit.NNTrkPhi = 0;
+                            LOGGER.log(Level.FINE, "NN"+hit.printInfo());
+                            this._DCHits.add(hit);
+                        }
                     }
                 }
             }
