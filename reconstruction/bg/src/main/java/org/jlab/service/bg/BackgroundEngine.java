@@ -23,9 +23,9 @@ public class BackgroundEngine extends ReconstructionEngine {
 
     static final Logger logger = Logger.getLogger(BackgroundEngine.class.getName());
 
-    EventMerger merger = null;
-    HipoDataSource reader = null;
-    LinkedList<String> filenames = new LinkedList<>();
+    EventMerger bgmerger = null;
+    HipoDataSource bgreader = null;
+    LinkedList<String> bgfilenames = new LinkedList<>();
 
     public BackgroundEngine() {
         super("BG", "baltzell", "1.0");
@@ -33,44 +33,49 @@ public class BackgroundEngine extends ReconstructionEngine {
 
     @Override
     public boolean init() {
-        return init(getEngineConfigString(CONF_FILENAME));
-    }
-
-    public boolean init(String filename) {
-        if (filename != null) {
-            File f = new File(filename);
-            if (!f.exists() || !f.isFile() || !f.canRead()) {
-                logger.log(Level.SEVERE,"BackgroundEngine:: filename {} invalid:  ",filename);
-                return false;
-            }
-            filenames.add(filename);
-            String detectors = getEngineConfigString(CONF_DETECTORS,"DC,FTOF");
-            String orders = getEngineConfigString(CONF_ORDERS,"NOMINAL");
-            Boolean suppressDoubles = Boolean.getBoolean(getEngineConfigString(CONF_SUPPRESS_DOUBLES,"true"));
-            Boolean preserveOrder = Boolean.getBoolean(getEngineConfigString(CONF_PRESERVE_ORDER,"true"));
-            logger.log(Level.INFO,"BackgroundEngine::  reading {0}",filename);
-            merger = new EventMerger(detectors.split(","), orders.split(","), suppressDoubles, preserveOrder);
-            reader = new HipoDataSource();
-            reader.open(getEngineConfigString(CONF_FILENAME));
-        }
+        if (getEngineConfigString(CONF_FILENAME) != null)
+            return init(getEngineConfigString(CONF_FILENAME).split(","));
         return true;
     }
 
+    public boolean init(String... filenames) {
+        bgfilenames.clear();
+        for (String filename : filenames) {
+            File f = new File(filename);
+            if (!f.exists() || !f.isFile() || !f.canRead()) {
+                logger.log(Level.SEVERE,"BackgroundEngine:: filename {0} invalid.",filename);
+                return false;
+            }
+            logger.log(Level.INFO,"BackgroundEngine::  reading {0}",filename);
+            bgfilenames.add(filename);
+        }
+        String detectors = getEngineConfigString(CONF_DETECTORS,"DC,FTOF");
+        String orders = getEngineConfigString(CONF_ORDERS,"NOMINAL");
+        Boolean suppressDoubles = Boolean.getBoolean(getEngineConfigString(CONF_SUPPRESS_DOUBLES,"true"));
+        Boolean preserveOrder = Boolean.getBoolean(getEngineConfigString(CONF_PRESERVE_ORDER,"true"));
+        bgmerger = new EventMerger(detectors.split(","), orders.split(","), suppressDoubles, preserveOrder);
+        openNextFile();
+        return true;
+    }
+
+    private void openNextFile() {
+        String filename = bgfilenames.remove();
+        bgfilenames.add(filename);
+        bgreader = new HipoDataSource();
+        bgreader.open(filename);
+    }
+
     synchronized public DataEvent getBackgroundEvent() {
-        if (reader.hasEvent()) return reader.getNextEvent();
-        String filename = filenames.remove();
-        filenames.add(filename);
-        reader = new HipoDataSource();
-        reader.open(filename);
-        return reader.getNextEvent();
+        if (!bgreader.hasEvent()) openNextFile();
+        return bgreader.getNextEvent();
     }
 
     @Override
     public boolean processDataEvent(DataEvent event) {
-        if (filenames.size() > 0) {
+        if (!bgfilenames.isEmpty()) {
             DataEvent a = getBackgroundEvent();
             DataEvent b = getBackgroundEvent();
-            merger.mergeEvents(event, a, b);
+            bgmerger.mergeEvents(event, a, b);
         }
         return true;
     }
