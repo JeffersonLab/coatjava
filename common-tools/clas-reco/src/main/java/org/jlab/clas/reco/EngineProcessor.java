@@ -16,7 +16,6 @@ import org.jlab.clara.engine.EngineData;
 import org.jlab.clara.engine.EngineDataType;
 import java.util.Arrays;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
-import org.jlab.utils.JsonUtils;
 import org.json.JSONObject;
 import org.jlab.logging.DefaultLogger;
 import org.jlab.utils.ClaraYaml;
@@ -27,6 +26,8 @@ import org.jlab.utils.ClaraYaml;
  */
 public class EngineProcessor {
 
+    public static final String ENGINE_CLASS_BG = "org.jlab.service.bg.BackgroundEngine";
+    
     private final Map<String,ReconstructionEngine>  processorEngines = new LinkedHashMap<>();
     private static final Logger LOGGER = Logger.getLogger(EngineProcessor.class.getPackage().getName());
     private boolean updateDictionary = true;
@@ -34,6 +35,27 @@ public class EngineProcessor {
     private final List<String> schemaExempt = Arrays.asList("RUN::config","DC::tdc");
 
     public EngineProcessor(){}
+
+    /**
+     * Get the (first) engine with the given class name.  Note, this exists 
+     * because engines are mapped by (what can be) a user-defined name, and .
+     * @param clazz
+     * @return 
+     */
+    private ReconstructionEngine findEngine(String clazz) {
+        for (String k : processorEngines.keySet()) {
+            if (processorEngines.get(k).getClass().getName().equals(clazz))
+                return processorEngines.get(k);
+        }
+        return null;
+    }
+
+    public void setBackgroundFiles(String filenames) {
+        if (findEngine(ENGINE_CLASS_BG) == null)
+            addEngine("BG",ENGINE_CLASS_BG);
+        findEngine(ENGINE_CLASS_BG).engineConfigMap.put("filename", filenames);
+        findEngine(ENGINE_CLASS_BG).init();
+    }
 
     private void updateDictionary(HipoDataSource source, HipoDataSync sync){
         SchemaFactory fsync = sync.getWriter().getSchemaFactory();
@@ -382,16 +404,10 @@ public class EngineProcessor {
             proc.setBanksToKeep(parser.getOption("-S").stringValue());
 
         // command-line filename for background merging overrides YAML:
-        if (parser.getOption("-B").stringValue() != null) {
-            if (proc.processorEngines.containsKey("org.jlab.service.bg.BackgroundEngine")) {
-                proc.processorEngines.get("org.jlab.service.bg.BackgroundEngine")
-                    .engineConfigMap.put("filename", parser.getOption("-B").stringValue());
-            } else {
-                LOGGER.severe("ERROR:  -B background file specified without BackgroundEngine.");
-                System.exit(11);
-            }
-        }
+        if (parser.getOption("-B").stringValue() != null)
+            proc.setBackgroundFiles(parser.getOption("-B").stringValue());
 
         proc.processFile(inputFile,outputFile,nskip,nevents);
     }
+
 }
