@@ -51,8 +51,8 @@ public class BackgroundEngine extends ReconstructionEngine {
         }
         String detectors = getEngineConfigString(CONF_DETECTORS,"DC,FTOF");
         String orders = getEngineConfigString(CONF_ORDERS,"NOMINAL");
-        Boolean suppressDoubles = Boolean.getBoolean(getEngineConfigString(CONF_SUPPRESS_DOUBLES,"true"));
-        Boolean preserveOrder = Boolean.getBoolean(getEngineConfigString(CONF_PRESERVE_ORDER,"true"));
+        Boolean suppressDoubles = Boolean.valueOf(getEngineConfigString(CONF_SUPPRESS_DOUBLES,"true"));
+        Boolean preserveOrder = Boolean.valueOf(getEngineConfigString(CONF_PRESERVE_ORDER,"true"));
         bgmerger = new EventMerger(detectors.split(","), orders.split(","), suppressDoubles, preserveOrder);
         openNextFile();
         return true;
