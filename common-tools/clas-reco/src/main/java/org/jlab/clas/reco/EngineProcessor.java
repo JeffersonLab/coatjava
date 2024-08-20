@@ -36,23 +36,20 @@ public class EngineProcessor {
 
     public EngineProcessor(){}
 
-    /**
-     * Get the (first) engine with the given class name.  Note, this exists 
-     * because engines are mapped by (what can be) a user-defined name, and .
-     * @param clazz
-     * @return 
-     */
     private ReconstructionEngine findEngine(String clazz) {
         for (String k : processorEngines.keySet()) {
-            if (processorEngines.get(k).getClass().getName().equals(clazz))
+            if (processorEngines.get(k).getClass().getName().equals(clazz)) {
                 return processorEngines.get(k);
+            }
         }
         return null;
     }
 
     public void setBackgroundFiles(String filenames) {
-        if (findEngine(ENGINE_CLASS_BG) == null)
+        if (findEngine(ENGINE_CLASS_BG) == null) {
+            LOGGER.info("Adding BackgroundEngine for -B option.");
             addEngine("BG",ENGINE_CLASS_BG);
+        }
         findEngine(ENGINE_CLASS_BG).engineConfigMap.put("filename", filenames);
         findEngine(ENGINE_CLASS_BG).init();
     }
@@ -120,7 +117,7 @@ public class EngineProcessor {
     public void initAll(){
 
         String[] names = new String[]{
-            "MAGFIELDS","BG",
+            "MAGFIELDS",
             "FTCAL", "FTHODO", "FTTRK", "FTEB",
             "URWELL", "DCCR", "DCHB","FTOFHB","EC","RASTER",
             "CVTFP","CTOF","CND","BAND",
@@ -131,7 +128,6 @@ public class EngineProcessor {
 
         String[] services = new String[]{
             "org.jlab.clas.swimtools.MagFieldsEngine",
-            "org.jlab.service.bg.BackgroundEngine",
             "org.jlab.rec.ft.cal.FTCALEngine",
             "org.jlab.rec.ft.hodo.FTHODOEngine",
             "org.jlab.rec.ft.trk.FTTRKEngine",
@@ -144,7 +140,6 @@ public class EngineProcessor {
             "org.jlab.service.raster.RasterEngine",
             "org.jlab.rec.cvt.services.CVTEngine",
             "org.jlab.service.ctof.CTOFEngine",
-            //"org.jlab.service.cnd.CNDEngine",
             "org.jlab.service.cnd.CNDCalibrationEngine",
             "org.jlab.service.band.BANDEngine",
             "org.jlab.service.htcc.HTCCReconstructionService",
