@@ -27,6 +27,7 @@ import org.jlab.utils.ClaraYaml;
 public class EngineProcessor {
 
     public static final String ENGINE_CLASS_BG = "org.jlab.service.bg.BackgroundEngine";
+    public static final String ENGINE_CLASS_PP = "org.jlab.service.pp.PostprocEngine";
     
     private final Map<String,ReconstructionEngine>  processorEngines = new LinkedHashMap<>();
     private static final Logger LOGGER = Logger.getLogger(EngineProcessor.class.getPackage().getName());
@@ -45,13 +46,22 @@ public class EngineProcessor {
         return null;
     }
 
-    public void setBackgroundFiles(String filenames) {
+    private void setBackgroundFiles(String filenames) {
         if (findEngine(ENGINE_CLASS_BG) == null) {
             LOGGER.info("Adding BackgroundEngine for -B option.");
             addEngine("BG",ENGINE_CLASS_BG);
         }
         findEngine(ENGINE_CLASS_BG).engineConfigMap.put("filename", filenames);
         findEngine(ENGINE_CLASS_BG).init();
+    }
+
+    private void setPreloadFiles(String filenames) {
+        if (findEngine(ENGINE_CLASS_PP) == null) {
+            LOGGER.info("Adding PostprocEngine for -P option.");
+            addEngine("BG",ENGINE_CLASS_PP);
+        }
+        findEngine(ENGINE_CLASS_PP).engineConfigMap.put("preloadFile", filenames);
+        findEngine(ENGINE_CLASS_PP).init();
     }
 
     private void updateDictionary(HipoDataSource source, HipoDataSync sync){
@@ -343,6 +353,7 @@ public class EngineProcessor {
         parser.addOption("-d","1","Debug level [0 - OFF, 1 - ON/default]");
         parser.addOption("-S",null,"schema directory");
         parser.addOption("-B",null,"background file");
+        parser.addOption("-P",null,"preload file for post-processing");
 
         parser.parse(args);
 
@@ -401,6 +412,10 @@ public class EngineProcessor {
         // command-line filename for background merging overrides YAML:
         if (parser.getOption("-B").stringValue() != null)
             proc.setBackgroundFiles(parser.getOption("-B").stringValue());
+        
+        // command-line filename for post-processing overrides YAML:
+        if (parser.getOption("-P").stringValue() != null)
+            proc.setPreloadFiles(parser.getOption("-P").stringValue());
 
         proc.processFile(inputFile,outputFile,nskip,nevents);
     }
