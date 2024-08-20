@@ -880,9 +880,9 @@ public class KFitter extends AKFitter {
             sv.transport(sector, k, 0, sVec, mv, this.getSwimmer(), forward);
 
             StateVec svc = sv.transported(forward).get(0);
-            path += svc.deltaPath;
+            path += (forward ? 1 : -1) * svc.deltaPath;
             svc.setPathLength(path);
-
+            
             double V0 = mv.measurements.get(0).surface.unc[0];
 
             Point3D point = new Point3D(svc.x, svc.y, mv.measurements.get(0).surface.measPoint.z());
@@ -922,7 +922,7 @@ public class KFitter extends AKFitter {
 
                 double h = mv.hDoca(point, mv.measurements.get(k1 + 1).surface.wireLine[0]);
                 svc = sv.transported(forward).get(k1 + 1);
-                path += svc.deltaPath;
+                path += (forward ? 1 : -1) * svc.deltaPath;
                 svc.setPathLength(path);
                 svc.setProjector(mv.measurements.get(k1 + 1).surface.wireLine[0].origin().x());
                 svc.setProjectorDoca(h);
@@ -975,7 +975,7 @@ public class KFitter extends AKFitter {
             sv.transport(sector, k, 0, sVec, mv, this.getSwimmer(), forward);
 
             StateVec svc = sv.transported(forward).get(0);
-            path += svc.deltaPath;
+            path += (forward ? 1 : -1) * svc.deltaPath;
             svc.setPathLength(path);
             
             Point3D point = new Point3D(svc.x, svc.y, mv.measurements.get(0).surface.measPoint.z());
@@ -1047,7 +1047,7 @@ public class KFitter extends AKFitter {
                 }
                 
                 svc = sv.transported(forward).get(k1 + 1);
-                path += svc.deltaPath;
+                path += (forward ? 1 : -1) * svc.deltaPath;
                 svc.setPathLength(path);
                 
                 point = new Point3D(sv.transported(forward).get(k1 + 1).x, sv.transported(forward).get(k1 + 1).y, mv.measurements.get(k1 + 1).surface.measPoint.z());
@@ -1115,6 +1115,10 @@ public class KFitter extends AKFitter {
 
     public Matrix propagateToVtx(int sector, double Zf) {
         return sv.transport(sector, finalStateVec.k, Zf, finalStateVec, mv, this.getSwimmer());
+    }
+    
+    public double getDeltaPathToVtx(int sector, double Zf) {
+        return sv.getDeltaPath(sector, finalStateVec.k, Zf, finalStateVec, mv, this.getSwimmer());
     }
 
     //Todo: apply the common funciton to replace current function above
