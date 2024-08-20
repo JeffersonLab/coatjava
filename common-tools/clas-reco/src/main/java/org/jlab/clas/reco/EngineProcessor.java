@@ -27,7 +27,7 @@ import org.jlab.utils.ClaraYaml;
 public class EngineProcessor {
 
     public static final String ENGINE_CLASS_BG = "org.jlab.service.bg.BackgroundEngine";
-    public static final String ENGINE_CLASS_PP = "org.jlab.service.pp.PostprocEngine";
+    public static final String ENGINE_CLASS_PP = "org.jlab.service.postproc.PostprocEngine";
     
     private final Map<String,ReconstructionEngine>  processorEngines = new LinkedHashMap<>();
     private static final Logger LOGGER = Logger.getLogger(EngineProcessor.class.getPackage().getName());
