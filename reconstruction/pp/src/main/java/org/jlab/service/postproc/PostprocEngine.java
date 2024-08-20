@@ -1,5 +1,6 @@
 package org.jlab.service.postproc;
 
+import java.io.File;
 import java.util.logging.Logger;
 import org.jlab.analysis.postprocess.Processor;
 import org.jlab.clas.reco.ReconstructionEngine;
@@ -29,8 +30,10 @@ public class PostprocEngine extends ReconstructionEngine {
     public boolean init() {
         requireConstants(Processor.CCDB_TABLES);
         if (getEngineConfigString(CONF_PRELOAD_FILE) != null) {
-            if (getEngineConfigString(CONF_PRELOAD_DIR) != null) {
-            }
+            if (getEngineConfigString(CONF_PRELOAD_DIR) != null)
+                logger.warning("PostprocEngine::  Using preloadFile, ignoring preloadDir.");
+            processor = new Processor(new File(getEngineConfigString(CONF_PRELOAD_FILE)),
+                Boolean.parseBoolean(getEngineConfigString(CONF_RESTREAM_HELICITY,"false")));
         }
         if (getEngineConfigString(CONF_PRELOAD_DIR) != null) {
             processor = new Processor(
