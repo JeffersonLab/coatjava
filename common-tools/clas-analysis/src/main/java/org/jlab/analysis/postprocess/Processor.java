@@ -127,7 +127,6 @@ public class Processor {
         if (helScaler.getRows()>0) {
             event.remove(schemaFactory.getSchema("HEL::scaler"));
             Util.assignScalerHelicity(runConfig.getLong("timestamp",0), helScaler, helicitySequence);
-            //Util.assignScalerHelicity(runConfig.getLong("timestamp",0), ((HipoDataBank)helScaler).getBank(), helicitySequence);
             event.write(helScaler);
         }
     }
@@ -199,7 +198,7 @@ public class Processor {
      * @param preloadFiles
      * @return map of rebuilt:preload files 
      */
-    public Map<String,String> rebuild(String dir, List<String> preloadFiles) {
+    private Map<String,String> rebuild(String dir, List<String> preloadFiles) {
         File d = new File(dir);
         if (!d.canWrite()) {
             throw new RuntimeException("No write permissions on "+dir);
@@ -217,7 +216,7 @@ public class Processor {
      * Replace files with new ones.
      * @param files map of new:old filenames
      */
-    public static void replace(Map<String,String> files) {
+    private static void replace(Map<String,String> files) {
         for (String rebuiltFile : files.keySet()) {
             new File(files.get(rebuiltFile)).delete();
             new File(rebuiltFile).renameTo(new File(files.get(rebuiltFile)));
@@ -227,7 +226,7 @@ public class Processor {
     /**
      * Replace preload files with rebuilt ones. 
      */
-    public void rebuildAndReplace(List<String> preloadFiles) {
+    private void rebuildAndReplace(List<String> preloadFiles) {
         replace(rebuild(".",preloadFiles));
     }
 
