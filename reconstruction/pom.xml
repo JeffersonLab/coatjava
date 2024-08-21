@@ -35,6 +35,6 @@
     <module>urwell</module>
     <module>alert</module>
     <module>bg</module>
-    <module>pp</module>
+    <module>postproc</module>
   </modules>
 </project>
