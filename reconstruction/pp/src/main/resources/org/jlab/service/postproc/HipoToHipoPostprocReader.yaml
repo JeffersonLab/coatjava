@@ -1,0 +1,13 @@
+---
+name: HipoToHipoPostprocReader
+engine: org.jlab.service.postproc.HipoToHipoPostprocReader
+type: java
+
+author: Nathan Baltzell
+email: baltzell@jlab.org
+
+version: 0.1
+description:
+  Reads HIPO events from a file and postprocess them.
+
+  Returns a new event on each request or an error if there was some problem.
