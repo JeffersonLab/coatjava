@@ -244,7 +244,7 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
         boolean value = false;
 
         if (this.get_fitPlane() != null && otherseg.get_fitPlane() != null) { 
-            if (Math.abs(Math.toDegrees(Math.acos(this.get_fitPlane().normal().dot(otherseg.get_fitPlane().normal()))) - 12.) < Constants.SEGMENTPLANESANGLE) // the angle between the plane normals is 12 degrees with some tolerance
+            if (Math.abs(Math.toDegrees(Math.acos(this.get_fitPlane().normal().dot(otherseg.get_fitPlane().normal()))) - 2*Constants.STEREOANGLE) < Constants.SEGMENTPLANESANGLE) // the angle between the plane normals is 2*Constants.STEREOANGLE degrees with some tolerance
             {
                 value = true;
             }

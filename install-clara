@@ -2,8 +2,8 @@
 
 # Default versions:
 grapes=2.17
-clara=v0
-coatjava=10.0.8
+clara=5.0.2
+coatjava=10.1.0
 
 # Abort on any non-zero exit codes:
 set -e
@@ -119,7 +119,7 @@ then
     coatjava=./coatjava
 fi
 mkdir -p clara-cre/plugins/clas12/config
-cp -Lr $coatjava/etc $coatjava/bin $coatjava/lib clara-cre/plugins/clas12
+cp -Lr $coatjava/etc $coatjava/bin $coatjava/lib* clara-cre/plugins/clas12
 
 # GRAPES:
 echo -e "\nRetrieving GRAPES version $grapes ..."
