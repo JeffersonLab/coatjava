@@ -258,7 +258,7 @@ public class DCTBEngine extends DCEngine {
                     }
                                         
                     // get CovMat at vertex
-                    Point3D VTCS = crosses.get(0).getCoordsInSector(TrackArray1.get_Vtx0().x(), TrackArray1.get_Vtx0().y(), TrackArray1.get_Vtx0().z());
+                    Point3D VTCS = crosses.get(0).getCoordsInTiltedSector(TrackArray1.get_Vtx0().x(), TrackArray1.get_Vtx0().y(), TrackArray1.get_Vtx0().z());
                     TrackArray1.set_CovMat(kFZRef.propagateToVtx(crosses.get(0).get_Sector(), VTCS.z()));
                     
                     double deltaPathToVtx =  kFZRef.getDeltaPathToVtx(TrackArray1.get(TrackArray1.size()-1).get_Sector(), VTCS.z());                                
@@ -302,7 +302,7 @@ public class DCTBEngine extends DCEngine {
                     }
 
                     // get CovMat at vertex
-                    Point3D VTCS = crosses.get(0).getCoordsInSector(TrackArray1.get_Vtx0().x(), TrackArray1.get_Vtx0().y(), TrackArray1.get_Vtx0().z());
+                    Point3D VTCS = crosses.get(0).getCoordsInTiltedSector(TrackArray1.get_Vtx0().x(), TrackArray1.get_Vtx0().y(), TrackArray1.get_Vtx0().z());
                     TrackArray1.set_CovMat(kFZRef.propagateToVtx(crosses.get(0).get_Sector(), VTCS.z()));
                     
                     double deltaPathToVtx =  kFZRef.getDeltaPathToVtx(TrackArray1.get(TrackArray1.size()-1).get_Sector(), VTCS.z());                                
