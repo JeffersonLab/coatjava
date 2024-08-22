@@ -16,7 +16,6 @@ import org.jlab.clara.engine.EngineData;
 import org.jlab.clara.engine.EngineDataType;
 import java.util.Arrays;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
-import org.jlab.utils.JsonUtils;
 import org.json.JSONObject;
 import org.jlab.logging.DefaultLogger;
 import org.jlab.utils.ClaraYaml;
@@ -27,6 +26,8 @@ import org.jlab.utils.ClaraYaml;
  */
 public class EngineProcessor {
 
+    public static final String ENGINE_CLASS_BG = "org.jlab.service.bg.BackgroundEngine";
+    
     private final Map<String,ReconstructionEngine>  processorEngines = new LinkedHashMap<>();
     private static final Logger LOGGER = Logger.getLogger(EngineProcessor.class.getPackage().getName());
     private boolean updateDictionary = true;
@@ -34,6 +35,24 @@ public class EngineProcessor {
     private final List<String> schemaExempt = Arrays.asList("RUN::config","DC::tdc");
 
     public EngineProcessor(){}
+
+    private ReconstructionEngine findEngine(String clazz) {
+        for (String k : processorEngines.keySet()) {
+            if (processorEngines.get(k).getClass().getName().equals(clazz)) {
+                return processorEngines.get(k);
+            }
+        }
+        return null;
+    }
+
+    public void setBackgroundFiles(String filenames) {
+        if (findEngine(ENGINE_CLASS_BG) == null) {
+            LOGGER.info("Adding BackgroundEngine for -B option.");
+            addEngine("BG",ENGINE_CLASS_BG);
+        }
+        findEngine(ENGINE_CLASS_BG).engineConfigMap.put("filename", filenames);
+        findEngine(ENGINE_CLASS_BG).init();
+    }
 
     private void updateDictionary(HipoDataSource source, HipoDataSync sync){
         SchemaFactory fsync = sync.getWriter().getSchemaFactory();
@@ -121,7 +140,6 @@ public class EngineProcessor {
             "org.jlab.service.raster.RasterEngine",
             "org.jlab.rec.cvt.services.CVTEngine",
             "org.jlab.service.ctof.CTOFEngine",
-            //"org.jlab.service.cnd.CNDEngine",
             "org.jlab.service.cnd.CNDCalibrationEngine",
             "org.jlab.service.band.BANDEngine",
             "org.jlab.service.htcc.HTCCReconstructionService",
@@ -324,7 +342,7 @@ public class EngineProcessor {
         parser.addOption("-u","true","update dictionary from writer ? ");
         parser.addOption("-d","1","Debug level [0 - OFF, 1 - ON/default]");
         parser.addOption("-S",null,"schema directory");
-        parser.setDescription("previously known as notsouseful-util");
+        parser.addOption("-B",null,"background file");
 
         parser.parse(args);
 
@@ -380,6 +398,11 @@ public class EngineProcessor {
         if (parser.getOption("-S").stringValue() != null)
             proc.setBanksToKeep(parser.getOption("-S").stringValue());
 
+        // command-line filename for background merging overrides YAML:
+        if (parser.getOption("-B").stringValue() != null)
+            proc.setBackgroundFiles(parser.getOption("-B").stringValue());
+
         proc.processFile(inputFile,outputFile,nskip,nevents);
     }
+
 }
