@@ -406,6 +406,8 @@ public class KFitterStraight extends AKFitter {
 		calcFinalChisq(sector, false);
 	}
     
+        // Since no vertex inforamtion, the starting point for path length is the final point at the last layer.
+        // After vertex information is obtained, transition for the starting point from the final point to vertex will be taken.
 	private void calcFinalChisq(int sector, boolean nofilter) {
         int k = svzLength - 1;
         this.chi2 = 0;

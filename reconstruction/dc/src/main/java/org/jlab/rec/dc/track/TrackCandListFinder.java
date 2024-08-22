@@ -1133,7 +1133,7 @@ public class TrackCandListFinder {
             org.jlab.rec.dc.trajectory.StateVec sv = new org.jlab.rec.dc.trajectory.StateVec(svc.x, svc.y, svc.tx, svc.ty);
             sv.setZ(svc.z);
             sv.setB(svc.B);
-            sv.setPathLength(svc.getPathLength() + deltaPathToVtx);  
+            sv.setPathLength(svc.getPathLength() + deltaPathToVtx);  // Transition for the starting point from the final point at the last layer to vertex
             sv.setProjector(svc.getProjector());
             sv.setProjectorDoca(svc.getProjectorDoca());
             kfStateVecsAlongTrajectory.add(sv);
@@ -1150,7 +1150,7 @@ public class TrackCandListFinder {
             org.jlab.rec.dc.trajectory.StateVec sv = new org.jlab.rec.dc.trajectory.StateVec(svc.x, svc.y, svc.tx, svc.ty);
             sv.setZ(svc.z);
             sv.setB(svc.B);
-            sv.setPathLength(svc.getPathLength() + deltaPathToVtx);  
+            sv.setPathLength(svc.getPathLength() + deltaPathToVtx); // Transition for the starting point from the final point at the last layer to vertex 
             sv.setProjector(svc.getProjector());
             sv.setProjectorDoca(svc.getProjectorDoca());
             kfStateVecsAlongTrajectory.add(sv);

@@ -708,7 +708,9 @@ public class KFitter extends AKFitter {
             return false;
         }
     }
-
+    
+    // Since no vertex inforamtion, the starting point for path length is the final point at the last layer.
+    // After vertex information is obtained, transition for the starting point from the final point to vertex will be taken.
     private boolean filter(int k, boolean forward) {
         StateVec sVec = sv.transported(forward).get(k);
         org.jlab.clas.tracking.kalmanfilter.AMeasVecs.MeasVec mVec = mv.measurements.get(k);
@@ -857,7 +859,9 @@ public class KFitter extends AKFitter {
     private void calcFinalChisq(int sector) {
         calcFinalChisq(sector, false);
     }
-    
+        
+    // Since no vertex inforamtion, the starting point for path length is the final point at the last layer.
+    // After vertex information is obtained, transition for the starting point from the final point to vertex will be taken.
     private void calcFinalChisq(int sector, boolean nofilter) {
         int k = svzLength - 1;
         this.chi2 = 0;
