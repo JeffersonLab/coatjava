@@ -49,7 +49,7 @@
         <version>3.13.0</version>
         <configuration>
           <encoding>UTF-8</encoding>
-          <release>11</release>
+          <release>17</release>
         </configuration>
       </plugin>
       <plugin>
