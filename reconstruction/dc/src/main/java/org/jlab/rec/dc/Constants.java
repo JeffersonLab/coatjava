@@ -94,7 +94,7 @@ public class Constants {
     public  int     SECTORSELECT = 0;
     public  int     NSUPERLAYERTRACKING = 5;
     private boolean USETSTART = true;
-    private boolean USETIMETBETA = false;
+    //private boolean USETIMETBETA = false;
     private boolean CHECKBETA = false;
     private int     T2D = 1;     // 1=polynomial, 0=exponential
     private boolean USEDOUBLETS = false;
@@ -296,13 +296,13 @@ public class Constants {
         USETSTART = usetstart;
     }
     
-    public boolean useUSETIMETBETA() {
-        return USETIMETBETA;
-    }
-
-    public void setUSETIMETBETA(boolean usetimebeta) {
-        USETIMETBETA = usetimebeta;
-    }
+//    public boolean useUSETIMETBETA() {
+//        return USETIMETBETA;
+//    }
+//
+//    public void setUSETIMETBETA(boolean usetimebeta) {
+//        USETIMETBETA = usetimebeta;
+//    }
        
     public double getWIREDIST() {
         return WIREDIST;
@@ -429,7 +429,7 @@ public class Constants {
         LOGGER.log(Level.INFO, "["+engine+"] run with wire ministagger = "  + MINISTAGGERSTATUS.getName());
         LOGGER.log(Level.INFO, "["+engine+"] run with wire feedthroughs = " + FEEDTHROUGHSSTATUS.getName());
         LOGGER.log(Level.INFO, "["+engine+"] run with wire distortions = " + ENDPLATESBOWING);
-        LOGGER.log(Level.INFO, "["+engine+"] run with with time Beta correction (is false for doca Beta correction) = " + USETIMETBETA);
+        //LOGGER.log(Level.INFO, "["+engine+"] run with with time Beta correction (is false for doca Beta correction) = " + USETIMETBETA);
         LOGGER.log(Level.INFO, "["+engine+"] run with with Beta cut = " + CHECKBETA);
         LOGGER.log(Level.INFO, "["+engine+"] run with time to distance function set to exponential/polynomial (0/1) = " + T2D);
         LOGGER.log(Level.INFO, "["+engine+"] run with with hit doublets recovery = " + USEDOUBLETS);
