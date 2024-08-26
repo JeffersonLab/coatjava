@@ -3,10 +3,6 @@
 #ulimit -u 49152
 set -e
 
-export CLAS12DIR=${CLARA_HOME}/plugins/clas12
-export PATH=${PATH}:$CLAS12DIR/bin
-unset CLARA_MONITOR_FE
-
 inputdir=.
 outputdir=.
 threads=2
@@ -31,16 +27,17 @@ function error() {
     exit 1
 }
 
-clara_home="$args"
 [ "${#args[@]}" -lt 1 ] && error "Missing PATH argument"
 [ "${#args[@]}" -gt 1 ] && error "Extra PATH arguments:  ${args[@]:1}"
-[ ! -e "$clara_home" ]  && error "Missing installation PATH:  $clara_home"
+export CLARA_HOME="$args"
+[ ! -e "$CLARA_HOME" ]  && error "Missing installation PATH:  $CLARA_HOME"
 [ -z ${yaml+x} ] && error "-y YAML must be specified."
 [ -r $yaml ] || error "YAML file does not exist."
 [ -d $inputdir ] || error "Input dir does not exist."
 
 [ $threads -eq 0 ] && threads=`grep -c ^processor /proc/cpuinfo`
 
+unset CLARA_MONITOR_FE
 export CLARA_USER_DATA=$(mktemp -d $outputdir/run-clara.tmp.XXXXXX)
 cd $CLARA_USER_DATA
 mkdir -p $CLARA_USER_DATA/log
