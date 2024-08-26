@@ -59,11 +59,9 @@ public class HipoToHipoWriter extends AbstractEventWriterService<HipoWriterSorte
             schemaDir = envSubstitutor.replace(schemaDir);
             System.out.printf("%s service: schema directory = %s%n", getName(), schemaDir);
         }
-        
+
         SchemaFactory factory = new SchemaFactory();
         factory.initFromDirectory(schemaDir);
-        
-        //writer.getSchemaFactory().initFromDirectory(schemaDir);
 
         if(opts.has(CONF_SCHEMA_WILDCARD)==true){
             String wildcard = opts.getString("wildcard");
