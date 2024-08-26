@@ -31,27 +31,24 @@ public class PostprocEngine extends ReconstructionEngine {
         requireConstants(Processor.CCDB_TABLES);
         if (getEngineConfigString(CONF_PRELOAD_FILE) != null) {
             if (getEngineConfigString(CONF_PRELOAD_DIR) != null)
-                logger.warning("PostprocEngine::  Using preloadFile, ignoring preloadDir.");
+                logger.warning("PostprocEngine::  Ignoring preloadDir, using preloadFile.");
             processor = new Processor(new File(getEngineConfigString(CONF_PRELOAD_FILE)),
-                Boolean.parseBoolean(getEngineConfigString(CONF_RESTREAM_HELICITY,"false")));
+                Boolean.parseBoolean(getEngineConfigString(CONF_RESTREAM_HELICITY,"false")),
+                Boolean.parseBoolean(getEngineConfigString(CONF_REBUILD_SCALERS,"true")));
         }
-        if (getEngineConfigString(CONF_PRELOAD_DIR) != null) {
+        else if (getEngineConfigString(CONF_PRELOAD_DIR) != null) {
             processor = new Processor(
                 getEngineConfigString(CONF_PRELOAD_DIR),
                 getEngineConfigString(CONF_PRELOAD_GLOB, Processor.DEF_PRELOAD_GLOB),
-                Boolean.parseBoolean(getEngineConfigString(CONF_RESTREAM_HELICITY,"false")));
-        }
-        if (null != getEngineConfigString(CONF_REBUILD_SCALERS)) {
-            if (Boolean.getBoolean(getEngineConfigString(CONF_REBUILD_SCALERS))) {
-                //processor.rebuildAndReplace();
-            }
+                Boolean.parseBoolean(getEngineConfigString(CONF_RESTREAM_HELICITY,"false")),
+                Boolean.parseBoolean(getEngineConfigString(CONF_REBUILD_SCALERS,"true")));
         }
         return true;
     }
 
     @Override
     public boolean processDataEvent(DataEvent event) {
-        if (processor != null) processor.processEvent(event);
+        processor.processEvent(event);
         return true;
     }
 
