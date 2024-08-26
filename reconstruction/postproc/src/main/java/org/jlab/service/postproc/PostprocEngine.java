@@ -34,14 +34,14 @@ public class PostprocEngine extends ReconstructionEngine {
                 logger.warning("PostprocEngine::  Ignoring preloadDir, using preloadFile.");
             processor = new Processor(new File(getEngineConfigString(CONF_PRELOAD_FILE)),
                 Boolean.parseBoolean(getEngineConfigString(CONF_RESTREAM_HELICITY,"false")),
-                Boolean.parseBoolean(getEngineConfigString(CONF_REBUILD_SCALERS,"true")));
+                Boolean.parseBoolean(getEngineConfigString(CONF_REBUILD_SCALERS,"false")));
         }
         else if (getEngineConfigString(CONF_PRELOAD_DIR) != null) {
             processor = new Processor(
                 getEngineConfigString(CONF_PRELOAD_DIR),
                 getEngineConfigString(CONF_PRELOAD_GLOB, Processor.DEF_PRELOAD_GLOB),
                 Boolean.parseBoolean(getEngineConfigString(CONF_RESTREAM_HELICITY,"false")),
-                Boolean.parseBoolean(getEngineConfigString(CONF_REBUILD_SCALERS,"true")));
+                Boolean.parseBoolean(getEngineConfigString(CONF_REBUILD_SCALERS,"false")));
         }
         return true;
     }
