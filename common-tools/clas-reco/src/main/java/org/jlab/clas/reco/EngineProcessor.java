@@ -55,12 +55,14 @@ public class EngineProcessor {
         findEngine(ENGINE_CLASS_BG).init();
     }
 
-    private void setPreloadFiles(String filenames) {
+    private void setPreloadFiles(String filenames, boolean restream, boolean rebuild) {
         if (findEngine(ENGINE_CLASS_PP) == null) {
             LOGGER.info("Adding PostprocEngine for -P option.");
             addEngine("BG",ENGINE_CLASS_PP);
         }
         findEngine(ENGINE_CLASS_PP).engineConfigMap.put("preloadFile", filenames);
+        findEngine(ENGINE_CLASS_PP).engineConfigMap.put("restream", String.valueOf(restream));
+        findEngine(ENGINE_CLASS_PP).engineConfigMap.put("rebuild", String.valueOf(rebuild));
         findEngine(ENGINE_CLASS_PP).init();
     }
 
@@ -354,6 +356,8 @@ public class EngineProcessor {
         parser.addOption("-S",null,"schema directory");
         parser.addOption("-B",null,"background file");
         parser.addOption("-P",null,"preload file for post-processing");
+        parser.addOption("-R","0","rebuild scalers");
+        parser.addOption("-H","0","restream helicity");
 
         parser.parse(args);
 
@@ -414,8 +418,11 @@ public class EngineProcessor {
             proc.setBackgroundFiles(parser.getOption("-B").stringValue());
         
         // command-line filename for post-processing overrides YAML:
-        if (parser.getOption("-P").stringValue() != null)
-            proc.setPreloadFiles(parser.getOption("-P").stringValue());
+        if (parser.getOption("-P").stringValue() != null) {
+            proc.setPreloadFiles(parser.getOption("-P").stringValue(),
+                parser.getOption("-H").intValue()!=0,
+                parser.getOption("-R").intValue()!=0);
+        }
 
         proc.processFile(inputFile,outputFile,nskip,nevents);
     }
