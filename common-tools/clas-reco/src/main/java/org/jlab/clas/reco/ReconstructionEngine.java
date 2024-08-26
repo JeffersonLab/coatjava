@@ -129,6 +129,10 @@ public abstract class ReconstructionEngine implements Engine {
         }
     }
 
+    public void requireConstants(String... tables){
+        requireConstants(Arrays.asList(tables));
+    }
+
     public final String getEngineConfiguration(){
         return this.engineConfiguration;
     }
