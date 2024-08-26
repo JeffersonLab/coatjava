@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.logging.Logger;
+import org.jlab.detector.calib.utils.ConstantsManager;
 
 import org.jlab.jnp.hipo4.io.HipoReader;
 import org.jlab.jnp.hipo4.data.Event;
@@ -27,6 +29,8 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
     
     private Bank rcfgBank=null;
   
+    static final Logger logger = Logger.getLogger(DaqScalersSequence.class.getName());
+    
     public static class Interval {
         private DaqScalers previous = null;
         private DaqScalers next = null;
@@ -187,6 +191,7 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
      * @return  sequence
      */
     public static DaqScalersSequence readSequence(List<String> filenames) {
+        logger.info("DaqScalersSequence::  Reading scaler sequence from "+String.join(",", filenames));
        
         DaqScalersSequence seq=new DaqScalersSequence();
 
@@ -227,6 +232,38 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
             reader.close();
         }
         
+        return seq;
+    }
+   
+    /**
+     * 
+     * @param tags
+     * @param conman
+     * @param filenames
+     * @return 
+     */
+    public static DaqScalersSequence rebuildSequence(int tags, ConstantsManager conman, List<String> filenames) {
+        logger.info("DaqScalersSequence::  Rebuilding scaler sequence from "+String.join(",", filenames));
+        DaqScalersSequence seq=new DaqScalersSequence();
+        for (String filename : filenames) {
+            HipoReader reader = new HipoReader();
+            reader.setTags(tags);
+            reader.open(filename);
+            SchemaFactory schema = reader.getSchemaFactory();
+            if (seq.rcfgBank==null)
+                seq.rcfgBank = new Bank(schema.getSchema("RUN::config"));
+            while (reader.hasNext()) {
+                Event event=new Event();
+                Bank scaler=new Bank(schema.getSchema("RAW::scaler"));
+                Bank config=new Bank(schema.getSchema("RUN::config"));
+                reader.nextEvent(event);
+                event.read(scaler);
+                event.read(config);
+                if (scaler.getRows()<1 || config.getRows()<1) continue;
+                seq.add(DaqScalers.create(conman, config, scaler));
+            }
+            reader.close();
+        }
         return seq;
     }
     
