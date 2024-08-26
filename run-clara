@@ -1,0 +1,63 @@
+#!/bin/bash
+
+#ulimit -u 49152
+set -e
+
+export CLAS12DIR=${CLARA_HOME}/plugins/clas12
+export PATH=${PATH}:$CLAS12DIR/bin
+unset CLARA_MONITOR_FE
+
+inputdir=.
+outputdir=.
+threads=2
+usage="asdf"
+info="qwer"
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -h) echo -e "\n$usage" && echo -e "\n$info" && exit 1 ;;
+        -i) inputdir="$2" && shift && shift ;;
+        -o) outputdir="$2" && shift && shift ;;
+        -t) threads="$2" && shift && shift ;;
+        -n) nevents="$2" && shift && shift ;;
+        -y) yaml="$2" && shift && shift ;;
+        -*|--*)  echo -e "$usage\n\nUnknown option:  $1" && exit 1 ;;
+        *) args+=("$1") && shift ;;
+    esac
+done
+
+function error() {
+    echo -e "\n$usage\n\nERROR:  $@"
+    exit 1
+}
+
+clara_home="$args"
+[ "${#args[@]}" -lt 1 ] && error "Missing PATH argument"
+[ "${#args[@]}" -gt 1 ] && error "Extra PATH arguments:  ${args[@]:1}"
+[ ! -e "$clara_home" ]  && error "Missing installation PATH:  $clara_home"
+[ -z ${yaml+x} ] && error "-y YAML must be specified."
+[ -r $yaml ] || error "YAML file does not exist."
+[ -d $inputdir ] || error "Input dir does not exist."
+
+[ $threads -eq 0 ] && threads=`grep -c ^processor /proc/cpuinfo`
+
+export CLARA_USER_DATA=$(mktemp -d $outputdir/run-clara.tmp.XXXXXX)
+cd $CLARA_USER_DATA
+mkdir -p $CLARA_USER_DATA/log
+mkdir -p $CLARA_USER_DATA/config
+mkdir -p $CLARA_USER_DATA/data/output
+
+find $inputdir -maxdepth 1 -type f -name '*.hipo' | sed 's;^\./;;' | sort > filelist.txt
+[ $(stat -L -c%s filelist.txt) -gt 0 ] || error "Found no input files"
+
+$CLARA_HOME/lib/clara/run-clara \
+        -i $inputdir \
+        -o $CLARA_USER_DATA \
+        -z rec_ \
+        -x $CLARA_USER_DATA/log \
+        -t $threads \
+        $nevents \
+        -s recon \
+        $yaml \
+        ./filelist.txt
+
