@@ -21,7 +21,7 @@ defaults:
     shell: bash
 
 env:
-  java_version: 17
+  java_version: 21
   java_distribution: zulu
   javadoc_version: 24 # newer than `java_version` for better javadoc
   groovy_version: 4.x
