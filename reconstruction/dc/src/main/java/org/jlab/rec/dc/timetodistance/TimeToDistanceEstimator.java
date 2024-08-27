@@ -105,7 +105,6 @@ public class TimeToDistanceEstimator {
         }
         double BLo = BfieldValues[BfLo];
         double BHi = BfieldValues[BfHi];
-
          // get the alpha bins	
         int alphaBin = this.getAlphaIdx(alpha); 
         int alphaLo = 0;
@@ -163,22 +162,22 @@ public class TimeToDistanceEstimator {
         double f_B_alpha_beta_t = interpolateLinear(t, timeLo, timeHi, f_B_alpha_beta_t1, f_B_alpha_beta_t2);
         
         double x = f_B_alpha_beta_t;
-        String st =new String();
-        st +="time "+t+" beta "+beta+" BETA: ["+betaValueLo+" "+betaCent+" "+betaValueHigh+"]"+" alpha "+alpha+"\n";
-        st +=(" f_B_alpha1_beta1_t1 "+f_B_alpha1_beta1_t1+" f_B_alpha2_beta1_t1 "+f_B_alpha2_beta1_t1+"\n");
-        st +=(" f_B_alpha1_beta2_t1 "+f_B_alpha1_beta2_t1+" f_B_alpha2_beta2_t1 "+f_B_alpha2_beta2_t1+"\n");
-        st +=(" f_B_alpha1_beta1_t2 "+f_B_alpha1_beta1_t2+" f_B_alpha2_beta1_t2 "+f_B_alpha2_beta1_t2+"\n");
-        st +=(" f_B_alpha1_beta2_t2 "+f_B_alpha1_beta2_t2+" f_B_alpha2_beta2_t2 "+f_B_alpha2_beta2_t2+"\n");       
-        st +=(" f_B_alpha_beta1_t1 "+f_B_alpha_beta1_t1+" f_B_alpha_beta2_t1 "+f_B_alpha_beta2_t1+"\n");
-        st +=(" f_B_alpha_beta1_t2 "+f_B_alpha_beta1_t2+" f_B_alpha_beta2_t2 "+f_B_alpha_beta2_t2+"\n");
-        st +=(" f_B_alpha_beta_t1 "+f_B_alpha_beta_t1+" f_B_alpha_beta_t2 "+f_B_alpha_beta_t2+"\n");
-        st +=(" f_B_alpha_t "+f_B_alpha_beta_t+"\n");
+//        String st =new String();
+//        st +="time "+t+" beta "+beta+" BETA: ["+betaValueLo+" "+betaCent+" "+betaValueHigh+"]"+" alpha "+alpha+"\n";
+//        st +=(" f_B_alpha1_beta1_t1 "+f_B_alpha1_beta1_t1+" f_B_alpha2_beta1_t1 "+f_B_alpha2_beta1_t1+"\n");
+//        st +=(" f_B_alpha1_beta2_t1 "+f_B_alpha1_beta2_t1+" f_B_alpha2_beta2_t1 "+f_B_alpha2_beta2_t1+"\n");
+//        st +=(" f_B_alpha1_beta1_t2 "+f_B_alpha1_beta1_t2+" f_B_alpha2_beta1_t2 "+f_B_alpha2_beta1_t2+"\n");
+//        st +=(" f_B_alpha1_beta2_t2 "+f_B_alpha1_beta2_t2+" f_B_alpha2_beta2_t2 "+f_B_alpha2_beta2_t2+"\n");       
+//        st +=(" f_B_alpha_beta1_t1 "+f_B_alpha_beta1_t1+" f_B_alpha_beta2_t1 "+f_B_alpha_beta2_t1+"\n");
+//        st +=(" f_B_alpha_beta1_t2 "+f_B_alpha_beta1_t2+" f_B_alpha_beta2_t2 "+f_B_alpha_beta2_t2+"\n");
+//        st +=(" f_B_alpha_beta_t1 "+f_B_alpha_beta_t1+" f_B_alpha_beta_t2 "+f_B_alpha_beta_t2+"\n");
+//        st +=(" f_B_alpha_t "+f_B_alpha_beta_t+"\n");
         
         double dmax = 2.*Constants.getInstance().wpdist[SlyrIdx];
-        st +=(" x "+x+" dmax "+dmax+"\n");
+//        st +=(" x "+x+" dmax "+dmax+"\n");
         
         if(x>dmax) {
-            setDebug(st);
+//            setDebug(st);
             return dmax;
         }
         
@@ -186,7 +185,7 @@ public class TimeToDistanceEstimator {
         double calctime = calc_Time( x,  alpha, B, SecIdx+1,  SlyrIdx+1) ;
         double deltatime_beta = TableLoader.getDeltaTimeBeta(x,beta,TableLoader.distbeta[SecIdx][SlyrIdx],TableLoader.v0[SecIdx][SlyrIdx]);
         calctime+=deltatime_beta;
-        st +=(" t "+t+" calctime "+calctime+" deltatime_beta "+deltatime_beta+"\n");
+//        st +=(" t "+t+" calctime "+calctime+" deltatime_beta "+deltatime_beta+"\n");
         if(calctime>t)   {     
             double tref=0;
             for(int i = 1; i<100; i++) {
@@ -195,11 +194,15 @@ public class TimeToDistanceEstimator {
                 calctime = calc_Time( x,  alpha, B, SecIdx+1,  SlyrIdx+1) ;
                 deltatime_beta = TableLoader.getDeltaTimeBeta(x,beta,TableLoader.distbeta[SecIdx][SlyrIdx],TableLoader.v0[SecIdx][SlyrIdx]);
                 calctime+=deltatime_beta;
-                st +=(i+"] x "+x+" t "+t+" calct "+calctime+"\n");
+//                st +=(i+"] x "+x+" t "+t+" calct "+calctime+"\n");
                 if(calctime<t) {
-                    double xi=this.interpolateLinear(t, tref, calctime, x+0.0001*i, x);
-                    st +=("xi "+xi+" t "+t+" calct "+calctime+"\n");
-                    setDebug(st);
+                    if(tref==0) {
+                        tref=calc_Time(x+0.0001*i,  alpha, B, SecIdx+1,  SlyrIdx+1) +
+                                TableLoader.getDeltaTimeBeta(x+0.0001*i,beta,TableLoader.distbeta[SecIdx][SlyrIdx],TableLoader.v0[SecIdx][SlyrIdx]);             
+                    }
+                    double xi=this.interpolateLinear(t, calctime, tref, x, x+0.0001*i);
+//                    st +=("xi "+xi+" t "+t+" calct "+calctime+" tref "+tref+"\n");
+//                    setDebug(st);
                     return xi;
                 }
                 tref=calctime;
@@ -212,15 +215,19 @@ public class TimeToDistanceEstimator {
                 calctime = calc_Time( x,  alpha, B, SecIdx+1,  SlyrIdx+1) ;
                 deltatime_beta = TableLoader.getDeltaTimeBeta(x,beta,TableLoader.distbeta[SecIdx][SlyrIdx],TableLoader.v0[SecIdx][SlyrIdx]);
                 calctime+=deltatime_beta;
-                st +=(i+"] x "+x+" t "+t+" calct "+calctime+"\n");
+//                st +=(i+"] x "+x+" t "+t+" calct "+calctime+"\n");
                 if(x>dmax) {
-                   setDebug(st);
+//                   setDebug(st);
                    return dmax;
                 } 
                 if(t<calctime) {
+                    if(tref==0) {
+                        tref=calc_Time(x-0.0001*i,  alpha, B, SecIdx+1,  SlyrIdx+1) +
+                                TableLoader.getDeltaTimeBeta(x-0.0001*i,beta,TableLoader.distbeta[SecIdx][SlyrIdx],TableLoader.v0[SecIdx][SlyrIdx]);             
+                    }
                     double xi=this.interpolateLinear(t, tref, calctime, x-0.0001*i, x);
-                    st +=("xi "+xi+" t "+t+" calct "+calctime+"\n");
-                    setDebug(st);
+//                    st +=(".xi "+xi+" t "+t+" calct "+calctime+" tref "+tref+"\n");
+//                    setDebug(st);
                     return xi;
                 }
                 tref=calctime;

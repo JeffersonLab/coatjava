@@ -6,10 +6,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.freehep.math.minuit.MnUserParameters;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.base.GeometryFactory;
 import org.jlab.geom.base.ConstantProvider;
 import org.jlab.groot.data.H1F;
+import org.jlab.groot.data.H2F;
+import org.jlab.groot.fitter.ParallelSliceFitter;
+import org.jlab.groot.math.Func1D;
 import org.jlab.groot.ui.TCanvas;
 import org.jlab.rec.dc.Constants;
 import static org.jlab.rec.dc.timetodistance.T2DFunctions.polyFcnMac;
@@ -61,75 +65,134 @@ public class TableLoader {
     
     public static void test(){
         
+        plotFcns();
+        
         TimeToDistanceEstimator tde = new TimeToDistanceEstimator();
         
         double[] beta = new double[]{0.65, 0.66, 0.67, 0.68, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0};
         double[] Bfield = new double[]{0.0, 0.5, 1.0, 1.2, 1.3, 1.4, 1.5, 2.0, 2.1, 2.15, 2.2, 2.25, 2.26, 2.27, 2.28, 2.29, 2.3};
-        double[] htmax = new double[]{200,250,2500,2600,720,800};
-        //map for beta values:
-        Map<Double, List<H1F>> tmap = new HashMap<>();
-        Map<Double, List<H1F>> dmap = new HashMap<>();
-        for(int b=0; b<beta.length; b++) {
-            List<H1F> hts = new ArrayList<>(); //histo to check table and interp. from time to idistance (by interpolation)
+        double[] htmax = new double[]{200,210,1050,1200,720,800};
+        double[] hdmax = new double[] {0.77, 0.8, 1.1, 1.2, 1.8, 1.84};
+
+        List<H1F> hts = new ArrayList<>(); //histo to check table and interp. from time to idistance (by interpolation)
                                            //to calculated time (from dist.to t) in seconds; as a function of time
-            List<H1F> hds = new ArrayList<>(); //histo to check table and interp. from distance to calculated time (from dist.to t) 
-                                            //to idistance (by interpolation) in microns; as a function of distance
-            
-            for(int r = 0; r<6; r++ ){ //loop over slys
-                hts.add(new H1F("ht"+(r+1), "time resolution (ns)", "Counts/0.02 ns", 100, -1.0,1.0));
-                hds.add(new H1F("ht"+(r+1), "doca resolution (um)", "Counts/0.02 um", 100, -1.0,1.0));
-            }
-            tmap.put(beta[b], hts);
-            dmap.put(beta[b], hds);
-        } 
-        
-        
-        for(int b=0; b<beta.length; b++) {
-            for(int r = 0; r<6; r++ ){ //loop over slys
-                int s=0;
-                double dmax = 2.*Constants.getInstance().wpdist[r]; 
-                int maxBidx = Bfield.length;
-                for(int ibfield =0; ibfield<maxBidx; ibfield++) {
-                    double Bf = Bfield[ibfield]; Bf=0;
-                    for(int icosalpha =0; icosalpha<maxBinIdxAlpha+1; icosalpha++) {
-                        double alpha = -(Math.toDegrees(Math.acos(Math.cos(Math.toRadians(30.)) + (icosalpha)*(1. - Math.cos(Math.toRadians(30.)))/5.)) - 30.);
-                        for(int t =0; t<htmax[s]; t++)  {
+        List<H1F> hds = new ArrayList<>(); //histo to check table and interp. from distance to calculated time (from dist.to t) 
+                                           //to idistance (by interpolation) in microns; as a function of distance
+        List<H2F> hd2s = new ArrayList<>();// as s function of distance   
+        List<H2F> ht2d = new ArrayList<>();// time to distance from interpolation 
+        for(int r = 0; r<6; r++ ){ //loop over slys
+            hts.add(new H1F("ht"+(r+1), "time resolution (ns)", "Counts/0.1 ns", 40, -2.0,2.0));
+            hds.add(new H1F("hd"+(r+1), "doca resolution (um)", "Counts/0.1 um", 40, -2.0,2.0));
+            //public H2F(String name, String title, int bx, double xmin, double xmax, int by, double ymin, double ymax)
+            hd2s.add(new H2F("hd2"+(r+1), "doca resolution (um) vs doca (cm)", (int)(hdmax[r]*100), 0, hdmax[r], 40, -2.0,2.0));
+            ht2d.add(new H2F("ht2d"+(r+1), "time(time (ns) vs doca (cm)", (int)htmax[r], 0, htmax[r], (int)(hdmax[r]*100), 0, hdmax[r]));
+        }
+       
+        for(int r = 0; r<6; r++ ){ //loop over slys
+            int s=0;
+            double dmax = 2.*Constants.getInstance().wpdist[r]; 
+            int maxBidx = Bfield.length; 
+            if(r<2 || r>3) maxBidx=1;
+            for(int ibfield =0; ibfield<maxBidx; ibfield++) {
+                double Bf = Bfield[ibfield]; 
+                for(int icosalpha =0; icosalpha<maxBinIdxAlpha+1; icosalpha++) {
+                    double alpha = -(Math.toDegrees(Math.acos(Math.cos(Math.toRadians(30.)) + (icosalpha)*(1. - Math.cos(Math.toRadians(30.)))/5.)) - 30.);
+                    for(int b=0; b<beta.length; b++) {
+                        for(int t =0; t<htmax[r]; t++)  {
                             double time = (double) t;
                             double idist = tde.interpolateOnGrid(Bf, alpha, beta[b], time, s, r);
+                            ht2d.get(r).fill(time, idist);
                             if(idist<dmax) { 
                                 double calct = calc_Time( idist,  alpha, Bf, s+1, r+1) +
                                     getDeltaTimeBeta(idist,beta[b],distbeta[s][r],v0[s][r]);
-                                double deltaT = time-calct;
-                                tmap.get(beta[b]).get(r).fill(deltaT);
+                                double deltaT = time-calct; 
+                                hts.get(r).fill(deltaT);
                             }
                         }
-                        
-                        for(int d =10; d<(int)(dmax*10000); d++) {
-                            double dist = (double) d/10000; 
+
+                        for(int d =0; d<(int)(hdmax[r]*1000); d++) {
+                            double dist = (double) d/1000; 
                             double calct = calc_Time( dist,  alpha, Bf, s+1, r+1) +
                                     getDeltaTimeBeta(dist,beta[b],distbeta[s][r],v0[s][r]); 
                             double idist = tde.interpolateOnGrid(Bf, alpha, beta[b], calct, s, r); 
                             double deltaD = dist-idist;
-                            dmap.get(beta[b]).get(r).fill(deltaD*10000);
+                            hds.get(r).fill(deltaD*10000);
+                            hd2s.get(r).fill(dist, deltaD*10000);
                         } 
                     }
                 }
             }
+            System.out.println("Done filling histograms for superlayer "+(r+1));
         }
-        TCanvas TCan = new TCanvas("Time resolution", 1200, 800);
-        TCanvas DCan = new TCanvas("Distance resolution", 1200, 800);
-        TCan.divide(6, beta.length);
-        DCan.divide(6, beta.length);
+        System.out.println("Done");
+        TCanvas T2DCan = new TCanvas("Time resolution", 1600, 1200);
+        TCanvas TCan = new TCanvas("Time resolution", 1600, 1200);
+        TCanvas DCan = new TCanvas("Distance resolution", 1600, 1200);
+        TCanvas DCan2 = new TCanvas("Distance resolution", 1600, 1200);
+        
+        TCan.divide(3, 2);
+        T2DCan.divide(3, 2);
+        DCan.divide(3, 2);
+        DCan2.divide(3, 2);
         int ci=0;
-        for(int b=0; b<beta.length; b++) {
-            for(int s = 0; s<6; s++ ){ // loop over sectors
-                TCan.cd(ci);
-                TCan.draw(tmap.get(beta[b]).get(s));
-                DCan.cd(ci);
-                DCan.draw(dmap.get(beta[b]).get(s));
-                ci++;
+        for(int sl = 0; sl<6; sl++ ){ // loop over sectors
+            T2DCan.cd(ci);
+            T2DCan.getPad().getAxisZ().setLog(true);
+            T2DCan.draw(ht2d.get(sl));
+            TCan.cd(ci);
+            TCan.draw(hts.get(sl));
+            DCan.cd(ci);
+            DCan.draw(hds.get(sl));
+            DCan2.cd(ci);
+            //DCan2.getPad().getAxisZ().setLog(true);
+            DCan2.draw(hd2s.get(sl));
+            
+            ci++;
+        }
+    }
+    
+    private static synchronized void plotFcns(){
+        TCanvas CanD2T = new TCanvas("Distance to Time Functions", 1600, 1200);
+        CanD2T.divide(3, 2);
+        Map<String, FitLine> fmap =  new HashMap<>();
+        for (int i = 0; i < 6; i++) {
+            CanD2T.cd(i);
+            double[] pars = new double[11];
+            pars[0] = TableLoader.v0[0][i];
+            pars[1] = TableLoader.vmid[0][i];
+            pars[2] = TableLoader.FracDmaxAtMinVel[0][i];
+            pars[3] = TableLoader.Tmax[0][i];
+            pars[4] = TableLoader.distbeta[0][i];
+            pars[5] = TableLoader.delta_bfield_coefficient[0][i];
+            pars[6] = TableLoader.b1[0][i];
+            pars[7] = TableLoader.b2[0][i];
+            pars[8] = TableLoader.b3[0][i];
+            pars[9] = TableLoader.b4[0][i];
+            pars[10] = 2.*Constants.getInstance().wpdist[i];//fix dmax
+            
+            for(int j =0; j<maxBinIdxAlpha+1; j++) {
+                double cos30minusalpha = Math.cos(Math.toRadians(30.)) + (double) (j)*(1. - Math.cos(Math.toRadians(30.)))/5.;
+                double alpha = -(Math.toDegrees(Math.acos(cos30minusalpha)) - 30);
+                int maxBidx = BfieldValues.length;
+                for(int k =0; k<maxBidx; k++) {
+                    if(k>0 && (i<2 || i>3) ) continue;
+                    String name = "f";
+                    name+=i;
+                    name+=".";
+                    name+=j;
+                    name+=".";
+                    name+=k;
+                    fmap.put(name, new FitLine(name, 0, pars[10],  0, i, 3, alpha, BfieldValues[k]));
+                    fmap.get(name).setLineWidth(2);
+                    fmap.get(name).setLineColor(k+1);
+                    fmap.get(name).setRange(0, pars[10]);  
+                    fmap.get(name).getAttributes().setTitleX("doca (cm)");
+                    fmap.get(name).getAttributes().setTitleY("time (ns)");
+                    CanD2T.draw(fmap.get(name), "same");
+                }
             }
         }
+        
     }
     
     private static int getAlphaBin(double Alpha) {
@@ -346,4 +409,29 @@ public class TableLoader {
     public static double[][] Tmax = new double[6][6];
     public static double[][] FracDmaxAtMinVel = new double[6][6];	
 
+    private static class FitLine extends Func1D {
+        
+        public FitLine(String name, double min, double max,
+                int s, int r, int ibeta, double alpha, double bfield) {
+             super(name, min, max);
+            this.s = s;
+            this.r = r;
+            this.ibeta = ibeta;
+            this.alpha = alpha;
+            this.bfield = bfield;
+        }
+        private final double alpha;
+        private final double bfield;
+        private final int ibeta;
+        private final int s;
+        private final int r;
+        
+        @Override
+        public double evaluate(double x) { 
+            double timebfield = calc_Time( x,  alpha, bfield, s+1, r+1) ;
+            double deltatime_beta = getDeltaTimeBeta(x,betaValues[ibeta],distbeta[s][r],v0[s][r]);
+            timebfield+=deltatime_beta;
+            return timebfield;
+        }
+    }
 }
