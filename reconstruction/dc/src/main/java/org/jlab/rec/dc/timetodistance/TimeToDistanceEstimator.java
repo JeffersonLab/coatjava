@@ -67,7 +67,6 @@ public class TimeToDistanceEstimator {
         }
         double timeLo=2*tLo+1;
         double timeHi=2*tHi+1;
-        
         //get the beta bins
         int binBeta = this.getBetaIdx(beta);
         int betaLo = 0;
@@ -123,7 +122,6 @@ public class TimeToDistanceEstimator {
                 alphaHi = TableLoader.maxBinIdxAlpha;
             }
         }
-        
         double alphaValueLo = this.getAlphaFromAlphaIdx(alphaLo);	 
         double alphaValueHi = this.getAlphaFromAlphaIdx(alphaHi); 
         
@@ -165,25 +163,30 @@ public class TimeToDistanceEstimator {
         double f_B_alpha_beta_t = interpolateLinear(t, timeLo, timeHi, f_B_alpha_beta_t1, f_B_alpha_beta_t2);
         
         double x = f_B_alpha_beta_t;
-        
-//        System.out.println(" f_B_alpha1_beta1_t1 "+f_B_alpha1_beta1_t1+" f_B_alpha2_beta1_t1 "+f_B_alpha2_beta1_t1);
-//        System.out.println(" f_B_alpha1_beta2_t1 "+f_B_alpha1_beta2_t1+" f_B_alpha2_beta2_t1 "+f_B_alpha2_beta2_t1);
-//        System.out.println(" f_B_alpha1_beta1_t2 "+f_B_alpha1_beta1_t2+" f_B_alpha2_beta1_t2 "+f_B_alpha2_beta1_t2);
-//        System.out.println(" f_B_alpha1_beta2_t2 "+f_B_alpha1_beta2_t2+" f_B_alpha2_beta2_t2 "+f_B_alpha2_beta2_t2);
-//         
-//        System.out.println(" f_B_alpha_beta1_t1 "+f_B_alpha_beta1_t1+" f_B_alpha_beta2_t1 "+f_B_alpha_beta2_t1);
-//        System.out.println(" f_B_alpha_beta1_t2 "+f_B_alpha_beta1_t2+" f_B_alpha_beta2_t2 "+f_B_alpha_beta2_t2);
-//        
-//        System.out.println(" f_B_alpha_beta_t1 "+f_B_alpha_beta_t1+" f_B_alpha_beta_t2 "+f_B_alpha_beta_t2);
-//        
-//        System.out.println(" f_B_alpha_t "+f_B_alpha_beta_t);
+        String st =new String();
+        st +="time "+t+" beta "+beta+" BETA: ["+betaValueLo+" "+betaCent+" "+betaValueHigh+"]"+" alpha "+alpha+"\n";
+        st +=(" f_B_alpha1_beta1_t1 "+f_B_alpha1_beta1_t1+" f_B_alpha2_beta1_t1 "+f_B_alpha2_beta1_t1+"\n");
+        st +=(" f_B_alpha1_beta2_t1 "+f_B_alpha1_beta2_t1+" f_B_alpha2_beta2_t1 "+f_B_alpha2_beta2_t1+"\n");
+        st +=(" f_B_alpha1_beta1_t2 "+f_B_alpha1_beta1_t2+" f_B_alpha2_beta1_t2 "+f_B_alpha2_beta1_t2+"\n");
+        st +=(" f_B_alpha1_beta2_t2 "+f_B_alpha1_beta2_t2+" f_B_alpha2_beta2_t2 "+f_B_alpha2_beta2_t2+"\n");       
+        st +=(" f_B_alpha_beta1_t1 "+f_B_alpha_beta1_t1+" f_B_alpha_beta2_t1 "+f_B_alpha_beta2_t1+"\n");
+        st +=(" f_B_alpha_beta1_t2 "+f_B_alpha_beta1_t2+" f_B_alpha_beta2_t2 "+f_B_alpha_beta2_t2+"\n");
+        st +=(" f_B_alpha_beta_t1 "+f_B_alpha_beta_t1+" f_B_alpha_beta_t2 "+f_B_alpha_beta_t2+"\n");
+        st +=(" f_B_alpha_t "+f_B_alpha_beta_t+"\n");
         
         double dmax = 2.*Constants.getInstance().wpdist[SlyrIdx];
-        if(x>dmax) return dmax;
+        st +=(" x "+x+" dmax "+dmax+"\n");
+        
+        if(x>dmax) {
+            setDebug(st);
+            return dmax;
+        }
+        
         //Reolution improvement to compensate for non-linearity accross bin not accounted for in interpolation
         double calctime = calc_Time( x,  alpha, B, SecIdx+1,  SlyrIdx+1) ;
         double deltatime_beta = TableLoader.getDeltaTimeBeta(x,beta,TableLoader.distbeta[SecIdx][SlyrIdx],TableLoader.v0[SecIdx][SlyrIdx]);
         calctime+=deltatime_beta;
+        st +=(" t "+t+" calctime "+calctime+" deltatime_beta "+deltatime_beta+"\n");
         if(calctime>t)   {     
             double tref=0;
             for(int i = 1; i<100; i++) {
@@ -192,27 +195,32 @@ public class TimeToDistanceEstimator {
                 calctime = calc_Time( x,  alpha, B, SecIdx+1,  SlyrIdx+1) ;
                 deltatime_beta = TableLoader.getDeltaTimeBeta(x,beta,TableLoader.distbeta[SecIdx][SlyrIdx],TableLoader.v0[SecIdx][SlyrIdx]);
                 calctime+=deltatime_beta;
+                st +=(i+"] x "+x+" t "+t+" calct "+calctime+"\n");
                 if(calctime<t) {
                     double xi=this.interpolateLinear(t, tref, calctime, x+0.0001*i, x);
+                    st +=("xi "+xi+" t "+t+" calct "+calctime+"\n");
+                    setDebug(st);
                     return xi;
                 }
                 tref=calctime;
             }
         }
-        if(t>calctime)   {  
+        if(t>calctime)   {   
             double tref=0;
             for(int i = 1; i<100; i++) {
                 x+=0.0001*i;
                 calctime = calc_Time( x,  alpha, B, SecIdx+1,  SlyrIdx+1) ;
                 deltatime_beta = TableLoader.getDeltaTimeBeta(x,beta,TableLoader.distbeta[SecIdx][SlyrIdx],TableLoader.v0[SecIdx][SlyrIdx]);
                 calctime+=deltatime_beta;
+                st +=(i+"] x "+x+" t "+t+" calct "+calctime+"\n");
                 if(x>dmax) {
-                    x=dmax;
-                   return x;
+                   setDebug(st);
+                   return dmax;
                 } 
-                
                 if(t<calctime) {
                     double xi=this.interpolateLinear(t, tref, calctime, x-0.0001*i, x);
+                    st +=("xi "+xi+" t "+t+" calct "+calctime+"\n");
+                    setDebug(st);
                     return xi;
                 }
                 tref=calctime;
@@ -221,10 +229,14 @@ public class TimeToDistanceEstimator {
         
         
         return x;
-
-    
    }
-
+    private String debug;
+    public void setDebug(String s) {
+        debug = s;
+    }
+    public String debug() {
+        return debug;
+    }
     /**
      * 
      * @param binAlpha alpha parameter bin

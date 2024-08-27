@@ -63,8 +63,8 @@ public class TableLoader {
         
         TimeToDistanceEstimator tde = new TimeToDistanceEstimator();
         
-        //double[] beta = new double[]{0.7,0.9,1.0};
-        double[] beta = new double[]{0.7,0.9,1.0};
+        double[] beta = new double[]{0.65, 0.66, 0.67, 0.68, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0};
+        double[] Bfield = new double[]{0.0, 0.5, 1.0, 1.2, 1.3, 1.4, 1.5, 2.0, 2.1, 2.15, 2.2, 2.25, 2.26, 2.27, 2.28, 2.29, 2.3};
         double[] htmax = new double[]{200,250,2500,2600,720,800};
         //map for beta values:
         Map<Double, List<H1F>> tmap = new HashMap<>();
@@ -88,9 +88,9 @@ public class TableLoader {
             for(int r = 0; r<6; r++ ){ //loop over slys
                 int s=0;
                 double dmax = 2.*Constants.getInstance().wpdist[r]; 
-                int maxBidx = BfieldValues.length;
+                int maxBidx = Bfield.length;
                 for(int ibfield =0; ibfield<maxBidx; ibfield++) {
-                    double Bf = BfieldValues[ibfield];
+                    double Bf = Bfield[ibfield]; Bf=0;
                     for(int icosalpha =0; icosalpha<maxBinIdxAlpha+1; icosalpha++) {
                         double alpha = -(Math.toDegrees(Math.acos(Math.cos(Math.toRadians(30.)) + (icosalpha)*(1. - Math.cos(Math.toRadians(30.)))/5.)) - 30.);
                         for(int t =0; t<htmax[s]; t++)  {
@@ -104,7 +104,7 @@ public class TableLoader {
                             }
                         }
                         
-                        for(int d =0; d<(int)(dmax*10000); d++) {
+                        for(int d =10; d<(int)(dmax*10000); d++) {
                             double dist = (double) d/10000; 
                             double calct = calc_Time( dist,  alpha, Bf, s+1, r+1) +
                                     getDeltaTimeBeta(dist,beta[b],distbeta[s][r],v0[s][r]); 
@@ -235,33 +235,34 @@ public class TableLoader {
                             double alpha = -(Math.toDegrees(Math.acos(cos30minusalpha)) - 30);
                             //int nxmax = (int) (dmax*cos30minusalpha/stepSize)+1; 
                             int nxmax = (int) (dmax/stepSize)+1; 
-                            double maxT=-1;
+                            double maxTime=-1;
                             for(int idist =0; idist<nxmax; idist++) {
-                                
                                 double x = (double)(idist+1)*stepSize;
                                 double timebfield = calc_Time( x,  alpha, bfield, s+1, r+1) ;
                                 double deltatime_beta = getDeltaTimeBeta(x,betaValues[ibeta],distbeta[s][r],v0[s][r]);
                                 timebfield+=deltatime_beta;
-                                if(timebfield<maxT) timebfield=maxT; //fix for turning over of the function
+                                if(timebfield>maxTime) 
+                                   maxTime=timebfield;
+                                
+                                    //System.out.println("T "+timebfield+" maxT "+maxTime+" x "+x);
                                 int tbin = (int) Math.floor(timebfield/2);
                                 if(tbin<0 || tbin>NBINST-1) {
                                     //System.err.println("Problem with tbin");
                                     continue;
                                 } 
-                                if(tbin>maxTBin)
+                                if(tbin>maxTBin) 
                                     maxTBin = tbin;
-                                //if(DISTFROMTIME[s][r][ibfield][icosalpha][ibeta][tbin]==0) {
-                                 //   DISTFROMTIME[s][r][ibfield][icosalpha][ibeta][tbin]=x;
-                                //} else {
-                                if(timebfield<=(tbin*2)+1 && timebfield>maxT) //fix for turning over of the function
-                                    DISTFROMTIME[s][r][ibfield][icosalpha][ibeta][tbin]=x; //get the value in the middle of the bin
-                                //}
+                                
+                                if(timebfield<maxTime) { //fix for turning over of the function
+                                    continue;
+                                }
+                                if(timebfield<=((double)tbin*2)+1) {//get the value in the middle of the bin
+                                    DISTFROMTIME[s][r][ibfield][icosalpha][ibeta][tbin]=x; 
+                                } 
                                 if(DISTFROMTIME[s][r][ibfield][icosalpha][ibeta][tbin]>dmax) {
                                     DISTFROMTIME[s][r][ibfield][icosalpha][ibeta][tbin]=dmax;
                                     idist=nxmax;
                                 }
-                                maxT=timebfield;
-                                
                             }
                         }
                     }
