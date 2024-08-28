@@ -1,51 +1,22 @@
 #!/bin/sh -f
 
+# this test needs rewritten, with more useful data (not KPP),
+# meanwhile not worth maintaining ...
+#exit 0
+
 # coatjava must already be built at ../../coatjava/
-OS=$(uname)
 
 # set up environment
 CLARA_HOME=$PWD/clara_installation/ ; export CLARA_HOME
 COAT=$CLARA_HOME/plugins/clas12/
 classPath="$COAT/lib/services/*:$COAT/lib/clas/*:$COAT/lib/utils/*:../lib/*:src/"
 
-# tar the local coatjava build so it can be installed with clara
-cd ../..
-tar -zcvf coatjava-local.tar.gz coatjava
-mv coatjava-local.tar.gz validation/advanced-tests/
-cd -
-
 # install clara
-
-case $OS in
-    'Linux')
-       wget --no-check-certificate https://claraweb.jlab.org/clara/_downloads/install-claracre-clas.sh
-     ;;
-     'Darwin')
-       echo "Getting Clara..."
-       curl -OL "https://claraweb.jlab.org/clara/_downloads/install-claracre-clas.sh" -o install-claracre-clas.sh
-     ;;
-     *) ;;
-esac
-
-
-chmod +x install-claracre-clas.sh
-echo Y | ./install-claracre-clas.sh -f 5.0.2 -j 11 -l local
+../../install-clara -c ../../coatjava $CLARA_HOME
 if [ $? != 0 ] ; then echo "clara installation error" ; exit 1 ; fi
-rm install-claracre-clas.sh
 
 # download test files
-
-case $OS in
-    'Linux')
-       wget --no-check-certificate http://clasweb.jlab.org/clas12offline/distribution/coatjava/validation_files/twoTrackEvents_809_raw.evio.tar.gz
-     ;;
-     'Darwin')
-       curl -OL "http://clasweb.jlab.org/clas12offline/distribution/coatjava/validation_files/twoTrackEvents_809_raw.evio.tar.gz" -o twoTrackEvents_809_raw.evio.tar.gz
-     ;;
-     *) ;;
-esac
-
-
+wget --no-check-certificate http://clasweb.jlab.org/clas12offline/distribution/coatjava/validation_files/twoTrackEvents_809_raw.evio.tar.gz
 
 if [ $? != 0 ] ; then echo "wget validation files failure" ; exit 1 ; fi
 tar -zxvf twoTrackEvents_809_raw.evio.tar.gz
@@ -64,7 +35,7 @@ echo "set session s_cook" >> cook.clara
 echo "set description d_cook" >> cook.clara
 ls twoTrackEvents_809.hipo > files.list
 echo "set fileList $PWD/files.list" >> cook.clara
-echo "set servicesFile $CLARA_HOME/plugins/clas12/config/kpp.yaml" >> cook.clara
+echo "set servicesFile $COAT/etc/services/kpp.yaml" >> cook.clara
 echo "run local" >> cook.clara
 echo "exit" >> cook.clara
 $CLARA_HOME/bin/clara-shell cook.clara

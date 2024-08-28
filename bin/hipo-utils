@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. `dirname $0`/env.sh 
+. `dirname $0`/../libexec/env.sh
 
 export MALLOC_ARENA_MAX=1
 

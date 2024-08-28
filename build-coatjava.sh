@@ -61,9 +61,9 @@ download () {
 }
 
 
-# download the default field maps, as defined in bin/env.sh:
+# download the default field maps, as defined in libexec/env.sh:
 # (and duplicated in etc/services/reconstruction.yaml):
-source `dirname $0`/bin/env.sh
+source `dirname $0`/libexec/env.sh
 if [ $downloadMaps == "yes" ]; then
   echo 'Retrieving field maps ...'
   webDir=https://clasweb.jlab.org/clas12offline/magfield
@@ -87,6 +87,7 @@ rm -rf coatjava
 mkdir -p coatjava
 cp -r bin coatjava/
 cp -r etc coatjava/
+cp -r libexec coatjava/
 
 # create schema directories for partial reconstruction outputs
 which python3 >& /dev/null && python=python3 || python=python

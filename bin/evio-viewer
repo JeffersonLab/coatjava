@@ -1,5 +1,5 @@
 #!/bin/bash
 
-. `dirname $0`/env.sh 
+. `dirname $0`/../libexec/env.sh
 
 java -cp "$CLAS12DIR/lib/clas/*" org.jlab.coda.eventViewer.EventTreeFrame $*

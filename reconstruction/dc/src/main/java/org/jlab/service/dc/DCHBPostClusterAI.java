@@ -71,8 +71,8 @@ public class DCHBPostClusterAI extends DCEngine {
         List<Segment> segments = null;
         List<FittedHit> fhits = null;
 
-        reader.read_NNHits(event);
-
+        reader.read_NNHits(event, getAIModel());
+        
         //I) get the lists
         List<Hit> hits = reader.get_DCHits();
         fhits = new ArrayList<>();

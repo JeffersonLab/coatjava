@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jlab.clas</groupId>
   <artifactId>coat-libs</artifactId>
-  <version>10.1.0-SNAPSHOT</version>
+  <version>11.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <repositories>
@@ -11,14 +11,21 @@
       <id>local-build</id>
       <url>https://clasweb.jlab.org/clas12maven</url>
     </repository>
+
+    <repository>
+      <id>local-build-j4np</id>
+      <url>https://clasweb.jlab.org/clas12maven/j4np/maven</url>
+    </repository>
+    
     <repository>
       <id>jnp-build</id>
       <url>https://clasweb.jlab.org/jhep/maven</url>
     </repository>
     <repository>
      <id>freehep-repo-public</id>
-     <url>https://srs.slac.stanford.edu/nexus/content/groups/freehep-maven2-public/</url>
-    </repository>
+     <url>https://clasweb.jlab.org/clas12maven/</url>
+     <!--<url>https://srs.slac.stanford.edu/nexus/content/groups/freehep-maven2-public/</url>-->
+  </repository>
   </repositories>
 
   <dependencies>
@@ -60,12 +67,26 @@
       <version>4.3-SNAPSHOT</version>
     </dependency>
 
+    
+    
     <dependency>
         <groupId>j4ml</groupId>
         <artifactId>j4ml-neuroph</artifactId>
         <version>0.9-SNAPSHOT</version>
     </dependency>
 
+    <dependency>
+      <groupId>j4np</groupId>
+      <artifactId>j4np-instarec</artifactId>
+      <version>1.1.0</version>
+    </dependency>
+    
+    <dependency>
+      <groupId>j4np</groupId>
+      <artifactId>j4np-data</artifactId>
+      <version>1.1.0</version>
+    </dependency>
+    
     <dependency>
         <groupId>j4ml</groupId>
         <artifactId>j4ml-clas12</artifactId>
@@ -93,67 +114,67 @@
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-io</artifactId>
-      <version>10.1.0-SNAPSHOT</version>
+      <version>11.0.0-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clara-io</artifactId>
-      <version>10.1.0-SNAPSHOT</version>
+      <version>11.0.0-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-reco</artifactId>
-      <version>10.1.0-SNAPSHOT</version>
+      <version>11.0.0-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-utils</artifactId>
-      <version>10.1.0-SNAPSHOT</version>
+      <version>11.0.0-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-jcsg</artifactId>
-      <version>10.1.0-SNAPSHOT</version>
+      <version>11.0.0-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-detector</artifactId>
-      <version>10.1.0-SNAPSHOT</version>
+      <version>11.0.0-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-analysis</artifactId>
-      <version>10.1.0-SNAPSHOT</version>
+      <version>11.0.0-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-geometry</artifactId>
-      <version>10.1.0-SNAPSHOT</version>
+      <version>11.0.0-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-physics</artifactId>
-      <version>10.1.0-SNAPSHOT</version>
+      <version>11.0.0-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>swim-tools</artifactId>
-      <version>10.1.0-SNAPSHOT</version>
+      <version>11.0.0-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-tracking</artifactId>
-      <version>10.1.0-SNAPSHOT</version>
+      <version>11.0.0-SNAPSHOT</version>
     </dependency>
 
     <dependency>
