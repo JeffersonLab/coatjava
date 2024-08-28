@@ -683,6 +683,15 @@ public class TrackCandListFinder {
 //                LOGGER.log(Level.FINE, "Checking overlaps for tracks ");
 //                t1.printInfo();t2.printInfo();
                 if(i!=j && t1.overlaps(t2)) {
+                    if( (t1.get_Vtx0().z() > -18 && t1.get_Vtx0().z() < 12) && (t2.get_Vtx0().z() < -18 || t2.get_Vtx0().z() > 12)){
+                        continue;
+                    }
+                    
+                    if( (t2.get_Vtx0().z() > -18 && t2.get_Vtx0().z() < 12) && (t1.get_Vtx0().z() < -18 || t1.get_Vtx0().z() > 12)){
+                        overlap=true;
+                        continue;
+                    }
+                                        
                     if(t1.get_FitChi2()/t1.get_FitNDF()>t2.get_FitChi2()/t2.get_FitNDF())
                         overlap=true;
                     else if(t1.get_FitChi2()/t1.get_FitNDF()==t2.get_FitChi2()/t2.get_FitNDF() && i>j)

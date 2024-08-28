@@ -123,7 +123,7 @@ public class CrossListFinder  {
                             //}
                             // require that the cross direction estimate be in the direction of the trajectory
                             if(cosTh1<Constants.TRACKDIRTOCROSSDIRCOSANGLE || cosTh2<Constants.TRACKDIRTOCROSSDIRCOSANGLE || cosTh3<Constants.TRACKDIRTOCROSSDIRCOSANGLE) {
-                                continue;
+                                //continue;
                             }
 
                             double fitchsq=0;
@@ -139,11 +139,11 @@ public class CrossListFinder  {
                             }
 
                             // fit the  projection with a line -- the track is ~ constant in phi
-                            LineFitter linefit = new LineFitter();
-                            boolean linefitstatusOK = linefit.fitStatus(X, Y, errX, errY, Z.length);
-                            if(!linefitstatusOK) {
-                                continue; // fit failed
-                            }
+                            //LineFitter linefit = new LineFitter();
+                            //boolean linefitstatusOK = linefit.fitStatus(X, Y, errX, errY, Z.length);
+                            //if(!linefitstatusOK) {
+                            //    continue; // fit failed
+                            //}
                             //if(TimeBased && tde!=null) {			
                             this.updateBFittedHits(event, c1, tab, DcDetector, tde, swimmer);
                             this.updateBFittedHits(event, c2, tab, DcDetector, tde, swimmer);
@@ -155,9 +155,9 @@ public class CrossListFinder  {
                             bCand.CrossesOnTrack.add(c2);
                             bCand.CrossesOnTrack.add(c3);
                             bCand.Chisq = fitchsq;
-                            if(bCand.Chisq<Constants.CROSSLISTSELECTQFMINCHSQ) {
+                            //if(bCand.Chisq<Constants.CROSSLISTSELECTQFMINCHSQ) {
                                 trkCnds.add(bCand);
-                            }
+                            //}
                         }
                     }
                 }

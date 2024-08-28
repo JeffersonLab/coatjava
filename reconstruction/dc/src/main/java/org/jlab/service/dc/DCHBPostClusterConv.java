@@ -98,7 +98,7 @@ public class DCHBPostClusterConv extends DCEngine {
                 rmSegs.add(se);
             }
         }
-        segments.removeAll(rmSegs);
+        //segments.removeAll(rmSegs);
         if(segments == null || segments.isEmpty())
             return true;
         /* 16 */
@@ -124,7 +124,7 @@ public class DCHBPostClusterConv extends DCEngine {
         trkcands = trkcandFinder.getTrackCands(crosslist,
                 Constants.getInstance().dcDetector,
                 Swimmer.getTorScale(),
-                dcSwim, false);
+                dcSwim, true);
         /* 19 */
         // track found
         int trkId = 1;
@@ -202,7 +202,7 @@ public class DCHBPostClusterConv extends DCEngine {
         List<Track> mistrkcands = trkcandFinder.getTrackCands(pcrosslist,
                 Constants.getInstance().dcDetector,
                 Swimmer.getTorScale(),
-                dcSwim, false);
+                dcSwim, true);
 
         // remove overlaps
         if (!mistrkcands.isEmpty()) {
