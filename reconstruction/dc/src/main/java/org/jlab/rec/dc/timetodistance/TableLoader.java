@@ -250,25 +250,16 @@ public class TableLoader {
         AlphaBounds[0][0] = 0;
         AlphaBounds[5][1] = 30;
     }
-    
-    public static synchronized void Fill(IndexedTable t2dPressure, IndexedTable t2dPressRef, IndexedTable pressure) {
-        
-        //CCDBTables 0 =  "/calibration/dc/signal_generation/doca_resolution";
-        //CCDBTables 1 =  "/calibration/dc/time_to_distance/t2d";
-        //CCDBTables 2 =  "/calibration/dc/time_corrections/T0_correction";	
-        if (T2DLOADED) return;
-        
-        double stepSize = 0.00010;
-        FillAlpha();
+    public static boolean useP = true;
+    public static synchronized void getConstants(IndexedTable t2dPressure, IndexedTable t2dPressRef, IndexedTable pressure){
         double p_ref = t2dPressRef.getDoubleValue("pressure", 0,0,0);
         double p = pressure.getDoubleValue("value", 0,0,3);
         double dp = p - p_ref;
         double dp2scale = 0;
         double dpscale = 1;
-        boolean useP = true;
+        
         if(!useP) 
             dpscale = 0;
-        TimeToDistanceEstimator tde = new TimeToDistanceEstimator();
         
         for(int s = 0; s<6; s++ ){ // loop over sectors
             for(int r = 0; r<6; r++ ){ //loop over slys
@@ -306,8 +297,13 @@ public class TableLoader {
                 Tmax[s][r] = t2dPressure.getDoubleValue("tmax_a0", s+1,r+1,0)
                         +t2dPressure.getDoubleValue("tmax_a1", s+1,r+1,0)*dp*dpscale
                         +t2dPressure.getDoubleValue("tmax_a2", s+1,r+1,0)*dp*dp*dp2scale;
-             
-                // end fill constants
+            }
+        }
+    }
+    public static synchronized void FillTable() {
+        double stepSize = 0.00010;
+        for(int s = 0; s<6; s++ ){ // loop over sectors
+            for(int r = 0; r<6; r++ ){ //loop over slys
                 //System.out.println("sector "+(s+1)+" sly "+(r+1)+" v0 "+v0[s][r]+" vmid "+vmid[s][r]+" R "+FracDmaxAtMinVel[s][r]);
                 double dmax = 2.*Constants.getInstance().wpdist[r]; 
                 //double tmax = CCDBConstants.getTMAXSUPERLAYER()[s][r];
@@ -366,6 +362,18 @@ public class TableLoader {
         }
         
         TableLoader.fillMissingTableBins();
+    }
+    public static synchronized void Fill(IndexedTable t2dPressure, IndexedTable t2dPressRef, IndexedTable pressure) {
+        
+        //CCDBTables 0 =  "/calibration/dc/signal_generation/doca_resolution";
+        //CCDBTables 1 =  "/calibration/dc/time_to_distance/t2d";
+        //CCDBTables 2 =  "/calibration/dc/time_corrections/T0_correction";	
+        if (T2DLOADED) return;
+        
+        FillAlpha();
+        getConstants(t2dPressure,  t2dPressRef,  pressure);
+        FillTable();
+        
         System.out.println(" T2D TABLE FILLED.....");
         T2DLOADED = true;
      }
