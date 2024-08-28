@@ -13,7 +13,7 @@ public class TimeToDistanceEstimator {
     public TimeToDistanceEstimator() {
             // TODO Auto-generated constructor stub
     }
-    
+    public boolean t2DPrecisionImprov=false;
     /**
      * 
      * @param x value on grid
@@ -51,7 +51,7 @@ public class TimeToDistanceEstimator {
     public double interpolateOnGrid(double Bf, double alpha, double beta, double t,  int SecIdx, int SlyrIdx) {
         //get the time bins
         int tBin = this.getTimeIdx(t);
-        double binCenterTime = 2*this.getTimeIdx(t)+1;
+        double binCenterTime = 2*tBin+1;
         int tLo=0;
         int tHi=0;
         if(t<binCenterTime) { // if the time is to the left of the center of the bin, interpolate using the previous time bin
@@ -180,7 +180,7 @@ public class TimeToDistanceEstimator {
 //            setDebug(st);
             return dmax;
         }
-        
+        if(!this.t2DPrecisionImprov) return x;
         //Reolution improvement to compensate for non-linearity accross bin not accounted for in interpolation
         double calctime = calc_Time( x,  alpha, B, SecIdx+1,  SlyrIdx+1) ;
         double deltatime_beta = TableLoader.getDeltaTimeBeta(x,beta,TableLoader.distbeta[SecIdx][SlyrIdx],TableLoader.v0[SecIdx][SlyrIdx]);

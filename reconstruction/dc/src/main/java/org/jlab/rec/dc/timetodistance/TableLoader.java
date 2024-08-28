@@ -68,7 +68,7 @@ public class TableLoader {
         plotFcns();
         
         TimeToDistanceEstimator tde = new TimeToDistanceEstimator();
-        
+        tde.t2DPrecisionImprov=true;
         double[] beta = new double[]{0.65, 0.66, 0.67, 0.68, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0};
         double[] Bfield = new double[]{0.0, 0.5, 1.0, 1.2, 1.3, 1.4, 1.5, 2.0, 2.1, 2.15, 2.2, 2.25, 2.26, 2.27, 2.28, 2.29, 2.3};
         double[] htmax = new double[]{200,210,1050,1200,720,800};
@@ -81,13 +81,14 @@ public class TableLoader {
         List<H2F> hd2s = new ArrayList<>();// as s function of distance   
         List<H2F> ht2d = new ArrayList<>();// time to distance from interpolation 
         for(int r = 0; r<6; r++ ){ //loop over slys
-            hts.add(new H1F("ht"+(r+1), "time resolution (ns)", "Counts/0.1 ns", 40, -2.0,2.0));
-            hds.add(new H1F("hd"+(r+1), "doca resolution (um)", "Counts/0.1 um", 40, -2.0,2.0));
+            hts.add(new H1F("ht"+(r+1), "time resolution (ns)", "Counts/0.1 ns", 400, -20.0,20.0));
+            hds.add(new H1F("hd"+(r+1), "doca resolution (um)", "Counts/0.1 um", 400, -20.0,20.0));
             //public H2F(String name, String title, int bx, double xmin, double xmax, int by, double ymin, double ymax)
-            hd2s.add(new H2F("hd2"+(r+1), "doca resolution (um) vs doca (cm)", (int)(hdmax[r]*100), 0, hdmax[r], 40, -2.0,2.0));
+            hd2s.add(new H2F("hd2"+(r+1), "doca resolution (um) vs doca (cm)", (int)(hdmax[r]*100), 0, hdmax[r], 400, -20.0,20.0));
             ht2d.add(new H2F("ht2d"+(r+1), "time(time (ns) vs doca (cm)", (int)htmax[r], 0, htmax[r], (int)(hdmax[r]*100), 0, hdmax[r]));
         }
-       
+        double t1 = System.currentTimeMillis();
+        int NumInterpCalls = 0;        
         for(int r = 0; r<6; r++ ){ //loop over slys
             int s=0;
             double dmax = 2.*Constants.getInstance().wpdist[r]; 
@@ -101,6 +102,7 @@ public class TableLoader {
                         for(int t =0; t<htmax[r]; t++)  {
                             double time = (double) t;
                             double idist = tde.interpolateOnGrid(Bf, alpha, beta[b], time, s, r);
+                            NumInterpCalls++;
                             ht2d.get(r).fill(time, idist);
                             if(idist<dmax) { 
                                 double calct = calc_Time( idist,  alpha, Bf, s+1, r+1) +
@@ -110,11 +112,12 @@ public class TableLoader {
                             }
                         }
 
-                        for(int d =0; d<(int)(hdmax[r]*1000); d++) {
-                            double dist = (double) d/1000; 
+                        for(int d =0; d<(int)(hdmax[r]*10000); d++) {
+                            double dist = (double) d/10000; 
                             double calct = calc_Time( dist,  alpha, Bf, s+1, r+1) +
                                     getDeltaTimeBeta(dist,beta[b],distbeta[s][r],v0[s][r]); 
                             double idist = tde.interpolateOnGrid(Bf, alpha, beta[b], calct, s, r); 
+                            NumInterpCalls++;
                             double deltaD = dist-idist;
                             hds.get(r).fill(deltaD*10000);
                             hd2s.get(r).fill(dist, deltaD*10000);
@@ -125,6 +128,8 @@ public class TableLoader {
             System.out.println("Done filling histograms for superlayer "+(r+1));
         }
         System.out.println("Done");
+        double t = System.currentTimeMillis() - t1;
+        System.out.println("PROCESSING TIME= " +(float) (t*1000/(double) NumInterpCalls)+" ns  / T2D Interpolation");
         TCanvas T2DCan = new TCanvas("Time resolution", 1600, 1200);
         TCanvas TCan = new TCanvas("Time resolution", 1600, 1200);
         TCanvas DCan = new TCanvas("Distance resolution", 1600, 1200);
@@ -233,10 +238,7 @@ public class TableLoader {
         //CCDBTables 2 =  "/calibration/dc/time_corrections/T0_correction";	
         if (T2DLOADED) return;
         
-        double stepSize = 0.0010;
-        //DecimalFormat df = new DecimalFormat("#");
-        //df.setRoundingMode(RoundingMode.CEILING);
-        
+        double stepSize = 0.00010;
         FillAlpha();
         double p_ref = t2dPressRef.getDoubleValue("pressure", 0,0,0);
         double p = pressure.getDoubleValue("value", 0,0,3);
@@ -299,6 +301,8 @@ public class TableLoader {
                             //int nxmax = (int) (dmax*cos30minusalpha/stepSize)+1; 
                             int nxmax = (int) (dmax/stepSize)+1; 
                             double maxTime=-1;
+                            double midbinclosestT=0;
+                            int di=0;
                             for(int idist =0; idist<nxmax; idist++) {
                                 double x = (double)(idist+1)*stepSize;
                                 double timebfield = calc_Time( x,  alpha, bfield, s+1, r+1) ;
@@ -319,9 +323,17 @@ public class TableLoader {
                                 if(timebfield<maxTime) { //fix for turning over of the function
                                     continue;
                                 }
-                                if(timebfield<=((double)tbin*2)+1) {//get the value in the middle of the bin
+                                if(timebfield<=(double)(tbin*2)+1) {//get the value in the middle of the bin
                                     DISTFROMTIME[s][r][ibfield][icosalpha][ibeta][tbin]=x; 
-                                } 
+                                    midbinclosestT=timebfield;
+                                    di =idist;
+                                } else { //if step beyond middle of the bin interpolate to get the value at the middle of the bin
+                                    if(idist==di+1) {
+                                        double midBinx = (((double)(tbin*2)+1) - timebfield)*(DISTFROMTIME[s][r][ibfield][icosalpha][ibeta][tbin] - x)/(midbinclosestT - timebfield) + x;
+                                        DISTFROMTIME[s][r][ibfield][icosalpha][ibeta][tbin]=midBinx;
+                                    }
+                                }
+                                
                                 if(DISTFROMTIME[s][r][ibfield][icosalpha][ibeta][tbin]>dmax) {
                                     DISTFROMTIME[s][r][ibfield][icosalpha][ibeta][tbin]=dmax;
                                     idist=nxmax;
