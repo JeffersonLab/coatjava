@@ -6,13 +6,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.freehep.math.minuit.MnUserParameters;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.base.GeometryFactory;
 import org.jlab.geom.base.ConstantProvider;
 import org.jlab.groot.data.H1F;
 import org.jlab.groot.data.H2F;
-import org.jlab.groot.fitter.ParallelSliceFitter;
 import org.jlab.groot.math.Func1D;
 import org.jlab.groot.ui.TCanvas;
 import org.jlab.rec.dc.Constants;
@@ -70,7 +68,7 @@ public class TableLoader {
         TimeToDistanceEstimator tde = new TimeToDistanceEstimator();
         tde.t2DPrecisionImprov=true;
         double[] beta = new double[]{0.65, 0.66, 0.67, 0.68, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0};
-        double[] Bfield = new double[]{0.0, 0.5, 1.0, 1.2, 1.3, 1.4, 1.5, 2.0, 2.1, 2.15, 2.2, 2.25, 2.26, 2.27, 2.28, 2.29, 2.3};
+        double[] Bfield = new double[]{0.0, 0.5, 1.0, 1.2, 1.3, 1.4, 1.5, 2.0, 2.1, 2.15, 2.2, 2.25, 2.26, 2.27, 2.28, 2.29};
         double[] htmax = new double[]{200,210,1050,1200,720,800};
         double[] hdmax = new double[] {0.77, 0.8, 1.1, 1.2, 1.8, 1.84};
 
@@ -78,6 +76,10 @@ public class TableLoader {
                                            //to calculated time (from dist.to t) in seconds; as a function of time
         List<H1F> hds = new ArrayList<>(); //histo to check table and interp. from distance to calculated time (from dist.to t) 
                                            //to idistance (by interpolation) in microns; as a function of distance
+        List<H1F> hdsSL3 = new ArrayList<>(); //histo to check table and interp. from distance to calculated time (from dist.to t) 
+                                             //for various values of B-field   
+        List<H1F> hdsSL4 = new ArrayList<>(); //histo to check table and interp. from distance to calculated time (from dist.to t) 
+        //for various values of B-field   
         List<H2F> hd2s = new ArrayList<>();// as s function of distance   
         List<H2F> ht2d = new ArrayList<>();// time to distance from interpolation 
         for(int r = 0; r<6; r++ ){ //loop over slys
@@ -85,7 +87,13 @@ public class TableLoader {
             hds.add(new H1F("hd"+(r+1), "doca resolution (um)", "Counts/0.1 um", 400, -20.0,20.0));
             //public H2F(String name, String title, int bx, double xmin, double xmax, int by, double ymin, double ymax)
             hd2s.add(new H2F("hd2"+(r+1), "doca resolution (um) vs doca (cm)", (int)(hdmax[r]*100), 0, hdmax[r], 400, -20.0,20.0));
-            ht2d.add(new H2F("ht2d"+(r+1), "time(time (ns) vs doca (cm)", (int)htmax[r], 0, htmax[r], (int)(hdmax[r]*100), 0, hdmax[r]));
+            ht2d.add(new H2F("ht2d"+(r+1), "doca (cm) vs time(time (ns)", (int)htmax[r], 0, htmax[r], (int)(hdmax[r]*100), 0, hdmax[r]));
+        }
+        for (int b =0; b<Bfield.length; b++) {
+            hdsSL3.add(new H1F("hdB"+(b), "doca resolution (um)", "Counts/0.1 um", 400, -20.0,20.0));
+            hdsSL4.add(new H1F("hdB"+(b), "doca resolution (um)", "Counts/0.1 um", 400, -20.0,20.0));
+            hdsSL3.get(b).setTitle("B = "+Bfield[b]+" T");
+            hdsSL4.get(b).setTitle("B = "+Bfield[b]+" T");
         }
         double t1 = System.currentTimeMillis();
         int NumInterpCalls = 0;        
@@ -120,6 +128,10 @@ public class TableLoader {
                             NumInterpCalls++;
                             double deltaD = dist-idist;
                             hds.get(r).fill(deltaD*10000);
+                            if(r==2) 
+                                hdsSL3.get(ibfield).fill(deltaD*10000);
+                            if(r==3) 
+                                hdsSL4.get(ibfield).fill(deltaD*10000);
                             hd2s.get(r).fill(dist, deltaD*10000);
                         } 
                     }
@@ -133,6 +145,7 @@ public class TableLoader {
         TCanvas T2DCan = new TCanvas("Time resolution", 1600, 1200);
         TCanvas TCan = new TCanvas("Time resolution", 1600, 1200);
         TCanvas DCan = new TCanvas("Distance resolution", 1600, 1200);
+        TCanvas DCanB = new TCanvas("Distance resolution", 1600, 1200);
         TCanvas DCan2 = new TCanvas("Distance resolution", 1600, 1200);
         
         TCan.divide(3, 2);
@@ -149,11 +162,18 @@ public class TableLoader {
             DCan.cd(ci);
             DCan.draw(hds.get(sl));
             DCan2.cd(ci);
-            //DCan2.getPad().getAxisZ().setLog(true);
+            DCan2.getPad().getAxisZ().setLog(true);
             DCan2.draw(hd2s.get(sl));
             
             ci++;
         }
+        DCanB.divide(4, 4);
+        for (int b =0; b<Bfield.length; b++) {
+            DCanB.cd(b);
+            DCanB.draw(hdsSL3.get(b));
+            DCanB.draw(hdsSL4.get(b));
+        }
+           
     }
     
     private static synchronized void plotFcns(){

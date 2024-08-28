@@ -125,28 +125,31 @@ public class TimeToDistanceEstimator {
         double alphaValueHi = this.getAlphaFromAlphaIdx(alphaHi); 
         
         // interpolate in B:
-        double f_B_alpha1_beta1_t1 = interpolateLinear(B*B, BLo*BLo, BHi*BHi, 
+        double Bfc = B*B;
+        double Bfa = BLo*BLo;
+        double Bfb = BHi*BHi;
+        double f_B_alpha1_beta1_t1 = interpolateLinear(Bfc, Bfa, Bfb, 
                     TableLoader.DISTFROMTIME[SecIdx][SlyrIdx][BfLo][alphaLo][betaLo][tLo],
                     TableLoader.DISTFROMTIME[SecIdx][SlyrIdx][BfHi][alphaLo][betaLo][tLo]);
-        double f_B_alpha2_beta1_t1 = interpolateLinear(B*B, BLo*BLo, BHi*BHi, 
+        double f_B_alpha2_beta1_t1 = interpolateLinear(Bfc, Bfa, Bfb, 
                     TableLoader.DISTFROMTIME[SecIdx][SlyrIdx][BfLo][alphaHi][betaLo][tLo],
                     TableLoader.DISTFROMTIME[SecIdx][SlyrIdx][BfHi][alphaHi][betaLo][tLo]);
-        double f_B_alpha1_beta1_t2 = interpolateLinear(B*B, BLo*BLo, BHi*BHi, 
+        double f_B_alpha1_beta1_t2 = interpolateLinear(Bfc, Bfa, Bfb, 
                     TableLoader.DISTFROMTIME[SecIdx][SlyrIdx][BfLo][alphaLo][betaLo][tHi],
                     TableLoader.DISTFROMTIME[SecIdx][SlyrIdx][BfHi][alphaLo][betaLo][tHi]);
-        double f_B_alpha2_beta1_t2 = interpolateLinear(B*B, BLo*BLo, BHi*BHi, 
+        double f_B_alpha2_beta1_t2 = interpolateLinear(Bfc, Bfa, Bfb, 
                     TableLoader.DISTFROMTIME[SecIdx][SlyrIdx][BfLo][alphaHi][betaLo][tHi],
                     TableLoader.DISTFROMTIME[SecIdx][SlyrIdx][BfHi][alphaHi][betaLo][tHi]);
-        double f_B_alpha1_beta2_t1 = interpolateLinear(B*B, BLo*BLo, BHi*BHi, 
+        double f_B_alpha1_beta2_t1 = interpolateLinear(Bfc, Bfa, Bfb, 
                     TableLoader.DISTFROMTIME[SecIdx][SlyrIdx][BfLo][alphaLo][betaHi][tLo],
                     TableLoader.DISTFROMTIME[SecIdx][SlyrIdx][BfHi][alphaLo][betaHi][tLo]);
-        double f_B_alpha2_beta2_t1 = interpolateLinear(B*B, BLo*BLo, BHi*BHi, 
+        double f_B_alpha2_beta2_t1 = interpolateLinear(Bfc, Bfa, Bfb, 
                     TableLoader.DISTFROMTIME[SecIdx][SlyrIdx][BfLo][alphaHi][betaHi][tLo],
                     TableLoader.DISTFROMTIME[SecIdx][SlyrIdx][BfHi][alphaHi][betaHi][tLo]);
-        double f_B_alpha1_beta2_t2 = interpolateLinear(B*B, BLo*BLo, BHi*BHi, 
+        double f_B_alpha1_beta2_t2 = interpolateLinear(Bfc, Bfa, Bfb, 
                     TableLoader.DISTFROMTIME[SecIdx][SlyrIdx][BfLo][alphaLo][betaHi][tHi],
                     TableLoader.DISTFROMTIME[SecIdx][SlyrIdx][BfHi][alphaLo][betaHi][tHi]);
-        double f_B_alpha2_beta2_t2 = interpolateLinear(B*B, BLo*BLo, BHi*BHi, 
+        double f_B_alpha2_beta2_t2 = interpolateLinear(Bfc, Bfa, Bfb, 
                     TableLoader.DISTFROMTIME[SecIdx][SlyrIdx][BfLo][alphaHi][betaHi][tHi],
                     TableLoader.DISTFROMTIME[SecIdx][SlyrIdx][BfHi][alphaHi][betaHi][tHi]);
         
