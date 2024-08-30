@@ -71,10 +71,9 @@ trap cleanup EXIT
 # Configure:
 debug=0
 args=()
-usage="Usage:  install-clara [-v] [-b] [-f CLARA] [-c COATJAVA] [-g GRAPES] [-j JRE] PATH"
+usage="Usage:  install-clara [-v] [-b] [-f CLARA] [-c COATJAVA] [-g GRAPES] PATH"
 info="\
 - The default COATJAVA/CLARA/GRAPES versions are $coatjava/$clara/$grapes.\n\
-- Unless requested, no JRE will be included in the installation.\n\
 - COATJAVA can also be specified as a local installation directory.\n\
 - [-v adds verbosity and disables cleanup]\n\
 - [-b builds clara from source]"
@@ -86,7 +85,6 @@ do
         -f) clara="$2" && shift && shift ;;
         -c) coatjava="$2" && shift && shift ;;
         -g) grapes="$2" && shift && shift ;;
-        -j) jre="$2" && shift && shift ;;
         -b) build=1 && shift ;;
         -v) let debug=$debug+1 && shift ;;
         -*|--*)  echo -e "$usage\n\nUnknown option:  $1" && exit 1 ;;
@@ -145,12 +143,4 @@ echo -e "\nRetrieving GRAPES version $grapes ..."
 get https://clasweb.jlab.org/clas12offline/distribution/grapes/grapes-$grapes.tar.gz
 mv grapes-$grapes clara-cre/plugins/grapes
 mv -f clara-cre/plugins/grapes/bin/clara-grapes clara-cre/bin/
-
-# JRE:
-#if ! [ -z ${jre+x} ]
-#then
-#    echo -e "\nRetrieving JRE version $jre ..."
-#    mkdir clara-cre/jre
-#    get https://userweb.jlab.org/~gurjyan/clara-cre/linux-64-$jre.tar.gz clara-cre/jre
-#fi
 
