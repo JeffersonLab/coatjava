@@ -6,12 +6,11 @@ set -e
 inputdir=.
 outputdir=.
 threads=2
-usage="asdf"
-info="qwer"
+usage="Usage:  run-clara -y yamlfile [-i dir] [-o dir] [-t threads] [-n nevents] [CLARA_HOME]"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
-        -h) echo -e "\n$usage" && echo -e "\n$info" && exit 1 ;;
+        -h) echo -e "$usage" && exit 0 ;;
         -i) inputdir="$2" && shift && shift ;;
         -o) outputdir="$2" && shift && shift ;;
         -t) threads="$2" && shift && shift ;;
@@ -27,10 +26,13 @@ function error() {
     exit 1
 }
 
-[ "${#args[@]}" -lt 1 ] && error "Missing PATH argument"
-[ "${#args[@]}" -gt 1 ] && error "Extra PATH arguments:  ${args[@]:1}"
-export CLARA_HOME="$args"
-[ ! -e "$CLARA_HOME" ]  && error "Missing installation PATH:  $CLARA_HOME"
+if [ "${#args[@]}" -lt 1 ]; then
+    [ -z ${CLARA_HOME+x} ] && error "CLARA_HOME undefined."
+else
+    [ "${#args[@]}" -gt 1 ] && error "Extra arguments:  ${args[@]:1}"
+    export CLARA_HOME="$args"
+fi
+[ ! -e "$CLARA_HOME" ]  && error "Missing CLARA_HOME:  $CLARA_HOME"
 [ -z ${yaml+x} ] && error "-y YAML must be specified."
 [ -r $yaml ] || error "YAML file does not exist."
 [ -d $inputdir ] || error "Input dir does not exist."
