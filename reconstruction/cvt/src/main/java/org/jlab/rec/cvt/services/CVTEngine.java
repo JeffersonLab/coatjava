@@ -289,13 +289,15 @@ public class CVTEngine extends ReconstructionEngine {
         IndexedTable bmtStripVoltage    = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_strip_voltage");
         IndexedTable bmtStripThreshold  = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_strip_voltage_thresholds");
         IndexedTable beamPos            = this.getConstantsManager().getConstants(run, "/geometry/beam/position");
+        IndexedTable adcStatus            = this.getConstantsManager().getConstants(run, "/calibration/svt/adcstatus");
         
         Geometry.getInstance().initialize(this.getConstantsManager().getVariation(), run, svtLorentz, bmtVoltage);
         
         CVTReconstruction reco = new CVTReconstruction(swimmer);
         
         List<ArrayList<Hit>>         hits = reco.readHits(event, svtStatus, bmtStatus, bmtTime, 
-                                                            bmtStripVoltage, bmtStripThreshold);
+                                                            bmtStripVoltage, bmtStripThreshold,
+                                                            adcStatus);
         List<ArrayList<Cluster>> clusters = reco.findClusters();
         List<ArrayList<Cross>>    crosses = reco.findCrosses();
         
@@ -466,7 +468,8 @@ public class CVTEngine extends ReconstructionEngine {
             "/calibration/mvt/bmt_voltage",
             "/calibration/mvt/bmt_strip_voltage",
             "/calibration/mvt/bmt_strip_voltage_thresholds",
-            "/geometry/beam/position"
+            "/geometry/beam/position",
+            "/calibration/svt/adcstatus"
         };
         requireConstants(Arrays.asList(tables));
         this.getConstantsManager().setVariation("default");

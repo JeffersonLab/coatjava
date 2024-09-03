@@ -223,12 +223,12 @@ public class HitReader {
      * @param omitHemisphere
      * @param status
      */
-    public void fetch_SVTHits(DataEvent event, int omitLayer, int omitHemisphere, IndexedTable status) {
+    public void fetch_SVTHits(DataEvent event, int omitLayer, int omitHemisphere, 
+            IndexedTable status, IndexedTable adcStatus) {
 
         if (event.hasBank("BST::adc") == false) {
             //System.err.println("there is no BST bank ");
             _SVTHits = new ArrayList<>();
-
             return;
         }
 
@@ -239,6 +239,21 @@ public class HitReader {
         int rows = bankDGTZ.rows();
         
         if (event.hasBank("BST::adc") == true) {
+            //pass event
+            //In RGA Spring 2018 data there should be no BST::adc.ADC=-1 and if found, the event is corrupted. 
+            //In which case all the SVT hits are unreliable and they should all be discarted
+            //Starting from Fall 2018 all events would have ADC=-1 and this is normal.
+            //This ADC=-1 status is in a ccdb table
+            boolean pass=true;
+            int adcStat = adcStatus.getIntValue("adcstatus", 0, 0, 0);
+            for (int i = 0; i < rows; i++) {     
+                int ADC = bankDGTZ.getInt("ADC", i);
+                if(ADCConvertor.isEventCorrupted(ADC, adcStat)==false) {
+                    pass=false;
+                }
+            }
+            if(pass==false) 
+                return;
             //bankDGTZ.show();
             // first get tdcs
             Map<Integer, Double> tdcs = new HashMap<>();
@@ -328,16 +343,21 @@ public class HitReader {
                 //if(adcConv.SVTADCtoDAQ(ADC[i], event)<50)
                 //    continue;
                 // create the strip object with the adc value converted to daq value used for cluster-centroid estimate
-                Strip SvtStrip = new Strip(strip, ADCConvertor.SVTADCtoDAQ(ADC), time); 
+                
+                boolean isMC = event.hasBank("MC::Particle");
+                double E = ADCConvertor.SVTADCtoDAQ(ADC, isMC);
+                if(E==-1) 
+                    continue;
+                Strip SvtStrip = new Strip(strip, E, time); 
                 SvtStrip.setPitch(SVTGeometry.getPitch());
                 // get the strip line
                 SvtStrip.setLine(Geometry.getInstance().getSVT().getStrip(layer, sector, strip));
                 SvtStrip.setModule(Geometry.getInstance().getSVT().getModule(layer, sector));
                 SvtStrip.setNormal(Geometry.getInstance().getSVT().getNormal(layer, sector)); 
                 // if the hit is useable in the analysis its status is =0
-                if (SvtStrip.getEdep() == 0) {
-                    SvtStrip.setStatus(1);
-                }
+                //if (SvtStrip.getEdep() == 0) {
+                //    SvtStrip.setStatus(1);
+                //}
                 //get status from ccdb
                 SvtStrip.setStatus(status.getIntValue("status", sector, layer, strip));
                 // create the hit object
