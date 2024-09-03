@@ -1,0 +1,73 @@
+#!/bin/bash
+
+usage="Usage:  run-clara -y yamlfile [-i dirorfile] [-o dir] [-t threads] [-n nevents] [-c CLARA_HOME]"
+
+function error() {
+    echo -e "\n$usage\n\nERROR:  $@" && exit 1
+}
+
+function abspath() {
+    [ -d $1 ] && echo $(cd $1 && pwd) && return 0
+    [ -f $1 ] && echo $(cd $(dirname $1) && pwd)/$1 && return 0
+    return 1
+}
+
+ulimit -u 49152 >& /dev/null
+set -e
+
+# Check user options:
+input=.
+output=.
+threads=2
+while getopts i:o:y:t:n:c:h opt
+do
+    case $opt in
+        i) input=$OPTARG ;;
+        o) output=$OPTARG ;;
+        y) yaml=$OPTARG ;;
+        t) threads=$OPTARG ;;
+        n) nevents="-e $OPTARG" ;;
+        c) CLARA_HOME=$OPTARG ;;
+        h) echo $usage && exit 0 ;;
+        ?) error "Unknown option:  $1" ;;
+    esac
+done
+[ -z ${CLARA_HOME+x} ] && error "CLARA_HOME must be specified."
+[ -d $CLARA_HOME ] || error "CLARA_HOME is missing:  $CLARA_HOME"
+[ -z ${yaml+x} ] && error "-y YAML must be specified."
+[ -r $yaml ] || error "YAML file does not exist."
+[ $threads -eq 0 ] && threads=`grep -c ^processor /proc/cpuinfo`
+
+# Normalize all user paths:
+export CLARA_HOME=$(abspath $CLARA_HOME)
+input=$(abspath $input)
+output=$(abspath $output)
+yaml=$(abspath $yaml)
+
+# Set the environment variables and directories required by CLARA:
+unset CLARA_MONITOR_FE
+export CLARA_USER_DATA=$(mktemp -d $output/run-clara.tmp.XXXXXX)
+cd $CLARA_USER_DATA
+mkdir -p $CLARA_USER_DATA/log
+mkdir -p $CLARA_USER_DATA/config
+mkdir -p $CLARA_USER_DATA/data/output
+
+# Generate the required file containing a file list for CLARA:
+# (Note, that file list must contain relative paths, not absolute.)
+test -e $input || eror "Invalid inputs:  $input"
+test -d $input && find $input -maxdepth 1 -type f -name '*.hipo' -exec basename {} \; > filelist.txt
+test -f $input && echo $(basename $input) > filelist.txt
+[ $(cat filelist.txt | wc -l) -gt 0 ] || error "Found no input files."
+
+# Finally, run CLARA:
+$CLARA_HOME/lib/clara/run-clara \
+    -i $input \
+    -o $CLARA_USER_DATA \
+    -z rec_ \
+    -x $CLARA_USER_DATA/log \
+    -t $threads \
+    $nevents \
+    -s recon \
+    $yaml \
+    ./filelist.txt
+
