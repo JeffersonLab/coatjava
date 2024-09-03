@@ -1,63 +1,70 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-usage="Usage:  run-clara -y yamlfile [-i dirorfile] [-o dir] [-t threads] [-n nevents] [-c CLARA_HOME]"
+usage="Usage:  run-clara -y YAML [-i INP] [-o OUT] [-c CLARA] [-t #] [-n #]"
+info="\nOptions:\n
+-y path to CLARA YAML steering file\n
+-i input HIPO file or directory of *.hipo files (default=.)\n
+-o output directory (default=.)\n
+-c CLARA installation (default=\$CLARA_HOME)\n
+-t number of threads (default=2)\n
+-n number of events (default=-1)\n\n
+Defaults will use \$CLARA_HOME to read all *.hipo files in \$PWD,\n
+with all output written to \$PWD."
 
 function error() {
-    echo -e "\n$usage\n\nERROR:  $@" && exit 1
+    echo -e "\n$usage\n\nERROR:  $@." && exit 1
 }
 
 function abspath() {
     [ -d $1 ] && echo $(cd $1 && pwd) && return 0
-    [ -f $1 ] && echo $(cd $(dirname $1) && pwd)/$1 && return 0
+    [ -r $1 ] && echo $(cd $(dirname $1) && pwd)/$(basename $1) && return 0
     return 1
 }
 
 ulimit -u 49152 >& /dev/null
 set -e
 
-# Check user options:
+# Check user command-line options:
 input=.
 output=.
 threads=2
-while getopts i:o:y:t:n:c:h opt
+while getopts i:o:c:y:t:n:h opt
 do
     case $opt in
         i) input=$OPTARG ;;
         o) output=$OPTARG ;;
-        y) yaml=$OPTARG ;;
-        t) threads=$OPTARG ;;
-        n) nevents="-e $OPTARG" ;;
         c) CLARA_HOME=$OPTARG ;;
-        h) echo $usage && exit 0 ;;
-        ?) error "Unknown option:  $1" ;;
+        y) yaml=$OPTARG && [ -r $yaml ] || error "-y must be a YAML file" ;;
+        t) threads=$OPTARG && [[ $threads =~ '^[0-9]+$' ]] || error "-t must be an integer, threads" ;;
+        n) nevents="-e $OPTARG" && [[ $nevents =~ '^[0-9]+$' ]] || error "-n must be an integer, events" ;;
+        h) echo -e $usage && echo -e $info && exit 0 ;;
     esac
 done
-[ -z ${CLARA_HOME+x} ] && error "CLARA_HOME must be specified."
-[ -d $CLARA_HOME ] || error "CLARA_HOME is missing:  $CLARA_HOME"
-[ -z ${yaml+x} ] && error "-y YAML must be specified."
-[ -r $yaml ] || error "YAML file does not exist."
+shift $((OPTIND-1))
+[ $# -gt 0 ] && error "Unknown arguments:  $@"
+[ -z ${yaml+x} ] && error "-y YAML must be specified"
+[ -z ${CLARA_HOME+x} ] && error "-c must be specified or \$CLARA_HOME set"
+[ -d $CLARA_HOME ] || error "Invalid CLARA_HOME:  $CLARA_HOME"
 [ $threads -eq 0 ] && threads=`grep -c ^processor /proc/cpuinfo`
+test -e $input && test -r $input || error "Invalid inputs -i:  $input"
 
-# Normalize all user paths:
-export CLARA_HOME=$(abspath $CLARA_HOME)
+# Create the environment variables and directories required by CLARA:
+[ -e $output ] && echo "WARNING:  Using existing directory:  $output."
+mkdir -p -v $output || error "Cannot create -o output directory: $output"
+mkdir -p $output/log $output/config $output/data/output
+export CLARA_USER_DATA=$output
+unset CLARA_MONITOR_FE
+
+# Normalize all paths:
 input=$(abspath $input)
 output=$(abspath $output)
 yaml=$(abspath $yaml)
+export CLARA_HOME=$(abspath $CLARA_HOME)
 
-# Set the environment variables and directories required by CLARA:
-unset CLARA_MONITOR_FE
-export CLARA_USER_DATA=$(mktemp -d $output/run-clara.tmp.XXXXXX)
-cd $CLARA_USER_DATA
-mkdir -p $CLARA_USER_DATA/log
-mkdir -p $CLARA_USER_DATA/config
-mkdir -p $CLARA_USER_DATA/data/output
-
-# Generate the required file containing a file list for CLARA:
-# (Note, that file list must contain relative paths, not absolute.)
-test -e $input || eror "Invalid inputs:  $input"
-test -d $input && find $input -maxdepth 1 -type f -name '*.hipo' -exec basename {} \; > filelist.txt
-test -f $input && echo $(basename $input) > filelist.txt
-[ $(cat filelist.txt | wc -l) -gt 0 ] || error "Found no input files."
+# Generate the file for CLARA containing a file list (of relative paths, not absolute):
+test -d $input && find $input -maxdepth 1 -type f -name '*.hipo' -exec basename {} \; > $CLARA_USER_DATA/filelist.txt
+test -f $input && echo $(basename $input) > $CLARA_USER_DATA/filelist.txt
+[ $(cat $CLARA_USER_DATA/filelist.txt | wc -l) -gt 0 ] || error "Found no input files."
 
 # Finally, run CLARA:
 $CLARA_HOME/lib/clara/run-clara \
@@ -69,5 +76,5 @@ $CLARA_HOME/lib/clara/run-clara \
     $nevents \
     -s recon \
     $yaml \
-    ./filelist.txt
+    ./$CLARA_USER_DATA/filelist.txt
 
