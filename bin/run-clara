@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 
 ulimit -u 49152 >& /dev/null
 export JAVA_OPTS="${JAVA_OPTS} -XX:+IgnoreUnrecognizedVMOptions"
@@ -30,9 +30,12 @@ function get_host_ip() {
     then
         while IFS=$': \t' read -r -a line
         do
-            [ -z "${line%inet}" ] &&
-               ip=${line[${#line[1]}>4?1:2]} &&
-               [ "${ip#127.0.0.1}" ] && echo $ip && return 0
+            if [ -z "${line%inet}" ]
+            then
+                ip=${line[${#line[1]}>4?1:2]}
+                [ "${ip#127.0.0.1}" ]
+                echo $ip && return 0
+            fi
         done< <(LANG=C ifconfig)
     fi
     return 1
@@ -40,12 +43,12 @@ function get_host_ip() {
 function get_dpe_port() {
     local ports
     ports=$(seq 7000 20 8000)
-    if command -v shuf >/dev/null 2>&1; then
-        ports=$(echo "$ports" | shuf)
-    fi
-    for port in $ports; do
+    command -v shuf >/dev/null 2>&1 && ports=$(echo "$ports" | shuf)
+    for port in $ports
+    do
         local ctrl_port=$((port + 2))
-        if ! eval "exec 6<>/dev/tcp/127.0.0.1/$ctrl_port" 2> /dev/null; then
+        if ! eval "exec 6<>/dev/tcp/127.0.0.1/$ctrl_port" 2> /dev/null
+        then
             echo $port
             return 0
         fi
@@ -65,11 +68,12 @@ do
         i) input=$OPTARG ;;
         o) output=$OPTARG ;;
         c) CLARA_HOME=$OPTARG ;;
-        t) threads=$OPTARG && [[ $threads =~ '^[0-9]+$' ]] || error "-t must be an integer, threads" ;;
-        n) nevents="-e $OPTARG" && [[ $nevents =~ '^[0-9]+$' ]] || error "-n must be an integer, events" ;;
+        t) threads=$OPTARG && echo $threads | grep -q -E '^[0-9]+$' || error "-t must be an integer, threads" ;;
+        n) nevents="-e $OPTARG" && echo $nevents | grep -q -E '^-e [0-9]+$' || error "-n must be an integer, events" ;;
         h) echo -e $usage && echo -e $info && exit 0 ;;
     esac
 done
+
 shift $((OPTIND-1))
 [ $# -gt 1 ] && error "Extra arguments:  ${@:2} (options must come before positionals)"
 [ $# -lt 1 ] && error "YAML file argument is required"
