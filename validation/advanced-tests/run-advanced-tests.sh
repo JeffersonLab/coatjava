@@ -1,9 +1,5 @@
 #!/bin/sh -f
 
-# this test needs rewritten, with more useful data (not KPP),
-# meanwhile not worth maintaining ...
-#exit 0
-
 # coatjava must already be built at ../../coatjava/
 
 # set up environment
@@ -27,7 +23,7 @@ export JAVA_OPTS="-Djava.util.logging.config.file=$PWD/../../etc/logging/debug.p
 $COAT/bin/decoder -t -0.5 -s 0.0 -i ./twoTrackEvents_809_raw.evio -o ./twoTrackEvents_809.hipo -c 2
 
 # run clara
-$COAT/bin/run-clara $COAT/etc/services.kpp.yaml  || echo "reconstruction with clara failure" && exit 1
+$COAT/bin/run-clara $COAT/etc/services/kpp.yaml  || echo "reconstruction with clara failure" && exit 1
 
 # compile test codes
 javac -cp $classPath src/kpptracking/KppTrackingTest.java 
