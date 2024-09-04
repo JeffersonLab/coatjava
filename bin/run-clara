@@ -1,18 +1,18 @@
-#!/usr/bin/env bash
+#!/bin/bash -f
 
 ulimit -u 49152 >& /dev/null
 export JAVA_OPTS="${JAVA_OPTS} -XX:+IgnoreUnrecognizedVMOptions"
 
 usage="Usage:  run-clara [-i IN] [-o OUT] [-c CLARA] [-t #] [-n #] YAML"
-info="\nOptions:\n
-YAML path to CLARA YAML steering file\n
+info='\nOptions:\n
+YAML - path to CLARA YAML steering file\n
 -i   input HIPO file or directory of *.hipo files (default=.)\n
 -o   output directory (default=.)\n
--c   CLARA installation (default=\$CLARA_HOME)\n
+-c   CLARA installation (default=$CLARA_HOME)\n
 -t   number of threads (default=2)\n
 -n   number of events (default=-1)\n\n
-Defaults will use \$CLARA_HOME to read all *.hipo files in \$PWD,\n
-with all output written to \$PWD."
+Defaults will use $CLARA_HOME to read all *.hipo files in $PWD,\n
+with all output written to $PWD.'
 
 function error() {
     echo -e "\n$usage\n\nERROR:  $@." && exit 1
