@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+. `dirname $0`/../libexec/env.sh
+cmd="java -Xms1024m -cp $CLAS12DIR/lib/clas/*:$CLAS12DIR/lib/plugins/* org.jlab.groot.data.TDirectory"
+
+if [ $# -eq 0 ]; then
+  echo """
+  hipo-merge-histograms
+  - merge histogram HIPO files
+  - to merge HIPO data files, use 'hipo-utils -merge' instead"""
+  $cmd | sed 's;\<hadd\>;hipo-merge-histograms;g'
+  exit 2
+fi
+
+$cmd $*
