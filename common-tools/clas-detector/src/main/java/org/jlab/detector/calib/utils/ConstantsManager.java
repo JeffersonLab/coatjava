@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.ccdb.Assignment;
 
 import org.jlab.utils.groups.IndexedTable;
 
@@ -25,6 +26,8 @@ public class ConstantsManager {
     private volatile Map<Integer, DatabaseConstantsDescriptor> runConstants = new LinkedHashMap<Integer, DatabaseConstantsDescriptor>();
     private volatile Map<Integer, Integer> runConstantRequestHistory = new LinkedHashMap<Integer, Integer>();
     private static volatile Map<Integer, RCDBConstants> rcdbConstants = new LinkedHashMap<Integer, RCDBConstants>();
+    private static volatile List<String> stringTables = new ArrayList();
+    private static volatile Map<Integer, Map<String,StringIndexedTable>> stringConstants = new LinkedHashMap();
 
     private String databaseVariation = "default";
     private String timeStamp = "";
@@ -58,7 +61,11 @@ public class ConstantsManager {
     public synchronized void init(List<String> tables) {
         this.defaultDescriptor.addTables(tables);
     }
-    
+
+    public synchronized void addStringTable(String... tables) {
+        for (String s : tables) stringTables.add(s);
+    }
+
     /**
      * use a map just to avoid name clash
      * @param tables map of table_name to #indices 
@@ -95,6 +102,13 @@ public class ConstantsManager {
             this.loadConstantsForRun(run);
         }
         return this.rcdbConstants.get(run);
+    }
+
+    public StringIndexedTable getStringConstants(int run, String table) {
+        if (!stringConstants.containsKey(run)) {
+            this.loadConstantsForRun(run);
+        }
+        return stringConstants.get(run).get(table);
     }
 
     public RCDBConstants.RCDBConstant getRcdbConstant(int run, String name) {
@@ -139,6 +153,15 @@ public class ConstantsManager {
                 requestStatus = -1;
             }
         }
+
+        if (!stringConstants.containsKey(run)) {
+            Map<String,StringIndexedTable> s = new HashMap();
+            for (String table : stringTables)
+                s.put(table, new StringIndexedTable(provider.getAssignment(table)));
+            stringConstants.put(run,s);
+            System.out.println(stringConstants.get(run).get("/runcontrol/beam").getValueFloat("beam_energy","value"));
+        }
+
         provider.disconnect();
         this.runConstants.put(run, desc);
 
@@ -181,11 +204,11 @@ public class ConstantsManager {
         Set<String>    tableNames  = new LinkedHashSet<String>();
         Set<String>    mapKeys     = new LinkedHashSet<String>();
         Map<String,IndexedTable>  hashTables = new LinkedHashMap<String,IndexedTable>();
-        
+
         public DatabaseConstantsDescriptor(){
             
         }
-       
+
         public void addTable(String table, int indices) {
             if (tableNames.add(table)) {
                 mapKeys.add(table);
