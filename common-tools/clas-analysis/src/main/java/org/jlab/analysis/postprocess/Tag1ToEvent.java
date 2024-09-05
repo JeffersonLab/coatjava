@@ -83,7 +83,7 @@ public class Tag1ToEvent {
             LOGGER.info("\n>>> Initializing helicity configuration from CCDB ...\n");
             ConstantsManager conman = new ConstantsManager();
             conman.init("/runcontrol/hwp","/runcontrol/helicity");
-            final int run = getRunNumber(parser.getInputList().get(0));
+            final int run = Util.getRunNumber(parser.getInputList().get(0));
             IndexedTable helTable = conman.getConstants(run, "/runcontrol/helicity");
  
             // Initialize the scaler sequence from tag-1 events:
@@ -137,7 +137,7 @@ public class Tag1ToEvent {
                     if (doHelicityDelay) {
                         recEventBank.putByte("helicity",0,hb.value());
                         recEventBank.putByte("helicityRaw",0,hbraw.value());
-                        RebuildScalers.assignScalerHelicity(runConfigBank.getLong("timestamp",0), helScalerBank, helSeq);
+                        Util.assignScalerHelicity(runConfigBank.getLong("timestamp",0), helScalerBank, helSeq);
                     }
 
                     // Write beam charge to REC::Event:
@@ -154,7 +154,7 @@ public class Tag1ToEvent {
                     writer.addEvent(event, event.getEventTag());
 
                     // Copy config banks to new, tag-1 events:
-                    createTag1Events(writer, event, configEvent, configBanks);
+                    Util.createTag1Events(writer, event, configEvent, configBanks);
                 }
 
                 reader.close();
@@ -169,33 +169,6 @@ public class Tag1ToEvent {
 
         LOGGER.info(String.format("Tag1ToEvent:  Good Helicity Fraction: %.2f%%",100*(float)goodHelicity/(goodHelicity+badHelicity)));
         LOGGER.info(String.format("Tag1ToEvent:  Good Charge   Fraction: %.2f%%",100*(float)goodCharge/(goodCharge+badCharge)));
-    }
-
-    private static void createTag1Events(HipoWriterSorted writer, Event source, Event destination, Bank... banks) {
-        destination.reset();
-        for (Bank bank : banks) {
-            source.read(bank);
-            if (bank.getRows()>0)
-                destination.write(bank);
-        }
-        if (!destination.isEmpty())
-            writer.addEvent(destination,1);
-    }
-
-    private static int getRunNumber(String... filenames) {
-        Event event = new Event();
-        for (String filename : filenames) {
-            HipoReader reader = new HipoReader();
-            reader.open(filename);
-            Bank bank = new Bank(reader.getSchemaFactory().getSchema("RUN::config"));
-            while (reader.hasNext()) {
-                reader.nextEvent(event);
-                event.read(bank);
-                if (bank.getRows()>0 && bank.getInt("run",0)>0)
-                    return bank.getInt("run",0);
-            }
-        }
-        return -1;
     }
 
 }

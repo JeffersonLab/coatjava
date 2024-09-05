@@ -17,7 +17,6 @@ import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.geom.base.Detector;
 import org.jlab.rec.dc.trajectory.TrajectorySurfaces;
 import org.jlab.utils.groups.IndexedTable;
-import org.jlab.detector.banks.RawBank.OrderType;
 
 /**
  * Constants used in the reconstruction
@@ -54,9 +53,10 @@ public class Constants {
     public static final double SIN25 = Math.sin(Math.toRadians(25.));
     public static final double COS25 = Math.cos(Math.toRadians(25.));
     public static final double COS30 = Math.cos(Math.toRadians(30.)); 
-    public static final double SIN6 = Math.sin(Math.toRadians(6.));
-    public static final double COS6 = Math.cos(Math.toRadians(6.));
-    public static final double TAN6 = Math.tan(Math.toRadians(6.));
+    public static final double STEREOANGLE = 6.;
+    public static final double SIN6 = Math.sin(Math.toRadians(STEREOANGLE));
+    public static final double COS6 = Math.cos(Math.toRadians(STEREOANGLE));
+    public static final double TAN6 = Math.tan(Math.toRadians(STEREOANGLE));
     public static final double CTAN6 = 1/TAN6;
     public static final double[] SINSECTOR60 = {0, Math.sin(Math.toRadians(60.)), Math.sin(Math.toRadians(120.)), 0, 
         Math.sin(Math.toRadians(240.)), Math.sin(Math.toRadians(300.))};
@@ -87,6 +87,8 @@ public class Constants {
 
     // CONFIGURABLE PARAMETERS
     private String  GEOVARIATION = "default";    
+    public  DCGeant4Factory.MinistaggerStatus  MINISTAGGERSTATUS = null;
+    public  DCGeant4Factory.FeedthroughsStatus FEEDTHROUGHSSTATUS = null;
     private boolean ENDPLATESBOWING = false;
     private double  WIREDIST = 0.0;
     public  int     SECTORSELECT = 0;
@@ -368,6 +370,8 @@ public class Constants {
 
     public synchronized void initialize(String engine,
                                         String variation, 
+                                        String ministaggerStatus,
+                                        String feedthroughsStatus,
                                         boolean wireDistortion,
                                         boolean useStartTime,
                                         boolean useBetaCut,
@@ -382,16 +386,18 @@ public class Constants {
             printConfig(engine);
         }
         else {
-            GEOVARIATION    = variation;
-            ENDPLATESBOWING = wireDistortion;
-            USETSTART       = useStartTime;
-            CHECKBETA       = useBetaCut;
-            T2D             = t2d;
-            USEDOUBLETS     = useDoublets;
-            DCRBJITTER      = dcrbJitter;  
-            SWAPDCRBBITS    = swapDCRBBits;
+            GEOVARIATION        = variation;
+            MINISTAGGERSTATUS   = DCGeant4Factory.MinistaggerStatus.getStatus(ministaggerStatus);
+            FEEDTHROUGHSSTATUS  = DCGeant4Factory.FeedthroughsStatus.getStatus(feedthroughsStatus);
+            ENDPLATESBOWING     = wireDistortion;
+            USETSTART           = useStartTime;
+            CHECKBETA           = useBetaCut;
+            T2D                 = t2d;
+            USEDOUBLETS         = useDoublets;
+            DCRBJITTER          = dcrbJitter;  
+            SWAPDCRBBITS        = swapDCRBBits;
             NSUPERLAYERTRACKING = nSuperLayer;
-            SECTORSELECT    = selectedSector;
+            SECTORSELECT        = selectedSector;
 
             LoadConstants();
 
@@ -420,6 +426,8 @@ public class Constants {
         LOGGER.log(Level.INFO, "["+engine+"] run with variation = " + GEOVARIATION);
         LOGGER.log(Level.INFO, "["+engine+"] run with sector selection = " + SECTORSELECT);
         LOGGER.log(Level.INFO, "["+engine+"] run with start time option = " + USETSTART);
+        LOGGER.log(Level.INFO, "["+engine+"] run with wire ministagger = "  + MINISTAGGERSTATUS.getName());
+        LOGGER.log(Level.INFO, "["+engine+"] run with wire feedthroughs = " + FEEDTHROUGHSSTATUS.getName());
         LOGGER.log(Level.INFO, "["+engine+"] run with wire distortions = " + ENDPLATESBOWING);
         LOGGER.log(Level.INFO, "["+engine+"] run with with time Beta correction (is false for doca Beta correction) = " + USETIMETBETA);
         LOGGER.log(Level.INFO, "["+engine+"] run with with Beta cut = " + CHECKBETA);
@@ -526,7 +534,7 @@ public class Constants {
     private synchronized void LoadGeometry(String geoVariation, double[][] shifts) {
         // Load the geometry
         ConstantProvider provider = GeometryFactory.getConstants(DetectorType.DC, 11, geoVariation);
-        dcDetector = new DCGeant4Factory(provider, DCGeant4Factory.MINISTAGGERON, ENDPLATESBOWING, shifts);
+        dcDetector = new DCGeant4Factory(provider, MINISTAGGERSTATUS, FEEDTHROUGHSSTATUS, ENDPLATESBOWING, shifts);
         for(int l=0; l<6; l++) {
             wpdist[l] = provider.getDouble("/geometry/dc/superlayer/wpdist", l);
         }

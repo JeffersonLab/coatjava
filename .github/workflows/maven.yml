@@ -21,7 +21,7 @@ defaults:
     shell: bash
 
 env:
-  java_version: 11
+  java_version: 17
   java_distribution: zulu
   groovy_version: 4.0.3
 
@@ -169,7 +169,7 @@ jobs:
   #############################################################################
 
   collect_webpages:
-    if: ${{ github.head_ref == 'development' || github.ref_name == 'development' }}
+    if: ${{ github.ref == 'refs/heads/development' }}
     needs: [ build, generate_documentation ]
     runs-on: ubuntu-latest
     steps:
@@ -190,7 +190,7 @@ jobs:
           path: pages/
 
   deploy_web_pages:
-    if: ${{ github.head_ref == 'development' || github.ref_name == 'development' }}
+    if: ${{ github.ref == 'refs/heads/development' }}
     needs: collect_webpages
     permissions:
       pages: write
