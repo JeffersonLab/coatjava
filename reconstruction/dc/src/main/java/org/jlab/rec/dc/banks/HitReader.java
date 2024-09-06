@@ -671,20 +671,26 @@ public class HitReader {
 
         int[] Ids  ;     //  1-6 = cluster ids for slyrs 1 - 6
         double[] tPars ; // NN trk pars p, theta, phi ; last idx = track id;
+        int trkId = 0;
         for (int j = 0; j < bankAI.rows(); j++) {
-            Ids  = new int[6];
-            tPars = new double[4];
-            Ids[0] = (int)bankAI.getShort("c1", j); // clusId in superlayer 1
-            Ids[1] = (int)bankAI.getShort("c2", j);
-            Ids[2] = (int)bankAI.getShort("c3", j);
-            Ids[3] = (int)bankAI.getShort("c4", j);
-            Ids[4] = (int)bankAI.getShort("c5", j);
-            Ids[5] = (int)bankAI.getShort("c6", j); // clusId in superlayer 6
-            
-            tPars[0] = (double)bankAI.getFloat("p", j);
-            tPars[1] = (double)bankAI.getFloat("theta", j);
-            tPars[2] = (double)bankAI.getFloat("phi", j);
-            tPars[3] = (double)bankAI.getByte("id", j);
+                trkId++;
+                        
+                Ids  = new int[6];
+                tPars = new double[7];
+                Ids[0] = (int)bankAI.getInt("c1", j); // clusId in superlayer 1
+                Ids[1] = (int)bankAI.getInt("c2", j);
+                Ids[2] = (int)bankAI.getInt("c3", j);
+                Ids[3] = (int)bankAI.getInt("c4", j);
+                Ids[4] = (int)bankAI.getInt("c5", j);
+                Ids[5] = (int)bankAI.getInt("c6", j); // clusId in superlayer 6
+
+                tPars[0] = (double)bankAI.getShort("charge", j);
+                tPars[1] = (double)bankAI.getFloat("px", j);
+                tPars[2] = (double)bankAI.getFloat("py", j);
+                tPars[3] = (double)bankAI.getFloat("pz", j);
+                tPars[4] = (double)bankAI.getFloat("vx", j);
+                tPars[5] = (double)bankAI.getFloat("vy", j);
+                tPars[6] = (double)bankAI.getFloat("vz", j);
             
             aimatch.clear();
             for (int k = 0; k < 6; k++) {
@@ -695,19 +701,28 @@ public class HitReader {
                 int clusterID = bank.getShort("clusterID", i);
 
                 if(clusterID>0) {
-                    if(this.aimatch.containsKey(clusterID)) { 
+                    if(this.aimatch.containsKey(clusterID)) {                         
                         Hit hit = new Hit(bank.getByte("sector", i), bank.getByte("superlayer", i), 
-                            bank.getByte("layer", i), bank.getShort("wire", i), bank.getInt("TDC", i), bank.getByte("jitter", i), bank.getShort("id", i));
+                                bank.getByte("layer", i), bank.getShort("wire", i), bank.getInt("TDC", i), bank.getByte("jitter", i), bank.getShort("id", i));
                         hit.set_Id(bank.getShort("id", i));
                         hit.calc_CellSize(detector);
                         double posError = hit.get_CellSize() / Math.sqrt(12.);
                         hit.set_DocaErr(posError);
-                        hit.NNTrkId  = (int) this.aimatch.get(clusterID)[3];
+                        hit.NNTrkId = trkId;
                         hit.NNClusId = clusterID;
-                        hit.NNTrkP      = this.aimatch.get(clusterID)[0];
-                        hit.NNTrkTheta  = this.aimatch.get(clusterID)[1];
-                        hit.NNTrkPhi    = this.aimatch.get(clusterID)[2];
-                        LOGGER.log(Level.FINE, "NN"+hit.printInfo());
+                        hit.NNTrkP = Math.sqrt(this.aimatch.get(clusterID)[1] * this.aimatch.get(clusterID)[1]
+                                + this.aimatch.get(clusterID)[2] * this.aimatch.get(clusterID)[2] + this.aimatch.get(clusterID)[3] * this.aimatch.get(clusterID)[3]);
+                        if (hit.NNTrkP != 0) {
+                            hit.NNTrkTheta = Math.acos(this.aimatch.get(clusterID)[3] / hit.NNTrkP);
+                        } else {
+                            hit.NNTrkTheta = 0;
+                        }
+                        if (this.aimatch.get(clusterID)[1] != 0) {
+                            hit.NNTrkPhi = Math.atan2(this.aimatch.get(clusterID)[2], this.aimatch.get(clusterID)[1]);
+                        } else {
+                            hit.NNTrkPhi = 0;
+                        }
+                        LOGGER.log(Level.FINE, "NN" + hit.printInfo());
                         this._DCHits.add(hit);
                     }
                 }
