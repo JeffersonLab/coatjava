@@ -159,7 +159,7 @@ public class ConstantsManager {
             for (String table : stringTables)
                 s.put(table, new StringIndexedTable(provider.getAssignment(table)));
             stringConstants.put(run,s);
-            System.out.println(stringConstants.get(run).get("/runcontrol/beam").getValueFloat("beam_energy","value"));
+            //System.out.println(stringConstants.get(run).get("/runcontrol/beam").getValueFloat("beam_energy","value"));
         }
 
         provider.disconnect();
