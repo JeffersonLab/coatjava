@@ -20,6 +20,7 @@ import org.jlab.rec.dc.nn.PatternRec;
 import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.track.Track;
 import org.jlab.rec.dc.track.TrackCandListFinder;
+import org.jlab.io.base.DataBank;
 
 /**
  *
@@ -156,6 +157,8 @@ public class DCHBPostClusterAI extends DCEngine {
             }
         }
         
+        rewriteInstarecBank(event, trkcands);
+        
                 // no candidate found, stop here and save the hits,
         // the clusters, the segments, the crosses
         if (trkcands.isEmpty()) {
@@ -175,6 +178,47 @@ public class DCHBPostClusterAI extends DCEngine {
                     writer.fillHBTrajectoryBank(event, trkcands));
         } 
         return true;
+    }
+    
+    void rewriteInstarecBank(DataEvent event, List<Track> trkcands){
+        if(event.hasBank(this.getBanks().getInstarecBank()) ){
+            DataBank bankInstarec = event.getBank(this.getBanks().getInstarecBank());
+            event.removeBank(bankInstarec.getDescriptor().getName());
+            
+            int[] clsIdsInstarec = new int[6];   
+            for (int row = 0; row < bankInstarec.rows(); row++) {             
+                clsIdsInstarec[0] = (int)bankInstarec.getInt("c1", row); 
+                clsIdsInstarec[1] = (int)bankInstarec.getInt("c2", row);
+                clsIdsInstarec[2] = (int)bankInstarec.getInt("c3", row);
+                clsIdsInstarec[3] = (int)bankInstarec.getInt("c4", row);
+                clsIdsInstarec[4] = (int)bankInstarec.getInt("c5", row);
+                clsIdsInstarec[5] = (int)bankInstarec.getInt("c6", row); 
+                
+                double chi2PerNDF = -999;
+                boolean matchFlag = false;
+                int[] clsIdsTrack = new int[6];
+                for (Track trk : trkcands) {
+                    for(Cross crs : trk){
+                        clsIdsTrack[crs.get_Segment1().get_Superlayer()-1] = crs.get_Segment1().get_Id();
+                        clsIdsTrack[crs.get_Segment2().get_Superlayer()-1] = crs.get_Segment2().get_Id();
+                    }
+                    
+                    int numClsMatch = 0;
+                    for(int i = 0; i < 6; i++){                    
+                        if((clsIdsTrack[i] == clsIdsInstarec[i]) || (clsIdsTrack[i] <= 0 && clsIdsInstarec[i] <= 0 )) numClsMatch++;                                                
+                    }
+                    if(numClsMatch == 6){
+                        matchFlag = true;
+                        chi2PerNDF = trk.get_FitChi2()/trk.get_FitNDF();
+                        break;
+                    }                                      
+                }
+                
+                if(matchFlag) bankInstarec.setFloat("chi2", row, (float)chi2PerNDF);                     
+            }
+            
+            event.appendBank(bankInstarec);            
+        }        
     }
     
 }
