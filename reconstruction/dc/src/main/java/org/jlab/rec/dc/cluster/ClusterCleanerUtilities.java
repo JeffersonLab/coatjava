@@ -222,7 +222,7 @@ public class ClusterCleanerUtilities {
             }
         }
 
-        // make new clusters
+        // make new clusters with application of OverlappingClusterResolver
         List<FittedCluster> selectedClusList = new ArrayList<>();
 
         int newcid = nextClsStartIndex;
@@ -240,19 +240,36 @@ public class ClusterCleanerUtilities {
                 }
             }
         }
+        
+        // Apply OverlappingClusterResolver again
+        List<FittedCluster> selectedClusList2 = new ArrayList<>();
+        for (FittedCluster cluster : selectedClusList) {
+            cluster.set_Id(newcid++);
+            cf.SetFitArray(cluster, "LC");
+            cf.Fit(cluster, true);
+
+            FittedCluster bestCls = OverlappingClusterResolver(cluster, selectedClusList);
+
+            if (bestCls != null) {
+
+                if (!(selectedClusList2.contains(bestCls))) {
+                    selectedClusList2.add(bestCls);
+                }
+            }
+        }
 
         int splitclusId = 1;
-        if (!selectedClusList.isEmpty()) {
-            for (FittedCluster cl : selectedClusList) {
+        if (!selectedClusList2.isEmpty()) {
+            for (FittedCluster cl : selectedClusList2) {
                 cl.set_Id(clus.get_Id() * 1000 + splitclusId);
                 splitclusId++;
             }
         }
 
-        if (selectedClusList.isEmpty()) {
-            selectedClusList.add(clus); // if the splitting fails, then return the original cluster
+        if (selectedClusList2.isEmpty()) {
+            selectedClusList2.add(clus); // if the splitting fails, then return the original cluster
         }
-        return selectedClusList;
+        return selectedClusList2;
     }
 
     public List<List<Hit>> byLayerListSorter(List<Hit> DCHits, int sector, int superlyr) {
@@ -732,8 +749,8 @@ public class ClusterCleanerUtilities {
                   //  passCls = false;
                 //}
             }
-            if((!isExceptionalFittedCluster(cls) && hitOvrl.size() < 3) 
-                    || (isExceptionalFittedCluster(cls) && hitOvrl.size() < 2)) {
+            if((!isExceptionalFittedCluster(cls) && !isExceptionalFittedCluster(thisclus) && hitOvrl.size() < 3) 
+                    || ((isExceptionalFittedCluster(cls) || isExceptionalFittedCluster(thisclus)) && hitOvrl.size() < 2)) {
                 passCls = false;
             }
 
