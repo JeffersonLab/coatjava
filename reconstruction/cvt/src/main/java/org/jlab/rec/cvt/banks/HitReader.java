@@ -222,6 +222,7 @@ public class HitReader {
      * @param omitLayer
      * @param omitHemisphere
      * @param status
+     * @param adcStatus
      */
     public void fetch_SVTHits(DataEvent event, int omitLayer, int omitHemisphere, 
             IndexedTable status, IndexedTable adcStatus) {
@@ -246,14 +247,14 @@ public class HitReader {
             //This ADC=-1 status is in a ccdb table
             boolean pass=true;
             int adcStat = adcStatus.getIntValue("adcstatus", 0, 0, 0);
-            for (int i = 0; i < rows; i++) {     
-                int ADC = bankDGTZ.getInt("ADC", i);
-                if(ADCConvertor.isEventCorrupted(ADC, adcStat)==false) {
-                    pass=false;
-                }
-            }
-            if(pass==false) 
-                return;
+//            for (int i = 0; i < rows; i++) {     
+//                int ADC = bankDGTZ.getInt("ADC", i);
+//                if(ADCConvertor.isEventCorrupted(ADC, adcStat)==false) {
+//                    pass=false;
+//                }
+//            }
+//            if(pass==false) 
+//                return;
             //bankDGTZ.show();
             // first get tdcs
             Map<Integer, Double> tdcs = new HashMap<>();
@@ -348,6 +349,7 @@ public class HitReader {
                 double E = ADCConvertor.SVTADCtoDAQ(ADC, isMC);
                 if(E==-1) 
                     continue;
+                
                 Strip SvtStrip = new Strip(strip, E, time); 
                 SvtStrip.setPitch(SVTGeometry.getPitch());
                 // get the strip line
@@ -365,9 +367,13 @@ public class HitReader {
                 hit.setId(id);
                 if (Constants.getInstance().flagSeeds)
                     hit.MCstatus = order;
-                
+                if(!ADCConvertor.isEventUnCorrupted(ADC, adcStat)) {
+                    hit.isCorrupted=true;
+                }
                 // add this hit
-                if(hit.getRegion()!=Constants.getInstance().getRmReg()) {     
+                
+                if(hit.getRegion()!=Constants.getInstance().getRmReg()
+                        && !hit.isCorrupted) {     
                     if(Constants.getInstance().useOnlyMCTruthHits() ) {
                         if(hit.MCstatus==0)
                             hits.add(hit);

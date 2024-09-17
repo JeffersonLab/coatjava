@@ -11,7 +11,7 @@ public class ADCConvertor {
 
     }
 
-    public static boolean isEventCorrupted(int adc, int adcstat) {
+    public static boolean isEventUnCorrupted(int adc, int adcstat) {
         boolean pass = true;
         if(adc==-1 && adc*adcstat==0) //0: event corrupted; -1 event is OK
             pass=false;
