@@ -3,7 +3,7 @@
 
   <groupId>org.jlab.clas</groupId>
   <artifactId>clas12rec</artifactId>
-  <version>11.0.1-SNAPSHOT</version>
+  <version>11.0.2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <repositories>
@@ -62,7 +62,7 @@
       <plugin>
         <groupId>com.github.spotbugs</groupId>
         <artifactId>spotbugs-maven-plugin</artifactId>
-        <version>4.8.6.2</version>
+        <version>4.8.6.3</version>
         <configuration>
           <excludeFilterFile>spotbugs-exclude.xml</excludeFilterFile>
         </configuration>
@@ -71,7 +71,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.8.0</version>
+        <version>3.10.0</version>
         <configuration>
           <doctitle>coatjavadocs</doctitle>
           <windowtitle>coatjavadocs</windowtitle>

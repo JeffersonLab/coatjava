@@ -30,7 +30,7 @@ if [ $# -ge 1 ]; then
     # additional variables and settings for groovy
     if [ "$1" = "groovy" ]; then
       JYPATH="${JYPATH:+${JYPATH}:}${CLAS12DIR}/lib/packages"
-      export JAVA_OPTS="-Dsun.java2d.pmoffscreen=false -Djava.util.logging.config.file=$CLAS12DIR/etc/logging/debug.properties -Xms1024m -Xmx2048m -XX:+UseSerialGC"
+      export JAVA_OPTS="-Dsun.java2d.pmoffscreen=false -Djava.util.logging.config.file=$CLAS12DIR/etc/logging/debug.properties -Xms1024m -Xmx2048m -XX:+UseSerialGC ${JAVA_OPTS-}"
     fi
 
     export JYPATH
