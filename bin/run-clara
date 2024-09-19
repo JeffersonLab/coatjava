@@ -98,7 +98,7 @@ export CLARA_HOME=$(abspath $CLARA_HOME)
 export CLAS12DIR=$CLARA_HOME/plugins/clas12
 
 # Generate the file for CLARA containing a file list (of relative paths, not absolute):
-test -d $input && find $input -maxdepth 1 -name '*.hipo' \( -type f \) -o \( -type l \) -exec basename {} \; > $CLARA_USER_DATA/filelist.txt
+test -d $input && find $input -maxdepth 1 -name '*.hipo' -exec basename {} \; > $CLARA_USER_DATA/filelist.txt
 test -f $input && echo $(basename $input) > $CLARA_USER_DATA/filelist.txt
 [ $(cat $CLARA_USER_DATA/filelist.txt | wc -l) -gt 0 ] || error "Found no input files."
 
