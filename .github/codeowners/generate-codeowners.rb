@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# run this script from the TOP level directory
 
 GithubHandles = {
   '<Adam Hobart>'            => 'ajhobart',
@@ -64,7 +65,7 @@ GithubHandles = {
 codeowners      = File.open('CODEOWNERS', 'w')
 unknown_authors = []
 
-File.readlines('main_dirs.txt').map(&:chomp).each do |line|
+File.readlines('.github/codeowners/main_dirs.txt').map(&:chomp).each do |line|
   if line.match? /^#/ or line.empty?
     codeowners.puts line
     next
