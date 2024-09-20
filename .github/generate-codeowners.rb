@@ -31,55 +31,71 @@ GithubHandles = {
   '<Nathan Baltzell>'        => 'baltzell',
   '<Nathan Harrison>'        => 'naharrison',
   '<Nick Markov>'            => 'markovnick',
-  '<Noemie Pilleux-LOCAL>'   => '',
+  '<Noemie Pilleux-LOCAL>'   => 'N-Plx',
   '<Peter EJ Davies>'        => '',
-  '<Pierre Chatagnon>'       => '',
-  '<Rafayel Paremuzyan>'     => '',
+  '<Pierre Chatagnon>'       => 'PChatagnon',
+  '<Rafayel Paremuzyan>'     => 'rafopar',
   '<Raffaella De Vita>'      => 'raffaelladevita',
   '<Reynier Cruz Torres>'    => '',
   '<Rong Wang>'              => '',
   '<Silvia Nicolai>'         => '',
-  '<Sylvester Joosten>'      => '',
-  '<Tongtong Cao>'           => '',
-  '<Vardan Gyurjyan>'        => '',
-  '<Veronique Ziegler>'      => '',
-  '<ajhobart>'               => '',
-  '<colesmith>'              => '',
-  '<cqplatt>'                => '',
-  '<dcpayette>'              => '',
+  '<Sylvester Joosten>'      => 'sly2j',
+  '<Tongtong Cao>'           => 'tongtongcao',
+  '<Vardan Gyurjyan>'        => 'gurjyan',
+  '<Veronique Ziegler>'      => 'zieglerv',
+  '<ajhobart>'               => 'ajhobart',
+  '<colesmith>'              => 'forcar',
+  '<cqplatt>'                => 'cqplatt',
+  '<dcpayette>'              => 'dcpayette',
   '<dependabot[bot]>'        => '',
-  '<efuchey>'                => '',
-  '<hattawy>'                => '',
-  '<huckb>'                  => '',
-  '<jwgibbs>'                => '',
-  '<mariangela-bondi>'       => '',
-  '<marmstr4>'               => '',
-  '<mcontalb>'               => '',
-  '<mpaolone>'               => '',
-  '<rtysonCLAS12>'           => '',
-  '<tongtongcao>'            => '',
+  '<efuchey>'                => 'efuchey',
+  '<hattawy>'                => 'Hattawy',
+  '<huckb>'                  => 'huckb',
+  '<jwgibbs>'                => 'jwgibbs',
+  '<mariangela-bondi>'       => 'mariangela-bondi',
+  '<marmstr4>'               => 'marmstr4',
+  '<mcontalb>'               => 'mcontalb',
+  '<mpaolone>'               => 'mpaolone',
+  '<rtysonCLAS12>'           => 'rtysonCLAS12',
+  '<tongtongcao>'            => 'tongtongcao',
   '<veronique>'              => 'zieglerv',
 }
 
 codeowners      = File.open('CODEOWNERS', 'w')
 unknown_authors = []
 
-file_list = `git ls-files`.split("\n")
-file_list.each_with_index do |file,i|
-  puts "#{i+1} / #{file_list.size}"
-  authors = `git shortlog -s -n -- '#{file}'`.split("\n").map do |line|
-    "<" + line.split(' ')[1..-1].join(' ') + ">"
+File.readlines('main_dirs.txt').map(&:chomp).each do |line|
+  if line.match? /^#/ or line.empty?
+    codeowners.puts line
+    next
   end
-  handles = authors.map do |author|
-    handle = GithubHandles[author]
-    if handle != ''
-      "@#{handle}"
-    else
-      unknown_authors << author
-      author
+
+  if line == '*'
+    codeowners.puts [line, '@baltzell', '@raffaelladevita', '@c-dilks'].join(' ')
+    next
+  end
+
+  puts line
+  these_authors = []
+  file_list = `git ls-files #{line.sub /\/\*$/, ''}`.split "\n"
+  file_list.each do |file|
+    puts " - #{file}"
+    authors = `git shortlog -s -n -- '#{file}'`.split("\n").map do |line|
+      "<" + line.split(' ')[1..-1].join(' ') + ">"
     end
+    handles = authors.map do |author|
+      handle = GithubHandles[author]
+      if handle != ''
+        "@#{handle}"
+      else
+        unknown_authors << author
+        author
+      end
+    end.reject{|h|h.match?(/dependabot/)}
+    these_authors += handles
   end
-  codeowners.puts "#{file.gsub(' ','\ ')} #{handles.join(' ')}"
+  codeowners.puts "#{line.gsub(' ','\ ')} #{these_authors.uniq.join(' ')}"
+
 end
 
 unless unknown_authors.empty?
