@@ -51,6 +51,7 @@ public class TracksFromTargetRec {
     private List<Cluster> SVTclusters;
     private List<Cluster> BMTclusters;
     private List<Cross> SVTcrosses;
+    public  List<Cross> SVTaddedcrosses;
     private List<Cross> BMTcrosses;
     private List<Seed>    CVTseeds ;
     private Swim swimmer;
@@ -72,6 +73,7 @@ public class TracksFromTargetRec {
         this.BMTclusters = clusters.get(1);
         this.SVTcrosses = crosses.get(0);   
         this.BMTcrosses = crosses.get(1);  
+        this.SVTaddedcrosses = new ArrayList<>();
         double solenoidValue = Constants.getSolenoidMagnitude(); // already the absolute value
         List<Seed> seeds = new ArrayList<>();
         // make list of crosses consistent with a track candidate
@@ -203,7 +205,6 @@ public class TracksFromTargetRec {
             if(seed.getId()<0) continue;
             int pid = elossPid;
             //seed.update_Crosses();
-            //System.out.println("Seed"+seed.toString());
             List<Surface> surfaces = measure.getMeasurements(seed);
             
             if(pid==0) pid = this.getTrackPid(event, seed.getId()); 
@@ -238,21 +239,30 @@ public class TracksFromTargetRec {
             
             if(Constants.getInstance().seedingDebugMode)
                 System.out.println("KF status ... failed "+kf.setFitFailed+" ndf "+kf.NDF+" helix "+kf.getHelix());
-            if (kf.setFitFailed == false && kf.NDF>0 && kf.getHelix()!=null) { 
+            if (kf.setFitFailed == false && kf.NDF>=0 && kf.getHelix()!=null) { 
                 Track fittedTrack = new Track(seed, kf, pid);
                 fittedTrack.update_Crosses(seed.getId());
                 for(Cross c : fittedTrack) { 
                     if(c.getDetector()==DetectorType.BST) {
-                        c.getCluster1().setAssociatedTrackID(0);
-                        c.getCluster2().setAssociatedTrackID(0);
+                        if(c.getCluster1()!=null)
+                            c.getCluster1().setAssociatedTrackID(0);
+                        if(c.getCluster2()!=null)
+                            c.getCluster2().setAssociatedTrackID(0);
                     }
                 }
+                
                 if (searchMissingCls) { 
                     //refit adding missing clusters
                     List<Cluster> clsOnTrack = recUtil.findClustersOnTrk(this.SVTclusters, seed.getClusters(), fittedTrack, swimmer); //VZ: finds missing clusters; RDV fix 0 error
-
+                    
                     List<Cross> crsOnTrack = recUtil.findCrossesFromClustersOnTrk(this.SVTcrosses, clsOnTrack, fittedTrack);
-
+                    
+                    for(Cluster cl : clsOnTrack) {
+                        if(cl.getAssociatedCrossID()==-1) {//make a pseudocross
+                            crsOnTrack.add(recUtil.createPseudoCross(cl, this.SVTcrosses.size()+crsOnTrack.size()));
+                        }
+                    }
+                    this.SVTaddedcrosses.addAll(crsOnTrack);
                     List<Cluster> bmtclsOnTrack = recUtil.findBMTClustersOnTrk(this.BMTclusters, seed.getCrosses(), fittedTrack.getHelix(),
                             fittedTrack.getP(), fittedTrack.getQ(), swimmer); //VZ: finds missing clusters
                     List<Cross> bmtcrsOnTrack = recUtil.findCrossesOnBMTTrack(this.BMTcrosses, bmtclsOnTrack);
@@ -291,18 +301,22 @@ public class TracksFromTargetRec {
                             fittedTrack = new Track(seed, kf, pid);
                             for(Cross c : fittedTrack) { 
                                 if(c.getDetector()==DetectorType.BST) {
-                                    c.getCluster1().setAssociatedTrackID(0);
-                                    c.getCluster2().setAssociatedTrackID(0);
+                                    if(c.getCluster1()!=null)
+                                        c.getCluster1().setAssociatedTrackID(0);
+                                    if(c.getCluster2()!=null)
+                                        c.getCluster2().setAssociatedTrackID(0);
                                 }
                             }
                         }
                     }
                 }
+                seed.checkSeedNClusters();
                 //fittedTrack.setStatus(1);
-                if(this.missingSVTCrosses(fittedTrack) == false)
+                if(this.missingSVTCrosses(fittedTrack) == false && !seed.isBad)
                     tracks.add(fittedTrack);
             } else {
-                if(Constants.getInstance().KFfailRecovery && Math.abs(pid)!=45) { 
+                seed.checkSeedNClusters();
+                if(Constants.getInstance().KFfailRecovery && !seed.isBad) { 
                     Track fittedTrack = null;
                     if(Constants.getInstance().KFfailRecovMisCls) { 
                         fittedTrack = recUtil.recovTrkMisClusSearch(seed, hlx, cov, kf2, kf, pid, surfaces, xb, yb,
@@ -314,7 +328,7 @@ public class TracksFromTargetRec {
 //                                System.out.println("RECOVERED..."+fittedTrack.toString());
 //                        } 
                     } 
-                    if((Constants.getInstance().KFfailRecovMisCls && fittedTrack==null) ){
+                    if((Constants.getInstance().KFfailRecovMisCls && fittedTrack==null) && !seed.isBad ){
                         //dump seed
                         kf2.init(hlx, cov, xb, yb, 0, surfaces, PDGDatabase.getParticleMass(pid)); 
                         kf2.runFitterNoFiltFailSafe();
@@ -325,13 +339,15 @@ public class TracksFromTargetRec {
                             //fittedTrack.setStatus(-1);
                             for(Cross c : fittedTrack) { 
                                 if(c.getDetector()==DetectorType.BST) {
-                                    c.getCluster1().setAssociatedTrackID(0);
-                                    c.getCluster2().setAssociatedTrackID(0);
+                                    if(c.getCluster1()!=null)
+                                        c.getCluster1().setAssociatedTrackID(0);
+                                    if(c.getCluster2()!=null)
+                                        c.getCluster2().setAssociatedTrackID(0);
                                 }
                             }
                         }
                     }
-                    if(fittedTrack!=null && this.missingSVTCrosses(fittedTrack) == false)
+                    if(fittedTrack!=null && this.missingSVTCrosses(fittedTrack) == false && !seed.isBad)
                         tracks.add(fittedTrack);
 
                 }
@@ -342,6 +358,11 @@ public class TracksFromTargetRec {
         // reset cross and cluster IDs
         if(SVTcrosses!=null) {
             for(Cross c : this.SVTcrosses) {
+                c.setAssociatedTrackID(-1);
+            }
+        }
+        if(SVTaddedcrosses!=null) {
+            for(Cross c : this.SVTaddedcrosses) {
                 c.setAssociatedTrackID(-1);
             }
         }

@@ -445,7 +445,8 @@ public class Cross extends ArrayList<Cluster> implements Comparable<Cross> {
      * @param trackDir
      */
     public void updateSVTCross(Vector3D trackDir) {
-
+        if(this.getId()<0) return; //pseudocross
+        
         Cluster inlayerclus  = this.getCluster1();
         Cluster outlayerclus = this.getCluster2();
         if (inlayerclus == null || outlayerclus == null) { 
@@ -596,12 +597,16 @@ public class Cross extends ArrayList<Cluster> implements Comparable<Cross> {
         if(this.getPoint0()!=null) s += " Point0 " + this.getPoint0().toString();
         if(this.getDir()!=null)    s += " Direction "+ this.getDir().toString()+" \n";
         s+="Hits: \n";
-        for(Hit h : this.getCluster1()) {
-            s+="Detector "+h.getDetector()+" Sector "+h.getSector()+" Layer "+h.getLayer()+" Strip "+h.getStrip().getStrip()+" MCT "+(h.MCstatus==0)+" \n";
-        }
-        if(this.getDetector()==DetectorType.BST) {
-            for(Hit h : this.getCluster2()) {
+        if(this.getCluster1()!=null) {
+            for(Hit h : this.getCluster1()) {
                 s+="Detector "+h.getDetector()+" Sector "+h.getSector()+" Layer "+h.getLayer()+" Strip "+h.getStrip().getStrip()+" MCT "+(h.MCstatus==0)+" \n";
+            }
+        }
+        if(this.getCluster2()!=null) {
+            if(this.getDetector()==DetectorType.BST) {
+                for(Hit h : this.getCluster2()) {
+                    s+="Detector "+h.getDetector()+" Sector "+h.getSector()+" Layer "+h.getLayer()+" Strip "+h.getStrip().getStrip()+" MCT "+(h.MCstatus==0)+" \n";
+                }
             }
         }
         return s;

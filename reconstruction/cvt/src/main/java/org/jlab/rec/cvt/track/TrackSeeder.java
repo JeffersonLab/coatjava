@@ -76,8 +76,7 @@ public class TrackSeeder {
                     if(Math.abs(res)<SVTParameters.RESIMAX) { 
                         seed.getCrosses().add(c);
                         fitStatus = seed.fit(Constants.SEEDFITITERATIONS, xbeam, ybeam, bfield, true);
-                        // add to seed   
-                        //System.out.println("SVTSEED test "+seed.toString());
+                        // add to seed  
                         if(!seed.isGood()) {
                             seed.getCrosses().remove(c);
                             //System.out.println("REMOVED "+c.printInfo());
@@ -113,7 +112,6 @@ public class TrackSeeder {
         double d = pars.doca();
         double r = pars.rho();
         double f = pars.phi();
-        
         boolean failed = false;
         for (Cross c : seedcrs ) { 
             double xi = c.getPoint().x(); 
@@ -272,7 +270,7 @@ public class TrackSeeder {
    
             // loop until a good circular fit. removing far crosses each time
             boolean circlefitstatusOK = false;
-            while( ! circlefitstatusOK && seedcrs.size()>=3 ){
+            while( ! circlefitstatusOK && seedcrs.size()>=2 ){
             
                 Xs.clear();
                 Ys.clear();
@@ -293,10 +291,8 @@ public class TrackSeeder {
                 CircleFitter circlefit = new CircleFitter(xbeam, ybeam);
                 circlefitstatusOK = circlefit.fitStatus(Xs, Ys, Ws, Xs.size());
                 CircleFitPars pars = circlefit.getFit();
-
                 // if not a good fit, check for outliers 
                 if (!circlefitstatusOK ||  pars.chisq()/(double)(Xs.size()-3)>10) {
-                  //System.out.println(" check circular fit" );
                     double d = pars.doca();
                     double r = pars.rho();
                     double f = pars.phi();
@@ -322,10 +318,10 @@ public class TrackSeeder {
 
         for(Seed mseed : getSeedScan()) { 
             boolean fitStatus = false;
-            if(mseed.getCrosses().size()>2) {
+            if(mseed.getCrosses().size()>=2) {
                 fitStatus = mseed.fit(Constants.SEEDFITITERATIONS, xbeam, ybeam, bfield, true);
             }
-            //System.out.println("CHECKING SSA SEED WOUT BMT-C");
+           
             //for(Cross c : mseed.getCrosses()) System.out.println(c.printInfo());
             if (fitStatus && mseed.isGood()) { 
                 List<Cross> sameSectorCrosses = this.findCrossesInSameSectorAsSVTTrk(mseed, bmtC_crosses);
@@ -351,7 +347,11 @@ public class TrackSeeder {
                         chi2_Line = bseed.getLineFitChi2PerNDF();
                     }
                 }
-                if(bestSeed!= null) seedlist.add(bestSeed);
+                if(bestSeed!= null) {
+                    seedlist.add(bestSeed);
+                } else {
+                    seedlist.add(mseed);
+                }
             }
         }
 

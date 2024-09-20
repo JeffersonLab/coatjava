@@ -26,7 +26,6 @@ public class TrackSeederRZ {
                 sortedCrosses.get(i).add(l,new ArrayList<>() );
             }
         }
-      
     }
     
     
@@ -131,6 +130,7 @@ public class TrackSeederRZ {
         }
         
         seeds.forEach((key,value) -> result.add(value));
+        removeCompleteZROverlaps(result);
         if(Constants.getInstance().seedingDebugMode) {
             System.out.println("ALL RZ SEEDS");
             for(List<Cross> s : result) {
@@ -139,7 +139,7 @@ public class TrackSeederRZ {
                     System.out.println(c.printInfo());
             }
         }
-        removeCompleteZROverlaps(result);
+        
         return result;
     }
     
@@ -173,6 +173,7 @@ public class TrackSeederRZ {
             
         zrtracks.removeAll(rmCros);
     }
+    
     private boolean interceptOK(Cross c1, Cross c2) { 
         if(Constants.getInstance().seedingDebugMode) {
             System.out.println("RZ Condidering (2):");

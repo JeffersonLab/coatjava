@@ -225,7 +225,16 @@ public class Track extends Trajectory implements Comparable<Track> {
             Point3D  trackPos = null;
             Vector3D trackDir = null;
             if(this.getKFTrajectories()!=null && Math.abs(this.getHelix().B)>0.0001) {
-                int layer = cross.getCluster1().getLayer();
+                int layer =0;
+                if(cross.getCluster1()==null) {
+                    layer=cross.getCluster2().getLayer()-1;
+                } else {
+                    layer=cross.getCluster1().getLayer();
+                    cross.getCluster1().setAssociatedTrackID(trackId);
+                }
+                if(cross.getCluster2()!=null) {
+                    cross.getCluster2().setAssociatedTrackID(trackId);
+                }
                 int index = MLayer.getType(cross.getDetector(), layer).getIndex();
                 HitOnTrack traj = this.getKFTrajectories().get(index);
                 if(traj==null) return; //RDV check why

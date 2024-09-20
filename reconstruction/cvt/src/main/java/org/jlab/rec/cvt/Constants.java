@@ -63,9 +63,9 @@ public class Constants {
     public boolean   preElossCorrection = true;
     private String   targetType = "";
     public Libr      KFMatrixLibrary;
-    private int svtmaxclussize = 30;
-    private int bmtcmaxclussize =30;
-    private int bmtzmaxclussize =30;
+    private int svtmaxclussize = 5;
+    private int bmtcmaxclussize =7;
+    private int bmtzmaxclussize =7;
     public boolean useSVTTimingCuts =  false;
     public boolean removeOverlappingSeeds = false;
     public boolean flagSeeds = true;
@@ -108,6 +108,7 @@ public class Constants {
 
     public  boolean EXCLUDELAYERS = false;
     private final Map<Integer,Integer> layersUsed = new HashMap<>();
+    private static final Map<Integer,Integer> svtlayersExcld = new HashMap<>();
     private final double[][]BMTPhiZRangeExcld = new double[2][2];
     private int BMTLayerExcld = -1;
     
@@ -134,7 +135,26 @@ public class Constants {
     public String getTargetType() {
         return targetType;
     }
-    
+    public void setSVTTExclude(String layers) {
+        for(int i = 0; i < 12; i++)
+            svtlayersExcld.put(i+1, 0);        
+        //Skip layers
+        if(layers!=null) {
+            String[] values = layers.split(",");
+            if(values.length==0) return;            
+            for(String value : values) {
+                int layer = Integer.valueOf(value);
+                svtlayersExcld.put(layer, 1); 
+            }
+        }
+    }
+    /**
+     * @return the svtlayersExcld
+     */
+    public static Map getSVTExcludedLayers() {
+        return svtlayersExcld;
+    }
+         
     public int getRmReg() {
         return removeRegion;
     }
@@ -169,7 +189,7 @@ public class Constants {
     public Map getUsedLayers() {
         return layersUsed;
     }
-
+    
     /**
      * @param layers
      */
@@ -205,7 +225,7 @@ public class Constants {
         }
     }
             
-            
+     
     /**
      * @return the BMTPhiZRangeExcld
      */
@@ -546,6 +566,7 @@ public class Constants {
     public synchronized void initialize(String engine,
                                         boolean isCosmics,
                                         boolean svtOnly,
+                                        String svtlayersExcld,
                                         String excludeLayers,
                                         String excludeBMTLayers,
                                         int removeRegion,
@@ -576,6 +597,7 @@ public class Constants {
         if (!ConstantsLoaded) {
             this.isCosmics = isCosmics;
             this.svtOnly      = svtOnly;
+            this.setSVTTExclude(svtlayersExcld);
             this.setUsedLayers(excludeLayers);
             this.setBMTExclude(excludeBMTLayers);
             this.removeRegion = removeRegion;

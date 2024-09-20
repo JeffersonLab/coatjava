@@ -31,7 +31,7 @@ public class TrajectoryFinder {
     public TrajectoryFinder() {
 
     }
-
+    @Deprecated
     public Trajectory findTrajectory(int id, Ray ray, ArrayList<Cross> candCrossList) {
         Trajectory traj = new Trajectory(ray);
         traj.setId(id);

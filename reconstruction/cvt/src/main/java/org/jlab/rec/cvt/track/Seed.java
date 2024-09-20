@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.jlab.detector.base.DetectorType;
+import org.jlab.geom.base.Detector;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
 import org.jlab.rec.cvt.Constants;
@@ -152,8 +153,10 @@ public class Seed implements Comparable<Seed>{
         List<Cluster> clusters = new ArrayList<>(); 
         for(Cross c : this.getCrosses()) { 
 	    if(c.getDetector()==DetectorType.BST) {
-                clusters.add(c.getCluster1());
-                clusters.add(c.getCluster2());
+                if(c.getCluster1()!=null)
+                    clusters.add(c.getCluster1());
+                if(c.getCluster2()!=null)
+                    clusters.add(c.getCluster2());
             } else {
                 clusters.add(c.getCluster1());
             }
@@ -179,6 +182,24 @@ public class Seed implements Comparable<Seed>{
     public List<Cross> getCrosses() {
         Collections.sort(_Crosses);
         return _Crosses;
+    }
+    
+    public List<Cross> getBMTZCrosses() {
+        List<Cross> crs = new ArrayList<>();
+        for(Cross c : _Crosses) {
+            if(c.getDetector()==DetectorType.BMT && c.getType()==BMTType.Z)
+                crs.add(c);
+        }
+        return crs;
+    }
+    
+    public List<Cross> getBMTCCrosses() {
+        List<Cross> crs = new ArrayList<>();
+        for(Cross c : _Crosses) {
+            if(c.getDetector()==DetectorType.BMT && c.getType()==BMTType.C)
+                crs.add(c);
+        }
+        return crs;
     }
 
     public final void setCrosses(List<Cross> crosses) {
@@ -286,7 +307,10 @@ public class Seed implements Comparable<Seed>{
         for (Cross c : this.getCrosses()) {
             // reset cross to clear previous track settings on direction and Point
             c.reset();
-            if (c.getDetector()==DetectorType.BST && !(c.getCluster1().getTlayer()==excludeLayer || c.getCluster2().getTlayer()==excludeLayer)) {
+            
+            if (c.getDetector()==DetectorType.BST && c.getId()>0
+                    && !((c.getCluster1()!=null && c.getCluster1().getTlayer()==excludeLayer) 
+                    || (c.getCluster2()!=null && c.getCluster2().getTlayer()==excludeLayer))) {
                 SVTCrosses.add(c);
             }
             else if (c.getDetector()==DetectorType.BMT && c.getType()==BMTType.C && !(c.getCluster1().getTlayer()==excludeLayer) ) {
@@ -789,6 +813,28 @@ public class Seed implements Comparable<Seed>{
         ovlrem2.addAll(ovlrem);
         
         return ovlrem2;
+    }
+    public boolean isBad = false; 
+    public void checkSeedNClusters() {
+        int nPhiCls=0;
+        int nPhiClsBMT=0;
+        for(Cluster cl : this.getClusters()) {
+            if(cl.get(0).getDetector()==DetectorType.BMT && cl.get(0).getType()==BMTType.Z)
+                nPhiClsBMT++;
+            if(cl.get(0).getDetector()==DetectorType.BST)
+                nPhiCls++;
+        }
+        boolean pass=true;
+        if(nPhiClsBMT==0 && nPhiCls==4) 
+            pass=false;
+        
+        if(!pass) {
+            for(Cross c : this.getCrosses()) 
+                c.setAssociatedTrackID(-1);
+            for(Cluster cl : this.getClusters())
+                cl.setAssociatedTrackID(-1);
+            this.isBad = true;
+        }
     }
     
     public class Key implements Comparable<Key> {

@@ -49,7 +49,8 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
     private Line3D _Line;                     // 3D line for SVT and BMT-Z
     private Arc3D  _Arc;                      // 3D Arc for BMT-C
     private Point3D _TrakInters;              //track intersection with the cluster
-    private int AssociatedTrackID = -1;       // the track ID associated with that hit
+    private int AssociatedTrackID = -1;       // the track ID associated with that cls
+    private int AssociatedCrossID = -1;       // the cross ID associated with that cls
 
 
     private int _MinStrip;			// the min strip number in the cluster
@@ -63,6 +64,7 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
     private Vector3D _s; //svt vector perpendicular to cluster pseudo-strip direction in the module plane or bmt vector perpendicular to cluster pseudo-strip in direction tangential to the cluster surface in the middle of the arc
     private Vector3D _n; //svt vector normal to the cluster module plane or bmt vector normal to the cluster surface in the middle of the arc
     public boolean flagForExclusion = false;
+    public Point3D trajPoint;
     
 
     public Cluster(DetectorType detector, BMTType type, int sector, int layer, int cid) {
@@ -756,6 +758,20 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
 
     public void setAssociatedTrackID(int associatedTrackID) {
         AssociatedTrackID = associatedTrackID;
+    }
+
+    /**
+     * @return the AssociatedCrossID
+     */
+    public int getAssociatedCrossID() {
+        return AssociatedCrossID;
+    }
+
+    /**
+     * @param AssociatedCrossID the AssociatedCrossID to set
+     */
+    public void setAssociatedCrossID(int AssociatedCrossID) {
+        this.AssociatedCrossID = AssociatedCrossID;
     }
 
     @Override

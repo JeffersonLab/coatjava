@@ -63,6 +63,7 @@ public class CVTEngine extends ReconstructionEngine {
     private boolean isCosmics           = false;
     private boolean svtOnly             = false;
     private String  excludeLayers       = null;
+    private String  svtlayersExcld      = null;
     private String  excludeBMTLayers    = null;
     private int     removeRegion        = 0;
     private int     beamSpotConstraint  = 2;
@@ -105,6 +106,7 @@ public class CVTEngine extends ReconstructionEngine {
         Constants.getInstance().initialize(this.getName(),
                                            isCosmics,
                                            svtOnly,
+                                           svtlayersExcld,
                                            excludeLayers,
                                            excludeBMTLayers,
                                            removeRegion,
@@ -304,7 +306,7 @@ public class CVTEngine extends ReconstructionEngine {
         
                 
         List<DataBank> banks = new ArrayList<>();
-
+        List<Cross> SVTtotalcrosses=new ArrayList<>();
         if(crosses != null) {
             if(Constants.getInstance().isCosmics) {
                 CosmicTracksRec trackFinder = new CosmicTracksRec();
@@ -332,6 +334,14 @@ public class CVTEngine extends ReconstructionEngine {
                                                                   true, this.getPid());
                 
                 if(seeds!=null) {
+                    if(trackFinder.SVTaddedcrosses!=null)
+                        SVTtotalcrosses.addAll(trackFinder.SVTaddedcrosses);
+                    List<Seed> rseeds = new ArrayList<>();
+                    for(Seed sid: seeds) {
+                        if(sid.isBad) 
+                            rseeds.add(sid);
+                    }
+                    seeds.removeAll(rseeds);
                     banks.add(RecoBankWriter.fillSeedBank(event, seeds, this.getSeedBank()));
                     banks.add(RecoBankWriter.fillSeedClusBank(event, seeds, this.getSeedClusBank()));
                 }
@@ -347,7 +357,8 @@ public class CVTEngine extends ReconstructionEngine {
         banks.add(RecoBankWriter.fillBMTHitBank(event, hits.get(1), this.getBmtHitBank()));
         banks.add(RecoBankWriter.fillSVTClusterBank(event, clusters.get(0), this.getSvtClusterBank()));
         banks.add(RecoBankWriter.fillBMTClusterBank(event, clusters.get(1), this.getBmtClusterBank()));
-        banks.add(RecoBankWriter.fillSVTCrossBank(event, crosses.get(0), this.getSvtCrossBank()));
+        SVTtotalcrosses.addAll(crosses.get(0));
+        banks.add(RecoBankWriter.fillSVTCrossBank(event, SVTtotalcrosses, this.getSvtCrossBank()));
         banks.add(RecoBankWriter.fillBMTCrossBank(event, crosses.get(1), this.getBmtCrossBank()));
 
         event.appendBanks(banks.toArray(new DataBank[0]));
@@ -365,6 +376,9 @@ public class CVTEngine extends ReconstructionEngine {
                
         if (this.getEngineConfigString("svtOnly")!=null)
             this.svtOnly = Boolean.valueOf(this.getEngineConfigString("svtOnly"));
+        
+        if (this.getEngineConfigString("svtlayersExcld")!=null) 
+            this.svtlayersExcld = this.getEngineConfigString("svtlayersExcld");
         
         if (this.getEngineConfigString("excludeLayers")!=null) 
             this.excludeLayers = this.getEngineConfigString("excludeLayers");

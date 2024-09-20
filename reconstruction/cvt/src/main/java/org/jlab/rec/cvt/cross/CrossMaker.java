@@ -149,6 +149,8 @@ public class CrossMaker {
 
                     // define new cross 
                     Cross this_cross = new Cross(DetectorType.BST, BMTType.UNDEFINED, inlayerclus.getSector(), inlayerclus.getRegion(), rid++);
+                    inlayerclus.setAssociatedCrossID(this_cross.getId());
+                    outlayerclus.setAssociatedCrossID(this_cross.getId());
                     // cluster1 is the inner layer cluster
                     this_cross.setCluster1(inlayerclus);
                     // cluster2 is the outer layer cluster
@@ -216,6 +218,7 @@ public class CrossMaker {
             Cross this_cross = new Cross(DetectorType.BMT, BMTType.Z, Zlayerclus.getSector(), Zlayerclus.getRegion(), pid++);
             this_cross.setId(pid);
             this_cross.setCluster1(Zlayerclus); 
+            Zlayerclus.setAssociatedCrossID(this_cross.getId());
             this_cross.updateBMTCross(null, null);
             if (this_cross.getPoint0() != null) {
                 //make arraylist
@@ -233,6 +236,7 @@ public class CrossMaker {
             Cross this_cross = new Cross(DetectorType.BMT, BMTType.C, Clayerclus.getSector(), Clayerclus.getRegion(), pid++);
             this_cross.setId(pid);
             this_cross.setCluster1(Clayerclus);
+            Clayerclus.setAssociatedCrossID(this_cross.getId());
             this_cross.updateBMTCross(null, null);
             if (this_cross.getPoint0() != null) {
                 //make arraylist

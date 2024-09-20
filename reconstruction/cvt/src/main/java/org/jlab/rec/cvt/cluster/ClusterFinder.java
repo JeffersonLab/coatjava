@@ -93,6 +93,7 @@ public class ClusterFinder {
                                 }
                             }
                         }
+                        
                         for (Hit h : hits) {
                             h.setAssociatedClusterID(this_cluster.getId());
                             //h.newClustering = true; //RDV fix me!

@@ -276,6 +276,12 @@ public class HitReader {
                 int id      = i + 1;
                 int sector  = bankDGTZ.getByte("sector", i);
                 int layer   = bankDGTZ.getByte("layer", i);
+                int useLayr = 1;
+                if(Constants.getSVTExcludedLayers()!=null )
+                    useLayr = (int) Constants.getInstance().getSVTExcludedLayers().get(layer);
+                if(useLayr>0)  
+                    continue;
+                
                 int strip   = bankDGTZ.getShort("component", i);
                 int ADC     = bankDGTZ.getInt("ADC", i);
                 double time = 0;//bankDGTZ.getFloat("time", i);
@@ -331,6 +337,8 @@ public class HitReader {
                 //    continue;
                 // create the strip object with the adc value converted to daq value used for cluster-centroid estimate
                 Strip SvtStrip = new Strip(strip, ADCConvertor.SVTADCtoDAQ(ADC), time); 
+                //if(ADC>7) System.out.println("EVENT "+event.getBank("RUN::config").getInt("event", 0));
+        
                 SvtStrip.setPitch(SVTGeometry.getPitch());
                 // get the strip line
                 SvtStrip.setLine(Geometry.getInstance().getSVT().getStrip(layer, sector, strip));
@@ -357,6 +365,7 @@ public class HitReader {
                     } else {
                         hits.add(hit); 
                     }
+                    if(hit.getStrip().getEdep()==0) {hit.printInfo(); System.out.println("ADC "+ADC+" E "+ADCConvertor.SVTADCtoDAQ(ADC));}
                 }
             }
         }

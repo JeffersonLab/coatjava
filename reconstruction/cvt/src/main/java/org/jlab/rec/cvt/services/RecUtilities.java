@@ -57,7 +57,7 @@ public class RecUtilities {
         List<Cross> rmCrosses = new ArrayList<>();
         
         for(Cross c : crosses) {
-            if(!Geometry.getInstance().getSVT().isInFiducial(c.getCluster1().getLayer(), c.getSector(), c.getPoint()))
+            if(c.getId()>0 && !Geometry.getInstance().getSVT().isInFiducial(c.getCluster1().getLayer(), c.getSector(), c.getPoint()))
                 rmCrosses.add(c);
         }
        
@@ -92,7 +92,7 @@ public class RecUtilities {
         List<Cross> rmCrosses = new ArrayList<>();
         
         for(Cross c : crosses.get(0)) {
-            if(!Geometry.getInstance().getSVT().isInFiducial(c.getCluster1().getLayer(), c.getSector(), c.getPoint()))
+            if(c.getId()>0 && !Geometry.getInstance().getSVT().isInFiducial(c.getCluster1().getLayer(), c.getSector(), c.getPoint()))
                 rmCrosses.add(c);
         }
        
@@ -129,8 +129,18 @@ public class RecUtilities {
         for (int i = 0; i < trkcand.size(); i++) { //SVT cluster sorting
             if(trkcand.get(i).getDetector()==DetectorType.BST) {
                 int sector   = trkcand.get(i).getCluster1().getSector();
-                int layertop = trkcand.get(i).getCluster1().getLayer();
-                int layerbot = trkcand.get(i).getCluster2().getLayer();
+                int layertop = 0;
+                if(trkcand.get(i).getCluster1()!=null) {
+                    layertop = trkcand.get(i).getCluster1().getLayer();
+                } else {
+                    layertop = trkcand.get(i).getCluster2().getLayer()-1;
+                }
+                int layerbot = 0;
+                if(trkcand.get(i).getCluster2()!=null) {
+                    layerbot = trkcand.get(i).getCluster2().getLayer();
+                } else {
+                    layerbot = trkcand.get(i).getCluster1().getLayer()+1;
+                }
                 Ray ray = trkcand.getRay();
                 Point3D top    = new Point3D();
                 Point3D bottom = new Point3D();
@@ -138,11 +148,11 @@ public class RecUtilities {
                 Geometry.getInstance().getSVT().getPlane(layerbot, sector).intersection(ray.toLine(), bottom);
                 
                 if(top.y()>bottom.y()) {
-                    clsList.add(trkcand.get(i).getCluster1());
-                    clsList.add(trkcand.get(i).getCluster2());
+                    if(trkcand.get(i).getCluster1()!=null) clsList.add(trkcand.get(i).getCluster1());
+                    if(trkcand.get(i).getCluster2()!=null) clsList.add(trkcand.get(i).getCluster2());
                 } else {
-                    clsList.add(trkcand.get(i).getCluster2());
-                    clsList.add(trkcand.get(i).getCluster1());
+                    if(trkcand.get(i).getCluster2()!=null) clsList.add(trkcand.get(i).getCluster2());
+                    if(trkcand.get(i).getCluster1()!=null) clsList.add(trkcand.get(i).getCluster1());
                 }
             }
         } 
@@ -252,8 +262,15 @@ public class RecUtilities {
                     for(Cluster cls : allClusters) { 
                         if(cls.getAssociatedTrackID()==-1 && cls.getSector()==sector && cls.getLayer()==layer) { 
                             double clsDoca = cls.residual(trajPoint); 
-                            // save the ones that have better doca 
-                            if(Math.abs(clsDoca)<Math.abs(doca) && Math.abs(clsDoca)<SVTParameters.TOCLUSN*cls.getSeedStrip().getPitch()/Math.sqrt(12)) {
+                            double Nsig = SVTParameters.TOCLUSN;
+                            if(trk.getNDF()<3) Nsig*=3;
+                            // save the ones that have better doca
+                            if(Constants.getInstance().seedingDebugMode) {
+                                System.out.println("Check Matching to cluster "+cls.toString()+
+                                        " doca "+Math.abs(clsDoca)+"?<"+(Nsig*cls.getSeedStrip().getPitch()/Math.sqrt(12)));
+                            }
+                            if(Math.abs(clsDoca)<Math.abs(doca) && Math.abs(clsDoca)<Nsig*cls.getSeedStrip().getPitch()/Math.sqrt(12)) {
+                                cls.trajPoint=trajPoint;
                                 if(clusterMap.containsKey(key) && clusterMap.get(key).getAssociatedTrackID()==-1) {
                                     clusterMap.replace(key, cls); 
                                 } else {
@@ -367,6 +384,7 @@ public class RecUtilities {
         return BMTCrosses;
     }
     
+    @Deprecated
     public void matchTrack2Traj(Seed trkcand, Map<Integer, 
             org.jlab.clas.tracking.kalmanfilter.helical.KFitter.HitOnTrack> traj) {
         
@@ -446,13 +464,13 @@ public class RecUtilities {
         
         for(Cross c : seed.getCrosses()) {
             if(c.getDetector()==DetectorType.BST) {
-                if(c.getCluster1().getTlayer()==exclLy) {
+                if(c.getCluster1()!=null && c.getCluster1().getTlayer()==exclLy) {
                     rmCrosses.add(c);
                     rmClusters.add(c.getCluster1());
                 }
-                if(c.getCluster2().getTlayer()==exclLy) {
+                if(c.getCluster2()!=null && c.getCluster2().getTlayer()==exclLy) {
                     rmCrosses.add(c);
-                    rmClusters.add(c.getCluster1());
+                    rmClusters.add(c.getCluster2());
                 } 
             }
              if(c.getDetector()==DetectorType.BMT) {
@@ -815,7 +833,23 @@ public class RecUtilities {
         
         return tCov;
     }
-
+    public Cross createPseudoCross(Cluster cl, int counter) {
+        Cross this_cross = new Cross(DetectorType.BST, BMTType.UNDEFINED, cl.getSector(), cl.getRegion(), -(counter+1));
+        this_cross.setOrderedRegion(cl.getRegion());
+        if(cl.getLayer()%2==0) {
+            this_cross.setCluster1(cl);
+        } else {
+            this_cross.setCluster2(cl);
+        }
+        cl.setAssociatedCrossID(this_cross.getId());  
+        this_cross.setPoint0(cl.trajPoint); 
+        this_cross.setPoint(cl.trajPoint);
+        this_cross.setPointErr0(new Point3D(0,0,0));
+        this_cross.setPointErr(new Point3D(0,0,0));
+        if(Constants.getInstance().seedingDebugMode)
+            System.out.println("Created pseudo-cross "+this_cross.printInfo());
+        return this_cross;
+    }
     public List<Cross> findCrossesFromClustersOnTrk(List<Cross> allCrosses, List<Cluster> clsOnTrack, Track track) {
         CrossMaker cm = new CrossMaker();
         List<Cross> crosses = new ArrayList<>();
@@ -832,14 +866,17 @@ public class RecUtilities {
                         && cl1.getMaxStrip() + cl2.getMaxStrip() < SVTParameters.MAXSTRIPSUM) {
                     Cross this_cross = null;
                     for(Cross c : allCrosses) {
-                        if(c.getCluster1().getId()==cl1.getId() && c.getCluster2().getId()==cl2.getId())
-                            this_cross = c;
+                        if(c.getCluster1()!=null && c.getCluster2()!=null)
+                            if(c.getCluster1().getId()==cl1.getId() && c.getCluster2().getId()==cl2.getId())
+                                this_cross = c;
                     }
                     if(this_cross==null) {
                         //System.out.print("Found NNNNNNNNNNNNNNNNNNNNNNew cross");
                         // define new cross 
                         this_cross = new Cross(DetectorType.BST, BMTType.UNDEFINED, cl1.getSector(), cl1.getRegion(), allCrosses.size()+1);
                         this_cross.setOrderedRegion(cl1.getRegion());
+                        cl1.setAssociatedCrossID(this_cross.getId());
+                        cl2.setAssociatedCrossID(this_cross.getId());
                         this_cross.setCluster1(cl1);
                         this_cross.setCluster2(cl2);
                         // sets the cross parameters (point3D and associated error) from the SVT geometry
@@ -934,8 +971,8 @@ public class RecUtilities {
         if(Constants.getInstance().seedingDebugMode) System.out.println("RECOVERED..."+fittedTrack.toString());
         for(Cross c : fittedTrack) { 
             if(c.getDetector()==DetectorType.BST) {
-                c.getCluster1().setAssociatedTrackID(0);
-                c.getCluster2().setAssociatedTrackID(0);
+                if(c.getCluster1()!=null) c.getCluster1().setAssociatedTrackID(0);
+                if(c.getCluster2()!=null) c.getCluster2().setAssociatedTrackID(0);
             }
         }
         //refit adding missing clusters
@@ -977,8 +1014,8 @@ public class RecUtilities {
             if(Constants.getInstance().seedingDebugMode) System.out.println("RECOVERED..."+fittedTrack.toString());
             for(Cross c : fittedTrack) { 
                 if(c.getDetector()==DetectorType.BST) {
-                    c.getCluster1().setAssociatedTrackID(0);
-                    c.getCluster2().setAssociatedTrackID(0);
+                    if(c.getCluster1()!=null) c.getCluster1().setAssociatedTrackID(0);
+                    if(c.getCluster2()!=null) c.getCluster2().setAssociatedTrackID(0);
                 }
             }
             //fittedTrack.setStatus(1); 
