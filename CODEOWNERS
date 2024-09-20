@@ -11,16 +11,16 @@ parent/* @raffaelladevita @baltzell @c-dilks @naharrison @zieglerv
 
 # common-tools
 common-tools/clara-io/* @baltzell @raffaelladevita
-common-tools/clas-analysis/* @raffaelladevita @baltzell @naharrison @zieglerv @marmstr4 @c-dilks
-common-tools/clas-io/* @raffaelladevita @baltzell @gavalian @naharrison @zieglerv @forcar @drewkenjo @c-dilks @huckb
-common-tools/clas-jcsg/* @drewkenjo @naharrison @c-dilks @raffaelladevita @baltzell @zieglerv @gangel85 @mcontalb @cqplatt @mariangela-bondi @gavalian @cpecar
+common-tools/clas-analysis/* @raffaelladevita @baltzell @naharrison @zieglerv @marmstr4
+common-tools/clas-io/* @raffaelladevita @baltzell @gavalian @naharrison @zieglerv @forcar @drewkenjo @huckb
+common-tools/clas-jcsg/* @drewkenjo @naharrison @raffaelladevita @baltzell @zieglerv @gangel85 @mcontalb @cqplatt @mariangela-bondi @gavalian @cpecar
 common-tools/clas-logging/* @baltzell @raffaelladevita
 common-tools/clas-math/* @raffaelladevita @baltzell @zieglerv @tongtongcao
-common-tools/clas-physics/* @raffaelladevita @baltzell @naharrison @zieglerv @c-dilks @drewkenjo @gavalian @fxgirod
+common-tools/clas-physics/* @raffaelladevita @baltzell @naharrison @zieglerv @drewkenjo @gavalian @fxgirod
 common-tools/clas-reco/* @raffaelladevita @baltzell @naharrison @zieglerv @josnewton @mcontalb @gavalian @afilippi67 @N-Plx @drewkenjo @rafopar @gurjyan @dcpayette <Efrain Segarra> @hauenst
 common-tools/clas-tracking/* @zieglerv @baltzell @raffaelladevita @tongtongcao
-common-tools/clas-utils/* @raffaelladevita @baltzell @naharrison @zieglerv @gavalian @c-dilks
-common-tools/cnuphys/* @heddle @c-dilks @naharrison @raffaelladevita @baltzell @zieglerv @tongtongcao
+common-tools/clas-utils/* @raffaelladevita @baltzell @naharrison @zieglerv @gavalian
+common-tools/cnuphys/* @heddle @naharrison @raffaelladevita @baltzell @zieglerv @tongtongcao
 common-tools/coat-lib/* @raffaelladevita @baltzell @gavalian @naharrison @zieglerv @drewkenjo
 common-tools/parent/* @raffaelladevita @baltzell @naharrison @zieglerv
 common-tools/swim-tools/* @raffaelladevita @baltzell @zieglerv @heddle @tongtongcao @gurjyan
@@ -60,34 +60,34 @@ common-tools/clas-geometry/src/main/java/org/jlab/geom/prim/* @naharrison @ziegl
 common-tools/clas-geometry/src/main/java/org/jlab/geom/view/* @naharrison
 
 # etc
-etc/bankdefs/* @hauenst <Efrain Segarra> @c-dilks @naharrison @raffaelladevita @zieglerv @gavalian @fxgirod @gangel85 @dcpayette @baltzell <Rong Wang> @drewkenjo @josnewton @afilippi67 @markovnick @rafopar @mathieuouillon @mpaolone @huckb @ajhobart @N-Plx @tongtongcao @forcar @mcontalb @rtysonCLAS12
+etc/bankdefs/* @hauenst <Efrain Segarra> @naharrison @raffaelladevita @zieglerv @gavalian @fxgirod @gangel85 @dcpayette @baltzell <Rong Wang> @drewkenjo @josnewton @afilippi67 @markovnick @rafopar @mathieuouillon @mpaolone @huckb @ajhobart @N-Plx @tongtongcao @forcar @mcontalb @rtysonCLAS12
 etc/benchmarks/* @naharrison
 etc/data/* @drewkenjo
 etc/ejml/* @raffaelladevita @gavalian
 etc/logging/* @baltzell
 etc/nnet/* @gavalian
-etc/services/* @baltzell @c-dilks @raffaelladevita @zieglerv
+etc/services/* @baltzell @raffaelladevita @zieglerv
 
 # reconstruction
-reconstruction/alert/* @baltzell @raffaelladevita @mathieuouillon @mpaolone @c-dilks @efuchey
-reconstruction/band/* @raffaelladevita @baltzell @c-dilks @zieglerv @hauenst <Efrain Segarra> <Efrain Patrick Segarra> <Reynier Cruz Torres>
+reconstruction/alert/* @baltzell @raffaelladevita @mathieuouillon @mpaolone @efuchey
+reconstruction/band/* @raffaelladevita @baltzell @zieglerv @hauenst <Efrain Segarra> <Efrain Patrick Segarra> <Reynier Cruz Torres>
 reconstruction/bg/* @baltzell @raffaelladevita
-reconstruction/cnd/* @raffaelladevita @baltzell @naharrison @zieglerv @c-dilks @PChatagnon @ajhobart <Rong Wang> <Silvia Nicolai>
-reconstruction/cvt/* @zieglerv @raffaelladevita @baltzell @naharrison @drewkenjo @fbossu @c-dilks @N-Plx @Guillaum-C
-reconstruction/dc/* @naharrison @raffaelladevita @baltzell @zieglerv @drewkenjo @tongtongcao @gurjyan @mcontalb @hauenst @latifkabir @c-dilks @gavalian @bleaktwig @N-Plx @marmstr4
-reconstruction/eb/* @baltzell @c-dilks @naharrison @raffaelladevita @sly2j @zieglerv @josnewton
+reconstruction/cnd/* @raffaelladevita @baltzell @naharrison @zieglerv @PChatagnon @ajhobart <Rong Wang> <Silvia Nicolai>
+reconstruction/cvt/* @zieglerv @raffaelladevita @baltzell @naharrison @drewkenjo @fbossu @N-Plx @Guillaum-C
+reconstruction/dc/* @naharrison @raffaelladevita @baltzell @zieglerv @drewkenjo @tongtongcao @gurjyan @mcontalb @hauenst @latifkabir @gavalian @bleaktwig @N-Plx @marmstr4
+reconstruction/eb/* @baltzell @naharrison @raffaelladevita @sly2j @zieglerv @josnewton
 reconstruction/ec/* @naharrison @raffaelladevita @baltzell @zieglerv @forcar @gavalian @rafopar
 reconstruction/ec/src/* @forcar @naharrison @raffaelladevita @baltzell @gavalian @rafopar
-reconstruction/fmt/* @baltzell @raffaelladevita @c-dilks
+reconstruction/fmt/* @baltzell @raffaelladevita
 reconstruction/ft/* @naharrison @raffaelladevita @baltzell @zieglerv @afilippi67
 reconstruction/htcc/* @raffaelladevita @baltzell @naharrison @zieglerv @markovnick
 reconstruction/ltcc/* @naharrison @raffaelladevita @baltzell @zieglerv @sly2j
-reconstruction/mc/* @baltzell @raffaelladevita @rafopar @c-dilks @zieglerv
+reconstruction/mc/* @baltzell @raffaelladevita @rafopar @zieglerv
 reconstruction/mltn/* @baltzell @raffaelladevita @gavalian
 reconstruction/postproc/* @baltzell
 reconstruction/raster/* @baltzell @raffaelladevita @N-Plx
 reconstruction/rich/* @drewkenjo @raffaelladevita @baltzell @naharrison @zieglerv @mcontalb
-reconstruction/rtpc/* @dcpayette @raffaelladevita @baltzell @mathieuouillon @zieglerv @Hattawy @c-dilks @dpayette
+reconstruction/rtpc/* @dcpayette @raffaelladevita @baltzell @mathieuouillon @zieglerv @Hattawy @dpayette
 reconstruction/swaps/* @baltzell @raffaelladevita
 reconstruction/tof/* @naharrison @zieglerv @raffaelladevita @baltzell @drewkenjo @gavalian
 reconstruction/urwell/* @baltzell @raffaelladevita @tongtongcao
