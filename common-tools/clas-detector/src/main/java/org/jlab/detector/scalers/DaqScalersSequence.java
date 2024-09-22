@@ -206,12 +206,11 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
             }
         
             SchemaFactory schema = reader.getSchemaFactory();
-        
+            Event event=new Event();
+            Bank scalerBank=new Bank(schema.getSchema("RUN::scaler"));
+            Bank configBank=new Bank(schema.getSchema("RUN::config"));
+
             while (reader.hasNext()) {
-            
-                Event event=new Event();
-                Bank scalerBank=new Bank(schema.getSchema("RUN::scaler"));
-                Bank configBank=new Bank(schema.getSchema("RUN::config"));
             
                 reader.nextEvent(event);
                 event.read(scalerBank);
