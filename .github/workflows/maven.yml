@@ -21,9 +21,9 @@ defaults:
     shell: bash
 
 env:
-  java_version: 17
+  java_version: 21
   java_distribution: zulu
-  groovy_version: 4.0.3
+  groovy_version: 4.0
 
 jobs:
 
