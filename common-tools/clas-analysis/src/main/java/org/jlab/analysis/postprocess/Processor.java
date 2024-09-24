@@ -31,8 +31,6 @@ import org.jlab.detector.helicity.HelicitySequenceDelayed;
  */
 public class Processor {
 
-    static final Logger logger = Logger.getLogger(Util.class.getName());
-
     public static final String CCDB_TABLES[] = {"/runcontrol/fcup","/runcontrol/slm",
         "/runcontrol/helicity","/daq/config/scalers/dsc1","/runcontrol/hwp"};
     public static final String DEF_PRELOAD_GLOB = "*.{hipo,h5}";
@@ -45,32 +43,29 @@ public class Processor {
     private DaqScalersSequence chargeSequence = null;
     private HelicitySequenceDelayed helicitySequence = null;
 
-    public Processor(File file, boolean restream) {
-        configure(restream, Arrays.asList(file.getAbsolutePath()));
+    public Processor(File file, boolean restream, boolean rebuild) {
+        configure(Arrays.asList(file.getAbsolutePath()), restream, rebuild);
     }
     
-    public Processor(String dir, boolean restream) {
-        configure(restream, findPreloadFiles(dir,DEF_PRELOAD_GLOB));
+    public Processor(String dir, boolean restream, boolean rebuild) {
+        configure(findPreloadFiles(dir,DEF_PRELOAD_GLOB), restream, rebuild);
     }
 
-    public Processor(String dir, String glob, boolean restream) {
-        configure(restream, findPreloadFiles(dir,glob));
+    public Processor(String dir, String glob, boolean restream, boolean rebuild) {
+        configure(findPreloadFiles(dir,glob), restream, rebuild);
     }
 
-    private void configure(boolean restream, List<String> preloadFiles) {
-        if (preloadFiles.isEmpty()) {
-            logger.warning("<<<< No preload files found, postprocessing disabled.");
-            initialized = false;
-        } else {
+    private void configure(List<String> preloadFiles, boolean restream, boolean rebuild) {
+        if (!preloadFiles.isEmpty()) {
             HipoReader r = new HipoReader();
             r.open(preloadFiles.get(0));
             conman = new ConstantsManager();
             conman.init(CCDB_TABLES);
             schemaFactory = r.getSchemaFactory();
             helicitySequence = Util.getHelicity(preloadFiles, schemaFactory, restream, conman);
-            chargeSequence = DaqScalersSequence.readSequence(preloadFiles);
+            if (rebuild) chargeSequence = DaqScalersSequence.rebuildSequence(1, conman, preloadFiles);
+            else chargeSequence = DaqScalersSequence.readSequence(preloadFiles);
             r.close();
-            initialized = true;
         }
     }
 
@@ -223,17 +218,9 @@ public class Processor {
         }
     }
 
-    /**
-     * Replace preload files with rebuilt ones. 
-     */
-    private void rebuildAndReplace(List<String> preloadFiles) {
-        replace(rebuild(".",preloadFiles));
-    }
-
     public static void main(String args[]) {
         DefaultLogger.debug();
-        Processor p = new Processor(System.getenv("HOME")+"/tmp","r*.hipo",false);
-        //p.rebuildAndReplace();
+        Processor p = new Processor(System.getenv("HOME")+"/tmp","r*.hipo",false,false);
     }
 
 }
