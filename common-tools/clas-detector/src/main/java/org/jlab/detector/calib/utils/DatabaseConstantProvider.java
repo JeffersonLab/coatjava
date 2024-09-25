@@ -15,6 +15,7 @@ import java.util.logging.Logger;
 import org.jlab.ccdb.CCDB;
 import javax.swing.JFrame;
 import org.jlab.ccdb.Assignment;
+import org.jlab.ccdb.TypeTable;
 
 import org.jlab.ccdb.TypeTableColumn;
 import org.rcdb.RCDB;
@@ -91,6 +92,14 @@ public class DatabaseConstantProvider implements ConstantProvider {
             entries.add(entry.getKey());
         }
         return entries;
+    }
+   
+    public Assignment getAssignment(String table) {
+        return provider.getData(table);
+    }
+
+    public TypeTable getTypeTable(String table) {
+        return provider.getTypeTable(table);
     }
     
     private String getEnvironment(){
