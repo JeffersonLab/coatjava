@@ -282,7 +282,6 @@ public class CVTEngine extends ReconstructionEngine {
     public boolean processDataEvent(DataEvent event) {
         
         Swim swimmer = new Swim();
-        LayerEfficiency le = new LayerEfficiency();
         int run = this.getRun(event); 
         int run4Eff = this.getRun4Eff();
         IndexedTable svtStatus          = this.getConstantsManager().getConstants(run, "/calibration/svt/status");
@@ -299,7 +298,7 @@ public class CVTEngine extends ReconstructionEngine {
         CVTReconstruction reco = new CVTReconstruction(swimmer);
         
         List<ArrayList<Hit>>         hits = reco.readHits(event, svtStatus, bmtStatus, bmtTime, 
-                                                            bmtStripVoltage, bmtStripThreshold, bmtEff, le);
+                                                            bmtStripVoltage, bmtStripThreshold, bmtEff);
         List<ArrayList<Cluster>> clusters = reco.findClusters();
         List<ArrayList<Cross>>    crosses = reco.findCrosses();
         

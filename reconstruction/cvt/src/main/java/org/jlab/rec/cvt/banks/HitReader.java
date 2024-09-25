@@ -84,8 +84,8 @@ public class HitReader {
      */
     public void fetch_BMTHits(DataEvent event, Swim swim, IndexedTable status, 
             IndexedTable timeCuts, IndexedTable bmtStripVoltage, IndexedTable bmtStripVoltageThresh, 
-            IndexedTable bmtEff, LayerEfficiency le) {
-
+            IndexedTable bmtEff) {
+        LayerEfficiency le = new LayerEfficiency();
         // return if there is no BMT bank
         if (event.hasBank("BMT::adc") == false) {
             //System.err.println("there is no BMT bank ");
@@ -108,7 +108,20 @@ public class HitReader {
             
             double tmin = timeCuts.getDoubleValue("hit_min", 0,0,0);
             double tmax = timeCuts.getDoubleValue("hit_max", 0,0,0);
-            
+            //create a map to represent the layer efficiency for the BMT
+            Map<Integer, Boolean> effMap = new HashMap<>();
+            for (int i = 0; i < rows; i++) {
+                int sector  = bankDGTZ.getByte("sector", i);
+                int layer   = bankDGTZ.getByte("layer", i);
+                //fill map according to efficiency
+                boolean pass = true;
+                effMap.put(sector*10+layer, pass);
+                if(Constants.getInstance().mcbmteff) {
+                    double eff  = bmtEff.getDoubleValue("efficiency", sector,layer, 0);
+                    pass = le.passLayer(eff);
+                    effMap.replace(sector*10+layer, pass);
+                }
+            }
             for (int i = 0; i < rows; i++) {
 
                 //if (bankDGTZ.getInt("ADC", i) < 1) {
@@ -116,10 +129,17 @@ public class HitReader {
                 //}                
                 int sector  = bankDGTZ.getByte("sector", i);
                 int layer   = bankDGTZ.getByte("layer", i);
+                
+                if(effMap.get(sector*10+layer)==false) {
+                    continue;
+                }
+                
                 int strip   = bankDGTZ.getShort("component", i);
                 double ADCtoEdep = bankDGTZ.getInt("ADC", i);
                 double time = bankDGTZ.getFloat("time", i);
                 int order   = bankDGTZ.trueOrder(i);
+                
+                
                 //if (order == 1) {
                 //    continue;
                 //}
@@ -132,15 +152,7 @@ public class HitReader {
                 if(strip<1) {
                     continue;
                 }
-                //Disgard according to efficiency
-                boolean pass = true;
-                if(Constants.getInstance().mcbmteff) {
-                    double eff  = bmtEff.getDoubleValue("efficiency", sector,layer, 0);
-                    le.setEfficiency(eff);
-                    pass = le.passHit();
-                }
-                if(!pass) 
-                    continue;
+                
                 // create the strip object for the BMT
                 Strip BmtStrip = new Strip(strip, ADCtoEdep, time);
                 BmtStrip.setStatus(status.getIntValue("status", sector, layer, strip));
@@ -206,6 +218,7 @@ public class HitReader {
                         hits.add(hit);
                     }
                 }
+                
             }
             if(Constants.getInstance().useOnlyBMTC50PercTruthHits) {
                 int s = hits50c.size()/2;
