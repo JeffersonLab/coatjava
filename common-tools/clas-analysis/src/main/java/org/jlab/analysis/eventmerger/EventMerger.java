@@ -109,7 +109,6 @@ public class EventMerger {
     public void mergeEvents(DataEvent event, DataEvent bg1, DataEvent bg2) {
         
         if(!event.hasBank("RUN::config") || !bg1.hasBank("RUN::config") || !bg2.hasBank("RUN::config")) {
-            System.out.println("Missing RUN::config bank");
             return;
         }
         

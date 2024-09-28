@@ -1,0 +1,134 @@
+#!/bin/bash -f
+
+ulimit -u 49152 >& /dev/null
+export JAVA_OPTS="${JAVA_OPTS} -XX:+IgnoreUnrecognizedVMOptions"
+
+usage="Usage:  run-clara [-i IN] [-o OUT] [-c CLARA] [-t #] [-n #] YAML"
+info='\nOptions:\n
+YAML - path to CLARA YAML steering file\n
+-i   input HIPO file or directory of *.hipo files (default=.)\n
+-o   output directory (default=.)\n
+-c   CLARA installation (default=$CLARA_HOME)\n
+-t   number of threads (default=2)\n
+-n   number of events (default=-1)\n\n
+Defaults will use $CLARA_HOME to read all *.hipo files in $PWD,\n
+with all output written to $PWD.'
+
+function error() {
+    echo -e "\n$usage\n\nERROR:  $@." && exit 1
+}
+function abspath() {
+    [ -d $1 ] && echo $(cd $1 && pwd) && return 0
+    [ -r $1 ] && echo $(cd $(dirname $1) && pwd)/$(basename $1) && return 0
+    return 1
+}
+function get_host_ip() {
+    if command -v ip >/dev/null 2>&1
+    then
+        ip route get 1 | awk '{print $7; exit}' && return 0
+    elif command -v ifconfig >/dev/null 2>&1
+    then
+        while IFS=$': \t' read -r -a line
+        do
+            if [ -z "${line%inet}" ]
+            then
+                ip=${line[${#line[1]}>4?1:2]}
+                [ "${ip#127.0.0.1}" ]
+                echo $ip && return 0
+            fi
+        done< <(LANG=C ifconfig)
+    fi
+    return 1
+}
+function get_dpe_port() {
+    local ports
+    ports=$(seq 7000 20 8000)
+    command -v shuf >/dev/null 2>&1 && ports=$(echo "$ports" | shuf)
+    for port in $ports
+    do
+        local ctrl_port=$((port + 2))
+        if ! eval "exec 6<>/dev/tcp/127.0.0.1/$ctrl_port" 2> /dev/null
+        then
+            echo $port
+            return 0
+        fi
+    done
+    return 1
+}
+
+set -e
+
+# Check user command-line options:
+input=.
+output=.
+threads=2
+while getopts i:o:c:t:n:h opt
+do
+    case $opt in
+        i) input=$OPTARG ;;
+        o) output=$OPTARG ;;
+        c) CLARA_HOME=$OPTARG ;;
+        t) threads=$OPTARG && echo $threads | grep -q -E '^[0-9]+$' || error "-t must be an integer, threads" ;;
+        n) nevents="-e $OPTARG" && echo $nevents | grep -q -E '^-e [0-9]+$' || error "-n must be an integer, events" ;;
+        h) echo -e $usage && echo -e $info && exit 0 ;;
+    esac
+done
+
+shift $((OPTIND-1))
+[ $# -gt 1 ] && error "Extra arguments:  ${@:2} (options must come before positionals)"
+[ $# -lt 1 ] && error "YAML file argument is required"
+[ -r $1 ] && yaml=$1 || error "YAML file does not exist:  $yaml"
+[ -z ${CLARA_HOME+x} ] && error "-c must be specified or \$CLARA_HOME set"
+[ -d $CLARA_HOME ] || error "Invalid CLARA_HOME:  $CLARA_HOME"
+[ $threads -eq 0 ] && threads=`grep -c ^processor /proc/cpuinfo`
+test -e $input && test -r $input || error "Invalid inputs -i:  $input"
+
+# Create the environment variables and directories required by CLARA:
+[ -e $output ] && echo "WARNING:  Using existing directory:  $output."
+mkdir -p -v $output || error "Cannot create -o output directory: $output"
+mkdir -p $output/log $output/config $output/data/output
+export CLARA_USER_DATA=$output
+unset CLARA_MONITOR_FE
+
+# Normalize all paths:
+input=$(abspath $input)
+output=$(abspath $output)
+yaml=$(abspath $yaml)
+export CLARA_HOME=$(abspath $CLARA_HOME)
+export CLAS12DIR=$CLARA_HOME/plugins/clas12
+
+# Generate the file for CLARA containing a file list (of relative paths, not absolute):
+test -d $input && find $input -maxdepth 1 -name '*.hipo' -exec basename {} \; > $CLARA_USER_DATA/filelist.txt
+test -f $input && echo $(basename $input) > $CLARA_USER_DATA/filelist.txt
+[ $(cat $CLARA_USER_DATA/filelist.txt | wc -l) -gt 0 ] || error "Found no input files."
+
+# Finally, run CLARA:
+[ -f $input ] || [ -h $input ] && input=$(dirname $input)
+if [ $(uname) == "Darwin" ]
+then
+    ip=$(get_host_ip) || error "Unknown IP address"
+    port=$(get_dpe_port) || error "Unknown DPE port"
+    $CLARA_HOME/bin/j_dpe \
+        --host $ip --port $port \
+        --session recon --max-cores $threads \
+        --max-sockets 5120 --report 5 \
+        2>&1 | tee $CLARA_USER_DATA/log/dpe.log &
+    echo "Sleeping 7 ......." && sleep 7
+    unset JAVA_OPTS
+    $CLARA_HOME/bin/clara-orchestrator \
+        -F -f ${ip}%${port}_java -s recon \
+            -i $input -o $output -z rec_ \
+            -p $threads -t $threads \
+            $yaml $CLARA_USER_DATA/filelist.txt
+else
+    $CLARA_HOME/lib/clara/run-clara \
+    -i $input \
+    -o $CLARA_USER_DATA \
+    -z rec_ \
+    -x $CLARA_USER_DATA/log \
+    -t $threads \
+    $nevents \
+    -s recon \
+    $yaml $CLARA_USER_DATA/filelist.txt
+fi
+

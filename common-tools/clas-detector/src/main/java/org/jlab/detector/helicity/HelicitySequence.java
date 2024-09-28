@@ -480,6 +480,7 @@ public class HelicitySequence {
     }
 
     public void initialize(List<String> filenames) {
+        LOGGER.info("HelicitySequence:  Reading sequence from "+String.join(",",filenames));
         for (String filename : filenames) {
             HipoReader reader = new HipoReader();
             reader.setTags(1);
@@ -526,7 +527,14 @@ public class HelicitySequence {
         this.integrityCheck();
     }
 
+    /**
+     * 
+     * @param schema
+     * @param conman
+     * @param filenames 
+     */
     public void addStream(SchemaFactory schema, ConstantsManager conman, List<String> filenames) {
+        LOGGER.info("HelicitySequence:  Restreaming sequence from "+String.join(",",filenames));
         Bank runConfigBank = new Bank(schema.getSchema("RUN::config"));
         Bank helAdcBank = new Bank(schema.getSchema("HEL::adc"));
         TreeSet<HelicityState> stream = new TreeSet<>();
