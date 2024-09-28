@@ -29,20 +29,24 @@ public class LayerEfficiency {
     public static void main(String[] args) {
         
         // Example usage
-        double efficiency = 0.79; // Example efficiency value
+        double efficiency = 0.0; // Example efficiency value
         LayerEfficiency detectorLayer = new LayerEfficiency();
         // Simulate passing 10 hits through the detector layer
-        int cnt =0;
         
-        for (int i = 0; i < 10000; i++) {
-            boolean hitPassed = detectorLayer.passLayer(efficiency);
-            if (hitPassed) {
-                //System.out.println("Hit passed through the detector layer.");
-                cnt++;
-            } else {
-                //System.out.println("Hit did not pass through the detector layer.");
+        int loop = 100000;
+        for(int e =10; e<100; e++) {
+            efficiency = (double)e/100.0;
+            int cnt =0;
+            for (int i = 0; i < loop; i++) {
+                boolean hitPassed = detectorLayer.passLayer(efficiency);
+                if (hitPassed) {
+                    //System.out.println("Hit passed through the detector layer.");
+                    cnt++;
+                } else {
+                    //System.out.println("Hit did not pass through the detector layer.");
+                }
             }
+            System.out.println((efficiency -(double)cnt/(double) loop));
         }
-        System.out.println((double)cnt/(double) 10000);
     }
 }
