@@ -6,7 +6,7 @@ export JAVA_OPTS="${JAVA_OPTS} -XX:+IgnoreUnrecognizedVMOptions"
 usage="Usage:  run-clara [-i IN] [-o OUT] [-c CLARA] [-t #] [-n #] YAML"
 info='\nOptions:\n
 YAML - path to CLARA YAML steering file\n
--i   input HIPO file or directory of *.hipo files (default=.)\n
+-i   input HIPO file, directory of *.hipo files, or glob of HIPO files (default=.)\n
 -o   output directory (default=.)\n
 -p   output prefix (default=rec_)\n
 -c   CLARA installation (default=$CLARA_HOME)\n
@@ -84,7 +84,8 @@ shift $((OPTIND-1))
 [ -z ${CLARA_HOME+x} ] && error "-c must be specified or \$CLARA_HOME set"
 [ -d $CLARA_HOME ] || error "Invalid CLARA_HOME:  $CLARA_HOME"
 [ $threads -eq 0 ] && threads=`grep -c ^processor /proc/cpuinfo`
-test -e $input && test -r $input || error "Invalid inputs -i:  $input"
+! test -r $input && echo "WARNING:  Interpreting -i as a glob:  $input"
+! test -r $input && ! compgen -G $input && error "Invalid glob -i:  $input"
 
 # Create the environment variables and directories required by CLARA:
 [ -e $output ] && echo "WARNING:  Using existing directory:  $output."
@@ -94,14 +95,15 @@ export CLARA_USER_DATA=$output
 unset CLARA_MONITOR_FE
 
 # Normalize all paths:
-input=$(abspath $input)
 output=$(abspath $output)
 yaml=$(abspath $yaml)
+test -r $input && input=$(abspath $input)
 export CLARA_HOME=$(abspath $CLARA_HOME)
 export CLAS12DIR=$CLARA_HOME/plugins/clas12
 
 # Generate the file for CLARA containing a file list (of relative paths, not absolute):
-test -d $input && find $input -maxdepth 1 -name '*.hipo' -exec basename {} \; > $CLARA_USER_DATA/filelist.txt
+! test -r $input && compgen -G $input > $CLARA_USER_DATA/filelist.txt
+test -d $input && find $input -maxdepth 1 -name "*.hipo" -exec basename {} \; > $CLARA_USER_DATA/filelist.txt
 test -f $input && echo $(basename $input) > $CLARA_USER_DATA/filelist.txt
 [ $(cat $CLARA_USER_DATA/filelist.txt | wc -l) -gt 0 ] || error "Found no input files."
 
