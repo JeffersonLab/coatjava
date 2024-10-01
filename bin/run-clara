@@ -8,6 +8,7 @@ info='\nOptions:\n
 YAML - path to CLARA YAML steering file\n
 -i   input HIPO file or directory of *.hipo files (default=.)\n
 -o   output directory (default=.)\n
+-p   output prefix (default=rec_)\n
 -c   CLARA installation (default=$CLARA_HOME)\n
 -t   number of threads (default=2)\n
 -n   number of events (default=-1)\n\n
@@ -62,11 +63,13 @@ set -e
 input=.
 output=.
 threads=2
-while getopts i:o:c:t:n:h opt
+prefix=rec_
+while getopts i:o:p:c:t:n:h opt
 do
     case $opt in
         i) input=$OPTARG ;;
         o) output=$OPTARG ;;
+        p) prefix=$OPTARG ;;
         c) CLARA_HOME=$OPTARG ;;
         t) threads=$OPTARG && echo $threads | grep -q -E '^[0-9]+$' || error "-t must be an integer, threads" ;;
         n) nevents="-e $OPTARG" && echo $nevents | grep -q -E '^-e [0-9]+$' || error "-n must be an integer, events" ;;
@@ -117,14 +120,14 @@ then
     unset JAVA_OPTS
     $CLARA_HOME/bin/clara-orchestrator \
         -F -f ${ip}%${port}_java -s recon \
-            -i $input -o $output -z rec_ \
+            -i $input -o $output -z $prefix \
             -p $threads -t $threads \
             $yaml $CLARA_USER_DATA/filelist.txt
 else
     $CLARA_HOME/lib/clara/run-clara \
     -i $input \
     -o $CLARA_USER_DATA \
-    -z rec_ \
+    -z $prefix \
     -x $CLARA_USER_DATA/log \
     -t $threads \
     $nevents \
