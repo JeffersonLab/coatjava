@@ -64,7 +64,7 @@ input=.
 output=.
 threads=2
 prefix=rec_
-while getopts i:o:p:c:t:n:h opt
+while getopts i:o:p:c:t:n:mh opt
 do
     case $opt in
         i) input=$OPTARG ;;
@@ -73,6 +73,7 @@ do
         c) CLARA_HOME=$OPTARG ;;
         t) threads=$OPTARG && echo $threads | grep -q -E '^[0-9]+$' || error "-t must be an integer, threads" ;;
         n) nevents="-e $OPTARG" && echo $nevents | grep -q -E '^-e [0-9]+$' || error "-n must be an integer, events" ;;
+        m) merge=1 ;;
         h) echo -e $usage && echo -e $info && exit 0 ;;
     esac
 done
@@ -86,6 +87,7 @@ shift $((OPTIND-1))
 [ $threads -eq 0 ] && threads=`grep -c ^processor /proc/cpuinfo`
 ! test -r $input && echo "WARNING:  Interpreting -i as a glob:  $input"
 ! test -r $input && ! compgen -G $input && error "Invalid glob -i:  $input"
+! [ -z ${merge+x} ] && ! command -v hipo-utils >& /dev/null && error "Merging requested, but hipo-utils is not in \$PATH"
 
 # Create the environment variables and directories required by CLARA:
 [ -e $output ] && echo "WARNING:  Using existing directory:  $output."
@@ -137,3 +139,17 @@ else
     $yaml $CLARA_USER_DATA/filelist.txt
 fi
 
+# Merge outputs:
+if ! [ -z ${merge+x} ]
+then
+    if grep -q org.jlab.jnp.grapes $yaml >& /dev/null
+    then
+        for id in $(yq .configuration.services.*.id $yaml | uniq)
+        do
+            hipo-utils -merge -o $output/$prefix$id.hipo $output/$prefix$id*.hipo
+        done
+    else
+        outfiles=$(sed "s#^#$output/$prefix#" $CLARA_USER_DATA/filelist.txt)
+        hipo-utils -merge -o $output/$prefix.hipo $outfiles
+    fi
+fi
