@@ -23,8 +23,8 @@ function get() {
 
 function install() {
     find clara-cre -exec touch {} +
-    chmod -R a+r clara-cre
-    chmod a+x clara-cre/bin/*
+    chmod -f -R a+r clara-cre
+    chmod -f a+x clara-cre/bin/*
     mv clara-cre $clara_home
 }
 
@@ -36,7 +36,7 @@ function litter() {
         then
             echo -e "\nSee temporary build directory for more info:\n\t$tmp_dir"
         else
-            rm -r $tmp_dir && echo -e "\nRemoved temporary build directory:\n\t$tmp_dir"
+            rm -rf $tmp_dir && echo -e "\nRemoved temporary build directory:\n\t$tmp_dir"
         fi
     fi
 }
@@ -57,16 +57,27 @@ function cleanup() {
     [ "$exit_code" -eq 0 ] && check
 }
 
+function build_clara {
+    export CLARA_HOME=$1
+    git clone https://github.com/baltzell/clara-java
+    cd clara-java
+    git checkout java21
+    ./gradlew && ./gradlew deploy
+    cd -
+}
+
 trap cleanup EXIT
 
 # Configure:
 debug=0
 args=()
-usage="Usage:  install-clara [-v] [-f CLARA] [-c COATJAVA] [-g GRAPES] [-j JRE] PATH"
+usage="Usage:  install-clara [-v] [-b] [-f CLARA] [-c COATJAVA] [-g GRAPES] PATH"
 info="\
 - The default COATJAVA/CLARA/GRAPES versions are $coatjava/$clara/$grapes.\n\
-- Unless requested, no JRE will be included in the installation.\n\
-- COATJAVA can also be specified as a local installation directory."
+- COATJAVA can also be specified as a local installation directory.\n\
+- [-v adds verbosity and disables cleanup]\n\
+- [-b builds clara from source]"
+
 while [[ $# -gt 0 ]]
 do
     case $1 in
@@ -74,7 +85,7 @@ do
         -f) clara="$2" && shift && shift ;;
         -c) coatjava="$2" && shift && shift ;;
         -g) grapes="$2" && shift && shift ;;
-        -j) jre="$2" && shift && shift ;;
+        -b) build=1 && shift ;;
         -v) let debug=$debug+1 && shift ;;
         -*|--*)  echo -e "$usage\n\nUnknown option:  $1" && exit 1 ;;
         *) args+=("$1") && shift ;;
@@ -108,8 +119,14 @@ echo -e "\nCreating temporary build directory:\n\t$tmp_dir"
 cd $tmp_dir
 
 # CLARA:
-echo -e "\nRetrieving CLARA version $clara ..."
-get https://clasweb.jlab.org/clas12offline/distribution/clara/clara-cre-$clara.tar.gz
+if ! [ -z ${build+x} ]
+then
+    echo -e "\nBuilding CLARA from source ..."
+    build_clara $PWD/clara-cre
+else
+    echo -e "\nRetrieving CLARA version $clara ..."
+    get https://clasweb.jlab.org/clas12offline/distribution/clara/clara-cre-$clara.tar.gz
+fi
 
 # COATJAVA:
 if ! compgen -G "$coatjava/lib/clas/coat-libs-*.jar" > /dev/null
@@ -125,13 +142,5 @@ cp -Lr $coatjava/etc $coatjava/bin $coatjava/lib* clara-cre/plugins/clas12
 echo -e "\nRetrieving GRAPES version $grapes ..."
 get https://clasweb.jlab.org/clas12offline/distribution/grapes/grapes-$grapes.tar.gz
 mv grapes-$grapes clara-cre/plugins/grapes
-cp -r clara-cre/plugins/grapes/bin/clara-grapes clara-cre/bin/
-
-# JRE:
-if ! [ -z ${jre+x} ]
-then
-    echo -e "\nRetrieving JRE version $jre ..."
-    mkdir clara-cre/jre
-    get https://userweb.jlab.org/~gurjyan/clara-cre/linux-64-$jre.tar.gz clara-cre/jre
-fi
+mv -f clara-cre/plugins/grapes/bin/clara-grapes clara-cre/bin/
 
