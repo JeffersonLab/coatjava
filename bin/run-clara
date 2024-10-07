@@ -3,17 +3,21 @@
 ulimit -u 49152 >& /dev/null
 export JAVA_OPTS="${JAVA_OPTS} -XX:+IgnoreUnrecognizedVMOptions"
 
-usage="Usage:  run-clara [-i IN] [-o OUT] [-c CLARA] [-t #] [-n #] YAML"
-info='\nOptions:\n
-YAML - path to CLARA YAML steering file\n
--i   input HIPO file, directory of *.hipo files, or glob of HIPO files (default=.)\n
--o   output directory (default=.)\n
--p   output prefix (default=rec_)\n
--c   CLARA installation (default=$CLARA_HOME)\n
--t   number of threads (default=2)\n
--n   number of events (default=-1)\n\n
+usage="\nUsage:  run-clara [-i IN] [-o OUT] [-p PREFIX] [-c CLARA_HOME] [-t #] [-n #] [-m] [-h] YAML"
+info='\nRequired Arguments:\n
+\tYAML = path to CLARA YAML steering file\n
+Options:\n
+\t-i   directory or shell glob of input HIPO files (default=.)\n
+\t-o   output directory (default=.)\n
+\t-p   output prefix (default=rec_)\n
+\t-c   CLARA installation (default=$CLARA_HOME)\n
+\t-t   number of threads (default=2)\n
+\t-n   number of events (default=-1)\n
+\t-m   merge output files (see dependencies below)\n
+\t-h   print this help and exit\n\n
 Defaults will use $CLARA_HOME to read all *.hipo files in $PWD,\n
-with all output written to $PWD.'
+with all output written to $PWD.  Merging outputs (-m) requires\n
+hipo-utils and yq (https://github.com/mikefarah/yq) in $PATH.'
 
 function error() {
     echo -e "\n$usage\n\nERROR:  $@." && exit 1
