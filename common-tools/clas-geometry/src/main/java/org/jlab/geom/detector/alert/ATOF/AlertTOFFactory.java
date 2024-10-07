@@ -120,7 +120,7 @@ public class AlertTOFFactory implements Factory<AlertTOFDetector, AlertTOFSector
 			Point3D            p5     = new Point3D(dR / 2, -widthTl / 2, len_b);
 			Point3D            p6     = new Point3D(dR / 2, widthTl / 2, len_b);
 			Point3D            p7     = new Point3D(-dR / 2, widthBl / 2, len_b);
-			ScintillatorPaddle Paddle = new ScintillatorPaddle(sectorId * 4 + padId, p0, p1, p2, p3, p4, p5, p6, p7);
+			ScintillatorPaddle Paddle = new ScintillatorPaddle(sectorId * 4 + padId+1, p0, p1, p2, p3, p4, p5, p6, p7);
 
 			double openAng_sector_deg = npaddles * openAng_pad_deg;
 			Paddle.rotateZ(Math.toRadians(padId * openAng_pad_deg + sectorId * openAng_sector_deg));
