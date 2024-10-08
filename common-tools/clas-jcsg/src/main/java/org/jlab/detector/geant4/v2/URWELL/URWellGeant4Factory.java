@@ -36,7 +36,7 @@ public final class URWellGeant4Factory extends Geant4Factory {
     
     public void init(DatabaseConstantProvider cp, boolean prototype, int regions ) {
    
-        motherVolume = new G4World("fc");
+        motherVolume = new G4World("root");
         isProto = prototype;
         if (prototype == false) {
             nRegions = Math.min(URWellConstants.NMAXREGIONS, regions);
