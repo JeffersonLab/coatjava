@@ -148,7 +148,7 @@ if ! [ -z ${merge+x} ]
 then
     if grep -q org.jlab.jnp.grapes $yaml >& /dev/null
     then
-        for id in $(yq .configuration.services.*.id $yaml | uniq)
+        for id in $(yq .configuration.services.*.id $yaml | sort -n | uniq)
         do
             hipo-utils -merge -o $output/$prefix$id.hipo $output/$prefix$id*.hipo
         done
