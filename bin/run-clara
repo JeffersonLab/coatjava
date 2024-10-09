@@ -67,7 +67,7 @@ for x in $inputs
 do
     test -f $x && test -r $x || error "Invalid input file:  $x"
     echo $(basename $x) >> $CLARA_USER_DATA/filelist.txt
-    ln -sf $(cd $(dirname $x) && pwd)/$(basename $x) $CLARA_USER_DATA
+    test -f $CLARA_USER_DATA/$(basename $x) || ln -sf $(cd $(dirname $x) && pwd)/$(basename $x) $CLARA_USER_DATA
 done
 [ $(cat $CLARA_USER_DATA/filelist.txt | wc -l) -gt 0 ] || error "Found no input files"
 
