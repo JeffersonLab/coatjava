@@ -111,7 +111,7 @@ then
     ip=$(get_host_ip) || error "Unknown IP address"
     port=$(get_dpe_port) || error "Unknown DPE port"
     set -v
-    echo $CLARA_HOME/bin/j_dpe \
+    $CLARA_HOME/bin/j_dpe \
         --host $ip --port $port \
         --session recon --max-cores $threads \
         --max-sockets 5120 --report 5 \
@@ -120,7 +120,7 @@ then
     #echo "Sleeping 7 ......." && sleep 7
     unset JAVA_OPTS
     set -v
-    echo $CLARA_HOME/bin/clara-orchestrator \
+    $CLARA_HOME/bin/clara-orchestrator \
         -F -f ${ip}%${port}_java -s recon \
             -i $CLARA_USER_DATA -o $CLARA_USER_DATA -z $prefix \
             -p $threads -t $threads \
@@ -128,7 +128,7 @@ then
     set +v
 else
     set -v
-    echo $CLARA_HOME/lib/clara/run-clara \
+    $CLARA_HOME/lib/clara/run-clara \
     -i $CLARA_USER_DATA \
     -o $CLARA_USER_DATA \
     -z $prefix \
@@ -147,10 +147,10 @@ then
     then
         for id in $(yq .configuration.services.*.id $yaml | sort -n | uniq)
         do
-            echo hipo-utils -merge -o $CLARA_USER_DATA/$prefix$id.hipo $CLARA_USER_DATA/$prefix$id*.hipo
+            hipo-utils -merge -o $CLARA_USER_DATA/$prefix$id.hipo $CLARA_USER_DATA/$prefix$id*.hipo
         done
     else
         outfiles=$(sed "s#^#$CLARA_USER_DATA/$prefix#" $CLARA_USER_DATA/filelist.txt)
-        echo hipo-utils -merge -o $CLARA_USER_DATA/$prefix.hipo $outfiles
+        hipo-utils -merge -o $CLARA_USER_DATA/$prefix.hipo $outfiles
     fi
 fi
