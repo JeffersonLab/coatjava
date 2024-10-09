@@ -40,16 +40,15 @@ do
     esac
 done
 shift $((OPTIND-1))
-inputs=("${@}")
+inputs=$@
 
 # Check configuration:
-[ ${#inputs[@]} -lt 1 ] && error "Input data files are required"
+[ $# -lt 1 ] && error "Input data files are required"
 [ -z ${yaml+x} ] && error "-y YAML is required"
 [ -f $yaml ] && [ -r $yaml ] || error "YAML file does not exist:  $yaml"
 [ -z ${CLARA_HOME+x} ] && error "-c must be specified or \$CLARA_HOME set"
 [ -d $CLARA_HOME ] || error "Invalid CLARA_HOME:  $CLARA_HOME"
 [ $threads -eq 0 ] && threads=`grep -c ^processor /proc/cpuinfo`
-! [ -z ${merge+x} ] && [ "${#inputs[@]}" -eq 1 ] && echo "WARNING:  merging disabled for single file"
 ! [ -z ${merge+x} ] && ! command -v hipo-utils >& /dev/null && error "Merging requested, but hipo-utils is not in \$PATH"
 yaml=$(cd $(dirname $yaml) && pwd)/$(basename $yaml)
 
@@ -142,7 +141,7 @@ else
 fi
 
 # Merge outputs:
-if [ ${#inputs[@]} -gt 1 ] && ! [ -z ${merge+x} ]
+if ! [ -z ${merge+x} ]
 then
     if grep -q org.jlab.jnp.grapes $yaml >& /dev/null
     then
