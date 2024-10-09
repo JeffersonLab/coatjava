@@ -280,7 +280,7 @@ public class ClusterFinder {
                 double lyL1 = clus.get_clusterLineFitSlope() + clus.get_clusterLineFitIntercept();
                 double wireL1 = (lyL1 - Math.tan(Math.PI / 6.))/2./Math.tan(Math.PI / 6.);
                 double lyL6 = clus.get_clusterLineFitSlope() * 6 + clus.get_clusterLineFitIntercept();
-                double wireL6 = (lyL6 - Math.tan(Math.PI / 6.))/2./Math.tan(Math.PI / 6.);
+                double wireL6 = lyL6/2./Math.tan(Math.PI / 6.);
                 clus.setWireL1(wireL1);
                 clus.setWireL6(wireL6);
                 
