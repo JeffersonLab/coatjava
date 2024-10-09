@@ -2,8 +2,9 @@
 
 ulimit -u 49152 >& /dev/null
 export JAVA_OPTS="${JAVA_OPTS} -XX:+IgnoreUnrecognizedVMOptions"
+set -e
 
-usage="\nUsage:  run-clara -y YAML [-h] [-m] [-t #] [-n #] [-o DIR] [-p PREFIX] [-c CLARA_HOME] FILE..."
+usage="Usage:  run-clara -y YAML [-h] [-m] [-t #] [-n #] [-o DIR] [-p PREFIX] [-c CLARA_HOME] FILE..."
 info='\nRequired Arguments:\n
 \tFILE... (input data files)\n
 \t-y   YAML file\n
@@ -20,11 +21,57 @@ Merging outputs (-m) requires hipo-utils and yq (https://github.com/mikefarah/yq
 function error() {
     echo -e "\n$usage\n\nERROR:  $@." && exit 1
 }
-function abspath() {
-    [ -d $1 ] && echo $(cd $1 && pwd) && return 0
-    [ -r $1 ] && echo $(cd $(dirname $1) && pwd)/$(basename $1) && return 0
-    return 1
-}
+
+# Interpret command line:
+threads=2
+prefix=rec_
+CLARA_USER_DATA=.
+while getopts y:o:p:c:t:n:mh opt
+do
+    case $opt in
+        y) yaml=$OPTARG ;;
+        o) CLARA_USER_DATA=$OPTARG ;;
+        p) prefix=$OPTARG ;;
+        c) CLARA_HOME=$OPTARG ;;
+        t) threads=$OPTARG && echo $threads | grep -q -E '^[0-9]+$' || error "-t must be an integer, threads" ;;
+        n) nevents="-e $OPTARG" && echo $nevents | grep -q -E '^-e [0-9]+$' || error "-n must be an integer, events" ;;
+        m) merge=1 ;;
+        h) echo -e "\n$usage" && echo -e $info && exit 0 ;;
+    esac
+done
+shift $((OPTIND-1))
+inputs=("${@}")
+
+# Check configuration:
+[ ${#inputs[@]} -lt 1 ] && error "Input data files are required"
+[ -z ${yaml+x} ] && error "-y YAML is required"
+[ -f $yaml ] && [ -r $yaml ] || error "YAML file does not exist:  $yaml"
+[ -z ${CLARA_HOME+x} ] && error "-c must be specified or \$CLARA_HOME set"
+[ -d $CLARA_HOME ] || error "Invalid CLARA_HOME:  $CLARA_HOME"
+[ $threads -eq 0 ] && threads=`grep -c ^processor /proc/cpuinfo`
+! [ -z ${merge+x} ] && [ "${#inputs[@]}" -eq 1 ] && echo "WARNING:  merging disabled for single file"
+! [ -z ${merge+x} ] && ! command -v hipo-utils >& /dev/null && error "Merging requested, but hipo-utils is not in \$PATH"
+yaml=$(cd $(dirname $yaml) && pwd)/$(basename $yaml)
+
+# Create the environment variables and directories required by CLARA:
+[ -e $CLARA_USER_DATA ] && echo "WARNING:  Using existing directory:  $CLARA_USER_DATA"
+mkdir -p -v $CLARA_USER_DATA || error "Cannot create -o output directory: $CLARA_USER_DATA"
+mkdir -p $CLARA_USER_DATA/log $CLARA_USER_DATA/config $CLARA_USER_DATA/data/output
+export CLARA_USER_DATA=$(cd $CLARA_USER_DATA && pwd)
+export CLARA_HOME=$(cd $CLARA_HOME && pwd)
+export CLAS12DIR=$CLARA_HOME/plugins/clas12
+unset CLARA_MONITOR_FE
+
+# Generate the file for CLARA containing a list of file basenames:
+rm -f $CLARA_USER_DATA/filelist.txt && touch $CLARA_USER_DATA/filelist.txt
+for x in $inputs
+do
+    test -f $x && test -r $x || error "Invalid input file:  $x"
+    echo $(basename $x) >> $CLARA_USER_DATA/filelist.txt
+    ln -sf $(cd $(dirname $x) && pwd)/$(basename $x) $CLARA_USER_DATA
+done
+[ $(cat $CLARA_USER_DATA/filelist.txt | wc -l) -gt 0 ] || error "Found no input files"
+
 function get_host_ip() {
     if command -v ip >/dev/null 2>&1
     then
@@ -59,79 +106,30 @@ function get_dpe_port() {
     return 1
 }
 
-set -e
-
-# Check user command-line options:
-output=.
-threads=2
-prefix=rec_
-while getopts y:o:p:c:t:n:mh opt
-do
-    case $opt in
-        y) yaml=$OPTARG ;;
-        o) output=$OPTARG ;;
-        p) prefix=$OPTARG ;;
-        c) CLARA_HOME=$OPTARG ;;
-        t) threads=$OPTARG && echo $threads | grep -q -E '^[0-9]+$' || error "-t must be an integer, threads" ;;
-        n) nevents="-e $OPTARG" && echo $nevents | grep -q -E '^-e [0-9]+$' || error "-n must be an integer, events" ;;
-        m) merge=1 ;;
-        h) echo -e $usage && echo -e $info && exit 0 ;;
-    esac
-done
-
-shift $((OPTIND-1))
-inputs=$@
-
-[ $# -lt 1 ] && error "Input data files are required."
-[ -z ${yaml+x} ] && error "-y YAML is required"
-[ -r $yaml ] || error "YAML file does not exist:  $yaml"
-[ -z ${CLARA_HOME+x} ] && error "-c must be specified or \$CLARA_HOME set"
-[ -d $CLARA_HOME ] || error "Invalid CLARA_HOME:  $CLARA_HOME"
-[ $threads -eq 0 ] && threads=`grep -c ^processor /proc/cpuinfo`
-! [ -z ${merge+x} ] && ! command -v hipo-utils >& /dev/null && error "Merging requested, but hipo-utils is not in \$PATH"
-
-# Create the environment variables and directories required by CLARA:
-[ -e $output ] && echo "WARNING:  Using existing directory:  $output"
-mkdir -p -v $output || error "Cannot create -o output directory: $output"
-mkdir -p $output/log $output/config $output/data/output
-export CLARA_USER_DATA=$output
-unset CLARA_MONITOR_FE
-
-# Normalize all paths:
-output=$(abspath $output)
-yaml=$(abspath $yaml)
-export CLARA_HOME=$(abspath $CLARA_HOME)
-export CLAS12DIR=$CLARA_HOME/plugins/clas12
-
-# Generate the file for CLARA containing a file list (of relative paths, not absolute):
-touch $CLARA_USER_DATA/filelist.txt
-for x in $inputs
-do
-    test -f $x && test -r $x || error "Invalid input file:  $x"
-    echo $(basename $x) >> $CLARA_USER_DATA/filelist.txt
-    ln -s $(abspath $(dirname $x))/$(basename $x) $CLARA_USER_DATA
-done
-[ $(cat $CLARA_USER_DATA/filelist.txt | wc -l) -gt 0 ] || error "Found no input files."
-
 # Finally, run CLARA:
 if [ $(uname) == "Darwin" ]
 then
     ip=$(get_host_ip) || error "Unknown IP address"
     port=$(get_dpe_port) || error "Unknown DPE port"
-    $CLARA_HOME/bin/j_dpe \
+    set -v
+    echo $CLARA_HOME/bin/j_dpe \
         --host $ip --port $port \
         --session recon --max-cores $threads \
         --max-sockets 5120 --report 5 \
         2>&1 | tee $CLARA_USER_DATA/log/dpe.log &
-    echo "Sleeping 7 ......." && sleep 7
+    set +v
+    #echo "Sleeping 7 ......." && sleep 7
     unset JAVA_OPTS
-    $CLARA_HOME/bin/clara-orchestrator \
+    set -v
+    echo $CLARA_HOME/bin/clara-orchestrator \
         -F -f ${ip}%${port}_java -s recon \
-            -i $CLARA_USER_DATA -o $output -z $prefix \
+            -i $CLARA_USER_DATA -o $CLARA_USER_DATA -z $prefix \
             -p $threads -t $threads \
             $yaml $CLARA_USER_DATA/filelist.txt
+    set +v
 else
-    $CLARA_HOME/lib/clara/run-clara \
+    set -v
+    echo $CLARA_HOME/lib/clara/run-clara \
     -i $CLARA_USER_DATA \
     -o $CLARA_USER_DATA \
     -z $prefix \
@@ -140,19 +138,20 @@ else
     $nevents \
     -s recon \
     $yaml $CLARA_USER_DATA/filelist.txt
+    set +v
 fi
 
 # Merge outputs:
-if ! [ -z ${merge+x} ]
+if [ ${#inputs[@]} -gt 1 ] && ! [ -z ${merge+x} ]
 then
     if grep -q org.jlab.jnp.grapes $yaml >& /dev/null
     then
         for id in $(yq .configuration.services.*.id $yaml | sort -n | uniq)
         do
-            hipo-utils -merge -o $output/$prefix$id.hipo $output/$prefix$id*.hipo
+            echo hipo-utils -merge -o $CLARA_USER_DATA/$prefix$id.hipo $CLARA_USER_DATA/$prefix$id*.hipo
         done
     else
-        outfiles=$(sed "s#^#$output/$prefix#" $CLARA_USER_DATA/filelist.txt)
-        hipo-utils -merge -o $output/$prefix.hipo $outfiles
+        outfiles=$(sed "s#^#$CLARA_USER_DATA/$prefix#" $CLARA_USER_DATA/filelist.txt)
+        echo hipo-utils -merge -o $CLARA_USER_DATA/$prefix.hipo $outfiles
     fi
 fi
