@@ -91,7 +91,7 @@ inputs=$@
 ! [ -z ${merge+x} ] && ! command -v hipo-utils >& /dev/null && error "Merging requested, but hipo-utils is not in \$PATH"
 
 # Create the environment variables and directories required by CLARA:
-[ -e $output ] && echo "WARNING:  Using existing directory:  $output."
+[ -e $output ] && echo "WARNING:  Using existing directory:  $output"
 mkdir -p -v $output || error "Cannot create -o output directory: $output"
 mkdir -p $output/log $output/config $output/data/output
 export CLARA_USER_DATA=$output
