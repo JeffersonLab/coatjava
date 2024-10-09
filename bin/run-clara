@@ -3,11 +3,11 @@
 ulimit -u 49152 >& /dev/null
 export JAVA_OPTS="${JAVA_OPTS} -XX:+IgnoreUnrecognizedVMOptions"
 
-usage="\nUsage:  run-clara [-i IN] [-o OUT] [-p PREFIX] [-c CLARA_HOME] [-t #] [-n #] [-m] [-h] YAML"
+usage="\nUsage:  run-clara -y YAML [-h] [-m] [-t #] [-n #] [-o DIR] [-p PREFIX] [-c CLARA_HOME] FILE..."
 info='\nRequired Arguments:\n
-\tYAML = path to CLARA YAML steering file\n
+\tFILE... (input data files)\n
+\t-y   YAML file\n
 Options:\n
-\t-i   directory or shell glob of input HIPO files (default=.)\n
 \t-o   output directory (default=.)\n
 \t-p   output prefix (default=rec_)\n
 \t-c   CLARA installation (default=$CLARA_HOME)\n
@@ -15,9 +15,7 @@ Options:\n
 \t-n   number of events (default=-1)\n
 \t-m   merge output files (see dependencies below)\n
 \t-h   print this help and exit\n\n
-Defaults will use $CLARA_HOME to read all *.hipo files in $PWD,\n
-with all output written to $PWD.  Merging outputs (-m) requires\n
-hipo-utils and yq (https://github.com/mikefarah/yq) in $PATH.'
+Merging outputs (-m) requires hipo-utils and yq (https://github.com/mikefarah/yq).'
 
 function error() {
     echo -e "\n$usage\n\nERROR:  $@." && exit 1
@@ -64,14 +62,13 @@ function get_dpe_port() {
 set -e
 
 # Check user command-line options:
-input=.
 output=.
 threads=2
 prefix=rec_
-while getopts i:o:p:c:t:n:mh opt
+while getopts y:o:p:c:t:n:mh opt
 do
     case $opt in
-        i) input=$OPTARG ;;
+        y) yaml=$OPTARG ;;
         o) output=$OPTARG ;;
         p) prefix=$OPTARG ;;
         c) CLARA_HOME=$OPTARG ;;
@@ -83,14 +80,14 @@ do
 done
 
 shift $((OPTIND-1))
-[ $# -gt 1 ] && error "Extra arguments:  ${@:2} (options must come before positionals)"
-[ $# -lt 1 ] && error "YAML file argument is required"
-[ -r $1 ] && yaml=$1 || error "YAML file does not exist:  $yaml"
+inputs=$@
+
+[ $# -lt 1 ] && error "Input data files are required."
+[ -z ${yaml+x} ] && error "-y YAML is required"
+[ -r $yaml ] || error "YAML file does not exist:  $yaml"
 [ -z ${CLARA_HOME+x} ] && error "-c must be specified or \$CLARA_HOME set"
 [ -d $CLARA_HOME ] || error "Invalid CLARA_HOME:  $CLARA_HOME"
 [ $threads -eq 0 ] && threads=`grep -c ^processor /proc/cpuinfo`
-! test -r $input && echo "WARNING:  Interpreting -i as a glob:  $input"
-! test -r $input && ! compgen -G $input && error "Invalid glob -i:  $input"
 ! [ -z ${merge+x} ] && ! command -v hipo-utils >& /dev/null && error "Merging requested, but hipo-utils is not in \$PATH"
 
 # Create the environment variables and directories required by CLARA:
@@ -103,18 +100,20 @@ unset CLARA_MONITOR_FE
 # Normalize all paths:
 output=$(abspath $output)
 yaml=$(abspath $yaml)
-test -r $input && input=$(abspath $input)
 export CLARA_HOME=$(abspath $CLARA_HOME)
 export CLAS12DIR=$CLARA_HOME/plugins/clas12
 
 # Generate the file for CLARA containing a file list (of relative paths, not absolute):
-! test -r $input && compgen -G $input | xargs basename > $CLARA_USER_DATA/filelist.txt
-test -d $input && find $input -maxdepth 1 -name "*.hipo" -exec basename {} \; > $CLARA_USER_DATA/filelist.txt
-test -f $input && echo $(basename $input) > $CLARA_USER_DATA/filelist.txt
+touch $CLARA_USER_DATA/filelist.txt
+for x in $inputs
+do
+    test -f $x && test -r $x || error "Invalid input file:  $x"
+    echo $(basename $x) >> $CLARA_USER_DATA/filelist.txt
+    ln -s $(abspath $(dirname $x))/$(basename $x) $CLARA_USER_DATA
+done
 [ $(cat $CLARA_USER_DATA/filelist.txt | wc -l) -gt 0 ] || error "Found no input files."
 
 # Finally, run CLARA:
-[ -f $input ] || [ -h $input ] && input=$(dirname $input)
 if [ $(uname) == "Darwin" ]
 then
     ip=$(get_host_ip) || error "Unknown IP address"
@@ -128,12 +127,12 @@ then
     unset JAVA_OPTS
     $CLARA_HOME/bin/clara-orchestrator \
         -F -f ${ip}%${port}_java -s recon \
-            -i $input -o $output -z $prefix \
+            -i $CLARA_USER_DATA -o $output -z $prefix \
             -p $threads -t $threads \
             $yaml $CLARA_USER_DATA/filelist.txt
 else
     $CLARA_HOME/lib/clara/run-clara \
-    -i $input \
+    -i $CLARA_USER_DATA \
     -o $CLARA_USER_DATA \
     -z $prefix \
     -x $CLARA_USER_DATA/log \
