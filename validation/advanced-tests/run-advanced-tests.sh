@@ -1,4 +1,4 @@
-#!/bin/sh -f
+#!/bin/bash -f
 
 # coatjava must already be built at ../../coatjava/
 
