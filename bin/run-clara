@@ -147,7 +147,7 @@ then
     then
         for id in $(yq .configuration.services.*.id $yaml | sort -n | uniq)
         do
-            hipo-utils -merge -o $CLARA_USER_DATA/$prefix$id.hipo $CLARA_USER_DATA/$prefix$id*.hipo
+            hipo-utils -merge -o $CLARA_USER_DATA/$prefix$id.hipo $CLARA_USER_DATA/$prefix*$id.hipo
         done
     else
         outfiles=$(sed "s#^#$CLARA_USER_DATA/$prefix#" $CLARA_USER_DATA/filelist.txt)
