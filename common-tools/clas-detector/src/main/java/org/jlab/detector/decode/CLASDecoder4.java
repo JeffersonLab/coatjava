@@ -78,6 +78,10 @@ public class CLASDecoder4 {
         return decoder;
     }
 
+    public void setVariation(String variation) {
+        detectorDecoder.setVariation(variation);
+    }
+
     public void setDebugMode(int mode){
         this.decoderDebugMode = mode;
     }
