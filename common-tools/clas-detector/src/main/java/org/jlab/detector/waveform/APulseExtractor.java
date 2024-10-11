@@ -51,28 +51,28 @@ public abstract class APulseExtractor implements IPulseExtractor {
 
     @Override
     public final void extract(Bank src, Bank dest) {
-        dest.reset();
         if (src.getRows() > 0) {
-            int iadc=0;
-            for (Pulse p : getPulses(src)) {
-                copyIndices(src, dest, p.index(), iadc);
-                dest.putFloat("ADC", iadc, p.integral());
-                dest.putFloat("time", iadc, p.time());
-                iadc++;
+            List<Pulse> pulses = getPulses(src);
+            dest.reset();
+            dest.setRows(pulses.size());
+            for (int i=0; i<pulses.size(); ++i) {
+                copyIndices(src, dest, pulses.get(i).index(), i);
+                dest.putFloat("ADC", i, pulses.get(i).integral());
+                dest.putFloat("time", i, pulses.get(i).time());
             }
         }
     }
 
     @Override
     public final void extract(DataBank src, DataBank dest) {
-        dest.reset();
         if (src.rows() > 0) {
-            int iadc=0;
-            for (Pulse p : getPulses(src)) {
-                copyIndices(src, dest, p.index(), iadc);
-                dest.setFloat("ADC", iadc, p.integral());
-                dest.setFloat("time", iadc, p.time());
-                iadc++;
+            List<Pulse> pulses = getPulses(src);
+            dest.reset();
+            dest.allocate(pulses.size());
+            for (int i=0; i<pulses.size(); ++i) {
+                copyIndices(src, dest, pulses.get(i).index(), i);
+                dest.setFloat("ADC", i, pulses.get(i).integral());
+                dest.setFloat("time", i, pulses.get(i).time());
             }
         }
     }
