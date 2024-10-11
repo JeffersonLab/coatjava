@@ -1,4 +1,4 @@
-package org.jlab.detector.waveform;
+package org.jlab.detector.pulse;
 
 import java.util.List;
 import org.jlab.io.base.DataBank;

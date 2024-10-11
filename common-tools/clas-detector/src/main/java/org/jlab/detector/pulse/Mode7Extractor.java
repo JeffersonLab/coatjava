@@ -1,4 +1,4 @@
-package org.jlab.detector.waveform;
+package org.jlab.detector.pulse;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +23,7 @@ public class Mode7Extractor extends Mode1Extractor {
 
     @Override
     public List<Pulse> extract(int id, short... samples) {
-        // With Pulse a (immutable) record, this isn't possible:
+        // Pulse is a (immutable) record, otherwise we could:
         // List<Pulse> pulses = super.extract(id, samples);
         // for (Pulse p : pulses) p.time = calculateTime(p.time, pedestal, samples);
         // Or, with streams:

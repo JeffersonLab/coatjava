@@ -1,4 +1,4 @@
-package org.jlab.detector.waveform;
+package org.jlab.detector.pulse;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,12 +36,6 @@ public class Mode1Extractor extends APulseExtractor {
             }
         }
         return pulses;
-    }
-    
-    public static void main(String args[]) {
-        Mode1Extractor e = new Mode1Extractor(5f,10f,2,2);
-        short[] samples = {9,10,11,8,1000,100,10,10,10,10,10,2000,200,10,10};
-        System.out.print(e.extract(2,samples));
     }
 
 }

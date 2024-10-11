@@ -1,7 +1,7 @@
 package org.jlab.rec.service;
 
 import org.jlab.clas.reco.ReconstructionEngine;
-import org.jlab.detector.waveform.AHDCExtractor;
+import org.jlab.detector.pulse.AHDCExtractor;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 

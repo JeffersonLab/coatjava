@@ -14,10 +14,8 @@ import org.jlab.detector.decode.DetectorDataDgtz.HelicityDecoderData;
 import org.jlab.detector.helicity.HelicityBit;
 import org.jlab.detector.helicity.HelicitySequence;
 import org.jlab.detector.helicity.HelicityState;
-import org.jlab.detector.waveform.AHDCExtractor;
-import org.jlab.detector.waveform.APulseExtractor;
-import org.jlab.detector.waveform.IPulseExtractor;
-import org.jlab.detector.waveform.Pulse;
+import org.jlab.detector.pulse.APulseExtractor;
+import org.jlab.detector.pulse.IPulseExtractor;
 
 import org.jlab.logging.DefaultLogger;
 
@@ -812,7 +810,7 @@ public class CLASDecoder4 {
         writer.close();
     }
 
-    private void alert(APulseExtractor ext, Event event) {
+    private void alert(IPulseExtractor ext, Event event) {
         Bank wf = new Bank(schemaFactory.getSchema("AHDC:wf:12"));
         event.read(wf);
         if (wf.getRows() > 0) {

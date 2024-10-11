@@ -1,4 +1,4 @@
-package org.jlab.detector.waveform;
+package org.jlab.detector.pulse;
 
 public interface IPulse {
     public float integral();

@@ -1,9 +1,11 @@
-package org.jlab.detector.waveform;
+package org.jlab.detector.pulse;
 
 import java.util.ArrayList;
 import java.util.List;
 import org.jlab.io.base.DataBank;
 import org.jlab.jnp.hipo4.data.Bank;
+import org.jlab.jnp.hipo4.data.Event;
+import org.jlab.jnp.hipo4.data.SchemaFactory;
 
 public abstract class APulseExtractor implements IPulseExtractor {
 
@@ -72,4 +74,15 @@ public abstract class APulseExtractor implements IPulseExtractor {
             }
         }
     }
+
+    public static void extract(IPulseExtractor ext, Event event, SchemaFactory schema) {
+        Bank wf = new Bank(schema.getSchema("AHDC:wf:12"));
+        event.read(wf);
+        if (wf.getRows() > 0) {
+            Bank adc = new Bank(schema.getSchema("AHDC::adc"));
+            ext.extract(wf, adc);
+            event.remove(schema.getSchema("AHDC::adc"));
+            if (adc.getRows() > 0) event.write(adc);
+        }
+    } 
 }
