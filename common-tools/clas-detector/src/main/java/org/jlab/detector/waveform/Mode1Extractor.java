@@ -3,10 +3,6 @@ package org.jlab.detector.waveform;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- *
- * @author baltzell
- */
 public class Mode1Extractor extends APulseExtractor {
 
     float threshold;

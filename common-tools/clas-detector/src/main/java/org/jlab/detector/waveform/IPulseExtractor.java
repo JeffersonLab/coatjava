@@ -4,13 +4,9 @@ import java.util.List;
 import org.jlab.io.base.DataBank;
 import org.jlab.jnp.hipo4.data.Bank;
 
-/**
- *
- * @author baltzell
- */
-public interface IPulseExtractor {
+public interface IPulseExtractor <T> {
 
-    public List<Pulse> extract(int id, short... samples);
+    public List<T> extract(int id, short... samples);
 
     public void extract(Bank src, Bank dest);
     

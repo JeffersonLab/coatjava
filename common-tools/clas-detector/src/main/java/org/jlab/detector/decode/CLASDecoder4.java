@@ -14,7 +14,7 @@ import org.jlab.detector.decode.DetectorDataDgtz.HelicityDecoderData;
 import org.jlab.detector.helicity.HelicityBit;
 import org.jlab.detector.helicity.HelicitySequence;
 import org.jlab.detector.helicity.HelicityState;
-import org.jlab.detector.waveform.AHDCPulseExtractor;
+import org.jlab.detector.waveform.AHDCExtractor;
 import org.jlab.detector.waveform.APulseExtractor;
 import org.jlab.detector.waveform.IPulseExtractor;
 import org.jlab.detector.waveform.Pulse;

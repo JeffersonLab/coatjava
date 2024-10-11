@@ -5,13 +5,9 @@ import java.util.List;
 import org.jlab.io.base.DataBank;
 import org.jlab.jnp.hipo4.data.Bank;
 
-/**
- *
- * @author baltzell
- */
 public abstract class APulseExtractor implements IPulseExtractor {
 
-    public static void copyIndices(Bank src, Bank dest, int isrc, int idest) {
+    public static final void copyIndices(Bank src, Bank dest, int isrc, int idest) {
         dest.putShort("sector", idest, src.getShort("sector",isrc));
         dest.putShort("layer", idest, src.getShort("layer",isrc));
         dest.putShort("component", idest, src.getShort("component",isrc));
@@ -19,7 +15,7 @@ public abstract class APulseExtractor implements IPulseExtractor {
         dest.putShort("index", idest, (short)isrc);
     }
 
-    public static void copyIndices(DataBank src, DataBank dest, int isrc, int idest) {
+    public static final void copyIndices(DataBank src, DataBank dest, int isrc, int idest) {
         dest.setShort("sector", idest, src.getShort("sector",isrc));
         dest.setShort("layer", idest, src.getShort("layer",isrc));
         dest.setShort("component", idest, src.getShort("component",isrc));
