@@ -7,18 +7,24 @@ import java.util.List;
  *
  * @author baltzell
  */
-public class Mode1Extractor extends APulseExtractor {
+public class Mode7Extractor extends Mode1Extractor {
 
-    float threshold;
-    float pedestal;
-    int nsa;
-    int nsb;
+    public Mode7Extractor(float threshold, float pedestal, int nsb, int nsa) {
+        super(threshold, pedestal, nsb, nsa);
+    }
 
-    public Mode1Extractor(float threshold, float pedestal, int nsb, int nsa) {
-        this.threshold = threshold;
-        this.pedestal = pedestal;
-        this.nsb = nsb;
-        this.nsa = nsa;
+    /**
+     * t0 is the threshold-crossing sample index
+    */
+    private static float calculateTime(int t0, float ped, short... samples) {
+        for (int j=t0+1; j<samples.length; ++j) {
+            if (samples[j] < samples[j-1]) {
+                float slope = (samples[j-1]-ped) / (j-t0);
+                float offset = samples[j-1] - slope*(j-1);
+                return (samples[j-1]/2 - offset) / slope;
+            }
+        }
+        return t0;
     }
 
     @Override
@@ -35,13 +41,14 @@ public class Mode1Extractor extends APulseExtractor {
                     n++;
                 }
                 integral -= n*pedestal;
-                pulses.add(new Pulse(integral, i, 0x0, id));
+                float time = calculateTime(i, pedestal, samples);
+                pulses.add(new Pulse(integral, time, 0x0, id));
                 i += nsa;
             }
         }
         return pulses;
     }
-    
+
     public static void main(String args[]) {
         Mode1Extractor e = new Mode1Extractor(5f,10f,2,2);
         short[] samples = {9,10,11,8,1000,100,10,10,10,10,10,2000,200,10,10};
