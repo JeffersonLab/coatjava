@@ -50,9 +50,11 @@ public class Mode7Extractor extends Mode1Extractor {
     }
 
     public static void main(String args[]) {
-        Mode1Extractor e = new Mode1Extractor(5f,10f,2,2);
         short[] samples = {9,10,11,8,1000,100,10,10,10,10,10,2000,200,10,10};
-        System.out.print(e.extract(2,samples));
+        Mode1Extractor e = new Mode1Extractor(5f,10f,2,2);
+        System.out.println(e.extract(2,samples));
+        Mode7Extractor s = new Mode7Extractor(5f,10f,2,2);
+        System.out.println(s.extract(2,samples));
     }
 
 }

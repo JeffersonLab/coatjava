@@ -5,7 +5,6 @@ import java.util.List;
 
 /**
  *
- * @author baltzell
  */
 public class AHDCPulseExtractor extends APulseExtractor {
 
