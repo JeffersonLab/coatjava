@@ -3,11 +3,12 @@ package org.jlab.detector.pulse;
 import java.util.ArrayList;
 import java.util.List;
 import org.jlab.io.base.DataBank;
+import org.jlab.io.base.DataEvent;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 
-public abstract class APulseExtractor implements IPulseExtractor {
+public abstract class HipoExtractor implements IExtractor {
 
     public static final void copyIndices(Bank src, Bank dest, int isrc, int idest) {
         dest.putShort("sector", idest, src.getShort("sector",isrc));
@@ -25,64 +26,72 @@ public abstract class APulseExtractor implements IPulseExtractor {
         dest.setShort("index", idest, (short)isrc);
     }
 
-    public final List<Pulse> getPulses(DataBank bank) {
+    public final List<Pulse> getPulses(ExtractorPars pars, DataBank bank) {
         List<Pulse> pulses = new ArrayList<>();
         for (int i=0; i<bank.rows(); ++i) {
             short[] samples = new short[12];
             for (int j=0; j<12; ++j)
                 samples[j] = bank.getShort("wf", j);
-            pulses.addAll(extract(i, samples));
+            pulses.addAll(extract(pars, i, samples));
         }
         return pulses;
     }
 
-    public final List<Pulse> getPulses(Bank bank) {
+    public final List<Pulse> getPulses(ExtractorPars pars, Bank bank) {
         List<Pulse> pulses = new ArrayList<>();
         for (int i=0; i<bank.getRows(); ++i) {
             short[] samples = new short[12];
             for (int j=0; j<12; ++j)
                 samples[j] = bank.getShort("wf", j);
-            pulses.addAll(extract(i, samples));
+            pulses.addAll(extract(pars, i, samples));
         }
         return pulses;
     }
 
-    @Override
-    public final void extract(Bank src, Bank dest) {
+    public final void update(ExtractorPars pars, Bank src, Bank dest) {
         if (src.getRows() > 0) {
-            List<Pulse> pulses = getPulses(src);
+            List<Pulse> pulses = getPulses(pars, src);
             dest.reset();
             dest.setRows(pulses.size());
             for (int i=0; i<pulses.size(); ++i) {
-                copyIndices(src, dest, pulses.get(i).index(), i);
-                dest.putFloat("ADC", i, pulses.get(i).integral());
-                dest.putFloat("time", i, pulses.get(i).time());
+                copyIndices(src, dest, pulses.get(i).id, i);
+                dest.putFloat("ADC", i, pulses.get(i).integral);
+                dest.putFloat("time", i, pulses.get(i).time);
             }
         }
     }
 
-    @Override
-    public final void extract(DataBank src, DataBank dest) {
+    public final void update(ExtractorPars pars, DataBank src, DataBank dest) {
         if (src.rows() > 0) {
-            List<Pulse> pulses = getPulses(src);
+            List<Pulse> pulses = getPulses(pars, src);
             dest.reset();
             dest.allocate(pulses.size());
             for (int i=0; i<pulses.size(); ++i) {
-                copyIndices(src, dest, pulses.get(i).index(), i);
-                dest.setFloat("ADC", i, pulses.get(i).integral());
-                dest.setFloat("time", i, pulses.get(i).time());
+                copyIndices(src, dest, pulses.get(i).id, i);
+                dest.setFloat("ADC", i, pulses.get(i).integral);
+                dest.setFloat("time", i, pulses.get(i).time);
             }
         }
     }
 
-    public static void extract(IPulseExtractor ext, Event event, SchemaFactory schema) {
-        Bank wf = new Bank(schema.getSchema("AHDC:wf:12"));
+    public final void update(ExtractorPars pars, Event event, SchemaFactory schema) {
+        Bank wf = new Bank(schema.getSchema(pars.wfBankName));
         event.read(wf);
         if (wf.getRows() > 0) {
-            Bank adc = new Bank(schema.getSchema("AHDC::adc"));
-            ext.extract(wf, adc);
-            event.remove(schema.getSchema("AHDC::adc"));
+            Bank adc = new Bank(schema.getSchema(pars.adcBankName));
+            update(pars, wf, adc);
+            event.remove(schema.getSchema(pars.adcBankName));
             if (adc.getRows() > 0) event.write(adc);
+        }
+    } 
+
+    public final void update(ExtractorPars pars, DataEvent event) {
+        DataBank wf = event.getBank(pars.wfBankName);
+        if (wf.rows() > 0) {
+            DataBank adc = event.getBank(pars.adcBankName);
+            update(pars, wf, adc);
+            event.removeBank(pars.adcBankName);
+            if (adc.rows() > 0) event.appendBank(adc);
         }
     } 
 }

@@ -1,13 +1,8 @@
 package org.jlab.detector.pulse;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class Mode7Extractor extends Mode1Extractor {
-
-    public Mode7Extractor(float threshold, float pedestal, int nsb, int nsa) {
-        super(threshold, pedestal, nsb, nsa);
-    }
 
     private static float calculateTime(int t0, float ped, short... samples) {
         // t0 is the threshold-crossing sample index
@@ -22,28 +17,9 @@ public class Mode7Extractor extends Mode1Extractor {
     }
 
     @Override
-    public List<Pulse> extract(int id, short... samples) {
-        // Pulse is a (immutable) record, otherwise we could:
-        // List<Pulse> pulses = super.extract(id, samples);
-        // for (Pulse p : pulses) p.time = calculateTime(p.time, pedestal, samples);
-        // Or, with streams:
-        List<Pulse> pulses = new ArrayList<>();
-        for (int i=0; i<samples.length; ++i) {
-            if (samples[i] > pedestal + threshold) {
-                int n = 0;
-                float integral = 0;
-                for (int j=i-nsb; j<=i+nsa; ++j) {
-                    if (j<0) continue;
-                    if (j>=samples.length) continue;
-                    integral += samples[j];
-                    n++;
-                }
-                integral -= n*pedestal;
-                float time = calculateTime(i, pedestal, samples);
-                pulses.add(new Pulse(integral, time, 0x0, id));
-                i += nsa;
-            }
-        }
+    public List<Pulse> extract(ExtractorPars pars, int id, short... samples) {
+        List<Pulse> pulses = super.extract(pars, id, samples);
+        for (Pulse p : pulses) p.time = calculateTime((int)p.time, pars.pedestal, samples);
         return pulses;
     }
 

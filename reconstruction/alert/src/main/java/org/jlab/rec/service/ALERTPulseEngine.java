@@ -2,12 +2,13 @@ package org.jlab.rec.service;
 
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.detector.pulse.AHDCExtractor;
+import org.jlab.detector.pulse.ExtractorPars;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 
 public class ALERTPulseEngine extends ReconstructionEngine {
 
-    AHDCExtractor ahdc = new AHDCExtractor(10,100);
+    AHDCExtractor ahdc = new AHDCExtractor();
     
 	public ALERTPulseEngine() {
 		super("ALERTPulse", "baltzell", "0.1");
@@ -15,11 +16,8 @@ public class ALERTPulseEngine extends ReconstructionEngine {
 
     @Override
     public boolean processDataEvent(DataEvent de) {
-        DataBank wf = de.getBank("AHDC::wf:12");
-        DataBank adc = de.getBank("AHDC::adc");
-        ahdc.extract(wf, adc);
-        de.removeBank("AHDC::adc");
-        de.appendBank(adc);
+        ExtractorPars pars = new ExtractorPars("AHDC::wf","AHDC::adc");
+        ahdc.update(pars, de);
         return true;
     }
 
