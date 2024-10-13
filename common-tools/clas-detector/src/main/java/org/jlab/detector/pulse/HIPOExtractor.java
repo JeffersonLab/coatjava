@@ -93,5 +93,6 @@ public abstract class HipoExtractor implements IExtractor {
             event.removeBank(pars.adcBankName);
             if (adc.rows() > 0) event.appendBank(adc);
         }
-    } 
+    }
+
 }

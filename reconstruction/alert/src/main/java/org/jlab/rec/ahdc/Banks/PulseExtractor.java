@@ -1,9 +1,12 @@
-package org.jlab.detector.pulse;
+package org.jlab.rec.ahdc.Banks;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.jlab.detector.pulse.ExtractorPars;
+import org.jlab.detector.pulse.HipoExtractor;
+import org.jlab.detector.pulse.Pulse;
 
-public class AHDCExtractor extends HipoExtractor {
+public class PulseExtractor extends HipoExtractor {
 
     @Override
     public List<Pulse> extract(ExtractorPars pars, int id, short... samples) {

@@ -1,14 +1,13 @@
 package org.jlab.rec.service;
 
 import org.jlab.clas.reco.ReconstructionEngine;
-import org.jlab.detector.pulse.AHDCExtractor;
+import org.jlab.rec.ahdc.Banks.PulseExtractor;
 import org.jlab.detector.pulse.ExtractorPars;
-import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 
 public class ALERTPulseEngine extends ReconstructionEngine {
 
-    AHDCExtractor ahdc = new AHDCExtractor();
+    PulseExtractor ahdc = new PulseExtractor();
     
 	public ALERTPulseEngine() {
 		super("ALERTPulse", "baltzell", "0.1");
