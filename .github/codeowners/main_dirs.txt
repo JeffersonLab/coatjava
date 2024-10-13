@@ -1,0 +1,97 @@
+# primary maintainers
+*
+
+# infrastructure
+.github/*
+bin/*
+docs/*
+external-dependencies/*
+libexec/*
+parent/*
+
+# common-tools
+common-tools/clara-io/*
+common-tools/clas-analysis/*
+common-tools/clas-io/*
+common-tools/clas-jcsg/*
+common-tools/clas-logging/*
+common-tools/clas-math/*
+common-tools/clas-physics/*
+common-tools/clas-reco/*
+common-tools/clas-tracking/*
+common-tools/clas-utils/*
+common-tools/cnuphys/*
+common-tools/coat-lib/*
+common-tools/parent/*
+common-tools/swim-tools/*
+
+# common-tools / clas-detector
+common-tools/clas-detector/src/main/java/org/jlab/detector/banks/*
+common-tools/clas-detector/src/main/java/org/jlab/detector/base/*
+common-tools/clas-detector/src/main/java/org/jlab/detector/calib/*
+common-tools/clas-detector/src/main/java/org/jlab/detector/decode/*
+common-tools/clas-detector/src/main/java/org/jlab/detector/epics/*
+common-tools/clas-detector/src/main/java/org/jlab/detector/examples/*
+common-tools/clas-detector/src/main/java/org/jlab/detector/helicity/*
+common-tools/clas-detector/src/main/java/org/jlab/detector/scalers/*
+common-tools/clas-detector/src/main/java/org/jlab/detector/swaps/*
+common-tools/clas-detector/src/main/java/org/jlab/detector/view/*
+common-tools/clas-detector/src/test/*
+
+# common-tools / clas-geometry
+common-tools/clas-geometry/src/main/java/org/jlab/detector/*
+common-tools/clas-geometry/src/main/java/org/jlab/geom/abs/*
+common-tools/clas-geometry/src/main/java/org/jlab/geom/base/*
+common-tools/clas-geometry/src/main/java/org/jlab/geom/component/*
+common-tools/clas-geometry/src/main/java/org/jlab/geom/detector/*
+common-tools/clas-geometry/src/main/java/org/jlab/geom/detector/alert/*
+common-tools/clas-geometry/src/main/java/org/jlab/geom/detector/bst/*
+common-tools/clas-geometry/src/main/java/org/jlab/geom/detector/cnd/*
+common-tools/clas-geometry/src/main/java/org/jlab/geom/detector/dc/*
+common-tools/clas-geometry/src/main/java/org/jlab/geom/detector/ec/*
+common-tools/clas-geometry/src/main/java/org/jlab/geom/detector/fmt/*
+common-tools/clas-geometry/src/main/java/org/jlab/geom/detector/ft/*
+common-tools/clas-geometry/src/main/java/org/jlab/geom/detector/ftof/*
+common-tools/clas-geometry/src/main/java/org/jlab/geom/fx/*
+common-tools/clas-geometry/src/main/java/org/jlab/geom/geant/*
+common-tools/clas-geometry/src/main/java/org/jlab/geom/gemc/*
+common-tools/clas-geometry/src/main/java/org/jlab/geom/gui/*
+common-tools/clas-geometry/src/main/java/org/jlab/geom/prim/*
+common-tools/clas-geometry/src/main/java/org/jlab/geom/view/*
+
+# etc
+etc/bankdefs/*
+etc/benchmarks/*
+etc/data/*
+etc/ejml/*
+etc/logging/*
+etc/nnet/*
+etc/services/*
+
+# reconstruction
+reconstruction/alert/*
+reconstruction/band/*
+reconstruction/bg/*
+reconstruction/cnd/*
+reconstruction/cvt/*
+reconstruction/dc/*
+reconstruction/eb/*
+reconstruction/ec/*
+reconstruction/ec/src/*
+reconstruction/fmt/*
+reconstruction/ft/*
+reconstruction/htcc/*
+reconstruction/ltcc/*
+reconstruction/mc/*
+reconstruction/mltn/*
+reconstruction/postproc/*
+reconstruction/raster/*
+reconstruction/rich/*
+reconstruction/rtpc/*
+reconstruction/swaps/*
+reconstruction/tof/*
+reconstruction/urwell/*
+reconstruction/vtx/*
+
+# validation
+validation/*
