@@ -130,7 +130,8 @@ public class DCHBPostClusterConv extends DCEngine {
         int trkId = 1;
         if (!trkcands.isEmpty()) {
             // remove overlaps
-            trkcandFinder.removeOverlappingTracks(trkcands);
+            //trkcandFinder.removeOverlappingTracks(trkcands);
+            trkcandFinder.handleClsOverlapTrks(trkcands, fhits, clusters, segments, crosses, Constants.getInstance().dcDetector);
             for (Track trk : trkcands) {
                 // reset the id
                 trk.set_Id(trkId);
@@ -207,6 +208,7 @@ public class DCHBPostClusterConv extends DCEngine {
         // remove overlaps
         if (!mistrkcands.isEmpty()) {
             trkcandFinder.removeOverlappingTracks(mistrkcands);
+            //trkcandFinder.handleClsOverlapTrks(trkcands, fhits, clusters, segments, crosses, Constants.getInstance().dcDetector);
             for (Track trk : mistrkcands) {
                 
                 // reset the id

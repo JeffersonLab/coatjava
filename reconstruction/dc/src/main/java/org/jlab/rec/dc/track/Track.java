@@ -8,6 +8,7 @@ import org.jlab.geom.prim.Vector3D;
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.cross.Cross;
 import org.jlab.rec.dc.hit.FittedHit;
+import org.jlab.rec.dc.cluster.FittedCluster;
 import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.trajectory.StateVec;
 import org.jlab.rec.dc.trajectory.Trajectory;
@@ -455,6 +456,55 @@ public class Track extends Trajectory implements Comparable<Track>{
         }
         return value;
     }
+    
+    public int checkClsOverlapStatus(Track o){
+        int status = 0;
+        List<Integer> regionOverlapCls = new ArrayList<>();
+        boolean pseudoCrossShared = false;
+        for(int i=0; i<this.size(); i++) {
+            int ct1 = this.get(i).get_Segment1().get_Id();
+            int co1 = o.get(i).get_Segment1().get_Id();
+            int ct2 = this.get(i).get_Segment2().get_Id();
+            int co2 = o.get(i).get_Segment2().get_Id();
+            if(this.get(i).get_Id()!=-1){ // Not pseduo-cross
+                if(ct1==co1) regionOverlapCls.add(this.get(i).get_Segment1().get_Region());
+                if(ct2==co2) regionOverlapCls.add(this.get(i).get_Segment2().get_Region());
+            }
+            else{ // pseduo-cross
+                if(ct1!=-1 && ct1==co1) {
+                    regionOverlapCls.add(this.get(i).get_Segment1().get_Region());
+                    pseudoCrossShared = true;
+                }
+                if(ct2!=-1 && ct2==co2) {
+                    regionOverlapCls.add(this.get(i).get_Segment2().get_Region());
+                    pseudoCrossShared = true;
+                }
+            }
+        }
+        
+        if(regionOverlapCls.isEmpty()) status = 0; // No shared cluster
+        else if((regionOverlapCls.size() == 1 && !pseudoCrossShared) || (regionOverlapCls.size() == 2 && 
+                (regionOverlapCls.get(0).equals( regionOverlapCls.get(1))))) status = 1; // One shared cluster not in pseudo-cross or two shared clusters in the same region
+        else status = 2; // else
+        
+        return status;
+    }
+    
+    public List<FittedCluster> extracOverlapCls(Track o){
+        List<FittedCluster> overlapCls = new ArrayList<>();
+        for(int i=0; i<this.size(); i++) {
+            int ct1 = this.get(i).get_Segment1().get_Id();
+            int co1 = o.get(i).get_Segment1().get_Id();
+            if(ct1!=-1 && ct1==co1) overlapCls.add(this.get(i).get_Segment1().get_fittedCluster());
+            
+            int ct2 = this.get(i).get_Segment2().get_Id();
+            int co2 = o.get(i).get_Segment2().get_Id();
+            if(ct2!=-1 && ct2==co2) overlapCls.add(this.get(i).get_Segment2().get_fittedCluster());
+        }        
+        
+        return overlapCls;
+    }
+    
         
     public boolean bestChi2(Track o) {
         return this.get_FitChi2()<o.get_FitChi2();

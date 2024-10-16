@@ -33,6 +33,8 @@ import org.jlab.clas.tracking.kalmanfilter.zReference.KFitterStraight;
 import org.jlab.clas.tracking.kalmanfilter.zReference.StateVecs;
 import org.jlab.clas.tracking.utilities.MatrixOps.Libr;
 import org.jlab.clas.tracking.utilities.RungeKuttaDoca;
+import org.jlab.rec.dc.cluster.Cluster;
+import org.jlab.rec.dc.cluster.FittedCluster;
 
 /**
  * A class with a method implementing an algorithm that finds lists of track
@@ -704,7 +706,173 @@ public class TrackCandListFinder {
         trkcands.removeAll(trkcands);
         trkcands.addAll(selectedTracks);
     }
-    
+        
+    public void handleClsOverlapTrks(List<Track> trkcands, List<FittedHit> hits, List<FittedCluster> clusters, List<Segment> segments, List<Cross> crosses, DCGeant4Factory DcDetector) {
+        if(Constants.DEBUG) {
+            LOGGER.log(Level.FINE, "Found "+trkcands.size()+" HB seeds ");
+            for(int i = 0; i< trkcands.size(); i++) {
+                LOGGER.log(Level.FINE, "cand "+i);
+                for(Cross c : trkcands.get(i)) {
+                    LOGGER.log(Level.FINE, c.printInfo());
+                }
+                LOGGER.log(Level.FINE, "------------------------------------------------------------------ ");
+            }
+        }
+        List<Track> badTracks = new ArrayList<>();
+        for(Track t : trkcands) if(!t.isGood()) badTracks.add(t);
+        trkcands.removeAll(badTracks);
+        
+        
+        // If there are multiple shared clusters not in the same region, choose one with better chi2/ndf
+        List<Track> selectedTracks =  new ArrayList<>();
+        for (int i = 0; i < trkcands.size(); i++) {
+            boolean overlap = false;
+            Track t1 = trkcands.get(i);
+            for(int j=0; j<trkcands.size(); j++ ) {
+                Track t2 = trkcands.get(j);
+                if(i!=j && (t1.checkClsOverlapStatus(t2) == 2)) {
+                    if( (t1.get_Vtx0().z() > -18 && t1.get_Vtx0().z() < 12) && (t2.get_Vtx0().z() < -18 || t2.get_Vtx0().z() > 12)){
+                        continue;
+                    }
+                    
+                    if( (t2.get_Vtx0().z() > -18 && t2.get_Vtx0().z() < 12) && (t1.get_Vtx0().z() < -18 || t1.get_Vtx0().z() > 12)){
+                        overlap=true;
+                        continue;
+                    }
+                                        
+                    if(t1.get_FitChi2()/t1.get_FitNDF()>t2.get_FitChi2()/t2.get_FitNDF())
+                        overlap=true;
+                    else if(t1.get_FitChi2()/t1.get_FitNDF()==t2.get_FitChi2()/t2.get_FitNDF() && i>j)
+                        overlap=true;
+                }
+            }
+            if(!overlap) selectedTracks.add(t1);
+        }
+        
+        
+        // If there is one or two shared clusters in the same region, keep all tracks 
+        // and duplicate clusters, segments, hits on them, and crosses constructed by them
+        int idSharedHits =  hits.size() + 10000;
+        int idSharedClusters = clusters.size() + 10001;        
+        int idSharedCrosses = clusters.size() + 10001;
+        
+        List<FittedHit> newHitList = new ArrayList<>();
+        List<FittedCluster> newClsList = new ArrayList<>();
+        List<Segment> newSegmentList = new ArrayList<>();
+        List<Cross> newCrossList = new ArrayList<>();
+        
+        for (int i = 0; i < selectedTracks.size(); i++) {
+            Track t1 = selectedTracks.get(i);            
+            for(int j=i+1; j<selectedTracks.size(); j++ ) {
+                Track t2 = selectedTracks.get(j);                    
+                if(t1.checkClsOverlapStatus(t2) == 1) {
+                    // Dupicate clusters, segment, and hits on them
+                    List<FittedCluster> overlapCls = t1.extracOverlapCls(t2);                   
+                    List<Segment> newSegments = new ArrayList<>();
+                    for(FittedCluster cls : overlapCls){
+                        FittedCluster newCls = new FittedCluster(cls.getBaseCluster());
+                        newCls.set_Id(idSharedClusters++);
+                        for (int i1 = 0; i1 < newCls.size(); i1++) {
+                            newCls.remove(i1);
+                        }
+                        
+                        for(FittedHit hit : cls){
+                            try{
+                                FittedHit newHit = hit.clone();
+                                newHit.set_Id(idSharedHits++);
+                                newHit.set_AssociatedClusterID(newCls.get_Id());
+                                newHit.set_WireLine(hit.get_WireLine());
+                                newHit.set_WireLength(hit.get_WireLength());
+                                newHit.set_XWire(hit.get_XWire());
+                                newHit.set_lX(hit.get_lX());
+                                newHit.set_lY(hit.get_Layer(), hit.get_Wire());
+                                newCls.add(newHit);
+                                newHitList.add(newHit);
+                            }catch (CloneNotSupportedException ex) {
+                                Logger.getLogger(FittedHit.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }
+                        
+                        newCls.set_Status(cls.get_Status());
+                        newCls.set_clusLine(cls.get_clusLine());
+                        newCls.set_clusLineErr(cls.get_clusLineErr());
+                        newCls.set_clusterLineFitSlope(cls.get_clusterLineFitSlope());
+                        newCls.set_clusterLineFitSlopeErr(cls.get_clusterLineFitSlopeErr());
+                        newCls.set_clusterLineFitIntercept(cls.get_clusterLineFitIntercept());
+                        newCls.set_clusterLineFitInterceptErr(cls.get_clusterLineFitInterceptErr());
+                        newCls.set_clusterLineFitSlIntCov(cls.get_clusterLineFitSlIntCov());
+                        newCls.set_fitProb(cls.get_fitProb());
+                        newCls.set_Chisq(cls.get_Chisq());  
+                        newCls.set_clusterLineFitSlopeMP(cls.get_clusterLineFitSlopeMP());
+                        newCls.set_clusterLineFitSlopeErrMP(cls.get_clusterLineFitSlopeErrMP());
+                        newCls.set_clusterLineFitInterceptMP(cls.get_clusterLineFitInterceptMP());
+                        newCls.set_clusterLineFitInterceptErrMP(cls.get_clusterLineFitInterceptErrMP());
+                        newClsList.add(newCls);
+                        
+                        Segment newSegment = new Segment(newCls);
+                        Cross orginCross = t2.get((cls.get_Superlayer()-1)/2);
+                        Segment orginSegment = orginCross.get_Segment1();
+                        if(cls.get_Superlayer() != orginSegment.get_Superlayer()) orginSegment = orginCross.get_Segment2();
+                        newSegment.set_ResiSum(orginSegment.get_ResiSum());                                               
+                        newSegment.set_TimeSum(orginSegment.get_TimeSum());                                         
+                        newSegment.set_fitPlane(DcDetector);
+                        newSegment.set_Trajectory( orginSegment.get_Trajectory());
+                        newSegment.set_Status(orginSegment.get_Status());
+                        newSegment.set_SegmentEndPoints( orginSegment.get_SegmentEndPoints());
+                        newSegments.add(newSegment);
+                        newSegmentList.add(newSegment);
+
+                    } 
+                    
+                    // Dupicate crosses
+                    Cross orginCross = t2.get((newSegments.get(0).get_Superlayer()-1)/2);
+                    Cross newCross = new Cross(orginCross.get_Sector(), orginCross.get_Region(), orginCross.get_Id() + idSharedCrosses++);
+                    Segment seg1 = orginCross.get_Segment1();
+                    Segment seg2 = orginCross.get_Segment2();
+                    if(newSegments.size() == 1) {
+                        if(newSegments.get(0).get_Superlayer() == orginCross.get_Segment1().get_Superlayer()){
+                            seg1 = newSegments.get(0);
+                        }
+                        else{
+                            seg2 = newSegments.get(0);                            
+                        }
+                    }
+                    else if(newSegments.size() == 2){
+                        if(newSegments.get(0).get_RegionSlayer() == 1){
+                            seg1 = newSegments.get(0);
+                            seg2 = newSegments.get(1);                                
+                        }
+                        else{
+                            seg1 = newSegments.get(1);
+                            seg2 = newSegments.get(0);                                
+                        }
+                    }
+                    newCross.add(seg1);
+                    newCross.add(seg2);
+                    newCross.set_Segment1(seg1);
+                    newCross.set_Segment2(seg2);                                                
+                    newCross.set_CrossParams(DcDetector); 
+                    if (newCross.isPseudoCross) {
+                        newCross.set_Id(-1);
+                    }
+                    newCross.set_CrossDirIntersSegWires();
+                    seg1.associatedCrossId = newCross.get_Id();
+                    seg2.associatedCrossId = newCross.get_Id();
+                    newCrossList.add(newCross);  
+                    t2.set(orginCross.get_Region()-1, newCross); // replace original cross into new cross in track                    
+                }
+            }                        
+        }
+        
+        hits.addAll(newHitList);
+        clusters.addAll(newClsList);
+        segments.addAll(newSegmentList);
+        crosses.addAll(newCrossList);        
+        
+        trkcands.removeAll(trkcands);
+        trkcands.addAll(selectedTracks);
+    }
+        
     /**
      * @param selectedTracks the list of selected tracks
      * @param selectedTrk the selected track
