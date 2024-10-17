@@ -1,6 +1,5 @@
 package org.jlab.service.eb;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -66,7 +65,7 @@ public class EBEngine extends ReconstructionEngine {
     }
 
     @Override
-    public boolean processDataEvent(DataEvent de) {
+    public boolean processDataEventUser(DataEvent de) {
         throw new RuntimeException("EBEngine cannot be used directly.  Use EBTBEngine/EBHBEngine instead.");
     }
 
@@ -91,7 +90,7 @@ public class EBEngine extends ReconstructionEngine {
         }
     }
 
-    public boolean processDataEvent(DataEvent de,EBScalers ebs) {
+    public boolean processDataEventUser(DataEvent de,EBScalers ebs) {
 
         // check run number, get constants from CCDB:
         int run=-1;
@@ -353,5 +352,8 @@ public class EBEngine extends ReconstructionEngine {
 
         return true;
     }
+
+    @Override
+    public void detectorChanged(int runNumber) {}
     
 }

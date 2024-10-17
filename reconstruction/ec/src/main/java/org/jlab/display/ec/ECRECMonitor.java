@@ -22,9 +22,12 @@ public class ECRECMonitor extends ReconstructionEngine {
     public ECRECMonitor(){
         super("ECMon","gavalian","1.0");
     }
-    
+   
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public void detectorChanged(int runNumber) {}
+
+    @Override
+    public boolean processDataEventUser(DataEvent event) {
         if(event.hasBank("REC::Particle")==true){
             DataBank bank = event.getBank("REC::Particle");
             int index1 = this.index(bank, 22, 0);
@@ -62,6 +65,7 @@ public class ECRECMonitor extends ReconstructionEngine {
         }
         return -1; 
     }
+
     @Override
     public boolean init() {
         canvas = new TGCanvas("c","EC Engine Monitoring",500,500);

@@ -99,7 +99,7 @@ public class FTEBEngineTest extends ReconstructionEngine {
     }
 
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         List<FTParticle> FTparticles = new ArrayList<FTParticle>();
         List<FTResponse> FTresponses = new ArrayList<FTResponse>();
 
@@ -486,7 +486,7 @@ public class FTEBEngineTest extends ReconstructionEngine {
             //if(nev > 10239) System.exit(0); if(nev != 10239) continue; // stop at a given evt number
             cal.processDataEvent(event);
             hodo.processDataEvent(event);
-	    trk.processDataEventAndGetClusters(event);
+	        trk.processDataEventAndGetClusters(event);
             en.processDataEvent(event);
             if(!event.hasBank("FTCAL::hits")) continue; 
             if (event instanceof EvioDataEvent) {
@@ -1675,5 +1675,10 @@ public class FTEBEngineTest extends ReconstructionEngine {
         frametrkonlyresVsCoord.add(canvastrkonlyresVsCoord);
         frametrkonlyresVsCoord.setLocationRelativeTo(null);
         frametrkonlyresVsCoord.setVisible(true);
+    }
+
+    @Override
+    public void detectorChanged(int runNumber) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

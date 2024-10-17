@@ -1,11 +1,7 @@
 package org.jlab.service.band;
 
-
 import java.util.ArrayList;
 import java.util.Arrays;
-
-import javax.naming.event.NamingEvent;
-
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
@@ -26,16 +22,14 @@ import org.jlab.rec.band.hit.BandHitFinder;
 
 public class BANDEngine extends ReconstructionEngine {
 
-
 	public BANDEngine() {
 		super("BAND", "hauensteinsegarra", "1.0");
 	}
 
 	int Run = -1;
 
-
 	@Override
-		public boolean processDataEvent(DataEvent event) {
+		public boolean processDataEventUser(DataEvent event) {
 			//System.out.println("**** NEW EVENT ****");
 			// update calibration constants based on run number if changed
 			setRunConditionsParameters(event);
@@ -61,9 +55,9 @@ public class BANDEngine extends ReconstructionEngine {
 		}
 
 	@Override
-		public boolean init() {
+    public boolean init() {
 			
-			String[]  bandTables = new String[]{
+	    String[]  bandTables = new String[]{
 				"/calibration/band/time_jitter",
 				"/calibration/band/lr_offsets",
 				"/calibration/band/effective_velocity",
@@ -79,14 +73,15 @@ public class BANDEngine extends ReconstructionEngine {
 				"/calibration/band/energy_conversion"
 				//"/calibration/band/time_walk_corr_left",
 				//"/calibration/band/time_walk_corr_right",
-    		};
+        };
     
-			requireConstants(Arrays.asList(bandTables));
-    		
-                        this.registerOutputBank("BAND::hits","BAND::rawhits","BAND::laser");
-		
-			return true;
-		}
+		requireConstants(Arrays.asList(bandTables));
+        this.registerOutputBank("BAND::hits","BAND::rawhits","BAND::laser");
+		return true;
+	}    
+        
+    @Override
+    public void detectorChanged(int runNumber) {}
 
 	public void setRunConditionsParameters(DataEvent event) {
 		if(event.hasBank("RUN::config")==false) {
@@ -132,7 +127,7 @@ public class BANDEngine extends ReconstructionEngine {
 			//	event.getBank("band::adc").show();
 			//	event.getBank("band::tdc").show();
 			//}
-			en.processDataEvent(event);
+			en.processDataEventUser(event);
 			writer.writeEvent(event);
 			//event.getBank("band::hits").show();
 			nevent++;
@@ -142,5 +137,4 @@ public class BANDEngine extends ReconstructionEngine {
 
 
 	}
-
 }
