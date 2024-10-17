@@ -581,7 +581,7 @@ public final class DCGeant4Factory extends Geant4Factory {
     private int nsgwires;
 
     private final double y_enlargement = 3.65;
-    private final double z_enlargement = -2.96;
+    private final double z_enlargement = -2.46;
     private final double microgap = 0.01;
 
     private final Wire[][][][] wires;
@@ -856,6 +856,19 @@ public final class DCGeant4Factory extends Geant4Factory {
 
         for (int isup = 0; isup < 2; isup++) {
             int isuper = iregion * 2 + isup;
+            Geant4Basic superlayerVolume = this.createSuperlayer(isuper);
+            superlayerVolume.setName("sl" + (isuper + 1) + "_s" + (isector + 1));
+
+            Vector3d slcenter = superlayerVolume.getLocalPosition();
+            Vector3d slshift = slcenter.minus(reg_position0);
+            slshift.rotateX(reg_thtilt);
+
+            superlayerVolume.rotate("zxy", -dbref.thster(isuper), 0.0, 0.0);
+
+            superlayerVolume.setPosition(slshift.x, slshift.y, slshift.z);
+            superlayerVolume.setMother(regionVolume);
+            superlayerVolume.setId(isector + 1, iregion + 1, isuper + 1);
+            
             int nsglayers = dbref.nsenselayers(isuper) + dbref.nguardlayers(isuper);
             for (int ilayer = 1; ilayer < nsglayers - 1; ilayer++) {
                 Geant4Basic layerVolume = this.createLayer(isuper, ilayer);
@@ -874,6 +887,40 @@ public final class DCGeant4Factory extends Geant4Factory {
         }
 
         return regionVolume;
+    }
+
+
+    /**
+     * Create GEANT4 superlayer volume:
+     * - from first to last guard wire in layer=0 to define y 
+     * - from first to last guard wire plane in z 
+     * @param isuper
+     * @return
+     */
+    public Geant4Basic createSuperlayer(int isuper) {
+        int nsglayers = dbref.nsenselayers(isuper) + dbref.nguardlayers(isuper);
+        Wire lw0 = new Wire(1, isuper, 0, 0);
+        Wire lw1 = new Wire(1, isuper, 0, nsgwires - 1);
+        Wire lw2 = new Wire(1, isuper, 2, 0);
+
+        Vector3d yline = lw1.mid().minus(lw0.mid());
+        double lay_dy = Math.sqrt(Math.pow(yline.magnitude(), 2.0) - Math.pow(yline.dot(lw0.dir()), 2.0)) / 2.0;
+        double lay_dx0 = lw0.length() / 2.0;
+        double lay_dx1 = lw1.length() / 2.0;
+        double lay_dz = (dbref.cellthickness(isuper)*dbref.nsenselayers(isuper)+1) * dbref.wpdist(isuper)/Math.cos(dbref.thtilt(isuper/2))/ 2.0;
+        double lay_skew = lw0.center().minus(lw1.center()).angle(lw1.dir()) - Math.toRadians(90.0);
+
+        Vector3d zline = lw2.mid().minus(lw0.mid()).normalized();
+        Vector3d lcent = lw0.center().plus(lw1.center()).dividedBy(2.0).plus(zline.times(lay_dz));
+        
+        G4Trap superlayerVolume = new G4Trap("sl" + (isuper + 1),
+                lay_dz, -dbref.thtilt(isuper / 2), Math.toRadians(90.0),
+                lay_dy, lay_dx0, lay_dx1, lay_skew,
+                lay_dy, lay_dx0, lay_dx1, lay_skew);
+
+        superlayerVolume.setPosition(lcent.x, lcent.y, lcent.z);
+
+        return superlayerVolume;
     }
 
     ///////////////////////////////////////////////////
