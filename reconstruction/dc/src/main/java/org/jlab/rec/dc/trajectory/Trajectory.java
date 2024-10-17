@@ -9,6 +9,7 @@ import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.cross.Cross;
+import org.jlab.rec.urwell.reader.URWellCross;
 
 
 /**
@@ -33,7 +34,24 @@ public class Trajectory extends ArrayList<Cross> {
     private List<TrajectoryStateVec> trajStateVecs = new ArrayList<>();
     
     private final static double TOLERANCE = 0.1; // trajectory toleerance (cm)
-        
+    
+    private URWellCross urCross;
+    
+    /**
+     * 
+     * @return URWell cross of track
+     */
+    public URWellCross get_URWellCross() {
+        return urCross;
+    }
+    /**
+     * 
+     * @param urCross URWell cross
+     */
+    public void set_URWellCross(URWellCross urCross) {
+        this.urCross = urCross;
+    }
+    
     private double a; // Parameter a for fitting function in xz plane: f(x) = a*z^2 + b*z + c
     
     public void setA(double a){

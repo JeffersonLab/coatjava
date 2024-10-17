@@ -11,6 +11,7 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.banks.Banks;
 import org.jlab.clas.tracking.kalmanfilter.zReference.KFitter;
+import org.jlab.clas.tracking.kalmanfilter.zReference.KFitterWithURWell;
 import org.jlab.clas.tracking.kalmanfilter.zReference.DAFilter;
 
 public class DCEngine extends ReconstructionEngine {
@@ -37,7 +38,9 @@ public class DCEngine extends ReconstructionEngine {
     private double[][] shifts         = new double[Constants.NREG][6];
     protected boolean  useDAF         = true;
     private String   dafChi2Cut     = null;
+    private String   dafChi2CutURWell     = null;
     private String   dafAnnealingFactorsTB = null;
+    private String   dafAnnealingFactorsTBWithURWell = null;
     
     public static final Logger LOGGER = Logger.getLogger(ReconstructionEngine.class.getName());
 
@@ -123,11 +126,21 @@ public class DCEngine extends ReconstructionEngine {
             DAFilter.setDafChi2Cut(Double.valueOf(dafChi2Cut));
         }
         
+        if(this.getEngineConfigString("dafChi2CutURWell")!=null) {
+            dafChi2CutURWell=this.getEngineConfigString("dafChi2CutURWell");
+            DAFilter.setDafChi2CutURWell(Double.valueOf(dafChi2CutURWell));
+        }
+        
         if(this.getEngineConfigString("dafAnnealingFactorsTB")!=null){ 
             dafAnnealingFactorsTB=this.getEngineConfigString("dafAnnealingFactorsTB");
             KFitter.setDafAnnealingFactorsTB(dafAnnealingFactorsTB);
         }
-               
+        
+        if(this.getEngineConfigString("dafAnnealingFactorsTBWithURWell")!=null){ 
+            dafAnnealingFactorsTBWithURWell=this.getEngineConfigString("dafAnnealingFactorsTBWithURWell");
+            KFitterWithURWell.setDafAnnealingFactorsTB(dafAnnealingFactorsTBWithURWell);
+        }
+        
         // Set geometry shifts for alignment code
         if(this.getEngineConfigString("alignmentShifts")!=null) {
             String[] alignmentShift = this.getEngineConfigString("alignmentShifts").split(",");

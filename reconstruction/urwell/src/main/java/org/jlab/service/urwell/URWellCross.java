@@ -42,6 +42,13 @@ public class URWellCross {
             this.time   = (c1.getTime() + c2.getTime())/2;
             this.cluster1 = c1.getId();
             this.cluster2 = c2.getId();
+            this.status = 0;
+            if(Math.abs(c1.getEnergy()-c2.getEnergy())>URWellConstants.deltaE) 
+                this.status += 1;
+            if(Math.abs(c1.getTime()-c2.getTime())>URWellConstants.deltaT)     
+                this.status += 2;
+            if(Math.abs(this.time - URWellConstants.meanT)>1.2*URWellConstants.deltaT)
+                this.status += 4;
         }
     }
 
