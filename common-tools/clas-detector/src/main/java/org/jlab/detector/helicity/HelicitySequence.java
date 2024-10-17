@@ -388,6 +388,34 @@ public class HelicitySequence {
         return integrity && geninit; 
     }
 
+    private final int rejectPairs() {
+        int n = 0;
+        for (int ii=0; ii<this.states.size(); ii++) {
+            if (this.states.get(ii).getSwStatus()!=0 || this.states.get(ii).getHwStatus()!=0
+                || this.states.get(ii).getHelicity() == HelicityBit.UDF) {
+                if (this.states.get(ii).getPairSync() == HelicityBit.PLUS) {
+                    if (ii<this.states.size()-1) {
+                        this.states.get(ii+1).addSwStatusMask(HelicityState.Mask.KILLPAIR);
+                        this.states.get(ii).addSwStatusMask(HelicityState.Mask.KILLPAIR);
+                        n++;
+                    }
+                }
+                else if (ii>0) {
+                    this.states.get(ii-1).addSwStatusMask(HelicityState.Mask.KILLPAIR);
+                    this.states.get(ii).addSwStatusMask(HelicityState.Mask.KILLPAIR);
+                    n++;
+                }
+            }
+        }
+        if (this.states.get(0).getPairSync() == HelicityBit.MINUS) {
+            this.states.get(0).addSwStatusMask(HelicityState.Mask.KILLPAIR);
+        }
+        if (this.states.get(this.states.size()-1).getPairSync() == HelicityBit.PLUS) {
+            this.states.get(this.states.size()-1).addSwStatusMask(HelicityState.Mask.KILLPAIR);
+        }
+        return n;
+    }
+
     /**
      * Perform integrity checking on the sequence.
      * @return whether the integrity checking succeeded
@@ -461,7 +489,8 @@ public class HelicitySequence {
             "\nQUARTET   ERRORS:  "+quartetErrors+
             "\nBIGGAP    ERRORS:  "+bigGapErrors+
             "\nSMALLGAP  ERRORS:  "+smallGapErrors+
-            "\nGENERATOR ERRORS:  "+generatorErrors
+            "\nGENERATOR ERRORS:  "+generatorErrors+
+            "\nKILLPAIR  ERRORS:  "+rejectPairs()
         );
 
         return (hwpErrors+syncErrors+quartetErrors+bigGapErrors+smallGapErrors+generatorErrors) == 0;

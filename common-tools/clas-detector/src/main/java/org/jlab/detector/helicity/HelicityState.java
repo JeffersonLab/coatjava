@@ -25,6 +25,7 @@ public class HelicityState implements Comparable<HelicityState>, Comparator<Heli
         public static final int PATTERN  =0x4;
         public static final int BIGGAP   =0x8;
         public static final int SMALLGAP =0x10;
+        public static final int KILLPAIR =0x12;
     }
 
     // FIXME:  these should go in CCDB
