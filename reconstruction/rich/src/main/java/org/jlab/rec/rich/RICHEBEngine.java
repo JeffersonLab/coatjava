@@ -1,52 +1,29 @@
 package org.jlab.rec.rich;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.JFrame;
-
-import org.jlab.clas.reco.ReconstructionEngine;
-import org.jlab.io.base.DataEvent;
-import org.jlab.io.base.DataBank;
-
-import org.jlab.utils.groups.IndexedTable;
 import java.util.Arrays;
 import java.util.Optional;
-
-import org.jlab.geom.prim.Plane3D;
-import org.jlab.geom.prim.Line3D;
-
+import org.jlab.clas.reco.ReconstructionEngine;
+import org.jlab.io.base.DataEvent;
 import org.jlab.detector.geom.RICH.RICHGeoFactory;
 
 public class RICHEBEngine extends ReconstructionEngine {
 
     private int Run = -1;
     private int Ncalls = 0;
-
     private long EBRICH_start_time;
-    
     private RICHGeoFactory       richgeo;
     private RICHTime             richtime = new RICHTime();
     private boolean engineDebug = false;
 
-
-    // ----------------
     public RICHEBEngine() {
-    // ----------------
         super("RICHEB", "mcontalb", "3.0");
-
     }
 
-
     @Override
-    // ----------------
     public boolean init() {
-    // ----------------
 
         int debugMode = 0;
         if(debugMode>=1)System.out.format("I am in RICHEBEngine init \n");
-
 
         String[] richTables = new String[]{
                     "/geometry/rich/setup",
@@ -83,25 +60,24 @@ public class RICHEBEngine extends ReconstructionEngine {
         if(this.getEngineConfigString("debug")!=null) 
             this.engineDebug = Boolean.parseBoolean(this.getEngineConfigString("debug"));
 
-        // Get the constant tables for reconstruction parameters, geometry and optical characterization
-        int run = 11;
-
-        richgeo   = new RICHGeoFactory(1, this.getConstantsManager(), run, engineDebug);
-        richtime.init_ProcessTime();
-
         return true;
 
     }
-
+    
+    @Override
+    public void detectorChanged(int runNumber) {
+        richgeo = new RICHGeoFactory(1, this.getConstantsManager(), runNumber, engineDebug);
+        richtime.init_ProcessTime();
+    }
 
     @Override
     // ----------------
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
     // ----------------
 
         int debugMode = 0;
 
-        // create instances of all event-dependent classes in processDataEvent to avoid interferences between different threads when running in clara
+        // create instances of all event-dependent classes in processDataEventUser to avoid interferences between different threads when running in clara
         RICHEvent              richevent = new RICHEvent();
         RICHio                 richio    = new RICHio();
         RICHCalibration        richcal   = new RICHCalibration();
@@ -159,5 +135,4 @@ public class RICHEBEngine extends ReconstructionEngine {
         return true;
 
     }
-
 }

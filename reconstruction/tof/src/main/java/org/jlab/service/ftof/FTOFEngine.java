@@ -45,9 +45,6 @@ public class FTOFEngine extends ReconstructionEngine {
     
     @Override
     public boolean init() {
-
-        // Load the Constants
-        // if (Constants.CSTLOADED == false) {
         Constants.Load();
         rbc = new RecoBankWriter();
 
@@ -68,30 +65,27 @@ public class FTOFEngine extends ReconstructionEngine {
                  };
         
         requireConstants(Arrays.asList(ftofTables));
-       
-       // Get the constants for the correct variation
         this.getConstantsManager().setVariation("default");
-        
-        // Get geometry database provider, load the geometry tables and create geometry
-        String engineVariation = Optional.ofNullable(this.getEngineConfigString("variation")).orElse("default");
-        ConstantProvider db = GeometryFactory.getConstants(DetectorType.FTOF, 11, engineVariation);
-        geometry = new FTOFGeant4Factory(db);
 
         this.registerOutputBank("FTOF::rawhits","FTOF::hbhits","FTOF::hbclusters");
         this.registerOutputBank("FTOF::hits","FTIF::clusters","FTOF::matchedClusters");
 
         return true;
     }
+    
+    @Override
+    public void detectorChanged(int runNumber) {
+        String engineVariation = Optional.ofNullable(this.getEngineConfigString("variation")).orElse("default");
+        ConstantProvider db = GeometryFactory.getConstants(DetectorType.FTOF, runNumber, engineVariation);
+        geometry = new FTOFGeant4Factory(db);
+    }
 
     @Override
-    public boolean processDataEvent(DataEvent event) {
-        // System.out.println(" PROCESSING EVENT ....");
-        // Constants.DEBUGMODE = true;
-        //setRunConditionsParameters( event) ;
+    public boolean processDataEventUser(DataEvent event) {
         if(event.hasBank("RUN::config")==false ) {
-		System.err.println("RUN CONDITIONS NOT READ!");
-		return true;
-	}
+		    System.err.println("RUN CONDITIONS NOT READ!");
+		    return true;
+	    }
 		
         DataBank bank = event.getBank("RUN::config");
 		
@@ -215,23 +209,9 @@ public class FTOFEngine extends ReconstructionEngine {
         
         // 3.4) exit if cluster list is empty but save the hits
         rbc.appendFTOFBanks(event, hits, clusters, matchedClusters, TrkType);
-//            if (event.hasBank("FTOF::adc")) {
-//                if (event.hasBank("FTOF::adc")) {
-//                    event.getBank("FTOF::adc").show();
-//                }
-//                if (event.hasBank("FTOF::tdc")) {
-//                    event.getBank("FTOF::tdc").show();
-//                }
-//                if (event.hasBank("FTOF::hits")) {
-//                    event.getBank("FTOF::hits").show();
-//                }
-//            }
-
 
         return true;
     }
-
-    
 
     public static void main(String arg[]) {
         FTOFHBEngine en = new FTOFHBEngine();
@@ -263,11 +243,11 @@ public class FTOFEngine extends ReconstructionEngine {
                 t1 = System.currentTimeMillis();
             }
 
-            //en0.processDataEvent(event);
+            //en0.processDataEventUser(event);
             //	if (counter > 3062)
-            //en0.processDataEvent(event);
-            //en1.processDataEvent(event);
-            en.processDataEvent(event);
+            //en0.processDataEventUser(event);
+            //en1.processDataEventUser(event);
+            en.processDataEventUser(event);
             System.out.println("  EVENT " + counter);
             //if (counter > 3066)
             //	break;

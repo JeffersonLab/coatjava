@@ -46,7 +46,7 @@ public class TruthMatch extends ReconstructionEngine {
     }
 
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
 
         if (event.hasBank("MC::True") == false) {
             return false;
@@ -232,6 +232,9 @@ public class TruthMatch extends ReconstructionEngine {
         return true;
 
     }
+
+    @Override
+    public void detectorChanged(int runNumber) {}
 
     /**
      * ************************************************************************

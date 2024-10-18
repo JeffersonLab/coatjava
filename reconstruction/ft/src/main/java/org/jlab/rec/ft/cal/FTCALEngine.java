@@ -19,7 +19,6 @@ import org.jlab.io.evio.EvioDataBank;
 import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.hipo.HipoDataSource;
 
-
 public class FTCALEngine extends ReconstructionEngine {
 
 	public FTCALEngine() {
@@ -33,25 +32,26 @@ public class FTCALEngine extends ReconstructionEngine {
 		reco = new FTCALReconstruction();
 		reco.debugMode=0;
 
-                String[]  tables = new String[]{ 
-                    "/calibration/ft/ftcal/charge_to_energy",
-                    "/calibration/ft/ftcal/time_offsets",
-                    "/calibration/ft/ftcal/time_walk",
-                    "/calibration/ft/ftcal/status",
-                    "/calibration/ft/ftcal/thresholds",
-                    "/calibration/ft/ftcal/cluster",
-                    "/calibration/ft/ftcal/energycorr"
-                };
-                requireConstants(Arrays.asList(tables));
-                this.getConstantsManager().setVariation("default");
-
-                this.registerOutputBank("FTCAL::hits","FTCAL::clusters");
-                
-                return true;
+        String[]  tables = new String[]{ 
+            "/calibration/ft/ftcal/charge_to_energy",
+            "/calibration/ft/ftcal/time_offsets",
+            "/calibration/ft/ftcal/time_walk",
+            "/calibration/ft/ftcal/status",
+            "/calibration/ft/ftcal/thresholds",
+            "/calibration/ft/ftcal/cluster",
+            "/calibration/ft/ftcal/energycorr"
+        };
+        requireConstants(Arrays.asList(tables));
+        this.getConstantsManager().setVariation("default");
+        this.registerOutputBank("FTCAL::hits","FTCAL::clusters");       
+        return true;
 	}
 
+    @Override
+    public void detectorChanged(int runNumber) {}
+
 	@Override
-	public boolean processDataEvent(DataEvent event) {
+	public boolean processDataEventUser(DataEvent event) {
             List<FTCALHit>     allHits           = new ArrayList();
             List<FTCALHit>     selectedHits      = new ArrayList();
             List<FTCALCluster> clusters          = new ArrayList();
@@ -123,7 +123,7 @@ public class FTCALEngine extends ReconstructionEngine {
         while(reader.hasEvent()){
 //        for(int nev=0; nev<2; nev++){
             DataEvent event = (DataEvent) reader.getNextEvent();
-            cal.processDataEvent(event);
+            cal.processDataEventUser(event);
 
             if(event instanceof EvioDataEvent) {
                 GenericKinematicFitter      fitter = new GenericKinematicFitter(11);
@@ -179,5 +179,4 @@ public class FTCALEngine extends ReconstructionEngine {
         frame.setVisible(true);     
 
 	}	
-	
 }

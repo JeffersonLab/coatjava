@@ -25,7 +25,7 @@ public class VersionEngine extends ReconstructionEngine {
     }
 
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         if (!done) {
             JsonObject versions = Versions.getVersionsJson();
             JsonObject config = new JsonObject();
@@ -43,5 +43,8 @@ public class VersionEngine extends ReconstructionEngine {
     public boolean init() {
         return true;
     }
+
+    @Override
+    public void detectorChanged(int runNumber) {}
 
 }

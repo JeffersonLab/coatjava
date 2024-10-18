@@ -44,7 +44,7 @@ public class DCHBPostClusterAI extends DCEngine {
     }
     
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         
         int run = this.getRun(event);
         if(run==0) {

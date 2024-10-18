@@ -30,7 +30,7 @@ public class ECEngine extends ReconstructionEngine {
     }
     
     @Override
-    public boolean processDataEvent(DataEvent de) {
+    public boolean processDataEventUser(DataEvent de) {
                            
         List<ECStrip>     ecStrips = ECCommon.initEC(de, this.getConstantsManager()); // thresholds, ADC/TDC match        
         List<ECPeak>       ecPeaks = ECCommon.processPeaks(ECCommon.createPeaks(ecStrips)); // thresholds, split peaks -> update peak-lines          
@@ -244,7 +244,6 @@ public class ECEngine extends ReconstructionEngine {
     }
         
     public void setIsMC(boolean val) {
-    	ECCommon.isMC = val;
     }
     
     public void setConfig(String val) {
@@ -423,12 +422,8 @@ public class ECEngine extends ReconstructionEngine {
         
         
         requireConstants(Arrays.asList(ecTables));
-        
+
         getConstantsManager().setVariation(ECCommon.variation);
-        String variationName = Optional.ofNullable(this.getEngineConfigString("variation")).orElse("default");
-        if(!(ECCommon.geomVariation.equals("default"))) variationName = ECCommon.geomVariation;
-        LOGGER.log(Level.INFO,"GEOMETRY VARIATION IS "+variationName);
-        ECCommon.ecDetector =  GeometryFactory.getDetector(DetectorType.ECAL,11,variationName);
 
         setConfig("test");
         
@@ -465,6 +460,14 @@ public class ECEngine extends ReconstructionEngine {
         if (ECCommon.isSingleThreaded) ECCommon.initHistos();
         
         return true;
+    }
+
+    @Override
+    public void detectorChanged(int runNumber) {
+        String variationName = Optional.ofNullable(this.getEngineConfigString("variation")).orElse("default");
+        if(!(ECCommon.geomVariation.equals("default"))) variationName = ECCommon.geomVariation;
+        LOGGER.log(Level.INFO,"GEOMETRY VARIATION IS "+variationName);
+        ECCommon.ecDetector =  GeometryFactory.getDetector(DetectorType.ECAL,11,variationName);
     }
     
 }

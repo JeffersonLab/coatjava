@@ -1,6 +1,5 @@
 package org.jlab.rec.ft;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -54,14 +53,15 @@ public class FTEBEngine extends ReconstructionEngine {
         };
         requireConstants(Arrays.asList(tables));
         this.getConstantsManager().setVariation("default");
-
         this.registerOutputBank("FT::particles");
-
         return true;
     }
 
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public void detectorChanged(int runNumber) {}
+
+    @Override
+    public boolean processDataEventUser(DataEvent event) {
         
         int run = this.setRunConditionsParameters(event);
         if (run>=0) {
@@ -376,10 +376,10 @@ public class FTEBEngine extends ReconstructionEngine {
             // always print to keep track of running
             if(debugMode>-1) System.out.println("////////////// event read " + bankEvt + " - sequential number " + nev);
             //if(nev > 10239) System.exit(0); if(nev != 10239) continue; // stop at a given evt number
-            cal.processDataEvent(event);
-            hodo.processDataEvent(event);
-	    trk.processDataEventAndGetClusters(event);
-            en.processDataEvent(event);
+            cal.processDataEventUser(event);
+            hodo.processDataEventUser(event);
+	        trk.processDataEventAndGetClusters(event);
+            en.processDataEventUser(event);
             if(!event.hasBank("FTCAL::hits")) continue; 
             if (event instanceof EvioDataEvent) {
                 GenericKinematicFitter fitter = new GenericKinematicFitter(11);
