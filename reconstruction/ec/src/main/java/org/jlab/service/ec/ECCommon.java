@@ -42,7 +42,6 @@ public class ECCommon {
     public static int       stripSortMethod = 0;
     public static int[]         splitThresh = new int[3];
     
-    public static Boolean              isMC = false;
     public static Boolean             debug = false;
     public static Boolean        debugSplit = false;
     public static Boolean  isSingleThreaded = false;
@@ -149,11 +148,7 @@ public class ECCommon {
     public static List<ECStrip>  initEC(DataEvent event,  ConstantsManager manager){
     	
         int run = getRunNumber(event);
-        
-        isMC = run<=100;
-        
-        if(isMC) {usePass2Timing = false; useDTCorrections = false; useFTpcal = false;}
-        
+
         manager.setVariation(variation);
 
         IndexedTable   atten1 = manager.getConstants(run, "/calibration/ec/attenuation");
