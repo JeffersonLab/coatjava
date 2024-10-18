@@ -690,7 +690,7 @@ public final class DCGeant4Factory extends Geant4Factory {
                          "\n\t feedthroughs: " + dbref.feedthroughsStatus().getName() +
                          "\n\t endplates bow: " + dbref.getEndPlatesStatus());
         
-        motherVolume = new G4World("fc");
+        motherVolume = new G4World("root");
 
         dbref.connect(provider, shifts);
         nsgwires = dbref.nsensewires() + dbref.nguardwires();

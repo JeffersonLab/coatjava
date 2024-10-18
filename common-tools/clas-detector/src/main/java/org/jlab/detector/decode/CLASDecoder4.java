@@ -78,6 +78,10 @@ public class CLASDecoder4 {
         return decoder;
     }
 
+    public void setVariation(String variation) {
+        detectorDecoder.setVariation(variation);
+    }
+
     public void setDebugMode(int mode){
         this.decoderDebugMode = mode;
     }
@@ -679,6 +683,7 @@ public class CLASDecoder4 {
         parser.addOption("-t", "-0.5","torus current in the header bank");
         parser.addOption("-s", "0.5","solenoid current in the header bank");
         parser.addOption("-x", null,"CCDB timestamp (MM/DD/YYYY-HH:MM:SS)");
+        parser.addOption("-v","default","CCDB variation");
 
         parser.parse(args);
 
@@ -735,9 +740,10 @@ public class CLASDecoder4 {
             decoder.setRunNumber(nrun,true);
         }
 
-        if (parser.getOption("-x").getValue() != null) {
+        if (parser.getOption("-x").getValue() != null)
             decoder.detectorDecoder.setTimestamp(parser.getOption("-x").stringValue());
-        }
+        if (parser.getOption("-v").getValue() != null)
+            decoder.detectorDecoder.setVariation(parser.getOption("-v").stringValue());
 
         // Store all helicity readings, ordered by timestamp:
         TreeSet<HelicityState> helicityReadings = new TreeSet<>();
