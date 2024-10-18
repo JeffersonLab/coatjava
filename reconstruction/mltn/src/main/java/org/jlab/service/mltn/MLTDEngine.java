@@ -26,7 +26,6 @@ public class MLTDEngine extends ReconstructionEngine {
     private String      outputBankPrefix = "ai";
     private String             inputBank = null;
     private String            outputBank = null;
-    private ArchiveProvider     provider = null;
 
     public MLTDEngine(){
         super("MLTD","gavalian","1.0");
