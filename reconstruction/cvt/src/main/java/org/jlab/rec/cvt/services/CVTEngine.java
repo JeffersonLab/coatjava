@@ -133,12 +133,14 @@ public class CVTEngine extends ReconstructionEngine {
         this.initConstantsTables();
         this.registerBanks();
         this.printConfiguration();
-        return true;    
+        return true;
     }
 
     @Override
     public void detectorChanged(int runNumber) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        IndexedTable svtLorentz = this.getConstantsManager().getConstants(runNumber, "/calibration/svt/lorentz_angle");
+        IndexedTable bmtVoltage = this.getConstantsManager().getConstants(runNumber, "/calibration/mvt/bmt_voltage");
+        Geometry.getInstance().initialize(this.getConstantsManager().getVariation(), runNumber, svtLorentz, bmtVoltage);
     }
     
     public final void setOutputBankPrefix(String prefix) {
@@ -286,15 +288,11 @@ public class CVTEngine extends ReconstructionEngine {
         int run = this.getRun(event); 
         
         IndexedTable svtStatus          = this.getConstantsManager().getConstants(run, "/calibration/svt/status");
-        IndexedTable svtLorentz         = this.getConstantsManager().getConstants(run, "/calibration/svt/lorentz_angle");
         IndexedTable bmtStatus          = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_status");
         IndexedTable bmtTime            = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_time");
-        IndexedTable bmtVoltage         = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_voltage");
         IndexedTable bmtStripVoltage    = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_strip_voltage");
         IndexedTable bmtStripThreshold  = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_strip_voltage_thresholds");
         IndexedTable beamPos            = this.getConstantsManager().getConstants(run, "/geometry/beam/position");
-        
-        Geometry.getInstance().initialize(this.getConstantsManager().getVariation(), run, svtLorentz, bmtVoltage);
         
         CVTReconstruction reco = new CVTReconstruction(swimmer);
         
