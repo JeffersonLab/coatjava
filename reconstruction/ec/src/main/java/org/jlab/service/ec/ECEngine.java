@@ -244,7 +244,6 @@ public class ECEngine extends ReconstructionEngine {
     }
         
     public void setIsMC(boolean val) {
-    	ECCommon.isMC = val;
     }
     
     public void setConfig(String val) {
