@@ -47,6 +47,9 @@ public class PostprocEngine extends ReconstructionEngine {
     }
 
     @Override
+    public void detectorChanged(int run) {}
+
+    @Override
     public boolean processDataEvent(DataEvent event) {
         processor.processEvent(event);
         return true;

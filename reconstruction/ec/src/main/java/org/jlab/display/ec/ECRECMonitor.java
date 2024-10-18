@@ -69,5 +69,8 @@ public class ECRECMonitor extends ReconstructionEngine {
         pion = new H1F("pion",120,0.005,0.6);
         return true;
     }
-    
+
+    public void detectorChanged(int run) {
+    }
+
 }

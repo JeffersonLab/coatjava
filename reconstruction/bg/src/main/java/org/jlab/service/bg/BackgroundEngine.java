@@ -41,6 +41,9 @@ public class BackgroundEngine extends ReconstructionEngine {
         return true;
     }
 
+    @Override
+    public void detectorChanged(int run) {}
+
     public boolean init(String... filenames) {
         bgfilenames.clear();
         String detectors = getEngineConfigString(CONF_DETECTORS,"DC,FTOF");
