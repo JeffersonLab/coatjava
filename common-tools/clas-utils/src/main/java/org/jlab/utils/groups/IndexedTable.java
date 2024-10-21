@@ -382,20 +382,4 @@ public class IndexedTable extends DefaultTableModel {
         }
     }
 
-    public static class NamedEntry extends IndexedEntry {
-
-        Map<String,Integer> entryNames = new HashMap<>();
-
-        public NamedEntry(IndexedEntry entry, List<String> names) {
-            super(entry.getSize());
-            for (int i=0; i<names.size(); ++i)
-                entryNames.put(names.get(i), i);
-            entryValues = entry.entryValues;
-        }
-
-        public Number getValue(String name) {
-            return getValue(entryNames.get(name));
-        }
-
-    }
 }
