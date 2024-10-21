@@ -244,6 +244,37 @@ public class CLASDecoder4 {
         return scaler;
     }
 
+    public void exportWaveforms() {
+        for ( DetectorDataDgtz x : dataList) {
+            if (x.getDescriptor().getType() == DetectorType.BMT) {
+                for (int i=0; i<x.getADCSize(); ++i) {
+                    if (x.getADCData(i).getPulseSize() > 0) {
+                        for (int j=0; j<x.getADCData(i).getPulseSize(); ++j) {
+                            System.err.print(String.format("%d ",j));
+                        }
+                        System.err.println();
+                    }
+                }
+            }
+        }
+    }
+
+    public Bank getDataBankWF(String name, DetectorType type) {
+        List<DetectorDataDgtz> a = this.getEntriesADC(type);
+        Bank b = new Bank(schemaFactory.getSchema(name), a.size());
+        for (int i=0; i<a.size(); ++i) {
+            b.putByte("sector", i, (byte) a.get(i).getDescriptor().getSector());
+            b.putByte("layer", i, (byte) a.get(i).getDescriptor().getLayer());
+            b.putShort("component", i, (short) a.get(i).getDescriptor().getComponent());
+            b.putByte("order", i, (byte) a.get(i).getDescriptor().getOrder());
+            b.putLong("timestamp", i, a.get(i).getADCData(0).getTimeStamp());
+            DetectorDataDgtz.ADCData xxx = a.get(i).getADCData(0);
+            for (int j=0; j<xxx.getPulseSize(); ++j)
+                b.putShort(String.format("s%d",j+1), i, xxx.getPulseValue(j));
+        }
+        return b;
+    }
+
     public Bank getDataBankADC(String name, DetectorType type){
 
         List<DetectorDataDgtz> adcDGTZ = this.getEntriesADC(type);
@@ -393,6 +424,9 @@ public class CLASDecoder4 {
 
         Event event = new Event();
 
+        String[] wfBankNames = new String[]{"BMT::wf"};
+        DetectorType[] wfBankTypes = new DetectorType[]{DetectorType.BMT};
+        
         String[]        adcBankNames = new String[]{"FTOF::adc","ECAL::adc","FTCAL::adc","FTHODO::adc","FTTRK::adc",
                                                     "HTCC::adc","BST::adc","CTOF::adc","CND::adc","LTCC::adc","BMT::adc",
                                                     "FMT::adc","HEL::adc","RF::adc","BAND::adc","RASTER::adc"};
@@ -409,6 +443,15 @@ public class CLASDecoder4 {
             if(adcBank!=null){
                 if(adcBank.getRows()>0){
                     event.write(adcBank);
+                }
+            }
+        }
+
+        for(int i = 0; i < wfBankTypes.length; i++){
+            Bank wfBank = getDataBankWF(wfBankNames[i],wfBankTypes[i]);
+            if(wfBank!=null){
+                if(wfBank.getRows()>0){
+                    event.write(wfBank);
                 }
             }
         }

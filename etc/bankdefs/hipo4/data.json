@@ -45,6 +45,25 @@
     ]
   },
   {
+    "name" : "BMT::wf",
+    "group": 20100,
+    "item" : 12,
+    "info": "WF bank for the Barrel MicroMegas Tracker",
+    "entries":[
+      { "name":"sector"    , "type":"B", "info":"sector"},
+      { "name":"layer"     , "type":"B", "info":"layer (1-6)"},
+      { "name":"component" , "type":"S", "info":"strips"},
+      { "name":"order"     , "type":"B", "info":"order: 0 - ADCL , 1 - ADCR"},
+      { "name":"timestamp" , "type":"L", "info":"timestamp"},
+      { "name":"s1"        , "type":"S", "info":"sample #1"},
+      { "name":"s2"        , "type":"S", "info":"sample #2"},
+      { "name":"s3"        , "type":"S", "info":"sample #3"},
+      { "name":"s4"        , "type":"S", "info":"sample #4"},
+      { "name":"s5"        , "type":"S", "info":"sample #5"},
+      { "name":"s6"        , "type":"S", "info":"sample #6"}
+    ]
+  },
+  {
     "name" : "BST::adc",
     "group": 20200,
     "item" : 11,
