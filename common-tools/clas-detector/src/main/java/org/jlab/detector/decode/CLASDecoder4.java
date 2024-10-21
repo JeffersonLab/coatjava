@@ -244,21 +244,6 @@ public class CLASDecoder4 {
         return scaler;
     }
 
-    public void exportWaveforms() {
-        for ( DetectorDataDgtz x : dataList) {
-            if (x.getDescriptor().getType() == DetectorType.BMT) {
-                for (int i=0; i<x.getADCSize(); ++i) {
-                    if (x.getADCData(i).getPulseSize() > 0) {
-                        for (int j=0; j<x.getADCData(i).getPulseSize(); ++j) {
-                            System.err.print(String.format("%d ",j));
-                        }
-                        System.err.println();
-                    }
-                }
-            }
-        }
-    }
-
     public Bank getDataBankWF(String name, DetectorType type) {
         List<DetectorDataDgtz> a = this.getEntriesADC(type);
         Bank b = new Bank(schemaFactory.getSchema(name), a.size());
