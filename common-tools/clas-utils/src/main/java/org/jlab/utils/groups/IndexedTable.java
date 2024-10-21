@@ -145,7 +145,11 @@ public class IndexedTable extends DefaultTableModel {
         }
         return 0;
     }
-    
+
+    public NamedEntry getNamedEntry(int... index) {
+        return new NamedEntry(entries.getItem(index), entryNames);
+    }
+
     public IndexedList getList(){
         return this.entries;
     }
@@ -295,7 +299,7 @@ public class IndexedTable extends DefaultTableModel {
         }
         return trow.getValue(column-ic).toString();
     }
-    
+
     public class RowConstraint {
         
         public int   COLUMN = 0;
@@ -376,5 +380,22 @@ public class IndexedTable extends DefaultTableModel {
                 entryValues.add((Integer) 0);
             }
         }
+    }
+
+    public static class NamedEntry extends IndexedEntry {
+
+        Map<String,Integer> entryNames = new HashMap<>();
+
+        public NamedEntry(IndexedEntry entry, List<String> names) {
+            super(entry.getSize());
+            for (int i=0; i<names.size(); ++i)
+                entryNames.put(names.get(i), i);
+            entryValues = entry.entryValues;
+        }
+
+        public Number getValue(String name) {
+            return getValue(entryNames.get(name));
+        }
+
     }
 }
