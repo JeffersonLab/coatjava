@@ -41,7 +41,8 @@
       { "name":"time"      , "type":"F", "info":"time from pulse fit"},
       { "name":"ped"       , "type":"S", "info":"pedestal from pulse analysis"},
       { "name":"integral"  , "type":"I", "info":"ADC integral (sum over the pulse)"},
-      { "name":"timestamp" , "type":"L", "info":"timestamp"}
+      { "name":"timestamp" , "type":"L", "info":"timestamp"},
+      { "name":"id"        , "type":"S", "info":"link to BMT::wf"}
     ]
   },
   {
