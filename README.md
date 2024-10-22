@@ -1,7 +1,11 @@
 # COATJAVA
 [![Build Status](https://github.com/jeffersonlab/coatjava/workflows/Coatjava-CI/badge.svg)](https://github.com/jeffersonlab/coatjava/actions)
 [![Validation Status](https://github.com/JeffersonLab/coatjava/actions/workflows/validation.yml/badge.svg)](https://github.com/JeffersonLab/coatjava/actions/workflows/validation.yml)
-[![codecov](https://codecov.io/gh/JeffersonLab/coatjava/branch/development/graph/badge.svg?precision=2)](https://codecov.io/gh/JeffersonLab/coatjava/branch/development)
+[![Coverage](https://badgen.net/static/JaCoCo/coverage/purple)](https://jeffersonlab.github.io/coatjava/jacoco)
+
+- [API Documentation (Javadoc)](https://jeffersonlab.github.io/coatjava/javadoc)
+
+----
 
 The original repository for COATJAVA was named "clas12-offline-software" and is [now archived and read-only](https://github.com/JeffersonLab/clas12-offline-software).  On May 17, 2023, this new repository was created by running BFG Repo Cleaner to get rid of old, large data files and things that should never have been in the repository, giving 10x reduction in repository size, clone time, etc, and renamed `coatjava`.  The most critical, GitHub-specific aspects have been transferred to this new repository:
 
@@ -26,8 +30,6 @@ If you just want to use the software without modifying/building it, you can down
 For anything more, see the "General Developer Documentation" link on that software wiki, which points [here](https://clasweb.jlab.org/wiki/index.php/COATJAVA_Developer_Docs).
 
 The [troubleshooting](https://github.com/JeffersonLab/clas12-offline-software/wiki/Troubleshooting) wiki page may also still be useful but likely outdated.
-
-<!--Javadocs can be found at the repository's [gh-page](https://jeffersonlab.github.io/clas12-offline-software/). A build history can be found at [Travis CI](https://travis-ci.org/JeffersonLab/clas12-offline-software).-->
 
 <!--
 ## Repository Structure and Dependency Management

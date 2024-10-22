@@ -50,7 +50,7 @@ public class FTEBEngine extends ReconstructionEngine {
             "/calibration/ft/ftcal/cluster",
             "/calibration/ft/ftcal/thetacorr",
             "/calibration/ft/ftcal/phicorr",
-            "/geometry/target"
+            "/geometry/shifts/solenoid"
         };
         requireConstants(Arrays.asList(tables));
         this.getConstantsManager().setVariation("default");

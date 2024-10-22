@@ -24,7 +24,11 @@ def create(dirname, banklist):
     os.mkdir(workdirectory + dirname)
     os.chdir(workdirectory + dirname)
     for bank in banklist:
-        os.symlink("../" + singledirectory + bank + ".json", bank + ".json")
+        src = "../" + singledirectory + bank + ".json"
+        if not os.path.exists(src):
+            print('ERROR:  Bank not found:  '+bank)
+            sys.exit(1)
+        os.symlink(src, bank + ".json")
     os.chdir("../../")
     print("Json file links created in " + workdirectory + dirname)
 
@@ -48,10 +52,9 @@ print("Single json files saved in " + workdirectory + singledirectory)
 
 # these should *always* be kept:
 mc = ["MC::Event", "MC::GenMatch", "MC::Header", "MC::Lund", "MC::Particle", "MC::RecMatch", "MC::True"]
-tag1 = ["RUN::config", "RAW::epics", "RAW::scaler", "RUN::scaler", "COAT::config", "HEL::flip", "HEL::online"]
+tag1 = ["RUN::config", "RAW::epics", "RAW::scaler", "RUN::scaler", "COAT::config", "HEL::flip", "HEL::online", "HEL::decoder"]
 
 # these are the output of the event builder:
-# FIXME:  this should be using wildcards or something!
 rectb   = ["REC::Event","REC::Particle","REC::Calorimeter","REC::CaloExtras","REC::Cherenkov","REC::CovMat","REC::ForwardTagger","REC::Scintillator","REC::ScintExtras","REC::Track","REC::UTrack","REC::Traj","RECFT::Event","RECFT::Particle"]
 rechb   = ["RECHB::Event","RECHB::Particle","RECHB::Calorimeter","RECHB::CaloExtras","RECHB::Cherenkov","RECHB::ForwardTagger","RECHB::Scintillator","RECHB::ScintExtras","RECHB::Track"]
 rectbai = ["RECAI::Event","RECAI::Particle","RECAI::Calorimeter","RECAI::CaloExtras","RECAI::Cherenkov","RECAI::CovMat","RECAI::ForwardTagger","RECAI::Scintillator","RECAI::ScintExtras","RECAI::Track","RECAI::Traj","RECAIFT::Event","RECAIFT::Particle"]
@@ -62,7 +65,7 @@ band   = ["BAND::laser","BAND::adc","BAND::tdc","BAND::hits","BAND::rawhits"]
 raster = ["RASTER::position"]
 rich   = ["RICH::tdc","RICH::Ring","RICH::Particle"]
 rtpc   = ["RTPC::hits","RTPC::tracks","RTPC::KFtracks"]
-alert  = ["ALRTDC::Track", "ALRTDC::MC", "ALRTDC::Hits", "ALRTDC::PreClusters", "ALRTDC::Clusters", "ALRTDC::KFTrack"]
+alert  = ["AHDC::Track", "AHDC::MC", "AHDC::Hits", "AHDC::PreClusters", "AHDC::Clusters", "AHDC::KFTrack"]
 dets   = band + raster + rich + rtpc + alert
 
 # additions for the calibration schema:
@@ -94,7 +97,15 @@ ecrerun.extend(["ECAL::tdc","ECAL::adc"])
 
 # DC alignment and AI-tracking validation schema:
 dcalign = list(dst)
-dcalign.extend(["ai::tracks", "aidn::tracks", "TimeBasedTrkg::AIClusters", "TimeBasedTrkg::AIHits", "TimeBasedTrkg::AITracks", "TimeBasedTrkg::TBClusters", "TimeBasedTrkg::TBHits", "TimeBasedTrkg::TBTracks"])
+dcalign.extend(["ai::tracks", "aidn::tracks", "TimeBasedTrkg::AIClusters", "TimeBasedTrkg::AIHits", "TimeBasedTrkg::AISegments", "TimeBasedTrkg::AITracks", "TimeBasedTrkg::TBClusters", "TimeBasedTrkg::TBHits", "TimeBasedTrkg::TBSegments", "TimeBasedTrkg::TBSegmentTrajectory", "TimeBasedTrkg::TBTracks"])
+
+# DC HV studies schema:
+dchv = list(dsthb)
+dchv.extend(["DC::tdc","DC::jitter", "HitBasedTrkg::HBClusters", "HitBasedTrkg::HBHitTrkId", "HitBasedTrkg::HBHits", "HitBasedTrkg::HBSegmentTrajectory", "HitBasedTrkg::HBSegments", "HitBasedTrkg::HBTracks", "HitBasedTrkg::Hits", "HitBasedTrkg::Trajectory", "TimeBasedTrkg::TBClusters", "TimeBasedTrkg::TBHits", "TimeBasedTrkg::TBSegments", "TimeBasedTrkg::TBSegmentTrajectory", "TimeBasedTrkg::TBTracks"])
+
+# Level3 validation schema:
+level3 = list(dst)
+level3.extend(["DC::tdc", "ECAL::adc", "ECAL::clusters", "FTOF::tdc", "FTOF::adc", "HitBasedTrkg::HBClusters", "HitBasedTrkg::HBTracks", "HTCC::adc", "RF::adc", "RF::tdc", "RUN::rf", "TimeBasedTrkg::TBClusters", "TimeBasedTrkg::TBTracks"])
 
 create("dst/", set(dst))
 create("dsthb/", set(dsthb))
@@ -103,5 +114,7 @@ create("mon/",  set(mon))
 create("ebrerun/", set(ebrerun))
 create("ecrerun/", set(ecrerun))
 create("dcalign/", set(dcalign))
+create("dchv/", set(dchv))
+create("level3/", set(level3))
 create("trigger/", set(trig))
 

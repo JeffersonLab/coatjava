@@ -261,7 +261,7 @@ public class StateVec implements Comparable<StateVec> {
         this.setTrkPhiAtSurface(mom.phi());
         this.setTrkThetaAtSurface(mom.theta());
         this.setPath(path);
-        this.setDx(surface.getDx(mom));
+        this.setDx(surface.getDx(pos, mom));
         this.setID(id);
     }
 

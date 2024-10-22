@@ -7,23 +7,28 @@ import org.jlab.geom.prim.Plane3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Arc3D;
 import org.jlab.geom.prim.Cylindrical3D;
+import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Transformation3D;
 import org.jlab.geom.prim.Vector3D;
 
 /**
  *
  * @author ziegler
+ * @author Tongtong Cao
  */
 public class Surface implements Comparable<Surface> {
     
     public Type type;
     public Plane3D plane;
-    public Point3D refPoint;
+    public Point3D measPoint;
+    public Point3D measPoint_err;
+    // Todo: make a line to replace two end points
     public Point3D lineEndPoint1;
     public Point3D lineEndPoint2;
     public Point3D finitePlaneCorner1;
     public Point3D finitePlaneCorner2;
     public Cylindrical3D cylinder;
+    public Cylindrical3D lineVolume;
     private Transformation3D toGlobal = new Transformation3D();
     private Transformation3D toLocal  = new Transformation3D();
     public Arc3D arc;
@@ -38,10 +43,56 @@ public class Surface implements Comparable<Surface> {
     public boolean passive = false;
     public double hemisphere = 1;
     
+    public double[] unc = new double[2];
+    public double[] doca = new double[2];
+    public Line3D[] wireLine = new Line3D[2];
+    public int region;
+    public int superlayer;
+    public int nMeas = 1;
+    
+        
+    public void setNMeas(int n) {
+    	nMeas = n;
+    }
+    
+    public int getNMeas() {
+    	return nMeas;
+    }
+    
+    // For URWell
+    public Surface(int sector, double x, double y, double z, double x_err, double y_err) {
+        type = Type.PLANEWITHPOINT;
+        this.sector = sector;
+        Point3D point = new Point3D(x, y, z);
+        measPoint = point;
+        Point3D point_err = new Point3D(x_err, y_err, 0);
+        measPoint_err = point_err;
+        Material material_air = new Material("air", 0, 0, 0, 30400, 0, Units.CM);
+        Material material_argon = new Material("argon", 0, 0, 0, 14, 0, Units.CM);
+        materials.add(material_air);
+        materials.add(material_argon);
+    }
+    
+    // For DC
+    public Surface(int region, double[] doca, double[] unc, double error, Line3D[] wireLine) {
+    	type = Type.LINEDOCA;
+    	this.region = region;
+        this.doca = doca;
+        this.unc = unc;
+        this.error = error;
+        this.wireLine = wireLine;
+        Point3D point = new Point3D(0, 0, wireLine[0].origin().z());
+        this.measPoint = point;
+        Material material_air = new Material("air", 0, 0, 0, 30400, 0, Units.CM);
+        Material material_argon = new Material("argon", 0, 0, 0, 14, 0, Units.CM);
+        materials.add(material_air);
+        materials.add(material_argon);
+    }
+    
     public Surface(Plane3D plane3d, Point3D refrPoint, Point3D c1, Point3D c2, double accuracy) {
         type = Type.PLANEWITHPOINT;
         plane = plane3d;
-        refPoint = refrPoint;
+        measPoint = refrPoint;
         finitePlaneCorner1 = c1;
         finitePlaneCorner2 = c2;
         swimAccuracy = accuracy;
@@ -80,7 +131,7 @@ public class Surface implements Comparable<Surface> {
     public Surface(Cylindrical3D cylinder3d, Point3D refrPoint, double accuracy) {
         type = Type.CYLINDERWITHPOINT;
         cylinder = cylinder3d;
-        refPoint = refrPoint;
+        measPoint = refrPoint;
         swimAccuracy = accuracy;
     }
     public Surface(Cylindrical3D cylinder3d, Point3D endPoint1, Point3D endPoint2, double accuracy) {
@@ -111,11 +162,19 @@ public class Surface implements Comparable<Surface> {
         swimAccuracy = accuracy;
     }
 
+    public Surface(Point3D endPoint1, Point3D endPoint2, Cylindrical3D volume, double accuracy) {
+        type = Type.LINE;
+        lineEndPoint1 = endPoint1;
+        lineEndPoint2 = endPoint2;
+        lineVolume = volume;
+        swimAccuracy = accuracy;
+    }
+    
     @Override
     public String toString() {
         String s = "Surface: ";
-        s = s + String.format("Type=%s Index=%d  Layer=%d  Sector=%d  Emisphere=%.1f X0=%.4f  Z/A=%.4f  Error=%.4f Passive=%b",
-                               this.type.name(), this.getIndex(),this.getLayer(),this.getSector(),this.hemisphere,this.getToverX0(),
+        s = s + String.format("Type=%s Index=%d  Layer=%d  Sector=%d  Emisphere=%.1f thickness=%.4f X0=%.4f Z/A=%.4f Error=%.4f Passive=%b",
+                               this.type.name(), this.getIndex(),this.getLayer(),this.getSector(),this.hemisphere,this.getThickness(),this.getToverX0(),
                                this.getZoverA(),this.getError(), this.passive);
         if(type==Type.PLANEWITHSTRIP) {
             s = s + "\n\t" + this.plane.toString();
@@ -127,9 +186,15 @@ public class Surface implements Comparable<Surface> {
             s = s + "\n\t" + this.cylinder.toString();
             s = s + "\n\t" + this.strip.toString();
         }
+        else if(type==Type.CYLINDERWITHLINE) {
+            s = s + "\n\t" + this.cylinder.toString();
+            s = s + "\n\t" + this.lineEndPoint1.toString();
+            s = s + "\n\t" + this.lineEndPoint2.toString();
+        }
         else if(type==Type.LINE) {
             s = s + "\n\t" + this.lineEndPoint1.toString();
             s = s + "\n\t" + this.lineEndPoint2.toString();
+            if(this.lineVolume!=null) s = s + "\n\t" + this.lineVolume.toString();
         }
         return s;
     }
@@ -168,6 +233,20 @@ public class Surface implements Comparable<Surface> {
     public void setLayer(int layer) {
         this.layer = layer;
     }
+    
+    /**
+     * @return the superlayer
+     */
+    public int getSuperLayer() {
+        return superlayer;
+    }
+
+    /**
+     * @param superlayer the superlayer to set
+     */
+    public void setSuperLayer(int superlayer) {
+        this.superlayer = superlayer;
+    }
 
     /**
      * @return the sector
@@ -193,6 +272,19 @@ public class Surface implements Comparable<Surface> {
     
     public void addMaterial(String name, double thickness, double density, double ZoverA, double X0, double IeV, Units unit) {
         this.materials.add(new Material(name, thickness, density, ZoverA, X0, IeV, unit));
+    }
+    
+    public double getRadius() {
+        if(this.cylinder!=null)
+            return this.cylinder.baseArc().radius();
+        else if(this.lineVolume!=null) 
+            return this.lineVolume.baseArc().radius();
+        else
+            return 0;
+    }
+    
+    public double getLength() {
+        return this.cylinder.height();
     }
     
     public double getThickness() {
@@ -221,56 +313,89 @@ public class Surface implements Comparable<Surface> {
         return ZA/RhoX;
     }
     
-    public double getLocalDir(Vector3D dir) {
+    public double getTrackLength(Point3D pos, Vector3D dir) {
+        return this.getTrackLength(pos, dir, 0);
+    }
+    
+    public double getTrackLength(Point3D pos, Vector3D dir, int materialIndex) {
         if(this.type!=Type.PLANEWITHSTRIP && 
            this.type!=Type.CYLINDERWITHSTRIP && 
            this.type!=Type.LINE) 
-           return 1;
+           return this.getMaterials().get(materialIndex).getThickness();
         else {
             if(this.type==Type.PLANEWITHSTRIP) {
                 Vector3D norm = this.plane.normal();
-                return Math.abs(norm.dot(dir));
+                return this.getMaterials().get(materialIndex).getThickness()/Math.abs(norm.dot(dir));
             }
             else if(this.type==Type.CYLINDERWITHSTRIP) {
                 Vector3D axis = this.cylinder.getAxis().direction().asUnit();
                 dir.sub(dir.projection(axis));
-                return Math.abs(dir.mag());
+                return this.getMaterials().get(materialIndex).getThickness()/Math.abs(dir.mag());
             }
             else if(this.type==Type.LINE) {
-                Vector3D axis = this.lineEndPoint1.vectorTo(this.lineEndPoint2).asUnit();
-                dir.sub(dir.projection(axis));
-                return Math.abs(dir.mag());
+                if(this.lineVolume==null) {
+                    Vector3D line = this.lineEndPoint1.vectorTo(this.lineEndPoint2).asUnit();
+                    dir.sub(dir.projection(line));
+                    return this.getMaterials().get(materialIndex).getThickness()/Math.abs(dir.mag());
+                }
+                else {  
+                    Line3D track = new Line3D(pos, dir);
+                    List<Point3D> intersections = new ArrayList<>();
+                    double trackLength = this.lineVolume.intersectionLength(track, intersections);
+                    if(materialIndex==0) { 
+                        return trackLength;
+                    }
+                    else {
+                        for(Point3D p : intersections) {
+                            if(this.lineVolume.isOnSurface(p)){
+                                Vector3D axis = this.lineVolume.getAxis().direction().asUnit();
+                                dir.sub(dir.projection(axis));
+                                return this.getMaterials().get(materialIndex).getThickness()/Math.abs(dir.mag());
+                            }
+                        }
+                        return 0;
+                    }
+                }
             }
             return 0;
         }
     }    
     
     public double getEloss(double p, double mass) {
-        double dE=0;
-        for(Material m : this.materials) {
+        double dE = 0;
+        for(int im=0; im<this.getMaterials().size(); im++) {
+            Material m = this.getMaterials().get(im);
             dE += m.getEloss(p, mass);
-        }
+        }    
         return dE;
     }
     
-    public double getEloss(Vector3D mom, double mass, int dir) {
-        double cosDir = this.getLocalDir(mom.asUnit());
+    public double getEloss(Point3D pos, Vector3D mom, double mass) {
+        double dE = 0;
+        double p = mom.mag();
+        for(int im=0; im<this.getMaterials().size(); im++) {
+            Material m = this.getMaterials().get(im);
+            dE += m.getEloss(p, mass)*this.getTrackLength(pos, mom.asUnit(), im)/m.getThickness();
+        }    
+        return dE;
+    }
+     
+    public double getElossScale(Point3D pos, Vector3D mom, double mass, int dir) {
         double scale = 0;
-        if(cosDir!=0) {
-            double dE = -dir*this.getEloss(mom.mag(), mass)/cosDir;
-            double Ecorr = Math.sqrt(mom.mag2() + mass*mass) + dE;
-            if(Ecorr>mass) scale = Math.sqrt(Ecorr*Ecorr - mass*mass)/mom.mag();
-            mom.scale(scale);
-        }
+        double dE = -dir*this.getEloss(pos, mom, mass);
+        double Ecorr = Math.sqrt(mom.mag2() + mass*mass) + dE;
+        if(Ecorr>mass) scale = Math.sqrt(Ecorr*Ecorr - mass*mass)/mom.mag();
+        mom.scale(scale);
         return scale;
     }
     
-    public double getDx(Vector3D mom) {
-        double cosDir = this.getLocalDir(mom.asUnit());
-        if(cosDir!=0)
-          return this.getThickness()/cosDir;
-        else
-            return 0;
+    public double getDx(Point3D pos, Vector3D mom) {
+        double dx = 0;
+        for(int im=0; im<this.getMaterials().size(); im ++) {
+            Material m = this.getMaterials().get(im);
+            dx += this.getTrackLength(pos, mom.asUnit(), im);
+        }
+        return dx;
     }
     
     public double getThetaMS(double p, double mass, double cosEntranceAngle) {

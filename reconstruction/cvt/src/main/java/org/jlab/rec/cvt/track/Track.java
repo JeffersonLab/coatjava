@@ -328,7 +328,7 @@ public class Track extends Trajectory implements Comparable<Track> {
             return false;
         if(this.getHelix().radius() < Constants.getInstance().getRCUT()) 
             return false;
-        if(Math.abs(Geometry.getInstance().getZoffset()-this.getHelix().getZ0()) > Geometry.getInstance().getZlength()+Constants.getInstance().getZRANGE()) 
+        if(Math.abs(Geometry.getInstance().getTargetZOffset()-this.getHelix().getZ0()) > Geometry.getInstance().getTargetHalfLength()+Constants.getInstance().getZRANGE()) 
             return false;
         else 
             return true;
