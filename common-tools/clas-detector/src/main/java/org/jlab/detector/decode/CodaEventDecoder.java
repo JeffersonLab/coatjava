@@ -280,12 +280,12 @@ public class CodaEventDecoder {
             else if(node.getTag()==57636){
                 //  RICH TDC data
                 return this.getDataEntries_57636(crate, node, event);
-            else if(node.getTag()==57657){
-                //  ATOF TDC data
-                return this.getDataEntries_57657(crate, node, event);
-            } else if(node.getTag()==57641){
-                //  RTPC  data decoding
-                return this.getDataEntries_57641(crate, node, event);
+            } else if (node.getTag() == 57657) {
+              //  ATOF Petiroc TDC data 
+              return this.getDataEntries_57657(crate, node, event);
+            } else if (node.getTag() == 57641) {
+              //  RTPC  data decoding
+              return this.getDataEntries_57641(crate, node, event);
             }
         }
         return bankEntries;
