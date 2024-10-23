@@ -12,7 +12,7 @@ then
 fi
 
 v=5.10
-git clone https://github.com/jeffersonlab/clas12-config
+test -d clas12-config || git clone https://github.com/jeffersonlab/clas12-config
 
 run=11
 nEvents=1000
