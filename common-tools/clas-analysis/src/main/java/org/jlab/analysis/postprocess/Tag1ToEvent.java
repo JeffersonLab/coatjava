@@ -40,7 +40,7 @@ public class Tag1ToEvent {
         // Parse command-line options:
         OptionParser parser = new OptionParser("postprocess");
         parser.addOption("-q","0","do beam charge and livetime (0/1=false/true)");
-        parser.addOption("-d","0","do delayed helicity (0/1=false/true)");
+        parser.addOption("-d","0","(ignored, old API)");
         parser.addOption("-f","0","rebuild the HEL::flip banks (0/1=false/true)");
         parser.addRequired("-o","output.hipo");
         parser.parse(args);
@@ -49,19 +49,23 @@ public class Tag1ToEvent {
             LOGGER.severe("No input file(s) specified.");
             System.exit(1);
         }
-        final boolean doHelicityDelay = parser.getOption("-d").intValue() != 0;
         final boolean doBeamCharge = parser.getOption("-q").intValue() != 0;
         final boolean doRebuildFlips = parser.getOption("-f").intValue() != 0;
-        if (!doHelicityDelay && !doBeamCharge && !doRebuildFlips) {
-            parser.printUsage();
-            LOGGER.severe("At least one of -q/-d/-f is required.");
-            System.exit(1);
-        }
 
         // Initialize event counters:
         long badCharge=0, goodCharge=0;
         long badHelicity=0, goodHelicity=0;
 
+        // Prepare to read from CCDB:
+        LOGGER.info("\n>>> Initializing helicity configuration from CCDB ...\n");
+        ConstantsManager conman = new ConstantsManager();
+        conman.init("/runcontrol/hwp","/runcontrol/helicity");
+        final int run = Util.getRunNumber(parser.getInputList().get(0));
+
+        // Determine whether to apply delay correction:
+        IndexedTable helTable = conman.getConstants(run, "/runcontrol/helicity");
+        final boolean doHelicityDelay = helTable.getIntValue("delay", 0,0,0) != 0;
+        
         try (HipoWriterSorted writer = new HipoWriterSorted()) {
             
             // Setup the output file writer:
@@ -78,13 +82,6 @@ public class Tag1ToEvent {
             Bank helScalerBank = new Bank(schema.getSchema("HEL::scaler"));
             Bank helFlipBank = new Bank(schema.getSchema("HEL::flip"));
             Bank[] configBanks = new Bank[]{new Bank(schema.getSchema(ReconstructionEngine.CONFIG_BANK_NAME))};
-
-            // Prepare to read from CCDB:
-            LOGGER.info("\n>>> Initializing helicity configuration from CCDB ...\n");
-            ConstantsManager conman = new ConstantsManager();
-            conman.init("/runcontrol/hwp","/runcontrol/helicity");
-            final int run = Util.getRunNumber(parser.getInputList().get(0));
-            IndexedTable helTable = conman.getConstants(run, "/runcontrol/helicity");
  
             // Initialize the scaler sequence from tag-1 events:
             LOGGER.info("\n>>> Initializing scaler sequence from RUN/HEL::scaler ...\n");
