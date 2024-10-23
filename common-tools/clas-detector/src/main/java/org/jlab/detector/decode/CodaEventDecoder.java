@@ -1069,8 +1069,8 @@ public class CodaEventDecoder {
                         Integer tdc_width = (Integer) cdataitems.get(position+2);
 
                         // Not sure what is going on here yet...
-                        DetectorDataDgtz bank = new DetectorDataDgtz(crate,slot.intValue(),2*(fiber*192+channel)+edge);
-                        bank.addTDC(new TDCData(tdc));
+                        DetectorDataDgtz bank = new DetectorDataDgtz(crate,slot.intValue(),channel.intValue());
+                        bank.addTDC(new TDCData(rawtdc));
 
                         entries.add(bank);
                         position += 3;
