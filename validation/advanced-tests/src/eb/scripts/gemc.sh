@@ -18,7 +18,7 @@ run=11
 nEvents=1000
 gcard=clas12-config/gemc/$v/clas12-default.gcard 
 
-echo gemc \
+gemc \
     $gcard \
     -INPUT_GEN_FILE="LUND, $1.txt" \
     -OUTPUT="hipo, $1.hipo" \
