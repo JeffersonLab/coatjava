@@ -11,11 +11,14 @@ then
     exit
 fi
 
+v=5.10
+git clone https://github.com/jeffersonlab/clas12-config
+
 run=11
 nEvents=1000
-gcard=$GEMC/../config/clas12-default.gcard 
+gcard=clas12-config/gemc/$v/clas12-default.gcard 
 
-gemc \
+echo gemc \
     $gcard \
     -INPUT_GEN_FILE="LUND, $1.txt" \
     -OUTPUT="hipo, $1.hipo" \
