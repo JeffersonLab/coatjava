@@ -322,7 +322,7 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
         }
         return bank;
     }
-
+    
     public DataBank fillHBTracksBank(DataEvent event, List<Track> candlist) {
         String name = bankNames.getTracksBank();
         DataBank bank = event.createBank(name, candlist.size()); 
@@ -398,7 +398,7 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
         //bank.show();
         return bank;
     }
-    
+        
     public DataBank fillHBTrajectoryBank(DataEvent event, List<Track> candlist) {
         return this.fillTrajectoryBank(event, candlist);
     }
@@ -495,6 +495,7 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
             bank.setShort("clusterID", i, (short) hitlist.get(i).get_AssociatedClusterID());
             bank.setByte("trkID", i, (byte) hitlist.get(i).get_AssociatedTBTrackID());
             bank.setFloat("timeResidual", i, (float) hitlist.get(i).get_TimeResidual());
+            bank.setFloat("DAFWeight", i, (float) hitlist.get(i).getDAFWeight());
             
             bank.setInt("TDC",i,hitlist.get(i).get_TDC());
             bank.setByte("jitter",i, (byte) hitlist.get(i).getJitter());
@@ -702,6 +703,7 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
         DataBank bank = event.createBank(name, candlist.size());
         for (int i = 0; i < candlist.size(); i++) {
             bank.setShort("id", i, (short) candlist.get(i).get_Id());
+            
             //bank.setShort("status", i, (short) (100+candlist.get(i).get_Status()*10+candlist.get(i).get_MissingSuperlayer()));
             bank.setShort("status", i, (short) candlist.get(i).getBitStatus());
             bank.setByte("sector", i, (byte) candlist.get(i).getSector());
@@ -761,7 +763,17 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
                         i, (short) candlist.get(i).getSingleSuperlayer().get_fittedCluster().get_Id());
             }
             bank.setFloat("chi2", i, (float) candlist.get(i).get_FitChi2());
-            bank.setShort("ndf", i, (short) candlist.get(i).get_FitNDF());
+            // To not interrupt current type of ndf, ndf weighted by DAF is converted from float to interger
+            int ndfDAF = 999;
+            if(candlist.get(i).get_NDFDAF() > 0){
+                ndfDAF = (int) Math.ceil(candlist.get(i).get_NDFDAF());
+            }
+            else if (candlist.get(i).get_NDFDAF() < 0){
+                ndfDAF = (int) Math.floor(candlist.get(i).get_NDFDAF());
+            }
+            bank.setShort("ndf", i, (short) ndfDAF);
+            // ndf0 is for traditional ndf for the track; # of hits can be obtained through it
+            bank.setShort("ndf0", i, (short) candlist.get(i).get_FitNDF());
         }
         return bank;
 
@@ -866,9 +878,9 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
             );
         }
     }
-
+    
     public void fillAllTBBanks(DataEvent event, List<FittedHit> fhits, List<FittedCluster> clusters,
-            List<Segment> segments, List<Cross> crosses,
+            List<Segment> segments, List<Cross> crosses, 
             List<Track> trkcands) {
 
         if (event == null) {
@@ -905,5 +917,5 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
         if (fhits != null && clusters == null) {
             event.appendBanks(this.fillTBHitsBank(event, fhits));
         }
-    }
+    }    
 }

@@ -21,6 +21,7 @@ import org.rcdb.RCDB;
 import org.jlab.geom.base.ConstantProvider;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.groups.IndexedTableViewer;
+import org.jlab.utils.system.FileSystemExecScan;
 
 /**
  *
@@ -28,9 +29,9 @@ import org.jlab.utils.groups.IndexedTableViewer;
  */
 public class DatabaseConstantProvider implements ConstantProvider {
 
-    Logger LOGGER = Logger.getLogger(DatabaseConstantProvider.class.getName());
+    static final Logger LOGGER = Logger.getLogger(DatabaseConstantProvider.class.getName());
     
-    private final HashMap<String,String[]> constantContainer = new HashMap<String,String[]>();
+    private final HashMap<String,String[]> constantContainer = new HashMap<>();
     private final boolean PRINT_ALL = true;
     private String variation  = "default";
     private Integer runNumber = 10;
@@ -41,8 +42,6 @@ public class DatabaseConstantProvider implements ConstantProvider {
     public static final String DEFAULT_ADDRESS = "mysql://clas12reader@clasdb.jlab.org/clas12";
     
     private org.jlab.ccdb.JDBCProvider provider;
-    
-    private int          debugMode = 1;
     
     public DatabaseConstantProvider(){
         this.loadTimeErrors = 0;
@@ -87,7 +86,7 @@ public class DatabaseConstantProvider implements ConstantProvider {
     }
     
     public Set<String> getEntrySet(){
-        Set<String> entries = new HashSet<String>();
+        Set<String> entries = new HashSet<>();
         for(Map.Entry<String,String[]> entry: this.constantContainer.entrySet()){
             entries.add(entry.getKey());
         }
@@ -107,7 +106,7 @@ public class DatabaseConstantProvider implements ConstantProvider {
         String propCLAS12 = System.getProperty("CLAS12DIR");
         String propCCDB   = System.getProperty("CCDB_DATABASE");
 
-        LOGGER.log(Level.FINE,"ENVIRONMENT : " + envCLAS12 + " " + envCCDB + " " + propCLAS12 + " " + propCCDB);
+        LOGGER.log(Level.FINE, "ENVIRONMENT : {0} {1} {2} {3}", new Object[]{envCLAS12, envCCDB, propCLAS12, propCCDB});
         
         if(envCCDB!=null&&envCLAS12!=null){
             StringBuilder str = new StringBuilder();
@@ -137,13 +136,16 @@ public class DatabaseConstantProvider implements ConstantProvider {
     }
     
     private void initialize(String address){
+
+        // choose /tmp directory:
+        FileSystemExecScan.scan();
+
         provider = CCDB.createProvider(address);
 
-        LOGGER.log(Level.INFO, "[DB] --->  open connection with : " + address);
-        LOGGER.log(Level.INFO, "[DB] --->  database variation   : " + this.variation);
-        LOGGER.log(Level.INFO, "[DB] --->  database run number  : " + this.runNumber);
-        LOGGER.log(Level.INFO, "[DB] --->  database time stamp  : " + databaseDate);
-
+        LOGGER.log(Level.INFO, "[DB] --->  open connection with : {0}", address);
+        LOGGER.log(Level.INFO, "[DB] --->  database variation   : {0}", this.variation);
+        LOGGER.log(Level.INFO, "[DB] --->  database run number  : {0}", this.runNumber);
+        LOGGER.log(Level.INFO, "[DB] --->  database time stamp  : {0}", databaseDate);
         
         provider.connect();
         
@@ -167,9 +169,9 @@ public class DatabaseConstantProvider implements ConstantProvider {
         try {
             databaseDate = format.parse(timestamp);
         } catch (ParseException ex) {
-            LOGGER.log(Level.SEVERE,"\n\n ***** TIMESTAMP ERROR ***** error parsing timestamp : " + timestamp);
+            LOGGER.log(Level.SEVERE, "\n\n ***** TIMESTAMP ERROR ***** error parsing timestamp : {0}", timestamp);
             databaseDate = new Date();
-            LOGGER.log(Level.WARNING," ***** TIMESTAMP WARNING ***** setting date to : " + databaseDate);
+            LOGGER.log(Level.WARNING, " ***** TIMESTAMP WARNING ***** setting date to : {0}", databaseDate);
 
         }
     }
@@ -177,6 +179,7 @@ public class DatabaseConstantProvider implements ConstantProvider {
     /**
      * Reads calibration constants for given table in the database.
      * @param table_name
+     * @param nindex
      * @return 
      */
     public CalibrationConstants  readConstants(String table_name, int nindex){
@@ -274,8 +277,8 @@ public class DatabaseConstantProvider implements ConstantProvider {
             
             int ncolumns = asgmt.getColumnCount();
             Vector<TypeTableColumn> typecolumn = asgmt.getTypeTable().getColumns();
-            LOGGER.log(Level.INFO,"[DB LOAD] ---> loading data table : " + table_name);
-            LOGGER.log(Level.INFO,"[DB LOAD] ---> number of columns  : " + typecolumn.size());
+            LOGGER.log(Level.INFO, "[DB LOAD] ---> loading data table : {0}", table_name);
+            LOGGER.log(Level.INFO, "[DB LOAD] ---> number of columns  : {0}", typecolumn.size());
             for(int loop = 0; loop < ncolumns; loop++){
                 String name = typecolumn.get(loop).getName();
                 Vector<String> row = asgmt.getColumnValuesString(name);

@@ -40,12 +40,15 @@ public class EBRadioFrequency {
 
         final double rfPeriod = this.ccdb.getDouble(EBCCDBEnum.RF_BUCKET_LENGTH);
 
-        // The RF calibration is relative to target center:
-        final double zTarget = this.ccdb.getDouble(EBCCDBEnum.TARGET_POSITION);
+        // The RF calibration is relative to the solenoid center: 
+        // FIXME the reference point doesn't have to be the solenoid center or 
+        // target center but could be z=0. It only needs to be consistent with 
+        // the one used in RF calibrations
+        final double zSolenoid = this.ccdb.getDouble(EBCCDBEnum.SOLENOID_POSITION);
 
         // The trigger particles' vertex info:
         final double tVertex = trigger.getVertexTime(type,layer,trigger.getPid());
-        final double dzTargetVertex = zTarget - trigger.vertex().z();
+        final double dzTargetVertex = zSolenoid - trigger.vertex().z();
 
         // The RF time at the trigger particle's vertex:
         // (Note, this is shifted forward by a large integer number of RF periods,

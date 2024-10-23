@@ -17,6 +17,7 @@ import javax.swing.JPanel;
 import javax.swing.border.SoftBevelBorder;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.base.DataEventType;
+import org.jlab.io.base.DataSource;
 import org.jlab.io.evio.EvioETSource;
 import org.jlab.io.evio.EvioSource;
 import org.jlab.io.hipo3.Hipo3DataSource;
@@ -200,6 +201,20 @@ public class DataSourceProcessorPane extends JPanel implements ActionListener {
         source.open(file);
         this.dataProcessor.setSource(source);
         this.setDataFile(null);
+        mediaPlay.setEnabled(false);
+        mediaPause.setEnabled(true);
+        mediaNext.setEnabled(true);
+        mediaPrev.setEnabled(true);
+        this.startProcessorTimer();
+    }
+
+    public void openAndRun(String filename) {
+        this.stopProcessorTimer();
+        DataSource source = filename.endsWith(".hipo") ?
+            new HipoDataSource() : new EvioSource();
+        source.open(filename);
+        this.dataProcessor.setSource(source);
+        statusLabel.setText(dataProcessor.getStatusString());
         mediaPlay.setEnabled(false);
         mediaPause.setEnabled(true);
         mediaNext.setEnabled(true);

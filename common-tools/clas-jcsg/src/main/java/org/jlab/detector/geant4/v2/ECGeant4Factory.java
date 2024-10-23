@@ -39,7 +39,7 @@ public final class ECGeant4Factory extends Geant4Factory {
 
 
     public ECGeant4Factory(ConstantProvider cp) {
-        motherVolume = new G4World("fc");
+        motherVolume = new G4World("root");
 
         nsectors = cp.getInteger("/geometry/ec/ec/nsectors", 0);
         nlayers = cp.getInteger("/geometry/ec/ec/nlayers", 0);

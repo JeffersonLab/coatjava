@@ -87,7 +87,7 @@ esac
 if [ $useClara -eq 0 ]
 then
     COAT=../../coatjava
-    source $COAT/bin/env.sh
+    source $COAT/libexec/env.sh
 else
     CLARA_HOME=$PWD/clara_installation/
     COAT=$CLARA_HOME/plugins/clas12/
@@ -117,11 +117,7 @@ then
         # install clara
         if ! [ -d clara_installation ]
         then
-            wget --no-check-certificate https://claraweb.jlab.org/clara/_downloads/install-claracre-clas.sh
-            chmod +x install-claracre-clas.sh
-            ./install-claracre-clas.sh -l local
-            if [ $? != 0 ] ; then echo "clara installation error" ; exit 1 ; fi
-            rm install-claracre-clas.sh
+            ../../install-clara clara_installation
         fi
     fi
 

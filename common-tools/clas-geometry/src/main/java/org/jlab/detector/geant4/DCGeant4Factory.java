@@ -277,7 +277,7 @@ final class Wire {
 public class DCGeant4Factory {
 
     DCdatabase dbref = DCdatabase.getInstance();
-    private Geant4Basic motherVolume = new Geant4Basic("fc", "Box", 0);
+    private Geant4Basic motherVolume = new Geant4Basic("root", "Box", 0);
     private HashMap<String, String> properties = new HashMap<String, String>();
 
     private int nsgwires;

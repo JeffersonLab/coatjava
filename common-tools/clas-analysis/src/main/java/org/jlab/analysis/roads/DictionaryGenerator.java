@@ -226,8 +226,8 @@ public class DictionaryGenerator {
         this.variation = variation;
         ConstantProvider providerDC = GeometryFactory.getConstants(DetectorType.DC, run, variation);
         dcDetector = new DCGeant4Factory(providerDC, true, true);
-        ConstantProvider providerTG = GeometryFactory.getConstants(DetectorType.TARGET, run, variation);
-        solShift = providerTG.getDouble("/geometry/target/position",0);
+        ConstantProvider providerMAGNETS = GeometryFactory.getConstants(DetectorType.MAGNETS, run, variation);
+        solShift = providerMAGNETS.getDouble("/geometry/shifts/solenoid/z",0);
         ConstantProvider providerFTOF = GeometryFactory.getConstants(DetectorType.FTOF, run, variation);
         ftofDetector = new FTOFGeant4Factory(providerFTOF);        
         ecalDetector =  GeometryFactory.getDetector(DetectorType.ECAL, run, variation);
