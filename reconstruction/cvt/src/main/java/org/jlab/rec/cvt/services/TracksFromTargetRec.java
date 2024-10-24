@@ -191,6 +191,7 @@ public class TracksFromTargetRec {
         kf2.polarity = (int) Math.signum(Constants.getSolenoidScale());
         Measurements measure = new Measurements(xb, yb, Constants.getInstance().kfBeamSpotConstraint());
         for (Seed seed : this.CVTseeds) { 
+            measure.setSeed(seed);
             if(seed.getId()<0) continue;
             int pid = elossPid;
             //seed.update_Crosses();
@@ -198,8 +199,11 @@ public class TracksFromTargetRec {
             List<Surface> surfaces = measure.getMeasurements(seed);
             
             if(pid==0) pid = this.getTrackPid(event, seed.getId()); 
-            Point3D  v = seed.getHelix().getVertex();
+            Point3D  v = seed.getHelix().getVertex(); 
             Vector3D p = seed.getHelix().getPXYZ(solenoidValue);
+            if(Constants.getInstance().seedingDebugMode)
+                System.out.println("Seed vtx = "+v.toString()+" Seed p = "+p.toString());
+            
             if(Constants.getInstance().preElossCorrection && pid!=Constants.DEFAULTPID) {
                 double pcorr = measure.getELoss(p.mag(), PDGDatabase.getParticleMass(pid));
                 p.scale(pcorr/p.mag());
@@ -238,6 +242,8 @@ public class TracksFromTargetRec {
                         c.getCluster2().setAssociatedTrackID(0);
                     }
                 }
+                if(Constants.getInstance().seedingDebugMode)
+                    System.out.println("KF vtx = "+fittedTrack.getSecondaryHelix().getVertex().toString());
                 if (searchMissingCls) { 
                     //refit adding missing clusters
                     List<Cluster> clsOnTrack = recUtil.findClustersOnTrk(this.SVTclusters, seed.getClusters(), fittedTrack, swimmer); //VZ: finds missing clusters; RDV fix 0 error

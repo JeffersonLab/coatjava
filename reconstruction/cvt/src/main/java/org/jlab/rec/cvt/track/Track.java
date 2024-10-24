@@ -224,7 +224,7 @@ public class Track extends Trajectory implements Comparable<Track> {
             cross.setAssociatedTrackID(trackId);
             Point3D  trackPos = null;
             Vector3D trackDir = null;
-            if(this.getKFTrajectories()!=null && Math.abs(this.getHelix().B)>0.0001) {
+            if(this.getKFTrajectories()!=null ) {
                 int layer = cross.getCluster1().getLayer();
                 int index = MLayer.getType(cross.getDetector(), layer).getIndex();
                 HitOnTrack traj = this.getKFTrajectories().get(index);
