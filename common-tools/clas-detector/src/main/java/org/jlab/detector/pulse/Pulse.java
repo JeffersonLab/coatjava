@@ -2,6 +2,9 @@ package org.jlab.detector.pulse;
 
 import org.jlab.detector.base.DetectorDescriptor;
 
+/**
+ * Just a dumb data container
+ */
 public class Pulse {
 
     public DetectorDescriptor descriptor;

@@ -4,7 +4,8 @@ import java.util.List;
 import org.jlab.utils.groups.NamedEntry;
 
 /**
- * Similar to a Mode-7 FADC250 pulse extraction
+ * Similar to a Mode-7 FADC250 pulse extraction.
+ * 
  * @author baltzell
  */
 public class Mode7 extends Mode3 {

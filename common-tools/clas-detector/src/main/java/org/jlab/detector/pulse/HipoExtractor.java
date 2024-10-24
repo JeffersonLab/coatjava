@@ -11,8 +11,17 @@ import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.utils.groups.IndexedTable;
 
 /**
- * For now, a place to store standard waveform/pulse HIPO manipulations.
- * No bounds checking for number of samples.
+ * For now, a place to store standard boilerplate for waveform/pulse HIPO
+ * manipulations.  No bounds checking regarding number of samples.
+ *
+ * Here an IndexedTable object from CCDB is used to pass initialization parameters
+ * to the extractor.  If that object is null, the @{link org.jlab.detector.pulse.IExtractor.extract}
+ * method should know what to do, e.g., hardcoded, channel-independent parameters.
+ * 
+ * FIXME:  Passing the #samples around is obviously bad, and there's probably a
+ * few non-horrible ways that can be addressed without changing bank format.
+ * 
+ * @author baltzell
  */
 public abstract class HipoExtractor implements IExtractor {
 
@@ -36,6 +45,7 @@ public abstract class HipoExtractor implements IExtractor {
     }
 
     /**
+     * This could be overriden, e.g., for non-standard ADC banks.
      * @param n number of samples in readout
      * @param it CCDB table containing extraction initialization parameters
      * @param event the event to modify
@@ -60,22 +70,22 @@ public abstract class HipoExtractor implements IExtractor {
     }
 
     /**
-     * 
-     * @param n
-     * @param it
-     * @param src
-     * @param dest 
+     * This could be overriden, e.g., for non-standard ADC banks.
+     * @param n number of samples in readout
+     * @param it CCDB table containing extraction initialization parameters
+     * @param wfBank input waveform bank
+     * @param adcBank  output ADC bank
      */
-    protected void update(int n, IndexedTable it, Bank src, Bank dest) {
-        if (src.getRows() > 0) {
-            List<Pulse> pulses = getPulses(n, it, src);
-            dest.reset();
-            dest.setRows(pulses!=null ? pulses.size() : 0);
+    protected void update(int n, IndexedTable it, Bank wfBank, Bank adcBank) {
+        if (wfBank.getRows() > 0) {
+            List<Pulse> pulses = getPulses(n, it, wfBank);
+            adcBank.reset();
+            adcBank.setRows(pulses!=null ? pulses.size() : 0);
             if (pulses!=null && !pulses.isEmpty()) {
                 for (int i=0; i<pulses.size(); ++i) {
-                    copyIndices(src, dest, pulses.get(i).id, i);
-                    dest.putInt("ADC", i, (int)pulses.get(i).integral);
-                    dest.putFloat("time", i, pulses.get(i).time);
+                    copyIndices(wfBank, adcBank, pulses.get(i).id, i);
+                    adcBank.putInt("ADC", i, (int)pulses.get(i).integral);
+                    adcBank.putFloat("time", i, pulses.get(i).time);
                 }
             }
         }
@@ -135,7 +145,7 @@ public abstract class HipoExtractor implements IExtractor {
         for (int i=0; i<wfBank.getRows(); ++i) {
             for (int j=0; j<n; ++j)
                 samples[j] = wfBank.getShort(String.format("s%d",j+1), i);
-                // Can speed this up (but looks like not for DataBank?):
+                // FIXME:  Can speed this up (but looks like not for DataBank?):
                 //samples[j] = wfBank.getShort(String.format(5+j,j+1), i);
             List p = it==null ? extract(null, i, samples) :
                 extract(it.getNamedEntry(getIndices(wfBank,i)), i, samples);
