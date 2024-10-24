@@ -41,7 +41,27 @@
       { "name":"time"      , "type":"F", "info":"time from pulse fit"},
       { "name":"ped"       , "type":"S", "info":"pedestal from pulse analysis"},
       { "name":"integral"  , "type":"I", "info":"ADC integral (sum over the pulse)"},
-      { "name":"timestamp" , "type":"L", "info":"timestamp"}
+      { "name":"timestamp" , "type":"L", "info":"timestamp"},
+      { "name":"id"        , "type":"S", "info":"link to BMT::wf"}
+    ]
+  },
+  {
+    "name" : "BMT::wf",
+    "group": 20100,
+    "item" : 12,
+    "info": "WF bank for the Barrel MicroMegas Tracker",
+    "entries":[
+      { "name":"sector"    , "type":"B", "info":"sector"},
+      { "name":"layer"     , "type":"B", "info":"layer (1-6)"},
+      { "name":"component" , "type":"S", "info":"strips"},
+      { "name":"order"     , "type":"B", "info":"order: 0 - ADCL , 1 - ADCR"},
+      { "name":"timestamp" , "type":"L", "info":"timestamp"},
+      { "name":"s1"        , "type":"S", "info":"sample #1"},
+      { "name":"s2"        , "type":"S", "info":"sample #2"},
+      { "name":"s3"        , "type":"S", "info":"sample #3"},
+      { "name":"s4"        , "type":"S", "info":"sample #4"},
+      { "name":"s5"        , "type":"S", "info":"sample #5"},
+      { "name":"s6"        , "type":"S", "info":"sample #6"}
     ]
   },
   {
