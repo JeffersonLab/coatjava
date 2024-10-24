@@ -11,10 +11,13 @@ public class Pulse {
     public long flags;
     public int id;
 
-    public Pulse(DetectorDescriptor d) {
-        this.descriptor = d;
-    }
-
+    /**
+     * Units are the same as the raw units of the samples.
+     * @param integral pulse integral, pedestal-subtracted
+     * @param time pulse time
+     * @param flags user flags
+     * @param id link to row in source bank
+     */
     public Pulse(float integral, float time, long flags, int id) {
         this.integral = integral;
         this.time = time;
@@ -24,7 +27,7 @@ public class Pulse {
 
     @Override
     public String toString() {
-        return String.format("org.jlab.detector.Pulse: integral=%f time=%f flags=%d id=%d",
+        return String.format("pulse: integral=%f time=%f flags=%d id=%d",
                 integral, time, flags, id);
     }
 

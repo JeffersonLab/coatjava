@@ -64,6 +64,14 @@ public class DetectorDescriptor implements Comparable<DetectorDescriptor> {
         }
     }
     
+    public int[] getCSC() {
+        return new int[]{hw_CRATE,hw_SLOT,hw_CHANNEL};
+    }
+
+    public int[] getSLCO() {
+        return new int[]{dt_SECTOR,dt_LAYER,dt_COMPONENT,dt_ORDER};
+    }
+    
     public DetectorType getType(){ return this.detectorType;}
     
     public final void setType(DetectorType type){

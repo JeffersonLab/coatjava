@@ -14,6 +14,7 @@ import org.jlab.detector.decode.DetectorDataDgtz.HelicityDecoderData;
 import org.jlab.detector.helicity.HelicityBit;
 import org.jlab.detector.helicity.HelicitySequence;
 import org.jlab.detector.helicity.HelicityState;
+import org.jlab.detector.pulse.ExampleExtractor;
 
 import org.jlab.logging.DefaultLogger;
 
@@ -47,6 +48,7 @@ public class CLASDecoder4 {
     private boolean              isRunNumberFixed = false;
     private int                  decoderDebugMode = 0;
     private SchemaFactory        schemaFactory = new SchemaFactory();
+    private ExampleExtractor mode3 = new ExampleExtractor();
 
     public CLASDecoder4(boolean development){
         codaDecoder = new CodaEventDecoder();
@@ -244,6 +246,10 @@ public class CLASDecoder4 {
         return scaler;
     }
 
+    public void extractPulses(Event event) {
+        mode3.update(6, null, event, schemaFactory, "BMT::wf", "BMT::adc");
+    }
+
     public Bank getDataBankWF(String name, DetectorType type) {
         List<DetectorDataDgtz> a = this.getEntriesADC(type);
         Bank b = new Bank(schemaFactory.getSchema(name), a.size());
@@ -434,10 +440,8 @@ public class CLASDecoder4 {
 
         for(int i = 0; i < wfBankTypes.length; i++){
             Bank wfBank = getDataBankWF(wfBankNames[i],wfBankTypes[i]);
-            if(wfBank!=null){
-                if(wfBank.getRows()>0){
-                    event.write(wfBank);
-                }
+            if(wfBank!=null && wfBank.getRows()>0){
+                event.write(wfBank);
             }
         }
 
@@ -799,7 +803,9 @@ public class CLASDecoder4 {
                 decodedEvent.read(rawScaler);
                 decodedEvent.read(rawRunConf);
                 decodedEvent.read(helicityAdc);
-               
+
+                decoder.extractPulses(decodedEvent);
+
                 helicityReadings.add(HelicityState.createFromFadcBank(helicityAdc, rawRunConf,
                     decoder.detectorDecoder.scalerManager));
 
@@ -841,4 +847,5 @@ public class CLASDecoder4 {
 
         writer.close();
     }
+
 }
