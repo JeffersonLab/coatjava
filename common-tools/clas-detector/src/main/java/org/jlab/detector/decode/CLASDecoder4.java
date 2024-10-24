@@ -14,7 +14,7 @@ import org.jlab.detector.decode.DetectorDataDgtz.HelicityDecoderData;
 import org.jlab.detector.helicity.HelicityBit;
 import org.jlab.detector.helicity.HelicitySequence;
 import org.jlab.detector.helicity.HelicityState;
-import org.jlab.detector.pulse.ExampleExtractor;
+import org.jlab.detector.pulse.Mode3;
 
 import org.jlab.logging.DefaultLogger;
 
@@ -48,7 +48,7 @@ public class CLASDecoder4 {
     private boolean              isRunNumberFixed = false;
     private int                  decoderDebugMode = 0;
     private SchemaFactory        schemaFactory = new SchemaFactory();
-    private ExampleExtractor mode3 = new ExampleExtractor();
+    private Mode3 mode3 = new Mode3();
 
     public CLASDecoder4(boolean development){
         codaDecoder = new CodaEventDecoder();

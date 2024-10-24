@@ -4,7 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 import org.jlab.utils.groups.NamedEntry;
 
-public class ExampleExtractor extends HipoExtractor {
+/**
+ * Similar to FADC250 Mode-3 pulse extraction.
+ * 
+ * @author baltzell
+ */
+public class Mode3 extends HipoExtractor {
 
     // Fixed extraction parameters:
     final double ped = 2000;
@@ -32,10 +37,12 @@ public class ExampleExtractor extends HipoExtractor {
         */
 
         // Perform the extraction:
-        for (int i=0; i<samples.length; ++i) {
-            if (samples[i] > ped+tet) {
+        for (int i=0; i<samples.length-1; ++i) {
+            // Check for threshold crossing:
+            if (samples[i] > ped+tet && samples[i+1] > samples[i]) {
                 int n = 0;
                 float integral = 0;
+                // Integrate the pulse:
                 for (int j=i-nsb; j<=i+nsa; ++j) {
                     if (j<0) continue;
                     if (j>=samples.length) break;
@@ -43,8 +50,12 @@ public class ExampleExtractor extends HipoExtractor {
                     n++;
                 }
                 integral -= n * ped;
+                Pulse p = new Pulse(integral, i, 0x0, id);
+                p.pedestal = (float)(ped);
+                // Add the new pulse to the list:
                 if (pulses == null) pulses = new ArrayList<>();
-                pulses.add(new Pulse(integral, i, 0x0, id));
+                pulses.add(p);
+                // Add a holdoff time before next possible pulse:
                 i += nsa;
             }
         }

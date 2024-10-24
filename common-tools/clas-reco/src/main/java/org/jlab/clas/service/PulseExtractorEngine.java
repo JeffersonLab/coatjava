@@ -1,12 +1,12 @@
 package org.jlab.clas.service;
 
 import org.jlab.clas.reco.ReconstructionEngine;
-import org.jlab.detector.pulse.ExampleExtractor;
+import org.jlab.detector.pulse.Mode3;
 import org.jlab.io.base.DataEvent;
 
 public class PulseExtractorEngine extends ReconstructionEngine {
 
-    ExampleExtractor basic = new ExampleExtractor();
+    Mode3 basic = new Mode3();
     
 	public PulseExtractorEngine() {
 		super("PULSE", "baltzell", "0.0");

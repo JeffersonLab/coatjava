@@ -8,6 +8,7 @@ public class Pulse {
     public long timestamp;
     public float integral;
     public float time;
+    public float pedestal;
     public long flags;
     public int id;
 
