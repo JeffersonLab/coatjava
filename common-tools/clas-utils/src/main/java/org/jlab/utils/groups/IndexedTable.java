@@ -65,7 +65,7 @@ public class IndexedTable extends DefaultTableModel {
         str.append("f");
         this.precisionFormat = str.toString();
     }
-    
+
     public boolean hasEntry(int... index){
         return this.entries.hasItem(index);
     }
@@ -147,7 +147,7 @@ public class IndexedTable extends DefaultTableModel {
     }
 
     public NamedEntry getNamedEntry(int... index) {
-        return new NamedEntry(entries.getItem(index), entryNames);
+        return NamedEntry.create(entries.getItem(index), entryNames, index);
     }
 
     public IndexedList getList(){

@@ -3,20 +3,32 @@ package org.jlab.utils.groups;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.jlab.utils.groups.IndexedTable.IndexedEntry;
 
-public class NamedEntry extends IndexedTable.IndexedEntry {
+/**
+ * IndexedEntry wrapper for names and indices.
+ */
+public class NamedEntry {
 
-    Map<String,Integer> entryNames = new HashMap<>();
+    IndexedEntry entry;
+    Map<String,Integer> names = new HashMap<>();
+    int[] index;
 
-    public NamedEntry(IndexedTable.IndexedEntry entry, List<String> names) {
-        super(entry.getSize());
+    public static NamedEntry create(IndexedEntry entry, List<String> names, int... index) {
+        NamedEntry e = new NamedEntry();
         for (int i=0; i<names.size(); ++i)
-            entryNames.put(names.get(i), i);
-        entryValues = entry.entryValues;
+            e.names.put(names.get(i), i);
+        e.entry = entry;
+        e.index = index;
+        return e;
     }
 
     public Number getValue(String name) {
-        return getValue(entryNames.get(name));
+        return entry.getValue(names.get(name));
+    }
+
+    public int[] getIndex() {
+        return index;
     }
 
 }
