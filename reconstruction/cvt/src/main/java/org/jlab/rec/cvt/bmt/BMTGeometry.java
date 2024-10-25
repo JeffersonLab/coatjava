@@ -954,6 +954,7 @@ public class BMTGeometry {
         Vector3D axis   = new Vector3D(0,0,1);
         Arc3D base = new Arc3D(origin, center, axis, 2*Math.PI);
         Cylindrical3D tube = new Cylindrical3D(base, 2*INNERTUBEDIM[2]);
+        BMTConstants.TOPOSITION.apply(tube);
         Surface surface = new Surface(tube, new Strip(0,0,0), Constants.DEFAULTSWIMACC);
         surface.addMaterial("CarbonFiber", INNERTUBEDIM[1]-INNERTUBEDIM[0],
                             TUBEMAT[0], TUBEMAT[1], TUBEMAT[2], TUBEMAT[3], Units.MM);
@@ -967,6 +968,7 @@ public class BMTGeometry {
         Vector3D axis   = new Vector3D(0,0,1);
         Arc3D base = new Arc3D(origin, center, axis, 2*Math.PI);
         Cylindrical3D tube = new Cylindrical3D(base, 2*OUTERTUBEDIM[2]);
+        BMTConstants.TOPOSITION.apply(tube);
         Surface surface = new Surface(tube, new Strip(0,0,0), Constants.DEFAULTSWIMACC);
         surface.addMaterial("CarbonFiber", OUTERTUBEDIM[1]-OUTERTUBEDIM[0],
                             TUBEMAT[0], TUBEMAT[1], TUBEMAT[2], TUBEMAT[3], Units.MM);
