@@ -2,6 +2,7 @@ package org.jlab.rec.urwell.reader;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.jlab.geom.prim.Point3D;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 
@@ -27,6 +28,10 @@ public class URWellReader{
     }
     
     public URWellReader(DataEvent event, String type) {
+        if(event.hasBank("URWELL::clusters"))
+                this.readClusters(event.getBank("URWELL::clusters"));
+        
+        
         if(type == "HB"){            
             if(event.hasBank("URWELL::crosses"))
                 this.readCrosses(event.getBank("URWELL::crosses"));
@@ -76,7 +81,15 @@ public class URWellReader{
             int    size   = bank.getShort("size", i);
             double energy = bank.getFloat("energy", i);
             double time   = bank.getFloat("time", i);
-            URWellCluster cluster = new URWellCluster(id, sector, layer, strip, size, energy, time);
+            double xo = bank.getFloat("xo", i);
+            double yo = bank.getFloat("yo", i);
+            double zo = bank.getFloat("zo", i);
+            double xe = bank.getFloat("xe", i);
+            double ye = bank.getFloat("ye", i);
+            double ze = bank.getFloat("ze", i);
+            Point3D pointOrigin = new Point3D(xo,yo,zo);
+            Point3D pointEnd = new Point3D(xe,ye,ze);
+            URWellCluster cluster = new URWellCluster(id, sector, layer, strip, size, energy, time, pointOrigin, pointEnd);
             urClusters.add(cluster);
         }
     }
@@ -99,6 +112,13 @@ public class URWellReader{
             URWellCross cross = new URWellCross(id, sector, region, x, y, z, energy, time, cluster1, cluster2, status);
             cross.setClusterIndex1(cluster1);
             cross.setClusterIndex2(cluster2);
+            cross.setCluster1(urClusters);
+            cross.setCluster2(urClusters);
+            
+            System.out.println("Layer: " + cross.getCluster1().layer() + "  " + cross.getCluster1().getLineLocal().origin().z() + "  " + cross.getCluster1().getLineLocal().end().z());
+            System.out.println("Layer: " + cross.getCluster2().layer() + "  " + cross.getCluster2().getLineLocal().origin().z() + "  " + cross.getCluster2().getLineLocal().end().z());
+            System.out.println();
+            
             if(cluster1<=urClusters.size()) urClusters.get(cluster1-1).setCrossIndex(i);
             if(cluster2<=urClusters.size()) urClusters.get(cluster2-1).setCrossIndex(i);           
             if(status == 0)            
@@ -126,6 +146,12 @@ public class URWellReader{
             int  cluster2 = bank.getShort("cluster2", i); 
             int status = bank.getShort("status", i); 
             URWellCross cross = new URWellCross(id, tid, sector, region, x, y, z, x_local, y_local, z_local, energy, time, cluster1, cluster2, status);
+            cross.setClusterIndex1(cluster1);
+            cross.setClusterIndex2(cluster2);
+            cross.setCluster1(urClusters);
+            cross.setCluster2(urClusters);
+            if(cluster1<=urClusters.size()) urClusters.get(cluster1-1).setCrossIndex(i);
+            if(cluster2<=urClusters.size()) urClusters.get(cluster2-1).setCrossIndex(i);    
             urCrosses.add(cross);
         }
     }

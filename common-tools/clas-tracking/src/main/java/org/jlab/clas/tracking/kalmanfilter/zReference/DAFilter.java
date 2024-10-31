@@ -31,9 +31,9 @@ public class DAFilter {
     private int indexReferenceWire = 0;  
     
     // For uRWell
-    private double[] xyVars_uRWell;
+    private double var_uRWell;
     private double weight_uRWell;
-    private double[] effectiveXYVars_uRWell;
+    private double effectiveVar_uRWell;
     
     
     public DAFilter(double[] docas, double[] vars,  double[] weights, Line3D[] wireLines) {
@@ -51,8 +51,8 @@ public class DAFilter {
         this.weight_single = weight;
     }
     
-    public DAFilter(double[] xyVars,  double weight) {
-        this.xyVars_uRWell = xyVars;
+    public DAFilter(double var,  double weight) {
+        this.var_uRWell = var;
         this.weight_uRWell = weight;              
     } 
     
@@ -134,10 +134,8 @@ public class DAFilter {
         effectiveDoca = doca_single;
     }
     
-    public void calc_effectiveMeasVars_uRWell(){
-        effectiveXYVars_uRWell = new double[]{10., 10.};
-        for(int i = 0; i < 2; i++)
-            effectiveXYVars_uRWell[i] = xyVars_uRWell[i]/weight_uRWell;
+    public void calc_effectiveMeasVar_uRWell(){
+        effectiveVar_uRWell = var_uRWell/weight_uRWell;
     }
     
     public double get_EffectiveDoca(){
@@ -148,8 +146,8 @@ public class DAFilter {
         return effectiveVar;
     }
     
-    public double[] get_EffectiveXYVars_uRWell(){
-        return effectiveXYVars_uRWell;
+    public double get_EffectiveVar_uRWell(){
+        return effectiveVar_uRWell;
     }
     
     public int get_IndexReferenceWire(){
@@ -192,10 +190,10 @@ public class DAFilter {
         return updatedWeights;
     }
     
-    public double calc_updatedWeight_uRWell(double[] residuals, double annealingFactor){
-        double factor = 1/(2 * Math.PI) / Math.sqrt( annealingFactor * xyVars_uRWell[0] * xyVars_uRWell[1]);
+    public double calc_updatedWeight_uRWell(double residual, double annealingFactor){
+        double factor = 1/(2 * Math.PI) / Math.sqrt( annealingFactor * var_uRWell);
         
-        double Chi2 = residuals[0] * residuals[0]/xyVars_uRWell[0] + residuals[1] * residuals[1]/xyVars_uRWell[1];
+        double Chi2 = residual * residual/var_uRWell;
         double Phi = factor * Math.exp(-0.5 / annealingFactor * Chi2);
         double Lambda = factor * Math.exp(-0.5 / annealingFactor * dafChi2CutURWell);
         double sum = Phi + Lambda;

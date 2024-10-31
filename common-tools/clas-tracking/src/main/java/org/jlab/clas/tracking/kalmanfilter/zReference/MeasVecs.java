@@ -38,6 +38,33 @@ public class MeasVecs extends AMeasVecs {
 
         return hMatrix;
     }
+    
+    public double[] HURWell(double stereo) {
+        double[] hMatrix = new double[5];
+        hMatrix[0] = Math.cos(Math.toRadians(stereo));
+        hMatrix[1] = Math.sin(Math.toRadians(stereo));
+        hMatrix[2] = 0;
+        hMatrix[3] = 0;
+        hMatrix[4] = 0;
+
+        return hMatrix;
+    }
+    
+    public double dhURWell(StateVec stateVec) {
+        double value = Double.NaN;
+        if (stateVec == null|| this.measurements.get(stateVec.k) == null) {
+            return value;
+        }
+        
+        double meas = this.measurements.get(stateVec.k).surface.measPoint.x();
+        double stereo = this.measurements.get(stateVec.k).surface.stereo;
+        double x = stateVec.x;
+        double y = stateVec.y;
+        double xx = Math.cos(Math.toRadians(stereo)) * x + Math.sin(Math.toRadians(stereo)) * y;  
+        value = meas - xx;
+        
+        return value;
+    }
 
     @Override
     public double[] H(AStateVecs.StateVec stateVec, AStateVecs sv, MeasVec mv, Swim swimmer) {

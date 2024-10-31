@@ -50,6 +50,8 @@ public class Surface implements Comparable<Surface> {
     public int superlayer;
     public int nMeas = 1;
     
+    public double stereo;
+    
         
     public void setNMeas(int n) {
     	nMeas = n;
@@ -60,13 +62,14 @@ public class Surface implements Comparable<Surface> {
     }
     
     // For URWell
-    public Surface(int sector, double x, double y, double z, double x_err, double y_err) {
+    public Surface(int sector, double x, double z, double x_err, double stereo) {
         type = Type.PLANEWITHPOINT;
         this.sector = sector;
-        Point3D point = new Point3D(x, y, z);
+        Point3D point = new Point3D(x, 0, z);
         measPoint = point;
-        Point3D point_err = new Point3D(x_err, y_err, 0);
+        Point3D point_err = new Point3D(x_err, 0, 0);
         measPoint_err = point_err;
+        this.stereo = stereo;
         Material material_air = new Material("air", 0, 0, 0, 30400, 0, Units.CM);
         Material material_argon = new Material("argon", 0, 0, 0, 14, 0, Units.CM);
         materials.add(material_air);

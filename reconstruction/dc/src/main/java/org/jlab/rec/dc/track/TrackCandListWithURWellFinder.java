@@ -1608,9 +1608,19 @@ public class TrackCandListWithURWellFinder {
         
         URWellCross urCross = trkcand.get_URWellCross();
         if(urCross != null){
-            HitOnTrack urhot = new HitOnTrack(urCross.sector(), urCross.local().x(), urCross.local().y(), urCross.local().z(), Constants.URWELLXRESOLUTION, Constants.URWELLYRESOLUTION);
-            urhot.isDCHit = false;
-            hOTS.add(urhot);
+            if(urCross.getCluster1() != null) {
+                HitOnTrack urhot = new HitOnTrack(urCross.sector(), urCross.getCluster1().layer(), urCross.getCluster1().getPointLocalStereoRotation().x(), 
+                        urCross.getCluster1().getPointLocalStereoRotation().z(), Constants.URWELLXRESOLUTION, urCross.getCluster1().getStereo());            
+                urhot.isDCHit = false;
+                hOTS.add(urhot);
+            } 
+            
+            if(urCross.getCluster2() != null) {
+                HitOnTrack urhot = new HitOnTrack(urCross.sector(), urCross.getCluster2().layer(), urCross.getCluster2().getPointLocalStereoRotation().x(), 
+                        urCross.getCluster2().getPointLocalStereoRotation().z(), Constants.URWELLXRESOLUTION, urCross.getCluster2().getStereo());            
+                urhot.isDCHit = false;
+                hOTS.add(urhot);
+            }   
         }
         
     	// loops over the regions and the superlayers in a region (1 to 2) and obtains the hits on track
@@ -1665,7 +1675,7 @@ public class TrackCandListWithURWellFinder {
     	Collections.sort(hOTS); // sort the collection in order of increasing Z value (i.e. going downstream from the target)
     	// identify double hits and take the average position          
     	for (int i = 0; i < hOTS.size(); i++) {
-    		if (i > 0) {
+    		if (i > 0 && hOTS.get(i).isDCHit && hOTS.get(i-1).isDCHit) {
     			if (Math.abs(hOTS.get(i - 1)._Z - hOTS.get(i)._Z)<0.01) {
     				hOTS.get(i - 1)._doca[1] = hOTS.get(i)._doca[0];
     				hOTS.get(i - 1)._Unc[1] = hOTS.get(i)._Unc[0];
@@ -1679,9 +1689,9 @@ public class TrackCandListWithURWellFinder {
     	List<Surface> surfaces =  new ArrayList<>(hOTS.size());
     	for (int i = 0; i < hOTS.size(); i++) {
             if(!hOTS.get(i).isDCHit){
-                Surface surf = new Surface(hOTS.get(i).sector, hOTS.get(i)._X, hOTS.get(i)._Y, hOTS.get(i)._Z, hOTS.get(i)._X_err, hOTS.get(i)._Y_err);
+                Surface surf = new Surface(hOTS.get(i).sector, hOTS.get(i)._X, hOTS.get(i)._Z, hOTS.get(i)._X_err, hOTS.get(i).stereo);
                 surf.region = 0;
-    		surf.setLayer(1);
+    		surf.setLayer(hOTS.get(i).layer);
                 surfaces.add(i, surf);
             }
             else{	
@@ -1713,19 +1723,18 @@ public class TrackCandListWithURWellFinder {
     	public int layer;
     	public int nMeas = 1;
         
-        // For URWell
-        public double _Y;   
-        public double _X_err;
-        public double _Y_err;          
+        // For URWell 
+        public double _X_err;        
         public boolean isDCHit = true;
+        public double stereo;
 
-        public HitOnTrack(int sector, double X, double Y, double Z, double X_err, double Y_err) {
+        public HitOnTrack(int sector, int layer, double X, double Z, double X_err, double stereo) {
                 this.sector = sector;
+                this.layer = layer;
     		_X = X;
-                _Y = Y;
     		_Z = Z;
                 _X_err = X_err;
-                _Y_err = Y_err;
+                this.stereo = stereo;
     	}
 
     	public HitOnTrack(int superlayer, double X, double Z, double wiremaxsag, Line3D wireLine) {

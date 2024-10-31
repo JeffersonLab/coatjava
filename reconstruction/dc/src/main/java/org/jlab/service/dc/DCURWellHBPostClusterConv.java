@@ -24,6 +24,7 @@ import org.jlab.rec.dc.cross.URWellDCCrossesList;
 import org.jlab.rec.dc.trajectory.Road;
 import org.jlab.rec.dc.trajectory.RoadFinder;
 import org.jlab.rec.urwell.reader.URWellReader;
+import org.jlab.rec.urwell.reader.URWellCluster;
 import org.jlab.rec.urwell.reader.URWellCross;
 import org.jlab.rec.dc.cross.URWellDCCrossesListFinder;
 

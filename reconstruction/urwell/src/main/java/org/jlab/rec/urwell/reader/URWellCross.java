@@ -14,7 +14,7 @@ public class URWellCross {
 
     private DetectorDescriptor desc = new DetectorDescriptor(DetectorType.URWELL);
     private Point3D global;
-    private Point3D local;
+    private Point3D local; // Points in local coordinates
     private int region;
     private double energy = 0;
     private double time = 0;
@@ -23,6 +23,8 @@ public class URWellCross {
     private int cluster2 = -1;
     private int status = -1;
     private int tid = -1; // Track id;
+    private URWellCluster cls1 = null;
+    private URWellCluster cls2 = null;
 
     public URWellCross(int id, int sector, int region, double x, double y, double z, double energy, double time, int cluster1, int cluster2, int status) {
         this.id = id;
@@ -31,7 +33,7 @@ public class URWellCross {
         this.global = new Point3D(x, y, z);
         this.local = new Point3D(x, y, z);
         local.rotateZ(Math.toRadians(-60 * (sector - 1)));
-        local.rotateY(Math.toRadians(-25));
+        local.rotateY(Math.toRadians(-25)); 
         this.energy = energy;
         this.time = time;
         this.cluster1 = cluster1;
@@ -126,6 +128,48 @@ public class URWellCross {
     public int status() {
         return this.status;
     }
+    
+    public void setCluster1(URWellCluster cluster) {        
+        cls1 = cluster;
+    }
+
+    public void setCluster2(URWellCluster cluster) {
+        cls2 = cluster;
+    }
+    
+    public URWellCluster getCluster1() {
+        return cls1;
+    }
+
+    public URWellCluster getCluster2() {
+        return cls2;
+    }
+    
+    public void setCluster1(List<URWellCluster> urClusters) {
+        URWellCluster cluster = null;
+        
+        for (URWellCluster cl : urClusters) {
+            if (cl.id() == cluster1) {
+                cluster = cl;
+                break;
+            }
+        }
+        
+        cls1 = cluster;
+    }
+
+    public void setCluster2(List<URWellCluster> urClusters) {
+        URWellCluster cluster = null;
+        
+        for (URWellCluster cl : urClusters) {
+            if (cl.id() == cluster2) {
+                cluster = cl;
+                break;
+            }
+        }
+        
+        cls2 = cluster;
+    }    
 
     public URWellCluster getCluster1(List<URWellCluster> urClusters) {
         URWellCluster cluster = null;
