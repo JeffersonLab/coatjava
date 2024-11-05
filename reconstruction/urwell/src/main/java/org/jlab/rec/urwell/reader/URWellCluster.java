@@ -21,7 +21,6 @@ public class URWellCluster {
     private int crossIndex = -1;
     private double stereo = 10.;
     private Line3D lineLocal = new Line3D();
-    private Point3D pointLocalStereoRotation = new Point3D(); // (x, 0, z) in stereo-rotated local coordinates
 
     public URWellCluster(int id, int sector, int layer, int component, int size, double energy, double time, Point3D pointOrigin, Point3D pointEnd) {
         this.id = id;
@@ -39,16 +38,7 @@ public class URWellCluster {
         pointEndLocal.copy(pointEnd);
         pointEndLocal.rotateZ(Math.toRadians(-60 * (sector - 1)));
         pointEndLocal.rotateY(Math.toRadians(-25));   
-        lineLocal.set(pointOriginLocal, pointEndLocal);
-        
-        Point3D pointOriginalLocalStereoRotation = new Point3D();
-        pointOriginalLocalStereoRotation.copy(pointOriginLocal);
-        pointOriginalLocalStereoRotation.rotateZ(Math.toRadians(-stereo));        
-        Point3D pointEndLocalStereoRotation = new Point3D();
-        pointEndLocalStereoRotation.copy(pointEndLocal);
-        pointEndLocalStereoRotation.rotateZ(Math.toRadians(-stereo));
-        
-        pointLocalStereoRotation.set((pointOriginalLocalStereoRotation.x() + pointEndLocalStereoRotation.x())/2., 0, (pointOriginalLocalStereoRotation.z() + pointEndLocalStereoRotation.z())/2.);  
+        lineLocal.set(pointOriginLocal, pointEndLocal);                     
     }
     
     public int id() {
@@ -93,10 +83,5 @@ public class URWellCluster {
     
     public Line3D getLineLocal(){
         return lineLocal;
-    }
-    
-    public Point3D getPointLocalStereoRotation(){
-        return pointLocalStereoRotation;
-    }
-
+    }    
 }

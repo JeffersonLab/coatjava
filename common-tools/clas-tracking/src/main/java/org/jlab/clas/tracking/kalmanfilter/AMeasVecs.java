@@ -23,7 +23,7 @@ public abstract class AMeasVecs {
 
     public void setMeasVecs(List<Surface> measSurfaces) {
         measurements = new ArrayList<>();
-        if(measSurfaces.get(0).type != Type.LINEDOCA && measSurfaces.get(0).type != Type.PLANEWITHPOINT) // Measurements from URWell and DC has been sorted 
+        if(measSurfaces.get(measSurfaces.size()-1).type != Type.LINEDOCA) // Measurements from URWell and DC has been sorted 
         	Collections.sort(measSurfaces);
         for(int i = 0; i < measSurfaces.size(); i++) {
             MeasVec mvec = new MeasVec();
@@ -35,16 +35,18 @@ public abstract class AMeasVecs {
             mvec.skip = mvec.surface.passive;
             mvec.hemisphere = measSurfaces.get(i).hemisphere;
             measurements.add(mvec);
-            if(measSurfaces.get(i).type == Type.LINEDOCA) { //Todo: assign a value to the Surface index and use that as the identifier
-            	mvec.region = measSurfaces.get(i).region;
-            	mvec.sector = measSurfaces.get(i).getSector();
-            	mvec.superlayer = measSurfaces.get(i).getSuperLayer();
-            	mvec.layer = measSurfaces.get(i).getLayer();
-            }
-            else if(measSurfaces.get(i).type == Type.PLANEWITHPOINT){
-                mvec.region = measSurfaces.get(i).region;
-                mvec.layer = measSurfaces.get(i).getLayer();
-            	mvec.sector = measSurfaces.get(i).getSector();
+            if(measSurfaces.get(measSurfaces.size()-1).type == Type.LINEDOCA){ //Todo: assign a value to the Surface index and use that as the identifier
+                if(measSurfaces.get(i).type == Type.LINEDOCA) { 
+                    mvec.region = measSurfaces.get(i).region;
+                    mvec.sector = measSurfaces.get(i).getSector();
+                    mvec.superlayer = measSurfaces.get(i).getSuperLayer();
+                    mvec.layer = measSurfaces.get(i).getLayer();
+                }
+                else if(measSurfaces.get(i).type == Type.PLANEWITHSTRIP){
+                    mvec.region = measSurfaces.get(i).region;
+                    mvec.layer = measSurfaces.get(i).getLayer();
+                    mvec.sector = measSurfaces.get(i).getSector();
+                }
             }
         }
     }
@@ -89,7 +91,26 @@ public abstract class AMeasVecs {
         WL.copy(wireLine);
         WL.copy(WL.distance(point));
         
-        return WL.length()*Math.signum(WL.direction().x());
+        return WL.length()*Math.signum(WL.direction().x());    
+    }
+       
+    public double dhURWell(StateVec stateVec) {
+        double value = Double.NaN;
+        if (stateVec == null|| this.measurements.get(stateVec.k) == null) {
+            return value;
+        }
+                       
+        Line3D l = new Line3D(this.measurements.get(stateVec.k).surface.lineEndPoint1, 
+        this.measurements.get(stateVec.k).surface.lineEndPoint2);
+        Line3D WL = new Line3D();
+        WL.copy(l);
+        Point3D svP = new Point3D(stateVec.x, stateVec.y, stateVec.z);
+        WL.copy(WL.distance(svP));
+        double sideStrip = -Math.signum(l.direction().cross(WL.direction()).
+                dot(this.measurements.get(stateVec.k).surface.plane.normal())); 
+        value = WL.length()*sideStrip;
+                
+        return value;
     }
     
     public double dh(int k, StateVec stateVec) {

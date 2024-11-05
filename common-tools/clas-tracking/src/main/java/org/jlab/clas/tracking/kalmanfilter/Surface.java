@@ -48,11 +48,8 @@ public class Surface implements Comparable<Surface> {
     public Line3D[] wireLine = new Line3D[2];
     public int region;
     public int superlayer;
-    public int nMeas = 1;
-    
-    public double stereo;
-    
-        
+    public int nMeas = 1;    
+            
     public void setNMeas(int n) {
     	nMeas = n;
     }
@@ -62,14 +59,16 @@ public class Surface implements Comparable<Surface> {
     }
     
     // For URWell
-    public Surface(int sector, double x, double z, double x_err, double stereo) {
-        type = Type.PLANEWITHPOINT;
+    public Surface(int sector, int layer, Line3D line, double err, double z) {                        
+        type = Type.PLANEWITHSTRIP;
         this.sector = sector;
-        Point3D point = new Point3D(x, 0, z);
+        this.layer = layer;
+        lineEndPoint1 = line.origin();
+        lineEndPoint2 = line.end();
+        error = err;  
+        Point3D point = new Point3D(0, 0, z); // fixed z in TSC
         measPoint = point;
-        Point3D point_err = new Point3D(x_err, 0, 0);
-        measPoint_err = point_err;
-        this.stereo = stereo;
+        plane = new Plane3D(0, 0, z, 0, 0, 1); // plan perpenticular to z axis in TSC
         Material material_air = new Material("air", 0, 0, 0, 30400, 0, Units.CM);
         Material material_argon = new Material("argon", 0, 0, 0, 14, 0, Units.CM);
         materials.add(material_air);

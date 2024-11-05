@@ -644,18 +644,17 @@ public class DCURWellTBEngine extends DCEngine {
         FittedHit hitOnTrk;
         
         URWellCross urCross = trk.get_URWellCross();
-        
         if(urCross != null){
             if(urCross.getCluster1() != null) {
-                HitOnTrack urhot = new HitOnTrack(urCross.sector(), urCross.getCluster1().layer(), urCross.getCluster1().getPointLocalStereoRotation().x(), 
-                        urCross.getCluster1().getPointLocalStereoRotation().z(), Constants.URWELLXRESOLUTION, urCross.getCluster1().getStereo());            
+                HitOnTrack urhot = new HitOnTrack(urCross.sector(), urCross.getCluster1().layer(), urCross.getCluster1().getLineLocal(),
+                         Constants.URWELLXRESOLUTION, Constants.URWELLLOCALZ);            
                 urhot.isDCHit = false;
                 hOTS.add(urhot);
             } 
             
             if(urCross.getCluster2() != null) {
-                HitOnTrack urhot = new HitOnTrack(urCross.sector(), urCross.getCluster2().layer(), urCross.getCluster2().getPointLocalStereoRotation().x(), 
-                        urCross.getCluster2().getPointLocalStereoRotation().z(), Constants.URWELLXRESOLUTION, urCross.getCluster2().getStereo());            
+                HitOnTrack urhot = new HitOnTrack(urCross.sector(), urCross.getCluster2().layer(), urCross.getCluster2().getLineLocal(),
+                         Constants.URWELLXRESOLUTION, Constants.URWELLLOCALZ);            
                 urhot.isDCHit = false;
                 hOTS.add(urhot);
             }   
@@ -693,25 +692,25 @@ public class DCURWellTBEngine extends DCEngine {
                                        
         Collections.sort(hOTS); // sort the collection in order of increasing Z value (i.e. going downstream from the target)
         // identify double hits and take the average position		
-        for (int i = 0; i < hOTS.size(); i++) {
-            if (i > 0 && hOTS.get(i).isDCHit && hOTS.get(i-1).isDCHit) {
-                if (Math.abs(hOTS.get(i - 1)._Z - hOTS.get(i)._Z)<0.01) {
-                    hOTS.get(i - 1)._doca[1] = hOTS.get(i)._doca[0];
-                    hOTS.get(i - 1)._Unc[1] = hOTS.get(i)._Unc[0];
-                    hOTS.get(i - 1)._wireLine[1] = hOTS.get(i)._wireLine[0];
-                    hOTS.remove(i);
-                    hOTS.get(i - 1).nMeas = 2;
-                }
-            }
-        }                
+    	for (int i = 0; i < hOTS.size(); i++) {
+    		if (i > 0) {                        
+                        if (Math.abs(hOTS.get(i - 1)._Z - hOTS.get(i)._Z)<0.01 && hOTS.get(i).isDCHit) {
+                            hOTS.get(i - 1)._doca[1] = hOTS.get(i)._doca[0];
+                            hOTS.get(i - 1)._Unc[1] = hOTS.get(i)._Unc[0];
+                            hOTS.get(i - 1)._wireLine[1] = hOTS.get(i)._wireLine[0];
+                            hOTS.remove(i);
+                            hOTS.get(i - 1).nMeas = 2;
+                        }                        
+    		}
+    	}                
 
         List<Surface> surfaces = new ArrayList<>(hOTS.size());
         
     	for (int i = 0; i < hOTS.size(); i++) {
             if(!hOTS.get(i).isDCHit){
-                Surface surf = new Surface(hOTS.get(i).sector, hOTS.get(i)._X, hOTS.get(i)._Z, hOTS.get(i)._X_err, hOTS.get(i).stereo);
+                Surface surf = new Surface(hOTS.get(i).sector, hOTS.get(i).layer, hOTS.get(i)._line, hOTS.get(i)._err, hOTS.get(i)._Z);
                 surf.region = 0;
-    		surf.setLayer(hOTS.get(i).layer);
+                surf.setNMeas(hOTS.get(i).nMeas);
                 surfaces.add(i, surf);
             }
             else{
@@ -744,17 +743,16 @@ public class DCURWellTBEngine extends DCEngine {
     	public int nMeas = 1;
 
         // For URWell 
-        public double _X_err;        
         public boolean isDCHit = true;
-        public double stereo;
+        public Line3D _line = new Line3D();
+        public double _err;        
 
-        public HitOnTrack(int sector, int layer, double X, double Z, double X_err, double stereo) {
+        public HitOnTrack(int sector, int layer, Line3D line, double err, double Z) {
                 this.sector = sector;
                 this.layer = layer;
-    		_X = X;
-    		_Z = Z;
-                _X_err = X_err;
-                this.stereo = stereo;
+                _line = line;
+                _err = err;
+                _Z = Z;
     	}
 
     	public HitOnTrack(int superlayer, double X, double Z, double wiremaxsag, Line3D wireLine) {

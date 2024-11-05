@@ -88,19 +88,10 @@ public class KFitterWithURWell extends AKFitter {
         this.numIter = 0;
         this.setFitFailed = false;
         mv.setMeasVecs(measSurfaces);
-        //System.out.println("start!!!!!");
         for (int i = 0; i < mv.measurements.size(); i++) {
             if (mv.measurements.get(i).skip == false) {
-                if(mv.measurements.get(i).surface.type == Type.LINEDOCA)
-                    this.NDF += mv.measurements.get(i).surface.getNMeas();
-                else if(mv.measurements.get(i).surface.type == Type.PLANEWITHPOINT){
-                    this.NDF++;
-                    //System.out.println(mv.measurements.get(i).layer + " " + mv.measurements.get(i).surface.measPoint.x() + "  " + 
-                            //mv.measurements.get(i).surface.measPoint.y() + "  " +  mv.measurements.get(i).surface.measPoint.z());
-                }
+                this.NDF += mv.measurements.get(i).surface.getNMeas();
             }
-            
-            
         }
 
         sv.init(initSV);
@@ -112,7 +103,7 @@ public class KFitterWithURWell extends AKFitter {
         else initFromHBNoDAF(measSurfaces, initSV, beta);
     }
 
-    public final void initFromHB(List<Surface> measSurfaces, StateVec initSV, double beta) {                       
+    public final void initFromHB(List<Surface> measSurfaces, StateVec initSV, double beta) { 
         finalSmoothedStateVec = null;
         finalTransportedStateVec = null;
         this.NDF = -5;
@@ -124,8 +115,8 @@ public class KFitterWithURWell extends AKFitter {
             if (mv.measurements.get(i).skip == false) {
                 if(mv.measurements.get(i).surface.type == Type.LINEDOCA)
                     this.NDF++;
-                else if(mv.measurements.get(i).surface.type == Type.PLANEWITHPOINT)
-                    this.NDF++;
+                else if(mv.measurements.get(i).surface.type == Type.PLANEWITHSTRIP)
+                    this.NDF += mv.measurements.get(i).surface.getNMeas();
             }
         }
 
@@ -147,8 +138,6 @@ public class KFitterWithURWell extends AKFitter {
             if (mv.measurements.get(i).skip == false) {
                 if(mv.measurements.get(i).surface.type == Type.LINEDOCA)
                     this.NDF += mv.measurements.get(i).surface.getNMeas();
-                else if(mv.measurements.get(i).surface.type == Type.PLANEWITHPOINT)
-                    this.NDF++;
             }
         }
 
@@ -230,7 +219,7 @@ public class KFitterWithURWell extends AKFitter {
                                 break;
                             }
                         }
-
+                        
                         if (!sv.transport(sector, k - 2, k - 1, this.sv.trackTrajB.get(k - 2), mv, this.getSwimmer(), forward)) {
                             this.stopIteration = true;
                             break;
@@ -754,67 +743,66 @@ public class KFitterWithURWell extends AKFitter {
                 }
             }
             
-            else if (mVec.surface.type == Type.PLANEWITHPOINT) {                                   
-                StateVec sVecPreviousFiltered = sv.filtered(!forward).get(k);
-                double daf_weight = 1;
-                if (sVecPreviousFiltered != null) {
-                    daf_weight = sVecPreviousFiltered.getWeightDAF_singleHit();
-                }
-                
-                double measVar = mVec.surface.measPoint_err.x() * mVec.surface.measPoint_err.x();
-                if(measVar == 0)
-                    LOGGER.log(Level.SEVERE, "Resolution for URWell is 0.");
-                DAFilter daf = new DAFilter(measVar, daf_weight);
-                daf.calc_effectiveMeasVar_uRWell();
+            else if (mVec.surface.type == Type.PLANEWITHSTRIP) {
+                    StateVec sVecPreviousFiltered = sv.filtered(!forward).get(k);
+                    double daf_weight = 1;
+                    if (sVecPreviousFiltered != null) {
+                        daf_weight = sVecPreviousFiltered.getWeightDAF_singleHit();
+                    }
 
-                double effectiveVar = daf.get_EffectiveVar_uRWell();
-                                                               
-                double[] K = new double[5];
-                double V = effectiveVar;
-                double[] H = mv.HURWell(mVec.surface.stereo);
-                Matrix CaInv = this.filterCovMat(H, sVec.CM, V);
-                Matrix cMat = new Matrix();
-                if (CaInv != null) {
-                    Matrix5x5.copy(CaInv, cMat);
-                } else {
-                    return false;
-                }
+                    double measVar = mVec.surface.getError() * mVec.surface.getError();
+                    if(measVar == 0)
+                        LOGGER.log(Level.SEVERE, "Resolution for URWell is 0.");
+                    DAFilter daf = new DAFilter(measVar, daf_weight);
+                    daf.calc_effectiveMeasVar_uRWell();
 
-                for (int j = 0; j < 5; j++) {
-                    // the gain matrix
-                    K[j] = (H[0] * cMat.get(j, 0)
-                            + H[1] * cMat.get(j, 1)) / V;
-                }                                
-  
-                double res = mv.dhURWell(sVec);                 
-                double filt[] = new double[5];
-                for(int j = 0; j < 5; j ++){
-                        filt[j] += K[j]*res;
-                }
-                
-                double c2 = res*res/V;                                
-                
-                chi2kf += c2;
-                if (filterOn) {
-                    StateVec filteredVec = sv.new StateVec(k);
-                    filteredVec.x = sVec.x + filt[0];
-                    filteredVec.y = sVec.y + filt[1];
-                    filteredVec.tx = sVec.tx + filt[2];
-                    filteredVec.ty = sVec.ty + filt[3];
-                    filteredVec.Q = sVec.Q +filt[4];
-                    filteredVec.z = sVec.z;
-                    filteredVec.B = sVec.B;
-                    filteredVec.deltaPath = sVec.deltaPath;
-                    filteredVec.CM = cMat;
-                    
-                    double residual = mVec.surface.measPoint.x();
-                    double updatedWeight_uRWell= daf.calc_updatedWeight_uRWell(residual, annealingFactor);  
-                    filteredVec.setWeightDAF_singleHit(updatedWeight_uRWell);
-                    
-                    sv.filtered(forward).put(k, filteredVec);                    
-                } else {
-                    return false;
-                }                                
+                    double effectiveVar = daf.get_EffectiveVar_uRWell();
+
+                    double[] K = new double[5];
+                    double V = effectiveVar;
+                    double[] H = mv.HURWell(sVec);
+                    Matrix CaInv = this.filterCovMat(H, sVec.CM, V);
+                    Matrix cMat = new Matrix();
+                    if (CaInv != null) {
+                        Matrix5x5.copy(CaInv, cMat);
+                    } else {
+                        return false;
+                    }
+
+                    for (int j = 0; j < 5; j++) {
+                        // the gain matrix
+                        K[j] = (H[0] * cMat.get(j, 0)
+                                + H[1] * cMat.get(j, 1)) / V;
+                    }                                
+
+                    double res = mv.dhURWell(sVec);                      
+                    double filt[] = new double[5];
+                    for(int j = 0; j < 5; j ++){
+                            filt[j] += K[j]*res;
+                    }
+
+                    double c2 = res*res/V;                                
+
+                    chi2kf += c2;
+                    if (filterOn) {
+                        StateVec filteredVec = sv.new StateVec(k);
+                        filteredVec.x = sVec.x + filt[0];
+                        filteredVec.y = sVec.y + filt[1];
+                        filteredVec.tx = sVec.tx + filt[2];
+                        filteredVec.ty = sVec.ty + filt[3];
+                        filteredVec.Q = sVec.Q +filt[4];
+                        filteredVec.z = sVec.z;
+                        filteredVec.B = sVec.B;
+                        filteredVec.deltaPath = sVec.deltaPath;
+                        filteredVec.CM = cMat;
+
+                        double residual = mv.dhURWell(filteredVec);  
+                        double updatedWeight_uRWell= daf.calc_updatedWeight_uRWell(residual, annealingFactor);  
+                        filteredVec.setWeightDAF_singleHit(updatedWeight_uRWell);                   
+                        sv.filtered(forward).put(k, filteredVec);                                               
+                    } else {
+                        return false;
+                    }                                               
             }
 
             return true;
@@ -942,15 +930,15 @@ public class KFitterWithURWell extends AKFitter {
                 }
             }
             
-            else if (mVec.surface.type == Type.PLANEWITHPOINT) {                                              
-                double V = mVec.surface.measPoint_err.x() * mVec.surface.measPoint_err.x();
+            else if (mVec.surface.type == Type.PLANEWITHSTRIP) {                                              
+                double V = mVec.surface.getError() * mVec.surface.getError();
                 
                 if(V == 0)
                     LOGGER.log(Level.SEVERE, "Resolution for URWell is 0.");
                 
                 
                 double[] K = new double[5];
-                double[] H = mv.HURWell(mVec.surface.stereo);
+                double[] H = mv.HURWell(sVec);
                 Matrix CaInv = this.filterCovMat(H, sVec.CM, V);
                 Matrix cMat = new Matrix();
                 if (CaInv != null) {
@@ -986,7 +974,7 @@ public class KFitterWithURWell extends AKFitter {
                     filteredVec.deltaPath = sVec.deltaPath;
 
                     filteredVec.CM = cMat;
-
+                    
                     sv.filtered(forward).put(k, filteredVec);
                     
                 } else {
@@ -1051,8 +1039,8 @@ public class KFitterWithURWell extends AKFitter {
             path += svc.deltaPath;
             svc.setPathLength(path);
             
-            if (mv.measurements.get(0).surface.type == Type.PLANEWITHPOINT) {                
-                double err = mv.measurements.get(0).surface.measPoint_err.x();
+            if (mv.measurements.get(0).surface.type == Type.PLANEWITHSTRIP) {                
+                double err = mv.measurements.get(0).surface.getError();
                 double res = mv.dhURWell(svc);               
                 chi2 += (res*res) / (err*err);                
                 kfStateVecURWell = svc;
@@ -1094,8 +1082,8 @@ public class KFitterWithURWell extends AKFitter {
                 path += svc.deltaPath;
                 svc.setPathLength(path);
 
-                if (mv.measurements.get(k1 + 1).surface.type == Type.PLANEWITHPOINT) {                
-                    double err = mv.measurements.get(k1 + 1).surface.measPoint_err.x();
+                if (mv.measurements.get(k1 + 1).surface.type == Type.PLANEWITHSTRIP) {                
+                    double err = mv.measurements.get(k1 + 1).surface.getError();
                     double res = mv.dhURWell(svc);               
                     chi2 += (res*res) / (err*err);
                     kfStateVecURWell = svc;
@@ -1157,14 +1145,14 @@ public class KFitterWithURWell extends AKFitter {
             path += svc.deltaPath;
             svc.setPathLength(path);
             
-            if(mv.measurements.get(0).surface.type == Type.PLANEWITHPOINT){
+            if(mv.measurements.get(0).surface.type == Type.PLANEWITHSTRIP){
                 StateVec sVecPreviousFiltered = sv.filtered(true).get(0);
                 double daf_weight = 1;
                 if (sVecPreviousFiltered != null) {
                     daf_weight = sVecPreviousFiltered.getWeightDAF_singleHit();
                 }
                 
-                double measVar = mv.measurements.get(0).surface.measPoint_err.x() * mv.measurements.get(0).surface.measPoint_err.x();
+                double measVar = mv.measurements.get(0).surface.getError() * mv.measurements.get(0).surface.getError();
                 DAFilter daf = new DAFilter(measVar, daf_weight);
                 daf.calc_effectiveMeasVar_uRWell();
                 double effectiveVar = daf.get_EffectiveVar_uRWell();
@@ -1250,14 +1238,14 @@ public class KFitterWithURWell extends AKFitter {
                 path += svc.deltaPath;
                 svc.setPathLength(path);
                                 
-                if(mv.measurements.get(k1 + 1).surface.type == Type.PLANEWITHPOINT){
+                if(mv.measurements.get(k1 + 1).surface.type == Type.PLANEWITHSTRIP){
                     StateVec sVecPreviousFiltered = sv.filtered(true).get(k1 + 1);
                     double daf_weight = 1;
                     if (sVecPreviousFiltered != null) {
                         daf_weight = sVecPreviousFiltered.getWeightDAF_singleHit();
                     }
 
-                    double measVar = mv.measurements.get(k1 + 1).surface.measPoint_err.x() * mv.measurements.get(k1 + 1).surface.measPoint_err.x();
+                    double measVar = mv.measurements.get(k1 + 1).surface.getError() * mv.measurements.get(k1 + 1).surface.getError();
                     DAFilter daf = new DAFilter(measVar, daf_weight);
                     daf.calc_effectiveMeasVar_uRWell();
                     double effectiveVar = daf.get_EffectiveVar_uRWell();
@@ -1394,11 +1382,11 @@ public class KFitterWithURWell extends AKFitter {
 
                 System.out.println(s);
             }
-            else if(measvec.surface.type == Type.PLANEWITHPOINT){
+            else if(measvec.surface.type == Type.PLANEWITHSTRIP){
                 String s = String.format("k=%d region=%d superlayer=%d layer=%d", measvec.k, measvec.region, measvec.superlayer,
                         measvec.layer);
                 s += String.format(" Surface: index=%d x=%.4f y=%.4f z=%.4f x_err=%.4f y_err=%.4f", measvec.surface.getIndex(),
-                        measvec.surface.measPoint.x(), measvec.surface.measPoint.y(), measvec.surface.measPoint.z(), measvec.surface.measPoint_err.x(), measvec.surface.measPoint_err.y());
+                        measvec.surface.measPoint.x(), measvec.surface.measPoint.y(), measvec.surface.measPoint.z(), measvec.surface.getError());
                 System.out.println(s);
             }
         }

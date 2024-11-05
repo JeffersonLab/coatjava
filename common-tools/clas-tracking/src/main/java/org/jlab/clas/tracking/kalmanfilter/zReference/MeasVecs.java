@@ -39,33 +39,33 @@ public class MeasVecs extends AMeasVecs {
         return hMatrix;
     }
     
-    public double[] HURWell(double stereo) {
+    public double[] HURWell(StateVec stateVec) {        
+        StateVecs sv = new StateVecs();
         double[] hMatrix = new double[5];
-        hMatrix[0] = Math.cos(Math.toRadians(stereo));
-        hMatrix[1] = Math.sin(Math.toRadians(stereo));
+        double Err = 0.01;
+        double[][] Result = new double[2][2];
+        for (int i = 0; i < 2; i++) {
+            StateVec svc = sv.new StateVec(stateVec.k);
+            svc.copy(stateVec);
+            svc.x = stateVec.x + (double) Math.pow(-1, i) * Err;
+            Result[i][0] = dhURWell(svc);
+        }
+        for (int i = 0; i < 2; i++) {
+            StateVec svc = sv.new StateVec(stateVec.k);
+            svc.copy(stateVec);
+            svc.y = stateVec.y + (double) Math.pow(-1, i) * Err;
+            Result[i][1] = dhURWell(svc);
+        }
+
+        hMatrix[0] = -(Result[0][0] - Result[1][0]) / (2. * Err); // Add negative sign since dh = meas - h; here use dh to replace h since meas is cancelled when derivative
+        hMatrix[1] = -(Result[0][1] - Result[1][1]) / (2. * Err); // Add negative sign since dh = meas - h; here use dh to replace h since meas is cancelled when derivative
         hMatrix[2] = 0;
         hMatrix[3] = 0;
         hMatrix[4] = 0;
-
+                
         return hMatrix;
-    }
+    }    
     
-    public double dhURWell(StateVec stateVec) {
-        double value = Double.NaN;
-        if (stateVec == null|| this.measurements.get(stateVec.k) == null) {
-            return value;
-        }
-        
-        double meas = this.measurements.get(stateVec.k).surface.measPoint.x();
-        double stereo = this.measurements.get(stateVec.k).surface.stereo;
-        double x = stateVec.x;
-        double y = stateVec.y;
-        double xx = Math.cos(Math.toRadians(stereo)) * x + Math.sin(Math.toRadians(stereo)) * y;  
-        value = meas - xx;
-        
-        return value;
-    }
-
     @Override
     public double[] H(AStateVecs.StateVec stateVec, AStateVecs sv, MeasVec mv, Swim swimmer) {
         throw new UnsupportedOperationException("Not supported yet.");
