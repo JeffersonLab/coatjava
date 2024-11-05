@@ -56,7 +56,7 @@ public class URWellReader{
 
     public List<URWellCross> getUrwellCrosses() {
         return urCrosses;
-    }    
+    } 
     
     public final void readHits(DataBank bank) {
 
@@ -113,12 +113,7 @@ public class URWellReader{
             cross.setClusterIndex1(cluster1);
             cross.setClusterIndex2(cluster2);
             cross.setCluster1(urClusters);
-            cross.setCluster2(urClusters);
-            
-            System.out.println("Layer: " + cross.getCluster1().layer() + "  " + cross.getCluster1().getLineLocal().origin().z() + "  " + cross.getCluster1().getLineLocal().end().z());
-            System.out.println("Layer: " + cross.getCluster2().layer() + "  " + cross.getCluster2().getLineLocal().origin().z() + "  " + cross.getCluster2().getLineLocal().end().z());
-            System.out.println();
-            
+            cross.setCluster2(urClusters);           
             if(cluster1<=urClusters.size()) urClusters.get(cluster1-1).setCrossIndex(i);
             if(cluster2<=urClusters.size()) urClusters.get(cluster2-1).setCrossIndex(i);           
             if(status == 0)            
