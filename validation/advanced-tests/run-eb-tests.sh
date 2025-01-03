@@ -1,4 +1,7 @@
 #!/bin/bash
+# WARNING:  coatjava must already be built at ../../coatjava/
+
+set -e
 
 # coatjava must already be built at ../../coatjava/
 # and input test data files at ./data
