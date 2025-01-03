@@ -30,7 +30,7 @@ public class PulseExtractorEngine extends ReconstructionEngine {
 	}
 
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
 
         // No CCDB table, hardcoded parameters in the extractor:
         //mode3.update(6, null, event, "BMT::wf", "BMT::adc");
@@ -49,5 +49,8 @@ public class PulseExtractorEngine extends ReconstructionEngine {
 
         return true;
     }
+
+    @Override
+    public void detectorChanged(int runNumber) {}
 
 }
