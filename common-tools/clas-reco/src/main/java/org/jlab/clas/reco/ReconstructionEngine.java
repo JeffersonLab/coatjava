@@ -361,7 +361,7 @@ public abstract class ReconstructionEngine implements Engine {
         return !this.ignoreInvalidRunNumbers || r>0;
     }
     
-    public void processDataEvent(DataEvent dataEvent) {
+    public final void processDataEvent(DataEvent dataEvent) {
         if (!this.wroteConfig) {
             this.wroteConfig = true;
             JsonUtils.extend(dataEvent, CONFIG_BANK_NAME, "json", this.generateConfig());
