@@ -65,8 +65,7 @@ function run_gemc () {
 
 for p in "${particles[@]}"
 do
-    [ -z ${multithread+} ] && args= || args=-m 
-    run_gemc -r $run -g $gemc -n $nevents -c $gcard -i $p.txt -o $p.hipo $args
+    run_gemc -r $run -g $gemc -n $nevents -c $gcard -i $p.txt -o $p.hipo
 done
 [ -z ${multithread+x} ] || wait
 
