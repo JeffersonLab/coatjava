@@ -185,6 +185,15 @@ public class AtofHit {
         return 1;
     }
     
+    public boolean barmatch(AtofHit hit2match)
+    {
+        if(this.getSector() != hit2match.getSector()) return false; //System.out.print("Two hits in different sectors \n");
+        else if(this.getLayer() != hit2match.getLayer()) return false; //System.out.print("Two hits in different layers \n");
+        else if(this.getComponent() != 10 || hit2match.getComponent() != 10) return false; //System.out.print("At least one hit is not in the bar \n");
+        else if(this.getOrder() == hit2match.getOrder()) return false; //System.out.print("Two hits in same SiPM \n");
+        else return true;
+    }
+    
     public AtofHit(int sector, int layer, int component, int order, int tdc, int tot, Detector atof) 
 	{
 		this.sector = sector;
@@ -200,7 +209,6 @@ public class AtofHit {
                 if(is_ok==1) is_ok = this.slc_to_xyz(atof);
 	}
 
-    
     /**
      * @param args the command line arguments
      */
