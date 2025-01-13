@@ -18,6 +18,7 @@ public class BarHit {
     private AtofHit hit_up, hit_down;
     private double x,y,z, time, energy;
     int sector, layer;
+    private boolean is_in_a_cluster;
     
     public AtofHit getHitUp() {
         return hit_up;
@@ -105,6 +106,19 @@ public class BarHit {
         this.layer = layer;
     }
     
+    public boolean getIs_in_a_cluster() {
+        return is_in_a_cluster;
+    }
+
+    public void setIs_in_a_cluster(boolean is_in_a_cluster) {
+        this.is_in_a_cluster = is_in_a_cluster;
+    }
+    
+    public double getPhi()
+    {
+        return Math.atan2(this.y, this.x);
+    }
+    
     public BarHit(AtofHit hit_down, AtofHit hit_up) 
 	{
             boolean hits_match = hit_down.barmatch(hit_up);
@@ -119,6 +133,10 @@ public class BarHit {
             this.computeZ(); 
             this.computeTime();
             this.computeEnergy();
+	}
+    
+    public BarHit() 
+	{
 	}
     
     /**

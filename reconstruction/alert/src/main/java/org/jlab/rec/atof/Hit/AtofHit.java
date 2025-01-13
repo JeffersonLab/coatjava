@@ -18,6 +18,7 @@ public class AtofHit {
     private int TDC, ToT;
     private double time, energy, x, y, z;
     private String type;
+    private boolean is_in_a_cluster;
 
     public int getSector() {
         return sector;
@@ -114,6 +115,14 @@ public class AtofHit {
     public void setType(String type) {
         this.type = type;
     }
+    
+    public boolean getIs_in_a_cluster() {
+        return is_in_a_cluster;
+    }
+
+    public void setIs_in_a_cluster(boolean is_in_a_cluster) {
+        this.is_in_a_cluster = is_in_a_cluster;
+    }
 
     public String makeType(){
         String type = "undefined";
@@ -194,6 +203,11 @@ public class AtofHit {
         else return true;
     }
     
+    public double getPhi()
+    {
+        return Math.atan2(this.y, this.x);
+    }
+    
     public AtofHit(int sector, int layer, int component, int order, int tdc, int tot, Detector atof) 
 	{
 		this.sector = sector;
@@ -202,11 +216,16 @@ public class AtofHit {
                 this.order = order;
 		this.TDC = tdc;
 		this.ToT = tot;
+                this.is_in_a_cluster = false;
                 
                 this.makeType();
                 int is_ok = this.TDC_to_time();
                 if(is_ok==1) is_ok = this.ToT_to_energy();
                 if(is_ok==1) is_ok = this.slc_to_xyz(atof);
+	}
+    
+    public AtofHit() 
+	{
 	}
 
     /**
