@@ -7,6 +7,10 @@ import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.hipo.HipoDataSource;
 import java.util.ArrayList;
+import java.util.List;
+import org.jlab.geom.prim.Point3D;
+import org.jlab.rec.atof.TrackMatch.TrackProjection;
+import org.jlab.rec.atof.TrackMatch.TrackProjector;
 
 /**
  *
@@ -19,6 +23,7 @@ public class BarHit {
     private double x,y,z, time, energy;
     int sector, layer;
     private boolean is_in_a_cluster;
+    private double path_length;
     
     public AtofHit getHitUp() {
         return hit_up;
@@ -114,10 +119,41 @@ public class BarHit {
         this.is_in_a_cluster = is_in_a_cluster;
     }
     
+    public double getpath_length() {
+        return path_length;
+    }
+
+    public void setpath_length(double path_length) {
+        this.path_length = path_length;
+    }
+    
     public double getPhi()
     {
         return Math.atan2(this.y, this.x);
     }
+    
+    public int compute_module_index(){
+        //Index ranging 0 to 60 for each wedge+bar module
+        return 4*this.sector + this.layer;
+    }
+    
+    public void MatchTrack(TrackProjector track_projector)
+    {
+        double sigma_phi = 10;
+        double sigma_z = 10;
+        List<TrackProjection> Projections = track_projector.getProjections();
+        for(int i_track = 0; i_track < Projections.size(); i_track++)
+            {
+                Point3D projection_point = Projections.get(i_track).get_BarIntersect();
+                if(Math.abs(this.getPhi() - projection_point.toVector3D().phi()) < sigma_phi) 
+                {
+                    if(Math.abs(this.getZ() - projection_point.z()) < sigma_z) 
+                    {
+                        this.setpath_length(Projections.get(i_track).get_BarPathLength());
+                    }
+                }   
+            }
+        }
     
     public BarHit(AtofHit hit_down, AtofHit hit_up) 
 	{

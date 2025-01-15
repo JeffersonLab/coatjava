@@ -13,6 +13,7 @@ public class AtofCluster {
     ArrayList<BarHit> bar_hits;
     ArrayList<AtofHit> wedge_hits;
     double x,y,z,time,energy;
+    double path_length;
     
     public ArrayList<BarHit> getBarHits() {
         return bar_hits;
@@ -70,6 +71,14 @@ public class AtofCluster {
         this.energy = energy;
     }
     
+    public double getpath_length() {
+        return path_length;
+    }
+
+    public void setpath_length(double path_length) {
+        this.path_length = path_length;
+    }
+    
     //Cluster coordinates and time are defined as the coordinates and time of the max energy hit
     //Can be changed later
     public void computeClusterProperties() {
@@ -100,6 +109,7 @@ public class AtofCluster {
             this.x = max_energy_hit.getX();
             this.y = max_energy_hit.getY();
             this.z = max_energy_hit.getZ();
+            this.path_length = max_energy_hit.getpath_length();
         }
         else
         {
@@ -107,8 +117,14 @@ public class AtofCluster {
             this.x = max_energy_barhit.getX();
             this.y = max_energy_barhit.getY();
             this.z = max_energy_barhit.getZ();
+            this.path_length = max_energy_barhit.getpath_length();
         }
         
+    }
+    
+    public double getPhi()
+    {
+        return Math.atan2(this.y, this.x);
     }
     
     public AtofCluster(ArrayList<BarHit> bar_hits, ArrayList<AtofHit> wedge_hits) 
