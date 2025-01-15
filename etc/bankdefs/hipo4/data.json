@@ -153,7 +153,11 @@
       { "name":"ADC"       , "type":"I", "info":"ADC maximum"},
       { "name":"time"      , "type":"F", "info":"time from pulse fit"},
       { "name":"ped"       , "type":"S", "info":"pedestal from pulse analysis"},
-      { "name":"windex"    , "type":"S", "info":"row index in waveform bank"}
+      { "name":"windex"    , "type":"S", "info":"row index in waveform bank"},
+      { "name":"integral"       , "type":"I", "info":"sum of ADC"},
+      { "name":"leadingEdgeTime"      , "type":"F", "info":"time at constant fraction amplitude"},
+      { "name":"timeOverThreshold"      , "type":"F", "info":"time over threshold at constant fraction amplitude"},
+      { "name":"constantFractionTime"      , "type":"F", "info":"time from constant fraction discriminator"}
     ]
   },
   {
