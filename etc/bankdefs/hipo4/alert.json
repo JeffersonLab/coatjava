@@ -8,19 +8,19 @@
                         {
                                 "name": "x_at_bar",
                                 "type": "F",
-                                "info": "x position at atof bar in mm"
+                                "info": "x position at atof bar (middle surface) in mm"
                         }, {
 			        "name": "y_at_bar",
                                 "type": "F",
-                                "info": "y position at atof bar in mm"
+                                "info": "y position at atof bar (middle surface) in mm"
                         }, {
                                 "name": "z_at_bar",
                                 "type": "F",
-                                "info": "z position at atof bar in mm"			    
+                                "info": "z position at atof bar (middle surface) in mm"			    
                         },{
                                 "name": "L_at_bar",
                                 "type": "F",
-                                "info": "path length at atof bar in mm" 
+                            "info": "path length at atof bar (inner surface) in mm" 
                         },{
                                 "name": "L_in_bar",
                                 "type": "F",
@@ -28,19 +28,19 @@
                         },{
                                 "name": "x_at_wedge",
                                 "type": "F",
-                                "info": "x position at atof wedge in mm"
+                            "info": "x position at atof wedge (middle surface) in mm"
                         }, {
                                 "name": "y_at_wedge",
                                 "type": "F",
-                                "info": "y position at atof wedge in mm"
+                                "info": "y position at atof wedge (middle surface) in mm"
                         }, {
                                 "name": "z_at_wedge",
                                 "type": "F",
-                                "info": "z position at atof wedge in mm"
+                                "info": "z position at atof wedge (middle surface) in mm"
                         },{
                                 "name": "L_at_wedge",
                                 "type": "F",
-                                "info": "path length at atof wedge in mm"
+                                "info": "path length at atof wedge (inner surface) in mm"
                         },{
                                 "name": "L_in_wedge",
                                 "type": "F",

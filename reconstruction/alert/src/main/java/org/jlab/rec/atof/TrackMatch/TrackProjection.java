@@ -4,7 +4,7 @@ import org.jlab.geom.prim.Point3D;
 
 /**
  * The {@code TrackProjection} class holds ahdc track information relevant for atof analysis
- * i.e projected to the middle surfaces of the bar and wedges
+ * i.e projected to the surfaces of the bar and wedges
  * @author pilleux
  */
 
@@ -22,13 +22,13 @@ public class TrackProjection {
     
     /** 
      * Path length of the track from the DOCA to the beam line 
-     * to the middle surface of the bar. 
+     * to the entrance surface of the bar. 
      */
     Float _BarPathLength; 
     
     /** 
      * Path length of the track from the DOCA to the beam line 
-     * to the middle surface of the wedges.
+     * to the entrance surface of the wedges.
      */
     Float _WedgePathLength; 
     
@@ -74,7 +74,7 @@ public class TrackProjection {
     }
 
     /**
-     * Gets the path length of the track from the DOCA to the beam line to the middle surface of the bar.
+     * Gets the path length of the track from the DOCA to the beam line to the inner surface of the bar.
      * 
      * @return {@code Float} path length to the bar's middle surface.
      */
@@ -83,7 +83,7 @@ public class TrackProjection {
     }
     
     /**
-     * Gets the path length of the track from the the middle surface of the bar
+     * Gets the path length of the track from the inner surface of the bar
      * to its middle surface.
      * 
      * @return {@code Float} path length inside the bar.
@@ -93,7 +93,7 @@ public class TrackProjection {
     }
 
     /**
-     * Gets the path length of the track from the DOCA to the beam line to the middle surface of the wedges.
+     * Gets the path length of the track from the DOCA to the beam line to the inner surface of the wedges.
      * 
      * @return {@code Float} path length to the wedge's middle surface.
      */
@@ -130,18 +130,18 @@ public class TrackProjection {
     }
 
     /**
-     * Sets the path length of the track from the DOCA to the beam line to the middle surface of the bar.
+     * Sets the path length of the track from the DOCA to the beam line to the inner surface of the bar.
      * 
-     * @param BarPathLength {@code Float} path length to the bar middle surface.
+     * @param BarPathLength {@code Float} path length to the bar inner surface.
      */
     public void set_BarPathLength(Float BarPathLength) {
         this._BarPathLength = BarPathLength;
     }
 
     /**
-     * Sets the path length of the track from the DOCA to the beam line to the middle surface of the wedges.
+     * Sets the path length of the track from the DOCA to the beam line to the inner surface of the wedges.
      * 
-     * @param WedgePathLength {@code Float} path length to the wedge middle surface.
+     * @param WedgePathLength {@code Float} path length to the wedge inner surface.
      */
     public void set_WedgePathLength(Float WedgePathLength) {
         this._WedgePathLength = WedgePathLength;

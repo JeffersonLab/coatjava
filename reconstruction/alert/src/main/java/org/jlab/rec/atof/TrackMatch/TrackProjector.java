@@ -139,12 +139,12 @@ public class TrackProjector {
                 projection.set_WedgeIntersect(helix.getHelixPointAtR(wedge_middle_radius));
 
                 //Path length to the middle of the bar or wedge
-                projection.set_BarPathLength((float) helix.getLAtR(bar_middle_radius));
-                projection.set_WedgePathLength((float) helix.getLAtR(wedge_middle_radius));
+                projection.set_BarPathLength((float) helix.getLAtR(bar_innerradius));
+                projection.set_WedgePathLength((float) helix.getLAtR(wedge_innerradius));
                 
                 //Path length from the inner radius to the middle radius
-                projection.set_BarInPathLength(projection.get_BarPathLength() - (float) helix.getLAtR(bar_innerradius));
-                projection.set_WedgeInPathLength(projection.get_WedgePathLength() - (float) helix.getLAtR(wedge_innerradius));
+                projection.set_BarInPathLength((float) helix.getLAtR(bar_middle_radius) - projection.get_BarPathLength());
+                projection.set_WedgeInPathLength((float) helix.getLAtR(wedge_middle_radius) - projection.get_WedgePathLength());
 
                 Projections.add(projection);
                 fill_out_bank(outputBank, projection, i);
