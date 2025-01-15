@@ -1,5 +1,45 @@
 [
 	{
+                "name": "AHDC::Projections",
+                "group": 23000,
+                "item": 31,
+                "info": "Track Projections to ATOF",
+            "entries": [		
+                        {
+                                "name": "x_at_bar",
+                                "type": "F",
+                                "info": "x position at atof bar in mm"
+                        }, {
+			        "name": "y_at_bar",
+                                "type": "F",
+                                "info": "y position at atof bar in mm"
+                        }, {
+                                "name": "z_at_bar",
+                                "type": "F",
+                                "info": "z position at atof bar in mm"			    
+                        },{
+                                "name": "L_at_bar",
+                                "type": "F",
+                                "info": "path length at atof bar in mm" 
+                        },{
+                                "name": "x_at_wedge",
+                                "type": "F",
+                                "info": "x position at atof wedge in mm"
+                        }, {
+                                "name": "y_at_wedge",
+                                "type": "F",
+                                "info": "y position at atof wedge in mm"
+                        }, {
+                                "name": "z_at_wedge",
+                                "type": "F",
+                                "info": "z position at atof wedge in mm"
+                        },{
+                                "name": "L_at_wedge",
+                                "type": "F",
+                                "info": "path length at atof wedge in mm"
+                        }
+                ]
+        },{
 		"name": "AHDC::Hits",
 		"group": 23000,
 		"item": 23,
