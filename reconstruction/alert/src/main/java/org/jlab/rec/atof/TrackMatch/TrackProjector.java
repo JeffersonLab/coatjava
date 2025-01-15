@@ -95,20 +95,23 @@ public class TrackProjector {
     public void ProjectTracks(DataEvent event) {//, CalibrationConstantsLoader ccdb) {
 
         Projections.clear();
-
+        //All of these are in MM
         double bar_innerradius = 77; //NEEDS TO BE REPLACED WITH DB CONSTANTS something like ccdb.INNERRADIUS[0]
         double wedge_innerradius = 80;
-
+        double bar_thickness = 3;
+        double wedge_thickness = 20;
+        double bar_middle_radius = bar_innerradius + bar_thickness/2;
+        double wedge_middle_radius = wedge_innerradius + wedge_thickness/2;   
+        
         String track_bank_name = "AHDC::Track";
 
         if (event == null) { // check if there is an event
-            //System.out.print(" no event");
+            //System.out.print(" no event \n");
         } else if (event.hasBank(track_bank_name) == false) {
             // check if there are ahdc tracks in the event
-            //System.out.print("no tracks");
+            //System.out.print("no tracks \n");
         } else {
             DataBank bank = event.getBank(track_bank_name);
-
             int nt = bank.rows(); // number of tracks 
             TrackProjection projection = new TrackProjection();
             DataBank outputBank = event.createBank("AHDC::Projections", nt);
@@ -131,11 +134,17 @@ public class TrackProjector {
 
                 Helix helix = new Helix(x, y, z, px, py, pz, q, B, xb, yb, units);
 
-                projection.set_BarIntersect(helix.getHelixPointAtR(bar_innerradius));
-                projection.set_WedgeIntersect(helix.getHelixPointAtR(wedge_innerradius));
+                //Intersection points with the middle of the bar or wedge
+                projection.set_BarIntersect(helix.getHelixPointAtR(bar_middle_radius));
+                projection.set_WedgeIntersect(helix.getHelixPointAtR(wedge_middle_radius));
 
-                projection.set_BarPathLength((float) helix.getLAtR(bar_innerradius));
-                projection.set_WedgePathLength((float) helix.getLAtR(wedge_innerradius));
+                //Path length to the middle of the bar or wedge
+                projection.set_BarPathLength((float) helix.getLAtR(bar_middle_radius));
+                projection.set_WedgePathLength((float) helix.getLAtR(wedge_middle_radius));
+                
+                //Path length from the inner radius to the middle radius
+                projection.set_BarInPathLength(projection.get_BarPathLength() - (float) helix.getLAtR(bar_innerradius));
+                projection.set_WedgeInPathLength(projection.get_WedgePathLength() - (float) helix.getLAtR(wedge_innerradius));
 
                 Projections.add(projection);
                 fill_out_bank(outputBank, projection, i);
@@ -149,10 +158,12 @@ public class TrackProjector {
         outputBank.setFloat("y_at_bar", i, (float) projection.get_BarIntersect().y());
         outputBank.setFloat("z_at_bar", i, (float) projection.get_BarIntersect().z());
         outputBank.setFloat("L_at_bar", i, (float) projection.get_BarPathLength());
+        outputBank.setFloat("L_in_bar", i, (float) projection.get_BarInPathLength());
         outputBank.setFloat("x_at_wedge", i, (float) projection.get_WedgeIntersect().x());
         outputBank.setFloat("y_at_wedge", i, (float) projection.get_WedgeIntersect().y());
         outputBank.setFloat("z_at_wedge", i, (float) projection.get_WedgeIntersect().z());
         outputBank.setFloat("L_at_wedge", i, (float) projection.get_WedgePathLength());
+        outputBank.setFloat("L_in_wedge", i, (float) projection.get_WedgeInPathLength());
     }
 
     public static void main(String arg[]) {
@@ -178,17 +189,16 @@ public class TrackProjector {
         projector.setB(B);
         
         //Input to be read
-        String input = "/Users/npilleux/Desktop/alert/atof-reconstruction/coatjava/test_updated_2.hipo";
+        String input = "/Users/npilleux/Desktop/alert/atof-reconstruction/coatjava/reconstruction/alert/src/main/java/org/jlab/rec/atof/Hit/update_protons_to_test_with_tracks.hipo";
         HipoDataSource reader = new HipoDataSource();
         reader.open(input);
-
         int event_number = 0;
         while (reader.hasEvent()) {
             DataEvent event = (DataEvent) reader.getNextEvent();
             event_number++;
 
             projector.ProjectTracks(event);
-            //event.getBank("AHDC::Projections").show();
+            event.getBank("AHDC::Projections").show();
         }
 
         System.out.print("Read " + event_number + " events");

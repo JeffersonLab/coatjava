@@ -22,6 +22,10 @@
                                 "type": "F",
                                 "info": "path length at atof bar in mm" 
                         },{
+                                "name": "L_in_bar",
+                                "type": "F",
+                                "info": "path length inside atof bar in mm"
+                        },{
                                 "name": "x_at_wedge",
                                 "type": "F",
                                 "info": "x position at atof wedge in mm"
@@ -37,6 +41,10 @@
                                 "name": "L_at_wedge",
                                 "type": "F",
                                 "info": "path length at atof wedge in mm"
+                        },{
+                                "name": "L_in_wedge",
+                                "type": "F",
+                                "info": "path length inside atof wedge in mm"
                         }
                 ]
         },{
