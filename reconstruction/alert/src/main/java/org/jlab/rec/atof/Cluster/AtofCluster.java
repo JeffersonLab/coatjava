@@ -1,8 +1,8 @@
-package org.jlab.rec.atof.Cluster;
+package org.jlab.rec.atof.cluster;
 
 import java.util.ArrayList;
-import org.jlab.rec.atof.Hit.AtofHit;
-import org.jlab.rec.atof.Hit.BarHit;
+import org.jlab.rec.atof.hit.AtofHit;
+import org.jlab.rec.atof.hit.BarHit;
 
 /**
  *
@@ -71,17 +71,17 @@ public class AtofCluster {
         this.energy = energy;
     }
     
-    public double getpath_length() {
+    public double getPath_length() {
         return path_length;
     }
 
-    public void setpath_length(double path_length) {
+    public void setPath_length(double path_length) {
         this.path_length = path_length;
     }
     
     //Cluster coordinates and time are defined as the coordinates and time of the max energy hit
     //Can be changed later
-    public void computeClusterProperties() {
+    public final void computeClusterProperties() {
         this.energy=0;
         double max_energy = -1;
         AtofHit max_energy_hit = new AtofHit();
@@ -109,7 +109,7 @@ public class AtofCluster {
             this.x = max_energy_hit.getX();
             this.y = max_energy_hit.getY();
             this.z = max_energy_hit.getZ();
-            this.path_length = max_energy_hit.getpath_length();
+            this.path_length = max_energy_hit.getPath_length();
         }
         else
         {
@@ -117,7 +117,7 @@ public class AtofCluster {
             this.x = max_energy_barhit.getX();
             this.y = max_energy_barhit.getY();
             this.z = max_energy_barhit.getZ();
-            this.path_length = max_energy_barhit.getpath_length();
+            this.path_length = max_energy_barhit.getPath_length();
         }
         
     }

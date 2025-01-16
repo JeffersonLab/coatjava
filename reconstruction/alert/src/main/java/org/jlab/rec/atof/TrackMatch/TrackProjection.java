@@ -1,4 +1,4 @@
-package org.jlab.rec.atof.TrackMatch;
+package org.jlab.rec.atof.trackMatch;
 
 import org.jlab.geom.prim.Point3D;
 

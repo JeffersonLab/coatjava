@@ -1,4 +1,4 @@
-package org.jlab.rec.atof.Hit;
+package org.jlab.rec.atof.hit;
 
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.geom.base.Detector;
@@ -9,8 +9,8 @@ import org.jlab.io.hipo.HipoDataSource;
 import java.util.ArrayList;
 import java.util.List;
 import org.jlab.geom.prim.Point3D;
-import org.jlab.rec.atof.TrackMatch.TrackProjection;
-import org.jlab.rec.atof.TrackMatch.TrackProjector;
+import org.jlab.rec.atof.trackMatch.TrackProjection;
+import org.jlab.rec.atof.trackMatch.TrackProjector;
 
 /**
  *
@@ -119,11 +119,11 @@ public class BarHit {
         this.is_in_a_cluster = is_in_a_cluster;
     }
     
-    public double getpath_length() {
+    public double getPath_length() {
         return path_length;
     }
 
-    public void setpath_length(double path_length) {
+    public void setPath_length(double path_length) {
         this.path_length = path_length;
     }
     
@@ -132,12 +132,12 @@ public class BarHit {
         return Math.atan2(this.y, this.x);
     }
     
-    public int compute_module_index(){
+    public int computeModule_index(){
         //Index ranging 0 to 60 for each wedge+bar module
         return 4*this.sector + this.layer;
     }
     
-    public void MatchTrack(TrackProjector track_projector)
+    public void matchTrack(TrackProjector track_projector)
     {
         double sigma_phi = 10;
         double sigma_z = 10;
@@ -149,7 +149,7 @@ public class BarHit {
                 {
                     if(Math.abs(this.getZ() - projection_point.z()) < sigma_z) 
                     {
-                        this.setpath_length(Projections.get(i_track).get_BarPathLength());
+                        this.setPath_length(Projections.get(i_track).get_BarPathLength());
                     }
                 }   
             }
@@ -157,7 +157,7 @@ public class BarHit {
     
     public BarHit(AtofHit hit_down, AtofHit hit_up) 
 	{
-            boolean hits_match = hit_down.barmatch(hit_up);
+            boolean hits_match = hit_down.matchBar(hit_up);
             if(!hits_match) throw new UnsupportedOperationException("Hits do not match \n");
             
             this.hit_up = hit_up;
@@ -221,7 +221,7 @@ public class BarHit {
                 for(int i_down=0; i_down<hit_down.size();i_down++)
                 {
                    AtofHit this_hit_down = hit_down.get(i_down); 
-                   if(this_hit_up.barmatch(this_hit_down)) 
+                   if(this_hit_up.matchBar(this_hit_down)) 
                    {
                        BarHit this_bar_hit = new BarHit(this_hit_up, this_hit_down);
                        bar_hits.add(this_bar_hit);

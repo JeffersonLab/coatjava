@@ -1,4 +1,4 @@
-package org.jlab.rec.atof.Cluster;
+package org.jlab.rec.atof.cluster;
 
 import cnuphys.magfield.MagneticFields;
 import java.util.ArrayList;
@@ -8,10 +8,10 @@ import org.jlab.geom.base.Detector;
 import org.jlab.geom.detector.alert.ATOF.AlertTOFFactory;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.hipo.HipoDataSource;
-import org.jlab.rec.atof.Hit.AtofHit;
-import org.jlab.rec.atof.Hit.BarHit;
-import org.jlab.rec.atof.Hit.HitFinder;
-import org.jlab.rec.atof.TrackMatch.TrackProjector;
+import org.jlab.rec.atof.hit.AtofHit;
+import org.jlab.rec.atof.hit.BarHit;
+import org.jlab.rec.atof.hit.HitFinder;
+import org.jlab.rec.atof.trackMatch.TrackProjector;
 import org.jlab.utils.CLASResources;
 
 /**
@@ -71,7 +71,7 @@ public class ClusterFinder {
                 }
                 //Check the distance between the hits
                 //For now we use phi module and z component differences from what is observed in simu
-                int delta_module = Math.abs(this_wedge_hit.compute_module_index() - other_wedge_hit.compute_module_index());
+                int delta_module = Math.abs(this_wedge_hit.computeModule_index() - other_wedge_hit.computeModule_index());
                 if (delta_module > 30) {
                     delta_module = 60 - delta_module;
                 }
@@ -103,7 +103,7 @@ public class ClusterFinder {
                 }
                 //Check the distance between the hits
                 //For now we use phi module difference from what is observed in simu
-                int delta_module = Math.abs(this_wedge_hit.compute_module_index() - other_bar_hit.compute_module_index());
+                int delta_module = Math.abs(this_wedge_hit.computeModule_index() - other_bar_hit.computeModule_index());
                 if (delta_module > 30) {
                     delta_module = 60 - delta_module;
                 }
@@ -152,7 +152,7 @@ public class ClusterFinder {
                 
                 //Check the distance between the hits
                 //For now we use phi module difference from what is observed in simu
-                int delta_module = Math.abs(this_bar_hit.compute_module_index() - other_bar_hit.compute_module_index());
+                int delta_module = Math.abs(this_bar_hit.computeModule_index() - other_bar_hit.computeModule_index());
                 if (delta_module > 30) {
                     delta_module = 60 - delta_module;
                 }

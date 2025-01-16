@@ -1,4 +1,4 @@
-package org.jlab.rec.atof.Hit;
+package org.jlab.rec.atof.hit;
 
 import java.util.List;
 import org.jlab.geom.base.*;
@@ -8,21 +8,18 @@ import org.jlab.geom.prim.Point3D;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.hipo.HipoDataSource;
-import org.jlab.rec.atof.TrackMatch.TrackProjection;
-import org.jlab.rec.atof.TrackMatch.TrackProjector;
+import org.jlab.rec.atof.trackMatch.TrackProjection;
+import org.jlab.rec.atof.trackMatch.TrackProjector;
 
 /**
- * 
- * Represents a hit in the atof.
- * Stores info about the sector, layer, component, order, TDC, ToT.
- * Type is wedge/bar up/bar down
- * Spatial coordinates are computed from atof detector object using the geometry service
- * Stores whether the hit is part of a cluster. 
- * Calculates time, energy based on TDC/ToT.
- * 
+ *
+ * Represents a hit in the atof. Stores info about the sector, layer, component,
+ * order, TDC, ToT. Type is wedge/bar up/bar down Spatial coordinates are
+ * computed from atof detector object using the geometry service Stores whether
+ * the hit is part of a cluster. Calculates time, energy based on TDC/ToT.
+ *
  * @author npilleux
  */
-
 public class AtofHit {
 
     private int sector, layer, component, order;
@@ -30,7 +27,7 @@ public class AtofHit {
     private double time, energy, x, y, z;
     private String type;
     private boolean is_in_a_cluster;
-    private double path_length;
+    private double path_length, inpath_length;
 
     public int getSector() {
         return sector;
@@ -136,17 +133,25 @@ public class AtofHit {
         this.is_in_a_cluster = is_in_a_cluster;
     }
 
-    public double getpath_length() {
+    public double getPath_length() {
         return path_length;
     }
 
-    public void setpath_length(double path_length) {
+    public void setPath_length(double path_length) {
         this.path_length = path_length;
     }
-    
-    public int compute_module_index(){
+
+    public double getInpath_length() {
+        return inpath_length;
+    }
+
+    public void setInpath_length(double inpath_length) {
+        this.inpath_length = inpath_length;
+    }
+
+    public int computeModule_index() {
         //Index ranging 0 to 60 for each wedge+bar module
-        return 4*this.sector + this.layer;
+        return 4 * this.sector + this.layer;
     }
 
     public final String makeType() {
@@ -164,50 +169,65 @@ public class AtofHit {
 
     public final int TDC_to_time() {
         double some_conversion = 0;
+        double veff = 1;
         if (null == this.type) {
             return 1;
         } else {
             switch (this.type) {
-                case "wedge" ->
+                case "wedge" -> {
                     some_conversion = 10;//read calib constants here
-                case "bar up" ->
-                    some_conversion = 10;
-                case "bar down" ->
-                    some_conversion = 10;
+                    veff = 1;
+                }
+                case "bar up" -> {
+                    some_conversion = 10;//read calib constants here
+                    veff = 1;
+                }
+                case "bar down" -> {
+                    some_conversion = 10;//read calib constants here
+                    veff = 1;
+                }
                 default -> {
                     return 1;
                 }
             }
         }
-        this.time = some_conversion * this.TDC;
+        //Time at the inner surface
+        this.time = some_conversion * this.TDC - this.inpath_length / veff;
         return 0;
     }
 
     public final int ToT_to_energy() {
         double some_conversion = 0;
+        double att_L = 1;
         if (null == this.type) {
             return 1;
         } else {
             switch (this.type) {
-                case "wedge" ->
+                case "wedge" -> {
                     some_conversion = 10;//read calib constants here
-                case "bar up" ->
-                    some_conversion = 10;
-                case "bar down" ->
-                    some_conversion = 10;
+                    att_L = 10;
+                }
+                case "bar up" -> {
+                    some_conversion = 10;//read calib constants here
+                    att_L = 10;
+                }
+                case "bar down" -> {
+                    some_conversion = 10;//read calib constants here
+                    att_L = 10;
+                }
                 default -> {
                     return 1;
                 }
             }
         }
-        this.energy = some_conversion * this.ToT;
+        this.energy = some_conversion * this.ToT * Math.exp(this.inpath_length / att_L);
         return 0;
     }
 
     /**
-     * Calculates spatial coordinates for the hit based on associated 
-     * detector component. Retrieves the midpoint of the atof component 
-     * to assign the corresponding x, y, z coordinates to the hit.
+     * Calculates spatial coordinates for the hit based on associated detector
+     * component. Retrieves the midpoint of the atof component to assign the
+     * corresponding x, y, z coordinates to the hit.
      *
      *
      * @param atof The Detector object representing the atof.
@@ -229,7 +249,6 @@ public class AtofHit {
                 }
             }
         }
-
         Component comp = atof.getSector(this.sector).getSuperlayer(sl).getLayer(this.layer).getComponent(this.component);
         Point3D midpoint = comp.getMidpoint();
         this.x = midpoint.x();
@@ -254,7 +273,7 @@ public class AtofHit {
      * @param hit2match The AtofHit object to compare with the current instance.
      * @return {@code true} if the hits match; {@code false} otherwise.
      */
-    public boolean barmatch(AtofHit hit2match) {
+    public boolean matchBar(AtofHit hit2match) {
         if (this.getSector() != hit2match.getSector()) {
             return false; //System.out.print("Two hits in different sectors \n");
         } else if (this.getLayer() != hit2match.getLayer()) {
@@ -285,7 +304,7 @@ public class AtofHit {
      * @param component The component within the layer that registered the hit.
      * @param order Order of the hit.
      * @param tdc TDC value.
-     * @param tot ToT velue.
+     * @param tot ToT value.
      * @param atof Detector object representing the atof, used to calculate
      * spatial coordinates.
      */
@@ -309,6 +328,41 @@ public class AtofHit {
     }
 
     /**
+     * Constructor for a fit in the atof. Initializes the hit's sector, layer,
+     * component, order, TDC, ToT. Sets the hit's initial state regarding
+     * clustering. Set up the hit's type, time, energy, and spatial coordinates.
+     *
+     * @param sector The sector of the detector where the hit occurred.
+     * @param layer The layer of the detector where the hit was detected.
+     * @param component The component within the layer that registered the hit.
+     * @param order Order of the hit.
+     * @param tdc TDC value.
+     * @param tot ToT value.
+     * @param atof Detector object representing the atof, used to calculate
+     * @param track_projector TrackProjector object with ahdc tracks to be
+     * matched to the hit.
+     */
+    public AtofHit(int sector, int layer, int component, int order, int tdc, int tot, Detector atof, TrackProjector track_projector) {
+        this.sector = sector;
+        this.layer = layer;
+        this.component = component;
+        this.order = order;
+        this.TDC = tdc;
+        this.ToT = tot;
+        this.is_in_a_cluster = false;
+
+        //First the type needs to be set
+        this.makeType();
+        //From it the coordinates can be computed
+        this.slc_to_xyz(atof);
+        //From them tracks can be matched
+        this.matchTrack(track_projector);
+        //And energy and time can then be computed
+        this.ToT_to_energy();
+        this.TDC_to_time();
+    }
+
+    /**
      * Matches the current track with ahdc tracks projections. Calculates the
      * match by comparing the hit's azimuthal angle and longitudinal position
      * (z) with the track projection. If a match is found within defined
@@ -318,7 +372,7 @@ public class AtofHit {
      * TrackProjections.
      *
      */
-    public void MatchTrack(TrackProjector track_projector) {
+    public final void matchTrack(TrackProjector track_projector) {
         double sigma_phi = 10;
         double sigma_z = 10;
         List<TrackProjection> Projections = track_projector.getProjections();
@@ -340,9 +394,9 @@ public class AtofHit {
             if (Math.abs(this.getPhi() - projection_point.toVector3D().phi()) < sigma_phi) {
                 if (Math.abs(this.getZ() - projection_point.z()) < sigma_z) {
                     if ("wedge".equals(this.getType())) {
-                        this.setpath_length(Projections.get(i_track).get_WedgePathLength());
+                        this.setPath_length(Projections.get(i_track).get_WedgePathLength());
                     } else {
-                        this.setpath_length(Projections.get(i_track).get_BarPathLength());
+                        this.setPath_length(Projections.get(i_track).get_BarPathLength());
                     }
                 }
             }

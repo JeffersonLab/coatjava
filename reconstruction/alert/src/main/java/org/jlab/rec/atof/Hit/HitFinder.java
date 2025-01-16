@@ -1,4 +1,4 @@
-package org.jlab.rec.atof.Hit;
+package org.jlab.rec.atof.hit;
 
 import cnuphys.magfield.MagneticFields;
 import java.util.ArrayList;
@@ -10,7 +10,7 @@ import org.jlab.geom.detector.alert.ATOF.AlertTOFFactory;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.hipo.HipoDataSource;
-import org.jlab.rec.atof.TrackMatch.TrackProjector;
+import org.jlab.rec.atof.trackMatch.TrackProjector;
 import org.jlab.utils.CLASResources;
 /**
  *
@@ -75,7 +75,7 @@ public class HitFinder {
                 else switch (hit.getType()) {
                     case "bar up" -> hit_up.add(hit);
                     case "bar down" -> hit_down.add(hit);
-                    case "wedge" -> {hit.MatchTrack(track_projector); this.wedge_hits.add(hit);}
+                    case "wedge" -> {hit.matchTrack(track_projector); this.wedge_hits.add(hit);}
                     default -> System.out.print("Undefined hit type \n");
                 }
             }//End loop through all hits
@@ -89,11 +89,11 @@ public class HitFinder {
                 {
                    AtofHit this_hit_down = hit_down.get(i_down); 
                    //Matching the hits: if same module and different order, they make up a bar hit
-                   if(this_hit_up.barmatch(this_hit_down)) 
+                   if(this_hit_up.matchBar(this_hit_down)) 
                    {
                        //Bar hits are matched to ahdc tracks and listed
                        BarHit this_bar_hit = new BarHit(this_hit_up, this_hit_down);
-                       this_bar_hit.MatchTrack(track_projector);
+                       this_bar_hit.matchTrack(track_projector);
                        this.bar_hits.add(this_bar_hit);
                    }
                 }

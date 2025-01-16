@@ -1,4 +1,4 @@
-package org.jlab.rec.atof.TrackMatch;
+package org.jlab.rec.atof.trackMatch;
 
 import java.util.ArrayList;
 import java.util.List;
