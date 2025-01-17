@@ -11,6 +11,7 @@ import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.utils.CLASResources;
 import cnuphys.magfield.MagneticFields;
+import org.jlab.rec.atof.constants.Parameters;
 
 /**
  * The {@code TrackProjector} class projects ahdc tracks to the inner surfaces
@@ -95,13 +96,6 @@ public class TrackProjector {
     public void ProjectTracks(DataEvent event) {//, CalibrationConstantsLoader ccdb) {
 
         Projections.clear();
-        //All of these are in MM
-        double bar_innerradius = 77; //NEEDS TO BE REPLACED WITH DB CONSTANTS something like ccdb.INNERRADIUS[0]
-        double wedge_innerradius = 80;
-        double bar_thickness = 3;
-        double wedge_thickness = 20;
-        double bar_middle_radius = bar_innerradius + bar_thickness/2;
-        double wedge_middle_radius = wedge_innerradius + wedge_thickness/2;   
         
         String track_bank_name = "AHDC::Track";
 
@@ -125,27 +119,91 @@ public class TrackProjector {
                 double py = bank.getFloat("py", i);
                 double pz = bank.getFloat("pz", i);
 
-                int q = 1; //this has to be changed, we need the charge info from tracking
+                int q = 1; //need the charge sign from tracking
 
                 Units units = Units.MM; //can be MM or CM. 
 
                 double xb = 0;
                 double yb = 0;
 
+                //momenta must be in GeV for the helix class
+                Helix helix = new Helix(x, y, z, px/1000., py/1000., pz/1000., q, B, xb, yb, units);
+
+                //Intersection points with the middle of the bar or wedge
+                projection.set_BarIntersect(helix.getHelixPointAtR(Parameters.BAR_MIDDLE_RADIUS));
+                projection.set_WedgeIntersect(helix.getHelixPointAtR(Parameters.WEDGE_MIDDLE_RADIUS));
+
+                //Path length to the middle of the bar or wedge
+                projection.set_BarPathLength((float) Math.abs(helix.getLAtR(Parameters.BAR_INNER_RADIUS)));
+                projection.set_WedgePathLength((float) Math.abs(helix.getLAtR(Parameters.WEDGE_INNER_RADIUS)));
+                
+                //Path length from the inner radius to the middle radius
+                projection.set_BarInPathLength((float) Math.abs(helix.getLAtR(Parameters.BAR_MIDDLE_RADIUS)) - projection.get_BarPathLength());
+                projection.set_WedgeInPathLength((float) Math.abs(helix.getLAtR(Parameters.WEDGE_MIDDLE_RADIUS)) - projection.get_WedgePathLength());
+                Projections.add(projection);
+                fill_out_bank(outputBank, projection, i);
+            }
+            event.appendBank(outputBank);
+        }
+    }
+    
+    /**
+     * Projects the MC particles onto the atof using a {@link Helix}
+     * model.
+     *
+     * @param event the {@link DataEvent} containing track data to be projected.
+     */
+    public void projectMCTracks(DataEvent event) {//, CalibrationConstantsLoader ccdb) {
+
+        Projections.clear();
+                
+        String track_bank_name = "MC::Particle";
+
+        if (event == null) { // check if there is an event
+            //System.out.print(" no event \n");
+        } else if (event.hasBank(track_bank_name) == false) {
+            // check if there are ahdc tracks in the event
+            //System.out.print("no tracks \n");
+        } else {
+            DataBank bank = event.getBank(track_bank_name);
+            int nt = bank.rows(); // number of tracks 
+            TrackProjection projection = new TrackProjection();
+            DataBank outputBank = event.createBank("AHDC::Projections", nt);
+
+            for (int i = 0; i < nt; i++) {
+
+                double x = bank.getFloat("vx", i);
+                double y = bank.getFloat("vy", i);
+                double z = bank.getFloat("vz", i);
+                double px = bank.getFloat("px", i);
+                double py = bank.getFloat("py", i);
+                double pz = bank.getFloat("pz", i);
+                
+                //Put everything in MM
+                x = x*10;
+                y = y*10;
+                z = z*10;
+                Units units = Units.MM;   
+                
+                int q = 1; //need the charge sign from tracking
+
+                double xb = 0;
+                double yb = 0;
+
+                //momenta must be in GeV for the helix class
                 Helix helix = new Helix(x, y, z, px, py, pz, q, B, xb, yb, units);
 
                 //Intersection points with the middle of the bar or wedge
-                projection.set_BarIntersect(helix.getHelixPointAtR(bar_middle_radius));
-                projection.set_WedgeIntersect(helix.getHelixPointAtR(wedge_middle_radius));
+                projection.set_BarIntersect(helix.getHelixPointAtR(Parameters.BAR_MIDDLE_RADIUS));
+                projection.set_WedgeIntersect(helix.getHelixPointAtR(Parameters.WEDGE_MIDDLE_RADIUS));
 
                 //Path length to the middle of the bar or wedge
-                projection.set_BarPathLength((float) helix.getLAtR(bar_innerradius));
-                projection.set_WedgePathLength((float) helix.getLAtR(wedge_innerradius));
+                projection.set_BarPathLength((float) Math.abs(helix.getLAtR(Parameters.BAR_INNER_RADIUS)));
+                projection.set_WedgePathLength((float) Math.abs(helix.getLAtR(Parameters.WEDGE_INNER_RADIUS)));
                 
                 //Path length from the inner radius to the middle radius
-                projection.set_BarInPathLength((float) helix.getLAtR(bar_middle_radius) - projection.get_BarPathLength());
-                projection.set_WedgeInPathLength((float) helix.getLAtR(wedge_middle_radius) - projection.get_WedgePathLength());
-
+                projection.set_BarInPathLength((float) Math.abs(helix.getLAtR(Parameters.BAR_MIDDLE_RADIUS)) - projection.get_BarPathLength());
+                projection.set_WedgeInPathLength((float) Math.abs(helix.getLAtR(Parameters.WEDGE_MIDDLE_RADIUS)) - projection.get_WedgePathLength());
                 Projections.add(projection);
                 fill_out_bank(outputBank, projection, i);
             }
