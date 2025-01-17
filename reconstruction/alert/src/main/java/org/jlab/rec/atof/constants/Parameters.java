@@ -21,16 +21,16 @@ public class Parameters {
     public static final double VEFF = 200.0;//mm/ns
     public static final double TDC2TIME = 0.015625;//ns per channel bin
     public static final double ATT_L = 1600.0;//mm
-    public static final double TOT2ENERGY_BAR = 1.956 * 0.3;//MeV? To be checked.
-    public static final double TOT2ENERGY_WEDGE = 1.956 * 2.0;//MeV? To be checked.
+    public static final double TOT2ENERGY_BAR = 1.956 * 0.3 /1000;//to MeV
+    public static final double TOT2ENERGY_WEDGE = 1.956 * 2.0 /1000;//to MeV
 
     public static double LENGTH_ATOF = 279.7; //detector length in mm
     
     public static double SIGMA_PHI_TRACK_MATCHING_BAR = 180 * Math.PI/180.;//in rad
     public static double SIGMA_PHI_TRACK_MATCHING_WEDGE = 180 * Math.PI/180.;//in rad
     
-    public static double SIGMA_Z_TRACK_MATCHING_BAR = 150;//in mm
-    public static double SIGMA_Z_TRACK_MATCHING_WEDGE = 150;//in mm
+    public static double SIGMA_Z_TRACK_MATCHING_BAR = 200;//in mm
+    public static double SIGMA_Z_TRACK_MATCHING_WEDGE = 200;//in mm
     
     public static double SIGMA_PHI_CLUSTERING = 6;//in deg
     
