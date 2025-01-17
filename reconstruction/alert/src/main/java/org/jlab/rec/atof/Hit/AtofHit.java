@@ -8,6 +8,7 @@ import org.jlab.geom.prim.Point3D;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.hipo.HipoDataSource;
+import org.jlab.rec.atof.constants.Parameters;
 import org.jlab.rec.atof.trackMatch.TrackProjection;
 import org.jlab.rec.atof.trackMatch.TrackProjector;
 
@@ -168,23 +169,23 @@ public class AtofHit {
     }
 
     public final int TDC_to_time() {
-        double some_conversion = 0;
+        double tdc2time = 1;
         double veff = 1;
         if (null == this.type) {
             return 1;
         } else {
             switch (this.type) {
                 case "wedge" -> {
-                    some_conversion = 10;//read calib constants here
-                    veff = 1;
+                    tdc2time = Parameters.TDC2TIME;
+                    veff = Parameters.VEFF;
                 }
                 case "bar up" -> {
-                    some_conversion = 10;//read calib constants here
-                    veff = 1;
+                    tdc2time = Parameters.TDC2TIME;
+                    veff = Parameters.VEFF;
                 }
                 case "bar down" -> {
-                    some_conversion = 10;//read calib constants here
-                    veff = 1;
+                    tdc2time = Parameters.TDC2TIME;
+                    veff = Parameters.VEFF;
                 }
                 default -> {
                     return 1;
@@ -192,35 +193,35 @@ public class AtofHit {
             }
         }
         //Time at the inner surface
-        this.time = some_conversion * this.TDC - this.inpath_length / veff;
+        this.time = tdc2time * this.TDC - this.inpath_length / veff;
         return 0;
     }
 
     public final int ToT_to_energy() {
-        double some_conversion = 0;
+        double tot2energy = 1;
         double att_L = 1;
         if (null == this.type) {
             return 1;
         } else {
             switch (this.type) {
                 case "wedge" -> {
-                    some_conversion = 10;//read calib constants here
-                    att_L = 10;
+                    tot2energy = Parameters.TOT2ENERGY_WEDGE;
+                    att_L = Parameters.ATT_L;
                 }
                 case "bar up" -> {
-                    some_conversion = 10;//read calib constants here
-                    att_L = 10;
+                    tot2energy = Parameters.TOT2ENERGY_WEDGE;
+                    att_L = Parameters.ATT_L;
                 }
                 case "bar down" -> {
-                    some_conversion = 10;//read calib constants here
-                    att_L = 10;
+                    tot2energy = Parameters.TOT2ENERGY_BAR;
+                    att_L = Parameters.ATT_L;
                 }
                 default -> {
                     return 1;
                 }
             }
         }
-        this.energy = some_conversion * this.ToT * Math.exp(this.inpath_length / att_L);
+        this.energy = tot2energy * this.ToT * Math.exp(this.inpath_length / att_L);
         return 0;
     }
 
@@ -251,9 +252,11 @@ public class AtofHit {
         }
         Component comp = atof.getSector(this.sector).getSuperlayer(sl).getLayer(this.layer).getComponent(this.component);
         Point3D midpoint = comp.getMidpoint();
-        this.x = midpoint.x();
-        this.y = midpoint.y();
-        this.z = midpoint.z();
+
+        //coordinates centered at the center of the atof in mm
+        this.x = midpoint.x() - Parameters.LENGTH_ATOF / 2.;
+        this.y = midpoint.y() - Parameters.LENGTH_ATOF / 2.;
+        this.z = midpoint.z() - Parameters.LENGTH_ATOF / 2.;
         return 0;
     }
 
@@ -373,24 +376,31 @@ public class AtofHit {
      *
      */
     public final void matchTrack(TrackProjector track_projector) {
-        double sigma_phi = 10;
-        double sigma_z = 10;
+        double sigma_phi = 0;
+        double sigma_z = 0;
+
         List<TrackProjection> Projections = track_projector.getProjections();
         for (int i_track = 0; i_track < Projections.size(); i_track++) {
             Point3D projection_point = new Point3D();
             if (null == this.getType()) {
-                System.out.print("Impossible to match track and hitm hit type is undefined \n");
+                System.out.print("Impossible to match track and hit; hit type is null \n");
             } else {
                 switch (this.getType()) {
-                    case "wedge" ->
+                    case "wedge" -> {
+                        sigma_phi = Parameters.SIGMA_PHI_TRACK_MATCHING_WEDGE;
+                        sigma_z = Parameters.SIGMA_Z_TRACK_MATCHING_WEDGE;
                         projection_point = Projections.get(i_track).get_WedgeIntersect();
-                    case "bar up", "bar down" ->
+                    }
+                    case "bar up", "bar down" -> {
+                        System.out.print("WARNING : YOU ARE MATCHING A TRACK TO A SINGLE HIT IN THE BAR. \n");
+                        sigma_phi = Parameters.SIGMA_PHI_TRACK_MATCHING_BAR;
+                        sigma_z = Parameters.SIGMA_Z_TRACK_MATCHING_BAR;
                         projection_point = Projections.get(i_track).get_BarIntersect();
+                    }
                     default ->
-                        System.out.print("Impossible to match track and hitm hit type is undefined \n");
+                        System.out.print("Impossible to match track and hit; hit type is undefined \n");
                 }
             }
-
             if (Math.abs(this.getPhi() - projection_point.toVector3D().phi()) < sigma_phi) {
                 if (Math.abs(this.getZ() - projection_point.z()) < sigma_z) {
                     if ("wedge".equals(this.getType())) {
@@ -401,6 +411,51 @@ public class AtofHit {
                 }
             }
         }
+    }
+
+    public void matchTrack(DataBank track_bank) {
+        int nt = track_bank.rows(); // number of tracks
+        double sigma_phi = 0;
+        double sigma_z = 0;
+
+        //Looping through all tracks
+        for (int i = 0; i < nt; i++) {
+
+            Float xt = null,yt = null,zt=null,path = null;
+            
+            if (null == this.getType()) {
+                System.out.print("Impossible to match track and hit; hit type is null \n");
+            } else {
+                switch (this.getType()) {
+                    case "wedge" -> {
+                        sigma_phi = Parameters.SIGMA_PHI_TRACK_MATCHING_WEDGE;
+                        sigma_z = Parameters.SIGMA_Z_TRACK_MATCHING_WEDGE;
+                        xt = track_bank.getFloat("x_at_wedge", i);
+                        yt = track_bank.getFloat("y_at_wedge", i);
+                        zt = track_bank.getFloat("z_at_wedge", i);
+                        path = track_bank.getFloat("L_at_wedge", i);
+                    }
+                    case "bar up", "bar down" -> {
+                        System.out.print("WARNING : YOU ARE MATCHING A TRACK TO A SINGLE HIT IN THE BAR. \n");
+                        sigma_phi = Parameters.SIGMA_PHI_TRACK_MATCHING_BAR;
+                        sigma_z = Parameters.SIGMA_Z_TRACK_MATCHING_BAR;
+                        xt = track_bank.getFloat("x_at_bar", i);
+                        yt = track_bank.getFloat("y_at_bar", i);
+                        zt = track_bank.getFloat("z_at_bar", i);
+                        path = track_bank.getFloat("L_at_bar", i);
+                    }
+                    default ->
+                        System.out.print("Impossible to match track and hit; hit type is undefined \n");
+                }
+            }
+            Point3D projection_point = new Point3D(xt, yt, zt);
+            if (Math.abs(this.getPhi() - projection_point.toVector3D().phi()) < sigma_phi) {
+                if (Math.abs(this.getZ() - projection_point.z()) < sigma_z) {
+                    this.setPath_length(path);
+                }
+            }
+        }
+
     }
 
     public AtofHit() {
