@@ -1,5 +1,4 @@
 package org.jlab.rec.atof.cluster;
-
 import java.util.ArrayList;
 import org.jlab.rec.atof.hit.AtofHit;
 import org.jlab.rec.atof.hit.BarHit;
@@ -8,6 +7,8 @@ import org.jlab.rec.atof.hit.BarHit;
  *
  * @author npilleux
  */
+
+
 public class AtofCluster {
     
     ArrayList<BarHit> bar_hits;
