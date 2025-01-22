@@ -16,8 +16,9 @@ import org.jlab.utils.CLASResources;
 
 /**
  *
- * @author npilleux
+ * @authors npilleux,churaman
  */
+
 public class ClusterFinder {
 
     private ArrayList<AtofCluster> clusters;
@@ -42,16 +43,10 @@ public class ClusterFinder {
         double sigma_Phi = 6.0; //angle opening of a layer. to be read from DB in the future
         double sigma_Z = 6000;//to be read from DB in the future
         double sigma_T = 1000;//timing resolution to be read from DB in the future
-
-	/*
-        double sigma_Phi = loadParameterFromDB("SIGMA_PHI");
-        double sigma_Z = loadParameterFromDB("SIGMA_Z");
-        double sigma_T = loadParameterFromDB("SIGMA_T");
-	*/
-	
 	int sigma_module = 1; //hits are always within +-1 phi module of the most energetic
         int sigma_component = 1;//hits are always within +-1 z component of the most energetic
 
+	
         //Looping through wedge hits first
         for (int i_wedge = 0; i_wedge < wedge_hits.size(); i_wedge++) {
             AtofHit this_wedge_hit = wedge_hits.get(i_wedge);

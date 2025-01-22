@@ -2,7 +2,7 @@ package org.jlab.rec.atof.constants;
 
 /**
  *
- * @author npilleux
+ * @authors npilleux,churaman
  */
 public class Parameters {
 

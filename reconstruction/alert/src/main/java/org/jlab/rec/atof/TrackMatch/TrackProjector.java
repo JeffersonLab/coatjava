@@ -180,10 +180,12 @@ public class TrackProjector {
                 double pz = bank.getFloat("pz", i);
                 
                 //Put everything in MM
+
                 x = x*10;
                 y = y*10;
                 z = z*10;
-                Units units = Units.MM;   
+
+		Units units = Units.MM;   
                 
                 int q = 1; //need the charge sign from tracking
 
@@ -194,15 +196,18 @@ public class TrackProjector {
                 Helix helix = new Helix(x, y, z, px, py, pz, q, B, xb, yb, units);
 
                 //Intersection points with the middle of the bar or wedge
-                projection.set_BarIntersect(helix.getHelixPointAtR(Parameters.BAR_MIDDLE_RADIUS));
+
+		projection.set_BarIntersect(helix.getHelixPointAtR(Parameters.BAR_MIDDLE_RADIUS));
                 projection.set_WedgeIntersect(helix.getHelixPointAtR(Parameters.WEDGE_MIDDLE_RADIUS));
 
                 //Path length to the middle of the bar or wedge
-                projection.set_BarPathLength((float) Math.abs(helix.getLAtR(Parameters.BAR_INNER_RADIUS)));
+
+		projection.set_BarPathLength((float) Math.abs(helix.getLAtR(Parameters.BAR_INNER_RADIUS)));
                 projection.set_WedgePathLength((float) Math.abs(helix.getLAtR(Parameters.WEDGE_INNER_RADIUS)));
                 
                 //Path length from the inner radius to the middle radius
-                projection.set_BarInPathLength((float) Math.abs(helix.getLAtR(Parameters.BAR_MIDDLE_RADIUS)) - projection.get_BarPathLength());
+
+		projection.set_BarInPathLength((float) Math.abs(helix.getLAtR(Parameters.BAR_MIDDLE_RADIUS)) - projection.get_BarPathLength());
                 projection.set_WedgeInPathLength((float) Math.abs(helix.getLAtR(Parameters.WEDGE_MIDDLE_RADIUS)) - projection.get_WedgePathLength());
                 Projections.add(projection);
                 fill_out_bank(outputBank, projection, i);

@@ -5,7 +5,7 @@ import org.jlab.rec.atof.hit.BarHit;
 
 /**
  *
- * @author npilleux
+ * @authors npilleux, churaman
  */
 
 
@@ -82,6 +82,7 @@ public class AtofCluster {
     
     //Cluster coordinates and time are defined as the coordinates and time of the max energy hit
     //Can be changed later
+
     public final void computeClusterProperties() {
         this.energy=0;
         double max_energy = -1;

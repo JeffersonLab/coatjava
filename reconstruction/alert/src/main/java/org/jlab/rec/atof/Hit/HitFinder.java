@@ -19,7 +19,7 @@ import org.jlab.utils.CLASResources;
 
 /**
  *
- * @author npilleux
+ * @authors npilleux,churaman
  */
 public class HitFinder {
 

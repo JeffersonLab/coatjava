@@ -11,7 +11,7 @@ import org.jlab.rec.atof.hit.AtofHit;
 
 /**
  *
- * @author npilleux
+ * @authors npilleux,churaman
  */
 public class RecoBankWriter {
     

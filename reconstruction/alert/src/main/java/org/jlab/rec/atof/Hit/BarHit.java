@@ -1,5 +1,4 @@
 package org.jlab.rec.atof.hit;
-
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.geom.base.Detector;
 import org.jlab.geom.detector.alert.ATOF.AlertTOFFactory;
@@ -15,8 +14,9 @@ import org.jlab.rec.atof.constants.Parameters;
  * by the two hits upstream and downstream composing a full bar hit. z position,
  * time and energy are defined from the up/down hits
  *
- * @author npilleux
+ * @authors npilleux,churaman 
  */
+
 public class BarHit extends AtofHit {
 
     //A bar hit is the combination of a downstream and upstream hits

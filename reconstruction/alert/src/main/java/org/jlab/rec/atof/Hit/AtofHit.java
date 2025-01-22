@@ -19,7 +19,7 @@ import org.jlab.rec.atof.trackMatch.TrackProjector;
  * computed from atof detector object using the geometry service Stores whether
  * the hit is part of a cluster. Calculates time, energy based on TDC/ToT.
  *
- * @author npilleux
+ * @authors npilleux, churaman
  */
 public class AtofHit {
 
@@ -285,6 +285,7 @@ public class AtofHit {
      * @param hit2match The AtofHit object to compare with the current instance.
      * @return {@code true} if the hits match; {@code false} otherwise.
      */
+    
     public boolean matchBar(AtofHit hit2match) {
         if (this.getSector() != hit2match.getSector()) {
             return false; //System.out.print("Two hits in different sectors \n");
@@ -386,6 +387,7 @@ public class AtofHit {
      * TrackProjections.
      *
      */
+    
     public final void matchTrack(TrackProjector track_projector) {
         double sigma_phi = 0;
         double sigma_z = 0;
