@@ -58,12 +58,8 @@ function cleanup() {
 }
 
 function build_clara {
-    export CLARA_HOME=$1
-    git clone https://code.jlab.org/hallb/clas12/clara-java
-    cd clara-java
-    git checkout java21
-    ./gradlew && ./gradlew deploy
-    cd -
+    git clone --branch $clara --depth 1 https://code.jlab.org/hallb/clas12/clara-java
+    cd clara-java && CLARA_HOME=$1 ./gradlew deploy && cd -
 }
 
 trap cleanup EXIT
