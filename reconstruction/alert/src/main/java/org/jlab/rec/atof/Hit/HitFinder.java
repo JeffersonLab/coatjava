@@ -19,7 +19,7 @@ import org.jlab.utils.CLASResources;
 
 /**
  *
- * @authors npilleux,churaman
+ * @author npilleux
  */
 public class HitFinder {
 
@@ -71,9 +71,10 @@ public class HitFinder {
             int tot = bank.getInt("ToT", i);
             //Building a Hit
             AtofHit hit = new AtofHit(sector, layer, component, order, tdc, tot, atof);
-            if (hit.getEnergy() < 0.1) {
+            if (hit.getEnergy() < 0.01) {
                 continue; //energy threshold
-            }                //Sorting the hits into wedge, upstream and downstream bar hits
+            }
+            //Sorting the hits into wedge, upstream and downstream bar hits
             //Lists are built for up/down bar to match them after
             //Wedge hits are mayched to ahdc tracks and listed 
             if (null == hit.getType()) {
@@ -110,8 +111,8 @@ public class HitFinder {
             }
         }
         //Once all has been listed, hits are sorted by energy
-        Collections.sort(this.bar_hits, (hit1, hit2) -> Double.compare(hit1.getEnergy(), hit2.getEnergy()));
-        Collections.sort(this.wedge_hits, (hit1, hit2) -> Double.compare(hit1.getEnergy(), hit2.getEnergy()));
+        Collections.sort(this.bar_hits, (hit1, hit2) -> Double.compare(hit2.getEnergy(), hit1.getEnergy()));
+        Collections.sort(this.wedge_hits, (hit1, hit2) -> Double.compare(hit2.getEnergy(), hit1.getEnergy()));
     }
 
     public void FindHits(DataEvent event, Detector atof) {
@@ -136,7 +137,7 @@ public class HitFinder {
             int tot = bank_atof_hits.getInt("ToT", i);
             //Building a Hit
             AtofHit hit = new AtofHit(sector, layer, component, order, tdc, tot, atof);
-            if (hit.getEnergy() < 0.1) {
+            if (hit.getEnergy() < 0.01) {
                 continue; //energy threshold
             }                //Sorting the hits into wedge, upstream and downstream bar hits
             //Lists are built for up/down bar to match them after
@@ -175,9 +176,9 @@ public class HitFinder {
             }
         }
         //Once all has been listed, hits are sorted by energy
-        Collections.sort(this.bar_hits, (hit1, hit2) -> Double.compare(hit1.getEnergy(), hit2.getEnergy()));
-        Collections.sort(this.wedge_hits, (hit1, hit2) -> Double.compare(hit1.getEnergy(), hit2.getEnergy()));
-        ArrayList<AtofHit> allhits = new ArrayList<>();;
+        Collections.sort(this.bar_hits, (hit1, hit2) -> Double.compare(hit2.getEnergy(), hit1.getEnergy()));
+        Collections.sort(this.wedge_hits, (hit1, hit2) -> Double.compare(hit2.getEnergy(), hit1.getEnergy()));
+        ArrayList<AtofHit> allhits = new ArrayList<>();
         allhits.addAll(this.wedge_hits);
         allhits.addAll(this.bar_hits);
         DataBank hitbank = fillAtofHitBank(event, allhits);
@@ -188,107 +189,5 @@ public class HitFinder {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-
-        //Building ALERT geometry
-        AlertTOFFactory factory = new AlertTOFFactory();
-        DatabaseConstantProvider cp = new DatabaseConstantProvider(11, "default");
-        Detector atof = factory.createDetectorCLAS(cp);
-
-        //READING MAG FIELD MAP
-        System.setProperty("CLAS12DIR", "../../");
-        String mapDir = CLASResources.getResourcePath("etc") + "/data/magfield";
-        try {
-            MagneticFields.getInstance().initializeMagneticFields(mapDir,
-                    "Symm_torus_r2501_phi16_z251_24Apr2018.dat", "Symm_solenoid_r601_phi1_z1201_13June2018.dat");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        float[] b = new float[3];
-        Swim swimmer = new Swim();
-        swimmer.BfieldLab(0, 0, 0, b);
-        double B = Math.abs(b[2]);
-
-        //Track Projector Initialisation with B field
-        TrackProjector projector = new TrackProjector();
-        projector.setB(B);
-
-        //Hit finder init
-        HitFinder hitfinder = new HitFinder();
-
-        //Input to be read
-        String input = "/Users/npilleux/Desktop/alert/atof-reconstruction/coatjava/reconstruction/alert/src/main/java/org/jlab/rec/atof/hit/updated_updated_rec_more_protons_50_to_650.hipo";
-        HipoDataSource reader = new HipoDataSource();
-        reader.open(input);
-
-        H1F h_delta_energy = new H1F("Energy", "Energy", 100, -10, 10);
-        h_delta_energy.setTitleX("delta energy [GeV]");
-
-        int event_number = 0;
-        while (reader.hasEvent()) {
-            DataEvent event = (DataEvent) reader.getNextEvent();
-            event_number++;
-            projector.ProjectTracks(event);
-            hitfinder.FindHits(event, atof);
-            DataBank MC_True = event.getBank("MC::True");
-            DataBank tdc = event.getBank("ATOF::tdc");
-            DataBank hits = event.getBank("ATOF::hits");
-            double totEdep = 0;
-
-            for (int i = 0; i < MC_True.rows(); i++) {
-
-                if (MC_True.getByte("detector", i) != 24) {
-                    continue;
-                }
-                Float true_energy = MC_True.getFloat("avgT", i);
-                if (true_energy < 5) {
-                    continue;
-                }
-                System.out.print(true_energy + " TRUE \n");
-                double min_diff = 9999.;
-                double energy_at_min = 9999.;
-
-                for (int j = 0; j < hits.rows(); j++) {
-                    Float hit_energy = hits.getFloat("time", j);
-                    Float diff = true_energy - hit_energy;
-                    if (diff < min_diff) {
-                        min_diff = diff;
-                        energy_at_min = true_energy;
-                    }
-                }
-            System.out.print("ICI " + energy_at_min + " " + true_energy + " \n");
-            h_delta_energy.fill(min_diff / energy_at_min);
-        }
-        System.out.print("------------------- \n");
-    }
-
-    System.out.print (
-            
-    "Read " + event_number + " events");
-        JFrame frame = new JFrame("Raster");
-
-    frame.setSize (
-            
-    2500,800);
-        EmbeddedCanvas canvas = new EmbeddedCanvas();
-
-    canvas.divide (
-            
-
-    3,2);
-    canvas.cd (
-            
-
-    3); canvas.draw (h_delta_energy);
-
-    frame.add (canvas);
-
-    frame.setLocationRelativeTo (
-            
-
-    null);
-    frame.setVisible (
-            
-
-true);
     }
 }
