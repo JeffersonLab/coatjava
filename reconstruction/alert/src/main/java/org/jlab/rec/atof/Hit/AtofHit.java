@@ -19,7 +19,7 @@ import org.jlab.rec.atof.trackMatch.TrackProjector;
  * computed from atof detector object using the geometry service Stores whether
  * the hit is part of a cluster. Calculates time, energy based on TDC/ToT.
  *
- * @authors npilleux, churaman
+ * @author npilleux
  */
 public class AtofHit {
 
@@ -156,6 +156,8 @@ public class AtofHit {
     }
 
     public final String makeType() {
+        //Type of hit can be wedge, bar up, bar down or bar.
+        //Avoids testing components and order every time.
         String itype = "undefined";
         if (this.component == 10 && this.order == 0) {
             itype = "bar down";
@@ -168,42 +170,66 @@ public class AtofHit {
         return itype;
     }
 
+    /**
+     * Converts TDC to time (ns). Sets the hit time parameter to a raw time for
+     * up/down bar hits or to the time corrected for the propagation for wedge
+     * hits.
+     *
+     * @return 0 if the time was successfully set, or 1 if the hit type is
+     * unsupported.
+     */
     public final int TDC_to_time() {
-        double tdc2time = 1;
-        double veff = 1;
+        double tdc2time, veff, distance_to_sipm;
         if (null == this.type) {
+            System.out.print("Null hit type, cannot convert tdc to time.");
             return 1;
         } else {
             switch (this.type) {
                 case "wedge" -> {
                     tdc2time = Parameters.TDC2TIME;
                     veff = Parameters.VEFF;
+                    //Wedge hits are placed at the center of wedges and sipm at their top
+                    distance_to_sipm = Parameters.WEDGE_THICKNESS / 2.;
                 }
                 case "bar up" -> {
                     tdc2time = Parameters.TDC2TIME;
                     veff = Parameters.VEFF;
+                    //The distance will be computed at barhit level when z information is available
+                    distance_to_sipm = 0;
                 }
                 case "bar down" -> {
                     tdc2time = Parameters.TDC2TIME;
                     veff = Parameters.VEFF;
+                    //The distance will be computed at barhit level when z information is available
+                    distance_to_sipm = 0;
                 }
                 case "bar" -> {
-                    tdc2time = Parameters.TDC2TIME;
-                    veff = Parameters.VEFF;
+                    System.out.print("Bar hit type, cannot convert tdc to time.");
+                    return 1;
                 }
                 default -> {
+                    System.out.print("Undefined hit type, cannot convert tdc to time.");
                     return 1;
                 }
             }
         }
-        //Time at the inner surface
-        this.time = tdc2time * this.TDC - this.inpath_length / veff;
+        //Hit time. Will need implementation of offsets.
+        this.time = tdc2time * this.TDC - distance_to_sipm / veff;
         return 0;
     }
 
+    /**
+     * Converts ToT to energy (MeV). Sets the hit energy parameter to a raw
+     * energy for up/down bar hits or to the energy corrected for the
+     * attenuation for wedge hits.
+     *
+     * @return 0 if the energy was successfully set, or 1 if the hit type is
+     * unsupported.
+     */
     public final int ToT_to_energy() {
-        double tot2energy = 1;
+        double tot2energy;
         if (null == this.type) {
+            System.out.print("Null hit type, cannot convert tot to energy.");
             return 1;
         } else {
             switch (this.type) {
@@ -211,7 +237,7 @@ public class AtofHit {
                     tot2energy = Parameters.TOT2ENERGY_WEDGE;
                     //For now hits are considered in the middle of the wedge
                     //And the SiPM on top 
-                    double distance_hit_to_sipm = Parameters.WEDGE_THICKNESS/2.; 
+                    double distance_hit_to_sipm = Parameters.WEDGE_THICKNESS / 2.;
                     this.energy = tot2energy * this.ToT * Math.exp(distance_hit_to_sipm / Parameters.ATT_L);
                 }
                 case "bar up" -> {
@@ -225,8 +251,13 @@ public class AtofHit {
                     //only half the information in the bar, 
                     //the attenuation will be computed when the full hit is formed
                     this.energy = tot2energy * this.ToT;
-                }                
+                }
+                case "bar" -> {
+                    System.out.print("Bar hit type, cannot convert tot to energy.");
+                    return 1;
+                }
                 default -> {
+                    System.out.print("Undefined hit type, cannot convert tot to energy.");
                     return 1;
                 }
             }
@@ -237,7 +268,7 @@ public class AtofHit {
     /**
      * Calculates spatial coordinates for the hit based on associated detector
      * component. Retrieves the midpoint of the atof component to assign the
-     * corresponding x, y, z coordinates to the hit.
+     * corresponding x, y, z coordinates to the hit (mm).
      *
      *
      * @param atof The Detector object representing the atof.
@@ -245,7 +276,7 @@ public class AtofHit {
      * is undefined or unsupported.
      */
     public final int slc_to_xyz(Detector atof) {
-        int sl = 999;
+        int sl;
         if (null == this.type) {
             return 1;
         } else {
@@ -261,10 +292,11 @@ public class AtofHit {
         }
         Component comp = atof.getSector(this.sector).getSuperlayer(sl).getLayer(this.layer).getComponent(this.component);
         Point3D midpoint = comp.getMidpoint();
-
-        //coordinates centered at the center of the atof in mm
-        this.x = midpoint.x() - Parameters.LENGTH_ATOF / 2.;
-        this.y = midpoint.y() - Parameters.LENGTH_ATOF / 2.;
+        //Midpoints defined in the system were z=0 is the upstream end of the atof
+        //Translation to the system were z=0 is the center of the atof
+        //Units are mm
+        this.x = midpoint.x();
+        this.y = midpoint.y();
         this.z = midpoint.z() - Parameters.LENGTH_ATOF / 2.;
         return 0;
     }
@@ -277,7 +309,7 @@ public class AtofHit {
      * <li>If either hit is not in the bar (component must be 10), the method
      * returns {@code false}.</li>
      * <li>If both hits are in the same SiPM (i.e., their order is the same),
-     * the method returns {@code false}.</li>
+     * or have incorrect order, the method returns {@code false}.</li>
      * </ul>
      * If none of these conditions are violated, the method returns
      * {@code true}, indicating the two hits match.
@@ -285,23 +317,27 @@ public class AtofHit {
      * @param hit2match The AtofHit object to compare with the current instance.
      * @return {@code true} if the hits match; {@code false} otherwise.
      */
-    
     public boolean matchBar(AtofHit hit2match) {
         if (this.getSector() != hit2match.getSector()) {
-            return false; //System.out.print("Two hits in different sectors \n");
+            //Two hits in different sectors
+            return false; 
         } else if (this.getLayer() != hit2match.getLayer()) {
-            return false; //System.out.print("Two hits in different layers \n");
+            //Two hits in different layers
+            return false; 
         } else if (this.getComponent() != 10 || hit2match.getComponent() != 10) {
-            return false; //System.out.print("At least one hit is not in the bar \n");
-        } else if (this.getOrder() > 1 || hit2match.getComponent() > 1) {
-            return false; //System.out.print("At least one hit is not a downstram or upstream hit. It may be a full bar hit. \n");
+            //At least one hit not in the bar
+            return false; 
+        } else if (this.getOrder() > 1 || hit2match.getOrder() > 1) {
+            //At least one hit has incorrect order
+            return false; 
         } else {
-            return this.getOrder() != hit2match.getOrder(); //System.out.print("Two hits in same SiPM \n");
+            //Match if one is order 0 and the other is order 1
+            return this.getOrder() != hit2match.getOrder();
         }
     }
 
     /**
-     * Returns the azimuthal angle (phi) of the hit.
+     * Computes the azimuthal angle (phi) of the hit in rad.
      *
      * @return The azimuthal angle (phi) in radians, in the range [-π, π].
      */
@@ -310,7 +346,7 @@ public class AtofHit {
     }
 
     /**
-     * Constructor for a fit in the atof. Initializes the hit's sector, layer,
+     * Constructor for a hit in the atof. Initializes the hit's sector, layer,
      * component, order, TDC, ToT. Sets the hit's initial state regarding
      * clustering. Set up the hit's type, time, energy, and spatial coordinates.
      *
@@ -343,7 +379,7 @@ public class AtofHit {
     }
 
     /**
-     * Constructor for a fit in the atof. Initializes the hit's sector, layer,
+     * Constructor for a hit in the atof. Initializes the hit's sector, layer,
      * component, order, TDC, ToT. Sets the hit's initial state regarding
      * clustering. Set up the hit's type, time, energy, and spatial coordinates.
      *
@@ -387,7 +423,6 @@ public class AtofHit {
      * TrackProjections.
      *
      */
-    
     public final void matchTrack(TrackProjector track_projector) {
         double sigma_phi = 0;
         double sigma_z = 0;
@@ -446,7 +481,6 @@ public class AtofHit {
             for (int i = 0; i < nt; i++) {
 
                 Float xt = null, yt = null, zt = null, path = null, inpath = null;
-
                 if (null == this.getType()) {
                     System.out.print("Impossible to match track and hit; hit type is null \n");
                 } else {
@@ -460,8 +494,7 @@ public class AtofHit {
                             path = track_bank.getFloat("L_at_wedge", i);
                             inpath = track_bank.getFloat("L_in_wedge", i);
                         }
-                        case "bar up", "bar down" -> {
-                            System.out.print("WARNING : YOU ARE MATCHING A TRACK TO A SINGLE HIT IN THE BAR. \n");
+                        case "bar" -> {
                             sigma_phi = Parameters.SIGMA_PHI_TRACK_MATCHING_BAR;
                             sigma_z = Parameters.SIGMA_Z_TRACK_MATCHING_BAR;
                             xt = track_bank.getFloat("x_at_bar", i);
@@ -470,6 +503,9 @@ public class AtofHit {
                             path = track_bank.getFloat("L_at_bar", i);
                             inpath = track_bank.getFloat("L_in_bar", i);
                         }
+                        case "bar up", "bar down" -> {
+                            System.out.print("WARNING : YOU ARE MATCHING A TRACK TO A SINGLE HIT IN THE BAR. \n");
+                        }
                         default ->
                             System.out.print("Impossible to match track and hit; hit type is undefined \n");
                     }
@@ -477,7 +513,6 @@ public class AtofHit {
                 Point3D projection_point = new Point3D(xt, yt, zt);
                 if (Math.abs(this.getPhi() - projection_point.toVector3D().phi()) < sigma_phi) {
                     if (Math.abs(this.getZ() - projection_point.z()) < sigma_z) {
-                        System.out.print("PASSED CUTS \n");
                         this.setPath_length(path);
                         this.setInpath_length(inpath);
                     }
@@ -494,33 +529,5 @@ public class AtofHit {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // TODO code application logic here
-        AlertTOFFactory factory = new AlertTOFFactory();
-        DatabaseConstantProvider cp = new DatabaseConstantProvider(11, "default");
-        Detector atof = factory.createDetectorCLAS(cp);
-
-        //Input to be read
-        String input = "/Users/npilleux/Desktop/alert/atof-reconstruction/coatjava/reconstruction/alert/src/main/java/org/jlab/rec/atof/Hit/test_tdc_atof.hipo";
-        HipoDataSource reader = new HipoDataSource();
-        reader.open(input);
-
-        int event_number = 0;
-        while (reader.hasEvent()) {
-            DataEvent event = (DataEvent) reader.getNextEvent();
-            event_number++;
-            DataBank bank = event.getBank("ATOF::tdc");
-            int nt = bank.rows(); // number of tracks 
-
-            for (int i = 0; i < nt; i++) {
-                int sector = bank.getInt("sector", i);
-                int layer = bank.getInt("layer", i);
-                int component = bank.getInt("component", i);
-                int order = bank.getInt("order", i);
-                int tdc = bank.getInt("TDC", i);
-                int tot = bank.getInt("ToT", i);
-                AtofHit hit = new AtofHit(sector, layer, component, order, tdc, tot, atof);
-                System.out.print(hit.getX() + "\n");
-            }
-        }
     }
 }
