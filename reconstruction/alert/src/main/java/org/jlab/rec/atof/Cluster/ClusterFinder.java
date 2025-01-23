@@ -229,3 +229,202 @@ public class ClusterFinder {
     }
 
 }
+
+
+
+
+/*
+// Exhibits more modular approach,  and parameters/thresholds for clustering 
+// 
+package org.jlab.rec.atof.cluster;
+
+import cnuphys.magfield.MagneticFields;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Logger;
+import org.jlab.clas.swimtools.Swim;
+import org.jlab.detector.calib.utils.DatabaseConstantProvider;
+import org.jlab.geom.base.Detector;
+import org.jlab.geom.detector.alert.ATOF.AlertTOFFactory;
+import org.jlab.io.base.DataEvent;
+import org.jlab.io.hipo.HipoDataSource;
+import org.jlab.rec.atof.hit.AtofHit;
+import org.jlab.rec.atof.hit.BarHit;
+import org.jlab.rec.atof.hit.HitFinder;
+import org.jlab.rec.atof.trackMatch.TrackProjector;
+import org.jlab.utils.CLASResources;
+
+
+//  @authors npilleux, churaman
+
+public class ClusterFinder {
+
+    private static final Logger logger = Logger.getLogger(ClusterFinder.class.getName());
+    private List<AtofCluster> clusters;
+//can be replaced with actual values 
+    private final double sigmaPhi = 6.0; // Angle opening of a layer
+    private final double sigmaZ = 6000.0; // Z threshold in mm
+    private final double sigmaT = 1000.0; // Timing resolution in ns
+    private final int sigmaModule = 1; // Module proximity threshold
+    private final int sigmaComponent = 1; // Component proximity threshold
+
+    public ClusterFinder() {
+        this.clusters = new ArrayList<>();
+    }
+
+    public List<AtofCluster> getClusters() {
+        return clusters;
+    }
+
+    public void setClusters(List<AtofCluster> clusters) {
+        this.clusters = clusters;
+    }
+
+    public void makeClusters(HitFinder hitFinder) {
+        clusters.clear();
+        List<AtofHit> wedgeHits = hitFinder.getWedgeHits();
+        List<BarHit> barHits = hitFinder.getBarHits();
+
+        clusterWedgeHits(wedgeHits, barHits);
+        clusterRemainingBarHits(barHits);
+
+        logger.info("Clustering completed: " + clusters.size() + " clusters formed.");
+    }
+
+    private void clusterWedgeHits(List<AtofHit> wedgeHits, List<BarHit> barHits) {
+        for (int i = 0; i < wedgeHits.size(); i++) {
+            AtofHit primaryHit = wedgeHits.get(i);
+            if (primaryHit.getIs_in_a_cluster()) continue;
+
+            List<AtofHit> clusterWedgeHits = new ArrayList<>();
+            List<BarHit> clusterBarHits = new ArrayList<>();
+
+            primaryHit.setIs_in_a_cluster(true);
+            clusterWedgeHits.add(primaryHit);
+
+            addNearbyWedgeHits(primaryHit, wedgeHits, clusterWedgeHits);
+            addNearbyBarHits(primaryHit, barHits, clusterBarHits);
+
+            clusters.add(new AtofCluster(clusterBarHits, clusterWedgeHits));
+        }
+    }
+
+    private void addNearbyWedgeHits(AtofHit primaryHit, List<AtofHit> wedgeHits, List<AtofHit> clusterWedgeHits) {
+        for (AtofHit hit : wedgeHits) {
+            if (hit.getIs_in_a_cluster()) continue;
+
+            if (isHitInProximity(primaryHit, hit)) {
+                hit.setIs_in_a_cluster(true);
+                clusterWedgeHits.add(hit);
+            }
+        }
+    }
+
+    private void addNearbyBarHits(AtofHit primaryHit, List<BarHit> barHits, List<BarHit> clusterBarHits) {
+        for (BarHit hit : barHits) {
+            if (hit.getIs_in_a_cluster()) continue;
+
+            if (isHitInProximity(primaryHit, hit)) {
+                hit.setIs_in_a_cluster(true);
+                clusterBarHits.add(hit);
+            }
+        }
+    }
+
+    private void clusterRemainingBarHits(List<BarHit> barHits) {
+        for (int i = 0; i < barHits.size(); i++) {
+            BarHit primaryHit = barHits.get(i);
+            if (primaryHit.getIs_in_a_cluster()) continue;
+
+            List<BarHit> clusterBarHits = new ArrayList<>();
+            primaryHit.setIs_in_a_cluster(true);
+            clusterBarHits.add(primaryHit);
+
+            for (int j = i + 1; j < barHits.size(); j++) {
+                BarHit secondaryHit = barHits.get(j);
+                if (secondaryHit.getIs_in_a_cluster()) continue;
+
+                if (isHitInProximity(primaryHit, secondaryHit)) {
+                    secondaryHit.setIs_in_a_cluster(true);
+                    clusterBarHits.add(secondaryHit);
+                }
+            }
+
+            clusters.add(new AtofCluster(clusterBarHits, new ArrayList<>()));
+        }
+    }
+
+private boolean isHitInProximity(AtofHit hit1, AtofHit hit2) {
+    // Check if both hits are wedge hits
+    if (!"wedge".equals(hit1.getType()) || !"wedge".equals(hit2.getType())) {
+        return false; // Return false if either hit is not a wedge
+    }
+
+    int deltaModule = Math.abs(hit1.computeModule_index() - hit2.computeModule_index());
+    deltaModule = deltaModule > 30 ? 60 - deltaModule : deltaModule;
+
+    int deltaComponent = Math.abs(hit1.getComponent() - hit2.getComponent());
+    double deltaT = Math.abs(hit1.getTime() - hit2.getTime());
+
+    return deltaModule <= sigmaModule && deltaComponent <= sigmaComponent && deltaT < sigmaT;
+}
+
+private boolean isHitInProximity(AtofHit hit1, BarHit hit2) {
+    // Ensures that the AtofHit is of type "wedge"
+    if (!"wedge".equals(hit1.getType())) {
+        return false;
+    }
+
+    // Computes module difference with circular boundary handling
+    int deltaModule = Math.abs(hit1.computeModule_index() - hit2.computeModule_index());
+    deltaModule = deltaModule > 30 ? 60 - deltaModule : deltaModule;
+
+    // Computes spatial and temporal proximity
+    double deltaZ = Math.abs(hit1.getZ() - hit2.getZ());
+    double deltaT = Math.abs(hit1.getTime() - hit2.getTime());
+
+    // Returns  true if all proximity conditions are satisfied
+    return deltaModule <= sigmaModule && deltaZ < sigmaZ && deltaT < sigmaT;
+}
+
+
+    public static void main(String[] args) {
+        AlertTOFFactory factory = new AlertTOFFactory();
+        DatabaseConstantProvider cp = new DatabaseConstantProvider(11, "default");
+        Detector atof = factory.createDetectorCLAS(cp);
+
+        System.setProperty("CLAS12DIR", "../../");
+        String mapDir = CLASResources.getResourcePath("etc") + "/data/magfield";
+        try {
+            MagneticFields.getInstance().initializeMagneticFields(
+                    mapDir,
+                    "Symm_torus_r2501_phi16_z251_24Apr2018.dat",
+                    "Symm_solenoid_r601_phi1_z1201_13June2018.dat"
+            );
+        } catch (Exception e) {
+            logger.severe("Error initializing magnetic fields: " + e.getMessage());
+        }
+
+        TrackProjector projector = new TrackProjector();
+        projector.setB(new Swim().BfieldLab(0, 0, 0, new float[3])[2]);
+
+        String inputFile = "/path/to/input.hipo";
+        HipoDataSource reader = new HipoDataSource();
+        reader.open(inputFile);
+
+        HitFinder hitFinder = new HitFinder();
+
+        while (reader.hasEvent()) {
+            DataEvent event = reader.getNextEvent();
+            projector.ProjectTracks(event);
+            hitFinder.FindHits(event, atof, projector);
+
+            ClusterFinder clusterFinder = new ClusterFinder();
+            clusterFinder.makeClusters(hitFinder);
+
+            logger.info("Processed event with " + clusterFinder.getClusters().size() + " clusters.");
+        }
+    }
+}
+*/
+    
