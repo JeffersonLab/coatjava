@@ -95,7 +95,7 @@ public class BANDEngine extends ReconstructionEngine {
 			// Load the constants
 			//-------------------
 			if(Run!=newRun) {
-				CalibrationConstantsLoader.Load(newRun,"default",this.getConstantsManager()); 
+				CalibrationConstantsLoader.Load(newRun,this.getConstantsManager()); 
 				Run = newRun;
 				Parameters.CreateGeometry(); // loading BAND params
 			}
