@@ -154,7 +154,7 @@ public class HitReader {
 		if(ev.hasBank("RUN::config")) {
 			DataBank  bank = ev.getBank("RUN::config");                       
 			long timeStamp = bank.getLong("timestamp", 0);
-			if( CalibrationConstantsLoader.JITTER_CYCLES > 0 && timeStamp != -1 ) {
+			if( CalibrationConstantsLoader.JITTER_CYCLES > 0 && timeStamp > 0 ) {
 				tPh = CalibrationConstantsLoader.JITTER_PERIOD *
 					( ( timeStamp + CalibrationConstantsLoader.JITTER_PHASE ) % 
 					  CalibrationConstantsLoader.JITTER_CYCLES);
