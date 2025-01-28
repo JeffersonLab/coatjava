@@ -22,7 +22,7 @@ public class HitReader {
                 if(event.hasBank("RUN::config")) {
                     DataBank  bank = event.getBank("RUN::config");                       
                     long timeStamp = bank.getLong("timestamp", 0);
-                    if(ccdb.JITTER_CYCLES>0 && timeStamp!=-1) 
+                    if(ccdb.JITTER_CYCLES>0 && timeStamp>0) 
                         triggerPhase=ccdb.JITTER_PERIOD*((timeStamp+ccdb.JITTER_PHASE)%ccdb.JITTER_CYCLES);
                 }
 

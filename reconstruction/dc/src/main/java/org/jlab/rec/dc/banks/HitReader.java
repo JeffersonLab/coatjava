@@ -114,7 +114,6 @@ public class HitReader {
            double period = timejitter.getDoubleValueByHash("period", hash);
            int    phase  = timejitter.getIntValueByHash("phase", hash);
            int    cycles = timejitter.getIntValueByHash("cycles", hash);
-
            if (cycles > 0) jitter = (int) (period * ((tiTimeStamp + phase) % cycles));
         }
         return jitter;
@@ -122,7 +121,7 @@ public class HitReader {
 
     private void getDCRBJitters(boolean swapBits) {
         
-        if(tiTimeStamp>=0 && event.hasBank(bankNames.getTimeStampBank())) {
+        if(tiTimeStamp>0 && event.hasBank(bankNames.getTimeStampBank())) {
             
             dcrbjitters = new IndexedTable(2, "jitter:I");
             
