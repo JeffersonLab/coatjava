@@ -55,8 +55,7 @@ public class EBRadioFrequency {
         // to accommadate the modulus in the next step, as it was done in CLAS6.
         // Probably this should be "simplified" with Math.IEEERemainder.)
         final double tVertexRF = - tVertex - dzTargetVertex / PhysicsConstants.speedOfLight()
-                + this.rfTime + this.ccdb.getDouble(EBCCDBEnum.RF_OFFSET)
-                + (EBConstants.RF_LARGE_INTEGER+0.5)*rfPeriod;
+                + this.rfTime + (EBConstants.RF_LARGE_INTEGER+0.5)*rfPeriod;
 
         // The relative, RF-beam-bucket-centering correction, based only on the
         // trigger particle:
@@ -168,7 +167,7 @@ public class EBRadioFrequency {
             final double rfOffset = ccdb.getDouble(EBCCDBEnum.RF_OFFSET);
             final double rfBucketLength = ccdb.getDouble(EBCCDBEnum.RF_BUCKET_LENGTH); 
             boolean skip = false;
-            double time = (tdc*rfTdc2Time) % (rfCycles*rfBucketLength) - this.getJitter();
+            double time = (tdc*rfTdc2Time) % (rfCycles*rfBucketLength) - this.getJitter() + rfOffset;
             // check if new TDC value compared to previous one is consistent with 80*2.004 ns interval
             if(this._tdc.size()>0) {               
                 int deltaTDC = tdc - this._tdc.get(this._tdc.size()-1);
