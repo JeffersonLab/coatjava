@@ -540,7 +540,7 @@ public class HitReader implements IMatchedHit {
         int    phase  = table.getIntValue("phase", 0,0,0);
         int    cycles = table.getIntValue("cycles", 0,0,0);
         double triggerphase=0;
-        if(cycles>0 && timestamp>0) triggerphase=period*((timestamp+phase)%cycles);
+        if(cycles>0 && timestamp>=0) triggerphase=period*((timestamp+phase)%cycles);
 //        System.out.println(period + " " + phase + " " + cycles + " " + timestamp + " " + triggerphase);
         return triggerphase;
     }
