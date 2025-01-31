@@ -327,7 +327,7 @@ public class ECCommon {
         if(CYCLES>0&&event.hasBank("RUN::config")==true){
             DataBank bank = event.getBank("RUN::config");
             long timestamp = bank.getLong("timestamp", 0);
-            triggerPhase = timestamp>0 ? (int) (PERIOD*((timestamp+PHASE)%CYCLES)) : 0;
+            triggerPhase = timestamp>=0 ? (int) (PERIOD*((timestamp+PHASE)%CYCLES)) : 0;
         }
 
         if(event.hasBank("ECAL::tdc")==true){
