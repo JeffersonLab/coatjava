@@ -121,7 +121,7 @@ public class HitReader {
 
     private void getDCRBJitters(boolean swapBits) {
         
-        if(tiTimeStamp>0 && event.hasBank(bankNames.getTimeStampBank())) {
+        if(tiTimeStamp>=0 && event.hasBank(bankNames.getTimeStampBank())) {
             
             dcrbjitters = new IndexedTable(2, "jitter:I");
             

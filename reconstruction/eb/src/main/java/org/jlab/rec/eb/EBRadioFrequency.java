@@ -95,7 +95,7 @@ public class EBRadioFrequency {
             int    phase  = ccdb.getInteger(EBCCDBEnum.RF_JITTER_PHASE);
             int    cycles = ccdb.getInteger(EBCCDBEnum.RF_JITTER_CYCLES);
             long   timeStamp = bank.getLong("timestamp", 0);
-            if(cycles>0 && timeStamp>0) triggerPhase=period*((timeStamp+phase)%cycles);
+            if(cycles>0 && timeStamp>=0) triggerPhase=period*((timeStamp+phase)%cycles);
         
         }
         // if RF::tdc exists (data), calculate rfTime from scratch
