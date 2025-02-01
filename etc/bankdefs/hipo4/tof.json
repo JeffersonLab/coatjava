@@ -151,7 +151,34 @@
         {"name":"midbarAlgo_1B_tCorr",  "type":"F", "info":"corrected hit time using middle of bar algorithm to compute the path length between 1A and 1B"},
         {"name":"EmaxAlgo_1B_tCorr",    "type":"F", "info":"corrected hit time using Emax algorithm to compute the path length between 1A and 1B"}    ]
  },
-
+   {
+    "name": "FTOF::calib",
+    "group": 21200,
+    "item" : 35,
+    "info": "reconstructed hit info from FTOF calibration",
+    "entries": [
+       {"name":"id",                 "type":"S", "info":"id of the hit"},
+       {"name":"status",             "type":"S", "info":"hit status defined based on presence (0) or absence (1) of TDCR-TDCL-ADCR-ADCL"},
+       {"name":"trackid",            "type":"S", "info":"matched DC track id"},
+       {"name":"sector",             "type":"B", "info":"sector of FTOF"},
+       {"name":"layer",              "type":"B", "info":"panel id of FTOF (1-1A, 2-1B, 3-2"},
+       {"name":"component",          "type":"S", "info":"paddle id of FTOF"},
+       {"name":"energy",             "type":"F", "info":"E dep (MeV) of hit"},
+       {"name":"time",               "type":"F", "info":"Hit time (ns)"},
+       {"name":"x",                  "type":"F", "info":"Global X coor (cm) of hit"},
+       {"name":"y",                  "type":"F", "info":"Global Y coor (cm) of hit"},
+       {"name":"z",                  "type":"F", "info":"Global Z coor (cm) of hit"},
+       {"name":"tx",                 "type":"F", "info":"Global X coor (cm) of hit from DC info - trackid index"},
+       {"name":"ty",                 "type":"F", "info":"Global Y coor (cm) of hit from DC info - trackid index"},
+       {"name":"tz",                 "type":"F", "info":"Global Z coor (cm) of hit from DC info - trackid index"},
+       {"name":"adc1",               "type":"I", "info":"ADCL"},
+       {"name":"adc2",               "type":"I", "info":"ADCR"},
+       {"name":"tdc1",               "type":"I", "info":"TDCL"},
+       {"name":"tdc2",               "type":"I", "info":"TDCR"},
+       {"name":"pathLength",         "type":"F", "info":"pathlength of the track from the vertex (doca point to the beamline to the midpoint between the entrance and exit of the hit bar"},
+       {"name":"pathLengthThruBar",  "type":"F", "info":"pathlength of the track from the entrance point to the exit point through the hit bar "}
+    ]
+  },
   {
     "name": "CTOF::rawhits",
     "group": 20400,
