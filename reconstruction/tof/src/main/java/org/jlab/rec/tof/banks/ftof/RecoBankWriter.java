@@ -209,6 +209,65 @@ public class RecoBankWriter {
         }
     }
 
+    public DataBank fillCalibBank(DataEvent event, List<Hit> hitlist, String hitsType) {
+        if (hitlist == null) {
+            return null;
+        }
+        if (hitlist.isEmpty()) {
+            return null;
+        }
+        
+        if(hitsType.equalsIgnoreCase("FTOFHB"))
+            return null;
+        
+        int nrows=0;
+        for(Hit h : hitlist) {
+            if(h.get_TrkId()>0 && 
+               h.get_TrkPosition()!=null &&
+               h.get_TrkPosition().z()!=0)
+                nrows++;
+        }
+        if(nrows==0) return null;
+        
+        String bankName = "FTOF::calib";               
+        DataBank bank = event.createBank(bankName, nrows);
+        if (bank == null) {
+            System.err.println("COULD NOT CREATE A BANK!!!!!!"+bankName);
+            return null;
+        }
+        int irow=0;
+        for(Hit h : hitlist) {
+            if(h.get_TrkId()>0 && 
+               h.get_TrkPosition()!=null &&
+               h.get_TrkPosition().z()!=0) {
+                bank.setShort("id", irow, (short) h.get_Id());
+                bank.setByte("sector", irow, (byte) h.get_Sector());
+                bank.setByte("layer", irow, (byte) h.get_Panel());
+                bank.setShort("component", irow, (short) h.get_Paddle());
+                bank.setShort("status", irow, (short) h.getStatus());
+                bank.setFloat("energy", irow, (float) h.get_Energy());
+                bank.setFloat("time", irow, (float) h.get_t());
+                bank.setFloat("x", irow, (float) h.get_Position().x());
+                bank.setFloat("y", irow, (float) h.get_Position().y());
+                bank.setFloat("z", irow, (float) h.get_Position().z());
+                bank.setFloat("tx", irow, (float) h.get_TrkPosition().x());
+                bank.setFloat("ty", irow, (float) h.get_TrkPosition().y());
+                bank.setFloat("tz", irow, (float) h.get_TrkPosition().z());
+                bank.setShort("trackid", irow, (short) h.get_TrkId());
+                bank.setInt("adc1", irow, h.get_ADC1());
+                bank.setInt("adc2", irow, h.get_ADC2());
+                bank.setInt("tdc1", irow, h.get_TDC1());
+                bank.setInt("tdc2", irow, h.get_TDC2());
+                bank.setFloat("pathLength", irow, (float) h.get_TrkPathLen());
+                bank.setFloat("pathLengthThruBar", irow, (float) h.get_TrkPathLenThruBar());
+                irow++;
+            }
+        }
+        // bank.show();
+        return bank;
+
+    }
+
     public void appendFTOFBanks(DataEvent event, List<Hit> hits, List<Cluster> clusters,
                                 ArrayList<ClusterMatcher> matchedClusters, String hitsType) {
         List<DataBank> fTOFBanks = new ArrayList<DataBank>();
@@ -233,18 +292,16 @@ public class RecoBankWriter {
             fTOFBanks.add(bank4);
         }
 
-        if (fTOFBanks.size() == 4) {
-            event.appendBanks(fTOFBanks.get(0), fTOFBanks.get(1), fTOFBanks.get(2), fTOFBanks.get(3));
+        DataBank bank5 = this.fillCalibBank((DataEvent) event, hits, hitsType);
+        if (bank5 != null) {
+            fTOFBanks.add(bank5);
         }
-        if (fTOFBanks.size() == 3) {
-            event.appendBanks(fTOFBanks.get(0), fTOFBanks.get(1), fTOFBanks.get(2));
+
+        if(!fTOFBanks.isEmpty()) {
+            DataBank[] banks = new DataBank[fTOFBanks.size()];
+            event.appendBanks(fTOFBanks.toArray(banks));
         }
-        if (fTOFBanks.size() == 2) {
-            event.appendBanks(fTOFBanks.get(0), fTOFBanks.get(1));
-        }
-        if (fTOFBanks.size() == 1) {
-            event.appendBanks(fTOFBanks.get(0));
-        }
+        
 
     }
 
