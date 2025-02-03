@@ -11,6 +11,9 @@ import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.utils.CLASResources;
 import cnuphys.magfield.MagneticFields;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import org.jlab.geom.prim.Point3D;
 import org.jlab.rec.atof.constants.Parameters;
 
 /**
@@ -109,7 +112,6 @@ public class TrackProjector {
             int nt = bank.rows(); // number of tracks 
             TrackProjection projection = new TrackProjection();
             DataBank outputBank = event.createBank("AHDC::Projections", nt);
-
             for (int i = 0; i < nt; i++) {
 
                 double x = bank.getFloat("x", i);
@@ -119,7 +121,7 @@ public class TrackProjector {
                 double py = bank.getFloat("py", i);
                 double pz = bank.getFloat("pz", i);
 
-                int q = 1; //need the charge sign from tracking
+                int q = -1; //need the charge sign from tracking
 
                 Units units = Units.MM; //can be MM or CM. 
 
@@ -158,7 +160,6 @@ public class TrackProjector {
         Projections.clear();
                 
         String track_bank_name = "MC::Particle";
-
         if (event == null) { // check if there is an event
             //System.out.print(" no event \n");
         } else if (event.hasBank(track_bank_name) == false) {
@@ -187,7 +188,7 @@ public class TrackProjector {
 
 		Units units = Units.MM;   
                 
-                int q = 1; //need the charge sign from tracking
+                int q = -1; //need the charge sign from tracking
 
                 double xb = 0;
                 double yb = 0;
@@ -196,7 +197,6 @@ public class TrackProjector {
                 Helix helix = new Helix(x, y, z, px, py, pz, q, B, xb, yb, units);
 
                 //Intersection points with the middle of the bar or wedge
-
 		projection.set_BarIntersect(helix.getHelixPointAtR(Parameters.BAR_MIDDLE_RADIUS));
                 projection.set_WedgeIntersect(helix.getHelixPointAtR(Parameters.WEDGE_MIDDLE_RADIUS));
 
@@ -215,6 +215,55 @@ public class TrackProjector {
             event.appendBank(outputBank);
         }
     }
+    
+    public void projectMCTracks_full_path(DataEvent event, int num_event, BufferedWriter writer) throws IOException { 
+                
+        String track_bank_name = "MC::Particle";
+        if (event == null) { // check if there is an event
+            //System.out.print(" no event \n");
+        } else if (event.hasBank(track_bank_name) == false) {
+            // check if there are ahdc tracks in the event
+            //System.out.print("no tracks \n");
+        } else {
+            DataBank bank = event.getBank(track_bank_name);
+            int nt = bank.rows(); // number of tracks 
+
+            for (int i = 0; i < nt; i++) {
+
+                double x = bank.getFloat("vx", i);
+                double y = bank.getFloat("vy", i);
+                double z = bank.getFloat("vz", i);
+                double px = bank.getFloat("px", i);
+                double py = bank.getFloat("py", i);
+                double pz = bank.getFloat("pz", i);
+                
+                //Put everything in MM
+
+                x = x*10;
+                y = y*10;
+                z = z*10;
+
+		Units units = Units.MM;   
+                
+                int q = -1; //need the charge sign from tracking
+
+                double xb = 0;
+                double yb = 0;
+
+                //momenta must be in GeV for the helix class
+                Helix helix = new Helix(x, y, z, px, py, pz, q, B, xb, yb, units);
+                
+                double min = 0.1;
+                double max = Parameters.WEDGE_INNER_RADIUS+Parameters.WEDGE_THICKNESS;
+                int nsteps = 20;
+                double step = (max-min)/nsteps;
+                for(double i_radius = min; i_radius<max; i_radius+=step){
+                    Point3D p = helix.getHelixPointAtR(i_radius);
+                    writer.write(String.format("%d,%f,%f,%f%n", num_event, p.x(), p.y(), p.z()));
+                }
+            }
+        }
+    }
 
     public static void fill_out_bank(DataBank outputBank, TrackProjection projection, int i) {
         outputBank.setFloat("x_at_bar", i, (float) projection.get_BarIntersect().x());
@@ -227,6 +276,7 @@ public class TrackProjector {
         outputBank.setFloat("z_at_wedge", i, (float) projection.get_WedgeIntersect().z());
         outputBank.setFloat("L_at_wedge", i, (float) projection.get_WedgePathLength());
         outputBank.setFloat("L_in_wedge", i, (float) projection.get_WedgeInPathLength());
+   
     }
 
     public static void main(String arg[]) {
@@ -259,11 +309,8 @@ public class TrackProjector {
         while (reader.hasEvent()) {
             DataEvent event = (DataEvent) reader.getNextEvent();
             event_number++;
-
             projector.ProjectTracks(event);
-            event.getBank("AHDC::Projections").show();
         }
-
         System.out.print("Read " + event_number + " events");
     }
 }
