@@ -159,9 +159,9 @@ public class AtofHit {
         //Type of hit can be wedge, bar up, bar down or bar.
         //Avoids testing components and order every time.
         String itype = "undefined";
-        if (this.component == 10 && this.order == 0) {
+        if (this.component == 10 && this.order == 1) {
             itype = "bar down";
-        } else if (this.component == 10 && this.order == 1) {
+        } else if (this.component == 10 && this.order == 0) {
             itype = "bar up";
         } else if (this.component < 10) {
             itype = "wedge";
@@ -492,7 +492,8 @@ public class AtofHit {
                             yt = track_bank.getFloat("y_at_wedge", i);
                             zt = track_bank.getFloat("z_at_wedge", i);
                             path = track_bank.getFloat("L_at_wedge", i);
-                            inpath = track_bank.getFloat("L_in_wedge", i);
+                            //A wedge hit traveled through the whole bar and then through a portion of the wedge
+                            inpath = track_bank.getFloat("L_in_wedge", i) + track_bank.getFloat("L_at_wedge", i) - track_bank.getFloat("L_at_bar", i); 
                         }
                         case "bar" -> {
                             sigma_phi = Parameters.SIGMA_PHI_TRACK_MATCHING_BAR;
