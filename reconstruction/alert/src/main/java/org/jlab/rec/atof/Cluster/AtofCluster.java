@@ -1,20 +1,19 @@
 package org.jlab.rec.atof.cluster;
+
 import java.util.ArrayList;
 import org.jlab.rec.atof.hit.AtofHit;
 import org.jlab.rec.atof.hit.BarHit;
 
 /**
  *
- * @authors npilleux, churaman
+ * @author npilleux
  */
-
-
 public class AtofCluster {
     
     ArrayList<BarHit> bar_hits;
     ArrayList<AtofHit> wedge_hits;
     double x,y,z,time,energy;
-    double path_length;
+    double path_length, inpath_length;
     
     public ArrayList<BarHit> getBarHits() {
         return bar_hits;
@@ -80,9 +79,16 @@ public class AtofCluster {
         this.path_length = path_length;
     }
     
+    public double getInpath_length() {
+        return inpath_length;
+    }
+
+    public void setInpath_length(double inpath_length) {
+        this.inpath_length = inpath_length;
+    }
+    
     //Cluster coordinates and time are defined as the coordinates and time of the max energy hit
     //Can be changed later
-
     public final void computeClusterProperties() {
         this.energy=0;
         double max_energy = -1;
@@ -112,6 +118,7 @@ public class AtofCluster {
             this.y = max_energy_hit.getY();
             this.z = max_energy_hit.getZ();
             this.path_length = max_energy_hit.getPath_length();
+            this.inpath_length = max_energy_hit.getInpath_length();
         }
         else
         {
@@ -120,13 +127,18 @@ public class AtofCluster {
             this.y = max_energy_barhit.getY();
             this.z = max_energy_barhit.getZ();
             this.path_length = max_energy_barhit.getPath_length();
+            this.inpath_length = max_energy_barhit.getInpath_length();
         }
-        
     }
     
     public double getPhi()
     {
         return Math.atan2(this.y, this.x);
+    }
+    
+    public double getBeta()
+    {
+        return (this.path_length / this.time) / (2.9979 * Math.pow(10, 2));//to do: Change to non-hardcoded value for c
     }
     
     public AtofCluster(ArrayList<BarHit> bar_hits, ArrayList<AtofHit> wedge_hits) 
