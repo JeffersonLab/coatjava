@@ -100,6 +100,54 @@
                         }
 		]
 	},{
+                "name": "ATOF::clusters",
+                "group": 22500,
+                "item": 22,
+                "info": "Clusters in ATOF",
+                "entries": [		
+                        {
+                                "name": "id",
+                                "type": "S",
+                                "info": "hit id"
+                        }, {
+			        "name": "barsize",
+                                "type": "I",
+                                "info": "number of hits from the bars"
+                        }, {
+                                "name": "wedgesize",
+                                "type": "I",
+                                "info": "number of hits from the wedges"			    
+                        },{
+                                "name": "time",
+                                "type": "F",
+                                "info": "time in ns"
+                        },{
+                                "name": "x",
+                                "type": "F",
+                            "info": "x position in mm"
+                        }, {
+                                "name": "y",
+                                "type": "F",
+                                "info": "y position in mm"
+                        }, {
+                                "name": "z",
+                                "type": "F",
+                                "info": "z position in mm"
+                        },{
+                                "name": "energy",
+                                "type": "F",
+                                "info": "energy in MeV"
+                        },{
+			        "name": "pathlength",
+                                "type": "F",
+                                "info": "path length to the cluster in mm"
+                        },{
+                                "name": "inpathlength",
+                                "type": "F",
+                                "info": "path length inside the detector in mm"
+                        }
+		]
+	},{
 		"name": "AHDC::Hits",
 		"group": 23000,
 		"item": 23,

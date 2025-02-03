@@ -1,21 +1,17 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Main.java to edit this template
- */
 package org.jlab.rec.atof.banks;
 
 import java.util.ArrayList;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
+import org.jlab.rec.atof.cluster.AtofCluster;
 import org.jlab.rec.atof.hit.AtofHit;
 
 /**
  *
- * @authors npilleux,churaman
+ * @author npilleux
  */
 public class RecoBankWriter {
     
-    // write useful information in the bank
     public static DataBank fillAtofHitBank(DataEvent event, ArrayList<AtofHit> hitlist) {
         
         DataBank bank =  event.createBank("ATOF::hits", hitlist.size());
@@ -39,6 +35,30 @@ public class RecoBankWriter {
             bank.setFloat("energy",i, (float) hitlist.get(i).getEnergy());
             bank.setFloat("inlength",i, (float) (hitlist.get(i).getInpath_length())); 
             bank.setFloat("pathlength",i, (float) (hitlist.get(i).getPath_length())); 
+        }
+        return bank;
+    }
+    
+    public static DataBank fillAtofClusterBank(DataEvent event, ArrayList<AtofCluster> clusterlist) {
+        
+        DataBank bank =  event.createBank("ATOF::clusters", clusterlist.size());
+        
+        if (bank == null) {
+            System.err.println("COULD NOT CREATE A ATOF::Hits BANK!!!!!!");
+            return null;
+        }
+        
+        for(int i =0; i< clusterlist.size(); i++) {
+            bank.setShort("id",i, (short)(i+1));
+            bank.setInt("barsize",i, (int) clusterlist.get(i).getBarHits().size());
+            bank.setInt("wedgesize",i, (int) clusterlist.get(i).getWedgeHits().size());
+            bank.setFloat("time",i, (float) clusterlist.get(i).getTime());
+            bank.setFloat("x",i, (float) (clusterlist.get(i).getX()));
+            bank.setFloat("y",i, (float) (clusterlist.get(i).getY()));
+            bank.setFloat("z",i, (float) (clusterlist.get(i).getZ()));
+            bank.setFloat("energy",i, (float) clusterlist.get(i).getEnergy());
+            bank.setFloat("inpathlength",i, (float) (clusterlist.get(i).getInpath_length())); 
+            bank.setFloat("pathlength",i, (float) (clusterlist.get(i).getPath_length())); 
         }
         return bank;
     }
