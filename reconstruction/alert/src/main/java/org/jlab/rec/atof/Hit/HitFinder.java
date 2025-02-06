@@ -13,7 +13,6 @@ import org.jlab.groot.graphics.EmbeddedCanvas;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.hipo.HipoDataSource;
-import static org.jlab.rec.atof.banks.RecoBankWriter.fillAtofHitBank;
 import org.jlab.rec.atof.trackMatch.TrackProjector;
 import org.jlab.utils.CLASResources;
 
@@ -178,16 +177,12 @@ public class HitFinder {
         //Once all has been listed, hits are sorted by energy
         Collections.sort(this.bar_hits, (hit1, hit2) -> Double.compare(hit2.getEnergy(), hit1.getEnergy()));
         Collections.sort(this.wedge_hits, (hit1, hit2) -> Double.compare(hit2.getEnergy(), hit1.getEnergy()));
-        ArrayList<AtofHit> allhits = new ArrayList<>();
-        allhits.addAll(this.wedge_hits);
-        allhits.addAll(this.bar_hits);
-        DataBank hitbank = fillAtofHitBank(event, allhits);
-        event.appendBank(hitbank);
     }
 
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
+        
     }
 }

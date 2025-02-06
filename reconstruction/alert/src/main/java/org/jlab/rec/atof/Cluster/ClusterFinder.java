@@ -13,7 +13,6 @@ import org.jlab.groot.graphics.EmbeddedCanvas;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.hipo.HipoDataSource;
-import static org.jlab.rec.atof.banks.RecoBankWriter.fillAtofClusterBank;
 import org.jlab.rec.atof.constants.Parameters;
 import org.jlab.rec.atof.hit.AtofHit;
 import org.jlab.rec.atof.hit.BarHit;
@@ -174,8 +173,8 @@ public class ClusterFinder {
             AtofCluster cluster = new AtofCluster(this_cluster_bar_hits, this_cluster_wedge_hits);
             clusters.add(cluster);
         }
-        DataBank clusterbank = fillAtofClusterBank(event, clusters);
-        event.appendBank(clusterbank);
+        //DataBank clusterbank = fillAtofClusterBank(event, clusters);
+        //event.appendBank(clusterbank);
     }
 
     public ClusterFinder() {
@@ -187,5 +186,4 @@ public class ClusterFinder {
      */
     public static void main(String[] args) {
     }
-
 }
