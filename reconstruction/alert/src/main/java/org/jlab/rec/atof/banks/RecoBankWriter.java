@@ -5,6 +5,7 @@ import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.atof.cluster.AtofCluster;
 import org.jlab.rec.atof.hit.AtofHit;
+import org.jlab.rec.atof.hit.BarHit;
 
 /**
  *
@@ -12,7 +13,11 @@ import org.jlab.rec.atof.hit.AtofHit;
  */
 public class RecoBankWriter {
     
-    public static DataBank fillAtofHitBank(DataEvent event, ArrayList<AtofHit> hitlist) {
+    public static DataBank fillAtofHitBank(DataEvent event, ArrayList<AtofHit> wedge_hits, ArrayList<BarHit> bar_hits) {
+        
+        ArrayList<AtofHit> hitlist = new ArrayList<>();
+        hitlist.addAll(wedge_hits);
+        hitlist.addAll(bar_hits);
         
         DataBank bank =  event.createBank("ATOF::hits", hitlist.size());
         
@@ -62,12 +67,28 @@ public class RecoBankWriter {
         }
         return bank;
     }
+    
+    public int appendATOFBanks(DataEvent event, ArrayList<AtofHit> wedge_hits, ArrayList<BarHit> bar_hits, ArrayList<AtofCluster> clusterlist) {
+        
+        DataBank hitbank = this.fillAtofHitBank(event, wedge_hits, bar_hits);
+        if (hitbank != null) {
+            event.appendBank(hitbank);
+        }
+        else return 1;
+
+        DataBank clusterbank = fillAtofClusterBank(event, clusterlist);
+        if (clusterbank != null) {
+            event.appendBank(clusterbank);
+        }
+        else return 1;
+        
+        return 0;
+    }
 
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // TODO code application logic here
     }
     
 }

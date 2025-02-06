@@ -7,7 +7,6 @@ import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.hipo.HipoDataSource;
-import org.jlab.io.hipo.HipoDataSync;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import org.jlab.clas.swimtools.Swim;
@@ -35,12 +34,25 @@ public class ATOFEngine extends ReconstructionEngine {
         super("ATOF", "pilleux", "1.0");
     }
 
-    //int Run = -1;
     RecoBankWriter rbc;
 
     private final AtomicInteger Run = new AtomicInteger(0);
     private Detector ATOF;
     private double B; //Magnetic field
+    
+    //Setters and getters
+    public void setB(double B) {
+        this.B = B;
+    }
+    public double getB() {
+        return B;
+    }
+    public void setATOF(Detector ATOF) {
+        this.ATOF = ATOF;
+    }
+    public Detector getATOF() {
+        return ATOF;
+    }
 
     @Override
     public boolean processDataEvent(DataEvent event) {
@@ -76,20 +88,19 @@ public class ATOFEngine extends ReconstructionEngine {
         ArrayList<AtofHit> WedgeHits = hitfinder.getWedgeHits();
         ArrayList<BarHit> BarHits = hitfinder.getBarHits();
         
-        //1) exit if halfhit list is empty
+        //Exit if hit lists are empty
         if (WedgeHits.isEmpty() && BarHits.isEmpty()) {
             //			System.out.println("No hits : ");
             //			event.show();
             return true;
         }
-
-
+        
         ClusterFinder clusterFinder = new ClusterFinder();
         clusterFinder.makeClusters(event,hitfinder);
-        ArrayList<AtofCluster> clusters = clusterFinder.getClusters();
+        ArrayList<AtofCluster> Clusters = clusterFinder.getClusters();
 
         if (WedgeHits.size() != 0 || BarHits.size() != 0) {
-            //rbc.appendBanks(event, hits, cndclusters);
+            rbc.appendATOFBanks(event, WedgeHits, BarHits, Clusters);
         }
         return true;
     }
@@ -102,7 +113,18 @@ public class ATOFEngine extends ReconstructionEngine {
         DatabaseConstantProvider cp = new DatabaseConstantProvider(11, "default");
         this.ATOF = factory.createDetectorCLAS(cp);
 
-        //READING MAG FIELD MAP
+        //requireConstants(Arrays.asList(CalibrationConstantsLoader.getAtofTables()));
+        //this.getConstantsManager().setVariation("default");
+
+        this.registerOutputBank("ATOF::hits", "ATOF::clusters");
+
+        return true;
+    }
+
+    public static void main(String arg[]) {
+        ATOFEngine en = new ATOFEngine();
+        
+         //READING MAG FIELD MAP
         System.setProperty("CLAS12DIR", "../../");
         String mapDir = CLASResources.getResourcePath("etc") + "/data/magfield";
         try {
@@ -114,44 +136,17 @@ public class ATOFEngine extends ReconstructionEngine {
         float[] b = new float[3];
         Swim swimmer = new Swim();
         swimmer.BfieldLab(0, 0, 0, b);
-        this.B = Math.abs(b[2]);
-
-        //requireConstants(Arrays.asList(CalibrationConstantsLoader.getCndTables()));
-        //this.getConstantsManager().setVariation("default");
-
-        this.registerOutputBank("CND::hits", "CND::clusters");
-
-        return true;
-    }
-
-    public static void main(String arg[]) {
-        ATOFEngine en = new ATOFEngine();
+        en.setB(Math.abs(b[2]));
 
         en.init();
         String input = "/Users/npilleux/Desktop/alert/atof-reconstruction/coatjava/reconstruction/alert/src/main/java/org/jlab/rec/atof/hit/mixed_ions.hipo";
         HipoDataSource reader = new HipoDataSource();
         reader.open(input);
-        //String outputFile = "/Users/npilleux/Desktop/alert/atof-reconstruction/coatjava/reconstruction/alert/src/main/java/org/jlab/rec/atof/hit/tester.hipo";
-        //HipoDataSync writer = new HipoDataSync();
-        //writer.open(outputFile);
-
+        
         while (reader.hasEvent()) {
             DataEvent event = (DataEvent) reader.getNextEvent();
             en.processDataEvent(event);
-            //writer.writeEvent(event);
+            event.getBank("ATOF::clusters").show();
             }
-        
-        //writer.close();
-
-        //HipoDataSource sortie = new HipoDataSource();
-        //sortie.open(outputFile);
-
-        //System.out.println("Fichier de sortie : ");
-        //while (sortie.hasEvent()) {
-
-         //   DataEvent event = (DataEvent) sortie.getNextEvent();
-            //event.show();
-        //}
     }
-
 }
