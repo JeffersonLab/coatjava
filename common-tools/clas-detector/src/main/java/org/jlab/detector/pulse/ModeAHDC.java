@@ -28,15 +28,15 @@ public class ModeAHDC extends HipoExtractor  {
 	@Override
 	public List<Pulse> extract(NamedEntry pars, int id, short... samples){
 		// Settings parameters (they can be initialised by a CCDB)
-		float samplingTime = 0;
+		float samplingTime = 44;
 		int sparseSample = 0;
 		short adcOffset = 0;
 		long timeStamp = 0;
 		float fineTimeStampResolution = 0;
 
-		float amplitudeFractionCFA = 0;
-		int binDelayCFD = 0;
-		float fractionCFD = 0;
+		float amplitudeFractionCFA = 0.5f;
+		int binDelayCFD = 5;
+		float fractionCFD = 0.3f;
 
 		// Calculation intermediaries
 		int binMax = 0; //Bin of the max ADC over the pulse

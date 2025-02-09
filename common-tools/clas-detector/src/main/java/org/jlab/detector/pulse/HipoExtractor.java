@@ -61,8 +61,13 @@ public abstract class HipoExtractor implements IExtractor {
                 DataBank adc = event.createBank(adcBankName, pulses.size());
                 for (int i=0; i<pulses.size(); ++i) {
                     copyIndices(wf, adc, i, i);
-                    adc.setInt("ADC", i, (int)pulses.get(i).integral);
+                    adc.setInt("ADC", i, (int)pulses.get(i).adcMax);
                     adc.setFloat("time", i, pulses.get(i).time);
+		    adc.setFloat("leadingEdgeTime", i, pulses.get(i).leadingEdgeTime);
+		    adc.setFloat("timeOverThreshold", i, pulses.get(i).timeOverThreshold);
+		    adc.setFloat("constantFractionTime", i, pulses.get(i).constantFractionTime);
+		    adc.setInt("integral", i, (int)pulses.get(i).integral);
+		    adc.setShort("ped", i, (short)pulses.get(i).pedestal);
                 }
                 event.appendBank(adc);
             }
@@ -84,8 +89,13 @@ public abstract class HipoExtractor implements IExtractor {
             if (pulses!=null && !pulses.isEmpty()) {
                 for (int i=0; i<pulses.size(); ++i) {
                     copyIndices(wfBank, adcBank, pulses.get(i).id, i);
-                    adcBank.putInt("ADC", i, (int)pulses.get(i).integral);
+                    adcBank.putInt("ADC", i, (int)pulses.get(i).adcMax);
                     adcBank.putFloat("time", i, pulses.get(i).time);
+		    adcBank.putFloat("leadingEdgeTime", i, pulses.get(i).leadingEdgeTime);
+		    adcBank.putFloat("timeOverThreshold", i, pulses.get(i).timeOverThreshold);
+		    adcBank.putFloat("constantFractionTime", i, pulses.get(i).constantFractionTime);
+		    adcBank.putInt("integral", i, (int)pulses.get(i).integral);
+		    adcBank.putShort("ped", i, (short)pulses.get(i).pedestal);
                 }
             }
         }
