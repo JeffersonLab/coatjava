@@ -1,24 +1,11 @@
 package org.jlab.rec.atof.cluster;
 
-import cnuphys.magfield.MagneticFields;
 import java.util.ArrayList;
-import javax.swing.JFrame;
-import org.jlab.clas.swimtools.Swim;
-import org.jlab.detector.calib.utils.DatabaseConstantProvider;
-import org.jlab.geom.base.Detector;
-import org.jlab.geom.detector.alert.ATOF.AlertTOFFactory;
-import org.jlab.groot.data.H1F;
-import org.jlab.groot.data.H2F;
-import org.jlab.groot.graphics.EmbeddedCanvas;
-import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
-import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.rec.atof.constants.Parameters;
 import org.jlab.rec.atof.hit.AtofHit;
 import org.jlab.rec.atof.hit.BarHit;
 import org.jlab.rec.atof.hit.HitFinder;
-import org.jlab.rec.atof.trackMatch.TrackProjector;
-import org.jlab.utils.CLASResources;
 
 /**
  *
@@ -173,8 +160,6 @@ public class ClusterFinder {
             AtofCluster cluster = new AtofCluster(this_cluster_bar_hits, this_cluster_wedge_hits);
             clusters.add(cluster);
         }
-        //DataBank clusterbank = fillAtofClusterBank(event, clusters);
-        //event.appendBank(clusterbank);
     }
 
     public ClusterFinder() {

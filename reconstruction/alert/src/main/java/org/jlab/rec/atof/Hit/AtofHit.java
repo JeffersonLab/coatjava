@@ -2,12 +2,9 @@ package org.jlab.rec.atof.hit;
 
 import java.util.List;
 import org.jlab.geom.base.*;
-import org.jlab.geom.detector.alert.ATOF.*;
-import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
-import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.rec.atof.constants.Parameters;
 import org.jlab.rec.atof.trackMatch.TrackProjection;
 import org.jlab.rec.atof.trackMatch.TrackProjector;
@@ -24,11 +21,11 @@ import org.jlab.rec.atof.trackMatch.TrackProjector;
 public class AtofHit {
 
     private int sector, layer, component, order;
-    private int TDC, ToT;
+    private int tdc, tot;
     private double time, energy, x, y, z;
     private String type;
-    private boolean is_in_a_cluster;
-    private double path_length, inpath_length;
+    private boolean isInACluster;
+    private double pathLength, inPathLength;
 
     public int getSector() {
         return sector;
@@ -62,20 +59,20 @@ public class AtofHit {
         this.component = component;
     }
 
-    public int getTDC() {
-        return TDC;
+    public int getTdc() {
+        return tdc;
     }
 
-    public void setTDC(int tdc) {
-        this.TDC = tdc;
+    public void setTdc(int tdc) {
+        this.tdc = tdc;
     }
 
-    public int getToT() {
-        return ToT;
+    public int getTot() {
+        return tot;
     }
 
-    public void setToT(int tot) {
-        this.ToT = tot;
+    public void setTot(int tot) {
+        this.tot = tot;
     }
 
     public double getTime() {
@@ -126,31 +123,31 @@ public class AtofHit {
         this.type = type;
     }
 
-    public boolean getIs_in_a_cluster() {
-        return is_in_a_cluster;
+    public boolean getIsInACluster() {
+        return isInACluster;
     }
 
-    public void setIs_in_a_cluster(boolean is_in_a_cluster) {
-        this.is_in_a_cluster = is_in_a_cluster;
+    public void setIsInACluster(boolean is_in_a_cluster) {
+        this.isInACluster = is_in_a_cluster;
     }
 
-    public double getPath_length() {
-        return path_length;
+    public double getPathLength() {
+        return pathLength;
     }
 
-    public void setPath_length(double path_length) {
-        this.path_length = path_length;
+    public void setPathLength(double path_length) {
+        this.pathLength = path_length;
     }
 
-    public double getInpath_length() {
-        return inpath_length;
+    public double getInPathLength() {
+        return inPathLength;
     }
 
-    public void setInpath_length(double inpath_length) {
-        this.inpath_length = inpath_length;
+    public void setInPathLength(double inpath_length) {
+        this.inPathLength = inpath_length;
     }
 
-    public int computeModule_index() {
+    public int computeModuleIndex() {
         //Index ranging 0 to 60 for each wedge+bar module
         return 4 * this.sector + this.layer;
     }
@@ -178,7 +175,7 @@ public class AtofHit {
      * @return 0 if the time was successfully set, or 1 if the hit type is
      * unsupported.
      */
-    public final int TDC_to_time() {
+    public final int convertTdcToTime() {
         double tdc2time, veff, distance_to_sipm;
         if (null == this.type) {
             System.out.print("Null hit type, cannot convert tdc to time.");
@@ -214,7 +211,7 @@ public class AtofHit {
             }
         }
         //Hit time. Will need implementation of offsets.
-        this.time = tdc2time * this.TDC - distance_to_sipm / veff;
+        this.time = tdc2time * this.tdc - distance_to_sipm / veff;
         return 0;
     }
 
@@ -226,7 +223,7 @@ public class AtofHit {
      * @return 0 if the energy was successfully set, or 1 if the hit type is
      * unsupported.
      */
-    public final int ToT_to_energy() {
+    public final int convertTotToEnergy() {
         double tot2energy;
         if (null == this.type) {
             System.out.print("Null hit type, cannot convert tot to energy.");
@@ -238,19 +235,19 @@ public class AtofHit {
                     //For now hits are considered in the middle of the wedge
                     //And the SiPM on top 
                     double distance_hit_to_sipm = Parameters.WEDGE_THICKNESS / 2.;
-                    this.energy = tot2energy * this.ToT * Math.exp(distance_hit_to_sipm / Parameters.ATT_L);
+                    this.energy = tot2energy * this.tot * Math.exp(distance_hit_to_sipm / Parameters.ATT_L);
                 }
                 case "bar up" -> {
                     tot2energy = Parameters.TOT2ENERGY_BAR;
                     //only half the information in the bar, 
                     //the attenuation will be computed when the full hit is formed
-                    this.energy = tot2energy * this.ToT;
+                    this.energy = tot2energy * this.tot;
                 }
                 case "bar down" -> {
                     tot2energy = Parameters.TOT2ENERGY_BAR;
                     //only half the information in the bar, 
                     //the attenuation will be computed when the full hit is formed
-                    this.energy = tot2energy * this.ToT;
+                    this.energy = tot2energy * this.tot;
                 }
                 case "bar" -> {
                     System.out.print("Bar hit type, cannot convert tot to energy.");
@@ -275,7 +272,7 @@ public class AtofHit {
      * @return 0 if the coordinates were successfully set, or 1 if the hit type
      * is undefined or unsupported.
      */
-    public final int slc_to_xyz(Detector atof) {
+    public final int convertSLCToXYZ(Detector atof) {
         int sl;
         if (null == this.type) {
             return 1;
@@ -364,17 +361,17 @@ public class AtofHit {
         this.layer = layer;
         this.component = component;
         this.order = order;
-        this.TDC = tdc;
-        this.ToT = tot;
-        this.is_in_a_cluster = false;
+        this.tdc = tdc;
+        this.tot = tot;
+        this.isInACluster = false;
 
         this.makeType();
-        int is_ok = this.TDC_to_time();
+        int is_ok = this.convertTdcToTime();
         if (is_ok != 1) {
-            is_ok = this.ToT_to_energy();
+            is_ok = this.convertTotToEnergy();
         }
         if (is_ok != 1) {
-            is_ok = this.slc_to_xyz(atof);
+            is_ok = this.convertSLCToXYZ(atof);
         }
     }
 
@@ -398,19 +395,19 @@ public class AtofHit {
         this.layer = layer;
         this.component = component;
         this.order = order;
-        this.TDC = tdc;
-        this.ToT = tot;
-        this.is_in_a_cluster = false;
+        this.tdc = tdc;
+        this.tot = tot;
+        this.isInACluster = false;
 
         //First the type needs to be set
         this.makeType();
         //From it the coordinates can be computed
-        this.slc_to_xyz(atof);
+        this.convertSLCToXYZ(atof);
         //From them tracks can be matched
         this.matchTrack(track_projector);
         //And energy and time can then be computed
-        this.ToT_to_energy();
-        this.TDC_to_time();
+        this.convertTotToEnergy();
+        this.convertTdcToTime();
     }
 
     /**
@@ -452,9 +449,9 @@ public class AtofHit {
             if (Math.abs(this.getPhi() - projection_point.toVector3D().phi()) < sigma_phi) {
                 if (Math.abs(this.getZ() - projection_point.z()) < sigma_z) {
                     if ("wedge".equals(this.getType())) {
-                        this.setPath_length(Projections.get(i_track).get_WedgePathLength());
+                        this.setPathLength(Projections.get(i_track).get_WedgePathLength());
                     } else {
-                        this.setPath_length(Projections.get(i_track).get_BarPathLength());
+                        this.setPathLength(Projections.get(i_track).get_BarPathLength());
                     }
                 }
             }
@@ -514,8 +511,8 @@ public class AtofHit {
                 Point3D projection_point = new Point3D(xt, yt, zt);
                 if (Math.abs(this.getPhi() - projection_point.toVector3D().phi()) < sigma_phi) {
                     if (Math.abs(this.getZ() - projection_point.z()) < sigma_z) {
-                        this.setPath_length(path);
-                        this.setInpath_length(inpath);
+                        this.setPathLength(path);
+                        this.setInPathLength(inpath);
                     }
                 }
             }
