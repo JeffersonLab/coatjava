@@ -434,13 +434,13 @@ public class AtofHit {
                     case "wedge" -> {
                         sigma_phi = Parameters.SIGMA_PHI_TRACK_MATCHING_WEDGE;
                         sigma_z = Parameters.SIGMA_Z_TRACK_MATCHING_WEDGE;
-                        projection_point = Projections.get(i_track).get_WedgeIntersect();
+                        projection_point = Projections.get(i_track).getWedgeIntersect();
                     }
                     case "bar up", "bar down" -> {
                         System.out.print("WARNING : YOU ARE MATCHING A TRACK TO A SINGLE HIT IN THE BAR. \n");
                         sigma_phi = Parameters.SIGMA_PHI_TRACK_MATCHING_BAR;
                         sigma_z = Parameters.SIGMA_Z_TRACK_MATCHING_BAR;
-                        projection_point = Projections.get(i_track).get_BarIntersect();
+                        projection_point = Projections.get(i_track).getBarIntersect();
                     }
                     default ->
                         System.out.print("Impossible to match track and hit; hit type is undefined \n");
@@ -449,9 +449,9 @@ public class AtofHit {
             if (Math.abs(this.getPhi() - projection_point.toVector3D().phi()) < sigma_phi) {
                 if (Math.abs(this.getZ() - projection_point.z()) < sigma_z) {
                     if ("wedge".equals(this.getType())) {
-                        this.setPathLength(Projections.get(i_track).get_WedgePathLength());
+                        this.setPathLength(Projections.get(i_track).getWedgePathLength());
                     } else {
-                        this.setPathLength(Projections.get(i_track).get_BarPathLength());
+                        this.setPathLength(Projections.get(i_track).getBarPathLength());
                     }
                 }
             }

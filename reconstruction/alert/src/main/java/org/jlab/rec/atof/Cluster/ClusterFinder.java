@@ -36,7 +36,7 @@ public class ClusterFinder {
         for (int i_wedge = 0; i_wedge < wedge_hits.size(); i_wedge++) {
             AtofHit this_wedge_hit = wedge_hits.get(i_wedge);
             //Make a cluster for each wedge hit that has not been previously clustered
-            if (this_wedge_hit.getIs_in_a_cluster()) {
+            if (this_wedge_hit.getIsInACluster()) {
                 continue;
             }
 
@@ -45,7 +45,7 @@ public class ClusterFinder {
             ArrayList<BarHit> this_cluster_bar_hits = new ArrayList<>();
 
             //Indicate that this hit now is in a cluster
-            this_wedge_hit.setIs_in_a_cluster(true);
+            this_wedge_hit.setIsInACluster(true);
             //And store it
             this_cluster_wedge_hits.add(this_wedge_hit);
 
@@ -54,12 +54,12 @@ public class ClusterFinder {
             for (int j_wedge = i_wedge + 1; j_wedge < wedge_hits.size(); j_wedge++) {
                 AtofHit other_wedge_hit = wedge_hits.get(j_wedge);
                 //If that other hit is already involved in a cluster, skip it
-                if (other_wedge_hit.getIs_in_a_cluster()) {
+                if (other_wedge_hit.getIsInACluster()) {
                     continue;
                 }
                 //Check the distance between the hits
                 //For now we use phi module and z component differences from what is observed in simu
-                int delta_module = Math.abs(this_wedge_hit.computeModule_index() - other_wedge_hit.computeModule_index());
+                int delta_module = Math.abs(this_wedge_hit.computeModuleIndex() - other_wedge_hit.computeModuleIndex());
                 if (delta_module > 30) {
                     delta_module = 60 - delta_module;
                 }
@@ -74,7 +74,7 @@ public class ClusterFinder {
                     if (delta_component <= Parameters.SIGMA_COMPONENT_CLUSTERING)//delta_Z <= sigma_Z)
                     {
                         if (delta_T < Parameters.SIGMA_T_CLUSTERING) {
-                            other_wedge_hit.setIs_in_a_cluster(true);
+                            other_wedge_hit.setIsInACluster(true);
                             this_cluster_wedge_hits.add(other_wedge_hit);
                         }
                     }
@@ -85,12 +85,12 @@ public class ClusterFinder {
             for (int j_bar = 0; j_bar < bar_hits.size(); j_bar++) {
                 BarHit other_bar_hit = bar_hits.get(j_bar);
                 //Skip already clustered hits
-                if (other_bar_hit.getIs_in_a_cluster()) {
+                if (other_bar_hit.getIsInACluster()) {
                     continue;
                 }
                 //Check the distance between the hits
                 //For now we use phi module difference from what is observed in simu
-                int delta_module = Math.abs(this_wedge_hit.computeModule_index() - other_bar_hit.computeModule_index());
+                int delta_module = Math.abs(this_wedge_hit.computeModuleIndex() - other_bar_hit.computeModuleIndex());
                 if (delta_module > 30) {
                     delta_module = 60 - delta_module;
                 }
@@ -102,7 +102,7 @@ public class ClusterFinder {
                 if (delta_module <= Parameters.SIGMA_MODULE_CLUSTERING) {
                     if (delta_Z < Parameters.SIGMA_Z_CLUSTERING) {
                         if (delta_T < Parameters.SIGMA_T_CLUSTERING) {
-                            other_bar_hit.setIs_in_a_cluster(true);
+                            other_bar_hit.setIsInACluster(true);
                             this_cluster_bar_hits.add(other_bar_hit);
                         }
                     }
@@ -119,26 +119,26 @@ public class ClusterFinder {
         for (int i_bar = 0; i_bar < bar_hits.size(); i_bar++) {
             BarHit this_bar_hit = bar_hits.get(i_bar);
             //Skip hits that have already been clustered
-            if (this_bar_hit.getIs_in_a_cluster()) {
+            if (this_bar_hit.getIsInACluster()) {
                 continue;
             }
 
             ArrayList<AtofHit> this_cluster_wedge_hits = new ArrayList<>();
             ArrayList<BarHit> this_cluster_bar_hits = new ArrayList<>();
-            this_bar_hit.setIs_in_a_cluster(true);
+            this_bar_hit.setIsInACluster(true);
             this_cluster_bar_hits.add(this_bar_hit);
 
             //Loop through less energetic clusters
             for (int j_bar = i_bar + 1; j_bar < bar_hits.size(); j_bar++) {
                 BarHit other_bar_hit = bar_hits.get(j_bar);
                 //Skip already clustered hits
-                if (other_bar_hit.getIs_in_a_cluster()) {
+                if (other_bar_hit.getIsInACluster()) {
                     continue;
                 }
 
                 //Check the distance between the hits
                 //For now we use phi module difference from what is observed in simu
-                int delta_module = Math.abs(this_bar_hit.computeModule_index() - other_bar_hit.computeModule_index());
+                int delta_module = Math.abs(this_bar_hit.computeModuleIndex() - other_bar_hit.computeModuleIndex());
                 if (delta_module > 30) {
                     delta_module = 60 - delta_module;
                 }
@@ -151,7 +151,7 @@ public class ClusterFinder {
                 if (delta_module <= Parameters.SIGMA_MODULE_CLUSTERING) {
                     if (delta_Z < Parameters.SIGMA_Z_CLUSTERING) {
                         if (delta_T < Parameters.SIGMA_T_CLUSTERING) {
-                            other_bar_hit.setIs_in_a_cluster(true);
+                            other_bar_hit.setIsInACluster(true);
                             this_cluster_bar_hits.add(other_bar_hit);
                         }
                     }

@@ -117,8 +117,8 @@ public class AtofCluster {
             this.x = max_energy_hit.getX();
             this.y = max_energy_hit.getY();
             this.z = max_energy_hit.getZ();
-            this.pathLength = max_energy_hit.getPath_length();
-            this.inPathLength = max_energy_hit.getInpath_length();
+            this.pathLength = max_energy_hit.getPathLength();
+            this.inPathLength = max_energy_hit.getInPathLength();
         }
         else
         {
@@ -126,11 +126,11 @@ public class AtofCluster {
             this.x = max_energy_barhit.getX();
             this.y = max_energy_barhit.getY();
             this.z = max_energy_barhit.getZ();
-            this.pathLength = max_energy_barhit.getPath_length();
-            this.inPathLength = max_energy_barhit.getInpath_length();
+            this.pathLength = max_energy_barhit.getPathLength();
+            this.inPathLength = max_energy_barhit.getInPathLength();
         }
     }
-     
+    
     public double getPhi()
     {
         return Math.atan2(this.y, this.x);
