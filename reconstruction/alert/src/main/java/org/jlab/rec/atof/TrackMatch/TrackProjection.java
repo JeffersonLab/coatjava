@@ -13,46 +13,46 @@ public class TrackProjection {
     /** 
      * Intersection point of the track with the middle surface of the bar.
      */
-    private Point3D _BarIntersect = new Point3D(); 
+    private Point3D barIntersect = new Point3D(); 
     
     /** 
      * Intersection point of the track with the middle surface of the wedges.
      */
-    private Point3D _WedgeIntersect = new Point3D(); 
+    private Point3D wedgeIntersect = new Point3D(); 
     
     /** 
      * Path length of the track from the DOCA to the beam line 
      * to the entrance surface of the bar. 
      */
-    Float _BarPathLength; 
+    Float barPathLength; 
     
     /** 
      * Path length of the track from the DOCA to the beam line 
      * to the entrance surface of the wedges.
      */
-    Float _WedgePathLength; 
+    Float wedgePathLength; 
     
     /** 
      * Path length inside the bar. 
      */
-    Float _BarInPathLength;
+    Float barInPathLength;
     
     /** 
      * Path length inside the wedge. 
      */
-    Float _WedgeInPathLength;
+    Float wedgeInPathLength;
     
 
     /**
      * Default constructor that initializes the intersection points and path lengths to {@code NaN}.
      */
     public TrackProjection() {
-        _BarIntersect = new Point3D(Double.NaN, Double.NaN, Double.NaN);
-        _WedgeIntersect = new Point3D(Double.NaN, Double.NaN, Double.NaN);
-        _BarPathLength = Float.NaN;
-        _WedgePathLength = Float.NaN;
-        _BarInPathLength = Float.NaN;
-        _WedgeInPathLength = Float.NaN;
+        barIntersect = new Point3D(Double.NaN, Double.NaN, Double.NaN);
+        wedgeIntersect = new Point3D(Double.NaN, Double.NaN, Double.NaN);
+        barPathLength = Float.NaN;
+        wedgePathLength = Float.NaN;
+        barInPathLength = Float.NaN;
+        wedgeInPathLength = Float.NaN;
     }
 
     /**
@@ -60,8 +60,8 @@ public class TrackProjection {
      * 
      * @return {@link Point3D} bar's intersection point.
      */
-    public Point3D get_BarIntersect() {
-        return _BarIntersect;
+    public Point3D getBarIntersect() {
+        return barIntersect;
     }
 
     /**
@@ -69,8 +69,8 @@ public class TrackProjection {
      * 
      * @return {@link Point3D} wedge's intersection point.
      */
-    public Point3D get_WedgeIntersect() {
-        return _WedgeIntersect;
+    public Point3D getWedgeIntersect() {
+        return wedgeIntersect;
     }
 
     /**
@@ -78,8 +78,8 @@ public class TrackProjection {
      * 
      * @return {@code Float} path length to the bar's middle surface.
      */
-    public Float get_BarPathLength() {
-        return _BarPathLength;
+    public Float getBarPathLength() {
+        return barPathLength;
     }
     
     /**
@@ -88,8 +88,8 @@ public class TrackProjection {
      * 
      * @return {@code Float} path length inside the bar.
      */
-    public Float get_BarInPathLength() {
-        return _BarInPathLength;
+    public Float getBarInPathLength() {
+        return barInPathLength;
     }
 
     /**
@@ -97,8 +97,8 @@ public class TrackProjection {
      * 
      * @return {@code Float} path length to the wedge's middle surface.
      */
-    public Float get_WedgePathLength() {
-        return _WedgePathLength;
+    public Float getWedgePathLength() {
+        return wedgePathLength;
     }
     
     /**
@@ -107,8 +107,8 @@ public class TrackProjection {
      * 
      * @return {@code Float} path length inside the wedge.
      */
-    public Float get_WedgeInPathLength() {
-        return _WedgeInPathLength;
+    public Float getWedgeInPathLength() {
+        return wedgeInPathLength;
     }
 
     /**
@@ -116,8 +116,8 @@ public class TrackProjection {
      * 
      * @param BarIntersect {@link Point3D} intersection with the bar.
      */
-    public void set_BarIntersect(Point3D BarIntersect) {
-        this._BarIntersect = BarIntersect;
+    public void setBarIntersect(Point3D BarIntersect) {
+        this.barIntersect = BarIntersect;
     }
 
     /**
@@ -125,8 +125,8 @@ public class TrackProjection {
      * 
      * @param WedgeIntersect {@link Point3D} intersection with the wedge.
      */
-    public void set_WedgeIntersect(Point3D WedgeIntersect) {
-        this._WedgeIntersect = WedgeIntersect;
+    public void setWedgeIntersect(Point3D WedgeIntersect) {
+        this.wedgeIntersect = WedgeIntersect;
     }
 
     /**
@@ -134,8 +134,8 @@ public class TrackProjection {
      * 
      * @param BarPathLength {@code Float} path length to the bar inner surface.
      */
-    public void set_BarPathLength(Float BarPathLength) {
-        this._BarPathLength = BarPathLength;
+    public void setBarPathLength(Float BarPathLength) {
+        this.barPathLength = BarPathLength;
     }
 
     /**
@@ -143,8 +143,8 @@ public class TrackProjection {
      * 
      * @param WedgePathLength {@code Float} path length to the wedge inner surface.
      */
-    public void set_WedgePathLength(Float WedgePathLength) {
-        this._WedgePathLength = WedgePathLength;
+    public void setWedgePathLength(Float WedgePathLength) {
+        this.wedgePathLength = WedgePathLength;
     }
     
     /**
@@ -152,8 +152,8 @@ public class TrackProjection {
      * 
      * @param BarInPathLength {@code Float} path length inside the bar.
      */
-    public void set_BarInPathLength(Float BarInPathLength) {
-        this._BarInPathLength = BarInPathLength;
+    public void setBarInPathLength(Float BarInPathLength) {
+        this.barInPathLength = BarInPathLength;
     }
 
     /**
@@ -161,10 +161,9 @@ public class TrackProjection {
      * 
      * @param WedgeInPathLength {@code Float} path length inside the wedge.
      */
-    public void set_WedgeInPathLength(Float WedgeInPathLength) {
-        this._WedgeInPathLength = WedgeInPathLength;
+    public void setWedgeInPathLength(Float WedgeInPathLength) {
+        this.wedgeInPathLength = WedgeInPathLength;
     }
-    
 
     /**
      * testing purposes.

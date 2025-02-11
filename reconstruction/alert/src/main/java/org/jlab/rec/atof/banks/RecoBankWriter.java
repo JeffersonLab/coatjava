@@ -36,8 +36,8 @@ public class RecoBankWriter {
             bank.setFloat("y",i, (float) (hitList.get(i).getY()));
             bank.setFloat("z",i, (float) (hitList.get(i).getZ()));
             bank.setFloat("energy",i, (float) hitList.get(i).getEnergy());
-            bank.setFloat("inlength",i, (float) (hitList.get(i).getInpath_length())); 
-            bank.setFloat("pathlength",i, (float) (hitList.get(i).getPath_length())); 
+            bank.setFloat("inlength",i, (float) (hitList.get(i).getInPathLength())); 
+            bank.setFloat("pathlength",i, (float) (hitList.get(i).getPathLength())); 
         }
         return bank;
     }
@@ -60,8 +60,8 @@ public class RecoBankWriter {
             bank.setFloat("y",i, (float) (clusterList.get(i).getY()));
             bank.setFloat("z",i, (float) (clusterList.get(i).getZ()));
             bank.setFloat("energy",i, (float) clusterList.get(i).getEnergy());
-            bank.setFloat("inpathlength",i, (float) (clusterList.get(i).getInpath_length())); 
-            bank.setFloat("pathlength",i, (float) (clusterList.get(i).getPath_length())); 
+            bank.setFloat("inpathlength",i, (float) (clusterList.get(i).getInPathLength())); 
+            bank.setFloat("pathlength",i, (float) (clusterList.get(i).getPathLength())); 
         }
         return bank;
     }
