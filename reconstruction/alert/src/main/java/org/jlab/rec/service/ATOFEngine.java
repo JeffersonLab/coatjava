@@ -1,15 +1,12 @@
 package org.jlab.rec.service;
 
-import cnuphys.magfield.MagneticFields;
 import java.util.ArrayList;
 
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
-import org.jlab.io.hipo.HipoDataSource;
 
 import java.util.concurrent.atomic.AtomicInteger;
-import org.jlab.clas.swimtools.Swim;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.geom.base.Detector;
 import org.jlab.geom.detector.alert.ATOF.AlertTOFFactory;
@@ -20,38 +17,36 @@ import org.jlab.rec.atof.hit.AtofHit;
 import org.jlab.rec.atof.hit.BarHit;
 import org.jlab.rec.atof.hit.HitFinder;
 import org.jlab.rec.atof.trackMatch.TrackProjector;
-import org.jlab.utils.CLASResources;
 
 /**
- * Service to return reconstructed ATOF hits and clusters
+ * Service to return reconstructed Atof hits and clusters
  *
  * @author npilleux
  *
  */
-public class ATOFEngine extends ReconstructionEngine {
+public class AtofEngine extends ReconstructionEngine {
 
-    public ATOFEngine() {
+    public AtofEngine() {
         super("ATOF", "pilleux", "1.0");
     }
 
     RecoBankWriter rbc;
 
-    private final AtomicInteger Run = new AtomicInteger(0);
-    private Detector ATOF;
-    private double B; //Magnetic field
+    private final AtomicInteger run = new AtomicInteger(0);
+    private Detector Atof;
+    private double b; //Magnetic field
     
-    //Setters and getters
     public void setB(double B) {
-        this.B = B;
+        this.b = B;
     }
     public double getB() {
-        return B;
+        return b;
     }
-    public void setATOF(Detector ATOF) {
-        this.ATOF = ATOF;
+    public void setAtof(Detector ATOF) {
+        this.Atof = ATOF;
     }
-    public Detector getATOF() {
-        return ATOF;
+    public Detector getAtof() {
+        return Atof;
     }
 
     @Override
@@ -63,27 +58,23 @@ public class ATOFEngine extends ReconstructionEngine {
 
         DataBank bank = event.getBank("RUN::config");
 
-        // Load the constants
-        //-------------------
         int newRun = bank.getInt("run", 0);
         if (newRun == 0) {
             return true;
         }
 
-        if (Run.get() == 0 || (Run.get() != 0 && Run.get() != newRun)) {
-            Run.set(newRun);
+        if (run.get() == 0 || (run.get() != 0 && run.get() != newRun)) {
+            run.set(newRun);
         }
 
-        //CalibrationConstantsLoader constantsLoader = new CalibrationConstantsLoader(newRun, this.getConstantsManager());
-
-        //Track Projector Initialisation with B field
+        //Track Projector Initialisation with b field
         TrackProjector projector = new TrackProjector();
-        projector.setB(this.B);
-        projector.ProjectTracks(event);
+        projector.setB(this.b);
+        projector.projectTracks(event);
 
         //Hit finder init
         HitFinder hitfinder = new HitFinder();
-        hitfinder.FindHits(event, ATOF);
+        hitfinder.findHits(event, Atof);
 
         ArrayList<AtofHit> WedgeHits = hitfinder.getWedgeHits();
         ArrayList<BarHit> BarHits = hitfinder.getBarHits();
@@ -100,7 +91,7 @@ public class ATOFEngine extends ReconstructionEngine {
         ArrayList<AtofCluster> Clusters = clusterFinder.getClusters();
 
         if (WedgeHits.size() != 0 || BarHits.size() != 0) {
-            rbc.appendATOFBanks(event, WedgeHits, BarHits, Clusters);
+            rbc.appendAtofBanks(event, WedgeHits, BarHits, Clusters);
         }
         return true;
     }
@@ -111,42 +102,12 @@ public class ATOFEngine extends ReconstructionEngine {
 
         AlertTOFFactory factory = new AlertTOFFactory();
         DatabaseConstantProvider cp = new DatabaseConstantProvider(11, "default");
-        this.ATOF = factory.createDetectorCLAS(cp);
-
-        //requireConstants(Arrays.asList(CalibrationConstantsLoader.getAtofTables()));
-        //this.getConstantsManager().setVariation("default");
-
+        this.Atof = factory.createDetectorCLAS(cp);
         this.registerOutputBank("ATOF::hits", "ATOF::clusters");
 
         return true;
     }
 
     public static void main(String arg[]) {
-        ATOFEngine en = new ATOFEngine();
-        
-         //READING MAG FIELD MAP
-        System.setProperty("CLAS12DIR", "../../");
-        String mapDir = CLASResources.getResourcePath("etc") + "/data/magfield";
-        try {
-            MagneticFields.getInstance().initializeMagneticFields(mapDir,
-                    "Symm_torus_r2501_phi16_z251_24Apr2018.dat", "Symm_solenoid_r601_phi1_z1201_13June2018.dat");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        float[] b = new float[3];
-        Swim swimmer = new Swim();
-        swimmer.BfieldLab(0, 0, 0, b);
-        en.setB(Math.abs(b[2]));
-
-        en.init();
-        String input = "/Users/npilleux/Desktop/alert/atof-reconstruction/coatjava/reconstruction/alert/src/main/java/org/jlab/rec/atof/hit/mixed_ions.hipo";
-        HipoDataSource reader = new HipoDataSource();
-        reader.open(input);
-        
-        while (reader.hasEvent()) {
-            DataEvent event = (DataEvent) reader.getNextEvent();
-            en.processDataEvent(event);
-            event.getBank("ATOF::clusters").show();
-            }
     }
 }

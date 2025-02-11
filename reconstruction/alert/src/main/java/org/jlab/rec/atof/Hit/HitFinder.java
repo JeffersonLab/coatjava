@@ -1,20 +1,11 @@
 package org.jlab.rec.atof.hit;
 
-import cnuphys.magfield.MagneticFields;
 import java.util.ArrayList;
 import java.util.Collections;
-import javax.swing.JFrame;
-import org.jlab.clas.swimtools.Swim;
-import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.geom.base.Detector;
-import org.jlab.geom.detector.alert.ATOF.AlertTOFFactory;
-import org.jlab.groot.data.H1F;
-import org.jlab.groot.graphics.EmbeddedCanvas;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
-import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.rec.atof.trackMatch.TrackProjector;
-import org.jlab.utils.CLASResources;
 
 /**
  *
@@ -22,37 +13,35 @@ import org.jlab.utils.CLASResources;
  */
 public class HitFinder {
 
-    private ArrayList<BarHit> bar_hits;
-    private ArrayList<AtofHit> wedge_hits;
+    private ArrayList<BarHit> barHits;
+    private ArrayList<AtofHit> wedgeHits;
 
     public HitFinder() {
-        this.bar_hits = new ArrayList<>();
-        this.wedge_hits = new ArrayList<>();
+        this.barHits = new ArrayList<>();
+        this.wedgeHits = new ArrayList<>();
     }
 
-    // Getter and Setter for bar_hits
+    // Getter and Setter for barHits
     public ArrayList<BarHit> getBarHits() {
-        return bar_hits;
+        return barHits;
     }
 
     public void setBarHits(ArrayList<BarHit> bar_hits) {
-        this.bar_hits = bar_hits;
+        this.barHits = bar_hits;
     }
 
-    // Getter and Setter for wedge_hits
     public ArrayList<AtofHit> getWedgeHits() {
-        return wedge_hits;
+        return wedgeHits;
     }
 
     public void setWedgeHits(ArrayList<AtofHit> wedge_hits) {
-        this.wedge_hits = wedge_hits;
+        this.wedgeHits = wedge_hits;
     }
 
-    public void FindHits(DataEvent event, Detector atof, TrackProjector track_projector) {
-
+    public void findHits(DataEvent event, Detector atof, TrackProjector track_projector) {
         //For each event a list of bar hits and a list of wedge hits are filled
-        this.bar_hits.clear();
-        this.wedge_hits.clear();
+        this.barHits.clear();
+        this.wedgeHits.clear();
         //They are read from the ATOF TDC bank
         DataBank bank = event.getBank("ATOF::tdc");
         int nt = bank.rows(); // number of hits
@@ -86,7 +75,7 @@ public class HitFinder {
                         hit_down.add(hit);
                     case "wedge" -> {
                         hit.matchTrack(track_projector);
-                        this.wedge_hits.add(hit);
+                        this.wedgeHits.add(hit);
                     }
                     default ->
                         System.out.print("Undefined hit type \n");
@@ -105,20 +94,20 @@ public class HitFinder {
                     //Bar hits are matched to ahdc tracks and listed
                     BarHit this_bar_hit = new BarHit(this_hit_up, this_hit_down);
                     this_bar_hit.matchTrack(track_projector);
-                    this.bar_hits.add(this_bar_hit);
+                    this.barHits.add(this_bar_hit);
                 }
             }
         }
         //Once all has been listed, hits are sorted by energy
-        Collections.sort(this.bar_hits, (hit1, hit2) -> Double.compare(hit2.getEnergy(), hit1.getEnergy()));
-        Collections.sort(this.wedge_hits, (hit1, hit2) -> Double.compare(hit2.getEnergy(), hit1.getEnergy()));
+        Collections.sort(this.barHits, (hit1, hit2) -> Double.compare(hit2.getEnergy(), hit1.getEnergy()));
+        Collections.sort(this.wedgeHits, (hit1, hit2) -> Double.compare(hit2.getEnergy(), hit1.getEnergy()));
     }
 
-    public void FindHits(DataEvent event, Detector atof) {
+    public void findHits(DataEvent event, Detector atof) {
 
         //For each event a list of bar hits and a list of wedge hits are filled
-        this.bar_hits.clear();
-        this.wedge_hits.clear();
+        this.barHits.clear();
+        this.wedgeHits.clear();
         //They are read from the ATOF TDC bank
         DataBank bank_atof_hits = event.getBank("ATOF::tdc");
         int nt = bank_atof_hits.rows(); // number of hits
@@ -151,7 +140,7 @@ public class HitFinder {
                         hit_down.add(hit);
                     case "wedge" -> {
                         hit.matchTrack(event);
-                        this.wedge_hits.add(hit);
+                        this.wedgeHits.add(hit);
                     }
                     default ->
                         System.out.print("Undefined hit type \n");
@@ -169,20 +158,19 @@ public class HitFinder {
                 if (this_hit_up.matchBar(this_hit_down)) {
                     //Bar hits are matched to ahdc tracks and listed
                     BarHit this_bar_hit = new BarHit(this_hit_up, this_hit_down);
-                    this_bar_hit.matchTrack(event);
-                    this.bar_hits.add(this_bar_hit);
+                    //this_bar_hit.matchTrack(event);
+                    this.barHits.add(this_bar_hit);
                 }
             }
         }
         //Once all has been listed, hits are sorted by energy
-        Collections.sort(this.bar_hits, (hit1, hit2) -> Double.compare(hit2.getEnergy(), hit1.getEnergy()));
-        Collections.sort(this.wedge_hits, (hit1, hit2) -> Double.compare(hit2.getEnergy(), hit1.getEnergy()));
+        Collections.sort(this.barHits, (hit1, hit2) -> Double.compare(hit2.getEnergy(), hit1.getEnergy()));
+        Collections.sort(this.wedgeHits, (hit1, hit2) -> Double.compare(hit2.getEnergy(), hit1.getEnergy()));
     }
 
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        
     }
 }
