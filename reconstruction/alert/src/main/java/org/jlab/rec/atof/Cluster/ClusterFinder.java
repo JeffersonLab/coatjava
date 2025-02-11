@@ -8,21 +8,51 @@ import org.jlab.rec.atof.hit.BarHit;
 import org.jlab.rec.atof.hit.HitFinder;
 
 /**
+ * The {@code ClusterFinder} class builds clusters in the atof
  *
- * @author npilleux
+ * <p>
+ * Uses found hits information.
+ * Creates a {@link AtofCluster} matching them.
+ * </p>
+ *
+ * @author pilleux
  */
 public class ClusterFinder {
 
+    /**
+     * list of clusters.
+     */
     private ArrayList<AtofCluster> clusters;
 
+    /**
+     * Sets the list of clusters.
+     *
+     * @param clusters a {@link ArrayList} of {@link AtofCluster}.
+     * 
+     */
     public void setClusters(ArrayList<AtofCluster> clusters) {
         this.clusters = clusters;
     }
 
+    /**
+     * Gets the list of clusters.
+     *
+     * @return a {@link ArrayList} of {@link AtofCluster}.
+     * 
+     */
     public ArrayList<AtofCluster> getClusters() {
         return clusters;
     }
 
+    /**
+     * Builds clusters in the {@link DateEvent} using hits found and
+     * stored in a {@link HitFinder}.
+     *
+     * @param event the {@link DataEvent} containing the clusters to be built
+     * 
+     * @param hitfinder the {@link HitFinder} containing the hits that were found
+     * 
+     */
     public void makeClusters(DataEvent event, HitFinder hitfinder) {
 
         //A list of clusters is built for each event
@@ -162,6 +192,10 @@ public class ClusterFinder {
         }
     }
 
+    /**
+     * Default constructor that initializes the list clusters as new empty
+     * list.
+     */
     public ClusterFinder() {
         clusters = new ArrayList<>();
     }

@@ -8,14 +8,33 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.rec.atof.trackMatch.TrackProjector;
 
 /**
+ * The {@code HitFinder} class finds hits in the atof.
+ * 
+ * <p>
+ * Uses atof tdc bank information 
+ * 
+ * Creates a {@link ArrayList} of {@link BarHit} for bar hits read.
+ * Creates a {@link ArrayList} of {@link AtofHit} for wedge hits read.
+ * 
+ * </p>
  *
- * @author npilleux
+ * @author pilleux
  */
 public class HitFinder {
 
+    /**
+     * list of bar hits
+     */
     private ArrayList<BarHit> barHits;
+    /**
+     * list of wedge hits
+     */
     private ArrayList<AtofHit> wedgeHits;
 
+    /**
+     * Default constructor that initializes the list of hits as new empty
+     * lists.
+     */
     public HitFinder() {
         this.barHits = new ArrayList<>();
         this.wedgeHits = new ArrayList<>();
@@ -38,6 +57,16 @@ public class HitFinder {
         this.wedgeHits = wedge_hits;
     }
 
+    /**
+     * Find hits in the event, matches them to tracks found in the ahdc 
+     * and build their properties.
+     *
+     * @param event the {@link DataEvent} containing hits.
+     * @param atof the {@link Detector} representing the atof geometry to match
+     * the sector/layer/component to x/y/z.
+     * @param track_projector the {@link TrackProjector} containing the ahdc tracks projected
+     * to the atof for matching.
+     */
     public void findHits(DataEvent event, Detector atof, TrackProjector track_projector) {
         //For each event a list of bar hits and a list of wedge hits are filled
         this.barHits.clear();
@@ -103,6 +132,14 @@ public class HitFinder {
         Collections.sort(this.wedgeHits, (hit1, hit2) -> Double.compare(hit2.getEnergy(), hit1.getEnergy()));
     }
 
+    /**
+     * Find hits in the event, matches them to tracks in the 
+     * projections bank and build their properties.
+     *
+     * @param event the {@link DataEvent} containing hits and the bank with ahdc track projections.
+     * @param atof the {@link Detector} representing the atof geometry to match
+     * the sector/layer/component to x/y/z.
+     */
     public void findHits(DataEvent event, Detector atof) {
 
         //For each event a list of bar hits and a list of wedge hits are filled

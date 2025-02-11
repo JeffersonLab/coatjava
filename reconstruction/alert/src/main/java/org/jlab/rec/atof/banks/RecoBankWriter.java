@@ -8,11 +8,25 @@ import org.jlab.rec.atof.hit.AtofHit;
 import org.jlab.rec.atof.hit.BarHit;
 
 /**
- *
- * @author npilleux
+ * The {@code RecoBankWriter} writes the banks needed for the atof reconstruction:
+ * track projections, hits and clusters info.
+ * 
+ * @author pilleux
  */
 public class RecoBankWriter {
     
+    /**
+     * Writes the bank of atof hits.
+     * 
+     * @param event the {@link DataEvent} in which to add the bank
+     * @param wedgeHits the {@link ArrayList} of {@link AtofHit} 
+     * containing the wedge hits to be added to the bank
+     * @param barHits the {@link ArrayList} of {@link BarHit} 
+     * containing the bar hits to be added to the bank
+     * 
+     * @return {@link DataBank} the bank with all the hits read in the event.
+     * 
+     */
     public static DataBank fillAtofHitBank(DataEvent event, ArrayList<AtofHit> wedgeHits, ArrayList<BarHit> barHits) {
         
         ArrayList<AtofHit> hitList = new ArrayList<>();
@@ -42,6 +56,16 @@ public class RecoBankWriter {
         return bank;
     }
     
+    /**
+     * Writes the bank of atof clusters.
+     * 
+     * @param event the {@link DataEvent} in which to add the bank
+     * @param clusterList the {@link ArrayList} of {@link AtofCluster} 
+     * containing the clusters info to be added to the bank
+     * 
+     * @return {@link DataBank} the bank with all the clusters built in the event.
+     * 
+     */
     public static DataBank fillAtofClusterBank(DataEvent event, ArrayList<AtofCluster> clusterList) {
         
         DataBank bank =  event.createBank("ATOF::clusters", clusterList.size());
@@ -66,6 +90,20 @@ public class RecoBankWriter {
         return bank;
     }
     
+    /**
+     * Appends the atof banks to an event.
+     * 
+     * @param event the {@link DataEvent} in which to append the banks
+     * @param clusterList the {@link ArrayList} of {@link AtofCluster} 
+     * containing the clusters info to be added to the bank
+     * @param wedgeHits the {@link ArrayList} of {@link AtofHit} 
+     * containing the wedge hits info to be added
+     * @param barHits the {@link ArrayList} of {@link BarHit} 
+     * containing the bar hits info to be added
+     * 
+     * @return 0 if it worked, 1 if it failed
+     * 
+     */
     public int appendAtofBanks(DataEvent event, ArrayList<AtofHit> wedgeHits, ArrayList<BarHit> barHits, ArrayList<AtofCluster> clusterList) {
         
         DataBank hitbank = this.fillAtofHitBank(event, wedgeHits, barHits);

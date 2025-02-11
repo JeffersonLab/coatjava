@@ -147,11 +147,19 @@ public class AtofHit {
         this.inPathLength = inpath_length;
     }
 
+    /**
+     * Computes the module index for the hit.
+     *
+     */
     public int computeModuleIndex() {
         //Index ranging 0 to 60 for each wedge+bar module
         return 4 * this.sector + this.layer;
     }
 
+     /**
+     * Assigns a type to the hit.
+     *
+     */
     public final String makeType() {
         //Type of hit can be wedge, bar up, bar down or bar.
         //Avoids testing components and order every time.
@@ -458,6 +466,15 @@ public class AtofHit {
         }
     }
 
+    /**
+     * Matches the current track with ahdc tracks projections that have been written to the banks.
+     * Calculates the match by comparing the hit's azimuthal angle and longitudinal position
+     * (z) with the track projection. If a match is found within defined
+     * tolerances for phi and z, the path length of the matched hit is updated.
+     *
+     * @param event a @link{DataEvent} in which the track projections bank has been written.
+     *
+     */
     public int matchTrack(DataEvent event) {
 
         String track_bank_name = "AHDC::Projections";
