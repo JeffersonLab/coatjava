@@ -5,16 +5,32 @@ import org.jlab.rec.atof.hit.AtofHit;
 import org.jlab.rec.atof.hit.BarHit;
 
 /**
+ * The {@code AtofCluster} represents clusters in the atof
  *
- * @author npilleux
+ * <p>
+ * Create clusters and compute their basic properties from the hits composing
+ * them.
+ * </p>
+ *
+ * @author pilleux
  */
 public class AtofCluster {
-    
+
+    /**
+     * list of hits in the bars.
+     */
     ArrayList<BarHit> barHits;
+    /**
+     * list of hits in the wedges.
+     */
     ArrayList<AtofHit> wedgeHits;
-    double x,y,z,time,energy;
+    /**
+     * cluster properties:position [cm], time [ns], energy[MeV], path length
+     * [cm] and length through the atof [cm].
+     */
+    double x, y, z, time, energy;
     double pathLength, inPathLength;
-    
+
     public ArrayList<BarHit> getBarHits() {
         return barHits;
     }
@@ -70,7 +86,7 @@ public class AtofCluster {
     public void setEnergy(double energy) {
         this.energy = energy;
     }
-    
+
     public double getPathLength() {
         return pathLength;
     }
@@ -78,7 +94,7 @@ public class AtofCluster {
     public void setPathLength(double pathLength) {
         this.pathLength = pathLength;
     }
-    
+
     public double getInPathLength() {
         return inPathLength;
     }
@@ -86,42 +102,50 @@ public class AtofCluster {
     public void setInPathLength(double inPathLength) {
         this.inPathLength = inPathLength;
     }
-    
-    //Cluster coordinates and time are defined as the coordinates and time of the max energy hit
-    //Can be changed later
+
+    /**
+     * Compute the cluster properties.
+     *
+     * Cluster coordinates and time are defined as the coordinates and time of
+     * the max energy hit.
+     *
+     * TO DO: Test other choices for the definitions.
+     *
+     */
     public final void computeClusterProperties() {
-        this.energy=0;
+        this.energy = 0;
         double max_energy = -1;
         AtofHit max_energy_hit = new AtofHit();
         BarHit max_energy_barhit = new BarHit();
 
-        for(int i_wedge = 0; i_wedge<this.wedgeHits.size(); i_wedge++)
-        {
+        for (int i_wedge = 0; i_wedge < this.wedgeHits.size(); i_wedge++) {
             AtofHit this_wedge_hit = this.wedgeHits.get(i_wedge);
             double this_energy = this_wedge_hit.getEnergy();
-            this.energy+=this_energy;
-            if(this_energy>max_energy){max_energy_hit = this_wedge_hit; max_energy = this_energy;}
+            this.energy += this_energy;
+            if (this_energy > max_energy) {
+                max_energy_hit = this_wedge_hit;
+                max_energy = this_energy;
+            }
         }
-        
-        for(int i_bar = 0; i_bar<this.barHits.size(); i_bar++)
-        {
+
+        for (int i_bar = 0; i_bar < this.barHits.size(); i_bar++) {
             BarHit this_bar_hit = this.barHits.get(i_bar);
             double this_energy = this_bar_hit.getEnergy();
-            this.energy+=this_energy;
-            if(this_energy>max_energy){max_energy_barhit = this_bar_hit; max_energy = this_energy;}
+            this.energy += this_energy;
+            if (this_energy > max_energy) {
+                max_energy_barhit = this_bar_hit;
+                max_energy = this_energy;
+            }
         }
-        
-        if(max_energy_hit.getEnergy() > max_energy_barhit.getEnergy())
-        {
+
+        if (max_energy_hit.getEnergy() > max_energy_barhit.getEnergy()) {
             this.time = max_energy_hit.getTime();
             this.x = max_energy_hit.getX();
             this.y = max_energy_hit.getY();
             this.z = max_energy_hit.getZ();
             this.pathLength = max_energy_hit.getPathLength();
             this.inPathLength = max_energy_hit.getInPathLength();
-        }
-        else
-        {
+        } else {
             this.time = max_energy_barhit.getTime();
             this.x = max_energy_barhit.getX();
             this.y = max_energy_barhit.getY();
@@ -130,28 +154,66 @@ public class AtofCluster {
             this.inPathLength = max_energy_barhit.getInPathLength();
         }
     }
-    
-    public double getPhi()
-    {
+
+    public double getEdepWedge() {
+        double energy = 0;
+        for (int i = 0; i < this.wedgeHits.size(); i++) {
+            AtofHit this_hit = this.wedgeHits.get(i);
+            energy += this_hit.getEnergy();
+        }
+        return energy;
+    }
+
+    public double getEdepBar() {
+        double energy = 0;
+        for (int i = 0; i < this.barHits.size(); i++) {
+            AtofHit this_hit = this.barHits.get(i);
+            energy += this_hit.getEnergy();
+        }
+        return energy;
+    }
+
+    /**
+     * Compute the cluster phi angle in radians.
+     *
+     * @return a double that is angle in radians
+     * 
+     */
+    public double getPhi() {
         return Math.atan2(this.y, this.x);
     }
-    
-    public double getBeta()
-    {
-        return (this.pathLength / this.time) / (2.9979 * Math.pow(10, 2));//to do: Change to non-hardcoded value for c
+
+    /**
+     * Compute the cluster beta from the path length and time.
+     *
+     * @return a double that is beta
+     * 
+     * - TO DO: Change to non-hardcoded value for c
+     * 
+     */
+    public double getBeta() {
+        //Need to change to non hardcoded value
+        return (this.pathLength / this.time) / (2.9979 * Math.pow(10, 2));
     }
-    
-    public AtofCluster(ArrayList<BarHit> bar_hits, ArrayList<AtofHit> wedge_hits) 
-	{
-		this.barHits = bar_hits;  
-		this.wedgeHits = wedge_hits;  
-                this.computeClusterProperties();
-        }
+
+    /**
+     * Constructor that initializes the list of bar hits and list of wedge hits
+     * and computes the cluster properties.
+     * 
+     * @param bar_hits a {@link ArrayList} of {@link BarHit}.
+     * @param wedge_hits a {@link ArrayList} of {@link AtofHit}.
+     * 
+     */
+    public AtofCluster(ArrayList<BarHit> bar_hits, ArrayList<AtofHit> wedge_hits) {
+        this.barHits = bar_hits;
+        this.wedgeHits = wedge_hits;
+        this.computeClusterProperties();
+    }
 
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
     }
-    
+
 }
