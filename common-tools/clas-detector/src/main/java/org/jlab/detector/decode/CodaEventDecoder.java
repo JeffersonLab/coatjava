@@ -156,7 +156,7 @@ public class CodaEventDecoder {
                     if(this.timeStampErrors<100) {
                         System.err.println("WARNING: mismatch in TI time stamps: crate " 
                                         + tiEntries.get(i).getDescriptor().getCrate() + " reports " 
-                                        + tiEntries.get(i).getTimeStamp() + " instead of the " + ts
+                                        + tiEntries.get(i).getTimeStamp() + " instead of the " + tiEntries.get(i0).getTimeStamp()
                                         + " from crate " + tiEntries.get(i0).getDescriptor().getCrate());
                     }
                     else if(this.timeStampErrors==100) {
