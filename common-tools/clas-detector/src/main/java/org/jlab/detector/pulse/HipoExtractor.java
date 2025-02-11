@@ -106,7 +106,7 @@ public abstract class HipoExtractor implements IExtractor {
         dest.putByte("layer", idest, src.getByte("layer",isrc));
         dest.putShort("component", idest, src.getShort("component",isrc));
         dest.putByte("order", idest, src.getByte("order",isrc));
-        //dest.putShort("id", idest, (short)isrc);
+        dest.putShort("windex", idest, (short)isrc);
     }
 
     private static void copyIndices(DataBank src, DataBank dest, int isrc, int idest) {
@@ -114,7 +114,7 @@ public abstract class HipoExtractor implements IExtractor {
         dest.setByte("layer", idest, src.getByte("layer",isrc));
         dest.setShort("component", idest, src.getShort("component",isrc));
         dest.setByte("order", idest, src.getByte("order",isrc));
-        //dest.setShort("id", idest, (short)isrc);
+        dest.setShort("windex", idest, (short)isrc);
     }
 
     private static int[] getIndices(Bank bank, int row) {

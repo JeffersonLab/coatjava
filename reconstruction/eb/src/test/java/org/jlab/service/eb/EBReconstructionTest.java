@@ -7,6 +7,7 @@ import org.jlab.analysis.physics.TestEvent;
 import org.jlab.analysis.math.ClasMath;
 import org.jlab.clas.swimtools.MagFieldsEngine;
 import cnuphys.magfield.MagneticFields;
+import org.jlab.detector.base.DetectorType;
 
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
@@ -116,7 +117,7 @@ public class EBReconstructionTest {
         SchemaFactory schemaFactory = new SchemaFactory();
         schemaFactory.initFromDirectory(dir);
         
-        DataEvent photonEvent = TestEvent.getECSector1PhotonEvent(schemaFactory);
+        DataEvent photonEvent = TestEvent.get(DetectorType.ECAL);
         processAllEngines(photonEvent);
         assertEquals(photonEvent.hasBank("RECHB::Event"), true);
         assertEquals(photonEvent.hasBank("RECHB::Particle"), true);
@@ -132,7 +133,7 @@ public class EBReconstructionTest {
         assertEquals(photonEvent.getBank("RECHB::Particle").getFloat("py", 0) < 0.15, true);
         assertEquals(ClasMath.isWithinXPercent(25.0, photonEvent.getBank("RECHB::Particle").getFloat("pz", 0), 2.266), true);
 
-        DataEvent electronEvent = TestEvent.getDCSector1ElectronEvent(schemaFactory);
+        DataEvent electronEvent = TestEvent.get(DetectorType.DC);
         processAllEngines(electronEvent);
         assertEquals(electronEvent.hasBank("REC::Event"), true);
         assertEquals(electronEvent.hasBank("REC::Particle"), true);

@@ -44,7 +44,7 @@ public class HitReader {
     private int run = 0;
     private long tiTimeStamp = 0;
     private DataEvent event = null;
-    
+        
     private IndexedTable tt          = null;
     private IndexedTable reverseTT   = null;
     private IndexedTable dcrbjitters = null;
@@ -54,7 +54,8 @@ public class HitReader {
     private IndexedTable docares     = null;
     private IndexedTable time2dist   = null;
     private IndexedTable t0s         = null;
-
+    
+    private int numTDCBankRows = -1;
     private List<Hit> _DCHits;
     private List<FittedHit> _HBHits; //hit-based tracking hit information
     private List<FittedHit> _TBHits; //time-based tracking hit information
@@ -263,6 +264,7 @@ public class HitReader {
 
         RawDataBank bankFiltered = new RawDataBank(bankNames.getTdcBank(), rawBankOrders);
         bankFiltered.read(event);
+        this.set_NumTDCBankRows(bankFiltered.rows());
         for (int i = 0; i < bankFiltered.rows(); i++) {
             int sector     = bankFiltered.getByte("sector", i);
             int layer      = (bankFiltered.getByte("layer", i)-1)%6 + 1;
@@ -339,6 +341,7 @@ public class HitReader {
                     hit.calc_CellSize(detector);
                     double posError = hit.get_CellSize() / Math.sqrt(12.);
                     hit.set_DocaErr(posError);
+                    hit.set_IndexTDC(index);
                     this._DCHits.add(hit);
                 }
             }
@@ -624,6 +627,7 @@ public class HitReader {
             tPars[2] = (double)bankAI.getFloat("phi", j);
             tPars[3] = (double)bankAI.getByte("id", j);
             
+            aimatch.clear();
             for (int k = 0; k < 6; k++) {
                 aimatch.put(Ids[k], tPars); 
             }
@@ -914,5 +918,21 @@ public class HitReader {
             }
             return list;
         }
+    }
+    
+    /**
+     *
+     * @param num # of rows in DC::TDC bank
+     */
+    public void set_NumTDCBankRows(int num){
+        this.numTDCBankRows = num;
+    }
+    
+    /**
+     *
+     * @return # of rows in DC::TDC bank
+     */
+    public int get_NumTDCBankRows(){
+        return numTDCBankRows;
     }
 }

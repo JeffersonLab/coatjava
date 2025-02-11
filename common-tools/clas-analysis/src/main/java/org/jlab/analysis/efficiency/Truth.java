@@ -34,40 +34,16 @@ public class Truth {
     long[][] recTallies;
     long[] mcTallies;
 
-    public static void main(String[] args) {
-        OptionParser o = new OptionParser("trutheff");
-        o.setRequiresInputList(true);
-        o.parse(args);
-        Truth t = new Truth(o.getInputList().get(0));
-        t.add(o.getInputList());
-        System.out.println(t.toTable());
-        System.out.println(t.toJson());
-    }
-
     public Truth(SchemaFactory s) {
-        init(s);
-    }
-
-    public Truth(HipoReader r) {
-        init(r.getSchemaFactory());
-    }
-
-    public Truth(String filename) {
-        HipoReader r = new HipoReader();
-        r.open(filename);
-        init(r.getSchemaFactory());
-    }
-
-    private void init(SchemaFactory schema) {
         validPids = new ArrayList(NEGATIVES);
         validPids.addAll(POSITIVES);
         validPids.addAll(NEUTRALS);
         validPids.add(UDF);
         mcTallies = new long[validPids.size()];
         recTallies = new long[validPids.size()][validPids.size()];
-        mcGenMatch = schema.getSchema("MC::GenMatch");
-        mcParticle = schema.getSchema("MC::Particle");
-        recParticle = schema.getSchema("REC::Particle");
+        mcGenMatch = s.getSchema("MC::GenMatch");
+        mcParticle = s.getSchema("MC::Particle");
+        recParticle = s.getSchema("REC::Particle");
     }
 
     /**
@@ -141,7 +117,7 @@ public class Truth {
     }
 
     /**
-     * Get efficiencies as a human-readable table.
+     * Get efficiencies as a plain, human-readable table.
      * @return 
      */
     public String toTable() {
@@ -152,13 +128,12 @@ public class Truth {
             if (validPids.size()==i+1) s.append("\n");
         }
         for (int i=0; i<validPids.size(); ++i) {
-            s.append(String.format("%6d",validPids.get(i)));
+            s.append(String.format("\n%6d",validPids.get(i)));
             for (int j=0; j<validPids.size(); ++j) {
                 if (mcTallies[i] > 0)
                     s.append(String.format("%7.4f",get(validPids.get(i),validPids.get(j))));
                 else
                     s.append(String.format("%7s","-"));
-                if (validPids.size()==j+1) s.append("\n");
             }
         }
         return s.toString();
@@ -186,4 +161,44 @@ public class Truth {
         ret.add("gens", gens);
         return ret;
     }
+
+    /**
+     * Get efficiencies as a Markdown table.
+     * @return 
+     */
+    public String toMarkdown() {
+        StringBuilder s = new StringBuilder();
+        s.append("|");
+        for (int i=0; i<validPids.size(); ++i) {
+            s.append(String.format("%d|",validPids.get(i)));
+            if (validPids.size()==i+1) s.append("\n");
+        }
+        s.append("|");
+        for (int i=0; i<validPids.size(); ++i) s.append(" --- |");
+        s.append("\n");
+        for (int i=0; i<validPids.size(); ++i) {
+            s.append(String.format("|%d|",validPids.get(i)));
+            for (int j=0; j<validPids.size(); ++j) {
+                if (mcTallies[i] > 0)
+                    s.append(String.format("%f|",get(validPids.get(i),validPids.get(j))));
+                else
+                    s.append("|");
+            }
+        }
+        return s.toString();
+    }
+
+    public static void main(String[] args) {
+        OptionParser o = new OptionParser("trutheff");
+        o.setRequiresInputList(true);
+        o.parse(args);
+        HipoReader r = new HipoReader();
+        r.open(o.getInputList().get(0));
+        Truth t = new Truth(r.getSchemaFactory());
+        t.add(o.getInputList());
+        System.out.println(t.toTable());
+        System.out.println(t.toJson());
+        System.out.println(t.toMarkdown());
+    }
+
 }
