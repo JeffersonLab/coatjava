@@ -74,7 +74,7 @@ public class AtofEngine extends ReconstructionEngine {
 
         //Hit finder init
         HitFinder hitfinder = new HitFinder();
-        hitfinder.findHits(event, Atof);
+        hitfinder.findHits(event, Atof, projector);
 
         ArrayList<AtofHit> WedgeHits = hitfinder.getWedgeHits();
         ArrayList<BarHit> BarHits = hitfinder.getBarHits();
@@ -91,7 +91,7 @@ public class AtofEngine extends ReconstructionEngine {
         ArrayList<AtofCluster> Clusters = clusterFinder.getClusters();
 
         if (WedgeHits.size() != 0 || BarHits.size() != 0) {
-            rbc.appendAtofBanks(event, WedgeHits, BarHits, Clusters);
+            rbc.appendAtofBanks(event, WedgeHits, BarHits, Clusters, projector.getProjections());
         }
         return true;
     }
