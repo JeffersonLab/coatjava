@@ -1,7 +1,6 @@
 package org.jlab.rec.atof.trackMatch;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
@@ -30,7 +29,7 @@ public class TrackProjector {
     /**
      * projections of tracks.
      */
-    private List<TrackProjection> projections;
+    private ArrayList<TrackProjection> projections;
     
     /**
      * solenoid magnitude
@@ -52,7 +51,7 @@ public class TrackProjector {
      * @return a {@link List} of {@link TrackProjection} objects representing
      * the projections.
      */
-    public List<TrackProjection> getProjections() {
+    public ArrayList<TrackProjection> getProjections() {
         return projections;
     }
     
@@ -70,7 +69,7 @@ public class TrackProjector {
      *
      * @param Projections a {@link List} of {@link TrackProjection}.
      */
-    public void setProjections(List<TrackProjection> Projections) {
+    public void setProjections(ArrayList<TrackProjection> Projections) {
         this.projections = Projections;
     }
     
@@ -104,7 +103,6 @@ public class TrackProjector {
             DataBank bank = event.getBank(track_bank_name);
             int nt = bank.rows(); // number of tracks 
             TrackProjection projection = new TrackProjection();
-            DataBank outputBank = event.createBank("AHDC::Projections", nt);
             for (int i = 0; i < nt; i++) {
 
                 double x = bank.getFloat("x", i);
@@ -136,9 +134,7 @@ public class TrackProjector {
                 projection.setBarInPathLength((float) Math.abs(helix.getLAtR(Parameters.BAR_MIDDLE_RADIUS)) - projection.getBarPathLength());
                 projection.setWedgeInPathLength((float) Math.abs(helix.getLAtR(Parameters.WEDGE_MIDDLE_RADIUS)) - projection.getWedgePathLength());
                 projections.add(projection);
-                fill_out_bank(outputBank, projection, i);
             }
-            event.appendBank(outputBank);
         }
     }
     
@@ -203,24 +199,8 @@ public class TrackProjector {
 		projection.setBarInPathLength((float) Math.abs(helix.getLAtR(Parameters.BAR_MIDDLE_RADIUS)) - projection.getBarPathLength());
                 projection.setWedgeInPathLength((float) Math.abs(helix.getLAtR(Parameters.WEDGE_MIDDLE_RADIUS)) - projection.getWedgePathLength());
                 projections.add(projection);
-                fill_out_bank(outputBank, projection, i);
             }
-            event.appendBank(outputBank);
         }
-    }
-    
-    public static void fill_out_bank(DataBank outputBank, TrackProjection projection, int i) {
-        outputBank.setFloat("x_at_bar", i, (float) projection.getBarIntersect().x());
-        outputBank.setFloat("y_at_bar", i, (float) projection.getBarIntersect().y());
-        outputBank.setFloat("z_at_bar", i, (float) projection.getBarIntersect().z());
-        outputBank.setFloat("L_at_bar", i, (float) projection.getBarPathLength());
-        outputBank.setFloat("L_in_bar", i, (float) projection.getBarInPathLength());
-        outputBank.setFloat("x_at_wedge", i, (float) projection.getWedgeIntersect().x());
-        outputBank.setFloat("y_at_wedge", i, (float) projection.getWedgeIntersect().y());
-        outputBank.setFloat("z_at_wedge", i, (float) projection.getWedgeIntersect().z());
-        outputBank.setFloat("L_at_wedge", i, (float) projection.getWedgePathLength());
-        outputBank.setFloat("L_in_wedge", i, (float) projection.getWedgeInPathLength());
-   
     }
 
     public static void main(String arg[]) {
