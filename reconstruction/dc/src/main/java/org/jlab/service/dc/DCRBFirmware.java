@@ -32,7 +32,7 @@ public class DCRBFirmware {
         }
         
         HipoDataSource reader = new HipoDataSource();
-        reader.open("/Users/devita/NetBeansProjects/coatjava/aaa.rec.hipo");
+        reader.open("/Users/devita/dcrb/rec_tdccut_tot50.hipo");
         while(reader.hasEvent()) {
             DataEvent event = reader.getNextEvent();
             
@@ -40,7 +40,7 @@ public class DCRBFirmware {
             if(event.hasBank("TimeBasedTrkg::TBHits")) {
                 DataBank hits = event.getBank("TimeBasedTrkg::TBHits");
                 for(int i=0; i<hits.rows(); i++) {
-                    if(hits.getShort("trkID", i)>-1)
+                    if(hits.getInt("trkID", i)>-1)
                         ontrack.put((int) hits.getShort("id",i), i);
                 }
             }

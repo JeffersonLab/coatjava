@@ -119,8 +119,8 @@ public class DetectorEventDecoder {
 
         // Data filter table
         keysFilter   = Arrays.asList(new String[]{"DC"});
-        tablesFilter = Arrays.asList(new String[]{"/calibration/dc/time_corrections/tdctimingcuts"});
-        fitterManager.init(keysFilter, tablesFilter);
+        tablesFilter = Arrays.asList(new String[]{"/test/dc/tdc"});
+        filterManager.init(keysFilter, tablesFilter);
 
         scalerManager.init(Arrays.asList(new String[]{"/runcontrol/fcup","/runcontrol/slm","/runcontrol/hwp",
                                                       "/runcontrol/helicity","/daq/config/scalers/dsc1"}));
@@ -229,17 +229,17 @@ public class DetectorEventDecoder {
     public void filterTDCs(List<DetectorDataDgtz>  detectorData){
         for(String table : keysFilter){
             Map<Integer,List<DetectorDataDgtz>> filteredData = new HashMap<>();
-//            IndexedTable filter = filterManager.getConstants(runNumber, table);
+            IndexedTable filter = filterManager.getConstants(runNumber, table);
             for(DetectorDataDgtz data : detectorData){
                 if(data.getDescriptor().getType()==DetectorType.getType(table)) {
                     int sector = data.getDescriptor().getSector();
                     int layer  = data.getDescriptor().getLayer();
                     int comp   = data.getDescriptor().getComponent();
                     int order  = data.getDescriptor().getOrder();
-                    int min = -1;//filter.getIntValue("minimum", sector, layer, comp, order);
-                    int max = Integer.MAX_VALUE;//filter.getIntValue("maximum", sector, layer, comp, order);
-                    if(data.getTDCSize()>0)
-                        if(data.getTDCData(0).getTime()<min || data.getTDCData(0).getTime()>max)
+                    int min = filter.getIntValue("minimum", sector, layer, 1);
+                    int max = filter.getIntValue("maximum", sector, layer, 1);
+                    int trs = filter.getIntValue("threshold", sector, layer, 1);
+                        if(data.getTDCData(0).getTime()<min || data.getTDCData(0).getTime()>max || data.getTDCData(0).getToT()<trs)
                             data.getTDCData(0).setType(OrderType.OUTOFTIME);
                     int key = data.getDescriptor().getHashCode();
                     if(!filteredData.containsKey(key))
@@ -253,10 +253,11 @@ public class DetectorEventDecoder {
                 int layer  = filteredData.get(key).get(0).getDescriptor().getLayer();
                 int comp   = filteredData.get(key).get(0).getDescriptor().getComponent();
                 int order  = filteredData.get(key).get(0).getDescriptor().getOrder();
-                int mult = 1;//filter.getIntValue("multiplicity", sector, layer, comp, order);
-                if(filteredData.get(key).size()>mult)
+                int mult = filter.getIntValue("multiplicity", sector, layer, 1);
+                if(filteredData.get(key).size()>mult) 
                     for(int i=mult; i<filteredData.get(key).size(); i++)
-                        filteredData.get(key).get(i).getTDCData(0).setType(OrderType.OUTOFTIME);
+                        if(filteredData.get(key).get(i).getTDCData(0).getType()==OrderType.NOMINAL)
+                            filteredData.get(key).get(i).getTDCData(0).setType(OrderType.OUTOFTIME);
             }
         }
     }
