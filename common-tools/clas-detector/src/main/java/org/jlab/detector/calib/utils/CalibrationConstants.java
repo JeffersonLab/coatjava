@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.detector.calib.utils;
 
 import java.awt.Color;
@@ -23,7 +18,6 @@ import org.jlab.utils.system.ClasUtilsFile;
 public class CalibrationConstants extends IndexedTable {   
     
     String constantsName = "default";
-
     
     public CalibrationConstants(int indexCount) {
         super(indexCount);
@@ -42,7 +36,6 @@ public class CalibrationConstants extends IndexedTable {
             this.setIndexName(2, "layer");
             this.setIndexName(3, "component");
         }
-        
     }
     
     public CalibrationConstants(int indexCount,String[] format) {
@@ -58,7 +51,6 @@ public class CalibrationConstants extends IndexedTable {
             this.setIndexName(2, "layer");
             this.setIndexName(3, "component");
         }
-        
     }
     
     public void setName(String name){
@@ -68,7 +60,7 @@ public class CalibrationConstants extends IndexedTable {
     public String getName(){ return this.constantsName;}
     
     public void save(String file){        
-        List<String>  linesFile = new ArrayList<String>();        
+        List<String>  linesFile = new ArrayList<>();        
         Map<Long,IndexedTable.IndexedEntry> map = this.getList().getMap();
         int nindex = this.getList().getIndexSize();
         for(Map.Entry<Long,IndexedTable.IndexedEntry> entry : map.entrySet()){
@@ -80,12 +72,9 @@ public class CalibrationConstants extends IndexedTable {
             int ncolumns = entry.getValue().getSize();
             for(int i = 0; i < ncolumns; i++){
                 str.append(String.format("  %e  ", entry.getValue().getValue(i)));
-                //str.append(" ");
             }
             linesFile.add(str.toString());
-            //System.out.println(str.toString());
         }
-        
         ClasUtilsFile.writeFile(file, linesFile);
     }
     
@@ -97,37 +86,36 @@ public class CalibrationConstants extends IndexedTable {
         }        
         @Override
         public Component getTableCellRendererComponent
-             (JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column)
-             {
-                 Component c = super.getTableCellRendererComponent
-                                                  (table, value, isSelected, hasFocus, row, column);
+             (JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            Component c = super.getTableCellRendererComponent
+                         (table, value, isSelected, hasFocus, row, column);
                  
-                 if(calib.isValid(row, column)==false){
-                     if(isSelected==true){
-                         c.setBackground(Color.RED);
-                     } else {
-                         c.setBackground(new Color(255,120,120));
-                     }
-                     c.setForeground(Color.YELLOW);
-                     return c;
-                 }
+            if(calib.isValid(row, column)==false){
+                if(isSelected==true){
+                    c.setBackground(Color.RED);
+                } else {
+                    c.setBackground(new Color(255,120,120));
+                }
+                c.setForeground(Color.YELLOW);
+                return c;
+            }
                  
-                 if(isSelected==true){
-                     c.setBackground(new Color(20,20,255));
-                     c.setForeground(Color.WHITE);
-                     return c;
-                 }
+            if(isSelected==true){
+                c.setBackground(new Color(20,20,255));
+                c.setForeground(Color.WHITE);
+                return c;
+            }
                  
-                 if(row%2==0){
-                     c.setBackground(new Color(220,255,220));
-                     c.setForeground(Color.BLACK);
-                 } else {                     
-                     c.setBackground(new Color(220,220,255));
-                     c.setForeground(Color.BLACK);
-                 }
+            if(row%2==0){
+                c.setBackground(new Color(220,255,220));
+                c.setForeground(Color.BLACK);
+            } else {                     
+                c.setBackground(new Color(220,220,255));
+                c.setForeground(Color.BLACK);
+            }
                  
-                 return c;
-             }
+            return c;
+        }
     }
     
     

@@ -2,13 +2,14 @@ package org.jlab.detector.decode;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.jlab.detector.banks.RawBank.OrderType;
 import org.jlab.detector.base.DetectorDescriptor;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.helicity.HelicityBit;
 import org.jlab.detector.helicity.HelicityState;
 import org.jlab.utils.data.DataUtils;
 
-/**
+/** 
  *
  * @author gavalian
  */
@@ -162,10 +163,9 @@ public class DetectorDataDgtz implements Comparable<DetectorDataDgtz> {
         return filtered;        
     }
     
-    /**
-     * a class to hold ADC values
+    /** ADC Data holder.
+     * A class to hold ADC values (FADC)
      */
-    
     public static class ADCData implements Comparable<ADCData> {
         
         private int    adcOrder        = 0;
@@ -325,32 +325,32 @@ public class DetectorDataDgtz implements Comparable<DetectorDataDgtz> {
         }
     }
     
-   /**
-    * a class to hold TDC data
-    */
-    
+    /** TDC Data. 
+     *  A class to hold Multihit TDC data
+     *
+     */
     public static class TDCData implements Comparable<TDCData>{
         
-        private int tdcOrder = 0;
+        private int tdcOrder = 0; // Used for sorting
         private int tdcTime  = 0;
-        private int tdcWidth = 0;
+        private int tdcToT   = 0; // Time over threshold
+        private OrderType tdcType = OrderType.NOMINAL;
         
         public TDCData() {}
         public TDCData(int time) { this.tdcTime = time;}
-        public TDCData(int time, int width) { 
-            this.tdcTime = time;
-            this.tdcWidth = width;
-        }
-        public int getTime()  { return this.tdcTime;}
-        public int getWidth() { return this.tdcWidth;}
+        public TDCData(int time, int ToT) { this.tdcTime = time; this.tdcToT = ToT;}
+        public int getTime() { return this.tdcTime;}
+        public int getToT() { return this.tdcToT;}
         public int getOrder() { return tdcOrder;}
-        public TDCData  setOrder(int order)   { tdcOrder = order;return this;}
-        public TDCData  setTime(short time)   { tdcTime = time;return this;}
-        public TDCData  setWidth(short width) { tdcWidth = width;return this;}
-        
+        public OrderType getType() { return tdcType;}
+        public TDCData setOrder(int order) { tdcOrder = order;return this;}
+        public TDCData setTime(short time) { tdcTime = time;return this;}
+        public TDCData setToT(short ToT) { tdcToT = ToT;return this;}
+        public TDCData setType(OrderType type) { tdcType = type; return this;}
+
         @Override
         public String toString(){
-            return String.format("TDC (%d) : %5d", getOrder(),getTime());
+            return String.format("TDC (%d) : %5d : %5d", getOrder(),getTime(),getToT());
         }
 
         public int compareTo(TDCData o) {

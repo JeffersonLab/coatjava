@@ -9,10 +9,17 @@ that is pulling it in.
     <mirrors>
         <mirror>
             <id>new-freehep</id>
-            <mirrorOf>freehep</mirrorOf>
-            <name>freehep</name>
+            <mirrorOf>freehep-jminuit</mirrorOf>
+            <name>freehep-jminuit</name>
+            <url>https://clasweb.jlab.org/clas12maven</url>
             <!--<url>https://java.freehep.org/maven2</url>-->
-            <url>https://srs.slac.stanford.edu/nexus/content/groups/freehep-maven2-public/</url>
+            <!--<url>https://srs.slac.stanford.edu/nexus/content/groups/freehep-maven2-public/</url>-->
+        </mirror>
+        <mirror>
+            <id>new-freehep-repo-public</id>
+            <mirrorOf>freehep-repo-public</mirrorOf>
+            <name>freehep-repo-public</name>
+            <url>https://clasweb.jlab.org/clas12maven</url>
         </mirror>
     </mirrors>
 </settings>

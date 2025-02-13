@@ -44,7 +44,7 @@ public final class PCALGeant4Factory extends Geant4Factory {
     List<PCALSector> sectorVolumes = new ArrayList<>();
 
     public PCALGeant4Factory(ConstantProvider cp) {
-        motherVolume = new G4World("fc");
+        motherVolume = new G4World("root");
 
         nsectors = cp.getInteger("/geometry/pcal/pcal/nsectors", 0);
         nlayers = cp.getInteger("/geometry/pcal/pcal/nlayers", 0);

@@ -3,6 +3,7 @@ package org.jlab.rec.ahdc.Hit;
 
 public class Hit implements Comparable<Hit> {
 
+	private final double thster = Math.toRadians(20.0);
 	private final int    id;
 	private final int    superLayerId;
 	private final int    layerId;
@@ -31,35 +32,38 @@ public class Hit implements Comparable<Hit> {
 
 		double numWires = 32.0;
 		double R_layer  = 47.0;
-
+		
 		switch (this.superLayerId) {
-			case 0:
+			case 1:
 				numWires = 47.0;
 				R_layer = 32.0;
 				break;
-			case 1:
+			case 2:
 				numWires = 56.0;
 				R_layer = 38.0;
 				break;
-			case 2:
+			case 3:
 				numWires = 72.0;
 				R_layer = 48.0;
 				break;
-			case 3:
+			case 4:
 				numWires = 87.0;
 				R_layer = 58.0;
 				break;
-			case 4:
+			case 5:
 				numWires = 99.0;
 				R_layer = 68.0;
 				break;
 		}
 
-		R_layer = R_layer + DR_layer * this.layerId;
+		R_layer = R_layer + DR_layer * (this.layerId-1);
 		double alphaW_layer = Math.toRadians(round / (numWires));
-		double wx           = -R_layer * Math.sin(alphaW_layer * this.wireId);
-		double wy           = -R_layer * Math.cos(alphaW_layer * this.wireId);
-
+		//should it be at z = 0? in which case, we need to account for the positive or negative stereo angle...
+		double wx           = -R_layer * Math.sin(alphaW_layer * (this.wireId-1) + 0.5*thster * (Math.pow(-1, this.superLayerId-1)));
+		double wy           = -R_layer * Math.cos(alphaW_layer * (this.wireId-1) + 0.5*thster * (Math.pow(-1, this.superLayerId-1)));
+		
+		//System.out.println(" superlayer " + this.superLayerId + " layer " + this.layerId + " wire " + this.wireId + " R_layer " + R_layer + " wx " + wx + " wy " + wy);
+		
 		this.nbOfWires = (int) numWires;
 		this.phi       = Math.atan2(wy, wx);
 		this.radius    = R_layer;
@@ -124,4 +128,6 @@ public class Hit implements Comparable<Hit> {
 	public double getY() {
 		return y;
 	}
+
+	public double getPhi() {return phi;}
 }

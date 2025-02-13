@@ -43,7 +43,7 @@ public final class FTOFGeant4Factory extends Geant4Factory {
     private final int[] nPaddles = new int[stringLayers.length];
     
     public FTOFGeant4Factory(ConstantProvider provider) {
-        motherVolume = new G4World("fc");
+        motherVolume = new G4World("root");
 
         int alignrows = provider.length("/geometry/ftof/alignment/sector");
         for(int irow = 0; irow< alignrows; irow++) {

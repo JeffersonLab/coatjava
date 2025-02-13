@@ -61,8 +61,10 @@ services:
     name: RTPC
 configuration:
 #  global:
-#    variation: rgb_spring2019
-#      timestamp: 12/31/2020-00:00:00
+#    variation: rga_fall2018_mc
+#    timestamp: 12/31/2020-00:00:00
+#    dcMinistagger: "NOTONREFWIRE"
+#    dcFeedthroughs: "OFF"
 #  io-services:
 #    writer:
 #      schema_dir: "absolute-path-to-schema-folder"

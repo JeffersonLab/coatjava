@@ -67,21 +67,27 @@ public class RawBank extends FilteredBank {
         NOMINAL         (  0),  // normal hits retained by denoising level-0
         BGADDED_NOMINAL ( 10),  // hits added by background merging and retained by level-0
         BGREMOVED       ( 20),  // hits removed during background merging 
-        RESERVED        ( 30),  // reserved for later use
+        BGREMOVED_BG    ( 30),  // background hits removed by background merging
         NOISE1          ( 40),  // normal hits retained by level-1 denoising
         NOISE2          ( 50),  // normal hits retained by level-2 denoising
         NOISE3          ( 60),  // normal hits retained by level-3 denoising
         BGADDED_NOISE1  ( 70),  // background hits retained by level-1 denoising
         BGADDED_NOISE2  ( 80),  // background hits retained by level-2 denoising
         BGADDED_NOISE3  ( 90),  // background hits retained by level-3 denoising
-        USER1           (100),
-        USER2           (110),
-        USER3           (120);
+        OUTOFTIME       (100),  // hit excluded during decoding
+        USER1           (110),
+        USER2           (120);
         private final int rawOrderId;
         private OrderType(int id){ rawOrderId = id; }
         public int getTypeId() { return rawOrderId; }
+        public static OrderType getType(int order) {
+            for(OrderType t : OrderType.values())
+                if(t.rawOrderId == order-order%10)
+                    return t;
+            return null;
+        }
     }
-
+    
     public static final String FILTER_VAR_NAME = "order"; 
 
     public RawBank(Schema sch){

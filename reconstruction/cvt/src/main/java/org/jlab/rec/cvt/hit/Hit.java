@@ -33,6 +33,7 @@ public class Hit implements Comparable<Hit> {
 
     public boolean newClustering = false;
     public int MCstatus = -1;
+    public boolean isCorrupted;
 
     // constructor
     public Hit(DetectorType detector, BMTType type, int sector, int layer, Strip strip) {

@@ -10,6 +10,8 @@ import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.banks.Banks;
+import org.jlab.clas.tracking.kalmanfilter.zReference.KFitter;
+import org.jlab.clas.tracking.kalmanfilter.zReference.DAFilter;
 
 public class DCEngine extends ReconstructionEngine {
 
@@ -18,6 +20,8 @@ public class DCEngine extends ReconstructionEngine {
     
     // options configured from yaml
     private int        selectedSector = 0;
+    private String     ministaggerStatus = null;
+    private String     feedthroughsStatus = null;
     private boolean    wireDistortion = false;
     private boolean    useStartTime   = true;
     private boolean    useBetaCut     = false;
@@ -31,6 +35,9 @@ public class DCEngine extends ReconstructionEngine {
     private String     inBankPrefix   = null;
     private String     outBankPrefix  = null;
     private double[][] shifts         = new double[Constants.NREG][6];
+    protected boolean  useDAF         = true;
+    private String   dafChi2Cut     = null;
+    private String   dafAnnealingFactorsTB = null;
     
     public static final Logger LOGGER = Logger.getLogger(ReconstructionEngine.class.getName());
 
@@ -55,6 +62,14 @@ public class DCEngine extends ReconstructionEngine {
         if(this.getEngineConfigString("dcUseStartTime")!=null)
             useStartTime = Boolean.valueOf(this.getEngineConfigString("dcUseStartTime"));
       
+        // R3 ministagger
+        if(this.getEngineConfigString("dcMinistagger")!=null)       
+            ministaggerStatus = this.getEngineConfigString("dcMinistagger");
+        
+        // Wire feedthroughs
+        if(this.getEngineConfigString("dcFeedthroughs")!=null)       
+            feedthroughsStatus = this.getEngineConfigString("dcFeedthroughs");
+        
         // Wire distortions
         if(this.getEngineConfigString("dcWireDistortion")!=null)       
             wireDistortion = Boolean.parseBoolean(this.getEngineConfigString("dcWireDistortion"));
@@ -99,6 +114,20 @@ public class DCEngine extends ReconstructionEngine {
             outBankPrefix = this.getEngineConfigString("outputBankPrefix");
         }
         
+        //Set if use DAF
+        if(this.getEngineConfigString("useDAF")!=null) 
+            useDAF=Boolean.valueOf(this.getEngineConfigString("useDAF"));
+        
+        if(this.getEngineConfigString("dafChi2Cut")!=null) {
+            dafChi2Cut=this.getEngineConfigString("dafChi2Cut");
+            DAFilter.setDafChi2Cut(Double.valueOf(dafChi2Cut));
+        }
+        
+        if(this.getEngineConfigString("dafAnnealingFactorsTB")!=null){ 
+            dafAnnealingFactorsTB=this.getEngineConfigString("dafAnnealingFactorsTB");
+            KFitter.setDafAnnealingFactorsTB(dafAnnealingFactorsTB);
+        }
+               
         // Set geometry shifts for alignment code
         if(this.getEngineConfigString("alignmentShifts")!=null) {
             String[] alignmentShift = this.getEngineConfigString("alignmentShifts").split(",");
@@ -150,6 +179,8 @@ public class DCEngine extends ReconstructionEngine {
         this.setOptions();
         Constants.getInstance().initialize(this.getName(),
                                            geoVariation, 
+                                           ministaggerStatus, 
+                                           feedthroughsStatus,
                                            wireDistortion, 
                                            useStartTime, 
                                            useBetaCut, 

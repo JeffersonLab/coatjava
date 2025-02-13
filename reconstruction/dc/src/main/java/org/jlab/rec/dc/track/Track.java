@@ -59,16 +59,17 @@ public class Track extends Trajectory implements Comparable<Track>{
     private Vector3D _pAtOrig_TiltedCS;
     private String _trking;
     private int _FitNDF;
+    private double _NDFDAF;
     private double _fitChisq;
     public boolean fit_Successful;
     private int _missingSuperlayer;
     private Segment _singleSuperlayer ;
     private int _fitConvergenceStatus;
     private StateVec finalStateVec ;
-    
-    
+          
     public Track() {
     }
+        
     /**
      * 
      * @return missing superlayer of the track
@@ -122,6 +123,24 @@ public class Track extends Trajectory implements Comparable<Track>{
     }
     
         
+    /**
+     * Status for different cross combos:
+     * 1: combos from R0R1R2R3
+     * 2: combos from R1R2R3
+     * 3: combos from R0R2R3
+     * 4: combos from R0R1R3
+     * 5: combos from R0R1R2
+    */
+    private int _Status_crossCombo=0;
+
+    public int get_Status_crossCombo() {
+        return _Status_crossCombo;
+    }
+
+    public void set_Status_crossCombo(int _Status) {
+        this._Status_crossCombo = _Status;
+    }
+    
     /**
      * 
      * @return id of the track
@@ -333,6 +352,22 @@ public class Track extends Trajectory implements Comparable<Track>{
     public void set_FitNDF(int _FitNDF) {
         this._FitNDF = _FitNDF;
     }
+    
+     /**
+     * 
+     * @return Kalman fit NDF weighted DAF
+     */
+    public double get_NDFDAF() {
+        return _NDFDAF;
+    }
+    /**
+     * 
+     * @param _NDFDAF Kalman fit NDF weighted by DAF
+     */
+    public void set_NDFDAF(double _NDFDAF) {
+        this._NDFDAF = _NDFDAF;
+    }    
+    
     /**
      * 
      * @return Kalman fit covariance matrix
@@ -420,7 +455,7 @@ public class Track extends Trajectory implements Comparable<Track>{
         }
         return value;
     }
-    
+        
     public boolean bestChi2(Track o) {
         return this.get_FitChi2()<o.get_FitChi2();
     }

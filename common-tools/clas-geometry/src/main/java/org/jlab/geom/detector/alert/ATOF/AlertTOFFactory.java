@@ -7,33 +7,37 @@
 //package clas12vis;
 
 package org.jlab.geom.detector.alert.ATOF;
-
 import org.jlab.geom.base.ConstantProvider;
 import org.jlab.geom.base.DetectorTransformation;
 import org.jlab.geom.base.Factory;
 import org.jlab.geom.component.ScintillatorPaddle;
-import org.jlab.geom.prim.Plane3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Transformation3D;
 
-import java.util.ArrayList;
-import java.util.List;
 
 /**
- * @author viktoriya
- * this is the latest ATOF geometry class to be used in reco. and in GEMC simulations!
- * commit on July 02, 2020
+ * @author viktoriya, pilleux
+ * Original geometry July 02, 2020
+ * Updated December 2024 to match actual atof conventions
+ * ATOF geometry class to be used in reco. and in GEMC simulations! 
  */
 public class AlertTOFFactory implements Factory<AlertTOFDetector, AlertTOFSector, AlertTOFSuperlayer, AlertTOFLayer> {
 
-	private final int nsectors = 15;
-	private final int nsuperl  = 2;
-	private final int nlayers1 = 10;
-	private final int npaddles = 4;
+        //Convention definitions: https://clasweb.jlab.org/wiki/index.php/File:Atof_def.png
+        //The atof has 15 phi sectors.
+	private final int nsectors    = 15;
+        //Top superlayer (index 1) = wedges.
+        //Bottom one (0) = bar.
+	private final int nsuperl     = 2;
+        //Layers = quarters of sectors.
+	private final int nlayers     = 4;
+        //Components = slices in z. 10 for the wedges, 1 for the bar.
+	private final int ncomponents = 10;
 
+        //Each pad = quarter of module
 	private final double openAng_pad_deg    = 6.0;
-	private final double openAng_pad_rad    = Math.toRadians(openAng_pad_deg);
-	private final double openAng_sector_rad = npaddles * openAng_pad_rad;
+        //4 pads = 4 layers = 1 sector
+	private final double openAng_sector_deg = nlayers * openAng_pad_deg;
 
 	@Override
 	public AlertTOFDetector createDetectorCLAS(ConstantProvider cp) {
@@ -72,23 +76,15 @@ public class AlertTOFFactory implements Factory<AlertTOFDetector, AlertTOFSector
 		if (!(0 <= sectorId && sectorId < nsectors)) throw new IllegalArgumentException("Error: invalid sector=" + sectorId);
 		if (!(0 <= superlayerId && superlayerId < nsuperl)) throw new IllegalArgumentException("Error: invalid superlayer=" + superlayerId);
 		AlertTOFSuperlayer superlayer = new AlertTOFSuperlayer(sectorId, superlayerId);
-
-		if (superlayerId == 0) {
-			int nlayers0 = 1;
-			for (int layerId = 0; layerId < nlayers0; layerId++)
-			     superlayer.addLayer(createLayer(cp, sectorId, superlayerId, layerId));
-		} else {
-			for (int layerId = 0; layerId < nlayers1; layerId++)
-			     superlayer.addLayer(createLayer(cp, sectorId, superlayerId, layerId));
-		}
+                for (int layerId = 0; layerId < nlayers; layerId++) superlayer.addLayer(createLayer(cp, sectorId, superlayerId, layerId));
 		return superlayer;
 	}
-
+        
 	@Override
 	public AlertTOFLayer createLayer(ConstantProvider cp, int sectorId, int superlayerId, int layerId) {
 		if (!(0 <= sectorId && sectorId < nsectors)) throw new IllegalArgumentException("Error: invalid sector=" + sectorId);
 		if (!(0 <= superlayerId && superlayerId < nsuperl)) throw new IllegalArgumentException("Error: invalid superlayer=" + superlayerId);
-		if (!(0 <= layerId && layerId < nlayers1)) throw new IllegalArgumentException("Error: invalid layer=" + layerId);
+		if (!(0 <= layerId && layerId < nlayers)) throw new IllegalArgumentException("Error: invalid layer=" + layerId);
 
 		double R0  = 77.0d;
 		double R1  = 80.0d;
@@ -109,54 +105,68 @@ public class AlertTOFFactory implements Factory<AlertTOFDetector, AlertTOFSector
 		double gap_pad_z = 0.3d; // mm, gap between paddles in z
 
 		AlertTOFLayer layer = new AlertTOFLayer(sectorId, superlayerId, layerId);
-
-		List<Plane3D> planes = new ArrayList<>();
-
-		double len_b   = layerId * pad_z + layerId * gap_pad_z; // back paddle plan
-		double len_f   = len_b + pad_z; // front paddle plan
+		
+                //Dimensions for the bar 
 		double Rl      = R0;
 		double dR      = dR0;
 		double widthTl = small_pad_b2;
 		double widthBl = small_pad_b1;
-
+                //Dimensions for the wedge
 		if (superlayerId == 1) {
 			Rl      = R1;
 			dR      = dR1;
 			widthTl = pad_b2;
 			widthBl = pad_b1;
 		}
+                
+                //Layer = quarter of a sector
+                double current_angle_deg = layerId * openAng_pad_deg + sectorId * openAng_sector_deg;
+                //Aligning the y axis with the separation between modules 0 and 14
+                current_angle_deg = current_angle_deg + 90 + 3; 
 
-		for (int padId = 0; padId < npaddles; padId++) {
-			Point3D p0 = new Point3D(-dR / 2, -widthBl / 2, len_f);
-			Point3D p1 = new Point3D(dR / 2, -widthTl / 2, len_f);
-			Point3D p2 = new Point3D(dR / 2, widthTl / 2, len_f);
-			Point3D p3 = new Point3D(-dR / 2, widthBl / 2, len_f);
+                //Component = z slice. 
+                //There are 10 for the wedge/top/sl=1
+                int current_ncomponents = ncomponents;
+                //There is only one for the bar/bottom/sl=0
+                if(superlayerId==0) current_ncomponents =  1;
+                
+                //Starting loop on components 
+		for (int padId = 0; padId < current_ncomponents; padId++) {
+                    
+                    //Component index increases with increasing z
+                    double len_b   = padId * pad_z + padId * gap_pad_z; // back paddle plan
+                    double len_f   = len_b + pad_z; // front paddle plan
 
-			Point3D            p4     = new Point3D(-dR / 2, -widthBl / 2, len_b);
-			Point3D            p5     = new Point3D(dR / 2, -widthTl / 2, len_b);
-			Point3D            p6     = new Point3D(dR / 2, widthTl / 2, len_b);
-			Point3D            p7     = new Point3D(-dR / 2, widthBl / 2, len_b);
-			ScintillatorPaddle Paddle = new ScintillatorPaddle(sectorId * 4 + padId, p0, p1, p2, p3, p4, p5, p6, p7);
+                    Point3D p0 = new Point3D(-dR / 2, -widthBl / 2, len_f);
+                    Point3D p1 = new Point3D(dR / 2, -widthTl / 2, len_f);
+                    Point3D p2 = new Point3D(dR / 2, widthTl / 2, len_f);
+                    Point3D p3 = new Point3D(-dR / 2, widthBl / 2, len_f);
 
-			double openAng_sector_deg = npaddles * openAng_pad_deg;
-			Paddle.rotateZ(Math.toRadians(padId * openAng_pad_deg + sectorId * openAng_sector_deg));
+                    Point3D            p4     = new Point3D(-dR / 2, -widthBl / 2, len_b);
+                    Point3D            p5     = new Point3D(dR / 2, -widthTl / 2, len_b);
+                    Point3D            p6     = new Point3D(dR / 2, widthTl / 2, len_b);
+                    Point3D            p7     = new Point3D(-dR / 2, widthBl / 2, len_b);
+		
+                    //Component index is the z slice for the top/wedge/sl=1
+                    int component = padId;
+                    //It is 10 for the bottom/bar/sl=0
+                    if(superlayerId==0) component =  10;   
+                    
+                    ScintillatorPaddle Paddle = new ScintillatorPaddle(component, p0, p1, p2, p3, p4, p5, p6, p7);
+                    
+                    Paddle.rotateZ(Math.toRadians(current_angle_deg));
 
-			double xoffset;
-			double yoffset;
+                    double xoffset;
+                    double yoffset;
 
-			xoffset = (Rl + dR / 2) * Math.cos(padId * openAng_pad_rad + sectorId * openAng_sector_rad);
-			yoffset = (Rl + dR / 2) * Math.sin(padId * openAng_pad_rad + sectorId * openAng_sector_rad);
+                    xoffset = (Rl + dR / 2) * Math.cos(Math.toRadians(current_angle_deg));
+                    yoffset = (Rl + dR / 2) * Math.sin(Math.toRadians(current_angle_deg));
 
-			Paddle.translateXYZ(xoffset, yoffset, 0);
+                    Paddle.translateXYZ(xoffset, yoffset, 0);
 
-			// Add the paddles to the list
-			layer.addComponent(Paddle);
+                    // Add the paddles to the list
+                    layer.addComponent(Paddle);
 		}
-
-		Plane3D plane = new Plane3D(0, Rl, 0, 0, 1, 0);
-		plane.rotateZ(sectorId * openAng_sector_rad - Math.toRadians(90));
-		planes.add(plane);
-
 		return layer;
 	}
 

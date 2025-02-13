@@ -384,7 +384,7 @@ public class Seed implements Comparable<Seed>{
             if (fitTrk.getchisq()[0] < chisqMax) {
                 chisqMax = fitTrk.getchisq()[0];
                 if(chisqMax<Constants.CIRCLEFIT_MAXCHI2) {
-                    this.update_Crosses();
+                    this.update_Crosses(xb,yb);
                 }
             }
         }
@@ -395,11 +395,13 @@ public class Seed implements Comparable<Seed>{
     /**
      * Updates the crosses positions based on trajectories or helix
      */
-    public void update_Crosses() {
+    public void update_Crosses(double xb, double yb) {
         if (this.getHelix() != null && this.getHelix().getCurvature() != 0) {
             for (int i = 0; i < this.getCrosses().size(); i++) {
                 Cross cross = this.getCrosses().get(i);
-                double R = Math.sqrt(cross.getPoint().x() * cross.getPoint().x() + cross.getPoint().y() * cross.getPoint().y());
+                double Cx = cross.getPoint().x()-xb;
+                double Cy = cross.getPoint().y()-yb;
+                double R = Math.sqrt(Cx * Cx + Cy * Cy);
                 Point3D  trackPos = this.getHelix().getPointAtRadius(R);
                 Vector3D trackDir = this.getHelix().getTrackDirectionAtRadius(R);
                 cross.update(trackPos, trackDir);
@@ -407,11 +409,13 @@ public class Seed implements Comparable<Seed>{
         }
     }
     
-    public void update_Crosses(List<Cross> crosses) {
+    public void update_Crosses(List<Cross> crosses, double xb, double yb) {
         if (this.getHelix() != null && this.getHelix().getCurvature() != 0) {
             for (int i = 0; i < crosses.size(); i++) {
                 Cross cross = crosses.get(i);
-                double R = Math.sqrt(cross.getPoint().x() * cross.getPoint().x() + cross.getPoint().y() * cross.getPoint().y());
+                double Cx = cross.getPoint().x()-xb;
+                double Cy = cross.getPoint().y()-yb;
+                double R = Math.sqrt(Cx * Cx + Cy * Cy);
                 Point3D  trackPos = this.getHelix().getPointAtRadius(R);
                 Vector3D trackDir = this.getHelix().getTrackDirectionAtRadius(R);
                 cross.update(trackPos, trackDir);

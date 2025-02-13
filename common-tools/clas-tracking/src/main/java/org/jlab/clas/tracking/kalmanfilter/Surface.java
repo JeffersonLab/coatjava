@@ -14,12 +14,15 @@ import org.jlab.geom.prim.Vector3D;
 /**
  *
  * @author ziegler
+ * @author Tongtong Cao
  */
 public class Surface implements Comparable<Surface> {
     
     public Type type;
     public Plane3D plane;
-    public Point3D refPoint;
+    public Point3D measPoint;
+    public Point3D measPoint_err;
+    // Todo: make a line to replace two end points
     public Point3D lineEndPoint1;
     public Point3D lineEndPoint2;
     public Point3D finitePlaneCorner1;
@@ -40,10 +43,56 @@ public class Surface implements Comparable<Surface> {
     public boolean passive = false;
     public double hemisphere = 1;
     
+    public double[] unc = new double[2];
+    public double[] doca = new double[2];
+    public Line3D[] wireLine = new Line3D[2];
+    public int region;
+    public int superlayer;
+    public int nMeas = 1;
+    
+        
+    public void setNMeas(int n) {
+    	nMeas = n;
+    }
+    
+    public int getNMeas() {
+    	return nMeas;
+    }
+    
+    // For URWell
+    public Surface(int sector, double x, double y, double z, double x_err, double y_err) {
+        type = Type.PLANEWITHPOINT;
+        this.sector = sector;
+        Point3D point = new Point3D(x, y, z);
+        measPoint = point;
+        Point3D point_err = new Point3D(x_err, y_err, 0);
+        measPoint_err = point_err;
+        Material material_air = new Material("air", 0, 0, 0, 30400, 0, Units.CM);
+        Material material_argon = new Material("argon", 0, 0, 0, 14, 0, Units.CM);
+        materials.add(material_air);
+        materials.add(material_argon);
+    }
+    
+    // For DC
+    public Surface(int region, double[] doca, double[] unc, double error, Line3D[] wireLine) {
+    	type = Type.LINEDOCA;
+    	this.region = region;
+        this.doca = doca;
+        this.unc = unc;
+        this.error = error;
+        this.wireLine = wireLine;
+        Point3D point = new Point3D(0, 0, wireLine[0].origin().z());
+        this.measPoint = point;
+        Material material_air = new Material("air", 0, 0, 0, 30400, 0, Units.CM);
+        Material material_argon = new Material("argon", 0, 0, 0, 14, 0, Units.CM);
+        materials.add(material_air);
+        materials.add(material_argon);
+    }
+    
     public Surface(Plane3D plane3d, Point3D refrPoint, Point3D c1, Point3D c2, double accuracy) {
         type = Type.PLANEWITHPOINT;
         plane = plane3d;
-        refPoint = refrPoint;
+        measPoint = refrPoint;
         finitePlaneCorner1 = c1;
         finitePlaneCorner2 = c2;
         swimAccuracy = accuracy;
@@ -82,7 +131,7 @@ public class Surface implements Comparable<Surface> {
     public Surface(Cylindrical3D cylinder3d, Point3D refrPoint, double accuracy) {
         type = Type.CYLINDERWITHPOINT;
         cylinder = cylinder3d;
-        refPoint = refrPoint;
+        measPoint = refrPoint;
         swimAccuracy = accuracy;
     }
     public Surface(Cylindrical3D cylinder3d, Point3D endPoint1, Point3D endPoint2, double accuracy) {
@@ -183,6 +232,20 @@ public class Surface implements Comparable<Surface> {
      */
     public void setLayer(int layer) {
         this.layer = layer;
+    }
+    
+    /**
+     * @return the superlayer
+     */
+    public int getSuperLayer() {
+        return superlayer;
+    }
+
+    /**
+     * @param superlayer the superlayer to set
+     */
+    public void setSuperLayer(int superlayer) {
+        this.superlayer = superlayer;
     }
 
     /**

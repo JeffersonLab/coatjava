@@ -156,7 +156,7 @@ public class CodaEventDecoder {
                     if(this.timeStampErrors<100) {
                         System.err.println("WARNING: mismatch in TI time stamps: crate " 
                                         + tiEntries.get(i).getDescriptor().getCrate() + " reports " 
-                                        + tiEntries.get(i).getTimeStamp() + " instead of the " + ts
+                                        + tiEntries.get(i).getTimeStamp() + " instead of the " + tiEntries.get(i0).getTimeStamp()
                                         + " from crate " + tiEntries.get(i0).getDescriptor().getCrate());
                     }
                     else if(this.timeStampErrors==100) {
@@ -283,9 +283,12 @@ public class CodaEventDecoder {
             else if(node.getTag()==57636){
                 //  RICH TDC data
                 return this.getDataEntries_57636(crate, node, event);
-            } else if(node.getTag()==57641){
-                //  RTPC  data decoding
-                return this.getDataEntries_57641(crate, node, event);
+            } else if (node.getTag() == 57657) {
+              //  ATOF Petiroc TDC data 
+              return this.getDataEntries_57657(crate, node, event);
+            } else if (node.getTag() == 57641) {
+              //  RTPC  data decoding
+              return this.getDataEntries_57641(crate, node, event);
             }
         }
         return bankEntries;
@@ -1062,6 +1065,79 @@ public class CodaEventDecoder {
         }
         return entries;
     }
+
+    /**
+     * Bank TAG=57657 used for ATOF PETIROC TDC values
+     * @param crate
+     * @param node
+     * @param event
+     * @return
+     *
+     * <dictEntry name="PETIROC Composite Data" tag="0xe139" num="0" type="composite">
+     *           <description format="c,i,l,N(c,i,i)">
+     *                       c   "slot number"
+     *                       i   "trigger number"
+     *                       l   "time stamp"
+     *                       N   "number of channels fired"
+     *                       c   "channel number"
+     *                       i   "tdc value"
+     *                       i   "width value"
+     *        </description>
+     * </dictEntry>
+     */
+    public List<DetectorDataDgtz>  getDataEntries_57657(Integer crate, EvioNode node, EvioDataEvent event){
+
+        ArrayList<DetectorDataDgtz>  entries = new ArrayList<>();
+
+        if(node.getTag()==57657){
+            try {
+                //System.err.println("Decoding ATOF PETIROC event!");
+                ByteBuffer     compBuffer = node.getByteData(true);
+                CompositeData  compData = new CompositeData(compBuffer.array(),event.getByteOrder());
+
+                List<DataType> cdatatypes = compData.getTypes();
+                List<Object>   cdataitems = compData.getItems();
+
+                if(cdatatypes.get(3) != DataType.NVALUE){
+                    System.err.println("[EvioRawDataSource] ** error ** corrupted "
+                    + " bank. tag = " + node.getTag() + " num = " + node.getNum());
+                    return null;
+                }
+
+                int position = 0;
+                while(position<cdatatypes.size()-4){
+                    Byte    slot     = (Byte)     cdataitems.get(position+0);
+                    Integer trig_num = (Integer)  cdataitems.get(position+1);
+                    Long    time_stamp = (Long)    cdataitems.get(position+2);
+                    Integer nchannels = (Integer) cdataitems.get(position+3);
+                    position += 4;
+                    int counter  = 0;
+                    while(counter<nchannels){
+                        Byte channel = (Byte) cdataitems.get(position+0);
+                        Integer tdc = (Integer) cdataitems.get(position+1);
+                        // width over threshold
+                        Integer tot = (Integer) cdataitems.get(position+2);
+
+
+                        // Not sure what is going on here yet...
+                        DetectorDataDgtz bank = new DetectorDataDgtz(crate,slot.intValue(),channel.intValue());
+                        bank.addTDC(new TDCData(tdc,tot));
+                        entries.add(bank);
+                        position += 3;
+                        counter++;
+                        //System.err.println("event: " + bank.toString());
+                    }
+                }
+
+                return entries;
+            } catch (EvioException ex) {
+                Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        return entries;
+    }
+
+
 
     public void getDataEntries_EPICS(EvioDataEvent event){
         epicsData = new JsonObject();

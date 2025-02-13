@@ -62,7 +62,10 @@ services:
 configuration:
   global:
     variation: rgb_spring2019
-#      timestamp: 12/31/2020-00:00:00
+#    timestamp: 12/31/2020-00:00:00
+## uncomment the following two lines for compatibility with alignments before the DC fixes
+#    dcMinistagger: "NOTONREFWIRE"
+#    dcFeedthroughs: "OFF"
 #  io-services:
 #    writer:
 #      schema_dir: "absolute-path-to-schema-folder"

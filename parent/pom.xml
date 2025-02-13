@@ -3,7 +3,7 @@
 
   <groupId>org.jlab.clas</groupId>
   <artifactId>clas12rec</artifactId>
-  <version>10.0.9-SNAPSHOT</version>
+  <version>11.1.2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <repositories>
@@ -18,6 +18,19 @@
     </repository>
   </repositories>
 
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>ai.djl</groupId>
+        <artifactId>bom</artifactId>
+        <version>0.32.0</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
   <dependencies>
     <!-- https://mvnrepository.com/artifact/junit/junit -->
     <dependency>
@@ -27,18 +40,10 @@
       <scope>test</scope>
     </dependency>
 
-    <!-- https://mvnrepository.com/artifact/org.hamcrest/hamcrest-core -->
-    <dependency>
-      <groupId>org.hamcrest</groupId>
-      <artifactId>hamcrest-core</artifactId>
-      <version>1.3</version>
-      <scope>test</scope>
-    </dependency>
-
     <dependency>
       <groupId>com.github.spotbugs</groupId>
       <artifactId>spotbugs</artifactId>
-      <version>3.1.12</version>
+      <version>4.9.0</version>
     </dependency>
     
     <dependency>
@@ -51,7 +56,47 @@
     <dependency>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.10</version>
+        <version>0.8.12</version>
+    </dependency>
+
+    <dependency>
+      <groupId>ai.djl</groupId>
+      <artifactId>model-zoo</artifactId>
+      <version>0.32.0</version>
+      <scope>compile</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>ai.djl.pytorch</groupId>
+      <artifactId>pytorch-model-zoo</artifactId>
+      <version>0.32.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>ai.djl.pytorch</groupId>
+      <artifactId>pytorch-engine</artifactId>
+      <version>0.32.0</version>
+      <scope>runtime</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>ai.djl.pytorch</groupId>
+      <artifactId>pytorch-native-cpu</artifactId>
+      <classifier>linux-x86_64</classifier>
+      <scope>runtime</scope>
+      <version>2.5.1</version>
+    </dependency>
+    
+    <dependency>
+      <groupId>ai.djl.pytorch</groupId>
+      <artifactId>pytorch-jni</artifactId>
+      <version>2.5.1-0.32.0</version>
+      <scope>runtime</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>ai.djl</groupId>
+      <artifactId>api</artifactId>
     </dependency>
 
   </dependencies>
@@ -61,7 +106,7 @@
       <extension>
         <groupId>org.apache.maven.wagon</groupId>
         <artifactId>wagon-ssh-external</artifactId>
-        <version>2.8</version>
+        <version>3.5.3</version>
       </extension>
     </extensions>
 
@@ -70,7 +115,7 @@
       <plugin>
         <groupId>com.github.spotbugs</groupId>
         <artifactId>spotbugs-maven-plugin</artifactId>
-        <version>4.8.3.1</version>
+        <version>4.8.6.6</version>
         <configuration>
           <excludeFilterFile>spotbugs-exclude.xml</excludeFilterFile>
         </configuration>
@@ -79,7 +124,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.4.0</version>
+        <version>3.11.2</version>
         <configuration>
           <doctitle>coatjavadocs</doctitle>
           <windowtitle>coatjavadocs</windowtitle>
@@ -89,9 +134,9 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.12.1</version>
+        <version>3.13.0</version>
         <configuration>
-            <release>11</release>
+            <release>17</release>
             <encoding>UTF-8</encoding>
         </configuration>
       </plugin>
@@ -99,7 +144,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
-        <version>3.2.0</version>
+        <version>3.3.1</version>
         <configuration>
           <encoding>UTF-8</encoding>
         </configuration>
@@ -108,7 +153,7 @@
       <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
-          <version>3.2.2</version>
+          <version>3.4.2</version>
           <configuration>
               <archive>
                   <manifest>
@@ -132,7 +177,7 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.10</version>
+        <version>0.8.12</version>
         <executions>
           <execution>
             <goals>

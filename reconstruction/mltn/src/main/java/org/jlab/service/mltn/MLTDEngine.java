@@ -55,7 +55,7 @@ public class MLTDEngine extends ReconstructionEngine {
         files.put("classifier", "trackClassifier.network");
         files.put("fixer", "trackFixer.network");        
         
-        ArchiveProvider provider = new ArchiveProvider(path);
+        ArchiveProvider provider = new ArchiveProvider(path.trim());
         
         //----- This will find in the archive the last run number closest
         //----- to provided run number that contains trained network.
@@ -67,7 +67,7 @@ public class MLTDEngine extends ReconstructionEngine {
         int adjustedRun = provider.findEntry(networkRun);
         
         String directory = String.format("network/%d/%s", adjustedRun, networkFlavor);
-        network.initZip(path,directory, files);
+        network.initZip(path.trim(),directory, files);
         
         //trackFinder = Clas12TrackFinder.createEJML("CLAS12DIR","etc/ejml/ejmlclas12.network");
         //classifier.setEnvDirectory("CLAS12DIR");
