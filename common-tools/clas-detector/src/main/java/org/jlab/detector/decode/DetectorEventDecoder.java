@@ -239,8 +239,10 @@ public class DetectorEventDecoder {
                     int min = filter.getIntValue("minimum", sector, layer, 1);
                     int max = filter.getIntValue("maximum", sector, layer, 1);
                     int trs = filter.getIntValue("threshold", sector, layer, 1);
-                        if(data.getTDCData(0).getTime()<min || data.getTDCData(0).getTime()>max || data.getTDCData(0).getToT()<trs)
-                            data.getTDCData(0).setType(OrderType.OUTOFTIME);
+                    if(data.getTDCData(0).getTime()<min || data.getTDCData(0).getTime()>max)
+                        data.getTDCData(0).setType(OrderType.OUTOFTIME);
+                    if( data.getTDCData(0).getToT()<trs)
+                        data.getTDCData(0).setType(OrderType.BELOWTHRS);
                     int key = data.getDescriptor().getHashCode();
                     if(!filteredData.containsKey(key))
                         filteredData.put(key, new ArrayList<>());
@@ -256,8 +258,8 @@ public class DetectorEventDecoder {
                 int mult = filter.getIntValue("multiplicity", sector, layer, 1);
                 if(filteredData.get(key).size()>mult) 
                     for(int i=mult; i<filteredData.get(key).size(); i++)
-                        if(filteredData.get(key).get(i).getTDCData(0).getType()==OrderType.NOMINAL)
-                            filteredData.get(key).get(i).getTDCData(0).setType(OrderType.OUTOFTIME);
+                        if(filteredData.get(key).get(i).getTDCData(0).getType()==OrderType.NOMINAL) 
+                            filteredData.get(key).get(i).getTDCData(0).setType(OrderType.MULTIHIT);
             }
         }
     }

@@ -188,7 +188,12 @@ public abstract class ReconstructionEngine implements Engine {
       LOGGER.log(Level.INFO,"--- engine configuration is called " + this.getDescription());
       try {
           if (this.getEngineConfigString("rawBankGroup")!=null) {
-              this.rawBankOrders = RawBank.getFilterGroup(this.getEngineConfigString("rawBankGroup"));
+              if(this.getEngineConfigString("rawBankGroup").contains(",")) {
+                  this.rawBankOrders = RawBank.createFilterGroup(this.getEngineConfigString("rawBankGroup").replace(" ","").split(","));
+              }
+              else {
+                  this.rawBankOrders = RawBank.getFilterGroup(this.getEngineConfigString("rawBankGroup"));
+              }
           }
           if (this.getEngineConfigString("dropBanks")!=null &&
                   this.getEngineConfigString("dropBanks").equals("true")) {
