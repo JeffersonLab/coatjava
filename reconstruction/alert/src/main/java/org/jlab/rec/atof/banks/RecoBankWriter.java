@@ -51,8 +51,6 @@ public class RecoBankWriter {
             bank.setFloat("y", i, (float) (hitList.get(i).getY()));
             bank.setFloat("z", i, (float) (hitList.get(i).getZ()));
             bank.setFloat("energy", i, (float) hitList.get(i).getEnergy());
-            bank.setFloat("inlength", i, (float) (hitList.get(i).getInPathLength()));
-            bank.setFloat("pathlength", i, (float) (hitList.get(i).getPathLength()));
         }
         return bank;
     }
@@ -138,21 +136,12 @@ public class RecoBankWriter {
      * wedge hits info to be added
      * @param barHits the {@link ArrayList} of {@link BarHit} containing the bar
      * hits info to be added
-     * @param projections the {@link ArrayList} of {@link TrackProjection} containing the 
-     * track projections info to be added
      *
      * @return 0 if it worked, 1 if it failed
      *
      */
-    public int appendAtofBanks(DataEvent event, ArrayList<AtofHit> wedgeHits, ArrayList<BarHit> barHits, ArrayList<AtofCluster> clusterList, ArrayList<TrackProjection> projections) {
+    public int appendAtofBanks(DataEvent event, ArrayList<AtofHit> wedgeHits, ArrayList<BarHit> barHits, ArrayList<AtofCluster> clusterList) {
 
-        DataBank projbank = this.fillProjectionsBank(event, projections);
-        if (projbank != null) {
-            event.appendBank(projbank);
-        } else {
-            return 1;
-        }
-        
         DataBank hitbank = this.fillAtofHitBank(event, wedgeHits, barHits);
         if (hitbank != null) {
             event.appendBank(hitbank);
@@ -167,6 +156,27 @@ public class RecoBankWriter {
             return 1;
         }
 
+        return 0;
+    }
+    
+    /**
+     * Appends the alert match banks to an event.
+     *
+     * @param event the {@link DataEvent} in which to append the banks
+     * @param projections the {@link ArrayList} of {@link TrackProjection} containing the 
+     * track projections info to be added
+     *
+     * @return 0 if it worked, 1 if it failed
+     *
+     */
+    public int appendMatchBanks(DataEvent event, ArrayList<TrackProjection> projections) {
+
+        DataBank projbank = this.fillProjectionsBank(event, projections);
+        if (projbank != null) {
+            event.appendBank(projbank);
+        } else {
+            return 1;
+        }
         return 0;
     }
 

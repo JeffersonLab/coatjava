@@ -1,13 +1,8 @@
 package org.jlab.rec.atof.hit;
 
-import java.util.List;
 import org.jlab.geom.base.*;
 import org.jlab.geom.prim.Point3D;
-import org.jlab.io.base.DataBank;
-import org.jlab.io.base.DataEvent;
 import org.jlab.rec.atof.constants.Parameters;
-import org.jlab.rec.atof.trackMatch.TrackProjection;
-import org.jlab.rec.atof.trackMatch.TrackProjector;
 
 /**
  *
@@ -25,7 +20,6 @@ public class AtofHit {
     private double time, energy, x, y, z;
     private String type;
     private boolean isInACluster;
-    private double pathLength, inPathLength;
 
     public int getSector() {
         return sector;
@@ -129,22 +123,6 @@ public class AtofHit {
 
     public void setIsInACluster(boolean is_in_a_cluster) {
         this.isInACluster = is_in_a_cluster;
-    }
-
-    public double getPathLength() {
-        return pathLength;
-    }
-
-    public void setPathLength(double path_length) {
-        this.pathLength = path_length;
-    }
-
-    public double getInPathLength() {
-        return inPathLength;
-    }
-
-    public void setInPathLength(double inpath_length) {
-        this.inPathLength = inpath_length;
     }
 
     /**
@@ -374,172 +352,14 @@ public class AtofHit {
         this.isInACluster = false;
 
         this.makeType();
-        int is_ok = this.convertTdcToTime();
-        if (is_ok != 1) {
-            is_ok = this.convertTotToEnergy();
-        }
-        if (is_ok != 1) {
-            is_ok = this.convertSLCToXYZ(atof);
-        }
-    }
-
-    /**
-     * Constructor for a hit in the atof. Initializes the hit's sector, layer,
-     * component, order, TDC, ToT. Sets the hit's initial state regarding
-     * clustering. Set up the hit's type, time, energy, and spatial coordinates.
-     *
-     * @param sector The sector of the detector where the hit occurred.
-     * @param layer The layer of the detector where the hit was detected.
-     * @param component The component within the layer that registered the hit.
-     * @param order Order of the hit.
-     * @param tdc TDC value.
-     * @param tot ToT value.
-     * @param atof Detector object representing the atof, used to calculate
-     * @param track_projector TrackProjector object with ahdc tracks to be
-     * matched to the hit.
-     */
-    public AtofHit(int sector, int layer, int component, int order, int tdc, int tot, Detector atof, TrackProjector track_projector) {
-        this.sector = sector;
-        this.layer = layer;
-        this.component = component;
-        this.order = order;
-        this.tdc = tdc;
-        this.tot = tot;
-        this.isInACluster = false;
-
-        //First the type needs to be set
-        this.makeType();
-        //From it the coordinates can be computed
-        this.convertSLCToXYZ(atof);
-        //From them tracks can be matched
-        this.matchTrack(track_projector);
-        //And energy and time can then be computed
-        this.convertTotToEnergy();
         this.convertTdcToTime();
+        this.convertTotToEnergy();
+        this.convertSLCToXYZ(atof);
     }
 
-    /**
-     * Matches the current track with ahdc tracks projections. Calculates the
-     * match by comparing the hit's azimuthal angle and longitudinal position
-     * (z) with the track projection. If a match is found within defined
-     * tolerances for phi and z, the path length of the matched hit is updated.
-     *
-     * @param track_projector The TrackProjector object that provides a list of
-     * TrackProjections.
-     *
-     */
-    public final void matchTrack(TrackProjector track_projector) {
-        double sigma_phi = 0;
-        double sigma_z = 0;
-
-        List<TrackProjection> Projections = track_projector.getProjections();
-        for (int i_track = 0; i_track < Projections.size(); i_track++) {
-            Point3D projection_point = new Point3D();
-            if (null == this.getType()) {
-                System.out.print("Impossible to match track and hit; hit type is null \n");
-            } else {
-                switch (this.getType()) {
-                    case "wedge" -> {
-                        sigma_phi = Parameters.SIGMA_PHI_TRACK_MATCHING_WEDGE;
-                        sigma_z = Parameters.SIGMA_Z_TRACK_MATCHING_WEDGE;
-                        projection_point = Projections.get(i_track).getWedgeIntersect();
-                    }
-                    case "bar up", "bar down" -> {
-                        System.out.print("WARNING : YOU ARE MATCHING A TRACK TO A SINGLE HIT IN THE BAR. \n");
-                        sigma_phi = Parameters.SIGMA_PHI_TRACK_MATCHING_BAR;
-                        sigma_z = Parameters.SIGMA_Z_TRACK_MATCHING_BAR;
-                        projection_point = Projections.get(i_track).getBarIntersect();
-                    }
-                    default ->
-                        System.out.print("Impossible to match track and hit; hit type is undefined \n");
-                }
-            }
-            if (Math.abs(this.getPhi() - projection_point.toVector3D().phi()) < sigma_phi) {
-                if (Math.abs(this.getZ() - projection_point.z()) < sigma_z) {
-                    if ("wedge".equals(this.getType())) {
-                        this.setPathLength(Projections.get(i_track).getWedgePathLength());
-                    } else {
-                        this.setPathLength(Projections.get(i_track).getBarPathLength());
-                    }
-                }
-            }
-        }
+    public AtofHit(){
     }
-
-    /**
-     * Matches the current track with ahdc tracks projections that have been written to the banks.
-     * Calculates the match by comparing the hit's azimuthal angle and longitudinal position
-     * (z) with the track projection. If a match is found within defined
-     * tolerances for phi and z, the path length of the matched hit is updated.
-     *
-     * @param event a @link{DataEvent} in which the track projections bank has been written.
-     *
-     */
-    public int matchTrack(DataEvent event) {
-
-        String track_bank_name = "AHDC::Projections";
-        if (event == null) { // check if there is an event
-            //System.out.print(" no event \n");
-            return 1;
-        } else if (event.hasBank(track_bank_name) == false) {
-            return 1;
-            // check if there are ahdc tracks in the event
-            //System.out.print("no tracks \n");
-        } else {
-            DataBank track_bank = event.getBank(track_bank_name);
-            int nt = track_bank.rows(); // number of tracks
-            double sigma_phi = 0;
-            double sigma_z = 0;
-
-            //Looping through all tracks
-            for (int i = 0; i < nt; i++) {
-
-                Float xt = null, yt = null, zt = null, path = null, inpath = null;
-                if (null == this.getType()) {
-                    System.out.print("Impossible to match track and hit; hit type is null \n");
-                } else {
-                    switch (this.getType()) {
-                        case "wedge" -> {
-                            sigma_phi = Parameters.SIGMA_PHI_TRACK_MATCHING_WEDGE;
-                            sigma_z = Parameters.SIGMA_Z_TRACK_MATCHING_WEDGE;
-                            xt = track_bank.getFloat("x_at_wedge", i);
-                            yt = track_bank.getFloat("y_at_wedge", i);
-                            zt = track_bank.getFloat("z_at_wedge", i);
-                            path = track_bank.getFloat("L_at_wedge", i);
-                            //A wedge hit traveled through the whole bar and then through a portion of the wedge
-                            inpath = track_bank.getFloat("L_in_wedge", i) + track_bank.getFloat("L_at_wedge", i) - track_bank.getFloat("L_at_bar", i); 
-                        }
-                        case "bar" -> {
-                            sigma_phi = Parameters.SIGMA_PHI_TRACK_MATCHING_BAR;
-                            sigma_z = Parameters.SIGMA_Z_TRACK_MATCHING_BAR;
-                            xt = track_bank.getFloat("x_at_bar", i);
-                            yt = track_bank.getFloat("y_at_bar", i);
-                            zt = track_bank.getFloat("z_at_bar", i);
-                            path = track_bank.getFloat("L_at_bar", i);
-                            inpath = track_bank.getFloat("L_in_bar", i);
-                        }
-                        case "bar up", "bar down" -> {
-                            System.out.print("WARNING : YOU ARE MATCHING A TRACK TO A SINGLE HIT IN THE BAR. \n");
-                        }
-                        default ->
-                            System.out.print("Impossible to match track and hit; hit type is undefined \n");
-                    }
-                }
-                Point3D projection_point = new Point3D(xt, yt, zt);
-                if (Math.abs(this.getPhi() - projection_point.toVector3D().phi()) < sigma_phi) {
-                    if (Math.abs(this.getZ() - projection_point.z()) < sigma_z) {
-                        this.setPathLength(path);
-                        this.setInPathLength(inpath);
-                    }
-                }
-            }
-        }
-        return 0;
-    }
-
-    public AtofHit() {
-    }
-
+    
     /**
      * @param args the command line arguments
      */

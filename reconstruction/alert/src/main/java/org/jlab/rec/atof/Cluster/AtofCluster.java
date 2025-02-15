@@ -1,6 +1,10 @@
 package org.jlab.rec.atof.cluster;
 
 import java.util.ArrayList;
+import org.jlab.geom.prim.Point3D;
+import org.jlab.io.base.DataBank;
+import org.jlab.io.base.DataEvent;
+import org.jlab.rec.atof.constants.Parameters;
 import org.jlab.rec.atof.hit.AtofHit;
 import org.jlab.rec.atof.hit.BarHit;
 
@@ -26,10 +30,12 @@ public class AtofCluster {
     ArrayList<AtofHit> wedgeHits;
     /**
      * cluster properties:position [cm], time [ns], energy[MeV], path length
-     * [cm] and length through the atof [cm].
+     * [cm] and length through the atof [cm], type of the maximum hit (to set
+     * resolutions).
      */
     double x, y, z, time, energy;
     double pathLength, inPathLength;
+    String typeMaxHit;
 
     public ArrayList<BarHit> getBarHits() {
         return barHits;
@@ -102,7 +108,15 @@ public class AtofCluster {
     public void setInPathLength(double inPathLength) {
         this.inPathLength = inPathLength;
     }
+    
+    public String getTypeMaxHit() {
+        return typeMaxHit;
+    }
 
+    public void setTypeMaxHit(String typeMaxHit) {
+        this.typeMaxHit = typeMaxHit;
+    }  
+    
     /**
      * Compute the cluster properties.
      *
@@ -116,7 +130,6 @@ public class AtofCluster {
         this.energy = 0;
         double max_energy = -1;
         AtofHit max_energy_hit = new AtofHit();
-        BarHit max_energy_barhit = new BarHit();
 
         for (int i_wedge = 0; i_wedge < this.wedgeHits.size(); i_wedge++) {
             AtofHit this_wedge_hit = this.wedgeHits.get(i_wedge);
@@ -133,26 +146,87 @@ public class AtofCluster {
             double this_energy = this_bar_hit.getEnergy();
             this.energy += this_energy;
             if (this_energy > max_energy) {
-                max_energy_barhit = this_bar_hit;
+                max_energy_hit = this_bar_hit;
                 max_energy = this_energy;
             }
         }
-
-        if (max_energy_hit.getEnergy() > max_energy_barhit.getEnergy()) {
-            this.time = max_energy_hit.getTime();
-            this.x = max_energy_hit.getX();
-            this.y = max_energy_hit.getY();
-            this.z = max_energy_hit.getZ();
-            this.pathLength = max_energy_hit.getPathLength();
-            this.inPathLength = max_energy_hit.getInPathLength();
+        
+        this.time = max_energy_hit.getTime();
+        this.x = max_energy_hit.getX();
+        this.y = max_energy_hit.getY();
+        this.z = max_energy_hit.getZ();
+        this.typeMaxHit = max_energy_hit.getType();
+    }
+    
+    /**
+     * Matches the current track with ahdc tracks projections that have been written to the banks.
+     * Calculates the match by comparing the hit's azimuthal angle and longitudinal position
+     * (z) with the track projection. If a match is found within defined
+     * tolerances for phi and z, the path length of the matched hit is updated.
+     *
+     * @param event a @link{DataEvent} in which the track projections bank has been written.
+     *
+     */
+    public int matchTrack(DataEvent event) {
+        String track_bank_name = "AHDC::Projections";
+        if (event == null) { // check if there is an event
+            //System.out.print(" no event \n");
+            return 1;
+        } else if (event.hasBank(track_bank_name) == false) {
+            // check if there are ahdc tracks in the event
+            //System.out.print("no tracks \n");
+            return 1;    
         } else {
-            this.time = max_energy_barhit.getTime();
-            this.x = max_energy_barhit.getX();
-            this.y = max_energy_barhit.getY();
-            this.z = max_energy_barhit.getZ();
-            this.pathLength = max_energy_barhit.getPathLength();
-            this.inPathLength = max_energy_barhit.getInPathLength();
+            DataBank track_bank = event.getBank(track_bank_name);
+            int nt = track_bank.rows(); // number of tracks
+            double sigma_phi = 0;
+            double sigma_z = 0;
+
+            //Looping through all tracks
+            for (int i = 0; i < nt; i++) {
+                Float xt = null, yt = null, zt = null, path = null, inpath = null;
+                if (null == this.getTypeMaxHit()) {
+                    System.out.print("Impossible to match track and hit; hit type is null \n");
+                } else {
+                    switch (this.getTypeMaxHit()) {
+                        case "wedge" -> {
+                            sigma_phi = Parameters.SIGMA_PHI_TRACK_MATCHING_WEDGE;
+                            sigma_z = Parameters.SIGMA_Z_TRACK_MATCHING_WEDGE;
+                            xt = track_bank.getFloat("x_at_wedge", i);
+                            yt = track_bank.getFloat("y_at_wedge", i);
+                            zt = track_bank.getFloat("z_at_wedge", i);
+                            path = track_bank.getFloat("L_at_wedge", i);
+                            //A wedge hit traveled through the whole bar and then through a portion of the wedge
+                            inpath = track_bank.getFloat("L_in_wedge", i) + track_bank.getFloat("L_at_wedge", i) - track_bank.getFloat("L_at_bar", i); 
+                        }
+                        case "bar" -> {
+                            sigma_phi = Parameters.SIGMA_PHI_TRACK_MATCHING_BAR;
+                            sigma_z = Parameters.SIGMA_Z_TRACK_MATCHING_BAR;
+                            xt = track_bank.getFloat("x_at_bar", i);
+                            yt = track_bank.getFloat("y_at_bar", i);
+                            zt = track_bank.getFloat("z_at_bar", i);
+                            path = track_bank.getFloat("L_at_bar", i);
+                            inpath = track_bank.getFloat("L_in_bar", i);
+                        }
+                        case "bar up", "bar down" -> {
+                            System.out.print("Impossible to match track and hit; hit type is a single up or down bar hit. \n");
+                        }
+                        default ->
+                            System.out.print("Impossible to match track and hit; hit type is undefined \n");
+                    }
+                }
+                Point3D projection_point = new Point3D(xt, yt, zt);
+                double delta_phi = Math.abs(this.getPhi() - projection_point.toVector3D().phi());
+                if(delta_phi > Math.PI) delta_phi = Math.PI - delta_phi;
+                if (delta_phi < sigma_phi) {
+                    if (Math.abs(this.getZ() - projection_point.z()) < sigma_z) {
+                        this.setPathLength(path);
+                        this.setInPathLength(inpath);
+                    }      
+                }
+            }   
         }
+        return 0;
     }
 
     public double getEdepWedge() {
@@ -208,6 +282,21 @@ public class AtofCluster {
         this.barHits = bar_hits;
         this.wedgeHits = wedge_hits;
         this.computeClusterProperties();
+    }
+    
+    /**
+     * Constructor that initializes the list of bar hits and list of wedge hits
+     * and computes the cluster properties.
+     * 
+     * @param bar_hits a {@link ArrayList} of {@link BarHit}.
+     * @param wedge_hits a {@link ArrayList} of {@link AtofHit}.
+     * 
+     */
+    public AtofCluster(ArrayList<BarHit> bar_hits, ArrayList<AtofHit> wedge_hits, DataEvent event) {
+        this.barHits = bar_hits;
+        this.wedgeHits = wedge_hits;
+        this.computeClusterProperties();
+        this.matchTrack(event);
     }
 
     /**

@@ -140,7 +140,7 @@ public class ClusterFinder {
             }//End loop bar hits
       
             //After all wedge and bar hits have been grouped, build the cluster
-            AtofCluster cluster = new AtofCluster(this_cluster_bar_hits, this_cluster_wedge_hits);
+            AtofCluster cluster = new AtofCluster(this_cluster_bar_hits, this_cluster_wedge_hits, event);
             //And add it to the list of clusters
             clusters.add(cluster);
         }//End loop on all wedge hits
@@ -187,7 +187,7 @@ public class ClusterFinder {
                     }
                 }
             }
-            AtofCluster cluster = new AtofCluster(this_cluster_bar_hits, this_cluster_wedge_hits);
+            AtofCluster cluster = new AtofCluster(this_cluster_bar_hits, this_cluster_wedge_hits, event);
             clusters.add(cluster);
         }
     }

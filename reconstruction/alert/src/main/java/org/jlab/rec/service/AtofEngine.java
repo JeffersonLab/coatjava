@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.geom.base.Detector;
 import org.jlab.geom.detector.alert.ATOF.AlertTOFFactory;
+import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.rec.atof.banks.RecoBankWriter;
 import org.jlab.rec.atof.cluster.AtofCluster;
 import org.jlab.rec.atof.cluster.ClusterFinder;
@@ -71,10 +72,10 @@ public class AtofEngine extends ReconstructionEngine {
         TrackProjector projector = new TrackProjector();
         projector.setB(this.b);
         projector.projectTracks(event);
-
+        rbc.appendMatchBanks(event, projector.getProjections());
         //Hit finder init
         HitFinder hitfinder = new HitFinder();
-        hitfinder.findHits(event, Atof, projector);
+        hitfinder.findHits(event, Atof);
 
         ArrayList<AtofHit> WedgeHits = hitfinder.getWedgeHits();
         ArrayList<BarHit> BarHits = hitfinder.getBarHits();
@@ -91,7 +92,7 @@ public class AtofEngine extends ReconstructionEngine {
         ArrayList<AtofCluster> Clusters = clusterFinder.getClusters();
 
         if (WedgeHits.size() != 0 || BarHits.size() != 0) {
-            rbc.appendAtofBanks(event, WedgeHits, BarHits, Clusters, projector.getProjections());
+            rbc.appendAtofBanks(event, WedgeHits, BarHits, Clusters);
         }
         return true;
     }
@@ -109,5 +110,6 @@ public class AtofEngine extends ReconstructionEngine {
     }
 
     public static void main(String arg[]) {
+
     }
 }
