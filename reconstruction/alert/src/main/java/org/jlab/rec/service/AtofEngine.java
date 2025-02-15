@@ -7,6 +7,7 @@ import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 
 import java.util.concurrent.atomic.AtomicInteger;
+import org.jlab.clas.swimtools.Swim;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.geom.base.Detector;
 import org.jlab.geom.detector.alert.ATOF.AlertTOFFactory;
@@ -67,8 +68,15 @@ public class AtofEngine extends ReconstructionEngine {
         if (run.get() == 0 || (run.get() != 0 && run.get() != newRun)) {
             run.set(newRun);
         }
-
+        
+        //Do we need to read the event vx,vy,vz?
+        //If not, this part can be moved in the initialization of the engine.
+        double eventVx=0,eventVy=0,eventVz=0; //They should be in CM
         //Track Projector Initialisation with b field
+        Swim swim = new Swim();
+        float magField[] = new float[3];
+        swim.BfieldLab(eventVx, eventVy, eventVz, magField); 
+        this.b = Math.sqrt(Math.pow(magField[0],2) + Math.pow(magField[1],2) + Math.pow(magField[2],2));
         TrackProjector projector = new TrackProjector();
         projector.setB(this.b);
         projector.projectTracks(event);
@@ -110,6 +118,4 @@ public class AtofEngine extends ReconstructionEngine {
     }
 
     public static void main(String arg[]) {
-
-    }
 }
