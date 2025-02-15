@@ -118,4 +118,5 @@ public class AtofEngine extends ReconstructionEngine {
     }
 
     public static void main(String arg[]) {
+    }
 }
