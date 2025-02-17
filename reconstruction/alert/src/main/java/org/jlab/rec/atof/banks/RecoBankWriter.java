@@ -101,7 +101,7 @@ public class RecoBankWriter {
      */
     public static DataBank fillProjectionsBank(DataEvent event, ArrayList<TrackProjection> projections) {
 
-        DataBank bank = event.createBank("AHDC::Projections", projections.size());
+        DataBank bank = event.createBank("ALERT::Projections", projections.size());
 
         if (bank == null) {
             System.err.println("COULD NOT CREATE A AHDC::Projections BANK!!!!!!");
