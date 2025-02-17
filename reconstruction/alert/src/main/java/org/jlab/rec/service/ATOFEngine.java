@@ -13,7 +13,7 @@ import org.jlab.geom.base.Detector;
 import org.jlab.geom.detector.alert.ATOF.AlertTOFFactory;
 import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.rec.atof.banks.RecoBankWriter;
-import org.jlab.rec.atof.cluster.AtofCluster;
+import org.jlab.rec.atof.cluster.ATOFCluster;
 import org.jlab.rec.atof.cluster.ClusterFinder;
 import org.jlab.rec.atof.hit.ATOFHit;
 import org.jlab.rec.atof.hit.BarHit;
@@ -21,7 +21,7 @@ import org.jlab.rec.atof.hit.HitFinder;
 import org.jlab.rec.atof.trackMatch.TrackProjector;
 
 /**
- * Service to return reconstructed Atof hits and clusters
+ * Service to return reconstructed ATOF hits and clusters
  *
  * @author npilleux
  *
@@ -35,7 +35,7 @@ public class ATOFEngine extends ReconstructionEngine {
     RecoBankWriter rbc;
 
     private final AtomicInteger run = new AtomicInteger(0);
-    private Detector Atof;
+    private Detector ATOF;
     private double b; //Magnetic field
     
     public void setB(double B) {
@@ -44,11 +44,11 @@ public class ATOFEngine extends ReconstructionEngine {
     public double getB() {
         return b;
     }
-    public void setAtof(Detector ATOF) {
-        this.Atof = ATOF;
+    public void setATOF(Detector ATOF) {
+        this.ATOF = ATOF;
     }
-    public Detector getAtof() {
-        return Atof;
+    public Detector getATOF() {
+        return ATOF;
     }
 
     @Override
@@ -83,7 +83,7 @@ public class ATOFEngine extends ReconstructionEngine {
         rbc.appendMatchBanks(event, projector.getProjections());
         //Hit finder init
         HitFinder hitfinder = new HitFinder();
-        hitfinder.findHits(event, Atof);
+        hitfinder.findHits(event, ATOF);
 
         ArrayList<ATOFHit> WedgeHits = hitfinder.getWedgeHits();
         ArrayList<BarHit> BarHits = hitfinder.getBarHits();
@@ -97,10 +97,10 @@ public class ATOFEngine extends ReconstructionEngine {
         
         ClusterFinder clusterFinder = new ClusterFinder();
         clusterFinder.makeClusters(event,hitfinder);
-        ArrayList<AtofCluster> Clusters = clusterFinder.getClusters();
+        ArrayList<ATOFCluster> Clusters = clusterFinder.getClusters();
 
         if (WedgeHits.size() != 0 || BarHits.size() != 0) {
-            rbc.appendAtofBanks(event, WedgeHits, BarHits, Clusters);
+            rbc.appendATOFBanks(event, WedgeHits, BarHits, Clusters);
         }
         return true;
     }
@@ -111,7 +111,7 @@ public class ATOFEngine extends ReconstructionEngine {
 
         AlertTOFFactory factory = new AlertTOFFactory();
         DatabaseConstantProvider cp = new DatabaseConstantProvider(11, "default");
-        this.Atof = factory.createDetectorCLAS(cp);
+        this.ATOF = factory.createDetectorCLAS(cp);
         this.registerOutputBank("ATOF::hits", "ATOF::clusters");
 
         return true;
