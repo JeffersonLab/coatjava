@@ -19,7 +19,7 @@ public class Hit implements Comparable<Hit> {
 	private final double r;
 	private final double phi;
 	private final double doca;
-	private final double adc;
+	private double adc;
 	private final double numWires;
 	private final Line3D line3D;
 	private final Line3D line3D_plus;
@@ -151,7 +151,7 @@ public class Hit implements Comparable<Hit> {
 	}
 
     	public RealMatrix get_MeasurementNoise() {
-		return new Array2DRowRealMatrix(new double[][]{{0.01}});
+		return new Array2DRowRealMatrix(new double[][]{{0.0225}});
 	}
     
 	public double doca() {
@@ -221,6 +221,10 @@ public class Hit implements Comparable<Hit> {
 
 	public double getADC() {
 		return adc;
+	}
+
+	public void setADC(double _adc) {
+		this.adc = _adc;
 	}
 
 	public Line3D getLine3D() {

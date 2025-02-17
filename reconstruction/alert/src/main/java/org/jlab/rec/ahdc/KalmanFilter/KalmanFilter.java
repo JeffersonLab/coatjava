@@ -93,15 +93,34 @@ public class KalmanFilter {
 
 			for (org.jlab.rec.ahdc.Hit.Hit AHDC_hit : AHDC_hits) {
 				Hit hit = new Hit(AHDC_hit.getSuperLayerId(), AHDC_hit.getLayerId(), AHDC_hit.getWireId(), AHDC_hit.getNbOfWires(), AHDC_hit.getRadius(), AHDC_hit.getDoca());
+				hit.setADC(AHDC_hit.getADC());
 				hit.setHitIdx(AHDC_hit.getId());
 				// Do delete hit with same radius
-				// boolean aleardyHaveR = false;
-				// for (Hit o: KF_hits){
-				// 	if (o.r() == hit.r()){
-				// 		aleardyHaveR = true;
-				// 	}
-				// }
-				// if (!aleardyHaveR)
+				boolean aleardyHaveR = false;
+				for (Hit o: KF_hits){
+				    if (o.r() == hit.r()){
+					if(hit.getADC()<o.getADC()){
+					    aleardyHaveR = true;
+					    
+					    if(o.phi()>hit.phi()){
+						    o.setSign(+1);
+					    }else{
+						    o.setSign(-1);
+					    }
+
+					}else{
+					    if(hit.phi()>o.phi()){
+						    hit.setSign(+1);
+					    }else{
+						    hit.setSign(-1);
+					    }
+					    //remove hit 
+					    KF_hits.remove(o);
+					}
+
+				    }
+				}
+				if (!aleardyHaveR)
 				KF_hits.add(hit);
 			}
 
