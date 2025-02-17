@@ -158,7 +158,7 @@ public class TrackProjector {
             DataBank bank = event.getBank(track_bank_name);
             int nt = bank.rows(); // number of tracks 
             TrackProjection projection = new TrackProjection();
-            DataBank outputBank = event.createBank("AHDC::Projections", nt);
+            DataBank outputBank = event.createBank("ALERT::Projections", nt);
 
             for (int i = 0; i < nt; i++) {
 

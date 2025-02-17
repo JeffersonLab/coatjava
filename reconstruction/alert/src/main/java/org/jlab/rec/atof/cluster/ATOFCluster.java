@@ -168,7 +168,7 @@ public class ATOFCluster {
      *
      */
     public int matchTrack(DataEvent event) {
-        String track_bank_name = "AHDC::Projections";
+        String track_bank_name = "ALERT::Projections";
         if (event == null) { // check if there is an event
             //System.out.print(" no event \n");
             return 1;

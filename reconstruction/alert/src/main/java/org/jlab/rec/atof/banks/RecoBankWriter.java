@@ -104,7 +104,7 @@ public class RecoBankWriter {
         DataBank bank = event.createBank("ALERT::Projections", projections.size());
 
         if (bank == null) {
-            System.err.println("COULD NOT CREATE A AHDC::Projections BANK!!!!!!");
+            System.err.println("COULD NOT CREATE A ALERT::Projections BANK!!!!!!");
             return null;
         }
 
