@@ -4,30 +4,30 @@ import org.jlab.rec.atof.constants.Parameters;
 
 /**
  *
- * Represents a hit in the atof bar. Extends class AtofHit. Is further defined
+ * Represents a hit in the atof bar. Extends class ATOFHit. Is further defined
  * by the two hits upstream and downstream composing a full bar hit. z position,
  * time and energy are defined from the up/down hits.
  *
  * @author npilleux
  */
-public class BarHit extends AtofHit {
+public class BarHit extends ATOFHit {
 
     //A bar hit is the combination of a downstream and upstream hits
-    private AtofHit hitUp, hitDown;
+    private ATOFHit hitUp, hitDown;
 
-    public AtofHit getHitUp() {
+    public ATOFHit getHitUp() {
         return hitUp;
     }
 
-    public void setHitUp(AtofHit hit_up) {
+    public void setHitUp(ATOFHit hit_up) {
         this.hitUp = hit_up;
     }
 
-    public AtofHit getHitDown() {
+    public ATOFHit getHitDown() {
         return hitDown;
     }
 
-    public void setHitDown(AtofHit hit_down) {
+    public void setHitDown(ATOFHit hit_down) {
         this.hitDown = hit_down;
     }
 
@@ -74,7 +74,7 @@ public class BarHit extends AtofHit {
         this.setEnergy(Edep_up + Edep_down);
     }
 
-    public BarHit(AtofHit hit_down, AtofHit hit_up) {
+    public BarHit(ATOFHit hit_down, ATOFHit hit_up) {
         boolean hits_match = hit_down.matchBar(hit_up);
         if (!hits_match) {
             throw new UnsupportedOperationException("Hits do not match \n");

@@ -13,7 +13,7 @@ import org.jlab.rec.atof.constants.Parameters;
  *
  * @author npilleux
  */
-public class AtofHit {
+public class ATOFHit {
 
     private int sector, layer, component, order;
     private int tdc, tot;
@@ -285,7 +285,7 @@ public class AtofHit {
     }
 
     /**
-     * Compares two AtofHit objects to check if they match in the bar.
+     * Compares two ATOFHit objects to check if they match in the bar.
      * <ul>
      * <li>If the sector or layer of the two hits do not match, the method
      * returns {@code false}.</li>
@@ -297,10 +297,10 @@ public class AtofHit {
      * If none of these conditions are violated, the method returns
      * {@code true}, indicating the two hits match.
      *
-     * @param hit2match The AtofHit object to compare with the current instance.
+     * @param hit2match The ATOFHit object to compare with the current instance.
      * @return {@code true} if the hits match; {@code false} otherwise.
      */
-    public boolean matchBar(AtofHit hit2match) {
+    public boolean matchBar(ATOFHit hit2match) {
         if (this.getSector() != hit2match.getSector()) {
             //Two hits in different sectors
             return false; 
@@ -342,7 +342,7 @@ public class AtofHit {
      * @param atof Detector object representing the atof, used to calculate
      * spatial coordinates.
      */
-    public AtofHit(int sector, int layer, int component, int order, int tdc, int tot, Detector atof) {
+    public ATOFHit(int sector, int layer, int component, int order, int tdc, int tot, Detector atof) {
         this.sector = sector;
         this.layer = layer;
         this.component = component;
@@ -357,7 +357,7 @@ public class AtofHit {
         this.convertSLCToXYZ(atof);
     }
 
-    public AtofHit(){
+    public ATOFHit(){
     }
     
     /**

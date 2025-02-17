@@ -13,7 +13,7 @@ import org.jlab.io.base.DataEvent;
  * Uses atof tdc bank information 
  * 
  * Creates a {@link ArrayList} of {@link BarHit} for bar hits read.
- * Creates a {@link ArrayList} of {@link AtofHit} for wedge hits read.
+ * Creates a {@link ArrayList} of {@link ATOFHit} for wedge hits read.
  * 
  * </p>
  *
@@ -28,7 +28,7 @@ public class HitFinder {
     /**
      * list of wedge hits
      */
-    private ArrayList<AtofHit> wedgeHits;
+    private ArrayList<ATOFHit> wedgeHits;
 
     /**
      * Default constructor that initializes the list of hits as new empty
@@ -48,11 +48,11 @@ public class HitFinder {
         this.barHits = bar_hits;
     }
 
-    public ArrayList<AtofHit> getWedgeHits() {
+    public ArrayList<ATOFHit> getWedgeHits() {
         return wedgeHits;
     }
 
-    public void setWedgeHits(ArrayList<AtofHit> wedge_hits) {
+    public void setWedgeHits(ArrayList<ATOFHit> wedge_hits) {
         this.wedgeHits = wedge_hits;
     }
 
@@ -72,8 +72,8 @@ public class HitFinder {
         DataBank bank = event.getBank("ATOF::tdc");
         int nt = bank.rows(); // number of hits
         //Hits in the bar downstream and upstream will be matched
-        ArrayList<AtofHit> hit_up = new ArrayList<>();
-        ArrayList<AtofHit> hit_down = new ArrayList<>();
+        ArrayList<ATOFHit> hit_up = new ArrayList<>();
+        ArrayList<ATOFHit> hit_down = new ArrayList<>();
         //Looping through all hits
         for (int i = 0; i < nt; i++) {
             //Getting their properties
@@ -84,7 +84,7 @@ public class HitFinder {
             int tdc = bank.getInt("TDC", i);
             int tot = bank.getInt("ToT", i);
             //Building a Hit
-            AtofHit hit = new AtofHit(sector, layer, component, order, tdc, tot, atof);
+            ATOFHit hit = new ATOFHit(sector, layer, component, order, tdc, tot, atof);
             if (hit.getEnergy() < 0.01) {
                 continue; //energy threshold
             }
@@ -110,10 +110,10 @@ public class HitFinder {
 
         //Starting loop through up hits in the bar
         for (int i_up = 0; i_up < hit_up.size(); i_up++) {
-            AtofHit this_hit_up = hit_up.get(i_up);
+            ATOFHit this_hit_up = hit_up.get(i_up);
             //Starting loop through down hits in the bar
             for (int i_down = 0; i_down < hit_down.size(); i_down++) {
-                AtofHit this_hit_down = hit_down.get(i_down);
+                ATOFHit this_hit_down = hit_down.get(i_down);
                 //Matching the hits: if same module and different order, they make up a bar hit
                 if (this_hit_up.matchBar(this_hit_down)) {
                     //Bar hits are matched to ahdc tracks and listed

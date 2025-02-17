@@ -5,11 +5,11 @@ import org.jlab.geom.prim.Point3D;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.atof.constants.Parameters;
-import org.jlab.rec.atof.hit.AtofHit;
+import org.jlab.rec.atof.hit.ATOFHit;
 import org.jlab.rec.atof.hit.BarHit;
 
 /**
- * The {@code AtofCluster} represents clusters in the atof
+ * The {@code ATOFCluster} represents clusters in the atof
  *
  * <p>
  * Create clusters and compute their basic properties from the hits composing
@@ -18,7 +18,7 @@ import org.jlab.rec.atof.hit.BarHit;
  *
  * @author pilleux
  */
-public class AtofCluster {
+public class ATOFCluster {
 
     /**
      * list of hits in the bars.
@@ -27,7 +27,7 @@ public class AtofCluster {
     /**
      * list of hits in the wedges.
      */
-    ArrayList<AtofHit> wedgeHits;
+    ArrayList<ATOFHit> wedgeHits;
     /**
      * cluster properties:position [cm], time [ns], energy[MeV], path length
      * [cm] and length through the atof [cm], type of the maximum hit (to set
@@ -45,11 +45,11 @@ public class AtofCluster {
         this.barHits = bar_hits;
     }
 
-    public ArrayList<AtofHit> getWedgeHits() {
+    public ArrayList<ATOFHit> getWedgeHits() {
         return wedgeHits;
     }
 
-    public void setWedgeHits(ArrayList<AtofHit> wedge_hits) {
+    public void setWedgeHits(ArrayList<ATOFHit> wedge_hits) {
         this.wedgeHits = wedge_hits;
     }
 
@@ -129,10 +129,10 @@ public class AtofCluster {
     public final void computeClusterProperties() {
         this.energy = 0;
         double max_energy = -1;
-        AtofHit max_energy_hit = new AtofHit();
+        ATOFHit max_energy_hit = new ATOFHit();
 
         for (int i_wedge = 0; i_wedge < this.wedgeHits.size(); i_wedge++) {
-            AtofHit this_wedge_hit = this.wedgeHits.get(i_wedge);
+            ATOFHit this_wedge_hit = this.wedgeHits.get(i_wedge);
             double this_energy = this_wedge_hit.getEnergy();
             this.energy += this_energy;
             if (this_energy > max_energy) {
@@ -232,7 +232,7 @@ public class AtofCluster {
     public double getEdepWedge() {
         double energy = 0;
         for (int i = 0; i < this.wedgeHits.size(); i++) {
-            AtofHit this_hit = this.wedgeHits.get(i);
+            ATOFHit this_hit = this.wedgeHits.get(i);
             energy += this_hit.getEnergy();
         }
         return energy;
@@ -241,7 +241,7 @@ public class AtofCluster {
     public double getEdepBar() {
         double energy = 0;
         for (int i = 0; i < this.barHits.size(); i++) {
-            AtofHit this_hit = this.barHits.get(i);
+            ATOFHit this_hit = this.barHits.get(i);
             energy += this_hit.getEnergy();
         }
         return energy;
@@ -275,10 +275,10 @@ public class AtofCluster {
      * and computes the cluster properties.
      * 
      * @param bar_hits a {@link ArrayList} of {@link BarHit}.
-     * @param wedge_hits a {@link ArrayList} of {@link AtofHit}.
+     * @param wedge_hits a {@link ArrayList} of {@link ATOFHit}.
      * 
      */
-    public AtofCluster(ArrayList<BarHit> bar_hits, ArrayList<AtofHit> wedge_hits) {
+    public ATOFCluster(ArrayList<BarHit> bar_hits, ArrayList<ATOFHit> wedge_hits) {
         this.barHits = bar_hits;
         this.wedgeHits = wedge_hits;
         this.computeClusterProperties();
@@ -289,10 +289,10 @@ public class AtofCluster {
      * and computes the cluster properties.
      * 
      * @param bar_hits a {@link ArrayList} of {@link BarHit}.
-     * @param wedge_hits a {@link ArrayList} of {@link AtofHit}.
+     * @param wedge_hits a {@link ArrayList} of {@link ATOFHit}.
      * 
      */
-    public AtofCluster(ArrayList<BarHit> bar_hits, ArrayList<AtofHit> wedge_hits, DataEvent event) {
+    public ATOFCluster(ArrayList<BarHit> bar_hits, ArrayList<ATOFHit> wedge_hits, DataEvent event) {
         this.barHits = bar_hits;
         this.wedgeHits = wedge_hits;
         this.computeClusterProperties();

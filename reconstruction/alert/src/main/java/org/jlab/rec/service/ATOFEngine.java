@@ -15,7 +15,7 @@ import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.rec.atof.banks.RecoBankWriter;
 import org.jlab.rec.atof.cluster.AtofCluster;
 import org.jlab.rec.atof.cluster.ClusterFinder;
-import org.jlab.rec.atof.hit.AtofHit;
+import org.jlab.rec.atof.hit.ATOFHit;
 import org.jlab.rec.atof.hit.BarHit;
 import org.jlab.rec.atof.hit.HitFinder;
 import org.jlab.rec.atof.trackMatch.TrackProjector;
@@ -26,9 +26,9 @@ import org.jlab.rec.atof.trackMatch.TrackProjector;
  * @author npilleux
  *
  */
-public class AtofEngine extends ReconstructionEngine {
+public class ATOFEngine extends ReconstructionEngine {
 
-    public AtofEngine() {
+    public ATOFEngine() {
         super("ATOF", "pilleux", "1.0");
     }
 
@@ -85,7 +85,7 @@ public class AtofEngine extends ReconstructionEngine {
         HitFinder hitfinder = new HitFinder();
         hitfinder.findHits(event, Atof);
 
-        ArrayList<AtofHit> WedgeHits = hitfinder.getWedgeHits();
+        ArrayList<ATOFHit> WedgeHits = hitfinder.getWedgeHits();
         ArrayList<BarHit> BarHits = hitfinder.getBarHits();
         
         //Exit if hit lists are empty

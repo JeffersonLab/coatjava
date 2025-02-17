@@ -3,7 +3,7 @@ package org.jlab.rec.atof.cluster;
 import java.util.ArrayList;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.atof.constants.Parameters;
-import org.jlab.rec.atof.hit.AtofHit;
+import org.jlab.rec.atof.hit.ATOFHit;
 import org.jlab.rec.atof.hit.BarHit;
 import org.jlab.rec.atof.hit.HitFinder;
 
@@ -12,7 +12,7 @@ import org.jlab.rec.atof.hit.HitFinder;
  *
  * <p>
  * Uses found hits information.
- * Creates a {@link AtofCluster} matching them.
+ * Creates a {@link ATOFCluster} matching them.
  * </p>
  *
  * @author pilleux
@@ -22,25 +22,25 @@ public class ClusterFinder {
     /**
      * list of clusters.
      */
-    private ArrayList<AtofCluster> clusters;
+    private ArrayList<ATOFCluster> clusters;
 
     /**
      * Sets the list of clusters.
      *
-     * @param clusters a {@link ArrayList} of {@link AtofCluster}.
+     * @param clusters a {@link ArrayList} of {@link ATOFCluster}.
      * 
      */
-    public void setClusters(ArrayList<AtofCluster> clusters) {
+    public void setClusters(ArrayList<ATOFCluster> clusters) {
         this.clusters = clusters;
     }
 
     /**
      * Gets the list of clusters.
      *
-     * @return a {@link ArrayList} of {@link AtofCluster}.
+     * @return a {@link ArrayList} of {@link ATOFCluster}.
      * 
      */
-    public ArrayList<AtofCluster> getClusters() {
+    public ArrayList<ATOFCluster> getClusters() {
         return clusters;
     }
 
@@ -59,19 +59,19 @@ public class ClusterFinder {
         clusters.clear();
 
         //Getting the list of hits, they must have been ordered by energy already
-        ArrayList<AtofHit> wedge_hits = hitfinder.getWedgeHits();
+        ArrayList<ATOFHit> wedge_hits = hitfinder.getWedgeHits();
         ArrayList<BarHit> bar_hits = hitfinder.getBarHits();
 
         //Looping through wedge hits first
         for (int i_wedge = 0; i_wedge < wedge_hits.size(); i_wedge++) {
-            AtofHit this_wedge_hit = wedge_hits.get(i_wedge);
+            ATOFHit this_wedge_hit = wedge_hits.get(i_wedge);
             //Make a cluster for each wedge hit that has not been previously clustered
             if (this_wedge_hit.getIsInACluster()) {
                 continue;
             }
 
             //Holding onto the hits composing the cluster
-            ArrayList<AtofHit> this_cluster_wedge_hits = new ArrayList<>();
+            ArrayList<ATOFHit> this_cluster_wedge_hits = new ArrayList<>();
             ArrayList<BarHit> this_cluster_bar_hits = new ArrayList<>();
 
             //Indicate that this hit now is in a cluster
@@ -82,7 +82,7 @@ public class ClusterFinder {
             //Check if other wedge hits should be clustered with the current one
             //Start from the index of the current one and look at less energetic hits
             for (int j_wedge = i_wedge + 1; j_wedge < wedge_hits.size(); j_wedge++) {
-                AtofHit other_wedge_hit = wedge_hits.get(j_wedge);
+                ATOFHit other_wedge_hit = wedge_hits.get(j_wedge);
                 //If that other hit is already involved in a cluster, skip it
                 if (other_wedge_hit.getIsInACluster()) {
                     continue;
@@ -140,7 +140,7 @@ public class ClusterFinder {
             }//End loop bar hits
       
             //After all wedge and bar hits have been grouped, build the cluster
-            AtofCluster cluster = new AtofCluster(this_cluster_bar_hits, this_cluster_wedge_hits, event);
+            ATOFCluster cluster = new ATOFCluster(this_cluster_bar_hits, this_cluster_wedge_hits, event);
             //And add it to the list of clusters
             clusters.add(cluster);
         }//End loop on all wedge hits
@@ -153,7 +153,7 @@ public class ClusterFinder {
                 continue;
             }
 
-            ArrayList<AtofHit> this_cluster_wedge_hits = new ArrayList<>();
+            ArrayList<ATOFHit> this_cluster_wedge_hits = new ArrayList<>();
             ArrayList<BarHit> this_cluster_bar_hits = new ArrayList<>();
             this_bar_hit.setIsInACluster(true);
             this_cluster_bar_hits.add(this_bar_hit);
@@ -187,7 +187,7 @@ public class ClusterFinder {
                     }
                 }
             }
-            AtofCluster cluster = new AtofCluster(this_cluster_bar_hits, this_cluster_wedge_hits, event);
+            ATOFCluster cluster = new ATOFCluster(this_cluster_bar_hits, this_cluster_wedge_hits, event);
             clusters.add(cluster);
         }
     }
