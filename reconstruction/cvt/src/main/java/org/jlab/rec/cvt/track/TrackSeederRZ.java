@@ -188,7 +188,7 @@ public class TrackSeederRZ {
         if(Math.abs(targetCen-in)<targetLen+Constants.getInstance().getZRANGE())
            value = true;
         if(Constants.getInstance().seedingDebugMode) 
-            System.out.println("Passing: "+ value);
+            System.out.println("Passing : "+in+" is "+ value+" for target at center z = "+targetCen+" and target length "+targetLen);
         return value;
     }
 

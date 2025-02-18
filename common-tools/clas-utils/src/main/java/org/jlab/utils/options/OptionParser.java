@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.utils.options;
 
 import java.util.ArrayList;
@@ -16,17 +11,15 @@ import java.util.TreeMap;
  */
 public class OptionParser {
     
-    private Map<String,OptionValue> optionsDescriptors = new TreeMap<String,OptionValue>();    
-    private Map<String,OptionValue>    requiredOptions = new TreeMap<String,OptionValue>();
-    private Map<String,OptionValue>      parsedOptions = new TreeMap<String,OptionValue>();
-    private List<String>               parsedInputList = new ArrayList<String>();
+    private Map<String,OptionValue> optionsDescriptors = new TreeMap<>();    
+    private Map<String,OptionValue>    requiredOptions = new TreeMap<>();
+    private Map<String,OptionValue>      parsedOptions = new TreeMap<>();
+    private List<String>               parsedInputList = new ArrayList<>();
     private String                             program = "undefined";
     private boolean                  requiresInputList = true;
     private String                  programDescription = "";
     
-    public OptionParser(){
-        
-    }
+    public OptionParser(){}
     
     public OptionParser(String pname){
         this.program = pname;
@@ -130,7 +123,6 @@ public class OptionParser {
             System.exit(0);
         }
 
-//this.show(arguments);
         for(Map.Entry<String,OptionValue> entry : this.requiredOptions.entrySet()){
             boolean status = entry.getValue().parse(arguments);
             if(status==false) { 
@@ -153,7 +145,11 @@ public class OptionParser {
                 this.parsedInputList.add(item);
             }
         }
-        //this.show(arguments);
+
+        // FIXME:  seems like we should really be throwing a RuntimeException ...
+        if (this.requiresInputList && this.parsedInputList.isEmpty()) {
+            System.err.println(" \n*** ERROR *** Empty Input List.");
+        }
     }
     
     public List<String> getInputList(){
@@ -167,9 +163,7 @@ public class OptionParser {
         parser.addOption("-r", "10");
         parser.addOption("-t", "25.0");
         parser.addOption("-d", "35");
-        
         parser.parse(options);
-        
         parser.show();        
     }
 }

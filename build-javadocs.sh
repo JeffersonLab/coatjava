@@ -10,7 +10,7 @@ mvn javadoc:javadoc -Ddoclint=none
 
 
 ##### collect documentation
-src=target/site/apidocs
+src=target/reports/apidocs
 dest=docs/javadoc
 
 for dir in `find . -type d | grep $src$`

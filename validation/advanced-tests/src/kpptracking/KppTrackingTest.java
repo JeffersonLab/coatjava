@@ -17,7 +17,7 @@ public class KppTrackingTest {
     public void testKppTracking() {
 
         HipoDataSource reader = new HipoDataSource();
-        reader.open("out_twoTrackEvents_809.hipo");
+        reader.open("rec_twoTrackEvents_809.hipo");
 
         int totalCount = 0;
         int twoTrackCountCV = 0;

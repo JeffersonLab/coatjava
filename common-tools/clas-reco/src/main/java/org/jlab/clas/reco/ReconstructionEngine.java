@@ -96,6 +96,10 @@ public abstract class ReconstructionEngine implements Engine {
         }
     }
 
+    protected SchemaFactory getSchemaFactory() {
+        return this.engineDictionary;
+    }
+
     protected RawBank getRawBankReader(String bankName) {
         return new RawDataBank(bankName, this.rawBankOrders);
     }
@@ -129,6 +133,10 @@ public abstract class ReconstructionEngine implements Engine {
         }
     }
 
+    public void requireConstants(String... tables){
+        requireConstants(Arrays.asList(tables));
+    }
+
     public final String getEngineConfiguration(){
         return this.engineConfiguration;
     }
@@ -137,12 +145,12 @@ public abstract class ReconstructionEngine implements Engine {
         return constManagerMap.get(this.getClass().getName());
     }
 
+    public String getEngineConfigString(String key, String def) {
+        return engineConfigMap.containsKey(key) ? engineConfigMap.get(key) : def;
+    }
+
     public String getEngineConfigString(String key) {
-        String val=null;
-        if (this.engineConfigMap.containsKey(key)) {
-            val=this.engineConfigMap.get(key);
-        }
-        return val;
+        return getEngineConfigString(key, null);
     }
 
     /**

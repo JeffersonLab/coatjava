@@ -188,33 +188,17 @@ public class ClusterCleanerUtilities {
                     }
                 }
             }
-            //no gaps
-            List<Hit> contigArrayOfHits = new ArrayList<>(); //contiguous cluster
-
+                        
+            //Limits for cluster candiates
             boolean passCluster = true;
-            for (int l = 1; l <= Constants.NLAYR; l++) {
-                for (int i = 0; i < newClus.size(); i++) {
-                    if (newClus.get(i).get_Layer() == l) {
-                        contigArrayOfHits.add(newClus.get(i));
-                    }
-                }
-            }
-            for (int i = 0; i < contigArrayOfHits.size() - 1; i++) { //if there is a gap do not include in list
-                if (contigArrayOfHits.get(i + 1).get_Layer() - contigArrayOfHits.get(i).get_Layer() > 1) {
+            if((!isExceptionalCluster(newClus) && count_nlayers_in_cluster(newClus) >= Constants.DC_MIN_NLAYERS) 
+                    || (isExceptionalCluster(newClus) && count_nlayers_in_cluster(newClus) >= Constants.DC_MIN_NLAYERS - 1)) {                            
+                //require consistency with line
+                cf.SetFitArray(newClus, "LC");
+                cf.Fit(newClus, true);
+                if (newClus.get_fitProb() < 0.9) {
                     passCluster = false;
                 }
-            }
-            //require 4 layers to make a cluster
-            if ((!isExceptionalCluster(contigArrayOfHits) && count_nlayers_in_cluster(contigArrayOfHits) < Constants.DC_MIN_NLAYERS) 
-                    || (isExceptionalCluster(contigArrayOfHits) && count_nlayers_in_cluster(contigArrayOfHits) < Constants.DC_MIN_NLAYERS - 1)) {
-                passCluster = false;
-            }
-
-            //require consistency with line
-            cf.SetFitArray(newClus, "LC");
-            cf.Fit(newClus, true);
-            if (newClus.get_fitProb() < 0.9) {
-                passCluster = false;
             }
 
             if (!(splitclusters.contains(newClus)) && passCluster) {
@@ -314,7 +298,7 @@ public class ClusterCleanerUtilities {
      * @param hitsInClus the hits in a cluster
      * @return the number of layers in a cluster
      */
-    int count_nlayers_in_cluster(List<Hit> hitsInClus) {
+    int count_nlayers_in_cluster(List<? extends Hit> hitsInClus) {
         // count hits in each layer
         int nlayr = 6;
         int[] nlayers = new int[nlayr];
@@ -1010,72 +994,52 @@ public class ClusterCleanerUtilities {
         return BestCluster;
     }
     
-        /**
-     *
-     * @param hitsInClus the hits in a cluster
-     * @return if one or more layers are skipped in the cluster
+    /**
+     * Check if one or more layers are skipped in the cluster
+     * @param hitsInClus the hits in a cluster (can be either Hit or FittedHit)
+     * @param nlayr the number of layers
+     * @return true if one or more layers are skipped in the cluster
      */
-    public boolean isExceptionalCluster(List<Hit> hitsInClus){        
-        // count hits in each layer
-        int nlayr = 6;
+    private boolean isExceptionalClusterHelper(List<? extends Hit> hitsInClus, int nlayr) {
+        // Initialize array to count hits in each layer
         int[] nlayers = new int[nlayr];
-        for (int l = 0; l < nlayr; l++) {
-            nlayers[l] = 0;
-            for (int h = 0; h < hitsInClus.size(); h++) {
-                if (hitsInClus.get(h).get_Layer() == l + 1) {
-                    nlayers[l]++;
-                }
+
+        // Count hits for each layer in a single pass through the hits
+        for (Hit hit : hitsInClus) {
+            int layer = hit.get_Layer() - 1; // layer numbering starts from 1
+            if (layer >= 0 && layer < nlayr) {
+            nlayers[layer]++;
             }
         }
 
-        boolean flag_hasSkippedLayer = false;
-        if((nlayers[0] == 0 && nlayers[1] == 0) || (nlayers[4] == 0 && nlayers[5] == 0)){
-            flag_hasSkippedLayer = true;
+        // Check if the first or last two layerers are missed
+        if ((nlayers[0] == 0 && nlayers[1] == 0) || (nlayers[4] == 0 && nlayers[5] == 0)) {
+            return true;
         }
-        else{
-            for (int l = 0; l < 4; l++) {
-                if (nlayers[l] > 0 && nlayers[l+1] == 0) {
-                    flag_hasSkippedLayer = true;
-                    break;
-                }
+
+        // Check if there is one or more skipped layers in the middle 
+        for (int l = 0; l < 4; l++) {
+            if (nlayers[l] > 0 && nlayers[l + 1] == 0) {
+                return true;
             }
         }
-        
-        return flag_hasSkippedLayer;        
+
+        return false;
     }
     
-    /*
-     * @param hitsInClus the hits in a cluster
-     * @return if one or more layers are skipped in the cluster
-     */
-    public boolean isExceptionalFittedCluster(List<FittedHit> hitsInClus){        
-        // count hits in each layer
-        int nlayr = 6;
-        int[] nlayers = new int[nlayr];
-        for (int l = 0; l < nlayr; l++) {
-            nlayers[l] = 0;
-            for (int h = 0; h < hitsInClus.size(); h++) {
-                if (hitsInClus.get(h).get_Layer() == l + 1) {
-                    nlayers[l]++;
-                }
-            }
-        }
-
-        boolean flag_hasSkippedLayer = false;
-        if((nlayers[0] == 0 && nlayers[1] == 0) || (nlayers[4] == 0 && nlayers[5] == 0)){
-            flag_hasSkippedLayer = true;
-        }
-        else{
-            for (int l = 0; l < 4; l++) {
-                if (nlayers[l] > 0 && nlayers[l+1] == 0) {
-                    flag_hasSkippedLayer = true;
-                    break;
-                }
-            }
-        }
-        
-        return flag_hasSkippedLayer;       
+    /**
+     * Wrapper for checking if a cluster of Hit objects is exceptional.
+    */
+    public boolean isExceptionalCluster(List hitsInClus) {
+        return isExceptionalClusterHelper(hitsInClus, 6); // 6 layers for Hit objects
     }
+    
+    /**
+     * Wrapper for checking if a cluster of FittedHit objects is exceptional.
+    */
+    public boolean isExceptionalFittedCluster(List hitsInClus) {
+        return isExceptionalClusterHelper(hitsInClus, 6); // 6 layers for FittedHit objects
+    }    
     
     public Cluster ClusterSticher(Cluster thisclus, Cluster nextclus, int cid){
         ClusterFitter cf = new ClusterFitter();

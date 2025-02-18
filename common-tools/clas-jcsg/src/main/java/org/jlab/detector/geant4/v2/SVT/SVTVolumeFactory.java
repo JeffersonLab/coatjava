@@ -223,7 +223,7 @@ public class SVTVolumeFactory
 		if( BUILDSENSORS ) System.out.println("  include sensor active and dead zones ? "+ BUILDSENSORZONES );
 		//System.out.println("  halve dimensions of boxes ? "+ HALFBOXES );
 		
-                  this.makeCage();
+                this.makeCage();
                   
 		for( int region = regionMin-1; region < regionMax; region++ ) // NREGIONS
 		{
@@ -278,6 +278,7 @@ public class SVTVolumeFactory
 					}*/
 					
                                         // FIXME currently using shifts from bottom module of each region
+                                        // FIXME global shift should be applied to mother volume
 					AlignmentFactory.applyShift( sectorVol, SVTConstants.getLayerSectorAlignmentData()[sector][region*2], fidTri3D.center(), scaleT, scaleR );
 					//System.out.println("S "+sectorVol.gemcString() );
 				}

@@ -16,6 +16,8 @@ import org.jlab.utils.groups.IndexedTable;
  */
 public class Dsc2Scaler extends DaqScaler{
 
+    public static final long MAX_DSC2_CLOCK_FREQ = (long)2e5;
+
     private static final boolean GATEINVERTED=true;
 
     // DSC has TRG and TDC thresholds, we use only TDC here:

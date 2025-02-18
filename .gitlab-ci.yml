@@ -1,0 +1,40 @@
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - if: '$CI_PIPELINE_SOURCE == "webide"'
+    - if: '$CI_COMMIT_BRANCH == "master"'
+    - if: '$CI_COMMIT_BRANCH == "development"'
+    - if: '$CI_COMMIT_TAG'
+
+default:
+  image: ubuntu:noble
+  retry: 2
+
+coatjava_build:
+  image: gcr.io/kaniko-project/executor:debug
+  script:
+    - echo "${CI_COMMIT_REF_NAME}"
+    - >-
+      /kaniko/executor
+      --context     $CI_PROJECT_DIR/docker
+      --dockerfile  $CI_PROJECT_DIR/.containers/coatjava.Dockerfile
+      --destination $CI_REGISTRY_IMAGE/coatjava:${CI_COMMIT_REF_NAME}
+      --build-arg REF_NAME=${CI_COMMIT_REF_NAME}
+    
+alert_testing:
+  needs: ["coatjava_build"]
+  variables:
+    REF_NAME: "$CI_COMMIT_REF_NAME"
+  trigger:
+    project: hallb/alert/c12
+    strategy: depend
+
+shared_for_alert_tests:
+  needs: ["coatjava_build"]
+  variables:
+    REF_NAME: "$CI_COMMIT_REF_NAME"
+  trigger:
+    project: hallb/alert/atof/shared_for_alert
+    strategy: depend
+

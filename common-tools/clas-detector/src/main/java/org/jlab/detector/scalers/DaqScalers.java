@@ -50,7 +50,10 @@ public class DaqScalers {
     public StruckScalers struck=null;
 
     private long timestamp=0;
-    public void setTimestamp(long timestamp) { this.timestamp=timestamp; }
+    public DaqScalers setTimestamp(long timestamp) {
+        this.timestamp=timestamp;
+        return this;
+    }
     public long getTimestamp(){ return this.timestamp; }
 
     /**
@@ -135,6 +138,37 @@ public class DaqScalers {
     public static DaqScalers create(Bank rawScalerBank,IndexedTable fcupTable,IndexedTable slmTable,IndexedTable helTable,IndexedTable dscTable) {
         Dsc2Scaler dsc2 = new Dsc2Scaler(rawScalerBank,fcupTable,slmTable,dscTable);
         return DaqScalers.create(rawScalerBank,fcupTable,slmTable,helTable,dsc2.getGatedClockSeconds());
+    }
+
+    /**
+     * 
+     * @param conman
+     * @param runConfig
+     * @param rawScaler
+     * @return 
+     */
+    public static DaqScalers create(ConstantsManager conman, Bank runConfig, Bank rawScaler) {
+        int run = runConfig.getInt("run", 0);
+        IndexedTable fcup = conman.getConstants(run, "/runcontrol/fcup");
+        IndexedTable slm = conman.getConstants(run, "/runcontrol/slm");
+        IndexedTable hel = conman.getConstants(run, "/runcontrol/helicity");
+        IndexedTable dsc = conman.getConstants(run, "/daq/config/scalers/dsc1");
+        if (fcup!=null && dsc!=null) {
+            if (dsc.getIntValue("frequency",0,0,0) < Dsc2Scaler.MAX_DSC2_CLOCK_FREQ) {
+                return DaqScalers.create(rawScaler, fcup, slm, hel, dsc)
+                    .setTimestamp(runConfig.getLong("timestamp", 0));
+            }
+            else {
+                try {
+                    Time rst = (Time)conman.getRcdbConstant(run,"run_start_time").getValue();
+                    Date uet = new Date(runConfig.getInt("unixtime",0)*1000L);
+                    return DaqScalers.create(rawScaler, fcup, slm, hel, rst, uet)
+                        .setTimestamp(runConfig.getLong("timestamp", 0));
+                }
+                catch (Exception e) {}
+            }
+        }
+        return null;
     }
 
     /**
@@ -253,7 +287,7 @@ public class DaqScalers {
         IndexedTable hel = conman.getConstants(runnumber, "/runcontrol/helicity");
         IndexedTable dsc = conman.getConstants(runnumber, "/daq/config/scalers/dsc1");
 
-        if (dsc.getIntValue("frequency", 0,0,0) < 2e5) {
+        if (dsc.getIntValue("frequency", 0,0,0) < Dsc2Scaler.MAX_DSC2_CLOCK_FREQ) {
             ret.addAll(createBanks(schema,rawScaler,fcup, slm, hel, dsc));
         }
         else {
@@ -274,5 +308,6 @@ public class DaqScalers {
 
         return ret;
     }
+
 }
 

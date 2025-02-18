@@ -1,7 +1,7 @@
 #!/bin/bash
 
 webDir=http://clasweb.jlab.org/clas12offline/distribution/coatjava/validation_files/eb
-webVersion=5.1-fid-r11
+webVersion=5.11-fid-tm-r11
 webDir=$webDir/$webVersion
 
 # coatjava must already be built at ../../coatjava/
@@ -40,11 +40,11 @@ do
 done
 
 # last argument is input file stub:
-webFileStub="${@: -1}"
+stub="${@: -1}"
 
 # sanity check on filestub name,
 # just to error with reasonable message before proceeding:
-case $webFileStub in
+case $stub in
     # electron in forward, hadron in forward:
     electronproton)
         ;;
@@ -79,7 +79,7 @@ case $webFileStub in
     electrondeuteronC)
         ;;
     *)
-      echo Invalid input evio file:  $webFileStub
+      echo Invalid input evio file:  $stub
       exit 1
 esac
 
@@ -122,20 +122,20 @@ then
     fi
 
     # download test files, if necessary:
-    wget -N --no-check-certificate $webDir/${webFileStub}.hipo
+    wget -N --no-check-certificate $webDir/${stub}.hipo
     if [ $? != 0 ] ; then echo "wget validation files failure" ; exit 1 ; fi
 
     # update the schema dictionary:  (no longer necessary now that recon-util does it)
-    #rm -f up_${webFileStub}.hipo
-    #../../coatjava/bin/hipo-utils -update -d ../../coatjava/etc/bankdefs/hipo4/ -o up_${webFileStub}.hipo ${webFileStub}.hipo
+    #rm -f up_${stub}.hipo
+    #../../coatjava/bin/hipo-utils -update -d ../../coatjava/etc/bankdefs/hipo4/ -o up_${stub}.hipo ${stub}.hipo
 
     # run reconstruction:
-    rm -f out_${webFileStub}.hipo
+    rm -f out_${stub}.hipo
     if [ $useClara -eq 0 ]
     then
         GEOMDBVAR=$geoDbVariation
         export GEOMDBVAR
-        ../../coatjava/bin/recon-util -i ${webFileStub}.hipo -o out_${webFileStub}.hipo -c 2
+        ../../coatjava/bin/recon-util -i ${stub}.hipo -o out_${stub}.hipo -c 2
     else
         echo "set inputDir $PWD/" > cook.clara
         echo "set outputDir $PWD/" >> cook.clara
@@ -143,7 +143,7 @@ then
         echo "set javaMemory 2" >> cook.clara
         echo "set session s_cook" >> cook.clara
         echo "set description d_cook" >> cook.clara
-        ls ${webFileStub}.hipo > files.list
+        ls ${stub}.hipo > files.list
         echo "set fileList $PWD/files.list" >> cook.clara
         echo "run local" >> cook.clara
         echo "exit" >> cook.clara
@@ -152,8 +152,10 @@ then
 fi
 
 # run Event Builder tests:
-java -DCLAS12DIR="$COAT" -Xmx1536m -Xms1024m -cp $classPath2 -DINPUTFILE=out_${webFileStub}.hipo org.junit.runner.JUnitCore eb.EBTwoTrackTest
+java -DCLAS12DIR="$COAT" -Xmx1536m -Xms1024m -cp $classPath2 -DINPUTFILE=out_${stub}.hipo org.junit.runner.JUnitCore eb.EBTwoTrackTest
 if [ $? != 0 ] ; then echo "EBTwoTrackTest unit test failure" ; exit 1 ; else echo "EBTwoTrackTest passed unit tests" ; fi
+
+$COAT/bin/trutheff ./out_${stub}.hipo
 
 exit 0
 

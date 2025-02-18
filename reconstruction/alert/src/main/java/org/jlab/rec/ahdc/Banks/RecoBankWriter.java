@@ -2,6 +2,7 @@ package org.jlab.rec.ahdc.Banks;
 
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
+import org.jlab.rec.ahdc.AI.TrackPrediction;
 import org.jlab.rec.ahdc.Cluster.Cluster;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
@@ -128,6 +129,31 @@ public class RecoBankWriter {
 			bank.setFloat("py", row, (float) py);
 			bank.setFloat("pz", row, (float) pz);
 
+			row++;
+		}
+
+		return bank;
+	}
+
+	public DataBank fillAIPrediction(DataEvent event, ArrayList<TrackPrediction> predictions) {
+
+		DataBank bank = event.createBank("AHDC_AI::Prediction", predictions.size());
+
+		int row = 0;
+
+		for (TrackPrediction track : predictions) {
+			bank.setFloat("X1", row, (float) track.getSuperpreclusters().get(0).getX());
+			bank.setFloat("Y1", row, (float) track.getSuperpreclusters().get(0).getY());
+			bank.setFloat("X2", row, (float) track.getSuperpreclusters().get(1).getX());
+			bank.setFloat("Y2", row, (float) track.getSuperpreclusters().get(1).getY());
+			bank.setFloat("X3", row, (float) track.getSuperpreclusters().get(2).getX());
+			bank.setFloat("Y3", row, (float) track.getSuperpreclusters().get(2).getY());
+			bank.setFloat("X4", row, (float) track.getSuperpreclusters().get(3).getX());
+			bank.setFloat("Y4", row, (float) track.getSuperpreclusters().get(3).getY());
+			bank.setFloat("X5", row, (float) track.getSuperpreclusters().get(4).getX());
+			bank.setFloat("Y5", row, (float) track.getSuperpreclusters().get(4).getY());
+
+			bank.setFloat("Pred", row, track.getPrediction());
 			row++;
 		}
 

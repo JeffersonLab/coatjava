@@ -41,7 +41,7 @@ public class DetectorEventDecoder {
         scalerManager.setTimeStamp(timestamp);
     }
 
-    private void setVariation(String variation) {
+    public void setVariation(String variation) {
         translationManager.setVariation(variation);
         fitterManager.setVariation(variation);
         scalerManager.setVariation(variation);
@@ -76,31 +76,41 @@ public class DetectorEventDecoder {
         tablesFitter = Arrays.asList(new String[]{"/daq/fadc/clasdev/htcc"});
         translationManager.init(keysTrans,tablesTrans);
         fitterManager.init(keysFitter, tablesFitter);
-        scalerManager.init(Arrays.asList(new String[]{"/runcontrol/fcup","/runcontrol/slm","/runcontrol/hwp","/runcontrol/helicity","/daq/config/scalers/dsc1"}));
+        scalerManager.init(Arrays.asList(new String[]{"/runcontrol/fcup","/runcontrol/slm","/runcontrol/hwp",
+                                                      "/runcontrol/helicity","/daq/config/scalers/dsc1"}));
     }
 
     public final void initDecoder(){
-        keysTrans = Arrays.asList(new String[]{
-		"FTCAL","FTHODO","FTTRK","LTCC","ECAL","FTOF","HTCC","DC","CTOF","CND","BST","RF","BMT","FMT","RICH","HEL","BAND","RTPC","RASTER"
-        });
 
+        // Detector translation table
+        keysTrans = Arrays.asList(new String[]{"FTCAL","FTHODO","FTTRK","LTCC","ECAL","FTOF",
+                                               "HTCC","DC","CTOF","CND","BST","RF","BMT","FMT",
+                                               "RICH","HEL","BAND","RTPC",
+                                               "RASTER","ATOF","AHDC"
+        });
         tablesTrans = Arrays.asList(new String[]{
             "/daq/tt/ftcal","/daq/tt/fthodo","/daq/tt/fttrk","/daq/tt/ltcc",
             "/daq/tt/ec","/daq/tt/ftof","/daq/tt/htcc","/daq/tt/dc","/daq/tt/ctof","/daq/tt/cnd","/daq/tt/svt",
             "/daq/tt/rf","/daq/tt/bmt","/daq/tt/fmt","/daq/tt/rich2","/daq/tt/hel","/daq/tt/band","/daq/tt/rtpc",
-            "/daq/tt/raster"
+            "/daq/tt/raster","/daq/tt/atof","/daq/tt/ahdc"
         });
-
         translationManager.init(keysTrans,tablesTrans);
         
-        keysFitter   = Arrays.asList(new String[]{"FTCAL","FTHODO","FTTRK","FTOF","LTCC","ECAL","HTCC","CTOF","CND","BMT","FMT","HEL","RF","BAND","RASTER"});
+        // ADC waveform fitter translation table
+        keysFitter   = Arrays.asList(new String[]{"FTCAL","FTHODO","FTTRK","FTOF","LTCC",
+                                                  "ECAL","HTCC","CTOF","CND","BMT",
+                                                  "FMT","HEL","RF","BAND","RASTER",
+                                                  "AHDC"});
         tablesFitter = Arrays.asList(new String[]{
-            "/daq/fadc/ftcal","/daq/fadc/fthodo","/daq/config/fttrk","/daq/fadc/ftof","/daq/fadc/ltcc","/daq/fadc/ec",
-            "/daq/fadc/htcc","/daq/fadc/ctof","/daq/fadc/cnd","/daq/config/bmt","/daq/config/fmt","/daq/fadc/hel","/daq/fadc/rf","/daq/fadc/band","/daq/fadc/raster"
+            "/daq/fadc/ftcal","/daq/fadc/fthodo","/daq/config/fttrk","/daq/fadc/ftof","/daq/fadc/ltcc",
+            "/daq/fadc/ec", "/daq/fadc/htcc","/daq/fadc/ctof","/daq/fadc/cnd","/daq/config/bmt",
+            "/daq/config/fmt","/daq/fadc/hel","/daq/fadc/rf","/daq/fadc/band","/daq/fadc/raster",
+            "/daq/config/ahdc"
         });
         fitterManager.init(keysFitter, tablesFitter);
 
-        scalerManager.init(Arrays.asList(new String[]{"/runcontrol/fcup","/runcontrol/slm","/runcontrol/hwp","/runcontrol/helicity","/daq/config/scalers/dsc1"}));
+        scalerManager.init(Arrays.asList(new String[]{"/runcontrol/fcup","/runcontrol/slm","/runcontrol/hwp",
+                                                      "/runcontrol/helicity","/daq/config/scalers/dsc1"}));
     }
 
     /**
@@ -119,7 +129,6 @@ public class DetectorEventDecoder {
             for(String table : keysTrans){
                 IndexedTable  tt = translationManager.getConstants(runNumber, table);
                 DetectorType  type = DetectorType.getType(table);
-
                 if(tt.hasEntry(crate,slot,channel)==true){
                     int sector    = tt.getIntValue("sector", crate,slot,channel);
                     int layer     = tt.getIntValue("layer", crate,slot,channel);
@@ -150,6 +159,7 @@ public class DetectorEventDecoder {
                 //custom MM fitter
             	if( ( (table.equals("BMT"))&&(data.getDescriptor().getType().getName().equals("BMT")) )
                  || ( (table.equals("FMT"))&&(data.getDescriptor().getType().getName().equals("FMT")) )
+                 || ( (table.equals("AHDC"))&&(data.getDescriptor().getType().getName().equals("AHDC")) )
                  || ( (table.equals("FTTRK"))&&(data.getDescriptor().getType().getName().equals("FTTRK")) ) ){
                     IndexedTable daq = fitterManager.getConstants(runNumber, table);
                     short adcOffset = (short) daq.getDoubleValue("adc_offset", 0, 0, 0);

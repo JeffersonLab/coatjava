@@ -420,14 +420,14 @@ public class RecUtilities {
     }
     
     
-    public List<Seed> reFit(List<Seed> seedlist, Swim swimmer,  StraightTrackSeeder trseed) {
+    public List<Seed> reFit(List<Seed> seedlist, Swim swimmer,  StraightTrackSeeder trseed, double xb, double yb) {
         List<Seed> filtlist = new ArrayList<>();
         if(seedlist==null)
             return filtlist;
         for (Seed bseed : seedlist) {
             if(bseed == null)
                 continue;
-            List<Seed>  fseeds = this.reFitSeed(bseed, trseed);
+            List<Seed>  fseeds = this.reFitSeed(bseed, trseed, xb, yb);
             if(fseeds!=null) {
                 filtlist.addAll(fseeds);
             }
@@ -435,7 +435,7 @@ public class RecUtilities {
         return filtlist;
     }        
     
-    public List<Seed> reFitSeed(Seed bseed, StraightTrackSeeder trseed) {
+    public List<Seed> reFitSeed(Seed bseed, StraightTrackSeeder trseed, double xb, double yb) {
         
         List<Cross> refib = new ArrayList<>();
         List<Cross> refi = new ArrayList<>();
@@ -461,7 +461,7 @@ public class RecUtilities {
             }
         }
         Collections.sort(refi);
-        List<Seed> seedlist = trseed.findSeed(refi, refib, false);
+        List<Seed> seedlist = trseed.findSeed(refi, refib, false, xb, yb);
         return seedlist;
     }
     
@@ -497,7 +497,7 @@ public class RecUtilities {
                 seed.getHelix().setCurvature(pars.rho());           
                 seed.getHelix().setDCA(-pars.doca());
                 seed.getHelix().setPhiAtDCA(pars.phi());
-                seed.update_Crosses();
+                seed.update_Crosses(xb,yb);
             }
         }
         return fitStatus;
@@ -762,7 +762,8 @@ public class RecUtilities {
         return tCov;
     }
 
-    public List<Cross> findCrossesFromClustersOnTrk(List<Cross> allCrosses, List<Cluster> clsOnTrack, Track track) {
+    public List<Cross> findCrossesFromClustersOnTrk(List<Cross> allCrosses, List<Cluster> clsOnTrack, 
+            Track track, double xb, double yb) {
         CrossMaker cm = new CrossMaker();
         List<Cross> crosses = new ArrayList<>();
         for (Cluster cl1 : clsOnTrack) {//inner layer
@@ -799,7 +800,9 @@ public class RecUtilities {
                         allCrosses.add(this_cross);
                     }
                     if (track.getHelix() != null && track.getHelix().getCurvature() != 0) {
-                        double R = this_cross.getPoint().toVector3D().rho();
+                        double Cx = this_cross.getPoint().x()-xb;
+                        double Cy = this_cross.getPoint().y()-yb;
+                        double R = Math.sqrt(Cx * Cx + Cy * Cy);
                         this_cross.update(track.getHelix().getPointAtRadius(R), track.getHelix().getTrackDirectionAtRadius(R));
                         this_cross.setAssociatedTrackID(track.getSeed().getClusters().get(0).getAssociatedTrackID());
                     }
@@ -886,7 +889,7 @@ public class RecUtilities {
         }
         //refit adding missing clusters
         List<Cluster> clsOnTrack = this.findClustersOnTrk(SVTclusters, seed.getClusters(), fittedTrack, swimmer); //VZ: finds missing clusters; RDV fix 0 error
-        List<Cross> crsOnTrack = this.findCrossesFromClustersOnTrk(SVTcrosses, clsOnTrack, fittedTrack);
+        List<Cross> crsOnTrack = this.findCrossesFromClustersOnTrk(SVTcrosses, clsOnTrack, fittedTrack, xb, yb);
 
         if(clsOnTrack.size()>0) {
             seed.add_Clusters(clsOnTrack);

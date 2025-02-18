@@ -159,5 +159,24 @@
 			"info": "pz in MeV"
 		}
 	]
-}
+},
+	{
+		"name": "AHDC_AI::Prediction",
+		"group": 23000,
+		"item": 30,
+		"info": "Prediction given by AI",
+		"entries": [
+			{"name": "X1", "type": "F", "info": "X1 position of the 1th superprecluster (mm)"},
+			{"name": "Y1", "type": "F", "info": "Y1 position of the 1th superprecluster (mm)"},
+			{"name": "X2", "type": "F", "info": "X2 position of the 2nd superprecluster (mm)"},
+			{"name": "Y2", "type": "F", "info": "Y2 position of the 2nd superprecluster (mm)"},
+			{"name": "X3", "type": "F", "info": "X3 position of the 3rd superprecluster (mm)"},
+			{"name": "Y3", "type": "F", "info": "Y3 position of the 3rd superprecluster (mm)"},
+			{"name": "X4", "type": "F", "info": "X4 position of the 4th superprecluster (mm)"},
+			{"name": "Y4", "type": "F", "info": "Y4 position of the 4th superprecluster (mm)"},
+			{"name": "X5", "type": "F", "info": "X5 position of the 5th superprecluster (mm)"},
+			{"name": "Y5", "type": "F", "info": "Y5 position of the 5th superprecluster (mm)"},
+			{"name": "Pred", "type": "F", "info": "Prediction of the model: 0 mean bad track; 1 mean good track"}
+		]
+	}
 ]

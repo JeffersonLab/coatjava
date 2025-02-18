@@ -40,6 +40,7 @@ public class SVTConstants {
 	
 	// data for alignment shifts
 //	private static String filenameSectorShiftData = null;
+        private static double[] GLOBALSHIFTDATA = null;
         private static double[][][] LAYERSHIFTDATA = null;
 	
 	//private static double[][] LAYERSHIFTDATA = null;
@@ -429,7 +430,8 @@ public class SVTConstants {
                 double xpos = cp.getDouble(ccdbPath+"position/x", 0 );
                 double ypos = cp.getDouble(ccdbPath+"position/y", 0 );
                 double zpos = cp.getDouble(ccdbPath+"position/z", 0 );
-
+                GLOBALSHIFTDATA = new double[]{xpos, ypos, zpos, 0, 0, 1, 0};
+                
 //                double[] myShift = {0, 0, 0, -Math.toRadians(0), 0, 0, 0};
                 LAYERSHIFTDATA = new double[NSECTORS[3]][NLAYERS-2][];
                 for( int i = 0; i < (NTOTALSECTORS-NSECTORS[3])*2; i++ )    // layeralignment tables doesn't cover region 4
@@ -832,6 +834,15 @@ public class SVTConstants {
         public static double[][][] getLayerSectorAlignmentData() {
                 if(LAYERSHIFTDATA == null ) { System.err.println("error: SVTConstants.getLayerSectorAlignmentData: LAYERSHIFTDATA requested is null"); }
                 return LAYERSHIFTDATA;
+        }
+        
+        /**
+         * Returns the layer/sector alignment data
+         * @return
+         */
+        public static double[] getGlobalAlignmentData() {
+                if(GLOBALSHIFTDATA == null ) { System.err.println("error: SVTConstants.getGlobalAlignmentData: GLOBALSHIFTDATA requested is null"); }
+                return GLOBALSHIFTDATA;
         }
         
         

@@ -205,30 +205,16 @@ public class HitReader {
         }
         return jitter;
     }
-    
-    public void fetch_DCHits(DataEvent event, Clas12NoiseAnalysis noiseAnalysis,
-                             NoiseReductionParameters parameters,
-                             Clas12NoiseResult results) {
-        this.initialize(event);
-        this.fetch_DCHits(noiseAnalysis, parameters, results);
-    }
-        
+            
      /**
      * reads the hits using clas-io methods to get the EvioBank for the DC and
      * fill the values to instantiate the DChit and MChit classes.This methods
      * fills the DChit list of hits.
-     *
-     * @param noiseAnalysis
-     * @param parameters
-     * @param results
      */
-    private void fetch_DCHits(Clas12NoiseAnalysis noiseAnalysis,
-                             NoiseReductionParameters parameters,
-                             Clas12NoiseResult results) {
-
+    public void fetch_DCHits(DataEvent event) {
+        this.initialize(event);
+        
         _DCHits = new ArrayList<>();
-
-        IndexedList<Boolean> noise = new IndexedList<>(4);
         
         RawDataBank bankDGTZ = new RawDataBank(bankNames.getTdcBank(), OrderGroups.NODENOISE);
         bankDGTZ.read(event);
@@ -236,7 +222,7 @@ public class HitReader {
         // event selection, including cut on max number of hits
         if( run <= 0 ||
             tiTimeStamp < 0 ||
-            bankDGTZ.rows()==0 || bankDGTZ.rows()>Constants.MAXHITS ) {
+            bankDGTZ.rows()==0) {
             return;
         }
         else {
@@ -251,11 +237,6 @@ public class HitReader {
                 superlayer[i] = (bankDGTZ.getByte("layer", i)-1)/6 + 1;
                 wire[i]       = bankDGTZ.getShort("component", i);
             }
-            results.clear();
-            noiseAnalysis.clear();
-            noiseAnalysis.findNoise(sector, superlayer, layer, wire, results);
-            for(int i=0; i<rows; i++)
-                noise.add(results.noise[i], sector[i], superlayer[i], layer[i], wire[i]);
         }
        
 //        DataBank bankDGTZ = event.getBank(bankNames.getTdcBank());
@@ -264,6 +245,9 @@ public class HitReader {
 
         RawDataBank bankFiltered = new RawDataBank(bankNames.getTdcBank(), rawBankOrders);
         bankFiltered.read(event);
+        
+        if(bankFiltered.rows() > Constants.MAXHITS) return;
+        
         this.set_NumTDCBankRows(bankFiltered.rows());
         for (int i = 0; i < bankFiltered.rows(); i++) {
             int sector     = bankFiltered.getByte("sector", i);
@@ -279,12 +263,7 @@ public class HitReader {
             if (wirestat != null) {
                 if (wirestat.getIntValue("status", sector, layer+(superlayer-1)*6, wire) != 0)
                     passHit = false;
-            }
-            
-            if(noise.hasItem(sector, superlayer, layer, wire)) {
-                if(noise.getItem(sector, superlayer, layer, wire))
-                    passHit = false;
-            }
+            }            
             
             if (passHit && wire != -1 && !(superlayer == 0)) {
 
