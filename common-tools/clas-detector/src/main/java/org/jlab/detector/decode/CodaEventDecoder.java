@@ -153,7 +153,7 @@ public class CodaEventDecoder {
                 long offsetT = 0;
                 if( tiEntries.get(i).getDescriptor().getCrate() == 78 ) offsetT = 5;
                 if(tiEntries.get(i).getDescriptor().getCrate()==this.tiMaster) deltaTS = deltaTS + 1;  // add 1 click tolerance for tiMaster
-                if(Math.abs(tiEntries.get(i).getTimeStamp()+offsetT-tiEntries.get(i0).getTimeStamp())>deltaTS) { // not sure about the sign of offsetT
+                if(Math.abs(tiEntries.get(i).getTimeStamp()-offsetT-tiEntries.get(i0).getTimeStamp())>deltaTS) { // not sure about the sign of offsetT
                     tiSync=false;
                     if(this.timeStampErrors<100) {
                         System.err.println("WARNING: mismatch in TI time stamps: crate " 
