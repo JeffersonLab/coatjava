@@ -43,6 +43,7 @@ public class RecoBankWriter {
 
         for (int i = 0; i < hitList.size(); i++) {
             bank.setShort("id", i, (short) (i + 1));
+            bank.setInt("clusterid", i, (int) hitList.get(i).getAssociatedClusterIndex());
             bank.setInt("sector", i, (int) hitList.get(i).getSector());
             bank.setInt("layer", i, (int) hitList.get(i).getLayer());
             bank.setInt("component", i, (int) hitList.get(i).getComponent());
