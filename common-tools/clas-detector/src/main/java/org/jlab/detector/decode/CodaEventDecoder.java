@@ -151,6 +151,7 @@ public class CodaEventDecoder {
             for(int i=0; i<tiEntries.size(); i++) {
                 long deltaTS = this.timeStampTolerance;       
                 long offsetT = 0;
+		// crate 78 is ATOF which is a TIpcie based ROC 
                 if( tiEntries.get(i).getDescriptor().getCrate() == 78 ) offsetT = 5;
                 if(tiEntries.get(i).getDescriptor().getCrate()==this.tiMaster) deltaTS = deltaTS + 1;  // add 1 click tolerance for tiMaster
                 if(Math.abs(tiEntries.get(i).getTimeStamp()-offsetT-tiEntries.get(i0).getTimeStamp())>deltaTS) { // not sure about the sign of offsetT
