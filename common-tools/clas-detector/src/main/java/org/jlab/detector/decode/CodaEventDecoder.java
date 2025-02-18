@@ -151,7 +151,7 @@ public class CodaEventDecoder {
             for(int i=0; i<tiEntries.size(); i++) {
                 long deltaTS = this.timeStampTolerance;       
                 if(tiEntries.get(i).getDescriptor().getCrate()==this.tiMaster) deltaTS = deltaTS + 1;  // add 1 click tolerance for tiMaster
-                if(Math.abs(tiEntries.get(i).getTimeStamp()-tiEntries.get(i0).getTimeStamp())>deltaTS) {
+                if(Math.abs(tiEntries.get(i).getTimeStamp()-tiEntries.get(i0).getTimeStamp())>deltaTS+5) {
                     tiSync=false;
                     if(this.timeStampErrors<100) {
                         System.err.println("WARNING: mismatch in TI time stamps: crate " 
