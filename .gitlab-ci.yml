@@ -29,6 +29,7 @@ coatjava_dind_build:
   image: eicweb.phy.anl.gov:4567/containers/image_recipes/ubuntu_dind:latest
   tags: 
     - "silicon"
+  when: manual
   allow_failure: true
   script:
     - echo "${CI_COMMIT_REF_NAME}"
