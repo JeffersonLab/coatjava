@@ -26,7 +26,8 @@ coatjava_build:
       --build-arg REF_NAME=${CI_COMMIT_REF_NAME}
 
 coatjava_dind_build:
-  tags: silicon
+  tags: 
+    - "silicon"
   allow_failure: true
   script:
     - echo "${CI_COMMIT_REF_NAME}"
