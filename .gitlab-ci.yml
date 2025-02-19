@@ -39,6 +39,19 @@ coatjava_dind_build:
                    -t $CI_REGISTRY_IMAGE/coatjava_dind:${CI_COMMIT_REF_NAME}  .
     - docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
     - docker push $CI_REGISTRY_IMAGE/coatjava_dind:${CI_COMMIT_REF_NAME}
+
+
+print_help:
+  image: $CI_REGISTRY_IMAGE/coatjava:${CI_COMMIT_REF_NAME}
+  needs: ["coatjava_build"]
+  script:
+    - export PATH=/opt/coatjava/coatjava/bin:$PATH
+    - source /opt/coatjava/coatjava/libexec/env.sh
+    - ls -lrth
+    - printenv
+    - decoder -help || true
+    - recon-util -help || true
+
     
 alert_testing:
   needs: ["coatjava_build"]
