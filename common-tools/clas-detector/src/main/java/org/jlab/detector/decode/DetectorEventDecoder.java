@@ -46,12 +46,14 @@ public class DetectorEventDecoder {
     public void setTimestamp(String timestamp) {
         translationManager.setTimeStamp(timestamp);
         fitterManager.setTimeStamp(timestamp);
+        filterManager.setTimeStamp(timestamp);
         scalerManager.setTimeStamp(timestamp);
     }
 
     public void setVariation(String variation) {
         translationManager.setVariation(variation);
         fitterManager.setVariation(variation);
+        filterManager.setVariation(variation);
         scalerManager.setVariation(variation);
     }
 
