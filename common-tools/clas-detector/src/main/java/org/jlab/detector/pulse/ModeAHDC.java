@@ -58,7 +58,7 @@ public class ModeAHDC extends HipoExtractor  {
 		float leadingEdgeTime = 0; // moment when the signal reaches a Constant Fraction of its Amplitude uphill (fitted)
 		float trailingEdgeTime = 0; // moment when the signal reaches a Constant Fraction of its Amplitude downhill (fitted)
 		float timeOverThreshold = 0; // is equal to (timeFallCFA - timeRiseCFA)
-		float constantFractionTime ; // time extracted using the Constant Fraction Discriminator (CFD) algorithm (fitted)
+		float constantFractionTime = 0; // time extracted using the Constant Fraction Discriminator (CFD) algorithm (fitted)
 		/// /////////////////////////
 		// Begin waveform correction
 		/// ////////////////////////
@@ -75,6 +75,9 @@ public class ModeAHDC extends HipoExtractor  {
 		//private void waveformCorrection(short[] samples, short adcOffset, float samplingTime, int sparseSample, int binMax, int adcMax, int integral, short samplesCorr[], int binOffset, int timeMax){
 			binNumber = samples.length;
 			binMax = 0;
+			if (binNumber >= 5) {
+				adcOffset = (short) ((samples[0] + samples[1] + samples[2] + samples[3] + samples[4])/5); // try to estimate the baseline (pedestal) using the first five samples
+			}
 			adcMax = (short) (samples[0] - adcOffset);
 			integral = 0;
 			samplesCorr = new short[binNumber];
