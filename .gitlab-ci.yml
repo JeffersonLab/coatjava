@@ -26,6 +26,7 @@ coatjava_build:
       --build-arg REF_NAME=${CI_COMMIT_REF_NAME}
 
 coatjava_dind_build:
+  image: eicweb.phy.anl.gov:4567/containers/image_recipes/ubuntu_dind:latest
   tags: 
     - "silicon"
   allow_failure: true
