@@ -34,9 +34,9 @@ coatjava_dind_build:
     - echo "${CI_COMMIT_REF_NAME}"
     - >
       docker build --no-cache \
-                   -t $CI_REGISTRY_IMAGE/coatjava:${CI_COMMIT_REF_NAME} \
+                   --build-arg REF_NAME=${CI_COMMIT_REF_NAME}  \
                    -f .containers/coatjava.Dockerfile \
-                   --build-arg REF_NAME=${CI_COMMIT_REF_NAME} 
+                   -t $CI_REGISTRY_IMAGE/coatjava:${CI_COMMIT_REF_NAME}  .
       docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
       docker push $CI_REGISTRY_IMAGE/coatjava:${CI_COMMIT_REF_NAME}
     
