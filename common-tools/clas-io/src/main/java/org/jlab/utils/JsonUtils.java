@@ -109,11 +109,11 @@ public class JsonUtils {
         JsonObject ret = new JsonObject();
         for (Map.Entry<String,Object> entry : map.entrySet()) {
             String topKey = entry.getKey();
+                System.out.println("topKey " + topKey);
             if (entry.getValue() instanceof Map) {
                 ret.add(topKey,Map2Json((Map)entry.getValue()));
             }
             else {
-                System.out.println("topKey " + topKey);
                 System.out.println("value " + entry.getValue());
                 ret.add(topKey, entry.getValue().toString());
             }
