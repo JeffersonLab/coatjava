@@ -355,7 +355,7 @@ public abstract class ReconstructionEngine implements Engine {
         if (r > 0) {
             if (this.runNumbers.isEmpty() || r != this.runNumbers.get(this.runNumbers.size()-1)) {
                 this.runNumbers.add(r);
-                this.detectorChanged(11);
+                this.detectorChanged(r);
             }
         }
         return !this.ignoreInvalidRunNumbers || r>0;
