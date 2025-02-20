@@ -18,7 +18,9 @@ public class Cluster extends ArrayList<Hit> {
     private int _Sector;      							//	    sector[1...6]
     private int _Superlayer;    	 					//	    superlayer [1,...6]
     private int _Id;									//		cluster Id
-
+    private int _MinWire;
+    private int _MaxWire;
+    
     /**
      *
      * @param sector the sector (1...6)
@@ -107,6 +109,38 @@ public class Cluster extends ArrayList<Hit> {
         return (this._Superlayer + 1) % 2 + 1;
     }
 
+    /**
+     *
+     * @return the min wire of the cluster (1...112)
+     */
+    public int get_MinWire() {
+        return _MinWire;
+    }
+
+    /**
+     *
+     * @param _MinWire min wire of the cluster (1...112)
+     */
+    public void set_MinWire(int _MinWire) {
+        this._MinWire = _MinWire;
+    }
+    
+    /**
+     *
+     * @return the max wire of the cluster (1...112)
+     */
+    public int get_MaxWire() {
+        return _MaxWire;
+    }
+
+    /**
+     *
+     * @param _MaxWire max wire of the cluster (1...112)
+     */
+    public void set_MaxWire(int _MaxWire) {
+        this._MaxWire = _MaxWire;
+    }
+    
     /**
      *
      * @return cluster info. about location and number of hits contained in it
