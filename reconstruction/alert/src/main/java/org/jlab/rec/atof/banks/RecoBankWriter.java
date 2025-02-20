@@ -6,7 +6,7 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.rec.atof.cluster.ATOFCluster;
 import org.jlab.rec.atof.hit.ATOFHit;
 import org.jlab.rec.atof.hit.BarHit;
-import org.jlab.rec.atof.trackMatch.TrackProjection;
+import org.jlab.rec.alert.projections.TrackProjection;
 
 /**
  * The {@code RecoBankWriter} writes the banks needed for the atof
