@@ -12,7 +12,7 @@ import org.jlab.geom.prim.Point3D;
  * 
  * @author bondi, devita, niccolai
  */
-public class recoilCluster extends ArrayList<recoilStrip> {
+public class RecoilCluster extends ArrayList<RecoilStrip> {
    
     
     private DetectorDescriptor  desc          = new DetectorDescriptor(DetectorType.RECOIL);
@@ -21,7 +21,7 @@ public class recoilCluster extends ArrayList<recoilStrip> {
     public int                  indexMaxStrip = -1;
     private byte                clusterStatus =  1;
     
-    public recoilCluster(recoilStrip strip){
+    public RecoilCluster(RecoilStrip strip){
         this.desc.setSectorLayerComponent(strip.getDescriptor().getSector(), 
                                           strip.getDescriptor().getLayer(), 0);
         this.add(strip);
@@ -53,7 +53,7 @@ public class recoilCluster extends ArrayList<recoilStrip> {
     
     public double getEnergy(){
         double energy = 0.0;
-        for(recoilStrip strip : this){
+        for(RecoilStrip strip : this){
             energy += strip.getEnergy();
         }
         return energy;
@@ -61,7 +61,7 @@ public class recoilCluster extends ArrayList<recoilStrip> {
     
     public double getTime(){
         double time = 0.0;
-        for(recoilStrip strip : this){
+        for(RecoilStrip strip : this){
             time += strip.getTime()*strip.getEnergy();
         }
         time /= this.getEnergy();
@@ -75,7 +75,7 @@ public class recoilCluster extends ArrayList<recoilStrip> {
             return 0.0;
     }
 
-    public recoilStrip getSeedStrip() {
+    public RecoilStrip getSeedStrip() {
     	    return this.get(this.indexMaxStrip);
     }
     
@@ -83,8 +83,8 @@ public class recoilCluster extends ArrayList<recoilStrip> {
         return this.get(this.indexMaxStrip).getDescriptor().getComponent();
     }
     
-    public boolean  addStrip(recoilStrip strip){
-        for(recoilStrip s : this){
+    public boolean  addStrip(RecoilStrip strip){
+        for(RecoilStrip s : this){
             if(s.isNeighbour(strip)){
                 this.add(strip);
                 if(strip.getEnergy()>this.get(indexMaxStrip).getEnergy()){
@@ -99,7 +99,7 @@ public class recoilCluster extends ArrayList<recoilStrip> {
     
     public int getADC(){
         int adc = 0;
-        for(recoilStrip s : this){
+        for(RecoilStrip s : this){
             adc+= s.getADC();
         }
         return adc;
@@ -111,7 +111,7 @@ public class recoilCluster extends ArrayList<recoilStrip> {
     
     public void setClusterId(int id){
         this.id = id;
-        for(recoilStrip strip : this){
+        for(RecoilStrip strip : this){
             strip.setClusterId(id);
         }
     }
@@ -155,20 +155,20 @@ public class recoilCluster extends ArrayList<recoilStrip> {
     }
     
     
-    public static List<recoilCluster> createClusters(List<recoilStrip> stripList){
+    public static List<RecoilCluster> createClusters(List<RecoilStrip> stripList){
     	
-        List<recoilCluster>  clusterList = new ArrayList<>();
+        List<RecoilCluster>  clusterList = new ArrayList<>();
         
         if(!stripList.isEmpty()){
             for(int loop = 0; loop < stripList.size(); loop++){ //Loop over all strips 
                 boolean stripAdded = false;                
-                for(recoilCluster  cluster : clusterList) {
+                for(RecoilCluster  cluster : clusterList) {
                     if(cluster.addStrip(stripList.get(loop))){ //Add adjacent strip to newly seeded peak
                         stripAdded = true;
                     }
                 }
                 if(!stripAdded){
-                    recoilCluster  newPeak = new recoilCluster(stripList.get(loop)); //Non-adjacent strip seeds new peak
+                    RecoilCluster  newPeak = new RecoilCluster(stripList.get(loop)); //Non-adjacent strip seeds new peak
                     clusterList.add(newPeak);
                 }
             }
@@ -180,9 +180,9 @@ public class recoilCluster extends ArrayList<recoilStrip> {
         return clusterList;
     }   
     
-    public static List<recoilCluster> getClusters(List<recoilCluster> clusters, int sector, int layer) {
-        List<recoilCluster> selectedClusters = new ArrayList<>();
-        for(recoilCluster cluster : clusters) {
+    public static List<RecoilCluster> getClusters(List<RecoilCluster> clusters, int sector, int layer) {
+        List<RecoilCluster> selectedClusters = new ArrayList<>();
+        for(RecoilCluster cluster : clusters) {
             if(cluster.getSector()==sector && cluster.getLayer()==layer)
                 selectedClusters.add(cluster);
         }
@@ -196,7 +196,7 @@ public class recoilCluster extends ArrayList<recoilStrip> {
                 this.desc.getSector(),this.desc.getLayer(), this.getEnergy()));
         str.append(this.clusterLine.toString());
         str.append("\n");
-        for(recoilStrip strip : this){
+        for(RecoilStrip strip : this){
             str.append("\t\t");
             str.append(strip.toString());
             str.append("\n");

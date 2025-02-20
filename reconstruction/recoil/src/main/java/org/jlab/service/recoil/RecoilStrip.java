@@ -6,7 +6,7 @@ import org.jlab.detector.banks.RawDataBank;
 import org.jlab.detector.base.DetectorDescriptor;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.calib.utils.ConstantsManager;
-import org.jlab.detector.geant4.v2.RECOIL.RecoilStripFactory;
+import org.jlab.detector.geant4.v2.recoil.RecoilStripFactory;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.io.base.DataEvent;
 
@@ -18,7 +18,7 @@ import org.jlab.io.base.DataEvent;
  */
 
 
-public class recoilStrip implements Comparable {
+public class RecoilStrip implements Comparable {
     
     private DetectorDescriptor  desc = new DetectorDescriptor(DetectorType.RECOIL);
     
@@ -36,11 +36,11 @@ public class recoilStrip implements Comparable {
     private double      time = 0;
     
     
-    public recoilStrip(int sector, int layer, int component){
+    public RecoilStrip(int sector, int layer, int component){
         this.desc.setSectorLayerComponent(sector, layer, component);
     }
 
-    public recoilStrip(int sector, int layer, int component, int ADC, int TDC){
+    public RecoilStrip(int sector, int layer, int component, int ADC, int TDC){
         this.desc.setSectorLayerComponent(sector, layer, component);
         this.ADC = ADC;
         this.TDC = TDC;
@@ -135,7 +135,7 @@ public class recoilStrip implements Comparable {
         this.status = status;
     }
     
-    public boolean isNeighbour(recoilStrip strip){
+    public boolean isNeighbour(RecoilStrip strip){
         if(strip.getDescriptor().getSector()==this.desc.getSector()&&
            strip.getDescriptor().getLayer()==this.desc.getLayer()){
             int s1 = strip.getDescriptor().getComponent();
@@ -145,13 +145,13 @@ public class recoilStrip implements Comparable {
         return false;
     }
     
-    public boolean isInTime(recoilStrip strip) {
-        return Math.abs(this.getTime() - strip.getTime()) < recoilConstants.COINCTIME;
+    public boolean isInTime(RecoilStrip strip) {
+        return Math.abs(this.getTime() - strip.getTime()) < RecoilConstants.COINCTIME;
     }     
     
     @Override
     public int compareTo(Object o) {
-        recoilStrip ob = (recoilStrip) o;
+        RecoilStrip ob = (RecoilStrip) o;
         if(ob.getDescriptor().getSector()     < this.desc.getSector())    return  1;
         if(ob.getDescriptor().getSector()     > this.desc.getSector())    return -1;
         if(ob.getDescriptor().getLayer()      < this.desc.getLayer())     return  1;
@@ -161,9 +161,9 @@ public class recoilStrip implements Comparable {
         return -1;
     }
     
-    public static List<recoilStrip> getStrips(DataEvent event, RecoilStripFactory factory, ConstantsManager ccdb) {
+    public static List<RecoilStrip> getStrips(DataEvent event, RecoilStripFactory factory, ConstantsManager ccdb) {
         
-        List<recoilStrip> strips = new ArrayList<>();
+        List<RecoilStrip> strips = new ArrayList<>();
         
         if(event.hasBank("RECOIL::adc")){
             RawDataBank bank = new RawDataBank("RECOIL::adc");
@@ -176,19 +176,19 @@ public class recoilStrip implements Comparable {
                 int     adc = bank.getInt("ADC", i);
                 double time = bank.getFloat("time", i);
                         
-                recoilStrip  strip = new recoilStrip(sector,  layer,   comp); 
+                RecoilStrip  strip = new RecoilStrip(sector,  layer,   comp); 
                 
 //                strip.setTriggerPhase(triggerPhase);
                 strip.setId(bank.trueIndex(i)+1);
                 strip.setADC(adc);
                 strip.setTDC((int) time);
-                strip.setEnergy(strip.ADC*recoilConstants.ADCTOENERGY);
-                strip.setTime(strip.TDC*recoilConstants.TDCTOTIME);
+                strip.setEnergy(strip.ADC*RecoilConstants.ADCTOENERGY);
+                strip.setTime(strip.TDC*RecoilConstants.TDCTOTIME);
                 strip.setLine(factory.getStrip(sector, layer, comp)); 
                 strip.setChamber(factory.getChamberIndex(comp)+1);
                 strip.setStatus(0);
                 
-                if(strip.getEnergy()>recoilConstants.THRESHOLD) strips.add(strip);
+                if(strip.getEnergy()>RecoilConstants.THRESHOLD) strips.add(strip);
 
             }
         }         

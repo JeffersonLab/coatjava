@@ -8,7 +8,7 @@ import javax.swing.JFrame;
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
-import org.jlab.detector.geant4.v2.RECOIL.RecoilStripFactory;
+import org.jlab.detector.geant4.v2.recoil.RecoilStripFactory;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.groot.data.H1F;
 import org.jlab.groot.fitter.DataFitter;
@@ -25,14 +25,14 @@ import org.jlab.io.hipo.HipoDataSource;
  * 
  * @author bondi, devita, niccolai
  */
-public class recoilEngine extends ReconstructionEngine {
+public class RecoilEngine extends ReconstructionEngine {
 
-    public static Logger LOGGER = Logger.getLogger(recoilEngine.class.getName());
+    public static Logger LOGGER = Logger.getLogger(RecoilEngine.class.getName());
 
     public static RecoilStripFactory factory = new RecoilStripFactory();
 
-    public recoilEngine() {
-        super("RECOIL","niccolai","1.0");
+    public RecoilEngine() {
+        super("Recoil","niccolai","1.0");
     }
 
     @Override
@@ -41,7 +41,7 @@ public class recoilEngine extends ReconstructionEngine {
         // init ConstantsManager to read constants from CCDB
         String variationName = Optional.ofNullable(this.getEngineConfigString("variation")).orElse("default");
         DatabaseConstantProvider cp = new DatabaseConstantProvider(11, variationName);
-        factory.init(cp, recoilConstants.NREGION);
+        factory.init(cp, RecoilConstants.NREGION);
         // register output banks for drop option        
         this.registerOutputBank("RECOIL::hits");
         this.registerOutputBank("RECOIL::clusters");
@@ -57,9 +57,9 @@ public class recoilEngine extends ReconstructionEngine {
     @Override
     public boolean processDataEvent(DataEvent event) {
         
-        List<recoilStrip>     strips = recoilStrip.getStrips(event, factory, this.getConstantsManager());
-        List<recoilCluster> clusters = recoilCluster.createClusters(strips);
-        List<recoilCross>    crosses = recoilCross.createCrosses(clusters);
+        List<RecoilStrip>     strips = RecoilStrip.getStrips(event, factory, this.getConstantsManager());
+        List<RecoilCluster> clusters = RecoilCluster.createClusters(strips);
+        List<RecoilCross>    crosses = RecoilCross.createCrosses(clusters);
         
         this.writeHipoBanks(event, strips, clusters, crosses);
         
@@ -68,9 +68,9 @@ public class recoilEngine extends ReconstructionEngine {
 
     
     private void writeHipoBanks(DataEvent de, 
-                                List<recoilStrip>     strips, 
-                                List<recoilCluster> clusters, 
-                                List<recoilCross>    crosses){
+                                List<RecoilStrip>     strips, 
+                                List<RecoilCluster> clusters, 
+                                List<RecoilCross>    crosses){
 	    
         DataBank bankS = de.createBank("RECOIL::hits", strips.size());
         for(int h = 0; h < strips.size(); h++){
@@ -153,14 +153,14 @@ public class recoilEngine extends ReconstructionEngine {
     
     public static void main (String arg[])  {
 
-        recoilEngine engine = new recoilEngine();
+        RecoilEngine engine = new RecoilEngine();
         engine.init();
 
         String input = "/Users/devita/urwell3d.hipo";
 
         DataGroup dg = new DataGroup(3, 2);
         String[] axes = {"x", "y"};
-        for(int il=0; il<recoilConstants.NLAYER; il++) {
+        for(int il=0; il<RecoilConstants.NLAYER; il++) {
             int layer = il+1;
             H1F h1 = new H1F("hiEnergyL"+layer, "Cluster Energy (eV)", "Counts", 100, 0., 1500.);         
             h1.setOptStat(Integer.parseInt("1111")); 
@@ -228,9 +228,9 @@ public class recoilEngine extends ReconstructionEngine {
         }
         reader.close();
         
-        for(int i=0; i<recoilConstants.NLAYER; i++) {
-           recoilEngine.fitGauss(dg.getH1F("hiTimeL"+(i+1)));
-           recoilEngine.fitGauss(dg.getH1F("hiSpace"+axes[i]));
+        for(int i=0; i<RecoilConstants.NLAYER; i++) {
+           RecoilEngine.fitGauss(dg.getH1F("hiTimeL"+(i+1)));
+           RecoilEngine.fitGauss(dg.getH1F("hiSpace"+axes[i]));
         }
         JFrame frame = new JFrame("recoil Reconstruction");
         frame.setSize(800,800);

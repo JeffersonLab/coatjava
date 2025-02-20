@@ -1,4 +1,4 @@
-package org.jlab.detector.geant4.v2.RECOIL;
+package org.jlab.detector.geant4.v2.recoil;
 
 
 import org.jlab.detector.calib.utils.DatabaseConstantProvider; 

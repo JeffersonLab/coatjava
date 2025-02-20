@@ -4,7 +4,7 @@ package org.jlab.service.recoil;
  *
  * @author bondi, devita,niccolai
  */
-public class recoilConstants {
+public class RecoilConstants {
     
     
     // geometry
