@@ -94,7 +94,6 @@ public class ClusterFinder {
     public <T extends ATOFHit> void clusterHits(int i, ArrayList<T> hits, ATOFHit this_hit, double sigma_module, Number sigma_z, double sigma_t, int cluster_id, ArrayList<? super T> this_cluster_hits) {
         // Loop through less energetic clusters
         for (int j = i + 1; j < hits.size(); j++) {
-            System.out.print("Getting other hit \n");
             T other_hit = hits.get(j);
             // Skip already clustered hits
             if (other_hit.getIsInACluster()) {
@@ -116,7 +115,6 @@ public class ClusterFinder {
             if (delta_module <= sigma_module) {
                 if (condition_z) {
                     if (delta_T < sigma_t) {
-                        System.out.print("Clustered \n");
                         other_hit.setIsInACluster(true);
                         other_hit.setAssociatedClusterIndex(cluster_id);
                         this_cluster_hits.add(other_hit);
@@ -130,8 +128,6 @@ public class ClusterFinder {
      * Builds clusters in the {@link DateEvent} using hits found and stored in a
      * {@link HitFinder}.
      *
-     * @param event the {@link DataEvent} containing the clusters to be built
-     *
      * @param hitfinder the {@link HitFinder} containing the hits that were
      * found
      *
@@ -144,7 +140,7 @@ public class ClusterFinder {
      * @param sigma_t the tolerance for clustering in time [ns]
      *
      */
-    public void makeClusters(DataEvent event, HitFinder hitfinder, double sigma_module, double sigma_component, double sigma_z, double sigma_t) {
+    public void makeClusters(HitFinder hitfinder, double sigma_module, double sigma_component, double sigma_z, double sigma_t, DataEvent event) {
 
         //A list of clusters is built for each event
         clusters.clear();
@@ -179,7 +175,7 @@ public class ClusterFinder {
             clusterHits(-1, bar_hits, this_wedge_hit, sigma_module, sigma_z, sigma_t, cluster_id, this_cluster_bar_hits);
 
             //After all wedge and bar hits have been grouped, build the cluster
-            ATOFCluster cluster = new ATOFCluster(this_cluster_bar_hits, this_cluster_wedge_hits, event);
+            ATOFCluster cluster = new ATOFCluster(this_cluster_bar_hits, this_cluster_wedge_hits,event);
             //And add it to the list of clusters
             clusters.add(cluster);
             cluster_id++;
@@ -220,11 +216,11 @@ public class ClusterFinder {
      *
      */
     public void makeClusters(DataEvent event, HitFinder hitfinder) {
-        makeClusters(event, hitfinder,
+        makeClusters(hitfinder,
                 Parameters.SIGMA_MODULE_CLUSTERING,
                 Parameters.SIGMA_COMPONENT_CLUSTERING,
                 Parameters.SIGMA_Z_CLUSTERING,
-                Parameters.SIGMA_T_CLUSTERING);
+                Parameters.SIGMA_T_CLUSTERING, event);
     }
 
     /**

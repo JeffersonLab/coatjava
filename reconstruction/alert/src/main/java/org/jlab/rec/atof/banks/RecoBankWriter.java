@@ -85,6 +85,8 @@ public class RecoBankWriter {
             bank.setFloat("y", i, (float) (clusterList.get(i).getY()));
             bank.setFloat("z", i, (float) (clusterList.get(i).getZ()));
             bank.setFloat("energy", i, (float) clusterList.get(i).getEnergy());
+            bank.setFloat("inpathlength",i, (float) (clusterList.get(i).getInPathLength()));
+            bank.setFloat("pathlength",i, (float) (clusterList.get(i).getPathLength())); 
         }
         return bank;
     }
