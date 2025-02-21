@@ -175,6 +175,7 @@
        {"name":"adc2",               "type":"I", "info":"ADCR"},
        {"name":"tdc1",               "type":"I", "info":"TDCL"},
        {"name":"tdc2",               "type":"I", "info":"TDCR"},
+       {"name":"p",                  "type":"F", "info":"particle momentum"},
        {"name":"pathLength",         "type":"F", "info":"pathlength of the track from the vertex (doca point to the beamline to the midpoint between the entrance and exit of the hit bar"},
        {"name":"pathLengthThruBar",  "type":"F", "info":"pathlength of the track from the entrance point to the exit point through the hit bar "}
     ]

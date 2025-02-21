@@ -37,6 +37,7 @@
     <module>bg</module>
     <module>postproc</module>
     <module>recoil</module>
+    <module>calib</module>
   </modules>
 
   <build>
