@@ -292,10 +292,10 @@ public class RecoBankWriter {
             fTOFBanks.add(bank4);
         }
 
-        DataBank bank5 = this.fillCalibBank((DataEvent) event, hits, hitsType);
-        if (bank5 != null) {
-            fTOFBanks.add(bank5);
-        }
+//        DataBank bank5 = this.fillCalibBank((DataEvent) event, hits, hitsType);
+//        if (bank5 != null) {
+//            fTOFBanks.add(bank5);
+//        }
 
         if(!fTOFBanks.isEmpty()) {
             DataBank[] banks = new DataBank[fTOFBanks.size()];
