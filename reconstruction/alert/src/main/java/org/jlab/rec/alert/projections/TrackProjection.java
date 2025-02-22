@@ -42,6 +42,8 @@ public class TrackProjection {
      */
     Float wedgeInPathLength;
     
+    int trackID;
+    
 
     /**
      * Default constructor that initializes the intersection points and path lengths to {@code NaN}.
@@ -163,6 +165,14 @@ public class TrackProjection {
      */
     public void setWedgeInPathLength(Float WedgeInPathLength) {
         this.wedgeInPathLength = WedgeInPathLength;
+    }
+
+    public void setTrackID(int trackID) {
+        this.trackID = trackID;
+    }
+    
+    public int getTrackID() {
+        return trackID;
     }
 
     /**

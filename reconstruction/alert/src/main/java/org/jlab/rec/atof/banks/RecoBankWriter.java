@@ -111,10 +111,10 @@ public class RecoBankWriter {
             System.err.println("COULD NOT CREATE A ALERT::Projections BANK!!!!!!");
             return null;
         }
-
         for (int i = 0; i < projections.size(); i++) {
             TrackProjection projection = projections.get(i);
             bank.setShort("id", i, (short) (i + 1));
+            bank.setShort("trackID", i, (short) projection.getTrackID());
             bank.setFloat("x_at_bar", i, (float) projection.getBarIntersect().x());
             bank.setFloat("y_at_bar", i, (float) projection.getBarIntersect().y());
             bank.setFloat("z_at_bar", i, (float) projection.getBarIntersect().z());

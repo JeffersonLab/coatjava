@@ -9,6 +9,10 @@
         "name": "id",
         "type": "S",
         "info": "projection id"
+      },{
+        "name": "trackID",
+        "type": "S",
+        "info": "id of the track that was projected"
       }, {
         "name": "x_at_bar",
         "type": "F",
