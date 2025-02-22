@@ -37,6 +37,7 @@ public class ATOFCluster {
     double x, y, z, time, energy;
     double pathLength, inPathLength;
     String typeMaxHit;
+    int iProj;
 
     public ArrayList<BarHit> getBarHits() {
         return barHits;
@@ -117,6 +118,14 @@ public class ATOFCluster {
     public void setTypeMaxHit(String typeMaxHit) {
         this.typeMaxHit = typeMaxHit;
     }
+    
+    public int getIProj() {
+        return iProj;
+    }
+
+    public void setIProj(int iProj) {
+        this.iProj = iProj;
+    }
 
     /**
      * Compute the cluster properties.
@@ -171,22 +180,32 @@ public class ATOFCluster {
      *
      */
     public int matchTrack(DataEvent event) {
+        
+        //This cluster point in space
+        Point3D cluster = new Point3D(this.x, this.y, this.z);
+        //Bank to be read
         String track_bank_name = "ALERT::Projections";
-        if (event == null) { // check if there is an event
-            //System.out.print(" no event \n");
+        //Checking if there is an event
+        if (event == null) { 
             return 1;
         } else if (event.hasBank(track_bank_name) == false) {
-            // check if there are ahdc tracks in the event
-            //System.out.print("no tracks \n");
+            //Check if there are tracks in the event
             //If it is not the case, assign a straight track
             this.makeStraightTrack();
             return 1;
         } else {
+            //There are tracks in the event
             DataBank track_bank = event.getBank(track_bank_name);
             int nt = track_bank.rows(); // number of tracks
             double sigma_phi = 0;
             double sigma_z = 0;
 
+            //This will help decide which track to consider 
+            //when more than one are matched to the same cluster
+            double distanceMinBetweenTrackAndCluster = 999;
+            
+            //Check if a track was matched
+            Boolean foundMatch = false;
             //Looping through all tracks
             for (int i = 0; i < nt; i++) {
                 Float xt = null, yt = null, zt = null, path = null, inpath = null;
@@ -222,25 +241,32 @@ public class ATOFCluster {
                 }
                 Point3D projection_point = new Point3D(xt, yt, zt);
                 double delta_phi = Math.abs(this.getPhi() - projection_point.toVector3D().phi());
-                if (delta_phi > Math.PI) {
-                    delta_phi = Math.PI - delta_phi;
-                }
+                if (delta_phi > Math.PI) delta_phi = Math.PI - delta_phi;
+                //Geometrical match
                 if (delta_phi < sigma_phi && Math.abs(this.getZ() - projection_point.z()) < sigma_z) {
-                    //If a track is matched, write the path lengths
-                    this.setPathLength(path);
-                    this.setInPathLength(inpath);
-                } else {
+                    foundMatch=true;
+                    //If a track is matched, we look at the distance between it and the cluster
+                    double distance = cluster.distance(projection_point);
+                    //We only consider the minimal distance track
+                    if (distance < distanceMinBetweenTrackAndCluster) {
+                        distanceMinBetweenTrackAndCluster = distance;
+                        this.setPathLength(path);
+                        this.setInPathLength(inpath);
+                        this.setIProj(track_bank.getInt("id", i));
+                    }
+                } 
+            }
+            if(!foundMatch) {
                     //If no track is matched, assign a straight track
                     this.makeStraightTrack();
                 }
-            }
         }
         return 0;
     }
 
     /**
      * Build a straight track from the vertex to this cluster.
-     * 
+     *
      * Sets the cluster path length and length through the atof from it.
      *
      */
@@ -250,17 +276,19 @@ public class ATOFCluster {
         double straightPath = vertexToCluster.length();
         this.setPathLength(straightPath);
         this.setInPathLength(getDistanceStraightInATOF(vx, vy, vz));
+        //ID indicating no track was matched
+        this.setIProj(-1);  
     }
 
     /**
-     * Computes the distance a straight track goes through the ATOF.
-     * The intersection point between a straight track from the vertex
-     * to the cluster and the ATOF inner cylinder is computed to that end.
-     * 
+     * Computes the distance a straight track goes through the ATOF. The
+     * intersection point between a straight track from the vertex to the
+     * cluster and the ATOF inner cylinder is computed to that end.
+     *
      * @param vx, the x coordinate of the vertex
      * @param vy, the y coordinate of the vertex
      * @param vz, the z coordinate of the vertex
-     * 
+     *
      * @return the distance the straight track went through in the ATOF
      *
      */
@@ -296,7 +324,7 @@ public class ATOFCluster {
 
     /**
      * Computes the energy deposited in the wedges.
-     * 
+     *
      * @return the energy deposited in the wedges.
      *
      */
@@ -311,7 +339,7 @@ public class ATOFCluster {
 
     /**
      * Computes the energy deposited in the bars.
-     * 
+     *
      * @return the energy deposited in the bars.
      *
      */
