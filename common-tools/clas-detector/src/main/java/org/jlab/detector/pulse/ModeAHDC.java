@@ -82,7 +82,7 @@ public class ModeAHDC extends HipoExtractor  {
 			integral = 0;
 			samplesCorr = new short[binNumber];
 			for (int bin = 0; bin < binNumber; bin++){
-				samplesCorr[bin] = (short) (samples[bin] - adcOffset);
+				samplesCorr[bin] = (short) Math.max(samples[bin] - adcOffset, 0);
 				if (adcMax < samplesCorr[bin]){
 					adcMax = samplesCorr[bin];
 					binMax = bin;
@@ -242,6 +242,7 @@ public class ModeAHDC extends HipoExtractor  {
 		//}
 		// output
 		Pulse pulse = new Pulse();
+		pulse.id = id;
 		pulse.adcMax = adcMax;
 		pulse.time = timeMax;
 		pulse.timestamp = timestamp;
