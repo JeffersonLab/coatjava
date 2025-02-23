@@ -89,6 +89,10 @@
         "name": "energy",
         "type": "F",
         "info": "deposited energy in MeV"
+      },{
+        "name": "clusterid",
+        "type": "I",
+        "info": "id of cluster to which the hit was associated"
       }
     ]
   },{

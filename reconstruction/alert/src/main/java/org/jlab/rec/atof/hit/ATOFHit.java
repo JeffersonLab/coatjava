@@ -20,6 +20,7 @@ public class ATOFHit {
     private double time, energy, x, y, z;
     private String type;
     private boolean isInACluster;
+    private int associatedClusterIndex;
 
     public int getSector() {
         return sector;
@@ -123,6 +124,14 @@ public class ATOFHit {
 
     public void setIsInACluster(boolean is_in_a_cluster) {
         this.isInACluster = is_in_a_cluster;
+    }
+    
+    public int getAssociatedClusterIndex() {
+        return associatedClusterIndex;
+    }
+
+    public void setAssociatedClusterIndex(int index) {
+        this.associatedClusterIndex = index;
     }
 
     /**
