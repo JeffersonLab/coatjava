@@ -139,7 +139,7 @@ public class AHDCEngine extends ReconstructionEngine {
 				}
 
 				for (TrackPrediction t : predictions) {
-					if (t.getPrediction() > 0.5)
+					// if (t.getPrediction() > 0.5)
 						AHDC_Tracks.add(new Track(t.getClusters()));
 				}
 			}
@@ -165,6 +165,10 @@ public class AHDCEngine extends ReconstructionEngine {
 
 				HelixFitJava h = new HelixFitJava();
 				track.setPositionAndMomentum(h.HelixFit(nbOfPoints, szPos, 1));
+				// double p = 150.0;//MeV/c
+				// double phi          = Math.atan2(szPos[0][1], szPos[0][0]);
+				// double x_0[] = {0.0, 0.0, 0.0, p*Math.sin(phi), p*Math.cos(phi), 0.0};
+				// track.setPositionAndMomentumVec(x_0);
 			}
 
 			// VI) Kalman Filter

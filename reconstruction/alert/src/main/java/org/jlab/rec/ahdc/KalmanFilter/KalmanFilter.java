@@ -90,7 +90,7 @@ public class KalmanFilter {
 			// Initialization hit
 			ArrayList<org.jlab.rec.ahdc.Hit.Hit> AHDC_hits = tracks.get(0).getHits();
 			ArrayList<Hit>                       KF_hits   = new ArrayList<>();
-
+			//System.out.println(" px " +  px0 + " py " + py0  +" pz " +  pz0 +" vz " + z0 + " number of hits: " + AHDC_hits.size() + " MC hits? " + sim_hits.size());
 			for (org.jlab.rec.ahdc.Hit.Hit AHDC_hit : AHDC_hits) {
 				Hit hit = new Hit(AHDC_hit.getSuperLayerId(), AHDC_hit.getLayerId(), AHDC_hit.getWireId(), AHDC_hit.getNbOfWires(), AHDC_hit.getRadius(), AHDC_hit.getDoca());
 				hit.setADC(AHDC_hit.getADC());
@@ -98,34 +98,37 @@ public class KalmanFilter {
 				// Do delete hit with same radius
 				boolean aleardyHaveR = false;
 				for (Hit o: KF_hits){
-				    if (o.r() == hit.r()){
-					if(hit.getADC()<o.getADC()){
-					    aleardyHaveR = true;
+				     if (o.r() == hit.r()){
+				// 	if(hit.getADC()<o.getADC()){
+				 	    aleardyHaveR = true;
 					    
-					    if(o.phi()>hit.phi()){
-						    o.setSign(+1);
-					    }else{
-						    o.setSign(-1);
-					    }
+					    // if(o.phi()>hit.phi()){
+				 	    // 	    o.setSign(+1);
+				 	    // 	    hit.setSign(-1);
+				 	    // }else{
+				 	    // 	    hit.setSign(+1);
+				 	    // 	    o.setSign(-1);
+				 	    // }
+					    // System.out.println( " r = " + o.r() + " o.phi = " + o.phi() + " o.doca = " + o.getDoca()*o.getSign() + " hit.phi " + hit.phi() +" hit.doca = " + hit.getDoca()*hit.getSign() + " angle between wires: " + Math.toRadians(360./hit.getNumWires()) + " >= ? angle covered by docas: " +  Math.atan( (o.getDoca()+hit.getDoca())/o.r() )  );
 
-					}else{
-					    if(hit.phi()>o.phi()){
-						    hit.setSign(+1);
-					    }else{
-						    hit.setSign(-1);
-					    }
-					    //remove hit 
-					    KF_hits.remove(o);
-					}
+				// 	}else{
+				// 	    if(hit.phi()>o.phi()){
+				// 		    hit.setSign(+1);
+				// 	    }else{
+				// 		    hit.setSign(-1);
+				// 	    }
+				// 	    //remove hit 
+				// 	    KF_hits.remove(o);
+				// 	}
 
-				    }
+				     }
 				}
 				if (!aleardyHaveR)
 				KF_hits.add(hit);
 			}
 
 			double zbeam = 0;
-			if(IsVtxDefined)zbeam = vxmc;//test
+			if(IsVtxDefined)zbeam = vzmc;//test
 			final ArrayList<Indicator> forwardIndicators  = forwardIndicators(KF_hits, materialHashMap);
 			final ArrayList<Indicator> backwardIndicators = backwardIndicators(KF_hits, materialHashMap, zbeam);
 			

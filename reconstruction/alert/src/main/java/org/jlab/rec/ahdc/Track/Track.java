@@ -63,6 +63,15 @@ public class Track {
 		this.pz0 = helixFitObject.get_pz();
 	}
 
+	public void setPositionAndMomentumVec(double[] x) {
+		this.x0  = x[0];
+		this.y0  = x[1];
+		this.z0  = x[2];
+		this.px0 = x[3];
+		this.py0 = x[4];
+		this.pz0 = x[5];
+	}
+
 	public void setPositionAndMomentumForKF(RealVector x) {
 		this.x0_kf  = x.getEntry(0);
 		this.y0_kf  = x.getEntry(1);

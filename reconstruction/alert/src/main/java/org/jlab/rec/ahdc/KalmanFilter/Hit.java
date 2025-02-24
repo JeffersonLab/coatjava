@@ -150,6 +150,15 @@ public class Hit implements Comparable<Hit> {
 		return new ArrayRealVector(new double[]{this.doca});
 	}
 
+        //hit measurement vector in 1 dimension with sign: if sign = 0, return doca, otherwise return 0
+        public RealVector get_Vector(int sign) {
+		if(sign == 0){    
+			return new ArrayRealVector(new double[]{this.doca});
+		}else{
+			return new ArrayRealVector(new double[]{0.0});
+		}
+	}
+
     	public RealMatrix get_MeasurementNoise() {
 		return new Array2DRowRealMatrix(new double[][]{{0.0225}});
 	}
