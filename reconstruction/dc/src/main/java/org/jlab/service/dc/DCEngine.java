@@ -20,6 +20,8 @@ public class DCEngine extends ReconstructionEngine {
     
     // options configured from yaml
     private int        selectedSector = 0;
+    private String     ministaggerStatus = null;
+    private String     feedthroughsStatus = null;
     private boolean    wireDistortion = false;
     private boolean    useStartTime   = true;
     private boolean    useBetaCut     = false;
@@ -60,6 +62,14 @@ public class DCEngine extends ReconstructionEngine {
         if(this.getEngineConfigString("dcUseStartTime")!=null)
             useStartTime = Boolean.valueOf(this.getEngineConfigString("dcUseStartTime"));
       
+        // R3 ministagger
+        if(this.getEngineConfigString("dcMinistagger")!=null)       
+            ministaggerStatus = this.getEngineConfigString("dcMinistagger");
+        
+        // Wire feedthroughs
+        if(this.getEngineConfigString("dcFeedthroughs")!=null)       
+            feedthroughsStatus = this.getEngineConfigString("dcFeedthroughs");
+        
         // Wire distortions
         if(this.getEngineConfigString("dcWireDistortion")!=null)       
             wireDistortion = Boolean.parseBoolean(this.getEngineConfigString("dcWireDistortion"));
@@ -169,6 +179,8 @@ public class DCEngine extends ReconstructionEngine {
         this.setOptions();
         Constants.getInstance().initialize(this.getName(),
                                            geoVariation, 
+                                           ministaggerStatus, 
+                                           feedthroughsStatus,
                                            wireDistortion, 
                                            useStartTime, 
                                            useBetaCut, 

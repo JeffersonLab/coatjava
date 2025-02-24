@@ -48,6 +48,7 @@ public class GeometryFactory {
             provider.loadTable("/geometry/dc/alignment");
             provider.loadTable("/geometry/dc/ministagger");
 	    provider.loadTable("/geometry/dc/endplatesbow");
+	    provider.loadTable("/geometry/dc/feedthroughs");
         }
         
         if(type==DetectorType.ECAL){

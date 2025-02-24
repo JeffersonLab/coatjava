@@ -13,14 +13,16 @@ public class ClusterFinder {
 	public ClusterFinder() {}
 
 	private void find_associate_cluster(PreCluster precluster, List<PreCluster> AHDC_precluster_list, int window, int minimal_distance, int super_layer, int layer, int associate_super_layer) {
+	    //System.out.println(" precluster superlayer " + precluster.get_Super_layer() + " ref superlayer " + super_layer + " layer " + precluster.get_Layer() + " ref " + layer);
 		if (precluster.get_Super_layer() == super_layer && precluster.get_Layer() == layer && !precluster.is_Used()) {
 			ArrayList<PreCluster> possible_precluster_list = new ArrayList<>();
 
-			double phi_mean = precluster.get_Phi() + 0.1 * Math.pow(-1, precluster.get_Super_layer());
+			double phi_mean = precluster.get_Phi() + 0.1 * Math.pow(-1, precluster.get_Super_layer()-1);
 			double x        = -precluster.get_Radius() * Math.sin(phi_mean);
 			double y        = -precluster.get_Radius() * Math.cos(phi_mean);
 			for (PreCluster other_precluster : AHDC_precluster_list) {
-				if (other_precluster.get_Super_layer() == associate_super_layer && other_precluster.get_Layer() == 0 && !other_precluster.is_Used()) {
+			    //System.out.println(" othercluster superlayer " + other_precluster.get_Super_layer() + " ref " + associate_super_layer + " layer " + other_precluster.get_Layer() + " ref 1 now");
+				if (other_precluster.get_Super_layer() == associate_super_layer && other_precluster.get_Layer() == 1 && !other_precluster.is_Used()) {
 					double x_start = x - window;
 					double x_end   = x + window;
 					double y_start = y - window;
@@ -67,10 +69,10 @@ public class ClusterFinder {
 		// Collections.sort(AHDC_precluster_list);
 
 		for (PreCluster precluster : AHDC_precluster_list) {
-			find_associate_cluster(precluster, AHDC_precluster_list, window, minimal_distance, 0, 0, 1);
 			find_associate_cluster(precluster, AHDC_precluster_list, window, minimal_distance, 1, 1, 2);
-			find_associate_cluster(precluster, AHDC_precluster_list, window, minimal_distance, 2, 1, 3);
-			find_associate_cluster(precluster, AHDC_precluster_list, window, minimal_distance, 3, 1, 4);
+			find_associate_cluster(precluster, AHDC_precluster_list, window, minimal_distance, 2, 2, 3);
+			find_associate_cluster(precluster, AHDC_precluster_list, window, minimal_distance, 3, 2, 4);
+			find_associate_cluster(precluster, AHDC_precluster_list, window, minimal_distance, 4, 2, 5);
 		}
 
 		for (Cluster cluster : _list_with_maybe_same_cluster) {

@@ -261,6 +261,9 @@ public class SVTGeometry {
         Vector3D axis   = new Vector3D(0,0,1);
         Arc3D base = new Arc3D(origin, center, axis, 2*Math.PI);
         Cylindrical3D fcCylinder = new Cylindrical3D(base, SVTConstants.FARADAYCAGELENGTH[i]);
+        fcCylinder.translateXYZ(SVTConstants.getGlobalAlignmentData()[0], 
+                                SVTConstants.getGlobalAlignmentData()[1],
+                                SVTConstants.getGlobalAlignmentData()[2]);
         Surface fcSurface = new Surface(fcCylinder, new Strip(0, 0, 0), Constants.DEFAULTSWIMACC);
         fcSurface.addMaterial("FaradayCage"+i,
                               SVTConstants.FARADAYCAGERMAX[i]-SVTConstants.FARADAYCAGERMIN[i],

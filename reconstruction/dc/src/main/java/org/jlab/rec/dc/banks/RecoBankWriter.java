@@ -246,8 +246,8 @@ public class RecoBankWriter {
                 chi2 += residual * residual;
             }
             bank.setFloat("fitChisqProb", i, (float) ProbChi2perNDF.prob(chi2, cluslist.get(i).size() - 2));
-            bank.setFloat("wireL1", i, (float) cluslist.get(i).getWireL1());
-            bank.setFloat("wireL6", i, (float) cluslist.get(i).getWireL6());
+            bank.setFloat("lYL1", i, (float) cluslist.get(i).getLYL1());
+            bank.setFloat("lYL6", i, (float) cluslist.get(i).getLYL6());
 
             for (int j = 0; j < hitIdxArray.length; j++) {
                 String hitStrg = "Hit";

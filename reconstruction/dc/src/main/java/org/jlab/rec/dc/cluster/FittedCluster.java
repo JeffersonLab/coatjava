@@ -63,9 +63,9 @@ public class FittedCluster extends ArrayList<FittedHit> implements Comparable<Fi
 
     private int[][] _Status;
     
-    // In LC, wire at L1 and L6 after linear fitting
-    private double _wireL1 = -1;
-    private double _wireL6 = -1;
+    //lY at L1 and L6 from linear fitting of a cluster in LC
+    private double _lYL1 = -1;
+    private double _lYL6 = -1;
 
     /**
      *
@@ -379,34 +379,34 @@ public class FittedCluster extends ArrayList<FittedHit> implements Comparable<Fi
     
     /**
      *
-     * @param _wireL1 wire at L1 in LC after linear fitting
+     * @param _lYL1 ly at L1 calculated by linear fitting of a cluster in LC
      */
-    public void setWireL1(double _wireL1){
-        this._wireL1 = _wireL1;
+    public void setLYL1(double _lYL1){
+        this._lYL1 = _lYL1;
     }
     
      /**
      *
-     * @return wire at L1 in LC after linear fitting
+     * @return ly at L1 calculated by linear fitting of a cluster in LC
      */
-    public double getWireL1(){
-        return _wireL1;
+    public double getLYL1(){
+        return _lYL1;
     }
     
     /**
      *
-     * @param _wireL6 wire at L6 in LC after linear fitting
+     * @param _lYL6 ly at L6 calculated by linear fitting of a cluster in LC
      */
-    public void setWireL6(double _wireL6){
-        this._wireL6 = _wireL6;
+    public void setLYL6(double _lYL6){
+        this._lYL6 = _lYL6;
     }
     
      /**
      *
-     * @return wire at L6 in LC after linear fitting
+     * @return ly at L6 calculated by linear fitting of a cluster in LC
      */
-    public double getWireL6(){
-        return _wireL6;
+    public double getLYL6(){
+        return _lYL6;
     }
 
 }

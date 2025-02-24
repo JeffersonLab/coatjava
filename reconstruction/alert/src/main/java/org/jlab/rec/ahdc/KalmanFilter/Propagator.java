@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Arrays;
 
+// All distances here should be in mm.
+// Do all those hardcoded values even make sense???
 public class Propagator {
 
 	private final RungeKutta4 RK4;

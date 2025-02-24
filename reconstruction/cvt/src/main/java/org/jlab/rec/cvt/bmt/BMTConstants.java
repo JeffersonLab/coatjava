@@ -83,6 +83,7 @@ public class BMTConstants {
     public static Line3D[][]   AXES = new Line3D[NLAYERS][NSECTORS];        // detector AXES
     public static Transformation3D[][] TOLOCAL  = new Transformation3D[NLAYERS][NSECTORS];
     public static Transformation3D[][] TOGLOBAL = new Transformation3D[NLAYERS][NSECTORS];
+    public static Transformation3D TOPOSITION = null;
     public static double[] ThetaL_grid = new double[405];    //Lorentz angle grid
     public static double[] E_grid = new double[405];         //Electric field value of the grid
     public static double[] B_grid = new double[405];        //Magnetic field value of the grid

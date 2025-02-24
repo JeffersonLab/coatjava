@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. `dirname $0`/env.sh 
+. `dirname $0`/../libexec/env.sh
 
 java -Xms1024m \
     -cp "$CLAS12DIR/lib/clas/*:$CLAS12DIR/lib/services/*:$CLAS12DIR/lib/utils/*" \

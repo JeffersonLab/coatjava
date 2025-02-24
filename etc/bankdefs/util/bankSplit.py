@@ -65,7 +65,7 @@ band   = ["BAND::laser","BAND::adc","BAND::tdc","BAND::hits","BAND::rawhits"]
 raster = ["RASTER::position"]
 rich   = ["RICH::tdc","RICH::Ring","RICH::Particle"]
 rtpc   = ["RTPC::hits","RTPC::tracks","RTPC::KFtracks"]
-alert  = ["AHDC::Track", "AHDC::MC", "AHDC::Hits", "AHDC::PreClusters", "AHDC::Clusters", "AHDC::KFTrack"]
+alert  = ["AHDC::Track", "AHDC::MC", "AHDC::Hits", "AHDC::PreClusters", "AHDC::Clusters", "AHDC::KFTrack", "AHDC_AI::Prediction"]
 dets   = band + raster + rich + rtpc + alert
 
 # additions for the calibration schema:

@@ -1,0 +1,107 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+require 'ostruct'
+require 'fileutils'
+
+def print_log(name, val)
+  puts name.rjust(30) + " = #{val}"
+end
+
+# user options
+@args = OpenStruct.new
+@args.inputs     = nil
+@args.output_dir = nil
+@args.prefix     = nil
+@args.num_merge  = nil
+@args.use_batch  = false
+@args.dry_run    = false
+OptionParser.new do |o|
+  o.banner = '''
+  This tool merges a set of input HIPO files to a set of output HIPO files,
+  where you may control the number of input files per output file; for example,
+  use this tool if you have 1000 small HIPO files but would rather have 10
+  large HIPO files.
+  '''
+  o.separator "USAGE: #{$0} [OPTIONS]..."
+  o.separator ''
+  o.separator 'REQUIRED OPTIONS:'
+  o.on('-i', '--input INPUTS', 'input directory or file glob;', 'surround file glob in quotes') { |a| @args.inputs = a }
+  o.on('-o', '--output OUTPUT_DIR', 'output directory') { |a| @args.output_dir = a }
+  o.on('-p', '--prefix OUTPUT_PREFIX', 'output filename prefix; names will be:', ' [OUTPUT_DIR]/[OUTPUT_PREFIX]_#####.hipo') { |a| @args.prefix = a }
+  o.on('-n', '--num NUM_FILES', 'number of files per output merged file') { |a| @args.num_merge = a.to_i }
+  o.separator ''
+  o.separator 'OPTIONAL OPTIONS:'
+  o.on('-b', '--batch', 'submit jobs to Slurm', '(default is sequential jobs)') { |a| @args.use_batch = true }
+  o.on('-d', '--dry-run', 'just print what would be done') { |a| @args.dry_run = true }
+  o.on_tail('-h', '--help', 'show this message') do
+    puts o
+    exit
+  end
+end.parse! ARGV.empty? ? ['--help'] : ARGV
+
+# check required options
+if [@args.inputs, @args.output_dir, @args.prefix, @args.num_merge].include? nil
+  raise 'missing required option(s;) re-run with "--help" for guidance.'
+end
+raise 'option "--num" must be greater than zero' unless @args.num_merge > 0
+
+# glob inputs
+input_glob = File.expand_path @args.inputs
+input_glob = File.join input_glob, "*.hipo" if File.directory? input_glob
+print_log 'input glob', input_glob
+print_log 'output dir', @args.output_dir
+print_log 'output prefix', @args.prefix
+print_log 'num files per output', @args.num_merge
+
+# chunks
+input_files = Dir.glob input_glob
+raise "no input files found with glob '#{input_glob}'" if input_files.empty?
+input_chunks = input_files.each_slice(@args.num_merge).to_a
+print_log 'num input files', input_files.size
+print_log 'num output files', input_chunks.size
+raise 'option "--num" >= num input files, therefore there is nothing to do' if input_chunks.size == 1
+
+# build commands
+puts "="*82
+merge_cmds = input_chunks.each_with_index.map do |input_chunk, chunk_num|
+  out_name = File.join @args.output_dir, "#{@args.prefix}_#{chunk_num.to_s.rjust(5, '0')}.hipo"
+  raise "output file #{out_name} already exists; cannot overwrite! delete it or choose another path/name" if File.exist? out_name
+  [ 'hipo-utils', '-merge', '-o', out_name, *input_chunk ].join ' '
+end
+
+# sbatch commands
+if @args.use_batch
+  sbatch_args = {
+    'job-name'      => "hipo_multi_merge___#{@args.prefix}",
+    'account'       => 'clas12',
+    'partition'     => 'production',
+    'mem-per-cpu'   => 500,
+    'time'          => '1:00:00',
+    'ntasks'        => 1,
+    'cpus-per-task' => 1,
+  }.map{ |opt, val| "--#{opt}=#{val.to_s}" }
+  exe_cmds = merge_cmds.each_with_index.map do |merge_cmd, job_num|
+    log_name = "/farm_out/%u/%x_#{job_num.to_s.rjust(5, '0')}"
+    [
+      'sbatch',
+      *sbatch_args,
+      "--output=#{log_name}.out",
+      "--error=#{log_name}.err",
+      "--wrap='#{merge_cmd}'",
+    ].join ' '
+  end
+else
+  exe_cmds = merge_cmds
+end
+
+# execute
+if @args.dry_run
+  puts 'THIS IS JUST A DRY RUN. Here are the commands which would be executed:'
+  puts "="*82
+  puts "mkdir -p #{@args.output_dir}"
+  exe_cmds.each do |cmd| puts cmd end
+else
+  FileUtils.mkdir_p @args.output_dir
+  exe_cmds.each do |cmd| system cmd end
+end

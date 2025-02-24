@@ -69,7 +69,7 @@ public final class RICHGeant4Factory extends Geant4Factory {
 
         int debugMode = 0;
         
-        motherVolume = new G4World("fc");
+        motherVolume = new G4World("root");
         //import the 5 mesh files
         int stlN=0;
         
