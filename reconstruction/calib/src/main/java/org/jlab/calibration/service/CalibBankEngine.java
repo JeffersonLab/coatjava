@@ -36,7 +36,7 @@ public class CalibBankEngine extends ReconstructionEngine {
 
     @Override
     public boolean init() {
-        String[] dets = getEngineConfigString(CONF_DETECTORS,"DC,FTOF").split(",");
+        String[] dets = getEngineConfigString(CONF_DETECTORS,"DC,FTOF,RICH").split(",");
         for(String d : dets) {
             DetectorType type = DetectorType.getType(d.trim());
             if(type != DetectorType.UNDEFINED)
