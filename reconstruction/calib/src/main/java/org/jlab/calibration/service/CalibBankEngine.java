@@ -8,6 +8,7 @@ import java.util.logging.Logger;
 import org.jlab.calibration.detectors.DCCalibrator;
 import org.jlab.calibration.detectors.DetectorCalibrator;
 import org.jlab.calibration.detectors.FTOFCalibrator;
+import org.jlab.calibration.detectors.RICHCalibrator;
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.io.base.DataBank;
@@ -19,17 +20,18 @@ import org.jlab.io.base.DataEvent;
  */
 public class CalibBankEngine extends ReconstructionEngine {
 
-    private Map<DetectorType,DetectorCalibrator> calibrators = new HashMap<>();
+    private final Map<DetectorType,DetectorCalibrator> calibrators = new HashMap<>();
 
     public static final String CONF_DETECTORS = "detectors";
-    private List<DetectorType> detectors = new ArrayList<>();
+    private final List<DetectorType> detectors = new ArrayList<>();
     
     static final Logger logger = Logger.getLogger(CalibBankEngine.class.getName());
 
     public CalibBankEngine() {
-        super("BG", "baltzell", "1.0");
+        super("CALIB", "devita", "1.0");
         calibrators.put(DetectorType.DC  , new DCCalibrator());
         calibrators.put(DetectorType.FTOF, new FTOFCalibrator());
+        calibrators.put(DetectorType.RICH, new RICHCalibrator());
     }
 
     @Override
@@ -40,7 +42,15 @@ public class CalibBankEngine extends ReconstructionEngine {
             if(type != DetectorType.UNDEFINED)
                 detectors.add(type);
         }
-        return !detectors.isEmpty();
+        if(detectors.isEmpty())
+            return false;
+        
+        String[] outputBanks = new String[detectors.size()];
+        for(int i=0; i<detectors.size(); i++) 
+            outputBanks[i] = calibrators.get(detectors.get(i)).getOutputBankName();
+        this.registerOutputBank(outputBanks);
+        
+        return true;
     }
 
     @Override

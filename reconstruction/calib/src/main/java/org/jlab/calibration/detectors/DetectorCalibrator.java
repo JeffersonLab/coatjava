@@ -14,13 +14,19 @@ public abstract class DetectorCalibrator {
     
     private DetectorType  type;
     private List<String> bankNames;
-
+    private String outputBankName;
+    
     public DetectorCalibrator(DetectorType type) {
         this.type = type;
+        this.outputBankName = type.getName()+"::calib";
     }
     
     public void init(String... banks) {
         bankNames = Arrays.asList(banks);
+    }
+    
+    public String getOutputBankName() {
+        return this.outputBankName;
     }
     
     public DataBank getCalibBank(DataEvent event) {
