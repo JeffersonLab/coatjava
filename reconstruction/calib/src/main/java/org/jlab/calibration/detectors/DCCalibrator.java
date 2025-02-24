@@ -16,6 +16,7 @@ public class DCCalibrator extends DetectorCalibrator {
 
     private static final int MINCLUSTERSIZE = 5;
     private static final double MAXRESIDUAL = 0.1; // cm
+    private static final double CHI2PIDCUT  = 5; // cm
     
     public DCCalibrator() {
         super(DetectorType.DC);
@@ -29,14 +30,14 @@ public class DCCalibrator extends DetectorCalibrator {
         
         if(part.rows()<2 ||
            part.getInt("pid", 0)!=11 || 
-           (part.getFloat("chi2pid", 0))>3 || 
+           (part.getFloat("chi2pid", 0))>CHI2PIDCUT || 
            ((int) (Math.abs(part.getShort("status", 0))/1000))!=2)
                 return false;
         
         boolean hasHadron = false;
         for(int i=1; i<part.rows(); i++) {
             if(part.getByte("charge", i)!=0 &&
-               Math.abs(part.getFloat("chi2pid", i))<3 && 
+               Math.abs(part.getFloat("chi2pid", i))<CHI2PIDCUT && 
                ((int) part.getShort("status", i)/1000)==2) {
                 hasHadron = true;
                 break;
@@ -82,7 +83,7 @@ public class DCCalibrator extends DetectorCalibrator {
         
         int ngood = 0;
         for(Integer key : clusters.keySet()) {
-            if(clusters.get(key).size()>MINCLUSTERSIZE)
+            if(clusters.get(key).size()>=MINCLUSTERSIZE)
                 ngood += clusters.get(key).size();
             else
                 clusters.get(key).clear();
