@@ -10,6 +10,7 @@ import org.jlab.coda.jevio.CompositeData;
 import org.jlab.coda.jevio.DataType;
 import org.jlab.coda.jevio.EvioException;
 import org.jlab.coda.jevio.EvioNode;
+import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.decode.DetectorDataDgtz.ADCData;
 import org.jlab.detector.decode.DetectorDataDgtz.HelicityDecoderData;
 import org.jlab.detector.decode.DetectorDataDgtz.SCALERData;
@@ -149,9 +150,11 @@ public class CodaEventDecoder {
                 }   
             }
             for(int i=0; i<tiEntries.size(); i++) {
-                long deltaTS = this.timeStampTolerance;       
+                long deltaTS = this.timeStampTolerance;
+                long offsetT = 0;
+                if( tiEntries.get(i).getDescriptor().getType() == DetectorType.ATOF) offsetT = 5;
                 if(tiEntries.get(i).getDescriptor().getCrate()==this.tiMaster) deltaTS = deltaTS + 1;  // add 1 click tolerance for tiMaster
-                if(Math.abs(tiEntries.get(i).getTimeStamp()-tiEntries.get(i0).getTimeStamp())>deltaTS+5) {
+                if(Math.abs(tiEntries.get(i).getTimeStamp()-offsetT-tiEntries.get(i0).getTimeStamp())>deltaTS) {
                     tiSync=false;
                     if(this.timeStampErrors<100) {
                         System.err.println("WARNING: mismatch in TI time stamps: crate " 
