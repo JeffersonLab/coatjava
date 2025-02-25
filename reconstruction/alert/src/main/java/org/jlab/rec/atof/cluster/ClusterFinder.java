@@ -57,11 +57,12 @@ public class ClusterFinder {
 
         //A list of clusters is built for each event
         clusters.clear();
-
+        int cluster_id = 1;
+        
         //Getting the list of hits, they must have been ordered by energy already
         ArrayList<ATOFHit> wedge_hits = hitfinder.getWedgeHits();
         ArrayList<BarHit> bar_hits = hitfinder.getBarHits();
-
+        
         //Looping through wedge hits first
         for (int i_wedge = 0; i_wedge < wedge_hits.size(); i_wedge++) {
             ATOFHit this_wedge_hit = wedge_hits.get(i_wedge);
@@ -76,6 +77,7 @@ public class ClusterFinder {
 
             //Indicate that this hit now is in a cluster
             this_wedge_hit.setIsInACluster(true);
+            this_wedge_hit.setAssociatedClusterIndex(cluster_id);
             //And store it
             this_cluster_wedge_hits.add(this_wedge_hit);
 
@@ -105,6 +107,7 @@ public class ClusterFinder {
                     {
                         if (delta_T < Parameters.SIGMA_T_CLUSTERING) {
                             other_wedge_hit.setIsInACluster(true);
+                            other_wedge_hit.setAssociatedClusterIndex(cluster_id);
                             this_cluster_wedge_hits.add(other_wedge_hit);
                         }
                     }
@@ -133,6 +136,7 @@ public class ClusterFinder {
                     if (delta_Z < Parameters.SIGMA_Z_CLUSTERING) {
                         if (delta_T < Parameters.SIGMA_T_CLUSTERING) {
                             other_bar_hit.setIsInACluster(true);
+                            other_bar_hit.setAssociatedClusterIndex(cluster_id);
                             this_cluster_bar_hits.add(other_bar_hit);
                         }
                     }
@@ -143,6 +147,7 @@ public class ClusterFinder {
             ATOFCluster cluster = new ATOFCluster(this_cluster_bar_hits, this_cluster_wedge_hits, event);
             //And add it to the list of clusters
             clusters.add(cluster);
+            cluster_id++;
         }//End loop on all wedge hits
         //Now make clusters from bar hits that are not associated with wedge hits
         //Loop through all bar hits
@@ -156,6 +161,7 @@ public class ClusterFinder {
             ArrayList<ATOFHit> this_cluster_wedge_hits = new ArrayList<>();
             ArrayList<BarHit> this_cluster_bar_hits = new ArrayList<>();
             this_bar_hit.setIsInACluster(true);
+            this_bar_hit.setAssociatedClusterIndex(cluster_id);
             this_cluster_bar_hits.add(this_bar_hit);
 
             //Loop through less energetic clusters
@@ -182,6 +188,7 @@ public class ClusterFinder {
                     if (delta_Z < Parameters.SIGMA_Z_CLUSTERING) {
                         if (delta_T < Parameters.SIGMA_T_CLUSTERING) {
                             other_bar_hit.setIsInACluster(true);
+                            other_bar_hit.setAssociatedClusterIndex(cluster_id);
                             this_cluster_bar_hits.add(other_bar_hit);
                         }
                     }
@@ -189,6 +196,7 @@ public class ClusterFinder {
             }
             ATOFCluster cluster = new ATOFCluster(this_cluster_bar_hits, this_cluster_wedge_hits, event);
             clusters.add(cluster);
+            cluster_id++;
         }
     }
 
