@@ -1,4 +1,4 @@
-package org.jlab.rec.service;
+package org.jlab.service.atof;
 
 import java.util.ArrayList;
 
