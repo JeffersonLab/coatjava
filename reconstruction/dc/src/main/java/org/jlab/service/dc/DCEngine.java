@@ -36,9 +36,11 @@ public class DCEngine extends ReconstructionEngine {
     private String     outBankPrefix  = null;
     private double[][] shifts         = new double[Constants.NREG][6];
     protected boolean  useDAF         = true;
-    private String   dafChi2Cut     = null;
+    private String   dafChi2Cut       = null;
     private String   dafAnnealingFactorsTB = null;
-    
+    protected boolean useInstarec     = true;
+    public boolean enableMulti = true;
+    public boolean saveMultiTB = true;
     public static final Logger LOGGER = Logger.getLogger(ReconstructionEngine.class.getName());
 
 
@@ -117,6 +119,19 @@ public class DCEngine extends ReconstructionEngine {
         //Set if use DAF
         if(this.getEngineConfigString("useDAF")!=null) 
             useDAF=Boolean.valueOf(this.getEngineConfigString("useDAF"));
+        
+        //Set if use Instarec bank for AI
+        if(this.getEngineConfigString("useInstarec")!=null) 
+            useInstarec=Boolean.valueOf(this.getEngineConfigString("useInstarec"));
+        
+        if(this.getEngineConfigString("enableMulti")!=null) 
+            enableMulti=Boolean.valueOf(this.getEngineConfigString("enableMulti"));
+        
+        
+        if(this.getEngineConfigString("saveMultiTB")!=null) 
+            saveMultiTB=Boolean.valueOf(this.getEngineConfigString("saveMultiTB"));
+        
+        
         
         if(this.getEngineConfigString("dafChi2Cut")!=null) {
             dafChi2Cut=this.getEngineConfigString("dafChi2Cut");
@@ -221,7 +236,7 @@ public class DCEngine extends ReconstructionEngine {
         if (!event.hasBank("RUN::config")) {
             return 0;
         }
-        DataBank bank = event.getBank("RUN::config");
+        DataBank bank = event.getBank("RUN::config"); 
         LOGGER.log(Level.FINE,"["+this.getName()+"] EVENT "+bank.getInt("event", 0));       
         
         int run = bank.getInt("run", 0);

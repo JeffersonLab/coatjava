@@ -20,6 +20,7 @@ import org.jlab.rec.dc.nn.PatternRec;
 import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.track.Track;
 import org.jlab.rec.dc.track.TrackCandListFinder;
+import static org.jlab.service.dc.DCEngine.LOGGER;
 
 /**
  *
@@ -71,7 +72,7 @@ public class DCHBPostClusterAI extends DCEngine {
         List<Segment> segments = null;
         List<FittedHit> fhits = null;
 
-        reader.read_NNHits(event);
+        reader.read_NNHits(event, useInstarec, enableMulti);
 
         //I) get the lists
         List<Hit> hits = reader.get_DCHits();
@@ -126,7 +127,7 @@ public class DCHBPostClusterAI extends DCEngine {
         int trkId = 1;
         if (trkcands.size() > 0) {
             // remove overlaps
-            trkcandFinder.removeOverlappingTracks(trkcands);
+            if(!useInstarec) trkcandFinder.removeOverlappingTracks(trkcands);
             for (Track trk : trkcands) {
                 // reset the id
                 trk.set_Id(trkId);

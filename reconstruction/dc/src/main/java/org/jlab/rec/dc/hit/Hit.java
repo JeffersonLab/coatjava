@@ -21,13 +21,14 @@ public class Hit implements Comparable<Hit> {
     private int _Id;
     private double _cellSize;
     private double _DocaErr;
+    private int _indexTDC = -1;
     // class implements Comparable interface to allow for sorting a collection of hits by wire number values
     public int NNTrkId;
     public int NNClusId;
     public double NNTrkP;
     public double NNTrkTheta;
     public double NNTrkPhi;
-    
+    public double NNTrkChi2;
     // constructors
     /**
      *
@@ -49,6 +50,22 @@ public class Hit implements Comparable<Hit> {
 
     }
     
+        
+    /**
+     *
+     * @return index in DC::TDC bank
+     */
+    public int get_IndexTDC(){
+        return _indexTDC;
+    }
+    
+     /**
+     *
+     * @param index in DC::TDC bank
+     */  
+    public void set_IndexTDC(int index){
+        this._indexTDC = index;
+    }
 
     /**
      *

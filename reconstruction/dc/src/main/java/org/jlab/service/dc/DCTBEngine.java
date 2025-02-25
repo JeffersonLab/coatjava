@@ -316,7 +316,8 @@ public class DCTBEngine extends DCEngine {
         }        
     	
         if(!trkcands.isEmpty()) {
-            //trkcandFinder.removeOverlappingTracks(trkcands);		// remove overlaps        	        	
+            if(!saveMultiTB && enableMulti)
+                trkcandFinder.removeInstarecOverlappingTracks(trkcands);		// remove overlaps        	        	
             for(Track trk: trkcands) {
                 int trkId = trk.get_Id();
                 // reset the id

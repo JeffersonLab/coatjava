@@ -33,6 +33,8 @@ import org.jlab.clas.tracking.kalmanfilter.zReference.KFitterStraight;
 import org.jlab.clas.tracking.kalmanfilter.zReference.StateVecs;
 import org.jlab.clas.tracking.utilities.MatrixOps.Libr;
 import org.jlab.clas.tracking.utilities.RungeKuttaDoca;
+import org.jlab.rec.dc.banks.HitReader;
+import org.jlab.rec.dc.banks.HitReader.TrackInfo;
 
 /**
  * A class with a method implementing an algorithm that finds lists of track
@@ -658,7 +660,69 @@ public class TrackCandListFinder {
             }
         }
     }
-    
+    public void removeInstarecOverlappingTracks(List<Track> trkcands) {
+        if(Constants.DEBUG) {
+            LOGGER.log(Level.FINE, "Found "+trkcands.size()+" tracks ");
+        }
+        Map<Integer, Track> selectedTracksMap = new HashMap<>();
+        List<HitReader.TrackInfo> trackInfoL = new ArrayList<>();
+        for(Track t : trkcands) {
+            int[] Ids = new int[]{-1,-1,-1,-1,-1,-1};
+            for(int k = 0; k < t.size(); k++) {
+                int r1idx = t.get(k).get_Region()*2-2;
+                int r2idx = t.get(k).get_Region()*2-1;
+                int s1 = t.get(k).get_Segment1().get_Id();
+                int s2 = t.get(k).get_Segment2().get_Id();
+                Ids[r1idx]=s1;
+                Ids[r2idx]=s2;
+            }
+            double[] tPars = new double[5];
+            tPars[0] = t.get_pAtOrig().x();
+            tPars[1] = t.get_pAtOrig().y();
+            tPars[2] = t.get_pAtOrig().z();
+            tPars[3] = t.get_Id();
+            tPars[4] = t.get_FitChi2();
+            
+            selectedTracksMap.put(t.get_Id(), t);
+            
+            HitReader.TrackInfo ti = new HitReader.TrackInfo(Ids, tPars);
+            trackInfoL.add(ti);
+        }
+        Collections.sort(trackInfoL);
+        List<List<TrackInfo>> trackInfoLs = new ArrayList<>();
+        trackInfoLs.add(new ArrayList<>());
+        trackInfoLs.get(0).add(trackInfoL.get(0));
+        for(int k = 1; k<trackInfoL.size(); k++) {
+            boolean isInGroup=false;
+            for(int i =0; i<6; i++) {
+                if(trackInfoL.get(k-1).getIds()[i]==trackInfoL.get(k).getIds()[i])
+                    isInGroup=true;
+            }
+            if(isInGroup) {
+                trackInfoLs.get(trackInfoLs.size()-1).add(trackInfoL.get(k));
+            } else {
+                trackInfoLs.add(new ArrayList<>());
+                trackInfoLs.get(trackInfoLs.size()-1).add(trackInfoL.get(k));
+            }
+        }
+        trkcands.clear();
+        // Now, process each group and keep only the top  prob value for each group
+        for ( List<HitReader.TrackInfo> trackInfoList : trackInfoLs) {
+            
+            // Sort by prob (tPars[4]) in ascending order
+            trackInfoList.sort((a, b) -> Double.compare(a.getProb(), b.getProb()));
+            
+            // Only keep the top prob entry
+            trackInfoList = trackInfoList.subList(0, Math.min(1, trackInfoList.size()));
+            for (HitReader.TrackInfo trackInfo : trackInfoList) {
+                int id = (int)trackInfo.getTPars()[3];
+                if(selectedTracksMap.containsKey(id))
+                    trkcands.add(selectedTracksMap.get(id));
+            }
+            
+        }
+
+    }
     public void removeOverlappingTracks(List<Track> trkcands) {
         if(Constants.DEBUG) {
             LOGGER.log(Level.FINE, "Found "+trkcands.size()+" HB seeds ");

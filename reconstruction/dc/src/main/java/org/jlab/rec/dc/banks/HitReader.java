@@ -12,6 +12,8 @@ import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
 import cnuphys.snr.NoiseReductionParameters;
 import cnuphys.snr.clas12.Clas12NoiseAnalysis;
 import cnuphys.snr.clas12.Clas12NoiseResult;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -44,7 +46,7 @@ public class HitReader {
     private int run = 0;
     private long tiTimeStamp = 0;
     private DataEvent event = null;
-    
+        
     private IndexedTable tt          = null;
     private IndexedTable reverseTT   = null;
     private IndexedTable dcrbjitters = null;
@@ -54,7 +56,8 @@ public class HitReader {
     private IndexedTable docares     = null;
     private IndexedTable time2dist   = null;
     private IndexedTable t0s         = null;
-
+    
+    private int numTDCBankRows = -1;
     private List<Hit> _DCHits;
     private List<FittedHit> _HBHits; //hit-based tracking hit information
     private List<FittedHit> _TBHits; //time-based tracking hit information
@@ -263,6 +266,7 @@ public class HitReader {
 
         RawDataBank bankFiltered = new RawDataBank(bankNames.getTdcBank(), rawBankOrders);
         bankFiltered.read(event);
+        this.set_NumTDCBankRows(bankFiltered.rows());
         for (int i = 0; i < bankFiltered.rows(); i++) {
             int sector     = bankFiltered.getByte("sector", i);
             int layer      = (bankFiltered.getByte("layer", i)-1)%6 + 1;
@@ -339,6 +343,7 @@ public class HitReader {
                     hit.calc_CellSize(detector);
                     double posError = hit.get_CellSize() / Math.sqrt(12.);
                     hit.set_DocaErr(posError);
+                    hit.set_IndexTDC(index);
                     this._DCHits.add(hit);
                 }
             }
@@ -409,13 +414,15 @@ public class HitReader {
         return grpHits;
     }
 
-    private final Map<Integer, Integer> id2tid = new HashMap<>();
-    private final Map<Integer, Double> id2tidB = new HashMap<>();
-    private final Map<Integer, Double> id2tidtProp = new HashMap<>();
-    private final Map<Integer, Double> id2tidtFlight = new HashMap<>();
+    private final Map<int[], Integer> id2tid = new HashMap<>();
+    private final Map<int[], Double> id2tidB = new HashMap<>();
+    private final Map<int[], Double> id2tidtProp = new HashMap<>();
+    private final Map<int[], Double> id2tidtFlight = new HashMap<>();
     
     private final Map<Integer, double[]> aimatch = new HashMap<>();
-
+    private final Map<int[], double[]> aimatchtrk = new HashMap<>();
+    final int MAXAITRACKS=3;
+    
     public void read_HBHits(DataEvent event, TimeToDistanceEstimator tde) {
         this.initialize(event);
         this.read_HBHits(tde);
@@ -438,23 +445,13 @@ public class HitReader {
         LOGGER.log(Level.FINE,"Reading hb banks for "+ bankName + ", " + pointName + " " + recBankName);
         
         _HBHits = new ArrayList<>();
-
+        
         if (run <=0 || tiTimeStamp<0 || !event.hasBank(bankName) || !event.hasBank(pointName) || event.getBank(pointName).rows()==0) {
             //    System.err.println("there is no HB dc bankAI for "+_names[0]);
             return;
         }
-        id2tid.clear();
-        id2tidB.clear();
-        id2tidtFlight.clear();
-        id2tidtProp.clear();
         
         DataBank pbank = event.getBank(pointName);
-        for (int i = 0; i < pbank.rows(); i++) {
-            id2tid.put((int)pbank.getShort("id", i), (int)pbank.getShort("tid", i));
-            id2tidB.put((int)pbank.getShort("id", i), (double)pbank.getFloat("B", i));
-            id2tidtFlight.put((int)pbank.getShort("id", i), (double)pbank.getFloat("TFlight", i));
-            id2tidtProp.put((int)pbank.getShort("id", i), (double)pbank.getFloat("TProp", i));
-        }
         
         DataBank bank = event.getBank(bankName);
         int rows = bank.rows();
@@ -489,13 +486,11 @@ public class HitReader {
            
             trkDoca[i] = bank.getFloat("trkDoca", i);
             clusterID[i] = bank.getShort("clusterID", i);
-            trkID[i] = -1;
-            if(this.id2tid.containsKey(id[i]) ){
-                trkID[i]    = this.id2tid.get(id[i]);
-                 B[i]       = this.id2tidB.get(id[i]);
-                 tProp[i]   = this.id2tidtProp.get(id[i]);
-                 tFlight[i] = this.id2tidtFlight.get(id[i]);
-            }
+            
+            trkID[i]   = (int)pbank.getShort("tid", i);
+            B[i]       = (double)pbank.getFloat("B", i);
+            tProp[i]   = (double)pbank.getFloat("TFlight", i);
+            tFlight[i] = (double)pbank.getFloat("TProp", i);
             
             if (event.hasBank("MC::Particle") ||
                     event.getBank("RUN::config").getInt("run", 0) < 100) {
@@ -590,11 +585,173 @@ public class HitReader {
         return pass;
     }
     //new way of fetching ai id'ed hits
-    public void read_NNHits(DataEvent event) {
+    public void read_NNHits(DataEvent event, boolean readInstarec, boolean enableMulti) {
         this.initialize(event);
-        this.read_NNHits();
+        if(readInstarec) {
+        this.read_InstarecNNHits(enableMulti);
+        } else {
+            this.read_NNHits();
+        }
+    }
+    
+    private void read_InstarecNNHits(boolean enableMulti) { 
+        _DCHits = new ArrayList<>();
+        if (!(event.hasBank(bankNames.getInputHitsBank()))) 
+            System.out.println("missing bank " + bankNames.getInputHitsBank());
+        if (!(event.hasBank(bankNames.getInputClustersBank()))) 
+            System.out.println("missing bank " + bankNames.getInputClustersBank());
+        if (!(event.hasBank(bankNames.getInstarecBank()))) 
+            System.out.println("missing bank " + bankNames.getInstarecBank());
+        if (!(event.hasBank(bankNames.getInputHitsBank()) 
+            && event.hasBank(bankNames.getInputClustersBank())
+            && event.hasBank(bankNames.getInstarecBank()))) {
+            System.out.println("missing bank ");
+            return;
+        }
+
+        DataBank bankAI = event.getBank(bankNames.getInstarecBank());
+        DataBank bank = event.getBank(bankNames.getInputHitsBank());
+
+        int[] Ids;  //  1-6 = cluster ids for slyrs 1 - 6
+        double[] tPars; // NN track parameters p, theta, phi ; last idx = track id
+
+        List<TrackInfo> trackInfoL = new ArrayList<>();
+
+        for (int j = 0; j < bankAI.rows(); j++) {
+            Ids = new int[6];
+            tPars = new double[5];
+            Ids[0] = (int) bankAI.getShort("c1", j);
+            Ids[1] = (int) bankAI.getShort("c2", j);
+            Ids[2] = (int) bankAI.getShort("c3", j);
+            Ids[3] = (int) bankAI.getShort("c4", j);
+            Ids[4] = (int) bankAI.getShort("c5", j);
+            Ids[5] = (int) bankAI.getShort("c6", j); // cluster ID in superlayer 6
+
+            tPars[0] = (double) bankAI.getFloat("px", j);
+            tPars[1] = (double) bankAI.getFloat("py", j);
+            tPars[2] = (double) bankAI.getFloat("pz", j);
+            tPars[3] = (double) bankAI.getShort("id", j);
+            tPars[4] = (double) bankAI.getFloat("prob", j);
+            if(!enableMulti) {
+                int status = (int) bankAI.getShort("status", j); 
+                if(status!=0)
+                    trackInfoL.add(new TrackInfo(Ids, tPars));
+            } else { 
+                trackInfoL.add(new TrackInfo(Ids, tPars));
+            }
+        }
+        Collections.sort(trackInfoL);
+        List<List<TrackInfo>> trackInfoLs = new ArrayList<>();
+        trackInfoLs.add(new ArrayList<>());
+        trackInfoLs.get(0).add(trackInfoL.get(0));
+        for(int k = 1; k<trackInfoL.size(); k++) {
+            boolean isInGroup=false;
+            for(int i =0; i<6; i++) {
+                if(trackInfoL.get(k-1).getIds()[i]==trackInfoL.get(k).getIds()[i])
+                    isInGroup=true;
+            }
+            if(isInGroup) {
+                trackInfoLs.get(trackInfoLs.size()-1).add(trackInfoL.get(k));
+            } else {
+                trackInfoLs.add(new ArrayList<>());
+                trackInfoLs.get(trackInfoLs.size()-1).add(trackInfoL.get(k));
+            }
+        }
+        
+
+        // Now, process each group and keep only the top 3 highest prob values for each group
+        for ( List<TrackInfo> trackInfoList : trackInfoLs) {
+            
+            // Sort by prob (tPars[4]) in descending order
+            trackInfoList.sort((a, b) -> Double.compare(b.getProb(), a.getProb()));
+            
+            // Only keep the top 3 highest prob entries
+            trackInfoList = trackInfoList.subList(0, Math.min(MAXAITRACKS, trackInfoList.size()));
+            
+            // Create a map of top 3 tracks for this group and add to aimatch
+            for (TrackInfo trackInfo : trackInfoList) {
+                aimatchtrk.put(trackInfo.getIds(), trackInfo.getTPars()); 
+            }
+
+            // Process the hits using the top 3 tracks
+            for (int i = 0; i < bank.rows(); i++) {
+                int clusterID = bank.getShort("clusterID", i);
+                if (clusterID > 0) {
+                    
+                    boolean found = false;
+                    for (int[] cids : this.aimatchtrk.keySet()) {
+                        found = Arrays.stream(cids).anyMatch(id -> id == clusterID);
+                        
+                        if (found) { 
+                            Hit hit = new Hit(bank.getByte("sector", i), bank.getByte("superlayer", i), 
+                                bank.getByte("layer", i), bank.getShort("wire", i), bank.getInt("TDC", i), 
+                                bank.getByte("jitter", i), bank.getShort("id", i));
+                            hit.set_Id(bank.getShort("id", i));
+                            hit.calc_CellSize(detector);
+                            double posError = hit.get_CellSize() / Math.sqrt(12.);
+                            hit.set_DocaErr(posError);
+                            hit.NNTrkId = (int) this.aimatchtrk.get(cids)[3];
+                            hit.NNClusId = clusterID;
+                            double px = this.aimatchtrk.get(cids)[0];
+                            double py = this.aimatchtrk.get(cids)[1];
+                            double pz = this.aimatchtrk.get(cids)[2];
+                            double p = Math.sqrt(px * px + py * py + pz * pz);
+                            double theta = Math.acos(pz / p);
+                            double phi = Math.atan2(py, px);
+                            hit.NNTrkP = p;
+                            hit.NNTrkTheta = theta;
+                            hit.NNTrkPhi = phi;
+                            hit.NNTrkChi2 = this.aimatchtrk.get(cids)[4];
+                            LOGGER.log(Level.FINE, "NN" + hit.printInfo());
+                            this._DCHits.add(hit);
+                        }
+                    }
+                }
+            }
+        }
     }
 
+    // Helper class to store track information
+    public static class TrackInfo implements Comparable<TrackInfo> {
+        private final int[] ids; // To store c1-c6 values
+        private final double[] tPars;
+        private final double prob;
+
+        public TrackInfo(int[] ids, double[] tPars) {
+            // Create defensive copies of the arrays to ensure immutability
+            this.ids = ids.clone(); 
+            this.tPars = tPars.clone();
+            this.prob = tPars[4]; // prob is at index 4
+        }
+
+        public int[] getIds() {
+            return ids.clone(); // Return a copy to prevent external modification
+        }
+
+        public double[] getTPars() {
+            return tPars.clone(); // Return a copy to prevent external modification
+        }
+
+        public double getProb() {
+            return prob;
+        }
+
+        @Override
+        public int compareTo(TrackInfo other) {
+            int[] c = new int[6];
+            for (int i = 0; i < 6; i++) {
+                c[i] = this.ids[i] < other.ids[i] ? -1 : this.ids[i] == other.ids[0] ? 0 : 1;
+            }
+
+            int return_val = ((c[0] == 0) ? c[1] : c[0]);
+            for (int i = 1; i < 6; i++) {
+                return_val = ((c[i] == 0) ? return_val : c[i]);
+            }
+            return return_val;
+        }
+    }
+
+    
     private void read_NNHits() {
         _DCHits = new ArrayList<>();
 
@@ -624,6 +781,7 @@ public class HitReader {
             tPars[2] = (double)bankAI.getFloat("phi", j);
             tPars[3] = (double)bankAI.getByte("id", j);
             
+            aimatch.clear();
             for (int k = 0; k < 6; k++) {
                 aimatch.put(Ids[k], tPars); 
             }
@@ -915,4 +1073,23 @@ public class HitReader {
             return list;
         }
     }
+    
+    /**
+     *
+     * @param num # of rows in DC::TDC bank
+     */
+    public void set_NumTDCBankRows(int num){
+        this.numTDCBankRows = num;
+    }
+    
+    /**
+     *
+     * @return # of rows in DC::TDC bank
+     */
+    public int get_NumTDCBankRows(){
+        return numTDCBankRows;
+    }
+
+
+
 }
