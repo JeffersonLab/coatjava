@@ -32,11 +32,12 @@ public class ATOFCluster {
     /**
      * cluster properties:position [cm], time [ns], energy[MeV], path length
      * [cm] and length through the atof [cm], type of the maximum hit (to set
-     * resolutions).
+     * resolutions) and index of the maximum hit.
      */
     double x, y, z, time, energy;
     double pathLength, inPathLength;
     String typeMaxHit;
+    int indexMaxHit;
     int iProj;
 
     public ArrayList<BarHit> getBarHits() {
@@ -118,13 +119,21 @@ public class ATOFCluster {
     public void setTypeMaxHit(String typeMaxHit) {
         this.typeMaxHit = typeMaxHit;
     }
-    
+
     public int getIProj() {
         return iProj;
     }
 
     public void setIProj(int iProj) {
         this.iProj = iProj;
+    }
+
+    public int getIndexMaxHit() {
+        return indexMaxHit;
+    }
+
+    public void setIndexMaxHit(int indexMaxHit) {
+        this.indexMaxHit = indexMaxHit;
     }
 
     /**
@@ -180,13 +189,13 @@ public class ATOFCluster {
      *
      */
     public int matchTrack(DataEvent event) {
-        
+
         //This cluster point in space
         Point3D cluster = new Point3D(this.x, this.y, this.z);
         //Bank to be read
         String track_bank_name = "ALERT::Projections";
         //Checking if there is an event
-        if (event == null) { 
+        if (event == null) {
             return 1;
         } else if (event.hasBank(track_bank_name) == false) {
             //Check if there are tracks in the event
@@ -203,7 +212,7 @@ public class ATOFCluster {
             //This will help decide which track to consider 
             //when more than one are matched to the same cluster
             double distanceMinBetweenTrackAndCluster = 999;
-            
+
             //Check if a track was matched
             Boolean foundMatch = false;
             //Looping through all tracks
@@ -241,10 +250,12 @@ public class ATOFCluster {
                 }
                 Point3D projection_point = new Point3D(xt, yt, zt);
                 double delta_phi = Math.abs(this.getPhi() - projection_point.toVector3D().phi());
-                if (delta_phi > Math.PI) delta_phi = Math.PI - delta_phi;
+                if (delta_phi > Math.PI) {
+                    delta_phi = Math.PI - delta_phi;
+                }
                 //Geometrical match
                 if (delta_phi < sigma_phi && Math.abs(this.getZ() - projection_point.z()) < sigma_z) {
-                    foundMatch=true;
+                    foundMatch = true;
                     //If a track is matched, we look at the distance between it and the cluster
                     double distance = cluster.distance(projection_point);
                     //We only consider the minimal distance track
@@ -254,12 +265,12 @@ public class ATOFCluster {
                         this.setInPathLength(inpath);
                         this.setIProj(track_bank.getInt("id", i));
                     }
-                } 
-            }
-            if(!foundMatch) {
-                    //If no track is matched, assign a straight track
-                    this.makeStraightTrack();
                 }
+            }
+            if (!foundMatch) {
+                //If no track is matched, assign a straight track
+                this.makeStraightTrack();
+            }
         }
         return 0;
     }
@@ -277,7 +288,7 @@ public class ATOFCluster {
         this.setPathLength(straightPath);
         this.setInPathLength(getDistanceStraightInATOF(vx, vy, vz));
         //ID indicating no track was matched
-        this.setIProj(-1);  
+        this.setIProj(-1);
     }
 
     /**
@@ -376,6 +387,66 @@ public class ATOFCluster {
     }
 
     /**
+     * Retrieve the hit with maximal energy in the cluster. It must have been
+     * computed previously.
+     *
+     * @return a ATOFHit that is the maximal energy hit in the cluster
+     *
+     */
+    public final ATOFHit getMaxHit() {
+        if (this.typeMaxHit == null) {
+            System.out.print("You did not compute the maximal hit! \n");
+            return null;
+        }
+        if (null == this.typeMaxHit) {
+            System.out.print("Unrecognized type! \n");
+            return null;
+        } else {
+            switch (this.typeMaxHit) {
+                case "wedge" -> {
+                    return this.wedgeHits.get(this.indexMaxHit);
+                }
+                case "bar" -> {
+                    return this.barHits.get(this.indexMaxHit);
+                }
+                default -> {
+                    System.out.print("Unrecognized type! \n");
+                    return null;
+                }
+            }
+        }
+    }
+
+    /**
+     * Computes the sum of TOT in the cluster.
+     *
+     * @return an int representing the summed TOT
+     *
+     */
+    public int getTot() {
+        int tot = 0;
+        for (int i = 0; i < this.wedgeHits.size(); i++) {
+            ATOFHit this_hit = this.wedgeHits.get(i);
+            tot += this_hit.getTot();
+        }
+        for (int i = 0; i < this.barHits.size(); i++) {
+            BarHit this_hit = this.barHits.get(i);
+            tot += this_hit.getTot();
+        }
+        return tot;
+    }
+
+    /**
+     * Returns the TDC of the maximal hit in the cluster.
+     *
+     * @return an int representing the TDC of the maximal hit.
+     *
+     */
+    public int getTdc() {
+        return this.getMaxHit().getTdc();
+    }
+
+    /**
      * Constructor that initializes the list of bar hits and list of wedge hits
      * and computes the cluster properties.
      *
@@ -403,6 +474,28 @@ public class ATOFCluster {
         this.wedgeHits = wedge_hits;
         this.computeClusterProperties();
         this.matchTrack(event);
+    }
+
+    /**
+     * Computes the wedge hit with maximal energy in the cluster.
+     *
+     * @return a ATOFHit that is the maximal energy hit in the wedges in the
+     * cluster.
+     *
+     */
+    public final ATOFHit getMaxWedgeHit() {
+        double max_energy = -1;
+        ATOFHit max_energy_hit = new ATOFHit();
+
+        for (int i_wedge = 0; i_wedge < this.wedgeHits.size(); i_wedge++) {
+            ATOFHit this_wedge_hit = this.wedgeHits.get(i_wedge);
+            double this_energy = this_wedge_hit.getEnergy();
+            if (this_energy > max_energy) {
+                max_energy_hit = this_wedge_hit;
+                max_energy = this_energy;
+            }
+        }
+        return max_energy_hit;
     }
 
     /**
