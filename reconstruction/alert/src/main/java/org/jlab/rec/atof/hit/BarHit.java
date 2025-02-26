@@ -91,6 +91,8 @@ public class BarHit extends ATOFHit {
         this.computeZ();
         this.computeTime();
         this.computeEnergy();
+        this.setTdc((hit_down.getTdc() + hit_up.getTdc())/2);
+        this.setTot((hit_down.getTot() + hit_up.getTot()));
     }
 
     public BarHit() {
