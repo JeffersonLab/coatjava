@@ -8,7 +8,7 @@ import org.jlab.geom.prim.Vector3D;
 
 /**
  * recoil V-W clusters
- * @author devita
+ * @author devita, niccolai
  */
 public class RecoilCross {
 

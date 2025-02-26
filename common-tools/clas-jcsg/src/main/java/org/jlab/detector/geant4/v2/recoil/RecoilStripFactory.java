@@ -16,7 +16,7 @@ import org.jlab.utils.groups.IndexedList;
 /**
  * Creates and handles the URWELL detector strips as 3D lines
  * 
- * @author bondi
+ * @author bondi, niccolai
  */
 public final class RecoilStripFactory {
 

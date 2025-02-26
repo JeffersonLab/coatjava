@@ -18,7 +18,7 @@ import org.jlab.geometry.prim.Straight;
 /**
  * Generate GEANT4 volume for the RECOIL detector
  * 
- * @author bondi
+ * @author bondi, niccolai
  */
 public final class RecoilGeant4Factory extends Geant4Factory {
     
