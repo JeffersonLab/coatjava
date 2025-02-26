@@ -35,6 +35,7 @@ import org.jlab.clas.tracking.utilities.MatrixOps.Libr;
 import org.jlab.clas.tracking.utilities.RungeKuttaDoca;
 import org.jlab.rec.dc.banks.HitReader;
 import org.jlab.rec.dc.banks.HitReader.TrackInfo;
+import static org.jlab.rec.dc.banks.HitReader.getNNSeedLists;
 
 /**
  * A class with a method implementing an algorithm that finds lists of track
@@ -688,23 +689,9 @@ public class TrackCandListFinder {
             HitReader.TrackInfo ti = new HitReader.TrackInfo(Ids, tPars);
             trackInfoL.add(ti);
         }
-        Collections.sort(trackInfoL);
-        List<List<TrackInfo>> trackInfoLs = new ArrayList<>();
+        List<List<TrackInfo>> trackInfoLs = getNNSeedLists(trackInfoL);
         trackInfoLs.add(new ArrayList<>());
-        trackInfoLs.get(0).add(trackInfoL.get(0));
-        for(int k = 1; k<trackInfoL.size(); k++) {
-            boolean isInGroup=false;
-            for(int i =0; i<6; i++) {
-                if(trackInfoL.get(k-1).getIds()[i]==trackInfoL.get(k).getIds()[i])
-                    isInGroup=true;
-            }
-            if(isInGroup) {
-                trackInfoLs.get(trackInfoLs.size()-1).add(trackInfoL.get(k));
-            } else {
-                trackInfoLs.add(new ArrayList<>());
-                trackInfoLs.get(trackInfoLs.size()-1).add(trackInfoL.get(k));
-            }
-        }
+        
         trkcands.clear();
         // Now, process each group and keep only the top  prob value for each group
         for ( List<HitReader.TrackInfo> trackInfoList : trackInfoLs) {

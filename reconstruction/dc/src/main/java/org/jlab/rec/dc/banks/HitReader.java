@@ -594,6 +594,33 @@ public class HitReader {
         }
     }
     
+    static boolean overlaps(TrackInfo t, List<TrackInfo> trackInfoL) {
+        for(TrackInfo ti : trackInfoL) {
+            boolean isInGroup=false;
+            for(int i =0; i<6; i++) {
+                if(ti.getIds()[i]==t.getIds()[i])
+                    isInGroup=true;
+            }
+            if(!isInGroup) return false;
+        }
+        return true;
+    }
+    public static List<List<TrackInfo>> getNNSeedLists(List<TrackInfo> trackInfoL) {
+        Collections.sort(trackInfoL);
+        List<List<TrackInfo>> trackInfoLs = new ArrayList<>();
+        trackInfoLs.add(new ArrayList<>());
+        trackInfoLs.get(0).add(trackInfoL.get(0));
+        for(int k = 1; k<trackInfoL.size(); k++) {
+            boolean isInGroup=overlaps(trackInfoL.get(k), trackInfoLs.get(trackInfoLs.size()-1));
+            if(isInGroup) {
+                trackInfoLs.get(trackInfoLs.size()-1).add(trackInfoL.get(k));
+            } else {
+                trackInfoLs.add(new ArrayList<>());
+                trackInfoLs.get(trackInfoLs.size()-1).add(trackInfoL.get(k));
+            }
+        }
+        return trackInfoLs;
+    }
     private void read_InstarecNNHits(boolean enableMulti) { 
         _DCHits = new ArrayList<>();
         if (!(event.hasBank(bankNames.getInputHitsBank()))) 
@@ -640,24 +667,7 @@ public class HitReader {
                 trackInfoL.add(new TrackInfo(Ids, tPars));
             }
         }
-        Collections.sort(trackInfoL);
-        List<List<TrackInfo>> trackInfoLs = new ArrayList<>();
-        trackInfoLs.add(new ArrayList<>());
-        trackInfoLs.get(0).add(trackInfoL.get(0));
-        for(int k = 1; k<trackInfoL.size(); k++) {
-            boolean isInGroup=false;
-            for(int i =0; i<6; i++) {
-                if(trackInfoL.get(k-1).getIds()[i]==trackInfoL.get(k).getIds()[i])
-                    isInGroup=true;
-            }
-            if(isInGroup) {
-                trackInfoLs.get(trackInfoLs.size()-1).add(trackInfoL.get(k));
-            } else {
-                trackInfoLs.add(new ArrayList<>());
-                trackInfoLs.get(trackInfoLs.size()-1).add(trackInfoL.get(k));
-            }
-        }
-        
+        List<List<TrackInfo>> trackInfoLs = getNNSeedLists(trackInfoL);
 
         // Now, process each group and keep only the top 3 highest prob values for each group
         for ( List<TrackInfo> trackInfoList : trackInfoLs) {
