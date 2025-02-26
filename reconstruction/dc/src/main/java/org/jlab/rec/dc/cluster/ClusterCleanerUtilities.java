@@ -190,16 +190,16 @@ public class ClusterCleanerUtilities {
             }
                         
             //Limits for cluster candiates
-            boolean passCluster = true;
+            boolean passCluster = false;
             int nLayers = count_nlayers_in_cluster(newClus);
             if((!isExceptionalCluster(newClus) && nLayers >= Constants.DC_MIN_NLAYERS) 
                     || (isExceptionalCluster(newClus) && nLayers >= Constants.DC_MIN_NLAYERS - 1)) {                            
                 //require consistency with line
                 cf.SetFitArray(newClus, "LC");
                 cf.Fit(newClus, true);
-                if ((nLayers == 6 && newClus.get_fitProb() < 0.9) ||  (nLayers == 5 && newClus.get_fitProb() < 0.85)
-                        || (nLayers == 4 && newClus.get_fitProb() < 0.75) || (nLayers == 3 && newClus.get_fitProb() < 0.65)) {
-                    passCluster = false;
+                if ((nLayers == 6 && newClus.get_fitProb() > 0.9) ||  (nLayers == 5 && newClus.get_fitProb() > 0.85)
+                        || (nLayers == 4 && newClus.get_fitProb() > 0.75) || (nLayers == 3 && newClus.get_fitProb() > 0.65)) {
+                    passCluster = true;
                 }
             }
 
