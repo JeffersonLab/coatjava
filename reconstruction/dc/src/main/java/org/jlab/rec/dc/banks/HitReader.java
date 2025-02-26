@@ -598,7 +598,7 @@ public class HitReader {
         for(TrackInfo ti : trackInfoL) {
             boolean isInGroup=false;
             for(int i =0; i<6; i++) {
-                if(ti.getIds()[i]==t.getIds()[i])
+                if(ti.getIds()[i]==t.getIds()[i] && t.getIds()[i]!=-1)
                     isInGroup=true;
             }
             if(!isInGroup) return false;
