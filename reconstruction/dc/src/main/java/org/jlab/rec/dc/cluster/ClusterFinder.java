@@ -236,7 +236,8 @@ public class ClusterFinder {
         int idSharedHits = numTDCBankRows + 10000;
         for (FittedCluster clus : fittedClusList) {
             if (clus != null && ((!ct.isExceptionalFittedCluster(clus) && clus.size() >= Constants.DC_MIN_NLAYERS) || 
-                    (ct.isExceptionalFittedCluster(clus) && clus.size() >= Constants.DC_MIN_NLAYERS-1)) && clus.get_fitProb()>Constants.HITBASEDTRKGMINFITHI2PROB) {
+                    (ct.isExceptionalFittedCluster(clus) && clus.size() >= Constants.DC_MIN_NLAYERS-1)) 
+                    && ((ct.count_nlayers_in_cluster(clus) < Constants.DC_MIN_NLAYERS && clus.get_fitProb() > 0.4) || (ct.count_nlayers_in_cluster(clus) >= Constants.DC_MIN_NLAYERS && clus.get_fitProb()>Constants.HITBASEDTRKGMINFITHI2PROB))) {
                 
                 // update the hits
                 for (FittedHit fhit : clus) {
