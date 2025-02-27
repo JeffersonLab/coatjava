@@ -105,10 +105,10 @@ public class Constants {
     public static final String TT             = "/daq/tt/dc";
     public static final String DOCARES        = "/calibration/dc/signal_generation/doca_resolution";
     public static final String TIME2DIST      = "/calibration/dc/time_to_distance/time2dist";
-    public static final String T2DPRESSURE    = "/calibration/dc/time_to_distance/t2d_pressure";
+    public static final String T2DPRESSURE    = "/calibration/dc/v2/t2d_pressure";
     public static final String PRESSURE       = "/hall/weather/pressure";
     public static final String T2DPRESSUREREF = "/calibration/dc/time_to_distance/ref_pressure";
-    public static final String T0CORRECTION   = "/calibration/dc/time_corrections/T0Corrections";
+    public static final String T0CORRECTION   = "/calibration/dc/v2/t0";
     public static final String TDCTCUTS       = "/calibration/dc/time_corrections/tdctimingcuts";
     public static final String WIRESTAT       = "/calibration/dc/tracking/wire_status";
     public static final String TIMEJITTER     = "/calibration/dc/time_jitter";
