@@ -34,12 +34,8 @@ public class VeffCalibrator {
                 continue;
             }
             double zFromWedge = cluster.getMaxWedgeHit().getZ();
-            System.out.print(zFromWedge + " z \n");
             double Lup = Parameters.LENGTH_ATOF / 2 + zFromWedge;
             double Ldown = Parameters.LENGTH_ATOF / 2 - zFromWedge;
-            System.out.print(Lup + " lup \n");
-            System.out.print(Ldown + " ldown \n");
-            System.out.print(Lup+Ldown + " sum\n");
             ArrayList<BarHit> BarHits = cluster.getBarHits();
             for (int i_b = 0; i_b < BarHits.size(); i_b++) {
                 BarHit barhit = BarHits.get(i_b);
