@@ -1,8 +1,5 @@
 package org.jlab.rec.service;
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 
 import org.jlab.clas.reco.ReconstructionEngine;
@@ -12,7 +9,6 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.geom.base.Detector;
 import org.jlab.geom.detector.alert.ATOF.AlertTOFFactory;
-import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.rec.atof.banks.TestBankWriter;
 import org.jlab.rec.atof.cluster.ATOFCluster;
 import org.jlab.rec.atof.cluster.ClusterFinder;
@@ -20,6 +16,7 @@ import org.jlab.rec.atof.constants.Parameters;
 import org.jlab.rec.atof.hit.ATOFHit;
 import org.jlab.rec.atof.hit.BarHit;
 import org.jlab.rec.atof.hit.HitFinder;
+import org.jlab.rec.atof.veff.VeffCalibrator;
 
 /**
  * Service to return ATOF test hits and clusters
@@ -76,14 +73,18 @@ public class ATOFTestEngine extends ReconstructionEngine {
         ClusterFinder clusterFinder = new ClusterFinder();
         int sigma_module = 5;
         int sigma_component = 11;
-        double sigma_z = 5*Parameters.LENGTH_ATOF;
+        double sigma_z = 5 * Parameters.LENGTH_ATOF;
         double sigma_t = 100;
 
         clusterFinder.makeClusters(hitfinder, sigma_module, sigma_component, sigma_z, sigma_t, event);
         ArrayList<ATOFCluster> Clusters = clusterFinder.getClusters();
 
+        VeffCalibrator calibrator = new VeffCalibrator();
+        calibrator.computeCalib(Clusters);
+
         if (WedgeHits.size() != 0 || BarHits.size() != 0) {
             rbc.appendATOFBanks(event, WedgeHits, BarHits, Clusters);
+            rbc.appendVeffBanks(event, calibrator.getCalibs());
         }
         return true;
     }

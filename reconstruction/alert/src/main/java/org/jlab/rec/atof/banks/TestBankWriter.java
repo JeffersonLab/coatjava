@@ -6,15 +6,15 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.rec.atof.cluster.ATOFCluster;
 import org.jlab.rec.atof.hit.ATOFHit;
 import org.jlab.rec.atof.hit.BarHit;
+import org.jlab.rec.atof.veff.VeffCalibration;
 
 /**
- * The {@code RecoBankWriter} writes the banks needed for the atof
- * testing: hits and clusters info.
+ * The {@code RecoBankWriter} writes the banks needed for the atof testing: hits
+ * and clusters info.
  *
  * @author pilleux
  */
 public class TestBankWriter {
-
 
     public static DataBank fillATOFTestHitBank(DataEvent event, ArrayList<ATOFHit> wedgeHits, ArrayList<BarHit> barHits) {
         ArrayList<ATOFHit> hitList = new ArrayList<>();
@@ -42,7 +42,7 @@ public class TestBankWriter {
         }
         return bank;
     }
-    
+
     public static DataBank fillATOFTestClusterBank(DataEvent event, ArrayList<ATOFCluster> clusterList) {
 
         DataBank bank = event.createBank("ATOF::testclusters", clusterList.size());
@@ -63,6 +63,25 @@ public class TestBankWriter {
             bank.setFloat("z", i, (float) (clusterList.get(i).getZ()));
             bank.setInt("TOT", i, (int) clusterList.get(i).getTot());
             bank.setFloat("energy", i, (float) clusterList.get(i).getEnergy());
+        }
+        return bank;
+    }
+
+    public static DataBank fillATOFTestVeff(DataEvent event, ArrayList<VeffCalibration> calibrations) {
+
+        DataBank bank = event.createBank("ATOF::testVeff", calibrations.size());
+
+        if (bank == null) {
+            System.err.println("COULD NOT CREATE A ATOF::testclusters BANK!!!!!!");
+            return null;
+        }
+        for (int i = 0; i < calibrations.size(); i++) {
+            bank.setShort("id", i, (short) (i + 1));
+            bank.setShort("iCluster", i, (short) calibrations.get(i).getICluster());
+            bank.setShort("iBar", i, (short) calibrations.get(i).getIBarHit());
+            bank.setFloat("ldiff", i, (float) calibrations.get(i).getLdiff());
+            bank.setFloat("tdiff", i, (float) calibrations.get(i).getTdiff());
+            bank.setShort("module", i, (short) calibrations.get(i).getModule());
         }
         return bank;
     }
@@ -93,6 +112,18 @@ public class TestBankWriter {
         DataBank clusterbank = fillATOFTestClusterBank(event, clusterList);
         if (clusterbank != null) {
             event.appendBank(clusterbank);
+        } else {
+            return 1;
+        }
+
+        return 0;
+    }
+
+    public int appendVeffBanks(DataEvent event, ArrayList<VeffCalibration> calibrations) {
+
+        DataBank veffbank = fillATOFTestVeff(event, calibrations);
+        if (veffbank != null) {
+            event.appendBank(veffbank);
         } else {
             return 1;
         }

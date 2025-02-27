@@ -49,10 +49,38 @@
         "name": "L_at_wedge",
         "type": "F",
         "info": "path length at atof wedge (inner surface) in mm"
+      }
+    ]
+  },{
+      "name": "ATOF::testVeff",
+      "group": 23000,
+      "item": 35,
+      "info": "veff test for ATOF",
+      "entries": [		
+	  {
+            "name": "id",
+            "type": "S",
+            "info": "calib id"
       },{
-        "name": "L_in_wedge",
+        "name": "iCluster",
+        "type": "S",
+        "info": "id of the cluster"
+      },{
+        "name": "iBar",
+        "type": "S",
+        "info": "id bar hit"
+      },{
+        "name": "ldiff",
         "type": "F",
-        "info": "path length inside atof wedge in mm"
+        "info": "length diff mm"
+      }, {
+        "name": "tdiff",
+        "type": "F",
+        "info": "time diff ns"			    
+      },{
+        "name": "module",
+        "type": "S",
+        "info": "module" 
       }
     ]
   },{
