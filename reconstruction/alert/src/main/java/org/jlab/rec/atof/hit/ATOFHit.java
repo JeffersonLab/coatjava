@@ -160,9 +160,9 @@ public class ATOFHit {
         //Type of hit can be wedge, bar up, bar down or bar.
         //Avoids testing components and order every time.
         String itype = "undefined";
-        if (this.component == 10 && this.order == 1) {
+        if (this.component == 10 && this.order == 0) {
             itype = "bar down";
-        } else if (this.component == 10 && this.order == 0) {
+        } else if (this.component == 10 && this.order == 1) {
             itype = "bar up";
         } else if (this.component < 10) {
             itype = "wedge";
