@@ -34,14 +34,12 @@ public class VeffCalibrator {
                 continue;
             }
             double zFromWedge = cluster.getMaxWedgeHit().getZ();
-            double Lup = Parameters.LENGTH_ATOF / 2 + zFromWedge;
-            double Ldown = Parameters.LENGTH_ATOF / 2 - zFromWedge;
             ArrayList<BarHit> BarHits = cluster.getBarHits();
             for (int i_b = 0; i_b < BarHits.size(); i_b++) {
                 BarHit barhit = BarHits.get(i_b);
                 double uphit_time = barhit.getHitUp().getTime();
                 double downhit_time = barhit.getHitDown().getTime();
-                calibs.add(new VeffCalibration(barhit.computeModuleIndex(),(Lup - Ldown),(uphit_time - downhit_time),i_c,i_b));     
+                calibs.add(new VeffCalibration(barhit.computeModuleIndex(),(2*zFromWedge),(uphit_time - downhit_time),i_c,i_b));     
             }
         }
         return true;
