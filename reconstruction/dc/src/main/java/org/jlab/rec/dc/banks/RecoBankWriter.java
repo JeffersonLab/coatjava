@@ -250,10 +250,10 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
             bank.setFloat("fitInterc", i, (float) cls.get_clusterLineFitIntercept());
             bank.setFloat("fitIntercErr", i, (float) cls.get_clusterLineFitInterceptErr());
 
-            bank.setFloat("SegEndPoint1X", i, (float) seglist.get(i).get_SegmentEndPoints()[0]);
-            bank.setFloat("SegEndPoint1Z", i, (float) seglist.get(i).get_SegmentEndPoints()[1]);
-            bank.setFloat("SegEndPoint2X", i, (float) seglist.get(i).get_SegmentEndPoints()[2]);
-            bank.setFloat("SegEndPoint2Z", i, (float) seglist.get(i).get_SegmentEndPoints()[3]);
+            //bank.setFloat("SegEndPoint1X", i, (float) seglist.get(i).get_SegmentEndPoints()[0]);
+            //bank.setFloat("SegEndPoint1Z", i, (float) seglist.get(i).get_SegmentEndPoints()[1]);
+            //bank.setFloat("SegEndPoint2X", i, (float) seglist.get(i).get_SegmentEndPoints()[2]);
+            //bank.setFloat("SegEndPoint2Z", i, (float) seglist.get(i).get_SegmentEndPoints()[3]);
 
             for (int j = 0; j < seglist.get(i).size(); j++) {
                 if (seglist.get(i).get_Id() == -1) {

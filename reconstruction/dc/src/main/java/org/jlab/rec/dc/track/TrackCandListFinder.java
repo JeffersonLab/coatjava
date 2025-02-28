@@ -34,8 +34,8 @@ import org.jlab.clas.tracking.kalmanfilter.zReference.StateVecs;
 import org.jlab.clas.tracking.utilities.MatrixOps.Libr;
 import org.jlab.clas.tracking.utilities.RungeKuttaDoca;
 import org.jlab.rec.dc.banks.HitReader;
-import org.jlab.rec.dc.banks.HitReader.TrackInfo;
-import static org.jlab.rec.dc.banks.HitReader.getNNSeedLists;
+import org.jlab.rec.dc.nn.HitReader.TrackInfo;
+import static org.jlab.rec.dc.nn.HitReader.getNNSeedLists;
 
 /**
  * A class with a method implementing an algorithm that finds lists of track
@@ -666,7 +666,7 @@ public class TrackCandListFinder {
             LOGGER.log(Level.FINE, "Found "+trkcands.size()+" tracks ");
         }
         Map<Integer, Track> selectedTracksMap = new HashMap<>();
-        List<HitReader.TrackInfo> trackInfoL = new ArrayList<>();
+        List<TrackInfo> trackInfoL = new ArrayList<>();
         for(Track t : trkcands) {
             int[] Ids = new int[]{-1,-1,-1,-1,-1,-1};
             for(int k = 0; k < t.size(); k++) {
@@ -686,7 +686,7 @@ public class TrackCandListFinder {
             
             selectedTracksMap.put(t.get_Id(), t);
             
-            HitReader.TrackInfo ti = new HitReader.TrackInfo(Ids, tPars);
+            TrackInfo ti = new TrackInfo(Ids, tPars);
             trackInfoL.add(ti);
         }
         List<List<TrackInfo>> trackInfoLs = getNNSeedLists(trackInfoL);
@@ -694,14 +694,14 @@ public class TrackCandListFinder {
         
         trkcands.clear();
         // Now, process each group and keep only the top  prob value for each group
-        for ( List<HitReader.TrackInfo> trackInfoList : trackInfoLs) {
+        for ( List<TrackInfo> trackInfoList : trackInfoLs) {
             
             // Sort by prob (tPars[4]) in ascending order
             trackInfoList.sort((a, b) -> Double.compare(a.getProb(), b.getProb()));
             
             // Only keep the top prob entry
             trackInfoList = trackInfoList.subList(0, Math.min(1, trackInfoList.size()));
-            for (HitReader.TrackInfo trackInfo : trackInfoList) {
+            for (TrackInfo trackInfo : trackInfoList) {
                 int id = (int)trackInfo.getTPars()[3];
                 if(selectedTracksMap.containsKey(id))
                     trkcands.add(selectedTracksMap.get(id));

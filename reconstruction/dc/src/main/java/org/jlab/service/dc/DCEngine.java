@@ -42,7 +42,7 @@ public class DCEngine extends ReconstructionEngine {
     public boolean enableMulti = true;
     public boolean saveMultiTB = true;
     public static final Logger LOGGER = Logger.getLogger(ReconstructionEngine.class.getName());
-
+    public static int evNum;
 
     public DCEngine(String name) {
         super(name,"ziegler","5.0");
@@ -240,6 +240,7 @@ public class DCEngine extends ReconstructionEngine {
         LOGGER.log(Level.FINE,"["+this.getName()+"] EVENT "+bank.getInt("event", 0));       
         
         int run = bank.getInt("run", 0);
+        this.evNum=bank.getInt("event", 0);
         return run;
     }
 }

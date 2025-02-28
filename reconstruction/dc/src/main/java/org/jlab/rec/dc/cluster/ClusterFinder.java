@@ -92,7 +92,7 @@ public class ClusterFinder {
                 int la = hit.get_Layer() - 1;
 
                 if (wi >= 0 && wi < nwire) {
-                    hitArray[ssl][wi][la] = hit;
+                    hitArray[ssl][wi][la] = hit; 
                 }
             }
         }

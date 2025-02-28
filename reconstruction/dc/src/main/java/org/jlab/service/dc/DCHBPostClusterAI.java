@@ -1,14 +1,14 @@
 package org.jlab.service.dc;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.clas.swimtools.Swimmer;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.dc.Constants;
-import org.jlab.rec.dc.banks.HitReader;
+import org.jlab.rec.dc.nn.HitReader;
 import org.jlab.rec.dc.banks.RecoBankWriter;
 import org.jlab.rec.dc.cluster.FittedCluster;
 import org.jlab.rec.dc.cross.Cross;
@@ -52,7 +52,6 @@ public class DCHBPostClusterAI extends DCEngine {
             LOGGER.log(Level.INFO, "RUN=0: Skipping event");
             return true;
         }
-        
         /* IO */
         HitReader reader      = new HitReader(this.getBanks(), Constants.getInstance().dcDetector);
         reader.initialize(event);
@@ -66,46 +65,58 @@ public class DCHBPostClusterAI extends DCEngine {
         /* 7 */
         /* 8 */
         //AI
-        List<Track> trkcands = null;
+        List<Track> trkcands = new ArrayList<>();
         List<Cross> crosses = null;
         List<FittedCluster> clusters = null;
-        List<Segment> segments = null;
+        Map<Integer, List<Segment>> segmentsMap = null;
         List<FittedHit> fhits = null;
 
         reader.read_NNHits(event, useInstarec, enableMulti);
 
         //I) get the lists
-        List<Hit> hits = reader.get_DCHits();
-        fhits = new ArrayList<>();
+        List<Hit> hits = reader.getDCHits();
+        fhits = new ArrayList<>(); 
+        
         //II) process the hits
         //1) exit if hit list is empty
         if (hits.isEmpty()) {
             return true;
         }
         PatternRec pr = new PatternRec();
-        segments = pr.RecomposeSegments(hits, Constants.getInstance().dcDetector);
-        Collections.sort(segments);
-
-        if (segments.isEmpty()) {
+        segmentsMap = pr.RecomposeSegments(hits, Constants.getInstance().dcDetector);
+        
+        if (segmentsMap.isEmpty()) {
             return true;
         } 
         //crossList
-        CrossList crosslist = pr.RecomposeCrossList(segments, Constants.getInstance().dcDetector);
+        List<CrossList> crosslists = new ArrayList<>();
+        List<Segment> segments = new ArrayList<>();
         crosses = new ArrayList<>();
-        
-        LOGGER.log(Level.FINE, "num cands = "+crosslist.size());
-        for (List<Cross> clist : crosslist) {
-            crosses.addAll(clist); 
-            for(Cross c : clist)
-                LOGGER.log(Level.FINE, "Pass Cross"+c.printInfo());
+        for(Integer it : segmentsMap.keySet()) { 
+            for(Segment se : segmentsMap.get(it)) {
+                if(se.get_Id()>0)
+                    segments.add(se);
+            }
+            
+            
+            CrossList crosslist = pr.RecomposeCrossList(segmentsMap.get(it), Constants.getInstance().dcDetector);
+            crosslists.add(crosslist);
+            for (List<Cross> clist : crosslist) {
+                crosses.addAll(clist); 
+            }
         }
+        
+        
+        LOGGER.log(Level.FINE, "num cands = "+crosses.size());
+        for(Cross c : crosses)
+            LOGGER.log(Level.FINE, "Pass Cross"+c.printInfo());
+        
         if (crosses.isEmpty()) {
             clusters = new ArrayList<>();
             for(Segment seg : segments) {
                 clusters.add(seg.get_fittedCluster());
             }
-            event.appendBanks(
-                    writer.fillHBHitsBank(event, fhits),    
+            event.appendBanks(writer.fillHBHitsBank(event, fhits),    
                     writer.fillHBClustersBank(event, clusters),
                     writer.fillHBSegmentsBank(event, segments));
             return true;
@@ -117,15 +128,18 @@ public class DCHBPostClusterAI extends DCEngine {
         }
         //find the list of  track candidates
         TrackCandListFinder trkcandFinder = new TrackCandListFinder(Constants.HITBASE);
-        trkcands = trkcandFinder.getTrackCands(crosslist,
+        
+        for(CrossList crosslist : crosslists) {
+            List<Track> ts= trkcandFinder.getTrackCands(crosslist,
             Constants.getInstance().dcDetector,
             Swimmer.getTorScale(),
             dcSwim, true);
-
+            if(ts!=null) trkcands.addAll(ts);
+        }
         // track found
         clusters = new ArrayList<>();
         int trkId = 1;
-        if (trkcands.size() > 0) {
+        if (!trkcands.isEmpty()) {
             // remove overlaps
             if(!useInstarec) trkcandFinder.removeOverlappingTracks(trkcands);
             for (Track trk : trkcands) {
@@ -158,16 +172,14 @@ public class DCHBPostClusterAI extends DCEngine {
         }
         
                 // no candidate found, stop here and save the hits,
-        // the clusters, the segments, the crosses
+        // the clusters, the segments0, the crosses
         if (trkcands.isEmpty()) {
-            event.appendBanks(
-                    writer.fillHBHitsBank(event, fhits),    
+            event.appendBanks(writer.fillHBHitsBank(event, fhits),    
                     writer.fillHBSegmentsBank(event, segments),
                     writer.fillHBCrossesBank(event, crosses));
         }
         else {
-            event.appendBanks(
-                    writer.fillHBHitsBank(event, fhits),    
+            event.appendBanks(writer.fillHBHitsBank(event, fhits),    
                     writer.fillHBClustersBank(event, clusters),
                     writer.fillHBSegmentsBank(event, segments),
                     writer.fillHBCrossesBank(event, crosses),
