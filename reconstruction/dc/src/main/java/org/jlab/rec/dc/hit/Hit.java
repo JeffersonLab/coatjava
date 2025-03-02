@@ -29,6 +29,8 @@ public class Hit implements Comparable<Hit> {
     public double NNTrkTheta;
     public double NNTrkPhi;
     public double NNTrkChi2;
+    public double aiClusDoca; //trkDoca in AI bank
+    public boolean outlier; // fit outlier flag
     // constructors
     /**
      *

@@ -34,8 +34,8 @@ import org.jlab.clas.tracking.kalmanfilter.zReference.StateVecs;
 import org.jlab.clas.tracking.utilities.MatrixOps.Libr;
 import org.jlab.clas.tracking.utilities.RungeKuttaDoca;
 import org.jlab.rec.dc.banks.HitReader;
-import org.jlab.rec.dc.nn.HitReader.TrackInfo;
-import static org.jlab.rec.dc.nn.HitReader.getNNSeedLists;
+import org.jlab.rec.dc.nn.AIHitReader.TrackInfo;
+import static org.jlab.rec.dc.nn.AIHitReader.getNNSeedLists;
 
 /**
  * A class with a method implementing an algorithm that finds lists of track

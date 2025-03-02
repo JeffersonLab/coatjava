@@ -16,71 +16,33 @@ import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
-import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.banks.Banks;
+import org.jlab.rec.dc.banks.HitReader;
 import org.jlab.rec.dc.hit.Hit;
-import org.jlab.service.dc.DCEngine;
-import org.jlab.utils.groups.IndexedTable;
-
 /**
  *
  * @author ziegler
  */
-public class HitReader {
-    private static final Logger LOGGER = Logger.getLogger(HitReader.class.getName());
+public class AIHitReader extends HitReader {
+    private static final Logger LOGGER = Logger.getLogger(AIHitReader.class.getName());
     private static final int MAX_AITRACKS = 3;
-    
-    private Banks bankNames;
-    private DCGeant4Factory detector;
-    private ConstantsManager manager;
-    private RawBank.OrderType[] rawBankOrders;
-
-    private int run = 0;
-    private long tiTimeStamp = 0;
-    private DataEvent event;
-
-    private IndexedTable tt, reverseTT, dcrbjitters, timejitter, wirestat, tdccuts, docares, time2dist, t0s;
-
-    private List<Hit> _DCHits;
-
-    private final double timeBuf = 25.0;
-
     private final Map<int[], double[]> aimatchtrk = new HashMap<>();
     private final Map<Integer, List<Hit>> aimatchcls = new HashMap<>();//map cluster id to list of hits ids
     private final Map<Integer, Integer> aihits = new HashMap<>();//map of hits ids
-    public HitReader(Banks names, DCGeant4Factory detector) {
-        this.bankNames = names;
-        this.detector = detector;
-    }
+    private DataEvent event;
+    public static final double OUTLIERCUT=1.2;
 
-    public HitReader(Banks names, RawBank.OrderType[] rawBankOrders, ConstantsManager manager, DCGeant4Factory detector) {
-        this(names, detector);
-        this.manager = manager;
-        this.rawBankOrders = rawBankOrders;
+    public AIHitReader(Banks names, RawBank.OrderType[] rawBankOrders, ConstantsManager manager, DCGeant4Factory detector) {
+        super(names, rawBankOrders, manager, detector);
     }
-
-    // Initialize various constants and parameters
-    public void initialize(DataEvent event) {
-        this.event = event;
-        if (event.hasBank("RUN::config")) {
-            DataBank bank = event.getBank("RUN::config");
-            run = bank.getInt("run", 0);
-            tiTimeStamp = bank.getLong("timestamp", 0);
-        }
-        if (manager != null) {
-            tt = manager.getConstants(run, Constants.TT);
-            timejitter = manager.getConstants(run, Constants.TIMEJITTER);
-            wirestat = manager.getConstants(run, Constants.WIRESTAT);
-            tdccuts = manager.getConstants(run, Constants.TDCTCUTS);
-            docares = manager.getConstants(run, Constants.DOCARES);
-            time2dist = manager.getConstants(run, Constants.TIME2DIST);
-            t0s = manager.getConstants(run, Constants.T0CORRECTION);
-        }
+    public AIHitReader(Banks names, DCGeant4Factory detector) {
+        super(names, detector);      
     }
-
+    
     // Main method for reading NN hits
     public void read_NNHits(DataEvent event, boolean readInstarec, boolean enableMulti) {
         this.initialize(event);
+        this.event = event;
         boolean multi = false;
         if (readInstarec) 
             multi = enableMulti;
@@ -250,7 +212,7 @@ public class HitReader {
                             Hit hit = createHit(bank, aihits.get(hids[ki]), cids);
                             hit.NNClusId = clusterID;
                             aimatchcls.computeIfAbsent(clusterID,  k-> new ArrayList<>()).add(hit);
-                            this.getDCHits().add(hit);
+                            this.getDCHits().add(hit); 
                         }
                     }
                 }
@@ -272,6 +234,8 @@ public class HitReader {
         );
         hit.set_Id(bank.getShort("id", row));
         hit.calc_CellSize(detector);
+        hit.aiClusDoca = bank.getFloat("trkDoca", row);
+        if(hit.aiClusDoca/hit.get_CellSize()>this.OUTLIERCUT) hit.outlier = true;
         double posError = hit.get_CellSize() / Math.sqrt(12.);
         hit.set_DocaErr(posError);
 
@@ -282,12 +246,15 @@ public class HitReader {
         
         // Assign track properties
         hit.NNTrkId = (int) aimatchtrk.get(cids)[3];
+        
         //hit.NNTrkP = aimatchtrk.get(cids)[0];
         //hit.NNTrkTheta = aimatchtrk.get(cids)[1];
         //hit.NNTrkPhi = aimatchtrk.get(cids)[2];
+        
         return hit;
     }
 
+    private List<Hit> _DCHits;
     /**
      * @return the _DCHits
      */

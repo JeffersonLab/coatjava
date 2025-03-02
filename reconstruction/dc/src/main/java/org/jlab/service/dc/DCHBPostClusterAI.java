@@ -8,7 +8,7 @@ import org.jlab.clas.swimtools.Swim;
 import org.jlab.clas.swimtools.Swimmer;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.dc.Constants;
-import org.jlab.rec.dc.nn.HitReader;
+import org.jlab.rec.dc.nn.AIHitReader;
 import org.jlab.rec.dc.banks.RecoBankWriter;
 import org.jlab.rec.dc.cluster.FittedCluster;
 import org.jlab.rec.dc.cross.Cross;
@@ -53,7 +53,7 @@ public class DCHBPostClusterAI extends DCEngine {
             return true;
         }
         /* IO */
-        HitReader reader      = new HitReader(this.getBanks(), Constants.getInstance().dcDetector);
+        AIHitReader reader  = new AIHitReader(this.getBanks(), Constants.getInstance().dcDetector);
         reader.initialize(event);
         RecoBankWriter writer = new RecoBankWriter(this.getBanks());
         // get Field
@@ -85,7 +85,7 @@ public class DCHBPostClusterAI extends DCEngine {
         PatternRec pr = new PatternRec();
         segmentsMap = pr.RecomposeSegments(hits, Constants.getInstance().dcDetector);
         
-        if (segmentsMap.isEmpty()) {
+        if (segmentsMap.isEmpty()) { 
             return true;
         } 
         //crossList
@@ -95,7 +95,7 @@ public class DCHBPostClusterAI extends DCEngine {
         for(Integer it : segmentsMap.keySet()) { 
             for(Segment se : segmentsMap.get(it)) {
                 if(se.get_Id()>0)
-                    segments.add(se);
+                    segments.add(se); 
             }
             
             
@@ -105,8 +105,7 @@ public class DCHBPostClusterAI extends DCEngine {
                 crosses.addAll(clist); 
             }
         }
-        
-        
+       
         LOGGER.log(Level.FINE, "num cands = "+crosses.size());
         for(Cross c : crosses)
             LOGGER.log(Level.FINE, "Pass Cross"+c.printInfo());
@@ -144,6 +143,7 @@ public class DCHBPostClusterAI extends DCEngine {
             if(!useInstarec) trkcandFinder.removeOverlappingTracks(trkcands);
             for (Track trk : trkcands) {
                 // reset the id
+                //if(useInstarec) trkId = trk.get(0).get_Segment1().get(0).NNTrkId;
                 trk.set_Id(trkId);
                 trkcandFinder.matchHits(trk.getStateVecs(),
                         trk,
@@ -151,19 +151,21 @@ public class DCHBPostClusterAI extends DCEngine {
                         dcSwim);
                 for (Cross c : trk) {
                     c.set_CrossDirIntersSegWires();
-                    clusters.add(c.get_Segment1().get_fittedCluster());
-                    clusters.add(c.get_Segment2().get_fittedCluster());
-                    trkcandFinder.setHitDoubletsInfo(c.get_Segment1());
-                    trkcandFinder.setHitDoubletsInfo(c.get_Segment2());
-                    for (FittedHit h1 : c.get_Segment1()) {
-                        h1.set_AssociatedHBTrackID(trkId);
-                        //if(h1.get_AssociatedHBTrackID()>0) 
-                        fhits.add(h1); 
+                    if(c.get_Segment1().get_fittedCluster().get_Id()>0) {
+                        clusters.add(c.get_Segment1().get_fittedCluster());
+                        trkcandFinder.setHitDoubletsInfo(c.get_Segment1());
+                        for (FittedHit h1 : c.get_Segment1()) {
+                            h1.set_AssociatedHBTrackID(trkId);
+                            fhits.add(h1); 
+                        }
                     }
-                    for (FittedHit h2 : c.get_Segment2()) {
-                        h2.set_AssociatedHBTrackID(trkId);
-                        //if(h2.get_AssociatedHBTrackID()>0) 
-                        fhits.add(h2); 
+                    if(c.get_Segment2().get_fittedCluster().get_Id()>0) {
+                        clusters.add(c.get_Segment2().get_fittedCluster());
+                        trkcandFinder.setHitDoubletsInfo(c.get_Segment2());
+                        for (FittedHit h2 : c.get_Segment2()) {
+                            h2.set_AssociatedHBTrackID(trkId);
+                            fhits.add(h2); 
+                        }
                     }
                 }
                 trk.calcTrajectory(trk.getId(), dcSwim, trk.get_Vtx0(), trk.get_pAtOrig(), trk.get_Q());
@@ -174,12 +176,14 @@ public class DCHBPostClusterAI extends DCEngine {
                 // no candidate found, stop here and save the hits,
         // the clusters, the segments0, the crosses
         if (trkcands.isEmpty()) {
-            event.appendBanks(writer.fillHBHitsBank(event, fhits),    
+            event.appendBanks(
+                    writer.fillHBHitsBank(event, fhits),    
                     writer.fillHBSegmentsBank(event, segments),
                     writer.fillHBCrossesBank(event, crosses));
         }
         else {
-            event.appendBanks(writer.fillHBHitsBank(event, fhits),    
+            event.appendBanks(
+                    writer.fillHBHitsBank(event, fhits),    
                     writer.fillHBClustersBank(event, clusters),
                     writer.fillHBSegmentsBank(event, segments),
                     writer.fillHBCrossesBank(event, crosses),

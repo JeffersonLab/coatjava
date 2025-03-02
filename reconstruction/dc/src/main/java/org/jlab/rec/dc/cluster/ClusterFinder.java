@@ -388,140 +388,139 @@ public class ClusterFinder {
             IndexedTable tab, DCGeant4Factory DcDetector, TimeToDistanceEstimator tde) {
 
         List<FittedCluster> clusters = new ArrayList<>();
-
         List<FittedCluster> rclusters = RecomposeTrackClusters(event, fhits, tab, DcDetector, tde);
-        //LOGGER.log(Level.FINER, " Clusters TimeBased Step 1");
-        //     for(FittedCluster c : rclusters)
-        //    	for(FittedHit h : c)
-        //    		LOGGER.log(Level.FINER, h.printInfo());
 
         for (FittedCluster clus : rclusters) {
-            // clean them up
-            //if(Constants.isSimulation) {  // at this stage only remove secondaries in MC
-            FittedCluster cleanClus = ct.SecondariesRemover(event, clus, cf, tab, DcDetector, tde);
-            clus = cleanClus;
-            //}
-
-            if (clus == null) {
-                continue;
-            }
-
-           // 	LOGGER.log(Level.FINER, " Clusters TimeBased Step 2ndaries rem");
-           // 	for(FittedHit h : clus)
-           // 		LOGGER.log(Level.FINER, h.printInfo());
-            FittedCluster LRresolvClus = ct.LRAmbiguityResolver(event, clus, cf, tab, DcDetector, tde);
-            clus = LRresolvClus;
-            if (clus == null) {
-                continue;
-            }
-
-            //	LOGGER.log(Level.FINER, " Clusters TimeBased Step LR res");
-           // 	for(FittedHit h : clus)
-             //   	LOGGER.log(Level.FINER, h.printInfo());
-            // resolves segments where there are only single hits in layers thereby resulting in a two-fold LR ambiguity
-            // hence there are 2 solutions to the segments
-            int[] SumLn = new int[6];
-            for (FittedHit fhit : clus) {
-                SumLn[fhit.get_Layer() - 1]++;
-            }
-            boolean tryOtherClus = true;
-            for (int l = 0; l < 6; l++) {
-                if (SumLn[l] > 1) {
-                    tryOtherClus = false;
-                }
-            }
-
-            if (tryOtherClus) {
-                FittedCluster Clus2 = new FittedCluster(clus.getBaseCluster());
-                for (FittedHit hit : clus) {
-
-                    if (hit.get_LeftRightAmb() != 0) {
-                        FittedHit newhit = new FittedHit(hit.get_Sector(), hit.get_Superlayer(), hit.get_Layer(), hit.get_Wire(),
-                                hit.get_TDC(), hit.getJitter(), hit.get_Id());
-                        newhit.set_Doca(hit.get_Doca());
-                        newhit.set_DocaErr(hit.get_DocaErr());
-                        newhit.setT0(hit.getT0()); 
-                        newhit.set_Beta(hit.get_Beta());
-                        newhit.setB(hit.getB());
-                        newhit.set_DeltaTimeBeta(hit.get_DeltaTimeBeta());
-                        newhit.set_DeltaDocaBeta(hit.get_DeltaDocaBeta());
-                        newhit.setTStart(hit.getTStart());
-                        newhit.setTProp(hit.getTProp());
-                        newhit.betaFlag= hit.betaFlag;
-                        newhit.setTFlight(hit.getTFlight());
-                        newhit.set_Time(hit.get_Time());
-                        newhit.set_Id(hit.get_Id());
-                        newhit.set_TrkgStatus(hit.get_TrkgStatus());
-                        newhit.set_LeftRightAmb(-hit.get_LeftRightAmb());
-                        newhit.calc_CellSize(DcDetector);
-                        newhit.set_XWire(hit.get_XWire());
-                        newhit.set_Z(hit.get_Z());
-                        newhit.set_WireLength(hit.get_WireLength());
-                        newhit.set_WireMaxSag(hit.get_WireMaxSag());
-                        newhit.set_WireLine(hit.get_WireLine());
-                        newhit.updateHitPositionWithTime(event, 1, hit.getB(), tab, DcDetector, tde); // assume the track angle is // to the layer						
-                        newhit.set_AssociatedClusterID(hit.get_AssociatedClusterID());
-                        newhit.set_AssociatedHBTrackID(hit.get_AssociatedHBTrackID());
-                        Clus2.add(newhit);
-                    }
-
-                }
-                cf.SetFitArray(Clus2, "TSC");
-                cf.Fit(Clus2, true);
-
-                if (Math.abs(clus.get_Chisq() - Clus2.get_Chisq()) < 1) {
-                    clusters.add(Clus2);
+            this.cleanCluster(event, clus, cf, ct, tab, DcDetector, tde);
+            // Resolve layer-specific issues and create an alternative cluster if needed
+            if (shouldTryAlternativeCluster(clus)) {
+                FittedCluster alternativeClus = createAlternativeCluster( event,  clus,  DcDetector, tab,  tde, cf);
+                if (Math.abs(clus.get_Chisq() - alternativeClus.get_Chisq()) < 1) {
+                    clusters.add(alternativeClus);
                 }
             }
             clusters.add(clus);
         }
 
+        
+        // Finalize the clusters and fit them
         for (FittedCluster clus : clusters) {
-
-            cf.SetFitArray(clus, "TSC");
-            cf.Fit(clus, true);
-
-            // update the hits
-            for (FittedHit fhit : clus) {
-                fhit.updateHitPositionWithTime(event, clus.get_clusterLineFitSlope(), fhit.getB(), tab, DcDetector, tde);
-            }
-            // iterate till convergence of trkAngle
-            double Chi2Diff = 1;
-            double prevChi2 = 999999999;
-            double trkAngleFinal = 0;
-            while (Chi2Diff > 0) {
-                cf.SetFitArray(clus, "TSC");
-                cf.Fit(clus, true);
-                Chi2Diff = prevChi2 - clus.get_Chisq();
-                if (Chi2Diff > 0) {
-                    // update the hits
-                    for (FittedHit fhit : clus) {
-                        fhit.updateHitPositionWithTime(event, clus.get_clusterLineFitSlope(), fhit.getB(), tab, DcDetector, tde);
-                    }
-                    trkAngleFinal = clus.get_clusterLineFitSlope();
-                }
-                prevChi2 = clus.get_Chisq();
-            }
-
-            // update to MP
-            cf.SetResidualDerivedParams(clus, false, false, DcDetector); //calcTimeResidual=false, resetLRAmbig=false 
-
-            for (FittedHit fhit : clus) {
-                fhit.updateHitPositionWithTime(event, trkAngleFinal, fhit.getB(), tab, DcDetector, tde);
-            }
-            cf.SetFitArray(clus, "TSC");
-            cf.Fit(clus, true);
-            cf.SetResidualDerivedParams(clus, true, false, DcDetector); //calcTimeResidual=false, resetLRAmbig=false 
-
-            cf.SetFitArray(clus, "TSC");
-            cf.Fit(clus, false);
-
-            cf.SetSegmentLineParameters(clus.get(0).get_Z(), clus);
-
+            performClusterFitting(event, clus, cf, tab, DcDetector, tde);
         }
 
         return clusters;
+    }
 
+    //handle cluster cleaning
+    public void cleanCluster(DataEvent event, 
+        FittedCluster clus, ClusterFitter cf, ClusterCleanerUtilities ct, 
+        IndexedTable tab, DCGeant4Factory DcDetector, TimeToDistanceEstimator tde) {
+        // Clean up clusters by removing secondaries
+        if(clus == null) return ;
+        clus = ct.SecondariesRemover(event, clus, cf, tab, DcDetector, tde);
+        if (clus == null) return ;
+
+        // Resolve ambiguity in clusters
+        clus = ct.LRAmbiguityResolver(event, clus, cf, tab, DcDetector, tde);
+        if (clus == null) return ;
+    }
+    private boolean shouldTryAlternativeCluster(FittedCluster clus) {
+        int[] SumLn = new int[6];
+        for (FittedHit fhit : clus) {
+            SumLn[fhit.get_Layer() - 1]++;
+        }
+        for (int l = 0; l < 6; l++) {
+            if (SumLn[l] > 1) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private FittedCluster createAlternativeCluster(DataEvent event, FittedCluster clus, DCGeant4Factory DcDetector, 
+            IndexedTable tab, TimeToDistanceEstimator tde,
+            ClusterFitter cf) {
+        FittedCluster Clus2 = new FittedCluster(clus.getBaseCluster());
+        for (FittedHit hit : clus) {
+            if (hit.get_LeftRightAmb() != 0) {
+                FittedHit newHit = createNewHitFromExisting(hit,event, tab, DcDetector, tde);
+                Clus2.add(newHit);
+            }
+        }
+        cf.SetFitArray(Clus2, "TSC");
+        cf.Fit(Clus2, true);
+        return Clus2;
+    }
+
+    private FittedHit createNewHitFromExisting(FittedHit hit, DataEvent event, 
+                IndexedTable tab, DCGeant4Factory DcDetector, TimeToDistanceEstimator tde) {
+        FittedHit newHit = new FittedHit(hit.get_Sector(), hit.get_Superlayer(), hit.get_Layer(), hit.get_Wire(),
+                                         hit.get_TDC(), hit.getJitter(), hit.get_Id());
+        newHit.set_Doca(hit.get_Doca());
+        newHit.set_DocaErr(hit.get_DocaErr());
+        newHit.setT0(hit.getT0()); 
+        newHit.set_Beta(hit.get_Beta());
+        newHit.setB(hit.getB());
+        newHit.set_DeltaTimeBeta(hit.get_DeltaTimeBeta());
+        newHit.set_DeltaDocaBeta(hit.get_DeltaDocaBeta());
+        newHit.setTStart(hit.getTStart());
+        newHit.setTProp(hit.getTProp());
+        newHit.betaFlag = hit.betaFlag;
+        newHit.setTFlight(hit.getTFlight());
+        newHit.set_Time(hit.get_Time());
+        newHit.set_Id(hit.get_Id());
+        newHit.set_TrkgStatus(hit.get_TrkgStatus());
+        newHit.set_LeftRightAmb(-hit.get_LeftRightAmb());
+        newHit.calc_CellSize(DcDetector);
+        newHit.set_XWire(hit.get_XWire());
+        newHit.set_Z(hit.get_Z());
+        newHit.set_WireLength(hit.get_WireLength());
+        newHit.set_WireMaxSag(hit.get_WireMaxSag());
+        newHit.set_WireLine(hit.get_WireLine());
+        newHit.updateHitPositionWithTime(event, 1, hit.getB(), tab, DcDetector, tde); 
+        newHit.set_AssociatedClusterID(hit.get_AssociatedClusterID());
+        newHit.set_AssociatedHBTrackID(hit.get_AssociatedHBTrackID());
+        return newHit;
+    }
+
+    private void performClusterFitting(DataEvent event, FittedCluster clus, ClusterFitter cf, IndexedTable tab,
+                                       DCGeant4Factory DcDetector, TimeToDistanceEstimator tde) {
+        cf.SetFitArray(clus, "TSC");
+        cf.Fit(clus, true);
+
+        // Update hits with new position after fitting
+        for (FittedHit fhit : clus) {
+            fhit.updateHitPositionWithTime(event, clus.get_clusterLineFitSlope(), fhit.getB(), tab, DcDetector, tde);
+        }
+
+        // Iterate until convergence
+        double Chi2Diff = 1;
+        double prevChi2 = Double.MAX_VALUE;
+        while (Chi2Diff > 0) {
+            cf.SetFitArray(clus, "TSC");
+            cf.Fit(clus, true);
+            Chi2Diff = prevChi2 - clus.get_Chisq();
+            if (Chi2Diff > 0) {
+                // Update the hits
+                for (FittedHit fhit : clus) {
+                    fhit.updateHitPositionWithTime(event, clus.get_clusterLineFitSlope(), fhit.getB(), tab, DcDetector, tde);
+                }
+            }
+            prevChi2 = clus.get_Chisq();
+        }
+
+        // Finalize residuals and update hits
+        cf.SetResidualDerivedParams(clus, false, false, DcDetector); //calcTimeResidual=false, resetLRAmbig=false 
+        for (FittedHit fhit : clus) {
+            fhit.updateHitPositionWithTime(event, clus.get_clusterLineFitSlope(), fhit.getB(), tab, DcDetector, tde);
+        }
+
+        cf.SetFitArray(clus, "TSC");
+        cf.Fit(clus, true);
+        cf.SetResidualDerivedParams(clus, true, false, DcDetector); //calcTimeResidual=true, resetLRAmbig=false 
+        cf.SetFitArray(clus, "TSC");
+        cf.Fit(clus, false);
+        cf.SetSegmentLineParameters(clus.get(0).get_Z(), clus);
     }
 
     /**
@@ -616,5 +615,9 @@ public class ClusterFinder {
         }
         return bank;
 
+    }
+
+    private void updateClusterWithTime(DataEvent event, FittedCluster clus, ClusterFitter cf, IndexedTable tab, DCGeant4Factory DcDetector, TimeToDistanceEstimator tde) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 }

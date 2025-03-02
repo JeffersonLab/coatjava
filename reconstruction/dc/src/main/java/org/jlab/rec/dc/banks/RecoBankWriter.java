@@ -88,7 +88,7 @@ public class RecoBankWriter {
         bank.setByte("LR", i-rejCnt, (byte) hitlist.get(i).get_LeftRightAmb());
         bank.setShort("clusterID", i-rejCnt, (short) hitlist.get(i).get_AssociatedClusterID());
         bank.setInt("TDC",i-rejCnt,hitlist.get(i).get_TDC());
-        bank.setByte("jitter",i, (byte) hitlist.get(i).getJitter());
+        bank.setByte("jitter",i-rejCnt, (byte) hitlist.get(i).getJitter());
         
     }
 

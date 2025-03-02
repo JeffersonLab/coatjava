@@ -38,8 +38,8 @@ import org.jlab.utils.groups.IndexedTable;
  */
 public class HitReader {
 
-    private Banks bankNames           = null;
-    private DCGeant4Factory detector  = null;
+    public Banks bankNames           = null;
+    public DCGeant4Factory detector  = null;
     private ConstantsManager manager  = null;
     private OrderType[] rawBankOrders = null;
     
@@ -53,13 +53,13 @@ public class HitReader {
     private IndexedTable timejitter  = null;
     private IndexedTable wirestat    = null;
     private IndexedTable tdccuts     = null;
-    private IndexedTable docares     = null;
-    private IndexedTable time2dist   = null;
-    private IndexedTable t0s         = null;
+    public IndexedTable docares     = null;
+    public IndexedTable time2dist   = null;
+    public IndexedTable t0s         = null;
     
     private int numTDCBankRows = -1;
     private List<Hit> _DCHits;
-    private List<FittedHit> _HBHits; //hit-based tracking hit information
+    public List<FittedHit> _HBHits; //hit-based tracking hit information
     private List<FittedHit> _TBHits; //time-based tracking hit information
 
     private final double timeBuf = 25.0;
@@ -565,7 +565,7 @@ public class HitReader {
         }
     }
     
-    private boolean passHit(int betaFlag) {
+    public boolean passHit(int betaFlag) {
         boolean pass = true;
         if(Constants.getInstance().USEBETACUT()) {
             //if(betaFlag != 0) { //all beta cuts
@@ -579,7 +579,7 @@ public class HitReader {
     }
     
     //betaFlag:0 = OK; -1 = negative; 1 = less than lower cut (0.15); 2 = greater than 1.15 (from HBEB beta vs p plots for data)
-    private void setBetaFlag(DataEvent event, int trkId, FittedHit hit, double beta) {
+    public void setBetaFlag(DataEvent event, int trkId, FittedHit hit, double beta) {
         if(beta<0.15) {
             if(beta<0) {
                 hit.betaFlag = -1;
@@ -626,7 +626,7 @@ public class HitReader {
         hit.set_Beta(beta);
     }
     
-    private double readBeta(DataEvent event, int trkId) {
+    public double readBeta(DataEvent event, int trkId) {
         double _beta = 1.0;
         String partBankName = bankNames.getRecPartBank();
         String trackBankName = bankNames.getRecTrackBank();
@@ -648,7 +648,7 @@ public class HitReader {
     }
 
 
-    private double[] getT0(int sector, int superlayer,
+    public double[] getT0(int sector, int superlayer,
                             int layer, int wire, IndexedTable t0Table) {
         double[] T0Corr = new double[2];
 
