@@ -21,6 +21,7 @@ import org.jlab.rec.ahdc.KalmanFilter.MaterialMap;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import org.jlab.rec.ahdc.PreCluster.PreClusterFinder;
 import org.jlab.rec.ahdc.Track.Track;
+import org.jlab.rec.ahdc.Mode;
 
 import java.io.File;
 import java.util.*;
@@ -28,10 +29,11 @@ import java.util.*;
 public class AHDCEngine extends ReconstructionEngine {
 
 	private boolean                   simulation;
-	private boolean                   use_AI_for_trackfinding;
 	private String                    findingMethod;
 	private HashMap<String, Material> materialMap;
 	private Model model;
+
+	private Mode mode = Mode.CV_Track_Finding;
 
 	public AHDCEngine() {
 		super("ALERT", "ouillon", "1.0.1");
@@ -41,10 +43,18 @@ public class AHDCEngine extends ReconstructionEngine {
 	public boolean init() {
 		simulation    = false;
 		findingMethod = "distance";
-		use_AI_for_trackfinding = true;
 
 		if (materialMap == null) {
 			materialMap = MaterialMap.generateMaterials();
+		}
+
+		if(this.getEngineConfigString("Mode")!=null) {
+			if (Objects.equals(this.getEngineConfigString("Mode"), Mode.AI_Track_Finding.name()))
+				mode = Mode.AI_Track_Finding;
+
+			if (Objects.equals(this.getEngineConfigString("Mode"), Mode.CV_Track_Finding.name()))
+				mode = Mode.CV_Track_Finding;
+
 		}
 
 		model = new Model();
@@ -89,8 +99,6 @@ public class AHDCEngine extends ReconstructionEngine {
 			AHDC_PreClusters = preclusterfinder.get_AHDCPreClusters();
 			//System.out.println("AHDC_PreClusters size " + AHDC_PreClusters.size());
 
-
-
 			// III) Create Cluster
 			ClusterFinder clusterfinder = new ClusterFinder();
 			clusterfinder.findCluster(AHDC_PreClusters);
@@ -101,7 +109,9 @@ public class AHDCEngine extends ReconstructionEngine {
 			ArrayList<Track> AHDC_Tracks = new ArrayList<>();
 			ArrayList<TrackPrediction> predictions = new ArrayList<>();
 
-			if (use_AI_for_trackfinding == false) {
+			// If there is too much hits, we rely on to the conventional track finding
+			if (AHDC_Hits.size() > 300) mode = Mode.CV_Track_Finding;
+			if (mode == Mode.CV_Track_Finding) {
 				if (findingMethod.equals("distance")) {
 					// IV) a) Distance method
 					//System.out.println("using distance");
@@ -116,7 +126,7 @@ public class AHDCEngine extends ReconstructionEngine {
 					AHDC_Tracks = houghtransform.get_AHDCTracks();
 				}
 			}
-			else {
+			if (mode == Mode.AI_Track_Finding) {
 				// AI ---------------------------------------------------------------------------------
 				AHDC_Hits.sort(new Comparator<Hit>() {
 					@Override
