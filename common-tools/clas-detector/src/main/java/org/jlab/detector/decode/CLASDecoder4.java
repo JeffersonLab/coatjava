@@ -248,7 +248,7 @@ public class CLASDecoder4 {
     }
 
     public void extractPulses(Event event) {
-        ahdcExtractor.update(128, null, event, schemaFactory, "AHDC::wf", "AHDC::adc");
+        ahdcExtractor.update(64, null, event, schemaFactory, "AHDC::wf", "AHDC::adc");
     }
 
     public Bank getDataBankWF(String name, DetectorType type) {
