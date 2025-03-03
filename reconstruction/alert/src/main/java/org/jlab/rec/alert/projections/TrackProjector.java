@@ -1,7 +1,6 @@
-package org.jlab.rec.atof.trackMatch;
+package org.jlab.rec.alert.projections;
 
 import java.util.ArrayList;
-
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.clas.tracking.trackrep.Helix;
@@ -30,7 +29,7 @@ public class TrackProjector {
      * projections of tracks.
      */
     private ArrayList<TrackProjection> projections;
-    
+
     /**
      * solenoid magnitude
      */
@@ -54,8 +53,8 @@ public class TrackProjector {
     public ArrayList<TrackProjection> getProjections() {
         return projections;
     }
-    
-     /**
+
+    /**
      * Gets the solenoid magnitude
      *
      * @return solenoid magnitude
@@ -72,8 +71,8 @@ public class TrackProjector {
     public void setProjections(ArrayList<TrackProjection> Projections) {
         this.projections = Projections;
     }
-    
-     /**
+
+    /**
      * Sets the solenoid magnitude.
      *
      * @param B a double.
@@ -91,9 +90,7 @@ public class TrackProjector {
     public void projectTracks(DataEvent event) {//, CalibrationConstantsLoader ccdb) {
 
         projections.clear();
-        
         String track_bank_name = "AHDC::Track";
-
         if (event == null) { // check if there is an event
             //System.out.print(" no event \n");
         } else if (event.hasBank(track_bank_name) == false) {
@@ -104,13 +101,13 @@ public class TrackProjector {
             int nt = bank.rows(); // number of tracks 
             TrackProjection projection = new TrackProjection();
             for (int i = 0; i < nt; i++) {
-
                 double x = bank.getFloat("x", i);
                 double y = bank.getFloat("y", i);
                 double z = bank.getFloat("z", i);
                 double px = bank.getFloat("px", i);
                 double py = bank.getFloat("py", i);
                 double pz = bank.getFloat("pz", i);
+                int id = nt + 1;//To be replaced by track id if it is added to the out bank
 
                 int q = -1; //need the charge sign from tracking
 
@@ -120,34 +117,36 @@ public class TrackProjector {
                 double yb = 0;
 
                 //momenta must be in GeV for the helix class
-                Helix helix = new Helix(x, y, z, px/1000., py/1000., pz/1000., q, b, xb, yb, units);
+                Helix helix = new Helix(x, y, z, px / 1000., py / 1000., pz / 1000., q, b, xb, yb, units);
 
                 //Intersection points with the middle of the bar or wedge
                 projection.setBarIntersect(helix.getHelixPointAtR(Parameters.BAR_MIDDLE_RADIUS));
                 projection.setWedgeIntersect(helix.getHelixPointAtR(Parameters.WEDGE_MIDDLE_RADIUS));
 
+                double rVertex = Math.sqrt(x * x + y * y);
+
                 //Path length to the middle of the bar or wedge
-                projection.setBarPathLength((float) Math.abs(helix.getLAtR(Parameters.BAR_INNER_RADIUS)));
-                projection.setWedgePathLength((float) Math.abs(helix.getLAtR(Parameters.WEDGE_INNER_RADIUS)));
-                
+                projection.setBarPathLength((float) helix.getPathLength(rVertex, Parameters.BAR_MIDDLE_RADIUS));
+                projection.setWedgePathLength((float) helix.getPathLength(rVertex, Parameters.WEDGE_MIDDLE_RADIUS));
                 //Path length from the inner radius to the middle radius
-                projection.setBarInPathLength((float) Math.abs(helix.getLAtR(Parameters.BAR_MIDDLE_RADIUS)) - projection.getBarPathLength());
-                projection.setWedgeInPathLength((float) Math.abs(helix.getLAtR(Parameters.WEDGE_MIDDLE_RADIUS)) - projection.getWedgePathLength());
+                projection.setBarInPathLength((float) helix.getPathLength(Parameters.BAR_INNER_RADIUS, Parameters.BAR_MIDDLE_RADIUS));
+                projection.setWedgeInPathLength((float) helix.getPathLength(Parameters.WEDGE_INNER_RADIUS, Parameters.WEDGE_MIDDLE_RADIUS));
+                projection.setTrackID(id);
                 projections.add(projection);
             }
+
         }
     }
-    
+
     /**
-     * Projects the MC particles onto the atof using a {@link Helix}
-     * model.
+     * Projects the MC particles onto the atof using a {@link Helix} model.
      *
      * @param event the {@link DataEvent} containing track data to be projected.
      */
     public void projectMCTracks(DataEvent event) {//, CalibrationConstantsLoader ccdb) {
 
         projections.clear();
-                
+
         String track_bank_name = "MC::Particle";
         if (event == null) { // check if there is an event
             //System.out.print(" no event \n");
@@ -158,7 +157,6 @@ public class TrackProjector {
             DataBank bank = event.getBank(track_bank_name);
             int nt = bank.rows(); // number of tracks 
             TrackProjection projection = new TrackProjection();
-            DataBank outputBank = event.createBank("ALERT::Projections", nt);
 
             for (int i = 0; i < nt; i++) {
 
@@ -168,15 +166,14 @@ public class TrackProjector {
                 double px = bank.getFloat("px", i);
                 double py = bank.getFloat("py", i);
                 double pz = bank.getFloat("pz", i);
-                
+                int id = bank.getShort("id", i);
                 //Put everything in MM
+                x = x * 10;
+                y = y * 10;
+                z = z * 10;
 
-                x = x*10;
-                y = y*10;
-                z = z*10;
+                Units units = Units.MM;
 
-		Units units = Units.MM;   
-                
                 int q = -1; //need the charge sign from tracking
 
                 double xb = 0;
@@ -186,24 +183,25 @@ public class TrackProjector {
                 Helix helix = new Helix(x, y, z, px, py, pz, q, b, xb, yb, units);
 
                 //Intersection points with the middle of the bar or wedge
-		projection.setBarIntersect(helix.getHelixPointAtR(Parameters.BAR_MIDDLE_RADIUS));
+                projection.setBarIntersect(helix.getHelixPointAtR(Parameters.BAR_MIDDLE_RADIUS));
                 projection.setWedgeIntersect(helix.getHelixPointAtR(Parameters.WEDGE_MIDDLE_RADIUS));
 
+                double rVertex = Math.sqrt(x * x + y * y);
+
                 //Path length to the middle of the bar or wedge
-
-		projection.setBarPathLength((float) Math.abs(helix.getLAtR(Parameters.BAR_INNER_RADIUS)));
-                projection.setWedgePathLength((float) Math.abs(helix.getLAtR(Parameters.WEDGE_INNER_RADIUS)));
-                
+                projection.setBarPathLength((float) helix.getPathLength(rVertex, Parameters.BAR_MIDDLE_RADIUS));
+                projection.setWedgePathLength((float) helix.getPathLength(rVertex, Parameters.WEDGE_MIDDLE_RADIUS));
                 //Path length from the inner radius to the middle radius
+                projection.setBarInPathLength((float) helix.getPathLength(Parameters.BAR_INNER_RADIUS, Parameters.BAR_MIDDLE_RADIUS));
+                projection.setWedgeInPathLength((float) helix.getPathLength(Parameters.WEDGE_INNER_RADIUS, Parameters.WEDGE_MIDDLE_RADIUS));
 
-		projection.setBarInPathLength((float) Math.abs(helix.getLAtR(Parameters.BAR_MIDDLE_RADIUS)) - projection.getBarPathLength());
-                projection.setWedgeInPathLength((float) Math.abs(helix.getLAtR(Parameters.WEDGE_MIDDLE_RADIUS)) - projection.getWedgePathLength());
+                projection.setTrackID(id);
                 projections.add(projection);
             }
         }
     }
 
     public static void main(String arg[]) {
-        
+
     }
 }

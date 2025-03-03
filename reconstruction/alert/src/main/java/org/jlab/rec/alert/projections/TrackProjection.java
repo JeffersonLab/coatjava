@@ -1,4 +1,4 @@
-package org.jlab.rec.atof.trackMatch;
+package org.jlab.rec.alert.projections;
 
 import org.jlab.geom.prim.Point3D;
 
@@ -41,6 +41,8 @@ public class TrackProjection {
      * Path length inside the wedge. 
      */
     Float wedgeInPathLength;
+    
+    int trackID;
     
 
     /**
@@ -163,6 +165,14 @@ public class TrackProjection {
      */
     public void setWedgeInPathLength(Float WedgeInPathLength) {
         this.wedgeInPathLength = WedgeInPathLength;
+    }
+
+    public void setTrackID(int trackID) {
+        this.trackID = trackID;
+    }
+    
+    public int getTrackID() {
+        return trackID;
     }
 
     /**

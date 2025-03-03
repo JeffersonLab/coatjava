@@ -18,7 +18,7 @@ import org.jlab.rec.atof.cluster.ClusterFinder;
 import org.jlab.rec.atof.hit.ATOFHit;
 import org.jlab.rec.atof.hit.BarHit;
 import org.jlab.rec.atof.hit.HitFinder;
-import org.jlab.rec.atof.trackMatch.TrackProjector;
+import org.jlab.rec.alert.projections.TrackProjector;
 
 /**
  * Service to return reconstructed ATOF hits and clusters

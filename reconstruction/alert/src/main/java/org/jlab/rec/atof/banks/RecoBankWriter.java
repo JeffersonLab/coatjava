@@ -6,7 +6,7 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.rec.atof.cluster.ATOFCluster;
 import org.jlab.rec.atof.hit.ATOFHit;
 import org.jlab.rec.atof.hit.BarHit;
-import org.jlab.rec.atof.trackMatch.TrackProjection;
+import org.jlab.rec.alert.projections.TrackProjection;
 
 /**
  * The {@code RecoBankWriter} writes the banks needed for the atof
@@ -43,7 +43,7 @@ public class RecoBankWriter {
 
         for (int i = 0; i < hitList.size(); i++) {
             bank.setShort("id", i, (short) (i + 1));
-            bank.setInt("clusterid", i, (int) hitList.get(i).getAssociatedClusterIndex());
+            bank.setShort("clusterid", i, (short) hitList.get(i).getAssociatedClusterIndex());
             bank.setInt("sector", i, (int) hitList.get(i).getSector());
             bank.setInt("layer", i, (int) hitList.get(i).getLayer());
             bank.setInt("component", i, (int) hitList.get(i).getComponent());
@@ -85,6 +85,9 @@ public class RecoBankWriter {
             bank.setFloat("y", i, (float) (clusterList.get(i).getY()));
             bank.setFloat("z", i, (float) (clusterList.get(i).getZ()));
             bank.setFloat("energy", i, (float) clusterList.get(i).getEnergy());
+            bank.setFloat("inpathlength",i, (float) (clusterList.get(i).getInPathLength()));
+            bank.setFloat("pathlength",i, (float) (clusterList.get(i).getPathLength()));
+            bank.setShort("projID", i, (short) (clusterList.get(i).getIProj()));
         }
         return bank;
     }
@@ -108,9 +111,10 @@ public class RecoBankWriter {
             System.err.println("COULD NOT CREATE A ALERT::Projections BANK!!!!!!");
             return null;
         }
-
         for (int i = 0; i < projections.size(); i++) {
             TrackProjection projection = projections.get(i);
+            bank.setShort("id", i, (short) (i + 1));
+            bank.setShort("trackID", i, (short) projection.getTrackID());
             bank.setFloat("x_at_bar", i, (float) projection.getBarIntersect().x());
             bank.setFloat("y_at_bar", i, (float) projection.getBarIntersect().y());
             bank.setFloat("z_at_bar", i, (float) projection.getBarIntersect().z());
