@@ -193,12 +193,12 @@ public class FittedCluster extends ArrayList<FittedHit> implements Comparable<Fi
     public int compareTo(FittedCluster o) {
         if (this.size() < o.size()) {
             return 1;
-        } 
+        }
         else if(this.size() == o.size()){
             if(this.get_fitProb() < o.get_fitProb()) return 1;
             else if(this.get_fitProb() == o.get_fitProb()) return 0;
             else return -1;
-        }
+    }
         else {
             return -1;
         }
@@ -360,6 +360,9 @@ public class FittedCluster extends ArrayList<FittedHit> implements Comparable<Fi
     public String printInfo() {
         String s = "Fitted DC cluster: ID " + this.get_Id() + " Sector " + this.get_Sector() + " Superlayer " + this.get_Superlayer() + " Size " + this.size() + " fit chi2 " + this.get_fitProb()
                  + " fit slope " + this.get_clusterLineFitSlope() + " fit intercept " + this.get_clusterLineFitIntercept();
+        for(FittedHit h : this) {
+            s+=h.printInfo()+"\n";
+        }
         return s;
     }
 

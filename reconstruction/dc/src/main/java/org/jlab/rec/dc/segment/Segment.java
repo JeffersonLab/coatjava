@@ -401,7 +401,9 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
      * @return the segment info.
      */
     public String printInfo() {
-        String s = "Segment: ID " + this.get_Id() + " Sector " + this.get_Sector() + " Superlayer " + this.get_Superlayer() + " Size " + this.size();
+        String s = "Segment: ID " + this.get_Id() + " Sector " + this.get_Sector() + " Superlayer " + this.get_Superlayer() + " Size " + this.size()+" cid"
+                +this.get_fittedCluster().printInfo();
+        
         return s;
     }
 

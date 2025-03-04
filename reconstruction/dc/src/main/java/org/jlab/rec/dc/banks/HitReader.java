@@ -12,6 +12,7 @@ import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
 import cnuphys.snr.NoiseReductionParameters;
 import cnuphys.snr.clas12.Clas12NoiseAnalysis;
 import cnuphys.snr.clas12.Clas12NoiseResult;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -23,6 +24,7 @@ import org.jlab.detector.banks.RawDataBank;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.rec.dc.Constants;
+import org.jlab.service.dc.DCEngine;
 import org.jlab.utils.groups.IndexedList;
 import org.jlab.utils.groups.IndexedTable;
 
@@ -36,8 +38,8 @@ import org.jlab.utils.groups.IndexedTable;
  */
 public class HitReader {
 
-    private Banks bankNames           = null;
-    private DCGeant4Factory detector  = null;
+    public Banks bankNames           = null;
+    public DCGeant4Factory detector  = null;
     private ConstantsManager manager  = null;
     private OrderType[] rawBankOrders = null;
     
@@ -51,9 +53,9 @@ public class HitReader {
     private IndexedTable timejitter  = null;
     private IndexedTable wirestat    = null;
     private IndexedTable tdccuts     = null;
-    private IndexedTable docares     = null;
-    private IndexedTable time2dist   = null;
-    private IndexedTable t0s         = null;
+    public IndexedTable docares     = null;
+    public IndexedTable time2dist   = null;
+    public IndexedTable t0s         = null;
     
     private int numTDCBankRows = -1;
     private List<Hit> _DCHits;
@@ -593,9 +595,13 @@ public class HitReader {
         return pass;
     }
     //new way of fetching ai id'ed hits
-    public void read_NNHits(DataEvent event) {
+    public void read_NNHits(DataEvent event, boolean useInstarec) {
         this.initialize(event);
-        this.read_NNHits();
+        if(useInstarec) {
+            this.read_InstarecNNHits();
+        } else {
+            this.read_NNHits();
+        }
     }
 
     private void read_NNHits() {
@@ -656,6 +662,74 @@ public class HitReader {
         }
     }
 
+    private void read_InstarecNNHits() { 
+        _DCHits = new ArrayList<>();
+        if (!(event.hasBank(bankNames.getInputHitsBank()))) 
+            System.out.println("missing bank " + bankNames.getInputHitsBank());
+        if (!(event.hasBank(bankNames.getInputClustersBank()))) 
+            System.out.println("missing bank " + bankNames.getInputClustersBank());
+        if (!(event.hasBank(bankNames.getInstarecBank()))) 
+            System.out.println("missing bank " + bankNames.getInstarecBank());
+        if (!(event.hasBank(bankNames.getInputHitsBank()) 
+            && event.hasBank(bankNames.getInputClustersBank())
+            && event.hasBank(bankNames.getInstarecBank()))) {
+            System.out.println("missing bank ");
+            return;
+        }
+
+        DataBank bankAI = event.getBank(bankNames.getInstarecBank());
+        DataBank bank = event.getBank(bankNames.getInputHitsBank());
+
+        int[] Ids;  //  1-6 = cluster ids for slyrs 1 - 6
+        double[] tPars; // NN track parameters px, py, pz ; last idx = track id
+
+        for (int j = 0; j < bankAI.rows(); j++) {
+            Ids = new int[6];
+            tPars = new double[5];
+            Ids[0] = (int) bankAI.getShort("c1", j);
+            Ids[1] = (int) bankAI.getShort("c2", j);
+            Ids[2] = (int) bankAI.getShort("c3", j);
+            Ids[3] = (int) bankAI.getShort("c4", j);
+            Ids[4] = (int) bankAI.getShort("c5", j);
+            Ids[5] = (int) bankAI.getShort("c6", j); // cluster ID in superlayer 6
+
+            tPars[0] = (double) bankAI.getFloat("px", j);
+            tPars[1] = (double) bankAI.getFloat("py", j);
+            tPars[2] = (double) bankAI.getFloat("pz", j);
+            tPars[3] = (double) bankAI.getShort("id", j);
+            tPars[4] = (double) bankAI.getFloat("prob", j);
+            int status = (int) bankAI.getShort("status", j); 
+            if(status==0) continue;
+            
+            aimatch.clear();
+            for (int k = 0; k < 6; k++) {
+                aimatch.put(Ids[k], tPars); 
+            }
+        
+            for (int i = 0; i < bank.rows(); i++) {
+                int clusterID = bank.getShort("clusterID", i);
+
+                if(clusterID>0) {
+                    if(this.aimatch.containsKey(clusterID)) { 
+                        Hit hit = new Hit(bank.getByte("sector", i), bank.getByte("superlayer", i), 
+                            bank.getByte("layer", i), bank.getShort("wire", i), bank.getInt("TDC", i), bank.getByte("jitter", i), bank.getShort("id", i));
+                        hit.set_Id(bank.getShort("id", i));
+                        hit.calc_CellSize(detector);
+                        double posError = hit.get_CellSize() / Math.sqrt(12.);
+                        hit.set_DocaErr(posError);
+                        hit.NNTrkId  = (int) this.aimatch.get(clusterID)[3];
+                        hit.NNClusId = clusterID;
+                        //hit.NNTrkP      = this.aimatch.get(clusterID)[0];
+                        //hit.NNTrkTheta  = this.aimatch.get(clusterID)[1];
+                        //hit.NNTrkPhi    = this.aimatch.get(clusterID)[2];
+                        LOGGER.log(Level.FINE, "NN"+hit.printInfo());
+                        this._DCHits.add(hit);
+                    }
+                }
+            }
+        }
+    }
+    
 //    public void read_NNHits(DataEvent event, DCGeant4Factory DcDetector,
 //                             double triggerPhase) {
 //        if (!(event.hasBank("DC::tdc") && event.hasBank("nn::dchits")  )) {
@@ -715,7 +789,7 @@ public class HitReader {
 //    }
 
     //betaFlag:0 = OK; -1 = negative; 1 = less than lower cut (0.15); 2 = greater than 1.15 (from HBEB beta vs p plots for data)
-    private void setBetaFlag(DataEvent event, int trkId, FittedHit hit, double beta) {
+    public void setBetaFlag(DataEvent event, int trkId, FittedHit hit, double beta) {
         if(beta<0.15) {
             if(beta<0) {
                 hit.betaFlag = -1;
@@ -762,7 +836,7 @@ public class HitReader {
         hit.set_Beta(beta);
     }
     
-    private double readBeta(DataEvent event, int trkId) {
+    public double readBeta(DataEvent event, int trkId) {
         double _beta = 1.0;
         String partBankName = bankNames.getRecPartBank();
         String trackBankName = bankNames.getRecTrackBank();
@@ -784,7 +858,7 @@ public class HitReader {
     }
 
 
-    private double[] getT0(int sector, int superlayer,
+    public double[] getT0(int sector, int superlayer,
                             int layer, int wire, IndexedTable t0Table) {
         double[] T0Corr = new double[2];
 

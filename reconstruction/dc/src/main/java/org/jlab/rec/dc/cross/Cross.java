@@ -1,6 +1,7 @@
 package org.jlab.rec.dc.cross;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jlab.clas.clas.math.FastMath;
@@ -184,6 +185,17 @@ public class Cross extends ArrayList<Segment> implements Comparable<Cross> {
         this._DirErr = _DirErr;
     }
 
+    public List<Segment> getSegments() {
+        List<Segment> segments = new ArrayList<>();
+       
+        if(this.get_Segment1().get_Id()!=-1) {
+            segments.add(this.get_Segment1());
+        }
+        if(this.get_Segment2().get_Id()!=-1) {
+            segments.add(this.get_Segment2());
+        }
+        return segments;
+    }
 
     /**
      * Sorts crosses by azimuth angle values
@@ -254,7 +266,7 @@ public class Cross extends ArrayList<Segment> implements Comparable<Cross> {
      * @param DcDetector
      */
     public void set_CrossParams(DCGeant4Factory DcDetector) {
-
+        
         //double z = GeometryLoader.dcDetector.getSector(0).getRegionMiddlePlane(this.get_Region()-1).point().z();
         double z = DcDetector.getRegionMidpoint(this.get_Region() - 1).z;
 
@@ -329,8 +341,9 @@ public class Cross extends ArrayList<Segment> implements Comparable<Cross> {
      */
     public String printInfo() {
         String s = "DC cross: ID " + this.get_Id() + " Sector " + this.get_Sector() + " Region " + this.get_Region()
-                + " Point " + this.get_Point().toString() + "  Dir " + this.get_Dir().toString();
-        return s;
+                + " Point " + this.get_Point().toString() + "  Dir " + this.get_Dir().toString()+"\n";
+        String s2 = this._seg1.printInfo()+"\n"+this._seg2.printInfo();
+        return s+s2;
     }
     
     /**

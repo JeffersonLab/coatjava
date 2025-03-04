@@ -28,6 +28,8 @@ public class Hit implements Comparable<Hit> {
     public double NNTrkP;
     public double NNTrkTheta;
     public double NNTrkPhi;
+    public float aiClusDoca;
+    public boolean outlier;
     
     // constructors
     /**

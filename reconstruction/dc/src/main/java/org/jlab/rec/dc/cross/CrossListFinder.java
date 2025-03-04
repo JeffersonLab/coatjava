@@ -208,7 +208,7 @@ public class CrossListFinder  {
         c1.set_DirErr(estimDirErr);
     }
 
-    private void recalcParsSegment(DataEvent event, Segment _Segment1, IndexedTable tab, DCGeant4Factory DcDetector, TimeToDistanceEstimator tde) {
+    public void recalcParsSegment(DataEvent event, Segment _Segment1, IndexedTable tab, DCGeant4Factory DcDetector, TimeToDistanceEstimator tde) {
         //refit
         double trkAngle = _Segment1.get_fittedCluster().get_clusterLineFitSlope();
         // update the hits

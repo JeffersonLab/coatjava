@@ -626,4 +626,17 @@ public class ClusterFinder {
         return bank;
 
     }    
+    //handle cluster cleaning
+    public void cleanCluster(DataEvent event, 
+        FittedCluster clus, ClusterFitter cf, ClusterCleanerUtilities ct, 
+        IndexedTable tab, DCGeant4Factory DcDetector, TimeToDistanceEstimator tde) {
+        // Clean up clusters by removing secondaries
+        if(clus == null) return ;
+        clus = ct.SecondariesRemover(event, clus, cf, tab, DcDetector, tde);
+        if (clus == null) return ;
+
+        // Resolve ambiguity in clusters
+        clus = ct.LRAmbiguityResolver(event, clus, cf, tab, DcDetector, tde);
+        if (clus == null) return ;
+    }
 }

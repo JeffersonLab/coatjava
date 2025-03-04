@@ -20,7 +20,7 @@ public class RoadFinder  {
     private final SegmentTrajectory segTrj = new SegmentTrajectory();
     public double fitPassingCut = 150;
     private final ClusterFitter cf = new ClusterFitter();
-    QuadraticFit qf = new QuadraticFit();
+    public QuadraticFit qf = new QuadraticFit();
     public RoadFinder() {
     }
     
@@ -174,7 +174,7 @@ public class RoadFinder  {
 
             FittedHit pseudoHit = new FittedHit(segList.get(0).get_Sector(),pseudoSeg.get_Superlayer(), layer, calcWire,
                             0, 0, -1); 
-            pseudoHit.set_DocaErr(pseudoHit.get_CellSize()/Math.sqrt(12.)/Constants.COS6);
+            pseudoHit.set_DocaErr(pseudoHit.get_CellSize()/Math.sqrt(12.));
             pseudoHit.updateHitPosition(DcDetector);
             pseudoHit.calc_GeomCorr(DcDetector, 0);
             fpseudoCluster.add(pseudoHit);
@@ -190,15 +190,14 @@ public class RoadFinder  {
      return pseudoSeg1;
     }
 
-    private boolean fitRoad(ArrayList<Segment> segList, DCGeant4Factory DcDetector) {
+    public boolean fitRoad(ArrayList<Segment> segList, DCGeant4Factory DcDetector) {
         qf.init();
         int NbHits =0;		
         if(segList.size()<2) {
             return false;
         }
-
         for(Segment s : segList) {
-            NbHits+=s.size();
+            NbHits+=s.size(); 
         }
         double[] X = new double[NbHits];
         double[] Z = new double[NbHits];
@@ -246,7 +245,7 @@ public class RoadFinder  {
     /**
      * quadratic fitting class to handle trajectory approximation 
      */
-    private class QuadraticFit {
+    public class QuadraticFit {
         public double chi2;
         public double NDF;
         public double[] a;

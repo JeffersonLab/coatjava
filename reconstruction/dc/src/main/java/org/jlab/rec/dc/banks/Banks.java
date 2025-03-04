@@ -149,6 +149,10 @@ public class Banks {
     public String getRecTrackBank() {
         return this.getRecBank("Track");
     }
+    public String getInstarecBank() {
+        aiBank = "instarec::tracks";
+        return aiBank;
+    } 
 
     @Override
     public String toString() {

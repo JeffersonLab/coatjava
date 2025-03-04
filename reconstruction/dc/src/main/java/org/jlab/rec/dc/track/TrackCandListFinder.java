@@ -33,6 +33,9 @@ import org.jlab.clas.tracking.kalmanfilter.zReference.KFitterStraight;
 import org.jlab.clas.tracking.kalmanfilter.zReference.StateVecs;
 import org.jlab.clas.tracking.utilities.MatrixOps.Libr;
 import org.jlab.clas.tracking.utilities.RungeKuttaDoca;
+import static org.jlab.rec.dc.Constants.DEBUG;
+import org.jlab.rec.dc.nn.AIHitReader;
+import static org.jlab.rec.dc.nn.AIHitReader.getNNSeedLists;
 
 /**
  * A class with a method implementing an algorithm that finds lists of track
@@ -618,6 +621,55 @@ public class TrackCandListFinder {
                 + trk.get(2).get_Id();
     }
 
+    public void removeInstarecOverlappingTracks(List<Track> trkcands) {
+        if(Constants.DEBUG) {
+            LOGGER.log(Level.FINE, "Found "+trkcands.size()+" tracks ");
+        }
+        Map<Integer, Track> selectedTracksMap = new HashMap<>();
+        List<AIHitReader.TrackInfo> trackInfoL = new ArrayList<>();
+        for(Track t : trkcands) {
+            int[] Ids = new int[]{-1,-1,-1,-1,-1,-1};
+            for(int k = 0; k < t.size(); k++) {
+                int r1idx = t.get(k).get_Region()*2-2;
+                int r2idx = t.get(k).get_Region()*2-1;
+                int s1 = t.get(k).get_Segment1().get_Id();
+                int s2 = t.get(k).get_Segment2().get_Id();
+                Ids[r1idx]=s1;
+                Ids[r2idx]=s2;
+            }
+            double[] tPars = new double[5];
+            tPars[0] = t.get_pAtOrig().x();
+            tPars[1] = t.get_pAtOrig().y();
+            tPars[2] = t.get_pAtOrig().z();
+            tPars[3] = t.get_Id();
+            tPars[4] = t.get_FitChi2();
+            
+            selectedTracksMap.put(t.get_Id(), t);
+            
+            AIHitReader.TrackInfo ti = new AIHitReader.TrackInfo(Ids, tPars);
+            trackInfoL.add(ti);
+        }
+        List<List<AIHitReader.TrackInfo>> trackInfoLs = getNNSeedLists(trackInfoL);
+        trackInfoLs.add(new ArrayList<>());
+        
+        trkcands.clear();
+        // Now, process each group and keep only the top  prob value for each group
+        for ( List<AIHitReader.TrackInfo> trackInfoList : trackInfoLs) {
+            
+            // Sort by prob (tPars[4]) in ascending order
+            trackInfoList.sort((a, b) -> Double.compare(a.getProb(), b.getProb()));
+            
+            // Only keep the top prob entry
+            trackInfoList = trackInfoList.subList(0, Math.min(1, trackInfoList.size()));
+            for (AIHitReader.TrackInfo trackInfo : trackInfoList) {
+                int id = (int)trackInfo.getTPars()[3];
+                if(selectedTracksMap.containsKey(id))
+                    trkcands.add(selectedTracksMap.get(id));
+            }
+            
+        }
+
+    }
     public void removeOverlappingTracksOld(List<Track> trkcands) {
         if(Constants.DEBUG) {
             LOGGER.log(Level.FINE, "Found "+trkcands.size()+" HB seeds ");
@@ -970,10 +1022,14 @@ public class TrackCandListFinder {
             
 
             if (traj == null) {
+                if(DEBUG)
+                    System.out.println("HB TRAJ is NULL!");
                 continue;
             }
 
             if (aCrossList.size() == 3 && this.PassNSuperlayerTracking(aCrossList, cand)) {
+                if(DEBUG)
+                    System.out.println("PASSED N SL TRKG");
                 cand.addAll(aCrossList);
                 cand.setSector(aCrossList.get(0).get_Sector());
 
@@ -1020,6 +1076,8 @@ public class TrackCandListFinder {
                     double iBdl = pars[1];  
 
                     if (chi2 > Constants.SEEDCUT && donotapplyCuts == false) {
+                        if(DEBUG)
+                            System.out.println("FAIL HB SEED CUT "+chi2);
                         continue;
                     }
                     // compute delta theta using the non-pseudo segments in region 1 and 3
@@ -1062,7 +1120,9 @@ public class TrackCandListFinder {
                         }
 
                         LOGGER.log(Level.FINE, "Kalman fitter - 2 = " + (System.currentTimeMillis() - startTime));
-
+                        if(DEBUG) {
+                            System.out.println("INIT HB KF! for ");cand.printInfo(); 
+                        }
                         KFitter kFZRef = new KFitter(true, 10, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
                         List<Surface> measSurfaces = getMeasSurfaces(cand, DcDetector);
                         StateVecs svs = new StateVecs();
@@ -1074,10 +1134,13 @@ public class TrackCandListFinder {
                         List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
                         
                         if (kFZRef.finalStateVec == null) {
+                            if(DEBUG) 
+                                System.out.println("HB KF FAILED!  finalStateVec=null!");
                             continue;
                         } else {
                             if (kFZRef.chi2 < Constants.MAXCHI2) {
-                                
+                                if(DEBUG)
+                                    System.out.println("HB KF CHI2 PASSED "+kFZRef.chi2);
                                 fitStateVec = new StateVec(kFZRef.finalStateVec.x,
                                 		kFZRef.finalStateVec.y, kFZRef.finalStateVec.tx, kFZRef.finalStateVec.ty);
                                 q = (int) Math.signum(kFZRef.finalStateVec.Q);
