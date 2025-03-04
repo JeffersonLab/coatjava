@@ -329,8 +329,10 @@ public class DCTBPostHBTAI extends DCEngine {
             rbc.fillAllTBBanks(event, fhits, clusters, segments, crosses, null); // no cand found, stop here and save the hits, the clusters, the segments, the crosses
             return true;
         }
-        if(trkcands.size()!=AIHitReader.getNNTrks()) System.out.println("event "+this.getEvent(event)+" expected trks "+AIHitReader.getNNTrks()+
+        if(Constants.DEBUG) {
+            if(trkcands.size()!=AIHitReader.getNNTrks()) System.out.println("event "+this.getEvent(event)+" expected trks "+AIHitReader.getNNTrks()+
                " found tracks "+ trkcands.size());
+        }
         rbc.fillAllTBBanks(event, fhits, clusters, segments, crosses, trkcands);
 
         return true;
