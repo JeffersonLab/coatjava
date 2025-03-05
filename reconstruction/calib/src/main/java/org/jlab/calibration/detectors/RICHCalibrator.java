@@ -36,28 +36,31 @@ public class RICHCalibrator extends DetectorCalibrator {
         DataBank hits = event.getBank("RICH::Hit");
         DataBank phos = event.getBank("RICH::Photon");
             
-        List<Integer> goodHits = new ArrayList<>();
+        List<Integer> goodPhotons = new ArrayList<>();
         for(int i=0; i<phos.rows(); i++) {
             int pid    = phos.getInt("hypo_pid", i);
             int pindex = phos.getByte("pindex", i);
-            if(part.getInt("pid", pindex)==pid) goodHits.add(i);
+            if(part.getInt("pid", pindex)==pid) goodPhotons.add(i);
         }
 
-        if(!goodHits.isEmpty()) {
-            DataBank calib = event.createBank("RICH::calib", goodHits.size());
+        List<Integer> goodClusters = new ArrayList<>();
+        for(int i=0; i<hits.rows(); i++) {
+            int cluster = hits.getShort("cluster", i);
+            if(cluster>0) goodClusters.add(i);
+        }
+
+        if(!goodPhotons.isEmpty() || !goodClusters.isEmpty()) {
+            DataBank calib = event.createBank("RICH::calib", goodPhotons.size()+goodClusters.size());
 
             int row =0;
-            for(int i : goodHits) {
+            for(int i : goodPhotons) {
                 int hindex = phos.getShort("hindex", i);
-                calib.setShort("id",           row, phos.getShort("id", i));
                 calib.setByte( "pindex",       row, phos.getByte("pindex", i));
                 calib.setShort("hindex",       row, (short) hindex);
                 calib.setByte( "sector",       row, (byte) hits.getShort("sector", hindex));
-                calib.setShort("tile",         row, hits.getShort("tile", hindex));
                 calib.setShort("pmt",          row, hits.getShort("pmt", hindex));
                 calib.setShort("anode",        row, hits.getShort("anode", hindex));
                 calib.setShort("status",       row, hits.getShort("status", hindex));
-                calib.setShort("type",         row, phos.getShort("type", i));
                 calib.setByte( "used",         row, phos.getByte("used", i));
                 calib.setFloat("x",            row, hits.getFloat("x", hindex));
                 calib.setFloat("y",            row, hits.getFloat("y", hindex));
@@ -79,14 +82,23 @@ public class RICHCalibrator extends DetectorCalibrator {
                 calib.setInt("traced_layers",  row, phos.getInt("traced_layers", i));
                 calib.setInt("traced_compos",  row, phos.getInt("traced_compos", i));
                 calib.setFloat("traced_etaC",  row, phos.getFloat("traced_etaC", i));
-                calib.setFloat("traced_aeron", row, phos.getFloat("traced_aeron", i));
-                calib.setFloat("traced_dthe",  row, phos.getFloat("traced_dthe", i));
-                calib.setFloat("traced_dphi",  row, phos.getFloat("traced_dphi", i));
-                calib.setFloat("eff",          row, phos.getFloat("eff", i));
-                calib.setFloat("back",         row, phos.getFloat("back", i));
                 calib.setFloat("etac_ref",     row, phos.getFloat("etac_ref", i));
                 calib.setFloat("etac_rms",     row, phos.getFloat("etac_rms", i));
                 calib.setFloat("prob",         row, phos.getFloat("prob", i));
+                row++;
+            }
+            for(int i : goodClusters) {
+                calib.setShort("hindex",       row, (short) i);
+                calib.setByte( "sector",       row, (byte) hits.getShort("sector", i));
+                calib.setShort("pmt",          row, hits.getShort("pmt", i));
+                calib.setShort("anode",        row, hits.getShort("anode", i));
+                calib.setShort("status",       row, hits.getShort("status", i));
+                calib.setByte( "used",         row, (byte) 2);
+                calib.setFloat("y",            row, hits.getFloat("y", i));
+                calib.setFloat("z",            row, hits.getFloat("z", i));
+                calib.setFloat("time",         row, hits.getFloat("time", i));
+                calib.setFloat("rawtime",      row, hits.getFloat("rawtime", i));
+                calib.setShort("duration",     row, hits.getShort("duration", i));
                 row++;
             }
             return calib;
