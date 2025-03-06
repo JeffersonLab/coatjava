@@ -1,4 +1,4 @@
-package org.jlab.rec.service;
+package org.jlab.service.ahdc;
 
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.clas.tracking.kalmanfilter.Material;
