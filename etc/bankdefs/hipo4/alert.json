@@ -237,8 +237,6 @@
         "name": "projID",
         "type": "S",
         "info": "id of the projected track matched. it is -1 if a straight track was assigned."
-<<<<<<< HEAD
-=======
       }
     ]
   },{
@@ -287,7 +285,6 @@
         "name": "TOT",
         "type": "I",
         "info": "TOT"
->>>>>>> origin/ATOF_testing
       }
     ]
   },{
