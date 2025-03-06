@@ -79,7 +79,7 @@ public class KFitter {
 		RealVector h;
 		if (indicator.R == 0.0 && !indicator.direction) {
 		    double z_beam_res_sq = 1.e10;//in mm
-			if(isvertexdefined)z_beam_res_sq = 100.0;//assuming 10. mm resolution
+			if(isvertexdefined)z_beam_res_sq = 4.0;//assuming 4. mm resolution
 			measurementNoise =
 					new Array2DRowRealMatrix(
 							new double[][]{
@@ -94,7 +94,7 @@ public class KFitter {
 		        measurementNoise = indicator.hit.get_MeasurementNoise();//1x1
 		        measurementMatrix = H(stateEstimation, indicator);//6x1
 		        h = h(stateEstimation, indicator);//1x1
-			z = indicator.hit.get_Vector();//1x1
+			z = indicator.hit.get_Vector(indicator.hit.getSign());//1x1
 		}
 		RealMatrix measurementMatrixT = measurementMatrix.transpose();
 
@@ -180,8 +180,8 @@ public class KFitter {
 
 	//measurement matrix in 1 dimension: minimize distance - doca
         private RealVector h(RealVector x, Indicator indicator) {
-		double d = indicator.hit.distance(new Point3D(x.getEntry(0), x.getEntry(1), x.getEntry(2)));
-		//	double d = indicator.hit.distance(new Point3D(x.getEntry(0), x.getEntry(1), x.getEntry(2)), indicator.hit.getSign());
+		//double d = indicator.hit.distance(new Point3D(x.getEntry(0), x.getEntry(1), x.getEntry(2)));
+			double d = indicator.hit.distance(new Point3D(x.getEntry(0), x.getEntry(1), x.getEntry(2)), indicator.hit.getSign());
 		return MatrixUtils.createRealVector(new double[]{d});
 	}
 

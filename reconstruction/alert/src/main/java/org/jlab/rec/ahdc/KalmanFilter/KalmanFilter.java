@@ -95,6 +95,7 @@ public class KalmanFilter {
 				Hit hit = new Hit(AHDC_hit.getSuperLayerId(), AHDC_hit.getLayerId(), AHDC_hit.getWireId(), AHDC_hit.getNbOfWires(), AHDC_hit.getRadius(), AHDC_hit.getDoca());
 				hit.setADC(AHDC_hit.getADC());
 				hit.setHitIdx(AHDC_hit.getId());
+				hit.setSign(0);
 				// Do delete hit with same radius
 				boolean aleardyHaveR = false;
 				for (Hit o: KF_hits){
@@ -154,7 +155,6 @@ public class KalmanFilter {
 					kFitter.predict(indicator);
 					if (indicator.haveAHit()) {
 						if( k==0  && indicator.hit.getHitIdx()>0){
-						    indicator.hit.setSign( kFitter.wire_sign(indicator) );
 							for (org.jlab.rec.ahdc.Hit.Hit AHDC_hit : AHDC_hits){
 								if(AHDC_hit.getId()==indicator.hit.getHitIdx())AHDC_hit.setResidualPrefit(kFitter.residual(indicator));
 							}
