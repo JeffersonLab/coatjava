@@ -11,4 +11,5 @@ public class Road extends ArrayList<Segment>{
 
     public int id;
     public double[] a = new double[3]; // fit params
+    public double chi2;
 }

@@ -23,7 +23,11 @@ public class RoadFinder  {
     public QuadraticFit qf = new QuadraticFit();
     public RoadFinder() {
     }
-    
+    private int fm=0;
+    public RoadFinder(int fittingmethod) {
+        fm = fittingmethod;
+        
+    }
     /**
      * 
      * @param segs list of segments
@@ -86,6 +90,7 @@ public class RoadFinder  {
                                 if(qf.chi2<fitPassingCut && qf.chi2!=0 ) { // road is good --> pass w.out looking for missing segment
                                     sLyr.id=roadId;
                                     sLyr.a=qf.a;
+                                    sLyr.chi2 = qf.chi2;
                                     Roads.add(sLyr);
                                     roadId++; 
                                 }
@@ -99,30 +104,10 @@ public class RoadFinder  {
         return Roads;
     }
 
-    public Segment findRoadMissingSegment(List<Segment> segList, DCGeant4Factory DcDetector, double[] a)  { 
+    public Segment findRoadMissingSegment(List<Segment> segList, int slyr, DCGeant4Factory DcDetector, double[] a)  { 
         
-        //his.fitRoad((ArrayList<Segment>) segList, DcDetector);
-     
-        Segment pseudoSeg = null;
+        Segment pseudoSeg = null; 
         if(segList.size()<3) { // make pseudo-segment for missing segment
-            // find missing segment superlayer
-            int s1 = (segList.get(0).get_Superlayer()-(segList.get(0).get_Superlayer()+1)%2-1)/2; // odd superlayers
-            int s2 = (segList.get(1).get_Superlayer()-(segList.get(1).get_Superlayer()+1)%2-1)/2; // even superlayers
-            int smiss = -1;
-            if(s1==0) {
-                if(s2==1) {
-                    smiss =2;
-                }
-                if(s2==2) {
-                    smiss =1;
-                }
-            } else {
-                smiss =0;
-            }
-            // the missing superlayer
-            int slyr = (segList.get(0).get_Superlayer()+1)%2+2*smiss+1;
-            if(slyr<1 || slyr>6)
-                return null;
             // make the missing segment
             Cluster pseudoCluster = new Cluster(segList.get(0).get_Sector(),slyr,-1);
             FittedCluster fpseudoCluster = new FittedCluster(pseudoCluster);
@@ -148,6 +133,32 @@ public class RoadFinder  {
             cf.SetSegmentLineParameters(fpseudoCluster.get(0).get_Z(), fpseudoCluster) ;
             pseudoSeg = new Segment(fpseudoCluster); 
             pseudoSeg.set_fitPlane(DcDetector);	
+        }
+        return pseudoSeg;
+    }
+    public Segment findRoadMissingSegment(List<Segment> segList, DCGeant4Factory DcDetector, double[] a)  { 
+        Segment pseudoSeg = null;
+        if(segList.size()<3) { // make pseudo-segment for missing segment
+            // find missing segment superlayer
+            int s1 = (segList.get(0).get_Superlayer()-(segList.get(0).get_Superlayer()+1)%2-1)/2; // odd superlayers
+            int s2 = (segList.get(1).get_Superlayer()-(segList.get(1).get_Superlayer()+1)%2-1)/2; // even superlayers
+            int smiss = -1;
+            if(s1==0) {
+                if(s2==1) {
+                    smiss =2;
+                }
+                if(s2==2) {
+                    smiss =1;
+                }
+            } else {
+                smiss =0;
+            }
+            // the missing superlayer
+            int slyr = (segList.get(0).get_Superlayer()+1)%2+2*smiss+1;
+            if(slyr<1 || slyr>6)
+                return null;
+            // make the missing segment
+            pseudoSeg  = findRoadMissingSegment(segList, slyr, DcDetector, a);
         }
         return pseudoSeg;
     }
@@ -208,27 +219,44 @@ public class RoadFinder  {
             for(int j =0; j<s.size(); j++) { 
                 X[hitno] = s.get(j).get_X();
                 //X[hitno] = GeometryLoader.dcDetector.getSector(0).getSuperlayer(s.get(j).get_Superlayer()-1).getLayer(s.get(j).get_Layer()-1).getComponent(s.get(j).get_Wire()-1).getMidpoint().x();
-                Z[hitno] = s.get(j).get_Z();
+                Z[hitno] = s.get(j).get_Z(); 
                 //errX[hitno] = s.get(j).get_DocaErr()/Constants.COS6; 
                 errX[hitno] = s.get(j).get_CellSize()/Math.sqrt(12.)/Constants.COS6; 
                 hitno++;
             }
         }
+        if(this.fm==0) {
+            qf.evaluate(Z, X, errX);
+            double WChi2 =0;
+            for(Segment s : segList) {
+                for(FittedHit h : s) {
+                    double trkX = qf.a[0]*h.get_Z()*h.get_Z()+qf.a[1]*h.get_Z()+qf.a[2]; 
+                    int calcWire = segTrj.getWireOnTrajectory(h.get_Sector(), h.get_Superlayer(), h.get_Layer(), trkX, DcDetector) ;
+                    WChi2+=(h.get_Wire()-calcWire)*(h.get_Wire()-calcWire);
+                } 
+            }
 
-        qf.evaluate(Z, X, errX);
-
-        double WChi2 =0;
-        for(Segment s : segList) {
-            for(FittedHit h : s) {
-                double trkX = qf.a[0]*h.get_Z()*h.get_Z()+qf.a[1]*h.get_Z()+qf.a[2]; 
-                int calcWire = segTrj.getWireOnTrajectory(h.get_Sector(), h.get_Superlayer(), h.get_Layer(), trkX, DcDetector) ;
-                WChi2+=(h.get_Wire()-calcWire)*(h.get_Wire()-calcWire);
-            } 
+            // pass if normalized chi2 is less than 1
+            return WChi2/qf.NDF <= 1;
+        } else {
+            polyfit = PolynomialFitter.fitSecondOrderPolynomial(Z, X);
+            double WChi2 =0;
+            for(Segment s : segList) {
+                for(FittedHit h : s) {
+                    double trkX = polyfit[0]*h.get_Z()*h.get_Z()+polyfit[1]*h.get_Z()+polyfit[2]; 
+                    int calcWire = segTrj.getWireOnTrajectory(h.get_Sector(), h.get_Superlayer(), h.get_Layer(), trkX, DcDetector) ;
+                    WChi2+=(h.get_Wire()-calcWire)*(h.get_Wire()-calcWire);
+                } 
+            }
+            
+            int ndf=Z.length-3; 
+            polyfit_chi2_ov_ndf=WChi2/(double)ndf;
+            
+            return polyfit_chi2_ov_ndf<2;
         }
-        // pass if normalized chi2 is less than 1
-        return WChi2/qf.NDF <= 1;
     }
-
+    public double[] polyfit;
+    public double polyfit_chi2_ov_ndf;
     /**
      * 
      * @param superlayer segment superlayer

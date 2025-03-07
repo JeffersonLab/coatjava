@@ -1,6 +1,7 @@
 package org.jlab.rec.dc.nn;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -41,7 +42,7 @@ public class PatternIRec {
     private final ClusterFinder cfd             = new ClusterFinder();
     private final ClusterFitter cf              = new ClusterFitter();
     private final CrossMaker crf                = new CrossMaker();
-    private final RoadFinder rf                 = new RoadFinder();
+    private final RoadFinder rf                 = new RoadFinder(1);
     private final ClusterCleanerUtilities ct    = new ClusterCleanerUtilities();
     private final PatternRec pr                 = new PatternRec();
     
@@ -51,163 +52,80 @@ public class PatternIRec {
 
     public CrossList RecomposeCrossList(List<Segment> clusters, DCGeant4Factory DcDetector) {
         CrossList crossList = new CrossList();
-        Map<Integer, List<Cross>> grpCrs = new HashMap<>();
         Map<Integer, List<Segment>> grpCls = new HashMap<>();
         clusters.sort(Comparator.comparing(Segment::get_Region).thenComparing(Segment::get_Superlayer));
         // Group clusters by associated HBTrackID
         for (Segment cls : clusters) {
-            
             int index = cls.get(0).get_AssociatedHBTrackID();
             grpCls.computeIfAbsent(index, k -> new ArrayList<>()).add(cls);
         }
-        Map<Integer, List<Segment>> regionSegs = new HashMap<>();
         // Process each cluster group
-        regionSegs.clear();
         for(Integer I : grpCls.keySet()) {
             List<Segment> segs2Crs = grpCls.get(I);
-            //segs2Crs.sort(Comparator.comparing(Segment::get_Region).thenComparing(Segment::get_Superlayer));
-            for(Segment s : segs2Crs) {
-                regionSegs.computeIfAbsent(s.get_Region(), k -> new ArrayList<>()).add(s);
-            }
-            
-            //List<Cross> crosses = new ArrayList<>();
-            Map<Integer, Cross> crsMap = new HashMap<>();
-            for(int r = 0; r<3; r++) {
-                if(regionSegs.containsKey(r+1)) {
-                    if(regionSegs.get(r+1).size()==2) {
-                        Cross cr = crf.getCross(regionSegs.get(r+1).get(0), 
-                            regionSegs.get(r+1).get(1), DcDetector, 0,0); 
-                        if(cr==null) {
-                            //keep only better segment and make a pseudocross: TODO
-                            cr = crf.getCross(regionSegs.get(r+1).get(0), 
-                            regionSegs.get(r+1).get(1), DcDetector, 0,10);
-                        }
-                        if(cr!=null)  crsMap.put(cr.get_Region(), cr);
-                    }
-                }
-            }
-            List<Cross> crosses = new ArrayList<>(crsMap.values());
-            if(crosses.size()<3) {//find pseudo-cross
-                CrossList cl = pr.RecomposeCrossList(segs2Crs, DcDetector);
-                for(List<Cross> clst : cl) {
-                    for(Cross c : clst) {
-                        if(!crsMap.containsKey(c.get_Region()))
-                            crosses.add(c);
-                    }
-                }
-            }
-            grpCrs.put(I, crosses);
-            //crossList.trackID = I;
-            // Log cross information
-            crosses.sort(Comparator.comparing(Cross::get_Region));
-            logCrossInfo(crosses);
+            //CrossList cl = pr.RecomposeCrossList(segs2Crs, DcDetector);
+            //List<Cross> crosses = cl.getCrosses();
+            List<Cross> crosses = this.RecomposeFHCrossList(segs2Crs, DcDetector, I);
+            if(crosses==null) continue;
             if(Constants.DEBUG) {
                 System.out.println("NNTrk "+I);
                 for(Cross s : crosses)
                     System.out.println(s.printInfo());
             }
-        
-            // Add valid crosses to the cross list
-            if (crosses.size() == 3) {
-                crossList.add(crosses);
-            }
+            if(crosses.size()<3) continue;
+            int cntpscrs=0;
+            for(Cross c : crosses)
+                if(c.isPseudoCross) cntpscrs++;
+            if(cntpscrs>1) continue;
+            this.logCrossInfo(crosses);
+            
+            crossList.add(crosses);
         }
         return crossList;
     }
 
-    public CrossList RecomposeCrossList0(List<Segment> clusters, DCGeant4Factory DcDetector) {
-        CrossList crossList = new CrossList();
-        Map<Integer, List<Cross>> grpCrs = new HashMap<>();
-        Map<Integer, List<Segment>> grpCls = new HashMap<>();
-        clusters.sort(Comparator.comparing(Segment::get_Region).thenComparing(Segment::get_Superlayer));
-        // Group clusters by associated HBTrackID
-        for (Segment cls : clusters) {
-            
-            int index = cls.get(0).get_AssociatedHBTrackID();
-            grpCls.computeIfAbsent(index, k -> new ArrayList<>()).add(cls);
-        }
+        public List<Cross> RecomposeFHCrossList(List<Segment> segs2Crs, DCGeant4Factory DcDetector, int i) {
+        
         Map<Integer, List<Segment>> regionSegs = new HashMap<>();
         // Process each cluster group
-        regionSegs.clear();
-        for(Integer I : grpCls.keySet()) {
-            List<Segment> segs2Crs = grpCls.get(I);
-            //segs2Crs.sort(Comparator.comparing(Segment::get_Region).thenComparing(Segment::get_Superlayer));
-            for(Segment s : segs2Crs) {
-                regionSegs.computeIfAbsent(s.get_Region(), k -> new ArrayList<>()).add(s);
-            }
-            
-            List<Cross> crosses = new ArrayList<>();
-            
-            int missingSegmentSL = -1;
-            Road evenroad = new Road();
-            Road oddroad = new Road();
-            int region=0;
-            for(int r = 0; r<3; r++) {
-                if(regionSegs.containsKey(r+1)) {
-                    if(regionSegs.get(r+1).size()==2) {
-                        evenroad.add(regionSegs.get(r+1).get(0));
-                        oddroad.add(regionSegs.get(r+1).get(1));
-                        Cross cr = crf.getCross(regionSegs.get(r+1).get(0), 
-                            regionSegs.get(r+1).get(1), DcDetector, 0,0); 
+        segs2Crs.sort(Comparator.comparing(Segment::get_Region).thenComparing(Segment::get_Superlayer));
+        for(Segment s : segs2Crs) {
+            regionSegs.computeIfAbsent(s.get_Region(), k -> new ArrayList<>()).add(s);
+        }
+
+        Map<Integer, Cross> crsMap = new HashMap<>();
+        for(int r = 0; r<3; r++) {
+            if(regionSegs.containsKey(r+1)) {
+                if(regionSegs.get(r+1).size()==2) {
+                    Cross cr = crf.getCross(regionSegs.get(r+1).get(0), 
+                        regionSegs.get(r+1).get(1), DcDetector, 0,0); 
+                    if(cr==null) {
+                        cr = crf.getCross(regionSegs.get(r+1).get(0), 
+                        regionSegs.get(r+1).get(1), DcDetector, 0,2);//loosen cut
                         if(cr==null) {
-                            //keep only better segment and make a pseudocross: TODO
-                            cr = crf.getCross(regionSegs.get(r+1).get(0), 
-                            regionSegs.get(r+1).get(1), DcDetector, 0,10);
+                            cr = this.findBestSegmentCross(regionSegs.get(r+1).get(0), 
+                            regionSegs.get(r+1).get(1), segs2Crs, DcDetector);
                         }
-                        if(cr!=null) crosses.add(cr);
-                    } else {
-                        region=r+1;
-                        if(regionSegs.get(r+1).get(0).get_RegionSlayer()==1) {
-                            missingSegmentSL=2; 
-                        } else {
-                            missingSegmentSL=1; 
-                        } 
-                    }
+                    } 
+                    if(cr!=null)  crsMap.put(cr.get_Region(), cr);
+                } else {
+                    Cross pseudo=this.getMissingSegmentPCross(regionSegs.get(r+1).get(0), null, segs2Crs, DcDetector);
+                    crsMap.put(regionSegs.get(r+1).get(0).get_Region(), pseudo);
                 }
-            }
-            if(missingSegmentSL==1) {
-                Segment mseg = this.missingSegment(oddroad, DcDetector);
-                if(mseg!=null) { 
-                    Cross cr = this.getPseudoCross(mseg, 
-                        regionSegs.get(region).get(0), DcDetector, 0);
-                    if(cr!=null) crosses.add(cr);
-                }
-            } 
-            if(missingSegmentSL==2) {
-                Segment mseg = this.missingSegment(evenroad, DcDetector);
-                if(mseg!=null) {
-                    Cross cr = this.getPseudoCross(regionSegs.get(region).get(0),
-                            mseg, DcDetector, 0);
-                    if(cr!=null) crosses.add(cr);
-                }
-            } 
-            
-            grpCrs.put(I, crosses);
-            //crossList.trackID = I;
-            // Log cross information
-            crosses.sort(Comparator.comparing(Cross::get_Region));
-            logCrossInfo(crosses);
-            if(Constants.DEBUG) {
-                System.out.println("NNTrk "+I);
-                for(Cross s : crosses)
-                    System.out.println(s.printInfo());
-            }
-        
-            // Add valid crosses to the cross list
-            if (crosses.size() == 3) {
-                crossList.add(crosses);
             }
         }
-        return crossList;
+
+        List<Cross> crosses = new ArrayList<>(crsMap.values());
+        crosses.sort(Comparator.comparing(Cross::get_Region));
+
+        logCrossInfo(crosses);
+        if(Constants.DEBUG) {
+            System.out.println("NNTrk "+i);
+            for(Cross s : crosses)
+                System.out.println(s.printInfo());
+        }
+
+        return crosses;
     }
-    private Segment missingSegment(Road road, DCGeant4Factory DcDetector) {
-        if (rf.fitRoad(road, DcDetector)==true) { 
-            road.a=rf.qf.a;
-            return rf.findRoadMissingSegment(road, DcDetector, road.a);                   
-        }                 
-        return null;                    
-    }
-    
     
     private void logCrossInfo(List<Cross> crosses) {
         for (Cross c : crosses) {
@@ -260,8 +178,9 @@ public class PatternIRec {
 
         // Group hits by NNTrkId and NNClusId
         for (FittedHit hit : fhits) {
-            if (hit.NNTrkId > 0) { 
-                Pair<Integer, Integer> index = new Pair<>(hit.NNTrkId, hit.NNClusId);
+            if (hit.get_AssociatedHBTrackID() > 0) { 
+                Pair<Integer, Integer> index = new Pair<>(hit.get_AssociatedHBTrackID(), 
+                        hit.get_AssociatedClusterID());
                 grpHits.computeIfAbsent(index, k -> new ArrayList<>()).add(hit);
             }
         }
@@ -329,6 +248,8 @@ public class PatternIRec {
             fhit.set_AssociatedClusterID(cid);
             fhit.set_AssociatedHBTrackID(tid);
             fhit.set_TrkgStatus(0);
+            fhit.NNClusId = cid;
+            fhit.NNTrkId  = tid;
             fhit.updateHitPosition(DcDetector);
         }
         if(fit) {
@@ -355,24 +276,6 @@ public class PatternIRec {
         seg.set_ResiSum(sumRes);
         seg.set_TimeSum(sumTime);
         return seg;
-    }
-
-    private Cross getPseudoCross(Segment seg1, Segment seg2, DCGeant4Factory DcDetector, int i) {
-        Cross cross = new Cross(seg1.get_Sector(), seg1.get_Region(), 0);
-        cross.set_Id(seg1.get_Id()*1000+seg2.get_Id());
-        cross.add(seg1);
-        cross.add(seg2);
-        cross.set_Segment1(seg1);
-        cross.set_Segment2(seg2);
-        cross.set_CrossParams(DcDetector);
-
-        cross.set_Id(-1);
-                        
-        cross.set_CrossDirIntersSegWires();
-        seg1.associatedCrossId = cross.get_Id();
-        seg2.associatedCrossId = cross.get_Id();
-        
-        return cross;
     }
 
     private FittedCluster getFittedCluster(List<Hit> hits, int cid, DCGeant4Factory DcDetector) {
@@ -431,6 +334,75 @@ public class PatternIRec {
         return fclus;
         
     }
+        
+    private Cross findBestSegmentCross(Segment s1, Segment s2, List<Segment> segments, DCGeant4Factory DcDetector) {
+        Cross crs1 = this.getMissingSegmentPCross(s1, s2, segments, DcDetector);
+        Cross crs2 = this.getMissingSegmentPCross(s2, s1, segments, DcDetector);
+
+        // If crs1 is null, return crs2 (if not null)
+        if (crs1 == null) {
+            return crs2;
+        }
+
+        // If crs2 is null, return crs1
+        if (crs2 == null) {
+            return crs1;
+        }
+
+        // Both are not null, return the one with the lower roadchi2 value
+        return (crs1.getPseudoSegment().roadchi2 < crs2.getPseudoSegment().roadchi2) ? crs1 : crs2;
+    }
+    
+    private Cross getMissingSegmentPCross(Segment s1, Segment wrong, List<Segment> segments, DCGeant4Factory DcDetector) {
+        Cross cr1 = null;
+        
+        List<Segment> Segs2Road1 = new ArrayList<>();
+        List<Segment> Segs2Road2 = new ArrayList<>();
+        if(wrong!=null) {
+            for (Segment s : segments) {
+                if(s.get_Id()==wrong.get_Id()) continue; //exclude this superlayer from the road
+                Segs2Road2.add(s);
+                if(s.get_Superlayer() % 2 == wrong.get_Superlayer() % 2) {
+                    Segs2Road1.add(s);
+                }
+            } 
+        } else {
+            int slm = 0;
+            if(s1.get_RegionSlayer()==1) {
+                slm = s1.get_Superlayer()+1;
+            } else {
+                slm = s1.get_Superlayer()-1;
+            }
+            for (Segment s : segments) { 
+                Segs2Road2.add(s);
+                if(s.get_Superlayer() % 2 == slm % 2) {
+                    Segs2Road1.add(s);
+                }
+            }
+        }
+        if (Segs2Road1.size() == 2) {
+            Road r = new Road();
+            r.addAll(Segs2Road2);
+            rf.fitRoad(r, DcDetector);
+            
+            Segment pSegment = rf.findRoadMissingSegment(Segs2Road1, 
+                        Constants.getInstance().dcDetector,
+                        rf.polyfit);
+            if(pSegment!=null) {pSegment.printInfo();cf.Fit(pSegment.get_fittedCluster(), true);pSegment.printInfo();}
+            pSegment.roadchi2 =rf.polyfit_chi2_ov_ndf;
+            if(s1.get_RegionSlayer()==1) {
+                cr1 = crf.getCross(s1, pSegment, DcDetector, 0, 2);
+            } else {
+                cr1 = crf.getCross(pSegment, s1, DcDetector, 0, 2);
+            }
+            if(cr1!=null) { 
+                cr1.setPseudoSegment(pSegment);
+            }
+        }
+        
+        return cr1;
+    }    
+        
     // Pair class implementation 
     class Pair<T, U> {
         private final T first;

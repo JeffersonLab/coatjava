@@ -446,4 +446,12 @@ public class Cross extends ArrayList<Segment> implements Comparable<Cross> {
         
         hit.setCrossDirIntersWire(new Point3D(x,y,z));
     } 
+
+    private Segment _pseudoseg;
+    public Segment getPseudoSegment() {
+        return _pseudoseg;
+    }
+    public void setPseudoSegment(Segment s) {
+        _pseudoseg=s;
+    }
 }

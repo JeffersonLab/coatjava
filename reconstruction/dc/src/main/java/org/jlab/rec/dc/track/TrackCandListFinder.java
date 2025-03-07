@@ -33,9 +33,12 @@ import org.jlab.clas.tracking.kalmanfilter.zReference.KFitterStraight;
 import org.jlab.clas.tracking.kalmanfilter.zReference.StateVecs;
 import org.jlab.clas.tracking.utilities.MatrixOps.Libr;
 import org.jlab.clas.tracking.utilities.RungeKuttaDoca;
+import org.jlab.io.base.DataBank;
 import static org.jlab.rec.dc.Constants.DEBUG;
 import org.jlab.rec.dc.nn.AIHitReader;
 import static org.jlab.rec.dc.nn.AIHitReader.getNNSeedLists;
+import static org.jlab.rec.dc.nn.AIHitReader.getNNTrks;
+import static org.jlab.rec.dc.nn.AIHitReader.setNNTrks;
 
 /**
  * A class with a method implementing an algorithm that finds lists of track
@@ -621,41 +624,60 @@ public class TrackCandListFinder {
                 + trk.get(2).get_Id();
     }
 
+    private List<AIHitReader.TrackInfo> getInstarecRecoTrks(List<Track> trkcands) {
+        Map<Integer, Segment> trkSegs = new HashMap<>();
+        List<AIHitReader.TrackInfo> trackInfoL = new ArrayList<>();
+        
+        for (int j = 0; j < trkcands.size(); j++) {
+            trkSegs.clear();
+            List<Segment> tsegs = trkcands.get(j).get_ListOfHBSegments();
+            for(Segment s : tsegs) {
+                trkSegs.put(s.get_Superlayer()-1, s);
+            }
+            
+            int[] ids = new int[6];
+            double[] tPars = new double[5];
+
+            for (int s = 0; s < 6; s++) {
+                if(trkSegs.containsKey(s)) {
+                ids[s] = trkSegs.get(s).get_Id();
+                } else {
+                    ids[s] = -1;
+                }
+            }
+
+            
+            tPars[3] = (double) trkcands.get(j).get_Id();
+            tPars[4] = (double) trkcands.get(j).get_FitChi2();
+            trackInfoL.add(new AIHitReader.TrackInfo(ids, tPars));
+            
+        }
+        return trackInfoL;
+    }
+    
+    
     public void removeInstarecOverlappingTracks(List<Track> trkcands) {
         if(Constants.DEBUG) {
             LOGGER.log(Level.FINE, "Found "+trkcands.size()+" tracks ");
         }
-        Map<Integer, Track> selectedTracksMap = new HashMap<>();
-        List<AIHitReader.TrackInfo> trackInfoL = new ArrayList<>();
-        for(Track t : trkcands) {
-            int[] Ids = new int[]{-1,-1,-1,-1,-1,-1};
-            for(int k = 0; k < t.size(); k++) {
-                int r1idx = t.get(k).get_Region()*2-2;
-                int r2idx = t.get(k).get_Region()*2-1;
-                int s1 = t.get(k).get_Segment1().get_Id();
-                int s2 = t.get(k).get_Segment2().get_Id();
-                Ids[r1idx]=s1;
-                Ids[r2idx]=s2;
-            }
-            double[] tPars = new double[5];
-            tPars[0] = t.get_pAtOrig().x();
-            tPars[1] = t.get_pAtOrig().y();
-            tPars[2] = t.get_pAtOrig().z();
-            tPars[3] = t.get_Id();
-            tPars[4] = t.get_FitChi2();
-            
-            selectedTracksMap.put(t.get_Id(), t);
-            
-            AIHitReader.TrackInfo ti = new AIHitReader.TrackInfo(Ids, tPars);
-            trackInfoL.add(ti);
+        if(Constants.DEBUG) {
+            System.out.println("Searching for overlapping tracks");
         }
+        
+        Map<Integer, Track> selectedTracksMap = new HashMap<>();
+        for(Track t: trkcands) {
+            selectedTracksMap.put(t.get_Id(), t);
+        }
+        List<AIHitReader.TrackInfo> trackInfoL = this.getInstarecRecoTrks(trkcands);
         List<List<AIHitReader.TrackInfo>> trackInfoLs = getNNSeedLists(trackInfoL);
         trackInfoLs.add(new ArrayList<>());
         
         trkcands.clear();
         // Now, process each group and keep only the top  prob value for each group
         for ( List<AIHitReader.TrackInfo> trackInfoList : trackInfoLs) {
-            
+            if(Constants.DEBUG) {
+                System.out.println("Track info "+trackInfoList.size());
+            }
             // Sort by prob (tPars[4]) in ascending order
             trackInfoList.sort((a, b) -> Double.compare(a.getProb(), b.getProb()));
             
@@ -666,9 +688,7 @@ public class TrackCandListFinder {
                 if(selectedTracksMap.containsKey(id))
                     trkcands.add(selectedTracksMap.get(id));
             }
-            
         }
-
     }
     public void removeOverlappingTracksOld(List<Track> trkcands) {
         if(Constants.DEBUG) {

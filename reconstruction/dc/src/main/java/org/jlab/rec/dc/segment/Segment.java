@@ -40,6 +40,7 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
     private int _Status = 1;
     private double[] _SegmentEndPoints;
     public int associatedCrossId = -1;
+    public double roadchi2; //for missing segments road
     
     @Override
     public Object clone(){  

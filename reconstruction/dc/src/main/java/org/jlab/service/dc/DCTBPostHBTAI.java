@@ -40,7 +40,6 @@ import org.jlab.clas.tracking.kalmanfilter.zReference.StateVecs;
 import org.jlab.clas.tracking.utilities.MatrixOps.Libr;
 import org.jlab.clas.tracking.utilities.RungeKuttaDoca;
 import org.jlab.rec.dc.cluster.ClusterFinder;
-import org.jlab.rec.dc.cross.CrossList;
 import org.jlab.rec.dc.cross.CrossListFinder;
 import org.jlab.rec.dc.nn.AIHitReader;
 import org.jlab.rec.dc.nn.HBHitReader;
@@ -126,6 +125,7 @@ public class DCTBPostHBTAI extends DCEngine {
         Map<Integer, List<Segment>> segmentsMap = new HashMap<>();
         
         LOGGER.log(Level.FINE, "TB AI "+ this.getName());
+        if(Constants.DEBUG) System.out.println("STARTING TBT");
         //instantiate bank writer
         RecoBankWriter rbc = new RecoBankWriter(this.getBanks());
         //1) get the hits from banks
@@ -169,8 +169,9 @@ public class DCTBPostHBTAI extends DCEngine {
         List<Segment> segments = new ArrayList<>();
         crosses = new ArrayList<>();
 
-        for(Integer it : segmentsMap.keySet()) {  
-            segmentsMap.get(it).sort(Comparator.comparing(Segment::get_Id));
+        for(Integer it : segmentsMap.keySet()) {
+            segmentsMap.get(it).sort(Comparator.comparing(Segment::get_Superlayer));
+            if(Constants.DEBUG) System.out.println("List of Segments for track "+it);
             for(Segment se : segmentsMap.get(it)) { 
                 if(se.get_Id()>0) { 
                     cfd.cleanCluster(event, se.get_fittedCluster(), cf, ccu, 
@@ -180,24 +181,26 @@ public class DCTBPostHBTAI extends DCEngine {
                     crossLister.recalcParsSegment(event, se, super.getConstantsManager().getConstants(run, Constants.TIME2DIST), 
                     Constants.getInstance().dcDetector, tde);
                     segments.add(se); 
-                    
+                    if(Constants.DEBUG) System.out.println(se.printInfo());
                 }
             }
             
-            CrossList crosslist = pr.RecomposeCrossList(segmentsMap.get(it), Constants.getInstance().dcDetector);
+            List<Cross> clist = pr.RecomposeFHCrossList(segmentsMap.get(it), 
+                    Constants.getInstance().dcDetector,  it);
             //crosslists.add(crosslist);
-            for (List<Cross> clist : crosslist) { 
-                crosses.addAll(clist); 
-                for(Cross cr : clist) { 
-                    crossLister.updateBFittedHits(event, cr, 
-                            super.getConstantsManager().getConstants(run, Constants.TIME2DIST), 
-                            Constants.getInstance().dcDetector, tde, dcSwim);
-                }
+            if(clist.isEmpty()) continue;
+            crosses.addAll(clist); 
+            for(Cross cr : clist) { 
+                crossLister.updateBFittedHits(event, cr, 
+                        super.getConstantsManager().getConstants(run, Constants.TIME2DIST), 
+                        Constants.getInstance().dcDetector, tde, dcSwim);
             }
+            
             if(trkMap.containsKey(it)) { 
                 Track trk = trkMap.get(it);
-                trk.set_ListOfHBSegments(crosslist.getSegments());
-                trk.addAll(crosslist.getCrosses());
+                trk.addAll(clist);
+                if(trk.isEmpty()) continue;
+                trk.set_ListOfHBSegments(segmentsMap.get(it));
                 
                 if(trk.get_ListOfHBSegments() == null || trk.get_ListOfHBSegments().size()<5) continue;
                 if(Math.abs(Swimmer.getTorScale()) < 0.001){
@@ -329,9 +332,12 @@ public class DCTBPostHBTAI extends DCEngine {
             rbc.fillAllTBBanks(event, fhits, clusters, segments, crosses, null); // no cand found, stop here and save the hits, the clusters, the segments, the crosses
             return true;
         }
-        if(Constants.DEBUG) {
+        if(Constants.DEBUG || Constants.DEBUGLIGHT) {
+            AIHitReader reader  = new AIHitReader(this.getBanks(), Constants.getInstance().dcDetector);
+            reader.read_NNHits(event, useInstarec,false);
             if(trkcands.size()!=AIHitReader.getNNTrks()) System.out.println("event "+this.getEvent(event)+" expected trks "+AIHitReader.getNNTrks()+
                " found tracks "+ trkcands.size());
+            
         }
         rbc.fillAllTBBanks(event, fhits, clusters, segments, crosses, trkcands);
 

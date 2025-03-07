@@ -470,7 +470,9 @@ public class Track extends Trajectory implements Comparable<Track>{
      */
     public void printInfo() {
         String str = "Track "+this._Id+" Sector= "+this.getSector()+" Q= "+this._Q+" P= "+this._P+" chi2="+this.get_FitChi2();
-        for(int i=0; i<this.size(); i++) str += " cross" + (i+1) + "= " + this.get(i).get_Id();
+        for(int i=0; i<this.size(); i++) {
+            str += " cross" + (i+1) + "= " + this.get(i).get_Id();
+        }
         System.out.println(str);
     }
     @Override

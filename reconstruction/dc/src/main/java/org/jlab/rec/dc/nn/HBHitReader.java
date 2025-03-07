@@ -22,7 +22,6 @@ import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.banks.Banks;
 import org.jlab.rec.dc.banks.HitReader;
 import org.jlab.rec.dc.hit.FittedHit;
-import org.jlab.rec.dc.hit.Hit;
 import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
 /**
  *
@@ -34,8 +33,8 @@ public class HBHitReader extends HitReader{
     private String recBankName = "RECHB::Event";
     private DataEvent event;
     private final Map<int[], double[]> aimatchtrk = new HashMap<>();
-    private final Map<Integer, List<Hit>> aimatchcls = new HashMap<>();//map cluster id to list of hits ids
-    private final Map<Pair, Integer> aihits = new HashMap<>();//map of hits ids
+    private final Map<Integer, int[]> aimatchcls = new HashMap<>();//map cluster id to list of hits ids
+    private final Map<Triplet, Integer> aihits = new HashMap<>();//map of hits ids
     private TimeToDistanceEstimator tde;
     
     public HBHitReader(Banks names, RawBank.OrderType[] rawBankOrders, ConstantsManager manager, DCGeant4Factory detector) {
@@ -120,10 +119,10 @@ public class HBHitReader extends HitReader{
         processHits(bank,banktids,bankCls);
     }
 
-    // Processes TrackInfo from the bank
+    // Processes TrackInfo from the bank: key=track info ; value = pars
     private List<TrackInfo> processTrackInfo(DataBank bank) {//bank = HitBasedTrkg::HBTracks
         List<TrackInfo> trackInfoL = new ArrayList<>();
-
+        aimatchtrk.clear();
         for (int j = 0; j < bank.rows(); j++) {
             int[] ids = new int[6];
             double[] tPars = new double[5];
@@ -161,40 +160,39 @@ public class HBHitReader extends HitReader{
         }
     }
 
-    // Processes hits from the bank using the top 3 tracks
-    private void processHits(DataBank bank, DataBank banktid, DataBank cbank) {
-        aihits.clear();
-        //get the list of valid hits
-        for (int i = 0; i < bank.rows(); i++) {
-            int hitID = bank.getShort("id", i);
-            int clusterID = bank.getShort("clusterID", i);
-            if(clusterID!=-1) {
-                Pair pair = new Pair(hitID, clusterID);
-                aihits.put(pair, i);//hit id and row
-            }
-        }
+    // Processes hits from the hbhitbank using the top 3 tracks
+    private void processHits(DataBank hbhitbank, DataBank hbhittrkidbank, DataBank clusterbank) {
+        //process the cluster bank to get the list of hit ids in the cluster
         aimatchcls.clear();
-        //read the cluster bank to get the list of hits belonging to it.
-        for (int i = 0; i < cbank.rows(); i++) {
-            int clusterID = cbank.getShort("id", i);
+        //read the cluster hbhitbank to get the list of hits belonging to it.
+        for (int i = 0; i < clusterbank.rows(); i++) {
+            int clusterID = clusterbank.getShort("id", i);
             int[] hids = new int[12];
             for(int ki =0; ki<12; ki++) {
                 String st = "Hit";
                 st+=(ki+1);
                 st+="_ID";
-                hids[ki]=(int)cbank.getShort(st, i);
-                Pair pair = new Pair(hids[ki],clusterID);
-                if(aihits.containsKey(pair)) {
-                    for (int[] cids : aimatchtrk.keySet()) {
-                        boolean found = Arrays.stream(cids).anyMatch(id -> id == clusterID);
-                        if (found) { 
-                            FittedHit hit = createHit(bank, banktid, aihits.get(pair), cids);
-                            hit.NNClusId = clusterID;
-                            aimatchcls.computeIfAbsent(clusterID,  k-> new ArrayList<>()).add(hit);
-
-                            this.getDCHits().add(hit);      
-                            
-                        }
+                hids[ki]=(int)clusterbank.getShort(st, i);//the hit id
+            }
+            aimatchcls.put(clusterID, hids);
+        }
+        //get the list of valid hits
+        for (int i = 0; i < hbhitbank.rows(); i++) {
+            int hitID = hbhitbank.getShort("id", i);
+            if((int)hbhittrkidbank.getShort("id", i)!=hitID) {
+                continue;//something is wrong with the output of HBT --> TODO: LOG THIS
+            }
+            int hitTID = hbhittrkidbank.getShort("tid", i);
+            int clusterID = hbhitbank.getShort("clusterID", i);
+            if(clusterID!=-1) {//pass the hit
+                if(aimatchcls.containsKey(clusterID)) {
+                    //match this hit to the cluster 
+                    boolean found = Arrays.stream(aimatchcls.get(clusterID)).anyMatch(id -> id == hitID);
+                    if(found) {
+                        FittedHit h = this.createHit(hbhitbank, hbhittrkidbank, i);
+                        h.set_AssociatedClusterID(clusterID);
+                        h.set_AssociatedHBTrackID(hitTID);
+                        this.getDCHits().add(h); 
                     }
                 }
             }
@@ -218,19 +216,19 @@ public class HBHitReader extends HitReader{
                 T_Start = event.getBank(recBankName).getFloat("startTime", 0);
         }  
             
-            
-        FittedHit hit = new FittedHit(
-                bank.getByte("sector", row),
-                bank.getByte("superlayer", row),
-                bank.getByte("layer", row),
-                bank.getShort("wire", row),
-                bank.getInt("TDC", row),
-                bank.getByte("jitter", row),
-                bank.getShort("id", row)
-        );
+        int sector = (int) bank.getByte("sector", row);
+        int superlayer = (int) bank.getByte("superlayer", row);
+        int layer = bank.getByte("layer", row);
+        int wire = (int)bank.getShort("wire", row);
+        int TDC = bank.getInt("TDC", row);
+        int jitter = (int) bank.getByte("jitter", row);
+        int id = bank.getShort("id", row);
+        int cid = bank.getShort("clusterID", row);
+        int tid = bankti.getShort("tid", row);
+        int LR = bank.getByte("LR", row);
+        FittedHit hit = new FittedHit(sector, superlayer, layer, wire, TDC, jitter, id);
         
-        T_0 = this.getT0((int)bank.getByte("sector", row), (int)bank.getByte("superlayer", row), 
-               (int)bank.getByte("layer", row), (int)bank.getShort("wire", row), t0s)[0];
+        T_0 = this.getT0(sector, superlayer, layer, wire, t0s)[0];
         hit.set_Id(bank.getShort("id", row));
         hit.calc_CellSize(detector);
         double posError = hit.get_CellSize() / Math.sqrt(12.);
@@ -241,9 +239,8 @@ public class HBHitReader extends HitReader{
             hit.set_OutOfTimeFlag(true);
             hit.set_QualityFac(3);
         }
-        hit.set_LeftRightAmb(bank.getByte("LR", row));
-        hit.set_AssociatedClusterID(bank.getShort("clusterID", row));
-        int tid = (int)bankti.getShort("tid", row);
+        hit.set_LeftRightAmb(LR);
+        hit.set_AssociatedClusterID(cid);
         hit.set_AssociatedHBTrackID(tid);
         hit.setB((double)bankti.getFloat("B", row));
         hit.set_Beta(this.readBeta(event, tid));
@@ -272,20 +269,10 @@ public class HBHitReader extends HitReader{
         hit.set_ClusFitDoca((double)bank.getFloat("trkDoca", row));
         hit.set_TimeToDistance(event, 0.0, hit.getB(), time2dist, tde);
         hit.set_DocaErr(hit.get_PosErr(event, hit.getB(), docares, time2dist, tde));
-        
+        hit.updateHitPositionWithTime(event, 0, T_0, t0s, detector, tde);
         return hit;
     }
-    private FittedHit createHit(DataBank bank,DataBank banktid, int row, int[] cids) {
-        FittedHit hit = this.createHit(bank,banktid, row);
-        
-        // Assign track properties
-        hit.NNTrkId = (int) aimatchtrk.get(cids)[3];
-        //hit.NNTrkP = aimatchtrk.get(cids)[0];
-        //hit.NNTrkTheta = aimatchtrk.get(cids)[1];
-        //hit.NNTrkPhi = aimatchtrk.get(cids)[2];
-        return hit;
-    }
-
+    
     private List<FittedHit> _DCHits;
     /**
      * @return the _DCHits
@@ -300,8 +287,6 @@ public class HBHitReader extends HitReader{
     public void setDCHits(List<FittedHit> _DCHits) {
         this._DCHits = _DCHits;
     }
-
-
 
 
     // Helper class to store track information
@@ -344,7 +329,7 @@ public class HBHitReader extends HitReader{
         }
     }
 
-    // Pair class implementation 
+       // Pair class implementation 
     class Pair<T, U> {
         private final T first;
         private final U second;
@@ -373,6 +358,47 @@ public class HBHitReader extends HitReader{
             if (o == null || getClass() != o.getClass()) return false;
             Pair<?, ?> pair = (Pair<?, ?>) o;
             return Objects.equals(first, pair.first) && Objects.equals(second, pair.second);
+        }
+    }
+    
+    //Not used 
+    // Triplet class implementation 
+    class Triplet<T, U, V> {
+        private final T first;
+        private final U second;
+        private final V third;
+
+        public Triplet(T first, U second, V third) {
+            this.first  = first;
+            this.second = second;
+            this.third  = third;
+        }
+
+        public T getFirst() {
+            return first;
+        }
+
+        public U getSecond() {
+            return second;
+        }
+        
+        public V getThird() {
+            return third;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(first, second, third);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Triplet<?, ?, ?> pair = (Triplet<?, ?, ?>) o;
+            return Objects.equals(first, pair.first) 
+                    && Objects.equals(second, pair.second)
+                    && Objects.equals(third, pair.third);
         }
     }
     

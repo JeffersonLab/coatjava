@@ -18,7 +18,6 @@ import org.jlab.rec.dc.cross.CrossListFinder;
 import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.hit.Hit;
 import org.jlab.rec.dc.nn.PatternIRec;
-import org.jlab.rec.dc.nn.PatternRec;
 import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.track.Track;
 import org.jlab.rec.dc.track.TrackCandListFinder;
@@ -137,15 +136,21 @@ public class DCHBPostIClusterAI extends DCEngine {
             Constants.getInstance().dcDetector,
             Swimmer.getTorScale(),
             dcSwim, true);
+            
             if(ts!=null) {
                 trkcands.addAll(ts);
-                if(DEBUG) {
-                    System.out.println("HB SEEDS");
-                    for(Track t : trkcands)
-                        t.printInfo();
-                }
             }
         }
+        
+        if(DEBUG) {   
+            System.out.println("HB SEEDS:");
+            for(Track t : trkcands) {
+                int trkId = t.get(0).get_Segment1().get(0).NNTrkId;
+                t.set_Id(trkId);
+                t.printInfo();
+            }
+        }
+        
         // track found
         clusters = new ArrayList<>();
         int trkId = 1;
@@ -154,7 +159,7 @@ public class DCHBPostIClusterAI extends DCEngine {
             if(!useInstarec) trkcandFinder.removeOverlappingTracks(trkcands);
             for (Track trk : trkcands) {
                 // reset the id
-                //if(useInstarec) trkId = trk.get(0).get_Segment1().get(0).NNTrkId;
+                if(useInstarec) trkId = trk.get(0).get_Segment1().get(0).NNTrkId;
                 trk.set_Id(trkId);
                 trkcandFinder.matchHits(trk.getStateVecs(),
                         trk,
@@ -180,6 +185,7 @@ public class DCHBPostIClusterAI extends DCEngine {
                     }
                 }
                 trk.calcTrajectory(trk.getId(), dcSwim, trk.get_Vtx0(), trk.get_pAtOrig(), trk.get_Q());
+                
                 trkId++;
             }
         }
@@ -193,6 +199,11 @@ public class DCHBPostIClusterAI extends DCEngine {
                     writer.fillHBCrossesBank(event, crosses));
         }
         else {
+            if(Constants.DEBUG || Constants.DEBUGLIGHT) {
+            if(trkcands.size()!=AIHitReader.getNNTrks() && !enableMulti) System.out.println("event "+this.getEvent(event)+" expected HB trks "+AIHitReader.getNNTrks()+
+               " found tracks "+ trkcands.size());
+            
+        }
             event.appendBanks(
                     writer.fillHBHitsBank(event, fhits),    
                     writer.fillHBClustersBank(event, clusters),
