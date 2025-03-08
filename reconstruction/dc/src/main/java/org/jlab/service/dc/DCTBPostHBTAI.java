@@ -44,6 +44,7 @@ import org.jlab.rec.dc.cross.CrossListFinder;
 import org.jlab.rec.dc.nn.AIHitReader;
 import org.jlab.rec.dc.nn.HBHitReader;
 import org.jlab.rec.dc.nn.PatternIRec;
+import org.jlab.rec.dc.nn.TrackSelector;
 import static org.jlab.service.dc.DCEngine.LOGGER;
 
 public class DCTBPostHBTAI extends DCEngine {
@@ -51,18 +52,21 @@ public class DCTBPostHBTAI extends DCEngine {
     private  TimeToDistanceEstimator tde   = null;
     private  ClusterFinder cfd             = null;
     private  ClusterCleanerUtilities ccu   = null;
+    private  TrackSelector tsel            = null;
     public DCTBPostHBTAI(String trking) {
         super(trking);
-        tde = new TimeToDistanceEstimator();
-        cfd = new ClusterFinder();
-        ccu = new ClusterCleanerUtilities();
+        tde  = new TimeToDistanceEstimator();
+        cfd  = new ClusterFinder();
+        ccu  = new ClusterCleanerUtilities();
+        tsel = new TrackSelector();
     }
     public DCTBPostHBTAI() {
         super("DCTB");
         this.getBanks().init("TimeBasedTrkg", "HB", "TB");
-        tde = new TimeToDistanceEstimator();
-        cfd = new ClusterFinder();
-        ccu = new ClusterCleanerUtilities();
+        tde  = new TimeToDistanceEstimator();
+        cfd  = new ClusterFinder();
+        ccu  = new ClusterCleanerUtilities();
+        tsel = new TrackSelector();
     }
     
     @Override
@@ -80,6 +84,15 @@ public class DCTBPostHBTAI extends DCEngine {
     public boolean processDataEvent(DataEvent event) {
         int run = this.getRun(event);
         if(run==0) return true;
+        
+        DataBank bankAI = null;
+        if(this.useInstarec) {
+            bankAI = event.getBank(this.getBanks().getInstarecBank());
+        } else {
+            bankAI = event.getBank(this.getBanks().getAiBank());
+        }
+        if(bankAI==null ) return false;
+        
         //find the list of  track candidates
         // read beam offsets from database
         double beamXoffset, beamYoffset;
@@ -290,8 +303,10 @@ public class DCTBPostHBTAI extends DCEngine {
             }	   
         }
         if(!trkcands.isEmpty()) {
-            if(!saveMultiTB && enableMulti)
-                trkcandFinder.removeInstarecOverlappingTracks(trkcands);		// remove overlaps        	        	
+            if(!saveMultiTB && enableMulti) {
+                tsel.removeInstarecOverlappingTracks(bankAI,
+                        enableMulti,trkcands);		// remove overlaps 
+            }                
             for(Track trk: trkcands) {
                 int trkId = trk.get_Id();
                 // reset the id

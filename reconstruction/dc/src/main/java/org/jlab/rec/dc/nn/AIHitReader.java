@@ -8,8 +8,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 import org.jlab.detector.banks.RawBank;
 import org.jlab.detector.calib.utils.ConstantsManager;
@@ -25,7 +27,7 @@ import org.jlab.rec.dc.hit.Hit;
  */
 public class AIHitReader extends HitReader {
     private static final Logger LOGGER = Logger.getLogger(AIHitReader.class.getName());
-    private static final int MAX_AITRACKS = 3;
+    public static final int MAX_AITRACKS = 3;
     private final Map<int[], double[]> aimatchtrk = new HashMap<>();
     private final Map<Integer, List<Hit>> aimatchcls = new HashMap<>();//map cluster id to list of hits ids
     private final Map<Integer, Integer> aihits = new HashMap<>();//map of hits ids
@@ -64,24 +66,6 @@ public class AIHitReader extends HitReader {
         return true;
     }
 
-    // Gets NN Seed Lists grouped by overlapping track information
-    public static List<List<TrackInfo>> getNNSeedLists(List<TrackInfo> trackInfoL) {
-        Collections.sort(trackInfoL);
-        List<List<TrackInfo>> trackInfoLs = new ArrayList<>();
-        trackInfoLs.add(new ArrayList<>());
-        trackInfoLs.get(0).add(trackInfoL.get(0));
-
-        for (int k = 1; k < trackInfoL.size(); k++) {
-            boolean isInGroup = overlaps(trackInfoL.get(k), trackInfoLs.get(trackInfoLs.size() - 1));
-            if (isInGroup) {
-                trackInfoLs.get(trackInfoLs.size() - 1).add(trackInfoL.get(k));
-            } else {
-                trackInfoLs.add(new ArrayList<>());
-                trackInfoLs.get(trackInfoLs.size() - 1).add(trackInfoL.get(k));
-            }
-        }
-        return trackInfoLs;
-    }
 
     // Reads InstruRec NN hits
     private void readNNHits(boolean instarec, boolean enableMulti) {
@@ -123,18 +107,17 @@ public class AIHitReader extends HitReader {
         DataBank bank = event.getBank(bankNames.getInputHitsBank());
         DataBank bankCls = event.getBank(bankNames.getInputClustersBank());
 
-        List<TrackInfo> trackInfoL = processTrackInfo(bankAI, cartesian, enableMulti);
-        List<List<TrackInfo>> trackInfoLs = getNNSeedLists(trackInfoL);
+        Map<TrackInfo, List<TrackInfo>> trackInfoL = processTrackInfo(bankAI, cartesian, enableMulti);
 
         // Process track info and match with top 3 tracks
-        processTopTracks(trackInfoLs);
+        processTopTracks(trackInfoL);
 
         // Process hits using the top 3 tracks
         processHits(bank,bankCls);
     }
 
-    // Processes TrackInfo from the bank
-    private List<TrackInfo> processTrackInfo(DataBank bankAI, boolean cartesian, boolean enableMulti) {
+    private Map<TrackInfo, List<TrackInfo>> processTrackInfo(DataBank bankAI, boolean cartesian, boolean enableMulti) {
+        Map<TrackInfo, List<TrackInfo>> trackInfoLM = new HashMap<>();
         List<TrackInfo> trackInfoL = new ArrayList<>();
         nnTrks=0;
         for (int j = 0; j < bankAI.rows(); j++) {
@@ -167,20 +150,48 @@ public class AIHitReader extends HitReader {
                     trackInfoL.add(new TrackInfo(ids, tPars));
                 }
             } else {
-                trackInfoL.add(new TrackInfo(ids, tPars));
+                TrackInfo ti = new TrackInfo(ids, tPars);
+                if(status!=0) {System.out.println("SEED "+Arrays.toString(ti.getIds()));
+                    trackInfoLM.computeIfAbsent(ti,  k-> new ArrayList<>()).add(ti); //this is the seed
+                } else {
+                    trackInfoL.add(ti); //these are the seed overlaps
+                    System.out.println("OVL "+Arrays.toString(ti.getIds()));
+                }
             }
         }
-        return trackInfoL;
+        Set<Integer> setA = new HashSet<>();
+        Set<Integer> setB = new HashSet<>();
+        for(TrackInfo ti: trackInfoLM.keySet()) {
+            for(TrackInfo tj : trackInfoL) {
+                setA.clear();
+                for (int num : ti.ids) {
+                    setA.add(num);
+                }
+                setB.clear();
+                for (int num : tj.ids) {
+                    setB.add(num);
+                }
+                setA.retainAll(setB);
+                if (!setA.isEmpty()) {
+                    System.out.println("There is an overlap. Common values: " + setA);
+                    trackInfoLM.get(ti).add(tj);
+                }
+            }
+        }
+            return trackInfoLM;
     }
-
+    
     // Process top 3 tracks based on probability
-    private void processTopTracks(List<List<TrackInfo>> trackInfoLs) {
-        for (List<TrackInfo> trackInfoList : trackInfoLs) {
+    private void processTopTracks(Map<TrackInfo, List<TrackInfo>> trackInfoLs) { 
+        for (List<TrackInfo> trackInfoList : trackInfoLs.values()) {System.out.println("***********");
             trackInfoList.sort((a, b) -> Double.compare(b.getProb(), a.getProb()));
-
-            // Only keep the top 3 tracks
+            for(TrackInfo t : trackInfoList)
+                System.out.println("NN "+Arrays.toString(t.getIds()));
+            // Only keep the top 3 tracks including the seed
+            
             trackInfoList = trackInfoList.subList(0, Math.min(MAX_AITRACKS, trackInfoList.size()));
-
+            for(TrackInfo t : trackInfoList)
+                System.out.println("UpdatedNN "+Arrays.toString(t.getIds()));
             for (TrackInfo trackInfo : trackInfoList) {
                 aimatchtrk.put(trackInfo.getIds(), trackInfo.getTPars());
             }
@@ -313,6 +324,20 @@ public class AIHitReader extends HitReader {
             return prob;
         }
 
+        // Override equals to only compare the ids
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            TrackInfo trackInfo = (TrackInfo) o;
+            return Arrays.equals(ids, trackInfo.ids); // Compare only ids
+        }
+
+        // Override hashCode to only depend on the ids
+        @Override
+        public int hashCode() {
+            return Arrays.hashCode(ids);  // Use only ids for hashCode
+        }
         @Override
         public int compareTo(TrackInfo other) {
             int[] c = new int[6];

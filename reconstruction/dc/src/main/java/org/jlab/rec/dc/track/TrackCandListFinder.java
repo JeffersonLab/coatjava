@@ -1,6 +1,7 @@
 package org.jlab.rec.dc.track;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -36,7 +37,6 @@ import org.jlab.clas.tracking.utilities.RungeKuttaDoca;
 import org.jlab.io.base.DataBank;
 import static org.jlab.rec.dc.Constants.DEBUG;
 import org.jlab.rec.dc.nn.AIHitReader;
-import static org.jlab.rec.dc.nn.AIHitReader.getNNSeedLists;
 import static org.jlab.rec.dc.nn.AIHitReader.getNNTrks;
 import static org.jlab.rec.dc.nn.AIHitReader.setNNTrks;
 
@@ -624,72 +624,7 @@ public class TrackCandListFinder {
                 + trk.get(2).get_Id();
     }
 
-    private List<AIHitReader.TrackInfo> getInstarecRecoTrks(List<Track> trkcands) {
-        Map<Integer, Segment> trkSegs = new HashMap<>();
-        List<AIHitReader.TrackInfo> trackInfoL = new ArrayList<>();
-        
-        for (int j = 0; j < trkcands.size(); j++) {
-            trkSegs.clear();
-            List<Segment> tsegs = trkcands.get(j).get_ListOfHBSegments();
-            for(Segment s : tsegs) {
-                trkSegs.put(s.get_Superlayer()-1, s);
-            }
-            
-            int[] ids = new int[6];
-            double[] tPars = new double[5];
-
-            for (int s = 0; s < 6; s++) {
-                if(trkSegs.containsKey(s)) {
-                ids[s] = trkSegs.get(s).get_Id();
-                } else {
-                    ids[s] = -1;
-                }
-            }
-
-            
-            tPars[3] = (double) trkcands.get(j).get_Id();
-            tPars[4] = (double) trkcands.get(j).get_FitChi2();
-            trackInfoL.add(new AIHitReader.TrackInfo(ids, tPars));
-            
-        }
-        return trackInfoL;
-    }
     
-    
-    public void removeInstarecOverlappingTracks(List<Track> trkcands) {
-        if(Constants.DEBUG) {
-            LOGGER.log(Level.FINE, "Found "+trkcands.size()+" tracks ");
-        }
-        if(Constants.DEBUG) {
-            System.out.println("Searching for overlapping tracks");
-        }
-        
-        Map<Integer, Track> selectedTracksMap = new HashMap<>();
-        for(Track t: trkcands) {
-            selectedTracksMap.put(t.get_Id(), t);
-        }
-        List<AIHitReader.TrackInfo> trackInfoL = this.getInstarecRecoTrks(trkcands);
-        List<List<AIHitReader.TrackInfo>> trackInfoLs = getNNSeedLists(trackInfoL);
-        trackInfoLs.add(new ArrayList<>());
-        
-        trkcands.clear();
-        // Now, process each group and keep only the top  prob value for each group
-        for ( List<AIHitReader.TrackInfo> trackInfoList : trackInfoLs) {
-            if(Constants.DEBUG) {
-                System.out.println("Track info "+trackInfoList.size());
-            }
-            // Sort by prob (tPars[4]) in ascending order
-            trackInfoList.sort((a, b) -> Double.compare(a.getProb(), b.getProb()));
-            
-            // Only keep the top prob entry
-            trackInfoList = trackInfoList.subList(0, Math.min(1, trackInfoList.size()));
-            for (AIHitReader.TrackInfo trackInfo : trackInfoList) {
-                int id = (int)trackInfo.getTPars()[3];
-                if(selectedTracksMap.containsKey(id))
-                    trkcands.add(selectedTracksMap.get(id));
-            }
-        }
-    }
     public void removeOverlappingTracksOld(List<Track> trkcands) {
         if(Constants.DEBUG) {
             LOGGER.log(Level.FINE, "Found "+trkcands.size()+" HB seeds ");
