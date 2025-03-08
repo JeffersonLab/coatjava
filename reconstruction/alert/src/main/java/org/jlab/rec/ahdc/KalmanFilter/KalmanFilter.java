@@ -103,15 +103,14 @@ public class KalmanFilter {
 				// 	if(hit.getADC()<o.getADC()){
 				 	    aleardyHaveR = true;
 					    
-					    // if(o.phi()>hit.phi()){
-				 	    // 	    o.setSign(+1);
-				 	    // 	    hit.setSign(-1);
-				 	    // }else{
-				 	    // 	    hit.setSign(+1);
-				 	    // 	    o.setSign(-1);
-				 	    // }
-					    // System.out.println( " r = " + o.r() + " o.phi = " + o.phi() + " o.doca = " + o.getDoca()*o.getSign() + " hit.phi " + hit.phi() +" hit.doca = " + hit.getDoca()*hit.getSign() + " angle between wires: " + Math.toRadians(360./hit.getNumWires()) + " >= ? angle covered by docas: " +  Math.atan( (o.getDoca()+hit.getDoca())/o.r() )  );
-
+					    if(o.phi()>hit.phi()){
+				 		    o.setSign(-1);
+				 		    hit.setSign(+1);
+				 	    }else{
+				 		    hit.setSign(-1);
+				 		    o.setSign(+1);
+				 	    }
+					    //System.out.println( " r = " + o.r() + " o.phi = " + o.phi() + " o.doca = " + o.getDoca()*o.getSign() + " hit.phi " + hit.phi() +" hit.doca = " + hit.getDoca()*hit.getSign() + " angle between wires: " + Math.toRadians(360./hit.getNumWires()) + " >= ? angle covered by docas: " +  Math.atan( (o.getDoca()+hit.getDoca())/o.r() )  );
 				// 	}else{
 				// 	    if(hit.phi()>o.phi()){
 				// 		    hit.setSign(+1);
@@ -121,7 +120,6 @@ public class KalmanFilter {
 				// 	    //remove hit 
 				// 	    KF_hits.remove(o);
 				// 	}
-
 				     }
 				}
 				if (!aleardyHaveR)
