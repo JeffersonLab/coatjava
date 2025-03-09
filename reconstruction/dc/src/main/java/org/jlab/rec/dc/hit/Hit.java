@@ -295,4 +295,25 @@ public class Hit implements Comparable<Hit> {
         return s;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Hit hit = (Hit) o;
+        return _Id == hit._Id &&
+               _Sector == hit._Sector &&
+               _Superlayer == hit._Superlayer &&
+               _Layer == hit._Layer &&
+               _Wire == hit._Wire;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Integer.hashCode(_Id);
+        result = 31 * result + Integer.hashCode(_Sector);
+        result = 31 * result + Integer.hashCode(_Superlayer);
+        result = 31 * result + Integer.hashCode(_Layer);
+        result = 31 * result + Integer.hashCode(_Wire);
+        return result;
+    }
 }

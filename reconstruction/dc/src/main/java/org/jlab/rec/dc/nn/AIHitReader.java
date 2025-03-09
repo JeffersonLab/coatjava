@@ -151,11 +151,10 @@ public class AIHitReader extends HitReader {
                 }
             } else {
                 TrackInfo ti = new TrackInfo(ids, tPars);
-                if(status!=0) {System.out.println("SEED "+Arrays.toString(ti.getIds()));
+                if(status!=0) {
                     trackInfoLM.computeIfAbsent(ti,  k-> new ArrayList<>()).add(ti); //this is the seed
                 } else {
                     trackInfoL.add(ti); //these are the seed overlaps
-                    System.out.println("OVL "+Arrays.toString(ti.getIds()));
                 }
             }
         }
@@ -172,8 +171,7 @@ public class AIHitReader extends HitReader {
                     setB.add(num);
                 }
                 setA.retainAll(setB);
-                if (!setA.isEmpty()) {
-                    System.out.println("There is an overlap. Common values: " + setA);
+                if (!setA.isEmpty() && setA.size() != setB.size()) {
                     trackInfoLM.get(ti).add(tj);
                 }
             }
@@ -183,15 +181,12 @@ public class AIHitReader extends HitReader {
     
     // Process top 3 tracks based on probability
     private void processTopTracks(Map<TrackInfo, List<TrackInfo>> trackInfoLs) { 
-        for (List<TrackInfo> trackInfoList : trackInfoLs.values()) {System.out.println("***********");
+        for (List<TrackInfo> trackInfoList : trackInfoLs.values()) {
             trackInfoList.sort((a, b) -> Double.compare(b.getProb(), a.getProb()));
-            for(TrackInfo t : trackInfoList)
-                System.out.println("NN "+Arrays.toString(t.getIds()));
-            // Only keep the top 3 tracks including the seed
             
-            trackInfoList = trackInfoList.subList(0, Math.min(MAX_AITRACKS, trackInfoList.size()));
-            for(TrackInfo t : trackInfoList)
-                System.out.println("UpdatedNN "+Arrays.toString(t.getIds()));
+            // Only keep the top 3 tracks including the seed
+            trackInfoList = trackInfoList.subList(0, Math.min(MAX_AITRACKS, 
+                    trackInfoList.size()));
             for (TrackInfo trackInfo : trackInfoList) {
                 aimatchtrk.put(trackInfo.getIds(), trackInfo.getTPars());
             }

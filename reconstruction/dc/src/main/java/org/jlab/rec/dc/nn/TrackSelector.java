@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,8 +27,6 @@ public class TrackSelector {
         
         // Iterate over track candidates
         trkcands.forEach(track -> {
-            System.out.println("CAND ");
-            track.printInfo();
             Map<Integer, Segment> trkSegs = new HashMap<>();
             List<Segment> tsegs = track.get_ListOfHBSegments();
             
@@ -45,9 +44,6 @@ public class TrackSelector {
                     ids[s] = segment.get_Id();
                 }
             }
-            
-
-            System.out.println("trk " + Arrays.toString(ids));
             trackList.put(new IntArrayKey(ids), track);
         });
         
@@ -76,28 +72,25 @@ public class TrackSelector {
             if (status != 0) {
                 if (enableMulti) {
                     trackInfoLM.computeIfAbsent(ti, k -> new ArrayList<>()).add(ti);
-                    System.out.println("SEED " + Arrays.toString(ti.getIds()));
                 } else {
                     trackInfoL.add(ti);
                 }
             } else {
                 trackInfoL.add(ti);
-                System.out.println("OVL " + Arrays.toString(ti.getIds()));
             }
         }
 
         // Handle overlaps between tracks
         trackInfoLM.keySet().forEach(ti -> {
             trackInfoL.forEach(tj -> {
-                Set<Integer> setA = Arrays.stream(ti.getIds())  
+                Set<Integer> setA = new LinkedHashSet<>(Arrays.stream(ti.getIds())  
                           .boxed()             
-                          .collect(Collectors.toSet()); 
-                Set<Integer> setB = Arrays.stream(tj.getIds())  
+                          .collect(Collectors.toSet())); 
+                Set<Integer> setB = new LinkedHashSet<>(Arrays.stream(tj.getIds())  
                           .boxed()             
-                          .collect(Collectors.toSet()); 
+                          .collect(Collectors.toSet())); 
                 setA.retainAll(setB);
                 if (!setA.isEmpty()) {
-                    System.out.println("There is an overlap. Common values: " + setA);
                     trackInfoLM.get(ti).add(tj);
                 }
             });
@@ -108,7 +101,6 @@ public class TrackSelector {
 
     public void removeInstarecOverlappingTracks(DataBank bankAI, boolean enableMulti, List<Track> tracks) {
         if (!enableMulti) return;
-
         Map<IntArrayKey, Track> selectedTrks = new HashMap<>();
         Map<AIHitReader.TrackInfo, List<AIHitReader.TrackInfo>> trackInfoLs = processTrackInfo(bankAI, enableMulti);
         Map<IntArrayKey, Track> instarecRecoTrks = getInstarecRecoTrks(tracks);
@@ -118,16 +110,12 @@ public class TrackSelector {
         trackInfoLs.values().forEach(tis -> {
             selected.clear();
             tis.forEach(ti -> {
-                System.out.println("CHECK " + Arrays.toString(ti.getIds())); 
                 IntArrayKey ik = new IntArrayKey(ti.getIds());
                 if (instarecRecoTrks.containsKey(ik)) {
-                    Track track = instarecRecoTrks.get(ik);
-                    System.out.println("Found track for " + Arrays.toString(ti.getIds()) + ": "); 
+                    Track track = instarecRecoTrks.get(ik); 
                     track.printInfo();
                     selected.put(ik, track);
-                } else {
-                    System.out.println("No track found for " + Arrays.toString(ti.getIds()));
-                }
+                } 
             });
 
             // Sort by FitChi2 / FitNDF and select best track
@@ -149,56 +137,62 @@ public class TrackSelector {
 
         // Remove overlaps
         selectedTrks.keySet().removeIf(tj -> selectedTrks.get(tj).get_Id() < 0);
-
-        // Remove already selected tracks from instarecRecoTrks
-        instarecRecoTrks.keySet().removeIf(tj -> selectedTrks.containsKey(tj));
-
-        // Check for overlaps and flag instarecRecoTrks entries
-        instarecRecoTrks.forEach((tj, track) -> {
-            boolean overlaps = selectedTrks.keySet().stream().anyMatch(ti -> checkOverlap(ti, tj, selectedTrks));
-            if (!overlaps) {
-                track.set_Id(-track.get_Id());  // Flag for removal
+        
+        //check for seeds that are not in the list of selected tracks and add if not overlapping
+        // Process tracks and filter out overlaps
+        trackInfoLs.keySet().forEach(tis -> {
+        IntArrayKey ik = new IntArrayKey(tis.getIds());
+            //check for overlap with selected tracks
+            if (selectedTrks.containsKey(ik)) {
+                //System.out.println("Found track for " + Arrays.toString(tis.getIds()) + ": \n"); 
+            } else {
+                //System.out.println("No track found for " + Arrays.toString(tis.getIds()));
+                //check overlaps with the rest of the selected tracks
+                
+                boolean overlaps = selectedTrks.keySet().stream().anyMatch(ti -> checkOverlap(ti, ik));
+                if(!overlaps) {
+                    selectedTrks.put(ik, instarecRecoTrks.get(ik));
+                }
             }
         });
 
-        // Add non-overlapping tracks to selectedTrks
-        instarecRecoTrks.forEach((tj, track) -> {
-            if (track.get_Id() < 0) {
-                track.set_Id(-track.get_Id()); // Reset flag
-                selectedTrks.put(tj, track);
-            }
-        });
-
-        // Update tracks list
+        
         tracks.clear();
         tracks.addAll(selectedTrks.values());
     }
 
-    private boolean checkOverlap(IntArrayKey ti, IntArrayKey tj, Map<IntArrayKey, Track> selectedTrks) {
+    private boolean checkOverlap(IntArrayKey ti, IntArrayKey tj
+    //        , Map<IntArrayKey, Track> selectedTrks
+    ) {
         // Convert int[] to Integer[] using stream
-        Set<Integer> setA = Arrays.stream(ti.getArray()).boxed().collect(Collectors.toSet());
-        Set<Integer> setB = Arrays.stream(tj.getArray()).boxed().collect(Collectors.toSet());
-
+        Set<Integer> setA = new LinkedHashSet<>(Arrays.stream(ti.getArray()).boxed().
+                                                collect(Collectors.toSet()));
+        Set<Integer> setB = new LinkedHashSet<>(Arrays.stream(tj.getArray()).boxed().
+                                                collect(Collectors.toSet()));
         setA.retainAll(setB);
         return !setA.isEmpty() && setA.size() != setB.size();
     }
 
-    private void resolveOverlaps(Map<IntArrayKey, Track> selectedTrks) {
+    private void resolveOverlaps(Map<IntArrayKey, Track> selectedTrks) { 
         selectedTrks.keySet().forEach(ti -> {
-            selectedTrks.keySet().forEach(tj -> {
-                if (!ti.equals(tj) && selectedTrks.get(ti).get_Id() != selectedTrks.get(tj).get_Id()) {
+            selectedTrks.keySet().forEach(tj -> { 
+                if (!ti.equals(tj) && selectedTrks.get(ti).get_Id() != selectedTrks.get(tj).get_Id()
+                        && selectedTrks.get(ti).get_Id()>0 && selectedTrks.get(tj).get_Id()>0) {
                     // Convert int[] to Integer[] using stream
-                    Set<Integer> setA = Arrays.stream(ti.getArray()).boxed().collect(Collectors.toSet());
-                    Set<Integer> setB = Arrays.stream(tj.getArray()).boxed().collect(Collectors.toSet());
-
+                    Set<Integer> setA = new LinkedHashSet<>(Arrays.stream(ti.getArray()).boxed().
+                                                            collect(Collectors.toSet()));
+                    Set<Integer> setB = new LinkedHashSet<>(Arrays.stream(tj.getArray()).boxed().
+                                                            collect(Collectors.toSet()));
                     setA.retainAll(setB);
                     if (!setA.isEmpty() && setA.size() != setB.size()) {
-                        System.out.println("Overlap detected: " + setA);
+                        //System.out.println("Overlap detected: " + setA);
                         if (selectedTrks.get(tj).get_FitChi2() / selectedTrks.get(tj).get_FitNDF() < 
                             selectedTrks.get(ti).get_FitChi2() / selectedTrks.get(ti).get_FitNDF()) {
                             selectedTrks.get(ti).set_Id(-selectedTrks.get(ti).get_Id());
+                            //System.out.println("flagged for rm "+selectedTrks.get(ti));
                         } else {
                             selectedTrks.get(tj).set_Id(-selectedTrks.get(tj).get_Id());
+                           // System.out.println("flagged for rm "+selectedTrks.get(ti));
                         }
                     }
                 }
@@ -230,5 +224,6 @@ public class TrackSelector {
         public int[] getArray() {
             return array;
         }
+        
     }
 }

@@ -3,9 +3,11 @@ package org.jlab.rec.dc.nn;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
@@ -118,7 +120,7 @@ public class PatternIRec {
 
         logCrossInfo(crosses);
         if(Constants.DEBUG) {
-            System.out.println("NNTrk "+i);
+            System.out.println("NNTrk RCL "+i);
             for(Cross s : crosses)
                 System.out.println(s.printInfo());
         }
@@ -146,7 +148,8 @@ public class PatternIRec {
 
         // Process each hit group
         for (Map.Entry<Pair<Integer, Integer>, List<Hit>> entry : grpHits.entrySet()) {
-            List<Hit> hits = entry.getValue();
+            //List<Hit> hits = entry.getValue();
+            List<Hit> hits = this.Uniq(entry.getValue());
             
             int cid = entry.getKey().getSecond();
             
@@ -161,7 +164,7 @@ public class PatternIRec {
         }
         if(Constants.DEBUG) {
             for(Integer i : fclusters.keySet()) {
-                System.out.println("NNTrk "+i);
+                System.out.println("NNTrk RSEGS"+i);
                 for(Segment s : fclusters.get(i))
                     System.out.println(s.printInfo());
             }
@@ -401,7 +404,12 @@ public class PatternIRec {
         
         return cr1;
     }    
-        
+
+    public static List<Hit> Uniq(List<Hit> hits) {
+        Set<Hit> uniqueHits = new HashSet<>(hits); // Convert to Set to remove duplicates
+        return new ArrayList<>(uniqueHits); // Convert back to List
+    }
+    
     // Pair class implementation 
     class Pair<T, U> {
         private final T first;
