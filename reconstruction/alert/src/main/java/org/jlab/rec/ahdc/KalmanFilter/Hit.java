@@ -163,6 +163,14 @@ public class Hit implements Comparable<Hit> {
 		return new Array2DRowRealMatrix(new double[][]{{0.0225}});
 	}
     
+    	public RealMatrix get_MeasurementNoise(boolean goodsign) {
+	    if(goodsign){
+		return new Array2DRowRealMatrix(new double[][]{{0.0225}});
+	    }else{
+		return new Array2DRowRealMatrix(new double[][]{{2*this.doca*this.doca}});
+	    }
+	}
+    
 	public double doca() {
 		return doca;
 	}
