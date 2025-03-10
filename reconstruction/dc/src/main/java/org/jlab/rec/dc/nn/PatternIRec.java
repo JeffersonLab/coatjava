@@ -16,6 +16,7 @@ import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.dc.Constants;
+import static org.jlab.rec.dc.Constants.DEBUG;
 import org.jlab.rec.dc.cluster.Cluster;
 import org.jlab.rec.dc.cluster.ClusterCleanerUtilities;
 import org.jlab.rec.dc.cluster.ClusterFinder;
@@ -102,9 +103,13 @@ public class PatternIRec {
                     Cross cr = crf.getCross(regionSegs.get(r+1).get(0), 
                         regionSegs.get(r+1).get(1), DcDetector, 0,0); 
                     if(cr==null) {
+                        if(DEBUG) System.out.println("Cross is null for "+regionSegs.get(r+1).get(0).printInfo()
+                                                                     +"\n"+regionSegs.get(r+1).get(1).printInfo());
                         cr = crf.getCross(regionSegs.get(r+1).get(0), 
                         regionSegs.get(r+1).get(1), DcDetector, 0,2);//loosen cut
                         if(cr==null) {
+                            if(DEBUG) System.out.println("Cross is still null for "+regionSegs.get(r+1).get(0).printInfo()
+                                                                     +"\n"+regionSegs.get(r+1).get(1).printInfo());
                             cr = this.findBestSegmentCross(regionSegs.get(r+1).get(0), 
                             regionSegs.get(r+1).get(1), segs2Crs, DcDetector);
                         }
@@ -367,6 +372,9 @@ public class PatternIRec {
     }
     
     private Cross getMissingSegmentPCross(Segment s1, Segment wrong, List<Segment> segments, DCGeant4Factory DcDetector) {
+        if(DEBUG) {
+            System.out.println("Finding Road for "+s1.printInfo());
+        }
         Cross cr1 = null;
         List<Segment> Segs2Road1 = new ArrayList<>();
         List<Segment> Segs2Road2 = new ArrayList<>();
@@ -376,6 +384,7 @@ public class PatternIRec {
                 Segs2Road2.add(s);
                 if(s.get_Superlayer() % 2 == wrong.get_Superlayer() % 2) {
                     Segs2Road1.add(s);
+                    if(DEBUG) System.out.println("ADDED to Road "+s.printInfo());
                 }
             } 
         } else {
@@ -394,7 +403,7 @@ public class PatternIRec {
         }
         if (Segs2Road1.size() == 2) {
             Road r = new Road();
-            r.addAll(Segs2Road2);
+            r.addAll(Segs2Road1);
             rf.fitRoad(r, DcDetector);
             
             Segment pSegment = rf.findRoadMissingSegment(Segs2Road1, 
@@ -402,18 +411,22 @@ public class PatternIRec {
                         rf.polyfit);
             if(pSegment!=null) {
                 cf.Fit(pSegment.get_fittedCluster(), true); 
-                if(Constants.DEBUG) System.out.println("Missing Segment "+pSegment.printInfo());
+                if(Constants.DEBUG) System.out.println("Found Missing Segment "+pSegment.printInfo());
             }
             pSegment.roadchi2 =rf.polyfit_chi2_ov_ndf;
             if(s1.get_RegionSlayer()==1) {
                 if(!TBT) {
                     cr1 = crf.getCross(s1, pSegment, DcDetector, 0, 2);
+                    if(cr1==null)
+                        cr1 = crf.getCrossNoCuts(s1, pSegment, DcDetector, 0); //find a way to flag this
                 } else {
                     cr1 = crf.getCrossNoCuts(s1, pSegment, DcDetector, 0); //make a cross anyway, let the KF sort out the hits on tracks for the segment
                 }
             } else {
                 if(!TBT) {
                     cr1 = crf.getCross(pSegment, s1, DcDetector, 0, 2);
+                    if(cr1==null)
+                        cr1 = crf.getCrossNoCuts(pSegment, s1, DcDetector, 0); //find a way to flag this
                 } else {
                     cr1 = crf.getCrossNoCuts(pSegment, s1, DcDetector, 0); //make a cross anyway, let the KF sort out the hits on tracks for the segment
                 }

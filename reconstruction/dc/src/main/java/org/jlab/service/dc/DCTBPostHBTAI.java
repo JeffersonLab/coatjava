@@ -303,12 +303,17 @@ public class DCTBPostHBTAI extends DCEngine {
                 }
             }	   
         }
+        for(Track trk: trkcands) {
+            if(trk==null) System.out.println("TRACK IS NULL");
+        }
         if(!trkcands.isEmpty()) {
             if(!saveMultiTB && enableMulti) {
-               // tsel.removeInstarecOverlappingTracks(bankAI,
-                //        enableMulti,trkcands);		// remove overlaps 
-            }                
+                tsel.removeInstarecOverlappingTracks(bankAI,
+                        enableMulti,trkcands);		// remove overlaps 
+            } 
+            
             for(Track trk: trkcands) {
+                
                 int trkId = trk.get_Id();
                 // reset the id
                 //trk.set_Id(trkId);
@@ -339,7 +344,7 @@ public class DCTBPostHBTAI extends DCEngine {
                     }
                 }
             }
-            this.ensureTrackUnique(trkcands);
+            //this.ensureTrackUnique(trkcands);
         }    
        
         this.ensureUniqueness(fhits, clusters, segments, crosses);

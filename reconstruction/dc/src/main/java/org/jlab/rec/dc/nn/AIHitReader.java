@@ -17,6 +17,7 @@ import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
+import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.banks.Banks;
 import org.jlab.rec.dc.banks.HitReader;
 import org.jlab.rec.dc.hit.Hit;
@@ -133,18 +134,14 @@ public class AIHitReader extends HitReader {
             if (status != 0) {
                     setNNTrks(getNNTrks() + 1); //for debugging
             }
-            if (!enableMulti) {
-                if (status != 0) {
-                    trackInfoL.add(new TrackInfo(ids, tPars));
-                }
+            TrackInfo ti = new TrackInfo(ids, tPars);
+            if(status!=0) {
+                trackInfoLM.computeIfAbsent(ti,  k-> new ArrayList<>()).add(ti); //this is the seed
             } else {
-                TrackInfo ti = new TrackInfo(ids, tPars);
-                if(status!=0) {
-                    trackInfoLM.computeIfAbsent(ti,  k-> new ArrayList<>()).add(ti); //this is the seed
-                } else {
+                if (enableMulti) 
                     trackInfoL.add(ti); //these are the seed overlaps
-                }
-            }
+            }    
+            
         }
         Set<Integer> setA = new HashSet<>();
         Set<Integer> setB = new HashSet<>();
@@ -164,7 +161,15 @@ public class AIHitReader extends HitReader {
                 }
             }
         }
-            return trackInfoLM;
+        if(Constants.DEBUG) {
+            for(TrackInfo ti :  trackInfoLM.keySet()) {
+                List<TrackInfo> til = trackInfoLM.get(ti);
+                System.out.println("Found SEED for " + Arrays.toString(ti.getIds()) + ": \n"); 
+                 for(TrackInfo tis : til)
+                     System.out.println("Found sub-SEED " + Arrays.toString(tis.getIds()) + ": \n"); 
+            }
+        }
+        return trackInfoLM;
     }
     
     // Process top 3 tracks based on probability

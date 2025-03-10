@@ -1093,7 +1093,7 @@ public class TrackCandListFinder {
                                 System.out.println("HB KF FAILED!  finalStateVec=null!");
                             continue;
                         } else {
-                            if (kFZRef.chi2 < Constants.MAXCHI2) {
+                            //if (kFZRef.chi2 < Constants.MAXCHI2) {
                                 if(DEBUG)
                                     System.out.println("HB KF CHI2 PASSED "+kFZRef.chi2);
                                 fitStateVec = new StateVec(kFZRef.finalStateVec.x,
@@ -1124,7 +1124,7 @@ public class TrackCandListFinder {
                                 if (cand.fit_Successful = true) {
                                     cands.add(cand);                                    
                                 }
-                            }
+                            //}
                         }
                                           
 

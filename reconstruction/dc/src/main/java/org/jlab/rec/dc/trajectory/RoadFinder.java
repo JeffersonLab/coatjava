@@ -252,7 +252,7 @@ public class RoadFinder  {
             int ndf=Z.length-3; 
             polyfit_chi2_ov_ndf=WChi2/(double)ndf;
             
-            return polyfit_chi2_ov_ndf<2;
+            return polyfit_chi2_ov_ndf<2000;
         }
     }
     public double[] polyfit;

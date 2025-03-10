@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -23,37 +24,22 @@ public class TrackSelector {
 
     private Map<IntArrayKey, Track> getInstarecRecoTrks(List<Track> trkcands,
             Map<TrackInfo, List<TrackInfo>> trackInfoLs) {
+        
+        Map<Integer, IntArrayKey> nntids = new HashMap<>();
+        for(List<TrackInfo> tis : trackInfoLs.values()) {
+            for(TrackInfo ti: tis) {
+                nntids.put(ti.getTrkId(),new IntArrayKey(ti.getIds()));
+            }
+        }
+    
         Map<IntArrayKey, Track> trackList = new HashMap<>();
         // Iterate over track candidates
         trkcands.forEach(track -> {
-            Map<Integer, Segment> trkSegs = new HashMap<>();
-            List<Segment> tsegs = track.get_ListOfHBSegments();
             int tid = track.get_Id();
-            int[] ids = new int[6];
-            for(TrackInfo ti : trackInfoLs.keySet()) {
-                if(ti.getTrkId()==tid) {
-                    ids=ti.getIds();
-                }
+            if(nntids.containsKey(tid)) {
+                trackList.put(nntids.get(tid), track);
             }
             
-            // Populate segments map and fill in the key using the NN track (for cases where the tracking reject a NN suggested segment -- keep the sme key for matching
-            tsegs.forEach(s -> trkSegs.put(s.get_Superlayer() - 1, s));
-            
-            // Get segment IDs
-            for (int s = 0; s < 6; s++) {
-                if(trkSegs.containsKey(s)) {
-                Segment segment = trkSegs.get(s);
-                    if (segment != null && segment.get_Id()!=-1) {
-                        int sid = segment.get_Id();
-                        boolean found = Arrays.stream(ids).anyMatch(id -> id == sid);
-                        if (!found) { 
-                            System.out.println("TRACK MATCHING ERROR");
-                        }
-                    }
-                }
-            }
-            removeTrailingZeros(ids);
-            trackList.put(new IntArrayKey(ids), track);
         });
         
         return trackList;
@@ -110,7 +96,9 @@ public class TrackSelector {
         return trackInfoLM;
     }
 
-    public void removeInstarecOverlappingTracks(DataBank bankAI, boolean enableMulti, List<Track> tracks) {
+    public void removeInstarecOverlappingTracks(DataBank bankAI, boolean enableMulti, 
+            List<Track> tracks) {
+        
         if (!enableMulti) return;
         Map<IntArrayKey, Track> selectedTrks = new HashMap<>();
         Map<TrackInfo, List<TrackInfo>> trackInfoLs = processTrackInfo(bankAI, enableMulti);
@@ -156,25 +144,41 @@ public class TrackSelector {
         
         //check for seeds that are not in the list of selected tracks and add if not overlapping
         // Process tracks and filter out overlaps
-        trackInfoLs.keySet().forEach(tis -> {
-        IntArrayKey ik = new IntArrayKey(tis.getIds());
-            //check for overlap with selected tracks
-            if (selectedTrks.containsKey(ik)) {
-                //System.out.println("Found track for " + Arrays.toString(tis.getIds()) + ": \n"); 
-            } else {
-                //System.out.println("No track found for " + Arrays.toString(tis.getIds()));
-                //check overlaps with the rest of the selected tracks
-                
-                boolean overlaps = selectedTrks.keySet().stream().anyMatch(ti -> checkOverlap(ti, ik));
-                if(!overlaps) {
-                    selectedTrks.put(ik, instarecRecoTrks.get(ik));
+        Map<IntArrayKey, Track> addedTrks = new HashMap<>();
+        trackInfoLs.keySet().forEach(tseed -> {
+            addedTrks.clear();
+            List<TrackInfo> til = trackInfoLs.get(tseed); //for each seed look wether its sub-seeds are selected
+            for(TrackInfo tis : til) {
+                IntArrayKey ik = new IntArrayKey(tis.getIds());
+                //check for overlap with selected tracks
+                if (selectedTrks.containsKey(ik)) {
+                    //System.out.println("Found track for " + Arrays.toString(tis.getIds()) + ": \n"); 
+                } else {
+                    //System.out.println("No track found for " + Arrays.toString(tis.getIds()));
+                    //check overlaps with the rest of the selected tracks
+                    if(instarecRecoTrks.containsKey(ik) && instarecRecoTrks.get(ik).get_Id()>0) {
+                        //check for overlaps with the rest of the tracks
+                        boolean overlaps = selectedTrks.keySet().stream().anyMatch(ti -> checkOverlap(ti, ik));
+                        if(!overlaps) {
+                            addedTrks.put(ik, instarecRecoTrks.get(ik));
+                        }
+                    }
                 }
+            }
+            //resolve overlaps
+            resolveOverlaps(addedTrks);
+            for(IntArrayKey ta : addedTrks.keySet()) {
+                selectedTrks.put(ta, addedTrks.get(ta));
             }
         });
 
         
         tracks.clear();
-        tracks.addAll(selectedTrks.values());
+        for(Track t : selectedTrks.values()) {
+            if(t!=null) {
+                tracks.add(t);
+            }
+        }
     }
 
     private boolean checkOverlap(IntArrayKey ti, IntArrayKey tj
