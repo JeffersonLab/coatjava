@@ -83,7 +83,7 @@ public class KalmanFilter {
 			//final
 			double py0 = tracks.get(0).get_py();
 			final double pz0 = tracks.get(0).get_pz();
-			final double p_init = java.lang.Math.sqrt(px0*px0+py0*py0+pz0*pz0);
+			//final double p_init = java.lang.Math.sqrt(px0*px0+py0*py0+pz0*pz0);
 			double[]     y   = new double[]{x0, y0, z0, px0, py0, pz0};
 			// EPAF: *the line below is for TEST ONLY!!!* 
 			//double[]     y   = new double[]{vxmc, vymc, vzmc, pxmc, pymc, pzmc};
@@ -104,13 +104,23 @@ public class KalmanFilter {
 				 	    aleardyHaveR = true;
 					    
 					    // if(o.phi()>hit.phi()){
+					    // 	if(Math.abs(o.phi()-hit.phi())< 2*Math.toRadians(360./o.getNumWires()) ){
 				 	    // 	    o.setSign(+1);
 				 	    // 	    hit.setSign(-1);
-				 	    // }else{
+					    // 	}else{
 				 	    // 	    hit.setSign(+1);
 				 	    // 	    o.setSign(-1);
+					    // 	}
+				 	    // }else{
+					    // 	if(Math.abs(o.phi()-hit.phi())< 2*Math.toRadians(360./o.getNumWires()) ){
+				 	    // 	    hit.setSign(+1);
+				 	    // 	    o.setSign(-1);
+					    // 	}else{
+					    // 	    o.setSign(+1);
+                                            //         hit.setSign(-1);
+					    // 	}
 				 	    // }
-					    // System.out.println( " r = " + o.r() + " o.phi = " + o.phi() + " o.doca = " + o.getDoca()*o.getSign() + " hit.phi " + hit.phi() +" hit.doca = " + hit.getDoca()*hit.getSign() + " angle between wires: " + Math.toRadians(360./hit.getNumWires()) + " >= ? angle covered by docas: " +  Math.atan( (o.getDoca()+hit.getDoca())/o.r() )  );
+					    //System.out.println( " r = " + o.r() + " o.phi = " + o.phi() + " o.doca = " + o.getDoca()*o.getSign() + " hit.phi " + hit.phi() +" hit.doca = " + hit.getDoca()*hit.getSign() + " angle between wires: " + Math.toRadians(360./hit.getNumWires()) + " >= ? angle covered by docas: " +  Math.atan( (o.getDoca()+hit.getDoca())/o.r() )  );
 
 				// 	}else{
 				// 	    if(hit.phi()>o.phi()){

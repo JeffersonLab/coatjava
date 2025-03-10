@@ -79,7 +79,7 @@ public class KFitter {
 		RealVector h;
 		if (indicator.R == 0.0 && !indicator.direction) {
 		    double z_beam_res_sq = 1.e10;//in mm
-			if(isvertexdefined)z_beam_res_sq = 4.0;//assuming 4. mm resolution
+			if(isvertexdefined)z_beam_res_sq = 4.0;//assuming 2. mm resolution
 			measurementNoise =
 					new Array2DRowRealMatrix(
 							new double[][]{
@@ -93,6 +93,7 @@ public class KFitter {
 		} else {
 		        measurementNoise = indicator.hit.get_MeasurementNoise();//1x1
 		        measurementMatrix = H(stateEstimation, indicator);//6x1
+			//System.out.println("h(stateEstimation):");
 		        h = h(stateEstimation, indicator);//1x1
 			z = indicator.hit.get_Vector(indicator.hit.getSign());//1x1
 		}
