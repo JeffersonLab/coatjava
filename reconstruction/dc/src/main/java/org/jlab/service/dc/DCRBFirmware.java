@@ -9,6 +9,7 @@ import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.groot.base.GStyle;
 import org.jlab.groot.data.H1F;
+import org.jlab.groot.data.H2F;
 import org.jlab.groot.ui.TCanvas;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
@@ -134,6 +135,20 @@ public class DCRBFirmware {
         }
     }
     
+    public void plot(String canvasTitle, H2F[][] hits) {
+        int nrow = hits.length;
+        int ncol = hits[0].length;
+        TCanvas canvas = new TCanvas(canvasTitle, 1000, 800);
+        canvas.divide(ncol, nrow);
+        for(int r=0; r<nrow; r++) {
+            for(int j=0; j<ncol; j++) {
+                canvas.cd(r*ncol+j);
+                canvas.getCanvas().getPad().getAxisZ().setLog(true);    
+                canvas.draw(hits[r][j]);
+            }
+        }
+    }
+    
     public static class Hit implements Comparable {
         
         private int index;
@@ -240,6 +255,7 @@ public class DCRBFirmware {
         String[] ttitle = {"Number of tracks", "NDF", "vz(cm)"};
         
         H1F[]   hMult = new H1F[3];
+        H2F[][] h2Mult = new H2F[3][2];
         H1F[]   hTrks = new H1F[3];
         H1F[][] hAll = new H1F[3][4];
         H1F[][] hFst = new H1F[3][4];
@@ -252,6 +268,11 @@ public class DCRBFirmware {
             hTrks[r].setOptStat("110");
             hMult[r] = new H1F("hMult"+r, "Region "+(r+1), 64, 0, 64);        
             hMult[r].setTitleX("Number of hits per group");
+            for(int s=0; s<2; s++) {
+                h2Mult[r][s] = new H2F("h2Mult"+r+s, "Region "+(r+1) + "- Sector " + (s*3+2), 64, 0, 64, 85, 0, 85);        
+                h2Mult[r][s].setTitleX("Number of hits per group");
+                h2Mult[r][s].setTitleY("Slot-Group");
+            }
             for(int j=0; j<4; j++) {
                hAll[r][j] = new H1F("hAll"+r+j, "Region "+(r+1), 100, hmin[j][r], hmax[j][r]);
                hFst[r][j] = new H1F("hFst"+r+j, "Region "+(r+1), 100, hmin[j][r], hmax[j][r]);
@@ -333,16 +354,22 @@ public class DCRBFirmware {
                     }
                 }
                 for(int key : multiplicity.keySet()) {
-                    int layer = dcrb.tt.getIntValue("layer", Hit.getSector(key), Hit.getLayer(key),Hit.getComponent(key));
+                    int slot   = Hit.getLayer(key);
+                    int group  = Hit.getComponent(key)/16;
+                    int sector = dcrb.tt.getIntValue("sector", Hit.getSector(key), Hit.getLayer(key),Hit.getComponent(key));
+                    int layer  = dcrb.tt.getIntValue("layer", Hit.getSector(key), Hit.getLayer(key),Hit.getComponent(key));
                     int r = (layer-1)/12;
-//                    if(multiplicity.get(key)>16)
-//                        System.out.println(key + " " + Hit.getSector(key) + " " +Hit.getLayer(key) + " " +Hit.getComponent(key));
+                    int ybin = slot<10 ? (slot-3)*6+group : (slot-7)*6+group;
+//                    if(sl==0)
+//                        System.out.println(key + " " + ybin + " " + sl + " " + Hit.getSector(key) + " " +Hit.getLayer(key) + " " +Hit.getComponent(key));
                     hMult[r].fill(multiplicity.get(key));
+                    h2Mult[r][(sector-2)/3].fill(multiplicity.get(key),ybin);
                 }
             }
         }
         
         dcrb.plot("All Hits", hMult, hAll, hFst, hSnd);
+        dcrb.plot("Multiplicity", h2Mult);
         dcrb.plot("Hits on track", hTrks, hOn);
         dcrb.plot("Hits off track", hTrks, hOff);
     }
