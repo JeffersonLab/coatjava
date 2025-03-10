@@ -97,10 +97,10 @@ public class KalmanFilter {
 				hit.setHitIdx(AHDC_hit.getId());
 				hit.setSign(0);
 				// Do delete hit with same radius
+				boolean phi_rollover = false;
 				boolean aleardyHaveR = false;
 				for (Hit o: KF_hits){
 				     if (o.r() == hit.r()){
-				// 	if(hit.getADC()<o.getADC()){
 					 aleardyHaveR = true;
 					    
 					    if(o.phi()>hit.phi()){
@@ -108,6 +108,7 @@ public class KalmanFilter {
 				 		    o.setSign(+1);
 				 		    hit.setSign(-1);
 						}else{
+						    phi_rollover = true;
 				 		    hit.setSign(+1);
 				 		    o.setSign(-1);
 						}
@@ -116,26 +117,20 @@ public class KalmanFilter {
 				 		    hit.setSign(+1);
 				 		    o.setSign(-1);
 						}else{
+						    phi_rollover = true;
 						    o.setSign(+1);
                                                     hit.setSign(-1);
 						}
 				 	    }
 					    //System.out.println( " r = " + o.r() + " o.phi = " + o.phi() + " o.doca = " + o.getDoca()*o.getSign() + " hit.phi " + hit.phi() +" hit.doca = " + hit.getDoca()*hit.getSign() + " angle between wires: " + Math.toRadians(360./hit.getNumWires()) + " >= ? angle covered by docas: " +  Math.atan( (o.getDoca()+hit.getDoca())/o.r() )  );
-
-				// 	}else{
-				// 	    if(hit.phi()>o.phi()){
-				// 		    hit.setSign(+1);
-				// 	    }else{
-				// 		    hit.setSign(-1);
-				// 	    }
-				// 	    //remove hit 
-				// 	    KF_hits.remove(o);
-				// 	}
-
 				     }
 				}
-				if (!aleardyHaveR)
-				KF_hits.add(hit);
+				//if(!aleardyHaveR)KF_hits.add(hit);
+				if (phi_rollover){
+				    KF_hits.add(KF_hits.size()-1, hit);
+				}else{
+				    KF_hits.add(hit);
+				}
 			}
 
 			double zbeam = 0;
@@ -177,7 +172,7 @@ public class KalmanFilter {
 				for (Indicator indicator : backwardIndicators) {
 					kFitter.predict(indicator);
 					if (indicator.haveAHit()) {
-						kFitter.correct(indicator);
+					    kFitter.correct(indicator);
 					}
 				}
 			}
