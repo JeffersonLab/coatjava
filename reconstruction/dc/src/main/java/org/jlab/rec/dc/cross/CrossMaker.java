@@ -55,6 +55,30 @@ public class CrossMaker {
         return null;
     }
 
+    public Cross getCrossNoCuts(Segment seg1, Segment seg2,DCGeant4Factory DcDetector, int id) { 
+        if (seg2.get_Sector() == seg1.get_Sector() && seg2.get_RegionSlayer() == 2 && seg2.get_Region() == seg1.get_Region()) {   //wire proximity 
+            
+            Cross cross = new Cross(seg1.get_Sector(), seg1.get_Region(), id);
+            cross.set_Id(seg1.get_Id()*1000+seg2.get_Id());
+            cross.add(seg1);
+            cross.add(seg2);
+            cross.set_Segment1(seg1);
+            cross.set_Segment2(seg2);
+            cross.set_CrossParams(DcDetector);
+                
+            if (cross.isPseudoCross) {
+                cross.set_Id(-1);
+            }
+            cross.set_CrossDirIntersSegWires();
+            seg1.associatedCrossId = cross.get_Id();
+            seg2.associatedCrossId = cross.get_Id();
+            return cross;
+            
+            
+        }
+        
+        return null;
+    }
     /**
      *
      * @param allSegments the list of segments in the event

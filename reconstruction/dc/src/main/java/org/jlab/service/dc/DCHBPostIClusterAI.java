@@ -83,7 +83,7 @@ public class DCHBPostIClusterAI extends DCEngine {
         if (hits.isEmpty()) {
             return true;
         }
-        PatternIRec pr = new PatternIRec();
+        PatternIRec pr = new PatternIRec(false);//not TBT
         segmentsMap = pr.RecomposeSegments(hits, Constants.getInstance().dcDetector);
         
         if (segmentsMap.isEmpty()) { 

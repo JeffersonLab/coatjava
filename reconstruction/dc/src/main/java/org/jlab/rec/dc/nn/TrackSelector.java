@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -22,37 +21,47 @@ import org.jlab.rec.dc.track.Track;
  */
 public class TrackSelector {
 
-    private Map<IntArrayKey, Track> getInstarecRecoTrks(List<Track> trkcands) {
+    private Map<IntArrayKey, Track> getInstarecRecoTrks(List<Track> trkcands,
+            Map<TrackInfo, List<TrackInfo>> trackInfoLs) {
         Map<IntArrayKey, Track> trackList = new HashMap<>();
-        
         // Iterate over track candidates
         trkcands.forEach(track -> {
             Map<Integer, Segment> trkSegs = new HashMap<>();
             List<Segment> tsegs = track.get_ListOfHBSegments();
-            
-            // Populate segments map
-            tsegs.forEach(s -> trkSegs.put(s.get_Superlayer() - 1, s));
-            
-            // Initialize IDs array
+            int tid = track.get_Id();
             int[] ids = new int[6];
-            Arrays.fill(ids, -1); // Default to -1
+            for(TrackInfo ti : trackInfoLs.keySet()) {
+                if(ti.getTrkId()==tid) {
+                    ids=ti.getIds();
+                }
+            }
+            
+            // Populate segments map and fill in the key using the NN track (for cases where the tracking reject a NN suggested segment -- keep the sme key for matching
+            tsegs.forEach(s -> trkSegs.put(s.get_Superlayer() - 1, s));
             
             // Get segment IDs
             for (int s = 0; s < 6; s++) {
+                if(trkSegs.containsKey(s)) {
                 Segment segment = trkSegs.get(s);
-                if (segment != null) {
-                    ids[s] = segment.get_Id();
+                    if (segment != null && segment.get_Id()!=-1) {
+                        int sid = segment.get_Id();
+                        boolean found = Arrays.stream(ids).anyMatch(id -> id == sid);
+                        if (!found) { 
+                            System.out.println("TRACK MATCHING ERROR");
+                        }
+                    }
                 }
             }
+            removeTrailingZeros(ids);
             trackList.put(new IntArrayKey(ids), track);
         });
         
         return trackList;
     }
 
-    private Map<AIHitReader.TrackInfo, List<AIHitReader.TrackInfo>> processTrackInfo(DataBank bankAI, boolean enableMulti) {
-        Map<AIHitReader.TrackInfo, List<AIHitReader.TrackInfo>> trackInfoLM = new HashMap<>();
-        List<AIHitReader.TrackInfo> trackInfoL = new ArrayList<>();
+    private Map<TrackInfo, List<TrackInfo>> processTrackInfo(DataBank bankAI, boolean enableMulti) {
+        Map<TrackInfo, List<TrackInfo>> trackInfoLM = new HashMap<>();
+        List<TrackInfo> trackInfoL = new ArrayList<>();
 
         // Iterate over rows in the bank
         for (int j = 0; j < bankAI.rows(); j++) {
@@ -61,14 +70,16 @@ public class TrackSelector {
 
             // Populate IDs array
             for (int s = 0; s < 6; s++) {
-                ids[s] = (int) bankAI.getShort("c" + (s + 1), j);
+                int cid = (int) bankAI.getShort("c" + (s + 1), j);
+                if(cid!=-1) ids[s] = cid;
             }
-
+            removeTrailingZeros(ids);
+            
             tPars[3] = (double) bankAI.getShort("id", j);
             tPars[4] = (double) bankAI.getFloat("prob", j);
             int status = (int) bankAI.getShort("status", j);
 
-            AIHitReader.TrackInfo ti = new AIHitReader.TrackInfo(ids, tPars);
+            TrackInfo ti = new TrackInfo(ids, tPars);
             if (status != 0) {
                 if (enableMulti) {
                     trackInfoLM.computeIfAbsent(ti, k -> new ArrayList<>()).add(ti);
@@ -102,8 +113,9 @@ public class TrackSelector {
     public void removeInstarecOverlappingTracks(DataBank bankAI, boolean enableMulti, List<Track> tracks) {
         if (!enableMulti) return;
         Map<IntArrayKey, Track> selectedTrks = new HashMap<>();
-        Map<AIHitReader.TrackInfo, List<AIHitReader.TrackInfo>> trackInfoLs = processTrackInfo(bankAI, enableMulti);
-        Map<IntArrayKey, Track> instarecRecoTrks = getInstarecRecoTrks(tracks);
+        Map<TrackInfo, List<TrackInfo>> trackInfoLs = processTrackInfo(bankAI, enableMulti);
+        Map<IntArrayKey, Track> instarecRecoTrks = getInstarecRecoTrks(tracks, trackInfoLs);
+        
         Map<IntArrayKey, Track> selected = new HashMap<>();
 
         // Process tracks and filter out overlaps
@@ -113,24 +125,28 @@ public class TrackSelector {
                 IntArrayKey ik = new IntArrayKey(ti.getIds());
                 if (instarecRecoTrks.containsKey(ik)) {
                     Track track = instarecRecoTrks.get(ik); 
-                    track.printInfo();
                     selected.put(ik, track);
-                } 
+                }
             });
 
-            // Sort by FitChi2 / FitNDF and select best track
+            // Sort by FitChi2 / FitNDF and select the best track
             List<Track> sList = new ArrayList<>(selected.values());
             sList.sort(Comparator.comparingDouble(a -> a.get_FitChi2() / (double) a.get_FitNDF()));
-            sList = sList.subList(0, Math.min(1, selected.size()));
 
-            Track ts = sList.get(0);  // Initialize ts outside the loop
-            for(IntArrayKey ii : selected.keySet()) {
-                Track tri = selected.get(ii);
-                if(tri.get_Id() == ts.get_Id()) {
-                    selectedTrks.put(ii, ts);  // Use ts here
+            // Ensure sList is not empty before accessing the first element
+            if (!sList.isEmpty()) {
+                sList = sList.subList(0, Math.min(1, sList.size()));
+                Track ts = sList.get(0);  // Initialize ts outside the loop
+
+                for (IntArrayKey ii : selected.keySet()) {
+                    Track tri = selected.get(ii);
+                    if (tri.get_Id() == ts.get_Id()) {
+                        selectedTrks.put(ii, ts);  // Use ts here
+                    }
                 }
             }
         });
+
 
         // Handle remaining overlaps and filter based on FitChi2/FitNDF
         resolveOverlaps(selectedTrks);
@@ -225,5 +241,21 @@ public class TrackSelector {
             return array;
         }
         
+    }
+    
+    public static int[] removeTrailingZeros(int[] arr) {
+        // Find the index where the trailing zeros start
+        int index = arr.length - 1;
+        while (index >= 0 && arr[index] == 0) {
+            index--;
+        }
+        
+        // If the entire array consists of zeros, return an empty array
+        if (index == -1) {
+            return new int[0];
+        }
+        
+        // Return a new array that excludes the trailing zeros
+        return Arrays.copyOfRange(arr, 0, index + 1);
     }
 }

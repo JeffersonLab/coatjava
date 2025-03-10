@@ -6,7 +6,6 @@ package org.jlab.rec.dc.nn;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -52,21 +51,7 @@ public class AIHitReader extends HitReader {
         this.readNNHits(readInstarec, multi);
     }
 
-    // Checks if two TrackInfo objects overlap
-    static boolean overlaps(TrackInfo t, List<TrackInfo> trackInfoL) {
-        for (TrackInfo ti : trackInfoL) {
-            boolean isInGroup = false;
-            for (int i = 0; i < 6; i++) {
-                if (ti.getIds()[i] == t.getIds()[i] && t.getIds()[i] > 0) {
-                    isInGroup = true;
-                }
-            }
-            if (!isInGroup) return false;
-        }
-        return true;
-    }
-
-
+    
     // Reads InstruRec NN hits
     private void readNNHits(boolean instarec, boolean enableMulti) {
         setDCHits(new ArrayList<>());
@@ -126,9 +111,12 @@ public class AIHitReader extends HitReader {
 
             for (int s = 0; s < 6; s++) {
                 String stg = "c" + (s + 1);
-                ids[s] = (int) bankAI.getShort(stg, j);
+                int cid = (int) bankAI.getShort(stg, j);
+                if(cid!=-1)
+                    ids[s] = cid;
             }
-
+            TrackSelector.removeTrailingZeros(ids);
+            
             if(cartesian) {
                 tPars[0] = (double) bankAI.getFloat("px", j);
                 tPars[1] = (double) bankAI.getFloat("py", j);
@@ -163,11 +151,11 @@ public class AIHitReader extends HitReader {
         for(TrackInfo ti: trackInfoLM.keySet()) {
             for(TrackInfo tj : trackInfoL) {
                 setA.clear();
-                for (int num : ti.ids) {
+                for (int num : ti.getIds()) {
                     setA.add(num);
                 }
                 setB.clear();
-                for (int num : tj.ids) {
+                for (int num : tj.getIds()) {
                     setB.add(num);
                 }
                 setA.retainAll(setB);
@@ -293,61 +281,4 @@ public class AIHitReader extends HitReader {
         nnTrks = _nnTrks;
     }
 
-
-    // Helper class to store track information
-    public static class TrackInfo implements Comparable<TrackInfo> {
-        private final int[] ids; // To store c1-c6 values
-        private final double[] tPars;
-        private final double prob;
-
-        public TrackInfo(int[] ids, double[] tPars) {
-            // Create defensive copies of the arrays to ensure immutability
-            this.ids = ids.clone(); 
-            this.tPars = tPars.clone();
-            this.prob = tPars[4]; // prob is at index 4
-        }
-
-        public int[] getIds() {
-            return ids.clone(); // Return a copy to prevent external modification
-        }
-
-        public double[] getTPars() {
-            return tPars.clone(); // Return a copy to prevent external modification
-        }
-
-        public double getProb() {
-            return prob;
-        }
-
-        // Override equals to only compare the ids
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            TrackInfo trackInfo = (TrackInfo) o;
-            return Arrays.equals(ids, trackInfo.ids); // Compare only ids
-        }
-
-        // Override hashCode to only depend on the ids
-        @Override
-        public int hashCode() {
-            return Arrays.hashCode(ids);  // Use only ids for hashCode
-        }
-        @Override
-        public int compareTo(TrackInfo other) {
-            int[] c = new int[6];
-            for (int i = 0; i < 6; i++) {
-                c[i] = this.ids[i] < other.ids[i] ? -1 : this.ids[i] == other.ids[0] ? 0 : 1;
-            }
-
-            int return_val = ((c[0] == 0) ? c[1] : c[0]);
-            for (int i = 1; i < 6; i++) {
-                return_val = ((c[i] == 0) ? return_val : c[i]);
-            }
-            return return_val;
-        }
-    }
-
-    
-    
 }

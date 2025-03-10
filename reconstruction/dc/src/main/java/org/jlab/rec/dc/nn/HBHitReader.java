@@ -8,9 +8,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.logging.Logger;
 import org.jlab.detector.banks.RawBank;
 import org.jlab.detector.calib.utils.ConstantsManager;
@@ -50,17 +52,30 @@ public class HBHitReader extends HitReader{
 
     // Checks if two TrackInfo objects overlap
     static boolean overlaps(TrackInfo t, List<TrackInfo> trackInfoL) {
+        boolean isInGroup = false;
+        Set<Integer> setA = new HashSet<>();
+        for (int num : t.getIds()) {
+            if(num!=-1)
+                setA.add(num);
+        }
+        Set<Integer> setB = new HashSet<>();
+        
         for (TrackInfo ti : trackInfoL) {
-            boolean isInGroup = false;
-            for (int i = 0; i < 6; i++) {
-                if (ti.getIds()[i] == t.getIds()[i] && t.getIds()[i] > 0) {
-                    isInGroup = true;
-                }
+            setB.clear();
+            for (int num : ti.getIds()) {
+                if(num!=-1)
+                    setB.add(num);
+            }
+            setA.retainAll(setB);
+            if (!setA.isEmpty() && setA.size() != setB.size()) {
+                isInGroup = true;
             }
             if (!isInGroup) return false;
         }
         return true;
     }
+
+
 
     // Gets NN Seed Lists grouped by overlapping track information
     public static List<List<TrackInfo>> getNNSeedLists(List<TrackInfo> trackInfoL) {
@@ -129,9 +144,12 @@ public class HBHitReader extends HitReader{
             for (int s = 0; s < 6; s++) {
                 String stg = "Cluster" + (s + 1);
                 stg+="_ID";
-                
-                ids[s] = (int) bank.getShort(stg, j);
+                int cid = (int) bank.getShort(stg, j);
+                if(cid!=-1)
+                    ids[s] = cid;
             }
+            TrackSelector.removeTrailingZeros(ids);
+            
             tPars[0] = (double) bank.getFloat("p0_x", j);
             tPars[1] = (double) bank.getFloat("p0_y", j);
             tPars[2] = (double) bank.getFloat("p0_z", j);
@@ -287,118 +305,4 @@ public class HBHitReader extends HitReader{
         this._DCHits = _DCHits;
     }
 
-
-    // Helper class to store track information
-    public static class TrackInfo implements Comparable<TrackInfo> {
-        private final int[] ids; // To store c1-c6 values
-        private final double[] tPars;
-        private final double prob;
-
-        public TrackInfo(int[] ids, double[] tPars) {
-            // Create defensive copies of the arrays to ensure immutability
-            this.ids = ids.clone(); 
-            this.tPars = tPars.clone();
-            this.prob = tPars[4]; // prob is at index 4
-        }
-
-        public int[] getIds() {
-            return ids.clone(); // Return a copy to prevent external modification
-        }
-
-        public double[] getTPars() {
-            return tPars.clone(); // Return a copy to prevent external modification
-        }
-
-        public double getProb() {
-            return prob;
-        }
-
-        @Override
-        public int compareTo(TrackInfo other) {
-            int[] c = new int[6];
-            for (int i = 0; i < 6; i++) {
-                c[i] = this.ids[i] < other.ids[i] ? -1 : this.ids[i] == other.ids[0] ? 0 : 1;
-            }
-
-            int return_val = ((c[0] == 0) ? c[1] : c[0]);
-            for (int i = 1; i < 6; i++) {
-                return_val = ((c[i] == 0) ? return_val : c[i]);
-            }
-            return return_val;
-        }
-    }
-
-       // Pair class implementation 
-    class Pair<T, U> {
-        private final T first;
-        private final U second;
-
-        public Pair(T first, U second) {
-            this.first = first;
-            this.second = second;
-        }
-
-        public T getFirst() {
-            return first;
-        }
-
-        public U getSecond() {
-            return second;
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(first, second);
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            Pair<?, ?> pair = (Pair<?, ?>) o;
-            return Objects.equals(first, pair.first) && Objects.equals(second, pair.second);
-        }
-    }
-    
-    //Not used 
-    // Triplet class implementation 
-    class Triplet<T, U, V> {
-        private final T first;
-        private final U second;
-        private final V third;
-
-        public Triplet(T first, U second, V third) {
-            this.first  = first;
-            this.second = second;
-            this.third  = third;
-        }
-
-        public T getFirst() {
-            return first;
-        }
-
-        public U getSecond() {
-            return second;
-        }
-        
-        public V getThird() {
-            return third;
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(first, second, third);
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            Triplet<?, ?, ?> pair = (Triplet<?, ?, ?>) o;
-            return Objects.equals(first, pair.first) 
-                    && Objects.equals(second, pair.second)
-                    && Objects.equals(third, pair.third);
-        }
-    }
-    
 }

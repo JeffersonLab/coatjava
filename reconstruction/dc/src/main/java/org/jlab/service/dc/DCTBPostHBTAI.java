@@ -151,7 +151,7 @@ public class DCTBPostHBTAI extends DCEngine {
             return true;
         }
         //
-        PatternIRec pr = new PatternIRec();
+        PatternIRec pr = new PatternIRec(true); //is TBT
         segmentsMap = pr.RecomposeFHSegments(event,hits,  
                             this.getConstantsManager().getConstants(run, Constants.TIME2DIST), 
                             Constants.getInstance().dcDetector, tde);
@@ -201,6 +201,7 @@ public class DCTBPostHBTAI extends DCEngine {
             List<Cross> clist = pr.RecomposeFHCrossList(segmentsMap.get(it), 
                     Constants.getInstance().dcDetector,  it);
             //crosslists.add(crosslist);
+            if(clist==null) continue;
             if(clist.isEmpty()) continue;
             crosses.addAll(clist); 
             for(Cross cr : clist) { 
@@ -304,8 +305,8 @@ public class DCTBPostHBTAI extends DCEngine {
         }
         if(!trkcands.isEmpty()) {
             if(!saveMultiTB && enableMulti) {
-                tsel.removeInstarecOverlappingTracks(bankAI,
-                        enableMulti,trkcands);		// remove overlaps 
+               // tsel.removeInstarecOverlappingTracks(bankAI,
+                //        enableMulti,trkcands);		// remove overlaps 
             }                
             for(Track trk: trkcands) {
                 int trkId = trk.get_Id();

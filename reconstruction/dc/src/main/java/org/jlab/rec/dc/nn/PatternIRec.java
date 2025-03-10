@@ -47,10 +47,12 @@ public class PatternIRec {
     private final ClusterCleanerUtilities ct    = new ClusterCleanerUtilities();
     private final PatternRec pr                 = new PatternRec();
     
-    public PatternIRec() {
+    public PatternIRec(boolean TBT) {
         rf.fitPassingCut = 1000;
+        this.TBT = TBT;
     }
-
+    private boolean TBT = false;
+    
     public CrossList RecomposeCrossList(List<Segment> clusters, DCGeant4Factory DcDetector) {
         CrossList crossList = new CrossList();
         Map<Integer, List<Segment>> grpCls = new HashMap<>();
@@ -110,17 +112,26 @@ public class PatternIRec {
                     if(cr!=null)  crsMap.put(cr.get_Region(), cr);
                 } else {
                     Cross pseudo=this.getMissingSegmentPCross(regionSegs.get(r+1).get(0), null, segs2Crs, DcDetector);
-                    crsMap.put(regionSegs.get(r+1).get(0).get_Region(), pseudo);
+                    if(pseudo!=null) crsMap.put(regionSegs.get(r+1).get(0).get_Region(), pseudo);
                 }
             }
         }
 
+        
         List<Cross> crosses = new ArrayList<>(crsMap.values());
-        crosses.sort(Comparator.comparing(Cross::get_Region));
+        int nonspeudo =0;
+        for(Cross c : crosses) {
+            if(c.get_Id()!=-2) 
+                nonspeudo++;
+        }
+        if(nonspeudo<2)
+            return null;
+        
+        crosses.sort(Comparator.comparing(Cross::get_Region));//sanity check - should already be sorted
 
         logCrossInfo(crosses);
         if(Constants.DEBUG) {
-            System.out.println("NNTrk RCL "+i);
+            System.out.println("NNTrk RCL sorted "+i);
             for(Cross s : crosses)
                 System.out.println(s.printInfo());
         }
@@ -357,7 +368,6 @@ public class PatternIRec {
     
     private Cross getMissingSegmentPCross(Segment s1, Segment wrong, List<Segment> segments, DCGeant4Factory DcDetector) {
         Cross cr1 = null;
-        
         List<Segment> Segs2Road1 = new ArrayList<>();
         List<Segment> Segs2Road2 = new ArrayList<>();
         if(wrong!=null) {
@@ -390,15 +400,27 @@ public class PatternIRec {
             Segment pSegment = rf.findRoadMissingSegment(Segs2Road1, 
                         Constants.getInstance().dcDetector,
                         rf.polyfit);
-            if(pSegment!=null) {pSegment.printInfo();cf.Fit(pSegment.get_fittedCluster(), true);pSegment.printInfo();}
+            if(pSegment!=null) {
+                cf.Fit(pSegment.get_fittedCluster(), true); 
+                if(Constants.DEBUG) System.out.println("Missing Segment "+pSegment.printInfo());
+            }
             pSegment.roadchi2 =rf.polyfit_chi2_ov_ndf;
             if(s1.get_RegionSlayer()==1) {
-                cr1 = crf.getCross(s1, pSegment, DcDetector, 0, 2);
+                if(!TBT) {
+                    cr1 = crf.getCross(s1, pSegment, DcDetector, 0, 2);
+                } else {
+                    cr1 = crf.getCrossNoCuts(s1, pSegment, DcDetector, 0); //make a cross anyway, let the KF sort out the hits on tracks for the segment
+                }
             } else {
-                cr1 = crf.getCross(pSegment, s1, DcDetector, 0, 2);
+                if(!TBT) {
+                    cr1 = crf.getCross(pSegment, s1, DcDetector, 0, 2);
+                } else {
+                    cr1 = crf.getCrossNoCuts(pSegment, s1, DcDetector, 0); //make a cross anyway, let the KF sort out the hits on tracks for the segment
+                }
             }
             if(cr1!=null) { 
                 cr1.setPseudoSegment(pSegment);
+                if(Constants.DEBUG) System.out.println("Pseudo-cross "+cr1.printInfo());
             }
         }
         
