@@ -12,42 +12,25 @@ public class PreClusterFinder {
 	public PreClusterFinder() {
 		_AHDCPreClusters = new ArrayList<>();
 	}
-
-	private void fill_list(List<Hit> AHDC_hits, ArrayList<Hit> sxlx, int super_layer, int layer) {
-		for (Hit hit : AHDC_hits) {
-			if (hit.getSuperLayerId() == super_layer && hit.getLayerId() == layer) {
-				sxlx.add(hit);
+	
+	private void fill_list(List<Hit> AHDC_hits, ArrayList<ArrayList<Hit>> all_super_layer){
+		int nsuper_layers = 8;
+		int super_layers[] = {1,2,2,3,3,4,4,5};
+		int layers[] = {1,1,2,1,2,1,2,1};
+		for(int i = 0; i < nsuper_layers; i++){
+			ArrayList<Hit> sxlx = new ArrayList<>();
+			for (Hit hit : AHDC_hits) {
+				if (hit.getSuperLayerId() == super_layers[i] && hit.getLayerId() == layers[i]) {
+					sxlx.add(hit);
+				}
 			}
+			all_super_layer.add(sxlx);
 		}
 	}
 
 	public void findPreCluster(List<Hit> AHDC_hits) {
-		ArrayList<Hit> s0l0 = new ArrayList<Hit>();
-		fill_list(AHDC_hits, s0l0, 0, 0);
-		ArrayList<Hit> s1l0 = new ArrayList<Hit>();
-		fill_list(AHDC_hits, s1l0, 1, 0);
-		ArrayList<Hit> s1l1 = new ArrayList<Hit>();
-		fill_list(AHDC_hits, s1l1, 1, 1);
-		ArrayList<Hit> s2l0 = new ArrayList<Hit>();
-		fill_list(AHDC_hits, s2l0, 2, 0);
-		ArrayList<Hit> s2l1 = new ArrayList<Hit>();
-		fill_list(AHDC_hits, s2l1, 2, 1);
-		ArrayList<Hit> s3l0 = new ArrayList<Hit>();
-		fill_list(AHDC_hits, s3l0, 3, 0);
-		ArrayList<Hit> s3l1 = new ArrayList<Hit>();
-		fill_list(AHDC_hits, s3l1, 3, 1);
-		ArrayList<Hit> s4l0 = new ArrayList<Hit>();
-		fill_list(AHDC_hits, s4l0, 4, 0);
-
 		ArrayList<ArrayList<Hit>> all_super_layer = new ArrayList<>();
-		all_super_layer.add(s0l0);
-		all_super_layer.add(s1l0);
-		all_super_layer.add(s1l1);
-		all_super_layer.add(s2l0);
-		all_super_layer.add(s2l1);
-		all_super_layer.add(s3l0);
-		all_super_layer.add(s3l1);
-		all_super_layer.add(s4l0);
+		fill_list(AHDC_hits,all_super_layer);
 
 		for (ArrayList<Hit> sxlx : all_super_layer) {
 			for (Hit hit : sxlx) {
@@ -57,10 +40,10 @@ public class PreClusterFinder {
 					hit.setUse(true);
 					int expected_wire_plus  = hit.getWireId() + 1;
 					int expected_wire_minus = hit.getWireId() - 1;
-					if (hit.getWireId() - 1 == 0) {
+					if (hit.getWireId() == 1) {
 						expected_wire_minus = hit.getNbOfWires();
 					}
-					if (hit.getWireId() + 1 == hit.getNbOfWires() + 1) {
+					if (hit.getWireId() == hit.getNbOfWires() ) {
 						expected_wire_plus = 1;
 					}
 

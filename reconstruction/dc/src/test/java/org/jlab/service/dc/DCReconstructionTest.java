@@ -10,10 +10,9 @@ import org.jlab.analysis.physics.TestEvent;
 import org.jlab.analysis.math.ClasMath;
 
 import org.jlab.clas.swimtools.MagFieldsEngine;
-import org.jlab.jnp.hipo4.data.SchemaFactory;
+import org.jlab.detector.base.DetectorType;
 import org.jlab.logging.DefaultLogger;
 import org.jlab.utils.CLASResources;
-import org.jlab.utils.system.ClasUtilsFile;
 
 /**
  *
@@ -29,19 +28,15 @@ public class DCReconstructionTest {
     System.setProperty("CLAS12DIR", "../../");
 
     String mapDir = CLASResources.getResourcePath("etc")+"/data/magfield";
-        try {
-            MagneticFields.getInstance().initializeMagneticFields(mapDir,
-                    "Symm_torus_r2501_phi16_z251_24Apr2018.dat","Symm_solenoid_r601_phi1_z1201_13June2018.dat");
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
+    try {
+        MagneticFields.getInstance().initializeMagneticFields(mapDir,
+                "Symm_torus_r2501_phi16_z251_24Apr2018.dat","Symm_solenoid_r601_phi1_z1201_13June2018.dat");
+    }
+    catch (Exception e) {
+        e.printStackTrace();
+    }
 
-    String dir = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4");
-    SchemaFactory schemaFactory = new SchemaFactory();
-    schemaFactory.initFromDirectory(dir);
-
-    DataEvent testEvent = TestEvent.getDCSector1ElectronEvent(schemaFactory);
+    DataEvent testEvent = TestEvent.get(DetectorType.DC);
 
     MagFieldsEngine enf = new MagFieldsEngine();
     enf.init();
@@ -72,7 +67,6 @@ public class DCReconstructionTest {
     if(testEvent.hasBank("TimeBasedTrkg::TBTracks")) {
         testEvent.getBank("TimeBasedTrkg::TBTracks").show();
     }
-
     
     assertEquals(testEvent.hasBank("TimeBasedTrkg::TBTracks"), true);
     assertEquals(testEvent.getBank("TimeBasedTrkg::TBTracks").rows(), 1);
@@ -90,7 +84,6 @@ public class DCReconstructionTest {
     assertEquals(testEvent.getBank("TimeBasedTrkg::TBTracks").getFloat("Vtx0_z", 0) < 0.885, true);
     assertEquals(testEvent.getBank("TimeBasedTrkg::TBTracks").getFloat("Vtx0_z", 0) > -0.0753, true);
     
-    
     //Region 1
     assertEquals(ClasMath.isWithinXPercent(155, testEvent.getBank("TimeBasedTrkg::TBCrosses").getFloat("x", 0), 4.02), true); 
     assertEquals(testEvent.getBank("TimeBasedTrkg::TBCrosses").getFloat("y", 0 ) < 9.25, true); 
@@ -106,7 +99,6 @@ public class DCReconstructionTest {
     assertEquals(ClasMath.isWithinXPercent(127, testEvent.getBank("TimeBasedTrkg::TBCrosses").getFloat("x", 2), -11.0), true); 
     assertEquals(testEvent.getBank("TimeBasedTrkg::TBCrosses").getFloat("y", 2 ) < 17.96, true); 
     assertEquals(testEvent.getBank("TimeBasedTrkg::TBCrosses").getFloat("y", 2 ) > -23.66, true); 
- 
     
   }
   

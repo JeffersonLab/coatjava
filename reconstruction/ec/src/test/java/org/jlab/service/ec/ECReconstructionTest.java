@@ -6,6 +6,7 @@ import static org.junit.Assert.*;
 import org.jlab.io.base.DataEvent;
 
 import org.jlab.analysis.physics.TestEvent;
+import org.jlab.detector.base.DetectorType;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.logging.DefaultLogger;
 import org.jlab.utils.system.ClasUtilsFile;
@@ -26,7 +27,7 @@ public class ECReconstructionTest {
     SchemaFactory schemaFactory = new SchemaFactory();
     schemaFactory.initFromDirectory(dir);
     
-    DataEvent testEvent = TestEvent.getECSector1PhotonEvent(schemaFactory);
+    DataEvent testEvent = TestEvent.get(DetectorType.ECAL);
     
     ECEngine engineEC = new ECEngine();
     engineEC.init();

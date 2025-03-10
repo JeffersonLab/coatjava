@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.geom.detector.alert.AHDC;
 
 import org.jlab.geom.base.ConstantProvider;
@@ -59,8 +54,7 @@ public class AlertDCFactory implements Factory<AlertDCDetector, AlertDCSector, A
 
 	@Override
 	public AlertDCSector createSector(ConstantProvider cp, int sectorId) {
-		if (!(0 <= sectorId && sectorId < nsectors)) throw new IllegalArgumentException("Error: invalid sector=" + sectorId);
-		AlertDCSector sector = new AlertDCSector(sectorId);
+		AlertDCSector sector = new AlertDCSector(sectorId+1);
 		for (int superlayerId = 0; superlayerId < nsuperl; superlayerId++)
 		     sector.addSuperlayer(createSuperlayer(cp, sectorId, superlayerId));
 		return sector;
@@ -69,9 +63,7 @@ public class AlertDCFactory implements Factory<AlertDCDetector, AlertDCSector, A
 
 	@Override
 	public AlertDCSuperlayer createSuperlayer(ConstantProvider cp, int sectorId, int superlayerId) {
-		if (!(0 <= sectorId && sectorId < nsectors)) throw new IllegalArgumentException("Error: invalid sector=" + sectorId);
-		if (!(0 <= superlayerId && superlayerId < nsuperl)) throw new IllegalArgumentException("Error: invalid superlayer=" + superlayerId);
-		AlertDCSuperlayer superlayer = new AlertDCSuperlayer(sectorId, superlayerId);
+		AlertDCSuperlayer superlayer = new AlertDCSuperlayer(sectorId+1, superlayerId+1);
 
 		for (int layerId = 0; layerId < nlayers; layerId++)
 		     superlayer.addLayer(createLayer(cp, sectorId, superlayerId, layerId));
@@ -85,7 +77,7 @@ public class AlertDCFactory implements Factory<AlertDCDetector, AlertDCSector, A
 		if (!(0 <= superlayerId && superlayerId < nsuperl)) throw new IllegalArgumentException("Error: invalid superlayer=" + superlayerId);
 		if (!(0 <= layerId && layerId < nlayers)) throw new IllegalArgumentException("Error: invalid layer=" + layerId);
 
-		AlertDCLayer layer = new AlertDCLayer(sectorId, superlayerId, layerId);
+		AlertDCLayer layer = new AlertDCLayer(sectorId+1, superlayerId+1, layerId+1);
 
 		// Load constants AHDC
 		// Length in Z mm!
@@ -221,7 +213,7 @@ public class AlertDCFactory implements Factory<AlertDCDetector, AlertDCSector, A
 			// not possible to add directly PrismaticComponent class because it is an ABSTRACT
 			// a new class should be created: public class NewClassWire extends PrismaticComponent {...}
 			// 5 top points & 5 bottom points with convexe shape. Concave shape is not supported.
-			AlertDCWire wire = new AlertDCWire(wireId, wireLine, firstF, secondF);
+			AlertDCWire wire = new AlertDCWire(wireId+1, wireLine, firstF, secondF);
 			// Add wire object to the list
 			layer.addComponent(wire);
 		}

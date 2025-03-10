@@ -79,19 +79,16 @@ public class DCHBClustering extends DCEngine {
         List<FittedCluster> clusters = clusFinder.FindHitBasedClusters(hits,
                 ct,
                 cf,
-                Constants.getInstance().dcDetector);
+                Constants.getInstance().dcDetector, hitRead.get_NumTDCBankRows());
         if (clusters.isEmpty()) {
             return true;
         } else {
             List<FittedHit> fhits = rbc.createRawHitList(hits);
             /* 13 */
             rbc.updateListsWithClusterInfo(fhits, clusters);
-            rbc.fillAllHBBanks(event,
-                    fhits,
-                    clusters,
-                    null,
-                    null,
-                    null);
+            event.appendBanks(rbc.fillHitsBank(event, fhits),
+                    rbc.fillHBClustersBank(event, clusters)
+            );
         }
         
         return true;

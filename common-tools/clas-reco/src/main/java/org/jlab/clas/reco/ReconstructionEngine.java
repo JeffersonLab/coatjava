@@ -96,6 +96,10 @@ public abstract class ReconstructionEngine implements Engine {
         }
     }
 
+    protected SchemaFactory getSchemaFactory() {
+        return this.engineDictionary;
+    }
+
     protected RawBank getRawBankReader(String bankName) {
         return new RawDataBank(bankName, this.rawBankOrders);
     }

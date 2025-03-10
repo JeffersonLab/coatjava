@@ -3,7 +3,7 @@
 # Default versions:
 grapes=2.17
 clara=5.0.2
-coatjava=10.1.0
+coatjava=11.1.1
 
 # Abort on any non-zero exit codes:
 set -e
@@ -59,7 +59,7 @@ function cleanup() {
 
 function build_clara {
     export CLARA_HOME=$1
-    git clone https://github.com/baltzell/clara-java
+    git clone https://code.jlab.org/hallb/clas12/clara-java
     cd clara-java
     git checkout java21
     ./gradlew && ./gradlew deploy

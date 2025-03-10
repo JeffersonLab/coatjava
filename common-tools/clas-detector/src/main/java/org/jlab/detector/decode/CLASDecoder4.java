@@ -14,6 +14,7 @@ import org.jlab.detector.decode.DetectorDataDgtz.HelicityDecoderData;
 import org.jlab.detector.helicity.HelicityBit;
 import org.jlab.detector.helicity.HelicitySequence;
 import org.jlab.detector.helicity.HelicityState;
+import org.jlab.detector.pulse.ModeAHDC;
 
 import org.jlab.logging.DefaultLogger;
 
@@ -46,7 +47,8 @@ public class CLASDecoder4 {
     private HipoDataEvent               hipoEvent = null;
     private boolean              isRunNumberFixed = false;
     private int                  decoderDebugMode = 0;
-    private SchemaFactory        schemaFactory = new SchemaFactory();
+    private SchemaFactory        schemaFactory    = new SchemaFactory();
+    private ModeAHDC ahdcExtractor                = new ModeAHDC();
 
     public CLASDecoder4(boolean development){
         codaDecoder = new CodaEventDecoder();
@@ -245,6 +247,26 @@ public class CLASDecoder4 {
         return scaler;
     }
 
+    public void extractPulses(Event event) {
+        ahdcExtractor.update(64, null, event, schemaFactory, "AHDC::wf", "AHDC::adc");
+    }
+
+    public Bank getDataBankWF(String name, DetectorType type) {
+        List<DetectorDataDgtz> a = this.getEntriesADC(type);
+        Bank b = new Bank(schemaFactory.getSchema(name), a.size());
+        for (int i=0; i<a.size(); ++i) {
+            b.putByte("sector", i, (byte) a.get(i).getDescriptor().getSector());
+            b.putByte("layer", i, (byte) a.get(i).getDescriptor().getLayer());
+            b.putShort("component", i, (short) a.get(i).getDescriptor().getComponent());
+            b.putByte("order", i, (byte) a.get(i).getDescriptor().getOrder());
+            b.putLong("timestamp", i, a.get(i).getADCData(0).getTimeStamp());
+            DetectorDataDgtz.ADCData xxx = a.get(i).getADCData(0);
+            for (int j=0; j<xxx.getPulseSize(); ++j)
+                b.putShort(String.format("s%d",j+1), i, xxx.getPulseValue(j));
+        }
+        return b;
+    }
+
     public Bank getDataBankADC(String name, DetectorType type){
 
         List<DetectorDataDgtz> adcDGTZ = this.getEntriesADC(type);
@@ -420,20 +442,20 @@ public class CLASDecoder4 {
 
         Event event = new Event();
 
+        String[]         wfBankNames = new String[]{"AHDC::wf"};
+        DetectorType[]   wfBankTypes = new DetectorType[]{DetectorType.AHDC};
         String[]        adcBankNames = new String[]{"FTOF::adc","ECAL::adc","FTCAL::adc",
                                                     "FTHODO::adc", "FTTRK::adc",
                                                     "HTCC::adc","BST::adc","CTOF::adc",
                                                     "CND::adc","LTCC::adc","BMT::adc",
                                                     "FMT::adc","HEL::adc","RF::adc",
-                                                    "BAND::adc","RASTER::adc", 
-                                                    "AHDC::adc"};
+                                                    "BAND::adc","RASTER::adc"};
         DetectorType[]  adcBankTypes = new DetectorType[]{DetectorType.FTOF,DetectorType.ECAL,DetectorType.FTCAL,
                                                           DetectorType.FTHODO,DetectorType.FTTRK,
                                                           DetectorType.HTCC,DetectorType.BST,DetectorType.CTOF,
                                                           DetectorType.CND,DetectorType.LTCC,DetectorType.BMT,
                                                           DetectorType.FMT,DetectorType.HEL,DetectorType.RF,
-                                                          DetectorType.BAND, DetectorType.RASTER, 
-                                                          DetectorType.AHDC};
+                                                          DetectorType.BAND, DetectorType.RASTER};
 
         String[] tdcBankNames = new String[]{"FTOF::tdc","ECAL::tdc","DC::tdc",
                                              "HTCC::tdc","LTCC::tdc","CTOF::tdc",
@@ -450,6 +472,13 @@ public class CLASDecoder4 {
                 if(adcBank.getRows()>0){
                     event.write(adcBank);
                 }
+            }
+        }
+
+        for(int i = 0; i < wfBankTypes.length; i++){
+            Bank wfBank = getDataBankWF(wfBankNames[i],wfBankTypes[i]);
+            if(wfBank!=null && wfBank.getRows()>0){
+                event.write(wfBank);
             }
         }
 
@@ -825,7 +854,9 @@ public class CLASDecoder4 {
                 decodedEvent.read(rawScaler);
                 decodedEvent.read(rawRunConf);
                 decodedEvent.read(helicityAdc);
-               
+
+                decoder.extractPulses(decodedEvent);
+
                 helicityReadings.add(HelicityState.createFromFadcBank(helicityAdc, rawRunConf,
                     decoder.detectorDecoder.scalerManager));
 
@@ -867,4 +898,5 @@ public class CLASDecoder4 {
 
         writer.close();
     }
+
 }

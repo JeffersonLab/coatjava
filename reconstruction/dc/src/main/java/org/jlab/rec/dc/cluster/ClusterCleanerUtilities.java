@@ -137,7 +137,7 @@ public class ClusterCleanerUtilities {
         // loop over accumulator array to find peaks (allows for more than one peak for multiple tracks)
         // The accumulator cell count must be at least half the total number of hits
         // Make binrMax, bintMax arrays to allow for more than one peak
-        int threshold = Constants.DC_MIN_NLAYERS;
+        int threshold = Constants.DC_MIN_NLAYERS-1;
         int nbPeaksR_Phi = 0;
 
         // 1st find the peaks in the R_Phi accumulator array
@@ -145,7 +145,7 @@ public class ClusterCleanerUtilities {
             for (int ibint1 = 0; ibint1 < N_t; ibint1++) {
                 //find the peak
 
-                if (R_Phi_Accumul[ibinr1][ibint1] >= Constants.DC_MIN_NLAYERS) {
+                if (R_Phi_Accumul[ibinr1][ibint1] >= Constants.DC_MIN_NLAYERS-1) {
 
                     if (R_Phi_Accumul[ibinr1][ibint1] > threshold) {
                         threshold = R_Phi_Accumul[ibinr1][ibint1];
@@ -171,7 +171,7 @@ public class ClusterCleanerUtilities {
             //remove all existing hits and add only the ones passing the criteria below
             //newClus.removeAll(clus);
             for (int i = 0; i < clus.size(); i++) {
-                double rho = clus.get(i).get_X();
+                double rho = clus.get(i).get_lX();
                 double phi = clus.get(i).get_lY();
 
                 for (int j_t = 0; j_t < N_t; j_t++) {
@@ -205,7 +205,8 @@ public class ClusterCleanerUtilities {
                 }
             }
             //require 4 layers to make a cluster
-            if (count_nlayers_in_cluster(contigArrayOfHits) < Constants.DC_MIN_NLAYERS) {
+            if ((!isExceptionalCluster(contigArrayOfHits) && count_nlayers_in_cluster(contigArrayOfHits) < Constants.DC_MIN_NLAYERS) 
+                    || (isExceptionalCluster(contigArrayOfHits) && count_nlayers_in_cluster(contigArrayOfHits) < Constants.DC_MIN_NLAYERS - 1)) {
                 passCluster = false;
             }
 
@@ -221,7 +222,7 @@ public class ClusterCleanerUtilities {
             }
         }
 
-        // make new clusters
+        // make new clusters with application of OverlappingClusterResolver
         List<FittedCluster> selectedClusList = new ArrayList<>();
 
         int newcid = nextClsStartIndex;
@@ -239,19 +240,36 @@ public class ClusterCleanerUtilities {
                 }
             }
         }
+        
+        // Apply OverlappingClusterResolver again
+        List<FittedCluster> selectedClusList2 = new ArrayList<>();
+        for (FittedCluster cluster : selectedClusList) {
+            cluster.set_Id(newcid++);
+            cf.SetFitArray(cluster, "LC");
+            cf.Fit(cluster, true);
+
+            FittedCluster bestCls = OverlappingClusterResolver(cluster, selectedClusList);
+
+            if (bestCls != null) {
+
+                if (!(selectedClusList2.contains(bestCls))) {
+                    selectedClusList2.add(bestCls);
+                }
+            }
+        }
 
         int splitclusId = 1;
-        if (!selectedClusList.isEmpty()) {
-            for (FittedCluster cl : selectedClusList) {
+        if (!selectedClusList2.isEmpty()) {
+            for (FittedCluster cl : selectedClusList2) {
                 cl.set_Id(clus.get_Id() * 1000 + splitclusId);
                 splitclusId++;
             }
         }
 
-        if (selectedClusList.isEmpty()) {
-            selectedClusList.add(clus); // if the splitting fails, then return the original cluster
+        if (selectedClusList2.isEmpty()) {
+            selectedClusList2.add(clus); // if the splitting fails, then return the original cluster
         }
-        return selectedClusList;
+        return selectedClusList2;
     }
 
     public List<List<Hit>> byLayerListSorter(List<Hit> DCHits, int sector, int superlyr) {
@@ -703,9 +721,9 @@ public class ClusterCleanerUtilities {
      * @return the selected cluster
      */
     public FittedCluster OverlappingClusterResolver(FittedCluster thisclus, List<FittedCluster> clusters) {
-
+        // Get list for overlapped clusters
         List<FittedCluster> overlapingClusters = new ArrayList<>();
-
+        
         for (FittedCluster cls : clusters) {
 
             List<FittedHit> hitOvrl = new ArrayList<>();
@@ -721,17 +739,18 @@ public class ClusterCleanerUtilities {
             //test
             boolean passCls = true;
             for (FittedCluster ovr : overlapingClusters) {
-                if (ovr.get_Id() == cls.get_Id()) {
+                if (ovr.equals(cls)) {
                     passCls = false;
                     continue;
                 }
                 //ensure that the lines are consistent
-
-                if (Math.abs(ovr.get_clusterLineFitSlope() - cls.get_clusterLineFitSlope()) > 0.2) {
-                    passCls = false;
-                }
+                
+                //if (Math.abs(ovr.get_clusterLineFitSlope() - cls.get_clusterLineFitSlope()) > 0.2) {
+                  //  passCls = false;
+                //}
             }
-            if (hitOvrl.size() < 3) {
+            if((!isExceptionalFittedCluster(cls) && !isExceptionalFittedCluster(thisclus) && hitOvrl.size() < 3) 
+                    || ((isExceptionalFittedCluster(cls) || isExceptionalFittedCluster(thisclus)) && hitOvrl.size() < 2)) {
                 passCls = false;
             }
 
@@ -740,8 +759,20 @@ public class ClusterCleanerUtilities {
             }
 
         }
-        Collections.sort(overlapingClusters);
-
+        
+        // Remove clusters in R1&R2 from lists, whose slope is out of limit
+        // If slope for all of clusters is out of limit, keep all
+        if(overlapingClusters.size() > 1){
+            List<FittedCluster> rmClusters = new ArrayList<>();
+            for(FittedCluster overlapingCls : overlapingClusters){
+                if(overlapingCls.get_Superlayer() <=4 && Math.abs(overlapingCls.get_clusterLineFitSlope()) > 0.578) //tan(30 deg) 
+                    rmClusters.add(overlapingCls);
+            }
+            if(overlapingClusters.size() > rmClusters.size()) overlapingClusters.removeAll(rmClusters);
+        }
+        
+        Collections.sort(overlapingClusters); // Order overlapping clusters; 1st priortiy: cluster size; 2nd priority if same cluster size : fitting quality
+         
         // return the largest cluster.
         return overlapingClusters.get(0);
 
@@ -977,6 +1008,77 @@ public class ClusterCleanerUtilities {
         //for(FittedHit h : BestCluster)
         //	LOGGER.log(Level.INFO, h.printInfo());
         return BestCluster;
+    }
+    
+    /**
+     * Check if one or more layers are skipped in the cluster
+     * @param hitsInClus the hits in a cluster (can be either Hit or FittedHit)
+     * @param nlayr the number of layers
+     * @return true if one or more layers are skipped in the cluster
+     */
+    private boolean isExceptionalClusterHelper(List<? extends Hit> hitsInClus, int nlayr) {
+        // Initialize array to count hits in each layer
+        int[] nlayers = new int[nlayr];
+
+        // Count hits for each layer in a single pass through the hits
+        for (Hit hit : hitsInClus) {
+            int layer = hit.get_Layer() - 1; // layer numbering starts from 1
+            if (layer >= 0 && layer < nlayr) {
+            nlayers[layer]++;
+            }
+        }
+
+        // Check if the first or last two layerers are missed
+        if ((nlayers[0] == 0 && nlayers[1] == 0) || (nlayers[4] == 0 && nlayers[5] == 0)) {
+            return true;
+        }
+
+        // Check if there is one or more skipped layers in the middle 
+        for (int l = 0; l < 4; l++) {
+            if (nlayers[l] > 0 && nlayers[l + 1] == 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    
+    /**
+     * Wrapper for checking if a cluster of Hit objects is exceptional.
+    */
+    public boolean isExceptionalCluster(List hitsInClus) {
+        return isExceptionalClusterHelper(hitsInClus, 6); // 6 layers for Hit objects
+    }
+    
+    /**
+     * Wrapper for checking if a cluster of FittedHit objects is exceptional.
+    */
+    public boolean isExceptionalFittedCluster(List hitsInClus) {
+        return isExceptionalClusterHelper(hitsInClus, 6); // 6 layers for FittedHit objects
+    }    
+    
+    public Cluster ClusterSticher(Cluster thisclus, Cluster nextclus, int cid){
+        ClusterFitter cf = new ClusterFitter();
+        
+        // Two clusters must be in the same sector and the same superlayer
+        if((thisclus.get_Sector() != nextclus.get_Sector()) || (thisclus.get_Superlayer() != nextclus.get_Superlayer())) return null;
+        
+        // Dont take stiching if number of layers in two clusters less than 3
+        if((count_nlayers_in_cluster(thisclus) + count_nlayers_in_cluster(nextclus)) < 3) return null;
+        
+        // Only allow one-wire skipped        
+        if((nextclus.get_MinWire() - thisclus.get_MaxWire() != 2)) return null;
+            
+        Cluster stichedcluster = new Cluster(thisclus.get_Sector(), thisclus.get_Superlayer(), cid);
+        stichedcluster.addAll(thisclus);
+        stichedcluster.addAll(nextclus);       
+         
+        if ((!isExceptionalCluster(stichedcluster) && count_nlayers_in_cluster(stichedcluster) < Constants.DC_MIN_NLAYERS) 
+                || (isExceptionalCluster(stichedcluster) && count_nlayers_in_cluster(stichedcluster) < Constants.DC_MIN_NLAYERS - 1)) 
+            return null;
+        
+        return stichedcluster;
+        
     }
 
 }

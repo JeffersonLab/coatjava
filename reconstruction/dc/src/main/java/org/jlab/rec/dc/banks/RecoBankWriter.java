@@ -36,21 +36,65 @@ public class RecoBankWriter {
 
     public void updateListsWithClusterInfo(List<FittedHit> fhits,
             List<FittedCluster> clusters) {
-        
+        ArrayList rmHits = new ArrayList<FittedHit>();
+        ArrayList addHits = new ArrayList<FittedHit>();
         for (int i = 0; i < clusters.size(); i++) {
             clusters.get(i).set_Id(i + 1);
             for (int j = 0; j < clusters.get(i).size(); j++) {
 
                 clusters.get(i).get(j).set_AssociatedClusterID(clusters.get(i).get_Id());
+                addHits.add(clusters.get(i).get(j));
                 for (int k = 0; k < fhits.size(); k++) {
                     if (fhits.get(k).get_Id() == clusters.get(i).get(j).get_Id()) {
-                        fhits.remove(k);
-                        fhits.add(clusters.get(i).get(j));
-
+                        rmHits.add(fhits.get(k));
+                    }
                 }
             }
         }
+        
+        fhits.removeAll(rmHits);
+        fhits.addAll(addHits);
+    }
+    
+    public DataBank fillHitsBank(DataEvent event, List<FittedHit> hitlist) {
+        String name = bankNames.getHitsBank();
+        
+        int rejCnt = 0;
+        for (int i = 0; i < hitlist.size(); i++) {
+//            if (hitlist.get(i).get_Id() == -1 /*|| hitlist.get(i).get_Id()==0*/) { //PASS1
+            if (hitlist.get(i).get_Id() == -1 || hitlist.get(i).get_Id()==0) {
+                rejCnt++;
+            }
         }
+        DataBank bank = event.createBank(name, hitlist.size()-rejCnt);
+        rejCnt=0;
+        for (int i = 0; i < hitlist.size(); i++) {
+//            if (hitlist.get(i).get_Id() == -1 /*|| hitlist.get(i).get_Id()==0*/) { //PASS1
+            if (hitlist.get(i).get_Id() == -1 || hitlist.get(i).get_Id()==0) {
+                rejCnt++;
+                continue;
+        }
+        bank.setShort("id", i-rejCnt, (short) hitlist.get(i).get_Id());
+        bank.setShort("indexTDC", i-rejCnt, (short) hitlist.get(i).get_IndexTDC());
+        bank.setShort("status", i-rejCnt, (short) hitlist.get(i).get_QualityFac());
+        bank.setByte("superlayer", i-rejCnt, (byte) hitlist.get(i).get_Superlayer());
+        bank.setByte("layer", i-rejCnt, (byte) hitlist.get(i).get_Layer());
+        bank.setByte("sector", i-rejCnt, (byte) hitlist.get(i).get_Sector());
+        bank.setShort("wire", i-rejCnt, (short) hitlist.get(i).get_Wire());
+        bank.setFloat("docaError", i-rejCnt, (float) hitlist.get(i).get_DocaErr());
+        bank.setFloat("trkDoca", i-rejCnt, (float) hitlist.get(i).get_ClusFitDoca());
+        bank.setFloat("LocX", i-rejCnt, (float) hitlist.get(i).get_lX());
+        bank.setFloat("LocY", i-rejCnt, (float) hitlist.get(i).get_lY());
+        bank.setFloat("X", i-rejCnt, (float) hitlist.get(i).get_X());
+        bank.setFloat("Z", i-rejCnt, (float) hitlist.get(i).get_Z());
+        bank.setByte("LR", i-rejCnt, (byte) hitlist.get(i).get_LeftRightAmb());
+        bank.setShort("clusterID", i-rejCnt, (short) hitlist.get(i).get_AssociatedClusterID());
+        bank.setInt("TDC",i-rejCnt,hitlist.get(i).get_TDC());
+        bank.setByte("jitter",i, (byte) hitlist.get(i).getJitter());
+        
+        }
+
+        return bank;
 
     }
 
@@ -829,6 +873,7 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
                     hit.get_Layer(), hit.get_Wire(), hit.get_TDC(), hit.getJitter(),
                     hit.get_Id());
             fhit.set_Id(hit.get_Id());
+            fhit.set_IndexTDC(hit.get_IndexTDC());
             fhit.set_DocaErr(hit.get_DocaErr());
             fhits.add(fhit);
         }

@@ -11,6 +11,7 @@ import org.jlab.service.eb.EBTBEngine;
 import org.jlab.analysis.physics.TestEvent;
 import org.jlab.analysis.math.ClasMath;
 import org.jlab.clas.swimtools.MagFieldsEngine;
+import org.jlab.detector.base.DetectorType;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.logging.DefaultLogger;
 import org.jlab.utils.CLASResources;
@@ -42,7 +43,7 @@ public class CVTReconstructionTest {
         SchemaFactory schemaFactory = new SchemaFactory();
         schemaFactory.initFromDirectory(dir);
     
-        DataEvent testEvent = TestEvent.getCVTTestEvent(schemaFactory);
+        DataEvent testEvent = TestEvent.get(DetectorType.CVT);
 
         MagFieldsEngine enf = new MagFieldsEngine();
         enf.init();

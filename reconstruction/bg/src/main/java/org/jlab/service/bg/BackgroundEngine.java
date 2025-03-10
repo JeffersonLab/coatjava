@@ -1,6 +1,7 @@
 package org.jlab.service.bg;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -21,14 +22,12 @@ public class BackgroundEngine extends ReconstructionEngine {
     public static final String CONF_SUPPRESS_DOUBLES = "suppressDoubles";
     public static final String CONF_PRESERVE_ORDER = "preserveOrder";
     public static final String CONF_REUSE_EVENTS = "reuseEvents";
+    public static final String CONF_BG_SCALE = "bgScale";
 
     static final Logger logger = Logger.getLogger(BackgroundEngine.class.getName());
 
-    int filesUsed = 0;
-    boolean reuseEvents = true;
     EventMerger bgmerger = null;
-    HipoDataSource bgreader = null;
-    LinkedList<String> bgfilenames = new LinkedList<>();
+//    LinkedList<String> bgfilenames = new LinkedList<>();
 
     public BackgroundEngine() {
         super("BG", "baltzell", "1.0");
@@ -42,51 +41,19 @@ public class BackgroundEngine extends ReconstructionEngine {
     }
 
     public boolean init(String... filenames) {
-        bgfilenames.clear();
         String detectors = getEngineConfigString(CONF_DETECTORS,"DC,FTOF");
         String orders = getEngineConfigString(CONF_ORDERS,"NOMINAL");
         boolean suppressDoubles = Boolean.valueOf(getEngineConfigString(CONF_SUPPRESS_DOUBLES,"true"));
         boolean preserveOrder = Boolean.valueOf(getEngineConfigString(CONF_PRESERVE_ORDER,"true"));
         boolean reuseEvents = Boolean.valueOf(getEngineConfigString(CONF_REUSE_EVENTS,"false"));
-        for (String filename : filenames) {
-            File f = new File(filename);
-            if (!f.exists() || !f.isFile() || !f.canRead()) {
-                logger.log(Level.SEVERE,"BackgroundEngine:: filename {0} invalid.",filename);
-                return false;
-            }
-            logger.log(Level.INFO,"BackgroundEngine::  reading {0}",filename);
-            bgfilenames.add(filename);
-        }
+        int     bgScale = Integer.valueOf(getEngineConfigString(CONF_BG_SCALE,"1"));
         bgmerger = new EventMerger(detectors.split(","), orders.split(","), suppressDoubles, preserveOrder);
-        openNextFile();
-        return true;
-    }
-
-    private void openNextFile() {
-        if (filesUsed>0 && filesUsed%bgfilenames.size()==0) {
-            if (reuseEvents) logger.info("BackgroundEngine::  Reopening previously used file.");
-            else throw new RuntimeException("BackgroundEngine::  Ran out of events.");
-        }
-        String filename = bgfilenames.remove();
-        bgfilenames.add(filename);
-        bgreader = new HipoDataSource();
-        bgreader.open(filename);
-        filesUsed++;
-    }
-
-    synchronized public DataEvent getBackgroundEvent() {
-        if (!bgreader.hasEvent()) openNextFile();
-        return bgreader.getNextEvent();
+        return bgmerger.setBgFiles(Arrays.asList(filenames), bgScale, reuseEvents);
     }
 
     @Override
     public boolean processDataEvent(DataEvent event) {
-        if (!bgfilenames.isEmpty()) {
-            DataEvent a = getBackgroundEvent();
-            DataEvent b = getBackgroundEvent();
-            bgmerger.mergeEvents(event, a, b);
-        }
-        return true;
+        return bgmerger.mergeEvents(event);
     }
 
 }

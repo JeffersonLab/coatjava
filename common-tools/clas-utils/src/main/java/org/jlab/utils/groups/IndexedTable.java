@@ -65,7 +65,7 @@ public class IndexedTable extends DefaultTableModel {
         str.append("f");
         this.precisionFormat = str.toString();
     }
-    
+
     public boolean hasEntry(int... index){
         return this.entries.hasItem(index);
     }
@@ -145,7 +145,11 @@ public class IndexedTable extends DefaultTableModel {
         }
         return 0;
     }
-    
+
+    public NamedEntry getNamedEntry(int... index) {
+        return NamedEntry.create(entries.getItem(index), entryNames, index);
+    }
+
     public IndexedList getList(){
         return this.entries;
     }
@@ -295,7 +299,7 @@ public class IndexedTable extends DefaultTableModel {
         }
         return trow.getValue(column-ic).toString();
     }
-    
+
     public class RowConstraint {
         
         public int   COLUMN = 0;
@@ -377,4 +381,5 @@ public class IndexedTable extends DefaultTableModel {
             }
         }
     }
+
 }
