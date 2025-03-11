@@ -90,36 +90,37 @@ public class KalmanFilter {
 			// Initialization hit
 			ArrayList<org.jlab.rec.ahdc.Hit.Hit> AHDC_hits = tracks.get(0).getHits();
 			ArrayList<Hit>                       KF_hits   = new ArrayList<>();
-			//System.out.println(" px " +  px0 + " py " + py0  +" pz " +  pz0 +" vz " + z0 + " number of hits: " + AHDC_hits.size() + " MC hits? " + sim_hits.size());
+			//System.out.println(" px " +  y[3] + " py " + y[4]  +" pz " +  y[5] +" vz " + y[2] + " number of hits: " + AHDC_hits.size() + " MC hits? " + sim_hits.size());
 			for (org.jlab.rec.ahdc.Hit.Hit AHDC_hit : AHDC_hits) {
 				Hit hit = new Hit(AHDC_hit.getSuperLayerId(), AHDC_hit.getLayerId(), AHDC_hit.getWireId(), AHDC_hit.getNbOfWires(), AHDC_hit.getRadius(), AHDC_hit.getDoca());
 				hit.setADC(AHDC_hit.getADC());
 				hit.setHitIdx(AHDC_hit.getId());
 				hit.setSign(0);
+				//System.out.println( " r = " + hit.r() + " hit.phi " + hit.phi() +" hit.doca = " + hit.getDoca()  );
 				// Do delete hit with same radius
 				boolean phi_rollover = false;
 				boolean aleardyHaveR = false;
 				for (Hit o: KF_hits){
 				     if (o.r() == hit.r()){
 					 aleardyHaveR = true;
-					    
+					 //sign+ means (phi track - phi wire) > 0
 					    if(o.phi()>hit.phi()){
 						if(Math.abs(o.phi()-hit.phi())< 2*Math.toRadians(360./o.getNumWires()) ){
-				 		    o.setSign(+1);
-				 		    hit.setSign(-1);
+				 		    o.setSign(-1);
+				 		    hit.setSign(+1);
 						}else{
 						    phi_rollover = true;
-				 		    hit.setSign(+1);
-				 		    o.setSign(-1);
+				 		    hit.setSign(-1);
+				 		    o.setSign(+1);
 						}
 				 	    }else{
 						if(Math.abs(o.phi()-hit.phi())< 2*Math.toRadians(360./o.getNumWires()) ){
-				 		    hit.setSign(+1);
-				 		    o.setSign(-1);
+				 		    hit.setSign(-1);
+				 		    o.setSign(+1);
 						}else{
 						    phi_rollover = true;
-						    o.setSign(+1);
-                                                    hit.setSign(-1);
+						    o.setSign(-1);
+                                                    hit.setSign(+1);
 						}
 				 	    }
 					    //System.out.println( " r = " + o.r() + " o.phi = " + o.phi() + " o.doca = " + o.getDoca()*o.getSign() + " hit.phi " + hit.phi() +" hit.doca = " + hit.getDoca()*hit.getSign() + " angle between wires: " + Math.toRadians(360./hit.getNumWires()) + " >= ? angle covered by docas: " +  Math.atan( (o.getDoca()+hit.getDoca())/o.r() )  );
@@ -127,7 +128,7 @@ public class KalmanFilter {
 				}
 				//if(!aleardyHaveR)KF_hits.add(hit);
 				if (phi_rollover){
-				    KF_hits.add(KF_hits.size()-1, hit);
+				     KF_hits.add(KF_hits.size()-1, hit);
 				}else{
 				    KF_hits.add(hit);
 				}

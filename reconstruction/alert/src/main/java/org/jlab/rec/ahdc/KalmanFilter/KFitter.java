@@ -91,12 +91,13 @@ public class KFitter {
 			h = h_beam(stateEstimation);//3x1
 			z = indicator.hit.get_Vector_beam();//0!
 		} else {
-		    boolean goodsign = true;
-		    if(indicator.hit.getSign()!=0){
-			double dphi = Math.atan2(stateEstimation.getEntry(1), stateEstimation.getEntry(0))-indicator.hit.phi(stateEstimation.getEntry(2));//
-			if(dphi*indicator.hit.getSign()<0)goodsign = false;
-			//System.out.println(" r " + indicator.hit.r() + " phi " +  indicator.hit.phi() + " phi wire (-zl/2) " + indicator.hit.phi(-150.0) + " phi wire (0) " + indicator.hit.phi(0.0) + " phi wire (+zl/2) " + indicator.hit.phi(150.) + " phi wire (z) " + indicator.hit.phi(stateEstimation.getEntry(2)) + " phi state " + Math.atan2(stateEstimation.getEntry(1), stateEstimation.getEntry(0)) + " sign " + indicator.hit.getSign() + " good? " + goodsign );
-		    }
+		    //System.out.println(" hit r " + indicator.hit.r() + " hit phi " +  indicator.hit.phi() + " phi wire (-zl/2) " + indicator.hit.phi(-150.0) + " phi wire (0) " + indicator.hit.phi(0.0) + " phi wire (+zl/2) " + indicator.hit.phi(150.) + " state x " + stateEstimation.getEntry(0) + " state y " + stateEstimation.getEntry(1) + " state z " + stateEstimation.getEntry(2) );
+			boolean goodsign = true;
+			if(indicator.hit.getSign()!=0){
+			    double dphi = Math.atan2(stateEstimation.getEntry(1), stateEstimation.getEntry(0))-indicator.hit.phi(stateEstimation.getEntry(2));
+			    if(dphi*indicator.hit.getSign()<0)goodsign = false;
+			    //System.out.println(" hit r " + indicator.hit.r() + " phi wire (z) " + indicator.hit.phi(stateEstimation.getEntry(2)) + " phi state " + Math.atan2(stateEstimation.getEntry(1), stateEstimation.getEntry(0)) + " sign " + indicator.hit.getSign() + " good? " + goodsign );
+			}
 		        measurementNoise = indicator.hit.get_MeasurementNoise(goodsign);//1x1
 		        //measurementNoise = indicator.hit.get_MeasurementNoise();//1x1
 		        measurementMatrix = H(stateEstimation, indicator);//6x1

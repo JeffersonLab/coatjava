@@ -192,7 +192,7 @@ public class Hit implements Comparable<Hit> {
 	}
 
 	public double distance(Point3D point3D, int sign) {
-	    if(sign!=0)
+		//if(sign!=0)
 	    	//System.out.println(" r " + this.r +  " phi " + this.phi + " doca " + this.doca + " sign " + sign + " distance " + this.line3D.distance(point3D).length() + " (sign 0) " + this.line3D_plus.distance(point3D).length() + " (sign+) " + this.line3D_minus.distance(point3D).length() + " (sign-) ");
 		if(sign>0)return this.line3D_plus.distance(point3D).length();
 		if(sign<0)return this.line3D_minus.distance(point3D).length();
