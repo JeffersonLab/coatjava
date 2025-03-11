@@ -7,14 +7,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.jlab.io.base.DataBank;
-import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.track.Track;
 /**
  *
@@ -152,15 +150,16 @@ public class TrackSelector {
                 IntArrayKey ik = new IntArrayKey(tis.getIds());
                 //check for overlap with selected tracks
                 if (selectedTrks.containsKey(ik)) {
-                    //System.out.println("Found track for " + Arrays.toString(tis.getIds()) + ": \n"); 
+                    //System.out.println("Found track"+ tis.getTrkId()+" for " + Arrays.toString(tis.getIds()) + ": \n"); 
                 } else {
-                    //System.out.println("No track found for " + Arrays.toString(tis.getIds()));
+                    //System.out.println("No track"+ tis.getTrkId()+" for " + Arrays.toString(tis.getIds()));
                     //check overlaps with the rest of the selected tracks
                     if(instarecRecoTrks.containsKey(ik) && instarecRecoTrks.get(ik).get_Id()>0) {
                         //check for overlaps with the rest of the tracks
                         boolean overlaps = selectedTrks.keySet().stream().anyMatch(ti -> checkOverlap(ti, ik));
                         if(!overlaps) {
                             addedTrks.put(ik, instarecRecoTrks.get(ik));
+                            //System.out.println("added track"+ instarecRecoTrks.get(ik).toString()+ ": \n"); 
                         }
                     }
                 }
@@ -168,10 +167,12 @@ public class TrackSelector {
             //resolve overlaps
             resolveOverlaps(addedTrks);
             for(IntArrayKey ta : addedTrks.keySet()) {
-                selectedTrks.put(ta, addedTrks.get(ta));
+                if(addedTrks.get(ta).get_Id()>0)
+                    selectedTrks.put(ta, addedTrks.get(ta));
             }
         });
-
+        
+        //resolveOverlaps(selectedTrks);
         
         tracks.clear();
         for(Track t : selectedTrks.values()) {

@@ -1,6 +1,7 @@
 package org.jlab.service.dc;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -145,8 +146,6 @@ public class DCHBPostIClusterAI extends DCEngine {
         if(DEBUG) {   
             System.out.println("HB SEEDS:");
             for(Track t : trkcands) {
-                int trkId = t.get(0).get_Segment1().get(0).NNTrkId;
-                t.set_Id(trkId);
                 t.printInfo();
             }
         }
@@ -155,11 +154,24 @@ public class DCHBPostIClusterAI extends DCEngine {
         clusters = new ArrayList<>();
         int trkId = 1;
         if (!trkcands.isEmpty()) {
+            if(useInstarec) {
+                Map<Double, Track> trkMap = new HashMap<>(); //cases where the same segment is lost and 
+                //where it was suggested by different ids --> gives duplicate track
+                for (Track trk : trkcands) {
+                    trkMap.put(trk.get_FitChi2(), trk);
+                }
+                trkcands.clear();
+                trkcands.addAll(new ArrayList<>(trkMap.values()));
+            }
+            
             // remove overlaps
             if(!useInstarec) trkcandFinder.removeOverlappingTracks(trkcands);
             for (Track trk : trkcands) {
-                // reset the id
-                if(useInstarec) trkId = trk.get(0).get_Segment1().get(0).NNTrkId;
+                if(useInstarec) {
+                     // reset the id
+                    List<Segment> segs = trk.get(0).getSegments();
+                    trkId = segs.get(0).get(0).NNTrkId;
+                }
                 trk.set_Id(trkId);
                 trkcandFinder.matchHits(trk.getStateVecs(),
                         trk,

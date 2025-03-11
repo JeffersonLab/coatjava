@@ -34,11 +34,7 @@ import org.jlab.clas.tracking.kalmanfilter.zReference.KFitterStraight;
 import org.jlab.clas.tracking.kalmanfilter.zReference.StateVecs;
 import org.jlab.clas.tracking.utilities.MatrixOps.Libr;
 import org.jlab.clas.tracking.utilities.RungeKuttaDoca;
-import org.jlab.io.base.DataBank;
 import static org.jlab.rec.dc.Constants.DEBUG;
-import org.jlab.rec.dc.nn.AIHitReader;
-import static org.jlab.rec.dc.nn.AIHitReader.getNNTrks;
-import static org.jlab.rec.dc.nn.AIHitReader.setNNTrks;
 
 /**
  * A class with a method implementing an algorithm that finds lists of track
@@ -1093,7 +1089,7 @@ public class TrackCandListFinder {
                                 System.out.println("HB KF FAILED!  finalStateVec=null!");
                             continue;
                         } else {
-                            //if (kFZRef.chi2 < Constants.MAXCHI2) {
+                            if (kFZRef.chi2 < Constants.MAXCHI2) {
                                 if(DEBUG)
                                     System.out.println("HB KF CHI2 PASSED "+kFZRef.chi2);
                                 fitStateVec = new StateVec(kFZRef.finalStateVec.x,
@@ -1124,7 +1120,7 @@ public class TrackCandListFinder {
                                 if (cand.fit_Successful = true) {
                                     cands.add(cand);                                    
                                 }
-                            //}
+                            }
                         }
                                           
 
