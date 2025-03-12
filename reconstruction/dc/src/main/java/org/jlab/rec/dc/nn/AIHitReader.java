@@ -113,10 +113,11 @@ public class AIHitReader extends HitReader {
             for (int s = 0; s < 6; s++) {
                 String stg = "c" + (s + 1);
                 int cid = (int) bankAI.getShort(stg, j);
-                if(cid!=-1)
+                if(cid!=-1) 
                     ids[s] = cid;
             }
-            TrackSelector.removeTrailingZeros(ids);
+            ids=TrackSelector.removeArrayZeros(ids);
+            System.out.println(Arrays.toString(ids));
             
             if(cartesian) {
                 tPars[0] = (double) bankAI.getFloat("px", j);

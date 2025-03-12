@@ -1121,9 +1121,7 @@ public class TrackCandListFinder {
                                     cands.add(cand);                                    
                                 }
                             }
-                        }
-                                          
-
+                        } 
                     }
                 }
             }

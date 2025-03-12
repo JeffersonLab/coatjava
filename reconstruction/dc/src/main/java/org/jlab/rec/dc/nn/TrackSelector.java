@@ -57,7 +57,7 @@ public class TrackSelector {
                 int cid = (int) bankAI.getShort("c" + (s + 1), j);
                 if(cid!=-1) ids[s] = cid;
             }
-            removeTrailingZeros(ids);
+            ids=removeArrayZeros(ids);
             
             tPars[3] = (double) bankAI.getShort("id", j);
             tPars[4] = (double) bankAI.getFloat("prob", j);
@@ -248,19 +248,22 @@ public class TrackSelector {
         
     }
     
-    public static int[] removeTrailingZeros(int[] arr) {
-        // Find the index where the trailing zeros start
-        int index = arr.length - 1;
-        while (index >= 0 && arr[index] == 0) {
-            index--;
+    public static int[] removeArrayZeros(int[] arr) {
+        int arrSize=0;
+        for(int i = 0; i<arr.length; i++) {
+            if(arr[i]>0) { 
+                arrSize++;
+            }
         }
         
-        // If the entire array consists of zeros, return an empty array
-        if (index == -1) {
-            return new int[0];
+        int[] newArr = new int[arrSize];
+        int arrCnt=0;
+        for(int i = 0; i<arr.length; i++) {
+            if(arr[i]>0) {
+                newArr[arrCnt]=arr[i]; 
+                arrCnt++;
+            }
         }
-        
-        // Return a new array that excludes the trailing zeros
-        return Arrays.copyOfRange(arr, 0, index + 1);
+        return newArr;
     }
 }

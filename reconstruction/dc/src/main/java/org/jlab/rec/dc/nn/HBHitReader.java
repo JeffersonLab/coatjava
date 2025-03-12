@@ -79,7 +79,7 @@ public class HBHitReader extends HitReader{
 
     // Gets NN Seed Lists grouped by overlapping track information
     public static List<List<TrackInfo>> getNNSeedLists(List<TrackInfo> trackInfoL) {
-        Collections.sort(trackInfoL);
+       // Collections.sort(trackInfoL);
         List<List<TrackInfo>> trackInfoLs = new ArrayList<>();
         trackInfoLs.add(new ArrayList<>());
         trackInfoLs.get(0).add(trackInfoL.get(0));
@@ -148,7 +148,7 @@ public class HBHitReader extends HitReader{
                 if(cid!=-1)
                     ids[s] = cid;
             }
-            TrackSelector.removeTrailingZeros(ids);
+            ids=TrackSelector.removeArrayZeros(ids);
             
             tPars[0] = (double) bank.getFloat("p0_x", j);
             tPars[1] = (double) bank.getFloat("p0_y", j);
