@@ -767,6 +767,7 @@ public class CLASDecoder4 {
         parser.addOption("-s", "0.5","solenoid current in the header bank");
         parser.addOption("-x", null,"CCDB timestamp (MM/DD/YYYY-HH:MM:SS)");
         parser.addOption("-v","default","CCDB variation");
+        parser.addOption("-skip","0", "number of events to skip");
 
         parser.parse(args);
 
@@ -809,6 +810,7 @@ public class CLASDecoder4 {
         Bank  helicityAdc = new Bank(writer.getSchemaFactory().getSchema("HEL::adc"));
         Event scalerEvent = new Event();
 
+        int skip = parser.getOption("-skip").intValue();
         int nrun = parser.getOption("-r").intValue();
         double torus = parser.getOption("-t").doubleValue();
         double solenoid = parser.getOption("-s").doubleValue();
@@ -837,7 +839,12 @@ public class CLASDecoder4 {
            
             while(reader.hasEvent()==true){
                 EvioDataEvent event = (EvioDataEvent) reader.getNextEvent();
-                
+
+                if (skip>0 && counter<skip) {
+                    counter++;
+                    continue;
+                }
+
                 Event  decodedEvent = decoder.getDataEvent(event);
                 
                 Bank   header = decoder.createHeaderBank( nrun, counter, (float) torus, (float) solenoid);
