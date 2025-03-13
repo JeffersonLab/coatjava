@@ -113,11 +113,11 @@ public class Hit implements Comparable<Hit> {
 
 		//calculate the "virtual" left and right wires accounting for the DOCA 
 		double deltaphi = Math.asin(this.doca/R_layer);
-		double wx_plus     = -R_layer * Math.sin( alphaW_layer * (this.wire-1) + deltaphi );//OK
-		double wy_plus     = -R_layer * Math.cos( alphaW_layer * (this.wire-1) + deltaphi );//OK
+		double wx_plus     = -R_layer * Math.sin( alphaW_layer * (this.wire-1) - deltaphi );//OK
+		double wy_plus     = -R_layer * Math.cos( alphaW_layer * (this.wire-1) - deltaphi );//OK
 
-		double wx_plus_end = -R_layer * Math.sin( alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)) + deltaphi );//OK
-		double wy_plus_end = -R_layer * Math.cos( alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)) + deltaphi );//OK
+		double wx_plus_end = -R_layer * Math.sin( alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)) - deltaphi );//OK
+		double wy_plus_end = -R_layer * Math.cos( alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)) - deltaphi );//OK
 
 		line = new Line3D(wx_plus, wy_plus, -zl/2, wx_plus_end, wy_plus_end, zl/2);
 		lPoint = new Point3D();
@@ -128,11 +128,11 @@ public class Hit implements Comparable<Hit> {
 		wireLine = new Line3D(lPoint, rPoint);
 		this.line3D_plus = wireLine;
 
-		double wx_minus     = -R_layer * Math.sin( alphaW_layer * (this.wire-1) - deltaphi );//OK
-		double wy_minus     = -R_layer * Math.cos( alphaW_layer * (this.wire-1) - deltaphi );//OK
+		double wx_minus     = -R_layer * Math.sin( alphaW_layer * (this.wire-1) + deltaphi );//OK
+		double wy_minus     = -R_layer * Math.cos( alphaW_layer * (this.wire-1) + deltaphi );//OK
 
-		double wx_minus_end = -R_layer * Math.sin( alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)) - deltaphi );//OK
-		double wy_minus_end = -R_layer * Math.cos( alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)) - deltaphi );//OK
+		double wx_minus_end = -R_layer * Math.sin( alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)) + deltaphi );//OK
+		double wy_minus_end = -R_layer * Math.cos( alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)) + deltaphi );//OK
 
 		line = new Line3D(wx_minus, wy_minus, -zl/2, wx_minus_end, wy_minus_end, zl/2);
 		lPoint = new Point3D();
@@ -167,7 +167,7 @@ public class Hit implements Comparable<Hit> {
 	    if(goodsign){
 		return new Array2DRowRealMatrix(new double[][]{{0.0225}});
 	    }else{
-		return new Array2DRowRealMatrix(new double[][]{{2*this.doca*this.doca}});
+		return new Array2DRowRealMatrix(new double[][]{{this.doca*this.doca}});
 	    }
 	}
     
@@ -194,8 +194,10 @@ public class Hit implements Comparable<Hit> {
 	public double distance(Point3D point3D, int sign) {
 		//if(sign!=0)
 	    	//System.out.println(" r " + this.r +  " phi " + this.phi + " doca " + this.doca + " sign " + sign + " distance " + this.line3D.distance(point3D).length() + " (sign 0) " + this.line3D_plus.distance(point3D).length() + " (sign+) " + this.line3D_minus.distance(point3D).length() + " (sign-) ");
-		if(sign>0)return this.line3D_plus.distance(point3D).length();
-		if(sign<0)return this.line3D_minus.distance(point3D).length();
+		if(sign>0 && sign*this.hitsign<0
+		   )return this.line3D_plus.distance(point3D).length();
+		if(sign<0 && sign*this.hitsign<0
+		   )return this.line3D_minus.distance(point3D).length();
 		return this.line3D.distance(point3D).length();
 	}
 
