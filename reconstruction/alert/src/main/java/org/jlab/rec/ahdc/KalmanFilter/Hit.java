@@ -112,7 +112,7 @@ public class Hit implements Comparable<Hit> {
 		this.line3D = wireLine;
 
 		//calculate the "virtual" left and right wires accounting for the DOCA 
-		double deltaphi = Math.sin(this.doca/R_layer);
+		double deltaphi = Math.asin(this.doca/R_layer);
 		double wx_plus     = -R_layer * Math.sin( alphaW_layer * (this.wire-1) + deltaphi );//OK
 		double wy_plus     = -R_layer * Math.cos( alphaW_layer * (this.wire-1) + deltaphi );//OK
 
@@ -163,6 +163,14 @@ public class Hit implements Comparable<Hit> {
 		return new Array2DRowRealMatrix(new double[][]{{0.0225}});
 	}
     
+    	public RealMatrix get_MeasurementNoise(boolean goodsign) {
+	    if(goodsign){
+		return new Array2DRowRealMatrix(new double[][]{{0.0225}});
+	    }else{
+		return new Array2DRowRealMatrix(new double[][]{{2*this.doca*this.doca}});
+	    }
+	}
+    
 	public double doca() {
 		return doca;
 	}
@@ -184,7 +192,8 @@ public class Hit implements Comparable<Hit> {
 	}
 
 	public double distance(Point3D point3D, int sign) {
-	    //if(sign!=0)System.out.println( " r = " + this.r + " sign ? " + sign + " distance ? sign 0: " + this.line3D.distance(point3D).length() + "; sign +: " + this.line3D_plus.distance(point3D).length() + "; sign -: " + this.line3D_minus.distance(point3D).length() );
+		//if(sign!=0)
+	    	//System.out.println(" r " + this.r +  " phi " + this.phi + " doca " + this.doca + " sign " + sign + " distance " + this.line3D.distance(point3D).length() + " (sign 0) " + this.line3D_plus.distance(point3D).length() + " (sign+) " + this.line3D_minus.distance(point3D).length() + " (sign-) ");
 		if(sign>0)return this.line3D_plus.distance(point3D).length();
 		if(sign<0)return this.line3D_minus.distance(point3D).length();
 		return this.line3D.distance(point3D).length();
