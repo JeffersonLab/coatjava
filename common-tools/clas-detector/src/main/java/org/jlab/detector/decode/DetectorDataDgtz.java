@@ -18,7 +18,7 @@ public class DetectorDataDgtz implements Comparable<DetectorDataDgtz> {
     private final List<TDCData>    tdcStore    = new ArrayList<>();
     private final List<VTPData>    vtpStore    = new ArrayList<>();
     private final List<SCALERData> scalerStore = new ArrayList<>();
-    private Long                   timestamp   = 0L;
+    private Long                   timeStamp   = 0L;
     private int                    trigger     = 0; // Trigger number ( usually only 1 trigger due to rol2(?) );
     
 
@@ -57,12 +57,12 @@ public class DetectorDataDgtz implements Comparable<DetectorDataDgtz> {
         return this;
     }
     
-    public void setTimestamp(long time){
-        this.timestamp = time;
+    public void setTimeStamp(long time){
+        this.timeStamp = time;
     }
     
-    public long getTimestamp(){
-        return this.timestamp;
+    public long getTimeStamp(){
+        return this.timeStamp;
     }
     
     public DetectorDescriptor getDescriptor(){
@@ -335,9 +335,10 @@ public class DetectorDataDgtz implements Comparable<DetectorDataDgtz> {
      */
     public static class TDCData implements Comparable<TDCData>{
         
-        private int tdcOrder = 0; // Used for sorting
-        private int tdcTime  = 0;
-        private int tdcToT   = 0; // Time over threshold
+        private int  tdcOrder    = 0; // Used for sorting
+        private int  tdcTime     = 0;
+        private int  tdcToT      = 0; // Time over threshold
+        private Long timeStamp   = 0L;
         
         public TDCData() {}
         public TDCData(int time) { this.tdcTime = time;}
@@ -345,9 +346,11 @@ public class DetectorDataDgtz implements Comparable<DetectorDataDgtz> {
         public int getTime() { return this.tdcTime;}
         public int getToT() { return this.tdcToT;}
         public int getOrder() { return tdcOrder;}
+        public long getTimeStamp(){ return this.timeStamp; }
         public TDCData setOrder(int order) { tdcOrder = order;return this;}
         public TDCData setTime(short time) { tdcTime = time;return this;}
         public TDCData setToT(short ToT) { tdcToT = ToT;return this;}
+        public TDCData setTimeStamp(long time){ timeStamp = time;return this; }
         
         @Override
         public String toString(){
