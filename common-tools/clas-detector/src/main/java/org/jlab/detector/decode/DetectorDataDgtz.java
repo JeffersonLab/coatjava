@@ -58,7 +58,7 @@ public class DetectorDataDgtz implements Comparable<DetectorDataDgtz> {
     }
     
     public void setTimestamp(long time){
-        this.timeStamp = time;
+        this.timestamp = time;
     }
     
     public long getTimestamp(){
