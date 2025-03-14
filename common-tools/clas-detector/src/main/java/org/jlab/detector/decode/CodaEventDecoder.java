@@ -1078,6 +1078,7 @@ public class CodaEventDecoder {
 
                         // Not sure what is going on here yet...
                         DetectorDataDgtz bank = new DetectorDataDgtz(crate,slot.intValue(),channel.intValue());
+                        bank.setTimeStamp(time_stamp);
                         bank.addTDC(new TDCData(tdc,tot));
                         entries.add(bank);
                         position += 3;
