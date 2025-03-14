@@ -18,7 +18,7 @@ public class DetectorDataDgtz implements Comparable<DetectorDataDgtz> {
     private final List<TDCData>    tdcStore    = new ArrayList<>();
     private final List<VTPData>    vtpStore    = new ArrayList<>();
     private final List<SCALERData> scalerStore = new ArrayList<>();
-    private Long                   timeStamp   = 0L;
+    private Long                   timestamp   = 0L;
     private int                    trigger     = 0; // Trigger number ( usually only 1 trigger due to rol2(?) );
     
 
@@ -57,12 +57,12 @@ public class DetectorDataDgtz implements Comparable<DetectorDataDgtz> {
         return this;
     }
     
-    public void setTimeStamp(long time){
+    public void setTimestamp(long time){
         this.timeStamp = time;
     }
     
-    public long getTimeStamp(){
-        return this.timeStamp;
+    public long getTimestamp(){
+        return this.timestamp;
     }
     
     public DetectorDescriptor getDescriptor(){
