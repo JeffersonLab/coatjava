@@ -14,12 +14,14 @@ import org.jlab.utils.data.DataUtils;
  */
 public class DetectorDataDgtz implements Comparable<DetectorDataDgtz> {
     
-    private final List<ADCData>       adcStore   = new ArrayList<>();
-    private final List<TDCData>       tdcStore   = new ArrayList<>();
-    private final List<VTPData>       vtpStore   = new ArrayList<>();
-    private final List<SCALERData> scalerStore   = new ArrayList<>();
-    private Long timeStamp = 0L;
+    private final List<ADCData>    adcStore    = new ArrayList<>();
+    private final List<TDCData>    tdcStore    = new ArrayList<>();
+    private final List<VTPData>    vtpStore    = new ArrayList<>();
+    private final List<SCALERData> scalerStore = new ArrayList<>();
+    private Long                   timeStamp   = 0L;
+    private int                    trigger     = 0; // Trigger number ( usually only 1 trigger due to rol2(?) );
     
+
     private final DetectorDescriptor  descriptor = new DetectorDescriptor();
     
     public DetectorDataDgtz(){
@@ -66,6 +68,9 @@ public class DetectorDataDgtz implements Comparable<DetectorDataDgtz> {
     public DetectorDescriptor getDescriptor(){
         return this.descriptor;
     }
+
+    public int              getTrigger() { return trigger;}
+    public DetectorDataDgtz setTrigger(int trig) { trigger = trig;return this;}
     
     @Override
     public String toString(){
