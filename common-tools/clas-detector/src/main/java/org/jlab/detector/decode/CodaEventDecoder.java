@@ -1086,9 +1086,10 @@ public class CodaEventDecoder {
                         // "entries" List<DetectorDataDgtz>  -> "bank" DetectorDataDgtz  -> "tdc" TDCData
                         // there is a redundancy in timestamp: the same value is stored in TDCData and the DetectorDataDgz
                         //
-                        bank.setTimestamp(time_stamp).setTrigger(trig_num);;
+                        bank.setTimeStamp(time_stamp);
+                        bank.setTrigger(trig_num);;
                         TDCData tdc_data = new TDCData(tdc, tot);
-                        tdc_data.setTimestamp(time_stamp).setOrder(counter);
+                        tdc_data.setTimeStamp(time_stamp).setOrder(counter);
                         bank.addTDC(tdc_data);
                         entries.add(bank);
                         position += 3; // channel,tdc,tot
