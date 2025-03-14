@@ -75,6 +75,7 @@ coatjava:singularity:
   tags:
      - silicon
   allow_failure: true
+  needs: ["coatjava_build"]
   script:
     - apptainer build  --build-arg REF_NAME=${REF_NAME} coatjava.sif .containers/coatjava.def
     - ls -lrth
