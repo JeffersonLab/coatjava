@@ -103,7 +103,7 @@ public class KFitter {
 		        measurementMatrix = H(stateEstimation, indicator);//6x1
 			//System.out.println("h(stateEstimation):");
 		        h = h(stateEstimation, indicator);//1x1
-			//z = indicator.hit.get_Vector(indicator.hit.getSign());//1x1
+			//z = indicator.hit.get_Vector(indicator.hit.getSign(), goodsign);//1x1
 			z = indicator.hit.get_Vector();//1x1
 		}
 		RealMatrix measurementMatrixT = measurementMatrix.transpose();
