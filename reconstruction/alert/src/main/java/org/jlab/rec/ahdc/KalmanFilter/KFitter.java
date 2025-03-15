@@ -98,13 +98,14 @@ public class KFitter {
 			    if(dphi*indicator.hit.getSign()<0)goodsign = false;
 			    //System.out.println(" hit r " + indicator.hit.r() + " phi wire (z) " + indicator.hit.phi(stateEstimation.getEntry(2)) + " phi state " + Math.atan2(stateEstimation.getEntry(1), stateEstimation.getEntry(0)) + " sign " + indicator.hit.getSign() + " good? " + goodsign );
 			}
-		        measurementNoise = indicator.hit.get_MeasurementNoise(goodsign);//1x1
 		        //measurementNoise = indicator.hit.get_MeasurementNoise();//1x1
+		        measurementNoise = indicator.hit.get_MeasurementNoise(goodsign);//1x1
 		        measurementMatrix = H(stateEstimation, indicator);//6x1
-			//System.out.println("h(stateEstimation):");
+		        //measurementMatrix = H(stateEstimation, indicator, goodsign);//6x1
 		        h = h(stateEstimation, indicator);//1x1
-			//z = indicator.hit.get_Vector(indicator.hit.getSign(), goodsign);//1x1
+		        //h = h(stateEstimation, indicator, goodsign);//1x1
 			z = indicator.hit.get_Vector();//1x1
+			//z = indicator.hit.get_Vector(indicator.hit.getSign(), goodsign);//1x1
 		}
 		RealMatrix measurementMatrixT = measurementMatrix.transpose();
 
