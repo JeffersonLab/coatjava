@@ -189,9 +189,14 @@ public class KFitter {
 	}
 
 	//measurement matrix in 1 dimension: minimize distance - doca
-        private RealVector h(RealVector x, Indicator indicator) {
+	private RealVector h(RealVector x, Indicator indicator) {
 		double d = indicator.hit.distance(new Point3D(x.getEntry(0), x.getEntry(1), x.getEntry(2)));
 		//double d = indicator.hit.distance(new Point3D(x.getEntry(0), x.getEntry(1), x.getEntry(2)), indicator.hit.getSign());
+		return MatrixUtils.createRealVector(new double[]{d});
+	}
+
+	private RealVector h(RealVector x, Indicator indicator, boolean goodsign) {
+		double d = indicator.hit.distance(new Point3D(x.getEntry(0), x.getEntry(1), x.getEntry(2)), indicator.hit.getSign(), goodsign);
 		return MatrixUtils.createRealVector(new double[]{d});
 	}
 
@@ -220,6 +225,35 @@ public class KFitter {
 
 		double doca_plus  = h(x_plus, indicator).getEntry(0);
 		double doca_minus = h(x_minus, indicator).getEntry(0);
+
+		return (doca_plus - doca_minus) / (2 * h);
+	}
+
+	//measurement matrix in 1 dimension: minimize distance - doca
+	private RealMatrix H(RealVector x, Indicator indicator, boolean goodsign) {
+
+		double ddocadx  = subfunctionH(x, indicator, 0, goodsign);
+		double ddocady  = subfunctionH(x, indicator, 1, goodsign);
+		double ddocadz  = subfunctionH(x, indicator, 2, goodsign);
+		double ddocadpx = subfunctionH(x, indicator, 3, goodsign);
+		double ddocadpy = subfunctionH(x, indicator, 4, goodsign);
+		double ddocadpz = subfunctionH(x, indicator, 5, goodsign);
+		
+		// As per my understanding: ddocadx,y,z -> = dr/dx,y,z, etc
+		return MatrixUtils.createRealMatrix(new double[][]{
+			{ddocadx, ddocady, ddocadz, ddocadpx, ddocadpy, ddocadpz}});
+	}
+
+	double subfunctionH(RealVector x, Indicator indicator, int i, boolean goodsign) {
+		double     h       = 1e-8;// in mm
+		RealVector x_plus  = x.copy();
+		RealVector x_minus = x.copy();
+
+		x_plus.setEntry(i, x_plus.getEntry(i) + h);
+		x_minus.setEntry(i, x_minus.getEntry(i) - h);
+
+		double doca_plus  = h(x_plus, indicator, goodsign).getEntry(0);
+		double doca_minus = h(x_minus, indicator, goodsign).getEntry(0);
 
 		return (doca_plus - doca_minus) / (2 * h);
 	}
