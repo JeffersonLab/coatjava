@@ -113,11 +113,11 @@ public class Hit implements Comparable<Hit> {
 
 		//calculate the "virtual" left and right wires accounting for the DOCA 
 		double deltaphi = Math.asin(this.doca/R_layer);
-		double wx_plus     = -R_layer * Math.sin( alphaW_layer * (this.wire-1) + deltaphi );//OK
-		double wy_plus     = -R_layer * Math.cos( alphaW_layer * (this.wire-1) + deltaphi );//OK
+		double wx_plus     = -R_layer * Math.sin( alphaW_layer * (this.wire-1) - deltaphi );//OK
+		double wy_plus     = -R_layer * Math.cos( alphaW_layer * (this.wire-1) - deltaphi );//OK
 
-		double wx_plus_end = -R_layer * Math.sin( alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)) + deltaphi );//OK
-		double wy_plus_end = -R_layer * Math.cos( alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)) + deltaphi );//OK
+		double wx_plus_end = -R_layer * Math.sin( alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)) - deltaphi );//OK
+		double wy_plus_end = -R_layer * Math.cos( alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)) - deltaphi );//OK
 
 		line = new Line3D(wx_plus, wy_plus, -zl/2, wx_plus_end, wy_plus_end, zl/2);
 		lPoint = new Point3D();
@@ -128,11 +128,11 @@ public class Hit implements Comparable<Hit> {
 		wireLine = new Line3D(lPoint, rPoint);
 		this.line3D_plus = wireLine;
 
-		double wx_minus     = -R_layer * Math.sin( alphaW_layer * (this.wire-1) - deltaphi );//OK
-		double wy_minus     = -R_layer * Math.cos( alphaW_layer * (this.wire-1) - deltaphi );//OK
+		double wx_minus     = -R_layer * Math.sin( alphaW_layer * (this.wire-1) + deltaphi );//OK
+		double wy_minus     = -R_layer * Math.cos( alphaW_layer * (this.wire-1) + deltaphi );//OK
 
-		double wx_minus_end = -R_layer * Math.sin( alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)) - deltaphi );//OK
-		double wy_minus_end = -R_layer * Math.cos( alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)) - deltaphi );//OK
+		double wx_minus_end = -R_layer * Math.sin( alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)) + deltaphi );//OK
+		double wy_minus_end = -R_layer * Math.cos( alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)) + deltaphi );//OK
 
 		line = new Line3D(wx_minus, wy_minus, -zl/2, wx_minus_end, wy_minus_end, zl/2);
 		lPoint = new Point3D();
