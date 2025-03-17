@@ -78,17 +78,10 @@ public final class RecoilGeant4Factory extends Geant4Factory {
 
 	int i=iregion;
         double[] SectorDimensions = new double[5];
-
-	SectorDimensions[0] = RecoilConstants.WIDTH[i]/2+1.;
-	SectorDimensions[1] = RecoilConstants.HEIGHT[i]/2+1.;
-	SectorDimensions[2] = (this.getChamberThickness())/2.+1;
 	
-	/*	SectorDimensions[0] = (this.getChamberThickness())/2. + RecoilConstants.ZENLARGEMENT ;
-	SectorDimensions[1] = RecoilConstants.SECTORHEIGHT/2 + RecoilConstants.YENLARGEMENT ;
-	SectorDimensions[2] = RecoilConstants.DX0CHAMBER0 + RecoilConstants.XENLARGEMENT ;
-	SectorDimensions[3] = (SectorDimensions[1]*2)*Math.tan(Math.toRadians(RecoilConstants.THOPEN/2))+SectorDimensions[2];  
-	SectorDimensions[4] = Math.toRadians(RecoilConstants.THTILT);  
-        */
+        SectorDimensions[0] = RecoilConstants.WIDTH[i]/2;
+	SectorDimensions[1] = RecoilConstants.HEIGHT[i]/2;
+	SectorDimensions[2] = (this.getChamberThickness())/2.;
 	
         return SectorDimensions;
     }
@@ -132,14 +125,9 @@ public final class RecoilGeant4Factory extends Geant4Factory {
         // baricenter coordinate in CLAS12 frame 
 
         Vector3d vCenter = this.getCenterCoordinate(isector,iregion);
-                // Sector construction
-	/*        Geant4Basic sectorVolume = new G4Trap("region_Recoil_" + (iregion + 1) + "_s" + (isector + 1),
-                regionDZ, -regionThilt, Math.toRadians(90.0),
-                regionDY, regionDX0, regionDX1, 0.0,
-                regionDY, regionDX0, regionDX1, 0.0);*/
 
 	Geant4Basic sectorVolume = new G4Box("region_recoil_" + (iregion + 1) + "_s" + (isector + 1),hlx,hly,hlz);
-  	/*       sectorVolume.rotate("yxz", 0.0, regionThilt, Math.toRadians(90.0 - isector * 60.0));*/
+
 	sectorVolume.rotate("yxz",(-1+isector*2)*Math.toRadians(1.5*RecoilConstants.HORIZONTHAL_OPENING_ANGLE+270),0,0);
         sectorVolume.translate(vCenter.x, vCenter.y, vCenter.z);
         sectorVolume.setId(isector + 1, iregion +1, 0, 0);
@@ -147,14 +135,9 @@ public final class RecoilGeant4Factory extends Geant4Factory {
                // Chambers construction
         for (int ich = 0; ich < Nchambers; ich++) {
 
-	    //           double y_chamber = (2*ich+1)*(RecoilConstants.SECTORHEIGHT/RecoilConstants.NCHAMBERS/2+0.05);
-
-            Geant4Basic chamberVolume = this.createChamber(isector, iregion, ich);
-
-                chamberVolume.setName("rg" + (iregion + 1) + "_s" + (isector + 1) + "_c" + (ich +1));
-             
+            Geant4Basic chamberVolume = this.createChamber(isector, iregion, ich);	   
+	    chamberVolume.setName("rg" + (iregion + 1) + "_s" + (isector + 1) + "_c" + (ich +1));
             chamberVolume.setMother(sectorVolume);
-            //chamberVolume.translate(0.0,y_chamber-RecoilConstants.SECTORHEIGHT/2,0. );
             chamberVolume.setId(isector + 1, iregion + 1, ich +1, 0);
          }
                

@@ -6,7 +6,6 @@ import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.detector.hits.DetHit;
 import org.jlab.detector.volume.Geant4Basic;
 import org.jlab.geom.prim.Line3D;
-import org.jlab.geom.prim.Plane3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
 import org.jlab.geometry.prim.Line3d;
@@ -23,7 +22,6 @@ public final class RecoilStripFactory {
     private RecoilGeant4Factory factory;
     private IndexedList<Line3D>  globalStrips = new IndexedList(3);
     private IndexedList<Line3D>  localStrips  = new IndexedList(3);
-    private IndexedList<Plane3D> planeStrips  = new IndexedList(3);
     private int nRegions;
     private int nSectors;
     private int nChambers;
@@ -73,7 +71,6 @@ public final class RecoilStripFactory {
 	nChambers = RecoilConstants.NCHAMBERS;
 	nLayers   = RecoilConstants.NLAYERS;
         this.fillStripLists();
-	//        this.fillPlaneLists();
     }
 
     /**
@@ -117,7 +114,7 @@ public final class RecoilStripFactory {
 	int nAB = (int) (2 * xHalf / RecoilConstants.PITCH);
   	int nAC = (int) (2 * yHalf / RecoilConstants.PITCH);
 
-	int nStrips = nAB + nAC;
+	int nStrips = nAB + nAC +1;
 
         return nStrips;
     }
@@ -191,7 +188,8 @@ public final class RecoilStripFactory {
 	}
 	// ID of the strip
 	int nS =  (int) (DY / RecoilConstants.PITCH);	
-        int nCStrip = nS + (cStrip - 1);
+	//	int nCStrip = nS + (cStrip - 1);
+	int nCStrip = nS + (cStrip);
 	double c = nCStrip * RecoilConstants.PITCH;
 
         // Take 2 points in the strip straight line. They needs to define Line object 
@@ -308,9 +306,10 @@ public final class RecoilStripFactory {
 			     DY = -yHalf;
 			 }
 			 int nS =  (int) (DY / RecoilConstants.PITCH);
-			 int nCStrip = nS + (cStrip - 1);
+			 //			 int nCStrip = nS + (cStrip - 1);
+			 int nCStrip = nS + (cStrip);
 			 double c = nCStrip * RecoilConstants.PITCH;
-			 if (((layer) % 2 == 0 && c>-xHalf && c<xHalf)||((layer) % 2 != 0 && c>-yHalf && c<yHalf))
+			 if (((layer) % 2 == 0 && c>=-xHalf && c<=xHalf)||((layer) % 2 != 0 && c>=-yHalf && c<=yHalf))
 			     {
 			 
 				 Line3d line = this.createStrip(sector, region,layer, strip);                                       
@@ -344,50 +343,7 @@ public final class RecoilStripFactory {
         return local;
     }
     
-    private void fillPlaneLists() {
-
-        for(int ir=0; ir<nRegions; ir++) {
-            int region = ir+1;
-            for(int is=0; is<nSectors; is++) {
-                int sector = is+1;
-		for(int il=0; il<nLayers; il++) {
- 
-                    int layer = (2*region-1) + il;
-
-                    for(int ic=0; ic<this.getNStripSector(); ic++) {
-                         int strip = ic+1;
-
-			 int chamberIndex = getChamberIndex(strip);
-			 double[] dim = factory.getChamber_daughter_Dimensions(region-1,chamberIndex);
-
-			 double yHalf          = dim[1];
-			 double xHalf          = dim[0];
-			 int cStrip = this.getLocalStripId(strip);
-			 double DY = -xHalf; //v strip
-			 if (layer % 2 != 0) { //u strip
-			     DY = -yHalf;
-			 }
-			 int nS =  (int) (DY / RecoilConstants.PITCH);
-			 int nCStrip = nS + (cStrip - 1);
-			 double c = nCStrip * RecoilConstants.PITCH;
-			 if ((layer % 2 == 0 && c>-xHalf && c<xHalf)||(layer % 2 != 0 && c>-yHalf && c<yHalf))
-			     {
-				 Plane3D plane = this.createPLane(sector, region, layer, strip);
-				 this.planeStrips.add(plane, sector, layer, strip);
-			     }
-                    }
-                }
-            }
-        }
-    }
-        
-    
-    public Plane3D getPlane(int sector, int layer, int strip){
-        
-        return planeStrips.getItem(sector, layer, strip);
-    }
-    
-    
+                
     /**
      * Provides the 3D line for the given strip in the CLAS12 frame
      * @param sector (1-6)
@@ -411,31 +367,6 @@ public final class RecoilStripFactory {
         return localStrips.getItem(sector, layer, strip);
     }
         
-    private Plane3D createPLane(int sector, int region, int layer, int strip){
-
-        int chamber = this.getChamberIndex(strip);
-	int LastStripID = this.getNStripChamber(chamber, region);
-
-	Line3D Last_strip = this.getStrip(sector, layer, LastStripID);
-	
-	Line3D First_strip = this.getStrip(sector, layer, 1);
-	
-	Line3D test_strip = this.getStrip(sector, layer, 1);
-	
-	Vector3D Dir_strip_test = First_strip.originDir();
-	
-	/* Line orthogonal to the 2 strip */
-	Line3D line = First_strip.distance(Last_strip);
-	
-	Vector3D Dir_line = line.originDir();
-	
-	Vector3D normal_plane = Dir_strip_test.cross(Dir_line);
-	
-	Plane3D plane = new Plane3D(First_strip.origin(), normal_plane);
-	
-	return plane;
-    }    
-    
     public static void main(String[] args) {
         DatabaseConstantProvider cp = new DatabaseConstantProvider(11, "default");
 
@@ -444,13 +375,7 @@ public final class RecoilStripFactory {
         RecoilGeant4Factory factory = new RecoilGeant4Factory(cp,1);
 
         RecoilStripFactory factory2 = new RecoilStripFactory(cp,1);
-  
-	//        Plane3D plane = factory2.getPlane(6, 1, 200);
-        //System.out.println(plane.toString());
-
-        //int strip =20;
-        //System.out.println((strip) + " " + factory2.getLocalStripId(strip) + "\n" + factory2.getChamberStrip(1, 6,1,2,strip)) ; 
-        
+          
 	for(int istrip=0; istrip<factory2.getNStripSector(); istrip++)  {
         System.out.println((istrip+1) + " " + factory2.getChamberIndex(istrip+1) + "\n" + factory2.getStrip(1, 1, istrip+1) + "\n" + factory2.getStrip(1, 2, istrip+1));}
         
