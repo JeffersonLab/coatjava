@@ -33,35 +33,39 @@ public class KalmanFilter {
 
 	public KalmanFilter(ArrayList<Track> tracks, DataEvent event) {propagation(tracks, event);}
 
+	private final boolean IsMC = false;
 	private final int Niter = 10;
 	private final boolean IsVtxDefined = false;
 
 	private void propagation(ArrayList<Track> tracks, DataEvent event) {
 
 		try {
-			//If simulation read MC::Particle Bank ------------------------------------------------
-			DataBank bankParticle = event.getBank("MC::Particle");
-			double   vxmc         = bankParticle.getFloat("vx", 0)*10;//mm
-			double   vymc         = bankParticle.getFloat("vy", 0)*10;//mm
-			double   vzmc         = bankParticle.getFloat("vz", 0)*10;//mm
-			double   pxmc         = bankParticle.getFloat("px", 0)*1000;//MeV
-			double   pymc         = bankParticle.getFloat("py", 0)*1000;//MeV
-			double   pzmc         = bankParticle.getFloat("pz", 0)*1000;//MeV
-			double p_mc = java.lang.Math.sqrt(pxmc*pxmc+pymc*pymc+pzmc*pzmc);
-			//System.out.println("MC track: vz: " + vzmc*10 + " px: " + pxmc*1000 + " py: " + pymc*1000 + " pz: " + pzmc*1000 + "; p = " + p_mc*1000);//convert p to MeV, v to mm
-			
-			ArrayList<Point3D> sim_hits = new ArrayList<>();
-			sim_hits.add(new Point3D(0, 0, vzmc));
-
-			DataBank bankMC = event.getBank("MC::True");
-			for (int i = 0; i < bankMC.rows(); i++) {
-				if (bankMC.getInt("pid", i) == 2212) {
-					float x = bankMC.getFloat("avgX", i);
-					float y = bankMC.getFloat("avgY", i);
-					float z = bankMC.getFloat("avgZ", i);
-					// System.out.println("r_sim = " + Math.hypot(x, y));
-					sim_hits.add(new Point3D(x, y, z));
+			double vz_constraint;
+			if(IsMC) {//If simulation read MC::Particle Bank ------------------------------------------------
+				DataBank bankParticle = event.getBank("MC::Particle");
+				double   vxmc         = bankParticle.getFloat("vx", 0)*10;//mm
+				double   vymc         = bankParticle.getFloat("vy", 0)*10;//mm
+				double   vzmc         = bankParticle.getFloat("vz", 0)*10;//mm
+				double   pxmc         = bankParticle.getFloat("px", 0)*1000;//MeV
+				double   pymc         = bankParticle.getFloat("py", 0)*1000;//MeV
+				double   pzmc         = bankParticle.getFloat("pz", 0)*1000;//MeV
+				double p_mc = java.lang.Math.sqrt(pxmc*pxmc+pymc*pymc+pzmc*pzmc);
+				//System.out.println("MC track: vz: " + vzmc*10 + " px: " + pxmc*1000 + " py: " + pymc*1000 + " pz: " + pzmc*1000 + "; p = " + p_mc*1000);//convert p to MeV, v to mm
+				
+				ArrayList<Point3D> sim_hits = new ArrayList<>();
+				sim_hits.add(new Point3D(0, 0, vzmc));
+				
+				DataBank bankMC = event.getBank("MC::True");
+				for (int i = 0; i < bankMC.rows(); i++) {
+					if (bankMC.getInt("pid", i) == 2212) {
+						float x = bankMC.getFloat("avgX", i);
+						float y = bankMC.getFloat("avgY", i);
+						float z = bankMC.getFloat("avgZ", i);
+						// System.out.println("r_sim = " + Math.hypot(x, y));
+						sim_hits.add(new Point3D(x, y, z));
+					}
 				}
+				vz_constraint = vzmc;
 			}
 
 			// Initialization ---------------------------------------------------------------------
@@ -135,7 +139,7 @@ public class KalmanFilter {
 			}
 
 			double zbeam = 0;
-			if(IsVtxDefined)zbeam = vzmc;//test
+			if(IsVtxDefined)zbeam = vz_constraint;//test
 			final ArrayList<Indicator> forwardIndicators  = forwardIndicators(KF_hits, materialHashMap);
 			final ArrayList<Indicator> backwardIndicators = backwardIndicators(KF_hits, materialHashMap, zbeam);
 			
