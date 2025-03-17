@@ -31,13 +31,12 @@ import java.util.HashMap;
 
 public class KalmanFilter {
 
-	public KalmanFilter(ArrayList<Track> tracks, DataEvent event) {propagation(tracks, event);}
+    public KalmanFilter(ArrayList<Track> tracks, DataEvent event, boolean IsMC) {propagation(tracks, event, IsMC);}
 
-	private final boolean IsMC = false;
 	private final int Niter = 10;
 	private final boolean IsVtxDefined = false;
 
-	private void propagation(ArrayList<Track> tracks, DataEvent event) {
+	private void propagation(ArrayList<Track> tracks, DataEvent event, boolean IsMC) {
 
 		try {
 			double vz_constraint;
