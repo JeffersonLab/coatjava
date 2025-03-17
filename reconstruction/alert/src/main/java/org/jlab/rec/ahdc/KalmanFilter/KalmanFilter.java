@@ -107,35 +107,35 @@ public class KalmanFilter {
 				for (Hit o: KF_hits){
 				     if (o.r() == hit.r()){
 					 aleardyHaveR = true;
-					 //sign+ means (phi track - phi wire) > 0
-					    if(o.phi()>hit.phi()){
-						if(Math.abs(o.phi()-hit.phi())< 2*Math.toRadians(360./o.getNumWires()) ){
-				 		    o.setSign(-1);
-				 		    hit.setSign(+1);
-						}else{
-						    phi_rollover = true;
-				 		    hit.setSign(-1);
-				 		    o.setSign(+1);
-						}
-				 	    }else{
-						if(Math.abs(o.phi()-hit.phi())< 2*Math.toRadians(360./o.getNumWires()) ){
-				 		    hit.setSign(-1);
-				 		    o.setSign(+1);
-						}else{
-						    phi_rollover = true;
-						    o.setSign(-1);
-                                                    hit.setSign(+1);
-						}
-				 	    }
-					    //System.out.println( " r = " + o.r() + " o.phi = " + o.phi() + " o.doca = " + o.getDoca()*o.getSign() + " hit.phi " + hit.phi() +" hit.doca = " + hit.getDoca()*hit.getSign() + " angle between wires: " + Math.toRadians(360./hit.getNumWires()) + " >= ? angle covered by docas: " +  Math.atan( (o.getDoca()+hit.getDoca())/o.r() )  );
+					 // //sign+ means (phi track - phi wire) > 0
+					 //    if(o.phi()>hit.phi()){
+					 // 	if(Math.abs(o.phi()-hit.phi())< 2*Math.toRadians(360./o.getNumWires()) ){
+				 	 // 	    o.setSign(-1);
+				 	 // 	    hit.setSign(+1);
+					 // 	}else{
+					 // 	    phi_rollover = true;
+				 	 // 	    hit.setSign(-1);
+				 	 // 	    o.setSign(+1);
+					 // 	}
+				 	 //    }else{
+					 // 	if(Math.abs(o.phi()-hit.phi())< 2*Math.toRadians(360./o.getNumWires()) ){
+				 	 // 	    hit.setSign(-1);
+				 	 // 	    o.setSign(+1);
+					 // 	}else{
+					 // 	    phi_rollover = true;
+					 // 	    o.setSign(-1);
+                                         //            hit.setSign(+1);
+					 // 	}
+				 	 //    }
+					 //    //System.out.println( " r = " + o.r() + " o.phi = " + o.phi() + " o.doca = " + o.getDoca()*o.getSign() + " hit.phi " + hit.phi() +" hit.doca = " + hit.getDoca()*hit.getSign() + " angle between wires: " + Math.toRadians(360./hit.getNumWires()) + " >= ? angle covered by docas: " +  Math.atan( (o.getDoca()+hit.getDoca())/o.r() )  );
 				     }
 				}
-				//if(!aleardyHaveR)KF_hits.add(hit);
-				if (phi_rollover){
-				     KF_hits.add(KF_hits.size()-1, hit);
-				}else{
-				    KF_hits.add(hit);
-				}
+				if(!aleardyHaveR)KF_hits.add(hit);
+				// if (phi_rollover){
+				//      KF_hits.add(KF_hits.size()-1, hit);
+				// }else{
+				//     KF_hits.add(hit);
+				// }
 			}
 
 			double zbeam = 0;
