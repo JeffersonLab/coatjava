@@ -7,7 +7,7 @@ package org.jlab.rec.dc.nn;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,27 +28,34 @@ import org.jlab.rec.dc.hit.Hit;
 public class AIHitReader extends HitReader {
     private static final Logger LOGGER = Logger.getLogger(AIHitReader.class.getName());
     public static final int MAX_AITRACKS = 3;
-    private final Map<int[], double[]> aimatchtrk = new HashMap<>();
-    private final Map<Integer, List<Hit>> aimatchcls = new HashMap<>();//map cluster id to list of hits ids
-    private final Map<Integer, Integer> aihits = new HashMap<>();//map of hits ids
-    private DataEvent event;
-    public static final double OUTLIERCUT=1.2;
+    Map<int[], double[]> aimatchtrk;
+    Map<Integer, List<Hit>> aimatchcls;//map cluster id to list of hits ids
+    Map<Integer, Integer> aihits;//map of hits ids
+    
+    static final double OUTLIERCUT=1.2;
 
     public AIHitReader(Banks names, RawBank.OrderType[] rawBankOrders, ConstantsManager manager, DCGeant4Factory detector) {
         super(names, rawBankOrders, manager, detector);
+        aimatchtrk = new HashMap<>();
+        aimatchcls = new HashMap<>();//map cluster id to list of hits ids
+        aihits = new HashMap<>();//map of hits ids
     }
     public AIHitReader(Banks names, DCGeant4Factory detector) {
         super(names, detector);      
+        aimatchtrk = new HashMap<>();
+        aimatchcls = new HashMap<>();//map cluster id to list of hits ids
+        aihits = new HashMap<>();//map of hits ids
     }
     
     // Main method for reading NN hits
     public void read_NNHits(DataEvent event, boolean readInstarec, boolean enableMulti) {
         this.initialize(event);
-        this.event = event;
         boolean multi = false;
         if (readInstarec) 
             multi = enableMulti;
-           
+        aimatchtrk.clear();
+        aimatchcls.clear();//map cluster id to list of hits ids
+        aihits.clear();//map of hits ids   
         this.readNNHits(readInstarec, multi);
     }
 
@@ -117,7 +124,6 @@ public class AIHitReader extends HitReader {
                     ids[s] = cid;
             }
             ids=TrackSelector.removeArrayZeros(ids);
-            System.out.println(Arrays.toString(ids));
             
             if(cartesian) {
                 tPars[0] = (double) bankAI.getFloat("px", j);
@@ -144,8 +150,8 @@ public class AIHitReader extends HitReader {
             }    
             
         }
-        Set<Integer> setA = new HashSet<>();
-        Set<Integer> setB = new HashSet<>();
+        Set<Integer> setA = new LinkedHashSet<>();
+        Set<Integer> setB = new LinkedHashSet<>();
         for(TrackInfo ti: trackInfoLM.keySet()) {
             for(TrackInfo tj : trackInfoL) {
                 setA.clear();
@@ -175,6 +181,7 @@ public class AIHitReader extends HitReader {
     
     // Process top 3 tracks based on probability
     private void processTopTracks(Map<TrackInfo, List<TrackInfo>> trackInfoLs) { 
+        aimatchtrk.clear();
         for (List<TrackInfo> trackInfoList : trackInfoLs.values()) {
             trackInfoList.sort((a, b) -> Double.compare(b.getProb(), a.getProb()));
             

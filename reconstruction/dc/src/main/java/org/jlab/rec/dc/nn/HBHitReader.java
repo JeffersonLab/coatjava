@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -32,18 +33,24 @@ public class HBHitReader extends HitReader{
     private static final Logger LOGGER = Logger.getLogger(HBHitReader.class.getName());
     private static final int MAX_AITRACKS = 3;
     private String recBankName = "RECHB::Event";
-    private DataEvent event;
-    private final Map<int[], double[]> aimatchtrk = new HashMap<>();
-    private final Map<Integer, int[]> aimatchcls = new HashMap<>();//map cluster id to list of hits ids
-    private final Map<Triplet, Integer> aihits = new HashMap<>();//map of hits ids
+   // Map<int[], double[]> aimatchtrk ;
+    Map<Integer, int[]> aimatchcls ;//map cluster id to list of hits ids
+   // Map<Triplet, Integer> aihits ;//map of hits ids
     private TimeToDistanceEstimator tde;
     
     public HBHitReader(Banks names, RawBank.OrderType[] rawBankOrders, ConstantsManager manager, DCGeant4Factory detector) {
         super(names, rawBankOrders, manager, detector);
+       // aimatchtrk = new HashMap<>();
+        aimatchcls = new HashMap<>();//map cluster id to list of hits ids
+       // aihits = new HashMap<>();//map of hits ids
+        
     }
     
     // Main method for reading NN hits
     public void read_AITrkgHBHits(DataEvent event) {
+       // aimatchtrk.clear();
+       // aimatchcls.clear();
+       // aihits.clear();//map of hits ids
         this.initialize(event);
         this.event = event;
         tde = new TimeToDistanceEstimator();
@@ -53,13 +60,12 @@ public class HBHitReader extends HitReader{
     // Checks if two TrackInfo objects overlap
     static boolean overlaps(TrackInfo t, List<TrackInfo> trackInfoL) {
         boolean isInGroup = false;
-        Set<Integer> setA = new HashSet<>();
+        Set<Integer> setA = new LinkedHashSet<>();
         for (int num : t.getIds()) {
             if(num!=-1)
                 setA.add(num);
         }
-        Set<Integer> setB = new HashSet<>();
-        
+        Set<Integer> setB = new LinkedHashSet<>();
         for (TrackInfo ti : trackInfoL) {
             setB.clear();
             for (int num : ti.getIds()) {
@@ -96,10 +102,10 @@ public class HBHitReader extends HitReader{
         return trackInfoLs;
     }
 
-    // Reads InstruRec NN hits
+    // Reads Instratec NN hits
     private void readHBHits() {
         setDCHits(new ArrayList<>());
-        aimatchtrk.clear();
+        //aihits.clear();
 
         if (!event.hasBank(bankNames.getInputHitsBank())) {
             LOGGER.warning("Missing bank " + bankNames.getInputHitsBank());
@@ -121,61 +127,62 @@ public class HBHitReader extends HitReader{
         DataBank bank = event.getBank(bankNames.getInputHitsBank());
         DataBank banktids = event.getBank(bankNames.getInputIdsBank());
         DataBank bankCls = event.getBank(bankNames.getInputClustersBank());
-        DataBank bankTrks = event.getBank(bankNames.getInputTracksBank());
+        //
+        //DataBank bankTrks = event.getBank(bankNames.getInputTracksBank());
 
-        List<TrackInfo> trackInfoL = processTrackInfo(bankTrks);
-        List<List<TrackInfo>> trackInfoLs = getNNSeedLists(trackInfoL);
+        //List<TrackInfo> trackInfoL = processTrackInfo(bankTrks);
+        //List<List<TrackInfo>> trackInfoLs = getNNSeedLists(trackInfoL);
 
         // Process track info and match with top 3 tracks
-        processTopTracks(trackInfoLs);
+        //processTopTracks(trackInfoLs);
 
         // Process hits using the top 3 tracks
         processHits(bank,banktids,bankCls);
     }
 
     // Processes TrackInfo from the bank: key=track info ; value = pars
-    private List<TrackInfo> processTrackInfo(DataBank bank) {//bank = HitBasedTrkg::HBTracks
-        List<TrackInfo> trackInfoL = new ArrayList<>();
-        aimatchtrk.clear();
-        for (int j = 0; j < bank.rows(); j++) {
-            int[] ids = new int[6];
-            double[] tPars = new double[5];
+//    private List<TrackInfo> processTrackInfo(DataBank bank) {//bank = HitBasedTrkg::HBTracks
+//        List<TrackInfo> trackInfoL = new ArrayList<>();
+//        aimatchtrk.clear();
+//        for (int j = 0; j < bank.rows(); j++) {
+//            int[] ids = new int[6];
+//            double[] tPars = new double[5];
+//
+//            for (int s = 0; s < 6; s++) {
+//                String stg = "Cluster" + (s + 1);
+//                stg+="_ID";
+//                int cid = (int) bank.getShort(stg, j);
+//                if(cid!=-1)
+//                    ids[s] = cid;
+//            }
+//            ids=TrackSelector.removeArrayZeros(ids);
+//            
+//            tPars[0] = (double) bank.getFloat("p0_x", j);
+//            tPars[1] = (double) bank.getFloat("p0_y", j);
+//            tPars[2] = (double) bank.getFloat("p0_z", j);
+//            
+//            tPars[3] = (double) bank.getShort("id", j);
+//            tPars[4] = (double) bank.getFloat("chi2", j);
+//
+//            trackInfoL.add(new TrackInfo(ids, tPars));
+//            
+//        }
+//        return trackInfoL;
+//    }
 
-            for (int s = 0; s < 6; s++) {
-                String stg = "Cluster" + (s + 1);
-                stg+="_ID";
-                int cid = (int) bank.getShort(stg, j);
-                if(cid!=-1)
-                    ids[s] = cid;
-            }
-            ids=TrackSelector.removeArrayZeros(ids);
-            
-            tPars[0] = (double) bank.getFloat("p0_x", j);
-            tPars[1] = (double) bank.getFloat("p0_y", j);
-            tPars[2] = (double) bank.getFloat("p0_z", j);
-            
-            tPars[3] = (double) bank.getShort("id", j);
-            tPars[4] = (double) bank.getFloat("chi2", j);
-
-            trackInfoL.add(new TrackInfo(ids, tPars));
-            
-        }
-        return trackInfoL;
-    }
-
-    // Process top 3 tracks based on probability
-    private void processTopTracks(List<List<TrackInfo>> trackInfoLs) {
-        for (List<TrackInfo> trackInfoList : trackInfoLs) {
-            trackInfoList.sort((a, b) -> Double.compare(a.getProb(), b.getProb()));
-
-            // Only keep the top 3 tracks
-            trackInfoList = trackInfoList.subList(0, Math.min(MAX_AITRACKS, trackInfoList.size()));
-
-            for (TrackInfo trackInfo : trackInfoList) {
-                aimatchtrk.put(trackInfo.getIds(), trackInfo.getTPars());
-            }
-        }
-    }
+//    // Process top 3 tracks based on probability
+//    private void processTopTracks(List<List<TrackInfo>> trackInfoLs) {
+//        for (List<TrackInfo> trackInfoList : trackInfoLs) {
+//            trackInfoList.sort((a, b) -> Double.compare(a.getProb(), b.getProb()));
+//
+//            // Only keep the top 3 tracks
+//            trackInfoList = trackInfoList.subList(0, Math.min(MAX_AITRACKS, trackInfoList.size()));
+//
+//            for (TrackInfo trackInfo : trackInfoList) {
+//                aimatchtrk.put(trackInfo.getIds(), trackInfo.getTPars());
+//            }
+//        }
+//    }
 
     // Processes hits from the hbhitbank using the top 3 tracks
     private void processHits(DataBank hbhitbank, DataBank hbhittrkidbank, DataBank clusterbank) {

@@ -12,7 +12,6 @@ import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
 import cnuphys.snr.NoiseReductionParameters;
 import cnuphys.snr.clas12.Clas12NoiseAnalysis;
 import cnuphys.snr.clas12.Clas12NoiseResult;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -24,7 +23,6 @@ import org.jlab.detector.banks.RawDataBank;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.rec.dc.Constants;
-import org.jlab.service.dc.DCEngine;
 import org.jlab.utils.groups.IndexedList;
 import org.jlab.utils.groups.IndexedTable;
 
@@ -45,7 +43,7 @@ public class HitReader {
     
     private int run = 0;
     private long tiTimeStamp = 0;
-    private DataEvent event = null;
+    public DataEvent event = null;
         
     private IndexedTable tt          = null;
     private IndexedTable reverseTT   = null;

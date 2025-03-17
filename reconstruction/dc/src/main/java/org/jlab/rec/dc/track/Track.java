@@ -2,7 +2,9 @@ package org.jlab.rec.dc.track;
 
 import org.jlab.jnp.matrix.*;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
 import org.jlab.rec.dc.Constants;
@@ -20,6 +22,7 @@ import org.jlab.rec.dc.trajectory.Trajectory;
  */
 public class Track extends Trajectory implements Comparable<Track>{
 
+     public boolean nnSelected=false;
     /**
      * @return the finalStateVec
      */
@@ -520,7 +523,17 @@ public class Track extends Trajectory implements Comparable<Track>{
 
             return ((returnSec ==0) ? return_val_a6 : returnSec);
     }
-
+    private Set _segids ;
+    public void setSegmentIds() {
+        _segids = new LinkedHashSet<>();
+        List<Segment> segs = this.get_ListOfHBSegments();
+        for(int i =0; i< segs.size(); i++) {
+            _segids.add(segs.get(i).get_Id());
+        }
+    }
+    public Set getSegmentIds() {
+        return _segids;
+    }
    
 
 }

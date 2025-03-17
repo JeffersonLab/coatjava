@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -411,9 +412,10 @@ public class PatternIRec {
                         rf.polyfit);
             if(pSegment!=null) {
                 cf.Fit(pSegment.get_fittedCluster(), true); 
+                pSegment.roadchi2 =rf.polyfit_chi2_ov_ndf;
                 if(Constants.DEBUG) System.out.println("Found Missing Segment "+pSegment.printInfo());
             }
-            pSegment.roadchi2 =rf.polyfit_chi2_ov_ndf;
+            
             if(s1.get_RegionSlayer()==1) {
                 if(!TBT) {
                     cr1 = crf.getCross(s1, pSegment, DcDetector, 0, 2);
@@ -441,7 +443,7 @@ public class PatternIRec {
     }    
 
     public static List<Hit> Uniq(List<Hit> hits) {
-        Set<Hit> uniqueHits = new HashSet<>(hits); // Convert to Set to remove duplicates
+        Set<Hit> uniqueHits = new LinkedHashSet<>(hits); // Convert to Set to remove duplicates
         return new ArrayList<>(uniqueHits); // Convert back to List
     }
     

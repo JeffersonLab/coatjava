@@ -303,13 +303,15 @@ public class DCTBPostHBTAI extends DCEngine {
                 }
             }	   
         }
-        for(Track trk: trkcands) {
-            if(trk==null) System.out.println("TRACK IS NULL");
-        }
+        //for(Track trk: trkcands) {
+         //   if(trk==null) System.out.println("TRACK IS NULL");
+        //}
         if(!trkcands.isEmpty()) {
-            if(!saveMultiTB && enableMulti) {
-                tsel.removeInstarecOverlappingTracks(bankAI,
-                        enableMulti,trkcands);		// remove overlaps 
+            if(!saveMultiTB ) {
+                //tsel.removeInstarecOverlappingTracks(bankAI,
+                //        enableMulti,trkcands);		// remove overlaps 
+                trkcandFinder.removeOverlappingTracks(trkcands);
+               
             } 
             
             for(Track trk: trkcands) {
@@ -353,6 +355,9 @@ public class DCTBPostHBTAI extends DCEngine {
             rbc.fillAllTBBanks(event, fhits, clusters, segments, crosses, null); // no cand found, stop here and save the hits, the clusters, the segments, the crosses
             return true;
         }
+        
+        rbc.fillAllTBBanks(event, fhits, clusters, segments, crosses, trkcands);
+
         if(Constants.DEBUG || Constants.DEBUGLIGHT) {
             AIHitReader reader  = new AIHitReader(this.getBanks(), Constants.getInstance().dcDetector);
             reader.read_NNHits(event, useInstarec,false);
@@ -360,8 +365,6 @@ public class DCTBPostHBTAI extends DCEngine {
                " found tracks "+ trkcands.size());
             
         }
-        rbc.fillAllTBBanks(event, fhits, clusters, segments, crosses, trkcands);
-
         return true;
     }
    

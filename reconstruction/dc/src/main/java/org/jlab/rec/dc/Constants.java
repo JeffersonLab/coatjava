@@ -48,7 +48,7 @@ public class Constants {
     private static boolean ConstantsLoaded = false;
     
     public static boolean DEBUG = false;
-    public static boolean DEBUGLIGHT = true;
+    public static boolean DEBUGLIGHT = false;
     
     // CONSTATNS for TRANSFORMATION
     public static final double SIN25 = Math.sin(Math.toRadians(25.));
