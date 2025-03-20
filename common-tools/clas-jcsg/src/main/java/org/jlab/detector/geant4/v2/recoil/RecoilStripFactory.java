@@ -338,8 +338,8 @@ public final class RecoilStripFactory {
     public Line3D toLocal(int sector, Line3D global) {
         Line3D local = new Line3D();
         local.copy(global);
-	local.rotateY((-1+sector*2)*Math.toRadians(1.5*RecoilConstants.HORIZONTHAL_OPENING_ANGLE+270));
-        
+	if(sector==0)local.rotateY((Math.toRadians(RecoilConstants.HORIZONTHAL_OPENING_ANGLE/2+RecoilConstants.HORIZONTHAL_STARTING_ANGLE)));
+        if(sector==1)local.rotateY(-(Math.toRadians(RecoilConstants.HORIZONTHAL_OPENING_ANGLE/2+RecoilConstants.HORIZONTHAL_STARTING_ANGLE)));
         return local;
     }
     

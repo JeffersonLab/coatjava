@@ -101,9 +101,9 @@ public final class RecoilGeant4Factory extends Geant4Factory {
 	int ir=iregion;
         Vector3d vCenter = new Vector3d(0, 0, 0);
         
-	vCenter.x = (-1+is*2)*(RecoilConstants.RADIUS[iregion])*Math.sin(Math.toRadians(1.5*RecoilConstants.HORIZONTHAL_OPENING_ANGLE));
+	vCenter.x = (-1+is*2)*(RecoilConstants.RADIUS[iregion])*Math.sin(Math.toRadians(RecoilConstants.HORIZONTHAL_OPENING_ANGLE/2+RecoilConstants.HORIZONTHAL_STARTING_ANGLE));
 	vCenter.y = 0;
-	vCenter.z =RecoilConstants.RADIUS[iregion]*Math.cos(Math.toRadians(1.5*RecoilConstants.HORIZONTHAL_OPENING_ANGLE));
+	vCenter.z =RecoilConstants.RADIUS[iregion]*Math.cos(Math.toRadians(RecoilConstants.HORIZONTHAL_OPENING_ANGLE/2+RecoilConstants.HORIZONTHAL_STARTING_ANGLE));
         return vCenter;
     }
     
@@ -128,7 +128,9 @@ public final class RecoilGeant4Factory extends Geant4Factory {
 
 	Geant4Basic sectorVolume = new G4Box("region_recoil_" + (iregion + 1) + "_s" + (isector + 1),hlx,hly,hlz);
 
-	sectorVolume.rotate("yxz",(-1+isector*2)*Math.toRadians(1.5*RecoilConstants.HORIZONTHAL_OPENING_ANGLE+270),0,0);
+	//sectorVolume.rotate("yxz",(-1+isector*2)*Math.toRadians((RecoilConstants.HORIZONTHAL_OPENING_ANGLE/2+RecoilConstants.HORIZONTHAL_STARTING_ANGLE)),0,0);
+	if(isector==0)sectorVolume.rotate("yxz",Math.toRadians((RecoilConstants.HORIZONTHAL_OPENING_ANGLE/2+RecoilConstants.HORIZONTHAL_STARTING_ANGLE)),0,0);
+	if(isector==1)sectorVolume.rotate("yxz",Math.toRadians(-(RecoilConstants.HORIZONTHAL_OPENING_ANGLE/2+RecoilConstants.HORIZONTHAL_STARTING_ANGLE)),0,0);
         sectorVolume.translate(vCenter.x, vCenter.y, vCenter.z);
         sectorVolume.setId(isector + 1, iregion +1, 0, 0);
 	
@@ -218,15 +220,6 @@ public final class RecoilGeant4Factory extends Geant4Factory {
 	int i = iregion;
         double[] chamber_daughter_Dimensions = new double[3];
         
-	/*	chamber_daughter_Dimensions[0] = RecoilConstants.SECTORHEIGHT/RecoilConstants.NCHAMBERS/2 ;
-	chamber_daughter_Dimensions[1] = (ichamber*RecoilConstants.SECTORHEIGHT/RecoilConstants.NCHAMBERS)
-	    * Math.tan(Math.toRadians(RecoilConstants.THOPEN/2.))
-	    + RecoilConstants.DX0CHAMBER0 ;
-	
-	chamber_daughter_Dimensions[2] = (RecoilConstants.SECTORHEIGHT/RecoilConstants.NCHAMBERS)
-	    * Math.tan(Math.toRadians(RecoilConstants.THOPEN/2.))+chamber_daughter_Dimensions[1];
-	    */
-
 	chamber_daughter_Dimensions[0] = RecoilConstants.WIDTH[i]/2;
 	chamber_daughter_Dimensions[1] = RecoilConstants.HEIGHT[i]/2;
 	

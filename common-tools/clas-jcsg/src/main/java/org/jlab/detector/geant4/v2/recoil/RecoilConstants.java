@@ -15,23 +15,14 @@ public class RecoilConstants {
     public final static int NLAYERS     = 2;    //number of layers
     public final static int NCHAMBERS   = 1;    //number of chambers in a sector
 
-    public final static double HORIZONTHAL_OPENING_ANGLE = 34.;
+    public final static double HORIZONTHAL_STARTING_ANGLE = 40.;
+    public final static double HORIZONTHAL_OPENING_ANGLE = 29.;
     public final static double VERTICAL_OPENING_ANGLE = 50.;
-    public final static double RADIUS[] = {33.5,55.5,79.5};
+    public final static double RADIUS[] = {44,72,100};
     public final static double WIDTH[] = new double[NMAXREGIONS];
     public final static double HEIGHT[] = new double[NMAXREGIONS];
 
     public final static double THTILT = 0;            // theta tilt (deg)
-    /*    public final static double XENLARGEMENT = 0.5; // cm
-    public final static double YENLARGEMENT = 1.;  // cm
-    public final static double ZENLARGEMENT = 0.1; // cm
-   
-    // Sector geometrical parameters
-    public final static double THOPEN = 34.;           // opening angle between endplate planes (deg)
-    public final static double THTILT = 0;            // theta tilt (deg)
-    public final static double THMIN  = 4.694;         // polar angle to the base of first chamber (deg)
-    public final static double SECTORHEIGHT = 146.21;  //height of each sector (cm)
-    public final static double DX0CHAMBER0  = 5.197;   // halfbase of chamber 1  (cm)*/
   
     // Chamber volumes  and materials (units are cm)
     public final static double[] CHAMBERVOLUMESTHICKNESS = {0.0025, 0.0005,0.3,                                // window
@@ -48,15 +39,6 @@ public class RecoilConstants {
            "capa_sharing_layer2_glue","capa_sharing_layer2_Cr","capa_sharing_layer2_kapton",
            "readout1_glue", "readout1_Cu", "readout1_kapton", "readout2_glue", "readout2_Cu", "readout2_kapton", "readout3_glue",
            "support_skin1_g10", "support_honeycomb_nomex", "support_skin2_g10"};
-
-    // URWELL position in the CLAS12 frame 
-    /*    public final static double TGT2DC0    = 228.078; // cm            
-   // public final static double URWELL2DC0 = 2;       // cm
-    public final static double URWELL2DC0[] = new double[NMAXREGIONS];
-    public final static double DIST2TGT[] = new double[NMAXREGIONS];
-    public final static double W2TGT[] = new double[NMAXREGIONS];; 
-    public final static double YMIN[] = new double[NMAXREGIONS];
-    public final static double ZMIN[] = new double[NMAXREGIONS];*/
     
     public final static double PITCH = 0.1 ;       // cm
     public final static double STEREOANGLE = 90;   // deg
@@ -95,14 +77,8 @@ public class RecoilConstants {
 
              for (int i=0; i<NMAXREGIONS; i++){
                 
-/*                URWELL2DC0[i] =  -2.+i*1.3;
-		  DIST2TGT[i]   = (TGT2DC0+URWELL2DC0[i]);
-		  W2TGT[i] = DIST2TGT[i]/Math.cos(Math.toRadians(THTILT-THMIN));
-		  YMIN[i]= W2TGT[i]*Math.sin(Math.toRadians(THMIN)); // distance from the base chamber1 and beamline
-		  ZMIN[i] = W2TGT[i]*Math.cos(Math.toRadians(THMIN));  
-		 */
-		 WIDTH[i]=2.*RADIUS[i]*Math.sin(Math.toRadians(HORIZONTHAL_OPENING_ANGLE)/2);
-		 HEIGHT[i]=RADIUS[i]*Math.tan(Math.toRadians(VERTICAL_OPENING_ANGLE)/2);
+		 WIDTH[i]=2.*RADIUS[i]*Math.tan(Math.toRadians(HORIZONTHAL_OPENING_ANGLE)/2);
+		 HEIGHT[i]=2*RADIUS[i]*Math.tan(Math.toRadians(VERTICAL_OPENING_ANGLE)/2);
 	     }
     }
 }
