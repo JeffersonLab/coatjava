@@ -260,6 +260,7 @@ public class CLASDecoder4 {
             b.putShort("component", i, (short) a.get(i).getDescriptor().getComponent());
             b.putByte("order", i, (byte) a.get(i).getDescriptor().getOrder());
             b.putLong("timestamp", i, a.get(i).getADCData(0).getTimeStamp());
+            b.putInt("time", i, (int)a.get(i).getADCData(0).getTime());
             DetectorDataDgtz.ADCData xxx = a.get(i).getADCData(0);
             for (int j=0; j<xxx.getPulseSize(); ++j)
                 b.putShort(String.format("s%d",j+1), i, xxx.getPulseValue(j));

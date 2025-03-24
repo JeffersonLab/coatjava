@@ -20,11 +20,13 @@ public class Mode3 extends HipoExtractor {
     /**
      * @param pars CCDB row
      * @param id link to row in source bank
+     * @param par1
+     * @param par2
      * @param samples ADC samples
      * @return extracted pulses 
      */
     @Override
-    public List<Pulse> extract(NamedEntry pars, int id, short... samples) {
+    public List<Pulse> extract(NamedEntry pars, int id, long par1, long par2, short... samples) {
 
         List<Pulse> pulses = null;
 

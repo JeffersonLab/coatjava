@@ -73,7 +73,8 @@
       { "name":"s61"        , "type":"S", "info":""},
       { "name":"s62"        , "type":"S", "info":""},
       { "name":"s63"        , "type":"S", "info":""},
-      { "name":"s64"        , "type":"S", "info":""}
+      { "name":"s64"        , "type":"S", "info":""},
+      { "name":"time"       , "type":"S", "info":"for fine time correction"}
     ]
   },
   {
