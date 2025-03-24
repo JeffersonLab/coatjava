@@ -79,7 +79,9 @@ public class AHDCEngine extends ReconstructionEngine {
 			HitReader hitRead = new HitReader(event, simulation);
 
 			ArrayList<Hit>     AHDC_Hits     = hitRead.get_AHDCHits();
-			ArrayList<TrueHit> TrueAHDC_Hits = hitRead.get_TrueAHDCHits();
+			if(simulation){
+				ArrayList<TrueHit> TrueAHDC_Hits = hitRead.get_TrueAHDCHits();
+			}
 			//System.out.println("AHDC_Hits size " + AHDC_Hits.size());
 			
 			// II) Create PreCluster
