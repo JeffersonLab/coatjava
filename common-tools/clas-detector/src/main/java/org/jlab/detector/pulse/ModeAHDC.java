@@ -5,11 +5,7 @@ import java.util.ArrayList;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.jnp.hipo4.data.Bank;
-import org.jlab.jnp.hipo4.data.Event;
-import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.utils.groups.IndexedTable;
-
-import net.jcip.annotations.GuardedBy;
 import org.jlab.utils.groups.NamedEntry;
 
 
@@ -32,7 +28,7 @@ public class ModeAHDC extends HipoExtractor  {
 	 * @param samples ADC samples
 	 */
 	@Override
-	public List<Pulse> extract(NamedEntry pars, int id, short... samples){
+	public List<Pulse> extract(NamedEntry pars, int id, long par1, long par2, short... samples){
 		// Settings parameters (they can be initialised by a CCDB)
 		float samplingTime = 44;
 		int sparseSample = 0;
