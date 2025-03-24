@@ -74,7 +74,7 @@
       { "name":"s62"        , "type":"S", "info":""},
       { "name":"s63"        , "type":"S", "info":""},
       { "name":"s64"        , "type":"S", "info":""},
-      { "name":"time"       , "type":"S", "info":"for fine time correction"}
+      { "name":"time"       , "type":"I", "info":"for fine time correction"}
     ]
   },
   {

@@ -130,7 +130,7 @@ public abstract class HipoExtractor implements IExtractor {
             for (int j=0; j<n; ++j)
                 samples[j] = wfBank.getShort(String.format("s%d",j+1), i);
 	    long timestamp = wfBank.getLong("timestamp",i);
-	    long time = wfBank.getLong("time",i);
+	    int time = wfBank.getInt("time",i);
             List<Pulse> p = it==null ? extract(null, i, timestamp, time, samples) :
                 extract(it.getNamedEntry(getIndices(wfBank,i)), i, timestamp, time, samples);
             if (p!=null && !p.isEmpty()) {
@@ -149,7 +149,7 @@ public abstract class HipoExtractor implements IExtractor {
                 samples[j] = wfBank.getShort(String.format("s%d",j+1), i);
                 // FIXME:  Can speed this up (but looks like not for DataBank?):
                 //samples[j] = wfBank.getShort(String.format(5+j,j+1), i);
-	    long time = wfBank.getLong("time",i);
+	    int time = wfBank.getInt("time",i);
 	    long timestamp = wfBank.getLong("timestamp",i);
             List p = it==null ? extract(null, i, timestamp, time, samples) :
                 extract(it.getNamedEntry(getIndices(wfBank,i)), i, timestamp, time, samples);
