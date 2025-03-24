@@ -188,33 +188,19 @@ public class ClusterCleanerUtilities {
                     }
                 }
             }
-            //no gaps
-            List<Hit> contigArrayOfHits = new ArrayList<>(); //contiguous cluster
-
-            boolean passCluster = true;
-            for (int l = 1; l <= Constants.NLAYR; l++) {
-                for (int i = 0; i < newClus.size(); i++) {
-                    if (newClus.get(i).get_Layer() == l) {
-                        contigArrayOfHits.add(newClus.get(i));
-                    }
+                        
+            //Limits for cluster candiates
+            boolean passCluster = false;
+            int nLayers = count_nlayers_in_cluster(newClus);
+            if((!isExceptionalCluster(newClus) && nLayers >= Constants.DC_MIN_NLAYERS) 
+                    || (isExceptionalCluster(newClus) && nLayers >= Constants.DC_MIN_NLAYERS - 1)) {                            
+                //require consistency with line
+                cf.SetFitArray(newClus, "LC");
+                cf.Fit(newClus, true);
+                if ((nLayers == 6 && newClus.get_fitProb() > 0.9) ||  (nLayers == 5 && newClus.get_fitProb() > 0.85)
+                        || (nLayers == 4 && newClus.get_fitProb() > 0.75) || (nLayers == 3 && newClus.get_fitProb() > 0.65)) {
+                    passCluster = true;
                 }
-            }
-            for (int i = 0; i < contigArrayOfHits.size() - 1; i++) { //if there is a gap do not include in list
-                if (contigArrayOfHits.get(i + 1).get_Layer() - contigArrayOfHits.get(i).get_Layer() > 1) {
-                    passCluster = false;
-                }
-            }
-            //require 4 layers to make a cluster
-            if ((!isExceptionalCluster(contigArrayOfHits) && count_nlayers_in_cluster(contigArrayOfHits) < Constants.DC_MIN_NLAYERS) 
-                    || (isExceptionalCluster(contigArrayOfHits) && count_nlayers_in_cluster(contigArrayOfHits) < Constants.DC_MIN_NLAYERS - 1)) {
-                passCluster = false;
-            }
-
-            //require consistency with line
-            cf.SetFitArray(newClus, "LC");
-            cf.Fit(newClus, true);
-            if (newClus.get_fitProb() < 0.9) {
-                passCluster = false;
             }
 
             if (!(splitclusters.contains(newClus)) && passCluster) {
@@ -314,7 +300,7 @@ public class ClusterCleanerUtilities {
      * @param hitsInClus the hits in a cluster
      * @return the number of layers in a cluster
      */
-    int count_nlayers_in_cluster(List<Hit> hitsInClus) {
+    int count_nlayers_in_cluster(List<? extends Hit> hitsInClus) {
         // count hits in each layer
         int nlayr = 6;
         int[] nlayers = new int[nlayr];
