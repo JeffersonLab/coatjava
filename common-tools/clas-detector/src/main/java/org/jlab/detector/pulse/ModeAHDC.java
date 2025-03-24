@@ -2,6 +2,12 @@ package org.jlab.detector.pulse;
 
 import java.util.List;
 import java.util.ArrayList;
+import org.jlab.io.base.DataBank;
+import org.jlab.io.base.DataEvent;
+import org.jlab.jnp.hipo4.data.Bank;
+import org.jlab.jnp.hipo4.data.Event;
+import org.jlab.jnp.hipo4.data.SchemaFactory;
+import org.jlab.utils.groups.IndexedTable;
 
 import net.jcip.annotations.GuardedBy;
 import org.jlab.utils.groups.NamedEntry;
@@ -28,15 +34,15 @@ public class ModeAHDC extends HipoExtractor  {
 	@Override
 	public List<Pulse> extract(NamedEntry pars, int id, short... samples){
 		// Settings parameters (they can be initialised by a CCDB)
-		float samplingTime = 0;
+		float samplingTime = 44;
 		int sparseSample = 0;
 		short adcOffset = 0;
 		long timeStamp = 0;
 		float fineTimeStampResolution = 0;
 
-		float amplitudeFractionCFA = 0;
-		int binDelayCFD = 0;
-		float fractionCFD = 0;
+		float amplitudeFractionCFA = 0.5f;
+		int binDelayCFD = 5;
+		float fractionCFD = 0.3f;
 
 		// Calculation intermediaries
 		int binMax = 0; //Bin of the max ADC over the pulse
@@ -52,7 +58,7 @@ public class ModeAHDC extends HipoExtractor  {
 		float leadingEdgeTime = 0; // moment when the signal reaches a Constant Fraction of its Amplitude uphill (fitted)
 		float trailingEdgeTime = 0; // moment when the signal reaches a Constant Fraction of its Amplitude downhill (fitted)
 		float timeOverThreshold = 0; // is equal to (timeFallCFA - timeRiseCFA)
-		float constantFractionTime ; // time extracted using the Constant Fraction Discriminator (CFD) algorithm (fitted)
+		float constantFractionTime = 0; // time extracted using the Constant Fraction Discriminator (CFD) algorithm (fitted)
 		/// /////////////////////////
 		// Begin waveform correction
 		/// ////////////////////////
@@ -69,11 +75,14 @@ public class ModeAHDC extends HipoExtractor  {
 		//private void waveformCorrection(short[] samples, short adcOffset, float samplingTime, int sparseSample, int binMax, int adcMax, int integral, short samplesCorr[], int binOffset, int timeMax){
 			binNumber = samples.length;
 			binMax = 0;
+			if (binNumber >= 5) {
+				adcOffset = (short) ((samples[0] + samples[1] + samples[2] + samples[3] + samples[4])/5); // try to estimate the baseline (pedestal) using the first five samples
+			}
 			adcMax = (short) (samples[0] - adcOffset);
 			integral = 0;
 			samplesCorr = new short[binNumber];
 			for (int bin = 0; bin < binNumber; bin++){
-				samplesCorr[bin] = (short) (samples[bin] - adcOffset);
+				samplesCorr[bin] = (short) Math.max(samples[bin] - adcOffset, 0);
 				if (adcMax < samplesCorr[bin]){
 					adcMax = samplesCorr[bin];
 					binMax = bin;
@@ -233,6 +242,7 @@ public class ModeAHDC extends HipoExtractor  {
 		//}
 		// output
 		Pulse pulse = new Pulse();
+		pulse.id = id;
 		pulse.adcMax = adcMax;
 		pulse.time = timeMax;
 		pulse.timestamp = timestamp;
@@ -255,4 +265,49 @@ public class ModeAHDC extends HipoExtractor  {
 	private void fitParabolic(float samplingTime) {
 
 	}
+
+	@Override
+	public void update(int n, IndexedTable it, DataEvent event, String wfBankName, String adcBankName) {
+        DataBank wf = event.getBank(wfBankName);
+        if (wf.rows() > 0) {
+            event.removeBank(adcBankName);
+            List<Pulse> pulses = getPulses(n, it, wf);
+            if (pulses != null && !pulses.isEmpty()) {
+                DataBank adc = event.createBank(adcBankName, pulses.size());
+                for (int i=0; i<pulses.size(); ++i) {
+                    copyIndices(wf, adc, i, i);
+                    adc.setInt("ADC", i, (int)pulses.get(i).adcMax);
+                    adc.setFloat("time", i, pulses.get(i).time);
+                    adc.setFloat("leadingEdgeTime", i, pulses.get(i).leadingEdgeTime);
+                    adc.setFloat("timeOverThreshold", i, pulses.get(i).timeOverThreshold);
+                    adc.setFloat("constantFractionTime", i, pulses.get(i).constantFractionTime);
+                    adc.setInt("integral", i, (int)pulses.get(i).integral);
+                    adc.setShort("ped", i, (short)pulses.get(i).pedestal);
+                }
+                event.appendBank(adc);
+            }
+        }
+    }
+
+	@Override
+	protected void update(int n, IndexedTable it, Bank wfBank, Bank adcBank) { 
+		if (wfBank.getRows() > 0) { 
+			List<Pulse> pulses = getPulses(n, it, wfBank); 
+			adcBank.reset(); 
+			adcBank.setRows(pulses!=null ? pulses.size() : 0); 
+			if (pulses!=null && !pulses.isEmpty()) { 
+				for (int i=0; i<pulses.size(); ++i) { 
+					copyIndices(wfBank, adcBank, pulses.get(i).id, i); 
+					adcBank.putInt("ADC", i, (int)pulses.get(i).adcMax); 
+					adcBank.putFloat("time", i, pulses.get(i).time); 
+					adcBank.putFloat("leadingEdgeTime", i, pulses.get(i).leadingEdgeTime); 
+					adcBank.putFloat("timeOverThreshold", i, pulses.get(i).timeOverThreshold); 
+					adcBank.putFloat("constantFractionTime", i, pulses.get(i).constantFractionTime); 
+					adcBank.putInt("integral", i, (int)pulses.get(i).integral); 
+					adcBank.putShort("ped", i, (short)pulses.get(i).pedestal); 
+				} 
+			} 
+		} 
+	}
+
 }

@@ -91,7 +91,7 @@ public abstract class HipoExtractor implements IExtractor {
         }
     }
 
-    private static void copyIndices(Bank src, Bank dest, int isrc, int idest) {
+    protected static void copyIndices(Bank src, Bank dest, int isrc, int idest) {
         dest.putByte("sector", idest, src.getByte("sector",isrc));
         dest.putByte("layer", idest, src.getByte("layer",isrc));
         dest.putShort("component", idest, src.getShort("component",isrc));
@@ -99,7 +99,7 @@ public abstract class HipoExtractor implements IExtractor {
         dest.putShort("windex", idest, (short)isrc);
     }
 
-    private static void copyIndices(DataBank src, DataBank dest, int isrc, int idest) {
+    protected static void copyIndices(DataBank src, DataBank dest, int isrc, int idest) {
         dest.setByte("sector", idest, src.getByte("sector",isrc));
         dest.setByte("layer", idest, src.getByte("layer",isrc));
         dest.setShort("component", idest, src.getShort("component",isrc));
@@ -107,7 +107,7 @@ public abstract class HipoExtractor implements IExtractor {
         dest.setShort("windex", idest, (short)isrc);
     }
 
-    private static int[] getIndices(Bank bank, int row) {
+    protected static int[] getIndices(Bank bank, int row) {
         return new int[] {
             bank.getShort("sector", row),
             bank.getShort("layer", row),
@@ -115,7 +115,7 @@ public abstract class HipoExtractor implements IExtractor {
             bank.getShort("order", row)};
     }
 
-    private static int[] getIndices(DataBank bank, int row) {
+    protected static int[] getIndices(DataBank bank, int row) {
         return new int[] {
             bank.getShort("sector", row),
             bank.getShort("layer", row),
@@ -123,7 +123,7 @@ public abstract class HipoExtractor implements IExtractor {
             bank.getShort("order", row)};
     }
 
-    private List<Pulse> getPulses(int n, IndexedTable it, DataBank wfBank) {
+    protected List<Pulse> getPulses(int n, IndexedTable it, DataBank wfBank) {
         List<Pulse> pulses = null;
         short[] samples = new short[n];
         for (int i=0; i<wfBank.rows(); ++i) {
@@ -139,7 +139,7 @@ public abstract class HipoExtractor implements IExtractor {
         return pulses;
     }
 
-    private List<Pulse> getPulses(int n, IndexedTable it, Bank wfBank) {
+    protected List<Pulse> getPulses(int n, IndexedTable it, Bank wfBank) {
         List<Pulse> pulses = null;
         short[] samples = new short[n];
         for (int i=0; i<wfBank.getRows(); ++i) {
