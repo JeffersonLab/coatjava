@@ -1,9 +1,5 @@
 package org.jlab.service.dc;
 
-import cnuphys.snr.NoiseReductionParameters;
-import cnuphys.snr.clas12.Clas12NoiseAnalysis;
-import cnuphys.snr.clas12.Clas12NoiseResult;
-
 import java.util.List;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.io.base.DataEvent;
@@ -45,27 +41,16 @@ public class DCHBClustering extends DCEngine {
         // get Field
         Swim dcSwim = new Swim();
         /* 2 */
-        // init SNR
-        Clas12NoiseResult results = new Clas12NoiseResult();
-        /* 3 */
-        Clas12NoiseAnalysis noiseAnalysis = new Clas12NoiseAnalysis();
-        /* 4 */
-        NoiseReductionParameters parameters =
-                new NoiseReductionParameters(
-                        2,
-                        Constants.SNR_LEFTSHIFTS,
-                        Constants.SNR_RIGHTSHIFTS);
-        /* 5 */
         ClusterFitter cf = new ClusterFitter();
-        /* 6 */
+        /* 3 */
         ClusterCleanerUtilities ct = new ClusterCleanerUtilities();
-        /* 7 */
+        /* 4 */
         RecoBankWriter rbc = new RecoBankWriter(this.getBanks());
-        /* 8 */
+        /* 5 */
         HitReader hitRead = new HitReader(this.getBanks(), this.getRawBankOrders(), super.getConstantsManager(), Constants.getInstance().dcDetector);
-        /* 9 */
-        hitRead.fetch_DCHits(event, noiseAnalysis, parameters, results);
-        /* 10 */
+        /* 6 */
+        hitRead.fetch_DCHits(event);
+        /* 7 */
         //I) get the hits
         List<Hit> hits = hitRead.get_DCHits(Constants.getInstance().SECTORSELECT);
         //II) process the hits
@@ -73,7 +58,7 @@ public class DCHBClustering extends DCEngine {
         if (hits.isEmpty()) {
             return true;
         }
-        /* 11 */
+        /* 8 */
         //2) find the clusters from these hits
         ClusterFinder clusFinder = new ClusterFinder();
         List<FittedCluster> clusters = clusFinder.FindHitBasedClusters(hits,
@@ -84,7 +69,7 @@ public class DCHBClustering extends DCEngine {
             return true;
         } else {
             List<FittedHit> fhits = rbc.createRawHitList(hits);
-            /* 13 */
+            /* 9 */
             rbc.updateListsWithClusterInfo(fhits, clusters);
             event.appendBanks(rbc.fillHitsBank(event, fhits),
                     rbc.fillHBClustersBank(event, clusters)
