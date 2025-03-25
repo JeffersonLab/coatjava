@@ -39,6 +39,10 @@ public class PreclusterSuperlayer {
         return y;
     }
 
+    public int getSuperlayer() {
+        return this.preclusters.get(0).get_Super_layer();
+    }
+
 
     public String toString() {
         return "PreCluster{" + "X: " + this.x + " Y: " + this.y + " phi: " + Math.atan2(this.y, this.x) + "}\n";
