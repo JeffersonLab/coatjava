@@ -111,6 +111,7 @@ public class AHDCEngine extends ReconstructionEngine {
 
 			// If there is too much hits, we rely on to the conventional track finding
 			if (AHDC_Hits.size() > 300) mode = Mode.CV_Track_Finding;
+
 			if (mode == Mode.CV_Track_Finding) {
 				if (findingMethod.equals("distance")) {
 					// IV) a) Distance method
@@ -141,9 +142,8 @@ public class AHDCEngine extends ReconstructionEngine {
 				ArrayList<ArrayList<PreclusterSuperlayer>> tracks = new ArrayList<>();
 				boolean sucess = trackConstruction.get_all_possible_track(preclusterSuperlayers, tracks);
 
-				//System.out.println("nb of track candidates: " + tracks.size());
 				if (!sucess) {
-					// System.err.println("Too much tracks candidates, exit");
+					System.err.println("Too much tracks candidates, exit");
 					return false;
 				}
 
@@ -164,7 +164,7 @@ public class AHDCEngine extends ReconstructionEngine {
 
 			//Temporary track method ONLY for MC with no background;
 			//AHDC_Tracks.add(new Track(AHDC_Hits));
-			/* 
+			
 			// V) Global fit
 			for (Track track : AHDC_Tracks) {
 				int nbOfPoints = track.get_Clusters().size();
@@ -208,7 +208,7 @@ public class AHDCEngine extends ReconstructionEngine {
 				DataBank recoMCBank = writer.fillAHDCMCTrackBank(event);
 				event.appendBank(recoMCBank);
 			}
-			*/
+			
 
 		}
 		return true;
