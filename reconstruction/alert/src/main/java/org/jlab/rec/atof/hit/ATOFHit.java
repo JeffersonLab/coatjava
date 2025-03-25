@@ -21,6 +21,7 @@ public class ATOFHit {
     private String type;
     private boolean isInACluster;
     private int associatedClusterIndex;
+    int idTDC;
 
     public int getSector() {
         return sector;
@@ -125,13 +126,21 @@ public class ATOFHit {
     public void setIsInACluster(boolean is_in_a_cluster) {
         this.isInACluster = is_in_a_cluster;
     }
-    
+
     public int getAssociatedClusterIndex() {
         return associatedClusterIndex;
     }
 
     public void setAssociatedClusterIndex(int index) {
         this.associatedClusterIndex = index;
+    }
+
+    public int getIdTDC() {
+        return idTDC;
+    }
+
+    public void setIdTDC(int index) {
+        this.idTDC = index;
     }
 
     /**
@@ -143,7 +152,7 @@ public class ATOFHit {
         return 4 * this.sector + this.layer;
     }
 
-     /**
+    /**
      * Assigns a type to the hit.
      *
      */
@@ -151,9 +160,9 @@ public class ATOFHit {
         //Type of hit can be wedge, bar up, bar down or bar.
         //Avoids testing components and order every time.
         String itype = "undefined";
-        if (this.component == 10 && this.order == 1) {
+        if (this.component == 10 && this.order == 0) {
             itype = "bar down";
-        } else if (this.component == 10 && this.order == 0) {
+        } else if (this.component == 10 && this.order == 1) {
             itype = "bar up";
         } else if (this.component < 10) {
             itype = "wedge";
@@ -300,8 +309,8 @@ public class ATOFHit {
      * returns {@code false}.</li>
      * <li>If either hit is not in the bar (component must be 10), the method
      * returns {@code false}.</li>
-     * <li>If both hits are in the same SiPM (i.e., their order is the same),
-     * or have incorrect order, the method returns {@code false}.</li>
+     * <li>If both hits are in the same SiPM (i.e., their order is the same), or
+     * have incorrect order, the method returns {@code false}.</li>
      * </ul>
      * If none of these conditions are violated, the method returns
      * {@code true}, indicating the two hits match.
@@ -312,16 +321,16 @@ public class ATOFHit {
     public boolean matchBar(ATOFHit hit2match) {
         if (this.getSector() != hit2match.getSector()) {
             //Two hits in different sectors
-            return false; 
+            return false;
         } else if (this.getLayer() != hit2match.getLayer()) {
             //Two hits in different layers
-            return false; 
+            return false;
         } else if (this.getComponent() != 10 || hit2match.getComponent() != 10) {
             //At least one hit not in the bar
-            return false; 
+            return false;
         } else if (this.getOrder() > 1 || hit2match.getOrder() > 1) {
             //At least one hit has incorrect order
-            return false; 
+            return false;
         } else {
             //Match if one is order 0 and the other is order 1
             return this.getOrder() != hit2match.getOrder();
@@ -366,9 +375,9 @@ public class ATOFHit {
         this.convertSLCToXYZ(atof);
     }
 
-    public ATOFHit(){
+    public ATOFHit() {
     }
-    
+
     /**
      * @param args the command line arguments
      */
