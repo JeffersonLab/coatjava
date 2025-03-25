@@ -138,8 +138,14 @@ public class AHDCEngine extends ReconstructionEngine {
 				ArrayList<PreCluster> preClustersAI = preClustering.find_preclusters_for_AI(AHDC_Hits);
 				ArrayList<PreclusterSuperlayer> preclusterSuperlayers = preClustering.merge_preclusters(preClustersAI);
 				TrackConstruction trackConstruction = new TrackConstruction();
-				ArrayList<ArrayList<PreclusterSuperlayer>> tracks = trackConstruction.get_all_possible_track(preclusterSuperlayers);
+				ArrayList<ArrayList<PreclusterSuperlayer>> tracks = new ArrayList<>();
+				boolean sucess = trackConstruction.get_all_possible_track(preclusterSuperlayers, tracks);
 
+				//System.out.println("nb of track candidates: " + tracks.size());
+				if (!sucess) {
+					// System.err.println("Too much tracks candidates, exit");
+					return false;
+				}
 
 				try {
 					AIPrediction aiPrediction = new AIPrediction();
@@ -158,7 +164,7 @@ public class AHDCEngine extends ReconstructionEngine {
 
 			//Temporary track method ONLY for MC with no background;
 			//AHDC_Tracks.add(new Track(AHDC_Hits));
-
+			/* 
 			// V) Global fit
 			for (Track track : AHDC_Tracks) {
 				int nbOfPoints = track.get_Clusters().size();
@@ -180,7 +186,7 @@ public class AHDCEngine extends ReconstructionEngine {
 			// VI) Kalman Filter
 			// System.out.println("AHDC_Tracks = " + AHDC_Tracks);
 			KalmanFilter kalmanFitter = new KalmanFilter(AHDC_Tracks, event);
-
+			
 			// VII) Write bank
 			RecoBankWriter writer = new RecoBankWriter();
 
@@ -202,6 +208,7 @@ public class AHDCEngine extends ReconstructionEngine {
 				DataBank recoMCBank = writer.fillAHDCMCTrackBank(event);
 				event.appendBank(recoMCBank);
 			}
+			*/
 
 		}
 		return true;
@@ -212,9 +219,9 @@ public class AHDCEngine extends ReconstructionEngine {
 		double starttime = System.nanoTime();
 
 		int    nEvent     = 0;
-		int    maxEvent   = 1000;
+		int    maxEvent   = 10;
 		int    myEvent    = 3;
-		String inputFile  = "alert_out_update.hipo";
+		String inputFile  = "merged_10.hipo";
 		String outputFile = "output.hipo";
 
 		if (new File(outputFile).delete()) System.out.println("output.hipo is delete.");
