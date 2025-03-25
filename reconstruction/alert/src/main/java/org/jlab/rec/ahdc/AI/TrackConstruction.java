@@ -8,12 +8,31 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
+/**
+ * The TrackConstruction class is responsible for constructing all possible track 
+ * candidates from a set of superpreclusters.
+ */
 public class TrackConstruction {
     private int max_number_of_track_candidates = 10000;
     private double max_angle = Math.toRadians(60);
 
+    /**
+     * Default constructor.
+     */
     public TrackConstruction() {}
 
+    /**
+     * Computes the modulo operation, which returns the remainder of the division
+     * of one number by another. This method handles floating-point edge cases
+     * to ensure accurate results within the expected range.
+     *
+     * @param x The dividend.
+     * @param y The divisor. If y is 0, the method returns x.
+     * @return The result of x modulo y. The result is in the range:
+     *         - [0..y) if y > 0
+     *         - (y..0] if y < 0
+     *         Special cases are handled to avoid floating-point inaccuracies.
+     */
     private double mod(double x, double y) {
 
         if (0. == y) return x;
@@ -37,21 +56,46 @@ public class TrackConstruction {
         return m;
     }
 
+    
+    /**
+     * Wraps an angle to the range [0, 2π).
+     *
+     * @param angle The angle to wrap.
+     * @return The angle wrapped to the range [0, 2π).
+     */
     private double warp_zero_two_pi(double angle) { return mod(angle, 2. * Math.PI); }
 
+    /**
+     * Checks if an angle is within a specified range.
+     *
+     * @param angle The angle to check.
+     * @param lower The lower bound of the range.
+     * @param upper The upper bound of the range.
+     * @return {@code true} if the angle is within the range, {@code false} otherwise.
+     */
     private boolean angle_in_range(double angle, double lower, double upper) { return warp_zero_two_pi(angle - lower) <= warp_zero_two_pi(upper - lower); }
 
-
+    /**
+     * Computes the Cartesian product of two lists of integers, ensuring the number of track candidates
+     * does not exceed the maximum allowed limit.
+     *
+     * @param v1 The first list of integer combinations.
+     * @param v2 The second list of integers to combine with the first list.
+     * @param too_much_track_candidates A mutable boolean that is set to {@code true} if the number of track candidates exceeds the maximum limit.
+     * @param number_of_track_candidates The current count of track candidates.
+     * @return A list of all possible combinations of integers from {@code v1} and {@code v2}.
+     */
     private ArrayList<ArrayList<Integer>> cartesian_product(ArrayList<ArrayList<Integer>> v1, ArrayList<Integer> v2, MutableBoolean too_much_track_candidates, int number_of_track_candidates) {
         ArrayList<ArrayList<Integer>> result = new ArrayList<>();
         for (ArrayList<Integer> i : v1) {
             if (too_much_track_candidates.booleanValue()) break;
             for (int j : v2) {
-                ArrayList<Integer> newCombination = new ArrayList<>(i);
-                newCombination.add(j);
-                result.add(newCombination);
-                
-                if (number_of_track_candidates + result.size() > max_number_of_track_candidates) {
+                if (too_much_track_candidates.booleanValue()) break;
+                ArrayList<Integer> n = new ArrayList<>(i);
+                n.add(j);
+                result.add(n);
+
+                if (number_of_track_candidates + result.size() >= max_number_of_track_candidates) {
                     too_much_track_candidates.setValue(true);
                     break;
                 }
@@ -64,17 +108,28 @@ public class TrackConstruction {
 
     public boolean get_all_possible_track(ArrayList<PreclusterSuperlayer> preclusterSuperlayers, ArrayList<ArrayList<PreclusterSuperlayer>> all_track_candidates) {
 
+        /*
+        Identify all superpreclusters located in the first superlayer.
+        These superpreclusters serve as seeds for constructing track candidates.
+        A track candidate always starts from a seed.
+        */
         ArrayList<Integer> seed_index = new ArrayList<>();
         for (int i = 0; i < preclusterSuperlayers.size(); i++) {
-            if (preclusterSuperlayers.get(i).getPreclusters().get(0).get_Super_layer() == 1) seed_index.add(i);
+            if (!preclusterSuperlayers.get(i).getPreclusters().isEmpty() &&
+            preclusterSuperlayers.get(i).getSuperlayer() == 1) {
+            seed_index.add(i);
+            }
         }
 
-        // System.out.println("New event: -------------------------------------------------------------------------");
 
         boolean sucess = true;
         int number_of_track_candidates = 0;
+
+        // Loop over all seeds to construct track candidates
         for (int s : seed_index) {
+            // Check if the number of track candidates exceeds the maximum limit if so, stop the loop
             if (!sucess) break;
+
             // Find all superpreclusters that have a phi angle within phi angle of the seed +/- 60 degrees
             // The goal is to reduce the number of superpreclusters to loop over
             double phi_seed = warp_zero_two_pi(Math.atan2(preclusterSuperlayers.get(s).getY(), preclusterSuperlayers.get(s).getX()));  // phi angle of the seed
@@ -86,48 +141,48 @@ public class TrackConstruction {
                 }
             }
 
+
             // Sort the superpreclusters by superlayer to have a simpler loops after
-            ArrayList<ArrayList<Integer>> superpreclusters_s1 = new ArrayList<>(List.of(new ArrayList<>(List.of(s))));
-            ArrayList<Integer> superpreclusters_s3 = new ArrayList<>(new ArrayList<>());
-            ArrayList<Integer> superpreclusters_s4 = new ArrayList<>(new ArrayList<>());
-            ArrayList<Integer> superpreclusters_s2 = new ArrayList<>(new ArrayList<>());
-            ArrayList<Integer> superpreclusters_s5 = new ArrayList<>(new ArrayList<>());
+            ArrayList<Integer> superpreclusters_s1 = new ArrayList<>(List.of(s));
+            ArrayList<Integer> superpreclusters_s3 = new ArrayList<>();
+            ArrayList<Integer> superpreclusters_s4 = new ArrayList<>();
+            ArrayList<Integer> superpreclusters_s2 = new ArrayList<>();
+            ArrayList<Integer> superpreclusters_s5 = new ArrayList<>();
 
             for (int i = 0; i < all_superpreclusters.size(); i++) {
                 if (preclusterSuperlayers.get(all_superpreclusters.get(i)).getPreclusters().get(0).get_Super_layer() == 2)
                     superpreclusters_s2.add(all_superpreclusters.get(i));
-                if (preclusterSuperlayers.get(all_superpreclusters.get(i)).getPreclusters().get(0).get_Super_layer() == 3)
+                else if (preclusterSuperlayers.get(all_superpreclusters.get(i)).getPreclusters().get(0).get_Super_layer() == 3)
                     superpreclusters_s3.add(all_superpreclusters.get(i));
-                if (preclusterSuperlayers.get(all_superpreclusters.get(i)).getPreclusters().get(0).get_Super_layer() == 4)
+                else if (preclusterSuperlayers.get(all_superpreclusters.get(i)).getPreclusters().get(0).get_Super_layer() == 4)
                     superpreclusters_s4.add(all_superpreclusters.get(i));
-                if (preclusterSuperlayers.get(all_superpreclusters.get(i)).getPreclusters().get(0).get_Super_layer() == 5)
+                else if (preclusterSuperlayers.get(all_superpreclusters.get(i)).getPreclusters().get(0).get_Super_layer() == 5)
                     superpreclusters_s5.add(all_superpreclusters.get(i));
             }
 
-            // Find all possible combinations of superpreclusters on different superlayers
-            MutableBoolean too_much_track_candidates = new MutableBoolean();
+            MutableBoolean too_much_track_candidates = new MutableBoolean(); // Need to be a mutable boolean to be able to change it in the cartesian_product method
             too_much_track_candidates.setFalse();
-            ArrayList<ArrayList<Integer>> combinations_s1_s2 = cartesian_product(superpreclusters_s1, superpreclusters_s2, too_much_track_candidates, number_of_track_candidates);
+
+            // Find all possible combinations of superpreclusters on different superlayers
+            ArrayList<ArrayList<Integer>> combinations_s1_s2 = cartesian_product(new ArrayList<>(List.of(superpreclusters_s1)), superpreclusters_s2, too_much_track_candidates, number_of_track_candidates);
             ArrayList<ArrayList<Integer>> combinations_s1_s2_s3 = cartesian_product(combinations_s1_s2, superpreclusters_s3, too_much_track_candidates, number_of_track_candidates);
             ArrayList<ArrayList<Integer>> combinations_s1_s2_s3_s4 = cartesian_product(combinations_s1_s2_s3, superpreclusters_s4, too_much_track_candidates, number_of_track_candidates);
             ArrayList<ArrayList<Integer>> combinations_s1_s2_s3_s4_s5 = cartesian_product(combinations_s1_s2_s3_s4, superpreclusters_s5, too_much_track_candidates, number_of_track_candidates);
+            
+            // Keep track of the number of track candidates
             number_of_track_candidates += combinations_s1_s2_s3_s4_s5.size();
-            if (too_much_track_candidates.booleanValue()) sucess = false;
-            // System.out.println("combinations_s1_s2_s3_s4_s5");
+            if (too_much_track_candidates.booleanValue()) sucess = false; // If the number of track candidates exceeds the maximum limit, set success to false
+            
+            // Add all track candidates to the list of all track candidates
+            // And switch back from index to superprecluster
             for (ArrayList<Integer> combination : combinations_s1_s2_s3_s4_s5) {
-                // System.out.println("combination: "+combination);
                 ArrayList<PreclusterSuperlayer> track_candidate = new ArrayList<>();
                 for (int index : combination) {
                     track_candidate.add(preclusterSuperlayers.get(index));
                 }
                 all_track_candidates.add(track_candidate);
             }
-
         }
-
-        //System.out.println("nb of track candidates: " + all_track_candidates.size() + " sucess: " + sucess);
-        System.out.print(sucess+", ");
-
 
         return sucess;
     }
