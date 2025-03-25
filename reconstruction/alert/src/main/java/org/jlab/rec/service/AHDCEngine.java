@@ -57,7 +57,9 @@ public class AHDCEngine extends ReconstructionEngine {
 
 		}
 
-		model = new Model();
+		if (mode == Mode.AI_Track_Finding) {
+			model = new Model();
+		}
 
 		return true;
 	}
@@ -155,7 +157,7 @@ public class AHDCEngine extends ReconstructionEngine {
 				}
 
 				for (TrackPrediction t : predictions) {
-					if (t.getPrediction() > 0.5)
+					if (t.getPrediction() > 0.2)
 						AHDC_Tracks.add(new Track(t.getClusters()));
 				}
 			}
