@@ -52,7 +52,7 @@ end
 puts """# Bank Group and Item IDs
 
 > [!NOTE]
-> Iguana banks, which are defined in the `iguana` repository, use group number 30000.
+> Iguana banks, which are defined in the Iguana repository, use group number 30000.
 
 """
 
