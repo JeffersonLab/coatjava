@@ -1,9 +1,5 @@
 package org.jlab.service.dc;
 
-import cnuphys.snr.NoiseReductionParameters;
-import cnuphys.snr.clas12.Clas12NoiseAnalysis;
-import cnuphys.snr.clas12.Clas12NoiseResult;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -69,28 +65,17 @@ public class DCHBEngine extends DCEngine {
         // get Field
         Swim dcSwim = new Swim();
         /* 2 */
-        // init SNR
-        Clas12NoiseResult results = new Clas12NoiseResult();
-        /* 3 */
-        Clas12NoiseAnalysis noiseAnalysis = new Clas12NoiseAnalysis();
-        /* 4 */
-        NoiseReductionParameters parameters =
-                new NoiseReductionParameters(
-                        2,
-                        Constants.SNR_LEFTSHIFTS,
-                        Constants.SNR_RIGHTSHIFTS);
-        /* 5 */
         ClusterFitter cf = new ClusterFitter();
-        /* 6 */
+        /* 3 */
         ClusterCleanerUtilities ct = new ClusterCleanerUtilities();
-        /* 7 */
+        /* 4 */
         RecoBankWriter rbc = new RecoBankWriter(this.getBanks());
-        /* 8 */
+        /* 5 */
         HitReader hitRead = new HitReader(this.getBanks(), this.getRawBankOrders(), super.getConstantsManager(), Constants.getInstance().dcDetector);
-        /* 9 */
-        hitRead.fetch_DCHits(event, noiseAnalysis, parameters, results);
+        /* 6 */
+        hitRead.fetch_DCHits(event);
         
-        /* 10 */
+        /* 7 */
         //I) get the hits
         List<Hit> hits = hitRead.get_DCHits();
         //II) process the hits
@@ -98,7 +83,7 @@ public class DCHBEngine extends DCEngine {
         if (hits.isEmpty()) {
             return true;
         }
-        /* 11 */
+        /* 8 */
         //2) find the clusters from these hits
         ClusterFinder clusFinder = new ClusterFinder();
         List<FittedCluster> clusters = clusFinder.FindHitBasedClusters(hits,
@@ -108,17 +93,17 @@ public class DCHBEngine extends DCEngine {
         if (clusters.isEmpty()) {
             return true;
         }
-        /* 12 */
+        /* 9 */
         List<FittedHit> fhits = rbc.createRawHitList(hits);
-        /* 13 : assign cluster IDs to hits: if hit is associated to two clusters, the second survives*/ 
+        /* 10 : assign cluster IDs to hits: if hit is associated to two clusters, the second survives*/ 
         rbc.updateListsWithClusterInfo(fhits, clusters);
-        /* 14 */
+        /* 11 */
         //3) find the segments from the fitted clusters
         SegmentFinder segFinder = new SegmentFinder();
         List<Segment> segments = segFinder.get_Segments(clusters,
                 event,
                 Constants.getInstance().dcDetector, false);
-        /* 15 */
+        /* 12 */
         // need 6 segments to make a trajectory
         if (segments.isEmpty()) {
             rbc.fillAllHBBanks(event,
@@ -142,7 +127,7 @@ public class DCHBEngine extends DCEngine {
             }
         }
         segments.removeAll(rmSegs);
-        /* 16 */
+        /* 13 */
         CrossMaker crossMake = new CrossMaker();
         List<Cross> crosses = crossMake.find_Crosses(segments, Constants.getInstance().dcDetector);
         if (crosses.isEmpty()) {
@@ -154,7 +139,7 @@ public class DCHBEngine extends DCEngine {
                     null);
             return true;
         }
-        /* 17 */
+        /* 14 */
         CrossListFinder crossLister = new CrossListFinder();
 
         CrossList crosslist = crossLister.candCrossLists(event, crosses,
@@ -163,14 +148,14 @@ public class DCHBEngine extends DCEngine {
                 Constants.getInstance().dcDetector,
                 null,
                 dcSwim, false);
-        /* 18 */
+        /* 15 */
         //6) find the list of  track candidates
         TrackCandListFinder trkcandFinder = new TrackCandListFinder(Constants.HITBASE);
         List<Track> trkcands = trkcandFinder.getTrackCands(crosslist,
                 Constants.getInstance().dcDetector,
                 Swimmer.getTorScale(),
                 dcSwim, false);
-        /* 19 */
+        /* 16 */
 
         // track found
         int trkId = 1;
