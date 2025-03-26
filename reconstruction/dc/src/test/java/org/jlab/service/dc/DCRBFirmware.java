@@ -17,7 +17,7 @@ import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.utils.groups.IndexedTable;
 
 /**
- *
+ * Example of analysis code for studying DC readout settings
  * @author devita
  */
 public class DCRBFirmware {
@@ -309,7 +309,7 @@ public class DCRBFirmware {
                     int wire   = tdc.getShort("component", i);
                     int order  = tdc.getByte("order", i);
                     int time   = tdc.getInt("TDC", i);
-                    int tot    = tdc.getInt("width", i);
+                    int tot    = tdc.getInt("ToT", i);
                     if((sector==2 || sector==5) /*&& order==0*/) {
                         int crate = dcrb.reverse.getIntValue("crate",   sector, layer, wire, order%10);
                         int slot  = dcrb.reverse.getIntValue("slot",    sector, layer, wire, order%10);

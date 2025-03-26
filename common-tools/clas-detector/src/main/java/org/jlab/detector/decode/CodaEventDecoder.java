@@ -284,7 +284,7 @@ public class CodaEventDecoder {
                 return this.getDataEntries_57622(crate, node, event);
             }
             else if(node.getTag()==57648){
-                //  This is DCRB bank with TDCs and widths
+                //  This is DCRB bank with TDCs and ToTs
                 return this.getDataEntries_57648(crate, node, event);
             }
             else if(node.getTag()==57636){
@@ -992,13 +992,13 @@ public class CodaEventDecoder {
                     int counter  = 0;
                     position = position + 4;
                     while(counter<nchannels){
-                        Byte   channel    = (Byte) cdataitems.get(position);
+                        Byte   channel = (Byte) cdataitems.get(position);
                         Short  tdc     = (Short) cdataitems.get(position+1);
-                        Short  width   = (Short) cdataitems.get(position+2);
+                        Short  tot     = (Short) cdataitems.get(position+2);
                         position += 3;
                         counter++;
                         DetectorDataDgtz   entry = new DetectorDataDgtz(crate,slot,channel);
-                        entry.addTDC(new TDCData(tdc, width));
+                        entry.addTDC(new TDCData(tdc, tot));
                         entry.setTimeStamp(time);
                         entries.add(entry);
                     }
