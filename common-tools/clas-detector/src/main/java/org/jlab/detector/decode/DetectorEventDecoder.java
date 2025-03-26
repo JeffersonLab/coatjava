@@ -228,10 +228,6 @@ public class DetectorEventDecoder {
             Map<Integer,List<DetectorDataDgtz>> filteredData = new HashMap<>();
             for(DetectorDataDgtz data : detectorData){
                 if(data.getDescriptor().getType()==DetectorType.getType(table)) {
-                    int sector = data.getDescriptor().getSector();
-                    int layer  = data.getDescriptor().getLayer();
-                    int comp   = data.getDescriptor().getComponent();
-                    int order  = data.getDescriptor().getOrder();
                     int key = data.getDescriptor().getHashCode();
                     if(!filteredData.containsKey(key))
                         filteredData.put(key, new ArrayList<>());
@@ -240,10 +236,6 @@ public class DetectorEventDecoder {
             }
             for(int key : filteredData.keySet()) {
                 filteredData.get(key).sort(new TDCComparator());
-                int sector = filteredData.get(key).get(0).getDescriptor().getSector();
-                int layer  = filteredData.get(key).get(0).getDescriptor().getLayer();
-                int comp   = filteredData.get(key).get(0).getDescriptor().getComponent();
-                int order  = filteredData.get(key).get(0).getDescriptor().getOrder();
                 if(filteredData.get(key).size()>maxMultiplicity) 
                     for(int i=maxMultiplicity; i<filteredData.get(key).size(); i++)
                         filteredData.get(key).get(i).getTDCData(0).setType(OrderType.DECREMOVED);
