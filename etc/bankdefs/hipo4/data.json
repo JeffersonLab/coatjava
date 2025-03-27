@@ -108,7 +108,9 @@
       { "name":"component" , "type":"S", "info":"signal (1-2)"},
       { "name":"order"     , "type":"B", "info":"order: 2 - TDCL , 3 - TDCR"},
       { "name":"TDC"       , "type":"I", "info":"TDC value"},
-      { "name":"ToT"       , "type":"I", "info":"Time Over Threshold"}
+      { "name":"ToT"       , "type":"I", "info":"Time Over Threshold"},
+      { "name":"timestamp" , "type":"L", "info":"timestamp"},
+      { "name":"trigger"   , "type":"I", "info":"trigger number"}
     ]
   },
   {
