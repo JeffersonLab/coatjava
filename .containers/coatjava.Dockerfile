@@ -22,4 +22,5 @@ ARG REF_NAME=development
 # build coatjava 
 RUN java --version && cd /opt && \
     git clone https://code.jlab.org/hallb/alert/coatjava.git && cd coatjava && \
-    git fetch origin && git checkout ${REF_NAME} && ./build-coatjava.sh --quiet
+    git fetch origin && git checkout ${REF_NAME} && ./build-coatjava.sh --quiet && \
+    ./install-clara /opt/clara
