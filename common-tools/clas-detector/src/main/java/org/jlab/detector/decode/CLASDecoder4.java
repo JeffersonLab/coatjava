@@ -333,6 +333,8 @@ public class CLASDecoder4 {
             tdcBANK.putByte("order", i, (byte) tdcDGTZ.get(i).getDescriptor().getOrder());
             tdcBANK.putInt("TDC", i, tdcDGTZ.get(i).getTDCData(0).getTime());
             tdcBANK.putInt("ToT", i, tdcDGTZ.get(i).getTDCData(0).getToT());
+            tdcBANK.putLong("timestamp", i, tdcDGTZ.get(i).getTDCData(0).getTimeStamp());
+            tdcBANK.putInt("trigger", i, tdcDGTZ.get(i).getTrigger());
             //System.err.println("event: " + tdcDGTZ.get(i).toString());
         }
         return tdcBANK;
