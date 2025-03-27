@@ -181,6 +181,14 @@
         "name": "Doca",
         "type": "D",
         "info": "distance od closest approch (mm)"
+      }, {
+	"name": "residual",
+	"type": "D",
+	"info": "residual (mm)"
+      }, {
+	"name": "residual_prefit",
+	"type": "D",
+	"info": "residual pre-fit (mm)"
       }
     ]
   }, {
