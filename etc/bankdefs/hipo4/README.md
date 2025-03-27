@@ -386,6 +386,8 @@
 | 12 | `ATOF::tdc` | TDC bank for the ALERT TOF |
 | 21 | `ATOF::hits` | Reconstructed ATOF hits |
 | 22 | `ATOF::clusters` | Clusters in ATOF |
+| 31 | `ATOF::testhits` | Reconstructed ATOF hits |
+| 32 | `ATOF::testclusters` | Clusters in ATOF |
 
 ## Group 22600
 
@@ -407,3 +409,4 @@
 | 26 | `AHDC::KFTrack` | Reco Kalman Filter Tracks |
 | 30 | `AHDC_AI::Prediction` | Prediction given by AI |
 | 31 | `ALERT::Projections` | Track Projections to ATOF |
+| 35 | `ATOF::testVeff` | veff test for ATOF |
