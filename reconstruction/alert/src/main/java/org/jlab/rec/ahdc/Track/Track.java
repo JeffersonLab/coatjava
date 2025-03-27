@@ -15,7 +15,6 @@ public class Track {
 	private       List<Cluster>  _Clusters = new ArrayList<>();
 	private       boolean        _Used     = false;
 	private final ArrayList<Hit> hits      = new ArrayList<>();
-	;
 
 	private double x0  = 0;
 	private double y0  = 0;
@@ -62,6 +61,15 @@ public class Track {
 		this.px0 = helixFitObject.get_px();
 		this.py0 = helixFitObject.get_py();
 		this.pz0 = helixFitObject.get_pz();
+	}
+
+	public void setPositionAndMomentumVec(double[] x) {
+		this.x0  = x[0];
+		this.y0  = x[1];
+		this.z0  = x[2];
+		this.px0 = x[3];
+		this.py0 = x[4];
+		this.pz0 = x[5];
 	}
 
 	public void setPositionAndMomentumForKF(RealVector x) {

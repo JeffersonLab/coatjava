@@ -9,6 +9,7 @@ public class Hit implements Comparable<Hit> {
 	private final int    layerId;
 	private final int    wireId;
 	private final double doca;
+	private final double adc;
 
 	private double  phi;
 	private double  radius;
@@ -16,14 +17,20 @@ public class Hit implements Comparable<Hit> {
 	private boolean use = false;
 	private double  x;
 	private double  y;
+	private double  residual_prefit;
+	private double  residual;
 
-	public Hit(int _Id, int _Super_layer, int _Layer, int _Wire, double _Doca) {
+        //updated constructor with ADC
+	public Hit(int _Id, int _Super_layer, int _Layer, int _Wire, double _Doca, double _ADC) {
 		this.id           = _Id;
 		this.superLayerId = _Super_layer;
 		this.layerId      = _Layer;
 		this.wireId       = _Wire;
 		this.doca         = _Doca;
+		this.adc          = _ADC;
 		wirePosition();
+		this.residual_prefit = 0.0;
+		this.residual        = 0.0;
 	}
 
 	private void wirePosition() {
@@ -130,4 +137,22 @@ public class Hit implements Comparable<Hit> {
 	}
 
 	public double getPhi() {return phi;}
+
+	public double getADC() {return adc;}
+
+	public double getResidual() {
+		return residual;
+	}
+
+	public double getResidualPrefit() {
+		return residual_prefit;
+	}
+
+	public void setResidual(double resid) {
+		this.residual = resid;
+	}
+
+	public void setResidualPrefit(double resid) {
+		this.residual_prefit = resid;
+	}
 }
