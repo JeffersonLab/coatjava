@@ -19,13 +19,17 @@ public class Hit implements Comparable<Hit> {
 	private final double r;
 	private final double phi;
 	private final double doca;
-	private final double adc;
+	private double adc;
 	private final double numWires;
 	private final Line3D line3D;
+	private final Line3D line3D_plus;
+	private final Line3D line3D_minus;
+	private int    hitidx;
+	private int    hitsign;
 
-        // Comparison with:  common-tools/clas-geometry/src/main/java/org/jlab/geom/detector/alert/AHDC/AlertDCFactory.java
-        // here, SuperLayer, Layer, Wire, start from 1
-        // in AlertDCFactory, same variables start from 1
+	// Comparison with:  common-tools/clas-geometry/src/main/java/org/jlab/geom/detector/alert/AHDC/AlertDCFactory.java
+	// here, SuperLayer, Layer, Wire, start from 1
+	// in AlertDCFactory, same variables start from 1
 	public Hit(int superLayer, int layer, int wire, int numWire, double r, double doca) {
 		this.superLayer = superLayer;
 		this.layer      = layer;
@@ -34,6 +38,8 @@ public class Hit implements Comparable<Hit> {
 		this.doca       = doca;
 		this.numWires = numWire;
 		this.adc = 0;//placeholder
+		this.hitidx = -1;
+		this.hitsign = 0;
 		
 		final double DR_layer = 4.0;//OK
 		final double round    = 360.0;//OK
@@ -104,42 +110,65 @@ public class Hit implements Comparable<Hit> {
 		Line3D wireLine = new Line3D(lPoint, rPoint);
 		//wireLine.show();
 		this.line3D = wireLine;
-	}
-    
-    //hit measurement vector in cylindrical coordinates: r, phi, z
-        public RealVector get_Vector() {
-	    // final double costhster = Math.cos(thster);
-	    // final double sinthster = Math.cos(thster);
-	    RealVector wire_meas = new ArrayRealVector(new double[]{this.r(), this.phi(), 0});
-	    // Array2DRowRealMatrix stereo_rotation = new Array2DRowRealMatrix(new double[][]{{1, 0.0, 0.0}, {0, costhster, -sinthster}, {0, sinthster, costhster}});//rotation of wire: needed?
-	    return wire_meas;//.multiply(stereo_rotation);
+
+		//calculate the "virtual" left and right wires accounting for the DOCA 
+		double deltaphi = Math.asin(this.doca/R_layer);
+		double wx_plus     = -R_layer * Math.sin( alphaW_layer * (this.wire-1) - deltaphi );//OK
+		double wy_plus     = -R_layer * Math.cos( alphaW_layer * (this.wire-1) - deltaphi );//OK
+
+		double wx_plus_end = -R_layer * Math.sin( alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)) - deltaphi );//OK
+		double wy_plus_end = -R_layer * Math.cos( alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)) - deltaphi );//OK
+
+		line = new Line3D(wx_plus, wy_plus, -zl/2, wx_plus_end, wy_plus_end, zl/2);
+		lPoint = new Point3D();
+		rPoint = new Point3D();
+		lPlane.intersection(line, lPoint);
+		rPlane.intersection(line, rPoint);
+
+		wireLine = new Line3D(lPoint, rPoint);
+		this.line3D_plus = wireLine;
+
+		double wx_minus     = -R_layer * Math.sin( alphaW_layer * (this.wire-1) + deltaphi );//OK
+		double wy_minus     = -R_layer * Math.cos( alphaW_layer * (this.wire-1) + deltaphi );//OK
+
+		double wx_minus_end = -R_layer * Math.sin( alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)) + deltaphi );//OK
+		double wy_minus_end = -R_layer * Math.cos( alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)) + deltaphi );//OK
+
+		line = new Line3D(wx_minus, wy_minus, -zl/2, wx_minus_end, wy_minus_end, zl/2);
+		lPoint = new Point3D();
+		rPoint = new Point3D();
+		lPlane.intersection(line, lPoint);
+		rPlane.intersection(line, rPoint);
+		
+		wireLine = new Line3D(lPoint, rPoint);
+		this.line3D_minus = wireLine;
+		
 	}
 
-    //hit measurement vector in 1 dimension: minimize distance - doca
-        public RealVector get_Vector_simple() {
+        //hit measurement vector in 1 dimension: minimize distance - doca
+        public RealVector get_Vector() {
 		return new ArrayRealVector(new double[]{this.doca});
 	}
 
-    //hit measurement vector in 1 dimension: minimize distance - doca - adds hit "sign"
-        public RealVector get_Vector_sign(int sign) {
- 	    // Attempt: multiply doca by sign
-		return new ArrayRealVector(new double[]{sign*this.doca});
+        //hit measurement vector in 1 dimension with sign: if sign = 0, return doca, otherwise return 0
+        public RealVector get_Vector(int sign, boolean goodsign) {
+		if(sign == 0 || goodsign){
+			return new ArrayRealVector(new double[]{this.doca});
+		}else{
+			return new ArrayRealVector(new double[]{0.0});
+		}
 	}
 
-        public RealMatrix get_MeasurementNoise() {
-	    final double costhster = Math.cos(thster);
-	    final double sinthster = Math.cos(thster);
-	    //dR = 0.1m dphi = pi dz = L/2 
-	    Array2DRowRealMatrix wire_noise = new Array2DRowRealMatrix(new double[][]{{0.1, 0.0, 0.0}, {0.0, Math.atan(0.1/this.r), 0.0}, {0.0, 0.0, 150.0/costhster}});//uncertainty matrix in wire coordinates
-	    Array2DRowRealMatrix stereo_rotation = new Array2DRowRealMatrix(new double[][]{{1, 0.0, 0.0}, {0, costhster, -sinthster}, {0, sinthster, costhster}});//rotation of wire
-	    wire_noise.multiply(stereo_rotation);
-	    
-	    return wire_noise.multiply(wire_noise);
-	    //
+    	public RealMatrix get_MeasurementNoise() {
+		return new Array2DRowRealMatrix(new double[][]{{0.0225}});
 	}
-
-    	public RealMatrix get_MeasurementNoise_simple() {
-	    return new Array2DRowRealMatrix(new double[][]{{0.01}});
+    
+    	public RealMatrix get_MeasurementNoise(boolean goodsign) {
+	    if(goodsign){
+		return new Array2DRowRealMatrix(new double[][]{{0.0225}});
+	    }else{
+		return new Array2DRowRealMatrix(new double[][]{{2*this.doca*this.doca}});
+	    }
 	}
     
 	public double doca() {
@@ -151,8 +180,6 @@ public class Hit implements Comparable<Hit> {
         public double phi()    {return phi;}//at z = 0;
     
         public double phi(double z)    {
-	    // double x_0 = r*sin(phi);
-	    // double y_0 = r*cos(phi);
 	    double x_z = r*Math.sin( phi + thster * z/(zl*0.5) * (Math.pow(-1, this.superLayer-1)) );
 	    double y_z = r*Math.cos( phi + thster * z/(zl*0.5) * (Math.pow(-1, this.superLayer-1)) );
 	    return Math.atan2(x_z, y_z);
@@ -161,10 +188,16 @@ public class Hit implements Comparable<Hit> {
 	public Line3D line() {return line3D;}
 
 	public double distance(Point3D point3D) {
-	    //System.out.println("Calculating distance: ");
-	    //this.line3D.show();
-	    //point3D.show();
-	    //System.out.println(" d = " + this.line3D.distance(point3D).length());
+		return this.line3D.distance(point3D).length();
+	}
+
+	public double distance(Point3D point3D, int sign, boolean goodsign) {
+		//if(sign!=0)
+	    	//System.out.println(" r " + this.r +  " phi " + this.phi + " doca " + this.doca + " sign " + sign + " distance " + this.line3D.distance(point3D).length() + " (sign 0) " + this.line3D_plus.distance(point3D).length() + " (sign+) " + this.line3D_minus.distance(point3D).length() + " (sign-) ");
+		if(!goodsign){	    
+			if(sign>0)return this.line3D_plus.distance(point3D).length();
+			if(sign<0)return this.line3D_minus.distance(point3D).length();
+		}
 		return this.line3D.distance(point3D).length();
 	}
 
@@ -211,6 +244,10 @@ public class Hit implements Comparable<Hit> {
 		return adc;
 	}
 
+	public void setADC(double _adc) {
+		this.adc = _adc;
+	}
+
 	public Line3D getLine3D() {
 		return line3D;
 	}
@@ -218,5 +255,22 @@ public class Hit implements Comparable<Hit> {
 	public double getNumWires() {
 		return numWires;
 	}
+
+	public int getHitIdx() {
+		return hitidx;
+	}
+
+	public void setHitIdx(int idx) {
+		this.hitidx = idx;
+	}
+
+	public int getSign() {
+		return hitsign;
+	}
+
+	public void setSign(int sign) {
+		this.hitsign = sign;
+	}
+    
 }
 

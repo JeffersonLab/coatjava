@@ -32,9 +32,10 @@ public class HitReader {
 				int    layer      = number % 10;
 				int    superlayer = (int) (number % 100) / 10;
 				int    wire       = bankDGTZ.getShort("component", i);
+				double adc        = bankDGTZ.getInt("ADC", i);
 				double doca       = bankDGTZ.getShort("ped", i) / 1000.0;
 
-				hits.add(new Hit(id, superlayer, layer, wire, doca));
+				hits.add(new Hit(id, superlayer, layer, wire, doca, adc));
 			}
 		}
 		this.set_AHDCHits(hits);

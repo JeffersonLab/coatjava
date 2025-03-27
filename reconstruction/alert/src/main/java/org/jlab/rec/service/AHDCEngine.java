@@ -91,7 +91,9 @@ public class AHDCEngine extends ReconstructionEngine {
 			HitReader hitRead = new HitReader(event, simulation);
 
 			ArrayList<Hit>     AHDC_Hits     = hitRead.get_AHDCHits();
-			ArrayList<TrueHit> TrueAHDC_Hits = hitRead.get_TrueAHDCHits();
+			if(simulation){
+				ArrayList<TrueHit> TrueAHDC_Hits = hitRead.get_TrueAHDCHits();
+			}
 			//System.out.println("AHDC_Hits size " + AHDC_Hits.size());
 			
 			// II) Create PreCluster
@@ -183,12 +185,15 @@ public class AHDCEngine extends ReconstructionEngine {
 
 				HelixFitJava h = new HelixFitJava();
 				track.setPositionAndMomentum(h.HelixFit(nbOfPoints, szPos, 1));
+				// double p = 150.0;//MeV/c
+				// double phi          = Math.atan2(szPos[0][1], szPos[0][0]);
+				// double x_0[] = {0.0, 0.0, 0.0, p*Math.sin(phi), p*Math.cos(phi), 0.0};
+				// track.setPositionAndMomentumVec(x_0);
 			}
 
 			// VI) Kalman Filter
 			// System.out.println("AHDC_Tracks = " + AHDC_Tracks);
-			KalmanFilter kalmanFitter = new KalmanFilter(AHDC_Tracks, event);
-			
+			KalmanFilter kalmanFitter = new KalmanFilter(AHDC_Tracks, event, simulation);
 			// VII) Write bank
 			RecoBankWriter writer = new RecoBankWriter();
 
