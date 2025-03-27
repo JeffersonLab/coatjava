@@ -53,7 +53,7 @@ public class StateVecs extends AStateVecs {
         this.trackTrajS.clear();
         this.trackTrajT.put(0, new StateVec(initSV));
     }
-
+    
     /**
      *
      * @param sector
@@ -149,6 +149,104 @@ public class StateVecs extends AStateVecs {
         }
 
         return fVec.CM;
+
+    } 
+
+    /**
+     *
+     * @param sector
+     * @param i initial state vector index
+     * @param Zf
+     * @param iVec state vector at the initial index
+     * @param mv measurements
+     */
+    public double getDeltaPath(int sector, int i, double Zf, StateVec iVec, AMeasVecs mv, Swim swimmer) { // s = signed step-size
+
+        double stepSize = 1.0;
+        StateVec fVec = new StateVec(0);
+        fVec.x = iVec.x;
+        fVec.y = iVec.y;
+        fVec.z = iVec.z;
+        fVec.tx = iVec.tx;
+        fVec.ty = iVec.ty;
+        fVec.Q = iVec.Q;
+        fVec.B = iVec.B;
+        Matrix5x5.copy(iVec.CM, fVec.CM);
+
+        double s = 0;
+        double zInit = mv.measurements.get(i).surface.measPoint.z();
+        double BatMeas = iVec.B;
+
+        double z = zInit;
+
+        while (Math.signum(Zf - zInit) * z < Math.signum(Zf - zInit) * Zf) {
+            z = fVec.z;
+            if (z == Zf) {
+                break;
+            }
+
+            double x = fVec.x;
+            double y = fVec.y;
+            double tx = fVec.tx;
+            double ty = fVec.ty;
+            double Q = fVec.Q;
+            double dPath = fVec.deltaPath;
+            Matrix cMat = new Matrix();
+            Matrix5x5.copy(fVec.CM, cMat);
+            s = Math.signum(Zf - zInit) * stepSize;
+
+            // LOGGER.log(Level.FINE, " from "+(float)Z[i]+" to "+(float)Z[f]+" at "+(float)z+" By is "+bf[1]+" B is "+Math.sqrt(bf[0]*bf[0]+bf[1]*bf[1]+bf[2]*bf[2])/Bmax+" stepSize is "+s);
+            if (Math.signum(Zf - zInit) * (z + s) > Math.signum(Zf - zInit) * Zf) {
+                s = Math.signum(Zf - zInit) * Math.abs(Zf - z);
+            }
+
+            //rk.RK4transport(sector, Q, x, y, z, tx, ty, s, swimmer, cMat, fVec, dPath);
+            rk.RK4transport(sector, s, swimmer, cMat, fVec);
+
+            // Q  process noise matrix estimate            
+            double p = Math.abs(1. / iVec.Q);
+
+            double X0 = this.getX0(mv.measurements.get(i).surface, z, Z);
+            double t_ov_X0 = Math.abs(s) / X0;//path length in radiation length units = t/X0 [true path length/ X0] ; Ar radiation length = 14 cm
+
+            double beta = this.beta;
+            if (beta > 1.0 || beta <= 0) {
+                beta = 1.0;
+            }
+
+            double sctRMS = 0;
+
+            ////// Todo: Modify multi-scattering or remove it; After update, some parameters, like iteration termintion chonditions, may need to be updated.
+            // Speed of light should be 1
+            // From one measurement site to another, F and Q should be calculated separaetely with multiple steps; and then C' = FTCF + Q
+            if (Math.abs(s) > 0) {
+                sctRMS = ((0.0136) / (beta * PhysicsConstants.speedOfLight() * p)) * Math.sqrt(t_ov_X0)
+                        * (1 + 0.038 * Math.log(t_ov_X0));
+            }
+
+            double cov_txtx = (1 + tx * tx) * (1 + tx * tx + ty * ty) * sctRMS * sctRMS;
+            double cov_tyty = (1 + ty * ty) * (1 + tx * tx + ty * ty) * sctRMS * sctRMS;
+            double cov_txty = tx * ty * (1 + tx * tx + ty * ty) * sctRMS * sctRMS;
+
+            fMS.set(
+                    0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0,
+                    0, 0, cov_txtx, cov_txty, 0,
+                    0, 0, cov_txty, cov_tyty, 0,
+                    0, 0, 0, 0, 0
+            );
+
+            Matrix5x5.copy(fVec.CM, copyMatrix);
+            Matrix5x5.add(copyMatrix, fMS, fVec.CM);
+
+            if (Math.abs(fVec.B - BatMeas) < 0.0001) {
+                stepSize *= 2;
+            }
+
+            BatMeas = fVec.B;
+        }
+
+        return fVec.deltaPath;
 
     }
 
