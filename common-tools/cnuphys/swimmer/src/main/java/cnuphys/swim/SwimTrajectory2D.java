@@ -277,7 +277,6 @@ public class SwimTrajectory2D {
 		}
 
 		int len = _path.length;
-		Point.Double wpi = new Point.Double();
 		double minDist = Double.POSITIVE_INFINITY;
 		for (int i = 1; i < len; i++) {
 			Point.Double wp0 = _path[i - 1];

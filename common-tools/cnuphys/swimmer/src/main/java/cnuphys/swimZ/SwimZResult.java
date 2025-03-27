@@ -209,6 +209,7 @@ public class SwimZResult {
 
 		return _bdl;
 	}
+
 	// usual cross product c = a x b
 	private static void cross(float a[], double b[], double c[]) {
 		c[0] = a[1] * b[2] - a[2] * b[1];
