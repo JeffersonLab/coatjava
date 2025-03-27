@@ -1063,24 +1063,36 @@ public class CodaEventDecoder {
 
                 int position = 0;
                 while(position<cdatatypes.size()-4){
-                    Byte    slot     = (Byte)     cdataitems.get(position+0);
-                    Integer trig_num = (Integer)  cdataitems.get(position+1);
+                    Byte    slot       = (Byte)     cdataitems.get(position+0);
+                    Integer trig_num   = (Integer)  cdataitems.get(position+1);
                     Long    time_stamp = (Long)    cdataitems.get(position+2);
-                    Integer nchannels = (Integer) cdataitems.get(position+3);
-                    position += 4;
-                    int counter  = 0;
+                    Integer nchannels  = (Integer) cdataitems.get(position+3);
+                    int     counter    = 0;
+
+                    position += 4; // slot, trig,time,nchannels
+                                   //
                     while(counter<nchannels){
                         Byte channel = (Byte) cdataitems.get(position+0);
                         Integer tdc = (Integer) cdataitems.get(position+1);
                         // width over threshold
                         Integer tot = (Integer) cdataitems.get(position+2);
 
-
-                        // Not sure what is going on here yet...
-                        DetectorDataDgtz bank = new DetectorDataDgtz(crate,slot.intValue(),channel.intValue());
-                        bank.addTDC(new TDCData(tdc,tot));
+                        DetectorDataDgtz bank = new DetectorDataDgtz(
+                            crate, slot.intValue(), channel.intValue());
+                        // the "bank" has a timestamp.
+                        // the tdc also can have a timestamp.
+                        // the tdc is added tot he "bank"
+                        // the "bank" is added to the "entries" (array of DetectorDataDgtz)
+                        // "entries" List<DetectorDataDgtz>  -> "bank" DetectorDataDgtz  -> "tdc" TDCData
+                        // there is a redundancy in timestamp: the same value is stored in TDCData and the DetectorDataDgz
+                        //
+                        bank.setTimeStamp(time_stamp);
+                        bank.setTrigger(trig_num);;
+                        TDCData tdc_data = new TDCData(tdc, tot);
+                        tdc_data.setTimeStamp(time_stamp).setOrder(counter);
+                        bank.addTDC(tdc_data);
                         entries.add(bank);
-                        position += 3;
+                        position += 3; // channel,tdc,tot
                         counter++;
                         //System.err.println("event: " + bank.toString());
                     }
