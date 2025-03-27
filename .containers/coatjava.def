@@ -1,0 +1,14 @@
+Bootstrap: docker
+From: codecr.jlab.org/hallb/alert/coatjava/coatjava:{{ REF_NAME }}
+
+
+%environment
+    export CLAS12DIR=/opt/coatjava/coatjava
+
+%help
+    This is a clas12 coatjava container used to run coatjava on HPC systems
+    and do rapid development.
+
+%labels
+    Author Whitney Armstrong warmstrong@anl.gov
+    REF_NAME {{ REF_NAME }}

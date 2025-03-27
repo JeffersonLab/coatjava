@@ -9,6 +9,7 @@ workflow:
 
 variables:
   KUBERNETES_MEMORY_LIMIT: "8Gi"
+  REF_NAME: ${CI_COMMIT_REF_NAME}
 
 default:
   image: ubuntu:noble
@@ -68,4 +69,17 @@ shared_for_alert_tests:
   trigger:
     project: hallb/alert/atof/shared_for_alert
     strategy: depend
+
+coatjava:singularity:
+  image: eicweb.phy.anl.gov:4567/containers/image_recipes/ubuntu_dind:latest
+  tags:
+     - silicon
+  allow_failure: true
+  script:
+    - apptainer build  --build-arg REF_NAME=${REF_NAME} coatjava.sif .containers/coatjava.def
+    - ls -lrth
+  artifacts:
+      paths:
+        - coatjava.sif
+
 
