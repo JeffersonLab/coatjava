@@ -40,10 +40,13 @@ mvn --batch-mode release:update-versions -DdevelopmentVersion=$ver_pom
 sed -i "s/^VERSION=.*/VERSION=$ver_num/g" common-tools/coat-lib/deployDistribution.sh
 
 # commit to git
+echo """
+============================================"""
 git commit -am "build: bump version number to $ver_num"
-echo """========================
-Done. Now run your usual 'git push' command, which is probably
+echo """Done.
+Now run your usual 'git push' command, which is probably:
 
   git push -u origin $new_branch
 
-========================"""
+============================================
+"""
