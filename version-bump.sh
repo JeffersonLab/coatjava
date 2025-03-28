@@ -1,20 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-if [ -z $2 ]
-then
-    echo Usage:  bump-version.sh oldversion newversion
-    exit
-fi
+[ $# -ne 1 ] && echo "USAGE: $0 [NEW_VERSION_NUMBER]" && exit 2
 
-old=$1
-new=$2
+ver_num=$(echo $1|sed 's/-SNAPSHOT//g')
+ver_pom=$ver_num-SNAPSHOT
 
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  find . -type f -name pom.xml -exec sed -i '' -e "s/$old-SNAPSHOT/$new-SNAPSHOT/" "{}" \;
-  find . -type f -name deployDistribution.sh -exec sed -i '' -e "s/$old/$new/" "{}" \;
-else
-  find . -type f -name pom.xml -exec sed -i -e "s/$old-SNAPSHOT/$new-SNAPSHOT/" "{}" \;
-  find . -type f -name deployDistribution.sh -exec sed -i -e "s/$old/$new/" "{}" \;
-fi
+mvn --batch-mode release:update-versions -DdevelopmentVersion=$ver_pom
 
-
+sed -i "s/^VERSION=.*/VERSION=$ver_num/g" common-tools/coat-lib/deployDistribution.sh
