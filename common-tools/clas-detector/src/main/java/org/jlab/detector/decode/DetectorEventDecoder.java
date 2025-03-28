@@ -1,7 +1,12 @@
 package org.jlab.detector.decode;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import org.jlab.detector.banks.RawBank.OrderType;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.decode.DetectorDataDgtz.ADCData;
@@ -21,6 +26,7 @@ public class DetectorEventDecoder {
     List<String> keysTrans    = null;
     List<String> tablesFitter = null;
     List<String> keysFitter   = null;
+    List<String> keysFilter   = null;
 
     private int runNumber = 10;
 
@@ -108,6 +114,9 @@ public class DetectorEventDecoder {
             "/daq/config/ahdc"
         });
         fitterManager.init(keysFitter, tablesFitter);
+
+        // Data filter list
+        keysFilter   = Arrays.asList(new String[]{"DC"});
 
         scalerManager.init(Arrays.asList(new String[]{"/runcontrol/fcup","/runcontrol/slm","/runcontrol/hwp",
                                                       "/runcontrol/helicity","/daq/config/scalers/dsc1"}));
@@ -210,5 +219,43 @@ public class DetectorEventDecoder {
                 }
             }
         }
+    }
+
+
+    public void filterTDCs(List<DetectorDataDgtz>  detectorData){
+        int maxMultiplicity = 1;
+        for(String table : keysFilter){
+            Map<Integer,List<DetectorDataDgtz>> filteredData = new HashMap<>();
+            for(DetectorDataDgtz data : detectorData){
+                if(data.getDescriptor().getType()==DetectorType.getType(table)) {
+                    int key = data.getDescriptor().getHashCode();
+                    if(!filteredData.containsKey(key))
+                        filteredData.put(key, new ArrayList<>());
+                    filteredData.get(key).add(data);
+                }
+            }
+            for(int key : filteredData.keySet()) {
+                filteredData.get(key).sort(new TDCComparator());
+                if(filteredData.get(key).size()>maxMultiplicity) 
+                    for(int i=maxMultiplicity; i<filteredData.get(key).size(); i++)
+                        filteredData.get(key).get(i).getTDCData(0).setType(OrderType.DECREMOVED);
+            }
+        }
+    }
+    
+    class TDCComparator implements Comparator<DetectorDataDgtz> { 
+  
+        // override the compare() method 
+        public int compare(DetectorDataDgtz s1, DetectorDataDgtz s2) 
+        { 
+            if(s1.getTDCSize()>0 && s2.getTDCSize()>0)
+                return s1.getTDCData(0).getTime()<s2.getTDCData(0).getTime() ? -1 : 1;
+            else if(s1.getTDCSize()>0)
+                return 1;
+            else if(s2.getTDCSize()>0)
+                return -1;
+            else
+                return 0;
+        } 
     }
 }

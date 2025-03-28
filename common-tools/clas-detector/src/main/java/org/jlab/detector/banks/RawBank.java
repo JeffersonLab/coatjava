@@ -74,9 +74,9 @@ public class RawBank extends FilteredBank {
         BGADDED_NOISE1  ( 70),  // background hits retained by level-1 denoising
         BGADDED_NOISE2  ( 80),  // background hits retained by level-2 denoising
         BGADDED_NOISE3  ( 90),  // background hits retained by level-3 denoising
-        USER1           (100),
-        USER2           (110),
-        USER3           (120);
+        DECREMOVED      (100),  // hits removed during decoding
+        USER1           (110),
+        USER2           (120);
         private final int rawOrderId;
         private OrderType(int id){ rawOrderId = id; }
         public int getTypeId() { return rawOrderId; }
