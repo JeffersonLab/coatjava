@@ -6,10 +6,18 @@
     "info": "Track Projections to ATOF",
     "entries": [		
       {
+        "name": "id",
+        "type": "S",
+        "info": "projection id"
+      },{
+        "name": "trackID",
+        "type": "S",
+        "info": "id of the track that was projected"
+      }, {
         "name": "x_at_bar",
         "type": "F",
         "info": "x position at atof bar (middle surface) in mm"
-      }, {
+      },{
         "name": "y_at_bar",
         "type": "F",
         "info": "y position at atof bar (middle surface) in mm"
@@ -91,7 +99,7 @@
         "info": "deposited energy in MeV"
       },{
         "name": "clusterid",
-        "type": "I",
+        "type": "S",
         "info": "id of cluster to which the hit was associated"
       }
     ]
@@ -141,6 +149,10 @@
         "name": "inpathlength",
         "type": "F",
         "info": "path length inside the detector in mm"
+      },{
+        "name": "projID",
+        "type": "S",
+        "info": "id of the projected track matched. it is -1 if a straight track was assigned."
       }
     ]
   },{
@@ -169,6 +181,14 @@
         "name": "Doca",
         "type": "D",
         "info": "distance od closest approch (mm)"
+      }, {
+	"name": "residual",
+	"type": "D",
+	"info": "residual (mm)"
+      }, {
+	"name": "residual_prefit",
+	"type": "D",
+	"info": "residual pre-fit (mm)"
       }
     ]
   }, {

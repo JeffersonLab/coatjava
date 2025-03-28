@@ -412,6 +412,39 @@ public class Helix {
         return new Vector3D(getPx(getB(),l),getPy(getB(),l),getPz(getB()));
     }
     
+    /**
+     * Computes the path length between to points at radius rMin and rMax of the
+     * helix.
+     *
+     * @param rMin the radius of the point from which to measure.
+     * @param rMax the radius of the point to which to measure.
+     *
+     * helix parametrization is X(l) = xc - s*R*sin(phi0+omega*l) Y(l) = yc +
+     * s*R*cos(phi0+omega*l) Z(l) = z0 - l*tanL
+     *
+     * d^2 = (dX/dl)^2 + (dY/dl)^2 + (dZ/dl)^2
+     *
+     * pathlength = integral of d(l) from l(rMin) to l(rMax) pathlength =
+     * sqrt(R^2omega^2+tanL^2)*(l(rMax)-l(rMin))
+     *
+     * @author pilleux
+     *
+     */
+    public double getPathLength(double rMin, double rMax) {
+
+        double s = (double) -KFitter.polarity * getTurningSign();
+
+        if (rMax <= rMin) {
+            System.out.print("Cannot compute path length, max radius smaller than min radius ! \n");
+            return 0;
+        }
+        double l0 = this.getLAtR(rMin);
+        double l1 = this.getLAtR(rMax);
+        double term1 = this.getOmega() * s * this.getR();
+        double term2 = this.getTanL();
+        return Math.abs((l1 - l0) * Math.sqrt(term1 * term1 + term2 * term2));
+    }
+    
     @Override
     public String toString() {
         String s = String.format("    drho=%.4f phi0=%.4f radius=%.4f z0=%.4f tanL=%.4f B=%.4f\n", this._d0, this._phi0, this._R, this._z0, this._tanL, this._B);

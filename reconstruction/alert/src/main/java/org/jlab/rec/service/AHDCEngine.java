@@ -1,4 +1,4 @@
-package org.jlab.rec.service;
+package org.jlab.service.ahdc;
 
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.clas.tracking.kalmanfilter.Material;
@@ -21,6 +21,7 @@ import org.jlab.rec.ahdc.KalmanFilter.MaterialMap;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import org.jlab.rec.ahdc.PreCluster.PreClusterFinder;
 import org.jlab.rec.ahdc.Track.Track;
+import org.jlab.rec.ahdc.Mode;
 
 import java.io.File;
 import java.util.*;
@@ -28,10 +29,11 @@ import java.util.*;
 public class AHDCEngine extends ReconstructionEngine {
 
 	private boolean                   simulation;
-	private boolean                   use_AI_for_trackfinding;
 	private String                    findingMethod;
 	private HashMap<String, Material> materialMap;
 	private Model model;
+
+	private Mode mode = Mode.CV_Track_Finding;
 
 	public AHDCEngine() {
 		super("ALERT", "ouillon", "1.0.1");
@@ -41,13 +43,23 @@ public class AHDCEngine extends ReconstructionEngine {
 	public boolean init() {
 		simulation    = false;
 		findingMethod = "distance";
-		use_AI_for_trackfinding = true;
 
 		if (materialMap == null) {
 			materialMap = MaterialMap.generateMaterials();
 		}
 
-		model = new Model();
+		if(this.getEngineConfigString("Mode")!=null) {
+			if (Objects.equals(this.getEngineConfigString("Mode"), Mode.AI_Track_Finding.name()))
+				mode = Mode.AI_Track_Finding;
+
+			if (Objects.equals(this.getEngineConfigString("Mode"), Mode.CV_Track_Finding.name()))
+				mode = Mode.CV_Track_Finding;
+
+		}
+
+		if (mode == Mode.AI_Track_Finding) {
+			model = new Model();
+		}
 
 		return true;
 	}
@@ -79,7 +91,9 @@ public class AHDCEngine extends ReconstructionEngine {
 			HitReader hitRead = new HitReader(event, simulation);
 
 			ArrayList<Hit>     AHDC_Hits     = hitRead.get_AHDCHits();
-			ArrayList<TrueHit> TrueAHDC_Hits = hitRead.get_TrueAHDCHits();
+			if(simulation){
+				ArrayList<TrueHit> TrueAHDC_Hits = hitRead.get_TrueAHDCHits();
+			}
 			//System.out.println("AHDC_Hits size " + AHDC_Hits.size());
 			
 			// II) Create PreCluster
@@ -88,8 +102,6 @@ public class AHDCEngine extends ReconstructionEngine {
 			preclusterfinder.findPreCluster(AHDC_Hits);
 			AHDC_PreClusters = preclusterfinder.get_AHDCPreClusters();
 			//System.out.println("AHDC_PreClusters size " + AHDC_PreClusters.size());
-
-
 
 			// III) Create Cluster
 			ClusterFinder clusterfinder = new ClusterFinder();
@@ -101,7 +113,10 @@ public class AHDCEngine extends ReconstructionEngine {
 			ArrayList<Track> AHDC_Tracks = new ArrayList<>();
 			ArrayList<TrackPrediction> predictions = new ArrayList<>();
 
-			if (use_AI_for_trackfinding == false) {
+			// If there is too much hits, we rely on to the conventional track finding
+			if (AHDC_Hits.size() > 300) mode = Mode.CV_Track_Finding;
+
+			if (mode == Mode.CV_Track_Finding) {
 				if (findingMethod.equals("distance")) {
 					// IV) a) Distance method
 					//System.out.println("using distance");
@@ -116,7 +131,7 @@ public class AHDCEngine extends ReconstructionEngine {
 					AHDC_Tracks = houghtransform.get_AHDCTracks();
 				}
 			}
-			else {
+			if (mode == Mode.AI_Track_Finding) {
 				// AI ---------------------------------------------------------------------------------
 				AHDC_Hits.sort(new Comparator<Hit>() {
 					@Override
@@ -128,8 +143,13 @@ public class AHDCEngine extends ReconstructionEngine {
 				ArrayList<PreCluster> preClustersAI = preClustering.find_preclusters_for_AI(AHDC_Hits);
 				ArrayList<PreclusterSuperlayer> preclusterSuperlayers = preClustering.merge_preclusters(preClustersAI);
 				TrackConstruction trackConstruction = new TrackConstruction();
-				ArrayList<ArrayList<PreclusterSuperlayer>> tracks = trackConstruction.get_all_possible_track(preclusterSuperlayers);
+				ArrayList<ArrayList<PreclusterSuperlayer>> tracks = new ArrayList<>();
+				boolean sucess = trackConstruction.get_all_possible_track(preclusterSuperlayers, tracks);
 
+				if (!sucess) {
+					System.err.println("Too much tracks candidates, exit");
+					return false;
+				}
 
 				try {
 					AIPrediction aiPrediction = new AIPrediction();
@@ -139,7 +159,7 @@ public class AHDCEngine extends ReconstructionEngine {
 				}
 
 				for (TrackPrediction t : predictions) {
-					if (t.getPrediction() > 0.5)
+					if (t.getPrediction() > 0.2)
 						AHDC_Tracks.add(new Track(t.getClusters()));
 				}
 			}
@@ -148,7 +168,7 @@ public class AHDCEngine extends ReconstructionEngine {
 
 			//Temporary track method ONLY for MC with no background;
 			//AHDC_Tracks.add(new Track(AHDC_Hits));
-
+			
 			// V) Global fit
 			for (Track track : AHDC_Tracks) {
 				int nbOfPoints = track.get_Clusters().size();
@@ -165,12 +185,15 @@ public class AHDCEngine extends ReconstructionEngine {
 
 				HelixFitJava h = new HelixFitJava();
 				track.setPositionAndMomentum(h.HelixFit(nbOfPoints, szPos, 1));
+				// double p = 150.0;//MeV/c
+				// double phi          = Math.atan2(szPos[0][1], szPos[0][0]);
+				// double x_0[] = {0.0, 0.0, 0.0, p*Math.sin(phi), p*Math.cos(phi), 0.0};
+				// track.setPositionAndMomentumVec(x_0);
 			}
 
 			// VI) Kalman Filter
 			// System.out.println("AHDC_Tracks = " + AHDC_Tracks);
-			KalmanFilter kalmanFitter = new KalmanFilter(AHDC_Tracks, event);
-
+			KalmanFilter kalmanFitter = new KalmanFilter(AHDC_Tracks, event, simulation);
 			// VII) Write bank
 			RecoBankWriter writer = new RecoBankWriter();
 
@@ -192,6 +215,7 @@ public class AHDCEngine extends ReconstructionEngine {
 				DataBank recoMCBank = writer.fillAHDCMCTrackBank(event);
 				event.appendBank(recoMCBank);
 			}
+			
 
 		}
 		return true;
@@ -202,9 +226,9 @@ public class AHDCEngine extends ReconstructionEngine {
 		double starttime = System.nanoTime();
 
 		int    nEvent     = 0;
-		int    maxEvent   = 1000;
+		int    maxEvent   = 10;
 		int    myEvent    = 3;
-		String inputFile  = "alert_out_update.hipo";
+		String inputFile  = "merged_10.hipo";
 		String outputFile = "output.hipo";
 
 		if (new File(outputFile).delete()) System.out.println("output.hipo is delete.");

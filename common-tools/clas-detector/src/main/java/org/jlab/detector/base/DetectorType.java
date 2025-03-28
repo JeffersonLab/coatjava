@@ -31,6 +31,7 @@ public enum DetectorType {
     URWELL    (23, "URWELL"),
     AHDC      (24, "AHDC"),
     ATOF      (25, "ATOF"),
+    RECOIL    (26, "RECOIL"),
     TARGET    (100, "TARGET"),
     MAGNETS   (101, "MAGNETS"),
     ECIN      (110, "ECIN"),
