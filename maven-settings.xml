@@ -3,6 +3,7 @@
           xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.2.0 http://maven.apache.org/xsd/settings-1.2.0.xsd">
 
     <!-- Set global properties, such as version number -->
+<!--
     <profiles>
         <profile>
             <id>release</id>
@@ -11,6 +12,7 @@
             </properties>
         </profile>
     </profiles>
+-->
 
     <!--
     At some version of maven, http is no longer allowed.  This is a workaround
