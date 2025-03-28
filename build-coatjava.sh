@@ -4,10 +4,11 @@ set -e
 set -u
 set -o pipefail
 
-usage='''build-coatjava.sh [-h] [--help] [--quiet] [--spotbugs] [--nomaps] [--unittests]
+usage='''build-coatjava.sh [-h] [--help] [--quiet] [--clean] [--spotbugs] [--nomaps] [--unittests]
  - all other arguments will be passed to `mvn`, e.g., -T4 will build with 4 parallel threads'''
 
 quiet="no"
+cleanBuild="no"
 runSpotBugs="no"
 downloadMaps="yes"
 runUnitTests="no"
@@ -20,6 +21,7 @@ do
     --nomaps)    downloadMaps="no"  ;;
     --unittests) runUnitTests="yes" ;;
     --quiet)     quiet="yes"        ;;
+    --clean)     cleanBuild="yes"   ;;
     -h|--help)
       echo "$usage"
       exit 2
@@ -100,7 +102,7 @@ mkdir -p coatjava/lib/services
 cp external-dependencies/jclara-4.3-SNAPSHOT.jar coatjava/lib/utils
 
 ### clean up any cache copies ###
-cd common-tools/coat-lib; $mvn clean; cd -
+[ $cleanBuild == "yes" ] && $mvn clean
 
 unset CLAS12DIR
 if [ $runUnitTests == "yes" ]; then
