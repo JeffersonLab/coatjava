@@ -26,7 +26,7 @@ public class Mode3 extends HipoExtractor {
      * @return extracted pulses 
      */
     @Override
-    public List<Pulse> extract(NamedEntry pars, int id, long par1, long par2, short... samples) {
+    public List<Pulse> extract(NamedEntry pars, int id, long par1, int par2, short... samples) {
 
         List<Pulse> pulses = null;
 

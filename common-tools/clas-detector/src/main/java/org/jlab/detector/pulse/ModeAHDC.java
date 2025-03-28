@@ -30,7 +30,7 @@ public class ModeAHDC extends HipoExtractor  {
 	 * @param samples ADC samples
 	 */
 	@Override
-	public List<Pulse> extract(NamedEntry pars, int id, long timestamp, long time, short... samples){
+	public List<Pulse> extract(NamedEntry pars, int id, long timestamp, int time, short... samples){
 		// Settings parameters (they can be initialised by a CCDB)
 		float samplingTime = 50; // 50 ns <--> 20 MHz
 		short adcOffset = 0;

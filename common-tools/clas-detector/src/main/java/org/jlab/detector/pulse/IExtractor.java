@@ -5,6 +5,6 @@ import org.jlab.utils.groups.NamedEntry;
 
 public interface IExtractor <T> {
    
-    public List<T> extract(NamedEntry pars, int id, long par1, long par2, short... samples);
+    public List<T> extract(NamedEntry pars, int id, long par1, int par2, short... samples);
 
 }
