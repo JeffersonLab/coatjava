@@ -957,9 +957,9 @@ public class CodaEventDecoder {
                     }
                 }
             } catch (EvioException ex) {
-                //Logger.getLogger(EvioRawDataSource.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
             } catch (IndexOutOfBoundsException ex){
-                //System.out.println("[ERROR] ----> ERROR DECODING COMPOSITE DATA FOR ONE EVENT");
+                Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
             }
 
         }
@@ -1004,9 +1004,9 @@ public class CodaEventDecoder {
                     }
                 }
             } catch (EvioException ex) {
-                //Logger.getLogger(EvioRawDataSource.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
             } catch (IndexOutOfBoundsException ex){
-                //System.out.println("[ERROR] ----> ERROR DECODING COMPOSITE DATA FOR ONE EVENT");
+                Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
             }
 
         }
