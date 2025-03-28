@@ -336,6 +336,8 @@ public class CLASDecoder4 {
             tdcBANK.putByte("order", i, (byte) tdcDGTZ.get(i).getDescriptor().getOrder());
             tdcBANK.putInt("TDC", i, tdcDGTZ.get(i).getTDCData(0).getTime());
             tdcBANK.putInt("ToT", i, tdcDGTZ.get(i).getTDCData(0).getToT());
+            tdcBANK.putLong("timestamp", i, tdcDGTZ.get(i).getTDCData(0).getTimeStamp());
+            tdcBANK.putInt("trigger", i, tdcDGTZ.get(i).getTrigger());
             //System.err.println("event: " + tdcDGTZ.get(i).toString());
         }
         return tdcBANK;
@@ -435,6 +437,27 @@ public class CLASDecoder4 {
             scalerBANK.putLong("value", i, scalerDGTZ.get(i).getSCALERData(0).getValue());
         }
         return scalerBANK;
+    }
+
+    public Event getDecodedEvent(EvioDataEvent rawEvent, int run, int counter, double torus, double solenoid) {
+
+        Event  decodedEvent = this.getDataEvent(rawEvent);        
+
+        Bank   header = this.createHeaderBank(run, counter, (float) torus, (float) solenoid);
+        if(header!=null) decodedEvent.write(header);
+
+        Bank   trigger = this.createTriggerBank();
+        if(trigger!=null) decodedEvent.write(trigger);
+
+        Bank onlineHelicity = this.createOnlineHelicityBank();
+        if(onlineHelicity!=null) decodedEvent.write(onlineHelicity);
+
+        Bank decodedHelicity = this.createHelicityDecoderBank(rawEvent);
+        if (decodedHelicity!=null) decodedEvent.write(decodedHelicity);
+
+        this.extractPulses(decodedEvent);
+
+        return decodedEvent;
     }
 
     public Event getDataEvent(DataEvent rawEvent){
@@ -842,24 +865,13 @@ public class CLASDecoder4 {
             while(reader.hasEvent()==true){
                 EvioDataEvent event = (EvioDataEvent) reader.getNextEvent();
                 
-                Event  decodedEvent = decoder.getDataEvent(event);
-                
-                Bank   header = decoder.createHeaderBank( nrun, counter, (float) torus, (float) solenoid);
-                if(header!=null) decodedEvent.write(header);
-                Bank   trigger = decoder.createTriggerBank();
-                if(trigger!=null) decodedEvent.write(trigger);
-                Bank onlineHelicity = decoder.createOnlineHelicityBank();
-                if(onlineHelicity!=null) decodedEvent.write(onlineHelicity);
-                Bank decodedHelicity = decoder.createHelicityDecoderBank(event);
-                if (decodedHelicity!=null) decodedEvent.write(decodedHelicity);
+                Event  decodedEvent = decoder.getDecodedEvent(event, nrun, counter, torus, solenoid);
                 
                 Bank epics = decoder.createEpicsBank();
                 
                 decodedEvent.read(rawScaler);
                 decodedEvent.read(rawRunConf);
                 decodedEvent.read(helicityAdc);
-
-                decoder.extractPulses(decodedEvent);
 
                 helicityReadings.add(HelicityState.createFromFadcBank(helicityAdc, rawRunConf,
                     decoder.detectorDecoder.scalerManager));
