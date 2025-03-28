@@ -2,6 +2,7 @@ package org.jlab.detector.decode;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.jlab.detector.banks.RawBank.OrderType;
 import org.jlab.detector.base.DetectorDescriptor;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.helicity.HelicityBit;
@@ -335,10 +336,11 @@ public class DetectorDataDgtz implements Comparable<DetectorDataDgtz> {
      */
     public static class TDCData implements Comparable<TDCData>{
         
-        private int  tdcOrder    = 0; // Used for sorting
-        private int  tdcTime     = 0;
-        private int  tdcToT      = 0; // Time over threshold
+        private int tdcOrder = 0; // Used for sorting
+        private int tdcTime  = 0;
+        private int tdcToT   = 0; // Time over threshold
         private Long timeStamp   = 0L;
+        private OrderType tdcType = OrderType.NOMINAL;
         
         public TDCData() {}
         public TDCData(int time) { this.tdcTime = time;}
@@ -347,10 +349,12 @@ public class DetectorDataDgtz implements Comparable<DetectorDataDgtz> {
         public int getToT() { return this.tdcToT;}
         public int getOrder() { return tdcOrder;}
         public long getTimeStamp(){ return this.timeStamp; }
+        public OrderType getType() { return tdcType;}
         public TDCData setOrder(int order) { tdcOrder = order;return this;}
         public TDCData setTime(short time) { tdcTime = time;return this;}
         public TDCData setToT(short ToT) { tdcToT = ToT;return this;}
         public TDCData setTimeStamp(long time){ timeStamp = time;return this; }
+        public TDCData setType(OrderType type) { tdcType = type; return this;}
         
         @Override
         public String toString(){
