@@ -17,6 +17,7 @@ import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.hit.Hit;
 import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
 import org.jlab.rec.dc.hit.FittedHit;
+import org.jlab.rec.urwell.reader.URWellCross;
 import org.jlab.utils.groups.IndexedTable;
 
 /**
@@ -53,7 +54,7 @@ public class ClusterFinder {
     int nwire = Constants.NWIRE;
 
     private Hit[][][] HitArray = new Hit[nsect * nslay][nwire][nlayr];
-
+    
     /**
      *
      * @return gets 3-dimentional array of hits as
@@ -100,7 +101,7 @@ public class ClusterFinder {
         this.setHitArray(hitArray);
 
     }
-
+          
     /**
      * @param allhits the list of unfitted hits
      * @param ct
@@ -165,6 +166,219 @@ public class ClusterFinder {
         }        
         return clumps;
     }
+        
+    /**
+     * @param allhits the list of unfitted hits
+     * @param urCrosses the list of urwell crosses
+     * @param ct
+     * @param cf
+     * @param DcDetector
+     * @param numTDCBankRows
+     * @return clusters of hits. Hit-based tracking linear fits to the wires are
+     * done to determine the clusters. The result is a fitted cluster
+     */
+    public List<FittedCluster> FindHitBasedClustersWithURWell(List<Hit> allhits, List<URWellCross> urCrosses, ClusterCleanerUtilities ct, ClusterFitter cf, DCGeant4Factory DcDetector, int numTDCBankRows) {
+
+        //fill array of hit
+        this.fillHitArray(allhits, 0);
+
+        //find clumps of hits init
+        List<Cluster> clusters = this.findClumps(allhits, ct);
+                
+        allhits.clear();
+        
+        for (Cluster clus : clusters) {
+            Collections.sort(clus);
+            allhits.addAll(ct.HitListPruner(clus));
+        }
+        
+        this.fillHitArray(allhits, 0);
+        clusters.clear();
+        clusters = this.findClumps(allhits, ct);
+                                 
+        // create cluster list to be fitted
+        List<FittedCluster> selectedClusList = new ArrayList<>();
+
+        for (Cluster clus : clusters) {            
+            if((!ct.isExceptionalCluster(clus) && clus.size()<Constants.DC_MIN_NLAYERS) 
+                    || (ct.isExceptionalCluster(clus) && clus.size()<Constants.DC_MIN_NLAYERS - 1))
+                continue;
+            //LOGGER.log(Level.FINER, " I passed this cluster "+clus.printInfo());
+            FittedCluster fClus = new FittedCluster(clus);
+            ct.outOfTimersRemover(fClus, true); // remove outoftimers
+            if((!ct.isExceptionalFittedCluster(fClus) && fClus.size()<Constants.DC_MIN_NLAYERS) 
+                    ||(ct.isExceptionalFittedCluster(fClus) && fClus.size()<Constants.DC_MIN_NLAYERS-1))
+                continue;
+            selectedClusList.add(fClus); 
+        }
+        
+        // Build a map for uRWell crosses:  sector as key, and uRWell cross list as value
+        Map<Integer, List<URWellCross>> map_sector_uRWellCrossList = new HashMap(); 
+        for(URWellCross crs : urCrosses){
+            if(map_sector_uRWellCrossList.keySet().contains(crs.sector())) map_sector_uRWellCrossList.get(crs.sector()).add(crs);
+            else{
+                List<URWellCross> uRWellCrossList = new ArrayList();
+                uRWellCrossList.add(crs);
+                map_sector_uRWellCrossList.put(crs.sector(), uRWellCrossList);
+            }
+        }
+        
+        // create list of fitted clusters
+        List<FittedCluster> fittedClusList = new ArrayList<>();
+        List<FittedCluster> refittedClusList = new ArrayList<>();
+
+        for (FittedCluster clus : selectedClusList) {
+            cf.SetFitArray(clus, "LC"); 
+            cf.Fit(clus, true);
+            if(!ct.isExceptionalFittedCluster(clus) && clus.get_fitProb()<Constants.HITBASEDTRKGMINFITHI2PROB) { 
+                ct.IsolatedHitsPruner(clus);
+                //Refit
+                cf.SetFitArray(clus, "LC"); 
+                cf.Fit(clus, true);
+            }
+            if(clus.get_Superlayer() == 1){ // uRWell only joins SL1 
+                // Select URWell crosses in a ly range
+                List<URWellCross> selectedURWellCrosses = new ArrayList();
+                if(map_sector_uRWellCrossList.get(clus.get_Sector()) != null)
+                    selectedURWellCrosses.addAll(ct.FindURWellInLYRange(clus, map_sector_uRWellCrossList.get(clus.get_Sector())));  
+                
+                // Judge if the cluster is good according to quality of fitting
+                boolean isGoodCluster = false;
+                if (clus.get_fitProb() > Constants.HITBASEDTRKGMINFITHI2PROB){                                        
+                    if(!selectedURWellCrosses.isEmpty()){
+                        URWellCross seletedURWellCross = ct.FindURWellCrossWithSmallestResidual(clus, selectedURWellCrosses, cf);
+                                                                         
+                        if(seletedURWellCross != null){
+                            if(Math.abs(clus.getMatchedURWellResidual()) < Constants.URWELLRESIDUALCUT){
+                                isGoodCluster = true;
+                                clus.setMatchedURWellCross(seletedURWellCross);
+                            }
+                            else{
+                                clus.setMatchedURWellResidual(-1);
+                            }
+                        }
+                    }                                                                                                                                                                                                    
+                }                
+                
+                if(isGoodCluster) fittedClusList.add(clus);
+                else {
+                    List<FittedCluster> splitClus = new ArrayList();
+                    if(selectedURWellCrosses.isEmpty())
+                        splitClus.addAll(ct.ClusterSplitter(clus, selectedClusList.size(), cf));
+                    else
+                        splitClus.addAll(ct.ClusterSplitter(clus, selectedURWellCrosses, selectedClusList.size(), cf));
+                   
+                    // For special cases, not all possible uRWell crosses are selected to enter splitter. 
+                    // After splitting, splitted clusters without uRWell are re-matched with uRWell crosses
+                    List<FittedCluster> splittedClustersWithoutURWell = new ArrayList();
+                    List<FittedCluster> splittedClustersWithURWell = new ArrayList();
+                    for(FittedCluster cls : splitClus){
+                        if(cls.getMatchedURWellCross() == null) splittedClustersWithoutURWell.add(cls);
+                        else splittedClustersWithURWell.add(cls);
+                    }                      
+                    
+                    if(!splittedClustersWithoutURWell.isEmpty() && map_sector_uRWellCrossList.get(clus.get_Sector()) != null){
+                        List<URWellCross> remainingURWellCrosses = new ArrayList();
+                        for(URWellCross crs : map_sector_uRWellCrossList.get(clus.get_Sector())){
+                            boolean flag = false;
+                            for(FittedCluster cls : splittedClustersWithURWell){
+                                if(crs.id() == cls.getMatchedURWellCross().id()){
+                                    flag = true;
+                                    break;
+                                }                            
+                            }
+                            if(!flag) remainingURWellCrosses.add(crs);
+                        }
+                        if(!remainingURWellCrosses.isEmpty()){
+                            for(FittedCluster cls : splittedClustersWithoutURWell){
+                                List<URWellCross> selectedRemainingURWellCrosses = ct.FindURWellInLYRange(cls, remainingURWellCrosses);  
+                                if(!selectedRemainingURWellCrosses.isEmpty()){
+                                    URWellCross seletedRemainingURWellCross = ct.FindURWellCrossWithSmallestResidual(cls, selectedRemainingURWellCrosses, cf);
+
+                                    if(seletedRemainingURWellCross != null){
+                                        if(Math.abs(cls.getMatchedURWellResidual()) < Constants.URWELLRESIDUALCUT){
+                                            cls.setMatchedURWellCross(seletedRemainingURWellCross);
+                                        }
+                                        else{
+                                            cls.setMatchedURWellResidual(-1);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    fittedClusList.addAll(splitClus);              
+                } 
+            }
+            else {                
+                if (clus.get_fitProb() > Constants.HITBASEDTRKGMINFITHI2PROB){         
+                    fittedClusList.add(clus); //if the chi2 prob is good enough, then just add the cluster                    
+                } else {  
+                    List<FittedCluster> splitClus = ct.ClusterSplitter(clus, selectedClusList.size(), cf);
+                    fittedClusList.addAll(splitClus);              
+                }
+            }
+        }
+        
+        int idSharedHits = numTDCBankRows + 10000;
+        for (FittedCluster clus : fittedClusList) {            
+            cf.SetFitArray(clus, "LC"); 
+            cf.Fit(clus, true);
+            
+            // todo: add conditions for cluster with urwell at sl1; add an item about urwell cross id into dc cluster bank
+            if (clus != null && ((!ct.isExceptionalFittedCluster(clus) && clus.size() >= Constants.DC_MIN_NLAYERS) || 
+                    (ct.isExceptionalFittedCluster(clus) && clus.size() >= Constants.DC_MIN_NLAYERS-1)) 
+                    && ((ct.count_nlayers_in_cluster(clus) < Constants.DC_MIN_NLAYERS && clus.get_fitProb() > 0.4) || 
+                    (ct.count_nlayers_in_cluster(clus) >= Constants.DC_MIN_NLAYERS && clus.get_fitProb()>Constants.HITBASEDTRKGMINFITHI2PROB))) {                                               
+                // update the hits
+                for (FittedHit fhit : clus) {
+                    fhit.set_TrkgStatus(0);
+                    fhit.updateHitPosition(DcDetector); 
+                    //fhit.set_AssociatedClusterID(clus.get_Id());
+                }
+                
+                cf.SetFitArray(clus, "TSC"); 
+                cf.Fit(clus, true); 
+                cf.SetResidualDerivedParams(clus, false, false, DcDetector); //calcTimeResidual=false, resetLRAmbig=false, local= false
+                
+                clus = ct.ClusterCleaner(clus, cf, DcDetector);
+                // update the hits
+                ArrayList rmHits = new ArrayList<FittedHit>();
+                ArrayList addHits = new ArrayList<FittedHit>();
+                for (FittedHit fhit : clus) {
+                    if(fhit.get_AssociatedClusterID() <= 0) 
+                        fhit.set_AssociatedClusterID(clus.get_Id());
+                    else{
+                        try{
+                            FittedHit newHit = fhit.clone();
+                            newHit.set_IndexTDC(fhit.get_IndexTDC());
+                            newHit.set_Id(idSharedHits++);
+                            newHit.set_AssociatedClusterID(clus.get_Id());
+                            rmHits.add(fhit);
+                            addHits.add(newHit);
+                            
+                        } catch (CloneNotSupportedException ex) {
+                            Logger.getLogger(FittedHit.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                }
+                clus.removeAll(rmHits);
+                clus.addAll(addHits);
+                cf.SetFitArray(clus, "TSC");
+                cf.Fit(clus, false);
+                cf.SetSegmentLineParameters(clus.get(0).get_Z(), clus);
+                if (clus != null ) {
+                    refittedClusList.add(clus);
+                }
+
+            }
+
+        }
+        
+        return refittedClusList;
+
+    }            
 
     /**
      * @param allhits the list of unfitted hits

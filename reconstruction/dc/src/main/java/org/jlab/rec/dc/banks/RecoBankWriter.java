@@ -234,6 +234,11 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
         bank.setFloat("fitSlopeErr", i, (float) cluslist.get(i).get_clusterLineFitSlopeErr());
         bank.setFloat("fitInterc", i, (float) fitInterc);
         bank.setFloat("fitIntercErr", i, (float) cluslist.get(i).get_clusterLineFitInterceptErr());
+        
+        if(cluslist.get(i).getMatchedURWellCross() != null)
+            bank.setShort("URWell_Cross_ID", i, (short) cluslist.get(i).getMatchedURWellCross().id());
+        else
+            bank.setShort("URWell_Cross_ID", i, (short)-1);
 
         for (int j = 0; j < cluslist.get(i).size(); j++) {
             if (j < hitIdxArray.length) {
@@ -664,6 +669,11 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
             bank.setFloat("fitSlopeErr", i, (float) cluslist.get(i).get_clusterLineFitSlopeErr());
             bank.setFloat("fitInterc", i, (float) fitInterc);
             bank.setFloat("fitIntercErr", i, (float) cluslist.get(i).get_clusterLineFitInterceptErr());
+            
+            if(cluslist.get(i).getMatchedURWellCross() != null)
+                bank.setShort("URWell_Cross_ID", i, (short) cluslist.get(i).getMatchedURWellCross().id());
+            else
+                bank.setShort("URWell_Cross_ID", i, (short)-1);
 
             for (int j = 0; j < cluslist.get(i).size(); j++) {
                 if (j < hitIdxArray.length) {

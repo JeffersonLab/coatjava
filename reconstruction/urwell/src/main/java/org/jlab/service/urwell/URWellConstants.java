@@ -29,6 +29,17 @@ public class URWellConstants {
     // cross
     public final static double deltaE = 200;
     public final static double deltaT = 50;
-    public final static double meanT = 180;
+    public final static double meanT = 180 + 550;
+    
+     //Todo: Should come from uRWell geometry package
+    public static final double URWELLLOCALZR1  = 226.0464; // cm
+    public static final double URWELLXRESOLUTION = 0.01; // cm
+    public static final double URWELLYRESOLUTION = 0.04; // cm
+    
+    // CalCulate uRWell crosses in LC
+    public static double INTERVALDCSL1L1L2TSC = 1.15848; // cm
+    public static double DCSL1L1ZTSC = 229.27948; // cm
+    public static double DCSL1L1W1XTSC = -83.7509153; // cm
+    public static double YDCSL1L1W1LC = 1.7320508075688772;
 
 }

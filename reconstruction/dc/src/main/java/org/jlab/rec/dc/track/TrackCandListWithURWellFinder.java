@@ -36,6 +36,7 @@ import org.jlab.clas.tracking.utilities.RungeKuttaDoca;
 import org.jlab.rec.urwell.reader.URWellCross;
 import org.jlab.rec.urwell.reader.URWellStateVec;
 import org.jlab.rec.dc.cross.URWellDCCrossesList;
+import org.jlab.service.urwell.URWellConstants;
 
 /**
  * A class with a method implementing an algorithm that finds lists of track
@@ -460,7 +461,7 @@ public class TrackCandListWithURWellFinder {
         cand.set_Region1TrackX(new Point3D(trkR1X.x(), trkR1X.y(), trkR1X.z()));
         cand.set_Region1TrackP(new Point3D(trkR1P.x(), trkR1P.y(), trkR1P.z()));
                 
-        double[] VecAtURWell = dcSwim.SwimToPlaneTiltSecSys(cand.get(0).get_Sector(), Constants.URWELLLOCALZ);
+        double[] VecAtURWell = dcSwim.SwimToPlaneTiltSecSys(cand.get(0).get_Sector(), URWellConstants.URWELLLOCALZR1);
         Point3D uRWellPointLocal = new Point3D(VecAtURWell[0], VecAtURWell[1], VecAtURWell[2]);
         Point3D uRWellPLocal = new Point3D(-VecAtURWell[3], -VecAtURWell[4], -VecAtURWell[5]);
         Point3D uRWellPointGlobal = C.getCoordsInLab(VecAtURWell[0], VecAtURWell[1], VecAtURWell[2]);
@@ -608,7 +609,7 @@ public class TrackCandListWithURWellFinder {
         cand.set_Region1TrackX(new Point3D(trkR1X.x(), trkR1X.y(), trkR1X.z()));
         cand.set_Region1TrackP(new Point3D(trkR1P.x(), trkR1P.y(), trkR1P.z()));
         
-        double[] VecAtURWell = dcSwim.SwimToPlaneTiltSecSys(cand.get(0).get_Sector(), Constants.URWELLLOCALZ);
+        double[] VecAtURWell = dcSwim.SwimToPlaneTiltSecSys(cand.get(0).get_Sector(), URWellConstants.URWELLLOCALZR1);
         Point3D uRWellPointLocal = new Point3D(VecAtURWell[0], VecAtURWell[1], VecAtURWell[2]);
         Point3D uRWellPLocal = new Point3D(-VecAtURWell[3], -VecAtURWell[4], -VecAtURWell[5]);
         Point3D uRWellPointGlobal = C.getCoordsInLab(VecAtURWell[0], VecAtURWell[1], VecAtURWell[2]);
@@ -1610,14 +1611,14 @@ public class TrackCandListWithURWellFinder {
         if(urCross != null){
             if(urCross.getCluster1() != null) {
                 HitOnTrack urhot = new HitOnTrack(urCross.sector(), urCross.getCluster1().layer(), urCross.getCluster1().getLineLocal(),
-                         Constants.URWELLXRESOLUTION, Constants.URWELLLOCALZ);            
+                         URWellConstants.URWELLXRESOLUTION, URWellConstants.URWELLLOCALZR1);            
                 urhot.isDCHit = false;
                 hOTS.add(urhot);
             } 
             
             if(urCross.getCluster2() != null) {
                 HitOnTrack urhot = new HitOnTrack(urCross.sector(), urCross.getCluster2().layer(), urCross.getCluster2().getLineLocal(),
-                         Constants.URWELLXRESOLUTION, Constants.URWELLLOCALZ);            
+                         URWellConstants.URWELLXRESOLUTION, URWellConstants.URWELLLOCALZR1);            
                 urhot.isDCHit = false;
                 hOTS.add(urhot);
             }   

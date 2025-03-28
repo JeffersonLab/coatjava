@@ -13,6 +13,7 @@ import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.track.fit.basefit.LineFitPars;
 import org.jlab.rec.dc.track.fit.basefit.LineFitter;
 import org.jlab.rec.dc.Constants; 
+import org.jlab.rec.urwell.reader.URWellCross;
 
 public class ClusterFitter {
 
@@ -79,6 +80,18 @@ public class ClusterFitter {
         FitArray.add((ArrayList<Double>) ey);
         
     }
+    
+    /**
+     * In LC, add uRWell measure
+     * @param crs URWell cross
+     */
+    public void addURWellLC(URWellCross crs){
+        x.add( URWellCross.getLxRelativeDCSL1LC());
+        ex.add((double) 0);
+        y.add(crs.getLyRelativeDCSL1LC());
+        ey.add(0.5);
+    }
+    
     /**
      * 
      * @param clus fitted cluster

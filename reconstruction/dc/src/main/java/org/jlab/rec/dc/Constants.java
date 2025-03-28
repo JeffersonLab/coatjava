@@ -65,6 +65,10 @@ public class Constants {
         Math.sin(Math.toRadians(-240.)), Math.sin(Math.toRadians(-300.))};
     public static final double[] COSSECTORNEG60 = {1, 0.5, -0.5, -1, -0.5, 0.5};
     
+    ////////////// DC-uRWell clustering
+    public static final double YDISTURWELLTOMOSTLEFTLAYERLC = 1.8;
+    public static final double URWELLRESIDUALCUT = 0.11;
+    
     ////////////// Uncertainties for initial state
     ////// DC only
     public static final double HBINITIALSTATEUNCSCALE = 1.5;
@@ -191,12 +195,8 @@ public class Constants {
     public TrajectorySurfaces trajSurfaces = null;
     
     public static final double HTCCRADIUS = 175;
-    public static final double LTCCPLANE  = 653.09;
+    public static final double LTCCPLANE  = 653.09;        
     
-    //Todo: Should come from uRWell geometry package
-    public static final double URWELLLOCALZ  = 226.0464; // cm
-    public static final double URWELLXRESOLUTION = 0.01; // cm
-    public static final double URWELLYRESOLUTION = 0.04; // cm
     // other CLAS12 parameters
     public static final  int NSECT  = 6;
     public static final  int NSLAY  = 6;

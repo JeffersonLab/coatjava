@@ -45,6 +45,7 @@ import org.jlab.rec.dc.track.TrackCandListWithURWellFinder;
 import org.jlab.rec.urwell.reader.URWellCross;
 import org.jlab.rec.urwell.reader.URWellReader;
 import org.jlab.rec.urwell.reader.URWellStateVec;
+import org.jlab.service.urwell.URWellConstants;
 
 /**
  *
@@ -181,7 +182,8 @@ public class DCURWellTBEngine extends DCEngine {
         
         // Read urwell crosses on HB tracks
         URWellReader uRWellReader = new URWellReader(event, this.getBanks().getPrefix());
-        List<URWellCross> urCrosses = uRWellReader.getUrwellCrosses();
+        //List<URWellCross> urCrosses = uRWellReader.getUrwellCrosses();
+        List<URWellCross> urCrosses = uRWellReader.getUrwellR1Crosses();
         
         DataBank trkbank = event.getBank(this.getBanks().getInputTracksBank());
         //DataBank trkcovbank = event.getBank("TimeBasedTrkg::TBCovMat");
@@ -647,14 +649,14 @@ public class DCURWellTBEngine extends DCEngine {
         if(urCross != null){
             if(urCross.getCluster1() != null) {
                 HitOnTrack urhot = new HitOnTrack(urCross.sector(), urCross.getCluster1().layer(), urCross.getCluster1().getLineLocal(),
-                         Constants.URWELLXRESOLUTION, Constants.URWELLLOCALZ);            
+                         URWellConstants.URWELLXRESOLUTION, URWellConstants.URWELLLOCALZR1);            
                 urhot.isDCHit = false;
                 hOTS.add(urhot);
             } 
             
             if(urCross.getCluster2() != null) {
                 HitOnTrack urhot = new HitOnTrack(urCross.sector(), urCross.getCluster2().layer(), urCross.getCluster2().getLineLocal(),
-                         Constants.URWELLXRESOLUTION, Constants.URWELLLOCALZ);            
+                         URWellConstants.URWELLXRESOLUTION, URWellConstants.URWELLLOCALZR1);            
                 urhot.isDCHit = false;
                 hOTS.add(urhot);
             }   

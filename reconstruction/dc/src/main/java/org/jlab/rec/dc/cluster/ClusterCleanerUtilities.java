@@ -3,6 +3,8 @@ package org.jlab.rec.dc.cluster;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.logging.Logger;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.io.base.DataEvent;
@@ -12,6 +14,7 @@ import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.hit.Hit;
 import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
 import org.jlab.utils.groups.IndexedTable;
+import org.jlab.rec.urwell.reader.URWellCross;
 
 public class ClusterCleanerUtilities {
 
@@ -257,7 +260,346 @@ public class ClusterCleanerUtilities {
         }
         return selectedClusList2;
     }
+    
+     /**
+     *
+     * Identify clusters in a DC hit clump and relative uRWell crosses
+     *
+     * @param clus the fitted cluster. This cluster is examined for overlaps and
+     * // tracks.
+     * * @param crosses uRWell crosses
+     * @param nextClsStartIndex the index of the next cluster in the splitted
+     * cluster.
+     * @param cf
+     * @return a list of fitted clusters
+     */    
+    public List<FittedCluster> ClusterSplitter(FittedCluster clus, List<URWellCross> crosses, int nextClsStartIndex, ClusterFitter cf) {
 
+        /// The principle of Hough Transform in pattern recognition is as follows.
+        /// For every point (rho, phi) on a line there exists an infinite number of
+        /// lines that go through this point.  Each such line can be parametrized
+        /// with parameters (r, theta) such that r = rho * cos(theta) + phi * sin(theta),
+        /// where theta is the polar angle of the line which is perpendicular to it
+        /// and intersects the origin, and r is the distance between that line and
+        /// the origin, for a given theta.
+        /// Hence a point in (rho, phi) parameter space corresponds to a sinusoidal
+        /// curve in (r, theta) parameter space, which is the so-called Hough-
+        /// transform space.
+        /// Points that fall on a line in (rho, phi) space correspond to sinusoidal
+        /// curves that intersect at a common point in Hough-transform space.
+        /// Remapping this point in (rho, phi) space yields the line that contains
+        /// the points in the original line.
+        /// This method is a pattern recognition tool used to select groups of points
+        /// belonging to the same shape, such as a line or a circle.
+        /// To find the ensemble of points belonging to a line in the original space
+        /// the Hough transform algorithm makes use of an array, called an accumulator.
+        /// The principle of the accumulator is a counting method.
+        /// The dimensions of the array is equal to the number of parameters in
+        /// Hough transform space, which is 2 corresponding to the (r, theta) pair
+        /// in our particular case.
+        /// The bin size in the array are finite intervals in r and theta, which are
+        /// called accumulator cells.
+        /// The bin content of cells along the curve of discretized (r, theta) values
+        /// get incremented.  The cell with the highest count corresponds to the
+        /// intersection of the curves.  This is a numerical method to find
+        /// the intersection of any number of curves.
+        /// Once the accumulator array has been filled with all (r, theta) points
+        /// peaks and their associated (rho, phi) points are determined.
+        /// From these, sets of points belonging to common lines can be
+        /// determined.
+        /// This is a preliminary pattern recognition method used to identify
+        /// reconstructed hits belonging to the same track-segment.
+        int N_t = 180;
+
+        // From this calculate the bin size in the theta accumulator array
+        double ThetaMin = 0.;
+        double ThetaMax = 2. * Math.PI;
+        double SizeThetaBin = (ThetaMax - ThetaMin) / ((double) N_t);
+
+        // Define the dimension of the r accumulator array
+        int N_r = 130;
+        // From this calculate the bin size in the theta accumulator array
+        double RMin = -130;
+        double RMax = 130;
+
+        int[][] R_Phi_Accumul;
+        R_Phi_Accumul = new int[N_r][N_t];
+
+        // cache the cos and sin theta values [for performance improvement]
+        double[] cosTheta_RPhi_array;
+        double[] sinTheta_RPhi_array;
+
+        // the values corresponding to the peaks in the array
+        double[] binrMaxR_Phi;
+        double[] bintMaxR_Phi;
+        binrMaxR_Phi = new double[N_r * N_t];
+        bintMaxR_Phi = new double[N_r * N_t];
+
+        cosTheta_RPhi_array = new double[N_t];
+        sinTheta_RPhi_array = new double[N_t];
+
+        for (int j_t = 0; j_t < N_t; j_t++) {
+            // theta_j in the middle of the bin :
+            double theta_j = ThetaMin + (0.5 + j_t) * SizeThetaBin;
+            cosTheta_RPhi_array[j_t] = Math.cos(theta_j);
+            sinTheta_RPhi_array[j_t] = Math.sin(theta_j);
+        }
+
+        // loop over points to fill the accumulator arrays
+        for (int i = 0; i < clus.size(); i++) {
+
+            double rho = clus.get(i).get_lX();
+            double phi = clus.get(i).get_lY();
+
+            // fill the accumulator arrays
+            for (int j_t = 0; j_t < N_t; j_t++) {
+                // cashed theta_j in the middle of the bin :
+                //double theta_j   = ThetaMin + (0.5 + j_t)*SizeThetaBin;
+                // r_j corresponding to that theta_j:
+                double r_j = rho * cosTheta_RPhi_array[j_t] + phi * sinTheta_RPhi_array[j_t];
+                // this value of r_j falls into the following bin in the r array:
+                int j_r = (int) Math.floor(N_r * (r_j - RMin) / (float) (RMax - RMin));
+
+                // increase this accumulator cell:
+                R_Phi_Accumul[j_r][j_t]++;
+            }
+        }        
+
+        // loop over accumulator array to find peaks (allows for more than one peak for multiple tracks)
+        // The accumulator cell count must be at least half the total number of hits
+        // Make binrMax, bintMax arrays to allow for more than one peak
+        int threshold = Constants.DC_MIN_NLAYERS-1;
+        int nbPeaksR_Phi = 0;
+
+        // 1st find the peaks in the R_Phi accumulator array
+        for (int ibinr1 = 0; ibinr1 < N_r; ibinr1++) {
+            for (int ibint1 = 0; ibint1 < N_t; ibint1++) {
+                //find the peak
+
+                if (R_Phi_Accumul[ibinr1][ibint1] >= Constants.DC_MIN_NLAYERS-1) {
+
+                    if (R_Phi_Accumul[ibinr1][ibint1] > threshold) {
+                        threshold = R_Phi_Accumul[ibinr1][ibint1];
+                    }
+
+                    binrMaxR_Phi[nbPeaksR_Phi] = ibinr1;
+                    bintMaxR_Phi[nbPeaksR_Phi] = ibint1;
+                    nbPeaksR_Phi++;
+
+                }
+            }
+        }
+
+        // For a given Maximum value of the accumulator, find the set of points associated with it;
+        //  for this, begin again loop over all the points
+        List<FittedCluster> splitclusters = new ArrayList<>();
+
+        for (int p = nbPeaksR_Phi - 1; p > -1; p--) {
+            // Make a new cluster
+
+            FittedCluster newClus = new FittedCluster(clus.getBaseCluster());
+            
+            // Add hits into new cluster
+            for (int i = 0; i < clus.size(); i++) {
+                double rho = clus.get(i).get_lX();
+                double phi = clus.get(i).get_lY();
+
+                for (int j_t = 0; j_t < N_t; j_t++) {
+                    // theta_j in the middle of the bin :
+                    //double theta_j   = ThetaMin + (0.5 + j_t)*SizeThetaBin;
+                    // r_j corresponding to that theta_j:
+                    double r_j = rho * cosTheta_RPhi_array[j_t] + phi * sinTheta_RPhi_array[j_t];
+                    // this value of r_j falls into the following bin in the r array:
+                    int j_r = (int) Math.floor(N_r * (r_j - RMin) / (float) (RMax - RMin));
+
+                    // match bins:
+                    if (j_r == binrMaxR_Phi[p] && j_t == bintMaxR_Phi[p]) {
+                        newClus.add(clus.get(i));  // add this hit
+                    }
+                }
+            }
+            
+            // Add uRWell crosses into new cluster
+            List<URWellCross> crossesInLine = new ArrayList();
+            for (URWellCross crs : crosses) {
+
+                double rho = URWellCross.getLxRelativeDCSL1LC();
+                double phi = crs.getLyRelativeDCSL1LC();
+
+                for (int j_t = 0; j_t < N_t; j_t++) {
+                    // theta_j in the middle of the bin :
+                    //double theta_j   = ThetaMin + (0.5 + j_t)*SizeThetaBin;
+                    // r_j corresponding to that theta_j:
+                    double r_j = rho * cosTheta_RPhi_array[j_t] + phi * sinTheta_RPhi_array[j_t];
+                    // this value of r_j falls into the following bin in the r array:
+                    int j_r = (int) Math.floor(N_r * (r_j - RMin) / (float) (RMax - RMin));
+
+                    // match bins:
+                    if (j_r == binrMaxR_Phi[p] && j_t == bintMaxR_Phi[p]) {
+                        crossesInLine.add(crs);  // add this hit
+                    }
+                }
+            }
+
+            // Find matched uRWell cross
+            if(!crossesInLine.isEmpty()){
+                URWellCross matchedURWellCrossInLine = FindURWellCrossWithSmallestResidual(newClus, crossesInLine, cf);
+                if(matchedURWellCrossInLine != null){                      
+                    if(Math.abs(newClus.getMatchedURWellResidual()) < Constants.URWELLRESIDUALCUT){
+                        newClus.setMatchedURWellCross(matchedURWellCrossInLine);                           
+                    }
+                }
+            }                        
+                        
+            //Limits for cluster candiates
+            boolean passCluster = false;
+            int nLayers = count_nlayers_in_cluster(newClus);
+            if((!isExceptionalCluster(newClus) && nLayers >= Constants.DC_MIN_NLAYERS) 
+                    || (isExceptionalCluster(newClus) && nLayers >= Constants.DC_MIN_NLAYERS - 1)) {                            
+                //require consistency with line
+                cf.SetFitArray(newClus, "LC");
+                cf.Fit(newClus, true);
+                if ((nLayers == 6 && newClus.get_fitProb() > 0.9) ||  (nLayers == 5 && newClus.get_fitProb() > 0.85)
+                        || (nLayers == 4 && newClus.get_fitProb() > 0.75) || (nLayers == 3 && newClus.get_fitProb() > 0.65)) {
+                    passCluster = true;
+                }
+            }
+            
+            boolean isClusterExisted = false;
+            for(FittedCluster cls : splitclusters){
+                if(newClus.isSameAs(cls)) {
+                    isClusterExisted = true;
+                    break;
+                }
+            }
+
+            if (!isClusterExisted && passCluster) {
+                splitclusters.add(newClus);
+            }            
+        }       
+                        
+        ////// make new clusters with application of OverlappingClusterResolver  
+        
+        // Separate clusters with and without uRWell
+        List<FittedCluster> splitclustersNoURWell = new ArrayList();
+        List<FittedCluster> splitclustersWithURWell = new ArrayList();
+        for(FittedCluster cls : splitclusters){
+            if(cls.getMatchedURWellCross() == null) splitclustersNoURWell.add(cls);
+            else splitclustersWithURWell.add(cls);
+        }
+        // select clusters with uRWell trhough OverlappingClusterResolver
+        List<FittedCluster> selectedClusListWithURWell = new ArrayList<>();
+        int newcid = nextClsStartIndex;        
+        for (FittedCluster cluster : splitclustersWithURWell) {
+            cluster.set_Id(newcid++);
+            cf.SetFitArray(cluster, "LC");
+            cf.Fit(cluster, true);
+
+            FittedCluster bestCls = OverlappingClusterResolver(cluster, splitclustersWithURWell);
+
+            if (bestCls != null) {
+
+                if (!(selectedClusListWithURWell.contains(bestCls))) {
+                    selectedClusListWithURWell.add(bestCls);
+                }
+            }
+        }         
+        
+        // select clusters trhough OverlappingClusterResolver    
+        selectedClusListWithURWell.addAll(splitclustersNoURWell); // Add selected clusters with uRWell into list of clusters without uRWell
+
+        List<FittedCluster> selectedClusList = new ArrayList<>();                
+        for (FittedCluster cluster : selectedClusListWithURWell) {
+            cluster.set_Id(newcid++);
+            cf.SetFitArray(cluster, "LC");
+            cf.Fit(cluster, true);
+
+            FittedCluster bestCls = OverlappingClusterResolver(cluster, selectedClusListWithURWell);
+
+            if (bestCls != null) {
+
+                if (!(selectedClusList.contains(bestCls))) {
+                    selectedClusList.add(bestCls);
+                }
+            }
+        }
+        
+        // Apply OverlappingClusterResolver again
+        List<FittedCluster> selectedClusList2 = new ArrayList<>();
+        for (FittedCluster cluster : selectedClusList) {
+            cluster.set_Id(newcid++);
+            cf.SetFitArray(cluster, "LC");
+            cf.Fit(cluster, true);
+
+            FittedCluster bestCls = OverlappingClusterResolver(cluster, selectedClusList);
+
+            if (bestCls != null) {
+
+                if (!(selectedClusList2.contains(bestCls))) {
+                    selectedClusList2.add(bestCls);
+                }
+            }
+        }                
+        
+        if (selectedClusList2.isEmpty()) {
+            URWellCross matchedURWellCross = FindURWellCrossWithSmallestResidual(clus, crosses, cf);
+            if(matchedURWellCross != null){                      
+                if(Math.abs(clus.getMatchedURWellResidual()) < Constants.URWELLRESIDUALCUT){
+                    clus.setMatchedURWellCross(matchedURWellCross);                           
+                }
+                else clus.setMatchedURWellResidual(-1);
+            }
+            
+            selectedClusList2.add(clus); // if the splitting fails, then return the original cluster
+        }
+        
+        return selectedClusList2;
+    }    
+    
+    // Find uRWell crosses in a wire range
+    public List<URWellCross> FindURWellInLYRange(FittedCluster cls, List<URWellCross> crosses){
+        // Get ly_min and ly_max for hits at the most left layer
+        List<FittedHit> hits = cls.getHitsAtMostLeftLayer();
+        double lyMinDC = 999;
+        double lyMaxDC = -999;
+        for(FittedHit hit : hits){
+            if(hit.get_lY() < lyMinDC) lyMinDC = hit.get_lY();
+            if(hit.get_lY() > lyMaxDC) lyMaxDC = hit.get_lY();
+        }
+        
+        // Select uRWell crosses in a ly range
+        List<URWellCross> selectedCrosses = new ArrayList();
+        for(URWellCross crs : crosses){
+            double y = crs.getLyRelativeDCSL1LC(); 
+            if(Math.abs(y - lyMinDC) < Constants.YDISTURWELLTOMOSTLEFTLAYERLC || Math.abs(y - lyMaxDC) < Constants.YDISTURWELLTOMOSTLEFTLAYERLC){              
+                selectedCrosses.add(crs);
+            }
+        }
+        
+        return selectedCrosses;
+    }
+    
+    // Find uRWell with smallest residual
+    public URWellCross FindURWellCrossWithSmallestResidual(FittedCluster cls, List<URWellCross> crosses, ClusterFitter cf){
+        double absResidualMin = 999;
+        URWellCross selectedCross = null;
+        for(URWellCross crs : crosses){
+           cf.SetFitArray(cls, "LC"); 
+           cf.addURWellLC(crs);
+           cf.Fit(cls, true); 
+           double x = URWellCross.getLxRelativeDCSL1LC();
+           double y = crs.getLyRelativeDCSL1LC();
+           double residual = cls.get_clusterLineFitSlope() * x + cls.get_clusterLineFitIntercept() - y;
+           if(Math.abs(residual) < absResidualMin){
+               absResidualMin = Math.abs(residual);
+               selectedCross = crs;
+               cls.setMatchedURWellResidual(residual);
+           }
+        }
+        
+        return selectedCross;
+    } 
+    
     public List<List<Hit>> byLayerListSorter(List<Hit> DCHits, int sector, int superlyr) {
 
         List<List<Hit>> hitsinlayr_array = new ArrayList<>();
@@ -699,8 +1041,13 @@ public class ClusterCleanerUtilities {
     }
 
     /**
-     * A method to select the largest cluster among a set of clusters with 4 or
-     * more of overlaping hits
+     * A method to select the cluster among a set of clusters with overlaping hits: 
+     * for cluster with uRWell:
+     * 2 or more overlaping hits for normal clusters
+     * 1 or more overlaping hits for set with exceptional clusters
+     * for cluster without uRWell:
+     * 3 or more overlaping hits for normal clusters
+     * 2 or more overlaping hits for set with exceptional clusters
      *
      * @param thisclus the cluster to be compared to a list of other clusters
      * @param clusters the list of clusters
@@ -711,39 +1058,54 @@ public class ClusterCleanerUtilities {
         List<FittedCluster> overlapingClusters = new ArrayList<>();
         
         for (FittedCluster cls : clusters) {
-
-            List<FittedHit> hitOvrl = new ArrayList<>();
-            for (FittedHit hit : thisclus) {
-                if (cls.contains(hit)) {
-
-                    if (!(hitOvrl.contains(hit))) {
-                        hitOvrl.add(hit);
-                    }
-                }
-            } // end loop over hits in thisclus
-
-            //test
             boolean passCls = true;
             for (FittedCluster ovr : overlapingClusters) {
                 if (ovr.equals(cls)) {
                     passCls = false;
-                    continue;
+                    break;
                 }
-                //ensure that the lines are consistent
+            }
+            
+            if(passCls && cls.getMatchedURWellCross() != null && thisclus.getMatchedURWellCross()!= null 
+                    && (cls.getMatchedURWellCross().id() != thisclus.getMatchedURWellCross().id())){
+                passCls = false;   
+            }
                 
-                //if (Math.abs(ovr.get_clusterLineFitSlope() - cls.get_clusterLineFitSlope()) > 0.2) {
-                  //  passCls = false;
-                //}
-            }
-            if((!isExceptionalFittedCluster(cls) && !isExceptionalFittedCluster(thisclus) && hitOvrl.size() < 3) 
-                    || ((isExceptionalFittedCluster(cls) || isExceptionalFittedCluster(thisclus)) && hitOvrl.size() < 2)) {
-                passCls = false;
-            }
+            
+            if(passCls){
+                List<FittedHit> hitOvrl = new ArrayList<>();
+                    for (FittedHit hit : thisclus) {
+                        if (cls.contains(hit)) {
 
-            if (passCls) {
-                overlapingClusters.add(cls);
-            }
+                            if (!(hitOvrl.contains(hit))) {
+                                hitOvrl.add(hit);
+                            }
+                        }
+                } // end loop over hits in thisclus
+            
+                if( cls.getMatchedURWellCross() != null && thisclus.getMatchedURWellCross()!= null 
+                        && (cls.getMatchedURWellCross().id() == thisclus.getMatchedURWellCross().id())){ // shared uRWell cross
 
+                    if((!isExceptionalFittedCluster(cls) && !isExceptionalFittedCluster(thisclus) && hitOvrl.size() < 2) 
+                            || ((isExceptionalFittedCluster(cls) || isExceptionalFittedCluster(thisclus)) && hitOvrl.size() < 1)) {
+                        passCls = false;
+                    }                                
+
+                    if (passCls) {
+                        overlapingClusters.add(cls);
+                    }                
+                }
+                else{                
+                    if((!isExceptionalFittedCluster(cls) && !isExceptionalFittedCluster(thisclus) && hitOvrl.size() < 3) 
+                            || ((isExceptionalFittedCluster(cls) || isExceptionalFittedCluster(thisclus)) && hitOvrl.size() < 2)) {
+                        passCls = false;
+                    }
+
+                    if (passCls) {
+                        overlapingClusters.add(cls);
+                    }
+                }
+            }
         }
         
         // Remove clusters in R1&R2 from lists, whose slope is out of limit
@@ -751,18 +1113,81 @@ public class ClusterCleanerUtilities {
         if(overlapingClusters.size() > 1){
             List<FittedCluster> rmClusters = new ArrayList<>();
             for(FittedCluster overlapingCls : overlapingClusters){
-                if(overlapingCls.get_Superlayer() <=4 && Math.abs(overlapingCls.get_clusterLineFitSlope()) > 0.578) //tan(30 deg) 
+                if(overlapingCls.getMatchedURWellCross() == null && overlapingCls.get_Superlayer() <=4 && Math.abs(overlapingCls.get_clusterLineFitSlope()) > 0.578) //tan(30 deg) 
                     rmClusters.add(overlapingCls);
             }
             if(overlapingClusters.size() > rmClusters.size()) overlapingClusters.removeAll(rmClusters);
         }
+                
+        // Collect clusters with uRWell cross
+        List<FittedCluster> overlapingClustersWithURWell = new ArrayList<>();
+        for(FittedCluster cls : overlapingClusters){
+            if(cls.getMatchedURWellCross() != null) overlapingClustersWithURWell.add(cls);
+        }
         
-        Collections.sort(overlapingClusters); // Order overlapping clusters; 1st priortiy: cluster size; 2nd priority if same cluster size : fitting quality
-         
-        // return the largest cluster.
-        return overlapingClusters.get(0);
+        if(!overlapingClustersWithURWell.isEmpty()){         
+            return SelectClusterWithSameURWellCross(overlapingClustersWithURWell); 
+        }
+        else{
+            // Order overlapping clusters; 1st priortiy: cluster size; 2nd priority if same cluster size : fitting quality
+            Collections.sort(overlapingClusters); 
+            return overlapingClusters.get(0);
+        }
 
     }
+    
+    /** Select a cluster from cluster list with the same uRWell; 1st priortiy: cluster size; 2nd priority if same cluster size : smallest uRWell residual
+     * 
+     * @param clusters - FittedCluster list
+     * @return selected FittedCluster
+     */
+    public FittedCluster SelectClusterWithSameURWellCross(List<FittedCluster> clusters){
+        Map<Integer, List<FittedCluster>> map_size_clusterList = new HashMap();
+        for(FittedCluster cls : clusters){
+            int size = cls.size();
+            if(map_size_clusterList.keySet().contains(size)) map_size_clusterList.get(size).add(cls);
+            else{
+                List<FittedCluster> newClusterList = new ArrayList();
+                newClusterList.add(cls);
+                map_size_clusterList.put(size, newClusterList);
+            }
+        }
+        
+        List<Integer> keyList = new ArrayList();
+        keyList.addAll(map_size_clusterList.keySet());
+        Collections.sort(keyList);
+        
+        List<FittedCluster> clusterListWithMostHits = map_size_clusterList.get(keyList.get(keyList.size() - 1));
+        return FindClusterWithSmallestURWellResidual(clusterListWithMostHits);        
+    }
+    
+    /** Find Cluster with smallest uRWell residual
+     * 
+     * @param clusters - FittedCluster list
+     * @return FittedCluster with smallest uRWell residual
+     */
+    public FittedCluster FindClusterWithSmallestURWellResidual(List<FittedCluster> clusters){
+        ClusterFitter cf = new ClusterFitter();
+        
+        double absResidualMin = 999;
+        FittedCluster selectedCluster = null;
+        for(FittedCluster cls : clusters){
+           URWellCross crs = cls.getMatchedURWellCross();
+           cf.SetFitArray(cls, "LC"); 
+           cf.addURWellLC(crs);
+           cf.Fit(cls, true); 
+           double x = URWellCross.getLxRelativeDCSL1LC();
+           double y = crs.getLyRelativeDCSL1LC();
+           double residual = cls.get_clusterLineFitSlope() * x + cls.get_clusterLineFitIntercept() - y;
+           if(Math.abs(residual) < absResidualMin){
+               absResidualMin = Math.abs(residual);
+               selectedCluster = cls;
+           }
+        }
+        
+        return selectedCluster;
+    } 
+    
 /**
      * Prunes the input hit list to remove noise candidates; the algorithm finds
      * contiguous hits in a layer (column) and removes hits according to the

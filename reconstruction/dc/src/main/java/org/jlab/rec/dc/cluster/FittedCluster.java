@@ -1,9 +1,11 @@
 package org.jlab.rec.dc.cluster;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.jlab.geom.prim.Line3D;
 import org.jlab.rec.dc.hit.FittedHit;
+import org.jlab.rec.urwell.reader.URWellCross;
 
 /**
  * A fitted cluster in the DC consists of an array of hits that are grouped
@@ -62,6 +64,10 @@ public class FittedCluster extends ArrayList<FittedHit> implements Comparable<Fi
     private double _clusterLineFitInterceptErrMP;
 
     private int[][] _Status;
+    
+    private URWellCross matchedURWellCross= null;
+    private double matchedURWellResidual = -1;
+    private List<URWellCross> potentialMatchedURWellCrosses = null;
 
     /**
      *
@@ -352,6 +358,67 @@ public class FittedCluster extends ArrayList<FittedHit> implements Comparable<Fi
         }
         return value;
     }
+    
+    
+    public List<FittedHit> getHitsAtMostLeftLayer(){
+        int mostLeftLayer = 6;
+        List<FittedHit> hitsAtMostLeftLayer = new ArrayList();
+        for(FittedHit hit : this){
+            if(hit.get_Layer() < mostLeftLayer){
+                mostLeftLayer = hit.get_Layer();
+                hitsAtMostLeftLayer.clear();
+                hitsAtMostLeftLayer.add(hit);
+            }
+            else if(hit.get_Layer() == mostLeftLayer){
+                hitsAtMostLeftLayer.add(hit);
+            }            
+        }
+        
+        return hitsAtMostLeftLayer;        
+    }
+           
+    public void setMatchedURWellCross(URWellCross crs){
+        matchedURWellCross = crs;
+    }
+    
+    public URWellCross getMatchedURWellCross(){
+        return matchedURWellCross;
+    }
+            
+    public void setMatchedURWellResidual(double residual){
+        matchedURWellResidual = residual;
+    }
+    
+    public double getMatchedURWellResidual(){
+        return matchedURWellResidual;
+    }
+    
+    public void setPotentialMatchedURWellCrosses(List<URWellCross> crosses){
+        potentialMatchedURWellCrosses = crosses;
+    }
+    
+    public List<URWellCross> getPotentialMatchedURWellCrosses(){
+        return potentialMatchedURWellCrosses;
+    }
+    
+    public boolean isSameAs(FittedCluster o){
+        if(this.getMatchedURWellCross() == null && o.getMatchedURWellCross() != null) return false;
+        else if(this.getMatchedURWellCross() != null && o.getMatchedURWellCross() == null) return false;
+        else if(this.getMatchedURWellCross() != null && o.getMatchedURWellCross() != null && this.getMatchedURWellCross().id() != o.getMatchedURWellCross().id()) return false;
+        int nMatchedHits = 0;
+        for(FittedHit hit1 : this){
+            for(FittedHit hit2 : o){
+                if(hit1.isSameAs(hit2)){
+                    nMatchedHits++;
+                    break;
+                }
+            }
+        }
+        
+        return ((this.size() == nMatchedHits) && (o.size() == nMatchedHits));
+    }
+    
+    
 
     /**
      *

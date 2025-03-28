@@ -25,6 +25,8 @@ public class URWellCross {
     private int tid = -1; // Track id;
     private URWellCluster cls1 = null;
     private URWellCluster cls2 = null;
+    private static double _lxR1RelativeDCSL1 = 1 - (URWellConstants.DCSL1L1ZTSC - URWellConstants.URWELLLOCALZR1)/URWellConstants.INTERVALDCSL1L1L2TSC; // x of R1 relative to DC SL1 in LC    
+    private double _lyR1RelativeDCSL1 = -999; // y of R1 relative to DC SL1 in LC 
 
     public URWellCross(int id, int sector, int region, double x, double y, double z, double energy, double time, int cluster1, int cluster2, int status) {
         this.id = id;
@@ -39,6 +41,7 @@ public class URWellCross {
         this.cluster1 = cluster1;
         this.cluster2 = cluster2;
         this.status =  status;
+        this._lyR1RelativeDCSL1 = getLyRelativeToDCSL1LC();
     }
     
     public URWellCross(int id, int tid, int sector, int region, double x, double y, double z, double x_local, double y_local, double z_local, double energy, double time, int cluster1, int cluster2, int status) {
@@ -53,6 +56,7 @@ public class URWellCross {
         this.cluster1 = cluster1;
         this.cluster2 = cluster2;
         this.status =  status;
+        this._lyR1RelativeDCSL1 = getLyRelativeToDCSL1LC();
     }
     
     URWellStateVec stateVec = null;
@@ -195,5 +199,22 @@ public class URWellCross {
         }
         
         return cluster;
+    }
+    
+    public static double getLxRelativeDCSL1LC(){
+        return _lxR1RelativeDCSL1;
+    }
+        
+    private double getLyRelativeToDCSL1LC(){
+        if(local != null) {
+            double xAlongDCSL1PlaneY0TSC = local.x()  - local.y() * Math.tan(Math.toRadians(6));
+            double lyR1RelativeDCSL1 = (xAlongDCSL1PlaneY0TSC - URWellConstants.DCSL1L1W1XTSC) * Math.cos(Math.toRadians(6))/URWellConstants.INTERVALDCSL1L1L2TSC + URWellConstants.YDCSL1L1W1LC;
+            return lyR1RelativeDCSL1;
+        }
+        else return -999;
+    }
+    
+    public double getLyRelativeDCSL1LC(){
+        return _lyR1RelativeDCSL1;
     }
 }
