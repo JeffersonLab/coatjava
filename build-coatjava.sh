@@ -119,12 +119,6 @@ if [ $runSpotBugs == "yes" ]; then
 	if [ $? != 0 ] ; then echo "spotbugs failure" ; exit 1 ; fi
 fi
 
-#FIXME: can `./pom.xml` and `common-tools/coat-lib/pom.xml` be combined? see also `version-bump.sh`
-cd common-tools/coat-lib
-$mvn package
-if [ $? != 0 ] ; then echo "mvn package failure" ; exit 1 ; fi
-cd -
-
 cp common-tools/coat-lib/target/coat-libs-*-SNAPSHOT.jar coatjava/lib/clas/
 cp reconstruction/*/target/clas12detector-*-SNAPSHOT*.jar coatjava/lib/services/
 
