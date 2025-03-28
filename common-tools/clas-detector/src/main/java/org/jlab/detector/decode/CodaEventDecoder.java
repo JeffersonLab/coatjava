@@ -280,9 +280,12 @@ public class CodaEventDecoder {
                 return this.getDataEntries_57640(crate, node, event);
             }
             else if(node.getTag()==57622){
-                //  This is regular integrated pulse mode, used for FTOF
-                // FTCAL and EC/PCAL
+                //  This is regular DCRB bank with TDCs only
                 return this.getDataEntries_57622(crate, node, event);
+            }
+            else if(node.getTag()==57648){
+                //  This is DCRB bank with TDCs and widths
+                return this.getDataEntries_57648(crate, node, event);
             }
             else if(node.getTag()==57636){
                 //  RICH TDC data
@@ -954,9 +957,56 @@ public class CodaEventDecoder {
                     }
                 }
             } catch (EvioException ex) {
-                //Logger.getLogger(EvioRawDataSource.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
             } catch (IndexOutOfBoundsException ex){
-                //System.out.println("[ERROR] ----> ERROR DECODING COMPOSITE DATA FOR ONE EVENT");
+                Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+        }
+        return entries;
+    }
+
+    /**
+     * Bank TAG=57648 used for DC (Drift Chambers) TDC and ToT values.
+     * @param crate
+     * @param node
+     * @param event
+     * @return
+     */
+    public List<DetectorDataDgtz>  getDataEntries_57648(Integer crate, EvioNode node, EvioDataEvent event){
+        List<DetectorDataDgtz>  entries = new ArrayList<>();
+        if(node.getTag()==57648){
+            try {
+                ByteBuffer     compBuffer = node.getByteData(true);
+                CompositeData  compData = new CompositeData(compBuffer.array(),event.getByteOrder());
+                //List<DataType> cdatatypes = compData.getTypes();
+                List<Object>   cdataitems = compData.getItems();
+
+                int  totalSize = cdataitems.size();
+                int  position  = 0;
+                while( (position + 4) < totalSize){
+                    Byte    slot = (Byte)     cdataitems.get(position);
+                    //Integer trig = (Integer)  cdataitems.get(position+1);
+                    Long    time = (Long)     cdataitems.get(position+2);
+                    Integer nchannels = (Integer) cdataitems.get(position+3);
+                    int counter  = 0;
+                    position = position + 4;
+                    while(counter<nchannels){
+                        Byte   channel = (Byte) cdataitems.get(position);
+                        Short  tdc     = (Short) cdataitems.get(position+1);
+                        Short  tot     = (Short) cdataitems.get(position+2);
+                        position += 3;
+                        counter++;
+                        DetectorDataDgtz   entry = new DetectorDataDgtz(crate,slot,channel);
+                        entry.addTDC(new TDCData(tdc, tot));
+                        entry.setTimeStamp(time);
+                        entries.add(entry);
+                    }
+                }
+            } catch (EvioException ex) {
+                Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IndexOutOfBoundsException ex){
+                Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
             }
 
         }

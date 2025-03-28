@@ -139,6 +139,7 @@ public class CLASDecoder4 {
                     
                     detectorDecoder.translate(dataList);
                     detectorDecoder.fitPulses(dataList);
+                    detectorDecoder.filterTDCs(dataList);
                     if(this.decoderDebugMode>0){
                         System.out.println("\n>>>>>>>>> TRANSLATED data");
                         for(DetectorDataDgtz data : dataList){
@@ -308,8 +309,10 @@ public class CLASDecoder4 {
             tdcBANK.putByte("sector", i, (byte) tdcDGTZ.get(i).getDescriptor().getSector());
             tdcBANK.putByte("layer", i, (byte) tdcDGTZ.get(i).getDescriptor().getLayer());
             tdcBANK.putShort("component", i, (short) tdcDGTZ.get(i).getDescriptor().getComponent());
-            tdcBANK.putByte("order", i, (byte) tdcDGTZ.get(i).getDescriptor().getOrder());
+            tdcBANK.putByte("order", i, (byte) (tdcDGTZ.get(i).getDescriptor().getOrder()+tdcDGTZ.get(i).getTDCData(0).getType().getTypeId()));
             tdcBANK.putInt("TDC", i, tdcDGTZ.get(i).getTDCData(0).getTime());
+            if(name == "DC::tdc")
+                tdcBANK.putShort("ToT", i, (short) tdcDGTZ.get(i).getTDCData(0).getToT());
         }
         return tdcBANK;
     }
