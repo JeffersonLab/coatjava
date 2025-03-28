@@ -27,6 +27,7 @@
     <module>clas-math</module>
     <module>clara-io</module>
     <module>clas-tracking</module>
+    <module>clas-decay-tools</module>
   </modules>
 
 </project>
