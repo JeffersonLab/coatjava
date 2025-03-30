@@ -32,6 +32,12 @@ hs_err_pid*
 *.iml
 .idea
 
+# eclipse JDT language server
+.classpath
+.factorypath
+.project
+.settings
+
 # no log files:
 *.log
 *.evio 
