@@ -12,7 +12,7 @@ import org.jlab.utils.groups.NamedEntry;
 /**
  * A new extraction method dedicated to the AHDC signal waveform
  * 
- * Some blocks of code are inspired by MVTFitter.java
+ * Some blocks of code are inspired by MVTFitter.java and Bonus12 (`createBonusBank()`)
  *
  * @author  ftouchte
  */
@@ -25,15 +25,15 @@ public class ModeAHDC extends HipoExtractor  {
 	 *
 	 * @param pars CCDB row
 	 * @param id link to row in source bank
+	 * @param timestamp ...
+	 * @param time time (exprimed in bin) of the first channel of the AHDC pulse (after or not zero suppress; if ZS=0, time == 0)
 	 * @param samples ADC samples
 	 */
 	@Override
-	public List<Pulse> extract(NamedEntry pars, int id, long par1, long par2, short... samples){
+	public List<Pulse> extract(NamedEntry pars, int id, long timestamp, long time, short... samples){
 		// Settings parameters (they can be initialised by a CCDB)
 		float samplingTime = 44;
-		int sparseSample = 0;
-		short adcOffset = 0;
-		long timeStamp = 0;
+		short adcOffset = 0; ///< pedestal of the pulse
 		float fineTimeStampResolution = 0;
 
 		float amplitudeFractionCFA = 0.5f;
@@ -42,11 +42,9 @@ public class ModeAHDC extends HipoExtractor  {
 
 		// Calculation intermediaries
 		int binMax = 0; //Bin of the max ADC over the pulse
-		int binOffset = 0; //Offset due to sparse sample
 		float adcMax = 0; //Max value of ADC over the pulse (fitted)
 		float timeMax =0; //Time of the max ADC over the pulse (fitted)
 		float integral = 0; //Sum of ADCs over the pulse (not fitted)
-		long timestamp = 0;
 
 		short[] samplesCorr; //Waveform after offset (pedestal) correction
 		int binNumber = 0; //Number of bins in one waveform
@@ -58,7 +56,7 @@ public class ModeAHDC extends HipoExtractor  {
 		/// /////////////////////////
 		// Begin waveform correction
 		/// ////////////////////////
-		//waveformCorrection(samples,adcOffset,samplingTime,sparseSample, binMax, adcMax, integral, samplesCorr[], binOffset, timeMax);
+		//waveformCorrection(samples,adcOffset,samplingTime, binMax, adcMax, integral, samplesCorr[], time, timeMax);
 		/**
 		 * This method subtracts the pedestal (noise) from samples and stores it in : samplesCorr
 		 * It also computes a first value for : adcMax, binMax, timeMax and integral
@@ -66,9 +64,8 @@ public class ModeAHDC extends HipoExtractor  {
 		 * @param samples ADC samples
 		 * @param adcOffset pedestal or noise level
 		 * @param samplingTime time between two adc bins
-		 * @param sparseSample used to define binOffset
 		 */
-		//private void waveformCorrection(short[] samples, short adcOffset, float samplingTime, int sparseSample, int binMax, int adcMax, int integral, short samplesCorr[], int binOffset, int timeMax){
+		//private void waveformCorrection(short[] samples, short adcOffset, float samplingTime, int binMax, int adcMax, int integral, short samplesCorr[], int time, int timeMax){
 			binNumber = samples.length;
 			binMax = 0;
 			if (binNumber >= 5) {
@@ -102,8 +99,7 @@ public class ModeAHDC extends HipoExtractor  {
 				}
 				binMax = (binMax + binMax2)/2;
 			}
-			binOffset = sparseSample*binMax;
-			timeMax = (binMax + binOffset)*samplingTime;
+			timeMax = (binMax + time)*samplingTime;
 		//}
 
 		/// /////////////////////////
@@ -151,7 +147,7 @@ public class ModeAHDC extends HipoExtractor  {
 			if (binRise + 1 <= binNumber-1)
 				slopeRise = samplesCorr[binRise+1] - samplesCorr[binRise];
 			float fittedBinRise = (slopeRise == 0) ? binRise : binRise + (threshold - samplesCorr[binRise])/slopeRise;
-			leadingEdgeTime = (fittedBinRise + binOffset)*samplingTime; // binOffset is determined in wavefromCorrection() // must be the same for all time ? // or must be defined using fittedBinRise*sparseSample
+			leadingEdgeTime = (fittedBinRise + time)*samplingTime;
 
 			// trailingEdgeTime
 			int binFall = binMax;
@@ -168,7 +164,7 @@ public class ModeAHDC extends HipoExtractor  {
 			if (binFall - 1 >= 0)
 				slopeFall = samplesCorr[binFall] - samplesCorr[binFall-1];
 			float fittedBinFall = (slopeFall == 0) ? binFall : binFall-1 + (threshold - samplesCorr[binFall-1])/slopeFall;
-			trailingEdgeTime = (fittedBinFall + binOffset)*samplingTime;
+			trailingEdgeTime = (fittedBinFall + time)*samplingTime;
 
 			// timeOverThreshold
 			timeOverThreshold = trailingEdgeTime - leadingEdgeTime;
@@ -213,29 +209,10 @@ public class ModeAHDC extends HipoExtractor  {
 			if (binZero + 1 <= binNumber)
 				slopeCFD = signal[binZero+1] - signal[binZero];
 			float fittedBinZero = (slopeCFD == 0) ? binZero : binZero + (0 - signal[binZero])/slopeCFD;
-			constantFractionTime = (fittedBinZero + binOffset)*samplingTime;
+			constantFractionTime = (fittedBinZero + time)*samplingTime;
 
 		//}
 
-		/// /////////////////////////
-		// Begin fineTimeStampCorrection
-		/// ////////////////////////
-		//fineTimeStampCorrection(timeStamp,fineTimeStampResolution);
-		/**
-		 * From MVTFitter.java
-		 * Make fine timestamp correction (using dream (=electronic chip) clock)
-		 * @param timeStamp timing informations (used to make fine corrections)
-		 * @param fineTimeStampResolution precision of dream clock (usually 8)
-		 */
-		//private void fineTimeStampCorrection (long timeStamp, float fineTimeStampResolution) {
-			//this.timestamp = timeStamp;
-			String binaryTimeStamp = Long.toBinaryString(timeStamp); //get 64 bit timestamp in binary format
-			if (binaryTimeStamp.length()>=3){
-				byte fineTimeStamp = Byte.parseByte(binaryTimeStamp.substring(binaryTimeStamp.length()-3,binaryTimeStamp.length()),2); //fineTimeStamp : keep and convert last 3 bits of binary timestamp
-				timeMax += (float) ((fineTimeStamp+0.5) * fineTimeStampResolution); //fineTimeStampCorrection
-				// Question : I wonder if I have to do the same thing of all time quantities that the extract() methods compute.
-			}
-		//}
 		// output
 		Pulse pulse = new Pulse();
 		pulse.id = id;
@@ -248,18 +225,10 @@ public class ModeAHDC extends HipoExtractor  {
 		pulse.timeOverThreshold = timeOverThreshold;
 		pulse.constantFractionTime = constantFractionTime;
 		//pulse.binMax = binMax;
-		//pulse.binOffset = binOffset;
 		pulse.pedestal = adcOffset;
 		List<Pulse> output = new ArrayList<>();
 		output.add(pulse);
 		return output;
-	}
-	/**
-	 * Fit the max of the pulse using parabolic fit, this method updates the timeMax and adcMax values
-	 * @param samplingTime time between 2 ADC bins
-	 */
-	private void fitParabolic(float samplingTime) {
-
 	}
 
 	@Override

@@ -168,7 +168,7 @@ public class DetectorEventDecoder {
                 //custom MM fitter
             	if( ( (table.equals("BMT"))&&(data.getDescriptor().getType().getName().equals("BMT")) )
                  || ( (table.equals("FMT"))&&(data.getDescriptor().getType().getName().equals("FMT")) )
-                 || ( (table.equals("AHDC"))&&(data.getDescriptor().getType().getName().equals("AHDC")) )
+                 //|| ( (table.equals("AHDC"))&&(data.getDescriptor().getType().getName().equals("AHDC")) )
                  || ( (table.equals("FTTRK"))&&(data.getDescriptor().getType().getName().equals("FTTRK")) ) ){
                     IndexedTable daq = fitterManager.getConstants(runNumber, table);
                     short adcOffset = (short) daq.getDoubleValue("adc_offset", 0, 0, 0);
