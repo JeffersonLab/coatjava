@@ -94,6 +94,7 @@ public class RICHCalibrator extends DetectorCalibrator {
                 calib.setShort("anode",        row, hits.getShort("anode", i));
                 calib.setShort("status",       row, hits.getShort("status", i));
                 calib.setByte( "used",         row, (byte) 2);
+                calib.setFloat("x",            row, hits.getFloat("x", i));
                 calib.setFloat("y",            row, hits.getFloat("y", i));
                 calib.setFloat("z",            row, hits.getFloat("z", i));
                 calib.setFloat("time",         row, hits.getFloat("time", i));
