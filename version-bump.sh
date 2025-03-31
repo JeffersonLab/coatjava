@@ -23,7 +23,7 @@ fi
 ver_arg=$1
 [ $# -ge 2 -a "${2-}" = "--no-git" ] && use_git=false || use_git=true
 
-# parse argument
+# parse version number argument
 ver_num=$(echo $ver_arg|sed 's/-SNAPSHOT//g')  # remove '-SNAPSHOT', if the user included it
 ver_pom=$ver_num-SNAPSHOT                      # append '-SNAPSHOT' for POM files
 
@@ -35,6 +35,7 @@ use_git: $use_git
 <<<<<"""
 
 # if using git, make a new branch
+new_branch=version/$ver_num
 if $use_git; then
   # verify user is on the main branch
   current_branch=$(git rev-parse --abbrev-ref HEAD)
@@ -44,7 +45,6 @@ if $use_git; then
     exit 1
   fi
   # switch to a new branch for this new version
-  new_branch=version/$ver_num
   git switch -c $new_branch
 fi
 
