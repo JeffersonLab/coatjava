@@ -3,13 +3,7 @@
 # Default versions:
 grapes=2.17
 clara=5.0.2
-# FIXME
-# FIXME
-# FIXME
-coatjava=11.1.1 # FIXME: does this need to be bumped?
-# FIXME
-# FIXME
-# FIXME
+coatjava=11.1.1
 
 # Abort on any non-zero exit codes:
 set -e
