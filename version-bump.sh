@@ -49,7 +49,8 @@ if $use_git; then
 fi
 
 # bump the POM project version
-mvn --batch-mode release:update-versions -DdevelopmentVersion=$ver_pom
+mvn versions:set -DnewVersion=$ver_pom -DprocessAllModules
+mvn versions:commit -DprocessAllModules
 
 # bump `deployDistribution.sh`'s version
 sed -i "s/^VERSION=.*/VERSION=$ver_num/g" common-tools/coat-lib/deployDistribution.sh

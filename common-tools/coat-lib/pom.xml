@@ -90,9 +90,6 @@
       <version>1.0</version>
     </dependency>
 
-    <!-- FIXME
-      these dependency versions are NOT being updated by version-bump.sh
-    -->
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-io</artifactId>
