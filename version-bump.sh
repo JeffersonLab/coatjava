@@ -54,6 +54,9 @@ mvn --batch-mode release:update-versions -DdevelopmentVersion=$ver_pom
 # bump `deployDistribution.sh`'s version
 sed -i "s/^VERSION=.*/VERSION=$ver_num/g" common-tools/coat-lib/deployDistribution.sh
 
+# bump `install-clara`'s version
+sed -i "s/^coatjava=.*/coatjava=$ver_num/g" install-clara
+
 # commit to git (or not)
 if $use_git; then
   echo """
