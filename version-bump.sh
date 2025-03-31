@@ -64,6 +64,7 @@ if $use_git; then
   ============================================"""
   git commit -am "build: bump version number to $ver_num"
   echo """Done.
+  Currently on branch $new_branch
   Now run your usual 'git push' command, which is probably:
 
     git push -u origin $new_branch
