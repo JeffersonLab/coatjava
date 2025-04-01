@@ -2,6 +2,7 @@ package org.jlab.detector.decode;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -36,12 +37,14 @@ public class CodaEventDecoder {
     private int timeStampErrors = 0;
     private long    triggerBits = 0;
     private byte helicityLevel3 = HelicityBit.UDF.value();
-    private List<Integer> triggerWords = new ArrayList<>();
+    private final List<Integer> triggerWords = new ArrayList<>();
     JsonObject  epicsData = new JsonObject();
 
-    private final long timeStampTolerance = 0L;
     private int tiMaster = -1; 
-            
+
+    // FIXME:  move this to CCDB, e.g., meanwhile cannot reuse ROC id 
+    private static final List<Integer> PCIE_ROCS = Arrays.asList(new Integer[]{78});
+
     public CodaEventDecoder(){
 
     }
@@ -65,7 +68,6 @@ public class CodaEventDecoder {
         // zero out the trigger bits, but let the others properties inherit
         // from the previous event, in the case where there's no HEAD bank:
         this.setTriggerBits(0);
-
         List<DetectorDataDgtz>  rawEntries = new ArrayList<DetectorDataDgtz>();
         List<EvioTreeBranch> branches = this.getEventBranches(event);
         this.setTimeStamp(event);
@@ -84,7 +86,6 @@ public class CodaEventDecoder {
 
         this.getDataEntries_EPICS(event);
         this.getDataEntries_HelicityDecoder(event);
-
 
         return rawEntries;
     }
@@ -141,17 +142,23 @@ public class CodaEventDecoder {
             // check sychronization
             boolean tiSync=true;
             int  i0 = -1;
-            // set reference timestamp from first entry which is not the tiMaster
+            // set reference timestamp from first entry which is not the tiMaster nor PCIE:
             for(int i=0; i<tiEntries.size(); i++) {
-                if(tiEntries.get(i).getDescriptor().getCrate()!=this.tiMaster) {
-                    i0 = i;
-                    break;
+                if(tiEntries.get(i).getDescriptor().getCrate() != this.tiMaster) {
+                    if (!PCIE_ROCS.contains(tiEntries.get(i).getDescriptor().getCrate())) {
+                        i0 = i;
+                        break;
+                    }
                 }   
             }
             for(int i=0; i<tiEntries.size(); i++) {
-                long deltaTS = this.timeStampTolerance;       
-                if(tiEntries.get(i).getDescriptor().getCrate()==this.tiMaster) deltaTS = deltaTS + 1;  // add 1 click tolerance for tiMaster
-                if(Math.abs(tiEntries.get(i).getTimeStamp()-tiEntries.get(i0).getTimeStamp())>deltaTS) {
+                long deltaTS = 0;
+                long offsetT = 0;
+                // Allow/require 5-click offset for PCIE ROCs:
+                if( PCIE_ROCS.contains(tiEntries.get(i).getDescriptor().getCrate() )) offsetT = 5;
+                // Add 1-click tolerance for "TI master" (FIXME:  this should be an offset too(?)):
+                if(tiEntries.get(i).getDescriptor().getCrate()==this.tiMaster) deltaTS = deltaTS + 1;
+                if(Math.abs(tiEntries.get(i).getTimeStamp()-offsetT-tiEntries.get(i0).getTimeStamp())>deltaTS) {
                     tiSync=false;
                     if(this.timeStampErrors<100) {
                         System.err.println("WARNING: mismatch in TI time stamps: crate " 
