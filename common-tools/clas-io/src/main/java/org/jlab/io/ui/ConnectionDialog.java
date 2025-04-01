@@ -42,8 +42,8 @@ public class ConnectionDialog extends BasicDialog {
     
     private static String[] hostNames = new String[]{"clondaq2","clondaq3","clondaq4","clondaq5","clondaq6","clondaq7"};
     private static String[]    hostIP = new String[]{"129.57.167.109","129.57.167.226","129.57.167.227","129.57.167.41","129.57.167.60","129.57.167.20"};
-    private static String defaultHost = "clondaq6";
-    private static String defaultIP = "129.57.167.60";
+    private static String defaultHost = "clondaq7";
+    private static String defaultIP = "129.57.167.20";
     
     Map<String,String>  connectionHosts = new LinkedHashMap<String,String>();
     
