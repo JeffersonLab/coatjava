@@ -389,7 +389,6 @@
 | 31 | `ATOF::testhits` | Reconstructed ATOF hits |
 | 32 | `ATOF::testclusters` | Clusters in ATOF |
 
-
 ## Group 22600
 
 | Item ID | Name | Description |
@@ -411,4 +410,3 @@
 | 30 | `AHDC_AI::Prediction` | Prediction given by AI |
 | 31 | `ALERT::Projections` | Track Projections to ATOF |
 | 35 | `ATOF::testVeff` | veff test for ATOF |
-
