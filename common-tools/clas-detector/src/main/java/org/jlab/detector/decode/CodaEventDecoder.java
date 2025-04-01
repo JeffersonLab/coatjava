@@ -280,9 +280,12 @@ public class CodaEventDecoder {
                 return this.getDataEntries_57640(crate, node, event);
             }
             else if(node.getTag()==57622){
-                //  This is regular integrated pulse mode, used for FTOF
-                // FTCAL and EC/PCAL
+                //  This is regular DCRB bank with TDCs only
                 return this.getDataEntries_57622(crate, node, event);
+            }
+            else if(node.getTag()==57648){
+                //  This is DCRB bank with TDCs and widths
+                return this.getDataEntries_57648(crate, node, event);
             }
             else if(node.getTag()==57636){
                 //  RICH TDC data
@@ -954,9 +957,56 @@ public class CodaEventDecoder {
                     }
                 }
             } catch (EvioException ex) {
-                //Logger.getLogger(EvioRawDataSource.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
             } catch (IndexOutOfBoundsException ex){
-                //System.out.println("[ERROR] ----> ERROR DECODING COMPOSITE DATA FOR ONE EVENT");
+                Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+        }
+        return entries;
+    }
+
+    /**
+     * Bank TAG=57648 used for DC (Drift Chambers) TDC and ToT values.
+     * @param crate
+     * @param node
+     * @param event
+     * @return
+     */
+    public List<DetectorDataDgtz>  getDataEntries_57648(Integer crate, EvioNode node, EvioDataEvent event){
+        List<DetectorDataDgtz>  entries = new ArrayList<>();
+        if(node.getTag()==57648){
+            try {
+                ByteBuffer     compBuffer = node.getByteData(true);
+                CompositeData  compData = new CompositeData(compBuffer.array(),event.getByteOrder());
+                //List<DataType> cdatatypes = compData.getTypes();
+                List<Object>   cdataitems = compData.getItems();
+
+                int  totalSize = cdataitems.size();
+                int  position  = 0;
+                while( (position + 4) < totalSize){
+                    Byte    slot = (Byte)     cdataitems.get(position);
+                    //Integer trig = (Integer)  cdataitems.get(position+1);
+                    Long    time = (Long)     cdataitems.get(position+2);
+                    Integer nchannels = (Integer) cdataitems.get(position+3);
+                    int counter  = 0;
+                    position = position + 4;
+                    while(counter<nchannels){
+                        Byte   channel = (Byte) cdataitems.get(position);
+                        Short  tdc     = (Short) cdataitems.get(position+1);
+                        Short  tot     = (Short) cdataitems.get(position+2);
+                        position += 3;
+                        counter++;
+                        DetectorDataDgtz   entry = new DetectorDataDgtz(crate,slot,channel);
+                        entry.addTDC(new TDCData(tdc, tot));
+                        entry.setTimeStamp(time);
+                        entries.add(entry);
+                    }
+                }
+            } catch (EvioException ex) {
+                Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IndexOutOfBoundsException ex){
+                Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
             }
 
         }
@@ -1063,24 +1113,36 @@ public class CodaEventDecoder {
 
                 int position = 0;
                 while(position<cdatatypes.size()-4){
-                    Byte    slot     = (Byte)     cdataitems.get(position+0);
-                    Integer trig_num = (Integer)  cdataitems.get(position+1);
+                    Byte    slot       = (Byte)     cdataitems.get(position+0);
+                    Integer trig_num   = (Integer)  cdataitems.get(position+1);
                     Long    time_stamp = (Long)    cdataitems.get(position+2);
-                    Integer nchannels = (Integer) cdataitems.get(position+3);
-                    position += 4;
-                    int counter  = 0;
+                    Integer nchannels  = (Integer) cdataitems.get(position+3);
+                    int     counter    = 0;
+
+                    position += 4; // slot, trig,time,nchannels
+                                   //
                     while(counter<nchannels){
                         Byte channel = (Byte) cdataitems.get(position+0);
                         Integer tdc = (Integer) cdataitems.get(position+1);
                         // width over threshold
                         Integer tot = (Integer) cdataitems.get(position+2);
 
-
-                        // Not sure what is going on here yet...
-                        DetectorDataDgtz bank = new DetectorDataDgtz(crate,slot.intValue(),channel.intValue());
-                        bank.addTDC(new TDCData(tdc,tot));
+                        DetectorDataDgtz bank = new DetectorDataDgtz(
+                            crate, slot.intValue(), channel.intValue());
+                        // the "bank" has a timestamp.
+                        // the tdc also can have a timestamp.
+                        // the tdc is added tot he "bank"
+                        // the "bank" is added to the "entries" (array of DetectorDataDgtz)
+                        // "entries" List<DetectorDataDgtz>  -> "bank" DetectorDataDgtz  -> "tdc" TDCData
+                        // there is a redundancy in timestamp: the same value is stored in TDCData and the DetectorDataDgz
+                        //
+                        bank.setTimeStamp(time_stamp);
+                        bank.setTrigger(trig_num);;
+                        TDCData tdc_data = new TDCData(tdc, tot);
+                        tdc_data.setTimeStamp(time_stamp).setOrder(counter);
+                        bank.addTDC(tdc_data);
                         entries.add(bank);
-                        position += 3;
+                        position += 3; // channel,tdc,tot
                         counter++;
                         //System.err.println("event: " + bank.toString());
                     }

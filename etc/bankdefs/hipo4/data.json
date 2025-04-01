@@ -73,7 +73,8 @@
       { "name":"s61"        , "type":"S", "info":""},
       { "name":"s62"        , "type":"S", "info":""},
       { "name":"s63"        , "type":"S", "info":""},
-      { "name":"s64"        , "type":"S", "info":""}
+      { "name":"s64"        , "type":"S", "info":""},
+      { "name":"time"       , "type":"I", "info":"for fine time correction"}
     ]
   },
   {
@@ -107,7 +108,9 @@
       { "name":"component" , "type":"S", "info":"signal (1-2)"},
       { "name":"order"     , "type":"B", "info":"order: 2 - TDCL , 3 - TDCR"},
       { "name":"TDC"       , "type":"I", "info":"TDC value"},
-      { "name":"ToT"       , "type":"I", "info":"Time Over Threshold"}
+      { "name":"ToT"       , "type":"I", "info":"Time Over Threshold"},
+      { "name":"timestamp" , "type":"L", "info":"timestamp"},
+      { "name":"trigger"   , "type":"I", "info":"trigger number"}
     ]
   },
   {
@@ -209,7 +212,8 @@
       { "name":"layer"     , "type":"B", "info":"layer (1..36)"},
       { "name":"component" , "type":"S", "info":"wire number (1..112)"},
       { "name":"order"     , "type":"B", "info":"order: 2 - TDCL , 3 - TDCR"},
-      { "name":"TDC"       , "type":"I", "info":"TDC value"}
+      { "name":"TDC"       , "type":"I", "info":"TDC value"},
+      { "name":"ToT"       , "type":"S", "info":"Time Over Threshold"}
     ]
   },
   {
