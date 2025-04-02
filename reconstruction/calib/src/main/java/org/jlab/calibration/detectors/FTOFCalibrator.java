@@ -53,13 +53,12 @@ public class FTOFCalibrator extends DetectorCalibrator {
         }
 
 
-        Map<Integer,Integer> pinds = new HashMap<>();
+        Map<Integer,Integer> tinds = new HashMap<>();
         for(int it=0; it<trac.rows(); it++) {
             int detector = trac.getByte("detector", it);
             if(DetectorType.getType(detector)==DetectorType.DC) {
                 int index  = trac.getShort("index", it);                
-                int pindex = trac.getShort("pindex", it);                
-                pinds.put((int) tbts.getShort("id", index), pindex);
+                tinds.put((int) tbts.getShort("id", index), it);
             }
         }
 
@@ -75,7 +74,8 @@ public class FTOFCalibrator extends DetectorCalibrator {
             for(int i=0; i<hits.rows(); i++) {
                 int tid = hits.getShort("trackid", i);
                 if(tid>0) {
-                    int pindex = pinds.get(tid);
+                    int tindex = tinds.get(tid);
+                    int pindex = trac.getShort("pindex", tindex);                
                     int layer  = hits.getByte("layer", i);
                     double path = paths.containsKey(pindex) && 
                                   paths.get(pindex).containsKey(layer) ? 
@@ -86,6 +86,7 @@ public class FTOFCalibrator extends DetectorCalibrator {
                     calib.setShort("id", row, hits.getShort("id", i));
                     calib.setShort("status", row, hits.getShort("status", i));
                     calib.setShort("trackid", row, hits.getShort("trackid", i));
+                    calib.setShort("pindex", row, (short) pindex);
                     calib.setByte("sector", row, hits.getByte("sector", i));
                     calib.setByte("layer", row, hits.getByte("layer", i));
                     calib.setShort("component", row, hits.getShort("component", i));
@@ -97,9 +98,14 @@ public class FTOFCalibrator extends DetectorCalibrator {
                     calib.setFloat("tx", row, hits.getFloat("tx", i));
                     calib.setFloat("ty", row, hits.getFloat("ty", i));
                     calib.setFloat("tz", row, hits.getFloat("tz", i));
+                    calib.setInt("pid", row, part.getInt("pid", pindex));
+                    calib.setByte("charge", row, part.getByte("charge", pindex));
                     calib.setFloat("p", row, (float) Math.sqrt(px*px+py*py+pz*pz));
+                    calib.setFloat("vz", row, part.getFloat("vz", pindex));
                     calib.setFloat("pathLength", row, (float) path);
                     calib.setFloat("pathLengthThruBar", row, hits.getFloat("pathLengthThruBar", i));
+                    calib.setFloat("chi2", row, trac.getFloat("chi2", tindex));
+                    calib.setShort("NDF", row, trac.getShort("NDF", tindex));
                     calib.setInt("adc1", row, adcs.getInt("ADC", hits.getShort("adc_idx1", i)));
                     calib.setInt("adc2", row, adcs.getInt("ADC", hits.getShort("adc_idx2", i)));
                     calib.setInt("tdc1", row, tdcs.getInt("TDC", hits.getShort("tdc_idx1", i)));
