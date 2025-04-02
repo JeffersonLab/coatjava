@@ -598,7 +598,7 @@
       { "name":"ped"       , "type":"S", "info":"pedestal from pulse analysis"}
     ]
   },
-{
+  {
     "name" : "URWELL::adc",
     "group": 22300,
     "item" : 11,
@@ -612,7 +612,21 @@
       { "name":"time"      , "type":"F", "info":"time"},
       { "name":"ped"       , "type":"S", "info":"pedestal from pulse analysis"}
     ]
-  },  
+  },
+  {
+    "name" : "RECOILTOF::tdc",
+    "group": 22700,
+    "item" : 12,
+    "info": "TDC bank for the RECOIL TOF",
+    "entries":[
+      { "name":"sector"    , "type":"B", "info":"sector"},
+      { "name":"row"     , "type":"B", "info":"row"},
+      { "name":"column" , "type":"B", "info":"column"},
+      { "name":"order"     , "type":"B", "info":"order: 2 - TDCL , 3 - TDCR"},
+      { "name":"TDC"       , "type":"I", "info":"TDC value"},
+      { "name":"ToT"       , "type":"I", "info":"Time Over Threshold"}
+    ]
+  },
   {
     "name" : "RAW::adc",
     "group": 20000,
