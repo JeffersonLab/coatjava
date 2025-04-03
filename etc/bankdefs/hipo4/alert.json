@@ -180,15 +180,19 @@
       }, {
         "name": "Doca",
         "type": "D",
-        "info": "distance od closest approch (mm)"
+        "info": "distance od closest approch (mm) is actually the distance from time2distance calibration"
       }, {
 	"name": "residual",
 	"type": "D",
-	"info": "residual (mm)"
+	"info": "residual (mm) is distance from time2distance calibration minus the distance of closest approach computed at the Kalman Filter stage"
       }, {
 	"name": "residual_prefit",
 	"type": "D",
 	"info": "residual pre-fit (mm)"
+      }, {
+	"name": "time",
+	"type": "D",
+	"info": "time (ns) is leadingEdgeTime from AHDC::adc minus t0 from calibration"
       }
     ]
   }, {
