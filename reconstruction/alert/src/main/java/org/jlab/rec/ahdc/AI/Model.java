@@ -16,6 +16,11 @@ import org.jlab.utils.CLASResources;
 import java.io.IOException;
 import java.nio.file.Paths;
 
+/** Model of What.
+ * 
+ *
+ * \todo fix class name 
+ */
 public class Model {
     private ZooModel<float[], Float> model;
 
