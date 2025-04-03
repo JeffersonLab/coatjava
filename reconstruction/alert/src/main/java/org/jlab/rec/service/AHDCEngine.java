@@ -22,6 +22,7 @@ import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import org.jlab.rec.ahdc.PreCluster.PreClusterFinder;
 import org.jlab.rec.ahdc.Track.Track;
 import org.jlab.rec.ahdc.Mode;
+import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
 
 import java.io.File;
 import java.util.*;
@@ -64,6 +65,7 @@ public class AHDCEngine extends ReconstructionEngine {
 		return true;
 	}
 
+	int Run = -1;
 
 	@Override
 	public boolean processDataEvent(DataEvent event) {
@@ -81,6 +83,14 @@ public class AHDCEngine extends ReconstructionEngine {
 			if (runNo <= 0) {
 				System.err.println("RTPCEngine:  got run <= 0 in RUN::config, skipping event.");
 				return false;
+			}
+			int newRun = Run;        
+			newRun = runNo; 
+			// Load the constants
+			//-------------------
+			if(Run!=newRun) {
+				CalibrationConstantsLoader.Load(newRun,"default",this.getConstantsManager()); 
+				Run = newRun;
 			}
 		}
 
