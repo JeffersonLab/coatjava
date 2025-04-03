@@ -77,10 +77,14 @@ public class ATOFEngine extends ReconstructionEngine {
         float magField[] = new float[3];
         swim.BfieldLab(eventVx, eventVy, eventVz, magField); 
         this.b = Math.sqrt(Math.pow(magField[0],2) + Math.pow(magField[1],2) + Math.pow(magField[2],2));
+
+        /// \todo move this to ALERTEngine
         TrackProjector projector = new TrackProjector();
         projector.setB(this.b);
         projector.projectTracks(event);
         rbc.appendMatchBanks(event, projector.getProjections());
+
+        // Why do we have to "find" hits? 
         //Hit finder init
         HitFinder hitfinder = new HitFinder();
         hitfinder.findHits(event, ATOF);
