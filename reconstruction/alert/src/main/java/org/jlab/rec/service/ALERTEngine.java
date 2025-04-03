@@ -1,5 +1,11 @@
 package org.jlab.service.alert;
 
+import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
+import org.jlab.clas.reco.ReconstructionEngine;
+import org.jlab.io.base.DataBank;
+import org.jlab.io.base.DataEvent;
+
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.clas.tracking.kalmanfilter.Material;
 import org.jlab.io.base.DataBank;
@@ -7,7 +13,9 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.io.hipo.HipoDataSync;
 import org.jlab.rec.ahdc.AI.*;
-import org.jlab.rec.ahdc.Banks.RecoBankWriter;
+
+import org.jlab.rec.atof.banks.RecoBankWriter;
+
 import org.jlab.rec.ahdc.Cluster.Cluster;
 import org.jlab.rec.ahdc.Cluster.ClusterFinder;
 import org.jlab.rec.ahdc.Distance.Distance;
@@ -29,6 +37,8 @@ import org.jlab.rec.atof.hit.BarHit;
 import org.jlab.rec.atof.hit.HitFinder;
 import org.jlab.rec.alert.projections.TrackProjector;
 
+import org.jlab.clas.swimtools.Swim;
+
 import java.io.File;
 import java.util.*;
 
@@ -39,7 +49,17 @@ import java.util.*;
 public class ALERTEngine extends ReconstructionEngine {
 
 
-    private Mode mode = Mode.CV_Track_Finding;
+    private RecoBankWriter rbc;
+
+    // why atomic here and nowhere else? 
+    private final AtomicInteger run = new AtomicInteger(0);
+    private double b; //Magnetic field
+    public void setB(double B) {
+        this.b = B;
+    }
+    public double getB() {
+        return b;
+    }
 
     public ALERTEngine() {
         super("ALERT", "whit,ouillon,pilleux", "0.1");
@@ -47,6 +67,9 @@ public class ALERTEngine extends ReconstructionEngine {
 
     @Override
     public boolean init() {
+
+        rbc = new RecoBankWriter();
+
 
         if(this.getEngineConfigString("Mode")!=null) {
             //if (Objects.equals(this.getEngineConfigString("Mode"), Mode.AI_Track_Finding.name()))
@@ -58,24 +81,41 @@ public class ALERTEngine extends ReconstructionEngine {
     @Override
     public boolean processDataEvent(DataEvent event) {
 
-        int    runNo          = 10;
-        int    eventNo        = 777; // 
+        if (!event.hasBank("AHDC::adc")) 
+            return false;
+        if (!event.hasBank("ATOF::tdc")) 
+            return false;
 
-        if (event.hasBank("RUN::config")) {
-            DataBank bank = event.getBank("RUN::config");
-            runNo          = bank.getInt("run", 0);
-            eventNo        = bank.getInt("event", 0);
-            //magfieldfactor = bank.getFloat("solenoid", 0);
-            if (runNo <= 0) {
-                System.err.println("RTPCEngine:  got run <= 0 in RUN::config, skipping event.");
-                return false;
-            }
+        if (!event.hasBank("RUN::config")) {
+            return true;
         }
 
-        if (event.hasBank("AHDC::adc")) {
+        DataBank bank = event.getBank("RUN::config");
+
+        int newRun = bank.getInt("run", 0);
+        if (newRun == 0) {
+            return true;
         }
-        if (event.hasBank("ATOF::tdc")) {
+
+        if (run.get() == 0 || (run.get() != 0 && run.get() != newRun)) {
+            run.set(newRun);
         }
+        
+        //Do we need to read the event vx,vy,vz?
+        //If not, this part can be moved in the initialization of the engine.
+        double eventVx=0,eventVy=0,eventVz=0; //They should be in CM
+        //Track Projector Initialisation with b field
+        Swim swim = new Swim();
+        float magField[] = new float[3];
+        swim.BfieldLab(eventVx, eventVy, eventVz, magField); 
+        this.b = Math.sqrt(Math.pow(magField[0],2) + Math.pow(magField[1],2) + Math.pow(magField[2],2));
+
+        /// \todo move this to ALERTEngine
+        TrackProjector projector = new TrackProjector();
+        projector.setB(this.b);
+        projector.projectTracks(event);
+        rbc.appendMatchBanks(event, projector.getProjections());
+
 
         return true;
     }
