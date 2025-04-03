@@ -52,6 +52,7 @@ public class ALERTEngine extends ReconstructionEngine {
             //if (Objects.equals(this.getEngineConfigString("Mode"), Mode.AI_Track_Finding.name()))
             //    mode = Mode.AI_Track_Finding;
         }
+        return true;
     }
 
     @Override
