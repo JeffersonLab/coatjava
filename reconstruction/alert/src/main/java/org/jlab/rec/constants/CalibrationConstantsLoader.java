@@ -151,7 +151,7 @@ public class CalibrationConstantsLoader {
                         int component  		   = Integer.parseInt((String)atof_timeOffsets.getValueAt(i, 2));
 			double t0       	   = atof_timeOffsets.getDoubleValue("t0",      	    sector, layer, component); 
 			double upstream_downstream = atof_timeOffsets.getDoubleValue("upstream_downstream", sector, layer, component); 
-			double wedge_bar    	   = atof_timeOffsets.getDoubleValue("wedge" , 		    sector, layer, component); 
+			double wedge_bar    	   = atof_timeOffsets.getDoubleValue("wedge_bar",	    sector, layer, component); 
 			double extra1   	   = atof_timeOffsets.getDoubleValue("extra1", 		    sector, layer, component); 
 			double extra2              = atof_timeOffsets.getDoubleValue("extra2", 		    sector, layer, component); 
 			// Put in map
