@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.detector.banks.RawDataBank;
+import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
 
 public class HitReader {
 
@@ -31,10 +32,30 @@ public class HitReader {
 				int    number     = bankDGTZ.getByte("layer", i);
 				int    layer      = number % 10;
 				int    superlayer = (int) (number % 100) / 10;
+				int    sector     = bankDGTZ.getInt("sector", i);
 				int    wire       = bankDGTZ.getShort("component", i);
 				double adc        = bankDGTZ.getInt("ADC", i);
-				double doca       = bankDGTZ.getShort("ped", i) / 1000.0;
-
+				double leadingEdgeTime = bankDGTZ.getFloat("leadingEdgeTime", i);
+				
+				// use calibration constants
+				int key_value = sector*10000 + layer*100 + wire;
+				double[] timeOffsets   = CalibrationConstantsLoader.AHDC_TIME_OFFSETS.get( key_value );
+				double[] time2distance = CalibrationConstantsLoader.AHDC_TIME_TO_DISTANCE.get( key_value ); // the time to distance table has only one row, should select the right key_value, is 0 ? is 11001 ? need to be tested !
+				double t0 = timeOffsets[0];
+				double p0 = time2distance[0];
+				double p1 = time2distance[1];
+				double p2 = time2distance[2];
+				double p3 = time2distance[3];
+				double p4 = time2distance[4];
+				double p5 = time2distance[5];
+				
+				double time = leadingEdgeTime - t0;
+				// we may prevent time to be too small or too big
+				// CONDITION TO BE ADDED
+				// we should also use a flag to prevent to read the ccdb if reconstructed event if from simulation
+				// TO BE DONE
+				//double doca       = bankDGTZ.getShort("ped", i) / 1000.0;
+				double doca = p0 + p1*Math.pow(time,1.0) + p2*Math.pow(time,2.0) + p3*Math.pow(time,3.0) + p4*Math.pow(time,4.0) + p5*Math.pow(time, 5.0);
 				hits.add(new Hit(id, superlayer, layer, wire, doca, adc));
 			}
 		}
