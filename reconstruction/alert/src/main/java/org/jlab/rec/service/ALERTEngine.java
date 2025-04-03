@@ -23,9 +23,7 @@ import org.jlab.rec.ahdc.PreCluster.PreClusterFinder;
 import org.jlab.rec.ahdc.Track.Track;
 import org.jlab.rec.ahdc.Mode;
 
-import org.jlab.rec.atof.banks.RecoBankWriter;
 import org.jlab.rec.atof.cluster.ATOFCluster;
-import org.jlab.rec.atof.cluster.ClusterFinder;
 import org.jlab.rec.atof.hit.ATOFHit;
 import org.jlab.rec.atof.hit.BarHit;
 import org.jlab.rec.atof.hit.HitFinder;
@@ -66,7 +64,7 @@ public class ALERTEngine extends ReconstructionEngine {
             DataBank bank = event.getBank("RUN::config");
             runNo          = bank.getInt("run", 0);
             eventNo        = bank.getInt("event", 0);
-            magfieldfactor = bank.getFloat("solenoid", 0);
+            //magfieldfactor = bank.getFloat("solenoid", 0);
             if (runNo <= 0) {
                 System.err.println("RTPCEngine:  got run <= 0 in RUN::config, skipping event.");
                 return false;
