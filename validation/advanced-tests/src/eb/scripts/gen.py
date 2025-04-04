@@ -3,7 +3,7 @@ import random,math,sys
 
 mp = 0.93827
 me = 0.00051
-fmt = ' '.join(5*['%d']+9*['%.4f'])
+fmt = ' '.join(6*['%d']+8*['%.4f'])
 
 def cartesian(p,t,h,m):
     x = p * math.cos(h) * math.sin(t)
