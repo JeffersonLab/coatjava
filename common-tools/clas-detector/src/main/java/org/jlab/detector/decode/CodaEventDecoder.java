@@ -68,7 +68,7 @@ public class CodaEventDecoder {
         // zero out the trigger bits, but let the others properties inherit
         // from the previous event, in the case where there's no HEAD bank:
         this.setTriggerBits(0);
-        List<DetectorDataDgtz>  rawEntries = new ArrayList<DetectorDataDgtz>();
+        List<DetectorDataDgtz>  rawEntries = new ArrayList<>();
         List<EvioTreeBranch> branches = this.getEventBranches(event);
         this.setTimeStamp(event);
         for(EvioTreeBranch branch : branches){
@@ -644,7 +644,6 @@ public class CodaEventDecoder {
                 System.out.println("Exception in CRATE = " + crate + "  RUN = " + this.runNumber
                 + "  EVENT = " + this.eventNumber + " LENGTH = " + compBuffer.array().length);
                 this.printByteBuffer(compBuffer, 120, 20);
-//                Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
         return entries;
@@ -747,7 +746,7 @@ public class CodaEventDecoder {
                     	int nSamples = nBytes*8/12;
                     	short[] samples = new short[ nSamples ];
 
-                    	int s = 0;
+                    	int s;
                     	for( int b=0;b<nBytes;b++ ) {
                     		short data = (short)((byte)cdataitems.get( jdata++ )&0xFF);
 
@@ -810,7 +809,6 @@ public class CodaEventDecoder {
                 	for( int ch=0; ch<nChannels; ch++ ) {
                     	Short CHANNEL = (Short)cdataitems.get( jdata++ ); i++;
 
-
                         int nPulses = (Byte)cdataitems.get( jdata++ ); i++;
                         for(int np = 0; np < nPulses; np++){
 
@@ -823,7 +821,7 @@ public class CodaEventDecoder {
                             int nSamples = nBytes*8/12;
                             short[] samples = new short[ nSamples ];
 
-                            int s = 0;
+                            int s;
                             for( int b=0;b<nBytes;b++ ) {
                                 short data = (short)((byte)cdataitems.get( jdata++ )&0xFF);
 
@@ -1191,14 +1189,12 @@ public class CodaEventDecoder {
             for(EvioNode node : branch.getNodes()){
                 if(node.getTag()==57651) {
                     
-                    long[] longData = ByteDataTransformer.toLongArray(node.getStructureBuffer(true));
                     int[]  intData  = ByteDataTransformer.toIntArray(node.getStructureBuffer(true));
 
                     // When there are multiple HelicityDecoder banks in an event, there is a BLKHDR work in the data,
                     // and when there is one HelicityDecoder bank in an event, it is not there. So we need to
                     // detect where the trigger time word is.
                     int i_data_offset = 2;
-                    int i_data_length = intData.length;
                     while(i_data_offset<intData.length){
                         // The following idiotic construction is needed because Java doesn't have unsigned ints,
                         // and a right shift on a negative int results in a negative number.
