@@ -7,6 +7,10 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.detector.banks.RawDataBank;
 import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
 
+//import java.util.Arrays; // tmp
+//import java.util.HashMap;
+//import java.util.Map;
+
 public class HitReader {
 
 	private ArrayList<Hit>     _AHDCHits;
@@ -38,9 +42,9 @@ public class HitReader {
 				double leadingEdgeTime = bankDGTZ.getFloat("leadingEdgeTime", i);
 				
 				// use calibration constants
-				int key_value = sector*10000 + layer*100 + wire;
-				double[] timeOffsets   = CalibrationConstantsLoader.AHDC_TIME_OFFSETS.get( key_value );
-				double[] time2distance = CalibrationConstantsLoader.AHDC_TIME_TO_DISTANCE.get( key_value ); // the time to distance table has only one row, should select the right key_value, is 0 ? is 11001 ? need to be tested !
+				int key_value = sector*10000 + number*100 + wire;
+				double[] timeOffsets = CalibrationConstantsLoader.AHDC_TIME_OFFSETS.get( key_value );
+				double[] time2distance = CalibrationConstantsLoader.AHDC_TIME_TO_DISTANCE.get( 10101 ); // the time to distance table has only one row ! (10101 is its only key)
 				double t0 = timeOffsets[0];
 				double p0 = time2distance[0];
 				double p1 = time2distance[1];
