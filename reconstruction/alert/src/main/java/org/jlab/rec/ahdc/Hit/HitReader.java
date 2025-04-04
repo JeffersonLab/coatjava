@@ -7,10 +7,6 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.detector.banks.RawDataBank;
 import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
 
-//import java.util.Arrays; // tmp
-//import java.util.HashMap;
-//import java.util.Map;
-
 public class HitReader {
 
 	private ArrayList<Hit>     _AHDCHits;
