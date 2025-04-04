@@ -67,6 +67,9 @@ public class CalibrationConstantsLoader {
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// AHDC time to distance
+		// Caution, this table has only one row 
+		// the corresponding identifers are (sector, layer, component) == (1,1,1)
+		// but it applies for all AHDC wires !
 		for( int i = 0; i < ahdc_time2distance.getRowCount(); i++){
 			int sector      = Integer.parseInt((String)ahdc_time2distance.getValueAt(i, 0));
                         int layer       = Integer.parseInt((String)ahdc_time2distance.getValueAt(i, 1));
