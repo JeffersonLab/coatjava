@@ -61,6 +61,17 @@ public class AHDCEngine extends ReconstructionEngine {
 		if (mode == Mode.AI_Track_Finding) {
 			model = new Model();
 		}
+		
+		// Requires calibration constants
+		String[] alertTables = new String[] {
+			"/calibration/alert/ahdc/time_offsets",
+			"/calibration/alert/ahdc/time_to_distance",
+			"/calibration/alert/atof/effective_velocity",
+			"/calibration/alert/atof/time_walk",
+			"/calibration/alert/atof/attenuation",
+			"/calibration/alert/atof/time_offsets"
+		};
+		requireConstants(Arrays.asList(alertTables));
 
 		return true;
 	}
