@@ -85,7 +85,6 @@ public class CodaEventDecoder {
         rawEntries.addAll(scalerEntries);
 
         this.getDataEntries_EPICS(event);
-        this.getDataEntries_HelicityDecoder(event);
 
         return rawEntries;
     }
