@@ -1207,18 +1207,30 @@ public class CodaEventDecoder {
                         i_data_offset++;
                     } // find the trigger time word.
                     if(i_data_offset>=intData.length){
-                        System.err.println("ERROR:  HelicityDecoder data is corrupted. Trigger time word not found.");
+                        System.err.println("ERROR:  HelicityDecoder EVIO data is corrupted. Trigger time word not found.");
                         return null;
                     }
                     long  timeStamp = (intData[i_data_offset]&0x00ffffff) + (((long)(intData[i_data_offset+1]&0x00ffffffL))<<24);
                     i_data_offset+=2; // Next word should be "DECODER DATA", with 0x18 in the top 5 bits.
-                    if(((int) (( ((long)intData[i_data_offset]) & 0x00000000ffffffffL ) >> 27)) != 0x18){
-                        System.err.println("ERROR:  HelicityDecoder data is corrupted. DECODER BANK not found.");
+                    try {
+                        if(((int) (( ((long)intData[i_data_offset]) & 0x00000000ffffffffL ) >> 27)) != 0x18){
+                            System.err.println("ERROR:  HelicityDecoder EVIO data is corrupted.");
+                            return null;
+                        }
+                    }
+                    catch (ArrayIndexOutOfBoundsException e) {
+                        System.err.println("ERROR:  HelicityDecoder EVIO data looks like v2 firmware(?), ignoring it.");
                         return null;
                     }
-                    int num_data_words = intData[i_data_offset]&0x07ffffff;
-                    if(num_data_words < 14){
-                        System.err.println("ERROR:  HelicityDecoder data is corrupted. Not enough data words.");
+                    try {
+                        int num_data_words = intData[i_data_offset]&0x07ffffff;
+                        if(num_data_words < 14){
+                            System.err.println("ERROR:  HelicityDecoder EVIO data is corrupted. Not enough data words.");
+                            return null;
+                        }
+                    }
+                    catch (ArrayIndexOutOfBoundsException e) {
+                        System.err.println("ERROR:  HelicityDecoder EVIO data looks like v2 firmware(?), ignoring it.");
                         return null;
                     }
                     i_data_offset ++; // Point to the first word in the data block.
