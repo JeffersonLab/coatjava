@@ -3,7 +3,7 @@
 usage() { echo "Usage: $0 [-g GEMC] [-n NEV] [-p PARTS] [-c GCARD] [-m]" 1>&2; exit $1; }
 
 run=11
-gemc=5.10
+gemc=dev
 nevents=100
 particles=()
 
