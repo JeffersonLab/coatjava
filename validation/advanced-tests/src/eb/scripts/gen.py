@@ -19,7 +19,7 @@ for i in range(int(sys.argv[1])):
     h = 2*math.pi*random.random()
     z = -5+10*random.random()
     header = [2,1,1,0,0,0,0,0,0,0]
-    electron = [0,0,1,11,0,0] + cartesian(9.0,math.radians(20),0,me) + [me,0,0,z]
+    electron = [0,0,1,11,0,0] + cartesian(9.0,math.radians(12),0,me) + [me,0,0,z]
     hadron = [1,0,1,2212,0,0] + cartesian(p,t,h,mp) + [mp,0,0,z]
     print(' '.join([str(x) for x in header]))
     print(fmt%tuple(electron))
