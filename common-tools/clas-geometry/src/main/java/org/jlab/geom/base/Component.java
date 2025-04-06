@@ -19,10 +19,10 @@ import org.jlab.geom.prim.Transformation3D;
  * Factory: {@link org.jlab.geom.base.Factory Factory}<br>
  * Hierarchy: 
  * <code>
- * {@link org.jlab.geom.base.Detector Detector} → 
- * {@link org.jlab.geom.base.Sector Sector} → 
- * {@link org.jlab.geom.base.Superlayer Superlayer} → 
- * {@link org.jlab.geom.base.Layer Layer} → 
+ * {@link org.jlab.geom.base.Detector Detector}  
+ * {@link org.jlab.geom.base.Sector Sector} 
+ * {@link org.jlab.geom.base.Superlayer Superlayer}  
+ * {@link org.jlab.geom.base.Layer Layer}  
  * <b>{@link org.jlab.geom.base.Component Component}</b>
  * </code>
  * <p>
