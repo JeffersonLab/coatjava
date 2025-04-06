@@ -16,21 +16,6 @@ import org.jlab.rec.ahdc.AI.*;
 
 import org.jlab.rec.atof.banks.RecoBankWriter;
 
-import org.jlab.rec.ahdc.Cluster.Cluster;
-import org.jlab.rec.ahdc.Cluster.ClusterFinder;
-import org.jlab.rec.ahdc.Distance.Distance;
-import org.jlab.rec.ahdc.HelixFit.HelixFitJava;
-import org.jlab.rec.ahdc.Hit.Hit;
-import org.jlab.rec.ahdc.Hit.HitReader;
-import org.jlab.rec.ahdc.Hit.TrueHit;
-import org.jlab.rec.ahdc.HoughTransform.HoughTransform;
-import org.jlab.rec.ahdc.KalmanFilter.KalmanFilter;
-import org.jlab.rec.ahdc.KalmanFilter.MaterialMap;
-import org.jlab.rec.ahdc.PreCluster.PreCluster;
-import org.jlab.rec.ahdc.PreCluster.PreClusterFinder;
-import org.jlab.rec.ahdc.Track.Track;
-import org.jlab.rec.ahdc.Mode;
-
 import org.jlab.rec.atof.cluster.ATOFCluster;
 import org.jlab.rec.atof.hit.ATOFHit;
 import org.jlab.rec.atof.hit.BarHit;

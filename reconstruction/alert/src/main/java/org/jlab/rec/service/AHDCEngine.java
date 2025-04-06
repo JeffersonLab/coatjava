@@ -108,24 +108,24 @@ public class AHDCEngine extends ReconstructionEngine {
         double magfield       = 50.0;  // what is this?
         double magfieldfactor = 1;     // why is this here?
 
-		if (event.hasBank("RUN::config")) {
-			DataBank bank = event.getBank("RUN::config");
-			runNo          = bank.getInt("run", 0);
-			eventNo        = bank.getInt("event", 0);
-			magfieldfactor = bank.getFloat("solenoid", 0);
-			if (runNo <= 0) {
-				System.err.println("AHDCEngine:  got run <= 0 in RUN::config, skipping event.");
-				return false;
-			}
-			int newRun = Run;        
-			newRun = runNo; 
-			// Load the constants
-			//-------------------
-			if(Run!=newRun) {
-				CalibrationConstantsLoader.Load(newRun,"default",this.getConstantsManager()); 
-				Run = newRun;
-			}
-		}
+        if (event.hasBank("RUN::config")) {
+            DataBank bank = event.getBank("RUN::config");
+            runNo          = bank.getInt("run", 0);
+            eventNo        = bank.getInt("event", 0);
+            magfieldfactor = bank.getFloat("solenoid", 0);
+            if (runNo <= 0) {
+                System.err.println("AHDCEngine:  got run <= 0 in RUN::config, skipping event.");
+                return false;
+            }
+            int newRun = Run;        
+            newRun = runNo; 
+            // Load the constants
+            //-------------------
+            if(Run!=newRun) {
+                CalibrationConstantsLoader.Load(newRun,"default",this.getConstantsManager()); 
+                Run = newRun;
+            }
+        }
 
         /// What is this? 
         magfield = 50 * magfieldfactor;
