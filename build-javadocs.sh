@@ -6,7 +6,7 @@
 set -e
 
 ##### generate documentation
-mvn javadoc:javadoc -Ddoclint=none
+mvn javadoc:javadoc -Ddoclint=none -Dfile.encoding="UTF-8"
 
 
 ##### collect documentation
