@@ -83,7 +83,7 @@ coatjava:singularity:
       paths:
         - coatjava.sif
 
-javadoc_build:
+create-pages:
   image: codecr.jlab.org/hallb/alert/coatjava/coatjava:development
   script:
     - export MAVEN_OPTS=" -Dfile.encoding=UTF-8"
