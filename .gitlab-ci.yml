@@ -100,4 +100,7 @@ create-pages:
     - ls -lrth docs/javadoc
     - mv docs/javadoc public
   pages: true  # specifies that this is a Pages job and publishes the default public directory
+  artifacts:
+      paths:
+        - public
 
