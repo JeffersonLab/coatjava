@@ -5,8 +5,10 @@
 
 set -e
 
+export MAVEN_OPTS=" -Dfile.encoding=UTF-8"
+
 ##### generate documentation
-mvn javadoc:javadoc -Ddoclint=none
+mvn javadoc:javadoc -Ddoclint=none 
 
 
 ##### collect documentation
