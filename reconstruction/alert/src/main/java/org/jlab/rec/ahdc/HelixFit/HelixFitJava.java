@@ -1,8 +1,14 @@
 package org.jlab.rec.ahdc.HelixFit;
 
-
+/** Helix Fit.
+ *
+ * This appears to be some code translation.
+ */
 public class HelixFitJava {
 
+    /** \todo What does this method do
+     *  \what does its name even mean?
+     */
 	void rwsmav(double r[], double a[], double v[], int n)
 	{
 	    //  Author: Martin Poppe. r[n] = a[n,n]*v[n]
