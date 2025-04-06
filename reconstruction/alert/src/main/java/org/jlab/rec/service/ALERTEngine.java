@@ -2,30 +2,21 @@ package org.jlab.service.alert;
 
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.jlab.clas.reco.ReconstructionEngine;
-import org.jlab.io.base.DataBank;
-import org.jlab.io.base.DataEvent;
+import java.io.File;
+import java.util.*;
 
-import org.jlab.clas.reco.ReconstructionEngine;
-import org.jlab.clas.tracking.kalmanfilter.Material;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.io.hipo.HipoDataSync;
-import org.jlab.rec.ahdc.AI.*;
 
-import org.jlab.rec.atof.banks.RecoBankWriter;
-
-import org.jlab.rec.atof.cluster.ATOFCluster;
-import org.jlab.rec.atof.hit.ATOFHit;
-import org.jlab.rec.atof.hit.BarHit;
-import org.jlab.rec.atof.hit.HitFinder;
-import org.jlab.rec.alert.projections.TrackProjector;
-
+import org.jlab.clas.reco.ReconstructionEngine;
+import org.jlab.clas.tracking.kalmanfilter.Material;
 import org.jlab.clas.swimtools.Swim;
 
-import java.io.File;
-import java.util.*;
+import org.jlab.rec.alert.banks.RecoBankWriter;
+import org.jlab.rec.alert.projections.TrackProjector;
+
 
 /** 
  * <h1>ALERTEngine reconstruction service.</h1>
@@ -89,6 +80,15 @@ public class ALERTEngine extends ReconstructionEngine {
         return true;
     }
 
+    /**
+     * Process Event.
+     * Main method called to process event data.
+     *
+     * <ul>
+     * <li> Check for AHDC and ATOF banks </li>
+     * <li> Project track to ATOF</li>
+     * </ul>
+     */
     @Override
     public boolean processDataEvent(DataEvent event) {
 
@@ -121,16 +121,18 @@ public class ALERTEngine extends ReconstructionEngine {
         swim.BfieldLab(eventVx, eventVy, eventVz, magField); 
         this.b = Math.sqrt(Math.pow(magField[0],2) + Math.pow(magField[1],2) + Math.pow(magField[2],2));
 
-        /// \todo move this to ALERTEngine
         TrackProjector projector = new TrackProjector();
         projector.setB(this.b);
         projector.projectTracks(event);
         rbc.appendMatchBanks(event, projector.getProjections());
 
-
         return true;
     }
 
+    /**
+     * ALERTEngine main.
+     * TODO: needs good test.
+     */
     public static void main(String[] args) {
 
         double starttime = System.nanoTime();
