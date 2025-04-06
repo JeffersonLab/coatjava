@@ -1,6 +1,6 @@
 package org.jlab.rec.ahdc.HelixFit;
 
-/**
+/** Helix track model.
  *
  * @author davidpayette
  */
