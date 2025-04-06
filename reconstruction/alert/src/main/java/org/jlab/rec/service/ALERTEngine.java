@@ -27,18 +27,36 @@ import org.jlab.clas.swimtools.Swim;
 import java.io.File;
 import java.util.*;
 
-/** ALERTEngine reconstruction service.
+/** 
+ * <h1>ALERTEngine reconstruction service.</h1>
  *
- *
+ * @author  Whit Armstrong
+ * @author  Noemie Pilleux
+ * @since   2025-04-03
  */
 public class ALERTEngine extends ReconstructionEngine {
 
-
+    /**
+     * ALERT Engine output bank writer.
+     * 
+     * @see RecoBankWriter
+     *
+     * <h3>Output banks</h3>
+     * <ul>
+     * <li> Track Projection @see TrackProjector</li>
+     * </ul>
+     *
+     */
     private RecoBankWriter rbc;
 
-    // why atomic here and nowhere else? 
+    /**
+     *  Current run number being processed.
+     *  TODO: why atomic here and nowhere else? 
+     */
     private final AtomicInteger run = new AtomicInteger(0);
+
     private double b; //Magnetic field
+    
     public void setB(double B) {
         this.b = B;
     }
@@ -46,10 +64,18 @@ public class ALERTEngine extends ReconstructionEngine {
         return b;
     }
 
+    /**
+     * ALERTEngine service c'tor. 
+     */
     public ALERTEngine() {
         super("ALERT", "whit,ouillon,pilleux", "0.1");
     }
 
+    /** 
+     * ALERTEngine initialization.
+     * Creates the RecoBankWriter and checks for various yaml flags.
+     * TODO: document flags
+     */
     @Override
     public boolean init() {
 
