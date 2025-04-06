@@ -72,6 +72,7 @@ shared_for_alert_tests:
 
 coatjava:singularity:
   image: eicweb.phy.anl.gov:4567/containers/image_recipes/ubuntu_dind:latest
+  needs: ["coatjava_build"]
   tags:
      - silicon
   allow_failure: true
