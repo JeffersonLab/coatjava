@@ -43,7 +43,7 @@ public class AHDCEngine extends ReconstructionEngine {
 	public boolean init() {
 		simulation    = false;
 		findingMethod = "distance";
-
+		
 		if (materialMap == null) {
 			materialMap = MaterialMap.generateMaterials();
 		}
@@ -84,6 +84,9 @@ public class AHDCEngine extends ReconstructionEngine {
 			}
 		}
 
+		if(event.hasBank("MC::Particle")){
+			simulation = true;
+		}
 		magfield = 50 * magfieldfactor;
 
 		if (event.hasBank("AHDC::adc")) {
