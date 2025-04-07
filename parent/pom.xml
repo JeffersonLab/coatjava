@@ -125,8 +125,8 @@
         <artifactId>maven-javadoc-plugin</artifactId>
         <version>3.11.2</version>
         <configuration>
-          <doctitle>coatjava API documentation - version ${project.version}</doctitle>
-          <windowtitle>coatjava API documentation - version ${project.version}</windowtitle>
+          <doctitle>COATJAVA - API documentation - version ${project.version}</doctitle>
+          <windowtitle>COATJAVA - API documentation - version ${project.version}</windowtitle>
           <encoding>UTF-8</encoding>
         </configuration>
         <executions>
@@ -208,30 +208,5 @@
     </plugins>
 
   </build>
-
-  <!-- <reporting> -->
-  <!--   <plugins> -->
-  <!--     <plugin> -->
-  <!--       <groupId>org.apache.maven.plugins</groupId> -->
-  <!--       <artifactId>maven-javadoc-plugin</artifactId> -->
-  <!--       <version>3.11.2</version> -->
-  <!--       <reportSets> -->
-  <!--         <reportSet> -->
-  <!--           <id>aggregate</id> -->
-  <!--           <inherited>false</inherited> -->
-  <!--           <reports> -->
-  <!--             <report>aggregate</report> -->
-  <!--           </reports> -->
-  <!--         </reportSet> -->
-  <!--         <reportSet> -->
-  <!--           <id>default</id> -->
-  <!--           <reports> -->
-  <!--             <report>javadoc</report> -->
-  <!--           </reports> -->
-  <!--         </reportSet> -->
-  <!--       </reportSets> -->
-  <!--     </plugin> -->
-  <!--   </plugins> -->
-  <!-- </reporting> -->
 
 </project>
