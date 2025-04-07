@@ -125,8 +125,8 @@
         <artifactId>maven-javadoc-plugin</artifactId>
         <version>3.11.2</version>
         <configuration>
-          <doctitle>coatjavadocs</doctitle>
-          <windowtitle>coatjavadocs</windowtitle>
+          <doctitle>coatjava API documentation - version ${project.version}</doctitle>
+          <windowtitle>coatjava API documentation - version ${project.version}</windowtitle>
           <encoding>UTF-8</encoding>
         </configuration>
         <executions>
@@ -135,10 +135,9 @@
             <goals>
               <goal>aggregate</goal>
             </goals>
-            <!-- <configuration> -->
-            <!--   <reportOutputDirectory>${user.dir}/docs/test_aggregate</reportOutputDirectory> -->
-            <!--   <destDir>javadoc</destDir> -->
-            <!-- </configuration> -->
+            <configuration>
+              <outputDirectory>${project.build.directory}/reports</outputDirectory>
+            </configuration>
           </execution>
         </executions>
       </plugin>
