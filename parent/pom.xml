@@ -129,8 +129,20 @@
           <doctitle>coatjavadocs</doctitle>
           <windowtitle>coatjavadocs</windowtitle>
         </configuration>
+        <executions>
+          <execution>
+            <id>aggregate</id>
+            <goals>
+              <goal>aggregate</goal>
+            </goals>
+            <configuration>
+              <reportOutputDirectory>${user.dir}/docs/test_aggregate</reportOutputDirectory>
+              <destDir>javadoc</destDir>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
-      
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
