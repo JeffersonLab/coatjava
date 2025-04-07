@@ -5,7 +5,7 @@
 
 set -e
 
-export MAVEN_OPTS=" -Dfile.encoding=UTF-8"
+# export JAVA_TOOL_OPTIONS='-Dfile.encoding=UTF-8'
 
 ##### generate documentation
 mvn javadoc:javadoc javadoc:aggregate -Ddoclint=none
