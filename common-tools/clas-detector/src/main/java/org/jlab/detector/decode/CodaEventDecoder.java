@@ -68,7 +68,7 @@ public class CodaEventDecoder {
         // zero out the trigger bits, but let the others properties inherit
         // from the previous event, in the case where there's no HEAD bank:
         this.setTriggerBits(0);
-        List<DetectorDataDgtz>  rawEntries = new ArrayList<DetectorDataDgtz>();
+        List<DetectorDataDgtz>  rawEntries = new ArrayList<>();
         List<EvioTreeBranch> branches = this.getEventBranches(event);
         this.setTimeStamp(event);
         for(EvioTreeBranch branch : branches){
@@ -85,7 +85,6 @@ public class CodaEventDecoder {
         rawEntries.addAll(scalerEntries);
 
         this.getDataEntries_EPICS(event);
-        this.getDataEntries_HelicityDecoder(event);
 
         return rawEntries;
     }
@@ -645,7 +644,6 @@ public class CodaEventDecoder {
                 System.out.println("Exception in CRATE = " + crate + "  RUN = " + this.runNumber
                 + "  EVENT = " + this.eventNumber + " LENGTH = " + compBuffer.array().length);
                 this.printByteBuffer(compBuffer, 120, 20);
-//                Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
         return entries;
@@ -748,7 +746,7 @@ public class CodaEventDecoder {
                     	int nSamples = nBytes*8/12;
                     	short[] samples = new short[ nSamples ];
 
-                    	int s = 0;
+                    	int s;
                     	for( int b=0;b<nBytes;b++ ) {
                     		short data = (short)((byte)cdataitems.get( jdata++ )&0xFF);
 
@@ -811,7 +809,6 @@ public class CodaEventDecoder {
                 	for( int ch=0; ch<nChannels; ch++ ) {
                     	Short CHANNEL = (Short)cdataitems.get( jdata++ ); i++;
 
-
                         int nPulses = (Byte)cdataitems.get( jdata++ ); i++;
                         for(int np = 0; np < nPulses; np++){
 
@@ -824,7 +821,7 @@ public class CodaEventDecoder {
                             int nSamples = nBytes*8/12;
                             short[] samples = new short[ nSamples ];
 
-                            int s = 0;
+                            int s;
                             for( int b=0;b<nBytes;b++ ) {
                                 short data = (short)((byte)cdataitems.get( jdata++ )&0xFF);
 
@@ -1192,14 +1189,12 @@ public class CodaEventDecoder {
             for(EvioNode node : branch.getNodes()){
                 if(node.getTag()==57651) {
                     
-                    long[] longData = ByteDataTransformer.toLongArray(node.getStructureBuffer(true));
                     int[]  intData  = ByteDataTransformer.toIntArray(node.getStructureBuffer(true));
 
                     // When there are multiple HelicityDecoder banks in an event, there is a BLKHDR work in the data,
                     // and when there is one HelicityDecoder bank in an event, it is not there. So we need to
                     // detect where the trigger time word is.
                     int i_data_offset = 2;
-                    int i_data_length = intData.length;
                     while(i_data_offset<intData.length){
                         // The following idiotic construction is needed because Java doesn't have unsigned ints,
                         // and a right shift on a negative int results in a negative number.
@@ -1208,18 +1203,30 @@ public class CodaEventDecoder {
                         i_data_offset++;
                     } // find the trigger time word.
                     if(i_data_offset>=intData.length){
-                        System.err.println("ERROR:  HelicityDecoder data is corrupted. Trigger time word not found.");
+                        System.err.println("ERROR:  HelicityDecoder EVIO data is corrupted. Trigger time word not found.");
                         return null;
                     }
                     long  timeStamp = (intData[i_data_offset]&0x00ffffff) + (((long)(intData[i_data_offset+1]&0x00ffffffL))<<24);
                     i_data_offset+=2; // Next word should be "DECODER DATA", with 0x18 in the top 5 bits.
-                    if(((int) (( ((long)intData[i_data_offset]) & 0x00000000ffffffffL ) >> 27)) != 0x18){
-                        System.err.println("ERROR:  HelicityDecoder data is corrupted. DECODER BANK not found.");
+                    try {
+                        if(((int) (( ((long)intData[i_data_offset]) & 0x00000000ffffffffL ) >> 27)) != 0x18){
+                            System.err.println("ERROR:  HelicityDecoder EVIO data is corrupted.");
+                            return null;
+                        }
+                    }
+                    catch (ArrayIndexOutOfBoundsException e) {
+                        System.err.println("ERROR:  HelicityDecoder EVIO data looks like v2 firmware(?), ignoring it.");
                         return null;
                     }
-                    int num_data_words = intData[i_data_offset]&0x07ffffff;
-                    if(num_data_words < 14){
-                        System.err.println("ERROR:  HelicityDecoder data is corrupted. Not enough data words.");
+                    try {
+                        int num_data_words = intData[i_data_offset]&0x07ffffff;
+                        if(num_data_words < 14){
+                            System.err.println("ERROR:  HelicityDecoder EVIO data is corrupted. Not enough data words.");
+                            return null;
+                        }
+                    }
+                    catch (ArrayIndexOutOfBoundsException e) {
+                        System.err.println("ERROR:  HelicityDecoder EVIO data looks like v2 firmware(?), ignoring it.");
                         return null;
                     }
                     i_data_offset ++; // Point to the first word in the data block.
