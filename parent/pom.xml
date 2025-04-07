@@ -12,13 +12,11 @@
       <id>clas12maven</id>
       <url>https://clasweb.jlab.org/.clas12maven</url> 
     </repository>
-
     <repository>
       <id>jnp-maven</id>
       <url>https://clasweb.jlab.org/.jhep/maven</url>
     </repository>
   </repositories>
-
 
   <dependencyManagement>
     <dependencies>
@@ -55,9 +53,9 @@
 
     <!-- https://mvnrepository.com/artifact/org.jacoco/jacoco-maven-plugin -->
     <dependency>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.13</version>
+      <groupId>org.jacoco</groupId>
+      <artifactId>jacoco-maven-plugin</artifactId>
+      <version>0.8.13</version>
     </dependency>
 
     <dependency>
@@ -165,27 +163,27 @@
       </plugin>
 
       <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-jar-plugin</artifactId>
-          <version>3.4.2</version>
-          <configuration>
-              <archive>
-                  <manifest>
-                      <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-                      <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
-                  </manifest>
-                  <manifestSections>
-                      <manifestSection>
-                          <name>${project.name}</name>
-                          <manifestEntries>
-                              <groupId>${project.groupId}</groupId>
-                              <artifactId>${project.artifactId}</artifactId>
-                              <version>${project.version}</version>
-                          </manifestEntries>
-                      </manifestSection>
-                  </manifestSections>
-              </archive>
-          </configuration>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.4.2</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+              <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+            </manifest>
+            <manifestSections>
+              <manifestSection>
+                <name>${project.name}</name>
+                <manifestEntries>
+                  <groupId>${project.groupId}</groupId>
+                  <artifactId>${project.artifactId}</artifactId>
+                  <version>${project.version}</version>
+                </manifestEntries>
+              </manifestSection>
+            </manifestSections>
+          </archive>
+        </configuration>
       </plugin>
 
       <plugin>
