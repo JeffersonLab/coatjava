@@ -46,7 +46,6 @@
        {"name":"Hit10_ID",     "type":"S", "info":"id of hit10 in cluster"},
        {"name":"Hit11_ID",     "type":"S", "info":"id of hit11 in cluster"},
        {"name":"Hit12_ID",     "type":"S", "info":"id of hit12 in cluster"},
-       {"name":"URWell_Cross_ID",     "type":"S", "info":"id of uRWell cross in cluster"},
        {"name":"avgWire",      "type":"F", "info":"average wire number"},
        {"name":"fitChisqProb", "type":"F", "info":"fit chisq prob."},
        {"name":"fitSlope",     "type":"F", "info":"line fit slope"},
@@ -55,7 +54,17 @@
        {"name":"fitIntercErr", "type":"F", "info":"error on the intercept"},
        {"name":"size",         "type":"B", "info":"cluster size"}
        ]
-  },
+  },  
+  {
+    "name": "HitBasedTrkg::URWellDCClusters",
+    "group": 20600,
+    "item" : 39,
+    "info": "reconstructed clusters with uRWell cross and DC hits",
+    "entries": [
+       {"name":"id",                  "type":"S", "info":"id of the cluster"},
+       {"name":"URWell_Cross_ID",     "type":"S", "info":"id of uRWell cross in cluster"}
+       ]
+  },  
  {
     "name": "HitBasedTrkg::DNHits",
     "group": 20600,

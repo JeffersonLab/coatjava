@@ -1,6 +1,7 @@
 package org.jlab.service.dc;
 
 import java.util.List;
+import java.util.ArrayList;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.dc.Constants;
@@ -30,6 +31,7 @@ public class DCURWellHBClustering extends DCEngine {
     public void setDropBanks() {        
         super.registerOutputBank(this.getBanks().getHitsBank());
         super.registerOutputBank(this.getBanks().getClustersBank());
+        super.registerOutputBank(this.getBanks().getURWellDCClustersBank());
     }
      
     
@@ -74,10 +76,16 @@ public class DCURWellHBClustering extends DCEngine {
             return true;
         } else {
             List<FittedHit> fhits = rbc.createRawHitList(hits);
+            List<FittedCluster> uRWellDCClusters = new ArrayList();
+            for(FittedCluster cls : clusters){
+                if(cls.getMatchedURWellCross() != null) uRWellDCClusters.add(cls);
+            }
+            
             /* 9 */
             rbc.updateListsWithClusterInfo(fhits, clusters);
             event.appendBanks(rbc.fillHitsBank(event, fhits),
-                    rbc.fillHBClustersBank(event, clusters)
+                    rbc.fillHBClustersBank(event, clusters),
+                    rbc.fillHBURWellDCClustersBank(event, uRWellDCClusters)
             );
         }
         

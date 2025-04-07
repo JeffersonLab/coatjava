@@ -113,6 +113,10 @@ public class Banks {
     public String getClustersBank() {
         return this.getOutputBank("Clusters");
     }
+    
+    public String getURWellDCClustersBank() {
+        return this.getOutputBank("URWellDCClusters");
+    }
 
     public String getSegmentsBank() {
         return this.getOutputBank("Segments");
