@@ -17,7 +17,8 @@ public class RecoilTOFConstants {
     public final static double BAR_WIDTH = 1; // cm
     public final static double BAR_THICKNESS = 0.5; // cm
     
-    public final static double HORIZONTAL_OPENING_ANGLE = 40.;
+    public final static double HORIZONTAL_STARTING_ANGLE = 40.;
+    public final static double HORIZONTAL_OPENING_ANGLE = 29.;
     public final static double RADIUS = 122.; // cm
 
     public final static double WIDTH = NCOLUMNS * BAR_WIDTH;                                                                    

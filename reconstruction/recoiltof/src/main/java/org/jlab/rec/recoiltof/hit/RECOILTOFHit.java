@@ -16,7 +16,7 @@ public class RECOILTOFHit {
 
     private int sector, row, column, order;
     private int tdc, tot;
-    private double time, energy, x, y, z;
+    private double time, energy, x, y, z, local_y;
     private String type;
     private boolean isInACluster;
     private int associatedClusterIndex;
@@ -100,6 +100,14 @@ public class RECOILTOFHit {
 
     public void setY(double y) {
         this.y = y;
+    }
+
+    public double getLocalY() {
+        return local_y;
+    }
+    
+    public void setLocalY(double local_y) {
+	this.local_y = local_y;
     }
 
     public double getZ() {
@@ -274,10 +282,46 @@ public class RECOILTOFHit {
 	    {
 		y_pos = y_start + (this.row -2) * dy_long + dy_short;
 	    }
+
+	double[] localCoords = {x_pos, y_pos, z_pos};
 	    	
-	this.x = x_pos;
-        this.y = y_pos;
-        this.z = z_pos;
+	// Calculate center coordinates for the sector
+	double sector_x = (-1+(this.sector-1)*2)*(Parameters.RADIUS)*Math.sin(Math.toRadians(Parameters.HORIZONTAL_OPENING_ANGLE/2+Parameters.HORIZONTAL_STARTING_ANGLE));
+	double sector_y = 0;
+	double sector_z = Parameters.RADIUS*Math.cos(Math.toRadians(Parameters.HORIZONTAL_OPENING_ANGLE/2+Parameters.HORIZONTAL_STARTING_ANGLE));
+
+	// Global coordinates of the sector
+        double[] globalCoordsSector = {sector_x, sector_y, sector_z};
+
+	// Rotation angle in radians 
+        double thetaY = 0;
+
+	if(this.sector==1) thetaY = Math.toRadians(Parameters.HORIZONTAL_OPENING_ANGLE/2+Parameters.HORIZONTAL_STARTING_ANGLE);
+	if(this.sector==2) thetaY = Math.toRadians(-(Parameters.HORIZONTAL_OPENING_ANGLE/2+Parameters.HORIZONTAL_STARTING_ANGLE));
+	
+        // Rotation matrix around the Y-axis
+        double[][] Ry = {
+            {Math.cos(thetaY), 0, Math.sin(thetaY)},
+            {0, 1, 0},
+            {-Math.sin(thetaY), 0, Math.cos(thetaY)}
+        };
+
+        // Rotate local coordinates
+        double[] rotatedCoords = new double[3];
+        for (int i = 0; i < 3; i++) {
+            rotatedCoords[i] = Ry[i][0] * localCoords[0] + Ry[i][1] * localCoords[1] + Ry[i][2] * localCoords[2];
+        }
+
+        // Calculate global coordinates for the hit
+        double[] globalCoordsBar = new double[3];
+        for (int i = 0; i < 3; i++) {
+            globalCoordsBar[i] = globalCoordsSector[i] + rotatedCoords[i];
+        }
+	
+	
+	this.x = globalCoordsBar[0]; 
+        this.y = globalCoordsBar[1];
+        this.z = globalCoordsBar[2];
         return 0;
     }
 

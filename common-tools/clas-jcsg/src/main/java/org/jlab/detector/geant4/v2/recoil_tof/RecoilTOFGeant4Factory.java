@@ -41,9 +41,9 @@ public final class RecoilTOFGeant4Factory extends Geant4Factory {
         int is=isector;
         Vector3d vCenter = new Vector3d(0, 0, 0);
         
-	vCenter.x = (-1+is*2)*(RecoilTOFConstants.RADIUS)*Math.sin(Math.toRadians(1.5*RecoilTOFConstants.HORIZONTAL_OPENING_ANGLE));
+	vCenter.x = (-1+is*2)*(RecoilTOFConstants.RADIUS)*Math.sin(Math.toRadians(RecoilTOFConstants.HORIZONTAL_OPENING_ANGLE/2+RecoilTOFConstants.HORIZONTAL_STARTING_ANGLE));
 	vCenter.y = 0;
-	vCenter.z =RecoilTOFConstants.RADIUS*Math.cos(Math.toRadians(1.5*RecoilTOFConstants.HORIZONTAL_OPENING_ANGLE));
+	vCenter.z =RecoilTOFConstants.RADIUS*Math.cos(Math.toRadians(RecoilTOFConstants.HORIZONTAL_OPENING_ANGLE/2+RecoilTOFConstants.HORIZONTAL_STARTING_ANGLE));
         return vCenter;
     }
 
@@ -59,7 +59,8 @@ public final class RecoilTOFGeant4Factory extends Geant4Factory {
 
 	Geant4Basic sectorVolume = new G4Box("recoil_tof_sector" + (isector + 1), hlx, hly, hlz);
 
-	sectorVolume.rotate("yxz",(-1+isector*2)*Math.toRadians(1.5*RecoilTOFConstants.HORIZONTAL_OPENING_ANGLE+270),0,0);
+	if(isector==0) sectorVolume.rotate("yxz",Math.toRadians((RecoilTOFConstants.HORIZONTAL_OPENING_ANGLE/2+RecoilTOFConstants.HORIZONTAL_STARTING_ANGLE)),0,0);
+	if(isector==1) sectorVolume.rotate("yxz",Math.toRadians(-(RecoilTOFConstants.HORIZONTAL_OPENING_ANGLE/2+RecoilTOFConstants.HORIZONTAL_STARTING_ANGLE)),0,0);
         sectorVolume.translate(vCenter.x, vCenter.y, vCenter.z);
         sectorVolume.setId(isector + 1, 0, 0);
 	

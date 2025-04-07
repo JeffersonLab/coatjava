@@ -51,9 +51,6 @@ public class RECOILTOFEngine extends ReconstructionEngine {
             run.set(newRun);
         }
         
-        //Do we need to read the event vx,vy,vz?
-        //If not, this part can be moved in the initialization of the engine.
-        double eventVx=0,eventVy=0,eventVz=0; //They should be in CM
 
         //Hit finder init
         HitFinder hitfinder = new HitFinder();
