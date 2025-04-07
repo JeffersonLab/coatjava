@@ -235,11 +235,6 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
         bank.setFloat("fitInterc", i, (float) fitInterc);
         bank.setFloat("fitIntercErr", i, (float) cluslist.get(i).get_clusterLineFitInterceptErr());
         
-        if(cluslist.get(i).getMatchedURWellCross() != null)
-            bank.setShort("URWell_Cross_ID", i, (short) cluslist.get(i).getMatchedURWellCross().id());
-        else
-            bank.setShort("URWell_Cross_ID", i, (short)-1);
-
         for (int j = 0; j < cluslist.get(i).size(); j++) {
             if (j < hitIdxArray.length) {
                 hitIdxArray[j] = cluslist.get(i).get(j).get_Id();
@@ -261,6 +256,32 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
     return bank;
 
     }
+
+    /**
+    *
+    * @param event the EvioEvent
+        * @param cluslist
+    * @return clusters bank
+    */
+   public DataBank fillHBURWellDCClustersBank(DataEvent event, List<FittedCluster> cluslist) {
+        String name = bankNames.getURWellDCClustersBank();
+        DataBank bank = event.createBank(name, cluslist.size());
+
+        int[] hitIdxArray = new int[12];
+        if(cluslist==null)
+            return bank;
+        for (int i = 0; i < cluslist.size(); i++) {
+            if (cluslist.get(i) == null || cluslist.get(i).get_Id() == -1) {
+                continue;
+            }
+            if(cluslist.get(i).getMatchedURWellCross() == null) continue;
+            
+            bank.setShort("id", i, (short) cluslist.get(i).get_Id());            
+            bank.setShort("URWell_Cross_ID", i, (short) cluslist.get(i).getMatchedURWellCross().id());
+        }
+
+        return bank;       
+   }
 
     /**
      *
