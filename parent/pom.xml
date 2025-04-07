@@ -9,7 +9,7 @@
   <repositories>
     <repository>
       <id>clas12maven</id>
-      <url>https://clasweb.jlab.org/.clas12maven</url> 
+      <url>https://clasweb.jlab.org/.clas12maven</url>
     </repository>
 
     <repository>
@@ -45,7 +45,7 @@
       <artifactId>spotbugs</artifactId>
       <version>4.9.1</version>
     </dependency>
-    
+
     <dependency>
       <groupId>org.jlab</groupId>
       <artifactId>groot</artifactId>
@@ -86,7 +86,7 @@
       <scope>runtime</scope>
       <version>2.5.1</version>
     </dependency>
-    
+
     <dependency>
       <groupId>ai.djl.pytorch</groupId>
       <artifactId>pytorch-jni</artifactId>
@@ -128,6 +128,7 @@
         <configuration>
           <doctitle>coatjavadocs</doctitle>
           <windowtitle>coatjavadocs</windowtitle>
+            <encoding>UTF-8</encoding>
         </configuration>
         <executions>
           <execution>
@@ -135,10 +136,10 @@
             <goals>
               <goal>aggregate</goal>
             </goals>
-            <configuration>
-              <reportOutputDirectory>${user.dir}/docs/test_aggregate</reportOutputDirectory>
-              <destDir>javadoc</destDir>
-            </configuration>
+            <!-- <configuration> -->
+            <!--   <reportOutputDirectory>${user.dir}/docs/test_aggregate</reportOutputDirectory> -->
+            <!--   <destDir>javadoc</destDir> -->
+            <!-- </configuration> -->
           </execution>
         </executions>
       </plugin>
@@ -209,5 +210,30 @@
     </plugins>
 
   </build>
+
+  <!-- <reporting> -->
+  <!--   <plugins> -->
+  <!--     <plugin> -->
+  <!--       <groupId>org.apache.maven.plugins</groupId> -->
+  <!--       <artifactId>maven-javadoc-plugin</artifactId> -->
+  <!--       <version>3.11.2</version> -->
+  <!--       <reportSets> -->
+  <!--         <reportSet> -->
+  <!--           <id>aggregate</id> -->
+  <!--           <inherited>false</inherited> -->
+  <!--           <reports> -->
+  <!--             <report>aggregate</report> -->
+  <!--           </reports> -->
+  <!--         </reportSet> -->
+  <!--         <reportSet> -->
+  <!--           <id>default</id> -->
+  <!--           <reports> -->
+  <!--             <report>javadoc</report> -->
+  <!--           </reports> -->
+  <!--         </reportSet> -->
+  <!--       </reportSets> -->
+  <!--     </plugin> -->
+  <!--   </plugins> -->
+  <!-- </reporting> -->
 
 </project>
