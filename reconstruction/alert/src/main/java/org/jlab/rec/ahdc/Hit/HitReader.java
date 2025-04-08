@@ -36,27 +36,30 @@ public class HitReader {
 				int    wire       = bankDGTZ.getShort("component", i);
 				double adc        = bankDGTZ.getInt("ADC", i);
 				double leadingEdgeTime = bankDGTZ.getFloat("leadingEdgeTime", i);
-				
-				// use calibration constants
-				int key_value = sector*10000 + number*100 + wire;
-				double[] timeOffsets = CalibrationConstantsLoader.AHDC_TIME_OFFSETS.get( key_value );
-				double[] time2distance = CalibrationConstantsLoader.AHDC_TIME_TO_DISTANCE.get( 10101 ); // the time to distance table has only one row ! (10101 is its only key)
-				double t0 = timeOffsets[0];
-				double p0 = time2distance[0];
-				double p1 = time2distance[1];
-				double p2 = time2distance[2];
-				double p3 = time2distance[3];
-				double p4 = time2distance[4];
-				double p5 = time2distance[5];
-				
-				double time = leadingEdgeTime - t0;
-				// we may prevent time to be too small or too big
-				// CONDITION TO BE ADDED
-				// we should also use a flag to prevent to read the ccdb if reconstructed event if from simulation
-				// TO BE DONE
-				//double doca       = bankDGTZ.getShort("ped", i) / 1000.0;
-				double doca = p0 + p1*Math.pow(time,1.0) + p2*Math.pow(time,2.0) + p3*Math.pow(time,3.0) + p4*Math.pow(time,4.0) + p5*Math.pow(time, 5.0);
-				hits.add(new Hit(id, superlayer, layer, wire, doca, adc, time));
+				double timeOverThreshold = bankDGTZ.getFloat("timeOverThreshold", i);	
+				// Temporary cuts
+				if ((adc >= 50) && (leadingEdgeTime >= 8*50.0) && (leadingEdgeTime <= 16*50.0) && (timeOverThreshold >= 6*50.0) && (timeOverThreshold <= 14*50.0)) {
+					// use calibration constants
+					int key_value = sector*10000 + number*100 + wire;
+					double[] timeOffsets = CalibrationConstantsLoader.AHDC_TIME_OFFSETS.get( key_value );
+					double[] time2distance = CalibrationConstantsLoader.AHDC_TIME_TO_DISTANCE.get( 10101 ); // the time to distance table has only one row ! (10101 is its only key)
+					double t0 = timeOffsets[0];
+					double p0 = time2distance[0];
+					double p1 = time2distance[1];
+					double p2 = time2distance[2];
+					double p3 = time2distance[3];
+					double p4 = time2distance[4];
+					double p5 = time2distance[5];
+					
+					double time = leadingEdgeTime - t0;
+					// we may prevent time to be too small or too big
+					// CONDITION TO BE ADDED
+					// we should also use a flag to prevent to read the ccdb if reconstructed event if from simulation
+					// TO BE DONE
+					//double doca       = bankDGTZ.getShort("ped", i) / 1000.0;
+					double doca = p0 + p1*Math.pow(time,1.0) + p2*Math.pow(time,2.0) + p3*Math.pow(time,3.0) + p4*Math.pow(time,4.0) + p5*Math.pow(time, 5.0);
+					hits.add(new Hit(id, superlayer, layer, wire, doca, adc, time));
+				}
 			}
 		}
 		this.set_AHDCHits(hits);

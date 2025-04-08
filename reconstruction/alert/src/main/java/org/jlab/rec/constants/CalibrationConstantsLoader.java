@@ -63,6 +63,7 @@ public class CalibrationConstantsLoader {
 			int key 	= sector*10000 + layer*100 + component;
 			double params[] = {t0, dt0, extra1, extra2, chi2ndf};
 			AHDC_TIME_OFFSETS.put(Integer.valueOf(key), params);
+			//System.out.println("t0 : " + t0 + " dt0 : " + dt0 + " extra1 : " + extra1 + " extra2 : " + extra2 + " chi2ndf : " + chi2ndf);
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -91,6 +92,7 @@ public class CalibrationConstantsLoader {
 			int key 	= sector*10000 + layer*100 + component;
 			double params[] = {p0, p1, p2, p3, p4, p5, dp0, dp1, dp2, dp3, dp4, dp5, chi2ndf};
 			AHDC_TIME_TO_DISTANCE.put(Integer.valueOf(key), params);
+			//System.out.println("p0 : " + p0 + " p1 : " + p1 + " p2 : " + p2 + " p3 : " + p3 + " p4 : " + p4 + " p5 : " + p5);
 		}
 		
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
