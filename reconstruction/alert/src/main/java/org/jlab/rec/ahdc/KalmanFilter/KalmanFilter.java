@@ -39,7 +39,7 @@ public class KalmanFilter {
 	private void propagation(ArrayList<Track> tracks, DataEvent event, boolean IsMC) {
 
 		try {
-			double vz_constraint;
+			double vz_constraint = 0;
 			if(IsMC) {//If simulation read MC::Particle Bank ------------------------------------------------
 				DataBank bankParticle = event.getBank("MC::Particle");
 				double   vxmc         = bankParticle.getFloat("vx", 0)*10;//mm
