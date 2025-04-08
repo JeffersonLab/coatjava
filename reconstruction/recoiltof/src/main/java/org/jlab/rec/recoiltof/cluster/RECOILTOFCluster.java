@@ -27,11 +27,11 @@ public class RECOILTOFCluster {
     ArrayList<BarHit> barHits;
     /**
      * cluster properties:position [cm], time [ns], energy[MeV], 
-     * type of the maximum hit (to set resolutions) and index of the maximum hit.
+     * type of the maximum hit (to set resolutions) and index and sector of the maximum hit.
      */
     double x, y, z, time, energy;
     String typeMaxHit;
-    int indexMaxHit;
+    int indexMaxHit, sectorMaxHit;
 
     public ArrayList<BarHit> getBarHits() {
         return barHits;
@@ -98,6 +98,15 @@ public class RECOILTOFCluster {
         this.indexMaxHit = indexMaxHit;
     }
 
+    public int getSectorMaxHit() {
+        return sectorMaxHit;
+    }
+
+    public void setSectorMaxHit(int sectorMaxHit) {
+        this.sectorMaxHit = sectorMaxHit;
+    }
+
+
     /**
      * Compute the cluster properties.
      *
@@ -127,6 +136,7 @@ public class RECOILTOFCluster {
         this.y = max_energy_hit.getY();
         this.z = max_energy_hit.getZ();
         this.typeMaxHit = max_energy_hit.getType();
+	this.sectorMaxHit = max_energy_hit.getSector();
     }
 
     

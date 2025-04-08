@@ -62,6 +62,10 @@
         "type": "I",
         "info": "number of hits from the bars"
       },{
+        "name": "sector",
+        "type": "I",
+        "info": "sector number"
+      },{
         "name": "time",
         "type": "F",
         "info": "time in ns"

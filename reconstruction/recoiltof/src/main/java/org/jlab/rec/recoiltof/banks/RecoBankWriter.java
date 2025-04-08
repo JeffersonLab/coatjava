@@ -76,6 +76,7 @@ public class RecoBankWriter {
         for (int i = 0; i < clusterList.size(); i++) {
             bank.setShort("id", i, (short) (i + 1));
             bank.setInt("N_bar", i, (int) clusterList.get(i).getBarHits().size());
+	    bank.setInt("sector", i, (int) clusterList.get(i).getSectorMaxHit());
             bank.setFloat("time", i, (float) clusterList.get(i).getTime());
             bank.setFloat("x", i, (float) (clusterList.get(i).getX()));
             bank.setFloat("y", i, (float) (clusterList.get(i).getY()));
