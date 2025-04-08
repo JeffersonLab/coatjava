@@ -26,6 +26,7 @@ public class RecoBankWriter {
 			bank.setDouble("Doca", i, hitList.get(i).getDoca());
 			bank.setDouble("residual", i, hitList.get(i).getResidual());
 			bank.setDouble("residual_prefit", i, hitList.get(i).getResidualPrefit());
+			bank.setDouble("time", i, hitList.get(i).getTime());
 		}
 
 		return bank;
