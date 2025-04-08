@@ -21,8 +21,9 @@ defaults:
     shell: bash
 
 env:
-  java_version: 24
+  java_version: 17
   java_distribution: zulu
+  javadoc_version: 24 # newer for better javadoc
   groovy_version: 4.x
 
 jobs:
@@ -170,7 +171,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
-          java-version: ${{ env.java_version }}
+          java-version: ${{ env.javadoc_version }}
           distribution: ${{ env.java_distribution }}
       - name: build
         run: ./build-coatjava.sh
