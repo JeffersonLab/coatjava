@@ -113,6 +113,10 @@ public class AHDCEngine extends ReconstructionEngine {
         double magfield       = 50.0;  // what is this?
         double magfieldfactor = 1;     // why is this here?
 
+	if(event.hasBank("MC::Particle")){
+	    simulation = true;
+	}
+
         if (event.hasBank("RUN::config")) {
             DataBank bank = event.getBank("RUN::config");
             runNo          = bank.getInt("run", 0);
