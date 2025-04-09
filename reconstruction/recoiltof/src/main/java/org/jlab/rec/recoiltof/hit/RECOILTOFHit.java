@@ -296,8 +296,8 @@ public class RECOILTOFHit {
 	// Rotation angle in radians 
         double thetaY = 0;
 
-	if(this.sector==1) thetaY = Math.toRadians(Parameters.HORIZONTAL_OPENING_ANGLE/2+Parameters.HORIZONTAL_STARTING_ANGLE);
-	if(this.sector==2) thetaY = Math.toRadians(-(Parameters.HORIZONTAL_OPENING_ANGLE/2+Parameters.HORIZONTAL_STARTING_ANGLE));
+	if(this.sector==1) thetaY = Math.toRadians(-(Parameters.HORIZONTAL_OPENING_ANGLE/2+Parameters.HORIZONTAL_STARTING_ANGLE));
+	if(this.sector==2) thetaY = Math.toRadians(Parameters.HORIZONTAL_OPENING_ANGLE/2+Parameters.HORIZONTAL_STARTING_ANGLE);
 	
         // Rotation matrix around the Y-axis
         double[][] Ry = {
