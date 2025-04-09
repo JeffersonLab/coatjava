@@ -26,6 +26,8 @@ import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
 
 import java.io.File;
 import java.util.*;
+import org.jlab.detector.calib.utils.DatabaseConstantProvider;
+import org.jlab.geom.detector.alert.AHDC.AlertDCFactory;
 
 /** AHDCEngine reconstruction service.
  *
@@ -64,6 +66,9 @@ public class AHDCEngine extends ReconstructionEngine {
 
     @Override
     public boolean init() {
+
+        (new AlertDCFactory()).createDetectorCLAS(new DatabaseConstantProvider());
+        
         simulation    = false;
         findingMethod = "distance";
 
