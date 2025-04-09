@@ -107,6 +107,14 @@ dchv.extend(["DC::tdc","DC::jitter", "HitBasedTrkg::HBClusters", "HitBasedTrkg::
 level3 = list(dst)
 level3.extend(["DC::tdc", "ECAL::adc", "ECAL::clusters", "FTOF::tdc", "FTOF::adc", "HitBasedTrkg::HBClusters", "HitBasedTrkg::HBTracks", "HTCC::adc", "RF::adc", "RF::tdc", "RUN::rf", "TimeBasedTrkg::TBClusters", "TimeBasedTrkg::TBTracks"])
 
+import glob
+rgl = glob.glob('./etc/bankdefs/hipo4/singles/full/ALERT*.json')
+rgl.extend(glob.glob('./etc/bankdefs/hipo4/singles/full/AHDC*.json'))
+rgl.extend(glob.glob('./etc/bankdefs/hipo4/singles/full/ATOF*.json'))
+calib.extend(rgl)
+mon.extend(rgl)
+dst.extend(rgl)
+
 create("dst/", set(dst))
 create("dsthb/", set(dsthb))
 create("calib/", set(calib))
