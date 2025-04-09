@@ -39,7 +39,7 @@ public class KalmanFilter {
 	private void propagation(ArrayList<Track> tracks, DataEvent event, boolean IsMC) {
 
 		try {
-			double vz_constraint;
+			double vz_constraint = 0;
 			if(IsMC) {//If simulation read MC::Particle Bank ------------------------------------------------
 				DataBank bankParticle = event.getBank("MC::Particle");
 				double   vxmc         = bankParticle.getFloat("vx", 0)*10;//mm
@@ -77,24 +77,23 @@ public class KalmanFilter {
 			// Initialization material map
 			HashMap<String, Material> materialHashMap = materialGeneration();
 
-			// Initialization State Vector
-			final double x0  = 0.0;
-			final double y0  = 0.0;
-			final double z0  = tracks.get(0).get_Z0();
-			//final
-			double px0 = tracks.get(0).get_px();
-			//final
-			double py0 = tracks.get(0).get_py();
-			final double pz0 = tracks.get(0).get_pz();
-			//final double p_init = java.lang.Math.sqrt(px0*px0+py0*py0+pz0*pz0);
-			double[]     y   = new double[]{x0, y0, z0, px0, py0, pz0};
-			// EPAF: *the line below is for TEST ONLY!!!* 
-			//double[]     y   = new double[]{vxmc, vymc, vzmc, pxmc, pymc, pzmc};
-			// Initialization hit
-			ArrayList<org.jlab.rec.ahdc.Hit.Hit> AHDC_hits = tracks.get(0).getHits();
-			ArrayList<Hit>                       KF_hits   = new ArrayList<>();
-			//System.out.println(" px " +  y[3] + " py " + y[4]  +" pz " +  y[5] +" vz " + y[2] + " number of hits: " + AHDC_hits.size() + " MC hits? " + sim_hits.size());
-			for (org.jlab.rec.ahdc.Hit.Hit AHDC_hit : AHDC_hits) {
+			for (Track track : tracks) {
+			    // Initialization State Vector
+			    final double x0  = 0.0;
+			    final double y0  = 0.0;
+			    final double z0  = track.get_Z0();
+			    //final
+			    double px0 = track.get_px();
+			    //final
+			    double py0 = track.get_py();
+			    final double pz0 = track.get_pz();
+			    //final double p_init = java.lang.Math.sqrt(px0*px0+py0*py0+pz0*pz0);
+			    double[]     y   = new double[]{x0, y0, z0, px0, py0, pz0};
+			    // Initialization hit
+			    ArrayList<org.jlab.rec.ahdc.Hit.Hit> AHDC_hits = track.getHits();
+			    ArrayList<Hit>                       KF_hits   = new ArrayList<>();
+			    //System.out.println(" px " +  y[3] + " py " + y[4]  +" pz " +  y[5] +" vz " + y[2] + " number of hits: " + AHDC_hits.size() + " MC hits? " + sim_hits.size());
+			    for (org.jlab.rec.ahdc.Hit.Hit AHDC_hit : AHDC_hits) {
 				Hit hit = new Hit(AHDC_hit.getSuperLayerId(), AHDC_hit.getLayerId(), AHDC_hit.getWireId(), AHDC_hit.getNbOfWires(), AHDC_hit.getRadius(), AHDC_hit.getDoca());
 				hit.setADC(AHDC_hit.getADC());
 				hit.setHitIdx(AHDC_hit.getId());
@@ -104,30 +103,30 @@ public class KalmanFilter {
 				boolean phi_rollover = false;
 				boolean aleardyHaveR = false;
 				for (Hit o: KF_hits){
-				     if (o.r() == hit.r()){
-					 aleardyHaveR = true;
-					 // //sign+ means (phi track - phi wire) > 0
-					 //    if(o.phi()>hit.phi()){
-					 // 	if(Math.abs(o.phi()-hit.phi())< 2*Math.toRadians(360./o.getNumWires()) ){
-				 	 // 	    o.setSign(-1);
-				 	 // 	    hit.setSign(+1);
-					 // 	}else{
-					 // 	    phi_rollover = true;
-				 	 // 	    hit.setSign(-1);
-				 	 // 	    o.setSign(+1);
-					 // 	}
-				 	 //    }else{
-					 // 	if(Math.abs(o.phi()-hit.phi())< 2*Math.toRadians(360./o.getNumWires()) ){
-				 	 // 	    hit.setSign(-1);
-				 	 // 	    o.setSign(+1);
-					 // 	}else{
-					 // 	    phi_rollover = true;
-					 // 	    o.setSign(-1);
-                                         //            hit.setSign(+1);
-					 // 	}
-				 	 //    }
-					 //    //System.out.println( " r = " + o.r() + " o.phi = " + o.phi() + " o.doca = " + o.getDoca()*o.getSign() + " hit.phi " + hit.phi() +" hit.doca = " + hit.getDoca()*hit.getSign() + " angle between wires: " + Math.toRadians(360./hit.getNumWires()) + " >= ? angle covered by docas: " +  Math.atan( (o.getDoca()+hit.getDoca())/o.r() )  );
-				     }
+				    if (o.r() == hit.r()){
+					aleardyHaveR = true;
+					// //sign+ means (phi track - phi wire) > 0
+					//    if(o.phi()>hit.phi()){
+					// 	if(Math.abs(o.phi()-hit.phi())< 2*Math.toRadians(360./o.getNumWires()) ){
+					// 	    o.setSign(-1);
+					// 	    hit.setSign(+1);
+					// 	}else{
+					// 	    phi_rollover = true;
+					// 	    hit.setSign(-1);
+					// 	    o.setSign(+1);
+					// 	}
+					//    }else{
+					// 	if(Math.abs(o.phi()-hit.phi())< 2*Math.toRadians(360./o.getNumWires()) ){
+					// 	    hit.setSign(-1);
+					// 	    o.setSign(+1);
+					// 	}else{
+					// 	    phi_rollover = true;
+					// 	    o.setSign(-1);
+					//            hit.setSign(+1);
+					// 	}
+					//    }
+					//    //System.out.println( " r = " + o.r() + " o.phi = " + o.phi() + " o.doca = " + o.getDoca()*o.getSign() + " hit.phi " + hit.phi() +" hit.doca = " + hit.getDoca()*hit.getSign() + " angle between wires: " + Math.toRadians(360./hit.getNumWires()) + " >= ? angle covered by docas: " +  Math.atan( (o.getDoca()+hit.getDoca())/o.r() )  );
+				    }
 				}
 				if(!aleardyHaveR)KF_hits.add(hit);
 				// if (phi_rollover){
@@ -135,66 +134,67 @@ public class KalmanFilter {
 				// }else{
 				//     KF_hits.add(hit);
 				// }
-			}
+			    }
 
-			double zbeam = 0;
-			if(IsVtxDefined)zbeam = vz_constraint;//test
-			final ArrayList<Indicator> forwardIndicators  = forwardIndicators(KF_hits, materialHashMap);
-			final ArrayList<Indicator> backwardIndicators = backwardIndicators(KF_hits, materialHashMap, zbeam);
+			    double zbeam = 0;
+			    if(IsVtxDefined)zbeam = vz_constraint;//test
+			    final ArrayList<Indicator> forwardIndicators  = forwardIndicators(KF_hits, materialHashMap);
+			    final ArrayList<Indicator> backwardIndicators = backwardIndicators(KF_hits, materialHashMap, zbeam);
 			
-			// Start propagation
-			Stepper     stepper    = new Stepper(y);
-			RungeKutta4 RK4        = new RungeKutta4(proton, numberOfVariables, B);
-			Propagator  propagator = new Propagator(RK4);
+			    // Start propagation
+			    Stepper     stepper    = new Stepper(y);
+			    RungeKutta4 RK4        = new RungeKutta4(proton, numberOfVariables, B);
+			    Propagator  propagator = new Propagator(RK4);
 
-			// ----------------------------------------------------------------------------------------
+			    // ----------------------------------------------------------------------------------------
 
-			// Initialization of the Kalman Fitter
-			RealVector initialStateEstimate   = new ArrayRealVector(stepper.y);
-			//first 3 lines in cm^2; last 3 lines in MeV^2
-			RealMatrix initialErrorCovariance = MatrixUtils.createRealMatrix(new double[][]{{1.00, 0.0, 0.0, 0.0, 0.0, 0.0}, {0.0, 1.00, 0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 25.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 1.00, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0, 1.00, 0.0}, {0.0, 0.0, 0.0, 0.0, 0.0, 25.0}});
-			KFitter kFitter = new KFitter(initialStateEstimate, initialErrorCovariance, stepper, propagator);
-			kFitter.setVertexDefined(IsVtxDefined);
+			    // Initialization of the Kalman Fitter
+			    RealVector initialStateEstimate   = new ArrayRealVector(stepper.y);
+			    //first 3 lines in cm^2; last 3 lines in MeV^2
+			    RealMatrix initialErrorCovariance = MatrixUtils.createRealMatrix(new double[][]{{1.00, 0.0, 0.0, 0.0, 0.0, 0.0}, {0.0, 1.00, 0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 25.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 1.00, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0, 1.00, 0.0}, {0.0, 0.0, 0.0, 0.0, 0.0, 25.0}});
+			    KFitter kFitter = new KFitter(initialStateEstimate, initialErrorCovariance, stepper, propagator);
+			    kFitter.setVertexDefined(IsVtxDefined);
 		 
-			for (int k = 0; k < Niter; k++) {
+			    for (int k = 0; k < Niter; k++) {
 				//System.out.println("--------- ForWard propagation !! ---------");
 				//Reset error covariance:
 				//kFitter.ResetErrorCovariance(initialErrorCovariance);
 				for (Indicator indicator : forwardIndicators) {
-					kFitter.predict(indicator);
-					if (indicator.haveAHit()) {
-						if( k==0  && indicator.hit.getHitIdx()>0){
-							for (org.jlab.rec.ahdc.Hit.Hit AHDC_hit : AHDC_hits){
-								if(AHDC_hit.getId()==indicator.hit.getHitIdx())AHDC_hit.setResidualPrefit(kFitter.residual(indicator));
-							}
-						}
-						kFitter.correct(indicator);
+				    kFitter.predict(indicator);
+				    if (indicator.haveAHit()) {
+					if( k==0  && indicator.hit.getHitIdx()>0){
+					    for (org.jlab.rec.ahdc.Hit.Hit AHDC_hit : AHDC_hits){
+						if(AHDC_hit.getId()==indicator.hit.getHitIdx())AHDC_hit.setResidualPrefit(kFitter.residual(indicator));
+					    }
 					}
+					kFitter.correct(indicator);
+				    }
 				}
 
 				//System.out.println("--------- BackWard propagation !! ---------");
 				for (Indicator indicator : backwardIndicators) {
-					kFitter.predict(indicator);
-					if (indicator.haveAHit()) {
-					    kFitter.correct(indicator);
-					}
+				    kFitter.predict(indicator);
+				    if (indicator.haveAHit()) {
+					kFitter.correct(indicator);
+				    }
 				}
-			}
+			    }
 
-			RealVector x_out = kFitter.getStateEstimationVector();
-			tracks.get(0).setPositionAndMomentumForKF(x_out);
+			    RealVector x_out = kFitter.getStateEstimationVector();
+			    track.setPositionAndMomentumForKF(x_out);
 
-			//Residual calcuation post fit:
-			for (Indicator indicator : forwardIndicators) {
+			    //Residual calcuation post fit:
+			    for (Indicator indicator : forwardIndicators) {
 				kFitter.predict(indicator);
 				if (indicator.haveAHit()) {
-					if( indicator.hit.getHitIdx()>0){
-						for (org.jlab.rec.ahdc.Hit.Hit AHDC_hit : AHDC_hits){
-							if(AHDC_hit.getId()==indicator.hit.getHitIdx())AHDC_hit.setResidual(kFitter.residual(indicator));
-						}
+				    if( indicator.hit.getHitIdx()>0){
+					for (org.jlab.rec.ahdc.Hit.Hit AHDC_hit : AHDC_hits){
+					    if(AHDC_hit.getId()==indicator.hit.getHitIdx())AHDC_hit.setResidual(kFitter.residual(indicator));
 					}
+				    }
 				}
-			}
+			    }
+			}//end of loop on track candidates
 		} catch (Exception e) {
 			// e.printStackTrace();
 		}
