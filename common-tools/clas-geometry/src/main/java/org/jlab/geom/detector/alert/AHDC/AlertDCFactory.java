@@ -195,18 +195,19 @@ public class AlertDCFactory implements Factory<AlertDCDetector, AlertDCSector, A
 			Point3D p_11 = new Point3D(px_11, py_11, zl);
 			// defining a cell around a wireLine, must be counter-clockwise!
 			firstF.add(p_0);
-			firstF.add(p_1);
-			firstF.add(p_2);
-			firstF.add(p_3);
-			firstF.add(p_4);
 			firstF.add(p_5);
+			firstF.add(p_4);
+			firstF.add(p_3);
+			firstF.add(p_2);
+			firstF.add(p_1);
 
 			secondF.add(p_6);
-			secondF.add(p_7);
-			secondF.add(p_8);
-			secondF.add(p_9);
-			secondF.add(p_10);
 			secondF.add(p_11);
+			secondF.add(p_10);
+			secondF.add(p_9);
+			secondF.add(p_8);
+			secondF.add(p_7);
+			
 
 			// Create the cell and signal wire inside
 			// PrismaticComponent(int componentId, List<Point3D> firstFace, List<Point3D> secondFace)
