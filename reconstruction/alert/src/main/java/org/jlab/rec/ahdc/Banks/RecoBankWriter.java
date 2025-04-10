@@ -141,13 +141,13 @@ public class RecoBankWriter {
 			bank.setFloat("px", row, (float) px);
 			bank.setFloat("py", row, (float) py);
 			bank.setFloat("pz", row, (float) pz);
-			bank.setInt("n_hits", row, (int) track.get_n_hits_kf());
-			bank.setInt("sum_adc", row, (int) track.get_sum_adc_kf());
+			bank.setInt("n_hits", row, (int) track.get_n_hits());
+			bank.setInt("sum_adc", row, (int) track.get_sum_adc());
 			bank.setFloat("path", row, (float) track.get_path_kf());
 			bank.setFloat("dEdx", row, (float) track.get_dEdx_kf());
 			bank.setFloat("p_drift", row, (float) track.get_p_drift_kf());
-			bank.setFloat("chi2", row, (float) track.get_chi2_kf());
-			bank.setFloat("sum_residuals", row, (float) track.get_sum_residuals_kf());
+			bank.setFloat("chi2", row, (float) track.get_chi2());
+			bank.setFloat("sum_residuals", row, (float) track.get_sum_residuals());
 
 			row++;
 		}
