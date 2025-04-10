@@ -42,11 +42,14 @@ done
 # last argument is input file stub:
 stub="${@: -1}"
 
+yaml=
+
 # sanity check on filestub name,
 # just to error with reasonable message before proceeding:
 case $stub in
     # electron in forward, hadron in forward:
     electronproton)
+        yaml='-y ../../etc/services/mc-ai.yaml'
         ;;
     electronkaon)
         ;;
@@ -135,7 +138,7 @@ then
     then
         GEOMDBVAR=$geoDbVariation
         export GEOMDBVAR
-        ../../coatjava/bin/recon-util -i ${stub}.hipo -o out_${stub}.hipo -c 2
+        ../../coatjava/bin/recon-util $yaml -i ${stub}.hipo -o out_${stub}.hipo -c 2
     else
         echo "set inputDir $PWD/" > cook.clara
         echo "set outputDir $PWD/" >> cook.clara
