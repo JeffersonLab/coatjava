@@ -27,6 +27,7 @@ public class RecoBankWriter {
 			bank.setDouble("residual", i, hitList.get(i).getResidual());
 			bank.setDouble("residual_prefit", i, hitList.get(i).getResidualPrefit());
 			bank.setDouble("time", i, hitList.get(i).getTime());
+			bank.setInt("trackId", i, hitList.get(i).getTrackId());
 		}
 
 		return bank;
@@ -97,12 +98,20 @@ public class RecoBankWriter {
 			double py = track.get_py();
 			double pz = track.get_pz();
 
+			bank.setInt("trackId", row, (int) track.get_trackId());
 			bank.setFloat("x", row, (float) x);
 			bank.setFloat("y", row, (float) y);
 			bank.setFloat("z", row, (float) z);
 			bank.setFloat("px", row, (float) px);
 			bank.setFloat("py", row, (float) py);
 			bank.setFloat("pz", row, (float) pz);
+			bank.setInt("n_hits", row, (int) track.get_n_hits());
+			bank.setInt("sum_adc", row, (int) track.get_sum_adc());
+			bank.setFloat("path", row, (float) track.get_path());
+			bank.setFloat("dEdx", row, (float) track.get_dEdx());
+			bank.setFloat("p_drift", row, (float) track.get_p_drift());
+			bank.setFloat("chi2", row, (float) track.get_chi2());
+			bank.setFloat("sum_residuals", row, (float) track.get_sum_residuals());
 
 			row++;
 		}
@@ -125,12 +134,20 @@ public class RecoBankWriter {
 			double py = track.getPy0_kf();
 			double pz = track.getPz0_kf();
 
+			bank.setInt("trackId", row, (int) track.get_trackId());
 			bank.setFloat("x", row, (float) x);
 			bank.setFloat("y", row, (float) y);
 			bank.setFloat("z", row, (float) z);
 			bank.setFloat("px", row, (float) px);
 			bank.setFloat("py", row, (float) py);
 			bank.setFloat("pz", row, (float) pz);
+			bank.setInt("n_hits", row, (int) track.get_n_hits_kf());
+			bank.setInt("sum_adc", row, (int) track.get_sum_adc_kf());
+			bank.setFloat("path", row, (float) track.get_path_kf());
+			bank.setFloat("dEdx", row, (float) track.get_dEdx_kf());
+			bank.setFloat("p_drift", row, (float) track.get_p_drift_kf());
+			bank.setFloat("chi2", row, (float) track.get_chi2_kf());
+			bank.setFloat("sum_residuals", row, (float) track.get_sum_residuals_kf());
 
 			row++;
 		}
