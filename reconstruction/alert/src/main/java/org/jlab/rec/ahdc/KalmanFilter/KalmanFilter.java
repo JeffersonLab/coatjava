@@ -76,8 +76,10 @@ public class KalmanFilter {
 
 			// Initialization material map
 			HashMap<String, Material> materialHashMap = materialGeneration();
-
+			int trackId = 0;
 			for (Track track : tracks) {
+			    trackId++;
+			    track.set_trackId(trackId);
 			    // Initialization State Vector
 			    final double x0  = 0.0;
 			    final double y0  = 0.0;
@@ -93,11 +95,15 @@ public class KalmanFilter {
 			    ArrayList<org.jlab.rec.ahdc.Hit.Hit> AHDC_hits = track.getHits();
 			    ArrayList<Hit>                       KF_hits   = new ArrayList<>();
 			    //System.out.println(" px " +  y[3] + " py " + y[4]  +" pz " +  y[5] +" vz " + y[2] + " number of hits: " + AHDC_hits.size() + " MC hits? " + sim_hits.size());
+			    track.set_n_hits(AHDC_hits.size());
 			    for (org.jlab.rec.ahdc.Hit.Hit AHDC_hit : AHDC_hits) {
 				Hit hit = new Hit(AHDC_hit.getSuperLayerId(), AHDC_hit.getLayerId(), AHDC_hit.getWireId(), AHDC_hit.getNbOfWires(), AHDC_hit.getRadius(), AHDC_hit.getDoca());
 				hit.setADC(AHDC_hit.getADC());
 				hit.setHitIdx(AHDC_hit.getId());
 				hit.setSign(0);
+				// set track id
+				AHDC_hit.setTrackId(trackId);
+				
 				//System.out.println( " r = " + hit.r() + " hit.phi " + hit.phi() +" hit.doca = " + hit.getDoca()  );
 				// Do delete hit with same radius
 				boolean phi_rollover = false;
@@ -194,6 +200,19 @@ public class KalmanFilter {
 				    }
 				}
 			    }
+			    // At this stage, all relevants AHDC hits are filled
+			    // Compute sum_adc, sum_residuals and chi2
+			    int sum_adc = 0;
+			    double sum_residuals = 0;
+			    double chi2 = 0;
+			    for (org.jlab.rec.ahdc.Hit.Hit AHDC_hit : AHDC_hits) {
+				sum_adc += AHDC_hit.getADC();
+				sum_residuals += AHDC_hit.getResidual();
+				chi2 += Math.pow(AHDC_hit.getResidual(),2.0);
+			    }
+			    track.set_sum_adc(sum_adc);
+			    track.set_sum_residuals(sum_residuals);
+			    track.set_chi2(chi2);
 			}//end of loop on track candidates
 		} catch (Exception e) {
 			// e.printStackTrace();
