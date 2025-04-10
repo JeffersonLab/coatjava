@@ -193,6 +193,10 @@
 	"name": "time",
 	"type": "D",
 	"info": "time (ns) is leadingEdgeTime from AHDC::adc minus t0 from calibration"
+      }, {
+        "name": "trackId",
+        "type": "I",
+        "info": "track id, is -1 if not associated to a Track"
       }
     ]
   }, {
@@ -238,6 +242,10 @@
     "info": "Reco Tracks",
     "entries": [
       {
+        "name": "trackId",
+        "type": "I",
+        "info": "track id"
+      }, {
         "name": "x",
         "type": "F",
         "info": "x position in mm"
@@ -261,6 +269,34 @@
         "name": "pz",
         "type": "F",
         "info": "pz in MeV"
+      }, {
+        "name": "n_hits",
+        "type": "I",
+        "info": "number of hits"
+      }, {
+        "name": "sum_adc",
+        "type": "I",
+        "info": "Sum of adc (adc)"
+      }, {
+        "name": "path",
+        "type": "F",
+        "info": "Length of the track (mm)"
+      }, {
+        "name": "dEdx",
+        "type": "F",
+        "info": "Deposited energy per path (adc/mm)"
+      }, {
+        "name": "p_drift",
+        "type": "F",
+        "info": "Momentum in the drift region (MeV)"
+      }, {
+        "name": "chi2",
+        "type": "F",
+        "info": "Sum of squared residuals (mm^2)"
+      }, {
+        "name": "sum_residuals",
+        "type": "F",
+        "info": "Sum of residuals (mm)"
       }
     ]
   }, {
@@ -270,6 +306,10 @@
     "info": "Reco Kalman Filter Tracks",
     "entries": [
       {
+        "name": "trackId",
+        "type": "I",
+        "info": "track id"
+      }, {
         "name": "x",
         "type": "F",
         "info": "x position in mm"
@@ -293,6 +333,34 @@
         "name": "pz",
         "type": "F",
         "info": "pz in MeV"
+      }, {
+        "name": "n_hits",
+        "type": "I",
+        "info": "number of hits"
+      }, {
+        "name": "sum_adc",
+        "type": "I",
+        "info": "Sum of adc (adc)"
+      }, {
+        "name": "path",
+        "type": "F",
+        "info": "Length of the track (mm)"
+      }, {
+        "name": "dEdx",
+        "type": "F",
+        "info": "Deposited energy per path (adc/mm)"
+      }, {
+        "name": "p_drift",
+        "type": "F",
+        "info": "Momentum in the drift region (MeV)"
+      }, {
+        "name": "chi2",
+        "type": "F",
+        "info": "Sum of squared residuals (mm^2)"
+      }, {
+        "name": "sum_residuals",
+        "type": "F",
+        "info": "Sum of residuals (mm)"
       }
     ]
   }, {
