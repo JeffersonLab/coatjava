@@ -193,7 +193,7 @@ public class ATOFCluster {
         //This cluster point in space
         Point3D cluster = new Point3D(this.x, this.y, this.z);
         //Bank to be read
-        String track_bank_name = "ALERT::Projections";
+        String track_bank_name = "ALERT::projections";
         //Checking if there is an event
         if (event == null) {
             return 1;
@@ -228,9 +228,9 @@ public class ATOFCluster {
                             xt = track_bank.getFloat("x_at_wedge", i);
                             yt = track_bank.getFloat("y_at_wedge", i);
                             zt = track_bank.getFloat("z_at_wedge", i);
-                            path = track_bank.getFloat("L_at_wedge", i);
+                            path = track_bank.getFloat("l_at_wedge", i);
                             //A wedge hit traveled through the whole bar and then through a portion of the wedge
-                            inpath = track_bank.getFloat("L_in_wedge", i) + track_bank.getFloat("L_at_wedge", i) - track_bank.getFloat("L_at_bar", i);
+                            inpath = track_bank.getFloat("l_in_wedge", i) + track_bank.getFloat("l_at_wedge", i) - track_bank.getFloat("l_at_bar", i);
                         }
                         case "bar" -> {
                             sigma_phi = Parameters.SIGMA_PHI_TRACK_MATCHING_BAR;
@@ -238,8 +238,8 @@ public class ATOFCluster {
                             xt = track_bank.getFloat("x_at_bar", i);
                             yt = track_bank.getFloat("y_at_bar", i);
                             zt = track_bank.getFloat("z_at_bar", i);
-                            path = track_bank.getFloat("L_at_bar", i);
-                            inpath = track_bank.getFloat("L_in_bar", i);
+                            path = track_bank.getFloat("l_at_bar", i);
+                            inpath = track_bank.getFloat("l_in_bar", i);
                         }
                         case "bar up", "bar down" -> {
                             System.out.print("Impossible to match track and hit; hit type is a single up or down bar hit. \n");
