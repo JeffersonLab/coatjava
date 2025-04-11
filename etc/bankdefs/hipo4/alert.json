@@ -156,13 +156,13 @@
       }
     ]
   },{
-    "name": "AHDC::Hits",
+    "name": "AHDC::hits",
     "group": 23000,
     "item": 23,
     "info": "Raw Hits",
     "entries": [
       {
-        "name": "ID",
+        "name": "id",
         "type": "S",
         "info": "hit id"
       }, {
@@ -178,7 +178,7 @@
         "type": "I",
         "info": "wire number"
       }, {
-        "name": "Doca",
+        "name": "doca",
         "type": "D",
         "info": "distance od closest approch (mm) is actually the distance from time2distance calibration"
       }, {
@@ -194,55 +194,55 @@
 	"type": "D",
 	"info": "time (ns) is leadingEdgeTime from AHDC::adc minus t0 from calibration"
       }, {
-        "name": "trackId",
+        "name": "trackid",
         "type": "I",
         "info": "track id, is -1 if not associated to a Track"
       }
     ]
   }, {
-    "name": "AHDC::PreClusters",
+    "name": "AHDC::preclusters",
     "group": 23000,
     "item": 24,
     "info": "Pre Clusters info",
     "entries": [
       {
-        "name": "X",
+        "name": "x",
         "type": "F",
-        "info": "X info (mm)"
+        "info": "x info (mm)"
       }, {
-        "name": "Y",
+        "name": "y",
         "type": "F",
-        "info": "Y info (mm)"
+        "info": "y info (mm)"
       }
     ]
   }, {
-    "name": "AHDC::Clusters",
+    "name": "AHDC::clusters",
     "group": 23000,
     "item": 25,
     "info": "Clusters info",
     "entries": [
       {
-        "name": "X",
+        "name": "x",
         "type": "F",
-        "info": "X info (mm)"
+        "info": "x info (mm)"
       }, {
-        "name": "Y",
+        "name": "y",
         "type": "F",
-        "info": "Y info (mm)"
+        "info": "y info (mm)"
       }, {
-        "name": "Z",
+        "name": "z",
         "type": "F",
-        "info": "Z info (mm)"
+        "info": "z info (mm)"
       }
     ]
   }, {
-    "name": "AHDC::Track",
+    "name": "AHDC::track",
     "group": 23000,
     "item": 21,
     "info": "Reco Tracks",
     "entries": [
       {
-        "name": "trackId",
+        "name": "trackid",
         "type": "I",
         "info": "track id"
       }, {
@@ -300,13 +300,13 @@
       }
     ]
   }, {
-    "name": "AHDC::KFTrack",
+    "name": "AHDC::kftrack",
     "group": 23000,
     "item": 26,
     "info": "Reco Kalman Filter Tracks",
     "entries": [
       {
-        "name": "trackId",
+        "name": "trackid",
         "type": "I",
         "info": "track id"
       }, {
@@ -364,7 +364,7 @@
       }
     ]
   }, {
-    "name": "AHDC::MC",
+    "name": "AHDC::mc",
     "group": 23000,
     "item": 22,
     "info": "MC Tracks",
