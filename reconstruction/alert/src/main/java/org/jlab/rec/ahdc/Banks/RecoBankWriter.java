@@ -157,23 +157,23 @@ public class RecoBankWriter {
 
 	public DataBank fillAIPrediction(DataEvent event, ArrayList<TrackPrediction> predictions) {
 
-		DataBank bank = event.createBank("AHDC_AI::Prediction", predictions.size());
+		DataBank bank = event.createBank("AHDC::ai:prediction", predictions.size());
 
 		int row = 0;
 
 		for (TrackPrediction track : predictions) {
-			bank.setFloat("X1", row, (float) track.getSuperpreclusters().get(0).getX());
-			bank.setFloat("Y1", row, (float) track.getSuperpreclusters().get(0).getY());
-			bank.setFloat("X2", row, (float) track.getSuperpreclusters().get(1).getX());
-			bank.setFloat("Y2", row, (float) track.getSuperpreclusters().get(1).getY());
-			bank.setFloat("X3", row, (float) track.getSuperpreclusters().get(2).getX());
-			bank.setFloat("Y3", row, (float) track.getSuperpreclusters().get(2).getY());
-			bank.setFloat("X4", row, (float) track.getSuperpreclusters().get(3).getX());
-			bank.setFloat("Y4", row, (float) track.getSuperpreclusters().get(3).getY());
-			bank.setFloat("X5", row, (float) track.getSuperpreclusters().get(4).getX());
-			bank.setFloat("Y5", row, (float) track.getSuperpreclusters().get(4).getY());
+			bank.setFloat("x1", row, (float) track.getSuperpreclusters().get(0).getX());
+			bank.setFloat("y1", row, (float) track.getSuperpreclusters().get(0).getY());
+			bank.setFloat("x2", row, (float) track.getSuperpreclusters().get(1).getX());
+			bank.setFloat("y2", row, (float) track.getSuperpreclusters().get(1).getY());
+			bank.setFloat("x3", row, (float) track.getSuperpreclusters().get(2).getX());
+			bank.setFloat("y3", row, (float) track.getSuperpreclusters().get(2).getY());
+			bank.setFloat("x4", row, (float) track.getSuperpreclusters().get(3).getX());
+			bank.setFloat("y4", row, (float) track.getSuperpreclusters().get(3).getY());
+			bank.setFloat("x5", row, (float) track.getSuperpreclusters().get(4).getX());
+			bank.setFloat("y5", row, (float) track.getSuperpreclusters().get(4).getY());
 
-			bank.setFloat("Pred", row, track.getPrediction());
+			bank.setFloat("pred", row, track.getPrediction());
 			row++;
 		}
 
