@@ -132,6 +132,8 @@ public class DCHBPostClusterAI extends DCEngine {
             // remove overlaps
             trkcandFinder.removeOverlappingTracks(trkcands);
             for (Track trk : trkcands) {
+                trk.setIsAITrack(true);
+                
                 // reset the id
                 trk.set_Id(trkId);
                 trkcandFinder.matchHits(trk.getStateVecs(),
