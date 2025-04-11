@@ -21,7 +21,7 @@ public class Track {
 	private int    sum_adc = 0;  ///< sum of adc (adc)
 	private double sum_residuals = 0; ///< sum of residuals (mm)
 	private double chi2    = 0;  ///< sum of residuals^2 (mm^2)
-	// AHDC::Track
+	// AHDC::track
 	private double x0  = 0;
 	private double y0  = 0;
 	private double z0  = 0;
@@ -31,7 +31,7 @@ public class Track {
 	private double dEdx    = 0;  ///< deposited energy per path length (adc/mm)
 	private double p_drift = 0;  ///< momentum in the drift region (MeV)
 	private double path    = 0;  ///< length of the track (mm)
-	// AHDC::KFTrack
+	// AHDC::kftrack
 	private double x0_kf  = 0;
 	private double y0_kf  = 0;
 	private double z0_kf  = 0;
@@ -185,7 +185,7 @@ public class Track {
 	public int    get_sum_adc() {return sum_adc;}
 	public double get_chi2() {return chi2;}
 	public double get_sum_residuals() {return sum_residuals;}
-	// AHDC::Track
+	// AHDC::track
 	public void set_dEdx(double _dEdx) { dEdx = _dEdx;}
 	public void set_p_drift(double _p_drift) { p_drift = _p_drift;}
 	public void set_path(double _path) { path = _path;}
@@ -193,7 +193,7 @@ public class Track {
 	public double get_p_drift() {return p_drift;}
 	public double get_path() {return path;}
 	
-	// AHDC::KFTrack
+	// AHDC::kftrack
 	public void set_dEdx_kf(double _dEdx_kf) { dEdx_kf = _dEdx_kf;}
 	public void set_p_drift_kf(double _p_drift_kf) { p_drift_kf = _p_drift_kf;}
 	public void set_path_kf(double _path_kf) { path_kf = _path_kf;}

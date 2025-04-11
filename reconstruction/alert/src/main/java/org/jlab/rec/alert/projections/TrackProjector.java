@@ -90,7 +90,7 @@ public class TrackProjector {
     public void projectTracks(DataEvent event) {//, CalibrationConstantsLoader ccdb) {
 
         projections.clear();
-        String track_bank_name = "AHDC::Track";
+        String track_bank_name = "AHDC::track";
 
         // check if there is an event
         if (event == null)  return;
