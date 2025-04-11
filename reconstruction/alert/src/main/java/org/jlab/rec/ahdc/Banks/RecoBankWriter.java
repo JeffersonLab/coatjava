@@ -15,19 +15,19 @@ public class RecoBankWriter {
 	public DataBank fillAHDCHitsBank(DataEvent event, ArrayList<Hit> hitList) {
 		if (hitList == null || hitList.size() == 0) return null;
 
-		DataBank bank = event.createBank("AHDC::Hits", hitList.size());
+		DataBank bank = event.createBank("AHDC::hits", hitList.size());
 
 		for (int i = 0; i < hitList.size(); i++) {
 
-			bank.setShort("ID", i, (short) hitList.get(i).getId());
+			bank.setShort("id", i, (short) hitList.get(i).getId());
 			bank.setByte("layer", i, (byte) hitList.get(i).getLayerId());
 			bank.setByte("superlayer", i, (byte) hitList.get(i).getSuperLayerId());
 			bank.setInt("wire", i, hitList.get(i).getWireId());
-			bank.setDouble("Doca", i, hitList.get(i).getDoca());
+			bank.setDouble("doca", i, hitList.get(i).getDoca());
 			bank.setDouble("residual", i, hitList.get(i).getResidual());
 			bank.setDouble("residual_prefit", i, hitList.get(i).getResidualPrefit());
 			bank.setDouble("time", i, hitList.get(i).getTime());
-			bank.setInt("trackId", i, hitList.get(i).getTrackId());
+			bank.setInt("trackid", i, hitList.get(i).getTrackId());
 		}
 
 		return bank;
@@ -36,11 +36,11 @@ public class RecoBankWriter {
 	public DataBank fillPreClustersBank(DataEvent event, ArrayList<PreCluster> preClusters) {
 		if (preClusters == null || preClusters.size() == 0) return null;
 
-		DataBank bank = event.createBank("AHDC::PreClusters", preClusters.size());
+		DataBank bank = event.createBank("AHDC::preclusters", preClusters.size());
 
 		for (int i = 0; i < preClusters.size(); i++) {
-			bank.setFloat("X", i, (float) preClusters.get(i).get_X());
-			bank.setFloat("Y", i, (float) preClusters.get(i).get_Y());
+			bank.setFloat("x", i, (float) preClusters.get(i).get_X());
+			bank.setFloat("y", i, (float) preClusters.get(i).get_Y());
 		}
 
 		return bank;
@@ -49,12 +49,12 @@ public class RecoBankWriter {
 	public DataBank fillClustersBank(DataEvent event, ArrayList<Cluster> clusters) {
 		if (clusters == null || clusters.size() == 0) return null;
 
-		DataBank bank = event.createBank("AHDC::Clusters", clusters.size());
+		DataBank bank = event.createBank("AHDC::clusters", clusters.size());
 
 		for (int i = 0; i < clusters.size(); i++) {
-			bank.setFloat("X", i, (float) clusters.get(i).get_X());
-			bank.setFloat("Y", i, (float) clusters.get(i).get_Y());
-			bank.setFloat("Z", i, (float) clusters.get(i).get_Z());
+			bank.setFloat("x", i, (float) clusters.get(i).get_X());
+			bank.setFloat("y", i, (float) clusters.get(i).get_Y());
+			bank.setFloat("z", i, (float) clusters.get(i).get_Z());
 		}
 
 		return bank;
@@ -72,7 +72,7 @@ public class RecoBankWriter {
 		double   pz_mc    = particle.getFloat("pz", 0) * 1000;
 
 		int      row  = 0;
-		DataBank bank = event.createBank("AHDC::MC", row + 1);
+		DataBank bank = event.createBank("AHDC::mc", row + 1);
 		bank.setFloat("x", row, (float) x_mc);
 		bank.setFloat("y", row, (float) y_mc);
 		bank.setFloat("z", row, (float) z_mc);
@@ -85,7 +85,7 @@ public class RecoBankWriter {
 
 	public DataBank fillAHDCTrackBank(DataEvent event, ArrayList<Track> tracks) {
 
-		DataBank bank = event.createBank("AHDC::Track", tracks.size());
+		DataBank bank = event.createBank("AHDC::track", tracks.size());
 
 		int row = 0;
 
@@ -98,7 +98,7 @@ public class RecoBankWriter {
 			double py = track.get_py();
 			double pz = track.get_pz();
 
-			bank.setInt("trackId", row, (int) track.get_trackId());
+			bank.setInt("trackid", row, (int) track.get_trackId());
 			bank.setFloat("x", row, (float) x);
 			bank.setFloat("y", row, (float) y);
 			bank.setFloat("z", row, (float) z);
@@ -121,7 +121,7 @@ public class RecoBankWriter {
 
 	public DataBank fillAHDCKFTrackBank(DataEvent event, ArrayList<Track> tracks) {
 
-		DataBank bank = event.createBank("AHDC::KFTrack", tracks.size());
+		DataBank bank = event.createBank("AHDC::kftrack", tracks.size());
 
 		int row = 0;
 
@@ -134,7 +134,7 @@ public class RecoBankWriter {
 			double py = track.getPy0_kf();
 			double pz = track.getPz0_kf();
 
-			bank.setInt("trackId", row, (int) track.get_trackId());
+			bank.setInt("trackid", row, (int) track.get_trackId());
 			bank.setFloat("x", row, (float) x);
 			bank.setFloat("y", row, (float) y);
 			bank.setFloat("z", row, (float) z);
