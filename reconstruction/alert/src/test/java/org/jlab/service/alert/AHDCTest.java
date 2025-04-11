@@ -38,7 +38,7 @@ public class AHDCTest {
     
     assertEquals(event.hasBank("FAKE::Bank"), false);
     assertEquals(event.hasBank("AHDC::wf"), true);
-    assertEquals(event.getBank("AHDC::hits").rows(), 10);    
+    assertEquals(event.getBank("AHDC::hits").rows(), 25);    
   }
 
   public static void main(String[] args) {
