@@ -9,6 +9,7 @@ import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.logging.DefaultLogger;
 import org.jlab.utils.system.ClasUtilsFile;
 import org.jlab.analysis.physics.TestEvent;
+import org.jlab.service.ahdc.AHDCEngine;
 
 /**
  *
@@ -26,7 +27,7 @@ public class AHDCTest {
     
     DataEvent event = TestEvent.get(DetectorType.AHDC);
     
-    ALERTEngine engine = new ALERTEngine();
+    AHDCEngine engine = new AHDCEngine();
     engine.init();
     engine.processDataEvent(event);
 
