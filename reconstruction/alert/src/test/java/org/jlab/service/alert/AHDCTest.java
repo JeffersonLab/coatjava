@@ -19,7 +19,7 @@ import org.jlab.service.ahdc.AHDCEngine;
 public class AHDCTest {
 	
   @Test
-  public static void run() {
+  public void run() {
     System.setProperty("CLAS12DIR", "../../");
     DefaultLogger.debug();
     String dir = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4");
@@ -42,7 +42,8 @@ public class AHDCTest {
   }
 
   public static void main(String[] args) {
-      run();
+      AHDCTest t = new AHDCTest();
+      t.run();
   }
 
 }
