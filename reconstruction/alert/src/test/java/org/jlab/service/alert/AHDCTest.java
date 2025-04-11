@@ -14,6 +14,7 @@ import org.jlab.service.ahdc.AHDCEngine;
 /**
  *
  * @author baltzell
+ * @author ftouchte
  */
 public class AHDCTest {
 	
@@ -32,12 +33,12 @@ public class AHDCTest {
     engine.processDataEvent(event);
 
     event.show();
-    event.getBank("ECAL::hits").show();
-    event.getBank("ECAL::clusters").show();
+    event.getBank("AHDC::hits").show();
+    event.getBank("AHDC::clusters").show();
     
     assertEquals(event.hasBank("FAKE::Bank"), false);
     assertEquals(event.hasBank("AHDC::wf"), true);
-    assertEquals(event.getBank("AHDC::hits").rows(), 3);    
+    assertEquals(event.getBank("AHDC::hits").rows(), 10);    
   }
 
   public static void main(String[] args) {
