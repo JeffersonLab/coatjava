@@ -405,5 +405,5 @@
 | 24 | `AHDC::preclusters` | Pre Clusters info |
 | 25 | `AHDC::clusters` | Clusters info |
 | 26 | `AHDC::kftrack` | Reco Kalman Filter Tracks |
-| 30 | `AHDC_AI::Prediction` | Prediction given by AI |
-| 31 | `ALERT::Projections` | Track Projections to ATOF |
+| 30 | `AHDC::ai:prediction` | Prediction given by AI |
+| 31 | `ALERT::projections` | Track Projections to ATOF |
