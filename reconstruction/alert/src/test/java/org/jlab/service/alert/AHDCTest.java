@@ -14,17 +14,17 @@ import org.jlab.analysis.physics.TestEvent;
  *
  * @author baltzell
  */
-public class AlertTest {
+public class AHDCTest {
 	
   @Test
-  public void testECReconstruction() {
-    DefaultLogger.debug();
+  public static void run() {
     System.setProperty("CLAS12DIR", "../../");
+    DefaultLogger.debug();
     String dir = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4");
     SchemaFactory schemaFactory = new SchemaFactory();
     schemaFactory.initFromDirectory(dir);
     
-    DataEvent event = TestEvent.get(DetectorType.ECAL);
+    DataEvent event = TestEvent.get(DetectorType.AHDC);
     
     ALERTEngine engine = new ALERTEngine();
     engine.init();
@@ -37,6 +37,10 @@ public class AlertTest {
     assertEquals(event.hasBank("FAKE::Bank"), false);
     assertEquals(event.hasBank("AHDC::wf"), true);
     assertEquals(event.getBank("AHDC::hits").rows(), 3);    
+  }
+
+  public static void main(String[] args) {
+      run();
   }
 
 }
