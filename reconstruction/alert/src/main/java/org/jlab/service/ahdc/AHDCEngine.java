@@ -99,6 +99,8 @@ public class AHDCEngine extends ReconstructionEngine {
         };
         requireConstants(Arrays.asList(alertTables));
 
+        this.registerOutputBank("AHDC::hits","AHDC::preclusters","AHDC::clusters","AHDC::track","AHDC::kftrack","AHDC::mc","AHDC::ai:prediction");
+
         return true;
     }
 
