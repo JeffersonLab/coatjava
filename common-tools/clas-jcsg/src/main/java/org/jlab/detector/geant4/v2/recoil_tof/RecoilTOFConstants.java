@@ -11,7 +11,7 @@ public class RecoilTOFConstants {
     public final static int NROWS     = 5;    //number of rows of bars in a sector
     public final static int NCOLUMNS   = 63;    //number of columns of bars in a sector
 
-    public final static double LONG_BAR_LENGTH = 20; // cm
+    public final static double LONG_BAR_LENGTH = 27.5; // cm
     public final static double SHORT_BAR_LENGTH = 4; // cm
     
     public final static double BAR_WIDTH = 1; // cm

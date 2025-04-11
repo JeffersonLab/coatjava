@@ -9,7 +9,7 @@ public class Parameters {
     public static final int NROWS     = 5;    //number of rows of bars in a sector
     public static final int NCOLUMNS   = 63;    //number of columns of bars in a sector
     
-    public static final double LONG_BAR_LENGTH = 200; // mm
+    public static final double LONG_BAR_LENGTH = 275; // mm
     public static final double SHORT_BAR_LENGTH = 40; // mm
 
     public static final double BAR_WIDTH = 10; // mm
