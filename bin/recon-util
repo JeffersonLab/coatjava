@@ -1,10 +1,26 @@
 #!/bin/bash
 
+set -e
+set -u
+set -o pipefail
+
 . `dirname $0`/../libexec/env.sh
 
 export MALLOC_ARENA_MAX=1
 
-java -Xmx3072m -Xms1024m -XX:+UseSerialGC \
+# allow heap allocation control
+min_heap_arg=-Xms1024m
+max_heap_arg=-Xmx1536m
+prog_args=()
+for arg in "$@"; do
+  case $arg in
+    -Xms*) min_heap_arg=$arg ;;
+    -Xmx*) max_heap_arg=$arg ;;
+    *) prog_args+=($arg) ;;
+  esac
+done
+
+java $min_heap_arg $max_heap_arg -XX:+UseSerialGC \
     -cp "$CLAS12DIR/lib/clas/*:$CLAS12DIR/lib/services/*:$CLAS12DIR/lib/utils/*" \
     org.jlab.clas.reco.EngineProcessor \
-    $*
+    ${prog_args[*]:-}
