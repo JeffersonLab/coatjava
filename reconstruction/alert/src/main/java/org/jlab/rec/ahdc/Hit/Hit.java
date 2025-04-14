@@ -68,13 +68,17 @@ public class Hit implements Comparable<Hit> {
 		}
 
 		R_layer = R_layer + DR_layer * (this.layerId-1);
-		double alphaW_layer = Math.toRadians(round / (numWires));
-		//should it be at z = 0? in which case, we need to account for the positive or negative stereo angle...
-		double wx           = -R_layer * Math.sin(alphaW_layer * (this.wireId-1) + 0.5*thster * (Math.pow(-1, this.superLayerId-1)));
-		double wy           = -R_layer * Math.cos(alphaW_layer * (this.wireId-1) + 0.5*thster * (Math.pow(-1, this.superLayerId-1)));
+		double alphaW_layer = Math.toRadians(round / (numWires*2));
 		
-		//System.out.println(" superlayer " + this.superLayerId + " layer " + this.layerId + " wire " + this.wireId + " R_layer " + R_layer + " wx " + wx + " wy " + wy);
-		
+		// Double for the guard wires, -1 as we inverted the count order compared to design
+		int wireNb = ((this.wireId-1) * 2) - (this.layerId-1);
+		// Correction of alinement of the 0 degree
+		if (numWires % 2 == 1) wireNb--;
+
+		// This is the wire position at z=0
+		double wx = R_layer * Math.cos(alphaW_layer * wireNb + 0.5*thster * (Math.pow(-1, this.superLayerId-1)));
+		double wy = R_layer * Math.sin(alphaW_layer * wireNb + 0.5*thster * (Math.pow(-1, this.superLayerId-1)));
+
 		this.nbOfWires = (int) numWires;
 		this.phi       = Math.atan2(wy, wx);
 		this.radius    = R_layer;

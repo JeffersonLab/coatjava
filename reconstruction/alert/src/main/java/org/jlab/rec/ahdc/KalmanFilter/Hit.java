@@ -12,7 +12,7 @@ import org.jlab.geom.prim.Vector3D;
 public class Hit implements Comparable<Hit> {
 
 	private final double thster = Math.toRadians(20.0);
-        private final double zl     = 300.0;//OK
+        private final double zl     = 300.0;
 	private final int    superLayer;
 	private final int    layer;
 	private final int    wire;
@@ -41,28 +41,24 @@ public class Hit implements Comparable<Hit> {
 		this.hitidx = -1;
 		this.hitsign = 0;
 		
-		final double DR_layer = 4.0;//OK
-		final double round    = 360.0;//OK
-		final double thster   = Math.toRadians(20.0);//OK
+		final double DR_layer = 4.0;
+		final double round    = 360.0;
+		final double thster   = Math.toRadians(20.0);
 
 		double numWires = 32.0;
 		double R_layer  = 47.0;
 
-		double zoff1 = -zl/2;//OK
-		double zoff2 = +zl/2;//OK
+		double zoff1 = -zl/2;
+		double zoff2 = +zl/2;
 		Point3D  p1 = new Point3D(R_layer, 0, zoff1);
 		Vector3D n1 = new Vector3D(0, 0, 1);
-		//n1.rotateY(-thopen);
-		//n1.rotateZ(thtilt);
-		Plane3D lPlane = new Plane3D(p1, n1);//OK
+		Plane3D lPlane = new Plane3D(p1, n1);
 
 		Point3D  p2 = new Point3D(R_layer, 0, zoff2);
 		Vector3D n2 = new Vector3D(0, 0, 1);
-		//n2.rotateY(thopen);
-		//n2.rotateZ(thtilt);
-		Plane3D rPlane = new Plane3D(p2, n2);//OK
+		Plane3D rPlane = new Plane3D(p2, n2);
 
-		switch (this.superLayer) {//OK
+		switch (this.superLayer) {
 			case 1:
 				numWires = 47.0;
 				R_layer = 32.0;
@@ -85,14 +81,20 @@ public class Hit implements Comparable<Hit> {
 				break;
 		}
 
-		
-		R_layer = R_layer + DR_layer * (this.layer-1);//OK
-		double alphaW_layer = Math.toRadians(round / (numWires));//OK
-		double wx           = R_layer * Math.cos(alphaW_layer * (this.wire-1));//OK
-		double wy           = R_layer * Math.sin(alphaW_layer * (this.wire-1));//OK
+		R_layer = R_layer + DR_layer * (this.layerId-1);
+		double alphaW_layer = Math.toRadians(round / (numWires*2));
 
-		double wx_end = R_layer * Math.cos(alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)));//OK
-		double wy_end = R_layer * Math.sin(alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)));//OK
+		// Double for the guard wires, -1 as we inverted the count order compared to design
+		int wireNb = ((this.wireId-1) * 2) - (this.layerId-1);
+		// Correction of alinement of the 0 degree
+		if (numWires % 2 == 1) wireNb--;
+
+		// This is the wire position at z=0
+		double wx = R_layer * Math.cos(alphaW_layer * wireNb);
+		double wy = R_layer * Math.sin(alphaW_layer * wireNb);
+
+		double wx_end = R_layer * Math.cos(alphaW_layer * wireNb + thster * (Math.pow(-1, this.superLayerId-1)));
+		double wy_end = R_layer * Math.sin(alphaW_layer * wireNb + thster * (Math.pow(-1, this.superLayerId-1)));
 
 		this.phi = Math.atan2( (wy+wy_end)*0.5, (wx+wx_end)*0.5 );
 		//System.out.println(" superlayer " + this.superLayer + " layer " + this.layer + " wire " + this.wire + " wx " + wx + " wy " + wy + " wx_end " + wx_end + " wy_end " + wy_end + " phi " + this.phi);
@@ -113,11 +115,11 @@ public class Hit implements Comparable<Hit> {
 
 		//calculate the "virtual" left and right wires accounting for the DOCA 
 		double deltaphi = Math.asin(this.doca/R_layer);
-		double wx_plus     = R_layer * Math.cos( alphaW_layer * (this.wire-1) - deltaphi );//OK
-		double wy_plus     = R_layer * Math.sin( alphaW_layer * (this.wire-1) - deltaphi );//OK
+		double wx_plus     = R_layer * Math.cos( alphaW_layer * wireNb - deltaphi );
+		double wy_plus     = R_layer * Math.sin( alphaW_layer * wireNb - deltaphi );
 
-		double wx_plus_end = R_layer * Math.cos( alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)) - deltaphi );//OK
-		double wy_plus_end = R_layer * Math.sin( alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)) - deltaphi );//OK
+		double wx_plus_end = R_layer * Math.cos( alphaW_layer * wireNb + thster * (Math.pow(-1, this.superLayer-1)) - deltaphi );
+		double wy_plus_end = R_layer * Math.sin( alphaW_layer * wireNb + thster * (Math.pow(-1, this.superLayer-1)) - deltaphi );
 
 		line = new Line3D(wx_plus, wy_plus, -zl/2, wx_plus_end, wy_plus_end, zl/2);
 		lPoint = new Point3D();
@@ -128,11 +130,11 @@ public class Hit implements Comparable<Hit> {
 		wireLine = new Line3D(lPoint, rPoint);
 		this.line3D_plus = wireLine;
 
-		double wx_minus     = R_layer * Math.cos( alphaW_layer * (this.wire-1) + deltaphi );//OK
-		double wy_minus     = R_layer * Math.sin( alphaW_layer * (this.wire-1) + deltaphi );//OK
+		double wx_minus     = R_layer * Math.cos( alphaW_layer * wireNb + deltaphi );
+		double wy_minus     = R_layer * Math.sin( alphaW_layer * wireNb + deltaphi );
 
-		double wx_minus_end = R_layer * Math.cos( alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)) + deltaphi );//OK
-		double wy_minus_end = R_layer * Math.sin( alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)) + deltaphi );//OK
+		double wx_minus_end = R_layer * Math.cos( alphaW_layer * wireNb + thster * (Math.pow(-1, this.superLayer-1)) + deltaphi );
+		double wy_minus_end = R_layer * Math.sin( alphaW_layer * wireNb + thster * (Math.pow(-1, this.superLayer-1)) + deltaphi );
 
 		line = new Line3D(wx_minus, wy_minus, -zl/2, wx_minus_end, wy_minus_end, zl/2);
 		lPoint = new Point3D();
