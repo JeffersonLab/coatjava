@@ -58,3 +58,6 @@ http://stackoverflow.com/questions/600079/how-do-i-clone-a-subdirectory-only-of-
 
 -->
 
+
+[Coatjava Apptainer](https://code.jlab.org/hallb/alert/coatjava/-/jobs/artifacts/development/raw/coatjava.sif?job=coatjava%3Asingularity)
+

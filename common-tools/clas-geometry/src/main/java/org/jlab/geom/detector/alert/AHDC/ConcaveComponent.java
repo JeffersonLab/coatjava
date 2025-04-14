@@ -60,7 +60,7 @@ public abstract class ConcaveComponent extends AbstractComponent {
 		if (n.dot(direction) > 0.001) {
 			// System.err.println("PrismaticComponent: #" + componentId + " " + n.dot(direction) + " > 0");
 			// for (Point3D point : firstFace) System.err.println("\t" + point);
-			throw new IllegalArgumentException("the first face is not counter-clockwise: componentId=" + componentId);
+            throw new IllegalArgumentException("the first face is not counter-clockwise: componentId=" + componentId);
 		}
 		u = secondFace.get(1).vectorFrom(secondFace.get(0));
 		v = secondFace.get(2).vectorFrom(secondFace.get(0));

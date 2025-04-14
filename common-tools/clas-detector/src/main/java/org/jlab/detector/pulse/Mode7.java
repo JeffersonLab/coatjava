@@ -29,8 +29,8 @@ public class Mode7 extends Mode3 {
     }
 
     @Override
-    public List<Pulse> extract(NamedEntry pars, int id, short... samples) {
-        List<Pulse> pulses = super.extract(pars, id, samples);
+    public List<Pulse> extract(NamedEntry pars, int id, long par1, long par2, short... samples) {
+        List<Pulse> pulses = super.extract(pars, id, par1, par2, samples);
         for (Pulse p : pulses)
             p.time = calculateTime((int)p.time, p.pedestal, samples);
         return pulses;

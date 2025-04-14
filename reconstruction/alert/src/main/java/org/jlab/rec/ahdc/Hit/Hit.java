@@ -9,6 +9,8 @@ public class Hit implements Comparable<Hit> {
 	private final int    layerId;
 	private final int    wireId;
 	private final double doca;
+	private final double adc;
+	private final double time;
 
 	private double  phi;
 	private double  radius;
@@ -16,14 +18,23 @@ public class Hit implements Comparable<Hit> {
 	private boolean use = false;
 	private double  x;
 	private double  y;
+	private double  residual_prefit;
+	private double  residual;
+	private int	trackId;
 
-	public Hit(int _Id, int _Super_layer, int _Layer, int _Wire, double _Doca) {
+        //updated constructor with ADC
+	public Hit(int _Id, int _Super_layer, int _Layer, int _Wire, double _Doca, double _ADC, double _Time) {
 		this.id           = _Id;
 		this.superLayerId = _Super_layer;
 		this.layerId      = _Layer;
 		this.wireId       = _Wire;
 		this.doca         = _Doca;
+		this.adc          = _ADC;
+		this.time 	  = _Time;
 		wirePosition();
+		this.residual_prefit = 0.0;
+		this.residual        = 0.0;
+		this.trackId	     = -1; // not defined yet
 	}
 
 	private void wirePosition() {
@@ -130,4 +141,35 @@ public class Hit implements Comparable<Hit> {
 	}
 
 	public double getPhi() {return phi;}
+
+	public double getADC() {return adc;}
+
+	public double getResidual() {
+		return residual;
+	}
+
+	public double getResidualPrefit() {
+		return residual_prefit;
+	}
+
+	public void setResidual(double resid) {
+		this.residual = resid;
+	}
+
+	public void setResidualPrefit(double resid) {
+		this.residual_prefit = resid;
+	}
+	
+	public double getTime() {
+		return time;
+	}
+
+	public int getTrackId() {
+		return trackId;
+	}
+
+	public void setTrackId(int _trackId) {
+		this.trackId = _trackId;
+	}
+
 }

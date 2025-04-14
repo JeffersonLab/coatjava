@@ -9,6 +9,7 @@ workflow:
 
 variables:
   KUBERNETES_MEMORY_LIMIT: "8Gi"
+  REF_NAME: ${CI_COMMIT_REF_NAME}
 
 default:
   image: ubuntu:noble
@@ -68,4 +69,35 @@ shared_for_alert_tests:
   trigger:
     project: hallb/alert/atof/shared_for_alert
     strategy: depend
+
+coatjava:singularity:
+  image: eicweb.phy.anl.gov:4567/containers/image_recipes/ubuntu_dind:latest
+  needs: ["coatjava_build"]
+  tags:
+     - silicon
+  allow_failure: true
+  script:
+    - apptainer build  --build-arg REF_NAME=${REF_NAME} coatjava.sif .containers/coatjava.def
+    - ls -lrth
+  artifacts:
+      paths:
+        - coatjava.sif
+
+create-pages:
+  image: codecr.jlab.org/hallb/alert/coatjava/coatjava:development
+  script:
+    - export MAVEN_OPTS=" -Dfile.encoding=UTF-8"
+    - echo "${CI_COMMIT_REF_NAME}"
+    - ls -lrth
+    - mvn --version
+    - java --version 
+    - ls -lrth
+    - pwd
+    - ls -lrth docs/javadoc
+    - ./build-javadocs.sh 
+    - ls -lrth
+    - ls -lrth docs/
+    - ls -lrth docs/javadoc
+    - mv docs/javadoc public
+  pages: true  # specifies that this is a Pages job and publishes the default public directory
 
