@@ -132,8 +132,8 @@ public class AlertDCFactory implements Factory<AlertDCDetector, AlertDCSector, A
 		for (int wireId = 0; wireId < numWires; wireId++) {
 
                         // start at phi=0
-                        // in each layer the first wire is the first at phi>=0, i.e.
-                        // 0.5 0 0.5 0 0.5 0.5 0 0.5 for layer 1 to 8
+                        // in each layer the first wire is the first at phi>=0, i.e. in cell units
+                        // at 0.5 0 0.5 0 0.5 0.5 0 0.5 for layer 1 to 8
                         double wirePhiIndex = wireId + 0.5*(numWires%2) + 0.5*layerId*(1-2*(numWires%2)); 
 
                         // The point given by (wx, wy, wz) is the origin of the current wire.
