@@ -12,7 +12,7 @@ public class HitReader {
 	private ArrayList<Hit>     _AHDCHits;
 	private ArrayList<TrueHit> _TrueAHDCHits;
 
-	public HitReader(DataEvent event, boolean simulation) {
+        public HitReader(DataEvent event, boolean simulation) {
 		fetch_AHDCHits(event);
 		if (simulation) fetch_TrueAHDCHits(event);
 	}

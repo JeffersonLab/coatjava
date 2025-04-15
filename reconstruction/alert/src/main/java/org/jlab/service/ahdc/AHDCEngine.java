@@ -27,6 +27,7 @@ import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
 import java.io.File;
 import java.util.*;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
+import org.jlab.geom.base.Detector;
 import org.jlab.geom.detector.alert.AHDC.AlertDCFactory;
 
 /** AHDCEngine reconstruction service.
@@ -60,6 +61,8 @@ public class AHDCEngine extends ReconstructionEngine {
     /// \todo better name... mode for what?
     private Mode mode = Mode.CV_Track_Finding;
 
+    private Detector factory = null;
+    
     public AHDCEngine() {
         super("ALERT", "ouillon", "1.0.1");
     }
@@ -67,7 +70,7 @@ public class AHDCEngine extends ReconstructionEngine {
     @Override
     public boolean init() {
 
-        (new AlertDCFactory()).createDetectorCLAS(new DatabaseConstantProvider());
+        factory = (new AlertDCFactory()).createDetectorCLAS(new DatabaseConstantProvider());
         
         simulation    = false;
         findingMethod = "distance";
