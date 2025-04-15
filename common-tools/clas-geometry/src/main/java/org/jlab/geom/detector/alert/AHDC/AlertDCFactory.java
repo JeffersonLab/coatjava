@@ -86,8 +86,8 @@ public class AlertDCFactory implements Factory<AlertDCDetector, AlertDCSector, A
 		double R_layer  = 32.0d;
 		double DR_layer = 4.0d;
 
-		double   zoff1 = 0.0d;
-		double   zoff2 = 300.0d;
+		double   zoff1 = -150.0d;
+		double   zoff2 =  150.0d;
 		Point3D  p1    = new Point3D(R_layer, 0, zoff1);
 		Vector3D n1    = new Vector3D(0, 0, 1);
 
@@ -131,10 +131,12 @@ public class AlertDCFactory implements Factory<AlertDCDetector, AlertDCSector, A
 		// Create AHDC sense wires
 		for (int iw = 0; iw < numWires; iw++) {
 
-                        int wireId = iw + 1 + (int) (numWires/2);
-                        if(wireId>numWires) wireId -= numWires;
+                        // start at phi=180
+                        double wirePhiIndex = (numWires/2) + iw - 0.5*(layerId-1); 
 
-                        double wirePhiIndex = (numWires/2) + iw - 0.5*(layerId-1); // start at phi=180
+                        // the wire id is such that the wire number = (wireId+1) is the first wqual or greater than numWires/2
+                        int wireId = iw + (int) (numWires/2);
+                        if(wireId>numWires-1) wireId -= numWires;
 
                         // The point given by (wx, wy, wz) is the origin of the current wire.
 			double wx = R_layer * Math.cos(alphaW_layer * wirePhiIndex);
@@ -144,7 +146,7 @@ public class AlertDCFactory implements Factory<AlertDCDetector, AlertDCSector, A
 			// planes by construciting a long line that passes through the midpoint
 			double wx_end = R_layer * Math.cos(alphaW_layer * wirePhiIndex + thster * (Math.pow(-1, superlayerId)));
 			double wy_end = R_layer * Math.sin(alphaW_layer * wirePhiIndex + thster * (Math.pow(-1, superlayerId)));
-			Line3D line   = new Line3D(wx, wy, 0, wx_end, wy_end, zl);
+			Line3D line   = new Line3D(wx, wy, -zl/2, wx_end, wy_end, zl/2);
 
 			Point3D lPoint = new Point3D();
 			Point3D rPoint = new Point3D();
@@ -185,19 +187,19 @@ public class AlertDCFactory implements Factory<AlertDCDetector, AlertDCSector, A
 			List<Point3D> firstF  = new ArrayList<>();
 			List<Point3D> secondF = new ArrayList<>();
 			// first Face
-			Point3D p_0 = new Point3D(px_0, py_0, 0.0d);
-			Point3D p_1 = new Point3D(px_1, py_1, 0.0d);
-			Point3D p_2 = new Point3D(px_2, py_2, 0.0d);
-			Point3D p_3 = new Point3D(px_3, py_3, 0.0d);
-			Point3D p_4 = new Point3D(px_4, py_4, 0.0d);
-			Point3D p_5 = new Point3D(px_5, py_5, 0.0d);
+			Point3D p_0 = new Point3D(px_0, py_0, -zl/2);
+			Point3D p_1 = new Point3D(px_1, py_1, -zl/2);
+			Point3D p_2 = new Point3D(px_2, py_2, -zl/2);
+			Point3D p_3 = new Point3D(px_3, py_3, -zl/2);
+			Point3D p_4 = new Point3D(px_4, py_4, -zl/2);
+			Point3D p_5 = new Point3D(px_5, py_5, -zl/2);
 			// second Face
-			Point3D p_6  = new Point3D(px_6, py_6, zl);
-			Point3D p_7  = new Point3D(px_7, py_7, zl);
-			Point3D p_8  = new Point3D(px_8, py_8, zl);
-			Point3D p_9  = new Point3D(px_9, py_9, zl);
-			Point3D p_10 = new Point3D(px_10, py_10, zl);
-			Point3D p_11 = new Point3D(px_11, py_11, zl);
+			Point3D p_6  = new Point3D(px_6, py_6, zl/2);
+			Point3D p_7  = new Point3D(px_7, py_7, zl/2);
+			Point3D p_8  = new Point3D(px_8, py_8, zl/2);
+			Point3D p_9  = new Point3D(px_9, py_9, zl/2);
+			Point3D p_10 = new Point3D(px_10, py_10, zl/2);
+			Point3D p_11 = new Point3D(px_11, py_11, zl/2);
 			// defining a cell around a wireLine, must be counter-clockwise!
 			firstF.add(p_0);
 			firstF.add(p_5);
@@ -218,7 +220,7 @@ public class AlertDCFactory implements Factory<AlertDCDetector, AlertDCSector, A
 			// not possible to add directly PrismaticComponent class because it is an ABSTRACT
 			// a new class should be created: public class NewClassWire extends PrismaticComponent {...}
 			// 5 top points & 5 bottom points with convexe shape. Concave shape is not supported.
-			AlertDCWire wire = new AlertDCWire(wireId, wireLine, firstF, secondF);
+			AlertDCWire wire = new AlertDCWire(wireId+1, wireLine, firstF, secondF);
 			// Add wire object to the list
 			layer.addComponent(wire);
 		}
