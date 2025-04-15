@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.detector.banks.RawDataBank;
+import org.jlab.geom.detector.alert.AHDC.AlertDCDetector;
 import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
 
 public class HitReader {
@@ -12,12 +13,12 @@ public class HitReader {
 	private ArrayList<Hit>     _AHDCHits;
 	private ArrayList<TrueHit> _TrueAHDCHits;
 
-        public HitReader(DataEvent event, boolean simulation) {
-		fetch_AHDCHits(event);
+        public HitReader(DataEvent event, AlertDCDetector detector, boolean simulation) {
+		fetch_AHDCHits(event, detector);
 		if (simulation) fetch_TrueAHDCHits(event);
 	}
 
-	public void fetch_AHDCHits(DataEvent event) {
+	public final void fetch_AHDCHits(DataEvent event, AlertDCDetector detector) {
 		ArrayList<Hit> hits = new ArrayList<>();
 		
 		if (event.hasBank("AHDC::adc")) {
@@ -58,14 +59,16 @@ public class HitReader {
 					// TO BE DONE
 					//double doca       = bankDGTZ.getShort("ped", i) / 1000.0;
 					double doca = p0 + p1*Math.pow(time,1.0) + p2*Math.pow(time,2.0) + p3*Math.pow(time,3.0) + p4*Math.pow(time,4.0) + p5*Math.pow(time, 5.0);
-					hits.add(new Hit(id, superlayer, layer, wire, doca, adc, time));
+					Hit h = new Hit(id, superlayer, layer, wire, doca, adc, time);
+                                        h.setWirePosition(detector);
+                                        hits.add(h);
 				}
 			}
 		}
 		this.set_AHDCHits(hits);
 	}
 
-	public void fetch_TrueAHDCHits(DataEvent event) {
+	public final void fetch_TrueAHDCHits(DataEvent event) {
 		ArrayList<TrueHit> truehits = new ArrayList<>();
 
 		DataBank bankSIMU = event.getBank("MC::True");
