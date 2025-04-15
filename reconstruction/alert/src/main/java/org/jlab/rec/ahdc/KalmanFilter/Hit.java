@@ -11,8 +11,6 @@ import org.jlab.geom.prim.Vector3D;
 
 public class Hit implements Comparable<Hit> {
 
-	private final double thster = Math.toRadians(20.0);
-        private final double zl     = 300.0;//OK
 	private final int    superLayer;
 	private final int    layer;
 	private final int    wire;
@@ -30,118 +28,31 @@ public class Hit implements Comparable<Hit> {
 	// Comparison with:  common-tools/clas-geometry/src/main/java/org/jlab/geom/detector/alert/AHDC/AlertDCFactory.java
 	// here, SuperLayer, Layer, Wire, start from 1
 	// in AlertDCFactory, same variables start from 1
-	public Hit(int superLayer, int layer, int wire, int numWire, double r, double doca) {
+	public Hit(int superLayer, int layer, int wire, int numWire, Line3D line, double doca) {
 		this.superLayer = superLayer;
 		this.layer      = layer;
 		this.wire       = wire;
-		this.r          = r;
+		this.r          = line.end().distance(0, 0, line.end().z());
 		this.doca       = doca;
 		this.numWires = numWire;
 		this.adc = 0;//placeholder
 		this.hitidx = -1;
 		this.hitsign = 0;
 		
-		final double DR_layer = 4.0;//OK
-		final double round    = 360.0;//OK
-		final double thster   = Math.toRadians(20.0);//OK
-
-		double numWires = 32.0;
-		double R_layer  = 47.0;
-
-		double zoff1 = -zl/2;//OK
-		double zoff2 = +zl/2;//OK
-		Point3D  p1 = new Point3D(R_layer, 0, zoff1);
-		Vector3D n1 = new Vector3D(0, 0, 1);
-		//n1.rotateY(-thopen);
-		//n1.rotateZ(thtilt);
-		Plane3D lPlane = new Plane3D(p1, n1);//OK
-
-		Point3D  p2 = new Point3D(R_layer, 0, zoff2);
-		Vector3D n2 = new Vector3D(0, 0, 1);
-		//n2.rotateY(thopen);
-		//n2.rotateZ(thtilt);
-		Plane3D rPlane = new Plane3D(p2, n2);//OK
-
-		switch (this.superLayer) {//OK
-			case 1:
-				numWires = 47.0;
-				R_layer = 32.0;
-				break;
-			case 2:
-				numWires = 56.0;
-				R_layer = 38.0;
-				break;
-			case 3:
-				numWires = 72.0;
-				R_layer = 48.0;
-				break;
-			case 4:
-				numWires = 87.0;
-				R_layer = 58.0;
-				break;
-			case 5:
-				numWires = 99.0;
-				R_layer = 68.0;
-				break;
-		}
-
-		
-		R_layer = R_layer + DR_layer * (this.layer-1);//OK
-		double alphaW_layer = Math.toRadians(round / (numWires));//OK
-		double wx           = -R_layer * Math.sin(alphaW_layer * (this.wire-1));//OK
-		double wy           = -R_layer * Math.cos(alphaW_layer * (this.wire-1));//OK
-
-		double wx_end = -R_layer * Math.sin(alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)));//OK
-		double wy_end = -R_layer * Math.cos(alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)));//OK
-
-		this.phi = Math.atan2( (wy+wy_end)*0.5, (wx+wx_end)*0.5 );
+		this.phi = line.midpoint().vectorFrom(0,0,0).phi();
 		//System.out.println(" superlayer " + this.superLayer + " layer " + this.layer + " wire " + this.wire + " wx " + wx + " wy " + wy + " wx_end " + wx_end + " wy_end " + wy_end + " phi " + this.phi);
 		
-		Line3D line = new Line3D(wx, wy, -zl/2, wx_end, wy_end, zl/2);
-		Point3D lPoint = new Point3D();
-		Point3D rPoint = new Point3D();
-		lPlane.intersection(line, lPoint);
-		rPlane.intersection(line, rPoint);
-		//lPoint.setZ(-zl/2);
-		//rPoint.setZ(zl/2);
-		//lPoint.show();
-		//rPoint.show();
-		// All wire go from left to right
-		Line3D wireLine = new Line3D(lPoint, rPoint);
-		//wireLine.show();
-		this.line3D = wireLine;
+		this.line3D = line;
 
 		//calculate the "virtual" left and right wires accounting for the DOCA 
-		double deltaphi = Math.asin(this.doca/R_layer);
-		double wx_plus     = -R_layer * Math.sin( alphaW_layer * (this.wire-1) - deltaphi );//OK
-		double wy_plus     = -R_layer * Math.cos( alphaW_layer * (this.wire-1) - deltaphi );//OK
-
-		double wx_plus_end = -R_layer * Math.sin( alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)) - deltaphi );//OK
-		double wy_plus_end = -R_layer * Math.cos( alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)) - deltaphi );//OK
-
-		line = new Line3D(wx_plus, wy_plus, -zl/2, wx_plus_end, wy_plus_end, zl/2);
-		lPoint = new Point3D();
-		rPoint = new Point3D();
-		lPlane.intersection(line, lPoint);
-		rPlane.intersection(line, rPoint);
-
-		wireLine = new Line3D(lPoint, rPoint);
-		this.line3D_plus = wireLine;
-
-		double wx_minus     = -R_layer * Math.sin( alphaW_layer * (this.wire-1) + deltaphi );//OK
-		double wy_minus     = -R_layer * Math.cos( alphaW_layer * (this.wire-1) + deltaphi );//OK
-
-		double wx_minus_end = -R_layer * Math.sin( alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)) + deltaphi );//OK
-		double wy_minus_end = -R_layer * Math.cos( alphaW_layer * (this.wire-1) + thster * (Math.pow(-1, this.superLayer-1)) + deltaphi );//OK
-
-		line = new Line3D(wx_minus, wy_minus, -zl/2, wx_minus_end, wy_minus_end, zl/2);
-		lPoint = new Point3D();
-		rPoint = new Point3D();
-		lPlane.intersection(line, lPoint);
-		rPlane.intersection(line, rPoint);
-		
-		wireLine = new Line3D(lPoint, rPoint);
-		this.line3D_minus = wireLine;
+		double deltaphi = Math.asin(this.doca/r);
+		this.line3D_plus = new Line3D();
+                this.line3D_plus.copy(line);
+                this.line3D_plus.rotateZ(deltaphi);
+                
+		this.line3D_minus = new Line3D();
+                this.line3D_minus.copy(line);
+                this.line3D_minus.rotateZ(deltaphi);
 		
 	}
 
@@ -180,9 +91,7 @@ public class Hit implements Comparable<Hit> {
         public double phi()    {return phi;}//at z = 0;
     
         public double phi(double z)    {
-	    double x_z = r*Math.sin( phi + thster * z/(zl*0.5) * (Math.pow(-1, this.superLayer-1)) );
-	    double y_z = r*Math.cos( phi + thster * z/(zl*0.5) * (Math.pow(-1, this.superLayer-1)) );
-	    return Math.atan2(x_z, y_z);
+	    return this.line3D.lerpPoint((z-line3D.origin().z())/line3D.length()).vectorFrom(0,0,0).phi();
 	}
 
 	public Line3D line() {return line3D;}
@@ -214,10 +123,6 @@ public class Hit implements Comparable<Hit> {
 
 	public RealVector get_Vector_beam() {
 		return null;
-	}
-
-	public double getThster() {
-		return thster;
 	}
 
 	public int getSuperLayer() {
