@@ -2,6 +2,7 @@ package org.jlab.rec.ahdc.KalmanFilter;
 
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
+import org.jlab.geom.prim.Line3D;
 
 public class Hit_beam extends Hit {
 
@@ -9,7 +10,7 @@ public class Hit_beam extends Hit {
 	double r,phi;
 
 	public Hit_beam(int superLayer, int layer, int wire, int numWire, double doca, double x, double y , double z) {
-	    super(0, 0, 0, 0, Math.hypot(x,y), 0);
+	    super(0, 0, 0, 0, new Line3D(x,y,0,x,y,1), 0);
 		this.x = x;
 		this.y = y;
 		this.z = z;
