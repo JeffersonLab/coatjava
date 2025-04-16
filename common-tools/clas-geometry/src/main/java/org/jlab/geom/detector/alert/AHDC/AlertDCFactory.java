@@ -129,14 +129,12 @@ public class AlertDCFactory implements Factory<AlertDCDetector, AlertDCSector, A
 		double zl     = 300.0d;
 
 		// Create AHDC sense wires
-		for (int iw = 0; iw < numWires; iw++) {
+		for (int wireId = 0; wireId < numWires; wireId++) {
 
-                        // start at phi=180
-                        double wirePhiIndex = (numWires/2) + iw - 0.5*(layerId-1); 
-
-                        // the wire id is such that the wire number = (wireId+1) is the first wqual or greater than numWires/2
-                        int wireId = iw + (int) (numWires/2);
-                        if(wireId>numWires-1) wireId -= numWires;
+                        // start at phi=0
+                        // in each layer the first wire is the first at phi>=0, i.e.
+                        // 0.5 0 0.5 0 0.5 0.5 0 0.5 for layer 1 to 8
+                        double wirePhiIndex = wireId + 0.5*(numWires%2) + 0.5*layerId*(1-2*(numWires%2)); 
 
                         // The point given by (wx, wy, wz) is the origin of the current wire.
 			double wx = R_layer * Math.cos(alphaW_layer * wirePhiIndex);
