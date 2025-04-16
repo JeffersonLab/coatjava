@@ -93,8 +93,9 @@ public class AHDCEngine extends ReconstructionEngine {
 
         // Requires calibration constants
         String[] alertTables = new String[] {
-            "/calibration/alert/ahdc/time_offsets",
+            	"/calibration/alert/ahdc/time_offsets",
                 "/calibration/alert/ahdc/time_to_distance",
+                "/calibration/alert/ahdc/raw_hit_cuts",
                 "/calibration/alert/atof/effective_velocity",
                 "/calibration/alert/atof/time_walk",
                 "/calibration/alert/atof/attenuation",
