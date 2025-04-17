@@ -6,7 +6,7 @@ import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.detector.banks.RawDataBank;
 import org.jlab.geom.detector.alert.AHDC.AlertDCDetector;
-import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
+import org.jlab.rec.constants.CalibrationConstantsLoader;
 
 public class HitReader {
 
