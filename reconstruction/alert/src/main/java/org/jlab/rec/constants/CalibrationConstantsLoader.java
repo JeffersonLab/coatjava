@@ -1,4 +1,4 @@
-package org.jlab.rec.alert.constants;
+package org.jlab.rec.constants;
 
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
@@ -6,8 +6,6 @@ import org.jlab.utils.groups.IndexedTable;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.lang.Integer;
-import java.lang.Double;
 
 /**
  * This class loads constants from CCDB
@@ -26,20 +24,19 @@ public class CalibrationConstantsLoader {
 
 	// Maps for constants from database
 	// AHDC	
-	public static Map<Integer, double[]> AHDC_TIME_OFFSETS           = new HashMap<Integer,double[]>(); 	///< AHDC Parameters for timing offsets
-	public static Map<Integer, double[]> AHDC_TIME_TO_DISTANCE       = new HashMap<Integer,double[]>();	///< AHDC Parameters for time to distance
-	public static Map<Integer, double[]> AHDC_RAW_HIT_CUTS           = new HashMap<Integer,double[]>();	///< AHDC Parameters for raw hit cuts
+	public static Map<Integer, double[]> AHDC_TIME_OFFSETS           = new HashMap<>(); 	///< AHDC Parameters for timing offsets
+	public static Map<Integer, double[]> AHDC_TIME_TO_DISTANCE       = new HashMap<>();	///< AHDC Parameters for time to distance
+	public static Map<Integer, double[]> AHDC_RAW_HIT_CUTS           = new HashMap<>();	///< AHDC Parameters for raw hit cuts
 	
 	// ATOF
-	public static Map<Integer, double[]> ATOF_EFFECTIVE_VELOCITY     = new HashMap<Integer,double[]>(); 	///< ATOF Parameters for effective velocity
-	public static Map<Integer, double[]> ATOF_TIME_WALK              = new HashMap<Integer,double[]>(); 	///< ATOF Parameters for time walk
-	public static Map<Integer, double[]> ATOF_ATTENUATION_LENGTH     = new HashMap<Integer,double[]>(); 	///< ATOF Parameters for attenuation lenght
-	public static Map<Integer, double[]> ATOF_TIME_OFFSETS         	 = new HashMap<Integer,double[]>(); 	///< ATOF Parameters for timing offsets
+	public static Map<Integer, double[]> ATOF_EFFECTIVE_VELOCITY     = new HashMap<>(); 	///< ATOF Parameters for effective velocity
+	public static Map<Integer, double[]> ATOF_TIME_WALK              = new HashMap<>(); 	///< ATOF Parameters for time walk
+	public static Map<Integer, double[]> ATOF_ATTENUATION_LENGTH     = new HashMap<>(); 	///< ATOF Parameters for attenuation lenght
+	public static Map<Integer, double[]> ATOF_TIME_OFFSETS         	 = new HashMap<>(); 	///< ATOF Parameters for timing offsets
 
-	public static synchronized void Load(int runno, String var, ConstantsManager manager) {
+	public static synchronized void Load(int runno, ConstantsManager manager) {
 
 		//System.out.println("*Loading calibration constants*");
-		manager.setVariation(var);
 
 		IndexedTable  ahdc_timeOffsets    	 = manager.getConstants(runno, "/calibration/alert/ahdc/time_offsets");
 		IndexedTable  ahdc_time2distance  	 = manager.getConstants(runno, "/calibration/alert/ahdc/time_to_distance");
