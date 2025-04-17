@@ -38,10 +38,22 @@ public class HitReader {
 				double adc        = bankDGTZ.getInt("ADC", i);
 				double leadingEdgeTime = bankDGTZ.getFloat("leadingEdgeTime", i);
 				double timeOverThreshold = bankDGTZ.getFloat("timeOverThreshold", i);	
-				// Temporary cuts
-				if ((adc >= 50) && (leadingEdgeTime >= 8*50.0) && (leadingEdgeTime <= 16*50.0) && (timeOverThreshold >= 6*50.0) && (timeOverThreshold <= 14*50.0)) {
-					// use calibration constants
-					int key_value = sector*10000 + number*100 + wire;
+				double adcOffset = bankDGTZ.getShort("ped", i);	
+				// Retrieve raw hit cuts from CCDB
+				int key_value = sector*10000 + number*100 + wire;
+				double[] rawHitCuts = CalibrationConstantsLoader.AHDC_RAW_HIT_CUTS.get( key_value );
+				double t_min = rawHitCuts[0];
+				double t_max = rawHitCuts[1];
+				double tot_min = rawHitCuts[2];
+				double tot_max = rawHitCuts[3];
+				double adc_min = rawHitCuts[4];
+				double adc_max = rawHitCuts[5];
+				double ped_min = rawHitCuts[6];
+				double ped_max = rawHitCuts[7];
+				//System.out.println("t_min : " + t_min + " t_max : " + t_max + " tot_min : " + tot_min + " tot_max : " + tot_max + " adc_min : " + adc_min + " adc_max : " + adc_max + " ped_min : " + ped_min + " ped_max : " + ped_max);
+				// Apply these cuts
+				if ((adc >= adc_min) && (adc <= adc_max) && (leadingEdgeTime >= t_min) && (leadingEdgeTime <= t_max) && (timeOverThreshold >= tot_min) && (timeOverThreshold <= tot_max) && (adcOffset >= ped_min) && (adcOffset <= ped_max)) {
+					// Retrieve others CCDB
 					double[] timeOffsets = CalibrationConstantsLoader.AHDC_TIME_OFFSETS.get( key_value );
 					double[] time2distance = CalibrationConstantsLoader.AHDC_TIME_TO_DISTANCE.get( 10101 ); // the time to distance table has only one row ! (10101 is its only key)
 					double t0 = timeOffsets[0];

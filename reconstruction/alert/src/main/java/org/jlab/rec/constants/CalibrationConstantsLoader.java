@@ -28,6 +28,7 @@ public class CalibrationConstantsLoader {
 	// AHDC	
 	public static Map<Integer, double[]> AHDC_TIME_OFFSETS           = new HashMap<Integer,double[]>(); 	///< AHDC Parameters for timing offsets
 	public static Map<Integer, double[]> AHDC_TIME_TO_DISTANCE       = new HashMap<Integer,double[]>();	///< AHDC Parameters for time to distance
+	public static Map<Integer, double[]> AHDC_RAW_HIT_CUTS           = new HashMap<Integer,double[]>();	///< AHDC Parameters for raw hit cuts
 	
 	// ATOF
 	public static Map<Integer, double[]> ATOF_EFFECTIVE_VELOCITY     = new HashMap<Integer,double[]>(); 	///< ATOF Parameters for effective velocity
@@ -42,6 +43,7 @@ public class CalibrationConstantsLoader {
 
 		IndexedTable  ahdc_timeOffsets    	 = manager.getConstants(runno, "/calibration/alert/ahdc/time_offsets");
 		IndexedTable  ahdc_time2distance  	 = manager.getConstants(runno, "/calibration/alert/ahdc/time_to_distance");
+		IndexedTable  ahdc_rawHitCuts   	 = manager.getConstants(runno, "/calibration/alert/ahdc/raw_hit_cuts");
 		IndexedTable  atof_effectiveVelocity     = manager.getConstants(runno, "/calibration/alert/atof/effective_velocity");
 		IndexedTable  atof_timeWalk   		 = manager.getConstants(runno, "/calibration/alert/atof/time_walk");
 		IndexedTable  atof_attenuationLength     = manager.getConstants(runno, "/calibration/alert/atof/attenuation");
@@ -96,6 +98,27 @@ public class CalibrationConstantsLoader {
 		}
 		
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// AHDC raw hit cuts
+		for( int i = 0; i < ahdc_rawHitCuts.getRowCount(); i++){
+			int sector      = Integer.parseInt((String)ahdc_rawHitCuts.getValueAt(i, 0));
+                        int layer       = Integer.parseInt((String)ahdc_rawHitCuts.getValueAt(i, 1));
+                        int component   = Integer.parseInt((String)ahdc_rawHitCuts.getValueAt(i, 2));
+			double t_min    = ahdc_rawHitCuts.getDoubleValue("t_min",   sector, layer, component);
+                        double t_max    = ahdc_rawHitCuts.getDoubleValue("t_max",   sector, layer, component);
+                        double tot_min  = ahdc_rawHitCuts.getDoubleValue("tot_min", sector, layer, component);
+                        double tot_max  = ahdc_rawHitCuts.getDoubleValue("tot_max", sector, layer, component);
+                        double adc_min  = ahdc_rawHitCuts.getDoubleValue("adc_min", sector, layer, component);
+                        double adc_max  = ahdc_rawHitCuts.getDoubleValue("adc_max", sector, layer, component);
+                        double ped_min  = ahdc_rawHitCuts.getDoubleValue("ped_min", sector, layer, component);
+                        double ped_max  = ahdc_rawHitCuts.getDoubleValue("ped_max", sector, layer, component);
+                        // Put in map
+                        int key         = sector*10000 + layer*100 + component;
+                        double params[] = {t_min, t_max, tot_min, tot_max, adc_min, adc_max, ped_min, ped_max};
+                        AHDC_RAW_HIT_CUTS.put(Integer.valueOf(key), params);
+                        //System.out.println("t_min : " + t_min + " t_max : " + t_max + " tot_min : " + tot_min + " tot_max : " + tot_max + " adc_min : " + adc_min + " adc_max : " + adc_max + " ped_min : " + ped_min + " ped_max : " + ped_max);
+		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		// ATOF effective velocity
 		for( int i = 0; i < atof_effectiveVelocity.getRowCount(); i++){
 			int sector      = Integer.parseInt((String)atof_effectiveVelocity.getValueAt(i, 0));
@@ -106,9 +129,10 @@ public class CalibrationConstantsLoader {
 			double extra1   = atof_effectiveVelocity.getDoubleValue("extra1", sector, layer, component); 
 			double extra2   = atof_effectiveVelocity.getDoubleValue("extra2", sector, layer, component); 
 			// Put in map
-			int key 	= sector*10000 + layer*100 + component;
+			int key 	= sector*10000 + layer*1000 + component*10;
 			double params[] = {veff, dveff, extra1, extra2};
 			ATOF_EFFECTIVE_VELOCITY.put(Integer.valueOf(key), params);
+			//System.out.println("veff : " + veff + " dveff : " + dveff + " extra1 : " + extra1 + " extra2 : " + extra2);
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -117,6 +141,7 @@ public class CalibrationConstantsLoader {
 			int sector      = Integer.parseInt((String)atof_timeWalk.getValueAt(i, 0));
                         int layer       = Integer.parseInt((String)atof_timeWalk.getValueAt(i, 1));
                         int component   = Integer.parseInt((String)atof_timeWalk.getValueAt(i, 2));
+			int order       = Integer.parseInt((String)atof_timeWalk.getValueAt(i, 3));
 			double tw0      = atof_timeWalk.getDoubleValue("tw0",     sector, layer, component); 
 			double tw1      = atof_timeWalk.getDoubleValue("tw1",     sector, layer, component); 
 			double tw2      = atof_timeWalk.getDoubleValue("tw2",     sector, layer, component); 
@@ -127,9 +152,10 @@ public class CalibrationConstantsLoader {
 			double dtw3     = atof_timeWalk.getDoubleValue("dtw3",    sector, layer, component); 
 			double chi2ndf  = atof_timeWalk.getDoubleValue("chi2ndf", sector, layer, component); 
 			// Put in map
-			int key 	= sector*10000 + layer*100 + component;
+			int key 	= sector*10000 + layer*1000 + component*10 + order;
 			double params[] = {tw0, tw1, tw2, tw3, dtw0, dtw1, dtw2, dtw3, chi2ndf};
 			ATOF_TIME_WALK.put(Integer.valueOf(key), params);
+			//System.out.println("tw0 : " + tw0 + " tw1 : " + tw1 + " tw2 : " + tw2 + " tw3 : " + tw3 + " ...");
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -143,9 +169,10 @@ public class CalibrationConstantsLoader {
 			double extra1   = atof_attenuationLength.getDoubleValue("extra1",  sector, layer, component); 
 			double extra2   = atof_attenuationLength.getDoubleValue("extra2",  sector, layer, component); 
 			// Put in map
-			int key 	= sector*10000 + layer*100 + component;
+			int key 	= sector*10000 + layer*1000 + component*10;
 			double params[] = {attlen, dattlen, extra1, extra2};
 			ATOF_ATTENUATION_LENGTH.put(Integer.valueOf(key), params);
+			//System.out.println("attlen : " + attlen + " dattlen : " + dattlen + " extra1 : " +extra1 + " extra2 : " + extra2 + " ...");
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -154,15 +181,17 @@ public class CalibrationConstantsLoader {
 			int sector      	   = Integer.parseInt((String)atof_timeOffsets.getValueAt(i, 0));
                         int layer       	   = Integer.parseInt((String)atof_timeOffsets.getValueAt(i, 1));
                         int component  		   = Integer.parseInt((String)atof_timeOffsets.getValueAt(i, 2));
+			int order       	   = Integer.parseInt((String)atof_timeOffsets.getValueAt(i, 3)); // we have to use it here !
 			double t0       	   = atof_timeOffsets.getDoubleValue("t0",      	    sector, layer, component); 
 			double upstream_downstream = atof_timeOffsets.getDoubleValue("upstream_downstream", sector, layer, component); 
 			double wedge_bar    	   = atof_timeOffsets.getDoubleValue("wedge_bar",	    sector, layer, component); 
 			double extra1   	   = atof_timeOffsets.getDoubleValue("extra1", 		    sector, layer, component); 
 			double extra2              = atof_timeOffsets.getDoubleValue("extra2", 		    sector, layer, component); 
 			// Put in map
-			int key 	= sector*10000 + layer*100 + component;
+			int key 	= sector*10000 + layer*1000 + component*10 + order;
 			double params[] = {t0, upstream_downstream, wedge_bar, extra1, extra2};
 			ATOF_TIME_OFFSETS.put(Integer.valueOf(key), params);
+			//System.out.println("t0 : " + t0 + " up_down : " + upstream_downstream + " wedge_bar : " + wedge_bar + " ...");
 		}
 
 
