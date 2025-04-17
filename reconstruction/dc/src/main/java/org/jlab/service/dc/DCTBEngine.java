@@ -189,6 +189,11 @@ public class DCTBEngine extends DCEngine {
                     trkbank.getFloat("tx", i), trkbank.getFloat("ty", i));
             HBFinalSV.setZ(trkbank.getFloat("z", i));
             HBtrk.setFinalStateVec(HBFinalSV);
+            
+            int status = trkbank.getShort("status", i);
+            int isAITrack = (status >> 12) & 1;
+            HBtrk.setIsAITrack((isAITrack == 1));
+                        
             TrackArray[HBtrk.get_Id()-1] = HBtrk; 
 //            TrackArray[HBtrk.get_Id()-1].set_Status(0);
         }
