@@ -54,7 +54,7 @@ function run_gemc () {
     [ -e "$_output" ] && echo Output file already exists:  $_output && exit 3
     [ -z ${dryrun+x} ] && set -x
     $dryrun gemc \
-        $_gcard -RANDOM $seed -RUNNO=$_run -USE_GUI=0 -N=$_nevents \
+        $_gcard -RANDOM=$seed -RUNNO=$_run -USE_GUI=0 -N=$_nevents \
         -SAVE_ALL_MOTHERS=1 -SKIPREJECTEDHITS=1 -INTEGRATEDRAW="*" -NGENP=50 \
         -INPUT_GEN_FILE="LUND, $_input" \
         -OUTPUT="hipo, $_output" &
