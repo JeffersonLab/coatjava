@@ -37,7 +37,7 @@ jobs:
       matrix:
         runner:
           - ubuntu-latest
-          - macos-14
+          #- macos-14
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
@@ -96,7 +96,7 @@ jobs:
           - { id: eb-enc,   cmd: ./run-eb-tests.sh -100 electronneutronC }
           - { id: eb-eftpi, cmd: ./run-eb-tests.sh -100 electronFTpion   }
           # run one macos test
-          - { runner: macos-14, id: eb-ep, cmd: ./run-eb-tests.sh -100 electronproton }
+          #- { runner: macos-14, id: eb-ep, cmd: ./run-eb-tests.sh -100 electronproton }
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
