@@ -108,10 +108,14 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: build_${{ matrix.runner }}
+      - uses: cvmfs-contrib/github-action-cvmfs@v3
+        with:
+          cvmfs_repositories: 'oasis.opensciencegrid.org'
       - name: untar build
         run: tar xzvf coatjava.tar.gz
       - name: run test
         run: |
+          export CCDB_CONNECTION=sqlite:////cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/ccdb/ccdb_latest.sqlite 
           cd validation/advanced-tests
           echo "COMMAND: ${{ matrix.cmd }}"
           ${{ matrix.cmd }}
