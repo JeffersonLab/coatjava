@@ -1,10 +1,15 @@
 package org.jlab.rec.ahdc.HelixFit;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /** Helix Fit.
  *
  * This appears to be some code translation.
  */
 public class HelixFitJava {
+
+    static final Logger LOGGER = Logger.getLogger(HelixFitJava.class.getName());
 
     /** \todo What does this method do
      *  \what does its name even mean?
@@ -239,12 +244,12 @@ public class HelixFitJava {
 	    double   ydca, xbar, ybar, xpt, ypt, alpha, beta; 
 	    if (npt <= 2) 
 	    {
-	      System.out.println("BonusHelixFit::rwfthc(): Cannot fit less than 3 points; exiting..\n");  
+	      LOGGER.finest("BonusHelixFit::rwfthc(): Cannot fit less than 3 points; exiting.");  
 	      return;
 	    }
 	    if (npt > MAX_HITS_ON_CHAIN) 
 	    {
-	    	System.out.println("BonusHelixFit::rwfthc(): Cannot fit more than " +  MAX_HITS_ON_CHAIN + " points; exiting..\n" );
+	      LOGGER.log(Level.FINEST, "BonusHelixFit::rwfthc(): Cannot fit more than {0} points; exiting.", MAX_HITS_ON_CHAIN);
 	      return;
 	    }
 	    for(i=0; i<npt; i++) 
