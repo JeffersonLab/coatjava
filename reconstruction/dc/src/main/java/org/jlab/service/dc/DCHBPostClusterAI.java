@@ -30,7 +30,7 @@ import org.jlab.rec.dc.trajectory.RoadFinder;
 
 /**
  *
- * @author ziegler
+ * @author ziegler, tongtong
  */
 public class DCHBPostClusterAI extends DCEngine {
 
@@ -71,7 +71,7 @@ public class DCHBPostClusterAI extends DCEngine {
         //AI
         List<Track> trkcands = null;
         List<Cross> crosses = null;
-        List<FittedCluster> clusters = null;
+        List<FittedCluster> clusters = new ArrayList<>();
         List<Segment> segments = null;
         List<FittedHit> fhits = null;
 
@@ -103,7 +103,6 @@ public class DCHBPostClusterAI extends DCEngine {
                 LOGGER.log(Level.FINE, "Pass Cross"+c.printInfo());
         }
         if (crosses.isEmpty()) {
-            clusters = new ArrayList<>();
             for(Segment seg : segments) {
                 clusters.add(seg.get_fittedCluster());
             }
@@ -126,7 +125,6 @@ public class DCHBPostClusterAI extends DCEngine {
             dcSwim, true);
 
         // track found
-        clusters = new ArrayList<>();
         int trkId = 1;
         if (trkcands.size() > 0) {
             // remove overlaps
@@ -312,6 +310,7 @@ public class DCHBPostClusterAI extends DCEngine {
         if (trkcands.isEmpty()) {
             event.appendBanks(
                     writer.fillHBHitsBank(event, fhits),    
+                    writer.fillHBClustersBank(event, clusters),
                     writer.fillHBSegmentsBank(event, segments),
                     writer.fillHBCrossesBank(event, crosses));
         }
