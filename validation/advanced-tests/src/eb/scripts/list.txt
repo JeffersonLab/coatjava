@@ -12,3 +12,4 @@ electrondeuteronC -pid 45 -cd
 electronFTpion -pid -211 -ft
 electronFTproton -pid -2212 -ft
 electronFTkaon -pid -321 -ft
+electronprotonA -pid -2212 -al
