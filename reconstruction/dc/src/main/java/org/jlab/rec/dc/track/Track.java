@@ -68,13 +68,14 @@ public class Track extends Trajectory implements Comparable<Track>{
     private int _fitConvergenceStatus;
     private StateVec finalStateVec ;
     
+
     private URWellCross urCross;
     private Point3D _URWellPointGlobal;
     private Point3D _URWellPGlobal;
     private Point3D _URWellPointLocal;
     private Point3D _URWellPLocal;
-    
-    
+    private boolean isAITrack = false;
+
     public Track() {
     }
     
@@ -182,6 +183,14 @@ public class Track extends Trajectory implements Comparable<Track>{
     public void setSingleSuperlayer(Segment _singleSuperlayer) {
         this._singleSuperlayer = _singleSuperlayer;
     }
+    
+    public void setIsAITrack(boolean isAITrack){
+        this.isAITrack = isAITrack;
+    }
+    
+    public boolean getIsAITrack(){
+        return isAITrack;
+    }
         
     public int getBitStatus() { 
         int status = 0;
@@ -203,6 +212,9 @@ public class Track extends Trajectory implements Comparable<Track>{
         for(int isl = 0; isl <6; isl++) {
             status |= segmentStatus[isl] << isl*2;
         }
+        
+        status |= (this.isAITrack ? 1 : 0) << 12; // The 13th bit tells if track is from AI-assisted trcking; 1: yes; 0: no
+        
         return status;
     }
     
