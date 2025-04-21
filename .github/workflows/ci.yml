@@ -51,7 +51,9 @@ jobs:
       - name: cvmfs
         run: ls /cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/ccdb/ccdb_latest.sqlite
       - name: build
-        run: ./build-coatjava.sh --spotbugs --unittests --quiet -T4
+        run: |
+          export CCDB_CONNECTION=sqlite:////cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/ccdb/ccdb_latest.sqlite 
+          ./build-coatjava.sh --spotbugs --unittests --quiet -T4
       - name: tar # tarball to preserve permissions
         run: tar czvf coatjava.tar.gz coatjava
       - uses: actions/upload-artifact@v4
