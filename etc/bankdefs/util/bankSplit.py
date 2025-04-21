@@ -108,9 +108,10 @@ level3 = list(dst)
 level3.extend(["DC::tdc", "ECAL::adc", "ECAL::clusters", "FTOF::tdc", "FTOF::adc", "HitBasedTrkg::HBClusters", "HitBasedTrkg::HBTracks", "HTCC::adc", "RF::adc", "RF::tdc", "RUN::rf", "TimeBasedTrkg::TBClusters", "TimeBasedTrkg::TBTracks"])
 
 import glob
-rgl = glob.glob('./etc/bankdefs/hipo4/singles/full/ALERT*.json')
-rgl.extend(glob.glob('./etc/bankdefs/hipo4/singles/full/AHDC*.json'))
-rgl.extend(glob.glob('./etc/bankdefs/hipo4/singles/full/ATOF*.json'))
+rgl = glob.glob('./singles/full/ALERT*.json')
+rgl.extend(glob.glob('./singles/full/AHDC*.json'))
+rgl.extend(glob.glob('./singles/full/ATOF*.json'))
+rgl = [os.path.basename(x)[:-5] for x in rgl]
 calib.extend(rgl)
 mon.extend(rgl)
 dst.extend(rgl)
