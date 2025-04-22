@@ -15,20 +15,32 @@ public class Track {
 	private       List<Cluster>  _Clusters = new ArrayList<>();
 	private       boolean        _Used     = false;
 	private final ArrayList<Hit> hits      = new ArrayList<>();
-
+	
+	private int    trackId = -1; ///< id of the track
+	private int    n_hits  = 0;  ///< number of hits
+	private int    sum_adc = 0;  ///< sum of adc (adc)
+	private double sum_residuals = 0; ///< sum of residuals (mm)
+	private double chi2    = 0;  ///< sum of residuals^2 (mm^2)
+	// AHDC::track
 	private double x0  = 0;
 	private double y0  = 0;
 	private double z0  = 0;
 	private double px0 = 0;
 	private double py0 = 0;
 	private double pz0 = 0;
-
+	private double dEdx    = 0;  ///< deposited energy per path length (adc/mm)
+	private double p_drift = 0;  ///< momentum in the drift region (MeV)
+	private double path    = 0;  ///< length of the track (mm)
+	// AHDC::kftrack
 	private double x0_kf  = 0;
 	private double y0_kf  = 0;
 	private double z0_kf  = 0;
 	private double px0_kf = 0;
 	private double py0_kf = 0;
 	private double pz0_kf = 0;
+	private double dEdx_kf    = 0;  ///< deposited energy per path length (adc/mm)
+	private double p_drift_kf = 0;  ///< momentum in the drift region (MeV)
+	private double path_kf    = 0;  ///< length of the track (mm)
 
 	public Track(List<Cluster> clusters) {
 		this._Clusters = clusters;
@@ -161,4 +173,32 @@ public class Track {
 	public double getPz0_kf() {
 		return pz0_kf;
 	}
+
+	// Same for Track and KFTrack	
+	public void set_trackId(int _trackId) { trackId = _trackId;}
+	public void set_n_hits(int _n_hits) { n_hits = _n_hits;}
+	public void set_sum_adc(int _sum_adc) { sum_adc = _sum_adc;}
+	public void set_chi2(double _chi2) { chi2 = _chi2;}
+	public void set_sum_residuals(double _sum_residuals) { sum_residuals = _sum_residuals;}
+	public int    get_trackId() {return trackId;}
+	public int    get_n_hits() {return n_hits;}
+	public int    get_sum_adc() {return sum_adc;}
+	public double get_chi2() {return chi2;}
+	public double get_sum_residuals() {return sum_residuals;}
+	// AHDC::track
+	public void set_dEdx(double _dEdx) { dEdx = _dEdx;}
+	public void set_p_drift(double _p_drift) { p_drift = _p_drift;}
+	public void set_path(double _path) { path = _path;}
+	public double get_dEdx() {return dEdx;}
+	public double get_p_drift() {return p_drift;}
+	public double get_path() {return path;}
+	
+	// AHDC::kftrack
+	public void set_dEdx_kf(double _dEdx_kf) { dEdx_kf = _dEdx_kf;}
+	public void set_p_drift_kf(double _p_drift_kf) { p_drift_kf = _p_drift_kf;}
+	public void set_path_kf(double _path_kf) { path_kf = _path_kf;}
+	public double get_dEdx_kf() {return dEdx_kf;}
+	public double get_p_drift_kf() {return p_drift_kf;}
+	public double get_path_kf() {return path_kf;}
+
 }

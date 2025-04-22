@@ -22,10 +22,12 @@ import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import org.jlab.rec.ahdc.PreCluster.PreClusterFinder;
 import org.jlab.rec.ahdc.Track.Track;
 import org.jlab.rec.ahdc.Mode;
-import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
-
 import java.io.File;
 import java.util.*;
+import org.jlab.detector.calib.utils.DatabaseConstantProvider;
+import org.jlab.geom.detector.alert.AHDC.AlertDCDetector;
+import org.jlab.geom.detector.alert.AHDC.AlertDCFactory;
+import org.jlab.rec.constants.CalibrationConstantsLoader;
 
 /** AHDCEngine reconstruction service.
  *
@@ -58,12 +60,17 @@ public class AHDCEngine extends ReconstructionEngine {
     /// \todo better name... mode for what?
     private Mode mode = Mode.CV_Track_Finding;
 
+    private AlertDCDetector factory = null;
+    
     public AHDCEngine() {
         super("ALERT", "ouillon", "1.0.1");
     }
 
     @Override
     public boolean init() {
+
+        factory = (new AlertDCFactory()).createDetectorCLAS(new DatabaseConstantProvider());
+        
         simulation    = false;
         findingMethod = "distance";
 
@@ -85,14 +92,19 @@ public class AHDCEngine extends ReconstructionEngine {
 
         // Requires calibration constants
         String[] alertTables = new String[] {
-            "/calibration/alert/ahdc/time_offsets",
+            	"/calibration/alert/ahdc/time_offsets",
                 "/calibration/alert/ahdc/time_to_distance",
+                "/calibration/alert/ahdc/raw_hit_cuts",
                 "/calibration/alert/atof/effective_velocity",
                 "/calibration/alert/atof/time_walk",
                 "/calibration/alert/atof/attenuation",
                 "/calibration/alert/atof/time_offsets"
         };
         requireConstants(Arrays.asList(alertTables));
+        
+        this.getConstantsManager().setVariation("default");
+        
+        this.registerOutputBank("AHDC::hits","AHDC::preclusters","AHDC::clusters","AHDC::track","AHDC::kftrack","AHDC::mc","AHDC::ai:prediction");
 
         return true;
     }
@@ -108,6 +120,10 @@ public class AHDCEngine extends ReconstructionEngine {
         double magfield       = 50.0;  // what is this?
         double magfieldfactor = 1;     // why is this here?
 
+	if(event.hasBank("MC::Particle")){
+	    simulation = true;
+	}
+
         if (event.hasBank("RUN::config")) {
             DataBank bank = event.getBank("RUN::config");
             runNo          = bank.getInt("run", 0);
@@ -122,7 +138,7 @@ public class AHDCEngine extends ReconstructionEngine {
             // Load the constants
             //-------------------
             if(Run!=newRun) {
-                CalibrationConstantsLoader.Load(newRun,"default",this.getConstantsManager()); 
+                CalibrationConstantsLoader.Load(newRun, this.getConstantsManager()); 
                 Run = newRun;
             }
         }
@@ -132,7 +148,7 @@ public class AHDCEngine extends ReconstructionEngine {
 
         if (event.hasBank("AHDC::adc")) {
             // I) Read raw hit
-            HitReader hitRead = new HitReader(event, simulation);
+            HitReader hitRead = new HitReader(event, factory, simulation);
 
             ArrayList<Hit>     AHDC_Hits     = hitRead.get_AHDCHits();
             if(simulation){

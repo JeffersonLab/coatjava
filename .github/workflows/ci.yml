@@ -23,7 +23,9 @@ defaults:
 env:
   java_version: 17
   java_distribution: zulu
+  javadoc_version: 24 # newer than `java_version` for better javadoc
   groovy_version: 4.x
+  CCDB_CONNECTION: 'sqlite:////cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/ccdb/ccdb_latest.sqlite'
 
 jobs:
 
@@ -40,11 +42,17 @@ jobs:
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
-      - name: Set up JDK
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
+      - uses: cvmfs-contrib/github-action-cvmfs@v5
+        with:
+          cvmfs_repositories: 'oasis.opensciencegrid.org'
+      - name: cvmfs
+        run: ls /cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/ccdb/ccdb_latest.sqlite
+      - name: echo CCDB_CONNECTION
+        run: echo $CCDB_CONNECTION
       - name: build
         run: ./build-coatjava.sh --spotbugs --unittests --quiet -T4
       - name: tar # tarball to preserve permissions
@@ -103,8 +111,13 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: build_${{ matrix.runner }}
+      - uses: cvmfs-contrib/github-action-cvmfs@v5
+        with:
+          cvmfs_repositories: 'oasis.opensciencegrid.org'
       - name: untar build
         run: tar xzvf coatjava.tar.gz
+      - name: echo CCDB_CONNECTION
+        run: echo $CCDB_CONNECTION
       - name: run test
         run: |
           cd validation/advanced-tests
@@ -170,7 +183,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
-          java-version: ${{ env.java_version }}
+          java-version: ${{ env.javadoc_version }}
           distribution: ${{ env.java_distribution }}
       - name: build
         run: ./build-coatjava.sh
