@@ -298,8 +298,8 @@ public class ATOFHit {
         //Units are mm
         this.x = midpoint.x();
         this.y = midpoint.y();
-        this.z = midpoint.z() - Parameters.LENGTH_ATOF / 2.;
-        return 0;
+        this.z = midpoint.z();
+	return 0;
     }
 
     /**
