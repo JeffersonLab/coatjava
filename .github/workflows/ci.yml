@@ -25,6 +25,7 @@ env:
   java_distribution: zulu
   javadoc_version: 24 # newer than `java_version` for better javadoc
   groovy_version: 4.x
+  CCDB_CONNECTION: 'sqlite:////cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/ccdb/ccdb_latest.sqlite'
 
 jobs:
 
@@ -50,6 +51,8 @@ jobs:
           cvmfs_repositories: 'oasis.opensciencegrid.org'
       - name: cvmfs
         run: ls /cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/ccdb/ccdb_latest.sqlite
+      - name: echo CCDB_CONNECTION
+        run: echo $CCDB_CONNECTION
       - name: build
         run: ./build-coatjava.sh --spotbugs --unittests --quiet -T4
       - name: tar # tarball to preserve permissions
@@ -113,9 +116,10 @@ jobs:
           cvmfs_repositories: 'oasis.opensciencegrid.org'
       - name: untar build
         run: tar xzvf coatjava.tar.gz
+      - name: echo CCDB_CONNECTION
+        run: echo $CCDB_CONNECTION
       - name: run test
         run: |
-          export CCDB_CONNECTION=sqlite:////cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/ccdb/ccdb_latest.sqlite 
           cd validation/advanced-tests
           echo "COMMAND: ${{ matrix.cmd }}"
           ${{ matrix.cmd }}
