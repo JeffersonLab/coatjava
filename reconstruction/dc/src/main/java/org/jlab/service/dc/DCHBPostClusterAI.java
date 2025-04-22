@@ -132,6 +132,11 @@ public class DCHBPostClusterAI extends DCEngine {
             for (Track trk : trkcands) {
                 trk.setIsAITrack(true);
                 
+                for (Cross c : trk) {
+                    clusters.add(c.get_Segment1().get_fittedCluster());
+                    clusters.add(c.get_Segment2().get_fittedCluster());
+                }
+                
                 // reset the id
                 trk.set_Id(trkId);
                 trkcandFinder.matchHits(trk.getStateVecs(),
