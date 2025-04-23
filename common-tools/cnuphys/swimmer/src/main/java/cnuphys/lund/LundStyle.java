@@ -22,7 +22,7 @@ public class LundStyle {
 	 */
 	protected static Hashtable<LundId, LundStyle> styles = new Hashtable<>(143);
 
-	private Stroke _stroke;
+	private BasicStroke _stroke;
 	private Color _lineColor;
 	private Color _fillColor;
 	private Color _transparentFillColor;
@@ -122,7 +122,7 @@ public class LundStyle {
 	 *
 	 * @return the drawing stroke
 	 */
-	public Stroke getStroke() {
+	public BasicStroke getStroke() {
 		return _stroke;
 	}
 
