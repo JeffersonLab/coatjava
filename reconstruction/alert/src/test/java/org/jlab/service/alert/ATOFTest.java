@@ -12,9 +12,7 @@ import org.jlab.analysis.physics.TestEvent;
 import org.jlab.service.atof.ATOFEngine;
 
 /**
- *
- * @author baltzell
- * @author ftouchte
+ * @N-Plx
  */
 public class ATOFTest {
 	
