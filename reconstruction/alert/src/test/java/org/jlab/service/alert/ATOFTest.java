@@ -38,7 +38,7 @@ public class ATOFTest {
     
     assertEquals(event.hasBank("FAKE::Bank"), false);
     assertEquals(event.hasBank("ATOF::tdc"), true);
-    assertEquals(event.getBank("ATOF::hits").rows(), 24);    
+    assertEquals(event.getBank("ATOF::hits").rows(), 8);    
   }
 
   public static void main(String[] args) {
