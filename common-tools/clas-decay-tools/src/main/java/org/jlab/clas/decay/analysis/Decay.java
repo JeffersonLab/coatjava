@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.jlab.clas.pdg.PDGDatabase;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
@@ -214,8 +215,8 @@ public class Decay extends Particle {
      */
     private boolean checkParticleCombination(int pass, Particle part1, Particle part2) {
         
-        if(Constants.particleMap.containsKey(_parPID) ) {
-            double pdgMass = Constants.particleMap.get(_parPID).mass();
+        if(PDGDatabase.isValidPid(_parPID)) {
+            double pdgMass = PDGDatabase.getParticleById(_parPID).mass();
             double emc1 = part1.getE();
             double emc2 = part2.getE();
             double p1x = part1.getUpx(), p1y = part1.getUpy(), p1z = part1.getUpz();
