@@ -23,4 +23,4 @@ done
 java $min_heap_arg $max_heap_arg -XX:+UseSerialGC \
     -cp "$CLAS12DIR/lib/clas/*:$CLAS12DIR/lib/services/*:$CLAS12DIR/lib/utils/*" \
     org.jlab.clas.reco.EngineProcessor \
-    ${prog_args[*]:-}
+    "${prog_args[@]:-}"
