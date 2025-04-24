@@ -38,7 +38,7 @@ public class PreCluster implements Comparable<PreCluster> {
 		}
 		pre_x /= hit_list.size();
 		pre_y /= hit_list.size();
-		this._Phi = mod(-Math.PI / 2 - Math.atan2(pre_y, pre_x), 2 * Math.PI);
+		this._Phi = Math.atan2(pre_y, pre_x);
 		this._X   = -this._Radius * Math.sin(this._Phi);
 		this._Y   = -this._Radius * Math.cos(this._Phi);
 
