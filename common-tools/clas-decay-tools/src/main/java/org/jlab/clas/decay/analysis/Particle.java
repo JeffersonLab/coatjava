@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.jlab.clas.swimtools.Swim;
 import cnuphys.swim.SwimTrajectory;
+import org.jlab.clas.pdg.PDGDatabase;
 import org.jlab.geom.prim.Line3D;
 
 import org.jlab.geom.prim.Point3D;
@@ -75,8 +76,9 @@ public class Particle {
             for(int i = 0; i<this.getDaughters().size(); i++) {
                 e+=this.getDaughters().get(i).getMassConstrE();
             }
-            if(Constants.particleMap.containsKey(this.getPid())) {
-                double cmass = Constants.particleMap.get(Math.abs(this.getPid())).mass();
+            
+            if(PDGDatabase.isValidPid(this.getPid())) {
+                double cmass = PDGDatabase.getParticleById(this.getPid()).mass();
                 e = Math.sqrt(this.getP()*this.getP()+cmass*cmass);
             }
         }
@@ -178,7 +180,7 @@ public class Particle {
         this._pid = pid; 
         this._p = Math.sqrt(upx*upx+upy*upy+upz*upz);
         this._pt = Math.sqrt(upx*upx+upy*upy); 
-        double cmass = Constants.particleMap.get(Math.abs(pid)).mass();
+        double cmass = PDGDatabase.getParticleById(Math.abs(pid)).mass();
         double mass = Math.sqrt((this._p/beta)*(this._p/beta)-this._p*this._p);
         double calcBeta = this._p/Math.sqrt(this._p*this._p+cmass*cmass);
         this._charge = charge;
@@ -219,7 +221,7 @@ public class Particle {
         this._pid = 22;
         this._p = Math.sqrt(upx*upx+upy*upy+upz*upz);
         this._pt = Math.sqrt(upx*upx+upy*upy);
-        double cmass = Constants.particleMap.get(Math.abs(22)).mass();
+        double cmass = PDGDatabase.getParticleById(22).mass();
         
         this._charge = charge;
         this._mass = cmass;

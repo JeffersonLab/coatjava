@@ -39,7 +39,6 @@ public class Analysis extends ReconstructionEngine {
 
     private String decays;
     RCDBConstants rcdb = null;
-    ConstantsManager conman = new ConstantsManager();
     
     
 
@@ -99,7 +98,7 @@ public class Analysis extends ReconstructionEngine {
         if (Run != newRun)  {
             this.setRun(newRun); 
             if (event.getBank("RUN::config").getInt("run",0) >= 100) {
-                rcdb = conman.getRcdbConstants(event.getBank("RUN::config").getInt("run",0));
+                rcdb = this.getConstantsManager().getRcdbConstants(event.getBank("RUN::config").getInt("run",0));
                 beamE=rcdb.getDouble("beam_energy")/1000.0;
                 String tar = rcdb.getString("target"); System.out.println("TARGET "+tar); 
                 if(tar!="LH2") tar="LH2";
@@ -217,7 +216,6 @@ public class Analysis extends ReconstructionEngine {
             pass=Integer.parseInt(this.getEngineConfigString("pass"));
         }
         
-        Constants.Load();
     }
     
     
