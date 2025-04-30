@@ -314,7 +314,7 @@ public class DCHBPostClusterAI extends DCEngine {
         // the clusters, the segments, the crosses
         if (trkcands.isEmpty()) {
             event.appendBanks(
-                    writer.fillHBHitsBank(event, fhits),
+                    writer.fillHBHitsBank(event, fhits),    
                     writer.fillHBClustersBank(event, clusters),
                     writer.fillHBSegmentsBank(event, segments),
                     writer.fillHBCrossesBank(event, crosses));

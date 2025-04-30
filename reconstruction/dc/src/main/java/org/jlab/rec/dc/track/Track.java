@@ -68,14 +68,14 @@ public class Track extends Trajectory implements Comparable<Track>{
     private int _fitConvergenceStatus;
     private StateVec finalStateVec ;
     
-
     private URWellCross urCross;
     private Point3D _URWellPointGlobal;
     private Point3D _URWellPGlobal;
     private Point3D _URWellPointLocal;
     private Point3D _URWellPLocal;
     private boolean isAITrack = false;
-
+    
+          
     public Track() {
     }
     

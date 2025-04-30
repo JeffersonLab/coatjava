@@ -215,38 +215,13 @@ public class HitReader {
         this.initialize(event);
         
         _DCHits = new ArrayList<>();
-        
-        RawDataBank bankDGTZ = new RawDataBank(bankNames.getTdcBank(), OrderGroups.NODENOISE);
-        bankDGTZ.read(event);
-
-        // event selection, including cut on max number of hits
-        if( run <= 0 ||
-            tiTimeStamp < 0 ||
-            bankDGTZ.rows()==0) {
-            return;
-        }
-        else {
-            int rows = bankDGTZ.rows();
-            int[] sector = new int[rows];
-            int[] layer = new int[rows];
-            int[] superlayer = new int[rows];
-            int[] wire = new int[rows];
-            for (int i = 0; i < rows; i++) {
-                sector[i]     = bankDGTZ.getByte("sector", i);
-                layer[i]      = (bankDGTZ.getByte("layer", i)-1)%6 + 1;
-                superlayer[i] = (bankDGTZ.getByte("layer", i)-1)/6 + 1;
-                wire[i]       = bankDGTZ.getShort("component", i);
-            }
-        }
-       
-//        DataBank bankDGTZ = event.getBank(bankNames.getTdcBank());
 
         this.getDCRBJitters(Constants.getInstance().isSWAPDCRBBITS());
 
         RawDataBank bankFiltered = new RawDataBank(bankNames.getTdcBank(), rawBankOrders);
         bankFiltered.read(event);
         
-        if(bankFiltered.rows() > Constants.MAXHITS) return;
+        if(run <= 0 || tiTimeStamp < 0 || bankFiltered.rows() > Constants.MAXHITS) return;
         
         this.set_NumTDCBankRows(bankFiltered.rows());
         for (int i = 0; i < bankFiltered.rows(); i++) {
