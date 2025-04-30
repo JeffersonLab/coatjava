@@ -174,6 +174,11 @@ public class PDGDatabase {
                 particleMap.put(3114, new PDGParticle("Sigma*-", 3114,  1.3872, -1));
                 particleMap.put(3324, new PDGParticle("Xi*0", 3324,  1.5318, 0));
                 particleMap.put(3314, new PDGParticle("Xi*-", 3314,  1.5334, -1));
+                particleMap.put(-3224, new PDGParticle("AntiSigma*-", -3224,  1.3828, -1));
+                particleMap.put(-3214, new PDGParticle("AntiSigma*0", -3214,  1.3846, 0));
+                particleMap.put(-3114, new PDGParticle("AntiSigma*+", -3114,  1.3872, 1));
+                particleMap.put(-3324, new PDGParticle("AntiXi*0", -3324,  1.5318, 0));
+                particleMap.put(-3314, new PDGParticle("AntiXi*+", -3314,  1.5334, -1));
                 particleMap.put(3334, new PDGParticle("Omega-", 3334, 24, 1.67245, -1));
                 particleMap.put(-3334, new PDGParticle("AntiOmega+", -3334, 32, 1.67245, 1));
 
