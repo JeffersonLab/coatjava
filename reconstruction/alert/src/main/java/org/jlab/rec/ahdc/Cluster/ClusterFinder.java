@@ -5,6 +5,11 @@ import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import java.util.ArrayList;
 import java.util.List;
 
+/** ClusterFinder
+ *
+ * \todo description of what it does and how it works
+ *
+ */
 public class ClusterFinder {
 
 	private final ArrayList<Cluster> _AHDCClusters                 = new ArrayList<>();
@@ -55,6 +60,7 @@ public class ClusterFinder {
 	}
 
 	public void findCluster(List<PreCluster> AHDC_precluster_list) {
+            /// \todo parameters should be exposed 
 		int window           = 30;
 		int minimal_distance = 10;
 

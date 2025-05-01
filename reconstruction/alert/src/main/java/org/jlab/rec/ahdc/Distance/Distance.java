@@ -7,6 +7,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**  Distance.
+ *
+ * \todo What is this class and what does it do?
+ *
+ */ 
 public class Distance {
 
     private ArrayList<Track> _AHDCTracks;

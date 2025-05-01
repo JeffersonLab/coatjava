@@ -2,15 +2,17 @@ package org.jlab.detector.pulse;
 
 import java.util.List;
 import java.util.ArrayList;
-
-import net.jcip.annotations.GuardedBy;
+import org.jlab.io.base.DataBank;
+import org.jlab.io.base.DataEvent;
+import org.jlab.jnp.hipo4.data.Bank;
+import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.groups.NamedEntry;
 
 
 /**
  * A new extraction method dedicated to the AHDC signal waveform
  * 
- * Some blocks of code are inspired by MVTFitter.java
+ * Some blocks of code are inspired by MVTFitter.java and Bonus12 (`createBonusBank()`)
  *
  * @author  ftouchte
  */
@@ -23,28 +25,26 @@ public class ModeAHDC extends HipoExtractor  {
 	 *
 	 * @param pars CCDB row
 	 * @param id link to row in source bank
+	 * @param timestamp ...
+	 * @param time time (exprimed in bin) of the first channel of the AHDC pulse (after or not zero suppress; if ZS=0, time == 0)
 	 * @param samples ADC samples
 	 */
 	@Override
-	public List<Pulse> extract(NamedEntry pars, int id, short... samples){
+	public List<Pulse> extract(NamedEntry pars, int id, long timestamp, long time, short... samples){
 		// Settings parameters (they can be initialised by a CCDB)
-		float samplingTime = 0;
-		int sparseSample = 0;
-		short adcOffset = 0;
-		long timeStamp = 0;
+		float samplingTime = 50.0f;
+		short adcOffset = 0; ///< pedestal of the pulse
 		float fineTimeStampResolution = 0;
 
-		float amplitudeFractionCFA = 0;
-		int binDelayCFD = 0;
-		float fractionCFD = 0;
+		float amplitudeFractionCFA = 0.5f;
+		int binDelayCFD = 5;
+		float fractionCFD = 0.3f;
 
 		// Calculation intermediaries
 		int binMax = 0; //Bin of the max ADC over the pulse
-		int binOffset = 0; //Offset due to sparse sample
 		float adcMax = 0; //Max value of ADC over the pulse (fitted)
 		float timeMax =0; //Time of the max ADC over the pulse (fitted)
 		float integral = 0; //Sum of ADCs over the pulse (not fitted)
-		long timestamp = 0;
 
 		short[] samplesCorr; //Waveform after offset (pedestal) correction
 		int binNumber = 0; //Number of bins in one waveform
@@ -52,11 +52,11 @@ public class ModeAHDC extends HipoExtractor  {
 		float leadingEdgeTime = 0; // moment when the signal reaches a Constant Fraction of its Amplitude uphill (fitted)
 		float trailingEdgeTime = 0; // moment when the signal reaches a Constant Fraction of its Amplitude downhill (fitted)
 		float timeOverThreshold = 0; // is equal to (timeFallCFA - timeRiseCFA)
-		float constantFractionTime ; // time extracted using the Constant Fraction Discriminator (CFD) algorithm (fitted)
+		float constantFractionTime = 0; // time extracted using the Constant Fraction Discriminator (CFD) algorithm (fitted)
 		/// /////////////////////////
 		// Begin waveform correction
 		/// ////////////////////////
-		//waveformCorrection(samples,adcOffset,samplingTime,sparseSample, binMax, adcMax, integral, samplesCorr[], binOffset, timeMax);
+		//waveformCorrection(samples,adcOffset,samplingTime, binMax, adcMax, integral, samplesCorr[], time, timeMax);
 		/**
 		 * This method subtracts the pedestal (noise) from samples and stores it in : samplesCorr
 		 * It also computes a first value for : adcMax, binMax, timeMax and integral
@@ -64,16 +64,18 @@ public class ModeAHDC extends HipoExtractor  {
 		 * @param samples ADC samples
 		 * @param adcOffset pedestal or noise level
 		 * @param samplingTime time between two adc bins
-		 * @param sparseSample used to define binOffset
 		 */
-		//private void waveformCorrection(short[] samples, short adcOffset, float samplingTime, int sparseSample, int binMax, int adcMax, int integral, short samplesCorr[], int binOffset, int timeMax){
+		//private void waveformCorrection(short[] samples, short adcOffset, float samplingTime, int binMax, int adcMax, int integral, short samplesCorr[], int time, int timeMax){
 			binNumber = samples.length;
 			binMax = 0;
+			if (binNumber >= 5) {
+				adcOffset = (short) ((samples[0] + samples[1] + samples[2] + samples[3] + samples[4])/5); // try to estimate the baseline (pedestal) using the first five samples
+			}
 			adcMax = (short) (samples[0] - adcOffset);
 			integral = 0;
 			samplesCorr = new short[binNumber];
 			for (int bin = 0; bin < binNumber; bin++){
-				samplesCorr[bin] = (short) (samples[bin] - adcOffset);
+				samplesCorr[bin] = (short) Math.max(samples[bin] - adcOffset, 0);
 				if (adcMax < samplesCorr[bin]){
 					adcMax = samplesCorr[bin];
 					binMax = bin;
@@ -97,8 +99,7 @@ public class ModeAHDC extends HipoExtractor  {
 				}
 				binMax = (binMax + binMax2)/2;
 			}
-			binOffset = sparseSample*binMax;
-			timeMax = (binMax + binOffset)*samplingTime;
+			timeMax = (binMax + time)*samplingTime;
 		//}
 
 		/// /////////////////////////
@@ -146,7 +147,7 @@ public class ModeAHDC extends HipoExtractor  {
 			if (binRise + 1 <= binNumber-1)
 				slopeRise = samplesCorr[binRise+1] - samplesCorr[binRise];
 			float fittedBinRise = (slopeRise == 0) ? binRise : binRise + (threshold - samplesCorr[binRise])/slopeRise;
-			leadingEdgeTime = (fittedBinRise + binOffset)*samplingTime; // binOffset is determined in wavefromCorrection() // must be the same for all time ? // or must be defined using fittedBinRise*sparseSample
+			leadingEdgeTime = (fittedBinRise + time)*samplingTime;
 
 			// trailingEdgeTime
 			int binFall = binMax;
@@ -163,7 +164,7 @@ public class ModeAHDC extends HipoExtractor  {
 			if (binFall - 1 >= 0)
 				slopeFall = samplesCorr[binFall] - samplesCorr[binFall-1];
 			float fittedBinFall = (slopeFall == 0) ? binFall : binFall-1 + (threshold - samplesCorr[binFall-1])/slopeFall;
-			trailingEdgeTime = (fittedBinFall + binOffset)*samplingTime;
+			trailingEdgeTime = (fittedBinFall + time)*samplingTime;
 
 			// timeOverThreshold
 			timeOverThreshold = trailingEdgeTime - leadingEdgeTime;
@@ -208,31 +209,13 @@ public class ModeAHDC extends HipoExtractor  {
 			if (binZero + 1 <= binNumber)
 				slopeCFD = signal[binZero+1] - signal[binZero];
 			float fittedBinZero = (slopeCFD == 0) ? binZero : binZero + (0 - signal[binZero])/slopeCFD;
-			constantFractionTime = (fittedBinZero + binOffset)*samplingTime;
+			constantFractionTime = (fittedBinZero + time)*samplingTime;
 
 		//}
 
-		/// /////////////////////////
-		// Begin fineTimeStampCorrection
-		/// ////////////////////////
-		//fineTimeStampCorrection(timeStamp,fineTimeStampResolution);
-		/**
-		 * From MVTFitter.java
-		 * Make fine timestamp correction (using dream (=electronic chip) clock)
-		 * @param timeStamp timing informations (used to make fine corrections)
-		 * @param fineTimeStampResolution precision of dream clock (usually 8)
-		 */
-		//private void fineTimeStampCorrection (long timeStamp, float fineTimeStampResolution) {
-			//this.timestamp = timeStamp;
-			String binaryTimeStamp = Long.toBinaryString(timeStamp); //get 64 bit timestamp in binary format
-			if (binaryTimeStamp.length()>=3){
-				byte fineTimeStamp = Byte.parseByte(binaryTimeStamp.substring(binaryTimeStamp.length()-3,binaryTimeStamp.length()),2); //fineTimeStamp : keep and convert last 3 bits of binary timestamp
-				timeMax += (float) ((fineTimeStamp+0.5) * fineTimeStampResolution); //fineTimeStampCorrection
-				// Question : I wonder if I have to do the same thing of all time quantities that the extract() methods compute.
-			}
-		//}
 		// output
 		Pulse pulse = new Pulse();
+		pulse.id = id;
 		pulse.adcMax = adcMax;
 		pulse.time = timeMax;
 		pulse.timestamp = timestamp;
@@ -242,17 +225,54 @@ public class ModeAHDC extends HipoExtractor  {
 		pulse.timeOverThreshold = timeOverThreshold;
 		pulse.constantFractionTime = constantFractionTime;
 		//pulse.binMax = binMax;
-		//pulse.binOffset = binOffset;
 		pulse.pedestal = adcOffset;
 		List<Pulse> output = new ArrayList<>();
 		output.add(pulse);
 		return output;
 	}
-	/**
-	 * Fit the max of the pulse using parabolic fit, this method updates the timeMax and adcMax values
-	 * @param samplingTime time between 2 ADC bins
-	 */
-	private void fitParabolic(float samplingTime) {
 
+	@Override
+	public void update(int n, IndexedTable it, DataEvent event, String wfBankName, String adcBankName) {
+        DataBank wf = event.getBank(wfBankName);
+        if (wf.rows() > 0) {
+            event.removeBank(adcBankName);
+            List<Pulse> pulses = getPulses(n, it, wf);
+            if (pulses != null && !pulses.isEmpty()) {
+                DataBank adc = event.createBank(adcBankName, pulses.size());
+                for (int i=0; i<pulses.size(); ++i) {
+                    copyIndices(wf, adc, i, i);
+                    adc.setInt("ADC", i, (int)pulses.get(i).adcMax);
+                    adc.setFloat("time", i, pulses.get(i).time);
+                    adc.setFloat("leadingEdgeTime", i, pulses.get(i).leadingEdgeTime);
+                    adc.setFloat("timeOverThreshold", i, pulses.get(i).timeOverThreshold);
+                    adc.setFloat("constantFractionTime", i, pulses.get(i).constantFractionTime);
+                    adc.setInt("integral", i, (int)pulses.get(i).integral);
+                    adc.setShort("ped", i, (short)pulses.get(i).pedestal);
+                }
+                event.appendBank(adc);
+            }
+        }
+    }
+
+	@Override
+	protected void update(int n, IndexedTable it, Bank wfBank, Bank adcBank) { 
+		if (wfBank.getRows() > 0) { 
+			List<Pulse> pulses = getPulses(n, it, wfBank); 
+			adcBank.reset(); 
+			adcBank.setRows(pulses!=null ? pulses.size() : 0); 
+			if (pulses!=null && !pulses.isEmpty()) { 
+				for (int i=0; i<pulses.size(); ++i) { 
+					copyIndices(wfBank, adcBank, pulses.get(i).id, i); 
+					adcBank.putInt("ADC", i, (int)pulses.get(i).adcMax); 
+					adcBank.putFloat("time", i, pulses.get(i).time); 
+					adcBank.putFloat("leadingEdgeTime", i, pulses.get(i).leadingEdgeTime); 
+					adcBank.putFloat("timeOverThreshold", i, pulses.get(i).timeOverThreshold); 
+					adcBank.putFloat("constantFractionTime", i, pulses.get(i).constantFractionTime); 
+					adcBank.putInt("integral", i, (int)pulses.get(i).integral); 
+					adcBank.putShort("ped", i, (short)pulses.get(i).pedestal); 
+				} 
+			} 
+		} 
 	}
+
 }

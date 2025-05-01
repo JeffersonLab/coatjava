@@ -32,14 +32,21 @@ public class PreClustering {
         ArrayList<Hit> s5l1 = fill(AHDC_hits, 5, 1);
 
         // Sort hits of each layers by phi:
-        s1l1.sort(new Comparator<Hit>() {@Override public int compare(Hit a1, Hit a2) {return Double.compare(a1.getPhi(), a2.getPhi());}});
-        s2l1.sort(new Comparator<Hit>() {@Override public int compare(Hit a1, Hit a2) {return Double.compare(a1.getPhi(), a2.getPhi());}});
-        s2l2.sort(new Comparator<Hit>() {@Override public int compare(Hit a1, Hit a2) {return Double.compare(a1.getPhi(), a2.getPhi());}});
-        s3l1.sort(new Comparator<Hit>() {@Override public int compare(Hit a1, Hit a2) {return Double.compare(a1.getPhi(), a2.getPhi());}});
-        s3l2.sort(new Comparator<Hit>() {@Override public int compare(Hit a1, Hit a2) {return Double.compare(a1.getPhi(), a2.getPhi());}});
-        s4l1.sort(new Comparator<Hit>() {@Override public int compare(Hit a1, Hit a2) {return Double.compare(a1.getPhi(), a2.getPhi());}});
-        s4l2.sort(new Comparator<Hit>() {@Override public int compare(Hit a1, Hit a2) {return Double.compare(a1.getPhi(), a2.getPhi());}});
-        s5l1.sort(new Comparator<Hit>() {@Override public int compare(Hit a1, Hit a2) {return Double.compare(a1.getPhi(), a2.getPhi());}});
+        Comparator<Hit> comparator = new Comparator<>() {
+            @Override
+            public int compare(Hit a1, Hit a2) {
+                return Double.compare(a1.getPhi(), a2.getPhi());
+            }
+        };
+
+        s1l1.sort(comparator);
+        s2l1.sort(comparator);
+        s2l2.sort(comparator);
+        s3l1.sort(comparator);
+        s3l2.sort(comparator);
+        s4l1.sort(comparator);
+        s4l2.sort(comparator);
+        s5l1.sort(comparator);
 
         ArrayList<ArrayList<Hit>> all_super_layer = new ArrayList<>(Arrays.asList(s1l1, s2l1, s2l2, s3l1, s3l2, s4l1, s4l2, s5l1));
 
@@ -55,12 +62,19 @@ public class PreClustering {
                     ArrayList<Hit> temp = new ArrayList<>();
                     temp.add(hit);
                     hit.setUse(true);
+                    int expected_wire_plus  = hit.getWireId() + 1;
+                    int expected_wire_minus = hit.getWireId() - 1;
+                    if (hit.getWireId() == 1)
+                        expected_wire_minus = hit.getNbOfWires();
+                    if (hit.getWireId() == hit.getNbOfWires() )
+                        expected_wire_plus = 1;
+
 
                     boolean has_next = true;
                     while (has_next) {
                         has_next = false;
                         for (Hit hit1 : p) {
-                            if (hit1.is_NoUsed() && (hit1.getWireId() == temp.get(temp.size() - 1).getWireId() + 1 || hit1.getWireId() == temp.get(temp.size() - 1).getWireId() - 1)) {
+                            if (hit1.is_NoUsed() && (hit1.getWireId() == expected_wire_minus || hit1.getWireId() == expected_wire_plus)) {
                                 temp.add(hit1);
                                 hit1.setUse(true);
                                 has_next = true;
