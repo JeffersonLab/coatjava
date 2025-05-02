@@ -14,7 +14,9 @@ mkdir -p $output_dir
 
 # make build directory
 build_dir=${output_dir}__build
-mkdir $build_dir # prefer to fail if already exists
+mkdir -p $build_dir
+rm -r $build_dir
+mkdir -p $build_dir
 
 # source directories
 src_dir=$(dirname $0)
@@ -29,6 +31,3 @@ tree $build_dir
 # build
 mkdocs build --config-file $build_dir/mkdocs.yaml --site-dir $output_dir
 tree $output_dir
-
-# no need to keep the build dir
-rm -r $build_dir
