@@ -9,7 +9,7 @@ if [ $# -ne 1 ]; then
 fi
 
 # make output dir
-output_dir=$1
+output_dir=$(realpath $1)
 mkdir -p $output_dir
 
 # make build directory
@@ -18,12 +18,12 @@ mkdir $build_dir # prefer to fail if already exists
 
 # source directories
 src_dir=$(dirname $0)
-top_dir=$(src_dir)/../..
+top_dir=$src_dir/../..
 
 # generate build files
 cp $src_dir/mkdocs.yaml $build_dir/
-cp -r $src_dir/files $build_dir/
-$src_dir/src/banks.rb $top_dir/etc/bankdefs/hipo4 > $build_dir/files/banks.md
+cp -r $src_dir/docs $build_dir/
+$src_dir/src/banks.rb $top_dir/etc/bankdefs/hipo4 > $build_dir/docs/banks.md
 tree $build_dir
 
 # build
