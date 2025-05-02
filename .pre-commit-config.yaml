@@ -1,8 +1,0 @@
-repos:
-- repo: local
-  hooks:
-    - id: make_banks_readme
-      name: make banks readme
-      entry: .github/make_banks_readme_precommit.sh
-      language: script
-      pass_filenames: false
