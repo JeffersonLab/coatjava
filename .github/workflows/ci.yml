@@ -178,8 +178,7 @@ jobs:
 
   generate_documentation:
     runs-on: ubuntu-latest
-    needs:
-      - build
+    needs: [ build ]
     steps:
       ### mkdocs
       - uses: actions/checkout@v4
@@ -199,12 +198,8 @@ jobs:
         with:
           java-version: ${{ env.javadoc_version }}
           distribution: ${{ env.java_distribution }}
-      - name: download coatjava build
-        uses: actions/download-artifact@v4
-        with:
-          name: build_ubuntu-latest
-      - name: untar coatjava build
-        run: tar xzvf coatjava.tar.gz
+      - name: build coatjava
+        run: ./build-coatjava.sh
       - name: generate javadoc documentation
         run: |
           ./build-javadocs.sh
