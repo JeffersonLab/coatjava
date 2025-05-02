@@ -13,37 +13,37 @@
         <groupId>org.jlab.clas</groupId>
         <artifactId>clas12rec</artifactId>
         <relativePath>../../parent/pom.xml</relativePath>
-        <version>12.0.5t-SNAPSHOT</version>
+        <version>12.0.6t-SNAPSHOT</version>
     </parent>
 
     <dependencies>
         <dependency>
             <groupId>org.jlab.clas</groupId>
             <artifactId>clas-reco</artifactId>
-            <version>12.0.5t-SNAPSHOT</version>
+            <version>12.0.6t-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.jlab.clas</groupId>
             <artifactId>clas-io</artifactId>
-            <version>12.0.5t-SNAPSHOT</version>
+            <version>12.0.6t-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.jlab.clas</groupId>
             <artifactId>clas-analysis</artifactId>
-            <version>12.0.5t-SNAPSHOT</version>
+            <version>12.0.6t-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.jlab.clas</groupId>
             <artifactId>clas-tracking</artifactId>
-            <version>12.0.5t-SNAPSHOT</version>
+            <version>12.0.6t-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.jlab.clas</groupId>
             <artifactId>clas-geometry</artifactId>
-            <version>12.0.5t-SNAPSHOT</version>
+            <version>12.0.6t-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
