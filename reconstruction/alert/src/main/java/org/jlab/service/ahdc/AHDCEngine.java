@@ -28,6 +28,7 @@ import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.geom.detector.alert.AHDC.AlertDCDetector;
 import org.jlab.geom.detector.alert.AHDC.AlertDCFactory;
 import org.jlab.rec.constants.CalibrationConstantsLoader;
+import org.jlab.detector.pulse.ModeAHDC;
 
 /** AHDCEngine reconstruction service.
  *
@@ -61,7 +62,8 @@ public class AHDCEngine extends ReconstructionEngine {
     private Mode mode = Mode.CV_Track_Finding;
 
     private AlertDCDetector factory = null;
-    
+    private ModeAHDC ahdcExtractor = new ModeAHDC();
+
     public AHDCEngine() {
         super("ALERT", "ouillon", "1.0.1");
     }
@@ -123,6 +125,9 @@ public class AHDCEngine extends ReconstructionEngine {
 	if(event.hasBank("MC::Particle")){
 	    simulation = true;
 	}
+
+        // TODO: this code should perhaps be in the if statement MC::Particle
+        ahdcExtractor.update(30, null, event, "AHDC::wf", "AHDC::adc");
 
         if (event.hasBank("RUN::config")) {
             DataBank bank = event.getBank("RUN::config");
