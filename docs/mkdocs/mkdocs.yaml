@@ -1,0 +1,8 @@
+site_name: COATJAVA Documentation
+repo_url: https://github.com/JeffersonLab/coatjava
+nav:
+  - Home: index.md
+  - HIPO Bank Definitions: banks.md
+use_directory_urls: false
+extra:
+  homepage: index.html
