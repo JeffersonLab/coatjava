@@ -51,8 +51,7 @@ end
 # dump a table
 puts """# Bank Group and Item IDs
 
-> [!NOTE]
-> Iguana banks, which are defined in the Iguana repository, use group number 30000.
+> **NOTE:**  Iguana banks, which are defined in the Iguana repository, use group number 30000.
 
 """
 
