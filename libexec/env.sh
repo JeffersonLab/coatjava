@@ -1,7 +1,6 @@
 #!/bin/bash
 
-CLAS12DIR=$(cd $(dirname ${BASH_SOURCE[0]:-$0})/.. && pwd -P)
-export CLAS12DIR
+export CLAS12DIR=$(cd $(dirname ${BASH_SOURCE[0]:-$0})/.. && pwd -P)
 
 # Set default field maps (but do not override user's env):
 if [ -z "${COAT_MAGFIELD_TORUSMAP-}" ]; then
@@ -37,3 +36,16 @@ if [ $# -ge 1 ]; then
 
   fi
 fi
+
+function split_cli {
+    jvm_options=()
+    class_options=()
+    while [[ $# -gt 0 ]]
+    do
+        case $1 in 
+            --) shift && jvm_options=("${@}") && break ;;
+            *)  class_options+=($1) && shift ;;
+        esac
+    done
+}
+
