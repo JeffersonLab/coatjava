@@ -8,6 +8,8 @@ def print_log(name, val)
   puts name.rjust(30) + " = #{val}"
 end
 
+SlurmMemReq = 2048 + 200 # `-Xmx` argument from `hipo-utils`, plus extra padding
+
 # user options
 @args = OpenStruct.new
 @args.inputs     = nil
@@ -76,7 +78,7 @@ if @args.use_batch
     'job-name'      => "hipo_multi_merge___#{@args.prefix}",
     'account'       => 'clas12',
     'partition'     => 'production',
-    'mem-per-cpu'   => 500,
+    'mem-per-cpu'   => SlurmMemReq,
     'time'          => '1:00:00',
     'ntasks'        => 1,
     'cpus-per-task' => 1,
