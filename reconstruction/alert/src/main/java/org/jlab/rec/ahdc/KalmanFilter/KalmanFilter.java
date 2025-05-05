@@ -94,6 +94,7 @@ public class KalmanFilter {
 			    // Initialization hit
 			    ArrayList<org.jlab.rec.ahdc.Hit.Hit> AHDC_hits = track.getHits();
 			    ArrayList<Hit>                       KF_hits   = new ArrayList<>();
+			    double ADCTot = 0;
 			    //System.out.println(" px " +  y[3] + " py " + y[4]  +" pz " +  y[5] +" vz " + y[2] + " number of hits: " + AHDC_hits.size() + " MC hits? " + sim_hits.size());
 			    track.set_n_hits(AHDC_hits.size());
 			    for (org.jlab.rec.ahdc.Hit.Hit AHDC_hit : AHDC_hits) {
@@ -101,6 +102,7 @@ public class KalmanFilter {
 				hit.setADC(AHDC_hit.getADC());
 				hit.setHitIdx(AHDC_hit.getId());
 				hit.setSign(0);
+				ADCTot+=AHDC_hit.getADC();
 				// set track id
 				AHDC_hit.setTrackId(trackId);
 				
@@ -188,7 +190,6 @@ public class KalmanFilter {
 
 			    RealVector x_out = kFitter.getStateEstimationVector();
 			    track.setPositionAndMomentumForKF(x_out);
-
 			    //Residual calcuation post fit:
 			    for (Indicator indicator : forwardIndicators) {
 				kFitter.predict(indicator);
@@ -200,6 +201,16 @@ public class KalmanFilter {
 				    }
 				}
 			    }
+			    
+			    // KFitter kfitter = new KFitter(initialStateEstimate, initialErrorCovariance, new Stepper(kFitter.getStateEstimationVector().toArray()), new Propagator(RK4));
+			    // for (Indicator indicator : forwardIndicators) {
+			    //  	kfitter.predict(indicator);
+			    // }
+			    
+			    double s = kFitter.stepper.s_drift;
+			    double dEdx = ADCTot / s;
+			    double p_drift = kFitter.stepper.p();
+			    
 			    // At this stage, all relevants AHDC hits are filled
 			    // Compute sum_adc, sum_residuals and chi2
 			    int sum_adc = 0;
@@ -213,6 +224,9 @@ public class KalmanFilter {
 			    track.set_sum_adc(sum_adc);
 			    track.set_sum_residuals(sum_residuals);
 			    track.set_chi2(chi2);
+			    track.set_p_drift_kf(p_drift);
+			    track.set_dEdx(dEdx);
+			    track.set_path_kf(s);
 			}//end of loop on track candidates
 		} catch (Exception e) {
 			// e.printStackTrace();
