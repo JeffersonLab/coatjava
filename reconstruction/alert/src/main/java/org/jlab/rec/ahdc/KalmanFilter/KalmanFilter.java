@@ -202,15 +202,10 @@ public class KalmanFilter {
 				}
 			    }
 			    
-			    // KFitter kfitter = new KFitter(initialStateEstimate, initialErrorCovariance, new Stepper(kFitter.getStateEstimationVector().toArray()), new Propagator(RK4));
-			    // for (Indicator indicator : forwardIndicators) {
-			    //  	kfitter.predict(indicator);
-			    // }
-			    
-			    double s = kFitter.stepper.s_drift;
+			    double s = kFitter.stepper.sTot;
 			    double dEdx = ADCTot / s;
 			    double p_drift = kFitter.stepper.p();
-			    
+
 			    // At this stage, all relevants AHDC hits are filled
 			    // Compute sum_adc, sum_residuals and chi2
 			    int sum_adc = 0;
