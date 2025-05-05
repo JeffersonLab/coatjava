@@ -4,7 +4,7 @@
 
   <groupId>org.jlab.clas12.detector</groupId>
   <artifactId>clas12detector-ec</artifactId>
-  <version>12.0.1t-SNAPSHOT</version>
+  <version>12.0.6t-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <parent>
