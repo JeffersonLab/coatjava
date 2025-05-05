@@ -65,7 +65,7 @@ band   = ["BAND::laser","BAND::adc","BAND::tdc","BAND::hits","BAND::rawhits"]
 raster = ["RASTER::position"]
 rich   = ["RICH::tdc","RICH::Ring","RICH::Particle"]
 rtpc   = ["RTPC::hits","RTPC::tracks","RTPC::KFtracks"]
-alert  = ["AHDC::Track", "AHDC::MC", "AHDC::Hits", "AHDC::PreClusters", "AHDC::Clusters", "AHDC::KFTrack", "AHDC_AI::Prediction"]
+alert  = ["AHDC::track", "AHDC::mc", "AHDC::hits", "AHDC::preclusters", "AHDC::clusters", "AHDC::kftrack", "AHDC::ai:prediction"]
 dets   = band + raster + rich + rtpc + alert
 
 # additions for the calibration schema:
@@ -106,6 +106,15 @@ dchv.extend(["DC::tdc","DC::jitter", "HitBasedTrkg::HBClusters", "HitBasedTrkg::
 # Level3 validation schema:
 level3 = list(dst)
 level3.extend(["DC::tdc", "ECAL::adc", "ECAL::clusters", "FTOF::tdc", "FTOF::adc", "HitBasedTrkg::HBClusters", "HitBasedTrkg::HBTracks", "HTCC::adc", "RF::adc", "RF::tdc", "RUN::rf", "TimeBasedTrkg::TBClusters", "TimeBasedTrkg::TBTracks"])
+
+import glob
+rgl = glob.glob('./singles/full/ALERT*.json')
+rgl.extend(glob.glob('./singles/full/AHDC*.json'))
+rgl.extend(glob.glob('./singles/full/ATOF*.json'))
+rgl = [os.path.basename(x)[:-5] for x in rgl]
+calib.extend(rgl)
+mon.extend(rgl)
+dst.extend(rgl)
 
 create("dst/", set(dst))
 create("dsthb/", set(dsthb))

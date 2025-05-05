@@ -164,6 +164,9 @@ public class EngineProcessor {
             "org.jlab.service.eb.EBTBEngine",
             "org.jlab.rec.rich.RICHEBEngine",
             "org.jlab.service.rtpc.RTPCEngine",
+            "org.jlab.service.ahdc.AHDCEngine",
+            "org.jlab.service.atof.ATOFEngine",
+            "org.jlab.service.alert.ALERTEngine",
             "org.jlab.service.mc.TruthMatch"
         };
 

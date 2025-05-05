@@ -95,8 +95,9 @@ public class AlertTOFFactory implements Factory<AlertTOFDetector, AlertTOFSector
 		double pad_b1 = 8.17369; // mm
 		double pad_b2 = 10.27; // mm
 
-		double pad_z = 279.7; // mm
-		if (superlayerId == 1) pad_z = 27.7; // mm
+		double atof_length = 279.7; // mm
+		double pad_z = atof_length; // For the bar
+		if (superlayerId == 1) pad_z = 27.7; // mm, for the wedges 10*27.7 + 9*0.3
 
 		// trapezoide dimensions for a smaller paddle (internal)
 		double small_pad_b1 = 7.85924; // mm
@@ -134,8 +135,8 @@ public class AlertTOFFactory implements Factory<AlertTOFDetector, AlertTOFSector
 		for (int padId = 0; padId < current_ncomponents; padId++) {
                     
                     //Component index increases with increasing z
-                    double len_b   = padId * pad_z + padId * gap_pad_z; // back paddle plan
-                    double len_f   = len_b + pad_z; // front paddle plan
+                    double len_b   = padId * pad_z + padId * gap_pad_z;// back paddle plan
+                    double len_f   = len_b + pad_z;// front paddle plan
 
                     Point3D p0 = new Point3D(-dR / 2, -widthBl / 2, len_f);
                     Point3D p1 = new Point3D(dR / 2, -widthTl / 2, len_f);
@@ -161,8 +162,8 @@ public class AlertTOFFactory implements Factory<AlertTOFDetector, AlertTOFSector
 
                     xoffset = (Rl + dR / 2) * Math.cos(Math.toRadians(current_angle_deg));
                     yoffset = (Rl + dR / 2) * Math.sin(Math.toRadians(current_angle_deg));
-
-                    Paddle.translateXYZ(xoffset, yoffset, 0);
+		    
+                    Paddle.translateXYZ(xoffset, yoffset, - atof_length/2); //centering at z=0
 
                     // Add the paddles to the list
                     layer.addComponent(Paddle);
