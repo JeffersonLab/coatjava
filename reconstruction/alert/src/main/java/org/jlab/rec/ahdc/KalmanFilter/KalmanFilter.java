@@ -209,8 +209,6 @@ public class KalmanFilter {
 			    double dEdx = ADCTot / s;
 			    double p_drift = kfitter.stepper.p();
 
-			    System.out.println(" sTot (1) " + kFitter.stepper.sTot + " (2) " + kfitter.stepper.sTot + " p_drift (1) " + kFitter.stepper.p() + " (2) " + kfitter.stepper.p());
-			    
 			    // At this stage, all relevants AHDC hits are filled
 			    // Compute sum_adc, sum_residuals and chi2
 			    int sum_adc = 0;
