@@ -188,24 +188,29 @@ public class KalmanFilter {
 				}
 			    }
 
+			    
 			    RealVector x_out = kFitter.getStateEstimationVector();
 			    track.setPositionAndMomentumForKF(x_out);
-			    //Residual calcuation post fit:
+			    
+			    //Residual, path and AHDC exit momentum calculation post fit:
+			    KFitter kfitter = new KFitter(kFitter.getStateEstimationVector(), initialErrorCovariance, new Stepper(kFitter.getStateEstimationVector().toArray()), new Propagator(RK4));
 			    for (Indicator indicator : forwardIndicators) {
-				kFitter.predict(indicator);
+				kfitter.predict(indicator);
 				if (indicator.haveAHit()) {
 				    if( indicator.hit.getHitIdx()>0){
 					for (org.jlab.rec.ahdc.Hit.Hit AHDC_hit : AHDC_hits){
-					    if(AHDC_hit.getId()==indicator.hit.getHitIdx())AHDC_hit.setResidual(kFitter.residual(indicator));
+					    if(AHDC_hit.getId()==indicator.hit.getHitIdx())AHDC_hit.setResidual(kfitter.residual(indicator));
 					}
 				    }
 				}
 			    }
 			    
-			    double s = kFitter.stepper.sTot;
+			    double s = kfitter.stepper.sTot;
 			    double dEdx = ADCTot / s;
-			    double p_drift = kFitter.stepper.p();
+			    double p_drift = kfitter.stepper.p();
 
+			    System.out.println(" sTot (1) " + kFitter.stepper.sTot + " (2) " + kfitter.stepper.sTot + " p_drift (1) " + kFitter.stepper.p() + " (2) " + kfitter.stepper.p());
+			    
 			    // At this stage, all relevants AHDC hits are filled
 			    // Compute sum_adc, sum_residuals and chi2
 			    int sum_adc = 0;
