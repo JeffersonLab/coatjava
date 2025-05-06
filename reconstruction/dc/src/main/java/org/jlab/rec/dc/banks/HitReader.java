@@ -745,8 +745,8 @@ public class HitReader {
         int cable = this.getCableID1to6(layer, wire);
         int slot = this.getSlotID1to7(wire);
 
-        double t0  = t0Table.getDoubleValue("t0correction", sector, superlayer, slot, cable);
-        double t0E = t0Table.getDoubleValue("t0error", sector, superlayer, slot, cable);
+        double t0  = t0Table.getDoubleValue("T0Correction", sector, superlayer, slot, cable);
+        double t0E = t0Table.getDoubleValue("T0Error", sector, superlayer, slot, cable);
 
         T0Corr[0] = t0;
         T0Corr[1] = t0E;

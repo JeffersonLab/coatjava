@@ -406,8 +406,6 @@ public class KFitterStraight extends AKFitter {
 		calcFinalChisq(sector, false);
 	}
     
-        // Since no vertex inforamtion, the starting point for path length is the final point at the last layer.
-        // After vertex information is obtained, transition for the starting point from the final point to vertex will be taken.
 	private void calcFinalChisq(int sector, boolean nofilter) {
         int k = svzLength - 1;
         this.chi2 = 0;
@@ -428,11 +426,11 @@ public class KFitterStraight extends AKFitter {
         kfStateVecsAlongTrajectory = new ArrayList<>();
         if (sVec != null && sVec.CM != null) {
         	
-           boolean forward = false;
+        	boolean forward = false;
             sv.transport(sector, k, 0, sVec, mv, this.getSwimmer(), forward);            
             
             StateVec svc = sv.transported(forward).get(0);             
-            path += (forward ? 1 : -1) * svc.deltaPath;           
+            path += svc.deltaPath;            
             svc.setPathLength(path);            
             
             double V0 = mv.measurements.get(0).surface.unc[0];
@@ -475,7 +473,7 @@ public class KFitterStraight extends AKFitter {
                 
                 double h = mv.hDoca(point, mv.measurements.get(k1 + 1).surface.wireLine[0]);
                 svc = sv.transported(forward).get(k1+1);
-                path += (forward ? 1 : -1) * svc.deltaPath;
+                path += svc.deltaPath;
                 svc.setPathLength(path);
                 svc.setProjector(mv.measurements.get(k1 + 1).surface.wireLine[0].origin().x());
                 svc.setProjectorDoca(h);
@@ -504,10 +502,6 @@ public class KFitterStraight extends AKFitter {
 	
     public Matrix propagateToVtx(int sector, double Zf) {
         return sv.transport(sector, finalStateVec.k, Zf, finalStateVec, mv, this.getSwimmer());
-    }
-    
-    public double getDeltaPathToVtx(int sector, double Zf) {
-        return sv.getDeltaPath(sector, finalStateVec.k, Zf, finalStateVec, mv, this.getSwimmer());
     }
     
     @Override
