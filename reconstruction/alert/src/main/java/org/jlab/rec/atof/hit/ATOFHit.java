@@ -3,6 +3,8 @@ package org.jlab.rec.atof.hit;
 import org.jlab.geom.base.*;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.rec.atof.constants.Parameters;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -14,6 +16,8 @@ import org.jlab.rec.atof.constants.Parameters;
  * @author npilleux
  */
 public class ATOFHit {
+
+    static final Logger LOGGER = Logger.getLogger(ATOFHit.class.getName());
 
     private int sector, layer, component, order;
     private int tdc, tot;
@@ -182,7 +186,7 @@ public class ATOFHit {
     public final int convertTdcToTime() {
         double tdc2time, veff, distance_to_sipm;
         if (null == this.type) {
-            System.out.print("Null hit type, cannot convert tdc to time.");
+            LOGGER.finest("Null hit type, cannot convert tdc to time.");
             return 1;
         } else {
             switch (this.type) {
@@ -205,11 +209,11 @@ public class ATOFHit {
                     distance_to_sipm = 0;
                 }
                 case "bar" -> {
-                    System.out.print("Bar hit type, cannot convert tdc to time.");
+                    LOGGER.finest("Bar hit type, cannot convert tdc to time.");
                     return 1;
                 }
                 default -> {
-                    System.out.print("Undefined hit type, cannot convert tdc to time.");
+                    LOGGER.finest("Undefined hit type, cannot convert tdc to time.");
                     return 1;
                 }
             }
@@ -230,7 +234,7 @@ public class ATOFHit {
     public final int convertTotToEnergy() {
         double tot2energy;
         if (null == this.type) {
-            System.out.print("Null hit type, cannot convert tot to energy.");
+            LOGGER.finest("Null hit type, cannot convert tot to energy.");
             return 1;
         } else {
             switch (this.type) {
@@ -254,11 +258,11 @@ public class ATOFHit {
                     this.energy = tot2energy * this.tot;
                 }
                 case "bar" -> {
-                    System.out.print("Bar hit type, cannot convert tot to energy.");
+                    LOGGER.finest("Bar hit type, cannot convert tot to energy.");
                     return 1;
                 }
                 default -> {
-                    System.out.print("Undefined hit type, cannot convert tot to energy.");
+                    LOGGER.finest("Undefined hit type, cannot convert tot to energy.");
                     return 1;
                 }
             }
@@ -294,12 +298,11 @@ public class ATOFHit {
         Component comp = atof.getSector(this.sector).getSuperlayer(sl).getLayer(this.layer).getComponent(this.component);
         Point3D midpoint = comp.getMidpoint();
         //Midpoints defined in the system were z=0 is the upstream end of the atof
-        //Translation to the system were z=0 is the center of the atof
         //Units are mm
         this.x = midpoint.x();
         this.y = midpoint.y();
-        this.z = midpoint.z() - Parameters.LENGTH_ATOF / 2.;
-        return 0;
+        this.z = midpoint.z();
+	return 0;
     }
 
     /**
