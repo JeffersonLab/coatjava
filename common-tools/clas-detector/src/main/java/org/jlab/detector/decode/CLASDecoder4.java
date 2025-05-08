@@ -101,7 +101,7 @@ public class CLASDecoder4 {
     }
 
     public CodaEventDecoder getCodaEventDecoder() {
-	return codaDecoder;
+        return codaDecoder;
     }
 
     public void initEvent(DataEvent event){
