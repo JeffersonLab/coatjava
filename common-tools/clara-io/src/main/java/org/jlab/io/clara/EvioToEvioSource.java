@@ -16,6 +16,7 @@ import org.json.JSONObject;
  */
 public class EvioToEvioSource extends AbstractEventReaderService<EvioSource> {
 
+    @Override
     protected EvioSource createReader(Path file, JSONObject opts) throws EventReaderException {
         return new EvioSource(file.toString());
     }
