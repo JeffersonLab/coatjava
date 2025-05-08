@@ -25,6 +25,10 @@ public class EvioSource implements DataSource {
 	private EvioDataDictionary dictionary = new EvioDataDictionary();
 	private String dictionaryPath = "some";
 
+    public EvioDataDictionary getDictionary() {
+        return dictionary;
+    }
+    @Override
     public void close() {
         evioReader.close();
     }
@@ -34,7 +38,7 @@ public class EvioSource implements DataSource {
     public ByteOrder getFileByteOrder() {
         return evioReader.getFileByteOrder();
     }
-    public Object getEventBuffer(int eventNumber, boolean asdf) throws EvioException {
+    public ByteBuffer getEventBuffer(int eventNumber, boolean asdf) throws EvioException {
         return evioReader.getEventBuffer(eventNumber, asdf);
     }
     
