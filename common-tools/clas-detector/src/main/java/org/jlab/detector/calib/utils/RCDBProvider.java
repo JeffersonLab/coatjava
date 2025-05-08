@@ -16,11 +16,10 @@ public class RCDBProvider {
 
     public static class RCDBManager {
         HashMap<Integer,RCDBConstants> cache = new HashMap<>();
-        RCDBProvider provider = new RCDBProvider();
+        RCDBProvider provider = null;
         public synchronized RCDBConstants getConstants(int run) {
-            if (!cache.containsKey(run)) {
-                cache.put(run, provider.getConstants(run));
-            }
+            if (provider == null) provider = new RCDBProvider();
+            if (!cache.containsKey(run)) cache.put(run, provider.getConstants(run));
             return cache.get(run);
         }
         public Double getTorusScale(int run) {
