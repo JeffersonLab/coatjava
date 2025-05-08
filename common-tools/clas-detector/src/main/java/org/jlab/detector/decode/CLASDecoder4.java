@@ -72,6 +72,10 @@ public class CLASDecoder4 {
         DefaultLogger.debug();
     }
 
+    public SchemaFactory getSchemaFactory(){
+        return schemaFactory;
+    }
+
     public static CLASDecoder createDecoder(){
         CLASDecoder decoder = new CLASDecoder();
         return decoder;
