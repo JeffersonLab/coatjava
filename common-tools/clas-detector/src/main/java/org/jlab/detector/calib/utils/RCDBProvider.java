@@ -141,6 +141,8 @@ public class RCDBProvider {
     }
 
     public static void main(String[] args){
+        RCDBManager m = new RCDBManager();
+        System.out.println(m.getTorusScale(4013));
         RCDBProvider a=new RCDBProvider();
         RCDBConstants data=a.getConstants(4014);
         data.show();
