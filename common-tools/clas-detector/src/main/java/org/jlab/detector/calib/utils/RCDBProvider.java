@@ -13,6 +13,24 @@ import org.rcdb.ConditionType;
  * @author baltzell
  */
 public class RCDBProvider {
+
+    public static class RCDBManager {
+        HashMap<Integer,RCDBConstants> cache = new HashMap<>();
+        RCDBProvider provider = new RCDBProvider();
+        public synchronized RCDBConstants getConstants(int run) {
+            if (!cache.containsKey(run)) {
+                cache.put(run, provider.getConstants(run));
+            }
+            return cache.get(run);
+        }
+        public Double getTorusScale(int run) {
+            return getConstants(run).getDouble("torus_scale");
+        }
+        public Double getSolenoidScale(int run) {
+            return getConstants(run).getDouble("solenoid_scale");
+        }
+    }
+
     public static Logger LOGGER = Logger.getLogger(RCDBProvider.class.getName());
 
     public static final String DEFAULTADDRESS = "mysql://rcdb@clasdb.jlab.org/rcdb";
