@@ -779,22 +779,18 @@ public class CLASDecoder4 {
     public static void main(String[] args){
 
         OptionParser parser = new OptionParser("decoder");
-
         parser.setDescription("CLAS12 Data Decoder");
         parser.addOption("-n", "-1", "maximum number of events to process");
         parser.addOption("-c", "2", "compression type (0-NONE, 1-LZ4 Fast, 2-LZ4 Best, 3-GZIP)");
         parser.addOption("-d", "0","debug mode, set >0 for more verbose output");
         parser.addOption("-m", "run","translation tables source (use -m devel for development tables)");
         parser.addOption("-b", "16","record buffer size in MB");
-        parser.addRequired("-o","output.hipo");
-
-
         parser.addOption("-r", "-1","run number in the header bank (-1 means use CODA run)");
         parser.addOption("-t", "-0.5","torus current in the header bank");
         parser.addOption("-s", "0.5","solenoid current in the header bank");
         parser.addOption("-x", null,"CCDB timestamp (MM/DD/YYYY-HH:MM:SS)");
         parser.addOption("-v","default","CCDB variation");
-
+        parser.addRequired("-o","output.hipo");
         parser.parse(args);
 
         List<String> inputList = parser.getInputList();
@@ -802,7 +798,7 @@ public class CLASDecoder4 {
         if(inputList.isEmpty()==true){
             parser.printUsage();
             System.out.println("\n >>>> error : no input file is specified....\n");
-            System.exit(0);
+            System.exit(1);
         }
 
         String modeDevel = parser.getOption("-m").stringValue();
@@ -811,7 +807,7 @@ public class CLASDecoder4 {
         if(modeDevel.compareTo("run")!=0&&modeDevel.compareTo("devel")!=0){
             parser.printUsage();
             System.out.println("\n >>>> error : mode has to be set to \"run\" or \"devel\" ");
-            System.exit(0);
+            System.exit(1);
         }
 
         if(modeDevel.compareTo("devel")==0){
