@@ -22,11 +22,14 @@ public class RCDBProvider {
             if (!cache.containsKey(run)) cache.put(run, provider.getConstants(run));
             return cache.get(run);
         }
+        public Double getDouble(int run, String key) {
+            return getConstants(run).getDouble(key);
+        }
         public Double getTorusScale(int run) {
-            return getConstants(run).getDouble("torus_scale");
+            return getDouble(run, "torus_scale");
         }
         public Double getSolenoidScale(int run) {
-            return getConstants(run).getDouble("solenoid_scale");
+            return getDouble(run, "solenoid_scale");
         }
     }
 
