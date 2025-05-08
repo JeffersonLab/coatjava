@@ -10,6 +10,7 @@ import java.util.TreeSet;
 import org.jlab.detector.base.DetectorDescriptor;
 
 import org.jlab.detector.base.DetectorType;
+import org.jlab.detector.calib.utils.RCDBProvider.RCDBManager;
 import org.jlab.detector.decode.DetectorDataDgtz.HelicityDecoderData;
 import org.jlab.detector.helicity.HelicityBit;
 import org.jlab.detector.helicity.HelicitySequence;
@@ -47,8 +48,9 @@ public class CLASDecoder4 {
     private HipoDataEvent               hipoEvent = null;
     private boolean              isRunNumberFixed = false;
     private int                  decoderDebugMode = 0;
-    private SchemaFactory        schemaFactory    = new SchemaFactory();
-    private ModeAHDC ahdcExtractor                = new ModeAHDC();
+    private SchemaFactory           schemaFactory = new SchemaFactory();
+    private ModeAHDC                ahdcExtractor = new ModeAHDC();
+    private RCDBManager               rcdbManager = new RCDBManager();
 
     public CLASDecoder4(boolean development){
         codaDecoder = new CodaEventDecoder();
@@ -439,11 +441,11 @@ public class CLASDecoder4 {
         return scalerBANK;
     }
 
-    public Event getDecodedEvent(EvioDataEvent rawEvent, int run, int counter, double torus, double solenoid) {
+    public Event getDecodedEvent(EvioDataEvent rawEvent, int run, int counter, Double torus, Double solenoid) {
 
         Event  decodedEvent = this.getDataEvent(rawEvent);        
 
-        Bank   header = this.createHeaderBank(run, counter, (float) torus, (float) solenoid);
+        Bank   header = this.createHeaderBank(run, counter, torus, solenoid);
         if(header!=null) decodedEvent.write(header);
 
         Bank   trigger = this.createTriggerBank();
@@ -614,7 +616,7 @@ public class CLASDecoder4 {
         return ((timestamp%6)+phase_offset)%6; // TI derived phase correction due to TDC and FADC clock differences
     }
 
-    public Bank createHeaderBank( int nrun, int nevent, float torus, float solenoid){
+    public Bank createHeaderBank( int nrun, int nevent, Double torus, Double solenoid){
 
         if(schemaFactory.hasSchema("RUN::config")==false) return null;
 
@@ -631,24 +633,31 @@ public class CLASDecoder4 {
             localEvent = nevent;
         }
 
-        /*
-        // example of getting torus/solenoid from RCDB:
-        if (Math.abs(solenoid)>10) {
-            solenoid = this.detectorDecoder.getRcdbSolenoidScale();
-        }
-        if (Math.abs(torus)>10) {
-            torus = this.detectorDecoder.getRcdbTorusScale();
-        }
-        */
-
         bank.putInt("run",        0, localRun);
         bank.putInt("event",      0, localEvent);
         bank.putInt("unixtime",   0, localTime);
         bank.putLong("trigger",   0, triggerBits);
-        bank.putFloat("torus",    0, torus);
-        bank.putFloat("solenoid", 0, solenoid);
         bank.putLong("timestamp", 0, timeStamp);
 
+        if (torus != null) {
+            bank.putFloat("torus", 0, torus.floatValue());
+        }
+        else if (rcdbManager.getTorusScale(localRun) == null) {
+            if (localRun > 100) throw new RuntimeException("Error retrieving torus scale from RCDB.");
+        }
+        else { 
+            bank.putFloat("torus", 0, rcdbManager.getTorusScale(localRun).floatValue());
+        }
+        if (solenoid != null) {
+            bank.putFloat("solenoid", 0, solenoid.floatValue());
+        }
+        else if (rcdbManager.getSolenoidScale(localRun) == null) {
+            if (localRun > 100) throw new RuntimeException("Error retrieving solenoid scale from RCDB.");
+        }
+        else { 
+            bank.putFloat("solenoid", 0, rcdbManager.getSolenoidScale(localRun).floatValue());
+        }
+        
         return bank;
     }
 
@@ -774,8 +783,7 @@ public class CLASDecoder4 {
         else 
             return null;
     }
-    
-    
+
     public static void main(String[] args){
 
         OptionParser parser = new OptionParser("decoder");
@@ -786,8 +794,8 @@ public class CLASDecoder4 {
         parser.addOption("-m", "run","translation tables source (use -m devel for development tables)");
         parser.addOption("-b", "16","record buffer size in MB");
         parser.addOption("-r", "-1","run number in the header bank (-1 means use CODA run)");
-        parser.addOption("-t", "-0.5","torus current in the header bank");
-        parser.addOption("-s", "0.5","solenoid current in the header bank");
+        parser.addOption("-t", null,"torus current in the header bank (null means use RCDB)");
+        parser.addOption("-s", null,"solenoid current in the header bank (null means use RCDB)");
         parser.addOption("-x", null,"CCDB timestamp (MM/DD/YYYY-HH:MM:SS)");
         parser.addOption("-v","default","CCDB variation");
         parser.addRequired("-o","output.hipo");
@@ -833,8 +841,8 @@ public class CLASDecoder4 {
         Event scalerEvent = new Event();
 
         int nrun = parser.getOption("-r").intValue();
-        double torus = parser.getOption("-t").doubleValue();
-        double solenoid = parser.getOption("-s").doubleValue();
+        Double torus = parser.getOption("-t").getValue() == null ? null : parser.getOption("-t").doubleValue();
+        Double solenoid = parser.getOption("-s").getValue() == null ? null : parser.getOption("-s").doubleValue();
 
         writer.open(outputFile);
         ProgressPrintout progress = new ProgressPrintout();
