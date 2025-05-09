@@ -1,7 +1,11 @@
 package org.jlab.io.clara;
 
 import java.nio.file.Path;
+import java.util.TreeSet;
 import org.jlab.clara.std.services.EventWriterException;
+import org.jlab.detector.calib.utils.ConstantsManager;
+import org.jlab.detector.helicity.HelicitySequence;
+import org.jlab.detector.helicity.HelicityState;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
@@ -22,8 +26,13 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
         "HEL::flip"
     };
 
+    long eventsProcessed;
     Bank[] banks;
     Bank runConfig;
+    Bank helicityAdc;
+
+    ConstantsManager conman = new ConstantsManager();
+    TreeSet<HelicityState> helicityReadings = new TreeSet<>();
 
     @Override
     protected HipoWriterSorted createWriter(Path file, JSONObject opts) throws EventWriterException {
@@ -31,10 +40,13 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
             HipoWriterSorted w = new HipoWriterSorted();
             super.configure(w, opts);
             w.open(file.toString());
+            eventsProcessed = 0;
             runConfig = new Bank(w.getSchemaFactory().getSchema("RUN::config"));
+            helicityAdc = new Bank(w.getSchemaFactory().getSchema("HEL::adc"));
             banks = new Bank[bankNames.length];
             for (int i=0; i<banks.length; ++i)
                 banks[i] = new Bank(w.getSchemaFactory().getSchema(bankNames[i]));
+            conman.init("/runcontrol/hwp");
             return w;
         } catch (Exception e) {
             throw new EventWriterException(e);
@@ -53,7 +65,15 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
             e.write(runConfig);
             writer.addEvent(e, TAG);
         }
-        super.writeEvent(event); 
+        helicityReadings.add(HelicityState.createFromFadcBank(helicityAdc, runConfig, conman));
+        super.writeEvent(event);
+        if (++eventsProcessed % 25000 == 0) System.gc();
+    }
+
+    @Override
+    protected void closeWriter() {
+        HelicitySequence.writeFlips(writer, helicityReadings); 
+        super.closeWriter();
     }
 
 }
