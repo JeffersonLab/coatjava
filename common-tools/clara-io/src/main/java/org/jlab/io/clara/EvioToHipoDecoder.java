@@ -36,8 +36,8 @@ public class EvioToHipoDecoder extends AbstractEventReaderService<EvioSource> {
         byteOrder = s.getFileByteOrder();
         maxEvents = s.getEventCount();
         decoder = new CLASDecoder4();
-        rawScaler   = new Bank(decoder.getSchemaFactory().getSchema("RAW::scaler"));
-        rawRunConf  = new Bank(decoder.getSchemaFactory().getSchema("RUN::config"));
+        rawScaler = new Bank(decoder.getSchemaFactory().getSchema("RAW::scaler"));
+        rawRunConf = new Bank(decoder.getSchemaFactory().getSchema("RUN::config"));
         return s;
     }
 
