@@ -15,7 +15,7 @@ import org.json.JSONObject;
  * Converter service that converts EvIO persistent data to EvIO transient data
  * (i.e. Reads EvIO events from an input file)
  */
-public class EvioToEvioCompactReader extends AbstractEventReaderService<EvioCompactReader> {
+public class EvioToEvioReader extends AbstractEventReaderService<EvioCompactReader> {
 
     @Override
     protected EvioCompactReader createReader(Path file, JSONObject opts)
