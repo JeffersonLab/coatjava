@@ -15,13 +15,17 @@ import org.json.JSONObject;
  */
 public class HipoToHipoTagWriter extends HipoToHipoWriter {
 
-    static final int tag = 1;
-    List<Bank> banks;
-    List<String> bankNames = Arrays.asList(new String[]{
+    static final int TAG = 1;
+
+    static final List<String> bankNames = Arrays.asList(new String[]{
         "RUN::scaler",
         "HEL::scaler",
-        "RUN::epics",
-        "HEL::flip"});
+        "RAW::scaler",
+        "RAW::epics",
+        "HEL::flip"
+    });
+
+    List<Bank> banks;
     Bank runConfig;
 
     @Override
@@ -30,9 +34,9 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
             HipoWriterSorted w = new HipoWriterSorted();
             super.configure(w, opts);
             w.open(file.toString());
+            runConfig = new Bank(w.getSchemaFactory().getSchema("RUN::config"));
             for (String b : bankNames)
                 banks.add(new Bank(w.getSchemaFactory().getSchema(b)));
-            runConfig = new Bank(w.getSchemaFactory().getSchema("RUN::config"));
             return w;
         } catch (Exception e) {
             throw new EventWriterException(e);
@@ -42,14 +46,14 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
     @Override
     protected void writeEvent(Object event) throws EventWriterException {
         Event e = new Event();
-        e.read(runConfig);
+        ((Event)event).read(runConfig);
         for (Bank b : banks) {
             ((Event)event).read(b);
             if (b.getRows() > 0) e.write(b);
         }
         if (!e.isEmpty()) {
             e.write(runConfig);
-            writer.addEvent(e, tag);
+            writer.addEvent(e, TAG);
         }
         super.writeEvent(event); 
     }
