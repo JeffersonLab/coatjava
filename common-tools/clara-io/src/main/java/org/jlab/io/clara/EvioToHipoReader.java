@@ -18,7 +18,7 @@ import org.json.JSONObject;
  *
  * @author baltzell
  */
-public class EvioToHipoDecoder extends AbstractEventReaderService<EvioSource> {
+public class EvioToHipoReader extends AbstractEventReaderService<EvioSource> {
 
     CLASDecoder4 decoder;
     private ByteOrder byteOrder;
