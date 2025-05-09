@@ -65,7 +65,7 @@ public class EvioToHipoDecoder extends AbstractEventReaderService<EvioSource> {
         if (eventNumber >= maxEvents) return null;
         try {
             ByteBuffer bb = reader.getEventBuffer(++eventNumber, true);
-			EvioDataEvent evio = new EvioDataEvent(bb.array(), byteOrder, reader.getDictionary());
+            EvioDataEvent evio = new EvioDataEvent(bb.array(), byteOrder, reader.getDictionary());
             Event hipo = decoder.getDecodedEvent(evio, runNumber, eventNumber, torus, solenoid);
             for (Bank b : decoder.createReconScalerBanks(hipo)) hipo.write(b);
             Bank epics = decoder.createEpicsBank();
