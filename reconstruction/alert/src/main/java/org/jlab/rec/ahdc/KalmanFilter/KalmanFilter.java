@@ -94,6 +94,7 @@ public class KalmanFilter {
 			    // Initialization hit
 			    ArrayList<org.jlab.rec.ahdc.Hit.Hit> AHDC_hits = track.getHits();
 			    ArrayList<Hit>                       KF_hits   = new ArrayList<>();
+			    double ADCTot = 0;
 			    //System.out.println(" px " +  y[3] + " py " + y[4]  +" pz " +  y[5] +" vz " + y[2] + " number of hits: " + AHDC_hits.size() + " MC hits? " + sim_hits.size());
 			    track.set_n_hits(AHDC_hits.size());
 			    for (org.jlab.rec.ahdc.Hit.Hit AHDC_hit : AHDC_hits) {
@@ -101,6 +102,7 @@ public class KalmanFilter {
 				hit.setADC(AHDC_hit.getADC());
 				hit.setHitIdx(AHDC_hit.getId());
 				hit.setSign(0);
+				ADCTot+=AHDC_hit.getADC();
 				// set track id
 				AHDC_hit.setTrackId(trackId);
 				
@@ -158,48 +160,55 @@ public class KalmanFilter {
 			    RealVector initialStateEstimate   = new ArrayRealVector(stepper.y);
 			    //first 3 lines in cm^2; last 3 lines in MeV^2
 			    RealMatrix initialErrorCovariance = MatrixUtils.createRealMatrix(new double[][]{{1.00, 0.0, 0.0, 0.0, 0.0, 0.0}, {0.0, 1.00, 0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 25.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 1.00, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0, 1.00, 0.0}, {0.0, 0.0, 0.0, 0.0, 0.0, 25.0}});
-			    KFitter kFitter = new KFitter(initialStateEstimate, initialErrorCovariance, stepper, propagator);
-			    kFitter.setVertexDefined(IsVtxDefined);
+			    KFitter TrackFitter = new KFitter(initialStateEstimate, initialErrorCovariance, stepper, propagator);
+			    TrackFitter.setVertexDefined(IsVtxDefined);
 		 
 			    for (int k = 0; k < Niter; k++) {
 				//System.out.println("--------- ForWard propagation !! ---------");
 				//Reset error covariance:
-				//kFitter.ResetErrorCovariance(initialErrorCovariance);
+				//TrackFitter.ResetErrorCovariance(initialErrorCovariance);
 				for (Indicator indicator : forwardIndicators) {
-				    kFitter.predict(indicator);
+				    TrackFitter.predict(indicator);
 				    if (indicator.haveAHit()) {
 					if( k==0  && indicator.hit.getHitIdx()>0){
 					    for (org.jlab.rec.ahdc.Hit.Hit AHDC_hit : AHDC_hits){
-						if(AHDC_hit.getId()==indicator.hit.getHitIdx())AHDC_hit.setResidualPrefit(kFitter.residual(indicator));
+						if(AHDC_hit.getId()==indicator.hit.getHitIdx())AHDC_hit.setResidualPrefit(TrackFitter.residual(indicator));
 					    }
 					}
-					kFitter.correct(indicator);
+					TrackFitter.correct(indicator);
 				    }
 				}
 
 				//System.out.println("--------- BackWard propagation !! ---------");
 				for (Indicator indicator : backwardIndicators) {
-				    kFitter.predict(indicator);
+				    TrackFitter.predict(indicator);
 				    if (indicator.haveAHit()) {
-					kFitter.correct(indicator);
+					TrackFitter.correct(indicator);
 				    }
 				}
 			    }
 
-			    RealVector x_out = kFitter.getStateEstimationVector();
+			    
+			    RealVector x_out = TrackFitter.getStateEstimationVector();
 			    track.setPositionAndMomentumForKF(x_out);
-
-			    //Residual calcuation post fit:
+			    
+			    //Residual, path and AHDC exit momentum calculation post fit:
+			    KFitter PostFitPropagator = new KFitter(TrackFitter.getStateEstimationVector(), initialErrorCovariance, new Stepper(TrackFitter.getStateEstimationVector().toArray()), new Propagator(RK4));
 			    for (Indicator indicator : forwardIndicators) {
-				kFitter.predict(indicator);
+				PostFitPropagator.predict(indicator);
 				if (indicator.haveAHit()) {
 				    if( indicator.hit.getHitIdx()>0){
 					for (org.jlab.rec.ahdc.Hit.Hit AHDC_hit : AHDC_hits){
-					    if(AHDC_hit.getId()==indicator.hit.getHitIdx())AHDC_hit.setResidual(kFitter.residual(indicator));
+					    if(AHDC_hit.getId()==indicator.hit.getHitIdx())AHDC_hit.setResidual(PostFitPropagator.residual(indicator));
 					}
 				    }
 				}
 			    }
+			    
+			    double s = PostFitPropagator.stepper.sTot;
+			    double dEdx = ADCTot / s;
+			    double p_drift = PostFitPropagator.stepper.p();
+			    
 			    // At this stage, all relevants AHDC hits are filled
 			    // Compute sum_adc, sum_residuals and chi2
 			    int sum_adc = 0;
@@ -213,6 +222,9 @@ public class KalmanFilter {
 			    track.set_sum_adc(sum_adc);
 			    track.set_sum_residuals(sum_residuals);
 			    track.set_chi2(chi2);
+			    track.set_p_drift_kf(p_drift);
+			    track.set_dEdx(dEdx);
+			    track.set_path_kf(s);
 			}//end of loop on track candidates
 		} catch (Exception e) {
 			// e.printStackTrace();
