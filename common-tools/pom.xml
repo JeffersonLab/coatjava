@@ -21,12 +21,13 @@
     <module>clas-jcsg</module>
     <module>clas-detector</module>
     <module>cnuphys</module>
-    <module>clas-reco</module> 
+    <module>clas-reco</module>
     <module>swim-tools</module>
-    <module>clas-analysis</module> 
+    <module>clas-analysis</module>
     <module>clas-math</module>
     <module>clara-io</module>
     <module>clas-tracking</module>
+    <module>coat-lib</module>
   </modules>
 
 </project>
