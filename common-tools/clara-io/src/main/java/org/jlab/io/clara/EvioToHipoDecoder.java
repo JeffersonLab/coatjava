@@ -23,11 +23,6 @@ public class EvioToHipoDecoder extends AbstractEventReaderService<EvioSource> {
     CLASDecoder4 decoder;
     private ByteOrder byteOrder;
     private long maxEvents;
-    private int runNumber=-1;
-    private float torus=1;
-    private float solenoid=1;
-    Bank rawScaler;
-    Bank rawRunConf;
 
     @Override
     protected EvioSource createReader(Path file, JSONObject opts) throws EventReaderException {
@@ -36,8 +31,6 @@ public class EvioToHipoDecoder extends AbstractEventReaderService<EvioSource> {
         byteOrder = s.getFileByteOrder();
         maxEvents = s.getEventCount();
         decoder = new CLASDecoder4();
-        rawScaler = new Bank(decoder.getSchemaFactory().getSchema("RAW::scaler"));
-        rawRunConf = new Bank(decoder.getSchemaFactory().getSchema("RUN::config"));
         return s;
     }
 
@@ -66,7 +59,7 @@ public class EvioToHipoDecoder extends AbstractEventReaderService<EvioSource> {
         try {
             ByteBuffer bb = reader.getEventBuffer(++eventNumber, true);
             EvioDataEvent evio = new EvioDataEvent(bb.array(), byteOrder, reader.getDictionary());
-            Event hipo = decoder.getDecodedEvent(evio, runNumber, eventNumber, torus, solenoid);
+            Event hipo = decoder.getDecodedEvent(evio, -1, eventNumber, -1, -1);
             for (Bank b : decoder.createReconScalerBanks(hipo)) hipo.write(b);
             Bank epics = decoder.createEpicsBank();
             if (epics != null) hipo.write(epics);
