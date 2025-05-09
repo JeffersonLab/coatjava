@@ -160,55 +160,55 @@ public class KalmanFilter {
 			    RealVector initialStateEstimate   = new ArrayRealVector(stepper.y);
 			    //first 3 lines in cm^2; last 3 lines in MeV^2
 			    RealMatrix initialErrorCovariance = MatrixUtils.createRealMatrix(new double[][]{{1.00, 0.0, 0.0, 0.0, 0.0, 0.0}, {0.0, 1.00, 0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 25.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 1.00, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0, 1.00, 0.0}, {0.0, 0.0, 0.0, 0.0, 0.0, 25.0}});
-			    KFitter kFitter = new KFitter(initialStateEstimate, initialErrorCovariance, stepper, propagator);
-			    kFitter.setVertexDefined(IsVtxDefined);
+			    KFitter TrackFitter = new KFitter(initialStateEstimate, initialErrorCovariance, stepper, propagator);
+			    TrackFitter.setVertexDefined(IsVtxDefined);
 		 
 			    for (int k = 0; k < Niter; k++) {
 				//System.out.println("--------- ForWard propagation !! ---------");
 				//Reset error covariance:
-				//kFitter.ResetErrorCovariance(initialErrorCovariance);
+				//TrackFitter.ResetErrorCovariance(initialErrorCovariance);
 				for (Indicator indicator : forwardIndicators) {
-				    kFitter.predict(indicator);
+				    TrackFitter.predict(indicator);
 				    if (indicator.haveAHit()) {
 					if( k==0  && indicator.hit.getHitIdx()>0){
 					    for (org.jlab.rec.ahdc.Hit.Hit AHDC_hit : AHDC_hits){
-						if(AHDC_hit.getId()==indicator.hit.getHitIdx())AHDC_hit.setResidualPrefit(kFitter.residual(indicator));
+						if(AHDC_hit.getId()==indicator.hit.getHitIdx())AHDC_hit.setResidualPrefit(TrackFitter.residual(indicator));
 					    }
 					}
-					kFitter.correct(indicator);
+					TrackFitter.correct(indicator);
 				    }
 				}
 
 				//System.out.println("--------- BackWard propagation !! ---------");
 				for (Indicator indicator : backwardIndicators) {
-				    kFitter.predict(indicator);
+				    TrackFitter.predict(indicator);
 				    if (indicator.haveAHit()) {
-					kFitter.correct(indicator);
+					TrackFitter.correct(indicator);
 				    }
 				}
 			    }
 
 			    
-			    RealVector x_out = kFitter.getStateEstimationVector();
+			    RealVector x_out = TrackFitter.getStateEstimationVector();
 			    track.setPositionAndMomentumForKF(x_out);
 			    
 			    //Residual, path and AHDC exit momentum calculation post fit:
-			    KFitter kfitter = new KFitter(kFitter.getStateEstimationVector(), initialErrorCovariance, new Stepper(kFitter.getStateEstimationVector().toArray()), new Propagator(RK4));
+			    KFitter PostFitPropagator = new KFitter(TrackFitter.getStateEstimationVector(), initialErrorCovariance, new Stepper(TrackFitter.getStateEstimationVector().toArray()), new Propagator(RK4));
 			    for (Indicator indicator : forwardIndicators) {
-				kfitter.predict(indicator);
+				PostFitPropagator.predict(indicator);
 				if (indicator.haveAHit()) {
 				    if( indicator.hit.getHitIdx()>0){
 					for (org.jlab.rec.ahdc.Hit.Hit AHDC_hit : AHDC_hits){
-					    if(AHDC_hit.getId()==indicator.hit.getHitIdx())AHDC_hit.setResidual(kfitter.residual(indicator));
+					    if(AHDC_hit.getId()==indicator.hit.getHitIdx())AHDC_hit.setResidual(PostFitPropagator.residual(indicator));
 					}
 				    }
 				}
 			    }
 			    
-			    double s = kfitter.stepper.sTot;
+			    double s = PostFitPropagator.stepper.sTot;
 			    double dEdx = ADCTot / s;
-			    double p_drift = kfitter.stepper.p();
-
+			    double p_drift = PostFitPropagator.stepper.p();
+			    
 			    // At this stage, all relevants AHDC hits are filled
 			    // Compute sum_adc, sum_residuals and chi2
 			    int sum_adc = 0;
