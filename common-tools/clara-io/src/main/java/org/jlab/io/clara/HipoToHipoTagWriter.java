@@ -22,16 +22,18 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
         "HEL::scaler",
         "RUN::epics",
         "HEL::flip"});
+    Bank runConfig;
 
     @Override
     protected HipoWriterSorted createWriter(Path file, JSONObject opts) throws EventWriterException {
         try {
-            HipoWriterSorted writer = new HipoWriterSorted();
-            super.configure(writer, opts);
-            writer.open(file.toString());
+            HipoWriterSorted w = new HipoWriterSorted();
+            super.configure(w, opts);
+            w.open(file.toString());
             for (String b : bankNames)
-                banks.add(new Bank(writer.getSchemaFactory().getSchema(b)));
-            return writer;
+                banks.add(new Bank(w.getSchemaFactory().getSchema(b)));
+            runConfig = new Bank(w.getSchemaFactory().getSchema("RUN::config"));
+            return w;
         } catch (Exception e) {
             throw new EventWriterException(e);
         }
@@ -40,11 +42,15 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
     @Override
     protected void writeEvent(Object event) throws EventWriterException {
         Event e = new Event();
+        e.read(runConfig);
         for (Bank b : banks) {
             ((Event)event).read(b);
             if (b.getRows() > 0) e.write(b);
         }
-        if (!e.isEmpty()) writer.addEvent(e, tag);
+        if (!e.isEmpty()) {
+            e.write(runConfig);
+            writer.addEvent(e, tag);
+        }
         super.writeEvent(event); 
     }
 
