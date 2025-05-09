@@ -26,8 +26,6 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
         "HEL::flip"
     };
 
-    boolean collectGarbage = true; // for memory leak in CompactEvioReader
-    long eventsProcessed;
     Bank[] banks;
     Bank runConfig;
     Bank helicityAdc;
@@ -41,7 +39,6 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
             HipoWriterSorted w = new HipoWriterSorted();
             super.configure(w, opts);
             w.open(file.toString());
-            eventsProcessed = 0;
             runConfig = new Bank(w.getSchemaFactory().getSchema("RUN::config"));
             helicityAdc = new Bank(w.getSchemaFactory().getSchema("HEL::adc"));
             banks = new Bank[bankNames.length];
@@ -58,6 +55,8 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
     protected void writeEvent(Object event) throws EventWriterException {
         Event e = new Event();
         ((Event)event).read(runConfig);
+        ((Event)event).read(helicityAdc);
+        helicityReadings.add(HelicityState.createFromFadcBank(helicityAdc, runConfig, conman));
         for (Bank b : banks) {
             ((Event)event).read(b);
             if (b.getRows() > 0) e.write(b);
@@ -66,9 +65,7 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
             e.write(runConfig);
             writer.addEvent(e, TAG);
         }
-        helicityReadings.add(HelicityState.createFromFadcBank(helicityAdc, runConfig, conman));
         super.writeEvent(event);
-        if (++eventsProcessed % 25000 == 0 && collectGarbage) System.gc();
     }
 
     @Override
