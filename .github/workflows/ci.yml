@@ -199,11 +199,9 @@ jobs:
           java-version: ${{ env.javadoc_version }}
           distribution: ${{ env.java_distribution }}
       - name: build coatjava
-        run: ./build-coatjava.sh
-      - name: generate javadoc documentation
         run: |
-          ./build-javadocs.sh
-          mv docs/javadoc pages/
+          ./build-coatjava.sh --docs
+          mv coatjava/share/doc/coatjava/html/* pages/
       ### upload artifacts
       - uses: actions/upload-pages-artifact@v3
         with:

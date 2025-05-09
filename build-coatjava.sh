@@ -4,14 +4,32 @@ set -e
 set -u
 set -o pipefail
 
-usage='''build-coatjava.sh [-h] [--help] [--quiet] [--clean] [--spotbugs] [--nomaps] [--unittests]
- - all other arguments will be passed to `mvn`, e.g., -T4 will build with 4 parallel threads'''
+usage='''build-coatjava.sh [OPTIONS]... [MAVEN_OPTIONS]...
+
+  OPTIONS
+
+   --quiet           run more quietly
+   --clean           clean up built objects and exit (does not compile)
+
+   --nomaps          do not download field maps
+
+   --docs            also build the API documentation webpages
+   --spotbugs        also run spotbugs plugin
+   --unittests       also run unit tests
+
+   --help            show this message
+
+  MAVEN_OPTIONS
+
+   all other arguments will be passed to `mvn`, e.g., -T4 will build with 4 parallel threads
+'''
 
 quiet="no"
 cleanBuild="no"
 runSpotBugs="no"
 downloadMaps="yes"
 runUnitTests="no"
+buildDocs="no"
 mvnArgs=()
 for xx in $@
 do
@@ -20,6 +38,7 @@ do
     -n)          runSpotBugs="no"   ;;
     --nomaps)    downloadMaps="no"  ;;
     --unittests) runUnitTests="yes" ;;
+    --docs)      buildDocs="yes"    ;;
     --quiet)     quiet="yes"        ;;
     --clean)     cleanBuild="yes"   ;;
     -h|--help)
@@ -116,24 +135,38 @@ mkdir -p $prefix_dir/lib/services
 # FIXME:  this is still needed by one of the tests
 cp external-dependencies/jclara-4.3-SNAPSHOT.jar $prefix_dir/lib/utils
 
+# spotbugs, unit tests
 unset CLAS12DIR
 if [ $runUnitTests == "yes" ]; then
-	$mvn install # also runs unit tests
-	if [ $? != 0 ] ; then echo "mvn install failure" ; exit 1 ; fi
+  $mvn install # also runs unit tests
+  if [ $? != 0 ] ; then echo "mvn install failure" ; exit 1 ; fi
 else
-	$mvn -Dmaven.test.skip=true install
-	if [ $? != 0 ] ; then echo "mvn install failure" ; exit 1 ; fi
+  $mvn -Dmaven.test.skip=true install
+  if [ $? != 0 ] ; then echo "mvn install failure" ; exit 1 ; fi
 fi
 
 if [ $runSpotBugs == "yes" ]; then
-	# mvn com.github.spotbugs:spotbugs-maven-plugin:spotbugs # spotbugs goal produces a report target/spotbugsXml.xml for each module
-	$mvn com.github.spotbugs:spotbugs-maven-plugin:check # check goal produces a report and produces build failed if bugs
-	# the spotbugsXml.xml file is easiest read in a web browser
-	# see http://spotbugs.readthedocs.io/en/latest/maven.html and https://spotbugs.github.io/spotbugs-maven-plugin/index.html for more info
-	if [ $? != 0 ] ; then echo "spotbugs failure" ; exit 1 ; fi
+  # mvn com.github.spotbugs:spotbugs-maven-plugin:spotbugs # spotbugs goal produces a report target/spotbugsXml.xml for each module
+  $mvn com.github.spotbugs:spotbugs-maven-plugin:check # check goal produces a report and produces build failed if bugs
+  # the spotbugsXml.xml file is easiest read in a web browser
+  # see http://spotbugs.readthedocs.io/en/latest/maven.html and https://spotbugs.github.io/spotbugs-maven-plugin/index.html for more info
+  if [ $? != 0 ] ; then echo "spotbugs failure" ; exit 1 ; fi
 fi
 
+# documentation
+if [ $buildDocs == "yes" ]; then
+  $mvn javadoc:javadoc javadoc:aggregate -Ddoclint=none
+fi
+
+# installation
 cp common-tools/coat-lib/target/coat-libs-*-SNAPSHOT.jar $prefix_dir/lib/clas/
 cp reconstruction/*/target/clas12detector-*-SNAPSHOT*.jar $prefix_dir/lib/services/
+echo "installed coatjava to: $prefix_dir"
+if [ $buildDocs == "yes" ]; then
+  doc_dir=$prefix_dir/share/doc/coatjava/html
+  mkdir -p $doc_dir
+  cp -r target/reports/apidocs/* $doc_dir/
+  echo "installed documentation to: $doc_dir"
+fi
 
 echo "COATJAVA SUCCESSFULLY BUILT !"

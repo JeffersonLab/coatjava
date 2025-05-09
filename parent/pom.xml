@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
@@ -9,15 +10,13 @@
   <repositories>
     <repository>
       <id>clas12maven</id>
-      <url>https://clasweb.jlab.org/.clas12maven</url> 
+      <url>https://clasweb.jlab.org/.clas12maven</url>
     </repository>
-
     <repository>
       <id>jnp-maven</id>
       <url>https://clasweb.jlab.org/.jhep/maven</url>
     </repository>
   </repositories>
-
 
   <dependencyManagement>
     <dependencies>
@@ -45,7 +44,7 @@
       <artifactId>spotbugs</artifactId>
       <version>4.9.1</version>
     </dependency>
-    
+
     <dependency>
       <groupId>org.jlab</groupId>
       <artifactId>groot</artifactId>
@@ -54,9 +53,9 @@
 
     <!-- https://mvnrepository.com/artifact/org.jacoco/jacoco-maven-plugin -->
     <dependency>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.13</version>
+      <groupId>org.jacoco</groupId>
+      <artifactId>jacoco-maven-plugin</artifactId>
+      <version>0.8.13</version>
     </dependency>
 
     <dependency>
@@ -86,7 +85,7 @@
       <scope>runtime</scope>
       <version>2.5.1</version>
     </dependency>
-    
+
     <dependency>
       <groupId>ai.djl.pytorch</groupId>
       <artifactId>pytorch-jni</artifactId>
@@ -126,18 +125,30 @@
         <artifactId>maven-javadoc-plugin</artifactId>
         <version>3.11.2</version>
         <configuration>
-          <doctitle>coatjavadocs</doctitle>
-          <windowtitle>coatjavadocs</windowtitle>
+          <doctitle>COATJAVA - API documentation - version ${project.version}</doctitle>
+          <windowtitle>COATJAVA - API documentation - version ${project.version}</windowtitle>
+          <encoding>UTF-8</encoding>
         </configuration>
+        <executions>
+          <execution>
+            <id>aggregate</id>
+            <goals>
+              <goal>aggregate</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/reports</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
-      
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.14.0</version>
         <configuration>
-            <release>17</release>
-            <encoding>UTF-8</encoding>
+          <release>17</release>
+          <encoding>UTF-8</encoding>
         </configuration>
       </plugin>
 
@@ -151,27 +162,27 @@
       </plugin>
 
       <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-jar-plugin</artifactId>
-          <version>3.4.2</version>
-          <configuration>
-              <archive>
-                  <manifest>
-                      <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-                      <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
-                  </manifest>
-                  <manifestSections>
-                      <manifestSection>
-                          <name>${project.name}</name>
-                          <manifestEntries>
-                              <groupId>${project.groupId}</groupId>
-                              <artifactId>${project.artifactId}</artifactId>
-                              <version>${project.version}</version>
-                          </manifestEntries>
-                      </manifestSection>
-                  </manifestSections>
-              </archive>
-          </configuration>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.4.2</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+              <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+            </manifest>
+            <manifestSections>
+              <manifestSection>
+                <name>${project.name}</name>
+                <manifestEntries>
+                  <groupId>${project.groupId}</groupId>
+                  <artifactId>${project.artifactId}</artifactId>
+                  <version>${project.version}</version>
+                </manifestEntries>
+              </manifestSection>
+            </manifestSections>
+          </archive>
+        </configuration>
       </plugin>
 
       <plugin>
