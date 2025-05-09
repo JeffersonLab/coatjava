@@ -4,10 +4,11 @@ set -e
 set -u
 set -o pipefail
 
-usage='''build-coatjava.sh [-h] [--help] [--quiet] [--spotbugs] [--nomaps] [--unittests]
+usage='''build-coatjava.sh [-h] [--help] [--quiet] [--clean] [--spotbugs] [--nomaps] [--unittests]
  - all other arguments will be passed to `mvn`, e.g., -T4 will build with 4 parallel threads'''
 
 quiet="no"
+cleanBuild="no"
 runSpotBugs="no"
 downloadMaps="yes"
 runUnitTests="no"
@@ -20,6 +21,7 @@ do
     --nomaps)    downloadMaps="no"  ;;
     --unittests) runUnitTests="yes" ;;
     --quiet)     quiet="yes"        ;;
+    --clean)     cleanBuild="yes"   ;;
     -h|--help)
       echo "$usage"
       exit 2
@@ -28,14 +30,18 @@ do
   esac
 done
 
-top="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+src_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+prefix_dir=$src_dir/coatjava
+
+# working directory should be the source code directory
+cd $src_dir
 
 wget='wget'
-mvn="mvn --settings $top/maven-settings.xml"
+mvn="mvn --settings $src_dir/maven-settings.xml"
 if [ "$quiet" == "yes" ]
 then
     wget='wget --progress=dot:mega'
-    mvn="mvn -q -B --settings $top/maven-settings.xml"
+    mvn="mvn -q -B --settings $src_dir/maven-settings.xml"
 fi
 mvn+=" ${mvnArgs[*]:-}"
 
@@ -63,7 +69,7 @@ download () {
 
 # download the default field maps, as defined in libexec/env.sh:
 # (and duplicated in etc/services/reconstruction.yaml):
-source `dirname $0`/libexec/env.sh
+source libexec/env.sh
 if [ $downloadMaps == "yes" ]; then
   echo 'Retrieving field maps ...'
   webDir=https://clasweb.jlab.org/clas12offline/magfield
@@ -83,24 +89,32 @@ if [ $downloadMaps == "yes" ]; then
   cd -
 fi
 
-rm -rf coatjava
-mkdir -p coatjava
-cp -r bin coatjava/
-cp -r etc coatjava/
-cp -r libexec coatjava/
+# always clean the installation prefix
+rm -rf $prefix_dir
+
+# clean up any cache copies
+if [ $cleanBuild == "yes" ]; then
+  $mvn clean
+  echo '''DONE CLEANING.
+  Now re-run without `--clean` to build.'''
+  exit
+fi
+
+# start new installation tree
+mkdir -p $prefix_dir
+cp -r bin $prefix_dir/
+cp -r etc $prefix_dir/
+cp -r libexec $prefix_dir/
 
 # create schema directories for partial reconstruction outputs
 which python3 >& /dev/null && python=python3 || python=python
-$python etc/bankdefs/util/bankSplit.py coatjava/etc/bankdefs/hipo4 || exit 1
-mkdir -p coatjava/lib/clas
-mkdir -p coatjava/lib/utils
-mkdir -p coatjava/lib/services
+$python etc/bankdefs/util/bankSplit.py $prefix_dir/etc/bankdefs/hipo4 || exit 1
+mkdir -p $prefix_dir/lib/clas
+mkdir -p $prefix_dir/lib/utils
+mkdir -p $prefix_dir/lib/services
 
 # FIXME:  this is still needed by one of the tests
-cp external-dependencies/jclara-4.3-SNAPSHOT.jar coatjava/lib/utils
-
-### clean up any cache copies ###
-cd common-tools/coat-lib; $mvn clean; cd -
+cp external-dependencies/jclara-4.3-SNAPSHOT.jar $prefix_dir/lib/utils
 
 unset CLAS12DIR
 if [ $runUnitTests == "yes" ]; then
@@ -119,12 +133,7 @@ if [ $runSpotBugs == "yes" ]; then
 	if [ $? != 0 ] ; then echo "spotbugs failure" ; exit 1 ; fi
 fi
 
-cd common-tools/coat-lib
-$mvn package
-if [ $? != 0 ] ; then echo "mvn package failure" ; exit 1 ; fi
-cd -
-
-cp common-tools/coat-lib/target/coat-libs-*-SNAPSHOT.jar coatjava/lib/clas/
-cp reconstruction/*/target/clas12detector-*-SNAPSHOT*.jar coatjava/lib/services/
+cp common-tools/coat-lib/target/coat-libs-*-SNAPSHOT.jar $prefix_dir/lib/clas/
+cp reconstruction/*/target/clas12detector-*-SNAPSHOT*.jar $prefix_dir/lib/services/
 
 echo "COATJAVA SUCCESSFULLY BUILT !"
