@@ -49,10 +49,6 @@ public class EvioToHipoDecoder extends AbstractEventReaderService<EvioSource> {
         return reader.getFileByteOrder();
     }
 
-    public void decodeEvent(EvioDataEvent e) {
-        
-    }
-    
     @Override
     public Object readEvent(int eventNumber) throws EventReaderException {
         if (eventNumber >= maxEvents) return null;
