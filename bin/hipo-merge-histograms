@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 
 . `dirname $0`/../libexec/env.sh
-cmd="java -Xms1024m -cp $CLAS12DIR/lib/clas/*:$CLAS12DIR/lib/plugins/* org.jlab.groot.data.TDirectory"
+
+split_cli $@
+
+cmd="java -Xms1024m ${jvm_options[@]} -cp $CLAS12DIR/lib/clas/*:$CLAS12DIR/lib/plugins/* org.jlab.groot.data.TDirectory"
 
 if [ $# -eq 0 ]; then
   echo """
@@ -12,4 +15,5 @@ if [ $# -eq 0 ]; then
   exit 2
 fi
 
-$cmd $*
+$cmd ${class_options[@]}
+
