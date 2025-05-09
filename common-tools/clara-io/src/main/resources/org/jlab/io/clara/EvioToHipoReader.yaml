@@ -8,5 +8,5 @@ email: baltzell@jlab.org
 
 version: 0.1
 description:
-  Reads EVIO events from a file.
+  Reads EVIO events from a file and exports to HIPO via "decoding".
 
