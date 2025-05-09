@@ -1,8 +1,6 @@
 package org.jlab.io.clara;
 
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Arrays;
 import org.jlab.clara.std.services.EventWriterException;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
@@ -16,16 +14,15 @@ import org.json.JSONObject;
 public class HipoToHipoTagWriter extends HipoToHipoWriter {
 
     static final int TAG = 1;
-
-    static final List<String> bankNames = Arrays.asList(new String[]{
+    static final String[] bankNames = {
         "RUN::scaler",
         "HEL::scaler",
         "RAW::scaler",
         "RAW::epics",
         "HEL::flip"
-    });
+    };
 
-    List<Bank> banks;
+    Bank[] banks;
     Bank runConfig;
 
     @Override
@@ -35,8 +32,9 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
             super.configure(w, opts);
             w.open(file.toString());
             runConfig = new Bank(w.getSchemaFactory().getSchema("RUN::config"));
-            for (String b : bankNames)
-                banks.add(new Bank(w.getSchemaFactory().getSchema(b)));
+            banks = new Bank[bankNames.length];
+            for (int i=0; i<banks.length; ++i)
+                banks[i] = new Bank(w.getSchemaFactory().getSchema(bankNames[i]));
             return w;
         } catch (Exception e) {
             throw new EventWriterException(e);
