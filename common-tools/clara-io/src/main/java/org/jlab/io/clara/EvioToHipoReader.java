@@ -10,7 +10,6 @@ import org.jlab.coda.jevio.EvioException;
 import org.jlab.detector.decode.CLASDecoder4;
 import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.evio.EvioSource;
-import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.json.JSONObject;
 
