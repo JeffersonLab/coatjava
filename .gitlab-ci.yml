@@ -86,18 +86,13 @@ coatjava:singularity:
 create-pages:
   image: codecr.jlab.org/hallb/alert/coatjava/coatjava:development
   script:
-    - export MAVEN_OPTS=" -Dfile.encoding=UTF-8"
     - echo "${CI_COMMIT_REF_NAME}"
     - ls -lrth
     - mvn --version
     - java --version 
     - ls -lrth
     - pwd
-    - ls -lrth docs/javadoc
-    - ./build-javadocs.sh 
-    - ls -lrth
-    - ls -lrth docs/
-    - ls -lrth docs/javadoc
-    - mv docs/javadoc public
+    - ./build-coatjava.sh --docs
+    - mv coatjava/share/doc/coatjava/html public
   pages: true  # specifies that this is a Pages job and publishes the default public directory
 
