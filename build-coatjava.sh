@@ -67,28 +67,6 @@ download () {
 }
 
 
-# download the default field maps, as defined in libexec/env.sh:
-# (and duplicated in etc/services/reconstruction.yaml):
-source libexec/env.sh
-if [ $downloadMaps == "yes" ]; then
-  echo 'Retrieving field maps ...'
-  webDir=https://clasweb.jlab.org/clas12offline/magfield
-  locDir=etc/data/magfield
-  mkdir -p $locDir
-  cd $locDir
-  for map in $COAT_MAGFIELD_SOLENOIDMAP $COAT_MAGFIELD_TORUSMAP $COAT_MAGFIELD_TORUSSECONDARYMAP
-  do
-    download $webDir/$map
-    if [ $? -ne 0 ]; then
-        echo ERROR:::::::::::  Could not download field map:
-        echo $webDir/$map
-        echo One option is to download manually into etc/data/magfield and then run this build script with --nomaps
-        exit 1
-    fi
-  done
-  cd -
-fi
-
 # always clean the installation prefix
 rm -rf $prefix_dir
 
@@ -105,6 +83,28 @@ mkdir -p $prefix_dir
 cp -r bin $prefix_dir/
 cp -r etc $prefix_dir/
 cp -r libexec $prefix_dir/
+
+# download the default field maps, as defined in libexec/env.sh:
+# (and duplicated in etc/services/reconstruction.yaml):
+source libexec/env.sh
+if [ $downloadMaps == "yes" ]; then
+  echo 'Retrieving field maps ...'
+  webDir=https://clasweb.jlab.org/clas12offline/magfield
+  locDir=coatjava/etc/data/magfield
+  mkdir -p $locDir
+  cd $locDir
+  for map in $COAT_MAGFIELD_SOLENOIDMAP $COAT_MAGFIELD_TORUSMAP $COAT_MAGFIELD_TORUSSECONDARYMAP
+  do
+    download $webDir/$map
+    if [ $? -ne 0 ]; then
+        echo ERROR:::::::::::  Could not download field map:
+        echo $webDir/$map
+        echo One option is to download manually into etc/data/magfield and then run this build script with --nomaps
+        exit 1
+    fi
+  done
+  cd -
+fi
 
 # create schema directories for partial reconstruction outputs
 which python3 >& /dev/null && python=python3 || python=python
