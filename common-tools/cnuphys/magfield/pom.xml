@@ -10,7 +10,7 @@
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas12rec</artifactId>
       <relativePath>../../../parent/pom.xml</relativePath>
-      <version>12.0.1t-SNAPSHOT</version>
+      <version>12.0.6t-SNAPSHOT</version>
     </parent>
 
     <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-math3 -->
