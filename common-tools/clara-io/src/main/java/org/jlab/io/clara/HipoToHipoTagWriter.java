@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.TreeSet;
 import org.jlab.clara.std.services.EventWriterException;
 import org.jlab.detector.calib.utils.ConstantsManager;
+import org.jlab.detector.decode.CLASDecoder4;
 import org.jlab.detector.helicity.HelicitySequence;
 import org.jlab.detector.helicity.HelicityState;
 import org.jlab.jnp.hipo4.data.Bank;
@@ -53,18 +54,14 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
 
     @Override
     protected void writeEvent(Object event) throws EventWriterException {
-        Event e = new Event();
+        Event tag = CLASDecoder4.createTaggedEvent(writer.getSchemaFactory(), 
+            (Event)event, "RUN::scaler","HEL::scaler","RAW::scaler","RAW::epics","HEL::flip");
+        if (!tag.isEmpty()) {
+            writer.addEvent(tag, TAG);
+        }
         ((Event)event).read(runConfig);
         ((Event)event).read(helicityAdc);
         helicityReadings.add(HelicityState.createFromFadcBank(helicityAdc, runConfig, conman));
-        for (Bank b : banks) {
-            ((Event)event).read(b);
-            if (b.getRows() > 0) e.write(b);
-        }
-        if (!e.isEmpty()) {
-            e.write(runConfig);
-            writer.addEvent(e, TAG);
-        }
         super.writeEvent(event);
     }
 
