@@ -22,14 +22,12 @@ public class EvioToHipoReader extends AbstractEventReaderService<EvioSource> {
     boolean collectGarbage = true; // for memory leak in CompactEvioReader
 
     CLASDecoder4 decoder;
-    private ByteOrder byteOrder;
     private long maxEvents;
 
     @Override
     protected EvioSource createReader(Path file, JSONObject opts) throws EventReaderException {
         EvioSource s = new EvioSource();
         s.open(file.toString());
-        byteOrder = s.getFileByteOrder();
         maxEvents = s.getEventCount();
         decoder = new CLASDecoder4();
         return s;
@@ -47,7 +45,7 @@ public class EvioToHipoReader extends AbstractEventReaderService<EvioSource> {
 
     @Override
     public ByteOrder readByteOrder() throws EventReaderException {
-        return reader.getFileByteOrder();
+        return ByteOrder.LITTLE_ENDIAN;
     }
 
     @Override
@@ -55,7 +53,7 @@ public class EvioToHipoReader extends AbstractEventReaderService<EvioSource> {
         if (eventNumber >= maxEvents) return null;
         try {
             ByteBuffer bb = reader.getEventBuffer(++eventNumber, true);
-            EvioDataEvent evio = new EvioDataEvent(bb.array(), byteOrder, reader.getDictionary());
+            EvioDataEvent evio = new EvioDataEvent(bb.array(), readByteOrder(), reader.getDictionary());
             Event hipo = decoder.getDecodedEvent(evio, -1, eventNumber, -1, -1);
             if (eventNumber % 25000 == 0 && collectGarbage) System.gc();
             return hipo;
