@@ -90,6 +90,10 @@ public class CLASDecoder4 {
         detectorDecoder.setVariation(variation);
     }
 
+    public void setTimestamp(String timestamp) {
+        detectorDecoder.setTimestamp(timestamp);
+    }
+
     public void setDebugMode(int mode){
         this.decoderDebugMode = mode;
     }
