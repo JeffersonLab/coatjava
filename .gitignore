@@ -4,6 +4,7 @@
 target
 /publish
 /docs/javadoc/*
+/clara-home
 
 *.class
 *lundfiles*.dat
