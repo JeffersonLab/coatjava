@@ -56,9 +56,7 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
     protected void writeEvent(Object event) throws EventWriterException {
         Event tag = CLASDecoder4.createTaggedEvent(writer.getSchemaFactory(), 
             (Event)event, "RUN::scaler","HEL::scaler","RAW::scaler","RAW::epics","HEL::flip");
-        if (!tag.isEmpty()) {
-            writer.addEvent(tag, TAG);
-        }
+        if (!tag.isEmpty()) writer.addEvent(tag, TAG);
         ((Event)event).read(runConfig);
         ((Event)event).read(helicityAdc);
         helicityReadings.add(HelicityState.createFromFadcBank(helicityAdc, runConfig, conman));
