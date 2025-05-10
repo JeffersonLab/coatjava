@@ -13,7 +13,8 @@ import org.jlab.jnp.hipo4.io.HipoWriterSorted;
 import org.json.JSONObject;
 
 /**
- *
+ * This is just a wrap of the standard COATJAVA "decoder" in a CLARA I/O service
+ * 
  * @author baltzell
  */
 public class HipoToHipoTagWriter extends HipoToHipoWriter {
