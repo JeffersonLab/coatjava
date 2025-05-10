@@ -158,6 +158,12 @@
     </dependency>
 
     <dependency>
+      <groupId>org.jlab.clas</groupId>
+      <artifactId>clas-decay-tools</artifactId>
+      <version>12.0.5t-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
       <groupId>org.freehep</groupId>
       <artifactId>jminuit</artifactId>
       <version>1.0</version>
