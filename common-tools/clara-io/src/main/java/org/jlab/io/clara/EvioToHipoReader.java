@@ -24,12 +24,24 @@ public class EvioToHipoReader extends AbstractEventReaderService<EvioSource> {
     CLASDecoder4 decoder;
     private long maxEvents;
 
+    String variation = "default";
+    String timestamp = "";
+
+    protected void configure(EvioToHipoReader reader, JSONObject opts) {
+        if (opts.has("variation"))
+            variation = opts.getString("variation");
+        if (opts.has("timestamp"))
+            timestamp = opts.getString("timestamp");
+    }
+
     @Override
     protected EvioSource createReader(Path file, JSONObject opts) throws EventReaderException {
         EvioSource s = new EvioSource();
         s.open(file.toString());
         maxEvents = s.getEventCount();
         decoder = new CLASDecoder4();
+        decoder.setVariation(variation);
+        decoder.setTimestamp(timestamp);
         return s;
     }
 
