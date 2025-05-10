@@ -1,25 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jlab.clas</groupId>
   <artifactId>coat-libs</artifactId>
-  <version>12.0.5t-SNAPSHOT</version>
+  <version>12.0.6t-SNAPSHOT</version>
   <packaging>pom</packaging>
+
+  <parent>
+    <groupId>org.jlab.clas</groupId>
+    <artifactId>clas12rec</artifactId>
+    <relativePath>../../parent/pom.xml</relativePath>
+    <version>12.0.6t-SNAPSHOT</version>
+  </parent>
 
   <repositories>
     <repository>
-      <id>local-build</id>
-      <url>https://clasweb.jlab.org/.clas12maven</url>
+      <id>freehep-repo-public</id>
+      <url>https://clasweb.jlab.org/.clas12maven/</url>
+      <!--<url>https://srs.slac.stanford.edu/nexus/content/groups/freehep-maven2-public/</url>-->
     </repository>
-    <repository>
-      <id>jnp-build</id>
-      <url>https://clasweb.jlab.org/.jhep/maven</url>
-  </repository>
-    <repository>
-     <id>freehep-repo-public</id>
-     <url>https://clasweb.jlab.org/.clas12maven/</url>
-     <!--<url>https://srs.slac.stanford.edu/nexus/content/groups/freehep-maven2-public/</url>-->
-  </repository>
   </repositories>
 
   <dependencies>
@@ -72,7 +72,7 @@
         <artifactId>j4ml-clas12</artifactId>
         <version>0.9-SNAPSHOT</version>
     </dependency>
-	
+
     <dependency>
       <groupId>org.jama</groupId>
       <artifactId>jamapack</artifactId>
@@ -94,67 +94,67 @@
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-io</artifactId>
-      <version>12.0.5t-SNAPSHOT</version>
+      <version>12.0.6t-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clara-io</artifactId>
-      <version>12.0.5t-SNAPSHOT</version>
+      <version>12.0.6t-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-reco</artifactId>
-      <version>12.0.5t-SNAPSHOT</version>
+      <version>12.0.6t-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-utils</artifactId>
-      <version>12.0.5t-SNAPSHOT</version>
+      <version>12.0.6t-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-jcsg</artifactId>
-      <version>12.0.5t-SNAPSHOT</version>
+      <version>12.0.6t-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-detector</artifactId>
-      <version>12.0.5t-SNAPSHOT</version>
+      <version>12.0.6t-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-analysis</artifactId>
-      <version>12.0.5t-SNAPSHOT</version>
+      <version>12.0.6t-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-geometry</artifactId>
-      <version>12.0.5t-SNAPSHOT</version>
+      <version>12.0.6t-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-physics</artifactId>
-      <version>12.0.5t-SNAPSHOT</version>
+      <version>12.0.6t-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>swim-tools</artifactId>
-      <version>12.0.5t-SNAPSHOT</version>
+      <version>12.0.6t-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-tracking</artifactId>
-      <version>12.0.5t-SNAPSHOT</version>
+      <version>12.0.6t-SNAPSHOT</version>
     </dependency>
 
     <dependency>

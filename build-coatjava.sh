@@ -4,13 +4,32 @@ set -e
 set -u
 set -o pipefail
 
-usage='''build-coatjava.sh [-h] [--help] [--quiet] [--spotbugs] [--nomaps] [--unittests]
- - all other arguments will be passed to `mvn`, e.g., -T4 will build with 4 parallel threads'''
+usage='''build-coatjava.sh [OPTIONS]... [MAVEN_OPTIONS]...
+
+  OPTIONS
+
+   --quiet           run more quietly
+   --clean           clean up built objects and exit (does not compile)
+
+   --nomaps          do not download field maps
+
+   --docs            also build the API documentation webpages
+   --spotbugs        also run spotbugs plugin
+   --unittests       also run unit tests
+
+   --help            show this message
+
+  MAVEN_OPTIONS
+
+   all other arguments will be passed to `mvn`, e.g., -T4 will build with 4 parallel threads
+'''
 
 quiet="no"
+cleanBuild="no"
 runSpotBugs="no"
 downloadMaps="yes"
 runUnitTests="no"
+buildDocs="no"
 mvnArgs=()
 for xx in $@
 do
@@ -19,7 +38,9 @@ do
     -n)          runSpotBugs="no"   ;;
     --nomaps)    downloadMaps="no"  ;;
     --unittests) runUnitTests="yes" ;;
+    --docs)      buildDocs="yes"    ;;
     --quiet)     quiet="yes"        ;;
+    --clean)     cleanBuild="yes"   ;;
     -h|--help)
       echo "$usage"
       exit 2
@@ -28,14 +49,18 @@ do
   esac
 done
 
-top="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+src_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+prefix_dir=$src_dir/coatjava
+
+# working directory should be the source code directory
+cd $src_dir
 
 wget='wget'
-mvn="mvn --settings $top/maven-settings.xml"
+mvn="mvn --settings $src_dir/maven-settings.xml"
 if [ "$quiet" == "yes" ]
 then
     wget='wget --progress=dot:mega'
-    mvn="mvn -q -B --settings $top/maven-settings.xml"
+    mvn="mvn -q -B --settings $src_dir/maven-settings.xml"
 fi
 mvn+=" ${mvnArgs[*]:-}"
 
@@ -63,7 +88,7 @@ download () {
 
 # download the default field maps, as defined in libexec/env.sh:
 # (and duplicated in etc/services/reconstruction.yaml):
-source `dirname $0`/libexec/env.sh
+source libexec/env.sh
 if [ $downloadMaps == "yes" ]; then
   echo 'Retrieving field maps ...'
   webDir=https://clasweb.jlab.org/clas12offline/magfield
@@ -83,48 +108,65 @@ if [ $downloadMaps == "yes" ]; then
   cd -
 fi
 
-rm -rf coatjava
-mkdir -p coatjava
-cp -r bin coatjava/
-cp -r etc coatjava/
-cp -r libexec coatjava/
+# always clean the installation prefix
+rm -rf $prefix_dir
+
+# clean up any cache copies
+if [ $cleanBuild == "yes" ]; then
+  $mvn clean
+  echo '''DONE CLEANING.
+  Now re-run without `--clean` to build.'''
+  exit
+fi
+
+# start new installation tree
+mkdir -p $prefix_dir
+cp -r bin $prefix_dir/
+cp -r etc $prefix_dir/
+cp -r libexec $prefix_dir/
 
 # create schema directories for partial reconstruction outputs
 which python3 >& /dev/null && python=python3 || python=python
-$python etc/bankdefs/util/bankSplit.py coatjava/etc/bankdefs/hipo4 || exit 1
-mkdir -p coatjava/lib/clas
-mkdir -p coatjava/lib/utils
-mkdir -p coatjava/lib/services
+$python etc/bankdefs/util/bankSplit.py $prefix_dir/etc/bankdefs/hipo4 || exit 1
+mkdir -p $prefix_dir/lib/clas
+mkdir -p $prefix_dir/lib/utils
+mkdir -p $prefix_dir/lib/services
 
 # FIXME:  this is still needed by one of the tests
-cp external-dependencies/jclara-4.3-SNAPSHOT.jar coatjava/lib/utils
+cp external-dependencies/jclara-4.3-SNAPSHOT.jar $prefix_dir/lib/utils
 
-### clean up any cache copies ###
-cd common-tools/coat-lib; $mvn clean; cd -
-
+# spotbugs, unit tests
 unset CLAS12DIR
 if [ $runUnitTests == "yes" ]; then
-	$mvn install # also runs unit tests
-	if [ $? != 0 ] ; then echo "mvn install failure" ; exit 1 ; fi
+  $mvn install # also runs unit tests
+  if [ $? != 0 ] ; then echo "mvn install failure" ; exit 1 ; fi
 else
-	$mvn -Dmaven.test.skip=true install
-	if [ $? != 0 ] ; then echo "mvn install failure" ; exit 1 ; fi
+  $mvn -Dmaven.test.skip=true install
+  if [ $? != 0 ] ; then echo "mvn install failure" ; exit 1 ; fi
 fi
 
 if [ $runSpotBugs == "yes" ]; then
-	# mvn com.github.spotbugs:spotbugs-maven-plugin:spotbugs # spotbugs goal produces a report target/spotbugsXml.xml for each module
-	$mvn com.github.spotbugs:spotbugs-maven-plugin:check # check goal produces a report and produces build failed if bugs
-	# the spotbugsXml.xml file is easiest read in a web browser
-	# see http://spotbugs.readthedocs.io/en/latest/maven.html and https://spotbugs.github.io/spotbugs-maven-plugin/index.html for more info
-	if [ $? != 0 ] ; then echo "spotbugs failure" ; exit 1 ; fi
+  # mvn com.github.spotbugs:spotbugs-maven-plugin:spotbugs # spotbugs goal produces a report target/spotbugsXml.xml for each module
+  $mvn com.github.spotbugs:spotbugs-maven-plugin:check # check goal produces a report and produces build failed if bugs
+  # the spotbugsXml.xml file is easiest read in a web browser
+  # see http://spotbugs.readthedocs.io/en/latest/maven.html and https://spotbugs.github.io/spotbugs-maven-plugin/index.html for more info
+  if [ $? != 0 ] ; then echo "spotbugs failure" ; exit 1 ; fi
 fi
 
-cd common-tools/coat-lib
-$mvn package
-if [ $? != 0 ] ; then echo "mvn package failure" ; exit 1 ; fi
-cd -
+# documentation
+if [ $buildDocs == "yes" ]; then
+  $mvn javadoc:javadoc javadoc:aggregate -Ddoclint=none
+fi
 
-cp common-tools/coat-lib/target/coat-libs-*-SNAPSHOT.jar coatjava/lib/clas/
-cp reconstruction/*/target/clas12detector-*-SNAPSHOT*.jar coatjava/lib/services/
+# installation
+cp common-tools/coat-lib/target/coat-libs-*-SNAPSHOT.jar $prefix_dir/lib/clas/
+cp reconstruction/*/target/clas12detector-*-SNAPSHOT*.jar $prefix_dir/lib/services/
+echo "installed coatjava to: $prefix_dir"
+if [ $buildDocs == "yes" ]; then
+  doc_dir=$prefix_dir/share/doc/coatjava/html
+  mkdir -p $doc_dir
+  cp -r target/reports/apidocs/* $doc_dir/
+  echo "installed documentation to: $doc_dir"
+fi
 
 echo "COATJAVA SUCCESSFULLY BUILT !"

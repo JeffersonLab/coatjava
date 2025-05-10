@@ -3,6 +3,7 @@
 /myLocalMvnRepo
 target
 /publish
+/docs/javadoc/*
 
 *.class
 *lundfiles*.dat
