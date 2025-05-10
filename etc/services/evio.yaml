@@ -3,7 +3,7 @@ io-services:
     class: org.jlab.io.clara.EvioToHipoReader
     name: EvioToHipoReader
   writer:
-    class: org.jlab.io.clara.HipoToTagHipoWriter
+    class: org.jlab.io.clara.HipoToHipoTagWriter
     name: HipoToHipoTagWriter
 services:
   - class: org.jlab.service.eb.EBTBEngine
