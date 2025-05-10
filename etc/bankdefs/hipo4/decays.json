@@ -1,0 +1,46 @@
+[
+    {
+        "name": "DECAYS::Event",
+        "group": 900,
+        "item": 10,
+        "info": "Event Header Bank",
+        "entries": [
+            {"name":"tarmass", "type":"F", "info":"target mass"},
+            {"name":"beamenergy",     "type":"F", "info":"beam energy"}
+            ]
+    },
+    {
+        "name": "DECAYS::Particle",
+        "group": 900,
+        "item" : 11,
+        "info": "Reconstructed Particle Information",
+        "entries": [
+            {"name":"idx",          "type":"S", "info":"particle idx"},
+            {"name":"pid",          "type":"I", "info":"particle id in LUND conventions"},
+            {"name":"emc",          "type":"F", "info":"particle mass constrained energy"},
+            {"name":"erec",         "type":"F", "info":"reconstructed particle energy"},
+            {"name":"e",            "type":"F", "info":"analysis particle energy (sum of constrained energies or daughters if mass constrain flag is on"},
+            {"name":"ovx",          "type":"F", "info":"x component of the vertex at the production vertex (cm)"},
+            {"name":"ovy",          "type":"F", "info":"y component of the vertex at the production vertex (cm)"},
+            {"name":"ovz",          "type":"F", "info":"z component of the vertex at the production vertex (cm)"},
+            {"name":"px",           "type":"F", "info":"x component of the momentum (GeV)"},
+            {"name":"py",           "type":"F", "info":"y component of the momentum (GeV)"},
+            {"name":"pz",           "type":"F", "info":"z component of the momentum (GeV)"},
+            {"name":"upx",          "type":"F", "info":"x component of the uncorrected momentum at the vertex (GeV)"},
+            {"name":"upy",          "type":"F", "info":"y component of the uncorrected momentum at the vertex (GeV)"},
+            {"name":"upz",          "type":"F", "info":"z component of the uncorrected momentum at the vertex (GeV)"},
+            {"name":"vx",           "type":"F", "info":"x component of the vertex (cm)"},
+            {"name":"vy",           "type":"F", "info":"y component of the vertex (cm)"},
+            {"name":"vz",           "type":"F", "info":"z component of the vertex (cm)"},
+            {"name":"r",            "type":"F", "info":"distance between helices for 2-particle decay (cm)"},
+            {"name":"charge",       "type":"B", "info":"particle charge"},
+            {"name":"mass",         "type":"F", "info":"particle mass (GeV)"},
+            {"name":"umass",        "type":"F", "info":"particle uncorrected mass (GeV)"},
+            {"name":"ndau",         "type":"B", "info":"number of daughters"},
+            {"name":"dau1idx",      "type":"S", "info":"daughter 1 idx"},
+            {"name":"dau2idx",      "type":"S", "info":"daughter 2 idx"},
+            {"name":"dau3idx",      "type":"S", "info":"daughter 3 idx"},
+            {"name":"det",          "type":"B", "info":"det=0 for central, det=1 for forward tracker"}
+        ]
+    }
+]
