@@ -201,7 +201,7 @@ jobs:
       - name: build coatjava
         run: |
           ./build-coatjava.sh --docs
-          mv coatjava/share/doc/coatjava/html/* pages/
+          mv coatjava/share/doc/coatjava/html pages/javadoc
       ### upload artifacts
       - uses: actions/upload-pages-artifact@v3
         with:
