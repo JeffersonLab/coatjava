@@ -37,5 +37,6 @@
     <module>alert</module>
     <module>bg</module>
     <module>postproc</module>
+    <module>recoil</module>
   </modules>
 </project>
