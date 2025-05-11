@@ -169,6 +169,7 @@ if [ $buildDocs == "yes" ]; then
   echo "installed documentation to: $doc_dir"
 fi
 
-rm -rf clara-home && ./install-clara -c ./coatjava ./clara-home
+# install clara
+#rm -rf clara-home && ./install-clara -c ./coatjava ./clara-home
 
 echo "COATJAVA SUCCESSFULLY BUILT !"
