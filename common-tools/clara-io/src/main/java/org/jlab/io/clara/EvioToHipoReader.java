@@ -66,7 +66,7 @@ public class EvioToHipoReader extends AbstractEventReaderService<EvioSource> {
         try {
             ByteBuffer bb = reader.getEventBuffer(++eventNumber, true);
             EvioDataEvent evio = new EvioDataEvent(bb.array(), readByteOrder(), reader.getDictionary());
-            Event hipo = decoder.getDecodedEvent(evio, -1, eventNumber, -1, -1);
+            Event hipo = decoder.getDecodedEvent(evio, -1, eventNumber, -1.0, -1.0);
             if (eventNumber % 25000 == 0 && collectGarbage) System.gc();
             return hipo;
         } catch (EvioException e) {
