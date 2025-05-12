@@ -13,6 +13,26 @@ import org.rcdb.ConditionType;
  * @author baltzell
  */
 public class RCDBProvider {
+
+    public static class RCDBManager {
+        HashMap<Integer,RCDBConstants> cache = new HashMap<>();
+        RCDBProvider provider = null;
+        public synchronized RCDBConstants getConstants(int run) {
+            if (provider == null) provider = new RCDBProvider();
+            if (!cache.containsKey(run)) cache.put(run, provider.getConstants(run));
+            return cache.get(run);
+        }
+        public Double getDouble(int run, String key) {
+            return getConstants(run).getDouble(key);
+        }
+        public Double getTorusScale(int run) {
+            return getDouble(run, "torus_scale");
+        }
+        public Double getSolenoidScale(int run) {
+            return getDouble(run, "solenoid_scale");
+        }
+    }
+
     public static Logger LOGGER = Logger.getLogger(RCDBProvider.class.getName());
 
     public static final String DEFAULTADDRESS = "mysql://rcdb@clasdb.jlab.org/rcdb";
@@ -121,6 +141,8 @@ public class RCDBProvider {
     }
 
     public static void main(String[] args){
+        RCDBManager m = new RCDBManager();
+        System.out.println(m.getTorusScale(4013));
         RCDBProvider a=new RCDBProvider();
         RCDBConstants data=a.getConstants(4014);
         data.show();

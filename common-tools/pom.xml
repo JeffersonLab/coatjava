@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jlab.clas</groupId>
@@ -21,12 +22,14 @@
     <module>clas-jcsg</module>
     <module>clas-detector</module>
     <module>cnuphys</module>
-    <module>clas-reco</module> 
+    <module>clas-reco</module>
     <module>swim-tools</module>
-    <module>clas-analysis</module> 
+    <module>clas-analysis</module>
     <module>clas-math</module>
     <module>clara-io</module>
     <module>clas-tracking</module>
+    <module>clas-decay-tools</module>
+    <module>coat-lib</module>
   </modules>
 
 </project>
