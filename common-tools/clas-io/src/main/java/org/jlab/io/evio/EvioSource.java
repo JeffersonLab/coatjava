@@ -25,6 +25,23 @@ public class EvioSource implements DataSource {
 	private EvioDataDictionary dictionary = new EvioDataDictionary();
 	private String dictionaryPath = "some";
 
+    public EvioDataDictionary getDictionary() {
+        return dictionary;
+    }
+    @Override
+    public void close() {
+        evioReader.close();
+    }
+    public int getEventCount() {
+        return evioReader.getEventCount();
+    }
+    public ByteOrder getFileByteOrder() {
+        return evioReader.getFileByteOrder();
+    }
+    public ByteBuffer getEventBuffer(int eventNumber, boolean asdf) throws EvioException {
+        return evioReader.getEventBuffer(eventNumber, asdf);
+    }
+    
 	public EvioSource() {
 
 		String CLAS12DIR = System.getenv("CLAS12DIR");
@@ -120,11 +137,6 @@ public class EvioSource implements DataSource {
 		} catch (EvioException ex) {
 			Logger.getLogger(EvioSource.class.getName()).log(Level.SEVERE, null, ex);
 		}
-	}
-
-	public void close() {
-		// TODO Auto-generated method stub
-
 	}
 
 	public int getSize() {
