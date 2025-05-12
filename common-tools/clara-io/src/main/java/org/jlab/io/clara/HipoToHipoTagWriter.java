@@ -19,8 +19,6 @@ import org.json.JSONObject;
  */
 public class HipoToHipoTagWriter extends HipoToHipoWriter {
 
-    // defaults:
-    int tag = 1;
     String[] bankNames = {
         "RUN::scaler",
         "HEL::scaler",
@@ -28,6 +26,7 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
         "RAW::epics",
         "HEL::flip"
     };
+    int tag = 1;
 
     Bank runConfig;
     Bank helicityAdc;
@@ -36,19 +35,21 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
 
     @Override
     protected HipoWriterSorted createWriter(Path file, JSONObject opts) throws EventWriterException {
-        helicityReadings = new TreeSet<>();
-        conman = new ConstantsManager();
-        conman.init("/runcontrol/hwp");
-        if (opts.has("variation")) conman.setVariation(opts.getString("variation"));
-        if (opts.has("timestamp")) conman.setTimeStamp(opts.getString("timestamp"));
-        if (opts.has("tag")) tag = opts.getInt("tag");
-        if (opts.has("banks")) bankNames = opts.getString("banks").split(",");
-        HipoWriterSorted w = new HipoWriterSorted();
-        super.configure(w, opts);
-        w.open(file.toString());
-        runConfig = new Bank(w.getSchemaFactory().getSchema("RUN::config"));
-        helicityAdc = new Bank(w.getSchemaFactory().getSchema("HEL::adc"));
-        return w;
+            helicityReadings = new TreeSet<>();
+            conman = new ConstantsManager();
+            conman.init("/runcontrol/hwp");
+            if (opts.has("variation")) conman.setVariation(opts.getString("variation"));
+            if (opts.has("timestamp")) conman.setTimeStamp(opts.getString("timestamp"));
+            if (opts.has("tag")) tag = opts.getInt("tag");
+            if (opts.has("banks")) bankNames = opts.getString("banks").split(",");
+            HipoWriterSorted w = new HipoWriterSorted();
+            super.configure(w, opts);
+            w.open(file.toString());
+            System.err.println("doggies:  "+w.getSchemaFactory());
+            w.getSchemaFactory().show();
+            runConfig = new Bank(w.getSchemaFactory().getSchema("RUN::config"));
+            helicityAdc = new Bank(w.getSchemaFactory().getSchema("HEL::adc"));
+            return w;
     }
 
     @Override
@@ -63,8 +64,8 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
 
     @Override
     protected void closeWriter() {
-        HelicitySequence.writeFlips(writer, helicityReadings); 
+        HelicitySequence.writeFlips(writer, helicityReadings);
         super.closeWriter();
     }
-
+        
 }
