@@ -170,6 +170,6 @@ if [ $buildDocs == "yes" ]; then
 fi
 
 # install clara
-#rm -rf clara-home && ./install-clara -c ./coatjava ./clara-home
+rm -rf clara-home && ./install-clara -c ./coatjava ./clara-home
 
 echo "COATJAVA SUCCESSFULLY BUILT !"
