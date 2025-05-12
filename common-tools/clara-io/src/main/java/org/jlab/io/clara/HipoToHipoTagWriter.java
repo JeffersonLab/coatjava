@@ -36,26 +36,27 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
     TreeSet<HelicityState> helicityReadings;
     SchemaFactory fullSchema;
 
+    protected void init(JSONObject opts) {
+        fullSchema = new SchemaFactory();
+        fullSchema.initFromDirectory(FileUtils.getEnvironmentPath("CLAS12DIR","etc/bankdefs/hipo4"));
+        runConfig = new Bank(fullSchema.getSchema("RUN::config"));
+        helicityAdc = new Bank(fullSchema.getSchema("HEL::adc"));
+        helicityReadings = new TreeSet<>();
+        conman = new ConstantsManager();
+        conman.init("/runcontrol/hwp");
+        if (opts.has("variation")) conman.setVariation(opts.getString("variation"));
+        if (opts.has("timestamp")) conman.setTimeStamp(opts.getString("timestamp"));
+        if (opts.has("tag")) tag = opts.getInt("tag");
+        if (opts.has("banks")) bankNames = opts.getString("banks").split(",");
+    }
+    
     @Override
     protected HipoWriterSorted createWriter(Path file, JSONObject opts) throws EventWriterException {
         try {
-            fullSchema = new SchemaFactory();
-            fullSchema.initFromDirectory(FileUtils.getEnvironmentPath("CLAS12DIR","etc/bankdefs/hipo4"));
-            helicityReadings = new TreeSet<>();
-            conman = new ConstantsManager();
-            conman.init("/runcontrol/hwp");
-            if (opts.has("variation")) conman.setVariation(opts.getString("variation"));
-            if (opts.has("timestamp")) conman.setTimeStamp(opts.getString("timestamp"));
-            if (opts.has("tag")) tag = opts.getInt("tag");
-            if (opts.has("banks")) bankNames = opts.getString("banks").split(",");
+            init(opts);
             HipoWriterSorted w = new HipoWriterSorted();
             super.configure(w, opts);
             w.open(file.toString());
-            System.err.println("doggies");
-            w.getSchemaFactory().show();
-            System.err.println("kitties");
-            runConfig = new Bank(fullSchema.getSchema("RUN::config"));
-            helicityAdc = new Bank(fullSchema.getSchema("HEL::adc"));
             return w;
         } catch (Exception e) {
             throw new EventWriterException(e);
