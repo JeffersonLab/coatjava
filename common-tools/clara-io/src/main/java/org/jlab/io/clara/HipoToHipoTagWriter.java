@@ -29,7 +29,6 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
         "HEL::flip"
     };
 
-    Bank[] banks;
     Bank runConfig;
     Bank helicityAdc;
     ConstantsManager conman;
@@ -49,16 +48,12 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
         w.open(file.toString());
         runConfig = new Bank(w.getSchemaFactory().getSchema("RUN::config"));
         helicityAdc = new Bank(w.getSchemaFactory().getSchema("HEL::adc"));
-        banks = new Bank[bankNames.length];
-        for (int i=0; i<banks.length; ++i)
-            banks[i] = new Bank(w.getSchemaFactory().getSchema(bankNames[i]));
         return w;
     }
 
     @Override
     protected void writeEvent(Object event) throws EventWriterException {
-        Event t = CLASDecoder4.createTaggedEvent(writer.getSchemaFactory(), 
-            (Event)event, "RUN::scaler","HEL::scaler","RAW::scaler","RAW::epics","HEL::flip");
+        Event t = CLASDecoder4.createTaggedEvent(writer.getSchemaFactory(), (Event)event, bankNames);
         if (!t.isEmpty()) writer.addEvent(t, tag);
         ((Event)event).read(runConfig);
         ((Event)event).read(helicityAdc);
