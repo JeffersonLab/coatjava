@@ -9,7 +9,9 @@ import org.jlab.detector.helicity.HelicitySequence;
 import org.jlab.detector.helicity.HelicityState;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
+import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
+import org.jlab.jnp.utils.file.FileUtils;
 import org.json.JSONObject;
 
 /**
@@ -32,9 +34,12 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
     Bank helicityAdc;
     ConstantsManager conman;
     TreeSet<HelicityState> helicityReadings;
+    SchemaFactory fullSchema;
 
     @Override
     protected HipoWriterSorted createWriter(Path file, JSONObject opts) throws EventWriterException {
+        fullSchema = new SchemaFactory();
+        fullSchema.initFromDirectory(FileUtils.getEnvironmentPath("CLAS12DIR","etc/bankdefs/hipo"));
             helicityReadings = new TreeSet<>();
             conman = new ConstantsManager();
             conman.init("/runcontrol/hwp");
@@ -48,14 +53,14 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
             System.err.println("doggies");
             w.getSchemaFactory().show();
             System.err.println("kitties");
-            runConfig = new Bank(w.getSchemaFactory().getSchema("RUN::config"));
-            //helicityAdc = new Bank(w.getSchemaFactory().getSchema("HEL::adc"));
+            runConfig = new Bank(fullSchema.getSchema("RUN::config"));
+            helicityAdc = new Bank(fullSchema.getSchema("HEL::adc"));
             return w;
     }
 
     @Override
     protected void writeEvent(Object event) throws EventWriterException {
-        Event t = CLASDecoder4.createTaggedEvent(writer.getSchemaFactory(), (Event)event, bankNames);
+        Event t = CLASDecoder4.createTaggedEvent(fullSchema, (Event)event, bankNames);
         if (!t.isEmpty()) writer.addEvent(t, tag);
         ((Event)event).read(runConfig);
         ((Event)event).read(helicityAdc);
