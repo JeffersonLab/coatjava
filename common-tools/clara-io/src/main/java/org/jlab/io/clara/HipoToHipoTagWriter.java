@@ -10,6 +10,7 @@ import org.jlab.detector.helicity.HelicityState;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
@@ -47,8 +48,11 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
             for (int i=0; i<banks.length; ++i)
                 banks[i] = new Bank(w.getSchemaFactory().getSchema(bankNames[i]));
             conman.init("/runcontrol/hwp");
+            if (opts.has("variation")) conman.setVariation(opts.getString("variation"));
+            if (opts.has("timestamp")) conman.setTimeStamp(opts.getString("timestamp"));
+            helicityReadings.clear();
             return w;
-        } catch (Exception e) {
+        } catch (JSONException e) {
             throw new EventWriterException(e);
         }
     }
