@@ -72,6 +72,10 @@ public class CLASDecoder4 {
         DefaultLogger.debug();
     }
 
+    public SchemaFactory getSchemaFactory(){
+        return schemaFactory;
+    }
+
     public static CLASDecoder createDecoder(){
         CLASDecoder decoder = new CLASDecoder();
         return decoder;
@@ -84,6 +88,10 @@ public class CLASDecoder4 {
 
     public void setVariation(String variation) {
         detectorDecoder.setVariation(variation);
+    }
+
+    public void setTimestamp(String timestamp) {
+        detectorDecoder.setTimestamp(timestamp);
     }
 
     public void setDebugMode(int mode){
@@ -459,6 +467,12 @@ public class CLASDecoder4 {
 
         this.extractPulses(decodedEvent);
 
+        Bank epics = createEpicsBank();
+        if (epics != null) decodedEvent.write(epics);
+
+        for (Bank b : createReconScalerBanks(decodedEvent))
+            decodedEvent.write(b);
+
         return decodedEvent;
     }
 
@@ -784,6 +798,25 @@ public class CLASDecoder4 {
             return null;
     }
 
+    public static Event createTaggedEvent(SchemaFactory sf, Event e, String... banks) {
+        Event t = new Event();
+        for (String s : banks) {
+            Bank b = new Bank(sf.getSchema(s));
+            e.read(b);
+            if (b.getRows() > 0) t.write(b);
+        }
+        if (!t.isEmpty()) {
+            Bank b = new Bank(sf.getSchema("RUN::config"));
+            e.read(b);
+            t.write(b);
+        }
+        return t;
+    }
+
+    public Event createTaggedEvent(Event e, String... banks) {
+        return createTaggedEvent(schemaFactory, e, banks);
+    }
+
     public static void main(String[] args){
 
         OptionParser parser = new OptionParser("decoder");
@@ -835,10 +868,8 @@ public class CLASDecoder4 {
         writer.setCompressionType(compression);
         writer.getSchemaFactory().initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4"));
 
-        Bank  rawScaler   = new Bank(writer.getSchemaFactory().getSchema("RAW::scaler"));
         Bank  rawRunConf  = new Bank(writer.getSchemaFactory().getSchema("RUN::config"));
         Bank  helicityAdc = new Bank(writer.getSchemaFactory().getSchema("HEL::adc"));
-        Event scalerEvent = new Event();
 
         int nrun = parser.getOption("-r").intValue();
         Double torus = parser.getOption("-t").getValue() == null ? null : parser.getOption("-t").doubleValue();
@@ -871,33 +902,15 @@ public class CLASDecoder4 {
                 
                 Event  decodedEvent = decoder.getDecodedEvent(event, nrun, counter, torus, solenoid);
                 
-                Bank epics = decoder.createEpicsBank();
-                
-                decodedEvent.read(rawScaler);
                 decodedEvent.read(rawRunConf);
                 decodedEvent.read(helicityAdc);
 
                 helicityReadings.add(HelicityState.createFromFadcBank(helicityAdc, rawRunConf,
                     decoder.detectorDecoder.scalerManager));
 
-                if(rawScaler.getRows()>0 || epics!=null) {
-                    scalerEvent.reset();
-                    
-                    if(rawScaler.getRows()>0) scalerEvent.write(rawScaler);
-                    if(rawRunConf.getRows()>0) scalerEvent.write(rawRunConf);
-
-                    for (Bank b : decoder.createReconScalerBanks(decodedEvent)) {
-                        decodedEvent.write(b);
-                        scalerEvent.write(b);
-                    }
-
-                    if (epics!=null) {
-                        decodedEvent.write(epics);
-                        scalerEvent.write(epics);
-                    }
-
-                    writer.addEvent(scalerEvent, 1);
-                }
+                Event taggedEvent = decoder.createTaggedEvent(decodedEvent, "RAW::epics","RAW::scaler","RUN::scaler","HEL::scaler");
+                if (!taggedEvent.isEmpty())
+                    writer.addEvent(taggedEvent, 1);
                 
                 writer.addEvent(decodedEvent,0);
                 
