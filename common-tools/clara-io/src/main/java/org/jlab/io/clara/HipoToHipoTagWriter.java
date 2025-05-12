@@ -38,8 +38,9 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
 
     @Override
     protected HipoWriterSorted createWriter(Path file, JSONObject opts) throws EventWriterException {
-        fullSchema = new SchemaFactory();
-        fullSchema.initFromDirectory(FileUtils.getEnvironmentPath("CLAS12DIR","etc/bankdefs/hipo"));
+        try {
+            fullSchema = new SchemaFactory();
+            fullSchema.initFromDirectory(FileUtils.getEnvironmentPath("CLAS12DIR","etc/bankdefs/hipo4"));
             helicityReadings = new TreeSet<>();
             conman = new ConstantsManager();
             conman.init("/runcontrol/hwp");
@@ -56,6 +57,9 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
             runConfig = new Bank(fullSchema.getSchema("RUN::config"));
             helicityAdc = new Bank(fullSchema.getSchema("HEL::adc"));
             return w;
+        } catch (Exception e) {
+            throw new EventWriterException(e);
+        }
     }
 
     @Override
