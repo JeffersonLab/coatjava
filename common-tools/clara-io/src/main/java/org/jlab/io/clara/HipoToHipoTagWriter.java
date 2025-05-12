@@ -10,7 +10,6 @@ import org.jlab.detector.helicity.HelicityState;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
@@ -20,8 +19,9 @@ import org.json.JSONObject;
  */
 public class HipoToHipoTagWriter extends HipoToHipoWriter {
 
-    static final int TAG = 1;
-    static final String[] bankNames = {
+    // defaults:
+    int tag = 1;
+    String[] bankNames = {
         "RUN::scaler",
         "HEL::scaler",
         "RAW::scaler",
@@ -32,36 +32,34 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
     Bank[] banks;
     Bank runConfig;
     Bank helicityAdc;
-
-    ConstantsManager conman = new ConstantsManager();
-    TreeSet<HelicityState> helicityReadings = new TreeSet<>();
+    ConstantsManager conman;
+    TreeSet<HelicityState> helicityReadings;
 
     @Override
     protected HipoWriterSorted createWriter(Path file, JSONObject opts) throws EventWriterException {
-        try {
-            HipoWriterSorted w = new HipoWriterSorted();
-            super.configure(w, opts);
-            w.open(file.toString());
-            runConfig = new Bank(w.getSchemaFactory().getSchema("RUN::config"));
-            helicityAdc = new Bank(w.getSchemaFactory().getSchema("HEL::adc"));
-            banks = new Bank[bankNames.length];
-            for (int i=0; i<banks.length; ++i)
-                banks[i] = new Bank(w.getSchemaFactory().getSchema(bankNames[i]));
-            conman.init("/runcontrol/hwp");
-            if (opts.has("variation")) conman.setVariation(opts.getString("variation"));
-            if (opts.has("timestamp")) conman.setTimeStamp(opts.getString("timestamp"));
-            helicityReadings.clear();
-            return w;
-        } catch (JSONException e) {
-            throw new EventWriterException(e);
-        }
+        helicityReadings = new TreeSet<>();
+        conman = new ConstantsManager();
+        conman.init("/runcontrol/hwp");
+        if (opts.has("variation")) conman.setVariation(opts.getString("variation"));
+        if (opts.has("timestamp")) conman.setTimeStamp(opts.getString("timestamp"));
+        if (opts.has("tag")) tag = opts.getInt("tag");
+        if (opts.has("banks")) bankNames = opts.getString("banks").split(",");
+        HipoWriterSorted w = new HipoWriterSorted();
+        super.configure(w, opts);
+        w.open(file.toString());
+        runConfig = new Bank(w.getSchemaFactory().getSchema("RUN::config"));
+        helicityAdc = new Bank(w.getSchemaFactory().getSchema("HEL::adc"));
+        banks = new Bank[bankNames.length];
+        for (int i=0; i<banks.length; ++i)
+            banks[i] = new Bank(w.getSchemaFactory().getSchema(bankNames[i]));
+        return w;
     }
 
     @Override
     protected void writeEvent(Object event) throws EventWriterException {
-        Event tag = CLASDecoder4.createTaggedEvent(writer.getSchemaFactory(), 
+        Event t = CLASDecoder4.createTaggedEvent(writer.getSchemaFactory(), 
             (Event)event, "RUN::scaler","HEL::scaler","RAW::scaler","RAW::epics","HEL::flip");
-        if (!tag.isEmpty()) writer.addEvent(tag, TAG);
+        if (!t.isEmpty()) writer.addEvent(t, tag);
         ((Event)event).read(runConfig);
         ((Event)event).read(helicityAdc);
         helicityReadings.add(HelicityState.createFromFadcBank(helicityAdc, runConfig, conman));
