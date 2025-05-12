@@ -45,10 +45,11 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
             HipoWriterSorted w = new HipoWriterSorted();
             super.configure(w, opts);
             w.open(file.toString());
-            System.err.println("doggies:  "+w.getSchemaFactory());
+            System.err.println("doggies");
             w.getSchemaFactory().show();
+            System.err.println("kitties");
             runConfig = new Bank(w.getSchemaFactory().getSchema("RUN::config"));
-            helicityAdc = new Bank(w.getSchemaFactory().getSchema("HEL::adc"));
+            //helicityAdc = new Bank(w.getSchemaFactory().getSchema("HEL::adc"));
             return w;
     }
 
