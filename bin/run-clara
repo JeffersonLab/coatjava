@@ -1,7 +1,6 @@
 #!/bin/bash -f
 
 ulimit -u 49152 >& /dev/null
-export JAVA_OPTS="${JAVA_OPTS} -XX:+IgnoreUnrecognizedVMOptions"
 set -e
 
 usage="Usage:  run-clara -y YAML [-h] [-m] [-t #] [-n #] [-o DIR] [-p PREFIX] [-c CLARA_HOME] FILE..."
@@ -70,6 +69,11 @@ do
     test -f $CLARA_USER_DATA/$(basename $x) || ln -sf $(cd $(dirname $x) && pwd)/$(basename $x) $CLARA_USER_DATA
 done
 [ $(cat $CLARA_USER_DATA/filelist.txt | wc -l) -gt 0 ] || error "Found no input files"
+
+# Set some JVM options:
+export JAVA_OPTS="$JAVA_OPTS -XX:+IgnoreUnrecognizedVMOptions"
+export JAVA_OPTS="$JAVA_OPTS -Djava.io.tmpdir=$CLARA_USER_DATA -Dorg.sqlite.tmpdir=$CLARA_USER_DATA"
+export JAVA_OPTS="$JAVA_OPTS -Djava.util.logging.config.file=$CLAS12DIR/etc/logging/debug.properties"
 
 function get_host_ip() {
     if command -v ip >/dev/null 2>&1
