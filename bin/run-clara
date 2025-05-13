@@ -53,7 +53,7 @@ yaml=$(cd $(dirname $yaml) && pwd)/$(basename $yaml)
 
 # Create the environment variables and directories required by CLARA:
 [ -e $CLARA_USER_DATA ] && echo "WARNING:  Using existing directory:  $CLARA_USER_DATA"
-mkdir -p -v $CLARA_USER_DATA || error "Cannot create -o output directory: $CLARA_USER_DATA"
+mkdir -p $CLARA_USER_DATA || error "Cannot create -o output directory: $CLARA_USER_DATA"
 mkdir -p $CLARA_USER_DATA/log $CLARA_USER_DATA/config $CLARA_USER_DATA/data/output
 export CLARA_USER_DATA=$(cd $CLARA_USER_DATA && pwd)
 export CLARA_HOME=$(cd $CLARA_HOME && pwd)
