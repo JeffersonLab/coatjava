@@ -1,5 +1,6 @@
 package org.jlab.detector.calib.utils;
 
+import java.lang.Thread;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -18,6 +19,8 @@ import org.jlab.utils.groups.IndexedTable;
  * @author gavalian
  */
 public class ConstantsManager {
+
+    public static final int DBERROR_SLEEP_SECONDS=3;
 
     private static Logger LOGGER = Logger.getLogger(ConstantsManager.class.getName());
 
@@ -115,6 +118,11 @@ public class ConstantsManager {
                 requestStatus = -1;
                 LOGGER.log(Level.SEVERE,
                         "[ConstantsManager] exceeded maximum requests " + requests + " for run " + run);
+            }
+            else if (requests > 1) {
+                LOGGER.log(Level.SEVERE,"[ConstantsManager] sleeping a bit before trying again ...");
+                try { Thread.sleep(DBERROR_SLEEP_SECONDS*1000); }
+                catch (InterruptedException e) {}
             }
         }
 

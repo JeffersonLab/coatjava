@@ -12,8 +12,10 @@ public class HitReader {
 
 	private ArrayList<Hit>     _AHDCHits;
 	private ArrayList<TrueHit> _TrueAHDCHits;
+	private boolean sim = false;
 
-        public HitReader(DataEvent event, AlertDCDetector detector, boolean simulation) {
+	public HitReader(DataEvent event, AlertDCDetector detector, boolean simulation) {
+		sim = simulation;
 		fetch_AHDCHits(event, detector);
 		if (simulation) fetch_TrueAHDCHits(event);
 	}
@@ -52,7 +54,7 @@ public class HitReader {
 				double ped_max = rawHitCuts[7];
 				//System.out.println("t_min : " + t_min + " t_max : " + t_max + " tot_min : " + tot_min + " tot_max : " + tot_max + " adc_min : " + adc_min + " adc_max : " + adc_max + " ped_min : " + ped_min + " ped_max : " + ped_max);
 				// Apply these cuts
-				if ((adc >= adc_min) && (adc <= adc_max) && (leadingEdgeTime >= t_min) && (leadingEdgeTime <= t_max) && (timeOverThreshold >= tot_min) && (timeOverThreshold <= tot_max) && (adcOffset >= ped_min) && (adcOffset <= ped_max)) {
+				if (((adc >= adc_min) && (adc <= adc_max) && (leadingEdgeTime >= t_min) && (leadingEdgeTime <= t_max) && (timeOverThreshold >= tot_min) && (timeOverThreshold <= tot_max) && (adcOffset >= ped_min) && (adcOffset <= ped_max)) || sim) {
 					// Retrieve others CCDB
 					double[] timeOffsets = CalibrationConstantsLoader.AHDC_TIME_OFFSETS.get( key_value );
 					double[] time2distance = CalibrationConstantsLoader.AHDC_TIME_TO_DISTANCE.get( 10101 ); // the time to distance table has only one row ! (10101 is its only key)
