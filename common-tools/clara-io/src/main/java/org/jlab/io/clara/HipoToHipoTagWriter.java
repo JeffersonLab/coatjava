@@ -21,14 +21,8 @@ import org.json.JSONObject;
  */
 public class HipoToHipoTagWriter extends HipoToHipoWriter {
 
-    String[] bankNames = {
-        "RUN::scaler",
-        "HEL::scaler",
-        "RAW::scaler",
-        "RAW::epics",
-        "HEL::flip"
-    };
     int tag = 1;
+    String[] bankNames = {"RUN::scaler","HEL::scaler","RAW::scaler","RAW::epics","HEL::flip"};
 
     Bank runConfig;
     Bank helicityAdc;
@@ -49,7 +43,7 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
         if (opts.has("tag")) tag = opts.getInt("tag");
         if (opts.has("banks")) bankNames = opts.getString("banks").split(",");
     }
-    
+
     @Override
     protected HipoWriterSorted createWriter(Path file, JSONObject opts) throws EventWriterException {
         try {
@@ -78,5 +72,5 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
         HelicitySequence.writeFlips(writer, helicityReadings);
         super.closeWriter();
     }
-        
+
 }
