@@ -225,9 +225,14 @@
                       <filter>
                           <artifact>*:*</artifact>
                           <excludes>
+                              <!-- signature and certificate files -->
                               <exclude>META-INF/*.SF</exclude>
                               <exclude>META-INF/*.DSA</exclude>
                               <exclude>META-INF/*.RSA</exclude>
+                              <!-- maven metadata about dependencies -->
+                              <exclude>META-INF/maven/**</exclude>
+                              <!-- jacoco -->
+                              <exclude>org/jacoco/**</exclude>
                           </excludes>
                       </filter>
                   </filters>
