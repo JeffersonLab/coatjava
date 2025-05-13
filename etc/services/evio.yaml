@@ -23,7 +23,7 @@ configuration:
     triggerMask: "0x1"
   io-services:
     writer:
-      schema_dir: $CLAS12DIR/etc/bankdefs/hipo4/singles/dst
+      schema_dir: /Users/baltzell/sw/coatjava/io-dev/coatjava/etc/bankdefs/hipo4/singles/dst
   services:
     MAGFIELDS:
       magfieldSolenoidMap: Symm_solenoid_r601_phi1_z1201_13June2018.dat
