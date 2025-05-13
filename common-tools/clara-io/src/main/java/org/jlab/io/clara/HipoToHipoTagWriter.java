@@ -24,6 +24,7 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
     int tag = 1;
     String[] bankNames = {"RUN::scaler","HEL::scaler","RAW::scaler","RAW::epics","HEL::flip","COAT::config"};
 
+    Bank[] banks;
     Bank runConfig;
     Bank helicityAdc;
     ConstantsManager conman;
@@ -42,6 +43,9 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
         if (opts.has("timestamp")) conman.setTimeStamp(opts.getString("timestamp"));
         if (opts.has("tag")) tag = opts.getInt("tag");
         if (opts.has("banks")) bankNames = opts.getString("banks").split(",");
+        banks = new Bank[bankNames.length];
+        for (int i=0; i<banks.length; ++i)
+            banks[i] = new Bank(fullSchema.getSchema(bankNames[i]));
     }
 
     @Override
@@ -59,11 +63,11 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
 
     @Override
     protected void writeEvent(Object event) throws EventWriterException {
-        Event t = CLASDecoder4.createTaggedEvent(fullSchema, (Event)event, bankNames);
-        if (!t.isEmpty()) writer.addEvent(t, tag);
         ((Event)event).read(runConfig);
         ((Event)event).read(helicityAdc);
         helicityReadings.add(HelicityState.createFromFadcBank(helicityAdc, runConfig, conman));
+        Event t = CLASDecoder4.createTaggedEvent((Event)event, runConfig, banks);
+        if (!t.isEmpty()) writer.addEvent(t, tag);
         super.writeEvent(event);
     }
 

@@ -788,19 +788,25 @@ public class CLASDecoder4 {
             return null;
     }
 
-    public static Event createTaggedEvent(SchemaFactory sf, Event e, String... banks) {
+    public static Event createTaggedEvent(Event e, Bank runConfig, Bank... banks) {
         Event t = new Event();
-        for (String s : banks) {
-            Bank b = new Bank(sf.getSchema(s));
+        for (Bank b : banks) {
             e.read(b);
             if (b.getRows() > 0) t.write(b);
         }
         if (!t.isEmpty()) {
-            Bank b = new Bank(sf.getSchema("RUN::config"));
-            e.read(b);
-            t.write(b);
+            e.read(runConfig);
+            t.write(runConfig);
         }
         return t;
+    }
+
+    public static Event createTaggedEvent(SchemaFactory sf, Event e, String... banks) {
+        Bank[] b = new Bank[banks.length];
+        for (int i=0; i<banks.length; ++i) {
+            b[i] = new Bank(sf.getSchema(banks[i]));
+        }
+        return createTaggedEvent(e, new Bank(sf.getSchema("RUN::config")), b);
     }
 
     public Event createTaggedEvent(Event e, String... banks) {
