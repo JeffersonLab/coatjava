@@ -23,6 +23,8 @@ public class EvioToHipoReader extends AbstractEventReaderService<EvioSource> {
 
     CLASDecoder4 decoder;
     private long maxEvents;
+    private Double torus;
+    private Double solenoid;
 
     @Override
     protected EvioSource createReader(Path file, JSONObject opts) throws EventReaderException {
@@ -30,6 +32,8 @@ public class EvioToHipoReader extends AbstractEventReaderService<EvioSource> {
         s.open(file.toString());
         maxEvents = s.getEventCount();
         decoder = new CLASDecoder4();
+        torus = opts.has("torus") ? opts.getDouble("torus") : null;
+        solenoid = opts.has("solenoid") ? opts.getDouble("solenoid") : null;
         if (opts.has("variation")) decoder.setVariation(opts.getString("variation"));
         if (opts.has("timestamp")) decoder.setTimestamp(opts.getString("timestamp"));
         return s;
@@ -56,7 +60,7 @@ public class EvioToHipoReader extends AbstractEventReaderService<EvioSource> {
         try {
             ByteBuffer bb = reader.getEventBuffer(++eventNumber, true);
             EvioDataEvent evio = new EvioDataEvent(bb.array(), readByteOrder(), reader.getDictionary());
-            Event hipo = decoder.getDecodedEvent(evio, -1, eventNumber, -1.0, -1.0);
+            Event hipo = decoder.getDecodedEvent(evio, -1, eventNumber, torus, solenoid);
             if (eventNumber % 25000 == 0 && collectGarbage) System.gc();
             return hipo;
         } catch (EvioException e) {
