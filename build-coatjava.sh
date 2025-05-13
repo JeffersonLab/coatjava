@@ -54,6 +54,7 @@ done
 
 src_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 prefix_dir=$src_dir/coatjava
+clara_home=$(dirname $prefix_dir)/clara-home
 
 # working directory should be the source code directory
 cd $src_dir
@@ -112,7 +113,7 @@ if [ $downloadMaps == "yes" ]; then
 fi
 
 # always clean the installation prefix
-rm -rf $prefix_dir
+rm -rf $prefix_dir $clara_home
 
 # clean up any cache copies
 if [ $cleanBuild == "yes" ]; then
@@ -174,7 +175,6 @@ fi
 
 # install clara
 if [ $clara == "yes" ]; then
-    clara_home=$(dirname $prefix_dir)/clara-home
     rm -rf $clara_home && ./install-clara -c $prefix_dir $clara_home
 fi
 
