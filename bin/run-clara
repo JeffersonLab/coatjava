@@ -127,7 +127,7 @@ then
     $CLARA_HOME/bin/clara-orchestrator \
         -F -f ${ip}%${port}_java -s recon \
             -i $CLARA_USER_DATA -o $CLARA_USER_DATA -z $prefix \
-            -p $threads -t $threads \
+            -p $threads -t $threads $nevents \
             $yaml $CLARA_USER_DATA/filelist.txt
     set +v
 else
