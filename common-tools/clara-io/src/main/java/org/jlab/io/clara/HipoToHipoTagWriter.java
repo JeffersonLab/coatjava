@@ -22,7 +22,7 @@ import org.json.JSONObject;
 public class HipoToHipoTagWriter extends HipoToHipoWriter {
 
     int tag = 1;
-    String[] bankNames = {"RUN::scaler","HEL::scaler","RAW::scaler","RAW::epics","HEL::flip"};
+    String[] bankNames = {"RUN::scaler","HEL::scaler","RAW::scaler","RAW::epics","HEL::flip","COAT::config"};
 
     Bank runConfig;
     Bank helicityAdc;
@@ -69,7 +69,8 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
 
     @Override
     protected void closeWriter() {
-        HelicitySequence.writeFlips(writer, helicityReadings);
+        HelicitySequence.writeFlips(fullSchema, writer, helicityReadings);
+        helicityReadings.clear();
         super.closeWriter();
     }
 
