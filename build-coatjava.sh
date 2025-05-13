@@ -16,6 +16,7 @@ usage='''build-coatjava.sh [OPTIONS]... [MAVEN_OPTIONS]...
    --docs            also build the API documentation webpages
    --spotbugs        also run spotbugs plugin
    --unittests       also run unit tests
+   --clara           also install clara
 
    --help            show this message
 
@@ -30,6 +31,7 @@ runSpotBugs="no"
 downloadMaps="yes"
 runUnitTests="no"
 buildDocs="no"
+clara="no"
 mvnArgs=()
 for xx in $@
 do
@@ -41,6 +43,7 @@ do
     --docs)      buildDocs="yes"    ;;
     --quiet)     quiet="yes"        ;;
     --clean)     cleanBuild="yes"   ;;
+    --clara)     clara="yes"   ;;
     -h|--help)
       echo "$usage"
       exit 2
@@ -170,6 +173,9 @@ if [ $buildDocs == "yes" ]; then
 fi
 
 # install clara
-rm -rf clara-home && ./install-clara -c ./coatjava ./clara-home
+if [ $clara == "yes" ]; then
+    clara_home=$(dirname $prefix_dir)/clara-home
+    rm -rf $clara_home && ./install-clara -c $prefix_dir $clara_home
+fi
 
 echo "COATJAVA SUCCESSFULLY BUILT !"
