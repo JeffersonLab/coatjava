@@ -15,6 +15,7 @@ usage='''build-coatjava.sh [OPTIONS]... [MAVEN_OPTIONS]...
 
    --spotbugs        also run spotbugs plugin
    --unittests       also run unit tests
+   --clara           also install clara
 
    --quiet           run more quietly
    --no-progress     no download progress printouts
@@ -48,6 +49,7 @@ do
       mvnArgs+=(--no-transfer-progress)
       wgetArgs+=(--no-verbose)
       ;;
+    --clara)     clara="yes"   ;;
     -h|--help)
       echo "$usage"
       exit 2
@@ -183,6 +185,9 @@ done
 echo "installed coatjava to: $prefix_dir"
 
 # install clara
-rm -rf clara-home && ./install-clara -c ./coatjava ./clara-home
+if [ $clara == "yes" ]; then
+    clara_home=$(dirname $prefix_dir)/clara-home
+    rm -rf $clara_home && ./install-clara -c $prefix_dir $clara_home
+fi
 
 echo "COATJAVA SUCCESSFULLY BUILT !"
