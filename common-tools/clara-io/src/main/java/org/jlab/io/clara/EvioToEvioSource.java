@@ -50,7 +50,7 @@ public class EvioToEvioSource extends AbstractEventReaderService<EvioSource> {
         if (eventNumber >= maxEvents) return null;
         try {
             ByteBuffer bb = reader.getEventBuffer(++eventNumber, true);
-            EvioDataEvent event = new EvioDataEvent(bb.array(), byteOrder, reader.getDictionary());
+            EvioDataEvent event = new EvioDataEvent(bb.array(), byteOrder);
             return event;
         } catch (EvioException e) {
             throw new EventReaderException(e);
