@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 REPO="$( cd "$(dirname "$0")"/../.. ; pwd -P )"/myLocalMvnRepo
 
 cd `dirname $0`
@@ -8,7 +10,13 @@ cd `dirname $0`
 # Script is exporting existing Jar files to repository
 #-------------------------------------------------------------------------------------------------
 
-VERSION=12.0.6t
+VERSION=12.0.6t-SNAPSHOT
+
+rm -rvf testDeployment
+mvn clean deploy
+tree target
+tree testDeployment
+exit
 
 mvn org.apache.maven.plugins:maven-install-plugin:2.5.2:install-file \
     -Dfile=target/coat-libs-${VERSION}-SNAPSHOT.jar \
@@ -17,6 +25,7 @@ mvn org.apache.maven.plugins:maven-install-plugin:2.5.2:install-file \
     -Dversion=${VERSION}-SNAPSHOT \
     -Dpackaging=jar \
     -DlocalRepositoryPath=$REPO
+exit
 
 scp -r $REPO/org/jlab/coat/coat-libs/${VERSION}-SNAPSHOT \
     clas12@jlabl1:/group/clas/www/clasweb/html/clas12maven/org/jlab/coat/coat-libs/.

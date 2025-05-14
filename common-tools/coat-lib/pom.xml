@@ -5,7 +5,7 @@
   <groupId>org.jlab.clas</groupId>
   <artifactId>coat-libs</artifactId>
   <version>12.0.6t-SNAPSHOT</version>
-  <packaging>pom</packaging>
+  <packaging>jar</packaging>
 
   <parent>
     <groupId>org.jlab.clas</groupId>
@@ -183,79 +183,107 @@
 
   </dependencies>
 
-  <!-- BUILD section for creating one JAR -->
   <build>
-      <finalName>coatjava</finalName>
-      <plugins>
-          <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-compiler-plugin</artifactId>
-              <version>3.8.0</version>
-              <configuration>
-                  <encoding>UTF-8</encoding>
-                  <release>17</release>
-              </configuration>
-          </plugin>
-          <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-resources-plugin</artifactId>
-              <version>3.3.1</version>
-              <configuration>
-                  <encoding>${project.build.sourceEncoding}</encoding>
-              </configuration>
-          </plugin>
-          <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-shade-plugin</artifactId>
-              <version>2.3</version>
-              <configuration>
-                  <outputFile>target/coat-libs-${project.version}.jar</outputFile>
-                  <artifactSet>
-                      <excludes>
-                          <exclude>cnuphys:cnuphys</exclude>
-                          <exclude>cnuphys:bCNU</exclude>
-                          <exclude>cnuphys:bCNU3D</exclude>
-                          <exclude>cnuphys:jogl-all</exclude>
-                          <exclude>cnuphys:jogl</exclude>
-                          <exclude>cnuphys:gluegen</exclude>
-                          <exclude>org.jlab.coda:jclara</exclude>
-                      </excludes>
-                  </artifactSet>
-                  <filters>
-                      <filter>
-                          <artifact>*:*</artifact>
-                          <excludes>
-                              <!-- signature and certificate files -->
-                              <exclude>META-INF/*.SF</exclude>
-                              <exclude>META-INF/*.DSA</exclude>
-                              <exclude>META-INF/*.RSA</exclude>
-                              <!-- maven metadata about dependencies -->
-                              <exclude>META-INF/maven/**</exclude>
-                              <!-- jacoco -->
-                              <exclude>org/jacoco/**</exclude>
-                          </excludes>
-                      </filter>
-                  </filters>
-                  <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                      <manifestEntries>
-                          <Specification-Title>${project.artifactId}</Specification-Title>
-                          <Specification-Version>${project.version}</Specification-Version>
-                          <Implementation-Title>${project.artifactId}</Implementation-Title>
-                          <Implementation-Version>${project.version}</Implementation-Version>
-                          <Implementation-Vendor-Id>${project.groupId}</Implementation-Vendor-Id>
-                      </manifestEntries>
-                  </transformer>
-              </configuration>
-              <executions>
-                  <execution>
-                      <phase>package</phase>
-                      <goals>
-                          <goal>shade</goal>
-                      </goals>
-                  </execution>
-              </executions>
-          </plugin>
-      </plugins>
+    <plugins>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.8.0</version>
+        <configuration>
+          <encoding>UTF-8</encoding>
+          <release>17</release>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>3.3.1</version>
+        <configuration>
+          <encoding>${project.build.sourceEncoding}</encoding>
+        </configuration>
+      </plugin>
+
+      <!-- create shaded coat-libs JAR -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.6.0</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <createDependencyReducedPom>true</createDependencyReducedPom>
+          <artifactSet>
+            <excludes>
+              <exclude>cnuphys:cnuphys</exclude>
+              <exclude>cnuphys:bCNU</exclude>
+              <exclude>cnuphys:bCNU3D</exclude>
+              <exclude>cnuphys:jogl-all</exclude>
+              <exclude>cnuphys:jogl</exclude>
+              <exclude>cnuphys:gluegen</exclude>
+              <exclude>org.jlab.coda:jclara</exclude>
+              <exclude>org.jacoco</exclude>
+            </excludes>
+          </artifactSet>
+          <filters>
+            <filter>
+              <artifact>*:*</artifact>
+              <excludes>
+                <!-- signature and certificate files -->
+                <exclude>META-INF/*.SF</exclude>
+                <exclude>META-INF/*.DSA</exclude>
+                <exclude>META-INF/*.RSA</exclude>
+                <!-- maven metadata about dependencies -->
+                <exclude>META-INF/maven/**</exclude>
+                <!-- IDE files, etc. -->
+                <exclude>.DS_Store</exclude>
+                <exclude>.classpath</exclude>
+                <exclude>.factorypath</exclude>
+                <exclude>.project</exclude>
+                <exclude>.settings</exclude>
+              </excludes>
+            </filter>
+          </filters>
+          <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+            <manifestEntries>
+              <Specification-Title>${project.artifactId}</Specification-Title>
+              <Specification-Version>${project.version}</Specification-Version>
+              <Implementation-Title>${project.artifactId}</Implementation-Title>
+              <Implementation-Version>${project.version}</Implementation-Version>
+              <Implementation-Vendor-Id>${project.groupId}</Implementation-Vendor-Id>
+            </manifestEntries>
+          </transformer>
+        </configuration>
+      </plugin>
+
+      <!-- deployment configuration -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-deploy-plugin</artifactId>
+        <version>3.1.4</version>
+        <configuration>
+          <!-- Use the reduced POM -->
+          <pomFile>${project.build.directory}/dependency-reduced-pom.xml</pomFile>
+        </configuration>
+      </plugin>
+
+    </plugins>
   </build>
+
+  <!-- deployment -->
+  <distributionManagement>
+    <repository>
+      <id>coat-lib-release</id> <!-- FIXME: not sure what to put here -->
+      <url>file://testDeployment</url>
+    </repository>
+  </distributionManagement>
+
 </project>
 

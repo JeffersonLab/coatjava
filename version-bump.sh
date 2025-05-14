@@ -20,22 +20,11 @@ if [ $# -lt 1 ]; then
   """
   exit 2
 fi
-ver_arg=$1
+ver=$1
 [ $# -ge 2 -a "${2-}" = "--no-git" ] && use_git=false || use_git=true
 
-# parse version number argument
-ver_num=$(echo $ver_arg|sed 's/-SNAPSHOT//g')  # remove '-SNAPSHOT', if the user included it
-ver_pom=$ver_num-SNAPSHOT                      # append '-SNAPSHOT' for POM files
-
-# print arguments
-echo """>>>>>
-ver_num: $ver_num
-ver_pom: $ver_pom
-use_git: $use_git
-<<<<<"""
-
 # if using git, make a new branch
-new_branch=version/$ver_num
+new_branch=version/$ver
 if $use_git; then
   # verify user is on the main branch
   current_branch=$(git rev-parse --abbrev-ref HEAD)
@@ -49,20 +38,20 @@ if $use_git; then
 fi
 
 # bump the POM project version
-mvn versions:set -DnewVersion=$ver_pom -DprocessAllModules
+mvn versions:set -DnewVersion=$ver -DprocessAllModules
 mvn versions:commit -DprocessAllModules
 
 # bump `deployDistribution.sh`'s version
-sed -i "s/^VERSION=.*/VERSION=$ver_num/g" common-tools/coat-lib/deployDistribution.sh
+sed -i "s/^VERSION=.*/VERSION=$ver/g" common-tools/coat-lib/deployDistribution.sh
 
 # bump `install-clara`'s version
-sed -i "s/^coatjava=.*/coatjava=$ver_num/g" install-clara
+sed -i "s/^coatjava=.*/coatjava=$ver/g" install-clara
 
 # commit to git (or not)
 if $use_git; then
   echo """
   ============================================"""
-  git commit -am "build: bump version number to $ver_num"
+  git commit -am "build: bump version number to $ver"
   echo """Done.
   Currently on branch $new_branch
   Now run your usual 'git push' command, which is probably:
