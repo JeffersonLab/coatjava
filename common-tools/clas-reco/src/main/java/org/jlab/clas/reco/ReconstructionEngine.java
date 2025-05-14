@@ -236,7 +236,7 @@ public abstract class ReconstructionEngine implements Engine {
             if(base.has(key)==true){
                 variation = base.getString(key);
             } else {
-                LOGGER.log(Level.WARNING,"[JSON]" + this.getName() + " **** warning **** does not contain key = " + key);
+                LOGGER.log(Level.FINE,"[JSON]" + this.getName() + " **** warning **** does not contain key = " + key);
             }
             /*
             js = base.get(key);
