@@ -29,19 +29,21 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
     Bank runConfig;
     Bank helicityAdc;
     ConstantsManager conman;
-    TreeSet<HelicityState> helicityReadings;
-    DaqScalersSequence daqScalers;
+    TreeSet<HelicityState> helicities;
+    DaqScalersSequence scalers;
     SchemaFactory fullSchema;
+    int runNumber;
 
     protected void init(JSONObject opts) {
+        runNumber = 0;
         fullSchema = new SchemaFactory();
         fullSchema.initFromDirectory(FileUtils.getEnvironmentPath("CLAS12DIR","etc/bankdefs/hipo4"));
         runConfig = new Bank(fullSchema.getSchema("RUN::config"));
         helicityAdc = new Bank(fullSchema.getSchema("HEL::adc"));
-        helicityReadings = new TreeSet<>();
-        daqScalers = new DaqScalersSequence(fullSchema);
+        helicities = new TreeSet<>();
+        scalers = new DaqScalersSequence(fullSchema);
         conman = new ConstantsManager();
-        conman.init("/runcontrol/hwp");
+        conman.init("/runcontrol/hwp","/runcontrol/helicity");
         if (opts.has("variation")) conman.setVariation(opts.getString("variation"));
         if (opts.has("timestamp")) conman.setTimeStamp(opts.getString("timestamp"));
         if (opts.has("tag")) tag = opts.getInt("tag");
@@ -66,10 +68,14 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
 
     @Override
     protected void writeEvent(Object event) throws EventWriterException {
-        daqScalers.add((Event)event);
+        scalers.add((Event)event);
         ((Event)event).read(runConfig);
+        if (runConfig.getRows() > 0) {
+            int r = runConfig.getInt("run",0);
+            if (r > 0) runNumber = r;
+        }
         ((Event)event).read(helicityAdc);
-        helicityReadings.add(HelicityState.createFromFadcBank(helicityAdc, runConfig, conman));
+        helicities.add(HelicityState.createFromFadcBank(helicityAdc, runConfig, conman));
         Event t = CLASDecoder4.createTaggedEvent((Event)event, runConfig, banks);
         if (!t.isEmpty()) writer.addEvent(t, tag);
         super.writeEvent(event);
@@ -77,9 +83,9 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
 
     @Override
     protected void closeWriter() {
-        HelicitySequence.writeFlips(fullSchema, writer, helicityReadings);
-        helicityReadings.clear();
-        daqScalers.clear();
+        HelicitySequence.writeFlips(fullSchema, writer, helicities);
+        helicities.clear();
+        scalers.clear();
         super.closeWriter();
     }
 
