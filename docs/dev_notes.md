@@ -25,7 +25,7 @@ flowchart TB
     gitPush[git push]:::manual
     pullRequest[pull request and merge]:::manual
     gitTag[git tag and release]:::manual
-    subgraph CI
+    subgraph Continuous Integration (CI)
         bump3{{bump version to $VERSION}}:::automatic
         deployGit{{deploy git release tarball}}:::automatic
     end
