@@ -49,7 +49,7 @@ if $use_git; then
   current_branch=$(git rev-parse --abbrev-ref HEAD)
   if [ "$current_branch" != "$main_branch" ]; then
     echo """ERROR: you are currently on branch '$current_branch', but you should be on branch '$main_branch'.
-    Please switch to branch '$main_branch' and (preferrably) run 'git pull'.""" >&2
+    Please switch to branch '$main_branch' and (preferably) run 'git pull'.""" >&2
     exit 1
   fi
   # switch to a new branch for this new version
