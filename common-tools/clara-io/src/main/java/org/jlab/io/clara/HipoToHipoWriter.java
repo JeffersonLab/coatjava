@@ -32,13 +32,15 @@ public class HipoToHipoWriter extends AbstractEventWriterService<HipoWriterSorte
     private final StringSubstitutor envSubstitutor = new StringSubstitutor(System.getenv());
 
     private int compression = 2;
+    protected String filename;
 
     @Override
     protected HipoWriterSorted createWriter(Path file, JSONObject opts) throws EventWriterException {
         try {
+            filename = file.toString();
             HipoWriterSorted writer = new HipoWriterSorted();
             configure(writer, opts);
-            writer.open(file.toString());
+            writer.open(filename);
             return writer;
         } catch (Exception e) {
             throw new EventWriterException(e);
