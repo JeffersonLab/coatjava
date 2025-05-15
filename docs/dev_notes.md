@@ -24,7 +24,7 @@ flowchart TB
     pullRequest[pull request and merge]:::manual
     gitTag[git tag and release]:::manual
     bump3{{bump version to $VERSION}}:::automatic
-    deployGit{{deploy git release tarball}}::automatic
+    deployGit{{deploy git release tarball}}:::automatic
 
     deployScript ==> bump1
     bump1 ==> deployMaven
