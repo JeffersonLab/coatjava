@@ -2,37 +2,81 @@
 
 set -euo pipefail
 
-# version number
+# constants
 src_dir=$(cd $(dirname ${BASH_SOURCE[0]:-$0}) && pwd -P)
-ver_current=$($src_dir/libexec/version.sh)
-ver_release=$(echo $ver_current | sed 's;-SNAPSHOT;;')
+deploy_dir=$src_dir/myLocalMvnRepo
+main_branch=development
 
 # printouts for this script (different from Maven printouts)
 log() { echo ">>> $@"; }
+
+# arguments
+ver_deploy=''
+snap_deploy=false
+dry_run=false
+use_git=true
 
 # usage guide
 usage() {
   echo """
   USAGE: $0 [OPTIONS]...
 
-    -v VERSION   set the version number to deploy
-                 default: $ver_release
-                 NOTE: append '-SNAPSHOT' if you want to deploy
-                       a timestamped snapshot version
+  REQUIRED OPTIONS:
+    -v VERSION   set the version number to deploy; required
 
-    -h           show this usage guide
+  OPTIONAL OPTIONS:
+    --no-git     do not involve 'git' in any way, just change the version number
+    --snap       deploy a snapshot version; applies '--no-git'
+    --dry-run    do everything except deploying to remote servers; applies '--no-git'
+    -h,--help    show this usage guide
+
+  BEFORE RUNNING:
+  - [ ] be on branch '$main_branch' before doing this, and it should
+        be up-to-date with the remote (run 'git pull')
+  - [ ] make sure you don't have any changes (run 'git status')
+
+  EFFECT:
+  - the new release will be deployed
+  - a new git branch for this version bump will be created, and a commit will be added
+  - at the end, all you have to do is run 'git push' and open a pull request
   """
 }
 
 # parse arguments
-while getopts "v:h" opt; do
+if [ $# -eq 0 ]; then
+  usage
+  exit 2
+fi
+while getopts "v:h-:" opt; do
   case $opt in
     v)
-      ver_release=$OPTARG
+      ver_deploy=$OPTARG
       ;;
     h)
       usage
       exit 2
+      ;;
+    -)
+      case $OPTARG in
+        no-git)
+          use_git=false
+          ;;
+        snap)
+          snap_deploy=true
+          use_git=false
+          ;;
+        dry-run)
+          dry_run=true
+          use_git=false
+          ;;
+        help)
+          usage
+          exit 2
+          ;;
+        *)
+          echo "ERROR: unknown option '$OPTARG'" >&2
+          exit 1
+      esac
       ;;
     *)
       exit 1
@@ -40,19 +84,44 @@ while getopts "v:h" opt; do
   esac
 done
 
+# be in the top-level source directory
+cd $src_dir
+
+# handle version number
+[ -z "$ver_deploy" ] && echo "ERROR: version number not specified" >&2 && exit 1
+ver_deploy=$(echo $ver_deploy | sed 's;-SNAPSHOT;;g')
+ver_snapshot=$ver_deploy-SNAPSHOT
+if $snap_deploy; then ver_deploy=$ver_snapshot; fi
+ver_current=$($src_dir/libexec/version.sh)
 log "========================"
-log "CURRENT VERSION = $ver_current"
-log "RELEASE VERSION = $ver_release"
+log "CURRENT VERSION  = $ver_current"
+log "SNAPSHOT VERSION = $ver_snapshot"
+log "DEPLOY VERSION   = $ver_deploy"
 log "========================"
+
+# if using git, make a new branch
+new_branch=version/$ver_deploy
+if $use_git; then
+  log "create git branch '$new_branch'"
+  # verify user is on the main branch
+  current_branch=$(git rev-parse --abbrev-ref HEAD)
+  if [ "$current_branch" != "$main_branch" ]; then
+    echo """ERROR: you are currently on branch '$current_branch', but you should be on branch '$main_branch'.
+    Please switch to branch '$main_branch' and (preferably) run 'git pull'.""" >&2
+    exit 1
+  fi
+  # switch to a new branch for this new version
+  git switch -c $new_branch
+fi
 
 # change the version number, if different
 # NOTE: `maven-release-plugin` could be used to better automate the versioning
 # here, but since this deployment is _only_ done in the `coat-lib` POM (the
 # shaded JAR), and we also want to make a tarball with _all_ of the POMs at the
 # correct version number, we may as well do the version bump here
-if [ "$ver_current" != "$ver_release" ]; then
-  log "change version number $ver_current -> $ver_release"
-  $src_dir/version-bump.sh --no-git --no-snap $ver_release
+if [ "$ver_current" != "$ver_deploy" ]; then
+  log "change version number $ver_current -> $ver_deploy"
+  $src_dir/libexec/version-bump.sh $ver_deploy
 fi
 
 # rebuild coatjava, cleanly, to be sure we deploy the correct version
@@ -60,57 +129,64 @@ log "cleanly rebuild coatjava"
 $src_dir/build-coatjava.sh --clean
 $src_dir/build-coatjava.sh
 
-# deploy
-log "deploy coatjava version $ver_release"
+# deploy locally
+log "local deployment of coatjava version $ver_deploy"
 mvn clean deploy -f $src_dir/common-tools/coat-lib/pom.xml
+deploy_tarball=coatjava-${ver_deploy}.tar.gz
+tar czf $deploy_tarball coatjava
+print_deployment() {
+  log "========================"
+  log "local deployments:"
+  log "  $deploy_dir"
+  log "  $deploy_tarball"
+  log "========================"
+}
+print_deployment
 
-# revert the version number and rebuild coatjava
-# NOTE: the standard approach is to increment the version number, but we typically
-# do that just before a new release, using `version-bump.sh`, so we can choose
-# which numbers to increment (major, minor, or patch) based on the recent changes;
-# so instead here we just revert to the previous state
-# FIXME: if anything failed between the `version-bump.sh` calls, your repository
-# may have the "wrong" version number; you can use `version-bump.sh` to fix (or
-# `git reset`); surely there is a smarter way to ensure no version number change
-# no matter what
-if [ "$ver_current" != "$ver_release" ]; then
-  log "revert version number to $ver_current"
-  $src_dir/version-bump.sh --no-git --no-snap $ver_current
-  log "rebuild coatjava with the original version number"
-  $src_dir/build-coatjava.sh
+
+# deploy remotely
+if ! $dry_run; then
+  log "remote deployment"
+  #+++FIXME
+  echo scp -r $deploy_dir/org/jlab/coat/coat-libs/* \
+    clas12@jlabl1:/group/clas/www/clasweb/html/clas12maven/org/jlab/coat/coat-libs/.
+  echo scp $deploy_tarball \
+    clas12@jlabl1:/group/clas/www/clasweb/html/clas12offline/distribution/coatjava/.
+else
+  log "dry run, not doing remote deployment"
 fi
 
+# change the version number to snapshot version
+if [ "$ver_deploy" != "$ver_snapshot" ]; then
+  log "change version number $ver_deploy -> $ver_snapshot"
+  $src_dir/libexec/version-bump.sh $ver_snapshot
+fi
 
-#-------------------------------------------------------------------------------------------------
-# Script is exporting existing Jar files to repository
-#-------------------------------------------------------------------------------------------------
+# print what was done, and remove your local deployment directory so the next
+# deployment doesn't clobber old deployments
+if $dry_run; then
+  log "this was just a dry run, nothing was deployed remotely, but the version number may have changed;"
+  log "use 'git' to revert the POM file changes, if you need to"
+  print_deployment
+else
+  log "version $ver_deploy has been deployed!"
+  log "now removing the local deployments"
+  print_deployment
+  echo rm -r $deploy_dir #+++FIXME
+  echo rm $deploy_tarball #+++FIXME
+fi
 
-# cd `dirname $0`
+# git commit
+if $use_git; then
+  echo """
+  ============================================"""
+  git commit -am "build: bump version number to $ver_deploy"
+  echo """Done.
+  Currently on branch $new_branch
+  Now run your usual 'git push' command, which is probably:
 
+    git push -u origin $new_branch
 
-# rm -rvf testDeployment
-# mvn clean deploy
-# tree target
-# tree testDeployment
-# exit
-#
-# repo=$src_dir/myLocalMvnRepo
-#
-# mvn org.apache.maven.plugins:maven-install-plugin:2.5.2:install-file \
-#     -Dfile=target/coat-libs-${VERSION}-SNAPSHOT.jar \
-#     -DgroupId=org.jlab.coat \
-#     -DartifactId=coat-libs \
-#     -Dversion=${VERSION}-SNAPSHOT \
-#     -Dpackaging=jar \
-#     -DlocalRepositoryPath=$repo
-# exit
-#
-# scp -r $repo/org/jlab/coat/coat-libs/${VERSION}-SNAPSHOT \
-#     clas12@jlabl1:/group/clas/www/clasweb/html/clas12maven/org/jlab/coat/coat-libs/.
-#
-#
-# cd $repo/..
-# tar -czvf coatjava-${VERSION}.tar.gz coatjava
-# scp coatjava-${VERSION}.tar.gz \
-#     clas12@jlabl1:/group/clas/www/clasweb/html/clas12offline/distribution/coatjava/.
-#
+  ============================================
+  """
+fi

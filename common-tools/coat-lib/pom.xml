@@ -280,8 +280,8 @@
   <!-- deployment -->
   <distributionManagement>
     <repository>
-      <id>coat-lib-release</id> <!-- FIXME: not sure what to put here -->
-      <url>file://testDeployment</url>
+      <id>coat-libs</id>
+      <url>file://myLocalMvnRepo</url> <!-- must be consistent with 'deploy-coatjava.sh' -->
     </repository>
   </distributionManagement>
 
