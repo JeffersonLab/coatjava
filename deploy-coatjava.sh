@@ -87,6 +87,13 @@ done
 # be in the top-level source directory
 cd $src_dir
 
+# make sure the deployment directory is empty
+if [ -d "$deploy_dir" ]; then
+  echo "ERROR: deployment directory already exists: $deploy_dir" >&2
+  echo "       please remove it (so the deployment will be clean)" >&2
+  exit 1
+fi
+
 # handle version number
 [ -z "$ver_deploy" ] && echo "ERROR: version number not specified" >&2 && exit 1
 ver_deploy=$(echo $ver_deploy | sed 's;-SNAPSHOT;;g')
@@ -157,23 +164,29 @@ else
 fi
 
 # change the version number to snapshot version
-if [ "$ver_deploy" != "$ver_snapshot" ]; then
-  log "change version number $ver_deploy -> $ver_snapshot"
-  $src_dir/libexec/version-bump.sh $ver_snapshot
+if ! $dry_run; then
+  if [ "$ver_deploy" != "$ver_snapshot" ]; then
+    log "change version number $ver_deploy -> $ver_snapshot"
+    $src_dir/libexec/version-bump.sh $ver_snapshot
+  fi
+else # revert the version number, if this was a dry run
+  # FIXME: it won't really be a dry run if some step above failed...
+  #        just use git to fix that
+  if [ "$ver_deploy" != "$ver_current" ]; then
+    log "since this is a dry run, revert version number $ver_deploy -> $ver_current"
+    $src_dir/libexec/version-bump.sh $ver_current
+  fi
 fi
 
 # print what was done, and remove your local deployment directory so the next
 # deployment doesn't clobber old deployments
+print_deployment
 if $dry_run; then
-  log "this was just a dry run, nothing was deployed remotely, but the version number may have changed;"
-  log "use 'git' to revert the POM file changes, if you need to"
-  print_deployment
+  log "this was just a dry run"
+  log " - nothing was deployed remotely"
+  log " - the version number was NOT bumped"
 else
   log "version $ver_deploy has been deployed!"
-  log "now removing the local deployments"
-  print_deployment
-  echo rm -r $deploy_dir #+++FIXME
-  echo rm $deploy_tarball #+++FIXME
 fi
 
 # git commit
@@ -189,4 +202,8 @@ if $use_git; then
 
   ============================================
   """
+elif ! $dry_run; then
+  log "Option '--no-git' was used and this is not a dry run;"
+  log "the version number may have been changed (run 'git status')."
+  log "Use 'libexec/version-bump.sh' if you need to revert the version number."
 fi
