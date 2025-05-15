@@ -11,8 +11,8 @@ document.
 
 ```mermaid
 flowchart TB
-    classDef manual fill:#f8f,color:black
-    classDef auto   fill:#8f8,color:black
+    classDef manual    fill:#f8f,color:black
+    classDef automatic fill:#8f8,color:black
 
     deployScript[deploy-coatjava.sh $VERSION]:::manual
     bump1{{bump version to $VERSION}}:::automatic
