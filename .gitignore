@@ -6,6 +6,7 @@ target
 /docs/javadoc/*
 /clara-home
 tmp
+dependency-reduced-pom.xml
 
 *.class
 *lundfiles*.dat
