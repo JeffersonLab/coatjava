@@ -7,6 +7,7 @@ import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.decode.CLASDecoder4;
 import org.jlab.detector.helicity.HelicitySequence;
 import org.jlab.detector.helicity.HelicityState;
+import org.jlab.detector.scalers.DaqScalersSequence;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
@@ -29,6 +30,7 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
     Bank helicityAdc;
     ConstantsManager conman;
     TreeSet<HelicityState> helicityReadings;
+    DaqScalersSequence daqScalers;
     SchemaFactory fullSchema;
 
     protected void init(JSONObject opts) {
@@ -37,6 +39,7 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
         runConfig = new Bank(fullSchema.getSchema("RUN::config"));
         helicityAdc = new Bank(fullSchema.getSchema("HEL::adc"));
         helicityReadings = new TreeSet<>();
+        daqScalers = new DaqScalersSequence(fullSchema);
         conman = new ConstantsManager();
         conman.init("/runcontrol/hwp");
         if (opts.has("variation")) conman.setVariation(opts.getString("variation"));
@@ -63,6 +66,7 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
 
     @Override
     protected void writeEvent(Object event) throws EventWriterException {
+        daqScalers.add((Event)event);
         ((Event)event).read(runConfig);
         ((Event)event).read(helicityAdc);
         helicityReadings.add(HelicityState.createFromFadcBank(helicityAdc, runConfig, conman));
@@ -75,6 +79,11 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
     protected void closeWriter() {
         HelicitySequence.writeFlips(fullSchema, writer, helicityReadings);
         helicityReadings.clear();
+        daqScalers.clear();
+        super.closeWriter();
+    }
+
+    protected void closeRawWriter() {
         super.closeWriter();
     }
 
