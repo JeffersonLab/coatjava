@@ -4,6 +4,11 @@
 
 Deploying a new version requires a new version number, named `$VERSION` in this
 document.
+- the release build will have version `$VERSION`
+- the git repository will have version `${VERSION}-SNAPSHOT`
+  - note that this is not conventional, since typically `-SNAPSHOT` is used for _upcoming_
+    releases; however, we never know what the new version number is going to be, and
+    we only bump the version number for a _new_ release
 
 **Legend:**
 - magenta rectangle: manual step
