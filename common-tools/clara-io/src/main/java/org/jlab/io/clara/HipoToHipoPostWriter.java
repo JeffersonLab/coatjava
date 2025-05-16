@@ -13,8 +13,8 @@ import org.jlab.jnp.hipo4.io.HipoReader;
  * @author baltzell
  */
 public class HipoToHipoPostWriter extends HipoToHipoTagWriter {
- 
-    protected void update() {
+
+    private void update() {
         int d = conman.getConstants(runNumber, "/runcontrol/helicity").getIntValue("delay",0,0,0);
         HelicitySequenceDelayed h = new HelicitySequenceDelayed(d);
         h.addStream(helicities);
@@ -31,9 +31,8 @@ public class HipoToHipoPostWriter extends HipoToHipoTagWriter {
         writer.close();
         new File(filename).delete();
         new File("pp_"+filename).renameTo(new File(filename));
-        
     }
-    
+
     @Override
     protected void closeWriter() {
         HelicitySequence.writeFlips(fullSchema, writer, helicities);

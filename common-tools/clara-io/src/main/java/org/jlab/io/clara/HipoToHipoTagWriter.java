@@ -16,7 +16,12 @@ import org.jlab.jnp.utils.file.FileUtils;
 import org.json.JSONObject;
 
 /**
- * This is just a wrap of the standard COATJAVA "decoder" in a CLARA I/O service
+ * A port of the standard "decoder" to a CLARA I/O service.
+ *
+ * 1. Converts EVIO to HIPO, translation tables, pulse extraction
+ * 2. Copies special banks on-the-fly to new tag-1 events
+ * 3. Caches helicity states and scaler readouts, for later use in post-processing.
+ * 4. Upon close, writes the helicity sequence to HEL::flip banks in new tag-1 events.
  * 
  * @author baltzell
  */
@@ -34,7 +39,7 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
     SchemaFactory fullSchema;
     int runNumber;
 
-    protected void init(JSONObject opts) {
+    private void init(JSONObject opts) {
         runNumber = 0;
         fullSchema = new SchemaFactory();
         fullSchema.initFromDirectory(FileUtils.getEnvironmentPath("CLAS12DIR","etc/bankdefs/hipo4"));
