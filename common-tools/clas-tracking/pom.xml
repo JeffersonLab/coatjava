@@ -16,7 +16,7 @@
   <dependencies>
     <dependency>
         <groupId>org.ejml</groupId>
-        <artifactId>ejml-all</artifactId>
+        <artifactId>ejml-simple</artifactId>
         <version>0.44.0</version>
     </dependency>
     <dependency>
