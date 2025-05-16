@@ -17,6 +17,21 @@
 
     <dependency>
       <groupId>org.jlab.coda</groupId>
+      <artifactId>jclara</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jlab.jnp</groupId>
+      <artifactId>jnp-hipo</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jlab.jnp</groupId>
+      <artifactId>jnp-hipo4</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jlab.coda</groupId>
       <artifactId>jtools</artifactId>
       <version>2.2</version>
     </dependency>

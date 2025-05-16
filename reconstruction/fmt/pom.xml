@@ -17,19 +17,18 @@
   </parent>
 
   <dependencies>
-     <dependency>
-      <groupId>org.jlab.clas</groupId>
-      <artifactId>clas-jcsg</artifactId>
-      <version>12.0.6t-SNAPSHOT</version>
-      <type>jar</type>
-    </dependency>  
+
+    <dependency>
+      <groupId>org.jlab.jnp</groupId>
+      <artifactId>jnp-hipo</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>swim-tools</artifactId>
       <version>12.0.6t-SNAPSHOT</version>
     </dependency>
-   
+
   </dependencies>
 
 </project>

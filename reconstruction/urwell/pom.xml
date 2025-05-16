@@ -24,7 +24,13 @@
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
-      <artifactId>clas-analysis</artifactId>
+      <artifactId>clas-jcsg</artifactId>
+      <version>12.0.6t-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jlab.clas</groupId>
+      <artifactId>clas-reco</artifactId>
       <version>12.0.6t-SNAPSHOT</version>
     </dependency>
 

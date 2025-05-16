@@ -17,6 +17,11 @@
   <dependencies>
 
     <dependency>
+      <groupId>org.jlab.jnp</groupId>
+      <artifactId>jnp-hipo4</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-detector</artifactId>
       <version>12.0.6t-SNAPSHOT</version>

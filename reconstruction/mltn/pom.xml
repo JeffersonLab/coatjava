@@ -18,6 +18,11 @@
     <dependencies>
 
         <dependency>
+          <groupId>org.jlab.jnp</groupId>
+          <artifactId>jnp-hipo4</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>j4ml</groupId>
             <artifactId>j4ml-neuroph</artifactId>
             <version>0.9-SNAPSHOT</version>
