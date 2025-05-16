@@ -16,6 +16,11 @@
 
   <dependencies>
     <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-base</artifactId>
+      <classifier>linux</classifier>
+    </dependency>
+    <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-reco</artifactId>
       <version>12.0.6t-SNAPSHOT</version>

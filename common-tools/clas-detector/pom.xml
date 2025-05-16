@@ -36,6 +36,11 @@
     </dependency>
 
     <dependency>
+      <groupId>org.jlab.ccdbrcdb</groupId>
+      <artifactId>ccdbrcdb</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-io</artifactId>
       <version>12.0.6t-SNAPSHOT</version>
@@ -44,6 +49,12 @@
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-geometry</artifactId>
+      <version>12.0.6t-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jlab.clas</groupId>
+      <artifactId>clas-logging</artifactId>
       <version>12.0.6t-SNAPSHOT</version>
     </dependency>
 
