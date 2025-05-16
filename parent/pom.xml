@@ -68,9 +68,21 @@
       </dependency>
 
       <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>1.7.6</version>
+      </dependency>
+
+      <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-math3</artifactId>
         <version>3.6.1</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-lang3</artifactId>
+        <version>3.17.0</version>
       </dependency>
 
       <dependency>
@@ -126,6 +138,18 @@
         <groupId>org.jlab.jnp</groupId>
         <artifactId>jnp-hipo4</artifactId>
         <version>4.3-SNAPSHOT</version>
+      </dependency>
+
+      <dependency>
+        <groupId>net.objecthunter</groupId>
+        <artifactId>exp4j</artifactId>
+        <version>0.4.8</version> <!-- resolve conflict between `org.jlab.jnp:jnp-hipo:jar:2.0-SNAPSHOT` and `org.jlab.jnp:jnp-hipo4:jar:4.3-SNAPSHOT` by choosing the later version -->
+      </dependency>
+
+      <dependency>
+        <groupId>com.google.code.gson</groupId>
+        <artifactId>gson</artifactId>
+        <version>2.11.0</version> <!-- resolve conflict between `org.jlab.coda:jclara` and `ai.djl:api` -->
       </dependency>
 
       <dependency>
@@ -230,24 +254,29 @@
       </plugin>
 
       <!-- TODO: try this -->
-      <!-- <plugin> -->
-      <!--   <groupId>org.apache.maven.plugins</groupId> -->
-      <!--   <artifactId>maven-enforcer-plugin</artifactId> -->
-      <!--   <version>3.5.0</version> -->
-      <!--   <executions> -->
-      <!--     <execution> -->
-      <!--       <id>enforce-dependency-convergence</id> -->
-      <!--       <goals> -->
-      <!--         <goal>enforce</goal> -->
-      <!--       </goals> -->
-      <!--       <configuration> -->
-      <!--         <rules> -->
-      <!--           <dependencyConvergence /> -->
-      <!--         </rules> -->
-      <!--       </configuration> -->
-      <!--     </execution> -->
-      <!--   </executions> -->
-      <!-- </plugin> -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>3.5.0</version>
+        <executions>
+          <execution>
+            <id>enforce-dependency-convergence</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <dependencyConvergence>
+                  <excludes>
+                    <!-- excluding conflicts that may be tricky to resolve -->
+                    <exclude>com.google.protobuf:protobuf-java</exclude> <!-- `org.jlab.ccdbrcdb:ccdbrcdb` use v3, but `org.jlab.coda.xmsg` uses v2 -->
+                  </excludes>
+                </dependencyConvergence>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
 
       <plugin>
         <groupId>org.jacoco</groupId>
