@@ -21,24 +21,25 @@ usage() {
   echo """
   USAGE: $0 [OPTIONS]...
 
+  CHECKLIST BEFORE RUNNING:
+  - [ ] be on git branch '$main_branch'
+  - [ ] be up-to-date ('git pull')
+  - [ ] have no local changes ('git status')
+
   REQUIRED OPTIONS:
-    -v VERSION   set the version number to deploy; required
+    -v VERSION   set the version number to deploy
 
   OPTIONAL OPTIONS:
-    --no-git     do not involve 'git' in any way, just change the version number
-    --snap       deploy a snapshot version; applies '--no-git'
-    --dry-run    do everything except deploying to remote servers; applies '--no-git'
+    --no-git     do not involve 'git' and ignore CHECKLIST satisfaction
+    --dry-run    do not deploy to remote servers; applies '--no-git'
+    --snap       deploy as 'VERSION-SNAPSHOT'; applies '--no-git'
     -h,--help    show this usage guide
 
-  BEFORE RUNNING:
-  - [ ] be on branch '$main_branch' before doing this, and it should
-        be up-to-date with the remote (run 'git pull')
-  - [ ] make sure you don't have any changes (run 'git status')
+  EFFECT (default):
+  - deploys new release as version 'VERSION'
+  - bumps repo version number to 'VERSION-SNAPSHOT'
+  - creates git branch and commit for bump
 
-  EFFECT:
-  - the new release will be deployed
-  - a new git branch for this version bump will be created, and a commit will be added
-  - at the end, all you have to do is run 'git push' and open a pull request
   """
 }
 
