@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.jlab.clas</groupId>
-  <artifactId>clas12rec</artifactId>
+  <artifactId>coatjava</artifactId>
   <version>12.0.6t-SNAPSHOT</version>
   <packaging>pom</packaging>
 

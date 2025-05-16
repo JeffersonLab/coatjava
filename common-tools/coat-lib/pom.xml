@@ -9,7 +9,7 @@
 
   <parent>
     <groupId>org.jlab.clas</groupId>
-    <artifactId>clas12rec</artifactId>
+    <artifactId>coatjava</artifactId>
     <relativePath>../../parent/pom.xml</relativePath>
     <version>12.0.6t-SNAPSHOT</version>
   </parent>
@@ -186,25 +186,6 @@
   <build>
     <plugins>
 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.8.0</version>
-        <configuration>
-          <encoding>UTF-8</encoding>
-          <release>17</release>
-        </configuration>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-resources-plugin</artifactId>
-        <version>3.3.1</version>
-        <configuration>
-          <encoding>${project.build.sourceEncoding}</encoding>
-        </configuration>
-      </plugin>
-
       <!-- create shaded coat-libs JAR -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -242,6 +223,8 @@
                 <exclude>META-INF/*.RSA</exclude>
                 <!-- maven metadata about dependencies -->
                 <exclude>META-INF/maven/**</exclude>
+                <!-- module metadata -->
+                <exclude>module-info.class</exclude>
                 <!-- IDE files, etc. -->
                 <exclude>.DS_Store</exclude>
                 <exclude>.classpath</exclude>
@@ -251,15 +234,17 @@
               </excludes>
             </filter>
           </filters>
-          <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-            <manifestEntries>
-              <Specification-Title>${project.artifactId}</Specification-Title>
-              <Specification-Version>${project.version}</Specification-Version>
-              <Implementation-Title>${project.artifactId}</Implementation-Title>
-              <Implementation-Version>${project.version}</Implementation-Version>
-              <Implementation-Vendor-Id>${project.groupId}</Implementation-Vendor-Id>
-            </manifestEntries>
-          </transformer>
+          <transformers>
+            <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+              <manifestEntries>
+                <Specification-Title>${project.artifactId}</Specification-Title>
+                <Specification-Version>${project.version}</Specification-Version>
+                <Implementation-Title>${project.artifactId}</Implementation-Title>
+                <Implementation-Version>${project.version}</Implementation-Version>
+                <Implementation-Vendor-Id>${project.groupId}</Implementation-Vendor-Id>
+              </manifestEntries>
+            </transformer>
+          </transformers>
         </configuration>
       </plugin>
 
