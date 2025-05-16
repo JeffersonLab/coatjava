@@ -59,6 +59,10 @@
             <artifactId>pytorch-model-zoo</artifactId>
             <version>0.31.1</version>
         </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
     </dependencies>
 
 </project>
