@@ -141,7 +141,6 @@
     <dependency>
       <groupId>org.freehep</groupId>
       <artifactId>jminuit</artifactId>
-      <version>1.0</version>
     </dependency>
 
     <dependency>

@@ -15,6 +15,10 @@
 
   <dependencies>
     <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-math3</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.jlab.jnp</groupId>
       <artifactId>jnp-hipo</artifactId>
     </dependency>
@@ -35,7 +39,17 @@
     </dependency>
     <dependency>
       <groupId>org.jlab.clas</groupId>
-      <artifactId>clas-math</artifactId>
+      <artifactId>clas-io</artifactId>
+      <version>12.0.6t-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jlab.clas</groupId>
+      <artifactId>clas-physics</artifactId>
+      <version>12.0.6t-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jlab.clas</groupId>
+      <artifactId>clas-geometry</artifactId>
       <version>12.0.6t-SNAPSHOT</version>
     </dependency>
   </dependencies>

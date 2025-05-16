@@ -13,12 +13,10 @@
       <version>12.0.6t-SNAPSHOT</version>
     </parent>
 
-    <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-math3 -->
     <dependencies>
       <dependency>
         <groupId>org.apache.commons</groupId>
-	    <artifactId>commons-math3</artifactId>
-	    <version>3.6.1</version>
+        <artifactId>commons-math3</artifactId>
       </dependency>
     </dependencies>
 
