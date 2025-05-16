@@ -52,6 +52,7 @@
       <dependency>
         <groupId>org.jlab.coda</groupId>
         <artifactId>jevio</artifactId>
+        <classifier>jar-with-dependencies</classifier>
         <version>6.2-SNAPSHOT</version>
         <exclusions>
           <exclusion>
