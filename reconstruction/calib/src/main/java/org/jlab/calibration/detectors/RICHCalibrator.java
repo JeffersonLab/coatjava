@@ -32,7 +32,8 @@ public class RICHCalibrator extends DetectorCalibrator {
 
     @Override
     public DataBank buildCalibBank(DataEvent event) {
-        DataBank part = event.getBank("REC::Particle"); ;
+        DataBank part = event.getBank("REC::Particle");
+        DataBank rich = event.getBank("RICH::Particle");        
         DataBank hits = event.getBank("RICH::Hit");
         DataBank phos = event.getBank("RICH::Photon");
             
@@ -43,6 +44,12 @@ public class RICHCalibrator extends DetectorCalibrator {
             if(part.getInt("pid", pindex)==pid) goodPhotons.add(i);
         }
 
+        Map<Integer,Integer> part2Rich = new HashMap<>();
+        for(int i=0; i<rich.rows(); i++) {
+            int pindex = rich.getByte("pindex", i);
+            part2Rich.put(pindex, i);
+        }
+        
         List<Integer> goodClusters = new ArrayList<>();
         for(int i=0; i<hits.rows(); i++) {
             int cluster = hits.getShort("cluster", i);
@@ -55,7 +62,8 @@ public class RICHCalibrator extends DetectorCalibrator {
             int row =0;
             for(int i : goodPhotons) {
                 int hindex = phos.getShort("hindex", i);
-                calib.setByte( "pindex",       row, phos.getByte("pindex", i));
+                int pindex = phos.getByte("pindex", i);
+                calib.setByte( "pindex",       row, (byte) pindex);
                 calib.setShort("hindex",       row, (short) hindex);
                 calib.setByte( "sector",       row, (byte) hits.getShort("sector", hindex));
                 calib.setShort("pmt",          row, hits.getShort("pmt", hindex));
@@ -68,6 +76,10 @@ public class RICHCalibrator extends DetectorCalibrator {
                 calib.setFloat("time",         row, hits.getFloat("time", hindex));
                 calib.setFloat("rawtime",      row, hits.getFloat("rawtime", hindex));
                 calib.setShort("duration",     row, hits.getShort("duration", hindex));
+                calib.setByte("emilay",        row, rich.getByte("emilay", part2Rich.get(pindex)));
+                calib.setByte("emico",         row, rich.getByte("emico", part2Rich.get(pindex)));
+                calib.setShort("emqua",        row, rich.getShort("emqua", part2Rich.get(pindex)));
+                calib.setFloat("start_time",   row, phos.getFloat("start_time", i));
                 calib.setFloat("traced_the",   row, phos.getFloat("traced_the", i));
                 calib.setFloat("traced_phi",   row, phos.getFloat("traced_phi", i));
                 calib.setFloat("traced_hitx",  row, phos.getFloat("traced_hitx", i));
@@ -75,7 +87,6 @@ public class RICHCalibrator extends DetectorCalibrator {
                 calib.setFloat("traced_hitz",  row, phos.getFloat("traced_hitz", i));
                 calib.setFloat("traced_path",  row, phos.getFloat("traced_path", i));
                 calib.setFloat("traced_time",  row, phos.getFloat("traced_time", i));
-                calib.setFloat("traced_stime", row, phos.getFloat("traced_stime", i));
                 calib.setShort("traced_nrfl",  row, phos.getShort("traced_nrfl", i));
                 calib.setShort("traced_nrfr",  row, phos.getShort("traced_nrfr", i));
                 calib.setShort("traced_1rfl",  row, phos.getShort("traced_1rfl", i));
