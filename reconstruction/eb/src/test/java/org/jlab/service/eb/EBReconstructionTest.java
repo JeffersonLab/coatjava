@@ -109,6 +109,7 @@ public class EBReconstructionTest {
     @Test
     public void testEBReconstruction() {
         DefaultLogger.debug();
+        System.setProperty("CLAS12DIR", "../../");
 
         DataEvent photonEvent = TestEvent.get(DetectorType.ECAL);
         processAllEngines(photonEvent);
