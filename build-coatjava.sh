@@ -62,8 +62,6 @@ then
     mvnArgs+=(-q -B)
 fi
 mvn="mvn ${mvnArgs[@]:-}"
-echo $mvn
-exit
 
 command_exists () {
     type "$1" &> /dev/null
