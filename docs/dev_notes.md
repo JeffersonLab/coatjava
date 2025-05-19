@@ -88,7 +88,7 @@ flowchart TB
     useCurrent == no ==> bump1 ==> deployMaven
     useCurrent == yes ==> deployMaven
     deployMaven ==> deployTarball
-    deployMaven ==> gitCommit
+    deployMaven ==> bump2 ==> gitCommit
     gitCommit ==> gitPush ==> pullRequest ==> gitTag
     gitTag ==> bump3 ==> deployGit
 ```
