@@ -162,9 +162,9 @@ jobs:
       - name: untar build
         run: tar xzvf coatjava.tar.gz
       - name: print dependency tree
-        run: mvn dependency:tree -Ddetail=true
+        run: mvn --no-transfer-progress dependency:tree -Ddetail=true
       - name: dependency analysis
-        run: mvn dependency:analyze -DfailOnWarning=true
+        run: mvn --no-transfer-progress dependency:analyze -DfailOnWarning=true
 
   # finalize
   #############################################################################
