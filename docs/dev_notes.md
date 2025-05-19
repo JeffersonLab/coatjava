@@ -1,6 +1,6 @@
 # Developer Notes
 
-## Deploying a New Version
+## Version 1: Increment version number at release time
 
 Deploying a new version requires a new version number, named `$VERSION` in this
 document.
@@ -20,7 +20,7 @@ flowchart TB
     classDef automatic fill:#8f8,color:black
 
     subgraph deploy-coatjava.sh
-        deployScript[deploy-coatjava.sh $VERSION]:::manual
+        deployScript[deploy-coatjava.sh -v $VERSION]:::manual
         bump1{{bump version to $VERSION}}:::automatic
         deployMaven{{deploy to Maven repo}}:::automatic
         deployTarball{{deploy tarball to clasweb}}:::automatic
@@ -39,6 +39,56 @@ flowchart TB
     bump1 ==> deployMaven
     bump1 ==> deployTarball
     bump1 ==> bump2 ==> gitCommit
+    gitCommit ==> gitPush ==> pullRequest ==> gitTag
+    gitTag ==> bump3 ==> deployGit
+```
+
+## Version 2 (conventional): Increment version number after release time
+
+Deploying a new version requires a current version number, named `$VERSION_CURRENT`,
+and a new version number for the future release, named `$VERSION_NEXT`
+- the release build will have version `$VERSION_CURRENT`, which by default is the
+  current project version; it can be changed if needed
+- the git repository will then have version `${VERSION_NEXT}-SNAPSHOT`
+  - by the time we are ready to release version `$VERSION_NEXT`, we
+    may need to change the version number again, depending on whether we change
+    the MAJOR, MINOR, or PATCH number
+  - by default, `$VERSION_NEXT` can initially be `$VERSION_CURRENT` with the PATCH number
+    incremented by 1, since most of our releases seem to be PATCH releases
+- this is the "conventional" approach, and Maven can automate these version bumps
+  - or we just use the script, since we do more than just `mvn deploy`
+
+**Legend:**
+- magenta rectangle: manual step
+- green hexagon: automated
+
+```mermaid
+flowchart TB
+    classDef manual    fill:#f8f,color:black
+    classDef automatic fill:#8f8,color:black
+
+    subgraph deploy-coatjava.sh
+        deployScript[deploy-coatjava.sh -n $VERSION_NEXT -v $VERSION_RELEASE]:::manual
+        useCurrent{does $VERSION_CURRENT equal $VERSION_RELEASE ?}:::manual
+        bump1{{bump version to $VERSION_RELEASE}}:::automatic
+        deployMaven{{deploy to Maven repo}}:::automatic
+        deployTarball{{deploy tarball to clasweb}}:::automatic
+        bump2{{bump version to $VERSION_NEXT-SNAPSHOT}}:::automatic
+        gitCommit{{new git branch and commit}}:::automatic
+    end
+    gitPush[git push]:::manual
+    pullRequest[pull request and merge]:::manual
+    gitTag[git tag and release]:::manual
+    subgraph "Continuous Integration (CI)"
+        bump3{{bump version to $VERSION_RELEASE}}:::automatic
+        deployGit{{deploy git release tarball}}:::automatic
+    end
+
+    deployScript ==> useCurrent
+    useCurrent == no ==> bump1 ==> deployMaven
+    useCurrent == yes ==> deployMaven
+    deployMaven ==> deployTarball
+    deployMaven ==> gitCommit
     gitCommit ==> gitPush ==> pullRequest ==> gitTag
     gitTag ==> bump3 ==> deployGit
 ```
