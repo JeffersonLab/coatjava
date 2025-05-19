@@ -190,6 +190,7 @@ jobs:
       - build
       - test_coatjava
       - test_run-groovy
+      - dependency_analysis
       - release
     runs-on: ubuntu-latest
     steps:
