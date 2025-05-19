@@ -16,11 +16,6 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.jlab.jnp</groupId>
-      <artifactId>jnp-hipo4</artifactId>
-      <!-- <scope>test</scope> -->
-    </dependency>
-    <dependency>
       <groupId>gov.nist.math</groupId>
       <artifactId>jama</artifactId>
     </dependency>

@@ -16,11 +16,6 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.jlab.jnp</groupId>
-      <artifactId>jnp-hipo4</artifactId>
-      <!-- <scope>test</scope> --> <!--FIXME-->
-    </dependency>
-    <dependency>
       <groupId>org.jlab</groupId>
       <artifactId>groot</artifactId>
     </dependency>
