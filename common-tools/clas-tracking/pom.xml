@@ -25,7 +25,6 @@
     <dependency>
       <groupId>org.ejml</groupId>
       <artifactId>ejml-simple</artifactId>
-      <version>0.40</version> <!-- match version from `j4ml:j4ml-clas12:jar:0.9-SNAPSHOT` -->
     </dependency>
     <dependency>
       <groupId>gov.nist.math</groupId>
