@@ -6,9 +6,11 @@ Deploying a new version requires a new version number, named `$VERSION` in this
 document.
 - the release build will have version `$VERSION`
 - the git repository will have version `${VERSION}-SNAPSHOT`
-  - note that this is not conventional, since typically `-SNAPSHOT` is used for _upcoming_
-    releases; however, we never know what the new version number is going to be, and
-    we only bump the version number for a _new_ release
+  - note that this is **not** conventional, since typically `-SNAPSHOT` is used for _upcoming_
+    releases
+    - however, we never know what the new version number is going to be, and we
+      only bump the version number for a new release
+    - this is more similar to what we have been doing all along
 
 **Legend:**
 - magenta rectangle: manual step
@@ -45,16 +47,16 @@ flowchart TB
 
 ## Version 2 (conventional): Increment version number after release time
 
-Deploying a new version requires a current version number, named `$VERSION_CURRENT`,
+Deploying a new version requires a current version number, named `$VERSION_RELEASE`,
 and a new version number for the future release, named `$VERSION_NEXT`
-- the release build will have version `$VERSION_CURRENT`, which by default is the
-  current project version; it can be changed if needed
+- by default, `$VERSION_RELEASE` is `$VERSION_CURRENT`, the current project version
+  - it can be changed if needed
 - the git repository will then have version `${VERSION_NEXT}-SNAPSHOT`
   - by the time we are ready to release version `$VERSION_NEXT`, we
     may need to change the version number again, depending on whether we change
     the MAJOR, MINOR, or PATCH number
   - by default, `$VERSION_NEXT` can initially be `$VERSION_CURRENT` with the PATCH number
-    incremented by 1, since most of our releases seem to be PATCH releases
+    incremented by 1, since most of our releases are PATCH releases
 - this is the "conventional" approach, and Maven can automate these version bumps
   - or we just use the script, since we do more than just `mvn deploy`
 
