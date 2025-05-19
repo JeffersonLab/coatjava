@@ -56,13 +56,12 @@ prefix_dir=$src_dir/coatjava
 cd $src_dir
 
 wget='wget'
-mvn="mvn --settings $src_dir/maven-settings.xml"
 if [ "$quiet" == "yes" ]
 then
     wget='wget --progress=dot:mega'
-    mvn="mvn -q -B --settings $src_dir/maven-settings.xml"
+    mvnArgs+=(-q -B)
 fi
-mvn+=" ${mvnArgs[*]:-}"
+mvn="mvn ${mvnArgs[*]:-}"
 
 command_exists () {
     type "$1" &> /dev/null
