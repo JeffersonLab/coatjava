@@ -49,12 +49,16 @@ public class OptionParser {
     }
     
     public void addRequired(String key,String desc){
+        if (requiredOptions.containsKey(key))
+            System.out.println("WARNING: overriding OptionParser option:  "+key);
         OptionValue option = new OptionValue(key);
         option.setDescription(desc);
         requiredOptions.put(key, option);
     }
     
     public void addOption(String key, String defaultValue){
+        if (optionsDescriptors.containsKey(key))
+            System.out.println("WARNING: overriding OptionParser option:  "+key);
         OptionValue option = new OptionValue(key,defaultValue);
         optionsDescriptors.put(key, option);
     }
