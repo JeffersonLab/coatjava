@@ -240,7 +240,6 @@ jobs:
   #############################################################################
 
   release_build:
-    name: release build
     if: ${{ github.ref_type == 'tag' }}
     needs: [ build ]
     runs-on: ubuntu-latest
@@ -274,11 +273,10 @@ jobs:
 
   final:
     needs:
-      - build
-      - unit_tests
       - test_coatjava
-      - test_run-groovy
       - dependency_analysis
+      - test_run-groovy
+      - generate_documentation
     runs-on: ubuntu-latest
     steps:
       - name: pass
