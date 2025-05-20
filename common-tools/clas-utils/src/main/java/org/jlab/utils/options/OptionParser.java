@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import org.jlab.logging.DefaultLogger;
@@ -21,7 +22,8 @@ public class OptionParser {
     private String                             program = "undefined";
     private boolean                  requiresInputList = true;
     private String                  programDescription = "";
-    
+    private boolean                  overrideVerbosity = false;
+
     public OptionParser(){
         init();
     }
@@ -47,23 +49,29 @@ public class OptionParser {
         OptionValue option = new OptionValue(key);
         requiredOptions.put(key, option);
     }
+
+    private void check(String key, Set<String> keys) {
+        if (keys.contains(key)) {
+            System.out.println("WARNING: overriding OptionParser option:  "+key);
+            if (key.equals("-v")) overrideVerbosity = true;
+        }
+    }
     
     public void addRequired(String key,String desc){
-        if (requiredOptions.containsKey(key))
-            System.out.println("WARNING: overriding OptionParser option:  "+key);
+        check(key,requiredOptions.keySet());
         OptionValue option = new OptionValue(key);
         option.setDescription(desc);
         requiredOptions.put(key, option);
     }
     
     public void addOption(String key, String defaultValue){
-        if (optionsDescriptors.containsKey(key))
-            System.out.println("WARNING: overriding OptionParser option:  "+key);
+        check(key, optionsDescriptors.keySet());
         OptionValue option = new OptionValue(key,defaultValue);
         optionsDescriptors.put(key, option);
     }
     
     public void addOption(String key, String defaultValue, String description){
+        check(key, optionsDescriptors.keySet());
         OptionValue option = new OptionValue(key,defaultValue);
         option.setDescription(description);
         optionsDescriptors.put(key, option);
@@ -165,7 +173,7 @@ public class OptionParser {
         }
 
         // Configure logger:
-        if (this.parsedOptions.containsKey("-v")) {
+        if (!overrideVerbosity) {
             setVerbosity(this.parsedOptions.get("-v").stringValue());
         }
     }
