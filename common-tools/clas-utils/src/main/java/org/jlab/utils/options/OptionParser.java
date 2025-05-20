@@ -1,29 +1,44 @@
 package org.jlab.utils.options;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.logging.Level;
+import org.jlab.logging.DefaultLogger;
 
 /**
  *
  * @author gavalian
  */
 public class OptionParser {
-    
+  
     private Map<String,OptionValue> optionsDescriptors = new TreeMap<>();    
     private Map<String,OptionValue>    requiredOptions = new TreeMap<>();
     private Map<String,OptionValue>      parsedOptions = new TreeMap<>();
     private List<String>               parsedInputList = new ArrayList<>();
     private String                             program = "undefined";
     private boolean                  requiresInputList = true;
+    private String                  programDescription = "";
     
-    public OptionParser(){}
+    public OptionParser(){
+        init();
+    }
     
     public OptionParser(String pname){
         this.program = pname;
+        init();
     }
-    
+   
+    private void init() {
+        addOption("-v","FINE","logging verbosity level");
+    }
+  
+    public void setDescription(String desc){
+        this.programDescription = desc;
+    }
+
     public void setRequiresInputList(boolean flag){
         this.requiresInputList = flag;
     }
@@ -56,13 +71,8 @@ public class OptionParser {
     
     public OptionValue getOption(String option){
         return this.parsedOptions.get(option);
-    }    
-    private void show(List<String> list){
-        for(int i = 0; i < list.size(); i++){
-            System.out.printf("%5d : %s\n", i,list.get(i));
-        }
     }
-    
+
     public void show(){
         for(Map.Entry<String,OptionValue> entry : this.parsedOptions.entrySet()){
          System.out.printf("%12s : %s\n", entry.getKey(),entry.getValue().getValue());
@@ -110,14 +120,17 @@ public class OptionParser {
     }
     
     public void parse(String[] args){
-        List<String> arguments = new ArrayList<String>();
-        for(String item : args){ arguments.add(item); }
-        
+
+        List<String> arguments = new ArrayList<>();
+        arguments.addAll(Arrays.asList(args));
+
+        // Default, non-overridable, help option:
         if(this.containsOptions(arguments, "-h","-help")==true){
             this.printUsage();
             System.exit(0);
         }
 
+        // Parse required options:
         for(Map.Entry<String,OptionValue> entry : this.requiredOptions.entrySet()){
             boolean status = entry.getValue().parse(arguments);
             if(status==false) { 
@@ -125,40 +138,59 @@ public class OptionParser {
                 this.printUsage();
                 System.err.println(" \n*** ERROR *** Missing argument : " + entry.getValue().getOption());
                 System.exit(100);
-                return;
             }
             this.parsedOptions.put(entry.getValue().getOption(), entry.getValue());
         }
+
+        // Parse non-required options:
         for(Map.Entry<String,OptionValue> entry : this.optionsDescriptors.entrySet()){
             boolean status = entry.getValue().parse(arguments);
             this.parsedOptions.put(entry.getKey(), entry.getValue());
         }
-        
+       
+        // Parse input list:
         parsedInputList.clear();
         for(String item : arguments){
             if(item.startsWith("-")==false){
                 this.parsedInputList.add(item);
             }
         }
-
-        // FIXME:  seems like we should really be throwing a RuntimeException ...
         if (this.requiresInputList && this.parsedInputList.isEmpty()) {
             System.err.println(" \n*** ERROR *** Empty Input List.");
+            System.exit(101);
+        }
+
+        // Configure logger:
+        if (this.parsedOptions.containsKey("-v")) {
+            setVerbosity(this.parsedOptions.get("-v").stringValue());
         }
     }
-    
+
+    private void setVerbosity(String level) {
+        try {
+            DefaultLogger.initialize(Level.parse(level));
+        }
+        catch (IllegalArgumentException e) {
+            System.err.println("Invalid -v java.util.logging.Level:  "+level);
+            System.exit(102);
+        }
+        catch (NullPointerException e) {
+            System.err.println("Unavailable -v COATJAVA logging level:  "+level);
+            System.exit(103);
+        }
+    }
+
     public List<String> getInputList(){
         return this.parsedInputList;
     }
     
     public static void main(String[] args){
-        String[] options = new String[]{"-t","2","-r","5","-o","output.hipo"};
         OptionParser parser = new OptionParser();
         parser.addRequired("-o");
         parser.addOption("-r", "10");
         parser.addOption("-t", "25.0");
         parser.addOption("-d", "35");
-        parser.parse(options);
+        parser.parse(args);
         parser.show();        
     }
 }
