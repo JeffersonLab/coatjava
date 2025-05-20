@@ -17,16 +17,11 @@ public class OptionParser {
     private List<String>               parsedInputList = new ArrayList<>();
     private String                             program = "undefined";
     private boolean                  requiresInputList = true;
-    private String                  programDescription = "";
     
     public OptionParser(){}
     
     public OptionParser(String pname){
         this.program = pname;
-    }
-    
-    public void setDescription(String desc){
-        this.programDescription = desc;
     }
     
     public void setRequiresInputList(boolean flag){
