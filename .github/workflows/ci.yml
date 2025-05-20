@@ -53,7 +53,7 @@ jobs:
         run: ls /cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/ccdb/ccdb_latest.sqlite
       - name: echo CCDB_CONNECTION
         run: echo $CCDB_CONNECTION
-      - run: bump version to tag if tag trigger
+      - name: bump version to tag if tag trigger
         if: ${{ github.ref_type == 'tag' }}
         run: libexec/version-bump.sh ${{ github.ref_name }}
       - name: build
