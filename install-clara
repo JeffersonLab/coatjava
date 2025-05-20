@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Default versions:
-grapes=2.17
+grapes=2.19
 clara=5.0.2
 coatjava=12.0.6t
 
@@ -138,5 +138,4 @@ cp -Lr $coatjava/etc $coatjava/bin $coatjava/lib* clara-cre/plugins/clas12
 echo -e "\nRetrieving GRAPES version $grapes ..."
 get https://clasweb.jlab.org/clas12offline/distribution/grapes/grapes-$grapes.tar.gz
 mv grapes-$grapes clara-cre/plugins/grapes
-mv -f clara-cre/plugins/grapes/bin/clara-grapes clara-cre/bin/
 
