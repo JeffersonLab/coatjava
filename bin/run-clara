@@ -25,7 +25,7 @@ function error() {
 threads=2
 prefix=rec_
 CLARA_USER_DATA=.
-while getopts y:o:p:c:t:n:mh opt
+while getopts y:o:p:c:t:n:qmh opt
 do
     case $opt in
         y) yaml=$OPTARG ;;
@@ -35,6 +35,7 @@ do
         t) threads=$OPTARG && echo $threads | grep -q -E '^[0-9]+$' || error "-t must be an integer, threads" ;;
         n) nevents="-e $OPTARG" && echo "$nevents" | grep -q -E '^-e [0-9]+$' || error "-n must be an integer, events" ;;
         m) merge=1 ;;
+        q) quiet=1 ;;
         h) echo -e "\n$usage" && echo -e $info && exit 0 ;;
     esac
 done
@@ -73,7 +74,9 @@ done
 # Set some JVM options:
 export JAVA_OPTS="$JAVA_OPTS -XX:+IgnoreUnrecognizedVMOptions"
 export JAVA_OPTS="$JAVA_OPTS -Djava.io.tmpdir=$CLARA_USER_DATA -Dorg.sqlite.tmpdir=$CLARA_USER_DATA"
-export JAVA_OPTS="$JAVA_OPTS -Djava.util.logging.config.file=$CLAS12DIR/etc/logging/debug.properties"
+# Set verbosity:
+[ -z ${quiet+x} ] && stub=debug || stub=info
+export JAVA_OPTS="$JAVA_OPTS -Djava.util.logging.config.file=$CLAS12DIR/etc/logging/$stub.properties"
 
 function get_host_ip() {
     if command -v ip >/dev/null 2>&1
