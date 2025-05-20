@@ -7,7 +7,7 @@ import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 /**
- * Read the default logging configuration and load it into the global log manager.
+ * Read a logging configuration and load it into the global log manager.
  *
  * @author Nick Tyler, UofSC
  *
@@ -16,41 +16,37 @@ import java.util.logging.Logger;
  */
 public class DefaultLogger {
 
-    private static String LOG_PROP = "logging.properties";
-
-    /**
-     * Class constructor which reads in a logging properties file from a classpath resource.
-     */
-    public DefaultLogger() {
-        InputStream inputStream = DefaultLogger.class.getResourceAsStream(LOG_PROP);
-        try {
-            LogManager.getLogManager().readConfiguration(inputStream);
-            Logger.getLogger(DefaultLogger.class.getName()).log(Level.INFO,"Reading default logging config from " + LOG_PROP);
-        } catch (SecurityException | IOException e) {
-            throw new RuntimeException("Initialization of default logging configuration failed.", e);
+    private static void init(String resource) {
+        // FIXME:  document why this check is here:
+        if (System.getProperty("java.util.logging.config.file") == null) {
+            InputStream inputStream = DefaultLogger.class.getResourceAsStream(resource);
+            try {
+                LogManager.getLogManager().readConfiguration(inputStream);
+                Logger.getLogger(DefaultLogger.class.getName()).log(Level.INFO, "Reading logging properties from org/jlab/logging/{0}", resource);
+            } catch (SecurityException | IOException e) {
+                throw new RuntimeException("Initialization of default logging configuration failed.", e);
+            }
         }
     }
 
-    /**
-     * Initialize default logging if java system properties are not set.
-     */
-    public static void initialize() {
-        String clas12_logger = System.getenv("CLAS12_LOGGER");
-        if(clas12_logger != null)
-            System.setProperty("java.util.logging.config.file", clas12_logger);
+    private static void init(Level level){
+        init(level.toString().toLowerCase()+".properties");
+    }
 
-        if (System.getProperty("java.util.logging.config.file") == null) {
-            // Config is only read in if there is not an externally set class or file already.
-            new DefaultLogger();
-        }
+    public static void initialize() {
+        init(Level.FINE);
+    }
+
+    public static void initialize(Level level) {
+        init(level);
     }
 
     public static void debug() {
-        LOG_PROP = "debug.properties";
-        if (System.getProperty("java.util.logging.config.file") == null) {
-            // Config is only read in if there is not an externally set class or file already.
-            new DefaultLogger();
-        }
+        init(Level.FINE);
+    }
+
+    public static void silent() {
+        init("silent.properties");
     }
 
     public static void main(String[] args) {
