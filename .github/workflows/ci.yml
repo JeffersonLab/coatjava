@@ -54,7 +54,7 @@ jobs:
       - name: echo CCDB_CONNECTION
         run: echo $CCDB_CONNECTION
       - name: build
-        run: ./build-coatjava.sh --spotbugs --unittests --quiet -T4
+        run: ./build-coatjava.sh --spotbugs --unittests --no-progress -T4
       - name: tar # tarball to preserve permissions
         run: tar czvf coatjava.tar.gz coatjava
       - uses: actions/upload-artifact@v4
@@ -200,7 +200,7 @@ jobs:
           distribution: ${{ env.java_distribution }}
       - name: build coatjava
         run: |
-          ./build-coatjava.sh --docs
+          ./build-coatjava.sh --no-progress --docs
           mv coatjava/share/doc/coatjava/html pages/javadoc
       ### upload artifacts
       - uses: actions/upload-pages-artifact@v3

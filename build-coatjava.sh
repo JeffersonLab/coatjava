@@ -8,7 +8,6 @@ usage='''build-coatjava.sh [OPTIONS]... [MAVEN_OPTIONS]...
 
   OPTIONS
 
-   --quiet           run more quietly
    --clean           clean up built objects and exit (does not compile)
 
    --nomaps          do not download field maps
@@ -17,6 +16,9 @@ usage='''build-coatjava.sh [OPTIONS]... [MAVEN_OPTIONS]...
    --spotbugs        also run spotbugs plugin
    --unittests       also run unit tests
 
+   --quiet           run more quietly
+   --no-progress     no download progress printouts
+
    --help            show this message
 
   MAVEN_OPTIONS
@@ -24,13 +26,13 @@ usage='''build-coatjava.sh [OPTIONS]... [MAVEN_OPTIONS]...
    all other arguments will be passed to `mvn`, e.g., -T4 will build with 4 parallel threads
 '''
 
-quiet="no"
 cleanBuild="no"
 runSpotBugs="no"
 downloadMaps="yes"
 runUnitTests="no"
 buildDocs="no"
 mvnArgs=()
+wgetArgs=()
 for xx in $@
 do
   case $xx in
@@ -39,8 +41,15 @@ do
     --nomaps)    downloadMaps="no"  ;;
     --unittests) runUnitTests="yes" ;;
     --docs)      buildDocs="yes"    ;;
-    --quiet)     quiet="yes"        ;;
     --clean)     cleanBuild="yes"   ;;
+    --quiet)
+      mvnArgs+=(--quiet --batch-mode)
+      wgetArgs+=(--quiet)
+      ;;
+    --no-progress)
+      mvnArgs+=(--no-transfer-progress)
+      wgetArgs+=(--no-verbose)
+      ;;
     -h|--help)
       echo "$usage"
       exit 2
@@ -55,13 +64,10 @@ prefix_dir=$src_dir/coatjava
 # working directory should be the source code directory
 cd $src_dir
 
-wget='wget'
-if [ "$quiet" == "yes" ]
-then
-    wget='wget --progress=dot:mega'
-    mvnArgs+=(-q -B)
-fi
+# set arguments for `mvn` and `wget`
+wgetArgs+=(--timestamping --no-check-certificate) # `--timestamping` only redownloads if timestamp/filesize is newer/different
 mvn="mvn ${mvnArgs[@]:-}"
+wget="wget ${wgetArgs[@]:-}"
 
 command_exists () {
     type "$1" &> /dev/null
@@ -69,8 +75,7 @@ command_exists () {
 download () {
     ret=0
     if command_exists wget ; then
-        # -N only redownloads if timestamp/filesize is newer/different
-        $wget -N --no-check-certificate $1
+        $wget $1
         ret=$?
     elif command_exists curl ; then
         if ! [ -e ${1##*/} ]; then
