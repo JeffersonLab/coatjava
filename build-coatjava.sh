@@ -15,7 +15,6 @@ usage='''build-coatjava.sh [OPTIONS]... [MAVEN_OPTIONS]...
 
    --spotbugs        also run spotbugs plugin
    --unittests       also run unit tests
-   --clara           also install clara
 
    --quiet           run more quietly
    --no-progress     no download progress printouts
@@ -49,7 +48,6 @@ do
       mvnArgs+=(--no-transfer-progress)
       wgetArgs+=(--no-verbose)
       ;;
-    --clara)     clara="yes"   ;;
     -h|--help)
       echo "$usage"
       exit 2
@@ -60,7 +58,6 @@ done
 
 src_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 prefix_dir=$src_dir/coatjava
-clara_home=$(dirname $prefix_dir)/clara-home
 
 # working directory should be the source code directory
 cd $src_dir
@@ -114,7 +111,7 @@ if [ $downloadMaps == "yes" ]; then
 fi
 
 # always clean the installation prefix
-rm -rf $prefix_dir $clara_home
+rm -rf $prefix_dir
 
 # clean up any cache copies
 if [ $cleanBuild == "yes" ]; then
@@ -184,10 +181,5 @@ for pom in $(find common-tools -name pom.xml); do
   fi
 done
 echo "installed coatjava to: $prefix_dir"
-
-# install clara
-if [ $clara == "yes" ]; then
-    rm -rf $clara_home && ./install-clara -c $prefix_dir $clara_home
-fi
 
 echo "COATJAVA SUCCESSFULLY BUILT !"
