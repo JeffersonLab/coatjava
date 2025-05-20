@@ -97,6 +97,17 @@ fi
 classPath="$COAT/lib/services/*:$COAT/lib/clas/*:$COAT/lib/utils/*:../lib/*:src/"
 
 classPath2="../../coatjava/lib/services/*:../../coatjava/lib/clas/*:../../coatjava/lib/utils/*:../lib/*:src/"
+echo DEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUG
+IFS=: read -r -a paths <<< "$classPath2"
+for path in "${paths[@]}"; do
+  if [ -d "$path" ]; then
+    echo "Listing contents of: $path"
+    ls "$path"
+  else
+    echo "No valid directory found for: $path"
+  fi
+done
+echo DEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUG
 
 # make sure test code compiles before anything else:
 javac -cp $classPath2 src/eb/EBTwoTrackTest.java

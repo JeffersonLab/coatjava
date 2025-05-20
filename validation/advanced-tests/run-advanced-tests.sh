@@ -7,6 +7,17 @@ JAVA_OPTS="-Djava.util.logging.config.file=$PWD/../../etc/logging/debug.properti
 CLARA_HOME=$PWD/clara_installation/ ; export CLARA_HOME
 COAT=$CLARA_HOME/plugins/clas12/
 classPath="$COAT/lib/services/*:$COAT/lib/clas/*:$COAT/lib/utils/*:../lib/*:src/"
+echo DEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUG
+IFS=: read -r -a paths <<< "$classPath"
+for path in "${paths[@]}"; do
+  if [ -d "$path" ]; then
+    echo "Listing contents of: $path"
+    ls "$path"
+  else
+    echo "No valid directory found for: $path"
+  fi
+done
+echo DEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUG
 
 # install clara
 ../../install-clara -c ../../coatjava $CLARA_HOME
