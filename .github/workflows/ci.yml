@@ -53,6 +53,9 @@ jobs:
         run: ls /cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/ccdb/ccdb_latest.sqlite
       - name: echo CCDB_CONNECTION
         run: echo $CCDB_CONNECTION
+      - run: bump version to tag if tag trigger
+        if: ${{ github.ref_type == 'tag' }}
+        run: libexec/version-bump.sh ${{ github.ref_name }}
       - name: build
         run: ./build-coatjava.sh --spotbugs --unittests --no-progress -T4
       - name: tar # tarball to preserve permissions
@@ -175,38 +178,6 @@ jobs:
             -pl '!org.jlab.clas:coat-libs' \
             --no-transfer-progress
 
-
-  # finalize
-  #############################################################################
-
-  release:
-    needs: [ build ]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: build_ubuntu-latest
-      - name: Release
-        uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: coatjava.tar.gz
-        env:
-          GITHUB_TOKEN:  ${{ secrets.GITHUB_TOKEN }}
-
-  final:
-    needs:
-      - build
-      - test_coatjava
-      - test_run-groovy
-      - dependency_analysis
-      - release
-    runs-on: ubuntu-latest
-    steps:
-      - name: pass
-        run: exit 0
-
   # documentation
   #############################################################################
 
@@ -256,3 +227,50 @@ jobs:
       - name: deployment
         id: deployment
         uses: actions/deploy-pages@v4
+
+  # finalize
+  #############################################################################
+
+  release_build:
+    name: release build
+    if: ${{ github.ref_type == 'tag' }}
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      REPO_URL: ${{ github.event.repository.html_url }}
+      RUN_ID: ${{ github.run_id }}
+      TAG_NAME: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: build_ubuntu-latest
+      - name: rename artifact
+        run: |
+          tar xzf coatjava.tar.gz
+          mv coatjava{,-${{ env.TAG_NAME }}}
+          tar czf coatjava-${{ env.TAG_NAME }}{.tar.gz,}
+      - name: release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: coatjava-${{ env.TAG_NAME }}.tar.gz
+      - name: open issue if failed
+        if: ${{ cancelled() || failure() }}
+        uses: JasonEtco/create-an-issue@v2
+        with:
+          filename: .github/issue_release.md
+
+  final:
+    needs:
+      - build
+      - test_coatjava
+      - test_run-groovy
+      - dependency_analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: pass
+        run: exit 0
