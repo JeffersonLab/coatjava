@@ -76,16 +76,6 @@ public class CLASDecoder4 {
         return schemaFactory;
     }
 
-    public static CLASDecoder createDecoder(){
-        CLASDecoder decoder = new CLASDecoder();
-        return decoder;
-    }
-
-    public static CLASDecoder createDecoderDevel(){
-        CLASDecoder decoder = new CLASDecoder(true);
-        return decoder;
-    }
-
     public void setVariation(String variation) {
         detectorDecoder.setVariation(variation);
     }
