@@ -124,7 +124,7 @@ fi
 
 # change the version number, if different
 # NOTE: `maven-release-plugin` could be used to better automate the versioning
-# here, but since this deployment is _only_ done in the `coat-lib` POM (the
+# here, but since this deployment is _only_ done in the `coat-libs` POM (the
 # shaded JAR), and we also want to make a tarball with _all_ of the POMs at the
 # correct version number, we may as well do the version bump here
 if [ "$ver_current" != "$ver_deploy" ]; then
@@ -139,7 +139,7 @@ $src_dir/build-coatjava.sh
 
 # deploy locally
 log "local deployment of coatjava version $ver_deploy"
-mvn clean deploy -f $src_dir/common-tools/coat-lib/pom.xml
+mvn clean deploy -f $src_dir/common-tools/coat-libs/pom.xml
 deploy_tarball=coatjava-${ver_deploy}.tar.gz
 tar czf $deploy_tarball coatjava
 print_deployment() {

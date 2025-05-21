@@ -163,7 +163,7 @@ if [ $buildDocs == "yes" ]; then
 fi
 
 # installation
-cp common-tools/coat-lib/target/coat-libs-*.jar $prefix_dir/lib/clas/
+cp common-tools/coat-libs/target/coat-libs-*.jar $prefix_dir/lib/clas/
 cp reconstruction/*/target/clas12detector-*.jar $prefix_dir/lib/services/
 echo "installed coatjava to: $prefix_dir"
 if [ $buildDocs == "yes" ]; then
