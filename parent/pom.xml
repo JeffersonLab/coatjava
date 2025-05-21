@@ -216,6 +216,9 @@
             </goals>
             <configuration>
               <outputDirectory>${project.build.directory}/reports</outputDirectory>
+              <excludeModules>
+                <excludeModule>org.jlab.clas:coat-libs</excludeModule>
+              </excludeModules>
             </configuration>
           </execution>
         </executions>
