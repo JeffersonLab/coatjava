@@ -490,7 +490,7 @@ public class CLASDecoder4 {
                                                           DetectorType.FMT,DetectorType.HEL,DetectorType.RF,
                                                           DetectorType.BAND, DetectorType.RASTER};
 
-        String[] tdcBankNames = new String[]{"FTOF::tdc","ECAL::tdc","DC::tdc",
+        String[] tdcBankNames = new String[]{"FTOF::tdc","ECAL::tdc","DC::tot",
                                              "HTCC::tdc","LTCC::tdc","CTOF::tdc",
                                              "CND::tdc","RF::tdc","RICH::tdc",
                                              "BAND::tdc"};
