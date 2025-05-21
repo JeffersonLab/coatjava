@@ -8,8 +8,6 @@ import org.jlab.io.base.DataEvent;
  */
 public class Banks {
     
-    private static final String[] tdcBanks = new String[]{"DC::tot","DC::tdc"};
-
     private final String tsBank     = "DC::jitter";
     private final String docaBank   = "DC::doca";
     
@@ -20,8 +18,7 @@ public class Banks {
     private String inPrefix         = "";
     private String outPrefix        = "";
 
-    public Banks() {
-    }
+    public Banks() {}
 
     public Banks(String bankType, String inputBankPrefix, String outputBankPrefix) {
         this.init(bankType, inputBankPrefix, outputBankPrefix);
@@ -57,10 +54,7 @@ public class Banks {
     }
 
     public static String getTdcBank(DataEvent e) {
-        for (int i=0; i<tdcBanks.length; ++i)
-            if (e.hasBank(tdcBanks[i]))
-                return tdcBanks[i];
-        return null;
+        return e.hasBank("DC::tot") ? "DC::tot" : "DC::tdc";
     }
 
     public String getTimeStampBank() {
