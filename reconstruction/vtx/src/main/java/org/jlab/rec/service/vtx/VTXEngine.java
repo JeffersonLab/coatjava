@@ -90,16 +90,23 @@ public class VTXEngine extends ReconstructionEngine {
         return true;
    }
 
+    /**
+     *
+     * @return init status
+     */
     @Override
     public boolean init() {
     //    String variation = Optional.ofNullable(this.getEngineConfigString("variation")).orElse("default");
         //beam offset table
     //    DatabaseConstantProvider dbprovider = new DatabaseConstantProvider(11, variation);
     //    dbprovider.loadTable("/geometry/beam/position");
-      this.registerBanks();
-      this.loadConfiguration();
-      Constants.setDOCACUT(this.docaCut);
-      return true;
+        this.registerBanks();
+        this.loadConfiguration();
+        Constants.setDOCACUT(this.docaCut);
+        
+        System.out.println("["+this.getName()+"] run with doca setting set to "+Constants.getDOCACUT());    
+
+        return true;
     }
     private void registerBanks() {
         super.registerOutputBank("REC::VertDoca");    
@@ -107,7 +114,7 @@ public class VTXEngine extends ReconstructionEngine {
     
     public void loadConfiguration() {    
         if (this.getEngineConfigString("docaCut")!=null) 
-            this.docaCut = (double) Double.valueOf(this.getEngineConfigString("docaCut"));
+            this.docaCut = (double) Double.valueOf(this.getEngineConfigString("docaCut"));     
                    
     }
 
