@@ -1,12 +1,15 @@
 package org.jlab.rec.dc.banks;
 
+import org.jlab.io.base.DataEvent;
+
 /**
  *
  * @author devita
  */
 public class Banks {
     
-    private final String tdcBank    = "DC::tdc";
+    private static final String[] tdcBanks = new String[]{"DC::tot","DC::tdc"};
+
     private final String tsBank     = "DC::jitter";
     private final String docaBank   = "DC::doca";
     
@@ -23,7 +26,7 @@ public class Banks {
     public Banks(String bankType, String inputBankPrefix, String outputBankPrefix) {
         this.init(bankType, inputBankPrefix, outputBankPrefix);
     }
-    
+   
     public final void init(String outputBankType, String inputBankPrefix, String outputBankPrefix) {
         this.outBankType = outputBankType;
         this.inPrefix    = inputBankPrefix;
@@ -52,9 +55,12 @@ public class Banks {
     public String getPrefix() {
         return outPrefix;
     }
-    
-    public String getTdcBank() {
-        return tdcBank;
+
+    public static String getTdcBank(DataEvent e) {
+        for (int i=0; i<tdcBanks.length; ++i)
+            if (e.hasBank(tdcBanks[i]))
+                return tdcBanks[i];
+        return null;
     }
 
     public String getTimeStampBank() {
