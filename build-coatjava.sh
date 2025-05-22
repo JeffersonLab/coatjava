@@ -115,6 +115,9 @@ rm -rf $prefix_dir
 # clean up any cache copies
 if [ $cleanBuild == "yes" ]; then
   $mvn clean
+  for target_dir in $(find $src_dir -type d -name target); do
+    echo "WARNING: target directory '$target_dir' was not removed! JAR files within may be accidentally installed!" >&2
+  done
   echo '''DONE CLEANING.
   Now re-run without `--clean` to build.'''
   exit
