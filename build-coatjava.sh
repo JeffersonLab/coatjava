@@ -129,11 +129,9 @@ cp -r libexec $prefix_dir/
 # create schema directories for partial reconstruction outputs
 which python3 >& /dev/null && python=python3 || python=python
 $python etc/bankdefs/util/bankSplit.py $prefix_dir/etc/bankdefs/hipo4 || exit 1
-mkdir -p $prefix_dir/lib/clas
-mkdir -p $prefix_dir/lib/utils
-mkdir -p $prefix_dir/lib/services
 
 # FIXME:  this is still needed by one of the tests
+mkdir -p $prefix_dir/lib/utils
 cp external-dependencies/jclara-4.3-SNAPSHOT.jar $prefix_dir/lib/utils
 
 # spotbugs, unit tests
@@ -155,8 +153,20 @@ if [ $runSpotBugs == "yes" ]; then
 fi
 
 # installation
+## install module JARs # FIXME: use `maven-assembly-plugin`
+install_jars() {
+  src=$1
+  dest=$2
+  mkdir -p $dest
+  for target_dir in $(find $src -type d -name target | grep -v common-tools/coat-libs); do
+    cp $(find $target_dir -name '*.jar') $dest/
+  done
+}
+install_jars common-tools   $prefix_dir/lib/common-tools
+install_jars reconstruction $prefix_dir/lib/services
+## install shaded JAR
+mkdir -p $prefix_dir/lib/clas
 cp common-tools/coat-libs/target/coat-libs-*.jar $prefix_dir/lib/clas/
-cp reconstruction/*/target/clas12detector-*.jar $prefix_dir/lib/services/
 echo "installed coatjava to: $prefix_dir"
 
 # install clara
