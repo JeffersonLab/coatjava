@@ -68,6 +68,11 @@ public class AHDCEngine extends ReconstructionEngine {
     }
 
     @Override
+    public void detectorChanged(int run) {
+        // FIXME:  move geometry initialization here
+    }
+
+    @Override
     public boolean init() {
 
         factory = (new AlertDCFactory()).createDetectorCLAS(new DatabaseConstantProvider());
@@ -91,7 +96,7 @@ public class AHDCEngine extends ReconstructionEngine {
     }
 
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
 
         if(event.hasBank("MC::Particle")) simulation = true;
 

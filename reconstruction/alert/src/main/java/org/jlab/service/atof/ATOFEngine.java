@@ -61,7 +61,8 @@ public class ATOFEngine extends ReconstructionEngine {
     private IndexedTable atofTimeOffsetsTable;
 
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
+
         if (!event.hasBank("RUN::config")) {
             return true;
         }
@@ -129,6 +130,11 @@ public class ATOFEngine extends ReconstructionEngine {
             rbc.appendATOFBanks(event, WedgeHits, BarHits, Clusters);
         }
         return true;
+    }
+
+    @Override
+    public void detectorChanged(int run) {
+        // FIXME:  move geometry initialization here
     }
 
     @Override
