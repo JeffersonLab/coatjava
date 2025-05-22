@@ -141,10 +141,8 @@ cp external-dependencies/jclara-4.3-SNAPSHOT.jar $prefix_dir/lib/utils
 unset CLAS12DIR
 if [ $runUnitTests == "yes" ]; then
   $mvn install # also runs unit tests
-  if [ $? != 0 ] ; then echo "mvn install failure" ; exit 1 ; fi
 else
-  $mvn -Dmaven.test.skip=true install
-  if [ $? != 0 ] ; then echo "mvn install failure" ; exit 1 ; fi
+  $mvn install -DskipTests
 fi
 
 if [ $runSpotBugs == "yes" ]; then
@@ -156,20 +154,31 @@ if [ $runSpotBugs == "yes" ]; then
 fi
 
 # installation
-## install module JARs # FIXME: use `maven-assembly-plugin`
+# NOTE: a maven plugin, such as `maven-assembly-plugin`, would be better, but it seems that they:
+# - require significantly more repetition of the module names and/or generation of additional XML file(s)
+# - seem to break thread safety of `mvn install`, i.e., we'd need to run `mvn package` first, then `mvn install`
+# - we just want copy the produced JAR files to a final installation directory, so the following bash code gets the job done without drama
 install_jars() {
-  src=$1
+  src=$(dirname $1)
   dest=$2
-  mkdir -p $dest
-  for target_dir in $(find $src -type d -name target | grep -v common-tools/coat-libs); do
-    cp $(find $target_dir -name '*.jar') $dest/
-  done
+  [ $# -ge 3 ] && filter="$3" || filter='*.jar'
+  if [ -d $src/target ]; then
+    for f in $(find $src/target -name $filter); do
+      mkdir -p $dest
+      cp $f $dest/
+    done
+  fi
 }
-install_jars common-tools   $prefix_dir/lib/common-tools
-install_jars reconstruction $prefix_dir/lib/services
-## install shaded JAR
-mkdir -p $prefix_dir/lib/clas
-cp common-tools/coat-libs/target/coat-libs-*.jar $prefix_dir/lib/clas/
+for pom in $(find reconstruction -name pom.xml); do
+  install_jars $pom $prefix_dir/lib/services
+done
+for pom in $(find common-tools -name pom.xml); do
+  if [[ "$pom" =~ coat-libs ]]; then
+    install_jars $pom $prefix_dir/lib/clas 'coat-libs-*.jar'
+  else
+    install_jars $pom $prefix_dir/lib/common-tools
+  fi
+done
 echo "installed coatjava to: $prefix_dir"
 
 # install clara
