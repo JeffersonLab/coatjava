@@ -208,7 +208,7 @@
   {
     "name" : "DC::tot",
     "group": 20600,
-    "item" : 13,
+    "item" : 15,
     "info": "TDC bank for the Drift Chambers (DCRB Firmware v2)",
     "entries":[
       { "name":"sector"    , "type":"B", "info":"sector (1..6)"},
