@@ -7,7 +7,7 @@ split_cli $@
 export MALLOC_ARENA_MAX=1
 
 java -Xmx2048m -Xms1024m -XX:+UseSerialGC ${jvm_options[@]} \
-    -cp "$CLAS12DIR/lib/clas/*:$CLAS12DIR/lib/plugins/*" \
+    -cp ${COATJAVA_CLASSPATH:-''} \
     org.jlab.jnp.hipo4.utils.HipoUtilities \
     ${class_options[@]}
 
