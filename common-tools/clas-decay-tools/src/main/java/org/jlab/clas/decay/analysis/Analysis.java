@@ -67,7 +67,7 @@ public class Analysis extends ReconstructionEngine {
     
        
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         Reader reader ;
         this.FieldsConfig = this.getFieldsConfig();
         if (event.hasBank("RUN::config") == false) {
@@ -250,5 +250,7 @@ public class Analysis extends ReconstructionEngine {
         }
         return xybeam;
     }
+
+    public void detectorChanged(int run) {}
     
 }
