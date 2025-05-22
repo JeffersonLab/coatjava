@@ -216,9 +216,6 @@
             </goals>
             <configuration>
               <outputDirectory>${project.build.directory}/reports</outputDirectory>
-              <excludeModules>
-                <excludeModule>org.jlab.clas:coat-libs</excludeModule>
-              </excludeModules>
             </configuration>
           </execution>
         </executions>
@@ -267,7 +264,6 @@
         </configuration>
       </plugin>
 
-      <!-- TODO: try this -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>

@@ -232,14 +232,23 @@
         </configuration>
       </plugin>
 
-      <!-- exclude this from aggregate javadoc -->
-      <!-- <plugin> -->
-      <!--   <groupId>org.apache.maven.plugins</groupId> -->
-      <!--   <artifactId>maven-javadoc-plugin</artifactId> -->
-      <!--   <configuration> -->
-      <!--     <skip>true</skip> -->
-      <!--   </configuration> -->
-      <!-- </plugin> -->
+      <!-- exclude this module from aggregate javadoc -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+
+      <!-- exclude this module from dependency convergence enforcer -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
 
     </plugins>
   </build>
@@ -253,4 +262,3 @@
   </distributionManagement>
 
 </project>
-

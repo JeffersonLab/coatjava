@@ -173,18 +173,9 @@ jobs:
       - name: untar build
         run: tar xzvf coatjava.tar.gz
       - name: print dependency tree
-        run: |
-          mvn \
-            dependency:tree \
-            -Ddetail=true \
-            --no-transfer-progress
+        run: mvn dependency:tree -Ddetail=true --no-transfer-progress
       - name: dependency analysis # note: skips `coat-libs`, since shaded JAR dependencies are "unused" according to `dependency:analyze`
-        run: |
-          mvn \
-            dependency:analyze \
-            -DfailOnWarning=true \
-            -pl '!org.jlab.clas:coat-libs' \
-            --no-transfer-progress
+        run: mvn dependency:analyze -DfailOnWarning=true --no-transfer-progress
 
   # documentation
   #############################################################################
