@@ -92,6 +92,9 @@ public class ALERTEngine extends ReconstructionEngine {
         super("ALERT", "whit,ouillon,pilleux", "0.1");
     }
 
+    @Override
+    public void detectorChanged(int run) {}
+
     /** 
      * ALERTEngine initialization.
      * Creates the RecoBankWriter and checks for various yaml flags.
@@ -132,7 +135,7 @@ public class ALERTEngine extends ReconstructionEngine {
      * </ul>
      */
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
 
         if (!event.hasBank("AHDC::adc")) 
             return false;
