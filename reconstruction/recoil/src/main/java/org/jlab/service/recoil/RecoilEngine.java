@@ -55,7 +55,7 @@ public class RecoilEngine extends ReconstructionEngine {
 
 
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         
         List<RecoilStrip>     strips = RecoilStrip.getStrips(event, factory, this.getConstantsManager());
         List<RecoilCluster> clusters = RecoilCluster.createClusters(strips);
@@ -241,4 +241,7 @@ public class RecoilEngine extends ReconstructionEngine {
         frame.setVisible(true);     
 
     }
+
+    @Override
+    public void detectorChanged(int run) {}
 }
