@@ -3,7 +3,7 @@
 set -e
 
 # Default versions:
-grapes=2.19
+grapes=2.20
 clara=5.0.2
 coatjava=$($(dirname $0)/libexec/version.sh)
 
