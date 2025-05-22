@@ -74,6 +74,11 @@ public class AHDCEngine extends ReconstructionEngine {
     }
 
     @Override
+    public void detectorChanged(int run) {
+        // FIXME:  move geometry initialization here
+    }
+
+    @Override
     public boolean init() {
 
         factory = (new AlertDCFactory()).createDetectorCLAS(new DatabaseConstantProvider());
@@ -119,7 +124,7 @@ public class AHDCEngine extends ReconstructionEngine {
     int Run = -1;
 
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
 
         int    runNo          = 10; // needed here?
         int    eventNo        = 777; // same
