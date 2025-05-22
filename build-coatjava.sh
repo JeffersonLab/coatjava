@@ -12,7 +12,6 @@ usage='''build-coatjava.sh [OPTIONS]... [MAVEN_OPTIONS]...
 
    --nomaps          do not download field maps
 
-   --docs            also build the API documentation webpages
    --spotbugs        also run spotbugs plugin
    --unittests       also run unit tests
 
@@ -30,7 +29,6 @@ cleanBuild="no"
 runSpotBugs="no"
 downloadMaps="yes"
 runUnitTests="no"
-buildDocs="no"
 mvnArgs=()
 wgetArgs=()
 for xx in $@
@@ -40,7 +38,6 @@ do
     -n)          runSpotBugs="no"   ;;
     --nomaps)    downloadMaps="no"  ;;
     --unittests) runUnitTests="yes" ;;
-    --docs)      buildDocs="yes"    ;;
     --clean)     cleanBuild="yes"   ;;
     --quiet)
       mvnArgs+=(--quiet --batch-mode)
@@ -157,21 +154,10 @@ if [ $runSpotBugs == "yes" ]; then
   if [ $? != 0 ] ; then echo "spotbugs failure" ; exit 1 ; fi
 fi
 
-# documentation
-if [ $buildDocs == "yes" ]; then
-  $mvn javadoc:javadoc javadoc:aggregate -Ddoclint=none
-fi
-
 # installation
 cp common-tools/coat-libs/target/coat-libs-*.jar $prefix_dir/lib/clas/
 cp reconstruction/*/target/clas12detector-*.jar $prefix_dir/lib/services/
 echo "installed coatjava to: $prefix_dir"
-if [ $buildDocs == "yes" ]; then
-  doc_dir=$prefix_dir/share/doc/coatjava/html
-  mkdir -p $doc_dir
-  cp -r target/reports/apidocs/* $doc_dir/
-  echo "installed documentation to: $doc_dir"
-fi
 
 # install clara
 #rm -rf clara-home && ./install-clara -c ./coatjava ./clara-home

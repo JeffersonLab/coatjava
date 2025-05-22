@@ -207,6 +207,7 @@
           <doctitle>COATJAVA - API documentation - version ${project.version}</doctitle>
           <windowtitle>COATJAVA - API documentation - version ${project.version}</windowtitle>
           <encoding>UTF-8</encoding>
+          <doclint>none</doclint>
         </configuration>
         <executions>
           <execution>
@@ -214,9 +215,6 @@
             <goals>
               <goal>aggregate</goal>
             </goals>
-            <configuration>
-              <outputDirectory>${project.build.directory}/reports</outputDirectory>
-            </configuration>
           </execution>
         </executions>
       </plugin>

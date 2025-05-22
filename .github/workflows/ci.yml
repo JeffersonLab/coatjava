@@ -26,6 +26,7 @@ env:
   javadoc_version: 24 # newer than `java_version` for better javadoc
   groovy_version: 4.x
   CCDB_CONNECTION: 'sqlite:////cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/ccdb/ccdb_latest.sqlite'
+  nthreads: 4
 
 jobs:
 
@@ -55,7 +56,7 @@ jobs:
         if: ${{ github.ref_type == 'tag' }}
         run: libexec/version-bump.sh ${{ github.ref_name }}
       - name: build
-        run: ./build-coatjava.sh --no-progress -T4
+        run: ./build-coatjava.sh --no-progress -T$nthreads
       - name: tar # tarball to preserve permissions
         run: tar czvf coatjava.tar.gz coatjava
       - uses: actions/upload-artifact@v4
@@ -79,7 +80,7 @@ jobs:
         with:
           cvmfs_repositories: 'oasis.opensciencegrid.org'
       - name: unit tests and spotbugs
-        run: ./build-coatjava.sh --spotbugs --unittests --no-progress -T4
+        run: ./build-coatjava.sh --spotbugs --unittests --no-progress -T$nthreads
       - name: collect jacoco report
         run: validation/jacoco-aggregate.sh
       - name: publish jacoco report
@@ -175,7 +176,7 @@ jobs:
       - name: print dependency tree
         run: mvn dependency:tree -Ddetail=true --no-transfer-progress
       - name: dependency analysis # note: skips `coat-libs`, since shaded JAR dependencies are "unused" according to `dependency:analyze`
-        run: mvn dependency:analyze -DfailOnWarning=true --no-transfer-progress
+        run: mvn dependency:analyze -DfailOnWarning=true -pl '!org.jlab.clas:coat-libs' --no-transfer-progress
 
   # documentation
   #############################################################################
@@ -202,10 +203,10 @@ jobs:
         with:
           java-version: ${{ env.javadoc_version }}
           distribution: ${{ env.java_distribution }}
-      - name: build coatjava javadocs
+      - name: build coatjava javadocs # javadoc:aggregate output dir cannot be controlled, so assume the latest "standard" path and `mv` it
         run: |
-          ./build-coatjava.sh --no-progress --docs
-          mv coatjava/share/doc/coatjava/html pages/javadoc
+          mvn javadoc:aggregate -pl '!org.jlab.clas:coat-libs' --no-transfer-progress
+          mv target/reports/apidocs pages/javadoc
       ### upload artifacts
       - uses: actions/upload-pages-artifact@v3
         with:
