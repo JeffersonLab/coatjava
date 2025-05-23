@@ -8,7 +8,7 @@
 
   <parent>
     <groupId>org.jlab.clas</groupId>
-    <artifactId>clas12rec</artifactId>
+    <artifactId>coatjava</artifactId>
     <relativePath>../parent/pom.xml</relativePath>
     <version>12.0.6t-SNAPSHOT</version>
   </parent>
@@ -29,7 +29,7 @@
     <module>clara-io</module>
     <module>clas-tracking</module>
     <module>clas-decay-tools</module>
-    <module>coat-lib</module>
+    <module>coat-libs</module>
   </modules>
 
 </project>
