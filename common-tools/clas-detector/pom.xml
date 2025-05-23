@@ -8,7 +8,7 @@
 
   <parent>
     <groupId>org.jlab.clas</groupId>
-    <artifactId>clas12rec</artifactId>
+    <artifactId>coatjava</artifactId>
     <relativePath>../../parent/pom.xml</relativePath>
     <version>12.0.6t-SNAPSHOT</version>
   </parent>
@@ -21,22 +21,48 @@
     </dependency>
 
     <dependency>
+      <groupId>org.jlab</groupId>
+      <artifactId>groot</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jlab.jnp</groupId>
+      <artifactId>jnp-hipo</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>org.jlab.jnp</groupId>
       <artifactId>jnp-hipo4</artifactId>
-      <version>4.3-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jlab.ccdbrcdb</groupId>
+      <artifactId>ccdbrcdb</artifactId>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-io</artifactId>
       <version>12.0.6t-SNAPSHOT</version>
-    </dependency> 
+    </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-geometry</artifactId>
       <version>12.0.6t-SNAPSHOT</version>
     </dependency>
+
+    <dependency>
+      <groupId>org.jlab.clas</groupId>
+      <artifactId>clas-logging</artifactId>
+      <version>12.0.6t-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+    </dependency>
+
   </dependencies>
 
 </project>

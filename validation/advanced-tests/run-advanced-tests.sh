@@ -6,11 +6,14 @@
 JAVA_OPTS="-Djava.util.logging.config.file=$PWD/../../etc/logging/debug.properties"
 CLARA_HOME=$PWD/clara_installation/ ; export CLARA_HOME
 COAT=$CLARA_HOME/plugins/clas12/
-classPath="$COAT/lib/services/*:$COAT/lib/clas/*:$COAT/lib/utils/*:../lib/*:src/"
 
 # install clara
 ../../install-clara -c ../../coatjava $CLARA_HOME
 [ $? -ne 0 ] && echo "clara installation error" && exit 1
+
+# source coatjava environment
+source $COAT/libexec/env.sh
+classPath="${COATJAVA_CLASSPATH}:../lib/*:src/"
 
 # download test files
 wget --no-check-certificate http://clasweb.jlab.org/clas12offline/distribution/coatjava/validation_files/twoTrackEvents_809_raw.evio.tar.gz

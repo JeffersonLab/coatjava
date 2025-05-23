@@ -18,6 +18,7 @@ updates:
       - jhep
     ignore:
       - dependency-name: "org.jlab:groot" # since version numbers are not in order
+      - dependency-name: "org.ejml:ejml-simple" # keep version the same as `j4ml:j4ml-clas12:jar:0.9-SNAPSHOT`; see pull requests #636 and #632
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
