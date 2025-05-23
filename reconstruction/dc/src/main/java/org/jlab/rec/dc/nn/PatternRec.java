@@ -84,8 +84,10 @@ public class PatternRec {
                                     s.get_Region() == r.get(ri).get_Region() &&
                                     s.associatedCrossId == r.get(ri).associatedCrossId &&
                                     r.get(ri).associatedCrossId != -1) {
-                                if (s.get_Superlayer() % 2 == missingSL % 2)
+                                if (s.get_Superlayer() % 2 == missingSL % 2){
                                     Segs2Road.add(s);
+                                    break;
+                                }
                             }
                         }
                     }
