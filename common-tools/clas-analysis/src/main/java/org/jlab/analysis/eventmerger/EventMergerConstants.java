@@ -33,31 +33,35 @@ public class EventMergerConstants {
             "/calibration/band/time_jitter"            
     };
 
-    public static final List<DetectorType> ADCs = Arrays.asList(DetectorType.BAND,
-                                                                DetectorType.BMT,
-                                                                DetectorType.BST,
-                                                                DetectorType.CND,
-                                                                DetectorType.CTOF,
-                                                                DetectorType.ECAL,
-                                                                DetectorType.FMT,
-                                                                DetectorType.FTCAL,
-                                                                DetectorType.FTHODO,
-                                                                DetectorType.FTOF,
-                                                                DetectorType.FTTRK,
-                                                                DetectorType.HTCC,
-                                                                DetectorType.LTCC,
-                                                                DetectorType.URWELL);
-                                                
-    public static final List<DetectorType> TDCs = Arrays.asList(DetectorType.BAND,
-                                                                DetectorType.CND,
-                                                                DetectorType.CTOF,
-                                                                DetectorType.DC,
-                                                                DetectorType.ECAL,
-                                                                DetectorType.FTOF);
+    public final Map<DetectorType,List<String>> ADCs = new HashMap<>();                                         
+    public final Map<DetectorType,List<String>> TDCs = new HashMap<>();
                                                                                                 
     
     public EventMergerConstants() {
         
+        // detectors and bank names
+        ADCs.put(DetectorType.BAND,Arrays.asList("adc"));
+        ADCs.put(DetectorType.BMT, Arrays.asList("adc"));
+        ADCs.put(DetectorType.BST, Arrays.asList("adc"));
+        ADCs.put(DetectorType.CND, Arrays.asList("adc"));
+        ADCs.put(DetectorType.CTOF, Arrays.asList("adc"));
+        ADCs.put(DetectorType.ECAL, Arrays.asList("adc"));
+        ADCs.put(DetectorType.FMT, Arrays.asList("adc"));
+        ADCs.put(DetectorType.FTCAL, Arrays.asList("adc"));
+        ADCs.put(DetectorType.FTHODO, Arrays.asList("adc"));
+        ADCs.put(DetectorType.FTOF, Arrays.asList("adc"));
+        ADCs.put(DetectorType.FTTRK, Arrays.asList("adc"));
+        ADCs.put(DetectorType.HTCC, Arrays.asList("adc"));
+        ADCs.put(DetectorType.LTCC, Arrays.asList("adc"));
+        ADCs.put(DetectorType.URWELL, Arrays.asList("adc"));
+        
+        TDCs.put(DetectorType.BAND,Arrays.asList("tdc"));
+        TDCs.put(DetectorType.CND, Arrays.asList("tdc"));
+        TDCs.put(DetectorType.CTOF, Arrays.asList("tdc"));
+        TDCs.put(DetectorType.DC, Arrays.asList("tot","tdc"));
+        TDCs.put(DetectorType.ECAL, Arrays.asList("tdc"));
+        TDCs.put(DetectorType.FTOF, Arrays.asList("tdc"));
+       
         // fill table map
         // time jitter
         setTable(DetectorType.DC,   EventMergerEnum.TIME_JITTER, "/calibration/dc/time_jitter");
