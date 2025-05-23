@@ -7,6 +7,8 @@ set -euo pipefail
 src_dir=$(cd $(dirname ${BASH_SOURCE[0]:-$0}) && pwd -P)
 deploy_dir=$src_dir/myLocalMvnRepo
 main_branch=development
+deployment_user=clas12
+deployment_host=jlabl1
 
 # printouts for this script (different from Maven printouts)
 log() { echo ">>> $@"; }
@@ -155,12 +157,10 @@ print_deployment
 
 # deploy remotely
 if ! $dry_run; then
-  log "remote deployment"
-  #+++FIXME
-  echo scp -r $deploy_dir/org/jlab/coat/coat-libs/* \
-    clas12@jlabl1:/group/clas/www/clasweb/html/clas12maven/org/jlab/coat/coat-libs/.
-  echo scp $deploy_tarball \
-    clas12@jlabl1:/group/clas/www/clasweb/html/clas12offline/distribution/coatjava/.
+  log "now deploying..."
+  scp -r $deploy_dir/org/jlab/coat/coat-libs/* $deployment_user@$deployment_host:/group/clas/www/clasweb/html/clas12maven/org/jlab/coat/coat-libs/.
+  scp $deploy_tarball $deployment_user@$deployment_host:/group/clas/www/clasweb/html/clas12offline/distribution/coatjava/.
+  log "...done"
 else
   log "dry run, not doing remote deployment"
 fi
