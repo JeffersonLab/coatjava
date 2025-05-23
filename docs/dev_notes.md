@@ -8,6 +8,12 @@ document.
 - the git repository will have version `${VERSION}-SNAPSHOT`
   - note that this is **not** conventional, since typically `-SNAPSHOT` is used for _upcoming_ releases
 
+### General Procedure
+1. `git switch development && git pull`
+1. `./deploy-coatjava.sh -v $VERSION`
+1. `git push` -> open PR -> review PR -> merge
+1. make git tag and release
+
 **Legend:**
 - magenta rectangle: manual step
 - green hexagon: automated
