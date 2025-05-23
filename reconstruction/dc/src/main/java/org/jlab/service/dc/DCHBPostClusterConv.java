@@ -146,9 +146,9 @@ public class DCHBPostClusterConv extends DCEngine {
 
         for (Cross c : crosses) {
             if (!c.get_Segment1().isOnTrack)
-                crossSegsNotOnTrack.add(c.get_Segment1());
+                if(!crossSegsNotOnTrack.contains(c.get_Segment1())) crossSegsNotOnTrack.add(c.get_Segment1());
             if (!c.get_Segment2().isOnTrack)
-                crossSegsNotOnTrack.add(c.get_Segment2());
+                if(!crossSegsNotOnTrack.contains(c.get_Segment2())) crossSegsNotOnTrack.add(c.get_Segment2());
         }
 
         RoadFinder rf = new RoadFinder();
@@ -174,8 +174,10 @@ public class DCHBPostClusterConv extends DCEngine {
                             s.get_Region() == r.get(ri).get_Region() &&
                             s.associatedCrossId == r.get(ri).associatedCrossId &&
                             r.get(ri).associatedCrossId != -1) {
-                        if (s.get_Superlayer() % 2 == missingSL % 2)
+                        if (s.get_Superlayer() % 2 == missingSL % 2){
                             Segs2Road.add(s); 
+                            break;
+                        }
                     }
                 }
             }
@@ -190,7 +192,12 @@ public class DCHBPostClusterConv extends DCEngine {
 
         segments.addAll(psegments);
         List<Cross> pcrosses = crossMake.find_Crosses(segments, Constants.getInstance().dcDetector);
-
+        List<Cross> fullPseudoCrosses = new ArrayList(); // Cross by two pseudo segments
+        for(Cross crs : pcrosses){
+            if(crs.get_Segment1().get_Id() == -1 && crs.get_Segment2().get_Id() == -1) fullPseudoCrosses.add(crs);
+        }
+        pcrosses.removeAll(fullPseudoCrosses);
+        
         CrossList pcrosslist = crossLister.candCrossLists(event, pcrosses,
                 false,
                 null,

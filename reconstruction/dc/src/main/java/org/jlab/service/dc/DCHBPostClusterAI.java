@@ -244,8 +244,10 @@ public class DCHBPostClusterAI extends DCEngine {
                             s.get_Region() == r.get(ri).get_Region() &&
                             s.associatedCrossId == r.get(ri).associatedCrossId &&
                             r.get(ri).associatedCrossId != -1) {
-                        if (s.get_Superlayer() % 2 == missingSL % 2)
+                        if (s.get_Superlayer() % 2 == missingSL % 2){
                             Segs2RoadConv.add(s); 
+                            break;
+                        }
                     }
                 }
             }
@@ -260,6 +262,11 @@ public class DCHBPostClusterAI extends DCEngine {
 
         segmentsConv.addAll(psegmentsConv);
         List<Cross> pcrossesConv = crossMake.find_Crosses(segmentsConv, Constants.getInstance().dcDetector);
+        List<Cross> fullPseudoCrossesConv = new ArrayList(); // Cross by two pseudo segments
+        for(Cross crs : pcrossesConv){
+            if(crs.get_Segment1().get_Id() == -1 && crs.get_Segment2().get_Id() == -1) fullPseudoCrossesConv.add(crs);
+        }
+        pcrossesConv.removeAll(fullPseudoCrossesConv);        
         CrossList pcrosslistConv = crossLister.candCrossLists(event, pcrossesConv,
                 false,
                 null,
