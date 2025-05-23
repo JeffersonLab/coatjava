@@ -93,7 +93,7 @@ jobs:
   test_coatjava:
     needs: [ build ]
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         runner:
           - ubuntu-latest
