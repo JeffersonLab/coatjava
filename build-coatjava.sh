@@ -175,8 +175,8 @@ done
 for pom in $(find common-tools -name pom.xml); do
   if [[ "$pom" =~ coat-libs ]]; then
     install_jars $pom $prefix_dir/lib/clas 'coat-libs-*.jar'
-  else
-    install_jars $pom $prefix_dir/lib/services
+  # else # FIXME, consumers may be need these after https://github.com/JeffersonLab/coatjava/pull/632 ; alternatively add needed deps to `coat-libs`
+  #   install_jars $pom $prefix_dir/lib/services
   fi
 done
 echo "installed coatjava to: $prefix_dir"
