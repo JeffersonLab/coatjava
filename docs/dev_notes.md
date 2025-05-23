@@ -1,16 +1,12 @@
 # Developer Notes
 
-## Version 1: Increment version number at release time
+## Bumping Version Number and Deploying
 
 Deploying a new version requires a new version number, named `$VERSION` in this
 document.
 - the release build will have version `$VERSION`
 - the git repository will have version `${VERSION}-SNAPSHOT`
-  - note that this is **not** conventional, since typically `-SNAPSHOT` is used for _upcoming_
-    releases
-    - however, we never know what the new version number is going to be, and we
-      only bump the version number for a new release
-    - this is more similar to what we have been doing all along
+  - note that this is **not** conventional, since typically `-SNAPSHOT` is used for _upcoming_ releases
 
 **Legend:**
 - magenta rectangle: manual step
@@ -45,7 +41,7 @@ flowchart TB
     gitTag ==> bump3 ==> deployGit
 ```
 
-## Version 2 (conventional): Increment version number after release time
+<!-- FIXME: this is the "correct" approach
 
 Deploying a new version requires a current version number, named `$VERSION_RELEASE`,
 and a new version number for the future release, named `$VERSION_NEXT`
@@ -57,8 +53,8 @@ and a new version number for the future release, named `$VERSION_NEXT`
     the MAJOR, MINOR, or PATCH number
   - by default, `$VERSION_NEXT` can initially be `$VERSION_CURRENT` with the PATCH number
     incremented by 1, since most of our releases are PATCH releases
-- this is the "conventional" approach, and Maven can automate these version bumps
-  - or we just use the script, since we do more than just `mvn deploy`
+- this is the "conventional" approach, and Maven can automate these version bumps,
+  but we just use the script since it does a bit more
 
 **Legend:**
 - magenta rectangle: manual step
@@ -94,3 +90,4 @@ flowchart TB
     gitCommit ==> gitPush ==> pullRequest ==> gitTag
     gitTag ==> bump3 ==> deployGit
 ```
+-->
