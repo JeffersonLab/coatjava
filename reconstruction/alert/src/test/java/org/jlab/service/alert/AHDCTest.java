@@ -5,9 +5,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.jlab.io.base.DataEvent;
 import org.jlab.detector.base.DetectorType;
-import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.logging.DefaultLogger;
-import org.jlab.utils.system.ClasUtilsFile;
 import org.jlab.analysis.physics.TestEvent;
 import org.jlab.service.ahdc.AHDCEngine;
 
@@ -22,9 +20,6 @@ public class AHDCTest {
   public void run() {
     System.setProperty("CLAS12DIR", "../../");
     DefaultLogger.debug();
-    String dir = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4");
-    SchemaFactory schemaFactory = new SchemaFactory();
-    schemaFactory.initFromDirectory(dir);
     
     DataEvent event = TestEvent.get(DetectorType.AHDC);
     

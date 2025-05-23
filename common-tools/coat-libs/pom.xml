@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.jlab.coat</groupId>
+  <artifactId>coat-libs</artifactId>
+  <version>12.0.6t-SNAPSHOT</version>
+  <packaging>jar</packaging>
+
+  <parent>
+    <groupId>org.jlab.clas</groupId>
+    <artifactId>coatjava</artifactId>
+    <relativePath>../../parent/pom.xml</relativePath>
+    <version>12.0.6t-SNAPSHOT</version>
+  </parent>
+
+  <repositories>
+    <repository>
+      <id>freehep-repo-public</id>
+      <url>https://clasweb.jlab.org/.clas12maven/</url>
+      <!--<url>https://srs.slac.stanford.edu/nexus/content/groups/freehep-maven2-public/</url>-->
+    </repository>
+  </repositories>
+
+  <dependencies>
+
+    <dependency>
+      <groupId>org.jlab.coda</groupId>
+      <artifactId>jevio</artifactId>
+      <classifier>jar-with-dependencies</classifier>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jlab.coda</groupId>
+      <artifactId>et</artifactId>
+      <version>14.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>j4ml</groupId>
+      <artifactId>j4ml-neuroph</artifactId>
+      <version>0.9-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>j4ml</groupId>
+      <artifactId>j4ml-clas12</artifactId>
+      <version>0.9-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jama</groupId>
+      <artifactId>jamapack</artifactId>
+      <version>1.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jlab.plugins</groupId>
+      <artifactId>trackfitter</artifactId>
+      <version>1.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jlab.plugins</groupId>
+      <artifactId>jMath</artifactId>
+      <version>1.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jlab.clas</groupId>
+      <artifactId>clas-io</artifactId>
+      <version>12.0.6t-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jlab.clas</groupId>
+      <artifactId>clara-io</artifactId>
+      <version>12.0.6t-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jlab.clas</groupId>
+      <artifactId>clas-reco</artifactId>
+      <version>12.0.6t-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jlab.clas</groupId>
+      <artifactId>clas-utils</artifactId>
+      <version>12.0.6t-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jlab.clas</groupId>
+      <artifactId>clas-jcsg</artifactId>
+      <version>12.0.6t-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jlab.clas</groupId>
+      <artifactId>clas-detector</artifactId>
+      <version>12.0.6t-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jlab.clas</groupId>
+      <artifactId>clas-analysis</artifactId>
+      <version>12.0.6t-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jlab.clas</groupId>
+      <artifactId>clas-geometry</artifactId>
+      <version>12.0.6t-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jlab.clas</groupId>
+      <artifactId>clas-math</artifactId>
+      <version>12.0.6t-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jlab.clas</groupId>
+      <artifactId>clas-physics</artifactId>
+      <version>12.0.6t-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jlab.clas</groupId>
+      <artifactId>swim-tools</artifactId>
+      <version>12.0.6t-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jlab.clas</groupId>
+      <artifactId>clas-tracking</artifactId>
+      <version>12.0.6t-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jlab.clas</groupId>
+      <artifactId>clas-decay-tools</artifactId>
+      <version>12.0.6t-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>cnuphys</groupId>
+      <artifactId>snr</artifactId>
+      <version>12.0.6t-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.freehep</groupId>
+      <artifactId>jminuit</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>de.erichseifert</groupId>
+      <artifactId>vectorgraphics2d</artifactId>
+      <version>1.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>net.objecthunter</groupId>
+      <artifactId>exp4j</artifactId>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <plugins>
+
+      <!-- create shaded coat-libs JAR -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.6.0</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <createDependencyReducedPom>true</createDependencyReducedPom>
+          <artifactSet>
+            <excludes>
+              <exclude>cnuphys:cnuphys</exclude>
+              <exclude>cnuphys:bCNU</exclude>
+              <exclude>cnuphys:bCNU3D</exclude>
+              <exclude>cnuphys:jogl-all</exclude>
+              <exclude>cnuphys:jogl</exclude>
+              <exclude>cnuphys:gluegen</exclude>
+              <exclude>org.jlab.coda:jclara</exclude>
+              <exclude>org.jacoco</exclude>
+            </excludes>
+          </artifactSet>
+          <filters>
+            <filter>
+              <artifact>*:*</artifact>
+              <excludes>
+                <!-- signature and certificate files -->
+                <exclude>META-INF/*.SF</exclude>
+                <exclude>META-INF/*.DSA</exclude>
+                <exclude>META-INF/*.RSA</exclude>
+                <!-- maven metadata about dependencies -->
+                <exclude>META-INF/maven/**</exclude>
+                <!-- module metadata -->
+                <exclude>module-info.class</exclude>
+                <!-- IDE files, etc. -->
+                <exclude>.DS_Store</exclude>
+                <exclude>.classpath</exclude>
+                <exclude>.factorypath</exclude>
+                <exclude>.project</exclude>
+                <exclude>.settings</exclude>
+              </excludes>
+            </filter>
+          </filters>
+          <transformers>
+            <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+              <manifestEntries>
+                <Specification-Title>${project.artifactId}</Specification-Title>
+                <Specification-Version>${project.version}</Specification-Version>
+                <Implementation-Title>${project.artifactId}</Implementation-Title>
+                <Implementation-Version>${project.version}</Implementation-Version>
+                <Implementation-Vendor-Id>${project.groupId}</Implementation-Vendor-Id>
+              </manifestEntries>
+            </transformer>
+          </transformers>
+        </configuration>
+      </plugin>
+
+      <!-- deployment configuration -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-deploy-plugin</artifactId>
+        <version>3.1.4</version>
+        <configuration>
+          <!-- Use the reduced POM -->
+          <pomFile>${project.build.directory}/dependency-reduced-pom.xml</pomFile>
+        </configuration>
+      </plugin>
+
+    </plugins>
+  </build>
+
+  <!-- deployment -->
+  <distributionManagement>
+    <repository>
+      <id>coat-libs</id>
+      <url>file://myLocalMvnRepo</url> <!-- must be consistent with 'deploy-coatjava.sh' -->
+    </repository>
+  </distributionManagement>
+
+</project>

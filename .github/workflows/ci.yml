@@ -26,6 +26,7 @@ env:
   javadoc_version: 24 # newer than `java_version` for better javadoc
   groovy_version: 4.x
   CCDB_CONNECTION: 'sqlite:////cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/ccdb/ccdb_latest.sqlite'
+  nthreads: 4
 
 jobs:
 
@@ -51,10 +52,11 @@ jobs:
           cvmfs_repositories: 'oasis.opensciencegrid.org'
       - name: cvmfs
         run: ls /cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/ccdb/ccdb_latest.sqlite
-      - name: echo CCDB_CONNECTION
-        run: echo $CCDB_CONNECTION
+      - name: bump version to tag if tag trigger
+        if: ${{ github.ref_type == 'tag' }}
+        run: libexec/version-bump.sh ${{ github.ref_name }}
       - name: build
-        run: ./build-coatjava.sh --spotbugs --unittests --no-progress -T4
+        run: ./build-coatjava.sh --no-progress -T${{ env.nthreads }}
       - name: tar # tarball to preserve permissions
         run: tar czvf coatjava.tar.gz coatjava
       - uses: actions/upload-artifact@v4
@@ -62,24 +64,36 @@ jobs:
           name: build_${{ matrix.runner }}
           retention-days: 1
           path: coatjava.tar.gz
+
+  # tests
+  #############################################################################
+
+  unit_tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.java_version }}
+          distribution: ${{ env.java_distribution }}
+      - uses: cvmfs-contrib/github-action-cvmfs@v5
+        with:
+          cvmfs_repositories: 'oasis.opensciencegrid.org'
+      - name: unit tests and spotbugs
+        run: ./build-coatjava.sh --spotbugs --unittests --no-progress -T${{ env.nthreads }}
       - name: collect jacoco report
-        if: ${{ matrix.runner == 'ubuntu-latest' }}
         run: validation/jacoco-aggregate.sh
       - name: publish jacoco report
-        if: ${{ matrix.runner == 'ubuntu-latest' }}
         uses: actions/upload-artifact@v4
         with:
           name: jacoco_report
           path: publish/
           retention-days: 1
 
-  # tests
-  #############################################################################
-
   test_coatjava:
     needs: [ build ]
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         runner:
           - ubuntu-latest
@@ -116,8 +130,6 @@ jobs:
           cvmfs_repositories: 'oasis.opensciencegrid.org'
       - name: untar build
         run: tar xzvf coatjava.tar.gz
-      - name: echo CCDB_CONNECTION
-        run: echo $CCDB_CONNECTION
       - name: run test
         run: |
           cd validation/advanced-tests
@@ -146,39 +158,32 @@ jobs:
       - name: test run-groovy
         run: coatjava/bin/run-groovy validation/advanced-tests/test-run-groovy.groovy
 
-  release:
+  dependency_analysis:
     needs: [ build ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.java_version }}
+          distribution: ${{ env.java_distribution }}
       - uses: actions/download-artifact@v4
         with:
           name: build_ubuntu-latest
-      - name: Release
-        uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: coatjava.tar.gz
-        env:
-          GITHUB_TOKEN:  ${{ secrets.GITHUB_TOKEN }}
-
-  final:
-    needs:
-      - build
-      - test_coatjava
-      - test_run-groovy
-      - release
-    runs-on: ubuntu-latest
-    steps:
-      - name: pass
-        run: exit 0
+      - name: untar build
+        run: tar xzvf coatjava.tar.gz
+      - name: print dependency tree
+        run: mvn dependency:tree -Ddetail=true --no-transfer-progress
+      - name: dependency analysis # note: skips `coat-libs`, since shaded JAR dependencies are "unused" according to `dependency:analyze`
+        run: mvn dependency:analyze -DfailOnWarning=true -pl '!org.jlab.coat:coat-libs' --no-transfer-progress
 
   # documentation
   #############################################################################
 
   generate_documentation:
     runs-on: ubuntu-latest
-    needs: [ build ]
+    needs: [ unit_tests ]
     steps:
       ### mkdocs
       - uses: actions/checkout@v4
@@ -198,10 +203,10 @@ jobs:
         with:
           java-version: ${{ env.javadoc_version }}
           distribution: ${{ env.java_distribution }}
-      - name: build coatjava
+      - name: build coatjava javadocs # javadoc:aggregate output dir cannot be controlled, so assume the latest "standard" path and `mv` it
         run: |
-          ./build-coatjava.sh --no-progress --docs
-          mv coatjava/share/doc/coatjava/html pages/javadoc
+          mvn javadoc:aggregate -pl '!org.jlab.coat:coat-libs' --no-transfer-progress
+          mv target/reports/apidocs pages/javadoc
       ### upload artifacts
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -222,3 +227,49 @@ jobs:
       - name: deployment
         id: deployment
         uses: actions/deploy-pages@v4
+
+  # finalize
+  #############################################################################
+
+  release_build:
+    if: ${{ github.ref_type == 'tag' }}
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      REPO_URL: ${{ github.event.repository.html_url }}
+      RUN_ID: ${{ github.run_id }}
+      TAG_NAME: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: build_ubuntu-latest
+      - name: rename artifact
+        run: |
+          tar xzf coatjava.tar.gz
+          mv coatjava{,-${{ env.TAG_NAME }}}
+          tar czf coatjava-${{ env.TAG_NAME }}{.tar.gz,}
+      - name: release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: coatjava-${{ env.TAG_NAME }}.tar.gz
+      - name: open issue if failed
+        if: ${{ cancelled() || failure() }}
+        uses: JasonEtco/create-an-issue@v2
+        with:
+          filename: .github/issue_release.md
+
+  final:
+    needs:
+      - test_coatjava
+      - dependency_analysis
+      - test_run-groovy
+      - generate_documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: pass
+        run: exit 0
