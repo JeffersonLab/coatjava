@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# build coatjava
 
 set -e
 set -u

@@ -9,6 +9,7 @@ document.
   - note that this is **not** conventional, since typically `-SNAPSHOT` is used for _upcoming_ releases
 
 ### General Procedure
+1. be on a machine from which you have permission to deploy (see `deploy-coatjava.sh`'s `scp` commands)
 1. `git switch development && git pull`
 1. `./deploy-coatjava.sh -v $VERSION`
 1. `git push` -> open PR -> review PR -> merge

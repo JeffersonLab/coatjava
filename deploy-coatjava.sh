@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# deploy a new release of coatjava
 
 set -euo pipefail
 
