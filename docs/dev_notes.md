@@ -5,7 +5,7 @@
 Deploying a new version requires a new version number, named `$VERSION` in this
 document.
 - the release build will have version `$VERSION`
-- the git repository will have version `${VERSION}-SNAPSHOT`
+- the `git` repository will have version `${VERSION}-SNAPSHOT`
   - note that this is **not** conventional, since typically `-SNAPSHOT` is used for _upcoming_ releases
 
 ### General Procedure
@@ -14,12 +14,12 @@ document.
 1. make sure you have no local changes (`git status`)
 1. `./deploy-coatjava.sh -v $VERSION`
 1. `git push` -> open PR -> review PR -> merge
-1. make git tag and release
+1. make `git` tag and release
 
 > [!NOTE]
-> Should `deploy-coatjava.sh` fail midway, your repository may be left in a transient state; here's how to revert:
-> 1. `git switch -` to switch back to `development` branch
-> 1. `libexec/version-bump.sh $ORIGINAL_VERSION` and be sure to include the `-SNAPSHOT`; alternatively, 'git reset --hard'
+> Should `deploy-coatjava.sh` fail midway, your `git` repository may no longer be in the recommended initial state; here's how to revert:
+> 1. `git switch development` to switch back to `development` branch
+> 1. `libexec/version-bump.sh $ORIGINAL_VERSION` and be sure to include the `-SNAPSHOT`; alternatively, `git reset --hard`
 > 1. `git branch -D version/$VERSION` to delete the created version-bump branch
 
 **Legend:**
