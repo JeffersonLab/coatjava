@@ -11,9 +11,16 @@ document.
 ### General Procedure
 1. be on a machine from which you have permission to deploy (see `deploy-coatjava.sh`'s `scp` commands)
 1. `git switch development && git pull`
+1. make sure you have no local changes (`git status`)
 1. `./deploy-coatjava.sh -v $VERSION`
 1. `git push` -> open PR -> review PR -> merge
 1. make git tag and release
+
+> [!NOTE]
+> Should `deploy-coatjava.sh` fail midway, your repository may be left in a transient state; here's how to revert:
+> 1. `git switch -` to switch back to `development` branch
+> 1. `libexec/version-bump.sh $ORIGINAL_VERSION` and be sure to include the `-SNAPSHOT`; alternatively, 'git reset --hard'
+> 1. `git branch -D version/$VERSION` to delete the created version-bump branch
 
 **Legend:**
 - magenta rectangle: manual step
