@@ -101,15 +101,16 @@ public class ADCTDCMerger {
      * 
      * @param detector: detector identifier
      * @param bank: selected DataBank  
+     * @param type: traditional TDC bank (0), extended with ToT (>0)
      * @return list of TDC hits
      */
-    public List<DGTZ> readTDCs(DetectorType detector, DataBank bank) {
+    public List<DGTZ> readTDCs(DetectorType detector, DataBank bank, int type) {
         List<DGTZ> tdcStore   = new ArrayList<>();
                         
         if(bank!=null) {
             for (int i = 0; i < bank.rows(); i++) {
                 TDC tdcData = new TDC(detector);
-                tdcData.readFromBank(bank, i);
+                tdcData.readFromBank(bank, i, type);
                 
                 if(!tdcData.isGood()) tdcData.remove();
                 
@@ -132,32 +133,36 @@ public class ADCTDCMerger {
         
         List<DataEvent> bgs = bgEvents[0];
 
-        String ADCString = detector.getName()+"::adc";
-        for(DataEvent bg : bgs) {
-            if(!bg.hasBank(ADCString)) {
-                return event.getBank(ADCString);
-            }
-        }
-
         List<DGTZ> bgADCs = new ArrayList<>();
         for(DataEvent bg : bgs) {
-            for(DGTZ dgtz : readADCs(detector,bg.getBank(ADCString))) {
-                if(layers==null || layers.contains(dgtz.getLayer()))
-                    bgADCs.add((ADC) dgtz);
+            for(String suffix : constants.ADCs.get(detector)) {
+                String name = detector.getName()+"::"+suffix;
+                if(!bg.hasBank(name))
+                    continue;
+                for(DGTZ dgtz : readADCs(detector,bg.getBank(name))) {
+                    if(layers==null || layers.contains(dgtz.getLayer()))
+                        bgADCs.add((ADC) dgtz);
+                }
             }
         }
-        List<DGTZ> ADCs    = readADCs(detector,event.getBank(ADCString));
-
-        DataBank bank = this.writeToBank(event, ADCString, this.merge(ADCs, bgADCs));
-
-        return bank;
-
+        String ADCname = detector.getName() + "::" + constants.ADCs.get(detector).get(0);
+        if(bgADCs.isEmpty())
+            return event.getBank(ADCname);
+        else {
+            List<DGTZ> ADCs = new ArrayList<>();
+            for(String suffix : constants.ADCs.get(detector)) {
+                String name = detector.getName()+"::"+suffix;
+                ADCs.addAll(readADCs(detector,event.getBank(name)));
+            }
+            DataBank bank = this.writeToBank(event, ADCname, this.merge(ADCs, bgADCs));
+            return bank;
+        }
     }
     
     /**
      * Merge TDC banks for data (signal) and background events for the selected detector and layers
      * Use two background events shifted in time to extend the time range of the backgrounds
-     * Multiple hits on the same components are kept if time distance exceed the holdoff time
+     * Multiple hits on the same components are kept if the time distance exceeds the holdoff time
      * 
      * @param detector
      * @param layers
@@ -167,48 +172,49 @@ public class ADCTDCMerger {
         
         List<DataEvent> bgs = bgEvents[0];
 
-        String TDCString = detector+"::tdc";
+        String TDCname = detector.getName() + "::" + constants.TDCs.get(detector).get(0);
         
-        // if the primary background event has no detector bank then keep the event bank
-        for(DataEvent bg : bgs) {
-            if(!bg.hasBank(TDCString)) {
-                return event.getBank(TDCString);
-            }
-        }
-        // if the primary background events has the detector bank, then proceed with merging                 
         // get background hits using multiple events dependending on detector
         int bgSize = constants.getInt(detector, EventMergerEnum.MERGE_SIZE);
-        if(!event.hasBank(TDCString)) bgSize = 1;
+        if(!event.hasBank(TDCname)) bgSize = 1;
         // collect bg hits
         List<DGTZ> bgTDCs = new ArrayList<>();
         for(int i=0; i<Math.min(bgSize, bgEvents.length); i++) {
             for(DataEvent bg : bgEvents[i]) {
-                if(bg.hasBank(TDCString)) {
-                    // get TDCs, correct them for jitter and shift them in time
-                    int jitter = this.getTDCJitter(detector, bg);
-                    for(DGTZ dgtz : readTDCs(detector, bg.getBank(TDCString))) {
-                        TDC tdc = (TDC) dgtz;
-                        int layer  = tdc.getLayer();
-                        int comp   = tdc.getComponent();
-                        if(layers==null || layers.contains(layer)) {
-                            int offset = constants.getInt(run, detector, EventMergerEnum.READOUT_WINDOW, 0, layer, comp);
-                            tdc.shift(jitter-i*offset);
-                            bgTDCs.add(tdc);
-                        } 
+                for(String suffix : constants.TDCs.get(detector)) {
+                    String name = detector.getName()+"::"+suffix;
+                    if(bg.hasBank(name)) {
+                        // get TDCs, correct them for jitter and shift them in time
+                        int jitter = this.getTDCJitter(detector, bg);
+                        for(DGTZ dgtz : readTDCs(detector, bg.getBank(name), suffix.equals("tdc") ? 0 : 1)) {
+                            TDC tdc = (TDC) dgtz;
+                            int layer  = tdc.getLayer();
+                            int comp   = tdc.getComponent();
+                            if(layers==null || layers.contains(layer)) {
+                                int offset = constants.getInt(run, detector, EventMergerEnum.READOUT_WINDOW, 0, layer, comp);
+                                tdc.shift(jitter-i*offset);
+                                bgTDCs.add(tdc);
+                            } 
+                        }
                     }
                 }
             }
         }
-
-        // get physics event hits hits
-        List<DGTZ> TDCs = readTDCs(detector, event.getBank(TDCString));
-
-        // merge physics and bg hit
-        List<DGTZ> mergedTDCs = this.merge(TDCs, bgTDCs);
-
-        // create output bank
-        return this.writeToBank(event, TDCString, mergedTDCs);
-        
+        // if no backkground hits were found, return signal event banks
+        if(bgTDCs.isEmpty())
+            return event.getBank(TDCname);
+        else {
+            // get physics event hits 
+            List<DGTZ> TDCs = new ArrayList<>();
+            for(String suffix : constants.TDCs.get(detector)) {
+                String name = detector.getName()+"::"+suffix;
+                TDCs.addAll(this.readTDCs(detector, event.getBank(TDCname), suffix.equals("tdc") ? 0 : 1));
+            }
+            // merge physics and bg hit
+            List<DGTZ> mergedTDCs = this.merge(TDCs, bgTDCs);
+            // create output bank
+            return this.writeToBank(event, TDCname, mergedTDCs);
+        }
     }    
 
     /**
@@ -411,7 +417,8 @@ public class ADCTDCMerger {
     
     public class TDC extends DGTZ {
         
-        private int tdc;
+        private int tdc = 0;
+        private int tot = -1;
         
         public TDC(DetectorType detector) {
             super(detector);
@@ -423,6 +430,14 @@ public class ADCTDCMerger {
 
         public void setTdc(int tdc) {
             this.tdc = tdc;
+        }
+
+        public int getTot() {
+            return tot;
+        }
+
+        public void setTot(int tot) {
+            this.tot = tot;
         }
         
         public void shift(int offset) {
@@ -438,12 +453,14 @@ public class ADCTDCMerger {
         public void addToBank(DataBank bank, int row) {
             super.addToBank(bank, row);
             bank.setInt("TDC", row, tdc);
+            bank.setShort("ToT", row, (short) tot);
         }
         
-        @Override
-        public void readFromBank(DataBank bank, int row) {
+        public void readFromBank(DataBank bank, int row, int type) {
             super.readFromBank(bank, row);
             this.tdc = bank.getInt("TDC", row);
+            if(type>0)
+                this.tot = bank.getShort("ToT", row);
         }
         
         

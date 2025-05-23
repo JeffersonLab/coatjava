@@ -64,10 +64,10 @@ public class EventMerger {
     private Map<DetectorType,List<Integer>> getDetectors(String... dets) {
         Map<DetectorType,List<Integer>> all = new HashMap<>();
         if(dets.length==1 && dets[0].equals("ALL")) {
-            for(DetectorType t : EventMergerConstants.ADCs) {
+            for(DetectorType t : constants.ADCs.keySet()) {
                 all.put(t, null);
             }
-            for(DetectorType d : EventMergerConstants.TDCs) {
+            for(DetectorType d : constants.TDCs.keySet()) {
                 if(!all.containsKey(d)) all.put(d, null);
             }
         }
@@ -218,12 +218,14 @@ public class EventMerger {
             
             List<Integer> layers = detectors.get(det);
             
-            if(EventMergerConstants.ADCs.contains(det)) {
-                names.add(det.getName()+"::adc");
+            if(constants.ADCs.containsKey(det)) {
+                for(String suffix : constants.ADCs.get(det))
+                        names.add(det.getName()+"::"+suffix);
                 banks.add(merger.mergeADCs(det, layers)); 
             }
-            if(EventMergerConstants.TDCs.contains(det)) {
-                names.add(det.getName()+"::tdc");
+            if(constants.TDCs.containsKey(det)) {
+                for(String suffix : constants.TDCs.get(det))
+                        names.add(det.getName()+"::"+suffix);
                 banks.add(merger.mergeTDCs(det, layers));
             }
             if(banks.isEmpty())
@@ -300,7 +302,7 @@ public class EventMerger {
             readerData.open(dataFile);
             
             //Writer
-            HipoDataSync writer = new HipoDataSync();
+            HipoDataSync writer = readerData.createWriter();
             writer.setCompressionType(2);
             writer.open(outputFile);
             
