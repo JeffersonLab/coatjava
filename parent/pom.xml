@@ -164,7 +164,7 @@
       <dependency> <!-- resolve conflict between `org.jlab.coda:jclara` and `ai.djl:api` -->
         <groupId>com.google.code.gson</groupId>
         <artifactId>gson</artifactId>
-        <version>2.11.0</version> <!-- choose the later version -->
+        <version>2.13.1</version> <!-- choose the later version -->
       </dependency>
 
       <dependency> <!-- resolve conflict between `j4ml:j4ml-clas12` and `clas-tracking` -->
