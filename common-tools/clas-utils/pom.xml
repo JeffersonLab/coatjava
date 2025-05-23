@@ -8,26 +8,16 @@
 
   <parent>
     <groupId>org.jlab.clas</groupId>
-    <artifactId>clas12rec</artifactId>
+    <artifactId>coatjava</artifactId>
     <relativePath>../../parent/pom.xml</relativePath>
     <version>12.0.6t-SNAPSHOT</version>
   </parent>
 
   <dependencies>
     <dependency>
-      <groupId>org.jlab.clas</groupId>
-      <artifactId>clas-logging</artifactId>
-      <version>12.0.6t-SNAPSHOT</version>
-    </dependency> 
-    <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-text</artifactId>
       <version>1.13.1</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-math3</artifactId>
-      <version>3.6.1</version>
     </dependency>
   </dependencies>
 

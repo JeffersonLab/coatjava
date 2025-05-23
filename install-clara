@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
 
+set -e
+
 # Default versions:
 grapes=2.19
 clara=5.0.2
-coatjava=12.0.6t
-
-# Abort on any non-zero exit codes:
-set -e
+coatjava=$($(dirname $0)/libexec/version.sh)
 
 function error() {
     echo -e "\n$usage\n\nERROR:  $@"

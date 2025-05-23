@@ -5,6 +5,7 @@
 
 - [**Documentation Homepage**](https://jeffersonlab.github.io/coatjava)
 - [API Documentation (Javadoc)](https://jeffersonlab.github.io/coatjava/javadoc)
+- [Developer notes](/docs/dev_notes.md)
 
 ----
 

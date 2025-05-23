@@ -1,6 +1,4 @@
 package org.jlab.clas.tracking.kalmanfilter.zReference;
-import org.jlab.clas.clas.math.FastMath;
-import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Line3D;
 
 /**

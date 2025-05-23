@@ -2,7 +2,6 @@ package cnuphys.swimZ;
 
 import java.util.ArrayList;
 
-import Jama.Matrix;
 import cnuphys.magfield.FieldProbe;
 import cnuphys.magfield.IMagField;
 import cnuphys.magfield.MagneticField;

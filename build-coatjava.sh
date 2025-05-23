@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# build coatjava
 
 set -e
 set -u
@@ -12,7 +13,6 @@ usage='''build-coatjava.sh [OPTIONS]... [MAVEN_OPTIONS]...
 
    --nomaps          do not download field maps
 
-   --docs            also build the API documentation webpages
    --spotbugs        also run spotbugs plugin
    --unittests       also run unit tests
 
@@ -30,7 +30,6 @@ cleanBuild="no"
 runSpotBugs="no"
 downloadMaps="yes"
 runUnitTests="no"
-buildDocs="no"
 mvnArgs=()
 wgetArgs=()
 for xx in $@
@@ -40,7 +39,6 @@ do
     -n)          runSpotBugs="no"   ;;
     --nomaps)    downloadMaps="no"  ;;
     --unittests) runUnitTests="yes" ;;
-    --docs)      buildDocs="yes"    ;;
     --clean)     cleanBuild="yes"   ;;
     --quiet)
       mvnArgs+=(--quiet --batch-mode)
@@ -92,7 +90,7 @@ download () {
 
 # download the default field maps, as defined in libexec/env.sh:
 # (and duplicated in etc/services/reconstruction.yaml):
-source libexec/env.sh
+source libexec/env.sh --no-classpath
 if [ $downloadMaps == "yes" ]; then
   echo 'Retrieving field maps ...'
   webDir=https://clasweb.jlab.org/clas12offline/magfield
@@ -118,6 +116,9 @@ rm -rf $prefix_dir
 # clean up any cache copies
 if [ $cleanBuild == "yes" ]; then
   $mvn clean
+  for target_dir in $(find $src_dir -type d -name target); do
+    echo "WARNING: target directory '$target_dir' was not removed! JAR files within may be accidentally installed!" >&2
+  done
   echo '''DONE CLEANING.
   Now re-run without `--clean` to build.'''
   exit
@@ -132,21 +133,17 @@ cp -r libexec $prefix_dir/
 # create schema directories for partial reconstruction outputs
 which python3 >& /dev/null && python=python3 || python=python
 $python etc/bankdefs/util/bankSplit.py $prefix_dir/etc/bankdefs/hipo4 || exit 1
-mkdir -p $prefix_dir/lib/clas
-mkdir -p $prefix_dir/lib/utils
-mkdir -p $prefix_dir/lib/services
 
 # FIXME:  this is still needed by one of the tests
+mkdir -p $prefix_dir/lib/utils
 cp external-dependencies/jclara-4.3-SNAPSHOT.jar $prefix_dir/lib/utils
 
 # spotbugs, unit tests
 unset CLAS12DIR
 if [ $runUnitTests == "yes" ]; then
   $mvn install # also runs unit tests
-  if [ $? != 0 ] ; then echo "mvn install failure" ; exit 1 ; fi
 else
-  $mvn -Dmaven.test.skip=true install
-  if [ $? != 0 ] ; then echo "mvn install failure" ; exit 1 ; fi
+  $mvn install -DskipTests
 fi
 
 if [ $runSpotBugs == "yes" ]; then
@@ -157,21 +154,33 @@ if [ $runSpotBugs == "yes" ]; then
   if [ $? != 0 ] ; then echo "spotbugs failure" ; exit 1 ; fi
 fi
 
-# documentation
-if [ $buildDocs == "yes" ]; then
-  $mvn javadoc:javadoc javadoc:aggregate -Ddoclint=none
-fi
-
 # installation
-cp common-tools/coat-lib/target/coat-libs-*-SNAPSHOT.jar $prefix_dir/lib/clas/
-cp reconstruction/*/target/clas12detector-*-SNAPSHOT*.jar $prefix_dir/lib/services/
+# NOTE: a maven plugin, such as `maven-assembly-plugin`, would be better, but it seems that they:
+# - require significantly more repetition of the module names and/or generation of additional XML file(s)
+# - seem to break thread safety of `mvn install`, i.e., we'd need to run `mvn package` first, then `mvn install`
+# - we just want copy the produced JAR files to a final installation directory, so the following bash code gets the job done without drama
+install_jars() {
+  src=$(dirname $1)
+  dest=$2
+  [ $# -ge 3 ] && filter="$3" || filter='*.jar'
+  if [ -d $src/target ]; then
+    for f in $(find $src/target -name $filter); do
+      mkdir -p $dest
+      cp $f $dest/
+    done
+  fi
+}
+for pom in $(find reconstruction -name pom.xml); do
+  install_jars $pom $prefix_dir/lib/services
+done
+for pom in $(find common-tools -name pom.xml); do
+  if [[ "$pom" =~ coat-libs ]]; then
+    install_jars $pom $prefix_dir/lib/clas 'coat-libs-*.jar'
+  # else # FIXME, consumers may be need these after https://github.com/JeffersonLab/coatjava/pull/632 ; alternatively add needed deps to `coat-libs`
+  #   install_jars $pom $prefix_dir/lib/services
+  fi
+done
 echo "installed coatjava to: $prefix_dir"
-if [ $buildDocs == "yes" ]; then
-  doc_dir=$prefix_dir/share/doc/coatjava/html
-  mkdir -p $doc_dir
-  cp -r target/reports/apidocs/* $doc_dir/
-  echo "installed documentation to: $doc_dir"
-fi
 
 # install clara
 #rm -rf clara-home && ./install-clara -c ./coatjava ./clara-home
