@@ -10,6 +10,7 @@ import org.jlab.rec.cvt.bmt.BMTType;
 import org.jlab.rec.cvt.cross.Cross;
 import org.jlab.rec.cvt.fit.CircleFitter;
 import org.jlab.rec.cvt.fit.CircleFitPars;
+import org.jlab.rec.rvt.PixelLinker;
 
 public class TrackSeederXY {
     
@@ -48,6 +49,42 @@ public class TrackSeederXY {
         ybeam = yb;
     }
     
+     public boolean passBMTCircle2Pix(List<Cross> seedcrs, PixelLinker.Pixel pix) {
+        Xs.clear();
+        Ys.clear();
+        Ws.clear();
+        ((ArrayList<Double>) Xs).ensureCapacity(seedcrs.size()+2);
+        ((ArrayList<Double>) Ys).ensureCapacity(seedcrs.size()+2);
+        ((ArrayList<Double>) Ws).ensureCapacity(seedcrs.size()+2);
+        Xs.add(0, xbeam); 
+        Ys.add(0, ybeam);
+        Ws.add(0,0.1);
+        for (Cross c : seedcrs ) { 
+            if(c.getType()==BMTType.C ) System.err.println("WRONG CROSS TYPE");
+            Xs.add(c.getPoint().x()); 
+            Ys.add(c.getPoint().y());
+            Ws.add(1. / (c.getPointErr().x()*c.getPointErr().x()+c.getPointErr().y()*c.getPointErr().y()));
+        } 
+        
+        CircleFitter circlefit = new CircleFitter(xbeam, ybeam);
+        boolean circlefitstatusOK = circlefit.fitStatus(Xs, Ys, Ws, Xs.size());
+        CircleFitPars pars = circlefit.getFit(); 
+        if(circlefitstatusOK==false )
+            return false;
+        double d = pars.doca();
+        double r = pars.rho();
+        double f = pars.phi();
+        
+        double xi = pix.x-xbeam; 
+        double yi = pix.y-ybeam;
+        double ri = Math.sqrt(xi*xi+yi*yi);
+        double fi = Math.atan2(yi,xi) ;
+        double res = this.calcResi(r, ri, d, f, fi);
+        if(Math.abs(res)>pix.w) 
+            return false;
+        
+        return true;
+    }
     
     
     public void fitSeed(List<Cross> seedcrs) {
@@ -203,7 +240,8 @@ public class TrackSeederXY {
                     fpars = this.CircleFit(mseed.getCrosses());
                 }
             }
-            if (fpars!=null && this.countType(mseed.getCrosses(), DetectorType.BST)>0 && mseed.getCrosses().size()>2) {
+            if (fpars!=null && 
+                    this.countType(mseed.getCrosses(), DetectorType.BST)>0 && mseed.getCrosses().size()>2) {
                 seedlist.add(mseed);
             }
         }
@@ -228,6 +266,7 @@ public class TrackSeederXY {
     }
     
     private int countType(List<Cross> cand, DetectorType dt) {
+        if(Constants.getInstance().bmtOnly) return 6;
         int countsvt=0;
         for(Cross c : cand) 
             if(c.getDetector()==dt)

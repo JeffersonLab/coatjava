@@ -355,7 +355,7 @@ public class RecoBankReader {
     //sets seeds from first pass tracks
     public static Map<Integer, Seed> readCVTSeedsBank(DataEvent event, double xb, double yb, Map<Integer, Cross> svtCrosses, Map<Integer, Cross> bmtCrosses) {
         
-        if(!event.hasBank("CVT::Seeds") || svtCrosses==null)
+        if(!event.hasBank("CVT::Seeds") || (svtCrosses==null && !Constants.getInstance().bmtOnly))
             return null;
         else {
             Map<Integer, Seed> seeds = new HashMap<>();        
@@ -409,9 +409,10 @@ public class RecoBankReader {
                     hitStrg += (j + 1);
                     hitStrg += "_ID";  
                     int cid = (int) bank.getShort(hitStrg, i);
-                    if(svtCrosses.containsKey(cid)) { 
-                        crossesOnTrk.add(svtCrosses.get(cid));
-                        
+                    if(svtCrosses!=null) {
+                        if(svtCrosses.containsKey(cid)) { 
+                            crossesOnTrk.add(svtCrosses.get(cid));
+                        }
                     }
                     if(bmtCrosses!=null) {
                         if(bmtCrosses.containsKey(cid)) { 
@@ -483,9 +484,10 @@ public class RecoBankReader {
                     hitStrg += (j + 1);
                     hitStrg += "_ID";  
                     int cid = (int) bank.getShort(hitStrg, i);
-                    if(svtCrosses.containsKey(cid)) { 
-                        crossesOnTrk.add(svtCrosses.get(cid));
-                        
+                    if(svtCrosses!=null) {
+                        if(svtCrosses.containsKey(cid)) { 
+                            crossesOnTrk.add(svtCrosses.get(cid));
+                        } 
                     }
                     if(bmtCrosses!=null) {
                         if(bmtCrosses.containsKey(cid)) { 

@@ -920,7 +920,7 @@ public class RecUtilities {
         kf.runFitter();
         if(Constants.getInstance().seedingDebugMode) System.out.println("Seed with searched clusters "+seed.toString());
         if(Constants.getInstance().seedingDebugMode)
-        System.out.println("KF status ... failed "+kf.setFitFailed+" ndf "+kf.NDF+" helix "+kf.getHelix());
+            System.out.println("KF status ...... failed "+kf.setFitFailed+" ndf "+kf.NDF+" helix "+kf.getHelix());
         if (kf.setFitFailed == false && kf.NDF>0 && kf.getHelix()!=null) { 
             fittedTrack = new Track(seed, kf, pid);
             if(Constants.getInstance().seedingDebugMode) System.out.println("RECOVERED..."+fittedTrack.toString());
@@ -939,6 +939,8 @@ public class RecUtilities {
                 
             }
         }
+        if(fittedTrack!=null)
+            System.out.println("FITTED..."+fittedTrack.toString());
         return fittedTrack;
     }
 }

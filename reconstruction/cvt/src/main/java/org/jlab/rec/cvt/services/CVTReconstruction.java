@@ -44,13 +44,17 @@ public class CVTReconstruction {
             IndexedTable adcStatus) {
         
         HitReader hitRead = new HitReader();
-        hitRead.fetch_SVTHits(event, -1, -1, svtStatus, adcStatus);
+        if(Constants.getInstance().bmtOnly==false)
+            hitRead.fetch_SVTHits(event, -1, -1, svtStatus, adcStatus);
         if(Constants.getInstance().svtOnly==false)
           hitRead.fetch_BMTHits(event, swimmer, bmtStatus, bmtTime, 
                   bmtStripVoltage, bmtStripVoltageThresh);
 
         //I) get the hits
-        List<Hit> SVThits = hitRead.getSVTHits();
+         List<Hit> SVThits = new ArrayList<>();
+        if(Constants.getInstance().bmtOnly==false) {
+            SVThits = hitRead.getSVTHits();
+        }
         if(SVThits == null || SVThits.size()>SVTParameters.MAXSVTHITS) {
             CVThits.add(new ArrayList<>());
         }

@@ -28,8 +28,10 @@ import org.jlab.rec.cvt.track.Seed.Key;
 import org.jlab.rec.cvt.track.StraightTrackSeeder;
 import org.jlab.rec.cvt.track.Track;
 import org.jlab.rec.cvt.track.TrackSeeder;
-import org.jlab.rec.cvt.track.TrackSeederCA;
+import org.jlab.rec.cvt.track.TrackSeederBMTLinker;
 import org.jlab.rec.cvt.track.TrackSeederSVTLinker;
+import org.jlab.rec.rvt.PixelLinker;
+import org.jlab.rec.rvt.PixelLinker.Pixel;
 //import org.jlab.utils.groups.IndexedTable;
 
 /**
@@ -66,67 +68,57 @@ public class TracksFromTargetRec {
     }
     
        
-    public List<Seed> getSeeds(List<ArrayList<Cluster>> clusters, List<ArrayList<Cross>> crosses) {
+    public List<Seed> getSeeds(List<ArrayList<Cluster>> clusters, List<ArrayList<Cross>> crosses,
+        DataEvent event) {
         this.init();
         this.SVTclusters = clusters.get(0);
         this.BMTclusters = clusters.get(1);
         this.SVTcrosses = crosses.get(0);   
         this.BMTcrosses = crosses.get(1);  
-        double solenoidValue = Constants.getSolenoidMagnitude(); // already the absolute value
+        PixelLinker pixlink = new PixelLinker();
+        List<Pixel> pixels = pixlink.simulatePixels(event, swimmer);
+        //double solenoidValue = Constants.getSolenoidMagnitude(); // already the absolute value
         List<Seed> seeds = new ArrayList<>();
-        // make list of crosses consistent with a track candidate
-        if(oldStraightTrackSeeder) {
-            StraightTrackSeeder trseed = new StraightTrackSeeder(xb, yb);
-            seeds = trseed.findSeed(this.SVTcrosses, this.BMTcrosses, Constants.getInstance().svtOnly, xb, yb);
-            // RDV, disabled because it seems to create fake tracks, skipping measurement in KF
-//            if(Constants.getInstance().EXCLUDELAYERS==true) {
-//                seeds = recUtil.reFit(seeds, swimmer, trseed); // RDV can we juts refit?
-//            }
+        
+        if(Constants.getInstance().svtOnly) {
+            TrackSeeder trseed = new TrackSeeder(swimmer, xb, yb);
+            trseed.unUsedHitsOnly = true;
+            seeds = trseed.findSeed(this.SVTcrosses, null);
         } else {
-            if(Constants.getInstance().svtOnly) {
-                TrackSeeder trseed = new TrackSeeder(swimmer, xb, yb);
-                trseed.unUsedHitsOnly = true;
-                seeds = trseed.findSeed(this.SVTcrosses, null);
+            if(!Constants.getInstance().bmtOnly) {
+                TrackSeederSVTLinker trseed = new TrackSeederSVTLinker(swimmer, xb, yb);  // new seeder
+                seeds.addAll(trseed.findSeed(this.SVTcrosses, this.BMTcrosses));
             } else {
-                if(Constants.getInstance().svtLinkerSeeding) {
-                    TrackSeederSVTLinker trseed = new TrackSeederSVTLinker(swimmer, xb, yb);  // new seeder
-                    seeds.addAll(trseed.findSeed(this.SVTcrosses, this.BMTcrosses));
-                } else {
-                    TrackSeederCA trseedca = new TrackSeederCA(swimmer, xb, yb);  // cellular automaton seeder
-                    seeds.addAll(trseedca.findSeed(this.SVTcrosses, this.BMTcrosses));
-                }
-                //second seeding algorithm to search for SVT only tracks, and/or tracks missed by the CA
-                if(Constants.getInstance().svtSeeding) {
-                    TrackSeeder trseed2 = new TrackSeeder(swimmer, xb, yb);
-                    trseed2.unUsedHitsOnly = true;
-                    seeds.addAll( trseed2.findSeed(this.SVTcrosses, this.BMTcrosses));
-                    // RDV, disabled because it seems to create fake tracks, skipping measurement in KF
-//                    if(Constants.getInstance().EXCLUDELAYERS==true) {
-//                        seeds = recUtil.reFit(seeds, swimmer, trseed, trseed2);
-//                    }
-                }
-            } //mv bracket
-            List<Seed> failed = new ArrayList<>();
-            for(Seed s : seeds) { 
-                if(Constants.getInstance().seedingDebugMode) {
-                    System.out.println("Before chi2 cut");
-                    System.out.println(s.toString());
-                }  
-                if(s.getChi2()>Constants.CHI2CUT*s.getCrosses().size())
-                    failed.add(s);
-                if(s.getHelix()==null)
+                TrackSeederBMTLinker trseed = new TrackSeederBMTLinker(swimmer, xb, yb);  // new seeder
+                seeds.addAll(trseed.findSeed(this.BMTcrosses, pixels));
+            }
+            //second seeding algorithm to search for SVT only tracks, and/or tracks missed by the CA
+            if(Constants.getInstance().svtSeeding) {
+                TrackSeeder trseed2 = new TrackSeeder(swimmer, xb, yb);
+                trseed2.unUsedHitsOnly = true;
+                seeds.addAll( trseed2.findSeed(this.SVTcrosses, this.BMTcrosses));
+                
+            }
+        } //mv bracket
+        List<Seed> failed = new ArrayList<>();
+        for(Seed s : seeds) { 
+            if(Constants.getInstance().seedingDebugMode) {
+                System.out.println("Before chi2 cut");
+                System.out.println(s.toString());
+            }  
+            if(s.getChi2()>Constants.CHI2CUT*s.getCrosses().size())
+                failed.add(s);
+            if(s.getHelix()==null)
+                failed.add(s);
+        }
+        seeds.removeAll(failed);
+        if(!Constants.getInstance().seedBeamSpotConstraint()) {
+            failed = new ArrayList<>();
+            for(Seed s : seeds) {
+                if(!recUtil.reFitCircle(s, Constants.getInstance().SEEDFITITERATIONS, xb, yb))
                     failed.add(s);
             }
             seeds.removeAll(failed);
-            if(!Constants.getInstance().seedBeamSpotConstraint()) {
-                failed = new ArrayList<>();
-                for(Seed s : seeds) {
-                    if(!recUtil.reFitCircle(s, Constants.getInstance().SEEDFITITERATIONS, xb, yb))
-                        failed.add(s);
-                }
-                seeds.removeAll(failed);
-            }
-            //} //mv bracket
         }
         for(Seed s : seeds) { 
             if(Constants.getInstance().seedingDebugMode) {
@@ -295,8 +287,11 @@ public class TracksFromTargetRec {
                     }
                 }
                 //fittedTrack.setStatus(1);
-                if(this.missingSVTCrosses(fittedTrack) == false)
+                if(this.missingSVTCrosses(fittedTrack) == false || Constants.getInstance().bmtOnly) {
+                    if(Constants.getInstance().seedingDebugMode) 
+                        System.out.println("TRACK..."+fittedTrack.toString());
                     tracks.add(fittedTrack);
+                }
             } else {
                 if(Constants.getInstance().KFfailRecovery && Math.abs(pid)!=45) { 
                     Track fittedTrack = null;
@@ -439,7 +434,7 @@ public class TracksFromTargetRec {
         
                        
         CVTseedsHM = RecoBankReader.readCVTSeedsBank(event, xb, yb, SVTcrossesHM, BMTcrossesHM);
-        if(CVTseedsHM == null) {
+        if(CVTseedsHM == null && Constants.getInstance().bmtOnly==false) {
             return null;
         } else {
             CVTseedsHMOK = RecoBankReader.readCVTTracksBank(event, xb, yb, CVTseedsHM, SVTcrossesHM, BMTcrossesHM);

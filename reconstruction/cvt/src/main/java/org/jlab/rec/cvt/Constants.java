@@ -20,6 +20,7 @@ public class Constants {
     public static double CAANGLE4=19.;
     public static double CAANGLE5=3.5;
     public boolean seedingDebugMode =false;
+    
    
     
     
@@ -47,6 +48,7 @@ public class Constants {
     // parameters configurable from yaml
     public boolean   isCosmics = false;
     public boolean   svtOnly = false;
+    public boolean   bmtOnly = true;
     private int      removeRegion = 0;
     public int       beamSpotConstraint = 2;
     private double   beamRadius = 0.3; // mm

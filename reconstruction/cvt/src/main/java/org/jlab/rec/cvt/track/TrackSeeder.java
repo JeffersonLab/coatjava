@@ -15,6 +15,7 @@ import org.jlab.rec.cvt.cross.Cross;
 import org.jlab.rec.cvt.fit.CircleFitter;
 import org.jlab.rec.cvt.fit.CircleFitPars;
 import org.jlab.rec.cvt.svt.SVTParameters;
+import org.jlab.rec.rvt.PixelLinker.Pixel;
 
 public class TrackSeeder {
     
@@ -80,6 +81,7 @@ public class TrackSeeder {
         }
     }
     
+   
     public void fitSeed(List<Cross> seedcrs) {
         Xs.clear();
         Ys.clear();

@@ -35,7 +35,16 @@ public class TrackSeederRZ {
         List<ArrayList<Cross>> result = new ArrayList<>();
         bmtcrs.clear();
         //sort the crosses in lists
-        for(Cross c : crosses) { 
+//        for(Integer i : svtcrs.keySet()) {
+//            System.out.println("i "+i);
+//             for(Integer j : svtcrs.get(i).keySet()) {   
+//                 System.out.println("j "+j);
+//                 for(Cross c : svtcrs.get(i).get(j))
+//                     System.out.println(c.printInfo());
+//             }   
+//        }
+        
+        for(Cross c : crosses) {
             if(!svtcrs.containsKey(c.getSector()))
                     continue;
             

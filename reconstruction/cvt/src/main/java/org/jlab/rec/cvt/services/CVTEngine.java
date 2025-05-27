@@ -322,7 +322,7 @@ public class CVTEngine extends ReconstructionEngine {
                 double[] xyBeam = CVTReconstruction.getBeamSpot(event, beamPos);
                 TracksFromTargetRec  trackFinder = new TracksFromTargetRec(swimmer, xyBeam);
                 trackFinder.totTruthHits = reco.getTotalNbTruHits();
-                List<Seed>   seeds = trackFinder.getSeeds(clusters, crosses);
+                List<Seed>   seeds = trackFinder.getSeeds(clusters, crosses, event);
                 
                 
                 List<Track> tracks = trackFinder.getTracks(event, this.isInitFromMc(), 
