@@ -11,6 +11,7 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.banks.HitReader;
 import org.jlab.rec.dc.banks.RecoBankWriter;
+import org.jlab.rec.dc.banks.URWellDCClustersReader;
 import org.jlab.rec.dc.cluster.ClusterFinder;
 import org.jlab.rec.dc.cluster.ClusterFitter;
 import org.jlab.rec.dc.cluster.FittedCluster;
@@ -27,6 +28,9 @@ import org.jlab.rec.dc.track.TrackCandListWithURWellFinder;
 import org.jlab.rec.dc.cross.URWellDCCrossesList;
 import org.jlab.rec.dc.cross.URWellDCCrossesListFinder;
 import org.jlab.rec.dc.segment.SegmentFinder;
+import org.jlab.rec.dc.track.TrackCandListFinder;
+import org.jlab.rec.dc.trajectory.Road;
+import org.jlab.rec.dc.trajectory.RoadFinderWithURWell;
 import org.jlab.rec.urwell.reader.URWellCross;
 import org.jlab.rec.urwell.reader.URWellReader;
 
@@ -67,29 +71,28 @@ public class DCURWellHBPostClusterAI extends DCEngine {
         RecoBankWriter writer = new RecoBankWriter(this.getBanks());
         // get Field
         Swim dcSwim = new Swim();
-        /* 2 */
-        
-        /* 5 */
+
         LOGGER.log(Level.FINE, "HB AI process event");
-        /* 7 */
-        /* 8 */
-        //AI
-        List<Track> trkcands = null;
+        
+        List<Track> trkcands = new ArrayList();
         List<Cross> crosses = null;
-        List<FittedCluster> clusters = null;
+        List<FittedCluster> clusters = new ArrayList<>();
         List<Segment> segments = null;
         List<FittedHit> fhits = null;
+                
+        ////// AI-assisted tracking
 
         reader.read_NNHits(event);
 
-        //I) get the lists
+        // Get the lists
         List<Hit> hits = reader.get_DCHits();
         fhits = new ArrayList<>();
-        //II) process the hits
-        //1) exit if hit list is empty
+        
         if (hits.isEmpty()) {
             return true;
         }
+        
+        // segments
         PatternRec pr = new PatternRec();
         segments = pr.RecomposeSegments(hits, Constants.getInstance().dcDetector);
         Collections.sort(segments);
@@ -97,12 +100,13 @@ public class DCURWellHBPostClusterAI extends DCEngine {
         if (segments.isEmpty()) {
             return true;
         } 
-        //crossList
-        CrossList crosslist = pr.RecomposeCrossList(segments, Constants.getInstance().dcDetector);
+        
+        // crossLists
+        CrossList crosslists = pr.RecomposeCrossList(segments, Constants.getInstance().dcDetector);
         crosses = new ArrayList<>();
         
-        LOGGER.log(Level.FINE, "num cands = "+crosslist.size());
-        for (List<Cross> clist : crosslist) {
+        LOGGER.log(Level.FINE, "num cands = "+crosslists.size());
+        for (List<Cross> clist : crosslists) {
             crosses.addAll(clist); 
             for(Cross c : clist)
                 LOGGER.log(Level.FINE, "Pass Cross"+c.printInfo());
@@ -126,181 +130,480 @@ public class DCURWellHBPostClusterAI extends DCEngine {
         
         // Read urwell crosses, and make urwell-dc-crosses combos
         URWellReader uRWellReader = new URWellReader(event, "HB");
-        List<URWellCross> urCrosses = uRWellReader.getUrwellCrosses();        
-        URWellDCCrossesListFinder uRWellDCCrossListLister = new URWellDCCrossesListFinder();        
-        URWellDCCrossesList urDC4CrossesList = uRWellDCCrossListLister.candURWellDCCrossesLists(event, crosses, urCrosses,
-                false,
-                null,
-                Constants.getInstance().dcDetector,
-                null,
-                dcSwim, false, 4
-        );
+        List<URWellCross> urCrosses = uRWellReader.getUrwellR1Crosses();  
         
-        //Build tracks for 4-crosses combos
-        TrackCandListWithURWellFinder trkcandFinder = new TrackCandListWithURWellFinder(Constants.HITBASE);
-        trkcands = trkcandFinder.getTrackCands(urDC4CrossesList,
-            Constants.getInstance().dcDetector,
-            Swimmer.getTorScale(),
-            dcSwim, true);
+        // read uRWell-DC clusters at SL1, and separate uRWell crosses into with and without associated SL1 cluster      
+        URWellDCClustersReader uRWellDCClustersReader = new URWellDCClustersReader();
+        Map<Integer, Integer> map_clsId_uRWellCrossId = uRWellDCClustersReader.getMapClsIdURWellCrossId(event); // segment id is the same as cluster id
+        for(Segment seg : segments){
+            if(seg.get_Superlayer() == 1){
+                if(map_clsId_uRWellCrossId.keySet().contains(seg.get_Id())) {
+                    int uRWellCrossId = map_clsId_uRWellCrossId.get(seg.get_Id());
+                    for(URWellCross urCrs : urCrosses){
+                        if(urCrs.id() == uRWellCrossId){
+                            seg.setMatchedURWellCross(urCrs);                           
+                            break;
+                        }
+                    }
+                }
+            }            
+        }        
+                                
+        // separate cross lists with and without associated uRWell
+        URWellDCCrossesList uRWellDCCrossesLists = new URWellDCCrossesList();
+        uRWellDCCrossesLists.set_URWellDCCrossesList(crosslists); 
+        
 
-        // track found
-        clusters = new ArrayList<>();
-        List<URWellCross> urCrossesOnTrks = new ArrayList<URWellCross>();
-        int trkId = 1;
+        URWellDCCrossesList crosslistsWithURWell = new URWellDCCrossesList();
+        URWellDCCrossesList crosslistsWithoutURWell = new URWellDCCrossesList();
+        
+        for(int i = 0; i < uRWellDCCrossesLists.get_URWellDCCrossesList().size(); i++){
+            for(Cross crs : uRWellDCCrossesLists.get_URWellDCCrossesList().get(i).get_DCCrosses()){
+                if(crs.get_Segment1().getMatchedURWellCross() != null) crosslistsWithURWell.add(uRWellDCCrossesLists.get_URWellDCCrossesList().get(i));
+                else crosslistsWithoutURWell.add(uRWellDCCrossesLists.get_URWellDCCrossesList().get(i));
+                break;
+            }
+        }
+ 
+        TrackCandListWithURWellFinder trkcandFinder = new TrackCandListWithURWellFinder(Constants.HITBASE);  
+        List<Track> trkcandsWithURWell = trkcandFinder.getTrackCands(crosslistsWithURWell,
+                Constants.getInstance().dcDetector,
+                Swimmer.getTorScale(),
+                dcSwim, true);
+        List<Track> trkcandsWithoutURWell = trkcandFinder.getTrackCands3URDCCrosses(crosslistsWithoutURWell,
+                Constants.getInstance().dcDetector,
+                Swimmer.getTorScale(),
+                dcSwim, true);       
+
+        trkcands.addAll(trkcandsWithURWell);
+        trkcands.addAll(trkcandsWithoutURWell);
+
         if (trkcands.size() > 0) {
             // remove overlaps
             trkcandFinder.removeOverlappingTracks(trkcands);
             for (Track trk : trkcands) {
-                // reset the id
-                trk.set_Id(trkId);
-                trkcandFinder.matchHits(trk.getStateVecs(),
-                        trk,
-                        Constants.getInstance().dcDetector,
-                        dcSwim);                
-                if(trk.get_URWellCross() != null){
-                    urCrossesOnTrks.add(trk.get_URWellCross()); 
-                    trk.get_URWellCross().set_tid(trk.get_Id());
+                trk.setIsAITrack(true);
+                
+                for (Cross c : trk) {
+                    clusters.add(c.get_Segment1().get_fittedCluster());
+                    clusters.add(c.get_Segment2().get_fittedCluster());
                 }
-                trkId++;
             }
-        }
+        }              
+       
+        ////// Conventional tracking with R0 and without R0 in order
+        ////       With R0: R0R1R2R3, R0-SL1R2R3, R0SL2R2R3, R0R1pR2R3, R0R1R2pR3, R0R2R3
+        ////       Without R0: R1R2R3, pR1R2R3, R1pR2R3, R1R2pR3
         
-        ////// Tracking for 3-DCCrosses combos, which AI predicted       
-        // Remove real dc crosses on tracks
-        List<Cross> dcCrossesOnTrack = new ArrayList();
-        for(Cross dcCross : crosses){
-            Segment seg1 = dcCross.get_Segment1();
-            Segment seg2 = dcCross.get_Segment2();
-            if(seg1.isOnTrack==true && seg2.isOnTrack==true && seg1.associatedCrossId==seg2.associatedCrossId){
-                dcCrossesOnTrack.add(dcCross);
+        
+        List<FittedCluster> clustersConv = null;
+        List<Segment> segmentsConv = null;
+        List<Cross> crossesConv = null;
+        List<Track> trkcandsConv = null;
+        
+        //1) read hits from the banks
+        Map<Integer, ArrayList<FittedHit>> hitsConv = reader.read_Hits(event);
+        
+        //2) find clusters from these hits
+        ClusterFinder clusFinder = new ClusterFinder();
+        ClusterFitter cf = new ClusterFitter();
+        clustersConv = clusFinder.RecomposeClusters(hitsConv, Constants.getInstance().dcDetector, cf);
+
+        //3) remove clusters which are on tracks
+        List<FittedCluster> removedClustersConv = new ArrayList();
+        for(FittedCluster cls : clustersConv){
+            boolean flag = false;
+            for(Track trk : trkcands){
+                if(flag) break;
+                for(Cross crs : trk){
+                    if(cls.get_Id() == crs.get_Segment1().get_Id() || cls.get_Id() == crs.get_Segment2().get_Id()) {
+                        removedClustersConv.add(cls);
+                        flag = true;
+                        break;
+                    }
+                }
             }
         }
-        crosses.removeAll(dcCrossesOnTrack);        
-        // Build 3-crosses combos from any of 3 regions
-        URWellDCCrossesList dc3CrossesList = uRWellDCCrossListLister.candURWellDCCrossesLists(event, crosses, new ArrayList(),
+        clustersConv.removeAll(removedClustersConv);
+        clusters.addAll(clustersConv);
+        
+        //4) find segments from clusters
+        SegmentFinder segFinder = new SegmentFinder();
+        segmentsConv = segFinder.get_Segments(clustersConv,
+                event,
+                Constants.getInstance().dcDetector, false);
+        List<Segment> rmSegsConv = new ArrayList<>();
+        // clean up hit-based segments
+        double trkDocOverCellSize;
+        for (Segment se : segmentsConv) {
+            trkDocOverCellSize = 0;
+            for (FittedHit fh : se.get_fittedCluster()) {
+                trkDocOverCellSize += fh.get_ClusFitDoca() / fh.get_CellSize();
+            }
+            if (trkDocOverCellSize / se.size() > 1.1) {
+                rmSegsConv.add(se);
+            }
+        }
+        segmentsConv.removeAll(rmSegsConv);
+        segments.addAll(segmentsConv);
+        
+        //5) find crosses from segments
+        CrossMaker crossMake = new CrossMaker();
+        crossesConv = crossMake.find_Crosses(segmentsConv, Constants.getInstance().dcDetector);
+        crosses.addAll(crossesConv);
+        
+        //6) find cross lists from crosses
+        CrossList crosslistConv = crossLister.candCrossLists(event, crossesConv,
                 false,
                 null,
                 Constants.getInstance().dcDetector,
                 null,
-                dcSwim, false, 3
-        ); 
-        // Build tracks for 3-DCcrosses combos       
-        List<Track> trkcands3DCCrosses = trkcandFinder.getTrackCands3URDCCrosses(dc3CrossesList,
-                Constants.getInstance().dcDetector,
-                Swimmer.getTorScale(),
-                dcSwim, false);
-        if (!trkcands3DCCrosses.isEmpty()) {
-            trkcandFinder.removeOverlappingTracks(trkcands3DCCrosses);
-            for (Track trk : trkcands3DCCrosses) {
-                
-                // reset the id
-                trk.set_Id(trkId);
-                trkcandFinder.matchHits(trk.getStateVecs(),
-                        trk,
-                        Constants.getInstance().dcDetector,
-                        dcSwim);              
-                trkId++;
-            }
-        }
+                dcSwim, false); 
         
-        trkcands.addAll(trkcands3DCCrosses);
-        
-        ////// Tracking for 3-DCURCrosses combos        
-        //// Find crosses only from conventional reconstruction (not exist in AI-assisted reconstruction)
-        // Find segments from conventional reconstruction
-        List<FittedCluster> clustersConv = null;
-        List<Segment> segmentsConv = null;        
-        Map<Integer, ArrayList<FittedHit>> hitsConv = reader.read_Hits(event);
-        if(hitsConv != null && !hitsConv.isEmpty()){
-            //find the segments from these hits
-            ClusterFinder clusFinder = new ClusterFinder();
-            ClusterFitter cf = new ClusterFitter();
-            clustersConv = clusFinder.RecomposeClusters(hitsConv, Constants.getInstance().dcDetector, cf);
-            if (clustersConv !=null && !clustersConv.isEmpty()) {                   
-                //find the segments from the fitted clusters
-                SegmentFinder segFinder = new SegmentFinder();
-                segmentsConv = segFinder.get_Segments(clustersConv,
-                        event,
-                        Constants.getInstance().dcDetector, false);
-
-                if (!segmentsConv.isEmpty()) {
-                    List<Segment> rmSegs = new ArrayList<>();
-                    // clean up hit-based segments
-                    double trkDocOverCellSize;
-                    for (Segment se : segmentsConv) {
-                        trkDocOverCellSize = 0;
-                        for (FittedHit fh : se.get_fittedCluster()) {
-                            trkDocOverCellSize += fh.get_ClusFitDoca() / fh.get_CellSize();
-                        }
-                        if (trkDocOverCellSize / se.size() > 1.1) {
-                            rmSegs.add(se);
+        //7) uRWell crosses
+        List<URWellCross> urCrossesWithSL1Conv = new ArrayList();
+        List<URWellCross> urCrossesWithoutSL1Conv = new ArrayList();
+        for(Segment seg : segmentsConv){
+            if(seg.get_Superlayer() == 1){
+                if(map_clsId_uRWellCrossId.keySet().contains(seg.get_Id())) {
+                    int uRWellCrossId = map_clsId_uRWellCrossId.get(seg.get_Id());
+                    for(URWellCross urCrs : urCrosses){
+                        if(urCrs.id() == uRWellCrossId){
+                            seg.setMatchedURWellCross(urCrs);
+                            if(!urCrossesWithSL1Conv.contains(urCrs)) urCrossesWithSL1Conv.add(urCrs);                            
+                            break;
                         }
                     }
-                    segmentsConv.removeAll(rmSegs);
-                }       
-            }
+                }
+            }            
+        }        
+        urCrossesWithoutSL1Conv.addAll(urCrosses);
+        urCrossesWithoutSL1Conv.removeAll(urCrossesWithSL1Conv);
+        for(Track trk : trkcands){
+            if(trk.get_URWellCross() != null) urCrossesWithoutSL1Conv.remove(trk.get_URWellCross());
         }
-        // find segments and clusters exist in convential reconstruction, but does not exit in AI-assisted reconstruction
-        List<Segment> segmentsConvOnly = get_segments_convOnly(segments, segmentsConv);  
-        segments.addAll(segmentsConvOnly);
-       // Find crosses exist in convential reconstruction, but does not exit in AI-assisted reconstruction
-        CrossMaker crossMake = new CrossMaker();
-        List<Cross> crossesConvOnly = crossMake.find_Crosses(segmentsConvOnly, Constants.getInstance().dcDetector);
-                        
-        //// Collect remaining crosses, which are not on tracks
-        // Remove real dc crosses on tracks
-        // Add real dc crosses into crossesOnTrack list from previous stage
-        List<Cross> dcCrossesOnTrack2 = new ArrayList();
-        for(Cross dcCross : crosses){
-            Segment seg1 = dcCross.get_Segment1();
-            Segment seg2 = dcCross.get_Segment2();
-            if(seg1.isOnTrack==true && seg2.isOnTrack==true && seg1.associatedCrossId==seg2.associatedCrossId){
-                dcCrossesOnTrack2.add(dcCross);
-            }
-        }
-        crosses.removeAll(dcCrossesOnTrack2);
-        // Add real dc crosses by segments from conventional only
-        crosses.addAll(crossesConvOnly);
-        // Remove uRWell crosses on tracks
-        urCrosses.removeAll(urCrossesOnTrks); 
         
-        // Build 3-crosses combos from any of 3 regions
-        URWellDCCrossesList urDC3CrossesList = uRWellDCCrossListLister.candURWellDCCrossesLists(event, crosses, urCrosses,
+        //8) tracking
+        URWellDCCrossesListFinder uRWellDCCrossListLister = new URWellDCCrossesListFinder(); 
+        RoadFinderWithURWell rf = new RoadFinderWithURWell();
+        
+        //// Seprate segments and crosses
+        List<Segment> segmentsSL1WithURWellConv = new ArrayList();
+        List<Segment> segmentsSL1WithoutURWellConv = new ArrayList();
+        List<Segment> segmentsSL2Conv = new ArrayList();
+        List<Segment> segmentsR2R3Conv = new ArrayList();
+        for(Segment seg : segmentsConv){
+            if(seg.get_Superlayer() == 1){
+                if(seg.getMatchedURWellCross() != null) segmentsSL1WithURWellConv.add(seg);
+                else segmentsSL1WithoutURWellConv.add(seg);
+            }
+            else if(seg.get_Superlayer() == 2) segmentsSL2Conv.add(seg);
+            else segmentsR2R3Conv.add(seg);
+        }        
+        
+        List<Cross> crossesR1WithURWellConv = new ArrayList();
+        List<Cross> crossesR1WithoutURWellConv = new ArrayList();
+        List<Cross> crossesR2R3Conv = new ArrayList();
+        for(Cross crs : crossesConv){
+            if(crs.get_Region() == 1){
+                if(crs.get_Segment1().getMatchedURWellCross() != null) {
+                    crossesR1WithURWellConv.add(crs);
+                }
+                else crossesR1WithoutURWellConv.add(crs);
+            }
+            else crossesR2R3Conv.add(crs);                
+        }        
+        
+        List<URWellCross> urCrossesRemainingConv = new ArrayList();
+        urCrossesRemainingConv.clear();
+        urCrossesRemainingConv.addAll(urCrossesWithSL1Conv);
+        urCrossesRemainingConv.addAll(urCrossesWithoutSL1Conv); 
+
+        //// With R0
+        /// Type 1: R0R1R2R3
+        List<Cross> crossesType1Order1 = new ArrayList();
+        crossesType1Order1.addAll(crossesR1WithURWellConv);
+        crossesType1Order1.addAll(crossesR2R3Conv);
+        
+        // Make cross lists
+        URWellDCCrossesList crossListsType1Order1 = uRWellDCCrossListLister.candCrossListsWithURWell(event, crossesType1Order1, null,
                 false,
                 null,
                 Constants.getInstance().dcDetector,
                 null,
                 dcSwim, false, 3
         );
-        // Build tracks for 3-crosses combos       
-        List<Track> trkcands3URDCCrosses = trkcandFinder.getTrackCands3URDCCrosses(urDC3CrossesList,
+        
+        // Tracking
+        List<Track> trkcandsType1Order1 = trkcandFinder.getTrackCands(crossListsType1Order1,
                 Constants.getInstance().dcDetector,
                 Swimmer.getTorScale(),
                 dcSwim, false);
-        if (!trkcands3URDCCrosses.isEmpty()) {
-            trkcandFinder.removeOverlappingTracks(trkcands3URDCCrosses);
-            for (Track trk : trkcands3URDCCrosses) {
-                
-                // reset the id
-                trk.set_Id(trkId);
-                trkcandFinder.matchHits(trk.getStateVecs(),
-                        trk,
-                        Constants.getInstance().dcDetector,
-                        dcSwim);
-                                
-                if(trk.get_URWellCross() != null){                    
-                    urCrossesOnTrks.add(trk.get_URWellCross()); 
-                    trk.get_URWellCross().set_tid(trk.get_Id());
+        
+        
+        /// Type 2: R0-SL1R2R3, R0SL2R2R3, R0R1pR2R3, R0R1R2pR3
+        List<Segment> segmentsType2Order1 = new ArrayList();
+        segmentsType2Order1.addAll(segmentsSL1WithURWellConv);
+        segmentsType2Order1.addAll(segmentsSL2Conv);
+        segmentsType2Order1.addAll(segmentsR2R3Conv);
+        
+        // Build pseudo segments
+        List<Road> allRoadsType2Order1 = rf.findRoadsWithURWell(segmentsType2Order1, Constants.getInstance().dcDetector);
+        List<Segment> psegmentsType2Order1 = new ArrayList<>();
+        List<Segment> Segs2RoadType2Order1 = new ArrayList<>();
+        for (Road r : allRoadsType2Order1) { 
+            Segs2RoadType2Order1.clear();
+            int missingSL = -1;
+            for (int ri = 0; ri < 3; ri++) {
+                if (r.get(ri).associatedCrossId == -1) {
+                    if (r.get(ri).get_Superlayer() % 2 == 1) {
+                        missingSL = r.get(ri).get_Superlayer() + 1;
+                    } else {
+                        missingSL = r.get(ri).get_Superlayer() - 1;
+                    }
                 }
-                trkId++;
+            } 
+            if(missingSL==-1) 
+                continue;
+            for (int ri = 0; ri < 3; ri++) {
+                for (Segment s : segmentsType2Order1) {
+                    if (s.get_Sector() == r.get(ri).get_Sector() &&
+                            s.get_Region() == r.get(ri).get_Region() &&
+                            s.associatedCrossId == r.get(ri).associatedCrossId &&
+                            r.get(ri).associatedCrossId != -1) {
+                        if (s.get_Superlayer() % 2 == missingSL % 2){
+                            Segs2RoadType2Order1.add(s); 
+                            break;
+                        }
+                    }
+                }
+            }
+            if (Segs2RoadType2Order1.size() == 2) {
+                Segment pSegment = rf.findRoadMissingSegment(Segs2RoadType2Order1, Constants.getInstance().dcDetector,r.a);
+                if (pSegment != null) psegmentsType2Order1.add(pSegment);
             }
         }
+
+        segmentsType2Order1.addAll(psegmentsType2Order1);
         
-        trkcands.addAll(trkcands3URDCCrosses);
+        // Make cross with remaning segments
+        List<Cross> crossesType2Order1 = crossMake.find_Crosses(segmentsType2Order1, Constants.getInstance().dcDetector);
+        List<Cross> fullPseudoCrossesType2Order1 = new ArrayList(); // Cross by two pseudo segments
+        for(Cross crs : crossesType2Order1){
+            if(crs.get_Segment1().get_Id() == -1 && crs.get_Segment2().get_Id() == -1) fullPseudoCrossesType2Order1.add(crs);
+        }
+        crossesType2Order1.removeAll(fullPseudoCrossesType2Order1);
         
-        //gather all the hits and URWell crosses for pointer bank creation        
+        // Make cross lists
+        URWellDCCrossesList crossListsType2Order1 = uRWellDCCrossListLister.candCrossListsWithURWell(event, crossesType2Order1, urCrossesRemainingConv,
+                false,
+                null,
+                Constants.getInstance().dcDetector,
+                null,
+                dcSwim, false, 3
+        );
+        
+        // Tracking
+        List<Track> trkcandsType2Order1 = trkcandFinder.getTrackCands(crossListsType2Order1,
+                Constants.getInstance().dcDetector,
+                Swimmer.getTorScale(),
+                dcSwim, false);
+        
+        /// Type 3: R0R2R3
+        List<Cross> crossesType3Order1 = new ArrayList();
+        crossesType3Order1.addAll(crossesR2R3Conv);
+        
+        // Make cross lists
+        URWellDCCrossesList crossListsType3Order1 = uRWellDCCrossListLister.candCrossListsWithURWell(event, crossesType3Order1, urCrossesRemainingConv,
+                false,
+                null,
+                Constants.getInstance().dcDetector,
+                null,
+                dcSwim, false, 2
+        );
+        
+        // Tracking
+        List<Track> trkcandsType3Order1 = trkcandFinder.getTrackCands(crossListsType3Order1,
+                Constants.getInstance().dcDetector,
+                Swimmer.getTorScale(),
+                dcSwim, false);
+        
+        /// Combine all types together
+        List<Track> trkcandsOrder1 = new ArrayList();
+        trkcandsOrder1.addAll(trkcandsType1Order1);
+        trkcandsOrder1.addAll(trkcandsType2Order1);
+        trkcandsOrder1.addAll(trkcandsType3Order1);
+        
+        // Remove overlaps        
+        if (trkcandsOrder1.size() > 0) {
+            // remove overlaps
+            trkcandFinder.removeOverlappingTracks(trkcandsOrder1);
+            for (Track trk : trkcandsOrder1) {
+                trk.setIsAITrack(false);
+                
+                for (Cross c : trk) {
+                    clusters.add(c.get_Segment1().get_fittedCluster());
+                    clusters.add(c.get_Segment2().get_fittedCluster());
+                }
+            }
+        }              
+        
+        // Add tracks into track list
+        trkcands.addAll(trkcandsOrder1);
+        
+        // Remove segments and crosses on tracks from lists
+        for(Track trk : trkcandsOrder1){
+            if(urCrossesWithSL1Conv.contains(trk.get_URWellCross())) urCrossesWithSL1Conv.remove(trk.get_URWellCross());
+            if(urCrossesWithoutSL1Conv.contains(trk.get_URWellCross())) urCrossesWithoutSL1Conv.remove(trk.get_URWellCross());
+            for(Cross crs : trk){
+                if(crossesR1WithURWellConv.contains(crs)) crossesR1WithURWellConv.remove(crs);
+                if(crossesR1WithoutURWellConv.contains(crs)) crossesR1WithoutURWellConv.remove(crs);
+                if(crossesR2R3Conv.contains(crs)) crossesR2R3Conv.remove(crs);
+                for(Segment seg : crs){
+                    if(segmentsSL1WithURWellConv.contains(seg)) segmentsSL1WithURWellConv.remove(seg);
+                    if(segmentsSL1WithoutURWellConv.contains(seg)) segmentsSL1WithoutURWellConv.remove(seg);
+                    if(segmentsSL2Conv.contains(seg)) segmentsSL2Conv.remove(seg);
+                    if(segmentsR2R3Conv.contains(seg)) segmentsR2R3Conv.remove(seg);
+                }                     
+                
+            }
+        }        
+        urCrossesRemainingConv.clear();
+        urCrossesRemainingConv.addAll(urCrossesWithSL1Conv);
+        urCrossesRemainingConv.addAll(urCrossesWithoutSL1Conv);  
+        
+        //// Without R0
+        /// Type 1: R1R2R3
+        List<Cross> crossesType1Order2 = new ArrayList();
+        crossesType1Order2.addAll(crossesR1WithURWellConv);
+        crossesType1Order2.addAll(crossesR1WithoutURWellConv);
+        crossesType1Order2.addAll(crossesR2R3Conv);
+        
+        // Make cross lists                           
+        URWellDCCrossesList crossListsType1Order2 = uRWellDCCrossListLister.candURWellDCCrossesLists(event, crossesType1Order2, new ArrayList(),
+                false,
+                null,
+                Constants.getInstance().dcDetector,
+                null,
+                dcSwim, false, 3
+        );
+        
+        // Tracking
+        List<Track> trkcandsType1Order2 = trkcandFinder.getTrackCands3URDCCrosses(crossListsType1Order2,
+                Constants.getInstance().dcDetector,
+                Swimmer.getTorScale(),
+                dcSwim, false);
+        
+        /// Type 2: pR1R2R3, R1pR2R3, R1R2pR3
+        List<Segment> segmentsR1R2R3Type2Order2 = new ArrayList();
+        segmentsR1R2R3Type2Order2.addAll(segmentsSL1WithURWellConv);
+        segmentsR1R2R3Type2Order2.addAll(segmentsSL1WithoutURWellConv);
+        segmentsR1R2R3Type2Order2.addAll(segmentsSL2Conv);
+        segmentsR1R2R3Type2Order2.addAll(segmentsR2R3Conv);
+        
+        // Build pseudo segments
+        List<Road> allRoadsType2Order2 = rf.findRoads(segmentsR1R2R3Type2Order2, Constants.getInstance().dcDetector);
+        List<Segment> psegmentsType2Order2 = new ArrayList<>();
+        List<Segment> Segs2RoadType2Order2 = new ArrayList<>();
+        for (Road r : allRoadsType2Order2) { 
+            Segs2RoadType2Order2.clear();
+            int missingSL = -1;
+            for (int ri = 0; ri < 3; ri++) {
+                if (r.get(ri).associatedCrossId == -1) {
+                    if (r.get(ri).get_Superlayer() % 2 == 1) {
+                        missingSL = r.get(ri).get_Superlayer() + 1;
+                    } else {
+                        missingSL = r.get(ri).get_Superlayer() - 1;
+                    }
+                }
+            } 
+            if(missingSL==-1) 
+                continue;
+            for (int ri = 0; ri < 3; ri++) {
+                for (Segment s : segmentsR1R2R3Type2Order2) {
+                    if (s.get_Sector() == r.get(ri).get_Sector() &&
+                            s.get_Region() == r.get(ri).get_Region() &&
+                            s.associatedCrossId == r.get(ri).associatedCrossId &&
+                            r.get(ri).associatedCrossId != -1) {
+                        if (s.get_Superlayer() % 2 == missingSL % 2){
+                            Segs2RoadType2Order2.add(s); 
+                            break;
+                        }
+                    }
+                }
+            }
+            if (Segs2RoadType2Order2.size() == 2) {
+                Segment pSegment = rf.findRoadMissingSegment(Segs2RoadType2Order2, Constants.getInstance().dcDetector,r.a);
+                if (pSegment != null) psegmentsType2Order2.add(pSegment);
+            }
+        }
+
+        segmentsR1R2R3Type2Order2.addAll(psegmentsType2Order2);
+        
+        // Make cross with remaning segments
+        List<Cross> crossesType2Order2 = crossMake.find_Crosses(segmentsR1R2R3Type2Order2, Constants.getInstance().dcDetector);
+        List<Cross> fullPseudoCrossesType2Order2 = new ArrayList(); // Cross by two pseudo segments
+        for(Cross crs : crossesType2Order2){
+            if(crs.get_Segment1().get_Id() == -1 && crs.get_Segment2().get_Id() == -1) fullPseudoCrossesType2Order2.add(crs);
+        }
+        crossesType2Order2.removeAll(fullPseudoCrossesType2Order2);
+        
+        // Make cross lists
+        URWellDCCrossesList crossListsType2Order2 = uRWellDCCrossListLister.candURWellDCCrossesLists(event, crossesType2Order2, new ArrayList(),
+                false,
+                null,
+                Constants.getInstance().dcDetector,
+                null,
+                dcSwim, false, 3
+        );
+
+        // Tracking
+        List<Track> trkcandsType2Order2 = trkcandFinder.getTrackCands3URDCCrosses(crossListsType2Order2,
+                Constants.getInstance().dcDetector,
+                Swimmer.getTorScale(),
+                dcSwim, false);
+        
+        
+         /// Combine all types together
+        List<Track> trkcandsOrder2 = new ArrayList();
+        trkcandsOrder2.addAll(trkcandsType1Order2);
+        trkcandsOrder2.addAll(trkcandsType2Order2);
+        
+        // Remove overlaps        
+        if (trkcandsOrder2.size() > 0) {
+            // remove overlaps
+            trkcandFinder.removeOverlappingTracks(trkcandsOrder2);
+            for (Track trk : trkcandsOrder2) {
+                trk.setIsAITrack(false);
+                
+                for (Cross c : trk) {
+                    clusters.add(c.get_Segment1().get_fittedCluster());
+                    clusters.add(c.get_Segment2().get_fittedCluster());
+                }
+            }
+        }              
+        
+        // Add tracks into track list
+        trkcands.addAll(trkcandsOrder2);        
+
+        //gather all the hits and URWell crosses for pointer bank creation  
+        int trkId = 1;
+        List<URWellCross> urCrossesOnTrks = new ArrayList<URWellCross>();
         for (Track trk : trkcands) {
             trk.calcTrajectory(trk.getId(), dcSwim, trk.get_Vtx0(), trk.get_pAtOrig(), trk.get_Q());
+            
+            // reset the id
+            trk.set_Id(trkId);
+            trkcandFinder.matchHits(trk.getStateVecs(),
+                    trk,
+                    Constants.getInstance().dcDetector,
+                    dcSwim);
+            
+            if(trk.get_URWellCross() != null){
+                    urCrossesOnTrks.add(trk.get_URWellCross()); 
+                    trk.get_URWellCross().set_tid(trk.get_Id());
+            }
+
             for (Cross c : trk) {
                 c.set_CrossDirIntersSegWires();
                 trkcandFinder.setHitDoubletsInfo(c.get_Segment1());
@@ -312,16 +615,10 @@ public class DCURWellHBPostClusterAI extends DCEngine {
                     if(h2.get_AssociatedHBTrackID()>0) fhits.add(h2);
                 }
             }
+            trkId++;
         }        
         // no candidate found, stop here and save the hits,
         // the clusters, the segments, the crosses
-        crosses.addAll(dcCrossesOnTrack);
-        crosses.addAll(dcCrossesOnTrack2);
-        for (Cross c : crosses) {
-            c.set_CrossDirIntersSegWires();
-            clusters.add(c.get_Segment1().get_fittedCluster());
-            clusters.add(c.get_Segment2().get_fittedCluster());
-        }
         if (trkcands.isEmpty()) {
             event.appendBanks(
                     writer.fillHBHitsBank(event, fhits),    

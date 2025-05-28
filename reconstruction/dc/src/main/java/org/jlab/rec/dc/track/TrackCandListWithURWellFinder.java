@@ -269,6 +269,7 @@ public class TrackCandListWithURWellFinder {
         
         List<Track> cands = null;
         if (Math.abs(TORSCALE) < 0.001) {
+            // Todo: straight tracking
             return null;
         } else {
             cands = this.findCurvedTracks3URDCCrosses(urDCCrossesList, DcDetector, TORSCALE, dcSwim, donotapplyCuts);

@@ -23,6 +23,20 @@ public class URWellDCCrossesList{
         return urDCCrossesList;
     }
     
+    public void set_URWellDCCrossesList(CrossList crosslists){
+        for(List<Cross> crossList : crosslists){
+            for(Cross crs: crossList){
+                if(crs.get_Segment1().get_Superlayer() == 1){
+                    if(crs.get_Segment1().getMatchedURWellCross() != null)
+                        this.add_URWellDCCrosses(crs.get_Segment1().getMatchedURWellCross(), crossList);
+                    else
+                        this.add_URWellDCCrosses(null, crossList);
+                    break;                    
+                }
+            }
+        }
+    }
+    
     public void set_URWellDCCrossesList(List<URWellDCCrosses> urDCCrossesList){
         this.urDCCrossesList = urDCCrossesList;
     }
@@ -30,17 +44,21 @@ public class URWellDCCrossesList{
     public void add_URWellDCCrosses(URWellCross urCross, List<Cross> dcCrosses){
         urDCCrossesList.add(new URWellDCCrosses(urCross, dcCrosses));
     }
+    
+    public void add(URWellDCCrosses urDCCrosses){
+        urDCCrossesList.add(urDCCrosses);
+    }
 
     public class URWellDCCrosses {
 
         private URWellCross urCross;
         private List<Cross> dcCrosses = new ArrayList<Cross>();
-
+        
         public URWellDCCrosses(URWellCross urCross, List<Cross> dcCrosses) {
             this.urCross = urCross;
             this.dcCrosses = dcCrosses;
         }
-        
+                
         public URWellCross get_URWellCross(){
             return urCross;
         }

@@ -12,6 +12,7 @@ import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.cluster.FittedCluster;
 import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.trajectory.SegmentTrajectory;
+import org.jlab.rec.urwell.reader.URWellCross;
 
 /**
  * A class to describe segment objects, where a Segment is a fitted cluster that
@@ -40,6 +41,8 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
     private int _Status = 1;
     private double[] _SegmentEndPoints;
     public int associatedCrossId = -1;
+    
+    private URWellCross matchedURWellCross= null;
     
     @Override
     public Object clone(){  
@@ -394,6 +397,14 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
      */
     public final void set_Status(int _Status) {
         this._Status = _Status;
+    }
+    
+    public void setMatchedURWellCross(URWellCross crs){
+        matchedURWellCross = crs;
+    }
+    
+    public URWellCross getMatchedURWellCross(){
+        return matchedURWellCross;
     }
 
     /**

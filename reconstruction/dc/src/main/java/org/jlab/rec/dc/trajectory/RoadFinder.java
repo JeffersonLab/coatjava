@@ -17,10 +17,10 @@ import org.jlab.detector.geant4.v2.DCGeant4Factory;
 
 public class RoadFinder  {
 
-    private final SegmentTrajectory segTrj = new SegmentTrajectory();
+    protected final SegmentTrajectory segTrj = new SegmentTrajectory();
     public double fitPassingCut = 150;
-    private final ClusterFitter cf = new ClusterFitter();
-    QuadraticFit qf = new QuadraticFit();
+    protected final ClusterFitter cf = new ClusterFitter();
+    protected QuadraticFit qf = new QuadraticFit();
     public RoadFinder() {
     }
     
@@ -246,7 +246,7 @@ public class RoadFinder  {
     /**
      * quadratic fitting class to handle trajectory approximation 
      */
-    private class QuadraticFit {
+    protected class QuadraticFit {
         public double chi2;
         public double NDF;
         public double[] a;
