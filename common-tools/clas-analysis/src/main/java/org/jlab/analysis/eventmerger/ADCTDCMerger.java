@@ -530,11 +530,15 @@ public class ADCTDCMerger {
             this.setOrder(order - type.getTypeId());
             if(type==OrderType.DECREMOVED) 
                 this.skip       = true;
-            if(type==OrderType.BGREMOVED) 
+            else if(type==OrderType.DECREMOVED_BG) { 
+                this.skip       = true;
+                this.background = true;                
+            }
+            else if(type==OrderType.BGREMOVED) 
                 this.removed    = true;
-            if(type==OrderType.BGADDED_NOMINAL) 
+            else if(type==OrderType.BGADDED_NOMINAL) 
                 this.background = true;
-            if(type==OrderType.BGREMOVED_BG) {
+            else if(type==OrderType.BGREMOVED_BG) {
                 this.removed    = true;
                 this.background = true;                
             }
@@ -577,7 +581,9 @@ public class ADCTDCMerger {
         }
 
         public RawBank.OrderType getOrderType() {
-            if(this.skip)
+            if(this.isBackground() && !this.isGood())
+                return OrderType.DECREMOVED_BG;
+            else if(!this.isGood())
                 return OrderType.DECREMOVED;
             else if(this.isBackground() && this.isRemoved())
                 return OrderType.BGREMOVED_BG;

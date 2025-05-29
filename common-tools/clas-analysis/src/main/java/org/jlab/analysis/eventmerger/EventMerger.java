@@ -351,7 +351,7 @@ public class EventMerger {
         parser.addOption("-r"    ,"1", "reuse background events: 0-false, 1-true");
         parser.addOption("-s"    ,"1", "suppress double TDC hits on the same component, 0-no suppression, 1-suppression");
         parser.addOption("-l"    ,"1", "preserve initial hit order (for compatibility with truth matching, 0-false, 1-true");
-        parser.addOption("-t"    ,"NOMINAL,BGADDED_NOMINAL,BGREMOVED,BGREMOVED_BG,DECREMOVED", "list of hit OrderTypes to be saved");
+        parser.addOption("-t"    ,"NOMINAL,BGADDED_NOMINAL,BGREMOVED,BGREMOVED_BG,DECREMOVED,DECREMOVED_BG", "list of hit OrderTypes to be saved");
         parser.addOption("-x"    ,"1", "background scale factor");
         parser.parse(args);
         
