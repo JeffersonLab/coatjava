@@ -76,16 +76,6 @@ public class CLASDecoder4 {
         return schemaFactory;
     }
 
-    public static CLASDecoder createDecoder(){
-        CLASDecoder decoder = new CLASDecoder();
-        return decoder;
-    }
-
-    public static CLASDecoder createDecoderDevel(){
-        CLASDecoder decoder = new CLASDecoder(true);
-        return decoder;
-    }
-
     public void setVariation(String variation) {
         detectorDecoder.setVariation(variation);
     }
@@ -321,7 +311,7 @@ public class CLASDecoder4 {
             tdcBANK.putShort("component", i, (short) tdcDGTZ.get(i).getDescriptor().getComponent());
             tdcBANK.putByte("order", i, (byte) (tdcDGTZ.get(i).getDescriptor().getOrder()+tdcDGTZ.get(i).getTDCData(0).getType().getTypeId()));
             tdcBANK.putInt("TDC", i, tdcDGTZ.get(i).getTDCData(0).getTime());
-            if(name == "DC::tdc")
+            if(tdcBANK.getSchema().hasEntry("ToT"))
                 tdcBANK.putShort("ToT", i, (short) tdcDGTZ.get(i).getTDCData(0).getToT());
         }
         return tdcBANK;
@@ -500,7 +490,7 @@ public class CLASDecoder4 {
                                                           DetectorType.FMT,DetectorType.HEL,DetectorType.RF,
                                                           DetectorType.BAND, DetectorType.RASTER};
 
-        String[] tdcBankNames = new String[]{"FTOF::tdc","ECAL::tdc","DC::tdc",
+        String[] tdcBankNames = new String[]{"FTOF::tdc","ECAL::tdc","DC::tot",
                                              "HTCC::tdc","LTCC::tdc","CTOF::tdc",
                                              "CND::tdc","RF::tdc","RICH::tdc",
                                              "BAND::tdc"};

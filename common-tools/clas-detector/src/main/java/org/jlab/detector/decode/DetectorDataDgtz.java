@@ -338,7 +338,7 @@ public class DetectorDataDgtz implements Comparable<DetectorDataDgtz> {
         
         private int tdcOrder = 0; // Used for sorting
         private int tdcTime  = 0;
-        private int tdcToT   = 0; // Time over threshold
+        private int tdcToT   = -1; // Time over threshold
         private Long timeStamp   = 0L;
         private OrderType tdcType = OrderType.NOMINAL;
         

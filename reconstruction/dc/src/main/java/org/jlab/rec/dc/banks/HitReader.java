@@ -1,7 +1,11 @@
 package org.jlab.rec.dc.banks;
 
-import java.util.ArrayList;
+import java.util.Map;
 import java.util.List;
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
@@ -9,21 +13,12 @@ import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.hit.Hit;
 import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
 
-import cnuphys.snr.NoiseReductionParameters;
-import cnuphys.snr.clas12.Clas12NoiseAnalysis;
-import cnuphys.snr.clas12.Clas12NoiseResult;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.jlab.clas.swimtools.Swimmer;
-import org.jlab.detector.banks.RawBank.OrderGroups;
 import org.jlab.detector.banks.RawBank.OrderType;
 import org.jlab.detector.banks.RawDataBank;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.rec.dc.Constants;
-import org.jlab.utils.groups.IndexedList;
 import org.jlab.utils.groups.IndexedTable;
 
 /**
@@ -63,9 +58,7 @@ public class HitReader {
     private final double timeBuf = 25.0;
 
     private static final Logger LOGGER = Logger.getLogger(HitReader.class.getName());
-    
-    
-    
+
     public HitReader(Banks names, DCGeant4Factory detector) {
         this.bankNames= names;
         this.detector = detector;            
@@ -94,7 +87,6 @@ public class HitReader {
             time2dist = manager.getConstants(run, Constants.TIME2DIST);
             t0s = manager.getConstants(run, Constants.T0CORRECTION);
         }
-        
     }
     
    /**
@@ -103,15 +95,6 @@ public class HitReader {
     public List<Hit> get_DCHits() {
         return _DCHits;
     }
-//
-//    /**
-//     * sets the list of DC hits
-//     *
-//     * @param _DCHits list of DC hits
-//     */
-//    private void setDCHits(List<Hit> _DCHits) {
-//        this._DCHits = _DCHits;
-//    }
 
     /**
      * @return list of DCHB hits
@@ -120,15 +103,6 @@ public class HitReader {
         return _HBHits;
     }
 
-//    /**
-//     * sets the list of HB DC hits
-//     *
-//     * @param _HBHits list of DC hits
-//     */
-//    private void setHBHits(List<FittedHit> _HBHits) {
-//        this._HBHits = _HBHits;
-//    }
-
     /**
      * @return list of DCTB hits
      */
@@ -136,18 +110,7 @@ public class HitReader {
         return _TBHits;
     }
 
-    /**
-     * sets the list of HB DC hits
-     *
-     * @param _TBHits list of DC hits
-//     */
-//    private void setTBHits(List<FittedHit> _TBHits) {
-//        this._TBHits = _TBHits;
-//    }
-    
-    
     private int getTIJitter() {
-        
         int jitter = 0;
         if (tiTimeStamp>=0 && timejitter!=null) {
            double period = timejitter.getDoubleValue("period", 0, 0, 0);
@@ -193,7 +156,6 @@ public class HitReader {
             if(!dcrbjitters.hasEntry(crate, slot))
                 LOGGER.log(Level.SEVERE, "Missing DC::jitter entry for crate/slot = " + crate + "/" + slot);
             jitter = dcrbjitters.getIntValue("jitter", crate, slot);
-//                if(jitter[i]!=-4*bankDGTZ.getByte("order", i)) System.out.println(jitter[i] + " " + -4*bankDGTZ.getByte("order", i));
         }    
         return jitter;
     }
@@ -218,7 +180,7 @@ public class HitReader {
 
         this.getDCRBJitters(Constants.getInstance().isSWAPDCRBBITS());
 
-        RawDataBank bankFiltered = new RawDataBank(bankNames.getTdcBank(), rawBankOrders);
+        RawDataBank bankFiltered = new RawDataBank(bankNames.getTdcBank(event), rawBankOrders);
         bankFiltered.read(event);
         
         if(run <= 0 || tiTimeStamp < 0 || bankFiltered.rows() > Constants.MAXHITS) return;
@@ -290,7 +252,6 @@ public class HitReader {
                     passTimingCut = true;
 
                 if (passTimingCut) { // cut on spurious hits
-                    //Hit hit = new Hit(sector, superlayer, layer, wire, smearedTime, 0, 0, hitno);			
                     Hit hit = new Hit(sector, superlayer, layer, wire, tdc, jitter, (index + 1));
                     hit.calc_CellSize(detector);
                     double posError = hit.get_CellSize() / Math.sqrt(12.);
@@ -330,7 +291,6 @@ public class HitReader {
             int jitter      = bank.getByte("jitter", i);
             int LR          = bank.getByte("LR", i);
             int clusterID   = bank.getShort("clusterID", i);
-            
         
             //use only hits that have been fit to a track
             if (clusterID == -1) {
