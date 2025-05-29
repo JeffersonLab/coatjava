@@ -1,11 +1,13 @@
 package org.jlab.analysis.eventmerger;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.calib.utils.ConstantsManager;
+import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.utils.groups.IndexedTable;
 
 /**
@@ -33,35 +35,16 @@ public class EventMergerConstants {
             "/calibration/band/time_jitter"            
     };
 
-    public final Map<DetectorType,List<String>> ADCs = new HashMap<>();                                         
-    public final Map<DetectorType,List<String>> TDCs = new HashMap<>();
-                                                                                                
+    public static final String[] ADCBANKTYPES = {"adc"};
+    public static final String[] TDCBANKTYPES = {"tot","tdc"};
+    
+    public static final String[] ADCDETECTORS = {"BAND","BMT", "BST","CND","CTOF","ECAL","FMT","FTCAL",
+                                                  "FTHODO","FTOF","FTTRK","HTCC","LTCC","URWELL"};
+    public static final String[] TDCDETECTORS = {"BAND","CND","CTOF","DC","ECAL","FTOF"};
+                                                                                                  
     
     public EventMergerConstants() {
         
-        // detectors and bank names
-        ADCs.put(DetectorType.BAND,Arrays.asList("adc"));
-        ADCs.put(DetectorType.BMT, Arrays.asList("adc"));
-        ADCs.put(DetectorType.BST, Arrays.asList("adc"));
-        ADCs.put(DetectorType.CND, Arrays.asList("adc"));
-        ADCs.put(DetectorType.CTOF, Arrays.asList("adc"));
-        ADCs.put(DetectorType.ECAL, Arrays.asList("adc"));
-        ADCs.put(DetectorType.FMT, Arrays.asList("adc"));
-        ADCs.put(DetectorType.FTCAL, Arrays.asList("adc"));
-        ADCs.put(DetectorType.FTHODO, Arrays.asList("adc"));
-        ADCs.put(DetectorType.FTOF, Arrays.asList("adc"));
-        ADCs.put(DetectorType.FTTRK, Arrays.asList("adc"));
-        ADCs.put(DetectorType.HTCC, Arrays.asList("adc"));
-        ADCs.put(DetectorType.LTCC, Arrays.asList("adc"));
-        ADCs.put(DetectorType.URWELL, Arrays.asList("adc"));
-        
-        TDCs.put(DetectorType.BAND,Arrays.asList("tdc"));
-        TDCs.put(DetectorType.CND, Arrays.asList("tdc"));
-        TDCs.put(DetectorType.CTOF, Arrays.asList("tdc"));
-        TDCs.put(DetectorType.DC, Arrays.asList("tot","tdc"));
-        TDCs.put(DetectorType.ECAL, Arrays.asList("tdc"));
-        TDCs.put(DetectorType.FTOF, Arrays.asList("tdc"));
-       
         // fill table map
         // time jitter
         setTable(DetectorType.DC,   EventMergerEnum.TIME_JITTER, "/calibration/dc/time_jitter");
@@ -104,7 +87,7 @@ public class EventMergerConstants {
         manager.init(Arrays.asList(tableNames));
     }
     
-    private void setTable(DetectorType detector, EventMergerEnum key, String path) {
+     private void setTable(DetectorType detector, EventMergerEnum key, String path) {
         if (!tables.containsKey(detector)) tables.put(detector,new HashMap<>());
         tables.get(detector).put(key,path);
     }

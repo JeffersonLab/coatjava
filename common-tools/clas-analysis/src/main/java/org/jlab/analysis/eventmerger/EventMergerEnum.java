@@ -6,8 +6,6 @@ package org.jlab.analysis.eventmerger;
  * @author devita
  */
 public enum EventMergerEnum {
-    ADC_BANKS,
-    TDC_BANKS,
     TIME_JITTER,
     READOUT_PAR,
     TDC_CONV,
