@@ -23,11 +23,17 @@ import org.jlab.utils.system.ClasUtilsFile;
 /**
  * Tool for merging of signal and background events
  *      
- * Usage : bgMerger -b [background file] -i [input data file] -o [merged file] 
- * Options :
- *      -d : list of detectors, for example "DC,FTOF,HTCC" (default = DC,FTOF)
- *      -n : maximum number of events to process (default = -1)
- * 
+ *     Usage : bg-merger -i [signal event file] -o [merged file]  [input1] [input2] ....
+ *
+ *  Options :
+ *       -d : list of detectors, for example "DC,FTOF,HTCC" or "ALL" for all available detectors. Use DC1, DC2 or DC3 to select the DC region (default = ALL)
+ *       -l : preserve initial hit order (for compatibility with truth matching, 0-false, 1-true (default = 1)
+ *       -n : maximum number of events to process (default = -1)
+ *       -r : reuse background events: 0-false, 1-true (default = 1)
+ *       -s : suppress double TDC hits on the same component, 0-no suppression, 1-suppression (default = 1)
+ *       -t : list of hit OrderTypes to be saved (default = NOMINAL,BGADDED_NOMINAL,BGREMOVED,BGREMOVED_BG,DECREMOVED,DECREMOVED_BG)
+ *       -x : background scale factor (default = 1)
+ *
  * @author ziegler
  * @author devita
  * 
