@@ -24,6 +24,9 @@ tar -zxvf twoTrackEvents_809_raw.evio.tar.gz
 $COAT/bin/decoder -t -0.5 -s 0.0 -i ./twoTrackEvents_809_raw.evio -o ./twoTrackEvents_809.hipo -c 2
 [ $? -ne 0 ] && echo "decoder failure" && exit 3
 
+# take a peek
+$COAT/bin/hipo-utils -stats ./twoTrackEvents_809.hipo
+
 # run clara
 $COAT/bin/run-clara -y $COAT/etc/services/kpp.yaml ./twoTrackEvents_809.hipo
 [ $? -ne 0 ] && echo "reconstruction with clara failure" && exit 4
