@@ -28,23 +28,26 @@ public class HipoToHipoWriter extends AbstractEventWriterService<HipoWriterSorte
     private static final String CONF_SCHEMA_FILTER = "schema_filter";
     private static final String CONF_SCHEMA_WILDCARD = "wildcard";
     
-    private final List<Bank> schemaBankList = new ArrayList<Bank>();
+    protected final List<Bank> schemaBankList = new ArrayList<Bank>();
     private final StringSubstitutor envSubstitutor = new StringSubstitutor(System.getenv());
 
     private int compression = 2;
+    protected String filename;
 
     @Override
     protected HipoWriterSorted createWriter(Path file, JSONObject opts) throws EventWriterException {
         try {
+            filename = file.toString();
             HipoWriterSorted writer = new HipoWriterSorted();
             configure(writer, opts);
-            writer.open(file.toString());
+            writer.open(filename);
             return writer;
         } catch (Exception e) {
             throw new EventWriterException(e);
         }
     }
 
+    
     protected void configure(HipoWriterSorted writer, JSONObject opts) {
         schemaBankList.clear();
         if (opts.has(CONF_COMPRESSION)) {
@@ -82,7 +85,7 @@ public class HipoToHipoWriter extends AbstractEventWriterService<HipoWriterSorte
                 }
             }
         }
-        
+
         System.out.printf("SERVICE WRITER :: [filter] %s\n",opts.has(HipoToHipoWriter.CONF_SCHEMA_FILTER));
         System.out.printf("SERVICE WRITER :: [dir] %s\n",opts.has(HipoToHipoWriter.CONF_SCHEMA_DIR));
         System.out.printf("SERVICE WRITER :: [wildcard] %s\n",opts.has(HipoToHipoWriter.CONF_SCHEMA_WILDCARD));
@@ -98,22 +101,20 @@ public class HipoToHipoWriter extends AbstractEventWriterService<HipoWriterSorte
         schemaBankList.clear();
     }
 
+    public static void writeEvent(HipoWriterSorted w, Event e, List<Bank> schema) {
+        int tag = e.getEventTag();
+        if (tag==1 || schema.isEmpty()) {
+            w.addEvent(e,tag);
+        }
+        else {
+            w.addEvent(e.reduceEvent(schema),tag);
+        }
+    }
+
     @Override
     protected void writeEvent(Object event) throws EventWriterException {
         try {
-            Event hipoEvent = (Event) event;
-            int   eventTag  = hipoEvent.getEventTag();
-            
-            if(eventTag == 1){
-                writer.addEvent( hipoEvent,eventTag);
-            } else {
-                if(!schemaBankList.isEmpty()){
-                    Event reduced = hipoEvent.reduceEvent(schemaBankList);
-                    writer.addEvent( reduced,eventTag);
-                } else {
-                    writer.addEvent( hipoEvent,eventTag);
-                }
-            }
+            writeEvent(writer, (Event)event, schemaBankList);
         } catch (Exception e) {
             throw new EventWriterException(e);
         }
