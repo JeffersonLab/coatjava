@@ -592,4 +592,21 @@ public class HelicitySequence {
         sequence.addStream(stream);
         sequence.writeFlips(writer, 1);
     }
+   
+    /**
+     * 
+     * @param sf
+     * @param writer
+     * @param stream 
+     */
+    public static void writeFlips(SchemaFactory sf, HipoWriterSorted writer, TreeSet<HelicityState> stream) {
+        HelicitySequence sequence = new HelicitySequence();
+        sequence.addStream(stream);
+        Event e = new Event();
+        for (Bank b : sequence.getBanks(sf)) {
+            e.write(b);
+            writer.addEvent(e, 1);
+            e.reset();
+        }
+    }
 }

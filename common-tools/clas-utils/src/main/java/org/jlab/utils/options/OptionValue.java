@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.utils.options;
 
 import java.util.List;
@@ -39,12 +34,12 @@ public class OptionValue {
     
     private int getOptionIndex(List<String> options){
         for(int i = 0; i < options.size(); i++){
-            if(options.get(i).startsWith(optionString)==true)
+            if(options.get(i).equals(optionString)==true)
                 return i;
         }
         return -1;
     }
-    
+
     public boolean parse(List<String> arguments){        
         int index = this.getOptionIndex(arguments);
         if(index<0) return false;

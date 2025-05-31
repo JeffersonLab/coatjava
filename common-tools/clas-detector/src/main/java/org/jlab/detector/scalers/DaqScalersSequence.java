@@ -27,10 +27,14 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
     
     protected final List<DaqScalers> scalers=new ArrayList<>();
     
-    private Bank rcfgBank=null;
+    private Bank runConfigBank=null;
+    private Bank runScalerBank=null;
+    private Bank rawScalerBank=null;
   
     static final Logger logger = Logger.getLogger(DaqScalersSequence.class.getName());
     
+    private DaqScalersSequence(){};
+
     public static class Interval {
         private DaqScalers previous = null;
         private DaqScalers next = null;
@@ -92,6 +96,15 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
         final int n = index<0 ? -index-2 : index;
         return n;
     }
+
+    public DaqScalersSequence(SchemaFactory schema) {
+        runConfigBank = new Bank(schema.getSchema("RUN::config"));
+        runScalerBank=new Bank(schema.getSchema("RUN::scaler"));
+    }
+
+    public void clear() {
+        scalers.clear();
+    }
    
     protected boolean add(DaqScalers ds) {
         if (this.scalers.isEmpty()) {
@@ -116,7 +129,22 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
             }
         }
     }
-    
+
+    public boolean add(Event event){
+        event.read(runScalerBank);
+        event.read(runConfigBank);
+        if (runScalerBank.getRows() > 0) {
+            long timestamp=0;
+            if (runConfigBank.getRows()>0) {
+                timestamp=runConfigBank.getLong("timestamp",0);
+            }
+            DaqScalers ds=DaqScalers.create(runScalerBank);
+            ds.setTimestamp(timestamp);
+            return add(ds);
+        }
+        return false;
+    }
+
     /**
      * @param timestamp TI timestamp (i.e. RUN::config.timestamp)
      * @return the most recent DaqScalers for the given timestamp
@@ -132,8 +160,8 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
      * @return the most recent DaqScalers for the given event
      */
     public DaqScalers get(Event event) {
-        event.read(this.rcfgBank);
-        return this.get(this.rcfgBank.getLong("timestamp", 0));
+        event.read(this.runConfigBank);
+        return this.get(this.runConfigBank.getLong("timestamp", 0));
     }
 
     /**
@@ -156,8 +184,8 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
      * @return smallest interval of scaler readings around that event
      */
     public Interval getInterval(Event event) {
-        event.read(this.rcfgBank);
-        return this.getInterval(this.rcfgBank.getLong("timestamp", 0));
+        event.read(this.runConfigBank);
+        return this.getInterval(this.runConfigBank.getLong("timestamp", 0));
     }
 
     /**
@@ -175,10 +203,10 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
      * @return smallest interval of scaler readings around those events
      */
     public Interval getInterval(Event event1, Event event2) {
-        event1.read(this.rcfgBank);
-        final long t1 = this.rcfgBank.getLong("timestamp",0);
-        event2.read(this.rcfgBank);
-        final long t2 = this.rcfgBank.getLong("timestamp",0);
+        event1.read(this.runConfigBank);
+        final long t1 = this.runConfigBank.getLong("timestamp",0);
+        event2.read(this.runConfigBank);
+        final long t2 = this.runConfigBank.getLong("timestamp",0);
         return this.getInterval(t1,t2);
     }
 
@@ -201,8 +229,8 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
             reader.setTags(1);
             reader.open(filename);
 
-            if (seq.rcfgBank==null) {
-                seq.rcfgBank = new Bank(reader.getSchemaFactory().getSchema("RUN::config"));
+            if (seq.runConfigBank==null) {
+                seq.runConfigBank = new Bank(reader.getSchemaFactory().getSchema("RUN::config"));
             }
         
             SchemaFactory schema = reader.getSchemaFactory();
@@ -249,8 +277,8 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
             reader.setTags(tags);
             reader.open(filename);
             SchemaFactory schema = reader.getSchemaFactory();
-            if (seq.rcfgBank==null)
-                seq.rcfgBank = new Bank(schema.getSchema("RUN::config"));
+            if (seq.runConfigBank==null)
+                seq.runConfigBank = new Bank(schema.getSchema("RUN::config"));
             while (reader.hasNext()) {
                 Event event=new Event();
                 Bank scaler=new Bank(schema.getSchema("RAW::scaler"));

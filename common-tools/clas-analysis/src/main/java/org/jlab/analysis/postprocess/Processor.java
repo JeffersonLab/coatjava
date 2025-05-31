@@ -55,6 +55,14 @@ public class Processor {
         configure(findPreloadFiles(dir,glob), restream, rebuild);
     }
 
+    public Processor(SchemaFactory schema, HelicitySequenceDelayed h, DaqScalersSequence s) {
+        conman = new ConstantsManager();
+        conman.init(CCDB_TABLES);
+        schemaFactory = schema;
+        helicitySequence = h;
+        chargeSequence = s;
+    }
+
     private void configure(List<String> preloadFiles, boolean restream, boolean rebuild) {
         if (!preloadFiles.isEmpty()) {
             HipoReader r = new HipoReader();
