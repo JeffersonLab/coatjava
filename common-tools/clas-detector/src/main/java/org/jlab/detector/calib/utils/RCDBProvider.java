@@ -84,7 +84,7 @@ public class RCDBProvider {
     private void initialize(String address){
         provider = RCDB.createProvider(address);
         try {
-            LOGGER.log(Level.INFO,"[RCDB] --->  open connection with : " + address);
+            LOGGER.log(Level.FINE,"[RCDB] --->  open connection with : " + address);
             provider.connect();
         }
         catch (Exception e) {
@@ -92,7 +92,7 @@ public class RCDBProvider {
         }
 
         if(provider.isConnected()==true){
-            LOGGER.log(Level.INFO,"[RCDB] --->  database connection  : success");
+            LOGGER.log(Level.FINE,"[RCDB] --->  database connection  : success");
         } else {
             LOGGER.log(Level.SEVERE,"[RCDB] --->  database connection  : failed");
         }
@@ -101,7 +101,7 @@ public class RCDBProvider {
 
     public void disconnect(){
         if (provider.isConnected()) {
-            LOGGER.log(Level.INFO,"[RCDB] --->  database disconnect  : success");
+            LOGGER.log(Level.FINE,"[RCDB] --->  database disconnect  : success");
             provider.close();
         }
     }

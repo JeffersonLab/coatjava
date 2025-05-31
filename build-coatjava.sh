@@ -182,7 +182,4 @@ for pom in $(find common-tools -name pom.xml); do
 done
 echo "installed coatjava to: $prefix_dir"
 
-# install clara
-#rm -rf clara-home && ./install-clara -c ./coatjava ./clara-home
-
 echo "COATJAVA SUCCESSFULLY BUILT !"
