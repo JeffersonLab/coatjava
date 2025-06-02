@@ -185,7 +185,7 @@
           </execution>
         </executions>
         <configuration>
-          <createDependencyReducedPom>true</createDependencyReducedPom>
+          <createDependencyReducedPom>false</createDependencyReducedPom> <!-- minimal POM will be created by 'flatten-maven-plugin' -->
           <artifactSet>
             <excludes>
               <exclude>cnuphys:cnuphys</exclude>
@@ -239,7 +239,7 @@
         <artifactId>flatten-maven-plugin</artifactId>
         <version>1.7.0</version>
         <configuration>
-          <flattenMode>clean</flattenMode>
+          <flattenMode>fatjar</flattenMode>
         </configuration>
         <executions>
           <execution>
