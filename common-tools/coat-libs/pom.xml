@@ -185,7 +185,7 @@
           </execution>
         </executions>
         <configuration>
-          <createDependencyReducedPom>true</createDependencyReducedPom>
+          <createDependencyReducedPom>false</createDependencyReducedPom> <!-- minimal POM will be created by 'flatten-maven-plugin' -->
           <artifactSet>
             <excludes>
               <exclude>cnuphys:cnuphys</exclude>
@@ -233,14 +233,33 @@
         </configuration>
       </plugin>
 
+      <!-- generate minimal POM file for deployment, containing GAV (groupID, artifactId, version) -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>flatten-maven-plugin</artifactId>
+        <version>1.7.0</version>
+        <configuration>
+          <flattenMode>fatjar</flattenMode>
+        </configuration>
+        <executions>
+          <execution>
+            <id>flatten</id>
+            <phase>package</phase>
+            <goals>
+              <goal>flatten</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
       <!-- deployment configuration -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-deploy-plugin</artifactId>
         <version>3.1.4</version>
         <configuration>
-          <!-- Use the reduced POM -->
-          <pomFile>${project.build.directory}/dependency-reduced-pom.xml</pomFile>
+          <!-- Use the minimal GAV POM -->
+          <pomFile>${project.build.directory}/.flattened-pom.xml</pomFile>
         </configuration>
       </plugin>
 
