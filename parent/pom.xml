@@ -174,9 +174,76 @@
       </dependency>
 
       <!-- END DEPENDENCY CONFLICT RESOLUTION -->
-
+      <dependency>
+        <groupId>ai.djl</groupId>
+        <artifactId>bom</artifactId>
+        <version>0.32.0</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
     </dependencies>
   </dependencyManagement>
+
+
+
+
+  <dependencies>
+
+    <dependency>
+        <groupId>ai.djl</groupId>
+        <artifactId>api</artifactId>
+        <version>0.32.0</version>
+    </dependency>
+
+    <!-- DJL Model Zoo -->
+    <dependency>
+        <groupId>ai.djl</groupId>
+        <artifactId>model-zoo</artifactId>
+        <version>0.32.0</version>
+    </dependency>
+
+    <!-- PyTorch Model Zoo -->
+    <dependency>
+        <groupId>ai.djl.pytorch</groupId>
+        <artifactId>pytorch-model-zoo</artifactId>
+        <version>0.32.0</version>
+    </dependency>
+
+    <!-- PyTorch Engine -->
+    <dependency>
+        <groupId>ai.djl.pytorch</groupId>
+        <artifactId>pytorch-engine</artifactId>
+        <version>0.32.0</version>
+        <scope>runtime</scope>
+    </dependency>
+
+    <!-- PyTorch Native CPU -->
+    <dependency>
+        <groupId>ai.djl.pytorch</groupId>
+        <artifactId>pytorch-native-cpu</artifactId>
+        <classifier>linux-x86_64</classifier>
+        <scope>runtime</scope>
+        <version>2.5.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>ai.djl.pytorch</groupId>
+      <artifactId>pytorch-jni</artifactId>
+      <version>2.5.1-0.32.0</version>
+      <scope>runtime</scope>
+    </dependency>
+
+  </dependencies>
+
+
+
+
+
+
+
+
+
+
 
   <build>
 
