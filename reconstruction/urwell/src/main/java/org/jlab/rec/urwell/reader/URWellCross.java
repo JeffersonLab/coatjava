@@ -29,7 +29,7 @@ public class URWellCross {
     private double _lyR1RelativeDCSL1 = -999; // y of R1 relative to DC SL1 in LC 
     private double _xRelativeDCSL1AtPlaneY0TSC = -999; // x of R1 cross relative to DC SL1 at the plan y = 0 in TSC 
     private double _xRelativeDCSL2AtPlaneY0TSC = -999; // x of R1 cross relative to DC SL2 at the plan y = 0 in TSC
-    private double _xErrRelativeDCAtPlaneY0TSC = -999; // x error of R1 cross relative to DC SL1 or SL2 at the plan y = 0 in TSC 
+    private double _xErrRelativeDCAtPlaneY0TSCHB = -999; // x error of R1 cross relative to DC SL1 or SL2 at the plan y = 0 in TSC 
 
     public URWellCross(int id, int sector, int region, double x, double y, double z, double energy, double time, int cluster1, int cluster2, int status) {
         this.id = id;
@@ -47,7 +47,7 @@ public class URWellCross {
         this._lyR1RelativeDCSL1 = getLyRelativeToDCSL1LC();
         this._xRelativeDCSL1AtPlaneY0TSC = getXRelativeToDCSL1AtPlaneY0TSC();
         this._xRelativeDCSL2AtPlaneY0TSC = getXRelativeToDCSL2AtPlaneY0TSC();  
-        this._xErrRelativeDCAtPlaneY0TSC = getXErrRelativeToDCAtPlaneY0TSC(); 
+        this._xErrRelativeDCAtPlaneY0TSCHB = getXErrRelativeToDCAtPlaneY0TSCHB(); 
     }
     
     public URWellCross(int id, int tid, int sector, int region, double x, double y, double z, double x_local, double y_local, double z_local, double energy, double time, int cluster1, int cluster2, int status) {
@@ -65,7 +65,7 @@ public class URWellCross {
         this._lyR1RelativeDCSL1 = getLyRelativeToDCSL1LC();
         this._xRelativeDCSL1AtPlaneY0TSC = getXRelativeToDCSL1AtPlaneY0TSC();
         this._xRelativeDCSL2AtPlaneY0TSC = getXRelativeToDCSL2AtPlaneY0TSC(); 
-        this._xErrRelativeDCAtPlaneY0TSC = getXErrRelativeToDCAtPlaneY0TSC(); 
+        this._xErrRelativeDCAtPlaneY0TSCHB = getXErrRelativeToDCAtPlaneY0TSCHB(); 
     }
     
     URWellStateVec stateVec = null;
@@ -235,9 +235,9 @@ public class URWellCross {
         return local.x() + local.y() * Math.tan(Math.toRadians(6));
     }
     
-    private double getXErrRelativeToDCAtPlaneY0TSC(){
-        return Math.sqrt(URWellConstants.URWELLXRESOLUTION * URWellConstants.URWELLXRESOLUTION + 
-                URWellConstants.URWELLYRESOLUTION * URWellConstants.URWELLYRESOLUTION * Math.tan(Math.toRadians(6)) * Math.tan(Math.toRadians(6)));
+    private double getXErrRelativeToDCAtPlaneY0TSCHB(){
+        return Math.sqrt(URWellConstants.URWELLXRESOLUTIONHB * URWellConstants.URWELLXRESOLUTIONHB + 
+                URWellConstants.URWELLYRESOLUTIONHB * URWellConstants.URWELLYRESOLUTIONHB * Math.tan(Math.toRadians(6)) * Math.tan(Math.toRadians(6)));
     }
     
     public double getXRelativeDCSL1AtPlaneY0TSC(){
@@ -248,7 +248,7 @@ public class URWellCross {
         return _xRelativeDCSL2AtPlaneY0TSC;
     }
     
-    public double getXErrRelativeDCAtPlaneY0TSC(){
-       return _xErrRelativeDCAtPlaneY0TSC; 
+    public double getXErrRelativeDCAtPlaneY0TSCHB(){
+       return _xErrRelativeDCAtPlaneY0TSCHB; 
     }
 }

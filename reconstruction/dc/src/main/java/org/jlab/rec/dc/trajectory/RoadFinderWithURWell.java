@@ -129,7 +129,7 @@ public class RoadFinderWithURWell extends RoadFinder  {
                 Z[hitno] = road.getURWellCross().local().z();
                 if(road.get(0).get_Superlayer() == 1) X[hitno] = road.getURWellCross().getXRelativeDCSL1AtPlaneY0TSC();
                 else X[hitno] = road.getURWellCross().getXRelativeDCSL2AtPlaneY0TSC();
-                errX[hitno] =  road.getURWellCross().getXErrRelativeDCAtPlaneY0TSC();
+                errX[hitno] =  road.getURWellCross().getXErrRelativeDCAtPlaneY0TSCHB();
                 hitno++;                
         }
         

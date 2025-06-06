@@ -1612,14 +1612,14 @@ public class TrackCandListWithURWellFinder {
         if(urCross != null){
             if(urCross.getCluster1() != null) {
                 HitOnTrack urhot = new HitOnTrack(urCross.sector(), urCross.getCluster1().layer(), urCross.getCluster1().getLineLocal(),
-                         URWellConstants.URWELLXRESOLUTION, URWellConstants.URWELLLOCALZR1);            
+                         URWellConstants.URWELLXRESOLUTIONHB, URWellConstants.URWELLLOCALZR1);            
                 urhot.isDCHit = false;
                 hOTS.add(urhot);
             } 
             
             if(urCross.getCluster2() != null) {
                 HitOnTrack urhot = new HitOnTrack(urCross.sector(), urCross.getCluster2().layer(), urCross.getCluster2().getLineLocal(),
-                         URWellConstants.URWELLXRESOLUTION, URWellConstants.URWELLLOCALZR1);            
+                         URWellConstants.URWELLXRESOLUTIONHB, URWellConstants.URWELLLOCALZR1);            
                 urhot.isDCHit = false;
                 hOTS.add(urhot);
             }   

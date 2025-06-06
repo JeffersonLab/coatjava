@@ -33,8 +33,11 @@ public class URWellConstants {
     
      //Todo: Should come from uRWell geometry package
     public static final double URWELLLOCALZR1  = 226.0464; // cm
-    public static final double URWELLXRESOLUTION = 0.01; // cm
-    public static final double URWELLYRESOLUTION = 0.04; // cm
+    public static final double URWELLXRESOLUTION = 0.024; // cm
+    public static final double URWELLYRESOLUTION = 0.15; // cm
+    
+    public static final double URWELLXRESOLUTIONHB = 0.12; // cm
+    public static final double URWELLYRESOLUTIONHB = 0.88; // cm
     
     // CalCulate uRWell crosses in LC
     public static double INTERVALDCSL1L1L2TSC = 1.15848; // cm

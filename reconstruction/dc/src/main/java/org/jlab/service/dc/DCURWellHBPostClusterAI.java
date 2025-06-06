@@ -131,7 +131,7 @@ public class DCURWellHBPostClusterAI extends DCEngine {
         // Read urwell crosses, and make urwell-dc-crosses combos
         URWellReader uRWellReader = new URWellReader(event, "HB");
         List<URWellCross> urCrosses = uRWellReader.getUrwellR1Crosses();  
-        
+                
         // read uRWell-DC clusters at SL1, and separate uRWell crosses into with and without associated SL1 cluster      
         URWellDCClustersReader uRWellDCClustersReader = new URWellDCClustersReader();
         Map<Integer, Integer> map_clsId_uRWellCrossId = uRWellDCClustersReader.getMapClsIdURWellCrossId(event); // segment id is the same as cluster id
@@ -189,7 +189,9 @@ public class DCURWellHBPostClusterAI extends DCEngine {
                     clusters.add(c.get_Segment2().get_fittedCluster());
                 }
             }
-        }              
+        }
+        
+        
        
         ////// Conventional tracking with R0 and without R0 in order
         ////       With R0: R0R1R2R3, R0-SL1R2R3, R0SL2R2R3, R0R1pR2R3, R0R1R2pR3, R0R2R3

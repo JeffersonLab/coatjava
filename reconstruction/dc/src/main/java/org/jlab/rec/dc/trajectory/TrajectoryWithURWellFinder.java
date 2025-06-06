@@ -227,8 +227,8 @@ public class TrajectoryWithURWellFinder {
             y[2] = urCross.local().y();
             z[2] = urCross.local().z();
             
-            x_err[2] = URWellConstants.URWELLXRESOLUTION;
-            y_err[2] = URWellConstants.URWELLYRESOLUTION;
+            x_err[2] = URWellConstants.URWELLXRESOLUTIONHB;
+            y_err[2] = URWellConstants.URWELLYRESOLUTIONHB;
 
             x_fitCoeff = quadraticLRFit(z, x, x_err);
             y_fitCoeff = quadraticLRFit(z, y, y_err); 
@@ -259,8 +259,8 @@ public class TrajectoryWithURWellFinder {
             y[3] = urCross.local().y();
             z[3] = urCross.local().z();
             
-            x_err[3] = URWellConstants.URWELLXRESOLUTION;
-            y_err[3] = URWellConstants.URWELLYRESOLUTION;
+            x_err[3] = URWellConstants.URWELLXRESOLUTIONHB;
+            y_err[3] = URWellConstants.URWELLYRESOLUTIONHB;
 
             x_fitCoeff = quadraticLRFit(z, x, x_err);
             y_fitCoeff = quadraticLRFit(z, y, y_err); 
