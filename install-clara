@@ -5,7 +5,6 @@ set -e
 # Default versions:
 grapes=2.20
 clara=5.0.2
-coatjava=''
 
 function error() {
     echo -e "\n$usage\n\n  Use option '-h' for more usage guidance.\n\nERROR:  $@"
@@ -66,10 +65,11 @@ trap cleanup EXIT
 # Configure:
 debug=0
 args=()
-usage="Usage:  install-clara -c COATJAVA [-v] [-b] [-f CLARA] [-g GRAPES] PATH"
+usage="Usage:  install-clara [-v] [-b] [-c COATJAVA] [-f CLARA] [-g GRAPES] PATH"
 info="""
-- Option -c for COATJAVA version is required; it can also be specified as a local installation directory
 - The default CLARA / GRAPES versions are $clara / $grapes
+- COATJAVA can also be specified as a local installation directory
+- If the COATJAVA version is not specified, it will try to auto-detect it.
 - [-v adds verbosity and disables cleanup]
 - [-b builds clara from source]"""
 
@@ -95,8 +95,14 @@ clara_home="$args"
 mkdir -p $clara_home    || error "Cannot create installation PATH:  $clara_home"
 clara_home=$(cd $clara_home && pwd) && rmdir $clara_home
 
+# If the user didn't specify a coatjava version, try auto-detect the version:
+if [ -z ${coatjava+x} ]
+then
+    [ -e "$(dirname $0)/libexec/version.sh" ] || error "Failed to auto-detect.  COATJAVA version must be specified with '-c'"
+    coatjava=$($(dirname $0)/libexec/version.sh | sed 's/-SNAPSHOT//')
+fi
+
 # Detect local COATJAVA installation and convert into an absolute path:
-[ -z "$coatjava" ] && error "COATJAVA version must be specified with '-c'"
 if compgen -G "$coatjava/lib/clas/coat-libs-*.jar" > /dev/null
 then
     coatjava=$(cd $coatjava && pwd)
