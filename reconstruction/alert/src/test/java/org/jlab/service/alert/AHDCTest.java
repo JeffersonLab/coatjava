@@ -8,6 +8,7 @@ import org.jlab.detector.base.DetectorType;
 import org.jlab.logging.DefaultLogger;
 import org.jlab.analysis.physics.TestEvent;
 import org.jlab.service.ahdc.AHDCEngine;
+import org.jlab.rec.ahdc.Mode;
 
 /**
  *
@@ -24,7 +25,7 @@ public class AHDCTest {
     DataEvent event = TestEvent.get(DetectorType.AHDC);
     
     AHDCEngine engine = new AHDCEngine();
-    engine.init();
+    engine.init(Mode.AI_Track_Finding);
     engine.processDataEvent(event);
 
     event.show();

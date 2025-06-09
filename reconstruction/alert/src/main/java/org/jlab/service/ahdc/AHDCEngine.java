@@ -68,6 +68,11 @@ public class AHDCEngine extends ReconstructionEngine {
         super("ALERT", "ouillon", "1.0.1");
     }
 
+    public boolean init(Mode m) {
+        mode = m;
+        return init();
+    }
+
     @Override
     public boolean init() {
 

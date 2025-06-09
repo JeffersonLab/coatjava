@@ -152,6 +152,14 @@
         <version>1.0.3</version>
       </dependency>
 
+      <dependency>
+        <groupId>ai.djl</groupId>
+        <artifactId>bom</artifactId>
+        <version>0.32.0</version> <!-- sets version number for all 'ai.djl' dependencies -->
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
       <!-- BEGIN DEPENDENCY CONFLICT RESOLUTION -->
       <!-- the following dependency versions are specified to resolve dependency tree conflicts; see also exclusions in `maven-enforcer-plugin` -->
 
