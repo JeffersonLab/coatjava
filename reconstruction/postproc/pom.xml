@@ -4,14 +4,14 @@
 
   <groupId>org.jlab.clas12.detector</groupId>
   <artifactId>clas12detector-postproc</artifactId>
-  <version>13.0.0-SNAPSHOT</version>
+  <version>13.0.1-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <parent>
     <groupId>org.jlab.clas</groupId>
     <artifactId>coatjava</artifactId>
     <relativePath>../../parent/pom.xml</relativePath>
-    <version>13.0.0-SNAPSHOT</version>
+    <version>13.0.1-SNAPSHOT</version>
   </parent>
 
   <dependencies>
@@ -19,19 +19,19 @@
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-io</artifactId>
-      <version>13.0.0-SNAPSHOT</version>
+      <version>13.0.1-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-reco</artifactId>
-      <version>13.0.0-SNAPSHOT</version>
+      <version>13.0.1-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-analysis</artifactId>
-      <version>13.0.0-SNAPSHOT</version>
+      <version>13.0.1-SNAPSHOT</version>
     </dependency>
 
   </dependencies>
