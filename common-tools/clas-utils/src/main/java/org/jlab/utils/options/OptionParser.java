@@ -2,6 +2,7 @@ package org.jlab.utils.options;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,12 +19,12 @@ public class OptionParser {
     private Map<String,OptionValue> optionsDescriptors = new TreeMap<>();    
     private Map<String,OptionValue>    requiredOptions = new TreeMap<>();
     private Map<String,OptionValue>      parsedOptions = new TreeMap<>();
+    private Set<String>               overridenOptions = new HashSet<>();
     private List<String>               parsedInputList = new ArrayList<>();
     private String                             program = "undefined";
     private boolean                  requiresInputList = true;
     private String                  programDescription = "";
-    private boolean                  overrideVerbosity = false;
-
+    
     public OptionParser(){
         init();
     }
@@ -34,7 +35,7 @@ public class OptionParser {
     }
    
     private void init() {
-        addOption("-v","FINE","logging verbosity level");
+        addOption("-l","FINE","logging verbosity level");
     }
   
     public void setDescription(String desc){
@@ -53,7 +54,7 @@ public class OptionParser {
     private void check(String key, Set<String> keys) {
         if (keys.contains(key)) {
             System.out.println("WARNING: overriding OptionParser option:  "+key);
-            if (key.equals("-v")) overrideVerbosity = true;
+            overridenOptions.add(key);
         }
     }
     
@@ -136,9 +137,13 @@ public class OptionParser {
         List<String> arguments = new ArrayList<>();
         arguments.addAll(Arrays.asList(args));
 
-        // Default, non-overridable, help option:
+        // Default, non-overridable, options:
         if(this.containsOptions(arguments, "-h","-help")==true){
             this.printUsage();
+            System.exit(0);
+        }
+        else if(this.containsOptions(arguments, "-v", "-version")==true){
+            System.err.println("HOWTOGETTHEVERSION?");
             System.exit(0);
         }
 
@@ -173,8 +178,8 @@ public class OptionParser {
         }
 
         // Configure logger:
-        if (!overrideVerbosity) {
-            setVerbosity(this.parsedOptions.get("-v").stringValue());
+        if (!overridenOptions.contains("-l")) {
+            setVerbosity(this.parsedOptions.get("-l").stringValue());
         }
     }
 
@@ -183,11 +188,11 @@ public class OptionParser {
             DefaultLogger.initialize(Level.parse(level));
         }
         catch (IllegalArgumentException e) {
-            System.err.println("Invalid -v java.util.logging.Level:  "+level);
+            System.err.println("Invalid -l java.util.logging.Level:  "+level);
             System.exit(102);
         }
         catch (NullPointerException e) {
-            System.err.println("Unavailable -v COATJAVA logging level:  "+level);
+            System.err.println("Unavailable -l COATJAVA logging level:  "+level);
             System.exit(103);
         }
     }
