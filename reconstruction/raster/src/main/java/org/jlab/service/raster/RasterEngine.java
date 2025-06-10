@@ -22,10 +22,12 @@ import org.jlab.utils.groups.IndexedTable;
 
 public class RasterEngine extends ReconstructionEngine {
 
+    private volatile int nErrors = 0;
+
     private final double udfPos = -999;
     private final int    xComponent = 1;
     private final int    yComponent = 2;
-    
+
     public static final Logger LOGGER = Logger.getLogger(RasterEngine.class.getName());
 
     public RasterEngine() {
@@ -68,7 +70,8 @@ public class RasterEngine extends ReconstructionEngine {
         // check if input bank has two rows, otherwise give warning
         DataBank adcBank = event.getBank("RASTER::adc");
         if(adcBank.rows()!=2) {
-            LOGGER.log(Level.WARNING,"RasterEngine:  RASTER::adc bank has incorrect number of rows, skipping event.");
+            if (10 > ++nErrors)
+                LOGGER.log(Level.WARNING,"RasterEngine:  RASTER::adc bank has incorrect number of rows, skipping event.");
             return false;
         }
         
