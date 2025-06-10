@@ -22,7 +22,8 @@ import org.jlab.utils.groups.IndexedTable;
 
 public class RasterEngine extends ReconstructionEngine {
 
-    private int nErrors = 0;
+    private volatile int nErrors = 0;
+
     private final double udfPos = -999;
     private final int    xComponent = 1;
     private final int    yComponent = 2;
