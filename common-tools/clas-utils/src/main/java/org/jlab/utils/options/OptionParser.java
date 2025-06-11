@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
+import java.util.Properties;
 import org.jlab.logging.DefaultLogger;
 
 /**
@@ -131,6 +132,17 @@ public class OptionParser {
         System.out.println(this.getUsageString());
         System.out.println("\n\n");
     }
+
+    public String getVersion() {
+      try {
+        Properties props = new Properties();
+        props.load(getClass().getResourceAsStream("/version.properties"));
+        return props.getProperty("version");
+      } catch (Exception ex) {
+        System.err.println("ERROR: failed to get version number");
+        return "UNKNOWN";
+      }
+    }
     
     public void parse(String[] args){
 
@@ -143,7 +155,7 @@ public class OptionParser {
             System.exit(0);
         }
         else if(this.containsOptions(arguments, "-v", "-version")==true){
-            System.err.println("HOWTOGETTHEVERSION?");
+            System.out.println(getVersion());
             System.exit(0);
         }
 
