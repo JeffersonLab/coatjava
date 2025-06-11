@@ -25,7 +25,7 @@ Due to the cleanup, previously existing forks and local copies of the old reposi
 
 ----
 
-If you just want to use the software without modifying/building it, you can download a pre-built package from the [GitHub releases](https://github.com/JeffersonLab/clas12-offline-software/releases) page or the corresponding repo at [JLab](https://clasweb.jlab.org/clas12offline/distribution/coatjava/).  Builds on JLab machines are also available, see the [general software wiki](https://clasweb.jlab.org/wiki/index.php/CLAS12_Software_Center) for setting up your environment to use them.
+If you just want to use the software without modifying/building it, you can download a pre-built package from the [GitHub releases](https://github.com/JeffersonLab/coatjava/releases) page or the corresponding repo at [JLab](https://clasweb.jlab.org/clas12offline/distribution/coatjava/).  Builds on JLab machines are also available, see the [general software wiki](https://clasweb.jlab.org/wiki/index.php/CLAS12_Software_Center) for setting up your environment to use them.
 
 For anything more, see the "General Developer Documentation" link on that software wiki, which points [here](https://clasweb.jlab.org/wiki/index.php/COATJAVA_Developer_Docs).
 
