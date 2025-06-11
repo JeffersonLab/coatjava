@@ -1,13 +1,17 @@
 package org.jlab.utils.options;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.jlab.logging.DefaultLogger;
 
 /**
@@ -138,12 +142,12 @@ public class OptionParser {
         arguments.addAll(Arrays.asList(args));
 
         // Default, non-overridable, options:
-        if(this.containsOptions(arguments, "-h","-help")==true){
+        if(this.containsOptions(arguments,"-h","-help")==true){
             this.printUsage();
             System.exit(0);
         }
-        else if(this.containsOptions(arguments, "-v", "-version")==true){
-            System.err.println("HOWTOGETTHEVERSION?");
+        else if(this.containsOptions(arguments,"-v","-version")==true){
+            System.out.println(getVersion());
             System.exit(0);
         }
 
@@ -199,6 +203,16 @@ public class OptionParser {
 
     public List<String> getInputList(){
         return this.parsedInputList;
+    }
+   
+    public static String getVersion(){
+        try {
+            Properties p = new Properties();
+            p.load(OptionParser.class.getResourceAsStream("/pom.properties"));
+            return String.format("coatjava version %s",p.getProperty("version"));
+        } catch (Exception e) {
+            return "coatjava version ???";
+        }
     }
     
     public static void main(String[] args){
