@@ -9,11 +9,12 @@ public class URWellConstants {
 
     private final static String CCDBPATH = "/geometry/urwell/";
     
-    public final static int NMAXREGIONS = 2;    //max number of regions 
+    public final static int NMAXREGIONS = 6;    //max number of regions 
     public final static int NREGIONS    = 1;    //number of regions 
     public final static int NSECTORS    = 6;    //number of sectors
     public final static int NLAYERS     = 2;    //number of layers
     public final static int NCHAMBERS   = 3;    //number of chambers in a sector
+    public final static int NCHAMBERS_ddvcs   = 1;    //number of chambers in a sector
 
     public final static double XENLARGEMENT = 0.5; // cm
     public final static double YENLARGEMENT = 1.;  // cm
@@ -26,6 +27,10 @@ public class URWellConstants {
     public final static double SECTORHEIGHT = 146.21;  //height of each sector (cm)
     public final static double DX0CHAMBER0  = 5.197;   // halfbase of chamber 1  (cm)
   
+    public final static double SECTORHEIGHT_ddvcs = 22;
+    public final static double THMIN_ddvcs  = 7;  
+    public final static double DX0CHAMBER0_ddvcs  = 3.597;
+    
     // Chamber volumes  and materials (units are cm)
     public final static double[] CHAMBERVOLUMESTHICKNESS = {0.0025, 0.0005,0.3,                                // window
                                                             0.0025, 0.0005,0.4,                                // cathode
@@ -43,7 +48,7 @@ public class URWellConstants {
            "support_skin1_g10", "support_honeycomb_nomex", "support_skin2_g10"};
 
     // URWELL position in the CLAS12 frame 
-    public final static double TGT2DC0    = 228.078; // cm            
+    public final static double TGT2DC0    = 228.078; // cm 
    // public final static double URWELL2DC0 = 2;       // cm
     public final static double URWELL2DC0[] = new double[NMAXREGIONS];
     public final static double DIST2TGT[] = new double[NMAXREGIONS];
@@ -51,12 +56,22 @@ public class URWellConstants {
     public final static double YMIN[] = new double[NMAXREGIONS];
     public final static double ZMIN[] = new double[NMAXREGIONS];
     
+    
+    public final static double TGT2DC0_ddvcs = 52.9; // cm 
+    // public final static double URWELL2DC0 = 2;       // cm
+    public final static double URWELL2DC0_ddvcs[] = new double[NMAXREGIONS];
+    public final static double DIST2TGT_ddvcs[] = new double[NMAXREGIONS];
+    public final static double W2TGT_ddvcs[] = new double[NMAXREGIONS];
+    ; 
+    public final static double YMIN_ddvcs[] = new double[NMAXREGIONS];
+    public final static double ZMIN_ddvcs[] = new double[NMAXREGIONS];
+    
   //  public final static double DIST2TGT   = (TGT2DC0-URWELL2DC0);
    // public final static double W2TGT = DIST2TGT/Math.cos(Math.toRadians(THTILT-THMIN));
   //  public final static double YMIN = W2TGT*Math.sin(Math.toRadians(THMIN)); // distance from the base chamber1 and beamline
   //  public final static double ZMIN = W2TGT*Math.cos(Math.toRadians(THMIN));   
     public final static double PITCH = 0.1 ;       // cm
-    public final static double STEREOANGLE = 10;   // deg
+    public final static double STEREOANGLE = 6;   // deg
     
     
     
@@ -121,7 +136,13 @@ public class URWellConstants {
                 W2TGT[i] = DIST2TGT[i]/Math.cos(Math.toRadians(THTILT-THMIN));
                 YMIN[i]= W2TGT[i]*Math.sin(Math.toRadians(THMIN)); // distance from the base chamber1 and beamline
                 ZMIN[i] = W2TGT[i]*Math.cos(Math.toRadians(THMIN));  
-  
+
+                URWELL2DC0_ddvcs[i] = -2. + i * 1.3;
+                DIST2TGT_ddvcs[i] = (TGT2DC0_ddvcs + URWELL2DC0_ddvcs[i]);
+                W2TGT_ddvcs[i] = DIST2TGT_ddvcs[i] / Math.cos(Math.toRadians(THTILT - THMIN_ddvcs));
+                YMIN_ddvcs[i] = W2TGT_ddvcs[i] * Math.sin(Math.toRadians(THMIN_ddvcs)); // distance from the base chamber1 and beamline
+                ZMIN_ddvcs[i] = W2TGT_ddvcs[i] * Math.cos(Math.toRadians(THMIN_ddvcs));
+                
                
                 }
 
