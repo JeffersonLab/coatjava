@@ -41,6 +41,10 @@ public class URWellDCCrossesList{
         this.urDCCrossesList = urDCCrossesList;
     }
     
+    public void add_URWellDCCrossesList(List<URWellDCCrosses> urDCCrossesList){
+        this.urDCCrossesList.addAll(urDCCrossesList);
+    }
+    
     public void add_URWellDCCrosses(URWellCross urCross, List<Cross> dcCrosses){
         urDCCrossesList.add(new URWellDCCrosses(urCross, dcCrosses));
     }

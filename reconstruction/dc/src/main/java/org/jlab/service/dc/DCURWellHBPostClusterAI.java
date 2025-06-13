@@ -194,8 +194,9 @@ public class DCURWellHBPostClusterAI extends DCEngine {
         
        
         ////// Conventional tracking with R0 and without R0 in order
-        ////       With R0: R0R1R2R3, R0-SL1R2R3, R0SL2R2R3, R0R1pR2R3, R0R1R2pR3, R0R2R3
-        ////       Without R0: R1R2R3, pR1R2R3, R1pR2R3, R1R2pR3
+        ////     6 or 5 DC clusters With R0: R0R1R2R3, R0-SL1R2R3, R0SL2R2R3, R0R1pR2R3, R0R1R2pR3
+        ////     6 or 5 DC clustersWithout R0: R1R2R3, pR1R2R3, R1pR2R3, R1R2pR3
+        ////     4 DC clusters with R0: R0R2R3
         
         
         List<FittedCluster> clustersConv = null;
@@ -321,7 +322,7 @@ public class DCURWellHBPostClusterAI extends DCEngine {
         urCrossesRemainingConv.addAll(urCrossesWithSL1Conv);
         urCrossesRemainingConv.addAll(urCrossesWithoutSL1Conv); 
 
-        //// With R0
+        //// 6 or 5 DC clusters With R0
         /// Type 1: R0R1R2R3
         List<Cross> crossesType1Order1 = new ArrayList();
         crossesType1Order1.addAll(crossesR1WithURWellConv);
@@ -411,30 +412,12 @@ public class DCURWellHBPostClusterAI extends DCEngine {
                 Swimmer.getTorScale(),
                 dcSwim, false);
         
-        /// Type 3: R0R2R3
-        List<Cross> crossesType3Order1 = new ArrayList();
-        crossesType3Order1.addAll(crossesR2R3Conv);
-        
-        // Make cross lists
-        URWellDCCrossesList crossListsType3Order1 = uRWellDCCrossListLister.candCrossListsWithURWell(event, crossesType3Order1, urCrossesRemainingConv,
-                false,
-                null,
-                Constants.getInstance().dcDetector,
-                null,
-                dcSwim, false, 2
-        );
-        
-        // Tracking
-        List<Track> trkcandsType3Order1 = trkcandFinder.getTrackCands(crossListsType3Order1,
-                Constants.getInstance().dcDetector,
-                Swimmer.getTorScale(),
-                dcSwim, false);
+
         
         /// Combine all types together
         List<Track> trkcandsOrder1 = new ArrayList();
         trkcandsOrder1.addAll(trkcandsType1Order1);
         trkcandsOrder1.addAll(trkcandsType2Order1);
-        trkcandsOrder1.addAll(trkcandsType3Order1);
         
         // Remove overlaps        
         if (trkcandsOrder1.size() > 0) {
@@ -474,7 +457,7 @@ public class DCURWellHBPostClusterAI extends DCEngine {
         urCrossesRemainingConv.addAll(urCrossesWithSL1Conv);
         urCrossesRemainingConv.addAll(urCrossesWithoutSL1Conv);  
         
-        //// Without R0
+        //// 6 or 5 DC clusters Without R0
         /// Type 1: R1R2R3
         List<Cross> crossesType1Order2 = new ArrayList();
         crossesType1Order2.addAll(crossesR1WithURWellConv);
@@ -586,11 +569,67 @@ public class DCURWellHBPostClusterAI extends DCEngine {
         }              
         
         // Add tracks into track list
-        trkcands.addAll(trkcandsOrder2);        
+        trkcands.addAll(trkcandsOrder2); 
+        
+
+                  
+        // Remove segments and crosses on tracks from lists
+        for(Track trk : trkcandsOrder2){
+            for(Cross crs : trk){
+                if(crossesR1WithURWellConv.contains(crs)) crossesR1WithURWellConv.remove(crs);
+                if(crossesR1WithoutURWellConv.contains(crs)) crossesR1WithoutURWellConv.remove(crs);
+                if(crossesR2R3Conv.contains(crs)) crossesR2R3Conv.remove(crs);
+                for(Segment seg : crs){
+                    if(segmentsSL1WithURWellConv.contains(seg)) segmentsSL1WithURWellConv.remove(seg);
+                    if(segmentsSL1WithoutURWellConv.contains(seg)) segmentsSL1WithoutURWellConv.remove(seg);
+                    if(segmentsSL2Conv.contains(seg)) segmentsSL2Conv.remove(seg);
+                    if(segmentsR2R3Conv.contains(seg)) segmentsR2R3Conv.remove(seg);
+                }                     
+                
+            }
+        } 
+                
+        //// 4 DC clusters Without R0
+        /// Type 1: R0R2R3
+        List<Cross> crossesType1Order3 = new ArrayList();
+        crossesType1Order3.addAll(crossesR2R3Conv);
+        
+        // Make cross lists
+        URWellDCCrossesList crossListsType1Order3 = uRWellDCCrossListLister.candCrossListsWithURWell(event, crossesType1Order3, urCrossesRemainingConv,
+                false,
+                null,
+                Constants.getInstance().dcDetector,
+                null,
+                dcSwim, false, 2
+        );
+        
+        // Tracking
+        List<Track> trkcandsType1Order3 = trkcandFinder.getTrackCands3URDCCrosses(crossListsType1Order3,
+                Constants.getInstance().dcDetector,
+                Swimmer.getTorScale(),
+                dcSwim, false);        
+        
+        
+        // Remove overlaps        
+        if (trkcandsType1Order3.size() > 0) {
+            // remove overlaps
+            trkcandFinder.removeOverlappingTracks(trkcandsType1Order3);
+            for (Track trk : trkcandsType1Order3) {
+                trk.setIsAITrack(false);
+                
+                for (Cross c : trk) {
+                    clusters.add(c.get_Segment1().get_fittedCluster());
+                    clusters.add(c.get_Segment2().get_fittedCluster());
+                }
+            }
+        }              
+        
+        // Add tracks into track list
+        trkcands.addAll(trkcandsType1Order3); 
 
         //gather all the hits and URWell crosses for pointer bank creation  
         int trkId = 1;
-        List<URWellCross> urCrossesOnTrks = new ArrayList<URWellCross>();
+        List<URWellCross> urCrossesOnTrks = new ArrayList<>();
         for (Track trk : trkcands) {
             trk.calcTrajectory(trk.getId(), dcSwim, trk.get_Vtx0(), trk.get_pAtOrig(), trk.get_Q());
             

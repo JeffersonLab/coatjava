@@ -141,16 +141,12 @@ public class DCURWellHBPostClusterConv extends DCEngine {
         }
 
         ////// Take tracking in order
-        ////// Overall, tracks with R0 are preferred
-        //// Wth R0, if there is SL1, it must be coorlation between R0 and SL1
-        //   Three types in order:
-        //      6 DC clusters: R0R1R2R3
-        //      5 DC clusters: R0-SL1R2R3, R0SL2R2R3, R0R1pR2R3, R0R1R2pR3
-        //      4 DC clusters: R0R2R3 (R1 is replaced by R0)
-        //// Then without R0
-        //   Two types in order:
-        //      6 DC clusters: R1R2R3
-        //      5 DC clusters: pR1R2R3, R1pR2R3, R1R2pR3
+        ////// Overall, tracks with R0 and more DC clusters are preferred
+        ////     Order 1: 6 DC clusters with R0: R0R1R2R3
+        ////     Order 2: 5 DC clusters with R0: R0SL1R2R3, R0SL2R2R3, R0R1pR2R3, R0R1R2pR3
+        ////     Order 3: 6 DC clusters without R0: R1R2R3
+        ////     Order 4: 5 DC clusters without R0: pR1R2R3, R1pR2R3, R1R2pR3
+        ////     Order 5: 4 DC clusters with R0: R0R2R3
         
                 
         //// Seprate segments and crosses
@@ -330,21 +326,23 @@ public class DCURWellHBPostClusterConv extends DCEngine {
         urCrossesRemaining.addAll(urCrossesWithSL1);
         urCrossesRemaining.addAll(urCrossesWithoutSL1);   
 
-        //// Order 3 - 4 DC clusters with R0: R0R2R3 (R1 is replaced by R0)
+        //// Order 3 - 6 DC clusters without R0: R1R2R3
         List<Cross> crossesOrder3 = new ArrayList();
+        crossesOrder3.addAll(crossesR1WithURWell);
+        crossesOrder3.addAll(crossesR1WithoutURWell);
         crossesOrder3.addAll(crossesR2R3);
         
-        // Make cross lists
-        URWellDCCrossesList crossListsOrder3 = uRWellDCCrossListLister.candCrossListsWithURWell(event, crossesOrder3, urCrossesRemaining,
+        // Make cross lists                           
+        URWellDCCrossesList crossListsOrder3 = uRWellDCCrossListLister.candURWellDCCrossesLists(event, crossesOrder3, new ArrayList(),
                 false,
                 null,
                 Constants.getInstance().dcDetector,
                 null,
-                dcSwim, false, 2
+                dcSwim, false, 3
         );
         
         // Tracking
-        List<Track> trkcandsOrder3 = trkcandFinder.getTrackCands(crossListsOrder3,
+        List<Track> trkcandsOrder3 = trkcandFinder.getTrackCands3URDCCrosses(crossListsOrder3,
                 Constants.getInstance().dcDetector,
                 Swimmer.getTorScale(),
                 dcSwim, false);
@@ -357,8 +355,6 @@ public class DCURWellHBPostClusterConv extends DCEngine {
 
         // Remove segments and crosses on tracks from lists
         for(Track trk : trkcandsOrder3){
-            if(urCrossesWithSL1.contains(trk.get_URWellCross())) urCrossesWithSL1.remove(trk.get_URWellCross());
-            if(urCrossesWithoutSL1.contains(trk.get_URWellCross())) urCrossesWithoutSL1.remove(trk.get_URWellCross());
             for(Cross crs : trk){
                 if(crossesR1WithURWell.contains(crs)) crossesR1WithURWell.remove(crs);
                 if(crossesR1WithoutURWell.contains(crs)) crossesR1WithoutURWell.remove(crs);
@@ -372,17 +368,62 @@ public class DCURWellHBPostClusterConv extends DCEngine {
                 
             }
         }
-        urCrossesRemaining.clear();
-        urCrossesRemaining.addAll(urCrossesWithSL1);
-        urCrossesRemaining.addAll(urCrossesWithoutSL1); 
-       
-        //// Order 4 - 6 DC clusters without R0: R1R2R3
-        List<Cross> crossesOrder4 = new ArrayList();
-        crossesOrder4.addAll(crossesR1WithURWell);
-        crossesOrder4.addAll(crossesR1WithoutURWell);
-        crossesOrder4.addAll(crossesR2R3);
+
+        //// Order 4 - 5 DC clusters without R0: pR1R2R3, R1pR2R3, R1R2pR3
+        List<Segment> segmentsR1R2R3Order4 = new ArrayList();
+        segmentsR1R2R3Order4.addAll(segmentsSL1WithURWell);
+        segmentsR1R2R3Order4.addAll(segmentsSL1WithoutURWell);
+        segmentsR1R2R3Order4.addAll(segmentsSL2);
+        segmentsR1R2R3Order4.addAll(segmentsR2R3);
         
-        // Make cross lists                           
+        // Build pseudo segments
+        List<Road> allRoadsOrder4 = rf.findRoads(segmentsR1R2R3Order4, Constants.getInstance().dcDetector);
+        List<Segment> psegmentsOrder4 = new ArrayList<>();
+        List<Segment> Segs2RoadOrder4 = new ArrayList<>();
+        for (Road r : allRoadsOrder4) { 
+            Segs2RoadOrder4.clear();
+            int missingSL = -1;
+            for (int ri = 0; ri < 3; ri++) {
+                if (r.get(ri).associatedCrossId == -1) {
+                    if (r.get(ri).get_Superlayer() % 2 == 1) {
+                        missingSL = r.get(ri).get_Superlayer() + 1;
+                    } else {
+                        missingSL = r.get(ri).get_Superlayer() - 1;
+                    }
+                }
+            } 
+            if(missingSL==-1) 
+                continue;
+            for (int ri = 0; ri < 3; ri++) {
+                for (Segment s : segmentsR1R2R3Order4) {
+                    if (s.get_Sector() == r.get(ri).get_Sector() &&
+                            s.get_Region() == r.get(ri).get_Region() &&
+                            s.associatedCrossId == r.get(ri).associatedCrossId &&
+                            r.get(ri).associatedCrossId != -1) {
+                        if (s.get_Superlayer() % 2 == missingSL % 2){
+                            Segs2RoadOrder4.add(s); 
+                            break;
+                        }
+                    }
+                }
+            }
+            if (Segs2RoadOrder4.size() == 2) {
+                Segment pSegment = rf.findRoadMissingSegment(Segs2RoadOrder4, Constants.getInstance().dcDetector,r.a);
+                if (pSegment != null) psegmentsOrder4.add(pSegment);
+            }
+        }
+
+        segmentsR1R2R3Order4.addAll(psegmentsOrder4);
+        
+        // Make cross with remaning segments
+        List<Cross> crossesOrder4 = crossMake.find_Crosses(segmentsR1R2R3Order4, Constants.getInstance().dcDetector);
+        List<Cross> fullPseudoCrossesOrder4 = new ArrayList(); // Cross by two pseudo segments
+        for(Cross crs : crossesOrder4){
+            if(crs.get_Segment1().get_Id() == -1 && crs.get_Segment2().get_Id() == -1) fullPseudoCrossesOrder4.add(crs);
+        }
+        crossesOrder4.removeAll(fullPseudoCrossesOrder4);
+        
+        // Make cross lists
         URWellDCCrossesList crossListsOrder4 = uRWellDCCrossListLister.candURWellDCCrossesLists(event, crossesOrder4, new ArrayList(),
                 false,
                 null,
@@ -390,7 +431,7 @@ public class DCURWellHBPostClusterConv extends DCEngine {
                 null,
                 dcSwim, false, 3
         );
-        
+
         // Tracking
         List<Track> trkcandsOrder4 = trkcandFinder.getTrackCands3URDCCrosses(crossListsOrder4,
                 Constants.getInstance().dcDetector,
@@ -402,7 +443,7 @@ public class DCURWellHBPostClusterConv extends DCEngine {
         
         // Add tracks into track list
         trkcands.addAll(trkcandsOrder4);
-
+        
         // Remove segments and crosses on tracks from lists
         for(Track trk : trkcandsOrder4){
             for(Cross crs : trk){
@@ -418,70 +459,20 @@ public class DCURWellHBPostClusterConv extends DCEngine {
                 
             }
         }
-
-        //// Order 5 - 5 DC clusters without R0: pR1R2R3, R1pR2R3, R1R2pR3
-        List<Segment> segmentsR1R2R3Order5 = new ArrayList();
-        segmentsR1R2R3Order5.addAll(segmentsSL1WithURWell);
-        segmentsR1R2R3Order5.addAll(segmentsSL1WithoutURWell);
-        segmentsR1R2R3Order5.addAll(segmentsSL2);
-        segmentsR1R2R3Order5.addAll(segmentsR2R3);
-        
-        // Build pseudo segments
-        List<Road> allRoadsOrder5 = rf.findRoads(segmentsR1R2R3Order5, Constants.getInstance().dcDetector);
-        List<Segment> psegmentsOrder5 = new ArrayList<>();
-        List<Segment> Segs2RoadOrder5 = new ArrayList<>();
-        for (Road r : allRoadsOrder5) { 
-            Segs2RoadOrder5.clear();
-            int missingSL = -1;
-            for (int ri = 0; ri < 3; ri++) {
-                if (r.get(ri).associatedCrossId == -1) {
-                    if (r.get(ri).get_Superlayer() % 2 == 1) {
-                        missingSL = r.get(ri).get_Superlayer() + 1;
-                    } else {
-                        missingSL = r.get(ri).get_Superlayer() - 1;
-                    }
-                }
-            } 
-            if(missingSL==-1) 
-                continue;
-            for (int ri = 0; ri < 3; ri++) {
-                for (Segment s : segmentsR1R2R3Order5) {
-                    if (s.get_Sector() == r.get(ri).get_Sector() &&
-                            s.get_Region() == r.get(ri).get_Region() &&
-                            s.associatedCrossId == r.get(ri).associatedCrossId &&
-                            r.get(ri).associatedCrossId != -1) {
-                        if (s.get_Superlayer() % 2 == missingSL % 2){
-                            Segs2RoadOrder5.add(s); 
-                            break;
-                        }
-                    }
-                }
-            }
-            if (Segs2RoadOrder5.size() == 2) {
-                Segment pSegment = rf.findRoadMissingSegment(Segs2RoadOrder5, Constants.getInstance().dcDetector,r.a);
-                if (pSegment != null) psegmentsOrder5.add(pSegment);
-            }
-        }
-
-        segmentsR1R2R3Order5.addAll(psegmentsOrder5);
-        
-        // Make cross with remaning segments
-        List<Cross> crossesOrder5 = crossMake.find_Crosses(segmentsR1R2R3Order5, Constants.getInstance().dcDetector);
-        List<Cross> fullPseudoCrossesOrder5 = new ArrayList(); // Cross by two pseudo segments
-        for(Cross crs : crossesOrder5){
-            if(crs.get_Segment1().get_Id() == -1 && crs.get_Segment2().get_Id() == -1) fullPseudoCrossesOrder5.add(crs);
-        }
-        crossesOrder5.removeAll(fullPseudoCrossesOrder5);
+                
+        //// Order 5 - 4 DC clusters with R0: R0R2R3 (R1 is replaced by R0)
+        List<Cross> crossesOrder5 = new ArrayList();
+        crossesOrder5.addAll(crossesR2R3);
         
         // Make cross lists
-        URWellDCCrossesList crossListsOrder5 = uRWellDCCrossListLister.candURWellDCCrossesLists(event, crossesOrder5, new ArrayList(),
+        URWellDCCrossesList crossListsOrder5 = uRWellDCCrossListLister.candCrossListsWithURWell(event, crossesOrder5, urCrossesRemaining,
                 false,
                 null,
                 Constants.getInstance().dcDetector,
                 null,
-                dcSwim, false, 3
+                dcSwim, false, 2
         );
-
+        
         // Tracking
         List<Track> trkcandsOrder5 = trkcandFinder.getTrackCands3URDCCrosses(crossListsOrder5,
                 Constants.getInstance().dcDetector,
