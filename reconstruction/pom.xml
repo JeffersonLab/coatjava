@@ -10,7 +10,6 @@
   <parent>
     <groupId>org.jlab.clas</groupId>
     <artifactId>coatjava</artifactId>
-    <relativePath>../parent/pom.xml</relativePath>
     <version>13.0.2-SNAPSHOT</version>
   </parent>
 
@@ -39,4 +38,24 @@
     <module>postproc</module>
     <module>recoil</module>
   </modules>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-deploy-plugin</artifactId>
+        <configuration>
+          <skip>true</skip> <!-- don't deploy this aggregator POM, but unfortunately every child module must override this -->
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <distributionManagement>
+    <repository>
+      <id>${project.artifactId}</id>
+      <url>${coat.deployment.url}</url>
+    </repository>
+  </distributionManagement>
+
 </project>
