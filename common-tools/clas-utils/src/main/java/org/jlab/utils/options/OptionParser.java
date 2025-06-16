@@ -1,7 +1,5 @@
 package org.jlab.utils.options;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -11,7 +9,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.jlab.logging.DefaultLogger;
 
 /**
@@ -40,8 +37,10 @@ public class OptionParser {
    
     private void init() {
         addOption("-l","FINE","logging verbosity level");
+        addOption("-v",null,"print version");
+        addOption("-h",null,"print help");
     }
-  
+
     public void setDescription(String desc){
         this.programDescription = desc;
     }
@@ -135,8 +134,8 @@ public class OptionParser {
         System.out.println(this.getUsageString());
         System.out.println("\n\n");
     }
-    
-    public void parse(String[] args){
+   
+    public void parse(String... args) {
 
         List<String> arguments = new ArrayList<>();
         arguments.addAll(Arrays.asList(args));
@@ -221,7 +220,11 @@ public class OptionParser {
         parser.addOption("-r", "10");
         parser.addOption("-t", "25.0");
         parser.addOption("-d", "35");
-        parser.parse(args);
+        parser.addOption("-h","helpless");
+        parser.addOption("-v","versionless");
+        if (args.length == 0) parser.parse("-o","out.dat","in.dat");
+        else parser.parse(args);
         parser.show();        
+        parser.parse("-h");
     }
 }
