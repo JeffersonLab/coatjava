@@ -47,6 +47,11 @@ jobs:
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
+      - name: install xrootd-client
+        run: |
+          sudo apt -y update
+          sudo apt -y upgrade
+          sudo apt -y install xrootd-client
       - uses: cvmfs-contrib/github-action-cvmfs@v5
         with:
           cvmfs_repositories: 'oasis.opensciencegrid.org'
@@ -76,6 +81,11 @@ jobs:
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
+      - name: install xrootd-client
+        run: |
+          sudo apt -y update
+          sudo apt -y upgrade
+          sudo apt -y install xrootd-client
       - uses: cvmfs-contrib/github-action-cvmfs@v5
         with:
           cvmfs_repositories: 'oasis.opensciencegrid.org'
