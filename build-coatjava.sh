@@ -1,5 +1,3 @@
-#!/usr/bin/env bash
-# build coatjava
 
 set -e
 set -u
@@ -32,6 +30,7 @@ runSpotBugs="no"
 downloadMaps="yes"
 runUnitTests="no"
 useXrootd=false
+useCvmfs=false
 mvnArgs=()
 wgetArgs=()
 for xx in $@
@@ -51,6 +50,7 @@ do
       wgetArgs+=(--no-verbose)
       ;;
     --xrootd) useXrootd=true ;;
+    --cvmfs) useCvmfs=true ;;
     -h|--help)
       echo "$usage"
       exit 2
@@ -78,6 +78,9 @@ download () {
     if $useXrootd; then
         xrdcp $1 ./
         ret=$?
+    elif $useCvmfs; then
+        cp $1 ./
+        ret=$?
     elif command_exists wget ; then
         $wget $1
         ret=$?
@@ -101,6 +104,7 @@ if [ $cleanBuild == "no" ] && [ $downloadMaps == "yes" ]; then
   echo 'Retrieving field maps ...'
   webDir=https://clasweb.jlab.org/clas12offline/magfield
   if $useXrootd; then webDir=xroot://sci-xrootd.jlab.org//osgpool/hallb/clas12/coatjava/magfield; fi
+  if $useCvmfs; then webDir=/cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/magfield; fi
   locDir=etc/data/magfield
   mkdir -p $locDir
   cd $locDir
