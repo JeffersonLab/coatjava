@@ -24,7 +24,24 @@ public class RungeKutta {
 	// the max dimension we'll use is probably 6, for state vectors
 	// e.g., [x, y, z, px/p, py/p, pz/p].
 	private static int MAXDIM = 6; // we'll know if this fails!
-
+        
+        // ddvcs parameters
+        //geometry
+        private static double[] THETA_SHIELD = {6.64, 41.3}; // min,max polar angle (deg)
+        private static double[] THETA_ECAL = {6.64, 30};     // min,max polar angle (deg)
+        private static double[] RHO_SHIELD = {60.0, 140};    // min,max distance from (0,0,0) at theta=25 deg
+        private static double[] RHO_ECAL = {60.0, 80.0};     // min,max distance from (0,0,0) at theta=25 deg
+        private static double TAN25 = Math.tan(Math.toRadians(25));
+        private static double COS25 = Math.cos(Math.toRadians(25));
+        // eloss
+        private static double EMASS = 0.511E-3;
+        private static double MUMASS = 105.66E-3;
+        private static double K = 0.000307075; //  GeV mol-1 cm2
+        // materials
+        private static double[] IeV = {823E-9, 600.7E-9}; // GeV
+        private static double[] DENSITY = {11.35, 8.3};   // g/cm3
+        private static double[] ZOVERA = {0.39573, 0.41315};
+        
 	/**
 	 * Create a RungeKutta object that can be used for integration
 	 */
@@ -1304,5 +1321,40 @@ public class RungeKutta {
 		return _minStepSize;
 	}
 
+        
+        /**
+         * Calculate energy loss
+         * @param p momentum in GeV
+         * @param x position in meters
+         * @param y position in meters
+         * @param z position in meters
+         * @param dx step pathlength in meters
+         * @return 
+         */
+        public double getEloss(double p, double x, double y, double z, double dx) {
+           
+            double dz = Math.sqrt(x*x+y*y)*TAN25;
+            double r  = (z+dz)*COS25;
+            if(r<RHO_SHIELD[0] || r>RHO_SHIELD[1])
+                    return 0;
+          
+            int imat = 0;
+            if(r<RHO_ECAL[1]){
+                double theta = Math.acos(z/r);
+                if(theta<THETA_ECAL[1])
+                    imat = 1;
+            }
+            
+            double beta = p / Math.sqrt(p * p + MUMASS * MUMASS);
+            double s = EMASS / MUMASS;
+            double gamma = 1. / Math.sqrt(1 - beta * beta);
+            double Wmax = 2. * EMASS * beta * beta * gamma * gamma
+                    / (1. + 2. * s * gamma + s * s);
+            double I = this.IeV[imat];
+            double logterm = 2. * EMASS * beta * beta * gamma * gamma * Wmax / (I * I);
+            double dE = dx/100 * DENSITY[imat] * K * ZOVERA[imat]
+                    * (0.5 * Math.log(logterm) - beta * beta) / beta / beta; //in GeV
+            return dE;
+        }
 
 }
