@@ -9,8 +9,8 @@ tmp
 # deployment
 /myLocalMvnRepo
 /coatjava-*.tar.gz
-/common-tools/coat-libs/dependency-reduced-pom.xml
-/common-tools/coat-libs/.flattened-pom.xml
+dependency-reduced-pom.xml
+.flattened-pom.xml
 
 *.class
 *lundfiles*.dat

@@ -140,9 +140,15 @@ log "cleanly rebuild coatjava"
 $src_dir/build-coatjava.sh --clean
 $src_dir/build-coatjava.sh
 
-# deploy locally
+# deploy locally; no need to `clean deploy`, since we have already cleaned and re-built
 log "local deployment of coatjava version $ver_deploy"
-mvn clean deploy -f $src_dir/common-tools/coat-libs/pom.xml
+pom_files=(
+  $src_dir/common-tools/coat-libs/pom.xml
+  $src_dir/reconstruction/pom.xml
+)
+for pom_file in ${pom_files[@]}; do
+  mvn deploy -Dmaven.test.skip=true -f $pom_file
+done
 deploy_tarball=coatjava-${ver_deploy}.tar.gz
 tar czf $deploy_tarball coatjava
 print_deployment() {
