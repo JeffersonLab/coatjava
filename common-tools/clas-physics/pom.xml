@@ -9,8 +9,7 @@
 
   <parent>
     <groupId>org.jlab.clas</groupId>
-    <artifactId>coatjava</artifactId>
-    <relativePath>../../parent/pom.xml</relativePath>
+    <artifactId>common-tools</artifactId>
     <version>13.0.2-SNAPSHOT</version>
   </parent>
 
