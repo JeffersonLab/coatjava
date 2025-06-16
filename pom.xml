@@ -20,7 +20,6 @@
   </parent>
 
   <modules>
-    <module>parent</module>
     <module>common-tools</module>
     <module>reconstruction</module>
   </modules>
