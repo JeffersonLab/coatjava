@@ -97,7 +97,7 @@ download () {
 # download the default field maps, as defined in libexec/env.sh:
 # (and duplicated in etc/services/reconstruction.yaml):
 source libexec/env.sh --no-classpath
-if [ $downloadMaps == "yes" ]; then
+if [ $cleanBuild == "no" ] && [ $downloadMaps == "yes" ]; then
   echo 'Retrieving field maps ...'
   webDir=https://clasweb.jlab.org/clas12offline/magfield
   if $useXrootd; then webDir=xroot://sci-xrootd.jlab.org//osgpool/hallb/clas12/coatjava/magfield; fi
