@@ -4,6 +4,6 @@ set -euo pipefail
 ver=$1
 echo ">>> bumping version number to: $ver"
 pom_file=$(cd $(dirname ${BASH_SOURCE[0]:-$0})/.. && pwd -P)/pom.xml
-mvn versions:set -DnewVersion=$ver -DprocessAllModules -f $pom_file
-mvn versions:commit -DprocessAllModules -f $pom_file
+mvn versions:set -DnewVersion=$ver -DprocessAllModules=true -f $pom_file
+mvn versions:commit -DprocessAllModules=true -f $pom_file
 echo ">>> bumped version number to: $ver"

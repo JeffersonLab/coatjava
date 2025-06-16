@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-
   <modelVersion>4.0.0</modelVersion>
+
   <groupId>org.jlab.coat</groupId>
   <artifactId>coat-libs</artifactId>
   <version>13.0.2-SNAPSHOT</version>
@@ -9,8 +9,7 @@
 
   <parent>
     <groupId>org.jlab.clas</groupId>
-    <artifactId>coatjava</artifactId>
-    <relativePath>../../parent/pom.xml</relativePath>
+    <artifactId>common-tools</artifactId>
     <version>13.0.2-SNAPSHOT</version>
   </parent>
 
@@ -244,34 +243,14 @@
         </configuration>
       </plugin>
 
-      <!-- generate minimal POM file for deployment, containing GAV (groupID, artifactId, version) -->
+      <!-- deployment plugins -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>flatten-maven-plugin</artifactId>
-        <version>1.7.1</version>
-        <configuration>
-          <flattenMode>fatjar</flattenMode>
-        </configuration>
-        <executions>
-          <execution>
-            <id>flatten</id>
-            <phase>package</phase>
-            <goals>
-              <goal>flatten</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
-
-      <!-- deployment configuration -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-deploy-plugin</artifactId>
-        <version>3.1.4</version>
-        <configuration>
-          <!-- Use the minimal GAV POM -->
-          <pomFile>${project.build.directory}/.flattened-pom.xml</pomFile>
-        </configuration>
       </plugin>
 
     </plugins>
@@ -280,8 +259,8 @@
   <!-- deployment -->
   <distributionManagement>
     <repository>
-      <id>coat-libs</id>
-      <url>file://myLocalMvnRepo</url> <!-- must be consistent with 'deploy-coatjava.sh' -->
+      <id>${project.artifactId}</id>
+      <url>${coat.deployment.url}</url>
     </repository>
   </distributionManagement>
 
