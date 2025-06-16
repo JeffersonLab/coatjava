@@ -56,7 +56,7 @@
       <dependency>
         <groupId>org.openjfx</groupId>
         <artifactId>javafx-graphics</artifactId>
-        <version>22.0.2</version>
+        <version>25-ea+20</version>
         <classifier>linux</classifier>
       </dependency>
 
