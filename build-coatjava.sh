@@ -76,7 +76,7 @@ command_exists () {
 download () {
     ret=0
     if $useXrootd; then
-        xrdcp xroot://sci-xrootd.jlab.org//osgpool/hallb/clas12/coatjava/magfield/$1 ./
+        xrdcp $1 ./
         ret=$?
     elif command_exists wget ; then
         $wget $1
@@ -100,6 +100,7 @@ source libexec/env.sh --no-classpath
 if [ $downloadMaps == "yes" ]; then
   echo 'Retrieving field maps ...'
   webDir=https://clasweb.jlab.org/clas12offline/magfield
+  if $useXrootd; then webDir=xroot://sci-xrootd.jlab.org//osgpool/hallb/clas12/coatjava/magfield; fi
   locDir=etc/data/magfield
   mkdir -p $locDir
   cd $locDir
