@@ -18,6 +18,7 @@ usage='''build-coatjava.sh [OPTIONS]... [MAVEN_OPTIONS]...
 
    --quiet           run more quietly
    --no-progress     no download progress printouts
+   --xrootd          use xrootd to download field maps
 
    --help            show this message
 
@@ -30,6 +31,7 @@ cleanBuild="no"
 runSpotBugs="no"
 downloadMaps="yes"
 runUnitTests="no"
+useXrootd=false
 mvnArgs=()
 wgetArgs=()
 for xx in $@
@@ -48,6 +50,7 @@ do
       mvnArgs+=(--no-transfer-progress)
       wgetArgs+=(--no-verbose)
       ;;
+    --xrootd) useXrootd=true ;;
     -h|--help)
       echo "$usage"
       exit 2
@@ -72,7 +75,10 @@ command_exists () {
 }
 download () {
     ret=0
-    if command_exists wget ; then
+    if $useXrootd; then
+        xrdcp xroot://sci-xrootd.jlab.org//osgpool/hallb/clas12/coatjava/magfield/$1 ./
+        ret=$?
+    elif command_exists wget ; then
         $wget $1
         ret=$?
     elif command_exists curl ; then
