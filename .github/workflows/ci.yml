@@ -39,7 +39,7 @@ jobs:
       matrix:
         runner:
           - ubuntu-latest
-          # - macos-latest #FIXME
+          - macos-latest
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
@@ -47,12 +47,17 @@ jobs:
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
-      - name: install xrootd-client
+      - name: install xrootd-client (linux)
+        if: ${{ matrix.runner == 'ubuntu-latest' }}
         run: |
           sudo apt -y update
           sudo apt -y upgrade
           sudo apt -y install xrootd-client
-      - uses: cvmfs-contrib/github-action-cvmfs@v5
+      - name: install xrootd-client (macos)
+        if: ${{ matrix.runner == 'macos-latest' }}
+        run: brew install xrootd
+      - name: setup cvmfs
+        uses: cvmfs-contrib/github-action-cvmfs@v5
         with:
           cvmfs_repositories: 'oasis.opensciencegrid.org'
       - name: cvmfs
@@ -123,7 +128,7 @@ jobs:
           - { id: eb-enc,   cmd: ./run-eb-tests.sh -100 electronneutronC }
           - { id: eb-eftpi, cmd: ./run-eb-tests.sh -100 electronFTpion   }
           # run one macos test
-          # - { runner: macos-latest, id: eb-ep, cmd: ./run-eb-tests.sh -100 electronproton } # FIXME
+          - { runner: macos-latest, id: eb-ep, cmd: ./run-eb-tests.sh -100 electronproton } # FIXME
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
