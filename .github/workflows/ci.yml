@@ -47,7 +47,17 @@ jobs:
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
-      - uses: cvmfs-contrib/github-action-cvmfs@v5
+      - name: install xrootd-client (linux)
+        if: ${{ matrix.runner == 'ubuntu-latest' }}
+        run: |
+          sudo apt -y update
+          sudo apt -y upgrade
+          sudo apt -y install xrootd-client
+      - name: install xrootd-client (macos)
+        if: ${{ matrix.runner == 'macos-latest' }}
+        run: brew install xrootd
+      - name: setup cvmfs
+        uses: cvmfs-contrib/github-action-cvmfs@v5
         with:
           cvmfs_repositories: 'oasis.opensciencegrid.org'
       - name: cvmfs
@@ -56,7 +66,7 @@ jobs:
         if: ${{ github.ref_type == 'tag' }}
         run: libexec/version-bump.sh ${{ github.ref_name }}
       - name: build
-        run: ./build-coatjava.sh --no-progress -T${{ env.nthreads }}
+        run: ./build-coatjava.sh --xrootd --no-progress -T${{ env.nthreads }}
       - name: tar # tarball to preserve permissions
         run: tar czvf coatjava.tar.gz coatjava
       - uses: actions/upload-artifact@v4
@@ -76,11 +86,16 @@ jobs:
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
+      - name: install xrootd-client
+        run: |
+          sudo apt -y update
+          sudo apt -y upgrade
+          sudo apt -y install xrootd-client
       - uses: cvmfs-contrib/github-action-cvmfs@v5
         with:
           cvmfs_repositories: 'oasis.opensciencegrid.org'
       - name: unit tests and spotbugs
-        run: ./build-coatjava.sh --spotbugs --unittests --no-progress -T${{ env.nthreads }}
+        run: ./build-coatjava.sh --xrootd --spotbugs --unittests --no-progress -T${{ env.nthreads }}
       - name: collect jacoco report
         run: validation/jacoco-aggregate.sh
       - name: publish jacoco report
