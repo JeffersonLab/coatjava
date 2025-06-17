@@ -26,7 +26,7 @@ env:
   javadoc_version: 24 # newer than `java_version` for better javadoc
   groovy_version: 4.x
   CCDB_CONNECTION: 'sqlite:////cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/ccdb/ccdb_latest.sqlite'
-  nthreads: 4
+  nthreads: 1
 
 jobs:
 
