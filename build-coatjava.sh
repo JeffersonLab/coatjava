@@ -19,6 +19,9 @@ usage='''build-coatjava.sh [OPTIONS]... [MAVEN_OPTIONS]...
    --quiet           run more quietly
    --no-progress     no download progress printouts
 
+   --xrootd          use xrootd to download field maps
+   --cvmfs           use cvmfs to download field maps
+
    --help            show this message
 
   MAVEN_OPTIONS
@@ -30,6 +33,8 @@ cleanBuild="no"
 runSpotBugs="no"
 downloadMaps="yes"
 runUnitTests="no"
+useXrootd=false
+useCvmfs=false
 mvnArgs=()
 wgetArgs=()
 for xx in $@
@@ -48,6 +53,8 @@ do
       mvnArgs+=(--no-transfer-progress)
       wgetArgs+=(--no-verbose)
       ;;
+    --xrootd) useXrootd=true ;;
+    --cvmfs) useCvmfs=true ;;
     -h|--help)
       echo "$usage"
       exit 2
@@ -72,7 +79,13 @@ command_exists () {
 }
 download () {
     ret=0
-    if command_exists wget ; then
+    if $useXrootd; then
+        xrdcp $1 ./
+        ret=$?
+    elif $useCvmfs; then
+        cp $1 ./
+        ret=$?
+    elif command_exists wget ; then
         $wget $1
         ret=$?
     elif command_exists curl ; then
@@ -91,12 +104,14 @@ download () {
 # download the default field maps, as defined in libexec/env.sh:
 # (and duplicated in etc/services/reconstruction.yaml):
 source libexec/env.sh --no-classpath
-if [ $downloadMaps == "yes" ]; then
+magfield_dir=$src_dir/etc/data/magfield
+if [ $cleanBuild == "no" ] && [ $downloadMaps == "yes" ]; then
   echo 'Retrieving field maps ...'
   webDir=https://clasweb.jlab.org/clas12offline/magfield
-  locDir=etc/data/magfield
-  mkdir -p $locDir
-  cd $locDir
+  if $useXrootd; then webDir=xroot://sci-xrootd.jlab.org//osgpool/hallb/clas12/coatjava/magfield; fi
+  if $useCvmfs; then webDir=/cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/magfield; fi
+  mkdir -p $magfield_dir
+  cd $magfield_dir
   for map in $COAT_MAGFIELD_SOLENOIDMAP $COAT_MAGFIELD_TORUSMAP $COAT_MAGFIELD_TORUSSECONDARYMAP
   do
     download $webDir/$map
@@ -119,8 +134,11 @@ if [ $cleanBuild == "yes" ]; then
   for target_dir in $(find $src_dir -type d -name target); do
     echo "WARNING: target directory '$target_dir' was not removed! JAR files within may be accidentally installed!" >&2
   done
-  echo '''DONE CLEANING.
-  Now re-run without `--clean` to build.'''
+  echo """DONE CLEANING.
+  NOTE: if you want to remove locally downloaded magnetic field maps, run:
+    rm $magfield_dir/*.dat
+
+  Now re-run without \`--clean\` to build."""
   exit
 fi
 
