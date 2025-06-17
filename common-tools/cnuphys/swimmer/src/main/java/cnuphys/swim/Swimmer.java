@@ -845,6 +845,8 @@ public final class Swimmer {
 		// Integrate
 		DefaultDerivative deriv = new DefaultDerivative(charge, momentum, _probe);
 		ntotal = (new RungeKutta()).uniformStep(uo, 0, maxPathLength, u, s, deriv, stopper);
+                
+                trajectory.setTotalEnergyLoss(deriv.getTotalEnergyLoss());
 
 		// now cycle through and get the save points
 		for (int i = 0; i < ntotal; i++) {

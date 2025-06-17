@@ -52,6 +52,8 @@ public class Swim {
     
     private ProbeCollection PC;
     
+    private static double MUMASS = 105.66E-3;
+    
     /**
      * Class for swimming to various surfaces.  The input and output units are cm and GeV/c
      */
@@ -978,6 +980,12 @@ public class Swim {
             return null;
         st.computeBDL(PC.CP);
         // st.computeBDL(compositeField);
+        
+        // Get total energy loss and update final momentum
+        double totalEnergyLoss = st.getTotalEnergyLoss();
+        double energyOrigin = Math.sqrt(_pTot*_pTot + MUMASS*MUMASS);
+        double energyFinal = energyOrigin + totalEnergyLoss;
+        _pTot =  Math.sqrt(energyFinal*energyFinal - MUMASS*MUMASS);
 
         double[] lastY = st.lastElement();
 

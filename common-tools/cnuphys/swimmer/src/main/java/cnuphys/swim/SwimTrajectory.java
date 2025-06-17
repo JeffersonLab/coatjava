@@ -66,6 +66,24 @@ public class SwimTrajectory extends ArrayList<double[]>  implements Serializable
 
 	/** The source of the trajectory e.g. hbtracking */
 	private String _source = "???";
+        
+        private double totalEnergyLoss = 0;
+                
+        /**
+         * Set total energy loss
+         * @param totalEnergyLoss total energy loss in GeV
+         */        
+        public void setTotalEnergyLoss(double totalEnergyLoss){
+            this.totalEnergyLoss = totalEnergyLoss;
+        }
+        
+        /**
+         * Get total energy loss
+         * @return total energy loss
+         */
+        public double getTotalEnergyLoss(){
+            return totalEnergyLoss;
+        }
 
 	/**
 	 * Create a swim trajectory with no initial content
