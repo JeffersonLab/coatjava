@@ -27,8 +27,5 @@ public interface IDerivative {
 	 */
 	public void derivative(double t, double y[], double dydt[]);
 	
-	
-	
-	
-	
+	public void energyLossUpdate(double[] u, double dx);			
 }
