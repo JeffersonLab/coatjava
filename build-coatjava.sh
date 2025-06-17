@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+# build coatjava
 
 set -e
 set -u
@@ -16,7 +18,9 @@ usage='''build-coatjava.sh [OPTIONS]... [MAVEN_OPTIONS]...
 
    --quiet           run more quietly
    --no-progress     no download progress printouts
+
    --xrootd          use xrootd to download field maps
+   --cvmfs           use cvmfs to download field maps
 
    --help            show this message
 

@@ -61,7 +61,7 @@ jobs:
         if: ${{ github.ref_type == 'tag' }}
         run: libexec/version-bump.sh ${{ github.ref_name }}
       - name: build
-        run: ./build-coatjava.sh --xrootd --no-progress -T ${{ env.nthreads }}
+        run: ./build-coatjava.sh --xrootd --no-progress -T${{ env.nthreads }}
       - name: tar # tarball to preserve permissions
         run: tar czvf coatjava.tar.gz coatjava
       - uses: actions/upload-artifact@v4
@@ -90,7 +90,7 @@ jobs:
         with:
           cvmfs_repositories: 'oasis.opensciencegrid.org'
       - name: unit tests and spotbugs
-        run: ./build-coatjava.sh --xrootd --spotbugs --unittests --no-progress -T ${{ env.nthreads }}
+        run: ./build-coatjava.sh --xrootd --spotbugs --unittests --no-progress -T${{ env.nthreads }}
       - name: collect jacoco report
         run: validation/jacoco-aggregate.sh
       - name: publish jacoco report
