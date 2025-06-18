@@ -71,6 +71,8 @@ cd $src_dir
 
 # set arguments for `mvn` and `wget`
 wgetArgs+=(--timestamping --no-check-certificate) # `--timestamping` only redownloads if timestamp/filesize is newer/different
+mvnTimeout=300000 # units=ms, default=60000
+mvnArgs+=(-Dsun.net.client.defaultConnectTimeout=$mvnTimeout -Dsun.net.client.defaultReadTimeout=$mvnTimeout)
 mvn="mvn ${mvnArgs[@]:-}"
 wget="wget ${wgetArgs[@]:-}"
 
