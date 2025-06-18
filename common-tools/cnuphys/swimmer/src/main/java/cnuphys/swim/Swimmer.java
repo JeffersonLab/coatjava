@@ -858,6 +858,92 @@ public final class Swimmer {
 
 		return trajectory;
 	}
+        
+        
+        /**
+	 * Swims a Lund particle with a built it stopper for the maximum value of
+	 * the radial coordinate. This is for the trajectory mode, where you want to
+	 * cache steps along the path. Uses a fixed stepsize algorithm.
+	 * 
+	 * @param charge
+	 *            the charge: -1 for electron, 1 for proton, etc
+	 * @param xo
+	 *            the x vertex position in meters
+	 * @param yo
+	 *            the y vertex position in meters
+	 * @param zo
+	 *            the z vertex position in meters
+	 * @param momentum
+	 *            initial momentum in GeV/c
+	 * @param theta
+	 *            initial polar angle in degrees
+	 * @param phi
+	 *            initial azimuthal angle in degrees
+	 * @param stopper
+	 *            an optional object that can terminate the swimming based on
+	 *            some condition
+	 * @param maxPathLength
+	 *            in meters. This determines the max number of steps based on
+	 *            the step size. If a stopper is used, the integration might
+	 *            terminate before all the steps are taken. A reasonable value
+	 *            for CLAS is 8. meters
+	 * @param stepSize
+	 *            the uniform step size in meters.
+	 * @param distanceBetweenSaves
+	 *            this distance is in meters. It should be bigger than stepSize.
+	 *            It is approximately the distance between "saves" where the
+	 *            point is saved in a trajectory for later drawing.
+	 * @return the trajectory of the particle
+	 */
+	public SwimTrajectory swimWithEnergyLoss(int charge, double xo, double yo, double zo, double momentum, double theta, double phi,
+			IStopper stopper, double maxPathLength, double stepSize, double distanceBetweenSaves) {
+
+		// if no magnetic field or no charge, then simple straight line tracks.
+		// the path will consist of just two points
+		if ((_probe == null) || (charge == 0)) {
+			GeneratedParticleRecord genPartRec = new GeneratedParticleRecord(charge, xo, yo, zo, momentum, theta, phi);
+			return straightLineTrajectory(genPartRec, maxPathLength);
+		}
+
+		if (momentum < MINMOMENTUM) {
+			//System.err.println("Skipping low momentum swim (A)");
+			return new SwimTrajectory(charge, xo, yo, zo, momentum, theta, phi);
+		}
+
+		// cycle is the number of advances per save
+		int cycle = (int) (distanceBetweenSaves / stepSize);
+		cycle = Math.max(2, cycle);
+
+		// max number of possible steps--may not use all of them
+		int ntotal = (int) (maxPathLength / stepSize); // number steps
+		int nsave = ntotal / cycle; // aprox number saves
+
+		// the the initial six vector
+		double uo[] = initialState(xo, yo, zo, theta, phi);
+
+		// storage for time and state
+		double s[] = new double[ntotal];
+		double u[][] = new double[6][ntotal];
+
+		// create the trajectory container
+		SwimTrajectory trajectory = new SwimTrajectory(charge, xo, yo, zo, momentum, theta, phi, nsave);
+
+		// Integrate
+		DefaultDerivative deriv = new DefaultDerivative(charge, momentum, _probe);
+		ntotal = (new RungeKutta()).uniformStepWithEnergyLoss(uo, 0, maxPathLength, u, s, deriv, stopper);
+                
+                trajectory.setTotalEnergyLoss(deriv.getTotalEnergyLoss());
+
+		// now cycle through and get the save points
+		for (int i = 0; i < ntotal; i++) {
+			if (((i % cycle) == 0) || (i == (ntotal - 1))) {
+				double v[] = makeVector(u[0][i], u[1][i], u[2][i], u[3][i], u[4][i], u[5][i]);
+				trajectory.add(v);
+			}
+		}
+
+		return trajectory;
+	}
 
 	/**
 	 * Swims a Lund particle with a built in stopper for the maximum value of

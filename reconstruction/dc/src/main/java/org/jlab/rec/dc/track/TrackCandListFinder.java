@@ -663,7 +663,7 @@ public class TrackCandListFinder {
             cand.fit_Successful = false;
             return;
         }
-        
+
        // recalc new vertex using plane stopper
         //int sector = cand.get(2).getSector();
         //double[] Vt = null;
@@ -694,6 +694,7 @@ public class TrackCandListFinder {
         cand.fit_Successful = true;
         cand.set_TrackingInfoString(trking);
 
+        /*
         dcSwim.SetSwimParameters(xOrFix, yOrFix, zOrFix,
                 pxOrFix, pyOrFix, pzOrFix,
                 cand.get_Q());
@@ -712,6 +713,7 @@ public class TrackCandListFinder {
         //set the pseudocross at extrapolated position
         cand.set_PreRegion1CrossPoint(new Point3D(xInner, yInner, zInner));
         cand.set_PreRegion1CrossDir(new Point3D(uxInner, uyInner, uzInner));
+        */
     }
 
     private Integer getKey(Track trk) {

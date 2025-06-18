@@ -115,6 +115,89 @@ public class RungeKutta {
 	}
 	
 
+	/**
+	 * Driver that uses the RungeKutta advance with a uniform step size. (i.e.,
+	 * this does NOT use an adaptive step size.)
+	 * 
+	 * This version stores each step into the arrays t[] and y[][]. An
+	 * alternative does not store the results but instead uses an IRk4Listener
+	 * to notify the listener that the next step has been advanced.
+	 * 
+	 * A very typical case is a 2nd order ODE converted to a 1st order where the
+	 * dependent variables are x, y, z, vx, vy, vz and the independent variable
+	 * is time.
+	 * 
+	 * @param yo
+	 *            initial values. Probably something like (xo, yo, zo, vxo, vyo,
+	 *                vzo).
+	 * @param to
+	 *            the initial value of the independent variable, e.g., time.
+	 * @param tf
+	 *            the maximum value of the independent variable.
+	 * @param y
+	 *            will be filled with results. The first index is small-- the
+	 *                dimensionality of the problem-- i.e., often it is 6 for (xo,
+	 *                yo, zo, vxo, vyo, vzo). The second dimension is for storing
+	 *                results and determining stepsize. If it is 1000, we will have
+	 *                a thousand steps and the stepsize will be (tf-to)/1000
+	 *                (actually 999).
+	 * @param t
+	 *            will filled with the locations of t--should have the exact
+	 *                same large dimension as the second index of y--i.e., something
+	 *                like 1000.
+	 * @param deriv
+	 *            the derivative computer (interface). This is where the problem
+	 *                specificity resides.
+	 * @param stopper
+	 *            if not <code>null</code> will be used to exit the integration
+	 *                early because some condition has been reached.
+	 * @return the number of steps used--may be less than the space provided if
+	 *         the integration ended early as a result of an exit condition.
+	 */
+	public int uniformStepWithEnergyLoss(double yo[],
+			double to,
+			double tf,
+			final double y[][],
+			final double t[],
+			IDerivative deriv,
+			IStopper stopper) {
+		int nstep = t.length; // the number of steps to store
+
+		// the dimensionality of the problem, e.g. six if (x, y, z, vx, vy, vz)
+		final int nDim = yo.length;
+
+		// uniform step size
+		double h = (tf - to) / (nstep - 1);
+
+		// put starting step in
+		t[0] = to;
+		for (int i = 0; i < nDim; i++) {
+			y[i][0] = yo[i];
+		}
+
+		IRkListener listener = new IRkListener() {
+
+			int step = 1;
+
+			@Override
+			public void nextStep(double tNext, double yNext[], double h) {
+				
+				if (step < t.length) {
+				t[step] = tNext;
+				for (int i = 0; i < nDim; i++) {
+					// store results for this step
+					y[i][step] = yNext[i];
+				}
+				}
+				step++;
+			}
+
+		};
+
+		return uniformStepWithEnergyLoss(yo, to, tf, h, deriv, stopper, listener);
+
+	}        
+        
 
 	/**
 	 * Integrator that uses the standard RK4 advance with a uniform step size.
@@ -155,6 +238,46 @@ public class RungeKutta {
 		UniformAdvance advancer = new UniformAdvance();
 		return driver(yo, to, tf, h, deriv, stopper, listener, advancer);
 	}
+        
+	/**
+	 * Integrator that uses the standard RK4 advance with a uniform step size.
+	 * (i.e., this does NOT use an adaptive step size.)
+	 * 
+	 * This version uses an IRk4Listener to notify the listener that the next
+	 * step has been advanced.
+	 * 
+	 * A very typical case is a 2nd order ODE converted to a 1st order where the
+	 * dependent variables are x, y, z, vx, vy, vz and the independent variable
+	 * is time.
+	 * 
+	 * @param yo
+	 *            initial values. Probably something like (xo, yo, zo, vxo, vyo,
+	 *            vzo).
+	 * @param to
+	 *            the initial value of the independent variable, e.g., time.
+	 * @param tf
+	 *            the maximum value of the independent variable.
+	 * @param deriv
+	 *            the derivative computer (interface). This is where the problem
+	 *            specificity resides.
+	 * @param stopper
+	 *            if not <code>null</code> will be used to exit the integration
+	 *                 early because some condition has been reached.
+	 * @param listener
+	 *            listens for each step
+	 * @return the number of steps used.
+	 */
+	public int uniformStepWithEnergyLoss(double yo[],
+			double to,
+			double tf,
+			double h,
+			IDerivative deriv,
+			IStopper stopper,
+			IRkListener listener) {
+
+		UniformAdvance advancer = new UniformAdvance();
+		return driverWithEnergyLoss(yo, to, tf, h, deriv, stopper, listener, advancer);
+	}        
 
 	/**
 	 * Integrator that uses the RungeKutta advance with a Butcher Tableau and
@@ -578,6 +701,86 @@ public class RungeKutta {
 			// use derivs at previous t
 			deriv.derivative(t, yt, dydt);
                         
+			advancer.advance(t, yt, dydt, h, deriv, yt, null); // yt is updated                                                
+                        
+			t += h;
+
+			// someone listening?
+			if (listener != null) {
+				listener.nextStep(t, yt, h);
+			}
+
+			// premature termination? Skip if stopper is null.
+			if (stopper != null) {
+				stopper.setFinalT(t);
+				if (stopper.stopIntegration(t, yt)) {
+					return k + 1; // actual number of steps taken
+				}
+			}
+		}
+
+		return nstep;
+	}
+        
+        
+	/**
+	 * Driver that uses the RungeKutta advance with a uniform step size. (I.e.,
+	 * this does NOT use an adaptive step size.)
+	 * 
+	 * This version uses an IRk4Listener to notify the listener that the next
+	 * step has been advanced.
+	 * 
+	 * A very typical case is a 2nd order ODE converted to a 1st order where the
+	 * dependent variables are x, y, z, vx, vy, vz and the independent variable
+	 * is time.
+	 * 
+	 * @param yo
+	 *            initial values. Probably something like (xo, yo, zo, vxo, vyo,
+	 *                vzo).
+	 * @param to
+	 *            the initial value of the independent variable, e.g., time.
+	 * @param tf
+	 *            the maximum value of the independent variable.
+	 * @param deriv
+	 *            the derivative computer (interface). This is where the problem
+	 *                specificity resides.
+	 * @param stopper
+	 *            if not <code>null</code> will be used to exit the integration
+	 *                early because some condition has been reached.
+	 * @return the number of steps used.
+	 */
+	private int driverWithEnergyLoss(double yo[],
+			double to,
+			double tf,
+			double h,
+			IDerivative deriv,
+			IStopper stopper,
+			IRkListener listener,
+			IAdvance advancer) {
+		int nstep = (int) (1 + (tf - to) / h); // the number of steps to store
+
+		// the dimensionality of the problem. E.., 6 if (x, y, z, vx, vy, vz)
+		int nDim = yo.length;
+
+		// yt is the current value of the state vector,
+		// typically [x, y, z, vx, vy, vz] and derivative
+		double yt[] = new double[nDim];
+		double dydt[] = new double[nDim];
+                double yttemp[] = new double[nDim];
+
+		double t = to;
+		for (int i = 0; i < nDim; i++) {
+			yt[i] = yo[i];
+		}
+
+		for (int k = 1; k < nstep; k++) {
+                        for (int i = 0; i < nDim; i++) {
+                            yttemp[i] = yt[i];
+                        }
+                    
+			// use derivs at previous t
+			deriv.derivative(t, yt, dydt);
+                        
 			advancer.advance(t, yt, dydt, h, deriv, yt, null); // yt is updated                         
                         
                         // Calculate energy loss, update momentum and alpha, and accumulate energy loss into totalEnergyLoss
@@ -600,7 +803,7 @@ public class RungeKutta {
 		}
 
 		return nstep;
-	}
+	}        
 
 
 
