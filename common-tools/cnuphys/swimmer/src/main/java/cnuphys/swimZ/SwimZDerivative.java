@@ -89,5 +89,8 @@ public class SwimZDerivative implements IDerivative {
 		dxdz[2] = _qv * Ax;
 		dxdz[3] = _qv * Ay;
 	}
+        
+        @Override
+        public void energyLossUpdate(double[] u, double dx){}
 
 }

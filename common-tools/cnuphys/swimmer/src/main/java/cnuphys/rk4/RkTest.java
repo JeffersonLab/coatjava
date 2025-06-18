@@ -14,6 +14,9 @@ public class RkTest {
 			dydt[0] = y[1];
 			dydt[1] = y[0];
 		}
+                
+                @Override
+                public void energyLossUpdate(double[] u, double dx){}
 		
 	};
 	

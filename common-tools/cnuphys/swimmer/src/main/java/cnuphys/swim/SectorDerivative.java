@@ -97,5 +97,8 @@ public class SectorDerivative implements IDerivative {
 		dQds[1] = Q[4];
 		dQds[2] = Q[5];
 	}
+        
+        @Override
+        public void energyLossUpdate(double[] u, double dx){}
 
 }
