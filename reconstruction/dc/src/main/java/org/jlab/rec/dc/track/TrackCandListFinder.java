@@ -859,7 +859,7 @@ public class TrackCandListFinder {
         }
 
         List<FittedHit> fhits = new ArrayList<>();
-
+        /*
         dcSwim.SetSwimParameters(trk.get_Vtx0().x(),
                 trk.get_Vtx0().y(), trk.get_Vtx0().z(), trk.get_pAtOrig().x(),
                 trk.get_pAtOrig().y(), trk.get_pAtOrig().z(), trk.get_Q());
@@ -868,6 +868,7 @@ public class TrackCandListFinder {
         if (ToFirstMeas == null) {
             return;
         }
+        */
 
         for (StateVec st : stateVecAtPlanesList) {
             if (st == null) {
