@@ -80,9 +80,6 @@ public class FTOFCalibrator extends DetectorCalibrator {
                     double path = paths.containsKey(pindex) && 
                                   paths.get(pindex).containsKey(layer) ? 
                                   paths.get(pindex).get(layer) : 0;
-                    double px  = part.getFloat("px", pindex);
-                    double py  = part.getFloat("py", pindex);
-                    double pz  = part.getFloat("pz", pindex);
                     calib.setShort("id", row, hits.getShort("id", i));
                     calib.setShort("status", row, hits.getShort("status", i));
                     calib.setShort("trackid", row, hits.getShort("trackid", i));
@@ -100,7 +97,11 @@ public class FTOFCalibrator extends DetectorCalibrator {
                     calib.setFloat("tz", row, hits.getFloat("tz", i));
                     calib.setInt("pid", row, part.getInt("pid", pindex));
                     calib.setByte("charge", row, part.getByte("charge", pindex));
-                    calib.setFloat("p", row, (float) Math.sqrt(px*px+py*py+pz*pz));
+                    calib.setFloat("px", row, part.getFloat("px", pindex));
+                    calib.setFloat("py", row, part.getFloat("py", pindex));
+                    calib.setFloat("pz", row, part.getFloat("pz", pindex));
+                    calib.setFloat("vx", row, part.getFloat("vx", pindex));
+                    calib.setFloat("vy", row, part.getFloat("vy", pindex));
                     calib.setFloat("vz", row, part.getFloat("vz", pindex));
                     calib.setFloat("pathLength", row, (float) path);
                     calib.setFloat("pathLengthThruBar", row, hits.getFloat("pathLengthThruBar", i));
