@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# build coatjava
 
 set -e
 set -u
@@ -8,14 +9,18 @@ usage='''build-coatjava.sh [OPTIONS]... [MAVEN_OPTIONS]...
 
   OPTIONS
 
-   --quiet           run more quietly
    --clean           clean up built objects and exit (does not compile)
 
    --nomaps          do not download field maps
 
-   --docs            also build the API documentation webpages
    --spotbugs        also run spotbugs plugin
    --unittests       also run unit tests
+
+   --quiet           run more quietly
+   --no-progress     no download progress printouts
+
+   --xrootd          use xrootd to download field maps
+   --cvmfs           use cvmfs to download field maps
 
    --help            show this message
 
@@ -24,13 +29,14 @@ usage='''build-coatjava.sh [OPTIONS]... [MAVEN_OPTIONS]...
    all other arguments will be passed to `mvn`, e.g., -T4 will build with 4 parallel threads
 '''
 
-quiet="no"
 cleanBuild="no"
 runSpotBugs="no"
 downloadMaps="yes"
 runUnitTests="no"
-buildDocs="no"
+useXrootd=false
+useCvmfs=false
 mvnArgs=()
+wgetArgs=()
 for xx in $@
 do
   case $xx in
@@ -38,9 +44,17 @@ do
     -n)          runSpotBugs="no"   ;;
     --nomaps)    downloadMaps="no"  ;;
     --unittests) runUnitTests="yes" ;;
-    --docs)      buildDocs="yes"    ;;
-    --quiet)     quiet="yes"        ;;
     --clean)     cleanBuild="yes"   ;;
+    --quiet)
+      mvnArgs+=(--quiet --batch-mode)
+      wgetArgs+=(--quiet)
+      ;;
+    --no-progress)
+      mvnArgs+=(--no-transfer-progress)
+      wgetArgs+=(--no-verbose)
+      ;;
+    --xrootd) useXrootd=true ;;
+    --cvmfs) useCvmfs=true ;;
     -h|--help)
       echo "$usage"
       exit 2
@@ -55,23 +69,24 @@ prefix_dir=$src_dir/coatjava
 # working directory should be the source code directory
 cd $src_dir
 
-wget='wget'
-mvn="mvn --settings $src_dir/maven-settings.xml"
-if [ "$quiet" == "yes" ]
-then
-    wget='wget --progress=dot:mega'
-    mvn="mvn -q -B --settings $src_dir/maven-settings.xml"
-fi
-mvn+=" ${mvnArgs[*]:-}"
+# set arguments for `mvn` and `wget`
+wgetArgs+=(--timestamping --no-check-certificate) # `--timestamping` only redownloads if timestamp/filesize is newer/different
+mvn="mvn ${mvnArgs[@]:-}"
+wget="wget ${wgetArgs[@]:-}"
 
 command_exists () {
     type "$1" &> /dev/null
 }
 download () {
     ret=0
-    if command_exists wget ; then
-        # -N only redownloads if timestamp/filesize is newer/different
-        $wget -N --no-check-certificate $1
+    if $useXrootd; then
+        xrdcp $1 ./
+        ret=$?
+    elif $useCvmfs; then
+        cp $1 ./
+        ret=$?
+    elif command_exists wget ; then
+        $wget $1
         ret=$?
     elif command_exists curl ; then
         if ! [ -e ${1##*/} ]; then
@@ -88,13 +103,15 @@ download () {
 
 # download the default field maps, as defined in libexec/env.sh:
 # (and duplicated in etc/services/reconstruction.yaml):
-source libexec/env.sh
-if [ $downloadMaps == "yes" ]; then
+source libexec/env.sh --no-classpath
+magfield_dir=$src_dir/etc/data/magfield
+if [ $cleanBuild == "no" ] && [ $downloadMaps == "yes" ]; then
   echo 'Retrieving field maps ...'
   webDir=https://clasweb.jlab.org/clas12offline/magfield
-  locDir=etc/data/magfield
-  mkdir -p $locDir
-  cd $locDir
+  if $useXrootd; then webDir=xroot://sci-xrootd.jlab.org//osgpool/hallb/clas12/coatjava/magfield; fi
+  if $useCvmfs; then webDir=/cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/magfield; fi
+  mkdir -p $magfield_dir
+  cd $magfield_dir
   for map in $COAT_MAGFIELD_SOLENOIDMAP $COAT_MAGFIELD_TORUSMAP $COAT_MAGFIELD_TORUSSECONDARYMAP
   do
     download $webDir/$map
@@ -114,8 +131,14 @@ rm -rf $prefix_dir
 # clean up any cache copies
 if [ $cleanBuild == "yes" ]; then
   $mvn clean
-  echo '''DONE CLEANING.
-  Now re-run without `--clean` to build.'''
+  for target_dir in $(find $src_dir -type d -name target); do
+    echo "WARNING: target directory '$target_dir' was not removed! JAR files within may be accidentally installed!" >&2
+  done
+  echo """DONE CLEANING.
+  NOTE: if you want to remove locally downloaded magnetic field maps, run:
+    rm $magfield_dir/*.dat
+
+  Now re-run without \`--clean\` to build."""
   exit
 fi
 
@@ -128,21 +151,17 @@ cp -r libexec $prefix_dir/
 # create schema directories for partial reconstruction outputs
 which python3 >& /dev/null && python=python3 || python=python
 $python etc/bankdefs/util/bankSplit.py $prefix_dir/etc/bankdefs/hipo4 || exit 1
-mkdir -p $prefix_dir/lib/clas
-mkdir -p $prefix_dir/lib/utils
-mkdir -p $prefix_dir/lib/services
 
 # FIXME:  this is still needed by one of the tests
+mkdir -p $prefix_dir/lib/utils
 cp external-dependencies/jclara-4.3-SNAPSHOT.jar $prefix_dir/lib/utils
 
 # spotbugs, unit tests
 unset CLAS12DIR
 if [ $runUnitTests == "yes" ]; then
   $mvn install # also runs unit tests
-  if [ $? != 0 ] ; then echo "mvn install failure" ; exit 1 ; fi
 else
-  $mvn -Dmaven.test.skip=true install
-  if [ $? != 0 ] ; then echo "mvn install failure" ; exit 1 ; fi
+  $mvn install -DskipTests
 fi
 
 if [ $runSpotBugs == "yes" ]; then
@@ -153,23 +172,32 @@ if [ $runSpotBugs == "yes" ]; then
   if [ $? != 0 ] ; then echo "spotbugs failure" ; exit 1 ; fi
 fi
 
-# documentation
-if [ $buildDocs == "yes" ]; then
-  $mvn javadoc:javadoc javadoc:aggregate -Ddoclint=none
-fi
-
 # installation
-cp common-tools/coat-lib/target/coat-libs-*-SNAPSHOT.jar $prefix_dir/lib/clas/
-cp reconstruction/*/target/clas12detector-*-SNAPSHOT*.jar $prefix_dir/lib/services/
+# NOTE: a maven plugin, such as `maven-assembly-plugin`, would be better, but it seems that they:
+# - require significantly more repetition of the module names and/or generation of additional XML file(s)
+# - seem to break thread safety of `mvn install`, i.e., we'd need to run `mvn package` first, then `mvn install`
+# - we just want copy the produced JAR files to a final installation directory, so the following bash code gets the job done without drama
+install_jars() {
+  src=$(dirname $1)
+  dest=$2
+  [ $# -ge 3 ] && filter="$3" || filter='*.jar'
+  if [ -d $src/target ]; then
+    for f in $(find $src/target -name $filter); do
+      mkdir -p $dest
+      cp $f $dest/
+    done
+  fi
+}
+for pom in $(find reconstruction -name pom.xml); do
+  install_jars $pom $prefix_dir/lib/services
+done
+for pom in $(find common-tools -name pom.xml); do
+  if [[ "$pom" =~ coat-libs ]]; then
+    install_jars $pom $prefix_dir/lib/clas 'coat-libs-*.jar'
+  # else # FIXME, consumers may be need these after https://github.com/JeffersonLab/coatjava/pull/632 ; alternatively add needed deps to `coat-libs`
+  #   install_jars $pom $prefix_dir/lib/services
+  fi
+done
 echo "installed coatjava to: $prefix_dir"
-if [ $buildDocs == "yes" ]; then
-  doc_dir=$prefix_dir/share/doc/coatjava/html
-  mkdir -p $doc_dir
-  cp -r target/reports/apidocs/* $doc_dir/
-  echo "installed documentation to: $doc_dir"
-fi
-
-# install clara
-#rm -rf clara-home && ./install-clara -c ./coatjava ./clara-home
 
 echo "COATJAVA SUCCESSFULLY BUILT !"

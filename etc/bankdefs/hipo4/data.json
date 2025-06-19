@@ -178,8 +178,7 @@
       { "name":"layer"     , "type":"B", "info":"layer (1..36)"},
       { "name":"component" , "type":"S", "info":"wire number (1..112)"},
       { "name":"order"     , "type":"B", "info":"order: 2 - TDCL , 3 - TDCR"},
-      { "name":"TDC"       , "type":"I", "info":"TDC value"},
-      { "name":"ToT"       , "type":"S", "info":"Time Over Threshold"}
+      { "name":"TDC"       , "type":"I", "info":"TDC value"}
     ]
   },
   {
@@ -204,6 +203,20 @@
       { "name":"sdoca"     , "type":"F", "info":"smeared doca"},
       { "name":"time"      , "type":"F", "info":"time for the hit"},
       { "name":"stime"     , "type":"F", "info":"smeared time"}
+    ]
+  },
+  {
+    "name" : "DC::tot",
+    "group": 20600,
+    "item" : 15,
+    "info": "TDC bank for the Drift Chambers (DCRB Firmware v2)",
+    "entries":[
+      { "name":"sector"    , "type":"B", "info":"sector (1..6)"},
+      { "name":"layer"     , "type":"B", "info":"layer (1..36)"},
+      { "name":"component" , "type":"S", "info":"wire number (1..112)"},
+      { "name":"order"     , "type":"B", "info":"order: 2 - TDCL , 3 - TDCR"},
+      { "name":"TDC"       , "type":"I", "info":"TDC value"},
+      { "name":"ToT"       , "type":"S", "info":"Time Over Threshold"}
     ]
   },
   {

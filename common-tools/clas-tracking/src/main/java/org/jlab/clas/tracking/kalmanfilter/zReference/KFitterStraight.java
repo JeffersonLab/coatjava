@@ -3,7 +3,6 @@ package org.jlab.clas.tracking.kalmanfilter.zReference;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jlab.clas.clas.math.FastMath;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.clas.tracking.kalmanfilter.AKFitter;
 import org.jlab.clas.tracking.kalmanfilter.AMeasVecs;

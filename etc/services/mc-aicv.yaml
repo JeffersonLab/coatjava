@@ -70,6 +70,8 @@ services:
     name: RICH
   - class: org.jlab.service.rtpc.RTPCEngine
     name: RTPC
+  - class: org.jlab.rec.service.vtx.VTXEngine
+    name: VTX
 configuration:
 #  global:
 #    variation: rga_fall2018_mc

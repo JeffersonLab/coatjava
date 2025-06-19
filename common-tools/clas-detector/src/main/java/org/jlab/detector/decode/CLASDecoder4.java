@@ -76,16 +76,6 @@ public class CLASDecoder4 {
         return schemaFactory;
     }
 
-    public static CLASDecoder createDecoder(){
-        CLASDecoder decoder = new CLASDecoder();
-        return decoder;
-    }
-
-    public static CLASDecoder createDecoderDevel(){
-        CLASDecoder decoder = new CLASDecoder(true);
-        return decoder;
-    }
-
     public void setVariation(String variation) {
         detectorDecoder.setVariation(variation);
     }
@@ -321,7 +311,7 @@ public class CLASDecoder4 {
             tdcBANK.putShort("component", i, (short) tdcDGTZ.get(i).getDescriptor().getComponent());
             tdcBANK.putByte("order", i, (byte) (tdcDGTZ.get(i).getDescriptor().getOrder()+tdcDGTZ.get(i).getTDCData(0).getType().getTypeId()));
             tdcBANK.putInt("TDC", i, tdcDGTZ.get(i).getTDCData(0).getTime());
-            if(name == "DC::tdc")
+            if(tdcBANK.getSchema().hasEntry("ToT"))
                 tdcBANK.putShort("ToT", i, (short) tdcDGTZ.get(i).getTDCData(0).getToT());
         }
         return tdcBANK;
@@ -500,7 +490,7 @@ public class CLASDecoder4 {
                                                           DetectorType.FMT,DetectorType.HEL,DetectorType.RF,
                                                           DetectorType.BAND, DetectorType.RASTER};
 
-        String[] tdcBankNames = new String[]{"FTOF::tdc","ECAL::tdc","DC::tdc",
+        String[] tdcBankNames = new String[]{"FTOF::tdc","ECAL::tdc","DC::tot",
                                              "HTCC::tdc","LTCC::tdc","CTOF::tdc",
                                              "CND::tdc","RF::tdc","RICH::tdc",
                                              "BAND::tdc"};
@@ -798,19 +788,25 @@ public class CLASDecoder4 {
             return null;
     }
 
-    public static Event createTaggedEvent(SchemaFactory sf, Event e, String... banks) {
+    public static Event createTaggedEvent(Event e, Bank runConfig, Bank... banks) {
         Event t = new Event();
-        for (String s : banks) {
-            Bank b = new Bank(sf.getSchema(s));
+        for (Bank b : banks) {
             e.read(b);
             if (b.getRows() > 0) t.write(b);
         }
         if (!t.isEmpty()) {
-            Bank b = new Bank(sf.getSchema("RUN::config"));
-            e.read(b);
-            t.write(b);
+            e.read(runConfig);
+            t.write(runConfig);
         }
         return t;
+    }
+
+    public static Event createTaggedEvent(SchemaFactory sf, Event e, String... banks) {
+        Bank[] b = new Bank[banks.length];
+        for (int i=0; i<banks.length; ++i) {
+            b[i] = new Bank(sf.getSchema(banks[i]));
+        }
+        return createTaggedEvent(e, new Bank(sf.getSchema("RUN::config")), b);
     }
 
     public Event createTaggedEvent(Event e, String... banks) {

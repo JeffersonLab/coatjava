@@ -22,12 +22,7 @@ public class EvioSource implements DataSource {
 	private EvioDataEvent evioEvent = null;
 	private int currentEvent;
 	private int currentFileEntries;
-	private EvioDataDictionary dictionary = new EvioDataDictionary();
-	private String dictionaryPath = "some";
 
-    public EvioDataDictionary getDictionary() {
-        return dictionary;
-    }
     @Override
     public void close() {
         evioReader.close();
@@ -42,69 +37,9 @@ public class EvioSource implements DataSource {
         return evioReader.getEventBuffer(eventNumber, asdf);
     }
     
-	public EvioSource() {
-
-		String CLAS12DIR = System.getenv("CLAS12DIR");
-		String CLAS12DIRPROP = System.getProperty("CLAS12DIR");
-
-		if (CLAS12DIR == null) {
-			LOGGER.log(Level.WARNING,"---> Warning the CLAS12DIR environment is not defined.");
-			// return;
-		} else {
-			dictionaryPath = CLAS12DIR + "/etc/bankdefs/clas12";
-		}
-
-		if (CLAS12DIRPROP == null) {
-			LOGGER.log(Level.WARNING,"---> Warning the CLAS12DIR property is not defined.");
-		} else {
-			dictionaryPath = CLAS12DIRPROP + "/etc/bankdefs/clas12";
-		}
-
-		if (CLAS12DIRPROP == null && CLAS12DIR == null) {
-			return;
-		}
-		// dictionary.initWithDir(dictionaryPath);
-		// System.err.println("[EvioSource] ---> Loaded bank Descriptors from : " +
-		// dictionaryPath);
-		// System.err.println("[EvioSource] ---> Factory loaded descriptor count : "
-		// + dictionary.getDescriptorList().length);
-
-		EvioFactory.loadDictionary(dictionaryPath);
-		dictionary = EvioFactory.getDictionary();
-		LOGGER.log(Level.INFO,"[EvioSource] ---> Factory loaded descriptor count : " + dictionary.getDescriptorList().length);
-		// dictionary.show();
-	}
+	public EvioSource() {}
 
 	public EvioSource(String filename) {
-		String CLAS12DIR = System.getenv("CLAS12DIR");
-		String CLAS12DIRPROP = System.getProperty("CLAS12DIR");
-
-		if (CLAS12DIR == null) {
-			LOGGER.log(Level.WARNING,"---> Warning the CLAS12DIR environment is not defined.");
-			// return;
-		} else {
-			dictionaryPath = CLAS12DIR + "/etc/bankdefs/clas12";
-		}
-
-		if (CLAS12DIRPROP == null) {
-			LOGGER.log(Level.WARNING,"---> Warning the CLAS12DIR property is not defined.");
-		} else {
-			dictionaryPath = CLAS12DIRPROP + "/etc/bankdefs/clas12";
-		}
-
-		if (CLAS12DIRPROP == null && CLAS12DIR == null) {
-			return;
-		}
-		// dictionary.initWithDir(dictionaryPath);
-		// System.err.println("[EvioSource] ---> Loaded bank Descriptors from : " +
-		// dictionaryPath);
-		// System.err.println("[EvioSource] ---> Factory loaded descriptor count : "
-		// + dictionary.getDescriptorList().length);
-
-		EvioFactory.loadDictionary(dictionaryPath);
-		dictionary = EvioFactory.getDictionary();
-		LOGGER.log(Level.INFO,"[EvioSource] ---> Factory loaded descriptor count : " + dictionary.getDescriptorList().length);
-		dictionary.show();
 		this.open(filename);
 	}
 
@@ -170,7 +105,7 @@ public class EvioSource implements DataSource {
 			currentEvent--;
 			currentEvent--;
 			ByteBuffer evioBuffer = evioReader.getEventBuffer(currentEvent, true);
-			EvioDataEvent event = new EvioDataEvent(evioBuffer.array(), storeByteOrder, dictionary);
+			EvioDataEvent event = new EvioDataEvent(evioBuffer.array(), storeByteOrder);
 			currentEvent++;
 			return event;
 		} catch (EvioException ex) {
@@ -184,7 +119,7 @@ public class EvioSource implements DataSource {
 			return null;
 		try {
 			ByteBuffer evioBuffer = evioReader.getEventBuffer(index, true);
-			EvioDataEvent event = new EvioDataEvent(evioBuffer.array(), storeByteOrder, dictionary);
+			EvioDataEvent event = new EvioDataEvent(evioBuffer.array(), storeByteOrder);
 			currentEvent = index + 1;
 			return event;
 		} catch (EvioException ex) {
@@ -212,7 +147,7 @@ public class EvioSource implements DataSource {
 			return null;
 		try {
 			ByteBuffer evioBuffer = evioReader.getEventBuffer(currentEvent, true);
-			EvioDataEvent event = new EvioDataEvent(evioBuffer.array(), storeByteOrder, dictionary);
+			EvioDataEvent event = new EvioDataEvent(evioBuffer.array(), storeByteOrder);
 			currentEvent++;
 			return event;
 		} catch (EvioException ex) {

@@ -4,7 +4,7 @@
 
 split_cli $@
 
-cmd="java -Xms1024m ${jvm_options[@]} -cp $CLAS12DIR/lib/clas/*:$CLAS12DIR/lib/plugins/* org.jlab.groot.data.TDirectory"
+cmd="java -Xms1024m ${jvm_options[@]} -cp ${COATJAVA_CLASSPATH:-''} org.jlab.groot.data.TDirectory"
 
 if [ $# -eq 0 ]; then
   echo """
