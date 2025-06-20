@@ -146,7 +146,7 @@
         </configuration>
       </plugin>
 
-<!-- Maven Shade Plugin to create single JAR with all ai.djl dependencies -->
+<!-- Maven Shade Plugin to create single JAR with all ai.djl dependencies 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
@@ -170,29 +170,30 @@
             </configuration>
           </execution>
         </executions>
-      </plugin>
+      </plugin>-->
+
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <version>3.1.0</version>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>3.8.1</version>
         <executions>
           <execution>
-            <id>copy-djl-jar</id>
+            <id>copy-dependencies</id>
             <phase>package</phase>
             <goals>
-              <goal>run</goal>
+              <goal>copy-dependencies</goal>
             </goals>
             <configuration>
-              <target>
-                <copy file="${project.build.directory}/ai-djl-${project.version}.jar" 
-                      todir="../../coatjava/lib/services"/>
-              </target>
+              <outputDirectory>${project.build.directory}/lib/services</outputDirectory>
+              <includeGroupIds>ai.djl</includeGroupIds>
             </configuration>
           </execution>
         </executions>
       </plugin>
- 
+
+
+
     </plugins>
   </build>
 
