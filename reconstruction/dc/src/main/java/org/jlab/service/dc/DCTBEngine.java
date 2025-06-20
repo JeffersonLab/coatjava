@@ -106,7 +106,7 @@ public class DCTBEngine extends DCEngine {
         List<Cross> crosses = new ArrayList<>();
         List<Track> trkcands = new ArrayList<>();
         
-        LOGGER.log(Level.FINE, "TB AI "+ this.getName());
+        LOGGER.log(Level.FINEST, "TB AI "+ this.getName());
         //instantiate bank writer
         RecoBankWriter rbc = new RecoBankWriter(this.getBanks());
 
@@ -328,7 +328,7 @@ public class DCTBEngine extends DCEngine {
                 //trk.set_Id(trkId);
                 trkcandFinder.matchHits(trk.getStateVecs(), trk, Constants.getInstance().dcDetector, dcSwim);
                 trk.calcTrajectory(trkId, dcSwim, trk.get_Vtx0(), trk.get_pAtOrig(), trk.get_Q());
-                LOGGER.log(Level.FINE, trk.toString());               
+                LOGGER.log(Level.FINEST, trk.toString());               
 
                 for(Cross c : trk) { 
                     c.set_CrossDirIntersSegWires();
@@ -571,7 +571,7 @@ public class DCTBEngine extends DCEngine {
                 double LR = Math.signum(trk.get_ListOfHBSegments().get(s).get(h).get_XWire()-trk.get_ListOfHBSegments().get(s).get(h).get_X());
                 hot._doca[0]*=-LR;
                 hot._hitError = trk.get_ListOfHBSegments().get(s).get(h).get_DocaErr()*trk.get_ListOfHBSegments().get(s).get(h).get_DocaErr();
-                //LOGGER.log(Level.FINE, " Z "+Z+" ferr "+(float)(hot._Unc /(hot._hitError/4.)));
+                //LOGGER.log(Level.FINEST, " Z "+Z+" ferr "+(float)(hot._Unc /(hot._hitError/4.)));
                 hot._Unc[0] = hot._hitError;
                 hot.region = trk.get_ListOfHBSegments().get(s).get(h).get_Region();
 				hot.sector = trk.get_ListOfHBSegments().get(s).get(h).get_Sector();
@@ -668,11 +668,11 @@ public class DCTBEngine extends DCEngine {
                 miss=l+1;
                 if(miss%2==0 && SegMap.containsKey(l)) {       //missing sl in 2,4,6
                     track.setSingleSuperlayer(SegMap.get(l));  //isolated sl in 1,3,5
-                    LOGGER.log(Level.FINE, "Missing superlayer "+miss+" seg "+SegMap.get(l).printInfo());
+                    LOGGER.log(Level.FINEST, "Missing superlayer "+miss+" seg "+SegMap.get(l).printInfo());
                 } 
                 else if(miss%2==1 && SegMap.containsKey(l+2)) { //missing sl in 1,3,5
                     track.setSingleSuperlayer(SegMap.get(l+2)); //isolated sl in 2,4,6
-                    LOGGER.log(Level.FINE, "Missing superlayer "+miss+" seg "+track.getSingleSuperlayer().printInfo());
+                    LOGGER.log(Level.FINEST, "Missing superlayer "+miss+" seg "+track.getSingleSuperlayer().printInfo());
                 }
             }
         } 
