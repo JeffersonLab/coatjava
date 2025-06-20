@@ -146,33 +146,6 @@
         </configuration>
       </plugin>
 
-<!-- Maven Shade Plugin to create single JAR with all ai.djl dependencies 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <version>3.4.1</version>
-        <executions>
-          <execution>
-            <id>shade-djl</id>
-            <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-            <configuration>
-              <artifactSet>
-                <includes>
-                  <include>ai.djl:*</include>
-                  <include>ai.djl.pytorch:*</include>
-                </includes>
-              </artifactSet>
-              <outputFile>${project.build.directory}/ai-djl-${project.version}.jar</outputFile>
-              <createDependencyReducedPom>false</createDependencyReducedPom>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>-->
-
-
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
