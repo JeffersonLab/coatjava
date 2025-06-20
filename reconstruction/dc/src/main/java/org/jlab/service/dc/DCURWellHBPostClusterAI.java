@@ -72,7 +72,7 @@ public class DCURWellHBPostClusterAI extends DCEngine {
         // get Field
         Swim dcSwim = new Swim();
 
-        LOGGER.log(Level.FINE, "HB AI process event");
+        LOGGER.log(Level.FINEST, "HB AI process event");
         
         List<Track> trkcands = new ArrayList();
         List<Cross> crosses = null;
@@ -105,11 +105,11 @@ public class DCURWellHBPostClusterAI extends DCEngine {
         CrossList crosslists = pr.RecomposeCrossList(segments, Constants.getInstance().dcDetector);
         crosses = new ArrayList<>();
         
-        LOGGER.log(Level.FINE, "num cands = "+crosslists.size());
+        LOGGER.log(Level.FINEST, "num cands = "+crosslists.size());
         for (List<Cross> clist : crosslists) {
             crosses.addAll(clist); 
             for(Cross c : clist)
-                LOGGER.log(Level.FINE, "Pass Cross"+c.printInfo());
+                LOGGER.log(Level.FINEST, "Pass Cross"+c.printInfo());
         }
         if (crosses.isEmpty()) {
             clusters = new ArrayList<>();
