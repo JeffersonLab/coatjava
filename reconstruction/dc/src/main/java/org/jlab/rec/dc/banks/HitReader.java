@@ -352,7 +352,7 @@ public class HitReader {
         String pointName   = bankNames.getInputIdsBank();
         String recBankName = bankNames.getRecEventBank();
         
-        LOGGER.log(Level.FINE,"Reading hb banks for "+ bankName + ", " + pointName + " " + recBankName);
+        LOGGER.log(Level.FINEST,"Reading hb banks for "+ bankName + ", " + pointName + " " + recBankName);
         
         _HBHits = new ArrayList<>();
 
@@ -494,7 +494,7 @@ public class HitReader {
             //if(hit.betaFlag == 0)
             if(passHit(hit.betaFlag)) {
                 this._HBHits.add(hit);        
-                LOGGER.log(Level.FINE, "Passing "+hit.printInfo()+" for "+ bankNames.getHitsBank());            
+                LOGGER.log(Level.FINEST, "Passing "+hit.printInfo()+" for "+ bankNames.getHitsBank());            
             }
         }
     }
@@ -567,7 +567,7 @@ public class HitReader {
                         hit.NNTrkP      = this.aimatch.get(clusterID)[0];
                         hit.NNTrkTheta  = this.aimatch.get(clusterID)[1];
                         hit.NNTrkPhi    = this.aimatch.get(clusterID)[2];
-                        LOGGER.log(Level.FINE, "NN"+hit.printInfo());
+                        LOGGER.log(Level.FINEST, "NN"+hit.printInfo());
                         this._DCHits.add(hit);
                     }
                 }
@@ -793,11 +793,11 @@ public class HitReader {
         } else {
             for(int i = 0; i<CableSwaps.length; i++) {
                 if(CableSwaps[i][0]==sector && CableSwaps[i][1]==layer && CableSwaps[i][2]==wire) {
-                   // LOGGER.log(Level.FINE, " swapped "+sector+", "+layer+", "+wire);
+                   // LOGGER.log(Level.FINEST, " swapped "+sector+", "+layer+", "+wire);
                     _sector = CableSwaps[i][3];
                     _layer  = CableSwaps[i][4];
                     _wire   = CableSwaps[i][5];
-                  //  LOGGER.log(Level.FINE, "    to  "+_sector+", "+_layer+", "+_wire);
+                  //  LOGGER.log(Level.FINEST, "    to  "+_sector+", "+_layer+", "+_wire);
                 }
             }
         }
@@ -817,9 +817,9 @@ public class HitReader {
 
         for (int s=1; s<7; s++) {
            if (trigger_bits[s]) {
-               LOGGER.log(Level.FINE, "Trigger bit set for electron in sector "+s);
+               LOGGER.log(Level.FINEST, "Trigger bit set for electron in sector "+s);
            }
-          if (trigger_bits[31])LOGGER.log(Level.FINE, "Trigger bit set from random pulser");
+          if (trigger_bits[31])LOGGER.log(Level.FINEST, "Trigger bit set from random pulser");
         }
 }
     }
