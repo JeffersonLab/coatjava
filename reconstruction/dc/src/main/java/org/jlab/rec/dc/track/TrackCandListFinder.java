@@ -351,7 +351,7 @@ public class TrackCandListFinder {
         double pz = cand.get_P() / Math.sqrt(stateVec.tanThetaX() * stateVec.tanThetaX()
                 + stateVec.tanThetaY() * stateVec.tanThetaY() + 1);
 
-        //LOGGER.log(Level.FINE, "Setting track params for ");stateVec.printInfo();
+        //LOGGER.log(Level.FINEST, "Setting track params for ");stateVec.printInfo();
         dcSwim.SetSwimParameters(stateVec.x(), stateVec.y(), z,
                 pz * stateVec.tanThetaX(), pz * stateVec.tanThetaY(), pz,
                 cand.get_Q());
@@ -489,7 +489,7 @@ public class TrackCandListFinder {
         double pz = cand.get_P() / Math.sqrt(stateVec.tanThetaX() * stateVec.tanThetaX()
                 + stateVec.tanThetaY() * stateVec.tanThetaY() + 1);
 
-        //LOGGER.log(Level.FINE, "Setting track params for ");stateVec.printInfo();
+        //LOGGER.log(Level.FINEST, "Setting track params for ");stateVec.printInfo();
         dcSwim.SetSwimParameters(stateVec.x(), stateVec.y(), z,
                 pz * stateVec.tanThetaX(), pz * stateVec.tanThetaY(), pz,
                 cand.get_Q());
@@ -620,13 +620,13 @@ public class TrackCandListFinder {
 
     public void removeOverlappingTracksOld(List<Track> trkcands) {
         if(Constants.DEBUG) {
-            LOGGER.log(Level.FINE, "Found "+trkcands.size()+" HB seeds ");
+            LOGGER.log(Level.FINEST, "Found "+trkcands.size()+" HB seeds ");
             for(int i = 0; i< trkcands.size(); i++) {
-                LOGGER.log(Level.FINE, "cand "+i);
+                LOGGER.log(Level.FINEST, "cand "+i);
                 for(Cross c : trkcands.get(i)) {
-                    LOGGER.log(Level.FINE, c.printInfo());
+                    LOGGER.log(Level.FINEST, c.printInfo());
                 }
-                LOGGER.log(Level.FINE, "------------------------------------------------------------------ ");
+                LOGGER.log(Level.FINEST, "------------------------------------------------------------------ ");
             }
         }
         Map<Integer, Track> selectedTracksMap = new HashMap<>();
@@ -648,26 +648,26 @@ public class TrackCandListFinder {
             trkcands.add(entry.getValue());
         });
         if(Constants.DEBUG) {
-            LOGGER.log(Level.FINE, "After Overlap Remvr "+trkcands.size()+" HB seeds ");
+            LOGGER.log(Level.FINEST, "After Overlap Remvr "+trkcands.size()+" HB seeds ");
             for(int i = 0; i< trkcands.size(); i++) {
-                LOGGER.log(Level.FINE, "cand "+i);
+                LOGGER.log(Level.FINEST, "cand "+i);
                 for(Cross c : trkcands.get(i)) {
-                    LOGGER.log(Level.FINE, c.printInfo());
+                    LOGGER.log(Level.FINEST, c.printInfo());
                 }
-                LOGGER.log(Level.FINE, "------------------------------------------------------------------ ");
+                LOGGER.log(Level.FINEST, "------------------------------------------------------------------ ");
             }
         }
     }
     
     public void removeOverlappingTracks(List<Track> trkcands) {
         if(Constants.DEBUG) {
-            LOGGER.log(Level.FINE, "Found "+trkcands.size()+" HB seeds ");
+            LOGGER.log(Level.FINEST, "Found "+trkcands.size()+" HB seeds ");
             for(int i = 0; i< trkcands.size(); i++) {
-                LOGGER.log(Level.FINE, "cand "+i);
+                LOGGER.log(Level.FINEST, "cand "+i);
                 for(Cross c : trkcands.get(i)) {
-                    LOGGER.log(Level.FINE, c.printInfo());
+                    LOGGER.log(Level.FINEST, c.printInfo());
                 }
-                LOGGER.log(Level.FINE, "------------------------------------------------------------------ ");
+                LOGGER.log(Level.FINEST, "------------------------------------------------------------------ ");
             }
         }
         List<Track> badTracks = new ArrayList<>();
@@ -680,7 +680,7 @@ public class TrackCandListFinder {
             Track t1 = trkcands.get(i);
             for(int j=0; j<trkcands.size(); j++ ) {
                 Track t2 = trkcands.get(j);
-//                LOGGER.log(Level.FINE, "Checking overlaps for tracks ");
+//                LOGGER.log(Level.FINEST, "Checking overlaps for tracks ");
 //                t1.printInfo();t2.printInfo();
                 if(i!=j && t1.overlaps(t2)) {
                     if(t1.get_FitChi2()/t1.get_FitNDF()>t2.get_FitChi2()/t2.get_FitNDF())
@@ -688,7 +688,7 @@ public class TrackCandListFinder {
                     else if(t1.get_FitChi2()/t1.get_FitNDF()==t2.get_FitChi2()/t2.get_FitNDF() && i>j)
                         overlap=true;
                 }
-//               LOGGER.log(Level.FINE, overlap);
+//               LOGGER.log(Level.FINEST, overlap);
             }
             if(!overlap) selectedTracks.add(t1);
         }
@@ -852,7 +852,7 @@ public class TrackCandListFinder {
 
     private List<Track> findStraightTracks(CrossList crossList, DCGeant4Factory DcDetector, double TORSCALE, Swim dcSwim) {
 
-        if(LOGGER.getLevel()==Level.FINE) {
+        if(LOGGER.getLevel()==Level.FINEST) {
             startTime2 = System.currentTimeMillis();
         }
 
@@ -866,11 +866,11 @@ public class TrackCandListFinder {
             Track cand = new Track();
             TrajectoryFinder trjFind = new TrajectoryFinder();
 
-            if(LOGGER.getLevel()==Level.FINE) {
+            if(LOGGER.getLevel()==Level.FINEST) {
                 startTime = System.currentTimeMillis();
             }
             Trajectory traj = trjFind.findTrajectory(aCrossList, DcDetector, dcSwim);
-            LOGGER.log(Level.FINE, "Trajectory finding = " + (System.currentTimeMillis() - startTime));
+            LOGGER.log(Level.FINEST, "Trajectory finding = " + (System.currentTimeMillis() - startTime));
             
 
             if (traj == null) {
@@ -892,7 +892,7 @@ public class TrackCandListFinder {
                             cand.get(0).get_Dir().y() / cand.get(0).get_Dir().z());
                     cand.set_StateVecAtReg1MiddlePlane(VecAtReg1MiddlePlane);
 
-                    LOGGER.log(Level.FINE, "Kalman fitter - 2 = " + (System.currentTimeMillis() - startTime));
+                    LOGGER.log(Level.FINEST, "Kalman fitter - 2 = " + (System.currentTimeMillis() - startTime));
 
                     KFitterStraight kFZRef = new KFitterStraight(true, 1, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
                     List<Surface> measSurfaces = getMeasSurfaces(cand, DcDetector);
@@ -943,7 +943,7 @@ public class TrackCandListFinder {
             boolean donotapplyCuts) {
     	    	
     	
-        if(LOGGER.getLevel()==Level.FINE) {
+        if(LOGGER.getLevel()==Level.FINEST) {
             startTime2 = System.currentTimeMillis();
         }
 
@@ -961,12 +961,12 @@ public class TrackCandListFinder {
             Track cand = new Track();
             TrajectoryFinder trjFind = new TrajectoryFinder();
 
-            if(LOGGER.getLevel()==Level.FINE) {
+            if(LOGGER.getLevel()==Level.FINEST) {
                 startTime = System.currentTimeMillis();
             }
             Trajectory traj = trjFind.findTrajectory(aCrossList, DcDetector, dcSwim);
             
-            LOGGER.log(Level.FINE, "Trajectory finding = " + (System.currentTimeMillis() - startTime));
+            LOGGER.log(Level.FINEST, "Trajectory finding = " + (System.currentTimeMillis() - startTime));
             
 
             if (traj == null) {
@@ -984,11 +984,11 @@ public class TrackCandListFinder {
 
                 //require 3 crosses to make a track (allows for 1 pseudo-cross)
                 if (cand.size() == 3) {
-                //    LOGGER.log(Level.FINE, "---- cand in sector " + aCrossList.get(0).getSector());
-                //    LOGGER.log(Level.FINE, aCrossList.get(0).printInfo());
-                //    LOGGER.log(Level.FINE, aCrossList.get(1).printInfo());
-                //    LOGGER.log(Level.FINE, aCrossList.get(2).printInfo());
-                //    LOGGER.log(Level.FINE, "---------------");
+                //    LOGGER.log(Level.FINEST, "---- cand in sector " + aCrossList.get(0).getSector());
+                //    LOGGER.log(Level.FINEST, aCrossList.get(0).printInfo());
+                //    LOGGER.log(Level.FINEST, aCrossList.get(1).printInfo());
+                //    LOGGER.log(Level.FINEST, aCrossList.get(2).printInfo());
+                //    LOGGER.log(Level.FINEST, "---------------");
                     double x1 = aCrossList.get(0).get_Point().x();
                     double y1 = aCrossList.get(0).get_Point().y();
                     double z1 = aCrossList.get(0).get_Point().z();
@@ -1029,12 +1029,12 @@ public class TrackCandListFinder {
                     if (iBdl != 0) {
                         // momentum estimate if Bdl is non zero and the track has curvature  
                         double p = calcInitTrkP(thX, thY, theta1, theta3, iBdl);
-                        if(LOGGER.getLevel()==Level.FINE) {
+                        if(LOGGER.getLevel()==Level.FINEST) {
                             startTime = System.currentTimeMillis();
                         }
                         int q = this.calcInitTrkQ(traj.getA(), TORSCALE);
                         
-                        LOGGER.log(Level.FINE, "calcInitTrkQ = " + (System.currentTimeMillis() - startTime));
+                        LOGGER.log(Level.FINEST, "calcInitTrkQ = " + (System.currentTimeMillis() - startTime));
 
                         if (p > 11) {
                             p = 11;
@@ -1061,7 +1061,7 @@ public class TrackCandListFinder {
                             crossIdxinList = 0;
                         }
 
-                        LOGGER.log(Level.FINE, "Kalman fitter - 2 = " + (System.currentTimeMillis() - startTime));
+                        LOGGER.log(Level.FINEST, "Kalman fitter - 2 = " + (System.currentTimeMillis() - startTime));
 
                         KFitter kFZRef = new KFitter(true, 10, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
                         List<Surface> measSurfaces = getMeasSurfaces(cand, DcDetector);
@@ -1228,7 +1228,7 @@ public class TrackCandListFinder {
 
     				hot._doca[0]*=-LR;
     				hot._hitError = trkcand.get(c).get(s).get(h).get_DocaErr()*trkcand.get(c).get(s).get(h).get_DocaErr();
-    				//LOGGER.log(Level.FINE, " Z "+Z+" ferr "+(float)(hot._Unc /(hot._hitError/4.)));
+    				//LOGGER.log(Level.FINEST, " Z "+Z+" ferr "+(float)(hot._Unc /(hot._hitError/4.)));
     				hot._Unc[0] = hot._hitError;
     				hOTS.add(hot);
 

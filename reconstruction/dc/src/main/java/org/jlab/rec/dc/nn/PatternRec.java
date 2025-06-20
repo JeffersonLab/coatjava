@@ -113,7 +113,7 @@ public class PatternRec {
             if(entry.getValue().size()==3)
                 crossList.add(entry.getValue()); 
             for(Cross c : entry.getValue()) 
-                LOGGER.log(Level.FINE, "AI"+c.printInfo()+c.get_Segment1().printInfo()+c.get_Segment2().printInfo());
+                LOGGER.log(Level.FINEST, "AI"+c.printInfo()+c.get_Segment1().printInfo()+c.get_Segment2().printInfo());
         }
         return crossList;
     }

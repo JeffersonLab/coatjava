@@ -222,7 +222,7 @@ public class DCEngine extends ReconstructionEngine {
             return 0;
         }
         DataBank bank = event.getBank("RUN::config");
-        LOGGER.log(Level.FINE,"["+this.getName()+"] EVENT "+bank.getInt("event", 0));       
+        LOGGER.log(Level.FINEST,"["+this.getName()+"] EVENT "+bank.getInt("event", 0));       
         
         int run = bank.getInt("run", 0);
         return run;

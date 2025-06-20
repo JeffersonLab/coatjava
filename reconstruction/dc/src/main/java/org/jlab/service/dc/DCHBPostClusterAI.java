@@ -66,7 +66,7 @@ public class DCHBPostClusterAI extends DCEngine {
         RecoBankWriter writer = new RecoBankWriter(this.getBanks());
         // get Field
         Swim dcSwim = new Swim();
-        LOGGER.log(Level.FINE, "HB AI process event");
+        LOGGER.log(Level.FINEST, "HB AI process event");
 
         //AI
         List<Track> trkcands = null;
@@ -96,11 +96,11 @@ public class DCHBPostClusterAI extends DCEngine {
         CrossList crosslist = pr.RecomposeCrossList(segments, Constants.getInstance().dcDetector);
         crosses = new ArrayList<>();
         
-        LOGGER.log(Level.FINE, "num cands = "+crosslist.size());
+        LOGGER.log(Level.FINEST, "num cands = "+crosslist.size());
         for (List<Cross> clist : crosslist) {
             crosses.addAll(clist); 
             for(Cross c : clist)
-                LOGGER.log(Level.FINE, "Pass Cross"+c.printInfo());
+                LOGGER.log(Level.FINEST, "Pass Cross"+c.printInfo());
         }
         if (crosses.isEmpty()) {
             for(Segment seg : segments) {
