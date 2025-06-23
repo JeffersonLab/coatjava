@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.clas.pdg;
 
 /**
@@ -10,12 +6,12 @@ package org.jlab.clas.pdg;
  */
 public class PDGParticle {
     
-    String  particleName = "unknown";
-    Integer particleId = 0;
-    Integer particleIdGeant = 0;
-    Double  particleMass = 0.0;
-    Integer    particleCharge = -1;
-    Double     particleWidth  = 0.0;
+    String     particleName    = "unknown";
+    Integer    particleId      = 0;      /// PDG code and Geant4
+    Integer    particleIdGeant = 0;      /// Geant3
+    Double     particleMass    = 0.0;    /// Units of Gev/c^2
+    Integer    particleCharge  = -1;     /// units of e
+    Double     particleWidth   = 0.0;    /// Units of Gev/c^2
     
     public PDGParticle(String partname, int partid, double partmass)
     {
