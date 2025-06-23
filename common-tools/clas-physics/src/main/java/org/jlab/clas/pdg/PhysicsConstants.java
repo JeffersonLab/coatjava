@@ -41,6 +41,20 @@ public class PhysicsConstants {
     public static double massKaonNeutral(){
         return 0.49761424;
     }
+
+    public static double massDeuteron(){
+        return 1.87612;
+    }
+    public static double massTriton(){
+        return 2.80943;
+    }
+    public static double massHe3(){
+        return 2.80941;
+    }
+    public static double massAlpha(){
+        return 3.7284;
+    }
+
     
     public static double getRandomGauss(double mean, double width){
         double u = 0;
