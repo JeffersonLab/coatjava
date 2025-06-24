@@ -23,6 +23,7 @@
     <module>parent</module>
     <module>common-tools</module>
     <module>reconstruction</module>
+    <module>validation</module>
   </modules>
 
 </project>
