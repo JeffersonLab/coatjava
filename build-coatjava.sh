@@ -70,7 +70,7 @@ prefix_dir=$src_dir/coatjava
 cd $src_dir
 
 # set arguments for `mvn` and `wget`
-wgetArgs+=(--timestamping --no-check-certificate) # `--timestamping` only redownloads if timestamp/filesize is newer/different
+wgetArgs+=(--timestamping) # `--timestamping` only redownloads if timestamp/filesize is newer/different
 mvn="mvn ${mvnArgs[@]:-}"
 wget="wget ${wgetArgs[@]:-}"
 
