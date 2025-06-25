@@ -85,14 +85,14 @@ download () {
     elif $useCvmfs; then
         cp $1 ./
         ret=$?
-    elif command_exists wget ; then
-        $wget $1
-        ret=$?
     elif command_exists curl ; then
         if ! [ -e ${1##*/} ]; then
           curl $1 -o ${1##*/}
           ret=$?
         fi
+    elif command_exists wget ; then
+        $wget $1
+        ret=$?
     else
         ret=1
         echo ERROR:::::::::::  Could not find wget nor curl.
