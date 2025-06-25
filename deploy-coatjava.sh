@@ -149,8 +149,12 @@ pom_files=(
 for pom_file in ${pom_files[@]}; do
   mvn deploy -Dmaven.test.skip=true -f $pom_file
 done
+
+# make a tarball too
 deploy_tarball=coatjava-${ver_deploy}.tar.gz
 tar czf $deploy_tarball coatjava
+
+# say what we did
 print_deployment() {
   log "========================"
   log "local deployments:"
@@ -159,7 +163,6 @@ print_deployment() {
   log "========================"
 }
 print_deployment
-
 
 # deploy remotely
 if ! $dry_run; then
