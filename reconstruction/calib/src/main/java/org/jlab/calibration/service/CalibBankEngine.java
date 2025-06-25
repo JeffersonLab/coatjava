@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+import org.jlab.calibration.detectors.CTOFCalibrator;
 import org.jlab.calibration.detectors.DCCalibrator;
 import org.jlab.calibration.detectors.DetectorCalibrator;
 import org.jlab.calibration.detectors.FTOFCalibrator;
@@ -31,6 +32,7 @@ public class CalibBankEngine extends ReconstructionEngine {
         super("CALIB", "devita", "1.0");
         calibrators.put(DetectorType.DC  , new DCCalibrator());
         calibrators.put(DetectorType.FTOF, new FTOFCalibrator());
+        calibrators.put(DetectorType.CTOF, new CTOFCalibrator());
         calibrators.put(DetectorType.RICH, new RICHCalibrator());
     }
 
