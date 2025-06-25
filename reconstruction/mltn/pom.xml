@@ -72,7 +72,6 @@
       </plugin>
     </plugins>
   </build>
->>>>>>> fac5552ec (feat: deploy `reconstruction/alert`)
 
   <distributionManagement>
     <repository>
