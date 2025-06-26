@@ -5,14 +5,12 @@
   <groupId>org.jlab.clas12.detector</groupId>
   <artifactId>clas12detector-dc</artifactId>
   <version>13.0.2-SNAPSHOT</version>
-
   <packaging>jar</packaging>
 
   <parent>
-      <groupId>org.jlab.clas</groupId>
-      <artifactId>coatjava</artifactId>
-      <relativePath>../../parent/pom.xml</relativePath>
-      <version>13.0.2-SNAPSHOT</version>
+    <groupId>org.jlab.clas12</groupId>
+    <artifactId>reconstruction</artifactId>
+    <version>13.0.2-SNAPSHOT</version>
   </parent>
 
   <dependencies>

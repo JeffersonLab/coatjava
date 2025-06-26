@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.jlab.clas</groupId>
+  <groupId>org.jlab.clas12</groupId>
   <artifactId>reconstruction</artifactId>
   <version>13.0.2-SNAPSHOT</version>
   <packaging>pom</packaging>
@@ -10,7 +10,6 @@
   <parent>
     <groupId>org.jlab.clas</groupId>
     <artifactId>coatjava</artifactId>
-    <relativePath>../parent/pom.xml</relativePath>
     <version>13.0.2-SNAPSHOT</version>
   </parent>
 
@@ -39,4 +38,30 @@
     <module>postproc</module>
     <module>recoil</module>
   </modules>
+
+  <build>
+    <plugins>
+      <!--
+        FIXME: these deployment plugins are here in this aggregator POM, so that all its modules
+        get deployed the same way, but it also means that _this_ aggregator POM gets deployed too;
+        it's not clear if this is actually useful, or correct
+      -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-deploy-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>flatten-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+
+  <distributionManagement>
+    <repository>
+      <id>${project.artifactId}</id>
+      <url>${coat.deployment.url}</url>
+    </repository>
+  </distributionManagement>
+
 </project>

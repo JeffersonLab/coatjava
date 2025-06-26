@@ -8,9 +8,8 @@
   <packaging>jar</packaging>
 
   <parent>
-    <groupId>org.jlab.clas</groupId>
-    <artifactId>coatjava</artifactId>
-    <relativePath>../../parent/pom.xml</relativePath>
+    <groupId>org.jlab.clas12</groupId>
+    <artifactId>reconstruction</artifactId>
     <version>13.0.2-SNAPSHOT</version>
   </parent>
 
