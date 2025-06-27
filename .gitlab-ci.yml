@@ -1,0 +1,92 @@
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      auto_cancel:
+        on_new_commit: interruptible
+    - if: $CI_COMMIT_BRANCH == "main"
+      auto_cancel:
+        on_new_commit: conservative
+    - if: $CI_COMMIT_TAG
+      auto_cancel:
+        on_new_commit: conservative
+
+default:
+  interruptible: true
+  before_script:
+    # FIXME: build minimal el9 container, or use container-forge
+    - dnf install -y java-21-openjdk maven wget tree ruby python3-pip
+
+stages:
+  - build-stage
+  - test-stage
+  - deploy-stage
+
+build:
+  stage: build-stage
+  script:
+    - ./build-coatjava.sh -T4 --unittests --spotbugs --quiet --no-progress
+    - tar -czf coatjava.tar.gz coatjava
+  artifacts:
+    when: always
+    expire_in: 1 day
+    paths:
+      - coatjava
+
+depana:
+  allow_failure: true
+  stage: test-stage
+  dependencies: [build]
+  script:
+    - mvn dependency:tree -Ddetail=true --no-transfer-progress
+    - mvn dependency:analyze -DfailOnWarning=true -pl '!org.jlab.coat:coat-libs' --no-transfer-progress
+
+eb:
+  stage: test-stage
+  dependencies: [build]
+  script:
+    - cd validation/advanced-tests && ./run-eb-tests.sh -100 ${ARG}
+  parallel:
+    matrix:
+      - ARG: electronproton 
+      - ARG: electronprotonC 
+      - ARG: electrongamma 
+      - ARG: electronneutronC
+      - ARG: electronFTpion
+
+jacoco:
+  allow_failure: true
+  stage: test-stage
+  needs: [build]
+  dependencies: [build]
+  script:
+    - ./validation/jacoco-aggregate.sh
+  artifacts:
+    when: always
+    expire_in: 1 day
+    paths:
+      - publish
+
+docs:
+  stage: test-stage
+  needs: [build,jacoco]
+  dependencies: [build,jacoco]
+  script:
+    - python3 -m pip install -r docs/mkdocs/requirements.txt
+    - ./docs/mkdocs/generate.sh pages
+    - mvn javadoc:aggregate -pl '!org.jlab.coat:coat-libs' --no-transfer-progress
+    - mv target/reports/apidocs pages/javadoc
+    - mv publish pages/jacoco
+  artifacts:
+    when: always
+    expire_in: 7 days
+    paths:
+      - pages
+
+#deploy:
+#  stage: deploy-stage
+#  dependencies: [docs,jacoco,depana]
+
+#release:
+#  stage: deploy-stage
+#  dependencies: [deploy]
+
