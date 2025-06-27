@@ -25,7 +25,6 @@ build:
   stage: build-stage
   script:
     - ./build-coatjava.sh -T4 --unittests --spotbugs --quiet --no-progress
-    - tar -czf coatjava.tar.gz coatjava
   artifacts:
     when: always
     expire_in: 1 day
