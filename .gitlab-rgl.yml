@@ -66,7 +66,7 @@ coatjava:singularity:
      - silicon
   allow_failure: true
   script:
-    - apptainer build  --build-arg REF_NAME=${REF_NAME} coatjava.sif .containers/coatjava.def
+    - apptainer build  --build-arg REF_NAME=${CI_COMMIT_REF_NAME} coatjava.sif .containers/coatjava.def
     - ls -lrth
   artifacts:
       paths:
