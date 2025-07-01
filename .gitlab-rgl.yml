@@ -1,0 +1,91 @@
+coatjava_build:
+  stage: build-stage
+  image: gcr.io/kaniko-project/executor:debug
+  script:
+    - echo "${CI_COMMIT_REF_NAME}"
+    - >-
+      /kaniko/executor
+      --context     $CI_PROJECT_DIR/docker
+      --dockerfile  $CI_PROJECT_DIR/.containers/coatjava.Dockerfile
+      --destination $CI_REGISTRY_IMAGE/coatjava:${CI_COMMIT_REF_NAME}
+      --build-arg REF_NAME=${CI_COMMIT_REF_NAME}
+
+coatjava_dind_build:
+  stage: build-stage
+  image: eicweb.phy.anl.gov:4567/containers/image_recipes/ubuntu_dind:latest
+  tags: 
+    - "silicon"
+  when: manual
+  allow_failure: true
+  script:
+    - echo "${CI_COMMIT_REF_NAME}"
+    - >
+      docker build --build-arg REF_NAME=${CI_COMMIT_REF_NAME}  \
+                   -f .containers/coatjava.Dockerfile \
+                   -t $CI_REGISTRY_IMAGE/coatjava_dind:${CI_COMMIT_REF_NAME}  .
+    - docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD} ${CI_REGISTRY}
+    - docker push $CI_REGISTRY_IMAGE/coatjava_dind:${CI_COMMIT_REF_NAME}
+
+
+print_help:
+  stage: test-stage
+  image: $CI_REGISTRY_IMAGE/coatjava:${CI_COMMIT_REF_NAME}
+  needs: ["coatjava_build"]
+  script:
+    - export PATH=/opt/coatjava/coatjava/bin:$PATH
+    - source /opt/coatjava/coatjava/libexec/env.sh
+    - ls -lrth
+    - printenv
+    - decoder -help || true
+    - recon-util -help || true
+
+    
+alert_testing:
+  allow_failure: true
+  stage: test-stage
+  needs: ["coatjava_build"]
+  variables:
+    COATJAVA_REF_NAME: "$CI_COMMIT_REF_NAME"
+  trigger:
+    project: hallb/alert/c12
+    strategy: depend
+
+shared_for_alert_tests:
+  allow_failure: true
+  stage: test-stage
+  needs: ["coatjava_build"]
+  variables:
+    REF_NAME: "$CI_COMMIT_REF_NAME"
+  trigger:
+    project: hallb/alert/atof/shared_for_alert
+    strategy: depend
+
+coatjava:singularity:
+  allow_failure: true
+  stage: build-stage
+  image: eicweb.phy.anl.gov:4567/containers/image_recipes/ubuntu_dind:latest
+  needs: ["coatjava_build"]
+  tags:
+     - silicon
+  allow_failure: true
+  script:
+    - apptainer build  --build-arg REF_NAME=${CI_COMMIT_REF_NAME} coatjava.sif .containers/coatjava.def
+    - ls -lrth
+  artifacts:
+      paths:
+        - coatjava.sif
+
+#create-pages:
+#  stage: build-stage
+#  image: codecr.jlab.org/hallb/alert/coatjava/coatjava:development
+#  script:
+#    - echo "${CI_COMMIT_REF_NAME}"
+#    - ls -lrth
+#    - mvn --version
+#    - java --version 
+#    - ls -lrth
+#    - pwd
+#    - ./build-coatjava.sh --docs
+#    - mv coatjava/share/doc/coatjava/html public
+#  pages: true  # specifies that this is a Pages job and publishes the default public directory
+
