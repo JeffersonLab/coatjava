@@ -1,4 +1,5 @@
 coatjava_build:
+  stage: build-stage
   image: gcr.io/kaniko-project/executor:debug
   script:
     - echo "${CI_COMMIT_REF_NAME}"
@@ -10,6 +11,7 @@ coatjava_build:
       --build-arg REF_NAME=${CI_COMMIT_REF_NAME}
 
 coatjava_dind_build:
+  stage: build-stage
   image: eicweb.phy.anl.gov:4567/containers/image_recipes/ubuntu_dind:latest
   tags: 
     - "silicon"
@@ -26,6 +28,7 @@ coatjava_dind_build:
 
 
 print_help:
+  stage: test-stage
   image: $CI_REGISTRY_IMAGE/coatjava:${CI_COMMIT_REF_NAME}
   needs: ["coatjava_build"]
   script:
@@ -38,6 +41,7 @@ print_help:
 
     
 alert_testing:
+  stage: test-stage
   needs: ["coatjava_build"]
   variables:
     REF_NAME: "$CI_COMMIT_REF_NAME"
@@ -46,6 +50,7 @@ alert_testing:
     strategy: depend
 
 shared_for_alert_tests:
+  stage: test-stage
   needs: ["coatjava_build"]
   variables:
     REF_NAME: "$CI_COMMIT_REF_NAME"
@@ -54,6 +59,7 @@ shared_for_alert_tests:
     strategy: depend
 
 coatjava:singularity:
+  stage: build-stage
   image: eicweb.phy.anl.gov:4567/containers/image_recipes/ubuntu_dind:latest
   needs: ["coatjava_build"]
   tags:
@@ -66,16 +72,17 @@ coatjava:singularity:
       paths:
         - coatjava.sif
 
-create-pages:
-  image: codecr.jlab.org/hallb/alert/coatjava/coatjava:development
-  script:
-    - echo "${CI_COMMIT_REF_NAME}"
-    - ls -lrth
-    - mvn --version
-    - java --version 
-    - ls -lrth
-    - pwd
-    - ./build-coatjava.sh --docs
-    - mv coatjava/share/doc/coatjava/html public
-  pages: true  # specifies that this is a Pages job and publishes the default public directory
+#create-pages:
+#  stage: build-stage
+#  image: codecr.jlab.org/hallb/alert/coatjava/coatjava:development
+#  script:
+#    - echo "${CI_COMMIT_REF_NAME}"
+#    - ls -lrth
+#    - mvn --version
+#    - java --version 
+#    - ls -lrth
+#    - pwd
+#    - ./build-coatjava.sh --docs
+#    - mv coatjava/share/doc/coatjava/html public
+#  pages: true  # specifies that this is a Pages job and publishes the default public directory
 
