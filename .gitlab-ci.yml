@@ -81,6 +81,8 @@ docs:
     paths:
       - pages
 
+include: '.gitlab-rgl.yml'
+
 #deploy:
 #  stage: deploy-stage
 #  dependencies: [docs,jacoco,depana]
