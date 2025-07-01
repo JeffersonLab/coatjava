@@ -7,13 +7,6 @@ workflow:
     - if: '$CI_COMMIT_BRANCH == "development"'
     - if: '$CI_COMMIT_TAG'
 
-variables:
-  KUBERNETES_MEMORY_LIMIT: "8Gi"
-  REF_NAME: ${CI_COMMIT_REF_NAME}
-
-default:
-  image: ubuntu:noble
-  retry: 2
 
 coatjava_build:
   image: gcr.io/kaniko-project/executor:debug
