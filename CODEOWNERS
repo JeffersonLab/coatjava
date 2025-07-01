@@ -62,6 +62,7 @@
 # infrastructure
 .github/* @baltzell @raffaelladevita @c-dilks
 .gitlab-ci.yml @baltzell @raffaelladevita @c-dilks
+.gitlab-rgl.yml @whit2333
 bin/* @baltzell @raffaelladevita @c-dilks
 docs/* @baltzell @raffaelladevita @c-dilks
 external-dependencies/* @baltzell @raffaelladevita @c-dilks
