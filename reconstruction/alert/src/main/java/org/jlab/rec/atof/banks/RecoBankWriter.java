@@ -93,6 +93,7 @@ public class RecoBankWriter {
             bank.setInt("sector", i, (int) hitList.get(i).getSector());
             bank.setInt("layer", i, (int) hitList.get(i).getLayer());
             bank.setInt("component", i, (int) hitList.get(i).getComponent());
+            bank.setInt("order", i, (int) hitList.get(i).getOrder());
             bank.setFloat("time", i, (float) hitList.get(i).getTime());
             bank.setFloat("x", i, (float) (hitList.get(i).getX()));
             bank.setFloat("y", i, (float) (hitList.get(i).getY()));

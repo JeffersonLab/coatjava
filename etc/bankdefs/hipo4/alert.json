@@ -126,6 +126,10 @@
         "type": "I",
         "info": "atof component" 
       },{
+        "name": "order",
+        "type": "I",
+        "info": "atof order" 
+      },{
         "name": "time",
         "type": "F",
         "info": "time in ns"
