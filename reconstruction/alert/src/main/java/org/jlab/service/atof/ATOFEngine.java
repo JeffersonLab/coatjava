@@ -103,7 +103,7 @@ public class ATOFEngine extends ReconstructionEngine {
         clusterFinder.makeClusters(event,hitfinder);
         ArrayList<ATOFCluster> Clusters = clusterFinder.getClusters();
 
-        if (WedgeHits.size() != 0 || BarHits.size() != 0) {
+        if (!WedgeHits.isEmpty() || !BarHits.isEmpty()) {
             rbc.appendATOFBanks(event, WedgeHits, BarHits, Clusters);
         }
         return true;

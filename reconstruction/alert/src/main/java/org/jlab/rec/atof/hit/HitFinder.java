@@ -86,10 +86,11 @@ public class HitFinder {
 
             //Building a Hit
             ATOFHit hit = new ATOFHit(sector, layer, component, order, tdc, tot, atof);
+            hit.setIdTDC(i);
             if (hit.getEnergy() < 0.01) {
                 continue; //energy threshold
             }
-
+            
             //Sorting the hits into wedge, upstream and downstream bar hits
             //Lists are built for up/down bar to match them after
             //Wedge hits are mayched to ahdc tracks and listed 

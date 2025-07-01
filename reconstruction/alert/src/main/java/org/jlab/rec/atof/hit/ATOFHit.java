@@ -25,7 +25,7 @@ public class ATOFHit {
     private String type;
     private boolean isInACluster;
     private int associatedClusterIndex;
-    int idTDC;
+    private int idTDC;
 
     public int getSector() {
         return sector;

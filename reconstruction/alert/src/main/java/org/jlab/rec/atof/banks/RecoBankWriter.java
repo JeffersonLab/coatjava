@@ -18,6 +18,7 @@ public class RecoBankWriter {
 
     /**
      * Writes the bank of atof hits.
+     * Hits represent hits in the scintillators.
      *
      * @param event the {@link DataEvent} in which to add the bank
      * @param wedgeHits the {@link ArrayList} of {@link ATOFHit} containing the
@@ -44,6 +45,51 @@ public class RecoBankWriter {
         for (int i = 0; i < hitList.size(); i++) {
             bank.setShort("id", i, (short) (i + 1));
             bank.setShort("clusterid", i, (short) hitList.get(i).getAssociatedClusterIndex());
+            bank.setInt("sector", i, (int) hitList.get(i).getSector());
+            bank.setInt("layer", i, (int) hitList.get(i).getLayer());
+            bank.setInt("component", i, (int) hitList.get(i).getComponent());
+            bank.setFloat("time", i, (float) hitList.get(i).getTime());
+            bank.setFloat("x", i, (float) (hitList.get(i).getX()));
+            bank.setFloat("y", i, (float) (hitList.get(i).getY()));
+            bank.setFloat("z", i, (float) (hitList.get(i).getZ()));
+            bank.setFloat("energy", i, (float) hitList.get(i).getEnergy());
+        }
+        return bank;
+    }
+    
+    /**
+     * Writes the bank of atof hits in single sipm channels.
+     *
+     * @param event the {@link DataEvent} in which to add the bank
+     * @param wedgeHits the {@link ArrayList} of {@link ATOFHit} containing the
+     * wedge hits to be added to the bank
+     * @param barHits the {@link ArrayList} of {@link BarHit} containing the bar
+     * hits that are an association of single sipm hits to be added to the bank. 
+     * @return {@link DataBank} the bank with all the hits read in the event.
+     *
+     */
+    public static DataBank fillATOFChannelHitBank(DataEvent event, ArrayList<ATOFHit> wedgeHits, ArrayList<BarHit> barHits) {
+
+        ArrayList<ATOFHit> hitList = new ArrayList<>();
+        hitList.addAll(wedgeHits);
+        for(int i_bar_hits=0; i_bar_hits<barHits.size(); i_bar_hits++){
+            BarHit thisBarHit = barHits.get(i_bar_hits);
+            hitList.add(thisBarHit.getHitUp());
+            hitList.add(thisBarHit.getHitDown());
+            
+        }
+
+        DataBank bank = event.createBank("ATOF::calibhits", hitList.size());
+
+        if (bank == null) {
+            System.err.println("COULD NOT CREATE A ATOF::calibhits BANK!!!!!!");
+            return null;
+        }
+
+        for (int i = 0; i < hitList.size(); i++) {
+            bank.setShort("id", i, (short) (i + 1));
+            bank.setShort("clusterid", i, (short) hitList.get(i).getAssociatedClusterIndex());
+            bank.setShort("tdcid", i, (short) hitList.get(i).getIdTDC());
             bank.setInt("sector", i, (int) hitList.get(i).getSector());
             bank.setInt("layer", i, (int) hitList.get(i).getLayer());
             bank.setInt("component", i, (int) hitList.get(i).getComponent());
@@ -155,6 +201,13 @@ public class RecoBankWriter {
         DataBank clusterbank = fillATOFClusterBank(event, clusterList);
         if (clusterbank != null) {
             event.appendBank(clusterbank);
+        } else {
+            return 1;
+        }
+        
+        DataBank calibHitBank = this.fillATOFChannelHitBank(event, wedgeHits, barHits);
+        if (calibHitBank != null) {
+            event.appendBank(calibHitBank);
         } else {
             return 1;
         }

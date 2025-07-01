@@ -30,6 +30,13 @@ public class BarHit extends ATOFHit {
     public void setHitDown(ATOFHit hit_down) {
         this.hitDown = hit_down;
     }
+    
+    @Override
+    public void setAssociatedClusterIndex(int index) {
+        super.setAssociatedClusterIndex(index);
+        this.hitDown.setAssociatedClusterIndex(index);
+        this.hitUp.setAssociatedClusterIndex(index);
+    }
 
     /**
      * Computes bar hit z coordinate from up/downstream hit times.
