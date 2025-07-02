@@ -2,8 +2,10 @@ package org.jlab.utils.options;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
@@ -18,12 +20,12 @@ public class OptionParser {
     private Map<String,OptionValue> optionsDescriptors = new TreeMap<>();    
     private Map<String,OptionValue>    requiredOptions = new TreeMap<>();
     private Map<String,OptionValue>      parsedOptions = new TreeMap<>();
+    private Set<String>               overridenOptions = new HashSet<>();
     private List<String>               parsedInputList = new ArrayList<>();
     private String                             program = "undefined";
     private boolean                  requiresInputList = true;
     private String                  programDescription = "";
-    private boolean                  overrideVerbosity = false;
-
+    
     public OptionParser(){
         init();
     }
@@ -34,9 +36,11 @@ public class OptionParser {
     }
    
     private void init() {
-        addOption("-v","FINE","logging verbosity level");
+        addOption("-l","FINE","logging verbosity level");
+        addOption("-v",null,"print version");
+        addOption("-h",null,"print help");
     }
-  
+
     public void setDescription(String desc){
         this.programDescription = desc;
     }
@@ -53,7 +57,7 @@ public class OptionParser {
     private void check(String key, Set<String> keys) {
         if (keys.contains(key)) {
             System.out.println("WARNING: overriding OptionParser option:  "+key);
-            if (key.equals("-v")) overrideVerbosity = true;
+            overridenOptions.add(key);
         }
     }
     
@@ -130,15 +134,19 @@ public class OptionParser {
         System.out.println(this.getUsageString());
         System.out.println("\n\n");
     }
-    
-    public void parse(String[] args){
+   
+    public void parse(String... args) {
 
         List<String> arguments = new ArrayList<>();
         arguments.addAll(Arrays.asList(args));
 
-        // Default, non-overridable, help option:
-        if(this.containsOptions(arguments, "-h","-help")==true){
+        // Default, non-overridable, options:
+        if(this.containsOptions(arguments,"-h","-help")==true){
             this.printUsage();
+            System.exit(0);
+        }
+        else if(this.containsOptions(arguments,"-v","-version")==true){
+            System.out.println(getVersion());
             System.exit(0);
         }
 
@@ -173,8 +181,8 @@ public class OptionParser {
         }
 
         // Configure logger:
-        if (!overrideVerbosity) {
-            setVerbosity(this.parsedOptions.get("-v").stringValue());
+        if (!overridenOptions.contains("-l")) {
+            setVerbosity(this.parsedOptions.get("-l").stringValue());
         }
     }
 
@@ -183,17 +191,27 @@ public class OptionParser {
             DefaultLogger.initialize(Level.parse(level));
         }
         catch (IllegalArgumentException e) {
-            System.err.println("Invalid -v java.util.logging.Level:  "+level);
+            System.err.println("Invalid -l java.util.logging.Level:  "+level);
             System.exit(102);
         }
         catch (NullPointerException e) {
-            System.err.println("Unavailable -v COATJAVA logging level:  "+level);
+            System.err.println("Unavailable -l COATJAVA logging level:  "+level);
             System.exit(103);
         }
     }
 
     public List<String> getInputList(){
         return this.parsedInputList;
+    }
+   
+    public static String getVersion(){
+        try {
+            Properties p = new Properties();
+            p.load(OptionParser.class.getResourceAsStream("/pom.properties"));
+            return String.format("coatjava version %s",p.getProperty("version"));
+        } catch (Exception e) {
+            return "coatjava version ???";
+        }
     }
     
     public static void main(String[] args){
@@ -202,7 +220,11 @@ public class OptionParser {
         parser.addOption("-r", "10");
         parser.addOption("-t", "25.0");
         parser.addOption("-d", "35");
-        parser.parse(args);
+        parser.addOption("-h","helpless");
+        parser.addOption("-v","versionless");
+        if (args.length == 0) parser.parse("-o","out.dat","in.dat");
+        else parser.parse(args);
         parser.show();        
+        parser.parse("-h");
     }
 }
