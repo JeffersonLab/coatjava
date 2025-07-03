@@ -12,6 +12,7 @@ import java.util.Arrays;
 
 
 
+
 /**
  * Generate GEANT4 volume for the URWELL detector
  * 
@@ -29,7 +30,8 @@ public final class URWellGeant4Factory extends Geant4Factory {
     private boolean isProto = false;
     private double[] ymin = new double[URWellConstants.NMAXREGIONS];
     private double[] zmin = new double[URWellConstants.NMAXREGIONS];
-    
+    private double[] Hsector = new double[URWellConstants.NMAXREGIONS];
+    private String name = ""; 
 
     /**
      * Create the URWELL full geometry
@@ -59,44 +61,51 @@ public final class URWellGeant4Factory extends Geant4Factory {
 
         switch (config) {
             case 0 -> {
-                
+                 
                 nSectors  = URWellConstants.NSECTORS;
                 nChambers = URWellConstants.NCHAMBERS;
                 nRegions = Math.min(URWellConstants.NMAXREGIONS, regions);
                 isProto = false;
                 sectorheight = URWellConstants.SECTORHEIGHT;
+                Arrays.fill(Hsector, URWellConstants.SECTORHEIGHT);   
                 thilt = URWellConstants.THTILT;
                 dx0chamber0 =  URWellConstants.DX0CHAMBER0;
                 thopen = URWellConstants.THOPEN;
                 ymin =Arrays.copyOf(URWellConstants.YMIN, URWellConstants.YMIN.length);
                 zmin =Arrays.copyOf(URWellConstants.ZMIN, URWellConstants.ZMIN.length);
+                name ="";
                 
             }
             case 1 -> {
+                nRegions = URWellConstants.NREGIONS_PROTO;
+                nSectors = URWellConstants.NSECTORS_PROTO;
+                nChambers = URWellConstants.NCHAMBERS_PROTO;
+                isProto = true;
+                name = "_proto";
+
+            }
+            case 2 -> {
+
                 nRegions = Math.min(URWellConstants.NMAXREGIONS, regions);
                 nSectors = URWellConstants.NSECTORS;
                 nChambers = URWellConstants.NCHAMBERS_ddvcs;
+                Hsector = Arrays.copyOf(URWellConstants.HSECTOR_ddvcs, URWellConstants.HSECTOR_ddvcs.length);
                 sectorheight = URWellConstants.SECTORHEIGHT_ddvcs;
                 thilt = URWellConstants.THTILT;
                 dx0chamber0 = URWellConstants.DX0CHAMBER0_ddvcs;
                 thopen = URWellConstants.THOPEN;
                 ymin = Arrays.copyOf(URWellConstants.YMIN_ddvcs, URWellConstants.YMIN_ddvcs.length);
                 zmin = Arrays.copyOf(URWellConstants.ZMIN_ddvcs, URWellConstants.ZMIN_ddvcs.length);
-
+                name = "_ddvcs";
                 isProto = false;
-            }
-            case 2 -> {
-                nRegions  = URWellConstants.NREGIONS_PROTO;
-                nSectors  = URWellConstants.NSECTORS_PROTO;
-                nChambers = URWellConstants.NCHAMBERS_PROTO;
-                isProto = true;
-                
             }
             default -> {
             }
         }
 
         for (int iregion = 0; iregion <regions ; iregion++) {
+            sectorheight = Hsector[iregion];
+           
             for (int isector = 0; isector < nSectors; isector++) {
                 Geant4Basic sectorVolume = createSector(isector, iregion, nChambers);
                 sectorVolume.setMother(motherVolume);
@@ -115,7 +124,6 @@ public final class URWellGeant4Factory extends Geant4Factory {
         if (prototype == false) {
             nRegions = Math.min(URWellConstants.NMAXREGIONS, regions);
 
-            nRegions = URWellConstants.NREGIONS;
             nSectors = URWellConstants.NSECTORS;
             nChambers = URWellConstants.NCHAMBERS;
             nRegions = Math.min(URWellConstants.NMAXREGIONS, regions);
@@ -126,14 +134,16 @@ public final class URWellGeant4Factory extends Geant4Factory {
             thopen = URWellConstants.THOPEN;
             ymin = Arrays.copyOf(URWellConstants.YMIN, URWellConstants.YMIN.length);
             zmin = Arrays.copyOf(URWellConstants.ZMIN, URWellConstants.ZMIN.length);
-            
+            name ="";
         } else {
             nRegions  = URWellConstants.NREGIONS_PROTO;
             nSectors  = URWellConstants.NSECTORS_PROTO;
             nChambers = URWellConstants.NCHAMBERS_PROTO;
+            name ="_proto";
         }
 
         for (int iregion = 0; iregion <regions ; iregion++) {
+            
             for (int isector = 0; isector < nSectors; isector++) {
                 Geant4Basic sectorVolume = createSector(isector, iregion, nChambers);
                 sectorVolume.setMother(motherVolume);
@@ -266,7 +276,7 @@ public final class URWellGeant4Factory extends Geant4Factory {
         Vector3d vCenter = this.getCenterCoordinate(isector, iregion);
         if(isProto == true) isector =5;
                 // Sector construction
-        Geant4Basic sectorVolume = new G4Trap("region_uRwell_" + (iregion + 1) + "_s" + (isector + 1),
+        Geant4Basic sectorVolume = new G4Trap("region_uRwell_" + (iregion + 1) + "_s" + (isector + 1) + name,
                 regionDZ, -regionThilt, Math.toRadians(90.0),
                 regionDY, regionDX0, regionDX1, 0.0,
                 regionDY, regionDX0, regionDX1, 0.0);
@@ -276,7 +286,7 @@ public final class URWellGeant4Factory extends Geant4Factory {
         sectorVolume.translate(vCenter.x, vCenter.y, vCenter.z);
         sectorVolume.setId(isector + 1, iregion + 1, 0, 0);
         
-        if (isProto==true) sectorVolume.setName("region_uRwell_" + (iregion + 1) + "_s" + (isector + 1) + "_proto");
+       // if (isProto==true) sectorVolume.setName("region_uRwell_" + (iregion + 1) + "_s" + (isector + 1) + "_proto");
         
                // Chambers construction
         for (int ich = 0; ich < Nchambers; ich++) {
@@ -285,11 +295,9 @@ public final class URWellGeant4Factory extends Geant4Factory {
 
             Geant4Basic chamberVolume = this.createChamber(isector, iregion, ich);
 
-            if (isProto==true) {
-                chamberVolume.setName("rg" + (iregion + 1) + "_s" + (isector + 1) + "_c" + (ich +1) + "_proto");
-            }else{
-                chamberVolume.setName("rg" + (iregion + 1) + "_s" + (isector + 1) + "_c" + (ich +1));
-            }
+
+            chamberVolume.setName("rg" + (iregion + 1) + "_s" + (isector + 1) + "_c" + (ich +1) + name);
+
              
             chamberVolume.setMother(sectorVolume);
             if(isProto==false) chamberVolume.translate(0.0,y_chamber-sectorheight/2,0. );
@@ -348,11 +356,8 @@ public final class URWellGeant4Factory extends Geant4Factory {
                 daughterDY, daughterDX0, daughterDX1, 0.0,
                 daughterDY, daughterDX0, daughterDX1, 0.0);
             
-            if (isProto==true) {
-                daughterVolume.setName("rg" + (iRegion + 1) + "_s" + (iSector + 1) + "_c" + (iChamber +1) +"_"+URWellConstants.CHAMBERVOLUMESNAME[i] + "_proto");
-            }else{
-                daughterVolume.setName("rg" + (iRegion + 1) + "_s" + (iSector + 1) + "_c" + (iChamber +1) +"_"+URWellConstants.CHAMBERVOLUMESNAME[i] );
-            }
+                daughterVolume.setName("rg" + (iRegion + 1) + "_s" + (iSector + 1) + "_c" + (iChamber +1) +"_"+URWellConstants.CHAMBERVOLUMESNAME[i] + name);
+
             
             daughterVolume.setMother(chamberVolume);
             daughterVolume.setPosition(0.0, daughterVolumeY,daughterVolumeZ);
@@ -361,107 +366,103 @@ public final class URWellGeant4Factory extends Geant4Factory {
     }
     
     
-    public double[] getChamber_Dimensions(int ichamber)
-    {
-        
-        double[] chamber_Dimensions = new double[5];
-        
-        if(isProto == false){  
-            chamber_Dimensions[0] = (this.getChamberThickness())/2. + URWellConstants.ZENLARGEMENT/2;
-            chamber_Dimensions[1] = sectorheight/nChambers/2+0.05;
-            chamber_Dimensions[2] = (ichamber*sectorheight/nChambers)*
-                                        Math.tan(Math.toRadians(thopen/2.))+ dx0chamber0 +0.1; 
-            chamber_Dimensions[3] = (sectorheight/nChambers)*
-                                        Math.tan(Math.toRadians(thopen/2.))+chamber_Dimensions[2];  
-            chamber_Dimensions[4] = Math.toRadians(thilt);
-        }else
-        {
-            Line3D AB = new Line3D(URWellConstants.Apoint, URWellConstants.Bpoint);
-            Line3D CD = new Line3D(URWellConstants.Cpoint, URWellConstants.Dpoint);
-            
-            double DX0_PROTO = URWellConstants.Cpoint.distance(URWellConstants.Dpoint);
-            double DX1_PROTO = URWellConstants.Apoint.distance(URWellConstants.Bpoint);
-            
-            Point3D mAB = AB.midpoint();
-            Point3D mCD = CD.midpoint();
-            double h_proto = mAB.distance(mCD);
-            
-            chamber_Dimensions[0] = (this.getChamberThickness())/2. + URWellConstants.ZENLARGEMENT/2. ;
-            chamber_Dimensions[1] = h_proto/2 + URWellConstants.YENLARGEMENT -0.1 ;
-            chamber_Dimensions[2] = DX0_PROTO/2 + URWellConstants.XENLARGEMENT -0.1 ;
-            chamber_Dimensions[3] = DX1_PROTO/2 + URWellConstants.XENLARGEMENT -0.1 ; 
-            chamber_Dimensions[4]=Math.toRadians(thilt);
-            
-        }
-
-        
-        return chamber_Dimensions;
-        
-    }
-    /**
-     * Calculates the chamber daughter dimensions
-     * 
-     * @param ichamber (0, 1, 2)
-     * @return an array of doubles containing trapezoid dimensions: half small base , half large base, half height
-     */
-    public double[] getChamber_daughter_Dimensions(int ichamber){
-        double[] chamber_daughter_Dimensions = new double[3];
-        
-        if(isProto == false)
-        {
-            chamber_daughter_Dimensions[0] = sectorheight/nChambers/2 ;
-            chamber_daughter_Dimensions[1] = (ichamber*sectorheight/nChambers)
-                             * Math.tan(Math.toRadians(thopen/2.))
-                             + dx0chamber0 ;
     
-            chamber_daughter_Dimensions[2] = (sectorheight/nChambers)
-                             * Math.tan(Math.toRadians(thopen/2.))+chamber_daughter_Dimensions[1];
-    
-        }else
-        {
+    private double[] getProtoDimensions(boolean full, boolean includeZ) {
+        Line3D AB = new Line3D(URWellConstants.Apoint, URWellConstants.Bpoint);
+        Line3D CD = new Line3D(URWellConstants.Cpoint, URWellConstants.Dpoint);
 
-            Line3D AB = new Line3D(URWellConstants.Apoint, URWellConstants.Bpoint);
-            Line3D CD = new Line3D(URWellConstants.Cpoint, URWellConstants.Dpoint);
-            
-            double DX0_PROTO = URWellConstants.Cpoint.distance(URWellConstants.Dpoint);
-            double DX1_PROTO = URWellConstants.Apoint.distance(URWellConstants.Bpoint);
-            
-            Point3D mAB = AB.midpoint();
-            Point3D mCD = CD.midpoint();
-            
-            double h_proto = mAB.distance(mCD);
-            
-            chamber_daughter_Dimensions[0] = h_proto/2. +0.1;
-            chamber_daughter_Dimensions[1] = DX0_PROTO/2.;
-            chamber_daughter_Dimensions[2] = DX1_PROTO/2.+0.05;
-   
+        double DX0_PROTO = URWellConstants.Cpoint.distance(URWellConstants.Dpoint);
+        double DX1_PROTO = URWellConstants.Apoint.distance(URWellConstants.Bpoint);
+
+        Point3D mAB = AB.midpoint();
+        Point3D mCD = CD.midpoint();
+        double h_proto = mAB.distance(mCD);
+
+        if (full) {
+            return new double[]{
+                this.getChamberThickness() / 2. + URWellConstants.ZENLARGEMENT / 2.,
+                h_proto / 2. + URWellConstants.YENLARGEMENT - 0.1,
+                DX0_PROTO / 2. + URWellConstants.XENLARGEMENT - 0.1,
+                DX1_PROTO / 2. + URWellConstants.XENLARGEMENT - 0.1,
+                Math.toRadians(thilt)
+            };
+        } else {
+            return new double[]{
+                h_proto / 2. + 0.1,
+                DX0_PROTO / 2.,
+                DX1_PROTO / 2. + 0.05
+            };
         }
-        return chamber_daughter_Dimensions;
     }
 
+    private double[] getNonProtoDimensions(int ichamber, double h, boolean full) {
+        double halfHeight = h / nChambers / 2.0;
+        double dx0 = (ichamber * h / nChambers) * Math.tan(Math.toRadians(thopen / 2.)) + dx0chamber0;
+        double dx1 = (h / nChambers) * Math.tan(Math.toRadians(thopen / 2.)) + dx0;
+
+        if (full) {
+            return new double[]{
+                this.getChamberThickness() / 2. + URWellConstants.ZENLARGEMENT / 2.,
+                halfHeight + 0.05,
+                dx0 + 0.1,
+                dx1,
+                Math.toRadians(thilt)
+            };
+        } else {
+            return new double[]{
+                halfHeight,
+                dx0,
+                dx1
+            };
+        }
+    }
+    
+    public double[] getChamber_Dimensions(int ichamber) {
+    return isProto
+        ? getProtoDimensions(true, true)
+                : getNonProtoDimensions(ichamber, sectorheight, true);
+    }
+
+    public double[] getChamber_daughter_Dimensions(int ichamber) {
+        return isProto
+                ? getProtoDimensions(false, false)
+                : getNonProtoDimensions(ichamber, sectorheight, false);
+    }
+
+    public double[] getChamber_daughter_Dimensions(int layer, int ichamber) {
+        int r = (layer - 1) / 2 ;
+       
+        return isProto
+                ? getProtoDimensions(false, false)
+                : getNonProtoDimensions(ichamber, Hsector[r], false);
+    }
+
+
+    
+    
+     
     /**
      * Returns the chamber volume for the chosen sector and chamber
      * 
      * @param sector (1-6)
      * @param chamber (1, 2, 3)
+     * @param layer
      * @return the chamber volume
      */
-    public Geant4Basic getChamberVolume(int sector, int chamber,int layer, boolean isProto) {
+    public Geant4Basic getChamberVolume(int sector, int chamber, int layer) {
 
-        int r = (layer-1)/2 +1;
+        int r = (layer - 1) / 2 + 1;
         int s = sector;
         int c = chamber;
 
         String volumeName;
-        if(isProto==false){
-            volumeName = "rg" + r + "_s" + s + "_c" + c + "_cathode_gas";
-        }else{
-            volumeName = "rg" + r + "_s" + s + "_c" + c + "_cathode_gas"+"_proto";
-        }
-         return this.getAllVolumes().stream()
-                      .filter(volume -> (volume.getName().contains(volumeName)))
-                      .findAny()
-                      .orElse(null);
+
+        volumeName = "rg" + r + "_s" + s + "_c" + c + "_cathode_gas" + name;
+
+        return this.getAllVolumes().stream()
+                .filter(volume -> (volume.getName().contains(volumeName)))
+                .findAny()
+                .orElse(null);
     }
 
     /**
@@ -475,7 +476,8 @@ public final class URWellGeant4Factory extends Geant4Factory {
         int r = region;
         int s = sector;
 
-        String volName = "region_uRwell_" + r + "_s" + s;
+        String volName = "region_uRwell_" + r + "_s" + s +name;
+       
         return this.getAllVolumes().stream()
                       .filter(volume -> (volume.getName().contains(volName)))
                       .findAny()
@@ -492,7 +494,7 @@ public final class URWellGeant4Factory extends Geant4Factory {
         URWellConstants.connect(cp);
         
        // URWellGeant4Factory factory = new URWellGeant4Factory(cp, false, 2);
-        URWellGeant4Factory factory = new URWellGeant4Factory(cp, 1, 2);    
+        URWellGeant4Factory factory = new URWellGeant4Factory(cp, 2, 6);    
         factory.getAllVolumes().forEach(volume -> {
             System.out.println(volume.gemcString());
         });
