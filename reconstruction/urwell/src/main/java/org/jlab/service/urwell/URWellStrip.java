@@ -185,7 +185,7 @@ public class URWellStrip implements Comparable {
                 strip.setEnergy(strip.ADC*URWellConstants.ADCTOENERGY);
                 strip.setTime(strip.TDC*URWellConstants.TDCTOTIME);
                 strip.setLine(factory.getStrip(sector, layer, comp)); 
-                strip.setChamber(factory.getChamberIndex(comp)+1);
+                strip.setChamber(factory.getChamberIndex(layer, comp)+1);
                 strip.setStatus(0);
                 
                 if(strip.getEnergy()>URWellConstants.THRESHOLD) strips.add(strip);
