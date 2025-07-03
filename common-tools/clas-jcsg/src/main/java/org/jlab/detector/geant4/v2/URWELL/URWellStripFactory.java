@@ -551,7 +551,7 @@ public final class URWellStripFactory {
         double angle = factory2.getStereoAngle(0,0);
 
         int strip = 1418;
-        int layer = 2;
+        int layer = 1;
         int sector =2;
         
         System.out.println("stereo angle");
