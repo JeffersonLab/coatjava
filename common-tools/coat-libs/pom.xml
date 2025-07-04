@@ -1,17 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-
   <modelVersion>4.0.0</modelVersion>
+
   <groupId>org.jlab.coat</groupId>
   <artifactId>coat-libs</artifactId>
-  <version>13.0.1-SNAPSHOT</version>
+  <version>13.0.2-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <parent>
     <groupId>org.jlab.clas</groupId>
-    <artifactId>coatjava</artifactId>
-    <relativePath>../../parent/pom.xml</relativePath>
-    <version>13.0.1-SNAPSHOT</version>
+    <artifactId>common-tools</artifactId>
+    <version>13.0.2-SNAPSHOT</version>
   </parent>
 
   <repositories>
@@ -69,85 +68,85 @@
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-io</artifactId>
-      <version>13.0.1-SNAPSHOT</version>
+      <version>13.0.2-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clara-io</artifactId>
-      <version>13.0.1-SNAPSHOT</version>
+      <version>13.0.2-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-reco</artifactId>
-      <version>13.0.1-SNAPSHOT</version>
+      <version>13.0.2-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-utils</artifactId>
-      <version>13.0.1-SNAPSHOT</version>
+      <version>13.0.2-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-jcsg</artifactId>
-      <version>13.0.1-SNAPSHOT</version>
+      <version>13.0.2-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-detector</artifactId>
-      <version>13.0.1-SNAPSHOT</version>
+      <version>13.0.2-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-analysis</artifactId>
-      <version>13.0.1-SNAPSHOT</version>
+      <version>13.0.2-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-geometry</artifactId>
-      <version>13.0.1-SNAPSHOT</version>
+      <version>13.0.2-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-math</artifactId>
-      <version>13.0.1-SNAPSHOT</version>
+      <version>13.0.2-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-physics</artifactId>
-      <version>13.0.1-SNAPSHOT</version>
+      <version>13.0.2-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>swim-tools</artifactId>
-      <version>13.0.1-SNAPSHOT</version>
+      <version>13.0.2-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-tracking</artifactId>
-      <version>13.0.1-SNAPSHOT</version>
+      <version>13.0.2-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-decay-tools</artifactId>
-      <version>13.0.1-SNAPSHOT</version>
+      <version>13.0.2-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>cnuphys</groupId>
       <artifactId>snr</artifactId>
-      <version>13.0.1-SNAPSHOT</version>
+      <version>13.0.2-SNAPSHOT</version>
     </dependency>
 
     <dependency>
@@ -244,34 +243,14 @@
         </configuration>
       </plugin>
 
-      <!-- generate minimal POM file for deployment, containing GAV (groupID, artifactId, version) -->
+      <!-- deployment plugins -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>flatten-maven-plugin</artifactId>
-        <version>1.7.0</version>
-        <configuration>
-          <flattenMode>fatjar</flattenMode>
-        </configuration>
-        <executions>
-          <execution>
-            <id>flatten</id>
-            <phase>package</phase>
-            <goals>
-              <goal>flatten</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
-
-      <!-- deployment configuration -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-deploy-plugin</artifactId>
-        <version>3.1.4</version>
-        <configuration>
-          <!-- Use the minimal GAV POM -->
-          <pomFile>${project.build.directory}/.flattened-pom.xml</pomFile>
-        </configuration>
       </plugin>
 
     </plugins>
@@ -280,8 +259,8 @@
   <!-- deployment -->
   <distributionManagement>
     <repository>
-      <id>coat-libs</id>
-      <url>file://myLocalMvnRepo</url> <!-- must be consistent with 'deploy-coatjava.sh' -->
+      <id>${project.artifactId}</id>
+      <url>${coat.deployment.url}</url>
     </repository>
   </distributionManagement>
 
