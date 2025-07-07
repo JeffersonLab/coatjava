@@ -62,7 +62,7 @@
       <dependency>
         <groupId>org.openjfx</groupId>
         <artifactId>javafx-base</artifactId>
-        <version>22.0.2</version>
+        <version>25-ea+23</version>
         <classifier>linux</classifier>
       </dependency>
 
