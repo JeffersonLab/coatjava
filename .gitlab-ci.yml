@@ -9,20 +9,12 @@ workflow:
     - if: $CI_COMMIT_TAG
       auto_cancel:
         on_new_commit: conservative
-    - if: '$CI_PIPELINE_SOURCE == "web"'
-      auto_cancel:
-        on_new_commit: interruptible
-    - if: '$CI_PIPELINE_SOURCE == "webide"'
-      auto_cancel:
-        on_new_commit: interruptible
-    - if: '$CI_COMMIT_BRANCH == "development"'
-      auto_cancel:
-        on_new_commit: conservative
-
 
 default:
   interruptible: true
-  retry: 2
+  before_script:
+    # FIXME: build minimal el9 container, or use container-forge
+    - dnf install -y java-21-openjdk maven wget tree ruby python3-pip
 
 stages:
   - build-stage
@@ -31,9 +23,6 @@ stages:
 
 build:
   stage: build-stage
-  before_script:
-    # FIXME: build minimal el9 container, or use container-forge
-    - dnf install -y java-21-openjdk maven wget tree ruby python3-pip
   script:
     - ./build-coatjava.sh -T4 --unittests --spotbugs --quiet --no-progress
   artifacts:
@@ -46,9 +35,6 @@ depana:
   allow_failure: true
   stage: test-stage
   dependencies: [build]
-  before_script:
-    # FIXME: build minimal el9 container, or use container-forge
-    - dnf install -y java-21-openjdk maven wget tree ruby python3-pip
   script:
     - mvn dependency:tree -Ddetail=true --no-transfer-progress
     - mvn dependency:analyze -DfailOnWarning=true -pl '!org.jlab.coat:coat-libs' --no-transfer-progress
@@ -56,9 +42,6 @@ depana:
 eb:
   stage: test-stage
   dependencies: [build]
-  before_script:
-    # FIXME: build minimal el9 container, or use container-forge
-    - dnf install -y java-21-openjdk maven wget tree ruby python3-pip
   script:
     - cd validation/advanced-tests && ./run-eb-tests.sh -100 ${ARG}
   parallel:
@@ -74,9 +57,6 @@ jacoco:
   stage: test-stage
   needs: [build]
   dependencies: [build]
-  before_script:
-    # FIXME: build minimal el9 container, or use container-forge
-    - dnf install -y java-21-openjdk maven wget tree ruby python3-pip
   script:
     - ./validation/jacoco-aggregate.sh
   artifacts:
@@ -89,9 +69,6 @@ docs:
   stage: test-stage
   needs: [build,jacoco]
   dependencies: [build,jacoco]
-  before_script:
-    # FIXME: build minimal el9 container, or use container-forge
-    - dnf install -y java-21-openjdk maven wget tree ruby python3-pip
   script:
     - python3 -m pip install -r docs/mkdocs/requirements.txt
     - ./docs/mkdocs/generate.sh pages
@@ -103,8 +80,6 @@ docs:
     expire_in: 7 days
     paths:
       - pages
-
-include: '.gitlab-rgl.yml'
 
 #deploy:
 #  stage: deploy-stage
