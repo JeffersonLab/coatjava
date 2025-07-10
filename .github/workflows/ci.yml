@@ -38,7 +38,7 @@ jobs:
       fail-fast: true
       matrix:
         runner:
-          - ubuntu-latest
+          - ubuntu-22.04
           - macos-latest
     runs-on: ${{ matrix.runner }}
     steps:
@@ -48,7 +48,7 @@ jobs:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
       - name: install xrootd-client (linux)
-        if: ${{ matrix.runner == 'ubuntu-latest' }}
+        if: ${{ matrix.runner == 'ubuntu-22.04' }}
         run: |
           sudo apt -y update
           sudo apt -y upgrade
@@ -79,7 +79,7 @@ jobs:
   #############################################################################
 
   unit_tests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -111,7 +111,7 @@ jobs:
       fail-fast: true
       matrix:
         runner:
-          - ubuntu-latest
+          - ubuntu-22.04
         id:
           - kpp
           - eb-ep
@@ -153,7 +153,7 @@ jobs:
 
   test_run-groovy:
     needs: [ build ]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK
@@ -167,7 +167,7 @@ jobs:
           groovy-version: ${{ env.groovy_version }}
       - uses: actions/download-artifact@v4
         with:
-          name: build_ubuntu-latest
+          name: build_ubuntu-22.04
       - name: untar build
         run: tar xzvf coatjava.tar.gz
       - name: test run-groovy
@@ -175,7 +175,7 @@ jobs:
 
   dependency_analysis:
     needs: [ build ]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK
@@ -185,7 +185,7 @@ jobs:
           distribution: ${{ env.java_distribution }}
       - uses: actions/download-artifact@v4
         with:
-          name: build_ubuntu-latest
+          name: build_ubuntu-22.04
       - name: untar build
         run: tar xzvf coatjava.tar.gz
       - name: print dependency tree
@@ -197,7 +197,7 @@ jobs:
   #############################################################################
 
   generate_documentation:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: [ unit_tests ]
     steps:
       ### mkdocs
@@ -237,7 +237,7 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: deployment
         id: deployment
@@ -249,7 +249,7 @@ jobs:
   release_build:
     if: ${{ github.ref_type == 'tag' }}
     needs: [ build ]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: write
       issues: write
@@ -262,7 +262,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          name: build_ubuntu-latest
+          name: build_ubuntu-22.04
       - name: rename artifact
         run: |
           tar xzf coatjava.tar.gz
@@ -284,7 +284,7 @@ jobs:
       - dependency_analysis
       - test_run-groovy
       - generate_documentation
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: pass
         run: exit 0
