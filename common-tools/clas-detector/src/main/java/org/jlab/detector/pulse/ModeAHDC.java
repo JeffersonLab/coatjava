@@ -8,231 +8,360 @@ import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.groups.NamedEntry;
 
-
 /**
  * A new extraction method dedicated to the AHDC signal waveform
  * 
  * Some blocks of code are inspired by MVTFitter.java and Bonus12 (`createBonusBank()`)
- *
- * @author  ftouchte
+ * 
+ * To do list:
+ * - read pedestal from the DB when a baseline cannot be computed
+ * - change the definition of ADC to be the max of the peak?
+ * - fit waveforms to define arrival time (and charge)
+ * 
+ * @author ftouchte, pilleux
  */
 public class ModeAHDC extends HipoExtractor  {
 
-	public static final short ADC_LIMIT = 4095; // 2^12-1
-	/**
-	 * This method extracts relevant informations from the digitized signal
-	 * (the samples) and store them in a Pulse
-	 *
-	 * @param pars CCDB row
-	 * @param id link to row in source bank
-	 * @param timestamp ...
-	 * @param time time (exprimed in bin) of the first channel of the AHDC pulse (after or not zero suppress; if ZS=0, time == 0)
-	 * @param samples ADC samples
-	 */
-	@Override
-	public List<Pulse> extract(NamedEntry pars, int id, long timestamp, long time, short... samples){
-		// Settings parameters (they can be initialised by a CCDB)
-		float samplingTime = 50.0f;
-		short adcOffset = 0; ///< pedestal of the pulse
-		float fineTimeStampResolution = 0;
+    //Parameters, to be read from DB?
+    
+    //Saturation threshold should be 4095 (2^12-1)
+    //But in practice waveforms saturate below it
+    private final short ADC_LIMIT = 3500; 
+    //number of consecutive samples exceeding threshold to consider a saturation plateau
+    private final int consecutiveSaturatingSamples = 3;
+    //Sampling time in ns
+    private final float samplingTime = 48.0f;
+    //CF threshold
+    private final float amplitudeFractionCFA = 0.5f;
+    //For the CFD algo
+    private final int binDelayCFD = 5;
+    private final float fractionCFD = 0.5f;
+    //Number of samples defining the baseline
+    private final int nBaselineSamples = 5;
+    //threshold for the slope to consider part of a wf flat
+    private final int flateness = 200;
+    //ADC offset to be considered as the default baseline
+    private final float defaultBaseline = 300;
 
-		float amplitudeFractionCFA = 0.5f;
-		int binDelayCFD = 5;
-		float fractionCFD = 0.3f;
+    //Waveform and corresponding pulse
+    //This is the CURRENT pulse, it is initialized
+    //at every extraction. This is not the cleanest 
+    //but it avoids feeding the same arguments to all methods
+    private short[] samples;
+    private Pulse pulse;
+    private long time_ZS;
+    private int binMax;
+    
+    //Waveform types:
+    //0 is good, 
+    //-1 is invalid,
+    //1 is saturating,
+    //2 has too short of a baseline,
+    //3 is late and only has a rising edge,
+    //4 is a trailing edge from a previous wf,
+    //5 has low ADC ("flat")
+    
+    /**
+    * This method checks if the wf starts with a flat baseline
+    */    
+    public void baselineSlope()
+    {
+        int slope = this.samples[this.nBaselineSamples-1] - this.samples[0];
+        if(slope<-this.flateness){this.pulse.wftype = 4;}//remnant from a previous sample, will be checked further later
+        else if(slope>this.flateness){this.pulse.wftype = 2;}//early waveform
+    }
+    
+    /**
+    * This method computes the waveform baseline 
+    * from the average of the first few samples
+    */    
+    public void baselineComputation()
+    {
+        //Default baseline
+        float adcOffset = -99;
 
-		// Calculation intermediaries
-		int binMax = 0; //Bin of the max ADC over the pulse
-		float adcMax = 0; //Max value of ADC over the pulse (fitted)
-		float timeMax =0; //Time of the max ADC over the pulse (fitted)
-		float integral = 0; //Sum of ADCs over the pulse (not fitted)
+        //Check if the wf has sufficient length, if not it is invalid
+        if (this.samples.length >= this.nBaselineSamples+1){
 
-		short[] samplesCorr; //Waveform after offset (pedestal) correction
-		int binNumber = 0; //Number of bins in one waveform
+            //Compute the slope of the baseline to know how to adress that wf shape
+            this.baselineSlope();
+        
+            //If it is an early pulse, pedestal should be read from DB default
+            if(this.pulse.wftype == 2) {adcOffset = this.defaultBaseline;} //TO DO: Here we should read ccdb!
+            else{
+                //The baseline is the average of the first few samples
+                for(int i=0; i<this.nBaselineSamples;i++){
+                    adcOffset += this.samples[i];
+                }
+                adcOffset = adcOffset/this.nBaselineSamples;
+            }
+        }
+        else {this.assignInvalidType();}//invalid, too short wf
+        this.pulse.pedestal = adcOffset;
+    }
+    
+    /**
+    * This method assigns a new type to the waveform
+    * by checking if another more restrictive type had already
+    * been assigned
+    * 
+    * @param type an int that is the new wf type to be applied
+    */
+    public void assignValidType(int type){
+        //We only assign a new type if a more restrictive type was not defined before
+        if(type>this.pulse.wftype) this.pulse.wftype = (short) type;
+    }
+    
+    /**
+    * This method assigns an invalid type (-1) to the waveform
+    */
+    public void assignInvalidType(){
+        this.pulse.wftype = 6;
+    }
+    
+    /**
+    * This method subtracts the baseline, 
+    * computes the max ADC and corresponding time
+    * and the integral of the wf
+    * 
+    * @return an int for status 
+    * 
+    */    
+    public int waveformADCProcessing()
+    {
+        int binNumber = this.samples.length; 
+        
+        //Initialize to dummy values
+        this.pulse.adcMax = -99;
+        this.binMax = -99;
+        
+        //For invalid wf, dummy values kept
+        if(this.pulse.wftype == -1) return 0;
+        
+        //Checking for saturation
+        int nsaturating = 0;
+        int maxNsaturating = 0;
+        //beginning and end of the saturation plateau
+        int startPlateau = -99;
+        int endPlateau = -99;
+        
+        //Looping through samples
+        for (int bin = 0; bin < binNumber; bin++){
+            //Baseline subtraction
+            this.samples[bin] = (short) Math.max(this.samples[bin] - this.pulse.pedestal, 0);
+            //Look for maximum
+            if (this.pulse.adcMax < this.samples[bin]){
+                this.pulse.adcMax = this.samples[bin];
+                this.binMax = bin;
+            }
+            //Integration
+            this.pulse.integral += this.samples[bin];
+            
+            //Check for saturation: if the sample exceeds the ths
+            //and if it belongs to a group of saturating samples
+            if(this.samples[bin]>(this.ADC_LIMIT-this.pulse.pedestal)){
+                //if this is the first sample saturating, start a new plateau
+                if(nsaturating==0) startPlateau = bin;
+                //else continue the plateau
+                else endPlateau = bin;
+                nsaturating++;
+                //we store the maximum length of consecutive saturating samples
+                if(nsaturating>maxNsaturating) maxNsaturating = nsaturating;
+            }
+            else nsaturating = 0;//this sample is not in a row of saturating samples    
+        }
 
-		float leadingEdgeTime = 0; // moment when the signal reaches a Constant Fraction of its Amplitude uphill (fitted)
-		float trailingEdgeTime = 0; // moment when the signal reaches a Constant Fraction of its Amplitude downhill (fitted)
-		float timeOverThreshold = 0; // is equal to (timeFallCFA - timeRiseCFA)
-		float constantFractionTime = 0; // time extracted using the Constant Fraction Discriminator (CFD) algorithm (fitted)
-		/// /////////////////////////
-		// Begin waveform correction
-		/// ////////////////////////
-		//waveformCorrection(samples,adcOffset,samplingTime, binMax, adcMax, integral, samplesCorr[], time, timeMax);
-		/**
-		 * This method subtracts the pedestal (noise) from samples and stores it in : samplesCorr
-		 * It also computes a first value for : adcMax, binMax, timeMax and integral
-		 * This code is inspired by the one of MVTFitter.java
-		 * @param samples ADC samples
-		 * @param adcOffset pedestal or noise level
-		 * @param samplingTime time between two adc bins
-		 */
-		//private void waveformCorrection(short[] samples, short adcOffset, float samplingTime, int binMax, int adcMax, int integral, short samplesCorr[], int time, int timeMax){
-			binNumber = samples.length;
-			binMax = 0;
-			if (binNumber >= 5) {
-				adcOffset = (short) ((samples[0] + samples[1] + samples[2] + samples[3] + samples[4])/5); // try to estimate the baseline (pedestal) using the first five samples
-			}
-			adcMax = (short) (samples[0] - adcOffset);
-			integral = 0;
-			samplesCorr = new short[binNumber];
-			for (int bin = 0; bin < binNumber; bin++){
-				samplesCorr[bin] = (short) Math.max(samples[bin] - adcOffset, 0);
-				if (adcMax < samplesCorr[bin]){
-					adcMax = samplesCorr[bin];
-					binMax = bin;
-				}
-				integral += samplesCorr[bin];
-			}
-			/*
-			 * If adcMax + adcOffset == ADC_LIMIT, that means there is saturation
-			 * In that case, binMax is the middle of the first plateau
-			 * This convention can be changed
-			 */
-			if ((short) adcMax + adcOffset == ADC_LIMIT) {
-				int binMax2 = binMax;
-				for (int bin = binMax; bin < binNumber; bin++){
-					if (samplesCorr[bin] + adcOffset == ADC_LIMIT) {
-						binMax2 = bin;
-					}
-					else {
-						break;
-					}
-				}
-				binMax = (binMax + binMax2)/2;
-			}
-			timeMax = (binMax + time)*samplingTime;
-		//}
+        //If the signal is flat i.e if the ADC max is the same height as the baseline
+        //within the "flatness" threshold
+        if(this.pulse.adcMax < this.flateness) this.assignValidType(5);
+        
+        //Signal if the waveform is at the beginning of the window
+        //This helps again to get rid of remnants from previous waveforms
+        if(this.binMax<this.nBaselineSamples) this.assignValidType(4);
+        
+        //Saturating samples: if the number of consecutive saturating samples 
+        //is greater than the limit, we consider the wf saturated
+        if(maxNsaturating>=this.consecutiveSaturatingSamples){
+            this.assignValidType(1);
+            //The time is taken as the middle of the plateau
+            this.binMax = (startPlateau + endPlateau)/2;
+        }
+ 
+        //Define the pulse time as the peak time 
+        this.pulse.time = (this.binMax + this.time_ZS)*this.samplingTime;
+        //If there are five points around the peak
+        //(if the peak is not at an edge of the window)
+        //Then the peak ADC value is revisited to be the average of these
+        //TO DO: just use the adcmax???
+        if ((this.binMax - 2 >= 0) && (this.binMax + 2 <= binNumber - 1)){
+            this.pulse.adcMax = 0;
+            for (int bin = this.binMax - 2; bin <= this.binMax + 2; bin++) this.pulse.adcMax += this.samples[bin];
+            this.pulse.adcMax = this.pulse.adcMax/5;
+        }
+        return 0;
+       }
+    
+    /**
+    * This method computes the leading edge time
+    * and time over threshold
+    * over a constant fraction of the peak value
+    * 
+    * @return an int for status
+    * 
+    */    
+    public int waveformCFAprocessing(){
+        
+        int binNumber = this.samples.length;
+        
+        //Initialization 
+        this.pulse.leadingEdgeTime = -9999;
+        this.pulse.trailingEdgeTime = -9999;
+        this.pulse.timeOverThreshold = -9999;
+        
+        //Waveforms for which timing cannot be defined
+        if(this.pulse.wftype == -1 || this.pulse.wftype>=4) return 0;
+        
+        //Set the CFA threshold
+        float threshold = this.amplitudeFractionCFA*this.pulse.adcMax;
+        
+        //Crossing the threshold before the peak
+        int binRise = -99;
+        for (int bin = 0; bin < binMax - 1; bin++){
+            if (this.samples[bin] < threshold && this.samples[bin+1] >= threshold)
+                binRise = bin; //Here we keep only the last time the signal crosses the threshold
+        }
+        //If the waveform does not cross the ths before the peak
+        //it was early and we cannot define a leading time
+        if(binRise==-99) this.assignValidType(4);
+        else
+        {
+            float slopeRise = 0;
+            //linear interpolation
+            //threshold = leadingtime*(ADC1-ADC0)+ADC0
+            if (binRise + 1 <= binNumber-1)
+                slopeRise = this.samples[binRise+1] - this.samples[binRise];
+            float fittedBinRise = (slopeRise == 0) ? binRise : binRise + (threshold - this.samples[binRise])/slopeRise;
+            this.pulse.leadingEdgeTime = (fittedBinRise + this.time_ZS)*this.samplingTime;
+        }
+        
+        //Crossing the threshold back down after the peak
+        int binFall = -99;
+        for (int bin = binMax; bin < binNumber-1; bin++){
+            if (this.samples[bin] > threshold 
+                    && this.samples[bin+1] <= threshold 
+                    && this.samples[bin]>0 
+                    && this.samples[bin+1]>0){
+                binFall = bin+1;
+                break; //We keep only the first time the signal crosses back the threshold
+            }
+        }
+        //If the waveform does not cross the ths again
+        //it was late and falling edge cannot be defined
+        if(binFall==-99) {this.assignValidType(3); return 0;}
+        else
+        {
+          float slopeFall = 0;
+          if (binFall - 1 >= 0)
+            slopeFall = this.samples[binFall] - this.samples[binFall-1];
+          float fittedBinFall = (slopeFall == 0) ? binFall : binFall-1 + (threshold - this.samples[binFall-1])/slopeFall;
+          this.pulse.trailingEdgeTime = (fittedBinFall + this.time_ZS)*this.samplingTime;
+        }
+ 
+        this.pulse.timeOverThreshold = this.pulse.trailingEdgeTime - this.pulse.leadingEdgeTime;
+        
+        return 0;
+        }
+    
+         /**
+         * This methods extracts a time using the Constant Fraction Discriminator (CFD) algorithm
+         * as described in https://commons.wikimedia.org/wiki/File:CFD_Diagram1.jpg for example
+         * 
+         * @return an int for status
+         * 
+         */
+        public int computeTimeUsingConstantFractionDiscriminator(){    
+            //Dummy values for hits for which the leading edge is not defined
+            this.pulse.constantFractionTime = -99;
+            if(this.pulse.wftype>=4) return 0;
+            
+            int binNumber = this.samples.length;
+            float[] signal = new float[binNumber];
 
-		/// /////////////////////////
-		// Begin fit average
-		/// ////////////////////////
+            // signal generation
+            for (int bin = 0; bin < binNumber; bin++){
+                signal[bin] = (1 - this.fractionCFD)*this.samples[bin]; // we fill it with a fraction of the original signal
+                if (bin < binNumber - this.binDelayCFD)
+                    signal[bin] += -1*this.fractionCFD*this.samples[bin + this.binDelayCFD]; // we advance and invert a complementary fraction of the original signal and superimpose it to the previous signal
+            }
+            // determine the two humps
+            int binHumpSup = 0;
+            int binHumpInf = 0;
+            for (int bin = 0; bin < binNumber; bin++){
+                if (signal[bin] > signal[binHumpSup])
+                    binHumpSup = bin;
+            }
+            for (int bin = 0; bin < binHumpSup; bin++){ // this loop has been added to be sure : binHumpInf < binHumpSup
+                if (signal[bin] < signal[binHumpInf])
+                    binHumpInf = bin;
+            }
+            // research for zero
+            int binZero = 0;
+            for (int bin = binHumpInf; bin <= binHumpSup; bin++){
+                if (signal[bin] < 0)
+                    binZero = bin; // last pass below zero
+            } // at this stage : binZero < constantFractionTime/samplingTime <= binZero + 1 // constantFractionTime is determined by assuming a linear fit between binZero and binZero + 1
+            float slopeCFD = 0;
+            if (binZero + 1 <= binNumber)
+                slopeCFD = signal[binZero+1] - signal[binZero];
+            float fittedBinZero = (slopeCFD == 0) ? binZero : binZero + (0 - signal[binZero])/slopeCFD;
+            this.pulse.constantFractionTime = (fittedBinZero + this.time_ZS)*this.samplingTime;
+            
+            return 0;
+        }
+    
+    /**
+     * This method extracts relevant information from the waveform
+     * and builds a pulse from it
+     *
+     * @param pars CCDB row
+     * @param id link to row in source bank
+     * @param timestamp ...
+     * @param time_ZS time_ZS time bin of the first channel of the AHDC pulse (linked to zero suppression; if ZS=0, time_ZS == 0)
+     * @param samples ADC samples
+     */
+    @Override
+    public List<Pulse> extract(NamedEntry pars, int id, long timestamp, long time_ZS, short... samples){
+        
+        //Initialize everything each time a new wf is read 
+        //and new adc information is extracted.
+        //This is messy but avoids feeding the same arguments to all methods
+        this.pulse = new Pulse();
+        this.pulse.id = id;
+        this.pulse.timestamp = timestamp;
+        this.time_ZS = time_ZS;
+        this.samples = samples;
+        this.binMax = -99;
+        
+        List<Pulse> output = new ArrayList<>();
+        
+        //Baseline computation
+        this.baselineComputation();
+       
+        //Get the ADC information from the pulse (peak ADC and time, integral)
+        this.waveformADCProcessing();
+        
+        //Get the time overr threshold
+        this.waveformCFAprocessing();
+        
+        //Get the CFD time
+        this.computeTimeUsingConstantFractionDiscriminator();
+        
+        output.add(this.pulse);
+        return output;
+    }
 
-		//fitAverage(samplingTime);
-		/**
-		 * This method gives a more precise value of the max of the waveform by computing the average of five points around the binMax
-		 * It is an alternative to fitParabolic()
-		 * The suitability of one of these fits can be the subject of a study
-		 * Remark : This method updates adcMax but doesn't change timeMax
-		 * @param samplingTime time between 2 ADC bins
-		 */
-		//private void fitAverage(float samplingTime){
-			if ((binMax - 2 >= 0) && (binMax + 2 <= binNumber - 1)){
-				adcMax = 0;
-				for (int bin = binMax - 2; bin <= binMax + 2; bin++){
-					adcMax += samplesCorr[bin];
-				}
-				adcMax = adcMax/5;
-			}
-		//}
-
-		/// /////////////////////////
-		// Begin computeTimeAtConstantFractionAmplitude
-		/// ////////////////////////
-		//computeTimeAtConstantFractionAmplitude(samplingTime,amplitudeFractionCFA);
-		/**
-		 * This method determines the moment when the signal reaches a Constant Fraction of its Amplitude (i.e fraction*adcMax)
-		 * It fills the attributs : leadingEdgeTime trailingEdgeTime, timeOverThreshold
-                 *
-		 * @param samplingTime time between 2 ADC bins
-		 * @param amplitudeFraction amplitude fraction between 0 and 1
-		 */
-		//private void computeTimeAtConstantFractionAmplitude(float samplingTime, float amplitudeFractionCFA){
-			float threshold = amplitudeFractionCFA*adcMax;
-			// leadingEdgeTime
-			int binRise = 0;
-			for (int bin = 0; bin < binMax; bin++){
-				if (samplesCorr[bin] < threshold)
-					binRise = bin;  // last pass below threshold and before adcMax
-			} // at this stage : binRise < leadingEdgeTime/samplingTime <= binRise + 1 // leadingEdgeTime is determined by assuming a linear fit between binRise and binRise + 1
-			float slopeRise = 0;
-			if (binRise + 1 <= binNumber-1)
-				slopeRise = samplesCorr[binRise+1] - samplesCorr[binRise];
-			float fittedBinRise = (slopeRise == 0) ? binRise : binRise + (threshold - samplesCorr[binRise])/slopeRise;
-			leadingEdgeTime = (fittedBinRise + time)*samplingTime;
-
-			// trailingEdgeTime
-			int binFall = binMax;
-			for (int bin = binMax; bin < binNumber; bin++){
-				if (samplesCorr[bin] > threshold){
-					binFall = bin;
-				}
-				else {
-					binFall = bin;
-					break; // first pass below the threshold
-				}
-			} // at this stage : binFall - 1 <= timeRiseCFA/samplingTime < binFall // trailingEdgeTime is determined by assuming a linear fit between binFall - 1 and binFall
-			float slopeFall = 0;
-			if (binFall - 1 >= 0)
-				slopeFall = samplesCorr[binFall] - samplesCorr[binFall-1];
-			float fittedBinFall = (slopeFall == 0) ? binFall : binFall-1 + (threshold - samplesCorr[binFall-1])/slopeFall;
-			trailingEdgeTime = (fittedBinFall + time)*samplingTime;
-
-			// timeOverThreshold
-			timeOverThreshold = trailingEdgeTime - leadingEdgeTime;
-		//}
-		/// /////////////////////////
-		// Begin computeTimeUsingConstantFractionDiscriminator
-		/// ////////////////////////
-		//computeTimeUsingConstantFractionDiscriminator(samplingTime,fractionCFD,binDelayCFD);
-		/**
-		 * This methods extracts a time using the Constant Fraction Discriminator (CFD) algorithm
-		 * It fills the attribut : constantFractionTime
-		 * @param samplingTime time between 2 ADC bins
-		 * @param fractionCFD CFD fraction parameter between 0 and 1
-		 * @param binDelayCFD CFD delay parameter
-		 */
-		//private void computeTimeUsingConstantFractionDiscriminator(float samplingTime, float fractionCFD, int binDelayCFD){
-			float[] signal = new float[binNumber];
-			// signal generation
-			for (int bin = 0; bin < binNumber; bin++){
-				signal[bin] = (1 - fractionCFD)*samplesCorr[bin]; // we fill it with a fraction of the original signal
-				if (bin < binNumber - binDelayCFD)
-					signal[bin] += -1*fractionCFD*samplesCorr[bin + binDelayCFD]; // we advance and invert a complementary fraction of the original signal and superimpose it to the previous signal
-			}
-			// determine the two humps
-			int binHumpSup = 0;
-			int binHumpInf = 0;
-			for (int bin = 0; bin < binNumber; bin++){
-				if (signal[bin] > signal[binHumpSup])
-					binHumpSup = bin;
-			}
-			for (int bin = 0; bin < binHumpSup; bin++){ // this loop has been added to be sure : binHumpInf < binHumpSup
-				if (signal[bin] < signal[binHumpInf])
-					binHumpInf = bin;
-			}
-			// research for zero
-			int binZero = 0;
-			for (int bin = binHumpInf; bin <= binHumpSup; bin++){
-				if (signal[bin] < 0)
-					binZero = bin; // last pass below zero
-			} // at this stage : binZero < constantFractionTime/samplingTime <= binZero + 1 // constantFractionTime is determined by assuming a linear fit between binZero and binZero + 1
-			float slopeCFD = 0;
-			if (binZero + 1 <= binNumber)
-				slopeCFD = signal[binZero+1] - signal[binZero];
-			float fittedBinZero = (slopeCFD == 0) ? binZero : binZero + (0 - signal[binZero])/slopeCFD;
-			constantFractionTime = (fittedBinZero + time)*samplingTime;
-
-		//}
-
-		// output
-		Pulse pulse = new Pulse();
-		pulse.id = id;
-		pulse.adcMax = adcMax;
-		pulse.time = timeMax;
-		pulse.timestamp = timestamp;
-		pulse.integral = integral;
-		pulse.leadingEdgeTime  = leadingEdgeTime ;
-		pulse.trailingEdgeTime = trailingEdgeTime;
-		pulse.timeOverThreshold = timeOverThreshold;
-		pulse.constantFractionTime = constantFractionTime;
-		//pulse.binMax = binMax;
-		pulse.pedestal = adcOffset;
-		List<Pulse> output = new ArrayList<>();
-		output.add(pulse);
-		return output;
-	}
-
-	@Override
-	public void update(int n, IndexedTable it, DataEvent event, String wfBankName, String adcBankName) {
+    @Override
+    public void update(int n, IndexedTable it, DataEvent event, String wfBankName, String adcBankName) {
         DataBank wf = event.getBank(wfBankName);
         if (wf.rows() > 0) {
             event.removeBank(adcBankName);
@@ -247,32 +376,33 @@ public class ModeAHDC extends HipoExtractor  {
                     adc.setFloat("timeOverThreshold", i, pulses.get(i).timeOverThreshold);
                     adc.setFloat("constantFractionTime", i, pulses.get(i).constantFractionTime);
                     adc.setInt("integral", i, (int)pulses.get(i).integral);
-                    adc.setShort("ped", i, (short)pulses.get(i).pedestal);
+                    adc.setFloat("ped", i, pulses.get(i).pedestal);
+                    adc.setShort("wfType", i, pulses.get(i).wftype);
                 }
                 event.appendBank(adc);
             }
         }
     }
 
-	@Override
-	protected void update(int n, IndexedTable it, Bank wfBank, Bank adcBank) { 
-		if (wfBank.getRows() > 0) { 
-			List<Pulse> pulses = getPulses(n, it, wfBank); 
-			adcBank.reset(); 
-			adcBank.setRows(pulses!=null ? pulses.size() : 0); 
-			if (pulses!=null && !pulses.isEmpty()) { 
-				for (int i=0; i<pulses.size(); ++i) { 
-					copyIndices(wfBank, adcBank, pulses.get(i).id, i); 
-					adcBank.putInt("ADC", i, (int)pulses.get(i).adcMax); 
-					adcBank.putFloat("time", i, pulses.get(i).time); 
-					adcBank.putFloat("leadingEdgeTime", i, pulses.get(i).leadingEdgeTime); 
-					adcBank.putFloat("timeOverThreshold", i, pulses.get(i).timeOverThreshold); 
-					adcBank.putFloat("constantFractionTime", i, pulses.get(i).constantFractionTime); 
-					adcBank.putInt("integral", i, (int)pulses.get(i).integral); 
-					adcBank.putShort("ped", i, (short)pulses.get(i).pedestal); 
-				} 
-			} 
-		} 
-	}
-
+    @Override
+    protected void update(int n, IndexedTable it, Bank wfBank, Bank adcBank) {
+        if (wfBank.getRows() > 0) { 
+            List<Pulse> pulses = getPulses(n, it, wfBank); 
+            adcBank.reset(); 
+            adcBank.setRows(pulses!=null ? pulses.size() : 0); 
+            if (pulses!=null && !pulses.isEmpty()) { 
+                for (int i=0; i<pulses.size(); ++i) { 
+                    copyIndices(wfBank, adcBank, pulses.get(i).id, i); 
+                    adcBank.putInt("ADC", i, (int)pulses.get(i).adcMax); 
+                    adcBank.putFloat("time", i, pulses.get(i).time); 
+                    adcBank.putFloat("leadingEdgeTime", i, pulses.get(i).leadingEdgeTime); 
+                    adcBank.putFloat("timeOverThreshold", i, pulses.get(i).timeOverThreshold); 
+                    adcBank.putFloat("constantFractionTime", i, pulses.get(i).constantFractionTime); 
+                    adcBank.putInt("integral", i, (int)pulses.get(i).integral); 
+                    adcBank.putFloat("ped", i, (short)pulses.get(i).pedestal);
+		    adcBank.putShort("wfType", i, pulses.get(i).wftype);
+                } 
+            }
+        } 
+    }   
 }
