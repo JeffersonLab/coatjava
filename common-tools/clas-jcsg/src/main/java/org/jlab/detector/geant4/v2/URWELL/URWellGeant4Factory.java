@@ -403,9 +403,9 @@ public final class URWellGeant4Factory extends Geant4Factory {
         if (full) {
             return new double[]{
                 this.getChamberThickness() / 2. + URWellConstants.ZENLARGEMENT / 2.,
-                halfHeight + 0.05,
-                dx0 + 0.1,
-                dx1,
+                halfHeight + URWellConstants.YENLARGEMENT / 2,
+                dx0 + URWellConstants.XENLARGEMENT / 2.,
+                dx1 + URWellConstants.XENLARGEMENT / 2.,
                 Math.toRadians(thilt)
             };
         } else {
