@@ -39,7 +39,7 @@ if [ $# -ge 1 ]; then
     if [ "$1" = "groovy" ]; then
       export JAVA_OPTS="-Dsun.java2d.pmoffscreen=false -Djava.util.logging.config.file=$CLAS12DIR/etc/logging/debug.properties -Xms1024m -Xmx2048m -XX:+UseSerialGC ${JAVA_OPTS-}"
     fi
-    export JYPATH=$COATJAVA_CLASSPATH
+    export JYPATH=${JYPATH:+${JYPATH}:}$COATJAVA_CLASSPATH
   fi
 fi
 
