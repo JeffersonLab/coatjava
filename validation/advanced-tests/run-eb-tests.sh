@@ -63,4 +63,3 @@ if [ $? != 0 ] ; then echo "EBTwoTrackTest unit test failure" ; exit 1 ; else ec
 
 # run truth-efficiency calculator:
 ../../coatjava/bin/trutheff ./out_${stub}.hipo
-
