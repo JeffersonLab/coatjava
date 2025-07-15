@@ -27,17 +27,7 @@ stub="${@: -1}"
 ! grep "^$stub -pid" src/eb/scripts/list.txt && echo Invalid stub:  $stub && exit 1
 
 # set up environment
-if [ $useClara -eq 0 ]
-then
-    COAT=../../coatjava
-    source $COAT/libexec/env.sh
-else
-    CLARA_HOME=$PWD/clara_installation/
-    COAT=$CLARA_HOME/plugins/clas12/
-    source $COAT/libexec/env.sh
-    export CLARA_HOME
-fi
-
+source ../../coatjava/libexec/env.sh
 classPath="${COATJAVA_CLASSPATH}:../lib/*:src/"
 
 # make sure test code compiles before anything else:
@@ -54,10 +44,11 @@ then
 fi
 
 # run Event Builder tests:
-java -DCLAS12DIR="$COAT" -Xmx1536m -Xms1024m -cp $classPath -DINPUTFILE=out_${stub}.hipo org.junit.runner.JUnitCore eb.EBTwoTrackTest
+java -Xmx1536m -Xms1024m -cp $classPath -DINPUTFILE=out_${stub}.hipo org.junit.runner.JUnitCore eb.EBTwoTrackTest
 if [ $? != 0 ] ; then echo "EBTwoTrackTest unit test failure" ; exit 1 ; else echo "EBTwoTrackTest passed unit tests" ; fi
 
-$COAT/bin/trutheff ./out_${stub}.hipo
+# show a pid effenciency matrix:
+trutheff ./out_${stub}.hipo
 
 exit 0
 
