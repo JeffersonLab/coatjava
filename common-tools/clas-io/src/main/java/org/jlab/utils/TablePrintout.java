@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.jlab.utils;
 
 import java.util.ArrayList;
@@ -14,9 +8,9 @@ import java.util.ArrayList;
  */
 public class TablePrintout {
     
-    private ArrayList<String>  headerDesc   = new ArrayList<String>();
-    private ArrayList<Integer> headerLength = new ArrayList<Integer>();    
-    private ArrayList<String[]> tableData   = new ArrayList<String[]>();
+    private ArrayList<String>  headerDesc   = new ArrayList<>();
+    private ArrayList<Integer> headerLength = new ArrayList<>();    
+    private ArrayList<String[]> tableData   = new ArrayList<>();
        
     private Integer tableIndent = 8;
     
@@ -45,7 +39,7 @@ public class TablePrintout {
         String[] tl = l.split(":");
         for(int loop = 0; loop < th.length; loop++){
             headerDesc.add(th[loop]);
-            headerLength.add(Integer.parseInt(tl[loop]));
+            headerLength.add(Integer.valueOf(tl[loop]));
         }
     }
     
@@ -55,7 +49,7 @@ public class TablePrintout {
         Integer[] ticks  = new Integer[tokens.length];
         for(int loop = 0; loop < tokens.length; loop++)
         {
-            ticks[loop] = Integer.parseInt(tokens[loop]);
+            ticks[loop] = Integer.valueOf(tokens[loop]);
         }
         return ticks;
     }
