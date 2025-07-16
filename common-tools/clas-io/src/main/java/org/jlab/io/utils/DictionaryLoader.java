@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.jlab.io.utils;
 
 import java.io.IOException;
@@ -29,7 +23,7 @@ public class DictionaryLoader {
     
     
     public static ArrayList<EvioDataDescriptor> getDescriptorsFromFile(String xmlfile){
-        ArrayList<EvioDataDescriptor> list = new ArrayList<EvioDataDescriptor>();
+        ArrayList<EvioDataDescriptor> list = new ArrayList<>();
         
         try {
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
@@ -46,10 +40,7 @@ public class DictionaryLoader {
                     for(EvioDataDescriptor item : descList){
                         list.add(item);
                     }
-                    //String oneBank = DictionaryLoader.parseBankXMLtoString(evio_bank);
-                    //dictionary_list.add(oneBank);
                 }
-
             }
             return list;
         } catch (ParserConfigurationException ex) {
@@ -59,14 +50,12 @@ public class DictionaryLoader {
         } catch (IOException ex) {
             Logger.getLogger(DictionaryLoader.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
         return null;
     }
     
-    
     public static ArrayList<String> descriptorParseXMLtoString(String xmlfile) {
 
-        ArrayList<String> dictionary_list = new ArrayList<String>();
+        ArrayList<String> dictionary_list = new ArrayList<>();
         try {
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder docBuilder = dbFactory.newDocumentBuilder();            
@@ -77,12 +66,10 @@ public class DictionaryLoader {
                 Element evio_nodes = (Element) evio_dict_nodelist.item(b);
                 NodeList evio_bank_nodes = evio_nodes.getElementsByTagName("bank");
                 for (int s = 0; s < evio_bank_nodes.getLength(); s++) {
-                    
                    Element evio_bank = (Element) evio_bank_nodes.item(s);
                    String oneBank = DictionaryLoader.parseBankXMLtoString(evio_bank);
                    dictionary_list.add(oneBank);
                 }
-
             }
         } catch (ParserConfigurationException ex) {
             Logger.getLogger(DictionaryLoader.class.getName()).log(Level.SEVERE, null, ex);
@@ -91,9 +78,9 @@ public class DictionaryLoader {
         } catch (IOException ex) {
             Logger.getLogger(DictionaryLoader.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
         return dictionary_list;
     }
+
     /**
      * Parse an XML string into a descriptors.
      * @param xmlstring
@@ -115,13 +102,14 @@ public class DictionaryLoader {
         }
         return null;
     }
+
     /**
      * 
      * @param doc
      * @return 
      */
     public static ArrayList<String> parseDocumentXMLtoString(Document doc){
-        ArrayList<String> dictionary_list = new ArrayList<String>();
+        ArrayList<String> dictionary_list = new ArrayList<>();
         NodeList evio_bank_nodes = doc.getElementsByTagName("bank");
         for (int s = 0; s < evio_bank_nodes.getLength(); s++) {
             Element evio_bank = (Element) evio_bank_nodes.item(s);
@@ -157,19 +145,14 @@ public class DictionaryLoader {
                 str.append(entry_num);
                 str.append(":");
                 str.append(entry_type);
-                
-                //System.err.println("Entry = " + entry_name + " " 
-                //        + section_tag + "  " + entry_num 
-                //        + "  " + entry_type);
             }
         }
         System.err.println("--> " + str.toString());
-        //dictionary_list.add(str.toString());
         return str.toString();
     }
     
     public static ArrayList<EvioDataDescriptor> parseBankXMLtoDescriptorList(Element bankElement){
-        ArrayList<EvioDataDescriptor> list = new ArrayList<EvioDataDescriptor>();
+        ArrayList<EvioDataDescriptor> list = new ArrayList<>();
 
         String bank_name = bankElement.getAttribute("name");
         String bank_tag  = bankElement.getAttribute("tag");
@@ -178,8 +161,7 @@ public class DictionaryLoader {
         for(int e = 0 ; e < evio_section.getLength(); e++){
             StringBuilder str = new StringBuilder();
             Element evio_entry = (Element) evio_section.item(e);
-            
-            Integer    section_tag  = Integer.parseInt(evio_entry.getAttribute("tag"));
+            Integer section_tag  = Integer.valueOf(evio_entry.getAttribute("tag"));
             String section_name = evio_entry.getAttribute("name");
             str.append(bank_name);
             str.append("::");
@@ -193,16 +175,10 @@ public class DictionaryLoader {
                 String entry_num   = evio_col.getAttribute("num");
                 String entry_type  = evio_col.getAttribute("type");
                 desc.addEntry(section_name, entry_name, section_tag,
-                        Integer.parseInt(entry_num), entry_type);
-                //System.err.println("Entry = " + str.toString() + "  " + entry_name + " " 
-                //        + section_tag + "  " + entry_num 
-                //        + "  " + entry_type);
+                        Integer.valueOf(entry_num), entry_type);
             }
             list.add(desc);
         }
-        //System.err.println("--> " + str.toString());
-        //dictionary_list.add(str.toString());
-        //return str.toString();
         return list;
     }
 }

@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.io.ui;
 
 import java.awt.Component;
@@ -35,8 +30,6 @@ public class ConnectionDialog extends BasicDialog {
     public static final int   RING_TYPE_ET = 5;
     public static final int RING_TYPE_HIPO = 6;
     
-    private int  connectionType = ConnectionDialog.RING_TYPE_ET;
-    
     private JRadioButton _directConnect;
     private JRadioButton _connectToDAQ;
     
@@ -45,7 +38,7 @@ public class ConnectionDialog extends BasicDialog {
     private static String defaultHost = "clondaq7";
     private static String defaultIP = "129.57.167.20";
     
-    Map<String,String>  connectionHosts = new LinkedHashMap<String,String>();
+    Map<String,String>  connectionHosts = new LinkedHashMap<>();
     
     private static String[] closeoutButtons = {"Connect", "Cancel"};
     
@@ -55,7 +48,6 @@ public class ConnectionDialog extends BasicDialog {
     
     private JComboBox  _comboHosts;
     private JComboBox  _comboEtFiles;
-    private JComboBox  _files;
     
     private int _reason = DialogUtilities.CANCEL_RESPONSE;
     
@@ -64,7 +56,6 @@ public class ConnectionDialog extends BasicDialog {
      */
     public ConnectionDialog() {
         super("Connection.....", true, closeoutButtons);
-        int nhosts = hostNames.length;
         for(int i = 0; i < hostNames.length; i++){
             this.connectionHosts.put(hostNames[i],hostIP[i]);
         }
@@ -72,7 +63,6 @@ public class ConnectionDialog extends BasicDialog {
     
     public ConnectionDialog(int type) {
         super("Connection.....", true, closeoutButtons);
-        int nhosts = hostNames.length;
         for(int i = 0; i < hostNames.length; i++){
             this.connectionHosts.put(hostNames[i],hostIP[i]);
         }        
@@ -80,7 +70,6 @@ public class ConnectionDialog extends BasicDialog {
     
     public ConnectionDialog(String defaultHost, String defaultIP) {
         super("Connection.....", true, closeoutButtons);
-        int nhosts = hostNames.length;
         for(int i = 0; i < hostNames.length; i++){
             this.connectionHosts.put(hostNames[i],hostIP[i]);
         }
@@ -105,13 +94,13 @@ public class ConnectionDialog extends BasicDialog {
                 BoxLayout.Y_AXIS));
         
         _ipField = new JTextField(25);
-        _ipField.setText(this.defaultIP);
+        _ipField.setText(ConnectionDialog.defaultIP);
         
         JPanel subpanel = new JPanel();
         subpanel.setLayout(new FlowLayout(FlowLayout.LEFT, 6, 2));
         
         JLabel labelip = new JLabel(" Address: ");
-        _comboHosts = new JComboBox(this.hostNames);
+        _comboHosts = new JComboBox(ConnectionDialog.hostNames);
         ItemListener itemListener = new ItemListener() {
             
             @Override
@@ -122,7 +111,7 @@ public class ConnectionDialog extends BasicDialog {
                 }
             }
         };
-        _comboHosts.setSelectedItem(this.defaultHost);
+        _comboHosts.setSelectedItem(ConnectionDialog.defaultHost);
         
         _comboHosts.addItemListener(itemListener);
         subpanel.add(labelip);
@@ -140,11 +129,8 @@ public class ConnectionDialog extends BasicDialog {
         _fileName.setText("/et/clasprod");
         subpanel2.add(label);
         subpanel2.add(_fileName);
-        //List<String>  etFiles = FileUtils.filesInFolder(null, reason);
         try {
             List<String> etFiles = FileUtils.dirListStartsWith("/et", "");
-            //List<String> etFiles = FileUtils.dirListStartsWith("/tmp", "et_sys");
-            //List<String> etFiles = FileUtils.dirListStartsWith("/Users/gavalian/Work", "d");
             for(String f : etFiles){
                 System.out.println(" -----> " + f);
             }
@@ -208,8 +194,8 @@ public class ConnectionDialog extends BasicDialog {
         String port_number = _portNumber.getText();
         Integer port = 11111;
         try {
-            port = Integer.parseInt(port_number);
-        } catch (Exception e) {
+            port = Integer.valueOf(port_number);
+        } catch (NumberFormatException e) {
             System.out.println("ERROR : the string provided is not a number : " + port_number);
         }
         return port;
