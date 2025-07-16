@@ -109,7 +109,7 @@ public class Constants {
     public static final String PRESSURE       = "/hall/weather/pressure";
     public static final String T2DPRESSUREREF = "/calibration/dc/v2/ref_pressure";
     public static final String T0CORRECTION   = "/calibration/dc/v2/t0";
-    public static final String TDCTCUTS       = "/calibration/dc/time_corrections/tdctimingcuts";
+    public static final String TDCTCUTS       = "/calibration/dc/v2/tdc_cuts";
     public static final String WIRESTAT       = "/calibration/dc/tracking/wire_status";
     public static final String TIMEJITTER     = "/calibration/dc/time_jitter";
     public static final String BEAMPOS        = "/geometry/beam/position";
