@@ -242,8 +242,8 @@ public class IndexedTable extends DefaultTableModel {
      */
     @Override
     public String getColumnName(int col) {
-        if(col>2){
-            return this.entryNames.get(col-3);
+        if(col>this.indexNames.size()-1){
+            return this.entryNames.get(col-this.indexNames.size());
         }
         return this.indexNames.get(col);
     }
