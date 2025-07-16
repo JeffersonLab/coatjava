@@ -565,13 +565,13 @@ public class BasicDataBank implements DataBank {
             if(entryMask.contains(columns[loop])==true||entryMask.size()<2){
                 for(int row = 0; row < nrows; row++){                    
                     if(this.byteContainer.containsKey(columns[loop])==true){
-                        objects[row][loop] = this.getByte(columns[loop], row);
+                        objects[row][loop] = new Byte(this.getByte(columns[loop], row));
                     }
                     if(this.shortContainer.containsKey(columns[loop])==true){
-                        objects[row][loop] = this.getShort(columns[loop], row);
+                        objects[row][loop] = new Short(this.getShort(columns[loop], row));
                     }
                     if(this.intContainer.containsKey(columns[loop])==true){
-                        objects[row][loop] = this.getInt(columns[loop], row);
+                        objects[row][loop] = new Integer(this.getInt(columns[loop], row));
                     }
                     if(this.floatContainer.containsKey(columns[loop])==true){
                         //objects[row][loop] = new Float(this.getFloat(columns[loop], row));
@@ -581,7 +581,7 @@ public class BasicDataBank implements DataBank {
                         objects[row][loop] = String.format("%12.5f",this.getDouble(columns[loop], row));
                     }
                     if(this.longContainer.containsKey(columns[loop])==true){
-                        objects[row][loop] = this.getLong(columns[loop], row);
+                        objects[row][loop] = new Long(this.getLong(columns[loop], row));
                     }
                 }
             }
