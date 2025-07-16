@@ -6,25 +6,26 @@ import org.jlab.utils.groups.IndexedTable;
 
 public class FTCALHit implements Comparable<FTCALHit>{
 	// class implements Comparable interface to allow for sorting a collection of hits by Edep values
-	
+	public static final int REFCOMPONENT =245;
+        
 	// constructor 
 	public FTCALHit(int i, int ICOMPONENT, int ADC, int TDC, IndexedTable charge2Energy, IndexedTable timeOffsets, IndexedTable timeWalk, IndexedTable cluster) {
 		this._COMPONENT = ICOMPONENT;
-		this._IDY = ((int) ICOMPONENT/22) + 1;
-		this._IDX = ICOMPONENT + 1 - (this._IDY-1)*22;
+		this._IDY = ((int) ICOMPONENT/44) + 1;
+		this._IDX = ICOMPONENT + 1 - (this._IDY-1)*44;
 		this._ADC = ADC;
 		this._TDC = TDC;
 		
-                this._Charge = ((double) this._ADC)*charge2Energy.getDoubleValue("fadc_to_charge", 1,1,ICOMPONENT);
-		this.set_Edep(this._Charge*charge2Energy.getDoubleValue("mips_energy", 1,1,ICOMPONENT)
-				          /charge2Energy.getDoubleValue("mips_charge", 1,1,ICOMPONENT)/1000.);
+                this._Charge = ((double) this._ADC)*charge2Energy.getDoubleValue("fadc_to_charge", 1,1,REFCOMPONENT);
+		this.set_Edep(this._Charge*charge2Energy.getDoubleValue("mips_energy", 1,1,REFCOMPONENT)
+				          /charge2Energy.getDoubleValue("mips_charge", 1,1,REFCOMPONENT)/1000.);
                 double twCorr=0;
                 if(this._Charge>0) {
-                    twCorr = timeWalk.getDoubleValue("amplitude", 1,1,ICOMPONENT)*Math.exp(-this._Charge*timeWalk.getDoubleValue("lambda", 1,1,ICOMPONENT));
+                    twCorr = timeWalk.getDoubleValue("amplitude", 1,1,REFCOMPONENT)*Math.exp(-this._Charge*timeWalk.getDoubleValue("lambda", 1,1,REFCOMPONENT));
                 }
 		this.set_Time(((double) this._TDC)/FTCALConstantsLoader.TIMECONVFAC
                                                  -(FTCALConstantsLoader.CRYS_LENGTH-cluster.getDoubleValue("depth_z", 1,1,0))/FTCALConstantsLoader.VEFF
-						 -timeOffsets.getDoubleValue("time_offset", 1,1,ICOMPONENT)-twCorr);
+						 -timeOffsets.getDoubleValue("time_offset", 1,1,REFCOMPONENT)-twCorr);
 //		if(this.get_Edep()>0.1) System.out.println(ICOMPONENT + " " + this._TDC + " " + 
 //				FTCALConstantsLoader.TIMECONVFAC + " " + FTCALConstantsLoader.time_offset[0][0][ICOMPONENT-1] + " " +
 //				this.get_Time());
@@ -37,21 +38,21 @@ public class FTCALHit implements Comparable<FTCALHit>{
 
 	public FTCALHit(int i, int ICOMPONENT, int ADC, float time, IndexedTable charge2Energy, IndexedTable timeOffsets, IndexedTable timeWalk, IndexedTable cluster) {
 		this._COMPONENT = ICOMPONENT;
-		this._IDY = ((int) ICOMPONENT/22) + 1;
-		this._IDX = ICOMPONENT + 1 - (this._IDY-1)*22;
+		this._IDY = ((int) ICOMPONENT/44) + 1;
+		this._IDX = ICOMPONENT + 1 - (this._IDY-1)*44;
 		this._ADC = ADC;
 		
-                this._Charge = ((double) this._ADC)*charge2Energy.getDoubleValue("fadc_to_charge", 1,1,ICOMPONENT);
-		this.set_Edep(this._Charge*charge2Energy.getDoubleValue("mips_energy", 1,1,ICOMPONENT)
-				          /charge2Energy.getDoubleValue("mips_charge", 1,1,ICOMPONENT)/1000.);
+                this._Charge = ((double) this._ADC)*charge2Energy.getDoubleValue("fadc_to_charge", 1,1,REFCOMPONENT);
+		this.set_Edep(this._Charge*charge2Energy.getDoubleValue("mips_energy", 1,1,REFCOMPONENT)
+				          /charge2Energy.getDoubleValue("mips_charge", 1,1,REFCOMPONENT)/1000.);
                 
                 double twCorr=0;
                 if(this._Charge>0) {
-                    twCorr = timeWalk.getDoubleValue("amplitude", 1,1,ICOMPONENT)*Math.exp(-this._Charge*timeWalk.getDoubleValue("lambda", 1,1,ICOMPONENT));
+                    twCorr = timeWalk.getDoubleValue("amplitude", 1,1,REFCOMPONENT)*Math.exp(-this._Charge*timeWalk.getDoubleValue("lambda", 1,1,REFCOMPONENT));
                 }
 		
                 this.set_Time(time -(FTCALConstantsLoader.CRYS_LENGTH-cluster.getDoubleValue("depth_z", 1,1,0))/FTCALConstantsLoader.VEFF
-				   -timeOffsets.getDoubleValue("time_offset", 1,1,ICOMPONENT)-twCorr); 
+				   -timeOffsets.getDoubleValue("time_offset", 1,1,REFCOMPONENT)-twCorr); 
 //		if(this.get_Edep()>0.1) System.out.println(ICOMPONENT + " " + this._TDC + " " + 
 //				FTCALConstantsLoader.TIMECONVFAC + " " + FTCALConstantsLoader.time_offset[0][0][ICOMPONENT-1] + " " +
 //				this.get_Time());
@@ -208,7 +209,7 @@ public class FTCALHit implements Comparable<FTCALHit>{
 	
 	public static boolean passHitSelection(FTCALHit hit, IndexedTable thresholds) {
 		// a selection cut to pass the hit. 
-		if(hit.get_Edep() > thresholds.getDoubleValue("thresholdHit", 1,1,hit.get_COMPONENT())) {
+		if(hit.get_Edep() > thresholds.getDoubleValue("thresholdHit", 1,1,REFCOMPONENT)) {
 			return true;
 		} else {
 			return false;

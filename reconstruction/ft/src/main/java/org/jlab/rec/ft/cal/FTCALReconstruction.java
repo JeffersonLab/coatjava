@@ -216,7 +216,7 @@ public class FTCALReconstruction {
                 int adc         = bankDGTZ.getInt("ADC",row);
                 float time      = bankDGTZ.getFloat("time",row);
                 if(ilayer==0) ilayer=1; // fix for wrong layer in TT
-                if(adc!=-1 && time!=-1 && status.getIntValue("status", isector, ilayer, icomponent)==0){
+                if(adc!=-1 && time!=-1 && status.getIntValue("status", isector, ilayer, FTCALHit.REFCOMPONENT)==0){
                     FTCALHit hit = new FTCALHit(bankDGTZ.trueIndex(row),icomponent, adc, time, charge2Energy, timeOffsets, timeWalk, cluster);
                     
                     ////////////////////////////////////////////////////////////////////////////////////////////////////

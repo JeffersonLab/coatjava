@@ -86,7 +86,8 @@ public class ADCTDCMerger {
                 ADC adcData = new ADC(detector);
                 adcData.readFromBank(bank, i);
 
-                if(!adcData.isGood()) adcData.skip();
+                if(!adcData.isGood() ||
+                   (detector==DetectorType.FTCAL && adcData.getAdc()<200)) adcData.skip();
                 
                 adcStore.add(adcData);
             }

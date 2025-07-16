@@ -47,7 +47,7 @@ public class FTCALCluster extends ArrayList<FTCALHit> {
         public double getFullEnergy(IndexedTable energyTable) {
             // return energy corrected for leakage and threshold effects
             double clusterEnergy  = this.getEnergy();
-            int seedID = this.get(0).get_COMPONENT();
+            int seedID = FTCALHit.REFCOMPONENT;//this.get(0).get_COMPONENT();
             double  energyCorr = (energyTable.getDoubleValue("c0",1,1,seedID)
                                +  energyTable.getDoubleValue("c1",1,1,seedID)*clusterEnergy
                                +  energyTable.getDoubleValue("c2",1,1,seedID)*clusterEnergy*clusterEnergy
@@ -197,7 +197,7 @@ public class FTCALCluster extends ArrayList<FTCALHit> {
         
         public boolean containsHit(FTCALHit hit, IndexedTable thresholds, IndexedTable clusterTable) {
             boolean addFlag = false;
-            if(hit.get_Edep()>thresholds.getDoubleValue("thresholdCluster",1,1,hit.get_COMPONENT())) {
+            if(hit.get_Edep()>thresholds.getDoubleValue("thresholdCluster",1,1,FTCALHit.REFCOMPONENT)) {
                 for(int j = 0; j< this.size(); j++) {
                     double tDiff = Math.abs(hit.get_Time() - this.get(j).get_Time());
                     double xDiff = Math.abs(hit.get_IDX()  - this.get(j).get_IDX());
