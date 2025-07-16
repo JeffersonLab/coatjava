@@ -206,51 +206,16 @@ public class HitReader {
 
                 double timeCutMin = 0;
                 double timeCutMax = 0;
-                double timeCutLC = 0;
 
                 int region = ((superlayer + 1) / 2);
-
-                switch (region) {
-                    case 1:
-                        timeCutMin = tdccuts.getIntValue("MinEdge", 0, region, 0);
-                        timeCutMax = tdccuts.getIntValue("MaxEdge", 0, region, 0);
-                        break;
-                    case 2:
-                        if (wire <= 56) {
-                            timeCutLC = tdccuts.getIntValue("LinearCoeff", 0, region, 1);
-                            timeCutMin = tdccuts.getIntValue("MinEdge", 0, region, 1);
-                            timeCutMax = tdccuts.getIntValue("MaxEdge", 0, region, 1);
-                        }
-                        if (wire > 56) {
-                            timeCutLC = tdccuts.getIntValue("LinearCoeff", 0, region, 56);
-                            timeCutMin = tdccuts.getIntValue("MinEdge", 0, region, 56);
-                            timeCutMax = tdccuts.getIntValue("MaxEdge", 0, region, 56);
-                        }
-                        break;
-                    case 3:
-                        timeCutMin = tdccuts.getIntValue("MinEdge", 0, region, 0);
-                        timeCutMax = tdccuts.getIntValue("MaxEdge", 0, region, 0)+timeBuf;
-                        break;
-                }
+                timeCutMin = tdccuts.getIntValue("min", 0, region, wire);
+                timeCutMax = tdccuts.getIntValue("max", 0, region, wire);
+         
                 boolean passTimingCut = false;
 
-                if (region == 1 && tdc > timeCutMin && tdc < timeCutMax)
+                if (tdc > timeCutMin && tdc < timeCutMax)
                     passTimingCut = true;
-                if (region == 2) {
-                    double Bscale = Swimmer.getTorScale() * Swimmer.getTorScale();
-                    if (wire >= 56) {
-                        if (tdc > timeCutMin &&
-                                tdc < timeCutMax + timeCutLC * (double) (112 - wire / 56) * Bscale)
-                            passTimingCut = true;
-                    } else {
-                        if (tdc > timeCutMin &&
-                                tdc < timeCutMax + timeCutLC * (double) (56 - wire / 56) * Bscale)
-                            passTimingCut = true;
-                    }
-                }
-                if (region == 3 && tdc > timeCutMin && tdc < timeCutMax)
-                    passTimingCut = true;
-
+                
                 if (passTimingCut) { // cut on spurious hits
                     Hit hit = new Hit(sector, superlayer, layer, wire, tdc, jitter, (index + 1));
                     hit.calc_CellSize(detector);
@@ -261,7 +226,6 @@ public class HitReader {
                 }
             }
         }
-
     }
     
     public Map<Integer, ArrayList<FittedHit>> read_Hits(DataEvent event) {
