@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.io.evio;
 
 import java.io.File;
@@ -34,10 +29,9 @@ import org.jlab.utils.options.OptionParser;
  */
 public class EvioRingSource implements DataSource {
 
-    private List<EvioDataEvent>  eventStore = new ArrayList<EvioDataEvent>();
+    private List<EvioDataEvent>  eventStore = new ArrayList<>();
     private int       eventStoreMaxCapacity = 500;
     private xMsg                 xmsgServer = null;
-    
     
     private boolean createConnection(String host){
 
@@ -52,13 +46,11 @@ public class EvioRingSource implements DataSource {
             } 
 
         } catch (xMsgException ex) {
-            //Logger.getLogger(HipoRingSource.class.getName()).log(Level.SEVERE, null, ex);
             System.out.println("   >>> connection to server " + host + " : failed");
             this.xmsgServer.destroy();
             this.xmsgServer = null;
             result = false;
         }
-        //System.out.println("-----> connection estabilished...");
         return result;
     }
     
@@ -140,11 +132,7 @@ public class EvioRingSource implements DataSource {
             return null;
         }
         EvioDataEvent event = this.eventStore.get(0);
-        //System.out.println("   >>> success getting event : size = " + eventStore.size());
-        //event.show();
         this.eventStore.remove(0);
-        //System.out.println("   >>>   FILO cleanup : size = " + eventStore.size());
-        //System.out.println("\n\n");
         return event;
     }
 
@@ -171,31 +159,24 @@ public class EvioRingSource implements DataSource {
     @Override
     public DataSourceType getType() {
         return DataSourceType.STREAM;
-        //        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
     public void waitForEvents() {
-        // For the Ring source, waiting for the events        
     }
-    
     
     private class MyCallBack implements xMsgCallBack {
 
         @Override
         public void callback(xMsgMessage mm) {
-            
             byte[] data = mm.getData();            
             String type = mm.getMimeType();
-            
             System.out.println("\n\n     >>>>>> received data : mime " + type);
             System.out.println("     >>>>>> received data : size " + data.length);
             if(eventStore.size()<eventStoreMaxCapacity){
                 EvioDataEvent event = new EvioDataEvent(data,ByteOrder.BIG_ENDIAN);
                 eventStore.add(event);
-                //System.out.printf("     >>>>>> adding event to the store : size = %d \n", eventStore.size());
             } else {
-                //System.out.printf("     >>>>>> event store is full : size = %d \n", eventStore.size());
             }
         }
     }
@@ -212,7 +193,6 @@ public class EvioRingSource implements DataSource {
         
         while(true){
             if(reader.hasEvent()==true){
-                //System.out.println("has event");
                 DataEvent event = reader.getNextEvent();
                 try {
                     event.show();
@@ -220,7 +200,6 @@ public class EvioRingSource implements DataSource {
                     System.out.println("something went wrong");
                 }
             } else {
-                //System.out.println("no event");
                 try {
                     Thread.sleep(20);
                 } catch (InterruptedException ex) {
