@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.jlab.io.evio;
 
 import java.util.ArrayList;
@@ -22,9 +16,9 @@ public class EvioDataDescriptor implements DataDescriptor {
 	private String descriptorName = "UNDEF";
 	private Integer descriptorContainerTag = 0;
 	private Integer descriptorContainerNum = 0;
-	private ArrayList<String> entryNames = new ArrayList<String>();
-	private Map<String, EvioDataDescriptorEntry> descriptorEntries = new LinkedHashMap<String, EvioDataDescriptorEntry>();
-	private HashMap<String, String> descriptorProperties = new HashMap<String, String>();
+	private ArrayList<String> entryNames = new ArrayList<>();
+	private Map<String, EvioDataDescriptorEntry> descriptorEntries = new LinkedHashMap<>();
+	private HashMap<String, String> descriptorProperties = new HashMap<>();
 
 	public EvioDataDescriptor(String name, String parenttag, String containertag) {
 		this.descriptorName = name;
@@ -36,35 +30,23 @@ public class EvioDataDescriptor implements DataDescriptor {
 		this.init(format);
 	}
 
-	public void init(String s) {
+    @Override
+	public final void init(String s) {
 		descriptorEntries.clear();
 		String[] tokens = s.split("/");
 		// System.out.println(" N - tokens = " + tokens.length);
 		String[] header = tokens[0].split(":");
 		this.descriptorName = header[0] + "::" + header[1];
-		String section_name = header[1];
-		this.descriptorContainerTag = Integer.parseInt(header[2]);
-		this.descriptorContainerNum = Integer.parseInt(header[3]);
+		this.descriptorContainerTag = Integer.valueOf(header[2]);
+		this.descriptorContainerNum = Integer.valueOf(header[3]);
 		this.descriptorProperties.put("parent_tag", header[2]);
 		this.descriptorProperties.put("container_tag", header[3]);
-		Integer sectionTag = Integer.parseInt(header[3]);
+		Integer sectionTag = Integer.valueOf(header[3]);
 
 		for (int loop = 1; loop < tokens.length; loop++) {
 			String[] entryParams = tokens[loop].split(":");
-			this.addEntry(this.descriptorName, entryParams[0], sectionTag, Integer.parseInt(entryParams[1]), entryParams[2]);
+			this.addEntry(this.descriptorName, entryParams[0], sectionTag, Integer.valueOf(entryParams[1]), entryParams[2]);
 		}
-		/*
-		 * descriptorName = tokens[0];
-		 * 
-		 * descriptorContainerTag = Integer.parseInt(tokens[1]); descriptorContainerNum = Integer.parseInt(tokens[2]); ArrayList<String> nnn = new
-		 * ArrayList<String>(); for(int loop = 3 ; loop < tokens.length; loop+=4){ nnn.add(tokens[loop]); descriptorEntries.put(tokens[loop], new
-		 * EvioDataDescriptorEntry("generic",tokens[loop], Integer.parseInt(tokens[loop+1]), Integer.parseInt(tokens[loop+2]), tokens[loop+3] )); }
-		 */
-		// entryNames = new String[nnn.size()];
-		// for(int loop = 0; loop < nnn.size(); loop++){
-		// entryNames[loop] = nnn.get(loop);
-		// }
-		// entryNames = (String[]) nnn.toArray();
 	}
 
 	public void addEntry(String section, String name, Integer tag, Integer num, String type) {
@@ -72,6 +54,7 @@ public class EvioDataDescriptor implements DataDescriptor {
 		entryNames.add(name);
 	}
 
+    @Override
 	public String[] getEntryList() {
 		// return entryNames;
 		String[] entries = new String[descriptorEntries.size()];
@@ -81,10 +64,12 @@ public class EvioDataDescriptor implements DataDescriptor {
 		return entries;
 	}
 
+    @Override
 	public String getName() {
 		return descriptorName;
 	}
 
+    @Override
 	public int getProperty(String property_name, String entry_name) {
 		int ret = -1;
 		if (descriptorEntries.containsKey(entry_name) == false) {
@@ -107,6 +92,7 @@ public class EvioDataDescriptor implements DataDescriptor {
 		return ret;
 	}
 
+    @Override
 	public int getProperty(String property_name) {
 		if (property_name.equals("tag") == true) {
 			return descriptorContainerTag;
@@ -117,6 +103,7 @@ public class EvioDataDescriptor implements DataDescriptor {
 		return 0;
 	}
 
+    @Override
 	public void show() {
 		System.out.println("\n\n>>> BANK name = " + this.getName() + " tag = " + this.getPropertyString("parent_tag"));
 		String[] entry_names = this.getEntryList();
@@ -132,12 +119,14 @@ public class EvioDataDescriptor implements DataDescriptor {
 		table.show();
 	}
 
+    @Override
 	public String getXML() {
 		StringBuilder str = new StringBuilder();
 
 		return str.toString();
 	}
 
+    @Override
 	public void setPropertyString(String name, String value) {
 		if (descriptorProperties.containsKey(name) == true) {
 			descriptorProperties.remove(name);
@@ -145,6 +134,7 @@ public class EvioDataDescriptor implements DataDescriptor {
 		descriptorProperties.put(name, value);
 	}
 
+    @Override
 	public String getPropertyString(String property_name) {
 		if (descriptorProperties.containsKey(property_name) == true) {
 			return descriptorProperties.get(property_name);
@@ -160,8 +150,6 @@ public class EvioDataDescriptor implements DataDescriptor {
 		str.append(this.descriptorProperties.get("parent_tag"));
 		str.append(":");
 		str.append(this.descriptorProperties.get("container_tag"));
-
-		// for(Map.Entry<String,EvioDataDescriptorEntry> entry : this.descriptorEntries.entrySet()){
 		for (String item : this.getEntryList()) {
 			str.append("/");
 			str.append(this.descriptorEntries.get(item).name);
@@ -173,7 +161,20 @@ public class EvioDataDescriptor implements DataDescriptor {
 		return str.toString();
 	}
 
-	public static void main(String[] args) {
+    @Override
+	public boolean hasEntry(String entry) {
+		return this.descriptorEntries.containsKey(entry);
+	}
+
+    @Override
+	public boolean hasEntries(String... entries) {
+		for (String item : entries)
+			if (this.hasEntry(item) == false)
+				return false;
+		return true;
+	}
+
+    public static void main(String[] args) {
 		EvioDataDescriptor desc = new EvioDataDescriptor("DC::true", "120", "0");
 		desc.init("DC:true:1200:1201/sector:1:float64/layer:2:int64/wire:3:int64");
 		desc.show();
@@ -182,14 +183,4 @@ public class EvioDataDescriptor implements DataDescriptor {
 		desc2.show();
 	}
 
-	public boolean hasEntry(String entry) {
-		return this.descriptorEntries.containsKey(entry);
-	}
-
-	public boolean hasEntries(String... entries) {
-		for (String item : entries)
-			if (this.hasEntry(item) == false)
-				return false;
-		return true;
-	}
 }
