@@ -9,14 +9,14 @@ public class URWellConstants {
     
     // geometry
     public final static int NSECTOR  = 6;
-    public final static int NLAYER   = 4;
-    public final static int NREGION  = 2;
-    public final static int NCHAMBER = 3;
-    public final static int[] NSTRIPS  = { 542,   628, 714}; // number of strips for the three chambers
-    public final static int[] STRIPMIN = {   1,  543, 1171}; // lower strip number
-    public final static int[] STRIPMAX = { 542, 1170, 1884}; // higher strip number
-    public final static double PITCH = 0.1; // mm
-    public final static double[] STEREO = { 10.0, 10.0 };
+    public final static int NLAYER   = 12;
+    public final static int NREGION  = 6;
+    public final static int NCHAMBER = 1;
+//    public final static int[] NSTRIPS  = { 542,   628, 714}; // number of strips for the three chambers
+//    public final static int[] STRIPMIN = {   1,  543, 1171}; // lower strip number
+//    public final static int[] STRIPMAX = { 542, 1170, 1884}; // higher strip number
+    public final static double PITCH = 0.5; // mm
+//    public final static double[] STEREO = { 10.0, 10.0 };
 
     // strips
     public final static double THRESHOLD = 0;

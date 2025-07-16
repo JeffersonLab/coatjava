@@ -113,6 +113,7 @@ public class RecoBankWriter {
         return bank;
     }
 
+    /*
     private static DataBank fillFMTTrajectoryBank(DataEvent event,List<Track> candlist) {
 
         DataBank bank = event.createBank("FMT::Trajectory", candlist.size()*Constants.NLAYERS);
@@ -147,27 +148,14 @@ public class RecoBankWriter {
         }
         return bank;
     }
+    */
 
-    public static void appendFMTBanks(DataEvent event, List<Hit> fhits, List<Cluster> clusters,
-                               List<Track> tracks) {
+    public static void appendFMTBanks(DataEvent event, List<Track> tracks) {
 
         if (event == null) return;
         
-        if (fhits != null) {
-            event.appendBanks(fillFMTHitsBank(event, fhits));
-        }        
-        
-        if (clusters != null && clusters.size()>0) {
-            event.appendBanks(fillFMTClustersBank(event, clusters));
-        }
-
-//        if (crosses != null && crosses.size() > 0) {
-//            event.appendBanks(this.fillFMTCrossesBank(event, crosses));
-//        }
-        
         if (tracks != null && tracks.size() > 0) {
             event.appendBanks(fillFMTTracksBank(event, tracks));
-            event.appendBanks(fillFMTTrajectoryBank(event, tracks));
         }
 
     }

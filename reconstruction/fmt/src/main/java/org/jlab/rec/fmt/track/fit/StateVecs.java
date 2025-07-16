@@ -12,6 +12,8 @@ import org.jlab.clas.swimtools.Swim;
  */
 public class StateVecs {
     private final double Bmax = 2.366498; // averaged
+    
+    private final double MuonMass = 0.105658; // GeV/c^2
 
     final double speedLight = 0.002997924580;
     public double[] Z;
@@ -29,7 +31,7 @@ public class StateVecs {
     private final float[] lbf = new float[3];
     private final Swim dcSwim;
     private final RungeKutta rk;
-
+    
     /**
      * State vector representing the track in the sector coordinate system at the measurement layer
      * @param swimmer
@@ -90,7 +92,8 @@ public class StateVecs {
             double X0 = this.getX0(z);
             double t_ov_X0 = Math.abs(s) / X0;//path length in radiation length units = t/X0 [true path length/ X0] ; Ar radiation length = 14 cm
 
-            double beta = this.beta;
+            double energy = Math.sqrt(p*p + MuonMass * MuonMass);
+            double beta = p/energy;
             if(beta>1.0 || beta<=0)
                 beta =1.0;
 
@@ -361,6 +364,7 @@ public class StateVecs {
         rinitSV.tx = pxVtx/pzVtx;
         rinitSV.ty = pyVtx/pzVtx;
         rinitSV.Q = (double)q / p;
+        /*
         double[] FTF = new double[25];
         double[] F = this.F(sector, z0, rinitSV);
         for(int i = 0; i<5; i++) {
@@ -369,6 +373,16 @@ public class StateVecs {
         Matrix initCMatrix = new Matrix();
         initCMatrix.set(FTF);
         initCM.covMat = initCMatrix;
+        */
+        Matrix initCMatrix = new Matrix();
+        initCMatrix.set(8 * 8, 0, 0, 0, 0,
+            0, 8 * 8, 0, 0, 0,
+            0, 0, 0.1 * 0.1, 0, 0,
+            0, 0, 0, 0.1 * 0.1, 0,
+            0, 0, 0, 0, 0.03 * 0.03
+        ); 
+        initCM.covMat = initCMatrix;
+        
         this.trackCov.put(0, initCM);
     }
     private StateVec reset(StateVec SVplus, StateVec stateVec) {
