@@ -1,20 +1,9 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.jlab.io.evio;
 
-import java.io.File;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 import org.jlab.coda.jevio.DataType;
 import org.jlab.coda.jevio.EventBuilder;
 import org.jlab.coda.jevio.EvioBank;
@@ -23,7 +12,6 @@ import org.jlab.coda.jevio.EvioException;
 import org.jlab.io.base.DataDescriptor;
 import org.jlab.io.base.DataEntryType;
 import org.jlab.utils.CLASResources;
-import org.xml.sax.SAXException;
 
 /**
  *
@@ -36,7 +24,6 @@ public class EvioFactory {
     public static EvioDataDictionary readDefaultDictionary(){
 
         EvioDataDictionary dict = new EvioDataDictionary();
-        //return dict;
         String clasDictionaryPath = CLASResources.getResourcePath("etc/bankdefs/clas12");
         if(clasDictionaryPath!=null){
             dict.initWithDir(clasDictionaryPath);
@@ -113,7 +100,6 @@ public class EvioFactory {
     
     public static EvioDataEvent  createEvioEvent(){
         try {
-            //EvioEvent baseBank = new EvioEvent(1, DataType.BANK, 0);
             EventBuilder builder = new EventBuilder(1,DataType.BANK,0);
             EvioEvent event = builder.getEvent();
             EvioBank baseBank = new EvioBank(10, DataType.ALSOBANK, 0);
@@ -123,7 +109,6 @@ public class EvioFactory {
             ByteOrder byteOrder = ByteOrder.LITTLE_ENDIAN;
             
             int byteSize = event.getTotalBytes();
-            //System.out.println("base bank size = " + byteSize);
             ByteBuffer bb = ByteBuffer.allocate(byteSize);
             bb.order(byteOrder);
             event.write(bb);
@@ -137,7 +122,6 @@ public class EvioFactory {
     }
     
     public static EvioDataBank createEvioBank(String name,DataDescriptor desc,int rows){
-        //EvioDataDescriptor desc = (EvioDataDescriptor) EvioFactory.getDictionary().getDescriptor(name);
         EvioDataBank bank = new EvioDataBank(desc);
         String[] entries = desc.getEntryList();
         for(String entry : entries){
