@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.io.hipo;
 
 import java.io.File;
@@ -35,44 +30,12 @@ import org.jlab.utils.options.OptionParser;
  */
 public class HipoRingSource implements DataSource {
     
-    private List<HipoDataEvent>  eventStore = new ArrayList<HipoDataEvent>();
+    private List<HipoDataEvent>  eventStore = new ArrayList<>();
     private int       eventStoreMaxCapacity = 500;
     private SchemaFactory        dictionary = new SchemaFactory();
     private xMsg                 xmsgServer = null;
     
-   
-    
     public HipoRingSource(String host){
-        /*
-        super("DataSource",
-                new xMsgProxyAddress(host, xMsgConstants.DEFAULT_PORT),
-                new xMsgRegAddress(host, xMsgConstants.REGISTRAR_PORT),
-                2);
-                final String domain  = "clas12-domain";
-        final String subject = "clas12-data";
-        final String type    = "data";
-        final String description = "clas12 data distribution ring";
-        
-        xMsgTopic topic = xMsgTopic.build(domain, subject, type);
-
-        try {
-            // Register this subscriber
-            register(xMsgRegInfo.subscriber(topic, description));
-        } catch (xMsgException ex) {
-            Logger.getLogger(HipoRingSource.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        try {
-            // Subscribe to default proxy
-            subscribe(topic, new MyCallBack());
-        } catch (xMsgException ex) {
-            Logger.getLogger(HipoRingSource.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        System.out.printf("Subscribed to = %s%n", topic);
-        
-        this.dictionary.initFromDirectory("CLAS12DIR", "etc/bankdefs/hipo");
-        */
-        
         String envCLAS = System.getenv("CLAS12DIR");
         dictionary.initFromDirectory(envCLAS + "/etc/bankdefs/hipo4");
     }
@@ -121,7 +84,7 @@ public class HipoRingSource implements DataSource {
     
     @Override
     public boolean hasEvent() {
-        return (eventStore.size()>0);
+        return !eventStore.isEmpty();
     }
 
     @Override
@@ -141,13 +104,11 @@ public class HipoRingSource implements DataSource {
             } 
 
         } catch (xMsgException ex) {
-            //Logger.getLogger(HipoRingSource.class.getName()).log(Level.SEVERE, null, ex);
             System.out.println("   >>> connection to server " + host + " : failed");
             this.xmsgServer.destroy();
             this.xmsgServer = null;
             result = false;
         }
-        //System.out.println("-----> connection estabilished...");
         return result;
     }
     
@@ -187,12 +148,11 @@ public class HipoRingSource implements DataSource {
         }
         System.out.println("   >>> subscription to topic : success\n\n");
         
-        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
     public void open(ByteBuffer buff) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
@@ -202,26 +162,21 @@ public class HipoRingSource implements DataSource {
 
     @Override
     public DataEventList getEventList(int start, int stop) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public DataEventList getEventList(int nrecords) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public DataEvent getNextEvent() {
-        //System.out.println("   >>> get next event : size = " + eventStore.size());
         if(eventStore.isEmpty()){
             return null;
         }
         HipoDataEvent event = this.eventStore.get(0);
-        //System.out.println("   >>> success getting event : size = " + eventStore.size());
-        //event.show();
         this.eventStore.remove(0);
-        //System.out.println("   >>>   FILO cleanup : size = " + eventStore.size());
-        //System.out.println("\n\n");
         return event;
     }
 
@@ -245,7 +200,7 @@ public class HipoRingSource implements DataSource {
         return 0;
     }
     
-    
+    @Override
     public void close() {
         /*try {
             this.getConnection().close();
@@ -257,7 +212,6 @@ public class HipoRingSource implements DataSource {
     @Override
     public DataSourceType getType() {
         return DataSourceType.STREAM;
-        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
@@ -269,15 +223,10 @@ public class HipoRingSource implements DataSource {
         @Override
         public void callback(xMsgMessage mm) {
             byte[] data = mm.getData();
-            String type = mm.getMimeType();
-            //System.out.println("\n\n     >>>>>> received data : mime " + type);
-            //System.out.println("     >>>>>> received data : size " + data.length);
             if(eventStore.size()<eventStoreMaxCapacity){
                 HipoDataEvent event = new HipoDataEvent(data,dictionary);
                 eventStore.add(event);
-                //System.out.printf("     >>>>>> adding event to the store : size = %d \n", eventStore.size());
             } else {
-                //System.out.printf("     >>>>>> event store is full : size = %d \n", eventStore.size());
             }
         }
     }
@@ -294,7 +243,6 @@ public class HipoRingSource implements DataSource {
         
         while(true){
             if(reader.hasEvent()==true){
-                //System.out.println("has event");
                 DataEvent event = reader.getNextEvent();
                 try {
                     event.show();
@@ -302,7 +250,6 @@ public class HipoRingSource implements DataSource {
                     System.out.println("something went wrong");
                 }
             } else {
-                //System.out.println("no event");
                 try {
                     Thread.sleep(20);
                 } catch (InterruptedException ex) {
@@ -310,32 +257,5 @@ public class HipoRingSource implements DataSource {
                 }
             }
         }
-        //reader.open("localhost");
-        /*
-        OptionParser parser = new OptionParser();        
-        parser.addRequired("-s");
-        
-        
-        HipoRingSource reader = HipoRingSource.createSource();
-        
-        while(reader.hasEvent()==true){
-            
-            HipoDataEvent  event = (HipoDataEvent) reader.getNextEvent();
-            //event.show();
-            
-            try {
-                Thread.sleep(8000);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(HipoRingSource.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            
-        }
-        System.out.println("DONE");
-        */
-        /*
-        String host = args[0];
-        try (HipoRingSource subscriber = new HipoRingSource(host)) {
-            xMsgUtil.keepAlive();
-        } */   
     }
 }
