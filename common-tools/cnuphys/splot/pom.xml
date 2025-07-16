@@ -4,13 +4,13 @@
 
     <groupId>cnuphys</groupId>
     <artifactId>splot</artifactId>
-    <version>13.0.2-SNAPSHOT</version>
+    <version>13.0.3-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <parent>
       <groupId>cnuphys</groupId>
       <artifactId>clas12</artifactId>
-      <version>13.0.2-SNAPSHOT</version>
+      <version>13.0.3-SNAPSHOT</version>
     </parent>
 
     <dependencies>
