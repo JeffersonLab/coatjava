@@ -13,7 +13,7 @@ import org.jlab.geom.prim.Vector3D;
  */
 public class Constants {
     
-    public static final int NLAYERS = 6;
+    public static final int NLAYERS = 12;
     
     // DC-tracks to FMT-clusters matching parameter
     public static double CIRCLECONFUSION = 1.2; // cm
