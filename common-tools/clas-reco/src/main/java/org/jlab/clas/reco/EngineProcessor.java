@@ -17,7 +17,6 @@ import org.jlab.clara.engine.EngineDataType;
 import java.util.Arrays;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.json.JSONObject;
-import org.jlab.logging.DefaultLogger;
 import org.jlab.utils.ClaraYaml;
 
 /**
@@ -358,7 +357,6 @@ public class EngineProcessor {
         parser.addOption("-n","-1","number of events to process");
         parser.addOption("-y","0","yaml file");
         parser.addOption("-u","true","update dictionary from writer ? ");
-        parser.addOption("-d","1","Debug level [0 - OFF, 1 - ON/default]");
         parser.addOption("-S",null,"schema directory");
         parser.addOption("-B",null,"background file");
         parser.addOption("-P",null,"preload file for post-processing");
@@ -366,9 +364,6 @@ public class EngineProcessor {
         parser.addOption("-H","0","restream helicity");
 
         parser.parse(args);
-
-        if(parser.getOption("-d").intValue() == 0) DefaultLogger.initialize();
-        else DefaultLogger.debug();
 
         List<String> services = parser.getInputList();
 
