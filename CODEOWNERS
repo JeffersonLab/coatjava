@@ -67,7 +67,6 @@ bin/ @baltzell @raffaelladevita @c-dilks
 docs/ @baltzell @raffaelladevita @c-dilks
 external-dependencies/ @baltzell @raffaelladevita @c-dilks
 libexec/ @baltzell @raffaelladevita @c-dilks
-**/pom.xml @baltzell @raffaelladevita @c-dilks
 
 # common-tools
 common-tools/clara-io/ @baltzell @raffaelladevita
@@ -127,3 +126,7 @@ etc/services/ @baltzell @raffaelladevita @zieglerv
 
 # validation
 validation/ @baltzell @raffaelladevita @c-dilks
+
+# all POM files
+### NOTE: exceptions and specific files/overrides must be listed last
+**/pom.xml @baltzell @raffaelladevita @c-dilks
