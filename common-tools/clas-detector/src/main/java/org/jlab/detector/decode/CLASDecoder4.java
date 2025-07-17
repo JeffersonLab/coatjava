@@ -305,17 +305,10 @@ public class CLASDecoder4 {
     }
 
     public Bank getDataBankTDCPetiroc(String name, DetectorType type){
-
         List<DetectorDataDgtz> tdcDGTZ = this.getEntriesTDC(type);
-        if(schemaFactory.hasSchema(name)==false){
-          System.out.println("WARNING: No schema for TDC type : "  + type);
-          return null;
-        }
+        if(schemaFactory.hasSchema(name)==false) return null;
         Bank tdcBANK = new Bank(schemaFactory.getSchema(name), tdcDGTZ.size());
-
         if(tdcBANK==null) return null;
-
-        // Not sure why  the schemea information isn't used here. 
         for(int i = 0; i < tdcDGTZ.size(); i++){
             tdcBANK.putByte("sector", i, (byte) tdcDGTZ.get(i).getDescriptor().getSector());
             tdcBANK.putByte("layer", i, (byte) tdcDGTZ.get(i).getDescriptor().getLayer());
@@ -329,38 +322,6 @@ public class CLASDecoder4 {
         return tdcBANK;
     }
 
-    public Bank getDataBankTimeStamp(String name, DetectorType type) {
-
-        List<DetectorDataDgtz> tdcDGTZ = this.getEntriesTDC(type);
-        if(schemaFactory.hasSchema(name)==false) return null;
-        Map<Integer, DetectorDataDgtz> tsMap = new LinkedHashMap<>();
-        for(DetectorDataDgtz tdc : tdcDGTZ) {
-            DetectorDescriptor desc = tdc.getDescriptor();
-            int hash = ((desc.getCrate()<<8)&0xFF00) | (desc.getSlot()&0x00FF);
-            if(tsMap.containsKey(hash)) {
-                if(tsMap.get(hash).getTimeStamp() != tdc.getTimeStamp()) 
-                    System.out.println("WARNING: inconsistent timestamp for DCRB crate/slot " 
-                                       + desc.getCrate() + "/" + desc.getSlot());
-            }
-            else {
-                tsMap.put(hash, tdc);
-            }
-        }
-        
-        Bank tsBANK = new Bank(schemaFactory.getSchema(name), tsMap.size());
-
-        if(tsBANK==null) return null;
-        
-        int i=0;
-        for(DetectorDataDgtz tdc : tsMap.values()) {
-            tsBANK.putByte("crate", i, (byte) tdc.getDescriptor().getCrate());
-            tsBANK.putByte("slot",  i, (byte) tdc.getDescriptor().getSlot());
-            tsBANK.putLong("timestamp", i, tdc.getTimeStamp());
-            i++;
-        }
-        return tsBANK;
-    }
-    
     public Bank getDataBankUndecodedADC(String name, DetectorType type){
         List<DetectorDataDgtz> adcDGTZ = this.getEntriesADC(type);
         Bank adcBANK = new Bank(schemaFactory.getSchema(name), adcDGTZ.size());
@@ -414,6 +375,38 @@ public class CLASDecoder4 {
         return scalerBANK;
     }
 
+    public Bank getDataBankTimeStamp(String name, DetectorType type) {
+
+        List<DetectorDataDgtz> tdcDGTZ = this.getEntriesTDC(type);
+        if(schemaFactory.hasSchema(name)==false) return null;
+        Map<Integer, DetectorDataDgtz> tsMap = new LinkedHashMap<>();
+        for(DetectorDataDgtz tdc : tdcDGTZ) {
+            DetectorDescriptor desc = tdc.getDescriptor();
+            int hash = ((desc.getCrate()<<8)&0xFF00) | (desc.getSlot()&0x00FF);
+            if(tsMap.containsKey(hash)) {
+                if(tsMap.get(hash).getTimeStamp() != tdc.getTimeStamp()) 
+                    System.out.println("WARNING: inconsistent timestamp for DCRB crate/slot " 
+                                       + desc.getCrate() + "/" + desc.getSlot());
+            }
+            else {
+                tsMap.put(hash, tdc);
+            }
+        }
+        
+        Bank tsBANK = new Bank(schemaFactory.getSchema(name), tsMap.size());
+
+        if(tsBANK==null) return null;
+        
+        int i=0;
+        for(DetectorDataDgtz tdc : tsMap.values()) {
+            tsBANK.putByte("crate", i, (byte) tdc.getDescriptor().getCrate());
+            tsBANK.putByte("slot",  i, (byte) tdc.getDescriptor().getSlot());
+            tsBANK.putLong("timestamp", i, tdc.getTimeStamp());
+            i++;
+        }
+        return tsBANK;
+    }
+    
     public Event getDecodedEvent(EvioDataEvent rawEvent, int run, int counter, Double torus, Double solenoid) {
 
         Event decodedEvent = this.getDataEvent(rawEvent);        
@@ -499,7 +492,6 @@ public class CLASDecoder4 {
             }
         }
         try {
-            // Do ATOF 
             Bank tdcBank = getDataBankTDCPetiroc("ATOF::tdc",DetectorType.ATOF);
             if(tdcBank!=null){
                 if(tdcBank.getRows()>0){
@@ -509,7 +501,6 @@ public class CLASDecoder4 {
         } catch(Exception e) {
             e.printStackTrace();
         }
-
 
         try {
             Bank tsBank = getDataBankTimeStamp("DC::jitter", DetectorType.DC);
@@ -522,9 +513,6 @@ public class CLASDecoder4 {
             e.printStackTrace();
         }
 
-        /**
-         * Adding un-decoded banks to the event
-         */
         try {
             Bank adcBankUD = this.getDataBankUndecodedADC("RAW::adc", DetectorType.UNDEFINED);
             if(adcBankUD!=null){
@@ -572,11 +560,8 @@ public class CLASDecoder4 {
         } catch(Exception e) {
             e.printStackTrace();
         }
-        //-----------------------------------------------------
-        // CREATING BONUS BANK --------------------------------
-        //-----------------------------------------------------
+
         try {
-            //System.out.println("creating bonus bank....");
             Bank bonusBank = this.createBonusBank();
             if(bonusBank!=null){
                 if(bonusBank.getRows()>0){
