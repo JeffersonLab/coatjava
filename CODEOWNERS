@@ -67,6 +67,7 @@ bin/ @baltzell @raffaelladevita @c-dilks
 docs/ @baltzell @raffaelladevita @c-dilks
 external-dependencies/ @baltzell @raffaelladevita @c-dilks
 libexec/ @baltzell @raffaelladevita @c-dilks
+**/pom.xml @baltzell @raffaelladevita @c-dilks
 
 # common-tools
 common-tools/clara-io/ @baltzell @raffaelladevita
