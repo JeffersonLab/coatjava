@@ -153,6 +153,7 @@ public class CLASDecoder4 {
     public List<DetectorDataDgtz>  getEntriesADC(DetectorType type){
         return this.getEntriesADC(type, dataList);
     }
+
     /**
      * returns ADC entries from decoded data for given detector TYPE
      * @param type detector type
@@ -199,6 +200,7 @@ public class CLASDecoder4 {
     public List<DetectorDataDgtz>  getEntriesVTP(DetectorType type){
         return getEntriesVTP(type,dataList);
     }
+
     /**
      * returns VTP entries from decoded data for given detector type
      * @param type detector type
@@ -221,6 +223,7 @@ public class CLASDecoder4 {
     public List<DetectorDataDgtz>  getEntriesSCALER(DetectorType type){
         return getEntriesSCALER(type,dataList);
     }
+
     /**
      * returns VTP entries from decoded data for given detector type
      * @param type detector type
@@ -288,7 +291,6 @@ public class CLASDecoder4 {
         return adcBANK;
     }
 
-
     public Bank getDataBankTDC(String name, DetectorType type){
 
         List<DetectorDataDgtz> tdcDGTZ = this.getEntriesTDC(type);
@@ -334,7 +336,6 @@ public class CLASDecoder4 {
         }
         return tdcBANK;
     }
-
 
     public Bank getDataBankTimeStamp(String name, DetectorType type) {
 
