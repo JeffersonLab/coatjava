@@ -82,10 +82,10 @@ public class EngineProcessor {
 
     private void setBanksToKeep(String schemaDirectory) {
         if (!Files.isDirectory((new File(schemaDirectory)).toPath())) {
-            LOGGER.log(Level.SEVERE, "Invalid schema directory, aborting:  "+schemaDirectory);
+            LOGGER.log(Level.SEVERE, "Invalid schema directory, aborting:  {0}", schemaDirectory);
             System.exit(1);
         }
-        LOGGER.log(Level.INFO, "Using schema directory:  "+schemaDirectory);
+        LOGGER.log(Level.INFO, "Using schema directory:  {0}", schemaDirectory);
         banksToKeep = new SchemaFactory();
         banksToKeep.initFromDirectory(schemaDirectory);
     }
@@ -256,13 +256,11 @@ public class EngineProcessor {
      * Initialize all the engines in the chain.
      */
     public void init(){
-        System.out.println("\n\n\n ");
         for(Map.Entry<String,ReconstructionEngine> entry : this.processorEngines.entrySet()){
-            System.out.println(String.format("   >>>>>> (*) initializing : %8s : %s",entry.getKey(),
+            LOGGER.info(String.format("   >>>>>> (*) initializing : %8s : %s",entry.getKey(),
                     entry.getValue().getClass().getName()));
             entry.getValue().init();
         }
-        System.out.println("\n\n");
     }
 
     /**
@@ -274,7 +272,7 @@ public class EngineProcessor {
             try {
                 engine.getValue().filterEvent(event);
             } catch (Exception e){
-                LOGGER.log(Level.SEVERE, "[Exception] >>>>> engine : {0}\n\n", engine.getKey());
+                LOGGER.log(Level.SEVERE, "[Exception] >>>>> engine : {0}", engine.getKey());
                 e.printStackTrace();
             }
         }
