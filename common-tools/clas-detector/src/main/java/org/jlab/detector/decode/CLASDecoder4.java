@@ -671,11 +671,8 @@ public class CLASDecoder4 {
     }
 
     public Bank createTriggerBank(){
-
         if(schemaFactory.hasSchema("RUN::trigger")==false) return null;
-
         Bank bank = new Bank(schemaFactory.getSchema("RUN::trigger"), this.codaDecoder.getTriggerWords().size());
-
         for(int i=0; i<this.codaDecoder.getTriggerWords().size(); i++) {
             bank.putInt("id",      i, i+1);
             bank.putInt("trigger", i, this.codaDecoder.getTriggerWords().get(i));
