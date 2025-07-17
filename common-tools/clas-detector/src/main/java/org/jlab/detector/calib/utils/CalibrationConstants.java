@@ -67,7 +67,7 @@ public class CalibrationConstants extends IndexedTable {
             StringBuilder str = new StringBuilder();
             for(int i = 0; i < nindex; i++){
                 str.append(
-                        String.format("%3d ",IndexedList.IndexGenerator.getIndex(entry.getKey(),i)));
+                        String.format("%3d ",this.getList().getIndexGenerator().getIndex(entry.getKey(),i)));
             }
             int ncolumns = entry.getValue().getSize();
             for(int i = 0; i < ncolumns; i++){
@@ -120,9 +120,9 @@ public class CalibrationConstants extends IndexedTable {
     
     
     public static void main(String[] args){
-        CalibrationConstants gain = new CalibrationConstants(3,"Mean/F:Error/I:Sigma/F:Serror/F");
-        for(int i = 0; i < 23; i++){
-            gain.addEntry(1,1,i+1);
+        CalibrationConstants gain = new CalibrationConstants(2,"Mean/F:Error/I:Sigma/F:Serror/F");
+        for(int i = 0; i < gain.getColumnCount(); i++){
+            System.out.print(gain.getColumnName(i) + " " + i + "\n");
         }
         
         gain.setDoubleValue(0.2, "Mean", 1,1,1);

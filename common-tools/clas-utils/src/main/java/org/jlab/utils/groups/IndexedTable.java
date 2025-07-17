@@ -288,7 +288,8 @@ public class IndexedTable extends DefaultTableModel {
             value = (Long) iter.next();
         }
         if(column<entries.getIndexSize()){
-            Integer index = IndexedList.IndexGenerator.getIndex(value, column);
+            IndexedList indexList = new IndexedList(entries.getIndexSize());
+            Integer index = indexList.getIndexGenerator().getIndex(value, column);
             return index.toString();
         }
         
