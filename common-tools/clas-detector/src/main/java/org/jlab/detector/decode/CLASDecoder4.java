@@ -265,13 +265,9 @@ public class CLASDecoder4 {
     }
 
     public Bank getDataBankADC(String name, DetectorType type){
-
         List<DetectorDataDgtz> adcDGTZ = this.getEntriesADC(type);
-
         if(schemaFactory.hasSchema(name)==false) return null;
-
         Bank adcBANK = new Bank(schemaFactory.getSchema(name), adcDGTZ.size());
-
         for(int i = 0; i < adcDGTZ.size(); i++){
             adcBANK.putByte("sector", i, (byte) adcDGTZ.get(i).getDescriptor().getSector());
             adcBANK.putByte("layer", i, (byte) adcDGTZ.get(i).getDescriptor().getLayer());
@@ -292,13 +288,10 @@ public class CLASDecoder4 {
     }
 
     public Bank getDataBankTDC(String name, DetectorType type){
-
         List<DetectorDataDgtz> tdcDGTZ = this.getEntriesTDC(type);
         if(schemaFactory.hasSchema(name)==false) return null;
         Bank tdcBANK = new Bank(schemaFactory.getSchema(name), tdcDGTZ.size());
-
         if(tdcBANK==null) return null;
-
         for(int i = 0; i < tdcDGTZ.size(); i++){
             tdcBANK.putByte("sector", i, (byte) tdcDGTZ.get(i).getDescriptor().getSector());
             tdcBANK.putByte("layer", i, (byte) tdcDGTZ.get(i).getDescriptor().getLayer());
@@ -332,7 +325,6 @@ public class CLASDecoder4 {
             tdcBANK.putInt("ToT", i, tdcDGTZ.get(i).getTDCData(0).getToT());
             tdcBANK.putLong("timestamp", i, tdcDGTZ.get(i).getTDCData(0).getTimeStamp());
             tdcBANK.putInt("trigger", i, tdcDGTZ.get(i).getTrigger());
-            //System.err.println("event: " + tdcDGTZ.get(i).toString());
         }
         return tdcBANK;
     }
@@ -372,7 +364,6 @@ public class CLASDecoder4 {
     public Bank getDataBankUndecodedADC(String name, DetectorType type){
         List<DetectorDataDgtz> adcDGTZ = this.getEntriesADC(type);
         Bank adcBANK = new Bank(schemaFactory.getSchema(name), adcDGTZ.size());
-
         for(int i = 0; i < adcDGTZ.size(); i++){
             adcBANK.putByte("crate", i, (byte) adcDGTZ.get(i).getDescriptor().getCrate());
             adcBANK.putByte("slot", i, (byte) adcDGTZ.get(i).getDescriptor().getSlot());
@@ -385,12 +376,9 @@ public class CLASDecoder4 {
     }
 
     public Bank getDataBankUndecodedTDC(String name, DetectorType type){
-
         List<DetectorDataDgtz> tdcDGTZ = this.getEntriesTDC(type);
-
         Bank tdcBANK = new Bank(schemaFactory.getSchema(name), tdcDGTZ.size());
         if(tdcBANK==null) return null;
-
         for(int i = 0; i < tdcDGTZ.size(); i++){
             tdcBANK.putByte("crate", i, (byte) tdcDGTZ.get(i).getDescriptor().getCrate());
             tdcBANK.putByte("slot", i, (byte) tdcDGTZ.get(i).getDescriptor().getSlot());
@@ -401,12 +389,9 @@ public class CLASDecoder4 {
     }
 
     public Bank getDataBankUndecodedVTP(String name, DetectorType type){
-
         List<DetectorDataDgtz> vtpDGTZ = this.getEntriesVTP(type);
-
         Bank vtpBANK = new Bank(schemaFactory.getSchema(name), vtpDGTZ.size());
         if(vtpBANK==null) return null;
-
         for(int i = 0; i < vtpDGTZ.size(); i++){
             vtpBANK.putByte("crate", i, (byte) vtpDGTZ.get(i).getDescriptor().getCrate());
             vtpBANK.putInt("word", i, vtpDGTZ.get(i).getVTPData(0).getWord());
@@ -415,12 +400,9 @@ public class CLASDecoder4 {
     }
 
     public Bank getDataBankUndecodedSCALER(String name, DetectorType type){
-
         List<DetectorDataDgtz> scalerDGTZ = this.getEntriesSCALER(type);
-
         Bank scalerBANK = new Bank(schemaFactory.getSchema(name), scalerDGTZ.size());
         if(scalerBANK==null) return null;
-
         for(int i = 0; i < scalerDGTZ.size(); i++){
             scalerBANK.putByte("crate", i, (byte) scalerDGTZ.get(i).getDescriptor().getCrate());
             scalerBANK.putByte("slot", i, (byte) scalerDGTZ.get(i).getDescriptor().getSlot());
@@ -434,12 +416,12 @@ public class CLASDecoder4 {
 
     public Event getDecodedEvent(EvioDataEvent rawEvent, int run, int counter, Double torus, Double solenoid) {
 
-        Event  decodedEvent = this.getDataEvent(rawEvent);        
+        Event decodedEvent = this.getDataEvent(rawEvent);        
 
-        Bank   header = this.createHeaderBank(run, counter, torus, solenoid);
+        Bank header = this.createHeaderBank(run, counter, torus, solenoid);
         if(header!=null) decodedEvent.write(header);
 
-        Bank   trigger = this.createTriggerBank();
+        Bank trigger = this.createTriggerBank();
         if(trigger!=null) decodedEvent.write(trigger);
 
         Bank onlineHelicity = this.createOnlineHelicityBank();
