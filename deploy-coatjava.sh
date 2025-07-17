@@ -168,6 +168,7 @@ print_deployment
 if ! $dry_run; then
   log "now deploying..."
   scp -r $deploy_dir/org/jlab/coat/coat-libs/* $deployment_user@$deployment_host:/group/clas/www/clasweb/html/clas12maven/org/jlab/coat/coat-libs/.
+  scp -r $deploy_dir/org/jlab/clas12/detector/* $deployment_user@$deployment_host:/group/clas/www/clasweb/html/clas12maven/org/jlab/clas12/detector/.
   scp $deploy_tarball $deployment_user@$deployment_host:/group/clas/www/clasweb/html/clas12offline/distribution/coatjava/.
   log "...done"
 else
