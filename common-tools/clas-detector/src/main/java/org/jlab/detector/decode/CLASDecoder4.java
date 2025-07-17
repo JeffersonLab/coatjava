@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeSet;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jlab.detector.base.DetectorDescriptor;
 
@@ -88,7 +89,7 @@ public class CLASDecoder4 {
     public void setRunNumber(int run, boolean fixed){
         this.isRunNumberFixed = fixed;
         this.detectorDecoder.setRunNumber(run);
-        System.out.println(" SETTING RUN NUMBER TO " + run + " FIXED = " + this.isRunNumberFixed);
+        LOGGER.log(Level.CONFIG, " SETTING RUN NUMBER TO {0} FIXED = {1}", new Object[]{run, this.isRunNumberFixed});
     }
 
     public CodaEventDecoder getCodaEventDecoder() {
@@ -169,7 +170,7 @@ public class CLASDecoder4 {
      * @param entries digitized data list
      * @return list of ADC's for detector type
      */
-    public List<DetectorDataDgtz>  getEntriesTDC(DetectorType type,
+    public static List<DetectorDataDgtz>  getEntriesTDC(DetectorType type,
             List<DetectorDataDgtz> entries){
         List<DetectorDataDgtz>  tdc = new ArrayList<>();
         for(DetectorDataDgtz entry : entries){
@@ -370,8 +371,7 @@ public class CLASDecoder4 {
             int hash = ((desc.getCrate()<<8)&0xFF00) | (desc.getSlot()&0x00FF);
             if(tsMap.containsKey(hash)) {
                 if(tsMap.get(hash).getTimeStamp() != tdc.getTimeStamp()) 
-                    System.out.println("WARNING: inconsistent timestamp for DCRB crate/slot " 
-                                       + desc.getCrate() + "/" + desc.getSlot());
+                    LOGGER.log(Level.WARNING, "inconsistent timestamp for DCRB crate/slot {0}/{1}", new Object[]{desc.getCrate(), desc.getSlot()});
             }
             else {
                 tsMap.put(hash, tdc);
@@ -775,7 +775,7 @@ public class CLASDecoder4 {
 
         if(inputList.isEmpty()==true){
             parser.printUsage();
-            System.out.println("\n >>>> error : no input file is specified....\n");
+            System.err.println("\n >>>> error : no input file is specified....\n");
             System.exit(1);
         }
 
@@ -784,7 +784,7 @@ public class CLASDecoder4 {
 
         if(modeDevel.compareTo("run")!=0&&modeDevel.compareTo("devel")!=0){
             parser.printUsage();
-            System.out.println("\n >>>> error : mode has to be set to \"run\" or \"devel\" ");
+            System.err.println("\n >>>> error : mode has to be set to \"run\" or \"devel\" ");
             System.exit(1);
         }
 
@@ -810,7 +810,7 @@ public class CLASDecoder4 {
 
         writer.open(outputFile);
         ProgressPrintout progress = new ProgressPrintout();
-        System.out.println("INPUT LIST SIZE = " + inputList.size());
+        LOGGER.log(Level.FINE, "INPUT LIST SIZE = {0}", inputList.size());
         int nevents = parser.getOption("-n").intValue();
         int counter = 0;
 
