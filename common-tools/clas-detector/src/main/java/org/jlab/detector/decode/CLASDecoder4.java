@@ -22,8 +22,6 @@ import org.jlab.logging.DefaultLogger;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.evio.EvioSource;
-import org.jlab.io.hipo.HipoDataEvent;
-import org.jlab.io.hipo.HipoDataSync;
 
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
@@ -44,8 +42,6 @@ public class CLASDecoder4 {
     private CodaEventDecoder          codaDecoder = null;
     private DetectorEventDecoder  detectorDecoder = null;
     private List<DetectorDataDgtz>       dataList = new ArrayList<>();
-    private HipoDataSync                   writer = null;
-    private HipoDataEvent               hipoEvent = null;
     private boolean              isRunNumberFixed = false;
     private int                  decoderDebugMode = 0;
     private SchemaFactory           schemaFactory = new SchemaFactory();
@@ -55,8 +51,6 @@ public class CLASDecoder4 {
     public CLASDecoder4(boolean development){
         codaDecoder = new CodaEventDecoder();
         detectorDecoder = new DetectorEventDecoder(development);
-        writer = new HipoDataSync();
-        hipoEvent = (HipoDataEvent) writer.createEvent();
         String dir = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4");
         schemaFactory.initFromDirectory(dir);
         DefaultLogger.debug();
@@ -65,8 +59,6 @@ public class CLASDecoder4 {
     public CLASDecoder4(){
         codaDecoder = new CodaEventDecoder();
         detectorDecoder = new DetectorEventDecoder();
-        writer = new HipoDataSync();
-        hipoEvent = (HipoDataEvent) writer.createEvent();
         String dir = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4");
         schemaFactory.initFromDirectory(dir);
         DefaultLogger.debug();
