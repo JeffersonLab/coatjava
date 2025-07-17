@@ -53,9 +53,7 @@ public class HipoDataSync implements DataSync {
     
     @Override
     public void writeEvent(DataEvent event) {
-        if(event instanceof HipoDataEvent) {
-            HipoDataEvent hipoEvent = (HipoDataEvent) event;
-            
+        if(event instanceof HipoDataEvent hipoEvent) {
             this.writer.addEvent(hipoEvent.getHipoEvent(),hipoEvent.getHipoEvent().getEventTag());
         }
     }
