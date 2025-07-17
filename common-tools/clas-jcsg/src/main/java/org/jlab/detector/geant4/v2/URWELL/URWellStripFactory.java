@@ -11,6 +11,7 @@ import org.jlab.geom.prim.Plane3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
 import org.jlab.geometry.prim.Line3d;
+import org.jlab.geom.prim.Trap3D;
 import org.jlab.geometry.prim.Straight;
 import org.jlab.utils.groups.IndexedList;
 
@@ -25,6 +26,9 @@ public final class URWellStripFactory {
     private IndexedList<Line3D> globalStrips = new IndexedList(3);
     private IndexedList<Line3D> localStrips = new IndexedList(3);
     private IndexedList<Plane3D> planeStrips = new IndexedList(3);
+    private IndexedList<Trap3D>  surfaceLayers = new IndexedList(2);
+            
+            
     private int nRegions;
     private int nSectors;
     private int nChambers;
@@ -107,6 +111,7 @@ public final class URWellStripFactory {
         }
         this.fillStripLists();
         this.fillPlaneLists();
+        this.fillSurfaceLists();
     }
 
     /**
@@ -156,6 +161,7 @@ public final class URWellStripFactory {
 
         this.fillStripLists();
         this.fillPlaneLists();
+        this.fillSurfaceLists();
     }
 
     public double getStereoAngle(int layer, int ichamber) {
@@ -535,9 +541,86 @@ public final class URWellStripFactory {
         }
 
         Plane3D plane = new Plane3D(First_strip.origin(), normal_plane);
-
+        
         return plane;
     }
+    
+    
+     private void fillSurfaceLists() {
+
+        for (int ir = 0; ir < nRegions; ir++) {
+            int region = ir + 1;
+
+            for (int is = 0; is < nSectors; is++) {
+                int sector = is + 1;
+                if (isProto == true) {
+                    sector = 6;
+                }
+
+                for (int il = 0; il < nLayers; il++) {
+
+                    int layer = (2 * region - 1) + il;
+
+                    Trap3D surf = this.createSurface(sector, layer);
+                    this.surfaceLayers.add(surf, sector, layer);
+                    
+
+                }
+            }
+        }
+    }
+
+    /**
+     * Define the boundary points of the uRWELL surface using the first strip
+     * from the odd and even layers. This method assumes the strips are aligned
+     * with the trapezoid sides, and is only valid under that geometric
+     * condition.
+     *
+     * @param sector
+     * @param layer
+     * @return
+     */
+    private Trap3D createSurface(int sector, int layer) {
+
+        int layer2 = 0;
+        if (layer % 2 == 0) {
+            layer2 = layer - 1;
+        } else {
+            layer2 = layer + 1;
+        }
+
+        Line3D first_strip = this.getStrip(sector, layer, 1);
+        Line3D second_strip = this.getStrip(sector, layer2, 1);
+
+        Point3D p0 = first_strip.origin();
+        Point3D p1 = first_strip.end();
+        Point3D p2 = second_strip.origin();
+        Point3D p3 = second_strip.end();
+
+        Trap3D trapezoid = new Trap3D(p0.x(), p0.y(), p0.z(), p1.x(), p1.y(), p1.z(), p2.x(), p2.y(), p2.z(), p3.x(), p3.y(), p3.z());
+
+        return trapezoid;
+    }
+
+    /**
+     *
+     * @param sector
+     * @param layer
+     * @return
+     */
+    public Trap3D getSurface(int sector, int layer) {
+
+        return surfaceLayers.getItem(sector, layer);
+    }
+
+    
+        
+    
+
+    
+    
+    
+    
 
     public static void main(String[] args) {
         DatabaseConstantProvider cp = new DatabaseConstantProvider(11, "default");
@@ -546,7 +629,7 @@ public final class URWellStripFactory {
 
         //    URWellGeant4Factory factory2 = new URWellGeant4Factory(cp, true, 2);
         //           URWellStripFactory factory2 = new URWellStripFactory(cp, false, 1);
-        URWellStripFactory factory2 = new URWellStripFactory(cp, 0, 2);
+        URWellStripFactory factory2 = new URWellStripFactory(cp, 2, 6);
 
         double angle = factory2.getStereoAngle(0,0);
 
@@ -559,12 +642,15 @@ public final class URWellStripFactory {
         System.out.println("Numero di strip "+factory2.getNStripSector(layer));
 
         System.out.println("Numero di strip chamber  "+factory2.getNStripChamber(layer,0));
+         
+        Trap3D surf =  factory2.getSurface(5,1);
         
+        System.out.println("norm " +surf.normal());
         //   Plane3D plane = factory2.getPlane(6, 1, 200);
         //   System.out.println(plane.toString());
  
 
-        System.out.println((strip) + " " + factory2.getLocalStripId(layer,strip) + "\n" + factory2.getChamberStrip(sector, layer, strip) + "\n" + factory2.getLocalStrip(sector, layer, strip) + "\n" + factory2.getStrip(sector, layer, strip))    ;
+//        System.out.println((strip) + " " + factory2.getLocalStripId(layer,strip) + "\n" + factory2.getChamberStrip(sector, layer, strip) + "\n" + factory2.getLocalStrip(sector, layer, strip) + "\n" + factory2.getStrip(sector, layer, strip))    ;
 
         /*
          for(int istrip=0; istrip<factory2.getNStripSector(); istrip++)  {
