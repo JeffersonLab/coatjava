@@ -2,11 +2,13 @@ package org.jlab.detector.decode;
 
 import org.jlab.detector.scalers.DaqScalers;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeSet;
+import java.util.logging.Logger;
 import org.jlab.detector.base.DetectorDescriptor;
 
 import org.jlab.detector.base.DetectorType;
@@ -39,11 +41,12 @@ import org.jlab.utils.system.ClasUtilsFile;
  */
 public class CLASDecoder4 {
 
+    private static final Logger LOGGER = Logger.getLogger(CLASDecoder4.class.getPackage().getName());
+
     private CodaEventDecoder          codaDecoder = null;
     private DetectorEventDecoder  detectorDecoder = null;
     private List<DetectorDataDgtz>       dataList = new ArrayList<>();
     private boolean              isRunNumberFixed = false;
-    private int                  decoderDebugMode = 0;
     private SchemaFactory           schemaFactory = new SchemaFactory();
     private ModeAHDC                ahdcExtractor = new ModeAHDC();
     private RCDBManager               rcdbManager = new RCDBManager();
@@ -76,10 +79,6 @@ public class CLASDecoder4 {
         detectorDecoder.setTimestamp(timestamp);
     }
 
-    public void setDebugMode(int mode){
-        this.decoderDebugMode = mode;
-    }
-
     public void setRunNumber(int run){
         if(this.isRunNumberFixed==false){
             this.detectorDecoder.setRunNumber(run);
@@ -110,25 +109,20 @@ public class CLASDecoder4 {
                         List<DetectorDataDgtz> fadcUnpacked = FADCData.convert(fadcPacked);
                         dataList.addAll(fadcUnpacked);
                     }
-                    
-                    if(this.decoderDebugMode>0){
-                        System.out.println("\n>>>>>>>>> RAW decoded data");
-                        for(DetectorDataDgtz data : dataList){
-                            System.out.println(data);
-                        }
-                    }
+                 
+                    LOGGER.finest(">>>>>>>>> RAW decoded data");
+                    LOGGER.finest(Arrays.toString(dataList.toArray()));
+
                     int runNumberCoda = codaDecoder.getRunNumber();
                     this.setRunNumber(runNumberCoda);
                     
                     detectorDecoder.translate(dataList);
                     detectorDecoder.fitPulses(dataList);
                     detectorDecoder.filterTDCs(dataList);
-                    if(this.decoderDebugMode>0){
-                        System.out.println("\n>>>>>>>>> TRANSLATED data");
-                        for(DetectorDataDgtz data : dataList){
-                            System.out.println(data);
-                        }
-                    }
+                        
+                    LOGGER.finest(">>>>>>>>> TRANSLATED data");
+                    LOGGER.finest(Arrays.toString(dataList.toArray()));
+
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -767,7 +761,6 @@ public class CLASDecoder4 {
         parser.setDescription("CLAS12 Data Decoder");
         parser.addOption("-n", "-1", "maximum number of events to process");
         parser.addOption("-c", "2", "compression type (0-NONE, 1-LZ4 Fast, 2-LZ4 Best, 3-GZIP)");
-        parser.addOption("-d", "0","debug mode, set >0 for more verbose output");
         parser.addOption("-m", "run","translation tables source (use -m devel for development tables)");
         parser.addOption("-b", "16","record buffer size in MB");
         parser.addOption("-r", "-1","run number in the header bank (-1 means use CODA run)");
@@ -802,12 +795,8 @@ public class CLASDecoder4 {
         String outputFile = parser.getOption("-o").stringValue();
         int compression = parser.getOption("-c").intValue();
         int  recordsize = parser.getOption("-b").intValue();
-        int debug = parser.getOption("-d").intValue();
 
         CLASDecoder4 decoder = new CLASDecoder4(developmentMode);
-
-        decoder.setDebugMode(debug);
-
         HipoWriterSorted writer = new HipoWriterSorted();
         writer.setCompressionType(compression);
         writer.getSchemaFactory().initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4"));
