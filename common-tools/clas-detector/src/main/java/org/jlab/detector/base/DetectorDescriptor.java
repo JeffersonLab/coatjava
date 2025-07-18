@@ -1,10 +1,4 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.detector.base;
-
 
 /**
  *
@@ -24,9 +18,7 @@ public class DetectorDescriptor implements Comparable<DetectorDescriptor> {
     private Integer dt_ORDER     = 0; // This is the order in the bank
     // defines ADCL,ADCR,TDCL,TDCR (1,2,3,4)
     
-    public DetectorDescriptor(){
-        
-    }
+    public DetectorDescriptor(){}
     
     public DetectorDescriptor(DetectorType type){
         this.detectorType = type;

@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.detector.base;
 
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
@@ -24,12 +19,7 @@ public class GeometryFactory {
     public static int SYSTEM_TILTED = 2;
     public static int SYSTEM_CLAS   = 3;
     
-    //private volatile 
-    
-    public GeometryFactory(){
-        
-    }
-    
+    public GeometryFactory(){}
     
     /**
      * Load constants for given detector, with RUN and VARIATION specified
