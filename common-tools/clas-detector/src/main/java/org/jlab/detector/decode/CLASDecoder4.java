@@ -52,14 +52,6 @@ public class CLASDecoder4 {
     private ModeAHDC                ahdcExtractor = new ModeAHDC();
     private RCDBManager               rcdbManager = new RCDBManager();
 
-    public CLASDecoder4(boolean development){
-        codaDecoder = new CodaEventDecoder();
-        detectorDecoder = new DetectorEventDecoder(development);
-        String dir = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4");
-        schemaFactory.initFromDirectory(dir);
-        DefaultLogger.debug();
-    }
-
     public CLASDecoder4(){
         codaDecoder = new CodaEventDecoder();
         detectorDecoder = new DetectorEventDecoder();
@@ -98,10 +90,12 @@ public class CLASDecoder4 {
 
     public void initEvent(DataEvent event){
 
-        if(event instanceof EvioDataEvent){
-            EvioDataEvent evioEvent = (EvioDataEvent) event;
+        if(event instanceof EvioDataEvent evioEvent){
             if(evioEvent.getHandler().getStructure()!=null){
                 try {
+
+                    int runNumberCoda = codaDecoder.getRunNumber();
+                    this.setRunNumber(runNumberCoda);
 
                     dataList = codaDecoder.getDataEntries( (EvioDataEvent) event);
                     
@@ -114,9 +108,6 @@ public class CLASDecoder4 {
                     LOGGER.finest(">>>>>>>>> RAW decoded data");
                     LOGGER.finest(Arrays.toString(dataList.toArray()));
 
-                    int runNumberCoda = codaDecoder.getRunNumber();
-                    this.setRunNumber(runNumberCoda);
-                    
                     detectorDecoder.translate(dataList);
                     detectorDecoder.fitPulses(dataList);
                     detectorDecoder.filterTDCs(dataList);
@@ -129,8 +120,8 @@ public class CLASDecoder4 {
                 }
             }
         }
-
     }
+
     /**
      * return list of digitized ADC values from internal list
      * @param type detector type
@@ -780,7 +771,6 @@ public class CLASDecoder4 {
         }
 
         String modeDevel = parser.getOption("-m").stringValue();
-        boolean developmentMode = false;
 
         if(modeDevel.compareTo("run")!=0&&modeDevel.compareTo("devel")!=0){
             parser.printUsage();
@@ -788,15 +778,11 @@ public class CLASDecoder4 {
             System.exit(1);
         }
 
-        if(modeDevel.compareTo("devel")==0){
-            developmentMode = true;
-        }
-
         String outputFile = parser.getOption("-o").stringValue();
         int compression = parser.getOption("-c").intValue();
         int  recordsize = parser.getOption("-b").intValue();
 
-        CLASDecoder4 decoder = new CLASDecoder4(developmentMode);
+        CLASDecoder4 decoder = new CLASDecoder4();
         HipoWriterSorted writer = new HipoWriterSorted();
         writer.setCompressionType(compression);
         writer.getSchemaFactory().initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4"));

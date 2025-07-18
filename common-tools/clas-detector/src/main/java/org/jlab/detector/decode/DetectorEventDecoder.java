@@ -33,12 +33,8 @@ public class DetectorEventDecoder {
     private ExtendedFADCFitter extendedFitter = new ExtendedFADCFitter();
     private MVTFitter mvtFitter = new MVTFitter();
 
-    public DetectorEventDecoder(boolean development){
-        if(development==true){
-            this.initDecoderDev();
-        } else {
-            this.initDecoder();
-        }
+    public DetectorEventDecoder(){
+        this.initDecoder();
     }
 
     public void setTimestamp(String timestamp) {
@@ -73,17 +69,6 @@ public class DetectorEventDecoder {
 
     public DetectorEventDecoder(){
         this.initDecoder();
-    }
-
-    public final void initDecoderDev(){
-        keysTrans = Arrays.asList(new String[]{ "HTCC","BST","RTPC"} );
-        tablesTrans = Arrays.asList(new String[]{ "/daq/tt/clasdev/htcc","/daq/tt/clasdev/svt","/daq/tt/clasdev/rtpc" });
-        keysFitter   = Arrays.asList(new String[]{"HTCC"});
-        tablesFitter = Arrays.asList(new String[]{"/daq/fadc/clasdev/htcc"});
-        translationManager.init(keysTrans,tablesTrans);
-        fitterManager.init(keysFitter, tablesFitter);
-        scalerManager.init(Arrays.asList(new String[]{"/runcontrol/fcup","/runcontrol/slm","/runcontrol/hwp",
-                                                      "/runcontrol/helicity","/daq/config/scalers/dsc1"}));
     }
 
     public final void initDecoder(){
