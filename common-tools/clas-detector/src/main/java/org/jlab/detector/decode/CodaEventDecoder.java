@@ -290,11 +290,11 @@ public class CodaEventDecoder {
             }
             else if(node.getTag()==BankTag.SSP_RICH){
                 return this.getDataEntries_57636(crate, node, event);
-            } else if (node.getTag() == BankTag.PETIROC) {
-              //  ATOF Petiroc TDC data 
+            }
+            else if (node.getTag() == BankTag.PETIROC) {
               return this.getDataEntries_57657(crate, node, event);
-            } else if (node.getTag() == BankTag.DREAM_TPC) {
-              //  RTPC  data decoding
+            }
+            else if (node.getTag() == BankTag.DREAM_TPC) {
               return this.getDataEntries_57641(crate, node, event);
             }
         }
