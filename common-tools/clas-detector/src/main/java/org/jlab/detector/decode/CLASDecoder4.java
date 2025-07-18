@@ -747,6 +747,15 @@ public class CLASDecoder4 {
 
     public static void main(String[] args){
 
+        Benchmark.getInstance().addTimer("BRE");
+        Benchmark.getInstance().addTimer("DDD");
+        Benchmark.getInstance().addTimer("TDC");
+        Benchmark.getInstance().addTimer("VTP");
+        Benchmark.getInstance().addTimer("SCA");
+        Benchmark.getInstance().addTimer("EPICS");
+        Benchmark.getInstance().addTimer("FAD");
+        Benchmark.getInstance().addTimer("MM");
+        
         OptionParser parser = new OptionParser("decoder");
         parser.setDescription("CLAS12 Data Decoder");
         parser.addOption("-n", "-1", "maximum number of events to process");
@@ -848,6 +857,8 @@ public class CLASDecoder4 {
         HelicitySequence.writeFlips(writer, helicityReadings);
 
         writer.close();
+        System.out.println(Benchmark.getInstance());
+        System.out.println(Benchmark.getInstance().benchmarkStringValue());
     }
 
 }
