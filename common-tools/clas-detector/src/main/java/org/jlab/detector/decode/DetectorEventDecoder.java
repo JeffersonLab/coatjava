@@ -201,7 +201,10 @@ public class DetectorEventDecoder {
         }
     }
 
-
+    /**
+     * FIXME:  what is this supposed to do?
+     * @param detectorData 
+     */
     public void filterTDCs(List<DetectorDataDgtz>  detectorData){
         int maxMultiplicity = 1;
         for(String table : keysFilter){
