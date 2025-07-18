@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.jlab.utils.benchmark;
 
 import java.util.ArrayList;
@@ -12,7 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.TreeMap;
 
 /**
  *
@@ -21,28 +14,23 @@ import java.util.TreeMap;
 public class Benchmark {
     
     private static Benchmark  benchmarkInstance = new Benchmark();
-    
-    private final Map<String,BenchmarkTimer> timerStore = new HashMap<String,BenchmarkTimer>();
+    private final Map<String,BenchmarkTimer> timerStore = new HashMap<>();
     private Timer updateTimer = null;
     
-    
-    public Benchmark(){
-        
-    }
+    public Benchmark(){}
     
     public void printTimer(int interval){
         TimerTask timerTask = new TimerTask()
             { 
+                @Override
                 public void run()
                 {
-                    //what to do at each excecution
                     System.out.println(benchmarkStringValue());
                 }
             };
         updateTimer = new Timer("Benchmark");
         updateTimer.scheduleAtFixedRate(timerTask, 0, interval);
     }
-    
     
     public void reset(){
         for(Map.Entry<String,BenchmarkTimer> entry : this.timerStore.entrySet()){
@@ -75,8 +63,6 @@ public class Benchmark {
     
     public void resume(String name){
         if(timerStore.containsKey(name)==false){
-            //System.err.println("[Benchmark] -----> error. no timer defined with name ("
-            //+ name + ")");
             addTimer(name);
             timerStore.get(name).resume();
         } else {
@@ -91,17 +77,14 @@ public class Benchmark {
         return null;
     }
     
-    
     public String benchmarkStringValue(){
          StringBuilder str = new StringBuilder();
-        ArrayList<String>  timerStrings = new ArrayList<String>();
+        ArrayList<String>  timerStrings = new ArrayList<>();
         for(Map.Entry<String,BenchmarkTimer> timer : timerStore.entrySet()){
             timerStrings.add(timer.getValue().toString());
-            //str.append(timer.getValue().toString());
-            //str.append("\n");
         }
         
-        if(timerStrings.size()>0){
+        if(!timerStrings.isEmpty()){
             int len = timerStrings.get(0).length();
             char[]  asterix = new char[len+8];
             Arrays.fill(asterix,'*');
@@ -125,14 +108,12 @@ public class Benchmark {
     @Override
     public String toString(){
         StringBuilder str = new StringBuilder();
-        ArrayList<String>  timerStrings = new ArrayList<String>();
+        ArrayList<String>  timerStrings = new ArrayList<>();
         for(Map.Entry<String,BenchmarkTimer> timer : timerStore.entrySet()){
             timerStrings.add(timer.getValue().toString());
-            //str.append(timer.getValue().toString());
-            //str.append("\n");
         }
         
-        if(timerStrings.size()>0){
+        if(!timerStrings.isEmpty()){
             int len = timerStrings.get(0).length();
             char[]  asterix = new char[len+8];
             Arrays.fill(asterix,'*');

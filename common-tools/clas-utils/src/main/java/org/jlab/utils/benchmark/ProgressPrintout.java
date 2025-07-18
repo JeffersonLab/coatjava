@@ -1,11 +1,5 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.utils.benchmark;
 
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
@@ -17,9 +11,7 @@ import java.util.logging.Logger;
  */
 public class ProgressPrintout {
     
-    private TreeMap<String,Object> items   = new TreeMap<String,Object>();
-    private TreeMap<String,Object> itemMax = new TreeMap<String,Object>();
-    
+    private TreeMap<String,Object> items = new TreeMap<>();
     private Long                   previousPrintoutTime = (long) 0;
     private Long                   startPrintoutTime    = (long) 0;
     
@@ -65,10 +57,8 @@ public class ProgressPrintout {
         this.numberOfCalls++;
         Long currentTime   = System.currentTimeMillis();
         Double elapsedTime = (currentTime - this.previousPrintoutTime)*1e-3;
-        //System.out.println("elapsed = " + elapsedTime);
         if(elapsedTime>=this.printoutIntervalSeconds){
             this.previousPrintoutTime = System.currentTimeMillis();
-            //System.out.println(" passed time ");
             System.out.println(this.getUpdateString());
         }
     }
@@ -83,12 +73,11 @@ public class ProgressPrintout {
     
     public String getItemString(String itemname){
         StringBuilder str = new StringBuilder();
-        if(this.items.get(itemname) instanceof Integer){
-            str.append(String.format("  %s : %5d",itemname,(Integer)this.items.get(itemname)));
+        if(this.items.get(itemname) instanceof Integer i){
+            str.append(String.format("  %s : %5d",itemname, i));
         }
-        
-        if(this.items.get(itemname) instanceof Double){
-            str.append(String.format("  %s : %8.3f",itemname,(Double)this.items.get(itemname)));
+        if(this.items.get(itemname) instanceof Double d){
+            str.append(String.format("  %s : %8.3f",itemname, d));
         }        
         return str.toString();
     }
@@ -103,7 +92,6 @@ public class ProgressPrintout {
             } catch (InterruptedException ex) {
                 Logger.getLogger(ProgressPrintout.class.getName()).log(Level.SEVERE, null, ex);
             }
-            //System.out.println("cycle " + loop);
             progress.updateStatus();
         }
     }
