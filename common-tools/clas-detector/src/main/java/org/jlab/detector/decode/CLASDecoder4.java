@@ -30,6 +30,7 @@ import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
+import org.jlab.utils.benchmark.Benchmark;
 
 import org.jlab.utils.benchmark.ProgressPrintout;
 import org.jlab.utils.groups.IndexedTable;
@@ -99,17 +100,22 @@ public class CLASDecoder4 {
 
                     dataList = codaDecoder.getDataEntries( (EvioDataEvent) event);
                     
+                    Benchmark.getInstance().resume("FAD");
                     List<FADCData> fadcPacked = codaDecoder.getADCEntries((EvioDataEvent) event);
                     if(fadcPacked!=null){
                         List<DetectorDataDgtz> fadcUnpacked = FADCData.convert(fadcPacked);
                         dataList.addAll(fadcUnpacked);
                     }
+                    Benchmark.getInstance().pause("FAD");
                  
                     LOGGER.finest(">>>>>>>>> RAW decoded data");
                     LOGGER.finest(Arrays.toString(dataList.toArray()));
 
+                    Benchmark.getInstance().pause("MM");
                     detectorDecoder.translate(dataList);
                     detectorDecoder.fitPulses(dataList);
+                    Benchmark.getInstance().pause("MM");
+        
                     detectorDecoder.filterTDCs(dataList);
                         
                     LOGGER.finest(">>>>>>>>> TRANSLATED data");

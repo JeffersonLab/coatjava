@@ -22,6 +22,7 @@ import org.jlab.io.evio.EvioSource;
 import org.jlab.io.evio.EvioTreeBranch;
 import org.jlab.utils.data.DataUtils;
 import org.jlab.jnp.utils.json.JsonObject;
+import org.jlab.utils.benchmark.Benchmark;
 
 /**
  *
@@ -89,7 +90,7 @@ public class CodaEventDecoder {
      * @return
      */
     public List<DetectorDataDgtz> getDataEntries(EvioDataEvent event){
-        
+       
         // This had been inserted to accommodate large EVIO events that
         // were unreadable in JEVIO versions prior to 6.2:
         //int event_size = event.getHandler().getStructure().getByteBuffer().array().length;
@@ -99,22 +100,33 @@ public class CodaEventDecoder {
         // from the previous event, in the case where there's no HEAD bank:
         this.setTriggerBits(0);
         List<DetectorDataDgtz>  rawEntries = new ArrayList<>();
+        Benchmark.getInstance().resume("BRE");
         List<EvioTreeBranch> branches = this.getEventBranches(event);
+        Benchmark.getInstance().pause("BRE");
         this.setTimeStamp(event);
+        Benchmark.getInstance().resume("DDD");
         for(EvioTreeBranch branch : branches){
             List<DetectorDataDgtz>  list = this.getDataEntries(event,branch.getTag());
-            if(list != null){
-                rawEntries.addAll(list);
-            }
+            if(list != null) rawEntries.addAll(list);
         }
+        Benchmark.getInstance().pause("DDD");
+        
+        Benchmark.getInstance().resume("TDC");
         List<DetectorDataDgtz>  tdcEntries = this.getDataEntries_TDC(event);
         rawEntries.addAll(tdcEntries);
+        Benchmark.getInstance().pause("TDC");
+        Benchmark.getInstance().resume("VTP");
         List<DetectorDataDgtz>  vtpEntries = this.getDataEntries_VTP(event);
         rawEntries.addAll(vtpEntries);
+        Benchmark.getInstance().pause("VTP");
+        Benchmark.getInstance().resume("SCA");
         List<DetectorDataDgtz>  scalerEntries = this.getDataEntries_Scalers(event);
         rawEntries.addAll(scalerEntries);
-
+        Benchmark.getInstance().pause("SCA");
+        
+        Benchmark.getInstance().resume("EPICS");
         this.getDataEntries_EPICS(event);
+        Benchmark.getInstance().pause("EPICS");
 
         return rawEntries;
     }
