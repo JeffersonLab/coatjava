@@ -223,7 +223,7 @@ public class KalmanFilter {
 			    track.set_sum_residuals(sum_residuals);
 			    track.set_chi2(chi2);
 			    track.set_p_drift_kf(p_drift);
-			    track.set_dEdx(dEdx);
+			    track.set_dEdx_kf(dEdx);
 			    track.set_path_kf(s);
 			}//end of loop on track candidates
 		} catch (Exception e) {
