@@ -67,10 +67,6 @@ public class DetectorEventDecoder {
                 getValue()).floatValue();
     }
 
-    public DetectorEventDecoder(){
-        this.initDecoder();
-    }
-
     public final void initDecoder(){
 
         // Detector translation table
@@ -170,7 +166,6 @@ public class DetectorEventDecoder {
                     }
                 } else {
                     IndexedTable  daq = fitterManager.getConstants(runNumber, table);
-                    DetectorType  type = DetectorType.getType(table);
                     if(daq.hasEntry(crate,slot,channel)==true){
                         int nsa = daq.getIntValue("nsa", crate,slot,channel);
                         int nsb = daq.getIntValue("nsb", crate,slot,channel);
@@ -231,6 +226,7 @@ public class DetectorEventDecoder {
     class TDCComparator implements Comparator<DetectorDataDgtz> { 
   
         // override the compare() method 
+        @Override
         public int compare(DetectorDataDgtz s1, DetectorDataDgtz s2) 
         { 
             if(s1.getTDCSize()>0 && s2.getTDCSize()>0)
