@@ -30,6 +30,29 @@ import org.jlab.jnp.utils.json.JsonObject;
  */
 public class CodaEventDecoder {
 
+    public static class BankTag {
+        public static final int HEAD              = 57615; // 0xe10f
+        public static final int FADC_MODE1_PACKED = 57638; // 0xe126
+        public static final int FADC_MODE1        = 57601; // 0xe101
+        public static final int FADC_MODE7        = 57602; // 0xe102
+        public static final int FADC_MODE3        = 57603; // 0xe103
+        public static final int VCSM_SVT          = 57617; // 0xe111
+        public static final int DREAM_MM          = 57627; // 0xe11b
+        public static final int DREAM_MM_PACKED   = 57640; // 0xe128
+        public static final int DCRB              = 57622; // 0xe116
+        public static final int DCRB_TOT          = 57648; // 0xe130
+        public static final int SSP_RICH          = 57636; // 0xe124
+        public static final int PETIROC           = 57657; // 0xe139
+        public static final int DREAM_TPC         = 57641; // 0xe129
+        public static final int SIS3801           = 57637; // 0xe125
+        public static final int DSC2              = 57621; // 0xe115
+        public static final int CAEN1190          = 57607; // 0xe107
+        public static final int TI                = 57610; // 0xe10a
+        public static final int EPICS             = 57620; // 0xe114
+        public static final int HELICITY_DECODER  = 57651; // 0xe113
+        public static final int VTP               = 57634; // 0xe122
+    }
+    
     private int   runNumber = 0;
     private int eventNumber = 0;
     private int    unixTime = 0;
@@ -198,33 +221,24 @@ public class CodaEventDecoder {
 
     public List<FADCData> getADCEntries(EvioDataEvent event, int crate){
         List<FADCData>  entries = new ArrayList<>();
-
         List<EvioTreeBranch> branches = this.getEventBranches(event);
         EvioTreeBranch cbranch = this.getEventBranch(branches, crate);
-
         if(cbranch == null ) return null;
-
         for(EvioNode node : cbranch.getNodes()){
-            if(node.getTag()==57638){
+            if(node.getTag() == BankTag.FADC_MODE1_PACKED){
                 return this.getDataEntries_57638(crate, node, event);
             }
         }
-
         return entries;
     }
 
     public List<FADCData> getADCEntries(EvioDataEvent event, int crate, int tagid){
-
         List<FADCData>  adc = new ArrayList<>();
         List<EvioTreeBranch> branches = this.getEventBranches(event);
-
         EvioTreeBranch cbranch = this.getEventBranch(branches, crate);
         if(cbranch == null ) return null;
-
         for(EvioNode node : cbranch.getNodes()){
            if(node.getTag()==tagid){
-                //  This is regular integrated pulse mode, used for FTOF
-                // FTCAL and EC/PCAL
                 return this.getADCEntries_Tag(crate, node, event,tagid);
             }
         }
@@ -246,53 +260,40 @@ public class CodaEventDecoder {
         if(cbranch == null ) return null;
 
         for (EvioNode node : cbranch.getNodes()) {
-            if (node.getTag() == 57615) {
-                //  This is regular integrated pulse mode, used for FTOF
-                // FTCAL and EC/PCAL
+            if (node.getTag() == BankTag.HEAD) {
                 this.tiMaster = crate;
                 this.readHeaderBank(crate, node, event);
             }
         }
         for(EvioNode node : cbranch.getNodes()){
 
-            if(node.getTag()==57617){
-                //  This is regular integrated pulse mode, used for FTOF
-                // FTCAL and EC/PCAL
+            if(node.getTag()==BankTag.VCSM_SVT){
                 return this.getDataEntries_57617(crate, node, event);
             }
-            else if(node.getTag()==57602){
-                //  This is regular integrated pulse mode, used for FTOF
-                // FTCAL and EC/PCAL
+            else if(node.getTag()==BankTag.FADC_MODE7){
                 return this.getDataEntries_57602(crate, node, event);
             }
-            else if(node.getTag()==57601){
-                //  This is regular integrated pulse mode, used for FTOF
-                // FTCAL and EC/PCAL
+            else if(node.getTag()==BankTag.FADC_MODE1){
                 return this.getDataEntries_57601(crate, node, event);
             }
-            else if(node.getTag()==57627){
-                //  This is regular integrated pulse mode, used for MM
+            else if(node.getTag()==BankTag.DREAM_MM){
                 return this.getDataEntries_57627(crate, node, event);
             }
-            else if(node.getTag()==57640){
-                //  This is bit-packed pulse mode, used for MM
+            else if(node.getTag()==BankTag.DREAM_MM_PACKED){
                 return this.getDataEntries_57640(crate, node, event);
             }
-            else if(node.getTag()==57622){
-                //  This is regular DCRB bank with TDCs only
+            else if(node.getTag()==BankTag.DCRB){
                 return this.getDataEntries_57622(crate, node, event);
             }
-            else if(node.getTag()==57648){
-                //  This is DCRB bank with TDCs and widths
+            else if(node.getTag()==BankTag.DCRB_TOT){
                 return this.getDataEntries_57648(crate, node, event);
             }
-            else if(node.getTag()==57636){
-                //  RICH TDC data
+            else if(node.getTag()==BankTag.SSP_RICH){
                 return this.getDataEntries_57636(crate, node, event);
-            } else if (node.getTag() == 57657) {
+            } else if (node.getTag() == BankTag.PETIROC) {
               //  ATOF Petiroc TDC data 
               return this.getDataEntries_57657(crate, node, event);
-            } else if (node.getTag() == 57641) {
+            } else if (node.getTag() == BankTag.DREAM_TPC) {
               //  RTPC  data decoding
               return this.getDataEntries_57641(crate, node, event);
             }
@@ -1160,7 +1161,7 @@ public class CodaEventDecoder {
         List<EvioTreeBranch> branches = this.getEventBranches(event);
         for(EvioTreeBranch branch : branches){
             for(EvioNode node : branch.getNodes()){
-                if(node.getTag()==57620) {
+                if(node.getTag()==BankTag.EPICS) {
                     byte[] stringData =  ByteDataTransformer.toByteArray(node.getStructureBuffer(true));
                     String cdata = new String(stringData);
                     String[] vars = cdata.trim().split("\n");
@@ -1187,7 +1188,7 @@ public class CodaEventDecoder {
         List<EvioTreeBranch> branches = this.getEventBranches(event);
         for(EvioTreeBranch branch : branches){
             for(EvioNode node : branch.getNodes()){
-                if(node.getTag()==57651) {
+                if(node.getTag()==BankTag.HELICITY_DECODER) {
                     
                     int[]  intData  = ByteDataTransformer.toIntArray(node.getStructureBuffer(true));
 
@@ -1269,13 +1270,13 @@ public class CodaEventDecoder {
         for(EvioTreeBranch branch : branches){
             int  crate = branch.getTag();
             for(EvioNode node : branch.getNodes()){
-                if(node.getTag()==57637 || node.getTag()==57621){
+                if(node.getTag()==BankTag.SIS3801 || node.getTag()==BankTag.DSC2){
                     int num = node.getNum();
                     int[] intData =  ByteDataTransformer.toIntArray(node.getStructureBuffer(true));
                     for(int loop = 2; loop < intData.length; loop++){
                         int  dataEntry = intData[loop];
                         // Struck Scaler:
-                        if(node.getTag()==57637) {
+                        if(node.getTag()==BankTag.SIS3801) {
                             int helicity = DataUtils.getInteger(dataEntry, 31, 31);
                             int quartet  = DataUtils.getInteger(dataEntry, 30, 30);
                             int interval = DataUtils.getInteger(dataEntry, 29, 29);
@@ -1299,7 +1300,7 @@ public class CodaEventDecoder {
                         // and the same for all DSC2s in the crate, instead of being
                         // parsed from the header or assigned manually based on
                         // the data length.
-                        else if(node.getTag()==57621 && loop>=5) {
+                        else if(node.getTag()==BankTag.DSC2 && loop>=5) {
 
                             final int dataWordIndex = loop-5;
                             final int nChannels = 16;
@@ -1349,7 +1350,7 @@ public class CodaEventDecoder {
         for(EvioTreeBranch branch : branches){
             int  crate = branch.getTag();
             for(EvioNode node : branch.getNodes()){
-                if(node.getTag()==57634){
+                if(node.getTag()==BankTag.VTP){
                     int[] intData =  ByteDataTransformer.toIntArray(node.getStructureBuffer(true));
                     for(int loop = 0; loop < intData.length; loop++){
                         int  dataEntry = intData[loop];
@@ -1377,7 +1378,7 @@ public class CodaEventDecoder {
             int  crate = branch.getTag();
             EvioTreeBranch cbranch = this.getEventBranch(branches, branch.getTag());
             for(EvioNode node : cbranch.getNodes()){
-                if(node.getTag()==57607){
+                if(node.getTag()==BankTag.CAEN1190){
                     int[] intData = ByteDataTransformer.toIntArray(node.getStructureBuffer(true));
                     for(int loop = 2; loop < intData.length; loop++){
                         int  dataEntry = intData[loop];
@@ -1408,7 +1409,7 @@ public class CodaEventDecoder {
             int  crate = branch.getTag();
             EvioTreeBranch cbranch = this.getEventBranch(branches, branch.getTag());
             for(EvioNode node : cbranch.getNodes()){
-                if(node.getTag()==57610){
+                if(node.getTag()==BankTag.TI){
                     long[] longData = ByteDataTransformer.toLongArray(node.getStructureBuffer(true));
                     int[]  intData  = ByteDataTransformer.toIntArray(node.getStructureBuffer(true));
                     long     tStamp = longData[2]&0x0000ffffffffffffL;
