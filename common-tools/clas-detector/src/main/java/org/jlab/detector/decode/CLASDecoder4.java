@@ -253,13 +253,13 @@ public class CLASDecoder4 {
             adcBANK.putInt("ADC", i, adcDGTZ.get(i).getADCData(0).getADC());
             adcBANK.putFloat("time", i, (float) adcDGTZ.get(i).getADCData(0).getTime());
             adcBANK.putShort("ped", i, (short) adcDGTZ.get(i).getADCData(0).getPedestal());
-            if(name == "BST::adc") adcBANK.putLong("timestamp", i, adcDGTZ.get(i).getADCData(0).getTimeStamp());
+            if(name.equals("BST::adc")) adcBANK.putLong("timestamp", i, adcDGTZ.get(i).getADCData(0).getTimeStamp());
             if(name.equals("BMT::adc")||name.equals("FMT::adc")|| name.equals("FTTRK::adc")){
             	adcBANK.putInt("ADC", i, adcDGTZ.get(i).getADCData(0).getHeight());
             	adcBANK.putInt("integral", i, adcDGTZ.get(i).getADCData(0).getIntegral());
             	adcBANK.putLong("timestamp", i, adcDGTZ.get(i).getADCData(0).getTimeStamp());
             }
-            if(name == "BAND::adc") adcBANK.putInt("amplitude", i, adcDGTZ.get(i).getADCData(0).getHeight());
+            if(name.equals("BAND::adc")) adcBANK.putInt("amplitude", i, adcDGTZ.get(i).getADCData(0).getHeight());
          }
         return adcBANK;
     }
@@ -268,7 +268,6 @@ public class CLASDecoder4 {
         List<DetectorDataDgtz> tdcDGTZ = this.getEntriesTDC(type);
         if(schemaFactory.hasSchema(name)==false) return null;
         Bank tdcBANK = new Bank(schemaFactory.getSchema(name), tdcDGTZ.size());
-        if(tdcBANK==null) return null;
         for(int i = 0; i < tdcDGTZ.size(); i++){
             tdcBANK.putByte("sector", i, (byte) tdcDGTZ.get(i).getDescriptor().getSector());
             tdcBANK.putByte("layer", i, (byte) tdcDGTZ.get(i).getDescriptor().getLayer());
@@ -285,7 +284,6 @@ public class CLASDecoder4 {
         List<DetectorDataDgtz> tdcDGTZ = this.getEntriesTDC(type);
         if(schemaFactory.hasSchema(name)==false) return null;
         Bank tdcBANK = new Bank(schemaFactory.getSchema(name), tdcDGTZ.size());
-        if(tdcBANK==null) return null;
         for(int i = 0; i < tdcDGTZ.size(); i++){
             tdcBANK.putByte("sector", i, (byte) tdcDGTZ.get(i).getDescriptor().getSector());
             tdcBANK.putByte("layer", i, (byte) tdcDGTZ.get(i).getDescriptor().getLayer());
@@ -316,7 +314,6 @@ public class CLASDecoder4 {
     public Bank getDataBankUndecodedTDC(String name, DetectorType type){
         List<DetectorDataDgtz> tdcDGTZ = this.getEntriesTDC(type);
         Bank tdcBANK = new Bank(schemaFactory.getSchema(name), tdcDGTZ.size());
-        if(tdcBANK==null) return null;
         for(int i = 0; i < tdcDGTZ.size(); i++){
             tdcBANK.putByte("crate", i, (byte) tdcDGTZ.get(i).getDescriptor().getCrate());
             tdcBANK.putByte("slot", i, (byte) tdcDGTZ.get(i).getDescriptor().getSlot());
@@ -329,7 +326,6 @@ public class CLASDecoder4 {
     public Bank getDataBankUndecodedVTP(String name, DetectorType type){
         List<DetectorDataDgtz> vtpDGTZ = this.getEntriesVTP(type);
         Bank vtpBANK = new Bank(schemaFactory.getSchema(name), vtpDGTZ.size());
-        if(vtpBANK==null) return null;
         for(int i = 0; i < vtpDGTZ.size(); i++){
             vtpBANK.putByte("crate", i, (byte) vtpDGTZ.get(i).getDescriptor().getCrate());
             vtpBANK.putInt("word", i, vtpDGTZ.get(i).getVTPData(0).getWord());
@@ -340,7 +336,6 @@ public class CLASDecoder4 {
     public Bank getDataBankUndecodedSCALER(String name, DetectorType type){
         List<DetectorDataDgtz> scalerDGTZ = this.getEntriesSCALER(type);
         Bank scalerBANK = new Bank(schemaFactory.getSchema(name), scalerDGTZ.size());
-        if(scalerBANK==null) return null;
         for(int i = 0; i < scalerDGTZ.size(); i++){
             scalerBANK.putByte("crate", i, (byte) scalerDGTZ.get(i).getDescriptor().getCrate());
             scalerBANK.putByte("slot", i, (byte) scalerDGTZ.get(i).getDescriptor().getSlot());
@@ -371,8 +366,6 @@ public class CLASDecoder4 {
         
         Bank tsBANK = new Bank(schemaFactory.getSchema(name), tsMap.size());
 
-        if(tsBANK==null) return null;
-        
         int i=0;
         for(DetectorDataDgtz tdc : tsMap.values()) {
             tsBANK.putByte("crate", i, (byte) tdc.getDescriptor().getCrate());
