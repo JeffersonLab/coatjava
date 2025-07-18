@@ -14,7 +14,7 @@ public abstract class HipoHistoWriter extends HipoToHipoWriter {
 
     @Override
     protected HipoWriterSorted createWriter(Path file, JSONObject opts) throws EventWriterException {
-        basename = Arrays.asList(file.toString().split("/")).getLast();
+        //basename = Arrays.asList(file.toString().split("/")).getLast();
         if (basename.endsWith(".hipo"))
             basename = basename.substring(0,basename.length()-5);
         return super.createWriter(file,opts);
