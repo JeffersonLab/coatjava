@@ -111,7 +111,7 @@ public class CLASDecoder4 {
                     LOGGER.finest(">>>>>>>>> RAW decoded data");
                     LOGGER.finest(Arrays.toString(dataList.toArray()));
 
-                    Benchmark.getInstance().pause("MM");
+                    Benchmark.getInstance().resume("MM");
                     detectorDecoder.translate(dataList);
                     detectorDecoder.fitPulses(dataList);
                     Benchmark.getInstance().pause("MM");
@@ -858,7 +858,6 @@ public class CLASDecoder4 {
 
         writer.close();
         System.out.println(Benchmark.getInstance());
-        System.out.println(Benchmark.getInstance().benchmarkStringValue());
     }
 
 }
