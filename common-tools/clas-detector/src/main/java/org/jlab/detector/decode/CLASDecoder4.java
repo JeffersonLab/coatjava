@@ -111,10 +111,12 @@ public class CLASDecoder4 {
                     LOGGER.finest(">>>>>>>>> RAW decoded data");
                     LOGGER.finest(Arrays.toString(dataList.toArray()));
 
-                    Benchmark.getInstance().resume("MM");
+                    Benchmark.getInstance().resume("TT");
                     detectorDecoder.translate(dataList);
+                    Benchmark.getInstance().pause("TT");
+                    Benchmark.getInstance().resume("DREAM");
                     detectorDecoder.fitPulses(dataList);
-                    Benchmark.getInstance().pause("MM");
+                    Benchmark.getInstance().pause("DREAM");
         
                     detectorDecoder.filterTDCs(dataList);
                         
@@ -754,7 +756,8 @@ public class CLASDecoder4 {
         Benchmark.getInstance().addTimer("SCALER");
         Benchmark.getInstance().addTimer("EPICS");
         Benchmark.getInstance().addTimer("FADCBPK");
-        Benchmark.getInstance().addTimer("MM");
+        Benchmark.getInstance().addTimer("TT");
+        Benchmark.getInstance().addTimer("DREAM");
         
         OptionParser parser = new OptionParser("decoder");
         parser.setDescription("CLAS12 Data Decoder");
