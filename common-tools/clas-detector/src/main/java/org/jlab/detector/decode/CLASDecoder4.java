@@ -102,11 +102,13 @@ public class CLASDecoder4 {
                     
                     Benchmark.getInstance().resume("FADCBPK");
                     List<FADCData> fadcPacked = codaDecoder.getADCEntries((EvioDataEvent) event);
+                    Benchmark.getInstance().pause("FADCBPK");
+                    Benchmark.getInstance().resume("FADCUBPK");
                     if(fadcPacked!=null){
                         List<DetectorDataDgtz> fadcUnpacked = FADCData.convert(fadcPacked);
                         dataList.addAll(fadcUnpacked);
                     }
-                    Benchmark.getInstance().pause("FADCBPK");
+                    Benchmark.getInstance().pause("FADCUBPK");
                  
                     LOGGER.finest(">>>>>>>>> RAW decoded data");
                     LOGGER.finest(Arrays.toString(dataList.toArray()));
@@ -777,7 +779,7 @@ public class CLASDecoder4 {
         }
 
         String outputFile = parser.getOption("-o").stringValue();
-        int compression = parser.getOption("-c").intValue();
+        final int compression = parser.getOption("-c").intValue();
 
         CLASDecoder4 decoder = new CLASDecoder4();
         HipoWriterSorted writer = new HipoWriterSorted();
@@ -787,19 +789,20 @@ public class CLASDecoder4 {
         Bank  rawRunConf  = new Bank(writer.getSchemaFactory().getSchema("RUN::config"));
         Bank  helicityAdc = new Bank(writer.getSchemaFactory().getSchema("HEL::adc"));
 
-        int nrun = parser.getOption("-r").intValue();
+        final int nrun = parser.getOption("-r").intValue();
+        if(nrun>0) decoder.setRunNumber(nrun,true);
+
         Double torus = parser.getOption("-t").getValue() == null ? null : parser.getOption("-t").doubleValue();
         Double solenoid = parser.getOption("-s").getValue() == null ? null : parser.getOption("-s").doubleValue();
 
-        writer.open(outputFile);
         ProgressPrintout progress = new ProgressPrintout();
-        LOGGER.log(Level.FINE, "INPUT LIST SIZE = {0}", inputList.size());
-        int nevents = parser.getOption("-n").intValue();
-        int counter = 0;
+        progress.addBenchmarks();
 
-        if(nrun>0){
-            decoder.setRunNumber(nrun,true);
-        }
+        writer.open(outputFile);
+        LOGGER.log(Level.FINE, "INPUT LIST SIZE = {0}", inputList.size());
+
+        final int nevents = parser.getOption("-n").intValue();
+        int counter = 0;
 
         if (parser.getOption("-x").getValue() != null)
             decoder.detectorDecoder.setTimestamp(parser.getOption("-x").stringValue());

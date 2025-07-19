@@ -113,9 +113,11 @@ public class DetectorEventDecoder {
 
         for(DetectorDataDgtz data : detectorData){
 
+            Benchmark.getInstance().resume("TTDD");
             int crate    = data.getDescriptor().getCrate();
             int slot     = data.getDescriptor().getSlot();
             int channel  = data.getDescriptor().getChannel();
+            Benchmark.getInstance().resume("TTDD");
 
             for(String table : keysTrans){
 
