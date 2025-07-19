@@ -761,7 +761,6 @@ public class CLASDecoder4 {
         parser.addOption("-n", "-1", "maximum number of events to process");
         parser.addOption("-c", "2", "compression type (0-NONE, 1-LZ4 Fast, 2-LZ4 Best, 3-GZIP)");
         parser.addOption("-m", "run","translation tables source (use -m devel for development tables)");
-        parser.addOption("-b", "16","record buffer size in MB");
         parser.addOption("-r", "-1","run number in the header bank (-1 means use CODA run)");
         parser.addOption("-t", null,"torus current in the header bank (null means use RCDB)");
         parser.addOption("-s", null,"solenoid current in the header bank (null means use RCDB)");
@@ -788,7 +787,6 @@ public class CLASDecoder4 {
 
         String outputFile = parser.getOption("-o").stringValue();
         int compression = parser.getOption("-c").intValue();
-        int  recordsize = parser.getOption("-b").intValue();
 
         CLASDecoder4 decoder = new CLASDecoder4();
         HipoWriterSorted writer = new HipoWriterSorted();
