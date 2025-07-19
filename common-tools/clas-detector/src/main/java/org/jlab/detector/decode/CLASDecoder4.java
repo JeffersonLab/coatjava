@@ -49,9 +49,9 @@ public class CLASDecoder4 {
     private DetectorEventDecoder  detectorDecoder = null;
     private List<DetectorDataDgtz>       dataList = new ArrayList<>();
     private boolean              isRunNumberFixed = false;
-    private SchemaFactory           schemaFactory = new SchemaFactory();
-    private ModeAHDC                ahdcExtractor = new ModeAHDC();
-    private RCDBManager               rcdbManager = new RCDBManager();
+    private final SchemaFactory     schemaFactory = new SchemaFactory();
+    private final ModeAHDC          ahdcExtractor = new ModeAHDC();
+    private final RCDBManager         rcdbManager = new RCDBManager();
 
     public CLASDecoder4(){
         codaDecoder = new CodaEventDecoder();
