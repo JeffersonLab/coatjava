@@ -114,9 +114,7 @@ public class CLASDecoder4 {
                     Benchmark.getInstance().resume("TT");
                     detectorDecoder.translate(dataList);
                     Benchmark.getInstance().pause("TT");
-                    Benchmark.getInstance().resume("DREAM");
                     detectorDecoder.fitPulses(dataList);
-                    Benchmark.getInstance().pause("DREAM");
         
                     detectorDecoder.filterTDCs(dataList);
                         
@@ -749,19 +747,6 @@ public class CLASDecoder4 {
 
     public static void main(String[] args){
 
-        Benchmark.getInstance().addTimer("GEB");
-        Benchmark.getInstance().addTimer("GDE");
-        Benchmark.getInstance().addTimer("TDC");
-        Benchmark.getInstance().addTimer("VTP");
-        Benchmark.getInstance().addTimer("SCALER");
-        Benchmark.getInstance().addTimer("EPICS");
-        Benchmark.getInstance().addTimer("FADCBPK");
-        Benchmark.getInstance().addTimer("TT");
-        Benchmark.getInstance().addTimer("DREAM");
-        Benchmark.getInstance().addTimer("DREAM_A");
-        Benchmark.getInstance().addTimer("DREAM_B");
-        Benchmark.getInstance().addTimer("DREAM_C");
-        
         OptionParser parser = new OptionParser("decoder");
         parser.setDescription("CLAS12 Data Decoder");
         parser.addOption("-n", "-1", "maximum number of events to process");

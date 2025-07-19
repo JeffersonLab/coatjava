@@ -118,26 +118,36 @@ public class DetectorEventDecoder {
             int channel  = data.getDescriptor().getChannel();
 
             for(String table : keysTrans){
+
+                Benchmark.getInstance().resume("TTGC");
                 IndexedTable  tt = translationManager.getConstants(runNumber, table);
                 DetectorType  type = DetectorType.getType(table);
+                Benchmark.getInstance().resume("TTGC");
+
                 if(tt.hasEntry(crate,slot,channel)==true){
+
+                    Benchmark.getInstance().resume("TTSLC");
                     int sector    = tt.getIntValue("sector", crate,slot,channel);
                     int layer     = tt.getIntValue("layer", crate,slot,channel);
                     int component = tt.getIntValue("component", crate,slot,channel);
                     int order     = tt.getIntValue("order", crate,slot,channel);
+                    Benchmark.getInstance().pause("TTSLC");
 
                     data.getDescriptor().setSectorLayerComponent(sector, layer, component);
                     data.getDescriptor().setOrder(order);
                     data.getDescriptor().setType(type);
 
+                    Benchmark.getInstance().resume("TTSO");
                     for(int i = 0; i < data.getADCSize(); i++) {
                         data.getADCData(i).setOrder(order);
                     }
                     for(int i = 0; i < data.getTDCSize(); i++) {
                         data.getTDCData(i).setOrder(order);
                     }
+                    Benchmark.getInstance().pause("TTSO");
                 }
             }
+
         }
     }
 
