@@ -100,16 +100,14 @@ public class CodaEventDecoder {
         // from the previous event, in the case where there's no HEAD bank:
         this.setTriggerBits(0);
         List<DetectorDataDgtz>  rawEntries = new ArrayList<>();
-        Benchmark.getInstance().resume("BRE");
         List<EvioTreeBranch> branches = this.getEventBranches(event);
-        Benchmark.getInstance().pause("BRE");
         this.setTimeStamp(event);
-        Benchmark.getInstance().resume("DDD");
+        Benchmark.getInstance().resume("GDE");
         for(EvioTreeBranch branch : branches){
             List<DetectorDataDgtz>  list = this.getDataEntries(event,branch.getTag());
             if(list != null) rawEntries.addAll(list);
         }
-        Benchmark.getInstance().pause("DDD");
+        Benchmark.getInstance().pause("GDE");
         
         Benchmark.getInstance().resume("TDC");
         List<DetectorDataDgtz>  tdcEntries = this.getDataEntries_TDC(event);
@@ -119,10 +117,10 @@ public class CodaEventDecoder {
         List<DetectorDataDgtz>  vtpEntries = this.getDataEntries_VTP(event);
         rawEntries.addAll(vtpEntries);
         Benchmark.getInstance().pause("VTP");
-        Benchmark.getInstance().resume("SCA");
+        Benchmark.getInstance().resume("SCALER");
         List<DetectorDataDgtz>  scalerEntries = this.getDataEntries_Scalers(event);
         rawEntries.addAll(scalerEntries);
-        Benchmark.getInstance().pause("SCA");
+        Benchmark.getInstance().pause("SCALER");
         
         Benchmark.getInstance().resume("EPICS");
         this.getDataEntries_EPICS(event);
@@ -322,11 +320,13 @@ public class CodaEventDecoder {
      * @return
      */
     public List<EvioTreeBranch>  getEventBranches(EvioDataEvent event){
+        Benchmark.getInstance().resume("GEB");
         ArrayList<EvioTreeBranch>  branches = new ArrayList<>();
         try {
 
             List<EvioNode>  eventNodes = event.getStructureHandler().getNodes();
             if(eventNodes==null){
+                Benchmark.getInstance().pause("GEB");
                 return branches;
             }
 
@@ -344,6 +344,7 @@ public class CodaEventDecoder {
         } catch (EvioException ex) {
             Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
         }
+        Benchmark.getInstance().pause("GEB");
         return branches;
     }
     /**

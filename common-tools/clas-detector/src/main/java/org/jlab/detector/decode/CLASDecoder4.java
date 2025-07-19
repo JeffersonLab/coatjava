@@ -100,13 +100,13 @@ public class CLASDecoder4 {
 
                     dataList = codaDecoder.getDataEntries( (EvioDataEvent) event);
                     
-                    Benchmark.getInstance().resume("FAD");
+                    Benchmark.getInstance().resume("FADCBPK");
                     List<FADCData> fadcPacked = codaDecoder.getADCEntries((EvioDataEvent) event);
                     if(fadcPacked!=null){
                         List<DetectorDataDgtz> fadcUnpacked = FADCData.convert(fadcPacked);
                         dataList.addAll(fadcUnpacked);
                     }
-                    Benchmark.getInstance().pause("FAD");
+                    Benchmark.getInstance().pause("FADCBPK");
                  
                     LOGGER.finest(">>>>>>>>> RAW decoded data");
                     LOGGER.finest(Arrays.toString(dataList.toArray()));
@@ -747,13 +747,13 @@ public class CLASDecoder4 {
 
     public static void main(String[] args){
 
-        Benchmark.getInstance().addTimer("BRE");
-        Benchmark.getInstance().addTimer("DDD");
+        Benchmark.getInstance().addTimer("GEB");
+        Benchmark.getInstance().addTimer("GDE");
         Benchmark.getInstance().addTimer("TDC");
         Benchmark.getInstance().addTimer("VTP");
-        Benchmark.getInstance().addTimer("SCA");
+        Benchmark.getInstance().addTimer("SCALER");
         Benchmark.getInstance().addTimer("EPICS");
-        Benchmark.getInstance().addTimer("FAD");
+        Benchmark.getInstance().addTimer("FADCBPK");
         Benchmark.getInstance().addTimer("MM");
         
         OptionParser parser = new OptionParser("decoder");
