@@ -169,7 +169,9 @@ public class DetectorEventDecoder {
                         int nsb = daq.getIntValue("nsb", crate,slot,channel);
                         int tet = daq.getIntValue("tet", crate,slot,channel);
                         int ped = 0;
-                        if(table.equals("RF")&&data.getDescriptor().getType().getName().equals("RF")) ped = daq.getIntValue("pedestal", crate,slot,channel);
+                        if(table.equals("RF")&&data.getDescriptor().getType().getName().equals("RF")) {
+                            ped = daq.getIntValue("pedestal", crate,slot,channel);
+                        }
                         if(data.getADCSize()>0){
                             for(int i = 0; i < data.getADCSize(); i++){
                                 ADCData adc = data.getADCData(i);
