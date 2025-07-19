@@ -10,6 +10,7 @@ import org.jlab.detector.banks.RawBank.OrderType;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.decode.DetectorDataDgtz.ADCData;
+import org.jlab.utils.benchmark.Benchmark;
 import org.jlab.utils.groups.IndexedTable;
 
 /**
@@ -149,6 +150,7 @@ public class DetectorEventDecoder {
             	if( ( (table.equals("BMT"))&&(data.getDescriptor().getType().getName().equals("BMT")) )
                  || ( (table.equals("FMT"))&&(data.getDescriptor().getType().getName().equals("FMT")) )
                  || ( (table.equals("FTTRK"))&&(data.getDescriptor().getType().getName().equals("FTTRK")) ) ){
+                    Benchmark.getInstance().resume("DREAM_A");
                     IndexedTable daq = fitterManager.getConstants(runNumber, table);
                     short adcOffset = (short) daq.getDoubleValue("adc_offset", 0, 0, 0);
                     double fineTimeStampResolution = (byte) daq.getDoubleValue("dream_clock", 0, 0, 0);
@@ -162,7 +164,9 @@ public class DetectorEventDecoder {
                         adc.setIntegral((int) (mvtFitter.integral));
                         adc.setTimeStamp(mvtFitter.timestamp);
                     }
+                    Benchmark.getInstance().pause("DREAM_A");
                 } else {
+                    Benchmark.getInstance().resume("DREAM_B");
                     IndexedTable  daq = fitterManager.getConstants(runNumber, table);
                     if(daq.hasEntry(crate,slot,channel)==true){
                         int nsa = daq.getIntValue("nsa", crate,slot,channel);
@@ -196,6 +200,7 @@ public class DetectorEventDecoder {
                             }
                         }
                     }
+                    Benchmark.getInstance().pause("DREAM_B");
                 }
             }
         }

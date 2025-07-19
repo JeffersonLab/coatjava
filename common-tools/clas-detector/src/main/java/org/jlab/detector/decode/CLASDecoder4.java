@@ -758,6 +758,9 @@ public class CLASDecoder4 {
         Benchmark.getInstance().addTimer("FADCBPK");
         Benchmark.getInstance().addTimer("TT");
         Benchmark.getInstance().addTimer("DREAM");
+        Benchmark.getInstance().addTimer("DREAM_A");
+        Benchmark.getInstance().addTimer("DREAM_B");
+        Benchmark.getInstance().addTimer("DREAM_C");
         
         OptionParser parser = new OptionParser("decoder");
         parser.setDescription("CLAS12 Data Decoder");
