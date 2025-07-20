@@ -1,6 +1,5 @@
 package org.jlab.utils.benchmark;
 
-import java.util.ArrayList;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
@@ -12,7 +11,7 @@ import java.util.logging.Logger;
  */
 public class ProgressPrintout {
 
-    private TreeMap<String,Object> items = new TreeMap<>();
+    private final TreeMap<String,Object> items = new TreeMap<>();
     private Long previousPrintoutTime = (long) 0;
     private Long startPrintoutTime = (long) 0;
     private double printoutIntervalSeconds = 10.0;
