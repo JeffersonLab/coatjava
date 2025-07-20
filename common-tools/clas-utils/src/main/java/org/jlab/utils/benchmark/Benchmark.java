@@ -2,6 +2,7 @@ package org.jlab.utils.benchmark;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
@@ -70,6 +71,7 @@ public class Benchmark {
         for(Map.Entry<String,BenchmarkTimer> timer : timerStore.entrySet()){
             timerStrings.add(timer.getValue().toString());
         }
+        Collections.sort(timerStrings);
         
         if(!timerStrings.isEmpty()){
             int len = timerStrings.get(0).length();
