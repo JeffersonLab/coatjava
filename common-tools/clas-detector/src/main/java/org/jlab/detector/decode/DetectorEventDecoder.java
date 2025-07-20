@@ -121,10 +121,12 @@ public class DetectorEventDecoder {
 
             for(String table : keysTrans){
 
-                Benchmark.getInstance().resume("TTGC");
+                Benchmark.getInstance().resume("TTGC1");
                 IndexedTable  tt = translationManager.getConstants(runNumber, table);
+                Benchmark.getInstance().pause("TTGC1");
+                Benchmark.getInstance().resume("TTGC2");
                 DetectorType  type = DetectorType.getType(table);
-                Benchmark.getInstance().pause("TTGC");
+                Benchmark.getInstance().pause("TTGC2");
 
                 if(tt.hasEntry(crate,slot,channel)==true){
 
