@@ -117,14 +117,14 @@ public class DetectorEventDecoder {
             int crate    = data.getDescriptor().getCrate();
             int slot     = data.getDescriptor().getSlot();
             int channel  = data.getDescriptor().getChannel();
-            Benchmark.getInstance().resume("TTDD");
+            Benchmark.getInstance().pause("TTDD");
 
             for(String table : keysTrans){
 
                 Benchmark.getInstance().resume("TTGC");
                 IndexedTable  tt = translationManager.getConstants(runNumber, table);
                 DetectorType  type = DetectorType.getType(table);
-                Benchmark.getInstance().resume("TTGC");
+                Benchmark.getInstance().pause("TTGC");
 
                 if(tt.hasEntry(crate,slot,channel)==true){
 
