@@ -120,9 +120,9 @@ public class CalibrationConstants extends IndexedTable {
     
     
     public static void main(String[] args){
-        CalibrationConstants gain = new CalibrationConstants(2,"Mean/F:Error/I:Sigma/F:Serror/F");
-        for(int i = 0; i < gain.getColumnCount(); i++){
-            System.out.print(gain.getColumnName(i) + " " + i + "\n");
+        CalibrationConstants gain = new CalibrationConstants(3,"Mean/F:Error/I:Sigma/F:Serror/F");
+        for(int i = 0; i < 23; i++){
+            gain.addEntry(1,1,i+1);
         }
         
         gain.setDoubleValue(0.2, "Mean", 1,1,1);
