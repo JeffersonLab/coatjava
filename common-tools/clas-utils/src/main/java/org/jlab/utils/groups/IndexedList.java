@@ -156,6 +156,14 @@ public class IndexedList<T> {
         private int[] shiftsToConsider;
         
         /**
+         * Constructs an IndexGenerator with generic index size.
+         *
+         */
+        public IndexGenerator(){
+            this(3);
+        }
+        
+        /**
          * Constructs an IndexGenerator for the specified index size.
          *
          * @param indsize the number of indices to encode
