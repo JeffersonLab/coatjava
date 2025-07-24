@@ -23,12 +23,16 @@ public class HitReader {
 	public final void fetch_AHDCHits(DataEvent event, AlertDCDetector detector) {
 		ArrayList<Hit> hits = new ArrayList<>();
 		
-		if (event.hasBank("AHDC::adc")) {
+		if (event.hasBank("AHDC::adc") && event.hasBank("REC::Event")) {
 
+			DataBank bankRecEvent = event.getBank("REC::Event"); 
+			double startTime = bankRecEvent.getFloat("startTime", 0);
+			if (startTime < 0) { // reject bad events 
+				return;
+			}
+			
 			RawDataBank bankDGTZ = new RawDataBank("AHDC::adc");
-        	bankDGTZ.read(event);
-		//DataBank bankDGTZ = event.getBank("ALRTDC::adc");
-
+        		bankDGTZ.read(event);
 		
 			for (int i = 0; i < bankDGTZ.rows(); i++) {
 				int    id         = bankDGTZ.trueIndex(i) + 1;
@@ -65,8 +69,9 @@ public class HitReader {
 				double p4 = time2distance[4];
 				double p5 = time2distance[5];
 				// Apply time calibration
-				// We may need adc calibration too	
-				double time = leadingEdgeTime - t0;
+				// We may need adc calibration too
+				// Remark: leadingEdgeTime already has the fine timestamp correction
+				double time = leadingEdgeTime - t0 - startTime; 
 
 				// Apply raw hit cuts
 				if (((adc >= adc_min) && (adc <= adc_max) && (time >= t_min) && (time <= t_max) && (timeOverThreshold >= tot_min) && (timeOverThreshold <= tot_max) && (adcOffset >= ped_min) && (adcOffset <= ped_max)) || sim) {
