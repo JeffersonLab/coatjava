@@ -42,6 +42,8 @@ public class ModeAHDC extends HipoExtractor  {
     private final int flateness = 200;
     //ADC offset to be considered as the default baseline
     private final float defaultBaseline = 300;
+    // dream clock for fine timestamp correction
+    private final float dream_clock = 8.0f;
 
     //Waveform and corresponding pulse
     //This is the CURRENT pulse, it is initialized
@@ -318,6 +320,25 @@ public class ModeAHDC extends HipoExtractor  {
             
             return 0;
         }
+
+	/** 
+	 * Apply fine timestamp correction
+	 *
+	 * adapted from decode/MVTFitter.java
+	 *
+	 * @param timestamp for fine time correction
+	 * @param fineTimeStampResolution correspond to the dream clock (usually equals to 8; but to be checked!)
+	 */
+	
+	private void fineTimeStampCorrection(long timestamp, float fineTimeStampResolution) {
+		String binaryTimeStamp = Long.toBinaryString(timestamp); //get 64 bit timestamp in binary format
+		if (binaryTimeStamp.length()>=3){
+			byte fineTimeStamp = Byte.parseByte(binaryTimeStamp.substring(binaryTimeStamp.length()-3,binaryTimeStamp.length()),2); //fineTimeStamp : keep and convert last 3 bits of binary timestamp
+			this.pulse.leadingEdgeTime += (double) ((fineTimeStamp+0.5) * fineTimeStampResolution); //fineTimeStampCorrection, only on the leadingEdgeTime for the moment (we don't use timeMax or constantFractionTime in the reconstruction yet)
+		}	
+	}
+
+
     
     /**
      * This method extracts relevant information from the waveform
@@ -355,6 +376,9 @@ public class ModeAHDC extends HipoExtractor  {
         
         //Get the CFD time
         this.computeTimeUsingConstantFractionDiscriminator();
+
+	// Fine timestamp correction on leadingEdgeTime
+	this.fineTimeStampCorrection(timestamp, dream_clock);
         
         output.add(this.pulse);
         return output;
