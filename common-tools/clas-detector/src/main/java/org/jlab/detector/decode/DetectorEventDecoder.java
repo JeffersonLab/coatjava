@@ -128,7 +128,11 @@ public class DetectorEventDecoder {
                 DetectorType  type = DetectorType.getType(table);
                 Benchmark.getInstance().pause("TTGC2");
 
-                if(tt.hasEntry(crate,slot,channel)==true){
+                Benchmark.getInstance().resume("TTHE");
+                final boolean dog = tt.hasEntry(crate,slot,channel);
+                Benchmark.getInstance().pause("TTHE");
+                if(dog){
+                //if(tt.hasEntry(crate,slot,channel)==true){
 
                     Benchmark.getInstance().resume("TTSLC");
                     int sector    = tt.getIntValue("sector", crate,slot,channel);
