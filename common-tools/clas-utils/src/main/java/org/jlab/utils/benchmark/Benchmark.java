@@ -60,12 +60,12 @@ public class Benchmark {
         timerStore.get(name).resume();
     }
     
-    public BenchmarkTimer  getTimer(String name){
+    public BenchmarkTimer getTimer(String name){
         return timerStore.getOrDefault(name, null);
     }
 
-    public BenchmarkTimer getTotal() {
-        BenchmarkTimer b = new BenchmarkTimer("TOTAL");
+    public BenchmarkTimer getTotal(String name) {
+        BenchmarkTimer b = new BenchmarkTimer(name);
         for(Map.Entry<String,BenchmarkTimer> timer : timerStore.entrySet()){
             b.numberOfCalls += timer.getValue().numberOfCalls;
             b.totalTime += timer.getValue().totalTime;
@@ -81,7 +81,7 @@ public class Benchmark {
             timerStrings.add(timer.getValue().toString());
         }
         Collections.sort(timerStrings);
-        timerStrings.add(getTotal().toString());
+        timerStrings.add(getTotal("TOTAL").toString());
         
         if(!timerStrings.isEmpty()){
             int len = timerStrings.get(0).length();
