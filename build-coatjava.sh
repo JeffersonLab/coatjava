@@ -11,6 +11,8 @@ usage='''build-coatjava.sh [OPTIONS]... [MAVEN_OPTIONS]...
 
    --clean           clean up built objects and exit (does not compile)
 
+   --depana          do dependency analysis
+
    --nomaps          do not download field maps
 
    --spotbugs        also run spotbugs plugin
@@ -145,7 +147,6 @@ fi
 
 if [ $anaDepends == "yes" ]; then
     mvn dependency:analyze -DfailOnWarning=true -pl '!org.jlab.coat:coat-libs' --no-transfer-progress
-    exit 0
 fi
 
 # start new installation tree
