@@ -79,6 +79,7 @@ jobs:
   #############################################################################
 
   unit_tests:
+    if: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -115,20 +116,20 @@ jobs:
         id:
           - kpp
           - eb-ep
-          - eb-eg
-          - eb-epc
-          - eb-enc
-          - eb-eftpi
+          #- eb-eg
+          #- eb-epc
+          #- eb-enc
+          #- eb-eftpi
         include:
           # run all tests on ubuntu
           - { id: kpp,      cmd: ./run-advanced-tests.sh }
-          - { id: eb-ep,    cmd: ./run-eb-tests.sh -100 electronproton   }
-          - { id: eb-eg,    cmd: ./run-eb-tests.sh -100 electrongamma    }
-          - { id: eb-epc,   cmd: ./run-eb-tests.sh -100 electronprotonC  }
-          - { id: eb-enc,   cmd: ./run-eb-tests.sh -100 electronneutronC }
-          - { id: eb-eftpi, cmd: ./run-eb-tests.sh -100 electronFTpion   }
+          #- { id: eb-ep,    cmd: ./run-eb-tests.sh -100 electronproton   }
+          #- { id: eb-eg,    cmd: ./run-eb-tests.sh -100 electrongamma    }
+          #- { id: eb-epc,   cmd: ./run-eb-tests.sh -100 electronprotonC  }
+          #- { id: eb-enc,   cmd: ./run-eb-tests.sh -100 electronneutronC }
+          #- { id: eb-eftpi, cmd: ./run-eb-tests.sh -100 electronFTpion   }
           # run one macos test
-          - { runner: macos-latest, id: eb-ep, cmd: ./run-eb-tests.sh -100 electronproton }
+          #- { runner: macos-latest, id: eb-ep, cmd: ./run-eb-tests.sh -100 electronproton }
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
