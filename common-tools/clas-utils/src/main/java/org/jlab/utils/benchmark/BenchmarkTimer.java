@@ -7,11 +7,12 @@ package org.jlab.utils.benchmark;
 public class BenchmarkTimer {
     
     private String timerName = "generic";
-    private long   totalTime = 0;
-    private long   timeAtResume = 0;
-    private int    numberOfCalls = 0;
     private Boolean isPaused = true;
     
+    protected long totalTime = 0;
+    protected long timeAtResume = 0;
+    protected int numberOfCalls = 0;
+
     public BenchmarkTimer(){}
     
     public BenchmarkTimer(String name){
