@@ -664,14 +664,7 @@ public class EvioDataEvent implements DataEvent {
     @Override
     public void appendBanks(DataBank... banklist) {
 
-        String common_tag = banklist[0].getDescriptor().getPropertyString("parent_tag");
-        for (int loop = 0; loop < banklist.length; loop++) {
-            String btag = banklist[loop].getDescriptor().getPropertyString("parent_tag");
-            if (btag.compareTo(common_tag) != 0) {
-            }
-        }
-
-        String parent_tag = common_tag;
+        String parent_tag = banklist[0].getDescriptor().getPropertyString("parent_tag");
 
         try {
 
