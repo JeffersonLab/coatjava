@@ -81,7 +81,7 @@ public class Benchmark {
             timerStrings.add(timer.getValue().toString());
         }
         Collections.sort(timerStrings);
-        timerStrings.add(getTotal("TOTAL").toString());
+        timerStrings.add(getTotal("").toString());
         
         if(!timerStrings.isEmpty()){
             int len = timerStrings.get(0).length();
