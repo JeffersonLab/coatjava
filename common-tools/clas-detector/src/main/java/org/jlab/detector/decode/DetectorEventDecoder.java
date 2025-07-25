@@ -113,48 +113,48 @@ public class DetectorEventDecoder {
 
         for(DetectorDataDgtz data : detectorData){
 
-            Benchmark.getInstance().resume("TTDDGET");
+            Benchmark.getInstance().resume("TT DDGET");
             int crate    = data.getDescriptor().getCrate();
             int slot     = data.getDescriptor().getSlot();
             int channel  = data.getDescriptor().getChannel();
-            Benchmark.getInstance().pause("TTDDGET");
+            Benchmark.getInstance().pause("TT DDGET");
 
             for(String table : keysTrans){
 
-                Benchmark.getInstance().resume("TTGC1");
+                Benchmark.getInstance().resume("TT GC1");
                 IndexedTable  tt = translationManager.getConstants(runNumber, table);
-                Benchmark.getInstance().pause("TTGC1");
-                Benchmark.getInstance().resume("TTGC2");
+                Benchmark.getInstance().pause("TT GC1");
+                Benchmark.getInstance().resume("TT GC2");
                 DetectorType  type = DetectorType.getType(table);
-                Benchmark.getInstance().pause("TTGC2");
+                Benchmark.getInstance().pause("TT GC2");
 
-                Benchmark.getInstance().resume("TTHE");
+                Benchmark.getInstance().resume("TT HE");
                 final boolean dog = tt.hasEntry(crate,slot,channel);
-                Benchmark.getInstance().pause("TTHE");
+                Benchmark.getInstance().pause("TT HE");
                 if(dog){
                 //if(tt.hasEntry(crate,slot,channel)==true){
 
-                    Benchmark.getInstance().resume("TTSLC");
+                    Benchmark.getInstance().resume("TT SLC");
                     int sector    = tt.getIntValue("sector", crate,slot,channel);
                     int layer     = tt.getIntValue("layer", crate,slot,channel);
                     int component = tt.getIntValue("component", crate,slot,channel);
                     int order     = tt.getIntValue("order", crate,slot,channel);
-                    Benchmark.getInstance().pause("TTSLC");
+                    Benchmark.getInstance().pause("TT SLC");
 
-                    Benchmark.getInstance().resume("TTDDSET");
+                    Benchmark.getInstance().resume("TT DDSET");
                     data.getDescriptor().setSectorLayerComponent(sector, layer, component);
                     data.getDescriptor().setOrder(order);
                     data.getDescriptor().setType(type);
-                    Benchmark.getInstance().pause("TTDDSET");
+                    Benchmark.getInstance().pause("TT DDSET");
 
-                    Benchmark.getInstance().resume("TTSO");
+                    Benchmark.getInstance().resume("TT SO");
                     for(int i = 0; i < data.getADCSize(); i++) {
                         data.getADCData(i).setOrder(order);
                     }
                     for(int i = 0; i < data.getTDCSize(); i++) {
                         data.getTDCData(i).setOrder(order);
                     }
-                    Benchmark.getInstance().pause("TTSO");
+                    Benchmark.getInstance().pause("TT SO");
                 }
             }
 
@@ -170,7 +170,7 @@ public class DetectorEventDecoder {
             	if( ( (table.equals("BMT"))&&(data.getDescriptor().getType().getName().equals("BMT")) )
                  || ( (table.equals("FMT"))&&(data.getDescriptor().getType().getName().equals("FMT")) )
                  || ( (table.equals("FTTRK"))&&(data.getDescriptor().getType().getName().equals("FTTRK")) ) ){
-                    Benchmark.getInstance().resume("DREAM_A");
+                    Benchmark.getInstance().resume("DREAM A");
                     IndexedTable daq = fitterManager.getConstants(runNumber, table);
                     short adcOffset = (short) daq.getDoubleValue("adc_offset", 0, 0, 0);
                     double fineTimeStampResolution = (byte) daq.getDoubleValue("dream_clock", 0, 0, 0);
@@ -184,9 +184,9 @@ public class DetectorEventDecoder {
                         adc.setIntegral((int) (mvtFitter.integral));
                         adc.setTimeStamp(mvtFitter.timestamp);
                     }
-                    Benchmark.getInstance().pause("DREAM_A");
+                    Benchmark.getInstance().pause("DREAM A");
                 } else {
-                    Benchmark.getInstance().resume("DREAM_B");
+                    Benchmark.getInstance().resume("DREAM B");
                     IndexedTable  daq = fitterManager.getConstants(runNumber, table);
                     if(daq.hasEntry(crate,slot,channel)==true){
                         int nsa = daq.getIntValue("nsa", crate,slot,channel);
@@ -220,7 +220,7 @@ public class DetectorEventDecoder {
                             }
                         }
                     }
-                    Benchmark.getInstance().pause("DREAM_B");
+                    Benchmark.getInstance().pause("DREAM B");
                 }
             }
         }

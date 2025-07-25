@@ -2,6 +2,7 @@ package org.jlab.utils.groups;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.jlab.utils.benchmark.Benchmark;
 
 /**
  *
@@ -29,8 +30,12 @@ public class IndexedList<T> {
     }
     
     public boolean hasItem(int... index){
+        Benchmark.getInstance().resume("TT HE 1");
         if(index.length!=this.indexSize) return false;
+        Benchmark.getInstance().pause("TT HE 1");
+        Benchmark.getInstance().resume("TT HE 2");
         long code = IndexGenerator.hashCode(index);
+        Benchmark.getInstance().pause("TT HE 2");
         return this.collection.containsKey(code);
     }
     

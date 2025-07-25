@@ -100,15 +100,15 @@ public class CLASDecoder4 {
 
                     dataList = codaDecoder.getDataEntries( (EvioDataEvent) event);
                     
-                    Benchmark.getInstance().resume("FADCBPK");
+                    Benchmark.getInstance().resume("FADC BPK");
                     List<FADCData> fadcPacked = codaDecoder.getADCEntries((EvioDataEvent) event);
-                    Benchmark.getInstance().pause("FADCBPK");
-                    Benchmark.getInstance().resume("FADCUBPK");
+                    Benchmark.getInstance().pause("FADC BPK");
+                    Benchmark.getInstance().resume("FADC UBPK");
                     if(fadcPacked!=null){
                         List<DetectorDataDgtz> fadcUnpacked = FADCData.convert(fadcPacked);
                         dataList.addAll(fadcUnpacked);
                     }
-                    Benchmark.getInstance().pause("FADCUBPK");
+                    Benchmark.getInstance().pause("FADC UBPK");
                  
                     LOGGER.finest(">>>>>>>>> RAW decoded data");
                     LOGGER.finest(Arrays.toString(dataList.toArray()));
