@@ -36,7 +36,6 @@ public class EvioDataEvent implements DataEvent {
     private DataEventType eventType = DataEventType.EVENT_ACCUMULATE;
 
     public EvioDataEvent(byte[] buffer, ByteOrder b_order) {
-
         evioBuffer = ByteBuffer.wrap(buffer);
         evioBuffer.order(b_order);
         eventHandler = new EvioDataEventHandler(evioBuffer);
@@ -105,7 +104,6 @@ public class EvioDataEvent implements DataEvent {
 
     @Override
     public String[] getColumnList(String bank_name) {
-        // TODO Auto-generated method stub
         return null;
     }
 
