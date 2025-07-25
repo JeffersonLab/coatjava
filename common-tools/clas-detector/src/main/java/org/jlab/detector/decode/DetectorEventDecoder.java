@@ -113,11 +113,11 @@ public class DetectorEventDecoder {
 
         for(DetectorDataDgtz data : detectorData){
 
-            Benchmark.getInstance().resume("TTDD");
+            Benchmark.getInstance().resume("TTDDGET");
             int crate    = data.getDescriptor().getCrate();
             int slot     = data.getDescriptor().getSlot();
             int channel  = data.getDescriptor().getChannel();
-            Benchmark.getInstance().pause("TTDD");
+            Benchmark.getInstance().pause("TTDDGET");
 
             for(String table : keysTrans){
 
@@ -137,9 +137,11 @@ public class DetectorEventDecoder {
                     int order     = tt.getIntValue("order", crate,slot,channel);
                     Benchmark.getInstance().pause("TTSLC");
 
+                    Benchmark.getInstance().resume("TTDDSET");
                     data.getDescriptor().setSectorLayerComponent(sector, layer, component);
                     data.getDescriptor().setOrder(order);
                     data.getDescriptor().setType(type);
+                    Benchmark.getInstance().pause("TTDDSET");
 
                     Benchmark.getInstance().resume("TTSO");
                     for(int i = 0; i < data.getADCSize(); i++) {
