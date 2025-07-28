@@ -3,6 +3,7 @@ package org.jlab.clas.service;
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.detector.pulse.Mode3;
 import org.jlab.detector.pulse.Mode7;
+import org.jlab.detector.pulse.ModeAHDC;
 import org.jlab.io.base.DataEvent;
 
 /**
@@ -15,6 +16,7 @@ public class PulseExtractorEngine extends ReconstructionEngine {
 
     Mode3 mode3 = new Mode3();
     Mode3 mode7 = new Mode7();
+    ModeAHDC mode_ahdc = new ModeAHDC();
     
 	public PulseExtractorEngine() {
 		super("PULSE", "baltzell", "0.0");
@@ -31,8 +33,9 @@ public class PulseExtractorEngine extends ReconstructionEngine {
     public boolean processDataEvent(DataEvent event) {
 
         // No CCDB table, hardcoded parameters in the extractor:
-        mode3.update(6, null, event, "BMT::wf", "BMT::adc");
+        //mode3.update(6, null, event, "BMT::wf", "BMT::adc");
         //mode7.update(80, null, event, "AHDC::wf", "AHDC::adc");
+        mode_ahdc.update(30, null, event, "AHDC::wf", "AHDC::adc");
 
         /*
         // Requiring a CCDB table:
