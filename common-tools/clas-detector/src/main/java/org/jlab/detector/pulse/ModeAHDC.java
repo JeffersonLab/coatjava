@@ -423,7 +423,7 @@ public class ModeAHDC extends HipoExtractor  {
                     adcBank.putFloat("timeOverThreshold", i, pulses.get(i).timeOverThreshold); 
                     adcBank.putFloat("constantFractionTime", i, pulses.get(i).constantFractionTime); 
                     adcBank.putInt("integral", i, (int)pulses.get(i).integral); 
-                    adcBank.putFloat("ped", i, (short)pulses.get(i).pedestal);
+                    adcBank.putFloat("ped", i, pulses.get(i).pedestal);
 		    adcBank.putShort("wfType", i, pulses.get(i).wftype);
                 } 
             }
