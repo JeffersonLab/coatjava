@@ -44,7 +44,7 @@ public class HitReader {
 				double adc        = bankDGTZ.getInt("ADC", i);
 				double leadingEdgeTime = bankDGTZ.getFloat("leadingEdgeTime", i);
 				double timeOverThreshold = bankDGTZ.getFloat("timeOverThreshold", i);	
-				double adcOffset = bankDGTZ.getShort("ped", i);	
+				double adcOffset = bankDGTZ.getFloat("ped", i);	
 				// Retrieve raw hit cuts from CCDB
 				int key_value = sector*10000 + number*100 + wire;
 				double[] rawHitCuts = CalibrationConstantsLoader.AHDC_RAW_HIT_CUTS.get( key_value );
@@ -72,9 +72,10 @@ public class HitReader {
 				// We may need adc calibration too
 				// Remark: leadingEdgeTime already has the fine timestamp correction
 				double time = leadingEdgeTime - t0 - startTime; 
-
+				
+				if (bankDGTZ.getShort("wfType", i) == 0) {
 				// Apply raw hit cuts
-				if (((adc >= adc_min) && (adc <= adc_max) && (time >= t_min) && (time <= t_max) && (timeOverThreshold >= tot_min) && (timeOverThreshold <= tot_max) && (adcOffset >= ped_min) && (adcOffset <= ped_max)) || sim) {
+				//if (((adc >= adc_min) && (adc <= adc_max) && (time >= t_min) && (time <= t_max) && (timeOverThreshold >= tot_min) && (timeOverThreshold <= tot_max) && (adcOffset >= ped_min) && (adcOffset <= ped_max)) || sim) {
 					// we may prevent time to be too small or too big
 					// CONDITION TO BE ADDED
 					// we should also use a flag to prevent to read the ccdb if reconstructed event if from simulation
