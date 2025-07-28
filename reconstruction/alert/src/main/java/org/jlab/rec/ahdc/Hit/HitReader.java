@@ -73,7 +73,7 @@ public class HitReader {
 				// Remark: leadingEdgeTime already has the fine timestamp correction
 				double time = leadingEdgeTime - t0 - startTime; 
 				
-				if (bankDGTZ.getShort("wfType", i) == 0) {
+				if ((bankDGTZ.getShort("wfType", i) == 0) || sim) {
 				// Apply raw hit cuts
 				//if (((adc >= adc_min) && (adc <= adc_max) && (time >= t_min) && (time <= t_max) && (timeOverThreshold >= tot_min) && (timeOverThreshold <= tot_max) && (adcOffset >= ped_min) && (adcOffset <= ped_max)) || sim) {
 					// we may prevent time to be too small or too big
