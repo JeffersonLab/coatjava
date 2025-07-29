@@ -331,11 +331,8 @@ public class ModeAHDC extends HipoExtractor  {
 	 */
 	
 	private void fineTimeStampCorrection(long timestamp, float fineTimeStampResolution) {
-		String binaryTimeStamp = Long.toBinaryString(timestamp); //get 64 bit timestamp in binary format
-		if (binaryTimeStamp.length()>=3){
-			byte fineTimeStamp = Byte.parseByte(binaryTimeStamp.substring(binaryTimeStamp.length()-3,binaryTimeStamp.length()),2); //fineTimeStamp : keep and convert last 3 bits of binary timestamp
-			this.pulse.leadingEdgeTime += (double) ((fineTimeStamp+0.5) * fineTimeStampResolution); //fineTimeStampCorrection, only on the leadingEdgeTime for the moment (we don't use timeMax or constantFractionTime in the reconstruction yet)
-		}	
+		long fineTimeStamp = timestamp & 0x00000007; // keep and convert last 3 bits of binary timestamp
+		this.pulse.leadingEdgeTime += (double) ((fineTimeStamp+0.5) * fineTimeStampResolution); //fineTimeStampCorrection, only on the leadingEdgeTime for the moment (we don't use timeMax or constantFractionTime in the reconstruction yet)
 	}
 
 
