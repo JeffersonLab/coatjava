@@ -2,6 +2,7 @@ package org.jlab.detector.decode;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -36,12 +37,14 @@ public class CodaEventDecoder {
     private int timeStampErrors = 0;
     private long    triggerBits = 0;
     private byte helicityLevel3 = HelicityBit.UDF.value();
-    private List<Integer> triggerWords = new ArrayList<>();
+    private final List<Integer> triggerWords = new ArrayList<>();
     JsonObject  epicsData = new JsonObject();
 
-    private final long timeStampTolerance = 0L;
     private int tiMaster = -1; 
-            
+
+    // FIXME:  move this to CCDB, e.g., meanwhile cannot reuse ROC id 
+    private static final List<Integer> PCIE_ROCS = Arrays.asList(new Integer[]{78});
+
     public CodaEventDecoder(){
 
     }
@@ -65,8 +68,7 @@ public class CodaEventDecoder {
         // zero out the trigger bits, but let the others properties inherit
         // from the previous event, in the case where there's no HEAD bank:
         this.setTriggerBits(0);
-
-        List<DetectorDataDgtz>  rawEntries = new ArrayList<DetectorDataDgtz>();
+        List<DetectorDataDgtz>  rawEntries = new ArrayList<>();
         List<EvioTreeBranch> branches = this.getEventBranches(event);
         this.setTimeStamp(event);
         for(EvioTreeBranch branch : branches){
@@ -83,8 +85,6 @@ public class CodaEventDecoder {
         rawEntries.addAll(scalerEntries);
 
         this.getDataEntries_EPICS(event);
-        this.getDataEntries_HelicityDecoder(event);
-
 
         return rawEntries;
     }
@@ -141,22 +141,28 @@ public class CodaEventDecoder {
             // check sychronization
             boolean tiSync=true;
             int  i0 = -1;
-            // set reference timestamp from first entry which is not the tiMaster
+            // set reference timestamp from first entry which is not the tiMaster nor PCIE:
             for(int i=0; i<tiEntries.size(); i++) {
-                if(tiEntries.get(i).getDescriptor().getCrate()!=this.tiMaster) {
-                    i0 = i;
-                    break;
+                if(tiEntries.get(i).getDescriptor().getCrate() != this.tiMaster) {
+                    if (!PCIE_ROCS.contains(tiEntries.get(i).getDescriptor().getCrate())) {
+                        i0 = i;
+                        break;
+                    }
                 }   
             }
             for(int i=0; i<tiEntries.size(); i++) {
-                long deltaTS = this.timeStampTolerance;       
-                if(tiEntries.get(i).getDescriptor().getCrate()==this.tiMaster) deltaTS = deltaTS + 1;  // add 1 click tolerance for tiMaster
-                if(Math.abs(tiEntries.get(i).getTimeStamp()-tiEntries.get(i0).getTimeStamp())>deltaTS) {
+                long deltaTS = 0;
+                long offsetT = 0;
+                // Allow/require 5-click offset for PCIE ROCs:
+                if( PCIE_ROCS.contains(tiEntries.get(i).getDescriptor().getCrate() )) offsetT = 5;
+                // Add 1-click tolerance for "TI master" (FIXME:  this should be an offset too(?)):
+                if(tiEntries.get(i).getDescriptor().getCrate()==this.tiMaster) deltaTS = deltaTS + 1;
+                if(Math.abs(tiEntries.get(i).getTimeStamp()-offsetT-tiEntries.get(i0).getTimeStamp())>deltaTS) {
                     tiSync=false;
                     if(this.timeStampErrors<100) {
                         System.err.println("WARNING: mismatch in TI time stamps: crate " 
                                         + tiEntries.get(i).getDescriptor().getCrate() + " reports " 
-                                        + tiEntries.get(i).getTimeStamp() + " instead of the " + ts
+                                        + tiEntries.get(i).getTimeStamp() + " instead of the " + tiEntries.get(i0).getTimeStamp()
                                         + " from crate " + tiEntries.get(i0).getDescriptor().getCrate());
                     }
                     else if(this.timeStampErrors==100) {
@@ -273,9 +279,12 @@ public class CodaEventDecoder {
                 return this.getDataEntries_57640(crate, node, event);
             }
             else if(node.getTag()==57622){
-                //  This is regular integrated pulse mode, used for FTOF
-                // FTCAL and EC/PCAL
+                //  This is regular DCRB bank with TDCs only
                 return this.getDataEntries_57622(crate, node, event);
+            }
+            else if(node.getTag()==57648){
+                //  This is DCRB bank with TDCs and widths
+                return this.getDataEntries_57648(crate, node, event);
             }
             else if(node.getTag()==57636){
                 //  RICH TDC data
@@ -635,7 +644,6 @@ public class CodaEventDecoder {
                 System.out.println("Exception in CRATE = " + crate + "  RUN = " + this.runNumber
                 + "  EVENT = " + this.eventNumber + " LENGTH = " + compBuffer.array().length);
                 this.printByteBuffer(compBuffer, 120, 20);
-//                Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
         return entries;
@@ -738,7 +746,7 @@ public class CodaEventDecoder {
                     	int nSamples = nBytes*8/12;
                     	short[] samples = new short[ nSamples ];
 
-                    	int s = 0;
+                    	int s;
                     	for( int b=0;b<nBytes;b++ ) {
                     		short data = (short)((byte)cdataitems.get( jdata++ )&0xFF);
 
@@ -801,7 +809,6 @@ public class CodaEventDecoder {
                 	for( int ch=0; ch<nChannels; ch++ ) {
                     	Short CHANNEL = (Short)cdataitems.get( jdata++ ); i++;
 
-
                         int nPulses = (Byte)cdataitems.get( jdata++ ); i++;
                         for(int np = 0; np < nPulses; np++){
 
@@ -814,7 +821,7 @@ public class CodaEventDecoder {
                             int nSamples = nBytes*8/12;
                             short[] samples = new short[ nSamples ];
 
-                            int s = 0;
+                            int s;
                             for( int b=0;b<nBytes;b++ ) {
                                 short data = (short)((byte)cdataitems.get( jdata++ )&0xFF);
 
@@ -947,9 +954,56 @@ public class CodaEventDecoder {
                     }
                 }
             } catch (EvioException ex) {
-                //Logger.getLogger(EvioRawDataSource.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
             } catch (IndexOutOfBoundsException ex){
-                //System.out.println("[ERROR] ----> ERROR DECODING COMPOSITE DATA FOR ONE EVENT");
+                Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+        }
+        return entries;
+    }
+
+    /**
+     * Bank TAG=57648 used for DC (Drift Chambers) TDC and ToT values.
+     * @param crate
+     * @param node
+     * @param event
+     * @return
+     */
+    public List<DetectorDataDgtz>  getDataEntries_57648(Integer crate, EvioNode node, EvioDataEvent event){
+        List<DetectorDataDgtz>  entries = new ArrayList<>();
+        if(node.getTag()==57648){
+            try {
+                ByteBuffer     compBuffer = node.getByteData(true);
+                CompositeData  compData = new CompositeData(compBuffer.array(),event.getByteOrder());
+                //List<DataType> cdatatypes = compData.getTypes();
+                List<Object>   cdataitems = compData.getItems();
+
+                int  totalSize = cdataitems.size();
+                int  position  = 0;
+                while( (position + 4) < totalSize){
+                    Byte    slot = (Byte)     cdataitems.get(position);
+                    //Integer trig = (Integer)  cdataitems.get(position+1);
+                    Long    time = (Long)     cdataitems.get(position+2);
+                    Integer nchannels = (Integer) cdataitems.get(position+3);
+                    int counter  = 0;
+                    position = position + 4;
+                    while(counter<nchannels){
+                        Byte   channel = (Byte) cdataitems.get(position);
+                        Short  tdc     = (Short) cdataitems.get(position+1);
+                        Short  tot     = (Short) cdataitems.get(position+2);
+                        position += 3;
+                        counter++;
+                        DetectorDataDgtz   entry = new DetectorDataDgtz(crate,slot,channel);
+                        entry.addTDC(new TDCData(tdc, tot));
+                        entry.setTimeStamp(time);
+                        entries.add(entry);
+                    }
+                }
+            } catch (EvioException ex) {
+                Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IndexOutOfBoundsException ex){
+                Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
             }
 
         }
@@ -1056,24 +1110,36 @@ public class CodaEventDecoder {
 
                 int position = 0;
                 while(position<cdatatypes.size()-4){
-                    Byte    slot     = (Byte)     cdataitems.get(position+0);
-                    Integer trig_num = (Integer)  cdataitems.get(position+1);
+                    Byte    slot       = (Byte)     cdataitems.get(position+0);
+                    Integer trig_num   = (Integer)  cdataitems.get(position+1);
                     Long    time_stamp = (Long)    cdataitems.get(position+2);
-                    Integer nchannels = (Integer) cdataitems.get(position+3);
-                    position += 4;
-                    int counter  = 0;
+                    Integer nchannels  = (Integer) cdataitems.get(position+3);
+                    int     counter    = 0;
+
+                    position += 4; // slot, trig,time,nchannels
+                                   //
                     while(counter<nchannels){
                         Byte channel = (Byte) cdataitems.get(position+0);
                         Integer tdc = (Integer) cdataitems.get(position+1);
                         // width over threshold
                         Integer tot = (Integer) cdataitems.get(position+2);
 
-
-                        // Not sure what is going on here yet...
-                        DetectorDataDgtz bank = new DetectorDataDgtz(crate,slot.intValue(),channel.intValue());
-                        bank.addTDC(new TDCData(tdc,tot));
+                        DetectorDataDgtz bank = new DetectorDataDgtz(
+                            crate, slot.intValue(), channel.intValue());
+                        // the "bank" has a timestamp.
+                        // the tdc also can have a timestamp.
+                        // the tdc is added tot he "bank"
+                        // the "bank" is added to the "entries" (array of DetectorDataDgtz)
+                        // "entries" List<DetectorDataDgtz>  -> "bank" DetectorDataDgtz  -> "tdc" TDCData
+                        // there is a redundancy in timestamp: the same value is stored in TDCData and the DetectorDataDgz
+                        //
+                        bank.setTimeStamp(time_stamp);
+                        bank.setTrigger(trig_num);;
+                        TDCData tdc_data = new TDCData(tdc, tot);
+                        tdc_data.setTimeStamp(time_stamp).setOrder(counter);
+                        bank.addTDC(tdc_data);
                         entries.add(bank);
-                        position += 3;
+                        position += 3; // channel,tdc,tot
                         counter++;
                         //System.err.println("event: " + bank.toString());
                     }
@@ -1123,14 +1189,12 @@ public class CodaEventDecoder {
             for(EvioNode node : branch.getNodes()){
                 if(node.getTag()==57651) {
                     
-                    long[] longData = ByteDataTransformer.toLongArray(node.getStructureBuffer(true));
                     int[]  intData  = ByteDataTransformer.toIntArray(node.getStructureBuffer(true));
 
                     // When there are multiple HelicityDecoder banks in an event, there is a BLKHDR work in the data,
                     // and when there is one HelicityDecoder bank in an event, it is not there. So we need to
                     // detect where the trigger time word is.
                     int i_data_offset = 2;
-                    int i_data_length = intData.length;
                     while(i_data_offset<intData.length){
                         // The following idiotic construction is needed because Java doesn't have unsigned ints,
                         // and a right shift on a negative int results in a negative number.
@@ -1139,18 +1203,30 @@ public class CodaEventDecoder {
                         i_data_offset++;
                     } // find the trigger time word.
                     if(i_data_offset>=intData.length){
-                        System.err.println("ERROR:  HelicityDecoder data is corrupted. Trigger time word not found.");
+                        System.err.println("ERROR:  HelicityDecoder EVIO data is corrupted. Trigger time word not found.");
                         return null;
                     }
                     long  timeStamp = (intData[i_data_offset]&0x00ffffff) + (((long)(intData[i_data_offset+1]&0x00ffffffL))<<24);
                     i_data_offset+=2; // Next word should be "DECODER DATA", with 0x18 in the top 5 bits.
-                    if(((int) (( ((long)intData[i_data_offset]) & 0x00000000ffffffffL ) >> 27)) != 0x18){
-                        System.err.println("ERROR:  HelicityDecoder data is corrupted. DECODER BANK not found.");
+                    try {
+                        if(((int) (( ((long)intData[i_data_offset]) & 0x00000000ffffffffL ) >> 27)) != 0x18){
+                            System.err.println("ERROR:  HelicityDecoder EVIO data is corrupted.");
+                            return null;
+                        }
+                    }
+                    catch (ArrayIndexOutOfBoundsException e) {
+                        System.err.println("ERROR:  HelicityDecoder EVIO data looks like v2 firmware(?), ignoring it.");
                         return null;
                     }
-                    int num_data_words = intData[i_data_offset]&0x07ffffff;
-                    if(num_data_words < 14){
-                        System.err.println("ERROR:  HelicityDecoder data is corrupted. Not enough data words.");
+                    try {
+                        int num_data_words = intData[i_data_offset]&0x07ffffff;
+                        if(num_data_words < 14){
+                            System.err.println("ERROR:  HelicityDecoder EVIO data is corrupted. Not enough data words.");
+                            return null;
+                        }
+                    }
+                    catch (ArrayIndexOutOfBoundsException e) {
+                        System.err.println("ERROR:  HelicityDecoder EVIO data looks like v2 firmware(?), ignoring it.");
                         return null;
                     }
                     i_data_offset ++; // Point to the first word in the data block.
