@@ -43,8 +43,8 @@ public class HitReader {
 				int    wire       = bankDGTZ.getShort("component", i);
 				double adc        = bankDGTZ.getInt("ADC", i);
 				double leadingEdgeTime = bankDGTZ.getFloat("leadingEdgeTime", i);
-				double timeOverThreshold = bankDGTZ.getFloat("timeOverThreshold", i);	
-				double adcOffset = bankDGTZ.getFloat("ped", i);	
+				//double timeOverThreshold = bankDGTZ.getFloat("timeOverThreshold", i);	
+				//double adcOffset = bankDGTZ.getFloat("ped", i);	
 				// Retrieve raw hit cuts from CCDB
 				int key_value = sector*10000 + number*100 + wire;
 				double[] rawHitCuts = CalibrationConstantsLoader.AHDC_RAW_HIT_CUTS.get( key_value );
@@ -57,7 +57,7 @@ public class HitReader {
 				double ped_min = rawHitCuts[6];
 				double ped_max = rawHitCuts[7];
 				//System.out.println("t_min : " + t_min + " t_max : " + t_max + " tot_min : " + tot_min + " tot_max : " + tot_max + " adc_min : " + adc_min + " adc_max : " + adc_max + " ped_min : " + ped_min + " ped_max : " + ped_max);
-				// Retrieve t0 and t2 from CCDB
+				// Retrieve t0 and t2d from CCDB
 				// What's about simulation?
 				double[] timeOffsets = CalibrationConstantsLoader.AHDC_TIME_OFFSETS.get( key_value );
 				double[] time2distance = CalibrationConstantsLoader.AHDC_TIME_TO_DISTANCE.get( 10101 ); // the time to distance table has only one row ! (10101 is its only key)
@@ -76,11 +76,6 @@ public class HitReader {
 				if ((bankDGTZ.getShort("wfType", i) == 0) || sim) {
 				// Apply raw hit cuts
 				//if (((adc >= adc_min) && (adc <= adc_max) && (time >= t_min) && (time <= t_max) && (timeOverThreshold >= tot_min) && (timeOverThreshold <= tot_max) && (adcOffset >= ped_min) && (adcOffset <= ped_max)) || sim) {
-					// we may prevent time to be too small or too big
-					// CONDITION TO BE ADDED
-					// we should also use a flag to prevent to read the ccdb if reconstructed event if from simulation
-					// TO BE DONE
-					//double doca       = bankDGTZ.getShort("ped", i) / 1000.0;
 					double doca = p0 + p1*Math.pow(time,1.0) + p2*Math.pow(time,2.0) + p3*Math.pow(time,3.0) + p4*Math.pow(time,4.0) + p5*Math.pow(time, 5.0);
 					Hit h = new Hit(id, superlayer, layer, wire, doca, adc, time);
                                         h.setWirePosition(detector);
