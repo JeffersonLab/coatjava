@@ -113,7 +113,9 @@ public class JsonUtils {
                 ret.add(topKey,Map2Json((Map)entry.getValue()));
             }
             else {
-                ret.add(topKey, entry.getValue().toString());
+                if(entry.getValue() != null) {
+                    ret.add(topKey, entry.getValue().toString());
+                }
             }
         }
         return ret;

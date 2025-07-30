@@ -2,7 +2,6 @@ package org.jlab.analysis.eventmerger;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.calib.utils.ConstantsManager;
@@ -33,28 +32,13 @@ public class EventMergerConstants {
             "/calibration/band/time_jitter"            
     };
 
-    public static final List<DetectorType> ADCs = Arrays.asList(DetectorType.BAND,
-                                                                DetectorType.BMT,
-                                                                DetectorType.BST,
-                                                                DetectorType.CND,
-                                                                DetectorType.CTOF,
-                                                                DetectorType.ECAL,
-                                                                DetectorType.FMT,
-                                                                DetectorType.FTCAL,
-                                                                DetectorType.FTHODO,
-                                                                DetectorType.FTOF,
-                                                                DetectorType.FTTRK,
-                                                                DetectorType.HTCC,
-                                                                DetectorType.LTCC,
-                                                                DetectorType.URWELL);
-                                                
-    public static final List<DetectorType> TDCs = Arrays.asList(DetectorType.BAND,
-                                                                DetectorType.CND,
-                                                                DetectorType.CTOF,
-                                                                DetectorType.DC,
-                                                                DetectorType.ECAL,
-                                                                DetectorType.FTOF);
-                                                                                                
+    public static final String[] ADCBANKTYPES = {"adc"};
+    public static final String[] TDCBANKTYPES = {"tot","tdc"};
+    
+    public static final String[] ADCDETECTORS = {"BAND","BMT", "BST","CND","CTOF","ECAL","FMT","FTCAL",
+                                                  "FTHODO","FTOF","FTTRK","HTCC","LTCC","URWELL"};
+    public static final String[] TDCDETECTORS = {"BAND","CND","CTOF","DC","ECAL","FTOF"};
+                                                                                                  
     
     public EventMergerConstants() {
         
@@ -100,7 +84,7 @@ public class EventMergerConstants {
         manager.init(Arrays.asList(tableNames));
     }
     
-    private void setTable(DetectorType detector, EventMergerEnum key, String path) {
+     private void setTable(DetectorType detector, EventMergerEnum key, String path) {
         if (!tables.containsKey(detector)) tables.put(detector,new HashMap<>());
         tables.get(detector).put(key,path);
     }

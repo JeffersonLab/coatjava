@@ -1,8 +1,16 @@
 # installed:
 /coatjava
-/myLocalMvnRepo
 target
 /publish
+/docs/javadoc/*
+/clara-home
+tmp
+
+# deployment
+/myLocalMvnRepo
+/coatjava-*.tar.gz
+dependency-reduced-pom.xml
+.flattened-pom.xml
 
 *.class
 *lundfiles*.dat
@@ -31,6 +39,12 @@ hs_err_pid*
 # ide stuff:
 *.iml
 .idea
+
+# eclipse JDT language server
+.classpath
+.factorypath
+.project
+.settings
 
 # no log files:
 *.log

@@ -1,182 +1,418 @@
 [
-	{
-		"name": "AHDC::Hits",
-		"group": 23000,
-		"item": 23,
-		"info": "Raw Hits",
-		"entries": [
-			{
-				"name": "ID",
-				"type": "S",
-				"info": "hit id"
-			}, {
-				"name": "layer",
-				"type": "B",
-				"info": "layer number"
-			}, {
-				"name": "superlayer",
-				"type": "B",
-				"info": "superlayer number"
-			}, {
-				"name": "wire",
-				"type": "I",
-				"info": "wire number"
-			}, {
-				"name": "Doca",
-				"type": "D",
-				"info": "distance od closest approch (mm)"
-			}
-		]
-	}, {
-	"name": "AHDC::PreClusters",
-	"group": 23000,
-	"item": 24,
-	"info": "Pre Clusters info",
-	"entries": [
-		{
-			"name": "X",
-			"type": "F",
-			"info": "X info (mm)"
-		}, {
-			"name": "Y",
-			"type": "F",
-			"info": "Y info (mm)"
-		}
-	]
-}, {
-	"name": "AHDC::Clusters",
-	"group": 23000,
-	"item": 25,
-	"info": "Clusters info",
-	"entries": [
-		{
-			"name": "X",
-			"type": "F",
-			"info": "X info (mm)"
-		}, {
-			"name": "Y",
-			"type": "F",
-			"info": "Y info (mm)"
-		}, {
-			"name": "Z",
-			"type": "F",
-			"info": "Z info (mm)"
-		}
-	]
-}, {
-	"name": "AHDC::Track",
-	"group": 23000,
-	"item": 21,
-	"info": "Reco Tracks",
-	"entries": [
-		{
-			"name": "x",
-			"type": "F",
-			"info": "x position in mm"
-		}, {
-			"name": "y",
-			"type": "F",
-			"info": "y position in mm"
-		}, {
-			"name": "z",
-			"type": "F",
-			"info": "z position in mm"
-		}, {
-			"name": "px",
-			"type": "F",
-			"info": "px in MeV"
-		}, {
-			"name": "py",
-			"type": "F",
-			"info": "py in MeV"
-		}, {
-			"name": "pz",
-			"type": "F",
-			"info": "pz in MeV"
-		}
-	]
-}, {
-	"name": "AHDC::KFTrack",
-	"group": 23000,
-	"item": 26,
-	"info": "Reco Kalman Filter Tracks",
-	"entries": [
-		{
-			"name": "x",
-			"type": "F",
-			"info": "x position in mm"
-		}, {
-			"name": "y",
-			"type": "F",
-			"info": "y position in mm"
-		}, {
-			"name": "z",
-			"type": "F",
-			"info": "z position in mm"
-		}, {
-			"name": "px",
-			"type": "F",
-			"info": "px in MeV"
-		}, {
-			"name": "py",
-			"type": "F",
-			"info": "py in MeV"
-		}, {
-			"name": "pz",
-			"type": "F",
-			"info": "pz in MeV"
-		}
-	]
-}, {
-	"name": "AHDC::MC",
-	"group": 23000,
-	"item": 22,
-	"info": "MC Tracks",
-	"entries": [
-		{
-			"name": "x",
-			"type": "F",
-			"info": "x position in mm"
-		}, {
-			"name": "y",
-			"type": "F",
-			"info": "y position in mm"
-		}, {
-			"name": "z",
-			"type": "F",
-			"info": "z position in mm"
-		}, {
-			"name": "px",
-			"type": "F",
-			"info": "px in MeV"
-		}, {
-			"name": "py",
-			"type": "F",
-			"info": "py in MeV"
-		}, {
-			"name": "pz",
-			"type": "F",
-			"info": "pz in MeV"
-		}
-	]
-},
-	{
-		"name": "AHDC_AI::Prediction",
-		"group": 23000,
-		"item": 30,
-		"info": "Prediction given by AI",
-		"entries": [
-			{"name": "X1", "type": "F", "info": "X1 position of the 1th superprecluster (mm)"},
-			{"name": "Y1", "type": "F", "info": "Y1 position of the 1th superprecluster (mm)"},
-			{"name": "X2", "type": "F", "info": "X2 position of the 2nd superprecluster (mm)"},
-			{"name": "Y2", "type": "F", "info": "Y2 position of the 2nd superprecluster (mm)"},
-			{"name": "X3", "type": "F", "info": "X3 position of the 3rd superprecluster (mm)"},
-			{"name": "Y3", "type": "F", "info": "Y3 position of the 3rd superprecluster (mm)"},
-			{"name": "X4", "type": "F", "info": "X4 position of the 4th superprecluster (mm)"},
-			{"name": "Y4", "type": "F", "info": "Y4 position of the 4th superprecluster (mm)"},
-			{"name": "X5", "type": "F", "info": "X5 position of the 5th superprecluster (mm)"},
-			{"name": "Y5", "type": "F", "info": "Y5 position of the 5th superprecluster (mm)"},
-			{"name": "Pred", "type": "F", "info": "Prediction of the model: 0 mean bad track; 1 mean good track"}
-		]
-	}
+  {
+    "name": "ALERT::projections",
+    "group": 23000,
+    "item": 31,
+    "info": "Track Projections to ATOF",
+    "entries": [		
+      {
+        "name": "id",
+        "type": "S",
+        "info": "projection id"
+      },{
+        "name": "trackid",
+        "type": "S",
+        "info": "id of the track that was projected"
+      }, {
+        "name": "x_at_bar",
+        "type": "F",
+        "info": "x position at atof bar (middle surface) in mm"
+      },{
+        "name": "y_at_bar",
+        "type": "F",
+        "info": "y position at atof bar (middle surface) in mm"
+      }, {
+        "name": "z_at_bar",
+        "type": "F",
+        "info": "z position at atof bar (middle surface) in mm"			    
+      },{
+        "name": "l_at_bar",
+        "type": "F",
+        "info": "path length at atof bar (inner surface) in mm" 
+      },{
+        "name": "l_in_bar",
+        "type": "F",
+        "info": "path length inside atof bar in mm"
+      },{
+        "name": "x_at_wedge",
+        "type": "F",
+        "info": "x position at atof wedge (middle surface) in mm"
+      }, {
+        "name": "y_at_wedge",
+        "type": "F",
+        "info": "y position at atof wedge (middle surface) in mm"
+      }, {
+        "name": "z_at_wedge",
+        "type": "F",
+        "info": "z position at atof wedge (middle surface) in mm"
+      },{
+        "name": "l_at_wedge",
+        "type": "F",
+        "info": "path length at atof wedge (inner surface) in mm"
+      },{
+        "name": "l_in_wedge",
+        "type": "F",
+        "info": "path length inside atof wedge in mm"
+      }
+    ]
+  },{
+    "name": "ATOF::hits",
+    "group": 22500,
+    "item": 21,
+    "info": "Reconstructed ATOF hits",
+    "entries": [		
+      {
+        "name": "id",
+        "type": "S",
+        "info": "hit id"
+      }, {
+        "name": "sector",
+        "type": "I",
+        "info": "atof sector"
+      }, {
+        "name": "layer",
+        "type": "I",
+        "info": "atof layer"			    
+      },{
+        "name": "component",
+        "type": "I",
+        "info": "atof component" 
+      },{
+        "name": "time",
+        "type": "F",
+        "info": "time in ns"
+      },{
+        "name": "x",
+        "type": "F",
+        "info": "x position in mm"
+      }, {
+        "name": "y",
+        "type": "F",
+        "info": "y position in mm"
+      }, {
+        "name": "z",
+        "type": "F",
+        "info": "z position in mm"
+      },{
+        "name": "energy",
+        "type": "F",
+        "info": "deposited energy in MeV"
+      },{
+        "name": "clusterid",
+        "type": "S",
+        "info": "id of cluster to which the hit was associated"
+      }
+    ]
+  },{
+    "name": "ATOF::clusters",
+    "group": 22500,
+    "item": 22,
+    "info": "Clusters in ATOF",
+    "entries": [		
+      {
+        "name": "id",
+        "type": "S",
+        "info": "hit id"
+      }, {
+        "name": "n_bar",
+        "type": "I",
+        "info": "number of hits from the bars"
+      }, {
+        "name": "n_wedge",
+        "type": "I",
+        "info": "number of hits from the wedges"			    
+      },{
+        "name": "time",
+        "type": "F",
+        "info": "time in ns"
+      },{
+        "name": "x",
+        "type": "F",
+        "info": "x position in mm"
+      }, {
+        "name": "y",
+        "type": "F",
+        "info": "y position in mm"
+      }, {
+        "name": "z",
+        "type": "F",
+        "info": "z position in mm"
+      },{
+        "name": "energy",
+        "type": "F",
+        "info": "energy in MeV"
+      },{
+        "name": "pathlength",
+        "type": "F",
+        "info": "path length to the cluster in mm"
+      },{
+        "name": "inpathlength",
+        "type": "F",
+        "info": "path length inside the detector in mm"
+      },{
+        "name": "projID",
+        "type": "S",
+        "info": "id of the projected track matched. it is -1 if a straight track was assigned."
+      }
+    ]
+  },{
+    "name": "AHDC::hits",
+    "group": 23000,
+    "item": 23,
+    "info": "Raw Hits",
+    "entries": [
+      {
+        "name": "id",
+        "type": "S",
+        "info": "hit id"
+      }, {
+        "name": "layer",
+        "type": "B",
+        "info": "layer number"
+      }, {
+        "name": "superlayer",
+        "type": "B",
+        "info": "superlayer number"
+      }, {
+        "name": "wire",
+        "type": "I",
+        "info": "wire number"
+      }, {
+        "name": "doca",
+        "type": "D",
+        "info": "distance od closest approch (mm) is actually the distance from time2distance calibration"
+      }, {
+	"name": "residual",
+	"type": "D",
+	"info": "residual (mm) is distance from time2distance calibration minus the distance of closest approach computed at the Kalman Filter stage"
+      }, {
+	"name": "residual_prefit",
+	"type": "D",
+	"info": "residual pre-fit (mm)"
+      }, {
+	"name": "time",
+	"type": "D",
+	"info": "time (ns) is leadingEdgeTime from AHDC::adc minus t0 from calibration"
+      }, {
+        "name": "trackid",
+        "type": "I",
+        "info": "track id, is -1 if not associated to a Track"
+      }
+    ]
+  }, {
+    "name": "AHDC::preclusters",
+    "group": 23000,
+    "item": 24,
+    "info": "Pre Clusters info",
+    "entries": [
+      {
+        "name": "x",
+        "type": "F",
+        "info": "x info (mm)"
+      }, {
+        "name": "y",
+        "type": "F",
+        "info": "y info (mm)"
+      }
+    ]
+  }, {
+    "name": "AHDC::clusters",
+    "group": 23000,
+    "item": 25,
+    "info": "Clusters info",
+    "entries": [
+      {
+        "name": "x",
+        "type": "F",
+        "info": "x info (mm)"
+      }, {
+        "name": "y",
+        "type": "F",
+        "info": "y info (mm)"
+      }, {
+        "name": "z",
+        "type": "F",
+        "info": "z info (mm)"
+      }
+    ]
+  }, {
+    "name": "AHDC::track",
+    "group": 23000,
+    "item": 21,
+    "info": "Reco Tracks",
+    "entries": [
+      {
+        "name": "trackid",
+        "type": "I",
+        "info": "track id"
+      }, {
+        "name": "x",
+        "type": "F",
+        "info": "x position in mm"
+      }, {
+        "name": "y",
+        "type": "F",
+        "info": "y position in mm"
+      }, {
+        "name": "z",
+        "type": "F",
+        "info": "z position in mm"
+      }, {
+        "name": "px",
+        "type": "F",
+        "info": "px in MeV"
+      }, {
+        "name": "py",
+        "type": "F",
+        "info": "py in MeV"
+      }, {
+        "name": "pz",
+        "type": "F",
+        "info": "pz in MeV"
+      }, {
+        "name": "n_hits",
+        "type": "I",
+        "info": "number of hits"
+      }, {
+        "name": "sum_adc",
+        "type": "I",
+        "info": "Sum of adc (adc)"
+      }, {
+        "name": "path",
+        "type": "F",
+        "info": "Length of the track (mm)"
+      }, {
+        "name": "dEdx",
+        "type": "F",
+        "info": "Deposited energy per path (adc/mm)"
+      }, {
+        "name": "p_drift",
+        "type": "F",
+        "info": "Momentum in the drift region (MeV)"
+      }, {
+        "name": "chi2",
+        "type": "F",
+        "info": "Sum of squared residuals (mm^2)"
+      }, {
+        "name": "sum_residuals",
+        "type": "F",
+        "info": "Sum of residuals (mm)"
+      }
+    ]
+  }, {
+    "name": "AHDC::kftrack",
+    "group": 23000,
+    "item": 26,
+    "info": "Reco Kalman Filter Tracks",
+    "entries": [
+      {
+        "name": "trackid",
+        "type": "I",
+        "info": "track id"
+      }, {
+        "name": "x",
+        "type": "F",
+        "info": "x position in mm"
+      }, {
+        "name": "y",
+        "type": "F",
+        "info": "y position in mm"
+      }, {
+        "name": "z",
+        "type": "F",
+        "info": "z position in mm"
+      }, {
+        "name": "px",
+        "type": "F",
+        "info": "px in MeV"
+      }, {
+        "name": "py",
+        "type": "F",
+        "info": "py in MeV"
+      }, {
+        "name": "pz",
+        "type": "F",
+        "info": "pz in MeV"
+      }, {
+        "name": "n_hits",
+        "type": "I",
+        "info": "number of hits"
+      }, {
+        "name": "sum_adc",
+        "type": "I",
+        "info": "Sum of adc (adc)"
+      }, {
+        "name": "path",
+        "type": "F",
+        "info": "Length of the track (mm)"
+      }, {
+        "name": "dEdx",
+        "type": "F",
+        "info": "Deposited energy per path (adc/mm)"
+      }, {
+        "name": "p_drift",
+        "type": "F",
+        "info": "Momentum in the drift region (MeV)"
+      }, {
+        "name": "chi2",
+        "type": "F",
+        "info": "Sum of squared residuals (mm^2)"
+      }, {
+        "name": "sum_residuals",
+        "type": "F",
+        "info": "Sum of residuals (mm)"
+      }
+    ]
+  }, {
+    "name": "AHDC::mc",
+    "group": 23000,
+    "item": 22,
+    "info": "MC Tracks",
+    "entries": [
+      {
+        "name": "x",
+        "type": "F",
+        "info": "x position in mm"
+      }, {
+        "name": "y",
+        "type": "F",
+        "info": "y position in mm"
+      }, {
+        "name": "z",
+        "type": "F",
+        "info": "z position in mm"
+      }, {
+        "name": "px",
+        "type": "F",
+        "info": "px in MeV"
+      }, {
+        "name": "py",
+        "type": "F",
+        "info": "py in MeV"
+      }, {
+        "name": "pz",
+        "type": "F",
+        "info": "pz in MeV"
+      }
+    ]
+  },
+  {
+    "name": "AHDC::ai:prediction",
+    "group": 23000,
+    "item": 30,
+    "info": "Prediction given by AI",
+    "entries": [
+      {"name": "x1", "type": "F", "info": "X1 position of the 1th superprecluster (mm)"},
+      {"name": "y1", "type": "F", "info": "Y1 position of the 1th superprecluster (mm)"},
+      {"name": "x2", "type": "F", "info": "X2 position of the 2nd superprecluster (mm)"},
+      {"name": "y2", "type": "F", "info": "Y2 position of the 2nd superprecluster (mm)"},
+      {"name": "x3", "type": "F", "info": "X3 position of the 3rd superprecluster (mm)"},
+      {"name": "y3", "type": "F", "info": "Y3 position of the 3rd superprecluster (mm)"},
+      {"name": "x4", "type": "F", "info": "X4 position of the 4th superprecluster (mm)"},
+      {"name": "y4", "type": "F", "info": "Y4 position of the 4th superprecluster (mm)"},
+      {"name": "x5", "type": "F", "info": "X5 position of the 5th superprecluster (mm)"},
+      {"name": "y5", "type": "F", "info": "Y5 position of the 5th superprecluster (mm)"},
+      {"name": "pred", "type": "F", "info": "Prediction of the model: 0 mean bad track; 1 mean good track"}
+    ]
+  }
 ]

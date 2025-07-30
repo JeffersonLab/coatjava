@@ -91,23 +91,23 @@ public abstract class HipoExtractor implements IExtractor {
         }
     }
 
-    private static void copyIndices(Bank src, Bank dest, int isrc, int idest) {
+    protected static void copyIndices(Bank src, Bank dest, int isrc, int idest) {
         dest.putByte("sector", idest, src.getByte("sector",isrc));
         dest.putByte("layer", idest, src.getByte("layer",isrc));
         dest.putShort("component", idest, src.getShort("component",isrc));
         dest.putByte("order", idest, src.getByte("order",isrc));
-        dest.putShort("id", idest, (short)isrc);
+        dest.putShort("windex", idest, (short)isrc);
     }
 
-    private static void copyIndices(DataBank src, DataBank dest, int isrc, int idest) {
+    protected static void copyIndices(DataBank src, DataBank dest, int isrc, int idest) {
         dest.setByte("sector", idest, src.getByte("sector",isrc));
         dest.setByte("layer", idest, src.getByte("layer",isrc));
         dest.setShort("component", idest, src.getShort("component",isrc));
         dest.setByte("order", idest, src.getByte("order",isrc));
-        dest.setShort("id", idest, (short)isrc);
+        dest.setShort("windex", idest, (short)isrc);
     }
 
-    private static int[] getIndices(Bank bank, int row) {
+    protected static int[] getIndices(Bank bank, int row) {
         return new int[] {
             bank.getShort("sector", row),
             bank.getShort("layer", row),
@@ -115,7 +115,7 @@ public abstract class HipoExtractor implements IExtractor {
             bank.getShort("order", row)};
     }
 
-    private static int[] getIndices(DataBank bank, int row) {
+    protected static int[] getIndices(DataBank bank, int row) {
         return new int[] {
             bank.getShort("sector", row),
             bank.getShort("layer", row),
@@ -123,14 +123,16 @@ public abstract class HipoExtractor implements IExtractor {
             bank.getShort("order", row)};
     }
 
-    private List<Pulse> getPulses(int n, IndexedTable it, DataBank wfBank) {
+    protected List<Pulse> getPulses(int n, IndexedTable it, DataBank wfBank) {
         List<Pulse> pulses = null;
         short[] samples = new short[n];
         for (int i=0; i<wfBank.rows(); ++i) {
             for (int j=0; j<n; ++j)
                 samples[j] = wfBank.getShort(String.format("s%d",j+1), i);
-            List<Pulse> p = it==null ? extract(null, i, samples) :
-                extract(it.getNamedEntry(getIndices(wfBank,i)), i, samples);
+            long timestamp = wfBank.getLong("timestamp",i);
+            int time = wfBank.getInt("time",i);
+            List<Pulse> p = it==null ? extract(null, i, timestamp, time, samples) :
+                extract(it.getNamedEntry(getIndices(wfBank,i)), i, timestamp, time, samples);
             if (p!=null && !p.isEmpty()) {
                 if (pulses == null) pulses = new ArrayList<>();
                 pulses.addAll(p);
@@ -139,7 +141,7 @@ public abstract class HipoExtractor implements IExtractor {
         return pulses;
     }
 
-    private List<Pulse> getPulses(int n, IndexedTable it, Bank wfBank) {
+    protected List<Pulse> getPulses(int n, IndexedTable it, Bank wfBank) {
         List<Pulse> pulses = null;
         short[] samples = new short[n];
         for (int i=0; i<wfBank.getRows(); ++i) {
@@ -147,8 +149,10 @@ public abstract class HipoExtractor implements IExtractor {
                 samples[j] = wfBank.getShort(String.format("s%d",j+1), i);
                 // FIXME:  Can speed this up (but looks like not for DataBank?):
                 //samples[j] = wfBank.getShort(String.format(5+j,j+1), i);
-            List p = it==null ? extract(null, i, samples) :
-                extract(it.getNamedEntry(getIndices(wfBank,i)), i, samples);
+            int time = wfBank.getInt("time",i);
+            long timestamp = wfBank.getLong("timestamp",i);
+            List p = it==null ? extract(null, i, timestamp, time, samples) :
+                extract(it.getNamedEntry(getIndices(wfBank,i)), i, timestamp, time, samples);
             if (p!=null && !p.isEmpty()) {
                 if (pulses == null) pulses = new ArrayList<>();
                 pulses.addAll(p);

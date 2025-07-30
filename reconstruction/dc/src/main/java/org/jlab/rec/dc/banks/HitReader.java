@@ -1,7 +1,11 @@
 package org.jlab.rec.dc.banks;
 
-import java.util.ArrayList;
+import java.util.Map;
 import java.util.List;
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
@@ -9,21 +13,12 @@ import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.hit.Hit;
 import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
 
-import cnuphys.snr.NoiseReductionParameters;
-import cnuphys.snr.clas12.Clas12NoiseAnalysis;
-import cnuphys.snr.clas12.Clas12NoiseResult;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.jlab.clas.swimtools.Swimmer;
-import org.jlab.detector.banks.RawBank.OrderGroups;
 import org.jlab.detector.banks.RawBank.OrderType;
 import org.jlab.detector.banks.RawDataBank;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.rec.dc.Constants;
-import org.jlab.utils.groups.IndexedList;
 import org.jlab.utils.groups.IndexedTable;
 
 /**
@@ -44,7 +39,7 @@ public class HitReader {
     private int run = 0;
     private long tiTimeStamp = 0;
     private DataEvent event = null;
-    
+        
     private IndexedTable tt          = null;
     private IndexedTable reverseTT   = null;
     private IndexedTable dcrbjitters = null;
@@ -54,7 +49,8 @@ public class HitReader {
     private IndexedTable docares     = null;
     private IndexedTable time2dist   = null;
     private IndexedTable t0s         = null;
-
+    
+    private int numTDCBankRows = -1;
     private List<Hit> _DCHits;
     private List<FittedHit> _HBHits; //hit-based tracking hit information
     private List<FittedHit> _TBHits; //time-based tracking hit information
@@ -62,9 +58,7 @@ public class HitReader {
     private final double timeBuf = 25.0;
 
     private static final Logger LOGGER = Logger.getLogger(HitReader.class.getName());
-    
-    
-    
+
     public HitReader(Banks names, DCGeant4Factory detector) {
         this.bankNames= names;
         this.detector = detector;            
@@ -93,7 +87,6 @@ public class HitReader {
             time2dist = manager.getConstants(run, Constants.TIME2DIST);
             t0s = manager.getConstants(run, Constants.T0CORRECTION);
         }
-        
     }
     
    /**
@@ -102,15 +95,6 @@ public class HitReader {
     public List<Hit> get_DCHits() {
         return _DCHits;
     }
-//
-//    /**
-//     * sets the list of DC hits
-//     *
-//     * @param _DCHits list of DC hits
-//     */
-//    private void setDCHits(List<Hit> _DCHits) {
-//        this._DCHits = _DCHits;
-//    }
 
     /**
      * @return list of DCHB hits
@@ -119,15 +103,6 @@ public class HitReader {
         return _HBHits;
     }
 
-//    /**
-//     * sets the list of HB DC hits
-//     *
-//     * @param _HBHits list of DC hits
-//     */
-//    private void setHBHits(List<FittedHit> _HBHits) {
-//        this._HBHits = _HBHits;
-//    }
-
     /**
      * @return list of DCTB hits
      */
@@ -135,18 +110,7 @@ public class HitReader {
         return _TBHits;
     }
 
-    /**
-     * sets the list of HB DC hits
-     *
-     * @param _TBHits list of DC hits
-//     */
-//    private void setTBHits(List<FittedHit> _TBHits) {
-//        this._TBHits = _TBHits;
-//    }
-    
-    
     private int getTIJitter() {
-        
         int jitter = 0;
         if (tiTimeStamp>=0 && timejitter!=null) {
            double period = timejitter.getDoubleValue("period", 0, 0, 0);
@@ -192,7 +156,6 @@ public class HitReader {
             if(!dcrbjitters.hasEntry(crate, slot))
                 LOGGER.log(Level.SEVERE, "Missing DC::jitter entry for crate/slot = " + crate + "/" + slot);
             jitter = dcrbjitters.getIntValue("jitter", crate, slot);
-//                if(jitter[i]!=-4*bankDGTZ.getByte("order", i)) System.out.println(jitter[i] + " " + -4*bankDGTZ.getByte("order", i));
         }    
         return jitter;
     }
@@ -204,65 +167,25 @@ public class HitReader {
         }
         return jitter;
     }
-    
-    public void fetch_DCHits(DataEvent event, Clas12NoiseAnalysis noiseAnalysis,
-                             NoiseReductionParameters parameters,
-                             Clas12NoiseResult results) {
-        this.initialize(event);
-        this.fetch_DCHits(noiseAnalysis, parameters, results);
-    }
-        
+            
      /**
      * reads the hits using clas-io methods to get the EvioBank for the DC and
      * fill the values to instantiate the DChit and MChit classes.This methods
      * fills the DChit list of hits.
-     *
-     * @param noiseAnalysis
-     * @param parameters
-     * @param results
      */
-    private void fetch_DCHits(Clas12NoiseAnalysis noiseAnalysis,
-                             NoiseReductionParameters parameters,
-                             Clas12NoiseResult results) {
-
-        _DCHits = new ArrayList<>();
-
-        IndexedList<Boolean> noise = new IndexedList<>(4);
+    public void fetch_DCHits(DataEvent event) {
+        this.initialize(event);
         
-        RawDataBank bankDGTZ = new RawDataBank(bankNames.getTdcBank(), OrderGroups.NODENOISE);
-        bankDGTZ.read(event);
-
-        // event selection, including cut on max number of hits
-        if( run <= 0 ||
-            tiTimeStamp < 0 ||
-            bankDGTZ.rows()==0 || bankDGTZ.rows()>Constants.MAXHITS ) {
-            return;
-        }
-        else {
-            int rows = bankDGTZ.rows();
-            int[] sector = new int[rows];
-            int[] layer = new int[rows];
-            int[] superlayer = new int[rows];
-            int[] wire = new int[rows];
-            for (int i = 0; i < rows; i++) {
-                sector[i]     = bankDGTZ.getByte("sector", i);
-                layer[i]      = (bankDGTZ.getByte("layer", i)-1)%6 + 1;
-                superlayer[i] = (bankDGTZ.getByte("layer", i)-1)/6 + 1;
-                wire[i]       = bankDGTZ.getShort("component", i);
-            }
-            results.clear();
-            noiseAnalysis.clear();
-            noiseAnalysis.findNoise(sector, superlayer, layer, wire, results);
-            for(int i=0; i<rows; i++)
-                noise.add(results.noise[i], sector[i], superlayer[i], layer[i], wire[i]);
-        }
-       
-//        DataBank bankDGTZ = event.getBank(bankNames.getTdcBank());
+        _DCHits = new ArrayList<>();
 
         this.getDCRBJitters(Constants.getInstance().isSWAPDCRBBITS());
 
-        RawDataBank bankFiltered = new RawDataBank(bankNames.getTdcBank(), rawBankOrders);
+        RawDataBank bankFiltered = new RawDataBank(bankNames.getTdcBank(event), rawBankOrders);
         bankFiltered.read(event);
+        
+        if(run <= 0 || tiTimeStamp < 0 || bankFiltered.rows() > Constants.MAXHITS) return;
+        
+        this.set_NumTDCBankRows(bankFiltered.rows());
         for (int i = 0; i < bankFiltered.rows(); i++) {
             int sector     = bankFiltered.getByte("sector", i);
             int layer      = (bankFiltered.getByte("layer", i)-1)%6 + 1;
@@ -277,73 +200,32 @@ public class HitReader {
             if (wirestat != null) {
                 if (wirestat.getIntValue("status", sector, layer+(superlayer-1)*6, wire) != 0)
                     passHit = false;
-            }
-            
-            if(noise.hasItem(sector, superlayer, layer, wire)) {
-                if(noise.getItem(sector, superlayer, layer, wire))
-                    passHit = false;
-            }
+            }            
             
             if (passHit && wire != -1 && !(superlayer == 0)) {
 
                 double timeCutMin = 0;
                 double timeCutMax = 0;
-                double timeCutLC = 0;
 
                 int region = ((superlayer + 1) / 2);
-
-                switch (region) {
-                    case 1:
-                        timeCutMin = tdccuts.getIntValue("MinEdge", 0, region, 0);
-                        timeCutMax = tdccuts.getIntValue("MaxEdge", 0, region, 0);
-                        break;
-                    case 2:
-                        if (wire <= 56) {
-                            timeCutLC = tdccuts.getIntValue("LinearCoeff", 0, region, 1);
-                            timeCutMin = tdccuts.getIntValue("MinEdge", 0, region, 1);
-                            timeCutMax = tdccuts.getIntValue("MaxEdge", 0, region, 1);
-                        }
-                        if (wire > 56) {
-                            timeCutLC = tdccuts.getIntValue("LinearCoeff", 0, region, 56);
-                            timeCutMin = tdccuts.getIntValue("MinEdge", 0, region, 56);
-                            timeCutMax = tdccuts.getIntValue("MaxEdge", 0, region, 56);
-                        }
-                        break;
-                    case 3:
-                        timeCutMin = tdccuts.getIntValue("MinEdge", 0, region, 0);
-                        timeCutMax = tdccuts.getIntValue("MaxEdge", 0, region, 0)+timeBuf;
-                        break;
-                }
+                timeCutMin = tdccuts.getIntValue("min", 0, region, wire);
+                timeCutMax = tdccuts.getIntValue("max", 0, region, wire);
+         
                 boolean passTimingCut = false;
 
-                if (region == 1 && tdc > timeCutMin && tdc < timeCutMax)
+                if (tdc > timeCutMin && tdc < timeCutMax)
                     passTimingCut = true;
-                if (region == 2) {
-                    double Bscale = Swimmer.getTorScale() * Swimmer.getTorScale();
-                    if (wire >= 56) {
-                        if (tdc > timeCutMin &&
-                                tdc < timeCutMax + timeCutLC * (double) (112 - wire / 56) * Bscale)
-                            passTimingCut = true;
-                    } else {
-                        if (tdc > timeCutMin &&
-                                tdc < timeCutMax + timeCutLC * (double) (56 - wire / 56) * Bscale)
-                            passTimingCut = true;
-                    }
-                }
-                if (region == 3 && tdc > timeCutMin && tdc < timeCutMax)
-                    passTimingCut = true;
-
+                
                 if (passTimingCut) { // cut on spurious hits
-                    //Hit hit = new Hit(sector, superlayer, layer, wire, smearedTime, 0, 0, hitno);			
                     Hit hit = new Hit(sector, superlayer, layer, wire, tdc, jitter, (index + 1));
                     hit.calc_CellSize(detector);
                     double posError = hit.get_CellSize() / Math.sqrt(12.);
                     hit.set_DocaErr(posError);
+                    hit.set_IndexTDC(index);
                     this._DCHits.add(hit);
                 }
             }
         }
-
     }
     
     public Map<Integer, ArrayList<FittedHit>> read_Hits(DataEvent event) {
@@ -373,7 +255,6 @@ public class HitReader {
             int jitter      = bank.getByte("jitter", i);
             int LR          = bank.getByte("LR", i);
             int clusterID   = bank.getShort("clusterID", i);
-            
         
             //use only hits that have been fit to a track
             if (clusterID == -1) {
@@ -435,7 +316,7 @@ public class HitReader {
         String pointName   = bankNames.getInputIdsBank();
         String recBankName = bankNames.getRecEventBank();
         
-        LOGGER.log(Level.FINE,"Reading hb banks for "+ bankName + ", " + pointName + " " + recBankName);
+        LOGGER.log(Level.FINEST,"Reading hb banks for "+ bankName + ", " + pointName + " " + recBankName);
         
         _HBHits = new ArrayList<>();
 
@@ -572,7 +453,7 @@ public class HitReader {
             //if(hit.betaFlag == 0)
             if(passHit(hit.betaFlag)) {
                 this._HBHits.add(hit);        
-                LOGGER.log(Level.FINE, "Passing "+hit.printInfo()+" for "+ bankNames.getHitsBank());            
+                LOGGER.log(Level.FINEST, "Passing "+hit.printInfo()+" for "+ bankNames.getHitsBank());            
             }
         }
     }
@@ -624,6 +505,7 @@ public class HitReader {
             tPars[2] = (double)bankAI.getFloat("phi", j);
             tPars[3] = (double)bankAI.getByte("id", j);
             
+            aimatch.clear();
             for (int k = 0; k < 6; k++) {
                 aimatch.put(Ids[k], tPars); 
             }
@@ -644,7 +526,7 @@ public class HitReader {
                         hit.NNTrkP      = this.aimatch.get(clusterID)[0];
                         hit.NNTrkTheta  = this.aimatch.get(clusterID)[1];
                         hit.NNTrkPhi    = this.aimatch.get(clusterID)[2];
-                        LOGGER.log(Level.FINE, "NN"+hit.printInfo());
+                        LOGGER.log(Level.FINEST, "NN"+hit.printInfo());
                         this._DCHits.add(hit);
                     }
                 }
@@ -787,8 +669,8 @@ public class HitReader {
         int cable = this.getCableID1to6(layer, wire);
         int slot = this.getSlotID1to7(wire);
 
-        double t0  = t0Table.getDoubleValue("T0Correction", sector, superlayer, slot, cable);
-        double t0E = t0Table.getDoubleValue("T0Error", sector, superlayer, slot, cable);
+        double t0  = t0Table.getDoubleValue("t0correction", sector, superlayer, slot, cable);
+        double t0E = t0Table.getDoubleValue("t0error", sector, superlayer, slot, cable);
 
         T0Corr[0] = t0;
         T0Corr[1] = t0E;
@@ -870,11 +752,11 @@ public class HitReader {
         } else {
             for(int i = 0; i<CableSwaps.length; i++) {
                 if(CableSwaps[i][0]==sector && CableSwaps[i][1]==layer && CableSwaps[i][2]==wire) {
-                   // LOGGER.log(Level.FINE, " swapped "+sector+", "+layer+", "+wire);
+                   // LOGGER.log(Level.FINEST, " swapped "+sector+", "+layer+", "+wire);
                     _sector = CableSwaps[i][3];
                     _layer  = CableSwaps[i][4];
                     _wire   = CableSwaps[i][5];
-                  //  LOGGER.log(Level.FINE, "    to  "+_sector+", "+_layer+", "+_wire);
+                  //  LOGGER.log(Level.FINEST, "    to  "+_sector+", "+_layer+", "+_wire);
                 }
             }
         }
@@ -894,9 +776,9 @@ public class HitReader {
 
         for (int s=1; s<7; s++) {
            if (trigger_bits[s]) {
-               LOGGER.log(Level.FINE, "Trigger bit set for electron in sector "+s);
+               LOGGER.log(Level.FINEST, "Trigger bit set for electron in sector "+s);
            }
-          if (trigger_bits[31])LOGGER.log(Level.FINE, "Trigger bit set from random pulser");
+          if (trigger_bits[31])LOGGER.log(Level.FINEST, "Trigger bit set from random pulser");
         }
 }
     }
@@ -914,5 +796,21 @@ public class HitReader {
             }
             return list;
         }
+    }
+    
+    /**
+     *
+     * @param num # of rows in DC::TDC bank
+     */
+    public void set_NumTDCBankRows(int num){
+        this.numTDCBankRows = num;
+    }
+    
+    /**
+     *
+     * @return # of rows in DC::TDC bank
+     */
+    public int get_NumTDCBankRows(){
+        return numTDCBankRows;
     }
 }

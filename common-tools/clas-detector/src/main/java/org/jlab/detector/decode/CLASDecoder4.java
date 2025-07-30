@@ -10,6 +10,7 @@ import java.util.TreeSet;
 import org.jlab.detector.base.DetectorDescriptor;
 
 import org.jlab.detector.base.DetectorType;
+import org.jlab.detector.calib.utils.RCDBProvider.RCDBManager;
 import org.jlab.detector.decode.DetectorDataDgtz.HelicityDecoderData;
 import org.jlab.detector.helicity.HelicityBit;
 import org.jlab.detector.helicity.HelicitySequence;
@@ -47,8 +48,9 @@ public class CLASDecoder4 {
     private HipoDataEvent               hipoEvent = null;
     private boolean              isRunNumberFixed = false;
     private int                  decoderDebugMode = 0;
-    private SchemaFactory        schemaFactory    = new SchemaFactory();
-    private ModeAHDC ahdcExtractor                = new ModeAHDC();
+    private SchemaFactory           schemaFactory = new SchemaFactory();
+    private ModeAHDC                ahdcExtractor = new ModeAHDC();
+    private RCDBManager               rcdbManager = new RCDBManager();
 
     public CLASDecoder4(boolean development){
         codaDecoder = new CodaEventDecoder();
@@ -70,18 +72,16 @@ public class CLASDecoder4 {
         DefaultLogger.debug();
     }
 
-    public static CLASDecoder createDecoder(){
-        CLASDecoder decoder = new CLASDecoder();
-        return decoder;
-    }
-
-    public static CLASDecoder createDecoderDevel(){
-        CLASDecoder decoder = new CLASDecoder(true);
-        return decoder;
+    public SchemaFactory getSchemaFactory(){
+        return schemaFactory;
     }
 
     public void setVariation(String variation) {
         detectorDecoder.setVariation(variation);
+    }
+
+    public void setTimestamp(String timestamp) {
+        detectorDecoder.setTimestamp(timestamp);
     }
 
     public void setDebugMode(int mode){
@@ -101,7 +101,7 @@ public class CLASDecoder4 {
     }
 
     public CodaEventDecoder getCodaEventDecoder() {
-	return codaDecoder;
+        return codaDecoder;
     }
 
     public void initEvent(DataEvent event){
@@ -139,6 +139,7 @@ public class CLASDecoder4 {
                     
                     detectorDecoder.translate(dataList);
                     detectorDecoder.fitPulses(dataList);
+                    detectorDecoder.filterTDCs(dataList);
                     if(this.decoderDebugMode>0){
                         System.out.println("\n>>>>>>>>> TRANSLATED data");
                         for(DetectorDataDgtz data : dataList){
@@ -248,7 +249,7 @@ public class CLASDecoder4 {
     }
 
     public void extractPulses(Event event) {
-        ahdcExtractor.update(6, null, event, schemaFactory, "AHDC::wf", "AHDC::adc");
+        ahdcExtractor.update(30, null, event, schemaFactory, "AHDC::wf", "AHDC::adc");
     }
 
     public Bank getDataBankWF(String name, DetectorType type) {
@@ -260,6 +261,7 @@ public class CLASDecoder4 {
             b.putShort("component", i, (short) a.get(i).getDescriptor().getComponent());
             b.putByte("order", i, (byte) a.get(i).getDescriptor().getOrder());
             b.putLong("timestamp", i, a.get(i).getADCData(0).getTimeStamp());
+            b.putInt("time", i, (int)a.get(i).getADCData(0).getTime());
             DetectorDataDgtz.ADCData xxx = a.get(i).getADCData(0);
             for (int j=0; j<xxx.getPulseSize(); ++j)
                 b.putShort(String.format("s%d",j+1), i, xxx.getPulseValue(j));
@@ -307,8 +309,10 @@ public class CLASDecoder4 {
             tdcBANK.putByte("sector", i, (byte) tdcDGTZ.get(i).getDescriptor().getSector());
             tdcBANK.putByte("layer", i, (byte) tdcDGTZ.get(i).getDescriptor().getLayer());
             tdcBANK.putShort("component", i, (short) tdcDGTZ.get(i).getDescriptor().getComponent());
-            tdcBANK.putByte("order", i, (byte) tdcDGTZ.get(i).getDescriptor().getOrder());
+            tdcBANK.putByte("order", i, (byte) (tdcDGTZ.get(i).getDescriptor().getOrder()+tdcDGTZ.get(i).getTDCData(0).getType().getTypeId()));
             tdcBANK.putInt("TDC", i, tdcDGTZ.get(i).getTDCData(0).getTime());
+            if(tdcBANK.getSchema().hasEntry("ToT"))
+                tdcBANK.putShort("ToT", i, (short) tdcDGTZ.get(i).getTDCData(0).getToT());
         }
         return tdcBANK;
     }
@@ -332,6 +336,8 @@ public class CLASDecoder4 {
             tdcBANK.putByte("order", i, (byte) tdcDGTZ.get(i).getDescriptor().getOrder());
             tdcBANK.putInt("TDC", i, tdcDGTZ.get(i).getTDCData(0).getTime());
             tdcBANK.putInt("ToT", i, tdcDGTZ.get(i).getTDCData(0).getToT());
+            tdcBANK.putLong("timestamp", i, tdcDGTZ.get(i).getTDCData(0).getTimeStamp());
+            tdcBANK.putInt("trigger", i, tdcDGTZ.get(i).getTrigger());
             //System.err.println("event: " + tdcDGTZ.get(i).toString());
         }
         return tdcBANK;
@@ -433,6 +439,33 @@ public class CLASDecoder4 {
         return scalerBANK;
     }
 
+    public Event getDecodedEvent(EvioDataEvent rawEvent, int run, int counter, Double torus, Double solenoid) {
+
+        Event  decodedEvent = this.getDataEvent(rawEvent);        
+
+        Bank   header = this.createHeaderBank(run, counter, torus, solenoid);
+        if(header!=null) decodedEvent.write(header);
+
+        Bank   trigger = this.createTriggerBank();
+        if(trigger!=null) decodedEvent.write(trigger);
+
+        Bank onlineHelicity = this.createOnlineHelicityBank();
+        if(onlineHelicity!=null) decodedEvent.write(onlineHelicity);
+
+        Bank decodedHelicity = this.createHelicityDecoderBank(rawEvent);
+        if (decodedHelicity!=null) decodedEvent.write(decodedHelicity);
+
+        this.extractPulses(decodedEvent);
+
+        Bank epics = createEpicsBank();
+        if (epics != null) decodedEvent.write(epics);
+
+        for (Bank b : createReconScalerBanks(decodedEvent))
+            decodedEvent.write(b);
+
+        return decodedEvent;
+    }
+
     public Event getDataEvent(DataEvent rawEvent){
         this.initEvent(rawEvent);
         return getDataEvent();
@@ -457,7 +490,7 @@ public class CLASDecoder4 {
                                                           DetectorType.FMT,DetectorType.HEL,DetectorType.RF,
                                                           DetectorType.BAND, DetectorType.RASTER};
 
-        String[] tdcBankNames = new String[]{"FTOF::tdc","ECAL::tdc","DC::tdc",
+        String[] tdcBankNames = new String[]{"FTOF::tdc","ECAL::tdc","DC::tot",
                                              "HTCC::tdc","LTCC::tdc","CTOF::tdc",
                                              "CND::tdc","RF::tdc","RICH::tdc",
                                              "BAND::tdc"};
@@ -587,7 +620,7 @@ public class CLASDecoder4 {
         return ((timestamp%6)+phase_offset)%6; // TI derived phase correction due to TDC and FADC clock differences
     }
 
-    public Bank createHeaderBank( int nrun, int nevent, float torus, float solenoid){
+    public Bank createHeaderBank( int nrun, int nevent, Double torus, Double solenoid){
 
         if(schemaFactory.hasSchema("RUN::config")==false) return null;
 
@@ -604,24 +637,31 @@ public class CLASDecoder4 {
             localEvent = nevent;
         }
 
-        /*
-        // example of getting torus/solenoid from RCDB:
-        if (Math.abs(solenoid)>10) {
-            solenoid = this.detectorDecoder.getRcdbSolenoidScale();
-        }
-        if (Math.abs(torus)>10) {
-            torus = this.detectorDecoder.getRcdbTorusScale();
-        }
-        */
-
         bank.putInt("run",        0, localRun);
         bank.putInt("event",      0, localEvent);
         bank.putInt("unixtime",   0, localTime);
         bank.putLong("trigger",   0, triggerBits);
-        bank.putFloat("torus",    0, torus);
-        bank.putFloat("solenoid", 0, solenoid);
         bank.putLong("timestamp", 0, timeStamp);
 
+        if (torus != null) {
+            bank.putFloat("torus", 0, torus.floatValue());
+        }
+        else if (rcdbManager.getTorusScale(localRun) == null) {
+            if (localRun > 100) throw new RuntimeException("Error retrieving torus scale from RCDB.");
+        }
+        else { 
+            bank.putFloat("torus", 0, rcdbManager.getTorusScale(localRun).floatValue());
+        }
+        if (solenoid != null) {
+            bank.putFloat("solenoid", 0, solenoid.floatValue());
+        }
+        else if (rcdbManager.getSolenoidScale(localRun) == null) {
+            if (localRun > 100) throw new RuntimeException("Error retrieving solenoid scale from RCDB.");
+        }
+        else { 
+            bank.putFloat("solenoid", 0, rcdbManager.getSolenoidScale(localRun).floatValue());
+        }
+        
         return bank;
     }
 
@@ -747,27 +787,47 @@ public class CLASDecoder4 {
         else 
             return null;
     }
-    
-    
+
+    public static Event createTaggedEvent(Event e, Bank runConfig, Bank... banks) {
+        Event t = new Event();
+        for (Bank b : banks) {
+            e.read(b);
+            if (b.getRows() > 0) t.write(b);
+        }
+        if (!t.isEmpty()) {
+            e.read(runConfig);
+            t.write(runConfig);
+        }
+        return t;
+    }
+
+    public static Event createTaggedEvent(SchemaFactory sf, Event e, String... banks) {
+        Bank[] b = new Bank[banks.length];
+        for (int i=0; i<banks.length; ++i) {
+            b[i] = new Bank(sf.getSchema(banks[i]));
+        }
+        return createTaggedEvent(e, new Bank(sf.getSchema("RUN::config")), b);
+    }
+
+    public Event createTaggedEvent(Event e, String... banks) {
+        return createTaggedEvent(schemaFactory, e, banks);
+    }
+
     public static void main(String[] args){
 
         OptionParser parser = new OptionParser("decoder");
-
         parser.setDescription("CLAS12 Data Decoder");
         parser.addOption("-n", "-1", "maximum number of events to process");
         parser.addOption("-c", "2", "compression type (0-NONE, 1-LZ4 Fast, 2-LZ4 Best, 3-GZIP)");
         parser.addOption("-d", "0","debug mode, set >0 for more verbose output");
         parser.addOption("-m", "run","translation tables source (use -m devel for development tables)");
         parser.addOption("-b", "16","record buffer size in MB");
-        parser.addRequired("-o","output.hipo");
-
-
         parser.addOption("-r", "-1","run number in the header bank (-1 means use CODA run)");
-        parser.addOption("-t", "-0.5","torus current in the header bank");
-        parser.addOption("-s", "0.5","solenoid current in the header bank");
+        parser.addOption("-t", null,"torus current in the header bank (null means use RCDB)");
+        parser.addOption("-s", null,"solenoid current in the header bank (null means use RCDB)");
         parser.addOption("-x", null,"CCDB timestamp (MM/DD/YYYY-HH:MM:SS)");
         parser.addOption("-v","default","CCDB variation");
-
+        parser.addRequired("-o","output.hipo");
         parser.parse(args);
 
         List<String> inputList = parser.getInputList();
@@ -775,7 +835,7 @@ public class CLASDecoder4 {
         if(inputList.isEmpty()==true){
             parser.printUsage();
             System.out.println("\n >>>> error : no input file is specified....\n");
-            System.exit(0);
+            System.exit(1);
         }
 
         String modeDevel = parser.getOption("-m").stringValue();
@@ -784,7 +844,7 @@ public class CLASDecoder4 {
         if(modeDevel.compareTo("run")!=0&&modeDevel.compareTo("devel")!=0){
             parser.printUsage();
             System.out.println("\n >>>> error : mode has to be set to \"run\" or \"devel\" ");
-            System.exit(0);
+            System.exit(1);
         }
 
         if(modeDevel.compareTo("devel")==0){
@@ -804,14 +864,12 @@ public class CLASDecoder4 {
         writer.setCompressionType(compression);
         writer.getSchemaFactory().initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4"));
 
-        Bank  rawScaler   = new Bank(writer.getSchemaFactory().getSchema("RAW::scaler"));
         Bank  rawRunConf  = new Bank(writer.getSchemaFactory().getSchema("RUN::config"));
         Bank  helicityAdc = new Bank(writer.getSchemaFactory().getSchema("HEL::adc"));
-        Event scalerEvent = new Event();
 
         int nrun = parser.getOption("-r").intValue();
-        double torus = parser.getOption("-t").doubleValue();
-        double solenoid = parser.getOption("-s").doubleValue();
+        Double torus = parser.getOption("-t").getValue() == null ? null : parser.getOption("-t").doubleValue();
+        Double solenoid = parser.getOption("-s").getValue() == null ? null : parser.getOption("-s").doubleValue();
 
         writer.open(outputFile);
         ProgressPrintout progress = new ProgressPrintout();
@@ -838,46 +896,17 @@ public class CLASDecoder4 {
             while(reader.hasEvent()==true){
                 EvioDataEvent event = (EvioDataEvent) reader.getNextEvent();
                 
-                Event  decodedEvent = decoder.getDataEvent(event);
+                Event  decodedEvent = decoder.getDecodedEvent(event, nrun, counter, torus, solenoid);
                 
-                Bank   header = decoder.createHeaderBank( nrun, counter, (float) torus, (float) solenoid);
-                if(header!=null) decodedEvent.write(header);
-                Bank   trigger = decoder.createTriggerBank();
-                if(trigger!=null) decodedEvent.write(trigger);
-                Bank onlineHelicity = decoder.createOnlineHelicityBank();
-                if(onlineHelicity!=null) decodedEvent.write(onlineHelicity);
-                Bank decodedHelicity = decoder.createHelicityDecoderBank(event);
-                if (decodedHelicity!=null) decodedEvent.write(decodedHelicity);
-                
-                Bank epics = decoder.createEpicsBank();
-                
-                decodedEvent.read(rawScaler);
                 decodedEvent.read(rawRunConf);
                 decodedEvent.read(helicityAdc);
-
-                decoder.extractPulses(decodedEvent);
 
                 helicityReadings.add(HelicityState.createFromFadcBank(helicityAdc, rawRunConf,
                     decoder.detectorDecoder.scalerManager));
 
-                if(rawScaler.getRows()>0 || epics!=null) {
-                    scalerEvent.reset();
-                    
-                    if(rawScaler.getRows()>0) scalerEvent.write(rawScaler);
-                    if(rawRunConf.getRows()>0) scalerEvent.write(rawRunConf);
-
-                    for (Bank b : decoder.createReconScalerBanks(decodedEvent)) {
-                        decodedEvent.write(b);
-                        scalerEvent.write(b);
-                    }
-
-                    if (epics!=null) {
-                        decodedEvent.write(epics);
-                        scalerEvent.write(epics);
-                    }
-
-                    writer.addEvent(scalerEvent, 1);
-                }
+                Event taggedEvent = decoder.createTaggedEvent(decodedEvent, "RAW::epics","RAW::scaler","RUN::scaler","HEL::scaler");
+                if (!taggedEvent.isEmpty())
+                    writer.addEvent(taggedEvent, 1);
                 
                 writer.addEvent(decodedEvent,0);
                 

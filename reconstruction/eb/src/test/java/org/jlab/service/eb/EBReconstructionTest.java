@@ -7,10 +7,10 @@ import org.jlab.analysis.physics.TestEvent;
 import org.jlab.analysis.math.ClasMath;
 import org.jlab.clas.swimtools.MagFieldsEngine;
 import cnuphys.magfield.MagneticFields;
+import org.jlab.detector.base.DetectorType;
 
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
-import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.logging.DefaultLogger;
 import org.jlab.service.dc.DCHBEngine;
 import org.jlab.service.dc.DCTBEngine;
@@ -20,7 +20,6 @@ import org.jlab.service.htcc.HTCCReconstructionService;
 import org.jlab.service.ltcc.LTCCEngine;
 
 import org.jlab.utils.CLASResources;
-import org.jlab.utils.system.ClasUtilsFile;
 
 /**
  *
@@ -110,13 +109,9 @@ public class EBReconstructionTest {
     @Test
     public void testEBReconstruction() {
         DefaultLogger.debug();
-
         System.setProperty("CLAS12DIR", "../../");
-        String dir = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4");
-        SchemaFactory schemaFactory = new SchemaFactory();
-        schemaFactory.initFromDirectory(dir);
-        
-        DataEvent photonEvent = TestEvent.getECSector1PhotonEvent(schemaFactory);
+
+        DataEvent photonEvent = TestEvent.get(DetectorType.ECAL);
         processAllEngines(photonEvent);
         assertEquals(photonEvent.hasBank("RECHB::Event"), true);
         assertEquals(photonEvent.hasBank("RECHB::Particle"), true);
@@ -132,7 +127,7 @@ public class EBReconstructionTest {
         assertEquals(photonEvent.getBank("RECHB::Particle").getFloat("py", 0) < 0.15, true);
         assertEquals(ClasMath.isWithinXPercent(25.0, photonEvent.getBank("RECHB::Particle").getFloat("pz", 0), 2.266), true);
 
-        DataEvent electronEvent = TestEvent.getDCSector1ElectronEvent(schemaFactory);
+        DataEvent electronEvent = TestEvent.get(DetectorType.DC);
         processAllEngines(electronEvent);
         assertEquals(electronEvent.hasBank("REC::Event"), true);
         assertEquals(electronEvent.hasBank("REC::Particle"), true);

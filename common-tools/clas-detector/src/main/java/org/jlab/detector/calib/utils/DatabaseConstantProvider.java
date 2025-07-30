@@ -142,15 +142,15 @@ public class DatabaseConstantProvider implements ConstantProvider {
 
         provider = CCDB.createProvider(address);
 
-        LOGGER.log(Level.INFO, "[DB] --->  open connection with : {0}", address);
-        LOGGER.log(Level.INFO, "[DB] --->  database variation   : {0}", this.variation);
-        LOGGER.log(Level.INFO, "[DB] --->  database run number  : {0}", this.runNumber);
-        LOGGER.log(Level.INFO, "[DB] --->  database time stamp  : {0}", databaseDate);
+        LOGGER.log(Level.FINE, "[DB] --->  open connection with : {0}", address);
+        LOGGER.log(Level.FINE, "[DB] --->  database variation   : {0}", this.variation);
+        LOGGER.log(Level.FINE, "[DB] --->  database run number  : {0}", this.runNumber);
+        LOGGER.log(Level.FINE, "[DB] --->  database time stamp  : {0}", databaseDate);
         
         provider.connect();
         
         if(provider.isConnected()){
-            LOGGER.log(Level.INFO,"[DB] --->  database connection  : success");
+            LOGGER.log(Level.FINE,"[DB] --->  database connection  : success");
         } else {
             LOGGER.log(Level.SEVERE,"[DB] --->  database connection  : failed");
         }
@@ -277,8 +277,8 @@ public class DatabaseConstantProvider implements ConstantProvider {
             
             int ncolumns = asgmt.getColumnCount();
             Vector<TypeTableColumn> typecolumn = asgmt.getTypeTable().getColumns();
-            LOGGER.log(Level.INFO, "[DB LOAD] ---> loading data table : {0}", table_name);
-            LOGGER.log(Level.INFO, "[DB LOAD] ---> number of columns  : {0}", typecolumn.size());
+            LOGGER.log(Level.FINE, "[DB LOAD] ---> loading data table : {0}", table_name);
+            LOGGER.log(Level.FINE, "[DB LOAD] ---> number of columns  : {0}", typecolumn.size());
             for(int loop = 0; loop < ncolumns; loop++){
                 String name = typecolumn.get(loop).getName();
                 Vector<String> row = asgmt.getColumnValuesString(name);
@@ -345,7 +345,7 @@ public class DatabaseConstantProvider implements ConstantProvider {
     }
     
     public void disconnect(){
-        LOGGER.log(Level.INFO,"[DB] --->  database disconnect  : success");
+        LOGGER.log(Level.FINE,"[DB] --->  database disconnect  : success");
         this.provider.close();
     }
 

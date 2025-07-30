@@ -10,6 +10,7 @@ import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
+import org.jlab.logging.DefaultLogger;
 import org.jlab.utils.groups.IndexedTable;
 
 /**
@@ -21,7 +22,7 @@ import org.jlab.utils.groups.IndexedTable;
  * 
  * @author baltzell
  */
-public class SwapManager {
+public final class SwapManager {
 
     public static final String DEF_CURRENT_CCDB_VARIATION = "swaps";
     public static final String DEF_PREVIOUS_CCDB_VARIATION = "default";
@@ -53,6 +54,7 @@ public class SwapManager {
     private final Map<String,String> detsToTables = new HashMap<>();
     private ConstantsManager prevConman = null;
     private ConstantsManager currConman = null;
+    private SchemaFactory schema = null;
 
     private static SwapManager instance = null;
 
@@ -137,9 +139,7 @@ public class SwapManager {
         if (this.swaps.get(run).containsKey(tableName)) {
             return this.swaps.get(run).get(tableName).get(slco);
         }
-        else {
-            return slco;
-        }
+        return slco;
     }
 
     /**
@@ -213,11 +213,26 @@ public class SwapManager {
         return ret;
     }
 
+    private void initDetector(String detName, String bankName, String tableName) {
+        if (schema.hasSchema(bankName)) {
+            this.banksToTables.put(bankName,tableName);
+            this.detsToTables.put(detName,tableName);
+            if (!this.detsToBanks.containsKey(detName)) {
+                this.detsToBanks.put(detName,new ArrayList<>());
+            }
+            this.detsToBanks.get(detName).add(bankName);
+        }
+    }
+    
     /**
      * Initialize the appropriate bank names and corresponding translation
      * table names, based on the given detector names.
      */
-    private final void initDetectors(List<String> detectorNames) {
+    private void initDetectors(List<String> detectorNames) {
+
+        // initialize schema:
+        schema = new SchemaFactory();
+        schema.initFromDirectory(System.getenv("CLAS12DIR")+"/etc/bankdefs/hipo4");
         
         // register the detector names:
         List<String> thisDets = new ArrayList<>();
@@ -236,27 +251,26 @@ public class SwapManager {
                 }
             }
         }
-       
+
         // set their bank/table names:
-        SchemaFactory schema = new SchemaFactory();
-        schema.initFromDirectory(System.getenv("CLAS12DIR")+"/etc/bankdefs/hipo4");
         for (String detName : thisDets) {
             // some detectors broke the bank/table naming convention:
             String tableName = detName.equals("BST") ? "/daq/tt/svt" : "/daq/tt/"+detName.toLowerCase();
-            for (String suffix : new String[]{"::adc","::tdc"}) {
-                if (schema.hasSchema(detName+suffix)) {
-                    this.banksToTables.put(detName+suffix,tableName);
-                    this.detsToTables.put(detName,tableName);
-                    if (!this.detsToBanks.containsKey(detName)) {
-                        this.detsToBanks.put(detName,new ArrayList<String>());
-                    }
-                    this.detsToBanks.get(detName).add(detName+suffix);
-                }
+            for (String suffix : new String[]{"::adc","::tdc","::tot"}) {
+                if (suffix.equals("::tot"))
+                    initDetector(detName+"2", detName+suffix, tableName);
+                else
+                    initDetector(detName, detName+suffix, tableName);
             }
         }
     }
 
     public static void main(String[] args) {
+        
+        DefaultLogger.debug();
+
+        SwapManager man1 = new SwapManager(Arrays.asList("DC"),"08/10/2020","10/13/2024");
+        System.err.println(man1.banksToTables.get("DC::tot"));
 
         SwapManager noman = getInstance();
         System.out.println(Arrays.toString(noman.get(11014, "/daq/tt/bmt",3,5,320,0)));
@@ -267,7 +281,6 @@ public class SwapManager {
         System.out.println(man.get(11014,man.getTable("BMT"),"sector",99,22,33,44));
         System.out.println(Arrays.toString(man.get(11014,man.getTable("BMT"),99,22,33,44)));
         System.out.println(Arrays.toString(man.get(11014,man.getTable("BMT"),3,5,320,0)));
-
     }
 
 }
