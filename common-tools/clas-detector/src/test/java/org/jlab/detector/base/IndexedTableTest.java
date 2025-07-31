@@ -22,11 +22,11 @@ public class IndexedTableTest {
         }
 
         for (int i=0; i<2e4; ++i){
-            if (i > 1e4) Benchmark.getInstance().resume("GC");
+            if (i > 1e4) Benchmark.getInstance().resume("IT:GIV");
             for (int j=0; j<csc.length; ++j){
                 it.getIntValue("sector",csc[j][0],csc[j][1],csc[j][2]);
             }
-            Benchmark.getInstance().pause("GC");
+            Benchmark.getInstance().pause("IT:GIV");
         }
         System.out.println(Benchmark.getInstance());
     }
