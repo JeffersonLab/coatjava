@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.io.evio;
 
 import java.io.File;
@@ -20,7 +15,6 @@ import org.jlab.coda.et.EtStationConfig;
 import org.jlab.coda.et.EtSystem;
 import org.jlab.coda.et.EtSystemOpenConfig;
 import org.jlab.coda.et.enums.Mode;
-import org.jlab.coda.et.enums.Modify;
 import org.jlab.coda.et.exception.EtBusyException;
 import org.jlab.coda.et.exception.EtClosedException;
 import org.jlab.coda.et.exception.EtDeadException;
@@ -38,7 +32,6 @@ import org.jlab.io.base.DataSource;
 import org.jlab.io.base.DataSourceType;
 import org.jlab.utils.options.OptionParser;
 
-
 /**
  *
  * @author gavalian
@@ -46,7 +39,6 @@ import org.jlab.utils.options.OptionParser;
 
 public class EvioETSource implements DataSource {
     
-
     private Boolean  connectionOK = false;
     private String   etRingHost   = "localhost";
     private Integer  etRingPort   = 11111;
@@ -58,7 +50,7 @@ public class EvioETSource implements DataSource {
     private Integer       MAX_NEVENTS = 20;
     private int           currentEventPosition = 0;
     
-    List<EvioDataEvent>   readerEvents     = new ArrayList<EvioDataEvent>();
+    List<EvioDataEvent>   readerEvents     = new ArrayList<>();
 
     public EvioETSource(){
         this.etRingPort = EtConstants.serverPort;
@@ -127,29 +119,19 @@ public class EvioETSource implements DataSource {
             if(this.remoteConnection==true){
                 config.setConnectRemotely(true);
             }
-            //config.setConnectRemotely(true);
-            //System.out.println("-------------->>>>> CONNECTING REMOTELY");
-            
-            //System.out.println("-------------->>>>> CONNECTING LOCALY");
             
             sys = new EtSystem(config);
             sys.setDebug(EtConstants.debugInfo);
             sys.open();
             
             EtStationConfig statConfig = new EtStationConfig();
-            //statConfig.setBlockMode(EtConstants.stationBlocking);
             statConfig.setBlockMode(EtConstants.stationNonBlocking);
             
             statConfig.setUserMode(EtConstants.stationUserMulti);
             statConfig.setRestoreMode(EtConstants.stationRestoreOut);
-            //EtStation station = sys.createStation(statConfig, "GRAND_CENTRAL");
             EtStation station = sys.createStation(statConfig, this.etStation);
             
             myAttachment = sys.attach(station);
-            
-            //this.loadEvents();
-            //sys.detach(myAttachment);
-            //System.out.println("[ET-RING] ----> opened a stream with events # = " + this.readerEvents.size());
             
         } catch (EtException ex) {
             this.connectionOK = false;
@@ -198,30 +180,13 @@ public class EvioETSource implements DataSource {
                             ByteBuffer  evioBuffer = ByteBuffer.allocate(events[nevent].getLength());
                             evioBuffer.put(data, 0, length);
                             evioBuffer.order(buffer.order());                                                    
-                            //EvioReader reader;
-                            //System.out.println("------> parsing event # " + nevent + 
-                            //        " width length = " + length);
                             try {
-                                //reader = new EvioReader(buffer);
                                 EvioCompactReader reader = new EvioCompactReader(buffer);
-                                //EvioEvent  event = reader.parseNextEvent();
-                                /*List<BaseStructure>  nodes = event.getChildrenList();
-                                System.out.println("----> rawbytes size = " + event.getRawBytes().length);
-                                for(BaseStructure base : nodes){
-                                    System.out.println("----> event # " + nevent + " " + base);
-                                }*/
                                 ByteBuffer  localBuffer = reader.getEventBuffer(1);
-                                /*
-                                EvioDataEvent dataEvent = new EvioDataEvent(
-                                        event.getRawBytes(),reader.getByteOrder(),
-                                        EvioFactory.getDictionary());
-                                        */
-                                //System.out.println("---> compact event buffer size = " + localBuffer.capacity());
                                 EvioDataEvent dataEvent = new EvioDataEvent(localBuffer,EvioFactory.getDictionary());
                                 this.readerEvents.add(dataEvent);                                
                             } catch (EvioException ex) {
                                 System.out.println("*** ERROR *** : problem reading event # " + nevent );
-                                //Logger.getLogger(EvioETSource.class.getName()).log(Level.SEVERE, null, ex);
                             }
                         }
                     }
@@ -281,6 +246,7 @@ public class EvioETSource implements DataSource {
         
     }
     
+    @Override
     public DataEvent getNextEvent() {
         if(this.currentEventPosition<this.readerEvents.size()){
             EvioDataEvent evt = this.readerEvents.get(this.currentEventPosition);
@@ -366,46 +332,6 @@ public class EvioETSource implements DataSource {
                 Logger.getLogger(EvioETSource.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        /*
-        String ethost = "129.57.76.215";
-        String file   = "/tmp/myEtRing";
-        Boolean isRemote = false;
-        
-        if(args.length>1){
-            ethost = args[0];
-            file   = args[1];
-        } else {
-            System.out.println("\n\n\nUsage : et-connect host etfile\n");
-            System.exit(0);            
-        }
-        
-        if(args.length>2){
-            String flag = args[2];
-            if(flag.compareTo("true")==0){
-                isRemote = true;
-            }
-        }
-        
-        EvioETSource reader = new EvioETSource(ethost);
-        reader.setRemote(isRemote);
-        reader.open(file);
-        //for(int loop = 0 ; loop < 10 ; loop++){
-        int counter = 0;
-        EvioEventDecoder  decoder = new EvioEventDecoder();
-        while(reader.hasEvent()){  
-            counter++;
-            System.out.println("Reading next event # " + counter);
-            EvioDataEvent event = (EvioDataEvent) reader.getNextEvent();
-            if(event!=null) {
-                System.out.println("------> received an event");
-                event.getHandler().list();
-                List<DetectorRawData> rawdata = decoder.getDataEntries(event);
-                for(DetectorRawData data : rawdata){
-                    System.out.println(data);
-                }
-            }
-        }*/
-        //}
     }
 
     @Override

@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.io.hipo;
 
 import java.util.HashMap;
@@ -16,9 +11,6 @@ import org.jlab.io.base.DataDictionary;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Schema;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
-
-
-
 
 /**
  *
@@ -37,11 +29,9 @@ public class HipoDataDictionary implements DataDictionary {
         }
         factory.initFromDirectory(envCLAS + "/" + "etc/bankdefs/hipo4");
         List<Schema> entries = factory.getSchemaList();
-        //System.out.println(" schema size = " + entries.size());
         for(Schema sch : entries){
             HipoDataDescriptor desc = new HipoDataDescriptor(sch);
             descriptors.put(desc.getName(), desc);
-            //System.out.println("name = " + sch.getName() + "  desc = " + desc.getName());
         }
         System.out.println("  >>>>> loading default dictionary : entries = " + descriptors.size());
     }
@@ -55,8 +45,6 @@ public class HipoDataDictionary implements DataDictionary {
     public String getXML() {
         return "<xml></xml>";
     }
-
-    
     
     @Override
     public String[] getDescriptorList() {
@@ -80,8 +68,6 @@ public class HipoDataDictionary implements DataDictionary {
         Schema schema = descriptors.get(name).getSchema();
         Bank bank = new Bank(schema,rows);
         HipoDataBank dataBank = new HipoDataBank(bank);
-        //Map<Integer,HipoNode>  map = descriptors.get(name).getSchema().createNodeMap(rows);
-        //HipoDataBank bank = new HipoDataBank(map,descriptors.get(name).getSchema());
         return dataBank;
     }
     

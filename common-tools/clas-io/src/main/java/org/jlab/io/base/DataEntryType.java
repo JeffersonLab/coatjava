@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.jlab.io.base;
 
 /**
@@ -19,9 +13,6 @@ public enum DataEntryType {
     LONG      (4,8,"int64"),
     FLOAT     (5,4,"float32"),
     DOUBLE    (6,8,"float64");
-    //CHAR8     (7,1,"CHAR8"),
-    //INT32     (8,4,"INT32");
-    
     
     private final int    typeId;
     private final int    typeSize;
