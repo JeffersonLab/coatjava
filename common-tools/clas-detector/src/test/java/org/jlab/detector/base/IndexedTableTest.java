@@ -9,11 +9,13 @@ public class IndexedTableTest {
 
     @Test
     public void run(){
-        ConstantsManager manager = new ConstantsManager("default");
-        manager.init("/daq/tt/ec","/daq/tt/ftof");
 
+        // Retrieve CCDB table:
+        ConstantsManager manager = new ConstantsManager("default");
+        manager.init("/daq/tt/ec");
         IndexedTable it = manager.getConstants(10, "/daq/tt/ec");
 
+        // Store its valid crate/slot/channel indices:
         int csc[][] = new int[it.getRowCount()][3];
         for (int row=0; row<it.getRowCount(); ++row){
             csc[row][0] = Integer.parseInt((String)it.getValueAt(row,0));
@@ -21,8 +23,11 @@ public class IndexedTableTest {
             csc[row][2] = Integer.parseInt((String)it.getValueAt(row,2));
         }
 
+        // Read the table many times:
         for (int i=0; i<2e4; ++i){
+            // Ignore initial reads, let it warm up first:
             if (i > 1e4) Benchmark.getInstance().resume("IT:GIV");
+            // Read every table row:
             for (int j=0; j<csc.length; ++j){
                 it.getIntValue("sector",csc[j][0],csc[j][1],csc[j][2]);
             }
