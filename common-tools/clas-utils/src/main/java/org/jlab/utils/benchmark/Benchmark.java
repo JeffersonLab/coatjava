@@ -66,8 +66,7 @@ public class Benchmark {
     
     public void pause(String name){
         if(timerStore.containsKey(name)==false){
-            System.err.println("[Benchmark] -----> error. no timer defined with name ("
-            + name + ")");
+            addTimer(name);
         } else {
             timerStore.get(name).pause();
         }
