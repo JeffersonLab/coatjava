@@ -68,8 +68,6 @@ public class SwimSerializer {
 		if (file.exists()) {
 			file.delete(); // Delete the file if it exists
 		}
-		
-		CLAS12Swimmer.DEBUG = true; // Turn on debugging
 	}
 	
 	/**
