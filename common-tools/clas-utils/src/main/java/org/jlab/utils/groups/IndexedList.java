@@ -35,8 +35,13 @@ public class IndexedList<T> {
      * Constructs an IndexedList with the specified number of indices.
      *
      * @param indsize the number of indices
+     * @throws IllegalArgumentException if indsize is greater than 4, 
+     * in which case a custom byte shift array should be used
      */
     public IndexedList(int indsize) {
+        if (indsize > 4) {
+            throw new IllegalArgumentException("Index size cannot be greater than 4, use custom byte shift array instead.");
+        }
         this.indexSize = indsize;
         //Initialization with the default index
         this.indexGenerator = new IndexGenerator();
@@ -74,7 +79,7 @@ public class IndexedList<T> {
         if (!isValidIndex(index)) {
             throw new IllegalArgumentException("Index length mismatch: expected " + this.indexSize);
         }
-        for (int i = 0; i < index.length-1; i++) {
+        for (int i = 0; i < index.length - 1; i++) {
             int bits = (i != 0)
                     ? indexGenerator.getByteShifts()[i] - indexGenerator.getByteShifts()[i + 1]
                     : 64 - indexGenerator.getByteShifts()[i]; // First field: number of bits from shift to 64
