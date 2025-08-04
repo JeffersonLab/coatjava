@@ -74,12 +74,13 @@ public class FTEBEngineTest extends ReconstructionEngine {
     public static H2F hSeedDet1 = new H2F("lay 4 vs lay3 cluster seeds fo form a cross", 768/4, -0.5, 767.5, 768/4, -0.5, 767.5);
     
     public static Point3D centerOfTarget = new Point3D(0., 0., -3.);
-    
-   
 
     public FTEBEngineTest() {
         super("FTEB", "devita", "3.0");
     }
+
+    @Override
+    public void detectorChanged(int i) {}
 
     @Override
     public boolean init() {
