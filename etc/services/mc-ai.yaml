@@ -61,7 +61,7 @@ services:
     name: RTPC
   - class: org.jlab.rec.service.vtx.VTXEngine
     name: VTX
-  - class: org.jlab.calibration.service.CalibBanksEngine
+  - class: org.jlab.calibration.service.CalibBankEngine
     name: CALIB
 configuration:
 #  global:
