@@ -74,6 +74,8 @@ services:
     name: RICH
   - class: org.jlab.service.rtpc.RTPCEngine
     name: RTPC
+  - class: org.jlab.calibration.service.CalibEngine
+    name: CALIB    
 configuration:
   global:
     variation: rgb_spring2019
