@@ -70,7 +70,7 @@ services:
     name: RICH
   - class: org.jlab.service.rtpc.RTPCEngine
     name: RTPC
-  - class: org.jlab.calibration.service.CalibEngine
+  - class: org.jlab.calibration.service.CalibBanksEngine
     name: CALIB
 configuration:
   services:
