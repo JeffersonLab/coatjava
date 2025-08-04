@@ -32,11 +32,14 @@
 # infrastructure
 .github/ @baltzell @raffaelladevita @c-dilks
 .gitlab-ci.yml @baltzell @raffaelladevita @c-dilks
-.gitlab-rgl.yml @whit2333
 bin/ @baltzell @raffaelladevita @c-dilks
 docs/ @baltzell @raffaelladevita @c-dilks
 external-dependencies/ @baltzell @raffaelladevita @c-dilks
 libexec/ @baltzell @raffaelladevita @c-dilks
+
+# RG-L (ALERT)
+.gitlab-rgl.yml @whit2333
+.containers/ @whit2333
 
 # common-tools
 common-tools/clara-io/ @baltzell
