@@ -260,6 +260,10 @@ public class CodaEventDecoder {
                 // FTCAL and EC/PCAL
                 return this.getDataEntries_57617(crate, node, event);
             }
+            else if(node.getTag()==57603){
+                //  This is regular integrated pulse mode, used for streaming
+                return this.getDataEntries_57603(crate, node, event);
+            }
             else if(node.getTag()==57602){
                 //  This is regular integrated pulse mode, used for FTOF
                 // FTCAL and EC/PCAL
@@ -905,6 +909,78 @@ public class CodaEventDecoder {
                             entry.setTimeStamp(time);
                             entries.add(entry);
                             position+=4;
+                        }
+                        counter++;
+                    }
+                }
+                return entries;
+            } catch (EvioException ex) {
+                Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        return entries;
+    }
+
+    /**
+     * Decoding MODE 7 data. for given crate.
+     * @param crate
+     * @param node
+     * @param event
+     * @return
+     */
+//      <dictEntry name="FADC250 Pulse Integral Data (mode 3)" tag="0xe103" num="0" type="composite">
+//            <description format="c,i,l,N(c,N(s,i))">
+//                  c     "slot number" (8bit)
+//                  i     "trigger number" (32bit)
+//                  l     "time stamp" (64bit)
+//                  N     "number of channels fired" (32bit)
+//                  c     "channel number" (8bit)
+//                  N     "number of pulses" (32bit)
+//                  s     "tdc value" (16bit)
+//                  i     "adc value" (32bit)
+//            </description>
+//      </dictEntry>
+    public List<DetectorDataDgtz>  getDataEntries_57603(Integer crate, EvioNode node, EvioDataEvent event){
+        List<DetectorDataDgtz>  entries = new ArrayList<>();
+        if(node.getTag()==57603){
+            try {
+                ByteBuffer     compBuffer = node.getByteData(true);
+                CompositeData  compData = new CompositeData(compBuffer.array(),event.getByteOrder());
+
+                List<DataType> cdatatypes = compData.getTypes();
+                List<Object>   cdataitems = compData.getItems();
+
+                if(cdatatypes.get(3) != DataType.NVALUE){
+                    System.err.println("[EvioRawDataSource] ** error ** corrupted "
+                    + " bank. tag = " + node.getTag() + " num = " + node.getNum());
+                    return null;
+                }
+
+                int position = 0;
+                while((position+4)<cdatatypes.size()){
+
+                    Byte    slot = (Byte)     cdataitems.get(position+0);
+                    //Integer trig = (Integer)  cdataitems.get(position+1);
+                    Long    time = (Long)     cdataitems.get(position+2);
+
+                    Integer nchannels = (Integer) cdataitems.get(position+3);
+                    position += 4;
+                    int counter  = 0;
+                    while(counter<nchannels){
+                        Byte channel   = (Byte) cdataitems.get(position);
+                        Integer length = (Integer) cdataitems.get(position+1);
+
+                        position += 2;
+                        for(int loop = 0; loop < length; loop++){
+                            Short tdc    = (Short) cdataitems.get(position);
+                            Integer adc  = (Integer) cdataitems.get(position+1);
+                            DetectorDataDgtz  entry = new DetectorDataDgtz(crate,slot,channel);
+                            ADCData   adcData = new ADCData();
+                            adcData.setIntegral(adc).setTimeWord(tdc);
+                            entry.addADC(adcData);
+                            entry.setTimeStamp(time);
+                            entries.add(entry);
+                            position+=2;
                         }
                         counter++;
                     }
