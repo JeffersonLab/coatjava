@@ -12,13 +12,13 @@ import org.jlab.io.base.DataEvent;
  *
  * @author devita
  */
-public class DCCalibrator extends DetectorCalibrator {
+public class DCBankBuilder extends CalibBankBuilder {
 
     private static final int MINCLUSTERSIZE = 5;
     private static final double MAXRESIDUAL = 0.1; // cm
     private static final double CHI2PIDCUT  = 5; // cm
     
-    public DCCalibrator() {
+    public DCBankBuilder() {
         super(DetectorType.DC);
         super.init("TimeBasedTrkg::TBHits","TimeBasedTrkg::TBHits","TimeBasedTrkg::TBTracks", 
                    "REC::Track", "REC::Particle");
