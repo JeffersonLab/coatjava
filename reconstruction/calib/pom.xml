@@ -20,15 +20,20 @@
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-io</artifactId>
-    <version>13.1.0-SNAPSHOT</version>
+      <version>13.1.0-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jlab.clas</groupId>
+      <artifactId>clas-detector</artifactId>
+      <version>13.1.0-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-reco</artifactId>
-    <version>13.1.0-SNAPSHOT</version>
+      <version>13.1.0-SNAPSHOT</version>
     </dependency>
 
   </dependencies>
-    <name>clas12detector-calib</name>
 </project>
