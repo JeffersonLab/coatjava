@@ -381,7 +381,7 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
                 else {
                     good++;
                     // do something useful with beam charge here:
-                    System.out.println(timestamp+" "+ds.dsc2.getBeamCharge()+" "+ds.dsc2.getBeamChargeGated());
+                    // System.out.println(timestamp+" "+ds.dsc2.getBeamCharge()+" "+ds.dsc2.getBeamChargeGated());
                 }
             }
 
@@ -389,12 +389,14 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
                     +bad+" "+good+" "+100*((float)bad)/(bad+good)+"%");
 
             // QADB usage
-            long timestamp = 1000;
             seq.downsample(2000);
+            System.out.println("SUBSEQUENCES:");
+            int i_seq = 0;
             for(DaqScalersSequence subseq : seq.getSubsequences())
-              System.out.println(subseq.getBeamChargeProxy());
-            System.out.println(seq.getSubsequence(timestamp).getBeamChargeProxy());
-            System.out.println(seq.getInterval(timestamp).getBeamChargeGated());
+              System.out.printf("%d %f\n", i_seq++, subseq.getBeamChargeProxy());
+            // long timestamp = 1000;
+            // System.out.println(seq.getSubsequence(timestamp).getBeamChargeProxy());
+            // System.out.println(seq.getInterval(timestamp).getBeamChargeGated());
 
             reader.close();
 
