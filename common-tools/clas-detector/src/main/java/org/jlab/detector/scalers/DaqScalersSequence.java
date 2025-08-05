@@ -307,19 +307,24 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
      * @param n keep every nth scaler readout, including the zeroth and the last. `n` should be `>1`.
      */
     public void downsample(int n) {
+      System.out.println("DEBUG: original size = " + this.scalers.size()); // FIXME: remove
       if (this.scalers.isEmpty() || n<=1)
         return;
       subsequences.clear();
       List<Integer> keep = new ArrayList<>();
       keep.add(0);
       for (int i=0; i<this.scalers.size(); i+=n) {
-        int end = Math.min(i+n, this.scalers.size()); // the last sample may be smaller
+        int end = Math.min(i+n, this.scalers.size()-1); // the last sample may be smaller
         subsequences.add(new DaqScalersSequence(this.scalers.subList(i, end)));
         keep.add(end);
       }
-      for (int i=this.scalers.size()-1; i>=0; i--)
+      System.out.println("DEBUG: keep indices = " + keep); // FIXME: remove
+      for (int i=this.scalers.size()-1; i>=0; i--) {
         if (!keep.contains(i))
           this.scalers.remove(i);
+      }
+      System.out.println("DEBUG: sampled size = " + this.scalers.size()); // FIXME: remove
+      System.out.println("DEBUG: num subsequences = " + this.subsequences.size()); // FIXME: remove
     }
 
     public double getBeamChargeProxy() {
@@ -389,11 +394,17 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
                     +bad+" "+good+" "+100*((float)bad)/(bad+good)+"%");
 
             // QADB usage
-            seq.downsample(2000);
+            seq.downsample(200); // nominally 2000
             System.out.println("SUBSEQUENCES:");
             int i_seq = 0;
-            for(DaqScalersSequence subseq : seq.getSubsequences())
-              System.out.printf("%d %f\n", i_seq++, subseq.getBeamChargeProxy());
+            System.out.printf("%20s %20s %20s\n", "bin", "q_gated", "q_corrected");
+            for(DaqScalersSequence subseq : seq.getSubsequences()) {
+              System.out.printf("%20d %20.5f %20.5f\n",
+                  i_seq++,
+                  subseq.getInterval().getBeamChargeGated(),
+                  subseq.getBeamChargeProxy()
+                  );
+            }
             // long timestamp = 1000;
             // System.out.println(seq.getSubsequence(timestamp).getBeamChargeProxy());
             // System.out.println(seq.getInterval(timestamp).getBeamChargeGated());
