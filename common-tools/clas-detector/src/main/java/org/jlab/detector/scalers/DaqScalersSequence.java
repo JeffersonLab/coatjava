@@ -38,6 +38,10 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
     public static class Interval {
         private DaqScalers previous = null;
         private DaqScalers next = null;
+        public Interval(DaqScalers previous, DaqScalers next) {
+            this.previous = previous;
+            this.next = next;
+        }
         public Interval(DaqScalersSequence seq) {
             if (!seq.scalers.isEmpty()) {
                 this.previous = seq.scalers.get(0);
@@ -75,6 +79,12 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
             }
             return 0;
         }
+        public double getLivetime() {
+            if (next!=null)
+                return this.next.dsc2.getLivetime();
+            return 0;
+        }
+
     }
     
     @Override
@@ -327,14 +337,23 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
       System.out.println("DEBUG: num subsequences = " + this.subsequences.size()); // FIXME: remove
     }
 
-    public double getBeamChargeProxy() {
-      return 0; // FIXME
+    /**
+     * @return DAQ-gated charge from the livetime-weighted sum of the ungated charge
+     */
+    public double getBeamChargeLivetimeWeighted() {
+      double result = 0;
+      for(int i=1; i<scalers.size(); i++) { // start at 1, since looping over intervals
+        Interval ivl = new Interval(this.scalers.get(i-1), this.scalers.get(i));
+        double lt = ivl.getLivetime();
+        double q = ivl.getBeamCharge(); // ungated
+        result += lt * q;
+      }
+      return result;
     }
 
-    public DaqScalersSequence getSubsequence(long timestamp) {
-      return this.subsequences.get(this.findIndex(timestamp)); // FIXME: catch exception
-    }
-
+    /**
+     * @return the list of subsequences, _e.g._, if `downsample` was called, this is the list of saved subsequences
+     */
     public List<DaqScalersSequence> getSubsequences() {
       return subsequences;
     }
@@ -402,12 +421,9 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
               System.out.printf("%20d %20.5f %20.5f\n",
                   i_seq++,
                   subseq.getInterval().getBeamChargeGated(),
-                  subseq.getBeamChargeProxy()
+                  subseq.getBeamChargeLivetimeWeighted()
                   );
             }
-            // long timestamp = 1000;
-            // System.out.println(seq.getSubsequence(timestamp).getBeamChargeProxy());
-            // System.out.println(seq.getInterval(timestamp).getBeamChargeGated());
 
             reader.close();
 
