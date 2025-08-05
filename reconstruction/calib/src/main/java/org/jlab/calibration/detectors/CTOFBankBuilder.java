@@ -10,9 +10,9 @@ import org.jlab.io.base.DataEvent;
  *
  * @author devita
  */
-public class CTOFCalibrator extends DetectorCalibrator {
+public class CTOFBankBuilder extends CalibBankBuilder {
 
-    public CTOFCalibrator() {
+    public CTOFBankBuilder() {
         super(DetectorType.CTOF);
         super.init("CTOF::adc", "CTOF::tdc", "CTOF::hits", "CVTRec::Tracks", 
                    "REC::Track", "REC::Scintillator", "REC::Particle");
