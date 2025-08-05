@@ -10,9 +10,9 @@ import org.jlab.io.base.DataEvent;
  *
  * @author devita
  */
-public class FTOFCalibrator extends DetectorCalibrator {
+public class FTOFBankBuilder extends CalibBankBuilder {
 
-    public FTOFCalibrator() {
+    public FTOFBankBuilder() {
         super(DetectorType.FTOF);
         super.init("FTOF::adc", "FTOF::tdc", "FTOF::hits", "TimeBasedTrkg::TBTracks", 
                    "REC::Track", "REC::Scintillator", "REC::Particle");

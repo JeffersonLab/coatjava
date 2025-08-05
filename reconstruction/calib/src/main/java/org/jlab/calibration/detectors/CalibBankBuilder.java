@@ -10,13 +10,13 @@ import org.jlab.io.base.DataEvent;
  *
  * @author devita
  */
-public abstract class DetectorCalibrator {
+public abstract class CalibBankBuilder {
     
     private DetectorType  type;
     private List<String> bankNames;
     private String outputBankName;
     
-    public DetectorCalibrator(DetectorType type) {
+    public CalibBankBuilder(DetectorType type) {
         this.type = type;
         this.outputBankName = type.getName()+"::calib";
     }
