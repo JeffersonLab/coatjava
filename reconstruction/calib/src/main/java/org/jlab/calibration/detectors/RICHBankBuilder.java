@@ -12,9 +12,9 @@ import org.jlab.io.base.DataEvent;
  *
  * @author devita
  */
-public class RICHCalibrator extends DetectorCalibrator {
+public class RICHBankBuilder extends CalibBankBuilder {
         
-    public RICHCalibrator() {
+    public RICHBankBuilder() {
         super(DetectorType.RICH);
         super.init("RICH::Hit", "RICH::Photon", "REC::Particle");
     }

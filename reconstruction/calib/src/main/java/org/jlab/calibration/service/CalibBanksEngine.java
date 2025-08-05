@@ -5,11 +5,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
-import org.jlab.calibration.detectors.CTOFCalibrator;
-import org.jlab.calibration.detectors.DCCalibrator;
-import org.jlab.calibration.detectors.DetectorCalibrator;
-import org.jlab.calibration.detectors.FTOFCalibrator;
-import org.jlab.calibration.detectors.RICHCalibrator;
+import org.jlab.calibration.detectors.CTOFBankBuilder;
+import org.jlab.calibration.detectors.DCBankBuilder;
+import org.jlab.calibration.detectors.CalibBankBuilder;
+import org.jlab.calibration.detectors.FTOFBankBuilder;
+import org.jlab.calibration.detectors.RICHBankBuilder;
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.io.base.DataBank;
@@ -19,21 +19,21 @@ import org.jlab.io.base.DataEvent;
  *
  * @author devita
  */
-public class CalibBankEngine extends ReconstructionEngine {
+public class CalibBanksEngine extends ReconstructionEngine {
 
-    private final Map<DetectorType,DetectorCalibrator> calibrators = new HashMap<>();
+    private final Map<DetectorType,CalibBankBuilder> calibrators = new HashMap<>();
 
     public static final String CONF_DETECTORS = "detectors";
     private final List<DetectorType> detectors = new ArrayList<>();
     
-    static final Logger logger = Logger.getLogger(CalibBankEngine.class.getName());
+    static final Logger logger = Logger.getLogger(CalibBanksEngine.class.getName());
 
-    public CalibBankEngine() {
+    public CalibBanksEngine() {
         super("CALIB", "devita", "1.0");
-        calibrators.put(DetectorType.DC  , new DCCalibrator());
-        calibrators.put(DetectorType.FTOF, new FTOFCalibrator());
-        calibrators.put(DetectorType.CTOF, new CTOFCalibrator());
-        calibrators.put(DetectorType.RICH, new RICHCalibrator());
+        calibrators.put(DetectorType.DC  , new DCBankBuilder());
+        calibrators.put(DetectorType.FTOF, new FTOFBankBuilder());
+        calibrators.put(DetectorType.CTOF, new CTOFBankBuilder());
+        calibrators.put(DetectorType.RICH, new RICHBankBuilder());
     }
 
     @Override
@@ -62,7 +62,7 @@ public class CalibBankEngine extends ReconstructionEngine {
         
         for(DetectorType d : detectors) {
         
-            DetectorCalibrator calibrator = calibrators.get(d);
+            CalibBankBuilder calibrator = calibrators.get(d);
             
             if(calibrator.isGoodEvent(event)) {
                 DataBank calib = calibrator.getCalibBank(event);
