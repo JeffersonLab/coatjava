@@ -26,7 +26,6 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
     public static final double TI_CLOCK_FREQ = 250e6; // Hz
     
     protected final List<DaqScalers> scalers=new ArrayList<>();
-    protected final List<DaqScalersSequence> subsequences=new ArrayList<>();
 
     private Bank runConfigBank=null;
     private Bank runScalerBank=null;
@@ -119,7 +118,6 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
 
     public void clear() {
         scalers.clear();
-        subsequences.clear();
     }
    
     protected boolean add(DaqScalers ds) {
@@ -316,33 +314,6 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
     }
 
     /**
-     * Sample this sequence, keeping every nth scaler readout as a subsequence of samples.
-     * Methods such as `getInterval` will only consider scaler readouts in this sample subsequence.
-     * The n _original_ scaler readouts between each sample are preserved as subsequences.
-     * @param n keep every nth scaler readout, including the zeroth and the last. `n` should be `>1`.
-     */
-    public void downsample(int n) {
-      System.out.println("DEBUG: original size = " + this.scalers.size()); // FIXME: remove
-      if (this.scalers.isEmpty() || n<=1)
-        return;
-      subsequences.clear();
-      List<Integer> keep = new ArrayList<>();
-      keep.add(0);
-      for (int i=0; i<this.scalers.size(); i+=n) {
-        int end = Math.min(i+n, this.scalers.size()-1); // the last sample may be smaller
-        subsequences.add(new DaqScalersSequence(this.scalers.subList(i, end)));
-        keep.add(end);
-      }
-      System.out.println("DEBUG: keep indices = " + keep); // FIXME: remove
-      for (int i=this.scalers.size()-1; i>=0; i--) {
-        if (!keep.contains(i))
-          this.scalers.remove(i);
-      }
-      System.out.println("DEBUG: sampled size = " + this.scalers.size()); // FIXME: remove
-      System.out.println("DEBUG: num subsequences = " + this.subsequences.size()); // FIXME: remove
-    }
-
-    /**
      * @return DAQ-gated charge from the livetime-weighted sum of the ungated charge
      */
     public double getBeamChargeLivetimeWeighted() {
@@ -354,13 +325,6 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
         result += lt * q;
       }
       return result;
-    }
-
-    /**
-     * @return the list of subsequences, _e.g._, if `downsample` was called, this is the list of saved subsequences
-     */
-    public List<DaqScalersSequence> getSubsequences() {
-      return subsequences;
     }
 
     public static void main(String[] args) {
@@ -410,25 +374,12 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
                 else {
                     good++;
                     // do something useful with beam charge here:
-                    // System.out.println(timestamp+" "+ds.dsc2.getBeamCharge()+" "+ds.dsc2.getBeamChargeGated());
+                    System.out.println(timestamp+" "+ds.dsc2.getBeamCharge()+" "+ds.dsc2.getBeamChargeGated());
                 }
             }
 
             System.out.println("DaqScalersSequence:  bad/good/badPercent: "
                     +bad+" "+good+" "+100*((float)bad)/(bad+good)+"%");
-
-            // QADB usage
-            seq.downsample(200); // nominally 2000
-            System.out.println("SUBSEQUENCES:");
-            int i_seq = 0;
-            System.out.printf("%20s %20s %20s\n", "bin", "q_gated", "q_corrected");
-            for(DaqScalersSequence subseq : seq.getSubsequences()) {
-              System.out.printf("%20d %20.5f %20.5f\n",
-                  i_seq++,
-                  subseq.getInterval().getBeamChargeGated(),
-                  subseq.getBeamChargeLivetimeWeighted()
-                  );
-            }
 
             reader.close();
 
