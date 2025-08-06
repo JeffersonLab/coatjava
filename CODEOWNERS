@@ -86,6 +86,7 @@ reconstruction/swaps/ @baltzell @raffaelladevita
 reconstruction/tof/ @zieglerv @raffaelladevita
 reconstruction/urwell/ @raffaelladevita @tongtongcao
 reconstruction/vtx/ @zieglerv
+reconstruction/calib/ @raffaelladevita
 
 # etc
 etc/bankdefs/ @baltzell @raffaelladevita @c-dilks
