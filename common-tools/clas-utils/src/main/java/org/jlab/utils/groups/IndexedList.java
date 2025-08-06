@@ -35,8 +35,8 @@ public class IndexedList<T> {
      * Constructs an IndexedList with the specified number of indices.
      *
      * @param indsize the number of indices
-     * @throws IllegalArgumentException if indsize is greater than 4, 
-     * in which case a custom byte shift array should be used
+     * @throws IllegalArgumentException if indsize is greater than 4, in which
+     * case a custom byte shift array should be used
      */
     public IndexedList(int indsize) {
         if (indsize > 4) {
@@ -65,7 +65,7 @@ public class IndexedList<T> {
      * @return true or false if the index is valid or not
      */
     private boolean isValidIndex(int... index) {
-        return index != null && index.length == this.indexSize;
+        return index.length == this.indexSize;
     }
 
     /**
@@ -80,16 +80,10 @@ public class IndexedList<T> {
             throw new IllegalArgumentException("Index length mismatch: expected " + this.indexSize);
         }
         for (int i = 0; i < index.length - 1; i++) {
-            int bits = (i != 0)
-                    ? indexGenerator.getByteShifts()[i] - indexGenerator.getByteShifts()[i + 1]
-                    : 64 - indexGenerator.getByteShifts()[i]; // First field: number of bits from shift to 64
-
-            int maxValue = (1 << bits) - 1;
-
             // Check if the index value is within the allowed range
-            if (index[i] < 0 || index[i] > maxValue) {
+            if (index[i] < 0 || index[i] > indexGenerator.getMaxValues()[i]) {
                 throw new IllegalArgumentException(
-                        String.format("Index value out of range (0–%d) for byte shift %d: %d", maxValue, bits, index[i])
+                        String.format("Index value out of range (0–%d) : %d", indexGenerator.getMaxValues()[i], index[i])
                 );
             }
         }
@@ -184,7 +178,7 @@ public class IndexedList<T> {
      */
     public void show() {
         for (Map.Entry<Long, T> entry : this.collection.entrySet()) {
-            String indexString = indexGenerator.getString(entry.getKey(), this.indexSize);
+            String indexString = indexGenerator.getString(entry.getKey());
             System.out.println(String.format("[%s] : ",
                     indexString) + entry.getValue());
         }
@@ -197,14 +191,16 @@ public class IndexedList<T> {
      */
     public static class IndexGenerator {
 
-        private int[] byteShifts = new int[]{48, 32, 16, 0};
+        private int[] byteShifts;
+        private final int[] bitWidths;
+        private final int[] maxValues;
 
         /**
          * Constructs an IndexGenerator with generic index size.
          */
         public IndexGenerator() {
             //Nominal case, only works up to four indices. 4 times 16 bits = 64 bits for a long
-            this.byteShifts = new int[]{48, 32, 16, 0};
+            this(new int[]{48, 32, 16, 0});
         }
 
         /**
@@ -213,13 +209,34 @@ public class IndexedList<T> {
          * @param byteShifts the array of byte shifts to consider
          */
         public IndexGenerator(int[] byteShifts) {
+            //Check if the byteShifts array is null
+            if (byteShifts == null) {
+                throw new IllegalArgumentException("byte shifts array must not be null.");
+            }
             // Check that no byte shift exceeds 64
             for (int shift : byteShifts) {
                 if (shift < 0 || shift >= 64) {
                     throw new IllegalArgumentException("Byte shift must be between 0 and 63.");
                 }
             }
+            // Ensure strictly decreasing order (e.g., [48, 32, 16, 0])
+            for (int i = 1; i < byteShifts.length; i++) {
+                if (byteShifts[i] >= byteShifts[i - 1]) {
+                    throw new IllegalArgumentException("byte shifts array must be strictly decreasing.");
+                }
+            }
             this.byteShifts = byteShifts;
+            //Computing max allowed for each index
+            this.bitWidths = new int[byteShifts.length];
+            this.maxValues = new int[byteShifts.length];
+            //First byte shift is the lower limit and goes up to 64 for a long
+            this.bitWidths[0] = 64 - this.byteShifts[0];
+            this.maxValues[0] = (1 << this.bitWidths[0]) - 1;
+            //Other widths are given from distance between two consecutive shifts
+            for (int i = 1; i < byteShifts.length; i++) {
+                this.bitWidths[i] = byteShifts[i-1] - byteShifts[i];
+                this.maxValues[i] = (1 << this.bitWidths[i]) - 1;
+            }
         }
 
         /**
@@ -229,6 +246,15 @@ public class IndexedList<T> {
          */
         public int[] getByteShifts() {
             return this.byteShifts;
+        }
+        
+        /**
+         * Get the max value allowed for each index
+         *
+         * @return the array of max values
+         */
+        public int[] getMaxValues(){
+            return this.maxValues;
         }
 
         /**
@@ -240,15 +266,22 @@ public class IndexedList<T> {
          * supported length
          */
         public long hashCode(int... indices) {
-            long result = (long) 0;
+            long result = 0L;
 
             if (indices.length > this.byteShifts.length) {
                 throw new IllegalArgumentException("# indices is larger than " + this.byteShifts.length);
             }
 
-            for (int loop = 0; loop < indices.length; loop++) {
-                long patern = (((long) indices[loop]) & 0x000000000000FFFF) << this.byteShifts[loop];
-                result = (result | patern);
+            for (int i = 0; i < indices.length; i++) {
+                int width = this.bitWidths[i];
+                //Check that we can work with int indices
+                if (width <= 0 || width > 32) {
+                    throw new IllegalArgumentException("Invalid bit width: " + width);
+                }
+                //long key from index
+                long mask = (1L << width) - 1; 
+                long pattern = (((long) indices[i]) & mask) << this.byteShifts[i];
+                result |= pattern;
             }
             return result;
         }
@@ -272,9 +305,9 @@ public class IndexedList<T> {
          * @param length the number of indices to extract
          * @return a string representation of the indices
          */
-        public String getString(long hashcode, int length) {
+        public String getString(long hashcode) {
             StringBuilder str = new StringBuilder();
-            for (int loop = 0; loop < length; loop++) {
+            for (int loop = 0; loop < this.byteShifts.length; loop++) {
                 str.append(String.format("%5d", this.getIndex(hashcode, loop)));
             }
             return str.toString();
