@@ -235,18 +235,25 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
      * @return  sequence
      */
     public static DaqScalersSequence readSequence(List<String> filenames) {
+        DaqScalersSequence seq=new DaqScalersSequence();
+        seq.readFiles(filenames);
+        return seq;
+    }
+
+    /**
+     * @param filenames list of names of HIPO files to read
+     */
+    protected void readFiles(List<String> filenames) {
         logger.info("DaqScalersSequence::  Reading scaler sequence from "+String.join(",", filenames));
        
-        DaqScalersSequence seq=new DaqScalersSequence();
-
         for (String filename : filenames) {
 
             HipoReader reader = new HipoReader();
             reader.setTags(1);
             reader.open(filename);
 
-            if (seq.runConfigBank==null) {
-                seq.runConfigBank = new Bank(reader.getSchemaFactory().getSchema("RUN::config"));
+            if (this.runConfigBank==null) {
+                this.runConfigBank = new Bank(reader.getSchemaFactory().getSchema("RUN::config"));
             }
         
             SchemaFactory schema = reader.getSchemaFactory();
@@ -269,13 +276,11 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
         
                 DaqScalers ds=DaqScalers.create(scalerBank);
                 ds.setTimestamp(timestamp);
-                seq.add(ds);
+                this.add(ds);
             }
 
             reader.close();
         }
-        
-        return seq;
     }
    
     /**
