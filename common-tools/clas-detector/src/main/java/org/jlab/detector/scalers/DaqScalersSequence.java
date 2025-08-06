@@ -33,7 +33,7 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
   
     static final Logger logger = Logger.getLogger(DaqScalersSequence.class.getName());
     
-    private DaqScalersSequence(){};
+    protected DaqScalersSequence(){};
 
     public static class Interval {
         private DaqScalers previous = null;
