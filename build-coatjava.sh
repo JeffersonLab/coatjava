@@ -15,6 +15,7 @@ usage='''build-coatjava.sh [OPTIONS]... [MAVEN_OPTIONS]...
 
    --spotbugs        also run spotbugs plugin
    --unittests       also run unit tests
+   --depana          also run dependency analysis
 
    --quiet           run more quietly
    --no-progress     no download progress printouts
