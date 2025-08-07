@@ -29,7 +29,6 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
     
     private Bank runConfigBank=null;
     private Bank runScalerBank=null;
-    private Bank rawScalerBank=null;
   
     static final Logger logger = Logger.getLogger(DaqScalersSequence.class.getName());
     
