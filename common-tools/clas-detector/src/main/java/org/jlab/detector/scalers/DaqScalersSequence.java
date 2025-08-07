@@ -96,6 +96,36 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
         return n;
     }
 
+    /**
+     * Try to fix clock rollover on the run-integrating DSC2 scaler.
+     * 1.  Assume the first clock readout has no rollover.
+     * 2.  Assume any subsequent clock decrease is a rollover. 
+     * @param rollover 
+     */
+    private boolean fixClockRollover(long rollover) {
+        boolean modified = false;
+        while (!modified) {
+            for (int i=1; i<this.scalers.size(); ++i){
+                Dsc2Scaler pre = this.scalers.get(i-1).dsc2;
+                Dsc2Scaler now = this.scalers.get(i).dsc2;
+                if (now.clock < pre.clock) {
+                    for (int j=i; j<this.scalers.size(); ++j)
+                        // FIXME:  it's not just an addition ...
+                        this.scalers.get(j).dsc2.clock += rollover;
+                    modified = true;
+                    break;
+                }
+                if (now.gatedClock < pre.gatedClock) {
+                    for (int j=i; j<this.scalers.size(); ++j)
+                        this.scalers.get(j).dsc2.gatedClock += rollover;
+                    modified = true;
+                    break;
+                }
+            }
+        }
+        return modified;
+    }
+    
     public DaqScalersSequence(SchemaFactory schema) {
         runConfigBank = new Bank(schema.getSchema("RUN::config"));
         runScalerBank=new Bank(schema.getSchema("RUN::scaler"));
