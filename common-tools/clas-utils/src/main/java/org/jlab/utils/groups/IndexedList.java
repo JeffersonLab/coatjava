@@ -300,8 +300,9 @@ public class IndexedList<T> {
          * @return the decoded index
          */
         public int getIndex(long hashcode, int order) {
-            int result = (int) (hashcode >> this.byteShifts[order]) & 0x000000000000FFFF;
-            return result;
+            int width = this.bitWidths[order];
+            long mask = (1L << width) - 1;
+            return (int) ((hashcode >> this.byteShifts[order]) & mask);
         }
 
         /**
