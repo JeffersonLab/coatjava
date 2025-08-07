@@ -231,12 +231,22 @@ public class IndexedList<T> {
             this.maxValues = new int[byteShifts.length];
             //First byte shift is the lower limit and goes up to 64 for a long
             this.bitWidths[0] = 64 - this.byteShifts[0];
+            //Check we can work with int
+            if (this.bitWidths[0] <= 0 || this.bitWidths[0] > 32) {
+                throw new IllegalArgumentException("Invalid bit width: " + this.bitWidths[0]);
+            }
             this.maxValues[0] = (1 << this.bitWidths[0]) - 1;
             //Other widths are given from distance between two consecutive shifts
             for (int i = 1; i < byteShifts.length; i++) {
-                this.bitWidths[i] = byteShifts[i-1] - byteShifts[i];
+                this.bitWidths[i] = byteShifts[i - 1] - byteShifts[i];
+                //Check we can work with int
+                if (this.bitWidths[i] <= 0 || this.bitWidths[i] > 32) {
+                    throw new IllegalArgumentException("Invalid bit width: " + this.bitWidths[0]);
+                }
                 this.maxValues[i] = (1 << this.bitWidths[i]) - 1;
             }
+
+            //Check that we can work with int indices
         }
 
         /**
@@ -247,13 +257,13 @@ public class IndexedList<T> {
         public int[] getByteShifts() {
             return this.byteShifts;
         }
-        
+
         /**
          * Get the max value allowed for each index
          *
          * @return the array of max values
          */
-        public int[] getMaxValues(){
+        public int[] getMaxValues() {
             return this.maxValues;
         }
 
@@ -274,12 +284,8 @@ public class IndexedList<T> {
 
             for (int i = 0; i < indices.length; i++) {
                 int width = this.bitWidths[i];
-                //Check that we can work with int indices
-                if (width <= 0 || width > 32) {
-                    throw new IllegalArgumentException("Invalid bit width: " + width);
-                }
                 //long key from index
-                long mask = (1L << width) - 1; 
+                long mask = (1L << width) - 1;
                 long pattern = (((long) indices[i]) & mask) << this.byteShifts[i];
                 result |= pattern;
             }
