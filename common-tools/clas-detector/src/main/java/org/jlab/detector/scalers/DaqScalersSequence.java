@@ -149,11 +149,14 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
         event.read(runConfigBank);
         if (runScalerBank.getRows() > 0) {
             long timestamp=0;
+            int evnum=0;
             if (runConfigBank.getRows()>0) {
                 timestamp=runConfigBank.getLong("timestamp",0);
+                evnum=runConfigBank.getInt("event",0);
             }
             DaqScalers ds=DaqScalers.create(runScalerBank);
             ds.setTimestamp(timestamp);
+            ds.setEventNum(evnum);
             return add(ds);
         }
         return false;

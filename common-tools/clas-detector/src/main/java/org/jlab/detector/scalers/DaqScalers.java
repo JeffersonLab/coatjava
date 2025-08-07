@@ -50,11 +50,14 @@ public class DaqScalers {
     public StruckScalers struck=null;
 
     private long timestamp=0;
+    private int evnum=0;
     public DaqScalers setTimestamp(long timestamp) {
         this.timestamp=timestamp;
         return this;
     }
     public long getTimestamp(){ return this.timestamp; }
+    public void setEventNum(int evnum) { this.evnum=evnum; }
+    public int getEventNum() { return this.evnum; }
 
     /**
      * Get seconds between two dates assuming the differ by not more than 24 hours.
