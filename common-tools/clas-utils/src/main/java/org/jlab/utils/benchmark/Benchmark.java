@@ -49,9 +49,11 @@ public class Benchmark {
     }
     
     public void pause(String name){
-        if (!timerStore.containsKey(name))
+        if (!timerStore.containsKey(name)){
             timerStore.put(name, new BenchmarkTimer(name));
-        timerStore.get(name).pause();
+        } else {
+            timerStore.get(name).pause();
+        }
     }
     
     public void resume(String name){
