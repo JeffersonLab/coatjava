@@ -59,7 +59,7 @@ public enum DetectorType {
         return detectorName;
     }
     
-     /**
+    /**
      * Returns the id number of the detector.
      * @return the id number of the detector
      */
@@ -67,6 +67,11 @@ public enum DetectorType {
         return detectorId;
     }
     
+    /**
+     * Get type from string name
+     * @param name
+     * @return 
+     */
     public static DetectorType getType(String name) {
         name = name.trim();
         for(DetectorType id: DetectorType.values())
@@ -74,6 +79,12 @@ public enum DetectorType {
                 return id;
         return UNDEFINED;
     }
+
+    /**
+     * Get type from integer id 
+     * @param detId
+     * @return 
+     */
     public static DetectorType getType(Integer detId) {
 
         for(DetectorType id: DetectorType.values())
