@@ -25,7 +25,7 @@ env:
   java_distribution: zulu
   javadoc_version: 24 # newer than `java_version` for better javadoc
   groovy_version: 4.x
-  #CCDB_CONNECTION: 'sqlite:////cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/ccdb/ccdb_latest.sqlite'
+  CCDB_CONNECTION: 'sqlite:////cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/ccdb/ccdb_latest.sqlite'
   nthreads: 1
 
 jobs:
