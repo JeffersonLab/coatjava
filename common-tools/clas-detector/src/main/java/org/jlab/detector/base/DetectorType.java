@@ -79,7 +79,7 @@ public enum DetectorType {
         return detectorId;
     }
     
-    public static DetectorType getType2(String name) {
+    public static DetectorType getType(String name) {
         Benchmark.getInstance().resume("DT:GT");
         name = name.trim();
         if (getStringLookup().containsKey(name)) {
@@ -90,7 +90,7 @@ public enum DetectorType {
         return UNDEFINED;
     }
 
-    public static DetectorType getType(String name) {
+    public static DetectorType getTypeOld(String name) {
         Benchmark.getInstance().resume("DT:GT");
         name = name.trim();
         for(DetectorType id: DetectorType.values())
