@@ -246,10 +246,17 @@ public class DetectorEventDecoder {
     class TDCComparator implements Comparator<DetectorDataDgtz> { 
   
         // override the compare() method 
+        @Override
         public int compare(DetectorDataDgtz s1, DetectorDataDgtz s2) 
-        { 
-            if(s1.getTDCSize()>0 && s2.getTDCSize()>0)
-                return s1.getTDCData(0).getTime()<s2.getTDCData(0).getTime() ? -1 : 1;
+        {
+            if(s1.getTDCSize()>0 && s2.getTDCSize()>0) {
+                if (s1.getTDCData(0).getTime() < s2.getTDCData(0).getTime())
+                    return -1;
+                else if (s1.getTDCData(0).getTime() > s2.getTDCData(0).getTime())
+                    return 1;
+                else
+                    return 0;
+            }
             else if(s1.getTDCSize()>0)
                 return 1;
             else if(s2.getTDCSize()>0)
