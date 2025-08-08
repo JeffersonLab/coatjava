@@ -12,6 +12,7 @@ import java.util.Set;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import org.jlab.utils.groups.IndexedList.IndexGenerator;
 
 /**
  *
@@ -56,6 +57,14 @@ public class IndexedTable extends DefaultTableModel {
             entryTypes.put(tokens[0],tokens[1] );
             entryNames.add(tokens[0]);
         }
+    }
+    
+    public void setByteShifts(int[] byteShifts){
+        this.entries.setIndexGenerator(new IndexGenerator(byteShifts));
+    }
+    
+    public int[] getByteShifts(){
+        return this.entries.getIndexGenerator().getByteShifts();
     }
     
     public void setPrecision(Integer precision){
@@ -288,7 +297,8 @@ public class IndexedTable extends DefaultTableModel {
             value = (Long) iter.next();
         }
         if(column<entries.getIndexSize()){
-            Integer index = IndexedList.IndexGenerator.getIndex(value, column);
+            IndexedList indexList = new IndexedList(entries.getIndexSize());
+            Integer index = indexList.getIndexGenerator().getIndex(value, column);
             return index.toString();
         }
         
