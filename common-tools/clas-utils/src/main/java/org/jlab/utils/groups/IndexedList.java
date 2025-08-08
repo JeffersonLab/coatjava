@@ -30,13 +30,17 @@ public class IndexedList<T> {
     }
     
     public boolean hasItem(int... index){
-        Benchmark.getInstance().resume("TT HE 1");
+        Benchmark.getInstance().resume("HE 1");
         if(index.length!=this.indexSize) return false;
-        Benchmark.getInstance().pause("TT HE 1");
-        Benchmark.getInstance().resume("TT HE 2");
+        Benchmark.getInstance().pause("HE 1");
+        Benchmark.getInstance().resume("HE 2");
         long code = IndexGenerator.hashCode(index);
-        Benchmark.getInstance().pause("TT HE 2");
+        Benchmark.getInstance().pause("HE 2");
         return this.collection.containsKey(code);
+    }
+
+    public boolean hasItem(long hash) {
+        return this.collection.containsKey(hash);
     }
     
     public T getItem(int... index){
@@ -45,6 +49,11 @@ public class IndexedList<T> {
         return this.collection.get(code);
     }
     
+    public T getItem(long hash){
+        if (!this.collection.containsKey(hash)) return null;
+        return this.collection.get(hash);
+    }
+
     public void clear(){this.collection.clear();}
     public int  getIndexSize(){ return this.indexSize;}
     public Map<Long,T> getMap(){ return this.collection;}

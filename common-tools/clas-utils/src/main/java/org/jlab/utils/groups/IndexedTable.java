@@ -12,6 +12,7 @@ import java.util.Set;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import org.jlab.utils.groups.IndexedList.IndexGenerator;
 
 /**
  *
@@ -117,7 +118,7 @@ public class IndexedTable extends DefaultTableModel {
             }
         }
     }
-    
+   
     public int  getIntValue(String item, int... index){
         if(this.entries.hasItem(index)==false){
             if(DEBUG_MODE>0) System.out.println( "[IndexedTable] ---> error.. entry does not exist");
@@ -131,7 +132,7 @@ public class IndexedTable extends DefaultTableModel {
         }
         return 0;
     }
-    
+
     public double  getDoubleValue(String item, int... index){
         if(this.entries.hasItem(index)==false){
             if(DEBUG_MODE>0) System.out.println( "[IndexedTable] ---> error.. entry does not exist");
@@ -382,4 +383,34 @@ public class IndexedTable extends DefaultTableModel {
         }
     }
 
+    // getters for more optimized access:
+    
+    public int getIntValue(String item, long hash) {
+        if (this.entries.hasItem(hash)) {
+            if (this.entryMap.containsKey(item)) {
+                Integer index = this.entryMap.get(item);
+                return this.entries.getItem(hash).getValue(index).intValue();
+            }
+        }
+        return 0;
+    }
+    
+    public int[] getIntValues(String[] items, int... index) {
+        long hash = IndexGenerator.hashCode(index);
+        int ret[] = new int[items.length];
+        for (int i=0; i<items.length; ++i)
+            ret[i] = getIntValue(items[i],hash);
+        return ret;
+    }
+
+    public int[] getIntValues(String s1, String s2, String s3, int... index) {
+        long hash = IndexGenerator.hashCode(index);
+        return new int[]{getIntValue(s1,hash),getIntValue(s2,hash),getIntValue(s3,hash)};
+    }
+    
+    public int[] getIntValues(String s1, String s2, String s3, String s4, int... index) {
+        long hash = IndexGenerator.hashCode(index);
+        return new int[]{getIntValue(s1,hash),getIntValue(s2,hash),getIntValue(s3,hash),getIntValue(s4,hash)};
+    }
+    
 }

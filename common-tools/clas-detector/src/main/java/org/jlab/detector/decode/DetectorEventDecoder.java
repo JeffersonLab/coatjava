@@ -11,6 +11,7 @@ import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.decode.DetectorDataDgtz.ADCData;
 import org.jlab.utils.benchmark.Benchmark;
+import org.jlab.utils.groups.IndexedList.IndexGenerator;
 import org.jlab.utils.groups.IndexedTable;
 
 /**
@@ -113,48 +114,52 @@ public class DetectorEventDecoder {
 
         for(DetectorDataDgtz data : detectorData){
 
-            Benchmark.getInstance().resume("TT DDGET");
+            Benchmark.getInstance().resume("DDGET");
             int crate    = data.getDescriptor().getCrate();
             int slot     = data.getDescriptor().getSlot();
             int channel  = data.getDescriptor().getChannel();
-            Benchmark.getInstance().pause("TT DDGET");
+            Benchmark.getInstance().pause("DDGET");
 
             for(String table : keysTrans){
 
-                Benchmark.getInstance().resume("TT GC1");
+                //Benchmark.getInstance().resume("GC");
                 IndexedTable  tt = translationManager.getConstants(runNumber, table);
-                Benchmark.getInstance().pause("TT GC1");
-                Benchmark.getInstance().resume("TT GC2");
-                DetectorType  type = DetectorType.getType(table);
-                Benchmark.getInstance().pause("TT GC2");
+                //Benchmark.getInstance().pause("GC");
 
-                Benchmark.getInstance().resume("TT HE");
+                //Benchmark.getInstance().resume("HE");
                 final boolean dog = tt.hasEntry(crate,slot,channel);
-                Benchmark.getInstance().pause("TT HE");
+                //Benchmark.getInstance().pause("HE");
                 if(dog){
                 //if(tt.hasEntry(crate,slot,channel)==true){
 
-                    Benchmark.getInstance().resume("TT SLC");
+                    Benchmark.getInstance().resume("SLC");
                     int sector    = tt.getIntValue("sector", crate,slot,channel);
                     int layer     = tt.getIntValue("layer", crate,slot,channel);
                     int component = tt.getIntValue("component", crate,slot,channel);
                     int order     = tt.getIntValue("order", crate,slot,channel);
-                    Benchmark.getInstance().pause("TT SLC");
+                    //int[] slco = tt.getIntValues("sector","layer","component","order",crate,slot,channel);
+                    //int sector = slco[0];
+                    //int layer = slco[1];
+                    //int component = slco[2];
+                    //int order = slco[3];
+                    Benchmark.getInstance().pause("SLC");
 
-                    Benchmark.getInstance().resume("TT DDSET");
+                    Benchmark.getInstance().resume("DT:GT");
+                    DetectorType  type = DetectorType.getType(table);
+                    Benchmark.getInstance().pause("DT:GT");
+                
+                    Benchmark.getInstance().resume("DDSET");
                     data.getDescriptor().setSectorLayerComponent(sector, layer, component);
                     data.getDescriptor().setOrder(order);
                     data.getDescriptor().setType(type);
-                    Benchmark.getInstance().pause("TT DDSET");
+                    Benchmark.getInstance().pause("DDSET");
 
-                    Benchmark.getInstance().resume("TT SO");
-                    for(int i = 0; i < data.getADCSize(); i++) {
+                    Benchmark.getInstance().resume("SO");
+                    for(int i = 0; i < data.getADCSize(); i++)
                         data.getADCData(i).setOrder(order);
-                    }
-                    for(int i = 0; i < data.getTDCSize(); i++) {
+                    for(int i = 0; i < data.getTDCSize(); i++)
                         data.getTDCData(i).setOrder(order);
-                    }
-                    Benchmark.getInstance().pause("TT SO");
+                    Benchmark.getInstance().pause("SO");
                 }
             }
 
@@ -170,7 +175,7 @@ public class DetectorEventDecoder {
             	if( ( (table.equals("BMT"))&&(data.getDescriptor().getType().getName().equals("BMT")) )
                  || ( (table.equals("FMT"))&&(data.getDescriptor().getType().getName().equals("FMT")) )
                  || ( (table.equals("FTTRK"))&&(data.getDescriptor().getType().getName().equals("FTTRK")) ) ){
-                    Benchmark.getInstance().resume("DREAM A");
+                    Benchmark.getInstance().resume("DREAM");
                     IndexedTable daq = fitterManager.getConstants(runNumber, table);
                     short adcOffset = (short) daq.getDoubleValue("adc_offset", 0, 0, 0);
                     double fineTimeStampResolution = (byte) daq.getDoubleValue("dream_clock", 0, 0, 0);
@@ -184,24 +189,28 @@ public class DetectorEventDecoder {
                         adc.setIntegral((int) (mvtFitter.integral));
                         adc.setTimeStamp(mvtFitter.timestamp);
                     }
-                    Benchmark.getInstance().pause("DREAM A");
+                    Benchmark.getInstance().pause("DREAM");
                 } else {
-                    Benchmark.getInstance().resume("DREAM B");
                     IndexedTable  daq = fitterManager.getConstants(runNumber, table);
                     if(daq.hasEntry(crate,slot,channel)==true){
+                        Benchmark.getInstance().resume("FADC:A");
                         int nsa = daq.getIntValue("nsa", crate,slot,channel);
                         int nsb = daq.getIntValue("nsb", crate,slot,channel);
                         int tet = daq.getIntValue("tet", crate,slot,channel);
+                        //int[] pars = daq.getIntValues("nsa","nsb","tet",crate,slot,channel);
                         int ped = 0;
                         if(table.equals("RF")&&data.getDescriptor().getType().getName().equals("RF")) {
                             ped = daq.getIntValue("pedestal", crate,slot,channel);
                         }
+                        Benchmark.getInstance().pause("FADC:A");
                         if(data.getADCSize()>0){
                             for(int i = 0; i < data.getADCSize(); i++){
                                 ADCData adc = data.getADCData(i);
                                 if(adc.getPulseSize()>0){
                                     try {
+                                        Benchmark.getInstance().resume("FADC:FIT");
                                         extendedFitter.fit(nsa, nsb, tet, ped, adc.getPulseArray());
+                                        Benchmark.getInstance().pause("FADC:FIT");
                                     } catch (Exception e) {
                                         System.out.println(">>>> error : fitting pulse "
                                                             +  crate + " / " + slot + " / " + channel);
@@ -220,7 +229,6 @@ public class DetectorEventDecoder {
                             }
                         }
                     }
-                    Benchmark.getInstance().pause("DREAM B");
                 }
             }
         }

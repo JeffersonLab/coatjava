@@ -60,7 +60,7 @@ public class BenchmarkTimer {
         double timePerCall = 0.0;
         if(numberOfCalls!=0) timePerCall = this.getMiliseconds()/numberOfCalls;
         str.append(String.format("TIMER (%-12s) : N Calls %12d,  Total Time  = %12.2f sec,  Unit Time = %12.3f msec",
-                this.getName(),numberOfCalls,this.getSeconds(),timePerCall));
+                this.getName(),this.getName().equals("") ? -1 : numberOfCalls,this.getSeconds(),this.getName().equals("") ? -1 : timePerCall));
         return str.toString();
     }
 }

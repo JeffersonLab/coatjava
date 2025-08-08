@@ -83,20 +83,20 @@ public class ConstantsManager {
     }
 
     public IndexedTable getConstants(int run, String table) {
-        Benchmark.getInstance().resume("TT GC1 MAP1");
+        Benchmark.getInstance().resume("GC MAP1");
         if (this.runConstants.containsKey(run) == false) {
             this.loadConstantsForRun(run);
         }
-        Benchmark.getInstance().pause("TT GC1 MAP1");
-        Benchmark.getInstance().resume("TT GC1 DCD");
+        Benchmark.getInstance().pause("GC MAP1");
+        Benchmark.getInstance().resume("GC DCD");
         DatabaseConstantsDescriptor descriptor = this.runConstants.get(run);
-        Benchmark.getInstance().pause("TT GC1 DCD");
-        Benchmark.getInstance().resume("TT GC1 MAP2");
+        Benchmark.getInstance().pause("GC DCD");
+        Benchmark.getInstance().resume("GC MAP2");
         if (descriptor.getMap().containsKey(table) == false) {
             LOGGER.log(Level.SEVERE,
                     "[getConstants] error ( run = " + run + " ) " + " table not found with name : " + table);
         }
-        Benchmark.getInstance().pause("TT GC1 MAP2");
+        Benchmark.getInstance().pause("GC MAP2");
         return descriptor.getMap().get(table);
     }
 

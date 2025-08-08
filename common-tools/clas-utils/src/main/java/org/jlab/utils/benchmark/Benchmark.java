@@ -17,6 +17,8 @@ public class Benchmark {
     private static final Benchmark benchmarkInstance = new Benchmark();
     private final Map<String,BenchmarkTimer> timerStore = new HashMap<>();
     private Timer updateTimer = null;
+   
+    private final boolean disabled = false;
     
     public Benchmark(){}
     
@@ -49,6 +51,7 @@ public class Benchmark {
     }
     
     public void pause(String name){
+        if (disabled) return;
         if (!timerStore.containsKey(name)){
             timerStore.put(name, new BenchmarkTimer(name));
         } else {
@@ -57,6 +60,7 @@ public class Benchmark {
     }
     
     public void resume(String name){
+        if (disabled) return;
         if (!timerStore.containsKey(name))
             timerStore.put(name, new BenchmarkTimer(name));
         timerStore.get(name).resume();
@@ -77,14 +81,17 @@ public class Benchmark {
 
     @Override
     public String toString(){
-        StringBuilder str = new StringBuilder();
+
         ArrayList<String> timerStrings = new ArrayList<>();
         for(Map.Entry<String,BenchmarkTimer> timer : timerStore.entrySet()){
             timerStrings.add(timer.getValue().toString());
         }
         Collections.sort(timerStrings);
+
         timerStrings.add(getTotal("").toString());
         
+        StringBuilder str = new StringBuilder();
+
         if(!timerStrings.isEmpty()){
             int len = timerStrings.get(0).length();
             char[]  asterix = new char[len+8];

@@ -98,7 +98,9 @@ public class CLASDecoder4 {
                     int runNumberCoda = codaDecoder.getRunNumber();
                     this.setRunNumber(runNumberCoda);
 
+                    Benchmark.getInstance().resume("CD:GDE");
                     dataList = codaDecoder.getDataEntries( (EvioDataEvent) event);
+                    Benchmark.getInstance().pause("CD:GDE");
                     
                     Benchmark.getInstance().resume("FADC BPK");
                     List<FADCData> fadcPacked = codaDecoder.getADCEntries((EvioDataEvent) event);
@@ -113,12 +115,12 @@ public class CLASDecoder4 {
                     LOGGER.finest(">>>>>>>>> RAW decoded data");
                     LOGGER.finest(Arrays.toString(dataList.toArray()));
 
-                    Benchmark.getInstance().resume("TT");
                     detectorDecoder.translate(dataList);
-                    Benchmark.getInstance().pause("TT");
                     detectorDecoder.fitPulses(dataList);
         
+                    Benchmark.getInstance().resume("F:TDC");
                     detectorDecoder.filterTDCs(dataList);
+                    Benchmark.getInstance().pause("F:TDC");
                         
                     LOGGER.finest(">>>>>>>>> TRANSLATED data");
                     LOGGER.finest(Arrays.toString(dataList.toArray()));
@@ -388,6 +390,7 @@ public class CLASDecoder4 {
 
         Event decodedEvent = this.getDataEvent(rawEvent);        
 
+        Benchmark.getInstance().resume("GDECE");
         Bank header = this.createHeaderBank(run, counter, torus, solenoid);
         if(header!=null) decodedEvent.write(header);
 
@@ -408,6 +411,7 @@ public class CLASDecoder4 {
         for (Bank b : createReconScalerBanks(decodedEvent))
             decodedEvent.write(b);
 
+        Benchmark.getInstance().pause("GDECE");
         return decodedEvent;
     }
 
@@ -418,6 +422,7 @@ public class CLASDecoder4 {
 
     public Event getDataEvent(){
 
+        Benchmark.getInstance().resume("GDE");
         Event event = new Event();
 
         String[]         wfBankNames = new String[]{"AHDC::wf"};
@@ -548,6 +553,7 @@ public class CLASDecoder4 {
         } catch(Exception e) {
             e.printStackTrace();
         }
+        Benchmark.getInstance().pause("GDE");
         return event;
     }
 
@@ -820,7 +826,8 @@ public class CLASDecoder4 {
                 EvioDataEvent event = (EvioDataEvent) reader.getNextEvent();
                 
                 Event  decodedEvent = decoder.getDecodedEvent(event, nrun, counter, torus, solenoid);
-                
+               
+                Benchmark.getInstance().resume("LOOP");
                 decodedEvent.read(rawRunConf);
                 decodedEvent.read(helicityAdc);
 
@@ -835,12 +842,9 @@ public class CLASDecoder4 {
                 
                 counter++;
                 progress.updateStatus();
-                if(counter%25000==0){
-                    System.gc();
-                }
-                if(nevents>0){
-                    if(counter>=nevents) break;
-                }
+                if(counter%25000==0) System.gc();
+                if(nevents>0 && counter>=nevents) break;
+                Benchmark.getInstance().pause("LOOP");
             }
 
         }

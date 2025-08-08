@@ -1,5 +1,8 @@
 package org.jlab.detector.base;
 
+import java.util.HashMap;
+import org.jlab.utils.benchmark.Benchmark;
+
 /**
  *
  * @author gavalian
@@ -40,18 +43,24 @@ public enum DetectorType {
     LAC       (113, "LAC"),
     SC        (114, "SC"),
     CC        (115, "CC");
-    
+   
     private final int detectorId;
     private final String detectorName;
-    
-    DetectorType(){
-        detectorId = 0;
-        detectorName = "UNDEFINED";
+
+    private static HashMap<String,DetectorType> stringLookup = null;
+
+    public static HashMap<String,DetectorType> getStringLookup() {
+        if (stringLookup != null) return stringLookup;
+        stringLookup = new HashMap<>();
+        for (DetectorType id: DetectorType.values())
+            stringLookup.put(id.getName(),id);
+        return stringLookup;
     }
-    
+
     DetectorType(int id, String name){
         detectorId = id;
         detectorName = name;
+        getStringLookup();
     }
     
     /**
@@ -70,18 +79,34 @@ public enum DetectorType {
         return detectorId;
     }
     
-    public static DetectorType getType(String name) {
+    public static DetectorType getType2(String name) {
+        Benchmark.getInstance().resume("DT:GT");
         name = name.trim();
-        for(DetectorType id: DetectorType.values())
-            if (id.getName().equalsIgnoreCase(name)) 
-                return id;
+        if (getStringLookup().containsKey(name)) {
+            Benchmark.getInstance().pause("DT:GT");
+            return getStringLookup().get(name);
+        }
+        Benchmark.getInstance().pause("DT:GT");
         return UNDEFINED;
     }
-    public static DetectorType getType(Integer detId) {
 
+    public static DetectorType getType(String name) {
+        Benchmark.getInstance().resume("DT:GT");
+        name = name.trim();
+        for(DetectorType id: DetectorType.values())
+            if (id.getName().equalsIgnoreCase(name)){ 
+                Benchmark.getInstance().pause("DT:GT");
+                return id;
+            }
+        Benchmark.getInstance().pause("DT:GT");
+        return UNDEFINED;
+    }
+
+    public static DetectorType getType(Integer detId) {
         for(DetectorType id: DetectorType.values())
             if (id.getDetectorId() == detId) 
                 return id;
         return UNDEFINED;
     }
+
 }
