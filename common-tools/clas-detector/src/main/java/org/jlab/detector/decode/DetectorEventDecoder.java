@@ -81,8 +81,8 @@ public class DetectorEventDecoder {
         tablesTrans = Arrays.asList(new String[]{ "/daq/tt/clasdev/htcc","/daq/tt/clasdev/svt","/daq/tt/clasdev/rtpc" });
         keysFitter   = Arrays.asList(new String[]{"HTCC"});
         tablesFitter = Arrays.asList(new String[]{"/daq/fadc/clasdev/htcc"});
-        translationManager.init(keysTrans,tablesTrans);
-        fitterManager.init(keysFitter, tablesFitter);
+        translationManager.init(tablesTrans);
+        fitterManager.init(tablesFitter);
         scalerManager.init(Arrays.asList(new String[]{"/runcontrol/fcup","/runcontrol/slm","/runcontrol/hwp",
                                                       "/runcontrol/helicity","/daq/config/scalers/dsc1"}));
     }
@@ -101,7 +101,7 @@ public class DetectorEventDecoder {
             "/daq/tt/rf","/daq/tt/bmt","/daq/tt/fmt","/daq/tt/rich2","/daq/tt/hel","/daq/tt/band","/daq/tt/rtpc",
             "/daq/tt/raster","/daq/tt/atof","/daq/tt/ahdc"
         });
-        translationManager.init(keysTrans,tablesTrans);
+        translationManager.init(tablesTrans);
         
         // ADC waveform fitter translation table
         keysFitter   = Arrays.asList(new String[]{"FTCAL","FTHODO","FTTRK","FTOF","LTCC",
@@ -114,7 +114,7 @@ public class DetectorEventDecoder {
             "/daq/config/fmt","/daq/fadc/hel","/daq/fadc/rf","/daq/fadc/band","/daq/fadc/raster",
             "/daq/config/ahdc"
         });
-        fitterManager.init(keysFitter, tablesFitter);
+        fitterManager.init(tablesFitter);
 
         // Data filter list
         keysFilter   = Arrays.asList(new String[]{"DC"});
@@ -138,7 +138,6 @@ public class DetectorEventDecoder {
             long hash    = new IndexGenerator().hashCode(crate,slot,channel);
 
             for(String table : keysTrans){
-
                 IndexedTable  tt = translationManager.getConstants(runNumber, table);
 
                 if(tt.hasEntry(hash)==true){
