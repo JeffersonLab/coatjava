@@ -16,6 +16,8 @@ usage='''build-coatjava.sh [OPTIONS]... [MAVEN_OPTIONS]...
    --spotbugs        also run spotbugs plugin
    --unittests       also run unit tests
 
+   --depana          run dependency analysis (only)
+
    --quiet           run more quietly
    --no-progress     no download progress printouts
 
@@ -30,6 +32,7 @@ usage='''build-coatjava.sh [OPTIONS]... [MAVEN_OPTIONS]...
 '''
 
 cleanBuild="no"
+anaDepends="no"
 runSpotBugs="no"
 downloadMaps="yes"
 runUnitTests="no"
@@ -45,6 +48,7 @@ do
     --nomaps)    downloadMaps="no"  ;;
     --unittests) runUnitTests="yes" ;;
     --clean)     cleanBuild="yes"   ;;
+    --depana)    anaDepends="yes"   ;;
     --quiet)
       mvnArgs+=(--quiet --batch-mode)
       wgetArgs+=(--quiet)
@@ -100,7 +104,6 @@ download () {
     return $ret
 }
 
-
 # download the default field maps, as defined in libexec/env.sh:
 # (and duplicated in etc/services/reconstruction.yaml):
 source libexec/env.sh --no-classpath
@@ -140,6 +143,12 @@ if [ $cleanBuild == "yes" ]; then
 
   Now re-run without \`--clean\` to build."""
   exit
+fi
+
+if [ $anaDepends == "yes" ]; then
+    mvn dependency:analyze -DfailOnWarning=true -pl '!org.jlab.coat:coat-libs' --no-transfer-progress
+    mvn dependency:tree -Ddetail=true --no-transfer-progress 
+    exit 0
 fi
 
 # start new installation tree
