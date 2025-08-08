@@ -126,22 +126,19 @@ public class DetectorEventDecoder {
                 IndexedTable  tt = translationManager.getConstants(runNumber, table);
                 //Benchmark.getInstance().pause("GC");
 
+                long hash = IndexGenerator.hashCode(crate,slot,channel);
+                
                 //Benchmark.getInstance().resume("HE");
-                final boolean dog = tt.hasEntry(crate,slot,channel);
+                final boolean dog = tt.hasEntry(hash);//crate,slot,channel);
                 //Benchmark.getInstance().pause("HE");
                 if(dog){
                 //if(tt.hasEntry(crate,slot,channel)==true){
 
                     Benchmark.getInstance().resume("SLC");
-                    int sector    = tt.getIntValue("sector", crate,slot,channel);
-                    int layer     = tt.getIntValue("layer", crate,slot,channel);
-                    int component = tt.getIntValue("component", crate,slot,channel);
-                    int order     = tt.getIntValue("order", crate,slot,channel);
-                    //int[] slco = tt.getIntValues("sector","layer","component","order",crate,slot,channel);
-                    //int sector = slco[0];
-                    //int layer = slco[1];
-                    //int component = slco[2];
-                    //int order = slco[3];
+                    int sector    = tt.getIntValue("sector", hash);//crate,slot,channel);
+                    int layer     = tt.getIntValue("layer", hash);//crate,slot,channel);
+                    int component = tt.getIntValue("component", hash);//crate,slot,channel);
+                    int order     = tt.getIntValue("order", hash);//crate,slot,channel);
                     Benchmark.getInstance().pause("SLC");
 
                     Benchmark.getInstance().resume("DT:GT");
