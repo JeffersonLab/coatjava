@@ -36,10 +36,7 @@ public enum DetectorType {
     MAGNETS   (101, "MAGNETS"),
     ECIN      (110, "ECIN"),
     ECOUT     (111, "ECOUT"),
-    ECTOT     (112, "ECTOT"),
-    LAC       (113, "LAC"),
-    SC        (114, "SC"),
-    CC        (115, "CC");
+    ECTOT     (112, "ECTOT");
     
     private final int detectorId;
     private final String detectorName;
