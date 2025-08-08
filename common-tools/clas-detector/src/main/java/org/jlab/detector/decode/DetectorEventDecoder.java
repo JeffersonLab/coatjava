@@ -138,7 +138,9 @@ public class DetectorEventDecoder {
             long hash    = new IndexGenerator().hashCode(crate,slot,channel);
 
             for(String table : keysTrans){
+
                 IndexedTable  tt = translationManager.getConstants(runNumber, table);
+
                 if(tt.hasEntry(hash)==true){
                     int sector    = tt.getIntValue("sector", hash);
                     int layer     = tt.getIntValue("layer", hash);
@@ -156,6 +158,9 @@ public class DetectorEventDecoder {
                     for(int i = 0; i < data.getTDCSize(); i++) {
                         data.getTDCData(i).setOrder(order);
                     }
+
+                    // crate/slot/channel must map to a unique detector: 
+                    break;
                 }
             }
         }
