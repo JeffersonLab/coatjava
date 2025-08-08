@@ -79,6 +79,10 @@ public class IndexedTable extends DefaultTableModel {
         return this.entries.hasItem(index);
     }
     
+    public boolean hasEntry(long hash){
+        return this.entries.hasItem(hash);
+    }
+    
     public final void setIndexName(int index, String name){
         indexNames.set(index, name);
     }
@@ -127,6 +131,26 @@ public class IndexedTable extends DefaultTableModel {
         }
     }
     
+    public int getIntValue(String item, long hash) {
+        if (this.entries.hasItem(hash)) {
+            if (this.entryMap.containsKey(item)) {
+                int index = this.entryMap.get(item);
+                return this.entries.getItem(hash).getValue(index).intValue();
+            }
+        }
+        return 0;
+    }
+    
+    public double getDoubleValue(String item, long hash) {
+        if (this.entries.hasItem(hash)) {
+            if (this.entryMap.containsKey(item)) {
+                int index = this.entryMap.get(item);
+                return this.entries.getItem(hash).getValue(index).doubleValue();
+            }
+        }
+        return 0;
+    }
+
     public int  getIntValue(String item, int... index){
         if(this.entries.hasItem(index)==false){
             if(DEBUG_MODE>0) System.out.println( "[IndexedTable] ---> error.. entry does not exist");
