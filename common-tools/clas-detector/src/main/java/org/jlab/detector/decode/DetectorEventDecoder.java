@@ -139,13 +139,13 @@ public class DetectorEventDecoder {
 
             for(String table : keysTrans){
                 IndexedTable  tt = translationManager.getConstants(runNumber, table);
-                DetectorType  type = DetectorType.getType(table);
                 if(tt.hasEntry(hash)==true){
                     int sector    = tt.getIntValue("sector", hash);
                     int layer     = tt.getIntValue("layer", hash);
                     int component = tt.getIntValue("component", hash);
                     int order     = tt.getIntValue("order", hash);
 
+                    DetectorType type = DetectorType.getType(table);
                     data.getDescriptor().setSectorLayerComponent(sector, layer, component);
                     data.getDescriptor().setOrder(order);
                     data.getDescriptor().setType(type);
