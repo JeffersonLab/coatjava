@@ -326,7 +326,8 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
     public static void main(String[] args) {
         
         final String dir = System.getenv("HOME")+"/data/";
-        final String file = "clas_004013.evio.00090-00099.hipo";
+        final String file = "clas_004013.evio.100.hipo";
+        //final String file = "clas_004013.evio.00090-00099.hipo";
 
         List<String> filenames=new ArrayList<>();
         if (args.length>0) filenames.addAll(Arrays.asList(args));
