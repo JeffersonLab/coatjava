@@ -59,7 +59,7 @@ public class RawBank extends FilteredBank {
             OrderType.NOISE3,
             OrderType.BGREMOVED
         };
-        public static final OrderType[] DEFAULT = NOMINAL;
+        public static final OrderType[] DEFAULT = NOISE1;
         public static final OrderType[] NODENOISE = NOISE3;
     }
 

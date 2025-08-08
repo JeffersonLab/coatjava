@@ -18,6 +18,8 @@ usage='''build-coatjava.sh [OPTIONS]... [MAVEN_OPTIONS]...
    --spotbugs        also run spotbugs plugin
    --unittests       also run unit tests
 
+   --depana          run dependency analysis (only)
+
    --quiet           run more quietly
    --no-progress     no download progress printouts
 
@@ -147,6 +149,8 @@ fi
 
 if [ $anaDepends == "yes" ]; then
     mvn dependency:analyze -DfailOnWarning=true -pl '!org.jlab.coat:coat-libs' --no-transfer-progress
+    mvn dependency:tree -Ddetail=true --no-transfer-progress 
+    exit 0
 fi
 
 # start new installation tree
