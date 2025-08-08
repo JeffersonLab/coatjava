@@ -70,6 +70,10 @@ public class IndexedTable extends DefaultTableModel {
     public boolean hasEntry(int... index){
         return this.entries.hasItem(index);
     }
+
+    public boolean hasEntry(long hash){
+        return this.entries.hasItem(hash);
+    }
     
     public final void setIndexName(int index, String name){
         indexNames.set(index, name);
@@ -384,7 +388,7 @@ public class IndexedTable extends DefaultTableModel {
     }
 
     // getters for more optimized access:
-    
+   
     public int getIntValue(String item, long hash) {
         if (this.entries.hasItem(hash)) {
             if (this.entryMap.containsKey(item)) {
