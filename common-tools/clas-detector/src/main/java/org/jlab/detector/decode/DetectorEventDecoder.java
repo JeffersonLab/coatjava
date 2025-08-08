@@ -10,6 +10,7 @@ import org.jlab.detector.banks.RawBank.OrderType;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.decode.DetectorDataDgtz.ADCData;
+import org.jlab.utils.groups.IndexedList.IndexGenerator;
 import org.jlab.utils.groups.IndexedTable;
 
 /**
@@ -134,15 +135,16 @@ public class DetectorEventDecoder {
             int crate    = data.getDescriptor().getCrate();
             int slot     = data.getDescriptor().getSlot();
             int channel  = data.getDescriptor().getChannel();
+            long hash    = new IndexGenerator().hashCode(crate,slot,channel);
 
             for(String table : keysTrans){
                 IndexedTable  tt = translationManager.getConstants(runNumber, table);
                 DetectorType  type = DetectorType.getType(table);
-                if(tt.hasEntry(crate,slot,channel)==true){
-                    int sector    = tt.getIntValue("sector", crate,slot,channel);
-                    int layer     = tt.getIntValue("layer", crate,slot,channel);
-                    int component = tt.getIntValue("component", crate,slot,channel);
-                    int order     = tt.getIntValue("order", crate,slot,channel);
+                if(tt.hasEntry(hash)==true){
+                    int sector    = tt.getIntValue("sector", hash);
+                    int layer     = tt.getIntValue("layer", hash);
+                    int component = tt.getIntValue("component", hash);
+                    int order     = tt.getIntValue("order", hash);
 
                     data.getDescriptor().setSectorLayerComponent(sector, layer, component);
                     data.getDescriptor().setOrder(order);
@@ -164,6 +166,8 @@ public class DetectorEventDecoder {
             int crate    = data.getDescriptor().getCrate();
             int slot     = data.getDescriptor().getSlot();
             int channel  = data.getDescriptor().getChannel();
+            long hash    = new IndexGenerator().hashCode(crate,slot,channel);
+            long hash0   = new IndexGenerator().hashCode(0,0,0);
             for(String table : keysFitter){
                 //custom MM fitter
             	if( ( (table.equals("BMT"))&&(data.getDescriptor().getType().getName().equals("BMT")) )
@@ -171,10 +175,10 @@ public class DetectorEventDecoder {
                  //|| ( (table.equals("AHDC"))&&(data.getDescriptor().getType().getName().equals("AHDC")) )
                  || ( (table.equals("FTTRK"))&&(data.getDescriptor().getType().getName().equals("FTTRK")) ) ){
                     IndexedTable daq = fitterManager.getConstants(runNumber, table);
-                    short adcOffset = (short) daq.getDoubleValue("adc_offset", 0, 0, 0);
-                    double fineTimeStampResolution = (byte) daq.getDoubleValue("dream_clock", 0, 0, 0);
-                    double samplingTime = (byte) daq.getDoubleValue("sampling_time", 0, 0, 0);
-                    int sparseSample = daq.getIntValue("sparse", 0, 0 ,0);
+                    short adcOffset = (short) daq.getDoubleValue("adc_offset", hash0);
+                    double fineTimeStampResolution = (byte) daq.getDoubleValue("dream_clock", hash0);
+                    double samplingTime = (byte) daq.getDoubleValue("sampling_time", hash0);
+                    int sparseSample = daq.getIntValue("sparse", hash0);
                     if (data.getADCSize() > 0) {
                         ADCData adc = data.getADCData(0);
                         mvtFitter.fit(adcOffset, fineTimeStampResolution, samplingTime, adc.getPulseArray(), adc.getTimeStamp(), sparseSample);
@@ -187,9 +191,9 @@ public class DetectorEventDecoder {
                     IndexedTable  daq = fitterManager.getConstants(runNumber, table);
                     DetectorType  type = DetectorType.getType(table);
                     if(daq.hasEntry(crate,slot,channel)==true){
-                        int nsa = daq.getIntValue("nsa", crate,slot,channel);
-                        int nsb = daq.getIntValue("nsb", crate,slot,channel);
-                        int tet = daq.getIntValue("tet", crate,slot,channel);
+                        int nsa = daq.getIntValue("nsa", hash);
+                        int nsb = daq.getIntValue("nsb", hash);
+                        int tet = daq.getIntValue("tet", hash);
                         int ped = 0;
                         if(table.equals("RF")&&data.getDescriptor().getType().getName().equals("RF")) ped = daq.getIntValue("pedestal", crate,slot,channel);
                         if(data.getADCSize()>0){
