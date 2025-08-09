@@ -105,6 +105,34 @@ jobs:
           path: publish/
           retention-days: 1
 
+  test_decoder:
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.java_version }}
+          distribution: ${{ env.java_distribution }}
+      - uses: cvmfs-contrib/github-action-cvmfs@v5
+        with:
+          cvmfs_repositories: 'oasis.opensciencegrid.org'
+      - name: install xrootd-client
+        run: |
+          sudo apt -y update
+          sudo apt -y upgrade
+          sudo apt -y install xrootd-client
+      - uses: actions/download-artifact@v4
+        with:
+          name: build_ubuntu-latest
+      - name: untar build
+        run: tar xzvf coatjava.tar.gz
+      - name: run test
+        run: |
+          xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/clas_005038.evio.00000 .
+          ./coatjava/bin/decoder -n 100000 -o dog.hipo ./clas_005038.evio.00000
+
   test_coatjava:
     needs: [ build ]
     strategy:
