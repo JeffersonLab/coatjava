@@ -33,10 +33,7 @@ public enum DetectorType {
     ATOF      (25, "ATOF"),
     RECOIL    (26, "RECOIL"),
     TARGET    (100, "TARGET"),
-    MAGNETS   (101, "MAGNETS"),
-    ECIN      (110, "ECIN"),
-    ECOUT     (111, "ECOUT"),
-    ECTOT     (112, "ECTOT");
+    MAGNETS   (101, "MAGNETS");
     
     private final int detectorId;
     private final String detectorName;
