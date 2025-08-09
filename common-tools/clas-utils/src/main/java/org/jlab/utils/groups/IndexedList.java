@@ -121,7 +121,7 @@ public class IndexedList<T> {
      * @param hash the hash code to look up
      * @return true if an item exists at the index; false otherwise
      */
-    public boolean hasItem(long hash) {
+    public boolean hasItemByHash(long hash) {
         return this.collection.containsKey(hash);
     }
     
@@ -145,7 +145,7 @@ public class IndexedList<T> {
      * @param hash the hash to find
      * @return the item with the hash, null if not found
      */
-    public T getItem(long hash){
+    public T getItemByHash(long hash){
         if (!this.collection.containsKey(hash)) return null;
         return this.collection.get(hash);
     }
