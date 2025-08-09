@@ -148,11 +148,11 @@ public class DetectorEventDecoder {
 
                 IndexedTable table = tables.get(j);
 
-                if(table.hasEntry(hash)==true){
-                    int sector    = table.getIntValue("sector", hash);
-                    int layer     = table.getIntValue("layer", hash);
-                    int component = table.getIntValue("component", hash);
-                    int order     = table.getIntValue("order", hash);
+                if(table.hasEntryByHash(hash)==true){
+                    int sector    = table.getIntValueByHash("sector", hash);
+                    int layer     = table.getIntValueByHash("layer", hash);
+                    int component = table.getIntValueByHash("component", hash);
+                    int order     = table.getIntValueByHash("order", hash);
 
                     data.getDescriptor().setSectorLayerComponent(sector, layer, component);
                     data.getDescriptor().setOrder(order);
@@ -194,10 +194,10 @@ public class DetectorEventDecoder {
                  || ( (type == DetectorType.FMT)&&(data.getDescriptor().getType().getName().equals("FMT")) )
                  //|| ( (type == DetectorType.AHDC)&&(data.getDescriptor().getType().getName().equals("AHDC")) )
                  || ( (type == DetectorType.FTTRK)&&(data.getDescriptor().getType().getName().equals("FTTRK")) ) ){
-                    short adcOffset = (short) daq.getDoubleValue("adc_offset", hash0);
-                    double fineTimeStampResolution = (byte) daq.getDoubleValue("dream_clock", hash0);
-                    double samplingTime = (byte) daq.getDoubleValue("sampling_time", hash0);
-                    int sparseSample = daq.getIntValue("sparse", hash0);
+                    short adcOffset = (short) daq.getDoubleValueByHash("adc_offset", hash0);
+                    double fineTimeStampResolution = (byte) daq.getDoubleValueByHash("dream_clock", hash0);
+                    double samplingTime = (byte) daq.getDoubleValueByHash("sampling_time", hash0);
+                    int sparseSample = daq.getIntValueByHash("sparse", hash0);
                     if (data.getADCSize() > 0) {
                         ADCData adc = data.getADCData(0);
                         mvtFitter.fit(adcOffset, fineTimeStampResolution, samplingTime, adc.getPulseArray(), adc.getTimeStamp(), sparseSample);
@@ -207,10 +207,10 @@ public class DetectorEventDecoder {
                         adc.setTimeStamp(mvtFitter.timestamp);
                     }
                 } else {
-                    if(daq.hasEntry(hash)==true){
-                        int nsa = daq.getIntValue("nsa", hash);
-                        int nsb = daq.getIntValue("nsb", hash);
-                        int tet = daq.getIntValue("tet", hash);
+                    if(daq.hasEntryByHash(hash)==true){
+                        int nsa = daq.getIntValueByHash("nsa", hash);
+                        int nsb = daq.getIntValueByHash("nsb", hash);
+                        int tet = daq.getIntValueByHash("tet", hash);
                         int ped = 0;
                         if(type == DetectorType.RF&&data.getDescriptor().getType().getName().equals("RF")) ped = daq.getIntValue("pedestal", crate,slot,channel);
                         if(data.getADCSize()>0){

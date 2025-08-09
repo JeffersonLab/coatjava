@@ -79,8 +79,8 @@ public class IndexedTable extends DefaultTableModel {
         return this.entries.hasItem(index);
     }
     
-    public boolean hasEntry(long hash){
-        return this.entries.hasItem(hash);
+    public boolean hasEntryByHash(long hash){
+        return this.entries.hasItemByHash(hash);
     }
     
     public final void setIndexName(int index, String name){
@@ -131,21 +131,21 @@ public class IndexedTable extends DefaultTableModel {
         }
     }
     
-    public int getIntValue(String item, long hash) {
-        if (this.entries.hasItem(hash)) {
+    public int getIntValueByHash(String item, long hash) {
+        if (this.entries.hasItemByHash(hash)) {
             if (this.entryMap.containsKey(item)) {
                 int index = this.entryMap.get(item);
-                return this.entries.getItem(hash).getValue(index).intValue();
+                return this.entries.getItemByHash(hash).getValue(index).intValue();
             }
         }
         return 0;
     }
     
-    public double getDoubleValue(String item, long hash) {
-        if (this.entries.hasItem(hash)) {
+    public double getDoubleValueByHash(String item, long hash) {
+        if (this.entries.hasItemByHash(hash)) {
             if (this.entryMap.containsKey(item)) {
                 int index = this.entryMap.get(item);
-                return this.entries.getItem(hash).getValue(index).doubleValue();
+                return this.entries.getItemByHash(hash).getValue(index).doubleValue();
             }
         }
         return 0;
