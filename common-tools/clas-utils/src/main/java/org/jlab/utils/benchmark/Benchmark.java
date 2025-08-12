@@ -36,9 +36,7 @@ public class Benchmark {
     }
     
     public void reset(){
-        for(Map.Entry<String,BenchmarkTimer> entry : timerStore.entrySet()){
-            entry.getValue().reset();
-        }
+        for (BenchmarkTimer bt : timerStore.values()) bt.reset(); 
     }
     
     public void addTimer(String name){
@@ -71,12 +69,12 @@ public class Benchmark {
     }
 
     public BenchmarkTimer getTotal(String name) {
-        BenchmarkTimer b = new BenchmarkTimer(name);
-        for(Map.Entry<String,BenchmarkTimer> timer : timerStore.entrySet()){
-            b.numberOfCalls += timer.getValue().numberOfCalls;
-            b.totalTime += timer.getValue().totalTime;
+        BenchmarkTimer total = new BenchmarkTimer(name);
+        for (BenchmarkTimer bt : timerStore.values()) {
+            total.numberOfCalls += bt.numberOfCalls;
+            total.totalTime += bt.totalTime;
         }
-        return b;
+        return total;
     }
 
     @Override
