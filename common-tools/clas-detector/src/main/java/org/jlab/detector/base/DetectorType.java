@@ -60,7 +60,6 @@ public enum DetectorType {
     DetectorType(int id, String name){
         detectorId = id;
         detectorName = name;
-        getStringLookup();
     }
     
     /**
