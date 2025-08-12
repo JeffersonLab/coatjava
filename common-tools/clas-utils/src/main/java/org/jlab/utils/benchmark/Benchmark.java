@@ -1,8 +1,7 @@
 package org.jlab.utils.benchmark;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Timer;
@@ -17,8 +16,7 @@ public class Benchmark {
     private static final Benchmark benchmarkInstance = new Benchmark();
     private final Map<String,BenchmarkTimer> timerStore = new LinkedHashMap<>();
     private Timer updateTimer = null;
-   
-    private final boolean disabled = false;
+    private boolean sort = false;
     
     public Benchmark(){}
     
@@ -49,7 +47,6 @@ public class Benchmark {
     }
     
     public void pause(String name){
-        if (disabled) return;
         if (!timerStore.containsKey(name)){
             timerStore.put(name, new BenchmarkTimer(name));
         } else {
@@ -58,7 +55,6 @@ public class Benchmark {
     }
     
     public void resume(String name){
-        if (disabled) return;
         if (!timerStore.containsKey(name))
             timerStore.put(name, new BenchmarkTimer(name));
         timerStore.get(name).resume();
@@ -70,9 +66,9 @@ public class Benchmark {
 
     public BenchmarkTimer getTotal(String name) {
         BenchmarkTimer total = new BenchmarkTimer(name);
-        for (BenchmarkTimer bt : timerStore.values()) {
-            total.numberOfCalls += bt.numberOfCalls;
-            total.totalTime += bt.totalTime;
+        for (BenchmarkTimer b : timerStore.values()) {
+            total.numberOfCalls += b.numberOfCalls;
+            total.totalTime += b.totalTime;
         }
         return total;
     }
@@ -80,35 +76,33 @@ public class Benchmark {
     @Override
     public String toString(){
 
-        ArrayList<String> timerStrings = new ArrayList<>();
-        for(Map.Entry<String,BenchmarkTimer> timer : timerStore.entrySet()){
-            timerStrings.add(timer.getValue().toString());
-        }
-        Collections.sort(timerStrings);
+        StringBuilder s = new StringBuilder();
 
-        timerStrings.add(getTotal("").toString());
+        Collection<BenchmarkTimer> timers = timerStore.values();
+
+        if (!timers.isEmpty()) {
         
-        StringBuilder str = new StringBuilder();
-
-        if(!timerStrings.isEmpty()){
-            int len = timerStrings.get(0).length();
-            char[]  asterix = new char[len+8];
+            int len = timers.iterator().next().toString().length();
+            char[] asterix = new char[len+8];
             Arrays.fill(asterix,'*');
             String margins = new String(asterix);
-            str.append(margins);
-            str.append("\n");
-            str.append("*     BENCHMARK  RESULTS \n");
-            str.append(margins);
-            str.append("\n");
-            for(String lines : timerStrings){
-                str.append("*   ");
-                str.append(lines);
-                str.append("   *\n");
+            s.append(margins);
+            s.append("\n");
+            s.append("*     BENCHMARK  RESULTS \n");
+            s.append(margins);
+            s.append("\n");
+            for (BenchmarkTimer b : timers) {
+                s.append("*   ");
+                s.append(b);
+                s.append("   *\n");
             }
-            str.append(margins);
-            str.append("\n");
+            s.append("*   ");
+            s.append(getTotal(""));
+            s.append("   *\n");
+            s.append(margins);
+            s.append("\n");
         }
         
-        return str.toString();
+        return s.toString();
     }
 }
