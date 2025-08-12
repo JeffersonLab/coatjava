@@ -86,7 +86,7 @@ public class HelicitySequence {
         
         if (!state.isValid()) return false;
         
-        LOGGER.log(Level.FINE, "HelicitySequence:  adding state:  {0}", state);
+        LOGGER.log(Level.FINEST, "HelicitySequence:  adding state:  {0}", state);
 
         // ignore states from other run numbers:
         for (HelicityState hs : this.states) {
