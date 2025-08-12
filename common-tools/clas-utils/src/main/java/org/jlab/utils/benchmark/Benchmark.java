@@ -3,7 +3,7 @@ package org.jlab.utils.benchmark;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -15,7 +15,7 @@ import java.util.TimerTask;
 public class Benchmark {
     
     private static final Benchmark benchmarkInstance = new Benchmark();
-    private final Map<String,BenchmarkTimer> timerStore = new HashMap<>();
+    private final Map<String,BenchmarkTimer> timerStore = new LinkedHashMap<>();
     private Timer updateTimer = null;
    
     private final boolean disabled = false;
