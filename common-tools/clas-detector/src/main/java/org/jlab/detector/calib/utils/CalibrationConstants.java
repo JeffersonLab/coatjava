@@ -67,7 +67,7 @@ public class CalibrationConstants extends IndexedTable {
             StringBuilder str = new StringBuilder();
             for(int i = 0; i < nindex; i++){
                 str.append(
-                        String.format("%3d ",IndexedList.IndexGenerator.getIndex(entry.getKey(),i)));
+                        String.format("%3d ",this.getList().getIndexGenerator().getIndex(entry.getKey(),i)));
             }
             int ncolumns = entry.getValue().getSize();
             for(int i = 0; i < ncolumns; i++){

@@ -59,6 +59,14 @@ public class IndexedTable extends DefaultTableModel {
         }
     }
     
+    public void setByteShifts(int[] byteShifts){
+        this.entries.setIndexGenerator(new IndexGenerator(byteShifts));
+    }
+    
+    public int[] getByteShifts(){
+        return this.entries.getIndexGenerator().getByteShifts();
+    }
+    
     public void setPrecision(Integer precision){
         StringBuilder str = new StringBuilder();
         str.append("%.");
@@ -293,7 +301,8 @@ public class IndexedTable extends DefaultTableModel {
             value = (Long) iter.next();
         }
         if(column<entries.getIndexSize()){
-            Integer index = IndexedList.IndexGenerator.getIndex(value, column);
+            IndexedList indexList = new IndexedList(entries.getIndexSize());
+            Integer index = indexList.getIndexGenerator().getIndex(value, column);
             return index.toString();
         }
         
@@ -397,24 +406,6 @@ public class IndexedTable extends DefaultTableModel {
             }
         }
         return 0;
-    }
-    
-    public int[] getIntValues(String[] items, int... index) {
-        long hash = IndexGenerator.hashCode(index);
-        int ret[] = new int[items.length];
-        for (int i=0; i<items.length; ++i)
-            ret[i] = getIntValue(items[i],hash);
-        return ret;
-    }
-
-    public int[] getIntValues(String s1, String s2, String s3, int... index) {
-        long hash = IndexGenerator.hashCode(index);
-        return new int[]{getIntValue(s1,hash),getIntValue(s2,hash),getIntValue(s3,hash)};
-    }
-    
-    public int[] getIntValues(String s1, String s2, String s3, String s4, int... index) {
-        long hash = IndexGenerator.hashCode(index);
-        return new int[]{getIntValue(s1,hash),getIntValue(s2,hash),getIntValue(s3,hash),getIntValue(s4,hash)};
     }
     
 }
