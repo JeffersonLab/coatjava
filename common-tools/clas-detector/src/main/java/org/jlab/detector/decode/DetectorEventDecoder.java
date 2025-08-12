@@ -126,7 +126,7 @@ public class DetectorEventDecoder {
                 IndexedTable  tt = translationManager.getConstants(runNumber, table);
                 //Benchmark.getInstance().pause("GC");
 
-                long hash = IndexGenerator.hashCode(crate,slot,channel);
+                long hash = (new IndexGenerator()).hashCode(crate,slot,channel);
                 
                 //Benchmark.getInstance().resume("HE");
                 final boolean dog = tt.hasEntry(hash);//crate,slot,channel);
