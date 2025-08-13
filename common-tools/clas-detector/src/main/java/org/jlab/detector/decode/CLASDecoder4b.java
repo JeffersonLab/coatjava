@@ -97,8 +97,9 @@ public class CLASDecoder4b extends CLASDecoder4 {
     }
 
     public static void main(String[] args) {
+        // hijack arguments, when run from an IDE:
         if (System.console() == null && args.length == 0) {
-            File f= new File("x.hipo");
+            File f = new File("x.hipo");
             if (f.exists()) f.delete();
             args = new String[]{"-o","x.hipo",System.getenv("HOME")+"/data/clas_005038.evio.00001"};
             System.setProperty("CLAS12DIR", System.getenv("HOME")+"/sw/coatjava/dev/coatjava");
