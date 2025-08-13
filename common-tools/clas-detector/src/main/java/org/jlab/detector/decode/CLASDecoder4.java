@@ -768,6 +768,7 @@ public class CLASDecoder4 {
         return p;
     }
 
+    @Deprecated
     public static void main(String[] args){
 
         OptionParser parser = CLASDecoder4.getOptionParser();
