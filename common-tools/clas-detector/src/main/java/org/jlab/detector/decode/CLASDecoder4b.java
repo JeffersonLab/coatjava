@@ -17,7 +17,7 @@ import org.jlab.utils.options.OptionParser;
 import org.jlab.utils.system.ClasUtilsFile;
 
 /**
- * Cleanup wrapper of CLASDecoder
+ * Cleanup wrapper of everything in CLAS12Decoder's main method.
  */
 public class CLASDecoder4b extends CLASDecoder4 {
   
