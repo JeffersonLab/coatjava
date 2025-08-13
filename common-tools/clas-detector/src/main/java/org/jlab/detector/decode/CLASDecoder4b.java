@@ -37,6 +37,10 @@ public class CLASDecoder4b extends CLASDecoder4 {
 
     public CLASDecoder4b(OptionParser o) {
         super();
+        init(o);
+    }
+
+    private void init(OptionParser o){
         eventCounter = 0;
         writer = null;
         filenames = new ArrayList<>(o.getInputList());
