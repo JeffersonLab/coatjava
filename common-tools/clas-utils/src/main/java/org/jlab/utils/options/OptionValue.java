@@ -32,9 +32,9 @@ public class OptionValue {
     public double  doubleValue()  { return Double.parseDouble(this.optionValue);}
     public String  stringValue()  { return this.optionValue;}
   
-    public int       intValueOrDefault(int def)    { return this.optionValue == null ? def : intValue(); }
-    public long     longValueOrDefault(long def)   { return this.optionValue == null ? def : longValue(); }
-    public double doubleValueOrDefault(double def) { return this.optionValue == null ? def : doubleValue(); }
+    public Integer  intValueOrDefault(Integer def) { return this.optionValue == null ? def : intValue(); }
+    public Long     longValueOrDefault(Long def)   { return this.optionValue == null ? def : longValue(); }
+    public Double doubleValueOrDefault(Double def) { return this.optionValue == null ? def : doubleValue(); }
     public String stringValueOrDefault(String def) { return this.optionValue == null ? def : stringValue(); }
 
     private int getOptionIndex(List<String> options){
