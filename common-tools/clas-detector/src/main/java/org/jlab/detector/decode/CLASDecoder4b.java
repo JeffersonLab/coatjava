@@ -16,6 +16,9 @@ import org.jlab.utils.benchmark.ProgressPrintout;
 import org.jlab.utils.options.OptionParser;
 import org.jlab.utils.system.ClasUtilsFile;
 
+/**
+ * Cleanup wrapper of CLASDecoder
+ */
 public class CLASDecoder4b extends CLASDecoder4 {
   
     private EvioSource reader;
