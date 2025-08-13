@@ -104,13 +104,19 @@ public class CLASDecoder4b extends CLASDecoder4 {
     }
 
     public static void main(String[] args) {
+
         // hijack arguments, when run from an IDE:
         if (System.console() == null && args.length == 0) {
-            File f = new File("x.hipo");
+            // delete output file, if necessary:
+            File f = new File("tmp.hipo");
             if (f.exists()) f.delete();
-            args = new String[]{"-o","x.hipo",System.getenv("HOME")+"/data/clas_005038.evio.00001"};
+            // setup decoder command-line options:
+            args = new String[]{"-o","tmp.hipo",System.getenv("HOME")+"/data/clas_005038.evio.00001"};
+            // try to find bankdefs:
             System.setProperty("CLAS12DIR", System.getenv("HOME")+"/sw/coatjava/dev/coatjava");
         }
+
+        // run the decoder:
         OptionParser opts = CLASDecoder4.getOptionParser();
         opts.parse(args);
         CLASDecoder4b decoder = new CLASDecoder4b(opts);
