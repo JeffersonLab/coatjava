@@ -7,7 +7,6 @@ import java.util.List;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jlab.detector.base.DetectorDescriptor;
@@ -16,23 +15,18 @@ import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.calib.utils.RCDBProvider.RCDBManager;
 import org.jlab.detector.decode.DetectorDataDgtz.HelicityDecoderData;
 import org.jlab.detector.helicity.HelicityBit;
-import org.jlab.detector.helicity.HelicitySequence;
-import org.jlab.detector.helicity.HelicityState;
 import org.jlab.detector.pulse.ModeAHDC;
 
 import org.jlab.logging.DefaultLogger;
 
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.evio.EvioDataEvent;
-import org.jlab.io.evio.EvioSource;
 
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
-import org.jlab.jnp.hipo4.io.HipoWriterSorted;
 import org.jlab.utils.benchmark.Benchmark;
 
-import org.jlab.utils.benchmark.ProgressPrintout;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.options.OptionParser;
 import org.jlab.utils.system.ClasUtilsFile;
@@ -770,87 +764,7 @@ public class CLASDecoder4 {
 
     @Deprecated
     public static void main(String[] args){
-
-        OptionParser parser = CLASDecoder4.getOptionParser();
-        parser.parse(args);
-        List<String> inputList = parser.getInputList();
-
-        if(parser.getOption("-o").getValue()==null){
-            parser.printUsage();
-            System.err.println("\n >>>> error : no -o output file is specified....\n");
-            System.exit(1);
-        }
-
-        String outputFile = parser.getOption("-o").stringValue();
-        final int compression = parser.getOption("-c").intValue();
-
-        CLASDecoder4 decoder = new CLASDecoder4();
-        HipoWriterSorted writer = new HipoWriterSorted();
-        writer.setCompressionType(compression);
-        writer.getSchemaFactory().initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4"));
-
-        Bank  rawRunConf  = new Bank(writer.getSchemaFactory().getSchema("RUN::config"));
-        Bank  helicityAdc = new Bank(writer.getSchemaFactory().getSchema("HEL::adc"));
-
-        final int nrun = parser.getOption("-r").intValue();
-        if(nrun>0) decoder.setRunNumber(nrun,true);
-
-        Double torus = parser.getOption("-t").getValue() == null ? null : parser.getOption("-t").doubleValue();
-        Double solenoid = parser.getOption("-s").getValue() == null ? null : parser.getOption("-s").doubleValue();
-
-        ProgressPrintout progress = new ProgressPrintout();
-        progress.addBenchmarks();
-
-        writer.open(outputFile);
-        LOGGER.log(Level.FINE, "INPUT LIST SIZE = {0}", inputList.size());
-
-        final int nevents = parser.getOption("-n").intValue();
-        int counter = 0;
-
-        if (parser.getOption("-x").getValue() != null)
-            decoder.detectorDecoder.setTimestamp(parser.getOption("-x").stringValue());
-        if (parser.getOption("-v").getValue() != null)
-            decoder.detectorDecoder.setVariation(parser.getOption("-v").stringValue());
-
-        // Store all helicity readings, ordered by timestamp:
-        TreeSet<HelicityState> helicityReadings = new TreeSet<>();
-
-        for(String inputFile : inputList){
-            EvioSource reader = new EvioSource();
-            reader.open(inputFile);
-           
-            while(reader.hasEvent()==true){
-                EvioDataEvent event = (EvioDataEvent) reader.getNextEvent();
-                
-                Event  decodedEvent = decoder.getDecodedEvent(event, nrun, counter, torus, solenoid);
-               
-                Benchmark.getInstance().resume("LOOP");
-                decodedEvent.read(rawRunConf);
-                decodedEvent.read(helicityAdc);
-
-                helicityReadings.add(HelicityState.createFromFadcBank(helicityAdc, rawRunConf,
-                    decoder.detectorDecoder.scalerManager));
-
-                Event taggedEvent = decoder.createTaggedEvent(decodedEvent, "RAW::epics","RAW::scaler","RUN::scaler","HEL::scaler");
-                if (!taggedEvent.isEmpty())
-                    writer.addEvent(taggedEvent, 1);
-                
-                writer.addEvent(decodedEvent,0);
-                
-                counter++;
-                progress.updateStatus();
-                if(counter%25000==0) System.gc();
-                if(nevents>0 && counter>=nevents) break;
-                Benchmark.getInstance().pause("LOOP");
-            }
-
-        }
-
-        // add the helicity flips into new tag-1 events:
-        HelicitySequence.writeFlips(writer, helicityReadings);
-
-        writer.close();
-        System.out.println(Benchmark.getInstance());
+        CLASDecoder4b.main(args);
     }
 
 }
