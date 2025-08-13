@@ -32,10 +32,10 @@ public class OptionValue {
     public double  doubleValue()  { return Double.parseDouble(this.optionValue);}
     public String  stringValue()  { return this.optionValue;}
   
-    public Integer  intValueOrDefault(Integer def) { return this.optionValue == null ? def : intValue(); }
-    public Long     longValueOrDefault(Long def)   { return this.optionValue == null ? def : longValue(); }
-    public Double doubleValueOrDefault(Double def) { return this.optionValue == null ? def : doubleValue(); }
-    public String stringValueOrDefault(String def) { return this.optionValue == null ? def : stringValue(); }
+    public Integer  intValueOrNull()  { return this.optionValue == null ? null : intValue(); }
+    public Long     longValueOrNull() { return this.optionValue == null ? null : longValue(); }
+    public Double doubleValueOrNull() { return this.optionValue == null ? null : doubleValue(); }
+    public String stringValueOrNull() { return this.optionValue == null ? null : stringValue(); }
 
     private int getOptionIndex(List<String> options){
         for(int i = 0; i < options.size(); i++){

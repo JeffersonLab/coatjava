@@ -1,5 +1,6 @@
 package org.jlab.detector.decode;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.TreeSet;
 import org.jlab.detector.helicity.HelicitySequence;
@@ -43,8 +44,8 @@ public class CLASDecoder4b extends CLASDecoder4 {
         helicities = new TreeSet<>();
         progress = new ProgressPrintout();
         progress.addBenchmarks();
-        torus = o.getOption("-t").doubleValueOrDefault(null);
-        solenoid = o.getOption("-s").doubleValueOrDefault(null);
+        torus = o.getOption("-t").doubleValueOrNull();
+        solenoid = o.getOption("-s").doubleValueOrNull();
         runNumber = o.getOption("-r").intValue();
         maxEvents = o.getOption("-n").intValue();
         if (runNumber > 0) setRunNumber(runNumber, true);
@@ -96,9 +97,15 @@ public class CLASDecoder4b extends CLASDecoder4 {
     }
 
     public static void main(String[] args) {
-        OptionParser parser = CLASDecoder4.getOptionParser();
-        parser.parse(args);
-        CLASDecoder4b decoder = new CLASDecoder4b(parser);
+        if (System.console() == null && args.length == 0) {
+            File f= new File("x.hipo");
+            if (f.exists()) f.delete();
+            args = new String[]{"-o","x.hipo",System.getenv("HOME")+"/data/clas_005038.evio.00001"};
+            System.setProperty("CLAS12DIR", System.getenv("HOME")+"/sw/coatjava/dev/coatjava");
+        }
+        OptionParser opts = CLASDecoder4.getOptionParser();
+        opts.parse(args);
+        CLASDecoder4b decoder = new CLASDecoder4b(opts);
         while (decoder.hasNext()) decoder.processNextEvent();
         decoder.close();
     }
