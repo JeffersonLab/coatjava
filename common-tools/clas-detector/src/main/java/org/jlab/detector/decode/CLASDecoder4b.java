@@ -1,5 +1,6 @@
 package org.jlab.detector.decode;
 
+import java.util.ArrayList;
 import java.util.TreeSet;
 import org.jlab.detector.helicity.HelicitySequence;
 import org.jlab.detector.helicity.HelicityState;
@@ -16,11 +17,12 @@ import org.jlab.utils.system.ClasUtilsFile;
 
 public class CLASDecoder4b extends CLASDecoder4 {
   
-    private OptionParser options;
+    private EvioSource reader;
     private HipoWriterSorted writer;
     private SchemaFactory schema;
     private Bank config;
     private Bank helicity;
+    private ArrayList<String> filenames;
     private TreeSet<HelicityState> helicities;
     private ProgressPrintout progress;
     private Double torus;
@@ -29,22 +31,11 @@ public class CLASDecoder4b extends CLASDecoder4 {
     private int maxEvents;
     private int eventCounter;
 
-    public static void main(String[] args) {
-        OptionParser parser = CLASDecoder4.getOptionParser();
-        parser.parse(args);
-        CLASDecoder4b decoder = new CLASDecoder4b(parser);
-        decoder.process();
-    }
-
     public CLASDecoder4b(OptionParser o) {
         super();
-        init(o);
-    }
-
-    private void init(OptionParser o) {
-        options = o;
         eventCounter = 0;
         writer = null;
+        filenames = new ArrayList<>(o.getInputList());
         schema = new SchemaFactory();
         schema.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4"));
         config  = new Bank(schema.getSchema("RUN::config"));
@@ -69,7 +60,19 @@ public class CLASDecoder4b extends CLASDecoder4 {
         }
     }
 
-    private void processNextEvent(EvioDataEvent evio) {
+    public boolean hasNext() {
+        if (reader != null && reader.hasEvent()) return true;
+        if (!filenames.isEmpty()) return true;
+        if (maxEvents < 0 || eventCounter < maxEvents) return true;
+        return false;
+    }
+
+    public void processNextEvent() {
+        if (reader == null || !reader.hasEvent()) {
+            reader = new EvioSource();
+            reader.open(filenames.removeFirst());
+        }
+        EvioDataEvent evio = (EvioDataEvent)reader.getNextEvent();
         Event event = super.getDecodedEvent(evio, runNumber, eventCounter, torus, solenoid);
         Benchmark.getInstance().resume("EVENT");
         event.read(config);
@@ -84,21 +87,21 @@ public class CLASDecoder4b extends CLASDecoder4 {
         progress.updateStatus();
         if (++eventCounter%25000 == 0) System.gc();
         Benchmark.getInstance().pause("EVENT");
-    } 
-    
-    private void process() {
-        for (String inputFile : options.getInputList()) {
-            EvioSource reader = new EvioSource();
-            reader.open(inputFile);
-            while (reader.hasEvent()) {
-                processNextEvent((EvioDataEvent)reader.getNextEvent());
-                if (maxEvents > 0 && eventCounter >= maxEvents) break;
-            }
-        }
+    }
+
+    public void close() {
         if (writer != null) {
             HelicitySequence.writeFlips(writer, helicities);
             writer.close();
         }
+    }
+
+    public static void main(String[] args) {
+        OptionParser parser = CLASDecoder4.getOptionParser();
+        parser.parse(args);
+        CLASDecoder4b decoder = new CLASDecoder4b(parser);
+        while (decoder.hasNext()) decoder.processNextEvent();
+        decoder.close();
     }
 
 }
