@@ -764,7 +764,7 @@ public class CLASDecoder4 {
         p.addOption("-s", null,"solenoid current in the header bank (null means use RCDB)");
         p.addOption("-x", null,"CCDB timestamp (MM/DD/YYYY-HH:MM:SS)");
         p.addOption("-v","default","CCDB variation");
-        p.addRequired("-o");
+        p.addOption("-o",null,"output HIPO filename");
         return p;
     }
 
@@ -777,6 +777,12 @@ public class CLASDecoder4 {
         if(inputList.isEmpty()==true){
             parser.printUsage();
             System.err.println("\n >>>> error : no input file is specified....\n");
+            System.exit(1);
+        }
+
+        if(parser.getOption("-o").getValue()==null){
+            parser.printUsage();
+            System.err.println("\n >>>> error : no -o output file is specified....\n");
             System.exit(1);
         }
 
