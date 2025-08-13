@@ -762,7 +762,7 @@ public class CLASDecoder4 {
         p.addOption("-t", null,"torus current in the header bank (null means use RCDB)");
         p.addOption("-s", null,"solenoid current in the header bank (null means use RCDB)");
         p.addOption("-x", null,"CCDB timestamp (MM/DD/YYYY-HH:MM:SS)");
-        p.addOption("-v","default","CCDB variation");
+        p.addOption("-V","default","CCDB variation");
         p.addOption("-o",null,"output HIPO filename");
         p.setRequiresInputList(true);
         return p;
