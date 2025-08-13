@@ -37,16 +37,14 @@ public class ClasUtilsFile {
     public static String getResourceDir(String env, String rpath){
         
         String envString = System.getenv(env);
-        if(envString==null){
-            ClasUtilsFile.printLog("Environment variable ["+env+"] is not defined");
+        if (envString==null) {
+            ClasUtilsFile.printLog("Environment variable ["+env+"] is not defined, trying system property ...");
             envString = System.getProperty(env);
+            if(envString == null){
+                ClasUtilsFile.printLog("System property ["+env+"] is not defined either.");
+                return null;
+            }
         }
-        
-        if(envString == null){
-            ClasUtilsFile.printLog("System property ["+env+"] is not defined");
-            return null;
-        }
-        
         StringBuilder str = new StringBuilder();
         int index = envString.length()-1;
         str.append(envString);
