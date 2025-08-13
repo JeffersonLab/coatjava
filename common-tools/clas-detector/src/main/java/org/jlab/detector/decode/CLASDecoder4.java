@@ -765,6 +765,7 @@ public class CLASDecoder4 {
         p.addOption("-x", null,"CCDB timestamp (MM/DD/YYYY-HH:MM:SS)");
         p.addOption("-v","default","CCDB variation");
         p.addOption("-o",null,"output HIPO filename");
+        p.setRequiresInputList(true);
         return p;
     }
 
@@ -773,12 +774,6 @@ public class CLASDecoder4 {
         OptionParser parser = CLASDecoder4.getOptionParser();
         parser.parse(args);
         List<String> inputList = parser.getInputList();
-
-        if(inputList.isEmpty()==true){
-            parser.printUsage();
-            System.err.println("\n >>>> error : no input file is specified....\n");
-            System.exit(1);
-        }
 
         if(parser.getOption("-o").getValue()==null){
             parser.printUsage();
