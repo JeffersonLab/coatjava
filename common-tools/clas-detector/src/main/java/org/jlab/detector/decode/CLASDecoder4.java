@@ -46,7 +46,7 @@ public class CLASDecoder4 {
     private static final Logger LOGGER = Logger.getLogger(CLASDecoder4.class.getPackage().getName());
 
     private CodaEventDecoder          codaDecoder = null;
-    private DetectorEventDecoder  detectorDecoder = null;
+    public DetectorEventDecoder  detectorDecoder = null;
     private List<DetectorDataDgtz>       dataList = new ArrayList<>();
     private boolean              isRunNumberFixed = false;
     private final SchemaFactory     schemaFactory = new SchemaFactory();
@@ -753,21 +753,25 @@ public class CLASDecoder4 {
         return createTaggedEvent(schemaFactory, e, banks);
     }
 
+    public static OptionParser getOptionParser() {
+        OptionParser p = new OptionParser("decoder");
+        p.setDescription("CLAS12 Data Decoder");
+        p.addOption("-n", "-1", "maximum number of events to process");
+        p.addOption("-c", "2", "compression type (0-NONE, 1-LZ4 Fast, 2-LZ4 Best, 3-GZIP)");
+        p.addOption("-m", "run","translation tables source (use -m devel for development tables)");
+        p.addOption("-r", "-1","run number in the header bank (-1 means use CODA run)");
+        p.addOption("-t", null,"torus current in the header bank (null means use RCDB)");
+        p.addOption("-s", null,"solenoid current in the header bank (null means use RCDB)");
+        p.addOption("-x", null,"CCDB timestamp (MM/DD/YYYY-HH:MM:SS)");
+        p.addOption("-v","default","CCDB variation");
+        p.addRequired("-o");
+        return p;
+    }
+
     public static void main(String[] args){
 
-        OptionParser parser = new OptionParser("decoder");
-        parser.setDescription("CLAS12 Data Decoder");
-        parser.addOption("-n", "-1", "maximum number of events to process");
-        parser.addOption("-c", "2", "compression type (0-NONE, 1-LZ4 Fast, 2-LZ4 Best, 3-GZIP)");
-        parser.addOption("-m", "run","translation tables source (use -m devel for development tables)");
-        parser.addOption("-r", "-1","run number in the header bank (-1 means use CODA run)");
-        parser.addOption("-t", null,"torus current in the header bank (null means use RCDB)");
-        parser.addOption("-s", null,"solenoid current in the header bank (null means use RCDB)");
-        parser.addOption("-x", null,"CCDB timestamp (MM/DD/YYYY-HH:MM:SS)");
-        parser.addOption("-v","default","CCDB variation");
-        parser.addRequired("-o","output.hipo");
+        OptionParser parser = CLASDecoder4.getOptionParser();
         parser.parse(args);
-
         List<String> inputList = parser.getInputList();
 
         if(inputList.isEmpty()==true){
