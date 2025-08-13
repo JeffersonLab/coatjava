@@ -758,7 +758,6 @@ public class CLASDecoder4 {
         p.setDescription("CLAS12 Data Decoder");
         p.addOption("-n", "-1", "maximum number of events to process");
         p.addOption("-c", "2", "compression type (0-NONE, 1-LZ4 Fast, 2-LZ4 Best, 3-GZIP)");
-        p.addOption("-m", "run","translation tables source (use -m devel for development tables)");
         p.addOption("-r", "-1","run number in the header bank (-1 means use CODA run)");
         p.addOption("-t", null,"torus current in the header bank (null means use RCDB)");
         p.addOption("-s", null,"solenoid current in the header bank (null means use RCDB)");
@@ -778,14 +777,6 @@ public class CLASDecoder4 {
         if(parser.getOption("-o").getValue()==null){
             parser.printUsage();
             System.err.println("\n >>>> error : no -o output file is specified....\n");
-            System.exit(1);
-        }
-
-        String modeDevel = parser.getOption("-m").stringValue();
-
-        if(modeDevel.compareTo("run")!=0&&modeDevel.compareTo("devel")!=0){
-            parser.printUsage();
-            System.err.println("\n >>>> error : mode has to be set to \"run\" or \"devel\" ");
             System.exit(1);
         }
 
