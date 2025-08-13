@@ -61,16 +61,15 @@ public class CLASDecoder4b extends CLASDecoder4 {
     }
 
     public boolean hasNext() {
+        if (maxEvents > 0 && eventCounter > maxEvents) return false;
         if (reader != null && reader.hasEvent()) return true;
-        if (!filenames.isEmpty()) return true;
-        if (maxEvents < 0 || eventCounter < maxEvents) return true;
-        return false;
+        return !filenames.isEmpty();
     }
 
     public void processNextEvent() {
         if (reader == null || !reader.hasEvent()) {
             reader = new EvioSource();
-            reader.open(filenames.removeFirst());
+            reader.open(filenames.remove(0));
         }
         EvioDataEvent evio = (EvioDataEvent)reader.getNextEvent();
         Event event = super.getDecodedEvent(evio, runNumber, eventCounter, torus, solenoid);
