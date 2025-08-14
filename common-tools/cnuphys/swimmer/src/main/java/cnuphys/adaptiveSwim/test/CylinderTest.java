@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import cnuphys.CLAS12Swim.CLAS12SwimResult;
 import cnuphys.CLAS12Swim.CLAS12Swimmer;
 import cnuphys.CLAS12Swim.geometry.Cylinder;
+import cnuphys.CLAS12Swim.geometry.Point;
 import cnuphys.adaptiveSwim.AdaptiveSwimException;
 import cnuphys.adaptiveSwim.AdaptiveSwimResult;
 import cnuphys.adaptiveSwim.AdaptiveSwimmer;
@@ -232,7 +233,7 @@ public class CylinderTest {
 		//uf is NOT the intersection
 		if (result.getStatus() == CLAS12Swimmer.SWIM_SUCCESS) {
 			double[] uf = result.getFinalU();
-			dist = cylinder.signedDistance(uf[0], uf[1], uf[2]);
+			dist = cylinder.signedDistance(new Point(uf[0], uf[1], uf[2]));
 			dist = Math.abs(dist);
 			writer.writeStartOfRow(uf[0], uf[1], uf[2], result.getPathLength(), result.getNStep(), dist);
 

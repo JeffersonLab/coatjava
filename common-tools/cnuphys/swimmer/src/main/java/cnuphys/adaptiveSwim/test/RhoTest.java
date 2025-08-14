@@ -42,7 +42,7 @@ public class RhoTest {
 
 
 		AdaptiveSwimmer adaptiveSwimmer = new AdaptiveSwimmer(); //adaptive
-		CLAS12Swimmer clas12Swimmer = new CLAS12Swimmer(EIntegrator.CashKarp); //DP
+		CLAS12Swimmer clas12Swimmer = new CLAS12Swimmer(); //DP
 
 		//results for adaptive
 		AdaptiveSwimResult result = new AdaptiveSwimResult(true);

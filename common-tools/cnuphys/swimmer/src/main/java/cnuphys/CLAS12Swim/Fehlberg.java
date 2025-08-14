@@ -27,31 +27,36 @@ public class Fehlberg {
 		double[] yTemp4 = new double[n];
 		double[] error = new double[n];
 		double[] scratch = new double[n];
-
-		double[] k1, k2, k3, k4, k5, k6;
+		
+		double k1[] = new double[n];
+		double k2[] = new double[n];
+		double k3[] = new double[n];
+		double k4[] = new double[n];
+		double k5[] = new double[n];
+		double k6[] = new double[n];
 
 		while (t < t1) {
 			if (t + h > t1) h = t1 - t;
 
 			boolean acceptStep = false;
 			while (!acceptStep) {
-				k1 = ode.getDerivatives(t, y);
+				ode.getDerivativesInto(t, y, k1);
 				ODEStepMath.scaleAndAdd(y, k1, a[1][0] * h, scratch);
-				k2 = ode.getDerivatives(t + c[1] * h, scratch);
+				ode.getDerivativesInto(t + c[1] * h, scratch, k2);
 
 				ODEStepMath.scaleAndAdd(y, k1, a[2][0] * h, k2, a[2][1] * h, scratch);
-				k3 = ode.getDerivatives(t + c[2] * h, scratch);
+				ode.getDerivativesInto(t + c[2] * h, scratch, k3);
 
 				ODEStepMath.scaleAndAdd(y, k1, a[3][0] * h, k2, a[3][1] * h, k3, a[3][2] * h, scratch);
-				k4 = ode.getDerivatives(t + c[3] * h, scratch);
+				ode.getDerivativesInto(t + c[3] * h, scratch, k4);
 
 				ODEStepMath.scaleAndAdd(y, k1, a[4][0] * h, k2, a[4][1] * h, k3, a[4][2] * h,
 						k4, a[4][3] * h, scratch);
-				k5 = ode.getDerivatives(t + c[4] * h, scratch);
+				ode.getDerivativesInto(t + c[4] * h, scratch, k5);
 
 				ODEStepMath.scaleAndAdd(y, k1, a[5][0] * h, k2, a[5][1] * h, k3, a[5][2] * h,
 						k4, a[5][3] * h, k5, a[5][4] * h, scratch);
-				k6 = ode.getDerivatives(t + c[5] * h, scratch);
+				ode.getDerivativesInto(t + c[5] * h, scratch, k6);
 
 				for (int i = 0; i < n; i++) {
 					yTemp[i] = y[i] + h * (b5[0]*k1[i] + b5[1]*k2[i] + b5[2]*k3[i] +

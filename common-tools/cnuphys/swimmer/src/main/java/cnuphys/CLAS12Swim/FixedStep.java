@@ -24,30 +24,34 @@ public class FixedStep {
 		double t = t0;
 
 		double[] y = y0.clone();
+		
+		double k1[] = new double[n];
+		double k2[] = new double[n];
+		double k3[] = new double[n];
+		double k4[] = new double[n];
+		double[] ytemp = new double[n];
 
 		while (t < t1) {
+		    if (t + h > t1) h = t1 - t;
 
-			if (t + h > t1) {
-				h = t1 - t;
-			}
+		    ode.getDerivativesInto(t, y, k1);
 
-			double[] k1 = ode.getDerivatives(t, y);
-			double[] k2 = ode.getDerivatives(t + h / 2.0, Vector.addVectors(y, Vector.scalarMultiply(k1, h / 2.0)));
-			double[] k3 = ode.getDerivatives(t + h / 2.0, Vector.addVectors(y, Vector.scalarMultiply(k2, h / 2.0)));
-			double[] k4 = ode.getDerivatives(t + h, Vector.addVectors(y, Vector.scalarMultiply(k3, h)));
+		    ODEStepMath.scaleAndAdd(y, k1, 0.5*h, ytemp);
+		    ode.getDerivativesInto(t + 0.5*h, ytemp, k2);
 
-			double[] yNext = y.clone();
-			for (int i = 0; i < n; i++) {
-				yNext[i] += h / 6.0 * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]);
-			}
+		    ODEStepMath.scaleAndAdd(y, k2, 0.5*h, ytemp);
+		    ode.getDerivativesInto(t + 0.5*h, ytemp, k3);
 
-			if (!listener.newStep(t + h, yNext)) {
-				return yNext; // Terminate integration based on listener's decision
-			}
+		    ODEStepMath.scaleAndAdd(y, k3, h, ytemp);
+		    ode.getDerivativesInto(t + h, ytemp, k4);
 
-			y = yNext;
-			t += h;
-		}
+		    // y += h/6*(k1 + 2k2 + 2k3 + k4)
+		    for (int i = 0; i < n; i++) {
+		        y[i] += (h/6.0) * (k1[i] + 2.0*k2[i] + 2.0*k3[i] + k4[i]);
+		    }
+
+		    t += h;
+		    if (listener != null && !listener.newStep(t, y)) break;		}
 
 		return y;
 	}

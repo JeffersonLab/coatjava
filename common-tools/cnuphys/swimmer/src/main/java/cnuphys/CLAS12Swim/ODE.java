@@ -12,4 +12,10 @@ public interface ODE {
 	 * @return The derivatives vector.
 	 */
 	double[] getDerivatives(double t, double[] y);
+	
+    // New: allocation-free path (default keeps compatibility)
+    default void getDerivativesInto(double t, double[] y, double[] dyOut) {
+        double[] tmp = getDerivatives(t, y);
+        System.arraycopy(tmp, 0, dyOut, 0, dyOut.length);
+    }
 }

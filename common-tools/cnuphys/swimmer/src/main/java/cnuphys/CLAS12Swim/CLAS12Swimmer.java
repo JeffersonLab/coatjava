@@ -56,7 +56,8 @@ public final class CLAS12Swimmer {
 	private FieldProbe _probe;
 
 	// which integrator are we using?
-	private EIntegrator _solver = EIntegrator.Fehlberg;
+//	private EIntegrator _solver = EIntegrator.Fehlberg;
+	private EIntegrator _solver = EIntegrator.DormandPrince;
 
 	/**
 	 * Create a swimmer using the current active field
@@ -92,24 +93,6 @@ public final class CLAS12Swimmer {
 	 */
 	public CLAS12Swimmer(FieldProbe probe) {
 		_probe = probe;
-	}
-
-	/**
-	 * Set the integrator (also called the solver) to use
-	 *
-	 * @param solver the integrator (solver) to use
-	 */
-	public void setSolver(EIntegrator solver) {
-		_solver = solver;
-	}
-
-	/**
-	 * Get the integrator (also called the solver) being used
-	 *
-	 * @return the integrator (solver) being used
-	 */
-	public EIntegrator getSolver() {
-		return _solver;
 	}
 
 	/**
@@ -403,70 +386,6 @@ public final class CLAS12Swimmer {
 
 	}
 
-	/**
-	 * Swim to a target accuracy. The details of the target and the accuracy are in
-	 * the CLAS12BoundaryListener
-	 *
-	 * @param ode       the ODE to solve
-	 * @param u         the initial state vector (x, y, z, tx, ty, tz) x, y, z in cm
-	 * @param sMin      the initial value of the independent variable (pathlength)
-	 *                  (usually 0)
-	 * @param h         the initial stepsize in cm
-	 * @param tolerance The desired tolerance. The solver will automatically adjust
-	 *                  the step size to meet this tolerance.
-	 * @param listener  the specific listener that can terminate the integration
-	 * @return the result of the swim
-	 * @see CLAS12BoundaryListener
-	 */
-	private CLAS12SwimResult swimToAccuracyDEP(CLAS12SwimODE ode, double u[], double sMin, double h, double tolerance,
-			CLAS12BoundaryListener listener) {
-
-		// all swims pass through here
-
-		if (listener.getIvals().p < MINMOMENTUM) {
-			listener.setStatus(BELOW_MIN_MOMENTUM);
-			return new CLAS12SwimResult(listener);
-		}
-
-		// neutral? Just return a line if we know how
-		if (listener.canMakeStraightLine() && listener.getIvals().q == 0) {
-			listener.straightLine();
-			return new CLAS12SwimResult(listener);
-		}
-
-		double s1 = sMin;
-		double s2 = listener.getSMax();
-
-		h = Math.min(h, listener.getAccuracy() / 2.);
-
-		CLAS12SwimResult cres = null;
-		while (true) {
-			cres = atomicSwim(ode, u, s1, s2, h, tolerance, listener);
-
-			if (listener.getStatus() == SWIM_SUCCESS) {
-				s2 = listener.getS();
-				listener.getTrajectory().removeLastPoint();
-
-				if (listener.accuracyReached(cres.getPathLength(), cres.getFinalU())) {
-					// do NOT forget to reset the max step size
-					resetMaxStepSize();
-					return cres;
-				}
-
-				u = listener.getU();
-				s1 = listener.getS();
-
-				double newMaxH = listener.distanceToTarget(s1, u) / 2;
-				setMaxStepSize(newMaxH);
-
-			} else { // failed, reached max path length
-				// do NOT forget to reset the max step size
-				resetMaxStepSize();
-				return cres;
-			}
-		}
-
-	}
 
 	/**
 	 * The basic swim method. The swim is terminated when the particle reaches the
