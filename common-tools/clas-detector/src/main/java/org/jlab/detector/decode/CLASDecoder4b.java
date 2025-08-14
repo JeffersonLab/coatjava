@@ -40,6 +40,21 @@ public class CLASDecoder4b extends CLASDecoder4 {
         init(o);
     }
 
+    public static OptionParser getOptionParser() {
+        OptionParser p = new OptionParser("decoder");
+        p.setDescription("CLAS12 Data Decoder");
+        p.addOption("-n", "-1", "maximum number of events to process");
+        p.addOption("-c", "2", "compression type (0-NONE, 1-LZ4 Fast, 2-LZ4 Best, 3-GZIP)");
+        p.addOption("-r", "-1","run number in the header bank (-1 means use CODA run)");
+        p.addOption("-t", null,"torus current in the header bank (null means use RCDB)");
+        p.addOption("-s", null,"solenoid current in the header bank (null means use RCDB)");
+        p.addOption("-x", null,"CCDB timestamp (MM/DD/YYYY-HH:MM:SS)");
+        p.addOption("-V","default","CCDB variation");
+        p.addOption("-o",null,"output HIPO filename");
+        p.setRequiresInputList(true);
+        return p;
+    }
+
     private void init(OptionParser o){
         eventCounter = 0;
         writer = null;
@@ -74,7 +89,7 @@ public class CLASDecoder4b extends CLASDecoder4 {
         return !filenames.isEmpty();
     }
 
-    public void processNextEvent() {
+    public void processNext() {
         if (reader == null || !reader.hasEvent()) {
             reader = new EvioSource();
             reader.open(filenames.remove(0));
@@ -116,11 +131,13 @@ public class CLASDecoder4b extends CLASDecoder4 {
             System.setProperty("CLAS12DIR", System.getenv("HOME")+"/sw/coatjava/dev/coatjava");
         }
 
-        // run the decoder:
-        OptionParser opts = CLASDecoder4.getOptionParser();
+        // parse command-line options:
+        OptionParser opts = CLASDecoder4b.getOptionParser();
         opts.parse(args);
+
+        // run the decoder:
         CLASDecoder4b decoder = new CLASDecoder4b(opts);
-        while (decoder.hasNext()) decoder.processNextEvent();
+        while (decoder.hasNext()) decoder.processNext();
         decoder.close();
     }
 

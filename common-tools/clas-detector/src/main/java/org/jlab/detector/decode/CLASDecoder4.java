@@ -28,7 +28,6 @@ import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.utils.benchmark.Benchmark;
 
 import org.jlab.utils.groups.IndexedTable;
-import org.jlab.utils.options.OptionParser;
 import org.jlab.utils.system.ClasUtilsFile;
 
 /**
@@ -745,21 +744,6 @@ public class CLASDecoder4 {
 
     public Event createTaggedEvent(Event e, String... banks) {
         return createTaggedEvent(schemaFactory, e, banks);
-    }
-
-    public static OptionParser getOptionParser() {
-        OptionParser p = new OptionParser("decoder");
-        p.setDescription("CLAS12 Data Decoder");
-        p.addOption("-n", "-1", "maximum number of events to process");
-        p.addOption("-c", "2", "compression type (0-NONE, 1-LZ4 Fast, 2-LZ4 Best, 3-GZIP)");
-        p.addOption("-r", "-1","run number in the header bank (-1 means use CODA run)");
-        p.addOption("-t", null,"torus current in the header bank (null means use RCDB)");
-        p.addOption("-s", null,"solenoid current in the header bank (null means use RCDB)");
-        p.addOption("-x", null,"CCDB timestamp (MM/DD/YYYY-HH:MM:SS)");
-        p.addOption("-V","default","CCDB variation");
-        p.addOption("-o",null,"output HIPO filename");
-        p.setRequiresInputList(true);
-        return p;
     }
 
     @Deprecated
