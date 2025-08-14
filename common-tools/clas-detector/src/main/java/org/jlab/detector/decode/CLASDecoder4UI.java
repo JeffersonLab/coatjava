@@ -19,7 +19,7 @@ import org.jlab.utils.system.ClasUtilsFile;
 /**
  * Cleanup wrapper of everything in CLAS12Decoder's main method.
  */
-public class CLASDecoder4b extends CLASDecoder4 {
+public class CLASDecoder4UI extends CLASDecoder4 {
   
     private EvioSource reader;
     private HipoWriterSorted writer;
@@ -35,7 +35,7 @@ public class CLASDecoder4b extends CLASDecoder4 {
     private int maxEvents;
     private int eventCounter;
 
-    public CLASDecoder4b(OptionParser o) {
+    public CLASDecoder4UI(OptionParser o) {
         super();
         init(o);
     }
@@ -132,11 +132,11 @@ public class CLASDecoder4b extends CLASDecoder4 {
         }
 
         // parse command-line options:
-        OptionParser opts = CLASDecoder4b.getOptionParser();
+        OptionParser opts = CLASDecoder4UI.getOptionParser();
         opts.parse(args);
 
         // run the decoder:
-        CLASDecoder4b decoder = new CLASDecoder4b(opts);
+        CLASDecoder4UI decoder = new CLASDecoder4UI(opts);
         while (decoder.hasNext()) decoder.processNext();
         decoder.close();
     }
