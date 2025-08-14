@@ -19,6 +19,7 @@ public final class EvioSource implements DataSource {
     static final Logger LOGGER = Logger.getLogger(EvioSource.class.getName());
     private ByteOrder storeByteOrder = ByteOrder.BIG_ENDIAN;
     private EvioCompactReader evioReader = null;
+    private EvioDataDictionary dictionary = new EvioDataDictionary();
     private int currentEvent;
     private int currentFileEntries;
 
@@ -36,12 +37,28 @@ public final class EvioSource implements DataSource {
         return evioReader.getEventBuffer(eventNumber, asdf);
     }
     
-    public EvioSource() {}
+    public EvioSource() {
+        dictionary = EvioSource.getDictionary();
+    }
 
     public EvioSource(String filename) {
+        dictionary = EvioSource.getDictionary();
         this.open(filename);
     }
 
+    public static EvioDataDictionary getDictionary() {
+        EvioDataDictionary ret = null;
+        String d = System.getenv("CLAS12DIR");
+        String p = System.getProperty("CLAS12DIR");
+        String x = d!=null ? d : ( p!=null ? p : null );
+        if (x != null) {
+            EvioFactory.loadDictionary(x);
+            ret = EvioFactory.getDictionary();
+            ret.show();
+        }
+        return ret;
+    }
+    
     @Override
     public void open(File file) {
         this.open(file.getAbsolutePath());
@@ -107,7 +124,7 @@ public final class EvioSource implements DataSource {
             currentEvent--;
             currentEvent--;
             ByteBuffer evioBuffer = evioReader.getEventBuffer(currentEvent, true);
-            EvioDataEvent event = new EvioDataEvent(evioBuffer.array(), storeByteOrder);
+            EvioDataEvent event = new EvioDataEvent(evioBuffer.array(), storeByteOrder, dictionary);
             currentEvent++;
             return event;
         } catch (EvioException ex) {
@@ -122,7 +139,7 @@ public final class EvioSource implements DataSource {
             return null;
         try {
             ByteBuffer evioBuffer = evioReader.getEventBuffer(index, true);
-            EvioDataEvent event = new EvioDataEvent(evioBuffer.array(), storeByteOrder);
+            EvioDataEvent event = new EvioDataEvent(evioBuffer.array(), storeByteOrder, dictionary);
             currentEvent = index + 1;
             return event;
         } catch (EvioException ex) {
@@ -151,7 +168,7 @@ public final class EvioSource implements DataSource {
             return null;
         try {
             ByteBuffer evioBuffer = evioReader.getEventBuffer(currentEvent, true);
-            EvioDataEvent event = new EvioDataEvent(evioBuffer.array(), storeByteOrder);
+            EvioDataEvent event = new EvioDataEvent(evioBuffer.array(), storeByteOrder, dictionary);
             currentEvent++;
             return event;
         } catch (EvioException ex) {
