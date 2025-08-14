@@ -748,7 +748,7 @@ public class CLASDecoder4 {
 
     @Deprecated
     public static void main(String[] args){
-        CLASDecoder4b.main(args);
+        CLASDecoder4UI.main(args);
     }
 
 }
