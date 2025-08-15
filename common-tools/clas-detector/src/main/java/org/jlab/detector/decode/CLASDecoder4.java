@@ -41,14 +41,14 @@ import org.jlab.utils.system.ClasUtilsFile;
  */
 public class CLASDecoder4 {
 
+    protected DetectorEventDecoder detectorDecoder = null;
+    protected SchemaFactory           schemaFactory = new SchemaFactory();
     private CodaEventDecoder          codaDecoder = null;
-    private DetectorEventDecoder  detectorDecoder = null;
     private List<DetectorDataDgtz>       dataList = new ArrayList<>();
     private HipoDataSync                   writer = null;
     private HipoDataEvent               hipoEvent = null;
     private boolean              isRunNumberFixed = false;
     private int                  decoderDebugMode = 0;
-    private SchemaFactory           schemaFactory = new SchemaFactory();
     private ModeAHDC                ahdcExtractor = new ModeAHDC();
     private RCDBManager               rcdbManager = new RCDBManager();
 
