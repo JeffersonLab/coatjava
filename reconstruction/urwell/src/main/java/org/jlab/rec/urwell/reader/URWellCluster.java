@@ -20,6 +20,7 @@ public class URWellCluster {
     private double time = 0;
     private int crossIndex = -1;
     private double stereo = 10.;
+    private Line3D line = new Line3D();
     private Line3D lineLocal = new Line3D();
 
     public URWellCluster(int id, int sector, int layer, int component, int size, double energy, double time, Point3D pointOrigin, Point3D pointEnd) {
@@ -28,6 +29,7 @@ public class URWellCluster {
         this.size = size;
         this.energy = energy;
         this.time = time;
+        this.line.set(pointOrigin, pointEnd);
         
         Point3D pointOriginLocal = new Point3D();
         pointOriginLocal.copy(pointOrigin);
@@ -82,6 +84,10 @@ public class URWellCluster {
     
     public Line3D getLineLocal(){
         return lineLocal;
+    }
+
+    public Line3D getLine(){
+        return line;
     }
 
     /**

@@ -14,6 +14,8 @@ import org.jlab.detector.geant4.v2.FTOFGeant4Factory;
 import org.jlab.detector.geom.RICH.RICHGeoFactory;
 import org.jlab.geom.base.ConstantProvider;
 import org.jlab.detector.calib.utils.ConstantsManager;
+import org.jlab.detector.calib.utils.DatabaseConstantProvider;
+import org.jlab.detector.geant4.v2.URWELL.URWellStripFactory;
 import org.jlab.geom.base.Detector;
 import org.jlab.rec.dc.trajectory.TrajectorySurfaces;
 import org.jlab.utils.groups.IndexedTable;
@@ -122,7 +124,7 @@ public class Constants {
     public DCGeant4Factory    dcDetector   = null;
     public FTOFGeant4Factory  ftofDetector = null;
     public Detector           ecalDetector = null;
-    public Detector           fmtDetector  = null;
+    public URWellStripFactory fmtDetector  = null;
     public RICHGeoFactory     richDetector = null;
     public TrajectorySurfaces trajSurfaces = null;
     
@@ -546,7 +548,7 @@ public class Constants {
         ConstantProvider providerFTOF = GeometryFactory.getConstants(DetectorType.FTOF, 11, geoVariation);
         ftofDetector = new FTOFGeant4Factory(providerFTOF);        
         ecalDetector =  GeometryFactory.getDetector(DetectorType.ECAL, 11, geoVariation);
-        fmtDetector =  GeometryFactory.getDetector(DetectorType.FMT, 11, geoVariation);
+        fmtDetector =  new URWellStripFactory(new DatabaseConstantProvider(),2, 6);
         ConstantsManager managerRICH = new ConstantsManager(geoVariation);;
         richDetector = new RICHGeoFactory(0, managerRICH, 11, false);
         // create the surfaces

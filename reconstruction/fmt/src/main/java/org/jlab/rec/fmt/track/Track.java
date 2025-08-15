@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import org.jlab.clas.swimtools.Swim;
+import org.jlab.detector.base.DetectorType;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
@@ -46,6 +47,7 @@ public class Track {
     private double _pz;
     private int _NDF;
 
+    private final Trajectory[]    _DCtrajs  = new Trajectory[Constants.NLAYERS];
     private final List<URWellCluster>[] _clusters = new ArrayList[Constants.NLAYERS];
     private final Trajectory[]    _FMTtrajs = new Trajectory[Constants.NLAYERS];
             
@@ -67,6 +69,23 @@ public class Track {
         for(URWellCluster cluster : clusters) this.addCluster(cluster);
     }
     
+
+    
+    /**
+     * @param layer
+     * @return the _traj
+     */
+    public Trajectory getDCTraj(int layer) {
+        if(layer<=0 || layer>Constants.NLAYERS) return null;
+        else return _DCtrajs[layer-1];
+    }
+
+    /**
+     * @param trj
+     */
+    public void setDCTraj(Trajectory trj) {
+        this._DCtrajs[trj.getLayer()-1] = trj;
+    }
 
     public List<URWellCluster> getClusters() {
         List<URWellCluster> clusters = new ArrayList<>();
@@ -290,6 +309,69 @@ public class Track {
         this._pz = _pz;
     }
     
+//    //  FIXME: THIS METHOD SHOULD BE GENERALIZED
+//    public double getSeedQuality() {
+//        double quality=99;
+//        if(this.getClusterLayer(1)>0 && this.getClusterLayer(2)>0 && this.getClusterLayer(3)>0) {
+//            Line3D seg1 = this.getClusters(1).get(0).getGlobalSegment();
+//            Line3D seg2 = this.getClusters(2).get(0).getGlobalSegment();
+//            Line3D seg3 = this.getClusters(3).get(0).getGlobalSegment();
+//            quality = seg1.distanceSegments(seg3).distanceSegments(seg2).length(); 
+//        }
+//        return quality;
+//    }
+
+
+//    //  FIXME: THIS METHOD SHOULD BE GENERALIZED
+//    public void filterClusters(int mode) {
+//                
+//        double dref = Double.POSITIVE_INFINITY;
+//        
+//        int[] ibest = new int[Constants.NLAYERS];
+//        for(int i=0; i<Constants.NLAYERS; i++) ibest[i] = -1;
+//        
+//        if(mode==1 && this.getClusterLayer(1)>0 && this.getClusterLayer(2)>0 && this.getClusterLayer(3)>0) {
+//            for(int i1=0; i1<this.getClusters(1).size(); i1++) {
+//                Line3D seg1 = this.getClusters(1).get(i1).getGlobalSegment();
+//                for(int i2=0; i2<this.getClusters(2).size(); i2++) {
+//                    Line3D seg2 = this.getClusters(2).get(i2).getGlobalSegment();
+//                    for(int i3=0; i3<this.getClusters(3).size(); i3++) {
+//                        Line3D seg3 = this.getClusters(3).get(i3).getGlobalSegment();
+//
+//                        double d = seg1.distanceSegments(seg3).distanceSegments(seg2).length();
+//                        if(d<dref) {
+//                            ibest[0] = i1; ibest[1]=i2; ibest[2]=i3;
+//                            dref = d;
+//                        }
+//                    }    
+//                }    
+//            }
+//        }
+//        else {
+//            for(int layer=1; layer<=Constants.NLAYERS; layer++) {
+//                
+//                if(this.getClusters(layer)==null) continue;
+//                
+//                dref = Double.POSITIVE_INFINITY;
+//                for(int j=0; j<this.getClusters(layer).size(); j++) {
+//                    double d = this.getClusters(layer).get(j).distance(this.getDCTraj(layer).getPosition());
+//                    if(d<dref) {
+//                        dref = d;
+//                        ibest[layer-1]=j;
+//                    }
+//                }
+//            }
+//        }
+//        
+//        for(int i=0; i<Constants.NLAYERS; i++) {
+//            if(ibest[i]>=0) {
+//                List<Cluster> cls = new ArrayList<>();
+//                cls.add(_clusters[i].get(ibest[i]));
+//                _clusters[i] = cls; 
+//            }
+//        }
+//    }
+    
     public List<Track> getDCTracks(DataEvent event, Swim swimmer) {
         
         Map<Integer, Track> trackmap = new LinkedHashMap<Integer, Track>();        
@@ -329,6 +411,21 @@ public class Track {
                 trk.setPz(momLocal.z());
                 trk.setStatus(1);
                 trackmap.put(id,trk);                            
+            }
+            for (int i = 0; i < trajBank.rows(); i++) {
+                if (trajBank.getByte("detector", i) == DetectorType.FMT.getDetectorId()) { 
+                    int id    = trajBank.getShort("id", i);
+                    int layer = trajBank.getByte("layer", i);
+                    Trajectory trj = new Trajectory(layer,
+                                                    trajBank.getFloat("x", i),
+                                                    trajBank.getFloat("y", i),
+                                                    trajBank.getFloat("z", i),
+                                                    trajBank.getFloat("tx", i),
+                                                    trajBank.getFloat("ty", i),
+                                                    trajBank.getFloat("tz", i),
+                                                    trajBank.getFloat("path", i));
+                    trackmap.get(id).setDCTraj(trj);                
+                }
             }
         }
         List<Track> tracks = new ArrayList<>();

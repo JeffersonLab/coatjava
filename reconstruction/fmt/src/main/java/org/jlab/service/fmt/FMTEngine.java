@@ -3,12 +3,15 @@ package org.jlab.service.fmt;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Comparator;
 
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.base.GeometryFactory;
+import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
+import org.jlab.geom.prim.Vector3D;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.io.base.*;
 import org.jlab.rec.fmt.Constants;
@@ -20,6 +23,7 @@ import org.jlab.rec.fmt.track.fit.KFitter;
 import org.jlab.rec.fmt.track.fit.StateVecs.StateVec;
 
 import org.jlab.rec.urwell.reader.URWellCluster;
+import org.jlab.rec.urwell.reader.URWellCross;
 import org.jlab.rec.urwell.reader.URWellReader;
 
 /**
@@ -91,22 +95,74 @@ public class FMTEngine extends ReconstructionEngine {
         // === CLUSTERS ============================================================================
         URWellReader uRWellReader = new URWellReader(event);
         List<URWellCluster> clusters = uRWellReader.getUrwellClusters();
+        List<URWellCross> crosses = uRWellReader.getUrwellCrosses();
         //System.out.println(clusters.size());
         //for (int i = 0; i < clusters.size(); i++) System.out.println(clusters.get(i).toString());
-        
+                
         // === DC TRACKS ===========================================================================
         Track trk = new Track();
         List<Track> tracks = trk.getDCTracks(event, swimmer);
         if(tracks.isEmpty()) return true;
 
         // === SEEDS =============================================================================
+        Point3D target = new Point3D(0,0,0);
         for(int i=0; i<tracks.size(); i++) {
             Track track = tracks.get(i);                           
-            for(int j=0; j<clusters.size(); j++) {                    
-                URWellCluster cluster = clusters.get(j);                                    
-                // Match the layers from track
-                if (cluster.sector() == track.getSector()) {
-                    track.addCluster(cluster);
+           
+            List<URWellCross>[] trackCrosses = new ArrayList[Constants.NLAYERS/2];
+            for(int j=0; j<trackCrosses.length; j++) trackCrosses[j] = new ArrayList<>(); 
+            for(int j=0; j<crosses.size(); j++) {                    
+                    
+                URWellCross cross = crosses.get(j);                    
+                
+                Trajectory trj = track.getDCTraj(cross.getCluster1().layer());
+                if (trj==null || track.getSector()!=cross.sector()) continue; 
+
+                // Match the layers from traj.
+                double d = cross.position().distance(trj.getPosition());
+                double e = cross.getCluster1().energy()-cross.getCluster2().energy();
+                if (d < Constants.CIRCLECONFUSION && Math.abs(e)<Constants.CROSSDELTAE) {
+                    trackCrosses[cross.region()-1].add(cross);
+                }
+            }
+            System.out.println();
+            for(int j=0; j<trackCrosses.length; j++) System.out.print(trackCrosses[j].size() + " "); 
+                    
+            List<List<URWellCross>> segments = new ArrayList<>();
+            List<URWellCross> end = new ArrayList<>();
+            for(int r=6; r>3; r--)
+                end.addAll(trackCrosses[r-1]);
+            for(URWellCross ce : end) {
+                Line3D ve = new Line3D(ce.position(),target);
+                for(int ro=1; ro<ce.region()-3; ro++) {
+                    for(URWellCross co : trackCrosses[ro-1]) {
+                        double dei = ce.position().distance(co.position());
+                        double dti = ve.distance(co.position()).length();
+                        if(dti<0.1*dei) {
+                            Line3D vei = new Line3D(ce.position(),co.position());
+                            List<URWellCross> segment = new ArrayList();
+                            segment.add(ce);
+                            for(int r=co.region()+1; r<ce.region(); r++) {
+                                for(URWellCross cr : trackCrosses[r]) {
+                                    if(vei.distance(cr.position()).length()<0.1) {
+                                        segment.add(cr);
+                                        break;
+                                    }
+                                }
+                            }
+                            segment.add(co);
+                            if(segment.size()>=4)
+                                segments.add(segment);
+                        }
+                    }
+                }
+            }
+            System.out.print(segments.size());
+            if(!segments.isEmpty()) {
+                segments.sort(Comparator.comparingInt(List<URWellCross>::size).reversed());
+                for(URWellCross cross : segments.get(0)) {
+                    track.addCluster(cross.getCluster1());
+                    track.addCluster(cross.getCluster2());
                 }
             }
         }
@@ -144,7 +200,7 @@ public class FMTEngine extends ReconstructionEngine {
                 int charge = (int)Math.signum(sv.Q);
                 
                 Point3D posGlobal = track.transLocaltoGlobal(track.getSector(), sv.x, sv.y, sv.z);                
-                Point3D momGlobal = track.transLocaltoGlobal(track.getSector(), sv.getPx(), sv.getPy(), sv.getPz());  
+                Point3D momGlobal = track.transLocaltoGlobal(track.getSector(), sv.getPx()/sv.getP()*track.getP(), sv.getPy()/sv.getP()*track.getP(), sv.getPz()/sv.getP()*track.getP());  
                 
                 swimmer.SetSwimParameters(posGlobal.x(),posGlobal.y(),posGlobal.z(), -momGlobal.x(),-momGlobal.y(),-momGlobal.z(),-charge);
                 double[] Vt = swimmer.SwimToBeamLine(xB, yB);

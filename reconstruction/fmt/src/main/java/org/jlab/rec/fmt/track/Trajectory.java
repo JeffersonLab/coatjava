@@ -26,7 +26,7 @@ public class Trajectory {
     public Trajectory(int layer, double x, double y, double z, double tx, double ty, double tz, double path) {
         this.layer         = layer;
         this.position      = new Point3D(x,y,z);
-        this.localPosition = Constants.toLocal(layer, position);
+//        this.localPosition = Constants.toLocal(layer, position);
         this.direction     = new Vector3D(tx,ty,tz);
         this.path          = path;
     }

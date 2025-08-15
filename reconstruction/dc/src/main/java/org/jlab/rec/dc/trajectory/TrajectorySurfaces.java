@@ -17,6 +17,7 @@ import org.jlab.rec.dc.Constants;
 
 import java.io.PrintWriter;
 import java.util.logging.Logger;
+import org.jlab.detector.geant4.v2.URWELL.URWellStripFactory;
 import org.jlab.geom.detector.ec.ECLayer;
 import org.jlab.geom.detector.ec.ECSuperlayer;
 import org.jlab.geom.detector.fmt.FMTLayer;
@@ -46,7 +47,7 @@ public class TrajectorySurfaces {
     }
 
     public void loadSurface(double targetPosition, double targetLength, DCGeant4Factory dcDetector,
-            FTOFGeant4Factory ftofDetector, Detector ecalDetector, Detector fmtDetector, RICHGeoFactory richDetector) {
+            FTOFGeant4Factory ftofDetector, Detector ecalDetector, URWellStripFactory fmtDetector, RICHGeoFactory richDetector) {
         // creating Boundaries for MS
         Constants.getInstance().Z[0]= targetPosition;
         Constants.getInstance().Z[1]= dcDetector.getWireMidpoint(0, 0, 0, 0).z;
@@ -76,9 +77,9 @@ public class TrajectorySurfaces {
             this.detectorPlanes.get(isector).add(new Surface(DetectorType.TARGET, sector, DetectorLayer.TARGET_CENTER, new Plane3D(0, 0, targetPosition, 0, 0, 1)));
 
             // Add FMT layers
-            for (int ilayer=0; ilayer<6; ++ilayer) {
-                FMTLayer fmtLayer = (FMTLayer) fmtDetector.getSector(0).getSuperlayer(0).getLayer(ilayer);
-                this.detectorPlanes.get(isector).add(new Surface(DetectorType.FMT, sector, ilayer+1, fmtLayer.getTrajectorySurface(), 0));
+            for (int ilayer=0; ilayer<12; ++ilayer) {
+//                FMTLayer fmtLayer = (FMTLayer) fmtDetector.getSector(0).getSuperlayer(0).getLayer(ilayer);
+                this.detectorPlanes.get(isector).add(new Surface(DetectorType.FMT, sector, ilayer+1, fmtDetector.getSurface(sector, ilayer+1), 0));
             }
 
             // Add DC

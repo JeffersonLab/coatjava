@@ -15,8 +15,11 @@ public class Constants {
     
     public static final int NLAYERS = 12;
     
+    // rMax difference between cross's clusters energy
+    public static double CROSSDELTAE = 200;
+
     // DC-tracks to FMT-clusters matching parameter
-    public static double CIRCLECONFUSION = 1.2; // cm
+    public static double CIRCLECONFUSION = 12; // cm
 
     // min path for final swimming to beamline to reject failed swimming
     public static double MIN_SWIM_PATH = 0.2; 
