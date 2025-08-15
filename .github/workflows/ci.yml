@@ -50,7 +50,7 @@ jobs:
       - name: download
         if: ${{ steps.cache.outputs.cache-hit != 'true' }}
         run: |
-          xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/clas_005038.evio.00000 ./
+          xrdcp xroot://sci-xrootd.jlab.org//osgpool/hallb/clas12/validation/raw/rg-a/clas_005038.evio.00000 ./
 
   # build
   #############################################################################
