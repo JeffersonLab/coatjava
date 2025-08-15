@@ -8,6 +8,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -20,6 +21,7 @@ public class ClasUtilsFile {
     private static String moduleString = "[ClasUtilsFile] --> ";
             
     public static String getName(){ return moduleString; }
+
     /**
      * prints a log message with the module name included.
      * @param log 
@@ -27,6 +29,22 @@ public class ClasUtilsFile {
     public static void printLog(String log){
         System.out.println(ClasUtilsFile.getName() + " " + log);
     }
+
+    /**
+     * get path from jar location
+     * @return 
+     */
+    public static String getJarPath() {
+        try {
+            File f = new File(ClasUtilsFile.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+            String[] dirs = f.getAbsolutePath().split("/");
+            return "/" + String.join("/", Arrays.copyOfRange(dirs,0,dirs.length-4)) + "/coatjava";
+        } catch (Exception e) {
+            System.getLogger(ClasUtilsFile.class.getName()).log(System.Logger.Level.ERROR, (String) null, e);
+            return null;
+        }
+    }
+    
     /**
      * returns package resource directory with given enviromental variable
      * and relative path.
@@ -37,6 +55,7 @@ public class ClasUtilsFile {
     public static String getResourceDir(String env, String rpath){
         
         String envString = System.getenv(env);
+
         if(envString==null){
             ClasUtilsFile.printLog("Environment variable ["+env+"] is not defined");
             envString = System.getProperty(env);
@@ -44,17 +63,19 @@ public class ClasUtilsFile {
         
         if(envString == null){
             ClasUtilsFile.printLog("System property ["+env+"] is not defined");
-            return null;
+            if (envString.equals("COATJAVA")) envString = getJarPath();
         }
+
+        if (envString == null) return null;
         
         StringBuilder str = new StringBuilder();
         int index = envString.length()-1;
         str.append(envString);
-        //Char fileSeparator =
         if(envString.charAt(index)!='/' && rpath.startsWith("/")==false) str.append('/');
         str.append(rpath);        
         return str.toString();
     }
+
     /**
      * returns list of files in the directory. absolute path is given.
      * This function will not exclude ".*" and "*~" files.
@@ -62,7 +83,7 @@ public class ClasUtilsFile {
      * @return 
      */
     public static List<String>  getFileList(String directory){        
-        List<String> fileList = new ArrayList<String>();
+        List<String> fileList = new ArrayList<>();
         File[] files = new File(directory).listFiles();
         System.out.println("FILE LIST LENGTH = " + files.length);
         for (File file : files) {
@@ -88,7 +109,7 @@ public class ClasUtilsFile {
         String directory = ClasUtilsFile.getResourceDir(env, rpath);
         if(directory==null){
             ClasUtilsFile.printLog("(error) directory does not exist : " + directory);
-            return new ArrayList<String>();
+            return new ArrayList<>();
         }
         return ClasUtilsFile.getFileList(directory);
     }
@@ -101,10 +122,10 @@ public class ClasUtilsFile {
      */
     public static List<String>  getFileList(String env, String rpath, String ext){
         String directory = ClasUtilsFile.getResourceDir(env, rpath);
-        if(directory!=null) return new ArrayList<String>();
+        if(directory!=null) return new ArrayList<>();
         
         List<String> files = ClasUtilsFile.getFileList(directory);
-        List<String> selected = new ArrayList<String>();
+        List<String> selected = new ArrayList<>();
         for(String item : files){
             if(item.endsWith(ext)==true) selected.add(item);
         }
@@ -135,7 +156,7 @@ public class ClasUtilsFile {
      * @return 
      */
     public static List<String>   readFile(String filename){
-        List<String>  lines = new ArrayList<String>();
+        List<String>  lines = new ArrayList<>();
         String line = null;
         try {
             // FileReader reads text files in the default encoding.
@@ -177,7 +198,7 @@ public class ClasUtilsFile {
      * @return 
      */
     public static List<String>  getFileNamesRelative(List<String> files){
-        List<String>  newList = new ArrayList<String>();
+        List<String>  newList = new ArrayList<>();
         for(String file : files){
             int index = file.lastIndexOf('/');
             if(index>=0&&index<file.length()){
@@ -209,7 +230,6 @@ public class ClasUtilsFile {
         
         StringBuilder str = new StringBuilder();
         int index = inputFile.lastIndexOf(".");
-        //int index = filename.lastIndexOf(".");
         str.append(inputFile.substring(0, index));
         str.append(addition);
         str.append(inputFile.substring(index, inputFile.length()));
@@ -217,7 +237,6 @@ public class ClasUtilsFile {
     }
     
     public static void main(String[] args){
-        String output_file = ClasUtilsFile.createFileName("/Users/gavalian/Work/Software/Release-9.0/COATJAVA/coatjava/../datasets/gemc/eklambda/gemc_eklambda_A0001_gen.evio", "_header", true);
-        System.out.println(output_file);
+        System.out.println(getJarPath());
     }
 }
