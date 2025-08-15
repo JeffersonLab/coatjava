@@ -7,7 +7,9 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -35,7 +37,6 @@ public class ClasUtilsFile {
      * @return 
      */
     public static String getResourceDir(String env, String rpath){
-        
         String envString = System.getenv(env);
         if(envString==null){
             ClasUtilsFile.printLog("Environment variable ["+env+"] is not defined");
@@ -44,9 +45,19 @@ public class ClasUtilsFile {
         
         if(envString == null){
             ClasUtilsFile.printLog("System property ["+env+"] is not defined");
-            return null;
+            try {
+                // Get path based on jar location:
+                File f = new File(ClasUtilsFile.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+                // If this needs to be different in an IDE, console(): 
+                //if (System.console() == null) {
+                    String[] dirs = f.getAbsolutePath().split("/");
+                    String top = "/"+String.join("/", Arrays.copyOfRange(dirs,0,dirs.length-4));
+                    envString = top+"/coatjava";
+                //}
+            } catch (URISyntaxException ex) {
+                return null;
+            }
         }
-        
         StringBuilder str = new StringBuilder();
         int index = envString.length()-1;
         str.append(envString);
@@ -216,8 +227,7 @@ public class ClasUtilsFile {
         return str.toString();
     }
     
-    public static void main(String[] args){
-        String output_file = ClasUtilsFile.createFileName("/Users/gavalian/Work/Software/Release-9.0/COATJAVA/coatjava/../datasets/gemc/eklambda/gemc_eklambda_A0001_gen.evio", "_header", true);
-        System.out.println(output_file);
+    public static void main(String[] args) {
+        System.out.println(ClasUtilsFile.getResourceDir("CLAS12DIR", "/asdf"));
     }
 }
