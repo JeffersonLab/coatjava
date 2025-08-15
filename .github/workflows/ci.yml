@@ -50,7 +50,7 @@ jobs:
       - name: download
         if: ${{ steps.cache.outputs.cache-hit != 'true' }}
         run: |
-          xrdcp xroot://sci-xrootd.jlab.org//osgpool/hallb/clas12/validation/raw/rg-a/clas_005038.evio.00000 ./
+          xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/raw/rg-a/clas_005038.evio.00000 ./
 
   # build
   #############################################################################
@@ -152,8 +152,7 @@ jobs:
       - name: untar build
         run: tar xzvf coatjava.tar.gz
       - name: run test
-        run: |
-          ./coatjava/bin/decoder -n 10000 -o dog.hipo ./clas_005038.evio.00000
+        run: ./coatjava/bin/decoder -n 10000 -o dog.hipo ./clas_005038.evio.00000
 
   test_coatjava:
     needs: [ build ]
