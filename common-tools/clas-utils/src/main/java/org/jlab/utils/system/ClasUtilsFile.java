@@ -31,18 +31,36 @@ public class ClasUtilsFile {
     }
 
     /**
-     * get path from jar location
-     * @return 
+     * @param clazz
+     * @return absolute path of the jar file containing clazz
      */
-    public static String getJarPath() {
+    public static String getJarPath(Class clazz) {
         try {
-            File f = new File(ClasUtilsFile.class.getProtectionDomain().getCodeSource().getLocation().toURI());
-            String[] dirs = f.getAbsolutePath().split("/");
-            return "/" + String.join("/", Arrays.copyOfRange(dirs,0,dirs.length-4)) + "/coatjava";
+            return (new File(clazz.getProtectionDomain().getCodeSource().getLocation().toURI())).getAbsolutePath();
         } catch (Exception e) {
             System.getLogger(ClasUtilsFile.class.getName()).log(System.Logger.Level.ERROR, (String) null, e);
             return null;
         }
+    }
+    
+    /**
+     * @return absolute path to COATJAVA installation runtime directory
+     */
+    public static String getCoatjavaRuntimeDir() {
+        String ret = getJarPath(ClasUtilsFile.class);
+        if (ret != null) {
+            String[] d = ret.split("/");
+            if (System.console() == null)
+                // When run from an IDE, the jar is in the coatjava source tree,
+                // so assume the "coatjava" installation directory at the top:
+                ret = "/" + String.join("/", Arrays.copyOfRange(d,0,d.length-4)) + "/coatjava";
+            else
+                // When running the JVM directly, the jar is already inside a
+                // coatjava installation, so just get to the top of it: 
+                ret = "/" + String.join("/", Arrays.copyOfRange(d,0,d.length-3));
+
+        }
+        return ret;
     }
     
     /**
@@ -63,15 +81,16 @@ public class ClasUtilsFile {
         
         if(envString == null){
             ClasUtilsFile.printLog("System property ["+env+"] is not defined");
-            if (envString.equals("COATJAVA")) envString = getJarPath();
+            if (envString.equals("COATJAVA") || envString.equals("CLAS12DIR")) {
+                envString = getCoatjavaRuntimeDir();
+            }
         }
 
         if (envString == null) return null;
         
         StringBuilder str = new StringBuilder();
-        int index = envString.length()-1;
         str.append(envString);
-        if(envString.charAt(index)!='/' && rpath.startsWith("/")==false) str.append('/');
+        if (!envString.endsWith("/") && !rpath.startsWith("/")) str.append('/');
         str.append(rpath);        
         return str.toString();
     }
@@ -237,6 +256,6 @@ public class ClasUtilsFile {
     }
     
     public static void main(String[] args){
-        System.out.println(getJarPath());
+        System.out.println(getCoatjavaRuntimeDir());
     }
 }
