@@ -24,6 +24,8 @@ usage='''build-coatjava.sh [OPTIONS]... [MAVEN_OPTIONS]...
    --xrootd          use xrootd to download field maps
    --cvmfs           use cvmfs to download field maps
 
+   --install         install in local maven repository
+
    --help            show this message
 
   MAVEN_OPTIONS
@@ -36,6 +38,7 @@ anaDepends="no"
 runSpotBugs="no"
 downloadMaps="yes"
 runUnitTests="no"
+mavenInstall="no"
 useXrootd=false
 useCvmfs=false
 mvnArgs=()
@@ -49,6 +52,7 @@ do
     --unittests) runUnitTests="yes" ;;
     --clean)     cleanBuild="yes"   ;;
     --depana)    anaDepends="yes"   ;;
+    --install)   mvnInstall="yes"   ;;
     --quiet)
       mvnArgs+=(--quiet --batch-mode)
       wgetArgs+=(--quiet)
@@ -207,6 +211,17 @@ for pom in $(find common-tools -name pom.xml); do
   #   install_jars $pom $prefix_dir/lib/services
   fi
 done
-echo "installed coatjava to: $prefix_dir"
 
+# install coat-libs in local maven repository:
+if [ $mvnInstall == "yes" ]; then
+  version=$(libexec/version.sh)
+  mvn install:install-file \
+    -Dfile=$prefix_dir/lib/clas/coat-libs-$version.jar \
+    -DgroupId=org.jlab.coat \
+    -DartifactId=coat-libs \
+    -Dversion=$version \
+    -Dpackaging=jar
+fi
+
+echo "installed coatjava to: $prefix_dir"
 echo "COATJAVA SUCCESSFULLY BUILT !"
