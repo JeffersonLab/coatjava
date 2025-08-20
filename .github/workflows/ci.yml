@@ -25,7 +25,7 @@ env:
   java_distribution: zulu
   javadoc_version: 24 # newer than `java_version` for better javadoc
   groovy_version: 4.x
-  #CCDB_CONNECTION: 'sqlite:////cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/ccdb/ccdb_latest.sqlite'
+  CCDB_CONNECTION: 'sqlite:////cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/ccdb/ccdb_latest.sqlite'
   nthreads: 1
 
 jobs:
@@ -105,6 +105,34 @@ jobs:
           path: publish/
           retention-days: 1
 
+  test_decoder:
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.java_version }}
+          distribution: ${{ env.java_distribution }}
+      - uses: cvmfs-contrib/github-action-cvmfs@v5
+        with:
+          cvmfs_repositories: 'oasis.opensciencegrid.org'
+      - name: install xrootd-client
+        run: |
+          sudo apt -y update
+          sudo apt -y upgrade
+          sudo apt -y install xrootd-client
+      - uses: actions/download-artifact@v4
+        with:
+          name: build_ubuntu-latest
+      - name: untar build
+        run: tar xzvf coatjava.tar.gz
+      - name: run test
+        run: |
+          xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/clas_005038.evio.00000 .
+          ./coatjava/bin/decoder -n 100000 -o dog.hipo ./clas_005038.evio.00000
+
   test_coatjava:
     needs: [ build ]
     strategy:
@@ -137,7 +165,7 @@ jobs:
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: build_${{ matrix.runner }}
       - uses: cvmfs-contrib/github-action-cvmfs@v5
@@ -165,7 +193,7 @@ jobs:
         uses: wtfjoke/setup-groovy@v2
         with:
           groovy-version: ${{ env.groovy_version }}
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: build_ubuntu-latest
       - name: untar build
@@ -183,7 +211,7 @@ jobs:
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: build_ubuntu-latest
       - name: untar build
@@ -208,7 +236,7 @@ jobs:
         run: docs/mkdocs/generate.sh pages
       ### jacoco
       - name: download jacoco report artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: jacoco_report
           path: pages/jacoco
@@ -260,7 +288,7 @@ jobs:
       TAG_NAME: ${{ github.ref_name }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: build_ubuntu-latest
       - name: rename artifact

@@ -42,6 +42,8 @@ public class ModeAHDC extends HipoExtractor  {
     private final int flateness = 200;
     //ADC offset to be considered as the default baseline
     private final float defaultBaseline = 300;
+    // dream clock for fine timestamp correction
+    private final float dream_clock = 8.0f;
 
     //Waveform and corresponding pulse
     //This is the CURRENT pulse, it is initialized
@@ -318,6 +320,22 @@ public class ModeAHDC extends HipoExtractor  {
             
             return 0;
         }
+
+	/** 
+	 * Apply fine timestamp correction
+	 *
+	 * adapted from decode/MVTFitter.java
+	 *
+	 * @param timestamp for fine time correction
+	 * @param fineTimeStampResolution correspond to the dream clock (usually equals to 8; but to be checked!)
+	 */
+	
+	private void fineTimeStampCorrection(long timestamp, float fineTimeStampResolution) {
+		long fineTimeStamp = timestamp & 0x00000007; // keep and convert last 3 bits of binary timestamp
+		this.pulse.leadingEdgeTime += (double) ((fineTimeStamp+0.5) * fineTimeStampResolution); //fineTimeStampCorrection, only on the leadingEdgeTime for the moment (we don't use timeMax or constantFractionTime in the reconstruction yet)
+	}
+
+
     
     /**
      * This method extracts relevant information from the waveform
@@ -355,6 +373,9 @@ public class ModeAHDC extends HipoExtractor  {
         
         //Get the CFD time
         this.computeTimeUsingConstantFractionDiscriminator();
+
+	// Fine timestamp correction on leadingEdgeTime
+	this.fineTimeStampCorrection(timestamp, dream_clock);
         
         output.add(this.pulse);
         return output;
@@ -399,7 +420,7 @@ public class ModeAHDC extends HipoExtractor  {
                     adcBank.putFloat("timeOverThreshold", i, pulses.get(i).timeOverThreshold); 
                     adcBank.putFloat("constantFractionTime", i, pulses.get(i).constantFractionTime); 
                     adcBank.putInt("integral", i, (int)pulses.get(i).integral); 
-                    adcBank.putFloat("ped", i, (short)pulses.get(i).pedestal);
+                    adcBank.putFloat("ped", i, pulses.get(i).pedestal);
 		    adcBank.putShort("wfType", i, pulses.get(i).wftype);
                 } 
             }
