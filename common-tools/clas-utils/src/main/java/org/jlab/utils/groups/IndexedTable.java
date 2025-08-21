@@ -20,6 +20,8 @@ import org.jlab.utils.groups.IndexedList.IndexGenerator;
  */
 public class IndexedTable extends DefaultTableModel {
     
+    public static final IndexGenerator DEFAULT_GENERATOR = new IndexGenerator();
+        
     private IndexedList<IndexedEntry> entries    = null;
     private Map<String,Integer>       entryMap   = new LinkedHashMap<>();
     private Map<String,String>        entryTypes = new LinkedHashMap<>();
