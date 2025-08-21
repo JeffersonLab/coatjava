@@ -10,7 +10,6 @@ import org.jlab.detector.banks.RawBank.OrderType;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.decode.DetectorDataDgtz.ADCData;
-import org.jlab.utils.groups.IndexedList.IndexGenerator;
 import org.jlab.utils.groups.IndexedTable;
 
 /**
@@ -142,7 +141,7 @@ public class DetectorEventDecoder {
             int crate    = data.getDescriptor().getCrate();
             int slot     = data.getDescriptor().getSlot();
             int channel  = data.getDescriptor().getChannel();
-            long hash    = new IndexGenerator().hashCode(crate,slot,channel);
+            long hash    = IndexedTable.DEFAULT_GENERATOR.hashCode(crate,slot,channel);
 
             for (int j=0; j<tablesTrans.size(); ++j) {
 
@@ -184,8 +183,8 @@ public class DetectorEventDecoder {
             int crate    = data.getDescriptor().getCrate();
             int slot     = data.getDescriptor().getSlot();
             int channel  = data.getDescriptor().getChannel();
-            long hash    = new IndexGenerator().hashCode(crate,slot,channel);
-            long hash0   = new IndexGenerator().hashCode(0,0,0);
+            long hash    = IndexedTable.DEFAULT_GENERATOR.hashCode(crate,slot,channel);
+            long hash0   = IndexedTable.DEFAULT_GENERATOR.hashCode(0,0,0);
             for (int j=0; j<keysFitter.size(); ++j) {
                 IndexedTable daq = tables.get(j);
                 DetectorType type = keysFitter.get(j);
@@ -212,7 +211,9 @@ public class DetectorEventDecoder {
                         int nsb = daq.getIntValueByHash("nsb", hash);
                         int tet = daq.getIntValueByHash("tet", hash);
                         int ped = 0;
-                        if(type == DetectorType.RF&&data.getDescriptor().getType().getName().equals("RF")) ped = daq.getIntValue("pedestal", crate,slot,channel);
+                        if(type == DetectorType.RF&&data.getDescriptor().getType().getName().equals("RF")) {
+                            ped = daq.getIntValueByHash("pedestal", hash);
+                        }
                         if(data.getADCSize()>0){
                             for(int i = 0; i < data.getADCSize(); i++){
                                 ADCData adc = data.getADCData(i);
