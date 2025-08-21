@@ -73,17 +73,18 @@ public class SwapTable {
         for (int row=0; row<fromTrans.getRowCount(); row++) {
 
             // crate/slot/channel is the base for mapping between the two tables:
-            final int crate = Integer.valueOf((String)fromTrans.getValueAt(row,0));
-            final int slot = Integer.valueOf((String)fromTrans.getValueAt(row,1));
-            final int channel = Integer.valueOf((String)fromTrans.getValueAt(row,2));
+            final int crate = Integer.parseInt((String)fromTrans.getValueAt(row,0));
+            final int slot = Integer.parseInt((String)fromTrans.getValueAt(row,1));
+            final int channel = Integer.parseInt((String)fromTrans.getValueAt(row,2));
+            final long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(crate, slot, channel);
 
             // load the previous and current values of sector/layer/component/order:
             boolean diff = false;
             int[] previous = new int[VAR_NAMES.length];
             int[] current = new int[VAR_NAMES.length];
             for (int ivar=0; ivar<VAR_NAMES.length; ivar++) {
-                previous[ivar] = fromTrans.getIntValue(VAR_NAMES[ivar],crate,slot,channel);
-                current[ivar] = toTrans.getIntValue(VAR_NAMES[ivar], crate, slot, channel);
+                previous[ivar] = fromTrans.getIntValueByHash(VAR_NAMES[ivar],hash);
+                current[ivar] = toTrans.getIntValueByHash(VAR_NAMES[ivar],hash);
                 if (previous[ivar] != current[ivar]) {
                     diff = true;
                 }
