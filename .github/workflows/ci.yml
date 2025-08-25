@@ -251,7 +251,7 @@ jobs:
           mvn javadoc:aggregate -pl '!org.jlab.coat:coat-libs' --no-transfer-progress
           mv target/reports/apidocs pages/javadoc
       ### upload artifacts
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v4
         with:
           retention-days: 7
           path: pages/
