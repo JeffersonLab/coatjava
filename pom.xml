@@ -227,7 +227,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.11.2</version>
+        <version>3.11.3</version>
         <configuration>
           <doctitle>COATJAVA - API documentation - version ${project.version}</doctitle>
           <windowtitle>COATJAVA - API documentation - version ${project.version}</windowtitle>
