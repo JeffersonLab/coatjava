@@ -22,13 +22,16 @@ public class HitReader {
 
 	public final void fetch_AHDCHits(DataEvent event, AlertDCDetector detector) {
 		ArrayList<Hit> hits = new ArrayList<>();
-		
-		if (event.hasBank("AHDC::adc") && event.hasBank("REC::Event")) {
 
-			DataBank bankRecEvent = event.getBank("REC::Event"); 
-			double startTime = bankRecEvent.getFloat("startTime", 0);
-			if (startTime < 0) { // reject bad events 
-				return;
+		
+		if (event.hasBank("AHDC::adc")) {
+			// Useful if one does not run the full CLAS12 reconstrcution
+			// i.e only run the reconstruction of ALERT
+			// or use simulated data
+			double startTime = 0;
+			if (event.hasBank("REC::Event") && !sim) {
+				DataBank bankRecEvent = event.getBank("REC::Event"); 
+				startTime = bankRecEvent.getFloat("startTime", 0);
 			}
 			
 			RawDataBank bankDGTZ = new RawDataBank("AHDC::adc");
