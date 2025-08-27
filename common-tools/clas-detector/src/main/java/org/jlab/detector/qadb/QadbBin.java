@@ -6,12 +6,17 @@ import org.jlab.detector.scalers.DaqScalersSequence;
 
 /**
  * A single bin for the Quality Assurance Database (QADB).
- * It may hold arbitrary data, such as a class instance, accessible by {@link getData} and {@link setData}.
+ * It may hold arbitrary data, such as a class instance, accessible by public member {@link QadbBin#data}.
  * A bin contains a (sub)sequence of scaler readouts, and therefore extends {@link DaqScalersSequence}.
  * @see QadbBinSequence
  * @author dilks
  */
 public class QadbBin<T> extends DaqScalersSequence {
+
+  /** lambda type to print each bin's generic data as a string */
+  public interface DataPrinter<T> {
+    String run(T data);
+  }
 
   private int binNum;
   private int evnumMin;
@@ -19,53 +24,41 @@ public class QadbBin<T> extends DaqScalersSequence {
   private long timestampMin;
   private long timestampMax;
 
-  private T binData;
+  /** arbitrary data that may be held by this bin; it is just public so the user can do anything with it */
+  public T data;
 
   /**
    * construct a single bin
-   * @param binNum the bin number, in the {@link QaBinSequence} which contains this bin
+   * @param binNum the bin number, in the {@link QadbBinSequence} which contains this bin
    * @param inputScalers the scaler sequence for this bin
+   * @param initData the initial data for this bin
    */
-  public QadbBin(int binNum, List<DaqScalers> inputScalers) {
+  public QadbBin(int binNum, List<DaqScalers> inputScalers, T initData) {
     super(inputScalers);
     this.binNum       = binNum;
+    this.data         = initData;
     this.timestampMin = this.scalers.get(0).getTimestamp();
     this.timestampMax = this.scalers.get(scalers.size()-1).getTimestamp();
     this.evnumMin     = this.scalers.get(0).getEventNum();
     this.evnumMax     = this.scalers.get(scalers.size()-1).getEventNum();
   }
 
-  /** @param binData the data to be associated with this bin */
-  public void setData(T binData) {
-    this.binData = binData;
-  }
-
-  /** @return the data associated with this bin */
-  public T getData() {
-    return binData;
-  }
-
   /**
-   * print a QA bin
-   * @param printNames if {@code true}, print the variable names too
+   * print a QA bin and its data
+   * @param verbose if {@code true}, print more
+   * @param dataPrinter a lambda which resolves {@link data} as a {@code String}
    */
-  public void print(boolean printNames) {
-    if(printNames)
-      System.out.printf("%15s %15s %15s\n",
-          "bin",
-          "q_gated",
-          "q_corrected"
-          );
-    System.out.printf("%15d %15.5f %15.5f\n",
-        this.binNum,
-        this.getInterval().getBeamChargeGated(),
-        this.getBeamChargeLivetimeWeighted()
-        );
-  }
-
-  /** print a QA bin; include header if bin 0 */
-  public void print() {
-    this.print(this.binNum==0);
+  public void print(boolean verbose, DataPrinter<T> dataPrinter) {
+    System.out.printf("BIN %d", this.binNum);
+    if(verbose) {
+      System.out.printf("\n");
+      System.out.printf("event number range: %d to %d\n", this.evnumMin, this.evnumMax);
+      System.out.printf("timestamp range:    %d to %d\n", this.timestampMin, this.timestampMax);
+      // FIXME: add charges etc.
+    } else {
+      System.out.printf(" :: ");
+    }
+    System.out.println(dataPrinter.run(this.data));
   }
 
   /** @return minimum timestamp for this bin */

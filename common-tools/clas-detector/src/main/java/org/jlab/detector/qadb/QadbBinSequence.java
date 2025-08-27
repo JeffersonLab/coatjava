@@ -1,54 +1,89 @@
 package org.jlab.detector.qadb;
 
 import java.util.List;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Optional;
 
 import org.jlab.detector.scalers.DaqScalersSequence;
 
+import org.jlab.jnp.hipo4.io.HipoReader;
+import org.jlab.jnp.hipo4.data.Event;
+import org.jlab.jnp.hipo4.data.Bank;
+import org.jlab.jnp.hipo4.data.SchemaFactory;
+
 /**
  * A sequence of bins for the Quality Assurance Database (QADB).
- * The bins may hold generic data, such as a class instance, accessible by {@link QadbBin#getData} and {@link QadbBin#setData}.
+ * The bins may hold generic data, such as a class instance, accessible by {@link QadbBin#data}.
  * @see QadbBin
  * @author dilks
  */
 public class QadbBinSequence<T> extends DaqScalersSequence {
 
+  /** lambda type to initialize each bin's generic data */
+  public interface DataInitializer<T> {
+    T run(int n);
+  }
+
   /** sequence of QA bins */
   private final List<QadbBin<T>> qaBins = new ArrayList<>();
 
   /**
+   * Read a list of HIPO files for a run and generate a sequence of QADB bins.
+   * The original sequence of scalers ({@link DaqScalersSequence}) is sampled:
+   * <ul>
+   * <li> bin boundaries are set such that each bin contains {@code binWidth} consecutive scaler readouts (excluding the first); the last bin may contain less</li>
+   * <li> {@link QadbBin} objects are defined between each pair of consecutive bin boundaries</li>
+   * <li> an initial (final) {@link QadbBin} object is also defined, for events which occur before (after) the first (last) scaler readout</li>
+   * <li> the {@code private} list of scalers becomes filled with ONLY the scaler readouts at the bin boundaries</li>
+   * <li> each bin's scaler subsequence is stored within its {@link QadbBin}</li>
+   * </ul>
    * @param filenames list of HIPO files to read
-   * @param binWidth the number of scaler readouts in each bin
+   * @param binWidth the number of consecutive scaler-readout intervals in each bin
+   * @param initDataFunction a lambda to create the initial data for each bin; must be of the form {@code (binNumber) -> { return initData object }}
    */
-  public QadbBinSequence(List<String> filenames, int binWidth) {
+  public QadbBinSequence(List<String> filenames, int binWidth, DataInitializer<T> initDataFunction) {
+    // construct the full, sorted scaler sequence
+    this.readFiles(filenames);
+    // sanity checks
     if(binWidth <= 0)
       throw new RuntimeException("binWidth must be greater than 0");
-    this.readFiles(filenames);
     System.out.println("DEBUG: original size = " + this.scalers.size()); // FIXME: remove
     if(this.scalers.isEmpty())
       throw new RuntimeException("scalers is empty");
-    List<Integer> keep = new ArrayList<>();
-    keep.add(0);
+    // add an initial, empty bin; its scaler sequence just contains the first scaler readout
+    this.qaBins.add(new QadbBin<T>(0, this.scalers.subList(0, 1), initDataFunction.run(0)));
+    // sample the original scaler sequence: make a new `QadbBin` for each subsequence
+    List<Integer> scalersToKeep = new ArrayList<>(); // list of `scalers` indices to keep, i.e., the ones at the bin boundaries
+    scalersToKeep.add(0);
     for(int i=0; i<this.scalers.size(); i+=binWidth) {
       int end = Math.min(i+binWidth, this.scalers.size()-1); // the last sample may be smaller
-      this.qaBins.add(new QadbBin<T>(this.qaBins.size(), this.scalers.subList(i, end)));
-      keep.add(end);
+      int binNum = this.qaBins.size();
+      this.qaBins.add(new QadbBin<T>(binNum, this.scalers.subList(i, end), initDataFunction.run(binNum)));
+      scalersToKeep.add(end);
     }
-    System.out.println("DEBUG: keep indices = " + keep); // FIXME: remove
+    System.out.println("DEBUG: scalersToKeep indices = " + scalersToKeep); // FIXME: remove
+    // add a final, empty bin; its scaler sequence just contains the last scaler readout
+    int binNum = this.qaBins.size();
+    this.qaBins.add(new QadbBin<T>(binNum, this.scalers.subList(this.scalers.size()-1, this.scalers.size()), initDataFunction.run(binNum)));
+    // remove all `scalers` elements which are not on bin boundaries
     for (int i=this.scalers.size()-1; i>=0; i--) {
-      if (!keep.contains(i))
+      if (!scalersToKeep.contains(i))
         this.scalers.remove(i);
     }
     System.out.println("DEBUG: sampled size = " + this.scalers.size()); // FIXME: remove
     System.out.println("DEBUG: num qaBins = " + this.qaBins.size()); // FIXME: remove
   }
 
-  /** print the QA bins */
-  public void print() {
+  /**
+   * print the QA bins
+   * @param verbose if {@code true}, print more
+   * @param dataPrinter a lambda which resolves each bin's {@link QadbBin#data} as a {@code String}
+   */
+  public void print(boolean verbose, QadbBin.DataPrinter<T> dataPrinter) {
     System.out.println("QA BINS:");
     for(var qaBin : this.qaBins)
-      qaBin.print();
+      qaBin.print(verbose, dataPrinter);
   }
 
   /**
@@ -58,6 +93,53 @@ public class QadbBinSequence<T> extends DaqScalersSequence {
   public Optional<QadbBin<T>> find(long timestamp) {
     var idx = this.findIndex(timestamp);
     return Optional.ofNullable(this.qaBins.get(idx));
+  }
+
+  /**
+   * Demonstrate how to use this class
+   * @param args command-line arguments
+   */
+  public static void main(String[] args) {
+
+    if(args.length == 0)
+      throw new RuntimeException("arguments must be HIPO file(s)");
+    List<String> filenames = new ArrayList<>();
+    filenames.addAll(Arrays.asList(args));
+
+    // define a QADB bin sequence
+    // - as an example, we have each bin store an integer, which we will use to count the number of events in the bin
+    // - each bin's integer is initialized to zero; the lambda argument `n` represents the bin number, and is unused here
+    // - in practice, we can use any data type instead of an integer, such as a class full of histograms
+    QadbBinSequence<Integer> seq = new QadbBinSequence<>(filenames, 2000, (n)->0);
+
+    // read the list of HIPO files
+    for(String filename : filenames) {
+      HipoReader reader = new HipoReader();
+      reader.setTags(0);
+      reader.open(filename);
+      SchemaFactory schema = reader.getSchemaFactory();
+
+      // event loop
+      while(reader.hasNext()) {
+        Bank configBank = new Bank(schema.getSchema("RUN::config"));
+        Event event=new Event();
+        reader.nextEvent(event);
+        event.read(configBank);
+
+        // increment each QADB bin's counter
+        if(configBank.getRows()>0) {
+          var thisBin = seq.find(configBank.getLong("timestamp",0));
+          if(thisBin.isPresent())
+            thisBin.get().data++;
+        }
+      }
+
+      reader.close();
+    }
+
+    // print the results: the bin number along with its number of events
+    seq.print(false, (data)->Integer.toString(data));
+
   }
 
 }
