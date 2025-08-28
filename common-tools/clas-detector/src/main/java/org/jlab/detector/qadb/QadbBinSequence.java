@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Optional;
-import java.util.logging.Logger;
+import java.util.Iterator;
 
 import org.jlab.detector.scalers.DaqScalersSequence;
 
@@ -19,7 +19,7 @@ import org.jlab.jnp.hipo4.data.SchemaFactory;
  * @see QadbBin
  * @author dilks
  */
-public class QadbBinSequence<T> extends DaqScalersSequence {
+public class QadbBinSequence<T> extends DaqScalersSequence implements Iterable<QadbBin<T>> {
 
   /** lambda type to initialize each bin's generic data */
   public interface DataInitializer<T> {
@@ -28,9 +28,6 @@ public class QadbBinSequence<T> extends DaqScalersSequence {
 
   /** sequence of QA bins */
   private final List<QadbBin<T>> qaBins = new ArrayList<>();
-
-  /** logger instance */
-  private static final Logger logger = Logger.getLogger(QadbBinSequence.class.getName());
 
   /**
    * Read a list of HIPO files for a run and generate a sequence of QADB bins.
@@ -81,15 +78,24 @@ public class QadbBinSequence<T> extends DaqScalersSequence {
     logger.fine("  number of QADB bins = " + this.qaBins.size());
   }
 
+  /** iterable interface implementation */
+  @Override
+  public Iterator<QadbBin<T>> iterator() {
+    return this.qaBins.iterator();
+  }
+
+  /** @return the number of bins in this sequence */
+  @Override
+  public int size() {
+    return this.qaBins.size();
+  }
+
   /**
-   * print the QA bins
-   * @param verbose if {@code true}, print more
-   * @param dataPrinter a lambda which resolves each bin's {@link QadbBin#data} as a {@code String}
+   * @param idx bin index
+   * @return a bin for a given index
    */
-  public void print(boolean verbose, QadbBin.DataPrinter<T> dataPrinter) {
-    System.out.println("QA BINS:");
-    for(var qaBin : this.qaBins)
-      qaBin.print(verbose, dataPrinter);
+  public QadbBin<T> getBin(int idx) {
+    return this.qaBins.get(idx);
   }
 
   /**
@@ -109,16 +115,27 @@ public class QadbBinSequence<T> extends DaqScalersSequence {
    */
   public static void main(String[] args) {
 
+    // parse arguments, which must be a list of HIPO files
     if(args.length == 0)
       throw new RuntimeException("arguments must be HIPO file(s)");
     List<String> filenames = new ArrayList<>();
     filenames.addAll(Arrays.asList(args));
 
     // define a QADB bin sequence
-    // - as an example, we have each bin store an integer, which we will use to count the number of events in the bin
+    // - as an example, we have each bin store an integer, which we will use to count the number of tag-0 events in the bin
     // - each bin's integer is initialized to zero; the lambda argument `n` represents the bin number, and is unused here
     // - in practice, we can use any data type instead of an integer, such as a class full of histograms
     QadbBinSequence<Integer> seq = new QadbBinSequence<>(filenames, 2000, (n)->0);
+
+    // apply a charge correction method
+    // for(var bin : seq)
+    //   bin.correctCharge(QadbBin.ChargeCorrectionMethod.BY_MEAN_LIVETIME);
+
+    // initialize a minimum and maximum event number and timestamp for tag-0 events
+    int evnumMin = -1;
+    int evnumMax = -1;
+    long timestampMin = -1;
+    long timestampMax = -1;
 
     // read the list of HIPO files
     logger.info("===== begin event loop ====");
@@ -128,18 +145,26 @@ public class QadbBinSequence<T> extends DaqScalersSequence {
       reader.open(filename);
       SchemaFactory schema = reader.getSchemaFactory();
 
-      // event loop
+      // tag-0 event loop
       while(reader.hasNext()) {
         Bank configBank = new Bank(schema.getSchema("RUN::config"));
-        Event event=new Event();
+        Event event = new Event();
         reader.nextEvent(event);
         event.read(configBank);
 
-        // increment each QADB bin's counter
+        // find the bin which contains this event
         if(configBank.getRows()>0) {
-          var thisBin = seq.find(configBank.getLong("timestamp", 0));
-          if(thisBin.isPresent())
-            thisBin.get().data++;
+          var timestamp = configBank.getLong("timestamp", 0);
+          var evnum     = configBank.getInt("event", 0);
+          var thisBin   = seq.find(timestamp);
+          if(thisBin.isPresent()) {
+            thisBin.get().data++; // increment the counter for tag-0 events
+            evnumMin     = evnumMin     == -1 ? evnum     : Math.min(evnum,     evnumMin); // set event number and timestamp extrema
+            evnumMax     = evnumMax     == -1 ? evnum     : Math.max(evnum,     evnumMax);
+            timestampMin = timestampMin == -1 ? timestamp : Math.min(timestamp, timestampMin);
+            timestampMax = timestampMax == -1 ? timestamp : Math.max(timestamp, timestampMax);
+          }
+          else logger.warning("WARNING: failed to find a bin containing timestamp " + timestamp);
         }
       }
 
@@ -147,9 +172,15 @@ public class QadbBinSequence<T> extends DaqScalersSequence {
     }
     logger.info("===== end event loop ====");
 
-    // print the results: the bin number along with its number of events
-    seq.print(true, (data) -> String.format("%30s %d", "number of events:", data));
+    // correct the first and last bin with the tag-0 event number and timestamp extrema;
+    // this is done such that the event number and timestamp ranges are correct
+    seq.getBin(0).correctLowerBound(evnumMin, timestampMin);
+    seq.getBin(seq.size()-1).correctUpperBound(evnumMax, timestampMax);
 
+    // print the results: the bin number along with its number of events
+    System.out.println(">>> QA BINS <<<");
+    for(var bin : seq)
+      bin.print(true, (data) -> String.format("%30s %d", "counted tag-0 events:", data));
   }
 
 }

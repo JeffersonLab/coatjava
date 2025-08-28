@@ -25,7 +25,15 @@ public class QadbBin<T> extends DaqScalersSequence {
     /** any bin between two scaler readouts */
     INTERMEDIATE,
     /** the last bin, for events after the last scaler readout */
-    LAST
+    LAST,
+  }
+
+  /** charge correction method */
+  public enum ChargeCorrectionMethod {
+    /** interchange the DAQ-gated and ungated charges */
+    BY_FLIP,
+    /** calculate the DAQ-gated charge as the mean livetime multiplied by the ungated charge */
+    BY_MEAN_LIVETIME,
   }
 
   private int binNum;
@@ -34,6 +42,8 @@ public class QadbBin<T> extends DaqScalersSequence {
   private int evnumMax;
   private long timestampMin;
   private long timestampMax;
+  private double charge; // ungated
+  private double chargeGated;
 
   /** arbitrary data that may be held by this bin; it is just public so the user can do anything with it */
   public T data;
@@ -46,33 +56,99 @@ public class QadbBin<T> extends DaqScalersSequence {
    */
   public QadbBin(int binNum, BinType binType, List<DaqScalers> inputScalers, T initData) {
     super(inputScalers);
-    this.binNum       = binNum;
-    this.binType      = binType;
-    this.data         = initData;
+    this.binNum  = binNum;
+    this.binType = binType;
+    this.data    = initData;
     switch(this.binType) {
       case INTERMEDIATE -> {
         this.timestampMin = this.scalers.get(0).getTimestamp();
         this.timestampMax = this.scalers.get(scalers.size()-1).getTimestamp();
         this.evnumMin     = this.scalers.get(0).getEventNum();
         this.evnumMax     = this.scalers.get(scalers.size()-1).getEventNum();
+        this.charge       = this.getInterval().getBeamCharge();
+        this.chargeGated  = this.getInterval().getBeamChargeGated();
       }
       case FIRST -> {
         if(this.scalers.size() != 1)
           throw new RuntimeException("a FIRST bin may only have ONE scaler readout");
-        this.timestampMin = 0;
+        this.timestampMin = 0; // user may correct this using `correctLowerBound`
         this.timestampMax = this.scalers.get(0).getTimestamp();
-        this.evnumMin     = 0;
+        this.evnumMin     = 0; // user may correct this using `correctLowerBound`
         this.evnumMax     = this.scalers.get(0).getEventNum();
+        this.charge       = 0; // since no lower bound
+        this.chargeGated  = 0; // since no lower bound
       }
       case LAST -> {
         if(this.scalers.size() != 1)
           throw new RuntimeException("a LAST bin may only have ONE scaler readout");
         this.timestampMin = this.scalers.get(0).getTimestamp();
-        this.timestampMax = 10 * this.timestampMin;
+        this.timestampMax = 10 * this.timestampMin; // user may correct this using `correctUpperBound`
         this.evnumMin     = this.scalers.get(0).getEventNum();
-        this.evnumMax     = 10 * this.evnumMin;
+        this.evnumMax     = 10 * this.evnumMin; // user may correct this using `correctUpperBound`
+        this.charge       = 0; // since no upper bound
+        this.chargeGated  = 0; // since no upper bound
       }
     }
+  }
+
+  /**
+   * correct the beam charge for this bin
+   * @param method the correction method to use
+   * @see ChargeCorrectionMethod
+   */
+  public void correctCharge(ChargeCorrectionMethod method) {
+    logger.fine("correcting beam charge for bin " + this.binNum + " using method " + method);
+    logger.fine("  before:   gated = " + this.chargeGated);
+    logger.fine("          ungated = " + this.charge);
+    switch(method) {
+      case BY_FLIP -> { // interchange the gated and ungated charge
+        var tmp          = this.charge;
+        this.charge      = this.chargeGated;
+        this.chargeGated = tmp;
+      }
+      case BY_MEAN_LIVETIME -> { // gated = <livetime> * ungated
+        double meanLivetime   = 0;
+        int numLivetimeEvents = 0;
+        for(int i=1; i<scalers.size(); i++) { // skip the first scaler, since that's for the previous bin
+          var livetime = scalers.get(i).dsc2.getLivetime();
+          if(livetime >= 0) { // filter out livetime = -1
+            meanLivetime += livetime;
+            numLivetimeEvents++;
+          }
+        }
+        meanLivetime = numLivetimeEvents > 0 ? meanLivetime / numLivetimeEvents : 0;
+        logger.fine("    mean livetime = " + meanLivetime);
+        this.chargeGated = meanLivetime * this.charge;
+      }
+    }
+    logger.fine("  after:    gated = " + this.chargeGated);
+    logger.fine("          ungated = " + this.charge);
+  }
+
+  /**
+   * correct the first bin's lower bound, if you know it from tag-0 events
+   * @param evnumMin the correct minimum event number
+   * @param timestampMin the correct minimum timestamp
+   */
+  public void correctLowerBound(int evnumMin, long timestampMin) {
+    if(this.binType == BinType.FIRST) {
+      this.evnumMin     = evnumMin;
+      this.timestampMin = timestampMin;
+    }
+    else logger.warning("not allowed to correct the lower bound of a bin with type " + this.binType);
+  }
+
+  /**
+   * correct the last bin's upper bound, if you know it from tag-0 events
+   * @param evnumMax the correct maximum event number
+   * @param timestampMax the correct maximum timestamp
+   */
+  public void correctUpperBound(int evnumMax, long timestampMax) {
+    if(this.binType == BinType.LAST) {
+      this.evnumMax     = evnumMax;
+      this.timestampMax = timestampMax;
+    }
+    else logger.warning("not allowed to correct the upper bound of a bin with type " + this.binType);
   }
 
   /**
@@ -81,17 +157,22 @@ public class QadbBin<T> extends DaqScalersSequence {
    * @param dataPrinter a lambda which resolves {@link data} as a {@code String}
    */
   public void print(boolean verbose, DataPrinter<T> dataPrinter) {
-    System.out.printf("BIN %d", this.binNum);
+    System.out.printf("BIN %d", this.getBinNum());
     if(verbose) {
       System.out.printf(" -----------\n");
-      System.out.printf("%30s %d to %d, range %d\n", "event number interval:", this.evnumMin, this.evnumMax, this.evnumMax - this.evnumMin);
-      System.out.printf("%30s %d to %d, range %d\n", "timestamp interval:", this.timestampMin, this.timestampMax, this.timestampMax - this.timestampMin);
-      // FIXME: add charges etc.
+      System.out.printf("%30s %d to %d\n", "timestamp interval:", this.getTimestampMin(), this.getTimestampMax());
+      System.out.printf("%30s %d to %d\n", "event number interval:", this.getEventNumMin(), this.getEventNumMax());
+      System.out.printf("%30s %f s\n", "duration:", this.getDuration());
+      System.out.printf("%30s %d events\n", "event number range:", this.getEventNumMax() - this.getEventNumMin());
+      System.out.printf("%30s %f / %f\n", "beam charge gated / ungated:", this.getBeamChargeGated(), this.getBeamCharge());
     } else {
       System.out.printf(" :: ");
     }
     System.out.println(dataPrinter.run(this.data));
   }
+
+  /** @return the bin number for this bin */
+  public int getBinNum() { return this.binNum; }
 
   /** @return minimum timestamp for this bin */
   public long getTimestampMin() { return this.timestampMin; }
@@ -104,6 +185,17 @@ public class QadbBin<T> extends DaqScalersSequence {
 
   /** @return maximum event number for this bin */
   public long getEventNumMax() { return this.evnumMax; }
+
+  /** @return the beam charge, not gated by DAQ, for this bin */
+  public double getBeamCharge() { return this.charge; }
+
+  /** @return the beam charge, gated by DAQ, for this bin */
+  public double getBeamChargeGated() { return this.chargeGated; }
+
+  /** @return the duration of the bin, in seconds */
+  public double getDuration() {
+    return (this.getTimestampMax() - this.getTimestampMin()) * 4e-9; // convert timestamp units [4ns] -> [s]
+  }
 
   /**
    * @param timestamp the timestamp

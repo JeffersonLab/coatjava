@@ -30,7 +30,7 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
     private Bank runConfigBank=null;
     private Bank runScalerBank=null;
   
-    static final Logger logger = Logger.getLogger(DaqScalersSequence.class.getName());
+    protected static final Logger logger = Logger.getLogger(DaqScalersSequence.class.getName());
     
     protected DaqScalersSequence(){};
 
@@ -91,6 +91,11 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
         if (o1.getTimestamp() < o2.getTimestamp()) return -1;
         if (o1.getTimestamp() > o2.getTimestamp()) return +1;
         return 0;
+    }
+
+    /** @return the number of scalers in this sequence */
+    public int size() {
+      return scalers.size();
     }
   
     protected int findIndex(long timestamp) {
