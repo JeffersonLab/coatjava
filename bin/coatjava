@@ -10,6 +10,11 @@ if [ $# -eq 0 ]; then
     COATJAVA_CLASS     the full class name
     CLASS_ARGS         arguments for its \`main\` method
     JVM_ARGS           arguments for the JVM, overriding defaults
+
+  EXAMPLE:
+    $(basename $0) org.jlab.detector.qadb.QadbBinSequence \\
+      skim_file.hipo -- \\
+      -Djava.util.logging.config.file=common-tools/clas-logging/src/main/resources/org/jlab/logging/fine.properties
   """
   exit 2
 fi

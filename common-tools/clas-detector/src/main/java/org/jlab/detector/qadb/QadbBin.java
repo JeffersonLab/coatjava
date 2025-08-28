@@ -18,7 +18,18 @@ public class QadbBin<T> extends DaqScalersSequence {
     String run(T data);
   }
 
+  /** bin type */
+  public enum BinType {
+    /** the first bin, for events before the first scaler readout */
+    FIRST,
+    /** any bin between two scaler readouts */
+    INTERMEDIATE,
+    /** the last bin, for events after the last scaler readout */
+    LAST
+  }
+
   private int binNum;
+  private BinType binType;
   private int evnumMin;
   private int evnumMax;
   private long timestampMin;
@@ -33,14 +44,35 @@ public class QadbBin<T> extends DaqScalersSequence {
    * @param inputScalers the scaler sequence for this bin
    * @param initData the initial data for this bin
    */
-  public QadbBin(int binNum, List<DaqScalers> inputScalers, T initData) {
+  public QadbBin(int binNum, BinType binType, List<DaqScalers> inputScalers, T initData) {
     super(inputScalers);
     this.binNum       = binNum;
+    this.binType      = binType;
     this.data         = initData;
-    this.timestampMin = this.scalers.get(0).getTimestamp();
-    this.timestampMax = this.scalers.get(scalers.size()-1).getTimestamp();
-    this.evnumMin     = this.scalers.get(0).getEventNum();
-    this.evnumMax     = this.scalers.get(scalers.size()-1).getEventNum();
+    switch(this.binType) {
+      case INTERMEDIATE -> {
+        this.timestampMin = this.scalers.get(0).getTimestamp();
+        this.timestampMax = this.scalers.get(scalers.size()-1).getTimestamp();
+        this.evnumMin     = this.scalers.get(0).getEventNum();
+        this.evnumMax     = this.scalers.get(scalers.size()-1).getEventNum();
+      }
+      case FIRST -> {
+        if(this.scalers.size() != 1)
+          throw new RuntimeException("a FIRST bin may only have ONE scaler readout");
+        this.timestampMin = 0;
+        this.timestampMax = this.scalers.get(0).getTimestamp();
+        this.evnumMin     = 0;
+        this.evnumMax     = this.scalers.get(0).getEventNum();
+      }
+      case LAST -> {
+        if(this.scalers.size() != 1)
+          throw new RuntimeException("a LAST bin may only have ONE scaler readout");
+        this.timestampMin = this.scalers.get(0).getTimestamp();
+        this.timestampMax = 10 * this.timestampMin;
+        this.evnumMin     = this.scalers.get(0).getEventNum();
+        this.evnumMax     = 10 * this.evnumMin;
+      }
+    }
   }
 
   /**
@@ -51,7 +83,7 @@ public class QadbBin<T> extends DaqScalersSequence {
   public void print(boolean verbose, DataPrinter<T> dataPrinter) {
     System.out.printf("BIN %d", this.binNum);
     if(verbose) {
-      System.out.printf("\n");
+      System.out.printf(" -----------\n");
       System.out.printf("event number range: %d to %d\n", this.evnumMin, this.evnumMax);
       System.out.printf("timestamp range:    %d to %d\n", this.timestampMin, this.timestampMax);
       // FIXME: add charges etc.

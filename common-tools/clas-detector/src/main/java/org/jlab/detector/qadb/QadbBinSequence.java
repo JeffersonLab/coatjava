@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 import org.jlab.detector.scalers.DaqScalersSequence;
 
@@ -28,6 +29,9 @@ public class QadbBinSequence<T> extends DaqScalersSequence {
   /** sequence of QA bins */
   private final List<QadbBin<T>> qaBins = new ArrayList<>();
 
+  /** logger instance */
+  private static final Logger logger = Logger.getLogger(QadbBinSequence.class.getName());
+
   /**
    * Read a list of HIPO files for a run and generate a sequence of QADB bins.
    * The original sequence of scalers ({@link DaqScalersSequence}) is sampled:
@@ -44,35 +48,37 @@ public class QadbBinSequence<T> extends DaqScalersSequence {
    */
   public QadbBinSequence(List<String> filenames, int binWidth, DataInitializer<T> initDataFunction) {
     // construct the full, sorted scaler sequence
+    logger.info("QadbBinSequence::  constructing DAQ scalers sequence");
     this.readFiles(filenames);
+    logger.fine("...done, now constructing QADB bin sequence...");
     // sanity checks
     if(binWidth <= 0)
       throw new RuntimeException("binWidth must be greater than 0");
-    System.out.println("DEBUG: original size = " + this.scalers.size()); // FIXME: remove
+    logger.fine("  initial sequence size = " + this.scalers.size());
     if(this.scalers.isEmpty())
-      throw new RuntimeException("scalers is empty");
+      throw new RuntimeException("scalers sequence is empty");
     // add an initial, empty bin; its scaler sequence just contains the first scaler readout
-    this.qaBins.add(new QadbBin<T>(0, this.scalers.subList(0, 1), initDataFunction.run(0)));
+    this.qaBins.add(new QadbBin<T>(0, QadbBin.BinType.FIRST, this.scalers.subList(0, 1), initDataFunction.run(0)));
     // sample the original scaler sequence: make a new `QadbBin` for each subsequence
     List<Integer> scalersToKeep = new ArrayList<>(); // list of `scalers` indices to keep, i.e., the ones at the bin boundaries
     scalersToKeep.add(0);
     for(int i=0; i<this.scalers.size(); i+=binWidth) {
       int end = Math.min(i+binWidth, this.scalers.size()-1); // the last sample may be smaller
       int binNum = this.qaBins.size();
-      this.qaBins.add(new QadbBin<T>(binNum, this.scalers.subList(i, end), initDataFunction.run(binNum)));
+      this.qaBins.add(new QadbBin<T>(binNum, QadbBin.BinType.INTERMEDIATE, this.scalers.subList(i, end), initDataFunction.run(binNum)));
       scalersToKeep.add(end);
     }
-    System.out.println("DEBUG: scalersToKeep indices = " + scalersToKeep); // FIXME: remove
+    logger.fine("  scalers to keep = " + scalersToKeep);
     // add a final, empty bin; its scaler sequence just contains the last scaler readout
     int binNum = this.qaBins.size();
-    this.qaBins.add(new QadbBin<T>(binNum, this.scalers.subList(this.scalers.size()-1, this.scalers.size()), initDataFunction.run(binNum)));
+    this.qaBins.add(new QadbBin<T>(binNum, QadbBin.BinType.LAST, this.scalers.subList(this.scalers.size()-1, this.scalers.size()), initDataFunction.run(binNum)));
     // remove all `scalers` elements which are not on bin boundaries
     for (int i=this.scalers.size()-1; i>=0; i--) {
       if (!scalersToKeep.contains(i))
         this.scalers.remove(i);
     }
-    System.out.println("DEBUG: sampled size = " + this.scalers.size()); // FIXME: remove
-    System.out.println("DEBUG: num qaBins = " + this.qaBins.size()); // FIXME: remove
+    logger.fine("  sampled sequence size = " + this.scalers.size());
+    logger.fine("  number of QADB bins = " + this.qaBins.size());
   }
 
   /**
@@ -92,7 +98,8 @@ public class QadbBinSequence<T> extends DaqScalersSequence {
    */
   public Optional<QadbBin<T>> find(long timestamp) {
     var idx = this.findIndex(timestamp);
-    return Optional.ofNullable(this.qaBins.get(idx));
+    logger.finest(" -> QadbBinSequence.find(" + timestamp + ") -> idx=" + idx);
+    return idx>=0 && idx<this.qaBins.size() ? Optional.ofNullable(this.qaBins.get(idx)) : Optional.empty();
   }
 
   /**
@@ -113,6 +120,7 @@ public class QadbBinSequence<T> extends DaqScalersSequence {
     QadbBinSequence<Integer> seq = new QadbBinSequence<>(filenames, 2000, (n)->0);
 
     // read the list of HIPO files
+    logger.info("===== begin event loop ====");
     for(String filename : filenames) {
       HipoReader reader = new HipoReader();
       reader.setTags(0);
@@ -128,7 +136,7 @@ public class QadbBinSequence<T> extends DaqScalersSequence {
 
         // increment each QADB bin's counter
         if(configBank.getRows()>0) {
-          var thisBin = seq.find(configBank.getLong("timestamp",0));
+          var thisBin = seq.find(configBank.getLong("timestamp", 0));
           if(thisBin.isPresent())
             thisBin.get().data++;
         }
@@ -136,9 +144,10 @@ public class QadbBinSequence<T> extends DaqScalersSequence {
 
       reader.close();
     }
+    logger.info("===== end event loop ====");
 
     // print the results: the bin number along with its number of events
-    seq.print(false, (data)->Integer.toString(data));
+    seq.print(true, (data) -> "number of events:   " + data);
 
   }
 
