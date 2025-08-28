@@ -1,0 +1,25 @@
+#!/bin/bash
+
+. `dirname $0`/../libexec/env.sh
+
+if [ $# -eq 0 ]; then
+  echo """Run the \`main\` method of any \`coatjava\` class
+
+  USAGE: $(basename $0) [COATJAVA_CLASS] [CLASS_ARGS] -- [JVM_ARGS]
+
+    COATJAVA_CLASS     the full class name
+    CLASS_ARGS         arguments for its \`main\` method
+    JVM_ARGS           arguments for the JVM, overriding defaults
+  """
+  exit 2
+fi
+
+class_name=$1
+shift
+
+split_cli $@
+
+exec java -Xmx1536m -Xms1024m -XX:+UseSerialGC ${jvm_options[@]} \
+  -cp ${COATJAVA_CLASSPATH:-''} \
+  $class_name \
+  ${class_options[@]}
