@@ -84,8 +84,8 @@ public class QadbBin<T> extends DaqScalersSequence {
     System.out.printf("BIN %d", this.binNum);
     if(verbose) {
       System.out.printf(" -----------\n");
-      System.out.printf("event number range: %d to %d\n", this.evnumMin, this.evnumMax);
-      System.out.printf("timestamp range:    %d to %d\n", this.timestampMin, this.timestampMax);
+      System.out.printf("%30s %d to %d, range %d\n", "event number interval:", this.evnumMin, this.evnumMax, this.evnumMax - this.evnumMin);
+      System.out.printf("%30s %d to %d, range %d\n", "timestamp interval:", this.timestampMin, this.timestampMax, this.timestampMax - this.timestampMin);
       // FIXME: add charges etc.
     } else {
       System.out.printf(" :: ");

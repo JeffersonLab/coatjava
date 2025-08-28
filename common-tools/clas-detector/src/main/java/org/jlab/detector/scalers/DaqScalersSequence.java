@@ -103,6 +103,7 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
         ds.setTimestamp(timestamp);
         final int index=Collections.binarySearch(this.scalers,ds,new DaqScalersSequence());
         final int n = index<0 ? -index-2 : index;
+        logger.finest(" -> DaqScalersSequence.findIndex(" + timestamp + ") -> index = " + index + " -> return " + n);
         return n;
     }
 
@@ -269,14 +270,17 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
                 event.read(configBank);
          
                 long timestamp=0;
+                int evnum=0;
                 
                 if (scalerBank.getRows()<1) continue;
                 if (configBank.getRows()>0) {
                     timestamp=configBank.getLong("timestamp",0);
+                    evnum=configBank.getInt("event",0);
                 }
         
                 DaqScalers ds=DaqScalers.create(scalerBank);
                 ds.setTimestamp(timestamp);
+                ds.setEventNum(evnum);
                 this.add(ds);
             }
 

@@ -97,8 +97,9 @@ public class QadbBinSequence<T> extends DaqScalersSequence {
    * @param timestamp the timestamp
    */
   public Optional<QadbBin<T>> find(long timestamp) {
-    var idx = this.findIndex(timestamp);
-    logger.finest(" -> QadbBinSequence.find(" + timestamp + ") -> idx=" + idx);
+    logger.finest(" -> QadbBinSequence.find(" + timestamp + ")");
+    var idx = this.findIndex(timestamp) + 1; // add 1, to account for the `FIRST` bin
+    logger.finest(" -> found QADB bin at idx = " + idx);
     return idx>=0 && idx<this.qaBins.size() ? Optional.ofNullable(this.qaBins.get(idx)) : Optional.empty();
   }
 
@@ -147,7 +148,7 @@ public class QadbBinSequence<T> extends DaqScalersSequence {
     logger.info("===== end event loop ====");
 
     // print the results: the bin number along with its number of events
-    seq.print(true, (data) -> "number of events:   " + data);
+    seq.print(true, (data) -> String.format("%30s %d", "number of events:", data));
 
   }
 
