@@ -21,16 +21,20 @@ import org.jlab.jnp.hipo4.data.SchemaFactory;
  */
 public class QadbBinSequence<T> extends DaqScalersSequence implements Iterable<QadbBin<T>> {
 
+  /** sequence of QA bins */
+  private final List<QadbBin<T>> qaBins = new ArrayList<>();
+
+  // ----------------------------------------------------------------------------------
+
   /** lambda type to initialize each bin's generic data */
   public interface DataInitializer<T> {
     T run(int n);
   }
 
-  /** sequence of QA bins */
-  private final List<QadbBin<T>> qaBins = new ArrayList<>();
+  // ----------------------------------------------------------------------------------
 
   /**
-   * Read a list of HIPO files for a run and generate a sequence of QADB bins.
+   * Constructor: read a list of HIPO files for a run and generate a sequence of QADB bins.
    * The original sequence of scalers ({@link DaqScalersSequence}) is sampled:
    * <ul>
    * <li> bin boundaries are set such that each bin contains {@code binWidth} consecutive scaler readouts (excluding the first); the last bin may contain less</li>
@@ -78,6 +82,8 @@ public class QadbBinSequence<T> extends DaqScalersSequence implements Iterable<Q
     logger.fine("  number of QADB bins = " + this.qaBins.size());
   }
 
+  // ----------------------------------------------------------------------------------
+
   /** iterable interface implementation */
   @Override
   public Iterator<QadbBin<T>> iterator() {
@@ -98,6 +104,8 @@ public class QadbBinSequence<T> extends DaqScalersSequence implements Iterable<Q
     return this.qaBins.get(idx);
   }
 
+  // ----------------------------------------------------------------------------------
+
   /**
    * @return the bin which contains the timestamp
    * @param timestamp the timestamp
@@ -108,6 +116,8 @@ public class QadbBinSequence<T> extends DaqScalersSequence implements Iterable<Q
     logger.finest(" -> found QADB bin at idx = " + idx);
     return idx>=0 && idx<this.qaBins.size() ? Optional.ofNullable(this.qaBins.get(idx)) : Optional.empty();
   }
+
+  // ----------------------------------------------------------------------------------
 
   /**
    * Demonstrate how to use this class

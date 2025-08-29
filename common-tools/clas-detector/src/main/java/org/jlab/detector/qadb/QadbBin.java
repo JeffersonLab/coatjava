@@ -13,6 +13,20 @@ import org.jlab.detector.scalers.DaqScalersSequence;
  */
 public class QadbBin<T> extends DaqScalersSequence {
 
+  private int     binNum;
+  private BinType binType;
+  private int     evnumMin;
+  private int     evnumMax;
+  private long    timestampMin;
+  private long    timestampMax;
+  private double  charge; // ungated
+  private double  chargeGated;
+
+  /** arbitrary data that may be held by this bin; it is just public so the user can do anything with it */
+  public T data;
+
+  // ----------------------------------------------------------------------------------
+
   /** lambda type to print each bin's generic data as a string */
   public interface DataPrinter<T> {
     String run(T data);
@@ -28,25 +42,15 @@ public class QadbBin<T> extends DaqScalersSequence {
     LAST,
   }
 
-  /** charge correction method */
-  public enum ChargeCorrectionMethod {
-    /** interchange the DAQ-gated and ungated charges */
-    BY_FLIP,
-    /** calculate the DAQ-gated charge as the mean livetime multiplied by the ungated charge */
-    BY_MEAN_LIVETIME,
+  /** charge type */
+  public enum ChargeType {
+    /** full charge, DAQ-ungated */
+    UNGATED,
+    /** DAQ-gated charge */
+    GATED,
   }
 
-  private int binNum;
-  private BinType binType;
-  private int evnumMin;
-  private int evnumMax;
-  private long timestampMin;
-  private long timestampMax;
-  private double charge; // ungated
-  private double chargeGated;
-
-  /** arbitrary data that may be held by this bin; it is just public so the user can do anything with it */
-  public T data;
+  // ----------------------------------------------------------------------------------
 
   /**
    * construct a single bin
@@ -91,6 +95,16 @@ public class QadbBin<T> extends DaqScalersSequence {
     }
   }
 
+  // ----------------------------------------------------------------------------------
+
+  /** charge correction method */
+  public enum ChargeCorrectionMethod {
+    /** interchange the DAQ-gated and ungated charges */
+    BY_FLIP,
+    /** calculate the DAQ-gated charge as the mean livetime multiplied by the ungated charge */
+    BY_MEAN_LIVETIME,
+  }
+
   /**
    * correct the beam charge for this bin
    * @param method the correction method to use
@@ -125,6 +139,8 @@ public class QadbBin<T> extends DaqScalersSequence {
     logger.fine("          ungated = " + this.charge);
   }
 
+  // ----------------------------------------------------------------------------------
+
   /**
    * correct the first bin's lower bound, if you know it from tag-0 events
    * @param evnumMin the correct minimum event number
@@ -151,6 +167,8 @@ public class QadbBin<T> extends DaqScalersSequence {
     else logger.warning("not allowed to correct the upper bound of a bin with type " + this.binType);
   }
 
+  // ----------------------------------------------------------------------------------
+
   /**
    * print a QA bin and its data
    * @param verbose if {@code true}, print more
@@ -171,6 +189,8 @@ public class QadbBin<T> extends DaqScalersSequence {
     System.out.println(dataPrinter.run(this.data));
   }
 
+  // ----------------------------------------------------------------------------------
+
   /** @return the bin number for this bin */
   public int getBinNum() { return this.binNum; }
 
@@ -186,23 +206,68 @@ public class QadbBin<T> extends DaqScalersSequence {
   /** @return maximum event number for this bin */
   public long getEventNumMax() { return this.evnumMax; }
 
+  /** @return the duration of the bin, in seconds */
+  public double getDuration() {
+    return (this.getTimestampMax() - this.getTimestampMin()) * 4e-9; // convert timestamp units [4ns] -> [s]
+  }
+
   /** @return the beam charge, not gated by DAQ, for this bin */
   public double getBeamCharge() { return this.charge; }
 
   /** @return the beam charge, gated by DAQ, for this bin */
   public double getBeamChargeGated() { return this.chargeGated; }
 
-  /** @return the duration of the bin, in seconds */
-  public double getDuration() {
-    return (this.getTimestampMax() - this.getTimestampMin()) * 4e-9; // convert timestamp units [4ns] -> [s]
+  /**
+   * @return the beam charge, gated or ungated
+   * @param chargeType the type of charge
+   */
+  public double getBeamCharge(ChargeType chargeType) {
+    return switch(chargeType) {
+      case UNGATED -> this.getBeamCharge();
+      case GATED   -> this.getBeamChargeGated();
+    };
+  }
+
+  // ----------------------------------------------------------------------------------
+
+  /** extremum type, used with {@link getChargeExtrumum} */
+  public enum ExtremumType {
+    /** from the first scaler readout */
+    FIRST,
+    /** from the last scaler readout */
+    LAST,
+    /** the maximum */
+    MAX,
+    /** the minimum */
+    MIN,
   }
 
   /**
-   * @param timestamp the timestamp
-   * @return {@code true} if the bin contains this timestamp
+   * Get the min/max or initial/final charge.
+   * NOTE: this is likely NOT corrected by {@link correctCharge}
+   * @param extremumType the type of extremum
+   * @param chargeType the type of charge
+   * @return the charge for the given extremum
    */
-  public boolean containsTimestamp(long timestamp) {
-    return timestamp >= this.timestampMin && timestamp <= this.timestampMax;
+  public double getChargeExtrumum(ExtremumType extremumType, ChargeType chargeType) {
+    return switch(extremumType) {
+      case FIRST -> getDsc2Charge(this.scalers.get(0), chargeType);
+      case LAST  -> getDsc2Charge(this.scalers.get(this.scalers.size()-1), chargeType);
+      case MIN   -> getDsc2Charge(this.scalers.stream().reduce((a,b) -> getDsc2Charge(a, chargeType) < getDsc2Charge(b, chargeType) ? a : b).get(), chargeType);
+      case MAX   -> getDsc2Charge(this.scalers.stream().reduce((a,b) -> getDsc2Charge(a, chargeType) > getDsc2Charge(b, chargeType) ? a : b).get(), chargeType);
+    };
+  }
+
+  /** helper method for {@link getChargeExtrumum}
+   * @param ds the scaler readout
+   * @param chargeType the charge type
+   * @return the charge from this scaler object
+   */
+  private static double getDsc2Charge(DaqScalers ds, ChargeType chargeType) {
+    return switch(chargeType) {
+      case UNGATED -> ds.dsc2.getBeamCharge();
+      case GATED   -> ds.dsc2.getBeamChargeGated();
+    };
   }
 
 }
