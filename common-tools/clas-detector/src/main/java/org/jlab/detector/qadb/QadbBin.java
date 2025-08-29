@@ -230,7 +230,7 @@ public class QadbBin<T> extends DaqScalersSequence {
 
   // ----------------------------------------------------------------------------------
 
-  /** extremum type, used with {@link getChargeExtrumum} */
+  /** extremum type, used with {@link getChargeExtremum} */
   public enum ExtremumType {
     /** from the first scaler readout */
     FIRST,
@@ -249,7 +249,7 @@ public class QadbBin<T> extends DaqScalersSequence {
    * @param chargeType the type of charge
    * @return the charge for the given extremum
    */
-  public double getChargeExtrumum(ExtremumType extremumType, ChargeType chargeType) {
+  public double getChargeExtremum(ExtremumType extremumType, ChargeType chargeType) {
     return switch(extremumType) {
       case FIRST -> getDsc2Charge(this.scalers.get(0), chargeType);
       case LAST  -> getDsc2Charge(this.scalers.get(this.scalers.size()-1), chargeType);
@@ -258,7 +258,7 @@ public class QadbBin<T> extends DaqScalersSequence {
     };
   }
 
-  /** helper method for {@link getChargeExtrumum}
+  /** helper method for {@link getChargeExtremum}
    * @param ds the scaler readout
    * @param chargeType the charge type
    * @return the charge from this scaler object
