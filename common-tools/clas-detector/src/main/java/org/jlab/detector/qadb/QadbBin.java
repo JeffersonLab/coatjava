@@ -97,6 +97,61 @@ public class QadbBin<T> extends DaqScalersSequence {
 
   // ----------------------------------------------------------------------------------
 
+  /** @return the bin number for this bin */
+  public int getBinNum() { return this.binNum; }
+
+  /** @return minimum timestamp for this bin */
+  public long getTimestampMin() { return this.timestampMin; }
+
+  /** @return maximum timestamp for this bin */
+  public long getTimestampMax() { return this.timestampMax; }
+
+  /** @return minimum event number for this bin */
+  public long getEventNumMin() { return this.evnumMin; }
+
+  /** @return maximum event number for this bin */
+  public long getEventNumMax() { return this.evnumMax; }
+
+  /** @return the beam charge, not gated by DAQ, for this bin */
+  public double getBeamCharge() { return this.charge; }
+
+  /** @return the beam charge, gated by DAQ, for this bin */
+  public double getBeamChargeGated() { return this.chargeGated; }
+
+  /**
+   * @return the beam charge, gated or ungated
+   * @param chargeType the type of charge
+   */
+  public double getBeamCharge(ChargeType chargeType) {
+    return switch(chargeType) {
+      case UNGATED -> this.getBeamCharge();
+      case GATED   -> this.getBeamChargeGated();
+    };
+  }
+
+  // ----------------------------------------------------------------------------------
+
+  /** @return the mean livetime for this bin */
+  public double getMeanLivetime() {
+    double sumLivetime   = 0;
+    int numLivetimeEvents = 0;
+    for(int i=1; i<scalers.size(); i++) { // skip the first scaler, since that's for the previous bin
+      var livetime = scalers.get(i).dsc2.getLivetime();
+      if(livetime >= 0) { // filter out livetime = -1
+        sumLivetime += livetime;
+        numLivetimeEvents++;
+      }
+    }
+    return numLivetimeEvents > 0 ? sumLivetime / numLivetimeEvents : 0;
+  }
+
+  /** @return the duration of the bin, in seconds */
+  public double getDuration() {
+    return (this.getTimestampMax() - this.getTimestampMin()) * 4e-9; // convert timestamp units [4ns] -> [s]
+  }
+
+  // ----------------------------------------------------------------------------------
+
   /** charge correction method */
   public enum ChargeCorrectionMethod {
     /** interchange the DAQ-gated and ungated charges */
@@ -121,16 +176,7 @@ public class QadbBin<T> extends DaqScalersSequence {
         this.chargeGated = tmp;
       }
       case BY_MEAN_LIVETIME -> { // gated = <livetime> * ungated
-        double meanLivetime   = 0;
-        int numLivetimeEvents = 0;
-        for(int i=1; i<scalers.size(); i++) { // skip the first scaler, since that's for the previous bin
-          var livetime = scalers.get(i).dsc2.getLivetime();
-          if(livetime >= 0) { // filter out livetime = -1
-            meanLivetime += livetime;
-            numLivetimeEvents++;
-          }
-        }
-        meanLivetime = numLivetimeEvents > 0 ? meanLivetime / numLivetimeEvents : 0;
+        var meanLivetime = this.getMeanLivetime();
         logger.fine("    mean livetime = " + meanLivetime);
         this.chargeGated = meanLivetime * this.charge;
       }
@@ -184,67 +230,6 @@ public class QadbBin<T> extends DaqScalersSequence {
 
   // ----------------------------------------------------------------------------------
 
-  /**
-   * print a QA bin and its data
-   * @param verbose if {@code true}, print more
-   * @param dataPrinter a lambda which resolves {@link data} as a {@code String}
-   */
-  public void print(boolean verbose, DataPrinter<T> dataPrinter) {
-    System.out.printf("BIN %d", this.getBinNum());
-    if(verbose) {
-      System.out.printf(" -----------\n");
-      System.out.printf("%30s %d to %d\n", "timestamp interval:", this.getTimestampMin(), this.getTimestampMax());
-      System.out.printf("%30s %d to %d\n", "event number interval:", this.getEventNumMin(), this.getEventNumMax());
-      System.out.printf("%30s %f s\n", "duration:", this.getDuration());
-      System.out.printf("%30s %d events\n", "event number range:", this.getEventNumMax() - this.getEventNumMin());
-      System.out.printf("%30s %f / %f\n", "beam charge gated / ungated:", this.getBeamChargeGated(), this.getBeamCharge());
-    } else {
-      System.out.printf(" :: ");
-    }
-    System.out.println(dataPrinter.run(this.data));
-  }
-
-  // ----------------------------------------------------------------------------------
-
-  /** @return the bin number for this bin */
-  public int getBinNum() { return this.binNum; }
-
-  /** @return minimum timestamp for this bin */
-  public long getTimestampMin() { return this.timestampMin; }
-
-  /** @return maximum timestamp for this bin */
-  public long getTimestampMax() { return this.timestampMax; }
-
-  /** @return minimum event number for this bin */
-  public long getEventNumMin() { return this.evnumMin; }
-
-  /** @return maximum event number for this bin */
-  public long getEventNumMax() { return this.evnumMax; }
-
-  /** @return the duration of the bin, in seconds */
-  public double getDuration() {
-    return (this.getTimestampMax() - this.getTimestampMin()) * 4e-9; // convert timestamp units [4ns] -> [s]
-  }
-
-  /** @return the beam charge, not gated by DAQ, for this bin */
-  public double getBeamCharge() { return this.charge; }
-
-  /** @return the beam charge, gated by DAQ, for this bin */
-  public double getBeamChargeGated() { return this.chargeGated; }
-
-  /**
-   * @return the beam charge, gated or ungated
-   * @param chargeType the type of charge
-   */
-  public double getBeamCharge(ChargeType chargeType) {
-    return switch(chargeType) {
-      case UNGATED -> this.getBeamCharge();
-      case GATED   -> this.getBeamChargeGated();
-    };
-  }
-
-  // ----------------------------------------------------------------------------------
-
   /** extremum type, used with {@link getChargeExtrumum} */
   public enum ExtremumType {
     /** from the first scaler readout */
@@ -283,6 +268,28 @@ public class QadbBin<T> extends DaqScalersSequence {
       case UNGATED -> ds.dsc2.getBeamCharge();
       case GATED   -> ds.dsc2.getBeamChargeGated();
     };
+  }
+
+  // ----------------------------------------------------------------------------------
+
+  /**
+   * print a QA bin and its data
+   * @param verbose if {@code true}, print more
+   * @param dataPrinter a lambda which resolves {@link data} as a {@code String}
+   */
+  public void print(boolean verbose, DataPrinter<T> dataPrinter) {
+    System.out.printf("BIN %d", this.getBinNum());
+    if(verbose) {
+      System.out.printf(" -----------\n");
+      System.out.printf("%30s %d to %d\n", "timestamp interval:", this.getTimestampMin(), this.getTimestampMax());
+      System.out.printf("%30s %d to %d\n", "event number interval:", this.getEventNumMin(), this.getEventNumMax());
+      System.out.printf("%30s %f s\n", "duration:", this.getDuration());
+      System.out.printf("%30s %d events\n", "event number range:", this.getEventNumMax() - this.getEventNumMin());
+      System.out.printf("%30s %f / %f\n", "beam charge gated / ungated:", this.getBeamChargeGated(), this.getBeamCharge());
+    } else {
+      System.out.printf(" :: ");
+    }
+    System.out.println(dataPrinter.run(this.data));
   }
 
 }
