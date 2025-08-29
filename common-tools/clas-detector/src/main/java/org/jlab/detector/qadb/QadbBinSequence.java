@@ -66,7 +66,7 @@ public class QadbBinSequence<T> extends DaqScalersSequence implements Iterable<Q
     for(int i=0; i<this.scalers.size(); i+=binWidth) {
       int end = Math.min(i+binWidth, this.scalers.size()-1); // the last sample may be smaller
       int binNum = this.qaBins.size();
-      this.qaBins.add(new QadbBin<T>(binNum, QadbBin.BinType.INTERMEDIATE, this.scalers.subList(i, end), initDataFunction.run(binNum)));
+      this.qaBins.add(new QadbBin<T>(binNum, QadbBin.BinType.INTERMEDIATE, this.scalers.subList(i, end+1), initDataFunction.run(binNum)));
       scalersToKeep.add(end);
     }
     logger.fine("  scalers to keep = " + scalersToKeep);
