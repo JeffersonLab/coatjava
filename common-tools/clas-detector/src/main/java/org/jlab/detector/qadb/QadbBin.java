@@ -106,7 +106,7 @@ public class QadbBin<T> extends DaqScalersSequence {
   }
 
   /**
-   * correct the beam charge for this bin
+   * correct the beam charge for this bin, using a correction method
    * @param method the correction method to use
    * @see ChargeCorrectionMethod
    */
@@ -135,6 +135,21 @@ public class QadbBin<T> extends DaqScalersSequence {
         this.chargeGated = meanLivetime * this.charge;
       }
     }
+    logger.fine("  after:    gated = " + this.chargeGated);
+    logger.fine("          ungated = " + this.charge);
+  }
+
+  /**
+   * correct the beam charge for this bin, using specific values from the caller
+   * @param charge the charge, not gated by the DAQ
+   * @param chargeGated the DAQ-gated charge
+   */
+  public void correctCharge(double charge, double chargeGated) {
+    logger.fine("correcting beam charge for bin " + this.binNum + " using user-specified values");
+    logger.fine("  before:   gated = " + this.chargeGated);
+    logger.fine("          ungated = " + this.charge);
+    this.charge      = charge;
+    this.chargeGated = chargeGated;
     logger.fine("  after:    gated = " + this.chargeGated);
     logger.fine("          ungated = " + this.charge);
   }
