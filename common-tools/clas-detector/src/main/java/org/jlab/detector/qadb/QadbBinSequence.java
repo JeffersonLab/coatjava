@@ -120,6 +120,26 @@ public class QadbBinSequence<T> extends DaqScalersSequence implements Iterable<Q
   // ----------------------------------------------------------------------------------
 
   /**
+   * correct the first bin's lower bound, if you know it from tag-0 events
+   * @param evnumMin the correct minimum event number
+   * @param timestampMin the correct minimum timestamp
+   */
+  public void correctLowerBound(int evnumMin, long timestampMin) {
+    this.getBin(0).correctLowerBound(evnumMin, timestampMin);
+  }
+
+  /**
+   * correct the last bin's upper bound, if you know it from tag-0 events
+   * @param evnumMax the correct maximum event number
+   * @param timestampMax the correct maximum timestamp
+   */
+  public void correctUpperBound(int evnumMax, long timestampMax) {
+    this.getBin(this.size()-1).correctUpperBound(evnumMax, timestampMax);
+  }
+
+  // ----------------------------------------------------------------------------------
+
+  /**
    * Demonstrate how to use this class
    * @param args command-line arguments
    */
@@ -133,9 +153,10 @@ public class QadbBinSequence<T> extends DaqScalersSequence implements Iterable<Q
 
     // define a QADB bin sequence
     // - as an example, we have each bin store an integer, which we will use to count the number of tag-0 events in the bin
-    // - each bin's integer is initialized to zero; the lambda argument `n` represents the bin number, and is unused here
+    // - each bin's integer is initialized to zero; the lambda argument `binNum` represents the bin number, and is unused here
     // - in practice, we can use any data type instead of an integer, such as a class full of histograms
-    QadbBinSequence<Integer> seq = new QadbBinSequence<>(filenames, 2000, (n)->0);
+    //   - the lambda argument `binNum` can be used, for example, as part of the histogram titles
+    QadbBinSequence<Integer> seq = new QadbBinSequence<>(filenames, 2000, (binNum)->0);
 
     // apply a charge correction method
     // for(var bin : seq)
@@ -184,8 +205,8 @@ public class QadbBinSequence<T> extends DaqScalersSequence implements Iterable<Q
 
     // correct the first and last bin with the tag-0 event number and timestamp extrema;
     // this is done such that the event number and timestamp ranges are correct
-    seq.getBin(0).correctLowerBound(evnumMin, timestampMin);
-    seq.getBin(seq.size()-1).correctUpperBound(evnumMax, timestampMax);
+    seq.correctLowerBound(evnumMin, timestampMin);
+    seq.correctUpperBound(evnumMax, timestampMax);
 
     // print the results: the bin number along with its number of events
     System.out.println(">>> QA BINS <<<");
