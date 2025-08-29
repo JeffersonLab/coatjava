@@ -110,9 +110,12 @@ public class QadbBinSequence<T> extends DaqScalersSequence implements Iterable<Q
    * @return the bin which contains the timestamp
    * @param timestamp the timestamp
    */
-  public Optional<QadbBin<T>> find(long timestamp) {
-    logger.finest(" -> QadbBinSequence.find(" + timestamp + ")");
-    var idx = this.findIndex(timestamp) + 1; // add 1, to account for the `FIRST` bin
+  public Optional<QadbBin<T>> findBin(long timestamp) {
+    logger.finest(" -> QadbBinSequence.findBin(" + timestamp + ")");
+    var idx = this.findIndex(timestamp);
+    if(idx>=0 && idx<this.scalers.size() && this.scalers.get(idx).getTimestamp() == timestamp)
+      idx--; // if on bin boundary, choose the earlier bin (QADB convention)
+    idx++; // add 1, to account for the `FIRST` bin (fenceposting)
     logger.finest(" -> found QADB bin at idx = " + idx);
     return idx>=0 && idx<this.qaBins.size() ? Optional.ofNullable(this.qaBins.get(idx)) : Optional.empty();
   }
@@ -187,7 +190,7 @@ public class QadbBinSequence<T> extends DaqScalersSequence implements Iterable<Q
         if(configBank.getRows()>0) {
           var timestamp = configBank.getLong("timestamp", 0);
           var evnum     = configBank.getInt("event", 0);
-          var thisBin   = seq.find(timestamp);
+          var thisBin   = seq.findBin(timestamp);
           if(thisBin.isPresent()) {
             thisBin.get().data++; // increment the counter for tag-0 events
             evnumMin     = evnumMin     == -1 ? evnum     : Math.min(evnum,     evnumMin); // set event number and timestamp extrema
