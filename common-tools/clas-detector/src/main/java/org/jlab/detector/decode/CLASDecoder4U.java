@@ -39,6 +39,13 @@ public class CLASDecoder4U extends CLASDecoder4 {
         init(o);
     }
 
+    public CLASDecoder4U(String... filename) {
+        super();
+        OptionParser o = getOptionParser();
+        o.parse(filename);
+        init(o);
+    }
+
     public static OptionParser getOptionParser() {
         OptionParser p = new OptionParser("decoder");
         p.setDescription("CLAS12 Data Decoder");
