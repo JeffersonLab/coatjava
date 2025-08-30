@@ -70,13 +70,14 @@ public class SwapTable {
         
         this.table = new IndexedTable(VAR_NAMES.length,String.join(":",VAR_NAMES));
 
-        for (int row=0; row<fromTrans.getRowCount(); row++) {
+        // loop over the rows in the translation table:
+        for (Object key : fromTrans.getList().getMap().keySet()) {
 
-            // crate/slot/channel is the base for mapping between the two tables:
-            final int crate = Integer.parseInt((String)fromTrans.getValueAt(row,0));
-            final int slot = Integer.parseInt((String)fromTrans.getValueAt(row,1));
-            final int channel = Integer.parseInt((String)fromTrans.getValueAt(row,2));
-            final long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(crate, slot, channel);
+            // get the hash for this row:
+            int crate = IndexedTable.DEFAULT_GENERATOR.getIndex((long)key, 0);
+            int slot = IndexedTable.DEFAULT_GENERATOR.getIndex((long)key, 1);
+            int channel = IndexedTable.DEFAULT_GENERATOR.getIndex((long)key, 2);
+            long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(crate, slot, channel);
 
             // load the previous and current values of sector/layer/component/order:
             boolean diff = false;
