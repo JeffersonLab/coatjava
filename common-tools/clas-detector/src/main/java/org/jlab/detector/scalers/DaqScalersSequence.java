@@ -26,7 +26,7 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
     public static final double TI_CLOCK_FREQ = 250e6; // Hz
     
     protected final List<DaqScalers> scalers=new ArrayList<>();
-
+    
     private Bank runConfigBank=null;
     private Bank runScalerBank=null;
   
@@ -37,10 +37,6 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
     public static class Interval {
         private DaqScalers previous = null;
         private DaqScalers next = null;
-        public Interval(DaqScalers previous, DaqScalers next) {
-            this.previous = previous;
-            this.next = next;
-        }
         public Interval(DaqScalersSequence seq) {
             if (!seq.scalers.isEmpty()) {
                 this.previous = seq.scalers.get(0);
@@ -78,12 +74,6 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
             }
             return 0;
         }
-        public double getLivetime() {
-            if (next!=null)
-                return this.next.dsc2.getLivetime();
-            return 0;
-        }
-
     }
     
     @Override
@@ -324,21 +314,7 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
         }
         return seq;
     }
-
-    /**
-     * @return DAQ-gated charge from the livetime-weighted sum of the ungated charge
-     */
-    public double getBeamChargeLivetimeWeighted() {
-      double result = 0;
-      for(int i=1; i<scalers.size(); i++) { // start at 1, since looping over intervals
-        Interval ivl = new Interval(this.scalers.get(i-1), this.scalers.get(i));
-        double lt = ivl.getLivetime();
-        double q = ivl.getBeamCharge(); // ungated
-        result += lt * q;
-      }
-      return result;
-    }
-
+    
     public static void main(String[] args) {
         
         final String dir="/Users/baltzell/data/CLAS12/rg-a/decoded/6b.2.0/";
