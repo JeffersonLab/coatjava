@@ -6,7 +6,9 @@ import org.jlab.detector.scalers.DaqScalersSequence;
 
 /**
  * A single bin for the Quality Assurance Database (QADB).
- * It may hold arbitrary data, such as a class instance, accessible by public member {@link QadbBin#data}.
+ * It may hold arbitrary data, such as a class instance, accessible by public member {@link QadbBin#data};
+ * its type is set by a generic type parameter.
+ * <p>
  * A bin contains a (sub)sequence of scaler readouts, and therefore extends {@link DaqScalersSequence}.
  * @see QadbBinSequence
  * @author dilks
@@ -29,6 +31,10 @@ public class QadbBin<T> extends DaqScalersSequence {
 
   /** lambda type to print each bin's generic data as a string */
   public interface DataPrinter<T> {
+    /**
+     * @param data the public member {@link QadbBin#data}
+     * @return a String representation of {@link QadbBin#data}
+     */
     String run(T data);
   }
 
@@ -55,8 +61,9 @@ public class QadbBin<T> extends DaqScalersSequence {
   /**
    * construct a single bin
    * @param binNum the bin number, in the {@link QadbBinSequence} which contains this bin
+   * @param binType the bin type (see {@link BinType})
    * @param inputScalers the scaler sequence for this bin
-   * @param initData the initial data for this bin
+   * @param initData the initial data for this bin (sets public member {@link data})
    */
   public QadbBin(int binNum, BinType binType, List<DaqScalers> inputScalers, T initData) {
     super(inputScalers);
@@ -230,7 +237,7 @@ public class QadbBin<T> extends DaqScalersSequence {
 
   // ----------------------------------------------------------------------------------
 
-  /** extremum type, used with {@link getChargeExtremum} */
+  /** extremum type, used with {@link QadbBin#getChargeExtremum} */
   public enum ExtremumType {
     /** from the first scaler readout */
     FIRST,
@@ -244,7 +251,8 @@ public class QadbBin<T> extends DaqScalersSequence {
 
   /**
    * Get the min/max or initial/final charge.
-   * NOTE: this is likely NOT corrected by {@link correctCharge}
+   * <p>
+   * WARNING: this is likely NOT corrected by {@link correctCharge}
    * @param extremumType the type of extremum
    * @param chargeType the type of charge
    * @return the charge for the given extremum

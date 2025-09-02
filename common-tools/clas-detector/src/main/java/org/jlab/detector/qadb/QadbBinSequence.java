@@ -15,7 +15,9 @@ import org.jlab.jnp.hipo4.data.SchemaFactory;
 
 /**
  * A sequence of bins for the Quality Assurance Database (QADB).
- * The bins may hold generic data, such as a class instance, accessible by {@link QadbBin#data}.
+ * <p>
+ * The bins may hold generic data, such as a class instance, accessible by {@link QadbBin#data}; the data
+ * type is set by a generic type parameter, and all bins will hold the same type of data.
  * @see QadbBin
  * @author dilks
  */
@@ -28,17 +30,21 @@ public class QadbBinSequence<T> extends DaqScalersSequence implements Iterable<Q
 
   /** lambda type to initialize each bin's generic data */
   public interface DataInitializer<T> {
+    /**
+     * @param n the bin number
+     * @return the initial public member {@link QadbBin#data} for bin number {@code n}
+     */
     T run(int n);
   }
 
   // ----------------------------------------------------------------------------------
 
   /**
-   * Constructor: read a list of HIPO files for a run and generate a sequence of QADB bins.
+   * read a list of HIPO files for a run and generate a sequence of QADB bins.
    * The original sequence of scalers ({@link DaqScalersSequence}) is sampled:
    * <ul>
    * <li> bin boundaries are set such that each bin contains {@code binWidth} consecutive scaler readouts (excluding the first); the last bin may contain less</li>
-   * <li> {@link QadbBin} objects are defined between each pair of consecutive bin boundaries</li>
+   * <li> {@link QadbBin} objects are defined for each pair of consecutive bin boundaries</li>
    * <li> an initial (final) {@link QadbBin} object is also defined, for events which occur before (after) the first (last) scaler readout</li>
    * <li> the {@code private} list of scalers becomes filled with ONLY the scaler readouts at the bin boundaries</li>
    * <li> each bin's scaler subsequence is stored within its {@link QadbBin}</li>
@@ -107,7 +113,7 @@ public class QadbBinSequence<T> extends DaqScalersSequence implements Iterable<Q
   // ----------------------------------------------------------------------------------
 
   /**
-   * @return the bin which contains the timestamp
+   * @return the bin which contains the timestamp, if found
    * @param timestamp the timestamp
    */
   public Optional<QadbBin<T>> findBin(long timestamp) {
