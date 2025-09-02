@@ -221,7 +221,8 @@ public class ModeAHDC extends HipoExtractor  {
         this.pulse.timeOverThreshold = -9999;
         
         //Waveforms for which timing cannot be defined
-        if(this.pulse.wftype == -1 || this.pulse.wftype>=4) return 0;
+        //compute the values even if the type may seem bad
+        //if(this.pulse.wftype == -1 || this.pulse.wftype>=4) return 0;
         
         //Set the CFA threshold
         float threshold = this.amplitudeFractionCFA*this.pulse.adcMax;
