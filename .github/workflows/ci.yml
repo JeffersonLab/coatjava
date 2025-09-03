@@ -51,7 +51,6 @@ jobs:
         if: ${{ matrix.runner == 'ubuntu-latest' }}
         run: |
           sudo apt -y update
-          sudo apt -y upgrade
           sudo apt -y install xrootd-client
       - name: install xrootd-client (macos)
         if: ${{ matrix.runner == 'macos-latest' }}
@@ -89,7 +88,6 @@ jobs:
       - name: install xrootd-client
         run: |
           sudo apt -y update
-          sudo apt -y upgrade
           sudo apt -y install xrootd-client
       - uses: cvmfs-contrib/github-action-cvmfs@v5
         with:
@@ -121,7 +119,6 @@ jobs:
       - name: install xrootd-client
         run: |
           sudo apt -y update
-          sudo apt -y upgrade
           sudo apt -y install xrootd-client
       - uses: actions/download-artifact@v5
         with:
