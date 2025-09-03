@@ -57,6 +57,9 @@ public class QadbBinSequence<T> extends DaqScalersSequence implements Iterable<Q
     // construct the full, sorted scaler sequence
     logger.info("QadbBinSequence::  constructing DAQ scalers sequence");
     this.readFiles(filenames);
+    logger.fine("...validating ordering...");
+    if(!this.validateOrdering())
+      logger.severe("ERROR: scaler readout ordering is NOT VALID!"); // continue anyway, since the user may still want to see the QADB results
     logger.fine("...done, now constructing QADB bin sequence...");
     // sanity checks
     if(binWidth <= 0)

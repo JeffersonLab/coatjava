@@ -314,7 +314,38 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
         }
         return seq;
     }
-    
+
+    /**
+     * Checks if the scalers list is sorted such that the scalers' timestamp and event number orderings are consistent and monotonically increasing.
+     * <p>
+     * @param scalers the list of DaqScalers to validate
+     * @return {@code true} if timestamp and event number orderings are consistent
+     */
+    public boolean validateOrdering() {
+        if (scalers.size() <= 1) return true; // trivial case
+        boolean result = true;
+        for (int i = 0; i < scalers.size() - 1; i++) {
+            var current             = scalers.get(i);
+            var next                = scalers.get(i + 1);
+            var timestampComparison = Long.compare(current.getTimestamp(), next.getTimestamp());
+            var evnumComparison     = Integer.compare(current.getEventNum(), next.getEventNum());
+            if (timestampComparison == 0 || evnumComparison == 0) {
+                logger.warning("WARNING: found possible duplicate scaler readout: evnum=" + current.getEventNum() + " timestamp=" + current.getTimestamp() + " i=" + i);
+                logger.warning("                                next readout has: evnum=" + next.getEventNum() + " timestamp=" + next.getTimestamp());
+                result = false;
+            }
+            // if neither is equal, they must have the same sign: negative, i.e., increasing monotonically
+            if (timestampComparison != 0 && evnumComparison != 0) {
+                if (Integer.signum(timestampComparison) != -1 || Integer.signum(evnumComparison) != -1) {
+                    logger.warning("WARNING: found non-monotonic scaler ordering: evnum=" + current.getEventNum() + " timestamp=" + current.getTimestamp() + " i=" + i);
+                    logger.warning("                            next readout has: evnum=" + next.getEventNum() + " timestamp=" + next.getTimestamp());
+                    result = false;
+                }
+            }
+        }
+        return result;
+    }
+
     public static void main(String[] args) {
         
         final String dir="/Users/baltzell/data/CLAS12/rg-a/decoded/6b.2.0/";
