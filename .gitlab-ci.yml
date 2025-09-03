@@ -14,7 +14,7 @@ default:
   interruptible: true
   before_script:
     # FIXME: build minimal el9 container, or use container-forge
-    - dnf install -y java-21-openjdk maven wget tree ruby python3-pip
+    - dnf install -y java-24-openjdk maven wget tree ruby python3-pip
 
 stages:
   - build-stage
