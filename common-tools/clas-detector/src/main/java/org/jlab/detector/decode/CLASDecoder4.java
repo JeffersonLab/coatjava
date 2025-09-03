@@ -816,6 +816,9 @@ public class CLASDecoder4 {
     public static void main(String[] args){
 
         OptionParser parser = CLASDecoder4U.getOptionParser();
+        parser.addOption("-d", "0","debug mode, set >0 for more verbose output");
+        parser.addOption("-m", "run","translation tables source (use -m devel for development tables)");
+        parser.addOption("-b", "16","record buffer size in MB");
         parser.parse(args);
         List<String> inputList = parser.getInputList();
 
