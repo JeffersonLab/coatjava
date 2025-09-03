@@ -1,6 +1,7 @@
 package org.jlab.rec.dc.cluster;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +16,7 @@ import org.jlab.rec.dc.hit.Hit;
 import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.rec.urwell.reader.URWellCross;
+import org.jlab.service.urwell.URWellConstants;
 
 public class ClusterCleanerUtilities {
 
@@ -423,7 +425,7 @@ public class ClusterCleanerUtilities {
             List<URWellCross> crossesInLine = new ArrayList();
             for (URWellCross crs : crosses) {
 
-                double rho = URWellCross.getLxRelativeDCSL1LC();
+                double rho = URWellCross.getLxRelativeDCSL1LC(crs.region());
                 double phi = crs.getLyRelativeDCSL1LC();
 
                 for (int j_t = 0; j_t < N_t; j_t++) {
@@ -443,12 +445,15 @@ public class ClusterCleanerUtilities {
 
             // Find matched uRWell cross
             if(!crossesInLine.isEmpty()){
-                URWellCross matchedURWellCrossInLine = FindURWellCrossWithSmallestResidual(newClus, crossesInLine, cf);
-                if(matchedURWellCrossInLine != null){                      
-                    if(Math.abs(newClus.getMatchedURWellResidual()) < Constants.URWELLRESIDUALCUT){
-                        newClus.setMatchedURWellCross(matchedURWellCrossInLine);                           
+                List<URWellCross> matchedURWellCrossesInLine = FindURWellCrossWithSmallestResidual(newClus, crossesInLine, cf);
+                List<URWellCross> matchedURWellCrossesInLineWithResidualCut = new ArrayList();
+                for(int i =0; i < matchedURWellCrossesInLine.size(); i++){  
+                    URWellCross crs = matchedURWellCrossesInLine.get(i);
+                    if(Math.abs(crs.getResidule()) < URWellConstants.URWELLRESIDUALCUT[crs.region()-1]){
+                        matchedURWellCrossesInLineWithResidualCut.add(crs);
                     }
                 }
+                if(!matchedURWellCrossesInLineWithResidualCut.isEmpty()) newClus.setMatchedURWellCrosses(matchedURWellCrossesInLineWithResidualCut); 
             }                        
                         
             //Limits for cluster candiates
@@ -484,7 +489,7 @@ public class ClusterCleanerUtilities {
         List<FittedCluster> splitclustersNoURWell = new ArrayList();
         List<FittedCluster> splitclustersWithURWell = new ArrayList();
         for(FittedCluster cls : splitclusters){
-            if(cls.getMatchedURWellCross() == null) splitclustersNoURWell.add(cls);
+            if(cls.getMatchedURWellCrosses().isEmpty()) splitclustersNoURWell.add(cls);
             else splitclustersWithURWell.add(cls);
         }
         // select clusters with uRWell trhough OverlappingClusterResolver
@@ -542,14 +547,17 @@ public class ClusterCleanerUtilities {
         }                
         
         if (selectedClusList2.isEmpty()) {
-            URWellCross matchedURWellCross = FindURWellCrossWithSmallestResidual(clus, crosses, cf);
-            if(matchedURWellCross != null){                      
-                if(Math.abs(clus.getMatchedURWellResidual()) < Constants.URWELLRESIDUALCUT){
-                    clus.setMatchedURWellCross(matchedURWellCross);                           
-                }
-                else clus.setMatchedURWellResidual(-1);
+            List<URWellCross> matchedURWellCross = FindURWellCrossWithSmallestResidual(clus, crosses, cf);
+            List<URWellCross> matchedURWellCrossWithResidualCut = new ArrayList();
+            for(int i = 0; i < matchedURWellCross.size(); i++){
+                URWellCross crs = matchedURWellCross.get(i);
+                if(Math.abs(crs.getResidule()) < URWellConstants.URWELLRESIDUALCUT[crs.region()-1]){
+                    matchedURWellCrossWithResidualCut.add(crs);
+                }                
             }
             
+            if(!matchedURWellCrossWithResidualCut.isEmpty()) clus.setMatchedURWellCrosses(matchedURWellCrossWithResidualCut);
+                        
             selectedClusList2.add(clus); // if the splitting fails, then return the original cluster
         }
         
@@ -571,7 +579,7 @@ public class ClusterCleanerUtilities {
         List<URWellCross> selectedCrosses = new ArrayList();
         for(URWellCross crs : crosses){
             double y = crs.getLyRelativeDCSL1LC(); 
-            if(Math.abs(y - lyMinDC) < Constants.YDISTURWELLTOMOSTLEFTLAYERLC || Math.abs(y - lyMaxDC) < Constants.YDISTURWELLTOMOSTLEFTLAYERLC){              
+            if(Math.abs(y - lyMinDC) < URWellConstants.YDISTURWELLTOMOSTLEFTLAYERLC[crs.region()-1] || Math.abs(y - lyMaxDC) < URWellConstants.YDISTURWELLTOMOSTLEFTLAYERLC[crs.region()-1]){              
                 selectedCrosses.add(crs);
             }
         }
@@ -579,25 +587,71 @@ public class ClusterCleanerUtilities {
         return selectedCrosses;
     }
     
-    // Find uRWell with smallest residual
-    public URWellCross FindURWellCrossWithSmallestResidual(FittedCluster cls, List<URWellCross> crosses, ClusterFitter cf){
-        double absResidualMin = 999;
-        URWellCross selectedCross = null;
+    // Find uRWell crosses with smallest residual from uRWell R1&R2 separately
+    // If both crosses at R1&R2 are found, they need to satisfy delta-x and delta-y cuts
+    // Otherwise, a cross with smaller residual at R1 or R2 is selected
+    public List<URWellCross> FindURWellCrossWithSmallestResidual(FittedCluster cls, List<URWellCross> crosses, ClusterFitter cf){
+        List<URWellCross> crossesR1 = new ArrayList();
+        List<URWellCross> crossesR2 = new ArrayList();  
         for(URWellCross crs : crosses){
+            if(crs.region() == 1) crossesR1.add(crs);
+            else if(crs.region() == 2) crossesR2.add(crs);
+        }
+
+        double absResidualMinR1 = 999;        
+        URWellCross selectedCrossR1 = null;
+        for(URWellCross crs : crossesR1){
            cf.SetFitArray(cls, "LC"); 
            cf.addURWellLC(crs);
            cf.Fit(cls, true); 
-           double x = URWellCross.getLxRelativeDCSL1LC();
+           double x = URWellCross.getLxRelativeDCSL1LC(crs.region());
            double y = crs.getLyRelativeDCSL1LC();
            double residual = cls.get_clusterLineFitSlope() * x + cls.get_clusterLineFitIntercept() - y;
-           if(Math.abs(residual) < absResidualMin){
-               absResidualMin = Math.abs(residual);
-               selectedCross = crs;
-               cls.setMatchedURWellResidual(residual);
+           if(Math.abs(residual) < absResidualMinR1){
+               absResidualMinR1 = Math.abs(residual);
+               crs.setResidule(residual);
+               selectedCrossR1 = crs;
            }
         }
         
-        return selectedCross;
+        double absResidualMinR2 = 999;        
+        URWellCross selectedCrossR2 = null;
+        for(URWellCross crs : crossesR2){
+           cf.SetFitArray(cls, "LC"); 
+           cf.addURWellLC(crs);
+           cf.Fit(cls, true); 
+           double x = URWellCross.getLxRelativeDCSL1LC(crs.region());
+           double y = crs.getLyRelativeDCSL1LC();
+           double residual = cls.get_clusterLineFitSlope() * x + cls.get_clusterLineFitIntercept() - y;
+           if(Math.abs(residual) < absResidualMinR2){
+               absResidualMinR2 = Math.abs(residual);
+               crs.setResidule(residual);
+               selectedCrossR2 = crs;
+           }
+        }
+        
+        List<URWellCross> selectedCrosses = new ArrayList();
+        
+        if(selectedCrossR1 != null && selectedCrossR2 == null){
+            selectedCrosses.add(selectedCrossR1);
+        }
+        else if(selectedCrossR1 == null && selectedCrossR2 != null){
+            selectedCrosses.add(selectedCrossR2);
+        }        
+        else if(selectedCrossR1 != null && selectedCrossR2 != null){
+            double absDiffX = Math.abs(selectedCrossR1.local().x() - selectedCrossR2.local().x());
+            double absDiffY = Math.abs(selectedCrossR1.local().y() - selectedCrossR2.local().y());
+            if(absDiffX < URWellConstants.URWELLDIFFX && absDiffY < URWellConstants.URWELLDIFFY){
+                selectedCrosses.add(selectedCrossR1);
+                selectedCrosses.add(selectedCrossR2);
+            }
+            else{
+                if(Math.abs(selectedCrossR1.getResidule()) < Math.abs(selectedCrossR2.getResidule())) selectedCrosses.add(selectedCrossR1);
+                else selectedCrosses.add(selectedCrossR2);
+            }
+        }       
+        
+        return selectedCrosses;
     } 
     
     public List<List<Hit>> byLayerListSorter(List<Hit> DCHits, int sector, int superlyr) {
@@ -1066,8 +1120,12 @@ public class ClusterCleanerUtilities {
                 }
             }
             
-            if(passCls && cls.getMatchedURWellCross() != null && thisclus.getMatchedURWellCross()!= null 
-                    && (cls.getMatchedURWellCross().id() != thisclus.getMatchedURWellCross().id())){
+            int numSharedURCrosses = thisclus.numSharedURWellCrosses(cls);
+            
+            // If uRWell crosses exit and not all uRWell crosses are shared, go to next level to check if cluster is added into overlapping list
+            // If uRWell crosses do not exit or not all uRWell crosses are shared, exclude cluster from overlapping list
+            if(passCls && !cls.getMatchedURWellCrosses().isEmpty() && !thisclus.getMatchedURWellCrosses().isEmpty()
+                    && (thisclus.getMatchedURWellCrosses().size() != numSharedURCrosses) ){
                 passCls = false;   
             }
                 
@@ -1082,10 +1140,11 @@ public class ClusterCleanerUtilities {
                             }
                         }
                 } // end loop over hits in thisclus
-            
-                if( cls.getMatchedURWellCross() != null && thisclus.getMatchedURWellCross()!= null 
-                        && (cls.getMatchedURWellCross().id() == thisclus.getMatchedURWellCross().id())){ // shared uRWell cross
-
+                    
+               if(numSharedURCrosses == 2){
+                   overlapingClusters.add(cls);
+               }
+               else if( numSharedURCrosses == 1){ 
                     if((!isExceptionalFittedCluster(cls) && !isExceptionalFittedCluster(thisclus) && hitOvrl.size() < 2) 
                             || ((isExceptionalFittedCluster(cls) || isExceptionalFittedCluster(thisclus)) && hitOvrl.size() < 1)) {
                         passCls = false;
@@ -1113,7 +1172,7 @@ public class ClusterCleanerUtilities {
         if(overlapingClusters.size() > 1){
             List<FittedCluster> rmClusters = new ArrayList<>();
             for(FittedCluster overlapingCls : overlapingClusters){
-                if(overlapingCls.getMatchedURWellCross() == null && overlapingCls.get_Superlayer() <=4 && Math.abs(overlapingCls.get_clusterLineFitSlope()) > 0.578) //tan(30 deg) 
+                if(overlapingCls.getMatchedURWellCrosses().isEmpty() && overlapingCls.get_Superlayer() <=4 && Math.abs(overlapingCls.get_clusterLineFitSlope()) > 0.578) //tan(30 deg) 
                     rmClusters.add(overlapingCls);
             }
             if(overlapingClusters.size() > rmClusters.size()) overlapingClusters.removeAll(rmClusters);
@@ -1122,11 +1181,11 @@ public class ClusterCleanerUtilities {
         // Collect clusters with uRWell cross
         List<FittedCluster> overlapingClustersWithURWell = new ArrayList<>();
         for(FittedCluster cls : overlapingClusters){
-            if(cls.getMatchedURWellCross() != null) overlapingClustersWithURWell.add(cls);
+            if(!cls.getMatchedURWellCrosses().isEmpty()) overlapingClustersWithURWell.add(cls);
         }
         
         if(!overlapingClustersWithURWell.isEmpty()){         
-            return SelectClusterWithSameURWellCross(overlapingClustersWithURWell); 
+            return selectClusterWithSameURWellCross(overlapingClustersWithURWell); 
         }
         else{
             // Order overlapping clusters; 1st priortiy: cluster size; 2nd priority if same cluster size : fitting quality
@@ -1136,12 +1195,17 @@ public class ClusterCleanerUtilities {
 
     }
     
-    /** Select a cluster from cluster list with the same uRWell; 1st priortiy: cluster size; 2nd priority if same cluster size : smallest uRWell residual
+    /** Select a cluster from cluster list with the same uRWell; 
+     * Priorities:
+     ** 1st priority: cluster size; 
+     ** 2nd priority: if is same cluster size , then number of uRWell crosses 
+     ** 3rd priority if same cluster size and same number of uRWell crosses, than smallest uRWell residual
      * 
      * @param clusters - FittedCluster list
      * @return selected FittedCluster
      */
-    public FittedCluster SelectClusterWithSameURWellCross(List<FittedCluster> clusters){
+    public FittedCluster selectClusterWithSameURWellCross(List<FittedCluster> clusters){
+        // Get cluster list with largest cluster size
         Map<Integer, List<FittedCluster>> map_size_clusterList = new HashMap();
         for(FittedCluster cls : clusters){
             int size = cls.size();
@@ -1158,7 +1222,27 @@ public class ClusterCleanerUtilities {
         Collections.sort(keyList);
         
         List<FittedCluster> clusterListWithMostHits = map_size_clusterList.get(keyList.get(keyList.size() - 1));
-        return FindClusterWithSmallestURWellResidual(clusterListWithMostHits);        
+        
+        // Get cluster list with largetst cluster size and largest number of uRWell crosses
+        Map<Integer, List<FittedCluster>> map_numURWellCrosses_clusterList = new HashMap();
+        for(FittedCluster cls : clusterListWithMostHits){
+            int num = cls.getMatchedURWellCrosses().size();
+            if(map_numURWellCrosses_clusterList.keySet().contains(num)) map_numURWellCrosses_clusterList.get(num).add(cls);
+            else{
+                List<FittedCluster> newClusterList = new ArrayList();
+                newClusterList.add(cls);
+                map_numURWellCrosses_clusterList.put(num, newClusterList);
+            }
+        }
+        
+        List<Integer> keyList2 = new ArrayList();
+        keyList2.addAll(map_numURWellCrosses_clusterList.keySet());
+        Collections.sort(keyList2);
+        
+        List<FittedCluster> clusterListWithMostHitsMostURWellCrosses = map_numURWellCrosses_clusterList.get(keyList2.get(keyList2.size() - 1));
+        
+        // 
+        return FindClusterWithSmallestURWellResidual(clusterListWithMostHitsMostURWellCrosses);        
     }
     
     /** Find Cluster with smallest uRWell residual
@@ -1166,27 +1250,30 @@ public class ClusterCleanerUtilities {
      * @param clusters - FittedCluster list
      * @return FittedCluster with smallest uRWell residual
      */
-    public FittedCluster FindClusterWithSmallestURWellResidual(List<FittedCluster> clusters){
-        ClusterFitter cf = new ClusterFitter();
-        
+    public FittedCluster FindClusterWithSmallestURWellResidual(List<FittedCluster> clusters) {
         double absResidualMin = 999;
         FittedCluster selectedCluster = null;
-        for(FittedCluster cls : clusters){
-           URWellCross crs = cls.getMatchedURWellCross();
-           cf.SetFitArray(cls, "LC"); 
-           cf.addURWellLC(crs);
-           cf.Fit(cls, true); 
-           double x = URWellCross.getLxRelativeDCSL1LC();
-           double y = crs.getLyRelativeDCSL1LC();
-           double residual = cls.get_clusterLineFitSlope() * x + cls.get_clusterLineFitIntercept() - y;
-           if(Math.abs(residual) < absResidualMin){
-               absResidualMin = Math.abs(residual);
-               selectedCluster = cls;
-           }
+        for (FittedCluster cls : clusters) {
+            double residual = 0;
+            for (URWellCross crs : cls.getMatchedURWellCrosses()) {
+                ClusterFitter cf = new ClusterFitter();
+                cf.SetFitArray(cls, "LC");
+                cf.addURWellLC(crs);
+                cf.Fit(cls, true);
+                double x = URWellCross.getLxRelativeDCSL1LC(crs.region());
+                double y = crs.getLyRelativeDCSL1LC();
+                residual += Math.abs(cls.get_clusterLineFitSlope() * x + cls.get_clusterLineFitIntercept() - y);
+                
+            }
+            
+            if (residual < absResidualMin) {
+                    absResidualMin = residual;
+                    selectedCluster = cls;
+            }
         }
-        
+
         return selectedCluster;
-    } 
+    }
     
 /**
      * Prunes the input hit list to remove noise candidates; the algorithm finds

@@ -27,37 +27,38 @@ import org.jlab.service.urwell.URWellConstants;
 
 public class URWellDCCrossesListFinder {
 
-    public URWellDCCrossesListFinder() {
-    }
+    public URWellDCCrossesListFinder() {}
 
-    public URWellDCCrossesList candURWellDCCrossLists(List<URWellCross> urCrosses, CrossList crosslist) {
-        URWellDCCrossesList urDCCrossesList = new URWellDCCrossesList();
-
-        for (int i = 0; i < urCrosses.size(); i++) {
-            for (int j = 0; j < crosslist.size(); j++) {
-                URWellCross urCross = urCrosses.get(i);
-                List<Cross> dcCrosses = crosslist.get(j);
-
-                if (urCross.sector() == dcCrosses.get(0).get_Sector() && urCross.sector() == dcCrosses.get(1).get_Sector() && urCross.sector() == dcCrosses.get(2).get_Sector()) {
-                    urDCCrossesList.add_URWellDCCrosses(urCross, dcCrosses);
-                }
-            }
-        }
-
-        return urDCCrossesList;
-    }
     
      /**
-     *
-     * @param dccrosslist the list of crosses in the event, where crosses in R1 are correlated with uRWell crosses
+     * Make cross list with joint of uRWell
+     * If DC-SL1 crosses have uRWell crosses, add them into aDC cross list
+     * If no, check if there are proper crosses in urCrosses to be added into DC cross list
+     * @param dccrosslist the list of DC crosses 
+     * @param urCrosses the list of uRWell crosses
+     * @param nReqDCCrosses # of required DC crosses in a list
      * @return the list of crosses determined to be consistent with belonging to
-     * a track in the DC
+     * a track in the DC with joint of uRWell
      */        
     public URWellDCCrossesList candCrossListsWithURWell(DataEvent event,
             List<Cross> dccrosslist, List<URWellCross> urCrosses, boolean TimeBased, 
             IndexedTable tab, DCGeant4Factory DcDetector, TimeToDistanceEstimator tde, 
             Swim swimmer, boolean FOOS, int nReqDCCrosses) {
         
+        //Build uRWell cross-pair list and put non-paired crosses into the other list
+        List<List<URWellCross>> urCrossPairs = new ArrayList();
+        List<URWellCross> urCrossesNotPaired = new ArrayList();
+        if(urCrosses != null){
+            urCrossPairs = buildURWellCrossPairs(urCrosses);
+            urCrossesNotPaired.addAll(urCrosses);
+            
+            for(List<URWellCross> urCrossPair : urCrossPairs){
+                for(URWellCross crs : urCrossPair){
+                    if(urCrossesNotPaired.contains(crs)) urCrossesNotPaired.remove(crs);
+                }
+            }
+        }
+
         URWellDCCrossesList urDCCrossesList = new URWellDCCrossesList();
 
         if(dccrosslist.size()>0) {
@@ -78,12 +79,6 @@ public class URWellDCCrossesListFinder {
             }
 
             if (nReqDCCrosses == 3) { // need 3 DC crosses  
-                TrajectoryParametriz qf1 = new TrajectoryParametriz(4);                                
-                double[] X = new double[4];
-                double[] Y = new double[4];
-                double[] Z = new double[4];
-                double[] errX = new double[4];
-                double[] errY = new double[4];
                 Vector3D traj1 = new Vector3D(0,0,0);
                 Vector3D traj2 = new Vector3D(0,0,0);
                 Vector3D traj3 = new Vector3D(0,0,0);
@@ -92,19 +87,27 @@ public class URWellDCCrossesListFinder {
                     for(Cross c1 : dccrosslistRg1) {
                         for(Cross c2 : dccrosslistRg2) {
                             for(Cross c3 : dccrosslistRg3) {
-                                if(c1.get_Sector()!=c2.get_Sector() || c1.get_Sector()!=c3.get_Sector()) {
-                                    this.clear(X, Y, Z, errX, errY);
+                                if(c1.get_Sector()!=c2.get_Sector() || c1.get_Sector()!=c3.get_Sector()) {                                    
                                     continue;
                                 }
                                 if(FOOS==true) {
                                     if(c1.get_Id()!=-1 && c2.get_Id()!=-1 && c3.get_Id()!=-1) {
-                                        this.clear(X, Y, Z, errX, errY);
                                         continue;
                                     }
                                 }
-                                
-                                // SL1 is coorelated with R0
-                                if(c1.get_Segment1().getMatchedURWellCross() != null){                                
+                                                                
+                                if(!c1.get_Segment1().getMatchedURWellCrosses().isEmpty()){ // SL1 is coorelated with uRWell in clustering
+                                    int numPoints = 3 + c1.get_Segment1().getMatchedURWellCrosses().size();
+                                    
+                                    TrajectoryParametriz qf1 = new TrajectoryParametriz(numPoints);                                
+                                    double[] X = new double[numPoints];
+                                    double[] Y = new double[numPoints];
+                                    double[] Z = new double[numPoints];
+                                    double[] errX = new double[numPoints];
+                                    double[] errY = new double[numPoints];
+                                    this.clear(X, Y, Z, errX, errY);
+                                    
+                                    
                                     Z[0] = c1.get_Point().z();
                                     Y[0] = c1.get_Point().y();
                                     X[0] = c1.get_Point().x();
@@ -121,12 +124,14 @@ public class URWellDCCrossesListFinder {
                                     errX[2] = c3.get_PointErr().x();
                                     errY[2] = c3.get_PointErr().y();
 
-                                    URWellCross urCross = c1.get_Segment1().getMatchedURWellCross();
-                                    Z[3] = urCross.local().z();
-                                    Y[3] = urCross.local().y();
-                                    X[3] = urCross.local().x();
-                                    errX[3] = URWellConstants.URWELLXRESOLUTIONHB;
-                                    errY[3] = URWellConstants.URWELLYRESOLUTIONHB;     
+                                    for(int i = 0; i < c1.get_Segment1().getMatchedURWellCrosses().size(); i++){
+                                        URWellCross urCross = c1.get_Segment1().getMatchedURWellCrosses().get(i);
+                                        Z[i+3] = urCross.local().z();
+                                        Y[i+3] = urCross.local().y();
+                                        X[i+3] = urCross.local().x();
+                                        errX[i+3] = URWellConstants.URWELLXRESOLUTIONHB;
+                                        errY[i+3] = URWellConstants.URWELLYRESOLUTIONHB;     
+                                    }
 
                                     // ignore point errors and assume the track vertex is close to the origin
                                     for(int j = 0; j<6; j++)
@@ -170,102 +175,192 @@ public class URWellDCCrossesListFinder {
                                     this.updateBFittedHits(event, c3, tab, DcDetector, tde, swimmer);
 
                                     if (fitchsq < Constants.CROSSLISTSELECTQFMINCHSQ) {
-                                        List<Cross> dcCrosses = new ArrayList<Cross>();
+                                        List<Cross> dcCrosses = new ArrayList();
                                         dcCrosses.add(c1);
                                         dcCrosses.add(c2);
                                         dcCrosses.add(c3);
-                                        urDCCrossesList.add_URWellDCCrosses(urCross, dcCrosses);
+                                        urDCCrossesList.add_URWellDCCrosses(c1.get_Segment1().getMatchedURWellCrosses(), dcCrosses);
                                     }
                                 }                                
-                                else{
-                                    if(urCrosses != null){
-                                        for (URWellCross urCross : urCrosses) {
-                                            if(urCross.sector() == c1.get_Sector()){
-                                                Z[0] = c1.get_Point().z();
-                                                Y[0] = c1.get_Point().y();
-                                                X[0] = c1.get_Point().x();
-                                                errX[0] = c1.get_PointErr().x();
-                                                errY[0] = c1.get_PointErr().y();
-                                                Z[1] = c2.get_Point().z();
-                                                Y[1] = c2.get_Point().y();
-                                                X[1] = c2.get_Point().x();
-                                                errX[1] = c2.get_PointErr().x();
-                                                errY[1] = c2.get_PointErr().y();
-                                                Z[2] = c3.get_Point().z();
-                                                Y[2] = c3.get_Point().y();
-                                                X[2] = c3.get_Point().x();
-                                                errX[2] = c3.get_PointErr().x();
-                                                errY[2] = c3.get_PointErr().y();
-                                                Z[3] = urCross.local().z();
-                                                Y[3] = urCross.local().y();
-                                                X[3] = urCross.local().x();
-                                                errX[3] = URWellConstants.URWELLXRESOLUTIONHB;
-                                                errY[3] = URWellConstants.URWELLYRESOLUTIONHB;
-                                                // ignore point errors and assume the track vertex is close to the origin
-                                                for (int j = 0; j < 6; j++) {
-                                                    this.clear(qf1.fitResult[j]);
-                                                }
-                                                qf1.evaluate(Z, X, errX, Y, errY);
+                                else{ // SL1 is not correlated with uRWell in clustering
+                                    // DC cross list + single uRWell cross
+                                    for(URWellCross urCross : urCrossesNotPaired) {
+                                        if(urCross.sector() == c1.get_Sector()){
+                                            TrajectoryParametriz qf1 = new TrajectoryParametriz(4);                                
+                                            double[] X = new double[4];
+                                            double[] Y = new double[4];
+                                            double[] Z = new double[4];
+                                            double[] errX = new double[4];
+                                            double[] errY = new double[4];
+                                            this.clear(X, Y, Z, errX, errY);
 
-                                                traj1.setXYZ(qf1.fitResult[3][0], qf1.fitResult[4][0], qf1.fitResult[5][0]);
-                                                traj2.setXYZ(qf1.fitResult[3][1], qf1.fitResult[4][1], qf1.fitResult[5][1]);
-                                                traj3.setXYZ(qf1.fitResult[3][2], qf1.fitResult[4][2], qf1.fitResult[5][2]);
+                                            Z[0] = c1.get_Point().z();
+                                            Y[0] = c1.get_Point().y();
+                                            X[0] = c1.get_Point().x();
+                                            errX[0] = c1.get_PointErr().x();
+                                            errY[0] = c1.get_PointErr().y();
+                                            Z[1] = c2.get_Point().z();
+                                            Y[1] = c2.get_Point().y();
+                                            X[1] = c2.get_Point().x();
+                                            errX[1] = c2.get_PointErr().x();
+                                            errY[1] = c2.get_PointErr().y();
+                                            Z[2] = c3.get_Point().z();
+                                            Y[2] = c3.get_Point().y();
+                                            X[2] = c3.get_Point().x();
+                                            errX[2] = c3.get_PointErr().x();
+                                            errY[2] = c3.get_PointErr().y();
+                                            Z[3] = urCross.local().z();
+                                            Y[3] = urCross.local().y();
+                                            X[3] = urCross.local().x();
+                                            errX[3] = URWellConstants.URWELLXRESOLUTIONHB;
+                                            errY[3] = URWellConstants.URWELLYRESOLUTIONHB;
+                                            // ignore point errors and assume the track vertex is close to the origin
+                                            for (int j = 0; j < 6; j++) {
+                                                this.clear(qf1.fitResult[j]);
+                                            }
+                                            qf1.evaluate(Z, X, errX, Y, errY);
 
-                                                double cosTh1 = traj1.dot(c1.get_Dir().toVector3D());
-                                                double cosTh2 = traj2.dot(c2.get_Dir().toVector3D());
-                                                double cosTh3 = traj3.dot(c3.get_Dir().toVector3D());
+                                            traj1.setXYZ(qf1.fitResult[3][0], qf1.fitResult[4][0], qf1.fitResult[5][0]);
+                                            traj2.setXYZ(qf1.fitResult[3][1], qf1.fitResult[4][1], qf1.fitResult[5][1]);
+                                            traj3.setXYZ(qf1.fitResult[3][2], qf1.fitResult[4][2], qf1.fitResult[5][2]);
 
-                                                // require that the cross direction estimate be in the direction of the trajectory
-                                                if (cosTh1 < Constants.TRACKDIRTOCROSSDIRCOSANGLE || cosTh2 < Constants.TRACKDIRTOCROSSDIRCOSANGLE || cosTh3 < Constants.TRACKDIRTOCROSSDIRCOSANGLE) {
-                                                    continue;
-                                                }
+                                            double cosTh1 = traj1.dot(c1.get_Dir().toVector3D());
+                                            double cosTh2 = traj2.dot(c2.get_Dir().toVector3D());
+                                            double cosTh3 = traj3.dot(c3.get_Dir().toVector3D());
 
-                                                double fitchsq = 0;
+                                            // require that the cross direction estimate be in the direction of the trajectory
+                                            if (cosTh1 < Constants.TRACKDIRTOCROSSDIRCOSANGLE || cosTh2 < Constants.TRACKDIRTOCROSSDIRCOSANGLE || cosTh3 < Constants.TRACKDIRTOCROSSDIRCOSANGLE) {
+                                                continue;
+                                            }
 
-                                                if (c1.isPseudoCross == false) {
-                                                    fitchsq += ((qf1.fitResult[1][0] - c1.get_Point().y()) / c1.get_PointErr().y()) * ((qf1.fitResult[1][0] - c1.get_Point().y()) / c1.get_PointErr().y());
-                                                }
-                                                if (c2.isPseudoCross == false) {
-                                                    fitchsq += ((qf1.fitResult[1][1] - c2.get_Point().y()) / c2.get_PointErr().y()) * ((qf1.fitResult[1][1] - c2.get_Point().y()) / c2.get_PointErr().y());
-                                                }
-                                                if (c3.isPseudoCross == false) {
-                                                    fitchsq += ((qf1.fitResult[1][2] - c3.get_Point().y()) / c3.get_PointErr().y()) * ((qf1.fitResult[1][2] - c3.get_Point().y()) / c3.get_PointErr().y());
-                                                }
-                                                fitchsq += ((qf1.fitResult[1][3] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB) * ((qf1.fitResult[1][3] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB);
+                                            double fitchsq = 0;
 
-                                                // fit the  projection with a line -- the track is ~ constant in phi
-                                                LineFitter linefit = new LineFitter();
-                                                boolean linefitstatusOK = linefit.fitStatus(X, Y, errX, errY, Z.length);
-                                                if (!linefitstatusOK) {
-                                                    continue; // fit failed
-                                                }
+                                            if (c1.isPseudoCross == false) {
+                                                fitchsq += ((qf1.fitResult[1][0] - c1.get_Point().y()) / c1.get_PointErr().y()) * ((qf1.fitResult[1][0] - c1.get_Point().y()) / c1.get_PointErr().y());
+                                            }
+                                            if (c2.isPseudoCross == false) {
+                                                fitchsq += ((qf1.fitResult[1][1] - c2.get_Point().y()) / c2.get_PointErr().y()) * ((qf1.fitResult[1][1] - c2.get_Point().y()) / c2.get_PointErr().y());
+                                            }
+                                            if (c3.isPseudoCross == false) {
+                                                fitchsq += ((qf1.fitResult[1][2] - c3.get_Point().y()) / c3.get_PointErr().y()) * ((qf1.fitResult[1][2] - c3.get_Point().y()) / c3.get_PointErr().y());
+                                            }
+                                            //fitchsq += ((qf1.fitResult[1][3] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB) * ((qf1.fitResult[1][3] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB);
 
-                                                this.updateBFittedHits(event, c1, tab, DcDetector, tde, swimmer);
-                                                this.updateBFittedHits(event, c2, tab, DcDetector, tde, swimmer);
-                                                this.updateBFittedHits(event, c3, tab, DcDetector, tde, swimmer);
+                                            // fit the  projection with a line -- the track is ~ constant in phi
+                                            LineFitter linefit = new LineFitter();
+                                            boolean linefitstatusOK = linefit.fitStatus(X, Y, errX, errY, Z.length);
+                                            if (!linefitstatusOK) {
+                                                continue; // fit failed
+                                            }
 
-                                                if (fitchsq < Constants.CROSSLISTSELECTQFMINCHSQ) {
-                                                    List<Cross> dcCrosses = new ArrayList<Cross>();
-                                                    dcCrosses.add(c1);
-                                                    dcCrosses.add(c2);
-                                                    dcCrosses.add(c3);
-                                                    urDCCrossesList.add_URWellDCCrosses(urCross, dcCrosses);
-                                                }
+                                            this.updateBFittedHits(event, c1, tab, DcDetector, tde, swimmer);
+                                            this.updateBFittedHits(event, c2, tab, DcDetector, tde, swimmer);
+                                            this.updateBFittedHits(event, c3, tab, DcDetector, tde, swimmer);
+
+                                            if (fitchsq < Constants.CROSSLISTSELECTQFMINCHSQ) {
+                                                List<Cross> dcCrosses = new ArrayList();
+                                                dcCrosses.add(c1);
+                                                dcCrosses.add(c2);
+                                                dcCrosses.add(c3);
+                                                List<URWellCross> urCrossList = new ArrayList();
+                                                urCrossList.add(urCross);
+                                                urDCCrossesList.add_URWellDCCrosses(urCrossList, dcCrosses);
                                             }
                                         }
                                     }
+
+                                    // DC cross list + uRWell cross pair
+                                    for(List<URWellCross> urCrossPair : urCrossPairs) {
+                                        if(urCrossPair.get(0).sector() == c1.get_Sector()){
+                                            int numPoints = 3 + urCrossPair.size();
+                                            TrajectoryParametriz qf1 = new TrajectoryParametriz(numPoints);                                
+                                            double[] X = new double[numPoints];
+                                            double[] Y = new double[numPoints];
+                                            double[] Z = new double[numPoints];
+                                            double[] errX = new double[numPoints];
+                                            double[] errY = new double[numPoints];
+                                            this.clear(X, Y, Z, errX, errY);
+
+                                            Z[0] = c1.get_Point().z();
+                                            Y[0] = c1.get_Point().y();
+                                            X[0] = c1.get_Point().x();
+                                            errX[0] = c1.get_PointErr().x();
+                                            errY[0] = c1.get_PointErr().y();
+                                            Z[1] = c2.get_Point().z();
+                                            Y[1] = c2.get_Point().y();
+                                            X[1] = c2.get_Point().x();
+                                            errX[1] = c2.get_PointErr().x();
+                                            errY[1] = c2.get_PointErr().y();
+                                            Z[2] = c3.get_Point().z();
+                                            Y[2] = c3.get_Point().y();
+                                            X[2] = c3.get_Point().x();
+                                            errX[2] = c3.get_PointErr().x();
+                                            errY[2] = c3.get_PointErr().y();
+                                            for(int i = 0; i < urCrossPair.size(); i++){
+                                                URWellCross urCross = urCrossPair.get(i);
+                                                Z[i+3] = urCross.local().z();
+                                                Y[i+3] = urCross.local().y();
+                                                X[i+3] = urCross.local().x();
+                                                errX[i+3] = URWellConstants.URWELLXRESOLUTIONHB;
+                                                errY[i+3] = URWellConstants.URWELLYRESOLUTIONHB;
+                                            }
+                                            // ignore point errors and assume the track vertex is close to the origin
+                                            for (int j = 0; j < 6; j++) {
+                                                this.clear(qf1.fitResult[j]);
+                                            }
+                                            qf1.evaluate(Z, X, errX, Y, errY);
+
+                                            traj1.setXYZ(qf1.fitResult[3][0], qf1.fitResult[4][0], qf1.fitResult[5][0]);
+                                            traj2.setXYZ(qf1.fitResult[3][1], qf1.fitResult[4][1], qf1.fitResult[5][1]);
+                                            traj3.setXYZ(qf1.fitResult[3][2], qf1.fitResult[4][2], qf1.fitResult[5][2]);
+
+                                            double cosTh1 = traj1.dot(c1.get_Dir().toVector3D());
+                                            double cosTh2 = traj2.dot(c2.get_Dir().toVector3D());
+                                            double cosTh3 = traj3.dot(c3.get_Dir().toVector3D());
+
+                                            // require that the cross direction estimate be in the direction of the trajectory
+                                            if (cosTh1 < Constants.TRACKDIRTOCROSSDIRCOSANGLE || cosTh2 < Constants.TRACKDIRTOCROSSDIRCOSANGLE || cosTh3 < Constants.TRACKDIRTOCROSSDIRCOSANGLE) {
+                                                continue;
+                                            }
+
+                                            double fitchsq = 0;
+
+                                            if (c1.isPseudoCross == false) {
+                                                fitchsq += ((qf1.fitResult[1][0] - c1.get_Point().y()) / c1.get_PointErr().y()) * ((qf1.fitResult[1][0] - c1.get_Point().y()) / c1.get_PointErr().y());
+                                            }
+                                            if (c2.isPseudoCross == false) {
+                                                fitchsq += ((qf1.fitResult[1][1] - c2.get_Point().y()) / c2.get_PointErr().y()) * ((qf1.fitResult[1][1] - c2.get_Point().y()) / c2.get_PointErr().y());
+                                            }
+                                            if (c3.isPseudoCross == false) {
+                                                fitchsq += ((qf1.fitResult[1][2] - c3.get_Point().y()) / c3.get_PointErr().y()) * ((qf1.fitResult[1][2] - c3.get_Point().y()) / c3.get_PointErr().y());
+                                            }                                                                                        
+
+                                            // fit the  projection with a line -- the track is ~ constant in phi
+                                            LineFitter linefit = new LineFitter();
+                                            boolean linefitstatusOK = linefit.fitStatus(X, Y, errX, errY, Z.length);
+                                            if (!linefitstatusOK) {
+                                                continue; // fit failed
+                                            }
+
+                                            this.updateBFittedHits(event, c1, tab, DcDetector, tde, swimmer);
+                                            this.updateBFittedHits(event, c2, tab, DcDetector, tde, swimmer);
+                                            this.updateBFittedHits(event, c3, tab, DcDetector, tde, swimmer);
+
+                                            if (fitchsq < Constants.CROSSLISTSELECTQFMINCHSQ) {
+                                                List<Cross> dcCrosses = new ArrayList();
+                                                dcCrosses.add(c1);
+                                                dcCrosses.add(c2);
+                                                dcCrosses.add(c3);
+                                                urDCCrossesList.add_URWellDCCrosses(urCrossPair, dcCrosses);
+                                            }
+                                        }
+                                    }                                        
                                 }
                             }
                         }
                     }
                 }
             } else if (nReqDCCrosses == 2) { // R1, R2 or R3 missed
-                TrajectoryParametriz qf1 = new TrajectoryParametriz(3);
-                double[] X = new double[3];
-                double[] Y = new double[3];
-                double[] Z = new double[3];
-                double[] errX = new double[3];
-                double[] errY = new double[3];
                 Vector3D traj1 = new Vector3D(0, 0, 0);
                 Vector3D traj2 = new Vector3D(0, 0, 0);
                 Vector3D traj3 = new Vector3D(0, 0, 0);
@@ -274,82 +369,163 @@ public class URWellDCCrossesListFinder {
                 if (!dccrosslistRg2.isEmpty() && !dccrosslistRg3.isEmpty()) { 
                     for (Cross c2 : dccrosslistRg2) {
                         for (Cross c3 : dccrosslistRg3) {                            
-                            if (c2.get_Sector()!=c3.get_Sector()) {
-                                this.clear(X, Y, Z, errX, errY);
+                            if (c2.get_Sector()!=c3.get_Sector()) {                                
                                 continue;
                             }
                             if (FOOS == true) {
                                 if (c2.get_Id() != -1 && c3.get_Id() != -1) {
-                                    this.clear(X, Y, Z, errX, errY);
                                     continue;
                                 }
                             }
-                         
-                            if(urCrosses != null){
-                                for (URWellCross urCross : urCrosses) {
-                                    if(urCross.sector() == c2.get_Sector()){
-                                        Z[0] = c2.get_Point().z();
-                                        Y[0] = c2.get_Point().y();
-                                        X[0] = c2.get_Point().x();
-                                        errX[0] = c2.get_PointErr().x();
-                                        errY[0] = c2.get_PointErr().y();
-                                        Z[1] = c3.get_Point().z();
-                                        Y[1] = c3.get_Point().y();
-                                        X[1] = c3.get_Point().x();
-                                        errX[1] = c3.get_PointErr().x();
-                                        errY[1] = c3.get_PointErr().y();
-                                        Z[2] = urCross.local().z();
-                                        Y[2] = urCross.local().y();
-                                        X[2] = urCross.local().x();
-                                        errX[2] = URWellConstants.URWELLXRESOLUTIONHB;
-                                        errY[2] = URWellConstants.URWELLYRESOLUTIONHB;
-                                        // ignore point errors and assume the track vertex is close to the origin
-                                        for (int j = 0; j < 6; j++) {
-                                            this.clear(qf1.fitResult[j]);
-                                        }
-                                        qf1.evaluate(Z, X, errX, Y, errY);
+                            
+                            // DC cross list + single uRWell cross
+                            for (URWellCross urCross : urCrossesNotPaired) {
+                                if(urCross.sector() == c2.get_Sector()){
+                                    TrajectoryParametriz qf1 = new TrajectoryParametriz(3);
+                                    double[] X = new double[3];
+                                    double[] Y = new double[3];
+                                    double[] Z = new double[3];
+                                    double[] errX = new double[3];
+                                    double[] errY = new double[3];
+                                    this.clear(X, Y, Z, errX, errY);
+                                    
+                                    Z[0] = c2.get_Point().z();
+                                    Y[0] = c2.get_Point().y();
+                                    X[0] = c2.get_Point().x();
+                                    errX[0] = c2.get_PointErr().x();
+                                    errY[0] = c2.get_PointErr().y();
+                                    Z[1] = c3.get_Point().z();
+                                    Y[1] = c3.get_Point().y();
+                                    X[1] = c3.get_Point().x();
+                                    errX[1] = c3.get_PointErr().x();
+                                    errY[1] = c3.get_PointErr().y();
+                                    Z[2] = urCross.local().z();
+                                    Y[2] = urCross.local().y();
+                                    X[2] = urCross.local().x();
+                                    errX[2] = URWellConstants.URWELLXRESOLUTIONHB;
+                                    errY[2] = URWellConstants.URWELLYRESOLUTIONHB;
+                                    // ignore point errors and assume the track vertex is close to the origin
+                                    for (int j = 0; j < 6; j++) {
+                                        this.clear(qf1.fitResult[j]);
+                                    }
+                                    qf1.evaluate(Z, X, errX, Y, errY);
 
-                                        traj2.setXYZ(qf1.fitResult[3][0], qf1.fitResult[4][0], qf1.fitResult[5][0]);
-                                        traj3.setXYZ(qf1.fitResult[3][1], qf1.fitResult[4][1], qf1.fitResult[5][1]);
+                                    traj2.setXYZ(qf1.fitResult[3][0], qf1.fitResult[4][0], qf1.fitResult[5][0]);
+                                    traj3.setXYZ(qf1.fitResult[3][1], qf1.fitResult[4][1], qf1.fitResult[5][1]);
 
-                                        double cosTh2 = traj2.dot(c2.get_Dir().toVector3D());
-                                        double cosTh3 = traj3.dot(c3.get_Dir().toVector3D());
+                                    double cosTh2 = traj2.dot(c2.get_Dir().toVector3D());
+                                    double cosTh3 = traj3.dot(c3.get_Dir().toVector3D());
 
-                                        // require that the cross direction estimate be in the direction of the trajectory
-                                        if (cosTh2 < Constants.TRACKDIRTOCROSSDIRCOSANGLE || cosTh3 < Constants.TRACKDIRTOCROSSDIRCOSANGLE) {
-                                            continue;
-                                        }
+                                    // require that the cross direction estimate be in the direction of the trajectory
+                                    if (cosTh2 < Constants.TRACKDIRTOCROSSDIRCOSANGLE || cosTh3 < Constants.TRACKDIRTOCROSSDIRCOSANGLE) {
+                                        continue;
+                                    }
 
-                                        double fitchsq = 0;
+                                    double fitchsq = 0;
 
-                                        if (c2.isPseudoCross == false) {
-                                            fitchsq += ((qf1.fitResult[1][0] - c2.get_Point().y()) / c2.get_PointErr().y()) * ((qf1.fitResult[1][0] - c2.get_Point().y()) / c2.get_PointErr().y());
-                                        }
-                                        if (c3.isPseudoCross == false) {
-                                            fitchsq += ((qf1.fitResult[1][1] - c3.get_Point().y()) / c3.get_PointErr().y()) * ((qf1.fitResult[1][1] - c3.get_Point().y()) / c3.get_PointErr().y());
-                                        }
-                                        fitchsq += ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB) * ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB);
+                                    if (c2.isPseudoCross == false) {
+                                        fitchsq += ((qf1.fitResult[1][0] - c2.get_Point().y()) / c2.get_PointErr().y()) * ((qf1.fitResult[1][0] - c2.get_Point().y()) / c2.get_PointErr().y());
+                                    }
+                                    if (c3.isPseudoCross == false) {
+                                        fitchsq += ((qf1.fitResult[1][1] - c3.get_Point().y()) / c3.get_PointErr().y()) * ((qf1.fitResult[1][1] - c3.get_Point().y()) / c3.get_PointErr().y());
+                                    }
+                                    //fitchsq += ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB) * ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB);
 
-                                        // fit the  projection with a line -- the track is ~ constant in phi
-                                        LineFitter linefit = new LineFitter();
-                                        boolean linefitstatusOK = linefit.fitStatus(X, Y, errX, errY, Z.length);
-                                        if (!linefitstatusOK) {
-                                            continue; // fit failed
-                                        }
+                                    // fit the  projection with a line -- the track is ~ constant in phi
+                                    LineFitter linefit = new LineFitter();
+                                    boolean linefitstatusOK = linefit.fitStatus(X, Y, errX, errY, Z.length);
+                                    if (!linefitstatusOK) {
+                                        continue; // fit failed
+                                    }
 
-                                        this.updateBFittedHits(event, c2, tab, DcDetector, tde, swimmer);
-                                        this.updateBFittedHits(event, c3, tab, DcDetector, tde, swimmer);
+                                    this.updateBFittedHits(event, c2, tab, DcDetector, tde, swimmer);
+                                    this.updateBFittedHits(event, c3, tab, DcDetector, tde, swimmer);
 
-                                        if (fitchsq < Constants.CROSSLISTSELECTQFMINCHSQ) {
-                                            List<Cross> dcCrosses = new ArrayList<Cross>();
-                                            dcCrosses.add(c2);
-                                            dcCrosses.add(c3);
-                                            urDCCrossesList.add_URWellDCCrosses(urCross, dcCrosses);
-                                        }
+                                    if (fitchsq < Constants.CROSSLISTSELECTQFMINCHSQ) {
+                                        List<Cross> dcCrosses = new ArrayList();
+                                        dcCrosses.add(c2);
+                                        dcCrosses.add(c3);
+                                        List<URWellCross> urCrossList = new ArrayList();
+                                        urCrossList.add(urCross);
+                                        urDCCrossesList.add_URWellDCCrosses(urCrossList, dcCrosses);
                                     }
                                 }
-                            }                                
-                                                        
+                            }
+                            
+                            // DC cross list + uRWell cross pair
+                            for (List<URWellCross> urCrossPair : urCrossPairs) {
+                                if(urCrossPair.get(0).sector() == c2.get_Sector()){
+                                    int numPoints = 2 + urCrossPair.size();
+                                    TrajectoryParametriz qf1 = new TrajectoryParametriz(numPoints);
+                                    double[] X = new double[numPoints];
+                                    double[] Y = new double[numPoints];
+                                    double[] Z = new double[numPoints];
+                                    double[] errX = new double[numPoints];
+                                    double[] errY = new double[numPoints];
+                                    this.clear(X, Y, Z, errX, errY);
+                                    
+                                    Z[0] = c2.get_Point().z();
+                                    Y[0] = c2.get_Point().y();
+                                    X[0] = c2.get_Point().x();
+                                    errX[0] = c2.get_PointErr().x();
+                                    errY[0] = c2.get_PointErr().y();
+                                    Z[1] = c3.get_Point().z();
+                                    Y[1] = c3.get_Point().y();
+                                    X[1] = c3.get_Point().x();
+                                    errX[1] = c3.get_PointErr().x();
+                                    errY[1] = c3.get_PointErr().y();
+                                    for(int i = 0; i < urCrossPair.size(); i++){
+                                        URWellCross urCross = urCrossPair.get(i);
+                                        Z[i+2] = urCross.local().z();
+                                        Y[i+2] = urCross.local().y();
+                                        X[i+2] = urCross.local().x();
+                                        errX[i+2] = URWellConstants.URWELLXRESOLUTIONHB;
+                                        errY[i+2] = URWellConstants.URWELLYRESOLUTIONHB;
+                                    }
+                                    // ignore point errors and assume the track vertex is close to the origin
+                                    for (int j = 0; j < 6; j++) {
+                                        this.clear(qf1.fitResult[j]);
+                                    }
+                                    qf1.evaluate(Z, X, errX, Y, errY);
+
+                                    traj2.setXYZ(qf1.fitResult[3][0], qf1.fitResult[4][0], qf1.fitResult[5][0]);
+                                    traj3.setXYZ(qf1.fitResult[3][1], qf1.fitResult[4][1], qf1.fitResult[5][1]);
+
+                                    double cosTh2 = traj2.dot(c2.get_Dir().toVector3D());
+                                    double cosTh3 = traj3.dot(c3.get_Dir().toVector3D());
+
+                                    // require that the cross direction estimate be in the direction of the trajectory
+                                    if (cosTh2 < Constants.TRACKDIRTOCROSSDIRCOSANGLE || cosTh3 < Constants.TRACKDIRTOCROSSDIRCOSANGLE) {
+                                        continue;
+                                    }
+
+                                    double fitchsq = 0;
+
+                                    if (c2.isPseudoCross == false) {
+                                        fitchsq += ((qf1.fitResult[1][0] - c2.get_Point().y()) / c2.get_PointErr().y()) * ((qf1.fitResult[1][0] - c2.get_Point().y()) / c2.get_PointErr().y());
+                                    }
+                                    if (c3.isPseudoCross == false) {
+                                        fitchsq += ((qf1.fitResult[1][1] - c3.get_Point().y()) / c3.get_PointErr().y()) * ((qf1.fitResult[1][1] - c3.get_Point().y()) / c3.get_PointErr().y());
+                                    }
+                                    
+                                    // fit the  projection with a line -- the track is ~ constant in phi
+                                    LineFitter linefit = new LineFitter();
+                                    boolean linefitstatusOK = linefit.fitStatus(X, Y, errX, errY, Z.length);
+                                    if (!linefitstatusOK) {
+                                        continue; // fit failed
+                                    }
+
+                                    this.updateBFittedHits(event, c2, tab, DcDetector, tde, swimmer);
+                                    this.updateBFittedHits(event, c3, tab, DcDetector, tde, swimmer);
+
+                                    if (fitchsq < Constants.CROSSLISTSELECTQFMINCHSQ) {
+                                        List<Cross> dcCrosses = new ArrayList();
+                                        dcCrosses.add(c2);
+                                        dcCrosses.add(c3);
+                                        urDCCrossesList.add_URWellDCCrosses(urCrossPair, dcCrosses);
+                                    }
+                                }
+                            }                            
                         }
                     }
                 } 
@@ -359,18 +535,24 @@ public class URWellDCCrossesListFinder {
                     for (Cross c1 : dccrosslistRg1) {
                         for (Cross c3 : dccrosslistRg3) {                            
                             if (c1.get_Sector()!=c3.get_Sector()) {
-                                this.clear(X, Y, Z, errX, errY);
                                 continue;
                             }
                             if (FOOS == true) {
                                 if (c1.get_Id() != -1 && c3.get_Id() != -1) {
-                                    this.clear(X, Y, Z, errX, errY);
                                     continue;
                                 }
                             }
-                            
-                            // SL1 is coorelated with R0
-                            if(c1.get_Segment1().getMatchedURWellCross() != null){    
+                                                        
+                            if(!c1.get_Segment1().getMatchedURWellCrosses().isEmpty()){ // SL1 is coorelated with R0 in clustering
+                                int numPoints = 2 + c1.get_Segment1().getMatchedURWellCrosses().size();
+                                TrajectoryParametriz qf1 = new TrajectoryParametriz(numPoints);
+                                double[] X = new double[numPoints];
+                                double[] Y = new double[numPoints];
+                                double[] Z = new double[numPoints];
+                                double[] errX = new double[numPoints];
+                                double[] errY = new double[numPoints];
+                                this.clear(X, Y, Z, errX, errY);
+                                
                                 Z[0] = c1.get_Point().z();
                                 Y[0] = c1.get_Point().y();
                                 X[0] = c1.get_Point().x();
@@ -382,12 +564,14 @@ public class URWellDCCrossesListFinder {
                                 errX[1] = c3.get_PointErr().x();
                                 errY[1] = c3.get_PointErr().y();
 
-                                URWellCross urCross = c1.get_Segment1().getMatchedURWellCross();
-                                Z[2] = urCross.local().z();
-                                Y[2] = urCross.local().y();
-                                X[2] = urCross.local().x();
-                                errX[2] = URWellConstants.URWELLXRESOLUTIONHB;
-                                errY[2] = URWellConstants.URWELLYRESOLUTIONHB;
+                                for(int i = 0; i < c1.get_Segment1().getMatchedURWellCrosses().size(); i++){
+                                        URWellCross urCross = c1.get_Segment1().getMatchedURWellCrosses().get(i);
+                                        Z[i+2] = urCross.local().z();
+                                        Y[i+2] = urCross.local().y();
+                                        X[i+2] = urCross.local().x();
+                                        errX[i+2] = URWellConstants.URWELLXRESOLUTIONHB;
+                                        errY[i+2] = URWellConstants.URWELLYRESOLUTIONHB;
+                                    }
 
                                 // ignore point errors and assume the track vertex is close to the origin
                                 for (int j = 0; j < 6; j++) {
@@ -414,8 +598,7 @@ public class URWellDCCrossesListFinder {
                                 if (c3.isPseudoCross == false) {
                                     fitchsq += ((qf1.fitResult[1][1] - c3.get_Point().y()) / c3.get_PointErr().y()) * ((qf1.fitResult[1][1] - c3.get_Point().y()) / c3.get_PointErr().y());
                                 }
-                                fitchsq += ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB) * ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB);
-
+                                
                                 // fit the  projection with a line -- the track is ~ constant in phi
                                 LineFitter linefit = new LineFitter();
                                 boolean linefitstatusOK = linefit.fitStatus(X, Y, errX, errY, Z.length);
@@ -427,76 +610,158 @@ public class URWellDCCrossesListFinder {
                                 this.updateBFittedHits(event, c3, tab, DcDetector, tde, swimmer);
 
                                 if (fitchsq < Constants.CROSSLISTSELECTQFMINCHSQ) {
-                                    List<Cross> dcCrosses = new ArrayList<Cross>();
+                                    List<Cross> dcCrosses = new ArrayList();
                                     dcCrosses.add(c1);
                                     dcCrosses.add(c3);
-                                    urDCCrossesList.add_URWellDCCrosses(urCross, dcCrosses);
+                                    urDCCrossesList.add_URWellDCCrosses(c1.get_Segment1().getMatchedURWellCrosses(), dcCrosses);
                                 }
-                            } else{
-                                if(urCrosses != null){
-                                    for (URWellCross urCross : urCrosses) {
-                                        if(urCross.sector() == c1.get_Sector()){
-                                            Z[0] = c1.get_Point().z();
-                                            Y[0] = c1.get_Point().y();
-                                            X[0] = c1.get_Point().x();
-                                            errX[0] = c1.get_PointErr().x();
-                                            errY[0] = c1.get_PointErr().y();
-                                            Z[1] = c3.get_Point().z();
-                                            Y[1] = c3.get_Point().y();
-                                            X[1] = c3.get_Point().x();
-                                            errX[1] = c3.get_PointErr().x();
-                                            errY[1] = c3.get_PointErr().y();
-                                            Z[2] = urCross.local().z();
-                                            Y[2] = urCross.local().y();
-                                            X[2] = urCross.local().x();
-                                            errX[2] = URWellConstants.URWELLXRESOLUTIONHB;
-                                            errY[2] = URWellConstants.URWELLYRESOLUTIONHB;
-                                            // ignore point errors and assume the track vertex is close to the origin
-                                            for (int j = 0; j < 6; j++) {
-                                                this.clear(qf1.fitResult[j]);
-                                            }
-                                            qf1.evaluate(Z, X, errX, Y, errY);
+                            } else{ // SL1 is not coorelated with R0 in clustering
+                                for (URWellCross urCross : urCrossesNotPaired) {
+                                    if(urCross.sector() == c1.get_Sector()){
+                                        TrajectoryParametriz qf1 = new TrajectoryParametriz(3);
+                                        double[] X = new double[3];
+                                        double[] Y = new double[3];
+                                        double[] Z = new double[3];
+                                        double[] errX = new double[3];
+                                        double[] errY = new double[3];
+                                        this.clear(X, Y, Z, errX, errY);
+                                        
+                                        Z[0] = c1.get_Point().z();
+                                        Y[0] = c1.get_Point().y();
+                                        X[0] = c1.get_Point().x();
+                                        errX[0] = c1.get_PointErr().x();
+                                        errY[0] = c1.get_PointErr().y();
+                                        Z[1] = c3.get_Point().z();
+                                        Y[1] = c3.get_Point().y();
+                                        X[1] = c3.get_Point().x();
+                                        errX[1] = c3.get_PointErr().x();
+                                        errY[1] = c3.get_PointErr().y();
+                                        Z[2] = urCross.local().z();
+                                        Y[2] = urCross.local().y();
+                                        X[2] = urCross.local().x();
+                                        errX[2] = URWellConstants.URWELLXRESOLUTIONHB;
+                                        errY[2] = URWellConstants.URWELLYRESOLUTIONHB;
+                                        // ignore point errors and assume the track vertex is close to the origin
+                                        for (int j = 0; j < 6; j++) {
+                                            this.clear(qf1.fitResult[j]);
+                                        }
+                                        qf1.evaluate(Z, X, errX, Y, errY);
 
-                                            traj1.setXYZ(qf1.fitResult[3][0], qf1.fitResult[4][0], qf1.fitResult[5][0]);
-                                            traj3.setXYZ(qf1.fitResult[3][1], qf1.fitResult[4][1], qf1.fitResult[5][1]);
+                                        traj1.setXYZ(qf1.fitResult[3][0], qf1.fitResult[4][0], qf1.fitResult[5][0]);
+                                        traj3.setXYZ(qf1.fitResult[3][1], qf1.fitResult[4][1], qf1.fitResult[5][1]);
 
-                                            double cosTh1 = traj1.dot(c1.get_Dir().toVector3D());
-                                            double cosTh3 = traj3.dot(c3.get_Dir().toVector3D());
+                                        double cosTh1 = traj1.dot(c1.get_Dir().toVector3D());
+                                        double cosTh3 = traj3.dot(c3.get_Dir().toVector3D());
 
-                                            // require that the cross direction estimate be in the direction of the trajectory
-                                            if (cosTh1 < Constants.TRACKDIRTOCROSSDIRCOSANGLE || cosTh3 < Constants.TRACKDIRTOCROSSDIRCOSANGLE) {
-                                                continue;
-                                            }
+                                        // require that the cross direction estimate be in the direction of the trajectory
+                                        if (cosTh1 < Constants.TRACKDIRTOCROSSDIRCOSANGLE || cosTh3 < Constants.TRACKDIRTOCROSSDIRCOSANGLE) {
+                                            continue;
+                                        }
 
-                                            double fitchsq = 0;
+                                        double fitchsq = 0;
 
-                                            if (c1.isPseudoCross == false) {
-                                                fitchsq += ((qf1.fitResult[1][0] - c1.get_Point().y()) / c1.get_PointErr().y()) * ((qf1.fitResult[1][0] - c1.get_Point().y()) / c1.get_PointErr().y());
-                                            }
-                                            if (c3.isPseudoCross == false) {
-                                                fitchsq += ((qf1.fitResult[1][1] - c3.get_Point().y()) / c3.get_PointErr().y()) * ((qf1.fitResult[1][1] - c3.get_Point().y()) / c3.get_PointErr().y());
-                                            }
-                                            fitchsq += ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB) * ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB);
+                                        if (c1.isPseudoCross == false) {
+                                            fitchsq += ((qf1.fitResult[1][0] - c1.get_Point().y()) / c1.get_PointErr().y()) * ((qf1.fitResult[1][0] - c1.get_Point().y()) / c1.get_PointErr().y());
+                                        }
+                                        if (c3.isPseudoCross == false) {
+                                            fitchsq += ((qf1.fitResult[1][1] - c3.get_Point().y()) / c3.get_PointErr().y()) * ((qf1.fitResult[1][1] - c3.get_Point().y()) / c3.get_PointErr().y());
+                                        }
+                                        //fitchsq += ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB) * ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB);
 
-                                            // fit the  projection with a line -- the track is ~ constant in phi
-                                            LineFitter linefit = new LineFitter();
-                                            boolean linefitstatusOK = linefit.fitStatus(X, Y, errX, errY, Z.length);
-                                            if (!linefitstatusOK) {
-                                                continue; // fit failed
-                                            }
+                                        // fit the  projection with a line -- the track is ~ constant in phi
+                                        LineFitter linefit = new LineFitter();
+                                        boolean linefitstatusOK = linefit.fitStatus(X, Y, errX, errY, Z.length);
+                                        if (!linefitstatusOK) {
+                                            continue; // fit failed
+                                        }
 
-                                            this.updateBFittedHits(event, c1, tab, DcDetector, tde, swimmer);
-                                            this.updateBFittedHits(event, c3, tab, DcDetector, tde, swimmer);
+                                        this.updateBFittedHits(event, c1, tab, DcDetector, tde, swimmer);
+                                        this.updateBFittedHits(event, c3, tab, DcDetector, tde, swimmer);
 
-                                            if (fitchsq < Constants.CROSSLISTSELECTQFMINCHSQ) {
-                                                List<Cross> dcCrosses = new ArrayList<Cross>();
-                                                dcCrosses.add(c1);
-                                                dcCrosses.add(c3);
-                                                urDCCrossesList.add_URWellDCCrosses(urCross, dcCrosses);
-                                            }
+                                        if (fitchsq < Constants.CROSSLISTSELECTQFMINCHSQ) {
+                                            List<Cross> dcCrosses = new ArrayList();
+                                            dcCrosses.add(c1);
+                                            dcCrosses.add(c3);
+                                            List<URWellCross> urCrossList = new ArrayList();
+                                            urCrossList.add(urCross);
+                                            urDCCrossesList.add_URWellDCCrosses(urCrossList, dcCrosses);
                                         }
                                     }
-                                }                                
+                                }
+
+                                for (List<URWellCross> urCrossPair : urCrossPairs) {
+                                    if(urCrossPair.get(0).sector() == c1.get_Sector()){
+                                        int numPoints = 2 + urCrossPair.size();
+                                        TrajectoryParametriz qf1 = new TrajectoryParametriz(numPoints);
+                                        double[] X = new double[numPoints];
+                                        double[] Y = new double[numPoints];
+                                        double[] Z = new double[numPoints];
+                                        double[] errX = new double[numPoints];
+                                        double[] errY = new double[numPoints];
+                                        this.clear(X, Y, Z, errX, errY);
+                                        
+                                        Z[0] = c1.get_Point().z();
+                                        Y[0] = c1.get_Point().y();
+                                        X[0] = c1.get_Point().x();
+                                        errX[0] = c1.get_PointErr().x();
+                                        errY[0] = c1.get_PointErr().y();
+                                        Z[1] = c3.get_Point().z();
+                                        Y[1] = c3.get_Point().y();
+                                        X[1] = c3.get_Point().x();
+                                        errX[1] = c3.get_PointErr().x();
+                                        errY[1] = c3.get_PointErr().y();
+                                        for(int i = 0; i < urCrossPair.size(); i++){
+                                            URWellCross urCross = urCrossPair.get(i);
+                                            Z[i+2] = urCross.local().z();
+                                            Y[i+2] = urCross.local().y();
+                                            X[i+2] = urCross.local().x();
+                                            errX[i+2] = URWellConstants.URWELLXRESOLUTIONHB;
+                                            errY[i+2] = URWellConstants.URWELLYRESOLUTIONHB;
+                                        }
+                                        // ignore point errors and assume the track vertex is close to the origin
+                                        for (int j = 0; j < 6; j++) {
+                                            this.clear(qf1.fitResult[j]);
+                                        }
+                                        qf1.evaluate(Z, X, errX, Y, errY);
+
+                                        traj1.setXYZ(qf1.fitResult[3][0], qf1.fitResult[4][0], qf1.fitResult[5][0]);
+                                        traj3.setXYZ(qf1.fitResult[3][1], qf1.fitResult[4][1], qf1.fitResult[5][1]);
+
+                                        double cosTh1 = traj1.dot(c1.get_Dir().toVector3D());
+                                        double cosTh3 = traj3.dot(c3.get_Dir().toVector3D());
+
+                                        // require that the cross direction estimate be in the direction of the trajectory
+                                        if (cosTh1 < Constants.TRACKDIRTOCROSSDIRCOSANGLE || cosTh3 < Constants.TRACKDIRTOCROSSDIRCOSANGLE) {
+                                            continue;
+                                        }
+
+                                        double fitchsq = 0;
+
+                                        if (c1.isPseudoCross == false) {
+                                            fitchsq += ((qf1.fitResult[1][0] - c1.get_Point().y()) / c1.get_PointErr().y()) * ((qf1.fitResult[1][0] - c1.get_Point().y()) / c1.get_PointErr().y());
+                                        }
+                                        if (c3.isPseudoCross == false) {
+                                            fitchsq += ((qf1.fitResult[1][1] - c3.get_Point().y()) / c3.get_PointErr().y()) * ((qf1.fitResult[1][1] - c3.get_Point().y()) / c3.get_PointErr().y());
+                                        }                                        
+
+                                        // fit the  projection with a line -- the track is ~ constant in phi
+                                        LineFitter linefit = new LineFitter();
+                                        boolean linefitstatusOK = linefit.fitStatus(X, Y, errX, errY, Z.length);
+                                        if (!linefitstatusOK) {
+                                            continue; // fit failed
+                                        }
+
+                                        this.updateBFittedHits(event, c1, tab, DcDetector, tde, swimmer);
+                                        this.updateBFittedHits(event, c3, tab, DcDetector, tde, swimmer);
+
+                                        if (fitchsq < Constants.CROSSLISTSELECTQFMINCHSQ) {
+                                            List<Cross> dcCrosses = new ArrayList();
+                                            dcCrosses.add(c1);
+                                            dcCrosses.add(c3);
+                                            urDCCrossesList.add_URWellDCCrosses(urCrossPair, dcCrosses);
+                                        }
+                                    }
+                                }
                             }                            
                         }
                     }
@@ -506,18 +771,25 @@ public class URWellDCCrossesListFinder {
                 if (!dccrosslistRg1.isEmpty() && !dccrosslistRg2.isEmpty()) { 
                     for (Cross c1 : dccrosslistRg1) {
                         for (Cross c2 : dccrosslistRg2) {                           
-                            if (c1.get_Sector() != c2.get_Sector()) {
-                                this.clear(X, Y, Z, errX, errY);
+                            if (c1.get_Sector() != c2.get_Sector()) {                                
                                 continue;
                             }
                             if (FOOS == true) {
-                                if (c1.get_Id() != -1 && c2.get_Id() != -1) {
-                                    this.clear(X, Y, Z, errX, errY);
+                                if (c1.get_Id() != -1 && c2.get_Id() != -1) {                                    
                                     continue;
                                 }
                             }
                             // SL1 is coorelated with R0
-                            if(c1.get_Segment1().getMatchedURWellCross() != null){
+                            if(!c1.get_Segment1().getMatchedURWellCrosses().isEmpty()){
+                                int numPoints = 2 + c1.get_Segment1().getMatchedURWellCrosses().size();
+                                TrajectoryParametriz qf1 = new TrajectoryParametriz(numPoints);
+                                double[] X = new double[numPoints];
+                                double[] Y = new double[numPoints];
+                                double[] Z = new double[numPoints];
+                                double[] errX = new double[numPoints];
+                                double[] errY = new double[numPoints];
+                                this.clear(X, Y, Z, errX, errY);
+                                                                
                                 Z[0] = c1.get_Point().z();
                                 Y[0] = c1.get_Point().y();
                                 X[0] = c1.get_Point().x();
@@ -528,13 +800,15 @@ public class URWellDCCrossesListFinder {
                                 X[1] = c2.get_Point().x();
                                 errX[1] = c2.get_PointErr().x();
                                 errY[1] = c2.get_PointErr().y();
-
-                                URWellCross urCross = c1.get_Segment1().getMatchedURWellCross();
-                                Z[2] = urCross.local().z();
-                                Y[2] = urCross.local().y();
-                                X[2] = urCross.local().x();
-                                errX[2] = URWellConstants.URWELLXRESOLUTIONHB;
-                                errY[2] = URWellConstants.URWELLYRESOLUTIONHB;
+                                
+                                for(int i = 0; i < c1.get_Segment1().getMatchedURWellCrosses().size(); i++){
+                                    URWellCross urCross = c1.get_Segment1().getMatchedURWellCrosses().get(i);
+                                    Z[i+2] = urCross.local().z();
+                                    Y[i+2] = urCross.local().y();
+                                    X[i+2] = urCross.local().x();
+                                    errX[i+2] = URWellConstants.URWELLXRESOLUTIONHB;
+                                    errY[i+2] = URWellConstants.URWELLYRESOLUTIONHB;
+                                }
 
                                 // ignore point errors and assume the track vertex is close to the origin
                                 for (int j = 0; j < 6; j++) {
@@ -561,8 +835,7 @@ public class URWellDCCrossesListFinder {
                                 if (c2.isPseudoCross == false) {
                                     fitchsq += ((qf1.fitResult[1][1] - c2.get_Point().y()) / c2.get_PointErr().y()) * ((qf1.fitResult[1][1] - c2.get_Point().y()) / c2.get_PointErr().y());
                                 }
-                                fitchsq += ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB) * ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB);
-
+                                
                                 // fit the  projection with a line -- the track is ~ constant in phi
                                 LineFitter linefit = new LineFitter();
                                 boolean linefitstatusOK = linefit.fitStatus(X, Y, errX, errY, Z.length);
@@ -574,79 +847,163 @@ public class URWellDCCrossesListFinder {
                                 this.updateBFittedHits(event, c2, tab, DcDetector, tde, swimmer);
 
                                 if (fitchsq < Constants.CROSSLISTSELECTQFMINCHSQ) {
-                                    List<Cross> dcCrosses = new ArrayList<Cross>();
+                                    List<Cross> dcCrosses = new ArrayList();
                                     dcCrosses.add(c1);
                                     dcCrosses.add(c2);
-                                    urDCCrossesList.add_URWellDCCrosses(urCross, dcCrosses);
+                                    urDCCrossesList.add_URWellDCCrosses(c1.get_Segment1().getMatchedURWellCrosses(), dcCrosses);
                                 } 
                             }
                             else {
-                                if(urCrosses != null){
-                                    for (URWellCross urCross : urCrosses) {
-                                        if(urCross.sector() == c1.get_Sector()){
-                                            Z[0] = c1.get_Point().z();
-                                            Y[0] = c1.get_Point().y();
-                                            X[0] = c1.get_Point().x();
-                                            errX[0] = c1.get_PointErr().x();
-                                            errY[0] = c1.get_PointErr().y();
-                                            Z[1] = c2.get_Point().z();
-                                            Y[1] = c2.get_Point().y();
-                                            X[1] = c2.get_Point().x();
-                                            errX[1] = c2.get_PointErr().x();
-                                            errY[1] = c2.get_PointErr().y();
+                                for (URWellCross urCross : urCrossesNotPaired) {
+                                    if(urCross.sector() == c1.get_Sector()){
+                                        TrajectoryParametriz qf1 = new TrajectoryParametriz(3);
+                                        double[] X = new double[3];
+                                        double[] Y = new double[3];
+                                        double[] Z = new double[3];
+                                        double[] errX = new double[3];
+                                        double[] errY = new double[3];
+                                        this.clear(X, Y, Z, errX, errY);
+                                        
+                                        Z[0] = c1.get_Point().z();
+                                        Y[0] = c1.get_Point().y();
+                                        X[0] = c1.get_Point().x();
+                                        errX[0] = c1.get_PointErr().x();
+                                        errY[0] = c1.get_PointErr().y();
+                                        Z[1] = c2.get_Point().z();
+                                        Y[1] = c2.get_Point().y();
+                                        X[1] = c2.get_Point().x();
+                                        errX[1] = c2.get_PointErr().x();
+                                        errY[1] = c2.get_PointErr().y();
 
-                                            Z[2] = urCross.local().z();
-                                            Y[2] = urCross.local().y();
-                                            X[2] = urCross.local().x();
-                                            errX[2] = URWellConstants.URWELLXRESOLUTIONHB;
-                                            errY[2] = URWellConstants.URWELLYRESOLUTIONHB;
+                                        Z[2] = urCross.local().z();
+                                        Y[2] = urCross.local().y();
+                                        X[2] = urCross.local().x();
+                                        errX[2] = URWellConstants.URWELLXRESOLUTIONHB;
+                                        errY[2] = URWellConstants.URWELLYRESOLUTIONHB;
 
-                                            // ignore point errors and assume the track vertex is close to the origin
-                                            for (int j = 0; j < 6; j++) {
-                                                this.clear(qf1.fitResult[j]);
-                                            }
-                                            qf1.evaluate(Z, X, errX, Y, errY);
+                                        // ignore point errors and assume the track vertex is close to the origin
+                                        for (int j = 0; j < 6; j++) {
+                                            this.clear(qf1.fitResult[j]);
+                                        }
+                                        qf1.evaluate(Z, X, errX, Y, errY);
 
-                                            traj1.setXYZ(qf1.fitResult[3][0], qf1.fitResult[4][0], qf1.fitResult[5][0]);
-                                            traj2.setXYZ(qf1.fitResult[3][1], qf1.fitResult[4][1], qf1.fitResult[5][1]);
+                                        traj1.setXYZ(qf1.fitResult[3][0], qf1.fitResult[4][0], qf1.fitResult[5][0]);
+                                        traj2.setXYZ(qf1.fitResult[3][1], qf1.fitResult[4][1], qf1.fitResult[5][1]);
 
-                                            double cosTh1 = traj1.dot(c1.get_Dir().toVector3D());
-                                            double cosTh2 = traj2.dot(c2.get_Dir().toVector3D());
+                                        double cosTh1 = traj1.dot(c1.get_Dir().toVector3D());
+                                        double cosTh2 = traj2.dot(c2.get_Dir().toVector3D());
 
-                                            // require that the cross direction estimate be in the direction of the trajectory
-                                            if (cosTh1 < Constants.TRACKDIRTOCROSSDIRCOSANGLE || cosTh2 < Constants.TRACKDIRTOCROSSDIRCOSANGLE) {
-                                                continue;
-                                            }
+                                        // require that the cross direction estimate be in the direction of the trajectory
+                                        if (cosTh1 < Constants.TRACKDIRTOCROSSDIRCOSANGLE || cosTh2 < Constants.TRACKDIRTOCROSSDIRCOSANGLE) {
+                                            continue;
+                                        }
 
-                                            double fitchsq = 0;
+                                        double fitchsq = 0;
 
-                                            if (c1.isPseudoCross == false) {
-                                                fitchsq += ((qf1.fitResult[1][0] - c1.get_Point().y()) / c1.get_PointErr().y()) * ((qf1.fitResult[1][0] - c1.get_Point().y()) / c1.get_PointErr().y());
-                                            }
-                                            if (c2.isPseudoCross == false) {
-                                                fitchsq += ((qf1.fitResult[1][1] - c2.get_Point().y()) / c2.get_PointErr().y()) * ((qf1.fitResult[1][1] - c2.get_Point().y()) / c2.get_PointErr().y());
-                                            }
-                                            fitchsq += ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB) * ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB);
+                                        if (c1.isPseudoCross == false) {
+                                            fitchsq += ((qf1.fitResult[1][0] - c1.get_Point().y()) / c1.get_PointErr().y()) * ((qf1.fitResult[1][0] - c1.get_Point().y()) / c1.get_PointErr().y());
+                                        }
+                                        if (c2.isPseudoCross == false) {
+                                            fitchsq += ((qf1.fitResult[1][1] - c2.get_Point().y()) / c2.get_PointErr().y()) * ((qf1.fitResult[1][1] - c2.get_Point().y()) / c2.get_PointErr().y());
+                                        }
+                                        //fitchsq += ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB) * ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB);
 
-                                            // fit the  projection with a line -- the track is ~ constant in phi
-                                            LineFitter linefit = new LineFitter();
-                                            boolean linefitstatusOK = linefit.fitStatus(X, Y, errX, errY, Z.length);
-                                            if (!linefitstatusOK) {
-                                                continue; // fit failed
-                                            }
+                                        // fit the  projection with a line -- the track is ~ constant in phi
+                                        LineFitter linefit = new LineFitter();
+                                        boolean linefitstatusOK = linefit.fitStatus(X, Y, errX, errY, Z.length);
+                                        if (!linefitstatusOK) {
+                                            continue; // fit failed
+                                        }
 
-                                            this.updateBFittedHits(event, c1, tab, DcDetector, tde, swimmer);
-                                            this.updateBFittedHits(event, c2, tab, DcDetector, tde, swimmer);
+                                        this.updateBFittedHits(event, c1, tab, DcDetector, tde, swimmer);
+                                        this.updateBFittedHits(event, c2, tab, DcDetector, tde, swimmer);
 
-                                            if (fitchsq < Constants.CROSSLISTSELECTQFMINCHSQ) {
-                                                List<Cross> dcCrosses = new ArrayList<Cross>();
-                                                dcCrosses.add(c1);
-                                                dcCrosses.add(c2);
-                                                urDCCrossesList.add_URWellDCCrosses(urCross, dcCrosses);
-                                            }
+                                        if (fitchsq < Constants.CROSSLISTSELECTQFMINCHSQ) {
+                                            List<Cross> dcCrosses = new ArrayList();
+                                            dcCrosses.add(c1);
+                                            dcCrosses.add(c2);
+                                            List<URWellCross> urCrossList = new ArrayList();
+                                            urCrossList.add(urCross);
+                                            urDCCrossesList.add_URWellDCCrosses(urCrossList, dcCrosses);
                                         }
                                     }
                                 }
+                                
+                                for (List<URWellCross> urCrossPair : urCrossPairs) {
+                                    if(urCrossPair.get(0).sector() == c1.get_Sector()){
+                                        int numPoints = 2 + urCrossPair.size();
+                                        TrajectoryParametriz qf1 = new TrajectoryParametriz(numPoints);
+                                        double[] X = new double[numPoints];
+                                        double[] Y = new double[numPoints];
+                                        double[] Z = new double[numPoints];
+                                        double[] errX = new double[numPoints];
+                                        double[] errY = new double[numPoints];
+                                        this.clear(X, Y, Z, errX, errY);
+                                        
+                                        Z[0] = c1.get_Point().z();
+                                        Y[0] = c1.get_Point().y();
+                                        X[0] = c1.get_Point().x();
+                                        errX[0] = c1.get_PointErr().x();
+                                        errY[0] = c1.get_PointErr().y();
+                                        Z[1] = c2.get_Point().z();
+                                        Y[1] = c2.get_Point().y();
+                                        X[1] = c2.get_Point().x();
+                                        errX[1] = c2.get_PointErr().x();
+                                        errY[1] = c2.get_PointErr().y();
+                                        
+                                        for(int i = 0; i < urCrossPair.size(); i++){
+                                            URWellCross urCross = urCrossPair.get(i);                                            
+                                            Z[i+2] = urCross.local().z();
+                                            Y[i+2] = urCross.local().y();
+                                            X[i+2] = urCross.local().x();
+                                            errX[i+2] = URWellConstants.URWELLXRESOLUTIONHB;
+                                            errY[i+2] = URWellConstants.URWELLYRESOLUTIONHB;
+                                        }
+
+                                        // ignore point errors and assume the track vertex is close to the origin
+                                        for (int j = 0; j < 6; j++) {
+                                            this.clear(qf1.fitResult[j]);
+                                        }
+                                        qf1.evaluate(Z, X, errX, Y, errY);
+
+                                        traj1.setXYZ(qf1.fitResult[3][0], qf1.fitResult[4][0], qf1.fitResult[5][0]);
+                                        traj2.setXYZ(qf1.fitResult[3][1], qf1.fitResult[4][1], qf1.fitResult[5][1]);
+
+                                        double cosTh1 = traj1.dot(c1.get_Dir().toVector3D());
+                                        double cosTh2 = traj2.dot(c2.get_Dir().toVector3D());
+
+                                        // require that the cross direction estimate be in the direction of the trajectory
+                                        if (cosTh1 < Constants.TRACKDIRTOCROSSDIRCOSANGLE || cosTh2 < Constants.TRACKDIRTOCROSSDIRCOSANGLE) {
+                                            continue;
+                                        }
+
+                                        double fitchsq = 0;
+
+                                        if (c1.isPseudoCross == false) {
+                                            fitchsq += ((qf1.fitResult[1][0] - c1.get_Point().y()) / c1.get_PointErr().y()) * ((qf1.fitResult[1][0] - c1.get_Point().y()) / c1.get_PointErr().y());
+                                        }
+                                        if (c2.isPseudoCross == false) {
+                                            fitchsq += ((qf1.fitResult[1][1] - c2.get_Point().y()) / c2.get_PointErr().y()) * ((qf1.fitResult[1][1] - c2.get_Point().y()) / c2.get_PointErr().y());
+                                        }
+                                        
+                                        // fit the  projection with a line -- the track is ~ constant in phi
+                                        LineFitter linefit = new LineFitter();
+                                        boolean linefitstatusOK = linefit.fitStatus(X, Y, errX, errY, Z.length);
+                                        if (!linefitstatusOK) {
+                                            continue; // fit failed
+                                        }
+
+                                        this.updateBFittedHits(event, c1, tab, DcDetector, tde, swimmer);
+                                        this.updateBFittedHits(event, c2, tab, DcDetector, tde, swimmer);
+
+                                        if (fitchsq < Constants.CROSSLISTSELECTQFMINCHSQ) {
+                                            List<Cross> dcCrosses = new ArrayList();
+                                            dcCrosses.add(c1);
+                                            dcCrosses.add(c2);
+                                            urDCCrossesList.add_URWellDCCrosses(urCrossPair, dcCrosses);
+                                        }
+                                    }
+                                }      
                             }
                         }
                     }
@@ -658,18 +1015,34 @@ public class URWellDCCrossesListFinder {
     }
 
     /**
-     *
-     * @param dccrosslist the list of crosses in the event
+     * Make cross list using DC and uRWell crosses
+     * @param dccrosslist the list of crosses
+     * @param urCrosses the list of uRWell crosses
+     * @param nReqRegions # of required regions among 4 regions R0R1R2R3
      * @return the list of crosses determined to be consistent with belonging to
-     * a track in the DC
+     * a track in the DC with/without joint of uRWell
      */
     ClusterFitter cf = new ClusterFitter();
 
     public URWellDCCrossesList candURWellDCCrossesLists(DataEvent event,
             List<Cross> dccrosslist, List<URWellCross> urCrosses, boolean TimeBased,
             IndexedTable tab, DCGeant4Factory DcDetector, TimeToDistanceEstimator tde,
-            Swim swimmer, boolean FOOS, int nReqCrosses) {
+            Swim swimmer, boolean FOOS, int nReqRegions) {
 
+        //Build uRWell cross-pair list and put non-paired crosses into the other list
+        List<List<URWellCross>> urCrossPairs = new ArrayList();
+        List<URWellCross> urCrossesNotPaired = new ArrayList();
+        if(urCrosses != null){
+            urCrossPairs = buildURWellCrossPairs(urCrosses);
+            urCrossesNotPaired.addAll(urCrosses);
+            
+            for(List<URWellCross> urCrossPair : urCrossPairs){
+                for(URWellCross crs : urCrossPair){
+                    if(urCrossesNotPaired.contains(crs)) urCrossesNotPaired.remove(crs);
+                }
+            }
+        }
+        
         URWellDCCrossesList urDCCrossesList = new URWellDCCrossesList();
 
         if (dccrosslist.size() > 0) {
@@ -688,23 +1061,23 @@ public class URWellDCCrossesListFinder {
                     dccrosslistRg3.add(dc);
                 }
             }
-            if (nReqCrosses == 4) { // need 4 crosses
-
-                TrajectoryParametriz qf1 = new TrajectoryParametriz(nReqCrosses);
-                double[] X = new double[4];
-                double[] Y = new double[4];
-                double[] Z = new double[4];
-                double[] errX = new double[4];
-                double[] errY = new double[4];
+            if (nReqRegions == 4) { // need 4 regions                
                 Vector3D traj1 = new Vector3D(0, 0, 0);
                 Vector3D traj2 = new Vector3D(0, 0, 0);
                 Vector3D traj3 = new Vector3D(0, 0, 0);
 
-                if (!dccrosslistRg1.isEmpty() && !dccrosslistRg2.isEmpty() && !dccrosslistRg3.isEmpty() && !urCrosses.isEmpty()) {
+                if (!dccrosslistRg1.isEmpty() && !dccrosslistRg2.isEmpty() && !dccrosslistRg3.isEmpty() && urCrosses != null && !urCrosses.isEmpty()) {
                     for (Cross c1 : dccrosslistRg1) {
                         for (Cross c2 : dccrosslistRg2) {
-                            for (Cross c3 : dccrosslistRg3) {
-                                for (URWellCross urCross : urCrosses) {
+                            for (Cross c3 : dccrosslistRg3) {    
+                                
+                                for (URWellCross urCross : urCrossesNotPaired) {                                                                    
+                                    TrajectoryParametriz qf1 = new TrajectoryParametriz(4);
+                                    double[] X = new double[4];
+                                    double[] Y = new double[4];
+                                    double[] Z = new double[4];
+                                    double[] errX = new double[4];
+                                    double[] errY = new double[4];
                                     if (urCross.sector() != c1.get_Sector() || urCross.sector() != c2.get_Sector() || urCross.sector() != c3.get_Sector()) {
                                         this.clear(X, Y, Z, errX, errY);
                                         continue;
@@ -766,7 +1139,7 @@ public class URWellDCCrossesListFinder {
                                     if (c3.isPseudoCross == false) {
                                         fitchsq += ((qf1.fitResult[1][2] - c3.get_Point().y()) / c3.get_PointErr().y()) * ((qf1.fitResult[1][2] - c3.get_Point().y()) / c3.get_PointErr().y());
                                     }
-                                    fitchsq += ((qf1.fitResult[1][3] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB) * ((qf1.fitResult[1][3] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB);
+                                    //fitchsq += ((qf1.fitResult[1][3] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB) * ((qf1.fitResult[1][3] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB);
 
                                     // fit the  projection with a line -- the track is ~ constant in phi
                                     LineFitter linefit = new LineFitter();
@@ -780,25 +1153,115 @@ public class URWellDCCrossesListFinder {
                                     this.updateBFittedHits(event, c3, tab, DcDetector, tde, swimmer);
 
                                     if (fitchsq < Constants.CROSSLISTSELECTQFMINCHSQ) {
-                                        List<Cross> dcCrosses = new ArrayList<Cross>();
+                                        List<Cross> dcCrosses = new ArrayList();
                                         dcCrosses.add(c1);
                                         dcCrosses.add(c2);
                                         dcCrosses.add(c3);
-                                        urDCCrossesList.add_URWellDCCrosses(urCross, dcCrosses);
+                                        List<URWellCross> urCrossList = new ArrayList();
+                                        urCrossList.add(urCross);
+                                        urDCCrossesList.add_URWellDCCrosses(urCrossList, dcCrosses);
                                     }
                                 }
+                                
+                                for (List<URWellCross> urCrossPair : urCrossPairs) {  
+                                    int numPoints = 3 + urCrossPair.size();
+                                    TrajectoryParametriz qf1 = new TrajectoryParametriz(numPoints);
+                                    double[] X = new double[numPoints];
+                                    double[] Y = new double[numPoints];
+                                    double[] Z = new double[numPoints];
+                                    double[] errX = new double[numPoints];
+                                    double[] errY = new double[numPoints];
+                                    if (urCrossPair.get(0).sector() != c1.get_Sector() || urCrossPair.get(0).sector() != c2.get_Sector() || urCrossPair.get(0).sector() != c3.get_Sector()) {
+                                        this.clear(X, Y, Z, errX, errY);
+                                        continue;
+                                    }
+                                    if (FOOS == true) {
+                                        if (c1.get_Id() != -1 && c2.get_Id() != -1 && c3.get_Id() != -1) {
+                                            this.clear(X, Y, Z, errX, errY);
+                                            continue;
+                                        }
+                                    }
+
+                                    Z[0] = c1.get_Point().z();
+                                    Y[0] = c1.get_Point().y();
+                                    X[0] = c1.get_Point().x();
+                                    errX[0] = c1.get_PointErr().x();
+                                    errY[0] = c1.get_PointErr().y();
+                                    Z[1] = c2.get_Point().z();
+                                    Y[1] = c2.get_Point().y();
+                                    X[1] = c2.get_Point().x();
+                                    errX[1] = c2.get_PointErr().x();
+                                    errY[1] = c2.get_PointErr().y();
+                                    Z[2] = c3.get_Point().z();
+                                    Y[2] = c3.get_Point().y();
+                                    X[2] = c3.get_Point().x();
+                                    errX[2] = c3.get_PointErr().x();
+                                    errY[2] = c3.get_PointErr().y();
+                                    for(int i = 0; i < urCrossPair.size(); i++){
+                                        URWellCross urCross = urCrossPair.get(i);
+                                        Z[i+3] = urCross.local().z();
+                                        Y[i+3] = urCross.local().y();
+                                        X[i+3] = urCross.local().x();
+                                        errX[i+3] = URWellConstants.URWELLXRESOLUTIONHB;
+                                        errY[i+3] = URWellConstants.URWELLYRESOLUTIONHB;
+                                    }
+                                    // ignore point errors and assume the track vertex is close to the origin
+                                    for (int j = 0; j < 6; j++) {
+                                        this.clear(qf1.fitResult[j]);
+                                    }
+                                    qf1.evaluate(Z, X, errX, Y, errY);
+
+                                    traj1.setXYZ(qf1.fitResult[3][0], qf1.fitResult[4][0], qf1.fitResult[5][0]);
+                                    traj2.setXYZ(qf1.fitResult[3][1], qf1.fitResult[4][1], qf1.fitResult[5][1]);
+                                    traj3.setXYZ(qf1.fitResult[3][2], qf1.fitResult[4][2], qf1.fitResult[5][2]);
+
+                                    double cosTh1 = traj1.dot(c1.get_Dir().toVector3D());
+                                    double cosTh2 = traj2.dot(c2.get_Dir().toVector3D());
+                                    double cosTh3 = traj3.dot(c3.get_Dir().toVector3D());
+                                    
+                                    // require that the cross direction estimate be in the direction of the trajectory
+                                    if (cosTh1 < Constants.TRACKDIRTOCROSSDIRCOSANGLE || cosTh2 < Constants.TRACKDIRTOCROSSDIRCOSANGLE || cosTh3 < Constants.TRACKDIRTOCROSSDIRCOSANGLE) {
+                                        continue;
+                                    }
+
+                                    double fitchsq = 0;
+
+                                    if (c1.isPseudoCross == false) {
+                                        fitchsq += ((qf1.fitResult[1][0] - c1.get_Point().y()) / c1.get_PointErr().y()) * ((qf1.fitResult[1][0] - c1.get_Point().y()) / c1.get_PointErr().y());
+                                    }
+                                    if (c2.isPseudoCross == false) {
+                                        fitchsq += ((qf1.fitResult[1][1] - c2.get_Point().y()) / c2.get_PointErr().y()) * ((qf1.fitResult[1][1] - c2.get_Point().y()) / c2.get_PointErr().y());
+                                    }
+                                    if (c3.isPseudoCross == false) {
+                                        fitchsq += ((qf1.fitResult[1][2] - c3.get_Point().y()) / c3.get_PointErr().y()) * ((qf1.fitResult[1][2] - c3.get_Point().y()) / c3.get_PointErr().y());
+                                    }
+                                    
+                                    // fit the  projection with a line -- the track is ~ constant in phi
+                                    LineFitter linefit = new LineFitter();
+                                    boolean linefitstatusOK = linefit.fitStatus(X, Y, errX, errY, Z.length);
+                                    if (!linefitstatusOK) {
+                                        continue; // fit failed
+                                    }
+
+                                    this.updateBFittedHits(event, c1, tab, DcDetector, tde, swimmer);
+                                    this.updateBFittedHits(event, c2, tab, DcDetector, tde, swimmer);
+                                    this.updateBFittedHits(event, c3, tab, DcDetector, tde, swimmer);
+
+                                    if (fitchsq < Constants.CROSSLISTSELECTQFMINCHSQ) {
+                                        List<Cross> dcCrosses = new ArrayList();
+                                        dcCrosses.add(c1);
+                                        dcCrosses.add(c2);
+                                        dcCrosses.add(c3);
+                                        urDCCrossesList.add_URWellDCCrosses(urCrossPair, dcCrosses);
+                                    }
+                                }
+                                
+                                
                             }
                         }
                     }
                 }
-            } else if (nReqCrosses == 3) { // need 3 crosses
-
-                TrajectoryParametriz qf1 = new TrajectoryParametriz(nReqCrosses);
-                double[] X = new double[3];
-                double[] Y = new double[3];
-                double[] Z = new double[3];
-                double[] errX = new double[3];
-                double[] errY = new double[3];
+            } else if (nReqRegions == 3) { // need 3 regions
                 Vector3D traj1 = new Vector3D(0, 0, 0);
                 Vector3D traj2 = new Vector3D(0, 0, 0);
                 Vector3D traj3 = new Vector3D(0, 0, 0);
@@ -807,6 +1270,12 @@ public class URWellDCCrossesListFinder {
                     for (Cross c1 : dccrosslistRg1) {
                         for (Cross c2 : dccrosslistRg2) {
                             for (Cross c3 : dccrosslistRg3) {
+                                TrajectoryParametriz qf1 = new TrajectoryParametriz(3);
+                                double[] X = new double[3];
+                                double[] Y = new double[3];
+                                double[] Z = new double[3];
+                                double[] errX = new double[3];
+                                double[] errY = new double[3];
                                 if (c1.get_Sector() != c2.get_Sector() || c1.get_Sector() != c3.get_Sector()) {
                                     this.clear(X, Y, Z, errX, errY);
                                     continue;
@@ -877,20 +1346,28 @@ public class URWellDCCrossesListFinder {
                                 this.updateBFittedHits(event, c3, tab, DcDetector, tde, swimmer);
 
                                 if (fitchsq < Constants.CROSSLISTSELECTQFMINCHSQ) {
-                                    List<Cross> dcCrosses = new ArrayList<Cross>();
+                                    List<Cross> dcCrosses = new ArrayList();
                                     dcCrosses.add(c1);
                                     dcCrosses.add(c2);
                                     dcCrosses.add(c3);
-                                    urDCCrossesList.add_URWellDCCrosses(null, dcCrosses);
+                                    urDCCrossesList.add_URWellDCCrosses(new ArrayList(), dcCrosses);
                                 }
                             }
                         }
                     }
                 }
-                if(!dccrosslistRg2.isEmpty() && !dccrosslistRg3.isEmpty() && !urCrosses.isEmpty()){ // Cases for R2R3R0
+                if(!dccrosslistRg2.isEmpty() && !dccrosslistRg3.isEmpty() && urCrosses != null && !urCrosses.isEmpty()){ // Cases for R2R3R0
                     for (Cross c2 : dccrosslistRg2) {
                         for (Cross c3 : dccrosslistRg3) {
-                            for (URWellCross urCross : urCrosses) {
+                            
+                            for (URWellCross urCross : urCrossesNotPaired) {
+                                TrajectoryParametriz qf1 = new TrajectoryParametriz(3);
+                                double[] X = new double[3];
+                                double[] Y = new double[3];
+                                double[] Z = new double[3];
+                                double[] errX = new double[3];
+                                double[] errY = new double[3];
+                                
                                 if (urCross.sector() != c2.get_Sector() || urCross.sector() != c3.get_Sector()) {
                                     this.clear(X, Y, Z, errX, errY);
                                     continue;
@@ -943,7 +1420,7 @@ public class URWellDCCrossesListFinder {
                                 if (c3.isPseudoCross == false) {
                                     fitchsq += ((qf1.fitResult[1][1] - c3.get_Point().y()) / c3.get_PointErr().y()) * ((qf1.fitResult[1][1] - c3.get_Point().y()) / c3.get_PointErr().y());
                                 }
-                                fitchsq += ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB) * ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB);
+                                //fitchsq += ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB) * ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB);
 
                                 // fit the  projection with a line -- the track is ~ constant in phi
                                 LineFitter linefit = new LineFitter();
@@ -956,19 +1433,112 @@ public class URWellDCCrossesListFinder {
                                 this.updateBFittedHits(event, c3, tab, DcDetector, tde, swimmer);
 
                                 if (fitchsq < Constants.CROSSLISTSELECTQFMINCHSQ) {
-                                    List<Cross> dcCrosses = new ArrayList<Cross>();
+                                    List<Cross> dcCrosses = new ArrayList();
                                     dcCrosses.add(c2);
                                     dcCrosses.add(c3);
-                                    urDCCrossesList.add_URWellDCCrosses(urCross, dcCrosses);
+                                    List<URWellCross> urCrossList = new ArrayList();
+                                    urCrossList.add(urCross);
+                                    urDCCrossesList.add_URWellDCCrosses(urCrossList, dcCrosses);
+                                }
+                            }
+                            
+                            for (List<URWellCross> urCrossPair : urCrossPairs) {
+                                int numPoints = 2 + urCrossPair.size();
+                                TrajectoryParametriz qf1 = new TrajectoryParametriz(numPoints);
+                                double[] X = new double[numPoints];
+                                double[] Y = new double[numPoints];
+                                double[] Z = new double[numPoints];
+                                double[] errX = new double[numPoints];
+                                double[] errY = new double[numPoints];
+                                
+                                if (urCrossPair.get(0).sector() != c2.get_Sector() || urCrossPair.get(0).sector() != c3.get_Sector()) {
+                                    this.clear(X, Y, Z, errX, errY);
+                                    continue;
+                                }
+                                if (FOOS == true) {
+                                    if (c2.get_Id() != -1 && c3.get_Id() != -1) {
+                                        this.clear(X, Y, Z, errX, errY);
+                                        continue;
+                                    }
+                                }
+
+                                Z[0] = c2.get_Point().z();
+                                Y[0] = c2.get_Point().y();
+                                X[0] = c2.get_Point().x();
+                                errX[0] = c2.get_PointErr().x();
+                                errY[0] = c2.get_PointErr().y();
+                                Z[1] = c3.get_Point().z();
+                                Y[1] = c3.get_Point().y();
+                                X[1] = c3.get_Point().x();
+                                errX[1] = c3.get_PointErr().x();
+                                errY[1] = c3.get_PointErr().y();
+                                for(int i = 0; i < urCrossPair.size(); i++){
+                                    URWellCross urCross = urCrossPair.get(i);
+                                    Z[i+2] = urCross.local().z();
+                                    Y[i+2] = urCross.local().y();
+                                    X[i+2] = urCross.local().x();
+                                    errX[i+2] = URWellConstants.URWELLXRESOLUTIONHB;
+                                    errY[i+2] = URWellConstants.URWELLYRESOLUTIONHB;
+                                }
+
+                                // ignore point errors and assume the track vertex is close to the origin
+                                for (int j = 0; j < 6; j++) {
+                                    this.clear(qf1.fitResult[j]);
+                                }
+                                qf1.evaluate(Z, X, errX, Y, errY);
+
+                                traj2.setXYZ(qf1.fitResult[3][0], qf1.fitResult[4][0], qf1.fitResult[5][0]);
+                                traj3.setXYZ(qf1.fitResult[3][1], qf1.fitResult[4][1], qf1.fitResult[5][1]);
+
+                                double cosTh2 = traj2.dot(c2.get_Dir().toVector3D());
+                                double cosTh3 = traj3.dot(c3.get_Dir().toVector3D());
+
+                                // require that the cross direction estimate be in the direction of the trajectory
+                                if (cosTh2 < Constants.TRACKDIRTOCROSSDIRCOSANGLE || cosTh3 < Constants.TRACKDIRTOCROSSDIRCOSANGLE) {
+                                    continue;
+                                }
+
+                                double fitchsq = 0;
+
+                                if (c2.isPseudoCross == false) {
+                                    fitchsq += ((qf1.fitResult[1][0] - c2.get_Point().y()) / c2.get_PointErr().y()) * ((qf1.fitResult[1][0] - c2.get_Point().y()) / c2.get_PointErr().y());
+                                }
+                                if (c3.isPseudoCross == false) {
+                                    fitchsq += ((qf1.fitResult[1][1] - c3.get_Point().y()) / c3.get_PointErr().y()) * ((qf1.fitResult[1][1] - c3.get_Point().y()) / c3.get_PointErr().y());
+                                }
+                                
+                                // fit the  projection with a line -- the track is ~ constant in phi
+                                LineFitter linefit = new LineFitter();
+                                boolean linefitstatusOK = linefit.fitStatus(X, Y, errX, errY, Z.length);
+                                if (!linefitstatusOK) {
+                                    continue; // fit failed
+                                }
+
+                                this.updateBFittedHits(event, c2, tab, DcDetector, tde, swimmer);
+                                this.updateBFittedHits(event, c3, tab, DcDetector, tde, swimmer);
+
+                                if (fitchsq < Constants.CROSSLISTSELECTQFMINCHSQ) {
+                                    List<Cross> dcCrosses = new ArrayList();
+                                    dcCrosses.add(c2);
+                                    dcCrosses.add(c3);
+                                    urDCCrossesList.add_URWellDCCrosses(urCrossPair, dcCrosses);
                                 }
                             }
                         }
                     }
                 }
-                if (!dccrosslistRg1.isEmpty() && !dccrosslistRg3.isEmpty() && !urCrosses.isEmpty()) { // Cases for R1R3R0
+                if (!dccrosslistRg1.isEmpty() && !dccrosslistRg3.isEmpty() && urCrosses != null && !urCrosses.isEmpty()) { // Cases for R1R3R0
                     for (Cross c1 : dccrosslistRg1) {
                         for (Cross c3 : dccrosslistRg3) {
-                            for (URWellCross urCross : urCrosses) {
+                            
+                            for (URWellCross urCross : urCrossesNotPaired) {
+                                TrajectoryParametriz qf1 = new TrajectoryParametriz(3);
+                                double[] X = new double[3];
+                                double[] Y = new double[3];
+                                double[] Z = new double[3];
+                                double[] errX = new double[3];
+                                double[] errY = new double[3];
+                                
                                 if (urCross.sector() != c1.get_Sector() || urCross.sector() != c3.get_Sector()) {
                                     this.clear(X, Y, Z, errX, errY);
                                     continue;
@@ -1034,19 +1604,114 @@ public class URWellDCCrossesListFinder {
                                 this.updateBFittedHits(event, c3, tab, DcDetector, tde, swimmer);
 
                                 if (fitchsq < Constants.CROSSLISTSELECTQFMINCHSQ) {
-                                    List<Cross> dcCrosses = new ArrayList<Cross>();
+                                    List<Cross> dcCrosses = new ArrayList();
                                     dcCrosses.add(c1);
                                     dcCrosses.add(c3);
-                                    urDCCrossesList.add_URWellDCCrosses(urCross, dcCrosses);
+                                    List<URWellCross> urCrossList = new ArrayList();
+                                    urCrossList.add(urCross);
+                                    urDCCrossesList.add_URWellDCCrosses(urCrossList, dcCrosses);
                                 }
                             }
+                            
+                            for (List<URWellCross> urCrossPair : urCrossPairs) {
+                                int numPoints = 2 + urCrossPair.size();
+                                TrajectoryParametriz qf1 = new TrajectoryParametriz(numPoints);
+                                double[] X = new double[numPoints];
+                                double[] Y = new double[numPoints];
+                                double[] Z = new double[numPoints];
+                                double[] errX = new double[numPoints];
+                                double[] errY = new double[numPoints];
+                                
+                                if (urCrossPair.get(0).sector() != c1.get_Sector() || urCrossPair.get(0).sector() != c3.get_Sector()) {
+                                    this.clear(X, Y, Z, errX, errY);
+                                    continue;
+                                }
+                                if (FOOS == true) {
+                                    if (c1.get_Id() != -1 && c3.get_Id() != -1) {
+                                        this.clear(X, Y, Z, errX, errY);
+                                        continue;
+                                    }
+                                }
+
+                                Z[0] = c1.get_Point().z();
+                                Y[0] = c1.get_Point().y();
+                                X[0] = c1.get_Point().x();
+                                errX[0] = c1.get_PointErr().x();
+                                errY[0] = c1.get_PointErr().y();
+                                Z[1] = c3.get_Point().z();
+                                Y[1] = c3.get_Point().y();
+                                X[1] = c3.get_Point().x();
+                                errX[1] = c3.get_PointErr().x();
+                                errY[1] = c3.get_PointErr().y();
+                                for(int i = 0; i < urCrossPair.size(); i++){
+                                    URWellCross urCross = urCrossPair.get(i);
+                                    Z[i+2] = urCross.local().z();
+                                    Y[i+2] = urCross.local().y();
+                                    X[i+2] = urCross.local().x();
+                                    errX[i+2] = URWellConstants.URWELLXRESOLUTIONHB;
+                                    errY[i+2] = URWellConstants.URWELLYRESOLUTIONHB;
+                                }
+
+                                // ignore point errors and assume the track vertex is close to the origin
+                                for (int j = 0; j < 6; j++) {
+                                    this.clear(qf1.fitResult[j]);
+                                }
+                                qf1.evaluate(Z, X, errX, Y, errY);
+
+                                traj1.setXYZ(qf1.fitResult[3][0], qf1.fitResult[4][0], qf1.fitResult[5][0]);
+                                traj3.setXYZ(qf1.fitResult[3][1], qf1.fitResult[4][1], qf1.fitResult[5][1]);
+
+                                double cosTh1 = traj1.dot(c1.get_Dir().toVector3D());
+                                double cosTh3 = traj3.dot(c3.get_Dir().toVector3D());
+                                
+                                // require that the cross direction estimate be in the direction of the trajectory
+                                if (cosTh1 < Constants.TRACKDIRTOCROSSDIRCOSANGLE || cosTh3 < Constants.TRACKDIRTOCROSSDIRCOSANGLE) {
+                                    continue;
+                                }
+                                
+                                double fitchsq = 0;
+
+                                if (c1.isPseudoCross == false) {
+                                    fitchsq += ((qf1.fitResult[1][0] - c1.get_Point().y()) / c1.get_PointErr().y()) * ((qf1.fitResult[1][0] - c1.get_Point().y()) / c1.get_PointErr().y());
+                                }
+                                if (c3.isPseudoCross == false) {
+                                    fitchsq += ((qf1.fitResult[1][1] - c3.get_Point().y()) / c3.get_PointErr().y()) * ((qf1.fitResult[1][1] - c3.get_Point().y()) / c3.get_PointErr().y());
+                                }
+                                
+                                // fit the  projection with a line -- the track is ~ constant in phi
+                                LineFitter linefit = new LineFitter();
+                                boolean linefitstatusOK = linefit.fitStatus(X, Y, errX, errY, Z.length);
+                                if (!linefitstatusOK) {
+                                    continue; // fit failed
+                                }
+
+                                this.updateBFittedHits(event, c1, tab, DcDetector, tde, swimmer);
+                                this.updateBFittedHits(event, c3, tab, DcDetector, tde, swimmer);
+
+                                if (fitchsq < Constants.CROSSLISTSELECTQFMINCHSQ) {
+                                    List<Cross> dcCrosses = new ArrayList();
+                                    dcCrosses.add(c1);
+                                    dcCrosses.add(c3);
+                                    urDCCrossesList.add_URWellDCCrosses(urCrossPair, dcCrosses);
+                                }
+                            }
+                            
+                            
                         }
                     }
                 }
-                if (!dccrosslistRg1.isEmpty() && !dccrosslistRg2.isEmpty() && !urCrosses.isEmpty()) { // Cases for R1R2R0
+                if (!dccrosslistRg1.isEmpty() && !dccrosslistRg2.isEmpty() && urCrosses != null && !urCrosses.isEmpty()) { // Cases for R1R2R0
                     for (Cross c1 : dccrosslistRg1) {
                         for (Cross c2 : dccrosslistRg2) {
-                            for (URWellCross urCross : urCrosses) {
+                            
+                            for (URWellCross urCross : urCrossesNotPaired) {
+                                TrajectoryParametriz qf1 = new TrajectoryParametriz(3);
+                                double[] X = new double[3];
+                                double[] Y = new double[3];
+                                double[] Z = new double[3];
+                                double[] errX = new double[3];
+                                double[] errY = new double[3];
+                                
                                 if (urCross.sector() != c1.get_Sector() || urCross.sector() != c2.get_Sector()) {
                                     this.clear(X, Y, Z, errX, errY);
                                     continue;
@@ -1099,7 +1764,7 @@ public class URWellDCCrossesListFinder {
                                 if (c2.isPseudoCross == false) {
                                     fitchsq += ((qf1.fitResult[1][1] - c2.get_Point().y()) / c2.get_PointErr().y()) * ((qf1.fitResult[1][1] - c2.get_Point().y()) / c2.get_PointErr().y());
                                 }
-                                fitchsq += ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB) * ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB);
+                                //fitchsq += ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB) * ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB);
                                 
                                 // fit the  projection with a line -- the track is ~ constant in phi
                                 LineFitter linefit = new LineFitter();
@@ -1112,12 +1777,97 @@ public class URWellDCCrossesListFinder {
                                 this.updateBFittedHits(event, c2, tab, DcDetector, tde, swimmer);
 
                                 if (fitchsq < Constants.CROSSLISTSELECTQFMINCHSQ) {
-                                    List<Cross> dcCrosses = new ArrayList<Cross>();
+                                    List<Cross> dcCrosses = new ArrayList();
                                     dcCrosses.add(c1);
                                     dcCrosses.add(c2);
-                                    urDCCrossesList.add_URWellDCCrosses(urCross, dcCrosses);
+                                    List<URWellCross> urCrossList = new ArrayList();
+                                    urCrossList.add(urCross);
+                                    urDCCrossesList.add_URWellDCCrosses(urCrossList, dcCrosses);
                                 }
                             }
+                            
+                            for (List<URWellCross> urCrossPair : urCrossPairs) {
+                                int numPoints = 2 + urCrossPair.size();
+                                TrajectoryParametriz qf1 = new TrajectoryParametriz(numPoints);
+                                double[] X = new double[numPoints];
+                                double[] Y = new double[numPoints];
+                                double[] Z = new double[numPoints];
+                                double[] errX = new double[numPoints];
+                                double[] errY = new double[numPoints];
+                                
+                                if (urCrossPair.get(0).sector() != c1.get_Sector() || urCrossPair.get(0).sector() != c2.get_Sector()) {
+                                    this.clear(X, Y, Z, errX, errY);
+                                    continue;
+                                }
+                                if (FOOS == true) {
+                                    if (c1.get_Id() != -1 && c2.get_Id() != -1) {
+                                        this.clear(X, Y, Z, errX, errY);
+                                        continue;
+                                    }
+                                }
+
+                                Z[0] = c1.get_Point().z();
+                                Y[0] = c1.get_Point().y();
+                                X[0] = c1.get_Point().x();
+                                errX[0] = c1.get_PointErr().x();
+                                errY[0] = c1.get_PointErr().y();
+                                Z[1] = c2.get_Point().z();
+                                Y[1] = c2.get_Point().y();
+                                X[1] = c2.get_Point().x();
+                                errX[1] = c2.get_PointErr().x();
+                                errY[1] = c2.get_PointErr().y();
+                                for(int i = 0; i < urCrossPair.size(); i++){
+                                    URWellCross urCross = urCrossPair.get(i);
+                                    Z[i+2] = urCross.local().z();
+                                    Y[i+2] = urCross.local().y();
+                                    X[i+2] = urCross.local().x();
+                                    errX[i+2] = URWellConstants.URWELLXRESOLUTIONHB;
+                                    errY[i+2] = URWellConstants.URWELLYRESOLUTIONHB;
+                                }
+
+                                // ignore point errors and assume the track vertex is close to the origin
+                                for (int j = 0; j < 6; j++) {
+                                    this.clear(qf1.fitResult[j]);
+                                }
+                                qf1.evaluate(Z, X, errX, Y, errY);
+
+                                traj1.setXYZ(qf1.fitResult[3][0], qf1.fitResult[4][0], qf1.fitResult[5][0]);
+                                traj2.setXYZ(qf1.fitResult[3][1], qf1.fitResult[4][1], qf1.fitResult[5][1]);
+
+                                double cosTh1 = traj1.dot(c1.get_Dir().toVector3D());
+                                double cosTh2 = traj2.dot(c2.get_Dir().toVector3D());
+                                
+                                // require that the cross direction estimate be in the direction of the trajectory
+                                if (cosTh1 < Constants.TRACKDIRTOCROSSDIRCOSANGLE || cosTh2 < Constants.TRACKDIRTOCROSSDIRCOSANGLE) {
+                                    continue;
+                                }
+
+                                double fitchsq = 0;
+
+                                if (c1.isPseudoCross == false) {
+                                    fitchsq += ((qf1.fitResult[1][0] - c1.get_Point().y()) / c1.get_PointErr().y()) * ((qf1.fitResult[1][0] - c1.get_Point().y()) / c1.get_PointErr().y());
+                                }
+                                if (c2.isPseudoCross == false) {
+                                    fitchsq += ((qf1.fitResult[1][1] - c2.get_Point().y()) / c2.get_PointErr().y()) * ((qf1.fitResult[1][1] - c2.get_Point().y()) / c2.get_PointErr().y());
+                                }
+                                
+                                // fit the  projection with a line -- the track is ~ constant in phi
+                                LineFitter linefit = new LineFitter();
+                                boolean linefitstatusOK = linefit.fitStatus(X, Y, errX, errY, Z.length);
+                                if (!linefitstatusOK) {
+                                    continue; // fit failed
+                                }
+
+                                this.updateBFittedHits(event, c1, tab, DcDetector, tde, swimmer);
+                                this.updateBFittedHits(event, c2, tab, DcDetector, tde, swimmer);
+
+                                if (fitchsq < Constants.CROSSLISTSELECTQFMINCHSQ) {
+                                    List<Cross> dcCrosses = new ArrayList();
+                                    dcCrosses.add(c1);
+                                    dcCrosses.add(c2);
+                                    urDCCrossesList.add_URWellDCCrosses(urCrossPair, dcCrosses);
+                                }
+                            }   
                         }
                     }
                 }                
@@ -1125,6 +1875,31 @@ public class URWellDCCrossesListFinder {
         }
 
         return urDCCrossesList;
+    }
+    
+    // Build uRWell cross pairs between R1 and R2
+    public List<List<URWellCross>> buildURWellCrossPairs(List<URWellCross> urCrosses){
+        List<URWellCross> urCrossesR1 = new ArrayList();
+        List<URWellCross> urCrossesR2 = new ArrayList();
+        for(URWellCross crs : urCrosses){
+            if(crs.region() == 1) urCrossesR1.add(crs);
+            else if(crs.region() == 2) urCrossesR2.add(crs);
+        }
+        
+        List<List<URWellCross>> uRWellCrossPairs = new ArrayList();
+        for(URWellCross crsR1 : urCrossesR1){
+            for(URWellCross crsR2 : urCrossesR2){
+                if(crsR1.sector() == crsR2.sector() && Math.abs(crsR1.local().x() - crsR2.local().x()) < URWellConstants.URWELLDIFFX 
+                        && Math.abs(crsR1.local().y() - crsR2.local().y()) < URWellConstants.URWELLDIFFY){
+                        List<URWellCross> urCrossPair = new ArrayList();
+                        urCrossPair.add(crsR1);
+                        urCrossPair.add(crsR2);
+                        uRWellCrossPairs.add(urCrossPair);
+                }
+            }
+        }
+        
+        return uRWellCrossPairs;    
     }
 
     @SuppressWarnings("unused")
@@ -1244,12 +2019,12 @@ public class URWellDCCrossesListFinder {
 
         private int nReqCrosses = 3;
 
-        private double[][] fitResult = {{0., 0., 0., 0.},
-        {0., 0., 0., 0.},
-        {0., 0., 0., 0.},
-        {0., 0., 0., 0.},
-        {0., 0., 0., 0.},
-        {0., 0., 0., 0.}};
+        private double[][] fitResult = {{0., 0., 0., 0., 0.},
+        {0., 0., 0., 0., 0.},
+        {0., 0., 0., 0., 0.},
+        {0., 0., 0., 0., 0.},
+        {0., 0., 0., 0., 0.},
+        {0., 0., 0., 0., 0.}};
 
         public TrajectoryParametriz(int nReqCrosses) {
             this.nReqCrosses = nReqCrosses;

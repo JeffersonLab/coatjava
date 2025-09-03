@@ -1,10 +1,11 @@
 package org.jlab.rec.dc.cluster;
 
+import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -18,6 +19,7 @@ import org.jlab.rec.dc.hit.Hit;
 import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
 import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.urwell.reader.URWellCross;
+import org.jlab.service.urwell.URWellConstants;
 import org.jlab.utils.groups.IndexedTable;
 
 /**
@@ -246,17 +248,20 @@ public class ClusterFinder {
                 boolean isGoodCluster = false;
                 if (clus.get_fitProb() > Constants.HITBASEDTRKGMINFITHI2PROB){                                        
                     if(!selectedURWellCrosses.isEmpty()){
-                        URWellCross seletedURWellCross = ct.FindURWellCrossWithSmallestResidual(clus, selectedURWellCrosses, cf);
-                                                                         
-                        if(seletedURWellCross != null){
-                            if(Math.abs(clus.getMatchedURWellResidual()) < Constants.URWELLRESIDUALCUT){
-                                isGoodCluster = true;
-                                clus.setMatchedURWellCross(seletedURWellCross);
-                            }
-                            else{
-                                clus.setMatchedURWellResidual(-1);
-                            }
+                        List<URWellCross> seletedURWellCrosses = ct.FindURWellCrossWithSmallestResidual(clus, selectedURWellCrosses, cf);
+                        
+                        List<URWellCross> matchedURWellCrosses = new ArrayList();
+                        for(int i = 0; i < seletedURWellCrosses.size(); i++){
+                            URWellCross seletedURWellCross = seletedURWellCrosses.get(i);
+                            if(Math.abs(seletedURWellCross.getResidule()) < URWellConstants.URWELLRESIDUALCUT[seletedURWellCross.region()-1]){                                
+                                matchedURWellCrosses.add(seletedURWellCross);
+                            }                            
                         }
+                                                
+                        if(!matchedURWellCrosses.isEmpty()) {
+                            isGoodCluster = true;
+                            clus.setMatchedURWellCrosses(matchedURWellCrosses);
+                        }                        
                     }                                                                                                                                                                                                    
                 }                
                 
@@ -273,7 +278,7 @@ public class ClusterFinder {
                     List<FittedCluster> splittedClustersWithoutURWell = new ArrayList();
                     List<FittedCluster> splittedClustersWithURWell = new ArrayList();
                     for(FittedCluster cls : splitClus){
-                        if(cls.getMatchedURWellCross() == null) splittedClustersWithoutURWell.add(cls);
+                        if(cls.getMatchedURWellCrosses().isEmpty()) splittedClustersWithoutURWell.add(cls);
                         else splittedClustersWithURWell.add(cls);
                     }                      
                     
@@ -282,10 +287,13 @@ public class ClusterFinder {
                         for(URWellCross crs : map_sector_uRWellCrossList.get(clus.get_Sector())){
                             boolean flag = false;
                             for(FittedCluster cls : splittedClustersWithURWell){
-                                if(crs.id() == cls.getMatchedURWellCross().id()){
-                                    flag = true;
-                                    break;
-                                }                            
+                                for(URWellCross crsCls : cls.getMatchedURWellCrosses()){
+                                    if(crs.id() == crsCls.id()){
+                                        flag = true;
+                                        break;
+                                    }                            
+                                }
+                                if(flag) break;
                             }
                             if(!flag) remainingURWellCrosses.add(crs);
                         }
@@ -293,16 +301,14 @@ public class ClusterFinder {
                             for(FittedCluster cls : splittedClustersWithoutURWell){
                                 List<URWellCross> selectedRemainingURWellCrosses = ct.FindURWellInLYRange(cls, remainingURWellCrosses);  
                                 if(!selectedRemainingURWellCrosses.isEmpty()){
-                                    URWellCross seletedRemainingURWellCross = ct.FindURWellCrossWithSmallestResidual(cls, selectedRemainingURWellCrosses, cf);
-
-                                    if(seletedRemainingURWellCross != null){
-                                        if(Math.abs(cls.getMatchedURWellResidual()) < Constants.URWELLRESIDUALCUT){
-                                            cls.setMatchedURWellCross(seletedRemainingURWellCross);
-                                        }
-                                        else{
-                                            cls.setMatchedURWellResidual(-1);
-                                        }
+                                    List<URWellCross> seletedRemainingSmallResiURWellCross = ct.FindURWellCrossWithSmallestResidual(cls, selectedRemainingURWellCrosses, cf);
+                                    List<URWellCross> seletedRemainingSMallResiURWellCrossWithResidualCut = new ArrayList();
+                                    for(URWellCross crs : seletedRemainingSmallResiURWellCross){
+                                        if(Math.abs(crs.getResidule()) < URWellConstants.URWELLRESIDUALCUT[crs.region()-1]){
+                                            seletedRemainingSMallResiURWellCrossWithResidualCut.add(crs);
+                                        }                                        
                                     }
+                                    if(!seletedRemainingSMallResiURWellCrossWithResidualCut.isEmpty()) cls.setMatchedURWellCrosses(seletedRemainingSMallResiURWellCrossWithResidualCut);
                                 }
                             }
                         }

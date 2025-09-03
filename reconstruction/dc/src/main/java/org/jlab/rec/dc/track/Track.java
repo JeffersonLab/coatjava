@@ -68,11 +68,15 @@ public class Track extends Trajectory implements Comparable<Track>{
     private int _fitConvergenceStatus;
     private StateVec finalStateVec ;
     
-    private URWellCross urCross;
-    private Point3D _URWellPointGlobal;
-    private Point3D _URWellPGlobal;
-    private Point3D _URWellPointLocal;
-    private Point3D _URWellPLocal;
+    private List<URWellCross> urCrosses = new ArrayList();
+    private Point3D _URWellPointGlobalR1;
+    private Point3D _URWellPGlobalR1;
+    private Point3D _URWellPointLocalR1;
+    private Point3D _URWellPLocalR1;
+    private Point3D _URWellPointGlobalR2;
+    private Point3D _URWellPGlobalR2;
+    private Point3D _URWellPointLocalR2;
+    private Point3D _URWellPLocalR2;
     private boolean isAITrack = false;
     
           
@@ -83,30 +87,30 @@ public class Track extends Trajectory implements Comparable<Track>{
      * 
      * @return URWell point on track in global coordinates
      */
-    public Point3D get_URWellPointGlobal() {
-        return _URWellPointGlobal;
+    public Point3D get_URWellPointGlobalR1() {
+        return _URWellPointGlobalR1;
     }
     /**
      * 
      * @param uRWellPointGlobal URWell point on track in global coordinates
      */
-    public void set_URWellPointGlobal(Point3D uRWellPointGlobal) {
-        this._URWellPointGlobal = uRWellPointGlobal;
+    public void set_URWellPointGlobalR1(Point3D uRWellPointGlobalR1) {
+        this._URWellPointGlobalR1 = uRWellPointGlobalR1;
     }
     
         /**
      * 
      * @return URWell Momentum at URWell point on track in global coordinates
      */
-    public Point3D get_URWellPGlobal() {
-        return _URWellPGlobal;
+    public Point3D get_URWellPGlobalR1() {
+        return _URWellPGlobalR1;
     }
     /**
      * 
      * @param uRWellDirGlobal Momentum at URWell point on track in global coordinates
      */
-    public void set_URWellPGlobal(Point3D uRWellPGlobal) {
-        this._URWellPGlobal = uRWellPGlobal;
+    public void set_URWellPGlobalR1(Point3D uRWellPGlobalR1) {
+        this._URWellPGlobalR1 = uRWellPGlobalR1;
     }
     
         
@@ -114,45 +118,107 @@ public class Track extends Trajectory implements Comparable<Track>{
      * 
      * @return URWell point on track in local coordinates
      */
-    public Point3D get_URWellPointLocal() {
-        return _URWellPointLocal;
+    public Point3D get_URWellPointLocalR1() {
+        return _URWellPointLocalR1;
     }
     /**
      * 
      * @param uRWellPointLocal URWell point on track in local coordinates
      */
-    public void set_URWellPointLocal(Point3D uRWellPointLocal) {
-        this._URWellPointLocal = uRWellPointLocal;
+    public void set_URWellPointLocalR1(Point3D uRWellPointLocalR1) {
+        this._URWellPointLocalR1 = uRWellPointLocalR1;
     }
     
         /**
      * 
      * @return URWell Omentum at URWell point on track in local coordinates
      */
-    public Point3D get_URWellPLocal() {
-        return _URWellPLocal;
+    public Point3D get_URWellPLocalR1() {
+        return _URWellPLocalR1;
     }
     /**
      * 
      * @param uRWellPLocal Momentum at URWell point on track in local coordinates
      */
-    public void set_URWellPLocal(Point3D uRWellPLocal) {
-        this._URWellPLocal = uRWellPLocal;
+    public void set_URWellPLocalR1(Point3D uRWellPLocalR1) {
+        this._URWellPLocalR1 = uRWellPLocalR1;
     }
+            
+    /**
+     * 
+     * @return URWell point on track in global coordinates
+     */
+    public Point3D get_URWellPointGlobalR2() {
+        return _URWellPointGlobalR2;
+    }
+    /**
+     * 
+     * @param uRWellPointGlobal URWell point on track in global coordinates
+     */
+    public void set_URWellPointGlobalR2(Point3D uRWellPointGlobalR2) {
+        this._URWellPointGlobalR2 = uRWellPointGlobalR2;
+    }
+    
+        /**
+     * 
+     * @return URWell Momentum at URWell point on track in global coordinates
+     */
+    public Point3D get_URWellPGlobalR2() {
+        return _URWellPGlobalR2;
+    }
+    /**
+     * 
+     * @param uRWellDirGlobal Momentum at URWell point on track in global coordinates
+     */
+    public void set_URWellPGlobalR2(Point3D uRWellPGlobalR2) {
+        this._URWellPGlobalR2 = uRWellPGlobalR2;
+    }
+    
+        
+    /**
+     * 
+     * @return URWell point on track in local coordinates
+     */
+    public Point3D get_URWellPointLocalR2() {
+        return _URWellPointLocalR2;
+    }
+    /**
+     * 
+     * @param uRWellPointLocal URWell point on track in local coordinates
+     */
+    public void set_URWellPointLocalR2(Point3D uRWellPointLocalR2) {
+        this._URWellPointLocalR2 = uRWellPointLocalR2;
+    }
+    
+        /**
+     * 
+     * @return URWell Omentum at URWell point on track in local coordinates
+     */
+    public Point3D get_URWellPLocalR2() {
+        return _URWellPLocalR2;
+    }
+    /**
+     * 
+     * @param uRWellPLocal Momentum at URWell point on track in local coordinates
+     */
+    public void set_URWellPLocalR2(Point3D uRWellPLocalR2) {
+        this._URWellPLocalR2 = uRWellPLocalR2;
+    }            
     
     /**
      * 
      * @return URWell cross of track
      */
-    public URWellCross get_URWellCross() {
-        return urCross;
+    public List<URWellCross> get_URWellCrosses() {
+        return urCrosses;
     }
     /**
      * 
      * @param urCross URWell cross
      */
-    public void set_URWellCross(URWellCross urCross) {
-        this.urCross = urCross;
+    public void set_URWellCrosses(List<URWellCross> urCrosses) {
+        this.urCrosses.clear();
+        this.urCrosses.addAll(urCrosses);
     }
     
     /**
@@ -216,26 +282,7 @@ public class Track extends Trajectory implements Comparable<Track>{
         status |= (this.isAITrack ? 1 : 0) << 12; // The 13th bit tells if track is from AI-assisted trcking; 1: yes; 0: no
         
         return status;
-    }
-    
-        
-    /**
-     * Status for different cross combos:
-     * 1: combos from R0R1R2R3
-     * 2: combos from R1R2R3
-     * 3: combos from R0R2R3
-     * 4: combos from R0R1R3
-     * 5: combos from R0R1R2
-    */
-    private int _Status_crossCombo=0;
-
-    public int get_Status_crossCombo() {
-        return _Status_crossCombo;
-    }
-
-    public void set_Status_crossCombo(int _Status) {
-        this._Status_crossCombo = _Status;
-    }
+    }            
     
     /**
      * 
@@ -552,21 +599,26 @@ public class Track extends Trajectory implements Comparable<Track>{
         return value;
     }
     
-    public boolean overlapsWithURWell(Track o) {
-        boolean value = false;
+    public boolean overlapsWithURWell(Track o) {        
         for(int i=0; i<this.size(); i++) {
             for(int j = 0; j < o.size(); j++){
                 if(this.get(i).get_Region() == o.get(j).get_Region()){
                     int ct = this.get(i).get_Id();
                     int co = o.get(j).get_Id();
-                    if(ct!=-1 && ct==co) value = true;
+                    if(ct != -1 && ct == co) return true;
                 }
             }   
         }
-        if(!value && this.get_URWellCross() != null && o.get_URWellCross() != null){
-            if(this.get_URWellCross().id() == o.get_URWellCross().id()) value = true;
+        
+        if(!this.get_URWellCrosses().isEmpty() && !o.get_URWellCrosses().isEmpty()){
+            for(URWellCross thisCrs : this.get_URWellCrosses()){
+                for(URWellCross oCrs : o.get_URWellCrosses()){
+                    if(thisCrs.id() > 0 && thisCrs.id() == oCrs.id()) return true;
+                }
+            }
         }
-        return value;
+        
+        return false;
     }
     
     public boolean bestChi2(Track o) {

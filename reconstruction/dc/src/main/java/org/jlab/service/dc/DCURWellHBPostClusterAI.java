@@ -130,21 +130,24 @@ public class DCURWellHBPostClusterAI extends DCEngine {
         
         // Read urwell crosses, and make urwell-dc-crosses combos
         URWellReader uRWellReader = new URWellReader(event, "HB");
-        List<URWellCross> urCrosses = uRWellReader.getUrwellR1Crosses();  
+        List<URWellCross> urCrosses = uRWellReader.getUrwellCrosses();  
                 
         // read uRWell-DC clusters at SL1, and separate uRWell crosses into with and without associated SL1 cluster      
         URWellDCClustersReader uRWellDCClustersReader = new URWellDCClustersReader();
-        Map<Integer, Integer> map_clsId_uRWellCrossId = uRWellDCClustersReader.getMapClsIdURWellCrossId(event); // segment id is the same as cluster id
+        Map<Integer, List<Integer>> map_clsId_uRWellCrossIds = uRWellDCClustersReader.getMapClsIdURWellCrossIds(event); // segment id is the same as cluster id
         for(Segment seg : segments){
             if(seg.get_Superlayer() == 1){
-                if(map_clsId_uRWellCrossId.keySet().contains(seg.get_Id())) {
-                    int uRWellCrossId = map_clsId_uRWellCrossId.get(seg.get_Id());
-                    for(URWellCross urCrs : urCrosses){
-                        if(urCrs.id() == uRWellCrossId){
-                            seg.setMatchedURWellCross(urCrs);                           
-                            break;
+                if(map_clsId_uRWellCrossIds.keySet().contains(seg.get_Id())) {
+                    List<URWellCross> matchedURWellCrosses = new ArrayList();
+                    for(int uRWellCrossId : map_clsId_uRWellCrossIds.get(seg.get_Id())){
+                        for(URWellCross urCrs : urCrosses){
+                            if(urCrs.id() == uRWellCrossId){
+                                matchedURWellCrosses.add(urCrs);                                                           
+                                break;
+                            }
                         }
                     }
+                    seg.setMatchedURWellCrosses(matchedURWellCrosses);
                 }
             }            
         }        
@@ -158,10 +161,9 @@ public class DCURWellHBPostClusterAI extends DCEngine {
         URWellDCCrossesList crosslistsWithoutURWell = new URWellDCCrossesList();
         
         for(int i = 0; i < uRWellDCCrossesLists.get_URWellDCCrossesList().size(); i++){
-            for(Cross crs : uRWellDCCrossesLists.get_URWellDCCrossesList().get(i).get_DCCrosses()){
-                if(crs.get_Segment1().getMatchedURWellCross() != null) crosslistsWithURWell.add(uRWellDCCrossesLists.get_URWellDCCrossesList().get(i));
+            if(!uRWellDCCrossesLists.get_URWellDCCrossesList().get(i).get_DCCrosses().isEmpty()){
+                if(!uRWellDCCrossesLists.get_URWellDCCrossesList().get(i).get_DCCrosses().get(0).get_Segment1().getMatchedURWellCrosses().isEmpty()) crosslistsWithURWell.add(uRWellDCCrossesLists.get_URWellDCCrossesList().get(i));
                 else crosslistsWithoutURWell.add(uRWellDCCrossesLists.get_URWellDCCrossesList().get(i));
-                break;
             }
         }
  
@@ -190,9 +192,7 @@ public class DCURWellHBPostClusterAI extends DCEngine {
                 }
             }
         }
-        
-        
-       
+
         ////// Conventional tracking with R0 and without R0 in order
         ////     6 or 5 DC clusters With R0: R0R1R2R3, R0-SL1R2R3, R0SL2R2R3, R0R1pR2R3, R0R1R2pR3
         ////     6 or 5 DC clustersWithout R0: R1R2R3, pR1R2R3, R1pR2R3, R1R2pR3
@@ -268,22 +268,27 @@ public class DCURWellHBPostClusterAI extends DCEngine {
         List<URWellCross> urCrossesWithoutSL1Conv = new ArrayList();
         for(Segment seg : segmentsConv){
             if(seg.get_Superlayer() == 1){
-                if(map_clsId_uRWellCrossId.keySet().contains(seg.get_Id())) {
-                    int uRWellCrossId = map_clsId_uRWellCrossId.get(seg.get_Id());
-                    for(URWellCross urCrs : urCrosses){
-                        if(urCrs.id() == uRWellCrossId){
-                            seg.setMatchedURWellCross(urCrs);
-                            if(!urCrossesWithSL1Conv.contains(urCrs)) urCrossesWithSL1Conv.add(urCrs);                            
-                            break;
+                if(map_clsId_uRWellCrossIds.keySet().contains(seg.get_Id())) {
+                    List<URWellCross> matchedURWellCrosses = new ArrayList();
+                    for(int uRWellCrossId : map_clsId_uRWellCrossIds.get(seg.get_Id())){
+                        for(URWellCross urCrs : urCrosses){
+                            if(urCrs.id() == uRWellCrossId){
+                                matchedURWellCrosses.add(urCrs);
+                                if(!urCrossesWithSL1Conv.contains(urCrs)) urCrossesWithSL1Conv.add(urCrs);                            
+                                break;
+                            }
                         }
                     }
+                    seg.setMatchedURWellCrosses(matchedURWellCrosses);
                 }
             }            
         }        
         urCrossesWithoutSL1Conv.addAll(urCrosses);
         urCrossesWithoutSL1Conv.removeAll(urCrossesWithSL1Conv);
         for(Track trk : trkcands){
-            if(trk.get_URWellCross() != null) urCrossesWithoutSL1Conv.remove(trk.get_URWellCross());
+            for(URWellCross crs : trk.get_URWellCrosses()){
+                if(urCrossesWithoutSL1Conv.contains(crs)) urCrossesWithoutSL1Conv.remove(crs);
+            }
         }
         
         //8) tracking
@@ -297,7 +302,7 @@ public class DCURWellHBPostClusterAI extends DCEngine {
         List<Segment> segmentsR2R3Conv = new ArrayList();
         for(Segment seg : segmentsConv){
             if(seg.get_Superlayer() == 1){
-                if(seg.getMatchedURWellCross() != null) segmentsSL1WithURWellConv.add(seg);
+                if(!seg.getMatchedURWellCrosses().isEmpty()) segmentsSL1WithURWellConv.add(seg);
                 else segmentsSL1WithoutURWellConv.add(seg);
             }
             else if(seg.get_Superlayer() == 2) segmentsSL2Conv.add(seg);
@@ -309,7 +314,7 @@ public class DCURWellHBPostClusterAI extends DCEngine {
         List<Cross> crossesR2R3Conv = new ArrayList();
         for(Cross crs : crossesConv){
             if(crs.get_Region() == 1){
-                if(crs.get_Segment1().getMatchedURWellCross() != null) {
+                if(!crs.get_Segment1().getMatchedURWellCrosses().isEmpty()) {
                     crossesR1WithURWellConv.add(crs);
                 }
                 else crossesR1WithoutURWellConv.add(crs);
@@ -438,8 +443,11 @@ public class DCURWellHBPostClusterAI extends DCEngine {
         
         // Remove segments and crosses on tracks from lists
         for(Track trk : trkcandsOrder1){
-            if(urCrossesWithSL1Conv.contains(trk.get_URWellCross())) urCrossesWithSL1Conv.remove(trk.get_URWellCross());
-            if(urCrossesWithoutSL1Conv.contains(trk.get_URWellCross())) urCrossesWithoutSL1Conv.remove(trk.get_URWellCross());
+            for(URWellCross crs : trk.get_URWellCrosses()){
+                if(urCrossesWithSL1Conv.contains(crs)) urCrossesWithSL1Conv.remove(crs);
+                if(urCrossesWithoutSL1Conv.contains(crs)) urCrossesWithoutSL1Conv.remove(crs);
+            }
+            
             for(Cross crs : trk){
                 if(crossesR1WithURWellConv.contains(crs)) crossesR1WithURWellConv.remove(crs);
                 if(crossesR1WithoutURWellConv.contains(crs)) crossesR1WithoutURWellConv.remove(crs);
@@ -639,11 +647,13 @@ public class DCURWellHBPostClusterAI extends DCEngine {
                     trk,
                     Constants.getInstance().dcDetector,
                     dcSwim);
-            
-            if(trk.get_URWellCross() != null){
-                    urCrossesOnTrks.add(trk.get_URWellCross()); 
-                    trk.get_URWellCross().set_tid(trk.get_Id());
-            }
+                        
+            if(!trk.get_URWellCrosses().isEmpty()){
+                urCrossesOnTrks.addAll(trk.get_URWellCrosses());
+                for(URWellCross crs : trk.get_URWellCrosses()){
+                    crs.set_tid(trk.get_Id());
+                }
+            } 
 
             for (Cross c : trk) {
                 c.set_CrossDirIntersSegWires();

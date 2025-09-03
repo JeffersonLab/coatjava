@@ -63,8 +63,7 @@ public class DCURWellHBClustering extends DCEngine {
             return true;
         }
         URWellReader uRWellReader = new URWellReader(event, "HB");
-        //List<URWellCross> urCrosses = uRWellReader.getUrwellCrosses();
-        List<URWellCross> urCrosses = uRWellReader.getUrwellR1Crosses();
+        List<URWellCross> urCrosses = uRWellReader.getUrwellCrosses();
         /* 8 */
         //2) find the clusters from these hits
         ClusterFinder clusFinder = new ClusterFinder();
@@ -78,7 +77,7 @@ public class DCURWellHBClustering extends DCEngine {
             List<FittedHit> fhits = rbc.createRawHitList(hits);
             List<FittedCluster> uRWellDCClusters = new ArrayList();
             for(FittedCluster cls : clusters){
-                if(cls.getMatchedURWellCross() != null) uRWellDCClusters.add(cls);
+                if(!cls.getMatchedURWellCrosses().isEmpty()) uRWellDCClusters.add(cls);
             }
             
             /* 9 */

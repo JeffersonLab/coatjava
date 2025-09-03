@@ -11,6 +11,7 @@ import org.jlab.rec.dc.cluster.FittedCluster;
 import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.Constants;
+import org.jlab.rec.urwell.reader.URWellCross;
 
 
 /**
@@ -79,7 +80,7 @@ public class RoadFinderWithURWell extends RoadFinder  {
                             } 
                             if(sLyr.size()<3) continue;
                             
-                            if(s1.getMatchedURWellCross() != null) sLyr.setURWellCross(s1.getMatchedURWellCross());
+                            if(!s1.getMatchedURWellCrosses().isEmpty()) sLyr.setURWellCrosses(s1.getMatchedURWellCrosses());
                             
                             if (this.fitRoadWithURWell(sLyr, DcDetector)==true) { 
                                 if(qf.chi2<fitPassingCut && qf.chi2!=0 ) { // road is good --> pass w.out looking for missing segment
@@ -98,6 +99,7 @@ public class RoadFinderWithURWell extends RoadFinder  {
         return Roads;
     }
     
+    // Fit road where SL1 is coorlated or not coorlated with uRWell
     private boolean fitRoadWithURWell(Road road, DCGeant4Factory DcDetector) {
         qf.init();
         int NbHits =0;		
@@ -109,7 +111,7 @@ public class RoadFinderWithURWell extends RoadFinder  {
             NbHits+=s.size();
         }
         
-        if(road.getURWellCross() != null) NbHits++;
+        if(!road.getURWellCrosses().isEmpty()) NbHits += road.getURWellCrosses().size();
         
         double[] X = new double[NbHits];
         double[] Z = new double[NbHits];
@@ -125,12 +127,14 @@ public class RoadFinderWithURWell extends RoadFinder  {
             }
         }
 
-        if(road.getURWellCross() != null){
-                Z[hitno] = road.getURWellCross().local().z();
-                if(road.get(0).get_Superlayer() == 1) X[hitno] = road.getURWellCross().getXRelativeDCSL1AtPlaneY0TSC();
-                else X[hitno] = road.getURWellCross().getXRelativeDCSL2AtPlaneY0TSC();
-                errX[hitno] =  road.getURWellCross().getXErrRelativeDCAtPlaneY0TSCHB();
-                hitno++;                
+        if(!road.getURWellCrosses().isEmpty()){
+            for(URWellCross crs : road.getURWellCrosses()){
+                Z[hitno] = crs.local().z();
+                if(road.get(0).get_Superlayer() == 1) X[hitno] = crs.getXRelativeDCSL1AtPlaneY0TSC();
+                else X[hitno] = crs.getXRelativeDCSL2AtPlaneY0TSC();
+                errX[hitno] =  crs.getXErrRelativeDCAtPlaneY0TSCHB();
+                hitno++;
+            }
         }
         
         qf.evaluate(Z, X, errX);
@@ -144,7 +148,7 @@ public class RoadFinderWithURWell extends RoadFinder  {
             } 
         }
         // pass if normalized chi2 is less than 1
-        if(road.getURWellCross() == null) return WChi2/qf.NDF <= 1;
+        if(road.getURWellCrosses().isEmpty()) return WChi2/qf.NDF <= 1;
         else return WChi2/(qf.NDF-1) <= 1;
     }               
     

@@ -31,18 +31,30 @@ public class URWellConstants {
     public final static double deltaT = 50;
     public final static double meanT = 180 + 550;
     
-     //Todo: Should come from uRWell geometry package
-    public static final double URWELLLOCALZR1  = 226.0464; // cm
-    public static final double URWELLXRESOLUTION = 0.024; // cm
-    public static final double URWELLYRESOLUTION = 0.15; // cm
+     //// Todo: Should come from uRWell geometry package
+    public static final double URWELLLOCALZ[]  = {226.0464, 227.3464}; // cm
     
+    // resolution for cross measures
     public static final double URWELLXRESOLUTIONHB = 0.12; // cm
-    public static final double URWELLYRESOLUTIONHB = 0.88; // cm
+    public static final double URWELLYRESOLUTIONHB = 0.87; // cm
     
-    // CalCulate uRWell crosses in LC
-    public static double INTERVALDCSL1L1L2TSC = 1.15848; // cm
-    public static double DCSL1L1ZTSC = 229.27948; // cm
-    public static double DCSL1L1W1XTSC = -83.7509153; // cm
-    public static double YDCSL1L1W1LC = 1.7320508075688772;
+    // resolution for cluster measures
+    public static final double URWELLRESOLUTIONHB[] = {0.19, 0.20}; // cm
+    public static final double URWELLRESOLUTIONTB[] = {0.032, 0.035}; // cm
+    
+    
+    //
+    public static final double URWELLDIFFX = 0.7; // cm; cut for absolute x difference between crosses of R1 and R2
+    public static final double URWELLDIFFY = 0.5; // cm; cut for absolute y difference between crosses of R1 and R2
+    
+    // DC-SL1 clustering with joint of uRWell
+    // For conversion of uRWell cross measurement relative to DC-SL1 local coordinates
+    public static double INTERVALDCSL1L1L2TSC = 1.15848; // cm; distance between layer1 & layer2 of SL1 in TSC
+    public static double DCSL1L1ZTSC = 229.27948; // cm; z for layer1 of SL1 in TSC
+    public static double DCSL1L1W1XTSC = -83.7509153; // cm; x for layer1 of SL1 in TSC
+    public static double YDCSL1L1W1LC = 1.7320508075688772; // cm; y for layer1 of SL1 in TSC
+      
+    public static final double YDISTURWELLTOMOSTLEFTLAYERLC[] = {1.8, 1.6}; // Absolute of Y difference between uRWell and most left layer of DC-SL1 in LC, separately for R1 and R2
+    public static final double URWELLRESIDUALCUT[] = {0.11, 0.14}; // cut for absolute uRWell resdial after DC-uRWell fitting in LC, separately for R1 and R2
 
 }

@@ -1,6 +1,7 @@
 package org.jlab.rec.urwell.reader;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.io.base.DataBank;
@@ -16,7 +17,8 @@ public class URWellReader{
     private final List<URWellCluster>   urClusters = new ArrayList<>();
     private final List<URWellCross>     urCrosses  = new ArrayList<>(); 
       
-    
+    private static List<Integer> pickedURWellRegions = new ArrayList<>(Arrays.asList(1, 2));
+        
     public URWellReader(DataEvent event) {
         
         if(event.hasBank("URWELL::hits"))
@@ -57,17 +59,7 @@ public class URWellReader{
     public List<URWellCross> getUrwellCrosses() {
         return urCrosses;
     } 
-    
-    public List<URWellCross> getUrwellR1Crosses() {
-        List<URWellCross> urCrossesR1 = new ArrayList<>();
-        for (URWellCross crs : urCrosses) {
-            if (crs.region() == 1) {
-                urCrossesR1.add(crs);
-            }
-        }
-        return urCrossesR1;
-    }
-    
+        
     public final void readHits(DataBank bank) {
 
         for(int i=0; i<bank.rows(); i++) {
@@ -108,26 +100,28 @@ public class URWellReader{
     public final void readCrosses(DataBank bank) {
 
         for(int i=0; i<bank.rows(); i++) {
-            int id = bank.getShort("id", i);
-            int    sector = bank.getByte("sector", i);
             int    region = bank.getByte("region", i);
-            double x      = bank.getFloat("x", i);
-            double y      = bank.getFloat("y", i);
-            double z      = bank.getFloat("z", i);                        
-            double energy = bank.getFloat("energy", i);
-            double time   = bank.getFloat("time", i);
-            int  cluster1 = bank.getShort("cluster1", i);
-            int  cluster2 = bank.getShort("cluster2", i); 
-            int status = bank.getShort("status", i); 
-            URWellCross cross = new URWellCross(id, sector, region, x, y, z, energy, time, cluster1, cluster2, status);
-            cross.setClusterIndex1(cluster1);
-            cross.setClusterIndex2(cluster2);
-            cross.setCluster1(urClusters);
-            cross.setCluster2(urClusters);           
-            if(cluster1<=urClusters.size()) urClusters.get(cluster1-1).setCrossIndex(i);
-            if(cluster2<=urClusters.size()) urClusters.get(cluster2-1).setCrossIndex(i);           
-            if(status == 0)            
-                urCrosses.add(cross);
+            if(pickedURWellRegions.contains(region)){
+                int id = bank.getShort("id", i);
+                int    sector = bank.getByte("sector", i);            
+                double x      = bank.getFloat("x", i);
+                double y      = bank.getFloat("y", i);
+                double z      = bank.getFloat("z", i);                        
+                double energy = bank.getFloat("energy", i);
+                double time   = bank.getFloat("time", i);
+                int  cluster1 = bank.getShort("cluster1", i);
+                int  cluster2 = bank.getShort("cluster2", i); 
+                int status = bank.getShort("status", i); 
+                URWellCross cross = new URWellCross(id, sector, region, x, y, z, energy, time, cluster1, cluster2, status);
+                cross.setClusterIndex1(cluster1);
+                cross.setClusterIndex2(cluster2);
+                cross.setCluster1(urClusters);
+                cross.setCluster2(urClusters);           
+                if(cluster1<=urClusters.size()) urClusters.get(cluster1-1).setCrossIndex(i);
+                if(cluster2<=urClusters.size()) urClusters.get(cluster2-1).setCrossIndex(i);           
+                if(status == 0)            
+                    urCrosses.add(cross);
+            }
         }
     } 
     
@@ -135,29 +129,41 @@ public class URWellReader{
     public final void readHBCrosses(DataBank bank) {
 
         for(int i=0; i<bank.rows(); i++) {
-            int id = bank.getShort("id", i);
-            int tid = bank.getShort("tid", i);    
-            int    sector = bank.getByte("sector", i);
             int    region = bank.getByte("region", i);
-            double x      = bank.getFloat("x", i);
-            double y      = bank.getFloat("y", i);
-            double z      = bank.getFloat("z", i);
-            double x_local = bank.getFloat("x_local", i);
-            double y_local = bank.getFloat("y_local", i);
-            double z_local = bank.getFloat("z_local", i);  
-            double energy = bank.getFloat("energy", i);
-            double time   = bank.getFloat("time", i);
-            int  cluster1 = bank.getShort("cluster1", i);
-            int  cluster2 = bank.getShort("cluster2", i); 
-            int status = bank.getShort("status", i); 
-            URWellCross cross = new URWellCross(id, tid, sector, region, x, y, z, x_local, y_local, z_local, energy, time, cluster1, cluster2, status);
-            cross.setClusterIndex1(cluster1);
-            cross.setClusterIndex2(cluster2);
-            cross.setCluster1(urClusters);
-            cross.setCluster2(urClusters);
-            if(cluster1<=urClusters.size()) urClusters.get(cluster1-1).setCrossIndex(i);
-            if(cluster2<=urClusters.size()) urClusters.get(cluster2-1).setCrossIndex(i);    
-            urCrosses.add(cross);
+            if(pickedURWellRegions.contains(region)){
+                int id = bank.getShort("id", i);
+                int tid = bank.getShort("tid", i);    
+                int    sector = bank.getByte("sector", i);
+                double x      = bank.getFloat("x", i);
+                double y      = bank.getFloat("y", i);
+                double z      = bank.getFloat("z", i);
+                double x_local = bank.getFloat("x_local", i);
+                double y_local = bank.getFloat("y_local", i);
+                double z_local = bank.getFloat("z_local", i);  
+                double energy = bank.getFloat("energy", i);
+                double time   = bank.getFloat("time", i);
+                int  cluster1 = bank.getShort("cluster1", i);
+                int  cluster2 = bank.getShort("cluster2", i); 
+                int status = bank.getShort("status", i); 
+                URWellCross cross = new URWellCross(id, tid, sector, region, x, y, z, x_local, y_local, z_local, energy, time, cluster1, cluster2, status);
+                cross.setClusterIndex1(cluster1);
+                cross.setClusterIndex2(cluster2);
+                cross.setCluster1(urClusters);
+                cross.setCluster2(urClusters);
+                if(cluster1<=urClusters.size()) urClusters.get(cluster1-1).setCrossIndex(i);
+                if(cluster2<=urClusters.size()) urClusters.get(cluster2-1).setCrossIndex(i);    
+                urCrosses.add(cross);
+            }
+        }
+    }
+    
+    public static void setPickedURWellRegions(String str){
+        pickedURWellRegions.clear();
+        if(str.equals( "R1")) pickedURWellRegions.add(1);
+        else if(str.equals("R2")) pickedURWellRegions.add(2);
+        else if(str.equals("R1R2")) {
+            pickedURWellRegions.add(1);
+            pickedURWellRegions.add(2);
         }
     }
 }

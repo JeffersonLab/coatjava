@@ -263,6 +263,16 @@ public abstract class AStateVecs {
         public Matrix CM = new Matrix(); // Todo: unify covMat and CM
         private double _PathLength;
         
+        private int layer = -1;
+        
+        public void setLayer(int layer){
+            this.layer = layer;
+        }
+        
+        public int getLayer(){
+            return layer;
+        }
+        
         /////////////////////// For DAF ///////////////////////
         private double weightDAF_single = 1;
         private double[] weightDAF_double = {0.5, 0.5};
@@ -389,6 +399,7 @@ public abstract class AStateVecs {
             	Matrix5x5.copy(s.CM, this.CM);
             this.weightDAF_single = s.weightDAF_single;
             this.weightDAF_double = s.weightDAF_double;
+            this.layer = s.layer;
         }
 
         public void copyCovMat(double[][] c) {

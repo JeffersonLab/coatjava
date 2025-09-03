@@ -45,7 +45,7 @@ public class KFitterWithURWell extends AKFitter {
     public StateVec finalStateVec = null;
     public StateVec initialStateVec = null;
     public List<StateVec> kfStateVecsAlongTrajectory;
-    public StateVec kfStateVecURWell = null;
+    public List<StateVec> kfStateVecsURWell;
 
     private int iterNum;
 
@@ -797,7 +797,7 @@ public class KFitterWithURWell extends AKFitter {
                         filteredVec.CM = cMat;
 
                         double residual = mv.dhURWell(filteredVec);  
-                        double updatedWeight_uRWell= daf.calc_updatedWeight_uRWell(residual, annealingFactor);  
+                        double updatedWeight_uRWell= daf.calc_updatedWeight_uRWell(residual, annealingFactor);                          
                         filteredVec.setWeightDAF_singleHit(updatedWeight_uRWell);                   
                         sv.filtered(forward).put(k, filteredVec);                                               
                     } else {
@@ -1030,7 +1030,8 @@ public class KFitterWithURWell extends AKFitter {
             sVec = sv.trackTrajF.get(k);
         }
 
-        kfStateVecsAlongTrajectory = new ArrayList<>();
+        kfStateVecsAlongTrajectory = new ArrayList();
+        kfStateVecsURWell = new ArrayList();
         if (sVec != null && sVec.CM != null) {
 
             boolean forward = false;
@@ -1042,8 +1043,9 @@ public class KFitterWithURWell extends AKFitter {
             if (mv.measurements.get(0).surface.type == Type.PLANEWITHSTRIP) {                
                 double err = mv.measurements.get(0).surface.getError();
                 double res = mv.dhURWell(svc);               
-                chi2 += (res*res) / (err*err);                
-                kfStateVecURWell = svc;
+                chi2 += (res*res) / (err*err);  
+                svc.setLayer(mv.measurements.get(0).layer);
+                kfStateVecsURWell.add(svc);
             }
             else if(mv.measurements.get(0).surface.type == Type.LINEDOCA) {
                 double V0 = mv.measurements.get(0).surface.unc[0];
@@ -1086,7 +1088,8 @@ public class KFitterWithURWell extends AKFitter {
                     double err = mv.measurements.get(k1 + 1).surface.getError();
                     double res = mv.dhURWell(svc);               
                     chi2 += (res*res) / (err*err);
-                    kfStateVecURWell = svc;
+                    svc.setLayer(mv.measurements.get(k1 + 1).layer);
+                    kfStateVecsURWell.add(svc);
                 }
                 else if(mv.measurements.get(k1 + 1).surface.type == Type.LINEDOCA) {
                     double V = mv.measurements.get(k1 + 1).surface.unc[0];
@@ -1136,6 +1139,7 @@ public class KFitterWithURWell extends AKFitter {
         }
 
         kfStateVecsAlongTrajectory = new ArrayList<>();
+        kfStateVecsURWell = new ArrayList();
         if (sVec != null && sVec.CM != null) {
                         
             boolean forward = false;
@@ -1162,7 +1166,8 @@ public class KFitterWithURWell extends AKFitter {
                 ndfDAF += daf_weight;
                 
                 svc.setFinalDAFWeight(daf_weight);
-                kfStateVecURWell = svc;
+                svc.setLayer(mv.measurements.get(0).layer);
+                kfStateVecsURWell.add(svc);
             }
             else if(mv.measurements.get(0).surface.type == Type.LINEDOCA){                          
                 Point3D point = new Point3D(svc.x, svc.y, mv.measurements.get(0).surface.measPoint.z());
@@ -1255,7 +1260,8 @@ public class KFitterWithURWell extends AKFitter {
                     ndfDAF += daf_weight;
 
                     svc.setFinalDAFWeight(daf_weight);
-                    kfStateVecURWell = svc;
+                    svc.setLayer(mv.measurements.get(k1 + 1).layer);
+                    kfStateVecsURWell.add(svc);
                 }
                 else if(mv.measurements.get(k1 + 1).surface.type == Type.LINEDOCA){ 
                     Point3D point = new Point3D(sv.transported(forward).get(k1 + 1).x, sv.transported(forward).get(k1 + 1).y, mv.measurements.get(k1 + 1).surface.measPoint.z());

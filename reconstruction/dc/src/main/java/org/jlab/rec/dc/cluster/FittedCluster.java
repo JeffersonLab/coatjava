@@ -1,6 +1,7 @@
 package org.jlab.rec.dc.cluster;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.jlab.geom.prim.Line3D;
@@ -65,9 +66,7 @@ public class FittedCluster extends ArrayList<FittedHit> implements Comparable<Fi
 
     private int[][] _Status;
     
-    private URWellCross matchedURWellCross= null;
-    private double matchedURWellResidual = -1;
-    private List<URWellCross> potentialMatchedURWellCrosses = null;
+    private List<URWellCross> matchedURWellCrosses= new ArrayList();
 
     /**
      *
@@ -377,34 +376,23 @@ public class FittedCluster extends ArrayList<FittedHit> implements Comparable<Fi
         return hitsAtMostLeftLayer;        
     }
            
-    public void setMatchedURWellCross(URWellCross crs){
-        matchedURWellCross = crs;
+    public void setMatchedURWellCrosses (List<URWellCross> crosses){
+        matchedURWellCrosses.clear();
+        matchedURWellCrosses.addAll(crosses);
     }
     
-    public URWellCross getMatchedURWellCross(){
-        return matchedURWellCross;
-    }
-            
-    public void setMatchedURWellResidual(double residual){
-        matchedURWellResidual = residual;
-    }
-    
-    public double getMatchedURWellResidual(){
-        return matchedURWellResidual;
-    }
-    
-    public void setPotentialMatchedURWellCrosses(List<URWellCross> crosses){
-        potentialMatchedURWellCrosses = crosses;
-    }
-    
-    public List<URWellCross> getPotentialMatchedURWellCrosses(){
-        return potentialMatchedURWellCrosses;
-    }
+    public List<URWellCross> getMatchedURWellCrosses(){
+        return matchedURWellCrosses;
+    }                
     
     public boolean isSameAs(FittedCluster o){
-        if(this.getMatchedURWellCross() == null && o.getMatchedURWellCross() != null) return false;
-        else if(this.getMatchedURWellCross() != null && o.getMatchedURWellCross() == null) return false;
-        else if(this.getMatchedURWellCross() != null && o.getMatchedURWellCross() != null && this.getMatchedURWellCross().id() != o.getMatchedURWellCross().id()) return false;
+        if(this.getMatchedURWellCrosses().size() != o.getMatchedURWellCrosses().size()) return false;
+        else{
+            for(int i = 0; i < this.getMatchedURWellCrosses().size(); i++){
+                if(this.getMatchedURWellCrosses().get(i).id() != o.getMatchedURWellCrosses().get(i).id()) return false;
+            }
+        }
+        
         int nMatchedHits = 0;
         for(FittedHit hit1 : this){
             for(FittedHit hit2 : o){
@@ -418,6 +406,19 @@ public class FittedCluster extends ArrayList<FittedHit> implements Comparable<Fi
         return ((this.size() == nMatchedHits) && (o.size() == nMatchedHits));
     }
     
+    public int numSharedURWellCrosses (FittedCluster o){
+        int num = 0;
+        for(URWellCross thisCrs : this.getMatchedURWellCrosses()){
+            for(URWellCross thatCrs : o.getMatchedURWellCrosses()){
+                if(thatCrs.id() == thisCrs.id()) {
+                    num++;
+                    break;
+                }
+            }
+        }
+                
+        return num;
+    }
     
 
     /**

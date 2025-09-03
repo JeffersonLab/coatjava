@@ -64,11 +64,7 @@ public class Constants {
     public static final double[] SINSECTORNEG60 = {0, Math.sin(Math.toRadians(-60.)), Math.sin(Math.toRadians(-120.)), 0, 
         Math.sin(Math.toRadians(-240.)), Math.sin(Math.toRadians(-300.))};
     public static final double[] COSSECTORNEG60 = {1, 0.5, -0.5, -1, -0.5, 0.5};
-    
-    ////////////// DC-uRWell clustering
-    public static final double YDISTURWELLTOMOSTLEFTLAYERLC = 1.8;
-    public static final double URWELLRESIDUALCUT = 0.11;
-    
+        
     ////////////// Uncertainties for initial state
     ////// DC only
     public static final double HBINITIALSTATEUNCSCALE = 1.5;

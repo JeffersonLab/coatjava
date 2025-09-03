@@ -182,8 +182,7 @@ public class DCURWellTBEngine extends DCEngine {
         
         // Read urwell crosses on HB tracks
         URWellReader uRWellReader = new URWellReader(event, this.getBanks().getPrefix());
-        //List<URWellCross> urCrosses = uRWellReader.getUrwellCrosses();
-        List<URWellCross> urCrosses = uRWellReader.getUrwellR1Crosses();
+        List<URWellCross> urCrosses = uRWellReader.getUrwellCrosses();
         
         DataBank trkbank = event.getBank(this.getBanks().getInputTracksBank());
         //DataBank trkcovbank = event.getBank("TimeBasedTrkg::TBCovMat");
@@ -203,17 +202,28 @@ public class DCURWellTBEngine extends DCEngine {
             HBFinalSV.setZ(trkbank.getFloat("z", i));
             HBtrk.setFinalStateVec(HBFinalSV);
             
-            int urcross_id =  trkbank.getShort("URWellCross_ID", i);
-            if(urcross_id > 0){
-                for(int j = 0; j < urCrosses.size(); j++){
-                    if(urCrosses.get(j).id() == urcross_id){
-                        HBtrk.set_URWellCross(urCrosses.get(j));                
+            int urcross1_id =  trkbank.getShort("URWellCross1_ID", i);
+            int urcross2_id =  trkbank.getShort("URWellCross2_ID", i);
+            List<URWellCross> uRWellCrossesHB = new ArrayList();
+            if(urcross1_id > 0){
+                for(URWellCross crs: urCrosses){
+                    if(crs.id() == urcross1_id){
+                        uRWellCrossesHB.add(crs);
                         break;
                     }
                 }
             }
+            if(urcross2_id > 0){
+                for(URWellCross crs: urCrosses){
+                    if(crs.id() == urcross2_id){
+                        uRWellCrossesHB.add(crs);
+                        break;
+                    }
+                }
+            }                        
+            HBtrk.set_URWellCrosses(uRWellCrossesHB);  
+            
             TrackArray[HBtrk.get_Id()-1] = HBtrk; 
-            TrackArray[HBtrk.get_Id()-1].set_Status_crossCombo(trkbank.getByte("status_crossCombo", i));
         }
         if(TrackArray==null) {
             return true; // HB tracks not saved correctly
@@ -249,7 +259,7 @@ public class DCURWellTBEngine extends DCEngine {
             }
             
             crosses.addAll(TrackArray1);
-            if(TrackArray1.get_URWellCross() != null){
+            if(!TrackArray1.get_URWellCrosses().isEmpty()){
                 KFitterWithURWell kFZRef = new KFitterWithURWell(true, 30, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
                 List<Surface> measSurfaces = getMeasSurfaces(TrackArray1, Constants.getInstance().dcDetector);
                 StateVecs svs = new StateVecs();
@@ -259,7 +269,7 @@ public class DCURWellTBEngine extends DCEngine {
                 kFZRef.runFitter(useDAF);
                     
                 List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
-                URWellStateVec kfStateVecURWell = setKFStateVecURWell(kFZRef);
+                List<URWellStateVec> kfStateVecsURWell = setKFStateVecsURWell(kFZRef);
 
                 StateVec fn = new StateVec();
                 if (kFZRef.setFitFailed==false && kFZRef.finalStateVec!=null) { 
@@ -279,7 +289,7 @@ public class DCURWellTBEngine extends DCEngine {
                     TrackArray1.set_FitNDF(kFZRef.NDF);
                     TrackArray1.set_NDFDAF(kFZRef.getNDFDAF());
                     TrackArray1.setStateVecs(kfStateVecsAlongTrajectory);
-                    TrackArray1.get_URWellCross().setURWellStateVec(kfStateVecURWell);
+                    TrackArray1.setURWellStateVecs(kfStateVecsURWell);
                     TrackArray1.set_FitConvergenceStatus(kFZRef.ConvStatus);
                     if (TrackArray1.get_Vtx0().toVector3D().mag() > 500) {
                         continue;
@@ -404,16 +414,19 @@ public class DCURWellTBEngine extends DCEngine {
     	return kfStateVecsAlongTrajectory;
     }
     
-    public URWellStateVec setKFStateVecURWell(KFitterWithURWell kFZRef) {
-        if (kFZRef.kfStateVecURWell != null) {
-            org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec svc = kFZRef.kfStateVecURWell;
-            URWellStateVec sv = new URWellStateVec(svc.x, svc.y, svc.z, svc.tx, svc.ty, svc.Q, svc.B, svc.getPathLength());
-            sv.setDAFWeight(svc.getFinalDAFWeight());
-
-            return sv;
-        } else {
-            return null;
+    public List<URWellStateVec> setKFStateVecsURWell(KFitterWithURWell kFZRef) {
+        List<URWellStateVec> svs = new ArrayList();
+        
+        if (!kFZRef.kfStateVecsURWell.isEmpty()) {
+            for(org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec svc : kFZRef.kfStateVecsURWell){
+                URWellStateVec sv = new URWellStateVec(svc.x, svc.y, svc.z, svc.tx, svc.ty, svc.Q, svc.B, svc.getPathLength());
+                sv.setLayer(svc.getLayer());
+                sv.setDAFWeight(svc.getFinalDAFWeight());
+                svs.add(sv);
+            }
         }
+
+        return svs;        
     }
     
     public List<org.jlab.rec.dc.trajectory.StateVec> setKFStateVecsAlongTrajectory(KFitter kFZRef) {
@@ -453,7 +466,7 @@ public class DCURWellTBEngine extends DCEngine {
             double ety = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATETYUNCUR;
             double eQ = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEQUNCUR;
             
-            if (trkcand.get_URWellCross() == null) {
+            if (trkcand.get_URWellCrosses().isEmpty()) {
                 ex = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEXUNCURNOR0;
                 ey = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEYUNCURNOR0;
                 etx = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATETXUNCURNOR0;
@@ -517,7 +530,7 @@ public class DCURWellTBEngine extends DCEngine {
             double ety = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATETYUNCUR;
             double eQ = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEQUNCUR;
             
-            if (trkcand.get_URWellCross() == null) {
+            if (trkcand.get_URWellCrosses().isEmpty()) {
                 ex = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEXUNCURNOR0;
                 ey = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATEYUNCURNOR0;
                 etx = Constants.TBINITIALSTATEUNCSCALEUR * Constants.TBINITIALSTATETXUNCURNOR0;
@@ -645,22 +658,24 @@ public class DCURWellTBEngine extends DCEngine {
         List<HitOnTrack> hOTS = new ArrayList<>(); // the list of hits on track		
         FittedHit hitOnTrk;
         
-        URWellCross urCross = trk.get_URWellCross();
-        if(urCross != null){
-            if(urCross.getCluster1() != null) {
-                HitOnTrack urhot = new HitOnTrack(urCross.sector(), urCross.getCluster1().layer(), urCross.getCluster1().getLineLocal(),
-                         URWellConstants.URWELLXRESOLUTION, URWellConstants.URWELLLOCALZR1);            
-                urhot.isDCHit = false;
-                hOTS.add(urhot);
-            } 
-            
-            if(urCross.getCluster2() != null) {
-                HitOnTrack urhot = new HitOnTrack(urCross.sector(), urCross.getCluster2().layer(), urCross.getCluster2().getLineLocal(),
-                         URWellConstants.URWELLXRESOLUTION, URWellConstants.URWELLLOCALZR1);            
-                urhot.isDCHit = false;
-                hOTS.add(urhot);
-            }   
-        }                
+        List<URWellCross> urCrosses = trk.get_URWellCrosses();
+        if(!urCrosses.isEmpty()){
+            for(URWellCross urCross : urCrosses){
+                if(urCross.getCluster1() != null) {
+                    HitOnTrack urhot = new HitOnTrack(urCross.sector(), urCross.getCluster1().layer(), urCross.getCluster1().getLineLocal(),
+                             URWellConstants.URWELLRESOLUTIONTB[0], urCross.getCluster1().getLineLocal().origin().z());            
+                    urhot.isDCHit = false;
+                    hOTS.add(urhot);
+                } 
+
+                if(urCross.getCluster2() != null) {
+                    HitOnTrack urhot = new HitOnTrack(urCross.sector(), urCross.getCluster2().layer(), urCross.getCluster2().getLineLocal(),
+                             URWellConstants.URWELLRESOLUTIONTB[1], urCross.getCluster2().getLineLocal().origin().z());            
+                    urhot.isDCHit = false;
+                    hOTS.add(urhot);
+                }
+            }
+        }
         
         for(int s = 0; s < trk.get_ListOfHBSegments().size(); s++) {
             for(int h = 0; h < trk.get_ListOfHBSegments().get(s).size(); h++) { 

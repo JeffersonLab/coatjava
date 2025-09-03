@@ -10,6 +10,7 @@ import org.jlab.geom.prim.Vector3D;
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.cross.Cross;
 import org.jlab.rec.urwell.reader.URWellCross;
+import org.jlab.rec.urwell.reader.URWellStateVec;
 
 
 /**
@@ -35,21 +36,22 @@ public class Trajectory extends ArrayList<Cross> {
     
     private final static double TOLERANCE = 0.1; // trajectory toleerance (cm)
     
-    private URWellCross urCross;
+    private List<URWellCross> urCrosses = new ArrayList();
     
     /**
      * 
      * @return URWell cross of track
      */
-    public URWellCross get_URWellCross() {
-        return urCross;
+    public List<URWellCross> get_URWellCrosses() {
+        return urCrosses;
     }
     /**
      * 
      * @param urCross URWell cross
      */
-    public void set_URWellCross(URWellCross urCross) {
-        this.urCross = urCross;
+    public void set_URWellCrosses(List<URWellCross> urCrosses) {
+        this.urCrosses.clear();
+        this.urCrosses.addAll(urCrosses);
     }
     
     private double a; // Parameter a for fitting function in xz plane: f(x) = a*z^2 + b*z + c
@@ -69,6 +71,17 @@ public class Trajectory extends ArrayList<Cross> {
 
     public void setStateVecs(List<StateVec> vecs) {
         this.stateVecs = vecs;
+    }
+    
+    public void setURWellStateVecs(List<URWellStateVec> vecs) {
+        for(URWellCross crs : this.get_URWellCrosses()){
+            List<URWellStateVec> stateVecs = new ArrayList();
+            for(URWellStateVec vec : vecs){
+                if(vec.getLayer() == crs.region() * 2 - 1) stateVecs.add(vec);
+                else if(vec.getLayer() == crs.region() * 2) stateVecs.add(vec);
+            }
+            crs.setURWellStateVecs(stateVecs);
+        }
     }
 
     public List<TrajectoryStateVec> getTrajectory() {

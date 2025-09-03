@@ -50,16 +50,16 @@ public class TrajectoryWithURWellFinder {
      * @param dcSwim
      * @return a trajectory object
      */
-    public Trajectory findTrajectory(List<Cross> candCrossList, URWellCross urCross, DCGeant4Factory DcDetector, Swim dcSwim) {
+    public Trajectory findTrajectory(List<Cross> candCrossList, List<URWellCross> urCrosses, DCGeant4Factory DcDetector, Swim dcSwim) {
         Trajectory traj = new Trajectory();
         if (candCrossList.isEmpty()) {
             return traj;
         }       
         
         traj.addAll(candCrossList);
-        traj.set_URWellCross(urCross);
+        traj.set_URWellCrosses(urCrosses);
         traj.setSector(candCrossList.get(0).get_Sector());
-        fitTrajectory(candCrossList, urCross);
+        fitTrajectory(candCrossList, urCrosses);
         if (this.TrajChisqProbFitXZ<Constants.TCHISQPROBFITXZ) {            
             return null;
         }
@@ -147,7 +147,7 @@ public class TrajectoryWithURWellFinder {
      * and constraining the quadratic parameters of the function describing the position values of the state vecs.
      * @param candCrossList list of crosses used in the fit
      */
-    public void fitTrajectory(List<Cross> candCrossList, URWellCross urCross) {             
+    public void fitTrajectory(List<Cross> candCrossList, List<URWellCross> urCrosses) {             
         x_fitCoeff = new double[3];
         y_fitCoeff = new double[3];
         
@@ -175,7 +175,7 @@ public class TrajectoryWithURWellFinder {
             TrajChisqProbFitXZ = Double.POSITIVE_INFINITY;
         }
         
-        if(urCross == null && candCrossList.size() == 3){
+        if(urCrosses.isEmpty() && candCrossList.size() == 3){
             double[] x = new double[3];
             double[] y = new double[3];
             double[] z = new double[3];
@@ -201,13 +201,14 @@ public class TrajectoryWithURWellFinder {
             x_fitCoeff = quadraticLRFit(z, x, x_err);
             y_fitCoeff = quadraticLRFit(z, y, y_err); 
         }
-        else if(urCross != null && candCrossList.size() == 2){            
-            double[] x = new double[3];
-            double[] y = new double[3];
-            double[] z = new double[3];
+        else if(!urCrosses.isEmpty() && candCrossList.size() == 2){ 
+            int numPoints = 2 + urCrosses.size();
+            double[] x = new double[numPoints];
+            double[] y = new double[numPoints];
+            double[] z = new double[numPoints];
 
-            double[] x_err = new double[3];
-            double[] y_err = new double[3];
+            double[] x_err = new double[numPoints];
+            double[] y_err = new double[numPoints];
 
             for (int i = 0; i < 2; i++) {
                 // make sure that the track direction makes sense
@@ -223,23 +224,27 @@ public class TrajectoryWithURWellFinder {
                 y_err[i] = candCrossList.get(i).get_PointErr().x();
             }
             
-            x[2] = urCross.local().x();
-            y[2] = urCross.local().y();
-            z[2] = urCross.local().z();
-            
-            x_err[2] = URWellConstants.URWELLXRESOLUTIONHB;
-            y_err[2] = URWellConstants.URWELLYRESOLUTIONHB;
+            for(int i = 0; i < urCrosses.size(); i++){
+                URWellCross urCross = urCrosses.get(i);
+                x[i+2] = urCross.local().x();
+                y[i+2] = urCross.local().y();
+                z[i+2] = urCross.local().z();
+
+                x_err[i+2] = URWellConstants.URWELLXRESOLUTIONHB;
+                y_err[i+2] = URWellConstants.URWELLYRESOLUTIONHB;
+            }
 
             x_fitCoeff = quadraticLRFit(z, x, x_err);
             y_fitCoeff = quadraticLRFit(z, y, y_err); 
         }
-        else if(urCross != null && candCrossList.size() == 3){
-            double[] x = new double[4];
-            double[] y = new double[4];
-            double[] z = new double[4];
+        else if(!urCrosses.isEmpty() && candCrossList.size() == 3){
+            int numPoints = 3 + urCrosses.size();
+            double[] x = new double[numPoints];
+            double[] y = new double[numPoints];
+            double[] z = new double[numPoints];
 
-            double[] x_err = new double[4];
-            double[] y_err = new double[4];
+            double[] x_err = new double[numPoints];
+            double[] y_err = new double[numPoints];
 
             for (int i = 0; i < 3; i++) {
                 // make sure that the track direction makes sense
@@ -255,12 +260,15 @@ public class TrajectoryWithURWellFinder {
                 y_err[i] = candCrossList.get(i).get_PointErr().x();
             }
             
-            x[3] = urCross.local().x();
-            y[3] = urCross.local().y();
-            z[3] = urCross.local().z();
-            
-            x_err[3] = URWellConstants.URWELLXRESOLUTIONHB;
-            y_err[3] = URWellConstants.URWELLYRESOLUTIONHB;
+            for(int i = 0; i < urCrosses.size(); i++){
+                URWellCross urCross = urCrosses.get(i);
+                x[i+3] = urCross.local().x();
+                y[i+3] = urCross.local().y();
+                z[i+3] = urCross.local().z();
+
+                x_err[i+3] = URWellConstants.URWELLXRESOLUTIONHB;
+                y_err[i+3] = URWellConstants.URWELLYRESOLUTIONHB;
+            }
 
             x_fitCoeff = quadraticLRFit(z, x, x_err);
             y_fitCoeff = quadraticLRFit(z, y, y_err); 

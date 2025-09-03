@@ -15,6 +15,7 @@ public class URWellStateVec {
     private double _B;
     private double _PathLength;
     private double _DAFWeight = -999;
+    private int layer = -1;
     
     /**
      * Instantiates a new  vec.
@@ -110,7 +111,15 @@ public class URWellStateVec {
      */ 
     public double Q() {
             return _Q;
-    }    
+    }
+
+    public void setLayer(int layer){
+        this.layer = layer;
+    }
+    
+    public int getLayer(){
+        return layer;
+    }
 
 
     public void printInfo() {

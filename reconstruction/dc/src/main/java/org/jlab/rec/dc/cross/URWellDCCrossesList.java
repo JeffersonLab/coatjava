@@ -13,11 +13,9 @@ import org.jlab.rec.dc.cross.Cross;
  */
 
 public class URWellDCCrossesList{
-    private List<URWellDCCrosses> urDCCrossesList = new ArrayList<URWellDCCrosses>();
+    private List<URWellDCCrosses> urDCCrossesList = new ArrayList();
     
-    public URWellDCCrossesList(){
-        
-    }
+    public URWellDCCrossesList(){}
     
     public List<URWellDCCrosses> get_URWellDCCrossesList(){
         return urDCCrossesList;
@@ -27,10 +25,10 @@ public class URWellDCCrossesList{
         for(List<Cross> crossList : crosslists){
             for(Cross crs: crossList){
                 if(crs.get_Segment1().get_Superlayer() == 1){
-                    if(crs.get_Segment1().getMatchedURWellCross() != null)
-                        this.add_URWellDCCrosses(crs.get_Segment1().getMatchedURWellCross(), crossList);
+                    if(!crs.get_Segment1().getMatchedURWellCrosses().isEmpty())
+                        this.add_URWellDCCrosses(crs.get_Segment1().getMatchedURWellCrosses(), crossList);
                     else
-                        this.add_URWellDCCrosses(null, crossList);
+                        this.add_URWellDCCrosses(new ArrayList(), crossList);
                     break;                    
                 }
             }
@@ -45,8 +43,8 @@ public class URWellDCCrossesList{
         this.urDCCrossesList.addAll(urDCCrossesList);
     }
     
-    public void add_URWellDCCrosses(URWellCross urCross, List<Cross> dcCrosses){
-        urDCCrossesList.add(new URWellDCCrosses(urCross, dcCrosses));
+    public void add_URWellDCCrosses(List<URWellCross> urCrosses, List<Cross> dcCrosses){
+        urDCCrossesList.add(new URWellDCCrosses(urCrosses, dcCrosses));
     }
     
     public void add(URWellDCCrosses urDCCrosses){
@@ -55,16 +53,16 @@ public class URWellDCCrossesList{
 
     public class URWellDCCrosses {
 
-        private URWellCross urCross;
-        private List<Cross> dcCrosses = new ArrayList<Cross>();
+        private List<URWellCross> urCrosses = new ArrayList();
+        private List<Cross> dcCrosses = new ArrayList();
         
-        public URWellDCCrosses(URWellCross urCross, List<Cross> dcCrosses) {
-            this.urCross = urCross;
-            this.dcCrosses = dcCrosses;
+        public URWellDCCrosses(List<URWellCross> urCrosses, List<Cross> dcCrosses) {            
+            this.urCrosses.addAll(urCrosses);
+            this.dcCrosses.addAll(dcCrosses);
         }
                 
-        public URWellCross get_URWellCross(){
-            return urCross;
+        public List<URWellCross> get_URWellCrosses(){
+            return urCrosses;
         }
         
         public List<Cross> get_DCCrosses(){

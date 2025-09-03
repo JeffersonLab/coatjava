@@ -274,10 +274,17 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
             if (cluslist.get(i) == null || cluslist.get(i).get_Id() == -1) {
                 continue;
             }
-            if(cluslist.get(i).getMatchedURWellCross() == null) continue;
+            if(cluslist.get(i).getMatchedURWellCrosses().isEmpty()) continue;
             
-            bank.setShort("id", i, (short) cluslist.get(i).get_Id());            
-            bank.setShort("URWell_Cross_ID", i, (short) cluslist.get(i).getMatchedURWellCross().id());
+            bank.setShort("id", i, (short) cluslist.get(i).get_Id());
+            
+            double URWell_Cross_IDs[] = {-1, -1};
+            for(URWellCross crs : cluslist.get(i).getMatchedURWellCrosses()){
+                URWell_Cross_IDs[crs.region()-1] = crs.id();
+            }
+            
+            bank.setShort("URWell_Cross1_ID", i, (short) URWell_Cross_IDs[0]);
+            bank.setShort("URWell_Cross2_ID", i, (short) URWell_Cross_IDs[1]);
         }
 
         return bank;       
@@ -420,11 +427,26 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
             bank.setShort("cluster1", i, (short) urCrosses.get(i).cluster1()); 
             bank.setShort("cluster2", i, (short) urCrosses.get(i).cluster2()); 
             bank.setShort("status",   i, (short) urCrosses.get(i).status()); 
-            if(urCrosses.get(i).getURWellStateVec() != null){
-                bank.setFloat("x_state",        i, (float) urCrosses.get(i).getURWellStateVec().x());
-                bank.setFloat("y_state",        i, (float) urCrosses.get(i).getURWellStateVec().y());
-                bank.setFloat("B",        i, (float) urCrosses.get(i).getURWellStateVec().getB());
-                bank.setFloat("pathLength",        i, (float) urCrosses.get(i).getURWellStateVec().getPathLength());  
+            if(urCrosses.get(i).getURWellStateVecs().size() == 2){
+                bank.setFloat("cluster1_x_state",        i, (float) urCrosses.get(i).getURWellStateVecs().get(0).x());
+                bank.setFloat("cluster1_y_state",        i, (float) urCrosses.get(i).getURWellStateVecs().get(0).y());
+                bank.setFloat("cluster1_B",        i, (float) urCrosses.get(i).getURWellStateVecs().get(0).getB());
+                bank.setFloat("cluster1_pathLength",        i, (float) urCrosses.get(i).getURWellStateVecs().get(0).getPathLength());  
+                
+                bank.setFloat("cluster2_x_state",        i, (float) urCrosses.get(i).getURWellStateVecs().get(1).x());
+                bank.setFloat("cluster2_y_state",        i, (float) urCrosses.get(i).getURWellStateVecs().get(1).y());
+                bank.setFloat("cluster2_B",        i, (float) urCrosses.get(i).getURWellStateVecs().get(1).getB());
+                bank.setFloat("cluster2_pathLength",        i, (float) urCrosses.get(i).getURWellStateVecs().get(1).getPathLength());                                
+            }else{
+                bank.setFloat("cluster1_x_state",        i, (float) -999.);
+                bank.setFloat("cluster1_y_state",        i, (float) -999.);
+                bank.setFloat("cluster1_B",        i, (float) -999.);
+                bank.setFloat("cluster1_pathLength",        i, (float) -999.);  
+                
+                bank.setFloat("cluster2_x_state",        i, (float) -999.);
+                bank.setFloat("cluster2_y_state",        i, (float) -999.);
+                bank.setFloat("cluster2_B",        i, (float) -999.);
+                bank.setFloat("cluster2_pathLength",        i, (float) -999.);  
             }
         }
         
@@ -441,7 +463,6 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
             bank.setByte("q", i, (byte) candlist.get(i).get_Q());
             //bank.setShort("status", i, (short) (100+candlist.get(i).get_Status()*10+candlist.get(i).get_MissingSuperlayer()));
             bank.setShort("status", i, (short) candlist.get(i).getBitStatus());
-            bank.setByte("status_crossCombo", i, (byte) candlist.get(i).get_Status_crossCombo());
             if(candlist.get(i).get_PreRegion1CrossPoint()!=null) {
                 bank.setFloat("c1_x", i, (float) candlist.get(i).get_PreRegion1CrossPoint().x());
                 bank.setFloat("c1_y", i, (float) candlist.get(i).get_PreRegion1CrossPoint().y());
@@ -466,20 +487,22 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
                 bank.setFloat("t1_py", i, (float) candlist.get(i).get_Region1TrackP().y());
                 bank.setFloat("t1_pz", i, (float) candlist.get(i).get_Region1TrackP().z());
             }
-            if(candlist.get(i).get_URWellPointGlobal() != null && candlist.get(i).get_URWellPointLocal() != null){
-                bank.setFloat("URWell_x", i, (float) candlist.get(i).get_URWellPointGlobal().x());
-                bank.setFloat("URWell_y", i, (float) candlist.get(i).get_URWellPointGlobal().y());
-                bank.setFloat("URWell_z", i, (float) candlist.get(i).get_URWellPointGlobal().z());
-                bank.setFloat("URWell_px", i, (float) candlist.get(i).get_URWellPGlobal().x());
-                bank.setFloat("URWell_py", i, (float) candlist.get(i).get_URWellPGlobal().y());
-                bank.setFloat("URWell_pz", i, (float) candlist.get(i).get_URWellPGlobal().z());
-                bank.setFloat("URWell_x_local", i, (float) candlist.get(i).get_URWellPointLocal().x());
-                bank.setFloat("URWell_y_local", i, (float) candlist.get(i).get_URWellPointLocal().y());
-                bank.setFloat("URWell_z_local", i, (float) candlist.get(i).get_URWellPointLocal().z());
-                bank.setFloat("URWell_px_local", i, (float) candlist.get(i).get_URWellPLocal().x());
-                bank.setFloat("URWell_py_local", i, (float) candlist.get(i).get_URWellPLocal().y());
-                bank.setFloat("URWell_pz_local", i, (float) candlist.get(i).get_URWellPLocal().z());
+            if(candlist.get(i).get_URWellPointGlobalR1() != null){
+                bank.setFloat("URWell_R1_x", i, (float) candlist.get(i).get_URWellPointGlobalR1().x());
+                bank.setFloat("URWell_R1_y", i, (float) candlist.get(i).get_URWellPointGlobalR1().y());
+                bank.setFloat("URWell_R1_z", i, (float) candlist.get(i).get_URWellPointGlobalR1().z());
+                bank.setFloat("URWell_R1_px", i, (float) candlist.get(i).get_URWellPGlobalR1().x());
+                bank.setFloat("URWell_R1_py", i, (float) candlist.get(i).get_URWellPGlobalR1().y());
+                bank.setFloat("URWell_R1_pz", i, (float) candlist.get(i).get_URWellPGlobalR1().z());
             }
+            if(candlist.get(i).get_URWellPointGlobalR2() != null){
+                bank.setFloat("URWell_R2_x", i, (float) candlist.get(i).get_URWellPointGlobalR2().x());
+                bank.setFloat("URWell_R2_y", i, (float) candlist.get(i).get_URWellPointGlobalR2().y());
+                bank.setFloat("URWell_R2_z", i, (float) candlist.get(i).get_URWellPointGlobalR2().z());
+                bank.setFloat("URWell_R2_px", i, (float) candlist.get(i).get_URWellPGlobalR2().x());
+                bank.setFloat("URWell_R2_py", i, (float) candlist.get(i).get_URWellPGlobalR2().y());
+                bank.setFloat("URWell_R2_pz", i, (float) candlist.get(i).get_URWellPGlobalR2().z());
+            }            
             bank.setFloat("pathlength", i, (float) candlist.get(i).get_TotPathLen());
             bank.setFloat("Vtx0_x", i, (float) candlist.get(i).get_Vtx0().x());
             bank.setFloat("Vtx0_y", i, (float) candlist.get(i).get_Vtx0().y());
@@ -488,10 +511,13 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
             bank.setFloat("p0_y", i, (float) candlist.get(i).get_pAtOrig().y());
             bank.setFloat("p0_z", i, (float) candlist.get(i).get_pAtOrig().z());
             //fill associated IDs
-            if(candlist.get(i).get_URWellCross() != null) 
-                bank.setShort("URWellCross_ID", i, (short) candlist.get(i).get_URWellCross().id());  
-            else
-                bank.setShort("URWellCross_ID", i, (short)-1);
+            double uRWellCross_IDs[] = {-1, -1};
+            for(URWellCross crs : candlist.get(i).get_URWellCrosses()){
+                uRWellCross_IDs[crs.region()-1] = crs.id();
+            }
+
+            bank.setShort("URWellCross1_ID", i, (short) uRWellCross_IDs[0]);
+            bank.setShort("URWellCross2_ID", i, (short) uRWellCross_IDs[1]);
             for(int r = 0; r < 3; r++) {
                 bank.setShort("Cross"+String.valueOf(r+1)+"_ID", 
                     i, (short) -1);
@@ -690,11 +716,6 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
             bank.setFloat("fitSlopeErr", i, (float) cluslist.get(i).get_clusterLineFitSlopeErr());
             bank.setFloat("fitInterc", i, (float) fitInterc);
             bank.setFloat("fitIntercErr", i, (float) cluslist.get(i).get_clusterLineFitInterceptErr());
-            
-            if(cluslist.get(i).getMatchedURWellCross() != null)
-                bank.setShort("URWell_Cross_ID", i, (short) cluslist.get(i).getMatchedURWellCross().id());
-            else
-                bank.setShort("URWell_Cross_ID", i, (short)-1);
 
             for (int j = 0; j < cluslist.get(i).size(); j++) {
                 if (j < hitIdxArray.length) {
@@ -782,7 +803,6 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
 
     }
 
-
     /**
      *
      * @param event the EvioEvent
@@ -850,13 +870,32 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
             bank.setShort("cluster1", i, (short) urCrosses.get(i).cluster1()); 
             bank.setShort("cluster2", i, (short) urCrosses.get(i).cluster2()); 
             bank.setShort("status",   i, (short) urCrosses.get(i).status());  
-            if(urCrosses.get(i).getURWellStateVec() != null){
-                bank.setFloat("x_state",        i, (float) urCrosses.get(i).getURWellStateVec().x());
-                bank.setFloat("y_state",        i, (float) urCrosses.get(i).getURWellStateVec().y());
-                bank.setFloat("B",        i, (float) urCrosses.get(i).getURWellStateVec().getB());
-                bank.setFloat("pathLength",       i, (float) urCrosses.get(i).getURWellStateVec().getPathLength());  
-                bank.setFloat("DAFWeight",        i, (float) urCrosses.get(i).getURWellStateVec().getDAFWeight());
-            }
+            
+            if(urCrosses.get(i).getURWellStateVecs().size() == 2){
+                bank.setFloat("cluster1_x_state",        i, (float) urCrosses.get(i).getURWellStateVecs().get(0).x());
+                bank.setFloat("cluster1_y_state",        i, (float) urCrosses.get(i).getURWellStateVecs().get(0).y());
+                bank.setFloat("cluster1_B",        i, (float) urCrosses.get(i).getURWellStateVecs().get(0).getB());
+                bank.setFloat("cluster1_pathLength",        i, (float) urCrosses.get(i).getURWellStateVecs().get(0).getPathLength());  
+                bank.setFloat("cluster1_DAFWeight",        i, (float) urCrosses.get(i).getURWellStateVecs().get(0).getDAFWeight());
+                
+                bank.setFloat("cluster2_x_state",        i, (float) urCrosses.get(i).getURWellStateVecs().get(1).x());
+                bank.setFloat("cluster2_y_state",        i, (float) urCrosses.get(i).getURWellStateVecs().get(1).y());
+                bank.setFloat("cluster2_B",        i, (float) urCrosses.get(i).getURWellStateVecs().get(1).getB());
+                bank.setFloat("cluster2_pathLength",        i, (float) urCrosses.get(i).getURWellStateVecs().get(1).getPathLength());  
+                bank.setFloat("cluster2_DAFWeight",        i, (float) urCrosses.get(i).getURWellStateVecs().get(1).getDAFWeight());                                
+            }else{
+                bank.setFloat("cluster1_x_state",        i, (float) -999.);
+                bank.setFloat("cluster1_y_state",        i, (float) -999.);
+                bank.setFloat("cluster1_B",        i, (float) -999.);
+                bank.setFloat("cluster1_pathLength",        i, (float) -999.);  
+                bank.setFloat("cluster1_DAFWeight",        i, (float) -999.);
+                
+                bank.setFloat("cluster2_x_state",        i, (float) -999.);
+                bank.setFloat("cluster2_y_state",        i, (float) -999.);
+                bank.setFloat("cluster2_B",        i, (float) -999.);
+                bank.setFloat("cluster2_pathLength",        i, (float) -999.);  
+                bank.setFloat("cluster2_DAFWeight",        i, (float) -999.); 
+            }            
         }
         
         return bank;        
@@ -876,7 +915,6 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
             
             //bank.setShort("status", i, (short) (100+candlist.get(i).get_Status()*10+candlist.get(i).get_MissingSuperlayer()));
             bank.setShort("status", i, (short) candlist.get(i).getBitStatus());
-            bank.setByte("status_crossCombo", i, (byte) candlist.get(i).get_Status_crossCombo());
             bank.setByte("sector", i, (byte) candlist.get(i).getSector());
             bank.setByte("q", i, (byte) candlist.get(i).get_Q());
             //bank.setFloat("p", i, (float) candlist.get(i).get_P());
@@ -904,21 +942,22 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
                 bank.setFloat("t1_py", i, (float) candlist.get(i).get_Region1TrackP().y());
                 bank.setFloat("t1_pz", i, (float) candlist.get(i).get_Region1TrackP().z());
             }
-            if(candlist.get(i).get_URWellPointGlobal() != null && candlist.get(i).get_URWellPointLocal() != null){
-                bank.setFloat("URWell_x", i, (float) candlist.get(i).get_URWellPointGlobal().x());
-                bank.setFloat("URWell_y", i, (float) candlist.get(i).get_URWellPointGlobal().y());
-                bank.setFloat("URWell_z", i, (float) candlist.get(i).get_URWellPointGlobal().z());
-                bank.setFloat("URWell_px", i, (float) candlist.get(i).get_URWellPGlobal().x());
-                bank.setFloat("URWell_py", i, (float) candlist.get(i).get_URWellPGlobal().y());
-                bank.setFloat("URWell_pz", i, (float) candlist.get(i).get_URWellPGlobal().z());
-                bank.setFloat("URWell_x_local", i, (float) candlist.get(i).get_URWellPointLocal().x());
-                bank.setFloat("URWell_y_local", i, (float) candlist.get(i).get_URWellPointLocal().y());
-                bank.setFloat("URWell_z_local", i, (float) candlist.get(i).get_URWellPointLocal().z());
-                bank.setFloat("URWell_px_local", i, (float) candlist.get(i).get_URWellPLocal().x());
-                bank.setFloat("URWell_py_local", i, (float) candlist.get(i).get_URWellPLocal().y());
-                bank.setFloat("URWell_pz_local", i, (float) candlist.get(i).get_URWellPLocal().z());
+            if(candlist.get(i).get_URWellPointGlobalR1() != null){
+                bank.setFloat("URWell_R1_x", i, (float) candlist.get(i).get_URWellPointGlobalR1().x());
+                bank.setFloat("URWell_R1_y", i, (float) candlist.get(i).get_URWellPointGlobalR1().y());
+                bank.setFloat("URWell_R1_z", i, (float) candlist.get(i).get_URWellPointGlobalR1().z());
+                bank.setFloat("URWell_R1_px", i, (float) candlist.get(i).get_URWellPGlobalR1().x());
+                bank.setFloat("URWell_R1_py", i, (float) candlist.get(i).get_URWellPGlobalR1().y());
+                bank.setFloat("URWell_R1_pz", i, (float) candlist.get(i).get_URWellPGlobalR1().z());
             }
-            
+            if(candlist.get(i).get_URWellPointGlobalR2() != null){
+                bank.setFloat("URWell_R2_x", i, (float) candlist.get(i).get_URWellPointGlobalR2().x());
+                bank.setFloat("URWell_R2_y", i, (float) candlist.get(i).get_URWellPointGlobalR2().y());
+                bank.setFloat("URWell_R2_z", i, (float) candlist.get(i).get_URWellPointGlobalR2().z());
+                bank.setFloat("URWell_R2_px", i, (float) candlist.get(i).get_URWellPGlobalR2().x());
+                bank.setFloat("URWell_R2_py", i, (float) candlist.get(i).get_URWellPGlobalR2().y());
+                bank.setFloat("URWell_R2_pz", i, (float) candlist.get(i).get_URWellPGlobalR2().z());
+            }            
             bank.setFloat("pathlength", i, (float) candlist.get(i).get_TotPathLen());
             bank.setFloat("Vtx0_x", i, (float) candlist.get(i).get_Vtx0().x());
             bank.setFloat("Vtx0_y", i, (float) candlist.get(i).get_Vtx0().y());
@@ -926,11 +965,14 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
             bank.setFloat("p0_x", i, (float) candlist.get(i).get_pAtOrig().x());
             bank.setFloat("p0_y", i, (float) candlist.get(i).get_pAtOrig().y());
             bank.setFloat("p0_z", i, (float) candlist.get(i).get_pAtOrig().z());
-           //fill associated IDs
-            if(candlist.get(i).get_URWellCross() != null) 
-                bank.setShort("URWellCross_ID", i, (short) candlist.get(i).get_URWellCross().id());  
-            else
-                bank.setShort("URWellCross_ID", i, (short)-1);
+            //fill associated IDs
+            double uRWellCross_IDs[] = {-1, -1};
+            for(URWellCross crs : candlist.get(i).get_URWellCrosses()){
+                uRWellCross_IDs[crs.region()-1] = crs.id();
+            }
+
+            bank.setShort("URWellCross1_ID", i, (short) uRWellCross_IDs[0]);
+            bank.setShort("URWellCross2_ID", i, (short) uRWellCross_IDs[1]);
             for(int r = 0; r < 3; r++) {
                 bank.setShort("Cross"+String.valueOf(r+1)+"_ID", 
                     i, (short) -1);

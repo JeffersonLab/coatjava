@@ -1,7 +1,7 @@
 package org.jlab.rec.dc.segment;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.logging.Logger;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.geom.prim.Plane3D;
@@ -42,7 +42,7 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
     private double[] _SegmentEndPoints;
     public int associatedCrossId = -1;
     
-    private URWellCross matchedURWellCross= null;
+    private List<URWellCross> matchedURWellCrosses = new ArrayList();
     
     @Override
     public Object clone(){  
@@ -399,13 +399,14 @@ public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>
         this._Status = _Status;
     }
     
-    public void setMatchedURWellCross(URWellCross crs){
-        matchedURWellCross = crs;
+    public void setMatchedURWellCrosses (List<URWellCross> crosses){
+        matchedURWellCrosses.clear();
+        matchedURWellCrosses.addAll(crosses);
     }
     
-    public URWellCross getMatchedURWellCross(){
-        return matchedURWellCross;
-    }
+    public List<URWellCross> getMatchedURWellCrosses(){
+        return matchedURWellCrosses;
+    }  
 
     /**
      *

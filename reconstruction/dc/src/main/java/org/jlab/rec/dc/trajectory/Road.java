@@ -1,5 +1,6 @@
 package org.jlab.rec.dc.trajectory;
 
+import java.util.List;
 import java.util.ArrayList;
 import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.urwell.reader.URWellCross;
@@ -13,13 +14,14 @@ public class Road extends ArrayList<Segment>{
     public int id;
     public double[] a = new double[3]; // fit params
     
-    private URWellCross uRWellCross= null;
+    private List<URWellCross> uRWellCrosses = new ArrayList();
     
-    public void setURWellCross(URWellCross crs){
-        uRWellCross = crs;
+    public void setURWellCrosses(List<URWellCross> crses){
+        this.uRWellCrosses.clear();
+        this.uRWellCrosses.addAll(crses);
     }
     
-    public URWellCross getURWellCross(){
-        return uRWellCross;
+    public List<URWellCross> getURWellCrosses(){
+        return uRWellCrosses;
     }
 }
