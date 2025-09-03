@@ -816,6 +816,7 @@ public class CLASDecoder4 {
     public static void main(String[] args){
 
         OptionParser parser = CLASDecoder4U.getOptionParser();
+        parser.parse(args);
         List<String> inputList = parser.getInputList();
 
         if(inputList.isEmpty()==true){
