@@ -1107,7 +1107,7 @@ public class ClusterCleanerUtilities {
      * @param clusters the list of clusters
      * @return the selected cluster
      */
-    public FittedCluster OverlappingClusterResolver(FittedCluster thisclus, List<FittedCluster> clusters) {
+     public FittedCluster OverlappingClusterResolver(FittedCluster thisclus, List<FittedCluster> clusters) {
         // Get list for overlapped clusters
         List<FittedCluster> overlapingClusters = new ArrayList<>();
         
@@ -1122,12 +1122,13 @@ public class ClusterCleanerUtilities {
             
             int numSharedURCrosses = thisclus.numSharedURWellCrosses(cls);
             
-            // If uRWell crosses exit and not all uRWell crosses are shared, go to next level to check if cluster is added into overlapping list
-            // If uRWell crosses do not exit or not all uRWell crosses are shared, exclude cluster from overlapping list
+            /*
+            // If both clusters have matched urwell crosses and their matched urwell crosses are not shared at all, they are regarded as non-overlapped
             if(passCls && !cls.getMatchedURWellCrosses().isEmpty() && !thisclus.getMatchedURWellCrosses().isEmpty()
-                    && (thisclus.getMatchedURWellCrosses().size() != numSharedURCrosses) ){
+                    && numSharedURCrosses == 0){
                 passCls = false;   
             }
+            */
                 
             
             if(passCls){
@@ -1141,10 +1142,10 @@ public class ClusterCleanerUtilities {
                         }
                 } // end loop over hits in thisclus
                     
-               if(numSharedURCrosses == 2){
+                if(numSharedURCrosses == 2){
                    overlapingClusters.add(cls);
-               }
-               else if( numSharedURCrosses == 1){ 
+                }
+                else if( numSharedURCrosses == 1){ 
                     if((!isExceptionalFittedCluster(cls) && !isExceptionalFittedCluster(thisclus) && hitOvrl.size() < 2) 
                             || ((isExceptionalFittedCluster(cls) || isExceptionalFittedCluster(thisclus)) && hitOvrl.size() < 1)) {
                         passCls = false;
@@ -1192,23 +1193,24 @@ public class ClusterCleanerUtilities {
             Collections.sort(overlapingClusters); 
             return overlapingClusters.get(0);
         }
-
     }
     
     /** Select a cluster from cluster list with the same uRWell; 
      * Priorities:
-     ** 1st priority: cluster size; 
-     ** 2nd priority: if is same cluster size , then number of uRWell crosses 
-     ** 3rd priority if same cluster size and same number of uRWell crosses, than smallest uRWell residual
+     ** 1st priority: # of DC hits + # of uRWell crosses * weight 
+     ** 2nd priority: if multiple clusters from 1st priority, then number of uRWell crosses 
+     ** 3rd priority if multiple clusters from 2nd priority, then smallest uRWell residual
      * 
      * @param clusters - FittedCluster list
      * @return selected FittedCluster
      */
     public FittedCluster selectClusterWithSameURWellCross(List<FittedCluster> clusters){
-        // Get cluster list with largest cluster size
+        // Get cluster list with largest (# of hit size + # of uRWell crosses * weight)
+        double weight = 2.;
         Map<Integer, List<FittedCluster>> map_size_clusterList = new HashMap();
         for(FittedCluster cls : clusters){
             int size = cls.size();
+            size += cls.getMatchedURWellCrosses().size() * weight; 
             if(map_size_clusterList.keySet().contains(size)) map_size_clusterList.get(size).add(cls);
             else{
                 List<FittedCluster> newClusterList = new ArrayList();
@@ -1223,7 +1225,7 @@ public class ClusterCleanerUtilities {
         
         List<FittedCluster> clusterListWithMostHits = map_size_clusterList.get(keyList.get(keyList.size() - 1));
         
-        // Get cluster list with largetst cluster size and largest number of uRWell crosses
+        // Get cluster list with largest number of uRWell crosses
         Map<Integer, List<FittedCluster>> map_numURWellCrosses_clusterList = new HashMap();
         for(FittedCluster cls : clusterListWithMostHits){
             int num = cls.getMatchedURWellCrosses().size();
