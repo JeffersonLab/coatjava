@@ -45,7 +45,7 @@ public class DaqScaler {
 
     @Override
     public String toString() {
-        return String.format("c=%d/%d f=%d/%d s=%d/%d",clock,gatedClock,fcup,gatedFcup,slm,gatedSlm);
+        return String.format("clock=%d/%d fcup=%d/%d slm=%d/%d",clock,gatedClock,fcup,gatedFcup,slm,gatedSlm);
     }
 
     /**
