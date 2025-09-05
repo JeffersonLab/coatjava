@@ -46,7 +46,7 @@ public class RebuildScalers {
         HelicitySequenceManager helSeq = new HelicitySequenceManager(8,inputList);
         
         HipoWriterSorted writer = new HipoWriterSorted();
-        writer.getSchemaFactory().initFromDirectory(ClasUtilsFile.getResourceDir("COATJAVA", "etc/bankdefs/hipo4"));
+        writer.getSchemaFactory().initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4"));
         writer.setCompressionType(2);
         writer.open(parser.getOption("-o").stringValue());
 			
