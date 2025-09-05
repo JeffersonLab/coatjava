@@ -12,6 +12,7 @@ import org.jlab.jnp.hipo4.io.HipoReader;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
+import org.jlab.utils.groups.IndexedTable;
 
 /**
  * For easy access to most recent scaler readout for any given event.
@@ -322,18 +323,24 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
         }
         return seq;
     }
-    
+
     public static void main(String[] args) {
         
         final String dir = System.getenv("HOME")+"/data/";
-        final String file = "DVCSWagon_004013.hipo";
+        //final String file = "rollover-4013.hipo";
+        final String file = "DVCSWagon_004003.hipo";
+        //final String file = "clas_004003.evio.00040-00049.hipo";
 
         List<String> filenames=new ArrayList<>();
         if (args.length>0) filenames.addAll(Arrays.asList(args));
         else               filenames.add(dir+file);
 
+        ConstantsManager consts = new ConstantsManager();
+        consts.init("/runcontrol/fcup","/runcontrol/slm","/runcontrol/helicity","/daq/config/scalers/dsc1","/runcontrol/hwp");
+
         // 1!!!1 initialize a sequence from tag=1 events: 
-        DaqScalersSequence seq = DaqScalersSequence.readSequence(filenames);
+        DaqScalersSequence seq = DaqScalersSequence.rebuildSequence(1, consts, filenames);
+        //DaqScalersSequence seq = DaqScalersSequence.readSequence(filenames);
 
         long good=0;
         long bad=0;
@@ -368,8 +375,7 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
                 else {
                     good++;
                     // do something useful with beam charge here:
-                    System.out.println(timestamp+" "+ds.dsc2.clock+" "+ds.dsc2.gatedClock+" "+
-                        ds.dsc2.slm+" "+ds.dsc2.getBeamCharge()+" "+ds.dsc2.getBeamChargeGated());
+                    System.out.println(String.format("%d %d %d %d %f %f",timestamp,ds.dsc2.clock,ds.dsc2.gatedClock,ds.dsc2.slm,ds.dsc2.getBeamCharge(),ds.dsc2.getBeamChargeGated()));
                 }
             }
 
