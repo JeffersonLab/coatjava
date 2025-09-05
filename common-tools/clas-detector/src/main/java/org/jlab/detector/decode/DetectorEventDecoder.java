@@ -165,7 +165,7 @@ public class DetectorEventDecoder {
                     }
 
                     // crate/slot/channel must map to a unique detector: 
-                    break;
+                    //break;
                 }
             }
         }
