@@ -97,36 +97,6 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
         return n;
     }
 
-    /**
-     * Try to fix clock rollover on the run-integrating DSC2 scaler.
-     * 1.  Assume the first clock readout has no rollover.
-     * 2.  Assume any subsequent clock decrease is a rollover. 
-     * @param rollover 
-     */
-    private boolean fixClockRollover(long rollover) {
-        boolean modified = false;
-        while (!modified) {
-            for (int i=1; i<this.scalers.size(); ++i){
-                Dsc2Scaler pre = this.scalers.get(i-1).dsc2;
-                Dsc2Scaler now = this.scalers.get(i).dsc2;
-                if (now.clock < pre.clock) {
-                    for (int j=i; j<this.scalers.size(); ++j)
-                        // FIXME:  it's not just an addition ...
-                        this.scalers.get(j).dsc2.clock += rollover;
-                    modified = true;
-                    break;
-                }
-                if (now.gatedClock < pre.gatedClock) {
-                    for (int j=i; j<this.scalers.size(); ++j)
-                        this.scalers.get(j).dsc2.gatedClock += rollover;
-                    modified = true;
-                    break;
-                }
-            }
-        }
-        return modified;
-    }
-    
     public DaqScalersSequence(SchemaFactory schema) {
         runConfigBank = new Bank(schema.getSchema("RUN::config"));
         runScalerBank=new Bank(schema.getSchema("RUN::scaler"));
@@ -324,11 +294,40 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
         return seq;
     }
 
+    /**
+     * Try to fix clock rollover on the run-integrating DSC2 scaler.
+     * 1.  Assume the first clock readout has no rollover.
+     * 2.  Assume any subsequent clock decrease is a rollover. 
+     * @param rollover 
+     */
+    private boolean fixClockRollover() {
+        boolean modified = true;
+        while (modified) {
+            modified = false;
+            for (int i=this.scalers.size()-1; i>0; --i) {
+                Dsc2Scaler previous = this.scalers.get(i-1).dsc2;
+                Dsc2Scaler next = this.scalers.get(i).dsc2;
+                if (previous.clock > next.clock) {
+                    for (int j=i; j<this.scalers.size(); ++j) {
+                        if (j==i) System.out.print( String.format("FIXING CLOCK ROLLOVER:  %d %d -> ",this.scalers.get(j).dsc2.clock,this.scalers.get(j).dsc2.gatedClock));
+                        this.scalers.get(j).dsc2.clock += 2*(long)Integer.MAX_VALUE;
+                        // The gated clock also rolls over (but it's triggered by the ungated clock, not itself!?):
+                        this.scalers.get(j).dsc2.gatedClock += 2*(long)Integer.MAX_VALUE;
+                        if (j==i) System.out.println(String.format("%d %d",this.scalers.get(j).dsc2.clock,this.scalers.get(j).dsc2.gatedClock));
+                    }
+                    modified = true;
+                    break;
+                }
+            }
+        }
+        return modified;
+    }
+    
     public static void main(String[] args) {
         
         final String dir = System.getenv("HOME")+"/data/";
         //final String file = "rollover-4013.hipo";
-        final String file = "DVCSWagon_004003.hipo";
+        final String file = "DVCSWagon_004013.hipo";
         //final String file = "clas_004003.evio.00040-00049.hipo";
 
         List<String> filenames=new ArrayList<>();
@@ -341,6 +340,14 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
         // 1!!!1 initialize a sequence from tag=1 events: 
         DaqScalersSequence seq = DaqScalersSequence.rebuildSequence(1, consts, filenames);
         //DaqScalersSequence seq = DaqScalersSequence.readSequence(filenames);
+        
+        //for (DaqScalers ds : seq.scalers) System.out.println(String.format("PRE:  %s",ds));
+                
+        seq.fixClockRollover();
+        
+        //for (DaqScalers ds : seq.scalers) System.out.println(String.format("POST:  %s",ds));
+        
+        System.exit(1);
 
         long good=0;
         long bad=0;
@@ -375,7 +382,11 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
                 else {
                     good++;
                     // do something useful with beam charge here:
-                    System.out.println(String.format("%d %d %d %d %f %f",timestamp,ds.dsc2.clock,ds.dsc2.gatedClock,ds.dsc2.slm,ds.dsc2.getBeamCharge(),ds.dsc2.getBeamChargeGated()));
+                    System.out.println(String.format("%d %s %f %f",
+                        timestamp,
+                        ds.dsc2,
+                        ds.dsc2.getBeamCharge(),
+                        ds.dsc2.getBeamChargeGated()));
                 }
             }
 
