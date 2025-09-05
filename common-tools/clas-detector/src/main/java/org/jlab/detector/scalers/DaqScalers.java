@@ -48,14 +48,20 @@ public class DaqScalers {
 
     public Dsc2Scaler dsc2=null;
     public StruckScalers struck=null;
-
     private long timestamp=0;
+    
     public DaqScalers setTimestamp(long timestamp) {
         this.timestamp=timestamp;
         return this;
     }
+    
     public long getTimestamp(){ return this.timestamp; }
 
+    @Override
+    public String toString() {
+        return String.format("%d %s",timestamp,dsc2);
+    }
+    
     /**
      * Get seconds between two dates assuming the differ by not more than 24 hours.
      *
