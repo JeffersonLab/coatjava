@@ -72,25 +72,25 @@ public class ClasUtilsFile {
      */
     public static String getResourceDir(String env, String rpath){
         
-        String envString = System.getenv(env);
+        String value = System.getenv(env);
 
-        if(envString==null){
+        if(value==null){
             ClasUtilsFile.printLog("Environment variable ["+env+"] is not defined");
-            envString = System.getProperty(env);
+            value = System.getProperty(env);
         }
         
-        if(envString == null){
+        if(value == null){
             ClasUtilsFile.printLog("System property ["+env+"] is not defined");
-            if (envString.equals("COATJAVA") || envString.equals("CLAS12DIR")) {
-                envString = getCoatjavaRuntimeDir();
+            if (env.equals("COATJAVA") || env.equals("CLAS12DIR")) {
+                value = getCoatjavaRuntimeDir();
             }
         }
 
-        if (envString == null) return null;
+        if (value == null) return null;
         
         StringBuilder str = new StringBuilder();
-        str.append(envString);
-        if (!envString.endsWith("/") && !rpath.startsWith("/")) str.append('/');
+        str.append(value);
+        if (!value.endsWith("/") && !rpath.startsWith("/")) str.append('/');
         str.append(rpath);        
         return str.toString();
     }
