@@ -130,7 +130,7 @@ public class DetectorEventDecoder {
      */
     public void translate(List<DetectorDataDgtz>  detectorData){
 
-        // preload CCDB tables once:
+        // Preload CCDB tables:
         ArrayList<IndexedTable> tables = new ArrayList<>();
         for (String name : tablesTrans) {
             tables.add(translationManager.getConstants(runNumber, name));
@@ -138,15 +138,18 @@ public class DetectorEventDecoder {
 
         for (DetectorDataDgtz data : detectorData) {
 
+            // Get the hardware indexing for this detector hit:
             int crate    = data.getDescriptor().getCrate();
             int slot     = data.getDescriptor().getSlot();
             int channel  = data.getDescriptor().getChannel();
             long hash    = IndexedTable.DEFAULT_GENERATOR.hashCode(crate,slot,channel);
-
+            
+            // Try to find it in the translation tables:
             for (int j=0; j<tablesTrans.size(); ++j) {
 
                 IndexedTable t = tables.get(j);
 
+                // Found it; now set the detector indexing for this hit:
                 if (t.hasEntryByHash(hash)) {
 
                     int sector    = t.getIntValueByHash("sector", hash);
