@@ -136,7 +136,7 @@ public class DetectorEventDecoder {
             tables.add(translationManager.getConstants(runNumber, name));
         }
 
-        for(DetectorDataDgtz data : detectorData){
+        for (DetectorDataDgtz data : detectorData) {
 
             int crate    = data.getDescriptor().getCrate();
             int slot     = data.getDescriptor().getSlot();
@@ -145,26 +145,24 @@ public class DetectorEventDecoder {
 
             for (int j=0; j<tablesTrans.size(); ++j) {
 
-                IndexedTable table = tables.get(j);
+                IndexedTable t = tables.get(j);
 
-                if(table.hasEntryByHash(hash)==true){
-                    int sector    = table.getIntValueByHash("sector", hash);
-                    int layer     = table.getIntValueByHash("layer", hash);
-                    int component = table.getIntValueByHash("component", hash);
-                    int order     = table.getIntValueByHash("order", hash);
+                if (t.hasEntryByHash(hash)) {
+
+                    int sector    = t.getIntValueByHash("sector", hash);
+                    int layer     = t.getIntValueByHash("layer", hash);
+                    int component = t.getIntValueByHash("component", hash);
+                    int order     = t.getIntValueByHash("order", hash);
 
                     data.getDescriptor().setSectorLayerComponent(sector, layer, component);
                     data.getDescriptor().setOrder(order);
                     data.getDescriptor().setType(keysTrans.get(j));
 
-                    for(int i = 0; i < data.getADCSize(); i++) {
-                        data.getADCData(i).setOrder(order);
-                    }
-                    for(int i = 0; i < data.getTDCSize(); i++) {
-                        data.getTDCData(i).setOrder(order);
-                    }
+                    for(int i = 0; i < data.getADCSize(); i++) data.getADCData(i).setOrder(order);
+                    for(int i = 0; i < data.getTDCSize(); i++) data.getTDCData(i).setOrder(order);
 
-                    // crate/slot/channel must map to a unique detector: 
+                    // Assume there's only one instance of this crate/slot/channel
+                    // in all translation tables, and we found it, so stop:
                     break;
                 }
             }
