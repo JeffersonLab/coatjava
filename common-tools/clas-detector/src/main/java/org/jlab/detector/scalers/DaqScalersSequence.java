@@ -298,9 +298,8 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
      * Try to fix clock rollover on the run-integrating DSC2 scaler.
      * 1.  Assume the first clock readout has no rollover.
      * 2.  Assume any subsequent clock decrease is a rollover. 
-     * @param rollover 
      */
-    private boolean fixClockRollover() {
+    public void fixClockRollover() {
         boolean modified = true;
         while (modified) {
             modified = false;
@@ -320,7 +319,6 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
                 }
             }
         }
-        return modified;
     }
     
     public static void main(String[] args) {
