@@ -11,7 +11,9 @@ import ai.djl.training.util.ProgressBar;
 import ai.djl.translate.Translator;
 import ai.djl.translate.TranslatorContext;
 import ai.djl.inference.Predictor;
+import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.translate.Batchifier;
+import java.io.IOException;
 
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.io.base.DataEvent;
@@ -27,14 +29,22 @@ public class DenoiseEngine extends ReconstructionEngine {
 
     @Override
     public boolean init() {
-        criteria = Criteria.builder()
-            .setTypes(float[][].class, float[][].class)
-            .optModelPath(Paths.get(ClasUtilsFile.getResourceDir("etc/nnet/dn/cnn_autoenc_0f_112.pt")))
-            .optEngine("PyTorch")
-            .optTranslator(DenoiseEngine.getTranslator())
-            .optProgress(new ProgressBar())
-            .build();
-        return true;
+        try {
+            criteria = Criteria.builder()
+                .setTypes(float[][].class, float[][].class)
+                .optModelPath(Paths.get(ClasUtilsFile.getResourceDir("etc/nnet/dn/cnn_autoenc_0f_112.pt")))
+                .optEngine("PyTorch")
+                .optTranslator(DenoiseEngine.getTranslator())
+                .optProgress(new ProgressBar())
+                .build();
+            return criteria.isDownloaded();
+        } catch (IOException ex) {
+            System.getLogger(DenoiseEngine.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+            return false;
+        } catch (ModelNotFoundException ex) {
+            System.getLogger(DenoiseEngine.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+            return false;
+        }
     }
 
     @Override
