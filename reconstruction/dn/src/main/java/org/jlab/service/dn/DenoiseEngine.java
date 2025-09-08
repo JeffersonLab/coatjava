@@ -16,11 +16,15 @@ import ai.djl.translate.Batchifier;
 import java.io.IOException;
 
 import org.jlab.clas.reco.ReconstructionEngine;
+import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.utils.system.ClasUtilsFile;
 
 public class DenoiseEngine extends ReconstructionEngine {
-    
+  
+    final static int LAYERS=36;
+    final static int WIRES=112;
+
     Criteria<float[][],float[][]> criteria;
 
     public DenoiseEngine() {
@@ -49,32 +53,46 @@ public class DenoiseEngine extends ReconstructionEngine {
 
     @Override
     public boolean processDataEvent(DataEvent event) {
-        try {
-            ZooModel<float[][], float[][]> model = criteria.loadModel();
-            Predictor<float[][], float[][]> predictor = model.newPredictor();
-            float[][] input = DenoiseEngine.getAlmostStraightSlightlyBendingTrack();
-            float[][] output = predictor.predict(input);
-            show(output);
-        }
-        catch (Exception e) {
-            throw new RuntimeException(e);
+        if (event.hasBank("DC::tot")) {
+            try {
+                ZooModel<float[][], float[][]> model = criteria.loadModel();
+                Predictor<float[][], float[][]> predictor = model.newPredictor();
+                float[][][] input = getSectors(event.getBank("DC::tot"));
+                for (int sector=0; sector<6; ++sector) {
+                    float[][] output = predictor.predict(input[sector]);
+                    show(output);
+                }
+            }
+            catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
         return true;
+    }
+
+    private static float[][][] getSectors(DataBank bank) {
+        float[][] sector = getAlmostStraightSlightlyBendingTrack();
+        float[][][] ret = new float[6][LAYERS][WIRES];
+        for (int s=0; s<6; ++s)
+            for (int l=0; l<LAYERS; ++l)
+                for (int w=0; w<WIRES; ++w)
+                    ret[s][l][w] = sector[l][w];
+        return ret;
     }
 
     public static void show(float[][] data) {
         System.out.println("Output shape: [" + data.length + "," + data[0].length + "]");
         System.out.println("Output values:");
-        for (int i = 0; i < 36; i++) {
-            for (int j = 0; j < 112; j++)
+        for (int i = 0; i < LAYERS; i++) {
+            for (int j = 0; j < WIRES; j++)
                 System.out.printf("%.3f ", data[i][j]);
             System.out.println();
         }
     }
 
     public static float[][] getAlmostStraightSlightlyBendingTrack() {
-        float[][] ret = new float[36][112];
-        for (int y = 0; y < 36; y++) {
+        float[][] ret = new float[LAYERS][WIRES];
+        for (int y = 0; y < LAYERS; y++) {
             int x = 50 + (y / 10);
             ret[y][x] = 1.0f;
         }
