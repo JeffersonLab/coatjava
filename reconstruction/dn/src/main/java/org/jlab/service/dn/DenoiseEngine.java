@@ -1,5 +1,6 @@
 package org.jlab.service.dn;
 
+import ai.djl.MalformedModelException;
 import java.nio.file.Paths;
 import ai.djl.ndarray.NDArray;
 import ai.djl.ndarray.NDList;
@@ -13,6 +14,7 @@ import ai.djl.translate.TranslatorContext;
 import ai.djl.inference.Predictor;
 import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.translate.Batchifier;
+import ai.djl.translate.TranslateException;
 import java.io.IOException;
 
 import org.jlab.clas.reco.ReconstructionEngine;
@@ -21,9 +23,10 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.utils.system.ClasUtilsFile;
 
 public class DenoiseEngine extends ReconstructionEngine {
-  
-    final static int LAYERS=36;
-    final static int WIRES=112;
+ 
+    final static boolean SIMULATION_MODE = true;
+    final static int LAYERS = 36;
+    final static int WIRES = 112;
 
     Criteria<float[][],float[][]> criteria;
 
@@ -42,10 +45,7 @@ public class DenoiseEngine extends ReconstructionEngine {
                 .optProgress(new ProgressBar())
                 .build();
             return criteria.isDownloaded();
-        } catch (IOException ex) {
-            System.getLogger(DenoiseEngine.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
-            return false;
-        } catch (ModelNotFoundException ex) {
+        } catch (IOException | ModelNotFoundException ex) {
             System.getLogger(DenoiseEngine.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
             return false;
         }
@@ -63,7 +63,7 @@ public class DenoiseEngine extends ReconstructionEngine {
                     show(output);
                 }
             }
-            catch (Exception e) {
+            catch (MalformedModelException | ModelNotFoundException | TranslateException | IOException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -71,13 +71,16 @@ public class DenoiseEngine extends ReconstructionEngine {
     }
 
     private static float[][][] getSectors(DataBank bank) {
-        float[][] sector = getAlmostStraightSlightlyBendingTrack();
-        float[][][] ret = new float[6][LAYERS][WIRES];
-        for (int s=0; s<6; ++s)
-            for (int l=0; l<LAYERS; ++l)
-                for (int w=0; w<WIRES; ++w)
-                    ret[s][l][w] = sector[l][w];
-        return ret;
+        float[][][] sectors = new float[6][LAYERS][WIRES];
+        if (SIMULATION_MODE) {
+            float[][] sector = getAlmostStraightSlightlyBendingTrack();
+            for (int s=0; s<6; ++s) sectors[s] = sector;
+        }
+        else {
+            for (int i=0; i<bank.rows(); ++i) {
+            }
+        }
+        return sectors;
     }
 
     public static void show(float[][] data) {
