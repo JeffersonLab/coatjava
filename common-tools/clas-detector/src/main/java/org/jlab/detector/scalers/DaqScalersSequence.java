@@ -317,8 +317,6 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
 
     /**
      * Checks if the scalers list is sorted such that the scalers' timestamp and event number orderings are consistent and monotonically increasing.
-     * <p>
-     * @param scalers the list of DaqScalers to validate
      * @return {@code true} if timestamp and event number orderings are consistent
      */
     public boolean validateOrdering() {
