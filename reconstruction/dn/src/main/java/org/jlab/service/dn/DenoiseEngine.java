@@ -78,6 +78,10 @@ public class DenoiseEngine extends ReconstructionEngine {
         }
         else {
             for (int i=0; i<bank.rows(); ++i) {
+                int s = bank.getByte("sector",i);
+                int l = bank.getByte("layer",i);
+                int c = bank.getShort("component",i);
+                sectors[s][l][c] = 1.0f;
             }
         }
         return sectors;
