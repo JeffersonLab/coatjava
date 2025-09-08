@@ -23,7 +23,10 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.utils.system.ClasUtilsFile;
 
 public class DenoiseEngine extends ReconstructionEngine {
- 
+
+    final float threshold = 0.1f;
+    
+    final static String BANK_NAME = "DC::tot";
     final static boolean SIMULATION_MODE = true;
     final static int LAYERS = 36;
     final static int WIRES = 112;
@@ -53,15 +56,20 @@ public class DenoiseEngine extends ReconstructionEngine {
 
     @Override
     public boolean processDataEvent(DataEvent event) {
-        if (event.hasBank("DC::tot")) {
+        if (event.hasBank(BANK_NAME)) {
+            DataBank bank = event.getBank(BANK_NAME);
+            event.removeBank(BANK_NAME);
             try {
                 ZooModel<float[][], float[][]> model = criteria.loadModel();
                 Predictor<float[][], float[][]> predictor = model.newPredictor();
-                float[][][] input = getSectors(event.getBank("DC::tot"));
                 for (int sector=0; sector<6; ++sector) {
-                    float[][] output = predictor.predict(input[sector]);
+                    float[][] input = DenoiseEngine.getSector(bank, sector+1);
+                    float[][] output = predictor.predict(input);
+                    show(input);
                     show(output);
+                    update(bank, threshold, output, sector);
                 }
+                event.appendBank(bank);
             }
             catch (MalformedModelException | ModelNotFoundException | TranslateException | IOException e) {
                 throw new RuntimeException(e);
@@ -70,21 +78,30 @@ public class DenoiseEngine extends ReconstructionEngine {
         return true;
     }
 
-    private static float[][][] getSectors(DataBank bank) {
-        float[][][] sectors = new float[6][LAYERS][WIRES];
-        if (SIMULATION_MODE) {
-            for (int s=0; s<6; ++s)
-                sectors[s] = getAlmostStraightSlightlyBendingTrack();
+    private static void update(DataBank b, float threshold, float[][] data, int sector) {
+        for (int row=0; row<b.rows(); row++) {
+            byte s = b.getByte("sector",row);
+            byte l = b.getByte("layer", row);
+            short c = b.getShort("component", row);
+            byte o = b.getByte("order", row);
+            if (s == sector && data[l][c] < threshold)
+                b.setByte("order", row, (byte)(o+10));
         }
-        else {
-            for (int i=0; i<bank.rows(); ++i) {
-                int s = bank.getByte("sector",i);
-                int l = bank.getByte("layer",i);
-                int c = bank.getShort("component",i);
-                sectors[s][l][c] = 1.0f;
+    }
+
+    private static float[][] getSector(DataBank bank, int sector) {
+        if (SIMULATION_MODE) return getAlmostStraightSlightlyBendingTrack();
+        float[][] ret = new float[LAYERS][WIRES];
+        for (int i=0; i<bank.rows(); ++i) {
+            if (bank.getByte("sector",i) == sector) {
+                byte l = bank.getByte("layer",i);
+                short c = bank.getShort("component",i);
+                byte o = bank.getByte("order",i);
+                if (0==o || 10==o)
+                    ret[l][c] = 1.0f;
             }
         }
-        return sectors;
+        return ret;
     }
 
     public static void show(float[][] data) {
