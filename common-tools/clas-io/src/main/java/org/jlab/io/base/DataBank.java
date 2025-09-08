@@ -32,6 +32,7 @@ public interface DataBank {
      */
     void setDouble(String path, double[] arr);
     void setDouble(String path, int row, double value);
+    void setDouble(int element, int row, double value);
     /**
      * Appends an array to existing array with the same name.
      * The resulting array will increase in size by arr.length.
@@ -45,6 +46,7 @@ public interface DataBank {
     float   getFloat(int element, int index);
     void setFloat(String path, float[] arr);
     void setFloat(String path, int row, float value);
+    void setFloat(int element, int row, float value);
     void appendFloat(String path, float[] arr);
     
     int[] getInt(String path);
@@ -52,6 +54,7 @@ public interface DataBank {
     int   getInt(int element, int index);
     void setInt(String path, int[] arr);
     void setInt(String path, int row, int value);
+    void setInt(int element, int row, int value);
     void appendInt(String path, int[] arr);
 
     short[] getShort(String path);
@@ -59,6 +62,7 @@ public interface DataBank {
     short   getShort(int element, int index);
     void setShort(String path, short[] arr);
     void setShort(String path, int row, short value);
+    void setShort(int element, int row, short value);
     void appendShort(String path, short[] arr);
     
     byte[] getByte(String path);
@@ -66,6 +70,7 @@ public interface DataBank {
     byte   getByte(int element, int index);
     void setByte(String path, byte[] arr);
     void setByte(String path, int row, byte value);
+    void setByte(int element, int row, byte value);
     void appendByte(String path, byte[] arr);
     
     long[] getLong(String path);
@@ -73,6 +78,7 @@ public interface DataBank {
     long   getLong(int element, int index);
     void setLong(String path, long[] arr);
     void setLong(String path, int row, long value);
+    void setLong(int element, int row, long value);
     void appendLong(String path, long[] arr);
     /**
      * Returns the number of columns in the bank. columns are number of
