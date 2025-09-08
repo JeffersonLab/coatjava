@@ -84,11 +84,8 @@ public class DenoiseEngine extends ReconstructionEngine {
     static void update(DataBank b, float threshold, float[][] data, int sector) {
         for (int row=0; row<b.rows(); row++) {
             if (b.getByte(0,row) != sector) continue;
-            byte l = b.getByte(1, row);
-            short c = b.getShort(2, row);
-            byte o = b.getByte(3, row);
-            if (data[l][c] < threshold)
-                b.setByte(3, row, (byte)(o+10));
+            if (data[b.getByte(1,row)][b.getShort(2,row)] < threshold)
+                b.setByte(3, row, (byte)(b.getByte(3,row)+10));
         }
     }
 
