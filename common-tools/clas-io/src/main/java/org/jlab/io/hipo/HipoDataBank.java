@@ -272,4 +272,34 @@ public class HipoDataBank implements DataBank  {
         for (int i=0; i<nrows; i++)
             this.hipoGroup.putLong(element, i, arr[i]);
     }
+
+    @Override
+    public void setDouble(int element, int row, double value) {
+        this.hipoGroup.putDouble(element, row, value);
+    }
+
+    @Override
+    public void setFloat(int element, int row, float value) {
+        this.hipoGroup.putFloat(element, row, value);
+    }
+
+    @Override
+    public void setInt(int element, int row, int value) {
+        this.hipoGroup.putInt(element, row, value);
+    }
+
+    @Override
+    public void setShort(int element, int row, short value) {
+        this.hipoGroup.putShort(element, row, value);
+    }
+
+    @Override
+    public void setByte(int element, int row, byte value) {
+        this.hipoGroup.putByte(element, row, value);
+    }
+
+    @Override
+    public void setLong(int element, int row, long value) {
+        this.hipoGroup.putLong(element, row, value);
+    }
 }
