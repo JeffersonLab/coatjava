@@ -40,7 +40,7 @@ import org.json.JSONObject;
  */
 public abstract class ReconstructionEngine implements Engine {
 
-    Logger LOGGER = Logger.getLogger(ReconstructionEngine.class.getName());
+    protected Logger LOGGER = Logger.getLogger(ReconstructionEngine.class.getName());
 
     public static final String CONFIG_BANK_NAME = "COAT::config";
     
