@@ -27,6 +27,7 @@ public class DenoiseEngine extends ReconstructionEngine {
     final float threshold = 0.1f;
     String BANK_NAME = "DC::tot";
     Criteria<float[][],float[][]> criteria;
+    ZooModel<float[][], float[][]> model;
     
     final static boolean SIMULATION_MODE = true;
     final static int LAYERS = 36;
@@ -46,8 +47,9 @@ public class DenoiseEngine extends ReconstructionEngine {
                 .optTranslator(DenoiseEngine.getTranslator())
                 .optProgress(new ProgressBar())
                 .build();
-            return criteria.isDownloaded();
-        } catch (IOException | ModelNotFoundException ex) {
+            model = criteria.loadModel();
+            return true;
+        } catch (MalformedModelException | IOException | ModelNotFoundException ex) {
             System.getLogger(DenoiseEngine.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
             return false;
         }
@@ -58,7 +60,6 @@ public class DenoiseEngine extends ReconstructionEngine {
         if (event.hasBank(BANK_NAME)) {
             DataBank bank = event.getBank(BANK_NAME);
             try {
-                ZooModel<float[][], float[][]> model = criteria.loadModel();
                 Predictor<float[][], float[][]> predictor = model.newPredictor();
                 for (int sector=0; sector<6; ++sector) {
                     float[][] input = DenoiseEngine.getSector(bank, sector+1);
@@ -70,7 +71,7 @@ public class DenoiseEngine extends ReconstructionEngine {
                 event.removeBank(BANK_NAME);
                 event.appendBank(bank);
             }
-            catch (MalformedModelException | ModelNotFoundException | TranslateException | IOException e) {
+            catch (TranslateException e) {
                 throw new RuntimeException(e);
             }
         }
