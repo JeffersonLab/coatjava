@@ -83,12 +83,12 @@ public class DenoiseEngine extends ReconstructionEngine {
      */
     static void update(DataBank b, float threshold, float[][] data, int sector) {
         for (int row=0; row<b.rows(); row++) {
-            if (b.getByte("sector",row) != sector) continue;
-            byte l = b.getByte("layer", row);
-            short c = b.getShort("component", row);
-            byte o = b.getByte("order", row);
+            if (b.getByte(0,row) != sector) continue;
+            byte l = b.getByte(1, row);
+            short c = b.getShort(2, row);
+            byte o = b.getByte(3, row);
             if (data[l][c] < threshold)
-                b.setByte("order", row, (byte)(o+10));
+                b.setByte(3, row, (byte)(o+10));
         }
     }
 
@@ -99,10 +99,10 @@ public class DenoiseEngine extends ReconstructionEngine {
         if (SIMULATION_MODE) return getAlmostStraightSlightlyBendingTrack();
         float[][] data = new float[LAYERS][WIRES];
         for (int i=0; i<bank.rows(); ++i) {
-            if (bank.getByte("sector",i) == sector) {
-                byte l = bank.getByte("layer",i);
-                short c = bank.getShort("component",i);
-                byte o = bank.getByte("order",i);
+            if (bank.getByte(0,i) == sector) {
+                byte l = bank.getByte(1,i);
+                short c = bank.getShort(2,i);
+                byte o = bank.getByte(3,i);
                 if (0==o || 10==o)
                     data[l][c] = 1.0f;
             }
