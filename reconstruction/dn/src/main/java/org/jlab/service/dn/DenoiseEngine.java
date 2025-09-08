@@ -73,8 +73,8 @@ public class DenoiseEngine extends ReconstructionEngine {
     private static float[][][] getSectors(DataBank bank) {
         float[][][] sectors = new float[6][LAYERS][WIRES];
         if (SIMULATION_MODE) {
-            float[][] sector = getAlmostStraightSlightlyBendingTrack();
-            for (int s=0; s<6; ++s) sectors[s] = sector;
+            for (int s=0; s<6; ++s)
+                sectors[s] = getAlmostStraightSlightlyBendingTrack();
         }
         else {
             for (int i=0; i<bank.rows(); ++i) {
