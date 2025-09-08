@@ -21,6 +21,7 @@ public class ATOFHit {
 
     private int sector, layer, component, order;
     private int tdc, tot;
+    private float startTime;
     private double time, energy, x, y, z;
     private String type;
     private boolean isInACluster;
@@ -363,13 +364,14 @@ public class ATOFHit {
      * @param atof Detector object representing the atof, used to calculate
      * spatial coordinates.
      */
-    public ATOFHit(int sector, int layer, int component, int order, int tdc, int tot, Detector atof) {
+    public ATOFHit(int sector, int layer, int component, int order, int tdc, int tot, float startTime, Detector atof) {
         this.sector = sector;
         this.layer = layer;
         this.component = component;
         this.order = order;
         this.tdc = tdc;
         this.tot = tot;
+        this.startTime = startTime;
         this.isInACluster = false;
 
         this.makeType();

@@ -57,6 +57,12 @@ public class ATOFEngine extends ReconstructionEngine {
         if (!event.hasBank("RUN::config")) {
             return true;
         }
+        
+        //This assumes the FD reconstruction produced an event with good startTime
+        //All start time handling could be moved as an EB-type step later
+        if (!event.hasBank("REC::Event") || event.getBank("REC::Event").getFloat("startTime", 0)==-1000) {
+            return true;
+        }
 
         DataBank bank = event.getBank("RUN::config");
 
@@ -68,6 +74,7 @@ public class ATOFEngine extends ReconstructionEngine {
         if (run.get() == 0 || (run.get() != 0 && run.get() != newRun)) {
             run.set(newRun);
         }
+        
         
         ////Do we need to read the event vx,vy,vz?
         ////If not, this part can be moved in the initialization of the engine.
