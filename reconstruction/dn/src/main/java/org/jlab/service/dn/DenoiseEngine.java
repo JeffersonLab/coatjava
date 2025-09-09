@@ -24,11 +24,12 @@ import org.jlab.utils.system.ClasUtilsFile;
 
 public class DenoiseEngine extends ReconstructionEngine {
 
-    final float threshold = 0.1f;
+    float threshold = 0.1f;
     String BANK_NAME = "DC::tot";
     Criteria<float[][],float[][]> criteria;
     ZooModel<float[][], float[][]> model;
     
+    final static String CONF_THRESHOLD = "threshold";
     final static boolean SIMULATION_MODE = true;
     final static int LAYERS = 36;
     final static int WIRES = 112;
@@ -39,6 +40,8 @@ public class DenoiseEngine extends ReconstructionEngine {
 
     @Override
     public boolean init() {
+        if (getEngineConfigString(CONF_THRESHOLD) != null)
+            threshold = Float.parseFloat(getEngineConfigString(CONF_THRESHOLD));
         try {
             criteria = Criteria.builder()
                 .setTypes(float[][].class, float[][].class)
@@ -84,31 +87,34 @@ public class DenoiseEngine extends ReconstructionEngine {
     static void update(DataBank b, float threshold, float[][] data, int sector) {
         for (int row=0; row<b.rows(); row++) {
             if (b.getByte(0,row) != sector) continue;
-            if (data[b.getByte(1,row)][b.getShort(2,row)] < threshold)
+            // FIXME:  check layer/wire indexing:
+            if (data[b.getByte(1,row)-1][b.getShort(2,row)-1] < threshold)
+                // FIXME:  check order masking:
                 b.setByte(3, row, (byte)(b.getByte(3,row)+10));
         }
     }
 
     /**
-     * Get sector data with hit weights set to 1.
+     * Get one-sector data with weights set to 0/1.
      */
     static float[][] getSector(DataBank bank, int sector) {
         if (SIMULATION_MODE) return getAlmostStraightSlightlyBendingTrack();
         float[][] data = new float[LAYERS][WIRES];
         for (int i=0; i<bank.rows(); ++i) {
             if (bank.getByte(0,i) == sector) {
-                byte l = bank.getByte(1,i);
-                short c = bank.getShort(2,i);
                 byte o = bank.getByte(3,i);
+                // FIXME:  check order masking
                 if (0==o || 10==o)
-                    data[l][c] = 1.0f;
+                    // got a hit, set weight to one:
+                    // FIXME:  check layer/wire indexing
+                    data[bank.getByte(1,i)-1][bank.getShort(2,i)-1] = 1.0f;
             }
         }
         return data;
     }
 
     /**
-     * Show all hits for one sector.
+     * Print all hits for one sector.
      */
     static void show(float[][] data) {
         System.out.println("Output shape: [" + data.length + "," + data[0].length + "]");
