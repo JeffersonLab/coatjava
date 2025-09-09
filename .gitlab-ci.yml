@@ -36,8 +36,8 @@ depana:
   stage: test-stage
   dependencies: [build]
   script:
-    - mvn dependency:tree -Ddetail=true --no-transfer-progress
-    - mvn dependency:analyze -DfailOnWarning=true -pl '!org.jlab.coat:coat-libs' --no-transfer-progress
+    - libexec/dependency-tree.sh
+    - libexec/dependency-analysis.sh
 
 eb:
   stage: test-stage
@@ -72,7 +72,7 @@ docs:
   script:
     - python3 -m pip install -r docs/mkdocs/requirements.txt
     - ./docs/mkdocs/generate.sh pages
-    - mvn javadoc:aggregate -pl '!org.jlab.coat:coat-libs' --no-transfer-progress
+    - libexec/build-javadocs.sh
     - mv target/reports/apidocs pages/javadoc
     - mv publish pages/jacoco
   artifacts:
