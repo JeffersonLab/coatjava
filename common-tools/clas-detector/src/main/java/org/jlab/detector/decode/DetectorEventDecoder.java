@@ -121,6 +121,16 @@ public class DetectorEventDecoder {
 
         scalerManager.init(Arrays.asList(new String[]{"/runcontrol/fcup","/runcontrol/slm","/runcontrol/hwp",
                                                       "/runcontrol/helicity","/daq/config/scalers/dsc1"}));
+        
+        checkTables();
+    }
+
+    public void checkTables() {
+        for (int i=0; i<tablesTrans.size(); i++) {
+            IndexedTable t = translationManager.getConstants(runNumber, tablesTrans.get(i));
+            for (int j=0; j<i; j++)
+                t.conflicts(translationManager.getConstants(runNumber, tablesTrans.get(j)));
+        }
     }
 
     /**

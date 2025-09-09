@@ -32,7 +32,7 @@ public class IndexedTable extends DefaultTableModel {
     private Map<Integer,List<RowConstraint>>  constrains = new HashMap<>(); 
     
     private int DEBUG_MODE = 0;
-    
+   
     public IndexedTable(int indexCount){
         entries = new IndexedList<>(indexCount);
         for(int i = 0; i < indexCount; i++){
@@ -416,6 +416,29 @@ public class IndexedTable extends DefaultTableModel {
                 entryValues.add((Integer) 0);
             }
         }
+    }
+
+    /**
+     * @param it table with which to compare
+     * @return whether the tables have conflicting indices 
+     */
+    public boolean conflicts(IndexedTable it) {
+        if (it.getList().getIndexSize() != this.getList().getIndexSize()) {
+            System.err.println("[CCDB-TT] Conflict:  Not even the same #inidices.");
+            return false;
+        }
+        List<Object> conflicts = new ArrayList<>();
+        for (Object key : it.getList().getMap().keySet()) {
+            if (entries.hasItemByHash((long)key)){
+                conflicts.add(key);
+                int[] index = new int[it.getList().getIndexSize()];
+                String s = "[CCDB-TT] Index Conflict:  ";
+                for (int i=0; i<index.length; i++)
+                    s += (i>0?"/":"")+IndexedTable.DEFAULT_GENERATOR.getIndex((long)key, i);
+                System.err.println(s);
+            }
+        }
+        return !conflicts.isEmpty();
     }
 
 }
