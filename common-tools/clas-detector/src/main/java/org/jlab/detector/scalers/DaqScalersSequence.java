@@ -124,7 +124,7 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
      * @param keep the number of readouts to keep 
      */
     public void clear(int keep) {
-        while (scalers.size() > keep) scalers.removeFirst();
+        while (scalers.size() > keep) scalers.remove(0);
     }
 
     protected boolean add(DaqScalers ds) {

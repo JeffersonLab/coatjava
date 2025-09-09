@@ -18,7 +18,7 @@ import org.json.JSONObject;
  * 
  * @author baltzell
  */
-public class EvioToHipoReader extends AbstractEventReaderService<EvioSource> {
+public class DecoderReader extends AbstractEventReaderService<EvioSource> {
 
     boolean collectGarbage = true; // for memory leak in CompactEvioReader
 
