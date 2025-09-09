@@ -54,37 +54,38 @@ public class QadbBinSequence<T> extends DaqScalersSequence implements Iterable<Q
    * @param initDataFunction a lambda to create the initial data for each bin; must be of the form {@code (binNumber) -> { return initData object }}
    */
   public QadbBinSequence(List<String> filenames, int binWidth, DataInitializer<T> initDataFunction) {
+    if(binWidth <= 0)
+      throw new RuntimeException("binWidth must be greater than 0");
     // construct the full, sorted scaler sequence
     logger.info("QadbBinSequence::  constructing DAQ scalers sequence");
     this.readFiles(filenames);
+    if(this.scalers.isEmpty())
+      throw new RuntimeException("scalers sequence is empty");
+    // validate ordering: currently, QADBs use event number for lookups, so event number vs. timestamp should monotonically increase
     logger.fine("...validating ordering...");
     if(!this.validateOrdering())
       logger.severe("ERROR: scaler readout ordering is NOT VALID!"); // continue anyway, since the user may still want to see the QADB results
     logger.fine("...done, now constructing QADB bin sequence...");
-    // sanity checks
-    if(binWidth <= 0)
-      throw new RuntimeException("binWidth must be greater than 0");
     logger.fine("  initial sequence size = " + this.scalers.size());
-    if(this.scalers.isEmpty())
-      throw new RuntimeException("scalers sequence is empty");
     // add an initial, empty bin; its scaler sequence just contains the first scaler readout
-    this.qaBins.add(new QadbBin<T>(0, QadbBin.BinType.FIRST, this.scalers.subList(0, 1), initDataFunction.run(0)));
+    int binNum = 0;
+    this.qaBins.add(new QadbBin<T>(binNum, QadbBin.BinType.FIRST, this.scalers.subList(0, 1), initDataFunction.run(binNum)));
     // sample the original scaler sequence: make a new `QadbBin` for each subsequence
     List<Integer> scalersToKeep = new ArrayList<>(); // list of `scalers` indices to keep, i.e., the ones at the bin boundaries
     scalersToKeep.add(0);
     for(int i=0; i<this.scalers.size(); i+=binWidth) {
-      int end = Math.min(i+binWidth, this.scalers.size()-1); // the last sample may be smaller
-      int binNum = this.qaBins.size();
+      int end = Math.min(i+binWidth, this.scalers.size()-1); // the penultimate bin is allowed to have less than `binWidth` scalers
+      binNum = this.qaBins.size();
       this.qaBins.add(new QadbBin<T>(binNum, QadbBin.BinType.INTERMEDIATE, this.scalers.subList(i, end+1), initDataFunction.run(binNum)));
       scalersToKeep.add(end);
     }
     logger.fine("  scalers to keep = " + scalersToKeep);
     // add a final, empty bin; its scaler sequence just contains the last scaler readout
-    int binNum = this.qaBins.size();
+    binNum = this.qaBins.size();
     this.qaBins.add(new QadbBin<T>(binNum, QadbBin.BinType.LAST, this.scalers.subList(this.scalers.size()-1, this.scalers.size()), initDataFunction.run(binNum)));
     // remove all `scalers` elements which are not on bin boundaries
-    for (int i=this.scalers.size()-1; i>=0; i--) {
-      if (!scalersToKeep.contains(i))
+    for(int i=this.scalers.size()-1; i>=0; i--) {
+      if(!scalersToKeep.contains(i))
         this.scalers.remove(i);
     }
     logger.fine("  sampled sequence size = " + this.scalers.size());
@@ -170,7 +171,7 @@ public class QadbBinSequence<T> extends DaqScalersSequence implements Iterable<Q
 
     // parse arguments, which must be a list of HIPO files
     if(args.length == 0)
-      throw new RuntimeException("arguments must be HIPO file(s)");
+      throw new RuntimeException("argument(s) must be HIPO file(s)");
     List<String> filenames = new ArrayList<>();
     filenames.addAll(Arrays.asList(args));
 
@@ -232,7 +233,7 @@ public class QadbBinSequence<T> extends DaqScalersSequence implements Iterable<Q
     logger.info("===== end event loop ====");
 
     // correct the first and last bin with the tag-0 event number and timestamp extrema;
-    // this is done such that the event number and timestamp ranges are correct
+    // this is done such that the event number and timestamp ranges are correct for these bins
     seq.correctLowerBound(evnumMin, timestampMin);
     seq.correctUpperBound(evnumMax, timestampMax);
 
