@@ -40,11 +40,10 @@ public class DecoderWriter extends HipoToHipoWriter {
     TreeSet<HelicityState> helicities;
     DaqScalersSequence scalers;
     SchemaFactory fullSchema;
-    int runNumber;
-    boolean postprocess = false;
+    boolean postprocess;
 
     private void init(JSONObject opts) {
-        runNumber = 0;
+        postprocess = false;
         fullSchema = new SchemaFactory();
         fullSchema.initFromDirectory(FileUtils.getEnvironmentPath("CLAS12DIR","etc/bankdefs/hipo4"));
         runConfig = new Bank(fullSchema.getSchema("RUN::config"));
@@ -78,10 +77,6 @@ public class DecoderWriter extends HipoToHipoWriter {
     protected void writeEvent(Object event) throws EventWriterException {
         scalers.add((Event)event);
         ((Event)event).read(runConfig);
-        if (runConfig.getRows() > 0) {
-            int r = runConfig.getInt("run",0);
-            if (r > 0) runNumber = r;
-        }
         ((Event)event).read(helicityAdc);
         helicities.add(HelicityState.createFromFadcBank(helicityAdc, runConfig, conman));
         Event t = CLASDecoder4.createTaggedEvent((Event)event, runConfig, tag1banks);
@@ -99,8 +94,21 @@ public class DecoderWriter extends HipoToHipoWriter {
         scalers.clear(1);
     }
    
+    private int getRunNumber() {
+        Event e = new Event();
+        HipoReader r = new HipoReader();
+        r.open(filename);
+        while (r.hasNext()) {
+            r.nextEvent(e);
+            e.read(runConfig);
+            if (runConfig.getRows()>0 && runConfig.getInt("run",0)>0)
+                return runConfig.getInt("run",0);
+        }
+        return 0;
+    }
+
     private void postprocess() {
-        int d = conman.getConstants(runNumber, "/runcontrol/helicity").getIntValue("delay",0,0,0);
+        int d = conman.getConstants(getRunNumber(), "/runcontrol/helicity").getIntValue("delay",0,0,0);
         HelicitySequenceDelayed h = new HelicitySequenceDelayed(d);
         h.addStream(helicities);
         Processor p = new Processor(fullSchema, h, scalers);
