@@ -104,7 +104,7 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
 
     public DaqScalersSequence(SchemaFactory schema) {
         runConfigBank = new Bank(schema.getSchema("RUN::config"));
-        runScalerBank=new Bank(schema.getSchema("RUN::scaler"));
+        runScalerBank = new Bank(schema.getSchema("RUN::scaler"));
     }
 
     public DaqScalersSequence(List<DaqScalers> inputScalers) {
@@ -121,7 +121,7 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
 
     /**
      * remove all but the latest readouts from the sequence
-     * @param keep the number of states to keep 
+     * @param keep the number of readouts to keep 
      */
     public void clear(int keep) {
         while (scalers.size() > keep) scalers.removeFirst();

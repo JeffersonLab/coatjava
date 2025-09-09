@@ -38,8 +38,10 @@ public class HipoToHipoPostWriter extends HipoToHipoTagWriter {
         HelicitySequence.writeFlips(fullSchema, writer, helicities);
         super.closeRawWriter();
         update();
+        // keep the latest helicity/scaler reading for the next file:
         helicities.clear();
-        scalers.clear();
+        while (helicities.size() > 1) helicities.removeFirst();
+        scalers.clear(1);
     }
 
 }
