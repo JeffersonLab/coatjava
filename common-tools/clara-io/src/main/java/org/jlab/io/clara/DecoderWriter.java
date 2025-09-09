@@ -31,7 +31,6 @@ import org.json.JSONObject;
  */
 public class DecoderWriter extends HipoToHipoWriter {
 
-    int tag = 1;
     String[] bankNames = {"RUN::scaler","HEL::scaler","RAW::scaler","RAW::epics","HEL::flip","COAT::config"};
     Bank[] banks;
     Bank runConfig;
@@ -56,7 +55,6 @@ public class DecoderWriter extends HipoToHipoWriter {
         if (opts.has("postprocess")) postprocess = opts.getBoolean("postprocess");
         if (opts.has("variation")) conman.setVariation(opts.getString("variation"));
         if (opts.has("timestamp")) conman.setTimeStamp(opts.getString("timestamp"));
-        if (opts.has("tag")) tag = opts.getInt("tag");
         if (opts.has("banks")) bankNames = opts.getString("banks").split(",");
         banks = new Bank[bankNames.length];
         for (int i=0; i<banks.length; ++i)
@@ -87,7 +85,7 @@ public class DecoderWriter extends HipoToHipoWriter {
         ((Event)event).read(helicityAdc);
         helicities.add(HelicityState.createFromFadcBank(helicityAdc, runConfig, conman));
         Event t = CLASDecoder4.createTaggedEvent((Event)event, runConfig, banks);
-        if (!t.isEmpty()) writer.addEvent(t, tag);
+        if (!t.isEmpty()) writer.addEvent(t, 1);
         super.writeEvent(event);
     }
 
