@@ -91,6 +91,17 @@ public class QadbBinSequence<T> extends DaqScalersSequence implements Iterable<Q
     logger.fine("  number of QADB bins = " + this.qaBins.size());
   }
 
+  /**
+   * alternative constructor, with no {@link QadbBin#data} initialization parameter
+   * <p>
+   * {@link QadbBin#data} will be initialized to {@code null}
+   * @param filenames list of HIPO files to read
+   * @param binWidth the number of consecutive scaler-readout intervals in each bin
+   */
+  public QadbBinSequence(List<String> filenames, int binWidth) {
+    this(filenames, binWidth, (binNum)->null);
+  }
+
   // ----------------------------------------------------------------------------------
 
   /** iterable interface implementation */
@@ -169,6 +180,11 @@ public class QadbBinSequence<T> extends DaqScalersSequence implements Iterable<Q
     // - in practice, we can use any data type instead of an integer, such as a class full of histograms
     //   - the lambda argument `binNum` can be used, for example, as part of the histogram titles
     QadbBinSequence<Integer> seq = new QadbBinSequence<>(filenames, 2000, (binNum)->0);
+    /* alternatively, if you do not want to store data with this class instance, use `Object` as the type, and no initializer lambda:
+    QadbBinSequence<Object> seeq = new QadbBinSequence<>(filenames, 2000);
+    for(var bin : seeq) bin.print();
+    System.exit(0);
+    */
 
     // apply a charge correction method
     // for(var bin : seq)
@@ -223,7 +239,7 @@ public class QadbBinSequence<T> extends DaqScalersSequence implements Iterable<Q
     // print the results: the bin number along with its number of events
     System.out.println(">>> QA BINS <<<");
     for(var bin : seq)
-      bin.print(true, (data) -> String.format("%30s %d", "counted tag-0 events:", data));
+      bin.print((data) -> String.format("%30s %d", "counted tag-0 events:", data), true);
   }
 
 }

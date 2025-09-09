@@ -280,24 +280,38 @@ public class QadbBin<T> extends DaqScalersSequence {
 
   // ----------------------------------------------------------------------------------
 
+  /** print a QA bin, and some basic information */
+  public void print() {
+    System.out.printf("BIN %d", this.getBinNum());
+    System.out.printf(" -----------\n");
+    System.out.printf("%30s %d to %d\n", "timestamp interval:", this.getTimestampMin(), this.getTimestampMax());
+    System.out.printf("%30s %d to %d\n", "event number interval:", this.getEventNumMin(), this.getEventNumMax());
+    System.out.printf("%30s %f s\n", "duration:", this.getDuration());
+    System.out.printf("%30s %d events\n", "event number range:", this.getEventNumMax() - this.getEventNumMin());
+    System.out.printf("%30s %f / %f\n", "beam charge gated / ungated:", this.getBeamChargeGated(), this.getBeamCharge());
+  }
+
   /**
-   * print a QA bin and its data
-   * @param verbose if {@code true}, print more
+   * print a QA bin's stored {@link data}
    * @param dataPrinter a lambda which resolves {@link data} as a {@code String}
    */
-  public void print(boolean verbose, DataPrinter<T> dataPrinter) {
-    System.out.printf("BIN %d", this.getBinNum());
-    if(verbose) {
-      System.out.printf(" -----------\n");
-      System.out.printf("%30s %d to %d\n", "timestamp interval:", this.getTimestampMin(), this.getTimestampMax());
-      System.out.printf("%30s %d to %d\n", "event number interval:", this.getEventNumMin(), this.getEventNumMax());
-      System.out.printf("%30s %f s\n", "duration:", this.getDuration());
-      System.out.printf("%30s %d events\n", "event number range:", this.getEventNumMax() - this.getEventNumMin());
-      System.out.printf("%30s %f / %f\n", "beam charge gated / ungated:", this.getBeamChargeGated(), this.getBeamCharge());
-    } else {
-      System.out.printf(" :: ");
-    }
+  public void print(DataPrinter<T> dataPrinter) {
+    System.out.printf("BIN %d :: ", this.getBinNum());
     System.out.println(dataPrinter.run(this.data));
+  }
+
+  /**
+   * print a QA bin's stored {@link data}, and optionally the bin's basic information
+   * @param dataPrinter a lambda which resolves {@link data} as a {@code String}
+   * @param verbose if {@code true}, print more
+   */
+  public void print(DataPrinter<T> dataPrinter, boolean verbose) {
+    if(verbose) {
+      this.print();
+      System.out.println(dataPrinter.run(this.data));
+    }
+    else
+      this.print(dataPrinter);
   }
 
 }
