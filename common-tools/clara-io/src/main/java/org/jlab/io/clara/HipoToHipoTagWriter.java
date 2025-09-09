@@ -16,7 +16,7 @@ import org.jlab.jnp.utils.file.FileUtils;
 import org.json.JSONObject;
 
 /**
- * A port of the standard "decoder" to a CLARA I/O service.
+ * Combined with EvioToHipoReader, a port of the standard "decoder" to CLARA.
  *
  * 1. Converts EVIO to HIPO, translation tables, pulse extraction
  * 2. Copies special banks on-the-fly to new tag-1 events
@@ -89,6 +89,7 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
     @Override
     protected void closeWriter() {
         HelicitySequence.writeFlips(fullSchema, writer, helicities);
+        // FIXME:  keep the last reading to avoid burps at file beginning/end
         helicities.clear();
         scalers.clear();
         super.closeWriter();
