@@ -52,7 +52,7 @@ public class DenoiseEngine extends ReconstructionEngine {
                 .build();
             model = criteria.loadModel();
             return true;
-        } catch (MalformedModelException | IOException | ModelNotFoundException ex) {
+        } catch (NullPointerException | MalformedModelException | IOException | ModelNotFoundException ex) {
             System.getLogger(DenoiseEngine.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
             return false;
         }
@@ -60,6 +60,9 @@ public class DenoiseEngine extends ReconstructionEngine {
 
     @Override
     public boolean processDataEvent(DataEvent event) {
+
+        if (SIMULATION_MODE) return processFakeEvent();
+        
         if (event.hasBank(BANK_NAME)) {
             DataBank bank = event.getBank(BANK_NAME);
             try {
@@ -81,6 +84,20 @@ public class DenoiseEngine extends ReconstructionEngine {
         return true;
     }
 
+    private boolean processFakeEvent() {
+        try {
+            Predictor<float[][], float[][]> predictor = model.newPredictor();
+            float[][] input = getAlmostStraightSlightlyBendingTrack();
+            float[][] output = predictor.predict(input);
+            show(input);
+            show(output);
+        }
+        catch (TranslateException e) {
+            throw new RuntimeException(e);
+        }
+        return true;
+    }
+    
     /**
      * Reject sub-threshold hits by modifying the bank's order variable.
      */
@@ -98,7 +115,6 @@ public class DenoiseEngine extends ReconstructionEngine {
      * Get one-sector data with weights set to 0/1.
      */
     static float[][] getSector(DataBank bank, int sector) {
-        if (SIMULATION_MODE) return getAlmostStraightSlightlyBendingTrack();
         float[][] data = new float[LAYERS][WIRES];
         for (int i=0; i<bank.rows(); ++i) {
             if (bank.getByte(0,i) == sector) {
