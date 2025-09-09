@@ -133,6 +133,18 @@ public class IndexedTable extends DefaultTableModel {
         }
     }
     
+    public int getIntValueByHash(int index, long hash) {
+        if (this.entries.hasItemByHash(hash))
+            return this.entries.getItemByHash(hash).getValue(index).intValue();
+        return 0;
+    }
+    
+    public double getDoubleValueByHash(int index, long hash) {
+        if (this.entries.hasItemByHash(hash))
+            return this.entries.getItemByHash(hash).getValue(index).doubleValue();
+        return 0;
+    }
+
     public int getIntValueByHash(String item, long hash) {
         if (this.entries.hasItemByHash(hash)) {
             if (this.entryMap.containsKey(item)) {

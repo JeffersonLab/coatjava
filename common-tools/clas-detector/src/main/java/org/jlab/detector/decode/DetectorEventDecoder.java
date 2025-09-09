@@ -162,10 +162,10 @@ public class DetectorEventDecoder {
                 // Found it; now set the detector indexing for this hit:
                 if (t.hasEntryByHash(hash)) {
 
-                    int sector    = t.getIntValueByHash("sector", hash);
-                    int layer     = t.getIntValueByHash("layer", hash);
-                    int component = t.getIntValueByHash("component", hash);
-                    int order     = t.getIntValueByHash("order", hash);
+                    int sector    = t.getIntValueByHash(0, hash);
+                    int layer     = t.getIntValueByHash(1, hash);
+                    int component = t.getIntValueByHash(2, hash);
+                    int order     = t.getIntValueByHash(3, hash);
 
                     data.getDescriptor().setSectorLayerComponent(sector, layer, component);
                     data.getDescriptor().setOrder(order);
