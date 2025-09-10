@@ -3,8 +3,10 @@ package org.jlab.rec.atof.hit;
 import org.jlab.geom.base.*;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.rec.atof.constants.Parameters;
-import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.detector.calib.utils.DatabaseConstantProvider;
+import org.jlab.geom.detector.alert.ATOF.AlertTOFFactory;
+import org.jlab.rec.constants.CalibrationConstantsLoader;
 
 /**
  *
@@ -18,6 +20,14 @@ import java.util.logging.Logger;
 public class ATOFHit {
 
     static final Logger LOGGER = Logger.getLogger(ATOFHit.class.getName());
+    
+    //For aligning bar together, take module 0, component 10 as the reference
+    //For now the table is full of things with order = 0 or order = 1 for the bars
+    //However these offsets are defined uniquely for order 0 and order 1
+    //Eventually the table will need to be revisited, either by adding another table
+    //That does not index the order or by indexing things with order 2 (or another number)
+    private int referenceModuleKey = 0*10000 + 0*1000 + 10*10 + 2;
+    double[] timeOffsetsRef = CalibrationConstantsLoader.ATOF_TIME_OFFSETS.get(referenceModuleKey);
 
     private int sector, layer, component, order;
     private int tdc, tot;
@@ -185,29 +195,67 @@ public class ATOFHit {
      * unsupported.
      */
     public final int convertTdcToTime() {
-        double tdc2time, veff, distance_to_sipm;
+        
+        //Converting tdc to ns, event start time correction
+        this.time = Parameters.TDC2TIME*this.tdc - this.startTime;
+        
+        //For now we use order 0 to read everything because the current calib constants
+        //are not for a specific bar channel
+        //Eventually this will need to be adjusted
+        int key = this.sector*10000 + this.layer*1000 + this.component*10 + 0;//this.order;
+
+        //Time offsets
+        double[] timeOffsets = CalibrationConstantsLoader.ATOF_TIME_OFFSETS.get(key);
+        //The names below correspond to the CCDB entries
+        //They will most probably evolve
+        //For now let's say t0 is used to store the bar-to-bar alignment
+        double t0 = timeOffsets[0];
+        double tB2B = t0 - timeOffsetsRef[0];
+        //tud is used to store the bar up - bar down alignment
+        double tud = timeOffsets[1];
+        //The rest of the constants are not used for now
+        /*double twb = timeOffsets[2];
+        double xtra1 = timeOffsets[3];
+        double xtra2 = timeOffsets[4];*/
+        
+        //TW corrections TO BE IMPLEMENTED
+        /*
+        double[] timeWalks = CalibrationConstantsLoader.ATOF_TIME_WALK.get(key);
+	double tw0 = timeWalks[0];
+        double tw1 = timeWalks[1];
+        double tw2 = timeWalks[2];
+        double tw3 = timeWalks[3];
+        double dtw0 = timeWalks[4];
+        double dtw1 = timeWalks[5];
+        double dtw2 = timeWalks[6];
+        double dtw3 = timeWalks[7];
+        double chi2ndf = timeWalks[8];*/
+        
+        //Veff corrections TO BE IMPLEMENTED
+        
+        double veff, distance_to_sipm, timeOffset;
         if (null == this.type) {
             LOGGER.finest("Null hit type, cannot convert tdc to time.");
             return 1;
         } else {
             switch (this.type) {
                 case "wedge" -> {
-                    tdc2time = Parameters.TDC2TIME;
                     veff = Parameters.VEFF;
                     //Wedge hits are placed at the center of wedges and sipm at their top
                     distance_to_sipm = Parameters.WEDGE_THICKNESS / 2.;
+                    timeOffset = 0; //To be replaced with w2w time and eventual other offsets
                 }
                 case "bar up" -> {
-                    tdc2time = Parameters.TDC2TIME;
                     veff = Parameters.VEFF;
                     //The distance will be computed at barhit level when z information is available
                     distance_to_sipm = 0;
+                    timeOffset = - tud/2. - tB2B;
                 }
                 case "bar down" -> {
-                    tdc2time = Parameters.TDC2TIME;
                     veff = Parameters.VEFF;
                     //The distance will be computed at barhit level when z information is available
                     distance_to_sipm = 0;
+                    timeOffset = + tud/2. - tB2B;
                 }
                 case "bar" -> {
                     LOGGER.finest("Bar hit type, cannot convert tdc to time.");
@@ -219,8 +267,8 @@ public class ATOFHit {
                 }
             }
         }
-        //Hit time. Will need implementation of offsets.
-        this.time = tdc2time * this.tdc - distance_to_sipm / veff;
+        //Hit time.
+        this.time = this.time - distance_to_sipm / veff + timeOffset;
         return 0;
     }
 
@@ -386,6 +434,6 @@ public class ATOFHit {
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) {        
     }
 }
