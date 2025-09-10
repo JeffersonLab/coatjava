@@ -100,7 +100,7 @@ public class DecoderWriter extends HipoToHipoWriter {
         super.closeWriter();
         if (postprocess) postprocess();
         // keep the latest helicity/scaler reading for the next file:
-        while (helicities.size() > 1) helicities.pollFirst();
+        while (helicities.size() > 30) helicities.pollFirst();
         scalers.clear(1);
     }
   
