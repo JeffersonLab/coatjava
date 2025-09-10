@@ -12,6 +12,7 @@ import org.jlab.jnp.hipo4.io.HipoReader;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
+import org.jlab.utils.groups.IndexedTable;
 
 /**
  * For easy access to most recent scaler readout for any given event.
@@ -29,7 +30,6 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
     
     private Bank runConfigBank=null;
     private Bank runScalerBank=null;
-    private Bank rawScalerBank=null;
   
     static final Logger logger = Logger.getLogger(DaqScalersSequence.class.getName());
     
@@ -263,7 +263,7 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
     }
    
     /**
-     * 
+     * Reads the RAW::scaler bank and rebuilds the RUN::scaler and HEL::scaler banks
      * @param tags
      * @param conman
      * @param filenames
@@ -293,20 +293,59 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
         }
         return seq;
     }
+
+    /**
+     * Try to fix clock rollover on the run-integrating DSC2 scaler.
+     * 1.  Assume the first clock readout has no rollover.
+     * 2.  Assume any subsequent clock decrease is a rollover. 
+     */
+    public void fixClockRollover() {
+        boolean modified = true;
+        while (modified) {
+            modified = false;
+            for (int i=this.scalers.size()-1; i>0; --i) {
+                Dsc2Scaler previous = this.scalers.get(i-1).dsc2;
+                Dsc2Scaler next = this.scalers.get(i).dsc2;
+                if (previous.clock > next.clock) {
+                    for (int j=i; j<this.scalers.size(); ++j) {
+                        if (j==i) System.out.print( String.format("FIXING CLOCK ROLLOVER:  %d %d -> ",this.scalers.get(j).dsc2.clock,this.scalers.get(j).dsc2.gatedClock));
+                        this.scalers.get(j).dsc2.clock += 2*(long)Integer.MAX_VALUE;
+                        // The gated clock also rolls over (but it's triggered by the ungated clock, not itself!?):
+                        this.scalers.get(j).dsc2.gatedClock += 2*(long)Integer.MAX_VALUE;
+                        if (j==i) System.out.println(String.format("%d %d",this.scalers.get(j).dsc2.clock,this.scalers.get(j).dsc2.gatedClock));
+                    }
+                    modified = true;
+                    break;
+                }
+            }
+        }
+    }
     
     public static void main(String[] args) {
         
-        final String dir="/Users/baltzell/data/CLAS12/rg-a/decoded/6b.2.0/";
-        final String file="clas_005038.evio.00000-00004.hipo";
-        //final String dir="/Users/baltzell/data/CLAS12/rg-b/decoded/";
-        //final String file="clas_006432.evio.00041-00042.hipo";
+        final String dir = System.getenv("HOME")+"/data/";
+        //final String file = "rollover-4013.hipo";
+        final String file = "DVCSWagon_004013.hipo";
+        //final String file = "clas_004003.evio.00040-00049.hipo";
 
         List<String> filenames=new ArrayList<>();
         if (args.length>0) filenames.addAll(Arrays.asList(args));
         else               filenames.add(dir+file);
 
+        ConstantsManager consts = new ConstantsManager();
+        consts.init("/runcontrol/fcup","/runcontrol/slm","/runcontrol/helicity","/daq/config/scalers/dsc1","/runcontrol/hwp");
+
         // 1!!!1 initialize a sequence from tag=1 events: 
-        DaqScalersSequence seq = DaqScalersSequence.readSequence(filenames);
+        DaqScalersSequence seq = DaqScalersSequence.rebuildSequence(1, consts, filenames);
+        //DaqScalersSequence seq = DaqScalersSequence.readSequence(filenames);
+        
+        //for (DaqScalers ds : seq.scalers) System.out.println(String.format("PRE:  %s",ds));
+                
+        seq.fixClockRollover();
+        
+        //for (DaqScalers ds : seq.scalers) System.out.println(String.format("POST:  %s",ds));
+        
+        System.exit(1);
 
         long good=0;
         long bad=0;
@@ -341,7 +380,11 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
                 else {
                     good++;
                     // do something useful with beam charge here:
-                    System.out.println(timestamp+" "+ds.dsc2.getBeamCharge()+" "+ds.dsc2.getBeamChargeGated());
+                    System.out.println(String.format("%d %s %f %f",
+                        timestamp,
+                        ds.dsc2,
+                        ds.dsc2.getBeamCharge(),
+                        ds.dsc2.getBeamChargeGated()));
                 }
             }
 

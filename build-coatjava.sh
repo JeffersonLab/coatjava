@@ -145,10 +145,11 @@ if [ $cleanBuild == "yes" ]; then
   exit
 fi
 
+# run dependency analysis and exit
 if [ $anaDepends == "yes" ]; then
-    mvn dependency:analyze -DfailOnWarning=true -pl '!org.jlab.coat:coat-libs' --no-transfer-progress
-    mvn dependency:tree -Ddetail=true --no-transfer-progress 
-    exit 0
+  libexec/dependency-analysis.sh
+  libexec/dependency-tree.sh
+  exit 0
 fi
 
 # start new installation tree

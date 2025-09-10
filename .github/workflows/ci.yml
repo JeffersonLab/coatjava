@@ -214,9 +214,9 @@ jobs:
       - name: untar build
         run: tar xzvf coatjava.tar.gz
       - name: print dependency tree
-        run: mvn dependency:tree -Ddetail=true --no-transfer-progress
-      - name: dependency analysis # note: skips `coat-libs`, since shaded JAR dependencies are "unused" according to `dependency:analyze`
-        run: mvn dependency:analyze -DfailOnWarning=true -pl '!org.jlab.coat:coat-libs' --no-transfer-progress
+        run: libexec/dependency-tree.sh
+      - name: dependency analysis
+        run: libexec/dependency-analysis.sh
 
   # documentation
   #############################################################################
@@ -245,7 +245,7 @@ jobs:
           distribution: ${{ env.java_distribution }}
       - name: build coatjava javadocs # javadoc:aggregate output dir cannot be controlled, so assume the latest "standard" path and `mv` it
         run: |
-          mvn javadoc:aggregate -pl '!org.jlab.coat:coat-libs' --no-transfer-progress
+          libexec/build-javadocs.sh
           mv target/reports/apidocs pages/javadoc
       ### upload artifacts
       - uses: actions/upload-pages-artifact@v4
