@@ -26,7 +26,7 @@ public class ATOFHit {
     //However these offsets are defined uniquely for order 0 and order 1
     //Eventually the table will need to be revisited, either by adding another table
     //That does not index the order or by indexing things with order 2 (or another number)
-    private int referenceModuleKey = 0*10000 + 0*1000 + 10*10 + 2;
+    private int referenceModuleKey = 0*10000 + 0*1000 + 10*10 + 0;
     double[] timeOffsetsRef = CalibrationConstantsLoader.ATOF_TIME_OFFSETS.get(referenceModuleKey);
 
     private int sector, layer, component, order;
@@ -434,6 +434,6 @@ public class ATOFHit {
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) {        
+    public static void main(String[] args) {  
     }
 }
