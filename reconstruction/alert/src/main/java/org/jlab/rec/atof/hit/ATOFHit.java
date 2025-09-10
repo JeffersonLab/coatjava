@@ -210,7 +210,7 @@ public class ATOFHit {
         //They will most probably evolve
         //For now let's say t0 is used to store the bar-to-bar alignment
         double t0 = timeOffsets[0];
-        double tB2B = t0 - timeOffsetsRef[0];
+        double tB2B = (t0 - timeOffsetsRef[0])/2;
         //tud is used to store the bar up - bar down alignment
         double tud = timeOffsets[1];
         //The rest of the constants are not used for now
@@ -434,6 +434,6 @@ public class ATOFHit {
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) {  
+    public static void main(String[] args) {
     }
 }
