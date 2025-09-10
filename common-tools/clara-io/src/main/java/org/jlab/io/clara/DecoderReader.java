@@ -14,7 +14,7 @@ import org.jlab.jnp.hipo4.data.Event;
 import org.json.JSONObject;
 
 /**
- * Combined with HipoToHipoTagWriter, a port of the standard "decoder" to CLARA.
+ * Combined with DecoderWriter, a port of the standard "decoder" to CLARA.
  * 
  * @author baltzell
  */

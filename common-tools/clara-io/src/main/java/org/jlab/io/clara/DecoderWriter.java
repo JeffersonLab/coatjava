@@ -20,7 +20,7 @@ import org.jlab.jnp.utils.file.FileUtils;
 import org.json.JSONObject;
 
 /**
- * Combined with EvioToHipoReader, a port of the standard "decoder" to CLARA.
+ * Combined with DecoderReader, a port of the standard "decoder" to CLARA.
  *
  * 1. Converts EVIO to HIPO, translation tables, pulse extraction
  * 2. Copies special banks on-the-fly to new tag-1 events
@@ -73,6 +73,12 @@ public class DecoderWriter extends HipoToHipoWriter {
         }
     }
 
+    /**
+     * In addition to writing the incoming event, copies all tag-1 banks to new
+     * tag-1 events and writes them, and stores helicity/scaler readings for later.
+     * @param event
+     * @throws EventWriterException 
+     */
     @Override
     protected void writeEvent(Object event) throws EventWriterException {
         scalers.add((Event)event);
@@ -84,6 +90,10 @@ public class DecoderWriter extends HipoToHipoWriter {
         super.writeEvent(event);
     }
 
+    /**
+     * In addition to closing the writer, creates and writes tag-1 events with
+     * HEL::flip bnks and clears old scaler/helicity readings.
+     */
     @Override
     protected void closeWriter() {
         HelicitySequence.writeFlips(fullSchema, writer, helicities);
@@ -93,7 +103,7 @@ public class DecoderWriter extends HipoToHipoWriter {
         while (helicities.size() > 1) helicities.pollFirst();
         scalers.clear(1);
     }
-   
+  
     private int getRunNumber() {
         Event e = new Event();
         HipoReader r = new HipoReader();
