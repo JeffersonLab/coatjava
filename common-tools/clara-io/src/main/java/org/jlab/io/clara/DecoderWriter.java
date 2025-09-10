@@ -117,6 +117,9 @@ public class DecoderWriter extends HipoToHipoWriter {
         return 0;
     }
 
+    /**
+     * Copy helicity/charge tag-1 information to all events.
+     */
     private void postprocess() {
         int d = conman.getConstants(getRunNumber(), "/runcontrol/helicity").getIntValue("delay",0,0,0);
         HelicitySequenceDelayed h = new HelicitySequenceDelayed(d);
