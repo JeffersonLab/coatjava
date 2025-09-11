@@ -20,8 +20,6 @@ import org.json.JSONObject;
  */
 public class DecoderReader extends AbstractEventReaderService<EvioSource> {
 
-    boolean collectGarbage = true; // for memory leak in CompactEvioReader
-
     CLASDecoder4 decoder;
     private long maxEvents;
     private Double torus;
@@ -62,7 +60,9 @@ public class DecoderReader extends AbstractEventReaderService<EvioSource> {
             ByteBuffer bb = reader.getEventBuffer(++eventNumber, true);
             EvioDataEvent evio = new EvioDataEvent(bb.array(), readByteOrder());
             Event hipo = decoder.getDecodedEvent(evio, -1, eventNumber, torus, solenoid);
-            if (eventNumber % 25000 == 0 && collectGarbage) System.gc();
+            // FIXME:  IIRC, this was added to (try to) address a memory leak in
+            // CompactEvioReader, but it was ineffective and could/should be removed.  
+            if (eventNumber % 25000 == 0) System.gc();
             return hipo;
         } catch (EvioException e) {
             throw new EventReaderException(e);
