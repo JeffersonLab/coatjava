@@ -55,9 +55,9 @@ public class DecoderReader extends AbstractEventReaderService<EvioSource> {
 
     @Override
     public Object readEvent(int eventNumber) throws EventReaderException {
-        if (eventNumber >= maxEvents) return null;
+        if (eventNumber++ >= maxEvents) return null;
         try {
-            ByteBuffer bb = reader.getEventBuffer(++eventNumber, true);
+            ByteBuffer bb = reader.getEventBuffer(eventNumber, true);
             EvioDataEvent evio = new EvioDataEvent(bb.array(), readByteOrder());
             Event hipo = decoder.getDecodedEvent(evio, -1, eventNumber, torus, solenoid);
             // FIXME:  IIRC, this was added to (try to) address a memory leak in
