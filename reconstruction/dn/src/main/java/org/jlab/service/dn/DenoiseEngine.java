@@ -24,16 +24,15 @@ import org.jlab.utils.system.ClasUtilsFile;
 
 public class DenoiseEngine extends ReconstructionEngine {
 
-    float threshold = 0.1f;
-    String BANK_NAME = "DC::tot";
-    Criteria<float[][],float[][]> criteria;
-    ZooModel<float[][], float[][]> model;
-    
+    final static String[] BANK_NAMES = {"DC::tdc","DC::tot"};
     final static String CONF_THRESHOLD = "threshold";
-    final static boolean SIMULATION_MODE = true;
     final static int LAYERS = 36;
     final static int WIRES = 112;
 
+    float threshold = 0.01f;
+    Criteria<float[][],float[][]> criteria;
+    ZooModel<float[][], float[][]> model;
+    
     public DenoiseEngine() {
         super("DenoiseEngine","lleztlab","1.0");
     }
@@ -61,24 +60,29 @@ public class DenoiseEngine extends ReconstructionEngine {
     @Override
     public boolean processDataEvent(DataEvent event) {
 
-        if (SIMULATION_MODE) return processFakeEvent();
-        
-        if (event.hasBank(BANK_NAME)) {
-            DataBank bank = event.getBank(BANK_NAME);
-            try {
-                Predictor<float[][], float[][]> predictor = model.newPredictor();
-                for (int sector=0; sector<6; ++sector) {
-                    float[][] input = DenoiseEngine.getSector(bank, sector+1);
-                    float[][] output = predictor.predict(input);
-                    show(input);
-                    show(output);
-                    update(bank, threshold, output, sector);
+        if (false) return processFakeEvent();
+       
+        for (int i=0; i<BANK_NAMES.length; i++){
+            if (event.hasBank(BANK_NAMES[i])) {
+                DataBank bank = event.getBank(BANK_NAMES[i]);
+                try {
+                    // WARNING:  Predictor is *not* thread safe.
+                    // WARNING:  A pool might be worthwhile.
+                    Predictor<float[][], float[][]> predictor = model.newPredictor();
+                    for (int sector=0; sector<6; sector++) {
+                        float[][] input = DenoiseEngine.getSector(bank, sector+1);
+                        float[][] output = predictor.predict(input);
+                        //show(input);
+                        //show(output);
+                        update(bank, threshold, output, sector);
+                    }
+                    event.removeBank(BANK_NAMES[i]);
+                    event.appendBank(bank);
                 }
-                event.removeBank(BANK_NAME);
-                event.appendBank(bank);
-            }
-            catch (TranslateException e) {
-                throw new RuntimeException(e);
+                catch (TranslateException e) {
+                    throw new RuntimeException(e);
+                }
+                break;
             }
         }
         return true;
@@ -105,9 +109,11 @@ public class DenoiseEngine extends ReconstructionEngine {
         for (int row=0; row<b.rows(); row++) {
             if (b.getByte(0,row) != sector) continue;
             // FIXME:  check layer/wire indexing:
-            if (data[b.getByte(1,row)-1][b.getShort(2,row)-1] < threshold)
+            if (data[b.getByte(1,row)-1][b.getShort(2,row)-1] < threshold) {
+                //b.show();
                 // FIXME:  check order masking:
                 b.setByte(3, row, (byte)(b.getByte(3,row)+10));
+            }
         }
     }
 
