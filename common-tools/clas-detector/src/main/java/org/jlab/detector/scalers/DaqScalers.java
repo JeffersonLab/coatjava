@@ -49,13 +49,16 @@ public class DaqScalers {
     public Dsc2Scaler dsc2=null;
     public StruckScalers struck=null;
     private long timestamp=0;
-    
+    private int evnum=0;
+
     public DaqScalers setTimestamp(long timestamp) {
         this.timestamp=timestamp;
         return this;
     }
     
     public long getTimestamp(){ return this.timestamp; }
+    public void setEventNum(int evnum) { this.evnum=evnum; }
+    public int getEventNum() { return this.evnum; }
 
     @Override
     public String toString() {
