@@ -45,7 +45,7 @@ public class DenoiseEngine extends ReconstructionEngine {
         try {
             criteria = Criteria.builder()
                 .setTypes(float[][].class, float[][].class)
-                .optModelPath(Paths.get(ClasUtilsFile.getResourceDir("etc/nnet/dn/cnn_autoenc_0f_112.pt")))
+                .optModelPath(Paths.get(ClasUtilsFile.getResourceDir("etc/nnet/dn/cnn_autoenc_sector1_nFilters12.pt")))
                 .optEngine("PyTorch")
                 .optTranslator(DenoiseEngine.getTranslator())
                 .optProgress(new ProgressBar())
