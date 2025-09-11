@@ -12,6 +12,7 @@ import java.util.Set;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import org.jlab.utils.groups.IndexedList.IndexGenerator;
 
 /**
  *
@@ -58,6 +59,14 @@ public class IndexedTable extends DefaultTableModel {
         }
     }
     
+    public void setByteShifts(int[] byteShifts){
+        this.entries.setIndexGenerator(new IndexGenerator(byteShifts));
+    }
+    
+    public int[] getByteShifts(){
+        return this.entries.getIndexGenerator().getByteShifts();
+    }
+    
     public void setPrecision(Integer precision){
         StringBuilder str = new StringBuilder();
         str.append("%.");
@@ -65,7 +74,7 @@ public class IndexedTable extends DefaultTableModel {
         str.append("f");
         this.precisionFormat = str.toString();
     }
-    
+
     public boolean hasEntry(int... index){
         return this.entries.hasItem(index);
     }
@@ -145,7 +154,11 @@ public class IndexedTable extends DefaultTableModel {
         }
         return 0;
     }
-    
+
+    public NamedEntry getNamedEntry(int... index) {
+        return NamedEntry.create(entries.getItem(index), entryNames, index);
+    }
+
     public IndexedList getList(){
         return this.entries;
     }
@@ -238,8 +251,8 @@ public class IndexedTable extends DefaultTableModel {
      */
     @Override
     public String getColumnName(int col) {
-        if(col>2){
-            return this.entryNames.get(col-3);
+        if(col>this.indexNames.size()-1){
+            return this.entryNames.get(col-this.indexNames.size());
         }
         return this.indexNames.get(col);
     }
@@ -284,7 +297,8 @@ public class IndexedTable extends DefaultTableModel {
             value = (Long) iter.next();
         }
         if(column<entries.getIndexSize()){
-            Integer index = IndexedList.IndexGenerator.getIndex(value, column);
+            IndexedList indexList = new IndexedList(entries.getIndexSize());
+            Integer index = indexList.getIndexGenerator().getIndex(value, column);
             return index.toString();
         }
         
@@ -295,7 +309,7 @@ public class IndexedTable extends DefaultTableModel {
         }
         return trow.getValue(column-ic).toString();
     }
-    
+
     public class RowConstraint {
         
         public int   COLUMN = 0;
@@ -377,4 +391,5 @@ public class IndexedTable extends DefaultTableModel {
             }
         }
     }
+
 }

@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.io.ring;
 
 import java.util.logging.Level;
@@ -38,19 +33,10 @@ public class DataDistributionRing {
      */
     public void initProxy(){
         try {
-            
             String host = xMsgUtil.localhost();
             xMsgProxyAddress address = new xMsgProxyAddress(host,xMsgConstants.DEFAULT_PORT);            
             System.out.println("\n   >>>>> starting xmsg proxy : " + host + "/" + xMsgConstants.DEFAULT_PORT);
             proxy = new xMsgProxy(xMsgContext.newContext(), address);
-            
-           /* Runtime.getRuntime().addShutdownHook(new Thread() {
-                @Override
-                public void run() {
-                    xMsgContext.destroyContext();
-                    proxy.shutdown();
-                }
-            });*/            
             proxy.start();
             System.out.println("\n   >>>>> starting xmsg proxy : success");
         } catch (xMsgException ex) {
@@ -69,14 +55,6 @@ public class DataDistributionRing {
         try {
             xMsgRegAddress address = new xMsgRegAddress("localhost", xMsgConstants.REGISTRAR_PORT);
             xMsgRegistrar registrar = new xMsgRegistrar(xMsgContext.newContext(), address);
-            /* Runtime.getRuntime().addShutdownHook(new Thread() {
-                @Override
-                public void run() {
-                    xMsgContext.destroyContext();
-                    registrar.shutdown();
-                }
-            });*/
-
             registrar.start();
             System.out.println("\n   >>>>> starting xmsg registrar : success");
         } catch (xMsgException ex) {
@@ -88,35 +66,14 @@ public class DataDistributionRing {
         producer = new DataRingProducer();
         producer.setDelay(3000);
         producer.start();
-        /*
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-                @Override
-                public void run() {
-
-                    System.out.println("\n\n\n");
-                    System.out.println("   ********* Graceful exit initiated");
-                    producer.shutdown();
-                    xMsgContext.destroyContext();
-                    System.out.println("   ********* Destroying xMsg context : done");
-                    registrar.shutdown();
-                    System.out.println("   ********* Registrar shudown  : done");
-                    proxy.shutdown();
-                    System.out.println("   ********* Proxy service  shudown  : done");
-                    System.out.println("   ********* Exiting Data Distribution\n\n");
-                    System.exit(0);
-                }
-        });*/
     }
     
     public void shutdown(){
         System.out.println("\n\n\n");
         System.out.println("   ********* Graceful exit initiated");
         producer.shutdown();
-        
         System.out.println("   ********* Destroying xMsg context : done");
-        
         registrar.shutdown();
-        
         System.out.println("   ********* Registrar shudown  : done");
         proxy.shutdown();
         System.out.println("   ********* Proxy service  shudown  : done");

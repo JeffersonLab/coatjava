@@ -1,15 +1,67 @@
 [
   {
-    "name" : "AHDC::tdc",
+    "name" : "AHDC::wf",
     "group": 22400,
-    "item" : 12,
-	"info": "TDC bank for the ALERT Wire Chamber",
-	"entries":[
-	  { "name":"sector"    , "type":"B", "info":"sector 1"},
-	  { "name":"layer"     , "type":"B", "info":"layer 1-5"},
-	  { "name":"component" , "type":"S", "info":"wire number"},
-	  { "name":"order"     , "type":"B", "info":"Stereo angle 0 - in, 1 - out"},
-	  { "name":"TDC"       , "type":"I", "info":"TDC value"}
+    "item" : 10,
+    "info": "Waveform bank for the AHDC",
+    "entries":[
+      { "name":"sector"    , "type":"B", "info":"sector"},
+      { "name":"layer"     , "type":"B", "info":"layer (1-6)"},
+      { "name":"component" , "type":"S", "info":"strips"},
+      { "name":"order"     , "type":"B", "info":"order: 0 - ADCL , 1 - ADCR"},
+      { "name":"timestamp" , "type":"L", "info":"timestamp"},
+      { "name":"s1"        , "type":"S", "info":"first sample"},
+      { "name":"s2"        , "type":"S", "info":""},
+      { "name":"s3"        , "type":"S", "info":""},
+      { "name":"s4"        , "type":"S", "info":""},
+      { "name":"s5"        , "type":"S", "info":""},
+      { "name":"s6"        , "type":"S", "info":""},
+      { "name":"s7"        , "type":"S", "info":""},
+      { "name":"s8"        , "type":"S", "info":""},
+      { "name":"s9"        , "type":"S", "info":""},
+      { "name":"s10"        , "type":"S", "info":""},
+      { "name":"s11"        , "type":"S", "info":""},
+      { "name":"s12"        , "type":"S", "info":""},
+      { "name":"s13"        , "type":"S", "info":""},
+      { "name":"s14"        , "type":"S", "info":""},
+      { "name":"s15"        , "type":"S", "info":""},
+      { "name":"s16"        , "type":"S", "info":""},
+      { "name":"s17"        , "type":"S", "info":""},
+      { "name":"s18"        , "type":"S", "info":""},
+      { "name":"s19"        , "type":"S", "info":""},
+      { "name":"s20"        , "type":"S", "info":""},
+      { "name":"s21"        , "type":"S", "info":""},
+      { "name":"s22"        , "type":"S", "info":""},
+      { "name":"s23"        , "type":"S", "info":""},
+      { "name":"s24"        , "type":"S", "info":""},
+      { "name":"s25"        , "type":"S", "info":""},
+      { "name":"s26"        , "type":"S", "info":""},
+      { "name":"s27"        , "type":"S", "info":""},
+      { "name":"s28"        , "type":"S", "info":""},
+      { "name":"s29"        , "type":"S", "info":""},
+      { "name":"s30"        , "type":"S", "info":""},
+      { "name":"time"       , "type":"I", "info":"for fine time correction"}
+    ]
+  },
+  {
+    "name" : "AHDC::adc",
+    "group": 22400,
+    "item" : 11,
+    "info": "ADC bank for the ALERT Wire Chamber",
+    "entries":[
+      { "name":"sector"              , "type":"B", "info":"sector 1"},
+      { "name":"layer"               , "type":"B", "info":"layer 1-5"},
+      { "name":"component"           , "type":"S", "info":"wire number"},
+      { "name":"order"               , "type":"B", "info":"Stereo angle 0 - in, 1 - out"},
+      { "name":"ADC"                 , "type":"I", "info":"average of 5 points around the time sample with the maximum ADC"},
+      { "name":"time"                , "type":"F", "info":"the time of the sample with the maximum ADC"},
+      { "name":"ped"                 , "type":"F", "info":"average ADC of the first few samples "},
+      { "name":"windex"              , "type":"S", "info":"row index in waveform bank"},
+      { "name":"integral"            , "type":"I", "info":"sum of ADC"},
+      { "name":"leadingEdgeTime"     , "type":"F", "info":"time at constant fraction amplitude"},
+      { "name":"timeOverThreshold"   , "type":"F", "info":"time over threshold at constant fraction amplitude"},
+      { "name":"constantFractionTime", "type":"F", "info":"time from constant fraction discriminator"},
+      { "name":"wfType"              , "type":"S", "info":"waveform type classification, good==0, bad=-1,others... "}
     ]
   },
   {
@@ -23,7 +75,9 @@
       { "name":"component" , "type":"S", "info":"signal (1-2)"},
       { "name":"order"     , "type":"B", "info":"order: 2 - TDCL , 3 - TDCR"},
       { "name":"TDC"       , "type":"I", "info":"TDC value"},
-      { "name":"ToT"       , "type":"I", "info":"Time Over Threshold"}
+      { "name":"ToT"       , "type":"I", "info":"Time Over Threshold"},
+      { "name":"timestamp" , "type":"L", "info":"timestamp"},
+      { "name":"trigger"   , "type":"I", "info":"trigger number"}
     ]
   },
   {
@@ -150,6 +204,20 @@
       { "name":"sdoca"     , "type":"F", "info":"smeared doca"},
       { "name":"time"      , "type":"F", "info":"time for the hit"},
       { "name":"stime"     , "type":"F", "info":"smeared time"}
+    ]
+  },
+  {
+    "name" : "DC::tot",
+    "group": 20600,
+    "item" : 15,
+    "info": "TDC bank for the Drift Chambers (DCRB Firmware v2)",
+    "entries":[
+      { "name":"sector"    , "type":"B", "info":"sector (1..6)"},
+      { "name":"layer"     , "type":"B", "info":"layer (1..36)"},
+      { "name":"component" , "type":"S", "info":"wire number (1..112)"},
+      { "name":"order"     , "type":"B", "info":"order: 2 - TDCL , 3 - TDCR"},
+      { "name":"TDC"       , "type":"I", "info":"TDC value"},
+      { "name":"ToT"       , "type":"S", "info":"Time Over Threshold"}
     ]
   },
   {

@@ -86,7 +86,7 @@ public class HelicitySequence {
         
         if (!state.isValid()) return false;
         
-        LOGGER.log(Level.FINE, "HelicitySequence:  adding state:  {0}", state);
+        LOGGER.log(Level.FINEST, "HelicitySequence:  adding state:  {0}", state);
 
         // ignore states from other run numbers:
         for (HelicityState hs : this.states) {
@@ -591,5 +591,22 @@ public class HelicitySequence {
         HelicitySequence sequence = new HelicitySequence();
         sequence.addStream(stream);
         sequence.writeFlips(writer, 1);
+    }
+   
+    /**
+     * 
+     * @param sf
+     * @param writer
+     * @param stream 
+     */
+    public static void writeFlips(SchemaFactory sf, HipoWriterSorted writer, TreeSet<HelicityState> stream) {
+        HelicitySequence sequence = new HelicitySequence();
+        sequence.addStream(stream);
+        Event e = new Event();
+        for (Bank b : sequence.getBanks(sf)) {
+            e.write(b);
+            writer.addEvent(e, 1);
+            e.reset();
+        }
     }
 }

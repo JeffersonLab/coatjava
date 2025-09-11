@@ -1,11 +1,24 @@
 version: 2
+
+registries:
+  clas12maven:
+    type: maven-repository
+    url: https://clasweb.jlab.org/clas12maven
+  jhep:
+    type: maven-repository
+    url: https://clasweb.jlab.org/jhep/maven
+
 updates:
   - package-ecosystem: "maven"
     directory: "/"
     schedule:
       interval: "weekly"
+    registries:
+      - clas12maven
+      - jhep
     ignore:
       - dependency-name: "org.jlab:groot" # since version numbers are not in order
+      - dependency-name: "org.ejml:ejml-simple" # keep version the same as `j4ml:j4ml-clas12:jar:0.9-SNAPSHOT`; see pull requests #636 and #632
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

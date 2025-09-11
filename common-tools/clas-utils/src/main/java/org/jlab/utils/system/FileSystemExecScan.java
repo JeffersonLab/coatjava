@@ -56,7 +56,7 @@ public class FileSystemExecScan {
         for(String dir : dirs){
             if (checkDirectory(dir)) {
                 for (String s : systemProperties) {
-                    LOGGER.info(String.format("Setting property : %s to %s",s,dir));
+                    LOGGER.fine(String.format("Setting property : %s to %s",s,dir));
                     System.setProperty(s, SUBSTITUTOR.replace(dir));
                 }
                 return true;

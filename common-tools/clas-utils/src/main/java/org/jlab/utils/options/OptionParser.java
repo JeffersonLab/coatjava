@@ -1,41 +1,50 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.utils.options;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.logging.Level;
+import org.jlab.logging.DefaultLogger;
 
 /**
  *
  * @author gavalian
  */
 public class OptionParser {
-    
-    private Map<String,OptionValue> optionsDescriptors = new TreeMap<String,OptionValue>();    
-    private Map<String,OptionValue>    requiredOptions = new TreeMap<String,OptionValue>();
-    private Map<String,OptionValue>      parsedOptions = new TreeMap<String,OptionValue>();
-    private List<String>               parsedInputList = new ArrayList<String>();
+  
+    private Map<String,OptionValue> optionsDescriptors = new TreeMap<>();    
+    private Map<String,OptionValue>    requiredOptions = new TreeMap<>();
+    private Map<String,OptionValue>      parsedOptions = new TreeMap<>();
+    private Set<String>               overridenOptions = new HashSet<>();
+    private List<String>               parsedInputList = new ArrayList<>();
     private String                             program = "undefined";
     private boolean                  requiresInputList = true;
     private String                  programDescription = "";
     
     public OptionParser(){
-        
+        init();
     }
     
     public OptionParser(String pname){
         this.program = pname;
+        init();
     }
-    
+   
+    private void init() {
+        addOption("-l","FINE","logging verbosity level");
+        addOption("-v",null,"print version");
+        addOption("-h",null,"print help");
+    }
+
     public void setDescription(String desc){
         this.programDescription = desc;
     }
-    
+
     public void setRequiresInputList(boolean flag){
         this.requiresInputList = flag;
     }
@@ -44,19 +53,29 @@ public class OptionParser {
         OptionValue option = new OptionValue(key);
         requiredOptions.put(key, option);
     }
+
+    private void check(String key, Set<String> keys) {
+        if (keys.contains(key)) {
+            System.out.println("WARNING: overriding OptionParser option:  "+key);
+            overridenOptions.add(key);
+        }
+    }
     
     public void addRequired(String key,String desc){
+        check(key,requiredOptions.keySet());
         OptionValue option = new OptionValue(key);
         option.setDescription(desc);
         requiredOptions.put(key, option);
     }
     
     public void addOption(String key, String defaultValue){
+        check(key, optionsDescriptors.keySet());
         OptionValue option = new OptionValue(key,defaultValue);
         optionsDescriptors.put(key, option);
     }
     
     public void addOption(String key, String defaultValue, String description){
+        check(key, optionsDescriptors.keySet());
         OptionValue option = new OptionValue(key,defaultValue);
         option.setDescription(description);
         optionsDescriptors.put(key, option);
@@ -68,13 +87,8 @@ public class OptionParser {
     
     public OptionValue getOption(String option){
         return this.parsedOptions.get(option);
-    }    
-    private void show(List<String> list){
-        for(int i = 0; i < list.size(); i++){
-            System.out.printf("%5d : %s\n", i,list.get(i));
-        }
     }
-    
+
     public void show(){
         for(Map.Entry<String,OptionValue> entry : this.parsedOptions.entrySet()){
          System.out.printf("%12s : %s\n", entry.getKey(),entry.getValue().getValue());
@@ -120,17 +134,23 @@ public class OptionParser {
         System.out.println(this.getUsageString());
         System.out.println("\n\n");
     }
-    
-    public void parse(String[] args){
-        List<String> arguments = new ArrayList<String>();
-        for(String item : args){ arguments.add(item); }
-        
-        if(this.containsOptions(arguments, "-h","-help")==true){
+   
+    public void parse(String... args) {
+
+        List<String> arguments = new ArrayList<>();
+        arguments.addAll(Arrays.asList(args));
+
+        // Default, non-overridable, options:
+        if(this.containsOptions(arguments,"-h","-help")==true){
             this.printUsage();
             System.exit(0);
         }
+        else if(this.containsOptions(arguments,"-v","-version")==true){
+            System.out.println(getVersion());
+            System.exit(0);
+        }
 
-//this.show(arguments);
+        // Parse required options:
         for(Map.Entry<String,OptionValue> entry : this.requiredOptions.entrySet()){
             boolean status = entry.getValue().parse(arguments);
             if(status==false) { 
@@ -138,38 +158,73 @@ public class OptionParser {
                 this.printUsage();
                 System.err.println(" \n*** ERROR *** Missing argument : " + entry.getValue().getOption());
                 System.exit(100);
-                return;
             }
             this.parsedOptions.put(entry.getValue().getOption(), entry.getValue());
         }
+
+        // Parse non-required options:
         for(Map.Entry<String,OptionValue> entry : this.optionsDescriptors.entrySet()){
             boolean status = entry.getValue().parse(arguments);
             this.parsedOptions.put(entry.getKey(), entry.getValue());
         }
-        
+       
+        // Parse input list:
         parsedInputList.clear();
         for(String item : arguments){
             if(item.startsWith("-")==false){
                 this.parsedInputList.add(item);
             }
         }
-        //this.show(arguments);
+        if (this.requiresInputList && this.parsedInputList.isEmpty()) {
+            System.err.println(" \n*** ERROR *** Empty Input List.");
+            System.exit(101);
+        }
+
+        // Configure logger:
+        if (!overridenOptions.contains("-l")) {
+            setVerbosity(this.parsedOptions.get("-l").stringValue());
+        }
     }
-    
+
+    private void setVerbosity(String level) {
+        try {
+            DefaultLogger.initialize(Level.parse(level));
+        }
+        catch (IllegalArgumentException e) {
+            System.err.println("Invalid -l java.util.logging.Level:  "+level);
+            System.exit(102);
+        }
+        catch (NullPointerException e) {
+            System.err.println("Unavailable -l COATJAVA logging level:  "+level);
+            System.exit(103);
+        }
+    }
+
     public List<String> getInputList(){
         return this.parsedInputList;
     }
+   
+    public static String getVersion(){
+        try {
+            Properties p = new Properties();
+            p.load(OptionParser.class.getResourceAsStream("/pom.properties"));
+            return String.format("coatjava version %s",p.getProperty("version"));
+        } catch (Exception e) {
+            return "coatjava version ???";
+        }
+    }
     
     public static void main(String[] args){
-        String[] options = new String[]{"-t","2","-r","5","-o","output.hipo"};
         OptionParser parser = new OptionParser();
         parser.addRequired("-o");
         parser.addOption("-r", "10");
         parser.addOption("-t", "25.0");
         parser.addOption("-d", "35");
-        
-        parser.parse(options);
-        
+        parser.addOption("-h","helpless");
+        parser.addOption("-v","versionless");
+        if (args.length == 0) parser.parse("-o","out.dat","in.dat");
+        else parser.parse(args);
         parser.show();        
+        parser.parse("-h");
     }
 }

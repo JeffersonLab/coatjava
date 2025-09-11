@@ -10,3 +10,17 @@ on:
 jobs:
   validation:
     uses: JeffersonLab/clas12-validation/.github/workflows/ci.yml@main
+    with:
+      matrix_evgen: >-
+        [
+          "e_p",
+          "e_n",
+          "e_g",
+          "e_pC",
+          "eFT_K",
+          "e_gFT"
+        ]
+      matrix_config: >-
+        [
+          "rgb_fall2019"
+        ]

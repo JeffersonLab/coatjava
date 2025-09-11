@@ -1,70 +1,55 @@
 package org.jlab.rec.ahdc.Hit;
 
+import org.jlab.geom.detector.alert.AHDC.AlertDCDetector;
+import org.jlab.geom.prim.Line3D;
+import org.jlab.geom.prim.Point3D;
 
 public class Hit implements Comparable<Hit> {
 
+	private final double thster = Math.toRadians(20.0);
 	private final int    id;
 	private final int    superLayerId;
 	private final int    layerId;
 	private final int    wireId;
 	private final double doca;
+	private final double adc;
+	private final double time;
 
+        private Line3D wireLine;
 	private double  phi;
 	private double  radius;
 	private int     nbOfWires;
 	private boolean use = false;
 	private double  x;
 	private double  y;
+	private double  residual_prefit;
+	private double  residual;
+	private int	trackId;
 
-	public Hit(int _Id, int _Super_layer, int _Layer, int _Wire, double _Doca) {
+        //updated constructor with ADC
+	public Hit(int _Id, int _Super_layer, int _Layer, int _Wire, double _Doca, double _ADC, double _Time) {
 		this.id           = _Id;
 		this.superLayerId = _Super_layer;
 		this.layerId      = _Layer;
 		this.wireId       = _Wire;
 		this.doca         = _Doca;
-		wirePosition();
+		this.adc          = _ADC;
+		this.time 	  = _Time;
+		this.residual_prefit = 0.0;
+		this.residual        = 0.0;
+		this.trackId	     = -1; // not defined yet
 	}
 
-	private void wirePosition() {
-		final double DR_layer = 4.0;
-		final double round    = 360.0;
-
-		double numWires = 32.0;
-		double R_layer  = 47.0;
-
-		switch (this.superLayerId) {
-			case 0:
-				numWires = 47.0;
-				R_layer = 32.0;
-				break;
-			case 1:
-				numWires = 56.0;
-				R_layer = 38.0;
-				break;
-			case 2:
-				numWires = 72.0;
-				R_layer = 48.0;
-				break;
-			case 3:
-				numWires = 87.0;
-				R_layer = 58.0;
-				break;
-			case 4:
-				numWires = 99.0;
-				R_layer = 68.0;
-				break;
-		}
-
-		R_layer = R_layer + DR_layer * this.layerId;
-		double alphaW_layer = Math.toRadians(round / (numWires));
-		double wx           = -R_layer * Math.sin(alphaW_layer * this.wireId);
-		double wy           = -R_layer * Math.cos(alphaW_layer * this.wireId);
-
-		this.nbOfWires = (int) numWires;
-		this.phi       = Math.atan2(wy, wx);
-		this.radius    = R_layer;
-		this.x         = wx;
-		this.y         = wy;
+	public void setWirePosition(AlertDCDetector factory) {
+	
+		//System.out.println(" superlayer " + this.superLayerId + " layer " + this.layerId + " wire " + this.wireId + " R_layer " + R_layer + " wx " + wx + " wy " + wy);
+		wireLine = factory.getSector(1).getSuperlayer(superLayerId).getLayer(layerId).getComponent(wireId).getLine();
+		Point3D end = wireLine.end();
+                this.nbOfWires = factory.getSector(1).getSuperlayer(superLayerId).getLayer(layerId).getNumComponents();
+		this.phi       = end.vectorFrom(0, 0, 0).phi();
+		this.radius    = end.distance(0, 0, end.z());
+		this.x         = end.x();
+		this.y         = end.y();
 	}
 
 	@Override
@@ -84,7 +69,7 @@ public class Hit implements Comparable<Hit> {
 	public int getId() {
 		return id;
 	}
-
+        
 	public int getSuperLayerId() {
 		return superLayerId;
 	}
@@ -101,7 +86,11 @@ public class Hit implements Comparable<Hit> {
 		return doca;
 	}
 
-	public double getRadius() {
+        public Line3D getLine() {
+            return wireLine;
+        }
+        
+        public double getRadius() {
 		return radius;
 	}
 
@@ -124,4 +113,37 @@ public class Hit implements Comparable<Hit> {
 	public double getY() {
 		return y;
 	}
+
+	public double getPhi() {return phi;}
+
+	public double getADC() {return adc;}
+
+	public double getResidual() {
+		return residual;
+	}
+
+	public double getResidualPrefit() {
+		return residual_prefit;
+	}
+
+	public void setResidual(double resid) {
+		this.residual = resid;
+	}
+
+	public void setResidualPrefit(double resid) {
+		this.residual_prefit = resid;
+	}
+	
+	public double getTime() {
+		return time;
+	}
+
+	public int getTrackId() {
+		return trackId;
+	}
+
+	public void setTrackId(int _trackId) {
+		this.trackId = _trackId;
+	}
+
 }

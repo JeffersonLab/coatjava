@@ -11,105 +11,102 @@ import org.jlab.geom.prim.Vector3D;
 
 public class Hit implements Comparable<Hit> {
 
-	private final double thster = Math.toRadians(20.0);
 	private final int    superLayer;
 	private final int    layer;
 	private final int    wire;
 	private final double r;
+	private final double phi;
 	private final double doca;
+	private double adc;
 	private final double numWires;
 	private final Line3D line3D;
+	private final Line3D line3D_plus;
+	private final Line3D line3D_minus;
+	private int    hitidx;
+	private int    hitsign;
 
-	public Hit(int superLayer, int layer, int wire, int numWire, double r, double doca) {
+	// Comparison with:  common-tools/clas-geometry/src/main/java/org/jlab/geom/detector/alert/AHDC/AlertDCFactory.java
+	// here, SuperLayer, Layer, Wire, start from 1
+	// in AlertDCFactory, same variables start from 1
+	public Hit(int superLayer, int layer, int wire, int numWire, Line3D line, double doca) {
 		this.superLayer = superLayer;
 		this.layer      = layer;
-		this.wire       = wire - 1;
-		this.r          = r;
+		this.wire       = wire;
+		this.r          = line.end().distance(0, 0, line.end().z());
 		this.doca       = doca;
 		this.numWires = numWire;
+		this.adc = 0;//placeholder
+		this.hitidx = -1;
+		this.hitsign = 0;
+		
+		this.phi = line.midpoint().vectorFrom(0,0,0).phi();
+		//System.out.println(" superlayer " + this.superLayer + " layer " + this.layer + " wire " + this.wire + " wx " + wx + " wy " + wy + " wx_end " + wx_end + " wy_end " + wy_end + " phi " + this.phi);
+		
+		this.line3D = line;
 
-		final double DR_layer = 4.0;
-		final double round    = 360.0;
-		final double thster   = Math.toRadians(20.0);
-		final double zl       = 300.0;
-
-		double numWires = 32.0;
-		double R_layer  = 47.0;
-
-		double zoff1 = 0.0d;
-		double zoff2 = 300.0d;
-		Point3D  p1 = new Point3D(R_layer, 0, zoff1);
-		Vector3D n1 = new Vector3D(0, 0, 1);
-		//n1.rotateY(-thopen);
-		//n1.rotateZ(thtilt);
-		Plane3D lPlane = new Plane3D(p1, n1);
-
-		Point3D  p2 = new Point3D(R_layer, 0, zoff2);
-		Vector3D n2 = new Vector3D(0, 0, 1);
-		//n2.rotateY(thopen);
-		//n2.rotateZ(thtilt);
-		Plane3D rPlane = new Plane3D(p2, n2);
-
-		switch (this.superLayer) {
-			case 0:
-				numWires = 47.0;
-				R_layer = 32.0;
-				break;
-			case 1:
-				numWires = 56.0;
-				R_layer = 38.0;
-				break;
-			case 2:
-				numWires = 72.0;
-				R_layer = 48.0;
-				break;
-			case 3:
-				numWires = 87.0;
-				R_layer = 58.0;
-				break;
-			case 4:
-				numWires = 99.0;
-				R_layer = 68.0;
-				break;
-		}
-
-		R_layer = R_layer + DR_layer * this.layer;
-		double alphaW_layer = Math.toRadians(round / (numWires));
-		double wx           = -R_layer * Math.sin(alphaW_layer * this.wire);
-		double wy           = -R_layer * Math.cos(alphaW_layer * this.wire);
-
-		double wx_end = -R_layer * Math.sin(alphaW_layer * this.wire + thster * (Math.pow(-1, this.superLayer)));
-		double wy_end = -R_layer * Math.cos(alphaW_layer * this.wire + thster * (Math.pow(-1, this.superLayer)));
-
-		Line3D line = new Line3D(wx, wy, -150, wx_end, wy_end, zl/2);
-
-		Point3D lPoint = new Point3D();
-		Point3D rPoint = new Point3D();
-		lPlane.intersection(line, lPoint);
-		rPlane.intersection(line, rPoint);
-		// All wire go from left to right
-		Line3D wireLine = new Line3D(lPoint, rPoint);
-
-		this.line3D = wireLine;
+		//calculate the "virtual" left and right wires accounting for the DOCA 
+		double deltaphi = Math.asin(this.doca/r);
+		this.line3D_plus = new Line3D();
+                this.line3D_plus.copy(line);
+                this.line3D_plus.rotateZ(deltaphi);
+                
+		this.line3D_minus = new Line3D();
+                this.line3D_minus.copy(line);
+                this.line3D_minus.rotateZ(deltaphi);
+		
 	}
 
-	public RealVector get_Vector() {
+        //hit measurement vector in 1 dimension: minimize distance - doca
+        public RealVector get_Vector() {
 		return new ArrayRealVector(new double[]{this.doca});
 	}
 
-	public RealMatrix get_MeasurementNoise() {
-		return new Array2DRowRealMatrix(new double[][]{{10}});
+        //hit measurement vector in 1 dimension with sign: if sign = 0, return doca, otherwise return 0
+        public RealVector get_Vector(int sign, boolean goodsign) {
+		if(sign == 0 || goodsign){
+			return new ArrayRealVector(new double[]{this.doca});
+		}else{
+			return new ArrayRealVector(new double[]{0.0});
+		}
 	}
 
+    	public RealMatrix get_MeasurementNoise() {
+		return new Array2DRowRealMatrix(new double[][]{{0.0225}});
+	}
+    
+    	public RealMatrix get_MeasurementNoise(boolean goodsign) {
+	    if(goodsign){
+		return new Array2DRowRealMatrix(new double[][]{{0.0225}});
+	    }else{
+		return new Array2DRowRealMatrix(new double[][]{{2*this.doca*this.doca}});
+	    }
+	}
+    
 	public double doca() {
 		return doca;
 	}
 
 	public double r()    {return r;}
 
+        public double phi()    {return phi;}//at z = 0;
+    
+        public double phi(double z)    {
+	    return this.line3D.lerpPoint((z-line3D.origin().z())/line3D.length()).vectorFrom(0,0,0).phi();
+	}
+
 	public Line3D line() {return line3D;}
 
 	public double distance(Point3D point3D) {
+		return this.line3D.distance(point3D).length();
+	}
+
+	public double distance(Point3D point3D, int sign, boolean goodsign) {
+		//if(sign!=0)
+	    	//System.out.println(" r " + this.r +  " phi " + this.phi + " doca " + this.doca + " sign " + sign + " distance " + this.line3D.distance(point3D).length() + " (sign 0) " + this.line3D_plus.distance(point3D).length() + " (sign+) " + this.line3D_minus.distance(point3D).length() + " (sign-) ");
+		if(!goodsign){	    
+			if(sign>0)return this.line3D_plus.distance(point3D).length();
+			if(sign<0)return this.line3D_minus.distance(point3D).length();
+		}
 		return this.line3D.distance(point3D).length();
 	}
 
@@ -126,10 +123,6 @@ public class Hit implements Comparable<Hit> {
 
 	public RealVector get_Vector_beam() {
 		return null;
-	}
-
-	public double getThster() {
-		return thster;
 	}
 
 	public int getSuperLayer() {
@@ -152,6 +145,14 @@ public class Hit implements Comparable<Hit> {
 		return doca;
 	}
 
+	public double getADC() {
+		return adc;
+	}
+
+	public void setADC(double _adc) {
+		this.adc = _adc;
+	}
+
 	public Line3D getLine3D() {
 		return line3D;
 	}
@@ -159,5 +160,22 @@ public class Hit implements Comparable<Hit> {
 	public double getNumWires() {
 		return numWires;
 	}
+
+	public int getHitIdx() {
+		return hitidx;
+	}
+
+	public void setHitIdx(int idx) {
+		this.hitidx = idx;
+	}
+
+	public int getSign() {
+		return hitsign;
+	}
+
+	public void setSign(int sign) {
+		this.hitsign = sign;
+	}
+    
 }
 

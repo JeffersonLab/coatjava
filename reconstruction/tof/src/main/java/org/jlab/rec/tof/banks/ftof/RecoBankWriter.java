@@ -245,7 +245,7 @@ public class RecoBankWriter {
         if (fTOFBanks.size() == 1) {
             event.appendBanks(fTOFBanks.get(0));
         }
-
+        
     }
 
 }
