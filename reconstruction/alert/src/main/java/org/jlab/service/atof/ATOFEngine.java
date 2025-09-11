@@ -1,13 +1,14 @@
 package org.jlab.service.atof;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 
-import java.util.concurrent.atomic.AtomicInteger;
-import org.jlab.clas.swimtools.Swim;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.geom.base.Detector;
 import org.jlab.geom.detector.alert.ATOF.AlertTOFFactory;
@@ -18,6 +19,7 @@ import org.jlab.rec.atof.cluster.ClusterFinder;
 import org.jlab.rec.atof.hit.ATOFHit;
 import org.jlab.rec.atof.hit.BarHit;
 import org.jlab.rec.atof.hit.HitFinder;
+import org.jlab.rec.constants.CalibrationConstantsLoader;
 //import org.jlab.rec.alert.projections.TrackProjector;
 
 /**
@@ -34,7 +36,6 @@ public class ATOFEngine extends ReconstructionEngine {
 
     RecoBankWriter rbc;
 
-    private final AtomicInteger run = new AtomicInteger(0);
     private Detector ATOF;
     private double b; //Magnetic field
     
@@ -51,23 +52,33 @@ public class ATOFEngine extends ReconstructionEngine {
         return ATOF;
     }
 
+    int Run = -1;
+    
     @Override
     public boolean processDataEvent(DataEvent event) {
 
         if (!event.hasBank("RUN::config")) {
             return true;
         }
-
-        DataBank bank = event.getBank("RUN::config");
-
-        int newRun = bank.getInt("run", 0);
-        if (newRun == 0) {
+        
+        //This assumes the FD reconstruction produced an event with good startTime
+        //All start time handling could be moved as an EB-type step later
+        if (!event.hasBank("REC::Event") || event.getBank("REC::Event").getFloat("startTime", 0)==-1000) {
             return true;
         }
 
-        if (run.get() == 0 || (run.get() != 0 && run.get() != newRun)) {
-            run.set(newRun);
+        DataBank bank = event.getBank("RUN::config");
+
+        int runNo = bank.getInt("run", 0);
+        if (runNo <= 0) {
+            System.err.println("ATOFEngine:  got run <= 0 in RUN::config, skipping event.");
+            return false;
         }
+        int newRun = runNo; 
+            // Load the constants
+        if(Run!=newRun) {
+            CalibrationConstantsLoader.Load(newRun, this.getConstantsManager());
+            }
         
         ////Do we need to read the event vx,vy,vz?
         ////If not, this part can be moved in the initialization of the engine.
@@ -116,11 +127,37 @@ public class ATOFEngine extends ReconstructionEngine {
         AlertTOFFactory factory = new AlertTOFFactory();
         DatabaseConstantProvider cp = new DatabaseConstantProvider(11, "default");
         this.ATOF = factory.createDetectorCLAS(cp);
+        
+        String[] alertTables = new String[] {
+            	"/calibration/alert/ahdc/time_offsets",
+                "/calibration/alert/ahdc/time_to_distance",
+                "/calibration/alert/ahdc/raw_hit_cuts",
+                "/calibration/alert/atof/effective_velocity",
+                "/calibration/alert/atof/time_walk",
+                "/calibration/alert/atof/attenuation",
+                "/calibration/alert/atof/time_offsets"
+        };
+        
+        Map<String, Integer> tableMap = new HashMap<>();
+        for (String table : alertTables) {
+            if (table.equals("/calibration/alert/atof/time_offsets") ||
+                table.equals("/calibration/alert/atof/time_walk")) {
+                tableMap.put(table, 4);
+            } else {
+                tableMap.put(table, 3);
+            }
+        }
+
+        requireConstants(tableMap);
+        
+        this.getConstantsManager().setVariation("default");
+        
         this.registerOutputBank("ATOF::hits", "ATOF::clusters");
 
         return true;
     }
 
     public static void main(String arg[]) {
+        
     }
 }
