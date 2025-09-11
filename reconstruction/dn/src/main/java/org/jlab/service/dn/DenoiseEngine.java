@@ -16,6 +16,8 @@ import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.translate.Batchifier;
 import ai.djl.translate.TranslateException;
 import java.io.IOException;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.io.base.DataBank;
@@ -32,7 +34,22 @@ public class DenoiseEngine extends ReconstructionEngine {
     float threshold = 0.01f;
     Criteria<float[][],float[][]> criteria;
     ZooModel<float[][], float[][]> model;
+    PredictorPool predictors;
     
+    public static class PredictorPool {
+        final BlockingQueue<Predictor> pool;
+        public PredictorPool(int size, ZooModel model) {
+            pool = new LinkedBlockingQueue<>(size);
+            for (int i=0; i<size; i++) pool.offer(model.newPredictor());
+        }
+        public Predictor get() throws InterruptedException {
+            return pool.take();
+        }
+        public void put(Predictor p) {
+            if (p != null) pool.offer(p);
+        }
+    }
+
     public DenoiseEngine() {
         super("DenoiseEngine","lleztlab","1.0");
     }
@@ -50,6 +67,7 @@ public class DenoiseEngine extends ReconstructionEngine {
                 .optProgress(new ProgressBar())
                 .build();
             model = criteria.loadModel();
+            predictors = new PredictorPool(64, model);
             return true;
         } catch (NullPointerException | MalformedModelException | IOException | ModelNotFoundException ex) {
             System.getLogger(DenoiseEngine.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
@@ -60,7 +78,7 @@ public class DenoiseEngine extends ReconstructionEngine {
     @Override
     public boolean processDataEvent(DataEvent event) {
 
-        if (false) return processFakeEvent();
+        //return processFakeEvent();
        
         for (int i=0; i<BANK_NAMES.length; i++){
             if (event.hasBank(BANK_NAMES[i])) {
@@ -68,10 +86,12 @@ public class DenoiseEngine extends ReconstructionEngine {
                 try {
                     // WARNING:  Predictor is *not* thread safe.
                     // WARNING:  A pool might be worthwhile.
-                    Predictor<float[][], float[][]> predictor = model.newPredictor();
+                    //Predictor<float[][], float[][]> predictor = model.newPredictor();
+                    Predictor<float[][], float[][]> predictor = predictors.get();
                     for (int sector=0; sector<6; sector++) {
                         float[][] input = DenoiseEngine.getSector(bank, sector+1);
                         float[][] output = predictor.predict(input);
+                        predictors.put(predictor);
                         //show(input);
                         //show(output);
                         update(bank, threshold, output, sector);
@@ -79,7 +99,7 @@ public class DenoiseEngine extends ReconstructionEngine {
                     event.removeBank(BANK_NAMES[i]);
                     event.appendBank(bank);
                 }
-                catch (TranslateException e) {
+                catch (TranslateException | InterruptedException e) {
                     throw new RuntimeException(e);
                 }
                 break;
@@ -199,4 +219,5 @@ public class DenoiseEngine extends ReconstructionEngine {
             }
         };
     }
+
 }
