@@ -121,7 +121,7 @@ public class RebuildScalers {
                         Date uet = new Date(runConfigBank.getInt("unixtime",0)*1000L);
                         ds = DaqScalers.create(rawScalerBank, ccdb_fcup, ccdb_slm, ccdb_hel, rst, uet);
                     }
-                    
+
                     runScalerBank = ds.createRunBank(writer.getSchemaFactory());
                     helScalerBank = ds.createHelicityBank(writer.getSchemaFactory());
                    
