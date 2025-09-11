@@ -69,6 +69,11 @@ public class HitFinder {
         this.wedgeHits.clear();
         //They are read from the ATOF TDC bank
         DataBank bank = event.getBank("ATOF::tdc");
+        //Check that the event start time is defined are done in the engine
+        //if (event.hasBank("REC::Event") && 
+        //        event.getBank("REC::Event").getFloat("startTime", 0)!=-1000)
+        float startTime = event.getBank("REC::Event").getFloat("startTime", 0);
+        
         int nt = bank.rows(); // number of hits
         //Hits in the bar downstream and upstream will be matched
         ArrayList<ATOFHit> hit_up = new ArrayList<>();
@@ -85,7 +90,7 @@ public class HitFinder {
             int tot = bank.getInt("ToT", i);
 
             //Building a Hit
-            ATOFHit hit = new ATOFHit(sector, layer, component, order, tdc, tot, atof);
+            ATOFHit hit = new ATOFHit(sector, layer, component, order, tdc, tot, startTime, atof);
             if (hit.getEnergy() < 0.01) {
                 continue; //energy threshold
             }
