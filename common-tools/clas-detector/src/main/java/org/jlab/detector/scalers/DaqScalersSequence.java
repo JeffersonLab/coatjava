@@ -31,9 +31,9 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
     private Bank runConfigBank=null;
     private Bank runScalerBank=null;
   
-    static final Logger logger = Logger.getLogger(DaqScalersSequence.class.getName());
+    protected static final Logger logger = Logger.getLogger(DaqScalersSequence.class.getName());
     
-    private DaqScalersSequence(){};
+    protected DaqScalersSequence(){};
 
     public static class Interval {
         private DaqScalers previous = null;
@@ -83,6 +83,11 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
         if (o1.getTimestamp() > o2.getTimestamp()) return +1;
         return 0;
     }
+
+    /** @return the number of scalers in this sequence */
+    public int size() {
+      return scalers.size();
+    }
   
     protected int findIndex(long timestamp) {
         if (this.scalers.isEmpty()) return -1;
@@ -94,12 +99,18 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
         ds.setTimestamp(timestamp);
         final int index=Collections.binarySearch(this.scalers,ds,new DaqScalersSequence());
         final int n = index<0 ? -index-2 : index;
+        logger.finest(" -> DaqScalersSequence.findIndex(" + timestamp + ") -> index = " + index + " -> return " + n);
         return n;
     }
 
     public DaqScalersSequence(SchemaFactory schema) {
         runConfigBank = new Bank(schema.getSchema("RUN::config"));
         runScalerBank=new Bank(schema.getSchema("RUN::scaler"));
+    }
+
+    public DaqScalersSequence(List<DaqScalers> inputScalers) {
+        for (DaqScalers inputScaler : inputScalers)
+            this.add(inputScaler);
     }
 
     public void clear() {
@@ -135,11 +146,14 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
         event.read(runConfigBank);
         if (runScalerBank.getRows() > 0) {
             long timestamp=0;
+            int evnum=0;
             if (runConfigBank.getRows()>0) {
                 timestamp=runConfigBank.getLong("timestamp",0);
+                evnum=runConfigBank.getInt("event",0);
             }
             DaqScalers ds=DaqScalers.create(runScalerBank);
             ds.setTimestamp(timestamp);
+            ds.setEventNum(evnum);
             return add(ds);
         }
         return false;
@@ -219,18 +233,25 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
      * @return  sequence
      */
     public static DaqScalersSequence readSequence(List<String> filenames) {
+        DaqScalersSequence seq=new DaqScalersSequence();
+        seq.readFiles(filenames);
+        return seq;
+    }
+
+    /**
+     * @param filenames list of names of HIPO files to read
+     */
+    protected void readFiles(List<String> filenames) {
         logger.info("DaqScalersSequence::  Reading scaler sequence from "+String.join(",", filenames));
        
-        DaqScalersSequence seq=new DaqScalersSequence();
-
         for (String filename : filenames) {
 
             HipoReader reader = new HipoReader();
             reader.setTags(1);
             reader.open(filename);
 
-            if (seq.runConfigBank==null) {
-                seq.runConfigBank = new Bank(reader.getSchemaFactory().getSchema("RUN::config"));
+            if (this.runConfigBank==null) {
+                this.runConfigBank = new Bank(reader.getSchemaFactory().getSchema("RUN::config"));
             }
         
             SchemaFactory schema = reader.getSchemaFactory();
@@ -245,21 +266,22 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
                 event.read(configBank);
          
                 long timestamp=0;
+                int evnum=0;
                 
                 if (scalerBank.getRows()<1) continue;
                 if (configBank.getRows()>0) {
                     timestamp=configBank.getLong("timestamp",0);
+                    evnum=configBank.getInt("event",0);
                 }
         
                 DaqScalers ds=DaqScalers.create(scalerBank);
                 ds.setTimestamp(timestamp);
-                seq.add(ds);
+                ds.setEventNum(evnum);
+                this.add(ds);
             }
 
             reader.close();
         }
-        
-        return seq;
     }
    
     /**
@@ -292,6 +314,35 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
             reader.close();
         }
         return seq;
+    }
+
+    /**
+     * Checks if the scalers list is sorted such that the scalers' timestamp and event number orderings are consistent and monotonically increasing.
+     * @return {@code true} if timestamp and event number orderings are consistent
+     */
+    public boolean validateOrdering() {
+        if (scalers.size() <= 1) return true; // trivial case
+        boolean result = true;
+        for (int i = 0; i < scalers.size() - 1; i++) {
+            var prev = scalers.get(i);
+            var next = scalers.get(i + 1);
+            var timestampComparison = Long.compare(prev.getTimestamp(), next.getTimestamp());
+            var evnumComparison     = Integer.compare(prev.getEventNum(), next.getEventNum());
+            if (timestampComparison == 0 || evnumComparison == 0) {
+                logger.warning("WARNING: found possible duplicate scaler readout: evnum=" + prev.getEventNum() + " timestamp=" + prev.getTimestamp() + " i=" + i);
+                logger.warning("                                next readout has: evnum=" + next.getEventNum() + " timestamp=" + next.getTimestamp());
+                result = false;
+            }
+            // if neither is equal, they must have the same sign: negative, i.e., increasing monotonically
+            else {
+                if (Integer.signum(timestampComparison) != -1 || Integer.signum(evnumComparison) != -1) {
+                    logger.warning("WARNING: found non-monotonic scaler ordering: evnum=" + prev.getEventNum() + " timestamp=" + prev.getTimestamp() + " i=" + i);
+                    logger.warning("                            next readout has: evnum=" + next.getEventNum() + " timestamp=" + next.getTimestamp());
+                    result = false;
+                }
+            }
+        }
+        return result;
     }
 
     /**
