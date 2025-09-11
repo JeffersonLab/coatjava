@@ -84,7 +84,7 @@ public class DenoiseEngine extends ReconstructionEngine {
         return true;
     }
 
-    private boolean processFakeEvent() {
+    boolean processFakeEvent() {
         try {
             Predictor<float[][], float[][]> predictor = model.newPredictor();
             float[][] input = getAlmostStraightSlightlyBendingTrack();
