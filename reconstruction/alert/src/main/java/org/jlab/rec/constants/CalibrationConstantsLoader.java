@@ -139,20 +139,21 @@ public class CalibrationConstantsLoader {
                         int layer       = Integer.parseInt((String)atof_timeWalk.getValueAt(i, 1));
                         int component   = Integer.parseInt((String)atof_timeWalk.getValueAt(i, 2));
 			int order       = Integer.parseInt((String)atof_timeWalk.getValueAt(i, 3));
-			double tw0      = atof_timeWalk.getDoubleValue("tw0",     sector, layer, component); 
-			double tw1      = atof_timeWalk.getDoubleValue("tw1",     sector, layer, component); 
-			double tw2      = atof_timeWalk.getDoubleValue("tw2",     sector, layer, component); 
-			double tw3      = atof_timeWalk.getDoubleValue("tw3",     sector, layer, component); 
-			double dtw0     = atof_timeWalk.getDoubleValue("dtw0",    sector, layer, component); 
-			double dtw1     = atof_timeWalk.getDoubleValue("dtw1",    sector, layer, component); 
-			double dtw2     = atof_timeWalk.getDoubleValue("dtw2",    sector, layer, component); 
-			double dtw3     = atof_timeWalk.getDoubleValue("dtw3",    sector, layer, component); 
-			double chi2ndf  = atof_timeWalk.getDoubleValue("chi2ndf", sector, layer, component); 
+			double tw0      = atof_timeWalk.getDoubleValue("tw0",     sector, layer, component, order); 
+			double tw1      = atof_timeWalk.getDoubleValue("tw1",     sector, layer, component, order); 
+			double tw2      = atof_timeWalk.getDoubleValue("tw2",     sector, layer, component, order); 
+			double tw3      = atof_timeWalk.getDoubleValue("tw3",     sector, layer, component, order); 
+			double dtw0     = atof_timeWalk.getDoubleValue("dtw0",    sector, layer, component, order); 
+			double dtw1     = atof_timeWalk.getDoubleValue("dtw1",    sector, layer, component, order); 
+			double dtw2     = atof_timeWalk.getDoubleValue("dtw2",    sector, layer, component, order); 
+			double dtw3     = atof_timeWalk.getDoubleValue("dtw3",    sector, layer, component, order); 
+			double chi2ndf  = atof_timeWalk.getDoubleValue("chi2ndf", sector, layer, component, order); 
 			// Put in map
 			int key 	= sector*10000 + layer*1000 + component*10 + order;
+                        //System.out.println("s " + sector + " l " + layer + " c " + component + " o " + order);
 			double params[] = {tw0, tw1, tw2, tw3, dtw0, dtw1, dtw2, dtw3, chi2ndf};
 			ATOF_TIME_WALK.put(Integer.valueOf(key), params);
-			//System.out.println("tw0 : " + tw0 + " tw1 : " + tw1 + " tw2 : " + tw2 + " tw3 : " + tw3 + " ...");
+			//System.out.println("tw0 : " + tw0 + " tw1 : " + tw1 + " tw2 : " + tw2 + " tw3 : " + tw3);
 		}
 
 		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -179,11 +180,11 @@ public class CalibrationConstantsLoader {
                         int layer       	   = Integer.parseInt((String)atof_timeOffsets.getValueAt(i, 1));
                         int component  		   = Integer.parseInt((String)atof_timeOffsets.getValueAt(i, 2));
 			int order       	   = Integer.parseInt((String)atof_timeOffsets.getValueAt(i, 3)); // we have to use it here !
-			double t0       	   = atof_timeOffsets.getDoubleValue("t0",      	    sector, layer, component); 
-			double upstream_downstream = atof_timeOffsets.getDoubleValue("upstream_downstream", sector, layer, component); 
-			double wedge_bar    	   = atof_timeOffsets.getDoubleValue("wedge_bar",	    sector, layer, component); 
-			double extra1   	   = atof_timeOffsets.getDoubleValue("extra1", 		    sector, layer, component); 
-			double extra2              = atof_timeOffsets.getDoubleValue("extra2", 		    sector, layer, component); 
+			double t0       	   = atof_timeOffsets.getDoubleValue("t0",      	    sector, layer, component, order); 
+			double upstream_downstream = atof_timeOffsets.getDoubleValue("upstream_downstream", sector, layer, component, order); 
+			double wedge_bar    	   = atof_timeOffsets.getDoubleValue("wedge_bar",	    sector, layer, component, order); 
+			double extra1   	   = atof_timeOffsets.getDoubleValue("extra1", 		    sector, layer, component, order); 
+			double extra2              = atof_timeOffsets.getDoubleValue("extra2", 		    sector, layer, component, order); 
 			// Put in map
 			int key 	= sector*10000 + layer*1000 + component*10 + order;
 			double params[] = {t0, upstream_downstream, wedge_bar, extra1, extra2};
@@ -209,6 +210,5 @@ public class CalibrationConstantsLoader {
 	}
 
 	public static void main (String arg[]) {
-		//	CalibrationConstantsLoader.Load(10,"default");
 	}
 }
