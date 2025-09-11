@@ -108,6 +108,12 @@ public class RebuildScalers {
                     if (ccdb_dsc.getIntValue("frequency", 0,0,0) < 2e5) {
                         ds = DaqScalers.create(rawScalerBank, ccdb_fcup, ccdb_slm, ccdb_hel, ccdb_dsc);
                     }
+                    else if (seq != null) {
+                        // Use rollover-corrected clock if available and clock's freq > 200 kHz
+                        long ut = seq.get(event).dsc2.getClock();
+                        long gt = seq.get(event).dsc2.getGatedClock();
+                        ds = DaqScalers.create(rawScalerBank, ccdb_fcup, ccdb_slm, ccdb_hel, ccdb_dsc, ut, gt);
+                    }
                     else {
                         // Inputs for calculation run duration in seconds, since for
                         // some run periods the DSC2 clock rolls over during a run.
@@ -116,11 +122,6 @@ public class RebuildScalers {
                         ds = DaqScalers.create(rawScalerBank, ccdb_fcup, ccdb_slm, ccdb_hel, rst, uet);
                     }
                     
-                    if (seq != null) {
-                        ds.dsc2.setClock(seq.get(event).dsc2.getClock());
-                        ds.dsc2.setGatedClock(seq.get(event).dsc2.getClock());
-                    }
-
                     runScalerBank = ds.createRunBank(writer.getSchemaFactory());
                     helScalerBank = ds.createHelicityBank(writer.getSchemaFactory());
                    
