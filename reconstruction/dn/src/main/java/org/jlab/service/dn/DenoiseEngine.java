@@ -78,22 +78,20 @@ public class DenoiseEngine extends ReconstructionEngine {
     @Override
     public boolean processDataEvent(DataEvent event) {
 
-        //return processFakeEvent();
+        //if (true) return processFakeEvent();
        
         for (int i=0; i<BANK_NAMES.length; i++){
             if (event.hasBank(BANK_NAMES[i])) {
                 DataBank bank = event.getBank(BANK_NAMES[i]);
                 try {
                     // WARNING:  Predictor is *not* thread safe.
-                    // WARNING:  A pool might be worthwhile.
-                    //Predictor<float[][], float[][]> predictor = model.newPredictor();
                     Predictor<float[][], float[][]> predictor = predictors.get();
                     for (int sector=0; sector<6; sector++) {
                         float[][] input = DenoiseEngine.read(bank, sector+1);
                         float[][] output = predictor.predict(input);
                         predictors.put(predictor);
-                        //show(input);
-                        //show(output);
+                        System.out.println("IN:");show(input);
+                        System.out.println("OUT:");show(output);
                         update(bank, threshold, output, sector);
                     }
                     event.removeBank(BANK_NAMES[i]);
@@ -113,8 +111,8 @@ public class DenoiseEngine extends ReconstructionEngine {
             Predictor<float[][], float[][]> predictor = model.newPredictor();
             float[][] input = getAlmostStraightSlightlyBendingTrack();
             float[][] output = predictor.predict(input);
-            show(input);
-            show(output);
+            System.out.println("IN:");show(input);
+            System.out.println("OUT:");show(output);
         }
         catch (TranslateException e) {
             throw new RuntimeException(e);
@@ -159,8 +157,7 @@ public class DenoiseEngine extends ReconstructionEngine {
      * Print all hits for one sector.
      */
     static void show(float[][] data) {
-        System.out.println("Output shape: [" + data.length + "," + data[0].length + "]");
-        System.out.println("Output values:");
+        System.out.println("Shape: [" + data.length + "," + data[0].length + "]");
         for (int i = 0; i < LAYERS; i++) {
             for (int j = 0; j < WIRES; j++)
                 System.out.printf("%.3f ", data[i][j]);
