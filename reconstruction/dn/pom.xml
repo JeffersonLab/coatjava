@@ -17,7 +17,7 @@
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
-      <artifactId>clas-detector</artifactId>
+      <artifactId>clas-utils</artifactId>
       <version>13.2.0-SNAPSHOT</version>
     </dependency>
 
