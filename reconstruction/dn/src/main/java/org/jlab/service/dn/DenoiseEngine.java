@@ -89,11 +89,11 @@ public class DenoiseEngine extends ReconstructionEngine {
                     for (int sector=0; sector<6; sector++) {
                         float[][] input = DenoiseEngine.read(bank, sector+1);
                         float[][] output = predictor.predict(input);
-                        predictors.put(predictor);
                         System.out.println("IN:");show(input);
                         System.out.println("OUT:");show(output);
                         update(bank, threshold, output, sector);
                     }
+                    predictors.put(predictor);
                     event.removeBank(BANK_NAMES[i]);
                     event.appendBank(bank);
                 }
@@ -126,7 +126,7 @@ public class DenoiseEngine extends ReconstructionEngine {
     static void update(DataBank b, float threshold, float[][] data, int sector) {
         System.out.println("IN:");b.show();
         for (int row=0; row<b.rows(); row++) {
-            if (b.getByte(0,row) != sector) continue;
+            if (b.getByte(0,row)-1 != sector) continue;
             // FIXME:  check layer/wire indexing:
             if (data[b.getByte(1,row)-1][b.getShort(2,row)-1] < threshold) {
                 // FIXME:  check order masking:
