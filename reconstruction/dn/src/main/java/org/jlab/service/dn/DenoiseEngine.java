@@ -89,8 +89,8 @@ public class DenoiseEngine extends ReconstructionEngine {
                     for (int sector=0; sector<6; sector++) {
                         float[][] input = DenoiseEngine.read(bank, sector+1);
                         float[][] output = predictor.predict(input);
-                        System.out.println("IN:");show(input);
-                        System.out.println("OUT:");show(output);
+                        //System.out.println("IN:");show(input);
+                        //System.out.println("OUT:");show(output);
                         update(bank, threshold, output, sector);
                     }
                     predictors.put(predictor);
@@ -111,8 +111,8 @@ public class DenoiseEngine extends ReconstructionEngine {
             Predictor<float[][], float[][]> predictor = model.newPredictor();
             float[][] input = getAlmostStraightSlightlyBendingTrack();
             float[][] output = predictor.predict(input);
-            System.out.println("IN:");show(input);
-            System.out.println("OUT:");show(output);
+            //System.out.println("IN:");show(input);
+            //System.out.println("OUT:");show(output);
         }
         catch (TranslateException e) {
             throw new RuntimeException(e);
@@ -124,7 +124,7 @@ public class DenoiseEngine extends ReconstructionEngine {
      * Reject sub-threshold hits by modifying the bank's order variable.
      */
     static void update(DataBank b, float threshold, float[][] data, int sector) {
-        System.out.println("IN:");b.show();
+        //System.out.println("IN:");b.show();
         for (int row=0; row<b.rows(); row++) {
             if (b.getByte(0,row)-1 != sector) continue;
             // FIXME:  check layer/wire indexing:
@@ -133,7 +133,7 @@ public class DenoiseEngine extends ReconstructionEngine {
                 b.setByte(3, row, (byte)(b.getByte(3,row)+10));
             }
         }
-        System.out.println("OUT:");b.show();
+        //System.out.println("OUT:");b.show();
     }
 
     /**
