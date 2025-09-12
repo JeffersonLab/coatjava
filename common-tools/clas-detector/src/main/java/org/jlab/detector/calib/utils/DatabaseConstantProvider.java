@@ -142,7 +142,7 @@ public class DatabaseConstantProvider implements ConstantProvider {
 
         provider = CCDB.createProvider(address);
 
-        LOGGER.log(Level.INFO, String.format("[DB] ---> open %sd | %s | %s | %s", address, variation, runNumber, databaseDate));
+        LOGGER.log(Level.INFO, String.format("[DB] ---> open %s | %s | %s | %s", runNumber, variation, databaseDate, address));
         
         provider.connect();
         
