@@ -14,7 +14,6 @@ import org.jlab.geom.base.ConstantProvider;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Trap3D;
-import org.jlab.logging.DefaultLogger;
 
 /**
  *
@@ -680,7 +679,6 @@ public final class DCGeant4Factory extends Geant4Factory {
                            FeedthroughsStatus feedthroughsStatus,
                            boolean endplatesStatus, 
                            double[][] shifts) {
-        DefaultLogger.debug();
         dbref = DCdatabase.getInstance();
         dbref.setMinistaggerType(ministaggerStatus);
         dbref.setFeedthroughsStatus(feedthroughsStatus);
