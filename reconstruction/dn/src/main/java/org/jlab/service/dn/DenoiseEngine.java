@@ -26,7 +26,7 @@ import org.jlab.utils.system.ClasUtilsFile;
 
 public class DenoiseEngine extends ReconstructionEngine {
 
-    final static String[] BANK_NAMES = {"DC::tdc","DC::tot"};
+    final static String[] BANK_NAMES = {"DC::tot","DC::tdc"};
     final static String CONF_THRESHOLD = "threshold";
     final static int LAYERS = 36;
     final static int WIRES = 112;
@@ -89,7 +89,7 @@ public class DenoiseEngine extends ReconstructionEngine {
                     //Predictor<float[][], float[][]> predictor = model.newPredictor();
                     Predictor<float[][], float[][]> predictor = predictors.get();
                     for (int sector=0; sector<6; sector++) {
-                        float[][] input = DenoiseEngine.getSector(bank, sector+1);
+                        float[][] input = DenoiseEngine.read(bank, sector+1);
                         float[][] output = predictor.predict(input);
                         predictors.put(predictor);
                         //show(input);
@@ -140,7 +140,7 @@ public class DenoiseEngine extends ReconstructionEngine {
     /**
      * Get one-sector data with weights set to 0/1.
      */
-    static float[][] getSector(DataBank bank, int sector) {
+    static float[][] read(DataBank bank, int sector) {
         float[][] data = new float[LAYERS][WIRES];
         for (int i=0; i<bank.rows(); ++i) {
             if (bank.getByte(0,i) == sector) {
