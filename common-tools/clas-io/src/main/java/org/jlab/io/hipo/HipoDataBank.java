@@ -57,7 +57,9 @@ public class HipoDataBank implements DataBank  {
 
     @Override
     public void setDouble(String path, double[] arr) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        int nrows = this.hipoGroup.getRows();
+        for (int i=0; i<nrows; i++)
+            this.hipoGroup.putDouble(path, i, arr[i]);
     }
 
     @Override
@@ -85,7 +87,9 @@ public class HipoDataBank implements DataBank  {
 
     @Override
     public void setFloat(String path, float[] arr) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        int nrows = this.hipoGroup.getRows();
+        for (int i=0; i<nrows; i++)
+            this.hipoGroup.putFloat(path, i, arr[i]);
     }
 
     @Override
@@ -113,7 +117,9 @@ public class HipoDataBank implements DataBank  {
 
     @Override
     public void setInt(String path, int[] arr) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        int nrows = this.hipoGroup.getRows();
+        for (int i=0; i<nrows; i++)
+            this.hipoGroup.putInt(path, i, arr[i]);
     }
 
     @Override
@@ -141,7 +147,9 @@ public class HipoDataBank implements DataBank  {
 
     @Override
     public void setShort(String path, short[] arr) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        int nrows = this.hipoGroup.getRows();
+        for (int i=0; i<nrows; i++)
+            this.hipoGroup.putShort(path, i, arr[i]);
     }
 
     @Override
@@ -169,7 +177,9 @@ public class HipoDataBank implements DataBank  {
 
     @Override
     public void setLong(String path, long[] arr) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        int nrows = this.hipoGroup.getRows();
+        for (int i=0; i<nrows; i++)
+            this.hipoGroup.putLong(path, i, arr[i]);
     }
 
     @Override
@@ -197,7 +207,9 @@ public class HipoDataBank implements DataBank  {
 
     @Override
     public void setByte(String path, byte[] arr) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        int nrows = this.hipoGroup.getRows();
+        for (int i=0; i<nrows; i++)
+            this.hipoGroup.putByte(path, i, arr[i]);
     }
 
     @Override
@@ -241,4 +253,89 @@ public class HipoDataBank implements DataBank  {
         return null;
     }
     
+    @Override
+    public byte getByte(int element, int index) {
+        return this.hipoGroup.getByte(element, index);
+    }
+    @Override
+    public short getShort(int element, int index) {
+        return this.hipoGroup.getShort(element, index);
+    }
+    @Override
+    public int getInt(int element, int index) {
+        return this.hipoGroup.getInt(element, index);
+    }
+    @Override
+    public long getLong(int element, int index) {
+        return this.hipoGroup.getLong(element, index);
+    }
+    @Override
+    public float getFloat(int element, int index) {
+        return this.hipoGroup.getFloat(element, index);
+    }
+    @Override
+    public double getDouble(int element, int index) {
+        return this.hipoGroup.getDouble(element, index);
+    }
+
+    public void setFloat(int element, float[] arr) {
+        int nrows = this.hipoGroup.getRows();
+        for (int i=0; i<nrows; i++)
+            this.hipoGroup.putFloat(element, i, arr[i]);
+    }
+    public void setDouble(int element, double[] arr) {
+        int nrows = this.hipoGroup.getRows();
+        for (int i=0; i<nrows; i++)
+            this.hipoGroup.putDouble(element, i, arr[i]);
+    }
+    public void setByte(int element, byte[] arr) {
+        int nrows = this.hipoGroup.getRows();
+        for (int i=0; i<nrows; i++)
+            this.hipoGroup.putByte(element, i, arr[i]);
+    }
+    public void setShort(int element, short[] arr) {
+        int nrows = this.hipoGroup.getRows();
+        for (int i=0; i<nrows; i++)
+            this.hipoGroup.putShort(element, i, arr[i]);
+    }
+    public void setInt(int element, int[] arr) {
+        int nrows = this.hipoGroup.getRows();
+        for (int i=0; i<nrows; i++)
+            this.hipoGroup.putInt(element, i, arr[i]);
+    }
+    public void setLong(int element, long[] arr) {
+        int nrows = this.hipoGroup.getRows();
+        for (int i=0; i<nrows; i++)
+            this.hipoGroup.putLong(element, i, arr[i]);
+    }
+
+    @Override
+    public void setDouble(int element, int row, double value) {
+        this.hipoGroup.putDouble(element, row, value);
+    }
+
+    @Override
+    public void setFloat(int element, int row, float value) {
+        this.hipoGroup.putFloat(element, row, value);
+    }
+
+    @Override
+    public void setInt(int element, int row, int value) {
+        this.hipoGroup.putInt(element, row, value);
+    }
+
+    @Override
+    public void setShort(int element, int row, short value) {
+        this.hipoGroup.putShort(element, row, value);
+    }
+
+    @Override
+    public void setByte(int element, int row, byte value) {
+        this.hipoGroup.putByte(element, row, value);
+    }
+
+    @Override
+    public void setLong(int element, int row, long value) {
+        this.hipoGroup.putLong(element, row, value);
+    }
 }
