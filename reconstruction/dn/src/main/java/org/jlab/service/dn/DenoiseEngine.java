@@ -124,15 +124,16 @@ public class DenoiseEngine extends ReconstructionEngine {
      * Reject sub-threshold hits by modifying the bank's order variable.
      */
     static void update(DataBank b, float threshold, float[][] data, int sector) {
+        System.out.println("IN:");b.show();
         for (int row=0; row<b.rows(); row++) {
             if (b.getByte(0,row) != sector) continue;
             // FIXME:  check layer/wire indexing:
             if (data[b.getByte(1,row)-1][b.getShort(2,row)-1] < threshold) {
-                //b.show();
                 // FIXME:  check order masking:
                 b.setByte(3, row, (byte)(b.getByte(3,row)+10));
             }
         }
+        System.out.println("OUT:");b.show();
     }
 
     /**
