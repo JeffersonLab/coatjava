@@ -142,10 +142,7 @@ public class DatabaseConstantProvider implements ConstantProvider {
 
         provider = CCDB.createProvider(address);
 
-        LOGGER.log(Level.FINE, "[DB] --->  open connection with : {0}", address);
-        LOGGER.log(Level.FINE, "[DB] --->  database variation   : {0}", this.variation);
-        LOGGER.log(Level.FINE, "[DB] --->  database run number  : {0}", this.runNumber);
-        LOGGER.log(Level.FINE, "[DB] --->  database time stamp  : {0}", databaseDate);
+        LOGGER.log(Level.INFO, String.format("[DB] ---> open %s | %s | %s | %s", runNumber, variation, databaseDate, address));
         
         provider.connect();
         
@@ -277,8 +274,8 @@ public class DatabaseConstantProvider implements ConstantProvider {
             
             int ncolumns = asgmt.getColumnCount();
             Vector<TypeTableColumn> typecolumn = asgmt.getTypeTable().getColumns();
-            LOGGER.log(Level.FINE, "[DB LOAD] ---> loading data table : {0}", table_name);
-            LOGGER.log(Level.FINE, "[DB LOAD] ---> number of columns  : {0}", typecolumn.size());
+            LOGGER.log(Level.INFO, "[DB LOAD] ---> loading : {0}", table_name);
+            LOGGER.log(Level.FINE, "[DB LOAD] ---> columns : {0}", typecolumn.size());
             for(int loop = 0; loop < ncolumns; loop++){
                 String name = typecolumn.get(loop).getName();
                 Vector<String> row = asgmt.getColumnValuesString(name);
