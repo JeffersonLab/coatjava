@@ -1,22 +1,26 @@
 package org.jlab.io.clara;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.util.TreeSet;
+import org.jlab.analysis.postprocess.Processor;
 import org.jlab.clara.std.services.EventWriterException;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.decode.CLASDecoder4;
 import org.jlab.detector.helicity.HelicitySequence;
+import org.jlab.detector.helicity.HelicitySequenceDelayed;
 import org.jlab.detector.helicity.HelicityState;
 import org.jlab.detector.scalers.DaqScalersSequence;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
+import org.jlab.jnp.hipo4.io.HipoReader;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
 import org.jlab.jnp.utils.file.FileUtils;
 import org.json.JSONObject;
 
 /**
- * A port of the standard "decoder" to a CLARA I/O service.
+ * Combined with DecoderReader, a port of the standard "decoder" to CLARA.
  *
  * 1. Converts EVIO to HIPO, translation tables, pulse extraction
  * 2. Copies special banks on-the-fly to new tag-1 events
@@ -25,22 +29,21 @@ import org.json.JSONObject;
  * 
  * @author baltzell
  */
-public class HipoToHipoTagWriter extends HipoToHipoWriter {
+public class DecoderWriter extends HipoToHipoWriter {
 
-    int tag = 1;
-    String[] bankNames = {"RUN::scaler","HEL::scaler","RAW::scaler","RAW::epics","HEL::flip","COAT::config"};
+    static final String[] TAG1BANKS = {"RUN::scaler","HEL::scaler","RAW::scaler","RAW::epics","HEL::flip","COAT::config"};
 
-    Bank[] banks;
+    Bank[] tag1banks;
     Bank runConfig;
     Bank helicityAdc;
     ConstantsManager conman;
     TreeSet<HelicityState> helicities;
     DaqScalersSequence scalers;
     SchemaFactory fullSchema;
-    int runNumber;
+    boolean postprocess;
 
     private void init(JSONObject opts) {
-        runNumber = 0;
+        postprocess = false;
         fullSchema = new SchemaFactory();
         fullSchema.initFromDirectory(FileUtils.getEnvironmentPath("CLAS12DIR","etc/bankdefs/hipo4"));
         runConfig = new Bank(fullSchema.getSchema("RUN::config"));
@@ -49,13 +52,12 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
         scalers = new DaqScalersSequence(fullSchema);
         conman = new ConstantsManager();
         conman.init("/runcontrol/hwp","/runcontrol/helicity");
+        if (opts.has("postprocess")) postprocess = opts.getBoolean("postprocess");
         if (opts.has("variation")) conman.setVariation(opts.getString("variation"));
         if (opts.has("timestamp")) conman.setTimeStamp(opts.getString("timestamp"));
-        if (opts.has("tag")) tag = opts.getInt("tag");
-        if (opts.has("banks")) bankNames = opts.getString("banks").split(",");
-        banks = new Bank[bankNames.length];
-        for (int i=0; i<banks.length; ++i)
-            banks[i] = new Bank(fullSchema.getSchema(bankNames[i]));
+        tag1banks = new Bank[TAG1BANKS.length];
+        for (int i=0; i<tag1banks.length; ++i)
+            tag1banks[i] = new Bank(fullSchema.getSchema(TAG1BANKS[i]));
     }
 
     @Override
@@ -71,31 +73,70 @@ public class HipoToHipoTagWriter extends HipoToHipoWriter {
         }
     }
 
+    /**
+     * In addition to writing the incoming event, copies all tag-1 banks to new
+     * tag-1 events and writes them, and stores helicity/scaler readings for later.
+     * @param event
+     * @throws EventWriterException 
+     */
     @Override
     protected void writeEvent(Object event) throws EventWriterException {
         scalers.add((Event)event);
         ((Event)event).read(runConfig);
-        if (runConfig.getRows() > 0) {
-            int r = runConfig.getInt("run",0);
-            if (r > 0) runNumber = r;
-        }
         ((Event)event).read(helicityAdc);
         helicities.add(HelicityState.createFromFadcBank(helicityAdc, runConfig, conman));
-        Event t = CLASDecoder4.createTaggedEvent((Event)event, runConfig, banks);
-        if (!t.isEmpty()) writer.addEvent(t, tag);
+        Event t = CLASDecoder4.createTaggedEvent((Event)event, runConfig, tag1banks);
+        if (!t.isEmpty()) writer.addEvent(t, 1);
         super.writeEvent(event);
     }
 
+    /**
+     * In addition to closing the writer, creates and writes tag-1 events with
+     * HEL::flip bnks and clears old scaler/helicity readings.
+     */
     @Override
     protected void closeWriter() {
         HelicitySequence.writeFlips(fullSchema, writer, helicities);
-        helicities.clear();
-        scalers.clear();
         super.closeWriter();
+        if (postprocess) postprocess();
+        // keep the latest helicity/scaler reading for the next file:
+        while (helicities.size() > 60) helicities.pollFirst();
+        scalers.clear(10);
+    }
+  
+    private int getRunNumber() {
+        Event e = new Event();
+        HipoReader r = new HipoReader();
+        r.open(filename);
+        while (r.hasNext()) {
+            r.nextEvent(e);
+            e.read(runConfig);
+            if (runConfig.getRows()>0 && runConfig.getInt("run",0)>0)
+                return runConfig.getInt("run",0);
+        }
+        return 0;
     }
 
-    protected void closeRawWriter() {
-        super.closeWriter();
+    /**
+     * Copy helicity/charge tag-1 information to all events.
+     */
+    private void postprocess() {
+        int d = conman.getConstants(getRunNumber(), "/runcontrol/helicity").getIntValue("delay",0,0,0);
+        HelicitySequenceDelayed h = new HelicitySequenceDelayed(d);
+        h.addStream(helicities);
+        Processor p = new Processor(fullSchema, h, scalers);
+        HipoReader r = new HipoReader();
+        r.open(filename);
+        Event e = new Event();
+        writer.open("pp_"+filename);
+        while (r.hasNext()) {
+            r.nextEvent(e);
+            p.processEvent(e);
+            HipoToHipoWriter.writeEvent(writer, e, schemaBankList);
+        }
+        writer.close();
+        new File(filename).delete();
+        new File("pp_"+filename).renameTo(new File(filename));
     }
 
 }
