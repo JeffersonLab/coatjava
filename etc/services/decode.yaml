@@ -1,10 +1,10 @@
 io-services:
   reader:
-    class: org.jlab.io.clara.EvioToHipoReader
-    name: EvioToHipoReader
+    class: org.jlab.io.clara.DecoderReader
+    name: DecoderReader
   writer:
-    class: org.jlab.io.clara.HipoToHipoTagWriter
-    name: HipoToHipoTagWriter
+    class: org.jlab.io.clara.DecoderWriter
+    name: DecoderWriter
 services:
   # FIXME: replace with dummy/useful service
   - class: org.jlab.service.eb.EBTBEngine

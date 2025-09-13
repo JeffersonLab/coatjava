@@ -1,6 +1,6 @@
 ---
-name: HipoToHipoTagWriter
-engine: org.jlab.io.clara.HipoToHipoTagWriter
+name: DecoderWriter
+engine: org.jlab.io.clara.DecoderWriter
 type: java
 
 author: Nathan Baltzell

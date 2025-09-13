@@ -1,6 +1,6 @@
 ---
-name: EvioToHipoReader
-engine: org.jlab.io.clara.EvioToHipoReader
+name: DecoderReader
+engine: org.jlab.io.clara.DecoderReader
 type: java
 
 author: Nathan Baltzell
