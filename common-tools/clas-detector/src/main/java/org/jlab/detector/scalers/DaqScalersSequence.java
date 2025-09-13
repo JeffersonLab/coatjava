@@ -6,13 +6,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.logging.Logger;
-import org.jlab.detector.calib.utils.ConstantsManager;
 
 import org.jlab.jnp.hipo4.io.HipoReader;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
-import org.jlab.utils.groups.IndexedTable;
+import org.jlab.detector.calib.utils.ConstantsManager;
 
 /**
  * For easy access to most recent scaler readout for any given event.
@@ -105,7 +104,7 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
 
     public DaqScalersSequence(SchemaFactory schema) {
         runConfigBank = new Bank(schema.getSchema("RUN::config"));
-        runScalerBank=new Bank(schema.getSchema("RUN::scaler"));
+        runScalerBank = new Bank(schema.getSchema("RUN::scaler"));
     }
 
     public DaqScalersSequence(List<DaqScalers> inputScalers) {
@@ -113,10 +112,21 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
             this.add(inputScaler);
     }
 
+    /**
+     * remove all readouts from the sequence
+     */
     public void clear() {
         scalers.clear();
     }
-   
+
+    /**
+     * remove all but the latest readouts from the sequence
+     * @param keep the number of readouts to keep 
+     */
+    public void clear(int keep) {
+        while (scalers.size() > keep) scalers.remove(0);
+    }
+
     protected boolean add(DaqScalers ds) {
         if (this.scalers.isEmpty()) {
             this.scalers.add(ds);

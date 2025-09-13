@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 import org.jlab.logging.DefaultLogger;
 
 import org.jlab.jnp.hipo4.data.Bank;
@@ -37,7 +36,6 @@ public class Processor {
 
     private final String outputPrefix = "tmp_";
 
-    private boolean initialized;
     private ConstantsManager conman = null;
     private SchemaFactory schemaFactory = null;
     private DaqScalersSequence chargeSequence = null;
@@ -165,7 +163,6 @@ public class Processor {
      * @param e 
      */
     public void processEvent(DataEvent e) {
-        if (!initialized) return;
         if (!e.hasBank("RUN::config")) return;
         if (!e.hasBank("REC::Event")) return;
         DataBank runConfig = e.getBank("RUN::config");
@@ -182,7 +179,6 @@ public class Processor {
      * @param e 
      */
     public void processEvent(Event e) {
-        if (!initialized) return;
         if (!e.hasBank(schemaFactory.getSchema("RUN::config"))) return;
         if (!e.hasBank(schemaFactory.getSchema("REC::Event"))) return;
         Bank runConfig = new Bank(schemaFactory.getSchema("RUN::config"));
