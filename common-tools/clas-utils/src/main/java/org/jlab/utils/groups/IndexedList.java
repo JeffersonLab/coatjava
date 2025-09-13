@@ -116,6 +116,16 @@ public class IndexedList<T> {
     }
 
     /**
+     * Checks whether an item exists for the specified hash code.
+     *
+     * @param hash the hash code to look up
+     * @return true if an item exists at the index; false otherwise
+     */
+    public boolean hasItemByHash(long hash) {
+        return this.collection.containsKey(hash);
+    }
+    
+    /**
      * Retrieves an item by its index.
      *
      * @param index the index to find
@@ -127,6 +137,17 @@ public class IndexedList<T> {
         }
         long code = indexGenerator.hashCode(index);
         return this.collection.get(code);
+    }
+
+    /**
+     * Retrieves an item by its hash.
+     *
+     * @param hash the hash to find
+     * @return the item with the hash, null if not found
+     */
+    public T getItemByHash(long hash){
+        if (!this.collection.containsKey(hash)) return null;
+        return this.collection.get(hash);
     }
 
     /**
