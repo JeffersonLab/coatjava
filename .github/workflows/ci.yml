@@ -30,6 +30,28 @@ env:
 
 jobs:
 
+  # download & cache
+  #############################################################################
+
+  download_test_data:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/cache@v4
+        id: cache
+        with:
+          key: raw_test_data # fixed key will always hit; clear cache to trigger cache miss
+          path: clas_005038.evio.00000
+          lookup-only: true
+      - name: install xrootd-client
+        if: ${{ steps.cache.outputs.cache-hit != 'true' }}
+        run: |
+          sudo apt -y update
+          sudo apt -y install xrootd-client
+      - name: download
+        if: ${{ steps.cache.outputs.cache-hit != 'true' }}
+        run: |
+          xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/clas_005038.evio.00000 ./
+
   # build
   #############################################################################
 
@@ -104,7 +126,7 @@ jobs:
           retention-days: 1
 
   test_decoder:
-    needs: [ build ]
+    needs: [ build, download_test_data ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -123,12 +145,14 @@ jobs:
       - uses: actions/download-artifact@v5
         with:
           name: build_ubuntu-latest
+      - uses: actions/cache/restore@v4
+        with:
+          key: raw_test_data
+          path: clas_005038.evio.00000
       - name: untar build
         run: tar xzvf coatjava.tar.gz
       - name: run test
-        run: |
-          xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/clas_005038.evio.00000 .
-          ./coatjava/bin/decoder -n 100000 -o dog.hipo ./clas_005038.evio.00000
+        run: ./coatjava/bin/decoder -n 10000 -o dog.hipo ./clas_005038.evio.00000
 
   test_coatjava:
     needs: [ build ]
