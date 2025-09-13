@@ -215,16 +215,15 @@ public class OptionParser {
     }
     
     public static void main(String[] args){
-        OptionParser parser = new OptionParser();
+        if (args.length == 0) args = new String[]{"-o","out.dat","in.dat"};
+        OptionParser parser = new OptionParser("PotionParser");
         parser.addRequired("-o");
         parser.addOption("-r", "10");
         parser.addOption("-t", "25.0");
         parser.addOption("-d", "35");
-        parser.addOption("-h","helpless");
-        parser.addOption("-v","versionless");
-        if (args.length == 0) parser.parse("-o","out.dat","in.dat");
-        else parser.parse(args);
-        parser.show();        
+        parser.show();
+        parser.parse(args);
+        System.out.println("INPUTLIST:  "+parser.getInputList());
         parser.parse("-h");
     }
 }

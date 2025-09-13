@@ -41,14 +41,14 @@ import org.jlab.utils.system.ClasUtilsFile;
  */
 public class CLASDecoder4 {
 
+    protected DetectorEventDecoder detectorDecoder = null;
+    protected SchemaFactory           schemaFactory = new SchemaFactory();
     private CodaEventDecoder          codaDecoder = null;
-    private DetectorEventDecoder  detectorDecoder = null;
     private List<DetectorDataDgtz>       dataList = new ArrayList<>();
     private HipoDataSync                   writer = null;
     private HipoDataEvent               hipoEvent = null;
     private boolean              isRunNumberFixed = false;
     private int                  decoderDebugMode = 0;
-    private SchemaFactory           schemaFactory = new SchemaFactory();
     private ModeAHDC                ahdcExtractor = new ModeAHDC();
     private RCDBManager               rcdbManager = new RCDBManager();
 
@@ -815,21 +815,11 @@ public class CLASDecoder4 {
 
     public static void main(String[] args){
 
-        OptionParser parser = new OptionParser("decoder");
-        parser.setDescription("CLAS12 Data Decoder");
-        parser.addOption("-n", "-1", "maximum number of events to process");
-        parser.addOption("-c", "2", "compression type (0-NONE, 1-LZ4 Fast, 2-LZ4 Best, 3-GZIP)");
+        OptionParser parser = CLASDecoder4U.getOptionParser();
         parser.addOption("-d", "0","debug mode, set >0 for more verbose output");
         parser.addOption("-m", "run","translation tables source (use -m devel for development tables)");
         parser.addOption("-b", "16","record buffer size in MB");
-        parser.addOption("-r", "-1","run number in the header bank (-1 means use CODA run)");
-        parser.addOption("-t", null,"torus current in the header bank (null means use RCDB)");
-        parser.addOption("-s", null,"solenoid current in the header bank (null means use RCDB)");
-        parser.addOption("-x", null,"CCDB timestamp (MM/DD/YYYY-HH:MM:SS)");
-        parser.addOption("-v","default","CCDB variation");
-        parser.addRequired("-o","output.hipo");
         parser.parse(args);
-
         List<String> inputList = parser.getInputList();
 
         if(inputList.isEmpty()==true){
