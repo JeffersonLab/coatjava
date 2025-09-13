@@ -54,7 +54,7 @@ public class HitReader {
     private List<Hit> _DCHits;
     private List<FittedHit> _HBHits; //hit-based tracking hit information
     private List<FittedHit> _TBHits; //time-based tracking hit information
-
+    
     private final double timeBuf = 25.0;
 
     private static final Logger LOGGER = Logger.getLogger(HitReader.class.getName());
@@ -113,9 +113,10 @@ public class HitReader {
     private int getTIJitter() {
         int jitter = 0;
         if (tiTimeStamp>=0 && timejitter!=null) {
-           double period = timejitter.getDoubleValue("period", 0, 0, 0);
-           int    phase  = timejitter.getIntValue("phase", 0, 0, 0);
-           int    cycles = timejitter.getIntValue("cycles", 0, 0, 0);
+           long     hash = IndexedTable.DEFAULT_GENERATOR.hashCode(0,0,0);
+           double period = timejitter.getDoubleValueByHash("period", hash);
+           int    phase  = timejitter.getIntValueByHash("phase", hash);
+           int    cycles = timejitter.getIntValueByHash("cycles", hash);
 
            if (cycles > 0) jitter = (int) (period * ((tiTimeStamp + phase) % cycles));
         }
@@ -149,10 +150,11 @@ public class HitReader {
 
         int jitter = 0;
         if(dcrbjitters!=null && reverseTT!=null) {
-            if(!reverseTT.hasEntry(sector, layer, wire, order))
+            long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(sector, layer, wire, order);
+            if(!reverseTT.hasEntryByHash(hash))
                 LOGGER.log(Level.SEVERE, "Missing TT entry for slco = " + sector + " " + layer + " " + wire + " " + order);
-            int crate = reverseTT.getIntValue("crate", sector, layer, wire, order);
-            int slot  = reverseTT.getIntValue("slot",  sector, layer, wire, order);
+            int crate = reverseTT.getIntValueByHash("crate", hash);
+            int slot  = reverseTT.getIntValueByHash("slot",  hash);
             if(!dcrbjitters.hasEntry(crate, slot))
                 LOGGER.log(Level.SEVERE, "Missing DC::jitter entry for crate/slot = " + crate + "/" + slot);
             jitter = dcrbjitters.getIntValue("jitter", crate, slot);

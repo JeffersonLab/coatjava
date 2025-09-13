@@ -152,7 +152,8 @@ jobs:
       - name: untar build
         run: tar xzvf coatjava.tar.gz
       - name: run test
-        run: ./coatjava/bin/decoder -n 10000 -o dog.hipo ./clas_005038.evio.00000
+        run: |
+          ./coatjava/bin/decoder -n 10000 -o dog.hipo ./clas_005038.evio.00000
 
   test_coatjava:
     needs: [ build ]
