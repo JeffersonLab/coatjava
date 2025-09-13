@@ -14,12 +14,11 @@ import org.jlab.jnp.hipo4.data.Event;
 import org.json.JSONObject;
 
 /**
- *
+ * Combined with DecoderWriter, a port of the standard "decoder" to CLARA.
+ * 
  * @author baltzell
  */
-public class EvioToHipoReader extends AbstractEventReaderService<EvioSource> {
-
-    boolean collectGarbage = true; // for memory leak in CompactEvioReader
+public class DecoderReader extends AbstractEventReaderService<EvioSource> {
 
     CLASDecoder4 decoder;
     private long maxEvents;
@@ -56,12 +55,14 @@ public class EvioToHipoReader extends AbstractEventReaderService<EvioSource> {
 
     @Override
     public Object readEvent(int eventNumber) throws EventReaderException {
-        if (eventNumber >= maxEvents) return null;
+        if (eventNumber++ >= maxEvents) return null;
         try {
-            ByteBuffer bb = reader.getEventBuffer(++eventNumber, true);
+            ByteBuffer bb = reader.getEventBuffer(eventNumber, true);
             EvioDataEvent evio = new EvioDataEvent(bb.array(), readByteOrder());
             Event hipo = decoder.getDecodedEvent(evio, -1, eventNumber, torus, solenoid);
-            if (eventNumber % 25000 == 0 && collectGarbage) System.gc();
+            // FIXME:  IIRC, this was added to (try to) address a memory leak in
+            // CompactEvioReader, but it was ineffective and could/should be removed.  
+            if (eventNumber % 25000 == 0) System.gc();
             return hipo;
         } catch (EvioException e) {
             throw new EventReaderException(e);
