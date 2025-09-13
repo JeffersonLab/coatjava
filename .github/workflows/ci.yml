@@ -153,7 +153,6 @@ jobs:
         run: tar xzvf coatjava.tar.gz
       - name: run test
         run: |
-          xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/clas_005038.evio.00000 .
           ./coatjava/bin/decoder -n 10000 -o dog.hipo ./clas_005038.evio.00000
 
   test_coatjava:
