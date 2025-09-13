@@ -103,6 +103,9 @@ public class TableLoader {
         
         for(int s = 0; s<6; s++ ){ // loop over sectors
             for(int r = 0; r<6; r++ ){ //loop over slys
+
+                long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(s+1,r+1,0);
+                
                 // Fill constants
                 FracDmaxAtMinVel[s][r] = t2dPressure.getDoubleValue("c1_a0", s+1,r+1,0)
                         +t2dPressure.getDoubleValue("c1_a1", s+1,r+1,0)*dp;
