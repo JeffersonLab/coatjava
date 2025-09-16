@@ -23,5 +23,6 @@ Dependabot, however, will routinely try to update the `dep:C` version, to the _l
 
 1. Comment out the `dependency` specification
 2. Rebuild coatjava, which will cause `maven-enforcer-plugin` to complain; that will tell you the versions
+   - alternatively, run `mvn enforcer:enforce -Drules=dependencyConvergence`, but that may not exclude dependencies that we _don't_ want to enforce convergence on (_e.g._, `com.google.protobuf:protobuf-java`
 3. Update the version number, if needed, by choosing the _later_ of the two conflicting versions
 4. Unless `dep:A` or `dep:B` are keeping _their_ version of `dep:C` dependency up-to-date, you will likely find that Dependabot is suggesting a version that is _too_ new; in that case, just close Dependabot's PR and await updates of `dep:A` or `dep:B`
