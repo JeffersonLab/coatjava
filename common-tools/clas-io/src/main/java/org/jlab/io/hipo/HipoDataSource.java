@@ -13,7 +13,7 @@ import org.jlab.io.base.DataSourceType;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.jnp.hipo4.io.HipoReader;
-import org.jlab.logging.DefaultLogger;
+import org.jlab.logging.SplitLogger;
 
 /**
  *
@@ -21,16 +21,12 @@ import org.jlab.logging.DefaultLogger;
  */
 public class HipoDataSource implements DataSource {
 
-    public static final Logger LOGGER = Logger.getLogger(HipoDataSource.class.getName());
-    // static {
-    //     org.jlab.io.util.StdOutErrLogHandler.configureLogger(LOGGER);
-    // }
+    public static final Logger LOGGER = SplitLogger.create(HipoDataSource.class.getName());
 
     HipoReader reader = null;
     int currentEventNumber = 0;
     
     public HipoDataSource(){
-        DefaultLogger.configureLogger(LOGGER);
         this.reader = new HipoReader();
         LOGGER.info("TEST --- INFO");
         LOGGER.warning("TEST --- WARNING");
