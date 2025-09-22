@@ -26,7 +26,7 @@ public class SplitLogger {
     java.util.logging.Handler infoHandler = new java.util.logging.StreamHandler(System.out, formatter) {
       @Override
       public synchronized void publish(java.util.logging.LogRecord record) {
-        if (record.getLevel().intValue() <= Level.INFO.intValue()) {
+        if (isLoggable(record) && record.getLevel().intValue() <= Level.INFO.intValue()) {
           super.publish(record);
           flush();
         }
@@ -35,7 +35,7 @@ public class SplitLogger {
     java.util.logging.Handler errorHandler = new java.util.logging.StreamHandler(System.err, formatter) {
       @Override
       public synchronized void publish(java.util.logging.LogRecord record) {
-        if (record.getLevel().intValue() >= Level.WARNING.intValue()) {
+        if (isLoggable(record) && record.getLevel().intValue() >= Level.WARNING.intValue()) {
           super.publish(record);
           flush();
         }
