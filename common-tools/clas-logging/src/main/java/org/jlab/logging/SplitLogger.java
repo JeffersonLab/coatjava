@@ -4,13 +4,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Helper methods to create a `Logger` that sends errors to `stderr` and everything else to `stdout`
+ * Helper methods to create a {@code Logger} that sends errors to {@code stderr} and everything else to {@code stdout}
+ * @see TestSplitLogger {@code TestSplitLogger}: for guidance on how to use this class
  * @author dilks
  */
 public class SplitLogger {
 
   /**
-   * @return a new `SplitLogger` instance
+   * create a new {@link SplitLogger} instance
+   * @return a new {@link SplitLogger} instance
    * @param the name of the logger
    */
   public static Logger create(String name) {
@@ -20,8 +22,8 @@ public class SplitLogger {
   }
 
   /**
-   * Configure a logger such that errors go to `stderr` and everything else to `stdout`
-   * @param logger the `Logger` instance to configure
+   * Configure a logger such that errors go to {@code stderr} and everything else to {@code stdout}
+   * @param logger the {@code Logger} instance to configure
    */
   public static void configureLogger(Logger logger) {
 
