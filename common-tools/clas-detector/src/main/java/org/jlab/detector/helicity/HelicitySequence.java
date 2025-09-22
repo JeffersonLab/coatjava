@@ -10,6 +10,7 @@ import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jlab.detector.calib.utils.ConstantsManager;
+import org.jlab.logging.SplitLogger;
 
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
@@ -52,7 +53,7 @@ import org.jlab.jnp.hipo4.io.HipoWriterSorted;
  */
 public class HelicitySequence {
 
-    static final Logger LOGGER = Logger.getLogger(HelicitySequence.class.getName());
+    static final Logger LOGGER = SplitLogger.create(HelicitySequence.class.getName());
     public static final double TIMESTAMP_CLOCK=250.0e6; // Hz
     protected double helicityClock=29.56; // Hz
     protected HelicityPattern pattern=HelicityPattern.QUARTET;
@@ -456,7 +457,7 @@ public class HelicitySequence {
         }
 
         LOGGER.info(
-            "HWP       ERRORS:  "+hwpErrors+
+            "\nHWP       ERRORS:  "+hwpErrors+
             "\nSYNC      ERRORS:  "+syncErrors+
             "\nQUARTET   ERRORS:  "+quartetErrors+
             "\nBIGGAP    ERRORS:  "+bigGapErrors+

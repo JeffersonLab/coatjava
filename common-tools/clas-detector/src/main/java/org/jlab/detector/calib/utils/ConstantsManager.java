@@ -13,6 +13,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jlab.utils.groups.IndexedTable;
+import org.jlab.logging.SplitLogger;
 
 /**
  *
@@ -22,7 +23,7 @@ public class ConstantsManager {
 
     public static final int DBERROR_SLEEP_SECONDS=3;
 
-    private static Logger LOGGER = Logger.getLogger(ConstantsManager.class.getName());
+    private static Logger LOGGER = SplitLogger.create(ConstantsManager.class.getName());
 
     private DatabaseConstantsDescriptor defaultDescriptor = new DatabaseConstantsDescriptor();
     private volatile Map<Integer, DatabaseConstantsDescriptor> runConstants = new LinkedHashMap<Integer, DatabaseConstantsDescriptor>();
@@ -88,7 +89,7 @@ public class ConstantsManager {
         DatabaseConstantsDescriptor descriptor = this.runConstants.get(run);
         if (descriptor.getMap().containsKey(table) == false) {
             LOGGER.log(Level.SEVERE,
-                    "[getConstants] error ( run = " + run + " ) " + " table not found with name : " + table);
+                    "error ( run = " + run + " ) " + " table not found with name : " + table);
         }
         return descriptor.getMap().get(table);
     }
@@ -117,16 +118,16 @@ public class ConstantsManager {
             if (requests > maxRequests) {
                 requestStatus = -1;
                 LOGGER.log(Level.SEVERE,
-                        "[ConstantsManager] exceeded maximum requests " + requests + " for run " + run);
+                        "exceeded maximum requests " + requests + " for run " + run);
             }
             else if (requests > 1) {
-                LOGGER.log(Level.SEVERE,"[ConstantsManager] sleeping a bit before trying again ...");
+                LOGGER.log(Level.SEVERE,"sleeping a bit before trying again ...");
                 try { Thread.sleep(DBERROR_SLEEP_SECONDS*1000); }
                 catch (InterruptedException e) {}
             }
         }
 
-        LOGGER.log(Level.FINE, "[ConstantsManager] --->  loading table for run = " + run);
+        LOGGER.log(Level.FINE, "--->  loading table for run = " + run);
         DatabaseConstantsDescriptor desc = defaultDescriptor.getCopy(run);
         DatabaseConstantProvider provider = new DatabaseConstantProvider(run, this.databaseVariation, this.timeStamp);
 
@@ -141,7 +142,7 @@ public class ConstantsManager {
                 LOGGER.log(Level.FINE, String.format("***** >>> adding : %14s / table = %s", tk.get(i), tableName));
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, e.getMessage());
-                LOGGER.log(Level.SEVERE, "[ConstantsManager] ---> error reading table : " + tableName);
+                LOGGER.log(Level.SEVERE, "---> error reading table : " + tableName);
                 // This happens if missing table or variation. No point in trying
                 // again, just set error status to trigger abort.
                 requestStatus = -1;
@@ -181,7 +182,7 @@ public class ConstantsManager {
      */
     public static class DatabaseConstantsDescriptor {
         
-        Logger LOGGER = Logger.getLogger(DatabaseConstantsDescriptor.class.getName());
+        Logger LOGGER = SplitLogger.create(DatabaseConstantsDescriptor.class.getName());
 
         private String  descName   = "descriptor";
         private int     runNumber  = 10;
@@ -213,7 +214,7 @@ public class ConstantsManager {
        
         public void addTables(Set<String> keys, Set<String> tables){
             if(keys.size()!=tables.size()){
-                LOGGER.log(Level.SEVERE,"[DatabaseConstantsDescriptor] error --> "
+                LOGGER.log(Level.SEVERE,"error --> "
                 + " size of keys ("+keys.size()+") does not match size of"
                         + " tables ("+tables.size()+")");
             } else {
@@ -227,7 +228,7 @@ public class ConstantsManager {
 
         public void addTables(Set<String> keys, Set<String> tables, List<Integer> indices){
             if(keys.size()!=tables.size()){
-                LOGGER.log(Level.SEVERE,"[DatabaseConstantsDescriptor] error --> "
+                LOGGER.log(Level.SEVERE,"error --> "
                 + " size of keys ("+keys.size()+") does not match size of"
                         + " tables ("+tables.size()+")");
             } else {
