@@ -3,16 +3,43 @@ package org.jlab.logging;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 
+/**
+ * A simple class demonstrating how to use {@link SplitLogger}.
+ * <p>
+ * The {@link SplitLogger} class will send {@code SEVERE} and {@code WARNING} log messages
+ * to {@code stderr}, and all lower levels to {@code stdout}.
+ * <p>
+ * <b>How to set the logging level:</b>
+ * <p>
+ * A {@code .properties} file is necessary, which has the class name and desired log level; for example,
+ * <pre>
+ * org.jlab.logging.TestSplitLogger.level = FINE
+ * </pre>
+ * From high to low, the levels are: {@code SEVERE, WARNING, INFO, CONFIG, FINE, FINER, FINEST}.
+ * <p>
+ * There are some example {@code .properties} files you can use with this class, like so:
+ * <pre>
+ * java \
+ *   -Djava.util.logging.config.file=common-tools/clas-logging/src/main/resources/org/jlab/logging/TestSplitLogger.finest.properties \
+ *   -cp ... \
+ *   org.jlab.logging.TestSplitLogger
+ * </pre>
+ * You may write your own {@code .properties} file, to control the logging level of all classes which use logging.
+ * @see SplitLogger {@code SplitLogger}: for implementation details
+ * @author dilks
+ */
 public class TestSplitLogger {
 
-  protected Logger LOGGER = SplitLogger.create(TestSplitLogger.class.getName());
-  // static final Logger LOGGER = Logger.getLogger(TestSplitLogger.class.getName());
+  /** logger instance for this class */
+  protected static final Logger LOGGER = SplitLogger.create(TestSplitLogger.class.getName());
 
+  /** constructor: prints some messages to {@code stdout}, but not using the logger yet */
   public TestSplitLogger() {
     System.out.println("Created 'TestSplitLogger' instance");
     System.out.println("Log level = " + LOGGER.getLevel());
   }
 
+  /** test sending string literals */
   public void test1() {
     System.out.println("=== TEST 1 ===");
     LOGGER.severe("SEVERE MESSAGE - should go to stderr" );
@@ -24,6 +51,7 @@ public class TestSplitLogger {
     LOGGER.finest("FINEST MESSAGE - should go to stdout" );
   }
 
+  /** test sending a format string with parameters */
   public void test2() {
     System.out.println("=== TEST 2 ===");
     LOGGER.log(Level.SEVERE, "{0} MESSAGE - should go to stderr", Level.SEVERE);
@@ -35,6 +63,10 @@ public class TestSplitLogger {
     LOGGER.log(Level.FINEST, "{0} MESSAGE - should go to stdout", Level.FINEST);
   }
 
+  /**
+   * run the tests
+   * @param args unused
+   */
   public static void main(String[] args) {
     var potato = new TestSplitLogger();
     potato.test1();
