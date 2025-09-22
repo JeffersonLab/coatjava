@@ -28,8 +28,6 @@ public class HipoDataSource implements DataSource {
     
     public HipoDataSource(){
         this.reader = new HipoReader();
-        LOGGER.info("TEST --- INFO");
-        LOGGER.warning("TEST --- WARNING");
     }
     
     @Override
@@ -58,7 +56,7 @@ public class HipoDataSource implements DataSource {
     public void open(String filename) {
         this.currentEventNumber = 0;
         this.reader.open(filename);
-    LOGGER.log(Level.INFO,"[DataSourceDump] --> opened file with events # " );
+        LOGGER.log(Level.INFO,"[DataSourceDump] --> opened file with events # " );
     }
 
     public void open(ByteBuffer buff) {
@@ -129,7 +127,6 @@ public class HipoDataSource implements DataSource {
         
     public static void main(String[] args){
         HipoDataSource reader = new HipoDataSource();
-        /*
         reader.open("test_hipoio.hipo");
         int counter = 0;
         while(reader.hasEvent()==true){
@@ -138,7 +135,6 @@ public class HipoDataSource implements DataSource {
             event.show();
             counter++;
         }
-        */
     }
 
     @Override
