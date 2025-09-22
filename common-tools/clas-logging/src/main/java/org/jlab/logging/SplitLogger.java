@@ -28,24 +28,24 @@ public class SplitLogger {
     // clear handlers
     logger.setUseParentHandlers(false);
 
+    // terse logger name
+    String terseName = logger.getName().replaceAll(".*\\.","");
+
     // log message formatting
     java.util.logging.Formatter formatter = new java.util.logging.SimpleFormatter() {
-      private static final String format = "%5$s%6$s%n";
       @Override
       public synchronized String format(java.util.logging.LogRecord lr) {
-        String msg;
-        if (lr.getParameters() != null && lr.getParameters().length > 0) {
-          msg = java.text.MessageFormat.format(lr.getMessage(), lr.getParameters());
-        } else {
-          msg = lr.getMessage();
-        }
-        return String.format(format,
-            lr.getSourceClassName(),
-            lr.getSourceMethodName(),
-            lr.getLoggerName(),
-            lr.getLevel().getLocalizedName(),
+        String methodName = lr.getSourceMethodName();
+        String msg = (lr.getParameters() != null && lr.getParameters().length > 0)
+          ? java.text.MessageFormat.format(lr.getMessage(), lr.getParameters())
+          : lr.getMessage();
+        String throwable = (lr.getThrown() == null) ? "" : lr.getThrown().toString();
+        return String.format("[%s.%s] %s %s",
+            terseName,
+            methodName==null ? "" : methodName,
             msg,
-            lr.getThrown() == null ? "" : lr.getThrown());
+            throwable.isEmpty() ? "" : " " + throwable
+            ) + System.lineSeparator();
       }
     };
 
