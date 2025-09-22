@@ -33,12 +33,18 @@ public class SplitLogger {
       private static final String format = "%5$s%6$s%n";
       @Override
       public synchronized String format(java.util.logging.LogRecord lr) {
+        String msg;
+        if (lr.getParameters() != null && lr.getParameters().length > 0) {
+          msg = java.text.MessageFormat.format(lr.getMessage(), lr.getParameters());
+        } else {
+          msg = lr.getMessage();
+        }
         return String.format(format,
             lr.getSourceClassName(),
             lr.getSourceMethodName(),
             lr.getLoggerName(),
             lr.getLevel().getLocalizedName(),
-            lr.getMessage(),
+            msg,
             lr.getThrown() == null ? "" : lr.getThrown());
       }
     };
