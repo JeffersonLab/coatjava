@@ -30,7 +30,7 @@ public class HipoDataSource implements DataSource {
     int currentEventNumber = 0;
     
     public HipoDataSource(){
-        DefaultLogger.debug();
+        DefaultLogger.configureLogger(LOGGER);
         this.reader = new HipoReader();
         LOGGER.info("TEST --- INFO");
         LOGGER.warning("TEST --- WARNING");
