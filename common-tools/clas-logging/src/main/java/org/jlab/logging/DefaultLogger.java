@@ -21,7 +21,7 @@ public class DefaultLogger {
     public static void configureLogger(Logger logger) {
         logger.setUseParentHandlers(false);
         java.util.logging.Formatter formatter = new java.util.logging.SimpleFormatter() {
-            private static final String format = "%5$s%6$s%n";
+            private static final String format = "NEW LOGGER: %5$s%6$s%n";
             @Override
             public synchronized String format(java.util.logging.LogRecord lr) {
                 return String.format(format,

@@ -13,6 +13,7 @@ import org.jlab.io.base.DataSourceType;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.jnp.hipo4.io.HipoReader;
+import org.jlab.logging.DefaultLogger;
 
 /**
  *
@@ -29,6 +30,7 @@ public class HipoDataSource implements DataSource {
     int currentEventNumber = 0;
     
     public HipoDataSource(){
+        DefaultLogger.debug();
         this.reader = new HipoReader();
         LOGGER.info("TEST --- INFO");
         LOGGER.warning("TEST --- WARNING");
