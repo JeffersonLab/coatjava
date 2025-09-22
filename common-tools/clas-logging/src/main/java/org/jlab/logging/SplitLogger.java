@@ -50,7 +50,9 @@ public class SplitLogger {
    */
   public static Logger create(String name) {
     Logger logger = Logger.getLogger(name);
+    System.out.println("CREATED LOGGER " + logger.getName() + " with level " + logger.getLevel()); // FIXME: remove
     configureLogger(logger);
+    System.out.println("CONFIG  LOGGER " + logger.getName() + " with level " + logger.getLevel()); // FIXME: remove
     return logger;
   }
 

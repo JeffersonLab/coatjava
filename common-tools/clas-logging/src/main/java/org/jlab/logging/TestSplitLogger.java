@@ -4,7 +4,7 @@ import java.util.logging.Logger;
 
 public class TestSplitLogger {
 
-  public static final Logger LOGGER = SplitLogger.create(TestSplitLogger.class.getName());
+  protected static final Logger LOGGER = SplitLogger.create(TestSplitLogger.class.getName());
 
   public TestSplitLogger()
   {
