@@ -37,11 +37,12 @@ public class Tag1ToEvent {
 
         // Parse command-line options:
         OptionParser parser = new OptionParser("postprocess");
+        parser.setLogger(LOGGER); // FIXME: bad idea?
         parser.addOption("-q","0","do beam charge and livetime (0/1=false/true)");
         parser.addOption("-d","0","do delayed helicity (0/1=false/true)");
         parser.addOption("-f","0","rebuild the HEL::flip banks (0/1=false/true)");
         parser.addRequired("-o","output.hipo");
-        parser.parse(args);
+        parser.parse(args); // FIXME: somehow this completely kills all logging
         if (parser.getInputList().isEmpty()) {
             parser.printUsage();
             LOGGER.severe("No input file(s) specified.");

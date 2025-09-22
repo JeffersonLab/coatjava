@@ -9,6 +9,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.jlab.logging.DefaultLogger;
 
 /**
@@ -25,6 +26,7 @@ public class OptionParser {
     private String                             program = "undefined";
     private boolean                  requiresInputList = true;
     private String                  programDescription = "";
+    private Logger                              logger = null; // FIXME: bad idea?
     
     public OptionParser(){
         init();
@@ -48,7 +50,11 @@ public class OptionParser {
     public void setRequiresInputList(boolean flag){
         this.requiresInputList = flag;
     }
-    
+
+    public void setLogger(Logger logger){
+        this.logger = logger; // FIXME: bad idea?
+    }
+
     public void addRequired(String key){
         OptionValue option = new OptionValue(key);
         requiredOptions.put(key, option);
@@ -189,6 +195,9 @@ public class OptionParser {
     private void setVerbosity(String level) {
         try {
             DefaultLogger.initialize(Level.parse(level));
+            if(this.logger!=null) {
+              this.logger.setLevel(Level.parse(level)); // FIXME: bad idea?
+            }
         }
         catch (IllegalArgumentException e) {
             System.err.println("Invalid -l java.util.logging.Level:  "+level);
