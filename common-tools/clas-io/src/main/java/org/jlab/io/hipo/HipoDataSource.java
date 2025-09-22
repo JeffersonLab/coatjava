@@ -22,28 +22,7 @@ public class HipoDataSource implements DataSource {
 
     public static final Logger LOGGER = Logger.getLogger(HipoDataSource.class.getName());
     static {
-        // Remove default handlers
-        LOGGER.setUseParentHandlers(false);
-        java.util.logging.Handler infoHandler = new java.util.logging.StreamHandler(System.out, new java.util.logging.SimpleFormatter()) {
-            @Override
-            public synchronized void publish(java.util.logging.LogRecord record) {
-                if (record.getLevel().intValue() == Level.INFO.intValue()) {
-                    super.publish(record);
-                    flush();
-                }
-            }
-        };
-        java.util.logging.Handler errorHandler = new java.util.logging.StreamHandler(System.err, new java.util.logging.SimpleFormatter()) {
-            @Override
-            public synchronized void publish(java.util.logging.LogRecord record) {
-                if (record.getLevel().intValue() >= Level.WARNING.intValue()) {
-                    super.publish(record);
-                    flush();
-                }
-            }
-        };
-        LOGGER.addHandler(infoHandler);
-        LOGGER.addHandler(errorHandler);
+        org.jlab.io.util.StdOutErrLogHandler.configureLogger(LOGGER);
     }
 
     HipoReader reader = null;
