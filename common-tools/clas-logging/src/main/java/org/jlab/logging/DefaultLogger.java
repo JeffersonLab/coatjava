@@ -66,6 +66,8 @@ public class DefaultLogger {
                 throw new RuntimeException("Initialization of default logging configuration failed.", e);
             }
         }
+        // Always apply custom handler after config is loaded
+        configureLogger(Logger.getLogger("") /* root logger */);
     }
 
     private static void init(Level level){
