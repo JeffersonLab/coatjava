@@ -21,6 +21,30 @@ import org.jlab.jnp.hipo4.io.HipoReader;
 public class HipoDataSource implements DataSource {
 
     public static final Logger LOGGER = Logger.getLogger(HipoDataSource.class.getName());
+    static {
+        // Remove default handlers
+        LOGGER.setUseParentHandlers(false);
+        java.util.logging.Handler infoHandler = new java.util.logging.StreamHandler(System.out, new java.util.logging.SimpleFormatter()) {
+            @Override
+            public synchronized void publish(java.util.logging.LogRecord record) {
+                if (record.getLevel().intValue() == Level.INFO.intValue()) {
+                    super.publish(record);
+                    flush();
+                }
+            }
+        };
+        java.util.logging.Handler errorHandler = new java.util.logging.StreamHandler(System.err, new java.util.logging.SimpleFormatter()) {
+            @Override
+            public synchronized void publish(java.util.logging.LogRecord record) {
+                if (record.getLevel().intValue() >= Level.WARNING.intValue()) {
+                    super.publish(record);
+                    flush();
+                }
+            }
+        };
+        LOGGER.addHandler(infoHandler);
+        LOGGER.addHandler(errorHandler);
+    }
 
     HipoReader reader = null;
     int currentEventNumber = 0;
@@ -55,7 +79,7 @@ public class HipoDataSource implements DataSource {
     public void open(String filename) {
         this.currentEventNumber = 0;
         this.reader.open(filename);
-        LOGGER.log(Level.INFO,"[DataSourceDump] --> opened file with events # " );
+    LOGGER.log(Level.INFO,"[DataSourceDump] --> opened file with events # " );
     }
 
     public void open(ByteBuffer buff) {
@@ -130,7 +154,7 @@ public class HipoDataSource implements DataSource {
         int counter = 0;
         while(reader.hasEvent()==true){
             DataEvent  event = reader.getNextEvent();
-            System.out.println("EVENT # " + counter);
+            LOGGER.log(Level.INFO, "EVENT # " + counter);
             event.show();
             counter++;
         }
