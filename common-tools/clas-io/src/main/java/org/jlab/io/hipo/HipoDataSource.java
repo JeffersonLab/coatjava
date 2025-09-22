@@ -21,9 +21,9 @@ import org.jlab.jnp.hipo4.io.HipoReader;
 public class HipoDataSource implements DataSource {
 
     public static final Logger LOGGER = Logger.getLogger(HipoDataSource.class.getName());
-    static {
-        org.jlab.io.util.StdOutErrLogHandler.configureLogger(LOGGER);
-    }
+    // static {
+    //     org.jlab.io.util.StdOutErrLogHandler.configureLogger(LOGGER);
+    // }
 
     HipoReader reader = null;
     int currentEventNumber = 0;
