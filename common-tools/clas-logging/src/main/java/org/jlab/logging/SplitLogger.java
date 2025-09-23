@@ -43,6 +43,9 @@ public class SplitLogger {
         if(methodName != null)
           prefix.append("."+methodName);
         prefix.append("] ");
+        // level
+        if(lr.getLevel().intValue() >= Level.WARNING.intValue())
+          prefix.append(lr.getLevel() + ": ");
         // message
         StringBuilder result = new StringBuilder(prefix);
         String msg = (lr.getParameters() != null && lr.getParameters().length > 0)
