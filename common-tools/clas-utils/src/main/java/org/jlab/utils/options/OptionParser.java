@@ -26,6 +26,7 @@ public class OptionParser {
     private boolean                  requiresInputList = true;
     private String                  programDescription = "";
     private Level                             logLevel = Level.FINE; // default log level
+    private boolean                usingExternalLogger = false; // if true, do not use `DefaultLogger` here
     
     public OptionParser(){
         init();
@@ -190,7 +191,8 @@ public class OptionParser {
     private void setVerbosity(String level) {
         try {
             this.logLevel = Level.parse(level);
-            DefaultLogger.initialize(this.logLevel); // FIXME: don't do this if using SplitLogger
+            if(!usingExternalLogger)
+              DefaultLogger.initialize(this.logLevel); // do not do this if using SplitLogger externally, otherwise you get NO log printouts whatsoever
         }
         catch (IllegalArgumentException e) {
             System.err.println("Invalid -l java.util.logging.Level:  "+level);
@@ -219,7 +221,11 @@ public class OptionParser {
     public Level getLogLevel() {
       return this.logLevel;
     }
-    
+
+    public void useExternalLogger() {
+      this.usingExternalLogger = true; // FIXME: if we get rid of `DefaultLogger`, we can get rid of this kluge
+    }
+
     public static void main(String[] args){
         if (args.length == 0) args = new String[]{"-o","out.dat","in.dat"};
         OptionParser parser = new OptionParser("PotionParser");
