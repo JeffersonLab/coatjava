@@ -16,7 +16,11 @@ or using `run-coatjava`,
 ```bash
 run-coatjava [CLASS_NAME] [CLASS_ARGS] -- -Djava.util.logging.config.file=my_levels.properties
 ```
-Note that these settings may compete with the log level set by `OptionParser`'s option `-l`, potentially overriding that level.
+From high to low, the levels are `SEVERE, WARNING, INFO, CONFIG, FINE, FINER, FINEST` (see `java.util.logging.Level` documentation).
+You may also use levels `ALL` or `OFF`, for everything or nothing, respectively.
+
+> [!NOTE]
+> These properties may compete with the log level set by `OptionParser`'s option `-l`, potentially overriding that level.
 
 ## Bumping Version Number and Deploying
 
