@@ -63,6 +63,40 @@ public class TestSplitLogger {
     LOGGER.log(Level.FINEST, "{0} MESSAGE - should go to stdout", Level.FINEST);
   }
 
+  /** test exception handling */
+  public void test3() {
+    System.out.println("=== TEST 3 ===");
+    try {
+      throwRuntimeException();
+    } catch (Exception ex) {
+      LOGGER.log(Level.SEVERE, "caught test 3 exception", ex);
+    }
+  }
+
+  /** test exception handling */
+  public void test4() {
+    System.out.println("=== TEST 4 ===");
+    try {
+      catchAndThrowException();
+    } catch (Exception ex) {
+      LOGGER.log(Level.SEVERE, "caught test 4 exception", ex);
+    }
+  }
+
+  /** throw a runtime exception */
+  private static void throwRuntimeException() throws RuntimeException {
+    throw new RuntimeException("this is a test runtime exception");
+  }
+
+  /** catch and throw an exception */
+  private static void catchAndThrowException() throws Exception {
+    try {
+      throwRuntimeException();
+    } catch(RuntimeException ex) {
+      throw new Exception("this is a test caught and thrown exception", ex);
+    }
+  }
+
   /**
    * run the tests
    * @param args unused
@@ -71,6 +105,8 @@ public class TestSplitLogger {
     var potato = new TestSplitLogger();
     potato.test1();
     potato.test2();
+    potato.test3();
+    potato.test4();
   }
 
 }
