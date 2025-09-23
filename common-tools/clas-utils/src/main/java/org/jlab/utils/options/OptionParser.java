@@ -9,7 +9,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.jlab.logging.DefaultLogger;
 
 /**
@@ -191,7 +190,7 @@ public class OptionParser {
     private void setVerbosity(String level) {
         try {
             this.logLevel = Level.parse(level);
-            DefaultLogger.initialize(this.logLevel);
+            DefaultLogger.initialize(this.logLevel); // FIXME: don't do this if using SplitLogger
         }
         catch (IllegalArgumentException e) {
             System.err.println("Invalid -l java.util.logging.Level:  "+level);

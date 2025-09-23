@@ -13,6 +13,7 @@ import org.jlab.detector.scalers.DaqScalersSequence;
 import org.jlab.detector.helicity.HelicityBit;
 import org.jlab.detector.helicity.HelicitySequenceDelayed;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
+// import org.jlab.logging.DefaultLogger; // FIXME: remove
 import org.jlab.logging.SplitLogger;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.options.OptionParser;
@@ -32,10 +33,18 @@ import org.jlab.utils.options.OptionParser;
 public class Tag1ToEvent {
 
     static final Logger LOGGER = SplitLogger.create(Tag1ToEvent.class.getName());
+    // static final Logger LOGGER = Logger.getLogger(Tag1ToEvent.class.getName()); // FIXME: remove
 
     public static void main(String[] args) {
 
+        // DefaultLogger.debug(); // FIXME: remove
+
         // Parse command-line options:
+        // System.setProperty("java.lang.Runtime.exit.tracing", "true"); // FIXME: remove
+        // String tracing = System.getProperty("java.lang.Runtime.exit.tracing"); // FIXME: remove
+        // System.out.println("java.lang.Runtime.exit.tracing = " + tracing); // FIXME: remove
+        // if(true) throw new RuntimeException("testing runtime stacktrace"); // FIXME: remove
+        // System.exit(101); // FIXME: remove
         OptionParser parser = new OptionParser("postprocess");
         parser.addOption("-q","0","do beam charge and livetime (0/1=false/true)");
         parser.addOption("-d","0","do delayed helicity (0/1=false/true)");
