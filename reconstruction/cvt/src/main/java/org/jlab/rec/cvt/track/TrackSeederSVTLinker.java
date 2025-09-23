@@ -1,13 +1,17 @@
 package org.jlab.rec.cvt.track;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.geom.prim.Line3D;
+import org.jlab.geom.prim.Plane3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
 import org.jlab.rec.cvt.Constants;
@@ -16,27 +20,32 @@ import org.jlab.rec.cvt.bmt.BMTGeometry;
 
 import org.jlab.rec.cvt.bmt.BMTType;
 import org.jlab.rec.cvt.cross.Cross;
+import org.jlab.rec.cvt.fit.CircleFitPars;
 import org.jlab.rec.cvt.fit.LineFitPars;
 import org.jlab.rec.cvt.fit.LineFitter;
 import org.jlab.rec.cvt.services.RecUtilities;
+import org.jlab.rec.cvt.svt.SVTGeometry;
 import org.jlab.rec.cvt.svt.SVTParameters;
 
 public class TrackSeederSVTLinker {
 
-    private final BMTGeometry bgeo = Geometry.getInstance().getBMT();
+    private SVTGeometry svtGeo;
+    private BMTGeometry bmtGeo;
     private double xbeam;
     private double ybeam;
     private double bfield;
     private Map <Integer, Map <Integer, List<Cross>>> svtcrs;
     private Map <Integer, Map <Integer, List<Cross>>> bmtcrs;
-    public TrackSeederSVTLinker(Swim swimmer, double xb, double yb) {
+    public TrackSeederSVTLinker(Swim swimmer, double xb, double yb, SVTGeometry svtGeom, BMTGeometry bmtGeom) {
+        svtGeo = svtGeom;
+        bmtGeo = bmtGeom;
         float[] b = new float[3];
         swimmer.BfieldLab(0, 0, 0, b);
         this.bfield = Math.abs(b[2]);
         this.xbeam = xb;
         this.ybeam = yb;
-        trseed1 = new TrackSeederRZ();
-        trseed2 = new TrackSeederXY(xb, yb);
+        trseed1 = new TrackSeederRZ(bmtGeo);
+        trseed2 = new TrackSeederXY(xb, yb, svtGeo, bmtGeo);
         trseed2.unUsedHitsOnly=false;
         svtcrs= new HashMap<>();
         bmtcrs= new HashMap<>();
@@ -146,7 +155,7 @@ public class TrackSeederSVTLinker {
             List<Double> EZ = new ArrayList<>();
             int sector = zrcross.get(0).getSector(); 
             for (Cross c : zrcross) { 
-                R.add(bgeo.getRadiusMidDrift(c.getCluster1().getLayer()));
+                R.add(bmtGeo.getRadiusMidDrift(c.getCluster1().getLayer()));
                 Z.add(c.getPoint().z());
                 EZ.add(c.getPointErr().z());
             }
@@ -230,7 +239,7 @@ public class TrackSeederSVTLinker {
                     s.getCrosses().addAll(zrcross);
                     s.setCrosses(s.getCrosses()) ;
                     s.fit(Constants.SEEDFITITERATIONS, xbeam, ybeam, bfield);
-                   
+                    if(this.flagSeed(s)) continue;
                     if(s.getChi2()<Constants.CHI2CUT*s.getCrosses().size()) {
                         s.setStatus(3);
                         for(Cross c : s.getCrosses()) {
@@ -361,6 +370,44 @@ public class TrackSeederSVTLinker {
         }    
     }
 
+    public boolean flagSeed(Seed seed) {
+        //get missing BMT layers
+        Set<Integer> missingBMTLayers = findBMTMissingRegions(seed);
+        
+        for(Integer l : missingBMTLayers) {
+            double r = bmtGeo.getRadius(l);
+            Point3D p = seed.getHelix().getPointAtRadius(r);
+            int sector = bmtGeo.getSector(l, Math.atan2(p.y(), p.x()));
+            boolean inDet = bmtGeo.inDetector(l, sector, p);
+            if(inDet) return true;
+        }
+        return false;
+    }
+    
+    
+    private Set<Integer> findBMTMissingRegions(Seed seed) {
+        Set<Integer> unUsedRegions = new HashSet<>();
+        // available layers
+        Set<Integer> bMTavailable = new HashSet<>(Arrays.asList(2, 3, 5));
+        List<Cross> bmtCrosses = new ArrayList<>();
+        for(Cross c : seed.getCrosses()) {
+            if(c.getDetector()==DetectorType.BMT && c.getType()==BMTType.Z)
+                bmtCrosses.add(c);
+        }
+        // remove the ones already used
+        
+        for(Cross c2 : bmtCrosses) {
+            bMTavailable.remove(c2.getCluster1().getLayer());
+        }
+        
+        for(Integer i : bMTavailable) {
+            unUsedRegions.add(i);
+        }
+        // now only the missing one remains
+        return unUsedRegions;
+    }
+    
+    
     private void printListSeedCrosses(List<Seed> cands, String strg) {
     System.out.println(strg);
         System.out.println("========");

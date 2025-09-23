@@ -22,7 +22,9 @@ import org.jlab.clas.tracking.kalmanfilter.Surface;
 import org.jlab.clas.tracking.kalmanfilter.Units;
 import org.jlab.rec.cvt.Geometry;
 import org.jlab.rec.cvt.banks.RecoBankReader;
+import org.jlab.rec.cvt.bmt.BMTGeometry;
 import org.jlab.rec.cvt.measurement.Measurements;
+import org.jlab.rec.cvt.svt.SVTGeometry;
 import org.jlab.rec.cvt.track.Seed;
 import org.jlab.rec.cvt.track.Seed.Key;
 import org.jlab.rec.cvt.track.StraightTrackSeeder;
@@ -58,11 +60,14 @@ public class TracksFromTargetRec {
     private double yb;
     public int totTruthHits;
     public boolean oldStraightTrackSeeder=false;
-    
-    public TracksFromTargetRec(Swim swimmer, double[] beamPos) {
+    private BMTGeometry bmtGeo;
+    private SVTGeometry svtGeo;
+    public TracksFromTargetRec(Swim swimmer, double[] beamPos, Geometry Geo) {
         this.swimmer = swimmer;
         this.xb = beamPos[0];
         this.yb = beamPos[1];
+        this.bmtGeo = Geo.getBMT();
+        this.svtGeo = Geo.getSVT();
     }
     
        
@@ -89,7 +94,7 @@ public class TracksFromTargetRec {
                 seeds = trseed.findSeed(this.SVTcrosses, null);
             } else {
                 if(Constants.getInstance().svtLinkerSeeding) {
-                    TrackSeederSVTLinker trseed = new TrackSeederSVTLinker(swimmer, xb, yb);  // new seeder
+                    TrackSeederSVTLinker trseed = new TrackSeederSVTLinker(swimmer, xb, yb, svtGeo, bmtGeo);  // new seeder
                     seeds.addAll(trseed.findSeed(this.SVTcrosses, this.BMTcrosses));
                 } else {
                     TrackSeederCA trseedca = new TrackSeederCA(swimmer, xb, yb);  // cellular automaton seeder

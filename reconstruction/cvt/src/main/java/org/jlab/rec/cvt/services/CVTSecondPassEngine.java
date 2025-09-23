@@ -48,7 +48,7 @@ public class CVTSecondPassEngine extends CVTEngine {
             return true;
         } else {
             double[] xyBeam = CVTReconstruction.getBeamSpot(event, beamPos);
-            TracksFromTargetRec  trackFinder = new TracksFromTargetRec(swimmer, xyBeam);
+            TracksFromTargetRec  trackFinder = new TracksFromTargetRec(swimmer, xyBeam, Geometry.getInstance());
             List<Seed>  seeds  = trackFinder.getSeedsFromBanks(event);
             List<Track> tracks = null;
             if(seeds!=null) {

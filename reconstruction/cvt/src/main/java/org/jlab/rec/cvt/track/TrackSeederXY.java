@@ -1,16 +1,22 @@
 package org.jlab.rec.cvt.track;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.jlab.detector.base.DetectorType;
+import org.jlab.geom.prim.Plane3D;
+import org.jlab.geom.prim.Point3D;
 import org.jlab.rec.cvt.Constants;
+import org.jlab.rec.cvt.bmt.BMTGeometry;
 import org.jlab.rec.cvt.bmt.BMTType;
 import org.jlab.rec.cvt.cross.Cross;
 import org.jlab.rec.cvt.fit.CircleFitter;
 import org.jlab.rec.cvt.fit.CircleFitPars;
-
+import org.jlab.rec.cvt.svt.SVTGeometry;
 public class TrackSeederXY {
     
     
@@ -27,8 +33,7 @@ public class TrackSeederXY {
     private double ybeam;
     public boolean unUsedHitsOnly = false;
     
-    public TrackSeederXY(double xb, double yb) {
-        
+    public TrackSeederXY(double xb, double yb, SVTGeometry svtGeom, BMTGeometry bmtGeom) {
         //init lists for scan
         sortedCrosses = new ArrayList<>();
         for(int i =0; i<NBINS; i++) {
@@ -223,9 +228,10 @@ public class TrackSeederXY {
             }
             //bseed.setStatus(3);
         }
-       
+        
         return seedlist;
     }
+    
     
     private int countType(List<Cross> cand, DetectorType dt) {
         int countsvt=0;
@@ -234,6 +240,19 @@ public class TrackSeederXY {
                 countsvt++;
         
         return countsvt;
+    }
+    private double[] calcXYAtR(double rho, double d0, double phi0, double r) {
+        double par = 1. - ((r * r - d0 * d0) * rho * rho) / (2. * (1. + d0 * Math.abs(rho)));
+        double newPathLength = Math.abs(Math.acos(par) / rho);
+        int charge = (int) Math.signum(rho);
+        double alpha = -newPathLength * rho;
+
+        double x = d0 * charge * Math.sin(phi0) + (charge / Math.abs(rho)) 
+                * (Math.sin(phi0) - Math.cos(alpha) * Math.sin(phi0) - Math.sin(alpha) * Math.cos(phi0));
+        double y = -d0 * charge * Math.cos(phi0) - (charge / Math.abs(rho)) 
+                * (Math.cos(phi0) + Math.sin(alpha) * Math.sin(phi0) - Math.cos(alpha) * Math.cos(phi0));
+       
+        return new double[] {x,y};
     }
     private double calcResi(double rho, double d0, double phi0, double xc, double yc) {
         double r = Math.sqrt(xc*xc+yc*yc);

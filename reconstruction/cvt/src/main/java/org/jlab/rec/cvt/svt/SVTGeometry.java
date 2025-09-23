@@ -16,7 +16,6 @@ import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
 import org.jlab.geometry.prim.Line3d;
 import org.jlab.rec.cvt.Constants;
-import org.jlab.rec.cvt.Geometry;
 import org.jlab.utils.groups.IndexedTable;
 
 public class SVTGeometry {

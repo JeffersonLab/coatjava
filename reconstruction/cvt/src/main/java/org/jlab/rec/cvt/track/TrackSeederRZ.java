@@ -1,12 +1,18 @@
 package org.jlab.rec.cvt.track;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import org.jlab.geom.prim.Point3D;
 import org.jlab.rec.cvt.Constants;
 import org.jlab.rec.cvt.Geometry;
+import org.jlab.rec.cvt.bmt.BMTConstants;
+import org.jlab.rec.cvt.bmt.BMTGeometry;
 import org.jlab.rec.cvt.cross.Cross;
 
 public class TrackSeederRZ {
@@ -15,8 +21,10 @@ public class TrackSeederRZ {
 
     public boolean unUsedHitsOnly = false;
     private Map <Integer, Map <Integer, List<Cross>>> bmtcrs;
-        
-    public TrackSeederRZ() {
+    BMTGeometry bmtGeom;
+   
+    public TrackSeederRZ(BMTGeometry bmtGeo) {
+        bmtGeom = bmtGeo;
         bmtcrs= new HashMap<>();
         //init lists for scan
         sortedCrosses = new ArrayList<>();
@@ -140,6 +148,9 @@ public class TrackSeederRZ {
             }
         }
         removeCompleteZROverlaps(result);
+        
+        result.removeIf(s -> status(s) == 0);
+        
         return result;
     }
     
@@ -216,4 +227,57 @@ public class TrackSeederRZ {
             System.out.println("Passing: "+ value);
         return value;
     }
+
+    private boolean missingCrossOK(Cross c1, Cross c3) {
+        if(Constants.getInstance().seedingDebugMode) {
+            System.out.println("RZ Search:");
+            System.out.println(c1.printInfo());
+            System.out.println(c3.printInfo());
+        }
+        boolean value = false;
+        if(interceptOK(c1,c3)==false)
+            return value;
+        double sl = (c1.getPoint().z() - c3.getPoint().z())/(c1.getPoint().toVector3D().rho() - c3.getPoint().toVector3D().rho());
+        double in = -sl*c1.getPoint().toVector3D().rho()+c1.getPoint().z();
+        
+        int region = findMissingRegion(c1, c3);
+        double Rm =BMTConstants.getCRCRADIUS()[region-1];
+        double Zc = sl*Rm +in;
+        int expectedStrip = bmtGeom.getCstrip(region, new Point3D(0,0,Zc));
+        if(expectedStrip==0) { 
+            value = true;
+        } else {
+            value = false;
+        }
+        
+        if(Constants.getInstance().seedingDebugMode) 
+            System.out.println("Passing: "+ value);
+        return value;
+    }
+    
+    private int status (List<Cross> crosses) {
+        int n = crosses.size();
+        if(n==3) {
+            return 1;
+        } else {
+            if(missingCrossOK(crosses.get(0), crosses.get(1))) {
+                return 1;
+            } else {
+                return 0;
+            }
+        }
+    }
+    
+    private int findMissingRegion(Cross c1, Cross c2) {
+        // available layers
+        Set<Integer> available = new HashSet<>(Arrays.asList(1, 2, 3));
+
+        // remove the ones already used
+        available.remove(c1.getRegion());
+        available.remove(c2.getRegion());
+
+        // now only the missing one remains
+        return available.iterator().next();
+    }
+
 }

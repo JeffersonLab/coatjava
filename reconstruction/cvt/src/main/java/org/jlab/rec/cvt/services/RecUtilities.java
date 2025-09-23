@@ -505,8 +505,9 @@ public class RecUtilities {
     
     //RDV: to be checked: causes track crosses to be overwritten
     @Deprecated
-    public List<Seed> reFit(List<Seed> seedlist, Swim swimmer,  TrackSeederSVTLinker trseed,  TrackSeeder trseed2, double xb, double yb) {
-        trseed = new TrackSeederSVTLinker(swimmer, xb, yb);
+    public List<Seed> reFit(List<Seed> seedlist, Swim swimmer,  TrackSeederSVTLinker trseed,  TrackSeeder trseed2, double xb, double yb,
+            SVTGeometry sgeo, BMTGeometry geo) {
+        trseed = new TrackSeederSVTLinker(swimmer, xb, yb, sgeo, geo);
         trseed2 = new TrackSeeder(swimmer, xb, yb);
         List<Seed> filtlist = new ArrayList<>();
         if(seedlist==null)
