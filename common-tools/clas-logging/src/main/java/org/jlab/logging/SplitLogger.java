@@ -17,15 +17,15 @@ public class SplitLogger {
    */
   public static Logger create(String name) {
     Logger logger = Logger.getLogger(name);
-    configureLogger(logger);
+    configureHandlers(logger);
     return logger;
   }
 
   /**
-   * Configure a logger such that errors go to {@code stderr} and everything else to {@code stdout}
+   * Configure a logger handlers such that errors go to {@code stderr} and everything else to {@code stdout}
    * @param logger the {@code Logger} instance to configure
    */
-  public static void configureLogger(Logger logger) {
+  public static void configureHandlers(Logger logger) {
 
     // clear handlers
     logger.setUseParentHandlers(false);
@@ -73,20 +73,31 @@ public class SplitLogger {
       }
     };
 
-    // tell the handlers which log level
+    // add the handlers
+    logger.addHandler(infoHandler);
+    logger.addHandler(errorHandler);
+
+    // set the log level, since the handlers need to know it too
     Level thisLevel = logger.getLevel();
     if(thisLevel==null) { // caller did not set log level, use parent
       thisLevel = logger.getParent().getLevel();
-      if(thisLevel==null) { // should never happen, but just in case
+      if(thisLevel==null) { // should never happen, but just in case, fall back to default and complain directly to `stderr`
         thisLevel = Level.INFO;
         System.err.println("WARNING: trouble setting level of logger '" + logger.getName() + "'; defaulting to level '" + thisLevel + "'");
       }
-      logger.setLevel(thisLevel);
     }
-    infoHandler.setLevel(thisLevel);
-    errorHandler.setLevel(thisLevel);
-    logger.addHandler(infoHandler);
-    logger.addHandler(errorHandler);
+    configureLevel(logger, thisLevel);
+  }
+
+  /**
+   * set the log level of a logger and its handlers
+   * @param logger the {@code Logger} instance to configure
+   * @param level the {@code Level} to apply
+   */
+  public static void configureLevel(Logger logger, Level level) {
+    logger.setLevel(level);
+    for(var handler : logger.getHandlers())
+      handler.setLevel(level);
   }
 
 }

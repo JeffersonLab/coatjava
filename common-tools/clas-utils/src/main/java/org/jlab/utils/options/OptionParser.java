@@ -26,7 +26,7 @@ public class OptionParser {
     private String                             program = "undefined";
     private boolean                  requiresInputList = true;
     private String                  programDescription = "";
-    private Logger                              logger = null; // FIXME: bad idea?
+    private Level                             logLevel = Level.FINE; // default log level
     
     public OptionParser(){
         init();
@@ -38,7 +38,7 @@ public class OptionParser {
     }
    
     private void init() {
-        addOption("-l","FINE","logging verbosity level");
+        addOption("-l",this.logLevel.toString(),"logging verbosity level");
         addOption("-v",null,"print version");
         addOption("-h",null,"print help");
     }
@@ -49,10 +49,6 @@ public class OptionParser {
 
     public void setRequiresInputList(boolean flag){
         this.requiresInputList = flag;
-    }
-
-    public void setLogger(Logger logger){
-        this.logger = logger; // FIXME: bad idea?
     }
 
     public void addRequired(String key){
@@ -194,10 +190,8 @@ public class OptionParser {
 
     private void setVerbosity(String level) {
         try {
-            DefaultLogger.initialize(Level.parse(level));
-            if(this.logger!=null) {
-              this.logger.setLevel(Level.parse(level)); // FIXME: bad idea?
-            }
+            this.logLevel = Level.parse(level);
+            DefaultLogger.initialize(this.logLevel);
         }
         catch (IllegalArgumentException e) {
             System.err.println("Invalid -l java.util.logging.Level:  "+level);
@@ -221,6 +215,10 @@ public class OptionParser {
         } catch (Exception e) {
             return "coatjava version ???";
         }
+    }
+
+    public Level getLogLevel() {
+      return this.logLevel;
     }
     
     public static void main(String[] args){
