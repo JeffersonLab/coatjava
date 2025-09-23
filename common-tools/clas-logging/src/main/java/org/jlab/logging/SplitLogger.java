@@ -34,20 +34,32 @@ public class SplitLogger {
     String terseName = logger.getName().replaceAll(".*\\.","");
 
     // log message formatting
-    java.util.logging.Formatter formatter = new java.util.logging.SimpleFormatter() {
+    java.util.logging.Formatter formatter = new java.util.logging.Formatter() {
       @Override
       public synchronized String format(java.util.logging.LogRecord lr) {
+        // prefix
+        StringBuilder prefix = new StringBuilder("[" + terseName);
         String methodName = lr.getSourceMethodName();
+        if(methodName != null)
+          prefix.append("."+methodName);
+        prefix.append("] ");
+        // message
+        StringBuilder result = new StringBuilder(prefix);
         String msg = (lr.getParameters() != null && lr.getParameters().length > 0)
           ? java.text.MessageFormat.format(lr.getMessage(), lr.getParameters())
           : lr.getMessage();
-        String throwable = (lr.getThrown() == null) ? "" : lr.getThrown().toString();
-        return String.format("[%s.%s] %s %s",
-            terseName,
-            methodName==null ? "" : methodName,
-            msg,
-            throwable.isEmpty() ? "" : " " + throwable
-            ) + System.lineSeparator();
+        result.append(msg);
+        // stack trace
+        if(lr.getThrown() != null) {
+          result.append(System.lineSeparator());
+          java.io.StringWriter sw = new java.io.StringWriter();
+          java.io.PrintWriter pw = new java.io.PrintWriter(sw);
+          lr.getThrown().printStackTrace(pw);
+          result.append(sw.toString());
+        }
+        // final result
+        result.append(System.lineSeparator());
+        return result.toString();
       }
     };
 
