@@ -30,41 +30,10 @@ public class SplitLogger {
     // clear handlers
     logger.setUseParentHandlers(false);
 
-    // terse logger name
-    String terseName = logger.getName().replaceAll(".*\\.","");
-
     // log message formatting
-    java.util.logging.Formatter formatter = new java.util.logging.Formatter() {
-      @Override
-      public synchronized String format(java.util.logging.LogRecord lr) {
-        // prefix
-        StringBuilder prefix = new StringBuilder("[" + terseName);
-        String methodName = lr.getSourceMethodName();
-        if(methodName != null)
-          prefix.append("."+methodName);
-        prefix.append("] ");
-        // level
-        if(lr.getLevel().intValue() >= Level.WARNING.intValue())
-          prefix.append(lr.getLevel() + ": ");
-        // message
-        StringBuilder result = new StringBuilder(prefix);
-        String msg = (lr.getParameters() != null && lr.getParameters().length > 0)
-          ? java.text.MessageFormat.format(lr.getMessage(), lr.getParameters())
-          : lr.getMessage();
-        result.append(msg);
-        // stack trace
-        if(lr.getThrown() != null) {
-          result.append(System.lineSeparator());
-          java.io.StringWriter sw = new java.io.StringWriter();
-          java.io.PrintWriter pw = new java.io.PrintWriter(sw);
-          lr.getThrown().printStackTrace(pw);
-          result.append(sw.toString());
-        }
-        // final result
-        result.append(System.lineSeparator());
-        return result.toString();
-      }
-    };
+    // "[source] level: message throwable_backtrace\n"
+    System.setProperty("java.util.logging.SimpleFormatter.format", "[%2$s] %4$s: %5$s%6$s%n");
+    java.util.logging.Formatter formatter = new java.util.logging.SimpleFormatter();
 
     // stdout handler
     java.util.logging.Handler infoHandler = new java.util.logging.StreamHandler(System.out, formatter) {
