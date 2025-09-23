@@ -1,5 +1,23 @@
 # Developer Notes
 
+## Controlling Log Levels
+
+To control the log level of a class with a `Logger`, make a logging `.properties` file, and set the level of each of your classes for which you want to use a non-default level; use the property name `className.level`, for example:
+```
+# my_levels.properties
+org.jlab.detector.helicity.HelicityGenerator.level = FINEST
+org.jlab.detector.calib.utils.RCDBProvider.level = FINER
+```
+Then run as
+```bash
+java -Djava.util.logging.config.file=my_levels.properties ...
+```
+or using `run-coatjava`,
+```bash
+run-coatjava [CLASS_NAME] [CLASS_ARGS] -- -Djava.util.logging.config.file=my_levels.properties
+```
+Note that these settings may compete with the log level set by `OptionParser`'s option `-l`, potentially overriding that level.
+
 ## Bumping Version Number and Deploying
 
 Deploying a new version requires a new version number, named `$VERSION` in this
