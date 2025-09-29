@@ -1,9 +1,9 @@
 package org.jlab.service.atof;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.io.base.DataBank;
@@ -38,6 +38,8 @@ public class ATOFEngine extends ReconstructionEngine {
 
     private Detector ATOF;
     private double b; //Magnetic field
+    private boolean useStartTime = true;
+    static final Logger LOGGER = Logger.getLogger(ATOFEngine.class.getName());
     
     public void setB(double B) {
         this.b = B;
@@ -56,15 +58,20 @@ public class ATOFEngine extends ReconstructionEngine {
     
     @Override
     public boolean processDataEvent(DataEvent event) {
-
         if (!event.hasBank("RUN::config")) {
             return true;
         }
-        
-        //This assumes the FD reconstruction produced an event with good startTime
-        //All start time handling could be moved as an EB-type step later
-        if (!event.hasBank("REC::Event") || event.getBank("REC::Event").getFloat("startTime", 0)==-1000) {
-            return true;
+        float startTime = 0;
+        if(useStartTime)
+        {
+            //This assumes the FD reconstruction produced an event with good startTime
+            //All start time handling could be moved as an EB-type step later
+            if (!event.hasBank("REC::Event")) {
+                LOGGER.severe("REC::Event bank could not be read in ATOF engine while requestign starttime");
+                return true;
+            }
+            //Deal with FT TODO : if(event.getBank("REC::Event").getFloat("startTime", 0)==-1000)
+            else startTime = event.getBank("REC::Event").getFloat("startTime", 0);
         }
 
         DataBank bank = event.getBank("RUN::config");
@@ -98,7 +105,7 @@ public class ATOFEngine extends ReconstructionEngine {
         // Why do we have to "find" hits? 
         //Hit finder init
         HitFinder hitfinder = new HitFinder();
-        hitfinder.findHits(event, ATOF);
+        hitfinder.findHits(event, ATOF, startTime);
 
         ArrayList<ATOFHit> WedgeHits = hitfinder.getWedgeHits();
         ArrayList<BarHit> BarHits = hitfinder.getBarHits();
@@ -149,15 +156,19 @@ public class ATOFEngine extends ReconstructionEngine {
         }
 
         requireConstants(tableMap);
-        
         this.getConstantsManager().setVariation("default");
-        
         this.registerOutputBank("ATOF::hits", "ATOF::clusters");
-
+        String useStartTimeString = "UseStartTime";
+        if(this.getEngineConfigString(useStartTimeString)!=null) {
+            if ("true".equals(this.getEngineConfigString(useStartTimeString)))
+                this.useStartTime = true;
+            else if ("false".equals(this.getEngineConfigString(useStartTimeString)))
+                this.useStartTime = false;
+            else {LOGGER.severe("Invalid option parsed for ATOF UseStartTime"); return false;}
+        }
         return true;
     }
 
     public static void main(String arg[]) {
-        
     }
 }
