@@ -63,7 +63,7 @@ public class HitFinder {
      * @param atof the {@link Detector} representing the atof geometry to match
      * the sector/layer/component to x/y/z.
      */
-    public void findHits(DataEvent event, Detector atof) {
+    public void findHits(DataEvent event, Detector atof, float startTime) {
         //For each event a list of bar hits and a list of wedge hits are filled
         this.barHits.clear();
         this.wedgeHits.clear();
@@ -72,7 +72,6 @@ public class HitFinder {
         //Check that the event start time is defined are done in the engine
         //if (event.hasBank("REC::Event") && 
         //        event.getBank("REC::Event").getFloat("startTime", 0)!=-1000)
-        float startTime = event.getBank("REC::Event").getFloat("startTime", 0);
         
         int nt = bank.rows(); // number of hits
         //Hits in the bar downstream and upstream will be matched
