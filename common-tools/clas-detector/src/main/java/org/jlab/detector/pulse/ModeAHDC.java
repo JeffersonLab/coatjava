@@ -37,7 +37,7 @@ public class ModeAHDC extends HipoExtractor  {
     private final int binDelayCFD = 5;
     private final float fractionCFD = 0.5f;
     //Number of samples defining the baseline
-    private final int nBaselineSamples = 5;
+    private final int nBaselineSamples = 4;
     //threshold for the slope to consider part of a wf flat
     private final int flateness = 200;
     //ADC offset to be considered as the default baseline
@@ -53,7 +53,9 @@ public class ModeAHDC extends HipoExtractor  {
     private Pulse pulse;
     private long time_ZS;
     private int binMax;
-    
+    private int numberOfBins;
+    private int effectiveNumberOfBins;
+
     //Waveform types:
     //0 is good, 
     //-1 is invalid,
@@ -64,13 +66,24 @@ public class ModeAHDC extends HipoExtractor  {
     //5 has low ADC ("flat")
     
     /**
-    * This method checks if the wf starts with a flat baseline
-    */    
-    public void baselineSlope()
-    {
-        int slope = this.samples[this.nBaselineSamples-1] - this.samples[0];
-        if(slope<-this.flateness){this.pulse.wftype = 4;}//remnant from a previous sample, will be checked further later
-        else if(slope>this.flateness){this.pulse.wftype = 2;}//early waveform
+     *
+     */
+    public void preProcess() {
+        assignValidType(0);
+        this.numberOfBins = samples.length;
+        // check if the signal is too short
+        int countNotZeros = 0;
+        boolean FirstNonZeroFromTheTailReached = false;
+        for (int i = samples.length-1; i >= 0; i--) {
+            if (samples[i] > 0) {
+                countNotZeros++;
+                if (!FirstNonZeroFromTheTailReached) {
+                    FirstNonZeroFromTheTailReached = true;
+                    this.effectiveNumberOfBins = i+1; // this value can be identified as the effective number of bins
+                }
+            }
+        }
+        if (countNotZeros <= 10) assignInvalidType(); 
     }
     
     /**
@@ -83,20 +96,13 @@ public class ModeAHDC extends HipoExtractor  {
         float adcOffset = -99;
 
         //Check if the wf has sufficient length, if not it is invalid
-        if (this.samples.length >= this.nBaselineSamples+1){
-
-            //Compute the slope of the baseline to know how to adress that wf shape
-            this.baselineSlope();
+        if (numberOfBins >= this.nBaselineSamples+1){
         
-            //If it is an early pulse, pedestal should be read from DB default
-            if(this.pulse.wftype == 2) {adcOffset = this.defaultBaseline;} //TO DO: Here we should read ccdb!
-            else{
-                //The baseline is the average of the first few samples
-                for(int i=0; i<this.nBaselineSamples;i++){
-                    adcOffset += this.samples[i];
-                }
-                adcOffset = adcOffset/this.nBaselineSamples;
+            //The baseline is the average of the first few samples
+            for(int i=0; i<this.nBaselineSamples;i++){
+                adcOffset += this.samples[i];
             }
+            adcOffset = adcOffset/this.nBaselineSamples;
         }
         else {this.assignInvalidType();}//invalid, too short wf
         this.pulse.pedestal = adcOffset;
@@ -131,14 +137,14 @@ public class ModeAHDC extends HipoExtractor  {
     */    
     public int waveformADCProcessing()
     {
-        int binNumber = this.samples.length; 
+        //int numberOfBins = this.samples.length; 
         
         //Initialize to dummy values
         this.pulse.adcMax = -99;
         this.binMax = -99;
         
         //For invalid wf, dummy values kept
-        if(this.pulse.wftype == -1) return 0;
+        //if(this.pulse.wftype == 6) return 0;
         
         //Checking for saturation
         int nsaturating = 0;
@@ -148,11 +154,11 @@ public class ModeAHDC extends HipoExtractor  {
         int endPlateau = -99;
         
         //Looping through samples
-        for (int bin = 0; bin < binNumber; bin++){
+        for (int bin = 0; bin < numberOfBins; bin++){
             //Baseline subtraction
             this.samples[bin] = (short) Math.max(this.samples[bin] - this.pulse.pedestal, 0);
             //Look for maximum
-            if (this.pulse.adcMax < this.samples[bin]){
+            if ((this.pulse.adcMax < this.samples[bin]) && (bin >= nBaselineSamples)) { // the max should not be in the baseline
                 this.pulse.adcMax = this.samples[bin];
                 this.binMax = bin;
             }
@@ -173,14 +179,6 @@ public class ModeAHDC extends HipoExtractor  {
             else nsaturating = 0;//this sample is not in a row of saturating samples    
         }
 
-        //If the signal is flat i.e if the ADC max is the same height as the baseline
-        //within the "flatness" threshold
-        if(this.pulse.adcMax < this.flateness) this.assignValidType(5);
-        
-        //Signal if the waveform is at the beginning of the window
-        //This helps again to get rid of remnants from previous waveforms
-        if(this.binMax<this.nBaselineSamples) this.assignValidType(4);
-        
         //Saturating samples: if the number of consecutive saturating samples 
         //is greater than the limit, we consider the wf saturated
         if(maxNsaturating>=this.consecutiveSaturatingSamples){
@@ -191,15 +189,18 @@ public class ModeAHDC extends HipoExtractor  {
  
         //Define the pulse time as the peak time 
         this.pulse.time = (this.binMax + this.time_ZS)*this.samplingTime;
-        //If there are five points around the peak
+        //If there are 2*npts+1 points around the peak
         //(if the peak is not at an edge of the window)
         //Then the peak ADC value is revisited to be the average of these
         //TO DO: just use the adcmax???
-        if ((this.binMax - 2 >= 0) && (this.binMax + 2 <= binNumber - 1)){
+        int npts = 1;
+        if (this.pulse.adcMax == 0) { assignValidType(5);} // classification before the fit
+        if ((this.binMax - npts >= 0) && (this.binMax + npts <= numberOfBins - 1)){
             this.pulse.adcMax = 0;
-            for (int bin = this.binMax - 2; bin <= this.binMax + 2; bin++) this.pulse.adcMax += this.samples[bin];
-            this.pulse.adcMax = this.pulse.adcMax/5;
+            for (int bin = this.binMax - npts; bin <= this.binMax + npts; bin++) this.pulse.adcMax += this.samples[bin];
+            this.pulse.adcMax = this.pulse.adcMax/(2*npts+1);
         }
+        
         return 0;
        }
     
@@ -213,16 +214,10 @@ public class ModeAHDC extends HipoExtractor  {
     */    
     public int waveformCFAprocessing(){
         
-        int binNumber = this.samples.length;
-        
         //Initialization 
         this.pulse.leadingEdgeTime = -9999;
         this.pulse.trailingEdgeTime = -9999;
         this.pulse.timeOverThreshold = -9999;
-        
-        //Waveforms for which timing cannot be defined
-        //compute the values even if the type may seem bad
-        //if(this.pulse.wftype == -1 || this.pulse.wftype>=4) return 0;
         
         //Set the CFA threshold
         float threshold = this.amplitudeFractionCFA*this.pulse.adcMax;
@@ -234,14 +229,18 @@ public class ModeAHDC extends HipoExtractor  {
                 binRise = bin; //Here we keep only the last time the signal crosses the threshold
         }
         //If the waveform does not cross the ths before the peak
-        //it was early and we cannot define a leading time
-        if(binRise==-99) this.assignValidType(4);
+        //it was early or remant from a previous event and we cannot define a leading time
+        //we set the time at zero
+        if(binRise==-99) { 
+            this.assignValidType(5);
+            this.pulse.leadingEdgeTime = (0 + this.time_ZS)*this.samplingTime;
+        }
         else
         {
             float slopeRise = 0;
             //linear interpolation
             //threshold = leadingtime*(ADC1-ADC0)+ADC0
-            if (binRise + 1 <= binNumber-1)
+            if (binRise + 1 <= numberOfBins-1)
                 slopeRise = this.samples[binRise+1] - this.samples[binRise];
             float fittedBinRise = (slopeRise == 0) ? binRise : binRise + (threshold - this.samples[binRise])/slopeRise;
             this.pulse.leadingEdgeTime = (fittedBinRise + this.time_ZS)*this.samplingTime;
@@ -249,7 +248,7 @@ public class ModeAHDC extends HipoExtractor  {
         
         //Crossing the threshold back down after the peak
         int binFall = -99;
-        for (int bin = binMax; bin < binNumber-1; bin++){
+        for (int bin = binMax; bin < numberOfBins-1; bin++){
             if (this.samples[bin] > threshold 
                     && this.samples[bin+1] <= threshold 
                     && this.samples[bin]>0 
@@ -260,7 +259,11 @@ public class ModeAHDC extends HipoExtractor  {
         }
         //If the waveform does not cross the ths again
         //it was late and falling edge cannot be defined
-        if(binFall==-99) {this.assignValidType(3); return 0;}
+        //the time correspond to the end of the signal
+        if(binFall==-99) {
+            this.assignValidType(2); 
+            this.pulse.trailingEdgeTime = (this.effectiveNumberOfBins -1 + this.time_ZS)*this.samplingTime;
+        }
         else
         {
           float slopeFall = 0;
@@ -271,6 +274,8 @@ public class ModeAHDC extends HipoExtractor  {
         }
  
         this.pulse.timeOverThreshold = this.pulse.trailingEdgeTime - this.pulse.leadingEdgeTime;
+        //if ((this.pulse.timeOverThreshold < 300) || (this.pulse.timeOverThreshold > 750)) this.assignValidType(4); // bad tot
+        if (this.pulse.timeOverThreshold < 300) this.assignValidType(4); // tot too small
         
         return 0;
         }
@@ -287,19 +292,19 @@ public class ModeAHDC extends HipoExtractor  {
             this.pulse.constantFractionTime = -99;
             if(this.pulse.wftype>=4) return 0;
             
-            int binNumber = this.samples.length;
-            float[] signal = new float[binNumber];
+            //int numberOfBins = this.samples.length;
+            float[] signal = new float[numberOfBins];
 
             // signal generation
-            for (int bin = 0; bin < binNumber; bin++){
+            for (int bin = 0; bin < numberOfBins; bin++){
                 signal[bin] = (1 - this.fractionCFD)*this.samples[bin]; // we fill it with a fraction of the original signal
-                if (bin < binNumber - this.binDelayCFD)
+                if (bin < numberOfBins - this.binDelayCFD)
                     signal[bin] += -1*this.fractionCFD*this.samples[bin + this.binDelayCFD]; // we advance and invert a complementary fraction of the original signal and superimpose it to the previous signal
             }
             // determine the two humps
             int binHumpSup = 0;
             int binHumpInf = 0;
-            for (int bin = 0; bin < binNumber; bin++){
+            for (int bin = 0; bin < numberOfBins; bin++){
                 if (signal[bin] > signal[binHumpSup])
                     binHumpSup = bin;
             }
@@ -314,7 +319,7 @@ public class ModeAHDC extends HipoExtractor  {
                     binZero = bin; // last pass below zero
             } // at this stage : binZero < constantFractionTime/samplingTime <= binZero + 1 // constantFractionTime is determined by assuming a linear fit between binZero and binZero + 1
             float slopeCFD = 0;
-            if (binZero + 1 <= binNumber)
+            if (binZero + 1 <= numberOfBins)
                 slopeCFD = signal[binZero+1] - signal[binZero];
             float fittedBinZero = (slopeCFD == 0) ? binZero : binZero + (0 - signal[binZero])/slopeCFD;
             this.pulse.constantFractionTime = (fittedBinZero + this.time_ZS)*this.samplingTime;
@@ -362,7 +367,9 @@ public class ModeAHDC extends HipoExtractor  {
         this.binMax = -99;
         
         List<Pulse> output = new ArrayList<>();
-        
+       
+        // Pre Process
+        this.preProcess();
         //Baseline computation
         this.baselineComputation();
        
