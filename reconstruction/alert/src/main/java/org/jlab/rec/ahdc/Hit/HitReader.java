@@ -78,8 +78,7 @@ public class HitReader {
 				double time = leadingEdgeTime - t0 - startTime;
 				
 				// Hit selection : wfType and additional cuts
-				//if (((wfType <= 2) && (adc >= adc_min) && (adc <= adc_max) && (time >= t_min) && (time <= t_max) && (timeOverThreshold >= tot_min) && (timeOverThreshold <= tot_max) && (adcOffset >= ped_min) && (adcOffset <= ped_max)) || sim) {
-				if (((wfType <= 2) && (adc >= adc_min) && (adc <= adc_max) && (leadingEdgeTime - t0 >= t_min) && (leadingEdgeTime - t0 <= t_max) && (timeOverThreshold >= tot_min) && (timeOverThreshold <= tot_max) && (adcOffset >= ped_min) && (adcOffset <= ped_max)) || sim) {
+				if (((wfType <= 2) && (adc >= adc_min) && (adc <= adc_max) && (time >= t_min) && (time <= t_max) && (timeOverThreshold >= tot_min) && (timeOverThreshold <= tot_max) && (adcOffset >= ped_min) && (adcOffset <= ped_max)) || sim) {
 					double doca = p0 + p1*Math.pow(time,1.0) + p2*Math.pow(time,2.0) + p3*Math.pow(time,3.0) + p4*Math.pow(time,4.0) + p5*Math.pow(time, 5.0);
 					if (sim) {
 						time += 5; // correction from mctime - systematic error of the decoding
