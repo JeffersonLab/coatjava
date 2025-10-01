@@ -14,8 +14,8 @@
   </parent>
 
   <modules>
+    <module>ai</module>
     <module>dc</module>
-    <module>dn</module>
     <module>tof</module>
     <module>cvt</module>
     <module>ft</module>

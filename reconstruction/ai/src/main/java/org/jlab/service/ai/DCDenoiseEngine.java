@@ -1,4 +1,4 @@
-package org.jlab.service.dn;
+package org.jlab.service.ai;
 
 import ai.djl.MalformedModelException;
 import java.nio.file.Paths;
@@ -24,7 +24,7 @@ import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.utils.system.ClasUtilsFile;
 
-public class DenoiseEngine extends ReconstructionEngine {
+public class DCDenoiseEngine extends ReconstructionEngine {
 
     final static String[] BANK_NAMES = {"DC::tot","DC::tdc"};
     final static String CONF_THRESHOLD = "threshold";
@@ -50,7 +50,7 @@ public class DenoiseEngine extends ReconstructionEngine {
         }
     }
 
-    public DenoiseEngine() {
+    public DCDenoiseEngine() {
         super("DenoiseEngine","lleztlab","1.0");
     }
 
@@ -63,14 +63,14 @@ public class DenoiseEngine extends ReconstructionEngine {
                 .setTypes(float[][].class, float[][].class)
                 .optModelPath(Paths.get(ClasUtilsFile.getResourceDir("etc/nnet/dn/cnn_autoenc_sector1_nFilters12.pt")))
                 .optEngine("PyTorch")
-                .optTranslator(DenoiseEngine.getTranslator())
+                .optTranslator(DCDenoiseEngine.getTranslator())
                 .optProgress(new ProgressBar())
                 .build();
             model = criteria.loadModel();
             predictors = new PredictorPool(64, model);
             return true;
         } catch (NullPointerException | MalformedModelException | IOException | ModelNotFoundException ex) {
-            System.getLogger(DenoiseEngine.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+            System.getLogger(DCDenoiseEngine.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
             return false;
         }
     }
@@ -87,7 +87,7 @@ public class DenoiseEngine extends ReconstructionEngine {
                     // WARNING:  Predictor is *not* thread safe.
                     Predictor<float[][], float[][]> predictor = predictors.get();
                     for (int sector=0; sector<6; sector++) {
-                        float[][] input = DenoiseEngine.read(bank, sector+1);
+                        float[][] input = DCDenoiseEngine.read(bank, sector+1);
                         float[][] output = predictor.predict(input);
                         //System.out.println("IN:");show(input);
                         //System.out.println("OUT:");show(output);
