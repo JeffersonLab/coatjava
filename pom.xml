@@ -4,7 +4,7 @@
 
   <groupId>org.jlab.clas</groupId>
   <artifactId>coatjava</artifactId>
-  <version>13.2.0-SNAPSHOT</version>
+  <version>13.3.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <properties>
@@ -37,7 +37,7 @@
       <dependency>
         <groupId>com.github.spotbugs</groupId>
         <artifactId>spotbugs</artifactId>
-        <version>4.9.4</version>
+        <version>4.9.6</version>
       </dependency>
 
       <dependency>
@@ -95,7 +95,7 @@
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-lang3</artifactId>
-        <version>3.18.0</version>
+        <version>3.19.0</version>
       </dependency>
 
       <dependency>
@@ -218,7 +218,7 @@
       <plugin>
         <groupId>com.github.spotbugs</groupId>
         <artifactId>spotbugs-maven-plugin</artifactId>
-        <version>4.9.4.2</version>
+        <version>4.9.6.0</version>
         <configuration>
           <excludeFilterFile>spotbugs-exclude.xml</excludeFilterFile>
         </configuration>
@@ -227,7 +227,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.11.3</version>
+        <version>3.12.0</version>
         <configuration>
           <doctitle>COATJAVA - API documentation - version ${project.version}</doctitle>
           <windowtitle>COATJAVA - API documentation - version ${project.version}</windowtitle>
@@ -247,7 +247,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.14.0</version>
+        <version>3.14.1</version>
         <configuration>
           <release>17</release>
           <encoding>UTF-8</encoding>
@@ -336,7 +336,7 @@
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>flatten-maven-plugin</artifactId>
-          <version>1.7.2</version>
+          <version>1.7.3</version>
           <configuration>
             <flattenMode>fatjar</flattenMode>
           </configuration>
