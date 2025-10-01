@@ -24,7 +24,7 @@
     </dependency>
     <dependency>
       <groupId>org.ejml</groupId>
-      <artifactId>ejml-simple</artifactId>
+      <artifactId>ejml-simple</artifactId> <!-- WARNING: don't override the version number from the top-level dependencyManagement; see `docs/dependency_conflicts.md` -->
     </dependency>
     <dependency>
       <groupId>gov.nist.math</groupId>
