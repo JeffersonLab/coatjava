@@ -46,8 +46,9 @@ public class HitReader {
 				int    wire       = bankDGTZ.getShort("component", i);
 				double adc        = bankDGTZ.getInt("ADC", i);
 				double leadingEdgeTime = bankDGTZ.getFloat("leadingEdgeTime", i);
-				//double timeOverThreshold = bankDGTZ.getFloat("timeOverThreshold", i);	
-				//double adcOffset = bankDGTZ.getFloat("ped", i);	
+				double timeOverThreshold = bankDGTZ.getFloat("timeOverThreshold", i);	
+				double adcOffset = bankDGTZ.getFloat("ped", i);	
+				int wfType = bankDGTZ.getShort("wfType", i);	
 				// Retrieve raw hit cuts from CCDB
 				int key_value = sector*10000 + number*100 + wire;
 				double[] rawHitCuts = CalibrationConstantsLoader.AHDC_RAW_HIT_CUTS.get( key_value );
@@ -76,9 +77,8 @@ public class HitReader {
 				// Remark: leadingEdgeTime already has the fine timestamp correction
 				double time = leadingEdgeTime - t0 - startTime;
 				
-				if ((bankDGTZ.getShort("wfType", i) <= 1) || sim) {
-				// Apply raw hit cuts
-				//if (((adc >= adc_min) && (adc <= adc_max) && (time >= t_min) && (time <= t_max) && (timeOverThreshold >= tot_min) && (timeOverThreshold <= tot_max) && (adcOffset >= ped_min) && (adcOffset <= ped_max)) || sim) {
+				// Hit selection : wfType and additional cuts
+				if (((wfType <= 2) && (adc >= adc_min) && (adc <= adc_max) && (time >= t_min) && (time <= t_max) && (timeOverThreshold >= tot_min) && (timeOverThreshold <= tot_max) && (adcOffset >= ped_min) && (adcOffset <= ped_max)) || sim) {
 					double doca = p0 + p1*Math.pow(time,1.0) + p2*Math.pow(time,2.0) + p3*Math.pow(time,3.0) + p4*Math.pow(time,4.0) + p5*Math.pow(time, 5.0);
 					if (sim) {
 						time += 5; // correction from mctime - systematic error of the decoding
