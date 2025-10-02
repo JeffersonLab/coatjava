@@ -23,7 +23,7 @@ defaults:
 env:
   java_version: 25
   java_distribution: zulu
-  javadoc_version: 24
+  #javadoc_version: 24
   groovy_version: 4.x
   CCDB_CONNECTION: 'sqlite:////cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/ccdb/ccdb_latest.sqlite'
   nthreads: 1
