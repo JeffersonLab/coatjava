@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.jlab.clas12.detector</groupId>
-  <artifactId>clas12detector-dn</artifactId>
+  <artifactId>clas12detector-ai</artifactId>
   <version>13.3.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
