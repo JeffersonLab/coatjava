@@ -21,9 +21,8 @@ defaults:
     shell: bash
 
 env:
-  java_version: 21
+  java_version: 25
   java_distribution: zulu
-  javadoc_version: 24 # newer than `java_version` for better javadoc
   groovy_version: 4.x
   CCDB_CONNECTION: 'sqlite:////cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/ccdb/ccdb_latest.sqlite'
   nthreads: 1
@@ -266,7 +265,7 @@ jobs:
       - name: set up JDK
         uses: actions/setup-java@v5
         with:
-          java-version: ${{ env.javadoc_version }}
+          java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
       - name: build coatjava javadocs # javadoc:aggregate output dir cannot be controlled, so assume the latest "standard" path and `mv` it
         run: |
