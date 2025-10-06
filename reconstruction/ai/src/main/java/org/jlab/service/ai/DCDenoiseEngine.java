@@ -31,7 +31,7 @@ public class DCDenoiseEngine extends ReconstructionEngine {
     final static int LAYERS = 36;
     final static int WIRES = 112;
 
-    float threshold = 0.01f;
+    float threshold = 0.025f;
     Criteria<float[][],float[][]> criteria;
     ZooModel<float[][], float[][]> model;
     PredictorPool predictors;
@@ -61,7 +61,7 @@ public class DCDenoiseEngine extends ReconstructionEngine {
         try {
             criteria = Criteria.builder()
                 .setTypes(float[][].class, float[][].class)
-                .optModelPath(Paths.get(ClasUtilsFile.getResourceDir("etc/nnet/dn/cnn_autoenc_sector1_nFilters12.pt")))
+                .optModelPath(Paths.get(ClasUtilsFile.getResourceDir("etc/nnet/dn/cnn_autoenc_sector1_nBlocks2.pt")))
                 .optEngine("PyTorch")
                 .optTranslator(DCDenoiseEngine.getTranslator())
                 .optProgress(new ProgressBar())
@@ -127,10 +127,9 @@ public class DCDenoiseEngine extends ReconstructionEngine {
         //System.out.println("IN:");b.show();
         for (int row=0; row<b.rows(); row++) {
             if (b.getByte(0,row)-1 != sector) continue;
-            // FIXME:  check layer/wire indexing:
-            if (data[b.getByte(1,row)-1][b.getShort(2,row)-1] < threshold) {
-                // FIXME:  check order masking:
-                b.setByte(3, row, (byte)(b.getByte(3,row)+10));
+            if (data[b.getByte(1,row)-1][b.getShort(2,row)-1] < threshold) {                
+                if(b.getByte(3,row) == 0) b.setByte(3, row, (byte)(60));
+                if(b.getByte(3,row) == 10) b.setByte(3, row, (byte)(90));
             }
         }
         //System.out.println("OUT:");b.show();
@@ -144,10 +143,8 @@ public class DCDenoiseEngine extends ReconstructionEngine {
         for (int i=0; i<bank.rows(); ++i) {
             if (bank.getByte(0,i) == sector) {
                 byte o = bank.getByte(3,i);
-                // FIXME:  check order masking
                 if (0==o || 10==o)
                     // got a hit, set weight to one:
-                    // FIXME:  check layer/wire indexing
                     data[bank.getByte(1,i)-1][bank.getShort(2,i)-1] = 1.0f;
             }
         }
