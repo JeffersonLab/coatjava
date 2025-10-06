@@ -122,6 +122,9 @@ public class DCDenoiseEngine extends ReconstructionEngine {
     
     /**
      * Reject sub-threshold hits by modifying the bank's order variable.
+     * WARNING:  This is not a full implementation of OrderType enum and
+     * all its names, but for now a copy of the subset in C++ DC denoising, see:
+     * https://code.jlab.org/hallb/clas12/coatjava/denoising/-/blob/main/denoising/code/drift.cc?ref_type=heads#L162-198 
      */
     static void update(DataBank b, float threshold, float[][] data, int sector) {
         //System.out.println("IN:");b.show();
