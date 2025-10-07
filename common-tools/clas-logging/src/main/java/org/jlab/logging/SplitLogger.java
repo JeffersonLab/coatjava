@@ -27,40 +27,6 @@ public class SplitLogger {
    */
   public static void configureHandlers(Logger logger) {
 
-    // clear handlers
-    logger.setUseParentHandlers(false);
-
-    // log message formatting
-    // "[source] level: message throwable_backtrace\n"
-    System.setProperty("java.util.logging.SimpleFormatter.format", "[%2$s] %4$s: %5$s%6$s%n");
-    java.util.logging.Formatter formatter = new java.util.logging.SimpleFormatter();
-
-    // stdout handler
-    java.util.logging.Handler infoHandler = new java.util.logging.StreamHandler(System.out, formatter) {
-      @Override
-      public synchronized void publish(java.util.logging.LogRecord record) {
-        if(isLoggable(record) && record.getLevel().intValue() <= Level.INFO.intValue()) {
-          super.publish(record);
-          flush();
-        }
-      }
-    };
-
-    // stderr handler
-    java.util.logging.Handler errorHandler = new java.util.logging.StreamHandler(System.err, formatter) {
-      @Override
-      public synchronized void publish(java.util.logging.LogRecord record) {
-        if(isLoggable(record) && record.getLevel().intValue() >= Level.WARNING.intValue()) {
-          super.publish(record);
-          flush();
-        }
-      }
-    };
-
-    // add the handlers
-    logger.addHandler(infoHandler);
-    logger.addHandler(errorHandler);
-
     // set the log level, since the handlers need to know it too
     Level thisLevel = logger.getLevel();
     if(thisLevel==null) { // caller did not set log level, use parent
