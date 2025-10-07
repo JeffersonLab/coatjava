@@ -46,9 +46,9 @@ hs_err_pid*
 .project
 .settings
 
-# no log files:
+# no log/data files:
 *.log
 *.evio 
 
-bin/evio2hipotest
-export.sh
+# scons litter:
+.sconsign.dblite

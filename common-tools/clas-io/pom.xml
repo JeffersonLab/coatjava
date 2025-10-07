@@ -60,6 +60,43 @@
         <scope>compile</scope>
     </dependency>
 
+    <dependency>
+        <groupId>org.jlab</groupId>
+        <artifactId>groot</artifactId>
+        <version>4.0.5</version>
+    </dependency>
+
   </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.6.1</version>
+                <executions>
+                    <execution>
+                        <id>scons-1</id>
+                        <phase>install</phase>
+                        <goals><goal>exec</goal></goals>
+                        <configuration>
+                            <arguments><argument>target/native</argument></arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>scons-2</id>
+                        <phase>install</phase>
+                        <goals><goal>exec</goal></goals>
+                        <configuration>
+                            <arguments><argument></argument></arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+                <configuration>
+                    <executable>scons</executable>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

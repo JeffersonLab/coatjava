@@ -1,0 +1,19 @@
+Import('env')
+
+javah = env.Command('native', 'src/main/java/org/jlab/io/root/HoistJNI.java', ['javac -h $TARGET $SOURCE', Delete('src/main/java/org/jlab/io/root/HoistJNI.class')])
+AlwaysBuild(javah)
+
+if 'JAVA_HOME' in env['ENV']:
+  env['JAVA_HOME'] = env['ENV']['JAVA_HOME']
+  env.Append(CPPPATH = ["$JAVA_HOME/include", "$JAVA_HOME/include/linux"])
+
+elif env['PLATFORM'] == 'darwin':
+  env.ParseConfig("echo -I`/usr/libexec/java_home`/include")
+  env.ParseConfig("echo -I`/usr/libexec/java_home`/include/darwin")
+
+if env['PLATFORM'] == 'darwin':
+  env.ParseConfig("echo -Wl,-rpath,`root-config --libdir`")
+
+env.Append(CPPPATH = ['native'])
+env.ParseConfig("root-config --libs --cflags")
+env.SharedLibrary('hoistJNI', Glob('*.cpp'))

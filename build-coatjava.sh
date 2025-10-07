@@ -208,6 +208,10 @@ for pom in $(find common-tools -name pom.xml); do
   #   install_jars $pom $prefix_dir/lib/services
   fi
 done
+
+# install JNI stuff:
+$(cd common-tools/clas-io/target && cp *.so ../../../coatjava/lib >& /dev/null || cp *.dylib ../../../coatjava/lib)
+
 echo "installed coatjava to: $prefix_dir"
 
 echo "COATJAVA SUCCESSFULLY BUILT !"
