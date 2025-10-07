@@ -83,6 +83,15 @@ public class TestSplitLogger {
     }
   }
 
+  /**
+   * test lazy evaluation.
+   * the slow function {@code nap()} will only run if the log level is {@code FINEST}.
+   */
+  public void test5() {
+    System.out.println("=== TEST 5 ===");
+    LOGGER.finest(() -> String.format("status: %s", nap()));
+  }
+
   /** throw a runtime exception */
   private static void throwRuntimeException() throws RuntimeException {
     throw new RuntimeException("this is a test runtime exception");
@@ -97,6 +106,17 @@ public class TestSplitLogger {
     }
   }
 
+  /** sleep for 5 seconds */
+  private static String nap() {
+    try {
+      LOGGER.warning("sleeping....");
+      Thread.sleep(5000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+    return "done sleeping";
+  }
+
   /**
    * run the tests
    * @param args unused
@@ -107,6 +127,7 @@ public class TestSplitLogger {
     potato.test2();
     potato.test3();
     potato.test4();
+    potato.test5();
   }
 
 }
