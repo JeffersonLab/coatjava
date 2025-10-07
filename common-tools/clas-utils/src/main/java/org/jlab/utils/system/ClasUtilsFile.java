@@ -95,10 +95,6 @@ public class ClasUtilsFile {
         return str.toString();
     }
 
-    public static String getResourceDir(String rpath) {
-        return getResourceDir("CLAS12DIR",rpath);
-    }
-    
     /**
      * returns list of files in the directory. absolute path is given.
      * This function will not exclude ".*" and "*~" files.
