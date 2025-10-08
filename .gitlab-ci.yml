@@ -45,7 +45,7 @@ spotbugs:
   script:
     - >
       tar -xzf coatjava.tar.gz &&
-      ./build-coatjava.sh -T4 --spotbugs --quiet --no-progress
+      ./build-coatjava.sh -T$JL_RUNNER_AVAIL_CPU --spotbugs --quiet --no-progress
 
 unit_tests:
   stage: test
