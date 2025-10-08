@@ -23,7 +23,7 @@ stages:
 build:
   stage: build
   script:
-    - ./build-coatjava.sh -T4 --quiet --no-progress
+    - ./build-coatjava.sh -T$JL_RUNNER_AVAIL_CPU --quiet --no-progress
     - tar -czf coatjava.tar.gz coatjava
   artifacts:
     when: always
