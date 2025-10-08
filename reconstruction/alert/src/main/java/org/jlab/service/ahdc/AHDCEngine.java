@@ -263,7 +263,7 @@ public class AHDCEngine extends ReconstructionEngine {
 
             // VI) Kalman Filter
             // System.out.println("AHDC_Tracks = " + AHDC_Tracks);
-            KalmanFilter kalmanFitter = new KalmanFilter(AHDC_Tracks, event, simulation);
+            KalmanFilter kalmanFitter = new KalmanFilter(AHDC_Tracks, event, magfield, simulation);
             // VII) Write bank
             RecoBankWriter writer = new RecoBankWriter();
 
