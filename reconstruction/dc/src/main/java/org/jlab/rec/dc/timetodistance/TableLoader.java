@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+import org.jlab.clas.clas.math.FastMath;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.base.GeometryFactory;
 import org.jlab.geom.base.ConstantProvider;
@@ -231,17 +232,17 @@ public class TableLoader {
     private static synchronized void FillAlpha() {
         for(int icosalpha =0; icosalpha<maxBinIdxAlpha+1; icosalpha++) {
 
-            double cos30minusalphaM = Math.cos(Math.toRadians(30.)) + (double) 
-                    (icosalpha)*(1. - Math.cos(Math.toRadians(30.)))/5.;
-            double alphaM = -(Math.toDegrees(Math.acos(cos30minusalphaM)) - 30);
+            double cos30minusalphaM = FastMath.cos(Math.toRadians(30.)) + (double) 
+                    (icosalpha)*(1. - FastMath.cos(Math.toRadians(30.)))/5.;
+            double alphaM = -(Math.toDegrees(FastMath.acos(cos30minusalphaM)) - 30);
             AlphaMid[icosalpha]= alphaM;
-            double cos30minusalphaU = Math.cos(Math.toRadians(30.)) + (double) 
-                    (icosalpha+0.5)*(1. - Math.cos(Math.toRadians(30.)))/5.;
-            double alphaU = -(Math.toDegrees(Math.acos(cos30minusalphaU)) - 30);
+            double cos30minusalphaU = FastMath.cos(Math.toRadians(30.)) + (double) 
+                    (icosalpha+0.5)*(1. - FastMath.cos(Math.toRadians(30.)))/5.;
+            double alphaU = -(Math.toDegrees(FastMath.acos(cos30minusalphaU)) - 30);
             AlphaBounds[icosalpha][1] = alphaU;
-            double cos30minusalphaL = Math.cos(Math.toRadians(30.)) + (double) 
-                    (icosalpha-0.5)*(1. - Math.cos(Math.toRadians(30.)))/5.;
-            double alphaL = -(Math.toDegrees(Math.acos(cos30minusalphaL)) - 30);
+            double cos30minusalphaL = FastMath.cos(Math.toRadians(30.)) + (double) 
+                    (icosalpha-0.5)*(1. - FastMath.cos(Math.toRadians(30.)))/5.;
+            double alphaL = -(Math.toDegrees(FastMath.acos(cos30minusalphaL)) - 30);
             AlphaBounds[icosalpha][0] = alphaL;
         }
         AlphaMid[0] = 0;
@@ -314,8 +315,8 @@ public class TableLoader {
                     for(int ibeta=0; ibeta<betaValues.length; ibeta++) {    
                         for(int icosalpha =0; icosalpha<maxBinIdxAlpha+1; icosalpha++) {
                             maxBinIdxT[s][r][ibfield][icosalpha] = NBINST; 
-                            double cos30minusalpha = Math.cos(Math.toRadians(30.)) + (double) (icosalpha)*(1. - Math.cos(Math.toRadians(30.)))/5.;
-                            double alpha = -(Math.toDegrees(Math.acos(cos30minusalpha)) - 30);
+                            double cos30minusalpha = FastMath.cos(Math.toRadians(30.)) + (double) (icosalpha)*(1. - FastMath.cos(Math.toRadians(30.)))/5.;
+                            double alpha = -(Math.toDegrees(FastMath.acos(cos30minusalpha)) - 30);
                             //int nxmax = (int) (dmax*cos30minusalpha/stepSize)+1; 
                             int nxmax = (int) (dmax/stepSize)+1; 
                             double maxTime=-1;
@@ -372,11 +373,12 @@ public class TableLoader {
         //CCDBTables 2 =  "/calibration/dc/time_corrections/T0_correction";	
         if (T2DLOADED) return;
         
+        System.out.println(" FILLING T2D TABLE ..."); 
         FillAlpha();
         getConstants(t2dPressure,  t2dPressRef,  pressure);
         FillTable();
         
-        System.out.println(" T2D TABLE FILLED.....");
+        System.out.println(" T2D TABLE FILLED."); 
         T2DLOADED = true;
      }
     
