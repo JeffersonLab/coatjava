@@ -31,12 +31,12 @@ import java.util.HashMap;
 
 public class KalmanFilter {
 
-    public KalmanFilter(ArrayList<Track> tracks, DataEvent event, boolean IsMC) {propagation(tracks, event, IsMC);}
+    public KalmanFilter(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {propagation(tracks, event, magfield, IsMC);}
 
 	private final int Niter = 10;
 	private final boolean IsVtxDefined = false;
 
-	private void propagation(ArrayList<Track> tracks, DataEvent event, boolean IsMC) {
+	private void propagation(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {
 
 		try {
 			double vz_constraint = 0;
@@ -68,7 +68,6 @@ public class KalmanFilter {
 			}
 
 			// Initialization ---------------------------------------------------------------------
-			final double      magfield          = +50;
 			final PDGParticle proton            = PDGDatabase.getParticleById(2212);
 			final int         numberOfVariables = 6;
 			final double      tesla             = 0.001;
