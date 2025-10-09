@@ -34,7 +34,7 @@ fi
 
 # java options
 # suppressions of "WARNING: A restricted method in java.lang.System has been called"
-export JAVA_OPTS="--enable-native-access=org.sqlite.SQLiteJDBCLoader,net.jpountz.util.Native ${JAVA_OPTS-}"
+export JAVA_OPTS="--enable-native-access=org.sqlite,net.jpountz.util ${JAVA_OPTS-}"
 
 # additional environment variables for groovy or interactive use
 # - call as `source $0 groovy` or `source $0 jshell`
