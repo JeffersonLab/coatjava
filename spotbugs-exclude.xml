@@ -1,8 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <FindBugsFilter>
-	<!-- Include only serious bugs (rank 1 to 16) -->
-	<Match>
-		<!--<Rank value="17" />-->
-		<Rank value="3" />
-	</Match>
+
+  <!-- set max rank value, where
+    1-4    high priority
+    5-9    medium priority
+    10-14  low priority
+    15-20  informational
+  -->
+  <Match>
+    <Rank value="4"/>
+  </Match>
+
+  <!-- RANK 4 SUPRESSIONS -->
+  <Match> <!-- not ours -->
+    <Class name="eu.mihosoft.vrl.v3d.ext.openjfx.shape3d.symbolic.SymbolicPolygonMesh"/>
+    <Bug pattern="UR_UNINIT_READ"/>
+  </Match>
+
+  <!-- HIGHER RANK SUPRESSIONS -->
+
+  <!-- <Match> --> <!-- not worth fixing -->
+  <!--   <Class name="cnuphys.snr.ExtendedWord"/> -->
+  <!--   <Method name="equals" params="cnuphys.snr.ExtendedWord"/> -->
+  <!--   <Bug pattern="EQ_SELF_USE_OBJECT"/> -->
+  <!-- </Match> -->
+  <!-- <Match> --> <!-- DefaultLogger may be deprecated soon -->
+  <!--   <Class name="org.jlab.logging.DefaultLogger"/> -->
+  <!--   <Method name="init" params="String"/> -->
+  <!--   <Bug pattern="OBL_UNSATISFIED_OBLIGATION"/> -->
+  <!-- </Match> -->
+
 </FindBugsFilter>

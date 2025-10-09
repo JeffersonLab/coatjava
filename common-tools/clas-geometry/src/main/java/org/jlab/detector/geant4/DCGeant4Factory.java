@@ -50,7 +50,7 @@ final class DCdatabase {
     private DCdatabase() {
     }
 
-    public static DCdatabase getInstance() {
+    public static synchronized DCdatabase getInstance() {
         if (instance == null) {
             instance = new DCdatabase();
         }

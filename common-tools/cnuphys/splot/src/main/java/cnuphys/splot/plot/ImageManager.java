@@ -42,7 +42,7 @@ public class ImageManager {
 	 * 
 	 * @return the image manager singleton.
 	 */
-	public static ImageManager getInstance() {
+	public static synchronized ImageManager getInstance() {
 		if (imageManager == null) {
 			try {
 				imageManager = new ImageManager();

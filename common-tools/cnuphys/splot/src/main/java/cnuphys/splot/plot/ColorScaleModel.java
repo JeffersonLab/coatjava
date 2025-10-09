@@ -52,7 +52,7 @@ public class ColorScaleModel {
 	 * 
 	 * @return a standard blue to red color scale
 	 */
-	public static ColorScaleModel blueToRed() {
+	public static synchronized ColorScaleModel blueToRed() {
 		if (_blueToRed == null) {
 			Color colors[] = {
 					// new Color(0, 0, 139),
