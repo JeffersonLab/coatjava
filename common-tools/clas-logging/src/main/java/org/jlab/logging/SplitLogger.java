@@ -11,28 +11,47 @@ import java.util.logging.Logger;
 public class SplitLogger {
 
   /**
-   * create a new {@link SplitLogger} instance
+   * create a new {@link SplitLogger} instance, with formatted messages
    * @return a new {@link SplitLogger} instance
-   * @param the name of the logger
+   * @param name the name of the logger
    */
   public static Logger create(String name) {
+    return create(name, true);
+  }
+
+  /**
+   * create a new {@link SplitLogger} instance, with an optional message formatting including a prefix
+   * @return a new {@link SplitLogger} instance
+   * @param name the name of the logger
+   * @param includePrefix whether or not to include a prefix in the formatting
+   */
+  public static Logger create(String name, boolean includePrefix) {
     Logger logger = Logger.getLogger(name);
-    configureHandlers(logger);
+    configureHandlers(logger, includePrefix);
     return logger;
   }
 
   /**
    * Configure a logger handlers such that errors go to {@code stderr} and everything else to {@code stdout}
    * @param logger the {@code Logger} instance to configure
+   * @param includePrefix whether or not to include a prefix in the formatting
    */
-  public static void configureHandlers(Logger logger) {
+  public static void configureHandlers(Logger logger, boolean includePrefix) {
 
     // clear handlers
     logger.setUseParentHandlers(false);
 
     // log message formatting
-    // "[source] level: message throwable_backtrace\n"
-    System.setProperty("java.util.logging.SimpleFormatter.format", "[%2$s] %4$s: %5$s%6$s%n");
+    if(includePrefix)
+      // "[source] level: message throwable_backtrace\n"
+      System.setProperty(
+          "java.util.logging.SimpleFormatter.format",
+          "[" + logger.getName().replaceAll(".*\\.","") + "] %4$s: %5$s%6$s%n");
+    else
+      // "level: message throwable_backtrace\n"
+      System.setProperty(
+          "java.util.logging.SimpleFormatter.format",
+          "%4$s: %5$s%6$s%n");
     java.util.logging.Formatter formatter = new java.util.logging.SimpleFormatter();
 
     // stdout handler
