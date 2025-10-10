@@ -46,7 +46,6 @@ public class HipoToHipoWriter extends AbstractEventWriterService<HipoWriterSorte
             throw new EventWriterException(e);
         }
     }
-
     
     protected void configure(HipoWriterSorted writer, JSONObject opts) {
         schemaBankList.clear();
@@ -60,6 +59,11 @@ public class HipoToHipoWriter extends AbstractEventWriterService<HipoWriterSorte
         if (opts.has(CONF_SCHEMA_DIR)) {
             schemaDir = opts.getString(CONF_SCHEMA_DIR);
             schemaDir = envSubstitutor.replace(schemaDir);
+            // If it's not already an absolute path, assume it's the name of a
+            // stock schema that comes with COATJAVA and get the full path to it:
+            if (!schemaDir.startsWith("/")) {
+                schemaDir = FileUtils.getEnvironmentPath("CLAS12DIR","etc/banks/hipo4/singles/"+schemaDir);
+            } 
             System.out.printf("%s service: schema directory = %s%n", getName(), schemaDir);
         }
 
