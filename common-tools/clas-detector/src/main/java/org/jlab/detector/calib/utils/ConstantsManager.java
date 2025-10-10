@@ -13,6 +13,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jlab.utils.groups.IndexedTable;
+import org.jlab.logging.SplitLogger;
 
 /**
  *
@@ -22,7 +23,7 @@ public class ConstantsManager {
 
     public static final int DBERROR_SLEEP_SECONDS=3;
 
-    private static Logger LOGGER = Logger.getLogger(ConstantsManager.class.getName());
+    private static Logger LOGGER = SplitLogger.create(ConstantsManager.class.getName(), false);
 
     private DatabaseConstantsDescriptor defaultDescriptor = new DatabaseConstantsDescriptor();
     private volatile Map<Integer, DatabaseConstantsDescriptor> runConstants = new LinkedHashMap<Integer, DatabaseConstantsDescriptor>();
@@ -181,7 +182,7 @@ public class ConstantsManager {
      */
     public static class DatabaseConstantsDescriptor {
         
-        Logger LOGGER = Logger.getLogger(DatabaseConstantsDescriptor.class.getName());
+        Logger LOGGER = SplitLogger.create(DatabaseConstantsDescriptor.class.getName(), false);
 
         private String  descName   = "descriptor";
         private int     runNumber  = 10;

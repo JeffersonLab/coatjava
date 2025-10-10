@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 
 /**
  * Helicity Pseudo-Random Sequence.
@@ -29,7 +30,7 @@ import java.util.logging.Logger;
  */
 public final class HelicityGenerator implements Comparable<HelicityGenerator>, Comparator<HelicityGenerator> {
 
-    static final Logger LOGGER = Logger.getLogger(HelicityGenerator.class.getName());
+    static final Logger LOGGER = SplitLogger.create(HelicityGenerator.class.getName());
     public static final int REGISTER_SIZE=30;
     private final List<Integer> states=new ArrayList<>();
     private int offset=0;
@@ -187,7 +188,7 @@ public final class HelicityGenerator implements Comparable<HelicityGenerator>, C
      */
     public final boolean initialize(List<HelicityState> states) {
 
-        LOGGER.log(Level.INFO, "HelicityGenerator:  Initializing with {0} states ...", states.size());
+        LOGGER.log(Level.INFO, "Initializing with {0} states ...", states.size());
        
         // make sure they're time-ordered:
         Collections.sort(states);
@@ -242,7 +243,7 @@ public final class HelicityGenerator implements Comparable<HelicityGenerator>, C
                     // bad timestamp delta, reset the sequence:
                     if (seconds < (1.0-0.5)/this.clock ||
                         seconds > (1.0+0.5)/this.clock) {
-                        LOGGER.log(Level.INFO,"HelicityGenerator:  got bad timestamp, resetting... ");
+                        LOGGER.log(Level.INFO,"got bad timestamp, resetting... ");
                         iStates.clear();
                     }
 
@@ -303,7 +304,7 @@ public final class HelicityGenerator implements Comparable<HelicityGenerator>, C
                     double corr=(jj-this.offset)/this.clock*HelicitySequence.TIMESTAMP_CLOCK;
                     timestamps.add(timeStamp-corr);
                     timestampsRaw.add((double)timeStamp);
-                    LOGGER.fine(String.format("HelicityGenerator:  timestamp = %d/%.1f/%.2f",
+                    LOGGER.fine(String.format("timestamp = %d/%.1f/%.2f",
                                 timeStamp,corr,timeStamp-corr));
                 }
             }
@@ -313,7 +314,7 @@ public final class HelicityGenerator implements Comparable<HelicityGenerator>, C
             System.err.println("HelicityGenerator:  Initialization Error.");
             this.reset();
         }
-        LOGGER.fine("HelicityGenerator:  Initialized.");
+        LOGGER.fine("Initialized.");
 
         return this.initialized();
     }
