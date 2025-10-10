@@ -15,6 +15,6 @@ configuration:
       variation: default
       timestamp: 05/11/2025-00:00:00
     writer:
-      schema_dir: /farm/home/baltzell/sw/coatjava/io-dev-2/coatjava/etc/bankdefs/hipo4/singles/dst
+      schema_dir: full
 mime-types:
   - binary/data-hipo
