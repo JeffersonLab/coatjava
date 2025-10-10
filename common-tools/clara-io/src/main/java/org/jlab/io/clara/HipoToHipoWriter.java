@@ -15,6 +15,7 @@ import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.jnp.hipo4.io.HipoWriter;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
 import org.jlab.jnp.utils.file.FileUtils;
+import org.jlab.utils.groups.StockSchema;
 import org.json.JSONObject;
 
 /**
@@ -46,7 +47,6 @@ public class HipoToHipoWriter extends AbstractEventWriterService<HipoWriterSorte
             throw new EventWriterException(e);
         }
     }
-
     
     protected void configure(HipoWriterSorted writer, JSONObject opts) {
         schemaBankList.clear();
@@ -60,6 +60,7 @@ public class HipoToHipoWriter extends AbstractEventWriterService<HipoWriterSorte
         if (opts.has(CONF_SCHEMA_DIR)) {
             schemaDir = opts.getString(CONF_SCHEMA_DIR);
             schemaDir = envSubstitutor.replace(schemaDir);
+            if (!schemaDir.contains("/")) schemaDir = StockSchema.get(schemaDir).getPath();
             System.out.printf("%s service: schema directory = %s%n", getName(), schemaDir);
         }
 

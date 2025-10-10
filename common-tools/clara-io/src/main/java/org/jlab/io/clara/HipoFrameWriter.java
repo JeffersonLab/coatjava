@@ -8,6 +8,7 @@ import org.jlab.jnp.hipo4.data.DataFrame;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.io.HipoWriterStream;
 import org.jlab.jnp.utils.file.FileUtils;
+import org.jlab.utils.groups.StockSchema;
 import org.json.JSONObject;
 
 /**
@@ -47,9 +48,11 @@ public class HipoFrameWriter extends AbstractEventWriterService<HipoWriterStream
     }
 
     private String getSchemaDirectory(JSONObject opts) {
-        return opts.has(CONF_SCHEMA)
-                ? opts.getString(CONF_SCHEMA)
-                : FileUtils.getEnvironmentPath("CLAS12DIR", "etc/bankdefs/hipo4");
+        if (opts.has(CONF_SCHEMA)) {
+            String schema_dir = opts.getString(CONF_SCHEMA);
+            return schema_dir.contains("/") ? schema_dir : StockSchema.get(schema_dir).getPath();
+        }
+        return FileUtils.getEnvironmentPath("CLAS12DIR", "etc/bankdefs/hipo4");
     }
 
     private String[] getFilterString(JSONObject opts){
