@@ -15,6 +15,7 @@ import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.jnp.hipo4.io.HipoWriter;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
 import org.jlab.jnp.utils.file.FileUtils;
+import org.jlab.utils.ClaraYaml;
 import org.json.JSONObject;
 
 /**
@@ -46,7 +47,6 @@ public class HipoToHipoWriter extends AbstractEventWriterService<HipoWriterSorte
             throw new EventWriterException(e);
         }
     }
-
     
     protected void configure(HipoWriterSorted writer, JSONObject opts) {
         schemaBankList.clear();
@@ -58,8 +58,12 @@ public class HipoToHipoWriter extends AbstractEventWriterService<HipoWriterSorte
 
         String schemaDir = FileUtils.getEnvironmentPath("CLAS12DIR", "etc/bankdefs/hipo4");
         if (opts.has(CONF_SCHEMA_DIR)) {
-            schemaDir = opts.getString(CONF_SCHEMA_DIR);
+            // Run YAML values throuh env-substitor: 
+            schemaDir = opts.getString(CONF_SCHEMA_DIR).trim();
             schemaDir = envSubstitutor.replace(schemaDir);
+            // If it's not already an absolute path, assume it's the name of a
+            // stock schema that comes with COATJAVA and get the full path to it:
+            if (!schemaDir.startsWith("/")) schemaDir = ClaraYaml.getStockSchemaDirectory(schemaDir);
             System.out.printf("%s service: schema directory = %s%n", getName(), schemaDir);
         }
 
