@@ -25,6 +25,8 @@ public class OptionParser {
     private String                             program = "undefined";
     private boolean                  requiresInputList = true;
     private String                  programDescription = "";
+    private Level                             logLevel = Level.FINE; // default log level
+    private boolean                usingExternalLogger = false; // if true, do not use `DefaultLogger` here
     
     public OptionParser(){
         init();
@@ -36,7 +38,7 @@ public class OptionParser {
     }
    
     private void init() {
-        addOption("-l","FINE","logging verbosity level");
+        addOption("-l",this.logLevel.toString(),"logging verbosity level");
         addOption("-v",null,"print version");
         addOption("-h",null,"print help");
     }
@@ -48,7 +50,7 @@ public class OptionParser {
     public void setRequiresInputList(boolean flag){
         this.requiresInputList = flag;
     }
-    
+
     public void addRequired(String key){
         OptionValue option = new OptionValue(key);
         requiredOptions.put(key, option);
@@ -188,7 +190,9 @@ public class OptionParser {
 
     private void setVerbosity(String level) {
         try {
-            DefaultLogger.initialize(Level.parse(level));
+            this.logLevel = Level.parse(level);
+            if (!usingExternalLogger)
+                DefaultLogger.initialize(this.logLevel); // do not do this if using SplitLogger externally, otherwise you get NO log printouts whatsoever
         }
         catch (IllegalArgumentException e) {
             System.err.println("Invalid -l java.util.logging.Level:  "+level);
@@ -213,7 +217,15 @@ public class OptionParser {
             return "coatjava version ???";
         }
     }
-    
+
+    public Level getLogLevel() {
+        return this.logLevel;
+    }
+
+    public void useExternalLogger() {
+        this.usingExternalLogger = true; // FIXME: if we get rid of `DefaultLogger`, we can get rid of this kluge
+    }
+
     public static void main(String[] args){
         if (args.length == 0) args = new String[]{"-o","out.dat","in.dat"};
         OptionParser parser = new OptionParser("PotionParser");
