@@ -3,6 +3,7 @@ package org.jlab.detector.calib.utils;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 
 import org.rcdb.RCDB;
 import org.rcdb.Condition;
@@ -33,7 +34,7 @@ public class RCDBProvider {
         }
     }
 
-    public static Logger LOGGER = Logger.getLogger(RCDBProvider.class.getName());
+    public static Logger LOGGER = SplitLogger.create(RCDBProvider.class.getName(), false);
 
     public static final String DEFAULTADDRESS = "mysql://rcdb@clasdb.jlab.org/rcdb";
 

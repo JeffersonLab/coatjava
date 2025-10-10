@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.text.StringSubstitutor;
+import org.jlab.logging.SplitLogger;
 
 /**
  * Find a location for a usable temporary directory, on a filesystem mounted
@@ -21,7 +22,7 @@ import org.apache.commons.text.StringSubstitutor;
  */
 public class FileSystemExecScan {
     
-    static final Logger LOGGER = Logger.getLogger(FileSystemExecScan.class.getName());
+    static final Logger LOGGER = SplitLogger.create(FileSystemExecScan.class.getName());
 
     static final StringSubstitutor SUBSTITUTOR = new StringSubstitutor(System.getenv());
 

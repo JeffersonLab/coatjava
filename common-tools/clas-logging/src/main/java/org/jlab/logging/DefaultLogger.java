@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 public class DefaultLogger {
 
     private static void init(String resource) {
-        // FIXME:  document why this check is here:
+        // if already set, don't override
         if (System.getProperty("java.util.logging.config.file") == null) {
             InputStream inputStream = DefaultLogger.class.getResourceAsStream(resource);
             try {
