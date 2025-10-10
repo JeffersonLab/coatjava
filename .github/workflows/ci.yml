@@ -39,7 +39,9 @@ jobs:
         id: cache
         with:
           key: raw_test_data # fixed key will always hit; clear cache to trigger cache miss
-          path: clas_005038.evio.00000
+          path: |
+            clas_005038.evio.00000
+            clas_021559.evio.00000
           lookup-only: true
       - name: install xrootd-client
         if: ${{ steps.cache.outputs.cache-hit != 'true' }}
@@ -50,6 +52,7 @@ jobs:
         if: ${{ steps.cache.outputs.cache-hit != 'true' }}
         run: |
           xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/clas_005038.evio.00000 ./
+          xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/raw/rg-l/clas_021559.evio.00000 ./
 
   # build
   #############################################################################
@@ -171,10 +174,11 @@ jobs:
         with:
           name: build_${{ matrix.runner }}
       - name: untar build
-        run: tar xzvf coatjava.tar.gz
+        run: |
+          tar xzvf clara.tar.gz
       - name: run test
         run: |
-          cd validation/advanced-tests
+          ./coatjava/bin/run-clara -y ./etc/services/rgl-clarode.yml ${{ env.nthreads }} -n 1000 -c ./clara ./clas_021559.evio.00000
           ls -lhtr
 
   test_coatjava:
