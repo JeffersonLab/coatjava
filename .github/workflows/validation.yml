@@ -3,7 +3,7 @@ name: Validation
 on:
   pull_request:
   push:
-    branches: [ development ]
+    branches: [ validation ]
     tags: [ '*' ]
   workflow_dispatch:
 
