@@ -24,6 +24,8 @@ usage='''build-coatjava.sh [OPTIONS]... [MAVEN_OPTIONS]...
    --xrootd          use xrootd to download field maps
    --cvmfs           use cvmfs to download field maps
 
+   --clara           install clara too
+
    --help            show this message
 
   MAVEN_OPTIONS
@@ -38,6 +40,7 @@ downloadMaps="yes"
 runUnitTests="no"
 useXrootd=false
 useCvmfs=false
+installClara=false
 mvnArgs=()
 wgetArgs=()
 for xx in $@
@@ -59,6 +62,7 @@ do
       ;;
     --xrootd) useXrootd=true ;;
     --cvmfs) useCvmfs=true ;;
+    --clara) installClara=true ;;
     -h|--help)
       echo "$usage"
       exit 2
@@ -69,6 +73,7 @@ done
 
 src_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 prefix_dir=$src_dir/coatjava
+clara_home=$src_dir/clara
 
 # working directory should be the source code directory
 cd $src_dir
@@ -129,7 +134,7 @@ if [ $cleanBuild == "no" ] && [ $downloadMaps == "yes" ]; then
 fi
 
 # always clean the installation prefix
-rm -rf $prefix_dir
+rm -rf $prefix_dir $clara_home
 
 # clean up any cache copies
 if [ $cleanBuild == "yes" ]; then
@@ -209,5 +214,7 @@ for pom in $(find common-tools -name pom.xml); do
   fi
 done
 echo "installed coatjava to: $prefix_dir"
+
+if $installClara; then ./install-clara -c $prefix_dir $clara_home; fi
 
 echo "COATJAVA SUCCESSFULLY BUILT !"
