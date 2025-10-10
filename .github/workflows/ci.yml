@@ -154,29 +154,6 @@ jobs:
         run: |
           ./coatjava/bin/decoder -n 10000 -o dog.hipo ./clas_005038.evio.00000
 
-  test_clara:
-    needs: [ build ]
-    strategy:
-      fail-fast: true
-      steps:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - name: Set up JDK
-        uses: actions/setup-java@v5
-        with:
-          java-version: ${{ env.java_version }}
-          distribution: ${{ env.java_distribution }}
-      - uses: actions/download-artifact@v5
-        with:
-          name: build_${{ matrix.runner }}
-      - name: untar build
-        run: tar xzvf coatjava.tar.gz
-      - name: run test
-        run: |
-          cd validation/advanced-tests
-          ls -lhtr
-
   test_coatjava:
     needs: [ build ]
     strategy:
