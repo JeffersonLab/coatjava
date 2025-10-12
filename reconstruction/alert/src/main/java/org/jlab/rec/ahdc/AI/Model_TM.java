@@ -60,7 +60,7 @@ public class Model_TM {
 
         String path = CLASResources.getResourcePath("etc/nnet/ALERT/model_TM/");
         Criteria<float[], float[]> my_model = Criteria.builder().setTypes(float[].class, float[].class)
-                .optModelPath(Paths.get("etc/nnet/ALERT/model_TM/"))
+                .optModelPath(Paths.get(path))
                 .optEngine("PyTorch")
                 .optTranslator(my_translator)
                 .optProgress(new ProgressBar())

@@ -45,7 +45,7 @@ public class Model {
 
         String path = CLASResources.getResourcePath("etc/data/nnet/ALERT/model_AHDC/");
         Criteria<float[], Float> my_model = Criteria.builder().setTypes(float[].class, Float.class)
-                .optModelPath(Paths.get("etc/nnet/ALERT/model_AHDC/"))
+                .optModelPath(Paths.get(path))
                 .optEngine("PyTorch")
                 .optTranslator(my_translator)
                 .optProgress(new ProgressBar())
