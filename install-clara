@@ -42,7 +42,7 @@ function litter() {
 function check() {
     if compgen -G "$clara_home/lib/jclara-*.jar" > /dev/null
     then
-        echo -e "\n\$CLARA_HOME installed at:\n\t$clara_home"
+        echo -e "\n\$CLARA_HOME installed at:\n\t$clara_home\n"
     else
         echo -e "\n\$CLARA_HOME installed but looks broken:\n\t$clara_home"
     fi
