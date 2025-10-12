@@ -53,7 +53,7 @@ public class HipoFrameWriter extends AbstractEventWriterService<HipoWriterStream
             s = opts.getString(CONF_SCHEMA).trim();
             // If it's not already an absolute path, assume it's the name of a
             // stock schema that comes with COATJAVA and get the full path to it:
-            if (!s.startsWith("/")) s = ClaraYaml.getStockSchemaDirectory(opts.getString(s));
+            if (!s.startsWith("/")) s = ClaraYaml.getStockSchemaDirectory(s);
         }
         return s;
     }
