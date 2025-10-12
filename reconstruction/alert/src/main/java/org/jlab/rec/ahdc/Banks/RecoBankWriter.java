@@ -113,6 +113,10 @@ public class RecoBankWriter {
 			bank.setFloat("chi2", row, (float) track.get_chi2());
 			bank.setFloat("sum_residuals", row, (float) track.get_sum_residuals());
 
+            bank.setInt("ATOF_sector", row, track.get_predicted_ATOF_sector());
+            bank.setInt("ATOF_layer", row, track.get_predicted_ATOF_layer());
+            bank.setInt("ATOF_wedge", row, track.get_predicted_ATOF_wedge());
+
 			row++;
 		}
 

@@ -297,7 +297,10 @@
         "name": "sum_residuals",
         "type": "F",
         "info": "Sum of residuals (mm)"
-      }
+      },
+      {"name": "ATOF_sector", "type": "I", "info": "Prediction for the ATOF sector"},
+      {"name": "ATOF_layer", "type": "I", "info": "Prediction for the ATOF layer"},
+      {"name": "ATOF_wedge", "type": "I", "info": "Prediction for the ATOF wedge"}
     ]
   }, {
     "name": "AHDC::kftrack",

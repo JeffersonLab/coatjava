@@ -41,6 +41,10 @@ public class Track {
 	private double dEdx_kf    = 0;  ///< deposited energy per path length (adc/mm)
 	private double p_drift_kf = 0;  ///< momentum in the drift region (MeV)
 	private double path_kf    = 0;  ///< length of the track (mm)
+    // AHDC::aiprediction
+    private int predicted_ATOF_sector = -1;
+    private int predicted_ATOF_layer = -1;
+    private int predicted_ATOF_wedge = -1;
 
 	public Track(List<Cluster> clusters) {
 		this._Clusters = clusters;
@@ -200,5 +204,13 @@ public class Track {
 	public double get_dEdx_kf() {return dEdx_kf;}
 	public double get_p_drift_kf() {return p_drift_kf;}
 	public double get_path_kf() {return path_kf;}
+
+    // AHDC::aiprediction
+    public void set_predicted_ATOF_sector(int s) {predicted_ATOF_sector = s;}
+    public void set_predicted_ATOF_layer(int l) {predicted_ATOF_layer = l;}
+    public void set_predicted_ATOF_wedge(int w) {predicted_ATOF_wedge = w;}
+    public int get_predicted_ATOF_sector() {return predicted_ATOF_sector;}
+    public int get_predicted_ATOF_layer() {return predicted_ATOF_layer;}
+    public int get_predicted_ATOF_wedge() {return predicted_ATOF_wedge;}
 
 }

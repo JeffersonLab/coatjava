@@ -6,6 +6,7 @@ import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.io.hipo.HipoDataSync;
+import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.rec.ahdc.AI.*;
 import org.jlab.rec.ahdc.Banks.RecoBankWriter;
 import org.jlab.rec.ahdc.Cluster.Cluster;
@@ -57,6 +58,7 @@ public class AHDCEngine extends ReconstructionEngine {
 
     /// \todo better name... Model of what?
     private Model model;
+    private Model_TM model_tm;
 
     /// \todo better name... mode for what?
     private Mode mode = Mode.CV_Track_Finding;
@@ -96,6 +98,8 @@ public class AHDCEngine extends ReconstructionEngine {
         if (mode == Mode.AI_Track_Finding) {
             model = new Model();
         }
+
+        model_tm = new Model_TM();
 
         // Requires calibration constants
         String[] alertTables = new String[] {
@@ -228,9 +232,21 @@ public class AHDCEngine extends ReconstructionEngine {
                     throw new RuntimeException(e);
                 }
 
+                // Track matching with AI: predict which sector, layer and wedge should be hit
                 for (TrackPrediction t : predictions) {
-                    if (t.getPrediction() > 0.2)
-                        AHDC_Tracks.add(new Track(t.getClusters()));
+                    if (t.getPrediction() > 0.2) {
+                        try {
+                            float[] pred = model_tm.prediction(t.getSuperpreclusters());
+                            Track track = new Track(t.getClusters());
+                            track.set_predicted_ATOF_sector((int)pred[0]);
+                            track.set_predicted_ATOF_layer((int)pred[1]);
+                            track.set_predicted_ATOF_wedge((int)pred[2]);
+                            AHDC_Tracks.add(track);
+
+                         } catch (Exception e) {throw new RuntimeException(e);}
+
+                    }
+
                 }
             }
             // ------------------------------------------------------------------------------------
@@ -298,7 +314,7 @@ public class AHDCEngine extends ReconstructionEngine {
         int    nEvent     = 0;
         int    maxEvent   = 10;
         int    myEvent    = 3;
-        String inputFile  = "merged_10.hipo";
+        String inputFile  = "output1.hipo";
         String outputFile = "output.hipo";
 
         if (new File(outputFile).delete()) System.out.println("output.hipo is delete.");
@@ -308,17 +324,20 @@ public class AHDCEngine extends ReconstructionEngine {
         AHDCEngine en = new AHDCEngine();
 
         HipoDataSource reader = new HipoDataSource();
-        HipoDataSync   writer = new HipoDataSync();
 
-        en.init();
+        // en.init();
+        en.init(Mode.AI_Track_Finding);
 
         reader.open(inputFile);
+        SchemaFactory factory = reader.getReader().getSchemaFactory();
+        HipoDataSync   writer = new HipoDataSync(factory);
         writer.open(outputFile);
 
         while (reader.hasEvent() && nEvent < maxEvent) {
             nEvent++;
             // if (nEvent % 100 == 0) System.out.println("nEvent = " + nEvent);
             DataEvent event = reader.getNextEvent();
+            System.out.println("Event: " + nEvent);
 
             // if (nEvent != myEvent) continue;
             // System.out.println("***********  NEXT EVENT ************");
