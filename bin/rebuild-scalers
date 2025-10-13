@@ -2,9 +2,11 @@
 
 . `dirname $0`/../libexec/env.sh
 
+split_cli $@
+
 export MALLOC_ARENA_MAX=1
 
-java -Xmx768m -Xms768m -XX:+UseSerialGC \
+java -Xms768m -Xmx1536m -XX:+UseSerialGC ${jvm_options[@]} \
     -cp ${COATJAVA_CLASSPATH:-''} \
     org.jlab.analysis.postprocess.RebuildScalers \
-    $*
+    ${class_options[@]}
