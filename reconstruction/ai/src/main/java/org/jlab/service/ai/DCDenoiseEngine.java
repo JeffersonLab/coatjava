@@ -29,6 +29,7 @@ public class DCDenoiseEngine extends ReconstructionEngine {
 
     final static String[] BANK_NAMES = {"DC::tot","DC::tdc"};
     final static String CONF_THRESHOLD = "threshold";
+    final static String CONF_THREADS = "threads";
     final static int LAYERS = 36;
     final static int WIRES = 112;
 
@@ -68,7 +69,8 @@ public class DCDenoiseEngine extends ReconstructionEngine {
                 .optProgress(new ProgressBar())
                 .build();
             model = criteria.loadModel();
-            predictors = new PredictorPool(64, model);
+            int threads = Integer.parseInt(getEngineConfigString(CONF_THREADS,"64"));
+            predictors = new PredictorPool(threads, model);
             return true;
         } catch (NullPointerException | MalformedModelException | IOException | ModelNotFoundException ex) {
             System.getLogger(DCDenoiseEngine.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
