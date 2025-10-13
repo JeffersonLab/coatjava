@@ -17,7 +17,7 @@ import ai.djl.translate.Batchifier;
 import ai.djl.translate.TranslateException;
 import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ArrayBlockingQueue;
 
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.io.base.DataBank;
@@ -39,7 +39,7 @@ public class DCDenoiseEngine extends ReconstructionEngine {
     public static class PredictorPool {
         final BlockingQueue<Predictor> pool;
         public PredictorPool(int size, ZooModel model) {
-            pool = new LinkedBlockingQueue<>(size);
+            pool = new ArrayBlockingQueue<>(size);
             for (int i=0; i<size; i++) pool.offer(model.newPredictor());
         }
         public Predictor get() throws InterruptedException {
