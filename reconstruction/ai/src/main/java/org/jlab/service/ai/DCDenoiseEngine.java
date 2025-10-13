@@ -58,6 +58,9 @@ public class DCDenoiseEngine extends ReconstructionEngine {
 
     @Override
     public boolean init() {
+        System.setProperty("ai.djl.pytorch.num_interop_threads", "1");
+        System.setProperty("ai.djl.pytorch.num_threads", "1");
+        System.setProperty("ai.djl.pytorch.graph_optimizer", "false");
         if (getEngineConfigString(CONF_THRESHOLD) != null)
             threshold = Float.parseFloat(getEngineConfigString(CONF_THRESHOLD));
         try {
@@ -81,7 +84,7 @@ public class DCDenoiseEngine extends ReconstructionEngine {
     public static void main(String args[]){
         DCDenoiseEngine dn = new DCDenoiseEngine();
         dn.init();
-        for (int i=0; i<100; i++) {
+        for (int i=0; i<10000; i++) {
             dn.processFakeEvent();
         }
     }
