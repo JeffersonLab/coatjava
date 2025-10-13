@@ -44,7 +44,7 @@ public class DCDenoiseEngine extends ReconstructionEngine {
             for (int i=0; i<size; i++) pool.add(model.newPredictor());
         }
         public Predictor get() throws InterruptedException {
-            return pool.take();
+            return pool.poll();
         }
         public void put(Predictor p) {
             if (p != null) pool.offer(p);
