@@ -41,7 +41,7 @@ public class DCDenoiseEngine extends ReconstructionEngine {
         final BlockingQueue<Predictor> pool;
         public PredictorPool(int size, ZooModel model) {
             pool = new ArrayBlockingQueue<>(size);
-            for (int i=0; i<size; i++) pool.offer(model.newPredictor());
+            for (int i=0; i<size; i++) pool.add(model.newPredictor());
         }
         public Predictor get() throws InterruptedException {
             return pool.take();
