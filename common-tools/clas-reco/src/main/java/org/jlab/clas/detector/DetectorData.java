@@ -424,6 +424,27 @@ public class DetectorData {
     }
 
 
+    public static DataBank getFTracksBank(List<DetectorTrack> ftracks, List<DetectorTrack>tracks, DataEvent event, String bank_name) {
+        DataBank bank = event.createBank(bank_name, ftracks.size());
+        for (int i = 0; i < tracks.size(); i++) {
+            bank.setShort("index", i,   (short) ftracks.get(i).getTrackIndex());
+            bank.setShort("pindex", i,  (short) tracks.get(ftracks.get(i).getTrackIndex()).getAssociation());
+            bank.setByte("sector", i,   (byte) ftracks.get(i).getSector());
+            bank.setByte("detector", i, (byte) ftracks.get(i).getDetectorID());
+            bank.setByte("q", i,        (byte) ftracks.get(i).getCharge());
+            bank.setFloat("chi2", i,    (float) ftracks.get(i).getchi2());
+            bank.setShort("NDF", i,     (short) ftracks.get(i).getNDF());
+            bank.setShort("status", i,  (short) ftracks.get(i).getStatus());
+            bank.setFloat("px", i,      (float) ftracks.get(i).getVector().x());
+            bank.setFloat("py", i,      (float) ftracks.get(i).getVector().y());
+            bank.setFloat("pz", i,      (float) ftracks.get(i).getVector().z());
+            bank.setFloat("vx", i,      (float) ftracks.get(i).getVertex().x());
+            bank.setFloat("vy", i,      (float) ftracks.get(i).getVertex().y());
+            bank.setFloat("vz", i,      (float) ftracks.get(i).getVertex().z());
+        }
+        return bank;
+    }
+
     public static DataBank getTrajectoriesBank(List<DetectorParticle> particles, DataEvent event, String bank_name) {
 
         // these are going to be dropped from REC::Traj:
@@ -589,6 +610,36 @@ public class DetectorData {
                 }
 
                 tracks.add(track);
+            }
+        }
+        return tracks;
+    }
+
+    public static List<DetectorTrack> readFDetectorTracks(DataEvent event, String bank_name) {
+
+        List<DetectorTrack> tracks = new ArrayList<>();
+        if (event.hasBank(bank_name) == true) {
+            DataBank bank = event.getBank(bank_name);
+            int nrows = bank.rows();
+
+            for (int row = 0; row < nrows; row++) {
+                int charge = bank.getByte("q", row);
+                Vector3D pvec = DetectorData.readVector(bank, row, "p0_x", "p0_y", "p0_z");
+                Vector3D vertex = DetectorData.readVector(bank, row, "Vtx0_x", "Vtx0_y", "Vtx0_z");
+
+                DetectorTrack track = new DetectorTrack(charge, pvec.mag(), (row));
+                track.setVector(pvec.x(), pvec.y(), pvec.z());
+                track.setVertex(vertex.x(), vertex.y(), vertex.z());
+                track.setSector(bank.getByte("sector", row));
+
+                track.setNDF(bank.getInt("NDF", row));
+                track.setchi2(bank.getFloat("chi2", row));
+                track.setStatus(bank.getInt("status", row));
+
+                track.setDetectorID(DetectorType.FMT.getDetectorId());
+
+                // save track only if NDF!=0, i.e. was refitted with FMT clusters
+                if(track.getNDF()>0) tracks.add(track);
             }
         }
         return tracks;
