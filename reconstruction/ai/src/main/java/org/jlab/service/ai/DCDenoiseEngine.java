@@ -78,6 +78,14 @@ public class DCDenoiseEngine extends ReconstructionEngine {
         }
     }
 
+    public static void main(String args[]){
+        DCDenoiseEngine dn = new DCDenoiseEngine();
+        dn.init();
+        for (int i=0; i<100; i++) {
+            dn.processFakeEvent();
+        }
+    }
+    
     @Override
     public boolean processDataEvent(DataEvent event) {
 
