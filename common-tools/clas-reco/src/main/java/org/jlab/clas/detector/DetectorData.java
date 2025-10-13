@@ -638,6 +638,7 @@ public class DetectorData {
 
                 track.setDetectorID(DetectorType.FMT.getDetectorId());
 
+                // save track only if NDF!=0, i.e. was refitted with FMT clusters
                 if(track.getNDF()>0) tracks.add(track);
             }
         }

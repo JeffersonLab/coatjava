@@ -227,7 +227,7 @@ public class EBEngine extends ReconstructionEngine {
                 }
 
                 if (!ftracks.isEmpty()) {
-                    DataBank x = DetectorData.getUTracksBank(ftracks, tracks, de, ftrackBank);
+                    DataBank x = DetectorData.getFTracksBank(ftracks, tracks, de, ftrackBank);
                     de.appendBanks(x);
                 }
             }
