@@ -6,7 +6,7 @@ configuration:
     timestamp: 10/08/2025-17:00:00
   io-services:
     writer:
-      schema_dir: "/scigroup/cvmfs/hallb/clas12/sw/noarch/coatjava/13.3.0/etc/bankdefs/hipo4/singles/mon"
+      schema_dir: full
   services:
     MAGFIELDS:
       magfieldSolenoidMap: Symm_solenoid_r601_phi1_z1201_13June2018.dat
