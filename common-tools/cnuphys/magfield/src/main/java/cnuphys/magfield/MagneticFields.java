@@ -7,10 +7,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
+import java.time.ZoneId;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
-import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -40,14 +41,9 @@ public class MagneticFields {
 	/**
 	 * A formatter to get the time in down to seconds (no day info).
 	 */
-	private static SimpleDateFormat formatterlong;
-
-	static {
-		TimeZone tz = TimeZone.getDefault();
-
-		formatterlong = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-		formatterlong.setTimeZone(tz);
-	}
+        private static final DateTimeFormatter formatterlong = DateTimeFormatter
+          .ofPattern("yyyy/MM/dd HH:mm:ss")
+          .withZone(ZoneId.systemDefault());
 
 	// version of mag field package
 	private static String VERSION = "1.20";
@@ -1660,7 +1656,7 @@ public class MagneticFields {
 	 * @return a string representation of the current time, down to seconds.
 	 */
 	public static String dateStringLong(long longtime) {
-		return formatterlong.format(longtime);
+		return formatterlong.format(Instant.ofEpochMilli(longtime));
 	}
 
 	/**
