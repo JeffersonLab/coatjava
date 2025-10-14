@@ -176,6 +176,10 @@ jobs:
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
+      - name: setup cvmfs
+        uses: cvmfs-contrib/github-action-cvmfs@v5
+        with:
+          cvmfs_repositories: 'oasis.opensciencegrid.org'
       - uses: actions/download-artifact@v5
         with:
           name: build_ubuntu-latest
