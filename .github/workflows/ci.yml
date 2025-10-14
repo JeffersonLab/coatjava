@@ -41,7 +41,7 @@ jobs:
           key: raw_test_data # fixed key will always hit; clear cache to trigger cache miss
           path: |
             clas_005038.evio.00000
-            clas_021559.evio.00000
+            clas_021559.evio.00001
           lookup-only: true
       - name: install xrootd-client
         if: ${{ steps.cache.outputs.cache-hit != 'true' }}
