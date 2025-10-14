@@ -17,7 +17,7 @@ import ai.djl.translate.Batchifier;
 import ai.djl.translate.TranslateException;
 import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ArrayBlockingQueue;
 
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.io.base.DataBank;
@@ -28,6 +28,7 @@ public class DCDenoiseEngine extends ReconstructionEngine {
 
     final static String[] BANK_NAMES = {"DC::tot","DC::tdc"};
     final static String CONF_THRESHOLD = "threshold";
+    final static String CONF_THREADS = "threads";
     final static int LAYERS = 36;
     final static int WIRES = 112;
 
@@ -39,11 +40,11 @@ public class DCDenoiseEngine extends ReconstructionEngine {
     public static class PredictorPool {
         final BlockingQueue<Predictor> pool;
         public PredictorPool(int size, ZooModel model) {
-            pool = new LinkedBlockingQueue<>(size);
-            for (int i=0; i<size; i++) pool.offer(model.newPredictor());
+            pool = new ArrayBlockingQueue<>(size);
+            for (int i=0; i<size; i++) pool.add(model.newPredictor());
         }
         public Predictor get() throws InterruptedException {
-            return pool.take();
+            return pool.poll();
         }
         public void put(Predictor p) {
             if (p != null) pool.offer(p);
@@ -56,6 +57,9 @@ public class DCDenoiseEngine extends ReconstructionEngine {
 
     @Override
     public boolean init() {
+        System.setProperty("ai.djl.pytorch.num_interop_threads", "1");
+        System.setProperty("ai.djl.pytorch.num_threads", "1");
+        System.setProperty("ai.djl.pytorch.graph_optimizer", "false");
         if (getEngineConfigString(CONF_THRESHOLD) != null)
             threshold = Float.parseFloat(getEngineConfigString(CONF_THRESHOLD));
         try {
@@ -67,7 +71,8 @@ public class DCDenoiseEngine extends ReconstructionEngine {
                 .optProgress(new ProgressBar())
                 .build();
             model = criteria.loadModel();
-            predictors = new PredictorPool(64, model);
+            int threads = Integer.parseInt(getEngineConfigString(CONF_THREADS,"64"));
+            predictors = new PredictorPool(threads, model);
             return true;
         } catch (NullPointerException | MalformedModelException | IOException | ModelNotFoundException ex) {
             System.getLogger(DCDenoiseEngine.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
@@ -75,6 +80,14 @@ public class DCDenoiseEngine extends ReconstructionEngine {
         }
     }
 
+    public static void main(String args[]){
+        DCDenoiseEngine dn = new DCDenoiseEngine();
+        dn.init();
+        for (int i=0; i<10000; i++) {
+            dn.processFakeEvent();
+        }
+    }
+    
     @Override
     public boolean processDataEvent(DataEvent event) {
 

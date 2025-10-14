@@ -39,7 +39,9 @@ jobs:
         id: cache
         with:
           key: raw_test_data # fixed key will always hit; clear cache to trigger cache miss
-          path: clas_005038.evio.00000
+          path: |
+            clas_005038.evio.00000
+            clas_021559.evio.00001
           lookup-only: true
       - name: install xrootd-client
         if: ${{ steps.cache.outputs.cache-hit != 'true' }}
@@ -50,6 +52,7 @@ jobs:
         if: ${{ steps.cache.outputs.cache-hit != 'true' }}
         run: |
           xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/clas_005038.evio.00000 ./
+          xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/raw/rg-l/clas_021559.evio.00001 ./
 
   # build
   #############################################################################
@@ -86,14 +89,18 @@ jobs:
         if: ${{ github.ref_type == 'tag' }}
         run: libexec/version-bump.sh ${{ github.ref_name }}
       - name: build
-        run: ./build-coatjava.sh --xrootd --no-progress -T${{ env.nthreads }}
+        run: ./build-coatjava.sh --clara --xrootd --no-progress -T${{ env.nthreads }}
       - name: tar # tarball to preserve permissions
-        run: tar czvf coatjava.tar.gz coatjava
+        run: |
+          tar czvf coatjava.tar.gz coatjava
+          tar czvf clara.tar.gz clara
       - uses: actions/upload-artifact@v4
         with:
           name: build_${{ matrix.runner }}
           retention-days: 1
-          path: coatjava.tar.gz
+          path: |
+              coatjava.tar.gz
+              clara.tar.gz
 
   # tests
   #############################################################################
@@ -147,12 +154,49 @@ jobs:
       - uses: actions/cache/restore@v4
         with:
           key: raw_test_data
-          path: clas_005038.evio.00000
+          path: |
+            clas_005038.evio.00000
+            clas_021559.evio.00001
       - name: untar build
         run: tar xzvf coatjava.tar.gz
       - name: run test
         run: |
+          ls -lhtr
           ./coatjava/bin/decoder -n 10000 -o dog.hipo ./clas_005038.evio.00000
+
+  test_clara:
+    needs: [ build, download_test_data ]
+    strategy:
+      fail-fast: true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          java-version: ${{ env.java_version }}
+          distribution: ${{ env.java_distribution }}
+      - name: setup cvmfs
+        uses: cvmfs-contrib/github-action-cvmfs@v5
+        with:
+          cvmfs_repositories: 'oasis.opensciencegrid.org'
+      - uses: actions/download-artifact@v5
+        with:
+          name: build_ubuntu-latest
+      - uses: actions/cache/restore@v4
+        with:
+          key: raw_test_data
+          path: |
+            clas_005038.evio.00000
+            clas_021559.evio.00001
+      - name: untar build
+        run: |
+          tar xzvf clara.tar.gz
+      - name: run test
+        run: |
+          ls -lhtr
+          ./clara/plugins/clas12/bin/run-clara -y ./etc/services/rgl-clarode.yml -t ${{ env.nthreads }} -n 200 -c ./clara -o ./tmp ./clas_021559.evio.00001
+          ls -lhtr
 
   test_coatjava:
     needs: [ build ]
