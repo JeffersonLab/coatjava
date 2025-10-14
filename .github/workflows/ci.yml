@@ -159,6 +159,7 @@ jobs:
         run: tar xzvf coatjava.tar.gz
       - name: run test
         run: |
+          ls -lhtr
           ./coatjava/bin/decoder -n 10000 -o dog.hipo ./clas_005038.evio.00000
 
   test_clara:
