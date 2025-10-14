@@ -53,6 +53,7 @@ jobs:
         run: |
           xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/clas_005038.evio.00000 ./
           xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/raw/rg-l/clas_021559.evio.00001 ./
+          ls -lhtr
 
   # build
   #############################################################################
@@ -154,7 +155,6 @@ jobs:
       - uses: actions/cache/restore@v4
         with:
           key: raw_test_data
-          path: clas_005038.evio.00000
       - name: untar build
         run: tar xzvf coatjava.tar.gz
       - name: run test
@@ -179,7 +179,6 @@ jobs:
       - uses: actions/cache/restore@v4
         with:
           key: raw_test_data
-          path: clas_021559.evio.00001
       - name: untar build
         run: |
           tar xzvf clara.tar.gz
