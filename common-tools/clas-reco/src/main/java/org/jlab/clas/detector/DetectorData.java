@@ -426,7 +426,7 @@ public class DetectorData {
 
     public static DataBank getFTracksBank(List<DetectorTrack> ftracks, List<DetectorTrack>tracks, DataEvent event, String bank_name) {
         DataBank bank = event.createBank(bank_name, ftracks.size());
-        for (int i = 0; i < tracks.size(); i++) {
+        for (int i = 0; i < ftracks.size(); i++) {
             bank.setShort("index", i,   (short) ftracks.get(i).getTrackIndex());
             bank.setShort("pindex", i,  (short) tracks.get(ftracks.get(i).getTrackIndex()).getAssociation());
             bank.setByte("sector", i,   (byte) ftracks.get(i).getSector());
