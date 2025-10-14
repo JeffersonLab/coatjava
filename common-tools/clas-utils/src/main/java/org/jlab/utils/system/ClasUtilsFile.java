@@ -60,9 +60,6 @@ public class ClasUtilsFile {
                 ret = "/" + String.join("/", Arrays.copyOfRange(d,0,d.length-3));
 
         }
-        if (!(new File(ret)).isDirectory()) {
-            ret = System.getenv("HOME")+"/sw/coatjava/coatjava";
-        }
         return ret;
     }
     
