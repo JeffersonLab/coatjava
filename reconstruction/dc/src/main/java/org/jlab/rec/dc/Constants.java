@@ -579,10 +579,10 @@ public class Constants {
     private void addReverseTT(int run, IndexedTable tt) {
         LOGGER.info("Reversing translation table for run " + run);
         IndexedTable reverse = new IndexedTable(4, "crate/I:slot/I:channel/I");
-        for(int row=0; row<tt.getRowCount(); row++) {
-            int crate   = Integer.valueOf((String)tt.getValueAt(row,0));
-            int slot    = Integer.valueOf((String)tt.getValueAt(row,1));
-            int channel = Integer.valueOf((String)tt.getValueAt(row,2));
+        for(Object key : tt.getList().getMap().keySet()) {
+            int crate   = tt.getList().getIndexGenerator().getIndex((long)key, 0);
+            int slot    = tt.getList().getIndexGenerator().getIndex((long)key, 1);
+            int channel = tt.getList().getIndexGenerator().getIndex((long)key, 2);
             int sector  = tt.getIntValue("sector",    crate,slot,channel);
             int layer   = tt.getIntValue("layer",     crate,slot,channel);
             int comp    = tt.getIntValue("component", crate,slot,channel);
