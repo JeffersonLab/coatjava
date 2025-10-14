@@ -34,7 +34,7 @@ function litter() {
         then
             echo -e "\nSee temporary build directory for more info:\n\t$tmp_dir"
         else
-            rm -rf $tmp_dir && echo -e "\nRemoved temporary build directory:\n\t$tmp_dir"
+            rm -rf $tmp_dir
         fi
     fi
 }
@@ -117,7 +117,6 @@ fi
 tmp_dir=$(mktemp -d tmp.install-clara.XXXXXX)
 [ $? -ne 0 ] && error "Cannot create temporary directory:  $tmp_dir"
 tmp_dir=$(cd $tmp_dir && pwd)
-echo -e "\nCreating temporary build directory:\n\t$tmp_dir"
 cd $tmp_dir
 
 # CLARA:
