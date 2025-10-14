@@ -22,7 +22,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
-import org.jlab.utils.benchmark.Benchmark;
 import org.jlab.utils.system.ClasUtilsFile;
 
 public class DCDenoiseEngine extends ReconstructionEngine {
@@ -99,14 +98,10 @@ public class DCDenoiseEngine extends ReconstructionEngine {
                 DataBank bank = event.getBank(BANK_NAMES[i]);
                 try {
                     // WARNING:  Predictor is *not* thread safe.
-                    Benchmark.getInstance().resume("GETPRED");
                     Predictor<float[][], float[][]> predictor = predictors.get();
-                    Benchmark.getInstance().pause("GETPRED");
                     for (int sector=0; sector<6; sector++) {
                         float[][] input = DCDenoiseEngine.read(bank, sector+1);
-                        Benchmark.getInstance().resume("PREDICT");
                         float[][] output = predictor.predict(input);
-                        Benchmark.getInstance().pause("PREDICT");
                         //System.out.println("IN:");show(input);
                         //System.out.println("OUT:");show(output);
                         update(bank, threshold, output, sector);
