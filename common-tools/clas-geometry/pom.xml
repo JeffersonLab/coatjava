@@ -4,13 +4,13 @@
 
   <groupId>org.jlab.clas</groupId>
   <artifactId>clas-geometry</artifactId>
-  <version>13.3.0-SNAPSHOT</version>
+  <version>13.4.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <parent>
     <groupId>org.jlab.clas</groupId>
     <artifactId>common-tools</artifactId>
-    <version>13.3.0-SNAPSHOT</version>
+    <version>13.4.0-SNAPSHOT</version>
   </parent>
 
   <dependencies>
