@@ -25,7 +25,7 @@ top_dir=$src_dir/../..
 # generate build files
 cp $src_dir/mkdocs.yaml $build_dir/
 cp -r $src_dir/docs $build_dir/
-$src_dir/src/banks.rb $top_dir/etc/bankdefs/hipo4 > $build_dir/docs/banks.md
+$src_dir/src/banks.rb $top_dir/etc/bankdefs/hipo4 $build_dir/docs
 tree $build_dir
 
 # build
