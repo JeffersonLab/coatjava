@@ -7,7 +7,7 @@ import org.jlab.utils.groups.IndexedTable;
 
 import java.util.LinkedList;
 import java.util.List;
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 import org.jlab.detector.banks.RawDataBank;
 import org.jlab.geom.prim.Vector3D;
 

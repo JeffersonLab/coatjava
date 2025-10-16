@@ -20,6 +20,10 @@
       <classifier>linux</classifier>
     </dependency>
     <dependency>
+      <groupId>jakarta.annotation</groupId>
+      <artifactId>jakarta.annotation-api</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.jlab</groupId>
       <artifactId>groot</artifactId>
     </dependency>
