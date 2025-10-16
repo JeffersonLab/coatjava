@@ -123,7 +123,7 @@ public class MagneticFields {
 	 *
 	 * @return the MagneticFields singleton
 	 */
-	public static MagneticFields getInstance() {
+	public static synchronized MagneticFields getInstance() {
 		if (instance == null) {
 			instance = new MagneticFields();
 		}

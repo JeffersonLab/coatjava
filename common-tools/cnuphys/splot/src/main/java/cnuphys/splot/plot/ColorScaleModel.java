@@ -41,7 +41,7 @@ public class ColorScaleModel {
 	 * @param minVal the minimum value;
 	 * @param maxVal the maximum value the array of colors.
 	 */
-	public ColorScaleModel(double minVal, double maxVal, Color[] colors) {
+	private ColorScaleModel(double minVal, double maxVal, Color[] colors) {
 		_colors = colors;
 		_minVal = minVal;
 		_maxVal = maxVal;

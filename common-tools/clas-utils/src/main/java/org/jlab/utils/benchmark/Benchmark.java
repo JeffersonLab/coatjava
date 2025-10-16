@@ -16,8 +16,8 @@ public class Benchmark {
     private static final Benchmark benchmarkInstance = new Benchmark();
     private final Map<String,BenchmarkTimer> timerStore = new LinkedHashMap<>();
     private Timer updateTimer = null;
-
-    public Benchmark(){}
+    
+    private Benchmark() {}
     
     public static Benchmark getInstance(){
         return benchmarkInstance;

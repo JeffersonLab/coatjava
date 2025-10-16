@@ -8,26 +8,39 @@
     15-20  informational
   -->
   <Match>
-    <Rank value="7"/>
+    <Rank value="8"/>
   </Match>
 
   <!-- RANK 4 SUPRESSIONS -->
   <Match> <!-- not ours -->
-    <Class name="eu.mihosoft.vrl.v3d.ext.openjfx.shape3d.symbolic.SymbolicPolygonMesh"/>
     <Bug pattern="UR_UNINIT_READ"/>
+    <Class name="eu.mihosoft.vrl.v3d.ext.openjfx.shape3d.symbolic.SymbolicPolygonMesh"/>
   </Match>
 
-  <!-- HIGHER RANK SUPRESSIONS -->
+  <!-- RANK 8 SUPRESSIONS -->
+  <Match> <!--  the pattern `while(phi > 360) phi -= 360.0;` -->
+    <Bug pattern="FL_FLOATS_AS_LOOP_COUNTERS"/>
+  </Match>
+  <Match> <!-- ignore this static method hiding -->
+    <Bug pattern="HSM_HIDING_METHOD"/>
+    <Class name="cnuphys.splot.plot.VerticalLabelUI"/>
+    <Method name="createUI"/>
+  </Match>
+  <Match> <!-- not quite a singleton pattern -->
+    <Bug pattern="SING_SINGLETON_HAS_NONPRIVATE_CONSTRUCTOR"/>
+    <Class name="cnuphys.splot.plot.VerticalLabelUI"/>
+  </Match>
 
+  <!-- HIGHER RANK SUPPRESSIONS -->
   <!-- <Match> --> <!-- not worth fixing -->
   <!--   <Class name="cnuphys.snr.ExtendedWord"/> -->
-  <!--   <Method name="equals" params="cnuphys.snr.ExtendedWord"/> -->
   <!--   <Bug pattern="EQ_SELF_USE_OBJECT"/> -->
+  <!--   <Method name="equals" params="cnuphys.snr.ExtendedWord"/> -->
   <!-- </Match> -->
   <!-- <Match> --> <!-- DefaultLogger may be deprecated soon -->
+  <!--   <Bug pattern="OBL_UNSATISFIED_OBLIGATION"/> -->
   <!--   <Class name="org.jlab.logging.DefaultLogger"/> -->
   <!--   <Method name="init" params="String"/> -->
-  <!--   <Bug pattern="OBL_UNSATISFIED_OBLIGATION"/> -->
   <!-- </Match> -->
 
 </FindBugsFilter>
