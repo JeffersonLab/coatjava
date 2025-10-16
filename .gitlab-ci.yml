@@ -23,13 +23,15 @@ stages:
 build:
   stage: build
   script:
-    - ./build-coatjava.sh -T$JL_RUNNER_AVAIL_CPU --quiet --no-progress
+    - ./build-coatjava.sh --clara -T$JL_RUNNER_AVAIL_CPU --quiet --no-progress
     - tar -czf coatjava.tar.gz coatjava
+    - tar -czf clara.tar.gz clara
   artifacts:
     when: always
     expire_in: 1 day
     paths:
       - coatjava.tar.gz
+      - clara.tar.gz
 
 depana:
   allow_failure: true
@@ -37,6 +39,18 @@ depana:
   script:
     - libexec/dependency-tree.sh
     - libexec/dependency-analysis.sh
+
+download:
+  stage: build
+  script:
+    - xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/clas_005038.evio.00000 ./
+    - xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/raw/rg-l/clas_021559.evio.00001 ./
+  artifacts:
+    when: always
+    expire_in: 1 day
+    paths:
+      - clas_005038.evio.00000
+      - clas_021559.evio.00000
 
 spotbugs:
   stage: test
@@ -99,6 +113,18 @@ eb:
       - ARG: electrongamma 
       - ARG: electronneutronC
       - ARG: electronFTpion
+
+clara:
+  allow_failure: true
+  stage: test
+  needs: [build]
+  dependencies: [build]
+  script:
+    - >
+      tar -xzf clara.tar.gz &&
+      ./clara/plugins/clas12/bin/run-clara -c ./clara
+        -t $JL_RUNNER_AVAIL_CPU -y ./etc/services/rgl-clarode.yml
+        -n 100 -o ./out clas_021*.hipo
 
 profile:
   stage: test
