@@ -318,26 +318,30 @@ public class StateVecsDoca {
 
 
     private double beta = 1.0;
-    public void setMass(int hypo, double mass) {
 
-        switch (hypo) {
-            case 0:
-                mass = 0.000510998;
-                break;
-            case 1:
-                mass = 0.13957018;
-                break;
-            case 2:
-                mass = 0.493677;
-                break;
-            case 3:
-                mass = 0.105658369;
-                break;
-            case 4:
-                mass = 0.938272029;
-                break;
-        }
-    }
+    // FIXME: `mass` parameter is dead upon entry but overwritten
+    //        (spotbugs bug `IP_PARAMETER_IS_DEAD_BUT_OVERWRITTEN`)
+    //        Can we just remove this?
+    // public void setMass(int hypo, double mass) {
+    //
+    //     switch (hypo) {
+    //         case 0:
+    //             mass = 0.000510998;
+    //             break;
+    //         case 1:
+    //             mass = 0.13957018;
+    //             break;
+    //         case 2:
+    //             mass = 0.493677;
+    //             break;
+    //         case 3:
+    //             mass = 0.105658369;
+    //             break;
+    //         case 4:
+    //             mass = 0.938272029;
+    //             break;
+    //     }
+    // }
 
 
     /**
