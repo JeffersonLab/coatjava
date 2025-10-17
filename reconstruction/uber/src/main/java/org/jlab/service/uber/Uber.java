@@ -67,9 +67,7 @@ public class Uber {
     public class HitBased extends UberEngine {
         public HitBased() {
             super("HB","uber","1.0");
-            add(new ForwardTagger(),
-                new Central(),
-                new DCHBClustering(),
+            add(new DCHBClustering(),
                 new MLTDEngine(),
                 new DCHBPostClusterAI(),
                 new BANDEngine(),

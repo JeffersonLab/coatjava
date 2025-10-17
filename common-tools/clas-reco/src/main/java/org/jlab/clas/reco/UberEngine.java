@@ -1,6 +1,7 @@
 package org.jlab.clas.reco;
 
 import java.util.ArrayList;
+import org.jlab.clara.engine.EngineData;
 import org.jlab.io.base.DataEvent;
 
 /**
@@ -47,5 +48,29 @@ public abstract class UberEngine extends ReconstructionEngine {
         for (ReconstructionEngine e : engines)
             if (!e.init()) ret = false;
         return ret;
+    }
+   
+    /**
+     * Run all engines' configure methods.
+     * @param ed
+     * @return 
+     */
+    @Override
+    public EngineData configure(EngineData ed) {
+        for (ReconstructionEngine e : engines) 
+            e.configure(ed);
+        return ed;
+    }
+
+    /**
+     * Run all engines' execute methods.
+     * @param ed
+     * @return 
+     */
+    @Override
+    public EngineData execute(EngineData ed) {
+        for (ReconstructionEngine e : engines) 
+            e.execute(ed);
+        return ed;
     }
 }
