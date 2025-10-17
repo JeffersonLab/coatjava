@@ -39,6 +39,7 @@
     <module>postproc</module>
     <module>recoil</module>
     <module>calib</module>
+    <module>uber</module>
   </modules>
 
   <build>
