@@ -22,7 +22,11 @@ public abstract class UberEngine extends ReconstructionEngine {
      * @param e
      */
     protected void add(ReconstructionEngine... e) {
-        for (int i=0; i<e.length; ++i) engines.add(e[i]);
+        for (int i=0; i<e.length; ++i) {
+            if (UberEngine.class.isInstance(e[i])) 
+                throw new RuntimeException("UberEngine cannot contain an UberEngine.");
+            engines.add(e[i]);
+        }
     }
 
     /**

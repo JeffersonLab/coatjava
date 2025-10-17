@@ -63,7 +63,7 @@ public class Uber {
                 new FTEBEngine());
         }
     }
-    
+
     public static class HitBased extends UberEngine {
         public HitBased() {
             super("HB","uber","1.0");
