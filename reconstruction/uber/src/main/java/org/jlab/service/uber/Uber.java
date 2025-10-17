@@ -35,7 +35,7 @@ import org.jlab.calibration.service.CalibBanksEngine;
  *
  * @author baltzell
  */
-public class Engines {
+public class Uber {
 
     public static class First extends UberEngine {
         public First(){

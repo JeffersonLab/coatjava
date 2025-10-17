@@ -6,13 +6,13 @@ io-services:
     class: org.jlab.io.clara.DecoderWriter
     name: DecoderWriter
 services:
-  - class: org.jlab.service.uber.Engines.First
+  - class: org.jlab.service.uber.Uber.First
     name: 1ST
-  - class: org.jlab.service.uber.Engines.HitBased
+  - class: org.jlab.service.uber.Uber.HitBased
     name: HB
-  - class: org.jlab.service.uber.Engines.TimeBased
+  - class: org.jlab.service.uber.Uber.TimeBased
     name: TB
-  - class: org.jlab.service.uber.Engines.Last
+  - class: org.jlab.service.uber.Uber.Last
     name: NTH
 configuration:
   global:
