@@ -45,12 +45,14 @@ download:
   script:
     - xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/clas_005038.evio.00000 ./
     - xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/raw/rg-l/clas_021559.evio.00001 ./
+    - xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/raw/rg-d/clas_018779.evio.00001 ./
   artifacts:
     when: always
     expire_in: 1 day
     paths:
       - clas_005038.evio.00000
-      - clas_021559.evio.00000
+      - clas_021559.evio.00001
+      - clas_018779.evio.00001
 
 spotbugs:
   stage: test
@@ -123,8 +125,8 @@ clara:
     - >
       tar -xzf clara.tar.gz &&
       ./clara/plugins/clas12/bin/run-clara -c ./clara
-        -t $JL_RUNNER_AVAIL_CPU -y ./etc/services/rgl-clarode.yml
-        -n 100 -o ./out clas_021*.hipo
+        -t $JL_RUNNER_AVAIL_CPU -y ./etc/services/rgd-clarode.yml
+        -n 100 -o ./out clas_018779.evio.00001
 
 profile:
   stage: test
