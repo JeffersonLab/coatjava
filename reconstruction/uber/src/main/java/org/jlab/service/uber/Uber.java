@@ -29,6 +29,7 @@ import org.jlab.service.ltcc.LTCCEngine;
 import org.jlab.service.mltn.MLTDEngine;
 import org.jlab.service.rtpc.RTPCEngine;
 import org.jlab.calibration.service.CalibBanksEngine;
+import org.jlab.service.dc.DCHBPostClusterConv;
 
 /**
  * A container of engine sequences for shorter YAMLs.
@@ -80,7 +81,7 @@ public class Uber {
     }
 
     public static class HitBasedAI extends UberEngine {
-        public HitBased() {
+        public HitBasedAI() {
             super("HB","uber","1.0");
             add(new DCHBClustering(),
                 new MLTDEngine(),
