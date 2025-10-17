@@ -69,6 +69,21 @@ public class Uber {
             super("HB","uber","1.0");
             add(new DCHBClustering(),
                 new MLTDEngine(),
+                new DCHBPostClusterConv(),
+                new BANDEngine(),
+                new HTCCReconstructionService(),
+                new LTCCEngine(),
+                new FTOFHBEngine(),
+                new ECEngine(),
+                new EBHBEngine());
+        }
+    }
+
+    public static class HitBasedAI extends UberEngine {
+        public HitBased() {
+            super("HB","uber","1.0");
+            add(new DCHBClustering(),
+                new MLTDEngine(),
                 new DCHBPostClusterAI(),
                 new BANDEngine(),
                 new HTCCReconstructionService(),
