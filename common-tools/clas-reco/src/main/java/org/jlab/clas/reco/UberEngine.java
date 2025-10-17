@@ -29,10 +29,14 @@ public abstract class UberEngine extends ReconstructionEngine {
         }
     }
 
+    @Override
+    public boolean processDataEvent(DataEvent event) {
+        return true;
+    }
+
     /**
      * Process one event through the chain of engines.
-     * @param event
-     * @return 
+     * @param event 
      */
     @Override
     public final void filterEvent(DataEvent event) {
