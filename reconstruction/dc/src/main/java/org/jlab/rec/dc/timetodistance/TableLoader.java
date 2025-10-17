@@ -371,12 +371,11 @@ public class TableLoader {
         //CCDBTables 1 =  "/calibration/dc/time_to_distance/t2d";
         //CCDBTables 2 =  "/calibration/dc/time_corrections/T0_correction";	
         if (T2DLOADED) return;
-        
+        System.out.println(" FILLING T2D TABLE ....");
         FillAlpha();
         getConstants(t2dPressure,  t2dPressRef,  pressure);
         FillTable();
-        
-        System.out.println(" T2D TABLE FILLED.....");
+        System.out.println(" T2D TABLE FILLED.");
         T2DLOADED = true;
      }
     
