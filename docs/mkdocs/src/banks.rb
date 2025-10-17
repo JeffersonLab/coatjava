@@ -6,14 +6,49 @@
 require 'json'
 require 'fileutils'
 
+# iguana-created banks have claimed this group ID
 IguanaGroupNum = 30000
-CommonBanks = [
-  'REC::Particle',
-  'RUN::config',
-  'REC::Calorimeter',
-  'REC::Traj',
-] # FIXME: add more, or take inspiration from DST schema
 
+# list of banks to put at the top
+# FIXME: adapted from <https://clasweb.jlab.org/wiki/index.php/CLAS12_DSTs>, but maybe we can use schema dirs to automate
+CommonBanks = {
+  'Event banks' => [
+    'RUN::config',
+    'REC::Event',
+  ],
+  'Physics Banks' => [
+    'REC::Particle',
+    'RECFT::Particle',
+    'REC::Calorimeter',
+    'REC::Scintillator',
+    'REC::Cherenkov',
+    'REC::Track',
+    'REC::Traj',
+    'REC::CovMat',
+    'REC::ScintExtras',
+  ],
+  'Special & Tagged Banks' => [
+    'HEL::flip',
+    'RAW::scaler',
+    'RUN::scaler',
+    'HEL::scaler',
+    'RAW::epics',
+    'HEL::online',
+    'HEL::decoder',
+  ],
+  'Simulation Banks' => [
+    'MC::Header',
+    'MC::Event',
+    'MC::Lund',
+    'MC::Particle',
+    'MC::True',
+    'MC::GenMatch',
+    'MC::RecMatch',
+    'MC::User',
+  ],
+}
+
+# usage and args
 unless ARGV.size == 2
   puts """
   USAGE: #{$0} [INPUT_JSON_DIR] [OUTPUT_DIR]
@@ -79,31 +114,46 @@ TypeHash = {
   'S' => 'short',
 }
 
-# output tables
-FileUtils.mkdir_p OutputDir
-outMain = File.open File.join(OutputDir, "banks.md"), 'w'
-outMain.puts """# HIPO Banks
-
-## Common Banks
-
-"""
-CommonBanks.each do |name|
-  outMain.puts "- #{bank_md_link name}"
-end
-
-outMain.puts """
-## Full List of Banks
-
-Organized by group and item ID
-
-> **NOTE:**  Iguana banks, which are defined in the Iguana repository, use group number #{IguanaGroupNum}.
-"""
-
+# make a table row
 def table_row(out, cols)
   out.puts "| #{cols.join ' | '} |"
 end
+
+# start output markdown
+FileUtils.mkdir_p OutputDir
+FileUtils.mkdir_p File.join(OutputDir, BanksSubDir)
+outMain = File.open File.join(OutputDir, "banks.md"), 'w'
+outMain.puts """# HIPO Banks
+
+The banks are listed in tables below, organized by group and item ID. Click on a bank name for its details.
+"""
+
+# common banks table
+outMain.puts """
+## Common DST Banks
+
+For convenience, here are commonly used DST banks:
+
+"""
+table_row outMain, ['Group', 'Banks']
+table_row outMain, ['---', '---']
+CommonBanks.each do |group_name, bank_list|
+  table_row outMain, [
+    group_name,
+    bank_list.map{ |bank_name| bank_md_link bank_name }.join(', ')
+  ]
+end
+
+# all other bank tables
 specs_fully_sorted.each do |group_id, spec_list|
-  outMain.puts "\n## Group #{group_id}\n\n"
+
+  # get list of unique bank-name prefixes
+  uniq_prefixes = spec_list.map do |spec|
+    "`#{spec['name'].gsub /::.*/, ''}`"
+  end.uniq
+
+  outMain.puts "\n## #{uniq_prefixes.join ', '} Banks"
+  outMain.puts "**Group ID:** #{group_id}\n\n"
   table_row outMain, ['Item ID', 'Name', 'Description']
   table_row outMain, ['---', '---', '---']
   spec_list.each do |spec|
