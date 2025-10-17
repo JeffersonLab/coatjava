@@ -42,6 +42,7 @@ jobs:
           path: |
             clas_005038.evio.00000
             clas_021559.evio.00001
+            clas_018779.evio.00001
           lookup-only: true
       - name: install xrootd-client
         if: ${{ steps.cache.outputs.cache-hit != 'true' }}
@@ -53,6 +54,7 @@ jobs:
         run: |
           xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/clas_005038.evio.00000 ./
           xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/raw/rg-l/clas_021559.evio.00001 ./
+          xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/raw/rg-d/clas_018779.evio.00001 ./
 
   # build
   #############################################################################
@@ -157,6 +159,7 @@ jobs:
           path: |
             clas_005038.evio.00000
             clas_021559.evio.00001
+            clas_018779.evio.00001
       - name: untar build
         run: tar xzvf coatjava.tar.gz
       - name: run test
@@ -189,13 +192,14 @@ jobs:
           path: |
             clas_005038.evio.00000
             clas_021559.evio.00001
+            clas_018779.evio.00001
       - name: untar build
         run: |
           tar xzvf clara.tar.gz
       - name: run test
         run: |
           ls -lhtr
-          ./clara/plugins/clas12/bin/run-clara -y ./etc/services/rgl-clarode.yml -t ${{ env.nthreads }} -n 200 -c ./clara -o ./tmp ./clas_021559.evio.00001
+          ./bin/run-clara -y ./etc/services/rgd-clarode.yml -t 4 -n 500 -c ./clara -o ./tmp ./clas_018779.evio.00001
           ls -lhtr
 
   test_coatjava:
