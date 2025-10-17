@@ -39,7 +39,7 @@ public class Engines {
 
     public static class First extends UberEngine {
         public First(){
-            super("1ST","bobcat","1.0");
+            super("1ST","uber","1.0");
             add(new MagFieldsEngine(),
                 new RasterEngine());
         }
@@ -47,7 +47,7 @@ public class Engines {
 
     public static class Central extends UberEngine {
         public Central(){
-            super("CD","bobcat","1.0");
+            super("CD","uber","1.0");
             add(new CVTEngine(),
                 new CTOFEngine(),
                 new CNDCalibrationEngine());
@@ -56,7 +56,7 @@ public class Engines {
 
     public static class ForwardTagger extends UberEngine {
         public ForwardTagger(){
-            super("FT","bobcat","1.0");
+            super("FT","uber","1.0");
             add(new FTCALEngine(),
                 new FTHODOEngine(),
                 new FTTRKEngine(),
@@ -66,7 +66,7 @@ public class Engines {
     
     public class HitBased extends UberEngine {
         public HitBased() {
-            super("HB","bobcat","1.0");
+            super("HB","uber","1.0");
             add(new ForwardTagger(),
                 new Central(),
                 new DCHBClustering(),
@@ -83,7 +83,7 @@ public class Engines {
 
     public class TimeBased extends UberEngine {
         public TimeBased() {
-            super("TB","bobcat","1.0");
+            super("TB","uber","1.0");
             add(new DCTBEngine(),
                 new FMTEngine(),
                 new CVTSecondPassEngine(),
@@ -94,7 +94,7 @@ public class Engines {
 
     public static class Last extends UberEngine {
         public Last() {
-            super("NTH","bobcat","1.0");
+            super("NTH","uber","1.0");
             add(new RICHEBEngine(),
                 new RTPCEngine(),
                 new VTXEngine(),
