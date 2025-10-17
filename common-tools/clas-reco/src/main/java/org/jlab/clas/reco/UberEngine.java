@@ -35,11 +35,9 @@ public abstract class UberEngine extends ReconstructionEngine {
      * @return 
      */
     @Override
-    public final boolean processDataEvent(DataEvent event) {
-        boolean ret = true;
+    public final void filterEvent(DataEvent event) {
         for (ReconstructionEngine e : engines) 
-            if (!e.processDataEvent(event)) ret = false;
-        return ret;
+            e.filterEvent(event);
     }
 
     /**
@@ -74,7 +72,7 @@ public abstract class UberEngine extends ReconstructionEngine {
     @Override
     public EngineData execute(EngineData ed) {
         for (ReconstructionEngine e : engines) 
-            e.execute(ed);
+            ed = e.execute(ed);
         return ed;
     }
 }
