@@ -39,6 +39,10 @@ public class DCHBPostClusterAI extends DCEngine {
         this.getBanks().init("HitBasedTrkg", "", "AI");
     }
     
+    public DCHBPostClusterAI(String outputBankPrefix) {
+        super("DCHAI");
+        this.getBanks().init("HitBasedTrkg", "", outputBankPrefix);
+    }
     
     @Override
     public void setDropBanks() {
