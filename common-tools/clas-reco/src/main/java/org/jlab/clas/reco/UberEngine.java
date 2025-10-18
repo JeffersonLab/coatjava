@@ -31,7 +31,7 @@ public abstract class UberEngine extends ReconstructionEngine {
 
     @Override
     public boolean processDataEvent(DataEvent event) {
-        return true;
+        throw new RuntimeException("UberEngine does not implement processDataEvent.");
     }
 
     /**
