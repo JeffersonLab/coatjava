@@ -34,7 +34,6 @@ do
         c) CLARA_HOME=$OPTARG ;;
         t) threads=$OPTARG && echo $threads | grep -q -E '^[0-9]+$' || error "-t must be an integer, threads" ;;
         n) nevents="-e $OPTARG" && echo "$nevents" | grep -q -E '^-e [0-9]+$' || error "-n must be an integer, events" ;;
-        g) memory_gb="-e $OPTARG" && echo "$memory_gb" | grep -q -E '^-e [0-9]+$' || error "-g must be an integer, GB of memory" ;;
         m) merge=1 ;;
         q) quiet=1 ;;
         h) echo -e "\n$usage" && echo -e $info && exit 0 ;;
@@ -43,8 +42,9 @@ done
 shift $((OPTIND-1))
 inputs=$@
 
-# Configure JVM -Xmx memory setting:
-[ -z ${memory_gb+x} ] && memory_gb=$((threads+2))
+# Configure JVM memory settings (overridedable via $JAVA_OPTS):
+gb=$((threads<3?x+2:x+1))
+java_opts=-Xmx${gb}g
 
 # Check configuration:
 [ $# -lt 1 ] && error "Input data files are required"
@@ -76,11 +76,14 @@ done
 [ $(cat $CLARA_USER_DATA/filelist.txt | wc -l) -gt 0 ] || error "Found no input files"
 
 # Set some JVM options:
-export JAVA_OPTS="$JAVA_OPTS -Xmx${memory_gb}g -XX:+IgnoreUnrecognizedVMOptions"
-export JAVA_OPTS="$JAVA_OPTS -Djava.io.tmpdir=$CLARA_USER_DATA -Dorg.sqlite.tmpdir=$CLARA_USER_DATA"
+JAVA_OPTS="$java_opts $JAVA_OPTS -XX:+IgnoreUnrecognizedVMOptions"
+JAVA_OPTS="$JAVA_OPTS -Djava.io.tmpdir=$CLARA_USER_DATA -Dorg.sqlite.tmpdir=$CLARA_USER_DATA"
+
 # Set verbosity:
 [ -z ${quiet+x} ] && stub=fine || stub=info
-export JAVA_OPTS="$JAVA_OPTS -Djava.util.logging.config.file=$CLAS12DIR/etc/logging/$stub.properties"
+JAVA_OPTS="$JAVA_OPTS -Djava.util.logging.config.file=$CLAS12DIR/etc/logging/$stub.properties"
+
+export JAVA_OPTS
 
 function get_host_ip() {
     if command -v ip >/dev/null 2>&1
