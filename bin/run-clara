@@ -43,7 +43,7 @@ shift $((OPTIND-1))
 inputs=$@
 
 # Configure JVM memory settings (overridedable via $JAVA_OPTS):
-gb=$((threads<3?x+2:x+1))
+gb=$((threads<3?threads+2:2+threads-threads/4))
 java_opts=-Xmx${gb}g
 
 # Check configuration:
