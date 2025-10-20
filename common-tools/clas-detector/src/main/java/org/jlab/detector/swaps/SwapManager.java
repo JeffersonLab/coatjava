@@ -70,29 +70,11 @@ public final class SwapManager {
     
     private SwapManager() {}
     
-    public static SwapManager getInstance() {
+    public static synchronized SwapManager getInstance() {
         if (instance == null) {
             instance = new SwapManager();
         }
         return instance;
-    }
-
-    /**
-     * @param detectorNames
-     * @param prevTimestamp in CCDB format:  MM/DD/YYYY
-     * @param currTimestamp in CCDB format:  MM/DD/YYYY
-     */
-    public SwapManager(List<String> detectorNames, String prevTimestamp,String currTimestamp) {
-        this.initialize(detectorNames, prevTimestamp, currTimestamp);    
-    }
-
-    /**
-     * @param detectorNames
-     * @param previous timestamp/variation used for translation tables during decoding
-     * @param current timestamp/variation with correct translation tables
-     */
-    public SwapManager(List<String> detectorNames,ConstantsManager previous,ConstantsManager current) {
-        this.initialize(detectorNames, previous, current);
     }
 
     /**
@@ -269,13 +251,13 @@ public final class SwapManager {
         
         DefaultLogger.debug();
 
-        SwapManager man1 = new SwapManager(Arrays.asList("DC"),"08/10/2020","10/13/2024");
-        System.err.println(man1.banksToTables.get("DC::tot"));
+        SwapManager man = getInstance();
+        System.out.println(Arrays.toString(man.get(11014, "/daq/tt/bmt",3,5,320,0)));
 
-        SwapManager noman = getInstance();
-        System.out.println(Arrays.toString(noman.get(11014, "/daq/tt/bmt",3,5,320,0)));
-        
-        SwapManager man = new SwapManager(Arrays.asList("BMT"),"08/10/2020","10/13/2020");
+        man.initialize(Arrays.asList("DC"),"08/10/2020","10/13/2024");
+        System.err.println(man.banksToTables.get("DC::tot"));
+
+        man.initialize(Arrays.asList("BMT"),"08/10/2020","10/13/2020");
         man.get(11014,man.getTable("BMT"),"sector",3,6,8,0);
         System.out.println("SwapManager:\n"+man);
         System.out.println(man.get(11014,man.getTable("BMT"),"sector",99,22,33,44));
