@@ -30,6 +30,15 @@
     <Bug pattern="SING_SINGLETON_HAS_NONPRIVATE_CONSTRUCTOR"/>
     <Class name="cnuphys.splot.plot.VerticalLabelUI"/>
   </Match>
+  <Match> <!-- singleton implements Serializable; should use enum singleton pattern -->
+    <Bug pattern="SING_SINGLETON_IMPLEMENTS_SERIALIZABLE"/>
+    <Class name="cnuphys.lund.LundTrackDialog"/>
+  </Match>
+  <Match> <!-- singleton implements Serializable; should use enum singleton pattern -->
+    <Bug pattern="SING_SINGLETON_IMPLEMENTS_SERIALIZABLE"/>
+    <Class name="cnuphys.swim.SwimMenu"/>
+  </Match>
+
 
   <!-- HIGHER RANK SUPPRESSIONS -->
   <!-- <Match> --> <!-- not worth fixing -->
