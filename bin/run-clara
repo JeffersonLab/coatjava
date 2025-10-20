@@ -14,6 +14,7 @@ Options:\n
 \t-t   number of threads (default=2)\n
 \t-n   number of events (default=-1)\n
 \t-m   merge output files (see dependencies below)\n
+\t-l   larger JVM memory requests\n
 \t-h   print this help and exit\n\n
 Merging outputs (-m) requires hipo-utils and yq (https://github.com/mikefarah/yq).'
 
