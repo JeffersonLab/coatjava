@@ -1,7 +1,8 @@
 site_name: COATJAVA Documentation
 nav:
   - Home: index.md
-  - HIPO Bank Definitions: banks.md
+  - HIPO Banks: banks.md
+  - Setup Guide: setup.md
 use_directory_urls: false
 extra:
   homepage: index.html
