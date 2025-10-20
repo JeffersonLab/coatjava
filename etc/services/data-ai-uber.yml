@@ -20,7 +20,7 @@ services:
     name: NTH
 configuration:
   global:
-    variation: rgb_spring2019
+    variation: rgd_fall2023
   io-services:
     writer:
       schema_dir: dst
