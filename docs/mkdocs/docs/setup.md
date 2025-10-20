@@ -1,6 +1,7 @@
 # Setup Guide
 
 <br>
+
 ## Obtaining the Software
 
 If you just want to use the software without modifying/building it, you can download a pre-built package from the [GitHub releases](https://github.com/JeffersonLab/coatjava/releases) page or the corresponding repo at [JLab](https://clasweb.jlab.org/clas12offline/distribution/coatjava/).  Builds on JLab machines are also available, see the [general software wiki](https://clasweb.jlab.org/wiki/index.php/CLAS12_Software_Center) for setting up your environment to use them.
@@ -12,6 +13,7 @@ For anything more, see the "General Developer Documentation" link on that softwa
 The [troubleshooting](https://github.com/JeffersonLab/clas12-offline-software/wiki/Troubleshooting) wiki page may also still be useful but likely outdated.
 
 <br>
+
 ## Dependencies
 
 - Java
@@ -20,6 +22,7 @@ The [troubleshooting](https://github.com/JeffersonLab/clas12-offline-software/wi
 Maven will automatically obtain all other dependencies.
 
 <br>
+
 ## Building and Installing
 
 Run the installation script:
@@ -42,6 +45,7 @@ The software will then be installed _within_ the top-level repository directory,
 | `libexec` | Internal scripts |
 
 <br>
+
 ## Troubleshooting
 
 If you want to _cleanly_ rebuild, use the `--clean` option for `build-coatjava.sh`.
