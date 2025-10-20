@@ -25,7 +25,7 @@ function error() {
 threads=2
 prefix=rec_
 CLARA_USER_DATA=.
-while getopts y:o:p:c:t:n:qmh opt
+while getopts y:o:p:c:t:n:lqmh opt
 do
     case $opt in
         y) yaml=$OPTARG ;;
@@ -34,6 +34,7 @@ do
         c) CLARA_HOME=$OPTARG ;;
         t) threads=$OPTARG && echo $threads | grep -q -E '^[0-9]+$' || error "-t must be an integer, threads" ;;
         n) nevents="-e $OPTARG" && echo "$nevents" | grep -q -E '^-e [0-9]+$' || error "-n must be an integer, events" ;;
+        l) large=1 ;;
         m) merge=1 ;;
         q) quiet=1 ;;
         h) echo -e "\n$usage" && echo -e $info && exit 0 ;;
@@ -43,8 +44,15 @@ shift $((OPTIND-1))
 inputs=$@
 
 # Configure JVM memory settings (overridedable via $JAVA_OPTS):
-gb=$((threads<3?threads+2:2+threads-threads/4))
-java_opts=-Xmx${gb}g
+if [ -z ${large+x} ]
+then
+    gb_max=$((threads<3?threads+2:threads+2-threads/4))
+    gb_init=$((threads<3?threads:threads-threads/3))
+else
+    gb_max=$((threads<3?threads+2:threads+2-threads/8))
+    gb_init=$((threads<3?threads:threads-threads/6))
+fi
+java_opts="-Xms${gb_init}g -Xmx${gb_max}g"
 
 # Check configuration:
 [ $# -lt 1 ] && error "Input data files are required"
