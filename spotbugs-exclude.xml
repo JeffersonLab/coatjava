@@ -38,6 +38,26 @@
     <Bug pattern="SING_SINGLETON_IMPLEMENTS_SERIALIZABLE"/>
     <Class name="cnuphys.swim.SwimMenu"/>
   </Match>
+  <Match> <!-- static method hiding of base-class DetectorResponse.readHipoEvent -->
+    <Bug pattern="HSM_HIDING_METHOD"/>
+    <Class name="org.jlab.clas.detector.TaggerResponse"/>
+    <Method name="readHipoEvent" params="org.jlab.io.base.DataEvent,String,org.jlab.detector.base.DetectorType"\>
+  </Match>
+  <Match> <!-- static method hiding of base-class DetectorResponse.readHipoEvent -->
+    <Bug pattern="HSM_HIDING_METHOD"/>
+    <Class name="org.jlab.clas.detector.ScintillatorResponse"/>
+    <Method name="readHipoEvent" params="org.jlab.io.base.DataEvent,String,org.jlab.detector.base.DetectorType"\>
+  </Match>
+  <Match> <!-- static method hiding of base-class DetectorResponse.readHipoEvent -->
+    <Bug pattern="HSM_HIDING_METHOD"/>
+    <Class name="org.jlab.clas.detector.CherenkovResponse"/>
+    <Method name="readHipoEvent" params="org.jlab.io.base.DataEvent,String,org.jlab.detector.base.DetectorType"\>
+  </Match>
+  <Match> <!-- static method hiding of base-class DetectorResponse.readHipoEvent -->
+    <Bug pattern="HSM_HIDING_METHOD"/>
+    <Class name="org.jlab.clas.detector.CalorimeterResponse"/>
+    <Method name="readHipoEvent" params="org.jlab.io.base.DataEvent,String,org.jlab.detector.base.DetectorType"\>
+  </Match>
 
 
   <!-- HIGHER RANK SUPPRESSIONS -->
