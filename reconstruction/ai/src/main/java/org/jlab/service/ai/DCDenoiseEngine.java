@@ -79,7 +79,11 @@ public class DCDenoiseEngine extends ReconstructionEngine {
     }
 
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public void detectorChanged(int run) {}
+
+    @Override
+    public boolean processDataEventUser(DataEvent event) {
+
         for (String bankName : BANK_NAMES) {
             if (!event.hasBank(bankName)) continue;
 
