@@ -24,7 +24,7 @@ services:
     name: FT
   - class: org.jlab.service.uber.Uber$Central
     name: CD
-  - class: org.jlab.service.uber.Uber$HitBased
+  - class: org.jlab.service.uber.Uber$HitBasedAI
     name: HB
   - class: org.jlab.service.uber.Uber$TimeBased
     name: TB
