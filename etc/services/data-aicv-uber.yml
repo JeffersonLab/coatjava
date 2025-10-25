@@ -24,9 +24,9 @@ services:
     name: FT
   - class: org.jlab.service.uber.Uber$Central
     name: CD
-  - class: org.jlab.service.uber.Uber$HitBasedCV
+  - class: org.jlab.service.uber.Uber$HitBasedAICV
     name: HB
-  - class: org.jlab.service.uber.Uber$TimeBasedCV
+  - class: org.jlab.service.uber.Uber$TimeBasedAICV
     name: TB
   - class: org.jlab.service.uber.Uber$Last
     name: NTH

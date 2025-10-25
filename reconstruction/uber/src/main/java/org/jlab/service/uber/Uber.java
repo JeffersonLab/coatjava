@@ -30,6 +30,9 @@ import org.jlab.service.mltn.MLTDEngine;
 import org.jlab.service.rtpc.RTPCEngine;
 import org.jlab.calibration.service.CalibBanksEngine;
 import org.jlab.service.dc.DCHBPostClusterConv;
+import org.jlab.service.dc.DCTBEngineAI;
+import org.jlab.service.eb.EBHBAIEngine;
+import org.jlab.service.eb.EBTBAIEngine;
 
 /**
  * A container of engine sequences for shorter YAMLs.
@@ -65,8 +68,8 @@ public class Uber {
         }
     }
 
-    public static class HitBased extends UberEngine {
-        public HitBased() {
+    public static class HitBasedCV extends UberEngine {
+        public HitBasedCV() {
             super("HB","uber","1.0");
             add(new DCHBClustering(),
                 new DCHBPostClusterConv(),
@@ -94,14 +97,44 @@ public class Uber {
         }
     }
 
-    public static class TimeBased extends UberEngine {
-        public TimeBased() {
+    public static class HitBasedAICV extends UberEngine {
+        public HitBasedAICV() {
+            super("HB","uber","1.0");
+            add(new DCHBClustering(),
+                new MLTDEngine(),
+                new DCHBPostClusterConv(),
+                new DCHBPostClusterAI("AI"),
+                new BANDEngine(),
+                new HTCCReconstructionService(),
+                new LTCCEngine(),
+                new FTOFHBEngine(),
+                new ECEngine(),
+                new EBHBEngine(),
+                new EBHBAIEngine());
+        }
+    }
+
+    public static class TimeBasedCV extends UberEngine {
+        public TimeBasedCV() {
             super("TB","uber","1.0");
             add(new DCTBEngine(),
                 new FMTEngine(),
                 new CVTSecondPassEngine(),
                 new FTOFTBEngine(),
                 new EBTBEngine());
+        }
+    }
+
+    public static class TimeBasedAICV extends UberEngine {
+        public TimeBasedAICV() {
+            super("TB","uber","1.0");
+            add(new DCTBEngine(),
+                new DCTBEngineAI(),
+                new FMTEngine(),
+                new CVTSecondPassEngine(),
+                new FTOFTBEngine(),
+                new EBTBEngine(),
+                new EBTBAIEngine("RECAI"));
         }
     }
 
