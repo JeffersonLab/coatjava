@@ -207,7 +207,9 @@
       </dependency>
 
       <!-- resolve conflict between `org.jlab.coda:jclara` and `ai.djl:api`
-           by choosing the later version of their `com.google.code.gson:gson` dependency -->
+           by choosing the later version of their `com.google.code.gson:gson` dependency
+           - `djl`'s `gson` version is here: https://github.com/deepjavalibrary/djl/blob/master/gradle/libs.versions.toml
+      -->
       <dependency>
         <groupId>com.google.code.gson</groupId>
         <artifactId>gson</artifactId>
