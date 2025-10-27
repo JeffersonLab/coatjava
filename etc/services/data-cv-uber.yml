@@ -9,7 +9,7 @@ configuration:
       magfieldSolenoidMap: Symm_solenoid_r601_phi1_z1201_13June2018.dat
       magfieldTorusMap: Full_torus_r251_phi181_z251_25Jan2021.dat
     HB:
-      run: "6302"
+      run: "19000"
 io-services:
   reader:
     class: org.jlab.io.clara.DecoderReader
