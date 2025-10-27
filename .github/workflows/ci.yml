@@ -150,7 +150,7 @@ jobs:
         run: |
           sudo apt -y update
           sudo apt -y install xrootd-client
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           name: build_ubuntu-latest
       - uses: actions/cache/restore@v4
@@ -183,7 +183,7 @@ jobs:
         uses: cvmfs-contrib/github-action-cvmfs@v5
         with:
           cvmfs_repositories: 'oasis.opensciencegrid.org'
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           name: build_ubuntu-latest
       - uses: actions/cache/restore@v4
@@ -234,7 +234,7 @@ jobs:
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           name: build_${{ matrix.runner }}
       - uses: cvmfs-contrib/github-action-cvmfs@v5
@@ -262,7 +262,7 @@ jobs:
         uses: wtfjoke/setup-groovy@v3
         with:
           groovy-version: ${{ env.groovy_version }}
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           name: build_ubuntu-latest
       - name: untar build
@@ -280,7 +280,7 @@ jobs:
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           name: build_ubuntu-latest
       - name: untar build
@@ -305,7 +305,7 @@ jobs:
         run: docs/mkdocs/generate.sh pages
       ### jacoco
       - name: download jacoco report artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: jacoco_report
           path: pages/jacoco
@@ -357,7 +357,7 @@ jobs:
       TAG_NAME: ${{ github.ref_name }}
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           name: build_ubuntu-latest
       - name: rename artifact
