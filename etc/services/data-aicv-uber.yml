@@ -1,6 +1,8 @@
 configuration:
   global:
     variation: rgd_fall2023
+#    dcMinistagger: "NOTONREFWIRE"
+#    dcFeedthroughs: "OFF"
   io-services:
     writer:
       schema_dir: dst
