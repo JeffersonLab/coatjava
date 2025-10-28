@@ -71,7 +71,7 @@ configuration:
 #    dcFeedthroughs: "OFF"
   io-services:
     writer:
-      schema_dir: mc-ai
+      schema_dir: dst
       #schema_dir: "/home/clas12-1/chef/myClara/plugins/clas12/etc/bankdefs/dst"
   services:
     MAGFIELDS:
