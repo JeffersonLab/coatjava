@@ -68,7 +68,7 @@ configuration:
 #    dcFeedthroughs: "OFF"
   io-services:
     writer:
-      schema_dir: mc-cv
+      schema_dir: dst
   services:
     MAGFIELDS:
       magfieldSolenoidMap: Symm_solenoid_r601_phi1_z1201_13June2018.dat
