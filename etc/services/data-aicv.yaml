@@ -76,14 +76,14 @@ services:
     name: CALIB
 configuration:
   global:
-    variation: rgb_spring2019
+    variation: rgd_fall2023
 #    timestamp: 12/31/2020-00:00:00
 ## uncomment the following two lines for compatibility with alignments before the DC fixes
 #    dcMinistagger: "NOTONREFWIRE"
 #    dcFeedthroughs: "OFF"
   io-services:
     writer:
-      schema_dir: data-aicv
+      schema_dir: dst
       #schema_dir: "/home/clas12-1/chef/myClara/plugins/clas12/etc/bankdefs/dst"
   services:
     MAGFIELDS:
