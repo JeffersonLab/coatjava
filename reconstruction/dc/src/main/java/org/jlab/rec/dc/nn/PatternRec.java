@@ -84,8 +84,10 @@ public class PatternRec {
                                     s.get_Region() == r.get(ri).get_Region() &&
                                     s.associatedCrossId == r.get(ri).associatedCrossId &&
                                     r.get(ri).associatedCrossId != -1) {
-                                if (s.get_Superlayer() % 2 == missingSL % 2)
+                                if (s.get_Superlayer() % 2 == missingSL % 2){
                                     Segs2Road.add(s);
+                                    break;
+                                }
                             }
                         }
                     }
@@ -111,7 +113,7 @@ public class PatternRec {
             if(entry.getValue().size()==3)
                 crossList.add(entry.getValue()); 
             for(Cross c : entry.getValue()) 
-                LOGGER.log(Level.FINE, "AI"+c.printInfo()+c.get_Segment1().printInfo()+c.get_Segment2().printInfo());
+                LOGGER.log(Level.FINEST, "AI"+c.printInfo()+c.get_Segment1().printInfo()+c.get_Segment2().printInfo());
         }
         return crossList;
     }

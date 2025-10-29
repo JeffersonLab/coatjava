@@ -78,8 +78,8 @@ public class RecoBankWriter {
 
         for (int i = 0; i < clusterList.size(); i++) {
             bank.setShort("id", i, (short) (i + 1));
-            bank.setInt("N_bar", i, (int) clusterList.get(i).getBarHits().size());
-            bank.setInt("N_wedge", i, (int) clusterList.get(i).getWedgeHits().size());
+            bank.setInt("n_bar", i, (int) clusterList.get(i).getBarHits().size());
+            bank.setInt("n_wedge", i, (int) clusterList.get(i).getWedgeHits().size());
             bank.setFloat("time", i, (float) clusterList.get(i).getTime());
             bank.setFloat("x", i, (float) (clusterList.get(i).getX()));
             bank.setFloat("y", i, (float) (clusterList.get(i).getY()));
@@ -105,26 +105,26 @@ public class RecoBankWriter {
      */
     public static DataBank fillProjectionsBank(DataEvent event, ArrayList<TrackProjection> projections) {
 
-        DataBank bank = event.createBank("ALERT::Projections", projections.size());
+        DataBank bank = event.createBank("ALERT::projections", projections.size());
 
         if (bank == null) {
-            System.err.println("COULD NOT CREATE A ALERT::Projections BANK!!!!!!");
+            System.err.println("COULD NOT CREATE A ALERT::projections BANK!!!!!!");
             return null;
         }
         for (int i = 0; i < projections.size(); i++) {
             TrackProjection projection = projections.get(i);
             bank.setShort("id", i, (short) (i + 1));
-            bank.setShort("trackID", i, (short) projection.getTrackID());
+            bank.setShort("trackid", i, (short) projection.getTrackID());
             bank.setFloat("x_at_bar", i, (float) projection.getBarIntersect().x());
             bank.setFloat("y_at_bar", i, (float) projection.getBarIntersect().y());
             bank.setFloat("z_at_bar", i, (float) projection.getBarIntersect().z());
-            bank.setFloat("L_at_bar", i, (float) projection.getBarPathLength());
-            bank.setFloat("L_in_bar", i, (float) projection.getBarInPathLength());
+            bank.setFloat("l_at_bar", i, (float) projection.getBarPathLength());
+            bank.setFloat("l_in_bar", i, (float) projection.getBarInPathLength());
             bank.setFloat("x_at_wedge", i, (float) projection.getWedgeIntersect().x());
             bank.setFloat("y_at_wedge", i, (float) projection.getWedgeIntersect().y());
             bank.setFloat("z_at_wedge", i, (float) projection.getWedgeIntersect().z());
-            bank.setFloat("L_at_wedge", i, (float) projection.getWedgePathLength());
-            bank.setFloat("L_in_wedge", i, (float) projection.getWedgeInPathLength());
+            bank.setFloat("l_at_wedge", i, (float) projection.getWedgePathLength());
+            bank.setFloat("l_in_wedge", i, (float) projection.getWedgeInPathLength());
         }
         return bank;
     }

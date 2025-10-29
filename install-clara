@@ -1,15 +1,13 @@
 #!/usr/bin/env bash
 
-# Default versions:
-grapes=2.17
-clara=5.0.2
-coatjava=11.1.1
-
-# Abort on any non-zero exit codes:
 set -e
 
+# Default versions:
+grapes=2.20
+clara=5.0.2
+
 function error() {
-    echo -e "\n$usage\n\nERROR:  $@"
+    echo -e "\n$usage\n\n  Use option '-h' for more usage guidance.\n\nERROR:  $@"
     exit 1
 }
 
@@ -36,7 +34,7 @@ function litter() {
         then
             echo -e "\nSee temporary build directory for more info:\n\t$tmp_dir"
         else
-            rm -rf $tmp_dir && echo -e "\nRemoved temporary build directory:\n\t$tmp_dir"
+            rm -rf $tmp_dir
         fi
     fi
 }
@@ -44,7 +42,7 @@ function litter() {
 function check() {
     if compgen -G "$clara_home/lib/jclara-*.jar" > /dev/null
     then
-        echo -e "\n\$CLARA_HOME installed at:\n\t$clara_home"
+        echo -e "\n\$CLARA_HOME installed at:\n\t$clara_home\n"
     else
         echo -e "\n\$CLARA_HOME installed but looks broken:\n\t$clara_home"
     fi
@@ -58,12 +56,8 @@ function cleanup() {
 }
 
 function build_clara {
-    export CLARA_HOME=$1
-    git clone https://code.jlab.org/hallb/clas12/clara-java
-    cd clara-java
-    git checkout java21
-    ./gradlew && ./gradlew deploy
-    cd -
+    git clone --branch $clara --depth 1 https://code.jlab.org/hallb/clas12/clara-java
+    cd clara-java && CLARA_HOME=$1 ./gradlew deploy && cd -
 }
 
 trap cleanup EXIT
@@ -71,17 +65,18 @@ trap cleanup EXIT
 # Configure:
 debug=0
 args=()
-usage="Usage:  install-clara [-v] [-b] [-f CLARA] [-c COATJAVA] [-g GRAPES] PATH"
-info="\
-- The default COATJAVA/CLARA/GRAPES versions are $coatjava/$clara/$grapes.\n\
-- COATJAVA can also be specified as a local installation directory.\n\
-- [-v adds verbosity and disables cleanup]\n\
-- [-b builds clara from source]"
+usage="Usage:  install-clara [-v] [-b] [-c COATJAVA] [-f CLARA] [-g GRAPES] PATH"
+info="""
+- The default CLARA / GRAPES versions are $clara / $grapes
+- COATJAVA can also be specified as a local installation directory
+- If the COATJAVA version is not specified, it will try to auto-detect it.
+- [-v adds verbosity and disables cleanup]
+- [-b builds clara from source]"""
 
 while [[ $# -gt 0 ]]
 do
     case $1 in
-        -h) echo -e "\n$usage" && echo -e "\n$info" && exit 1 ;;
+        -h|--help) echo -e "\n$usage" && echo -e "$info" && exit 1 ;;
         -f) clara="$2" && shift && shift ;;
         -c) coatjava="$2" && shift && shift ;;
         -g) grapes="$2" && shift && shift ;;
@@ -100,12 +95,19 @@ clara_home="$args"
 mkdir -p $clara_home    || error "Cannot create installation PATH:  $clara_home"
 clara_home=$(cd $clara_home && pwd) && rmdir $clara_home
 
+# If the user didn't specify a coatjava version, try auto-detect the version:
+if [ -z ${coatjava+x} ]
+then
+    [ -e "$(dirname $0)/libexec/version.sh" ] || error "Failed to auto-detect.  COATJAVA version must be specified with '-c'"
+    coatjava=$($(dirname $0)/libexec/version.sh | sed 's/-SNAPSHOT//')
+fi
+
 # Detect local COATJAVA installation and convert into an absolute path:
 if compgen -G "$coatjava/lib/clas/coat-libs-*.jar" > /dev/null
 then
     coatjava=$(cd $coatjava && pwd)
     echo -e "\nUsing local COATJAVA installation:\n\t$coatjava"
-elif ! [[ "$coatjava" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+elif ! [[ "$coatjava" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)t?$ ]] # must be semver, or semver+"t"
 then
     echo -e "\n\nWARNING:  COATJAVA doesn't look like a local installation nor version number:  $coatjava"
 fi
@@ -115,7 +117,6 @@ fi
 tmp_dir=$(mktemp -d tmp.install-clara.XXXXXX)
 [ $? -ne 0 ] && error "Cannot create temporary directory:  $tmp_dir"
 tmp_dir=$(cd $tmp_dir && pwd)
-echo -e "\nCreating temporary build directory:\n\t$tmp_dir"
 cd $tmp_dir
 
 # CLARA:
@@ -142,5 +143,4 @@ cp -Lr $coatjava/etc $coatjava/bin $coatjava/lib* clara-cre/plugins/clas12
 echo -e "\nRetrieving GRAPES version $grapes ..."
 get https://clasweb.jlab.org/clas12offline/distribution/grapes/grapes-$grapes.tar.gz
 mv grapes-$grapes clara-cre/plugins/grapes
-mv -f clara-cre/plugins/grapes/bin/clara-grapes clara-cre/bin/
 

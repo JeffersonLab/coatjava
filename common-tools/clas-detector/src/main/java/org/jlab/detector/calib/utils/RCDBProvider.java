@@ -3,6 +3,7 @@ package org.jlab.detector.calib.utils;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 
 import org.rcdb.RCDB;
 import org.rcdb.Condition;
@@ -13,7 +14,27 @@ import org.rcdb.ConditionType;
  * @author baltzell
  */
 public class RCDBProvider {
-    public static Logger LOGGER = Logger.getLogger(RCDBProvider.class.getName());
+
+    public static class RCDBManager {
+        HashMap<Integer,RCDBConstants> cache = new HashMap<>();
+        RCDBProvider provider = null;
+        public synchronized RCDBConstants getConstants(int run) {
+            if (provider == null) provider = new RCDBProvider();
+            if (!cache.containsKey(run)) cache.put(run, provider.getConstants(run));
+            return cache.get(run);
+        }
+        public Double getDouble(int run, String key) {
+            return getConstants(run).getDouble(key);
+        }
+        public Double getTorusScale(int run) {
+            return getDouble(run, "torus_scale");
+        }
+        public Double getSolenoidScale(int run) {
+            return getDouble(run, "solenoid_scale");
+        }
+    }
+
+    public static Logger LOGGER = SplitLogger.create(RCDBProvider.class.getName(), false);
 
     public static final String DEFAULTADDRESS = "mysql://rcdb@clasdb.jlab.org/rcdb";
 
@@ -64,7 +85,7 @@ public class RCDBProvider {
     private void initialize(String address){
         provider = RCDB.createProvider(address);
         try {
-            LOGGER.log(Level.INFO,"[RCDB] --->  open connection with : " + address);
+            LOGGER.log(Level.FINE,"[RCDB] --->  open connection with : " + address);
             provider.connect();
         }
         catch (Exception e) {
@@ -72,7 +93,7 @@ public class RCDBProvider {
         }
 
         if(provider.isConnected()==true){
-            LOGGER.log(Level.INFO,"[RCDB] --->  database connection  : success");
+            LOGGER.log(Level.FINE,"[RCDB] --->  database connection  : success");
         } else {
             LOGGER.log(Level.SEVERE,"[RCDB] --->  database connection  : failed");
         }
@@ -81,7 +102,7 @@ public class RCDBProvider {
 
     public void disconnect(){
         if (provider.isConnected()) {
-            LOGGER.log(Level.INFO,"[RCDB] --->  database disconnect  : success");
+            LOGGER.log(Level.FINE,"[RCDB] --->  database disconnect  : success");
             provider.close();
         }
     }
@@ -121,6 +142,8 @@ public class RCDBProvider {
     }
 
     public static void main(String[] args){
+        RCDBManager m = new RCDBManager();
+        System.out.println(m.getTorusScale(4013));
         RCDBProvider a=new RCDBProvider();
         RCDBConstants data=a.getConstants(4014);
         data.show();

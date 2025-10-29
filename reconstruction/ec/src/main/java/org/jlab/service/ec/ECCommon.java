@@ -345,10 +345,12 @@ public class ECCommon {
                 int  ip = bank.getShort("component",i);    
                 int tdc = bank.getInt("TDC",i);
                 
-                if(status.getIntValue("status",is,il,ip)==2) continue; //for MC use only
+                int istatus = status.getIntValue("status",is,il,ip);
+                
+                if(istatus==2 || istatus==3) continue; 
                 
                 if(tdc>0) {                       
-                    if(!tdcs.hasItem(is,il,ip)) tdcs.add(new ArrayList<Integer>(),is,il,ip);
+                    if(!tdcs.hasItem(is,il,ip)) tdcs.add(new ArrayList<>(),is,il,ip);
                         tdcs.getItem(is,il,ip).add(tdc);       
                 }
             }
@@ -366,11 +368,13 @@ public class ECCommon {
                 float t = bank.getFloat("time", i) + (float) tmf.getDoubleValue("offset",is,il,ip) // TDC-FADC offset (sector, layer, PMT)
                                                    + (float)  fo.getDoubleValue("offset",is,il,0); // TDC-FADC offset (sector, layer) 
                 
-                if (status.getIntValue("status",is,il,ip)==3) continue; //for MC use only
+                int istatus = status.getIntValue("status",is,il,ip);
+
+                if(istatus==1 || istatus==3) continue; 
                 
                 ECStrip  strip = new ECStrip(is, il, ip); 
                 
-                strip.setStatus(status.getIntValue("status",is,il,ip));                
+                strip.setStatus(istatus);                
                 strip.setADC(adc);
                 strip.setTriggerPhase(triggerPhase);
                 strip.setID(bank.trueIndex(i)+1);

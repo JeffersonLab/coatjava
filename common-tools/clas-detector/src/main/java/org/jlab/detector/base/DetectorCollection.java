@@ -82,7 +82,7 @@ public class DetectorCollection<T> {
         Set<Integer>  sectors = new HashSet<Integer>();
                 
         for(Long item : list){
-            int sect = IndexedList.IndexGenerator.getIndex(item, 0);
+            int sect = this.collection.getIndexGenerator().getIndex(item, 0);
             sectors.add(sect);
         }
         return sectors;
@@ -97,9 +97,9 @@ public class DetectorCollection<T> {
         Set<Long>  list = this.collection.getMap().keySet();
         Set<Integer>  layers = new HashSet<Integer>();
         for(Long item : list){
-            int sect = IndexedList.IndexGenerator.getIndex(item, 0);
+            int sect = this.collection.getIndexGenerator().getIndex(item, 0);
             if(sect==sector){
-                int lay = IndexedList.IndexGenerator.getIndex(item, 1);
+                int lay = this.collection.getIndexGenerator().getIndex(item, 1);
                 layers.add(lay);
             }
         }
@@ -115,10 +115,10 @@ public class DetectorCollection<T> {
         Set<Long>  list = this.collection.getMap().keySet();
         Set<Integer>  components = new HashSet<Integer>();
         for(Long item : list){
-            int sect = IndexedList.IndexGenerator.getIndex(item, 0);
-            int lay = IndexedList.IndexGenerator.getIndex(item, 1);
+            int sect = this.collection.getIndexGenerator().getIndex(item, 0);
+            int lay = this.collection.getIndexGenerator().getIndex(item, 1);
             if(sect==sector&&lay==layer){
-                int comp = IndexedList.IndexGenerator.getIndex(item, 2);
+                int comp = this.collection.getIndexGenerator().getIndex(item, 2);
                 components.add(comp);
             }
         }

@@ -106,7 +106,7 @@ public class EngineProcessor {
         String[] names = new String[]{
             "MAGFIELDS",
             "DCCR","DCHB","FTOFHB","EC","HTCC","EBHB",
-            "DCTB","FTOFTB","EBTB"
+            "DCTB","FTOFTB","EBTB","VTX"
         };
 
         String[] services = new String[]{
@@ -119,7 +119,8 @@ public class EngineProcessor {
             "org.jlab.service.eb.EBHBEngine",
             "org.jlab.service.dc.DCTBEngine",
             "org.jlab.service.ftof.FTOFTBEngine",
-            "org.jlab.service.eb.EBTBEngine"
+            "org.jlab.service.eb.EBTBEngine",
+            "org.jlab.rec.service.vtx.VTXEngine"
         };
 
         for(int i = 0; i < names.length; i++){
@@ -135,7 +136,7 @@ public class EngineProcessor {
             "CVTFP","CTOF","CND","BAND",
             "HTCC","LTCC","EBHB",
             "DCTB","FMT","FTOFTB","CVT","EBTB",
-            "RICHEB","RTPC","MC"
+            "RICHEB","RTPC","AHDC","ATOF","ALERT", "MC","VTX"
         };
 
         String[] services = new String[]{
@@ -164,9 +165,14 @@ public class EngineProcessor {
             "org.jlab.service.eb.EBTBEngine",
             "org.jlab.rec.rich.RICHEBEngine",
             "org.jlab.service.rtpc.RTPCEngine",
-            "org.jlab.service.mc.TruthMatch"
+            "org.jlab.service.ahdc.AHDCEngine",
+            "org.jlab.service.atof.ATOFEngine",
+            "org.jlab.service.alert.ALERTEngine",
+            "org.jlab.service.mc.TruthMatch",
+            "org.jlab.rec.service.vtx.VTXEngine"
         };
-
+        if(names.length!=services.length)
+            LOGGER.log(Level.SEVERE, "initAll : the list of services does not match the list of service names...  ");
         for(int i = 0; i < names.length; i++){
             this.addEngine(names[i], services[i]);
         }
@@ -352,7 +358,6 @@ public class EngineProcessor {
         parser.addOption("-n","-1","number of events to process");
         parser.addOption("-y","0","yaml file");
         parser.addOption("-u","true","update dictionary from writer ? ");
-        parser.addOption("-d","1","Debug level [0 - OFF, 1 - ON/default]");
         parser.addOption("-S",null,"schema directory");
         parser.addOption("-B",null,"background file");
         parser.addOption("-P",null,"preload file for post-processing");
@@ -360,9 +365,6 @@ public class EngineProcessor {
         parser.addOption("-H","0","restream helicity");
 
         parser.parse(args);
-
-        if(parser.getOption("-d").intValue() == 0) DefaultLogger.initialize();
-        else DefaultLogger.debug();
 
         List<String> services = parser.getInputList();
 

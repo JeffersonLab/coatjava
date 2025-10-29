@@ -1,10 +1,8 @@
 package org.jlab.io.evio;
 
-
 import org.jlab.io.base.BasicDataBank;
 import org.jlab.io.base.DataDescriptor;
 import org.jlab.io.base.DataEntryType;
-
 
 public class EvioDataBank extends BasicDataBank {
     

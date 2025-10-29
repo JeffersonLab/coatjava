@@ -1,0 +1,20 @@
+io-services:
+  reader:
+    class: org.jlab.io.clara.DecoderReader
+    name: DecoderReader
+  writer:
+    class: org.jlab.io.clara.DecoderWriter
+    name: DecoderWriter
+services:
+  # FIXME: replace with dummy/useful service
+  - class: org.jlab.service.eb.EBTBEngine
+    name: EBTB
+configuration:
+  io-services:
+    reader:
+      variation: default
+      timestamp: 05/11/2025-00:00:00
+    writer:
+      schema_dir: full
+mime-types:
+  - binary/data-hipo

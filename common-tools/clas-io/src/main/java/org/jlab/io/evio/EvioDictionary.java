@@ -45,10 +45,7 @@ public final class EvioDictionary implements DataDictionary {
 		try {
 			File dict_dir = new File(dict_path);
 			this.setDictionary(dict_dir);
-			/*
-			 * } catch (NoSuchAlgorithmException | ParserConfigurationException | SAXException | IOException | TransformerException e) { // TODO Auto-generated catch
-			 * block e.printStackTrace(); }
-			 */ } catch (ParserConfigurationException ex) {
+		} catch (ParserConfigurationException ex) {
 			Logger.getLogger(EvioDictionary.class.getName()).log(Level.SEVERE, null, ex);
 		} catch (SAXException ex) {
 			Logger.getLogger(EvioDictionary.class.getName()).log(Level.SEVERE, null, ex);
@@ -68,10 +65,7 @@ public final class EvioDictionary implements DataDictionary {
 	public EvioDictionary(File dict_dir) {
 		try {
 			this.setDictionary(dict_dir);
-			/*
-			 * } catch (NoSuchAlgorithmException | ParserConfigurationException | SAXException | IOException | TransformerException e) { // TODO Auto-generated catch
-			 * block e.printStackTrace(); }
-			 */ } catch (ParserConfigurationException ex) {
+	    } catch (ParserConfigurationException ex) {
 			Logger.getLogger(EvioDictionary.class.getName()).log(Level.SEVERE, null, ex);
 		} catch (SAXException ex) {
 			Logger.getLogger(EvioDictionary.class.getName()).log(Level.SEVERE, null, ex);
@@ -84,30 +78,31 @@ public final class EvioDictionary implements DataDictionary {
 		}
 	}
 
+    @Override
 	public void init(String xml_dict) {
 		/*
 		 * try { this.setDictionary(xml_dict); } catch (NoSuchAlgorithmException e) { e.printStackTrace(); } catch (ParserConfigurationException e) {
 		 * e.printStackTrace(); } catch (SAXException e) { e.printStackTrace(); } catch (IOException e) { e.printStackTrace(); }
-		 * 
 		 */
 	}
 
+    @Override
 	public String getXML() {
 		return dict;
 	}
 
+    @Override
 	public String[] getDescriptorList() {
 		String[] names = new String[descriptors.keySet().size()];
-		// ArrayList<String> array = new ArrayList();
 		int icounter = 0;
 		for (String key : descriptors.keySet()) {
 			names[icounter] = key;
 			icounter++;
 		}
 		return names;
-		// return (String[]) descriptors.keySet().toArray();
 	}
 
+    @Override
 	public DataDescriptor getDescriptor(String bank_name) {
 		return this.descriptors.get(bank_name);
 	}
@@ -133,22 +128,12 @@ public final class EvioDictionary implements DataDictionary {
 		return doc;
 	}
 
-	private void rebuildHashMaps_2p0() throws ParserConfigurationException, SAXException, IOException {
-		Document doc = this.getDocument();
-		if (doc == null) {
-			return;
-		}
-		this.descriptors = new HashMap<String, EvioDescriptor>();
-		NodeList evio_dict_nodelist = doc.getElementsByTagName("evio_dictionary");
-
-	}
-
 	private void rebuildHashMaps() throws ParserConfigurationException, SAXException, IOException {
 		Document doc = this.getDocument();
 		if (doc == null) {
 			return;
 		}
-		this.descriptors = new HashMap<String, EvioDescriptor>();
+		this.descriptors = new HashMap<>();
 		NodeList evio_dict_nodelist = doc.getElementsByTagName("evio_dictionary");
 		for (int i = 0; i < evio_dict_nodelist.getLength(); i++) {
 			Element evio_dict = (Element) evio_dict_nodelist.item(i);
@@ -160,28 +145,25 @@ public final class EvioDictionary implements DataDictionary {
 				if (name != null) {
 					int tag = Integer.parseInt(bank_elem.getAttribute("tag"));
 
-					ArrayList<String> col_names = new ArrayList<String>();
-					HashMap<String, Integer> nums = new HashMap<String, Integer>();
-					HashMap<String, Integer> types = new HashMap<String, Integer>();
+					ArrayList<String> col_names = new ArrayList<>();
+					HashMap<String, Integer> nums = new HashMap<>();
+					HashMap<String, Integer> types = new HashMap<>();
 
 					NodeList col_node_list = bank_elem.getElementsByTagName("column");
 
 					for (int k = 0; k < col_node_list.getLength(); k++) {
 						Element col_elem = (Element) col_node_list.item(k);
 						String col_name = col_elem.getAttribute("name");
-						Integer num = Integer.parseInt(col_elem.getAttribute("num"));
+						Integer num = Integer.valueOf(col_elem.getAttribute("num"));
 						String type_str = col_elem.getAttribute("type");
 
 						Integer type;
-						if (type_str.equals("int32")) {
-							type = 1;
-						} else if (type_str.equals("float32")) {
-							type = 2;
-						} else if (type_str.equals("float64")) {
-							type = 3;
-						} else {
-							type = 0;
-						}
+                        type = switch (type_str) {
+                            case "int32" -> 1;
+                            case "float32" -> 2;
+                            case "float64" -> 3;
+                            default -> 0;
+                        };
 
 						col_names.add(col_name);
 						nums.put(col_name, num);
@@ -200,7 +182,7 @@ public final class EvioDictionary implements DataDictionary {
 	}
 
 	public void setDictionary(File dict_dir) throws ParserConfigurationException, SAXException, IOException, NoSuchAlgorithmException, TransformerException {
-		ArrayList<String> ignorePrefixes = new ArrayList<String>();
+		ArrayList<String> ignorePrefixes = new ArrayList<>();
 		ignorePrefixes.add(".");
 		ignorePrefixes.add("_");
 
@@ -222,7 +204,7 @@ public final class EvioDictionary implements DataDictionary {
 				// }
 			}
 		} else {
-			xmlFileList = new ArrayList<String>();
+			xmlFileList = new ArrayList<>();
 			xmlFileList.add(dict_dir.getAbsolutePath());
 		}
 
@@ -309,6 +291,7 @@ public final class EvioDictionary implements DataDictionary {
 		System.out.println("DC.x_avg (" + tag + ", " + num + ", " + typ + ")");
 	}
 
+    @Override
 	public DataBank createBank(String name, int rows) {
 		throw new UnsupportedOperationException("Not supported yet."); // To change body of generated methods, choose Tools | Templates.
 	}

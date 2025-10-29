@@ -1,5 +1,6 @@
 package org.jlab.detector.calib.utils;
 
+import java.lang.Thread;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -12,6 +13,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jlab.utils.groups.IndexedTable;
+import org.jlab.logging.SplitLogger;
 
 /**
  *
@@ -19,7 +21,9 @@ import org.jlab.utils.groups.IndexedTable;
  */
 public class ConstantsManager {
 
-    private static Logger LOGGER = Logger.getLogger(ConstantsManager.class.getName());
+    public static final int DBERROR_SLEEP_SECONDS=3;
+
+    private static Logger LOGGER = SplitLogger.create(ConstantsManager.class.getName(), false);
 
     private DatabaseConstantsDescriptor defaultDescriptor = new DatabaseConstantsDescriptor();
     private volatile Map<Integer, DatabaseConstantsDescriptor> runConstants = new LinkedHashMap<Integer, DatabaseConstantsDescriptor>();
@@ -116,9 +120,14 @@ public class ConstantsManager {
                 LOGGER.log(Level.SEVERE,
                         "[ConstantsManager] exceeded maximum requests " + requests + " for run " + run);
             }
+            else if (requests > 1) {
+                LOGGER.log(Level.SEVERE,"[ConstantsManager] sleeping a bit before trying again ...");
+                try { Thread.sleep(DBERROR_SLEEP_SECONDS*1000); }
+                catch (InterruptedException e) {}
+            }
         }
 
-        LOGGER.log(Level.INFO, "[ConstantsManager] --->  loading table for run = " + run);
+        LOGGER.log(Level.FINE, "[ConstantsManager] --->  loading table for run = " + run);
         DatabaseConstantsDescriptor desc = defaultDescriptor.getCopy(run);
         DatabaseConstantProvider provider = new DatabaseConstantProvider(run, this.databaseVariation, this.timeStamp);
 
@@ -130,7 +139,7 @@ public class ConstantsManager {
             try {
                 IndexedTable  table = provider.readTable(tableName, desc.getTableIndices().get(i));
                 desc.getMap().put(tk.get(i), table);
-                LOGGER.log(Level.INFO, String.format("***** >>> adding : %14s / table = %s", tk.get(i), tableName));
+                LOGGER.log(Level.FINE, String.format("***** >>> adding : %14s / table = %s", tk.get(i), tableName));
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, e.getMessage());
                 LOGGER.log(Level.SEVERE, "[ConstantsManager] ---> error reading table : " + tableName);
@@ -173,7 +182,7 @@ public class ConstantsManager {
      */
     public static class DatabaseConstantsDescriptor {
         
-        Logger LOGGER = Logger.getLogger(DatabaseConstantsDescriptor.class.getName());
+        Logger LOGGER = SplitLogger.create(DatabaseConstantsDescriptor.class.getName(), false);
 
         private String  descName   = "descriptor";
         private int     runNumber  = 10;

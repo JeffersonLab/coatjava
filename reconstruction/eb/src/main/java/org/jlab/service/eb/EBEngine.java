@@ -39,6 +39,7 @@ public class EBEngine extends ReconstructionEngine {
     String cherenkovBank    = null;
     String trackBank        = null;
     String utrackBank       = null;
+    String ftrackBank       = null;
     String crossBank        = null;
     String ftBank           = null;
     String trajectoryBank   = null;
@@ -46,6 +47,7 @@ public class EBEngine extends ReconstructionEngine {
     
     // inputs banks:
     String trackType        = null;
+    String ftrackType       = null;
     String ftofHitsType     = null;
     String trajectoryType   = null;
     String covMatrixType    = null;
@@ -80,6 +82,7 @@ public class EBEngine extends ReconstructionEngine {
         this.setScintExtrasBank(prefix+"::ScintExtras");
         this.setTrackBank(prefix+"::Track");
         this.setUTrackBank(prefix+"::UTrack");
+        this.setFTrackBank(prefix+"::FTrack");
         this.setCrossBank(prefix+"::TrackCross");
         this.setTrajectoryBank(prefix+"::Traj");
         this.setFTBank(prefix+"::ForwardTagger");
@@ -133,6 +136,8 @@ public class EBEngine extends ReconstructionEngine {
         List<DetectorTrack>  tracks = DetectorData.readDetectorTracks(de, trackType, trajectoryType, covMatrixType);
         eb.addTracks(tracks);      
         
+        List<DetectorTrack> ftracks = DetectorData.readFDetectorTracks(de, ftrackType);
+
         List<DetectorTrack> ctracks = DetectorData.readCentralDetectorTracks(de, cvtTrackType, cvtTrajType);
         eb.addTracks(ctracks);
         
@@ -221,6 +226,11 @@ public class EBEngine extends ReconstructionEngine {
                     DataBank x = DetectorData.getUTracksBank(cutracks, ctracks, de, utrackBank);
                     de.appendBanks(x);
                 }
+
+                if (!ftracks.isEmpty()) {
+                    DataBank x = DetectorData.getFTracksBank(ftracks, tracks, de, ftrackBank);
+                    de.appendBanks(x);
+                }
             }
       
             // update PID for FT-based start time:
@@ -284,6 +294,10 @@ public class EBEngine extends ReconstructionEngine {
         this.utrackBank = name;
     }
     
+    public void setFTrackBank(String name) {
+        this.ftrackBank = name;
+    }
+    
     public void setFTBank(String name) {
         this.ftBank = name;
     }
@@ -302,6 +316,10 @@ public class EBEngine extends ReconstructionEngine {
     
     public void setTrackType(String name) {
         this.trackType = name;
+    }
+
+    public void setFTrackType(String name) {
+        this.ftrackType = name;
     }
     
     public void setFTOFHitsType(String name) {
@@ -338,6 +356,7 @@ public class EBEngine extends ReconstructionEngine {
         this.registerOutputBank(cherenkovBank);
         this.registerOutputBank(trackBank);
         this.registerOutputBank(utrackBank);
+        this.registerOutputBank(ftrackBank);
         this.registerOutputBank(crossBank);
         this.registerOutputBank(ftBank);
         this.registerOutputBank(trajectoryBank);
