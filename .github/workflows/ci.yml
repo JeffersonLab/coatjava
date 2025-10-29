@@ -199,7 +199,7 @@ jobs:
       - name: run test
         run: |
           ls -lhtr
-          ./bin/run-clara -y ./etc/services/rgd-clarode.yml -t 4 -n 500 -c ./clara -o ./tmp ./clas_018779.evio.00001
+          ./bin/run-clara -y ./etc/services/rgd-clarode.yml -t 4 -n 500 -c ./clara -o ./tmp ./clas_018779.evio.00001 
           ls -lhtr
 
   test_coatjava:

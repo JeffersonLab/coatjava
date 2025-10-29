@@ -1,0 +1,102 @@
+#!/usr/bin/env python3
+
+def cli():
+    import os,argparse
+    cli = argparse.ArgumentParser(description='CLARA scaling test')
+    cli.add_argument('-y',help='YAML file',required=True)
+    cli.add_argument('-c',help='CLARA_HOME path',default=os.getenv('CLARA_HOME',None))
+    cli.add_argument('-t',help='threads',default=[2,4],type=int,action='append')
+    cli.add_argument('-e',help='events per thread',default=100,type=int)
+    cli.add_argument('input',help='input data file')
+    cfg = cli.parse_args()
+    import sys
+    if cfg.c is None: sys.exit('-c or $CLARA_HOME is required')
+    return cfg
+
+def run(cmd):
+    import subprocess
+    print('scaling >>> '+' '.join(cmd))
+    p = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,universal_newlines=True,encoding='latin-1')
+    for line in iter(p.stdout.readline, ''):
+        line = line.strip()
+        if len(line) > 0:
+            yield line
+    p.wait()
+    if p.returncode != 0:
+        pass
+
+def benchmark(cfg, threads):
+    import collections
+    exiting,benchmarks = False,collections.OrderedDict()
+    cmd = ['run-clara',
+            '-c',cfg.c,
+            '-n',str(cfg.e*threads),
+            '-t',str(threads),
+            '-y',cfg.y,
+            '-o',f'tmp-scaling-{threads}',
+            cfg.input]
+    for line in run(cmd):
+        cols = line.split()
+        print(line)
+        try:
+            if line.find('Benchmark results:') >= 0:
+                exiting = True
+            elif line.find('Processing is complete') >= 0:
+                exiting = False
+            elif len(cols) > 20:
+                if line.find('Processed') >= 0:
+                    benchmarks['event'] = float(cols[12])
+            elif exiting:
+                # catch-all for services:
+                if len(cols) > 14:
+                    if 'services' not in benchmarks:
+                        benchmarks['services'] = collections.OrderedDict()
+                    benchmarks['services'][cols[2]] = float(cols[14])
+                # FIXME:  what are these, why don't they add up?
+                elif line.find('Average processing time') >= 0:
+                    benchmarks['avg'] = float(cols[6])
+                elif line.find('Total processing time') >= 0:
+                    benchmarks['total'] = float(cols[6])
+                elif line.find('Total orchestrator time') >= 0:
+                    benchmarks['orch'] = float(cols[6])
+        except ValueError:
+            pass
+    return benchmarks
+
+def table(benchmarks):
+    table = []
+    header = [ 'threads' ]
+    b = benchmarks[0][1]
+    header.extend([x for x in b if x != 'services'])
+    if 'services' in b:
+        header.extend(b['services'].keys())
+    table.append(header)
+    for b in benchmarks:
+        threads,benchmark = b[0],b[1]
+        row = [threads]
+        for k in ['event','avg','total','orch','services']:
+            if k in benchmark:
+                if k == 'services':
+                    row.extend(benchmark[k].values())
+                else:
+                    row.append(benchmark[k])
+        table.append(row)
+    return table
+
+def show(benchmarks):
+    for row in table(benchmarks):
+        print(' '.join([str(x) for x in row])) 
+
+def save(benchmarks):
+    with open('scaling.txt','w') as f:
+        for row in table(benchmarks):
+            f.write(' '.join([str(x) for x in row])) 
+
+if __name__ == '__main__':
+    cfg = cli()
+    benchmarks = []
+    for threads in cfg.t:
+        benchmarks.append([threads, benchmark(cfg, threads)])
+    show(benchmarks)
+    save(benchmarks)
+
