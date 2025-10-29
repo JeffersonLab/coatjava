@@ -20,6 +20,9 @@ public class Pulse {
     public float trailingEdgeTime;
     public float timeOverThreshold;
     public float constantFractionTime;
+    
+    //A flag for classifying waveforms
+    public short wftype;
 
     /**
      * Units are the same as the raw units of the samples.

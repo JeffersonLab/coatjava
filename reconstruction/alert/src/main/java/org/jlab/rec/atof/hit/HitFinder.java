@@ -8,13 +8,13 @@ import org.jlab.io.base.DataEvent;
 
 /**
  * The {@code HitFinder} class finds hits in the atof.
- * 
+ *
  * <p>
- * Uses atof tdc bank information 
- * 
- * Creates a {@link ArrayList} of {@link BarHit} for bar hits read.
- * Creates a {@link ArrayList} of {@link ATOFHit} for wedge hits read.
- * 
+ * Uses atof tdc bank information
+ *
+ * Creates a {@link ArrayList} of {@link BarHit} for bar hits read. Creates a
+ * {@link ArrayList} of {@link ATOFHit} for wedge hits read.
+ *
  * </p>
  *
  * @author pilleux
@@ -31,8 +31,7 @@ public class HitFinder {
     private ArrayList<ATOFHit> wedgeHits;
 
     /**
-     * Default constructor that initializes the list of hits as new empty
-     * lists.
+     * Default constructor that initializes the list of hits as new empty lists.
      */
     public HitFinder() {
         this.barHits = new ArrayList<>();
@@ -57,23 +56,28 @@ public class HitFinder {
     }
 
     /**
-     * Find hits in the event, matches them to tracks found in the ahdc 
-     * and build their properties.
+     * Find hits in the event, matches them to tracks found in the ahdc and
+     * build their properties.
      *
      * @param event the {@link DataEvent} containing hits.
      * @param atof the {@link Detector} representing the atof geometry to match
      * the sector/layer/component to x/y/z.
      */
-    public void findHits(DataEvent event, Detector atof) {
+    public void findHits(DataEvent event, Detector atof, float startTime) {
         //For each event a list of bar hits and a list of wedge hits are filled
         this.barHits.clear();
         this.wedgeHits.clear();
         //They are read from the ATOF TDC bank
         DataBank bank = event.getBank("ATOF::tdc");
+        //Check that the event start time is defined are done in the engine
+        //if (event.hasBank("REC::Event") && 
+        //        event.getBank("REC::Event").getFloat("startTime", 0)!=-1000)
+        
         int nt = bank.rows(); // number of hits
         //Hits in the bar downstream and upstream will be matched
         ArrayList<ATOFHit> hit_up = new ArrayList<>();
         ArrayList<ATOFHit> hit_down = new ArrayList<>();
+        
         //Looping through all hits
         for (int i = 0; i < nt; i++) {
             //Getting their properties
@@ -83,11 +87,13 @@ public class HitFinder {
             int order = bank.getInt("order", i);
             int tdc = bank.getInt("TDC", i);
             int tot = bank.getInt("ToT", i);
+
             //Building a Hit
-            ATOFHit hit = new ATOFHit(sector, layer, component, order, tdc, tot, atof);
+            ATOFHit hit = new ATOFHit(sector, layer, component, order, tdc, tot, startTime, atof);
             if (hit.getEnergy() < 0.01) {
                 continue; //energy threshold
             }
+
             //Sorting the hits into wedge, upstream and downstream bar hits
             //Lists are built for up/down bar to match them after
             //Wedge hits are mayched to ahdc tracks and listed 
@@ -111,14 +117,21 @@ public class HitFinder {
         //Starting loop through up hits in the bar
         for (int i_up = 0; i_up < hit_up.size(); i_up++) {
             ATOFHit this_hit_up = hit_up.get(i_up);
+            int countMatches = 0;
             //Starting loop through down hits in the bar
             for (int i_down = 0; i_down < hit_down.size(); i_down++) {
                 ATOFHit this_hit_down = hit_down.get(i_down);
                 //Matching the hits: if same module and different order, they make up a bar hit
                 if (this_hit_up.matchBar(this_hit_down)) {
                     //Bar hits are matched to ahdc tracks and listed
-                    BarHit this_bar_hit = new BarHit(this_hit_up, this_hit_down);
+                    if (countMatches > 0) {
+                        //If the up hit was already involved in a match, do not make an additionnal match
+                        //Chosing to ignore double matches for now because it happened for <1% of events in cosmic runs
+                        continue;
+                    }
+                    BarHit this_bar_hit = new BarHit(this_hit_down, this_hit_up);
                     this.barHits.add(this_bar_hit);
+                    countMatches++;
                 }
             }
         }

@@ -2,7 +2,6 @@ package org.jlab.detector.geant4.v2.recoil;
 
 
 import org.jlab.detector.calib.utils.DatabaseConstantProvider; 
-import org.jlab.geom.prim.Point3D;
 
 
 public class RecoilConstants {
@@ -23,7 +22,7 @@ public class RecoilConstants {
     public final static double HEIGHT[] = new double[NMAXREGIONS];
 
     public final static double THTILT = 0;            // theta tilt (deg)
-  
+   
     // Chamber volumes  and materials (units are cm)
     public final static double[] CHAMBERVOLUMESTHICKNESS = {0.0025, 0.0005,0.3,                                // window
                                                             0.0025, 0.0005,0.4,                                // cathode
@@ -39,7 +38,7 @@ public class RecoilConstants {
            "capa_sharing_layer2_glue","capa_sharing_layer2_Cr","capa_sharing_layer2_kapton",
            "readout1_glue", "readout1_Cu", "readout1_kapton", "readout2_glue", "readout2_Cu", "readout2_kapton", "readout3_glue",
            "support_skin1_g10", "support_honeycomb_nomex", "support_skin2_g10"};
-    
+
     public final static double PITCH = 0.1 ;       // cm
     public final static double STEREOANGLE = 90;   // deg
        

@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.io.ring;
 
 import java.util.logging.Level;
@@ -34,6 +29,7 @@ public class DataRingProducer extends xMsg {
     public DataRingProducer(){
         super("DataRingProducer");
     }
+
     /**
      * sets the sleep timer after each event has been published.
      * @param delay 
@@ -45,28 +41,22 @@ public class DataRingProducer extends xMsg {
     public void updateList(){
         
     }
+
     /**
      * Start publisher service. establishes connection
      */
     public void start(){
         
         try {
-            
             connection = getConnection();
-            
             final String domain   = "clas12domain";
             final String subject  = "clas12data";
             final String typeHipo = "data-hipo";
             final String typeEvio = "data-evio";
-            
             final String description = "clas12 data distribution ring";
-            
             topicHipo = xMsgTopic.build(domain, subject, typeHipo);
             topicEvio = xMsgTopic.build(domain, subject, typeEvio);
-            
             register(xMsgRegInfo.publisher(topicHipo, description));
-            //register(xMsgRegInfo.publisher(topicEvio, description));
-            
             
         } catch (xMsgException ex) {
             Logger.getLogger(DataRingProducer.class.getName()).log(Level.SEVERE, null, ex);
@@ -89,23 +79,17 @@ public class DataRingProducer extends xMsg {
             System.out.println("    >>>>>>  published message : size = " + b.length);
             System.out.println("    >>>>>>  delay " + publishDelay + "  ms");
         }
-        //this.publishCounter++;
     }
     
-    
     public void shutdown(){
-
         this.unsubscribeAll();
         this.connection.close();
         this.destroy();
     }
     
     public void addEvent(HipoDataEvent event){
-        
         byte[] b = event.getEventBuffer().array();
-        
         xMsgMessage  msg = new xMsgMessage(topicHipo,"data/hipo",b);
-        
         try {
             this.publish(connection, msg);
         } catch (xMsgException ex) {
@@ -118,7 +102,6 @@ public class DataRingProducer extends xMsg {
         }
         this.publishCounter++;
     }
-    
     
     public static void main(String[] args){
         int delay   = Integer.parseInt(args[0]);

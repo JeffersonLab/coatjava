@@ -12,6 +12,7 @@ import java.util.Set;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import org.jlab.utils.groups.IndexedList.IndexGenerator;
 
 /**
  *
@@ -19,6 +20,8 @@ import javax.swing.table.DefaultTableModel;
  */
 public class IndexedTable extends DefaultTableModel {
     
+    public static final IndexGenerator DEFAULT_GENERATOR = new IndexGenerator();
+        
     private IndexedList<IndexedEntry> entries    = null;
     private Map<String,Integer>       entryMap   = new LinkedHashMap<>();
     private Map<String,String>        entryTypes = new LinkedHashMap<>();
@@ -29,7 +32,7 @@ public class IndexedTable extends DefaultTableModel {
     private Map<Integer,List<RowConstraint>>  constrains = new HashMap<>(); 
     
     private int DEBUG_MODE = 0;
-    
+   
     public IndexedTable(int indexCount){
         entries = new IndexedList<>(indexCount);
         for(int i = 0; i < indexCount; i++){
@@ -58,6 +61,14 @@ public class IndexedTable extends DefaultTableModel {
         }
     }
     
+    public void setByteShifts(int[] byteShifts){
+        this.entries.setIndexGenerator(new IndexGenerator(byteShifts));
+    }
+    
+    public int[] getByteShifts(){
+        return this.entries.getIndexGenerator().getByteShifts();
+    }
+    
     public void setPrecision(Integer precision){
         StringBuilder str = new StringBuilder();
         str.append("%.");
@@ -68,6 +79,10 @@ public class IndexedTable extends DefaultTableModel {
 
     public boolean hasEntry(int... index){
         return this.entries.hasItem(index);
+    }
+    
+    public boolean hasEntryByHash(long hash){
+        return this.entries.hasItemByHash(hash);
     }
     
     public final void setIndexName(int index, String name){
@@ -118,6 +133,38 @@ public class IndexedTable extends DefaultTableModel {
         }
     }
     
+    public int getIntValueByHash(int index, long hash) {
+        if (this.entries.hasItemByHash(hash))
+            return this.entries.getItemByHash(hash).getValue(index).intValue();
+        return 0;
+    }
+    
+    public double getDoubleValueByHash(int index, long hash) {
+        if (this.entries.hasItemByHash(hash))
+            return this.entries.getItemByHash(hash).getValue(index).doubleValue();
+        return 0;
+    }
+
+    public int getIntValueByHash(String item, long hash) {
+        if (this.entries.hasItemByHash(hash)) {
+            if (this.entryMap.containsKey(item)) {
+                int index = this.entryMap.get(item);
+                return this.entries.getItemByHash(hash).getValue(index).intValue();
+            }
+        }
+        return 0;
+    }
+    
+    public double getDoubleValueByHash(String item, long hash) {
+        if (this.entries.hasItemByHash(hash)) {
+            if (this.entryMap.containsKey(item)) {
+                int index = this.entryMap.get(item);
+                return this.entries.getItemByHash(hash).getValue(index).doubleValue();
+            }
+        }
+        return 0;
+    }
+
     public int  getIntValue(String item, int... index){
         if(this.entries.hasItem(index)==false){
             if(DEBUG_MODE>0) System.out.println( "[IndexedTable] ---> error.. entry does not exist");
@@ -242,8 +289,8 @@ public class IndexedTable extends DefaultTableModel {
      */
     @Override
     public String getColumnName(int col) {
-        if(col>2){
-            return this.entryNames.get(col-3);
+        if(col>this.indexNames.size()-1){
+            return this.entryNames.get(col-this.indexNames.size());
         }
         return this.indexNames.get(col);
     }
@@ -288,7 +335,8 @@ public class IndexedTable extends DefaultTableModel {
             value = (Long) iter.next();
         }
         if(column<entries.getIndexSize()){
-            Integer index = IndexedList.IndexGenerator.getIndex(value, column);
+            IndexedList indexList = new IndexedList(entries.getIndexSize());
+            Integer index = indexList.getIndexGenerator().getIndex(value, column);
             return index.toString();
         }
         
@@ -380,6 +428,29 @@ public class IndexedTable extends DefaultTableModel {
                 entryValues.add((Integer) 0);
             }
         }
+    }
+
+    /**
+     * @param it table with which to compare
+     * @return whether the tables have conflicting indices 
+     */
+    public boolean conflicts(IndexedTable it) {
+        if (it.getList().getIndexSize() != this.getList().getIndexSize()) {
+            System.err.println("[CCDB-TT] Conflict:  Not even the same #inidices.");
+            return false;
+        }
+        List<Object> conflicts = new ArrayList<>();
+        for (Object key : it.getList().getMap().keySet()) {
+            if (entries.hasItemByHash((long)key)){
+                conflicts.add(key);
+                int[] index = new int[it.getList().getIndexSize()];
+                String s = "[CCDB-TT] Index Conflict:  ";
+                for (int i=0; i<index.length; i++)
+                    s += (i>0?"/":"")+IndexedTable.DEFAULT_GENERATOR.getIndex((long)key, i);
+                System.err.println(s);
+            }
+        }
+        return !conflicts.isEmpty();
     }
 
 }

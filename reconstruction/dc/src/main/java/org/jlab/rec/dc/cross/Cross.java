@@ -389,14 +389,14 @@ public class Cross extends ArrayList<Segment> implements Comparable<Cross> {
 		
 		if(this.recalc==0) {
 			
-			LOGGER.log(Level.FINE, this.recalc+"] "+this.printInfo()+" alpha "+Math.toDegrees(alpha)+" X "+X+" Y "+Y+c2.printInfo()+" "+c3.printInfo());
+			LOGGER.log(Level.FINEST, this.recalc+"] "+this.printInfo()+" alpha "+Math.toDegrees(alpha)+" X "+X+" Y "+Y+c2.printInfo()+" "+c3.printInfo());
 			this.set_Point(new Point3D(X, Y, this.get_Point().z()));
 		}
 		XY[0] = X;
 		XY[1] = Y;
 		
 		return XY;
-		//LOGGER.log(Level.FINE, this.recalc+"] "+this.printInfo()+" alpha "+Math.toDegrees(alpha)+" X "+X+" Y "+Y+c2.printInfo()+" "+c3.printInfo());
+		//LOGGER.log(Level.FINEST, this.recalc+"] "+this.printInfo()+" alpha "+Math.toDegrees(alpha)+" X "+X+" Y "+Y+c2.printInfo()+" "+c3.printInfo());
 	}
      */
 
@@ -407,7 +407,7 @@ public class Cross extends ArrayList<Segment> implements Comparable<Cross> {
         double val_it1 = this._seg1.get_fittedCluster().get_clusterLineFitIntercept();
         double val_it2 = this._seg2.get_fittedCluster().get_clusterLineFitIntercept();
         
-        LOGGER.log(Level.FINE, this._seg1.printInfo()+this._seg2.printInfo()+" insterWire: seg1 "+new Point3D(val_sl1, val_it1,999).toString()+
+        LOGGER.log(Level.FINEST, this._seg1.printInfo()+this._seg2.printInfo()+" insterWire: seg1 "+new Point3D(val_sl1, val_it1,999).toString()+
                     " seg2 "+new Point3D(val_sl2, val_it2,999).toString()
                    );
         for(int i =0; i<this.get_Segment1().size(); i++) {
@@ -421,14 +421,14 @@ public class Cross extends ArrayList<Segment> implements Comparable<Cross> {
    
     private void calc_IntersectPlaneAtZ(double z, double wy_over_wx, double val_sl1, double val_sl2, double val_it1, double val_it2, FittedHit hit) {
        
-        LOGGER.log(Level.FINE, " .....insterWire: seg1 "+new Point3D(val_sl1, val_it1,z).toString()+
+        LOGGER.log(Level.FINEST, " .....insterWire: seg1 "+new Point3D(val_sl1, val_it1,z).toString()+
                     " seg2 "+new Point3D(val_sl2, val_it2,z).toString()
                    );
         double x = 0.5 * (val_it1 + val_it2) + 0.5 * z * (val_sl1 + val_sl2);
         double y = 0.5 * wy_over_wx * (val_it2 - val_it1) + 0.5 * wy_over_wx * z * (val_sl2 - val_sl1);
         
         if(hit.getCrossDirIntersWire()!=null && hit.getCrossDirIntersWire().x()!=x)
-                LOGGER.log(Level.FINE, "Already exists "+hit.getCrossDirIntersWire().toString()+" for "
+                LOGGER.log(Level.FINEST, "Already exists "+hit.getCrossDirIntersWire().toString()+" for "
                 +hit.printInfo() +"new "+new Point3D(x,y,z).toString());
         
         hit.setCrossDirIntersWire(new Point3D(x,y,z));

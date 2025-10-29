@@ -1,28 +1,16 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.io.ui;
 
 import java.awt.Component;
-import java.awt.FlowLayout;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.border.Border;
-import org.jlab.utils.FileUtils;
 
 /**
  *
@@ -36,23 +24,18 @@ public class ConnectionDialogHipo extends BasicDialog {
     public static final int   RING_TYPE_ET = 5;
     public static final int RING_TYPE_HIPO = 6;
     
-    private int  connectionType = ConnectionDialog.RING_TYPE_ET;
-    
     private JRadioButton _directConnect;
     private JRadioButton _connectToDAQ;
     
-    private static String[] hostNames = new String[]{"clondaq2","clondaq3","clondaq4","clondaq5","clondaq6"};
-    private static String[]    hostIP = new String[]{"129.57.167.109","129.57.167.226","129.57.167.227","129.57.167.41","129.57.167.60"};
+    private static String[] hostNames = new String[]{"clondaq2","clondaq3","clondaq4","clondaq5","clondaq6","clondaq7"};
+    private static String[]    hostIP = new String[]{"129.57.167.109","129.57.167.226","129.57.167.227","129.57.167.41","129.57.167.60","129.57.167.20"};
     
-    Map<String,String>  connectionHosts = new LinkedHashMap<String,String>();
+    Map<String,String>  connectionHosts = new LinkedHashMap<>();
     
     private static String[] closeoutButtons = {"Connect", "Cancel"};
     
     private JTextField _ipField;
     private JTextField _fileName;
-    private JComboBox  _comboHosts;
-    private JComboBox  _comboEtFiles;
-    private JComboBox  _files;
     
     private int _reason = DialogUtilities.CANCEL_RESPONSE;
     
@@ -61,12 +44,10 @@ public class ConnectionDialogHipo extends BasicDialog {
      */
     public ConnectionDialogHipo() {
         super("Connection.....", true, closeoutButtons);
-        int nhosts = hostNames.length;
         for(int i = 0; i < hostNames.length; i++){
             this.connectionHosts.put(hostNames[i],hostIP[i]);
         }
     }
-        
     
     @Override
     protected Component createCenterComponent() {
@@ -89,17 +70,7 @@ public class ConnectionDialogHipo extends BasicDialog {
         panel.add(Box.createVerticalStrut(6));
         panel.add(_connectToDAQ);
         
-        
- 
-                
-      
-        
-        Border emptyBorder = BorderFactory
-                .createEtchedBorder();//4, 4, 4, 4);
-        
-        //CommonBorder cborder = new CommonBorder("Connect to ET");
-        
-        //panel.setBorder(BorderFactory.createCompoundBorder(emptyBorder));
+        Border emptyBorder = BorderFactory.createEtchedBorder();
         panel.setBorder(BorderFactory.createTitledBorder(emptyBorder, "Connect to Host"));
         return panel;
     }
@@ -142,7 +113,6 @@ public class ConnectionDialogHipo extends BasicDialog {
         else if (_connectToDAQ.isSelected()) {
             return CONNECTDAQ;
         }
-        
         return -1;
     }
     

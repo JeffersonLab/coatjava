@@ -6,7 +6,7 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.rec.atof.cluster.ATOFCluster;
 import org.jlab.rec.atof.hit.ATOFHit;
 import org.jlab.rec.atof.hit.BarHit;
-import org.jlab.rec.atof.trackMatch.TrackProjection;
+import org.jlab.rec.alert.projections.TrackProjection;
 
 /**
  * The {@code RecoBankWriter} writes the banks needed for the atof
@@ -43,7 +43,7 @@ public class RecoBankWriter {
 
         for (int i = 0; i < hitList.size(); i++) {
             bank.setShort("id", i, (short) (i + 1));
-            bank.setInt("clusterid", i, (int) hitList.get(i).getAssociatedClusterIndex());
+            bank.setShort("clusterid", i, (short) hitList.get(i).getAssociatedClusterIndex());
             bank.setInt("sector", i, (int) hitList.get(i).getSector());
             bank.setInt("layer", i, (int) hitList.get(i).getLayer());
             bank.setInt("component", i, (int) hitList.get(i).getComponent());
@@ -78,13 +78,16 @@ public class RecoBankWriter {
 
         for (int i = 0; i < clusterList.size(); i++) {
             bank.setShort("id", i, (short) (i + 1));
-            bank.setInt("N_bar", i, (int) clusterList.get(i).getBarHits().size());
-            bank.setInt("N_wedge", i, (int) clusterList.get(i).getWedgeHits().size());
+            bank.setInt("n_bar", i, (int) clusterList.get(i).getBarHits().size());
+            bank.setInt("n_wedge", i, (int) clusterList.get(i).getWedgeHits().size());
             bank.setFloat("time", i, (float) clusterList.get(i).getTime());
             bank.setFloat("x", i, (float) (clusterList.get(i).getX()));
             bank.setFloat("y", i, (float) (clusterList.get(i).getY()));
             bank.setFloat("z", i, (float) (clusterList.get(i).getZ()));
             bank.setFloat("energy", i, (float) clusterList.get(i).getEnergy());
+            bank.setFloat("inpathlength",i, (float) (clusterList.get(i).getInPathLength()));
+            bank.setFloat("pathlength",i, (float) (clusterList.get(i).getPathLength()));
+            bank.setShort("projID", i, (short) (clusterList.get(i).getIProj()));
         }
         return bank;
     }
@@ -102,25 +105,26 @@ public class RecoBankWriter {
      */
     public static DataBank fillProjectionsBank(DataEvent event, ArrayList<TrackProjection> projections) {
 
-        DataBank bank = event.createBank("ALERT::Projections", projections.size());
+        DataBank bank = event.createBank("ALERT::projections", projections.size());
 
         if (bank == null) {
-            System.err.println("COULD NOT CREATE A ALERT::Projections BANK!!!!!!");
+            System.err.println("COULD NOT CREATE A ALERT::projections BANK!!!!!!");
             return null;
         }
-
         for (int i = 0; i < projections.size(); i++) {
             TrackProjection projection = projections.get(i);
+            bank.setShort("id", i, (short) (i + 1));
+            bank.setShort("trackid", i, (short) projection.getTrackID());
             bank.setFloat("x_at_bar", i, (float) projection.getBarIntersect().x());
             bank.setFloat("y_at_bar", i, (float) projection.getBarIntersect().y());
             bank.setFloat("z_at_bar", i, (float) projection.getBarIntersect().z());
-            bank.setFloat("L_at_bar", i, (float) projection.getBarPathLength());
-            bank.setFloat("L_in_bar", i, (float) projection.getBarInPathLength());
+            bank.setFloat("l_at_bar", i, (float) projection.getBarPathLength());
+            bank.setFloat("l_in_bar", i, (float) projection.getBarInPathLength());
             bank.setFloat("x_at_wedge", i, (float) projection.getWedgeIntersect().x());
             bank.setFloat("y_at_wedge", i, (float) projection.getWedgeIntersect().y());
             bank.setFloat("z_at_wedge", i, (float) projection.getWedgeIntersect().z());
-            bank.setFloat("L_at_wedge", i, (float) projection.getWedgePathLength());
-            bank.setFloat("L_in_wedge", i, (float) projection.getWedgeInPathLength());
+            bank.setFloat("l_at_wedge", i, (float) projection.getWedgePathLength());
+            bank.setFloat("l_in_wedge", i, (float) projection.getWedgeInPathLength());
         }
         return bank;
     }

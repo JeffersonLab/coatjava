@@ -4,6 +4,11 @@ import org.jlab.rec.ahdc.Hit.Hit;
 
 import java.util.ArrayList;
 
+/** PreCluster.
+ *
+ *  \todo What is a pre cluster?
+ *
+ */
 public class PreCluster implements Comparable<PreCluster> {
 
 	private int            _Id;

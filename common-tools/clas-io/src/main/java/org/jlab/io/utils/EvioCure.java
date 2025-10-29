@@ -15,7 +15,7 @@ import org.jlab.logging.DefaultLogger;
  */
 public class EvioCure {
 
-    private static Logger LOGGER = Logger.getLogger(EvioCure.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(EvioCure.class.getName());
 
     public static void main(String[] args) {
         DefaultLogger.debug();
@@ -27,11 +27,9 @@ public class EvioCure {
         EventWriter evioWriter = null;
         try {
             EvioReader reader = new EvioReader(inputFile, false, false);
-            LOGGER.log(Level.INFO, " READER OPENED " + reader.getEventCount());
-            String dictionary = "<xmlDict></xmlDict>\n";
-            LOGGER.log(Level.INFO, " ENDIANNESS : " + reader.getByteOrder());
+            LOGGER.log(Level.INFO, " READER OPENED {0}", reader.getEventCount());
+            LOGGER.log(Level.INFO, " ENDIANNESS : {0}", reader.getByteOrder());
             evioWriter = new EventWriter(outputFile, false, reader.getByteOrder());
-            boolean isActive = true;
             reader.rewind();
             for (int i = 1; i < reader.getEventCount(); i++) {
                 ByteBuffer buffer = reader.getEventBuffer(i);
@@ -39,7 +37,7 @@ public class EvioCure {
                 evioWriter.writeEvent(buffer);
                 icounter++;
             }
-            LOGGER.log(Level.INFO, " RECOVERED EVENT " + icounter);
+            LOGGER.log(Level.INFO, " RECOVERED EVENT {0}", icounter);
             evioWriter.close();
         } catch (EvioException ex) {
             LOGGER.log(Level.WARNING, " RECOVERED EVENT (EVIO exception) " + icounter, ex);

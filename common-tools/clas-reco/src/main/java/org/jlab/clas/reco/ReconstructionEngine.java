@@ -117,7 +117,7 @@ public abstract class ReconstructionEngine implements Engine {
      */
     public void requireConstants(Map<String,Integer> tables){
         if(constManagerMap.containsKey(this.getClass().getName())==false){
-            LOGGER.log(Level.INFO,"[ConstantsManager] ---> create a new one for module : " + this.getClass().getName());
+            LOGGER.log(Level.FINE, "[ConstantsManager] ---> create a new one for module : {0}", this.getClass().getName());
             ConstantsManager manager = new ConstantsManager();
             manager.init(tables);
             constManagerMap.put(this.getClass().getName(), manager);
@@ -126,7 +126,7 @@ public abstract class ReconstructionEngine implements Engine {
 
     public void requireConstants(List<String> tables){
         if(constManagerMap.containsKey(this.getClass().getName())==false){
-            LOGGER.log(Level.INFO,"[ConstantsManager] ---> create a new one for module : " + this.getClass().getName());
+            LOGGER.log(Level.FINE, "[ConstantsManager] ---> create a new one for module : {0}", this.getClass().getName());
             ConstantsManager manager = new ConstantsManager();
             manager.init(tables);
             constManagerMap.put(this.getClass().getName(), manager);
@@ -163,10 +163,10 @@ public abstract class ReconstructionEngine implements Engine {
         
         if (ed.getMimeType().equals(EngineDataType.JSON.toString())) {
             this.engineConfiguration = (String) ed.getData();
-            LOGGER.log(Level.INFO,"[CONFIGURE][" + this.getName() + "] ---> JSON Data : " + this.engineConfiguration);
+            LOGGER.log(Level.FINE,"[CONFIGURE][" + this.getName() + "] ---> JSON Data : " + this.engineConfiguration);
         } else {
             this.engineConfiguration = "";
-            LOGGER.log(Level.INFO,"[CONFIGURE][" + this.getName() + "] *** WARNING *** ---> NO JSON Data provided");
+            LOGGER.log(Level.FINE,"[CONFIGURE][" + this.getName() + "] *** WARNING *** ---> NO JSON Data provided");
         }
        
         // store yaml contents for easy access by engines:
@@ -185,7 +185,7 @@ public abstract class ReconstructionEngine implements Engine {
           constManagerMap = new ConcurrentHashMap<>();
       if(engineDictionary == null)
           engineDictionary = new SchemaFactory();
-      LOGGER.log(Level.INFO,"--- engine configuration is called " + this.getDescription());
+      LOGGER.log(Level.FINEST,"--- engine configuration is called " + this.getDescription());
       try {
           if (this.getEngineConfigString("rawBankGroup")!=null) {
               this.rawBankOrders = RawBank.getFilterGroup(this.getEngineConfigString("rawBankGroup"));
@@ -211,13 +211,13 @@ public abstract class ReconstructionEngine implements Engine {
             if(engineConfiguration.length()>2){
 //                String variation = this.getStringConfigParameter(engineConfiguration, "services", "variation");
                 String variation = this.getStringConfigParameter(engineConfiguration, "variation");
-                LOGGER.log(Level.INFO,"[CONFIGURE]["+ this.getName() +"] ---->  Setting variation : " + variation);
+                LOGGER.log(Level.FINE,"[CONFIGURE]["+ this.getName() +"] ---->  Setting variation : " + variation);
                 if(variation.length()>2) this.setVariation(variation);
                 String timestamp = this.getStringConfigParameter(engineConfiguration, "timestamp");
-                LOGGER.log(Level.INFO,"[CONFIGURE]["+ this.getName() +"] ---->  Setting timestamp : " + timestamp);
+                LOGGER.log(Level.FINE,"[CONFIGURE]["+ this.getName() +"] ---->  Setting timestamp : " + timestamp);
                 if(timestamp.length()>2) this.setTimeStamp(timestamp);
             } else {
-                LOGGER.log(Level.WARNING,"[CONFIGURE][" + this.getName() +"] *** WARNING *** ---> configuration string is too short ("
+                LOGGER.log(Level.FINE,"[CONFIGURE][" + this.getName() +"] *** WARNING *** ---> configuration string is too short ("
                  + this.engineConfiguration + ")");
             }
         } catch (Exception e){
@@ -236,7 +236,7 @@ public abstract class ReconstructionEngine implements Engine {
             if(base.has(key)==true){
                 variation = base.getString(key);
             } else {
-                LOGGER.log(Level.WARNING,"[JSON]" + this.getName() + " **** warning **** does not contain key = " + key);
+                LOGGER.log(Level.FINE,"[JSON]" + this.getName() + " **** warning **** does not contain key = " + key);
             }
             /*
             js = base.get(key);
@@ -279,7 +279,7 @@ public abstract class ReconstructionEngine implements Engine {
     
     public void setVariation(String variation){
        for(Map.Entry<String,ConstantsManager> entry : constManagerMap.entrySet()){
-           LOGGER.log(Level.INFO,"[MAP MANAGER][" + this.getName() + "] ---> Setting " + entry.getKey() + " : variation = "
+           LOGGER.log(Level.FINE,"[MAP MANAGER][" + this.getName() + "] ---> Setting " + entry.getKey() + " : variation = "
                    + variation );
            entry.getValue().setVariation(variation);
        }
@@ -287,7 +287,7 @@ public abstract class ReconstructionEngine implements Engine {
     
     public void setTimeStamp(String timestamp){
         for(Map.Entry<String,ConstantsManager> entry : constManagerMap.entrySet()){
-            LOGGER.log(Level.INFO,"[MAP MANAGER][" + this.getName() + "] ---> Setting " + entry.getKey() + " : timestamp = "
+            LOGGER.log(Level.FINE,"[MAP MANAGER][" + this.getName() + "] ---> Setting " + entry.getKey() + " : timestamp = "
                    + timestamp );
            entry.getValue().setTimeStamp(timestamp);
        }
@@ -305,7 +305,7 @@ public abstract class ReconstructionEngine implements Engine {
             mask = mask.substring(2);
         }
         triggerMask = Long.parseLong(mask,16);
-        LOGGER.log(Level.INFO, String.format("[CONFIGURE][%s] Trigger mask set to : 0x%016x", this.getName(), triggerMask));
+        LOGGER.log(Level.FINE, String.format("[CONFIGURE][%s] Trigger mask set to : 0x%016x", this.getName(), triggerMask));
     }
 
     public final boolean applyTriggerMask(DataEvent event) {
