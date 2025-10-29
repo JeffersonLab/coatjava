@@ -70,6 +70,7 @@ public class EBTBEngine extends EBEngine {
 
         this.setFTOFHitsType("FTOF::clusters");
         this.setTrackType("TimeBasedTrkg::TBTracks");
+        this.setFTrackType("FMT::Tracks");
         this.setTrajectoryType("TimeBasedTrkg::Trajectory");
         this.setCovMatrixType("TimeBasedTrkg::TBCovMat");
         this.setCvtTrackType("CVTRec::Tracks");

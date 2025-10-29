@@ -47,6 +47,7 @@ public class EBEngine extends ReconstructionEngine {
     
     // inputs banks:
     String trackType        = null;
+    String ftrackType       = null;
     String ftofHitsType     = null;
     String trajectoryType   = null;
     String covMatrixType    = null;
@@ -135,7 +136,7 @@ public class EBEngine extends ReconstructionEngine {
         List<DetectorTrack>  tracks = DetectorData.readDetectorTracks(de, trackType, trajectoryType, covMatrixType);
         eb.addTracks(tracks);      
         
-        List<DetectorTrack> ftracks = DetectorData.readFDetectorTracks(de, "FMT::Tracks");
+        List<DetectorTrack> ftracks = DetectorData.readFDetectorTracks(de, ftrackType);
 
         List<DetectorTrack> ctracks = DetectorData.readCentralDetectorTracks(de, cvtTrackType, cvtTrajType);
         eb.addTracks(ctracks);
@@ -315,6 +316,10 @@ public class EBEngine extends ReconstructionEngine {
     
     public void setTrackType(String name) {
         this.trackType = name;
+    }
+
+    public void setFTrackType(String name) {
+        this.ftrackType = name;
     }
     
     public void setFTOFHitsType(String name) {
