@@ -28,50 +28,56 @@
     <Class name="eu.mihosoft.vrl.v3d.ext.openjfx.shape3d.symbolic.SymbolicPolygonMesh"/>
   </Match>
 
+  <!-- RANK 7 SUPPRESSIONS -->
+  <Match> <!-- seems that @Nullable is no longer enough to suppress -->
+    <Bug pattern="NP_NULL_PARAM_DEREF_NONVIRTUAL"/>
+    <Class name="org.jlab.service.ltcc.LTCCHit"/>
+  </Match>
+
   <!-- RANK 8 SUPPRESSIONS -->
-  <Match> <!--  the pattern `while(phi > 360) phi -= 360.0;` -->
-    <Bug pattern="FL_FLOATS_AS_LOOP_COUNTERS"/>
-  </Match>
-  <Match> <!-- ignore this static method hiding -->
-    <Bug pattern="HSM_HIDING_METHOD"/>
-    <Class name="cnuphys.splot.plot.VerticalLabelUI"/>
-    <Method name="createUI"/>
-  </Match>
-  <Match> <!-- not quite a singleton pattern -->
-    <Bug pattern="SING_SINGLETON_HAS_NONPRIVATE_CONSTRUCTOR"/>
-    <Class name="cnuphys.splot.plot.VerticalLabelUI"/>
-  </Match>
-  <Match> <!-- singleton implements Serializable; should use enum singleton pattern -->
-    <Bug pattern="SING_SINGLETON_IMPLEMENTS_SERIALIZABLE"/>
-    <Class name="cnuphys.lund.LundTrackDialog"/>
-  </Match>
-  <Match> <!-- singleton implements Serializable; should use enum singleton pattern -->
-    <Bug pattern="SING_SINGLETON_IMPLEMENTS_SERIALIZABLE"/>
-    <Class name="cnuphys.swim.SwimMenu"/>
-  </Match>
-  <Match> <!-- static method hiding of base-class DetectorResponse.readHipoEvent -->
-    <Bug pattern="HSM_HIDING_METHOD"/>
-    <Class name="org.jlab.clas.detector.TaggerResponse"/>
-    <Method name="readHipoEvent" params="org.jlab.io.base.DataEvent,String,org.jlab.detector.base.DetectorType"\>
-  </Match>
-  <Match> <!-- static method hiding of base-class DetectorResponse.readHipoEvent -->
-    <Bug pattern="HSM_HIDING_METHOD"/>
-    <Class name="org.jlab.clas.detector.ScintillatorResponse"/>
-    <Method name="readHipoEvent" params="org.jlab.io.base.DataEvent,String,org.jlab.detector.base.DetectorType"\>
-  </Match>
-  <Match> <!-- static method hiding of base-class DetectorResponse.readHipoEvent -->
-    <Bug pattern="HSM_HIDING_METHOD"/>
-    <Class name="org.jlab.clas.detector.CherenkovResponse"/>
-    <Method name="readHipoEvent" params="org.jlab.io.base.DataEvent,String,org.jlab.detector.base.DetectorType"\>
-  </Match>
-  <Match> <!-- static method hiding of base-class DetectorResponse.readHipoEvent -->
-    <Bug pattern="HSM_HIDING_METHOD"/>
-    <Class name="org.jlab.clas.detector.CalorimeterResponse"/>
-    <Method name="readHipoEvent" params="org.jlab.io.base.DataEvent,String,org.jlab.detector.base.DetectorType"\>
-  </Match>
-  <Match> <!-- since DefaultLogger may be deprecated soon; FIXME: this filter doesn't seem to work -->
-    <Class name="org.jlab.logging.DefaultLogger"/>
-  </Match>
+  <!-- <Match> --> <!--  the pattern `while(phi > 360) phi -= 360.0;` -->
+  <!--   <Bug pattern="FL_FLOATS_AS_LOOP_COUNTERS"/> -->
+  <!-- </Match> -->
+  <!-- <Match> --> <!-- ignore this static method hiding -->
+  <!--   <Bug pattern="HSM_HIDING_METHOD"/> -->
+  <!--   <Class name="cnuphys.splot.plot.VerticalLabelUI"/> -->
+  <!--   <Method name="createUI"/> -->
+  <!-- </Match> -->
+  <!-- <Match> --> <!-- not quite a singleton pattern -->
+  <!--   <Bug pattern="SING_SINGLETON_HAS_NONPRIVATE_CONSTRUCTOR"/> -->
+  <!--   <Class name="cnuphys.splot.plot.VerticalLabelUI"/> -->
+  <!-- </Match> -->
+  <!-- <Match> --> <!-- singleton implements Serializable; should use enum singleton pattern -->
+  <!--   <Bug pattern="SING_SINGLETON_IMPLEMENTS_SERIALIZABLE"/> -->
+  <!--   <Class name="cnuphys.lund.LundTrackDialog"/> -->
+  <!-- </Match> -->
+  <!-- <Match> --> <!-- singleton implements Serializable; should use enum singleton pattern -->
+  <!--   <Bug pattern="SING_SINGLETON_IMPLEMENTS_SERIALIZABLE"/> -->
+  <!--   <Class name="cnuphys.swim.SwimMenu"/> -->
+  <!-- </Match> -->
+  <!-- <Match> --> <!-- static method hiding of base-class DetectorResponse.readHipoEvent -->
+  <!--   <Bug pattern="HSM_HIDING_METHOD"/> -->
+  <!--   <Class name="org.jlab.clas.detector.TaggerResponse"/> -->
+  <!--   <Method name="readHipoEvent" params="org.jlab.io.base.DataEvent,String,org.jlab.detector.base.DetectorType"\> -->
+  <!-- </Match> -->
+  <!-- <Match> --> <!-- static method hiding of base-class DetectorResponse.readHipoEvent -->
+  <!--   <Bug pattern="HSM_HIDING_METHOD"/> -->
+  <!--   <Class name="org.jlab.clas.detector.ScintillatorResponse"/> -->
+  <!--   <Method name="readHipoEvent" params="org.jlab.io.base.DataEvent,String,org.jlab.detector.base.DetectorType"\> -->
+  <!-- </Match> -->
+  <!-- <Match> --> <!-- static method hiding of base-class DetectorResponse.readHipoEvent -->
+  <!--   <Bug pattern="HSM_HIDING_METHOD"/> -->
+  <!--   <Class name="org.jlab.clas.detector.CherenkovResponse"/> -->
+  <!--   <Method name="readHipoEvent" params="org.jlab.io.base.DataEvent,String,org.jlab.detector.base.DetectorType"\> -->
+  <!-- </Match> -->
+  <!-- <Match> --> <!-- static method hiding of base-class DetectorResponse.readHipoEvent -->
+  <!--   <Bug pattern="HSM_HIDING_METHOD"/> -->
+  <!--   <Class name="org.jlab.clas.detector.CalorimeterResponse"/> -->
+  <!--   <Method name="readHipoEvent" params="org.jlab.io.base.DataEvent,String,org.jlab.detector.base.DetectorType"\> -->
+  <!-- </Match> -->
+  <!-- <Match> --> <!-- since DefaultLogger may be deprecated soon; FIXME: this filter doesn't seem to work -->
+  <!--   <Class name="org.jlab.logging.DefaultLogger"/> -->
+  <!-- </Match> -->
 
   <!-- HIGHER RANK SUPPRESSIONS -->
   <!-- <Match> --> <!-- not worth fixing -->

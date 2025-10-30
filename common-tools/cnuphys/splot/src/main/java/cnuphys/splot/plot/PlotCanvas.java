@@ -151,7 +151,6 @@ public class PlotCanvas extends JComponent
 			}
 			catch (DataSetException e) {
 				e.printStackTrace();
-                                System.exit(1);
 			}
 		}
 
