@@ -1,23 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <FindBugsFilter>
 
-  <!-- set max rank value, where
-    1-4    high priority
-    5-9    medium priority
-    10-14  low priority
-    15-20  informational
+  <!--
+    set max rank value, where the higher the rank, the less serious the
+    bug-prone behavior:
+      - 1-4    high priority
+      - 5-9    medium priority
+      - 10-14  low priority
+      - 15-20  informational
+    FIXME:
+    At rank 8, the number of bug detections skyrockets; many of them are suppressed
+    below, but there are still many more bug detections to either fix or suppress.
+    So for now, we set the max rank to 7.
   -->
   <Match>
-    <Rank value="8"/>
+    <Rank value="7"/>
   </Match>
 
-  <!-- RANK 4 SUPRESSIONS -->
+  <!--
+    the following are suppressions, where we tell spotbugs to ignore
+    certain problems; these are organized by rank
+  -->
+
+  <!-- RANK 4 SUPPRESSIONS -->
   <Match> <!-- not ours -->
     <Bug pattern="UR_UNINIT_READ"/>
     <Class name="eu.mihosoft.vrl.v3d.ext.openjfx.shape3d.symbolic.SymbolicPolygonMesh"/>
   </Match>
 
-  <!-- RANK 8 SUPRESSIONS -->
+  <!-- RANK 8 SUPPRESSIONS -->
   <Match> <!--  the pattern `while(phi > 360) phi -= 360.0;` -->
     <Bug pattern="FL_FLOATS_AS_LOOP_COUNTERS"/>
   </Match>
@@ -58,18 +69,15 @@
     <Class name="org.jlab.clas.detector.CalorimeterResponse"/>
     <Method name="readHipoEvent" params="org.jlab.io.base.DataEvent,String,org.jlab.detector.base.DetectorType"\>
   </Match>
-
+  <Match> <!-- since DefaultLogger may be deprecated soon; FIXME: this filter doesn't seem to work -->
+    <Class name="org.jlab.logging.DefaultLogger"/>
+  </Match>
 
   <!-- HIGHER RANK SUPPRESSIONS -->
   <!-- <Match> --> <!-- not worth fixing -->
   <!--   <Class name="cnuphys.snr.ExtendedWord"/> -->
   <!--   <Bug pattern="EQ_SELF_USE_OBJECT"/> -->
   <!--   <Method name="equals" params="cnuphys.snr.ExtendedWord"/> -->
-  <!-- </Match> -->
-  <!-- <Match> --> <!-- DefaultLogger may be deprecated soon -->
-  <!--   <Bug pattern="OBL_UNSATISFIED_OBLIGATION"/> -->
-  <!--   <Class name="org.jlab.logging.DefaultLogger"/> -->
-  <!--   <Method name="init" params="String"/> -->
   <!-- </Match> -->
 
 </FindBugsFilter>
