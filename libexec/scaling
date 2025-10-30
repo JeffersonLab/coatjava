@@ -5,10 +5,11 @@ def cli():
     cli = argparse.ArgumentParser(description='CLARA scaling test')
     cli.add_argument('-y',help='YAML file',required=True)
     cli.add_argument('-c',help='CLARA_HOME path',default=os.getenv('CLARA_HOME',None))
-    cli.add_argument('-t',help='threads',default=[2,4],type=int,action='append')
+    cli.add_argument('-t',help='threads (default=4,8)',default='4,8')
     cli.add_argument('-e',help='events per thread',default=100,type=int)
     cli.add_argument('input',help='input data file')
     cfg = cli.parse_args()
+    cli.t = cli.t.split(',')
     import sys
     if cfg.c is None: sys.exit('-c or $CLARA_HOME is required')
     return cfg
