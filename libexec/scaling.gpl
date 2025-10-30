@@ -1,0 +1,32 @@
+
+set terminal qt size 1000,700
+set multiplot layout 2,2
+set key box
+set xlabel 'Threads'
+set ylabel 'Event Time [ms]'
+set datafile columnheaders
+set yrange [0:]
+
+set title 'I/O'
+set key outside right
+plot 'dog' using 1:($2*$1) pt 7  with points title columnhead(2) ,\
+        '' using 1:($6)    pt 7 with points title columnhead(6)  ,\
+        '' using 1:($35)   pt 7 with points title columnhead(35) ,\
+        '' using 1:($6*$1) pt 7 with points title 'I-Overhead' ,\
+
+set title 'Engines'
+set key outside right width 2
+plot 'dog' using 1:($16) pt 7 with points title columnhead(16) ,\
+        '' using 1:($26) pt 7 with points title columnhead(26) ,\
+        '' using 1:($19) pt 7 with points title columnhead(19) ,\
+        '' using 1:($28) pt 7 with points title columnhead(28) ,\
+
+unset title
+unset key
+set size 1.0,0.5
+set origin 0,0
+set ylabel 'Rate [Hz]'
+f(x) = m*x
+fit f(x) 'dog' using 1:(1/$2*1e3) via m
+plot 'dog' using 1:(1/$2*1e3) pt 7, f(x)
+
