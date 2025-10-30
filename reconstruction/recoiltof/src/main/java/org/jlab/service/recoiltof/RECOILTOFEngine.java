@@ -7,7 +7,6 @@ import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 
 import java.util.concurrent.atomic.AtomicInteger;
-import org.jlab.clas.swimtools.Swim;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.rec.recoiltof.banks.RecoBankWriter;
