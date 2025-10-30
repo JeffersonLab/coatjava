@@ -73,6 +73,7 @@ jobs:
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
+          cache: maven
       - name: install xrootd-client (linux)
         if: ${{ matrix.runner == 'ubuntu-latest' }}
         run: |
@@ -115,6 +116,7 @@ jobs:
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
+          cache: maven
       - name: install xrootd-client
         run: |
           sudo apt -y update
@@ -140,6 +142,7 @@ jobs:
       - uses: actions/checkout@v5
       - name: Set up JDK
         uses: actions/setup-java@v5
+        cache: maven
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
@@ -161,6 +164,7 @@ jobs:
       - uses: actions/checkout@v5
       - name: Set up JDK
         uses: actions/setup-java@v5
+        cache: maven
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
@@ -197,6 +201,7 @@ jobs:
       - uses: actions/checkout@v5
       - name: Set up JDK
         uses: actions/setup-java@v5
+        cache: maven
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
@@ -252,6 +257,7 @@ jobs:
       - uses: actions/checkout@v5
       - name: Set up JDK
         uses: actions/setup-java@v5
+        cache: maven
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
@@ -276,6 +282,7 @@ jobs:
       - uses: actions/checkout@v5
       - name: Set up JDK
         uses: actions/setup-java@v5
+        cache: maven
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
@@ -298,6 +305,7 @@ jobs:
       - uses: actions/checkout@v5
       - name: Set up JDK
         uses: actions/setup-java@v5
+        cache: maven
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
@@ -333,6 +341,7 @@ jobs:
       ### javadoc
       - name: set up JDK
         uses: actions/setup-java@v5
+        cache: maven
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
