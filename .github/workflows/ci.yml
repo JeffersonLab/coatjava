@@ -122,8 +122,8 @@ jobs:
       - uses: cvmfs-contrib/github-action-cvmfs@v5
         with:
           cvmfs_repositories: 'oasis.opensciencegrid.org'
-      - name: unit tests and spotbugs
-        run: ./build-coatjava.sh --xrootd --spotbugs --unittests --no-progress -T${{ env.nthreads }}
+      - name: unit tests
+        run: ./build-coatjava.sh --xrootd --unittests --no-progress -T${{ env.nthreads }}
       - name: collect jacoco report
         run: validation/jacoco-aggregate.sh
       - name: publish jacoco report
@@ -132,6 +132,27 @@ jobs:
           name: jacoco_report
           path: publish/
           retention-days: 1
+
+  spotbugs:
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          java-version: ${{ env.java_version }}
+          distribution: ${{ env.java_distribution }}
+      - uses: cvmfs-contrib/github-action-cvmfs@v5
+        with:
+          cvmfs_repositories: 'oasis.opensciencegrid.org'
+      - uses: actions/download-artifact@v6
+        with:
+          name: build_ubuntu-latest
+      - name: untar build
+        run: tar xzvf coatjava.tar.gz
+      - name: spotbugs
+        run: libexec/spotbugs.sh
 
   test_decoder:
     needs: [ build, download_test_data ]
