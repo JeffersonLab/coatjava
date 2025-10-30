@@ -155,7 +155,7 @@ jobs:
       - name: untar build
         run: tar xzvf coatjava.tar.gz
       - name: spotbugs
-        run: libexec/spotbugs.sh
+        run: ./build-coatjava.sh --xrootd --spotbugs --no-progress
 
   test_decoder:
     needs: [ build, download_test_data ]
