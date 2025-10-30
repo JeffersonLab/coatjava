@@ -10,6 +10,7 @@ set yrange [0:]
 set title 'I/O'
 set key outside right
 plot 'dog' using 1:($2*$1) pt 7  with points title columnhead(2) ,\
+        '' using 1:($36)   pt 7 with points title columnhead(36) ,\
         '' using 1:($6)    pt 7 with points title columnhead(6)  ,\
         '' using 1:($35)   pt 7 with points title columnhead(35) ,\
         '' using 1:($6*$1) pt 7 with points title 'I-Overhead' ,\
@@ -27,6 +28,6 @@ set size 1.0,0.5
 set origin 0,0
 set ylabel 'Rate [Hz]'
 f(x) = m*x
-fit f(x) 'dog' using 1:(1/$2*1e3) via m
+fit [0:24] f(x) 'dog' using 1:(1/$2*1e3) via m
 plot 'dog' using 1:(1/$2*1e3) pt 7, f(x)
 
