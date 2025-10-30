@@ -142,10 +142,10 @@ jobs:
       - uses: actions/checkout@v5
       - name: Set up JDK
         uses: actions/setup-java@v5
-        cache: maven
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
+          cache: maven
       - uses: cvmfs-contrib/github-action-cvmfs@v5
         with:
           cvmfs_repositories: 'oasis.opensciencegrid.org'
@@ -164,10 +164,10 @@ jobs:
       - uses: actions/checkout@v5
       - name: Set up JDK
         uses: actions/setup-java@v5
-        cache: maven
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
+          cache: maven
       - uses: cvmfs-contrib/github-action-cvmfs@v5
         with:
           cvmfs_repositories: 'oasis.opensciencegrid.org'
@@ -201,10 +201,10 @@ jobs:
       - uses: actions/checkout@v5
       - name: Set up JDK
         uses: actions/setup-java@v5
-        cache: maven
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
+          cache: maven
       - name: setup cvmfs
         uses: cvmfs-contrib/github-action-cvmfs@v5
         with:
@@ -257,10 +257,10 @@ jobs:
       - uses: actions/checkout@v5
       - name: Set up JDK
         uses: actions/setup-java@v5
-        cache: maven
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
+          cache: maven
       - uses: actions/download-artifact@v6
         with:
           name: build_${{ matrix.runner }}
@@ -282,10 +282,10 @@ jobs:
       - uses: actions/checkout@v5
       - name: Set up JDK
         uses: actions/setup-java@v5
-        cache: maven
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
+          cache: maven
       - name: setup groovy
         uses: wtfjoke/setup-groovy@v3
         with:
@@ -305,10 +305,10 @@ jobs:
       - uses: actions/checkout@v5
       - name: Set up JDK
         uses: actions/setup-java@v5
-        cache: maven
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
+          cache: maven
       - uses: actions/download-artifact@v6
         with:
           name: build_ubuntu-latest
@@ -341,10 +341,10 @@ jobs:
       ### javadoc
       - name: set up JDK
         uses: actions/setup-java@v5
-        cache: maven
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
+          cache: maven
       - name: build coatjava javadocs # javadoc:aggregate output dir cannot be controlled, so assume the latest "standard" path and `mv` it
         run: |
           libexec/build-javadocs.sh
