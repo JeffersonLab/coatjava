@@ -47,20 +47,20 @@ def benchmark(cfg, threads):
                 exiting = False
             elif len(cols) > 20:
                 if line.find('Processed') >= 0:
-                    benchmarks['event'] = float(cols[12])
+                    benchmarks['Event'] = float(cols[12])
             elif exiting:
                 # catch-all for services:
                 if len(cols) > 14:
-                    if 'services' not in benchmarks:
-                        benchmarks['services'] = collections.OrderedDict()
-                    benchmarks['services'][cols[2]] = float(cols[14])
+                    if 'Services' not in benchmarks:
+                        benchmarks['Services'] = collections.OrderedDict()
+                    benchmarks['Services'][cols[2]] = float(cols[14])
                 # FIXME:  what are these, why don't they add up?
                 elif line.find('Average processing time') >= 0:
-                    benchmarks['avg'] = float(cols[6])
+                    benchmarks['Avg'] = float(cols[6])
                 elif line.find('Total processing time') >= 0:
-                    benchmarks['total'] = float(cols[6])
+                    benchmarks['Total'] = float(cols[6])
                 elif line.find('Total orchestrator time') >= 0:
-                    benchmarks['orch'] = float(cols[6])
+                    benchmarks['Orch'] = float(cols[6])
         except ValueError:
             pass
     return benchmarks
@@ -69,16 +69,16 @@ def table(benchmarks):
     table = []
     header = [ 'threads' ]
     b = benchmarks[0][1]
-    header.extend([x for x in b if x != 'services'])
-    if 'services' in b:
-        header.extend(b['services'].keys())
+    header.extend([x for x in b if x != 'Services'])
+    if 'Services' in b:
+        header.extend(b['Services'].keys())
     table.append(header)
     for b in benchmarks:
         threads,benchmark = b[0],b[1]
         row = [threads]
-        for k in ['event','avg','total','orch','services']:
+        for k in ['Event','Avg','Total','Orch','Services']:
             if k in benchmark:
-                if k == 'services':
+                if k == 'Services':
                     row.extend(benchmark[k].values())
                 else:
                     row.append(benchmark[k])
@@ -92,7 +92,7 @@ def show(benchmarks):
 def save(benchmarks):
     with open('scaling.txt','w') as f:
         for row in table(benchmarks):
-            f.write(' '.join([str(x) for x in row])) 
+            f.write(' '.join([str(x) for x in row])+'\n') 
 
 if __name__ == '__main__':
     cfg = cli()
