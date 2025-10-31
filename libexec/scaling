@@ -68,7 +68,7 @@ def benchmark(cfg, threads):
 
 def table(benchmarks):
     table = []
-    header = [ 'threads' ]
+    header = [ 'Threads' ]
     b = benchmarks[0][1]
     header.extend([x for x in b if x != 'Services'])
     if 'Services' in b:
