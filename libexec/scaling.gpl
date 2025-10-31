@@ -1,25 +1,40 @@
 
 set terminal qt size 1000,700
+
 set multiplot layout 2,2
+set datafile columnheaders
+set title font 'sans,14'
 set key box
 set xlabel 'Threads'
 set ylabel 'Event Time [ms]'
-set datafile columnheaders
 set yrange [0:]
 
 set title 'I/O'
 set key outside right width 2
-plot 'scaling.txt' using 1:($2*$1) pt 7  with points title columnhead(2) ,\
-        '' using 1:($36)   pt 7 with points title columnhead(36) ,\
-        '' using 1:($6)    pt 7 with points title columnhead(6)  ,\
-        '' using 1:($35)   pt 7 with points title columnhead(35) ,\
-        '' using 1:($6*$1) pt 7 with points title 'I-Over' ,\
+plot 'scaling.txt' \
+           using 1:(($2*$1))        pt 7 with points title columnhead(2) ,\
+        '' using 1:((column($#)))   pt 7 with points title 'Total' ,\
+        '' using 1:($6)             pt 7 with points title 'Reader' ,\
+        '' using 1:((column($#-1))) pt 7 with points title 'Writer' ,\
+        '' using 1:(($6*$1))        pt 7 with points title 'IOver' ,\
 
 set title 'Engines'
-plot 'scaling.txt' using 1:($16) pt 7 with points title columnhead(16) ,\
-        '' using 1:($26) pt 7 with points title columnhead(26) ,\
-        '' using 1:($19) pt 7 with points title columnhead(19) ,\
-        '' using 1:($28) pt 7 with points title columnhead(28) ,\
+
+# data-ai-uber.yml:
+plot 'scaling.txt' \
+           using 1:($7)  pt 7 with points title columnhead(7) ,\
+        '' using 1:($8)  pt 7 with points title columnhead(8) ,\
+        '' using 1:($9)  pt 7 with points title columnhead(9) ,\
+        '' using 1:($10) pt 7 with points title columnhead(10) ,\
+        '' using 1:($11) pt 7 with points title columnhead(11) ,\
+        '' using 1:($12) pt 7 with points title columnhead(12) ,\
+
+# rgd-clarode.yml:
+#plot 'scaling.txt' \
+#           using 1:($16) pt 7 with points title columnhead(16) ,\
+#        '' using 1:($26) pt 7 with points title columnhead(26) ,\
+#        '' using 1:($19) pt 7 with points title columnhead(19) ,\
+#        '' using 1:($28) pt 7 with points title columnhead(28) ,\
 
 set title 'Throughput'
 set ylabel 'Rate [Hz]'
