@@ -155,10 +155,8 @@ plot 'scaling.txt' using 1:(1/$2*1e3) pt 7, f(x)
 def plot():
     import tempfile
     with tempfile.NamedTemporaryFile(mode='w') as f:
-        [ f.write(x+'\n') for x in gnuplot.split('\n') ]
+        f.write(gnuplot)
         f.flush()
-        print(f.name)
-        print('\n'.join(list(run(['cat',f.name]))))
         list(run(['gnuplot','-p',f.name]))
         input()
 
