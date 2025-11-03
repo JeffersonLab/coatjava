@@ -54,11 +54,11 @@ public class IndexedTable extends DefaultTableModel {
      */
     public IndexedTable(IndexedTable it) {
         entries = new IndexedList<>(it.indexNames.size());
-        for (int i = 0; i < it.indexNames.size(); i++) this.indexNames.add("A"+i);
+        for (int i = 0; i < it.indexNames.size(); i++) indexNames.add("A"+i);
         entryMap = it.entryMap;
         entryTypes = it.entryTypes;
     }
-    
+
     public IndexedTable(int indexCount,String[] format){
         entries = new IndexedList<>(indexCount);
         for(int i = 0; i < indexCount; i++){
@@ -469,14 +469,6 @@ public class IndexedTable extends DefaultTableModel {
     }
 
     public static IndexedTable add(List<IndexedTable> tables) {
-        // check for conflicts and abort:
-        for (int i=0; i<tables.size(); i++) {
-            for (int j=1; j<tables.size(); j++) {
-                if (tables.get(i).conflicts(tables.get(j))) {
-                    throw new RuntimeException("Cannot add conflicting tables.");
-                }
-            }
-        }
         // create the new table:
         IndexedTable ret = new IndexedTable(tables.get(0));
         for (IndexedTable table : tables) {
