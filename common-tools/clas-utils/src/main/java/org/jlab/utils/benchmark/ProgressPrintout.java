@@ -40,8 +40,9 @@ public class ProgressPrintout {
     }
 
     public String getUpdateString(){
-        double totalElapsedTime = (this.previousPrintoutTime-this.startPrintoutTime)*1e-3;
         StringBuilder str = new StringBuilder();
+        if (benchmark != null) str.append(benchmark);
+        double totalElapsedTime = (this.previousPrintoutTime-this.startPrintoutTime)*1e-3;
         double averageTime = 1000.0*totalElapsedTime/this.numberOfCalls;
         str.append(String.format("%s (%12d) : ", this.printoutLeadingString,this.numberOfCalls));
         str.append(String.format(" time : %8.2f (sec) =>>> average time = %9.3f msec", totalElapsedTime,averageTime));
@@ -53,7 +54,6 @@ public class ProgressPrintout {
     }
     
     public void showStatus(){
-        if (benchmark != null) System.out.println(benchmark);
         System.out.println("\n\n");
         System.out.println(this.getUpdateString());
         System.out.println("\n\n");        
