@@ -19,6 +19,12 @@ updates:
     ignore:
       - dependency-name: "org.jlab:groot" # since version numbers are not in order
       - dependency-name: "org.ejml:ejml-simple" # keep version the same as `j4ml:j4ml-clas12:jar:0.9-SNAPSHOT`; see pull requests #636 and #632
+      - dependency-name: "org.openjfx:javafx-base"
+        versions: [">= 24"] # version 24 requires JAVA_VERSION 22+
+      - dependency-name: "org.openjfx:javafx-graphics"
+        versions: [">= 24"] # version 24 requires JAVA_VERSION 22+
+      - dependency-name: "org.openjfx:javafx-fxml"
+        versions: [">= 24"] # version 24 requires JAVA_VERSION 22+
     groups:
       javafx:
         patterns:
