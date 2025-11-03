@@ -57,13 +57,13 @@ public class ModeAHDC extends HipoExtractor  {
     private int effectiveNumberOfBins;
 
     //Waveform types:
-    //0 is good, 
-    //-1 is invalid,
-    //1 is saturating,
-    //2 has too short of a baseline,
-    //3 is late and only has a rising edge,
-    //4 is a trailing edge from a previous wf,
-    //5 has low ADC ("flat")
+    //wfType 6 ⇒ too small (nsamples <= 10)
+    //wfType 5 ⇒ decreasing baseline (or leadingEdgeTime fails)
+    //wfType 4 ⇒ bad ToT (ToT < 300)
+    //wfType 3 ⇒ pileUp // TO BE DONE
+    //wfType 2 ⇒ bad trailingEdgeTime
+    //wfType 1 ⇒ saturing
+    //wfType 0 ⇒ OK
     
     /**
      *
