@@ -34,8 +34,6 @@ import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.options.OptionParser;
 import org.jlab.utils.system.ClasUtilsFile;
 
-import org.jlab.detector.pulse.ModeAHDC;
-
 /**
  *
  * @author gavalian
@@ -50,7 +48,6 @@ public class CLASDecoder4 {
     private HipoDataEvent               hipoEvent = null;
     private boolean              isRunNumberFixed = false;
     private int                  decoderDebugMode = 0;
-    private ModeAHDC                ahdcExtractor = new ModeAHDC();
     private RCDBManager               rcdbManager = new RCDBManager();
 
     public CLASDecoder4(boolean development){
@@ -247,10 +244,6 @@ public class CLASDecoder4 {
             }
         }
         return scaler;
-    }
-
-    public void extractPulses(Event event) {
-        ahdcExtractor.update(30, null, event, schemaFactory, "AHDC::wf", "AHDC::adc");
     }
 
     public Bank getDataBankWF(String name, DetectorType type) {
@@ -454,8 +447,6 @@ public class CLASDecoder4 {
 
         Bank decodedHelicity = this.createHelicityDecoderBank(rawEvent);
         if (decodedHelicity!=null) decodedEvent.write(decodedHelicity);
-
-        this.extractPulses(decodedEvent);
 
         Bank epics = createEpicsBank();
         if (epics != null) decodedEvent.write(epics);
