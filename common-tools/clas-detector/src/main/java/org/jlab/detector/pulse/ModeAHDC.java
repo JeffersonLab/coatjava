@@ -60,7 +60,7 @@ public class ModeAHDC extends HipoExtractor  {
     //wfType 6 ⇒ too small (nsamples <= 10)
     //wfType 5 ⇒ decreasing baseline (or leadingEdgeTime fails)
     //wfType 4 ⇒ bad ToT (ToT < 300)
-    //wfType 3 ⇒ pileUp
+    //wfType 3 ⇒ pileUp // TO BE DONE
     //wfType 2 ⇒ bad trailingEdgeTime
     //wfType 1 ⇒ saturing
     //wfType 0 ⇒ OK
