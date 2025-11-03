@@ -34,6 +34,8 @@ import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.options.OptionParser;
 import org.jlab.utils.system.ClasUtilsFile;
 
+import org.jlab.detector.pulse.ModeAHDC;
+
 /**
  *
  * @author gavalian
