@@ -28,6 +28,7 @@ import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
+import org.jlab.utils.benchmark.Benchmark;
 
 import org.jlab.utils.benchmark.ProgressPrintout;
 import org.jlab.utils.groups.IndexedTable;
@@ -116,13 +117,17 @@ public class CLASDecoder4 {
                     // Then unpacks into Detector Digigitized data, and appends to existing buffer
                     // Modified on 9/5/2018
                     //-----------------------------------------------------------------------------
-                    
+                   
+                    Benchmark.getInstance().resume("getADCEntries");
                     List<FADCData>  fadcPacked = codaDecoder.getADCEntries((EvioDataEvent) event);
-                    
+                    Benchmark.getInstance().pause("getADCEntries");
+                   
+                    Benchmark.getInstance().resume("FADCData.convert");
                     if(fadcPacked!=null){
                         List<DetectorDataDgtz> fadcUnpacked = FADCData.convert(fadcPacked);
                         dataList.addAll(fadcUnpacked);
                     }
+                    Benchmark.getInstance().pause("FADCData.convert");
                     //  END of Bitpacked section
                     //-----------------------------------------------------------------------------
                     
@@ -855,6 +860,8 @@ public class CLASDecoder4 {
 
         writer.open(outputFile);
         ProgressPrintout progress = new ProgressPrintout();
+        progress.addBenchmarks();
+        
         System.out.println("INPUT LIST SIZE = " + inputList.size());
         int nevents = parser.getOption("-n").intValue();
         int counter = 0;
@@ -900,6 +907,7 @@ public class CLASDecoder4 {
                 if(nevents>0){
                     if(counter>=nevents) break;
                 }
+
             }
 
         }
