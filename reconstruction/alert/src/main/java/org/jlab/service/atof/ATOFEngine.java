@@ -67,7 +67,7 @@ public class ATOFEngine extends ReconstructionEngine {
             //This assumes the FD reconstruction produced an event with good startTime
             //All start time handling could be moved as an EB-type step later
             if (!event.hasBank("REC::Event")) {
-                LOGGER.severe("REC::Event bank could not be read in ATOF engine while requestign starttime");
+                LOGGER.finer("REC::Event bank could not be read in ATOF engine while requesting starttime");
                 return true;
             }
             //Deal with FT TODO : if(event.getBank("REC::Event").getFloat("startTime", 0)==-1000)
