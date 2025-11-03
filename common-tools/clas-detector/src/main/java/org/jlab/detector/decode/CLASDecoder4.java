@@ -254,7 +254,7 @@ public class CLASDecoder4 {
             b.putByte( 1, i, (byte) a.get(i).getDescriptor().getLayer());
             b.putShort(2, i, (short) a.get(i).getDescriptor().getComponent());
             b.putByte( 3, i, (byte) a.get(i).getDescriptor().getOrder());
-            b.putLong("timestamp", i, a.get(i).getADCData(0).getTimeStamp());
+            b.putLong( 4, i, a.get(i).getADCData(0).getTimeStamp());
             b.putInt("time", i, (int)a.get(i).getADCData(0).getTime());
             DetectorDataDgtz.ADCData xxx = a.get(i).getADCData(0);
             for (int j=0; j<xxx.getPulseSize(); ++j)
@@ -276,14 +276,14 @@ public class CLASDecoder4 {
             adcBANK.putByte( 1, i, (byte) adcDGTZ.get(i).getDescriptor().getLayer());
             adcBANK.putShort(2, i, (short) adcDGTZ.get(i).getDescriptor().getComponent());
             adcBANK.putByte( 3, i, (byte) adcDGTZ.get(i).getDescriptor().getOrder());
-            adcBANK.putInt("ADC", i, adcDGTZ.get(i).getADCData(0).getADC());
-            adcBANK.putFloat("time", i, (float) adcDGTZ.get(i).getADCData(0).getTime());
+            adcBANK.putInt(  4, i, adcDGTZ.get(i).getADCData(0).getADC());
+            adcBANK.putFloat(5, i, (float) adcDGTZ.get(i).getADCData(0).getTime());
             adcBANK.putShort("ped", i, (short) adcDGTZ.get(i).getADCData(0).getPedestal());
-            if(name == "BST::adc") adcBANK.putLong("timestamp", i, adcDGTZ.get(i).getADCData(0).getTimeStamp());
+            if(name == "BST::adc") adcBANK.putLong(7, i, adcDGTZ.get(i).getADCData(0).getTimeStamp());
             if(name.equals("BMT::adc")||name.equals("FMT::adc")|| name.equals("FTTRK::adc")){
-            	adcBANK.putInt("ADC", i, adcDGTZ.get(i).getADCData(0).getHeight());
-            	adcBANK.putInt("integral", i, adcDGTZ.get(i).getADCData(0).getIntegral());
-            	adcBANK.putLong("timestamp", i, adcDGTZ.get(i).getADCData(0).getTimeStamp());
+            	adcBANK.putInt(4, i, adcDGTZ.get(i).getADCData(0).getHeight());
+            	adcBANK.putInt(7, i, adcDGTZ.get(i).getADCData(0).getIntegral());
+            	adcBANK.putLong(8, i, adcDGTZ.get(i).getADCData(0).getTimeStamp());
             }
             if(name == "BAND::adc") adcBANK.putInt("amplitude", i, adcDGTZ.get(i).getADCData(0).getHeight());
          }
@@ -304,7 +304,7 @@ public class CLASDecoder4 {
             tdcBANK.putByte( 1, i, (byte) tdcDGTZ.get(i).getDescriptor().getLayer());
             tdcBANK.putShort(2, i, (short) tdcDGTZ.get(i).getDescriptor().getComponent());
             tdcBANK.putByte( 3, i, (byte) (tdcDGTZ.get(i).getDescriptor().getOrder()+tdcDGTZ.get(i).getTDCData(0).getType().getTypeId()));
-            tdcBANK.putInt("TDC", i, tdcDGTZ.get(i).getTDCData(0).getTime());
+            tdcBANK.putInt(  4, i, tdcDGTZ.get(i).getTDCData(0).getTime());
             if(tdcBANK.getSchema().hasEntry("ToT"))
                 tdcBANK.putShort("ToT", i, (short) tdcDGTZ.get(i).getTDCData(0).getToT());
         }
@@ -328,10 +328,10 @@ public class CLASDecoder4 {
             tdcBANK.putByte( 1, i, (byte) tdcDGTZ.get(i).getDescriptor().getLayer());
             tdcBANK.putShort(2, i, (short) tdcDGTZ.get(i).getDescriptor().getComponent());
             tdcBANK.putByte( 3, i, (byte) tdcDGTZ.get(i).getDescriptor().getOrder());
-            tdcBANK.putInt("TDC", i, tdcDGTZ.get(i).getTDCData(0).getTime());
-            tdcBANK.putInt("ToT", i, tdcDGTZ.get(i).getTDCData(0).getToT());
-            tdcBANK.putLong("timestamp", i, tdcDGTZ.get(i).getTDCData(0).getTimeStamp());
-            tdcBANK.putInt("trigger", i, tdcDGTZ.get(i).getTrigger());
+            tdcBANK.putInt(  4, i, tdcDGTZ.get(i).getTDCData(0).getTime());
+            tdcBANK.putInt(  5, i, tdcDGTZ.get(i).getTDCData(0).getToT());
+            tdcBANK.putLong( 6, i, tdcDGTZ.get(i).getTDCData(0).getTimeStamp());
+            tdcBANK.putInt(  7, i, tdcDGTZ.get(i).getTrigger());
         }
         return tdcBANK;
     }
@@ -361,9 +361,9 @@ public class CLASDecoder4 {
         
         int i=0;
         for(DetectorDataDgtz tdc : tsMap.values()) {
-            tsBANK.putByte("crate", i, (byte) tdc.getDescriptor().getCrate());
-            tsBANK.putByte("slot",  i, (byte) tdc.getDescriptor().getSlot());
-            tsBANK.putLong("timestamp", i, tdc.getTimeStamp());
+            tsBANK.putByte(0, i, (byte) tdc.getDescriptor().getCrate());
+            tsBANK.putByte(1,  i, (byte) tdc.getDescriptor().getSlot());
+            tsBANK.putLong(2, i, tdc.getTimeStamp());
             i++;
         }
         return tsBANK;
@@ -377,9 +377,9 @@ public class CLASDecoder4 {
             adcBANK.putByte( 0, i, (byte) adcDGTZ.get(i).getDescriptor().getCrate());
             adcBANK.putByte( 1, i, (byte) adcDGTZ.get(i).getDescriptor().getSlot());
             adcBANK.putShort(2, i, (short) adcDGTZ.get(i).getDescriptor().getChannel());
-            adcBANK.putInt("ADC", i, adcDGTZ.get(i).getADCData(0).getADC());
-            adcBANK.putFloat("time", i, (float) adcDGTZ.get(i).getADCData(0).getTime());
-            adcBANK.putShort("ped", i, (short) adcDGTZ.get(i).getADCData(0).getPedestal());
+            adcBANK.putInt(  3, i, adcDGTZ.get(i).getADCData(0).getADC());
+            adcBANK.putFloat(4, i, (float) adcDGTZ.get(i).getADCData(0).getTime());
+            adcBANK.putShort(5, i, (short) adcDGTZ.get(i).getADCData(0).getPedestal());
         }
         return adcBANK;
     }
@@ -395,7 +395,7 @@ public class CLASDecoder4 {
             tdcBANK.putByte( 0, i, (byte) tdcDGTZ.get(i).getDescriptor().getCrate());
             tdcBANK.putByte( 1, i, (byte) tdcDGTZ.get(i).getDescriptor().getSlot());
             tdcBANK.putShort(2, i, (short) tdcDGTZ.get(i).getDescriptor().getChannel());
-            tdcBANK.putInt("TDC", i, tdcDGTZ.get(i).getTDCData(0).getTime());
+            tdcBANK.putInt(  3, i, tdcDGTZ.get(i).getTDCData(0).getTime());
         }
         return tdcBANK;
     }
@@ -408,8 +408,8 @@ public class CLASDecoder4 {
         if(vtpBANK==null) return null;
 
         for(int i = 0; i < vtpDGTZ.size(); i++){
-            vtpBANK.putByte("crate", i, (byte) vtpDGTZ.get(i).getDescriptor().getCrate());
-            vtpBANK.putInt("word", i, vtpDGTZ.get(i).getVTPData(0).getWord());
+            vtpBANK.putByte(0, i, (byte) vtpDGTZ.get(i).getDescriptor().getCrate());
+            vtpBANK.putInt( 1, i, vtpDGTZ.get(i).getVTPData(0).getWord());
         }
         return vtpBANK;
     }
@@ -425,9 +425,9 @@ public class CLASDecoder4 {
             scalerBANK.putByte( 0, i, (byte) scalerDGTZ.get(i).getDescriptor().getCrate());
             scalerBANK.putByte( 1, i, (byte) scalerDGTZ.get(i).getDescriptor().getSlot());
             scalerBANK.putShort(2, i, (short) scalerDGTZ.get(i).getDescriptor().getChannel());
-            scalerBANK.putByte("helicity", i, (byte) scalerDGTZ.get(i).getSCALERData(0).getHelicity());
-            scalerBANK.putByte("quartet", i, (byte) scalerDGTZ.get(i).getSCALERData(0).getQuartet());
-            scalerBANK.putLong("value", i, scalerDGTZ.get(i).getSCALERData(0).getValue());
+            scalerBANK.putByte( 3, i, (byte) scalerDGTZ.get(i).getSCALERData(0).getHelicity());
+            scalerBANK.putByte( 4, i, (byte) scalerDGTZ.get(i).getSCALERData(0).getQuartet());
+            scalerBANK.putLong( 5, i, scalerDGTZ.get(i).getSCALERData(0).getValue());
         }
         return scalerBANK;
     }
@@ -737,10 +737,10 @@ public class CLASDecoder4 {
                 bonusBank.putByte( 0, currentRow, (byte) bonus.getDescriptor().getSector());
                 bonusBank.putByte( 1, currentRow, (byte) bonus.getDescriptor().getLayer());
                 bonusBank.putShort(2, currentRow, (short) bonus.getDescriptor().getComponent());
-                bonusBank.putByte( 3,      currentRow, (byte) bonus.getDescriptor().getOrder());
-                bonusBank.putInt("ADC",    currentRow, pulses[k]);
-                bonusBank.putFloat("time", currentRow, (float) pulseTime);
-                bonusBank.putShort("ped",  currentRow, (short) 0);
+                bonusBank.putByte( 3, currentRow, (byte) bonus.getDescriptor().getOrder());
+                bonusBank.putInt(  4, currentRow, pulses[k]);
+                bonusBank.putFloat(5, currentRow, (float) pulseTime);
+                bonusBank.putShort(6, currentRow, (short) 0);
                 currentRow++;
             }
         }
@@ -751,28 +751,29 @@ public class CLASDecoder4 {
     public Bank createHelicityDecoderBank(EvioDataEvent event) {
         HelicityDecoderData data = this.codaDecoder.getDataEntries_HelicityDecoder(event);
         if(data!=null) {
+            int i=0;
             Bank bank = new Bank(schemaFactory.getSchema("HEL::decoder"), 1);
-            bank.putByte("helicity",        0, data.getHelicityState().getHelicity().value());
-            bank.putByte("pair",            0, data.getHelicityState().getPairSync().value());
-            bank.putByte("pattern",         0, data.getHelicityState().getPatternSync().value());
-            bank.putByte("tSettle",         0, data.getTSettle().value());
-            bank.putByte("helicityPattern", 0, data.getHelicityPattern().value());
-            bank.putByte("polarity",        0, data.getPolarity());
-            bank.putByte("phase",           0, data.getPatternPhaseCount());
-            bank.putLong("timestamp",       0, data.getTimestamp());
-            bank.putInt("helicitySeed",     0, data.getHelicitySeed());
-            bank.putInt("nTStableRE",       0, data.getNTStableRisingEdge());
-            bank.putInt("nTStableFE",       0, data.getNTStableFallingEdge());
-            bank.putInt("nPattern",         0, data.getNPattern());
-            bank.putInt("nPair",            0, data.getNPair());
-            bank.putInt("tStableStart",     0, data.getTStableStart());
-            bank.putInt("tStableEnd",       0, data.getTStableEnd());
-            bank.putInt("tStableTime",      0, data.getTStableTime());
-            bank.putInt("tSettleTime",      0, data.getTSettleTime());
-            bank.putInt("patternArray",     0, data.getPatternWindows());
-            bank.putInt("pairArray",        0, data.getPairWindows());
-            bank.putInt("helicityArray",    0, data.getHelicityWindows());
-            bank.putInt("helicityPArray",   0, data.getHelicityPatternWindows());
+            bank.putByte(i++, 0, data.getHelicityState().getHelicity().value());
+            bank.putByte(i++, 0, data.getHelicityState().getPairSync().value());
+            bank.putByte(i++, 0, data.getHelicityState().getPatternSync().value());
+            bank.putByte(i++, 0, data.getTSettle().value());
+            bank.putByte(i++, 0, data.getHelicityPattern().value());
+            bank.putByte(i++, 0, data.getPolarity());
+            bank.putByte(i++, 0, data.getPatternPhaseCount());
+            bank.putLong(i++, 0, data.getTimestamp());
+            bank.putInt(i++, 0, data.getHelicitySeed());
+            bank.putInt(i++, 0, data.getNTStableRisingEdge());
+            bank.putInt(i++, 0, data.getNTStableFallingEdge());
+            bank.putInt(i++, 0, data.getNPattern());
+            bank.putInt(i++, 0, data.getNPair());
+            bank.putInt(i++, 0, data.getTStableStart());
+            bank.putInt(i++, 0, data.getTStableEnd());
+            bank.putInt(i++, 0, data.getTStableTime());
+            bank.putInt(i++, 0, data.getTSettleTime());
+            bank.putInt(i++, 0, data.getPatternWindows());
+            bank.putInt(i++, 0, data.getPairWindows());
+            bank.putInt(i++, 0, data.getHelicityWindows());
+            bank.putInt(i++, 0, data.getHelicityPatternWindows());
             return bank;
         }
         else 
