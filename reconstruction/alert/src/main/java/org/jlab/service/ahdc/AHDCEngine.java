@@ -22,9 +22,11 @@ import org.jlab.rec.ahdc.KalmanFilter.MaterialMap;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import org.jlab.rec.ahdc.PreCluster.PreClusterFinder;
 import org.jlab.rec.ahdc.Track.Track;
-import org.jlab.rec.ahdc.Mode;
+import org.jlab.rec.ahdc.ModeTrackFinding;
 import java.io.File;
 import java.util.*;
+import java.util.logging.Logger;
+
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.geom.detector.alert.AHDC.AlertDCDetector;
 import org.jlab.geom.detector.alert.AHDC.AlertDCFactory;
@@ -40,38 +42,26 @@ import org.jlab.detector.pulse.ModeAHDC;
  *
  */
 public class AHDCEngine extends ReconstructionEngine {
+    static final Logger LOGGER = Logger.getLogger(AHDCEngine.class.getName());
 
-    private boolean                   simulation;
-
-    /** 
-     * String name for track seedsfinding method.
-     *  Options are:
-     *  - "distance"
-     *  - "hough"
-     *
-     *  \todo remove bool use_AI_for_trackfinding and use option string above.
-     */
-    private String                    findingMethod;
+    private boolean simulation;
 
     /// Material Map used by Kalman filter
     private HashMap<String, Material> materialMap;
 
-    /// \todo better name... Model of what?
-    private ModelTrackFinding model_track_finding;
-    private Model_TM model_tm;
+    private ModelTrackFinding modelTrackFinding;
+    private ModeTrackFinding modeTrackFinding = ModeTrackFinding.AI_Track_Finding;
 
-    /// \todo better name... mode for what?
-    private Mode mode = Mode.CV_Track_Finding;
+    /// TODO: Need to be in the ALERT Engine
+    private Model_TM model_tm;
 
     private AlertDCDetector factory = null;
     private ModeAHDC ahdcExtractor = new ModeAHDC();
 
-    public AHDCEngine() {
-        super("ALERT", "ouillon", "1.0.1");
-    }
+    public AHDCEngine() { super("ALERT", "ouillon", "1.0.1"); }
 
-    public boolean init(Mode m) {
-        mode = m;
+    public boolean init(ModeTrackFinding m) {
+        modeTrackFinding = m;
         return init();
     }
 
@@ -79,27 +69,22 @@ public class AHDCEngine extends ReconstructionEngine {
     public boolean init() {
 
         factory = (new AlertDCFactory()).createDetectorCLAS(new DatabaseConstantProvider());
-        
-        simulation    = false;
-        findingMethod = "distance";
+        simulation = false;
 
-        if (materialMap == null) {
-            materialMap = MaterialMap.generateMaterials();
-        }
+        if (materialMap == null) materialMap = MaterialMap.generateMaterials();
 
         if(this.getEngineConfigString("Mode")!=null) {
-            if (Objects.equals(this.getEngineConfigString("Mode"), Mode.AI_Track_Finding.name()))
-                mode = Mode.AI_Track_Finding;
-
-            if (Objects.equals(this.getEngineConfigString("Mode"), Mode.CV_Track_Finding.name()))
-                mode = Mode.CV_Track_Finding;
+            if (Objects.equals(this.getEngineConfigString("Mode"), ModeTrackFinding.AI_Track_Finding.name()))
+                modeTrackFinding = ModeTrackFinding.AI_Track_Finding;
+            else if (Objects.equals(this.getEngineConfigString("Mode"), ModeTrackFinding.CV_Distance.name()))
+                modeTrackFinding = ModeTrackFinding.CV_Distance;
+            else if (Objects.equals(this.getEngineConfigString("Mode"), ModeTrackFinding.CV_Hough.name()))
+                modeTrackFinding = ModeTrackFinding.CV_Hough;
         }
 
-        if (mode == Mode.AI_Track_Finding) {
-            model_track_finding = new ModelTrackFinding();
+        if (modeTrackFinding == ModeTrackFinding.AI_Track_Finding) {
+            modelTrackFinding = new ModelTrackFinding();
         }
-
-        model_tm = new Model_TM();
 
         // Requires calibration constants
         String[] alertTables = new String[] {
@@ -125,109 +110,89 @@ public class AHDCEngine extends ReconstructionEngine {
     @Override
     public boolean processDataEvent(DataEvent event) {
 
-        int    runNo          = 10; // needed here?
-        int    eventNo        = 777; // same
+        double magfield = 50.0; // what is this? The full magnetic field strength in kGauss (factor * 50kGauss)
 
-        double magfield       = 50.0;  // what is this?
-        double magfieldfactor = 1;     // why is this here?
+        if(event.hasBank("MC::Particle")) simulation = true;
 
-	if(event.hasBank("MC::Particle")){
-	    simulation = true;
-	}
-
-        // TODO: this code should perhaps be in the if statement MC::Particle
         ahdcExtractor.update(30, null, event, "AHDC::wf", "AHDC::adc");
 
         if (event.hasBank("RUN::config")) {
             DataBank bank = event.getBank("RUN::config");
-            runNo          = bank.getInt("run", 0);
-            eventNo        = bank.getInt("event", 0);
-            magfieldfactor = bank.getFloat("solenoid", 0);
-            if (runNo <= 0) {
+            int newRun = bank.getInt("run", 0);
+            float magfieldfactor = bank.getFloat("solenoid", 0);
+            if (newRun <= 0) {
                 System.err.println("AHDCEngine:  got run <= 0 in RUN::config, skipping event.");
                 return false;
             }
-            int newRun = Run;        
-            newRun = runNo; 
             // Load the constants
             //-------------------
-            if(Run!=newRun) {
-                CalibrationConstantsLoader.Load(newRun, this.getConstantsManager()); 
+            if(Run != newRun) {
+                CalibrationConstantsLoader.Load(newRun, this.getConstantsManager());
                 Run = newRun;
             }
+
+            /// What is this? The field value in the RUN::config bank is a scaling factor (between -1 and 1) of the full field
+            /// The kalman filter use the field in kG not Tesla
+            magfield = 50 * magfieldfactor;
         }
 
-        /// What is this? 
-        magfield = 50 * magfieldfactor;
+
 
         if (event.hasBank("AHDC::adc")) {
-            // I) Read raw hit
-            HitReader hitRead = new HitReader(event, factory, simulation);
-
-            ArrayList<Hit>     AHDC_Hits     = hitRead.get_AHDCHits();
-            if(simulation){
-                ArrayList<TrueHit> TrueAHDC_Hits = hitRead.get_TrueAHDCHits();
-            }
-            //System.out.println("AHDC_Hits size " + AHDC_Hits.size());
+            // I) Read raw hits
+            HitReader hitReader = new HitReader(event, factory, simulation);
+            ArrayList<Hit> AHDC_Hits = hitReader.get_AHDCHits();
+            if(simulation) { ArrayList<TrueHit> TrueAHDC_Hits = hitReader.get_TrueAHDCHits(); }
 
             // II) Create PreCluster
-            ArrayList<PreCluster> AHDC_PreClusters = new ArrayList<>();
             PreClusterFinder preclusterfinder = new PreClusterFinder();
             preclusterfinder.findPreCluster(AHDC_Hits);
-            AHDC_PreClusters = preclusterfinder.get_AHDCPreClusters();
-            //System.out.println("AHDC_PreClusters size " + AHDC_PreClusters.size());
+            ArrayList<PreCluster> AHDC_PreClusters = preclusterfinder.get_AHDCPreClusters();
 
             // III) Create Cluster
             ClusterFinder clusterfinder = new ClusterFinder();
             clusterfinder.findCluster(AHDC_PreClusters);
             ArrayList<Cluster> AHDC_Clusters = clusterfinder.get_AHDCClusters();
-            //System.out.println("AHDC_Clusters size " + AHDC_Clusters.size());
 
             // IV) Track Finder
             ArrayList<Track> AHDC_Tracks = new ArrayList<>();
             ArrayList<TrackPrediction> predictions = new ArrayList<>();
 
             // If there is too much hits, we rely on to the conventional track finding
-            if (AHDC_Hits.size() > 300) mode = Mode.CV_Track_Finding;
+            if (AHDC_Hits.size() > 300) {
+                LOGGER.info("Too many AHDC_Hits in AHDC::adc, rely on conventional track finding for this event");
+                modeTrackFinding = ModeTrackFinding.CV_Distance;
+            }
 
-            if (mode == Mode.CV_Track_Finding) {
-                if (findingMethod.equals("distance")) {
-                    // IV) a) Distance method
-                    //System.out.println("using distance");
+            if (modeTrackFinding == ModeTrackFinding.CV_Distance || modeTrackFinding == ModeTrackFinding.CV_Hough) {
+                if (modeTrackFinding == ModeTrackFinding.CV_Distance) {
                     Distance distance = new Distance();
                     distance.find_track(AHDC_Clusters);
                     AHDC_Tracks = distance.get_AHDCTracks();
-                } else if (findingMethod.equals("hough")) {
-                    // IV) b) Hough Transform method
-                    //System.out.println("using hough");
+                } else if (modeTrackFinding == ModeTrackFinding.CV_Hough) {
                     HoughTransform houghtransform = new HoughTransform();
                     houghtransform.find_tracks(AHDC_Clusters);
                     AHDC_Tracks = houghtransform.get_AHDCTracks();
                 }
             }
-            if (mode == Mode.AI_Track_Finding) {
+            if (modeTrackFinding == ModeTrackFinding.AI_Track_Finding) {
                 // AI ---------------------------------------------------------------------------------
-                AHDC_Hits.sort(new Comparator<Hit>() {
-                    @Override
-                    public int compare(Hit a1, Hit a2) {
-                        return Double.compare(a1.getRadius(), a2.getRadius());
-                    }
-                });
+                AHDC_Hits.sort(Comparator.comparingDouble(Hit::getRadius));
                 PreClustering preClustering = new PreClustering();
                 ArrayList<PreCluster> preClustersAI = preClustering.find_preclusters_for_AI(AHDC_Hits);
                 ArrayList<PreclusterSuperlayer> preclusterSuperlayers = preClustering.merge_preclusters(preClustersAI);
                 TrackConstruction trackConstruction = new TrackConstruction();
                 ArrayList<ArrayList<PreclusterSuperlayer>> tracks = new ArrayList<>();
-                boolean sucess = trackConstruction.get_all_possible_track(preclusterSuperlayers, tracks);
+                boolean success = trackConstruction.get_all_possible_track(preclusterSuperlayers, tracks);
 
-                if (!sucess) {
+                if (!success) {
                     System.err.println("Too much tracks candidates, exit");
                     return false;
                 }
 
                 try {
                     AIPrediction aiPrediction = new AIPrediction();
-                    predictions = aiPrediction.prediction(tracks, model_track_finding);
+                    predictions = aiPrediction.prediction(tracks, modelTrackFinding);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -326,7 +291,7 @@ public class AHDCEngine extends ReconstructionEngine {
         HipoDataSource reader = new HipoDataSource();
 
         // en.init();
-        en.init(Mode.AI_Track_Finding);
+        en.init(ModeTrackFinding.AI_Track_Finding);
 
         reader.open(inputFile);
         SchemaFactory factory = reader.getReader().getSchemaFactory();

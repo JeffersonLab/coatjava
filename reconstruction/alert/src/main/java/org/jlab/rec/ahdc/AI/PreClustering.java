@@ -6,6 +6,7 @@ import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import java.util.*;
 
 public class PreClustering {
+    static final double DISTANCE_MAX = 8.0;
 
     private int getNextWire(int wireId, int totalWires) { return wireId == totalWires ? 1 : wireId + 1; }
     private int getPreviousWire(int wireId, int totalWires) { return wireId == 1 ? totalWires : wireId - 1; }
@@ -40,9 +41,7 @@ public class PreClustering {
         for (ArrayList<Hit> layer : all_super_layer) {
             Map<Integer, Hit> wireToHit = new HashMap<>();
             for (Hit hit : layer) {
-                if (hit.is_NoUsed()) {
-                    wireToHit.put(hit.getWireId(), hit);
-                }
+                if (hit.is_NoUsed()) wireToHit.put(hit.getWireId(), hit);
             }
 
             for (Hit seedHit : layer) {
@@ -80,8 +79,6 @@ public class PreClustering {
     }
 
     public ArrayList<PreclusterSuperlayer> merge_preclusters(ArrayList<PreCluster> preclusters) {
-        double distance_max = 8.0;
-
         ArrayList<PreclusterSuperlayer> superpreclusters = new ArrayList<>();
         for (PreCluster precluster : preclusters) {
             if (!precluster.is_Used()) {
@@ -94,7 +91,7 @@ public class PreClustering {
                         double dy = precluster.get_Y() - other.get_Y();
                         double distance = Math.sqrt(dx * dx + dy * dy);
 
-                        if (distance < distance_max) {
+                        if (distance < DISTANCE_MAX) {
                             other.set_Used(true);
                             tmp.add(other);
                         }
