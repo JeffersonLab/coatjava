@@ -4,8 +4,6 @@ import org.jlab.geom.base.*;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.rec.atof.constants.Parameters;
 import java.util.logging.Logger;
-import org.jlab.detector.calib.utils.DatabaseConstantProvider;
-import org.jlab.geom.detector.alert.ATOF.AlertTOFFactory;
 import org.jlab.rec.constants.CalibrationConstantsLoader;
 
 /**
@@ -21,14 +19,6 @@ public class ATOFHit {
 
     static final Logger LOGGER = Logger.getLogger(ATOFHit.class.getName());
     
-    //For aligning bar together, take module 0, component 10 as the reference
-    //For now the table is full of things with order = 0 or order = 1 for the bars
-    //However these offsets are defined uniquely for order 0 and order 1
-    //Eventually the table will need to be revisited, either by adding another table
-    //That does not index the order or by indexing things with order 2 (or another number)
-    private int referenceModuleKey = 0*10000 + 0*1000 + 10*10 + 0;
-    double[] timeOffsetsRef = CalibrationConstantsLoader.ATOF_TIME_OFFSETS.get(referenceModuleKey);
-
     private int sector, layer, component, order;
     private int tdc, tot;
     private float startTime;
@@ -198,19 +188,25 @@ public class ATOFHit {
         
         //Converting tdc to ns, event start time correction
         this.time = Parameters.TDC2TIME*this.tdc - this.startTime;
-        
-        //For now we use order 0 to read everything because the current calib constants
-        //are not for a specific bar channel
-        //Eventually this will need to be adjusted
-        int key = this.sector*10000 + this.layer*1000 + this.component*10 + 0;//this.order;
 
+        //TODO: When table structure evolves, pay attention to order.
+        //Key for the current channel 
+        int key = this.sector*10000 + this.layer*1000 + this.component*10 + 0;//this.order;
+        //Key for the reference channel over which all the others sharing the same z are aligned 
+        int referenceModuleKey = this.component*10; 
+    
         //Time offsets
         double[] timeOffsets = CalibrationConstantsLoader.ATOF_TIME_OFFSETS.get(key);
+        double[] timeOffsetsRef = CalibrationConstantsLoader.ATOF_TIME_OFFSETS.get(referenceModuleKey);
+        
         //The names below correspond to the CCDB entries
         //They will most probably evolve
-        //For now let's say t0 is used to store the bar-to-bar alignment
+        //For now let's say t0 is used to store the bar-to-bar and wedge-to-wedge alignments
         double t0 = timeOffsets[0];
-        double tB2B = (t0 - timeOffsetsRef[0])/2;
+        double tChannelToChannelPhiAlignment = (t0 - timeOffsetsRef[0]);
+        if(this.type=="bar up" || this.type=="bar down") //bar alignment is done with the sum of the two times
+            tChannelToChannelPhiAlignment=tChannelToChannelPhiAlignment/2.;
+        
         //tud is used to store the bar up - bar down alignment
         double tud = timeOffsets[1];
         //The rest of the constants are not used for now
@@ -243,19 +239,19 @@ public class ATOFHit {
                     veff = Parameters.VEFF;
                     //Wedge hits are placed at the center of wedges and sipm at their top
                     distance_to_sipm = Parameters.WEDGE_THICKNESS / 2.;
-                    timeOffset = 0; //To be replaced with w2w time and eventual other offsets
+                    timeOffset = - tChannelToChannelPhiAlignment;
                 }
                 case "bar up" -> {
                     veff = Parameters.VEFF;
                     //The distance will be computed at barhit level when z information is available
                     distance_to_sipm = 0;
-                    timeOffset = - tud/2. - tB2B;
+                    timeOffset = - tud/2. - tChannelToChannelPhiAlignment;
                 }
                 case "bar down" -> {
                     veff = Parameters.VEFF;
                     //The distance will be computed at barhit level when z information is available
                     distance_to_sipm = 0;
-                    timeOffset = + tud/2. - tB2B;
+                    timeOffset = + tud/2. - tChannelToChannelPhiAlignment;
                 }
                 case "bar" -> {
                     LOGGER.finest("Bar hit type, cannot convert tdc to time.");

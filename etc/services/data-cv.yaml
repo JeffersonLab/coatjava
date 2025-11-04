@@ -63,7 +63,7 @@ services:
     name: CALIB    
 configuration:
   global:
-    variation: rgb_spring2019
+    variation: rgd_fall2023
 #    timestamp: 12/31/2020-00:00:00
 #    triggerMask: "0x1"
 ## uncomment the following two lines for compatibility with alignments before the DC fixes
@@ -71,7 +71,7 @@ configuration:
 #    dcFeedthroughs: "OFF"
   io-services:
     writer:
-      schema_dir: data-cv
+      schema_dir: dst
   services:
     MAGFIELDS:
       magfieldSolenoidMap: Symm_solenoid_r601_phi1_z1201_13June2018.dat

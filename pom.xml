@@ -37,7 +37,7 @@
       <dependency>
         <groupId>com.github.spotbugs</groupId>
         <artifactId>spotbugs</artifactId>
-        <version>4.9.6</version>
+        <version>4.9.8</version>
       </dependency>
 
       <dependency>
@@ -62,21 +62,21 @@
       <dependency>
         <groupId>org.openjfx</groupId>
         <artifactId>javafx-base</artifactId>
-        <version>22.0.2</version>
+        <version>23.0.2</version>
         <classifier>linux</classifier>
       </dependency>
 
       <dependency>
         <groupId>org.openjfx</groupId>
         <artifactId>javafx-graphics</artifactId>
-        <version>22.0.2</version>
+        <version>23.0.2</version>
         <classifier>linux</classifier>
       </dependency>
 
       <dependency>
         <groupId>org.openjfx</groupId>
         <artifactId>javafx-fxml</artifactId>
-        <version>22.0.2</version>
+        <version>23.0.2</version>
         <classifier>linux</classifier>
       </dependency>
 
@@ -186,7 +186,7 @@
       <dependency> <!-- sets version number for all 'ai.djl' dependencies -->
         <groupId>ai.djl</groupId>
         <artifactId>bom</artifactId>
-        <version>0.34.0</version> <!-- WARNING: if changed, check the `com.google.code.gson:gson` version; see `docs/dependency_conflicts.md` -->
+        <version>0.35.0</version> <!-- WARNING: if changed, check the `com.google.code.gson:gson` version; see `docs/dependency_conflicts.md` -->
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -207,7 +207,9 @@
       </dependency>
 
       <!-- resolve conflict between `org.jlab.coda:jclara` and `ai.djl:api`
-           by choosing the later version of their `com.google.code.gson:gson` dependency -->
+           by choosing the later version of their `com.google.code.gson:gson` dependency
+           - `djl`'s `gson` version is here: https://github.com/deepjavalibrary/djl/blob/master/gradle/libs.versions.toml
+      -->
       <dependency>
         <groupId>com.google.code.gson</groupId>
         <artifactId>gson</artifactId>
@@ -246,7 +248,7 @@
       <plugin>
         <groupId>com.github.spotbugs</groupId>
         <artifactId>spotbugs-maven-plugin</artifactId>
-        <version>4.9.6.0</version>
+        <version>4.9.8.1</version>
         <configuration>
           <excludeFilterFile>spotbugs-exclude.xml</excludeFilterFile>
         </configuration>

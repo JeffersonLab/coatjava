@@ -73,6 +73,7 @@ jobs:
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
+          cache: maven
       - name: install xrootd-client (linux)
         if: ${{ matrix.runner == 'ubuntu-latest' }}
         run: |
@@ -96,7 +97,7 @@ jobs:
         run: |
           tar czvf coatjava.tar.gz coatjava
           tar czvf clara.tar.gz clara
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: build_${{ matrix.runner }}
           retention-days: 1
@@ -115,6 +116,7 @@ jobs:
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
+          cache: maven
       - name: install xrootd-client
         run: |
           sudo apt -y update
@@ -122,16 +124,38 @@ jobs:
       - uses: cvmfs-contrib/github-action-cvmfs@v5
         with:
           cvmfs_repositories: 'oasis.opensciencegrid.org'
-      - name: unit tests and spotbugs
-        run: ./build-coatjava.sh --xrootd --spotbugs --unittests --no-progress -T${{ env.nthreads }}
+      - name: unit tests
+        run: ./build-coatjava.sh --xrootd --unittests --no-progress -T${{ env.nthreads }}
       - name: collect jacoco report
         run: validation/jacoco-aggregate.sh
       - name: publish jacoco report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: jacoco_report
           path: publish/
           retention-days: 1
+
+  spotbugs:
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          java-version: ${{ env.java_version }}
+          distribution: ${{ env.java_distribution }}
+          cache: maven
+      - uses: cvmfs-contrib/github-action-cvmfs@v5
+        with:
+          cvmfs_repositories: 'oasis.opensciencegrid.org'
+      - uses: actions/download-artifact@v6
+        with:
+          name: build_ubuntu-latest
+      - name: untar build
+        run: tar xzvf coatjava.tar.gz
+      - name: spotbugs
+        run: ./build-coatjava.sh --spotbugs --nomaps --no-progress
 
   test_decoder:
     needs: [ build, download_test_data ]
@@ -143,6 +167,7 @@ jobs:
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
+          cache: maven
       - uses: cvmfs-contrib/github-action-cvmfs@v5
         with:
           cvmfs_repositories: 'oasis.opensciencegrid.org'
@@ -150,7 +175,7 @@ jobs:
         run: |
           sudo apt -y update
           sudo apt -y install xrootd-client
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           name: build_ubuntu-latest
       - uses: actions/cache/restore@v4
@@ -179,11 +204,12 @@ jobs:
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
+          cache: maven
       - name: setup cvmfs
         uses: cvmfs-contrib/github-action-cvmfs@v5
         with:
           cvmfs_repositories: 'oasis.opensciencegrid.org'
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           name: build_ubuntu-latest
       - uses: actions/cache/restore@v4
@@ -199,7 +225,7 @@ jobs:
       - name: run test
         run: |
           ls -lhtr
-          ./bin/run-clara -y ./etc/services/rgd-clarode.yml -t 4 -n 500 -c ./clara -o ./tmp ./clas_018779.evio.00001
+          ./bin/run-clara -y ./etc/services/rgd-clarode.yml -t 4 -n 500 -c ./clara -o ./tmp ./clas_018779.evio.00001 
           ls -lhtr
 
   test_coatjava:
@@ -234,7 +260,8 @@ jobs:
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
-      - uses: actions/download-artifact@v5
+          cache: maven
+      - uses: actions/download-artifact@v6
         with:
           name: build_${{ matrix.runner }}
       - uses: cvmfs-contrib/github-action-cvmfs@v5
@@ -258,11 +285,12 @@ jobs:
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
+          cache: maven
       - name: setup groovy
         uses: wtfjoke/setup-groovy@v3
         with:
           groovy-version: ${{ env.groovy_version }}
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           name: build_ubuntu-latest
       - name: untar build
@@ -280,7 +308,8 @@ jobs:
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
-      - uses: actions/download-artifact@v5
+          cache: maven
+      - uses: actions/download-artifact@v6
         with:
           name: build_ubuntu-latest
       - name: untar build
@@ -305,7 +334,7 @@ jobs:
         run: docs/mkdocs/generate.sh pages
       ### jacoco
       - name: download jacoco report artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           name: jacoco_report
           path: pages/jacoco
@@ -315,6 +344,7 @@ jobs:
         with:
           java-version: ${{ env.java_version }}
           distribution: ${{ env.java_distribution }}
+          cache: maven
       - name: build coatjava javadocs # javadoc:aggregate output dir cannot be controlled, so assume the latest "standard" path and `mv` it
         run: |
           libexec/build-javadocs.sh
@@ -357,7 +387,7 @@ jobs:
       TAG_NAME: ${{ github.ref_name }}
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           name: build_ubuntu-latest
       - name: rename artifact
