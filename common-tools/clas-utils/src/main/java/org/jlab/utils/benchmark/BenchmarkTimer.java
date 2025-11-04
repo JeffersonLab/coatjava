@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.jlab.utils.benchmark;
 
 /**
@@ -13,16 +7,13 @@ package org.jlab.utils.benchmark;
 public class BenchmarkTimer {
     
     private String timerName = "generic";
-    
-    private long   lastStartTime = 0;
-    private long   totalTime = 0;
-    private long   timeAtResume = 0;
-    private int    numberOfCalls = 0;
     private Boolean isPaused = true;
     
-    public BenchmarkTimer(){
-        
-    }
+    protected long totalTime = 0;
+    protected long timeAtResume = 0;
+    protected int numberOfCalls = 0;
+
+    public BenchmarkTimer(){}
     
     public BenchmarkTimer(String name){
         timerName = name;
@@ -49,7 +40,6 @@ public class BenchmarkTimer {
     }
     
     public void reset(){
-        lastStartTime = 0;
         totalTime = 0;
         timeAtResume = 0;
         numberOfCalls = 0;
@@ -69,8 +59,10 @@ public class BenchmarkTimer {
         StringBuilder str = new StringBuilder();
         double timePerCall = 0.0;
         if(numberOfCalls!=0) timePerCall = this.getMiliseconds()/numberOfCalls;
-        str.append(String.format("TIMER (%-12s) : N Calls %12d,  Total Time  = %12.2f sec,  Unit Time = %12.3f msec",
-                this.getName(),numberOfCalls,this.getSeconds(),timePerCall));
+        String fmt = "%-12s : Calls %15d,  Total = %8.2f sec,  Unit = %8.4f msec";
+        str.append(String.format(fmt,
+            this.getName(),this.getName().equals("")?0:numberOfCalls,
+            this.getSeconds(),this.getName().equals("")?0:timePerCall));
         return str.toString();
     }
 }

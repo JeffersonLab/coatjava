@@ -1,11 +1,5 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.utils.benchmark;
 
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
@@ -16,28 +10,30 @@ import java.util.logging.Logger;
  * @author gavalian
  */
 public class ProgressPrintout {
+
+    private final TreeMap<String,Object> items = new TreeMap<>();
+    private Long previousPrintoutTime = (long) 0;
+    private Long startPrintoutTime = (long) 0;
+    private double printoutIntervalSeconds = 10.0;
+    private String printoutLeadingString = ">>>>> progress : ";
+    private Integer numberOfCalls = 0;
+    private Benchmark benchmark = null;
     
-    private TreeMap<String,Object> items   = new TreeMap<String,Object>();
-    private TreeMap<String,Object> itemMax = new TreeMap<String,Object>();
-    
-    private Long                   previousPrintoutTime = (long) 0;
-    private Long                   startPrintoutTime    = (long) 0;
-    
-    private double   printoutIntervalSeconds = 10.0;
-    private String   printoutLeadingString   = ">>>>> progress : ";
-    private Integer  numberOfCalls           = 0;
-    
-    public  ProgressPrintout(){
+    public ProgressPrintout(){
         this.previousPrintoutTime = System.currentTimeMillis();
         this.startPrintoutTime = System.currentTimeMillis();
     }
     
-    public  ProgressPrintout(String name){
+    public ProgressPrintout(String name){
         this.printoutLeadingString = name;
         this.previousPrintoutTime = System.currentTimeMillis();
         this.startPrintoutTime = System.currentTimeMillis();
     }
-    
+
+    public void addBenchmarks() {
+        benchmark = Benchmark.getInstance();
+    }
+
     public void setInterval(double interval){
         this.printoutIntervalSeconds = interval;
     }
@@ -56,40 +52,36 @@ public class ProgressPrintout {
     }
     
     public void showStatus(){
-        System.out.println("\n\n");
+        if (benchmark != null) System.out.println(benchmark);
         System.out.println(this.getUpdateString());
-        System.out.println("\n\n");        
     }
     
-    public void updateStatus(){        
+    public void updateStatus(){
         this.numberOfCalls++;
-        Long currentTime   = System.currentTimeMillis();
+        Long currentTime = System.currentTimeMillis();
         Double elapsedTime = (currentTime - this.previousPrintoutTime)*1e-3;
-        //System.out.println("elapsed = " + elapsedTime);
         if(elapsedTime>=this.printoutIntervalSeconds){
             this.previousPrintoutTime = System.currentTimeMillis();
-            //System.out.println(" passed time ");
-            System.out.println(this.getUpdateString());
+            showStatus();
         }
     }
     
-    public void   setAsInteger(String name, Integer value){
+    public void setAsInteger(String name, Integer value){
         this.items.put(name, value);
     }
     
-    public void   setAsDouble(String name, Double value){
+    public void setAsDouble(String name, Double value){
         this.items.put(name, value);
     }
     
     public String getItemString(String itemname){
         StringBuilder str = new StringBuilder();
-        if(this.items.get(itemname) instanceof Integer){
-            str.append(String.format("  %s : %5d",itemname,(Integer)this.items.get(itemname)));
+        if(this.items.get(itemname) instanceof Integer i){
+            str.append(String.format("  %s : %5d",itemname, i));
         }
-        
-        if(this.items.get(itemname) instanceof Double){
-            str.append(String.format("  %s : %8.3f",itemname,(Double)this.items.get(itemname)));
-        }        
+        if(this.items.get(itemname) instanceof Double d){
+            str.append(String.format("  %s : %8.3f",itemname, d));
+        }
         return str.toString();
     }
     
@@ -103,7 +95,6 @@ public class ProgressPrintout {
             } catch (InterruptedException ex) {
                 Logger.getLogger(ProgressPrintout.class.getName()).log(Level.SEVERE, null, ex);
             }
-            //System.out.println("cycle " + loop);
             progress.updateStatus();
         }
     }
