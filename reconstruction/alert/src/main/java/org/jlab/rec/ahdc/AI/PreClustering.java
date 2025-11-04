@@ -33,7 +33,7 @@ public class PreClustering {
         return layers;
     }
 
-    public ArrayList<PreCluster> new_find_preclusters_for_AI(List<Hit> AHDC_hits) {
+    public ArrayList<PreCluster> find_preclusters_for_AI(List<Hit> AHDC_hits) {
         ArrayList<ArrayList<Hit>> all_super_layer = fillAllLayers(AHDC_hits);
         ArrayList<PreCluster> preclusters = new ArrayList<>();
 

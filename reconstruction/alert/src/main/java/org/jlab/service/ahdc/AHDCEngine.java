@@ -57,7 +57,7 @@ public class AHDCEngine extends ReconstructionEngine {
     private HashMap<String, Material> materialMap;
 
     /// \todo better name... Model of what?
-    private Model model;
+    private ModelTrackFinding model_track_finding;
     private Model_TM model_tm;
 
     /// \todo better name... mode for what?
@@ -96,7 +96,7 @@ public class AHDCEngine extends ReconstructionEngine {
         }
 
         if (mode == Mode.AI_Track_Finding) {
-            model = new Model();
+            model_track_finding = new ModelTrackFinding();
         }
 
         model_tm = new Model_TM();
@@ -227,7 +227,7 @@ public class AHDCEngine extends ReconstructionEngine {
 
                 try {
                     AIPrediction aiPrediction = new AIPrediction();
-                    predictions = aiPrediction.prediction(tracks, model.getModel());
+                    predictions = aiPrediction.prediction(tracks, model_track_finding);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
