@@ -34,7 +34,7 @@ public class PreClustering {
         return layers;
     }
 
-    public ArrayList<PreCluster> find_preclusters_for_AI(List<Hit> AHDC_hits) {
+    public ArrayList<PreCluster> findPreclustersForAI(List<Hit> AHDC_hits) {
         ArrayList<ArrayList<Hit>> all_super_layer = fillAllLayers(AHDC_hits);
         ArrayList<PreCluster> preclusters = new ArrayList<>();
 
@@ -78,31 +78,27 @@ public class PreClustering {
         return preclusters;
     }
 
-    public ArrayList<PreclusterSuperlayer> merge_preclusters(ArrayList<PreCluster> preclusters) {
-        ArrayList<PreclusterSuperlayer> superpreclusters = new ArrayList<>();
+    public ArrayList<InterCluster> mergePreclusters(ArrayList<PreCluster> preclusters) {
+        ArrayList<InterCluster> interclusters = new ArrayList<>();
         for (PreCluster precluster : preclusters) {
             if (!precluster.is_Used()) {
                 ArrayList<PreCluster> tmp = new ArrayList<>();
                 tmp.add(precluster);
                 precluster.set_Used(true);
                 for (PreCluster other : preclusters) {
-                    if (precluster.get_hits_list().get(precluster.get_hits_list().size() - 1).getSuperLayerId() == other.get_hits_list().get(other.get_hits_list().size() - 1).getSuperLayerId() && precluster.get_hits_list().get(precluster.get_hits_list().size() - 1).getLayerId() != other.get_hits_list().get(other.get_hits_list().size() - 1).getLayerId() && !other.is_Used()) {
-                        double dx = precluster.get_X() - other.get_X();
-                        double dy = precluster.get_Y() - other.get_Y();
-                        double distance = Math.sqrt(dx * dx + dy * dy);
-
-                        if (distance < DISTANCE_MAX) {
+                    if (precluster.get_hits_list().getLast().getSuperLayerId() == other.get_hits_list().getLast().getSuperLayerId()
+                            && precluster.get_hits_list().getLast().getLayerId() != other.get_hits_list().getLast().getLayerId()
+                            && !other.is_Used()) {
+                        if (Math.hypot(precluster.get_X() - other.get_X(), precluster.get_Y() - other.get_Y()) < DISTANCE_MAX) {
                             other.set_Used(true);
                             tmp.add(other);
                         }
                     }
                 }
-
-                if (!tmp.isEmpty()) superpreclusters.add(new PreclusterSuperlayer(tmp));
+                if (!tmp.isEmpty()) interclusters.add(new InterCluster(tmp));
             }
         }
-
-        return superpreclusters;
+        return interclusters;
     }
 
 

@@ -1,11 +1,7 @@
 package org.jlab.rec.ahdc.AI;
 
 import org.apache.commons.lang3.mutable.MutableBoolean;
-import org.jlab.rec.ahdc.Hit.Hit;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.*;
 
 /**
@@ -106,7 +102,7 @@ public class TrackConstruction {
         return result;
     }
 
-    public boolean get_all_possible_track(ArrayList<PreclusterSuperlayer> preclusterSuperlayers, ArrayList<ArrayList<PreclusterSuperlayer>> all_track_candidates) {
+    public boolean get_all_possible_track(ArrayList<InterCluster> interClusters, ArrayList<ArrayList<InterCluster>> all_track_candidates) {
 
         /*
         Identify all superpreclusters located in the first superlayer.
@@ -114,9 +110,9 @@ public class TrackConstruction {
         A track candidate always starts from a seed.
         */
         ArrayList<Integer> seed_index = new ArrayList<>();
-        for (int i = 0; i < preclusterSuperlayers.size(); i++) {
-            if (!preclusterSuperlayers.get(i).getPreclusters().isEmpty() &&
-            preclusterSuperlayers.get(i).getSuperlayer() == 1) {
+        for (int i = 0; i < interClusters.size(); i++) {
+            if (!interClusters.get(i).getPreclusters().isEmpty() &&
+            interClusters.get(i).getSuperlayer() == 1) {
             seed_index.add(i);
             }
         }
@@ -132,10 +128,10 @@ public class TrackConstruction {
 
             // Find all superpreclusters that have a phi angle within phi angle of the seed +/- 60 degrees
             // The goal is to reduce the number of superpreclusters to loop over
-            double phi_seed = warp_zero_two_pi(Math.atan2(preclusterSuperlayers.get(s).getY(), preclusterSuperlayers.get(s).getX()));  // phi angle of the seed
+            double phi_seed = warp_zero_two_pi(Math.atan2(interClusters.get(s).getY(), interClusters.get(s).getX()));  // phi angle of the seed
             ArrayList<Integer> all_superpreclusters = new ArrayList<>();                                                                   // all superpreclusters that are within phi angle of the seed
-            for (int i = 0; i < preclusterSuperlayers.size(); ++i) {
-                double phi_p = warp_zero_two_pi(Math.atan2(preclusterSuperlayers.get(i).getY(), preclusterSuperlayers.get(i).getX()));
+            for (int i = 0; i < interClusters.size(); ++i) {
+                double phi_p = warp_zero_two_pi(Math.atan2(interClusters.get(i).getY(), interClusters.get(i).getX()));
                 if (angle_in_range(phi_p, phi_seed - max_angle, phi_seed + max_angle)) {
                     all_superpreclusters.add(i);
                 }
@@ -150,13 +146,13 @@ public class TrackConstruction {
             ArrayList<Integer> superpreclusters_s5 = new ArrayList<>();
 
             for (int i = 0; i < all_superpreclusters.size(); i++) {
-                if (preclusterSuperlayers.get(all_superpreclusters.get(i)).getPreclusters().get(0).get_Super_layer() == 2)
+                if (interClusters.get(all_superpreclusters.get(i)).getPreclusters().get(0).get_Super_layer() == 2)
                     superpreclusters_s2.add(all_superpreclusters.get(i));
-                else if (preclusterSuperlayers.get(all_superpreclusters.get(i)).getPreclusters().get(0).get_Super_layer() == 3)
+                else if (interClusters.get(all_superpreclusters.get(i)).getPreclusters().get(0).get_Super_layer() == 3)
                     superpreclusters_s3.add(all_superpreclusters.get(i));
-                else if (preclusterSuperlayers.get(all_superpreclusters.get(i)).getPreclusters().get(0).get_Super_layer() == 4)
+                else if (interClusters.get(all_superpreclusters.get(i)).getPreclusters().get(0).get_Super_layer() == 4)
                     superpreclusters_s4.add(all_superpreclusters.get(i));
-                else if (preclusterSuperlayers.get(all_superpreclusters.get(i)).getPreclusters().get(0).get_Super_layer() == 5)
+                else if (interClusters.get(all_superpreclusters.get(i)).getPreclusters().get(0).get_Super_layer() == 5)
                     superpreclusters_s5.add(all_superpreclusters.get(i));
             }
 
@@ -176,9 +172,9 @@ public class TrackConstruction {
             // Add all track candidates to the list of all track candidates
             // And switch back from index to superprecluster
             for (ArrayList<Integer> combination : combinations_s1_s2_s3_s4_s5) {
-                ArrayList<PreclusterSuperlayer> track_candidate = new ArrayList<>();
+                ArrayList<InterCluster> track_candidate = new ArrayList<>();
                 for (int index : combination) {
-                    track_candidate.add(preclusterSuperlayers.get(index));
+                    track_candidate.add(interClusters.get(index));
                 }
                 all_track_candidates.add(track_candidate);
             }

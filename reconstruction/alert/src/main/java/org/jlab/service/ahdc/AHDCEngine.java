@@ -179,11 +179,11 @@ public class AHDCEngine extends ReconstructionEngine {
                 // AI ---------------------------------------------------------------------------------
                 AHDC_Hits.sort(Comparator.comparingDouble(Hit::getRadius));
                 PreClustering preClustering = new PreClustering();
-                ArrayList<PreCluster> preClustersAI = preClustering.find_preclusters_for_AI(AHDC_Hits);
-                ArrayList<PreclusterSuperlayer> preclusterSuperlayers = preClustering.merge_preclusters(preClustersAI);
+                ArrayList<PreCluster> preClustersAI = preClustering.findPreclustersForAI(AHDC_Hits);
+                ArrayList<InterCluster> interClusters = preClustering.mergePreclusters(preClustersAI);
                 TrackConstruction trackConstruction = new TrackConstruction();
-                ArrayList<ArrayList<PreclusterSuperlayer>> tracks = new ArrayList<>();
-                boolean success = trackConstruction.get_all_possible_track(preclusterSuperlayers, tracks);
+                ArrayList<ArrayList<InterCluster>> tracks = new ArrayList<>();
+                boolean success = trackConstruction.get_all_possible_track(interClusters, tracks);
 
                 if (!success) {
                     System.err.println("Too much tracks candidates, exit");

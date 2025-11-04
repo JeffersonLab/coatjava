@@ -7,14 +7,14 @@ public class AIPrediction {
 
     public AIPrediction() {}
 
-    public ArrayList<TrackPrediction> prediction(ArrayList<ArrayList<PreclusterSuperlayer>> tracks, ModelTrackFinding modelTrackFinding) throws Exception {
+    public ArrayList<TrackPrediction> prediction(ArrayList<ArrayList<InterCluster>> tracks, ModelTrackFinding modelTrackFinding) throws Exception {
         ArrayList<TrackPrediction> result = new ArrayList<>();
 
         if (tracks.isEmpty()) return result;
 
         float[][] batchInput = new float[tracks.size()][10];
         for (int i = 0; i < tracks.size(); i++) {
-            ArrayList<PreclusterSuperlayer> track = tracks.get(i);
+            ArrayList<InterCluster> track = tracks.get(i);
             batchInput[i][0] = (float) track.get(0).getX();
             batchInput[i][1] = (float) track.get(0).getY();
             batchInput[i][2] = (float) track.get(1).getX();

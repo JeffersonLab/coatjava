@@ -1,17 +1,15 @@
 package org.jlab.rec.ahdc.AI;
 
-import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
 
 import java.util.ArrayList;
 
-public class PreclusterSuperlayer {
+public class InterCluster {
     private final double x;
     private final double y;
     private ArrayList<PreCluster> preclusters = new ArrayList<>();
 
-
- ;   public PreclusterSuperlayer(ArrayList<PreCluster> preclusters_) {
+    public InterCluster(ArrayList<PreCluster> preclusters_) {
         this.preclusters = preclusters_;
         double x_ = 0;
         double y_ = 0;

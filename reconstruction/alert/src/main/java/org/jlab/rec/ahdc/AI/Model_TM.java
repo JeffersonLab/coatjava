@@ -13,14 +13,11 @@ import ai.djl.training.util.ProgressBar;
 import ai.djl.translate.TranslateException;
 import ai.djl.translate.Translator;
 import ai.djl.translate.TranslatorContext;
-import org.jlab.rec.ahdc.Track.Track;
 import org.jlab.utils.CLASResources;
 
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.stream.IntStream;
 
 public class Model_TM {
     private ZooModel<float[], float[]> model;
@@ -79,7 +76,7 @@ public class Model_TM {
         return model;
     }
 
-    public float[] prediction(ArrayList<PreclusterSuperlayer> track) throws TranslateException {
+    public float[] prediction(ArrayList<InterCluster> track) throws TranslateException {
         float[] a = new float[]{(float) track.get(0).getX(), (float) track.get(0).getY(),
                 (float) track.get(1).getX(), (float) track.get(1).getY(),
                 (float) track.get(2).getX(), (float) track.get(2).getY(),
