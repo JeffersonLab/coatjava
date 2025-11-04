@@ -3,86 +3,76 @@ package org.jlab.rec.ahdc.AI;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 public class PreClustering {
 
-    private ArrayList<Hit> fill(List<Hit> hits, int super_layer, int layer) {
+    private int getNextWire(int wireId, int totalWires) { return wireId == totalWires ? 1 : wireId + 1; }
+    private int getPreviousWire(int wireId, int totalWires) { return wireId == 1 ? totalWires : wireId - 1; }
 
-        ArrayList<Hit> result = new ArrayList<>();
+    private ArrayList<ArrayList<Hit>> fillAllLayers(List<Hit> hits) {
+        // Define layer configurations: [superLayer, layer]
+        int[][] layerConfig = {{1, 1}, {2, 1}, {2, 2}, {3, 1}, {3, 2}, {4, 1}, {4, 2}, {5, 1}};
+
+        ArrayList<ArrayList<Hit>> layers = new ArrayList<>();
+        for (int i = 0; i < layerConfig.length; i++) { layers.add(new ArrayList<>()); }
+
         for (Hit hit : hits) {
-            if (hit.getSuperLayerId() == super_layer && hit.getLayerId() == layer) result.add(hit);
+            for (int i = 0; i < layerConfig.length; i++) {
+                if (layerConfig[i][0] == hit.getSuperLayerId() && layerConfig[i][1] == hit.getLayerId()) {
+                    hit.setUse(false);
+                    layers.get(i).add(hit);
+                    break;
+                }
+            }
         }
-        return result;
+
+        Comparator<Hit> phiComparator = Comparator.comparingDouble(Hit::getPhi);
+        for (ArrayList<Hit> layer : layers) { layer.sort(phiComparator); }
+
+        return layers;
     }
 
-    public ArrayList<PreCluster> find_preclusters_for_AI(List<Hit> AHDC_hits) {
+    public ArrayList<PreCluster> new_find_preclusters_for_AI(List<Hit> AHDC_hits) {
+        ArrayList<ArrayList<Hit>> all_super_layer = fillAllLayers(AHDC_hits);
         ArrayList<PreCluster> preclusters = new ArrayList<>();
 
-        ArrayList<Hit> s1l1 = fill(AHDC_hits, 1, 1);
-        ArrayList<Hit> s2l1 = fill(AHDC_hits, 2, 1);
-        ArrayList<Hit> s2l2 = fill(AHDC_hits, 2, 2);
-        ArrayList<Hit> s3l1 = fill(AHDC_hits, 3, 1);
-        ArrayList<Hit> s3l2 = fill(AHDC_hits, 3, 2);
-        ArrayList<Hit> s4l1 = fill(AHDC_hits, 4, 1);
-        ArrayList<Hit> s4l2 = fill(AHDC_hits, 4, 2);
-        ArrayList<Hit> s5l1 = fill(AHDC_hits, 5, 1);
-
-        // Sort hits of each layers by phi:
-        Comparator<Hit> comparator = new Comparator<>() {
-            @Override
-            public int compare(Hit a1, Hit a2) {
-                return Double.compare(a1.getPhi(), a2.getPhi());
-            }
-        };
-
-        s1l1.sort(comparator);
-        s2l1.sort(comparator);
-        s2l2.sort(comparator);
-        s3l1.sort(comparator);
-        s3l2.sort(comparator);
-        s4l1.sort(comparator);
-        s4l2.sort(comparator);
-        s5l1.sort(comparator);
-
-        ArrayList<ArrayList<Hit>> all_super_layer = new ArrayList<>(Arrays.asList(s1l1, s2l1, s2l2, s3l1, s3l2, s4l1, s4l2, s5l1));
-
-        for (ArrayList<Hit> p : all_super_layer) {
-            for (Hit hit : p) {
-                hit.setUse(false);
-            }
-        }
-
-        for (ArrayList<Hit> p : all_super_layer) {
-            for (Hit hit : p) {
+        for (ArrayList<Hit> layer : all_super_layer) {
+            Map<Integer, Hit> wireToHit = new HashMap<>();
+            for (Hit hit : layer) {
                 if (hit.is_NoUsed()) {
-                    ArrayList<Hit> temp = new ArrayList<>();
-                    temp.add(hit);
-                    hit.setUse(true);
-                    int expected_wire_plus  = hit.getWireId() + 1;
-                    int expected_wire_minus = hit.getWireId() - 1;
-                    if (hit.getWireId() == 1)
-                        expected_wire_minus = hit.getNbOfWires();
-                    if (hit.getWireId() == hit.getNbOfWires() )
-                        expected_wire_plus = 1;
+                    wireToHit.put(hit.getWireId(), hit);
+                }
+            }
 
+            for (Hit seedHit : layer) {
+                if (seedHit.is_NoUsed()) {
+                    ArrayList<Hit> clusterHits = new ArrayList<>();
+                    Queue<Hit> toProcess = new LinkedList<>();
 
-                    boolean has_next = true;
-                    while (has_next) {
-                        has_next = false;
-                        for (Hit hit1 : p) {
-                            if (hit1.is_NoUsed() && (hit1.getWireId() == expected_wire_minus || hit1.getWireId() == expected_wire_plus)) {
-                                temp.add(hit1);
-                                hit1.setUse(true);
-                                has_next = true;
-                                break;
+                    toProcess.add(seedHit);
+                    seedHit.setUse(true);
+                    wireToHit.remove(seedHit.getWireId());
+
+                    while (!toProcess.isEmpty()) {
+                        Hit currentHit = toProcess.poll();
+                        clusterHits.add(currentHit);
+
+                        int totalWires = currentHit.getNbOfWires();
+                        int nextWire = getNextWire(currentHit.getWireId(), totalWires);
+                        int prevWire = getPreviousWire(currentHit.getWireId(), totalWires);
+
+                        for (int adjacentWire : new int[]{nextWire, prevWire}) {
+                            Hit adjacentHit = wireToHit.get(adjacentWire);
+                            if (adjacentHit != null) {
+                                adjacentHit.setUse(true);
+                                wireToHit.remove(adjacentWire);
+                                toProcess.add(adjacentHit);
                             }
                         }
                     }
-                    if (!temp.isEmpty()) preclusters.add(new PreCluster(temp));
+
+                    preclusters.add(new PreCluster(clusterHits));
                 }
             }
         }

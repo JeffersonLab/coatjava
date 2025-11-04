@@ -21,11 +21,11 @@ import java.nio.file.Paths;
  *
  * \todo fix class name 
  */
-public class Model {
-    private ZooModel<float[], Float> model;
+public class ModelTrackFinding {
+    private final ZooModel<float[], Float> model;
 
-    public Model() {
-        Translator<float[], Float> my_translator = new Translator<float[], Float>() {
+    public ModelTrackFinding() {
+        Translator<float[], Float> my_translator = new Translator<>() {
             @Override
             public Float processOutput(TranslatorContext translatorContext, NDList ndList) throws Exception {
                 return ndList.get(0).getFloat();
@@ -33,9 +33,8 @@ public class Model {
 
             @Override
             public NDList processInput(TranslatorContext translatorContext, float[] floats) throws Exception {
-                NDManager manager = NDManager.newBaseManager();
-                NDArray samples = manager.zeros(new Shape(floats.length));
-                samples.set(floats);
+                NDManager manager = translatorContext.getNDManager();
+                NDArray samples = manager.create(floats);
                 return new NDList(samples);
             }
         };
@@ -45,7 +44,7 @@ public class Model {
 
         String path = CLASResources.getResourcePath("etc/data/nnet/ALERT/model_AHDC/");
         Criteria<float[], Float> my_model = Criteria.builder().setTypes(float[].class, Float.class)
-                .optModelPath(Paths.get(path))
+                .optModelPath(Paths.get("etc/nnet/ALERT/model_AHDC/"))
                 .optEngine("PyTorch")
                 .optTranslator(my_translator)
                 .optProgress(new ProgressBar())
@@ -62,5 +61,42 @@ public class Model {
 
     public ZooModel<float[], Float> getModel() {
         return model;
+    }
+
+    /**
+     * Batch prediction for improved performance.
+     * Predicts all tracks at once instead of one at a time.
+     * This is significantly faster due to reduced overhead and better GPU utilization.
+     *
+     * @param inputs Array of input features for each track
+     * @return Array of predictions for each track
+     */
+    public float[] batchPredict(float[][] inputs) throws Exception {
+        if (inputs == null || inputs.length == 0) {
+            return new float[0];
+        }
+
+        try (NDManager manager = NDManager.newBaseManager()) {
+            int batchSize = inputs.length;
+            NDArray batchInput = manager.create(inputs);
+            NDList inputList = new NDList(batchInput);
+            ai.djl.inference.Predictor<NDList, NDList> rawPredictor = model.newPredictor(new ai.djl.translate.NoopTranslator());
+            NDList output = rawPredictor.predict(inputList);
+
+            NDArray outputArray = output.get(0);
+            float[] results = new float[batchSize];
+
+            if (outputArray.getShape().dimension() == 2) {
+                for (int i = 0; i < batchSize; i++) {
+                    results[i] = outputArray.get(i, 0).getFloat();
+                }
+            } else {
+                for (int i = 0; i < batchSize; i++) {
+                    results[i] = outputArray.get(i).getFloat();
+                }
+            }
+
+            return results;
+        }
     }
 }

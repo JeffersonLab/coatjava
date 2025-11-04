@@ -2,32 +2,34 @@ package org.jlab.rec.ahdc.AI;
 
 import java.util.ArrayList;
 
-import ai.djl.MalformedModelException;
-import ai.djl.inference.Predictor;
-import ai.djl.repository.zoo.ModelNotFoundException;
-import ai.djl.repository.zoo.ZooModel;
-import ai.djl.translate.TranslateException;
-
-import java.io.IOException;
-
 public class AIPrediction {
 
 
-    public AIPrediction() throws ModelNotFoundException, MalformedModelException, IOException {
-    }
+    public AIPrediction() {}
 
-    public ArrayList<TrackPrediction> prediction(ArrayList<ArrayList<PreclusterSuperlayer>> tracks, ZooModel<float[], Float> model) throws TranslateException {
+    public ArrayList<TrackPrediction> prediction(ArrayList<ArrayList<PreclusterSuperlayer>> tracks, ModelTrackFinding modelTrackFinding) throws Exception {
         ArrayList<TrackPrediction> result = new ArrayList<>();
-        for (ArrayList<PreclusterSuperlayer> track : tracks) {
-            float[] a = new float[]{(float) track.get(0).getX(), (float) track.get(0).getY(),
-                    (float) track.get(1).getX(), (float) track.get(1).getY(),
-                    (float) track.get(2).getX(), (float) track.get(2).getY(),
-                    (float) track.get(3).getX(), (float) track.get(3).getY(),
-                    (float) track.get(4).getX(), (float) track.get(4).getY(),
-            };
 
-            Predictor<float[], Float> my_predictor = model.newPredictor();
-            result.add(new TrackPrediction(my_predictor.predict(a), track));
+        if (tracks.isEmpty()) return result;
+
+        float[][] batchInput = new float[tracks.size()][10];
+        for (int i = 0; i < tracks.size(); i++) {
+            ArrayList<PreclusterSuperlayer> track = tracks.get(i);
+            batchInput[i][0] = (float) track.get(0).getX();
+            batchInput[i][1] = (float) track.get(0).getY();
+            batchInput[i][2] = (float) track.get(1).getX();
+            batchInput[i][3] = (float) track.get(1).getY();
+            batchInput[i][4] = (float) track.get(2).getX();
+            batchInput[i][5] = (float) track.get(2).getY();
+            batchInput[i][6] = (float) track.get(3).getX();
+            batchInput[i][7] = (float) track.get(3).getY();
+            batchInput[i][8] = (float) track.get(4).getX();
+            batchInput[i][9] = (float) track.get(4).getY();
+        }
+
+        float[] predictions = modelTrackFinding.batchPredict(batchInput);
+        for (int i = 0; i < tracks.size(); i++) {
+            result.add(new TrackPrediction(predictions[i], tracks.get(i)));
         }
 
         return result;
