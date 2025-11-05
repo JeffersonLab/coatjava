@@ -14,6 +14,13 @@ workflow:
 
 default:
   interruptible: true
+  before_script:
+    - export CLARA_HOME=$CI_PROJECT_DIR/clara
+    - export COATJAVA=$CI_PROJECT_DIR/coatjava
+    - export PATH=$CLARA_HOME/plugins/clas12/bin:$PATH
+    - export PATH=$CLARA_HOME/bin:$PATH
+    - export PATH=$COATJAVA/bin:$PATH
+    - echo $PATH
 
 stages:
   - build
@@ -43,15 +50,11 @@ depana:
 download:
   stage: build
   script:
-    - xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/clas_005038.evio.00000 ./
-    - xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/raw/rg-l/clas_021559.evio.00001 ./
     - xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/raw/rg-d/clas_018779.evio.00001 ./
   artifacts:
     when: always
     expire_in: 1 day
     paths:
-      - clas_005038.evio.00000
-      - clas_021559.evio.00001
       - clas_018779.evio.00001
 
 spotbugs:
@@ -59,19 +62,17 @@ spotbugs:
   needs: [build]
   dependencies: [build]
   script:
-    - >
-      tar -xzf coatjava.tar.gz &&
-      ./build-coatjava.sh -T$JL_RUNNER_AVAIL_CPU --spotbugs --quiet --no-progress
+    - tar -xzf coatjava.tar.gz
+    - ./build-coatjava.sh -T$JL_RUNNER_AVAIL_CPU --spotbugs --quiet --no-progress
 
 unit_tests:
   stage: test
   needs: [build]
   dependencies: [build]
   script:
-    - >
-      tar -xzf coatjava.tar.gz &&
-      ./build-coatjava.sh -T$JL_RUNNER_AVAIL_CPU --unittests --quiet --no-progress &&
-      ./validation/jacoco-aggregate.sh
+    - tar -xzf coatjava.tar.gz
+    - ./build-coatjava.sh -T$JL_RUNNER_AVAIL_CPU --unittests --quiet --no-progress
+    - ./validation/jacoco-aggregate.sh
   artifacts:
     when: always
     expire_in: 1 day
@@ -83,16 +84,15 @@ docs:
   needs: [build,unit_tests]
   dependencies: [build,unit_tests]
   script:
-    - >
-      tar -xzf coatjava.tar.gz &&
-      python3 -m venv venv &&
-      source venv/bin/activate &&
-      python3 -m pip install -r docs/mkdocs/requirements.txt &&
-      ./docs/mkdocs/generate.sh pages &&
-      libexec/build-javadocs.sh &&
-      ls -l && ls -l pages && ls -l publish &&
-      mv target/reports/apidocs pages/javadoc &&
-      cp -r publish pages/jacoco
+    - tar -xzf coatjava.tar.gz
+    - python3 -m venv venv
+    - source venv/bin/activate
+    - python3 -m pip install -r docs/mkdocs/requirements.txt
+    - ./docs/mkdocs/generate.sh pages
+    - libexec/build-javadocs.sh
+    - ls -l && ls -l pages && ls -l publish
+    - mv target/reports/apidocs pages/javadoc
+    - cp -r publish pages/jacoco
   artifacts:
     when: always
     expire_in: 7 days
@@ -119,14 +119,11 @@ eb:
 clara:
   allow_failure: true
   stage: test
-  needs: [build]
-  dependencies: [build]
+  needs: [build,download]
+  dependencies: [build,download]
   script:
-    - >
-      tar -xzf clara.tar.gz &&
-      ./clara/plugins/clas12/bin/run-clara -c ./clara
-        -t $JL_RUNNER_AVAIL_CPU -y ./etc/services/rgd-clarode.yml
-        -n 100 -o ./out clas_018779.evio.00001
+    - tar -xzf clara.tar.gz && ls -l
+    - run-clara -v -c $CLARA_HOME -t $JL_RUNNER_AVAIL_CPU -y ./etc/services/rgd-clarode.yml -n 100 -o out clas_018779.evio.00001
 
 profile:
   stage: test
@@ -140,10 +137,10 @@ profile:
 deploy:
   stage: deploy
   script:
-    - echo DEPLOY!!!
+    - echo DEPLOY!
 
 release:
   stage: deploy
   script:
-    - echo RELEASE!!!
+    - echo RELEASE!
 
