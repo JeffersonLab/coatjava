@@ -414,5 +414,23 @@
       {"name": "y5", "type": "F", "info": "Y5 position of the 5th superprecluster (mm)"},
       {"name": "pred", "type": "F", "info": "Prediction of the model: 0 mean bad track; 1 mean good track"}
     ]
+  },
+  {
+    "name": "AHDC::kftrack:mon",
+    "group": 23000,
+    "item": 32,
+    "info": "Monitoring of the Kalman Filter a given kftrack",
+    "entries": [
+      {"name": "Niter", "type": "S", "info": "iteration number of the Kalman Filter algorithm"},
+      {"name": "orientation", "type": "S", "info": "forward (0), backward (1), postfit (2) propagation"},
+      {"name": "indicator", "type": "S", "info": "wire ==> layer*100 + component  ; beamline ==> 0 ; target straw surface ==> 1 (inner face), 2 (outer face) [[ remark: if indicator < 10 then it is not a wire ]]"},
+      {"name": "status", "type": "S", "info": "state just after: prediction (0) or correction (1)"},
+      {"name": "x", "type": "F", "info": "x position of the state (mm)"},
+      {"name": "y", "type": "F", "info": "y position of the state (mm)"},
+      {"name": "z", "type": "F", "info": "z position of the state (mm)"},
+      {"name": "px", "type": "F", "info": "px momentum of the state (MeV)"},
+      {"name": "py", "type": "F", "info": "py momentum of the state (MeV)"},
+      {"name": "pz", "type": "F", "info": "pz momentum of the state (MeV)"}
+    ]
   }
 ]
