@@ -421,6 +421,7 @@
     "item": 32,
     "info": "Monitoring of the Kalman Filter a given kftrack",
     "entries": [
+      {"name": "trackid", "type": "S", "info": "trackid"},
       {"name": "Niter", "type": "S", "info": "iteration number of the Kalman Filter algorithm"},
       {"name": "orientation", "type": "S", "info": "forward (0), backward (1), postfit (2) propagation"},
       {"name": "indicator", "type": "S", "info": "wire ==> layer*100 + component  ; beamline ==> 0 ; target straw surface ==> 1 (inner face), 2 (outer face) [[ remark: if indicator < 10 then it is not a wire ]]"},
