@@ -7,6 +7,8 @@ import org.jlab.rec.ahdc.Cluster.Cluster;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import org.jlab.rec.ahdc.Track.Track;
+import org.jlab.rec.ahdc.Track.KFMonitor;
+import org.apache.commons.math3.linear.RealVector;
 
 import java.util.ArrayList;
 
@@ -179,4 +181,39 @@ public class RecoBankWriter {
 
 		return bank;
 	}
+
+	public DataBank fillKFMonitorBank(DataEvent event, ArrayList<Track> tracks) {
+		
+		int nentries = 0;
+		for (Track track : tracks) {
+			nentries += track.get_ListOfKFMonitors().size();
+		}
+		
+		DataBank bank = event.createBank("AHDC::kftrack:mon", nentries);
+
+		int row = 0;
+
+		for (Track track : tracks) {
+			if (track == null) continue;
+			for (KFMonitor monitor : track.get_ListOfKFMonitors()) {
+				RealVector state = monitor.get_state();
+				bank.setFloat("x", row, (float) state.getEntry(0));
+				bank.setFloat("y", row, (float) state.getEntry(1));
+				bank.setFloat("z", row, (float) state.getEntry(2));
+				bank.setFloat("px", row, (float) state.getEntry(3));
+				bank.setFloat("py", row, (float) state.getEntry(4));
+				bank.setFloat("pz", row, (float) state.getEntry(5));
+				bank.setShort("trackid", row, (short) monitor.get_trackid());
+				bank.setShort("Niter", row, (short) monitor.get_Niter());
+				bank.setShort("orientation", row, (short) monitor.get_orientation());
+				bank.setShort("indicator", row, (short) monitor.get_indicator());
+				bank.setShort("status", row, (short) monitor.get_status());
+
+				row++;
+			}
+		}
+
+		return bank;
+	}
+
 }
