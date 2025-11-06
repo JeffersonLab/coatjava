@@ -23,4 +23,28 @@ public class Indicator {
 		if (this.R == 0 && !direction) res = true;
 		return res;
 	}
+
+
+	// This method is not self consistent. We should not have hardcoded values
+	// It is just for testing purpose
+	public int getUniqueId() {
+                if (hit != null) {
+                	return (hit.getSuperLayer()*10 + hit.getLayer())*100 + hit.getWire();
+                }
+                else if (Math.abs(R) < 1e-9) {
+                	// beamline
+                	return 0;
+                }
+                else if (Math.abs(R - 3.0) < 1e-9) {
+                	// inner face of the target straw
+                	return 1;
+                }
+                else if (Math.abs(R - 3.060) < 1e-9) {
+                	// outer face of the target straw
+                	return 2;
+                }
+		else {
+			return -1;
+		}
+	}
 }
