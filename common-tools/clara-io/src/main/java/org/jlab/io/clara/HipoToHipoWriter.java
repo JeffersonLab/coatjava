@@ -24,10 +24,10 @@ import org.json.JSONObject;
  */
 public class HipoToHipoWriter extends AbstractEventWriterService<HipoWriterSorted> {
 
-    private static final String CONF_COMPRESSION = "compression";
-    private static final String CONF_SCHEMA_DIR = "schema_dir";
-    private static final String CONF_SCHEMA_FILTER = "schema_filter";
-    private static final String CONF_SCHEMA_WILDCARD = "wildcard";
+    protected static final String CONF_COMPRESSION = "compression";
+    protected static final String CONF_SCHEMA_DIR = "schema_dir";
+    protected static final String CONF_SCHEMA_FILTER = "schema_filter";
+    protected static final String CONF_SCHEMA_WILDCARD = "wildcard";
     
     protected final List<Bank> schemaBankList = new ArrayList<Bank>();
     private final StringSubstitutor envSubstitutor = new StringSubstitutor(System.getenv());
@@ -56,16 +56,8 @@ public class HipoToHipoWriter extends AbstractEventWriterService<HipoWriterSorte
         }
         writer.setCompressionType(compression);
 
-        String schemaDir = FileUtils.getEnvironmentPath("CLAS12DIR", "etc/bankdefs/hipo4");
-        if (opts.has(CONF_SCHEMA_DIR)) {
-            // Run YAML values throuh env-substitor: 
-            schemaDir = opts.getString(CONF_SCHEMA_DIR).trim();
-            schemaDir = envSubstitutor.replace(schemaDir);
-            // If it's not already an absolute path, assume it's the name of a
-            // stock schema that comes with COATJAVA and get the full path to it:
-            if (!schemaDir.startsWith("/")) schemaDir = ClaraYaml.getStockSchemaDirectory(schemaDir);
-            System.out.printf("%s service: schema directory = %s%n", getName(), schemaDir);
-        }
+        String schemaDir = getSchemaDir(opts);
+        System.out.printf("%s service: schema directory = %s%n", getName(), schemaDir);
 
         SchemaFactory factory = new SchemaFactory();
         factory.initFromDirectory(schemaDir);
@@ -93,6 +85,17 @@ public class HipoToHipoWriter extends AbstractEventWriterService<HipoWriterSorte
         System.out.printf("SERVICE WRITER :: [filter] %s\n",opts.has(HipoToHipoWriter.CONF_SCHEMA_FILTER));
         System.out.printf("SERVICE WRITER :: [dir] %s\n",opts.has(HipoToHipoWriter.CONF_SCHEMA_DIR));
         System.out.printf("SERVICE WRITER :: [wildcard] %s\n",opts.has(HipoToHipoWriter.CONF_SCHEMA_WILDCARD));
+    }
+
+    public static String getSchemaDir(JSONObject opts) {
+        String schemaDir = FileUtils.getEnvironmentPath("CLAS12DIR", "etc/bankdefs/hipo4");
+        if (opts.has(CONF_SCHEMA_DIR)) {
+            schemaDir = opts.getString(CONF_SCHEMA_DIR).trim();
+            // If it's not already an absolute path, assume it's the name of a
+            // stock schema that comes with COATJAVA and get the full path to it:
+            if (!schemaDir.startsWith("/")) schemaDir = ClaraYaml.getStockSchemaDirectory(schemaDir);
+        }
+        return schemaDir;
     }
 
     private Method getSchemaFilterSetter() throws NoSuchMethodException, SecurityException {

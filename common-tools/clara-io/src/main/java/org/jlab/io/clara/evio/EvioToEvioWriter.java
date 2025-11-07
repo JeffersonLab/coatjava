@@ -1,4 +1,4 @@
-package org.jlab.io.clara;
+package org.jlab.io.clara.evio;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -12,6 +12,7 @@ import org.jlab.coda.jevio.EventWriter;
 import org.jlab.coda.jevio.EvioException;
 import org.jlab.coda.hipo.CompressionType;
 import org.jlab.coda.jevio.EvioBank;
+import org.jlab.io.clara.Clas12Types;
 import org.json.JSONException;
 import org.json.JSONObject;
 

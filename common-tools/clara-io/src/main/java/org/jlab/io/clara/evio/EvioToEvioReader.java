@@ -1,4 +1,4 @@
-package org.jlab.io.clara;
+package org.jlab.io.clara.evio;
 
 import java.io.IOException;
 import java.nio.ByteOrder;
@@ -9,6 +9,7 @@ import org.jlab.clara.std.services.AbstractEventReaderService;
 import org.jlab.clara.std.services.EventReaderException;
 import org.jlab.coda.jevio.EvioCompactReader;
 import org.jlab.coda.jevio.EvioException;
+import org.jlab.io.clara.Clas12Types;
 import org.json.JSONObject;
 
 /**
