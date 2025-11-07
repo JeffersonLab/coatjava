@@ -30,7 +30,7 @@ public abstract class UberEngine extends ReconstructionEngine {
     }
 
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         throw new RuntimeException("UberEngine does not implement processDataEvent.");
     }
 
@@ -39,9 +39,9 @@ public abstract class UberEngine extends ReconstructionEngine {
      * @param event 
      */
     @Override
-    public final void filterEvent(DataEvent event) {
+    public final void processDataEvent(DataEvent event) {
         for (ReconstructionEngine e : engines) 
-            e.filterEvent(event);
+            e.processDataEvent(event);
     }
 
     /**
@@ -54,6 +54,16 @@ public abstract class UberEngine extends ReconstructionEngine {
         for (ReconstructionEngine e : engines)
             if (!e.init()) ret = false;
         return ret;
+    }
+
+    /**
+     * Run all engines' dettectorChanged methods.
+     * @param runNumber
+     */ 
+    @Override
+    public final void detectorChanged(int runNumber) {
+        for (ReconstructionEngine e : engines)
+            e.detectorChanged(runNumber);
     }
    
     /**
