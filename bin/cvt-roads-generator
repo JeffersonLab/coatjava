@@ -1,0 +1,10 @@
+#!/bin/bash
+
+. `dirname $0`/../libexec/env.sh
+
+export MALLOC_ARENA_MAX=1
+
+java -Xmx4g -Xms2g -XX:+UseSerialGC \
+    -cp ${COATJAVA_CLASSPATH:-''} \
+    org.jlab.rec.cvt.roads.DictionaryGenerator \
+    $*
