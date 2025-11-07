@@ -360,7 +360,40 @@ public class Cross extends ArrayList<Cluster> implements Comparable<Cross> {
     public void setMatchedCCross(Cross _MatchedCCross) {
         this._MatchedCCross = _MatchedCCross;
     }
-    
+    public Cross copy() {
+        Cross cloned = new Cross(this._Detector, this._Type, this._Sector, this._Region, this._Id);
+        cloned.setOrderedRegion(this._OrderedRegion);
+        cloned.setusedInXYcand(this._usedInXYcand);
+        cloned.setusedInZRcand(this._usedInZRcand);
+        cloned.isInSeed = this.isInSeed;
+        cloned.cCrossRadius = this.cCrossRadius;
+
+        // Clone the internal list (deep copy of clusters)
+        for (Cluster cluster : this) {
+                // Assuming Cluster has a copy constructor or clone method
+                cloned.add(cluster); // Replace with `cluster.clone()` or actual deep copy
+            }
+
+        // Clone Point3D and Vector3D objects (assumes they are immutable or have copy methods)
+        cloned.setPoint(this._Point != null ? new Point3D(this._Point.x(), this._Point.y(), this._Point.z()) : null);
+        cloned.setPointErr(this._PointErr != null ? new Point3D(this._PointErr.x(), this._PointErr.y(), this._PointErr.z()) : null);
+        cloned.setPoint0(this._Point0 != null ? new Point3D(this._Point0.x(), this._Point0.y(), this._Point0.z()) : null);
+        cloned.setPointErr0(this._PointErr0 != null ? new Point3D(this._PointErr0.x(), this._PointErr0.y(), this._PointErr0.z()) : null);
+
+        cloned.setDir(this._Dir != null ? new Vector3D(this._Dir.x(), this._Dir.y(), this._Dir.z()) : null);
+        cloned.setDirErr(this._DirErr != null ? new Vector3D(this._DirErr.x(), this._DirErr.y(), this._DirErr.z()) : null);
+
+        // Cloning clusters
+        cloned.setCluster1(this._clus1 != null ? this._clus1 : null);
+        cloned.setCluster2(this._clus2 != null ? this._clus2 : null);
+
+        // Matched Crosses: optional – shallow or deep copy depending on logic
+        cloned.setMatchedZCross(this._MatchedZCross); // or this._MatchedZCross != null ? this._MatchedZCross.copy() : null
+        cloned.setMatchedCCross(this._MatchedCCross);
+
+        return cloned;
+    }
+
     public void reset() {
         this.setDir(null);
         this.setDirErr(null);

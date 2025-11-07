@@ -3,7 +3,7 @@ package org.jlab.rec.cvt.services;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
+import java.util.Set;
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.io.base.DataBank;
@@ -14,6 +14,7 @@ import org.jlab.rec.cvt.banks.RecoBankWriter;
 import org.jlab.rec.cvt.cluster.Cluster;
 import org.jlab.rec.cvt.cross.Cross;
 import org.jlab.rec.cvt.hit.Hit;
+import org.jlab.rec.cvt.roads.PatternRec;
 import org.jlab.rec.cvt.track.Seed;
 import org.jlab.rec.cvt.track.StraightTrack;
 import org.jlab.rec.cvt.track.Track;
@@ -28,7 +29,7 @@ import org.jlab.utils.groups.IndexedTable;
  */
 public class CVTEngine extends ReconstructionEngine {
 
-
+    public static String targetDirName = "/Users/veronique/Work/Roads/";
     /**
      * @param docacutsum the docacutsum to set
      */
@@ -273,10 +274,15 @@ public class CVTEngine extends ReconstructionEngine {
     public void setBmtzmaxclussize(int bmtzmaxclussize) {
         this.bmtzmaxclussize = bmtzmaxclussize;
     }
+    PatternRec pr = new PatternRec();
     
+    int counter =1;
     @Override
     public boolean processDataEvent(DataEvent event) {
-        
+        if(counter==1) { //init on 1st event
+            PatternRec.maxDeltaStrips=2;
+            PatternRec.minNClusters=4;
+        }
         Swim swimmer = new Swim();
         
         int run = this.getRun(event); 
@@ -298,10 +304,20 @@ public class CVTEngine extends ReconstructionEngine {
         List<ArrayList<Hit>>         hits = reco.readHits(event, svtStatus, bmtStatus, bmtTime, 
                                                             bmtStripVoltage, bmtStripThreshold,
                                                             adcStatus);
+        if(hits.get(0).isEmpty()) return true;
+        double[] xyBeam = CVTReconstruction.getBeamSpot(event, beamPos);
+        
+        counter++;
+        
         List<ArrayList<Cluster>> clusters = reco.findClusters();
+        
+        //Using roads
+        //Get List of CTOF paddles
+        // Set<Integer> paddles = PatternRec.getCTOFHitPaddles(event);
+        //pr.selectClusters(clusters, paddles);
+        
         List<ArrayList<Cross>>    crosses = reco.findCrosses();
         
-                
         List<DataBank> banks = new ArrayList<>();
 
         if(crosses != null) {
@@ -319,7 +335,6 @@ public class CVTEngine extends ReconstructionEngine {
                 }            
             } 
             else {
-                double[] xyBeam = CVTReconstruction.getBeamSpot(event, beamPos);
                 TracksFromTargetRec  trackFinder = new TracksFromTargetRec(swimmer, xyBeam);
                 trackFinder.totTruthHits = reco.getTotalNbTruHits();
                 List<Seed>   seeds = trackFinder.getSeeds(clusters, crosses);

@@ -1,7 +1,13 @@
 package org.jlab.rec.cvt.trajectory;
 
+import java.util.ArrayList;
+import java.util.List;
+import org.jlab.clas.tracking.kalmanfilter.Units;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
+import org.jlab.geom.prim.Line3D;
+import org.jlab.geom.prim.Plane3D;
+import org.jlab.rec.cvt.svt.SVTGeometry;
 
 //import Jama.Matrix;
 import org.jlab.rec.cvt.Constants;
@@ -62,6 +68,24 @@ public class Helix {
         setXb(xb);
         setYb(yb);
     } 
+   
+    
+    public Helix(double p, double theta_deg, double phi_deg, double Z0, int q, double xb, double yb) {
+        double phi=Math.toRadians(phi_deg);
+        double theta = Math.toRadians(theta_deg);
+        double pt = p*Math.sin(theta);
+        double pz = p*Math.cos(theta);
+        double tandip = pz/pt; 
+        double curvature = (double)q*Constants.LIGHTVEL*Constants.getSolenoidMagnitude()/pt * Math.signum(Constants.getSolenoidScale());
+        
+        setDCA(0); //assume dca at 0
+        setPhiAtDCA(phi);
+        setCurvature(curvature);
+        setZ0(Z0);
+        setTanDip(tandip);
+        setXb(xb);
+        setYb(yb);
+    } 
     
     public Helix(org.jlab.clas.tracking.trackrep.Helix helix, double[][] matrix) { 
         this(helix.getD0(), helix.getPhi0(), helix.getOmega(), helix.getZ0(), 
@@ -81,6 +105,36 @@ public class Helix {
             }
         }
         this.setCovMatrix(kfCov);
+    }
+    
+    public org.jlab.clas.tracking.trackrep.Helix toKFRepresentation(int charge) {
+        Point3D  v = this.getVertex(); 
+        Vector3D p = this.getPXYZ(Constants.getSolenoidMagnitude());
+        org.jlab.clas.tracking.trackrep.Helix hlx = new org.jlab.clas.tracking.trackrep.Helix(v.x(),v.y(),v.z(),p.x(),p.y(),p.z(), charge,
+                        Constants.getSolenoidMagnitude(), xb , yb, Units.MM);
+        return hlx;
+    }
+    
+    double PHISIGMA = Math.toRadians(0.2);
+    double TANDIPSIGMA = 0.03;
+    double RHOSIGMA = 0.04;
+    double NSIGMAS = 5;
+    public List<Point3D> PointSpreadHelix(Helix helix, double R) {
+        List<Point3D> psh = new ArrayList<>();
+        Helix hlx = new Helix(helix.getDCA(),
+        helix.getPhiAtDCA(),
+        helix.getCurvature(),
+        helix.getZ0(),
+        helix.getTanDip(),
+        helix.getXb(),
+        helix.getYb());
+        for(int i = -1; i<2; i++) {
+            hlx.setPhiAtDCA(helix.getPhiAtDCA()+(double)i*NSIGMAS*PHISIGMA);
+            hlx.setCurvature(helix.getCurvature()+(double)i*NSIGMAS*RHOSIGMA*helix.getCurvature());
+            hlx.setTanDip(helix.getTanDip()+(double)i*NSIGMAS*TANDIPSIGMA);
+            psh.add(hlx.getPointAtRadius(R));
+        }
+        return psh;
     }
     
     public double getXb() {
@@ -256,6 +310,17 @@ public class Helix {
         return charge;
     }
 
+    public Point3D getPointAtModule(int layer, int sector, SVTGeometry geo) {
+        double r = geo.getModule(layer, sector).midpoint().toVector3D().rho();
+        Point3D p3 = getPointAtRadius(r);
+        Plane3D pln = geo.getPlane(layer, sector);
+        Line3D distance = new Line3D();
+        pln.distance(p3, distance);
+        r-=distance.length();
+        
+        return  getPointAtRadius(r);
+    }
+    
     public Point3D getPointAtRadius(double r) {
         // a method to return a point (as a vector) at a given radial position.	
         double d0 = _dca;

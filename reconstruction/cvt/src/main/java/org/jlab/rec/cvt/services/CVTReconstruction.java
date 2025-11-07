@@ -1,7 +1,9 @@
 package org.jlab.rec.cvt.services;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.io.base.DataBank;
@@ -81,6 +83,12 @@ public class CVTReconstruction {
         return CVThits;
     }
     
+    public void updateClusters(List<ArrayList<Cluster>> clusters) {
+        for(int i =0; i<2; i++) {
+            CVTclusters.get(i).clear();
+            CVTclusters.get(i).addAll(clusters.get(i));
+        }
+    }
     public List<ArrayList<Cluster>> findClusters() {
         
         List<Cluster> clusters = new ArrayList<>();
@@ -105,8 +113,8 @@ public class CVTReconstruction {
         }
         return CVTclusters; 
     }
-    
-    
+        
+        
     public List<ArrayList<Cross>> findCrosses() {
         
         List<Cluster> clusters = new ArrayList<>();
@@ -135,6 +143,16 @@ public class CVTReconstruction {
         return run;
     }
 
+    public static double[] getBeamSpotNoRaster(DataEvent event, IndexedTable beamPos) {
+        double[] xyBeam = new double[2];
+        xyBeam[0] = beamPos.getDoubleValue("x_offset", 0, 0, 0)*10;
+        xyBeam[1] = beamPos.getDoubleValue("y_offset", 0, 0, 0)*10;
+        if(Constants.getInstance().seedingDebugMode) 
+            System.out.println("BEAM SPOT INFO.  (xB, yB) = ("+xyBeam[0]+", "+xyBeam[1]+") mm");
+        
+        return xyBeam;
+    }
+    
     public static double[] getBeamSpot(DataEvent event, IndexedTable beamPos) {
         double[] xyBeam = new double[2];
         xyBeam[0] = beamPos.getDoubleValue("x_offset", 0, 0, 0)*10;
