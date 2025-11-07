@@ -1,0 +1,20 @@
+configuration:
+  io-services:
+    writer:
+      schema_dir: dst
+      histers:
+        - org.jlab.io.clara.histo.Examples$DumbHistoMaker
+io-services:
+  reader:
+    class: org.jlab.io.clara.HipoToHipoReader
+    name: HipoToHipoReader
+  writer:
+    class: org.jlab.io.clara.histo.HistoWriter
+    name: HistoWriter
+services:
+  - class: org.jlab.service.htcc.HTCCReconstructionService
+    name: HTCC
+  - class: org.jlab.service.ltcc.LTCCEngine
+    name: LTCC
+mime-types:
+  - binary/data-hipo

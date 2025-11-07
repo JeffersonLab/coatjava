@@ -1,4 +1,4 @@
-package org.jlab.io.clara;
+package org.jlab.io.clara.evio;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -8,6 +8,7 @@ import org.jlab.clara.engine.EngineDataType;
 import org.jlab.clara.std.services.AbstractEventReaderService;
 import org.jlab.clara.std.services.EventReaderException;
 import org.jlab.coda.jevio.EvioException;
+import org.jlab.io.clara.Clas12Types;
 import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.evio.EvioSource;
 import org.json.JSONObject;

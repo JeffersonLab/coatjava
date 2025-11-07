@@ -60,6 +60,13 @@ public class DecoderWriter extends HipoToHipoWriter {
             tag1banks[i] = new Bank(fullSchema.getSchema(TAG1BANKS[i]));
     }
 
+    /**
+     *
+     * @param file
+     * @param opts
+     * @return
+     * @throws EventWriterException
+     */
     @Override
     protected HipoWriterSorted createWriter(Path file, JSONObject opts) throws EventWriterException {
         try {
