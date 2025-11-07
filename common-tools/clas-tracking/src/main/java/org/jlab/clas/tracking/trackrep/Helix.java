@@ -87,6 +87,30 @@ public class Helix {
         this.update();
     }
     
+    public void setParameters(double x0, double y0, double z0, double px0, double py0, double pz0,
+            int q, double B, double xb, double yb, Units unit) {
+        _turningSign = q; 
+        _B           = B;
+        units        = unit;
+        double pt    = Math.sqrt(px0*px0 + py0*py0);
+        _R           = pt/(B*this.getLightVelocity());
+        _cosphi0     = px0/pt;
+        _sinphi0     = py0/pt;
+        _phi0        = Math.atan2(py0, px0);
+        _tanL        = pz0/pt;
+        _z0          = z0;
+        _omega       = (double) KFitter.polarity*_turningSign/_R ; 
+        double S = Math.sin(_phi0);
+        double C = Math.cos(_phi0);
+        if(Math.abs(S)>=Math.abs(C)) {
+            _d0 = -(x0-xb)/S;
+        } else {
+            _d0 = (y0-yb)/C;
+        }
+        _xb = xb;
+        _yb = yb;
+        this.update();
+    }
     
     public Units getUnits() {
         return this.units;
