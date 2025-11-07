@@ -155,9 +155,7 @@ public class EBTwoTrackTest {
             hadronPDG=45;
         }
         else if (ss.equals("electrongammaFT")) {
-            isForwardTagger=true;
-            ftPDG=22;
-            hadronPDG=11;
+            hadronPDG=22;
         }
         else udfFileType=true;
 
