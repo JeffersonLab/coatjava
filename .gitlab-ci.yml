@@ -132,7 +132,7 @@ profile:
   script:
     - >
       tar -xzf coatjava.tar.gz &&
-      libexec/profile.sh
+      libexec/profile
 
 deploy:
   stage: deploy
