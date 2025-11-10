@@ -26,7 +26,9 @@ def run(cmd):
         pass
 
 def benchmark(cfg, threads):
-    import collections
+    import sys,shutil,collections
+    if not shutil.which('run-clara'):
+        sys.exit('run-clara is not in $PATH')
     exiting,benchmarks = False,collections.OrderedDict()
     cmd = ['run-clara',
             '-c',cfg.c,

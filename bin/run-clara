@@ -15,6 +15,7 @@ Options:\n
 \t-n   number of events (default=-1)\n
 \t-m   merge output files (see dependencies below)\n
 \t-l   larger JVM memory requests\n
+\t-v   verbose output\n
 \t-h   print this help and exit\n\n
 Merging outputs (-m) requires hipo-utils and yq (https://github.com/mikefarah/yq).'
 
@@ -26,7 +27,7 @@ function error() {
 threads=2
 prefix=rec_
 CLARA_USER_DATA=.
-while getopts y:o:p:c:t:n:lqmh opt
+while getopts y:o:p:c:t:n:lqmvh opt
 do
     case $opt in
         y) yaml=$OPTARG ;;
@@ -38,6 +39,7 @@ do
         l) large=1 ;;
         m) merge=1 ;;
         q) quiet=1 ;;
+        v) set -o xtrace ;;
         h) echo -e "\n$usage" && echo -e $info && exit 0 ;;
     esac
 done
