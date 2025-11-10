@@ -132,7 +132,7 @@ profile:
   script:
     - >
       tar -xzf coatjava.tar.gz &&
-      libexec/profile
+      libexec/profile -y etc/services/rgd-clarode.yml -e cpu clas_018779.evio.00001
 
 deploy:
   stage: deploy

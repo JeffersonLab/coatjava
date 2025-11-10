@@ -1,16 +1,38 @@
 #!/bin/bash
 
-echo PROFILE!!!
+# configure:
+event=cpu #nativemem
+format=flat
+nevents=1000
+seconds=12
+yaml=etc/services/data-ai-uber.yml
+while getopts y:n:f:e:s:h opt
+do
+    case $opt in
+        s) seconds=$OPTARG ;;
+        y) yaml=$OPTARG ;;
+        n) nevents=$OPTARG ;;
+        f) format=$OPTARG ;;
+        e) event=$OPTARG ;;
+        h) echo "\nUsage:  profile [-y YAML] [-n #] [-e EVENT] datafile" && exit 0 ;;
+    esac
+done
+shift $((OPTIND-1))
+data=$1
+stub=$(basename $data)
 
-#asprof -e cpu -d 120 \
-#  -o tree -f results/$1_tree_cpu.html \
-#  $(pidof java)
+#set -o xtrace
+ls /usr/local/bin
+which asprof
+[ "$?" -ne 0 ] && echo 'ERROR:  asprof is not in $PATH.' && exit 9
 
-#asprof -e nativemem -d 120 \
-#  -o tree -f results/$1_tree_nativemem.html \
-#  $(pidof java)
+recon-util -y $yaml -n $nevents -o pro_$stub -i $data >& pro_$stub.log &
+pid=$(pgrep -P "$!")
 
-#asprof -e nativemem -d 120 \
-#  -f results/$1_mem.jfr \
-#  $(pidof java)
+echo "Waiting for 60 seconds of CoatJava warmup ..."
+for x in $(seq 60); do let y=60-$x && echo -e -n "\r$y ..." && sleep 1; done
+
+asprof -e $event -d $seconds -o $format -f pro_${format}_${event}_$stub.html $pid
+
+kill -9 $pid
 
