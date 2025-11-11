@@ -52,7 +52,10 @@ public class ProgressPrintout {
     }
     
     public void showStatus(){
-        if (benchmark != null) System.out.println(benchmark);
+        if (benchmark != null) {
+            String b = benchmark.toString();
+            if (b.length() > 0) System.out.println(b);
+        }
         System.out.println(this.getUpdateString());
     }
     
