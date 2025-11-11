@@ -17,7 +17,6 @@ import org.jlab.clara.engine.EngineDataType;
 import java.util.Arrays;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.json.JSONObject;
-import org.jlab.logging.DefaultLogger;
 import org.jlab.utils.ClaraYaml;
 
 /**
