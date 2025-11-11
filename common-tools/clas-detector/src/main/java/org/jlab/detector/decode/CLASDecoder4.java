@@ -285,13 +285,13 @@ public class CLASDecoder4 {
             adcBANK.putInt("ADC", i, adcDGTZ.get(i).getADCData(0).getADC());
             adcBANK.putFloat("time", i, (float) adcDGTZ.get(i).getADCData(0).getTime());
             adcBANK.putShort("ped", i, (short) adcDGTZ.get(i).getADCData(0).getPedestal());
-            if(name == "BST::adc") adcBANK.putLong("timestamp", i, adcDGTZ.get(i).getADCData(0).getTimeStamp());
+            if("BST::adc".equals(name)) adcBANK.putLong("timestamp", i, adcDGTZ.get(i).getADCData(0).getTimeStamp());
             if(name.equals("BMT::adc")||name.equals("FMT::adc")|| name.equals("FTTRK::adc")){
             	adcBANK.putInt("ADC", i, adcDGTZ.get(i).getADCData(0).getHeight());
             	adcBANK.putInt("integral", i, adcDGTZ.get(i).getADCData(0).getIntegral());
             	adcBANK.putLong("timestamp", i, adcDGTZ.get(i).getADCData(0).getTimeStamp());
             }
-            if(name == "BAND::adc") adcBANK.putInt("amplitude", i, adcDGTZ.get(i).getADCData(0).getHeight());
+            if("BAND::adc".equals(name)) adcBANK.putInt("amplitude", i, adcDGTZ.get(i).getADCData(0).getHeight());
          }
         return adcBANK;
     }
@@ -843,7 +843,6 @@ public class CLASDecoder4 {
 
         String outputFile = parser.getOption("-o").stringValue();
         int compression = parser.getOption("-c").intValue();
-        int  recordsize = parser.getOption("-b").intValue();
         int debug = parser.getOption("-d").intValue();
 
         CLASDecoder4 decoder = new CLASDecoder4(developmentMode);
