@@ -63,9 +63,8 @@ public abstract class UberEngine extends ReconstructionEngine {
      */
     @Override
     public EngineData configure(EngineData ed) {
-        for (ReconstructionEngine e : engines) { 
+        for (ReconstructionEngine e : engines)
             e.configure(ed);
-        }
         return ed;
     }
 
