@@ -23,13 +23,13 @@ public class Benchmark {
         return benchmarkInstance;
     }
     
-    public void printTimer(int interval){
+    public void printTimer(int seconds){
         TimerTask timerTask = new TimerTask() { 
                 @Override
-                public void run() { System.out.println(this); }
+                public void run() { System.out.println(getInstance()); }
         };
         updateTimer = new Timer("Benchmark");
-        updateTimer.scheduleAtFixedRate(timerTask, 0, interval);
+        updateTimer.scheduleAtFixedRate(timerTask, 0, 1000*seconds);
     }
     
     public void reset(){
@@ -94,5 +94,18 @@ public class Benchmark {
             s.append("\n");
         }
         return s.toString();
+    }
+
+    public static void main(String[] args){
+        Benchmark b = getInstance();
+        b.printTimer(10);
+        int loop = 0;
+        while(true){
+            b.resume("COUNT");
+            loop++;
+            b.pause("COUNT");
+            try { Thread.sleep(2000); }
+            catch (InterruptedException ex) {}
+        }
     }
 }
