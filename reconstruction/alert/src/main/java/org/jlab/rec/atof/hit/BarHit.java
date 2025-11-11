@@ -1,6 +1,7 @@
 package org.jlab.rec.atof.hit;
 
 import org.jlab.rec.atof.constants.Parameters;
+import org.jlab.rec.constants.CalibrationConstantsLoader;
 
 /**
  *
@@ -14,6 +15,8 @@ public class BarHit extends ATOFHit {
 
     //A bar hit is the combination of a downstream and upstream hits
     private ATOFHit hitUp, hitDown;
+    //Effective velocity read from CCDB
+    double vEff;
 
     public ATOFHit getHitUp() {
         return hitUp;
@@ -36,7 +39,7 @@ public class BarHit extends ATOFHit {
      * 
      */
     public final void computeZ() {
-        this.setZ(Parameters.VEFF/2. * (hitUp.getTime() - hitDown.getTime()));
+        this.setZ(this.vEff/2. * (hitUp.getTime() - hitDown.getTime()));
     }
 
     /**
@@ -56,7 +59,7 @@ public class BarHit extends ATOFHit {
             time_at_sipm = this.hitUp.getTime();
             distance_to_sipm = Parameters.LENGTH_ATOF/2. + this.getZ();
         }
-        this.setTime(time_at_sipm - distance_to_sipm/Parameters.VEFF);
+        this.setTime(time_at_sipm - distance_to_sipm/this.vEff);
     }
 
     /**
@@ -88,6 +91,11 @@ public class BarHit extends ATOFHit {
         this.setComponent(10);
         this.setX(hit_up.getX());
         this.setY(hit_up.getY());
+        
+        //CCDB readout for the effective velocity
+        int key = this.getSector()*10000 + this.getLayer()*1000 + this.getComponent()*10;
+        double[] vEffTable = CalibrationConstantsLoader.ATOF_EFFECTIVE_VELOCITY.get(key);
+        this.vEff = vEffTable[0];
         this.computeZ();
         this.computeTime();
         this.computeEnergy();
