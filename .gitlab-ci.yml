@@ -104,10 +104,9 @@ eb:
   needs: [build]
   dependencies: [build]
   script:
-    - >
-      tar -xzf coatjava.tar.gz &&
-      cd validation/advanced-tests && 
-      ./run-eb-tests.sh -100 ${ARG}
+    - tar -xzf coatjava.tar.gz
+    - cd validation/advanced-tests
+    - ./run-eb-tests.sh -100 ${ARG}
   parallel:
     matrix:
       - ARG: electronproton 
@@ -116,23 +115,34 @@ eb:
       - ARG: electronneutronC
       - ARG: electronFTpion
 
-clara:
-  allow_failure: true
+decoder:
   stage: test
   needs: [build,download]
   dependencies: [build,download]
   script:
-    - tar -xzf clara.tar.gz && ls -l
+    - tar -xzf clara.tar.gz
+    - decoder -n 1000 -o clas_018779_00001.hipo clas_018779.evio.00001
+  artifacts:
+    when: always
+    expire_in: 1 day
+    paths:
+      - clas_018779_00001.hipo
+
+clara:
+  stage: test
+  needs: [build,download]
+  dependencies: [build,download]
+  script:
+    - tar -xzf clara.tar.gz
     - run-clara -v -c $CLARA_HOME -t $JL_RUNNER_AVAIL_CPU -y ./etc/services/rgd-clarode.yml -n 100 -o out clas_018779.evio.00001
 
 profile:
   stage: test
-  needs: [build]
-  dependencies: [build]
+  needs: [build,decoder]
+  dependencies: [build,decoder]
   script:
-    - >
-      tar -xzf coatjava.tar.gz &&
-      libexec/profile.sh
+    - tar -xzf coatjava.tar.gz
+    - libexec/profile -e cpu clas_018779_00001.hipo
 
 deploy:
   stage: deploy
