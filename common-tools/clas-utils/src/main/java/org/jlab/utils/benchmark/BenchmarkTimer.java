@@ -38,6 +38,11 @@ public class BenchmarkTimer {
         }
     }
 
+    public void add(BenchmarkTimer b) {
+        totalTime += b.totalTime;
+        numberOfCalls += b.numberOfCalls;
+    }
+
     public void reset(){
         totalTime = 0;
         timeAtResume = 0;
