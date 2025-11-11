@@ -313,6 +313,7 @@ public class EngineProcessor {
             if(nskip>0 && nevents>0) nevents += nskip;
             
             ProgressPrintout  progress = new ProgressPrintout();
+            progress.addBenchmarks();
             while(reader.hasEvent()==true){
                 DataEvent event = reader.getNextEvent();
                 if(nskip<=0 || eventCounter>nskip) {

@@ -862,6 +862,7 @@ public class CLASDecoder4 {
 
         writer.open(outputFile);
         ProgressPrintout progress = new ProgressPrintout();
+        progress.addBenchmarks();
         System.out.println("INPUT LIST SIZE = " + inputList.size());
         int nevents = parser.getOption("-n").intValue();
         int counter = 0;
