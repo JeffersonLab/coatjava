@@ -82,10 +82,10 @@ public class EngineProcessor {
 
     private void setBanksToKeep(String schemaDirectory) {
         if (!Files.isDirectory((new File(schemaDirectory)).toPath())) {
-            LOGGER.log(Level.SEVERE, "Invalid schema directory, aborting:  "+schemaDirectory);
+            LOGGER.log(Level.SEVERE, () -> "Invalid schema directory, aborting:  "+schemaDirectory);
             System.exit(1);
         }
-        LOGGER.log(Level.INFO, "Using schema directory:  "+schemaDirectory);
+        LOGGER.log(Level.INFO, () -> "Using schema directory:  "+schemaDirectory);
         banksToKeep = new SchemaFactory();
         banksToKeep.initFromDirectory(schemaDirectory);
     }
