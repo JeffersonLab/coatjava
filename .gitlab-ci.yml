@@ -5,6 +5,7 @@ workflow:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       auto_cancel:
         on_new_commit: interruptible
+    - if: $CI_PIPELINE_SOURCE == "schedule"
     - if: $CI_COMMIT_BRANCH == "main"
       auto_cancel:
         on_new_commit: conservative
@@ -20,15 +21,35 @@ default:
     - export PATH=$CLARA_HOME/plugins/clas12/bin:$PATH
     - export PATH=$CLARA_HOME/bin:$PATH
     - export PATH=$COATJAVA/bin:$PATH
-    - echo $PATH
 
 stages:
+  - mirror
   - build
   - test
   - deploy
 
+mirror:
+  stage: mirror
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+  script:
+    - git config --global --add safe.directory $CI_PROJECT_DIR
+    - git config --global user.email "ci-bot@code.jlab.org"
+    - git config --global user.name "GitLab CI"
+    - git checkout development
+    - git config pull.rebase true
+    - git remote get-url origin
+    - git remote set-url origin https://github.com/jeffersonlab/coatjava
+    - git pull
+    - git remote set-url origin https://gitlab-ci-token:${CI_JOB_TOKEN}@code.jlab.org/hallb/clas12/coatjava/coatjava.git
+#    - git remote set-url origin git@code.jlab.org:hallb/clas12/coatjava/coatjava
+    - git push
+
 build:
   stage: build
+  needs:
+    - job: mirror
+      optional: true
   script:
     - ./build-coatjava.sh --clara -T$JL_RUNNER_AVAIL_CPU --quiet --no-progress
     - tar -czf coatjava.tar.gz coatjava
