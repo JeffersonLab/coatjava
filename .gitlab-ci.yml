@@ -162,11 +162,13 @@ profile:
   script:
     - tar -xzf coatjava.tar.gz
     - libexec/profile -e cpu -f flamegraph clas_018779_00001.hipo
+    - libexec/profile -e nativemem -f flat clas_018779_00001.hipo
   artifacts:
     when: always
     expire_in: 1 week
     paths:
       - pro_flamegraph_cpu_clas_018779_00001.html
+      - pro_flat_nativemem_clas_018779_00001.html
 
 .deploy:
   stage: deploy
