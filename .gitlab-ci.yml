@@ -38,11 +38,9 @@ mirror:
     - git config --global user.name "GitLab CI"
     - git checkout development
     - git config pull.rebase true
-    - git remote get-url origin
     - git remote set-url origin https://github.com/jeffersonlab/coatjava
-    - git pull
+    - git pull origin development
     - git remote set-url origin https://gitlab-ci-token:${CI_JOB_TOKEN}@code.jlab.org/hallb/clas12/coatjava/coatjava.git
-#    - git remote set-url origin git@code.jlab.org:hallb/clas12/coatjava/coatjava
     - git push
 
 build:
