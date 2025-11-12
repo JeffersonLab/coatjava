@@ -171,7 +171,7 @@ public class KalmanFilter {
 			    TrackFitter.setVertexDefined(IsVtxDefined);
 		 	    
 			    // save initial state and error covariance matrix
-			    track.add_KFMonitor(new KFMonitor(trackId, -1, -1, -1, -1, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
+			    track.add_KFMonitor(new KFMonitor(trackId, 0, 0, 0, 0, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
 			    for (int k = 0; k < Niter; k++) {
 				//System.out.println("--------- ForWard propagation !! ---------");
 				//Reset error covariance:
