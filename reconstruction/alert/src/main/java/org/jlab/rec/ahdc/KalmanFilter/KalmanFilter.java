@@ -77,18 +77,25 @@ public class KalmanFilter {
 			// Initialization material map
 			HashMap<String, Material> materialHashMap = materialGeneration();
 			int trackId = 0;
+			DataBank mcBank = event.getBank("MC::Particle");
 			for (Track track : tracks) {
 			    trackId++;
 			    track.set_trackId(trackId);
 			    // Initialization State Vector
-			    final double x0  = 0.0;
-			    final double y0  = 0.0;
-			    final double z0  = track.get_Z0();
+			    /*final*/ double x0  = 0.0;
+			    /*final*/ double y0  = 0.0;
+			    /*final*/ double z0  = track.get_Z0();
 			    //final
 			    double px0 = track.get_px();
 			    //final
 			    double py0 = track.get_py();
-			    final double pz0 = track.get_pz();
+			    /*final*/ double pz0 = track.get_pz();
+			    if (IsMC) {
+				z0  = mcBank.getFloat("vz", trackId-1)*10;
+				px0 = mcBank.getFloat("px", trackId-1)*1000;
+				py0 = mcBank.getFloat("py", trackId-1)*1000;
+				pz0 = mcBank.getFloat("pz", trackId-1)*1000;
+			    }	
 			    //final double p_init = java.lang.Math.sqrt(px0*px0+py0*py0+pz0*pz0);
 			    double[]     y   = new double[]{x0, y0, z0, px0, py0, pz0};
 			    // Initialization hit
