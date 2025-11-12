@@ -166,7 +166,7 @@ profile:
     when: always
     expire_in: 1 week
     paths:
-      - pro_flat_cpu_clas_018779_00001.html
+      - pro_flamegraph_cpu_clas_018779_00001.html
 
 .deploy:
   stage: deploy
