@@ -59,7 +59,7 @@ build:
       - coatjava.tar.gz
       - clara.tar.gz
 
-depana:
+.depana:
   allow_failure: true
   stage: build
   script:
@@ -76,7 +76,7 @@ download:
     paths:
       - clas_018779.evio.00001
 
-spotbugs:
+.spotbugs:
   stage: test
   needs: [build]
   dependencies: [build]
@@ -84,7 +84,7 @@ spotbugs:
     - tar -xzf coatjava.tar.gz
     - ./build-coatjava.sh -T$JL_RUNNER_AVAIL_CPU --spotbugs --quiet --no-progress
 
-unit_tests:
+.unit_tests:
   stage: test
   needs: [build]
   dependencies: [build]
@@ -98,7 +98,7 @@ unit_tests:
     paths:
       - publish
 
-docs:
+.docs:
   stage: test
   needs: [build,unit_tests]
   dependencies: [build,unit_tests]
@@ -163,12 +163,12 @@ profile:
     - tar -xzf coatjava.tar.gz
     - libexec/profile -e cpu clas_018779_00001.hipo
 
-deploy:
+.deploy:
   stage: deploy
   script:
     - echo DEPLOY!
 
-release:
+.release:
   stage: deploy
   script:
     - echo RELEASE!
