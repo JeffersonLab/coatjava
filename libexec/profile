@@ -20,6 +20,7 @@ done
 shift $((OPTIND-1))
 data=$1
 stub=$(basename $data)
+stub=${stub%%.*}
 
 which asprof >& /dev/null
 [ "$?" -ne 0 ] && echo 'ERROR:  asprof is not in $PATH.' && exit 9
