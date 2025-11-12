@@ -33,12 +33,12 @@ pid_java=$(pgrep -P "$pid_bash")
 
 echo PID2=$pid_java
 
-ps waux && ps -p $pid
+ps waux && ps -p $pid_java
 
 echo "Waiting for 60 seconds of CoatJava warmup ..."
 for x in $(seq 60); do let y=60-$x && echo -e -n "\r$y ..." && sleep 1; done
 
-cat pro_$stub.log
+tail -n 42 pro_$stub.log
 
 asprof -e $event -d $seconds -o $format -f pro_${format}_${event}_$stub.html $pid_java
 
