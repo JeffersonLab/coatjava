@@ -320,6 +320,10 @@ public class KFitter {
 		return stateEstimation.copy();
 	}
 
+	public RealMatrix getErrorCovarianceMatrix() {
+		return errorCovariance.copy();
+	} 
+
 	public double getMomentum() {
 		return Math.sqrt(stateEstimation.getEntry(3) * stateEstimation.getEntry(3) + stateEstimation.getEntry(4) * stateEstimation.getEntry(4) + stateEstimation.getEntry(5) * stateEstimation.getEntry(5));
 	}

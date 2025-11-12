@@ -77,7 +77,7 @@ public class KalmanFilter {
 			// Initialization material map
 			HashMap<String, Material> materialHashMap = materialGeneration();
 			int trackId = 0;
-			DataBank mcBank = event.getBank("MC::Particle");
+			//DataBank mcBank = event.getBank("MC::Particle");
 			for (Track track : tracks) {
 			    trackId++;
 			    track.set_trackId(trackId);
@@ -90,12 +90,12 @@ public class KalmanFilter {
 			    //final
 			    double py0 = track.get_py();
 			    /*final*/ double pz0 = track.get_pz();
-			    if (IsMC) {
-				z0  = mcBank.getFloat("vz", trackId-1)*10;
-				px0 = mcBank.getFloat("px", trackId-1)*1000;
-				py0 = mcBank.getFloat("py", trackId-1)*1000;
-				pz0 = mcBank.getFloat("pz", trackId-1)*1000;
-			    }	
+			    //if (IsMC) {
+				//z0  = mcBank.getFloat("vz", trackId-1)*10;
+				//px0 = mcBank.getFloat("px", trackId-1)*1000;
+				//py0 = mcBank.getFloat("py", trackId-1)*1000;
+				//pz0 = mcBank.getFloat("pz", trackId-1)*1000;
+			    //}	
 			    //final double p_init = java.lang.Math.sqrt(px0*px0+py0*py0+pz0*pz0);
 			    double[]     y   = new double[]{x0, y0, z0, px0, py0, pz0};
 			    // Initialization hit
@@ -169,14 +169,16 @@ public class KalmanFilter {
 			    RealMatrix initialErrorCovariance = MatrixUtils.createRealMatrix(new double[][]{{1.00, 0.0, 0.0, 0.0, 0.0, 0.0}, {0.0, 1.00, 0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 25.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 1.00, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0, 1.00, 0.0}, {0.0, 0.0, 0.0, 0.0, 0.0, 25.0}});
 			    KFitter TrackFitter = new KFitter(initialStateEstimate, initialErrorCovariance, stepper, propagator);
 			    TrackFitter.setVertexDefined(IsVtxDefined);
-		 
+		 	    
+			    // save initial state and error covariance matrix
+			    track.add_KFMonitor(new KFMonitor(trackId, -1, -1, -1, -1, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
 			    for (int k = 0; k < Niter; k++) {
 				//System.out.println("--------- ForWard propagation !! ---------");
 				//Reset error covariance:
 				//TrackFitter.ResetErrorCovariance(initialErrorCovariance);
 				for (Indicator indicator : forwardIndicators) {
 				    TrackFitter.predict(indicator);
-				    track.add_KFMonitor(new KFMonitor(trackId, k, 0, indicator.getUniqueId(), 0, TrackFitter.getStateEstimationVector()));
+				    track.add_KFMonitor(new KFMonitor(trackId, k, 0, indicator.getUniqueId(), 0, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
 				    if (indicator.haveAHit()) {
 					if( k==0  && indicator.hit.getHitIdx()>0){
 					    for (org.jlab.rec.ahdc.Hit.Hit AHDC_hit : AHDC_hits){
@@ -184,17 +186,17 @@ public class KalmanFilter {
 					    }
 					}
 					TrackFitter.correct(indicator);
-				    	track.add_KFMonitor(new KFMonitor(trackId, k, 0, indicator.getUniqueId(), 1, TrackFitter.getStateEstimationVector()));
+				    	track.add_KFMonitor(new KFMonitor(trackId, k, 0, indicator.getUniqueId(), 1, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
 				    }
 				}
 
 				//System.out.println("--------- BackWard propagation !! ---------");
 				for (Indicator indicator : backwardIndicators) {
 				    TrackFitter.predict(indicator);
-				    	track.add_KFMonitor(new KFMonitor(trackId, k, 1, indicator.getUniqueId(), 0, TrackFitter.getStateEstimationVector()));
+				    	track.add_KFMonitor(new KFMonitor(trackId, k, 1, indicator.getUniqueId(), 0, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
 				    if (indicator.haveAHit()) {
 					TrackFitter.correct(indicator);
-				    	track.add_KFMonitor(new KFMonitor(trackId, k, 1, indicator.getUniqueId(), 1, TrackFitter.getStateEstimationVector()));
+				    	track.add_KFMonitor(new KFMonitor(trackId, k, 1, indicator.getUniqueId(), 1, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
 				    }
 				}
 			    }
@@ -207,7 +209,7 @@ public class KalmanFilter {
 			    KFitter PostFitPropagator = new KFitter(TrackFitter.getStateEstimationVector(), initialErrorCovariance, new Stepper(TrackFitter.getStateEstimationVector().toArray()), new Propagator(RK4));
 			    for (Indicator indicator : forwardIndicators) {
 				PostFitPropagator.predict(indicator);
-				track.add_KFMonitor(new KFMonitor(trackId, Niter, 2, indicator.getUniqueId(), 0, TrackFitter.getStateEstimationVector()));
+				track.add_KFMonitor(new KFMonitor(trackId, Niter, 2, indicator.getUniqueId(), 0, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
 				if (indicator.haveAHit()) {
 				    if( indicator.hit.getHitIdx()>0){
 					for (org.jlab.rec.ahdc.Hit.Hit AHDC_hit : AHDC_hits){

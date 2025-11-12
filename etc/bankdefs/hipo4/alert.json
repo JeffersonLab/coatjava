@@ -431,7 +431,13 @@
       {"name": "z", "type": "F", "info": "z position of the state (mm)"},
       {"name": "px", "type": "F", "info": "px momentum of the state (MeV)"},
       {"name": "py", "type": "F", "info": "py momentum of the state (MeV)"},
-      {"name": "pz", "type": "F", "info": "pz momentum of the state (MeV)"}
+      {"name": "pz", "type": "F", "info": "pz momentum of the state (MeV)"},
+      {"name": "var_x", "type": "F", "info": "error variance on x (mm^2)"},
+      {"name": "var_y", "type": "F", "info": "error variance on y (mm^2)"},
+      {"name": "var_z", "type": "F", "info": "error variance on z (mm^2)"},
+      {"name": "var_px", "type": "F", "info": "error variance on px (MeV^2)"},
+      {"name": "var_py", "type": "F", "info": "error variance on py (MeV^2)"},
+      {"name": "var_pz", "type": "F", "info": "error variance on pz (MeV^2)"}
     ]
   }
 ]
