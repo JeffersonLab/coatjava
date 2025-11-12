@@ -161,7 +161,12 @@ profile:
   dependencies: [build,decoder]
   script:
     - tar -xzf coatjava.tar.gz
-    - libexec/profile -e cpu clas_018779_00001.hipo
+    - libexec/profile -e cpu -f flat clas_018779_00001.hipo
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - pro_flat_cpu_clas_018779_00001.html
 
 .deploy:
   stage: deploy
