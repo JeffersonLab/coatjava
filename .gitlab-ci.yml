@@ -38,11 +38,9 @@ mirror:
     - git config --global user.name "GitLab CI"
     - git checkout development
     - git config pull.rebase true
-    - git remote get-url origin
     - git remote set-url origin https://github.com/jeffersonlab/coatjava
-    - git pull
+    - git pull origin development
     - git remote set-url origin https://gitlab-ci-token:${CI_JOB_TOKEN}@code.jlab.org/hallb/clas12/coatjava/coatjava.git
-#    - git remote set-url origin git@code.jlab.org:hallb/clas12/coatjava/coatjava
     - git push
 
 build:
@@ -61,7 +59,7 @@ build:
       - coatjava.tar.gz
       - clara.tar.gz
 
-depana:
+.depana:
   allow_failure: true
   stage: build
   script:
@@ -78,7 +76,7 @@ download:
     paths:
       - clas_018779.evio.00001
 
-spotbugs:
+.spotbugs:
   stage: test
   needs: [build]
   dependencies: [build]
@@ -86,7 +84,7 @@ spotbugs:
     - tar -xzf coatjava.tar.gz
     - ./build-coatjava.sh -T$JL_RUNNER_AVAIL_CPU --spotbugs --quiet --no-progress
 
-unit_tests:
+.unit_tests:
   stage: test
   needs: [build]
   dependencies: [build]
@@ -100,7 +98,7 @@ unit_tests:
     paths:
       - publish
 
-docs:
+.docs:
   stage: test
   needs: [build,unit_tests]
   dependencies: [build,unit_tests]
@@ -163,14 +161,23 @@ profile:
   dependencies: [build,decoder]
   script:
     - tar -xzf coatjava.tar.gz
-    - libexec/profile -e cpu clas_018779_00001.hipo
+    - libexec/profile -f flamegraph -e cpu       clas_018779_00001.hipo
+    - libexec/profile -f flamegraph -e nativemem clas_018779_00001.hipo
+    - libexec/profile -f flamegraph -e alloc     clas_018779_00001.hipo
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - pro_flamegraph_cpu_clas_018779_00001
+      - pro_flamegraph_nativemem_clas_018779_00001
+      - pro_flamegraph_alloc_clas_018779_00001
 
-deploy:
+.deploy:
   stage: deploy
   script:
     - echo DEPLOY!
 
-release:
+.release:
   stage: deploy
   script:
     - echo RELEASE!
