@@ -99,7 +99,7 @@ public class DaqScalers {
     public static DaqScalers create(Bank runScalerBank) {
         DaqScalers ds=new DaqScalers();
         ds.dsc2=new Dsc2Scaler();
-        if (runScalerBank.getRows() >= 1) {
+        if (runScalerBank.getRows() > 0) {
             ds.dsc2.setLivetime(runScalerBank.getFloat("livetime", 0));
             ds.dsc2.setBeamCharge(runScalerBank.getFloat("fcup",0));
             ds.dsc2.setBeamChargeGated(runScalerBank.getFloat("fcupgated",0));
