@@ -1,21 +1,27 @@
 #!/usr/bin/env python3
 
 def cli():
-    import os,argparse
+    import os,sys,argparse
     cli = argparse.ArgumentParser(description='CLARA scaling test')
-    cli.add_argument('-y',help='YAML file',required=True)
+    cli.add_argument('-P',help='plot only',action='store_true')
+    cli.add_argument('-y',help='YAML file',default=None)
     cli.add_argument('-c',help='CLARA_HOME path',default=os.getenv('CLARA_HOME',None))
-    cli.add_argument('-t',help='threads',default=[2,4],type=int,action='append')
+    cli.add_argument('-t',help='threads (default=4,8)',default='4,8')
     cli.add_argument('-e',help='events per thread',default=100,type=int)
-    cli.add_argument('input',help='input data file')
+    cli.add_argument('-i',help='input data file',default=None)
     cfg = cli.parse_args()
-    import sys
-    if cfg.c is None: sys.exit('-c or $CLARA_HOME is required')
+    cfg.t = cfg.t.split(',')
+    if cfg.P:
+        cfg.i = 'scaling.txt'
+    else:
+        if cfg.y is None: sys.exit('-y YAML is required w/o -P')
+        if cfg.c is None: sys.exit('-c or $CLARA_HOME is required w/o -P')
+    if cfg.i is None: sys.exit('-i is required')
     return cfg
 
 def run(cmd):
     import subprocess
-    print('scaling >>> '+' '.join(cmd))
+    print('run >>> '+' '.join(cmd))
     p = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,universal_newlines=True,encoding='latin-1')
     for line in iter(p.stdout.readline, ''):
         line = line.strip()
@@ -47,38 +53,38 @@ def benchmark(cfg, threads):
                 exiting = False
             elif len(cols) > 20:
                 if line.find('Processed') >= 0:
-                    benchmarks['event'] = float(cols[12])
+                    benchmarks['Event'] = float(cols[12])
             elif exiting:
                 # catch-all for services:
                 if len(cols) > 14:
-                    if 'services' not in benchmarks:
-                        benchmarks['services'] = collections.OrderedDict()
-                    benchmarks['services'][cols[2]] = float(cols[14])
+                    if 'Services' not in benchmarks:
+                        benchmarks['Services'] = collections.OrderedDict()
+                    benchmarks['Services'][cols[2]] = float(cols[14])
                 # FIXME:  what are these, why don't they add up?
                 elif line.find('Average processing time') >= 0:
-                    benchmarks['avg'] = float(cols[6])
+                    benchmarks['Avg'] = float(cols[6])
                 elif line.find('Total processing time') >= 0:
-                    benchmarks['total'] = float(cols[6])
+                    benchmarks['Total'] = float(cols[6])
                 elif line.find('Total orchestrator time') >= 0:
-                    benchmarks['orch'] = float(cols[6])
+                    benchmarks['Orch'] = float(cols[6])
         except ValueError:
             pass
     return benchmarks
 
 def table(benchmarks):
     table = []
-    header = [ 'threads' ]
+    header = [ 'Threads' ]
     b = benchmarks[0][1]
-    header.extend([x for x in b if x != 'services'])
-    if 'services' in b:
-        header.extend(b['services'].keys())
+    header.extend([x for x in b if x != 'Services'])
+    if 'Services' in b:
+        header.extend(b['Services'].keys())
     table.append(header)
     for b in benchmarks:
         threads,benchmark = b[0],b[1]
         row = [threads]
-        for k in ['event','avg','total','orch','services']:
+        for k in ['Event','Avg','Total','Orch','Services']:
             if k in benchmark:
-                if k == 'services':
+                if k == 'Services':
                     row.extend(benchmark[k].values())
                 else:
                     row.append(benchmark[k])
@@ -92,13 +98,75 @@ def show(benchmarks):
 def save(benchmarks):
     with open('scaling.txt','w') as f:
         for row in table(benchmarks):
-            f.write(' '.join([str(x) for x in row])) 
+            f.write(' '.join([str(x) for x in row])+'\n') 
+
+gnuplot='''
+set terminal qt size 1000,700
+
+set multiplot layout 2,2
+set datafile columnheaders
+set title font 'sans,14'
+set key box
+set xlabel 'Threads'
+set ylabel 'Event Time [ms]'
+set yrange [0:]
+
+set title 'I/O'
+set key outside right width 2
+plot 'scaling.txt' \
+           using 1:(($2*$1))        pt 7 with points title columnhead(2) ,\
+        '' using 1:((column($#)))   pt 7 with points title 'Total' ,\
+        '' using 1:($6)             pt 7 with points title 'Reader' ,\
+        '' using 1:((column($#-1))) pt 7 with points title 'Writer' ,\
+        '' using 1:(($6*$1))        pt 7 with points title 'IOver' ,\
+
+set title 'Engines'
+
+# data-ai-uber.yml:
+#plot 'scaling.txt' \
+#           using 1:($7)  pt 7 with points title columnhead(7) ,\
+#        '' using 1:($8)  pt 7 with points title columnhead(8) ,\
+#        '' using 1:($9)  pt 7 with points title columnhead(9) ,\
+#        '' using 1:($10) pt 7 with points title columnhead(10) ,\
+#        '' using 1:($11) pt 7 with points title columnhead(11) ,\
+#        '' using 1:($12) pt 7 with points title columnhead(12) ,\
+
+# rgd-clarode.yml:
+plot 'scaling.txt' \
+           using 1:($7)  pt 7 with points title columnhead(7) ,\
+        '' using 1:($14) pt 7 with points title columnhead(14) ,\
+        '' using 1:($15) pt 7 with points title columnhead(15) ,\
+        '' using 1:($16) pt 7 with points title columnhead(16) ,\
+        '' using 1:($26) pt 9 with points title columnhead(26) ,\
+        '' using 1:($19) pt 7 with points title columnhead(19) ,\
+        '' using 1:($28) pt 9 with points title columnhead(28) ,\
+        '' using 1:($33) pt 9 with points title columnhead(33) ,\
+
+set title 'Throughput'
+set ylabel 'Rate [Hz]'
+set size 0.7,0.5
+set origin 0.12,0
+unset key
+f(x) = m*x
+fit [0:24] f(x) 'scaling.txt' using 1:(1/$2*1e3) via m
+plot 'scaling.txt' using 1:(1/$2*1e3) pt 7, f(x)
+'''
+
+def plot():
+    import tempfile
+    with tempfile.NamedTemporaryFile(mode='w') as f:
+        f.write(gnuplot)
+        f.flush()
+        list(run(['gnuplot','-p',f.name]))
+        input()
 
 if __name__ == '__main__':
     cfg = cli()
-    benchmarks = []
-    for threads in cfg.t:
-        benchmarks.append([threads, benchmark(cfg, threads)])
-    show(benchmarks)
-    save(benchmarks)
+    if not cfg.P:
+        benchmarks = []
+        for threads in cfg.t:
+            benchmarks.append([threads, benchmark(cfg, threads)])
+        show(benchmarks)
+        save(benchmarks)
+    plot()
 
