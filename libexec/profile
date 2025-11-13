@@ -47,4 +47,5 @@ asprof --title "Coatjava - asprof - $event"  -e $event \
     -d $seconds -o $format -f pro_${format}_${event}_$stub $pid_java
 
 kill -9 $pid_java
+rm -f pro_$stub.hipo
 
