@@ -21,8 +21,10 @@ defaults:
     shell: bash
 
 env:
-  java_version: 25
+  JAVA_VERSION: 21 # must be consistent with POM; see also dependabot config for any version limits
+  JAVA_VERSION_LATEST: 25 # the latest `JAVA_VERSION` that we test with CI
   java_distribution: zulu
+  javadoc_version: 25 # newer than `JAVA_VERSION` for better javadoc
   groovy_version: 4.x
   CCDB_CONNECTION: 'sqlite:////cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/ccdb/ccdb_latest.sqlite'
   nthreads: 1
@@ -71,7 +73,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-java@v5
         with:
-          java-version: ${{ env.java_version }}
+          java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
           cache: maven
       - name: install xrootd-client (linux)
@@ -108,13 +110,28 @@ jobs:
   # tests
   #############################################################################
 
+  java_matrix: # make JSON job matrix, to workaround GitHub's lack of `env` var support in job matrix params
+    runs-on: ubuntu-latest
+    outputs:
+      versions: ${{ steps.matrix.outputs.versions }}
+    steps:
+      - name: matrix
+        id: matrix
+        run: echo versions="[\"${{ env.JAVA_VERSION }}\",\"${{ env.JAVA_VERSION_LATEST }}\"]" | tee -a $GITHUB_OUTPUT
+
   unit_tests:
+    needs:
+      - java_matrix
+    strategy:
+      fail-fast: false
+      matrix:
+        JAVA_VERSION: ${{ fromJson(needs.java_matrix.outputs.versions) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-java@v5
         with:
-          java-version: ${{ env.java_version }}
+          java-version: ${{ matrix.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
           cache: maven
       - name: install xrootd-client
@@ -127,8 +144,10 @@ jobs:
       - name: unit tests
         run: ./build-coatjava.sh --xrootd --unittests --no-progress -T${{ env.nthreads }}
       - name: collect jacoco report
+        if: ${{ matrix.JAVA_VERSION == env.JAVA_VERSION }}
         run: validation/jacoco-aggregate.sh
       - name: publish jacoco report
+        if: ${{ matrix.JAVA_VERSION == env.JAVA_VERSION }}
         uses: actions/upload-artifact@v5
         with:
           name: jacoco_report
@@ -143,7 +162,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v5
         with:
-          java-version: ${{ env.java_version }}
+          java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
           cache: maven
       - uses: cvmfs-contrib/github-action-cvmfs@v5
@@ -165,7 +184,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v5
         with:
-          java-version: ${{ env.java_version }}
+          java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
           cache: maven
       - uses: cvmfs-contrib/github-action-cvmfs@v5
@@ -202,7 +221,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v5
         with:
-          java-version: ${{ env.java_version }}
+          java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
           cache: maven
       - name: setup cvmfs
@@ -258,7 +277,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v5
         with:
-          java-version: ${{ env.java_version }}
+          java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
           cache: maven
       - uses: actions/download-artifact@v6
@@ -283,7 +302,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v5
         with:
-          java-version: ${{ env.java_version }}
+          java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
           cache: maven
       - name: setup groovy
@@ -306,7 +325,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v5
         with:
-          java-version: ${{ env.java_version }}
+          java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
           cache: maven
       - uses: actions/download-artifact@v6
@@ -342,7 +361,7 @@ jobs:
       - name: set up JDK
         uses: actions/setup-java@v5
         with:
-          java-version: ${{ env.java_version }}
+          java-version: ${{ env.javadoc_version }}
           distribution: ${{ env.java_distribution }}
           cache: maven
       - name: build coatjava javadocs # javadoc:aggregate output dir cannot be controlled, so assume the latest "standard" path and `mv` it

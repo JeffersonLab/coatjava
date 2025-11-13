@@ -279,7 +279,7 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.14.1</version>
         <configuration>
-          <release>21</release>
+          <release>21</release> <!-- CI variable `JAVA_VERSION` must match this; see also dependabot configuration -->
           <encoding>UTF-8</encoding>
         </configuration>
       </plugin>
