@@ -201,15 +201,15 @@ public class CLASDecoder {
         List<DetectorDataDgtz> a = this.getEntriesADC(type);
         Bank b = new Bank(schemaFactory.getSchema(name), a.size());
         for (int i=0; i<a.size(); ++i) {
-            b.putByte("sector", i, (byte) a.get(i).getDescriptor().getSector());
-            b.putByte("layer", i, (byte) a.get(i).getDescriptor().getLayer());
-            b.putShort("component", i, (short) a.get(i).getDescriptor().getComponent());
-            b.putByte("order", i, (byte) a.get(i).getDescriptor().getOrder());
+            b.putByte( 0, i, (byte) a.get(i).getDescriptor().getSector());
+            b.putByte( 1, i, (byte) a.get(i).getDescriptor().getLayer());
+            b.putShort(2, i, (short) a.get(i).getDescriptor().getComponent());
+            b.putByte( 3, i, (byte) a.get(i).getDescriptor().getOrder());
             b.putLong("timestamp", i, a.get(i).getADCData(0).getTimeStamp());
             b.putInt("time", i, (int)a.get(i).getADCData(0).getTime());
             DetectorDataDgtz.ADCData xxx = a.get(i).getADCData(0);
             for (int j=0; j<xxx.getPulseSize(); ++j)
-                b.putShort(String.format("s%d",j+1), i, xxx.getPulseValue(j));
+                b.putShort(j+5,j+1), i, xxx.getPulseValue(j));
         }
         return b;
     }
@@ -223,10 +223,10 @@ public class CLASDecoder {
         Bank adcBANK = new Bank(schemaFactory.getSchema(name), adcDGTZ.size());
 
         for(int i = 0; i < adcDGTZ.size(); i++){
-            adcBANK.putByte("sector", i, (byte) adcDGTZ.get(i).getDescriptor().getSector());
-            adcBANK.putByte("layer", i, (byte) adcDGTZ.get(i).getDescriptor().getLayer());
-            adcBANK.putShort("component", i, (short) adcDGTZ.get(i).getDescriptor().getComponent());
-            adcBANK.putByte("order", i, (byte) adcDGTZ.get(i).getDescriptor().getOrder());
+            adcBANK.putByte(0, i, (byte) adcDGTZ.get(i).getDescriptor().getSector());
+            adcBANK.putByte(1, i, (byte) adcDGTZ.get(i).getDescriptor().getLayer());
+            adcBANK.putShort(2, i, (short) adcDGTZ.get(i).getDescriptor().getComponent());
+            adcBANK.putByte(3, i, (byte) adcDGTZ.get(i).getDescriptor().getOrder());
             adcBANK.putInt("ADC", i, adcDGTZ.get(i).getADCData(0).getADC());
             adcBANK.putFloat("time", i, (float) adcDGTZ.get(i).getADCData(0).getTime());
             adcBANK.putShort("ped", i, (short) adcDGTZ.get(i).getADCData(0).getPedestal());
@@ -251,10 +251,10 @@ public class CLASDecoder {
         if(tdcBANK==null) return null;
 
         for(int i = 0; i < tdcDGTZ.size(); i++){
-            tdcBANK.putByte("sector", i, (byte) tdcDGTZ.get(i).getDescriptor().getSector());
-            tdcBANK.putByte("layer", i, (byte) tdcDGTZ.get(i).getDescriptor().getLayer());
-            tdcBANK.putShort("component", i, (short) tdcDGTZ.get(i).getDescriptor().getComponent());
-            tdcBANK.putByte("order", i, (byte) (tdcDGTZ.get(i).getDescriptor().getOrder()+tdcDGTZ.get(i).getTDCData(0).getType().getTypeId()));
+            tdcBANK.putByte(0, i, (byte) tdcDGTZ.get(i).getDescriptor().getSector());
+            tdcBANK.putByte(1, i, (byte) tdcDGTZ.get(i).getDescriptor().getLayer());
+            tdcBANK.putShort(2, i, (short) tdcDGTZ.get(i).getDescriptor().getComponent());
+            tdcBANK.putByte(3, i, (byte) (tdcDGTZ.get(i).getDescriptor().getOrder()+tdcDGTZ.get(i).getTDCData(0).getType().getTypeId()));
             tdcBANK.putInt("TDC", i, tdcDGTZ.get(i).getTDCData(0).getTime());
             if(tdcBANK.getSchema().hasEntry("ToT"))
                 tdcBANK.putShort("ToT", i, (short) tdcDGTZ.get(i).getTDCData(0).getToT());
@@ -275,10 +275,10 @@ public class CLASDecoder {
 
         // Not sure why  the schemea information isn't used here. 
         for(int i = 0; i < tdcDGTZ.size(); i++){
-            tdcBANK.putByte("sector", i, (byte) tdcDGTZ.get(i).getDescriptor().getSector());
-            tdcBANK.putByte("layer", i, (byte) tdcDGTZ.get(i).getDescriptor().getLayer());
-            tdcBANK.putShort("component", i, (short) tdcDGTZ.get(i).getDescriptor().getComponent());
-            tdcBANK.putByte("order", i, (byte) tdcDGTZ.get(i).getDescriptor().getOrder());
+            tdcBANK.putByte(0, i, (byte) tdcDGTZ.get(i).getDescriptor().getSector());
+            tdcBANK.putByte(1, i, (byte) tdcDGTZ.get(i).getDescriptor().getLayer());
+            tdcBANK.putShort(2, i, (short) tdcDGTZ.get(i).getDescriptor().getComponent());
+            tdcBANK.putByte(3, i, (byte) tdcDGTZ.get(i).getDescriptor().getOrder());
             tdcBANK.putInt("TDC", i, tdcDGTZ.get(i).getTDCData(0).getTime());
             tdcBANK.putInt("ToT", i, tdcDGTZ.get(i).getTDCData(0).getToT());
             tdcBANK.putLong("timestamp", i, tdcDGTZ.get(i).getTDCData(0).getTimeStamp());
@@ -514,10 +514,10 @@ public class CLASDecoder {
                 
                 double pulseTime = coeff + offset1 + offset2 + k*120.0;
                 
-                bonusBank.putByte("sector", currentRow, (byte) bonus.getDescriptor().getSector());
-                bonusBank.putByte("layer" , currentRow, (byte) bonus.getDescriptor().getLayer());
-                bonusBank.putShort("component", currentRow, (short) bonus.getDescriptor().getComponent());
-                bonusBank.putByte("order",      currentRow, (byte) bonus.getDescriptor().getOrder());
+                bonusBank.putByte(0, currentRow, (byte) bonus.getDescriptor().getSector());
+                bonusBank.putByte(1 , currentRow, (byte) bonus.getDescriptor().getLayer());
+                bonusBank.putShort(2, currentRow, (short) bonus.getDescriptor().getComponent());
+                bonusBank.putByte(3,      currentRow, (byte) bonus.getDescriptor().getOrder());
                 bonusBank.putInt("ADC",    currentRow, pulses[k]);
                 bonusBank.putFloat("time", currentRow, (float) pulseTime);
                 bonusBank.putShort("ped",  currentRow, (short) 0);
