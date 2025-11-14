@@ -23,6 +23,7 @@ import org.jlab.io.hipo.HipoDataSync;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
+import org.jlab.utils.benchmark.Benchmark;
 
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.system.ClasUtilsFile;
@@ -732,7 +733,9 @@ public class CLASDecoder {
             if(evioEvent.getHandler().getStructure()!=null){
                 try {
 
+                    Benchmark.getInstance().resume("GDE");
                     dataList = codaDecoder.getDataEntries( (EvioDataEvent) event);
+                    Benchmark.getInstance().pause("GDE");
                     
                     //-----------------------------------------------------------------------------
                     // This part reads the BITPACKED FADC data from tag=57638 Format (cmcms)
