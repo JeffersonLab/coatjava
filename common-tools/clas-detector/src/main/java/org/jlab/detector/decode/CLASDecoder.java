@@ -44,6 +44,7 @@ public class CLASDecoder {
     private int                  decoderDebugMode = 0;
     private ModeAHDC                ahdcExtractor = new ModeAHDC();
     private RCDBManager               rcdbManager = new RCDBManager();
+    protected boolean benchmark = true;
 
     public CLASDecoder(boolean development){
         codaDecoder = new CodaEventDecoder();
@@ -725,6 +726,9 @@ public class CLASDecoder {
         }
         return event;
     }
+
+    void resume(String s) { if (benchmark) Benchmark.getInstance().resume(s); }
+    void pause(String s) { if (benchmark) Benchmark.getInstance().pause(s); }
 
     public void initEvent(DataEvent event){
 

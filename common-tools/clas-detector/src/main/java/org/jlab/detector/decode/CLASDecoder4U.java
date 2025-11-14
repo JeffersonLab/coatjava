@@ -53,6 +53,7 @@ public class CLASDecoder4U extends CLASDecoder {
         p.addOption("-r", "-1","run number in the header bank (-1 means use CODA run)");
         p.addOption("-t", null,"torus current in the header bank (null means use RCDB)");
         p.addOption("-s", null,"solenoid current in the header bank (null means use RCDB)");
+        p.addOption("-b", null, "run benchmark timers");
         p.addOption("-x", null,"CCDB timestamp (MM/DD/YYYY-HH:MM:SS)");
         p.addOption("-V","default","CCDB variation");
         p.addOption("-o",null,"output HIPO filename");
@@ -150,6 +151,7 @@ public class CLASDecoder4U extends CLASDecoder {
         solenoid = o.getOption("-s").getValue()==null?null:o.getOption("-s").doubleValue();
         runNumber = o.getOption("-r").intValue();
         maxEvents = o.getOption("-n").intValue();
+        benchmark = o.getOption("-b").getValue() != null;
         if (runNumber > 0) setRunNumber(runNumber, true);
         if (o.getOption("-x").getValue() != null)
             detectorDecoder.setTimestamp(o.getOption("-x").stringValue());
