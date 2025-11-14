@@ -127,13 +127,9 @@ public class CLASDecoder4U extends CLASDecoder {
         solenoid = o.getOption("-s").getValue()==null?null:o.getOption("-s").doubleValue();
         runNumber = o.getOption("-r").intValue();
         maxEvents = o.getOption("-n").intValue();
-        logger.warning("DOGGIES:");
-        System.err.println("OKY1");
         if (o.getOption("-b").getValue() != null) {
-            System.err.println("OKY2");
             benchmark = true;
-            Benchmark.getInstance().printTimer(1);
-            System.err.println("OKY3");
+            Benchmark.getInstance().printTimer(10);
         }
         if (runNumber > 0) setRunNumber(runNumber, true);
         if (o.getOption("-x").getValue() != null)
@@ -154,11 +150,8 @@ public class CLASDecoder4U extends CLASDecoder {
      */
     public static void main(String[] args) {
 
-        System.err.println("MAIN");
-
         // hijack arguments, when run from an IDE:
         if (System.console() == null && args.length == 0) {
-        System.err.println("HIJACK");
             // delete output file, if necessary:
             File f = new File("tmp.hipo");
             if (f.exists()) f.delete();
@@ -171,11 +164,9 @@ public class CLASDecoder4U extends CLASDecoder {
         // parse command-line options:
         OptionParser opts = getOptionParser();
         opts.parse(args);
-        System.err.println(opts);
 
         // run the decoder:
         CLASDecoder4U decoder = new CLASDecoder4U(opts);
-        System.err.println("DECODER: "+decoder);
         while (decoder.hasNext()) decoder.getNext();
         decoder.close();
     }
