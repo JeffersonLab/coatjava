@@ -15,11 +15,10 @@ import org.jlab.utils.options.OptionParser;
 import org.jlab.utils.system.ClasUtilsFile;
 
 /**
- * Wrapper of everything in CLAS12Decoder4's main method.
+ * Wrapper of everything (previously) in CLAS12Decoder4's main method.
  *
- * @author baltzell
  */
-public class CLASDecoder4U extends CLASDecoder4 {
+public class CLASDecoder4U extends CLASDecoder {
 
     private EvioSource reader;
     private HipoWriterSorted writer;
