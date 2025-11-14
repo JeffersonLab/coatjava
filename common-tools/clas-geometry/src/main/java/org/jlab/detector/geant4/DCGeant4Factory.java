@@ -45,15 +45,11 @@ final class DCdatabase {
     private int nguardwires;
 
     private final String dcdbpath = "/geometry/dc/";
-    private static DCdatabase instance = null;
+    private static DCdatabase instance = new DCdatabase();
 
-    private DCdatabase() {
-    }
+    private DCdatabase() {}
 
-    public static synchronized DCdatabase getInstance() {
-        if (instance == null) {
-            instance = new DCdatabase();
-        }
+    public static DCdatabase getInstance() {
         return instance;
     }
 
