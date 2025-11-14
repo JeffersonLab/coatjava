@@ -737,9 +737,9 @@ public class CLASDecoder {
             if(evioEvent.getHandler().getStructure()!=null){
                 try {
 
-                    Benchmark.getInstance().resume("GDE");
+                    resume("GDE");
                     dataList = codaDecoder.getDataEntries( (EvioDataEvent) event);
-                    Benchmark.getInstance().pause("GDE");
+                    pause("GDE");
                     
                     //-----------------------------------------------------------------------------
                     // This part reads the BITPACKED FADC data from tag=57638 Format (cmcms)
@@ -747,8 +747,11 @@ public class CLASDecoder {
                     // Modified on 9/5/2018
                     //-----------------------------------------------------------------------------
                     
+                    resume("GAE");
                     List<FADCData>  fadcPacked = codaDecoder.getADCEntries((EvioDataEvent) event);
+                    pause("GAE");
                     
+                    resume("MISC");
                     if(fadcPacked!=null){
                         List<DetectorDataDgtz> fadcUnpacked = FADCData.convert(fadcPacked);
                         dataList.addAll(fadcUnpacked);
@@ -774,6 +777,7 @@ public class CLASDecoder {
                             System.out.println(data);
                         }
                     }
+                    pause("MISC");
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

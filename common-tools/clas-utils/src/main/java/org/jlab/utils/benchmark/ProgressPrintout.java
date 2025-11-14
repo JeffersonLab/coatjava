@@ -56,10 +56,8 @@ public class ProgressPrintout {
         this.numberOfCalls++;
         Long currentTime   = System.currentTimeMillis();
         Double elapsedTime = (currentTime - this.previousPrintoutTime)*1e-3;
-        //System.out.println("elapsed = " + elapsedTime);
         if(elapsedTime>=this.printoutIntervalSeconds){
             this.previousPrintoutTime = System.currentTimeMillis();
-            //System.out.println(" passed time ");
             System.out.println(this.getUpdateString());
         }
     }

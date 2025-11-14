@@ -25,11 +25,13 @@ public class Benchmark {
     
     public void printTimer(int seconds){
         TimerTask timerTask = new TimerTask() { 
-                @Override
-                public void run() { System.out.println(getInstance()); }
+            @Override
+            public void run() { System.out.println(benchmarkInstance); }
         };
+        System.err.println("KITTY");
         updateTimer = new Timer("Benchmark");
         updateTimer.scheduleAtFixedRate(timerTask, 0, 1000*seconds);
+        System.err.println("DOGGY");
     }
     
     public void reset(){

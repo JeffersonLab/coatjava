@@ -1,6 +1,5 @@
 package org.jlab.detector.calib.utils;
 
-import java.lang.Thread;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -13,7 +12,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jlab.utils.groups.IndexedTable;
-import org.jlab.logging.SplitLogger;
 
 /**
  *
@@ -23,7 +21,7 @@ public class ConstantsManager {
 
     public static final int DBERROR_SLEEP_SECONDS=3;
 
-    private static Logger LOGGER = SplitLogger.create(ConstantsManager.class.getName(), false);
+    private static Logger LOGGER = Logger.getLogger("ConstantsManager");
 
     private DatabaseConstantsDescriptor defaultDescriptor = new DatabaseConstantsDescriptor();
     private volatile Map<Integer, DatabaseConstantsDescriptor> runConstants = new LinkedHashMap<Integer, DatabaseConstantsDescriptor>();
@@ -182,7 +180,7 @@ public class ConstantsManager {
      */
     public static class DatabaseConstantsDescriptor {
         
-        Logger LOGGER = SplitLogger.create(DatabaseConstantsDescriptor.class.getName(), false);
+        Logger LOGGER = Logger.getLogger(DatabaseConstantsDescriptor.class.getName());
 
         private String  descName   = "descriptor";
         private int     runNumber  = 10;

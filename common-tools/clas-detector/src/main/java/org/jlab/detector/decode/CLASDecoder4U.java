@@ -3,6 +3,7 @@ package org.jlab.detector.decode;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.TreeSet;
+import java.util.logging.Logger;
 import org.jlab.detector.helicity.HelicitySequence;
 import org.jlab.detector.helicity.HelicityState;
 import org.jlab.io.evio.EvioDataEvent;
@@ -10,6 +11,7 @@ import org.jlab.io.evio.EvioSource;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
+import org.jlab.utils.benchmark.Benchmark;
 import org.jlab.utils.benchmark.ProgressPrintout;
 import org.jlab.utils.options.OptionParser;
 import org.jlab.utils.system.ClasUtilsFile;
@@ -20,6 +22,7 @@ import org.jlab.utils.system.ClasUtilsFile;
  */
 public class CLASDecoder4U extends CLASDecoder {
 
+    private static final Logger logger = Logger.getLogger("CLASDecoder4U");
     private EvioSource reader;
     private HipoWriterSorted writer;
     private Bank config;
@@ -94,33 +97,6 @@ public class CLASDecoder4U extends CLASDecoder {
         }
     }
 
-    /**
-     * The command-line "decoder" program.
-     * @param args 
-     */
-    public static void main(String[] args) {
-
-        // hijack arguments, when run from an IDE:
-        if (System.console() == null && args.length == 0) {
-            // delete output file, if necessary:
-            File f = new File("tmp.hipo");
-            if (f.exists()) f.delete();
-            // setup decoder command-line options:
-            args = new String[]{"-o","tmp.hipo",System.getenv("HOME")+"/data/clas_005038.evio.00001"};
-            // try to find bankdefs:
-            System.setProperty("CLAS12DIR", System.getenv("HOME")+"/sw/coatjava/dev/coatjava");
-        }
-
-        // parse command-line options:
-        OptionParser opts = CLASDecoder4U.getOptionParser();
-        opts.parse(args);
-
-        // run the decoder:
-        CLASDecoder4U decoder = new CLASDecoder4U(opts);
-        while (decoder.hasNext()) decoder.getNext();
-        decoder.close();
-    }
-
     private EvioDataEvent getNextEvioEvent() {
         if (reader == null || !reader.hasEvent()) {
             reader = new EvioSource();
@@ -151,7 +127,14 @@ public class CLASDecoder4U extends CLASDecoder {
         solenoid = o.getOption("-s").getValue()==null?null:o.getOption("-s").doubleValue();
         runNumber = o.getOption("-r").intValue();
         maxEvents = o.getOption("-n").intValue();
-        benchmark = o.getOption("-b").getValue() != null;
+        logger.warning("DOGGIES:");
+        System.err.println("OKY1");
+        if (o.getOption("-b").getValue() != null) {
+            System.err.println("OKY2");
+            benchmark = true;
+            Benchmark.getInstance().printTimer(1);
+            System.err.println("OKY3");
+        }
         if (runNumber > 0) setRunNumber(runNumber, true);
         if (o.getOption("-x").getValue() != null)
             detectorDecoder.setTimestamp(o.getOption("-x").stringValue());
@@ -163,6 +146,38 @@ public class CLASDecoder4U extends CLASDecoder {
             writer.getSchemaFactory().initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4"));
             writer.open(o.getOption("-o").stringValue());
         }
+    }
+
+    /**
+     * The command-line "decoder" program.
+     * @param args 
+     */
+    public static void main(String[] args) {
+
+        System.err.println("MAIN");
+
+        // hijack arguments, when run from an IDE:
+        if (System.console() == null && args.length == 0) {
+        System.err.println("HIJACK");
+            // delete output file, if necessary:
+            File f = new File("tmp.hipo");
+            if (f.exists()) f.delete();
+            // setup decoder command-line options:
+            args = new String[]{"-o","tmp.hipo",System.getenv("HOME")+"/data/clas_005038.evio.00001"};
+            // try to find bankdefs:
+            System.setProperty("CLAS12DIR", System.getenv("HOME")+"/sw/coatjava/dev/coatjava");
+        }
+
+        // parse command-line options:
+        OptionParser opts = getOptionParser();
+        opts.parse(args);
+        System.err.println(opts);
+
+        // run the decoder:
+        CLASDecoder4U decoder = new CLASDecoder4U(opts);
+        System.err.println("DECODER: "+decoder);
+        while (decoder.hasNext()) decoder.getNext();
+        decoder.close();
     }
 
 }
