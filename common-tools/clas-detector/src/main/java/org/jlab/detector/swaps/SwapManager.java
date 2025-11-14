@@ -55,8 +55,6 @@ public final class SwapManager {
     private ConstantsManager currConman = null;
     private SchemaFactory schema = null;
 
-    private static SwapManager instance = null;
-
     public Set<String> getDetectors() {
         return this.detsToBanks.keySet();
     }
@@ -67,14 +65,7 @@ public final class SwapManager {
         return this.detsToBanks.get(detectorName);
     }
     
-    private SwapManager() {}
-    
-    public static synchronized SwapManager getInstance() {
-        if (instance == null) {
-            instance = new SwapManager();
-        }
-        return instance;
-    }
+    public SwapManager() {}
 
     /**
      * @param detectorNames
@@ -248,7 +239,7 @@ public final class SwapManager {
 
     public static void main(String[] args) {
 
-        SwapManager man = getInstance();
+        SwapManager man = new SwapManager();
         System.out.println(Arrays.toString(man.get(11014, "/daq/tt/bmt",3,5,320,0)));
 
         man.initialize(Arrays.asList("DC"),"08/10/2020","10/13/2024");
