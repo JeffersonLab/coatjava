@@ -228,16 +228,21 @@ public class CLASDecoder {
             adcBANK.putShort(2, i, (short) adcDGTZ.get(i).getDescriptor().getComponent());
             adcBANK.putByte( 3, i, (byte) adcDGTZ.get(i).getDescriptor().getOrder());
             adcBANK.putInt(  4, i, adcDGTZ.get(i).getADCData(0).getADC());
-            // At least BAND breaks the mold here.
-            adcBANK.putFloat("time", i, (float) adcDGTZ.get(i).getADCData(0).getTime());
-            adcBANK.putShort("ped", i, (short) adcDGTZ.get(i).getADCData(0).getPedestal());
-            if("BST::adc".equals(name)) adcBANK.putLong("timestamp", i, adcDGTZ.get(i).getADCData(0).getTimeStamp());
             if(name.equals("BMT::adc")||name.equals("FMT::adc")|| name.equals("FTTRK::adc")){
-            	adcBANK.putInt("ADC", i, adcDGTZ.get(i).getADCData(0).getHeight());
-            	adcBANK.putInt("integral", i, adcDGTZ.get(i).getADCData(0).getIntegral());
-            	adcBANK.putLong("timestamp", i, adcDGTZ.get(i).getADCData(0).getTimeStamp());
+            	adcBANK.putInt( 4, i, adcDGTZ.get(i).getADCData(0).getHeight());
+            	adcBANK.putInt( 7, i, adcDGTZ.get(i).getADCData(0).getIntegral());
+            	adcBANK.putLong(8, i, adcDGTZ.get(i).getADCData(0).getTimeStamp());
             }
-            if("BAND::adc".equals(name)) adcBANK.putInt("amplitude", i, adcDGTZ.get(i).getADCData(0).getHeight());
+            if("BAND::adc".equals(name)) {
+                adcBANK.putInt(  5, i, adcDGTZ.get(i).getADCData(0).getHeight());
+                adcBANK.putFloat(6, i, (float) adcDGTZ.get(i).getADCData(0).getTime());
+                adcBANK.putShort(7, i, (short) adcDGTZ.get(i).getADCData(0).getPedestal());
+            }
+            else {
+                adcBANK.putFloat(5, i, (float) adcDGTZ.get(i).getADCData(0).getTime());
+                adcBANK.putShort(6, i, (short) adcDGTZ.get(i).getADCData(0).getPedestal());
+            }
+            if("BST::adc".equals(name)) adcBANK.putLong(7, i, adcDGTZ.get(i).getADCData(0).getTimeStamp());
          }
         return adcBANK;
     }
@@ -442,20 +447,17 @@ public class CLASDecoder {
         byte  helicityL3 = this.codaDecoder.getHelicityLevel3();
         IndexedTable hwpTable = this.detectorDecoder.scalerManager.
                 getConstants(this.detectorDecoder.getRunNumber(),"/runcontrol/hwp");
-        bank.putByte("helicityRaw",0, helicityL3);
-        bank.putByte("helicity",0,(byte)(helicityL3*hwpTable.getIntValue("hwp",0,0,0)));
+        bank.putByte(0,0, helicityL3);
+        bank.putByte(1,0,(byte)(helicityL3*hwpTable.getIntValue("hwp",0,0,0)));
         return bank;
     }
 
     public Bank createTriggerBank(){
-
         if(schemaFactory.hasSchema("RUN::trigger")==false) return null;
-
         Bank bank = new Bank(schemaFactory.getSchema("RUN::trigger"), this.codaDecoder.getTriggerWords().size());
-
         for(int i=0; i<this.codaDecoder.getTriggerWords().size(); i++) {
-            bank.putInt("id",      i, i+1);
-            bank.putInt("trigger", i, this.codaDecoder.getTriggerWords().get(i));
+            bank.putInt(0, i, i+1);
+            bank.putInt(1, i, this.codaDecoder.getTriggerWords().get(i));
         }
         return bank;
     }
@@ -466,7 +468,7 @@ public class CLASDecoder {
         String json = this.codaDecoder.getEpicsData().toString();
         Bank bank = new Bank(schemaFactory.getSchema("RAW::epics"), json.length());
         for (int ii=0; ii<json.length(); ii++) {
-            bank.putByte("json",ii,(byte)json.charAt(ii));
+            bank.putByte(0,ii,(byte)json.charAt(ii));
         }
         return bank;
     }
@@ -513,13 +515,13 @@ public class CLASDecoder {
                 
                 double pulseTime = coeff + offset1 + offset2 + k*120.0;
                 
-                bonusBank.putByte(0, currentRow, (byte) bonus.getDescriptor().getSector());
-                bonusBank.putByte(1 , currentRow, (byte) bonus.getDescriptor().getLayer());
+                bonusBank.putByte( 0, currentRow, (byte) bonus.getDescriptor().getSector());
+                bonusBank.putByte( 1, currentRow, (byte) bonus.getDescriptor().getLayer());
                 bonusBank.putShort(2, currentRow, (short) bonus.getDescriptor().getComponent());
-                bonusBank.putByte(3,      currentRow, (byte) bonus.getDescriptor().getOrder());
-                bonusBank.putInt("ADC",    currentRow, pulses[k]);
-                bonusBank.putFloat("time", currentRow, (float) pulseTime);
-                bonusBank.putShort("ped",  currentRow, (short) 0);
+                bonusBank.putByte( 3, currentRow, (byte) bonus.getDescriptor().getOrder());
+                bonusBank.putInt(  4, currentRow, pulses[k]);
+                bonusBank.putFloat(5, currentRow, (float) pulseTime);
+                bonusBank.putShort(6, currentRow, (short) 0);
                 currentRow++;
             }
         }
@@ -531,27 +533,28 @@ public class CLASDecoder {
         HelicityDecoderData data = this.codaDecoder.getDataEntries_HelicityDecoder(event);
         if(data!=null) {
             Bank bank = new Bank(schemaFactory.getSchema("HEL::decoder"), 1);
-            bank.putByte("helicity",        0, data.getHelicityState().getHelicity().value());
-            bank.putByte("pair",            0, data.getHelicityState().getPairSync().value());
-            bank.putByte("pattern",         0, data.getHelicityState().getPatternSync().value());
-            bank.putByte("tSettle",         0, data.getTSettle().value());
-            bank.putByte("helicityPattern", 0, data.getHelicityPattern().value());
-            bank.putByte("polarity",        0, data.getPolarity());
-            bank.putByte("phase",           0, data.getPatternPhaseCount());
-            bank.putLong("timestamp",       0, data.getTimestamp());
-            bank.putInt("helicitySeed",     0, data.getHelicitySeed());
-            bank.putInt("nTStableRE",       0, data.getNTStableRisingEdge());
-            bank.putInt("nTStableFE",       0, data.getNTStableFallingEdge());
-            bank.putInt("nPattern",         0, data.getNPattern());
-            bank.putInt("nPair",            0, data.getNPair());
-            bank.putInt("tStableStart",     0, data.getTStableStart());
-            bank.putInt("tStableEnd",       0, data.getTStableEnd());
-            bank.putInt("tStableTime",      0, data.getTStableTime());
-            bank.putInt("tSettleTime",      0, data.getTSettleTime());
-            bank.putInt("patternArray",     0, data.getPatternWindows());
-            bank.putInt("pairArray",        0, data.getPairWindows());
-            bank.putInt("helicityArray",    0, data.getHelicityWindows());
-            bank.putInt("helicityPArray",   0, data.getHelicityPatternWindows());
+            int i=0;
+            bank.putByte(i++, 0, data.getHelicityState().getHelicity().value());
+            bank.putByte(i++, 0, data.getHelicityState().getPairSync().value());
+            bank.putByte(i++, 0, data.getHelicityState().getPatternSync().value());
+            bank.putByte(i++, 0, data.getTSettle().value());
+            bank.putByte(i++, 0, data.getHelicityPattern().value());
+            bank.putByte(i++, 0, data.getPolarity());
+            bank.putByte(i++, 0, data.getPatternPhaseCount());
+            bank.putLong(i++, 0, data.getTimestamp());
+            bank.putInt(i++,  0, data.getHelicitySeed());
+            bank.putInt(i++,  0, data.getNTStableRisingEdge());
+            bank.putInt(i++,  0, data.getNTStableFallingEdge());
+            bank.putInt(i++,  0, data.getNPattern());
+            bank.putInt(i++,  0, data.getNPair());
+            bank.putInt(i++,  0, data.getTStableStart());
+            bank.putInt(i++,  0, data.getTStableEnd());
+            bank.putInt(i++,  0, data.getTStableTime());
+            bank.putInt(i++,  0, data.getTSettleTime());
+            bank.putInt(i++,  0, data.getPatternWindows());
+            bank.putInt(i++,  0, data.getPairWindows());
+            bank.putInt(i++,  0, data.getHelicityWindows());
+            bank.putInt(i++,  0, data.getHelicityPatternWindows());
             return bank;
         }
         else 
