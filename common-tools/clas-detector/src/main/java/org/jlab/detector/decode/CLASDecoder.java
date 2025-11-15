@@ -209,7 +209,7 @@ public class CLASDecoder {
             b.putInt("time", i, (int)a.get(i).getADCData(0).getTime());
             DetectorDataDgtz.ADCData xxx = a.get(i).getADCData(0);
             for (int j=0; j<xxx.getPulseSize(); ++j)
-                b.putShort(j+5,j+1), i, xxx.getPulseValue(j));
+                b.putShort(j+5, i, xxx.getPulseValue(j));
         }
         return b;
     }
