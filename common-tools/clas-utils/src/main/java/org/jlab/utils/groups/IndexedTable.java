@@ -39,7 +39,18 @@ public class IndexedTable extends DefaultTableModel {
             this.indexNames.add("A"+i);
         }
     }
-    
+
+    /**
+     * Clone the format of an existing IndexedTable.
+     * @param it 
+     */
+    public IndexedTable(IndexedTable it) {
+        entries = new IndexedList<>(it.indexNames.size());
+        for (int i = 0; i < it.indexNames.size(); i++) indexNames.add("A"+i);
+        entryMap = it.entryMap;
+        entryTypes = it.entryTypes;
+    }
+       
     public IndexedTable(int indexCount,String format){
         entries = new IndexedList<>(indexCount);
         for(int i = 0; i < indexCount; i++){
@@ -119,7 +130,11 @@ public class IndexedTable extends DefaultTableModel {
             }
         }
     }
-    
+   
+    public void setIntValueByHash(Integer value, int column, long hash) {
+        this.entries.getItemByHash(hash).setValue(column, value);
+    }
+
     public  void setDoubleValue(Double value, String item, int... index){
         if(this.entries.hasItem(index)==false){
             if(DEBUG_MODE>0) System.out.println( "[IndexedTable] ---> error.. entry does not exist");
@@ -453,4 +468,31 @@ public class IndexedTable extends DefaultTableModel {
         return !conflicts.isEmpty();
     }
 
+    /**
+     * Make one big table.
+     * @param tables the tables to combine
+     * @return 
+     */
+    public static IndexedTable add(List<IndexedTable> tables) {
+        // create the new table:
+        IndexedTable ret = new IndexedTable(tables.get(0));
+        for (IndexedTable table : tables) {
+            // loop over the input table rows:
+            for (Object key : table.getList().getMap().keySet()) {
+                // get the indexing for this row:
+                int crate = IndexedTable.DEFAULT_GENERATOR.getIndex((long)key, 0);
+                int slot = IndexedTable.DEFAULT_GENERATOR.getIndex((long)key, 1);
+                int channel = IndexedTable.DEFAULT_GENERATOR.getIndex((long)key, 2);
+                long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(crate, slot, channel);
+                // add row to the new table:
+                ret.addEntry(crate,slot,channel);
+                // set values for the new row:
+                for (int column : table.entryMap.values()) {
+                    int value = table.getIntValueByHash(column, hash);
+                    ret.setIntValueByHash(value, column, hash);
+                }
+            }
+        }
+        return ret; 
+    }
 }
