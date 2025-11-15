@@ -205,7 +205,7 @@ public class CLASDecoder {
             b.putByte( 1, i, (byte) a.get(i).getDescriptor().getLayer());
             b.putShort(2, i, (short) a.get(i).getDescriptor().getComponent());
             b.putByte( 3, i, (byte) a.get(i).getDescriptor().getOrder());
-            b.putLong("timestamp", i, a.get(i).getADCData(0).getTimeStamp());
+            b.putLong( 4, i, a.get(i).getADCData(0).getTimeStamp());
             b.putInt("time", i, (int)a.get(i).getADCData(0).getTime());
             DetectorDataDgtz.ADCData xxx = a.get(i).getADCData(0);
             for (int j=0; j<xxx.getPulseSize(); ++j)
@@ -227,7 +227,8 @@ public class CLASDecoder {
             adcBANK.putByte( 1, i, (byte) adcDGTZ.get(i).getDescriptor().getLayer());
             adcBANK.putShort(2, i, (short) adcDGTZ.get(i).getDescriptor().getComponent());
             adcBANK.putByte( 3, i, (byte) adcDGTZ.get(i).getDescriptor().getOrder());
-            adcBANK.putInt("ADC", i, adcDGTZ.get(i).getADCData(0).getADC());
+            adcBANK.putInt(  4, i, adcDGTZ.get(i).getADCData(0).getADC());
+            // At least BAND breaks the mold here.
             adcBANK.putFloat("time", i, (float) adcDGTZ.get(i).getADCData(0).getTime());
             adcBANK.putShort("ped", i, (short) adcDGTZ.get(i).getADCData(0).getPedestal());
             if("BST::adc".equals(name)) adcBANK.putLong("timestamp", i, adcDGTZ.get(i).getADCData(0).getTimeStamp());
@@ -255,7 +256,7 @@ public class CLASDecoder {
             tdcBANK.putByte( 1, i, (byte) tdcDGTZ.get(i).getDescriptor().getLayer());
             tdcBANK.putShort(2, i, (short) tdcDGTZ.get(i).getDescriptor().getComponent());
             tdcBANK.putByte( 3, i, (byte) (tdcDGTZ.get(i).getDescriptor().getOrder()+tdcDGTZ.get(i).getTDCData(0).getType().getTypeId()));
-            tdcBANK.putInt("TDC", i, tdcDGTZ.get(i).getTDCData(0).getTime());
+            tdcBANK.putInt(  4, i, tdcDGTZ.get(i).getTDCData(0).getTime());
             if(tdcBANK.getSchema().hasEntry("ToT"))
                 tdcBANK.putShort("ToT", i, (short) tdcDGTZ.get(i).getTDCData(0).getToT());
         }
@@ -273,17 +274,15 @@ public class CLASDecoder {
 
         if(tdcBANK==null) return null;
 
-        // Not sure why  the schemea information isn't used here. 
         for(int i = 0; i < tdcDGTZ.size(); i++){
             tdcBANK.putByte( 0, i, (byte) tdcDGTZ.get(i).getDescriptor().getSector());
             tdcBANK.putByte( 1, i, (byte) tdcDGTZ.get(i).getDescriptor().getLayer());
             tdcBANK.putShort(2, i, (short) tdcDGTZ.get(i).getDescriptor().getComponent());
             tdcBANK.putByte( 3, i, (byte) tdcDGTZ.get(i).getDescriptor().getOrder());
-            tdcBANK.putInt("TDC", i, tdcDGTZ.get(i).getTDCData(0).getTime());
-            tdcBANK.putInt("ToT", i, tdcDGTZ.get(i).getTDCData(0).getToT());
-            tdcBANK.putLong("timestamp", i, tdcDGTZ.get(i).getTDCData(0).getTimeStamp());
-            tdcBANK.putInt("trigger", i, tdcDGTZ.get(i).getTrigger());
-            //System.err.println("event: " + tdcDGTZ.get(i).toString());
+            tdcBANK.putInt(  4, i, tdcDGTZ.get(i).getTDCData(0).getTime());
+            tdcBANK.putInt(  5, i, tdcDGTZ.get(i).getTDCData(0).getToT());
+            tdcBANK.putLong( 6, i, tdcDGTZ.get(i).getTDCData(0).getTimeStamp());
+            tdcBANK.putInt(  7, i, tdcDGTZ.get(i).getTrigger());
         }
         return tdcBANK;
     }
@@ -329,9 +328,9 @@ public class CLASDecoder {
             adcBANK.putByte( 0, i, (byte) adcDGTZ.get(i).getDescriptor().getCrate());
             adcBANK.putByte( 1, i, (byte) adcDGTZ.get(i).getDescriptor().getSlot());
             adcBANK.putShort(2, i, (short) adcDGTZ.get(i).getDescriptor().getChannel());
-            adcBANK.putInt("ADC", i, adcDGTZ.get(i).getADCData(0).getADC());
-            adcBANK.putFloat("time", i, (float) adcDGTZ.get(i).getADCData(0).getTime());
-            adcBANK.putShort("ped", i, (short) adcDGTZ.get(i).getADCData(0).getPedestal());
+            adcBANK.putInt(  3, i, adcDGTZ.get(i).getADCData(0).getADC());
+            adcBANK.putFloat(4, i, (float) adcDGTZ.get(i).getADCData(0).getTime());
+            adcBANK.putShort(5, i, (short) adcDGTZ.get(i).getADCData(0).getPedestal());
         }
         return adcBANK;
     }
@@ -347,7 +346,7 @@ public class CLASDecoder {
             tdcBANK.putByte( 0, i, (byte) tdcDGTZ.get(i).getDescriptor().getCrate());
             tdcBANK.putByte( 1, i, (byte) tdcDGTZ.get(i).getDescriptor().getSlot());
             tdcBANK.putShort(2, i, (short) tdcDGTZ.get(i).getDescriptor().getChannel());
-            tdcBANK.putInt("TDC", i, tdcDGTZ.get(i).getTDCData(0).getTime());
+            tdcBANK.putInt(  3, i, tdcDGTZ.get(i).getTDCData(0).getTime());
         }
         return tdcBANK;
     }
@@ -360,8 +359,8 @@ public class CLASDecoder {
         if(vtpBANK==null) return null;
 
         for(int i = 0; i < vtpDGTZ.size(); i++){
-            vtpBANK.putByte("crate", i, (byte) vtpDGTZ.get(i).getDescriptor().getCrate());
-            vtpBANK.putInt("word", i, vtpDGTZ.get(i).getVTPData(0).getWord());
+            vtpBANK.putByte(0, i, (byte) vtpDGTZ.get(i).getDescriptor().getCrate());
+            vtpBANK.putInt( 1, i, vtpDGTZ.get(i).getVTPData(0).getWord());
         }
         return vtpBANK;
     }
@@ -377,9 +376,9 @@ public class CLASDecoder {
             scalerBANK.putByte( 0, i, (byte) scalerDGTZ.get(i).getDescriptor().getCrate());
             scalerBANK.putByte( 1, i, (byte) scalerDGTZ.get(i).getDescriptor().getSlot());
             scalerBANK.putShort(2, i, (short) scalerDGTZ.get(i).getDescriptor().getChannel());
-            scalerBANK.putByte("helicity", i, (byte) scalerDGTZ.get(i).getSCALERData(0).getHelicity());
-            scalerBANK.putByte("quartet", i, (byte) scalerDGTZ.get(i).getSCALERData(0).getQuartet());
-            scalerBANK.putLong("value", i, scalerDGTZ.get(i).getSCALERData(0).getValue());
+            scalerBANK.putByte( 3, i, (byte) scalerDGTZ.get(i).getSCALERData(0).getHelicity());
+            scalerBANK.putByte( 4, i, (byte) scalerDGTZ.get(i).getSCALERData(0).getQuartet());
+            scalerBANK.putLong( 5, i, scalerDGTZ.get(i).getSCALERData(0).getValue());
         }
         return scalerBANK;
     }
@@ -408,11 +407,11 @@ public class CLASDecoder {
             localEvent = nevent;
         }
 
-        bank.putInt("run",        0, localRun);
-        bank.putInt("event",      0, localEvent);
-        bank.putInt("unixtime",   0, localTime);
-        bank.putLong("trigger",   0, triggerBits);
-        bank.putLong("timestamp", 0, timeStamp);
+        bank.putInt( 0, 0, localRun);
+        bank.putInt( 1, 0, localEvent);
+        bank.putInt( 2, 0, localTime);
+        bank.putLong(3, 0, triggerBits);
+        bank.putLong(4, 0, timeStamp);
 
         if (torus != null) {
             bank.putFloat("torus", 0, torus.floatValue());
