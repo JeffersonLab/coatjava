@@ -359,6 +359,12 @@ public class Helix {
         return new Vector3D(getPx(getB(),l),getPy(getB(),l),getPz(getB()));
     }
     
+    public double getZ0(double Z, double r) {
+        double l = getLAtR(r);
+        double z0 = Z+l*this.getTanL();
+        return z0;
+    }
+    
     public double getLAtR(double r) {
         
         double x;
