@@ -1,0 +1,60 @@
+# SVT Road Finder and Cluster Matching
+
+## Overview
+
+This package implements a **fast SVT (Silicon Vertex Tracker) road-finding algorithm** for cluster hits in a particle detector. 
+It allows mapping of clusters (grouped detector hits) to predefined "roads," which represent likely track patterns across multiple 
+SVT layers.
+
+The algorithm is designed for **high performance**, using a compact **Uber Index** to quickly match clusters to candidate roads 
+without scanning all possible combinations.
+
+---
+
+## Key Concepts
+
+### 1. Roads
+
+- A **road** is a compressed representation of a track candidate across SVT layers.
+- Each road consists of **CompactElements**:
+  - `layer` (1–6)
+  - `sector` (1–24)
+  - `strip` (≤ 256)
+- Road elements are **bit-packed** for storage efficiency:
+  - `layer`: 4 bits
+  - `sector`: 5 bits
+  - `strip`: 11 bits
+
+### 2. Uber Index
+
+- The **Uber Index** is a nested map that provides a pointer to a location in the 
+  roads byte[] array for the key corresponding the cluster information
+  
+  Map<Paddle, Map<RoadKey, int[]>>
+
+
+
+## Algorithm: Cluster to Road Matching
+### Cluster Encoding:
+Convert the input cluster (set of SVT hits) into the same key format used by the Uber Index.
+Each hit is mapped to a RoadKey using its (layer, sector, strip) coordinates.
+### Index Lookup:
+For each cluster key, retrieve the list of candidate road IDs from the Uber Index.
+Increment a score counter for each road ID based on how many keys match.
+Select Best Road:
+The road with the highest matching score is chosen as the candidate for the cluster.
+Only accept roads where the score meets a minimum threshold (e.g., at least 4 hits match).
+### Result:
+Returns the UberEntry representing the road, which can then be used for further track reconstruction.
+
+### Memory Management
+Temporary structures (IntArray, hash sets) are used during index building.
+The final Uber Index is stored as Map<Integer, Map<Long,int[]>> for efficiency.
+Serialized index files can be saved and loaded to avoid rebuilding every run.
+
+### Files and Components
+## RoadIndexManager.java – Main class for building and querying roads.
+## CompactRoad.java – Represents a road with its elements.
+## UberEntry.java – Represents metadata for a road in the Uber Index.
+## paddleFiles/ – .bin.gz files containing precomputed SVT roads per paddle.
+## roadCache – Optional caching of decoded roads for fast repeated access.

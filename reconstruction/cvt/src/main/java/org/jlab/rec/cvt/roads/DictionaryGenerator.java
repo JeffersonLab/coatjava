@@ -20,7 +20,8 @@ public final class DictionaryGenerator {
     private double targetCen; 
     private double targetLen;
     private double BMag;
-    public DictionaryGenerator(String outputpath, String variation, int run, double bmag) {
+    public DictionaryGenerator(String outputpath, String variation, int run, 
+            double bmag) {
         this.init(outputpath, variation, run, bmag);
     }
     
@@ -44,13 +45,15 @@ public final class DictionaryGenerator {
         xyBeam = xyB;
         targetCen = targetC;
         targetLen = targetL;
+        System.out.println("Target Center (mm) "+targetCen);
+        System.out.println("Target Length (mm) "+targetLen);
         BMag = bmag;
     }
     
     public void process() {
-        RoadMaker rm;
+        BitPackedRoadMaker rm;
         try {
-                rm = new RoadMaker(Geometry.getInstance().getSVT(), Geometry.getInstance().getBMT(),
+                rm = new BitPackedRoadMaker(Geometry.getInstance().getSVT(), Geometry.getInstance().getBMT(),
                         xyBeam[0], xyBeam[1], targetCen, targetLen, outputPath,BMag);
                 rm.MakeRoads();
             } catch (IOException ex) {

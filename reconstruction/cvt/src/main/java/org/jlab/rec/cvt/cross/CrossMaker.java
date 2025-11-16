@@ -141,7 +141,6 @@ public class CrossMaker {
                 if (outlayerclus.getSector() != inlayerclus.getSector()) {
                     continue;
                 }
-                
                     // define new cross ))
                 // a cut to avoid looping over all strips - from geometry there is a minimum (maximum) strip sum of inner and outer layers that can give a strip intersection
                 if ((inlayerclus.getMinStrip() + outlayerclus.getMinStrip() > SVTParameters.MINSTRIPSUM)

@@ -114,7 +114,14 @@ public class CVTReconstruction {
         return CVTclusters; 
     }
         
-        
+    public List<Cross> findCrosses(List<Cluster> clusters)  {
+        CrossMaker crossMake = new CrossMaker();
+        List<Cross> crosses = new ArrayList<>();
+        List<ArrayList<Cross>> scrosses = crossMake.findCrosses(clusters);
+        crosses.addAll(scrosses.get(0));
+        crosses.addAll(scrosses.get(1));
+        return crosses;
+    }  
     public List<ArrayList<Cross>> findCrosses() {
         
         List<Cluster> clusters = new ArrayList<>();

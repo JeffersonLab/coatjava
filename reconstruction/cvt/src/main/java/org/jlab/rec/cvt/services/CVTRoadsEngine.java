@@ -1,22 +1,32 @@
 package org.jlab.rec.cvt.services;
-
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.MappedByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-
+import java.util.Map;
+import java.util.Set;
+import java.util.zip.GZIPInputStream;
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.clas.swimtools.Swim;
+import org.jlab.detector.banks.RawDataBank;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.cvt.Constants;
 import org.jlab.rec.cvt.Geometry;
-import org.jlab.rec.cvt.banks.RecoBankWriter;
 import org.jlab.rec.cvt.cluster.Cluster;
-import org.jlab.rec.cvt.cross.Cross;
 import org.jlab.rec.cvt.hit.Hit;
-import org.jlab.rec.cvt.track.Seed;
-import org.jlab.rec.cvt.track.StraightTrack;
-import org.jlab.rec.cvt.track.Track;
+import org.jlab.rec.cvt.roads.CompactElement;
+import org.jlab.rec.cvt.roads.CompactRoad;
+import org.jlab.rec.cvt.roads.RoadIndexManager;
+import org.jlab.rec.cvt.roads.RoadSeeder;
+import org.jlab.rec.cvt.roads.Util;
 import org.jlab.utils.groups.IndexedTable;
 
 /**
@@ -26,9 +36,9 @@ import org.jlab.utils.groups.IndexedTable;
  * @author ziegler
  *
  */
-public class CVTEngine extends ReconstructionEngine {
+public class CVTRoadsEngine extends ReconstructionEngine {
 
-
+    public static String roadsDir = "/Users/veronique/Work/Roads/";
     /**
      * @param docacutsum the docacutsum to set
      */
@@ -89,11 +99,11 @@ public class CVTEngine extends ReconstructionEngine {
     private double rcut = 120.0;
     private double z0cut = 10;
     
-    public CVTEngine(String name) {
+    public CVTRoadsEngine(String name) {
         super(name, "ziegler", "6.0");
     }
 
-    public CVTEngine() {
+    public CVTRoadsEngine() {
         super("CVTEngine", "ziegler", "6.0");
     }
 
@@ -273,7 +283,13 @@ public class CVTEngine extends ReconstructionEngine {
     public void setBmtzmaxclussize(int bmtzmaxclussize) {
         this.bmtzmaxclussize = bmtzmaxclussize;
     }
-    
+    // --- Class members ---
+    private boolean roadsUploaded = false;
+    private RoadIndexManager rim;
+    private RoadSeeder seeder;
+    private Map<Integer, byte[]> paddleBytes = new HashMap<>();
+
+
     @Override
     public boolean processDataEvent(DataEvent event) {
         
@@ -293,72 +309,141 @@ public class CVTEngine extends ReconstructionEngine {
         
         Geometry.getInstance().initialize(this.getConstantsManager().getVariation(), run, svtLorentz, bmtVoltage);
         
+        List<DataBank> banks = new ArrayList<>();
+        
         CVTReconstruction reco = new CVTReconstruction(swimmer);
         
         List<ArrayList<Hit>>         hits = reco.readHits(event, svtStatus, bmtStatus, bmtTime, 
                                                             bmtStripVoltage, bmtStripThreshold,
                                                             adcStatus);
-        
         if(hits.get(0).isEmpty()) return true;
         double[] xyBeam = CVTReconstruction.getBeamSpot(event, beamPos);
-        
-        List<ArrayList<Cluster>> clusters = reco.findClusters();
-        List<ArrayList<Cross>>    crosses = reco.findCrosses();
-        
-                
-        List<DataBank> banks = new ArrayList<>();
+        double[] xyB = new double[2];
+        xyB[0] = beamPos.getDoubleValue("x_offset", 0, 0, 0)*10;
+        xyB[1] = beamPos.getDoubleValue("y_offset", 0, 0, 0)*10;
+        double targetC = Geometry.getInstance().getTargetZOffset();
+        double targetL = Geometry.getInstance().getTargetHalfLength();
+        // --- Init ---
+        // Initialization (run once)
 
-        if(crosses != null) {
-            if(Constants.getInstance().isCosmics) {
-                CosmicTracksRec trackFinder = new CosmicTracksRec();
-                List<StraightTrack>  seeds = trackFinder.getSeeds(event, clusters.get(0), clusters.get(1), crosses);
-                List<StraightTrack> tracks = trackFinder.getTracks(event, this.isInitFromMc(), 
-                                                                          this.isKfFilterOn(), 
-                                                                          this.getKfIterations());
-                if(seeds!=null) banks.add(RecoBankWriter.fillStraightSeedsBank(event, seeds, "CVTRec::CosmicSeeds"));
-                if(tracks!=null) {
-                    banks.add(RecoBankWriter.fillStraightTracksBank(event, tracks, "CVTRec::Cosmics"));
-                    banks.add(RecoBankWriter.fillStraightTracksTrajectoryBank(event, tracks, "CVTRec::Trajectory"));
-                    banks.add(RecoBankWriter.fillStraightTrackKFTrajectoryBank(event, tracks, "CVTRec::KFTrajectory"));
-                }            
-            } 
-            else {
-                TracksFromTargetRec  trackFinder = new TracksFromTargetRec(swimmer, xyBeam);
-                trackFinder.totTruthHits = reco.getTotalNbTruHits();
-                List<Seed>   seeds = trackFinder.getSeeds(clusters, crosses);
-                
-                
-                List<Track> tracks = trackFinder.getTracks(event, this.isInitFromMc(), 
-                                                                  this.isKfFilterOn(), 
-                                                                  this.getKfIterations(), 
-                                                                  true, this.getPid());
-                
-                if(seeds!=null) {
-                    banks.add(RecoBankWriter.fillSeedBank(event, seeds, this.getSeedBank()));
-                    banks.add(RecoBankWriter.fillSeedClusBank(event, seeds, this.getSeedClusBank()));
+
+    if (!roadsUploaded) {
+        // load paddle byte arrays (only gz-decoded bytes; memory for paddleBytes minimal: a few MB each)
+        String roadsDir = "/Users/veronique/Work/Roads/"; // set in yaml
+        for (int p = 1; p <= 48; p++) {
+            Path path = Paths.get(String.format("%s/svt_roads_paddle_%02d.bin.gz", roadsDir, p));
+            if (!Files.exists(path)) continue;
+            try (InputStream fis = Files.newInputStream(path);
+                 GZIPInputStream gis = new GZIPInputStream(fis)) {
+                byte[] bytes = gis.readAllBytes();
+                paddleBytes.put(p, bytes);
+            } catch (IOException ex) {
+                System.getLogger(CVTRoadsEngine.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+            }
+        }
+
+        // build compact index (or load it from disk with rim.loadCompactIndex())
+        rim = new RoadIndexManager();
+            try {
+                //rim.buildUberIndex(roadsDir);
+                //rim.saveUberIndex(roadsDir);
+                rim.loadUberIndex(roadsDir);
+            } catch (IOException ex) {
+                System.getLogger(CVTRoadsEngine.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+            } catch (ClassNotFoundException ex) {
+                System.getLogger(CVTRoadsEngine.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+            }
+
+        seeder = new RoadSeeder(rim);
+        roadsUploaded = true;
+    }
+
+    // per-event: find hits (ctof paddles) and clusters
+    Set<Integer> paddles = Util.getCTOFHitPaddles(event);
+    //System.out.println("PADDLES "+paddles.toString());
+    if (paddles.isEmpty()) return true;
+
+    List<ArrayList<Cluster>> clustersList = reco.findClusters();
+    List<Cluster> clusters = clustersList.get(0);
+
+    Map<Integer, Map<CompactRoad, List<Cluster>>> seeds = null;
+        try {
+            seeds = seeder.seedUsingRoads(clusters, paddles, paddleBytes);
+        } catch (IOException ex) {
+            System.getLogger(CVTRoadsEngine.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+        }
+
+    // now handle seeds...
+    for (Map.Entry<Integer, Map<CompactRoad, List<Cluster>>> e : seeds.entrySet()) {
+        int paddle = e.getKey();
+        for (Map.Entry<CompactRoad, List<Cluster>> r : e.getValue().entrySet()) {
+            CompactRoad road = r.getKey();
+            List<Cluster> matched = r.getValue();
+            //System.out.println(road.toString());
+            //for(Cluster c : clusters) System.out.println("event cluster "+c.toString());
+            //for(Cluster c : matched) System.out.println("matched cluster "+c.toString());
+        }
+    }
+// TODO: use the matched clusters as initial seeds to match to the BMT and start the regular tracking
+    
+        return true;
+    }
+    
+    public static Set<Integer> getCTOFHitPaddles(DataEvent event) {
+        Set<Integer> paddles = new HashSet<>();
+        String detADC = "CTOF";
+        detADC += "::adc";
+        String detTDC = "CTOF";
+        detTDC += "::tdc";
+
+        if (event.hasBank(detADC) == false && event.hasBank(detTDC) == false) {
+            return paddles;
+        }
+        if (event.hasBank(detADC) == true) {
+            RawDataBank bank = new RawDataBank(detADC);
+            bank.read(event);
+            int bankSize = bank.rows();
+            for (int i = 0; i < bankSize; i++) {
+                paddles.add(bank.getShort("component", i));
+            }
+        }
+        if (event.hasBank(detTDC) == true) {
+            RawDataBank bank = new RawDataBank(detTDC);
+            bank.read(event);
+            int bankSize = bank.rows();
+            for (int i = 0; i < bankSize; i++) {
+                paddles.add(bank.getShort("component", i));
+            }
+        }
+        return paddles;
+    }
+
+    public static void printSeedMap(Map<Integer, Map<CompactRoad, List<Cluster>>> seedMap) {
+        for (Map.Entry<Integer, Map<CompactRoad, List<Cluster>>> paddleEntry : seedMap.entrySet()) {
+            int paddle = paddleEntry.getKey();
+            Map<CompactRoad, List<Cluster>> roadMap = paddleEntry.getValue();
+            System.out.printf("Paddle %d: %d seeded roads%n", paddle, roadMap.size());
+
+            for (Map.Entry<CompactRoad, List<Cluster>> roadEntry : roadMap.entrySet()) {
+                CompactRoad road = roadEntry.getKey();
+                List<Cluster> clusters = roadEntry.getValue();
+
+                System.out.printf("  Road elements=%d:%n", road.elements.size());
+                int idx = 1;
+                for (CompactElement ce : road.elements) {
+                    System.out.printf("    Element %d: sector=%d, layer=%d, strip=%d%n",
+                            idx++, ce.sector, ce.layer, ce.strip);
                 }
-                if(tracks!=null) {
-                    banks.add(RecoBankWriter.fillTrackBank(event, tracks, this.getTrackBank()));
-    //                banks.add(RecoBankWriter.fillTrackCovMatBank(event, tracks, this.getCovMat()));
-                    banks.add(RecoBankWriter.fillTrajectoryBank(event, tracks, this.getTrajectoryBank()));
-                    banks.add(RecoBankWriter.fillKFTrajectoryBank(event, tracks, this.getKFTrajectoryBank()));
+
+                System.out.printf("    Matched clusters: %d%n", clusters.size());
+                for (Cluster cl : clusters) {
+                    System.out.printf("      Cluster: sector=%d, layer=%d, centroid=%.2f%n",
+                            cl.getSector(), cl.getLayer(), cl.getCentroid());
                 }
             }
         }
-        banks.add(RecoBankWriter.fillSVTHitBank(event, hits.get(0), this.getSvtHitBank()));
-        banks.add(RecoBankWriter.fillBMTHitBank(event, hits.get(1), this.getBmtHitBank()));
-        banks.add(RecoBankWriter.fillSVTClusterBank(event, clusters.get(0), this.getSvtClusterBank()));
-        banks.add(RecoBankWriter.fillBMTClusterBank(event, clusters.get(1), this.getBmtClusterBank()));
-        banks.add(RecoBankWriter.fillSVTCrossBank(event, crosses.get(0), this.getSvtCrossBank()));
-        banks.add(RecoBankWriter.fillBMTCrossBank(event, crosses.get(1), this.getBmtCrossBank()));
-
-        event.appendBanks(banks.toArray(new DataBank[0]));
-            
-        
-        return true;
     }
-
-         
+     
     public void loadConfiguration() {            
         
         // general (pass-independent) settings
@@ -615,6 +700,7 @@ public class CVTEngine extends ReconstructionEngine {
         
     }
 
+    
     
 
 }

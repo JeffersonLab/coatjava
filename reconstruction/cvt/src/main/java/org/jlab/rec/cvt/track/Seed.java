@@ -184,6 +184,11 @@ public class Seed implements Comparable<Seed>{
         this._Crosses = crosses;
         this.setClusters();
     }
+    public final void setClusters(List<Cluster> clusters) {
+        Collections.sort(clusters);
+        this._Clusters = clusters;
+        this.setClusters();
+    }
 
     public double getCircleFitChi2PerNDF() {
         return _circleFitChi2PerNDF;
