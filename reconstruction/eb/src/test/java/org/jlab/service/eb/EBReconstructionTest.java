@@ -11,7 +11,6 @@ import org.jlab.detector.base.DetectorType;
 
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
-import org.jlab.logging.DefaultLogger;
 import org.jlab.service.dc.DCHBEngine;
 import org.jlab.service.dc.DCTBEngine;
 import org.jlab.service.ec.ECEngine;
@@ -108,7 +107,6 @@ public class EBReconstructionTest {
 
     @Test
     public void testEBReconstruction() {
-        DefaultLogger.debug();
         System.setProperty("CLAS12DIR", "../../");
 
         DataEvent photonEvent = TestEvent.get(DetectorType.ECAL);

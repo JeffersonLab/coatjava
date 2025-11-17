@@ -24,7 +24,6 @@ import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Path3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geometry.prim.Line3d;
-import org.jlab.logging.DefaultLogger;
 import org.jlab.utils.benchmark.ProgressPrintout;
 import org.jlab.utils.options.OptionParser;
 
@@ -338,8 +337,6 @@ public class DictionaryGenerator {
 
     
     public static void main(String[] args) {
-
-        DefaultLogger.debug();
 
         OptionParser parser = new OptionParser("dict-generator");
         parser.setRequiresInputList(false);

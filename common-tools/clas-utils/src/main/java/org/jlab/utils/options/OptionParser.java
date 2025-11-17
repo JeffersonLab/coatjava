@@ -9,7 +9,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
-import org.jlab.logging.DefaultLogger;
 
 /**
  *
@@ -26,7 +25,6 @@ public class OptionParser {
     private boolean                  requiresInputList = true;
     private String                  programDescription = "";
     private Level                             logLevel = Level.FINE; // default log level
-    private boolean                usingExternalLogger = false; // if true, do not use `DefaultLogger` here
     
     public OptionParser(){
         init();
@@ -191,8 +189,6 @@ public class OptionParser {
     private void setVerbosity(String level) {
         try {
             this.logLevel = Level.parse(level);
-            if (!usingExternalLogger)
-                DefaultLogger.initialize(this.logLevel); // do not do this if using SplitLogger externally, otherwise you get NO log printouts whatsoever
         }
         catch (IllegalArgumentException e) {
             System.err.println("Invalid -l java.util.logging.Level:  "+level);
@@ -220,10 +216,6 @@ public class OptionParser {
 
     public Level getLogLevel() {
         return this.logLevel;
-    }
-
-    public void useExternalLogger() {
-        this.usingExternalLogger = true; // FIXME: if we get rid of `DefaultLogger`, we can get rid of this kluge
     }
 
     public static void main(String[] args){

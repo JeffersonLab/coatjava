@@ -36,7 +36,6 @@ public class Tag1ToEvent {
     public static void main(String[] args) {
 
         OptionParser parser = new OptionParser("postprocess");
-        parser.useExternalLogger(); // necessary, since we have `LOGGER` here
         parser.addOption("-q","0","do beam charge and livetime (0/1=false/true)");
         parser.addOption("-d","0","do delayed helicity (0/1=false/true)");
         parser.addOption("-f","0","rebuild the HEL::flip banks (0/1=false/true)");
