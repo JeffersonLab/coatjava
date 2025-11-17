@@ -43,11 +43,14 @@ public class Tag1ToEvent {
         parser.parse(args);
         parser.syncLogLevels(
             LOGGER,
+            "org.jlab.analysis.postprocess.Util",
             "org.jlab.clas.reco.ReconstructionEngine",
             "org.jlab.detector.calib.utils.ConstantsManager",
+            "org.jlab.detector.helicity.HelicityGenerator",
+            "org.jlab.detector.helicity.HelicitySequence",
             "org.jlab.detector.scalers.DaqScalers",
-            "org.jlab.detector.scalers.DaqScalersSequence",
-            "org.jlab.detector.helicity.HelicitySequence");
+            "org.jlab.detector.scalers.DaqScalersSequence"
+            );
         if (parser.getInputList().isEmpty()) {
             parser.printUsage();
             LOGGER.severe("No input file(s) specified.");
