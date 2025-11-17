@@ -5,10 +5,11 @@ import java.util.logging.Level;
 /** Configuration singleton for {@code SplitLogger} */
 public enum SplitLoggerConfig {
 
+  /** singleton instance */
   INSTANCE;
 
-  private volatile Level defaultLevel   = Level.INFO;
-  private boolean calledSetDefaultLevel = false;
+  private volatile Level defaultLevel            = Level.INFO;
+  private volatile boolean calledSetDefaultLevel = false;
 
   /**
    * Set the default {@code logging.Level} for all new {@code SplitLogger} instances.
