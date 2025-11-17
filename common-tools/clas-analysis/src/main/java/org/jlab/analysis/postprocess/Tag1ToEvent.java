@@ -41,7 +41,7 @@ public class Tag1ToEvent {
         parser.addOption("-f","0","rebuild the HEL::flip banks (0/1=false/true)");
         parser.addRequired("-o","output.hipo");
         parser.parse(args);
-        parser.configureLogging(
+        parser.syncLogLevels(
             LOGGER,
             "org.jlab.clas.reco.ReconstructionEngine",
             "org.jlab.detector.calib.utils.ConstantsManager",

@@ -220,19 +220,19 @@ public class OptionParser {
         return this.logLevel;
     }
 
-    /// Set the log level of a list of classes
+    /// Set the log level of a list of classes to be consistent with the level set by the {@code -l} option
     /// @param classList string names of the classes
-    public void configureLogging(String... classList) {
+    public void syncLogLevels(String... classList) {
         for(var className : classList)
             System.setProperty(className + ".level", this.logLevel.toString());
     }
 
-    /// Set the log level of a list of classes
-    /// @param externalLogger the logger owned by the owner of this `OptionParser` instance
+    /// Set the log level of a list of classes to be consistent with the level set by the {@code -l} option, along with an external {@code Logger} instance
+    /// @param externalLogger an external {@code Logger} instance, typically one owned by the owner of this {@code OptionParser} instance
     /// @param classList string names of the classes
-    public void configureLogging(Logger externalLogger, String... classList) {
+    public void syncLogLevels(Logger externalLogger, String... classList) {
         SplitLogger.configureLevel(externalLogger, this.logLevel);
-        configureLogging(classList);
+        syncLogLevels(classList);
     }
 
     public static void main(String[] args){
