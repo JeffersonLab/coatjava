@@ -2,6 +2,7 @@ package org.jlab.service.htcc;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.rec.htcc.HTCCReconstruction;
@@ -13,7 +14,7 @@ import org.jlab.io.base.DataEvent;
  */
 public class HTCCReconstructionService extends ReconstructionEngine{
 
-    public static Logger LOGGER = Logger.getLogger(HTCCReconstructionService.class.getName());
+    public static Logger LOGGER = SplitLogger.create(HTCCReconstructionService.class.getName());
 
     public HTCCReconstructionService(){
         super("HTCC","henkins","1.0");

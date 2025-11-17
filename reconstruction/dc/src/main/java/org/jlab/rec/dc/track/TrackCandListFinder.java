@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 import org.jlab.clas.clas.math.FastMath;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
@@ -43,7 +44,7 @@ import org.jlab.clas.tracking.utilities.RungeKuttaDoca;
 
 public class TrackCandListFinder {
 
-    private static final Logger LOGGER = Logger.getLogger(TrackCandListFinder.class.getName());
+    private static final Logger LOGGER = SplitLogger.create(TrackCandListFinder.class.getName());
 
     long startTime, startTime2 = 0;
 

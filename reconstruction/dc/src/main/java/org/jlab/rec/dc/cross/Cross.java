@@ -3,6 +3,7 @@ package org.jlab.rec.dc.cross;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 import org.jlab.clas.clas.math.FastMath;
 
 //import org.apache.commons.math3.util.FastMath;
@@ -21,7 +22,7 @@ import org.jlab.rec.dc.Constants;
  */
 public class Cross extends ArrayList<Segment> implements Comparable<Cross> {
     
-    private static final Logger LOGGER = Logger.getLogger(Cross.class.getName());
+    private static final Logger LOGGER = SplitLogger.create(Cross.class.getName());
 
     /**
      * serial id

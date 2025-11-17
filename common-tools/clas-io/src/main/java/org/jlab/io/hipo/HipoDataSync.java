@@ -3,6 +3,7 @@ package org.jlab.io.hipo;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.base.DataSync;
 import org.jlab.io.base.DataBank;
@@ -17,7 +18,7 @@ import org.jlab.jnp.hipo4.io.HipoWriterSorted;
  */
 public class HipoDataSync implements DataSync {
 
-    public static final Logger LOGGER = Logger.getLogger(HipoDataSync.class.getName());
+    public static final Logger LOGGER = SplitLogger.create(HipoDataSync.class.getName());
     
     HipoWriterSorted writer = null;
     

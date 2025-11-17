@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 
 import org.jlab.detector.calib.utils.DatabaseConstantProvider; // coatjava-3.0
 
@@ -33,7 +34,7 @@ import eu.mihosoft.vrl.v3d.Transform;
  */
 public class SVTConstants {
 
-	public static Logger LOGGER = Logger.getLogger(SVTConstants.class.getName());
+	public static Logger LOGGER = SplitLogger.create(SVTConstants.class.getName());
 
 	private static String ccdbPath = "/geometry/cvt/svt/";
 	private static boolean bLoadedConstants = false; // only load constants once

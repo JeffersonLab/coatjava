@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
@@ -54,7 +55,7 @@ public class HitReader {
     private List<FittedHit> _HBHits; //hit-based tracking hit information
     private List<FittedHit> _TBHits; //time-based tracking hit information
 
-    private static final Logger LOGGER = Logger.getLogger(HitReader.class.getName());
+    private static final Logger LOGGER = SplitLogger.create(HitReader.class.getName());
 
     public HitReader(Banks names, DCGeant4Factory detector) {
         this.bankNames= names;

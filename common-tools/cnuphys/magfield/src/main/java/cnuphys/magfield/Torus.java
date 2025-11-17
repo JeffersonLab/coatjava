@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 
 /**
  * The Class Torus.
@@ -15,7 +16,7 @@ import java.util.logging.Logger;
 
 public class Torus extends MagneticField {
 
-	public static Logger LOGGER = Logger.getLogger(Torus.class.getName());
+	public static Logger LOGGER = SplitLogger.create(Torus.class.getName());
 		
 	//has part of the solenoid been added in to remove the overlap?
 

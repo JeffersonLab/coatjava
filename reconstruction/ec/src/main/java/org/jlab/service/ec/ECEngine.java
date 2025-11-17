@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.detector.base.DetectorCollection;
@@ -23,7 +24,7 @@ import org.jlab.io.base.DataEvent;
 
 public class ECEngine extends ReconstructionEngine {
 
-    public static Logger LOGGER = Logger.getLogger(ECEngine.class.getName());
+    public static Logger LOGGER = SplitLogger.create(ECEngine.class.getName());
     
     public ECEngine(){
         super("EC","gavalian","1.0");

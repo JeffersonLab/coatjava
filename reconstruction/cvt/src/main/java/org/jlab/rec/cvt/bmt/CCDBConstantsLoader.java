@@ -8,6 +8,7 @@ import org.jlab.geom.prim.Vector3D;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 
 /**
  *
@@ -16,7 +17,7 @@ import java.util.logging.Logger;
  */
 public class CCDBConstantsLoader {
 
-    public static Logger LOGGER = Logger.getLogger(CCDBConstantsLoader.class.getName());
+    public static Logger LOGGER = SplitLogger.create(CCDBConstantsLoader.class.getName());
 
     public CCDBConstantsLoader() {}
 

@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.io.base.DataBank;
@@ -14,7 +15,7 @@ import org.jlab.utils.groups.IndexedTable;
 
 public class MagFieldsEngine extends ReconstructionEngine {
 
-    public static Logger LOGGER = Logger.getLogger(MagFieldsEngine.class.getName());
+    public static Logger LOGGER = SplitLogger.create(MagFieldsEngine.class.getName());
 
     private String solShift = null;
 

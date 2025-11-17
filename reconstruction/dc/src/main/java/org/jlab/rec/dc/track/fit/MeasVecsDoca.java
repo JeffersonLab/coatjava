@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
@@ -13,7 +14,7 @@ import org.jlab.rec.dc.track.Track;
 
 public class MeasVecsDoca {
 
-    private static final Logger LOGGER = Logger.getLogger(MeasVecsDoca.class.getName());
+    private static final Logger LOGGER = SplitLogger.create(MeasVecsDoca.class.getName());
     
     public List<MeasVec> measurements = new ArrayList<MeasVec>();
 

@@ -4,6 +4,7 @@ import org.jlab.jnp.matrix.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 import org.jlab.clas.clas.math.FastMath;
 import org.jlab.clas.pdg.PhysicsConstants;
 import org.jlab.clas.swimtools.Swim;
@@ -16,7 +17,7 @@ import org.jlab.geom.prim.Point3D;
  */
 public class StateVecsDoca {
 
-    private static final Logger LOGGER = Logger.getLogger(StateVecsDoca.class.getName());
+    private static final Logger LOGGER = SplitLogger.create(StateVecsDoca.class.getName());
 
     private final double Bmax = 2.366498; // averaged
 

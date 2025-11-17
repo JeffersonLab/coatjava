@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.cluster.Cluster;
@@ -29,7 +30,7 @@ import org.jlab.rec.dc.trajectory.RoadFinder;
  */
 public class PatternRec {
     
-    private static final Logger LOGGER = Logger.getLogger(PatternRec.class.getName());
+    private static final Logger LOGGER = SplitLogger.create(PatternRec.class.getName());
 
     private final ClusterFinder clf = new ClusterFinder();
     private final ClusterCleanerUtilities ct = new ClusterCleanerUtilities();

@@ -4,6 +4,7 @@ import cnuphys.magfield.MagneticFields;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 
 /**
  *
@@ -13,7 +14,7 @@ import java.util.logging.Logger;
 
 public class Swimmer {
 
-    public static Logger LOGGER = Logger.getLogger(Swimmer.class.getName());
+    public static Logger LOGGER = SplitLogger.create(Swimmer.class.getName());
     
     private static HashMap<Thread, ProbeCollection> swimmers = new HashMap<>();
     

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 import org.jlab.calibration.detectors.CTOFBankBuilder;
 import org.jlab.calibration.detectors.DCBankBuilder;
 import org.jlab.calibration.detectors.CalibBankBuilder;
@@ -26,7 +27,7 @@ public class CalibBanksEngine extends ReconstructionEngine {
     public static final String CONF_DETECTORS = "detectors";
     private final List<DetectorType> detectors = new ArrayList<>();
     
-    static final Logger logger = Logger.getLogger(CalibBanksEngine.class.getName());
+    static final Logger logger = SplitLogger.create(CalibBanksEngine.class.getName());
 
     public CalibBanksEngine() {
         super("CALIB", "devita", "1.0");

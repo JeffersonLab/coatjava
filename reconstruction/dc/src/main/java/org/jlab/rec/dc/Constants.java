@@ -3,6 +3,7 @@ package org.jlab.rec.dc;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 
 import cnuphys.snr.NoiseReductionParameters;
 import java.util.LinkedHashMap;
@@ -43,7 +44,7 @@ public class Constants {
     }
 
     
-    public static Logger LOGGER = Logger.getLogger(Constants.class.getName());
+    public static Logger LOGGER = SplitLogger.create(Constants.class.getName());
 
     private static boolean ConstantsLoaded = false;
     

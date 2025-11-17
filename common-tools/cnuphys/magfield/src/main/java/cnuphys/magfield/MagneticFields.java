@@ -13,6 +13,7 @@ import java.util.StringTokenizer;
 import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JFileChooser;
@@ -30,7 +31,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
  */
 public class MagneticFields {
 
-	public static Logger LOGGER = Logger.getLogger(MagneticField.class.getName());
+	public static Logger LOGGER = SplitLogger.create(MagneticField.class.getName());
 
 	// used for rotating to tilted sector coordinates
 	private static final double ROOT3OVER2 = Math.sqrt(3) / 2;

@@ -17,6 +17,7 @@ import org.jlab.rec.dc.Constants;
 
 import java.io.PrintWriter;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 import org.jlab.geom.detector.ec.ECLayer;
 import org.jlab.geom.detector.ec.ECSuperlayer;
 import org.jlab.geom.detector.fmt.FMTLayer;
@@ -33,7 +34,7 @@ import org.jlab.geom.prim.Triangle3D;
  */
 public class TrajectorySurfaces {
 
-    public static Logger LOGGER = Logger.getLogger(TrajectorySurfaces.class.getName());
+    public static Logger LOGGER = SplitLogger.create(TrajectorySurfaces.class.getName());
 
     private List<ArrayList<Surface>> detectorPlanes = new ArrayList<>();
 

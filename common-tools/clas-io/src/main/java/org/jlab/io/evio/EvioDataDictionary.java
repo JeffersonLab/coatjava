@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataDescriptor;
@@ -20,7 +21,7 @@ import org.jlab.utils.TablePrintout;
  */
 public class EvioDataDictionary implements DataDictionary {
 
-	static final Logger LOGGER = Logger.getLogger(EvioDataDictionary.class.getName());
+	static final Logger LOGGER = SplitLogger.create(EvioDataDictionary.class.getName());
 	private HashMap<String, EvioDataDescriptor> descriptors = new HashMap<>();
 
 	public EvioDataDictionary() {

@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 import org.jlab.analysis.eventmerger.EventMerger;
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.io.base.DataEvent;
@@ -24,7 +25,7 @@ public class BackgroundEngine extends ReconstructionEngine {
     public static final String CONF_REUSE_EVENTS = "reuseEvents";
     public static final String CONF_BG_SCALE = "bgScale";
 
-    static final Logger logger = Logger.getLogger(BackgroundEngine.class.getName());
+    static final Logger logger = SplitLogger.create(BackgroundEngine.class.getName());
 
     EventMerger bgmerger = null;
 //    LinkedList<String> bgfilenames = new LinkedList<>();

@@ -3,6 +3,7 @@ package org.jlab.rec.dc.segment;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.geom.prim.Plane3D;
 import org.jlab.geom.prim.Point3D;
@@ -23,7 +24,7 @@ import org.jlab.rec.dc.trajectory.SegmentTrajectory;
 public class Segment extends ArrayList<FittedHit> implements Comparable<Segment>,
         Cloneable {
 
-    private static final Logger LOGGER = Logger.getLogger(Segment.class.getName());
+    private static final Logger LOGGER = SplitLogger.create(Segment.class.getName());
 
     private static final long serialVersionUID = -997960312423538455L;
     private FittedCluster _fittedCluster;

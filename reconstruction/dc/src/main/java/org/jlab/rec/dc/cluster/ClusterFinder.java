@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.io.base.DataEvent;
 
@@ -40,7 +41,7 @@ public class ClusterFinder {
     public ClusterFinder() {
 
     }
-    private static final Logger LOGGER = Logger.getLogger(ClusterFinder.class.getName());
+    private static final Logger LOGGER = SplitLogger.create(ClusterFinder.class.getName());
 
     // cluster finding algorithm
     // the loop is done over sector and superlayers

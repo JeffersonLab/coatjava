@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 import javax.swing.JFrame;
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.detector.base.DetectorType;
@@ -27,7 +28,7 @@ import org.jlab.io.hipo.HipoDataSource;
  */
 public class RecoilEngine extends ReconstructionEngine {
 
-    public static Logger LOGGER = Logger.getLogger(RecoilEngine.class.getName());
+    public static Logger LOGGER = SplitLogger.create(RecoilEngine.class.getName());
 
     public static RecoilStripFactory factory = new RecoilStripFactory();
 

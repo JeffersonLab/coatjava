@@ -3,6 +3,7 @@ package cnuphys.swim;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 
 import cnuphys.adaptiveSwim.AdaptiveSwimResult;
 import cnuphys.adaptiveSwim.geometry.Cylinder;
@@ -28,7 +29,7 @@ import cnuphys.swim.util.Plane;
  *
  */
 public final class Swimmer {
-	public static Logger LOGGER = Logger.getLogger(Swimmer.class.getName());
+	public static Logger LOGGER = SplitLogger.create(Swimmer.class.getName());
 
 	// Speed of light in m/s
 	public static final double C = 299792458.0; // m/s

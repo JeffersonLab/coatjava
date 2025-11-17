@@ -3,6 +3,7 @@ package org.jlab.rec.dc.track.fit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
@@ -16,7 +17,7 @@ import org.jlab.jnp.matrix.*;
  */
 public class KFitterDoca {
 
-    private static final Logger LOGGER = Logger.getLogger(KFitterDoca.class.getName());
+    private static final Logger LOGGER = SplitLogger.create(KFitterDoca.class.getName());
     
     public boolean setFitFailed = false;
 

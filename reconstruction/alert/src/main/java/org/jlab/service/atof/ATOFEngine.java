@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.io.base.DataBank;
@@ -39,7 +40,7 @@ public class ATOFEngine extends ReconstructionEngine {
     private Detector ATOF;
     private double b; //Magnetic field
     private boolean useStartTime = true;
-    static final Logger LOGGER = Logger.getLogger(ATOFEngine.class.getName());
+    static final Logger LOGGER = SplitLogger.create(ATOFEngine.class.getName());
     
     public void setB(double B) {
         this.b = B;

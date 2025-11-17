@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 import org.jlab.clara.base.ClaraUtil;
 import org.jlab.clara.engine.Engine;
 import org.jlab.clara.engine.EngineData;
@@ -40,7 +41,7 @@ import org.json.JSONObject;
  */
 public abstract class ReconstructionEngine implements Engine {
 
-    Logger LOGGER = Logger.getLogger(ReconstructionEngine.class.getName());
+    Logger LOGGER = SplitLogger.create(ReconstructionEngine.class.getName());
 
     public static final String CONFIG_BANK_NAME = "COAT::config";
     

@@ -2,6 +2,7 @@ package org.jlab.rec.ahdc.HelixFit;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 
 /** Helix Fit.
  *
@@ -9,7 +10,7 @@ import java.util.logging.Logger;
  */
 public class HelixFitJava {
 
-    static final Logger LOGGER = Logger.getLogger(HelixFitJava.class.getName());
+    static final Logger LOGGER = SplitLogger.create(HelixFitJava.class.getName());
 
     /** \todo What does this method do
      *  \what does its name even mean?

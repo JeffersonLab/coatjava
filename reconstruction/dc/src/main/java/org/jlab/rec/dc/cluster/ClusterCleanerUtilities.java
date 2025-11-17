@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.io.base.DataEvent;
 
@@ -15,7 +16,7 @@ import org.jlab.utils.groups.IndexedTable;
 
 public class ClusterCleanerUtilities {
 
-    private static final Logger LOGGER = Logger.getLogger(ClusterCleanerUtilities.class.getName());
+    private static final Logger LOGGER = SplitLogger.create(ClusterCleanerUtilities.class.getName());
 
     public ClusterCleanerUtilities() {
         List<ArrayList<Hit>> sortdHits = new ArrayList<>();

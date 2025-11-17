@@ -4,6 +4,7 @@ import cnuphys.magfield.MagneticFields;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 import org.jlab.clas.pdg.PhysicsConstants;
 import org.jlab.clas.swimtools.Swim;
 
@@ -13,7 +14,7 @@ import org.jlab.rec.cvt.svt.SVTParameters;
 public class Constants {
    
 
-    public static Logger LOGGER = Logger.getLogger(Constants.class.getName());
+    public static Logger LOGGER = SplitLogger.create(Constants.class.getName());
     public static double CAANGLE1= 1.75;
     public static double CAANGLE2=0.551;
     public static double CAANGLE3=30.;

@@ -3,6 +3,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 import javax.swing.JFrame;
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.groot.data.H2F;
@@ -28,7 +29,7 @@ public class RasterEngine extends ReconstructionEngine {
     private final int    xComponent = 1;
     private final int    yComponent = 2;
 
-    public static final Logger LOGGER = Logger.getLogger(RasterEngine.class.getName());
+    public static final Logger LOGGER = SplitLogger.create(RasterEngine.class.getName());
 
     public RasterEngine() {
         super("RasterEngine","devita","1.0");

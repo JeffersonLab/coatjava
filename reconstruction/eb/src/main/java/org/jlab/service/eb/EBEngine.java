@@ -3,6 +3,7 @@ package org.jlab.service.eb;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.io.base.DataEvent;
@@ -23,7 +24,7 @@ import org.jlab.rec.eb.EBRadioFrequency;
  */
 public class EBEngine extends ReconstructionEngine {
 
-    public static final Logger LOGGER = Logger.getLogger(EBEngine.class.getName());
+    public static final Logger LOGGER = SplitLogger.create(EBEngine.class.getName());
 
     boolean usePOCA = false;
 

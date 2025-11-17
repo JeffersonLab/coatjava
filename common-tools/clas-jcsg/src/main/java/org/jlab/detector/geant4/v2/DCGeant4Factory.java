@@ -4,6 +4,7 @@ import eu.mihosoft.vrl.v3d.Vector3d;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.base.GeometryFactory;
 import org.jlab.detector.units.SystemOfUnits.Length;
@@ -573,7 +574,7 @@ final class Wire {
 ///////////////////////////////////////////////////
 public final class DCGeant4Factory extends Geant4Factory {
 
-    private static final Logger LOGGER = Logger.getLogger("DCGeant4Factory");
+    private static final Logger LOGGER = SplitLogger.create("DCGeant4Factory");
     DCdatabase dbref = null;
     
     private final HashMap<String, String> properties = new HashMap<>();

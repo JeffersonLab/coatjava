@@ -6,6 +6,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 
 import org.jlab.coda.jevio.EvioCompactReader;
 import org.jlab.coda.jevio.EvioException;
@@ -16,7 +17,7 @@ import org.jlab.io.base.DataSourceType;
 
 public final class EvioSource implements DataSource {
 
-    static final Logger LOGGER = Logger.getLogger(EvioSource.class.getName());
+    static final Logger LOGGER = SplitLogger.create(EvioSource.class.getName());
     private ByteOrder storeByteOrder = ByteOrder.BIG_ENDIAN;
     private EvioCompactReader evioReader = null;
     private int currentEvent;

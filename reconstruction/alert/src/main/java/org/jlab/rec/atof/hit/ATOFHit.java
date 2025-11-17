@@ -4,6 +4,7 @@ import org.jlab.geom.base.*;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.rec.atof.constants.Parameters;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
 
 /**
@@ -17,7 +18,7 @@ import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
  */
 public class ATOFHit {
 
-    static final Logger LOGGER = Logger.getLogger(ATOFHit.class.getName());
+    static final Logger LOGGER = SplitLogger.create(ATOFHit.class.getName());
     
     private int sector, layer, component, order;
     private int tdc, tot;

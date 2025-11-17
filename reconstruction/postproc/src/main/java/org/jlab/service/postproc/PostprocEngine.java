@@ -2,6 +2,7 @@ package org.jlab.service.postproc;
 
 import java.io.File;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 import org.jlab.analysis.postprocess.Processor;
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.io.base.DataEvent;
@@ -18,7 +19,7 @@ public class PostprocEngine extends ReconstructionEngine {
     public static final String CONF_RESTREAM_HELICITY = "restream";
     public static final String CONF_REBUILD_SCALERS = "rebuild";
 
-    static final Logger logger = Logger.getLogger(PostprocEngine.class.getName());
+    static final Logger logger = SplitLogger.create(PostprocEngine.class.getName());
 
     Processor processor = null;
 

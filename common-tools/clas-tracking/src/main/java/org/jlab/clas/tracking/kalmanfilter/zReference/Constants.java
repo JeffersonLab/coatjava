@@ -1,6 +1,7 @@
 package org.jlab.clas.tracking.kalmanfilter.zReference;
 
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 
 /**
  * Constants used in forward tracking
@@ -14,7 +15,7 @@ public class Constants {
     }
     
     
-    public static Logger LOGGER = Logger.getLogger(Constants.class.getName());
+    public static Logger LOGGER = SplitLogger.create(Constants.class.getName());
     
     // CONSTATNS for TRANSFORMATION
     public static final double ITERSTOPXHB = 1.2e-2; 

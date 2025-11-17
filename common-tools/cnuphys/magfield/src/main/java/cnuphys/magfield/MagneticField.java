@@ -9,6 +9,7 @@ import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 
 /**
  * For magnetic fields stored in a specific format. This is low-level,
@@ -19,7 +20,7 @@ import java.util.logging.Logger;
  * @version 1.0
  */
 public abstract class MagneticField implements IMagField {
-	public static Logger LOGGER = Logger.getLogger(MagneticField.class.getName());
+	public static Logger LOGGER = SplitLogger.create(MagneticField.class.getName());
 
 	/** Magic number used to check if byteswapping is necessary. */
 	public static final int MAGICNUMBER = 0xced;

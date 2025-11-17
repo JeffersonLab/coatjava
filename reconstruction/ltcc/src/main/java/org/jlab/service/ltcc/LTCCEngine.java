@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.logging.SplitLogger;
 
 /**
  * LTCC Reconstruction Engine.
@@ -14,7 +15,7 @@ import java.util.logging.Logger;
  */
 public class LTCCEngine extends ReconstructionEngine {
 
-    public static Logger LOGGER = Logger.getLogger(LTCCEngine.class.getName());
+    public static Logger LOGGER = SplitLogger.create(LTCCEngine.class.getName());
 
     private static final boolean DEBUG = false;
     private static final List<String> CC_TABLES = 
