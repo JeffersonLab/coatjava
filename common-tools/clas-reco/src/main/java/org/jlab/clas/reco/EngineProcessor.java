@@ -365,6 +365,7 @@ public class EngineProcessor {
         parser.addOption("-H","0","restream helicity");
 
         parser.parse(args);
+        parser.syncLogLevel(LOGGER);
 
         List<String> services = parser.getInputList();
 

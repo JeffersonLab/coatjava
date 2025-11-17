@@ -437,6 +437,7 @@ public class LayerEfficiencyAnalyzer extends DCEngine implements IDataEventListe
         OptionParser parser = new OptionParser("dclayereffs-anal");
         parser.addOption("-i","");
         parser.parse(args);
+        parser.syncLogLevel(LOGGER);
         
         if(parser.hasOption("-i")==true){
             String inputFile    = parser.getOption("-i").stringValue();

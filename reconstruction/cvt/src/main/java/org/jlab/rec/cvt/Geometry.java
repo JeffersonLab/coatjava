@@ -519,7 +519,7 @@ public class Geometry {
         parser.addOption("-var2",   "rgb_spring2019", "geometry variation 2");
         parser.addOption("-offset", "0",              "compensate for the average offset of SVT-R1 strip upstream end (1)");
         parser.parse(args);
-        SplitLogger.configureLevel(LOGGER, parser.getLogLevel());
+        parser.syncLogLevel(LOGGER);
         
         int run = 11;
         String var1 = parser.getOption("-var1").stringValue();
