@@ -31,12 +31,6 @@
     </dependency>
     <dependency>
       <groupId>org.jlab.clas</groupId>
-      <artifactId>clas-logging</artifactId>
-      <version>13.4.1-SNAPSHOT</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jlab.clas</groupId>
       <artifactId>clas-reco</artifactId>
       <version>13.4.1-SNAPSHOT</version>
     </dependency>
