@@ -11,6 +11,7 @@ import java.util.TreeMap;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 import org.jlab.logging.SplitLogger;
+import org.jlab.logging.SplitLoggerConfig;
 
 /**
  *
@@ -191,6 +192,7 @@ public class OptionParser {
     private void setVerbosity(String level) {
         try {
             this.logLevel = Level.parse(level);
+            SplitLoggerConfig.INSTANCE.setDefaultLevel(this.logLevel);
         }
         catch (IllegalArgumentException e) {
             System.err.println("Invalid -l java.util.logging.Level:  "+level);
@@ -220,19 +222,23 @@ public class OptionParser {
         return this.logLevel;
     }
 
-    /// Set the log level of a list of classes to be consistent with the level set by the {@code -l} option
-    /// @param classList string names of the classes
-    public void syncLogLevels(String... classList) {
+    /**
+     * Set the log level of a list of classes to your preferred level.
+     * Use this to override the user's choice of logging level for certain classes.
+     * @param level the log level
+     * @param classList string names of the classes
+     */
+    public static void overrideLogLevel(String level, String... classList) {
         for(var className : classList)
-            System.setProperty(className + ".level", this.logLevel.toString());
+            System.setProperty(className + ".level", level);
     }
 
-    /// Set the log level of a list of classes to be consistent with the level set by the {@code -l} option, along with an external {@code Logger} instance
-    /// @param externalLogger an external {@code Logger} instance, typically one owned by the owner of this {@code OptionParser} instance
-    /// @param classList string names of the classes
-    public void syncLogLevels(Logger externalLogger, String... classList) {
+    /**
+     * Set the log level to be consistent with the level set by the user's {@code -l} option
+     * @param externalLogger an external {@code Logger} instance, typically one owned by the owner of this {@code OptionParser} instance
+     */
+    public void syncLogLevel(Logger externalLogger) {
         SplitLogger.configureLevel(externalLogger, this.logLevel);
-        syncLogLevels(classList);
     }
 
     public static void main(String[] args){

@@ -81,12 +81,18 @@ public class SplitLogger {
     logger.addHandler(errorHandler);
 
     // set the log level, since the handlers need to know it too
-    Level thisLevel = logger.getLevel();
-    // kluge: forcefully respect '<className>.level' system property (assumes logger name == class name)
-    String userLevel = System.getProperty(logger.getName() + ".level");
-    if(userLevel!=null)
-      thisLevel = Level.parse(userLevel);
-    // if caller or user did not set log level, use parent
+    Level thisLevel = null;
+    // if a system property named '<ClassName>.level' is set, use that
+    String userLevelProperty = System.getProperty(logger.getName() + ".level");
+    if(userLevelProperty != null)
+      thisLevel = Level.parse(userLevelProperty);
+    // else if the `SplitLoggerConfig` default level was set, use that level
+    else if(SplitLoggerConfig.INSTANCE.defaultLevelWasSet())
+      thisLevel = SplitLoggerConfig.INSTANCE.getDefaultLevel();
+    // else fallback to the level of `logger` itself
+    else
+      thisLevel = logger.getLevel();
+    // if all else fails, try to use the parent's level
     if(thisLevel==null) {
       thisLevel = logger.getParent().getLevel();
       if(thisLevel==null) { // should never happen, but just in case, fall back to default and complain directly to `stderr`
