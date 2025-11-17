@@ -82,7 +82,12 @@ public class SplitLogger {
 
     // set the log level, since the handlers need to know it too
     Level thisLevel = logger.getLevel();
-    if(thisLevel==null) { // caller did not set log level, use parent
+    // kluge: forcefully respect '<className>.level' system property (assumes logger name == class name)
+    String userLevel = System.getProperty(logger.getName() + ".level");
+    if(userLevel!=null)
+      thisLevel = Level.parse(userLevel);
+    // if caller or user did not set log level, use parent
+    if(thisLevel==null) {
       thisLevel = logger.getParent().getLevel();
       if(thisLevel==null) { // should never happen, but just in case, fall back to default and complain directly to `stderr`
         thisLevel = Level.INFO;

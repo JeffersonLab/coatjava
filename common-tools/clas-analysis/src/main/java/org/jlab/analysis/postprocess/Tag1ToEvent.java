@@ -41,7 +41,13 @@ public class Tag1ToEvent {
         parser.addOption("-f","0","rebuild the HEL::flip banks (0/1=false/true)");
         parser.addRequired("-o","output.hipo");
         parser.parse(args);
-        SplitLogger.configureLevel(LOGGER, parser.getLogLevel());
+        parser.configureLogging(
+            LOGGER,
+            "org.jlab.clas.reco.ReconstructionEngine",
+            "org.jlab.detector.calib.utils.ConstantsManager",
+            "org.jlab.detector.scalers.DaqScalers",
+            "org.jlab.detector.scalers.DaqScalersSequence",
+            "org.jlab.detector.helicity.HelicitySequence");
         if (parser.getInputList().isEmpty()) {
             parser.printUsage();
             LOGGER.severe("No input file(s) specified.");
