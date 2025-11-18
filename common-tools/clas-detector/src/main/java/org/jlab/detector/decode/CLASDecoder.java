@@ -229,12 +229,12 @@ public class CLASDecoder {
             adcBANK.putShort(2, i, (short) adcDGTZ.get(i).getDescriptor().getComponent());
             adcBANK.putByte( 3, i, (byte) adcDGTZ.get(i).getDescriptor().getOrder());
             adcBANK.putInt(  4, i, adcDGTZ.get(i).getADCData(0).getADC());
-            if(name.equals("BMT::adc")||name.equals("FMT::adc")|| name.equals("FTTRK::adc")){
+            if (type == DetectorType.BMT || type == DetectorType.FMT || type == DetectorType.FTTRK) {
             	adcBANK.putInt( 4, i, adcDGTZ.get(i).getADCData(0).getHeight());
             	adcBANK.putInt( 7, i, adcDGTZ.get(i).getADCData(0).getIntegral());
             	adcBANK.putLong(8, i, adcDGTZ.get(i).getADCData(0).getTimeStamp());
             }
-            if("BAND::adc".equals(name)) {
+            if(type == DetectorType.BAND) {
                 adcBANK.putInt(  5, i, adcDGTZ.get(i).getADCData(0).getHeight());
                 adcBANK.putFloat(6, i, (float) adcDGTZ.get(i).getADCData(0).getTime());
                 adcBANK.putShort(7, i, (short) adcDGTZ.get(i).getADCData(0).getPedestal());
@@ -243,7 +243,7 @@ public class CLASDecoder {
                 adcBANK.putFloat(5, i, (float) adcDGTZ.get(i).getADCData(0).getTime());
                 adcBANK.putShort(6, i, (short) adcDGTZ.get(i).getADCData(0).getPedestal());
             }
-            if("BST::adc".equals(name)) adcBANK.putLong(7, i, adcDGTZ.get(i).getADCData(0).getTimeStamp());
+            if(type == DetectorType.BST) adcBANK.putLong(7, i, adcDGTZ.get(i).getADCData(0).getTimeStamp());
          }
         return adcBANK;
     }
