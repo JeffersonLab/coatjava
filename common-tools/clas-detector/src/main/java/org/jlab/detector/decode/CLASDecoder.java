@@ -477,6 +477,8 @@ public class CLASDecoder {
             totalSize += pulse.length;
         }
        
+        if (bonusData.isEmpty()) return null;
+
         Bank bonusBank = new Bank(schemaFactory.getSchema("RTPC::adc"), totalSize);
         int currentRow = 0;
         for(int i = 0; i < bonusData.size(); i++){
