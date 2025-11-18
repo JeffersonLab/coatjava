@@ -422,22 +422,22 @@ public class CLASDecoder {
         bank.putLong(4, 0, timeStamp);
 
         if (torus != null) {
-            bank.putFloat("torus", 0, torus.floatValue());
+            bank.putFloat(7, 0, torus.floatValue());
         }
         else if (rcdbManager.getTorusScale(localRun) == null) {
             if (localRun > 100) throw new RuntimeException("Error retrieving torus scale from RCDB.");
         }
         else { 
-            bank.putFloat("torus", 0, rcdbManager.getTorusScale(localRun).floatValue());
+            bank.putFloat(7, 0, rcdbManager.getTorusScale(localRun).floatValue());
         }
         if (solenoid != null) {
-            bank.putFloat("solenoid", 0, solenoid.floatValue());
+            bank.putFloat(8, 0, solenoid.floatValue());
         }
         else if (rcdbManager.getSolenoidScale(localRun) == null) {
             if (localRun > 100) throw new RuntimeException("Error retrieving solenoid scale from RCDB.");
         }
         else { 
-            bank.putFloat("solenoid", 0, rcdbManager.getSolenoidScale(localRun).floatValue());
+            bank.putFloat(8, 0, rcdbManager.getSolenoidScale(localRun).floatValue());
         }
         
         return bank;
