@@ -202,6 +202,7 @@ public class CLASDecoder {
 
     public Bank getDataBankWF(String name, DetectorType type) {
         List<DetectorDataDgtz> a = this.getEntriesADC(type);
+        if (a.isEmpty()) return null;
         Bank b = new Bank(schemaFactory.getSchema(name), a.size());
         for (int i=0; i<a.size(); ++i) {
             b.putByte( 0, i, (byte) a.get(i).getDescriptor().getSector());
@@ -220,6 +221,7 @@ public class CLASDecoder {
     public Bank getDataBankADC(String name, DetectorType type){
 
         List<DetectorDataDgtz> adcDGTZ = this.getEntriesADC(type);
+        if (adcDGTZ.isEmpty()) return null;
 
         Bank adcBANK = new Bank(schemaFactory.getSchema(name), adcDGTZ.size());
 
@@ -252,6 +254,7 @@ public class CLASDecoder {
     public Bank getDataBankTDC(String name, DetectorType type){
 
         List<DetectorDataDgtz> tdcDGTZ = this.getEntriesTDC(type);
+        if (tdcDGTZ.isEmpty()) return null;
         Bank tdcBANK = new Bank(schemaFactory.getSchema(name), tdcDGTZ.size());
 
         for(int i = 0; i < tdcDGTZ.size(); i++){
@@ -269,6 +272,7 @@ public class CLASDecoder {
     public Bank getDataBankTDCPetiroc(String name, DetectorType type){
 
         List<DetectorDataDgtz> tdcDGTZ = this.getEntriesTDC(type);
+        if (tdcDGTZ.isEmpty()) return null;
         Bank tdcBANK = new Bank(schemaFactory.getSchema(name), tdcDGTZ.size());
 
         for(int i = 0; i < tdcDGTZ.size(); i++){
@@ -288,6 +292,7 @@ public class CLASDecoder {
     public Bank getDataBankTimeStamp(String name, DetectorType type) {
 
         List<DetectorDataDgtz> tdcDGTZ = this.getEntriesTDC(type);
+        if (tdcDGTZ.isEmpty()) return null;
         Map<Integer, DetectorDataDgtz> tsMap = new LinkedHashMap<>();
         for(DetectorDataDgtz tdc : tdcDGTZ) {
             DetectorDescriptor desc = tdc.getDescriptor();
@@ -316,6 +321,7 @@ public class CLASDecoder {
     
     public Bank getDataBankUndecodedADC(String name, DetectorType type){
         List<DetectorDataDgtz> adcDGTZ = this.getEntriesADC(type);
+        if (adcDGTZ.isEmpty()) return null;
         Bank adcBANK = new Bank(schemaFactory.getSchema(name), adcDGTZ.size());
 
         for(int i = 0; i < adcDGTZ.size(); i++){
@@ -332,6 +338,7 @@ public class CLASDecoder {
     public Bank getDataBankUndecodedTDC(String name, DetectorType type){
 
         List<DetectorDataDgtz> tdcDGTZ = this.getEntriesTDC(type);
+        if (tdcDGTZ.isEmpty()) return null;
 
         Bank tdcBANK = new Bank(schemaFactory.getSchema(name), tdcDGTZ.size());
 
@@ -347,6 +354,7 @@ public class CLASDecoder {
     public Bank getDataBankUndecodedVTP(String name, DetectorType type){
 
         List<DetectorDataDgtz> vtpDGTZ = this.getEntriesVTP(type);
+        if (vtpDGTZ.isEmpty()) return null;
 
         Bank vtpBANK = new Bank(schemaFactory.getSchema(name), vtpDGTZ.size());
 
@@ -360,6 +368,7 @@ public class CLASDecoder {
     public Bank getDataBankUndecodedSCALER(String name, DetectorType type){
 
         List<DetectorDataDgtz> scalerDGTZ = this.getEntriesSCALER(type);
+        if (scalerDGTZ.isEmpty()) return null;
 
         Bank scalerBANK = new Bank(schemaFactory.getSchema(name), scalerDGTZ.size());
 
