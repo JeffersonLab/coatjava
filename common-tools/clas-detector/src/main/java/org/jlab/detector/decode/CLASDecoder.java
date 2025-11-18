@@ -254,8 +254,6 @@ public class CLASDecoder {
         List<DetectorDataDgtz> tdcDGTZ = this.getEntriesTDC(type);
         Bank tdcBANK = new Bank(schemaFactory.getSchema(name), tdcDGTZ.size());
 
-        if(tdcBANK==null) return null;
-
         for(int i = 0; i < tdcDGTZ.size(); i++){
             tdcBANK.putByte( 0, i, (byte) tdcDGTZ.get(i).getDescriptor().getSector());
             tdcBANK.putByte( 1, i, (byte) tdcDGTZ.get(i).getDescriptor().getLayer());
@@ -272,8 +270,6 @@ public class CLASDecoder {
 
         List<DetectorDataDgtz> tdcDGTZ = this.getEntriesTDC(type);
         Bank tdcBANK = new Bank(schemaFactory.getSchema(name), tdcDGTZ.size());
-
-        if(tdcBANK==null) return null;
 
         for(int i = 0; i < tdcDGTZ.size(); i++){
             tdcBANK.putByte( 0, i, (byte) tdcDGTZ.get(i).getDescriptor().getSector());
@@ -308,8 +304,6 @@ public class CLASDecoder {
         
         Bank tsBANK = new Bank(schemaFactory.getSchema(name), tsMap.size());
 
-        if(tsBANK==null) return null;
-        
         int i=0;
         for(DetectorDataDgtz tdc : tsMap.values()) {
             tsBANK.putByte(0, i, (byte) tdc.getDescriptor().getCrate());
@@ -340,7 +334,6 @@ public class CLASDecoder {
         List<DetectorDataDgtz> tdcDGTZ = this.getEntriesTDC(type);
 
         Bank tdcBANK = new Bank(schemaFactory.getSchema(name), tdcDGTZ.size());
-        if(tdcBANK==null) return null;
 
         for(int i = 0; i < tdcDGTZ.size(); i++){
             tdcBANK.putByte( 0, i, (byte) tdcDGTZ.get(i).getDescriptor().getCrate());
@@ -356,7 +349,6 @@ public class CLASDecoder {
         List<DetectorDataDgtz> vtpDGTZ = this.getEntriesVTP(type);
 
         Bank vtpBANK = new Bank(schemaFactory.getSchema(name), vtpDGTZ.size());
-        if(vtpBANK==null) return null;
 
         for(int i = 0; i < vtpDGTZ.size(); i++){
             vtpBANK.putByte(0, i, (byte) vtpDGTZ.get(i).getDescriptor().getCrate());
@@ -370,7 +362,6 @@ public class CLASDecoder {
         List<DetectorDataDgtz> scalerDGTZ = this.getEntriesSCALER(type);
 
         Bank scalerBANK = new Bank(schemaFactory.getSchema(name), scalerDGTZ.size());
-        if(scalerBANK==null) return null;
 
         for(int i = 0; i < scalerDGTZ.size(); i++){
             scalerBANK.putByte( 0, i, (byte) scalerDGTZ.get(i).getDescriptor().getCrate());
@@ -485,7 +476,7 @@ public class CLASDecoder {
             short[]  pulse = bonusData.get(i).getADCData(0).getPulseArray();
             totalSize += pulse.length;
         }
-        
+       
         Bank bonusBank = new Bank(schemaFactory.getSchema("RTPC::adc"), totalSize);
         int currentRow = 0;
         for(int i = 0; i < bonusData.size(); i++){
@@ -514,7 +505,6 @@ public class CLASDecoder {
                 currentRow++;
             }
         }
-        
         return bonusBank;
     }
 
