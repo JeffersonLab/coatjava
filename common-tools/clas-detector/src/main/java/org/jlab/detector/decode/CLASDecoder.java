@@ -70,6 +70,9 @@ public class CLASDecoder {
         return schemaFactory;
     }
 
+    void resume(String s) { if (benchmark) Benchmark.getInstance().resume(s); }
+    void pause(String s) { if (benchmark) Benchmark.getInstance().pause(s); }
+
     public void setVariation(String variation) {
         detectorDecoder.setVariation(variation);
     }
@@ -586,58 +589,71 @@ public class CLASDecoder {
         return createTaggedEvent(schemaFactory, e, banks);
     }
 
+    public static class Config {
+        public static final String[] wfBankNames = new String[]{"AHDC::wf"};
+        public static final DetectorType[] wfBankTypes = new DetectorType[]{DetectorType.AHDC};
+        public static final String[] adcBankNames = new String[]{
+            "FTOF::adc","ECAL::adc","FTCAL::adc",
+            "FTHODO::adc", "FTTRK::adc",
+            "HTCC::adc","BST::adc","CTOF::adc",
+            "CND::adc","LTCC::adc","BMT::adc",
+            "FMT::adc","HEL::adc","RF::adc",
+            "BAND::adc","RASTER::adc"};
+        public static final DetectorType[]  adcBankTypes = new DetectorType[]{
+            DetectorType.FTOF,DetectorType.ECAL,DetectorType.FTCAL,
+            DetectorType.FTHODO,DetectorType.FTTRK,
+            DetectorType.HTCC,DetectorType.BST,DetectorType.CTOF,
+            DetectorType.CND,DetectorType.LTCC,DetectorType.BMT,
+            DetectorType.FMT,DetectorType.HEL,DetectorType.RF,
+            DetectorType.BAND, DetectorType.RASTER};
+        public static final String[] tdcBankNames = new String[]{
+            "FTOF::tdc","ECAL::tdc","DC::tot",
+            "HTCC::tdc","LTCC::tdc","CTOF::tdc",
+            "CND::tdc","RF::tdc","RICH::tdc",
+            "BAND::tdc"};
+        public static final DetectorType[] tdcBankTypes = new DetectorType[]{
+            DetectorType.FTOF,DetectorType.ECAL,
+            DetectorType.DC,DetectorType.HTCC,DetectorType.LTCC,
+            DetectorType.CTOF,DetectorType.CND,DetectorType.RF,
+            DetectorType.RICH,DetectorType.BAND};
+    }
+    
     public Event getDataEvent(){
 
         Event event = new Event();
 
-        String[]         wfBankNames = new String[]{"AHDC::wf"};
-        DetectorType[]   wfBankTypes = new DetectorType[]{DetectorType.AHDC};
-        String[]        adcBankNames = new String[]{"FTOF::adc","ECAL::adc","FTCAL::adc",
-                                                    "FTHODO::adc", "FTTRK::adc",
-                                                    "HTCC::adc","BST::adc","CTOF::adc",
-                                                    "CND::adc","LTCC::adc","BMT::adc",
-                                                    "FMT::adc","HEL::adc","RF::adc",
-                                                    "BAND::adc","RASTER::adc"};
-        DetectorType[]  adcBankTypes = new DetectorType[]{DetectorType.FTOF,DetectorType.ECAL,DetectorType.FTCAL,
-                                                          DetectorType.FTHODO,DetectorType.FTTRK,
-                                                          DetectorType.HTCC,DetectorType.BST,DetectorType.CTOF,
-                                                          DetectorType.CND,DetectorType.LTCC,DetectorType.BMT,
-                                                          DetectorType.FMT,DetectorType.HEL,DetectorType.RF,
-                                                          DetectorType.BAND, DetectorType.RASTER};
-
-        String[] tdcBankNames = new String[]{"FTOF::tdc","ECAL::tdc","DC::tot",
-                                             "HTCC::tdc","LTCC::tdc","CTOF::tdc",
-                                             "CND::tdc","RF::tdc","RICH::tdc",
-                                             "BAND::tdc"};
-        DetectorType[] tdcBankTypes = new DetectorType[]{DetectorType.FTOF,DetectorType.ECAL,
-                                                         DetectorType.DC,DetectorType.HTCC,DetectorType.LTCC,
-                                                         DetectorType.CTOF,DetectorType.CND,DetectorType.RF,
-                                                         DetectorType.RICH,DetectorType.BAND};
-
-        for(int i = 0; i < adcBankTypes.length; i++){
-            Bank adcBank = getDataBankADC(adcBankNames[i],adcBankTypes[i]);
+        resume("adc");
+        for(int i = 0; i < Config.adcBankTypes.length; i++){
+            Bank adcBank = getDataBankADC(Config.adcBankNames[i],Config.adcBankTypes[i]);
             if(adcBank!=null){
                 if(adcBank.getRows()>0){
                     event.write(adcBank);
                 }
             }
         }
+        pause("adc");
 
-        for(int i = 0; i < wfBankTypes.length; i++){
-            Bank wfBank = getDataBankWF(wfBankNames[i],wfBankTypes[i]);
+        resume("wf");
+        for(int i = 0; i < Config.wfBankTypes.length; i++){
+            Bank wfBank = getDataBankWF(Config.wfBankNames[i],Config.wfBankTypes[i]);
             if(wfBank!=null && wfBank.getRows()>0){
                 event.write(wfBank);
             }
         }
+        pause("wf");
 
-        for(int i = 0; i < tdcBankTypes.length; i++){
-            Bank tdcBank = getDataBankTDC(tdcBankNames[i],tdcBankTypes[i]);
+        resume("tdc");
+        for(int i = 0; i < Config.tdcBankTypes.length; i++){
+            Bank tdcBank = getDataBankTDC(Config.tdcBankNames[i],Config.tdcBankTypes[i]);
             if(tdcBank!=null){
                 if(tdcBank.getRows()>0){
                     event.write(tdcBank);
                 }
             }
         }
+        pause("tdc");
+
+        resume("atof");
         try {
             // Do ATOF 
             Bank tdcBank = getDataBankTDCPetiroc("ATOF::tdc",DetectorType.ATOF);
@@ -649,8 +665,9 @@ public class CLASDecoder {
         } catch(Exception e) {
             e.printStackTrace();
         }
+        pause("atof");
 
-
+        resume("jitter");
         try {
             Bank tsBank = getDataBankTimeStamp("DC::jitter", DetectorType.DC);
             if(tsBank != null) {
@@ -661,10 +678,12 @@ public class CLASDecoder {
         } catch(Exception e) {
             e.printStackTrace();
         }
+        pause("jitter");
 
         /**
          * Adding un-decoded banks to the event
          */
+        resume("adcud");
         try {
             Bank adcBankUD = this.getDataBankUndecodedADC("RAW::adc", DetectorType.UNDEFINED);
             if(adcBankUD!=null){
@@ -675,7 +694,9 @@ public class CLASDecoder {
         } catch(Exception e) {
             e.printStackTrace();
         }
+        pause("adcud");
 
+        resume("tdcud");
         try {
             Bank tdcBankUD = this.getDataBankUndecodedTDC("RAW::tdc", DetectorType.UNDEFINED);
             if(tdcBankUD!=null){
@@ -688,7 +709,9 @@ public class CLASDecoder {
         } catch(Exception e) {
             e.printStackTrace();
         }
+        pause("tdcud");
 
+        resume("vtp");
         try {
             Bank vtpBankUD = this.getDataBankUndecodedVTP("RAW::vtp", DetectorType.UNDEFINED);
             if(vtpBankUD!=null){
@@ -701,7 +724,9 @@ public class CLASDecoder {
         } catch(Exception e) {
             e.printStackTrace();
         }
-
+        pause("vtp");
+        
+        resume("scaler");
         try {
             Bank scalerBankUD = this.getDataBankUndecodedSCALER("RAW::scaler", DetectorType.UNDEFINED);
             if(scalerBankUD!=null){
@@ -712,11 +737,10 @@ public class CLASDecoder {
         } catch(Exception e) {
             e.printStackTrace();
         }
-        //-----------------------------------------------------
-        // CREATING BONUS BANK --------------------------------
-        //-----------------------------------------------------
+        pause("scaler");
+
+        resume("bonus");
         try {
-            //System.out.println("creating bonus bank....");
             Bank bonusBank = this.createBonusBank();
             if(bonusBank!=null){
                 if(bonusBank.getRows()>0){
@@ -726,11 +750,10 @@ public class CLASDecoder {
         } catch(Exception e) {
             e.printStackTrace();
         }
+        pause("bonus");
+
         return event;
     }
-
-    void resume(String s) { if (benchmark) Benchmark.getInstance().resume(s); }
-    void pause(String s) { if (benchmark) Benchmark.getInstance().pause(s); }
 
     public void initEvent(DataEvent event){
 
