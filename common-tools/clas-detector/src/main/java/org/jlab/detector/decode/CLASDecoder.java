@@ -732,43 +732,46 @@ public class CLASDecoder {
                     dataList = codaDecoder.getDataEntries( (EvioDataEvent) event);
                     pause("GDE");
                     
+                    resume("GAE");
+                    List<FADCData>  fadcPacked = codaDecoder.getADCEntries((EvioDataEvent) event);
+                    pause("GAE");
+
                     //-----------------------------------------------------------------------------
                     // This part reads the BITPACKED FADC data from tag=57638 Format (cmcms)
                     // Then unpacks into Detector Digigitized data, and appends to existing buffer
                     // Modified on 9/5/2018
                     //-----------------------------------------------------------------------------
-                    
-                    resume("GAE");
-                    List<FADCData>  fadcPacked = codaDecoder.getADCEntries((EvioDataEvent) event);
-                    pause("GAE");
-                    
-                    resume("MISC");
                     if(fadcPacked!=null){
                         List<DetectorDataDgtz> fadcUnpacked = FADCData.convert(fadcPacked);
                         dataList.addAll(fadcUnpacked);
                     }
                     //  END of Bitpacked section
                     //-----------------------------------------------------------------------------
-                    
+                   
                     if(this.decoderDebugMode>0){
                         System.out.println("\n>>>>>>>>> RAW decoded data");
                         for(DetectorDataDgtz data : dataList){
                             System.out.println(data);
                         }
                     }
+
                     int runNumberCoda = codaDecoder.getRunNumber();
                     this.setRunNumber(runNumberCoda);
-                    
+                   
+                    resume("translate");
                     detectorDecoder.translate(dataList);
+                    pause("translate");
+                    resume("fitPulse");
                     detectorDecoder.fitPulses(dataList);
+                    pause("fitPulse");
                     detectorDecoder.filterTDCs(dataList);
+
                     if(this.decoderDebugMode>0){
                         System.out.println("\n>>>>>>>>> TRANSLATED data");
                         for(DetectorDataDgtz data : dataList){
                             System.out.println(data);
                         }
                     }
-                    pause("MISC");
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
