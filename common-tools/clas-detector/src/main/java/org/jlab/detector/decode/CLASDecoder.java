@@ -221,8 +221,6 @@ public class CLASDecoder {
 
         List<DetectorDataDgtz> adcDGTZ = this.getEntriesADC(type);
 
-        if(schemaFactory.hasSchema(name)==false) return null;
-
         Bank adcBANK = new Bank(schemaFactory.getSchema(name), adcDGTZ.size());
 
         for(int i = 0; i < adcDGTZ.size(); i++){
@@ -254,7 +252,6 @@ public class CLASDecoder {
     public Bank getDataBankTDC(String name, DetectorType type){
 
         List<DetectorDataDgtz> tdcDGTZ = this.getEntriesTDC(type);
-        if(schemaFactory.hasSchema(name)==false) return null;
         Bank tdcBANK = new Bank(schemaFactory.getSchema(name), tdcDGTZ.size());
 
         if(tdcBANK==null) return null;
@@ -274,10 +271,6 @@ public class CLASDecoder {
     public Bank getDataBankTDCPetiroc(String name, DetectorType type){
 
         List<DetectorDataDgtz> tdcDGTZ = this.getEntriesTDC(type);
-        if(schemaFactory.hasSchema(name)==false){
-          System.out.println("WARNING: No schema for TDC type : "  + type);
-          return null;
-        }
         Bank tdcBANK = new Bank(schemaFactory.getSchema(name), tdcDGTZ.size());
 
         if(tdcBANK==null) return null;
@@ -299,7 +292,6 @@ public class CLASDecoder {
     public Bank getDataBankTimeStamp(String name, DetectorType type) {
 
         List<DetectorDataDgtz> tdcDGTZ = this.getEntriesTDC(type);
-        if(schemaFactory.hasSchema(name)==false) return null;
         Map<Integer, DetectorDataDgtz> tsMap = new LinkedHashMap<>();
         for(DetectorDataDgtz tdc : tdcDGTZ) {
             DetectorDescriptor desc = tdc.getDescriptor();
@@ -400,8 +392,6 @@ public class CLASDecoder {
 
     public Bank createHeaderBank( int nrun, int nevent, Double torus, Double solenoid){
 
-        if(schemaFactory.hasSchema("RUN::config")==false) return null;
-
         Bank bank = new Bank(schemaFactory.getSchema("RUN::config"), 1);
 
         int    localRun = this.codaDecoder.getRunNumber();
@@ -444,8 +434,7 @@ public class CLASDecoder {
     }
 
     public Bank createOnlineHelicityBank() {
-        if (schemaFactory.hasSchema("HEL::online")==false ||
-            this.codaDecoder.getHelicityLevel3()==HelicityBit.DNE.value()) return null;
+        if (this.codaDecoder.getHelicityLevel3()==HelicityBit.DNE.value()) return null;
         Bank bank = new Bank(schemaFactory.getSchema("HEL::online"), 1);
         byte  helicityL3 = this.codaDecoder.getHelicityLevel3();
         IndexedTable hwpTable = this.detectorDecoder.scalerManager.
@@ -456,7 +445,6 @@ public class CLASDecoder {
     }
 
     public Bank createTriggerBank(){
-        if(schemaFactory.hasSchema("RUN::trigger")==false) return null;
         Bank bank = new Bank(schemaFactory.getSchema("RUN::trigger"), this.codaDecoder.getTriggerWords().size());
         for(int i=0; i<this.codaDecoder.getTriggerWords().size(); i++) {
             bank.putInt(0, i, i+1);
@@ -466,7 +454,6 @@ public class CLASDecoder {
     }
 
     public Bank createEpicsBank(){
-        if(schemaFactory.hasSchema("RAW::epics")==false) return null;
         if (this.codaDecoder.getEpicsData().isEmpty()==true) return null;
         String json = this.codaDecoder.getEpicsData().toString();
         Bank bank = new Bank(schemaFactory.getSchema("RAW::epics"), json.length());
@@ -492,7 +479,6 @@ public class CLASDecoder {
     }
 
     public Bank createBonusBank(){
-        if(schemaFactory.hasSchema("RTPC::adc")==false) return null;
         List<DetectorDataDgtz> bonusData = this.getEntriesADC(DetectorType.RTPC);
         int totalSize = 0;
         for(int i = 0; i < bonusData.size(); i++){
