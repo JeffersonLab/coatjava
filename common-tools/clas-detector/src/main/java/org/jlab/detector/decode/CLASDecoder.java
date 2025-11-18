@@ -260,8 +260,8 @@ public class CLASDecoder {
             tdcBANK.putShort(2, i, (short) tdcDGTZ.get(i).getDescriptor().getComponent());
             tdcBANK.putByte( 3, i, (byte) (tdcDGTZ.get(i).getDescriptor().getOrder()+tdcDGTZ.get(i).getTDCData(0).getType().getTypeId()));
             tdcBANK.putInt(  4, i, tdcDGTZ.get(i).getTDCData(0).getTime());
-            if(tdcBANK.getSchema().hasEntry("ToT"))
-                tdcBANK.putShort("ToT", i, (short) tdcDGTZ.get(i).getTDCData(0).getToT());
+            if(type == DetectorType.DC) 
+                tdcBANK.putShort(5, i, (short) tdcDGTZ.get(i).getTDCData(0).getToT());
         }
         return tdcBANK;
     }
