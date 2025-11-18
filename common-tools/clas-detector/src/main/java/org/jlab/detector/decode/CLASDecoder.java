@@ -609,7 +609,6 @@ public class CLASDecoder {
 
         Event event = new Event();
 
-        resume("adc");
         for(int i = 0; i < Config.adcBankTypes.length; i++){
             Bank adcBank = getDataBankADC(Config.adcBankNames[i],Config.adcBankTypes[i]);
             if(adcBank!=null){
@@ -618,18 +617,14 @@ public class CLASDecoder {
                 }
             }
         }
-        pause("adc");
 
-        resume("wf");
         for(int i = 0; i < Config.wfBankTypes.length; i++){
             Bank wfBank = getDataBankWF(Config.wfBankNames[i],Config.wfBankTypes[i]);
             if(wfBank!=null && wfBank.getRows()>0){
                 event.write(wfBank);
             }
         }
-        pause("wf");
 
-        resume("tdc");
         for(int i = 0; i < Config.tdcBankTypes.length; i++){
             Bank tdcBank = getDataBankTDC(Config.tdcBankNames[i],Config.tdcBankTypes[i]);
             if(tdcBank!=null){
@@ -638,11 +633,8 @@ public class CLASDecoder {
                 }
             }
         }
-        pause("tdc");
 
-        resume("atof");
         try {
-            // Do ATOF 
             Bank tdcBank = getDataBankTDCPetiroc("ATOF::tdc",DetectorType.ATOF);
             if(tdcBank!=null){
                 if(tdcBank.getRows()>0){
@@ -652,9 +644,7 @@ public class CLASDecoder {
         } catch(Exception e) {
             e.printStackTrace();
         }
-        pause("atof");
 
-        resume("jitter");
         try {
             Bank tsBank = getDataBankTimeStamp("DC::jitter", DetectorType.DC);
             if(tsBank != null) {
@@ -665,12 +655,10 @@ public class CLASDecoder {
         } catch(Exception e) {
             e.printStackTrace();
         }
-        pause("jitter");
 
         /**
          * Adding un-decoded banks to the event
          */
-        resume("adcud");
         try {
             Bank adcBankUD = this.getDataBankUndecodedADC("RAW::adc", DetectorType.UNDEFINED);
             if(adcBankUD!=null){
@@ -681,9 +669,7 @@ public class CLASDecoder {
         } catch(Exception e) {
             e.printStackTrace();
         }
-        pause("adcud");
 
-        resume("tdcud");
         try {
             Bank tdcBankUD = this.getDataBankUndecodedTDC("RAW::tdc", DetectorType.UNDEFINED);
             if(tdcBankUD!=null){
@@ -696,9 +682,7 @@ public class CLASDecoder {
         } catch(Exception e) {
             e.printStackTrace();
         }
-        pause("tdcud");
 
-        resume("vtp");
         try {
             Bank vtpBankUD = this.getDataBankUndecodedVTP("RAW::vtp", DetectorType.UNDEFINED);
             if(vtpBankUD!=null){
@@ -711,9 +695,7 @@ public class CLASDecoder {
         } catch(Exception e) {
             e.printStackTrace();
         }
-        pause("vtp");
         
-        resume("scaler");
         try {
             Bank scalerBankUD = this.getDataBankUndecodedSCALER("RAW::scaler", DetectorType.UNDEFINED);
             if(scalerBankUD!=null){
@@ -724,9 +706,7 @@ public class CLASDecoder {
         } catch(Exception e) {
             e.printStackTrace();
         }
-        pause("scaler");
 
-        resume("bonus");
         try {
             Bank bonusBank = this.createBonusBank();
             if(bonusBank!=null){
@@ -737,7 +717,6 @@ public class CLASDecoder {
         } catch(Exception e) {
             e.printStackTrace();
         }
-        pause("bonus");
 
         return event;
     }
