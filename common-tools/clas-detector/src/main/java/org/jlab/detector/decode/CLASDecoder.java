@@ -322,7 +322,7 @@ public class CLASDecoder {
         for(DetectorDataDgtz tdc : tsMap.values()) {
             tsBANK.putByte(0, i, (byte) tdc.getDescriptor().getCrate());
             tsBANK.putByte(1, i, (byte) tdc.getDescriptor().getSlot());
-            tsBANK.putLong("timestamp", i, tdc.getTimeStamp());
+            tsBANK.putLong(2, i, tdc.getTimeStamp());
             i++;
         }
         return tsBANK;
