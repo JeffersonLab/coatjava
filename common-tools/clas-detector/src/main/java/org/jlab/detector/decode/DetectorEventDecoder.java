@@ -246,6 +246,7 @@ public class DetectorEventDecoder {
                     if(!filteredData.containsKey(key))
                         filteredData.put(key, new ArrayList<>());
                     filteredData.get(key).add(data);
+                    break;
                 }
             }
             for(int key : filteredData.keySet()) {
