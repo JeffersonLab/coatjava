@@ -59,9 +59,9 @@ public class DetectorEventDecoder {
     public void setRunNumber(int run){
         if (run != this.runNumber) {
             // Load a global translation table:
-            TranslationTable tt = new TranslationTable();
+            translator = new TranslationTable();
             for (int i=0; i<keysTrans.size(); i++)
-                tt.add(keysTrans.get(i), translationManager.getConstants(runNumber, tablesTrans.get(i)));
+                translator.add(keysTrans.get(i), translationManager.getConstants(runNumber, tablesTrans.get(i)));
         }
         this.runNumber = run;
     }
