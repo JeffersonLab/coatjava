@@ -2,7 +2,6 @@ package org.jlab.detector.calib.utils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -10,6 +9,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.detector.base.DetectorType;
+import org.jlab.detector.decode.TranslationTable;
 
 import org.jlab.utils.groups.IndexedTable;
 
@@ -24,18 +25,16 @@ public class ConstantsManager {
     private static Logger LOGGER = Logger.getLogger("ConstantsManager");
 
     private DatabaseConstantsDescriptor defaultDescriptor = new DatabaseConstantsDescriptor();
-    private volatile Map<Integer, DatabaseConstantsDescriptor> runConstants = new LinkedHashMap<Integer, DatabaseConstantsDescriptor>();
-    private volatile Map<Integer, Integer> runConstantRequestHistory = new LinkedHashMap<Integer, Integer>();
-    private static volatile Map<Integer, RCDBConstants> rcdbConstants = new LinkedHashMap<Integer, RCDBConstants>();
+    private volatile Map<Integer, DatabaseConstantsDescriptor> runConstants = new LinkedHashMap<>();
+    private volatile Map<Integer, Integer> runConstantRequestHistory = new LinkedHashMap<>();
+    private static volatile Map<Integer, RCDBConstants> rcdbConstants = new LinkedHashMap<>();
 
     private String databaseVariation = "default";
     private String timeStamp = "";
     private int requestStatus = 0;
     private int maxRequests = 2;
 
-    public ConstantsManager() {
-
-    }
+    public ConstantsManager() {}
 
     public ConstantsManager(String variation) {
         this.databaseVariation = variation;
@@ -74,8 +73,8 @@ public class ConstantsManager {
     }
 
     public synchronized void init(List<String> keys, List<String> tables) {
-        Set<String> keysSet = new LinkedHashSet<String>(keys);
-        Set<String> tablesSet = new LinkedHashSet<String>(tables);
+        Set<String> keysSet = new LinkedHashSet<>(keys);
+        Set<String> tablesSet = new LinkedHashSet<>(tables);
         this.defaultDescriptor.addTables(keysSet, tablesSet);
 
     }
@@ -86,8 +85,7 @@ public class ConstantsManager {
         }
         DatabaseConstantsDescriptor descriptor = this.runConstants.get(run);
         if (descriptor.getMap().containsKey(table) == false) {
-            LOGGER.log(Level.SEVERE,
-                    "[getConstants] error ( run = " + run + " ) " + " table not found with name : " + table);
+            LOGGER.log(Level.SEVERE, () -> "[getConstants] error ( run = " + run + " ) " + " table not found with name : " + table);
         }
         return descriptor.getMap().get(table);
     }
@@ -115,8 +113,7 @@ public class ConstantsManager {
             runConstantRequestHistory.put(run, requests + 1);
             if (requests > maxRequests) {
                 requestStatus = -1;
-                LOGGER.log(Level.SEVERE,
-                        "[ConstantsManager] exceeded maximum requests " + requests + " for run " + run);
+                LOGGER.log(Level.SEVERE, () -> "[ConstantsManager] exceeded maximum requests " + requests + " for run " + run);
             }
             else if (requests > 1) {
                 LOGGER.log(Level.SEVERE,"[ConstantsManager] sleeping a bit before trying again ...");
@@ -125,12 +122,12 @@ public class ConstantsManager {
             }
         }
 
-        LOGGER.log(Level.FINE, "[ConstantsManager] --->  loading table for run = " + run);
+        LOGGER.log(Level.FINE, () -> "[ConstantsManager] --->  loading table for run = " + run);
         DatabaseConstantsDescriptor desc = defaultDescriptor.getCopy(run);
         DatabaseConstantProvider provider = new DatabaseConstantProvider(run, this.databaseVariation, this.timeStamp);
 
-        List<String> tn = new ArrayList<String>(desc.getTableNames());
-        List<String> tk = new ArrayList<String>(desc.getTableKeys());
+        List<String> tn = new ArrayList<>(desc.getTableNames());
+        List<String> tk = new ArrayList<>(desc.getTableKeys());
 
         for (int i = 0; i < desc.getTableNames().size(); i++) {
             String tableName = tn.get(i);
@@ -140,7 +137,7 @@ public class ConstantsManager {
                 LOGGER.log(Level.FINE, String.format("***** >>> adding : %14s / table = %s", tk.get(i), tableName));
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, e.getMessage());
-                LOGGER.log(Level.SEVERE, "[ConstantsManager] ---> error reading table : " + tableName);
+                LOGGER.log(Level.SEVERE, () -> "[ConstantsManager] ---> error reading table : " + tableName);
                 // This happens if missing table or variation. No point in trying
                 // again, just set error status to trigger abort.
                 requestStatus = -1;
@@ -182,12 +179,11 @@ public class ConstantsManager {
         
         Logger LOGGER = Logger.getLogger(DatabaseConstantsDescriptor.class.getName());
 
-        private String  descName   = "descriptor";
         private int     runNumber  = 10;
-        List<Integer>  tableIndices = new ArrayList<Integer>();
-        Set<String>    tableNames  = new LinkedHashSet<String>();
-        Set<String>    mapKeys     = new LinkedHashSet<String>();
-        Map<String,IndexedTable>  hashTables = new LinkedHashMap<String,IndexedTable>();
+        List<Integer>  tableIndices = new ArrayList<>();
+        Set<String>    tableNames  = new LinkedHashSet<>();
+        Set<String>    mapKeys     = new LinkedHashSet<>();
+        Map<String,IndexedTable>  hashTables = new LinkedHashMap<>();
         
         public DatabaseConstantsDescriptor(){
             
@@ -212,8 +208,8 @@ public class ConstantsManager {
        
         public void addTables(Set<String> keys, Set<String> tables){
             if(keys.size()!=tables.size()){
-                LOGGER.log(Level.SEVERE,"[DatabaseConstantsDescriptor] error --> "
-                + " size of keys ("+keys.size()+") does not match size of"
+                LOGGER.log(Level.SEVERE, () -> "[DatabaseConstantsDescriptor] error --> "
+                    + " size of keys ("+keys.size()+") does not match size of"
                         + " tables ("+tables.size()+")");
             } else {
                 mapKeys.addAll(keys);
@@ -226,8 +222,8 @@ public class ConstantsManager {
 
         public void addTables(Set<String> keys, Set<String> tables, List<Integer> indices){
             if(keys.size()!=tables.size()){
-                LOGGER.log(Level.SEVERE,"[DatabaseConstantsDescriptor] error --> "
-                + " size of keys ("+keys.size()+") does not match size of"
+                LOGGER.log(Level.SEVERE, () -> "[DatabaseConstantsDescriptor] error --> "
+                    + " size of keys ("+keys.size()+") does not match size of"
                         + " tables ("+tables.size()+")");
             } else {
                 mapKeys.addAll(keys);
@@ -299,29 +295,21 @@ public class ConstantsManager {
     
     public static void main(String[] args){
 
-        ConstantsManager  manager = new ConstantsManager("default");
+        ConstantsManager manager = new ConstantsManager("default");
+        manager.init(Arrays.asList(new String[]{"/daq/tt/ftof","/daq/tt/htcc"}));
         
-        manager.init(Arrays.asList(new String[]{
-            "/daq/fadc/ec",
-            "/daq/fadc/ftof","/daq/fadc/htcc"}));
-        for(int i = 0; i < 3 ; i++){
-            IndexedTable  table1 = manager.getConstants(10, "/daq/fadc/htcc");
-            IndexedTable  table2 = manager.getConstants(10, "/daq/fadc/ec");
-            manager.reset();
-            LOGGER.log(Level.INFO,"\n\n STATUS = " + manager.getRequestStatus());
-        }
-
-        ConstantsManager conman = new ConstantsManager("default");
-        Map<String,Integer> tables = new HashMap<>();
-        tables.put("/calibration/dc/time_corrections/T0Corrections",4);
-        tables.put("/calibration/dc/time_corrections/timingcuts",3);
-        conman.init(tables);
-        IndexedTable t4 = conman.getConstants(4013, "/calibration/dc/time_corrections/T0Corrections");
-        IndexedTable t3 = conman.getConstants(4013, "/calibration/dc/time_corrections/timingcuts");
-        LOGGER.log(Level.INFO,"4conman:  "+t4.getColumnCount());
-        LOGGER.log(Level.INFO,"4conman:  "+t4.toString());
-        LOGGER.log(Level.INFO,"4conman:  1/4/6/1:  "+t4.getDoubleValue("T0Correction", 1,4,6,1));
-        LOGGER.log(Level.INFO,"3conman:  0/2/56:   "+t3.getDoubleValue("LinearCoeff",0,2,56));
+        IndexedTable ftof = manager.getConstants(4013,"/daq/tt/ftof");
+        IndexedTable htcc = manager.getConstants(4013,"/daq/tt/htcc");
         
+        htcc.show();
+        
+        TranslationTable tt = new TranslationTable();
+        
+        tt.show();
+        
+        tt.add(DetectorType.FTOF, ftof);
+        tt.add(DetectorType.HTCC, htcc);
+        
+        tt.show();
     }
 }
