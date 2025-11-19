@@ -20,6 +20,10 @@
 
   <repositories>
     <repository>
+      <id>central</id>
+      <url>https://repo.maven.apache.org/maven2</url>
+    </repository>
+    <repository>
       <id>clas12maven</id>
       <url>https://clasweb.jlab.org/.clas12maven</url>
     </repository>
