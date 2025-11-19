@@ -259,8 +259,6 @@ public class DetectorEventDecoder {
     }
     
     class TDCComparator implements Comparator<DetectorDataDgtz> { 
-  
-        // override the compare() method 
         @Override
         public int compare(DetectorDataDgtz s1, DetectorDataDgtz s2) 
         {
