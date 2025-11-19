@@ -27,12 +27,14 @@ import org.jlab.utils.system.ClasUtilsFile;
 public class DCDenoiseEngine extends ReconstructionEngine {
 
     final static String[] BANK_NAMES = {"DC::tot","DC::tdc"};
+    final static String CONF_MODEL_FILE = "modelFile";
     final static String CONF_THRESHOLD = "threshold";
-    final static String CONF_THREADS = "threads";
+    final static String CONF_THREADS = "threads";    
     final static int LAYERS = 36;
     final static int WIRES = 112;
-
-    float threshold = 0.025f;
+    
+    String modelFile = "cnn_autoenc_sector1_2b_48f_4x6k.pt";
+    float threshold = 0.03f;
     Criteria<float[][],float[][]> criteria;
     ZooModel<float[][], float[][]> model;
     PredictorPool predictors;
@@ -62,10 +64,14 @@ public class DCDenoiseEngine extends ReconstructionEngine {
         System.setProperty("ai.djl.pytorch.graph_optimizer", "false");
         if (getEngineConfigString(CONF_THRESHOLD) != null)
             threshold = Float.parseFloat(getEngineConfigString(CONF_THRESHOLD));
+        if(getEngineConfigString(CONF_MODEL_FILE) != null)
+            modelFile = getEngineConfigString(CONF_MODEL_FILE);
         try {
+            String modelPath = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/data/nnet/dn/" + modelFile);
+            
             criteria = Criteria.builder()
                 .setTypes(float[][].class, float[][].class)
-                .optModelPath(Paths.get(ClasUtilsFile.getResourceDir("CLAS12DIR","etc/data/nnet/dn/cnn_autoenc_sector1_nBlocks2.pt")))
+                .optModelPath(Paths.get(modelPath))
                 .optEngine("PyTorch")
                 .optTranslator(DCDenoiseEngine.getTranslator())
                 .optProgress(new ProgressBar())
