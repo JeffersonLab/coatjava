@@ -1,6 +1,5 @@
 package org.jlab.detector.decode;
 
-import java.util.HashMap;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.utils.groups.IndexedTable;
 
@@ -9,16 +8,12 @@ import org.jlab.utils.groups.IndexedTable;
  * @author baltzell
  */
 public class TranslationTable extends IndexedTable {
-    
-    private HashMap<DetectorType, IndexedTable> tables;
-    
+        
     public TranslationTable() {
         super(3,new String[]{"sector/I","layer/I","component/I","order/I","type/I"});
-        tables = new HashMap<>();
     };
 
     public void add(DetectorType dt, IndexedTable it) {
-        tables.put(dt,it);
         for (Object key : it.getList().getMap().keySet()) {
             int crate = IndexedTable.DEFAULT_GENERATOR.getIndex((long) key, 0);
             int slot = IndexedTable.DEFAULT_GENERATOR.getIndex((long) key, 1);
