@@ -151,10 +151,7 @@ public class DetectorEventDecoder {
         for (DetectorDataDgtz d : detectorData) {
 
             // Get the hardware indexing for this detector data object:
-            int crate = d.getDescriptor().getCrate();
-            int slot = d.getDescriptor().getSlot();
-            int channel = d.getDescriptor().getChannel();
-            long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(crate, slot, channel);
+            long hash = d.getTranslationHash();
 
             if (translator.hasEntryByHash(hash)) {
                 
