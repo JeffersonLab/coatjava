@@ -6,7 +6,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import org.jlab.detector.banks.RawBank.OrderType;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.calib.utils.ConstantsManager;
@@ -202,39 +201,35 @@ public class DetectorEventDecoder {
                         adc.setIntegral((int) (mvtFitter.integral));
                         adc.setTimeStamp(mvtFitter.timestamp);
                     }
-                } else {
-                    if(daq.hasEntryByHash(hash)==true){
-                        int nsa = daq.getIntValueByHash("nsa", hash);
-                        int nsb = daq.getIntValueByHash("nsb", hash);
-                        int tet = daq.getIntValueByHash("tet", hash);
-                        int ped = 0;
-                        if(type == DetectorType.RF&&data.getDescriptor().getType().getName().equals("RF")) {
-                            ped = daq.getIntValueByHash("pedestal", hash);
-                        }
-                        if(data.getADCSize()>0){
-                            for(int i = 0; i < data.getADCSize(); i++){
-                                ADCData adc = data.getADCData(i);
-                                if(adc.getPulseSize()>0){
-                                    try {
-                                        extendedFitter.fit(nsa, nsb, tet, ped, adc.getPulseArray());
-                                    } catch (Exception e) {
-                                        System.out.println(">>>> error : fitting pulse "
-                                                            +  crate + " / " + slot + " / " + channel);
-                                    }
-                                    int adc_corrected = extendedFitter.adc + extendedFitter.ped*(nsa+nsb);
-                                    adc.setHeight((short) this.extendedFitter.pulsePeakValue);
-                                    adc.setIntegral(adc_corrected);
-                                    adc.setTimeWord(this.extendedFitter.t0);
-                                    adc.setPedestal((short) this.extendedFitter.ped);
+                    break;
+                } else if (daq.hasEntryByHash(hash) == true) {
+                    int nsa = daq.getIntValueByHash("nsa", hash);
+                    int nsb = daq.getIntValueByHash("nsb", hash);
+                    int tet = daq.getIntValueByHash("tet", hash);
+                    int ped = 0;
+                    if (type == DetectorType.RF && data.getDescriptor().getType().getName().equals("RF")) {
+                        ped = daq.getIntValueByHash("pedestal", hash);
+                    }
+                    if (data.getADCSize() > 0) {
+                        for (int i = 0; i < data.getADCSize(); i++) {
+                            ADCData adc = data.getADCData(i);
+                            if (adc.getPulseSize() > 0) {
+                                try {
+                                    extendedFitter.fit(nsa, nsb, tet, ped, adc.getPulseArray());
+                                } catch (Exception e) {
+                                    System.out.println(">>>> error : fitting pulse "
+                                        + crate + " / " + slot + " / " + channel);
                                 }
+                                int adc_corrected = extendedFitter.adc + extendedFitter.ped * (nsa + nsb);
+                                adc.setHeight((short) this.extendedFitter.pulsePeakValue);
+                                adc.setIntegral(adc_corrected);
+                                adc.setTimeWord(this.extendedFitter.t0);
+                                adc.setPedestal((short) this.extendedFitter.ped);
                             }
-                        }
-                        if(data.getADCSize()>0){
-                            for(int i = 0; i < data.getADCSize(); i++){
-                                    data.getADCData(i).setADC(nsa, nsb);
-                            }
+                            data.getADCData(i).setADC(nsa, nsb);
                         }
                     }
+                    break;
                 }
             }
         }
