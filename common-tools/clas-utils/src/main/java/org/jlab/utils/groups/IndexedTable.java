@@ -39,7 +39,7 @@ public class IndexedTable extends DefaultTableModel {
             this.indexNames.add("A"+i);
         }
     }
-
+    
     /**
      * Clone the format of an existing IndexedTable.
      * @param it 
@@ -49,8 +49,9 @@ public class IndexedTable extends DefaultTableModel {
         for (int i = 0; i < it.indexNames.size(); i++) indexNames.add("A"+i);
         entryMap = it.entryMap;
         entryTypes = it.entryTypes;
+        entryNames = it.entryNames;
     }
-       
+
     public IndexedTable(int indexCount,String format){
         entries = new IndexedList<>(indexCount);
         for(int i = 0; i < indexCount; i++){
@@ -214,6 +215,10 @@ public class IndexedTable extends DefaultTableModel {
 
     public IndexedList getList(){
         return this.entries;
+    }
+    
+    public Map<String,Integer> getEntryMap(){
+        return this.entryMap;
     }
     
     private void parseFormat(String format){
