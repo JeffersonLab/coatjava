@@ -28,10 +28,8 @@ public class Benchmark {
             @Override
             public void run() { System.out.println(benchmarkInstance); }
         };
-        System.err.println("KITTY");
         updateTimer = new Timer("Benchmark", true);
         updateTimer.scheduleAtFixedRate(timerTask, 0, 1000*seconds);
-        System.err.println("DOGGY");
     }
     
     public void reset(){
