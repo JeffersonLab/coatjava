@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
@@ -179,6 +180,14 @@ public class IndexedTable extends DefaultTableModel {
             }
         }
         return 0;
+    }
+    
+    public List<Number> getValuesByHash(long hash) {
+        return this.entries.getItemByHash(hash).entryValues;
+    }
+    
+    public List<Integer> getIntegersByHash(long hash) {
+        return getValuesByHash(hash).stream().map(x -> x.intValue()).collect(Collectors.toList());
     }
 
     public int  getIntValue(String item, int... index){
