@@ -728,14 +728,15 @@ public class CLASDecoder {
             if(evioEvent.getHandler().getStructure()!=null){
                 try {
 
-                    resume("GDE");
+                    resume("gde");
                     dataList = codaDecoder.getDataEntries( (EvioDataEvent) event);
-                    pause("GDE");
+                    pause("gde");
                     
-                    resume("GAE");
+                    resume("gae");
                     List<FADCData>  fadcPacked = codaDecoder.getADCEntries((EvioDataEvent) event);
-                    pause("GAE");
+                    pause("gae");
 
+                    resume("misc");
                     //-----------------------------------------------------------------------------
                     // This part reads the BITPACKED FADC data from tag=57638 Format (cmcms)
                     // Then unpacks into Detector Digigitized data, and appends to existing buffer
@@ -757,13 +758,14 @@ public class CLASDecoder {
 
                     int runNumberCoda = codaDecoder.getRunNumber();
                     this.setRunNumber(runNumberCoda);
+                    pause("misc");
                    
                     resume("translate");
                     detectorDecoder.translate(dataList);
                     pause("translate");
-                    resume("fitPulse");
+                    resume("fit");
                     detectorDecoder.fitPulses(dataList);
-                    pause("fitPulse");
+                    pause("fit");
                     detectorDecoder.filterTDCs(dataList);
 
                     if(this.decoderDebugMode>0){
@@ -781,8 +783,10 @@ public class CLASDecoder {
 
     public Event getDecodedEvent(EvioDataEvent rawEvent, int run, int counter, Double torus, Double solenoid) {
 
-        Event  decodedEvent = this.getDataEvent(rawEvent);        
+        this.initEvent(rawEvent);
+        Event  decodedEvent = this.getDataEvent();        
 
+        resume("gee");
         Bank   header = this.createHeaderBank(run, counter, torus, solenoid);
         if(header!=null) decodedEvent.write(header);
 
@@ -802,13 +806,8 @@ public class CLASDecoder {
 
         for (Bank b : createReconScalerBanks(decodedEvent))
             decodedEvent.write(b);
+        pause("gee");
 
         return decodedEvent;
     }
-
-    public Event getDataEvent(DataEvent rawEvent){
-        this.initEvent(rawEvent);
-        return getDataEvent();
-    }
-
 }

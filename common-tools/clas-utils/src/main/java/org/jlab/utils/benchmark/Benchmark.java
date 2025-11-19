@@ -62,7 +62,7 @@ public class Benchmark {
     }
 
     public BenchmarkTimer getTotal(String name) {
-        BenchmarkTimer total = new BenchmarkTimer(name);
+        BenchmarkTimerTotal total = new BenchmarkTimerTotal(name);
         for (BenchmarkTimer b : timerStore.values())
             total.add(b);
         return total;
