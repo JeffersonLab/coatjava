@@ -8,12 +8,12 @@ import org.jlab.utils.groups.IndexedTable;
  * @author baltzell
  */
 public class TranslationTable extends IndexedTable {
-
-    public TranslationTable() {
-        super(3);
-    };
     
-    public void add(IndexedTable it, DetectorType dt) {
+    public TranslationTable() {
+        super(3,new String[]{"sector/I","layer/I","component/I","order/I","type/I"});
+    };
+
+    public void add(DetectorType dt, IndexedTable it) {
         for (Object key : it.getList().getMap().keySet()) {
             int crate = IndexedTable.DEFAULT_GENERATOR.getIndex((long) key, 0);
             int slot = IndexedTable.DEFAULT_GENERATOR.getIndex((long) key, 1);
@@ -22,14 +22,13 @@ public class TranslationTable extends IndexedTable {
             // add row to the new table:
             addEntry(crate, slot, channel);
             // add all entries to the new row:
-            int column = 0;
-            for (int c : it.getEntryMap().values()) {
-                column = c;
+            int column;
+            for (column=0; column<it.getEntryMap().values().size(); column++) {
                 int value = it.getIntValueByHash(column, hash);
                 setIntValueByHash(value, column, hash);
             }
-            // add new entry, the detector type:
-            setIntValueByHash(dt.getDetectorId(), column+1, hash);
+            // add the new detector type:
+            setIntValueByHash(dt.getDetectorId(), column, hash);
         }
     }
 
