@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.jlab.detector.banks.RawBank.OrderType;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.calib.utils.ConstantsManager;
@@ -156,19 +157,12 @@ public class DetectorEventDecoder {
             if (translator.hasEntryByHash(hash)) {
                 
                 // The tanslated detector indexing:
-                int sector = translator.getIntValueByHash(0, hash);
-                int layer = translator.getIntValueByHash(1, hash);
-                int component = translator.getIntValueByHash(2, hash);
-                int order = translator.getIntValueByHash(3, hash);
-                int type = translator.getIntValueByHash(4, hash);
+                List<Integer> idx = translator.getIntegersByHash(hash);
 
                 // Set the translated detector indexing:
-                d.getDescriptor().setSectorLayerComponent(sector, layer, component);
-                d.getDescriptor().setOrder(order);
-                d.getDescriptor().setType(DetectorType.getType(type));
-
-                for (int i=0; i<d.getADCSize(); i++) d.getADCData(i).setOrder(order);
-                for (int i=0; i<d.getTDCSize(); i++) d.getTDCData(i).setOrder(order);
+                d.getDescriptor().setSectorLayerComponentOrderType(idx.get(0), idx.get(1), idx.get(2), idx.get(3), idx.get(4));
+                for (int i=0; i<d.getADCSize(); i++) d.getADCData(i).setOrder(idx.get(3));
+                for (int i=0; i<d.getTDCSize(); i++) d.getTDCData(i).setOrder(idx.get(3));
             }
         }
     }
@@ -182,11 +176,13 @@ public class DetectorEventDecoder {
         }
 
         for(DetectorDataDgtz data : detectorData){
+            
             int crate    = data.getDescriptor().getCrate();
             int slot     = data.getDescriptor().getSlot();
             int channel  = data.getDescriptor().getChannel();
             long hash    = IndexedTable.DEFAULT_GENERATOR.hashCode(crate,slot,channel);
             long hash0   = IndexedTable.DEFAULT_GENERATOR.hashCode(0,0,0);
+            
             for (int j=0; j<keysFitter.size(); ++j) {
                 IndexedTable daq = tables.get(j);
                 DetectorType type = keysFitter.get(j);
