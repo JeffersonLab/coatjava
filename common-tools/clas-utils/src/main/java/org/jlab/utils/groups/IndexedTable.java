@@ -46,12 +46,12 @@ public class IndexedTable extends DefaultTableModel {
      */
     public IndexedTable(IndexedTable it) {
         entries = new IndexedList<>(it.indexNames.size());
-        for (int i = 0; i < it.indexNames.size(); i++) indexNames.add("A"+i);
+        indexNames.addAll(it.indexNames);
         entryMap = it.entryMap;
         entryTypes = it.entryTypes;
         entryNames = it.entryNames;
     }
-
+    
     public IndexedTable(int indexCount,String format){
         entries = new IndexedList<>(indexCount);
         for(int i = 0; i < indexCount; i++){
@@ -270,7 +270,7 @@ public class IndexedTable extends DefaultTableModel {
     @Override
     public String toString(){
         StringBuilder str = new StringBuilder();
-        str.append(String.format("IndexedList SIZE = %d\n", entryMap.size()));
+        str.append(String.format("IndexedList SIZE = %d/%d\n", entryMap.size(),entries.getMap().size()));
         for(Map.Entry<String,Integer> entry : this.entryMap.entrySet()){
             str.append(String.format("* %-24s * %3s * \n",entry.getKey(),
                     this.entryTypes.get(entry.getKey())));
