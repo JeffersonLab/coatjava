@@ -5,17 +5,26 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.io.File;
 import java.util.*;
 
+import org.jlab.detector.calib.utils.DatabaseConstantProvider;
+import org.jlab.geom.base.Detector;
+import org.jlab.geom.detector.alert.ATOF.AlertTOFFactory;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.io.hipo.HipoDataSync;
 
 import org.jlab.clas.reco.ReconstructionEngine;
-import org.jlab.clas.tracking.kalmanfilter.Material;
 import org.jlab.clas.swimtools.Swim;
+
+import org.jlab.rec.ahdc.AI.InterCluster;
+import org.jlab.rec.ahdc.AI.PreClustering;
+import org.jlab.rec.ahdc.Hit.Hit;
+import org.jlab.rec.ahdc.PreCluster.PreCluster;
+import org.jlab.rec.alert.TrackMatchingAI.ModelTrackMatching;
 
 import org.jlab.rec.alert.banks.RecoBankWriter;
 import org.jlab.rec.alert.projections.TrackProjector;
+import org.jlab.rec.atof.hit.ATOFHit;
 
 
 /** 
@@ -47,7 +56,9 @@ public class ALERTEngine extends ReconstructionEngine {
     private final AtomicInteger run = new AtomicInteger(0);
 
     private double b; //Magnetic field
-    
+
+    private ModelTrackMatching modelTrackMatching;
+
     public void setB(double B) {
         this.b = B;
     }
@@ -72,6 +83,7 @@ public class ALERTEngine extends ReconstructionEngine {
 
         rbc = new RecoBankWriter();
 
+        modelTrackMatching = new ModelTrackMatching();
 
         if(this.getEngineConfigString("Mode")!=null) {
             //if (Objects.equals(this.getEngineConfigString("Mode"), Mode.AI_Track_Finding.name()))
@@ -126,6 +138,90 @@ public class ALERTEngine extends ReconstructionEngine {
         projector.projectTracks(event);
         rbc.appendMatchBanks(event, projector.getProjections());
 
+        /// ---------------------------------------------------------------------------------------
+        /// Track matching using AI ---------------------------------------------------------------
+
+        if (event == null)  return false; // TODO: is it useful?
+        if (!event.hasBank("AHDC::track")) return false;
+
+        DataBank bank_AHDCtracks = event.getBank("AHDC::track");
+        DataBank bank_AHDCHits = event.getBank("AHDC::hits");
+        DataBank bank_ATOFHits = event.getBank("ATOF::hits");
+
+        for (int i = 0; i < bank_AHDCtracks.rows(); i++) {
+            int track_id = bank_AHDCtracks.getInt("track_id", i);
+
+            ArrayList<Hit> AHDC_Hits = new ArrayList<>();
+            for  (int j = 0; j < bank_AHDCHits.columns(); j++) {
+                int track_id_hit  = bank_AHDCHits.getInt("track_id", j);
+                if (track_id == track_id_hit) {
+                    int id = bank_AHDCHits.getInt("id", j);
+                    int layer = bank_AHDCHits.getInt("layer", j);
+                    int superlayer = bank_AHDCHits.getInt("superlayer", j);
+                    int wire = bank_AHDCHits.getInt("wire", j);
+                    AHDC_Hits.add(new Hit(id, superlayer, layer, wire, 0,0,0));
+                }
+            }
+
+            /// Generate preclusters and interclusters for the prediction
+            AHDC_Hits.sort(Comparator.comparingDouble(Hit::getRadius));
+            PreClustering preClustering = new PreClustering();
+            ArrayList<PreCluster> preClustersAI = preClustering.findPreclustersForAI(AHDC_Hits);
+            ArrayList<InterCluster> interClusters = preClustering.mergePreclusters(preClustersAI);
+
+            try {
+                AlertTOFFactory factory = new AlertTOFFactory();
+                DatabaseConstantProvider cp = new DatabaseConstantProvider(11, "default");
+                Detector ATOF = factory.createDetectorCLAS(cp);
+
+                float[] pred = modelTrackMatching.prediction(interClusters);
+                int sector_pred = (int) pred[0];
+                int layer_pred = (int) pred[1];
+                int wedge_pred = (int) pred[2];
+
+                ATOFHit hit_pred = new ATOFHit(sector_pred, layer_pred, wedge_pred, 0, 0, 0, 0, ATOF);
+                double pred_x = hit_pred.getX();
+                double pred_y = hit_pred.getY();
+                double pred_z = hit_pred.getZ();
+
+                double threshold = 20.0;
+                double minDistanceSquared = threshold * threshold;
+
+                ATOFHit matchAtofHit = null;
+                int matchHitId = -1;
+
+                for (int k = 0; k < bank_ATOFHits.rows(); k++) {
+                    int component = bank.getInt("component", k);
+                    if (component == 10) continue;
+
+                    int sector = bank.getInt("sector", k);
+                    int layer = bank.getInt("layer", k);
+
+                    ATOFHit hit = new ATOFHit(sector, layer, component, 0, 0, 0, 0, ATOF);
+
+                    double dx = pred_x - hit.getX();
+                    double dy = pred_y - hit.getY();
+                    double dz = pred_z - hit.getZ();
+
+                    double distanceSquared = dx * dx + dy * dy + dz * dz;
+
+                    if (distanceSquared < minDistanceSquared) {
+                        minDistanceSquared = distanceSquared;
+                        matchAtofHit = hit;
+                        matchHitId = bank_ATOFHits.getInt("id", k);
+                    }
+                }
+
+                if (matchAtofHit != null) {
+                    double actualDistance = Math.sqrt(minDistanceSquared);
+                    // Use matchAtofHit, matchHitId, and actualDistance
+                }
+
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+
+        }
         return true;
     }
 

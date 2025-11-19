@@ -52,9 +52,6 @@ public class AHDCEngine extends ReconstructionEngine {
     private ModelTrackFinding modelTrackFinding;
     private ModeTrackFinding modeTrackFinding = ModeTrackFinding.AI_Track_Finding;
 
-    /// TODO: Need to be in the ALERT Engine
-    private Model_TM model_tm;
-
     private AlertDCDetector factory = null;
     private ModeAHDC ahdcExtractor = new ModeAHDC();
 
@@ -176,17 +173,16 @@ public class AHDCEngine extends ReconstructionEngine {
                 }
             }
             if (modeTrackFinding == ModeTrackFinding.AI_Track_Finding) {
-                // AI ---------------------------------------------------------------------------------
                 AHDC_Hits.sort(Comparator.comparingDouble(Hit::getRadius));
                 PreClustering preClustering = new PreClustering();
                 ArrayList<PreCluster> preClustersAI = preClustering.findPreclustersForAI(AHDC_Hits);
                 ArrayList<InterCluster> interClusters = preClustering.mergePreclusters(preClustersAI);
                 TrackConstruction trackConstruction = new TrackConstruction();
                 ArrayList<ArrayList<InterCluster>> tracks = new ArrayList<>();
-                boolean success = trackConstruction.get_all_possible_track(interClusters, tracks);
+                boolean success = trackConstruction.getAllPossibleTrack(interClusters, tracks);
 
                 if (!success) {
-                    System.err.println("Too much tracks candidates, exit");
+                    LOGGER.severe("Too many track candidates find by the AI, exiting...");
                     return false;
                 }
 
@@ -197,21 +193,15 @@ public class AHDCEngine extends ReconstructionEngine {
                     throw new RuntimeException(e);
                 }
 
-                // Track matching with AI: predict which sector, layer and wedge should be hit
                 for (TrackPrediction t : predictions) {
                     if (t.getPrediction() > 0.2) {
                         try {
-                            float[] pred = model_tm.prediction(t.getSuperpreclusters());
                             Track track = new Track(t.getClusters());
-                            track.set_predicted_ATOF_sector((int)pred[0]);
-                            track.set_predicted_ATOF_layer((int)pred[1]);
-                            track.set_predicted_ATOF_wedge((int)pred[2]);
                             AHDC_Tracks.add(track);
-
-                         } catch (Exception e) {throw new RuntimeException(e);}
-
+                         } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
                     }
-
                 }
             }
             // ------------------------------------------------------------------------------------
@@ -245,6 +235,7 @@ public class AHDCEngine extends ReconstructionEngine {
             // VI) Kalman Filter
             // System.out.println("AHDC_Tracks = " + AHDC_Tracks);
             KalmanFilter kalmanFitter = new KalmanFilter(AHDC_Tracks, event, magfield, simulation);
+
             // VII) Write bank
             RecoBankWriter writer = new RecoBankWriter();
 

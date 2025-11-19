@@ -1,4 +1,4 @@
-package org.jlab.rec.ahdc.AI;
+package org.jlab.rec.alert.TrackMatchingAI;
 
 import ai.djl.MalformedModelException;
 import ai.djl.inference.Predictor;
@@ -13,40 +13,35 @@ import ai.djl.training.util.ProgressBar;
 import ai.djl.translate.TranslateException;
 import ai.djl.translate.Translator;
 import ai.djl.translate.TranslatorContext;
+import org.jlab.rec.ahdc.AI.InterCluster;
 import org.jlab.utils.CLASResources;
 
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 
-public class Model_TM {
-    private ZooModel<float[], float[]> model;
+public class ModelTrackMatching {
 
-    public Model_TM() {
-        Translator<float[], float[]> my_translator = new Translator<float[], float[]>() {
+    private final ZooModel<float[], float[]> model;
+
+    public ModelTrackMatching() {
+        Translator<float[], float[]> my_translator = new Translator<>() {
             @Override
             public float[] processOutput(TranslatorContext translatorContext, NDList ndList) throws Exception {
                 NDArray result_sector = ndList.get(0);
                 NDArray result_layer = ndList.get(1);
                 NDArray result_wedge = ndList.get(2);
-                // System.out.println("Output translator sector: " + result_sector);
-                // System.out.println("Output translator layer: " + result_layer);
-                // System.out.println("Output translator wedge: " + result_wedge);
-
                 // Find the maximum of an array
                 long sector_prediction = result_sector.argMax().getLong(); // long because argMax return an array of int64 -> long
                 long layer_prediction = result_layer.argMax().getLong();
                 long wedge_prediction = result_wedge.argMax().getLong();
-
-                // System.out.println("Sector: " + sector_prediction + " layer: " + layer_prediction + " wedge: " + wedge_prediction);
-
                 return new float[]{sector_prediction, layer_prediction, wedge_prediction};
             }
 
             @Override
             public NDList processInput(TranslatorContext translatorContext, float[] floats) throws Exception {
-                NDManager manager = NDManager.newBaseManager();
-                NDArray samples = manager.zeros(new Shape(floats.length));
+                NDManager manager = translatorContext.getNDManager();
+                NDArray samples = manager.create(floats);
                 samples.set(floats);
                 return new NDList(samples);
             }
@@ -87,4 +82,5 @@ public class Model_TM {
         Predictor<float[], float[]> my_predictor = model.newPredictor();
         return my_predictor.predict(a);
     }
+
 }

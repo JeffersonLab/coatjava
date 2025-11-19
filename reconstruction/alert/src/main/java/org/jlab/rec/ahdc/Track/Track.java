@@ -1,6 +1,7 @@
 package org.jlab.rec.ahdc.Track;
 
 import org.apache.commons.math3.linear.RealVector;
+import org.jlab.rec.ahdc.AI.InterCluster;
 import org.jlab.rec.ahdc.Cluster.Cluster;
 import org.jlab.rec.ahdc.HelixFit.HelixFitObject;
 import org.jlab.rec.ahdc.Hit.Hit;
@@ -53,7 +54,7 @@ public class Track {
 			this._Distance += Math.sqrt((clusters.get(i).get_X() - clusters.get(i + 1).get_X()) * (clusters.get(i).get_X() - clusters.get(i + 1).get_X()) + (clusters.get(i).get_Y() - clusters.get(i + 1).get_Y()) * (clusters.get(i).get_Y() - clusters.get(i + 1).get_Y()));
 		}
 		generateHitList();
-	}
+    }
 
     public Track(ArrayList<Hit> hitslist) {
 	hits.addAll(hitslist);
