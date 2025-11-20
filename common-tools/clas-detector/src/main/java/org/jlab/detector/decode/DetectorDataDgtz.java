@@ -8,7 +8,6 @@ import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.helicity.HelicityBit;
 import org.jlab.detector.helicity.HelicityState;
 import org.jlab.utils.data.DataUtils;
-import org.jlab.utils.groups.IndexedTable;
 
 /** 
  *
@@ -32,13 +31,6 @@ public class DetectorDataDgtz implements Comparable<DetectorDataDgtz> {
 
     public DetectorDataDgtz(int crate, int slot, int channel){
         this.descriptor.setCrateSlotChannel(crate, slot, channel);
-    }
-
-    public long getTranslationHash() {
-        return IndexedTable.DEFAULT_GENERATOR.hashCode(
-            descriptor.getCrate(),
-            descriptor.getSlot(),
-            descriptor.getChannel());
     }
 
     public DetectorDataDgtz addPulse(short[] data){
