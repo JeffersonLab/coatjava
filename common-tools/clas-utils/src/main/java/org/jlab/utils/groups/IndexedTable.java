@@ -22,16 +22,15 @@ import org.jlab.utils.groups.IndexedList.IndexGenerator;
 public class IndexedTable extends DefaultTableModel {
     
     public static final IndexGenerator DEFAULT_GENERATOR = new IndexGenerator();
+
+    protected Map<String,Integer>     entryMap   = new LinkedHashMap<>();
+    protected Map<String,String>      entryTypes = new LinkedHashMap<>();
         
     private IndexedList<IndexedEntry> entries    = null;
-    private Map<String,Integer>       entryMap   = new LinkedHashMap<>();
-    private Map<String,String>        entryTypes = new LinkedHashMap<>();
     private List<String>              entryNames = new ArrayList<>();
     private List<String>              indexNames = new ArrayList<>();
     private String                    precisionFormat = "%.6f";
-    
     private Map<Integer,List<RowConstraint>>  constrains = new HashMap<>(); 
-    
     private int DEBUG_MODE = 0;
    
     public IndexedTable(int indexCount){

@@ -37,11 +37,8 @@ public class DetectorEventDecoder {
     private TranslationTable translator = new TranslationTable();
     
     public DetectorEventDecoder(boolean development){
-        if(development==true){
-            this.initDecoderDev();
-        } else {
-            this.initDecoder();
-        }
+        if(development==true) this.initDecoderDev();
+        else this.initDecoder();
     }
 
     public void setTimestamp(String timestamp) {
@@ -58,10 +55,9 @@ public class DetectorEventDecoder {
 
     public void setRunNumber(int run){
         if (run != this.runNumber) {
-            // Load a global translation table:
             translator = new TranslationTable();
             for (int i=0; i<keysTrans.size(); i++)
-                translator.add(keysTrans.get(i), translationManager.getConstants(runNumber, tablesTrans.get(i)));
+                translator.add(keysTrans.get(i), translationManager.getConstants(run, tablesTrans.get(i)));
         }
         this.runNumber = run;
     }

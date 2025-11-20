@@ -11,6 +11,9 @@ public class TranslationTable extends IndexedTable {
         
     public TranslationTable() {
         super(3,new String[]{"sector/I","layer/I","component/I","order/I","type/I"});
+        String[] x = new String[entryMap.keySet().size()];
+        for (String name : entryMap.keySet())
+            x[entryMap.get(name)] = name + "/" + entryTypes.get(name);
     };
 
     public void add(DetectorType dt, IndexedTable it) {
