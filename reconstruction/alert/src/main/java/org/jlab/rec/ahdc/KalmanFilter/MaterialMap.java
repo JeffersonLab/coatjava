@@ -5,6 +5,12 @@ import org.jlab.clas.tracking.kalmanfilter.Units;
 
 import java.util.HashMap;
 
+// In KalmanFilter.java, we have a refinition of this material
+// We should merge these codes in the sense that KalmanFilter 
+// should refer to this class
+//
+// Also this is not exactly the material for ALERT
+// To be modified
 public class MaterialMap {
 
 	public static HashMap<String, Material> generateMaterials() {
