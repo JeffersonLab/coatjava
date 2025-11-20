@@ -86,7 +86,9 @@ jobs:
         if: ${{ github.ref_type == 'tag' }}
         run: libexec/version-bump.sh ${{ github.ref_name }}
       - name: build
-        run: ./build-coatjava.sh --clara --cvmfs --no-progress -T${{ env.nthreads }}
+        run: |
+          ./build-coatjava.sh --cvmfs --no-progress -T${{ env.nthreads }}
+          ./install-clara -b -c ./coatjava ./clara  
       - name: tar # tarball to preserve permissions
         run: |
           tar czvf coatjava.tar.gz coatjava
