@@ -56,8 +56,15 @@ function cleanup() {
 }
 
 function build_clara {
-    git clone --branch $clara --depth 1 https://code.jlab.org/hallb/clas12/clara-java
+    #git clone --branch $clara --depth 1 https://code.jlab.org/hallb/clas12/clara-java
+    git clone --depth 1 https://code.jlab.org/hallb/clas12/clara-java
     cd clara-java && CLARA_HOME=$1 ./gradlew deploy && cd -
+}
+
+function build_grapes {
+    #git clone --branch $grapes --depth 1 https://code.jlab.org/hallb/clas12/coatjava/grapes
+    git clone --depth 1 https://code.jlab.org/hallb/clas12/coatjava/grapes
+    cd grapes && mvn package && cd -
 }
 
 trap cleanup EXIT
@@ -133,14 +140,14 @@ fi
 if ! compgen -G "$coatjava/lib/clas/coat-libs-*.jar" > /dev/null
 then
     echo -e "\nRetrieving COATJAVA version $coatjava ..."
-    get https://clasweb.jlab.org/clas12offline/distribution/coatjava/coatjava-$coatjava.tar.gz
-    coatjava=./coatjava
+    get https://github.com/JeffersonLab/coatjava/releases/download/$coatjava/coatjava-$coatjava.tar.gz
+    coatjava=./coatjava-$coatjava
 fi
 mkdir -p clara-cre/plugins/clas12/config
 cp -Lr $coatjava/etc $coatjava/bin $coatjava/lib* clara-cre/plugins/clas12
 
 # GRAPES:
 echo -e "\nRetrieving GRAPES version $grapes ..."
-get https://clasweb.jlab.org/clas12offline/distribution/grapes/grapes-$grapes.tar.gz
-mv grapes-$grapes clara-cre/plugins/grapes
-
+build_grapes $PWD/grapes
+mkdir -p clara-cre/plugins/grapes/lib/core/
+cp grapes/target/grapes-*core*.jar clara-cre/plugins/grapes/lib/core/
