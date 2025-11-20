@@ -92,7 +92,7 @@ download () {
         xrdcp $1 ./
         ret=$?
     elif $useCvmfs; then
-        cp $1 ./
+        cp -v $1 ./
         ret=$?
     elif command_exists wget ; then
         $wget $1
