@@ -5,6 +5,7 @@ import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import java.util.ArrayList;
 
 public class InterCluster {
+    private int trackId = -1;
     private final double x;
     private final double y;
     private ArrayList<PreCluster> preclusters = new ArrayList<>();
@@ -41,6 +42,13 @@ public class InterCluster {
         return this.preclusters.get(0).get_Super_layer();
     }
 
+    public int getTrackId() {
+        return trackId;
+    }
+
+    public void setTrackId(int trackId) {
+        this.trackId = trackId;
+    }
 
     public String toString() {
         return "PreCluster{" + "X: " + this.x + " Y: " + this.y + " phi: " + Math.atan2(this.y, this.x) + "}\n";

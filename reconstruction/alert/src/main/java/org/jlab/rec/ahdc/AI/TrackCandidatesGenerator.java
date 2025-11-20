@@ -8,14 +8,14 @@ import java.util.*;
  * The TrackConstruction class is responsible for constructing all possible track 
  * candidates from a set of superpreclusters.
  */
-public class TrackConstruction {
+public class TrackCandidatesGenerator {
     static final private int MAX_NUMBER_OF_TRACK_CANDIDATES = 10000;
     static final private double MAX_ANGLE = Math.toRadians(60);
 
     /**
      * Default constructor.
      */
-    public TrackConstruction() {}
+    public TrackCandidatesGenerator() {}
 
     /**
      * Computes the modulo operation, which returns the remainder of the division

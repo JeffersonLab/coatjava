@@ -24,6 +24,7 @@ import org.jlab.rec.ahdc.PreCluster.PreClusterFinder;
 import org.jlab.rec.ahdc.Track.Track;
 import org.jlab.rec.ahdc.ModeTrackFinding;
 import java.io.File;
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -51,6 +52,8 @@ public class AHDCEngine extends ReconstructionEngine {
 
     private ModelTrackFinding modelTrackFinding;
     private ModeTrackFinding modeTrackFinding = ModeTrackFinding.AI_Track_Finding;
+    static final double TRACK_FINDING_AI_THRESHOLD = 0.2;
+    static final int MAX_HITS_FOR_AI = 300;
 
     private AlertDCDetector factory = null;
     private ModeAHDC ahdcExtractor = new ModeAHDC();
@@ -118,7 +121,7 @@ public class AHDCEngine extends ReconstructionEngine {
             int newRun = bank.getInt("run", 0);
             float magfieldfactor = bank.getFloat("solenoid", 0);
             if (newRun <= 0) {
-                System.err.println("AHDCEngine:  got run <= 0 in RUN::config, skipping event.");
+                LOGGER.warning("AHDCEngine:  got run <= 0 in RUN::config, skipping event.");
                 return false;
             }
             // Load the constants
@@ -139,72 +142,80 @@ public class AHDCEngine extends ReconstructionEngine {
             // I) Read raw hits
             HitReader hitReader = new HitReader(event, factory, simulation);
             ArrayList<Hit> AHDC_Hits = hitReader.get_AHDCHits();
-            if(simulation) { ArrayList<TrueHit> TrueAHDC_Hits = hitReader.get_TrueAHDCHits(); }
 
-            // II) Create PreCluster
+            // II) Create PreClusters
             PreClusterFinder preclusterfinder = new PreClusterFinder();
-            preclusterfinder.findPreCluster(AHDC_Hits);
+            preclusterfinder.findPreclusters(AHDC_Hits);
             ArrayList<PreCluster> AHDC_PreClusters = preclusterfinder.get_AHDCPreClusters();
 
-            // III) Create Cluster
-            ClusterFinder clusterfinder = new ClusterFinder();
-            clusterfinder.findCluster(AHDC_PreClusters);
-            ArrayList<Cluster> AHDC_Clusters = clusterfinder.get_AHDCClusters();
 
-            // IV) Track Finder
-            ArrayList<Track> AHDC_Tracks = new ArrayList<>();
-            ArrayList<TrackPrediction> predictions = new ArrayList<>();
+            // III) Track Finding: Input = PreClusters, Output = Tracks
+            // During track finding we build Clusters and InterClusters. Each of these objects must be assigned a Track ID so we can:
+            //   - identify which track they belong to,
+            //   - write them properly into the output banks later,
+            //   - and reuse them downstream in the ALERT Engine.
+            //
+            // If using AI-based track finding, tracks are identified using inter-clusters.
+            // Otherwise, the conventional methods (Hough Transform or distance) use clusters.
 
-            // If there is too much hits, we rely on to the conventional track finding
-            if (AHDC_Hits.size() > 300) {
+            // Safety check: if too many hits, rely on conventional track finding
+            if (AHDC_Hits.size() > MAX_HITS_FOR_AI) {
                 LOGGER.info("Too many AHDC_Hits in AHDC::adc, rely on conventional track finding for this event");
                 modeTrackFinding = ModeTrackFinding.CV_Distance;
             }
 
-            if (modeTrackFinding == ModeTrackFinding.CV_Distance || modeTrackFinding == ModeTrackFinding.CV_Hough) {
-                if (modeTrackFinding == ModeTrackFinding.CV_Distance) {
-                    Distance distance = new Distance();
-                    distance.find_track(AHDC_Clusters);
-                    AHDC_Tracks = distance.get_AHDCTracks();
-                } else if (modeTrackFinding == ModeTrackFinding.CV_Hough) {
-                    HoughTransform houghtransform = new HoughTransform();
-                    houghtransform.find_tracks(AHDC_Clusters);
-                    AHDC_Tracks = houghtransform.get_AHDCTracks();
-                }
-            }
+            ArrayList<Track> AHDC_Tracks = new ArrayList<>();
+
             if (modeTrackFinding == ModeTrackFinding.AI_Track_Finding) {
-                AHDC_Hits.sort(Comparator.comparingDouble(Hit::getRadius));
+                // 1) Create inter-clusters from pre-clusters
                 PreClustering preClustering = new PreClustering();
-                ArrayList<PreCluster> preClustersAI = preClustering.findPreclustersForAI(AHDC_Hits);
-                ArrayList<InterCluster> interClusters = preClustering.mergePreclusters(preClustersAI);
-                TrackConstruction trackConstruction = new TrackConstruction();
-                ArrayList<ArrayList<InterCluster>> tracks = new ArrayList<>();
-                boolean success = trackConstruction.getAllPossibleTrack(interClusters, tracks);
+                ArrayList<InterCluster> inter_clusters = preClustering.mergePreclusters(AHDC_PreClusters);
+                
+                // 2) Create track candidates from inter-clusters
+                ArrayList<ArrayList<InterCluster>> tracks_candidates = new ArrayList<>();
+                TrackCandidatesGenerator trackCandidatesGenerator = new TrackCandidatesGenerator();
+                boolean success = trackCandidatesGenerator.getAllPossibleTrack(inter_clusters, tracks_candidates);
 
                 if (!success) {
                     LOGGER.severe("Too many track candidates find by the AI, exiting...");
                     return false;
                 }
 
+                // 3) Use AI model to evaluate track candidates
+                ArrayList<TrackPrediction> predictions = new ArrayList<>();
                 try {
                     AIPrediction aiPrediction = new AIPrediction();
-                    predictions = aiPrediction.prediction(tracks, modelTrackFinding);
+                    predictions = aiPrediction.prediction(tracks_candidates, modelTrackFinding);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
 
+                // 4) Use the output for the AI model to select the good tracks among the candidates
                 for (TrackPrediction t : predictions) {
-                    if (t.getPrediction() > 0.2) {
-                        try {
-                            Track track = new Track(t.getClusters());
-                            AHDC_Tracks.add(track);
-                         } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
+                    if (t.getPrediction() > TRACK_FINDING_AI_THRESHOLD) AHDC_Tracks.add(new Track(t.getClusters()));
+                }
+                // The assignment of Track ID to all objects is done in the Kalman filter step below 
+                // I don't know if it is a good idea.
+            }
+            else {
+                // Conventional Track Finding: Hough Transform or Distance: use cluster informations to find tracks
+                // 1) Create clusters from pre-clusters
+                ClusterFinder clusterfinder = new ClusterFinder();
+                clusterfinder.findCluster(AHDC_PreClusters);
+                ArrayList<Cluster> AHDC_Clusters = clusterfinder.get_AHDCClusters();
+                
+                // 2) Find tracks using the selected conventional method
+                if (modeTrackFinding == ModeTrackFinding.CV_Distance) {
+                    Distance distance = new Distance();
+                    distance.find_track(AHDC_Clusters);
+                    AHDC_Tracks = distance.get_AHDCTracks();
+                }
+                else if (modeTrackFinding == ModeTrackFinding.CV_Hough) {
+                    HoughTransform houghtransform = new HoughTransform();
+                    houghtransform.find_tracks(AHDC_Clusters);
+                    AHDC_Tracks = houghtransform.get_AHDCTracks();
                 }
             }
-            // ------------------------------------------------------------------------------------
 
 
             //Temporary track method ONLY for MC with no background;
@@ -226,14 +237,9 @@ public class AHDCEngine extends ReconstructionEngine {
 
               HelixFitJava h = new HelixFitJava();
               track.setPositionAndMomentum(h.HelixFit(nbOfPoints, szPos, 1));
-              // double p = 150.0;//MeV/c
-              // double phi          = Math.atan2(szPos[0][1], szPos[0][0]);
-              // double x_0[] = {0.0, 0.0, 0.0, p*Math.sin(phi),
-              // p*Math.cos(phi), 0.0}; track.setPositionAndMomentumVec(x_0);
             }
 
             // VI) Kalman Filter
-            // System.out.println("AHDC_Tracks = " + AHDC_Tracks);
             KalmanFilter kalmanFitter = new KalmanFilter(AHDC_Tracks, event, magfield, simulation);
 
             // VII) Write bank
@@ -241,23 +247,33 @@ public class AHDCEngine extends ReconstructionEngine {
 
             DataBank recoHitsBank       = writer.fillAHDCHitsBank(event, AHDC_Hits);
             DataBank recoPreClusterBank = writer.fillPreClustersBank(event, AHDC_PreClusters);
+            ArrayList<Cluster> AHDC_Clusters = new ArrayList<>();
+            for (Track track : AHDC_Tracks) {
+                AHDC_Clusters.addAll(track.get_Clusters());
+            }
             DataBank recoClusterBank    = writer.fillClustersBank(event, AHDC_Clusters);
             DataBank recoTracksBank     = writer.fillAHDCTrackBank(event, AHDC_Tracks);
             DataBank recoKFTracksBank   = writer.fillAHDCKFTrackBank(event, AHDC_Tracks);
-            DataBank AIPredictionBanks = writer.fillAIPrediction(event, predictions);
+
+            ArrayList<InterCluster> all_interclusters = new ArrayList<>();
+            for (Track track : AHDC_Tracks) {
+                all_interclusters.addAll(track.getInterclusters());
+            }
+            DataBank recoInterClusterBank = writer.fillInterClusterBank(event, all_interclusters);
+            // DataBank AIPredictionBanks = writer.fillAIPrediction(event, predictions);
 
             event.appendBank(recoHitsBank);
             event.appendBank(recoPreClusterBank);
             event.appendBank(recoClusterBank);
             event.appendBank(recoTracksBank);
             event.appendBank(recoKFTracksBank);
-            event.appendBank(AIPredictionBanks);
+            event.appendBank(recoInterClusterBank);
+            // event.appendBank(AIPredictionBanks);
 
             if (simulation) {
                 DataBank recoMCBank = writer.fillAHDCMCTrackBank(event);
                 event.appendBank(recoMCBank);
             }
-
 
         }
         return true;

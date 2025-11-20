@@ -8,15 +8,14 @@ import java.util.ArrayList;
 public class TrackPrediction {
 
     private float prediction;
-    private final ArrayList<InterCluster> superpreclusters;
+    private final ArrayList<InterCluster> interclusters;
     private final ArrayList<PreCluster> preclusters = new ArrayList<>();
     private ArrayList<Cluster> clusters = new ArrayList<>();
 
-    public TrackPrediction(float prediction, ArrayList<InterCluster> superpreclusters_) {
+    public TrackPrediction(float prediction, ArrayList<InterCluster> interclusters_) {
         this.prediction = prediction;
-        this.superpreclusters = superpreclusters_;
-
-        for (InterCluster p : this.superpreclusters) {
+        this.interclusters = interclusters_;
+        for (InterCluster p : this.interclusters) {
             if (p.getPreclusters() != null)
                 this.preclusters.addAll(p.getPreclusters());
         }
@@ -61,7 +60,7 @@ public class TrackPrediction {
     }
 
     public ArrayList<InterCluster> getSuperpreclusters() {
-        return superpreclusters;
+        return interclusters;
     }
 
     public ArrayList<PreCluster> getPreclusters() {
