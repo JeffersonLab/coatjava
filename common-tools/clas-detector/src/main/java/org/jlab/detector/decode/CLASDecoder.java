@@ -728,27 +728,26 @@ public class CLASDecoder {
             if(evioEvent.getHandler().getStructure()!=null){
                 try {
 
-                    resume("gde");
+                    resume("evio");
                     dataList = codaDecoder.getDataEntries( (EvioDataEvent) event);
-                    pause("gde");
+                    pause("evio");
                     
-                    resume("gae");
-                    List<FADCData>  fadcPacked = codaDecoder.getADCEntries((EvioDataEvent) event);
-                    pause("gae");
+                    resume("eviobp");
+                    List<FADCData> fadcPacked = codaDecoder.getADCEntries((EvioDataEvent) event);
+                    pause("eviobp");
 
-                    resume("misc");
-                    //-----------------------------------------------------------------------------
-                    // This part reads the BITPACKED FADC data from tag=57638 Format (cmcms)
-                    // Then unpacks into Detector Digigitized data, and appends to existing buffer
-                    // Modified on 9/5/2018
-                    //-----------------------------------------------------------------------------
-                    if(fadcPacked!=null){
+                    resume("ubitp");
+                    if (fadcPacked != null) {
+                        //-----------------------------------------------------------------------------
+                        // This part reads the BITPACKED FADC data from tag=57638 Format (cmcms)
+                        // Then unpacks into Detector Digigitized data, and appends to existing buffer
+                        // Modified on 9/5/2018
+                        //-----------------------------------------------------------------------------
                         List<DetectorDataDgtz> fadcUnpacked = FADCData.convert(fadcPacked);
                         dataList.addAll(fadcUnpacked);
                     }
-                    //  END of Bitpacked section
-                    //-----------------------------------------------------------------------------
-                   
+                    pause("ubitp");
+
                     if(this.decoderDebugMode>0){
                         System.out.println("\n>>>>>>>>> RAW decoded data");
                         for(DetectorDataDgtz data : dataList){
@@ -758,7 +757,6 @@ public class CLASDecoder {
 
                     int runNumberCoda = codaDecoder.getRunNumber();
                     this.setRunNumber(runNumberCoda);
-                    pause("misc");
                    
                     resume("translate");
                     detectorDecoder.translate(dataList);
@@ -784,13 +782,14 @@ public class CLASDecoder {
     public Event getDecodedEvent(EvioDataEvent rawEvent, int run, int counter, Double torus, Double solenoid) {
 
         this.initEvent(rawEvent);
-        Event  decodedEvent = this.getDataEvent();        
+        resume("banks");
+        Event decodedEvent = this.getDataEvent();
+        pause("banks");
 
-        resume("gee");
-        Bank   header = this.createHeaderBank(run, counter, torus, solenoid);
+        Bank header = this.createHeaderBank(run, counter, torus, solenoid);
         if(header!=null) decodedEvent.write(header);
 
-        Bank   trigger = this.createTriggerBank();
+        Bank trigger = this.createTriggerBank();
         if(trigger!=null) decodedEvent.write(trigger);
 
         Bank onlineHelicity = this.createOnlineHelicityBank();
@@ -806,7 +805,6 @@ public class CLASDecoder {
 
         for (Bank b : createReconScalerBanks(decodedEvent))
             decodedEvent.write(b);
-        pause("gee");
 
         return decodedEvent;
     }
