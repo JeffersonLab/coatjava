@@ -140,8 +140,8 @@ fi
 if ! compgen -G "$coatjava/lib/clas/coat-libs-*.jar" > /dev/null
 then
     echo -e "\nRetrieving COATJAVA version $coatjava ..."
-    get https://clasweb.jlab.org/clas12offline/distribution/coatjava/coatjava-$coatjava.tar.gz
-    coatjava=./coatjava
+    get https://github.com/JeffersonLab/coatjava/releases/download/$coatjava/coatjava-$coatjava.tar.gz
+    coatjava=./coatjava-$coatjava
 fi
 mkdir -p clara-cre/plugins/clas12/config
 cp -Lr $coatjava/etc $coatjava/bin $coatjava/lib* clara-cre/plugins/clas12
