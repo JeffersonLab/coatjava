@@ -3,10 +3,10 @@ version: 2
 # registries: FIXME: disabled, see <https://github.com/JeffersonLab/coatjava/issues/915>
 #   clas12maven:
 #     type: maven-repository
-#     url: https://clasweb.jlab.org/clas12maven
+#     url: https://clasweb.jlab.org/.clas12maven
 #   jhep:
 #     type: maven-repository
-#     url: https://clasweb.jlab.org/jhep/maven
+#     url: https://clasweb.jlab.org/.jhep/maven
 
 updates:
   - package-ecosystem: "maven"
