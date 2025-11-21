@@ -12,6 +12,7 @@ import org.jlab.geom.prim.Point3D;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.ahdc.Track.Track;
+import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.Track.KFMonitor;
 
 import java.util.ArrayList;
@@ -75,31 +76,17 @@ public class KalmanFilter {
 			    }*/	
 			    double[]     y   = new double[]{x0, y0, z0, px0, py0, pz0};
 			    // Initialization hit
-                // Here the hits that will be used by the Kalman Filter are initialised from the one AHDC::hits bank
-                // Why defining a new type of hit ?
-                // Unifying could be useful for the processing time. To be checked later.
-			    ArrayList<org.jlab.rec.ahdc.Hit.Hit> AHDC_hits = track.getHits();
-			    ArrayList<Hit>                       KF_hits   = new ArrayList<>();
-			    double ADCTot = 0;
-			    track.set_n_hits(AHDC_hits.size());
-			    for (org.jlab.rec.ahdc.Hit.Hit AHDC_hit : AHDC_hits) {
-                    // Define ahdc.KalmanFilter.Hit from ahdc.Hit.Hit
-                    Hit hit = new Hit(AHDC_hit.getSuperLayerId(), AHDC_hit.getLayerId(), AHDC_hit.getWireId(), AHDC_hit.getNbOfWires(), AHDC_hit.getLine(), AHDC_hit.getDoca());
-                    hit.setADC(AHDC_hit.getADC());
-                    hit.setHitIdx(AHDC_hit.getId());
-                    ADCTot+=AHDC_hit.getADC();
-                    // set track id
-                    AHDC_hit.setTrackId(trackId);
-                    KF_hits.add(hit);
-			    }
+			    ArrayList<Hit> AHDC_hits = track.getHits();
+                //-----------------------------------------
                 // add a routine to sort the list of hits
+                //-----------------------------------------
 
 			    double zbeam = 0;
 			    if(IsVtxDefined)zbeam = vz_constraint;//test
                 // Define forward and backward indicator
                 // cf. Indicator.java
-			    final ArrayList<Indicator> forwardIndicators  = forwardIndicators(KF_hits, materialHashMap);
-			    final ArrayList<Indicator> backwardIndicators = backwardIndicators(KF_hits, materialHashMap, zbeam);
+			    final ArrayList<Indicator> forwardIndicators  = forwardIndicators(AHDC_hits, materialHashMap);
+			    final ArrayList<Indicator> backwardIndicators = backwardIndicators(AHDC_hits, materialHashMap, zbeam);
 			
 			    // Start propagation
 			    Stepper     stepper    = new Stepper(y);
@@ -129,13 +116,12 @@ public class KalmanFilter {
                         track.add_KFMonitor(new KFMonitor(trackId, k, 0, indicator.getUniqueId(), 0, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
                         if (indicator.haveAHit()) {
                             // I don't see the utility of this
-                            if( k==0  && indicator.hit.getHitIdx()>0){
-                                for (org.jlab.rec.ahdc.Hit.Hit AHDC_hit : AHDC_hits){
-                                    if(AHDC_hit.getId()==indicator.hit.getHitIdx())AHDC_hit.setResidualPrefit(TrackFitter.residual(indicator));
-                                }
+                            if( k==0  && indicator.hit.getId()>0){ // first iteration and indicator != beamline (because its id is -1)
+                                indicator.hit.setResidualPrefit(TrackFitter.residual(indicator));
                             }
                             // Correction only if we have a measure (hit)
                             TrackFitter.correct(indicator);
+                            // KFMonitor: save state and error covariance matrix
                             track.add_KFMonitor(new KFMonitor(trackId, k, 0, indicator.getUniqueId(), 1, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
                         }
                     }
@@ -143,9 +129,11 @@ public class KalmanFilter {
                     //System.out.println("--------- BackWard propagation !! ---------");
                     for (Indicator indicator : backwardIndicators) {
                         TrackFitter.predict(indicator);
+                        // KFMonitor: save state and error covariance matrix
                         track.add_KFMonitor(new KFMonitor(trackId, k, 1, indicator.getUniqueId(), 0, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
                         if (indicator.haveAHit()) {
                             TrackFitter.correct(indicator);
+                            // KFMonitor: save state and error covariance matrix
                             track.add_KFMonitor(new KFMonitor(trackId, k, 1, indicator.getUniqueId(), 1, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
                         }
                     }
@@ -159,36 +147,34 @@ public class KalmanFilter {
 			    KFitter PostFitPropagator = new KFitter(TrackFitter.getStateEstimationVector(), initialErrorCovariance, new Stepper(TrackFitter.getStateEstimationVector().toArray()), new Propagator(RK4));
 			    for (Indicator indicator : forwardIndicators) {
                     PostFitPropagator.predict(indicator);
+                    // KFMonitor: save state and error covariance matrix
                     track.add_KFMonitor(new KFMonitor(trackId, Niter, 2, indicator.getUniqueId(), 0, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
                     if (indicator.haveAHit()) {
-                        if( indicator.hit.getHitIdx()>0){
-                            for (org.jlab.rec.ahdc.Hit.Hit AHDC_hit : AHDC_hits){
-                                if(AHDC_hit.getId()==indicator.hit.getHitIdx())AHDC_hit.setResidual(PostFitPropagator.residual(indicator));
-                            }
+                        if( indicator.hit.getId()>0){
+                            indicator.hit.setResidual(TrackFitter.residual(indicator));
                         }
                     }
 			    }
 			    
+                // Fill track and hit bank
 			    double s = PostFitPropagator.stepper.sTot;
-			    double dEdx = ADCTot / s;
 			    double p_drift = PostFitPropagator.stepper.p();
-			    
-			    // At this stage, all relevants AHDC hits are filled
-			    // Compute sum_adc, sum_residuals and chi2
 			    int sum_adc = 0;
 			    double sum_residuals = 0;
 			    double chi2 = 0;
-			    for (org.jlab.rec.ahdc.Hit.Hit AHDC_hit : AHDC_hits) {
-                    sum_adc += AHDC_hit.getADC();
-                    sum_residuals += AHDC_hit.getResidual();
-                    chi2 += Math.pow(AHDC_hit.getResidual(),2.0);
+			    for (Hit hit : AHDC_hits) {
+                    hit.setTrackId(trackId);
+                    sum_adc += hit.getADC();
+                    sum_residuals += hit.getResidual();
+                    chi2 += Math.pow(hit.getResidual(),2.0);
 			    }
 			    track.set_sum_adc(sum_adc);
 			    track.set_sum_residuals(sum_residuals);
 			    track.set_chi2(chi2);
 			    track.set_p_drift_kf(p_drift);
-			    track.set_dEdx_kf(dEdx);
+			    track.set_dEdx_kf(sum_adc/s);
 			    track.set_path_kf(s);
+			    track.set_n_hits(AHDC_hits.size());
 			}//end of loop on track candidates
 		} catch (Exception e) {
 			// e.printStackTrace();
@@ -250,7 +236,7 @@ public class KalmanFilter {
 		forwardIndicators.add(new Indicator(3.0, 0.2, null, true, materialHashMap.get("deuteriumGas")));
 		forwardIndicators.add(new Indicator(3.060, 0.001, null, true, materialHashMap.get("Kapton")));
 		for (Hit hit : hitArrayList) {
-			forwardIndicators.add(new Indicator(hit.r(), 0.1, hit, true, materialHashMap.get("BONuS12Gas")));
+			forwardIndicators.add(new Indicator(hit.getRadius(), 0.1, hit, true, materialHashMap.get("BONuS12Gas")));
 		}
 		return forwardIndicators;
 	}
@@ -259,11 +245,11 @@ public class KalmanFilter {
 		ArrayList<Indicator> backwardIndicators = new ArrayList<>();
 		//R, h, defined in mm!
 		for (int i = hitArrayList.size() - 2; i >= 0; i--) {
-			backwardIndicators.add(new Indicator(hitArrayList.get(i).r(), 0.1, hitArrayList.get(i), false, materialHashMap.get("BONuS12Gas")));
+			backwardIndicators.add(new Indicator(hitArrayList.get(i).getRadius(), 0.1, hitArrayList.get(i), false, materialHashMap.get("BONuS12Gas")));
 		}
 		backwardIndicators.add(new Indicator(3.060, 1, null, false, materialHashMap.get("BONuS12Gas")));
 		backwardIndicators.add(new Indicator(3.0, 0.001, null, false, materialHashMap.get("Kapton")));
-		Hit hit = new Hit_beam(0, 0, 0, 0, 0, 0, 0, 0);
+		Hit hit = new Hit_beam(0, 0, 0);
 		backwardIndicators.add(new Indicator(0.0, 0.2, hit, false, materialHashMap.get("deuteriumGas")));
 		return backwardIndicators;
 	}
@@ -272,11 +258,11 @@ public class KalmanFilter {
 		ArrayList<Indicator> backwardIndicators = new ArrayList<>();
 		//R, h, defined in mm!
 		for (int i = hitArrayList.size() - 2; i >= 0; i--) {
-			backwardIndicators.add(new Indicator(hitArrayList.get(i).r(), 0.1, hitArrayList.get(i), false, materialHashMap.get("BONuS12Gas")));
+			backwardIndicators.add(new Indicator(hitArrayList.get(i).getRadius(), 0.1, hitArrayList.get(i), false, materialHashMap.get("BONuS12Gas")));
 		}
 		backwardIndicators.add(new Indicator(3.060, 1, null, false, materialHashMap.get("BONuS12Gas")));
 		backwardIndicators.add(new Indicator(3.0, 0.001, null, false, materialHashMap.get("Kapton")));
-		Hit hit = new Hit_beam(0, 0, 0, 0, 0, 0, 0, vz);
+		Hit hit = new Hit_beam(0, 0, vz);
 		backwardIndicators.add(new Indicator(0.0, 0.2, hit, false, materialHashMap.get("deuteriumGas")));
 		return backwardIndicators;
 	}

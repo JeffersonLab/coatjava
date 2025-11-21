@@ -4,6 +4,11 @@ import org.jlab.geom.detector.alert.AHDC.AlertDCDetector;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
 
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealVector;
+
 public class Hit implements Comparable<Hit> {
 
 	private final double thster = Math.toRadians(20.0);
@@ -45,7 +50,7 @@ public class Hit implements Comparable<Hit> {
 		//System.out.println(" superlayer " + this.superLayerId + " layer " + this.layerId + " wire " + this.wireId + " R_layer " + R_layer + " wx " + wx + " wy " + wy);
 		wireLine = factory.getSector(1).getSuperlayer(superLayerId).getLayer(layerId).getComponent(wireId).getLine();
 		Point3D end = wireLine.end();
-                this.nbOfWires = factory.getSector(1).getSuperlayer(superLayerId).getLayer(layerId).getNumComponents();
+        this.nbOfWires = factory.getSector(1).getSuperlayer(superLayerId).getLayer(layerId).getNumComponents();
 		this.phi       = end.vectorFrom(0, 0, 0).phi();
 		this.radius    = end.distance(0, 0, end.z());
 		this.x         = end.x();
@@ -144,6 +149,22 @@ public class Hit implements Comparable<Hit> {
 
 	public void setTrackId(int _trackId) {
 		this.trackId = _trackId;
+	}
+
+	public RealVector get_Vector() {
+		return new ArrayRealVector(new double[]{this.doca});
+	}
+
+    public RealMatrix get_MeasurementNoise() {
+		return new Array2DRowRealMatrix(new double[][]{{0.0225}});
+	}
+
+	public RealVector get_Vector_beam() {
+		return null;
+	}
+
+	public double distance(Point3D point3D) {
+		return this.wireLine.distance(point3D).length();
 	}
 
 }

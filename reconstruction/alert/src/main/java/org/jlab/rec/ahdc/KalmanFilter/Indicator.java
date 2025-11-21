@@ -1,6 +1,7 @@
 package org.jlab.rec.ahdc.KalmanFilter;
 
 import org.jlab.clas.tracking.kalmanfilter.Material;
+import org.jlab.rec.ahdc.Hit.Hit;
 
 // Give the relative positions of the main constituents of the detector
 //      - beamline
@@ -43,11 +44,11 @@ public class Indicator {
 
 
 	// This method is not self consistent. We should not have hardcoded values
-	// It is just for testing purpose
-	// Used by KFMonitor
+	// It is just for testing
+	// Only used by KFMonitor
 	public int getUniqueId() {
                 if (hit != null) {
-                	return (hit.getSuperLayer()*10 + hit.getLayer())*100 + hit.getWire();
+                	return (hit.getSuperLayerId()*10 + hit.getLayerId())*100 + hit.getWireId();
                 }
                 else if (Math.abs(R) < 1e-9) {
                 	// beamline

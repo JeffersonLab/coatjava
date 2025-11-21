@@ -73,7 +73,7 @@ public class KFitter {
 	}
 
 	public void correct(Indicator indicator) {
-        RealVector z, z_plus, z_minus;
+        RealVector z;
 		RealMatrix measurementNoise;
 		RealMatrix measurementMatrix;
 		RealVector h;
@@ -124,7 +124,7 @@ public class KFitter {
 
 	public double residual(Indicator indicator) {
 		double d = indicator.hit.distance( new Point3D( stateEstimation.getEntry(0), stateEstimation.getEntry(1), stateEstimation.getEntry(2) ) );
-		return indicator.hit.doca()-d;
+		return indicator.hit.getDoca()-d;
 	}
 
     public void ResetErrorCovariance(final RealMatrix initialErrorCovariance){
@@ -247,12 +247,6 @@ public class KFitter {
 						{dphidx, dphidy, dphidz, dphidpx, dphidpy, dphidpz},
 						{dzdx, dzdy, dzdz, dzdpx, dzdpy, dzdpz}
 				});
-	}
-
-
-	private RealVector innovation(RealVector z, Indicator indicator) {
-
-		return z.subtract(h(stateEstimation, indicator));
 	}
 
 	/**
