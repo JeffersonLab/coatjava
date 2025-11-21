@@ -49,6 +49,8 @@ build:
     - job: mirror
       optional: true
   script:
+    - git lfs install
+    - git submodule update --init etc/data/magfield
     - ./build-coatjava.sh --clara -T$JL_RUNNER_AVAIL_CPU --quiet --no-progress
     - tar -czf coatjava.tar.gz coatjava
     - tar -czf clara.tar.gz clara
@@ -69,7 +71,9 @@ build:
 download:
   stage: build
   script:
-    - xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/raw/rg-d/clas_018779.evio.00001 ./
+#    - xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/raw/rg-d/clas_018779.evio.00001 ./
+    - git clone https://code.jlab.org/hallb/clas12/validation-data
+    - cp validation-data/raw/rg-d/clas_018779.evio.00001 .
   artifacts:
     when: always
     expire_in: 1 day
@@ -124,6 +128,9 @@ eb:
   dependencies: [build]
   script:
     - tar -xzf coatjava.tar.gz
+    - tar -xzf clara.tar.gz
+    - git lfs install
+    - git submodule update --init validation/advanced-tests/data
     - cd validation/advanced-tests
     - ./run-eb-tests.sh -100 ${ARG}
   parallel:

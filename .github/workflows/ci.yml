@@ -42,8 +42,6 @@ jobs:
         with:
           key: raw_test_data # fixed key will always hit; clear cache to trigger cache miss
           path: |
-            clas_005038.evio.00000
-            clas_021559.evio.00001
             clas_018779.evio.00001
           lookup-only: true
       - name: install xrootd-client
@@ -53,10 +51,12 @@ jobs:
           sudo apt -y install xrootd-client
       - name: download
         if: ${{ steps.cache.outputs.cache-hit != 'true' }}
+#        run: |
+#          xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/raw/rg-d/clas_018779.evio.00001 ./
         run: |
-          xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/clas_005038.evio.00000 ./
-          xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/raw/rg-l/clas_021559.evio.00001 ./
-          xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/raw/rg-d/clas_018779.evio.00001 ./
+          git lfs install
+          git clone --depth 1 https://code.jlab.org/hallb/clas12/validation-data
+          cp validation-data/raw/rg-d/clas_018779.evio.00001 .
 
   # build
   #############################################################################
@@ -87,6 +87,8 @@ jobs:
         run: libexec/version-bump.sh ${{ github.ref_name }}
       - name: build
         run: |
+          git lfs install
+          git submodule update --init ./etc/data/magfield
           ./build-coatjava.sh --cvmfs --no-progress -T${{ env.nthreads }}
           ./install-clara -b -c ./coatjava ./clara  
       - name: tar # tarball to preserve permissions
@@ -187,15 +189,13 @@ jobs:
         with:
           key: raw_test_data
           path: |
-            clas_005038.evio.00000
-            clas_021559.evio.00001
             clas_018779.evio.00001
       - name: untar build
         run: tar xzvf coatjava.tar.gz
       - name: run test
         run: |
           ls -lhtr
-          ./coatjava/bin/decoder -n 10000 -o dog.hipo ./clas_005038.evio.00000
+          ./coatjava/bin/decoder -n 10000 -o dog.hipo ./clas_018779.evio.00001
 
   test_clara:
     needs: [ build, download_test_data ]
@@ -221,8 +221,6 @@ jobs:
         with:
           key: raw_test_data
           path: |
-            clas_005038.evio.00000
-            clas_021559.evio.00001
             clas_018779.evio.00001
       - name: untar build
         run: |
@@ -273,9 +271,13 @@ jobs:
         with:
           cvmfs_repositories: 'oasis.opensciencegrid.org'
       - name: untar build
-        run: tar xzvf coatjava.tar.gz
+        run: |
+          tar xzvf coatjava.tar.gz
+          tar xzvf clara.tar.gz
       - name: run test
         run: |
+          git lfs install
+          git submodule update --init validation/advanced-tests/data
           cd validation/advanced-tests
           echo "COMMAND: ${{ matrix.cmd }}"
           ${{ matrix.cmd }}
