@@ -10,11 +10,11 @@ import org.jlab.geom.prim.Point3D;
 public class KFitter {
 
 	private       RealVector stateEstimation;
-	private       RealMatrix errorCovariance;
+    private       RealMatrix errorCovariance;
 	public final  Stepper    stepper;
 	private final Propagator propagator;
-	public        double     chi2             = 0;
-        // masses/energies in MeV
+	public        double     chi2 = 0;
+    // masses/energies in MeV
 	private final double     electron_mass_c2 = PhysicsConstants.massElectron() * 1000;
 	private final double     proton_mass_c2   = PhysicsConstants.massProton() * 1000;
 	private boolean isvertexdefined = false;
@@ -73,12 +73,12 @@ public class KFitter {
 	}
 
 	public void correct(Indicator indicator) {
-	        RealVector z, z_plus, z_minus;
+        RealVector z, z_plus, z_minus;
 		RealMatrix measurementNoise;
 		RealMatrix measurementMatrix;
 		RealVector h;
 		if (indicator.R == 0.0 && !indicator.direction) {
-		    double z_beam_res_sq = 1.e10;//in mm
+            double z_beam_res_sq = 1.e10;//in mm
 			if(isvertexdefined)z_beam_res_sq = 4.0;//assuming 2. mm resolution
 			measurementNoise =
 					new Array2DRowRealMatrix(
@@ -91,21 +91,10 @@ public class KFitter {
 			h = h_beam(stateEstimation);//3x1
 			z = indicator.hit.get_Vector_beam();//0!
 		} else {
-		    //System.out.println(" hit r " + indicator.hit.r() + " hit phi " +  indicator.hit.phi() + " phi wire (-zl/2) " + indicator.hit.phi(-150.0) + " phi wire (0) " + indicator.hit.phi(0.0) + " phi wire (+zl/2) " + indicator.hit.phi(150.) + " state x " + stateEstimation.getEntry(0) + " state y " + stateEstimation.getEntry(1) + " state z " + stateEstimation.getEntry(2) );
-			boolean goodsign = true;
-			if(indicator.hit.getSign()!=0){
-			    double dphi = Math.atan2(stateEstimation.getEntry(1), stateEstimation.getEntry(0))-indicator.hit.phi(stateEstimation.getEntry(2));
-			    if(dphi*indicator.hit.getSign()<0)goodsign = false;
-			    //System.out.println(" hit r " + indicator.hit.r() + " phi wire (z) " + indicator.hit.phi(stateEstimation.getEntry(2)) + " phi state " + Math.atan2(stateEstimation.getEntry(1), stateEstimation.getEntry(0)) + " sign " + indicator.hit.getSign() + " good? " + goodsign );
-			}
-		        //measurementNoise = indicator.hit.get_MeasurementNoise();//1x1
-		        measurementNoise = indicator.hit.get_MeasurementNoise(goodsign);//1x1
-		        measurementMatrix = H(stateEstimation, indicator);//6x1
-		        //measurementMatrix = H(stateEstimation, indicator, goodsign);//6x1
-		        h = h(stateEstimation, indicator);//1x1
-		        //h = h(stateEstimation, indicator, goodsign);//1x1
+            measurementNoise = indicator.hit.get_MeasurementNoise();//1x1
+            measurementMatrix = H(stateEstimation, indicator);//6x1
+            h = h(stateEstimation, indicator);//1x1
 			z = indicator.hit.get_Vector();//1x1
-			//z = indicator.hit.get_Vector(indicator.hit.getSign(), goodsign);//1x1
 		}
 		RealMatrix measurementMatrixT = measurementMatrix.transpose();
 
@@ -123,6 +112,7 @@ public class KFitter {
 		// update estimate with measurement z(k) xHat(k) = xHat(k)- + K * Inn
 		stateEstimation = stateEstimation.add(kalmanGain.operate(innovation));
 		// update covariance of prediction error P(k) = (I - K * H) * P(k)-
+		// The Joseph's form is numerically more stable P(k) = (I - K * H) * P(k)- (I - K * H)' - H*R*K'
 		RealMatrix identity = MatrixUtils.createRealIdentityMatrix(kalmanGain.getRowDimension());
 		// Numerically more stable !!
 		RealMatrix tmpMatrix = identity.subtract(kalmanGain.multiply(measurementMatrix));
@@ -137,20 +127,9 @@ public class KFitter {
 		return indicator.hit.doca()-d;
 	}
 
-	//function for left-right disambiguation
-	public int wire_sign(Indicator indicator) {//let's decide: positive when  (phi state - phi wire) > 0
-	        double phi_state = Math.atan2(stateEstimation.getEntry(1), stateEstimation.getEntry(0));
-		double phi_wire = indicator.hit.phi(stateEstimation.getEntry(2));
-		if( (phi_state-phi_wire)/Math.abs(phi_state-phi_wire)>0 ){
-			return +1;
-		}else{
-			return -1;
-		}
-	}
-
-        public void ResetErrorCovariance(final RealMatrix initialErrorCovariance){
-	      this.errorCovariance = initialErrorCovariance;  
-        }
+    public void ResetErrorCovariance(final RealMatrix initialErrorCovariance){
+        this.errorCovariance = initialErrorCovariance;  
+    }
     
 	private RealMatrix F(Indicator indicator, Stepper stepper1) throws Exception {
 
@@ -192,12 +171,6 @@ public class KFitter {
 	//measurement matrix in 1 dimension: minimize distance - doca
 	private RealVector h(RealVector x, Indicator indicator) {
 		double d = indicator.hit.distance(new Point3D(x.getEntry(0), x.getEntry(1), x.getEntry(2)));
-		//double d = indicator.hit.distance(new Point3D(x.getEntry(0), x.getEntry(1), x.getEntry(2)), indicator.hit.getSign());
-		return MatrixUtils.createRealVector(new double[]{d});
-	}
-
-	private RealVector h(RealVector x, Indicator indicator, boolean goodsign) {
-		double d = indicator.hit.distance(new Point3D(x.getEntry(0), x.getEntry(1), x.getEntry(2)), indicator.hit.getSign(), goodsign);
 		return MatrixUtils.createRealVector(new double[]{d});
 	}
 
@@ -226,35 +199,6 @@ public class KFitter {
 
 		double doca_plus  = h(x_plus, indicator).getEntry(0);
 		double doca_minus = h(x_minus, indicator).getEntry(0);
-
-		return (doca_plus - doca_minus) / (2 * h);
-	}
-
-	//measurement matrix in 1 dimension: minimize distance - doca
-	private RealMatrix H(RealVector x, Indicator indicator, boolean goodsign) {
-
-		double ddocadx  = subfunctionH(x, indicator, 0, goodsign);
-		double ddocady  = subfunctionH(x, indicator, 1, goodsign);
-		double ddocadz  = subfunctionH(x, indicator, 2, goodsign);
-		double ddocadpx = subfunctionH(x, indicator, 3, goodsign);
-		double ddocadpy = subfunctionH(x, indicator, 4, goodsign);
-		double ddocadpz = subfunctionH(x, indicator, 5, goodsign);
-		
-		// As per my understanding: ddocadx,y,z -> = dr/dx,y,z, etc
-		return MatrixUtils.createRealMatrix(new double[][]{
-			{ddocadx, ddocady, ddocadz, ddocadpx, ddocadpy, ddocadpz}});
-	}
-
-	double subfunctionH(RealVector x, Indicator indicator, int i, boolean goodsign) {
-		double     h       = 1e-8;// in mm
-		RealVector x_plus  = x.copy();
-		RealVector x_minus = x.copy();
-
-		x_plus.setEntry(i, x_plus.getEntry(i) + h);
-		x_minus.setEntry(i, x_minus.getEntry(i) - h);
-
-		double doca_plus  = h(x_plus, indicator, goodsign).getEntry(0);
-		double doca_minus = h(x_minus, indicator, goodsign).getEntry(0);
 
 		return (doca_plus - doca_minus) / (2 * h);
 	}

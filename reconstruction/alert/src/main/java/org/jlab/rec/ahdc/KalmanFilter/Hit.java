@@ -23,7 +23,6 @@ public class Hit implements Comparable<Hit> {
 	private final Line3D line3D_plus;
 	private final Line3D line3D_minus;
 	private int    hitidx;
-	private int    hitsign;
 
 	// Comparison with:  common-tools/clas-geometry/src/main/java/org/jlab/geom/detector/alert/AHDC/AlertDCFactory.java
 	// here, SuperLayer, Layer, Wire, start from 1
@@ -37,7 +36,6 @@ public class Hit implements Comparable<Hit> {
 		this.numWires = numWire;
 		this.adc = 0;//placeholder
 		this.hitidx = -1;
-		this.hitsign = 0;
 		
 		this.phi = line.midpoint().vectorFrom(0,0,0).phi();
 		//System.out.println(" superlayer " + this.superLayer + " layer " + this.layer + " wire " + this.wire + " wx " + wx + " wy " + wy + " wx_end " + wx_end + " wy_end " + wy_end + " phi " + this.phi);
@@ -61,25 +59,8 @@ public class Hit implements Comparable<Hit> {
 		return new ArrayRealVector(new double[]{this.doca});
 	}
 
-        //hit measurement vector in 1 dimension with sign: if sign = 0, return doca, otherwise return 0
-        public RealVector get_Vector(int sign, boolean goodsign) {
-		if(sign == 0 || goodsign){
-			return new ArrayRealVector(new double[]{this.doca});
-		}else{
-			return new ArrayRealVector(new double[]{0.0});
-		}
-	}
-
     	public RealMatrix get_MeasurementNoise() {
 		return new Array2DRowRealMatrix(new double[][]{{0.0225}});
-	}
-    
-    	public RealMatrix get_MeasurementNoise(boolean goodsign) {
-	    if(goodsign){
-		return new Array2DRowRealMatrix(new double[][]{{0.0225}});
-	    }else{
-		return new Array2DRowRealMatrix(new double[][]{{2*this.doca*this.doca}});
-	    }
 	}
     
 	public double doca() {
@@ -97,16 +78,6 @@ public class Hit implements Comparable<Hit> {
 	public Line3D line() {return line3D;}
 
 	public double distance(Point3D point3D) {
-		return this.line3D.distance(point3D).length();
-	}
-
-	public double distance(Point3D point3D, int sign, boolean goodsign) {
-		//if(sign!=0)
-	    	//System.out.println(" r " + this.r +  " phi " + this.phi + " doca " + this.doca + " sign " + sign + " distance " + this.line3D.distance(point3D).length() + " (sign 0) " + this.line3D_plus.distance(point3D).length() + " (sign+) " + this.line3D_minus.distance(point3D).length() + " (sign-) ");
-		if(!goodsign){	    
-			if(sign>0)return this.line3D_plus.distance(point3D).length();
-			if(sign<0)return this.line3D_minus.distance(point3D).length();
-		}
 		return this.line3D.distance(point3D).length();
 	}
 
@@ -169,13 +140,5 @@ public class Hit implements Comparable<Hit> {
 		this.hitidx = idx;
 	}
 
-	public int getSign() {
-		return hitsign;
-	}
-
-	public void setSign(int sign) {
-		this.hitsign = sign;
-	}
-    
 }
 

@@ -34,125 +34,71 @@ public class KalmanFilter {
 
     public KalmanFilter(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {propagation(tracks, event, magfield, IsMC);}
 
-	private final int Niter = 10;
-	private final boolean IsVtxDefined = false;
+	private final int Niter = 10; // number of iterations of the Kalman Filter
+	private final boolean IsVtxDefined = false; // never used so far
+                                                // can be useful to take into account the vertex of the electron
 
 	private void propagation(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {
 
 		try {
-			double vz_constraint = 0;
-			if(IsMC) {//If simulation read MC::Particle Bank ------------------------------------------------
-				DataBank bankParticle = event.getBank("MC::Particle");
-				double   vxmc         = bankParticle.getFloat("vx", 0)*10;//mm
-				double   vymc         = bankParticle.getFloat("vy", 0)*10;//mm
-				double   vzmc         = bankParticle.getFloat("vz", 0)*10;//mm
-				double   pxmc         = bankParticle.getFloat("px", 0)*1000;//MeV
-				double   pymc         = bankParticle.getFloat("py", 0)*1000;//MeV
-				double   pzmc         = bankParticle.getFloat("pz", 0)*1000;//MeV
-				double p_mc = java.lang.Math.sqrt(pxmc*pxmc+pymc*pymc+pzmc*pzmc);
-				//System.out.println("MC track: vz: " + vzmc*10 + " px: " + pxmc*1000 + " py: " + pymc*1000 + " pz: " + pzmc*1000 + "; p = " + p_mc*1000);//convert p to MeV, v to mm
-				
-				ArrayList<Point3D> sim_hits = new ArrayList<>();
-				sim_hits.add(new Point3D(0, 0, vzmc));
-				
-				DataBank bankMC = event.getBank("MC::True");
-				for (int i = 0; i < bankMC.rows(); i++) {
-					if (bankMC.getInt("pid", i) == 2212) {
-						float x = bankMC.getFloat("avgX", i);
-						float y = bankMC.getFloat("avgY", i);
-						float z = bankMC.getFloat("avgZ", i);
-						// System.out.println("r_sim = " + Math.hypot(x, y));
-						sim_hits.add(new Point3D(x, y, z));
-					}
-				}
-				vz_constraint = vzmc;
-			}
+			double vz_constraint = 0; // to be linked to the electron vertex
 
 			// Initialization ---------------------------------------------------------------------
 			final PDGParticle proton            = PDGDatabase.getParticleById(2212);
 			final int         numberOfVariables = 6;
 			final double      tesla             = 0.001;
 			final double[]    B                 = {0.0, 0.0, magfield / 10 * tesla};
+			
+            //DataBank mcBank = event.getBank("MC::Particle");
 
 			// Initialization material map
 			HashMap<String, Material> materialHashMap = materialGeneration();
+            // Loop over tracks
+            // Each track candidate form the HelixFitter is independently processed by the Kalman Filter
 			int trackId = 0;
-			//DataBank mcBank = event.getBank("MC::Particle");
 			for (Track track : tracks) {
 			    trackId++;
 			    track.set_trackId(trackId);
 			    // Initialization State Vector
-			    /*final*/ double x0  = 0.0;
-			    /*final*/ double y0  = 0.0;
-			    /*final*/ double z0  = track.get_Z0();
-			    //final
+			    double x0  = 0.0;
+			    double y0  = 0.0;
+			    double z0  = track.get_Z0();
 			    double px0 = track.get_px();
-			    //final
 			    double py0 = track.get_py();
-			    /*final*/ double pz0 = track.get_pz();
-			    //if (IsMC) {
-				//z0  = mcBank.getFloat("vz", trackId-1)*10;
-				//px0 = mcBank.getFloat("px", trackId-1)*1000;
-				//py0 = mcBank.getFloat("py", trackId-1)*1000;
-				//pz0 = mcBank.getFloat("pz", trackId-1)*1000;
-			    //}	
-			    //final double p_init = java.lang.Math.sqrt(px0*px0+py0*py0+pz0*pz0);
+			    double pz0 = track.get_pz();
+			    // using or not mc
+                // will be deleted in the final code
+                /*if (IsMC) {
+                    z0  = mcBank.getFloat("vz", trackId-1)*10;
+                    px0 = mcBank.getFloat("px", trackId-1)*1000;
+                    py0 = mcBank.getFloat("py", trackId-1)*1000;
+                    pz0 = mcBank.getFloat("pz", trackId-1)*1000;
+			    }*/	
 			    double[]     y   = new double[]{x0, y0, z0, px0, py0, pz0};
 			    // Initialization hit
+                // Here the hits that will be used by the Kalman Filter are initialised from the one AHDC::hits bank
+                // Why defining a new type of hit ?
+                // Unifying could be useful for the processing time. To be checked later.
 			    ArrayList<org.jlab.rec.ahdc.Hit.Hit> AHDC_hits = track.getHits();
 			    ArrayList<Hit>                       KF_hits   = new ArrayList<>();
 			    double ADCTot = 0;
-			    //System.out.println(" px " +  y[3] + " py " + y[4]  +" pz " +  y[5] +" vz " + y[2] + " number of hits: " + AHDC_hits.size() + " MC hits? " + sim_hits.size());
 			    track.set_n_hits(AHDC_hits.size());
 			    for (org.jlab.rec.ahdc.Hit.Hit AHDC_hit : AHDC_hits) {
-				Hit hit = new Hit(AHDC_hit.getSuperLayerId(), AHDC_hit.getLayerId(), AHDC_hit.getWireId(), AHDC_hit.getNbOfWires(), AHDC_hit.getLine(), AHDC_hit.getDoca());
-				hit.setADC(AHDC_hit.getADC());
-				hit.setHitIdx(AHDC_hit.getId());
-				hit.setSign(0);
-				ADCTot+=AHDC_hit.getADC();
-				// set track id
-				AHDC_hit.setTrackId(trackId);
-				
-				//System.out.println( " r = " + hit.r() + " hit.phi " + hit.phi() +" hit.doca = " + hit.getDoca()  );
-				// Do delete hit with same radius
-				boolean phi_rollover = false;
-				boolean aleardyHaveR = false;
-				for (Hit o: KF_hits){
-				    if (o.r() == hit.r()){
-					aleardyHaveR = true;
-					// //sign+ means (phi track - phi wire) > 0
-					//    if(o.phi()>hit.phi()){
-					// 	if(Math.abs(o.phi()-hit.phi())< 2*Math.toRadians(360./o.getNumWires()) ){
-					// 	    o.setSign(-1);
-					// 	    hit.setSign(+1);
-					// 	}else{
-					// 	    phi_rollover = true;
-					// 	    hit.setSign(-1);
-					// 	    o.setSign(+1);
-					// 	}
-					//    }else{
-					// 	if(Math.abs(o.phi()-hit.phi())< 2*Math.toRadians(360./o.getNumWires()) ){
-					// 	    hit.setSign(-1);
-					// 	    o.setSign(+1);
-					// 	}else{
-					// 	    phi_rollover = true;
-					// 	    o.setSign(-1);
-					//            hit.setSign(+1);
-					// 	}
-					//    }
-					//    //System.out.println( " r = " + o.r() + " o.phi = " + o.phi() + " o.doca = " + o.getDoca()*o.getSign() + " hit.phi " + hit.phi() +" hit.doca = " + hit.getDoca()*hit.getSign() + " angle between wires: " + Math.toRadians(360./hit.getNumWires()) + " >= ? angle covered by docas: " +  Math.atan( (o.getDoca()+hit.getDoca())/o.r() )  );
-				    }
-				}
-				if(!aleardyHaveR)KF_hits.add(hit);
-				// if (phi_rollover){
-				//      KF_hits.add(KF_hits.size()-1, hit);
-				// }else{
-				//     KF_hits.add(hit);
-				// }
+                    // Define ahdc.KalmanFilter.Hit from ahdc.Hit.Hit
+                    Hit hit = new Hit(AHDC_hit.getSuperLayerId(), AHDC_hit.getLayerId(), AHDC_hit.getWireId(), AHDC_hit.getNbOfWires(), AHDC_hit.getLine(), AHDC_hit.getDoca());
+                    hit.setADC(AHDC_hit.getADC());
+                    hit.setHitIdx(AHDC_hit.getId());
+                    ADCTot+=AHDC_hit.getADC();
+                    // set track id
+                    AHDC_hit.setTrackId(trackId);
+                    KF_hits.add(hit);
 			    }
+                // add a routine to sort the list of hits
 
 			    double zbeam = 0;
 			    if(IsVtxDefined)zbeam = vz_constraint;//test
+                // Define forward and backward indicator
+                // cf. Indicator.java
 			    final ArrayList<Indicator> forwardIndicators  = forwardIndicators(KF_hits, materialHashMap);
 			    final ArrayList<Indicator> backwardIndicators = backwardIndicators(KF_hits, materialHashMap, zbeam);
 			
@@ -165,28 +111,32 @@ public class KalmanFilter {
 
 			    // Initialization of the Kalman Fitter
 			    RealVector initialStateEstimate   = new ArrayRealVector(stepper.y);
-			    //first 3 lines in cm^2; last 3 lines in MeV^2
+			    //first 3 lines in mm^2; last 3 lines in MeV^2
 			    RealMatrix initialErrorCovariance = MatrixUtils.createRealMatrix(new double[][]{{1.00, 0.0, 0.0, 0.0, 0.0, 0.0}, {0.0, 1.00, 0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 25.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 1.00, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0, 1.00, 0.0}, {0.0, 0.0, 0.0, 0.0, 0.0, 25.0}});
 			    KFitter TrackFitter = new KFitter(initialStateEstimate, initialErrorCovariance, stepper, propagator);
 			    TrackFitter.setVertexDefined(IsVtxDefined);
 		 	    
-			    // save initial state and error covariance matrix
+			    // KFmonitor: save initial state and error covariance matrix
 			    track.add_KFMonitor(new KFMonitor(trackId, 0, 0, 0, 0, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
 			    for (int k = 0; k < Niter; k++) {
 				//System.out.println("--------- ForWard propagation !! ---------");
 				//Reset error covariance:
-				//TrackFitter.ResetErrorCovariance(initialErrorCovariance);
+				//TrackFitter.ResetErrorCovariance(initialErrorCovariance); // that can be very interesting, to be checked later, this has an effect on the convergence speed
 				for (Indicator indicator : forwardIndicators) {
+                    // Prediction
 				    TrackFitter.predict(indicator);
+                    // KFMonitor: save state and error covariance matrix
 				    track.add_KFMonitor(new KFMonitor(trackId, k, 0, indicator.getUniqueId(), 0, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
 				    if (indicator.haveAHit()) {
-					if( k==0  && indicator.hit.getHitIdx()>0){
-					    for (org.jlab.rec.ahdc.Hit.Hit AHDC_hit : AHDC_hits){
-						if(AHDC_hit.getId()==indicator.hit.getHitIdx())AHDC_hit.setResidualPrefit(TrackFitter.residual(indicator));
-					    }
-					}
-					TrackFitter.correct(indicator);
-				    	track.add_KFMonitor(new KFMonitor(trackId, k, 0, indicator.getUniqueId(), 1, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
+                        // I don't see the utility of this
+                        if( k==0  && indicator.hit.getHitIdx()>0){
+                            for (org.jlab.rec.ahdc.Hit.Hit AHDC_hit : AHDC_hits){
+                                if(AHDC_hit.getId()==indicator.hit.getHitIdx())AHDC_hit.setResidualPrefit(TrackFitter.residual(indicator));
+                            }
+                        }
+                        // Correction only if we have a measure (hit)
+                        TrackFitter.correct(indicator);
+                        track.add_KFMonitor(new KFMonitor(trackId, k, 0, indicator.getUniqueId(), 1, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
 				    }
 				}
 
