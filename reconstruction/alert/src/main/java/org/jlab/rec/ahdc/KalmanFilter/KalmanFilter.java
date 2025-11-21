@@ -21,7 +21,6 @@ import java.util.HashMap;
  * TODO : - Fix multi hit on the same layer
  *        - Optimize measurement noise and probably use doca as weight
  *        - Fix the wire number (-1)
- *        - Iterate thought multiple tracks per event
  *        - use a flag for simulation
  *        - add target in the map
  *        - move map to initialization engine
@@ -118,37 +117,38 @@ public class KalmanFilter {
 		 	    
 			    // KFmonitor: save initial state and error covariance matrix
 			    track.add_KFMonitor(new KFMonitor(trackId, 0, 0, 0, 0, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
+                // Loop over number of iterations
 			    for (int k = 0; k < Niter; k++) {
-				//System.out.println("--------- ForWard propagation !! ---------");
-				//Reset error covariance:
-				//TrackFitter.ResetErrorCovariance(initialErrorCovariance); // that can be very interesting, to be checked later, this has an effect on the convergence speed
-				for (Indicator indicator : forwardIndicators) {
-                    // Prediction
-				    TrackFitter.predict(indicator);
-                    // KFMonitor: save state and error covariance matrix
-				    track.add_KFMonitor(new KFMonitor(trackId, k, 0, indicator.getUniqueId(), 0, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
-				    if (indicator.haveAHit()) {
-                        // I don't see the utility of this
-                        if( k==0  && indicator.hit.getHitIdx()>0){
-                            for (org.jlab.rec.ahdc.Hit.Hit AHDC_hit : AHDC_hits){
-                                if(AHDC_hit.getId()==indicator.hit.getHitIdx())AHDC_hit.setResidualPrefit(TrackFitter.residual(indicator));
+                    //System.out.println("--------- ForWard propagation !! ---------");
+                    //Reset error covariance:
+                    //TrackFitter.ResetErrorCovariance(initialErrorCovariance); // that can be very interesting, to be checked later, this has an effect on the convergence speed
+                    for (Indicator indicator : forwardIndicators) {
+                        // Prediction
+                        TrackFitter.predict(indicator);
+                        // KFMonitor: save state and error covariance matrix
+                        track.add_KFMonitor(new KFMonitor(trackId, k, 0, indicator.getUniqueId(), 0, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
+                        if (indicator.haveAHit()) {
+                            // I don't see the utility of this
+                            if( k==0  && indicator.hit.getHitIdx()>0){
+                                for (org.jlab.rec.ahdc.Hit.Hit AHDC_hit : AHDC_hits){
+                                    if(AHDC_hit.getId()==indicator.hit.getHitIdx())AHDC_hit.setResidualPrefit(TrackFitter.residual(indicator));
+                                }
                             }
+                            // Correction only if we have a measure (hit)
+                            TrackFitter.correct(indicator);
+                            track.add_KFMonitor(new KFMonitor(trackId, k, 0, indicator.getUniqueId(), 1, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
                         }
-                        // Correction only if we have a measure (hit)
-                        TrackFitter.correct(indicator);
-                        track.add_KFMonitor(new KFMonitor(trackId, k, 0, indicator.getUniqueId(), 1, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
-				    }
-				}
+                    }
 
-				//System.out.println("--------- BackWard propagation !! ---------");
-				for (Indicator indicator : backwardIndicators) {
-				    TrackFitter.predict(indicator);
-				    	track.add_KFMonitor(new KFMonitor(trackId, k, 1, indicator.getUniqueId(), 0, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
-				    if (indicator.haveAHit()) {
-					TrackFitter.correct(indicator);
-				    	track.add_KFMonitor(new KFMonitor(trackId, k, 1, indicator.getUniqueId(), 1, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
-				    }
-				}
+                    //System.out.println("--------- BackWard propagation !! ---------");
+                    for (Indicator indicator : backwardIndicators) {
+                        TrackFitter.predict(indicator);
+                        track.add_KFMonitor(new KFMonitor(trackId, k, 1, indicator.getUniqueId(), 0, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
+                        if (indicator.haveAHit()) {
+                            TrackFitter.correct(indicator);
+                            track.add_KFMonitor(new KFMonitor(trackId, k, 1, indicator.getUniqueId(), 1, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
+                        }
+                    }
 			    }
 
 			    
@@ -158,15 +158,15 @@ public class KalmanFilter {
 			    //Residual, path and AHDC exit momentum calculation post fit:
 			    KFitter PostFitPropagator = new KFitter(TrackFitter.getStateEstimationVector(), initialErrorCovariance, new Stepper(TrackFitter.getStateEstimationVector().toArray()), new Propagator(RK4));
 			    for (Indicator indicator : forwardIndicators) {
-				PostFitPropagator.predict(indicator);
-				track.add_KFMonitor(new KFMonitor(trackId, Niter, 2, indicator.getUniqueId(), 0, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
-				if (indicator.haveAHit()) {
-				    if( indicator.hit.getHitIdx()>0){
-					for (org.jlab.rec.ahdc.Hit.Hit AHDC_hit : AHDC_hits){
-					    if(AHDC_hit.getId()==indicator.hit.getHitIdx())AHDC_hit.setResidual(PostFitPropagator.residual(indicator));
-					}
-				    }
-				}
+                    PostFitPropagator.predict(indicator);
+                    track.add_KFMonitor(new KFMonitor(trackId, Niter, 2, indicator.getUniqueId(), 0, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
+                    if (indicator.haveAHit()) {
+                        if( indicator.hit.getHitIdx()>0){
+                            for (org.jlab.rec.ahdc.Hit.Hit AHDC_hit : AHDC_hits){
+                                if(AHDC_hit.getId()==indicator.hit.getHitIdx())AHDC_hit.setResidual(PostFitPropagator.residual(indicator));
+                            }
+                        }
+                    }
 			    }
 			    
 			    double s = PostFitPropagator.stepper.sTot;
@@ -179,9 +179,9 @@ public class KalmanFilter {
 			    double sum_residuals = 0;
 			    double chi2 = 0;
 			    for (org.jlab.rec.ahdc.Hit.Hit AHDC_hit : AHDC_hits) {
-				sum_adc += AHDC_hit.getADC();
-				sum_residuals += AHDC_hit.getResidual();
-				chi2 += Math.pow(AHDC_hit.getResidual(),2.0);
+                    sum_adc += AHDC_hit.getADC();
+                    sum_residuals += AHDC_hit.getResidual();
+                    chi2 += Math.pow(AHDC_hit.getResidual(),2.0);
 			    }
 			    track.set_sum_adc(sum_adc);
 			    track.set_sum_residuals(sum_residuals);
@@ -193,8 +193,6 @@ public class KalmanFilter {
 		} catch (Exception e) {
 			// e.printStackTrace();
 		}
-
-
 	}
 
 	private HashMap<String, Material> materialGeneration() {
