@@ -11,7 +11,6 @@ import org.apache.commons.math3.linear.RealVector;
 
 public class Hit implements Comparable<Hit> {
 
-	private final double thster = Math.toRadians(20.0);
 	private final int    id;
 	private final int    superLayerId;
 	private final int    layerId;
@@ -20,7 +19,7 @@ public class Hit implements Comparable<Hit> {
 	private final double adc;
 	private final double time;
 
-        private Line3D wireLine;
+    private Line3D wireLine;
 	private double  phi;
 	private double  radius;
 	private int     nbOfWires;
@@ -31,7 +30,7 @@ public class Hit implements Comparable<Hit> {
 	private double  residual;
 	private int	trackId;
 
-        //updated constructor with ADC
+    //updated constructor with ADC
 	public Hit(int _Id, int _Super_layer, int _Layer, int _Wire, double _Doca, double _ADC, double _Time) {
 		this.id           = _Id;
 		this.superLayerId = _Super_layer;
@@ -91,13 +90,13 @@ public class Hit implements Comparable<Hit> {
 		return doca;
 	}
 
-        public Line3D getLine() {
-            return wireLine;
-        }
-        
-        public double getRadius() {
-		return radius;
-	}
+    public Line3D getLine() {
+        return wireLine;
+    }
+
+    public double getRadius() {
+        return radius;
+    }
 
 	public int getNbOfWires() {
 		return nbOfWires;
