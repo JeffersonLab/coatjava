@@ -26,6 +26,7 @@ usage='''build-coatjava.sh [OPTIONS]... [MAVEN_OPTIONS]...
    --lfs             use lfs for field maps and test data
 
    --clara           install clara too
+   --data            download test data (requires lfs)
 
    --help            show this message
 
@@ -84,6 +85,7 @@ fi
 
 # Currently only git-lfs works from offsite:
 if ! [[ $(hostname) == *.jlab.org ]]; then
+    echo "INFO:  using --lfs for offsite usage"
     useLsf=true
 fi
 
@@ -110,9 +112,7 @@ download () {
     elif $useLfs; then
         cd $src_dir
         git submodule update --init etc/data/magfield
-        if $downloadData; then
-            git submodule update --init validation/advanced-tests/data
-        fi
+        if $downloadData; then git submodule update --init validation/advanced-tests/data; fi
         cd - > /dev/null
     elif $useCvmfs; then
         cp -v $1 ./
