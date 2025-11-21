@@ -42,8 +42,6 @@ jobs:
         with:
           key: raw_test_data # fixed key will always hit; clear cache to trigger cache miss
           path: |
-            clas_005038.evio.00000
-            clas_021559.evio.00001
             clas_018779.evio.00001
           lookup-only: true
       - name: install xrootd-client
@@ -54,8 +52,6 @@ jobs:
       - name: download
         if: ${{ steps.cache.outputs.cache-hit != 'true' }}
         run: |
-          xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/clas_005038.evio.00000 ./
-          xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/raw/rg-l/clas_021559.evio.00001 ./
           xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/raw/rg-d/clas_018779.evio.00001 ./
 
   # build
@@ -187,15 +183,13 @@ jobs:
         with:
           key: raw_test_data
           path: |
-            clas_005038.evio.00000
-            clas_021559.evio.00001
             clas_018779.evio.00001
       - name: untar build
         run: tar xzvf coatjava.tar.gz
       - name: run test
         run: |
           ls -lhtr
-          ./coatjava/bin/decoder -n 10000 -o dog.hipo ./clas_005038.evio.00000
+          ./coatjava/bin/decoder -n 10000 -o dog.hipo ./clas_018779.evio.00001
 
   test_clara:
     needs: [ build, download_test_data ]
@@ -221,8 +215,6 @@ jobs:
         with:
           key: raw_test_data
           path: |
-            clas_005038.evio.00000
-            clas_021559.evio.00001
             clas_018779.evio.00001
       - name: untar build
         run: |
