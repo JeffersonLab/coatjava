@@ -1,16 +1,12 @@
 #!/bin/bash -f
 
-# coatjava must already be built at ../../coatjava/
+# coatjava and clara must already be built at ../../coatjava/
 # and input data files at ./data
 
 # set up environment
 JAVA_OPTS="-Djava.util.logging.config.file=$PWD/../../etc/logging/debug.properties"
-CLARA_HOME=$PWD/clara_installation/ ; export CLARA_HOME
+CLARA_HOME=$PWD/../../clara/ ; export CLARA_HOME
 COAT=$CLARA_HOME/plugins/clas12/
-
-# install clara
-../../install-clara -c ../../coatjava $CLARA_HOME
-[ $? -ne 0 ] && echo "clara installation error" && exit 1
 
 # source coatjava environment
 source $COAT/libexec/env.sh

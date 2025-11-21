@@ -273,7 +273,9 @@ jobs:
         with:
           cvmfs_repositories: 'oasis.opensciencegrid.org'
       - name: untar build
-        run: tar xzvf coatjava.tar.gz
+        run: |
+          tar xzvf coatjava.tar.gz
+          tar xzvf clara.tar.gz
       - name: run test
         run: |
           cd validation/advanced-tests
