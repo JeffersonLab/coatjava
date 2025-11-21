@@ -1,0 +1,3 @@
+[submodule "etc/data/magfield"]
+	path = etc/data/magfield
+	url = https://code.jlab.org/hallb/clas12/magfield
