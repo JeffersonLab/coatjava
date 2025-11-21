@@ -86,7 +86,7 @@ fi
 # Currently only git-lfs works from offsite:
 if ! [[ $(hostname) == *.jlab.org ]]; then
     echo "INFO:  using --lfs for offsite usage"
-    useLsf=true
+    useLfs=true
 fi
 
 src_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
