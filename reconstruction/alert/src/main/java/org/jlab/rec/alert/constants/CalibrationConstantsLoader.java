@@ -1,4 +1,4 @@
-package org.jlab.rec.constants;
+package org.jlab.rec.alert.constants;
 
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;

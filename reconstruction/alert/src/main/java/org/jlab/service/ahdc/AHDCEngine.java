@@ -27,7 +27,7 @@ import java.util.*;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.geom.detector.alert.AHDC.AlertDCDetector;
 import org.jlab.geom.detector.alert.AHDC.AlertDCFactory;
-import org.jlab.rec.constants.CalibrationConstantsLoader;
+import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
 import org.jlab.detector.pulse.ModeAHDC;
 
 /** AHDCEngine reconstruction service.
