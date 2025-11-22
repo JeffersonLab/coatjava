@@ -5,7 +5,6 @@ import static org.junit.Assert.assertEquals;
 
 import org.jlab.io.base.DataEvent;
 import org.jlab.detector.base.DetectorType;
-import org.jlab.logging.DefaultLogger;
 import org.jlab.analysis.physics.TestEvent;
 import org.jlab.service.ahdc.AHDCEngine;
 import org.jlab.rec.ahdc.Mode;
@@ -20,7 +19,6 @@ public class AHDCTest {
   @Test
   public void run() {
     System.setProperty("CLAS12DIR", "../../");
-    DefaultLogger.debug();
     
     DataEvent event = TestEvent.get(DetectorType.AHDC);
     

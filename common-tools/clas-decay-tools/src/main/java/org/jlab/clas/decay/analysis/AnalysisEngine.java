@@ -5,7 +5,6 @@
 package org.jlab.clas.decay.analysis;
 
 import org.jlab.clas.swimtools.MagFieldsEngine;
-import org.jlab.logging.DefaultLogger;
 
 /**
  *
@@ -20,8 +19,6 @@ public class AnalysisEngine extends Analysis {
     
     public static void main(String[] args) {
 
-        DefaultLogger.debug();
-        
         MagFieldsEngine enf = new MagFieldsEngine();
         enf.init();
         

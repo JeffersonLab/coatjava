@@ -10,7 +10,6 @@ import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
-import org.jlab.logging.DefaultLogger;
 import org.jlab.utils.groups.IndexedTable;
 
 /**
@@ -267,8 +266,6 @@ public final class SwapManager {
 
     public static void main(String[] args) {
         
-        DefaultLogger.debug();
-
         SwapManager man1 = new SwapManager(Arrays.asList("DC"),"08/10/2020","10/13/2024");
         System.err.println(man1.banksToTables.get("DC::tot"));
 
