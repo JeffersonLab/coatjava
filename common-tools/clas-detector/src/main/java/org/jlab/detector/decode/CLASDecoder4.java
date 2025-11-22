@@ -17,8 +17,6 @@ import org.jlab.detector.helicity.HelicitySequence;
 import org.jlab.detector.helicity.HelicityState;
 import org.jlab.detector.pulse.ModeAHDC;
 
-import org.jlab.logging.DefaultLogger;
-
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.evio.EvioSource;
@@ -59,7 +57,6 @@ public class CLASDecoder4 {
         hipoEvent = (HipoDataEvent) writer.createEvent();
         String dir = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4");
         schemaFactory.initFromDirectory(dir);
-        DefaultLogger.debug();
     }
 
     public CLASDecoder4(){
@@ -69,7 +66,6 @@ public class CLASDecoder4 {
         hipoEvent = (HipoDataEvent) writer.createEvent();
         String dir = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4");
         schemaFactory.initFromDirectory(dir);
-        DefaultLogger.debug();
     }
 
     public SchemaFactory getSchemaFactory(){
