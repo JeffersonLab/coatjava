@@ -42,8 +42,6 @@ jobs:
         with:
           key: raw_test_data # fixed key will always hit; clear cache to trigger cache miss
           path: |
-            clas_005038.evio.00000
-            clas_021559.evio.00001
             clas_018779.evio.00001
           lookup-only: true
       - name: install xrootd-client
@@ -53,10 +51,12 @@ jobs:
           sudo apt -y install xrootd-client
       - name: download
         if: ${{ steps.cache.outputs.cache-hit != 'true' }}
+#        run: |
+#          xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/raw/rg-d/clas_018779.evio.00001 ./
         run: |
-          xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/clas_005038.evio.00000 ./
-          xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/raw/rg-l/clas_021559.evio.00001 ./
-          xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/raw/rg-d/clas_018779.evio.00001 ./
+          git lfs install
+          git clone --depth 1 https://code.jlab.org/hallb/clas12/validation-data
+          cp validation-data/raw/rg-d/clas_018779.evio.00001 .
 
   # build
   #############################################################################
@@ -76,14 +76,6 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
           cache: maven
-      - name: install xrootd-client (linux)
-        if: ${{ matrix.runner == 'ubuntu-latest' }}
-        run: |
-          sudo apt -y update
-          sudo apt -y install xrootd-client
-      - name: install xrootd-client (macos)
-        if: ${{ matrix.runner == 'macos-latest' }}
-        run: brew install xrootd
       - name: setup cvmfs
         uses: cvmfs-contrib/github-action-cvmfs@v5
         with:
@@ -94,7 +86,11 @@ jobs:
         if: ${{ github.ref_type == 'tag' }}
         run: libexec/version-bump.sh ${{ github.ref_name }}
       - name: build
-        run: ./build-coatjava.sh --clara --xrootd --no-progress -T${{ env.nthreads }}
+        run: |
+          git lfs install
+          git submodule update --init ./etc/data/magfield
+          ./build-coatjava.sh --cvmfs --no-progress -T${{ env.nthreads }}
+          ./install-clara -b -c ./coatjava ./clara  
       - name: tar # tarball to preserve permissions
         run: |
           tar czvf coatjava.tar.gz coatjava
@@ -134,15 +130,11 @@ jobs:
           java-version: ${{ matrix.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
           cache: maven
-      - name: install xrootd-client
-        run: |
-          sudo apt -y update
-          sudo apt -y install xrootd-client
       - uses: cvmfs-contrib/github-action-cvmfs@v5
         with:
           cvmfs_repositories: 'oasis.opensciencegrid.org'
       - name: unit tests
-        run: ./build-coatjava.sh --xrootd --unittests --no-progress -T${{ env.nthreads }}
+        run: ./build-coatjava.sh --cvmfs --unittests --no-progress -T${{ env.nthreads }}
       - name: collect jacoco report
         if: ${{ matrix.JAVA_VERSION == env.JAVA_VERSION }}
         run: validation/jacoco-aggregate.sh
@@ -190,10 +182,6 @@ jobs:
       - uses: cvmfs-contrib/github-action-cvmfs@v5
         with:
           cvmfs_repositories: 'oasis.opensciencegrid.org'
-      - name: install xrootd-client
-        run: |
-          sudo apt -y update
-          sudo apt -y install xrootd-client
       - uses: actions/download-artifact@v6
         with:
           name: build_ubuntu-latest
@@ -201,15 +189,13 @@ jobs:
         with:
           key: raw_test_data
           path: |
-            clas_005038.evio.00000
-            clas_021559.evio.00001
             clas_018779.evio.00001
       - name: untar build
         run: tar xzvf coatjava.tar.gz
       - name: run test
         run: |
           ls -lhtr
-          ./coatjava/bin/decoder -n 10000 -o dog.hipo ./clas_005038.evio.00000
+          ./coatjava/bin/decoder -n 10000 -o dog.hipo ./clas_018779.evio.00001
 
   test_clara:
     needs: [ build, download_test_data ]
@@ -235,8 +221,6 @@ jobs:
         with:
           key: raw_test_data
           path: |
-            clas_005038.evio.00000
-            clas_021559.evio.00001
             clas_018779.evio.00001
       - name: untar build
         run: |
@@ -287,9 +271,13 @@ jobs:
         with:
           cvmfs_repositories: 'oasis.opensciencegrid.org'
       - name: untar build
-        run: tar xzvf coatjava.tar.gz
+        run: |
+          tar xzvf coatjava.tar.gz
+          tar xzvf clara.tar.gz
       - name: run test
         run: |
+          git lfs install
+          git submodule update --init validation/advanced-tests/data
           cd validation/advanced-tests
           echo "COMMAND: ${{ matrix.cmd }}"
           ${{ matrix.cmd }}
