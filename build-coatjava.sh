@@ -23,8 +23,10 @@ usage='''build-coatjava.sh [OPTIONS]... [MAVEN_OPTIONS]...
 
    --xrootd          use xrootd to download field maps
    --cvmfs           use cvmfs to download field maps
+   --lfs             use lfs for field maps and test data
 
    --clara           install clara too
+   --data            download test data (requires lfs)
 
    --help            show this message
 
@@ -40,7 +42,9 @@ downloadMaps="yes"
 runUnitTests="no"
 useXrootd=false
 useCvmfs=false
+useLfs=false
 installClara=false
+downloadData=false
 mvnArgs=()
 wgetArgs=()
 for xx in $@
@@ -61,8 +65,10 @@ do
       wgetArgs+=(--no-verbose)
       ;;
     --xrootd) useXrootd=true ;;
-    --cvmfs) useCvmfs=true ;;
-    --clara) installClara=true ;;
+    --cvmfs)  useCvmfs=true ;;
+    --lfs)    useLfs=true ;;
+    --clara)  installClara=true ;;
+    --data)   downloadData=true ;;
     -h|--help)
       echo "$usage"
       exit 2
@@ -70,6 +76,18 @@ do
     *) mvnArgs+=($xx) ;;
   esac
 done
+
+if $downloadData && ! $useLfs; then
+    echo "$usage"
+    echo "ERROR:::::::::::  --data requires --lfs"
+    exit 2
+fi
+
+# Currently only git-lfs works from offsite:
+if ! [[ $(hostname) == *.jlab.org ]]; then
+    echo "INFO:  using --lfs for offsite usage"
+    useLfs=true
+fi
 
 src_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 prefix_dir=$src_dir/coatjava
@@ -91,8 +109,13 @@ download () {
     if $useXrootd; then
         xrdcp $1 ./
         ret=$?
+    elif $useLfs; then
+        cd $src_dir
+        git submodule update --init etc/data/magfield
+        if $downloadData; then git submodule update --init validation/advanced-tests/data; fi
+        cd - > /dev/null
     elif $useCvmfs; then
-        cp $1 ./
+        cp -v $1 ./
         ret=$?
     elif command_exists wget ; then
         $wget $1
@@ -116,6 +139,7 @@ magfield_dir=$src_dir/etc/data/magfield
 if [ $cleanBuild == "no" ] && [ $downloadMaps == "yes" ]; then
   echo 'Retrieving field maps ...'
   webDir=https://clasweb.jlab.org/clas12offline/magfield
+  if $useLfs; then webDir=${magfield_dir##$src_dir}; fi
   if $useXrootd; then webDir=xroot://sci-xrootd.jlab.org//osgpool/hallb/clas12/coatjava/magfield; fi
   if $useCvmfs; then webDir=/cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/magfield; fi
   mkdir -p $magfield_dir
