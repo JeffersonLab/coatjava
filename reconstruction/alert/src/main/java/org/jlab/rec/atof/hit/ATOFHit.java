@@ -4,7 +4,7 @@ import org.jlab.geom.base.*;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.rec.atof.constants.Parameters;
 import java.util.logging.Logger;
-import org.jlab.rec.constants.CalibrationConstantsLoader;
+import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
 
 /**
  *
