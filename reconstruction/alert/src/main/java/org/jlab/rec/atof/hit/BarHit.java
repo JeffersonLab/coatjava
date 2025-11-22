@@ -1,7 +1,7 @@
 package org.jlab.rec.atof.hit;
 
 import org.jlab.rec.atof.constants.Parameters;
-import org.jlab.rec.constants.CalibrationConstantsLoader;
+import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
 
 /**
  *
