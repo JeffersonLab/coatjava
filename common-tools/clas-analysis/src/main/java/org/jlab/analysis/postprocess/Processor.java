@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.jlab.logging.DefaultLogger;
 
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
@@ -223,7 +222,6 @@ public class Processor {
     }
 
     public static void main(String args[]) {
-        DefaultLogger.debug();
         Processor p = new Processor(System.getenv("HOME")+"/tmp","r*.hipo",false,false);
     }
 

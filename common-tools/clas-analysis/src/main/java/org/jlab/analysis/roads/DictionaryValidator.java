@@ -16,7 +16,6 @@ import org.jlab.groot.graphics.EmbeddedCanvasTabbed;
 import org.jlab.groot.group.DataGroup;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.hipo.HipoDataSource;
-import org.jlab.logging.DefaultLogger;
 import org.jlab.utils.benchmark.ProgressPrintout;
 
 import org.jlab.utils.options.OptionParser;
@@ -303,8 +302,6 @@ public class DictionaryValidator {
     
 
     public static void main(String[] args) {
-        
-        DefaultLogger.debug();
 
         OptionParser parser = new OptionParser("dict-validator");
         parser.setRequiresInputList(false);

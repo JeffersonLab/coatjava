@@ -15,7 +15,6 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.io.hipo.HipoDataSync;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
-import org.jlab.logging.DefaultLogger;
 import org.jlab.utils.benchmark.ProgressPrintout;
 import org.jlab.utils.options.OptionParser;
 import org.jlab.utils.system.ClasUtilsFile;
@@ -345,8 +344,6 @@ public class EventMerger {
     }
 
     public static void main(String[] args)  {
-
-        DefaultLogger.debug();
 
         OptionParser parser = new OptionParser("bg-merger");
         parser.addRequired("-o"    ,"merged file");

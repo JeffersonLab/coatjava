@@ -7,7 +7,6 @@ import org.jlab.io.base.DataEvent;
 
 import org.jlab.analysis.physics.TestEvent;
 import org.jlab.detector.base.DetectorType;
-import org.jlab.logging.DefaultLogger;
 
 /**
  *
@@ -17,7 +16,6 @@ public class ECReconstructionTest {
 	
   @Test
   public void testECReconstruction() {
-    DefaultLogger.debug();
 
     System.setProperty("CLAS12DIR", "../../");
 
