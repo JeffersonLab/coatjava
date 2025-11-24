@@ -3,7 +3,6 @@ import java.util.List;
 import org.jlab.jnp.hipo4.data.*;
 import org.jlab.jnp.hipo4.io.HipoReader;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
-import org.jlab.logging.DefaultLogger;
 import org.jlab.utils.benchmark.ProgressPrintout;
 import org.jlab.utils.options.OptionParser;
 import org.jlab.utils.system.ClasUtilsFile;
@@ -36,8 +35,6 @@ public class RandomTriggerSplit {
     }
 
     public static void main(String[] args){
-
-        DefaultLogger.debug();
 
         OptionParser parser = new OptionParser("trigger-splitter");
         parser.addOption("-o"    ,"",   "output file prefix");

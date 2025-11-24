@@ -11,7 +11,6 @@ import org.jlab.analysis.math.ClasMath;
 
 import org.jlab.clas.swimtools.MagFieldsEngine;
 import org.jlab.detector.base.DetectorType;
-import org.jlab.logging.DefaultLogger;
 import org.jlab.utils.CLASResources;
 
 /**
@@ -22,8 +21,6 @@ public class DCReconstructionTest {
 
   @Test
   public void testDCReconstruction() {
-
-    DefaultLogger.debug();
 
     System.setProperty("CLAS12DIR", "../../");
 

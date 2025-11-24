@@ -116,6 +116,7 @@ calib.extend(rgl)
 mon.extend(rgl)
 dst.extend(rgl)
 
+create("tag1/", set(tag1))
 create("dst/", set(dst))
 create("dsthb/", set(dsthb))
 create("calib/", set(calib))
