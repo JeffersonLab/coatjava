@@ -33,7 +33,7 @@ if [ "${1-}" != '--no-classpath' ]; then
 fi
 
 # set log manager
-export JAVA_OPTS="-Dorg.jlab.logging.SplitLogManager ${JAVA_OPTS-}"
+export JAVA_OPTS="-Djava.util.logging.manager=org.jlab.logging.SplitLogManager ${JAVA_OPTS-}"
 
 # additional environment variables for groovy or interactive use
 # - call as `source $0 groovy` or `source $0 jshell`
