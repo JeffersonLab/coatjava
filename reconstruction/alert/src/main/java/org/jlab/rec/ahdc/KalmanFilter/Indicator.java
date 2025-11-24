@@ -47,23 +47,20 @@ public class Indicator {
 	// It is just for testing
 	// Only used by KFMonitor
 	public int getUniqueId() {
-                if (hit != null) {
-                	return (hit.getSuperLayerId()*10 + hit.getLayerId())*100 + hit.getWireId();
-                }
-                else if (Math.abs(R) < 1e-9) {
-                	// beamline
-                	return 0;
-                }
-                else if (Math.abs(R - 3.0) < 1e-9) {
-                	// inner face of the target straw
-                	return 1;
-                }
-                else if (Math.abs(R - 3.060) < 1e-9) {
-                	// outer face of the target straw
-                	return 2;
-                }
-		else {
-			return -1;
+		if (hit != null) {
+			return (hit.getSuperLayerId()*10 + hit.getLayerId())*100 + hit.getWireId();
+			// for the beamline it will return 0
 		}
+		else if (Math.abs(R - 3.0) < 1e-9) {
+			// inner face of the target straw
+			return 1;
+		}
+		else if (Math.abs(R - 3.060) < 1e-9) {
+			// outer face of the target straw
+			return 2;
+		}
+			else {
+				return -1;
+			}
 	}
 }
