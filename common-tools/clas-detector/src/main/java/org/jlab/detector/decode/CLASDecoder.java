@@ -42,7 +42,7 @@ public class CLASDecoder {
     private int                  decoderDebugMode = 0;
     private ModeAHDC                ahdcExtractor = new ModeAHDC();
     private RCDBManager               rcdbManager = new RCDBManager();
-    protected boolean benchmark = true;
+    static protected boolean            benchmark = true;
 
     public CLASDecoder(boolean development){
         codaDecoder = new CodaEventDecoder();
@@ -66,8 +66,8 @@ public class CLASDecoder {
         return schemaFactory;
     }
 
-    void resume(String s) { if (benchmark) Benchmark.getInstance().resume(s); }
-    void pause(String s) { if (benchmark) Benchmark.getInstance().pause(s); }
+    static void resume(String s) { if (benchmark) Benchmark.getInstance().resume(s); }
+    static void pause(String s) { if (benchmark) Benchmark.getInstance().pause(s); }
 
     public void setVariation(String variation) {
         detectorDecoder.setVariation(variation);
