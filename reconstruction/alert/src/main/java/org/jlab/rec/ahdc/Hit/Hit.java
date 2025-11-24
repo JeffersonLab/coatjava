@@ -4,9 +4,11 @@ import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
+import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.geom.detector.alert.AHDC.AlertDCDetector;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
+import org.jlab.geom.detector.alert.AHDC.AlertDCFactory;
 
 public class Hit implements Comparable<Hit> {
 
@@ -179,5 +181,21 @@ public class Hit implements Comparable<Hit> {
 	public double distance(Point3D point3D) {
 		return this.wireLine.distance(point3D).length();
 	}
+
+	public static void main(String[] args) {
+		AlertDCDetector factory = (new AlertDCFactory()).createDetectorCLAS(new DatabaseConstantProvider());
+		System.out.println("Run test: comparison between two hits.");
+		Hit h1 = new Hit(1,1,1,1,0,0,0);
+		Hit h2 = new Hit(1,1,1,47,0,0,0);
+		Hit h3 = new Hit(1,2,1,47,0,0,0);
+		h1.setWirePosition(factory);
+		h2.setWirePosition(factory);
+		System.out.println("h1 : " + h1);
+		System.out.println("h2 : " + h2);
+		System.out.println("numWires : " + h1.getNbOfWires());
+		System.out.println("h1 compare to h2 : " + h1.compareTo(h2));
+		System.out.println("h2 compare to h1 : " + h2.compareTo(h1));
+		System.out.println("h1 compare to h3 : " + h1.compareTo(h3));
+    }
 
 }
