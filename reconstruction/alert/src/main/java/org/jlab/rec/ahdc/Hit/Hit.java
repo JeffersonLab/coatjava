@@ -169,7 +169,7 @@ public class Hit implements Comparable<Hit> {
 	}
 
     public RealMatrix get_MeasurementNoise() {
-		return new Array2DRowRealMatrix(new double[][]{{0.0225}});
+		return new Array2DRowRealMatrix(new double[][]{{0.09}});
 	}
 
 	public RealVector get_Vector_beam() {
