@@ -147,7 +147,8 @@ decoder:
   dependencies: [build,download]
   script:
     - tar -xzf clara.tar.gz
-    - decoder -n 1000 -o clas_018779_00001.hipo clas_018779.evio.00001
+    - ls -l
+    - decoder4u -n 1000 -o clas_018779_00001.hipo clas_018779.evio.00001
   artifacts:
     when: always
     expire_in: 1 day
