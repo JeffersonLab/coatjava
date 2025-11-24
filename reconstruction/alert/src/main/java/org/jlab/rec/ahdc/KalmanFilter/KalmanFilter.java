@@ -35,7 +35,7 @@ public class KalmanFilter {
 
     public KalmanFilter(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {propagation(tracks, event, magfield, IsMC);}
 
-	private final int Niter = 10; // number of iterations of the Kalman Filter
+	private final int Niter = 60; // number of iterations of the Kalman Filter
 	private final boolean IsVtxDefined = false; // never used so far
                                                 // can be useful to take into account the vertex of the electron
 
@@ -78,15 +78,20 @@ public class KalmanFilter {
 			    double[]     y   = new double[]{x0, y0, z0, px0, py0, pz0};
 			    // Initialization hit
 			    ArrayList<Hit> AHDC_hits = track.getHits();
-				System.out.println("*** Before sorting ***");
+				/*System.out.println("*** Before sorting ***");
 				for (Hit hit : AHDC_hits) {
 					System.out.println(hit);
-				}
+				}*/
+				/*System.out.println("*** Set Random position ***");
+				Collections.shuffle(AHDC_hits);
+				for (Hit hit : AHDC_hits) {
+					System.out.println(hit);
+				}*/
 				Collections.sort(AHDC_hits); // sorted following the compareTo() method in Hit.java
-				System.out.println("*** After sorting ***");
+				/*System.out.println("*** After sorting ***");
 				for (Hit hit : AHDC_hits) {
 					System.out.println(hit);
-				}
+				}*/
 
 			    double zbeam = 0;
 			    if(IsVtxDefined)zbeam = vz_constraint;//test
@@ -113,7 +118,7 @@ public class KalmanFilter {
 			    track.add_KFMonitor(new KFMonitor(trackId, 0, 0, 0, 0, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
                 // Loop over number of iterations
 			    for (int k = 0; k < Niter; k++) {
-                    //System.out.println("--------- ForWard propagation !! ---------");
+                    //System.out.println("Niter:" + k + "   --------- ForWard propagation !! ---------");
                     //Reset error covariance:
                     //TrackFitter.ResetErrorCovariance(initialErrorCovariance); // that can be very interesting, to be checked later, this has an effect on the convergence speed
                     for (Indicator indicator : forwardIndicators) {
@@ -133,7 +138,7 @@ public class KalmanFilter {
                         }
                     }
 
-                    //System.out.println("--------- BackWard propagation !! ---------");
+                    //System.out.println("Niter:" + k + "--------- BackWard propagation !! ---------");
                     for (Indicator indicator : backwardIndicators) {
                         TrackFitter.predict(indicator);
                         // KFMonitor: save state and error covariance matrix
@@ -158,7 +163,7 @@ public class KalmanFilter {
                     track.add_KFMonitor(new KFMonitor(trackId, Niter, 2, indicator.getUniqueId(), 0, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
                     if (indicator.haveAHit()) {
                         if( indicator.hit.getId()>0){
-                            indicator.hit.setResidual(TrackFitter.residual(indicator));
+                            indicator.hit.setResidual(PostFitPropagator.residual(indicator));
                         }
                     }
 			    }
