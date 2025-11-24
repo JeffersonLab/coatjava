@@ -147,7 +147,8 @@ public class DetectorEventDecoder {
         for (DetectorDataDgtz d : detectorData) {
 
             // Get the hardware indexing for this detector data object:
-            long hash = d.getDescriptor().getHashCode();
+            long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(
+                d.getDescriptor().getCrate(), d.getDescriptor().getSlot(), d.getDescriptor().getChannel());
 
             if (translator.hasEntryByHash(hash)) {
                 
