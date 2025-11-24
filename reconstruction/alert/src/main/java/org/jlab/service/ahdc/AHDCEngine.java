@@ -274,7 +274,8 @@ public class AHDCEngine extends ReconstructionEngine {
             DataBank recoKFTracksBank   = writer.fillAHDCKFTrackBank(event, AHDC_Tracks);
             DataBank AIPredictionBanks = writer.fillAIPrediction(event, predictions);
             DataBank recoKFMonitorBank   = writer.fillKFMonitorBank(event, AHDC_Tracks);
-
+            
+            event.removeBanks("AHDC::hits","AHDC::preclusters","AHDC::clusters","AHDC::track","AHDC::kftrack","AHDC::mc","AHDC::ai:prediction","AHDC::kftrack:mon");
             event.appendBank(recoHitsBank);
             event.appendBank(recoPreClusterBank);
             event.appendBank(recoClusterBank);
