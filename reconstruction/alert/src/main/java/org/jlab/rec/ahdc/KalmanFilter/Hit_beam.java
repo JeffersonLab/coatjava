@@ -3,6 +3,7 @@ package org.jlab.rec.ahdc.KalmanFilter;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 import org.jlab.geom.prim.Line3D;
+import org.jlab.geom.prim.Point3D;
 import org.jlab.rec.ahdc.Hit.Hit;
 
 // A weird object that just want to be considered as a Hit
@@ -34,4 +35,8 @@ public class Hit_beam extends Hit {
 	public Line3D getLine() {
 		return beamline;
     }
+
+	public double distance(Point3D point3D) {
+		return this.beamline.distance(point3D).length();
+	}
 }
