@@ -41,6 +41,15 @@ public class DetectorEventDecoder {
         else this.initDecoder();
     }
 
+    public void setRunNumber(int run){
+        if (run != this.runNumber) {
+            translator = new TranslationTable();
+            for (int i=0; i<keysTrans.size(); i++)
+                translator.add(keysTrans.get(i), translationManager.getConstants(run, tablesTrans.get(i)));
+        }
+        this.runNumber = run;
+    }
+
     public void setTimestamp(String timestamp) {
         translationManager.setTimeStamp(timestamp);
         fitterManager.setTimeStamp(timestamp);
@@ -51,15 +60,6 @@ public class DetectorEventDecoder {
         translationManager.setVariation(variation);
         fitterManager.setVariation(variation);
         scalerManager.setVariation(variation);
-    }
-
-    public void setRunNumber(int run){
-        if (run != this.runNumber) {
-            translator = new TranslationTable();
-            for (int i=0; i<keysTrans.size(); i++)
-                translator.add(keysTrans.get(i), translationManager.getConstants(run, tablesTrans.get(i)));
-        }
-        this.runNumber = run;
     }
 
     public int getRunNumber() {
@@ -147,18 +147,18 @@ public class DetectorEventDecoder {
         for (DetectorDataDgtz d : detectorData) {
 
             // Get the hardware indexing for this detector data object:
-            long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(
-                d.getDescriptor().getCrate(), d.getDescriptor().getSlot(), d.getDescriptor().getChannel());
+            long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(d.getDescriptor().getCrate(),
+                d.getDescriptor().getSlot(), d.getDescriptor().getChannel());
 
             if (translator.hasEntryByHash(hash)) {
                 
                 // The tanslated detector indexing:
-                List<Integer> idx = translator.getIntegersByHash(hash);
+                List<Integer> x = translator.getIntegersByHash(hash);
 
                 // Set the translated detector indexing:
-                d.getDescriptor().setSectorLayerComponentOrderType(idx.get(0), idx.get(1), idx.get(2), idx.get(3), idx.get(4));
-                for (int i=0; i<d.getADCSize(); i++) d.getADCData(i).setOrder(idx.get(3));
-                for (int i=0; i<d.getTDCSize(); i++) d.getTDCData(i).setOrder(idx.get(3));
+                d.getDescriptor().setSectorLayerComponentOrderType(x.get(0),x.get(1),x.get(2),x.get(3),x.get(4));
+                for (int i=0; i<d.getADCSize(); i++) d.getADCData(i).setOrder(x.get(3));
+                for (int i=0; i<d.getTDCSize(); i++) d.getTDCData(i).setOrder(x.get(3));
             }
         }
     }
@@ -167,10 +167,9 @@ public class DetectorEventDecoder {
 
         // preload CCDB tables once:
         ArrayList<IndexedTable> tables = new ArrayList<>();
-        for (String name : tablesFitter) {
-            tables.add(fitterManager.getConstants(runNumber, name));
-        }
+        for (String name : tablesFitter) tables.add(fitterManager.getConstants(runNumber, name));
 
+        // loop over data:
         for(DetectorDataDgtz data : detectorData){
             
             int crate    = data.getDescriptor().getCrate();
@@ -182,7 +181,8 @@ public class DetectorEventDecoder {
             for (int j=0; j<keysFitter.size(); ++j) {
                 IndexedTable daq = tables.get(j);
                 DetectorType type = keysFitter.get(j);
-                //custom MM fitter
+
+                // custom MM fitter, uses only hash0:
             	if( ( type == DetectorType.BMT && data.getDescriptor().getType() == DetectorType.BMT )
                  || ( type == DetectorType.FMT && data.getDescriptor().getType() == DetectorType.FMT )
                  || ( type == DetectorType.FTTRK && data.getDescriptor().getType() == DetectorType.FTTRK ) ){
@@ -199,7 +199,10 @@ public class DetectorEventDecoder {
                         adc.setTimeStamp(mvtFitter.timestamp);
                     }
                     break;
-                } else if (daq.hasEntryByHash(hash) == true) {
+                }
+                
+                // standard fitter, uses full detector descriptor:
+                else if (daq.hasEntryByHash(hash) == true) {
                     int nsa = daq.getIntValueByHash("nsa", hash);
                     int nsb = daq.getIntValueByHash("nsb", hash);
                     int tet = daq.getIntValueByHash("tet", hash);
