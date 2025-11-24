@@ -14,6 +14,7 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.rec.ahdc.Track.Track;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.Track.KFMonitor;
+import java.util.Collections;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -77,9 +78,15 @@ public class KalmanFilter {
 			    double[]     y   = new double[]{x0, y0, z0, px0, py0, pz0};
 			    // Initialization hit
 			    ArrayList<Hit> AHDC_hits = track.getHits();
-                //-----------------------------------------
-                // add a routine to sort the list of hits
-                //-----------------------------------------
+				System.out.println("*** Before sorting ***");
+				for (Hit hit : AHDC_hits) {
+					System.out.println(hit);
+				}
+				Collections.sort(AHDC_hits); // sorted following the compareTo() method in Hit.java
+				System.out.println("*** After sorting ***");
+				for (Hit hit : AHDC_hits) {
+					System.out.println(hit);
+				}
 
 			    double zbeam = 0;
 			    if(IsVtxDefined)zbeam = vz_constraint;//test

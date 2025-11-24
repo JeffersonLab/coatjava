@@ -1,13 +1,12 @@
 package org.jlab.rec.ahdc.Hit;
 
-import org.jlab.geom.detector.alert.AHDC.AlertDCDetector;
-import org.jlab.geom.prim.Line3D;
-import org.jlab.geom.prim.Point3D;
-
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
+import org.jlab.geom.detector.alert.AHDC.AlertDCDetector;
+import org.jlab.geom.prim.Line3D;
+import org.jlab.geom.prim.Point3D;
 
 public class Hit implements Comparable<Hit> {
 
@@ -61,12 +60,27 @@ public class Hit implements Comparable<Hit> {
 		return "Hit{" + "_Super_layer=" + superLayerId + ", _Layer=" + layerId + ", _Wire=" + wireId + ", _Doca=" + doca + ", _Phi=" + phi + '}';
 	}
 
+	// Should return
+	//  0 if equality
+	// +1 if this is bigger than arg0
+	// -1 if this is lower than arg0 
 	@Override
 	public int compareTo(Hit arg0) {
-		if (this.superLayerId == arg0.superLayerId && this.layerId == arg0.layerId && this.wireId == arg0.wireId) {
-			return 0;
-		} else {
-			return 1;
+		if (this.superLayerId == arg0.superLayerId && this.layerId == arg0.layerId) { // same layer, so they have the same nbOfWires
+			if (this.wireId == 1 && arg0.wireId == this.nbOfWires) {
+				return 1;
+			} 
+			else if (this.wireId == this.nbOfWires && arg0.wireId == 1) {
+				return -1;
+			}
+			else {
+				return Integer.compare(this.wireId, arg0.wireId);
+			}
+		}
+		else {
+			int this_value = 10*this.superLayerId + this.layerId;
+			int value = 10*arg0.superLayerId + arg0.layerId;
+			return Integer.compare(this_value, value);
 		}
 	}
 
