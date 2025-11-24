@@ -19,7 +19,7 @@ public class Hit_beam extends Hit {
     // FOr clarity, we should remove them
 	//public Hit_beam(double x, double y , double z) {}
 	public Hit_beam(double x, double y , double z) {
-		super(-1, -1, -1, -1, 0, 0, -1); // just a line parallel to the beam axis, defined by two end points
+		super(0,0,0,0, 0, 0, -1); // just a line parallel to the beam axis, defined by two end points
 		this.x = x;
 		this.y = y;
 		this.z = z;
