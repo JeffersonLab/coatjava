@@ -4,9 +4,9 @@ import java.util.logging.Logger;
 import java.util.logging.Level;
 
 /**
- * A simple class demonstrating how to use {@link SplitLogger}.
+ * A simple class demonstrating how to use {@link SplitLogManager}.
  * <p>
- * The {@link SplitLogger} class will send {@code SEVERE} and {@code WARNING} log messages
+ * The {@link SplitLogManager} will create {@code Logger} instances that send {@code SEVERE} and {@code WARNING} log messages
  * to {@code stderr}, and all lower levels to {@code stdout}.
  * <p>
  * <b>How to set the logging level:</b>
@@ -25,13 +25,13 @@ import java.util.logging.Level;
  *   org.jlab.logging.TestSplitLogger
  * </pre>
  * You may write your own {@code .properties} file, to control the logging level of all classes which use logging.
- * @see SplitLogger {@code SplitLogger}: for implementation details
+ * @see SplitLogManager {@code SplitLogManager}: for implementation details
  * @author dilks
  */
 public class TestSplitLogger {
 
   /** logger instance for this class */
-  protected static final Logger LOGGER = SplitLogger.create(TestSplitLogger.class.getName());
+  protected static final Logger LOGGER = Logger.getLogger(TestSplitLogger.class.getName());
 
   /** constructor: prints some messages to {@code stdout}, but not using the logger yet */
   public TestSplitLogger() {

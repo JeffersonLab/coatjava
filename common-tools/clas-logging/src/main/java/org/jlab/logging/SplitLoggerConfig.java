@@ -2,7 +2,7 @@ package org.jlab.logging;
 
 import java.util.logging.Level;
 
-/** Configuration singleton for {@code SplitLogger} */
+/** Configuration singleton for {@code SplitLogManager} */
 public enum SplitLoggerConfig {
 
   /** singleton instance */
@@ -12,8 +12,8 @@ public enum SplitLoggerConfig {
   private volatile boolean calledSetDefaultLevel = false;
 
   /**
-   * Set the default {@code logging.Level} for all new {@code SplitLogger} instances.
-   * Note: see {@code SplitLogger} details to check if other ways to set logging levels will take priority over this.
+   * Set the default {@code logging.Level} for all new {@code SplitLogManager}'s {@code Logger} instances.
+   * Note: see {@code SplitLogManager} details to check if other ways to set logging levels will take priority over this.
    * @param level the log level
    */
   public synchronized void setDefaultLevel(Level level) {
@@ -21,8 +21,8 @@ public enum SplitLoggerConfig {
     this.calledSetDefaultLevel = true;
   }
 
-  /** @return the default {@code logging.Level} for all new {@code SplitLogger} instances.
-   * Note: see {@code SplitLogger} details to check if other ways to set logging levels will take priority over this.
+  /** @return the default {@code logging.Level} for all new {@code SplitLogManager}'s {@code Logger} instances.
+   * Note: see {@code SplitLogManager} details to check if other ways to set logging levels will take priority over this.
    */
   public Level getDefaultLevel() {
     return this.defaultLevel;

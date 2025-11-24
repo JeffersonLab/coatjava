@@ -91,6 +91,11 @@ JAVA_OPTS="$java_opts $JAVA_OPTS -XX:+IgnoreUnrecognizedVMOptions"
 JAVA_OPTS="$JAVA_OPTS -Djava.io.tmpdir=$CLARA_USER_DATA -Dorg.sqlite.tmpdir=$CLARA_USER_DATA"
 
 # Set verbosity:
+#
+# FIXME:
+# - use SplitLogManager
+# - allow verbosity control
+#
 [ -z ${quiet+x} ] && stub=fine || stub=info
 JAVA_OPTS="$JAVA_OPTS -Djava.util.logging.config.file=$CLAS12DIR/etc/logging/$stub.properties"
 

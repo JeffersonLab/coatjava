@@ -2,33 +2,39 @@ package org.jlab.logging;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.logging.LogManager;
 
 /**
- * Helper methods to create a {@code Logger} that sends errors to {@code stderr} and everything else to {@code stdout}
+ * {@code LogManager} that sends errors to {@code stderr} and everything else to {@code stdout}
  * @see TestSplitLogger {@code TestSplitLogger}: for guidance on how to use this class
  * @author dilks
  */
-public class SplitLogger {
+public class SplitLogManager extends LogManager {
 
   /**
-   * create a new {@link SplitLogger} instance, with formatted messages
-   * @return a new {@link SplitLogger} instance
+   * create a new {@link Logger} instance
    * @param name the name of the logger
+   * @return a new {@link Logger} instance
    */
-  public static Logger create(String name) {
-    return create(name, true);
+  @Override
+  public Logger getLogger(String name) {
+    Logger logger = super.getLogger(name);
+    if(logger != null)
+      configureHandlers(logger, true);
+    return logger;
   }
 
   /**
-   * create a new {@link SplitLogger} instance, with an optional message formatting including a prefix
-   * @return a new {@link SplitLogger} instance
+   * add a new {@link Logger} instance
    * @param name the name of the logger
-   * @param includePrefix whether or not to include a prefix in the formatting
+   * @return {@code true} if the argument logger was registered successfully, {@code false} if a logger of that name already exists
    */
-  public static Logger create(String name, boolean includePrefix) {
-    Logger logger = Logger.getLogger(name);
-    configureHandlers(logger, includePrefix);
-    return logger;
+  @Override
+  public synchronized boolean addLogger(Logger logger) {
+    boolean added = super.addLogger(logger);
+    if(added)
+      configureHandlers(logger, true);
+    return added;
   }
 
   /**

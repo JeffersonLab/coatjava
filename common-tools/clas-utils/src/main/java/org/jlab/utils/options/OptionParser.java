@@ -10,7 +10,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 import java.util.logging.Level;
-import org.jlab.logging.SplitLogger;
+import org.jlab.logging.SplitLogManager;
 import org.jlab.logging.SplitLoggerConfig;
 
 /**
@@ -238,7 +238,7 @@ public class OptionParser {
      * @param externalLogger an external {@code Logger} instance, typically one owned by the owner of this {@code OptionParser} instance
      */
     public void syncLogLevel(Logger externalLogger) {
-        SplitLogger.configureLevel(externalLogger, this.logLevel);
+        SplitLogManager.configureLevel(externalLogger, this.logLevel);
     }
 
     public static void main(String[] args){
