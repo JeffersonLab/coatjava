@@ -192,6 +192,7 @@ public class Hit implements Comparable<Hit> {
 		h2.setWirePosition(factory);
 		System.out.println("h1 : " + h1);
 		System.out.println("h2 : " + h2);
+		System.out.println("h3 : " + h3);
 		System.out.println("numWires : " + h1.getNbOfWires());
 		System.out.println("h1 compare to h2 : " + h1.compareTo(h2));
 		System.out.println("h2 compare to h1 : " + h2.compareTo(h1));
