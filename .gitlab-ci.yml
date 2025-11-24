@@ -49,6 +49,7 @@ build:
     - job: mirror
       optional: true
   script:
+    - git config --global --add safe.directory $CI_PROJECT_DIR
     - git lfs install
     - git submodule update --init etc/data/magfield
     - ./build-coatjava.sh --clara -T$JL_RUNNER_AVAIL_CPU --quiet --no-progress
@@ -129,6 +130,7 @@ eb:
   script:
     - tar -xzf coatjava.tar.gz
     - tar -xzf clara.tar.gz
+    - git config --global --add safe.directory $CI_PROJECT_DIR
     - git lfs install
     - git submodule update --init validation/advanced-tests/data
     - cd validation/advanced-tests
