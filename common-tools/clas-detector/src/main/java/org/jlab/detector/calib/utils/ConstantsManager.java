@@ -11,6 +11,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.decode.TranslationTable;
+import org.jlab.logging.SplitLogger;
 
 import org.jlab.utils.groups.IndexedTable;
 
@@ -22,8 +23,8 @@ public class ConstantsManager {
 
     public static final int DBERROR_SLEEP_SECONDS=3;
 
-    private static Logger LOGGER = Logger.getLogger("ConstantsManager");
-
+    private static final Logger LOGGER = SplitLogger.create("ConstantsManager");
+        
     private DatabaseConstantsDescriptor defaultDescriptor = new DatabaseConstantsDescriptor();
     private volatile Map<Integer, DatabaseConstantsDescriptor> runConstants = new LinkedHashMap<>();
     private volatile Map<Integer, Integer> runConstantRequestHistory = new LinkedHashMap<>();

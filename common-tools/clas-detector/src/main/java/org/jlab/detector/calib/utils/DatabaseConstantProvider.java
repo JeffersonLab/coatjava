@@ -19,6 +19,7 @@ import org.jlab.ccdb.Assignment;
 import org.jlab.ccdb.TypeTableColumn;
 import org.rcdb.RCDB;
 import org.jlab.geom.base.ConstantProvider;
+import org.jlab.logging.SplitLogger;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.groups.IndexedTableViewer;
 import org.jlab.utils.system.FileSystemExecScan;
@@ -29,7 +30,7 @@ import org.jlab.utils.system.FileSystemExecScan;
  */
 public class DatabaseConstantProvider implements ConstantProvider {
 
-    static final Logger LOGGER = Logger.getLogger("DatabaseConstantProvider");
+    static final Logger LOGGER = SplitLogger.create("DatabaseConstantProvider");
     
     private final HashMap<String,String[]> constantContainer = new HashMap<>();
     private final boolean PRINT_ALL = true;
