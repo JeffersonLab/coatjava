@@ -91,12 +91,8 @@ JAVA_OPTS="$java_opts $JAVA_OPTS -XX:+IgnoreUnrecognizedVMOptions"
 JAVA_OPTS="$JAVA_OPTS -Djava.io.tmpdir=$CLARA_USER_DATA -Dorg.sqlite.tmpdir=$CLARA_USER_DATA"
 
 # Set verbosity:
-#
-# FIXME:
-# - use SplitLogManager
-# - allow verbosity control
-#
-[ -z ${quiet+x} ] && stub=fine || stub=info
+[ -z ${quiet+x} ] && stub=logging || stub=debug
+JAVA_OPTS="$JAVA_OPTS -Djava.util.logging.manager=org.jlab.logging.SplitLogManager"
 JAVA_OPTS="$JAVA_OPTS -Djava.util.logging.config.file=$CLAS12DIR/etc/logging/$stub.properties"
 
 export JAVA_OPTS
