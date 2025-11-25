@@ -3,7 +3,7 @@ package org.jlab.logging;
 import java.util.logging.Level;
 
 /** Configuration singleton for {@code SplitLogManager} */
-public enum SplitLoggerConfig {
+public enum SplitLogManagerConfig {
 
   /** singleton instance */
   INSTANCE;

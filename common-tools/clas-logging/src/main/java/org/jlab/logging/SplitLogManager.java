@@ -6,7 +6,6 @@ import java.util.logging.LogManager;
 
 /**
  * {@code LogManager} that sends errors to {@code stderr} and everything else to {@code stdout}
- * @see TestSplitLogger {@code TestSplitLogger}: for guidance on how to use this class
  * @author dilks
  */
 public class SplitLogManager extends LogManager {
@@ -92,9 +91,9 @@ public class SplitLogManager extends LogManager {
     String userLevelProperty = System.getProperty(logger.getName() + ".level");
     if(userLevelProperty != null)
       thisLevel = Level.parse(userLevelProperty);
-    // else if the `SplitLoggerConfig` default level was set, use that level
-    else if(SplitLoggerConfig.INSTANCE.defaultLevelWasSet())
-      thisLevel = SplitLoggerConfig.INSTANCE.getDefaultLevel();
+    // else if the `SplitLogManagerConfig` default level was set, use that level
+    else if(SplitLogManagerConfig.INSTANCE.defaultLevelWasSet())
+      thisLevel = SplitLogManagerConfig.INSTANCE.getDefaultLevel();
     // else fallback to the level of `logger` itself
     else
       thisLevel = logger.getLevel();
