@@ -80,7 +80,7 @@ public class SwapEngine extends ReconstructionEngine {
         System.out.println("["+this.getName()+"] --> Setting detectors : "+this.getEngineConfigString("detectors"));
         System.out.println("["+this.getName()+"] --> Modifying ADC/TDC banks!");
 
-        this.swapman = SwapManager.getInstance();
+        this.swapman = new SwapManager();
         this.swapman.initialize(dets,previousTimestamp,currentTimestamp);
        
         System.out.println("["+this.getName()+"] --> swaps are ready....");
