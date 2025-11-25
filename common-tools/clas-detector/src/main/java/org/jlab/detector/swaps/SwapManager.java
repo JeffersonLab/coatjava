@@ -10,7 +10,6 @@ import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
-import org.jlab.logging.DefaultLogger;
 import org.jlab.utils.groups.IndexedTable;
 
 /**
@@ -248,8 +247,6 @@ public final class SwapManager {
     }
 
     public static void main(String[] args) {
-        
-        DefaultLogger.debug();
 
         SwapManager man = getInstance();
         System.out.println(Arrays.toString(man.get(11014, "/daq/tt/bmt",3,5,320,0)));

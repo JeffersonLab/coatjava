@@ -26,7 +26,6 @@ import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.task.DataSourceProcessorPane;
 import org.jlab.io.task.IDataEventListener;
-import org.jlab.logging.DefaultLogger;
 import org.jlab.rec.dc.banks.HitReader;
 import org.jlab.rec.dc.cluster.ClusterCleanerUtilities;
 import org.jlab.rec.dc.cluster.ClusterFinder;
@@ -420,8 +419,6 @@ public class LayerEfficiencyAnalyzer extends DCEngine implements IDataEventListe
    
     public static void main(String[] args) {
 
-        DefaultLogger.debug();
-
         JFrame frame = new JFrame("DC ANALYSIS");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         Dimension screensize = null;
@@ -440,6 +437,7 @@ public class LayerEfficiencyAnalyzer extends DCEngine implements IDataEventListe
         OptionParser parser = new OptionParser("dclayereffs-anal");
         parser.addOption("-i","");
         parser.parse(args);
+        parser.syncLogLevel(LOGGER);
         
         if(parser.hasOption("-i")==true){
             String inputFile    = parser.getOption("-i").stringValue();

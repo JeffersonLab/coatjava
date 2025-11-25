@@ -1,0 +1,6 @@
+[submodule "etc/data/magfield"]
+	path = etc/data/magfield
+	url = https://code.jlab.org/hallb/clas12/magfield
+[submodule "validation/advanced-tests/data"]
+	path = validation/advanced-tests/data
+	url = https://code.jlab.org/hallb/clas12/coatjava/advanced-tests
