@@ -8,11 +8,16 @@ To control the log level of a class with a `Logger`, make a logging `.properties
 org.jlab.detector.helicity.HelicityGenerator.level = FINEST
 org.jlab.detector.calib.utils.RCDBProvider.level = FINER
 ```
-Then run as
-```bash
-java -Djava.util.logging.config.file=my_levels.properties ...
+You can also control the _global_ log level for all classes with `.level`, for example, to set
+it to `FINE`:
 ```
-or using `run-coatjava`,
+.level = FINE
+```
+To use this `.properties` file, run with the `java` option
+```
+-Djava.util.logging.config.file=my_levels.properties
+```
+For example, if using `run-coatjava`,
 ```bash
 run-coatjava [CLASS_NAME] [CLASS_ARGS] -- -Djava.util.logging.config.file=my_levels.properties
 ```
@@ -20,7 +25,7 @@ From high to low, the levels are `SEVERE, WARNING, INFO, CONFIG, FINE, FINER, FI
 You may also use levels `ALL` or `OFF`, for everything or nothing, respectively.
 
 > [!NOTE]
-> These properties may compete with the log level set by `OptionParser`'s option `-l`, potentially overriding that level.
+> These properties may compete with the log level set by `OptionParser`'s option `-l`, potentially overriding that level. For example, `postprocess` and `decoder` use `OptionParser`.
 
 ## Bumping Version Number and Deploying
 
