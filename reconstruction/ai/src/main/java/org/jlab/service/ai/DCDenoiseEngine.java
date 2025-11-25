@@ -36,7 +36,7 @@ public class DCDenoiseEngine extends ReconstructionEngine {
 
     final static int LAYERS = 36;
     final static int WIRES = 112;
-    final static int SECTORS_PER_EVENT = 6;
+    final static int SECTORS= 6;
 
     String modelFile = "cnn_autoenc_sector1_2b_48f_4x6k.pt";
     float threshold = 0.053f;
@@ -106,22 +106,22 @@ public class DCDenoiseEngine extends ReconstructionEngine {
             DataBank bank = event.getBank(bankName);
             try {
                 // Build batch for 6 sectors
-                float[][][] batchInput = new float[SECTORS_PER_EVENT][LAYERS][WIRES];
+                float[][][] batchInput = new float[SECTORS][LAYERS][WIRES];
                 boolean anySectorPresent = false;
                 int rows = bank.rows();
                 for (int r=0; r<rows; r++) {
                     int sector = bank.getByte(0,r); // 1..6
-                    if (sector < 1 || sector > SECTORS_PER_EVENT) continue;
-                    int layer = bank.getByte(1,r)-1;
-                    int wire = bank.getShort(2,r)-1;
+                    if (sector < 1 || sector > SECTORS) continue;
+                    int layer = bank.getByte(1,r);
+                    int wire = bank.getShort(2,r);
                     byte order = bank.getByte(3,r);
                     if ((order==0)||(order==10)) {
-                        batchInput[sector-1][layer][wire]=1.0f;
+                        batchInput[sector-1][layer-1][wire-1]=1.0f;
                         anySectorPresent = true;
                     }
                 }
 
-                if (!anySectorPresent) break;
+                if (!anySectorPresent) continue;
 
                 Predictor<float[][][], float[][][]> predictor = predictors.take();
                 float[][][] batchOutput;
@@ -131,7 +131,7 @@ public class DCDenoiseEngine extends ReconstructionEngine {
                     predictors.put(predictor);
                 }
 
-                for (int sectorIdx=0; sectorIdx<SECTORS_PER_EVENT; sectorIdx++) {
+                for (int sectorIdx=0; sectorIdx<SECTORS; sectorIdx++) {
                     update(bank, threshold, batchOutput[sectorIdx], sectorIdx);
                 }
 
@@ -194,15 +194,14 @@ public class DCDenoiseEngine extends ReconstructionEngine {
     }
 
     // -------- Update single sector in bank --------
-    static void update(DataBank b, float threshold, float[][] data, int sectorZeroBased) {
-        int sector = sectorZeroBased+1;
+    static void update(DataBank b, float threshold, float[][] data, int sectorIdx) {
         for (int row=0; row<b.rows(); row++) {
-            if (b.getByte(0,row)-1 != sectorZeroBased) continue;
-            int lay=b.getByte(1,row)-1;
+            if (b.getByte(0,row)-1 != sectorIdx) continue;
+            int layer=b.getByte(1,row)-1;
             int wire=b.getShort(2,row)-1;
-            if (lay<0 || lay>=data.length) continue;
+            if (layer<0 || layer>=data.length) continue;
             if (wire<0 || wire>=data[0].length) continue;
-            if (data[lay][wire]<threshold) {
+            if (data[layer][wire]<threshold) {
                 if(b.getByte(3,row)==0) b.setByte(3,row,(byte)60);
                 if(b.getByte(3,row)==10) b.setByte(3,row,(byte)90);
             }
