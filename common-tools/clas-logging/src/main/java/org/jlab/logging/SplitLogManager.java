@@ -99,7 +99,12 @@ public class SplitLogManager extends LogManager {
       thisLevel = logger.getLevel();
     // if all else fails, try to use the parent's level
     if(thisLevel==null) {
-      thisLevel = logger.getParent().getLevel();
+      try {
+        thisLevel = logger.getParent().getLevel();
+      }
+      catch(NullPointerException e) {
+        System.err.println("WARNING: 'getParent()' of logger '" + logger.getName() + "' failed");
+      }
       if(thisLevel==null) { // should never happen, but just in case, fall back to default and complain directly to `stderr`
         thisLevel = Level.INFO;
         System.err.println("WARNING: trouble setting level of logger '" + logger.getName() + "'; defaulting to level '" + thisLevel + "'");
