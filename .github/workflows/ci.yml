@@ -39,9 +39,14 @@ jobs:
       - run: git lfs install
       - name: git clone
         run: git clone --depth 1 https://code.jlab.org/hallb/clas12/validation-data.git
-      - name: git lfs pull
+      - run: tree
         working-directory: validation-data
-        run: git lfs pull -I recon/mon/validation_files.tar.zst
+      - run: git status
+        working-directory: validation-data
+      - run: git lfs pull -I README.md
+        working-directory: validation-data
+      - run: git lfs pull -I recon/mon/validation_files.tar.zst
+        working-directory: validation-data
       - run: tree
         working-directory: validation-data
       - run: git status
