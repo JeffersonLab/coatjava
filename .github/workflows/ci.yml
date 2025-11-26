@@ -20,9 +20,10 @@ jobs:
     env:
       GIT_LFS_SKIP_SMUDGE: 1 # skip automatic LFS checkout
     steps:
-      - run: git lfs install
       - name: git clone
         run: git clone --depth 1 https://code.jlab.org/hallb/clas12/validation-data.git
+      - run: git lfs install
+        working-directory: validation-data
       - run: tree
         working-directory: validation-data
       - run: git status
