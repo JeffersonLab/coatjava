@@ -4,13 +4,6 @@ name: Coatjava-CI
 
 on:
   pull_request:
-  push:
-    branches: [ development ]
-    tags: [ '*' ]
-  schedule:
-    # NOTE: From what I read, the email notification for cron can only go
-    #       to the last committer of this file!!!!!
-    - cron: '0 22 * * *'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
@@ -19,15 +12,6 @@ concurrency:
 defaults:
   run:
     shell: bash
-
-env:
-  JAVA_VERSION: 21 # must be consistent with POM; see also dependabot config for any version limits
-  JAVA_VERSION_LATEST: 25 # the latest `JAVA_VERSION` that we test with CI
-  java_distribution: zulu
-  javadoc_version: 25 # newer than `JAVA_VERSION` for better javadoc
-  groovy_version: 4.x
-  CCDB_CONNECTION: 'sqlite:////cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/ccdb/ccdb_latest.sqlite'
-  nthreads: 1
 
 jobs:
 
