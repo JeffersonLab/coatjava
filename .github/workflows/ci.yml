@@ -45,9 +45,17 @@ jobs:
         working-directory: validation-data
       - run: git lfs pull -I README.md
         working-directory: validation-data
-      - run: git lfs pull -I recon/mon/validation_files.tar.zst
+      - name: pull evio
         working-directory: validation-data
-      - run: tree
+        run: |
+          for f in $(find raw -type f); do
+            echo "PULL $f"
+            git lfs pull -I $f || echo "FAILED TO PULL $f"
+          done
+      - name: pull tarballs
         working-directory: validation-data
-      - run: git status
-        working-directory: validation-data
+        run: |
+          for f in $(find recon -type f -name "*.zst"); do
+            echo "PULL $f"
+            git lfs pull -I $f || echo "FAILED TO PULL $f"
+          done
