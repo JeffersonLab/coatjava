@@ -63,7 +63,7 @@ jobs:
     steps:
       - run: git lfs install
       - name: git clone
-        run: git clone --depth 1 https://code.jlab.org/hallb/clas12/validation-data || echo "failed"
+        run: git clone --depth 1 https://code.jlab.org/hallb/clas12/validation-data.git || echo "failed"
       - run: tree
         working-directory: validation-data
       - run: git status
