@@ -36,8 +36,7 @@ public class KalmanFilter {
     public KalmanFilter(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {propagation(tracks, event, magfield, IsMC);}
 
 	private final int Niter = 60; // number of iterations of the Kalman Filter
-	private final boolean IsVtxDefined = false; // never used so far
-                                                // can be useful to take into account the vertex of the electron
+	private boolean IsVtxDefined = false;
 
 	private void propagation(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {
 
@@ -51,6 +50,18 @@ public class KalmanFilter {
 			final double[]    B                 = {0.0, 0.0, magfield / 10 * tesla};
 			
             //DataBank mcBank = event.getBank("MC::Particle");
+			// Load electron vertex
+			if (event.hasBank("REC::Particle")) {
+				DataBank recBank = event.getBank("REC::Particle");
+				int row = 0;
+				while ((!IsVtxDefined) && row < recBank.rows()) {
+					if (recBank.getInt("pid", row) == 11) {
+						IsVtxDefined = true;
+						vz_constraint = recBank.getFloat("vz",row);
+					}
+					row++;
+				}
+			}
 
 			// Initialization material map
 			HashMap<String, Material> materialHashMap = materialGeneration();
@@ -94,7 +105,7 @@ public class KalmanFilter {
 				}*/
 
 			    double zbeam = 0;
-			    if(IsVtxDefined)zbeam = vz_constraint;//test
+			    if(IsVtxDefined)zbeam = vz_constraint;
                 // Define forward and backward indicator
                 // cf. Indicator.java
 			    final ArrayList<Indicator> forwardIndicators  = forwardIndicators(AHDC_hits, materialHashMap);
