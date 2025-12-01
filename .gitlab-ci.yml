@@ -71,21 +71,21 @@ download:
   stage: build
   script:
 # XRootD:
-#    - xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/raw/rg-d/clas_018779.evio.01339 ./
+#    - xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/raw/rg-d/clas_018779.evio.00001 ./
 # validation-data git-lfs repo:
-#    - git clone https://code.jlab.org/hallb/clas12/validation-data
-#    - ls -l validation-data/raw/rg-d
-#    - cp validation-data/raw/rg-d/clas_018779.evio.01339 .
+    - git clone https://code.jlab.org/hallb/clas12/validation-data
+    - ls -l validation-data/raw/rg-d
+    - cp validation-data/raw/rg-d/clas_018779.evio.00001 .
 # validation/advanced-tests git-lfs submodule:
-    - git config --global --add safe.directory $CI_PROJECT_DIR
-    - git lfs install
-    - git submodule update --init validation/advanced-tests/data
-    - cp validation/advanced-tests/data/evio/rg-d/clas_018779.evio.01339 .
+#    - git config --global --add safe.directory $CI_PROJECT_DIR
+#    - git lfs install
+#    - git submodule update --init validation/advanced-tests/data
+#    - cp validation/advanced-tests/data/evio/rg-d/clas_018779.evio.00001 .
   artifacts:
     when: always
     expire_in: 1 day
     paths:
-      - clas_018779.evio.01339
+      - clas_018779.evio.00001
 
 .spotbugs:
   stage: test
@@ -169,12 +169,12 @@ decoder:
   script:
     - tar -xzf clara.tar.gz
     - ls -l
-    - decoder4u -n 20000 -o clas_018779_01339.hipo clas_018779.evio.01339
+    - decoder4u -n 20000 -o clas_018779_00001.hipo clas_018779.evio.00001
   artifacts:
     when: always
     expire_in: 1 day
     paths:
-      - clas_018779_01339.hipo
+      - clas_018779_00001.hipo
 
 clara:
   stage: test
@@ -182,7 +182,7 @@ clara:
   dependencies: [build,download]
   script:
     - tar -xzf clara.tar.gz
-    - run-clara -v -c $CLARA_HOME -t $JL_RUNNER_AVAIL_CPU -y ./etc/services/rgd-clarode.yml -n 100 -o out clas_018779.evio.01339
+    - run-clara -v -c $CLARA_HOME -t $JL_RUNNER_AVAIL_CPU -y ./etc/services/rgd-clarode.yml -n 100 -o out clas_018779.evio.00001
 
 profile:
   stage: test
@@ -190,16 +190,16 @@ profile:
   dependencies: [build,decoder]
   script:
     - tar -xzf coatjava.tar.gz
-    - libexec/profile -f flamegraph -e cpu       clas_018779_01339.hipo
-    - libexec/profile -f flamegraph -e nativemem clas_018779_01339.hipo
-    - libexec/profile -f flamegraph -e alloc     clas_018779_01339.hipo
+    - libexec/profile -f flamegraph -e cpu       clas_018779_00001.hipo
+    - libexec/profile -f flamegraph -e nativemem clas_018779_00001.hipo
+    - libexec/profile -f flamegraph -e alloc     clas_018779_00001.hipo
   artifacts:
     when: always
     expire_in: 1 week
     paths:
-      - pro_flamegraph_cpu_clas_018779_01339
-      - pro_flamegraph_nativemem_clas_018779_01339
-      - pro_flamegraph_alloc_clas_018779_01339
+      - pro_flamegraph_cpu_clas_018779_00001
+      - pro_flamegraph_nativemem_clas_018779_00001
+      - pro_flamegraph_alloc_clas_018779_00001
 
 .deploy:
   stage: deploy
