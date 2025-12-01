@@ -305,23 +305,22 @@ public class TableLoader {
         for(int s = 0; s<6; s++ ){ // loop over sectors
             for(int r = 0; r<6; r++ ){ //loop over slys
                 //System.out.println("sector "+(s+1)+" sly "+(r+1)+" v0 "+v0[s][r]+" vmid "+vmid[s][r]+" R "+FracDmaxAtMinVel[s][r]);
-                double dmax = 2.*Constants.getInstance().wpdist[r]; 
+                final double dmax = 2.*Constants.getInstance().wpdist[r]; 
+                final int nxmax = (int) (dmax/stepSize)+1; 
                 //double tmax = CCDBConstants.getTMAXSUPERLAYER()[s][r];
                 for(int ibfield =0; ibfield<maxBinIdxB+1; ibfield++) {
-                    double bfield = BfieldValues[ibfield];
                     for(int ibeta=0; ibeta<betaValues.length; ibeta++) {    
                         for(int icosalpha =0; icosalpha<maxBinIdxAlpha+1; icosalpha++) {
                             maxBinIdxT[s][r][ibfield][icosalpha] = NBINST; 
                             double cos30minusalpha = Math.cos(Math.toRadians(30.)) + (double) (icosalpha)*(1. - Math.cos(Math.toRadians(30.)))/5.;
                             double alpha = -(Math.toDegrees(Math.acos(cos30minusalpha)) - 30);
                             //int nxmax = (int) (dmax*cos30minusalpha/stepSize)+1; 
-                            int nxmax = (int) (dmax/stepSize)+1; 
                             double maxTime=-1;
                             double midbinclosestT=0;
                             int di=0;
                             for(int idist =0; idist<nxmax; idist++) {
                                 double x = (double)(idist+1)*stepSize;
-                                double timebfield = calc_Time( x,  alpha, bfield, s+1, r+1) ;
+                                double timebfield = calc_Time( x,  alpha, BfieldValues[ibfield], s+1, r+1) ;
                                 double deltatime_beta = getDeltaTimeBeta(x,betaValues[ibeta],distbeta[s][r],v0[s][r]);
                                 timebfield+=deltatime_beta;
                                 if(timebfield>maxTime) 
