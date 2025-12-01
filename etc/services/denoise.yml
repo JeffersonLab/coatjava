@@ -1,0 +1,16 @@
+mime-types:
+  - binary/data-hipo
+configuration:
+  io-services:
+    writer:
+      schema_dir: dst
+io-services:
+  reader:
+    class: org.jlab.io.clara.DecoderReader
+    name: DecoderReader
+  writer:
+    class: org.jlab.io.clara.DecoderWriter
+    name: DecoderWriter
+services:
+  - class: org.jlab.service.ai.DCDenoiseEngine
+    name: DCDN
