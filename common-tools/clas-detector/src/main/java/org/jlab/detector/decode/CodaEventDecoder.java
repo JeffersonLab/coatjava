@@ -316,7 +316,7 @@ public class CodaEventDecoder {
      * @param event
      * @return
      */
-    public List<EvioTreeBranch>  getEventBranches(EvioDataEvent event){
+    public static List<EvioTreeBranch>  getEventBranches(EvioDataEvent event){
         ArrayList<EvioTreeBranch>  branches = new ArrayList<>();
         try {
 
