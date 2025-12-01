@@ -72,6 +72,7 @@ download:
   script:
 #    - xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/raw/rg-d/clas_018779.evio.00001 ./
     - git clone https://code.jlab.org/hallb/clas12/validation-data
+    - ls -l validation-data/raw/rg-d
     - cp validation-data/raw/rg-d/clas_018779.evio.00001 .
   artifacts:
     when: always
