@@ -724,6 +724,8 @@ public class CLASDecoder {
             if(evioEvent.getHandler().getStructure()!=null){
                 try {
 
+                    codaDecoder.cacheBranches(evioEvent);
+
                     resume("evio");
                     dataList = codaDecoder.getDataEntries( (EvioDataEvent) event);
                     pause("evio");
