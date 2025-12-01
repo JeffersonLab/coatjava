@@ -129,6 +129,18 @@ download:
     paths:
       - pages
 
+kpp:
+  stage: test
+  needs: [build]
+  dependencies: [build]
+  script:
+    - tar -xzf coatjava.tar.gz
+    - git config --global --add safe.directory $CI_PROJECT_DIR
+    - git lfs install
+    - git submodule update --init validation/advanced-tests/data
+    - cd validation/advanced-tests
+    - ./run-advanced-tests.sh
+
 eb:
   stage: test
   needs: [build]
