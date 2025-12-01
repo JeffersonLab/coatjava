@@ -156,9 +156,9 @@ public class CLASDecoder4U extends CLASDecoder {
             File f = new File("tmp.hipo");
             if (f.exists()) f.delete();
             // setup decoder command-line options:
-            args = new String[]{"-o","tmp.hipo",System.getenv("HOME")+"/data/clas_005038.evio.00001"};
+            args = new String[]{"-o","tmp.hipo",System.getenv("HOME")+"/data/clas_018779.evio.00001"};
             // try to find bankdefs:
-            System.setProperty("CLAS12DIR", System.getenv("HOME")+"/sw/coatjava/dev/coatjava");
+            System.setProperty("CLAS12DIR", System.getenv("HOME")+"/sw/coatjava/coatjava");
         }
 
         // parse command-line options:
