@@ -24,12 +24,15 @@ import org.jlab.io.evio.EvioTreeBranch;
 import org.jlab.utils.data.DataUtils;
 
 import org.jlab.jnp.utils.json.JsonObject;
+import org.jlab.logging.SplitLogger;
 
 /**
  *
  * @author gavalian
  */
 public class CodaEventDecoder {
+
+    static final Logger LOGGER = SplitLogger.create("CodaEventDecoder");
 
     private int   runNumber = 0;
     private int eventNumber = 0;
@@ -340,7 +343,7 @@ public class CodaEventDecoder {
             }
 
         } catch (EvioException ex) {
-            Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
         }
         return branches;
     }
@@ -719,7 +722,7 @@ public class CodaEventDecoder {
                 return entries;
 
             } catch (EvioException ex) {
-                Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, null, ex);
             }
         }
         return entries;
@@ -789,7 +792,7 @@ public class CodaEventDecoder {
                 return entries;
 
             } catch (EvioException ex) {
-                Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, null, ex);
             }
         }
         return entries;
@@ -866,7 +869,7 @@ public class CodaEventDecoder {
                 return entries;
 
             } catch (EvioException ex) {
-                Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, null, ex);
             }
         }
         return entries;
@@ -928,7 +931,7 @@ public class CodaEventDecoder {
                 }
                 return entries;
             } catch (EvioException ex) {
-                Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, null, ex);
             }
         }
         return entries;
@@ -1000,7 +1003,7 @@ public class CodaEventDecoder {
                 }
                 return entries;
             } catch (EvioException ex) {
-                Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, null, ex);
             }
         }
         return entries;
@@ -1043,9 +1046,9 @@ public class CodaEventDecoder {
                     }
                 }
             } catch (EvioException ex) {
-                Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, null, ex);
             } catch (IndexOutOfBoundsException ex){
-                Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, null, ex);
             }
 
         }
@@ -1090,9 +1093,9 @@ public class CodaEventDecoder {
                     }
                 }
             } catch (EvioException ex) {
-                Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, null, ex);
             } catch (IndexOutOfBoundsException ex){
-                Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, null, ex);
             }
 
         }
@@ -1153,7 +1156,7 @@ public class CodaEventDecoder {
 
                 return entries;
             } catch (EvioException ex) {
-                Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, null, ex);
             }
         }
         return entries;
@@ -1236,7 +1239,7 @@ public class CodaEventDecoder {
 
                 return entries;
             } catch (EvioException ex) {
-                Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, null, ex);
             }
         }
         return entries;
