@@ -110,7 +110,7 @@ download () {
           cd $src_dir > /dev/null
           git lfs install
           git submodule update --init etc/data/magfield
-          git submodule update --init etc/nnet
+          git submodule update --init etc/data/nnet
           if $downloadData; then git submodule update --init validation/advanced-tests/data; fi
           cd - > /dev/null
         else
