@@ -45,7 +45,7 @@ public class MLTDEngine extends ReconstructionEngine {
         String runNumber = Optional.ofNullable(this.getEngineConfigString("run")).orElse("5038");
         networkRun = Integer.parseInt(runNumber);
         
-        String path = CLASResources.getResourcePath("etc/ejml/ejmlclas12.network"); 
+        String path = CLASResources.getResourcePath("etc/data/ejml/ejmlclas12.network"); 
         if(this.getEngineConfigString("network")!=null) 
             path = this.getEngineConfigString("network");
         System.out.println("[neural-network] info : Loading neural network from " + path);
