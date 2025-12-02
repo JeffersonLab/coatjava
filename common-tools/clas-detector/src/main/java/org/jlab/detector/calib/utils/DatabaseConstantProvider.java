@@ -436,7 +436,7 @@ public class DatabaseConstantProvider implements ConstantProvider {
             Date dateThen = format.parse("01/23/2017");
             System.out.println(dateThen);            
         } catch (ParseException ex) {
-            Logger.getLogger(DatabaseConstantProvider.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, ex);
         }
         
         org.rcdb.JDBCProvider provider_rcdb = RCDB.createProvider("mysql://rcdb@clasdb.jlab.org/rcdb");
