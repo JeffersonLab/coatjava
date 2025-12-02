@@ -301,8 +301,8 @@ public class AHDCEngine extends ReconstructionEngine {
         en.init(ModeTrackFinding.AI_Track_Finding);
 
         reader.open(inputFile);
-        SchemaFactory factory = reader.getReader().getSchemaFactory();
-        HipoDataSync   writer = new HipoDataSync(factory);
+        // SchemaFactory factory = reader.getReader().getSchemaFactory();
+        HipoDataSync   writer = new HipoDataSync();
         writer.open(outputFile);
 
         while (reader.hasEvent() && nEvent < maxEvent) {
