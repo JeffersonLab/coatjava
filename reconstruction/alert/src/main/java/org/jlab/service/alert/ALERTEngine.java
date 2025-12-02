@@ -26,6 +26,8 @@ import org.jlab.rec.alert.banks.RecoBankWriter;
 import org.jlab.rec.alert.projections.TrackProjector;
 import org.jlab.rec.atof.hit.ATOFHit;
 
+import ai.djl.util.Pair;
+
 
 /** 
  * <h1>ALERTEngine reconstruction service.</h1>
@@ -145,29 +147,24 @@ public class ALERTEngine extends ReconstructionEngine {
         if (!event.hasBank("AHDC::track")) return false;
 
         DataBank bank_AHDCtracks = event.getBank("AHDC::track");
-        DataBank bank_AHDCHits = event.getBank("AHDC::hits");
+        DataBank bank_AHDCInterclusters = event.getBank("AHDC::interclusters");
         DataBank bank_ATOFHits = event.getBank("ATOF::hits");
+
+        ArrayList<Pair<Integer, Integer>> matched_ATOF_hit_id = new ArrayList<>();
 
         for (int i = 0; i < bank_AHDCtracks.rows(); i++) {
             int track_id = bank_AHDCtracks.getInt("track_id", i);
 
-            ArrayList<Hit> AHDC_Hits = new ArrayList<>();
-            for  (int j = 0; j < bank_AHDCHits.columns(); j++) {
-                int track_id_hit  = bank_AHDCHits.getInt("track_id", j);
-                if (track_id == track_id_hit) {
-                    int id = bank_AHDCHits.getInt("id", j);
-                    int layer = bank_AHDCHits.getInt("layer", j);
-                    int superlayer = bank_AHDCHits.getInt("superlayer", j);
-                    int wire = bank_AHDCHits.getInt("wire", j);
-                    AHDC_Hits.add(new Hit(id, superlayer, layer, wire, 0,0,0));
+            // Get all interclusters for this track
+            ArrayList<Pair<Float, Float>> interClusters = new ArrayList<>();
+            for (int j = 0; j < bank_AHDCInterclusters.rows(); j++) {
+                int intercluster_track_id = bank_AHDCInterclusters.getInt("track_id", j);
+                if (intercluster_track_id == track_id) {
+                    float x = bank_AHDCInterclusters.getFloat("x", j);
+                    float y = bank_AHDCInterclusters.getFloat("y", j);
+                    interClusters.add(new Pair<>(x, y));
                 }
             }
-
-            /// Generate preclusters and interclusters for the prediction
-            AHDC_Hits.sort(Comparator.comparingDouble(Hit::getRadius));
-            PreClustering preClustering = new PreClustering();
-            ArrayList<PreCluster> preClustersAI = preClustering.findPreclustersForAI(AHDC_Hits);
-            ArrayList<InterCluster> interClusters = preClustering.mergePreclusters(preClustersAI);
 
             try {
                 AlertTOFFactory factory = new AlertTOFFactory();
@@ -187,7 +184,7 @@ public class ALERTEngine extends ReconstructionEngine {
                 double threshold = 20.0;
                 double minDistanceSquared = threshold * threshold;
 
-                ATOFHit matchAtofHit = null;
+                ATOFHit matchAtofHit = null; // Could be used later
                 int matchHitId = -1;
 
                 for (int k = 0; k < bank_ATOFHits.rows(); k++) {
@@ -211,16 +208,14 @@ public class ALERTEngine extends ReconstructionEngine {
                         matchHitId = bank_ATOFHits.getInt("id", k);
                     }
                 }
-
-                if (matchAtofHit != null) {
-                    double actualDistance = Math.sqrt(minDistanceSquared);
-                    // Use matchAtofHit, matchHitId, and actualDistance
-                }
+                matched_ATOF_hit_id.add(new Pair<>(track_id, matchHitId));
 
             } catch (Exception ex) {
-                throw new RuntimeException(ex);
+                System.out.println("Exception in ALERTEngine processDataEvent: " + ex); // TODO: proper logging
             }
 
+
+            
         }
         return true;
     }

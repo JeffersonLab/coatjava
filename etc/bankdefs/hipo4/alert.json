@@ -55,7 +55,18 @@
         "info": "path length inside atof wedge in mm"
       }
     ]
-  },{
+  },
+    {
+    "name": "ALERT::ai:projections",
+    "group": 23000,
+    "item": 32,
+    "info": "Track Projections to ATOF given by AI",
+    "entries": [    
+      {"name": "trackid", "type": "I", "info": "track id"},
+      {"name": "matched_atof_hit_id", "type": "I", "info": "id of the matched ATOF hit, -1 if no hit was matched"}
+    ]
+  },
+  {
     "name": "ATOF::hits",
     "group": 22500,
     "item": 21,
@@ -297,10 +308,7 @@
         "name": "sum_residuals",
         "type": "F",
         "info": "Sum of residuals (mm)"
-      },
-      {"name": "ATOF_sector", "type": "I", "info": "Prediction for the ATOF sector"},
-      {"name": "ATOF_layer", "type": "I", "info": "Prediction for the ATOF layer"},
-      {"name": "ATOF_wedge", "type": "I", "info": "Prediction for the ATOF wedge"}
+      }
     ]
   }, {
     "name": "AHDC::kftrack",

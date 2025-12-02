@@ -13,6 +13,8 @@ import ai.djl.training.util.ProgressBar;
 import ai.djl.translate.TranslateException;
 import ai.djl.translate.Translator;
 import ai.djl.translate.TranslatorContext;
+import ai.djl.util.Pair;
+
 import org.jlab.rec.ahdc.AI.InterCluster;
 import org.jlab.utils.CLASResources;
 
@@ -71,12 +73,12 @@ public class ModelTrackMatching {
         return model;
     }
 
-    public float[] prediction(ArrayList<InterCluster> track) throws TranslateException {
-        float[] a = new float[]{(float) track.get(0).getX(), (float) track.get(0).getY(),
-                (float) track.get(1).getX(), (float) track.get(1).getY(),
-                (float) track.get(2).getX(), (float) track.get(2).getY(),
-                (float) track.get(3).getX(), (float) track.get(3).getY(),
-                (float) track.get(4).getX(), (float) track.get(4).getY(),
+    public float[] prediction(ArrayList<Pair<Float, Float>> track) throws TranslateException {
+        float[] a = new float[]{(float) track.get(0).getKey(), (float) track.get(0).getValue(),
+                (float) track.get(1).getKey(), (float) track.get(1).getValue(),
+                (float) track.get(2).getKey(), (float) track.get(2).getValue(),
+                (float) track.get(3).getKey(), (float) track.get(3).getValue(),
+                (float) track.get(4).getKey(), (float) track.get(4).getValue(),
         };
 
         Predictor<float[], float[]> my_predictor = model.newPredictor();
