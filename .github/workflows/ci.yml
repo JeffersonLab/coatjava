@@ -87,10 +87,8 @@ jobs:
         run: libexec/version-bump.sh ${{ github.ref_name }}
       - name: build
         run: |
-          git lfs install
-          git submodule update --init ./etc/data/magfield
-          ./build-coatjava.sh --cvmfs --no-progress -T${{ env.nthreads }}
-          ./install-clara -b -c ./coatjava ./clara  
+          ./build-coatjava.sh --lfs --no-progress -T${{ env.nthreads }}
+          ./install-clara -b -c ./coatjava ./clara
       - name: tar # tarball to preserve permissions
         run: |
           tar czvf coatjava.tar.gz coatjava
