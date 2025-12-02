@@ -170,7 +170,7 @@ decoder:
   script:
     - tar -xzf clara.tar.gz
     - ls -l
-    - decoder4u -n 20000 -o clas_018779_00001.hipo clas_018779.evio.00001
+    - decoder4u -l FINE -n 20000 -o clas_018779_00001.hipo clas_018779.evio.00001
   artifacts:
     when: always
     expire_in: 1 day
