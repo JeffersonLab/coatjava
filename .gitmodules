@@ -4,3 +4,6 @@
 [submodule "validation/advanced-tests/data"]
 	path = validation/advanced-tests/data
 	url = https://code.jlab.org/hallb/clas12/coatjava/advanced-tests
+[submodule "etc/nnet"]
+	path = etc/nnet
+	url = https://code.jlab.org/hallb/clas12/coatjava/networks
