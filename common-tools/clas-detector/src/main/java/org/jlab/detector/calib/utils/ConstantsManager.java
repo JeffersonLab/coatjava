@@ -178,8 +178,6 @@ public class ConstantsManager {
      */
     public static class DatabaseConstantsDescriptor {
         
-        Logger LOGGER = Logger.getLogger(DatabaseConstantsDescriptor.class.getName());
-
         private int     runNumber  = 10;
         List<Integer>  tableIndices = new ArrayList<>();
         Set<String>    tableNames  = new LinkedHashSet<>();
