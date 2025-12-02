@@ -177,7 +177,7 @@ public class DetectorEventDecoder {
             
             // custom MM fitter, uses only hash0:
             if (keysMicromega.contains(data.getDescriptor().getType())) {
-                long hash0 = IndexedTable.DEFAULT_GENERATOR.hashCode(0,0,0);
+                long hash0 = 0;//IndexedTable.DEFAULT_GENERATOR.hashCode(0,0,0);
                 for (int j=0; j<keysFitter.size(); ++j) {
                     IndexedTable daq = tables.get(j);
                     if (keysMicromega.contains(keysFitter.get(j))) {
