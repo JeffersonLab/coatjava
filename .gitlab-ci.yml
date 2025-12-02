@@ -50,9 +50,7 @@ build:
       optional: true
   script:
     - git config --global --add safe.directory $CI_PROJECT_DIR
-    - git lfs install
-    - git submodule update --init etc/data/magfield
-    - ./build-coatjava.sh --clara -T$JL_RUNNER_AVAIL_CPU --quiet --no-progress
+    - ./build-coatjava.sh --lfs --clara -T$JL_RUNNER_AVAIL_CPU --quiet --no-progress
     - tar -czf coatjava.tar.gz coatjava
     - tar -czf clara.tar.gz clara
   artifacts:
