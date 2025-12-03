@@ -52,7 +52,7 @@ public class ModelTrackMatching {
         System.setProperty("ai.djl.pytorch.num_threads", "1");
         System.setProperty("ai.djl.pytorch.graph_optimizer", "false");
 
-        String path = CLASResources.getResourcePath("etc/nnet/ALERT/model_TM/");
+        String path = CLASResources.getResourcePath("etc/data/nnet/ALERT/model_TM/");
         Criteria<float[], float[]> my_model = Criteria.builder().setTypes(float[].class, float[].class)
                 .optModelPath(Paths.get(path))
                 .optEngine("PyTorch")
