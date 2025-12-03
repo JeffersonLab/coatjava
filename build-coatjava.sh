@@ -5,31 +5,34 @@ set -e
 set -u
 set -o pipefail
 
-usage='''build-coatjava.sh [OPTIONS]... [MAVEN_OPTIONS]...
+usage='''build-coatjava.sh [OPTIONS]...
 
-  OPTIONS
-   --clara           install clara too
-   --clean           clean up built objects and exit (does not compile)
-   --quiet           run more quietly
-   --no-progress     no download progress printouts
-   --help            show this message
+  GENERAL OPTIONS
+    --clara           install clara too
+    --clean           clean up built objects and exit (does not compile)
+    --quiet           run more quietly
+    --no-progress     no download progress printouts
+    --help            show this message
 
-  OPTIONS FOR MAGNETIC FIELD MAPS, NEURAL NETWORK MODELS, etc.
-   --lfs             use Git Large File Storage (requires `git-lfs`)
-   --cvmfs           use CernVM-FS (requires `/cvfms`)
-   --xrootd          use XRootD (requires `xrootd`)
-   --nomaps          do not download field maps
+  DATA RETRIEVAL OPTIONS
+   How to retrieve magnetic field maps, neural network models, etc.;
+   choose only one:
+    --lfs             use Git Large File Storage (requires `git-lfs`)
+    --cvmfs           use CernVM-FS (requires `/cvfms`)
+    --xrootd          use XRootD (requires `xrootd`)
+    --nomaps          do not download field maps
 
-  OPTIONS FOR TESTING
-   --spotbugs        also run spotbugs plugin
-   --unittests       also run unit tests
-   --depana          run dependency analysis (only)
-   --data            download test data (requires lfs)
+  TESTING OPTIONS
+    --spotbugs        also run spotbugs plugin
+    --unittests       also run unit tests
+    --depana          run dependency analysis (only)
+    --data            download test data (requires `git-lfs`)
 
-  MAVEN_OPTIONS
+  MAVEN OPTIONS
    all other arguments will be passed to `mvn`; for example,
    -T4 will build with 4 parallel threads
 '''
+
 
 ################################################################################
 # parse arguments
@@ -64,9 +67,9 @@ do
       mvnArgs+=(--no-transfer-progress)
       wgetArgs+=(--no-verbose)
       ;;
-    --xrootd) useXrootd=true ;;
-    --cvmfs)  useCvmfs=true ;;
-    --lfs)    useLfs=true ;;
+    --xrootd) useXrootd=true    ;;
+    --cvmfs)  useCvmfs=true     ;;
+    --lfs)    useLfs=true       ;;
     --clara)  installClara=true ;;
     --data)   downloadData=true ;;
     -h|--help)
@@ -89,13 +92,16 @@ if ! [[ $(hostname) == *.jlab.org ]]; then
     useLfs=true
 fi
 
+
 ################################################################################
 # setup
 ################################################################################
 
+# directories
 src_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 prefix_dir=$src_dir/coatjava
 clara_home=$src_dir/clara
+magfield_dir=$src_dir/etc/data/magfield
 
 # working directory should be the source code directory
 cd $src_dir
@@ -105,14 +111,55 @@ wgetArgs+=(--timestamping --no-check-certificate) # `--timestamping` only redown
 mvn="mvn ${mvnArgs[@]:-}"
 wget="wget ${wgetArgs[@]:-}"
 
+# environment
+source libexec/env.sh --no-classpath
+
+
+################################################################################
+# cleaning, dependency analysis, etc.
+################################################################################
+
+# function to clean installation prefixes
+clean_prefixes() {
+  rm -rf $prefix_dir $clara_home
+}
+
+# clean up any cache copies
+if $cleanBuild; then
+  clean_prefixes
+  $mvn clean
+  for target_dir in $(find $src_dir -type d -name target); do
+    echo "WARNING: target directory '$target_dir' was not removed! JAR files within may be accidentally installed!" >&2
+  done
+  echo """DONE CLEANING.
+  NOTE:
+    - to remove local magnetic field maps:
+        rm $magfield_dir/*.dat
+    - to clear all LFS git submodules:
+        git submodule deinit --all
+
+  Now re-run without \`--clean\` to build."""
+  exit
+fi
+
+# run dependency analysis and exit
+if $anaDepends; then
+  libexec/dependency-analysis.sh
+  libexec/dependency-tree.sh
+  exit 0
+fi
+
+
 ################################################################################
 # download field maps, NN models, etc.
 ################################################################################
 
+# check if a command exists
 command_exists () {
-    type "$1" &> /dev/null
+  type "$1" &> /dev/null
 }
 
+# update an LFS submodule
 download_lfs() {
   if command_exists git-lfs ; then
     cd $src_dir > /dev/null
@@ -125,6 +172,7 @@ download_lfs() {
   fi
 }
 
+# download a magnetic field map
 download_map () {
     ret=0
     if $useXrootd; then
@@ -150,9 +198,7 @@ download_map () {
 
 # download the default field maps, as defined in libexec/env.sh:
 # (and duplicated in etc/services/reconstruction.yaml):
-source libexec/env.sh --no-classpath
-magfield_dir=$src_dir/etc/data/magfield
-if ! $cleanBuild && $downloadMaps; then
+if $downloadMaps; then
   echo 'Retrieving field maps ...'
   if $useLfs; then
     download_lfs etc/data/magfield
@@ -191,42 +237,13 @@ if $downloadData; then
   download_lfs validation/advanced-tests/data
 fi
 
-################################################################################
-# cleaning
-################################################################################
-
-# always clean the installation prefix
-rm -rf $prefix_dir $clara_home
-
-# clean up any cache copies
-if $cleanBuild; then
-  $mvn clean
-  for target_dir in $(find $src_dir -type d -name target); do
-    echo "WARNING: target directory '$target_dir' was not removed! JAR files within may be accidentally installed!" >&2
-  done
-  echo """DONE CLEANING.
-  NOTE:
-    - to remove local magnetic field maps:
-        rm $magfield_dir/*.dat
-    - to clear all LFS git submodules:
-        git submodule deinit --all
-
-  Now re-run without \`--clean\` to build."""
-  exit
-fi
 
 ################################################################################
 # build
 ################################################################################
 
-# run dependency analysis and exit
-if $anaDepends; then
-  libexec/dependency-analysis.sh
-  libexec/dependency-tree.sh
-  exit 0
-fi
-
 # start new installation tree
+clean_prefixes # always clean the installation prefix
 mkdir -p $prefix_dir
 cp -r bin $prefix_dir/
 cp -r etc $prefix_dir/
@@ -240,7 +257,7 @@ $python etc/bankdefs/util/bankSplit.py $prefix_dir/etc/bankdefs/hipo4 || exit 1
 mkdir -p $prefix_dir/lib/utils
 cp external-dependencies/jclara-4.3-SNAPSHOT.jar $prefix_dir/lib/utils
 
-# spotbugs, unit tests
+# build (and test)
 unset CLAS12DIR
 if $runUnitTests; then
   $mvn install # also runs unit tests
@@ -248,6 +265,7 @@ else
   $mvn install -DskipTests
 fi
 
+# run spotbugs
 if $runSpotBugs; then
   # mvn com.github.spotbugs:spotbugs-maven-plugin:spotbugs # spotbugs goal produces a report target/spotbugsXml.xml for each module
   $mvn com.github.spotbugs:spotbugs-maven-plugin:check # check goal produces a report and produces build failed if bugs
@@ -255,6 +273,7 @@ if $runSpotBugs; then
   # see http://spotbugs.readthedocs.io/en/latest/maven.html and https://spotbugs.github.io/spotbugs-maven-plugin/index.html for more info
   if [ $? != 0 ] ; then echo "spotbugs failure" >&2 ; exit 1 ; fi
 fi
+
 
 ################################################################################
 # install
@@ -287,6 +306,7 @@ for pom in $(find common-tools -name pom.xml); do
 done
 echo "installed coatjava to: $prefix_dir"
 
+# install clara
 if $installClara; then ./install-clara -c $prefix_dir $clara_home; fi
 
 echo "COATJAVA SUCCESSFULLY BUILT !"
