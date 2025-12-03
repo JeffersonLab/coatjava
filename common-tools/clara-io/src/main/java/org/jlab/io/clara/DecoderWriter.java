@@ -66,7 +66,7 @@ public class DecoderWriter extends HipoToHipoWriter {
             init(opts);
             HipoWriterSorted w = new HipoWriterSorted();
             super.configure(w, opts);
-            w.open(file.toString());
+            w.open(file.toString().endsWith(".hipo") ? file.toString() : file.toString()+".hipo");
             return w;
         } catch (Exception e) {
             throw new EventWriterException(e);
