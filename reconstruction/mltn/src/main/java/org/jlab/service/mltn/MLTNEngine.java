@@ -29,7 +29,7 @@ public class MLTNEngine extends ReconstructionEngine {
     @Override
     public boolean init() {
         classifier.setEnvDirectory("CLAS12DIR");
-        classifier.setEnvPath("etc/nnet/neuroph");
+        classifier.setEnvPath("etc/data/nnet/neuroph");
         classifier.load("trackClassifier.nnet", "trackFixer.nnet");
         System.out.println("Loading neural network files done...");
         //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
