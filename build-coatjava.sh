@@ -8,31 +8,27 @@ set -o pipefail
 usage='''build-coatjava.sh [OPTIONS]... [MAVEN_OPTIONS]...
 
   OPTIONS
-
+   --clara           install clara too
    --clean           clean up built objects and exit (does not compile)
-
-   --nomaps          do not download field maps
-
-   --spotbugs        also run spotbugs plugin
-   --unittests       also run unit tests
-
-   --depana          run dependency analysis (only)
-
    --quiet           run more quietly
    --no-progress     no download progress printouts
-
-   --xrootd          use xrootd to download field maps
-   --cvmfs           use cvmfs to download field maps
-   --lfs             use lfs for field maps and test data
-
-   --clara           install clara too
-   --data            download test data (requires lfs)
-
    --help            show this message
 
-  MAVEN_OPTIONS
+  OPTIONS FOR MAGNETIC FIELD MAPS
+   --lfs             use git-lfs for field maps and test data
+   --cvmfs           use cvmfs to download field maps
+   --xrootd          use xrootd to download field maps
+   --nomaps          do not download field maps
 
-   all other arguments will be passed to `mvn`, e.g., -T4 will build with 4 parallel threads
+  OPTIONS FOR TESTING
+   --spotbugs        also run spotbugs plugin
+   --unittests       also run unit tests
+   --depana          run dependency analysis (only)
+   --data            download test data (requires lfs)
+
+  MAVEN_OPTIONS
+   all other arguments will be passed to `mvn`; for example,
+   -T4 will build with 4 parallel threads
 '''
 
 cleanBuild="no"
@@ -79,7 +75,7 @@ done
 
 if $downloadData && ! $useLfs; then
     echo "$usage"
-    echo "ERROR:::::::::::  --data requires --lfs"
+    echo "ERROR:::::::::::  --data requires --lfs" >&2
     exit 2
 fi
 
@@ -110,10 +106,16 @@ download () {
         xrdcp $1 ./
         ret=$?
     elif $useLfs; then
-        cd $src_dir
-        git submodule update --init etc/data/magfield
-        if $downloadData; then git submodule update --init validation/advanced-tests/data; fi
-        cd - > /dev/null
+        if command_exists git-lfs ; then
+          cd $src_dir > /dev/null
+          git lfs install
+          git submodule update --init etc/data/magfield
+          if $downloadData; then git submodule update --init validation/advanced-tests/data; fi
+          cd - > /dev/null
+        else
+          echo 'ERROR: `git-lfs` not found; please install it, or use a different option other than `--lfs`' >&2
+          ret=1
+        fi
     elif $useCvmfs; then
         cp -v $1 ./
         ret=$?
@@ -127,7 +129,7 @@ download () {
         fi
     else
         ret=1
-        echo ERROR:::::::::::  Could not find wget nor curl.
+        echo "ERROR:::::::::::  Could not find wget nor curl." >&2
     fi
     return $ret
 }
@@ -148,11 +150,12 @@ if [ $cleanBuild == "no" ] && [ $downloadMaps == "yes" ]; then
   do
     download $webDir/$map
     if [ $? -ne 0 ]; then
-        echo ERROR:::::::::::  Could not download field map:
-        echo $webDir/$map
-        echo One option is to download manually into etc/data/magfield and then run this build script with --nomaps
+        echo "ERROR:::::::::::  Could not download field map:" >&2
+        echo "$webDir/$map" >&2
+        echo "One option is to download manually into etc/data/magfield and then run this build script with --nomaps" >&2
         exit 1
     fi
+    $useLfs && break
   done
   cd -
 fi
