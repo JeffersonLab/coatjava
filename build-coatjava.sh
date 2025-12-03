@@ -35,11 +35,11 @@ usage='''build-coatjava.sh [OPTIONS]... [MAVEN_OPTIONS]...
 # parse arguments
 ################################################################################
 
-cleanBuild="no"
-anaDepends="no"
-runSpotBugs="no"
-downloadMaps="yes"
-runUnitTests="no"
+cleanBuild=false
+anaDepends=false
+runSpotBugs=false
+downloadMaps=true
+runUnitTests=false
 useXrootd=false
 useCvmfs=false
 useLfs=false
@@ -50,12 +50,12 @@ wgetArgs=()
 for xx in $@
 do
   case $xx in
-    --spotbugs)  runSpotBugs="yes"  ;;
-    -n)          runSpotBugs="no"   ;;
-    --nomaps)    downloadMaps="no"  ;;
-    --unittests) runUnitTests="yes" ;;
-    --clean)     cleanBuild="yes"   ;;
-    --depana)    anaDepends="yes"   ;;
+    --spotbugs)  runSpotBugs=true   ;;
+    -n)          runSpotBugs=false  ;;
+    --nomaps)    downloadMaps=false ;;
+    --unittests) runUnitTests=true  ;;
+    --clean)     cleanBuild=true    ;;
+    --depana)    anaDepends=true    ;;
     --quiet)
       mvnArgs+=(--quiet --batch-mode)
       wgetArgs+=(--quiet)
@@ -152,7 +152,7 @@ download_map () {
 # (and duplicated in etc/services/reconstruction.yaml):
 source libexec/env.sh --no-classpath
 magfield_dir=$src_dir/etc/data/magfield
-if [ $cleanBuild == "no" ] && [ $downloadMaps == "yes" ]; then
+if ! $cleanBuild && $downloadMaps; then
   echo 'Retrieving field maps ...'
   if $useLfs; then
     download_lfs etc/data/magfield
@@ -182,7 +182,8 @@ if $useLfs; then
 elif $useCvmfs; then
   cp -rv /cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/networks/* etc/data/nnet/
 else
-  echo "WARNING: neural networks not downloaded" >&2
+  echo "WARNING: neural networks not downloaded; run with '--help' for guidance" >&2
+  sleep 1
 fi
 
 # download validation data
@@ -198,7 +199,7 @@ fi
 rm -rf $prefix_dir $clara_home
 
 # clean up any cache copies
-if [ $cleanBuild == "yes" ]; then
+if $cleanBuild; then
   $mvn clean
   for target_dir in $(find $src_dir -type d -name target); do
     echo "WARNING: target directory '$target_dir' was not removed! JAR files within may be accidentally installed!" >&2
@@ -219,7 +220,7 @@ fi
 ################################################################################
 
 # run dependency analysis and exit
-if [ $anaDepends == "yes" ]; then
+if $anaDepends; then
   libexec/dependency-analysis.sh
   libexec/dependency-tree.sh
   exit 0
@@ -241,13 +242,13 @@ cp external-dependencies/jclara-4.3-SNAPSHOT.jar $prefix_dir/lib/utils
 
 # spotbugs, unit tests
 unset CLAS12DIR
-if [ $runUnitTests == "yes" ]; then
+if $runUnitTests; then
   $mvn install # also runs unit tests
 else
   $mvn install -DskipTests
 fi
 
-if [ $runSpotBugs == "yes" ]; then
+if $runSpotBugs; then
   # mvn com.github.spotbugs:spotbugs-maven-plugin:spotbugs # spotbugs goal produces a report target/spotbugsXml.xml for each module
   $mvn com.github.spotbugs:spotbugs-maven-plugin:check # check goal produces a report and produces build failed if bugs
   # the spotbugsXml.xml file is easiest read in a web browser
