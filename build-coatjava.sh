@@ -367,7 +367,6 @@ for pom in $(find common-tools -name pom.xml); do
 done
 echo "installed coatjava to: $prefix_dir"
 
-# install clara
-if $installClara; then ./install-clara -c $prefix_dir $clara_home; fi
+if $installClara; then ./bin/install-clara -c $prefix_dir $clara_home; fi
 
 echo "COATJAVA SUCCESSFULLY BUILT !"
