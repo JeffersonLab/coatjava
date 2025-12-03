@@ -65,7 +65,7 @@ public class DCDenoiseEngine extends ReconstructionEngine {
         try {
             criteria = Criteria.builder()
                 .setTypes(float[][].class, float[][].class)
-                .optModelPath(Paths.get(ClasUtilsFile.getResourceDir("CLAS12DIR","etc/nnet/dn/cnn_autoenc_sector1_nBlocks2.pt")))
+                .optModelPath(Paths.get(ClasUtilsFile.getResourceDir("CLAS12DIR","etc/data/nnet/dn/cnn_autoenc_sector1_nBlocks2.pt")))
                 .optEngine("PyTorch")
                 .optTranslator(DCDenoiseEngine.getTranslator())
                 .optProgress(new ProgressBar())

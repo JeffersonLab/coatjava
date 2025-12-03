@@ -43,7 +43,7 @@ public class Model {
         System.setProperty("ai.djl.pytorch.num_threads", "1");
         System.setProperty("ai.djl.pytorch.graph_optimizer", "false");
 
-        String path = CLASResources.getResourcePath("etc/nnet/ALERT/model_AHDC/");
+        String path = CLASResources.getResourcePath("etc/data/nnet/ALERT/model_AHDC/");
         Criteria<float[], Float> my_model = Criteria.builder().setTypes(float[].class, Float.class)
                 .optModelPath(Paths.get(path))
                 .optEngine("PyTorch")
