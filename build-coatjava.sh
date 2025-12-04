@@ -5,37 +5,44 @@ set -e
 set -u
 set -o pipefail
 
-usage='''build-coatjava.sh [OPTIONS]... [MAVEN_OPTIONS]...
+usage='''build-coatjava.sh [OPTIONS]...
 
-  OPTIONS
-   --clara           install clara too
-   --clean           clean up built objects and exit (does not compile)
-   --quiet           run more quietly
-   --no-progress     no download progress printouts
-   --help            show this message
+GENERAL OPTIONS
+    --clara           install clara too
+    --clean           clean up built objects and exit (does not compile)
+    --quiet           run more quietly
+    --no-progress     no download progress printouts
+    --help            show this message
 
-  OPTIONS FOR MAGNETIC FIELD MAPS
-   --lfs             use git-lfs for field maps and test data
-   --cvmfs           use cvmfs to download field maps
-   --xrootd          use xrootd to download field maps
-   --nomaps          do not download field maps
+DATA RETRIEVAL OPTIONS
+  How to retrieve magnetic field maps, neural network models, etc.;
+  choose only one:
+    --lfs             use Git Large File Storage (requires `git-lfs`)
+    --cvmfs           use CernVM-FS (requires `/cvfms`)
+    --xrootd          use XRootD (requires `xrootd`)
+    --nomaps          do not download field maps
 
-  OPTIONS FOR TESTING
-   --spotbugs        also run spotbugs plugin
-   --unittests       also run unit tests
-   --depana          run dependency analysis (only)
-   --data            download test data (requires lfs)
+TESTING OPTIONS
+    --spotbugs        also run spotbugs plugin
+    --unittests       also run unit tests
+    --depana          run dependency analysis (only)
+    --data            download test data (requires option `--lfs`)
 
-  MAVEN_OPTIONS
-   all other arguments will be passed to `mvn`; for example,
-   -T4 will build with 4 parallel threads
+MAVEN OPTIONS
+  all other arguments will be passed to `mvn`; for example,
+  -T4 will build with 4 parallel threads
 '''
 
-cleanBuild="no"
-anaDepends="no"
-runSpotBugs="no"
-downloadMaps="yes"
-runUnitTests="no"
+
+################################################################################
+# parse arguments
+################################################################################
+
+cleanBuild=false
+anaDepends=false
+runSpotBugs=false
+downloadMaps=true
+runUnitTests=false
 useXrootd=false
 useCvmfs=false
 useLfs=false
@@ -46,12 +53,12 @@ wgetArgs=()
 for xx in $@
 do
   case $xx in
-    --spotbugs)  runSpotBugs="yes"  ;;
-    -n)          runSpotBugs="no"   ;;
-    --nomaps)    downloadMaps="no"  ;;
-    --unittests) runUnitTests="yes" ;;
-    --clean)     cleanBuild="yes"   ;;
-    --depana)    anaDepends="yes"   ;;
+    --spotbugs)  runSpotBugs=true   ;;
+    -n)          runSpotBugs=false  ;;
+    --nomaps)    downloadMaps=false ;;
+    --unittests) runUnitTests=true  ;;
+    --clean)     cleanBuild=true    ;;
+    --depana)    anaDepends=true    ;;
     --quiet)
       mvnArgs+=(--quiet --batch-mode)
       wgetArgs+=(--quiet)
@@ -60,9 +67,9 @@ do
       mvnArgs+=(--no-transfer-progress)
       wgetArgs+=(--no-verbose)
       ;;
-    --xrootd) useXrootd=true ;;
-    --cvmfs)  useCvmfs=true ;;
-    --lfs)    useLfs=true ;;
+    --xrootd) useXrootd=true    ;;
+    --cvmfs)  useCvmfs=true     ;;
+    --lfs)    useLfs=true       ;;
     --clara)  installClara=true ;;
     --data)   downloadData=true ;;
     -h|--help)
@@ -73,21 +80,22 @@ do
   esac
 done
 
-if $downloadData && ! $useLfs; then
-    echo "$usage"
-    echo "ERROR:::::::::::  --data requires --lfs" >&2
-    exit 2
-fi
-
 # Currently only git-lfs works from offsite:
 if ! [[ $(hostname) == *.jlab.org ]]; then
     echo "INFO:  using --lfs for offsite usage"
     useLfs=true
 fi
 
+
+################################################################################
+# setup
+################################################################################
+
+# directories
 src_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 prefix_dir=$src_dir/coatjava
 clara_home=$src_dir/clara
+magfield_dir=$src_dir/etc/data/magfield
 
 # working directory should be the source code directory
 cd $src_dir
@@ -97,33 +105,96 @@ wgetArgs+=(--timestamping --no-check-certificate) # `--timestamping` only redown
 mvn="mvn ${mvnArgs[@]:-}"
 wget="wget ${wgetArgs[@]:-}"
 
-command_exists () {
-    type "$1" &> /dev/null
+# environment
+source libexec/env.sh --no-classpath
+
+# install LFS
+if $useLfs; then
+  git lfs install
+fi
+
+################################################################################
+# cleaning, dependency analysis, etc.
+################################################################################
+
+# function to clean installation prefixes
+clean_prefixes() {
+  rm -rf $prefix_dir $clara_home
 }
-download () {
+
+# clean up any cache copies
+if $cleanBuild; then
+  clean_prefixes
+  $mvn clean
+  for target_dir in $(find $src_dir -type d -name target); do
+    echo "WARNING: target directory '$target_dir' was not removed! JAR files within may be accidentally installed!" >&2
+  done
+  echo """DONE CLEANING.
+  NOTE:
+    - to remove local magnetic field maps:
+        rm $magfield_dir/*.dat
+    - to clear all LFS git submodules:
+        git submodule deinit --all
+
+  Now re-run without \`--clean\` to build."""
+  exit
+fi
+
+# run dependency analysis and exit
+if $anaDepends; then
+  libexec/dependency-analysis.sh
+  libexec/dependency-tree.sh
+  exit 0
+fi
+
+
+################################################################################
+# download field maps, NN models, etc.
+################################################################################
+
+# check if a command exists
+command_exists () {
+  type "$1" &> /dev/null
+}
+
+# print retrieval notice
+notify_retrieval() {
+  echo "Retrieving $1 from $2 ..."
+}
+
+# update an LFS submodule
+download_lfs() {
+  if ! $useLfs; then
+    echo 'ERROR: attempted to use LFS, but option `--lfs` not set' >&2
+    exit 1
+  fi
+  if command_exists git-lfs ; then
+    cd $src_dir > /dev/null
+    git submodule update --init $1
+    cd - > /dev/null
+  else
+    echo 'ERROR: `git-lfs` not found; please install it, or use a different option other than `--lfs`' >&2
+    exit 1
+  fi
+}
+
+# download a magnetic field map
+download_map () {
     ret=0
     if $useXrootd; then
+        notify_retrieval 'field map' 'xrootd'
         xrdcp $1 ./
         ret=$?
-    elif $useLfs; then
-        if command_exists git-lfs ; then
-          cd $src_dir > /dev/null
-          git lfs install
-          git submodule update --init etc/data/magfield
-          git submodule update --init etc/data/nnet
-          if $downloadData; then git submodule update --init validation/advanced-tests/data; fi
-          cd - > /dev/null
-        else
-          echo 'ERROR: `git-lfs` not found; please install it, or use a different option other than `--lfs`' >&2
-          ret=1
-        fi
     elif $useCvmfs; then
-        cp -v $1 ./
+        notify_retrieval 'field map' 'cvmfs'
+        cp $1 ./
         ret=$?
     elif command_exists wget ; then
+        notify_retrieval 'field map' 'clasweb via wget'
         $wget $1
         ret=$?
     elif command_exists curl ; then
+        notify_retrieval 'field map' 'clasweb via curl'
         if ! [ -e ${1##*/} ]; then
           curl $1 -o ${1##*/}
           ret=$?
@@ -137,55 +208,55 @@ download () {
 
 # download the default field maps, as defined in libexec/env.sh:
 # (and duplicated in etc/services/reconstruction.yaml):
-source libexec/env.sh --no-classpath
-magfield_dir=$src_dir/etc/data/magfield
-if [ $cleanBuild == "no" ] && [ $downloadMaps == "yes" ]; then
-  echo 'Retrieving field maps ...'
-  webDir=https://clasweb.jlab.org/clas12offline/magfield
-  if $useLfs; then webDir=${magfield_dir##$src_dir}; fi
-  if $useXrootd; then webDir=xroot://sci-xrootd.jlab.org//osgpool/hallb/clas12/coatjava/magfield; fi
-  if $useCvmfs; then webDir=/cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/magfield; fi
-  mkdir -p $magfield_dir
-  cd $magfield_dir
-  for map in $COAT_MAGFIELD_SOLENOIDMAP $COAT_MAGFIELD_TORUSMAP $COAT_MAGFIELD_TORUSSECONDARYMAP
-  do
-    download $webDir/$map
-    if [ $? -ne 0 ]; then
-        echo "ERROR:::::::::::  Could not download field map:" >&2
-        echo "$webDir/$map" >&2
-        echo "One option is to download manually into etc/data/magfield and then run this build script with --nomaps" >&2
-        exit 1
-    fi
-    $useLfs && break
-  done
-  cd -
+if $downloadMaps; then
+  if $useLfs; then
+    notify_retrieval 'field maps' 'lfs'
+    download_lfs etc/data/magfield
+  else
+    webDir=https://clasweb.jlab.org/clas12offline/magfield
+    if $useXrootd; then webDir=xroot://sci-xrootd.jlab.org//osgpool/hallb/clas12/coatjava/magfield; fi
+    if $useCvmfs; then webDir=/cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/magfield; fi
+    mkdir -p $magfield_dir
+    cd $magfield_dir
+    for map in $COAT_MAGFIELD_SOLENOIDMAP $COAT_MAGFIELD_TORUSMAP $COAT_MAGFIELD_TORUSSECONDARYMAP
+    do
+      download_map $webDir/$map
+      if [ $? -ne 0 ]; then
+          echo "ERROR:::::::::::  Could not download field map:" >&2
+          echo "$webDir/$map" >&2
+          echo "One option is to download manually into etc/data/magfield and then run this build script with --nomaps" >&2
+          exit 1
+      fi
+    done
+    cd -
+  fi
 fi
 
-# always clean the installation prefix
-rm -rf $prefix_dir $clara_home
-
-# clean up any cache copies
-if [ $cleanBuild == "yes" ]; then
-  $mvn clean
-  for target_dir in $(find $src_dir -type d -name target); do
-    echo "WARNING: target directory '$target_dir' was not removed! JAR files within may be accidentally installed!" >&2
-  done
-  echo """DONE CLEANING.
-  NOTE: if you want to remove locally downloaded magnetic field maps, run:
-    rm $magfield_dir/*.dat
-
-  Now re-run without \`--clean\` to build."""
-  exit
+# download neural networks
+if $useLfs; then
+  notify_retrieval 'neural networks' 'lfs'
+  download_lfs etc/data/nnet
+elif $useCvmfs; then
+  notify_retrieval 'neural networks' 'cvmfs'
+  cp -r /cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/networks/* etc/data/nnet/
+else
+  echo 'WARNING: neural networks not downloaded; run with `--help` for guidance' >&2
+  sleep 1
 fi
 
-# run dependency analysis and exit
-if [ $anaDepends == "yes" ]; then
-  libexec/dependency-analysis.sh
-  libexec/dependency-tree.sh
-  exit 0
+# download validation data
+if $downloadData; then
+  notify_retrieval 'validation data' 'lfs'
+  download_lfs validation/advanced-tests/data
 fi
+
+
+################################################################################
+# build
+################################################################################
 
 # start new installation tree
+clean_prefixes # always clean the installation prefix
 mkdir -p $prefix_dir
 cp -r bin $prefix_dir/
 cp -r etc $prefix_dir/
@@ -199,15 +270,16 @@ $python etc/bankdefs/util/bankSplit.py $prefix_dir/etc/bankdefs/hipo4 || exit 1
 mkdir -p $prefix_dir/lib/utils
 cp external-dependencies/jclara-4.3-SNAPSHOT.jar $prefix_dir/lib/utils
 
-# spotbugs, unit tests
+# build (and test)
 unset CLAS12DIR
-if [ $runUnitTests == "yes" ]; then
+if $runUnitTests; then
   $mvn install # also runs unit tests
 else
   $mvn install -DskipTests
 fi
 
-if [ $runSpotBugs == "yes" ]; then
+# run spotbugs
+if $runSpotBugs; then
   # mvn com.github.spotbugs:spotbugs-maven-plugin:spotbugs # spotbugs goal produces a report target/spotbugsXml.xml for each module
   $mvn com.github.spotbugs:spotbugs-maven-plugin:check # check goal produces a report and produces build failed if bugs
   # the spotbugsXml.xml file is easiest read in a web browser
@@ -215,7 +287,11 @@ if [ $runSpotBugs == "yes" ]; then
   if [ $? != 0 ] ; then echo "spotbugs failure" >&2 ; exit 1 ; fi
 fi
 
-# installation
+
+################################################################################
+# install
+################################################################################
+
 # NOTE: a maven plugin, such as `maven-assembly-plugin`, would be better, but it seems that they:
 # - require significantly more repetition of the module names and/or generation of additional XML file(s)
 # - seem to break thread safety of `mvn install`, i.e., we'd need to run `mvn package` first, then `mvn install`
@@ -243,6 +319,7 @@ for pom in $(find common-tools -name pom.xml); do
 done
 echo "installed coatjava to: $prefix_dir"
 
+# install clara
 if $installClara; then ./install-clara -c $prefix_dir $clara_home; fi
 
 echo "COATJAVA SUCCESSFULLY BUILT !"
