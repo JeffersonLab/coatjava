@@ -280,8 +280,6 @@ public class TableLoader {
                 if(r>1 && r<4) {
                     delta_bfield_coefficient[s][r] = t2dPressure.getDoubleValueByHash("delta_bfield_a0", hash)
                             +t2dPressure.getDoubleValueByHash("delta_bfield_a1", hash)*dp*dpscale
-                            +t2dPressure.getDoubleValueByHash("delta_bfield_a2", hash)*dp*dp*dp2scale
-                            +t2dPressure.getDoubleValueByHash("delta_bfield_a1", hash)*dp*dpscale
                             +t2dPressure.getDoubleValueByHash("delta_bfield_a2", hash)*dp*dp*dp2scale;
                     b1[s][r] = t2dPressure.getDoubleValueByHash("b1_a0", hash)
                             +t2dPressure.getDoubleValueByHash("b1_a1", hash)*dp*dpscale
