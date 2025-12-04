@@ -7,30 +7,30 @@ set -o pipefail
 
 usage='''build-coatjava.sh [OPTIONS]...
 
-  GENERAL OPTIONS
+GENERAL OPTIONS
     --clara           install clara too
     --clean           clean up built objects and exit (does not compile)
     --quiet           run more quietly
     --no-progress     no download progress printouts
     --help            show this message
 
-  DATA RETRIEVAL OPTIONS
-   How to retrieve magnetic field maps, neural network models, etc.;
-   choose only one:
+DATA RETRIEVAL OPTIONS
+  How to retrieve magnetic field maps, neural network models, etc.;
+  choose only one:
     --lfs             use Git Large File Storage (requires `git-lfs`)
     --cvmfs           use CernVM-FS (requires `/cvfms`)
     --xrootd          use XRootD (requires `xrootd`)
     --nomaps          do not download field maps
 
-  TESTING OPTIONS
+TESTING OPTIONS
     --spotbugs        also run spotbugs plugin
     --unittests       also run unit tests
     --depana          run dependency analysis (only)
-    --data            download test data (requires `git-lfs`)
+    --data            download test data (requires option `--lfs`)
 
-  MAVEN OPTIONS
-   all other arguments will be passed to `mvn`; for example,
-   -T4 will build with 4 parallel threads
+MAVEN OPTIONS
+  all other arguments will be passed to `mvn`; for example,
+  -T4 will build with 4 parallel threads
 '''
 
 
@@ -80,12 +80,6 @@ do
   esac
 done
 
-if $downloadData && ! $useLfs; then
-    echo "$usage"
-    echo "ERROR:::::::::::  --data requires --lfs" >&2
-    exit 2
-fi
-
 # Currently only git-lfs works from offsite:
 if ! [[ $(hostname) == *.jlab.org ]]; then
     echo "INFO:  using --lfs for offsite usage"
@@ -114,6 +108,10 @@ wget="wget ${wgetArgs[@]:-}"
 # environment
 source libexec/env.sh --no-classpath
 
+# install LFS
+if $useLfs; then
+  git lfs install
+fi
 
 ################################################################################
 # cleaning, dependency analysis, etc.
@@ -159,11 +157,19 @@ command_exists () {
   type "$1" &> /dev/null
 }
 
+# print retrieval notice
+notify_retrieval() {
+  echo "Retrieving $1 from $2 ..."
+}
+
 # update an LFS submodule
 download_lfs() {
+  if ! $useLfs; then
+    echo 'ERROR: attempted to use LFS, but option `--lfs` not set' >&2
+    exit 1
+  fi
   if command_exists git-lfs ; then
     cd $src_dir > /dev/null
-    git lfs install
     git submodule update --init $1
     cd - > /dev/null
   else
@@ -176,15 +182,19 @@ download_lfs() {
 download_map () {
     ret=0
     if $useXrootd; then
+        notify_retrieval 'field map' 'xrootd'
         xrdcp $1 ./
         ret=$?
     elif $useCvmfs; then
-        cp -v $1 ./
+        notify_retrieval 'field map' 'cvmfs'
+        cp $1 ./
         ret=$?
     elif command_exists wget ; then
+        notify_retrieval 'field map' 'clasweb via wget'
         $wget $1
         ret=$?
     elif command_exists curl ; then
+        notify_retrieval 'field map' 'clasweb via curl'
         if ! [ -e ${1##*/} ]; then
           curl $1 -o ${1##*/}
           ret=$?
@@ -199,8 +209,8 @@ download_map () {
 # download the default field maps, as defined in libexec/env.sh:
 # (and duplicated in etc/services/reconstruction.yaml):
 if $downloadMaps; then
-  echo 'Retrieving field maps ...'
   if $useLfs; then
+    notify_retrieval 'field maps' 'lfs'
     download_lfs etc/data/magfield
   else
     webDir=https://clasweb.jlab.org/clas12offline/magfield
@@ -224,16 +234,19 @@ fi
 
 # download neural networks
 if $useLfs; then
+  notify_retrieval 'neural networks' 'lfs'
   download_lfs etc/data/nnet
 elif $useCvmfs; then
-  cp -rv /cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/networks/* etc/data/nnet/
+  notify_retrieval 'neural networks' 'cvmfs'
+  cp -r /cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/networks/* etc/data/nnet/
 else
-  echo "WARNING: neural networks not downloaded; run with '--help' for guidance" >&2
+  echo 'WARNING: neural networks not downloaded; run with `--help` for guidance' >&2
   sleep 1
 fi
 
 # download validation data
 if $downloadData; then
+  notify_retrieval 'validation data' 'lfs'
   download_lfs validation/advanced-tests/data
 fi
 
