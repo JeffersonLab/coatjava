@@ -2,13 +2,13 @@ name: Submodule Changes
 
 on:
   pull_request:
-    # types:
-    #   - opened
+    types:
+      - opened
 
 jobs:
   changes:
     name: Submodule Changes
-    if: github.actor == 'c-dilks' # FIXME
+    if: github.actor == 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
