@@ -10,7 +10,7 @@ public class LundFileSupport {
 	
 	private LundFileSupport() {}
 	
-	public static LundFileSupport getInstance() {
+	public static synchronized LundFileSupport getInstance() {
 		if (instance == null) {
 			instance = new LundFileSupport();
 		}

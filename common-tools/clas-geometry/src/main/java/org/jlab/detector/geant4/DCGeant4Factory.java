@@ -1,17 +1,7 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.detector.geant4;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.HashMap;
 import org.jlab.geom.geant.Geant4Basic;
-import org.jlab.geom.prim.Line3D;
-import org.jlab.geom.prim.Plane3D;
-import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.base.ConstantProvider;
 import org.jlab.geom.prim.Vector3D;
 
@@ -45,15 +35,11 @@ final class DCdatabase {
     private int nguardwires;
 
     private final String dcdbpath = "/geometry/dc/";
-    private static DCdatabase instance = null;
+    private static DCdatabase instance = new DCdatabase();
 
-    private DCdatabase() {
-    }
+    private DCdatabase() {}
 
     public static DCdatabase getInstance() {
-        if (instance == null) {
-            instance = new DCdatabase();
-        }
         return instance;
     }
 
@@ -278,7 +264,7 @@ public class DCGeant4Factory {
 
     DCdatabase dbref = DCdatabase.getInstance();
     private Geant4Basic motherVolume = new Geant4Basic("root", "Box", 0);
-    private HashMap<String, String> properties = new HashMap<String, String>();
+    private HashMap<String, String> properties = new HashMap<>();
 
     private int nsgwires;
 
