@@ -5,16 +5,17 @@ package org.jlab.utils.benchmark;
  * @author gavalian
  */
 public class BenchmarkTimer {
-    
+
     private String timerName = "generic";
-    private long   totalTime = 0;
-    private long   timeAtResume = 0;
-    private int    numberOfCalls = 0;
+    private long timeAtResume = 0;
     private Boolean isPaused = true;
-    
-    public BenchmarkTimer(){}
-    
-    public BenchmarkTimer(String name){
+
+    protected int numberOfCalls = 0;
+    protected long totalTime = 0;
+
+    public BenchmarkTimer() {}
+
+    public BenchmarkTimer(String name) {
         timerName = name;
     }
     
@@ -38,11 +39,6 @@ public class BenchmarkTimer {
         }
     }
 
-    public void add(BenchmarkTimer b) {
-        totalTime += b.totalTime;
-        numberOfCalls += b.numberOfCalls;
-    }
-
     public void reset(){
         totalTime = 0;
         timeAtResume = 0;
@@ -59,12 +55,10 @@ public class BenchmarkTimer {
     }
     
     @Override
-    public String toString(){
-        StringBuilder str = new StringBuilder();
+    public String toString() {
         double timePerCall = 0.0;
-        if(numberOfCalls!=0) timePerCall = this.getMiliseconds()/numberOfCalls;
-        str.append(String.format("TIMER (%-12s) : N Calls %12d,  Total Time  = %12.2f sec,  Unit Time = %12.3f msec",
-                this.getName(),numberOfCalls,this.getSeconds(),timePerCall));
-        return str.toString();
+        if (numberOfCalls != 0) timePerCall = getMiliseconds() / numberOfCalls;
+        return String.format("TIMER (%-12s) : N Calls %12d,  Total Time  = %12.2f sec,  Unit Time = %12.3f msec",
+            getName(), numberOfCalls, getSeconds(), timePerCall);
     }
 }
