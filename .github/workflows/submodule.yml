@@ -18,7 +18,11 @@ jobs:
       - name: get changes
         id: changes
         run: |
-          git diff origin/${{ github.base_ref }} --submodule=log | tee changes.txt
+          for sm in $(grep 'path = ' .gitmodules | awk '{print $3}'); do
+            echo "SUBMODULE $sm ===========" | tee changes.txt
+            git diff origin/${{ github.base_ref }} --submodule=log -- $sm | tee changes.txt
+            echo "" | tee changes.txt
+          done
           echo "changes<<EOF" >> $GITHUB_OUTPUT
           cat changes.txt >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
