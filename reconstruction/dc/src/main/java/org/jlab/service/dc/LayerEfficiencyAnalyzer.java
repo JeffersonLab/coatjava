@@ -480,7 +480,7 @@ public class LayerEfficiencyAnalyzer extends DCEngine implements IDataEventListe
             System.err.println("❌ Option parsing failed: " + e.getMessage());
             System.err.println();
             System.err.println("Usage: dclayereffs-ana <input-path/file> ");
-            return; // avoids Runtime.exit()
+            return; 
         }
 
         String file = args[0];
@@ -506,13 +506,13 @@ public class LayerEfficiencyAnalyzer extends DCEngine implements IDataEventListe
             tm.drawPlots();
             File ofile = new File("dclayereffs.hipo");
             if (ofile.exists()) {
-            boolean deleted = ofile.delete();
-            if (deleted) {
-                System.out.println("Deleted: " + ofile.getName());
-            } else {
-                System.out.println("Failed to delete: " + ofile.getName());
-            }
-        } 
+                boolean deleted = ofile.delete();
+                if (deleted) {
+                    System.out.println("Deleted: " + ofile.getName());
+                } else {
+                    System.out.println("Failed to delete: " + ofile.getName());
+                }
+            } 
             tm.saveHistosToFile("dclayereffs.hipo");
         }
     }
