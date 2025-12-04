@@ -1,0 +1,34 @@
+name: Submodule Changes
+
+on:
+  pull_request:
+    types:
+      - opened
+
+jobs:
+  changes:
+    name: Submodule Changes
+    if: github.actor == 'c-dilks' # FIXME
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: true
+      - name: get changes
+        id: changes
+        run: |
+          git diff origin/${{ github.base_rev }} --submodule=log | tee changes.txt
+          echo "changes<<EOF" >> $GITHUB_OUTPUT
+          cat changes.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      - name: comment
+        uses: actions/github-script@v8
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## Submodule Changes\n\n\`\`\`\n${{ steps.changes.outputs.changes }}\n\`\`\``
+            })
