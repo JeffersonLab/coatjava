@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
@@ -21,16 +22,15 @@ import org.jlab.utils.groups.IndexedList.IndexGenerator;
 public class IndexedTable extends DefaultTableModel {
     
     public static final IndexGenerator DEFAULT_GENERATOR = new IndexGenerator();
+
+    protected Map<String,Integer>     entryMap   = new LinkedHashMap<>();
+    protected Map<String,String>      entryTypes = new LinkedHashMap<>();
         
     private IndexedList<IndexedEntry> entries    = null;
-    private Map<String,Integer>       entryMap   = new LinkedHashMap<>();
-    private Map<String,String>        entryTypes = new LinkedHashMap<>();
     private List<String>              entryNames = new ArrayList<>();
     private List<String>              indexNames = new ArrayList<>();
     private String                    precisionFormat = "%.6f";
-    
     private Map<Integer,List<RowConstraint>>  constrains = new HashMap<>(); 
-    
     private int DEBUG_MODE = 0;
    
     public IndexedTable(int indexCount){
@@ -38,6 +38,18 @@ public class IndexedTable extends DefaultTableModel {
         for(int i = 0; i < indexCount; i++){
             this.indexNames.add("A"+i);
         }
+    }
+    
+    /**
+     * Clone the format of an existing IndexedTable.
+     * @param it 
+     */
+    public IndexedTable(IndexedTable it) {
+        entries = new IndexedList<>(it.indexNames.size());
+        indexNames.addAll(it.indexNames);
+        entryMap = it.entryMap;
+        entryTypes = it.entryTypes;
+        entryNames = it.entryNames;
     }
     
     public IndexedTable(int indexCount,String format){
@@ -119,7 +131,11 @@ public class IndexedTable extends DefaultTableModel {
             }
         }
     }
-    
+   
+    public void setIntValueByHash(Integer value, int column, long hash) {
+        this.entries.getItemByHash(hash).setValue(column, value);
+    }
+
     public  void setDoubleValue(Double value, String item, int... index){
         if(this.entries.hasItem(index)==false){
             if(DEBUG_MODE>0) System.out.println( "[IndexedTable] ---> error.. entry does not exist");
@@ -134,35 +150,31 @@ public class IndexedTable extends DefaultTableModel {
     }
     
     public int getIntValueByHash(int index, long hash) {
-        if (this.entries.hasItemByHash(hash))
-            return this.entries.getItemByHash(hash).getValue(index).intValue();
-        return 0;
+        return entries.getItemByHash(hash).getValue(index).intValue();
     }
-    
+
     public double getDoubleValueByHash(int index, long hash) {
-        if (this.entries.hasItemByHash(hash))
-            return this.entries.getItemByHash(hash).getValue(index).doubleValue();
-        return 0;
+        return entries.getItemByHash(hash).getValue(index).doubleValue();
     }
 
     public int getIntValueByHash(String item, long hash) {
-        if (this.entries.hasItemByHash(hash)) {
-            if (this.entryMap.containsKey(item)) {
-                int index = this.entryMap.get(item);
-                return this.entries.getItemByHash(hash).getValue(index).intValue();
-            }
-        }
-        return 0;
+        return entries.getItemByHash(hash).getValue(entryMap.get(item)).intValue();
+    }
+
+    public double getDoubleValueByHash(String item, long hash) {
+        return entries.getItemByHash(hash).getValue(entryMap.get(item)).doubleValue();
+    }
+
+    public List<Number> getValuesByHash(long hash) {
+        return this.entries.getItemByHash(hash).entryValues;
     }
     
-    public double getDoubleValueByHash(String item, long hash) {
-        if (this.entries.hasItemByHash(hash)) {
-            if (this.entryMap.containsKey(item)) {
-                int index = this.entryMap.get(item);
-                return this.entries.getItemByHash(hash).getValue(index).doubleValue();
-            }
-        }
-        return 0;
+    public List<Integer> getIntegersByHash(long hash) {
+        return getValuesByHash(hash).stream().map(x -> x.intValue()).collect(Collectors.toList());
+    }
+    
+    public List<Double> getDoublesByHash(long hash) {
+        return getValuesByHash(hash).stream().map(x -> x.doubleValue()).collect(Collectors.toList());
     }
 
     public int  getIntValue(String item, int... index){
@@ -199,6 +211,10 @@ public class IndexedTable extends DefaultTableModel {
 
     public IndexedList getList(){
         return this.entries;
+    }
+    
+    public Map<String,Integer> getEntryMap(){
+        return this.entryMap;
     }
     
     private void parseFormat(String format){
@@ -250,7 +266,7 @@ public class IndexedTable extends DefaultTableModel {
     @Override
     public String toString(){
         StringBuilder str = new StringBuilder();
-        str.append(String.format("IndexedList SIZE = %d\n", entryMap.size()));
+        str.append(String.format("IndexedList SIZE = %d/%d\n", entryMap.size(),entries.getMap().size()));
         for(Map.Entry<String,Integer> entry : this.entryMap.entrySet()){
             str.append(String.format("* %-24s * %3s * \n",entry.getKey(),
                     this.entryTypes.get(entry.getKey())));
@@ -453,4 +469,31 @@ public class IndexedTable extends DefaultTableModel {
         return !conflicts.isEmpty();
     }
 
+    /**
+     * Make one big table.
+     * @param tables the tables to combine
+     * @return 
+     */
+    public static IndexedTable add(List<IndexedTable> tables) {
+        // create the new table:
+        IndexedTable ret = new IndexedTable(tables.get(0));
+        for (IndexedTable table : tables) {
+            // loop over the input table rows:
+            for (Object key : table.getList().getMap().keySet()) {
+                // get the indexing for this row:
+                int crate = IndexedTable.DEFAULT_GENERATOR.getIndex((long)key, 0);
+                int slot = IndexedTable.DEFAULT_GENERATOR.getIndex((long)key, 1);
+                int channel = IndexedTable.DEFAULT_GENERATOR.getIndex((long)key, 2);
+                long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(crate, slot, channel);
+                // add row to the new table:
+                ret.addEntry(crate,slot,channel);
+                // set values for the new row:
+                for (int column : table.entryMap.values()) {
+                    int value = table.getIntValueByHash(column, hash);
+                    ret.setIntValueByHash(value, column, hash);
+                }
+            }
+        }
+        return ret; 
+    }
 }
