@@ -16,7 +16,7 @@ GENERAL OPTIONS
 
 DATA RETRIEVAL OPTIONS
   How to retrieve magnetic field maps, neural network models, etc.;
-  choose only one:
+  choose only one, e.g., if the automated default choice fails:
     --lfs             use Git Large File Storage (requires `git-lfs`)
     --cvmfs           use CernVM-FS (requires `/cvfms`)
     --xrootd          use XRootD (requires `xrootd`)
@@ -80,10 +80,34 @@ do
   esac
 done
 
-# Currently only git-lfs works from offsite:
-if ! [[ $(hostname) == *.jlab.org ]]; then
-    echo "INFO:  using --lfs for offsite usage"
+# count how many data-retrieval options are set
+count_download_opts() {
+  local n=0
+  for o in $useLfs $useCvmfs $useXrootd; do
+    $o && ((n++))
+  done
+  echo $n
+}
+
+# if the user did not choose a data retrieval method, choose a reasonable one
+if [[ $(count_download_opts) -eq 0 ]]; then
+  echo 'INFO: no data-retrieval option set; choosing a default...'
+  if ! [[ $(hostname) == *.jlab.org ]]; then
+    echo 'INFO: ... using `--lfs` since you are likely offsite'
     useLfs=true
+  elif [ -d /cvmfs ]; then
+    echo 'INFO: ... using `--cvmfs` since you are likely onsite and have /cvmfs'
+    useCvmfs=true
+  else
+    echo 'WARNING: default data-retrieval option cannot be determined; use `--help` for guidance' >&2
+    sleep 1
+  fi
+fi
+
+# if they chose too many, fail
+if [[ $(count_download_opts) -gt 1 ]]; then
+  echo 'ERROR: more than one data-retrieval option is set' >&2
+  exit 1
 fi
 
 
