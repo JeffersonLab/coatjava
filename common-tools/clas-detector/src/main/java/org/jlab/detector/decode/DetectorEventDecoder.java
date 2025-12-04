@@ -28,18 +28,27 @@ public class DetectorEventDecoder {
     List<DetectorType> keysTrans    = null;
     List<DetectorType> keysFitter   = null;
     List<DetectorType> keysFilter   = null;
+    List<DetectorType> keysMicromega= null;
 
     private int runNumber = 10;
 
     private ExtendedFADCFitter extendedFitter = new ExtendedFADCFitter();
     private MVTFitter mvtFitter = new MVTFitter();
 
+    private TranslationTable translator = new TranslationTable();
+    
     public DetectorEventDecoder(boolean development){
-        if(development==true){
-            this.initDecoderDev();
-        } else {
-            this.initDecoder();
+        if(development==true) this.initDecoderDev();
+        else this.initDecoder();
+    }
+
+    public void setRunNumber(int run){
+        if (run != this.runNumber) {
+            translator = new TranslationTable();
+            for (int i=0; i<keysTrans.size(); i++)
+                translator.add(keysTrans.get(i), translationManager.getConstants(run, tablesTrans.get(i)));
         }
+        this.runNumber = run;
     }
 
     public void setTimestamp(String timestamp) {
@@ -52,10 +61,6 @@ public class DetectorEventDecoder {
         translationManager.setVariation(variation);
         fitterManager.setVariation(variation);
         scalerManager.setVariation(variation);
-    }
-
-    public void setRunNumber(int run){
-        this.runNumber = run;
     }
 
     public int getRunNumber() {
@@ -121,7 +126,9 @@ public class DetectorEventDecoder {
 
         scalerManager.init(Arrays.asList(new String[]{"/runcontrol/fcup","/runcontrol/slm","/runcontrol/hwp",
                                                       "/runcontrol/helicity","/daq/config/scalers/dsc1"}));
-        
+       
+        keysMicromega = Arrays.asList(new DetectorType[]{DetectorType.BMT,DetectorType.FMT,DetectorType.FTTRK});
+
         checkTables();
     }
 
@@ -132,52 +139,29 @@ public class DetectorEventDecoder {
                 t.conflicts(translationManager.getConstants(runNumber, tablesTrans.get(j)));
         }
     }
-
+    
     /**
      * applies translation table to the digitized data to translate
      * crate,slot channel to sector layer component.
      * @param detectorData
      */
-    public void translate(List<DetectorDataDgtz>  detectorData){
+    public void translate(List<DetectorDataDgtz> detectorData){
 
-        // Preload CCDB tables:
-        ArrayList<IndexedTable> tables = new ArrayList<>();
-        for (String name : tablesTrans) {
-            tables.add(translationManager.getConstants(runNumber, name));
-        }
+        for (DetectorDataDgtz d : detectorData) {
 
-        for (DetectorDataDgtz data : detectorData) {
+            // Get the hardware indexing for this detector data object:
+            long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(d.getDescriptor().getCrate(),
+                d.getDescriptor().getSlot(), d.getDescriptor().getChannel());
 
-            // Get the hardware indexing for this detector hit:
-            int crate    = data.getDescriptor().getCrate();
-            int slot     = data.getDescriptor().getSlot();
-            int channel  = data.getDescriptor().getChannel();
-            long hash    = IndexedTable.DEFAULT_GENERATOR.hashCode(crate,slot,channel);
-            
-            // Try to find it in the translation tables:
-            for (int j=0; j<tablesTrans.size(); ++j) {
+            if (translator.hasEntryByHash(hash)) {
+                
+                // The tanslated detector indexing:
+                List<Integer> x = translator.getIntegersByHash(hash);
 
-                IndexedTable t = tables.get(j);
-
-                // Found it; now set the detector indexing for this hit:
-                if (t.hasEntryByHash(hash)) {
-
-                    int sector    = t.getIntValueByHash(0, hash);
-                    int layer     = t.getIntValueByHash(1, hash);
-                    int component = t.getIntValueByHash(2, hash);
-                    int order     = t.getIntValueByHash(3, hash);
-
-                    data.getDescriptor().setSectorLayerComponent(sector, layer, component);
-                    data.getDescriptor().setOrder(order);
-                    data.getDescriptor().setType(keysTrans.get(j));
-
-                    for(int i = 0; i < data.getADCSize(); i++) data.getADCData(i).setOrder(order);
-                    for(int i = 0; i < data.getTDCSize(); i++) data.getTDCData(i).setOrder(order);
-
-                    // Assume there's only one instance of this crate/slot/channel
-                    // in all translation tables, and we found it, so stop:
-                    break;
-                }
+                // Set the translated detector indexing:
+                d.getDescriptor().setSectorLayerComponentOrderType(x.get(0),x.get(1),x.get(2),x.get(3),x.get(4));
+                for (int i=0; i<d.getADCSize(); i++) d.getADCData(i).setOrder(x.get(3));
+                for (int i=0; i<d.getTDCSize(); i++) d.getTDCData(i).setOrder(x.get(3));
             }
         }
     }
@@ -186,68 +170,71 @@ public class DetectorEventDecoder {
 
         // preload CCDB tables once:
         ArrayList<IndexedTable> tables = new ArrayList<>();
-        for (String name : tablesFitter) {
-            tables.add(fitterManager.getConstants(runNumber, name));
-        }
+        for (String name : tablesFitter) tables.add(fitterManager.getConstants(runNumber, name));
 
+        // loop over data:
         for(DetectorDataDgtz data : detectorData){
-            int crate    = data.getDescriptor().getCrate();
-            int slot     = data.getDescriptor().getSlot();
-            int channel  = data.getDescriptor().getChannel();
-            long hash    = IndexedTable.DEFAULT_GENERATOR.hashCode(crate,slot,channel);
-            long hash0   = IndexedTable.DEFAULT_GENERATOR.hashCode(0,0,0);
-            for (int j=0; j<keysFitter.size(); ++j) {
-                IndexedTable daq = tables.get(j);
-                DetectorType type = keysFitter.get(j);
-                //custom MM fitter
-            	if( ( (type == DetectorType.BMT)&&(data.getDescriptor().getType().getName().equals("BMT")) )
-                 || ( (type == DetectorType.FMT)&&(data.getDescriptor().getType().getName().equals("FMT")) )
-                 //|| ( (type == DetectorType.AHDC)&&(data.getDescriptor().getType().getName().equals("AHDC")) )
-                 || ( (type == DetectorType.FTTRK)&&(data.getDescriptor().getType().getName().equals("FTTRK")) ) ){
-                    short adcOffset = (short) daq.getDoubleValueByHash("adc_offset", hash0);
-                    double fineTimeStampResolution = (byte) daq.getDoubleValueByHash("dream_clock", hash0);
-                    double samplingTime = (byte) daq.getDoubleValueByHash("sampling_time", hash0);
-                    int sparseSample = daq.getIntValueByHash("sparse", hash0);
-                    if (data.getADCSize() > 0) {
-                        ADCData adc = data.getADCData(0);
-                        mvtFitter.fit(adcOffset, fineTimeStampResolution, samplingTime, adc.getPulseArray(), adc.getTimeStamp(), sparseSample);
-                        adc.setHeight((short) (mvtFitter.adcMax));
-                        adc.setTime((int) (mvtFitter.timeMax));
-                        adc.setIntegral((int) (mvtFitter.integral));
-                        adc.setTimeStamp(mvtFitter.timestamp);
+            
+            // custom MM fitter, uses only hash0:
+            if (keysMicromega.contains(data.getDescriptor().getType())) {
+                long hash0 = 0;//IndexedTable.DEFAULT_GENERATOR.hashCode(0,0,0);
+                for (int j=0; j<keysFitter.size(); ++j) {
+                    IndexedTable daq = tables.get(j);
+                    if (keysMicromega.contains(keysFitter.get(j))) {
+                        short adcOffset = (short) daq.getDoubleValueByHash("adc_offset", hash0);
+                        double fineTimeStampResolution = (byte) daq.getDoubleValueByHash("dream_clock", hash0);
+                        double samplingTime = (byte) daq.getDoubleValueByHash("sampling_time", hash0);
+                        int sparseSample = daq.getIntValueByHash("sparse", hash0);
+                        if (data.getADCSize() > 0) {
+                            ADCData adc = data.getADCData(0);
+                            mvtFitter.fit(adcOffset, fineTimeStampResolution, samplingTime, adc.getPulseArray(), adc.getTimeStamp(), sparseSample);
+                            adc.setHeight((short) (mvtFitter.adcMax));
+                            adc.setTime((int) (mvtFitter.timeMax));
+                            adc.setIntegral((int) (mvtFitter.integral));
+                            adc.setTimeStamp(mvtFitter.timestamp);
+                        }
+                        break;
                     }
-                } else {
-                    if(daq.hasEntryByHash(hash)==true){
+                }
+            }
+                
+            // standard fitter, uses full detector descriptor:
+            else {
+                int crate    = data.getDescriptor().getCrate();
+                int slot     = data.getDescriptor().getSlot();
+                int channel  = data.getDescriptor().getChannel();
+                long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(crate,slot,channel);
+                for (int j=0; j<keysFitter.size(); ++j) {
+                    IndexedTable daq = tables.get(j);
+                    DetectorType type = keysFitter.get(j);
+                    if (daq.hasEntryByHash(hash) == true) {
                         int nsa = daq.getIntValueByHash("nsa", hash);
                         int nsb = daq.getIntValueByHash("nsb", hash);
                         int tet = daq.getIntValueByHash("tet", hash);
                         int ped = 0;
-                        if(type == DetectorType.RF&&data.getDescriptor().getType().getName().equals("RF")) {
+                        if (type == DetectorType.RF && data.getDescriptor().getType().getName().equals("RF")) {
                             ped = daq.getIntValueByHash("pedestal", hash);
                         }
-                        if(data.getADCSize()>0){
-                            for(int i = 0; i < data.getADCSize(); i++){
+                        if (data.getADCSize() > 0) {
+                            for (int i = 0; i < data.getADCSize(); i++) {
                                 ADCData adc = data.getADCData(i);
-                                if(adc.getPulseSize()>0){
+                                if (adc.getPulseSize() > 0) {
                                     try {
                                         extendedFitter.fit(nsa, nsb, tet, ped, adc.getPulseArray());
                                     } catch (Exception e) {
                                         System.out.println(">>>> error : fitting pulse "
-                                                            +  crate + " / " + slot + " / " + channel);
+                                            + crate + " / " + slot + " / " + channel);
                                     }
-                                    int adc_corrected = extendedFitter.adc + extendedFitter.ped*(nsa+nsb);
+                                    int adc_corrected = extendedFitter.adc + extendedFitter.ped * (nsa + nsb);
                                     adc.setHeight((short) this.extendedFitter.pulsePeakValue);
                                     adc.setIntegral(adc_corrected);
                                     adc.setTimeWord(this.extendedFitter.t0);
                                     adc.setPedestal((short) this.extendedFitter.ped);
                                 }
+                                data.getADCData(i).setADC(nsa, nsb);
                             }
                         }
-                        if(data.getADCSize()>0){
-                            for(int i = 0; i < data.getADCSize(); i++){
-                                    data.getADCData(i).setADC(nsa, nsb);
-                            }
-                        }
+                        break;
                     }
                 }
             }
@@ -265,6 +252,7 @@ public class DetectorEventDecoder {
                     if(!filteredData.containsKey(key))
                         filteredData.put(key, new ArrayList<>());
                     filteredData.get(key).add(data);
+                    break;
                 }
             }
             for(int key : filteredData.keySet()) {
@@ -277,8 +265,6 @@ public class DetectorEventDecoder {
     }
     
     class TDCComparator implements Comparator<DetectorDataDgtz> { 
-  
-        // override the compare() method 
         @Override
         public int compare(DetectorDataDgtz s1, DetectorDataDgtz s2) 
         {
