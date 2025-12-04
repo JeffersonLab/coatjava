@@ -18,7 +18,7 @@ jobs:
       - name: get changes
         id: changes
         run: |
-          git diff origin/${{ github.base_rev }} --submodule=log | tee changes.txt
+          git diff origin/${{ github.base_ref }} --submodule=log | tee changes.txt
           echo "changes<<EOF" >> $GITHUB_OUTPUT
           cat changes.txt >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
