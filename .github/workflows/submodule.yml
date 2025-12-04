@@ -1,0 +1,36 @@
+name: Submodule Changes
+
+on:
+  pull_request:
+    types:
+      - opened
+
+jobs:
+  changes:
+    name: Submodule Changes
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: true
+      - name: get changes
+        id: changes
+        run: |
+          for sm in $(grep 'path = ' .gitmodules | awk '{print $3}'); do
+            git diff origin/${{ github.base_ref }} --submodule=log -- $sm | tee -a changes.txt
+          done
+          echo "changes<<EOF" >> $GITHUB_OUTPUT
+          cat changes.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      - name: comment
+        uses: actions/github-script@v8
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## Submodule Changes\n\n\`\`\`\n${{ steps.changes.outputs.changes }}\n\`\`\``
+            })
