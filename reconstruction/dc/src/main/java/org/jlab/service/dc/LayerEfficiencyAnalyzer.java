@@ -3,6 +3,8 @@ package org.jlab.service.dc;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -13,6 +15,8 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
 import org.jlab.clas.swimtools.MagFieldsEngine;
+import org.jlab.detector.calib.utils.ConstantsManager;
+import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 
 import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.rec.dc.Constants;
@@ -36,9 +40,22 @@ import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.segment.SegmentFinder;
 import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
 import org.jlab.rec.dc.trajectory.SegmentTrajectory;
+import org.jlab.utils.groups.IndexedTable;
 
 public class LayerEfficiencyAnalyzer extends DCEngine implements IDataEventListener{
-    
+    int        selectedSector = 0;
+    String     ministaggerStatus = null;
+    String     feedthroughsStatus = null;
+    boolean    wireDistortion = false;
+    boolean    useStartTime   = true;
+    boolean    useBetaCut     = false;
+    boolean    useDoublets    = true;
+    boolean    dcrbJitter     = false;
+    boolean    swapDCRBBits   = false;
+    int        t2d            = 1;
+    int        nSuperLayer    = 5;
+    String     geoVariation   = "default";
+    double[][] shifts         = new double[Constants.NREG][6];
 
     public LayerEfficiencyAnalyzer(){
         super("LE");
@@ -56,6 +73,22 @@ public class LayerEfficiencyAnalyzer extends DCEngine implements IDataEventListe
        // mainPanel.add(processorPane,BorderLayout.PAGE_END);
 
         //this.processorPane.addEventListener(this);
+        
+        //load ccdb
+        Constants.getInstance().initialize(this.getName(),
+                                           geoVariation, 
+                                           ministaggerStatus, 
+                                           feedthroughsStatus,
+                                           wireDistortion, 
+                                           useStartTime, 
+                                           useBetaCut, 
+                                           t2d,
+                                           useDoublets,
+                                           dcrbJitter,
+                                           swapDCRBBits,
+                                           nSuperLayer, 
+                                           selectedSector,
+                                           shifts);
     }
     private TimeToDistanceEstimator tde;
     //plotting stuff
@@ -434,16 +467,31 @@ public class LayerEfficiencyAnalyzer extends DCEngine implements IDataEventListe
         frame.add(tm.mainPanel);
         frame.setVisible(true);   
         
-        OptionParser parser = new OptionParser("dclayereffs-anal");
-        parser.addOption("-i","");
-        parser.parse(args);
-        parser.syncLogLevel(LOGGER);
+       
+        OptionParser parser = new OptionParser("dclayereffs-ana");
+        System.out.println("args "+args.length);
+        System.out.println("Args length = " + args.length);
+        for (int i = 0; i < args.length; i++) {
+            System.out.printf("  args[%d] = '%s'%n", i, args[i]);
+        }
+        try {
+            parser.parse(args);
+        } catch (Exception e) {
+            System.err.println("❌ Option parsing failed: " + e.getMessage());
+            System.err.println();
+            System.err.println("Usage: dclayereffs-ana <input-path/file> ");
+            return; // avoids Runtime.exit()
+        }
+
+        String file = args[0];
+        System.out.printf("✅ Starting layer efficiency with file=%s%n",
+                file);
+
         
-        if(parser.hasOption("-i")==true){
-            String inputFile    = parser.getOption("-i").stringValue();
+        if(file!=null){
             int counter =0;
             HipoDataSource reader = new HipoDataSource();
-            reader.open(inputFile);
+            reader.open(file);
             while (reader.hasEvent()) {
                 counter++;
                 DataEvent event = reader.getNextEvent();
@@ -456,8 +504,19 @@ public class LayerEfficiencyAnalyzer extends DCEngine implements IDataEventListe
                 }
             }
             tm.drawPlots();
+            File ofile = new File("dclayereffs.hipo");
+            if (ofile.exists()) {
+            boolean deleted = ofile.delete();
+            if (deleted) {
+                System.out.println("Deleted: " + ofile.getName());
+            } else {
+                System.out.println("Failed to delete: " + ofile.getName());
+            }
+        } 
             tm.saveHistosToFile("dclayereffs.hipo");
         }
     }
    
 }
+
+
