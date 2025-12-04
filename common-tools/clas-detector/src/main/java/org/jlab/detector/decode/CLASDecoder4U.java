@@ -3,6 +3,7 @@ package org.jlab.detector.decode;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.TreeSet;
+import java.util.logging.Logger;
 import org.jlab.detector.helicity.HelicitySequence;
 import org.jlab.detector.helicity.HelicityState;
 import org.jlab.io.evio.EvioDataEvent;
@@ -10,17 +11,18 @@ import org.jlab.io.evio.EvioSource;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
+import org.jlab.utils.benchmark.Benchmark;
 import org.jlab.utils.benchmark.ProgressPrintout;
 import org.jlab.utils.options.OptionParser;
 import org.jlab.utils.system.ClasUtilsFile;
 
 /**
- * Wrapper of everything in CLAS12Decoder4's main method.
+ * Wrapper of everything (previously) in CLAS12Decoder4's main method.
  *
- * @author baltzell
  */
-public class CLASDecoder4U extends CLASDecoder4 {
+public class CLASDecoder4U extends CLASDecoder {
 
+    private static final Logger logger = Logger.getLogger("CLASDecoder4U");
     private EvioSource reader;
     private HipoWriterSorted writer;
     private Bank config;
@@ -54,6 +56,7 @@ public class CLASDecoder4U extends CLASDecoder4 {
         p.addOption("-r", "-1","run number in the header bank (-1 means use CODA run)");
         p.addOption("-t", null,"torus current in the header bank (null means use RCDB)");
         p.addOption("-s", null,"solenoid current in the header bank (null means use RCDB)");
+        p.addOption("-b", null, "run benchmark timers");
         p.addOption("-x", null,"CCDB timestamp (MM/DD/YYYY-HH:MM:SS)");
         p.addOption("-V","default","CCDB variation");
         p.addOption("-o",null,"output HIPO filename");
@@ -94,33 +97,6 @@ public class CLASDecoder4U extends CLASDecoder4 {
         }
     }
 
-    /**
-     * The command-line "decoder" program.
-     * @param args 
-     */
-    public static void main(String[] args) {
-
-        // hijack arguments, when run from an IDE:
-        if (System.console() == null && args.length == 0) {
-            // delete output file, if necessary:
-            File f = new File("tmp.hipo");
-            if (f.exists()) f.delete();
-            // setup decoder command-line options:
-            args = new String[]{"-o","tmp.hipo",System.getenv("HOME")+"/data/clas_005038.evio.00001"};
-            // try to find bankdefs:
-            System.setProperty("CLAS12DIR", System.getenv("HOME")+"/sw/coatjava/dev/coatjava");
-        }
-
-        // parse command-line options:
-        OptionParser opts = CLASDecoder4U.getOptionParser();
-        opts.parse(args);
-
-        // run the decoder:
-        CLASDecoder4U decoder = new CLASDecoder4U(opts);
-        while (decoder.hasNext()) decoder.getNext();
-        decoder.close();
-    }
-
     private EvioDataEvent getNextEvioEvent() {
         if (reader == null || !reader.hasEvent()) {
             reader = new EvioSource();
@@ -151,6 +127,10 @@ public class CLASDecoder4U extends CLASDecoder4 {
         solenoid = o.getOption("-s").getValue()==null?null:o.getOption("-s").doubleValue();
         runNumber = o.getOption("-r").intValue();
         maxEvents = o.getOption("-n").intValue();
+        if (o.getOption("-b").getValue() != null) {
+            benchmark = true;
+            Benchmark.getInstance().printTimer(10);
+        }
         if (runNumber > 0) setRunNumber(runNumber, true);
         if (o.getOption("-x").getValue() != null)
             detectorDecoder.setTimestamp(o.getOption("-x").stringValue());
@@ -162,6 +142,33 @@ public class CLASDecoder4U extends CLASDecoder4 {
             writer.getSchemaFactory().initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4"));
             writer.open(o.getOption("-o").stringValue());
         }
+    }
+
+    /**
+     * The command-line "decoder" program.
+     * @param args 
+     */
+    public static void main(String[] args) {
+
+        // hijack arguments, when run from an IDE:
+        if (System.console() == null && args.length == 0) {
+            // delete output file, if necessary:
+            File f = new File("tmp.hipo");
+            if (f.exists()) f.delete();
+            // setup decoder command-line options:
+            args = new String[]{"-o","tmp.hipo",System.getenv("HOME")+"/data/clas_018779.evio.00001"};
+            // try to find bankdefs:
+            System.setProperty("CLAS12DIR", System.getenv("HOME")+"/sw/coatjava/coatjava");
+        }
+
+        // parse command-line options:
+        OptionParser opts = getOptionParser();
+        opts.parse(args);
+
+        // run the decoder:
+        CLASDecoder4U decoder = new CLASDecoder4U(opts);
+        while (decoder.hasNext()) decoder.getNext();
+        decoder.close();
     }
 
 }
