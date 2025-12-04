@@ -132,25 +132,7 @@ public class ClasUtilsFile {
         }
         return ClasUtilsFile.getFileList(directory);
     }
-    /**
-     * returns a file list that contains files with given extension
-     * @param env
-     * @param rpath
-     * @param ext
-     * @return 
-     */
-    public static List<String>  getFileList(String env, String rpath, String ext){
-        String directory = ClasUtilsFile.getResourceDir(env, rpath);
-        if(directory!=null) return new ArrayList<>();
-        
-        List<String> files = ClasUtilsFile.getFileList(directory);
-        List<String> selected = new ArrayList<>();
-        for(String item : files){
-            if(item.endsWith(ext)==true) selected.add(item);
-        }
-        return selected;
-    }
-    
+
     public static void   writeFile(String filename, List<String> lines){
         System.out.println("writing file --->  " + filename);
         BufferedWriter writer = null;
