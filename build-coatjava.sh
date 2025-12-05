@@ -92,11 +92,11 @@ count_download_opts() {
 # if the user did not choose a data retrieval method, choose a reasonable one
 if [[ $(count_download_opts) -eq 0 ]]; then
   echo 'INFO: no data-retrieval option set; choosing a default...'
-  if ! [[ $(hostname) == *.jlab.org ]]; then
-    echo 'INFO: ... using `--lfs` since you are likely offsite'
-    useLfs=true
-  elif [ -d /cvmfs ]; then
-    echo 'INFO: ... using `--cvmfs` since you are likely onsite and have /cvmfs'
+  if ! [[ $(hostname) == *.jlab.org ]] &&  command_exists git-lfs ; then
+      echo 'INFO: ... using `--lfs` since you are likely offsite and have git-lfs installed'
+      useLfs=true
+  elif [ -d /cvmfs/oasis.opensciencegrid.org/jlab ]; then
+    echo 'INFO: ... using `--cvmfs` since you appear to have /cvmfs/oasis.opensciencegrid.org'
     useCvmfs=true
   else
     echo 'WARNING: default data-retrieval option cannot be determined; use `--help` for guidance' >&2
@@ -192,14 +192,9 @@ download_lfs() {
     echo 'ERROR: attempted to use LFS, but option `--lfs` not set' >&2
     exit 1
   fi
-  if command_exists git-lfs ; then
-    cd $src_dir > /dev/null
-    git submodule update --init $1
-    cd - > /dev/null
-  else
-    echo 'ERROR: `git-lfs` not found; please install it, or use a different option other than `--lfs`' >&2
-    exit 1
-  fi
+  cd $src_dir > /dev/null
+  git submodule update --init $1
+  cd - > /dev/null
 }
 
 # download a magnetic field map
