@@ -92,7 +92,7 @@ count_download_opts() {
 # if the user did not choose a data retrieval method, choose a reasonable one
 if [[ $(count_download_opts) -eq 0 ]]; then
   echo 'INFO: no data-retrieval option set; choosing a default...'
-  if ! [[ $(hostname) == *.jlab.org ]] &&  command_exists git-lfs ; then
+  if ! [[ $(hostname) == *.jlab.org ]] && command_exists git-lfs ; then
       echo 'INFO: ... using `--lfs` since you are likely offsite and have git-lfs installed'
       useLfs=true
   elif [ -d /cvmfs/oasis.opensciencegrid.org/jlab ]; then
@@ -134,6 +134,10 @@ source libexec/env.sh --no-classpath
 
 # install LFS
 if $useLfs; then
+  if ! command_exists git-lfs ; then
+      echo 'ERROR: `git-lfs` not found; please install it, or use a different option other than `--lfs`' >&2
+      exit 1
+  fi
   git lfs install
 fi
 
