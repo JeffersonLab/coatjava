@@ -80,6 +80,11 @@ do
   esac
 done
 
+# check if a command exists
+command_exists () {
+  type "$1" &> /dev/null
+}
+
 # count how many data-retrieval options are set
 count_download_opts() {
   local n=0
@@ -179,11 +184,6 @@ fi
 ################################################################################
 # download field maps, NN models, etc.
 ################################################################################
-
-# check if a command exists
-command_exists () {
-  type "$1" &> /dev/null
-}
 
 # print retrieval notice
 notify_retrieval() {
