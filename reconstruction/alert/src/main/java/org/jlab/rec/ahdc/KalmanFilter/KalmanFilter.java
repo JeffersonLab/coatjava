@@ -51,7 +51,7 @@ public class KalmanFilter {
 			
             //DataBank mcBank = event.getBank("MC::Particle");
 			// Load electron vertex
-			if (event.hasBank("REC::Particle")) {
+			/*if (event.hasBank("REC::Particle")) {
 				DataBank recBank = event.getBank("REC::Particle");
 				int row = 0;
 				while ((!IsVtxDefined) && row < recBank.rows()) {
@@ -61,7 +61,7 @@ public class KalmanFilter {
 					}
 					row++;
 				}
-			}
+			}*/
 
 			// Initialization material map
 			HashMap<String, Material> materialHashMap = materialGeneration();
