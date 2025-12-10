@@ -132,7 +132,7 @@ jobs:
         with:
           cvmfs_repositories: 'oasis.opensciencegrid.org'
       - name: unit tests
-        run: ./build-coatjava.sh --cvmfs --unittests --no-progress -T${{ env.nthreads }}
+        run: ./build-coatjava.sh --lfs --unittests --no-progress -T${{ env.nthreads }}
       - name: collect jacoco report
         if: ${{ matrix.JAVA_VERSION == env.JAVA_VERSION }}
         run: validation/jacoco-aggregate.sh
