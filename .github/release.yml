@@ -1,26 +1,26 @@
 changelog:
   categories:
-    - title: Bug Fixes
+    - title: 🐛 Bug Fixes
       labels: [ bug ]
-    - title: AI Updates
+    - title: ✨ AI Updates
       labels: [ ai ]
-    - title: Calibration Updates
+    - title: ⚙️ Calibration Updates
       labels: [ calib ]
-    - title: GEMC Updates
-      labels: [ gemc ]
-    - title: Bank Schema Updates
+    - title: 💾 Bank Schema Updates
       labels: [ schema ]
-    - title: RG-L Updates
+    - title: 🔘 GEMC Updates
+      labels: [ gemc ]
+    - title: 🔘 RG-L Updates
       labels: [ rg-l ]
-    - title: Performance Updates
+    - title: 🚀 Performance Updates
       labels: [ speed ]
-    - title: CI Updates
+    - title: ▶️ CI Updates
       labels: [ ci ]
-    - title: Java Updates
+    - title: ☕ Java Updates
       labels: [ java ]
-    - title: Maven Updates
+    - title: 🔧 Maven Updates
       labels: [ maven ]
-    - title: Dependency Updates
+    - title: 📦 Dependency Updates
       labels: [ dependencies ]
-    - title: Other Changes
+    - title: 🔘 Other Changes
       labels: [ '*' ]
