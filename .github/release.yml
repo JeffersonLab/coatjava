@@ -1,0 +1,26 @@
+changelog:
+  categories:
+    - title: Bug Fixes
+      labels: [ bug ]
+    - title: AI Updates
+      labels: [ ai ]
+    - title: Calibration Updates
+      labels: [ calib ]
+    - title: GEMC Updates
+      labels: [ gemc ]
+    - title: Bank Schema Updates
+      labels: [ schema ]
+    - title: RG-L Updates
+      labels: [ rg-l ]
+    - title: Performance Updates
+      labels: [ speed ]
+    - title: CI Updates
+      labels: [ ci ]
+    - title: Java Updates
+      labels: [ java ]
+    - title: Maven Updates
+      labels: [ maven ]
+    - title: Dependency Updates
+      labels: [ dependencies ]
+    - title: Other Changes
+      labels: [ '*' ]
