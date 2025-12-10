@@ -1,6 +1,6 @@
 ---
-name: CLAS12Reader
-engine: org.jlab.io.clara.CLAS12Reader
+name: Clas12Reader
+engine: org.jlab.io.clara.Clas12Reader
 type: java
 
 author: Nathan Baltzell

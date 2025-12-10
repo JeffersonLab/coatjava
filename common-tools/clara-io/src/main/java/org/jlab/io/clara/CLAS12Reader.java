@@ -18,7 +18,7 @@ import org.json.JSONObject;
  *
  * @author baltzell
  */
-public class CLAS12Reader extends AbstractEventReaderService<Object> {
+public class Clas12Reader extends AbstractEventReaderService<Object> {
 
     boolean evio;
     CLASDecoder4 decoder;
