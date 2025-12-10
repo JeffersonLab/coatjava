@@ -20,7 +20,9 @@ DATA RETRIEVAL OPTIONS
     --lfs             use Git Large File Storage (requires `git-lfs`)
     --cvmfs           use CernVM-FS (requires `/cvfms`)
     --xrootd          use XRootD (requires `xrootd`)
-    --nomaps          do not download field maps
+  Options to disable data retrieval:
+    --nomaps          do not download/overwrite field maps
+    --nonets          do not download/overwrite neural networks
 
 TESTING OPTIONS
     --spotbugs        also run spotbugs plugin
@@ -42,6 +44,7 @@ cleanBuild=false
 anaDepends=false
 runSpotBugs=false
 downloadMaps=true
+downloadNets=true
 runUnitTests=false
 useXrootd=false
 useCvmfs=false
@@ -56,6 +59,7 @@ do
     --spotbugs)  runSpotBugs=true   ;;
     -n)          runSpotBugs=false  ;;
     --nomaps)    downloadMaps=false ;;
+    --nonets)    downloadNets=false ;;
     --unittests) runUnitTests=true  ;;
     --clean)     cleanBuild=true    ;;
     --depana)    anaDepends=true    ;;
@@ -256,15 +260,17 @@ if $downloadMaps; then
 fi
 
 # download neural networks
-if $useLfs; then
-  notify_retrieval 'neural networks' 'lfs'
-  download_lfs etc/data/nnet
-elif $useCvmfs; then
-  notify_retrieval 'neural networks' 'cvmfs'
-  cp -r /cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/networks/* etc/data/nnet/
-else
-  echo 'WARNING: neural networks not downloaded; run with `--help` for guidance' >&2
-  sleep 1
+if $downloadNets; then
+  if $useLfs; then
+    notify_retrieval 'neural networks' 'lfs'
+    download_lfs etc/data/nnet
+  elif $useCvmfs; then
+    notify_retrieval 'neural networks' 'cvmfs'
+    cp -r /cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/networks/* etc/data/nnet/
+  else
+    echo 'WARNING: neural networks not downloaded; run with `--help` for guidance' >&2
+    sleep 1
+  fi
 fi
 
 # download validation data
