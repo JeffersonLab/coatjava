@@ -94,7 +94,7 @@ download:
   dependencies: [build]
   script:
     - tar -xzf coatjava.tar.gz
-    - ./build-coatjava.sh -T$JL_RUNNER_AVAIL_CPU --unittests --quiet --no-progress
+    - ./build-coatjava.sh -T$JL_RUNNER_AVAIL_CPU --lfs --unittests --quiet --no-progress
     - ./validation/jacoco-aggregate.sh
   artifacts:
     when: always
