@@ -10,6 +10,7 @@ import java.util.ArrayList;
  */
 public class Cluster {
 
+	private int                   _trackId = -1;
 	private double                _StereoAngle = 20.0;
 	private double                _DeltaZ = 300.0;
 	private double                _Zoffset = 150.0;
@@ -137,5 +138,13 @@ public class Cluster {
 
 	public void set_V(double _V) {
 		this._V = _V;
+	}
+
+	public int get_trackId() {
+		return _trackId;
+	}
+
+	public void set_trackId(int trackId) {
+		this._trackId = trackId;
 	}
 }
