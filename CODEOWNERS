@@ -94,7 +94,7 @@ reconstruction/vtx/ @zieglerv
 # etc
 etc/bankdefs/ @baltzell @raffaelladevita @c-dilks
 etc/data/ @baltzell
-etc/data/nnet @baltzell @tongtongcao @c-dilks
+etc/data/nnet/ @baltzell @tongtongcao @c-dilks
 etc/ejml/ @raffaelladevita @gavalian
 etc/logging/ @baltzell
 etc/nnet/ @gavalian
