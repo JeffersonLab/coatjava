@@ -1,16 +1,15 @@
 package org.jlab.rec.ahdc.KalmanFilter;
 
+import java.util.Arrays;
+
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 import org.jlab.geom.prim.Point3D;
-
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Writer;
-import java.util.Arrays;
+import org.jlab.clas.tracking.kalmanfilter.Material;
+import java.util.HashMap;
+import org.jlab.rec.ahdc.Hit.Hit;
 
 // All distances here should be in mm.
-// Do all those hardcoded values even make sense???
 public class Propagator {
 
 	private final RungeKutta4 RK4;
@@ -19,145 +18,175 @@ public class Propagator {
 		this.RK4 = rungeKutta4;
 	}
     
-    // Propagate the stepper toward the next indicator
-	void propagate(Stepper stepper, Indicator indicator) {
-		// ------------------------------------------------------------
-		final int    maxNbOfStep = 10000; // do not allow more than 10000 steps (very critical cases)
-		final double R           = indicator.R;
+	// This function needs to know:
+	// - the direction
+	// These information are already accessible in the stepper, but where shoulb specifiy them
+    // Propagate the stepper toward the next hit
+	//void propagate(Stepper stepper, Indicator indicator, HashMap<String, Material> materialHashMap) {
+	void propagate(Stepper stepper, Hit hit, HashMap<String, Material> materialHashMap) {
+		
+		// Do not allow more than 10000 steps (very critical cases)
+		final int    maxNbOfStep = 10000;
+		
+		// Initialize a stepper, used to save the previous stepper
+		Stepper prevStepper = new Stepper(stepper.y);
 
+		// Initialize distances, d should always disminish
 		double dMin = Double.MAX_VALUE;
-		double d    = 0;
+		double prev_dMin = Double.MAX_VALUE;
+		double d;
 
-		// System.out.println("R = " + R);
-		// stepper.print();
-        
-        // We should use a "while" instead of "for"
-		for (int nbStep = 0; nbStep < maxNbOfStep; nbStep++) {
-			double previous_r = stepper.r();
+		// Intialize radius
+		double R = stepper.r();
+		double prev_R = R;
+
+		// Initialize the stepper size
+		stepper.h = 0.1;
+
+		// Initialize material
+		// R = 3 mm is the location of the target
+		if (R < 3) {
+			stepper.material = materialHashMap.get("deuteriumGas");
+		} else {
+			stepper.material = materialHashMap.get("BONuS12Gas");
+		}
+
+		// boolean : check if we reach or not the target
+		boolean target_reached = false;
+		boolean target_crossed = false;
+		double thickness = 0;
+
+		// Do the propagation
+		int nbStep = 0;
+		while (nbStep < maxNbOfStep) {
+			nbStep++;
+			// Save previous state
+			prevStepper.y = Arrays.copyOf(stepper.y, stepper.y.length);
+			prev_R = stepper.r();
+			// Take a step
 			RK4.doOneStep(stepper);
-			double r = stepper.r();
-			// stepper.print();
+			// compute distance with respect to the hit
+			// this distance should always disminish
+			d = hit.distance(new Point3D(stepper.y[0], stepper.y[1], stepper.y[2]));
+			R = stepper.r();
+			// check the evolution
+			if (d < dMin) {
+				prev_dMin = dMin;
+				dMin = d;
+			}
+			else {
+				// go back to the previous step and stop the propagation
+				stepper.y = Arrays.copyOf(prevStepper.y, prevStepper.y.length);
+				// ---------------------------------------
+				// this part can be optomized
+				// we can make the step size dynamical
+				// e.g : if d >= dMin, go back to the previous step and reduce the step size by a factor 5
+				// to be done later
+				// ---------------------------------------
+				break;
+			}
+			
+			// When the propagation is done between the beamline and the first AHDC hit,
+			// we should take care of the target material
+			// target is located at R = 3 mm with a thickness of 0.060 mm (60 µm)
+			// if R < 5 mm, be careful!
+			if (R < 5) {
 
-
-			if (stepper.direction) { // forward propagation
-				if (r >= R - 2 - 1.5 * stepper.h) stepper.h = 1e-2; // ?
-				if (indicator.hit != null) { // the indicator is a hit/wire
-					if (r >= R - 2) { // only when the stepper is 2 mm closer to the layer of the hit
-						d = indicator.hit.distance(new Point3D(stepper.y[0], stepper.y[1], stepper.y[2])); // distance of the stepper with respect to the wire
-						if (d < dMin) dMin = d; // the distance d should continue to diminish
+				// We try to cross the target
+				if (((prev_R < 3 && R > 3) || (prev_R > 3 && R < 3)) && !target_reached) {
+					// We want to cross the target with a very small step < 0.060 mm
+					if (Math.abs(R - prev_R) > 0.060) {
+						stepper.h /= 5;
+						// redo the propagation
+						// so, go back to the previous step
+						stepper.y = Arrays.copyOf(prevStepper.y, prevStepper.y.length);
+						dMin = prev_dMin;
+						continue;
 					}
-					if (r >= R + 2 || d > dMin) { // r should not be bigger than R
-                                                  // if the distance d starts to grow again, stop the propagation!
-                                                  // in that case, the good stepper is the previous one!
-						// System.out.println("dMin = " + dMin);
-						break;
-					}
-				} else { // the indicator is the target face (inner or outer)
-					if (r >= R) {
-						break; // break as soon as r >= R, again, may the good stepper is the previous one
+					// we can consider that we have reached the target and that we are ready to cross it
+					else {
+						target_reached = true;
+						// redo the propagation
+						// so, go back to the previous step
+						stepper.y = Arrays.copyOf(prevStepper.y, prevStepper.y.length);
+						dMin = prev_dMin;
+						// We are now ready to cross the target
+						// set the target material
+						stepper.material = materialHashMap.get("Kapton");
+						// update the step size
+						stepper.h = 0.003;
+						// initialise the crossed thickness
+						thickness = 0;
+						continue;
 					}
 				}
-			} else { // backward direction
-				if (r <= R + 2 + 1.5 * stepper.h) stepper.h = 1e-2; // ?
-				if (R < 5) { // we are now close the target (outer face is at 3.060 mm)
-					if (stepper.h < 1e-4) stepper.h = 1e-4; // this step is too short // it increases the computing time
-					if ((previous_r - r) < 0) { // in the backward propagation, we expect r to decrease; if not stop the propagation!
-						break;
+				
+				// cross the target for 0.06 mm
+				if (target_reached && !target_crossed) {
+					thickness += Math.abs(R - prev_R);
+					if (thickness > 0.06) {
+						target_crossed = true;
+						// update stepper size
+						// we go back to a normal propagation
+						stepper.h = 0.1;
+						// update stepper material
+						if (stepper.direction) { // forward propagation
+							stepper.material = materialHashMap.get("BONuS12Gas");
+						}
+						else { // backward propagation
+							stepper.material = materialHashMap.get("deuteriumGas");
+						}
 					}
 				}
-				if (indicator.hit != null) { // wire/hit or beamline
-					if (r <= R + 2) { // here R < r and r decreases, we enter here when r becomes 2 mm closer to R
-                                      // we compute the distance, we expect it to decrease
-						d = indicator.hit.distance(new Point3D(stepper.y[0], stepper.y[1], stepper.y[2]));
-						if (d < dMin) dMin = d;
-					}
-					if (r <= R - 2 || d > dMin) { // if the distance grows again, stop the propagation
-						// System.out.println("dMin = " + dMin);
-						break;
-					}
-				} else { // the indicator is the target face (inner or outer)
-					if (r <= R) { 
-						break; // break as soon as r <= R, again, may the good stepper is the previous one
-					}
-				}
-
-
+				
 			}
 
-
-
 		}
+		//System.out.printf("nbstep : %d (%s)\n", nbStep, stepper.direction ? "forward" : "backward");
+
 	}
 
-	public RealVector f(Stepper stepper, Indicator indicator) {
-		propagate(stepper, indicator);
+	public RealVector f(Stepper stepper, Hit hit, HashMap<String, Material> materialHashMap) {
+		propagate(stepper, hit, materialHashMap);
 		return new ArrayRealVector(stepper.y);
 	}
-    
-    // -------------------------------
-    // not used, to be deleted
-    // -------------------------------
-	public void propagateAndWrite(Stepper stepper, Indicator indicator, Writer writer) {
-		// ------------------------------------------------------------
-		final int    maxNbOfStep = 10000;
+
+}
+
+// Draft
+// ------------------------------------------------------------
+		/*final int    maxNbOfStep = 10000; // do not allow more than 10000 steps (very critical cases)
 		final double R           = indicator.R;
 
 		double dMin = Double.MAX_VALUE;
 		double d    = 0;
+		Stepper prevStepper = new Stepper(stepper.y);
+		prevStepper.initialize(indicator);
 
-		System.out.println("R = " + R);
-		stepper.print();
-		try {writer.write("" + Arrays.toString(stepper.y) + '\n');} catch (Exception e) {e.printStackTrace();}
-
-		for (int nbStep = 0; nbStep < maxNbOfStep; nbStep++) {
-			double previous_r = stepper.r();
+        int nbStep = 0;
+        while (nbStep < maxNbOfStep) {
+            nbStep++;
+			prevStepper.y = Arrays.copyOf(stepper.y, stepper.y.length);
 			RK4.doOneStep(stepper);
-			double r = stepper.r();
-			stepper.print();
-			try {writer.write("" + Arrays.toString(stepper.y) + '\n');} catch (Exception e) {e.printStackTrace();}
-
-			if (stepper.direction) {
-				if (r >= R - 2 - 1.5 * stepper.h) stepper.h = 1e-2;
-				if (indicator.hit != null) {
-					if (r >= R - 2) {
-						d = indicator.hit.distance(new Point3D(stepper.y[0], stepper.y[1], stepper.y[2]));
-						System.out.println("d = " + d);
-						if (d < dMin) dMin = d;
-					}
-					if (r >= R + 2 || d > dMin) {
-						System.out.println("dMin = " + dMin);
-						break;
-					}
-				} else {
-					if (r >= R) {
-						break;
-					}
+            
+            // Compute the distance
+            if (indicator.hit != null) { // the indicator is a hit/wire
+                d = indicator.hit.distance(new Point3D(stepper.y[0], stepper.y[1], stepper.y[2])); // distance of the stepper with respect to the wire
+            } else { // the indicator is the target face (inner or outer)
+			    double d0 = Math.abs(indicator.R - stepper.r());
+                d = Math.max(d0, stepper.h);
+				if (flag) {
+                	System.out.printf("[%4d] r : %f  --->  R : %2.5f (%s)\n", nbStep, stepper.r(), indicator.R, stepper.direction ? "forward" : "backward");
 				}
-			} else {
-				if (r <= R + 2 + 1.5 * stepper.h) stepper.h = 1e-2;
-				if (R < 5) {
-					if (stepper.h < 1e-4) stepper.h = 1e-4;
-					if ((previous_r - r) < 0) {
-						break;
-					}
-				}
-				if (indicator.hit != null) {
-					if (r <= R + 2) {
-						d = indicator.hit.distance(new Point3D(stepper.y[0], stepper.y[1], stepper.y[2]));
-						if (d < dMin) dMin = d;
-					}
-					if (r <= R - 2 || d > dMin) {
-						System.out.println("dMin = " + dMin);
-						break;
-					}
-				} else {
-					if (r <= R) {
-						break;
-					}
-				}
+            }
 
+            // The first time, it will disminish because dMin = "Infinity"
+            // Starting nbStep 2, the distance should continue to disminish. If not, stop the propagation
+            if (d < dMin) {
+                dMin = d; 
+            } else {
+				stepper.y = Arrays.copyOf(prevStepper.y, prevStepper.y.length);
+                break;
+            }
 
-			}
-		}
-	}
-}
+		}*/

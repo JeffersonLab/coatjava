@@ -23,14 +23,12 @@ public class Stepper {
 	// The initialisation tells the stepper where to go (i.e toward the `indicator`)
     // Cf. notes in Indicator.java
     // The initilisation is done before any propagation between indicators, in the predict() method of KFitter.java
-	public void initialize(Indicator indicator) {
+	//public void initialize(Indicator indicator) {
+	public void initialize(boolean direction) {
 		this.s           = 0;
 		this.dEdx        = 0;
-		this.h           = indicator.h;
-		this.material    = indicator.material;
-		this.direction   = indicator.direction;
+		this.direction   = direction;
 		this.is_in_drift = false;
-
 	}
     
     // radius, distance to the beamline

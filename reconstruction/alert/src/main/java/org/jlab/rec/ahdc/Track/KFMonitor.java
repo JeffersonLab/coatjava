@@ -7,7 +7,7 @@ public class KFMonitor {
 	private int trackid; //< trackid
 	private int Niter; //< iteration number of the Kalman Filter algorithm
 	private int orientation; //< forward (0), backward (1), postfit (2) propagation
-	private int indicator; //< wire ==> layer*100 + component  ; beamline ==> 0 ; target straw surface ==> 1 (inner face), 2 (outer face) [[ remark: if indicator < 10 then it is not a wire ]]
+	private int indicator; //< wire ==> layer*100 + component  ; beamline ==> 0 
 	private int status; //< state just after: prediction (0) or correction (1)
 	private RealVector state; //< vector containing x, y, z, px, py, pz
 	private RealMatrix errorCovarianceMatrix; // error covariance matrix, only the diagonal matter (x-x')^2, (y-y')^2, ..., (pz-pz')^2	

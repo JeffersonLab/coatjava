@@ -3,7 +3,6 @@ package org.jlab.rec.ahdc.KalmanFilter;
 import org.jlab.clas.pdg.PDGParticle;
 import org.jlab.clas.pdg.PhysicsConstants;
 
-import java.util.Arrays;
 
 // Compute the next trajectory point using the equation of motion
 // the path length is given by the stepper
