@@ -21,7 +21,7 @@ defaults:
     shell: bash
 
 env:
-  JAVA_VERSION: 21 # must be consistent with POM; see also dependabot config for any version limits
+  JAVA_VERSION: 25 # must be consistent with POM; see also dependabot config for any version limits
   JAVA_VERSION_LATEST: 25 # the latest `JAVA_VERSION` that we test with CI
   java_distribution: zulu
   javadoc_version: 25 # newer than `JAVA_VERSION` for better javadoc
