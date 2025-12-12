@@ -27,6 +27,7 @@ public class Clas12Writer extends DecoderWriter {
     
     @Override
     protected void configure(HipoWriterSorted writer, JSONObject opts) {
+        System.out.println("DOOKEYBALL");
         super.configure(writer, opts);
         if (opts.has("histers")) {
             JSONArray a = opts.getJSONArray("histers");

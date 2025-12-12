@@ -1,0 +1,11 @@
+---
+name: Clas12Writer
+engine: org.jlab.io.clara.Clas12Writer
+type: java
+
+author: Nathan Baltzell
+email: baltzell@jlab.org
+
+version: 0.1
+description:
+  Extension of DecoderWriter to include histogram output.
