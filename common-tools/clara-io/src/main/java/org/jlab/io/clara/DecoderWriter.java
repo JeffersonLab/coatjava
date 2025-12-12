@@ -42,7 +42,7 @@ public class DecoderWriter extends HipoToHipoWriter {
     SchemaFactory fullSchema;
     boolean postprocess;
 
-    private void init(JSONObject opts) {
+    protected void init(JSONObject opts) {
         postprocess = false;
         fullSchema = new SchemaFactory();
         fullSchema.initFromDirectory(FileUtils.getEnvironmentPath("CLAS12DIR","etc/bankdefs/hipo4"));

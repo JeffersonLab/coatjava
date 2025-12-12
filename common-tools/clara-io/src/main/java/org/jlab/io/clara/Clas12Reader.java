@@ -16,6 +16,8 @@ import org.json.JSONObject;
 
 /**
  *
+ * This is DecoderReader or HipoToHipoReader, depending on the file suffix.
+ * 
  * @author baltzell
  */
 public class Clas12Reader extends AbstractEventReaderService<Object> {
