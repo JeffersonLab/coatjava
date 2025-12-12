@@ -21,24 +21,26 @@ public class Clas12Writer extends DecoderWriter {
     
     String histoFilename;
     ArrayList<Hister> histers = new ArrayList<>();
+   
+    private void add(String name) {
+        try {
+            Constructor<?> c = Class.forName(name).getDeclaredConstructor();
+            Hister m = (Hister)c.newInstance();
+            m.configure();
+            histers.add(m);
+            System.out.println("INFO Clas12Writer - created hister:  "+name);
+        } catch (NoSuchMethodException | ClassNotFoundException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
+            System.getLogger(DecoderWriter.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+        }
+    }
     
     private void init(JSONObject opts) {
         if (opts.has("histers")) {
             JSONArray a = opts.getJSONArray("histers");
-            for (int i=0; i<a.length(); i++) {
-                try {
-                    Constructor<?> c = Class.forName(a.getString(i)).getDeclaredConstructor();
-                    Hister m = (Hister)c.newInstance();
-                    m.configure();
-                    histers.add(m);
-                    System.out.println("INFO Clas12Writer - created hister:  "+a.getString(i));
-                } catch (NoSuchMethodException | ClassNotFoundException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-                    System.getLogger(DecoderWriter.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
-                }
-            }
+            for (int i=0; i<a.length(); i++) add(a.getString(i));
         }
     }
-    
+
     @Override
     protected HipoWriterSorted createWriter(Path file, JSONObject opts) throws EventWriterException {
         HipoWriterSorted w = super.createWriter(file,opts);
