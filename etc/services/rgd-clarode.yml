@@ -22,8 +22,8 @@ io-services:
     class: org.jlab.io.clara.Clas12Reader
     name: Clas12Reader
   writer:
-    class: org.jlab.io.clara.DecoderWriter
-    name: DecoderWriter
+    class: org.jlab.io.clara.Clas12Writer
+    name: Clas12Writer
 services:
   - class: org.jlab.service.ai.DCDenoiseEngine
     name: DCDN
