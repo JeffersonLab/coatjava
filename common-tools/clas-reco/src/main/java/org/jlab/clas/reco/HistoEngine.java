@@ -64,13 +64,13 @@ public abstract class HistoEngine extends ReconstructionEngine {
             histos.get(dir).addAll(Arrays.asList(data));
         }
 
-        public static class Example extends Hister {
-            H1F q2 = new H1F("q2","Q^{2}",100,0,5);
-            @Override
-            public void fill(Object event) { q2.fill(0.1); }
-            @Override
-            public void configure() { add("/TEST/dir1", q2); }
-        }
     }
  
+    public static class Example extends Hister {
+        H1F q2 = new H1F("q2","Q^{2}",100,0,5);
+        @Override
+        public void fill(Object event) { q2.fill(0.1); }
+        @Override
+        public void configure() { add("/TEST/dir1", q2); }
+    }
 }

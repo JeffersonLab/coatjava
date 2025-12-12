@@ -70,6 +70,7 @@ public class Clas12Writer extends DecoderWriter {
             for (Hister h : histers) h.write(d);
             d.writeFile(histoFilename);
             histers.clear();
+            System.out.println("INFO Clas12Writer - created "+histoFilename);
         }
     }
 }
