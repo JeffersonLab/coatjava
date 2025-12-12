@@ -24,7 +24,6 @@ public class AHDCTest {
     
     AHDCEngine engine = new AHDCEngine();
     engine.init(ModeTrackFinding.AI_Track_Finding);
-    //engine.init(ModeTrackFinding.CV_Distance); 
     engine.processDataEvent(event);
 
     event.show();
