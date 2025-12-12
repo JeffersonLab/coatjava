@@ -4,14 +4,11 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import org.jlab.clara.std.services.EventWriterException;
-import org.jlab.groot.data.H1F;
-import org.jlab.groot.data.IDataSet;
 import org.jlab.groot.data.TDirectory;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
+import org.jlab.analysis.clara.Hister;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -25,10 +22,7 @@ public class Clas12Writer extends DecoderWriter {
     String histoFilename;
     ArrayList<Hister> histers = new ArrayList<>();
     
-    @Override
-    protected void configure(HipoWriterSorted writer, JSONObject opts) {
-        System.out.println("DOOKEYBALL");
-        super.configure(writer, opts);
+    private void init(JSONObject opts) {
         if (opts.has("histers")) {
             JSONArray a = opts.getJSONArray("histers");
             for (int i=0; i<a.length(); i++) {
@@ -37,6 +31,7 @@ public class Clas12Writer extends DecoderWriter {
                     Hister m = (Hister)c.newInstance();
                     m.configure();
                     histers.add(m);
+                    System.out.println("INFO Clas12Writer - created hister:  "+a.getString(i));
                 } catch (NoSuchMethodException | ClassNotFoundException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
                     System.getLogger(DecoderWriter.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
                 }
@@ -46,13 +41,15 @@ public class Clas12Writer extends DecoderWriter {
     
     @Override
     protected HipoWriterSorted createWriter(Path file, JSONObject opts) throws EventWriterException {
-        HipoWriterSorted w = super.createWriter(file, opts);
+        HipoWriterSorted w = super.createWriter(file,opts);
+        init(opts);
         if (!histers.isEmpty()) {
-            String dir = opts.optString("outDir",file.getParent().toString());
+            String dirname = file.getParent().toString();
             String basename = file.getFileName().toString();
             if (basename.startsWith("rec_")) basename = basename.substring(4);
             basename = "hist_" + basename;
-            histoFilename = dir + "/" + basename;
+            if (!basename.endsWith(".hipo")) basename += ".hipo";
+            histoFilename = dirname + "/" + basename;
         }
         return w;
     }
@@ -71,29 +68,6 @@ public class Clas12Writer extends DecoderWriter {
             for (Hister h : histers) h.write(d);
             d.writeFile(histoFilename);
             histers.clear();
-        }
-    }
-    
-    abstract class Hister {
-        abstract public void fill(Event event);
-        abstract public void configure();
-        protected HashMap<String,ArrayList<IDataSet>> histos;
-        public void write(TDirectory dir) {
-            for (HashMap.Entry<String,ArrayList<IDataSet>> e : histos.entrySet()) {
-                dir.cd( e.getKey().startsWith("/") ? e.getKey() : "/"+e.getKey());
-                for (IDataSet d : e.getValue()) dir.addDataSet(d);
-            }
-        }
-        public void add(String dir, IDataSet... data) {
-            if (!histos.containsKey(dir)) histos.put(dir, new ArrayList<>());
-            histos.get(dir).addAll(Arrays.asList(data));
-        }
-        public class Example extends Hister {
-            H1F q2 = new H1F("q2","Q^{2}",100,0,5);
-            @Override
-            public void fill(Event event) { q2.fill(0.1); }
-            @Override
-            public void configure() { add("/TEST/dir1", q2); }
         }
     }
 }
