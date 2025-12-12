@@ -1,14 +1,9 @@
 package org.jlab.service.bg;
 
-import java.io.File;
 import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.jlab.analysis.eventmerger.EventMerger;
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.io.base.DataEvent;
-import org.jlab.io.hipo.HipoDataSource;
 
 /**
  *
@@ -23,8 +18,6 @@ public class BackgroundEngine extends ReconstructionEngine {
     public static final String CONF_PRESERVE_ORDER = "preserveOrder";
     public static final String CONF_REUSE_EVENTS = "reuseEvents";
     public static final String CONF_BG_SCALE = "bgScale";
-
-    static final Logger logger = Logger.getLogger(BackgroundEngine.class.getName());
 
     EventMerger bgmerger = null;
 //    LinkedList<String> bgfilenames = new LinkedList<>();
