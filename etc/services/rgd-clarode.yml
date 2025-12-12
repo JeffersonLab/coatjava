@@ -8,7 +8,7 @@ configuration:
     writer:
       schema_dir: dst
       histers:
-        - org.jlab.analysis.clara.Hister$Example
+        - org.jlab.clas.reco.HistoEngine$Example
   services:
     MAGFIELDS:
       magfieldSolenoidMap: Symm_solenoid_r601_phi1_z1201_13June2018.dat

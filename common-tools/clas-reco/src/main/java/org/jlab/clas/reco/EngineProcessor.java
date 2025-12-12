@@ -15,6 +15,7 @@ import org.jlab.utils.options.OptionParser;
 import org.jlab.clara.engine.EngineData;
 import org.jlab.clara.engine.EngineDataType;
 import java.util.Arrays;
+import org.jlab.groot.data.TDirectory;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.json.JSONObject;
 import org.jlab.logging.SplitLogger;
@@ -332,10 +333,21 @@ public class EngineProcessor {
             }
             progress.showStatus();
             writer.close();
+            writeHistos("dog.hipo");
         } else {
             LOGGER.info("\n\n>>>> error in file extension (use .hipo,.h4 or .h5)\n>>>> how is this not simple ?\n");
         }
-        
+    }
+
+    public void writeHistos(String filename) {
+        TDirectory d = null;
+        for(ReconstructionEngine engine : this.processorEngines.values()){
+            if (engine instanceof HistoEngine) {
+                if (d == null) d = new TDirectory();
+                ((HistoEngine)engine).hister.write(d);
+            }
+        }
+        if (d != null) d.writeFile(filename);
     }
 
     /**

@@ -8,7 +8,7 @@ import org.jlab.clara.std.services.EventWriterException;
 import org.jlab.groot.data.TDirectory;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.io.HipoWriterSorted;
-import org.jlab.analysis.clara.Hister;
+import org.jlab.clas.reco.HistoEngine.Hister;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
