@@ -79,6 +79,10 @@ public class ATOFHit {
     public double getTime() {
         return time;
     }
+    
+    public double getStartTime() {
+        return this.startTime;
+    }
 
     public void setTime(double time) {
         this.time = time;
