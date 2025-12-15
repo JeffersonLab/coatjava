@@ -171,8 +171,8 @@ public class KalmanFilter {
 			    track.set_n_hits(AHDC_hits.size());
 			}//end of loop on track candidates
 		} catch (Exception e) {
-			// e.printStackTrace();
-			System.out.println("===> Error");
+			e.printStackTrace();
+			System.out.println("======> Kalman Filter Error");
 		}
 	}
 
