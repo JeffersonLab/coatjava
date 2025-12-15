@@ -26,7 +26,9 @@ public class ATOFHit {
     private String type;
     private boolean isInACluster;
     private int associatedClusterIndex;
+    private double meanTimeAligned;
     int idTDC;
+    
 
     public int getSector() {
         return sector;
@@ -82,6 +84,10 @@ public class ATOFHit {
     
     public double getStartTime() {
         return this.startTime;
+    }
+    
+    public double getMeanTimeAligned(){
+        return this.meanTimeAligned;
     }
 
     public void setTime(double time) {
@@ -202,12 +208,12 @@ public class ATOFHit {
         //Time offsets
         double[] timeOffsets = CalibrationConstantsLoader.ATOF_TIME_OFFSETS.get(key);
         double[] timeOffsetsRef = CalibrationConstantsLoader.ATOF_TIME_OFFSETS.get(referenceModuleKey);
-        
+        this.meanTimeAligned = timeOffsetsRef[0];
         //The names below correspond to the CCDB entries
         //They will most probably evolve
         //For now let's say t0 is used to store the bar-to-bar and wedge-to-wedge alignments
         double t0 = timeOffsets[0];
-        double tChannelToChannelPhiAlignment = (t0 - timeOffsetsRef[0]);
+        double tChannelToChannelPhiAlignment = (t0 - this.meanTimeAligned);
         if(this.type=="bar up" || this.type=="bar down") //bar alignment is done with the sum of the two times
             tChannelToChannelPhiAlignment=tChannelToChannelPhiAlignment/2.;
         

@@ -126,17 +126,8 @@ public class HitFinder {
                 if (this_hit_up.matchBar(this_hit_down)) {
                     //Bar hits are matched to ahdc tracks and listed
                     BarHit this_bar_hit = new BarHit(this_hit_down, this_hit_up);
-                    int key = this_hit_up.getSector()*10000 + this_hit_up.getLayer()*1000 + this_hit_up.getComponent()*10;//Order does not matter (t0 computed from time sum)
-                    double[] timeOffsets = CalibrationConstantsLoader.ATOF_TIME_OFFSETS.get(key);
-                    double meanTime = timeOffsets[0];
-                    double sigmaTime = Math.abs(timeOffsets[3]);
-                    //Cuts for bar time sum are derived correcting with FD electrons
-                    //So we need to move the cut to be centered at the same startTime for FT electron events
-                    //For now, we will just keep all FT electron events even if out of time
-                    if(this_hit_up.getStartTime()!=-1000 && this_hit_up.getStartTime()!=0){
-                        if(2*this_bar_hit.getTime() > meanTime + 5*sigmaTime) continue;
-                        if(2*this_bar_hit.getTime() < meanTime - 3*sigmaTime) continue;
-                        }
+                    //Only add bar hits for which the time sum is in time
+                    if(!this_bar_hit.isInTime()) continue;
                     this.barHits.add(this_bar_hit);
                     countMatches++;
                 }
