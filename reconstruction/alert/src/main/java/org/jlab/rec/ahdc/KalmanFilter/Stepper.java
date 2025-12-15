@@ -19,6 +19,32 @@ public class Stepper {
 	public Stepper(double[] y) {
 		this.y = Arrays.copyOf(y, y.length);
 	}
+
+	// Copy constructor
+	public Stepper(Stepper stepper) {
+		this.y = Arrays.copyOf(stepper.y, stepper.y.length);
+		this.h = stepper.h;
+		this.material = stepper.material;
+		this.s = stepper.s;
+		this.sTot = stepper.sTot;
+		this.s_drift = stepper.s_drift;
+		this.is_in_drift = stepper.is_in_drift;
+		this.dEdx = stepper.dEdx;
+		this.direction = stepper.direction;
+	}
+
+	// Copy the contents but do not change the reference
+	public void copyContent(Stepper stepper) {
+		this.y = Arrays.copyOf(stepper.y, stepper.y.length);
+		this.h = stepper.h;
+		this.material = stepper.material;
+		this.s = stepper.s;
+		this.sTot = stepper.sTot;
+		this.s_drift = stepper.s_drift;
+		this.is_in_drift = stepper.is_in_drift;
+		this.dEdx = stepper.dEdx;
+		this.direction = stepper.direction;
+	}
 	
 	// The initialisation tells the stepper where to go (i.e toward the `indicator`)
     // Cf. notes in Indicator.java
@@ -49,4 +75,12 @@ public class Stepper {
 	public String toString() {
 		return "" + sTot + ' ' + y[0] + ' ' + y[1] + ' ' + y[2] + ' ' + y[3] + ' ' + y[4] + ' ' + y[5];
 	}
+
+	public double distance(Stepper stepper) {
+		double dx = this.y[0] - stepper.y[0];
+		double dy = this.y[1] - stepper.y[1];
+		double dz = this.y[2] - stepper.y[2];
+		return Math.sqrt(dx*dx + dy*dy + dz*dz);
+	}
+
 }

@@ -1,6 +1,6 @@
 package org.jlab.rec.ahdc.KalmanFilter;
 
-import java.util.Arrays;
+//import java.util.Arrays;
 
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
@@ -18,22 +18,20 @@ public class Propagator {
 		this.RK4 = rungeKutta4;
 	}
     
-	// This function needs to know:
-	// - the direction
-	// These information are already accessible in the stepper, but where shoulb specifiy them
     // Propagate the stepper toward the next hit
-	//void propagate(Stepper stepper, Indicator indicator, HashMap<String, Material> materialHashMap) {
 	void propagate(Stepper stepper, Hit hit, HashMap<String, Material> materialHashMap) {
 		
 		// Do not allow more than 10000 steps (very critical cases)
 		final int    maxNbOfStep = 10000;
 		
-		// Initialize a stepper, used to save the previous stepper
-		Stepper prevStepper = new Stepper(stepper.y);
+		// Initialise steppers to save the two previous states
+		Stepper prev_stepper = new Stepper(stepper);
+		Stepper prev_prev_stepper = new Stepper(stepper);
 
 		// Initialize distances, d should always disminish
 		double dMin = Double.MAX_VALUE;
 		double prev_dMin = Double.MAX_VALUE;
+		double prev_prev_dMin = Double.MAX_VALUE;
 		double d;
 
 		// Intialize radius
@@ -41,7 +39,7 @@ public class Propagator {
 		double prev_R = R;
 
 		// Initialize the stepper size
-		stepper.h = 0.1;
+		stepper.h = 0.5;
 
 		// Initialize material
 		// R = 3 mm is the location of the target
@@ -57,33 +55,55 @@ public class Propagator {
 		double thickness = 0;
 
 		// Do the propagation
+		//stepper.print();
 		int nbStep = 0;
 		while (nbStep < maxNbOfStep) {
 			nbStep++;
 			// Save previous state
-			prevStepper.y = Arrays.copyOf(stepper.y, stepper.y.length);
+			prev_prev_stepper.copyContent(prev_stepper);
+			prev_stepper.copyContent(stepper);
 			prev_R = stepper.r();
 			// Take a step
 			RK4.doOneStep(stepper);
 			// compute distance with respect to the hit
 			// this distance should always disminish
 			d = hit.distance(new Point3D(stepper.y[0], stepper.y[1], stepper.y[2]));
+			/*if (hit.getRadius() < 34 && hit.getRadius() > 30 && !stepper.direction) { // beamline for backward propagation
+				System.out.print("d = " + d + " ");
+				stepper.print();
+			}*/
 			R = stepper.r();
 			// check the evolution
 			if (d < dMin) {
+				prev_prev_dMin = prev_dMin;
 				prev_dMin = dMin;
 				dMin = d;
 			}
 			else {
-				// go back to the previous step and stop the propagation
-				stepper.y = Arrays.copyOf(prevStepper.y, prevStepper.y.length);
-				// ---------------------------------------
-				// this part can be optomized
-				// we can make the step size dynamical
-				// e.g : if d >= dMin, go back to the previous step and reduce the step size by a factor 5
-				// to be done later
-				// ---------------------------------------
-				break;
+				// reduce the step size
+				//if (stepper.h > 0.05) {
+				//if (Math.abs(prev_dMin - dMin) > 0.05) {
+				if (stepper.distance(prev_stepper) > 0.05) {
+					// we didn't reach the precision, so
+					// go back two steps before
+					// and redo the propagation
+					stepper.copyContent(prev_prev_stepper);
+					dMin = prev_prev_dMin;
+					stepper.h /= 2;
+					continue;
+				}
+				else {
+					// we reach the precision, so
+					// go back to the previous step and stop the propagation
+					stepper.copyContent(prev_stepper);
+					stepper.h = 0.5;
+					break;
+				}
+				// we reach the precision, so
+				// go back to the previous step and break
+				/*stepper.copyContent(prev_stepper);
+				stepper.h = 0.1;
+				break;*/
 			}
 			
 			// When the propagation is done between the beamline and the first AHDC hit,
@@ -96,10 +116,10 @@ public class Propagator {
 				if (((prev_R < 3 && R > 3) || (prev_R > 3 && R < 3)) && !target_reached) {
 					// We want to cross the target with a very small step < 0.060 mm
 					if (Math.abs(R - prev_R) > 0.060) {
-						stepper.h /= 5;
 						// redo the propagation
 						// so, go back to the previous step
-						stepper.y = Arrays.copyOf(prevStepper.y, prevStepper.y.length);
+						stepper.copyContent(prev_stepper);
+						stepper.h /= 5;
 						dMin = prev_dMin;
 						continue;
 					}
@@ -108,12 +128,12 @@ public class Propagator {
 						target_reached = true;
 						// redo the propagation
 						// so, go back to the previous step
-						stepper.y = Arrays.copyOf(prevStepper.y, prevStepper.y.length);
+						stepper.copyContent(prev_stepper);
 						dMin = prev_dMin;
 						// We are now ready to cross the target
 						// set the target material
 						stepper.material = materialHashMap.get("Kapton");
-						// update the step size
+						// copyContent the step size
 						stepper.h = 0.003;
 						// initialise the crossed thickness
 						thickness = 0;
@@ -126,10 +146,10 @@ public class Propagator {
 					thickness += Math.abs(R - prev_R);
 					if (thickness > 0.06) {
 						target_crossed = true;
-						// update stepper size
+						// copyContent stepper size
 						// we go back to a normal propagation
-						stepper.h = 0.1;
-						// update stepper material
+						stepper.h = 0.5;
+						// copyContent stepper material
 						if (stepper.direction) { // forward propagation
 							stepper.material = materialHashMap.get("BONuS12Gas");
 						}
@@ -142,7 +162,10 @@ public class Propagator {
 			}
 
 		}
-		//System.out.printf("nbstep : %d (%s)\n", nbStep, stepper.direction ? "forward" : "backward");
+		/*System.out.printf("nbstep : %d (%s)\n", nbStep, stepper.direction ? "forward" : "backward");
+		if (hit.getId() == 0) {
+			System.out.printf("******** Beamline <-- radius = %f, stepper.h = %f\n", stepper.r(), stepper.h);
+		}*/
 
 	}
 
@@ -152,41 +175,3 @@ public class Propagator {
 	}
 
 }
-
-// Draft
-// ------------------------------------------------------------
-		/*final int    maxNbOfStep = 10000; // do not allow more than 10000 steps (very critical cases)
-		final double R           = indicator.R;
-
-		double dMin = Double.MAX_VALUE;
-		double d    = 0;
-		Stepper prevStepper = new Stepper(stepper.y);
-		prevStepper.initialize(indicator);
-
-        int nbStep = 0;
-        while (nbStep < maxNbOfStep) {
-            nbStep++;
-			prevStepper.y = Arrays.copyOf(stepper.y, stepper.y.length);
-			RK4.doOneStep(stepper);
-            
-            // Compute the distance
-            if (indicator.hit != null) { // the indicator is a hit/wire
-                d = indicator.hit.distance(new Point3D(stepper.y[0], stepper.y[1], stepper.y[2])); // distance of the stepper with respect to the wire
-            } else { // the indicator is the target face (inner or outer)
-			    double d0 = Math.abs(indicator.R - stepper.r());
-                d = Math.max(d0, stepper.h);
-				if (flag) {
-                	System.out.printf("[%4d] r : %f  --->  R : %2.5f (%s)\n", nbStep, stepper.r(), indicator.R, stepper.direction ? "forward" : "backward");
-				}
-            }
-
-            // The first time, it will disminish because dMin = "Infinity"
-            // Starting nbStep 2, the distance should continue to disminish. If not, stop the propagation
-            if (d < dMin) {
-                dMin = d; 
-            } else {
-				stepper.y = Arrays.copyOf(prevStepper.y, prevStepper.y.length);
-                break;
-            }
-
-		}*/
