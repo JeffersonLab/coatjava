@@ -13,7 +13,6 @@ import org.jlab.clas.pdg.PDGParticle;
 import org.jlab.clas.tracking.kalmanfilter.Material;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.ahdc.Hit.Hit;
-import org.jlab.rec.ahdc.Track.KFMonitor;
 import org.jlab.rec.ahdc.Track.Track;
 
 //import org.apache.commons.math3.linear.RealMatrixFormat;
@@ -38,21 +37,7 @@ public class KalmanFilter {
 			final double      tesla             = 0.001;
 			final double[]    B                 = {0.0, 0.0, magfield / 10 * tesla};
 			HashMap<String, Material> materialHashMap = MaterialMap.generateMaterials();
-			
-            //DataBank mcBank = event.getBank("MC::Particle");
-			// Load electron vertex
-			/*if (event.hasBank("REC::Particle")) {
-				DataBank recBank = event.getBank("REC::Particle");
-				int row = 0;
-				while ((!IsVtxDefined) && row < recBank.rows()) {
-					if (recBank.getInt("pid", row) == 11) {
-						IsVtxDefined = true;
-						vz_constraint = recBank.getFloat("vz",row);
-					}
-					row++;
-				}
-			}*/
-			
+					
             // Loop over tracks
 			int trackId = 0;
 			for (Track track : tracks) {
@@ -65,14 +50,7 @@ public class KalmanFilter {
 			    double px0 = track.get_px();
 			    double py0 = track.get_py();
 			    double pz0 = track.get_pz();
-			    // using or not mc
-                // will be deleted in the final code
-                /*if (IsMC) {
-                    z0  = mcBank.getFloat("vz", trackId-1)*10;
-                    px0 = mcBank.getFloat("px", trackId-1)*1000;
-                    py0 = mcBank.getFloat("py", trackId-1)*1000;
-                    pz0 = mcBank.getFloat("pz", trackId-1)*1000;
-			    }*/	
+
 			    double[]     y   = new double[]{x0, y0, z0, px0, py0, pz0};
 			    // Read list of hits
 			    ArrayList<Hit> AHDC_hits = track.getHits();
@@ -93,34 +71,25 @@ public class KalmanFilter {
 				KFitter TrackFitter = new KFitter(initialStateEstimate, initialErrorCovariance, stepper, propagator, materialHashMap);
 			    TrackFitter.setVertexDefined(IsVtxDefined);
 		 	    
-			    // KFmonitor: save state and error covariance matrix
-			    track.add_KFMonitor(new KFMonitor(trackId, 0, 0, 0, 0, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
-                
 				// Loop over number of iterations
 			    for (int k = 0; k < Niter; k++) {
 					// Forward propagation
 					for (Hit hit : AHDC_hits) {
                         TrackFitter.predict(hit, true);
-                        track.add_KFMonitor(new KFMonitor(trackId, k, 0, (hit.getSuperLayerId()*10 + hit.getLayerId())*100 + hit.getWireId(), 0, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
 						TrackFitter.correct(hit);
-						track.add_KFMonitor(new KFMonitor(trackId, k, 0, (hit.getSuperLayerId()*10 + hit.getLayerId())*100 + hit.getWireId(), 1, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
 					
                     }
 					// Backward propagation (last layer to first layer)
 					for (int i = AHDC_hits.size() - 2; i >= 0; i--) {
 						Hit hit = AHDC_hits.get(i);
 						TrackFitter.predict(hit, false);
-                        track.add_KFMonitor(new KFMonitor(trackId, k, 1, (hit.getSuperLayerId()*10 + hit.getLayerId())*100 + hit.getWireId(), 0, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
 						TrackFitter.correct(hit);
-						track.add_KFMonitor(new KFMonitor(trackId, k, 1, (hit.getSuperLayerId()*10 + hit.getLayerId())*100 + hit.getWireId(), 1, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
 					}
 					// Backward propagation (first layer to beamline)
 					{
 						Hit hit = new Hit_beam(0, 0, zbeam);
 						TrackFitter.predict(hit, false);
-                        track.add_KFMonitor(new KFMonitor(trackId, k, 1, (hit.getSuperLayerId()*10 + hit.getLayerId())*100 + hit.getWireId(), 0, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
 						TrackFitter.correct(hit);
-						track.add_KFMonitor(new KFMonitor(trackId, k, 1, (hit.getSuperLayerId()*10 + hit.getLayerId())*100 + hit.getWireId(), 1, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
 					}
 
 			    }
@@ -144,7 +113,6 @@ public class KalmanFilter {
 			    KFitter PostFitPropagator = new KFitter(TrackFitter.getStateEstimationVector(), initialErrorCovariance, new Stepper(TrackFitter.getStateEstimationVector().toArray()), new Propagator(RK4), materialHashMap);
 			    for (Hit hit : AHDC_hits) {
                     PostFitPropagator.predict(hit, true);
-                    track.add_KFMonitor(new KFMonitor(trackId, Niter, 2, (hit.getSuperLayerId()*10 + hit.getLayerId())*100 + hit.getWireId(), 0, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
 					if( hit.getId()>0){ // for the beamline the hit id is 0, so we only look at AHDC hits
 						hit.setResidual(PostFitPropagator.residual(hit));
 					}

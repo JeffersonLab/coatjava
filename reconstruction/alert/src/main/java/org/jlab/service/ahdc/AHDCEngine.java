@@ -111,7 +111,7 @@ public class AHDCEngine extends ReconstructionEngine {
         
         this.getConstantsManager().setVariation("default");
         
-        this.registerOutputBank("AHDC::hits","AHDC::preclusters","AHDC::clusters","AHDC::track","AHDC::kftrack","AHDC::mc","AHDC::ai:prediction", "AHDC::kftrack:mon");
+        this.registerOutputBank("AHDC::hits","AHDC::preclusters","AHDC::clusters","AHDC::track","AHDC::kftrack","AHDC::mc","AHDC::ai:prediction");
 
         return true;
     }
@@ -273,16 +273,14 @@ public class AHDCEngine extends ReconstructionEngine {
             DataBank recoTracksBank     = writer.fillAHDCTrackBank(event, AHDC_Tracks);
             DataBank recoKFTracksBank   = writer.fillAHDCKFTrackBank(event, AHDC_Tracks);
             DataBank AIPredictionBanks = writer.fillAIPrediction(event, predictions);
-            DataBank recoKFMonitorBank   = writer.fillKFMonitorBank(event, AHDC_Tracks);
             
-            event.removeBanks("AHDC::hits","AHDC::preclusters","AHDC::clusters","AHDC::track","AHDC::kftrack","AHDC::mc","AHDC::ai:prediction","AHDC::kftrack:mon");
+            event.removeBanks("AHDC::hits","AHDC::preclusters","AHDC::clusters","AHDC::track","AHDC::kftrack","AHDC::mc","AHDC::ai:prediction");
             event.appendBank(recoHitsBank);
             event.appendBank(recoPreClusterBank);
             event.appendBank(recoClusterBank);
             event.appendBank(recoTracksBank);
             event.appendBank(recoKFTracksBank);
             event.appendBank(AIPredictionBanks);
-            event.appendBank(recoKFMonitorBank);
 
             if (simulation) {
                 DataBank recoMCBank = writer.fillAHDCMCTrackBank(event);

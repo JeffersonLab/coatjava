@@ -41,9 +41,6 @@ public class Track {
 	private double dEdx_kf    = 0;  ///< deposited energy per path length (adc/mm)
 	private double p_drift_kf = 0;  ///< momentum in the drift region (MeV)
 	private double path_kf    = 0;  ///< length of the track (mm)
-	// Monitoring of the Kalman Filter
-	private List<KFMonitor>  ListOfKFMonitors = new ArrayList<>(); 
-	
 
 	public Track(List<Cluster> clusters) {
 		this._Clusters = clusters;
@@ -203,9 +200,5 @@ public class Track {
 	public double get_dEdx_kf() {return dEdx_kf;}
 	public double get_p_drift_kf() {return p_drift_kf;}
 	public double get_path_kf() {return path_kf;}
-
-	// KF monitoring
-	public void add_KFMonitor(KFMonitor _monitor) { ListOfKFMonitors.add(_monitor);}
-	public List<KFMonitor> get_ListOfKFMonitors() { return ListOfKFMonitors;}
 
 }

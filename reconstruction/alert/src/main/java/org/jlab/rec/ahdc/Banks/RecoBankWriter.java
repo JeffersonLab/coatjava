@@ -7,7 +7,6 @@ import org.jlab.rec.ahdc.Cluster.Cluster;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import org.jlab.rec.ahdc.Track.Track;
-import org.jlab.rec.ahdc.Track.KFMonitor;
 import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 
@@ -178,47 +177,6 @@ public class RecoBankWriter {
 
 			bank.setFloat("pred", row, track.getPrediction());
 			row++;
-		}
-
-		return bank;
-	}
-
-	public DataBank fillKFMonitorBank(DataEvent event, ArrayList<Track> tracks) {
-		
-		int nentries = 0;
-		for (Track track : tracks) {
-			nentries += track.get_ListOfKFMonitors().size();
-		}
-		
-		DataBank bank = event.createBank("AHDC::kftrack:mon", nentries);
-
-		int row = 0;
-
-		for (Track track : tracks) {
-			if (track == null) continue;
-			for (KFMonitor monitor : track.get_ListOfKFMonitors()) {
-				RealVector state = monitor.get_state();
-				RealMatrix errorCovarianceMatrix = monitor.get_errorCovarianceMatrix();
-				bank.setFloat("x", row, (float) state.getEntry(0));
-				bank.setFloat("y", row, (float) state.getEntry(1));
-				bank.setFloat("z", row, (float) state.getEntry(2));
-				bank.setFloat("px", row, (float) state.getEntry(3));
-				bank.setFloat("py", row, (float) state.getEntry(4));
-				bank.setFloat("pz", row, (float) state.getEntry(5));
-				bank.setShort("trackid", row, (short) monitor.get_trackid());
-				bank.setShort("Niter", row, (short) monitor.get_Niter());
-				bank.setShort("orientation", row, (short) monitor.get_orientation());
-				bank.setShort("indicator", row, (short) monitor.get_indicator());
-				bank.setShort("status", row, (short) monitor.get_status());
-				bank.setFloat("var_x", row, (float) errorCovarianceMatrix.getEntry(0,0));
-				bank.setFloat("var_y", row, (float) errorCovarianceMatrix.getEntry(1,1));
-				bank.setFloat("var_z", row, (float) errorCovarianceMatrix.getEntry(2,2));
-				bank.setFloat("var_px", row, (float) errorCovarianceMatrix.getEntry(3,3));
-				bank.setFloat("var_py", row, (float) errorCovarianceMatrix.getEntry(4,4));
-				bank.setFloat("var_pz", row, (float) errorCovarianceMatrix.getEntry(5,5));
-
-				row++;
-			}
 		}
 
 		return bank;
