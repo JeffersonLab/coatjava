@@ -29,7 +29,7 @@ function error() {
 threads=2
 prefix=rec_
 java_quiet=false
-java_log_level=warning
+java_log_level=info
 CLARA_USER_DATA=.
 while getopts y:o:p:c:t:n:lL:qmvh opt
 do
