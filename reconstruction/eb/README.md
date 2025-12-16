@@ -136,8 +136,8 @@ particle must have both
 1.  a track in the DC
 2.  an associated FTOF hit in panel 1B (preferred) or 1A
 
-Priority is then ordered as $e^-$, $e^+$, $\pi^+$,
-$\pi^-$. In each case, if multiple candidates exist, the one with
+Priority is then ordered as $e^-$, $e^+$, $\pi^-$,
+$\pi^+$. In each case, if multiple candidates exist, the one with
 the highest momentum is taken. For $e^+/e^-$ the
 ECAL/HTCC criteria discussed in the next section is required, but for
 pions there are no additional requirements (i.e. it's just assumed to be
