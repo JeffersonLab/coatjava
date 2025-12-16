@@ -81,6 +81,7 @@ do
     --cvmfs)   dataRetrieval=cvmfs   ;;
     --lfs)     dataRetrieval=lfs     ;;
     --clasweb) dataRetrieval=clasweb ;;
+    --xrootd)  dataRetrieval=xrootd  ;;
     --clara)   installClara=true     ;;
     --data)    downloadData=true     ;;
     -h|--help)
@@ -157,6 +158,30 @@ command_exists () {
   type "$1" &> /dev/null
 }
 
+# check data-retrieval options, and prepare accordingly
+case $dataRetrieval in
+  lfs)
+    if ! command_exists git-lfs ; then
+      echo 'ERROR: `git-lfs` not found; please install it, or use a different data-retrieval option other than `--lfs`' >&2
+      exit 1
+    fi
+    git lfs install
+    ;;
+  cvmfs)
+    path=/cvmfs/oasis.opensciencegrid.org/jlab
+    if [ ! -d $path ]; then
+      echo "ERROR: cannot find CVMFS path '$path'; data retrieval option \`--cvmfs\` failed" >&2
+      exit 1
+    fi
+    ;;
+  clasweb)
+    ;;
+  *)
+    echo "ERROR: data retrieval option '$dataRetrieval' is not supported" >&2
+    exit 1
+    ;;
+esac
+
 # print retrieval notice
 notify_retrieval() {
   echo "Retrieving $1 from $2 ..."
@@ -202,34 +227,10 @@ download_map () {
   return $ret
 }
 
-# check data-retrieval options, and prepare accordingly
-case $dataRetrieval in
-  lfs)
-    if ! command_exists git-lfs ; then
-      echo 'ERROR: `git-lfs` not found; please install it, or use a different data-retrieval option other than `--lfs`' >&2
-      exit 1
-    fi
-    git lfs install
-    ;;
-  cvmfs)
-    path=/cvmfs/oasis.opensciencegrid.org/jlab
-    if [ ! -d $path ]; then
-      echo "ERROR: cannot find CVMFS path '$path'; data retrieval option \`--cvmfs\` failed" >&2
-      exit 1
-    fi
-    ;;
-  clasweb)
-    ;;
-  *)
-    echo "ERROR: data retrieval option '$dataRetrieval' is not supported" >&2
-    exit 1
-    ;;
-esac
-
 # download the default field maps, as defined in libexec/env.sh:
 # (and duplicated in etc/services/reconstruction.yaml):
 if $downloadMaps; then
-  case $dataRetrieval
+  case $dataRetrieval in
     lfs)
       notify_retrieval 'field maps' 'lfs'
       download_lfs etc/data/magfield
