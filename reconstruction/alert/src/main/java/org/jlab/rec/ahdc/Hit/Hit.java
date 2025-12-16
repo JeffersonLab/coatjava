@@ -174,6 +174,7 @@ public class Hit implements Comparable<Hit> {
 		return new Array2DRowRealMatrix(new double[][]{{0.09}});
 	}
 
+	// a signature for KalmanFilter.Hit_beam
 	public RealVector get_Vector_beam() {
 		return null;
 	}

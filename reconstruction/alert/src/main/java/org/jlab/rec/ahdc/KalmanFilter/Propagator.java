@@ -9,7 +9,15 @@ import org.jlab.clas.tracking.kalmanfilter.Material;
 import java.util.HashMap;
 import org.jlab.rec.ahdc.Hit.Hit;
 
-// All distances here should be in mm.
+/**
+ * Is responsible of the propagation
+ * 
+ * All distances here should be in mm.
+ * 
+ * @author Mathieu Ouillon
+ * @author Éric Fuchey 
+ * @author Felix Touchte Codjo
+ */
 public class Propagator {
 
 	private final RungeKutta4 RK4;
@@ -55,11 +63,10 @@ public class Propagator {
 		double thickness = 0;
 
 		// Do the propagation
-		//stepper.print();
 		int nbStep = 0;
 		while (nbStep < maxNbOfStep) {
 			nbStep++;
-			// Save previous state
+			// Save previous states
 			prev_prev_stepper.copyContent(prev_stepper);
 			prev_stepper.copyContent(stepper);
 			prev_R = stepper.r();
@@ -68,10 +75,6 @@ public class Propagator {
 			// compute distance with respect to the hit
 			// this distance should always disminish
 			d = hit.distance(new Point3D(stepper.y[0], stepper.y[1], stepper.y[2]));
-			/*if (hit.getRadius() < 34 && hit.getRadius() > 30 && !stepper.direction) { // beamline for backward propagation
-				System.out.print("d = " + d + " ");
-				stepper.print();
-			}*/
 			R = stepper.r();
 			// check the evolution
 			if (d < dMin) {
@@ -80,12 +83,10 @@ public class Propagator {
 				dMin = d;
 			}
 			else {
-				// reduce the step size
-				//if (stepper.h > 0.05) {
-				//if (Math.abs(prev_dMin - dMin) > 0.05) {
+				// check the distance between the steps, they should be very big
 				if (stepper.distance(prev_stepper) > 0.05) {
-					// we didn't reach the precision, so
-					// go back two steps before
+					// we didn't reach the precision
+					// so, go back two steps before, reduce the step size
 					// and redo the propagation
 					stepper.copyContent(prev_prev_stepper);
 					dMin = prev_prev_dMin;
@@ -93,22 +94,17 @@ public class Propagator {
 					continue;
 				}
 				else {
-					// we reach the precision, so
-					// go back to the previous step and stop the propagation
+					// the distance between the step is not so big but the distance with respect to the hit starts to increase
+					// so, go back to the previous step (the best we have) and stop the propagation, set the default step size
 					stepper.copyContent(prev_stepper);
 					stepper.h = 0.5;
 					break;
 				}
-				// we reach the precision, so
-				// go back to the previous step and break
-				/*stepper.copyContent(prev_stepper);
-				stepper.h = 0.1;
-				break;*/
 			}
 			
 			// When the propagation is done between the beamline and the first AHDC hit,
 			// we should take care of the target material
-			// target is located at R = 3 mm with a thickness of 0.060 mm (60 µm)
+			// the target is located at R = 3 mm with a thickness of 0.060 mm (60 µm)
 			// if R < 5 mm, be careful!
 			if (R < 5) {
 
@@ -117,7 +113,7 @@ public class Propagator {
 					// We want to cross the target with a very small step < 0.060 mm
 					if (Math.abs(R - prev_R) > 0.060) {
 						// redo the propagation
-						// so, go back to the previous step
+						// so, go back to the previous step and reduce the step size
 						stepper.copyContent(prev_stepper);
 						stepper.h /= 5;
 						dMin = prev_dMin;
@@ -133,7 +129,7 @@ public class Propagator {
 						// We are now ready to cross the target
 						// set the target material
 						stepper.material = materialHashMap.get("Kapton");
-						// copyContent the step size
+						// update the step size
 						stepper.h = 0.003;
 						// initialise the crossed thickness
 						thickness = 0;
@@ -146,10 +142,10 @@ public class Propagator {
 					thickness += Math.abs(R - prev_R);
 					if (thickness > 0.06) {
 						target_crossed = true;
-						// copyContent stepper size
+						// reset stepper size
 						// we go back to a normal propagation
 						stepper.h = 0.5;
-						// copyContent stepper material
+						// update stepper material
 						if (stepper.direction) { // forward propagation
 							stepper.material = materialHashMap.get("BONuS12Gas");
 						}
@@ -162,10 +158,6 @@ public class Propagator {
 			}
 
 		}
-		/*System.out.printf("nbstep : %d (%s)\n", nbStep, stepper.direction ? "forward" : "backward");
-		if (hit.getId() == 0) {
-			System.out.printf("******** Beamline <-- radius = %f, stepper.h = %f\n", stepper.r(), stepper.h);
-		}*/
 
 	}
 

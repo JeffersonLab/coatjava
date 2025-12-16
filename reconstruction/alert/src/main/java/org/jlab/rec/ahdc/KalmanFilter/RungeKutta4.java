@@ -4,9 +4,14 @@ import org.jlab.clas.pdg.PDGParticle;
 import org.jlab.clas.pdg.PhysicsConstants;
 
 
-// Compute the next trajectory point using the equation of motion
-// the path length is given by the stepper
-// doneOneStep() is the main method, it is used in the Propagator.propagate() method
+/**
+ * Compute the next trajectory point using the equation of motion
+ * the step size is given by the stepper
+ * doneOneStep() is the main method, it is used in Propagator.propagate()
+ * 
+ * @author Mathieu Ouillon
+ * @author Éric Fuchey 
+ */
 public class RungeKutta4 {
 	private final int numberOfVariables;
 	private final PDGParticle particle;

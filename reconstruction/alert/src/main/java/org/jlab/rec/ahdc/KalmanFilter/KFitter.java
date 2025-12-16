@@ -11,6 +11,13 @@ import org.jlab.clas.tracking.kalmanfilter.Material;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.rec.ahdc.Hit.Hit;
 
+/**
+ * Implement the prediction and the correction stages of the Kalman Filter
+ * 
+ * @author Mathieu Ouillon
+ * @author Éric Fuchey 
+ * @author Felix Touchte Codjo
+ */
 public class KFitter {
 
 	private       RealVector stateEstimation;

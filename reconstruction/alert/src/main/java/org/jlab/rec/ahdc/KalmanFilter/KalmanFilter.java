@@ -17,14 +17,21 @@ import org.jlab.rec.ahdc.Track.Track;
 
 //import org.apache.commons.math3.linear.RealMatrixFormat;
 
-// masses/energies should be in MeV; distances should be in mm
-
+/**
+ * This is the main routine of the Kalman Filter. The fit is done by a KFitter
+ * 
+ * masses/energies should be in MeV; distances should be in mm
+ * 
+ * @author Mathieu Ouillon
+ * @author Éric Fuchey 
+ * @author Felix Touchte Codjo
+ */
 public class KalmanFilter {
 
     public KalmanFilter(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {propagation(tracks, event, magfield, IsMC);}
 
-	private final int Niter = 60; // number of iterations of the Kalman Filter
-	private boolean IsVtxDefined = false;
+	private final int Niter = 60; // number of iterations for the Kalman Filter
+	private boolean IsVtxDefined = false; // implemented but not used yet
 
 	private void propagation(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {
 
@@ -108,8 +115,8 @@ public class KalmanFilter {
 			    
 			    RealVector x_out = TrackFitter.getStateEstimationVector();
 			    track.setPositionAndMomentumForKF(x_out);
-			    //System.out.println("==================================> PostFit Progation");
-			    //Residual, path and AHDC exit momentum calculation post fit:
+
+			    // Post fit propagation (no correction) to set the residuals
 			    KFitter PostFitPropagator = new KFitter(TrackFitter.getStateEstimationVector(), initialErrorCovariance, new Stepper(TrackFitter.getStateEstimationVector().toArray()), new Propagator(RK4), materialHashMap);
 			    for (Hit hit : AHDC_hits) {
                     PostFitPropagator.predict(hit, true);
@@ -119,6 +126,7 @@ public class KalmanFilter {
 			    }
 			    
                 // Fill track and hit bank
+				// TO DO : s and p_drift have to be checked to be sure they represent what we want
 			    double s = PostFitPropagator.stepper.sTot;
 			    double p_drift = PostFitPropagator.stepper.p();
 			    int sum_adc = 0;
