@@ -2,7 +2,7 @@
 
 ## Controlling Log Levels
 
-To control the log level of a class with a `Logger`, use properties. As CLI options, you may use, for example,
+To control the log level of a class with a `Logger`, use properties. For example, use `java` options:
 ```
 -Dorg.jlab.detector.helicity.HelicityGenerator.level=FINEST   # sets HelicityGenerator level to FINEST
 -D.level=FINE   # sets the level of all loggers to FINE
