@@ -49,9 +49,8 @@ build:
     - job: mirror
       optional: true
   script:
-    - git lfs install
-    - git submodule update --init etc/data/magfield
-    - ./build-coatjava.sh --clara -T$JL_RUNNER_AVAIL_CPU --quiet --no-progress
+    - git config --global --add safe.directory $CI_PROJECT_DIR
+    - ./build-coatjava.sh --lfs --clara -T$JL_RUNNER_AVAIL_CPU --quiet --no-progress
     - tar -czf coatjava.tar.gz coatjava
     - tar -czf clara.tar.gz clara
   artifacts:
@@ -72,6 +71,7 @@ download:
   stage: build
   script:
 #    - xrdcp xroot://sci-xrootd.jlab.org///osgpool/hallb/clas12/validation/raw/rg-d/clas_018779.evio.00001 ./
+    - git lfs install
     - git clone https://code.jlab.org/hallb/clas12/validation-data
     - cp validation-data/raw/rg-d/clas_018779.evio.00001 .
   artifacts:
@@ -94,7 +94,7 @@ download:
   dependencies: [build]
   script:
     - tar -xzf coatjava.tar.gz
-    - ./build-coatjava.sh -T$JL_RUNNER_AVAIL_CPU --unittests --quiet --no-progress
+    - ./build-coatjava.sh -T$JL_RUNNER_AVAIL_CPU --lfs --unittests --quiet --no-progress
     - ./validation/jacoco-aggregate.sh
   artifacts:
     when: always
@@ -129,6 +129,7 @@ eb:
   script:
     - tar -xzf coatjava.tar.gz
     - tar -xzf clara.tar.gz
+    - git config --global --add safe.directory $CI_PROJECT_DIR
     - git lfs install
     - git submodule update --init validation/advanced-tests/data
     - cd validation/advanced-tests

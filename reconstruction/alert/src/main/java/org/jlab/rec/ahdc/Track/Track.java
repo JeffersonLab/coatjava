@@ -1,10 +1,13 @@
 package org.jlab.rec.ahdc.Track;
 
 import org.apache.commons.math3.linear.RealVector;
+import org.jlab.rec.ahdc.AI.InterCluster;
 import org.jlab.rec.ahdc.Cluster.Cluster;
 import org.jlab.rec.ahdc.HelixFit.HelixFitObject;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
+import org.jlab.rec.ahdc.PreCluster.PreClusterFinder;
+import org.jlab.rec.ahdc.AI.PreClustering;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +16,7 @@ public class Track {
 
 	private       double         _Distance;
 	private       List<Cluster>  _Clusters = new ArrayList<>();
+	private       List<InterCluster>  _InterClusters = new ArrayList<>();
 	private       boolean        _Used     = false;
 	private final ArrayList<Hit> hits      = new ArrayList<>();
 	
@@ -41,6 +45,10 @@ public class Track {
 	private double dEdx_kf    = 0;  ///< deposited energy per path length (adc/mm)
 	private double p_drift_kf = 0;  ///< momentum in the drift region (MeV)
 	private double path_kf    = 0;  ///< length of the track (mm)
+    // AHDC::aiprediction
+    private int predicted_ATOF_sector = -1;
+    private int predicted_ATOF_layer = -1;
+    private int predicted_ATOF_wedge = -1;
 
 	public Track(List<Cluster> clusters) {
 		this._Clusters = clusters;
@@ -49,21 +57,22 @@ public class Track {
 			this._Distance += Math.sqrt((clusters.get(i).get_X() - clusters.get(i + 1).get_X()) * (clusters.get(i).get_X() - clusters.get(i + 1).get_X()) + (clusters.get(i).get_Y() - clusters.get(i + 1).get_Y()) * (clusters.get(i).get_Y() - clusters.get(i + 1).get_Y()));
 		}
 		generateHitList();
-	}
+		generateInterClusterList();
+    }
 
     public Track(ArrayList<Hit> hitslist) {
-	hits.addAll(hitslist);
-	this.x0  = 0.0;
-	this.y0  = 0.0;
-	this.z0  = 0.0;
-	double p = 150.0;//MeV/c
-	//take first hit.
-	Hit hit = hitslist.get(0);
-	double phi          = Math.atan2(hit.getY(), hit.getX());
-	//hitslist.
-	this.px0  = p*Math.sin(phi);
-	this.py0  = p*Math.cos(phi);
-	this.pz0  = 0.0;
+		hits.addAll(hitslist);
+		this.x0  = 0.0;
+		this.y0  = 0.0;
+		this.z0  = 0.0;
+		double p = 150.0;//MeV/c
+		//take first hit.
+		Hit hit = hitslist.get(0);
+		double phi          = Math.atan2(hit.getY(), hit.getX());
+		//hitslist.
+		this.px0  = p*Math.sin(phi);
+		this.py0  = p*Math.cos(phi);
+		this.pz0  = 0.0;
     }
 
 	public void setPositionAndMomentum(HelixFitObject helixFitObject) {
@@ -101,6 +110,17 @@ public class Track {
 		}
 	}
 
+	private void generateInterClusterList() {
+		// Use hits to generate preclusters
+		PreClusterFinder preclusterfinder = new PreClusterFinder();
+		preclusterfinder.findPreclusters(hits);
+		ArrayList<PreCluster> AHDC_PreClusters = preclusterfinder.get_AHDCPreClusters();
+
+		// Use preclusters to generate interclusters
+		PreClustering preClustering = new PreClustering();
+		this._InterClusters = preClustering.mergePreclusters(AHDC_PreClusters);
+	}
+
 	public ArrayList<Hit> getHits() {
 		return hits;
 	}
@@ -116,6 +136,10 @@ public class Track {
 
 	public List<Cluster> get_Clusters() {
 		return _Clusters;
+	}
+
+	public List<InterCluster> getInterclusters() {
+		return _InterClusters;
 	}
 
 	public boolean is_Used() {
@@ -175,7 +199,17 @@ public class Track {
 	}
 
 	// Same for Track and KFTrack	
-	public void set_trackId(int _trackId) { trackId = _trackId;}
+	public void set_trackId(int _trackId) { 
+		trackId = _trackId;
+		// set trackId for clusters
+		for(Cluster cluster : this._Clusters) {
+			cluster.set_trackId(_trackId);
+		}
+		// set trackId for interclusters
+		for(InterCluster interCluster : this._InterClusters) {
+			interCluster.setTrackId(_trackId);
+		}
+	}
 	public void set_n_hits(int _n_hits) { n_hits = _n_hits;}
 	public void set_sum_adc(int _sum_adc) { sum_adc = _sum_adc;}
 	public void set_chi2(double _chi2) { chi2 = _chi2;}
@@ -200,5 +234,13 @@ public class Track {
 	public double get_dEdx_kf() {return dEdx_kf;}
 	public double get_p_drift_kf() {return p_drift_kf;}
 	public double get_path_kf() {return path_kf;}
+
+    // AHDC::aiprediction
+    public void set_predicted_ATOF_sector(int s) {predicted_ATOF_sector = s;}
+    public void set_predicted_ATOF_layer(int l) {predicted_ATOF_layer = l;}
+    public void set_predicted_ATOF_wedge(int w) {predicted_ATOF_wedge = w;}
+    public int get_predicted_ATOF_sector() {return predicted_ATOF_sector;}
+    public int get_predicted_ATOF_layer() {return predicted_ATOF_layer;}
+    public int get_predicted_ATOF_wedge() {return predicted_ATOF_wedge;}
 
 }

@@ -70,7 +70,7 @@ jobs:
           - macos-latest
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
         with:
           java-version: ${{ env.JAVA_VERSION }}
@@ -87,10 +87,8 @@ jobs:
         run: libexec/version-bump.sh ${{ github.ref_name }}
       - name: build
         run: |
-          git lfs install
-          git submodule update --init ./etc/data/magfield
-          ./build-coatjava.sh --cvmfs --no-progress -T${{ env.nthreads }}
-          ./install-clara -b -c ./coatjava ./clara  
+          ./build-coatjava.sh --lfs --no-progress -T${{ env.nthreads }}
+          ./install-clara -b -c ./coatjava ./clara
       - name: tar # tarball to preserve permissions
         run: |
           tar czvf coatjava.tar.gz coatjava
@@ -124,7 +122,7 @@ jobs:
         JAVA_VERSION: ${{ fromJson(needs.java_matrix.outputs.versions) }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
         with:
           java-version: ${{ matrix.JAVA_VERSION }}
@@ -134,7 +132,7 @@ jobs:
         with:
           cvmfs_repositories: 'oasis.opensciencegrid.org'
       - name: unit tests
-        run: ./build-coatjava.sh --cvmfs --unittests --no-progress -T${{ env.nthreads }}
+        run: ./build-coatjava.sh --lfs --unittests --no-progress -T${{ env.nthreads }}
       - name: collect jacoco report
         if: ${{ matrix.JAVA_VERSION == env.JAVA_VERSION }}
         run: validation/jacoco-aggregate.sh
@@ -150,7 +148,7 @@ jobs:
     needs: [ build ]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Set up JDK
         uses: actions/setup-java@v5
         with:
@@ -172,7 +170,7 @@ jobs:
     needs: [ build, download_test_data ]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Set up JDK
         uses: actions/setup-java@v5
         with:
@@ -203,7 +201,7 @@ jobs:
       fail-fast: true
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Set up JDK
         uses: actions/setup-java@v5
         with:
@@ -257,7 +255,7 @@ jobs:
           - { runner: macos-latest, id: eb-ep, cmd: ./run-eb-tests.sh -100 electronproton }
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Set up JDK
         uses: actions/setup-java@v5
         with:
@@ -286,7 +284,7 @@ jobs:
     needs: [ build ]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Set up JDK
         uses: actions/setup-java@v5
         with:
@@ -309,7 +307,7 @@ jobs:
     needs: [ build ]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Set up JDK
         uses: actions/setup-java@v5
         with:
@@ -334,7 +332,7 @@ jobs:
     needs: [ unit_tests ]
     steps:
       ### mkdocs
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: install mkdocs dependencies
         run: python -m pip install -r docs/mkdocs/requirements.txt
       - name: generate mkdocs
@@ -393,7 +391,7 @@ jobs:
       RUN_ID: ${{ github.run_id }}
       TAG_NAME: ${{ github.ref_name }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/download-artifact@v6
         with:
           name: build_ubuntu-latest

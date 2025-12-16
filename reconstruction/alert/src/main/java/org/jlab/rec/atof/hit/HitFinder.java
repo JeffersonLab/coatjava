@@ -5,6 +5,7 @@ import java.util.Collections;
 import org.jlab.geom.base.Detector;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
+import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
 
 /**
  * The {@code HitFinder} class finds hits in the atof.
@@ -124,12 +125,9 @@ public class HitFinder {
                 //Matching the hits: if same module and different order, they make up a bar hit
                 if (this_hit_up.matchBar(this_hit_down)) {
                     //Bar hits are matched to ahdc tracks and listed
-                    if (countMatches > 0) {
-                        //If the up hit was already involved in a match, do not make an additionnal match
-                        //Chosing to ignore double matches for now because it happened for <1% of events in cosmic runs
-                        continue;
-                    }
                     BarHit this_bar_hit = new BarHit(this_hit_down, this_hit_up);
+                    //Only add bar hits for which the time sum is in time
+                    if(!this_bar_hit.isInTime()) continue;
                     this.barHits.add(this_bar_hit);
                     countMatches++;
                 }

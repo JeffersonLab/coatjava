@@ -11,8 +11,12 @@ version: 2
 updates:
   - package-ecosystem: "maven"
     directory: "/"
+    cooldown:
+      default-days: 14
     schedule:
       interval: "weekly"
+    commit-message:
+      prefix: "build(deps)"
     ignore:
       - dependency-name: "org.jlab:groot" # since version numbers are not in order
       - dependency-name: "org.ejml:ejml-simple" # keep version the same as `j4ml:j4ml-clas12:jar:0.9-SNAPSHOT`; see pull requests #636 and #632
@@ -28,5 +32,15 @@ updates:
           - "org.openjfx:javafx-*"
   - package-ecosystem: "github-actions"
     directory: "/"
+    cooldown:
+      default-days: 14
     schedule:
       interval: "weekly"
+    commit-message:
+      prefix: "ci(deps)"
+  - package-ecosystem: "gitsubmodule"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "chore(submodule)"
