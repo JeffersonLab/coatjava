@@ -30,7 +30,7 @@ public class KalmanFilter {
 
     public KalmanFilter(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {propagation(tracks, event, magfield, IsMC);}
 
-	private final int Niter = 60; // number of iterations for the Kalman Filter
+	private final int Niter = 40; // number of iterations for the Kalman Filter
 	private boolean IsVtxDefined = false; // implemented but not used yet
 
 	private void propagation(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {
