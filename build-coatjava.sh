@@ -38,9 +38,10 @@ DATA RETRIEVAL OPTIONS
     --lfs             use Git Large File Storage (requires `git-lfs`)
     --cvmfs           use CernVM-FS (requires `/cvfms`)
     --clasweb         use clasweb (only works for field maps)
-  Options to disable data retrieval:
+  Additional options
     --nomaps          do not download/overwrite field maps
     --nonets          do not download/overwrite neural networks
+    --wipe            remove retrieved data
 
 TESTING OPTIONS
     --spotbugs        also run spotbugs plugin
@@ -81,9 +82,13 @@ do
     --cvmfs)   dataRetrieval=cvmfs   ;;
     --lfs)     dataRetrieval=lfs     ;;
     --clasweb) dataRetrieval=clasweb ;;
-    --xrootd)  dataRetrieval=xrootd  ;;
+    --wipe)    dataRetrieval=wipe    ;;
     --clara)   installClara=true     ;;
     --data)    downloadData=true     ;;
+    --xrootd)
+      echo "ERROR: option \`$xx\` is deprecated; use \`--help\` for guidance" >&2
+      exit 1
+      ;;
     -h|--help)
       echo "$usage"
       exit 2
@@ -130,14 +135,17 @@ if $cleanBuild; then
   for target_dir in $(find $src_dir -type d -name target); do
     echo "WARNING: target directory '$target_dir' was not removed! JAR files within may be accidentally installed!" >&2
   done
-  echo """DONE CLEANING.
-  NOTE:
-    - to remove local magnetic field maps:
-        rm $magfield_dir/*.dat
-    - to clear all LFS git submodules:
-        git submodule deinit --all
+fi
 
-  Now re-run without \`--clean\` to build."""
+# wipe retrieved data (field maps, NN models, etc.)
+if [ "$dataRetrieval" = "wipe" ]; then
+  git submodule deinit --all --force
+fi
+
+# print cleanup note and exit
+if $cleanBuild || [ "$dataRetrieval" = "wipe" ]; then
+  [ "$dataRetrieval" = "wipe" ] && echo "[+] REMOVED RETRIEVED DATA" || echo "[+] NOTE: retrieved data not removed; use \`--wipe\` if you need to remove them"
+  $cleanBuild && echo "[+] DONE CLEANING; rerun without \`--clean\` to build"
   exit
 fi
 
