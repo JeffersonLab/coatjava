@@ -1,5 +1,9 @@
 package org.jlab.rec.ahdc.KalmanFilter;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
@@ -7,16 +11,12 @@ import org.apache.commons.math3.linear.RealVector;
 import org.jlab.clas.pdg.PDGDatabase;
 import org.jlab.clas.pdg.PDGParticle;
 import org.jlab.clas.tracking.kalmanfilter.Material;
-import org.jlab.geom.prim.Point3D;
-import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
-import org.jlab.rec.ahdc.Track.Track;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.Track.KFMonitor;
-import java.util.Collections;
+import org.jlab.rec.ahdc.Track.Track;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+//import org.apache.commons.math3.linear.RealMatrixFormat;
 
 // masses/energies should be in MeV; distances should be in mm
 
@@ -24,7 +24,7 @@ public class KalmanFilter {
 
     public KalmanFilter(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {propagation(tracks, event, magfield, IsMC);}
 
-	private final int Niter = 1; // number of iterations of the Kalman Filter
+	private final int Niter = 60; // number of iterations of the Kalman Filter
 	private boolean IsVtxDefined = false;
 
 	private void propagation(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {
@@ -89,8 +89,8 @@ public class KalmanFilter {
 			    // Initialization of the Kalman Fitter
 				// for the error matrix: first 3 lines in mm^2; last 3 lines in MeV^2
 			    RealVector initialStateEstimate   = new ArrayRealVector(stepper.y);
-			    RealMatrix initialErrorCovariance = MatrixUtils.createRealMatrix(new double[][]{{1.00, 0.0, 0.0, 0.0, 0.0, 0.0}, {0.0, 1.00, 0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 25.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 1.00, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0, 1.00, 0.0}, {0.0, 0.0, 0.0, 0.0, 0.0, 25.0}});
-			    KFitter TrackFitter = new KFitter(initialStateEstimate, initialErrorCovariance, stepper, propagator, materialHashMap);
+			    RealMatrix initialErrorCovariance = MatrixUtils.createRealMatrix(new double[][]{{50.0, 0.0, 0.0, 0.0, 0.0, 0.0}, {0.0, 50.0, 0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 900.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 100.00, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0, 100.00, 0.0}, {0.0, 0.0, 0.0, 0.0, 0.0, 900.0}});
+				KFitter TrackFitter = new KFitter(initialStateEstimate, initialErrorCovariance, stepper, propagator, materialHashMap);
 			    TrackFitter.setVertexDefined(IsVtxDefined);
 		 	    
 			    // KFmonitor: save state and error covariance matrix
@@ -98,24 +98,14 @@ public class KalmanFilter {
                 
 				// Loop over number of iterations
 			    for (int k = 0; k < Niter; k++) {
-                    //Reset error covariance:
-                    //TrackFitter.ResetErrorCovariance(initialErrorCovariance); // that can be very interesting, to be checked later, this has an effect on the convergence speed
-                    
 					// Forward propagation
-					//System.out.println("==================================> Forward Progation");
 					for (Hit hit : AHDC_hits) {
                         TrackFitter.predict(hit, true);
                         track.add_KFMonitor(new KFMonitor(trackId, k, 0, (hit.getSuperLayerId()*10 + hit.getLayerId())*100 + hit.getWireId(), 0, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
-						// I don't see the utility of this
-						// so I comment it, we will also need to delete the residual_prefit attribut in the AHDC::hits bank
-						/*if( k==0  && indicator.hit.getId()>0){ // first iteration and indicator != beamline (because its id is -1)
-							indicator.hit.setResidualPrefit(TrackFitter.residual(indicator));
-						}*/
 						TrackFitter.correct(hit);
 						track.add_KFMonitor(new KFMonitor(trackId, k, 0, (hit.getSuperLayerId()*10 + hit.getLayerId())*100 + hit.getWireId(), 1, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
 					
                     }
-					//System.out.println("==================================> Backward Progation");
 					// Backward propagation (last layer to first layer)
 					for (int i = AHDC_hits.size() - 2; i >= 0; i--) {
 						Hit hit = AHDC_hits.get(i);
@@ -133,8 +123,18 @@ public class KalmanFilter {
 						track.add_KFMonitor(new KFMonitor(trackId, k, 1, (hit.getSuperLayerId()*10 + hit.getLayerId())*100 + hit.getWireId(), 1, TrackFitter.getStateEstimationVector(), TrackFitter.getErrorCovarianceMatrix()));
 					}
 
-                    
 			    }
+
+				/*RealMatrixFormat format =
+					new RealMatrixFormat(
+						"[\n", "\n]",     // matrix start/end
+						"[", "]",     // row start/end
+						",\n",         // column separator
+						" ; ",        // row separator
+						new java.text.DecimalFormat("0.0000")
+					);
+				System.out.println("=====> Print error matrix");
+				System.out.println(format.format(TrackFitter.getErrorCovarianceMatrix()));*/
 
 			    
 			    RealVector x_out = TrackFitter.getStateEstimationVector();
@@ -171,8 +171,8 @@ public class KalmanFilter {
 			    track.set_n_hits(AHDC_hits.size());
 			}//end of loop on track candidates
 		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("======> Kalman Filter Error");
+			//e.printStackTrace();
+			//System.out.println("======> Kalman Filter Error");
 		}
 	}
 
