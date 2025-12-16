@@ -5,6 +5,24 @@ set -e
 set -u
 set -o pipefail
 
+################################################################################
+# default options
+################################################################################
+
+cleanBuild=false
+anaDepends=false
+runSpotBugs=false
+downloadMaps=true
+downloadNets=true
+runUnitTests=false
+dataRetrieval=lfs
+installClara=false
+downloadData=false
+
+################################################################################
+# usage
+################################################################################
+
 usage='''build-coatjava.sh [OPTIONS]...
 
 GENERAL OPTIONS
@@ -15,14 +33,15 @@ GENERAL OPTIONS
     --help            show this message
 
 DATA RETRIEVAL OPTIONS
-  How to retrieve magnetic field maps, neural network models, etc.;
-  choose only one, e.g., if the automated default choice fails:
+  How to retrieve magnetic field maps, neural network models, etc.
+  Choose only one; default is `--'$dataRetrieval'`
     --lfs             use Git Large File Storage (requires `git-lfs`)
     --cvmfs           use CernVM-FS (requires `/cvfms`)
-    --xrootd          use XRootD (requires `xrootd`)
-  Options to disable data retrieval:
+    --https           use clasweb HTTPS (field maps only)
+  Additional options
     --nomaps          do not download/overwrite field maps
     --nonets          do not download/overwrite neural networks
+    --wipe            remove retrieved data
 
 TESTING OPTIONS
     --spotbugs        also run spotbugs plugin
@@ -40,17 +59,6 @@ MAVEN OPTIONS
 # parse arguments
 ################################################################################
 
-cleanBuild=false
-anaDepends=false
-runSpotBugs=false
-downloadMaps=true
-downloadNets=true
-runUnitTests=false
-useXrootd=false
-useCvmfs=false
-useLfs=false
-installClara=false
-downloadData=false
 mvnArgs=()
 wgetArgs=()
 for xx in $@
@@ -71,11 +79,16 @@ do
       mvnArgs+=(--no-transfer-progress)
       wgetArgs+=(--no-verbose)
       ;;
-    --xrootd) useXrootd=true    ;;
-    --cvmfs)  useCvmfs=true     ;;
-    --lfs)    useLfs=true       ;;
-    --clara)  installClara=true ;;
-    --data)   downloadData=true ;;
+    --cvmfs) dataRetrieval=cvmfs ;;
+    --lfs)   dataRetrieval=lfs   ;;
+    --https) dataRetrieval=https ;;
+    --wipe)  dataRetrieval=wipe  ;;
+    --clara) installClara=true   ;;
+    --data)  downloadData=true   ;;
+    --xrootd)
+      echo "ERROR: option \`$xx\` is deprecated; use \`--help\` for guidance" >&2
+      exit 1
+      ;;
     -h|--help)
       echo "$usage"
       exit 2
@@ -83,41 +96,6 @@ do
     *) mvnArgs+=($xx) ;;
   esac
 done
-
-# check if a command exists
-command_exists () {
-  type "$1" &> /dev/null
-}
-
-# count how many data-retrieval options are set
-count_download_opts() {
-  local n=0
-  for o in $useLfs $useCvmfs $useXrootd; do
-    $o && ((n++))
-  done
-  echo $n
-}
-
-# if the user did not choose a data retrieval method, choose a reasonable one
-if [[ $(count_download_opts) -eq 0 ]]; then
-  echo 'INFO: no data-retrieval option set; choosing a default...'
-  if ! [[ $(hostname) == *.jlab.org ]] && command_exists git-lfs ; then
-      echo 'INFO: ... using `--lfs` since you are likely offsite and have git-lfs installed'
-      useLfs=true
-  elif [ -d /cvmfs/oasis.opensciencegrid.org/jlab ]; then
-    echo 'INFO: ... using `--cvmfs` since you appear to have /cvmfs/oasis.opensciencegrid.org'
-    useCvmfs=true
-  else
-    echo 'WARNING: default data-retrieval option cannot be determined; use `--help` for guidance' >&2
-    sleep 1
-  fi
-fi
-
-# if they chose too many, fail
-if [[ $(count_download_opts) -gt 1 ]]; then
-  echo 'ERROR: more than one data-retrieval option is set' >&2
-  exit 1
-fi
 
 
 ################################################################################
@@ -141,15 +119,6 @@ wget="wget ${wgetArgs[@]:-}"
 # environment
 source libexec/env.sh --no-classpath
 
-# install LFS
-if $useLfs; then
-  if ! command_exists git-lfs ; then
-      echo 'ERROR: `git-lfs` not found; please install it, or use a different option other than `--lfs`' >&2
-      exit 1
-  fi
-  git lfs install
-fi
-
 ################################################################################
 # cleaning, dependency analysis, etc.
 ################################################################################
@@ -166,14 +135,17 @@ if $cleanBuild; then
   for target_dir in $(find $src_dir -type d -name target); do
     echo "WARNING: target directory '$target_dir' was not removed! JAR files within may be accidentally installed!" >&2
   done
-  echo """DONE CLEANING.
-  NOTE:
-    - to remove local magnetic field maps:
-        rm $magfield_dir/*.dat
-    - to clear all LFS git submodules:
-        git submodule deinit --all
+fi
 
-  Now re-run without \`--clean\` to build."""
+# wipe retrieved data (field maps, NN models, etc.)
+if [ "$dataRetrieval" = "wipe" ]; then
+  git submodule deinit --all --force
+fi
+
+# print cleanup note and exit
+if $cleanBuild || [ "$dataRetrieval" = "wipe" ]; then
+  [ "$dataRetrieval" = "wipe" ] && echo "[+] REMOVED RETRIEVED DATA" || echo "[+] NOTE: retrieved data not removed; use \`--wipe\` if you need to remove them"
+  $cleanBuild && echo "[+] DONE CLEANING; rerun without \`--clean\` to build"
   exit
 fi
 
@@ -189,6 +161,35 @@ fi
 # download field maps, NN models, etc.
 ################################################################################
 
+# check if a command exists
+command_exists () {
+  type "$1" &> /dev/null
+}
+
+# check data-retrieval options, and prepare accordingly
+case $dataRetrieval in
+  lfs)
+    if ! command_exists git-lfs ; then
+      echo 'ERROR: `git-lfs` not found; please install it, or use a different data-retrieval option other than `--lfs`' >&2
+      exit 1
+    fi
+    git lfs install
+    ;;
+  cvmfs)
+    path=/cvmfs/oasis.opensciencegrid.org/jlab
+    if [ ! -d $path ]; then
+      echo "ERROR: cannot find CVMFS path '$path'; data retrieval option \`--cvmfs\` failed" >&2
+      exit 1
+    fi
+    ;;
+  https)
+    ;;
+  *)
+    echo "ERROR: data retrieval option '$dataRetrieval' is not supported" >&2
+    exit 1
+    ;;
+esac
+
 # print retrieval notice
 notify_retrieval() {
   echo "Retrieving $1 from $2 ..."
@@ -196,10 +197,6 @@ notify_retrieval() {
 
 # update an LFS submodule
 download_lfs() {
-  if ! $useLfs; then
-    echo 'ERROR: attempted to use LFS, but option `--lfs` not set' >&2
-    exit 1
-  fi
   cd $src_dir > /dev/null
   git submodule update --init $1
   cd - > /dev/null
@@ -207,76 +204,101 @@ download_lfs() {
 
 # download a magnetic field map
 download_map () {
-    ret=0
-    if $useXrootd; then
-        notify_retrieval 'field map' 'xrootd'
-        xrdcp $1 ./
-        ret=$?
-    elif $useCvmfs; then
-        notify_retrieval 'field map' 'cvmfs'
-        cp $1 ./
-        ret=$?
-    elif command_exists wget ; then
+  ret=0
+  case $dataRetrieval in
+    cvmfs)
+      notify_retrieval 'field map' 'cvmfs'
+      cp $1 ./
+      ret=$?
+      ;;
+    https)
+      if command_exists wget ; then
         notify_retrieval 'field map' 'clasweb via wget'
         $wget $1
         ret=$?
-    elif command_exists curl ; then
+      elif command_exists curl ; then
         notify_retrieval 'field map' 'clasweb via curl'
         if ! [ -e ${1##*/} ]; then
           curl $1 -o ${1##*/}
           ret=$?
         fi
-    else
+      else
         ret=1
         echo "ERROR:::::::::::  Could not find wget nor curl." >&2
-    fi
-    return $ret
+      fi
+      ;;
+    *)
+      ret=1
+      echo "ERROR:::::::::::  called 'download_map' with bad 'dataRetrieval'." >&2
+      ;;
+  esac
+  return $ret
 }
 
 # download the default field maps, as defined in libexec/env.sh:
 # (and duplicated in etc/services/reconstruction.yaml):
 if $downloadMaps; then
-  if $useLfs; then
-    notify_retrieval 'field maps' 'lfs'
-    download_lfs etc/data/magfield
-  else
-    webDir=https://clasweb.jlab.org/clas12offline/magfield
-    if $useXrootd; then webDir=xroot://sci-xrootd.jlab.org//osgpool/hallb/clas12/coatjava/magfield; fi
-    if $useCvmfs; then webDir=/cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/magfield; fi
-    mkdir -p $magfield_dir
-    cd $magfield_dir
-    for map in $COAT_MAGFIELD_SOLENOIDMAP $COAT_MAGFIELD_TORUSMAP $COAT_MAGFIELD_TORUSSECONDARYMAP
-    do
-      download_map $webDir/$map
-      if [ $? -ne 0 ]; then
-          echo "ERROR:::::::::::  Could not download field map:" >&2
-          echo "$webDir/$map" >&2
-          echo "One option is to download manually into etc/data/magfield and then run this build script with --nomaps" >&2
-          exit 1
+  case $dataRetrieval in
+    lfs)
+      notify_retrieval 'field maps' 'lfs'
+      download_lfs etc/data/magfield
+      ;;
+    cvmfs|https)
+      webDir=https://clasweb.jlab.org/clas12offline/magfield
+      if [ "$dataRetrieval" = "cvmfs" ]; then
+        webDir=/cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/magfield
       fi
-    done
-    cd -
-  fi
+      mkdir -p $magfield_dir
+      cd $magfield_dir
+      for map in $COAT_MAGFIELD_SOLENOIDMAP $COAT_MAGFIELD_TORUSMAP $COAT_MAGFIELD_TORUSSECONDARYMAP
+      do
+        download_map $webDir/$map
+        if [ $? -ne 0 ]; then
+            echo "ERROR:::::::::::  Could not download field map:" >&2
+            echo "$webDir/$map" >&2
+            echo "One option is to download manually into etc/data/magfield and then run this build script with --nomaps" >&2
+            exit 1
+        fi
+      done
+      cd -
+      ;;
+    *)
+      echo "ERROR: data retrieval option '$dataRetrieval' not supported for field maps" >&2
+      exit 1
+      ;;
+  esac
 fi
 
 # download neural networks
 if $downloadNets; then
-  if $useLfs; then
-    notify_retrieval 'neural networks' 'lfs'
-    download_lfs etc/data/nnet
-  elif $useCvmfs; then
-    notify_retrieval 'neural networks' 'cvmfs'
-    cp -r /cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/networks/* etc/data/nnet/
-  else
-    echo 'WARNING: neural networks not downloaded; run with `--help` for guidance' >&2
-    sleep 1
-  fi
+  case $dataRetrieval in
+    lfs)
+      notify_retrieval 'neural networks' 'lfs'
+      download_lfs etc/data/nnet
+      ;;
+    cvmfs)
+      notify_retrieval 'neural networks' 'cvmfs'
+      cp -r /cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/networks/* etc/data/nnet/
+      ;;
+    *)
+      echo 'WARNING: neural networks not downloaded; run with `--help` for guidance' >&2
+      sleep 1
+      ;;
+  esac
 fi
 
 # download validation data
 if $downloadData; then
-  notify_retrieval 'validation data' 'lfs'
-  download_lfs validation/advanced-tests/data
+  case $dataRetrieval in
+    lfs)
+      notify_retrieval 'validation data' 'lfs'
+      download_lfs validation/advanced-tests/data
+      ;;
+    *)
+      echo 'ERROR: option `--lfs` must be used when using `--data`' >&2
+      exit 1
+      ;;
+  esac
 fi
 
 
