@@ -8,6 +8,8 @@ import org.jlab.rec.ahdc.Cluster.Cluster;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import org.jlab.rec.ahdc.Track.Track;
+import org.apache.commons.math3.linear.RealVector;
+import org.apache.commons.math3.linear.RealMatrix;
 
 import java.util.ArrayList;
 
