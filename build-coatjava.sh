@@ -37,7 +37,7 @@ DATA RETRIEVAL OPTIONS
   Choose only one; default is `--'$dataRetrieval'`
     --lfs             use Git Large File Storage (requires `git-lfs`)
     --cvmfs           use CernVM-FS (requires `/cvfms`)
-    --clasweb         use clasweb (only works for field maps)
+    --https           use clasweb HTTPS (field maps only)
   Additional options
     --nomaps          do not download/overwrite field maps
     --nonets          do not download/overwrite neural networks
@@ -79,12 +79,12 @@ do
       mvnArgs+=(--no-transfer-progress)
       wgetArgs+=(--no-verbose)
       ;;
-    --cvmfs)   dataRetrieval=cvmfs   ;;
-    --lfs)     dataRetrieval=lfs     ;;
-    --clasweb) dataRetrieval=clasweb ;;
-    --wipe)    dataRetrieval=wipe    ;;
-    --clara)   installClara=true     ;;
-    --data)    downloadData=true     ;;
+    --cvmfs) dataRetrieval=cvmfs ;;
+    --lfs)   dataRetrieval=lfs   ;;
+    --https) dataRetrieval=https ;;
+    --wipe)  dataRetrieval=wipe  ;;
+    --clara) installClara=true   ;;
+    --data)  downloadData=true   ;;
     --xrootd)
       echo "ERROR: option \`$xx\` is deprecated; use \`--help\` for guidance" >&2
       exit 1
@@ -182,7 +182,7 @@ case $dataRetrieval in
       exit 1
     fi
     ;;
-  clasweb)
+  https)
     ;;
   *)
     echo "ERROR: data retrieval option '$dataRetrieval' is not supported" >&2
@@ -211,7 +211,7 @@ download_map () {
       cp $1 ./
       ret=$?
       ;;
-    clasweb)
+    https)
       if command_exists wget ; then
         notify_retrieval 'field map' 'clasweb via wget'
         $wget $1
@@ -243,7 +243,7 @@ if $downloadMaps; then
       notify_retrieval 'field maps' 'lfs'
       download_lfs etc/data/magfield
       ;;
-    cvmfs|clasweb)
+    cvmfs|https)
       webDir=https://clasweb.jlab.org/clas12offline/magfield
       if [ "$dataRetrieval" = "cvmfs" ]; then
         webDir=/cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/magfield
