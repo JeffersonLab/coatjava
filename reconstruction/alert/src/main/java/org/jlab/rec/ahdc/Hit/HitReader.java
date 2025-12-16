@@ -35,7 +35,7 @@ public class HitReader {
 			}
 			
 			RawDataBank bankDGTZ = new RawDataBank("AHDC::adc");
-        		bankDGTZ.read(event);
+        	bankDGTZ.read(event);
 		
 			for (int i = 0; i < bankDGTZ.rows(); i++) {
 				int    id         = bankDGTZ.trueIndex(i) + 1;
@@ -82,8 +82,8 @@ public class HitReader {
 					double doca = p0 + p1*Math.pow(time,1.0) + p2*Math.pow(time,2.0) + p3*Math.pow(time,3.0) + p4*Math.pow(time,4.0) + p5*Math.pow(time, 5.0);
 					if (time < 0) doca = 0;
 					Hit h = new Hit(id, superlayer, layer, wire, doca, adc, time);
-                                        h.setWirePosition(detector);
-                                        hits.add(h);
+                    h.setWirePosition(detector);
+                    hits.add(h);
 				}
 			}
 		}

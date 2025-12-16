@@ -3,8 +3,15 @@ package org.jlab.rec.ahdc.KalmanFilter;
 import org.jlab.clas.pdg.PDGParticle;
 import org.jlab.clas.pdg.PhysicsConstants;
 
-import java.util.Arrays;
 
+/**
+ * Compute the next trajectory point using the equation of motion
+ * the step size is given by the stepper
+ * doneOneStep() is the main method, it is used in Propagator.propagate()
+ * 
+ * @author Mathieu Ouillon
+ * @author Éric Fuchey 
+ */
 public class RungeKutta4 {
 	private final int numberOfVariables;
 	private final PDGParticle particle;
@@ -96,7 +103,8 @@ public class RungeKutta4 {
 	}
 
 	private double[] f(double[] y) {
-		double charge = 1.0;
+		double charge = 1.0; // the charge should by given by the particle object
+                             // for now, we assume it is a proton
 		double pModuleInverse = 1.0 / Math.sqrt(y[3] * y[3] + y[4] * y[4] + y[5] * y[5]);
 		double k = charge * PhysicsConstants.speedOfLight() * 10 * pModuleInverse;
 

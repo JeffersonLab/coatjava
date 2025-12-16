@@ -5,6 +5,13 @@ import org.jlab.clas.tracking.kalmanfilter.Units;
 
 import java.util.HashMap;
 
+/**
+ * TO DO: use/rename the relevant materials for ALERT
+ * 
+ * @author Mathieu Ouillon
+ * @author Éric Fuchey 
+ * @author Felix Touchte Codjo
+ */
 public class MaterialMap {
 
 	public static HashMap<String, Material> generateMaterials() {
