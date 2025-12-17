@@ -60,9 +60,14 @@ public class HitReader {
             // -----------------------------
             // Raw hit cuts
             // -----------------------------
-            double[] rawHitCuts = CalibrationConstantsLoader.AHDC_RAW_HIT_CUTS.get(key_value);
-            if (rawHitCuts == null) continue;
+	    // double[] rawHitCuts = CalibrationConstantsLoader.AHDC_RAW_HIT_CUTS.get(key_value);
+            //if (rawHitCuts == null) continue;
 
+
+           double[] rawHitCuts = CalibrationConstantsLoader.AHDC_RAW_HIT_CUTS.get(key_value);
+           if (rawHitCuts == null) {throw new IllegalStateException("Missing CCDB table /calibration/alert/ahdc/raw_hit_cuts for key=" + key_value+ " (check run/variation + key mapping)");
+           }
+	    
             double t_min   = rawHitCuts[0];
             double t_max   = rawHitCuts[1];
             double tot_min = rawHitCuts[2];
@@ -75,11 +80,28 @@ public class HitReader {
             // -----------------------------
             // Time calibration + t->d
             // -----------------------------
-            double[] timeOffsets = CalibrationConstantsLoader.AHDC_TIME_OFFSETS.get(key_value);
-            if (timeOffsets == null) continue;
+            //double[] timeOffsets = CalibrationConstantsLoader.AHDC_TIME_OFFSETS.get(key_value);
+            //if (timeOffsets == null) continue;
 
-            double[] time2distance = CalibrationConstantsLoader.AHDC_TIME_TO_DISTANCE.get(10101);
-            if (time2distance == null) continue;
+	    //  double[] timeOffsets = CalibrationConstantsLoader.AHDC_TIME_OFFSETS.get(key_value);
+            //if (timeOffsets == null) {
+	    //throw new IllegalStateException("Missing AHDC time_offsets for key=" + key_value);
+	    //}
+
+	  double[] timeOffsets = CalibrationConstantsLoader.AHDC_TIME_OFFSETS.get(key_value);
+	    
+          if (timeOffsets == null) {
+           throw new IllegalStateException("Missing CCDB /calibration/alert/ahdc/time_offsets for key=" + key_value + " (check run/variation + key mapping)");
+          }
+
+
+
+	  double[] time2distance = CalibrationConstantsLoader.AHDC_TIME_TO_DISTANCE.get(key_value);
+         if (time2distance == null) { throw new IllegalStateException("Missing CCDB table /calibration/alert/ahdc/time_to_distance for key=" + key_value+ " (check run/variation + key mapping)");
+      }
+
+//          double[] time2distance = CalibrationConstantsLoader.AHDC_TIME_TO_DISTANCE.get(10101);
+//         if (time2distance == null) continue;
 
             double t0 = timeOffsets[0];
 
