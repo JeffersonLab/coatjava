@@ -579,6 +579,7 @@ public final class DCGeant4Factory extends Geant4Factory {
     private final HashMap<String, String> properties = new HashMap<>();
     private int nsgwires;
 
+    private final double x_enlargement = 1.00;
     private final double y_enlargement = 3.65;
     private final double z_enlargement = -2.46;
     private final double microgap = 0.01;
@@ -823,19 +824,20 @@ public final class DCGeant4Factory extends Geant4Factory {
     }
 
     private Geant4Basic getLayer(int isec, int isuper, int ilayer) {
-        return getRegion(isec, isuper/2).getChildren().get((isuper%2)*6 + ilayer);
+        return getRegion(isec, isuper/2).getChildren().get(0).getChildren().get((isuper%2)*6 + ilayer);
     }
     ///////////////////////////////////////////////////
     public Geant4Basic createRegion(int isector, int iregion) {
         Wire regw0 = new Wire(isector+1, iregion * 2, 0, 0);
         Wire regw1 = new Wire(isector+1, iregion * 2 + 1, 7, nsgwires - 1);
 
-        double dx_shift = y_enlargement * Math.tan(Math.toRadians(29.5));
+        double dx_shift = y_enlargement * Math.tan(dbref.thopen(iregion)/2);
+        double extra = 0.2;
 
         double reg_dz = (dbref.frontgap(iregion) + dbref.backgap(iregion) + dbref.midgap(iregion) + dbref.superwidth(iregion * 2) + dbref.superwidth(iregion * 2 + 1)) / 2.0 + z_enlargement;
-        double reg_dx0 = Math.abs(regw0.bottom().x) - dx_shift + 1.0;
-        double reg_dx1 = Math.abs(regw1.top().x) + dx_shift + 1.0;
-        double reg_dy = regw1.top().minus(regw0.bottom()).y / Math.cos(dbref.thtilt(iregion)) / 2.0 + y_enlargement + 1.0;
+        double reg_dx0 = Math.abs(regw0.bottom().x) - dx_shift + x_enlargement;
+        double reg_dx1 = Math.abs(regw1.top().x) + dx_shift + x_enlargement;
+        double reg_dy = regw1.top().minus(regw0.bottom()).y / Math.cos(dbref.thtilt(iregion)) / 2.0 + y_enlargement;
         double reg_skew = 0.0;
         double reg_thtilt = dbref.thtilt(iregion);
 
@@ -852,6 +854,17 @@ public final class DCGeant4Factory extends Geant4Factory {
         regionVolume.translate(vcenter.x, vcenter.y, vcenter.z);
         regionVolume.setId(isector + 1, iregion + 1, 0, 0);
 
+        double gas_dx0 = reg_dx0 - x_enlargement + dx_shift + extra;
+        double gas_dx1 = reg_dx1 - x_enlargement - dx_shift + extra;
+        double gas_dy  = reg_dy  - y_enlargement + extra;
+        Geant4Basic regionGas = new G4Trap("regionGas" + (iregion + 1) + "_s" + (isector + 1),
+                reg_dz, -reg_thtilt, Math.toRadians(90.0),
+                gas_dy, gas_dx0, gas_dx1, 0.0,
+                gas_dy, gas_dx0, gas_dx1, 0.0);
+        regionGas.setPosition(0, 0, 0);
+        regionGas.setMother(regionVolume);
+        regionGas.setId(isector + 1, iregion + 1, 0, 0);
+
         for (int isup = 0; isup < 2; isup++) {
             int isuper = iregion * 2 + isup;
             Geant4Basic superlayerVolume = this.createSuperlayer(isuper);
@@ -864,7 +877,7 @@ public final class DCGeant4Factory extends Geant4Factory {
             superlayerVolume.rotate("zxy", -dbref.thster(isuper), 0.0, 0.0);
 
             superlayerVolume.setPosition(slshift.x, slshift.y, slshift.z);
-            superlayerVolume.setMother(regionVolume);
+            superlayerVolume.setMother(regionGas);
             superlayerVolume.setId(isector + 1, iregion + 1, isuper + 1);
             
             int nsglayers = dbref.nsenselayers(isuper) + dbref.nguardlayers(isuper);
@@ -879,7 +892,7 @@ public final class DCGeant4Factory extends Geant4Factory {
                 layerVolume.rotate("zxy", -dbref.thster(isuper), 0.0, 0.0);
 
                 layerVolume.setPosition(lshift.x, lshift.y, lshift.z);
-                layerVolume.setMother(regionVolume);
+                layerVolume.setMother(regionGas);
                 layerVolume.setId(isector + 1, iregion + 1, isuper + 1, ilayer);
             }
         }
