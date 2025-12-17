@@ -17,8 +17,10 @@ public class Hit implements Comparable<Hit> {
 	private final int    layerId;
 	private final int    wireId;
 	private final double doca;
-	private final double adc;
+	private final double raw_adc;
 	private final double time;
+	private double tot;
+	private double adc;
 
     private Line3D wireLine;
 	private double  phi;
@@ -27,7 +29,6 @@ public class Hit implements Comparable<Hit> {
 	private boolean use = false;
 	private double  x;
 	private double  y;
-	private double  residual_prefit;
 	private double  residual;
 	private int	trackId;
 
@@ -38,9 +39,8 @@ public class Hit implements Comparable<Hit> {
 		this.layerId      = _Layer;
 		this.wireId       = _Wire;
 		this.doca         = _Doca;
-		this.adc          = _ADC;
+		this.raw_adc          = _ADC;
 		this.time 	  = _Time;
-		this.residual_prefit = 0.0;
 		this.residual        = 0.0;
 		this.trackId	     = -1; // not defined yet
 	}
@@ -142,18 +142,26 @@ public class Hit implements Comparable<Hit> {
 		return residual;
 	}
 
-	public double getResidualPrefit() {
-		return residual_prefit;
-	}
-
 	public void setResidual(double resid) {
 		this.residual = resid;
 	}
 
-	public void setResidualPrefit(double resid) {
-		this.residual_prefit = resid;
+	public void setToT(double _tot) {
+		this.tot = _tot;
 	}
-	
+
+	public double getToT() {
+		return tot;
+	}
+
+	public void setADC(double _adc) {
+		this.adc = _adc;
+	}
+
+	public double getRawADC() {
+		return raw_adc;
+	}
+
 	public double getTime() {
 		return time;
 	}
