@@ -43,7 +43,7 @@ public class EventBuilder {
     
     private final IMatch cndMatcher;
 
-    private static final int[] TRIGGERLIST = new int[]{11,-11,211,-211,0};
+    private static final int[] TRIGGERLIST = new int[]{11,-11,-211,211,0};
 
     private boolean usePOCA=false;
     
