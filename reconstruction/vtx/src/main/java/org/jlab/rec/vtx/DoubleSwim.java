@@ -39,6 +39,8 @@ public class DoubleSwim  extends Swim {
         swim2.stepSize= 500.00* 1.e-6; // 500 microns
         swim1.distanceBetweenSaves=500.00 * 1.e-6; // 500 microns
         swim2.distanceBetweenSaves=500.00 * 1.e-6; // 500 microns
+        swim1.setMaxPathLength(0.5); // m
+        swim2.setMaxPathLength(0.5); // m
     }
     
     public void init(double x01, double y01, double z01, double px01, double py01, double pz01, int charge1,
