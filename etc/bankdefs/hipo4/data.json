@@ -49,7 +49,7 @@
     "item" : 11,
     "info": "ADC bank for the ALERT Wire Chamber",
     "entries":[
-      { "name":"sector"              , "type":"B", "info":"sector, set at 1"},
+      { "name":"sector"              , "type":"B", "info":"sector"},
       { "name":"layer"               , "type":"B", "info":"2 digits: first digit is superlayer, second digit is layer"},
       { "name":"component"           , "type":"S", "info":"wire number"},
       { "name":"order"               , "type":"B", "info":"Stereo angle 0 - in, 1 - out"},
