@@ -96,12 +96,9 @@ public class HitReader {
 
 
 
-	  double[] time2distance = CalibrationConstantsLoader.AHDC_TIME_TO_DISTANCE.get(key_value);
-         if (time2distance == null) { throw new IllegalStateException("Missing CCDB table /calibration/alert/ahdc/time_to_distance for key=" + key_value+ " (check run/variation + key mapping)");
-      }
-
-//          double[] time2distance = CalibrationConstantsLoader.AHDC_TIME_TO_DISTANCE.get(10101);
-//         if (time2distance == null) continue;
+      
+          double[] time2distance = CalibrationConstantsLoader.AHDC_TIME_TO_DISTANCE.get(10101);
+         if (time2distance == null) continue;
 
             double t0 = timeOffsets[0];
 
