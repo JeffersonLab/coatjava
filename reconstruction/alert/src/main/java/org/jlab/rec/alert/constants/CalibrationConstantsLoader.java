@@ -127,29 +127,39 @@ public class CalibrationConstantsLoader {
             AHDC_RAW_HIT_CUTS.put(Integer.valueOf(key), params);
         }
 
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // AHDC ADC gains (UPDATED SCHEMA)
-        // keys   : sector, layer, component
-        // columns: gainCorr, dgainCorr, extra1, extra2, extra3
-        for (int i = 0; i < ahdc_adcGains.getRowCount(); i++) {
-            int sector    = Integer.parseInt((String) ahdc_adcGains.getValueAt(i, 0));
-            int layer     = Integer.parseInt((String) ahdc_adcGains.getValueAt(i, 1));
-            int component = Integer.parseInt((String) ahdc_adcGains.getValueAt(i, 2));
+	
+      // AHDC ADC gains table
+     // keys   : sector, layer, component
+    // cols   : gainCorr, dgainCorr, extra1, extra2, extra3
 
-            double gainCorr  = ahdc_adcGains.getDoubleValue("gainCorr",  sector, layer, component);
-            double dgainCorr = ahdc_adcGains.getDoubleValue("dgainCorr", sector, layer, component);
+      if (ahdc_adcGains != null) {
+    for (int i = 0; i < ahdc_adcGains.getRowCount(); i++) {
 
-            double extra1 = 0.0, extra2 = 0.0, extra3 = 0.0;
-            try { extra1 = ahdc_adcGains.getDoubleValue("extra1", sector, layer, component); } catch (Exception e) {}
-            try { extra2 = ahdc_adcGains.getDoubleValue("extra2", sector, layer, component); } catch (Exception e) {}
-            try { extra3 = ahdc_adcGains.getDoubleValue("extra3", sector, layer, component); } catch (Exception e) {}
+        int sector    = Integer.parseInt((String) ahdc_adcGains.getValueAt(i, 0));
+        int layer     = Integer.parseInt((String) ahdc_adcGains.getValueAt(i, 1));   
+        int component = Integer.parseInt((String) ahdc_adcGains.getValueAt(i, 2));
 
-            int key = sector * 10000 + layer * 100 + component;
-            double params[] = { gainCorr, dgainCorr, extra1, extra2, extra3 };
-            AHDC_ADC_GAINS.put(Integer.valueOf(key), params);
-        }
+        double gainCorr  = ahdc_adcGains.getDoubleValue("gainCorr",  sector, layer, component);
+        double dgainCorr = ahdc_adcGains.getDoubleValue("dgainCorr", sector, layer, component);
 
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        double extra1 = 0.0, extra2 = 0.0, extra3 = 0.0;
+        try { extra1 = ahdc_adcGains.getDoubleValue("extra1", sector, layer, component); } catch (Exception e) {}
+        try { extra2 = ahdc_adcGains.getDoubleValue("extra2", sector, layer, component); } catch (Exception e) {}
+        try { extra3 = ahdc_adcGains.getDoubleValue("extra3", sector, layer, component); } catch (Exception e) {}
+
+        int key = sector * 10000 + layer * 100 + component;   
+        AHDC_ADC_GAINS.put(key, new double[]{gainCorr, dgainCorr, extra1, extra2, extra3});
+    }
+}
+
+
+
+
+
+
+
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // AHDC time_over_threshold (NEW TABLE)
         // keys   : sector, layer, component
         // columns: totCorr, dtotCorr, extra1, extra2, extra3
