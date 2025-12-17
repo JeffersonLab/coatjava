@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.detector.base;
 
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
@@ -24,12 +19,7 @@ public class GeometryFactory {
     public static int SYSTEM_TILTED = 2;
     public static int SYSTEM_CLAS   = 3;
     
-    //private volatile 
-    
-    public GeometryFactory(){
-        
-    }
-    
+    public GeometryFactory(){}
     
     /**
      * Load constants for given detector, with RUN and VARIATION specified
@@ -39,7 +29,9 @@ public class GeometryFactory {
      * @return 
      */
     public static ConstantProvider getConstants(DetectorType type, int run, String variation){
+
         DatabaseConstantProvider  provider = new DatabaseConstantProvider(run,variation);
+
         if(type==DetectorType.DC){
             provider.loadTable("/geometry/dc/dc");
             provider.loadTable("/geometry/dc/region");
@@ -47,8 +39,8 @@ public class GeometryFactory {
             provider.loadTable("/geometry/dc/layer");
             provider.loadTable("/geometry/dc/alignment");
             provider.loadTable("/geometry/dc/ministagger");
-	    provider.loadTable("/geometry/dc/endplatesbow");
-	    provider.loadTable("/geometry/dc/feedthroughs");
+            provider.loadTable("/geometry/dc/endplatesbow");
+            provider.loadTable("/geometry/dc/feedthroughs");
         }
         
         if(type==DetectorType.ECAL){
