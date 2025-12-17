@@ -94,7 +94,10 @@ public class AHDCEngine extends ReconstructionEngine {
                 "/calibration/alert/atof/effective_velocity",
                 "/calibration/alert/atof/time_walk",
                 "/calibration/alert/atof/attenuation",
-                "/calibration/alert/atof/time_offsets"
+                "/calibration/alert/atof/time_offsets",
+                "/calibration/alert/ahdc/gains",
+		"/calibration/alert/ahdc/time_over_threshold"
+		
         };
         requireConstants(Arrays.asList(alertTables));
         
