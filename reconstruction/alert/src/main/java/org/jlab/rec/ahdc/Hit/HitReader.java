@@ -133,7 +133,8 @@ public class HitReader {
                     (wfType <= 2) &&
                     (adcRaw >= adc_min) && (adcRaw <= adc_max) &&
                     (time   >= t_min)   && (time   <= t_max) &&
-                    (totUsed >= tot_min) && (totUsed <= tot_max) &&
+                    (timeOverThreshold >= tot_min) && (timeOverThreshold <= tot_max)&&
+                	//(totUsed >= tot_min) && (totUsed <= tot_max) &&
                     (adcOffset >= ped_min) && (adcOffset <= ped_max);
 
             if (!passCuts && !sim) continue;
