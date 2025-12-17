@@ -152,6 +152,35 @@ public class CalibrationConstantsLoader {
     }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// AHDC time_over_threshold (NEW TABLE)
+// keys   : sector, layer, component
+// columns: totCorr, dtotCorr, extra1, extra2, extra3
+
+// always clear so behavior is deterministic if Load() is ever called again
+AHDC_TIME_OVER_THRESHOLD.clear();
+
+// Table may not exist for some runs/variations -> treat as "no correction"
+if (ahdc_timeOverThreshold != null) {
+
+    for (int i = 0; i < ahdc_timeOverThreshold.getRowCount(); i++) {
+        int sector    = Integer.parseInt((String) ahdc_timeOverThreshold.getValueAt(i, 0));
+        int layer     = Integer.parseInt((String) ahdc_timeOverThreshold.getValueAt(i, 1));
+        int component = Integer.parseInt((String) ahdc_timeOverThreshold.getValueAt(i, 2));
+
+        double totCorr  = ahdc_timeOverThreshold.getDoubleValue("totCorr",  sector, layer, component);
+        double dtotCorr = ahdc_timeOverThreshold.getDoubleValue("dtotCorr", sector, layer, component);
+
+        double extra1 = 0.0, extra2 = 0.0, extra3 = 0.0;
+        try { extra1 = ahdc_timeOverThreshold.getDoubleValue("extra1", sector, layer, component); } catch (Exception e) {}
+        try { extra2 = ahdc_timeOverThreshold.getDoubleValue("extra2", sector, layer, component); } catch (Exception e) {}
+        try { extra3 = ahdc_timeOverThreshold.getDoubleValue("extra3", sector, layer, component); } catch (Exception e) {}
+
+        int key = sector * 10000 + layer * 100 + component;
+        double[] params = { totCorr, dtotCorr, extra1, extra2, extra3 };
+        AHDC_TIME_OVER_THRESHOLD.put(Integer.valueOf(key), params);
+    }
+}
 
 
 
@@ -163,23 +192,23 @@ public class CalibrationConstantsLoader {
         // AHDC time_over_threshold (NEW TABLE)
         // keys   : sector, layer, component
         // columns: totCorr, dtotCorr, extra1, extra2, extra3
-        for (int i = 0; i < ahdc_timeOverThreshold.getRowCount(); i++) {
-            int sector    = Integer.parseInt((String) ahdc_timeOverThreshold.getValueAt(i, 0));
-            int layer     = Integer.parseInt((String) ahdc_timeOverThreshold.getValueAt(i, 1));
-            int component = Integer.parseInt((String) ahdc_timeOverThreshold.getValueAt(i, 2));
+//        for (int i = 0; i < ahdc_timeOverThreshold.getRowCount(); i++) {
+//          int sector    = Integer.parseInt((String) ahdc_timeOverThreshold.getValueAt(i, 0));
+//          int layer     = Integer.parseInt((String) ahdc_timeOverThreshold.getValueAt(i, 1));
+//          int component = Integer.parseInt((String) ahdc_timeOverThreshold.getValueAt(i, 2));
+//
+//          double totCorr  = ahdc_timeOverThreshold.getDoubleValue("totCorr",  sector, layer, component);
+//          double dtotCorr = ahdc_timeOverThreshold.getDoubleValue("dtotCorr", sector, layer, component);
 
-            double totCorr  = ahdc_timeOverThreshold.getDoubleValue("totCorr",  sector, layer, component);
-            double dtotCorr = ahdc_timeOverThreshold.getDoubleValue("dtotCorr", sector, layer, component);
+//          double extra1 = 0.0, extra2 = 0.0, extra3 = 0.0;
+//          try { extra1 = ahdc_timeOverThreshold.getDoubleValue("extra1", sector, layer, component); } catch (Exception e) {}
+////           try { extra2 = ahdc_timeOverThreshold.getDoubleValue("extra2", sector, layer, component); } catch (Exception e) {}
+//        try { extra3 = ahdc_timeOverThreshold.getDoubleValue("extra3", sector, layer, component); } catch (Exception e) {}
 
-            double extra1 = 0.0, extra2 = 0.0, extra3 = 0.0;
-            try { extra1 = ahdc_timeOverThreshold.getDoubleValue("extra1", sector, layer, component); } catch (Exception e) {}
-            try { extra2 = ahdc_timeOverThreshold.getDoubleValue("extra2", sector, layer, component); } catch (Exception e) {}
-            try { extra3 = ahdc_timeOverThreshold.getDoubleValue("extra3", sector, layer, component); } catch (Exception e) {}
-
-            int key = sector * 10000 + layer * 100 + component;
-            double params[] = { totCorr, dtotCorr, extra1, extra2, extra3 };
-            AHDC_TIME_OVER_THRESHOLD.put(Integer.valueOf(key), params);
-        }
+//          int key = sector * 10000 + layer * 100 + component;
+//          double params[] = { totCorr, dtotCorr, extra1, extra2, extra3 };
+//          AHDC_TIME_OVER_THRESHOLD.put(Integer.valueOf(key), params);
+//      }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // ATOF effective velocity
