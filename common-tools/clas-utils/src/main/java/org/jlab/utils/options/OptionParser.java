@@ -10,8 +10,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 import java.util.logging.Level;
-import org.jlab.logging.SplitLogger;
-import org.jlab.logging.SplitLoggerConfig;
+import org.jlab.logging.SplitLogManager;
+import org.jlab.logging.SplitLogManagerConfig;
 
 /**
  *
@@ -192,7 +192,7 @@ public class OptionParser {
     private void setVerbosity(String level) {
         try {
             this.logLevel = Level.parse(level);
-            SplitLoggerConfig.INSTANCE.setDefaultLevel(this.logLevel);
+            SplitLogManagerConfig.INSTANCE.setDefaultLevel(this.logLevel);
         }
         catch (IllegalArgumentException e) {
             System.err.println("Invalid -l java.util.logging.Level:  "+level);
@@ -238,7 +238,7 @@ public class OptionParser {
      * @param externalLogger an external {@code Logger} instance, typically one owned by the owner of this {@code OptionParser} instance
      */
     public void syncLogLevel(Logger externalLogger) {
-        SplitLogger.configureLevel(externalLogger, this.logLevel);
+        SplitLogManager.configureLevel(externalLogger, this.logLevel);
     }
 
     public static void main(String[] args){
