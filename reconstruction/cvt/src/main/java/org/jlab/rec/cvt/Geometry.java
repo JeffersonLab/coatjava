@@ -30,7 +30,6 @@ import org.jlab.groot.base.GStyle;
 import org.jlab.groot.data.GraphErrors;
 import org.jlab.groot.graphics.EmbeddedCanvasTabbed;
 import org.jlab.groot.group.DataGroup;
-import org.jlab.logging.SplitLogger;
 import org.jlab.rec.cvt.bmt.BMTGeometry;
 import org.jlab.rec.cvt.bmt.BMTType;
 import org.jlab.rec.cvt.bmt.CCDBConstantsLoader;
@@ -94,7 +93,7 @@ public class Geometry {
     
     private static boolean LOADED;
     
-    private final static Logger LOGGER = SplitLogger.create(Geometry.class.getName());
+    private final static Logger LOGGER = Logger.getLogger(Geometry.class.getName());
     
     
     // private constructor for a singleton
