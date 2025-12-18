@@ -26,7 +26,7 @@ public class MUVTCluster extends ArrayList<MUVTStrip> {
         this.desc.setSectorLayerComponent(strip.getDescriptor().getSector(), 
                                           strip.getDescriptor().getLayer(), 0);
         this.add(strip);
-        this.clusterLine.copy(strip.getLine());
+        this.clusterLine = new Line3D(strip.getLine());
         this.clusterLineTS = MUVTConstants.toTiltedSectorFrame(this.desc.getSector(), clusterLine);
         this.indexMaxStrip = 0;
     }
