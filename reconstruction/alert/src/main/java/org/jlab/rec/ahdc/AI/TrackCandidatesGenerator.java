@@ -1,25 +1,21 @@
 package org.jlab.rec.ahdc.AI;
 
 import org.apache.commons.lang3.mutable.MutableBoolean;
-import org.jlab.rec.ahdc.Hit.Hit;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.*;
 
 /**
  * The TrackConstruction class is responsible for constructing all possible track 
  * candidates from a set of superpreclusters.
  */
-public class TrackConstruction {
-    private int max_number_of_track_candidates = 10000;
-    private double max_angle = Math.toRadians(60);
+public class TrackCandidatesGenerator {
+    static final private int MAX_NUMBER_OF_TRACK_CANDIDATES = 10000;
+    static final private double MAX_ANGLE = Math.toRadians(60);
 
     /**
      * Default constructor.
      */
-    public TrackConstruction() {}
+    public TrackCandidatesGenerator() {}
 
     /**
      * Computes the modulo operation, which returns the remainder of the division
@@ -63,7 +59,7 @@ public class TrackConstruction {
      * @param angle The angle to wrap.
      * @return The angle wrapped to the range [0, 2π).
      */
-    private double warp_zero_two_pi(double angle) { return mod(angle, 2. * Math.PI); }
+    private double warpZeroTwoPi(double angle) { return mod(angle, 2. * Math.PI); }
 
     /**
      * Checks if an angle is within a specified range.
@@ -73,7 +69,7 @@ public class TrackConstruction {
      * @param upper The upper bound of the range.
      * @return {@code true} if the angle is within the range, {@code false} otherwise.
      */
-    private boolean angle_in_range(double angle, double lower, double upper) { return warp_zero_two_pi(angle - lower) <= warp_zero_two_pi(upper - lower); }
+    private boolean angleInRange(double angle, double lower, double upper) { return warpZeroTwoPi(angle - lower) <= warpZeroTwoPi(upper - lower); }
 
     /**
      * Computes the Cartesian product of two lists of integers, ensuring the number of track candidates
@@ -85,7 +81,7 @@ public class TrackConstruction {
      * @param number_of_track_candidates The current count of track candidates.
      * @return A list of all possible combinations of integers from {@code v1} and {@code v2}.
      */
-    private ArrayList<ArrayList<Integer>> cartesian_product(ArrayList<ArrayList<Integer>> v1, ArrayList<Integer> v2, MutableBoolean too_much_track_candidates, int number_of_track_candidates) {
+    private ArrayList<ArrayList<Integer>> cartesianProduct(ArrayList<ArrayList<Integer>> v1, ArrayList<Integer> v2, MutableBoolean too_much_track_candidates, int number_of_track_candidates) {
         ArrayList<ArrayList<Integer>> result = new ArrayList<>();
         for (ArrayList<Integer> i : v1) {
             if (too_much_track_candidates.booleanValue()) break;
@@ -95,7 +91,7 @@ public class TrackConstruction {
                 n.add(j);
                 result.add(n);
 
-                if (number_of_track_candidates + result.size() >= max_number_of_track_candidates) {
+                if (number_of_track_candidates + result.size() >= MAX_NUMBER_OF_TRACK_CANDIDATES) {
                     too_much_track_candidates.setValue(true);
                     break;
                 }
@@ -106,7 +102,7 @@ public class TrackConstruction {
         return result;
     }
 
-    public boolean get_all_possible_track(ArrayList<PreclusterSuperlayer> preclusterSuperlayers, ArrayList<ArrayList<PreclusterSuperlayer>> all_track_candidates) {
+    public boolean getAllPossibleTrack(ArrayList<InterCluster> interClusters, ArrayList<ArrayList<InterCluster>> all_track_candidates) {
 
         /*
         Identify all superpreclusters located in the first superlayer.
@@ -114,9 +110,9 @@ public class TrackConstruction {
         A track candidate always starts from a seed.
         */
         ArrayList<Integer> seed_index = new ArrayList<>();
-        for (int i = 0; i < preclusterSuperlayers.size(); i++) {
-            if (!preclusterSuperlayers.get(i).getPreclusters().isEmpty() &&
-            preclusterSuperlayers.get(i).getSuperlayer() == 1) {
+        for (int i = 0; i < interClusters.size(); i++) {
+            if (!interClusters.get(i).getPreclusters().isEmpty() &&
+            interClusters.get(i).getSuperlayer() == 1) {
             seed_index.add(i);
             }
         }
@@ -132,15 +128,14 @@ public class TrackConstruction {
 
             // Find all superpreclusters that have a phi angle within phi angle of the seed +/- 60 degrees
             // The goal is to reduce the number of superpreclusters to loop over
-            double phi_seed = warp_zero_two_pi(Math.atan2(preclusterSuperlayers.get(s).getY(), preclusterSuperlayers.get(s).getX()));  // phi angle of the seed
+            double phi_seed = warpZeroTwoPi(Math.atan2(interClusters.get(s).getY(), interClusters.get(s).getX()));  // phi angle of the seed
             ArrayList<Integer> all_superpreclusters = new ArrayList<>();                                                                   // all superpreclusters that are within phi angle of the seed
-            for (int i = 0; i < preclusterSuperlayers.size(); ++i) {
-                double phi_p = warp_zero_two_pi(Math.atan2(preclusterSuperlayers.get(i).getY(), preclusterSuperlayers.get(i).getX()));
-                if (angle_in_range(phi_p, phi_seed - max_angle, phi_seed + max_angle)) {
+            for (int i = 0; i < interClusters.size(); ++i) {
+                double phi_p = warpZeroTwoPi(Math.atan2(interClusters.get(i).getY(), interClusters.get(i).getX()));
+                if (angleInRange(phi_p, phi_seed - MAX_ANGLE, phi_seed + MAX_ANGLE)) {
                     all_superpreclusters.add(i);
                 }
             }
-
 
             // Sort the superpreclusters by superlayer to have a simpler loops after
             ArrayList<Integer> superpreclusters_s1 = new ArrayList<>(List.of(s));
@@ -150,13 +145,13 @@ public class TrackConstruction {
             ArrayList<Integer> superpreclusters_s5 = new ArrayList<>();
 
             for (int i = 0; i < all_superpreclusters.size(); i++) {
-                if (preclusterSuperlayers.get(all_superpreclusters.get(i)).getPreclusters().get(0).get_Super_layer() == 2)
+                if (interClusters.get(all_superpreclusters.get(i)).getPreclusters().get(0).get_Super_layer() == 2)
                     superpreclusters_s2.add(all_superpreclusters.get(i));
-                else if (preclusterSuperlayers.get(all_superpreclusters.get(i)).getPreclusters().get(0).get_Super_layer() == 3)
+                else if (interClusters.get(all_superpreclusters.get(i)).getPreclusters().get(0).get_Super_layer() == 3)
                     superpreclusters_s3.add(all_superpreclusters.get(i));
-                else if (preclusterSuperlayers.get(all_superpreclusters.get(i)).getPreclusters().get(0).get_Super_layer() == 4)
+                else if (interClusters.get(all_superpreclusters.get(i)).getPreclusters().get(0).get_Super_layer() == 4)
                     superpreclusters_s4.add(all_superpreclusters.get(i));
-                else if (preclusterSuperlayers.get(all_superpreclusters.get(i)).getPreclusters().get(0).get_Super_layer() == 5)
+                else if (interClusters.get(all_superpreclusters.get(i)).getPreclusters().get(0).get_Super_layer() == 5)
                     superpreclusters_s5.add(all_superpreclusters.get(i));
             }
 
@@ -164,10 +159,10 @@ public class TrackConstruction {
             too_much_track_candidates.setFalse();
 
             // Find all possible combinations of superpreclusters on different superlayers
-            ArrayList<ArrayList<Integer>> combinations_s1_s2 = cartesian_product(new ArrayList<>(List.of(superpreclusters_s1)), superpreclusters_s2, too_much_track_candidates, number_of_track_candidates);
-            ArrayList<ArrayList<Integer>> combinations_s1_s2_s3 = cartesian_product(combinations_s1_s2, superpreclusters_s3, too_much_track_candidates, number_of_track_candidates);
-            ArrayList<ArrayList<Integer>> combinations_s1_s2_s3_s4 = cartesian_product(combinations_s1_s2_s3, superpreclusters_s4, too_much_track_candidates, number_of_track_candidates);
-            ArrayList<ArrayList<Integer>> combinations_s1_s2_s3_s4_s5 = cartesian_product(combinations_s1_s2_s3_s4, superpreclusters_s5, too_much_track_candidates, number_of_track_candidates);
+            ArrayList<ArrayList<Integer>> combinations_s1_s2 = cartesianProduct(new ArrayList<>(List.of(superpreclusters_s1)), superpreclusters_s2, too_much_track_candidates, number_of_track_candidates);
+            ArrayList<ArrayList<Integer>> combinations_s1_s2_s3 = cartesianProduct(combinations_s1_s2, superpreclusters_s3, too_much_track_candidates, number_of_track_candidates);
+            ArrayList<ArrayList<Integer>> combinations_s1_s2_s3_s4 = cartesianProduct(combinations_s1_s2_s3, superpreclusters_s4, too_much_track_candidates, number_of_track_candidates);
+            ArrayList<ArrayList<Integer>> combinations_s1_s2_s3_s4_s5 = cartesianProduct(combinations_s1_s2_s3_s4, superpreclusters_s5, too_much_track_candidates, number_of_track_candidates);
             
             // Keep track of the number of track candidates
             number_of_track_candidates += combinations_s1_s2_s3_s4_s5.size();
@@ -176,9 +171,9 @@ public class TrackConstruction {
             // Add all track candidates to the list of all track candidates
             // And switch back from index to superprecluster
             for (ArrayList<Integer> combination : combinations_s1_s2_s3_s4_s5) {
-                ArrayList<PreclusterSuperlayer> track_candidate = new ArrayList<>();
+                ArrayList<InterCluster> track_candidate = new ArrayList<>();
                 for (int index : combination) {
-                    track_candidate.add(preclusterSuperlayers.get(index));
+                    track_candidate.add(interClusters.get(index));
                 }
                 all_track_candidates.add(track_candidate);
             }

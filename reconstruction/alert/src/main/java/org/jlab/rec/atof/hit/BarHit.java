@@ -21,6 +21,27 @@ public class BarHit extends ATOFHit {
     public ATOFHit getHitUp() {
         return hitUp;
     }
+    
+    /**
+     * Computes bar time sum and check if it is around 
+     * the value the hits were aligned to. For now,
+     * 40ns cut. When calibrations are final, it should
+     * be refined to reflect the resolution.
+     * 
+     */
+    public boolean isInTime() {
+        double timeShift = 0;
+        //For FT electron for which the startTime is set at -1000
+        //We need to shift where the cut is applied
+        if(this.hitUp.getStartTime()<0) timeShift = 2180;
+        if(Math.abs(
+                this.hitUp.getTime()+this.hitDown.getTime()
+                        -timeShift
+                        -this.hitUp.getMeanTimeAligned())
+                <40)
+            return true;
+        return false;
+    }
 
     public void setHitUp(ATOFHit hit_up) {
         this.hitUp = hit_up;

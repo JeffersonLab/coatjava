@@ -10,123 +10,201 @@ import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
 
 public class HitReader {
 
-	private ArrayList<Hit>     _AHDCHits;
-	private ArrayList<TrueHit> _TrueAHDCHits;
-	private boolean sim = false;
+    private ArrayList<Hit>     _AHDCHits;
+    private ArrayList<TrueHit> _TrueAHDCHits;
+    private boolean sim = false;
 
-	public HitReader(DataEvent event, AlertDCDetector detector, boolean simulation) {
-		sim = simulation;
-		fetch_AHDCHits(event, detector);
-		if (simulation) fetch_TrueAHDCHits(event);
-	}
+    public HitReader(DataEvent event, AlertDCDetector detector, boolean simulation) {
+        sim = simulation;
+        fetch_AHDCHits(event, detector);
+        if (simulation) fetch_TrueAHDCHits(event);
+    }
 
-	public final void fetch_AHDCHits(DataEvent event, AlertDCDetector detector) {
-		ArrayList<Hit> hits = new ArrayList<>();
+    public final void fetch_AHDCHits(DataEvent event, AlertDCDetector detector) {
 
-		
-		if (event.hasBank("AHDC::adc")) {
-			// Useful if one does not run the full CLAS12 reconstrcution
-			// i.e only run the reconstruction of ALERT
-			// or use simulated data
-			double startTime = 0;
-			if (event.hasBank("REC::Event") && !sim) {
-				DataBank bankRecEvent = event.getBank("REC::Event"); 
-				startTime = bankRecEvent.getFloat("startTime", 0);
-			}
-			
-			RawDataBank bankDGTZ = new RawDataBank("AHDC::adc");
-        		bankDGTZ.read(event);
-		
-			for (int i = 0; i < bankDGTZ.rows(); i++) {
-				int    id         = bankDGTZ.trueIndex(i) + 1;
-				int    number     = bankDGTZ.getByte("layer", i);
-				int    layer      = number % 10;
-				int    superlayer = (int) (number % 100) / 10;
-				int    sector     = bankDGTZ.getInt("sector", i);
-				int    wire       = bankDGTZ.getShort("component", i);
-				double adc        = bankDGTZ.getInt("ADC", i);
-				double leadingEdgeTime = bankDGTZ.getFloat("leadingEdgeTime", i);
-				double timeOverThreshold = bankDGTZ.getFloat("timeOverThreshold", i);	
-				double adcOffset = bankDGTZ.getFloat("ped", i);	
-				int wfType = bankDGTZ.getShort("wfType", i);	
-				// Retrieve raw hit cuts from CCDB
-				int key_value = sector*10000 + number*100 + wire;
-				double[] rawHitCuts = CalibrationConstantsLoader.AHDC_RAW_HIT_CUTS.get( key_value );
-				double t_min = rawHitCuts[0];
-				double t_max = rawHitCuts[1];
-				double tot_min = rawHitCuts[2];
-				double tot_max = rawHitCuts[3];
-				double adc_min = rawHitCuts[4];
-				double adc_max = rawHitCuts[5];
-				double ped_min = rawHitCuts[6];
-				double ped_max = rawHitCuts[7];
-				//System.out.println("t_min : " + t_min + " t_max : " + t_max + " tot_min : " + tot_min + " tot_max : " + tot_max + " adc_min : " + adc_min + " adc_max : " + adc_max + " ped_min : " + ped_min + " ped_max : " + ped_max);
-				// Retrieve t0 and t2d from CCDB
-				// What's about simulation?
-				double[] timeOffsets = CalibrationConstantsLoader.AHDC_TIME_OFFSETS.get( key_value );
-				double[] time2distance = CalibrationConstantsLoader.AHDC_TIME_TO_DISTANCE.get( 10101 ); // the time to distance table has only one row ! (10101 is its only key)
-				double t0 = timeOffsets[0];
-				double p0 = time2distance[0];
-				double p1 = time2distance[1];
-				double p2 = time2distance[2];
-				double p3 = time2distance[3];
-				double p4 = time2distance[4];
-				double p5 = time2distance[5];
-				// Apply time calibration
-				// We may need adc calibration too
-				// Remark: leadingEdgeTime already has the fine timestamp correction
-				double time = leadingEdgeTime - t0 - startTime;
-				
-				// Hit selection : wfType and additional cuts
-				if (((wfType <= 2) && (adc >= adc_min) && (adc <= adc_max) && (time >= t_min) && (time <= t_max) && (timeOverThreshold >= tot_min) && (timeOverThreshold <= tot_max) && (adcOffset >= ped_min) && (adcOffset <= ped_max)) || sim) {
-					double doca = p0 + p1*Math.pow(time,1.0) + p2*Math.pow(time,2.0) + p3*Math.pow(time,3.0) + p4*Math.pow(time,4.0) + p5*Math.pow(time, 5.0);
-					if (sim) {
-						time += 5; // correction from mctime - systematic error of the decoding
-						doca = -0.0497 - 0.00667*Math.pow(time,1.0) + 0.389*Math.pow(time,1.0/2) - 0.189*Math.pow(time,1.0/3);
-					}
-					if (time < 0) doca = 0;
-					Hit h = new Hit(id, superlayer, layer, wire, doca, adc, time);
-                                        h.setWirePosition(detector);
-                                        hits.add(h);
-				}
-			}
-		}
-		this.set_AHDCHits(hits);
-	}
+        ArrayList<Hit> hits = new ArrayList<>();
 
-	public final void fetch_TrueAHDCHits(DataEvent event) {
-		ArrayList<TrueHit> truehits = new ArrayList<>();
+        if (!event.hasBank("AHDC::adc")) {
+            this.set_AHDCHits(hits);
+            return;
+        }
 
-		DataBank bankSIMU = event.getBank("MC::True");
+        double startTime = 0.0;
+        if (event.hasBank("REC::Event") && !sim) {
+            DataBank bankRecEvent = event.getBank("REC::Event");
+            startTime = bankRecEvent.getFloat("startTime", 0);
+        }
 
-		if (event.hasBank("MC::True")) {
-			for (int i = 0; i < bankSIMU.rows(); i++) {
-				int    pid    = bankSIMU.getInt("pid", i);
-				double x_true = bankSIMU.getFloat("avgX", i);
-				double y_true = bankSIMU.getFloat("avgY", i);
-				double z_true = bankSIMU.getFloat("avgZ", i);
-				double trackE = bankSIMU.getFloat("trackE", i);
+        RawDataBank bankDGTZ = new RawDataBank("AHDC::adc");
+        bankDGTZ.read(event);
 
-				truehits.add(new TrueHit(pid, x_true, y_true, z_true, trackE));
-			}
-		}
-		this.set_TrueAHDCHits(truehits);
-	}
+        for (int i = 0; i < bankDGTZ.rows(); i++) {
 
-	public ArrayList<Hit> get_AHDCHits() {
-		return _AHDCHits;
-	}
+            int id         = bankDGTZ.trueIndex(i) + 1;
+            int number     = bankDGTZ.getByte("layer", i);      // e.g. 11,12,21,... (this matches CCDB "layer")
+            int layer      = number % 10;
+            int superlayer = (number % 100) / 10;
+            int sector     = bankDGTZ.getInt("sector", i);
+            int wire       = bankDGTZ.getShort("component", i);
 
-	public void set_AHDCHits(ArrayList<Hit> _AHDCHits) {
-		this._AHDCHits = _AHDCHits;
-	}
+            // RAW quantities from bank
+            double adcRaw            = bankDGTZ.getInt("ADC", i);
+            double leadingEdgeTime   = bankDGTZ.getFloat("leadingEdgeTime", i);
+            double timeOverThreshold = bankDGTZ.getFloat("timeOverThreshold", i);
+            double adcOffset         = bankDGTZ.getFloat("ped", i);
+            int    wfType            = bankDGTZ.getShort("wfType", i);
 
-	public ArrayList<TrueHit> get_TrueAHDCHits() {
-		return _TrueAHDCHits;
-	}
+            // CCDB key
+            int key_value = sector * 10000 + number * 100 + wire;
 
-	public void set_TrueAHDCHits(ArrayList<TrueHit> _TrueAHDCHits) {
-		this._TrueAHDCHits = _TrueAHDCHits;
-	}
+            // -----------------------------
+            // Raw hit cuts
+            // -----------------------------
+	    // double[] rawHitCuts = CalibrationConstantsLoader.AHDC_RAW_HIT_CUTS.get(key_value);
+            //if (rawHitCuts == null) continue;
 
+
+           double[] rawHitCuts = CalibrationConstantsLoader.AHDC_RAW_HIT_CUTS.get(key_value);
+           if (rawHitCuts == null) {throw new IllegalStateException("Missing CCDB table /calibration/alert/ahdc/raw_hit_cuts for key=" + key_value+ " (check run/variation + key mapping)");
+           }
+	    
+            double t_min   = rawHitCuts[0];
+            double t_max   = rawHitCuts[1];
+            double tot_min = rawHitCuts[2];
+            double tot_max = rawHitCuts[3];
+            double adc_min = rawHitCuts[4];
+            double adc_max = rawHitCuts[5];
+            double ped_min = rawHitCuts[6];
+            double ped_max = rawHitCuts[7];
+
+            // -----------------------------
+            // Time calibration + t->d
+            // -----------------------------
+            //double[] timeOffsets = CalibrationConstantsLoader.AHDC_TIME_OFFSETS.get(key_value);
+            //if (timeOffsets == null) continue;
+
+	    //  double[] timeOffsets = CalibrationConstantsLoader.AHDC_TIME_OFFSETS.get(key_value);
+            //if (timeOffsets == null) {
+	    //throw new IllegalStateException("Missing AHDC time_offsets for key=" + key_value);
+	    //}
+
+	  double[] timeOffsets = CalibrationConstantsLoader.AHDC_TIME_OFFSETS.get(key_value);
+	    
+          if (timeOffsets == null) {
+           throw new IllegalStateException("Missing CCDB /calibration/alert/ahdc/time_offsets for key=" + key_value + " (check run/variation + key mapping)");
+          }
+
+
+
+      
+          double[] time2distance = CalibrationConstantsLoader.AHDC_TIME_TO_DISTANCE.get(10101);
+         if (time2distance == null) continue;
+
+            double t0 = timeOffsets[0];
+
+            double p0 = time2distance[0];
+            double p1 = time2distance[1];
+            double p2 = time2distance[2];
+            double p3 = time2distance[3];
+            double p4 = time2distance[4];
+            double p5 = time2distance[5];
+
+            double time = leadingEdgeTime - t0 - startTime;
+
+            // -----------------------------
+            // ToT correction (new CCDB)
+            // convention: ToT_corr = ToT_raw * totCorr
+            // -----------------------------
+            double totUsed = timeOverThreshold;
+            if (!sim) {
+                double[] totArr = CalibrationConstantsLoader.AHDC_TIME_OVER_THRESHOLD.get(key_value);
+                if (totArr != null && totArr.length > 0) {
+                    double totCorr = totArr[0];
+                    totUsed = timeOverThreshold * totCorr;
+                }
+            }
+
+            // -----------------------------
+            // Hit selection (cuts)
+            // NOTE: we cut on totUsed (corrected ToT). If you want RAW-ToT cuts,
+            // replace totUsed with timeOverThreshold in the condition.
+            // -----------------------------
+            boolean passCuts =
+                    (wfType <= 2) &&
+                    (adcRaw >= adc_min) && (adcRaw <= adc_max) &&
+                    (time   >= t_min)   && (time   <= t_max) &&
+                    (timeOverThreshold >= tot_min) && (timeOverThreshold <= tot_max)&&
+                	//(totUsed >= tot_min) && (totUsed <= tot_max) &&
+                    (adcOffset >= ped_min) && (adcOffset <= ped_max);
+
+            if (!passCuts && !sim) continue;
+
+            // -----------------------------
+            // DOCA from calibrated time
+            // -----------------------------
+            double doca = p0
+                    + p1*Math.pow(time, 1.0)
+                    + p2*Math.pow(time, 2.0)
+                    + p3*Math.pow(time, 3.0)
+                    + p4*Math.pow(time, 4.0)
+                    + p5*Math.pow(time, 5.0);
+
+            if (time < 0) doca = 0.0;
+
+            // -----------------------------
+            // ADC gain calibration (new gains schema: gainCorr is index 0)
+            // convention: ADC_cal = ADC_raw * gainCorr
+            // -----------------------------
+            double adcCal = adcRaw;
+            if (!sim) {
+                double[] gainArr = CalibrationConstantsLoader.AHDC_ADC_GAINS.get(key_value);
+                if (gainArr != null && gainArr.length > 0) {
+                    double gainCorr = gainArr[0];
+                    adcCal = adcRaw * gainCorr;
+                }
+            }
+
+            Hit h = new Hit(id, superlayer, layer, wire, doca, adcCal, time);
+            h.setWirePosition(detector);
+            hits.add(h);
+        }
+
+        this.set_AHDCHits(hits);
+    }
+
+    public final void fetch_TrueAHDCHits(DataEvent event) {
+
+        ArrayList<TrueHit> truehits = new ArrayList<>();
+
+        if (event.hasBank("MC::True")) {
+            DataBank bankSIMU = event.getBank("MC::True");
+            for (int i = 0; i < bankSIMU.rows(); i++) {
+                int    pid    = bankSIMU.getInt("pid", i);
+                double x_true = bankSIMU.getFloat("avgX", i);
+                double y_true = bankSIMU.getFloat("avgY", i);
+                double z_true = bankSIMU.getFloat("avgZ", i);
+                double trackE = bankSIMU.getFloat("trackE", i);
+
+                truehits.add(new TrueHit(pid, x_true, y_true, z_true, trackE));
+            }
+        }
+
+        this.set_TrueAHDCHits(truehits);
+    }
+
+    public ArrayList<Hit> get_AHDCHits() {
+        return _AHDCHits;
+    }
+
+    public void set_AHDCHits(ArrayList<Hit> hits) {
+        this._AHDCHits = hits;
+    }
+
+    public ArrayList<TrueHit> get_TrueAHDCHits() {
+        return _TrueAHDCHits;
+    }
+
+    public void set_TrueAHDCHits(ArrayList<TrueHit> trueHits) {
+        this._TrueAHDCHits = trueHits;
+    }
 }

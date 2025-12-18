@@ -55,7 +55,18 @@
         "info": "path length inside atof wedge in mm"
       }
     ]
-  },{
+  },
+    {
+    "name": "ALERT::ai:projections",
+    "group": 23000,
+    "item": 32,
+    "info": "Track Projections to ATOF given by AI",
+    "entries": [    
+      {"name": "trackid", "type": "I", "info": "track id"},
+      {"name": "matched_atof_hit_id", "type": "I", "info": "id of the matched ATOF hit, -1 if no hit was matched"}
+    ]
+  },
+  {
     "name": "ATOF::hits",
     "group": 22500,
     "item": 21,
@@ -413,6 +424,17 @@
       {"name": "x5", "type": "F", "info": "X5 position of the 5th superprecluster (mm)"},
       {"name": "y5", "type": "F", "info": "Y5 position of the 5th superprecluster (mm)"},
       {"name": "pred", "type": "F", "info": "Prediction of the model: 0 mean bad track; 1 mean good track"}
+    ]
+  },
+  {
+    "name": "AHDC::interclusters",
+    "group": 23000,
+    "item": 27,
+    "info": "InterClusters info",
+    "entries": [
+      {"name": "trackid", "type": "I", "info": "track id"},
+      {"name": "x", "type": "F", "info": "x info (mm)"},
+      {"name": "y", "type": "F", "info": "y info (mm)"}
     ]
   }
 ]
