@@ -292,18 +292,13 @@ public class EngineProcessor {
      * @param nevents number of events to process
      */
     public void processFile(String file, String output, int nskip, int nevents){
-        if(file.endsWith(".hipo")==true||file.endsWith(".h5")==true
-                ||file.endsWith(".h4")==true){
+        if(file.endsWith(".hipo")  ||  file.endsWith(".h5") || file.endsWith(".h4")) {
             HipoDataSource reader = new HipoDataSource();
             reader.open(file);
             
             int eventCounter = 0;
             HipoDataSync   writer = new HipoDataSync();
             writer.setCompressionType(2);
-
-            // this doesn't work (before or after "open"):
-            //if (this.banksToKeep != null)
-            //    writer.getWriter().getSchemaFactory().reduce(banksToKeep.getSchemaKeys());
 
             writer.open(output);
 
