@@ -164,8 +164,10 @@ public class HitReader {
                 }
             }
 
-            Hit h = new Hit(id, superlayer, layer, wire, doca, adcCal, time);
+            Hit h = new Hit(id, superlayer, layer, wire, doca, adcRaw, time);
             h.setWirePosition(detector);
+            h.setADC(adcCal); // place to store calibrated ADC
+            h.setToT(totUsed); // place to store caibrated ToT
             hits.add(h);
         }
 
