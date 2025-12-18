@@ -15,8 +15,8 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.jlab.jnp</groupId>
-      <artifactId>jnp-hipo</artifactId>
+      <groupId>org.jlab</groupId>
+      <artifactId>groot</artifactId>
     </dependency>
     <dependency>
       <groupId>org.jlab.clas</groupId>
