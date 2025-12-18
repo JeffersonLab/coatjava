@@ -284,6 +284,25 @@ public class EngineProcessor {
         this.processFile(file, output, -1, -1);
     }
 
+    public void processFile(HipoDataSource reader, HipoDataSync writer, int skipEvents, int maxEvents) {
+        if (updateDictionary==true) updateDictionary(reader, writer);
+        ProgressPrintout  progress = new ProgressPrintout();
+        int eventsRead = 0;
+        while (reader.hasEvent()) {
+            DataEvent event = reader.getNextEvent();
+            eventsRead++;
+            if (skipEvents <= 0 || eventsRead > skipEvents) {
+                processEvent(event);
+                removeBanks(event);
+                writer.writeEvent(event);
+            }
+            if (maxEvents > 0 && eventsRead > maxEvents+skipEvents) break;
+            progress.updateStatus();
+        }
+        progress.showStatus();
+        writer.close();
+    }
+
     /**
      * process entire file through engine chain.
      * @param file input file name to process
@@ -291,45 +310,17 @@ public class EngineProcessor {
      * @param nskip number of events to skip
      * @param nevents number of events to process
      */
-    public void processFile(String file, String output, int nskip, int nevents){
+    public void processFile(String file, String output, int nskip, int nevents) {
         if(file.endsWith(".hipo")  ||  file.endsWith(".h5") || file.endsWith(".h4")) {
             HipoDataSource reader = new HipoDataSource();
             reader.open(file);
-            
-            int eventCounter = 0;
-            HipoDataSync   writer = new HipoDataSync();
+            HipoDataSync writer = new HipoDataSync();
             writer.setCompressionType(2);
-
             writer.open(output);
-
-            if(updateDictionary==true)
-                updateDictionary(reader, writer);
-           
-            if(nskip>0 && nevents>0) nevents += nskip;
-            
-            ProgressPrintout  progress = new ProgressPrintout();
-            while(reader.hasEvent()==true){
-                DataEvent event = reader.getNextEvent();
-                if(nskip<=0 || eventCounter>nskip) {
-                    processEvent(event);
-
-                    // this works:
-                    removeBanks(event);
-
-                    writer.writeEvent(event);
-                }
-                eventCounter++;
-                if(nevents>0){
-                    if(eventCounter>nevents) break;
-                }
-                progress.updateStatus();
-            }
-            progress.showStatus();
-            writer.close();
+            processFile(reader, writer, nskip, nevents);
         } else {
             LOGGER.info("\n\n>>>> error in file extension (use .hipo,.h4 or .h5)\n>>>> how is this not simple ?\n");
         }
-        
     }
 
     /**
