@@ -2,4 +2,4 @@
 
 . `dirname $0`/../libexec/env.sh
 
-java -cp ${COATJAVA_CLASSPATH:-''} org.jlab.coda.eventViewer.EventTreeFrame $*
+java ${JAVA_OPTS-} -cp ${COATJAVA_CLASSPATH:-''} org.jlab.coda.eventViewer.EventTreeFrame $*

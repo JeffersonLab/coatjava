@@ -4,7 +4,6 @@
 # and input data files at ./data
 
 # set up environment
-JAVA_OPTS="-Djava.util.logging.config.file=$PWD/../../etc/logging/debug.properties"
 CLARA_HOME=$PWD/../../clara/ ; export CLARA_HOME
 COAT=$CLARA_HOME/plugins/clas12/
 

@@ -24,7 +24,7 @@ shift
 
 split_cli $@
 
-exec java -Xmx1536m -Xms1024m -XX:+UseSerialGC ${jvm_options[@]} \
+exec java ${JAVA_OPTS-} -Xmx1536m -Xms1024m -XX:+UseSerialGC ${jvm_options[@]} \
   -cp ${COATJAVA_CLASSPATH:-''} \
   $class_name \
   ${class_options[@]}

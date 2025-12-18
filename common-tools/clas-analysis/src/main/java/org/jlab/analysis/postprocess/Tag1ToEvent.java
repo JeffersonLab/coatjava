@@ -13,7 +13,6 @@ import org.jlab.detector.scalers.DaqScalersSequence;
 import org.jlab.detector.helicity.HelicityBit;
 import org.jlab.detector.helicity.HelicitySequenceDelayed;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
-import org.jlab.logging.SplitLogger;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.options.OptionParser;
 
@@ -31,7 +30,7 @@ import org.jlab.utils.options.OptionParser;
 
 public class Tag1ToEvent {
 
-    static final Logger LOGGER = SplitLogger.create(Tag1ToEvent.class.getName());
+    static final Logger LOGGER = Logger.getLogger(Tag1ToEvent.class.getName());
 
     public static void main(String[] args) {
 

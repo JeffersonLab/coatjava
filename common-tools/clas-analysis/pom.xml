@@ -79,12 +79,6 @@
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
-      <artifactId>clas-logging</artifactId>
-      <version>13.5.1-SNAPSHOT</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.jlab.clas</groupId>
       <artifactId>swim-tools</artifactId>
       <version>13.5.1-SNAPSHOT</version>
     </dependency>
