@@ -19,8 +19,10 @@ import org.jlab.clara.engine.EngineDataType;
 import java.util.Arrays;
 import org.jlab.coda.jevio.EvioException;
 import org.jlab.detector.decode.CLASDecoder;
+import org.jlab.io.base.DataBank;
 import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.evio.EvioSource;
+import org.jlab.io.hipo.HipoDataEvent;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.json.JSONObject;
@@ -40,6 +42,8 @@ public class EngineProcessor {
     private boolean updateDictionary = true;
     private SchemaFactory banksToKeep = null;
     private final List<String> schemaExempt = Arrays.asList("RUN::config","DC::tdc");
+
+    private CLASDecoder decoder = new CLASDecoder();
 
     public EngineProcessor(){}
 
@@ -296,7 +300,7 @@ public class EngineProcessor {
         removeBanks(event);
         writer.writeEvent(event);
     }
-    
+
     public void processFile(HipoDataSource reader, HipoDataSync writer, int skipEvents, int maxEvents) {
         if (updateDictionary==true) updateDictionary(reader, writer);
         ProgressPrintout progress = new ProgressPrintout();
@@ -313,7 +317,6 @@ public class EngineProcessor {
     }
 
     public void processFile(EvioSource reader, HipoDataSync writer, int skipEvents, int maxEvents) {
-        CLASDecoder decoder = new CLASDecoder();
         ProgressPrintout progress = new ProgressPrintout();
         int eventsRead = 0;
         while (reader.hasEvent()) {
@@ -322,35 +325,37 @@ public class EngineProcessor {
                 ByteBuffer bb = reader.getEventBuffer(eventsRead, true);
                 EvioDataEvent evio = new EvioDataEvent(bb.array(), ByteOrder.LITTLE_ENDIAN);
                 Event hipo = decoder.getDecodedEvent(evio, -1, eventsRead, null, null);
-                //processEvent(hipo, writer);
+                HipoDataEvent hipo2 = new HipoDataEvent(hipo, decoder.getSchemaFactory());
+                if (skipEvents <= 0 || eventsRead > skipEvents) processEvent(hipo2, writer);
+                if (maxEvents > 0 && eventsRead > maxEvents+skipEvents) break;
             } catch (EvioException ex) {
                 System.getLogger(EngineProcessor.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
             }
             progress.updateStatus();
         }
+        progress.showStatus();
+        writer.close();
     }
 
     /**}
      * process entire file through engine chain.
-     * @param file input file name to process
+     * @param input input file name to process
      * @param output output filename
      * @param nskip number of events to skip
      * @param nevents number of events to process
      */
-    public void processFile(String file, String output, int nskip, int nevents) {
-        if (file.endsWith(".hipo")  ||  file.endsWith(".h5") || file.endsWith(".h4")) {
+    public void processFile(String input, String output, int nskip, int nevents) {
+        HipoDataSync writer = new HipoDataSync();
+        writer.setCompressionType(2);
+        if (input.endsWith(".hipo")  ||  input.endsWith(".h5") || input.endsWith(".h4")) {
             HipoDataSource reader = new HipoDataSource();
-            reader.open(file);
-            HipoDataSync writer = new HipoDataSync();
-            writer.setCompressionType(2);
+            reader.open(input);
             writer.open(output);
             processFile(reader, writer, nskip, nevents);
         } else {
-            LOGGER.info(() -> "No HIPO file extension found, assuming this is an EVIO file:  "+file);
+            LOGGER.info(() -> "No HIPO file extension found, assuming this is an EVIO file:  "+input);
             EvioSource reader = new EvioSource();
-            reader.open(file);
-            HipoDataSync writer = new HipoDataSync();
-            writer.setCompressionType(2);
+            reader.open(input);
             writer.open(output);
             processFile(reader, writer, nskip, nevents);
         }
