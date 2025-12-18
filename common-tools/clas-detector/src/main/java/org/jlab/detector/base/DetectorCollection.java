@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.detector.base;
 
 import java.util.ArrayList;
@@ -10,7 +5,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.jlab.detector.base.DetectorDescriptor;
 import org.jlab.utils.groups.IndexedList;
 
 /**
@@ -19,7 +13,7 @@ import org.jlab.utils.groups.IndexedList;
  */
 public class DetectorCollection<T> {
     
-    private IndexedList<T>  collection = new IndexedList<T>(3);
+    private IndexedList<T>  collection = new IndexedList<>(3);
     private String          collectionName = "undefined";
     
      public void setName(String name){
@@ -67,7 +61,7 @@ public class DetectorCollection<T> {
      */
     public List<T> getList(){
         Collection<T> vc = this.collection.getMap().values();
-        List<T>  list = new ArrayList<T>();
+        List<T>  list = new ArrayList<>();
         for(T c : vc){
             list.add(c);
         }
@@ -79,7 +73,7 @@ public class DetectorCollection<T> {
      */
     public Set<Integer> getSectors(){
         Set<Long>  list = this.collection.getMap().keySet();
-        Set<Integer>  sectors = new HashSet<Integer>();
+        Set<Integer>  sectors = new HashSet<>();
                 
         for(Long item : list){
             int sect = this.collection.getIndexGenerator().getIndex(item, 0);
@@ -95,7 +89,7 @@ public class DetectorCollection<T> {
      */
     public Set<Integer> getLayers(int sector){
         Set<Long>  list = this.collection.getMap().keySet();
-        Set<Integer>  layers = new HashSet<Integer>();
+        Set<Integer>  layers = new HashSet<>();
         for(Long item : list){
             int sect = this.collection.getIndexGenerator().getIndex(item, 0);
             if(sect==sector){
@@ -113,7 +107,7 @@ public class DetectorCollection<T> {
      */
     public Set<Integer>  getComponents(int sector, int layer){
         Set<Long>  list = this.collection.getMap().keySet();
-        Set<Integer>  components = new HashSet<Integer>();
+        Set<Integer>  components = new HashSet<>();
         for(Long item : list){
             int sect = this.collection.getIndexGenerator().getIndex(item, 0);
             int lay = this.collection.getIndexGenerator().getIndex(item, 1);
