@@ -22,15 +22,13 @@ import org.jlab.detector.helicity.HelicitySequence;
 import org.jlab.detector.helicity.HelicitySequenceDelayed;
 import org.jlab.detector.helicity.HelicitySequenceManager;
 
-import org.jlab.logging.SplitLogger;
-
 /**
  * Static utility methods for postprocessing.
  * @author baltzell
  */
 class Util {
 
-    static final Logger logger = SplitLogger.create(Util.class.getName());
+    static final Logger logger = Logger.getLogger(Util.class.getName());
 
     /**
      * Assign the delay-corrected helicity to the HEL::scaler bank's rows

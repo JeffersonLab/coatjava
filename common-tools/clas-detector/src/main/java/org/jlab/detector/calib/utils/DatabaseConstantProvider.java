@@ -22,7 +22,7 @@ import org.jlab.geom.base.ConstantProvider;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.groups.IndexedTableViewer;
 import org.jlab.utils.system.FileSystemExecScan;
-import org.jlab.logging.SplitLogger;
+import org.jlab.logging.SplitLogManager;
 
 /**
  *
@@ -30,7 +30,10 @@ import org.jlab.logging.SplitLogger;
  */
 public class DatabaseConstantProvider implements ConstantProvider {
 
-    static final Logger LOGGER = SplitLogger.create(DatabaseConstantProvider.class.getName(), false);
+    static final Logger LOGGER = Logger.getLogger(DatabaseConstantProvider.class.getName());
+    static {
+        SplitLogManager.configureHandlers(LOGGER, false);
+    }
     
     private final HashMap<String,String[]> constantContainer = new HashMap<>();
     private final boolean PRINT_ALL = true;

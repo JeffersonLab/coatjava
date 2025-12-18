@@ -7,7 +7,6 @@ import java.util.logging.Logger;
 import org.jlab.coda.jevio.EventWriter;
 import org.jlab.coda.jevio.EvioException;
 import org.jlab.coda.jevio.EvioReader;
-import org.jlab.logging.SplitLogger;
 
 /**
  *
@@ -15,7 +14,7 @@ import org.jlab.logging.SplitLogger;
  */
 public class EvioCure {
 
-    private static final Logger LOGGER = SplitLogger.create(EvioCure.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(EvioCure.class.getName());
 
     public static void main(String[] args) {
 

@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.jlab.logging.SplitLogger;
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.detector.banks.RawBank.OrderType;
 import org.jlab.io.base.DataBank;
@@ -45,7 +44,7 @@ public class DCEngine extends ReconstructionEngine {
     private String   dafAnnealingFactorsTBWithURWell = null;
     private String pickedURWellRegions = "R1R2";
     
-    public static final Logger LOGGER = SplitLogger.create(ReconstructionEngine.class.getName());
+    public static final Logger LOGGER = Logger.getLogger(ReconstructionEngine.class.getName());
 
 
     public DCEngine(String name) {

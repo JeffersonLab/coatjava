@@ -10,7 +10,6 @@ import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.utils.groups.IndexedTable;
 import java.util.logging.Logger;
-import org.jlab.logging.SplitLogger;
 
 /**
  *
@@ -53,7 +52,7 @@ public class DaqScalers {
     private long timestamp=0;
     private int evnum=0;
 
-    private static final Logger logger = SplitLogger.create(DaqScalers.class.getName());
+    private static final Logger logger = Logger.getLogger(DaqScalers.class.getName());
 
     public DaqScalers setTimestamp(long timestamp) {
         this.timestamp=timestamp;
