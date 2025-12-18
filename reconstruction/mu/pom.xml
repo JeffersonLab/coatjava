@@ -15,6 +15,10 @@
 
   <dependencies>
     <dependency>
+      <groupId>org.jlab.jnp</groupId>
+      <artifactId>jnp-hipo</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.jlab</groupId>
       <artifactId>groot</artifactId>
     </dependency>
