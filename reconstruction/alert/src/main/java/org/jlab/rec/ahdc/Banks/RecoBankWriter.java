@@ -8,8 +8,6 @@ import org.jlab.rec.ahdc.Cluster.Cluster;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import org.jlab.rec.ahdc.Track.Track;
-import org.apache.commons.math3.linear.RealVector;
-import org.apache.commons.math3.linear.RealMatrix;
 
 import java.util.ArrayList;
 
@@ -28,8 +26,9 @@ public class RecoBankWriter {
 			bank.setInt("wire", i, hitList.get(i).getWireId());
 			bank.setDouble("doca", i, hitList.get(i).getDoca());
 			bank.setDouble("residual", i, hitList.get(i).getResidual());
-			bank.setDouble("residual_prefit", i, hitList.get(i).getResidualPrefit());
 			bank.setDouble("time", i, hitList.get(i).getTime());
+			bank.setInt("adc", i, (int) hitList.get(i).getADC());
+			bank.setDouble("timeOverThreshold", i, hitList.get(i).getToT());
 			bank.setInt("trackid", i, hitList.get(i).getTrackId());
 		}
 
