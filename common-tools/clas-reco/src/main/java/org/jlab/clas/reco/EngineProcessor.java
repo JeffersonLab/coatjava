@@ -1,6 +1,8 @@
 package org.jlab.clas.reco;
 
 import java.io.File;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.file.Files;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -15,6 +17,11 @@ import org.jlab.utils.options.OptionParser;
 import org.jlab.clara.engine.EngineData;
 import org.jlab.clara.engine.EngineDataType;
 import java.util.Arrays;
+import org.jlab.coda.jevio.EvioException;
+import org.jlab.detector.decode.CLASDecoder;
+import org.jlab.io.evio.EvioDataEvent;
+import org.jlab.io.evio.EvioSource;
+import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.json.JSONObject;
 import org.jlab.utils.ClaraYaml;
@@ -284,18 +291,20 @@ public class EngineProcessor {
         this.processFile(file, output, -1, -1);
     }
 
+    public void processEvent(DataEvent event, HipoDataSync writer) {
+        processEvent(event);
+        removeBanks(event);
+        writer.writeEvent(event);
+    }
+    
     public void processFile(HipoDataSource reader, HipoDataSync writer, int skipEvents, int maxEvents) {
         if (updateDictionary==true) updateDictionary(reader, writer);
-        ProgressPrintout  progress = new ProgressPrintout();
+        ProgressPrintout progress = new ProgressPrintout();
         int eventsRead = 0;
         while (reader.hasEvent()) {
             DataEvent event = reader.getNextEvent();
             eventsRead++;
-            if (skipEvents <= 0 || eventsRead > skipEvents) {
-                processEvent(event);
-                removeBanks(event);
-                writer.writeEvent(event);
-            }
+            if (skipEvents <= 0 || eventsRead > skipEvents) processEvent(event, writer);
             if (maxEvents > 0 && eventsRead > maxEvents+skipEvents) break;
             progress.updateStatus();
         }
@@ -303,7 +312,25 @@ public class EngineProcessor {
         writer.close();
     }
 
-    /**
+    public void processFile(EvioSource reader, HipoDataSync writer, int skipEvents, int maxEvents) {
+        CLASDecoder decoder = new CLASDecoder();
+        ProgressPrintout progress = new ProgressPrintout();
+        int eventsRead = 0;
+        while (reader.hasEvent()) {
+            eventsRead++;
+            try {
+                ByteBuffer bb = reader.getEventBuffer(eventsRead, true);
+                EvioDataEvent evio = new EvioDataEvent(bb.array(), ByteOrder.LITTLE_ENDIAN);
+                Event hipo = decoder.getDecodedEvent(evio, -1, eventsRead, null, null);
+                //processEvent(hipo, writer);
+            } catch (EvioException ex) {
+                System.getLogger(EngineProcessor.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+            }
+            progress.updateStatus();
+        }
+    }
+
+    /**}
      * process entire file through engine chain.
      * @param file input file name to process
      * @param output output filename
@@ -311,7 +338,7 @@ public class EngineProcessor {
      * @param nevents number of events to process
      */
     public void processFile(String file, String output, int nskip, int nevents) {
-        if(file.endsWith(".hipo")  ||  file.endsWith(".h5") || file.endsWith(".h4")) {
+        if (file.endsWith(".hipo")  ||  file.endsWith(".h5") || file.endsWith(".h4")) {
             HipoDataSource reader = new HipoDataSource();
             reader.open(file);
             HipoDataSync writer = new HipoDataSync();
@@ -319,7 +346,13 @@ public class EngineProcessor {
             writer.open(output);
             processFile(reader, writer, nskip, nevents);
         } else {
-            LOGGER.info("\n\n>>>> error in file extension (use .hipo,.h4 or .h5)\n>>>> how is this not simple ?\n");
+            LOGGER.info(() -> "No HIPO file extension found, assuming this is an EVIO file:  "+file);
+            EvioSource reader = new EvioSource();
+            reader.open(file);
+            HipoDataSync writer = new HipoDataSync();
+            writer.setCompressionType(2);
+            writer.open(output);
+            processFile(reader, writer, nskip, nevents);
         }
     }
 
