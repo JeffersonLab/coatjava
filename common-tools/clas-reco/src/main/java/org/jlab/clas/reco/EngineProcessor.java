@@ -322,10 +322,12 @@ public class EngineProcessor {
             eventsRead++;
             try {
                 ByteBuffer bb = reader.getEventBuffer(eventsRead, true);
-                EvioDataEvent evio = new EvioDataEvent(bb.array(), ByteOrder.LITTLE_ENDIAN);
-                Event hipo = decoder.getDecodedEvent(evio, -1, eventsRead, null, null);
-                HipoDataEvent hipo2 = new HipoDataEvent(hipo, decoder.getSchemaFactory());
-                if (skipEvents <= 0 || eventsRead > skipEvents) processEvent(hipo2, writer);
+                if (skipEvents <= 0 || eventsRead > skipEvents) {
+                    EvioDataEvent evio = new EvioDataEvent(bb.array(), ByteOrder.LITTLE_ENDIAN);
+                    Event hipo = decoder.getDecodedEvent(evio, -1, eventsRead, null, null);
+                    HipoDataEvent hipo2 = new HipoDataEvent(hipo, decoder.getSchemaFactory());
+                    processEvent(hipo2, writer);
+                }
                 if (maxEvents > 0 && eventsRead > maxEvents+skipEvents) break;
             } catch (EvioException ex) {
                 System.getLogger(EngineProcessor.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
