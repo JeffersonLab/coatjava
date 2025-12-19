@@ -521,7 +521,7 @@ public class TrackCandListFinder {
                 -cand.get_Q());
 
         //swimming to a ref point upstream of the first DC region
-        double[] VecAtTarIn = dcSwim.SwimToPlaneTiltSecSys(cand.get(0).get_Sector(), 180);
+        double[] VecAtTarIn = dcSwim.SwimToPlaneTiltSecSys(cand.get(0).get_Sector(), 229);
         if (VecAtTarIn == null) {
             cand.fit_Successful = false;
             return;
@@ -608,8 +608,8 @@ public class TrackCandListFinder {
         double uzInner = VecAtHtccSurf[5] / cand.get_P();
 
         //set the pseudocross at extrapolated position
-        cand.set_PreRegion1CrossPoint(new Point3D(xInner, yInner, zInner));
-        cand.set_PreRegion1CrossDir(new Point3D(uxInner, uyInner, uzInner));
+        cand.set_PreRegion1CrossPoint(new Point3D(xOr, yOr, zOr));
+        cand.set_PreRegion1CrossDir(new Point3D(pxOr / cand.get_P(), pyOr / cand.get_P(), pzOr / cand.get_P()));
     }
 
     private Integer getKey(Track trk) {
