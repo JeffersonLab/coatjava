@@ -24,7 +24,6 @@ import org.jlab.io.evio.EvioTreeBranch;
 import org.jlab.utils.data.DataUtils;
 
 import org.jlab.jnp.utils.json.JsonObject;
-import org.jlab.logging.SplitLogger;
 
 /**
  *
@@ -32,7 +31,7 @@ import org.jlab.logging.SplitLogger;
  */
 public class CodaEventDecoder {
 
-    static final Logger LOGGER = SplitLogger.create("CodaEventDecoder");
+    static final Logger LOGGER = Logger.getLogger("CodaEventDecoder");
 
     private int   runNumber = 0;
     private int eventNumber = 0;
