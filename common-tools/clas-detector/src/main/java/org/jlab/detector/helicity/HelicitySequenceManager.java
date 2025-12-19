@@ -12,7 +12,6 @@ import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.jnp.hipo4.io.HipoReader;
-import org.jlab.logging.SplitLogger;
 
 /**
  * Manage helicity sequences for multiple run numbers simultaneously.
@@ -22,7 +21,7 @@ import org.jlab.logging.SplitLogger;
  */
 public final class HelicitySequenceManager {
 
-    static final Logger LOGGER = SplitLogger.create(HelicitySequence.class.getName());
+    static final Logger LOGGER = Logger.getLogger(HelicitySequence.class.getName());
     SchemaFactory schema=null;
     private final int delay;
     private boolean flip=false;

@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.jlab.utils.benchmark;
 
 /**
@@ -13,16 +7,12 @@ package org.jlab.utils.benchmark;
 public class BenchmarkTimer {
     
     private String timerName = "generic";
-    
-    private long   lastStartTime = 0;
     private long   totalTime = 0;
     private long   timeAtResume = 0;
     private int    numberOfCalls = 0;
     private Boolean isPaused = true;
     
-    public BenchmarkTimer(){
-        
-    }
+    public BenchmarkTimer(){}
     
     public BenchmarkTimer(String name){
         timerName = name;
@@ -47,9 +37,13 @@ public class BenchmarkTimer {
             isPaused = true;
         }
     }
-    
+
+    public void add(BenchmarkTimer b) {
+        totalTime += b.totalTime;
+        numberOfCalls += b.numberOfCalls;
+    }
+
     public void reset(){
-        lastStartTime = 0;
         totalTime = 0;
         timeAtResume = 0;
         numberOfCalls = 0;

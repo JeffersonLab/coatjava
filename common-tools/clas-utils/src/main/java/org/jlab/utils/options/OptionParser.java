@@ -8,8 +8,10 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.logging.Logger;
 import java.util.logging.Level;
-import org.jlab.logging.DefaultLogger;
+import org.jlab.logging.SplitLogManager;
+import org.jlab.logging.SplitLogManagerConfig;
 
 /**
  *
@@ -25,8 +27,7 @@ public class OptionParser {
     private String                             program = "undefined";
     private boolean                  requiresInputList = true;
     private String                  programDescription = "";
-    private Level                             logLevel = Level.FINE; // default log level
-    private boolean                usingExternalLogger = false; // if true, do not use `DefaultLogger` here
+    private Level                             logLevel = Level.INFO; // default log level
     
     public OptionParser(){
         init();
@@ -191,8 +192,7 @@ public class OptionParser {
     private void setVerbosity(String level) {
         try {
             this.logLevel = Level.parse(level);
-            if (!usingExternalLogger)
-                DefaultLogger.initialize(this.logLevel); // do not do this if using SplitLogger externally, otherwise you get NO log printouts whatsoever
+            SplitLogManagerConfig.INSTANCE.setDefaultLevel(this.logLevel);
         }
         catch (IllegalArgumentException e) {
             System.err.println("Invalid -l java.util.logging.Level:  "+level);
@@ -222,8 +222,23 @@ public class OptionParser {
         return this.logLevel;
     }
 
-    public void useExternalLogger() {
-        this.usingExternalLogger = true; // FIXME: if we get rid of `DefaultLogger`, we can get rid of this kluge
+    /**
+     * Set the log level of a list of classes to your preferred level.
+     * Use this to override the user's choice of logging level for certain classes.
+     * @param level the log level
+     * @param classList string names of the classes
+     */
+    public static void overrideLogLevel(String level, String... classList) {
+        for(var className : classList)
+            System.setProperty(className + ".level", level);
+    }
+
+    /**
+     * Set the log level to be consistent with the level set by the user's {@code -l} option
+     * @param externalLogger an external {@code Logger} instance, typically one owned by the owner of this {@code OptionParser} instance
+     */
+    public void syncLogLevel(Logger externalLogger) {
+        SplitLogManager.configureLevel(externalLogger, this.logLevel);
     }
 
     public static void main(String[] args){

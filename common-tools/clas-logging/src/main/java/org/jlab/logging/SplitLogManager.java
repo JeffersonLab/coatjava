@@ -2,33 +2,38 @@ package org.jlab.logging;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.logging.LogManager;
 
 /**
- * Helper methods to create a {@code Logger} that sends errors to {@code stderr} and everything else to {@code stdout}
- * @see TestSplitLogger {@code TestSplitLogger}: for guidance on how to use this class
+ * {@code LogManager} that sends errors to {@code stderr} and everything else to {@code stdout}
  * @author dilks
  */
-public class SplitLogger {
+public class SplitLogManager extends LogManager {
 
   /**
-   * create a new {@link SplitLogger} instance, with formatted messages
-   * @return a new {@link SplitLogger} instance
+   * create a new {@link Logger} instance
    * @param name the name of the logger
+   * @return a new {@link Logger} instance
    */
-  public static Logger create(String name) {
-    return create(name, true);
+  @Override
+  public Logger getLogger(String name) {
+    Logger logger = super.getLogger(name);
+    if(logger != null)
+      configureHandlers(logger, true);
+    return logger;
   }
 
   /**
-   * create a new {@link SplitLogger} instance, with an optional message formatting including a prefix
-   * @return a new {@link SplitLogger} instance
+   * add a new {@link Logger} instance
    * @param name the name of the logger
-   * @param includePrefix whether or not to include a prefix in the formatting
+   * @return {@code true} if the argument logger was registered successfully, {@code false} if a logger of that name already exists
    */
-  public static Logger create(String name, boolean includePrefix) {
-    Logger logger = Logger.getLogger(name);
-    configureHandlers(logger, includePrefix);
-    return logger;
+  @Override
+  public synchronized boolean addLogger(Logger logger) {
+    boolean added = super.addLogger(logger);
+    if(added)
+      configureHandlers(logger, true);
+    return added;
   }
 
   /**
@@ -81,9 +86,25 @@ public class SplitLogger {
     logger.addHandler(errorHandler);
 
     // set the log level, since the handlers need to know it too
-    Level thisLevel = logger.getLevel();
-    if(thisLevel==null) { // caller did not set log level, use parent
-      thisLevel = logger.getParent().getLevel();
+    Level thisLevel = null;
+    // if a system property named '<ClassName>.level' is set, use that
+    String userLevelProperty = System.getProperty(logger.getName() + ".level");
+    if(userLevelProperty != null)
+      thisLevel = Level.parse(userLevelProperty);
+    // else if the `SplitLogManagerConfig` default level was set, use that level
+    else if(SplitLogManagerConfig.INSTANCE.defaultLevelWasSet())
+      thisLevel = SplitLogManagerConfig.INSTANCE.getDefaultLevel();
+    // else fallback to the level of `logger` itself
+    else
+      thisLevel = logger.getLevel();
+    // if all else fails, try to use the parent's level
+    if(thisLevel==null) {
+      try {
+        thisLevel = logger.getParent().getLevel();
+      }
+      catch(NullPointerException e) {
+        System.err.println("WARNING: 'getParent()' of logger '" + logger.getName() + "' failed");
+      }
       if(thisLevel==null) { // should never happen, but just in case, fall back to default and complain directly to `stderr`
         thisLevel = Level.INFO;
         System.err.println("WARNING: trouble setting level of logger '" + logger.getName() + "'; defaulting to level '" + thisLevel + "'");

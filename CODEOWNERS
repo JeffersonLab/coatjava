@@ -64,9 +64,11 @@ common-tools/coat-libs/ @raffaelladevita @baltzell @c-dilks
 common-tools/cnuphys/ @heddle
 
 # reconstruction
+reconstruction/ai/ @baltzell @tongtongcao
 reconstruction/alert/ @baltzell @mathieuouillon @mpaolone @efuchey @whit2333 @ftouchte @N-Plx
 reconstruction/band/ @hauenst
 reconstruction/bg/ @baltzell @raffaelladevita
+reconstruction/calib/ @raffaelladevita
 reconstruction/cnd/ @PChatagnon @ajhobart @silvianic
 reconstruction/cvt/ @zieglerv @raffaelladevita
 reconstruction/dc/ @zieglerv @tongtongcao @hauenst
@@ -80,17 +82,19 @@ reconstruction/mc/ @baltzell @rafopar
 reconstruction/mltn/ @gavalian
 reconstruction/postproc/ @baltzell
 reconstruction/raster/ @raffaelladevita @N-Plx
+reconstruction/recoil/ @silvianic
 reconstruction/rich/ @drewkenjo @mcontalb
 reconstruction/rtpc/ @mathieuouillon @Hattawy
 reconstruction/swaps/ @baltzell @raffaelladevita
 reconstruction/tof/ @zieglerv @raffaelladevita
+reconstruction/uber/ @baltzell @raffaelladevita
 reconstruction/urwell/ @raffaelladevita @tongtongcao
 reconstruction/vtx/ @zieglerv
-reconstruction/calib/ @raffaelladevita
 
 # etc
 etc/bankdefs/ @baltzell @raffaelladevita @c-dilks
 etc/data/ @baltzell
+etc/data/nnet/ @baltzell @tongtongcao @c-dilks
 etc/ejml/ @raffaelladevita @gavalian
 etc/logging/ @baltzell
 etc/nnet/ @gavalian

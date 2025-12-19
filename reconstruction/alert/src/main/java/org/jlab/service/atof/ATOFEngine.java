@@ -19,8 +19,7 @@ import org.jlab.rec.atof.cluster.ClusterFinder;
 import org.jlab.rec.atof.hit.ATOFHit;
 import org.jlab.rec.atof.hit.BarHit;
 import org.jlab.rec.atof.hit.HitFinder;
-import org.jlab.rec.constants.CalibrationConstantsLoader;
-//import org.jlab.rec.alert.projections.TrackProjector;
+import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
 
 /**
  * Service to return reconstructed ATOF hits and clusters
@@ -67,7 +66,7 @@ public class ATOFEngine extends ReconstructionEngine {
             //This assumes the FD reconstruction produced an event with good startTime
             //All start time handling could be moved as an EB-type step later
             if (!event.hasBank("REC::Event")) {
-                LOGGER.severe("REC::Event bank could not be read in ATOF engine while requestign starttime");
+                LOGGER.finer("REC::Event bank could not be read in ATOF engine while requesting starttime");
                 return true;
             }
             //Deal with FT TODO : if(event.getBank("REC::Event").getFloat("startTime", 0)==-1000)

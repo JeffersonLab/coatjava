@@ -1,5 +1,7 @@
 package org.jlab.detector.base;
 
+import java.util.HashMap;
+
 /**
  *
  * @author gavalian
@@ -37,6 +39,16 @@ public enum DetectorType {
     
     private final int detectorId;
     private final String detectorName;
+  
+    private static final HashMap<String,DetectorType> stringLookup = new HashMap<>();
+    private static final HashMap<Integer,DetectorType> intLookup = new HashMap<>();
+
+    static {
+        for (DetectorType t : values()) {
+            stringLookup.put(t.getName(), t);
+            intLookup.put(t.getDetectorId(), t);
+        }
+    }
     
     DetectorType(){
         detectorId = 0;
@@ -70,11 +82,7 @@ public enum DetectorType {
      * @return 
      */
     public static DetectorType getType(String name) {
-        name = name.trim();
-        for(DetectorType id: DetectorType.values())
-            if (id.getName().equalsIgnoreCase(name)) 
-                return id;
-        return UNDEFINED;
+        return stringLookup.getOrDefault(name.trim(), UNDEFINED);
     }
 
     /**
@@ -83,10 +91,6 @@ public enum DetectorType {
      * @return 
      */
     public static DetectorType getType(Integer detId) {
-
-        for(DetectorType id: DetectorType.values())
-            if (id.getDetectorId() == detId) 
-                return id;
-        return UNDEFINED;
+        return intLookup.getOrDefault(detId, UNDEFINED);
     }
 }

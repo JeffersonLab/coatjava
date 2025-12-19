@@ -1,17 +1,16 @@
 package org.jlab.rec.ahdc.AI;
 
-import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
 
 import java.util.ArrayList;
 
-public class PreclusterSuperlayer {
+public class InterCluster {
+    private int trackId = -1;
     private final double x;
     private final double y;
     private ArrayList<PreCluster> preclusters = new ArrayList<>();
 
-
- ;   public PreclusterSuperlayer(ArrayList<PreCluster> preclusters_) {
+    public InterCluster(ArrayList<PreCluster> preclusters_) {
         this.preclusters = preclusters_;
         double x_ = 0;
         double y_ = 0;
@@ -43,6 +42,13 @@ public class PreclusterSuperlayer {
         return this.preclusters.get(0).get_Super_layer();
     }
 
+    public int getTrackId() {
+        return trackId;
+    }
+
+    public void setTrackId(int trackId) {
+        this.trackId = trackId;
+    }
 
     public String toString() {
         return "PreCluster{" + "X: " + this.x + " Y: " + this.y + " phi: " + Math.atan2(this.y, this.x) + "}\n";

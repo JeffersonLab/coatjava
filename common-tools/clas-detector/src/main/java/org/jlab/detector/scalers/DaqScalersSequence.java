@@ -12,7 +12,6 @@ import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.detector.calib.utils.ConstantsManager;
-import org.jlab.logging.SplitLogger;
 
 /**
  * For easy access to most recent scaler readout for any given event.
@@ -31,7 +30,7 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
     private Bank runConfigBank=null;
     private Bank runScalerBank=null;
   
-    protected static final Logger logger = SplitLogger.create(DaqScalersSequence.class.getName());
+    protected static final Logger logger = Logger.getLogger(DaqScalersSequence.class.getName());
     
     protected DaqScalersSequence(){};
 

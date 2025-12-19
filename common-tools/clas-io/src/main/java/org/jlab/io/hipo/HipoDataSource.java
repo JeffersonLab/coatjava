@@ -13,7 +13,6 @@ import org.jlab.io.base.DataSourceType;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.jnp.hipo4.io.HipoReader;
-import org.jlab.logging.SplitLogger;
 
 /**
  *
@@ -21,7 +20,7 @@ import org.jlab.logging.SplitLogger;
  */
 public class HipoDataSource implements DataSource {
 
-    public static final Logger LOGGER = SplitLogger.create(HipoDataSource.class.getName());
+    public static final Logger LOGGER = Logger.getLogger(HipoDataSource.class.getName());
 
     HipoReader reader = null;
     int currentEventNumber = 0;

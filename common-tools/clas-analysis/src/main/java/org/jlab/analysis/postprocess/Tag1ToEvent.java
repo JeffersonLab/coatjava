@@ -13,7 +13,6 @@ import org.jlab.detector.scalers.DaqScalersSequence;
 import org.jlab.detector.helicity.HelicityBit;
 import org.jlab.detector.helicity.HelicitySequenceDelayed;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
-import org.jlab.logging.SplitLogger;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.options.OptionParser;
 
@@ -31,18 +30,17 @@ import org.jlab.utils.options.OptionParser;
 
 public class Tag1ToEvent {
 
-    static final Logger LOGGER = SplitLogger.create(Tag1ToEvent.class.getName());
+    static final Logger LOGGER = Logger.getLogger(Tag1ToEvent.class.getName());
 
     public static void main(String[] args) {
 
         OptionParser parser = new OptionParser("postprocess");
-        parser.useExternalLogger(); // necessary, since we have `LOGGER` here
         parser.addOption("-q","0","do beam charge and livetime (0/1=false/true)");
         parser.addOption("-d","0","do delayed helicity (0/1=false/true)");
         parser.addOption("-f","0","rebuild the HEL::flip banks (0/1=false/true)");
         parser.addRequired("-o","output.hipo");
         parser.parse(args);
-        SplitLogger.configureLevel(LOGGER, parser.getLogLevel());
+        parser.syncLogLevel(LOGGER);
         if (parser.getInputList().isEmpty()) {
             parser.printUsage();
             LOGGER.severe("No input file(s) specified.");

@@ -9,6 +9,7 @@ import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.jlab.utils.groups.IndexedTable;
+import java.util.logging.Logger;
 
 /**
  *
@@ -50,6 +51,8 @@ public class DaqScalers {
     public StruckScalers struck=null;
     private long timestamp=0;
     private int evnum=0;
+
+    private static final Logger logger = Logger.getLogger(DaqScalers.class.getName());
 
     public DaqScalers setTimestamp(long timestamp) {
         this.timestamp=timestamp;
@@ -95,11 +98,13 @@ public class DaqScalers {
     public static DaqScalers create(Bank runScalerBank) {
         DaqScalers ds=new DaqScalers();
         ds.dsc2=new Dsc2Scaler();
-        for (int ii=0; ii<runScalerBank.getRows(); ii++) {
-            ds.dsc2.setLivetime(runScalerBank.getFloat("livetime", ii));
-            ds.dsc2.setBeamCharge(runScalerBank.getFloat("fcup",ii));
-            ds.dsc2.setBeamChargeGated(runScalerBank.getFloat("fcupgated",ii));
-            break; 
+        if (runScalerBank.getRows() > 0) {
+            ds.dsc2.setLivetime(runScalerBank.getFloat("livetime", 0));
+            ds.dsc2.setBeamCharge(runScalerBank.getFloat("fcup",0));
+            ds.dsc2.setBeamChargeGated(runScalerBank.getFloat("fcupgated",0));
+        }
+        if (runScalerBank.getRows() > 1) {
+            logger.warning("found event where RUN::scaler bank has more than 1 row");
         }
         return ds;
     }

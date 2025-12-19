@@ -12,7 +12,6 @@ import org.jlab.analysis.physics.TestEvent;
 import org.jlab.analysis.math.ClasMath;
 import org.jlab.clas.swimtools.MagFieldsEngine;
 import org.jlab.detector.base.DetectorType;
-import org.jlab.logging.DefaultLogger;
 import org.jlab.utils.CLASResources;
 
 /**
@@ -24,7 +23,6 @@ public class CVTReconstructionTest {
     @Test
     public void testCVTReconstruction() {
         
-        DefaultLogger.debug();
 
         System.setProperty("CLAS12DIR", "../../");
        

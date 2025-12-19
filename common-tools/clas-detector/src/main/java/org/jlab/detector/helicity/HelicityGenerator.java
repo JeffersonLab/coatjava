@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.jlab.logging.SplitLogger;
 
 /**
  * Helicity Pseudo-Random Sequence.
@@ -30,7 +29,7 @@ import org.jlab.logging.SplitLogger;
  */
 public final class HelicityGenerator implements Comparable<HelicityGenerator>, Comparator<HelicityGenerator> {
 
-    static final Logger LOGGER = SplitLogger.create(HelicityGenerator.class.getName());
+    static final Logger LOGGER = Logger.getLogger(HelicityGenerator.class.getName());
     public static final int REGISTER_SIZE=30;
     private final List<Integer> states=new ArrayList<>();
     private int offset=0;
