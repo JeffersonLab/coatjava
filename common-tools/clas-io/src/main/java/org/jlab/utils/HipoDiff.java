@@ -134,5 +134,9 @@ public class HipoDiff {
         for (String name : badEntries.keySet()) {
             System.out.println(name + " " + badEntries.get(name));
         }
+
+        if (nbadevent + nbadrow + nbadentry > 0) {
+            System.exit(7);
+        }
     }
 }
