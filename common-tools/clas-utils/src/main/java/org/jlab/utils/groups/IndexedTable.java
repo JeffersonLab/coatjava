@@ -201,7 +201,11 @@ public class IndexedTable extends DefaultTableModel {
     public IndexedList getList(){
         return this.entries;
     }
-    
+
+    public Map<String,Integer> getEntryMap(){
+        return this.entryMap;
+    }
+
     private void parseFormat(String format){
         String[] tokens = format.split(":");
         entryMap.clear();
