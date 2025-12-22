@@ -2,7 +2,6 @@ package org.jlab.clas.swimtools;
 import cnuphys.magfield.MagneticFields;
 
 import java.util.HashMap;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
