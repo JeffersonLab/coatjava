@@ -179,6 +179,7 @@ public class OptionParser {
             }
         }
         if (this.requiresInputList && this.parsedInputList.isEmpty()) {
+            printUsage();
             System.err.println(" \n*** ERROR *** Empty Input List.");
             System.exit(101);
         }
