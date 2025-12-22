@@ -1,0 +1,13 @@
+#!/bin/bash
+
+. `dirname $0`/../libexec/env.sh
+
+split_cli $@
+
+export MALLOC_ARENA_MAX=1
+
+java -Xmx2304m -Xms1280m -XX:+UseSerialGC ${jvm_options[@]} \
+    -cp ${COATJAVA_CLASSPATH:-''} \
+    org.jlab.detector.decode.CLASDecoder4U \
+    ${class_options[@]}
+
