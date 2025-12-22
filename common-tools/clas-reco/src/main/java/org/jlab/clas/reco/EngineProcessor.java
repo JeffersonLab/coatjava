@@ -17,7 +17,6 @@ import org.jlab.clara.engine.EngineDataType;
 import java.util.Arrays;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.json.JSONObject;
-import org.jlab.logging.SplitLogger;
 import org.jlab.utils.ClaraYaml;
 
 /**
@@ -30,7 +29,7 @@ public class EngineProcessor {
     public static final String ENGINE_CLASS_PP = "org.jlab.service.postproc.PostprocEngine";
     
     private final Map<String,ReconstructionEngine>  processorEngines = new LinkedHashMap<>();
-    private static final Logger LOGGER = SplitLogger.create(EngineProcessor.class.getPackage().getName());
+    private static final Logger LOGGER = Logger.getLogger(EngineProcessor.class.getPackage().getName());
     private boolean updateDictionary = true;
     private SchemaFactory banksToKeep = null;
     private final List<String> schemaExempt = Arrays.asList("RUN::config","DC::tdc");

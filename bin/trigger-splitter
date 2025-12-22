@@ -4,7 +4,7 @@
 
 export MALLOC_ARENA_MAX=1
 
-java -Xmx1536m -Xms1024m -XX:+UseSerialGC \
+java ${JAVA_OPTS-} -Xmx1536m -Xms1024m -XX:+UseSerialGC \
     -cp ${COATJAVA_CLASSPATH:-''} \
     org.jlab.analysis.eventmerger.RandomTriggerSplit \
     $*

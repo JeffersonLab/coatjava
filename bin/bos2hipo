@@ -2,7 +2,7 @@
 
 . `dirname $0`/../libexec/env.sh
 
-java -Xms1024m -XX:+UseSerialGC \
+java ${JAVA_OPTS-} -Xms1024m -XX:+UseSerialGC \
     -cp ${COATJAVA_CLASSPATH:-''} \
     org.jlab.io.utils.Bos2HipoEventBank \
     $*
