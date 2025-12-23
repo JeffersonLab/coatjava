@@ -249,7 +249,6 @@ public class Swim extends SwimPars implements ISwim {
      * @param Rad
      * @return state  x,y,z,px,py,pz, pathlength, iBdl at the surface 
      */
-    @Override
     public double[] SwimToCylinder(double Rad) {
         
         if (this.SwimUnPhys) return null;
@@ -289,7 +288,8 @@ public class Swim extends SwimPars implements ISwim {
         try {
             AdaptiveSwimResult result = new AdaptiveSwimResult(false);
             
-            PC.CF.swimRho(_charge, _x0, _y0, _z0, _pTot, _theta, _phi, radius/100, accuracy/100, _rMax, stepSize, cnuphys.swim.Swimmer.CLAS_Tolerance, result);
+            PC.CF.swimRho(_charge, _x0, _y0, _z0, _pTot, _theta, _phi, 
+                radius/100, accuracy/100, _rMax, stepSize, cnuphys.swim.Swimmer.CLAS_Tolerance, result);
 
             if(result.getStatus()==0) {
                 value = new double[8];   
