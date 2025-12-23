@@ -23,6 +23,14 @@ public class SwimPars {
     
     ProbeCollection PC;
     
+    public SwimPars() {
+        PC = Swimmer.getProbeCollection(Thread.currentThread());
+        if (PC == null) {
+            PC = new ProbeCollection();
+            Swimmer.put(Thread.currentThread(), PC);
+        }
+    }
+
     /**
      * Set max swimming path length
      *
