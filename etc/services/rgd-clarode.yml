@@ -19,8 +19,8 @@ configuration:
       outputBankPrefix: "HB"
 io-services:
   reader:
-    class: org.jlab.io.clara.DecoderReader
-    name: DecoderReader
+    class: org.jlab.io.clara.Clas12Reader
+    name: Clas12Reader
   writer:
     class: org.jlab.io.clara.DecoderWriter
     name: DecoderWriter
