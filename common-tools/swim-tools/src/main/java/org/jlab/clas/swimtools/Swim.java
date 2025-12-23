@@ -276,15 +276,6 @@ public class Swim extends SwimPars implements ISwim {
 
     /**
      * 
-     * @param radius in cm
-     * @return state  x,y,z,px,py,pz, pathlength, iBdl at the surface 
-     */
-    public double[] SwimRho(double radius)  {
-        return SwimRho(radius, accuracy*100);
-    }
-    
-    /**
-     * 
      * @param radius   in cm
      * @param accuracy in cm 
      * @return state  x,y,z,px,py,pz, pathlength, iBdl at the surface 
