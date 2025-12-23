@@ -118,7 +118,7 @@ then
         # install clara
         if ! [ -d clara_installation ]
         then
-            ../../install-clara clara_installation
+            ../../bin/install-clara clara_installation
         fi
     fi
 
