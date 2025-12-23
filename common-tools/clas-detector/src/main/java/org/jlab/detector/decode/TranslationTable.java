@@ -29,18 +29,19 @@ public class TranslationTable extends IndexedTable {
                 System.err.print("TranslationTable:  found CCDB overlap for ");
                 System.err.println(String.format("%d/%d/%d %s",crate,slot,channel,dt));
             }
+            else {
+                // add row to the new table:
+                addEntry(crate, slot, channel);
 
-            // add row to the new table:
-            addEntry(crate, slot, channel);
+                // add each column's entry to the new row:
+                for (int column=0; column<it.getEntryMap().values().size(); column++) {
+                    int value = it.getIntValueByHash(column, hash);
+                    setIntValueByHash(value, column, hash);
+                }
 
-            // add each column's entry to the new row:
-            for (int column=0; column<it.getEntryMap().values().size(); column++) {
-                int value = it.getIntValueByHash(column, hash);
-                setIntValueByHash(value, column, hash);
+                // add the new detector type, as the last column:
+                setIntValueByHash(dt.getDetectorId(), it.getEntryMap().values().size(), hash);
             }
-
-            // add the new detector type, as the last column:
-            setIntValueByHash(dt.getDetectorId(), it.getEntryMap().values().size(), hash);
         }
     }
 
