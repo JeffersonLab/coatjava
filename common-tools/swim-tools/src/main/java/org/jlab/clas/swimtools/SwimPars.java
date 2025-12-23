@@ -46,9 +46,9 @@ public class SwimPars {
      * @param x0 (cm)
      * @param y0 (cm)
      * @param z0 (cm)
-     * @param thx (units?)
-     * @param thy (units?)
-     * @param p (units?)
+     * @param thx 
+     * @param thy 
+     * @param p (GeV)
      * @param charge
      */
     public void SetSwimParameters(int direction, double x0, double y0, double z0,
@@ -79,7 +79,7 @@ public class SwimPars {
      * @param z0 (cm)
      * @param thx
      * @param thy
-     * @param p
+     * @param p (GeV)
      * @param charge
      */
     public void SetSwimParameters(int superlayerIdx, int layerIdx,
@@ -104,9 +104,9 @@ public class SwimPars {
      * @param x0 (cm)
      * @param y0 (cm)
      * @param z0 (cm)
-     * @param px
-     * @param py
-     * @param pz
+     * @param px (GeV)
+     * @param py (GeV)
+     * @param pz (GeV)
      * @param charge
      */
     public void SetSwimParameters(double x0, double y0, double z0,
@@ -128,7 +128,7 @@ public class SwimPars {
      * @param zcm
      * @param phiDeg
      * @param thetaDeg
-     * @param p
+     * @param p (GeV)
      * @param charge
      * @param maxPathLength
      */
@@ -153,7 +153,7 @@ public class SwimPars {
      * @param zcm
      * @param phiDeg
      * @param thetaDeg
-     * @param p
+     * @param p (GeV)
      * @param charge
      * @param maxPathLength
      * @param Accuracy
