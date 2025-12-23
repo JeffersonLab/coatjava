@@ -314,17 +314,6 @@ public class Swim extends SwimPars implements ISwim {
      * @param axisPoint1 in cm
      * @param axisPoint2 in cm 
      * @param radius in cm 
-     * @return swam trajectory to the cylinder
-     */
-    public double[] SwimGenCylinder(Point3D axisPoint1, Point3D axisPoint2, double radius)  {
-        return SwimGenCylinder(axisPoint1, axisPoint2, radius, accuracy*100);
-    }
-    
-    /**
-     * 
-     * @param axisPoint1 in cm
-     * @param axisPoint2 in cm 
-     * @param radius in cm 
      * @param accuracy in cm
      * @return swam trajectory to the cylinder
      */
