@@ -69,10 +69,6 @@ public class AdaptiveSwim extends SwimPars implements ISwim {
         return value;
     }
 
-    public static Point dog(Point3D p) {
-        return new Point(p.x(), p.y(), p.z());
-    }
-    
     @Override
     public double[] SwimGenCylinder(Point3D axisPoint1, Point3D axisPoint2, double radius, double accuracy) {
 
