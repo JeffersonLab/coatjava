@@ -1,24 +1,30 @@
 package org.jlab.clas.swimtools;
 
-import cnuphys.adaptiveSwim.AdaptiveSwimException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.math3.util.FastMath;
+
+import org.jlab.geom.prim.Vector3D;
+import org.jlab.geom.prim.Point3D;
+import org.jlab.geom.prim.Line3D;
+
 import cnuphys.rk4.IStopper;
 import cnuphys.rk4.RungeKuttaException;
+
 import cnuphys.swim.SwimTrajectory;
 import cnuphys.swim.util.Plane;
+
 import cnuphys.swimZ.SwimZException;
 import cnuphys.swimZ.SwimZResult;
 import cnuphys.swimZ.SwimZStateVector;
-import org.apache.commons.math3.util.FastMath;
-import org.jlab.geom.prim.Vector3D;
-import org.jlab.geom.prim.Point3D;
+
+import cnuphys.adaptiveSwim.AdaptiveSwimException;
 import cnuphys.adaptiveSwim.AdaptiveSwimResult;
 import cnuphys.adaptiveSwim.AdaptiveSwimmer;
 import cnuphys.adaptiveSwim.geometry.Line;
 import cnuphys.adaptiveSwim.geometry.Point;
 import cnuphys.adaptiveSwim.geometry.Vector;
-import java.util.ArrayList;
-import java.util.List;
-import org.jlab.geom.prim.Line3D;
 
 /**
  *
