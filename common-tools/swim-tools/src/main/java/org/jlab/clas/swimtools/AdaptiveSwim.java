@@ -20,7 +20,9 @@ import cnuphys.swim.SwimTrajectory;
 public class AdaptiveSwim extends ASwim {
 
     private static double[] convert(AdaptiveSwimResult result, double p) {
+
         double[] value = null;
+
         if (result.getStatus() == AdaptiveSwimmer.SWIM_SUCCESS) {
             value = new double[8];
             value[0] = result.getUf()[0] * 100; // convert back to cm
@@ -32,6 +34,7 @@ public class AdaptiveSwim extends ASwim {
             value[6] = result.getFinalS() * 100;
             value[7] = 0; // Conversion from kG.m to T.cm
         }
+
         return value;
     }
 
@@ -43,13 +46,11 @@ public class AdaptiveSwim extends ASwim {
 
         try {
             AdaptiveSwimResult result = new AdaptiveSwimResult(false);
-            
             PC.AS.swimRho(_charge, _x0, _y0, _z0, _pTot, _theta, _phi, radius, 
                           accuracy/100, _rMax, stepSize, cnuphys.swim.Swimmer.getEps(), result);
-
             return convert(result, _pTot);
-
-        } catch (AdaptiveSwimException e) {
+        }
+        catch (AdaptiveSwimException e) {
             e.printStackTrace();
         }
         return null;
@@ -62,19 +63,15 @@ public class AdaptiveSwim extends ASwim {
         radius = radius/100;
         Point a1 = new Point(axisPoint1.x()/100, axisPoint1.y()/100, axisPoint1.z()/100);
         Point a2 = new Point(axisPoint2.x()/100, axisPoint2.y()/100, axisPoint2.z()/100);
-        Line centerLine = new Line(a1, a2);
-
-        Cylinder targetCylinder = new Cylinder(centerLine, radius);
+        Cylinder targetCylinder = new Cylinder(new Line(a1,a2), radius);
 
         try {
             AdaptiveSwimResult result = new AdaptiveSwimResult(false);
-            
             PC.AS.swimCylinder(_charge, _x0, _y0, _z0, _pTot, _theta, _phi, targetCylinder,
                             accuracy/100, _rMax, stepSize, cnuphys.swim.Swimmer.getEps(), result);
-
             return convert(result, _pTot);
-                    
-        } catch (AdaptiveSwimException e) {
+        }
+        catch (AdaptiveSwimException e) {
             e.printStackTrace();
         }        
         return null;
@@ -86,18 +83,15 @@ public class AdaptiveSwim extends ASwim {
         // convert to meters:
         Vector norm = new Vector(n.asUnit().x(), n.asUnit().y(), n.asUnit().z());
         Point point = new Point(p.x()/100, p.y()/100, p.z()/100);
- 
         Plane targetPlane = new Plane(norm, point);
 
         try {
             AdaptiveSwimResult result = new AdaptiveSwimResult(false);
-            
             PC.AS.swimPlane(_charge, _x0, _y0, _z0, _pTot, _theta, _phi, targetPlane,
                             accuracy/100, _rMax, stepSize, cnuphys.swim.Swimmer.getEps(), result);
-
             return convert(result, _pTot);
-            
-        } catch (AdaptiveSwimException e) {
+        }
+        catch (AdaptiveSwimException e) {
             e.printStackTrace();
         }        
         return null;
@@ -111,13 +105,11 @@ public class AdaptiveSwim extends ASwim {
 
         try {
             AdaptiveSwimResult result = new AdaptiveSwimResult(false);
-            
             PC.AS.swimSphere(_charge, _x0, _y0, _z0, _pTot, _theta, _phi, targetSphere,
                             accuracy/100, _rMax, stepSize, cnuphys.swim.Swimmer.getEps(), result);
-
             return convert(result, _pTot);
-            
-        } catch (AdaptiveSwimException e) {
+        }
+        catch (AdaptiveSwimException e) {
             e.printStackTrace();
         }        
         return null;
@@ -130,16 +122,14 @@ public class AdaptiveSwim extends ASwim {
         Point a1 = new Point(l.origin().x()/100, l.origin().y()/100, l.origin().z()/100);
         Point a2 = new Point(l.end().x()/100, l.end().y()/100, l.end().z()/100);
         Line targetLine = new Line(a1, a2);
- 
+
         try {
             AdaptiveSwimResult result = new AdaptiveSwimResult(false);
-            
             PC.AS.swimLine(_charge, _x0, _y0, _z0, _pTot, _theta, _phi, targetLine,
                             accuracy/100, _rMax, stepSize, cnuphys.swim.Swimmer.getEps(), result);
-
             return convert(result, _pTot);
-                    
-        } catch (AdaptiveSwimException e) {
+        }
+        catch (AdaptiveSwimException e) {
             e.printStackTrace();
         }        
         return null;
