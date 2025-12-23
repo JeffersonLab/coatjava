@@ -34,10 +34,6 @@ import org.jlab.clas.swimtools.Stoppers.ZSwimStopper;
  */
 public class Swim extends SwimPars implements ISwim {
 
-    public Swim() {
-        super();
-    }
-
     /**
      * 
      * @param sector
