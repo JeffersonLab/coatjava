@@ -27,7 +27,7 @@ import org.jlab.clas.swimtools.Stoppers.ZSwimStopper;
  *
  * @author ziegler
  */
-public class Swim extends SwimPars implements ISwim {
+public class Swim extends ASwim {
 
     private SwimTrajectory swimTraj; 
     

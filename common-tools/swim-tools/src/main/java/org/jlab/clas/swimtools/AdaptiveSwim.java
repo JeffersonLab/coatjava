@@ -14,27 +14,7 @@ import cnuphys.adaptiveSwim.AdaptiveSwimmer;
 
 import cnuphys.swim.SwimTrajectory;
 
-public class AdaptiveSwim extends SwimPars implements ISwim {
-
-    @Override
-    public double[] SwimToPlaneTiltSecSys(int sector, double z_cm) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public double[] SwimToPlaneTiltSecSysBdlXZPlane(int sector, double z_cm) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public double[] SwimToPlaneLab(double z_cm) {
-        return SwimPlane(new Vector3D(0,0,1), new Point3D(0,0,z_cm), accuracy);
-    }
-
-    @Override
-    public double[] SwimToCylinder(double radius) {
-        return SwimGenCylinder(new Point3D(0,0,-1), new Point3D(0,0,1), radius, accuracy);
-    }
+public class AdaptiveSwim extends ASwim {
 
     @Override
     public double[] SwimRho(double radius, double accuracy) {
@@ -164,11 +144,6 @@ public class AdaptiveSwim extends SwimPars implements ISwim {
     @Override
     public double[] SwimToLine(Line3D l) {
         throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public double[] SwimToZ(double Z, int dir) {
-        return SwimPlane(new Vector3D(0,0,dir*1), new Point3D(0,0,Z), accuracy);
     }
 
     @Override
