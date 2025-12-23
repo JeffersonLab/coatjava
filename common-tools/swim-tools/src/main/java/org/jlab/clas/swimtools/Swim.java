@@ -83,7 +83,7 @@ public class Swim {
      * @param charge
      */
     public void SetSwimParameters(int direction, double x0, double y0, double z0,
-        double thx, double thy, double p, int charge) {
+                                  double thx, double thy, double p, int charge) {
         _x0 = x0 / 100; // convert to meters
         _y0 = y0 / 100;
         _z0 = z0 / 100;
@@ -114,7 +114,8 @@ public class Swim {
      * @param charge
      */
     public void SetSwimParameters(int superlayerIdx, int layerIdx,
-        double x0, double y0, double z0, double thx, double thy, double p, int charge) {
+                                  double x0, double y0, double z0,
+                                  double thx, double thy, double p, int charge) {
         _x0 = x0 / 100; // convert to meters
         _y0 = y0 / 100;
         _z0 = z0 / 100;
@@ -139,7 +140,8 @@ public class Swim {
      * @param pz
      * @param charge
      */
-    public void SetSwimParameters(double x0, double y0, double z0, double px, double py, double pz, int charge) {
+    public void SetSwimParameters(double x0, double y0, double z0,
+                                  double px, double py, double pz, int charge) {
         _x0 = x0 / 100; // convert to meters
         _y0 = y0 / 100;
         _z0 = z0 / 100;
@@ -161,8 +163,9 @@ public class Swim {
      * @param charge
      * @param maxPathLength
      */
-    public void SetSwimParameters(double xcm, double ycm, double zcm, double phiDeg, double thetaDeg, double p,
-                    int charge, double maxPathLength) {
+    public void SetSwimParameters(double xcm, double ycm, double zcm,
+                                  double phiDeg, double thetaDeg,
+                                  double p, int charge, double maxPathLength) {
         _maxPathLength = maxPathLength;
         _charge = charge;
         _phi = phiDeg;
@@ -187,8 +190,10 @@ public class Swim {
      * @param Accuracy
      * @param StepSize
      */
-    public void SetSwimParameters(double xcm, double ycm, double zcm, double phiDeg, double thetaDeg, double p,
-                    int charge, double maxPathLength, double Accuracy, double StepSize) {
+    public void SetSwimParameters(double xcm, double ycm, double zcm,
+                                  double phiDeg, double thetaDeg,
+                                  double p, int charge,
+                                  double maxPathLength, double Accuracy, double StepSize) {
         _maxPathLength = maxPathLength;
          accuracy = Accuracy/100;
          stepSize = StepSize/100;
@@ -1145,7 +1150,7 @@ public class Swim {
         this.swimTraj = swimTraj;
     }
     
-    private  class DCASwimStopper implements IStopper {
+    private class DCASwimStopper implements IStopper {
 
         public DCASwimStopper(SwimTrajectory swimTraj) { 
             _swimTraj = swimTraj;
