@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
@@ -22,9 +23,10 @@ public class IndexedTable extends DefaultTableModel {
     
     public static final IndexGenerator DEFAULT_GENERATOR = new IndexGenerator();
         
+    protected Map<String,Integer>       entryMap   = new LinkedHashMap<>();
+    protected Map<String,String>        entryTypes = new LinkedHashMap<>();
+    
     private IndexedList<IndexedEntry> entries    = null;
-    private Map<String,Integer>       entryMap   = new LinkedHashMap<>();
-    private Map<String,String>        entryTypes = new LinkedHashMap<>();
     private List<String>              entryNames = new ArrayList<>();
     private List<String>              indexNames = new ArrayList<>();
     private String                    precisionFormat = "%.6f";
@@ -119,7 +121,7 @@ public class IndexedTable extends DefaultTableModel {
             }
         }
     }
-    
+
     public  void setDoubleValue(Double value, String item, int... index){
         if(this.entries.hasItem(index)==false){
             if(DEBUG_MODE>0) System.out.println( "[IndexedTable] ---> error.. entry does not exist");
@@ -133,38 +135,6 @@ public class IndexedTable extends DefaultTableModel {
         }
     }
     
-    public int getIntValueByHash(int index, long hash) {
-        if (this.entries.hasItemByHash(hash))
-            return this.entries.getItemByHash(hash).getValue(index).intValue();
-        return 0;
-    }
-    
-    public double getDoubleValueByHash(int index, long hash) {
-        if (this.entries.hasItemByHash(hash))
-            return this.entries.getItemByHash(hash).getValue(index).doubleValue();
-        return 0;
-    }
-
-    public int getIntValueByHash(String item, long hash) {
-        if (this.entries.hasItemByHash(hash)) {
-            if (this.entryMap.containsKey(item)) {
-                int index = this.entryMap.get(item);
-                return this.entries.getItemByHash(hash).getValue(index).intValue();
-            }
-        }
-        return 0;
-    }
-    
-    public double getDoubleValueByHash(String item, long hash) {
-        if (this.entries.hasItemByHash(hash)) {
-            if (this.entryMap.containsKey(item)) {
-                int index = this.entryMap.get(item);
-                return this.entries.getItemByHash(hash).getValue(index).doubleValue();
-            }
-        }
-        return 0;
-    }
-
     public int  getIntValue(String item, int... index){
         if(this.entries.hasItem(index)==false){
             if(DEBUG_MODE>0) System.out.println( "[IndexedTable] ---> error.. entry does not exist");
@@ -193,6 +163,38 @@ public class IndexedTable extends DefaultTableModel {
         return 0;
     }
 
+    public void setIntValueByHash(Integer value, int column, long hash) {
+        this.entries.getItemByHash(hash).setValue(column, value);
+    }
+
+    public int getIntValueByHash(int index, long hash) {
+        return entries.getItemByHash(hash).getValue(index).intValue();
+    }
+    
+    public double getDoubleValueByHash(int index, long hash) {
+        return entries.getItemByHash(hash).getValue(index).doubleValue();
+    }
+
+    public int getIntValueByHash(String item, long hash) {
+        return entries.getItemByHash(hash).getValue(entryMap.get(item)).intValue();
+    }
+    
+    public double getDoubleValueByHash(String item, long hash) {
+        return entries.getItemByHash(hash).getValue(entryMap.get(item)).doubleValue();
+    }
+
+    public List<Number> getValuesByHash(long hash) {
+        return this.entries.getItemByHash(hash).entryValues;
+    }
+
+    public List<Integer> getIntegersByHash(long hash) {
+        return getValuesByHash(hash).stream().map(x -> x.intValue()).collect(Collectors.toList());
+    }
+
+    public List<Double> getDoublesByHash(long hash) {
+        return getValuesByHash(hash).stream().map(x -> x.doubleValue()).collect(Collectors.toList());
+    }
+
     public NamedEntry getNamedEntry(int... index) {
         return NamedEntry.create(entries.getItem(index), entryNames, index);
     }
@@ -200,7 +202,11 @@ public class IndexedTable extends DefaultTableModel {
     public IndexedList getList(){
         return this.entries;
     }
-    
+
+    public Map<String,Integer> getEntryMap(){
+        return this.entryMap;
+    }
+
     private void parseFormat(String format){
         String[] tokens = format.split(":");
         entryMap.clear();
