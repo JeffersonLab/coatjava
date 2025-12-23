@@ -5,6 +5,11 @@ import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
 
+/**
+ * Warning, lots of these should probably be removed!
+ * 
+ * @author baltzell
+ */
 interface ISwim {
 
     public double[] SwimToPlaneTiltSecSys(int sector, double z_cm);
