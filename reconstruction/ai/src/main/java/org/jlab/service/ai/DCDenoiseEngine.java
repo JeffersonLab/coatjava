@@ -38,8 +38,8 @@ public class DCDenoiseEngine extends ReconstructionEngine {
     final static int WIRES = 112;
     final static int SECTORS= 6;
 
-    String modelFile = "cnn_autoenc_sector1_2b_48f_4x6k.pt";
-    float threshold = 0.03f;
+    String modelFile = "cnn_autoenc_allSectors_2b_48f_4x6k.pt";
+    float threshold = 0.025f;
     Criteria<float[][][], float[][][]> criteria;
     ZooModel<float[][][], float[][][]> model;
     PredictorPool predictors;
