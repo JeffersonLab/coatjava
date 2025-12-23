@@ -4,7 +4,6 @@ import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.utils.groups.IndexedTable;
 
-
 /**
  *
  * @author baltzell
@@ -27,7 +26,10 @@ public class TranslationTable extends IndexedTable {
 
             if (hasEntryByHash(hash)) {
                 System.err.print("TranslationTable:  found CCDB overlap for ");
-                System.err.println(String.format("%d/%d/%d %s",crate,slot,channel,dt));
+                System.err.println(String.format("type %d/%s versus %s and c/s/c=%d/%d/%d",
+                    getIntValueByHash("type",hash),
+                    DetectorType.getType(getIntValueByHash("type",hash)),
+                    dt,crate,slot,channel));
             }
             else {
                 // add row to the new table:
