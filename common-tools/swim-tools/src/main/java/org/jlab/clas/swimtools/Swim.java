@@ -616,7 +616,6 @@ public class Swim {
         return value;
     }
     
-    
     private class SphericalBoundarySwimStopper implements IStopper {
 
         private double _finalPathLength = Double.NaN;
@@ -703,11 +702,9 @@ public class Swim {
          * @param maxR the max radial coordinate in meters.
          */
         private PlaneBoundarySwimStopper(double d, Vector3D n, int dir) {
-                // DC reconstruction units are cm. Swim units are m. Hence scale by
-                // 100
-                _d = d;
-                _n = n;
-                _dir = dir;
+            _d = d;
+            _n = n;
+            _dir = dir;
         }
 
         @Override
@@ -773,7 +770,6 @@ public class Swim {
         }
         return value;
     }
-   
 
     private class BeamLineSwimStopper implements IStopper {
 
@@ -848,7 +844,6 @@ public class Swim {
         return value;
     }
    
-
     private class LineSwimStopper implements IStopper {
 
         private double _finalPathLength = Double.NaN;
@@ -948,12 +943,10 @@ public class Swim {
      * @param result B field components in T in the lab frame
      */
     public void BfieldLab(double x_cm, double y_cm, double z_cm, float[] result) {
-
         PC.CP.field((float) x_cm, (float) y_cm, (float) z_cm, result);
         result[0] = result[0] / 10;
         result[1] = result[1] / 10;
         result[2] = result[2] / 10;
-
     }
 
     public double[] AdaptiveSwimPlane(double px, double py, double pz, double nx, double ny, double nz, double accuracy)  {
@@ -1153,7 +1146,6 @@ public class Swim {
             for(int i = 0; i < _swimTraj.size()-1; i++) { 
                 polylines.add(new Line3D(_swimTraj.get(i)[0],_swimTraj.get(i)[1],_swimTraj.get(i)[2],
                         _swimTraj.get(i+1)[0],_swimTraj.get(i+1)[1],_swimTraj.get(i+1)[2]));
-                
             }
         }
 
@@ -1204,7 +1196,7 @@ public class Swim {
 
     public double[] SwimToDCA(SwimTrajectory trk2) { //use for both traj to get doca for each track
         
-         double[] value = new double[6];
+        double[] value = new double[6];
         
         DCASwimStopper stopper = new DCASwimStopper(trk2);
         
