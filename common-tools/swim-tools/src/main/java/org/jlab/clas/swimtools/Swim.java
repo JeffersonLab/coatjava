@@ -28,20 +28,14 @@ import org.jlab.clas.swimtools.Stoppers.SphericalBoundarySwimStopper;
 import org.jlab.clas.swimtools.Stoppers.ZSwimStopper;
 
 /**
+ * Class for swimming to various surfaces.  The input and output units are cm and GeV/c
  *
  * @author ziegler
  */
 public class Swim extends SwimPars implements ISwim {
 
-    /**
-     * Class for swimming to various surfaces.  The input and output units are cm and GeV/c
-     */
     public Swim() {
-        PC = Swimmer.getProbeCollection(Thread.currentThread());
-        if (PC == null) {
-            PC = new ProbeCollection();
-            Swimmer.put(Thread.currentThread(), PC);
-        }
+        super();
     }
 
     /**
