@@ -63,21 +63,6 @@ public class Swim2 extends SwimPars implements ISwim {
     }
 
     @Override
-    public double[] AdaptiveSwimPlane(double px, double py, double pz, double nx, double ny, double nz, double accuracy) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public double[] AdaptiveSwimCylinder(double a1x, double a1y, double a1z, double a2x, double a2y, double a2z, double radius, double accuracy) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public double[] AdaptiveSwimRho(double radius, double accuracy) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
     public double[] SwimToZ(double Z, int dir) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
@@ -86,5 +71,5 @@ public class Swim2 extends SwimPars implements ISwim {
     public double[] SwimToDCA(SwimTrajectory trk2) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-    
+
 }
