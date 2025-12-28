@@ -42,7 +42,7 @@ public class DCClsComboEngine extends ReconstructionEngine {
     final static String CONF_MODEL_FILE_6CLS = "modelFile6Cls";
     final static String CONF_THRESHOLD_6CLS = "threshold6Cls";  
     String modelFile6Cls = "mlp_64h_4l_6cls.pt";
-    float threshold6Cls = 0.78f;
+    float threshold6Cls = 0.95f;
     Criteria<float[][], float[]> criteria6Cls;
     ZooModel<float[][], float[]> model6Cls;
     PredictorPool predictors6Cls;
