@@ -189,7 +189,6 @@ public class FitEditorPanel extends JPanel {
 			switch (curve.getFit().getFitType()) {
 
 			case POLYNOMIAL:
-			case ALTPOLYNOMIAL:
 				remove(_gaussianCountSelector);
 				carefulAdd(_polynomialOrderSelector);
 				break;
@@ -262,7 +261,6 @@ public class FitEditorPanel extends JPanel {
 	public void fitSpecific(FitType type) {
 		switch (type) {
 		case POLYNOMIAL:
-		case ALTPOLYNOMIAL:
 			_polynomialOrderSelector.setEnabled(true);
 			_gaussianCountSelector.setEnabled(false);
 			break;

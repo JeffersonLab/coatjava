@@ -11,7 +11,6 @@ import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
-import cnuphys.splot.fit.AltPolynomialFit;
 import cnuphys.splot.fit.CubicSpline;
 import cnuphys.splot.fit.ErfFit;
 import cnuphys.splot.fit.ErfcFit;
@@ -21,7 +20,6 @@ import cnuphys.splot.fit.FitUtilities;
 import cnuphys.splot.fit.GaussianFit;
 import cnuphys.splot.fit.IValueGetter;
 import cnuphys.splot.fit.LineFit;
-import cnuphys.splot.fit.LinearExyFit;
 import cnuphys.splot.fit.PolyAndGaussianFit;
 import cnuphys.splot.fit.PolyFit;
 import cnuphys.splot.pdata.DataColumn;
@@ -366,14 +364,8 @@ public class CurveDrawer {
 					return;
 				}
 			}
-			if (plotCanvas.getDataSet().hasXErrors()) {
-				LinearExyFit lexyfit = (LinearExyFit) yfit.getFit();
-				drawValueGetter(g2, plotCanvas, lexyfit);
-			}
-			else {
-				LineFit lfit = (LineFit) yfit.getFit();
-				drawValueGetter(g2, plotCanvas, lfit);
-			}
+			LineFit lfit = (LineFit) yfit.getFit();
+			drawValueGetter(g2, plotCanvas, lfit);
 			break;
 
 		case ERF:
@@ -451,16 +443,6 @@ public class CurveDrawer {
 			drawValueGetter(g2, plotCanvas, nrpfit);
 			break;
 
-		case ALTPOLYNOMIAL:
-			if (yfit.isDirty()) {
-				FitUtilities.fitAltPoly(yfit);
-				// FitUtilities.doFit(yfit,
-				// "cnuphys.splot.fit.AltPolynomialFit");
-			}
-
-			AltPolynomialFit altfit = (AltPolynomialFit) yfit.getFit();
-			drawValueGetter(g2, plotCanvas, altfit);
-			break;
 
 		case POLYPLUSGAUSS:
 			if (yfit.isDirty()) {

@@ -112,16 +112,6 @@ public class DataSet extends DefaultTableModel {
 
 		switch (type) {
 
-		case XYY: // shared x, any number of y
-			_columns.add(new DataColumn(DataColumnType.X, colNames[0]));
-			// the y columns, if any
-			for (int i = 1; i < colCount; i++) {
-				_columns.add(new DataColumn(DataColumnType.Y, colNames[i]));
-				getColumn(i).initStyle();
-				getColumn(i).initFit();
-			}
-			break;
-
 		case XYXY:
 			// repeated x,y columns. Number of columns should be divisible by
 			// two
@@ -150,26 +140,6 @@ public class DataSet extends DefaultTableModel {
 				_columns.add(new DataColumn(DataColumnType.X, colNames[j]));
 				_columns.add(new DataColumn(DataColumnType.Y, colNames[j + 1]));
 				_columns.add(new DataColumn(DataColumnType.YERR, colNames[j + 2]));
-				getColumn(j + 1).initStyle();
-				getColumn(j + 1).initFit();
-			}
-			break;
-
-		case XYEEXYEE:
-			// repeated x,y,xerr, yerr. Number of columns should be divisible by
-			// four
-
-			_hasXErrors = true;
-			if ((colCount % 4) != 0) {
-				throw new DataSetException(
-						"The number of columns for type XYEEXYEE " + colCount + " is not divisible by 4.");
-			}
-			for (int i = 0; i < colCount / 4; i++) {
-				int j = i * 3;
-				_columns.add(new DataColumn(DataColumnType.X, colNames[j]));
-				_columns.add(new DataColumn(DataColumnType.Y, colNames[j + 1]));
-				_columns.add(new DataColumn(DataColumnType.XERR, colNames[j + 2]));
-				_columns.add(new DataColumn(DataColumnType.YERR, colNames[j + 3]));
 				getColumn(j + 1).initStyle();
 				getColumn(j + 1).initFit();
 			}
@@ -223,9 +193,6 @@ public class DataSet extends DefaultTableModel {
 		DataColumn newCurve = null;
 
 		switch (getType()) {
-		case XYY:
-			System.err.println("[sPlot] Can not add curve for type: " + getType());
-			break;
 
 		case XYXY:
 			addColumn(xname);
@@ -242,10 +209,6 @@ public class DataSet extends DefaultTableModel {
 			System.err.println("[sPlot] Can not add curve for type: " + getType());
 			break;
 
-		case XYEEXYEE:
-			System.err.println("[sPlot] Can not add curve for type: " + getType());
-			break;
-
 		case H1D:
 			System.err.println("[sPlot] Can not add curve for type: " + getType());
 			break;
@@ -259,12 +222,6 @@ public class DataSet extends DefaultTableModel {
 			break;
 		}
 
-		// Vector<String> colNames = new Vector<String>();
-		// for (DataColumn dc : _columns) {
-		// colNames.add(dc.getName());
-		// }
-		// setColumnIdentifiers(colNames);
-
 		return newCurve;
 	}
 
@@ -277,9 +234,6 @@ public class DataSet extends DefaultTableModel {
 		int count = getColumnCount();
 
 		switch (getType()) {
-		case XYY:
-			System.err.println("[sPlot] Can not add to curve for type: " + getType());
-			break;
 
 		case XYXY:
 			int curveCount = count / 2;
@@ -295,10 +249,6 @@ public class DataSet extends DefaultTableModel {
 			break;
 
 		case XYEXYE:
-			System.err.println("[sPlot] Can not add to curve for type: " + getType());
-			break;
-
-		case XYEEXYEE:
 			System.err.println("[sPlot] Can not add to curve for type: " + getType());
 			break;
 

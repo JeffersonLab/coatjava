@@ -13,7 +13,7 @@ import cnuphys.splot.style.EnumComboBox;
 
 public enum FitType {
 
-	NOLINE, CONNECT, STAIRS, LINE, POLYNOMIAL, GAUSSIANS, POLYPLUSGAUSS, ERF, ERFC, ALTPOLYNOMIAL, CUBICSPLINE;
+	NOLINE, CONNECT, STAIRS, LINE, POLYNOMIAL, GAUSSIANS, POLYPLUSGAUSS, ERF, ERFC, CUBICSPLINE;
 
 	// some hex colors
 	private static final String WHEAT = X11Colors.getX11ColorAsHex("WHEAT");
@@ -35,7 +35,6 @@ public enum FitType {
 		names.put(POLYPLUSGAUSS, "Poly & Gaussians");
 		names.put(ERF, "Erf Function");
 		names.put(ERFC, "Erfc Function");
-		names.put(ALTPOLYNOMIAL, "Alt Polynomial");
 		names.put(NOLINE, "No Line");
 	}
 
@@ -197,24 +196,6 @@ public enum FitType {
 			}
 			break; // ERFC
 
-		case ALTPOLYNOMIAL:
-			sb.append(
-					header("Alt Polynomial Fit:") + descript("y = " + _SUM + sub("A", "n") + "&thinsp;x<SUP>n</SUP>"));
-			sb.append(info("Polynomial Order: " + curveFit.getPolynomialOrder()));
-
-			if (fit != null) {
-				AltPolynomialFit faltp = (AltPolynomialFit) fit;
-
-				for (int i = 0; i < faltp.a.length; i++) {
-					sb.append(pmString(sub("A", i), faltp.a[i], Math.sqrt(faltp.covar[i][i])) + "<BR>");
-				}
-				sb.append(errorType(curveFit));
-				sb.append(chiSqString(faltp.chisq));
-			}
-			else {
-				sb.append(warning("ALTERNATE POLY FIT PROBLEM"));
-			}
-			break; // ALTPOLYNOMIAL
 
 		case GAUSSIANS:
 			sb.append(header("Gaussian Fit:") + descript(" y = " + _SUM + sub("A", "n") + "&thinsp;exp{-[(x-"

@@ -81,7 +81,6 @@ public class ErfcTest extends AExample {
 				e.printStackTrace();
 				System.exit(1);
 			}
-			// ds.add(i, i);
 		}
 	}
 

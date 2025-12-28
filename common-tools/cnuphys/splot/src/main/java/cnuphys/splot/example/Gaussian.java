@@ -1,58 +1,61 @@
 package cnuphys.splot.example;
 
 import java.awt.Color;
+import java.util.Random;
 
 import org.apache.commons.math3.distribution.NormalDistribution;
 
 import cnuphys.splot.fit.FitType;
 import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.pdata.DataSetException;
-import cnuphys.splot.pdata.HistoData;
+import cnuphys.splot.pdata.DataSetType;
 import cnuphys.splot.plot.PlotParameters;
 
-public class Histo extends AExample {
+public class Gaussian extends AExample {
 
 	@Override
 	protected DataSet createDataSet() throws DataSetException {
-		HistoData h1 = new HistoData("Histo 1", 0.0, 100.0, 50);
-		return new DataSet(h1);
+		return new DataSet(DataSetType.XYEXYE, getColumnNames());
 	}
 
 	@Override
 	protected String[] getColumnNames() {
-		return null;
+		String names[] = { "X", "Y", "E" };
+		return names;
 	}
 
 	@Override
 	protected String getXAxisLabel() {
-		return "some measured value";
+		return "x";
 	}
 
 	@Override
 	protected String getYAxisLabel() {
-		return "Counts";
+		return "y";
 	}
 
 	@Override
 	protected String getPlotTitle() {
-		return "Sample 1D Histogram";
+		return "Sample Gaussian Fit";
 	}
 
 	@Override
 	public void fillData() {
-		int n = 10000;
-		double mu = 50.0;
-		double sig = 10.0;
+		int n = 100;
+		double mu = 1.0;
+		double sig = 0.2;
 	    NormalDistribution normDev = new NormalDistribution(mu, sig);
 
 		DataSet ds = _canvas.getDataSet();
+		Random rand = new Random();
 		for (int i = 0; i < n; i++) {
-			double y = normDev.sample();
-			try {
-				ds.add(y);
-			}
-			catch (DataSetException e) {
-				e.printStackTrace();
+			double x = 2.0 * rand.nextDouble();
+			double y = normDev.density(x) + 0.2*(rand.nextDouble() - 0.5);
+			double e = 0.2*rand.nextDouble();
+		    try {
+				ds.add(x, y, e);
+			} catch (DataSetException e1) {
+				e1.printStackTrace();
 			}
 		}
 	}
@@ -65,12 +68,11 @@ public class Histo extends AExample {
 		ds.getCurve(0).getFit().setFitType(FitType.GAUSSIANS);
 		PlotParameters params = _canvas.getParameters();
 		params.setMinExponentY(6);
-		params.setNumDecimalY(0);
-
+		params.setNumDecimalY(2);
 	}
-
+	
 	public static void main(String arg[]) {
-		final Histo example = new Histo();
+		final Gaussian example = new Gaussian();
 
 		javax.swing.SwingUtilities.invokeLater(new Runnable() {
 			@Override
@@ -80,4 +82,5 @@ public class Histo extends AExample {
 		});
 
 	}
+
 }

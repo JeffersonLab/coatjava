@@ -15,14 +15,7 @@ public class FitUtilities {
 	 */
 	public static void fitStraightLine(Fit fit) {
 		fixNullSig(fit);
-
-		if (fit.getSigmaX() != null) {
-			System.err.println("Fitting with X Errors");
-			new LinearExyFit(fit);
-		}
-		else {
-			new LineFit(fit);
-		}
+		new LineFit(fit);
 	}
 
 	/**
@@ -35,45 +28,7 @@ public class FitUtilities {
 		new PolyFit(fit); // errors
 	}
 
-	/**
-	 * An alternate polynomial fit with errors
-	 * 
-	 * @param fit the fit data
-	 */
-	public static void fitAltPoly(Fit fit) {
-		fixNullSig(fit);
-		new AltPolynomialFit(fit); // errors
-	}
 
-	/**
-	 * Where the fitting is actually done
-	 * 
-	 * @param fit
-	 * @param className
-	 */
-	// public static void doFit(Fit fit, String className) {
-	// fixNullSig(fit);
-	// Class<?> clazz;
-	// try {
-	// clazz = Class.forName(className);
-	// Constructor<?> ctor = clazz.getConstructor(Fit.class);
-	// Object object = ctor.newInstance(new Object[] { fit });
-	// } catch (ClassNotFoundException e) {
-	// e.printStackTrace();
-	// } catch (NoSuchMethodException e) {
-	// e.printStackTrace();
-	// } catch (SecurityException e) {
-	// e.printStackTrace();
-	// } catch (InstantiationException e) {
-	// e.printStackTrace();
-	// } catch (IllegalAccessException e) {
-	// e.printStackTrace();
-	// } catch (IllegalArgumentException e) {
-	// e.printStackTrace();
-	// } catch (InvocationTargetException e) {
-	// e.printStackTrace();
-	// }
-	// }
 
 	/**
 	 * Erf fit with errors
@@ -365,7 +320,7 @@ public class FitUtilities {
 		}
 
 		else {
-			// just check there are n0 zero errors
+			// just check there are no zero errors
 			double result[] = stats(sigY);
 			double mean = result[0];
 

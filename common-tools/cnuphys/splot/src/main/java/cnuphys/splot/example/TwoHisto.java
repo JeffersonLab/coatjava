@@ -2,13 +2,13 @@ package cnuphys.splot.example;
 
 import java.awt.Color;
 
+import org.apache.commons.math3.distribution.NormalDistribution;
+
 import cnuphys.splot.fit.FitType;
 import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.pdata.DataSetException;
 import cnuphys.splot.pdata.HistoData;
 import cnuphys.splot.plot.PlotParameters;
-
-import com.nr.ran.Normaldev;
 
 public class TwoHisto extends AExample {
 
@@ -42,21 +42,18 @@ public class TwoHisto extends AExample {
 	@Override
 	public void fillData() {
 		int n = 10000;
-		Normaldev normDev1;
 		double mu = 50.0;
 		double sig = 10.0;
-		int seed = 33557799;
-		normDev1 = new Normaldev(mu, sig, seed);
+	    NormalDistribution normDev1 = new NormalDistribution(mu, sig);
 
-		Normaldev normDev2;
 		mu = 100.0;
 		sig = 20.0;
-		normDev2 = new Normaldev(mu, sig, seed);
+	    NormalDistribution normDev2 = new NormalDistribution(mu, sig);
 
 		DataSet ds = _canvas.getDataSet();
 		for (int i = 0; i < n; i++) {
-			double y1 = normDev1.dev();
-			double y2 = normDev2.dev();
+			double y1 = normDev1.sample();
+			double y2 = normDev2.sample();
 			try {
 				ds.add(y1, y2);
 			}

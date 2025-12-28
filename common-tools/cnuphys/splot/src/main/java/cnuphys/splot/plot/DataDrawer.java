@@ -64,14 +64,6 @@ public class DataDrawer {
 			}
 			break;
 
-		case XYEEXYEE:
-			for (int i = 0; i < ds.getColumnCount() / 4; i++) {
-				int j = 4 * i;
-				CurveDrawer.drawCurve(g, _plotCanvas, ds.getColumn(j), ds.getColumn(j + 1), ds.getColumn(j + 2),
-						ds.getColumn(j + 3));
-			}
-			break;
-
 		case H1D:
 			for (int i = 0; i < ds.getColumnCount(); i++) {
 				CurveDrawer.drawHisto1D(g, _plotCanvas, ds.getColumn(i));
@@ -80,12 +72,6 @@ public class DataDrawer {
 
 		case H2D:
 			CurveDrawer.drawHisto2D(g, _plotCanvas, ds.getColumn(0));
-			break;
-
-		case XYY: // share an x column
-			for (int i = 1; i < ds.getColumnCount(); i++) {
-				CurveDrawer.drawCurve(g, _plotCanvas, ds.getColumn(0), ds.getColumn(i));
-			}
 			break;
 
 		case XYXY:

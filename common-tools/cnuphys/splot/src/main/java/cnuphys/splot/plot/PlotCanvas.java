@@ -145,7 +145,7 @@ public class PlotCanvas extends JComponent
 		// default to xy plot no errors
 		if (dataSet == null) {
 			try {
-				dataSet = new DataSet(DataSetType.XYY, "X", "Y");
+				dataSet = new DataSet(DataSetType.XYXY, "X", "Y");
 			}
 			catch (DataSetException e) {
 				e.printStackTrace();

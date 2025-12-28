@@ -10,13 +10,14 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.Collection;
+import java.util.Random;
 
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 
-import com.nr.ran.Normaldev;
+import org.apache.commons.math3.distribution.NormalDistribution;
 
 import cnuphys.splot.fit.FGaussian;
 import cnuphys.splot.fit.FitType;
@@ -29,7 +30,6 @@ import cnuphys.splot.pdata.DataSetType;
 import cnuphys.splot.pdata.HistoData;
 import cnuphys.splot.pdata.StripData;
 import cnuphys.splot.plot.Environment;
-import cnuphys.splot.plot.GraphicsUtilities;
 import cnuphys.splot.plot.HorizontalLine;
 import cnuphys.splot.plot.LimitsMethod;
 import cnuphys.splot.plot.PlotCanvas;
@@ -107,13 +107,6 @@ public class Grid extends JFrame implements IValueGetter {
 			_canvases[index].setWorldSystem();
 		}
 
-		// test
-//		for (int row = 0; row < 2; row++) {
-//			for (int col = 0; col < 3; col++) {
-//				System.out.println("Plot at row: " + row + " col: " + col + "  has title: "
-//						+ _plotGrid.getPlotCanvas(row, col).getTitle());
-//			}
-//		}
 		sizeToScreen(0.85);
 	}
 
@@ -137,7 +130,7 @@ public class Grid extends JFrame implements IValueGetter {
 			return new DataSet(DataSetType.XYEXYE, getColumnNames(index));
 
 		case 1:
-			return new DataSet(DataSetType.XYEEXYEE, getColumnNames(index));
+			return new DataSet(DataSetType.XYEXYE, getColumnNames(index));
 
 		case 2:
 			StripData sd = new StripData("Memory", 25, this, 2000);
@@ -167,7 +160,7 @@ public class Grid extends JFrame implements IValueGetter {
 			return names0;
 
 		case 1:
-			String names1[] = { "X", "Y", "Xerr", "Yerr" };
+			String names1[] = { "X", "Y", "E"};
 			return names1;
 
 		case 2:
@@ -196,7 +189,7 @@ public class Grid extends JFrame implements IValueGetter {
 			return "<html>DAC Threshold";
 
 		case 1:
-			return "<html>x data  X<SUB>M</SUB><SUP>2</SUP>";
+			return "<html>x data";
 
 		case 2:
 			return "Time (s)";
@@ -223,7 +216,7 @@ public class Grid extends JFrame implements IValueGetter {
 			return "<html>Occupancy";
 
 		case 1:
-			return "<html>y data  Y<SUB>Q</SUB><SUP>2</SUP>";
+			return "y data";
 
 		case 2:
 			return "Heap Memory (MB)";
@@ -249,7 +242,7 @@ public class Grid extends JFrame implements IValueGetter {
 			return "<html>p4 U1, BCO 128ns, BLR on, low gain, 125 ns, chan 0";
 
 		case 1:
-			return "<html>Line with X and Y errors";
+			return "<html>Gaussia Noise Sample";
 
 		case 2:
 			return "Sample Strip Chart";
@@ -280,7 +273,6 @@ public class Grid extends JFrame implements IValueGetter {
 					double x = ErfTest._rawdata[i];
 					double y = ErfTest._rawdata[i+1];
 					double e = ErfTest._rawdata[i+2];
-	//				System.out.println("Plot [" + index + "]  (x, y, e) = (" + x + ", " + y + ", " + e + ")");
 					ds.add(x, y, e);
 				}
 				catch (DataSetException e) {
@@ -292,13 +284,20 @@ public class Grid extends JFrame implements IValueGetter {
 			break;
 
 		case 1:
-			for (int i = 0; i < LineWithXAndYErrors.x.length; i++) {
-				try {
-					ds.add(LineWithXAndYErrors.x[i], LineWithXAndYErrors.y[i], LineWithXAndYErrors.xSig[i],
-							LineWithXAndYErrors.ySig[i]);
-				}
-				catch (DataSetException e) {
-					e.printStackTrace();
+			int n = 100;
+			double mu = 1.0;
+			double ssig = 0.2;
+		    NormalDistribution normDev = new NormalDistribution(mu, ssig);
+
+			Random rand = new Random();
+			for (int i = 0; i < n; i++) {
+				double x = 2.0 * rand.nextDouble();
+				double y = normDev.density(x) + 0.2*(rand.nextDouble() - 0.5);
+				double e = 0.2*rand.nextDouble();
+			    try {
+					ds.add(x, y, e);
+				} catch (DataSetException e1) {
+					e1.printStackTrace();
 				}
 			}
 			break;
@@ -351,21 +350,18 @@ public class Grid extends JFrame implements IValueGetter {
 			break;
 
 		case 4:
-			int n = 10000;
-			Normaldev normDev1;
-			double mu = 50.0;
-			double ssig = 10.0;
-			int seed = 33557799;
-			normDev1 = new Normaldev(mu, ssig, seed);
+			int n2 = 10000;
+			double mu2 = 50.0;
+			double ssig2 = 10.0;
+		    NormalDistribution normDev1 = new NormalDistribution(mu2, ssig2);
 
-			Normaldev normDev2;
-			mu = 100.0;
-			ssig = 20.0;
-			normDev2 = new Normaldev(mu, ssig, seed);
+			mu2 = 100.0;
+			ssig2 = 20.0;
+		    NormalDistribution normDev2 = new NormalDistribution(mu2, ssig2);
 
-			for (int i = 0; i < n; i++) {
-				double y1 = normDev1.dev();
-				double y2 = normDev2.dev();
+			for (int i = 0; i < n2; i++) {
+				double y1 = normDev1.sample();
+				double y2 = normDev2.sample();
 				try {
 					ds.add(y1, y2);
 				}
@@ -419,6 +415,11 @@ public class Grid extends JFrame implements IValueGetter {
 			break;
 
 		case 1:
+			ds.getCurveStyle(0).setFillColor(new Color(196, 196, 196, 64));
+			ds.getCurveStyle(0).setBorderColor(Color.black);
+			ds.getCurve(0).getFit().setFitType(FitType.NOLINE);
+			params.setMinExponentY(6);
+			params.setNumDecimalY(2);
 			break;
 
 		case 2:

@@ -63,8 +63,6 @@ public abstract class AExample extends JFrame {
 
 		add(ppanel, BorderLayout.CENTER);
 
-		// add a curve panel
-		addEast();
 		pack();
 		GraphicsUtilities.centerComponent(this);
 	}
@@ -76,12 +74,6 @@ public abstract class AExample extends JFrame {
 	 */
 	public PlotCanvas getPlotCanvas() {
 		return _canvas;
-	}
-
-	// add the east component
-	private void addEast() {
-		// _curveEditor = new CurveEditorPanel(_canvas);
-		// add(_curveEditor, BorderLayout.EAST);
 	}
 
 	protected abstract DataSet createDataSet() throws DataSetException;

@@ -1,6 +1,6 @@
 package cnuphys.splot.example;
 
-import com.nr.ran.Normaldev;
+import org.apache.commons.math3.distribution.NormalDistribution;
 
 import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.pdata.DataSetException;
@@ -39,18 +39,15 @@ public class Histo2D extends AExample {
 		int n = 1000000;
 		double mu = 50.0;
 		double sig = 20.0;
-		int seed = 33557799;
-		Normaldev normDevX = new Normaldev(mu, sig, seed);
+	    NormalDistribution normDevX = new NormalDistribution(mu, sig);
 
 		mu = 35;
-		seed = 777555;
-		Normaldev normDevY = new Normaldev(mu, sig, seed);
+	    NormalDistribution normDevY = new NormalDistribution(mu, sig);
 
 		DataSet ds = _canvas.getDataSet();
 		for (int i = 0; i < n; i++) {
-			double x = normDevX.dev();
-			double y = normDevY.dev();
-//			System.err.print("X, Y: " + x + ", " + y);
+			double x = normDevX.sample();
+			double y = normDevY.sample();
 			try {
 				ds.add(x, y);
 			}

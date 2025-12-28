@@ -2,13 +2,13 @@ package cnuphys.splot.example;
 
 import java.awt.Color;
 
+import org.apache.commons.math3.distribution.NormalDistribution;
+
 import cnuphys.splot.fit.FitType;
 import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.pdata.DataSetException;
 import cnuphys.splot.pdata.HistoData;
 import cnuphys.splot.plot.PlotParameters;
-
-import com.nr.ran.Normaldev;
 
 public class GrowingHisto extends AExample {
 
@@ -66,17 +66,15 @@ public class GrowingHisto extends AExample {
 		System.err.println("Ready...");
 
 		int n = 10000;
-		Normaldev normDev;
 		double mu = 50.0;
 		double sig = 10.0;
-		int seed = 33557799;
-		normDev = new Normaldev(mu, sig, seed);
+	    NormalDistribution normDev = new NormalDistribution(mu, sig);
 
 		final DataSet ds = example.getPlotCanvas().getDataSet();
 
 		while (true) {
 			try {
-				double y = normDev.dev();
+				double y = normDev.sample();
 				try {
 					ds.add(y);
 					example.getPlotCanvas().needsRedraw(true);

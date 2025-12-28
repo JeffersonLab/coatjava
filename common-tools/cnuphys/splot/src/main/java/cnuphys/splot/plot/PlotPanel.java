@@ -122,10 +122,6 @@ public class PlotPanel extends JPanel implements PropertyChangeListener {
 
 			_status = makeStatusLabel();
 
-//			_status = makeJLabel("  ", parameters.getStatusFont(),
-//					SwingConstants.CENTER, new Color(240, 240, 240),
-//					Color.blue, true);
-
 			_status.setAlignmentX(Component.CENTER_ALIGNMENT);
 			spanel.add(_status, BorderLayout.SOUTH);
 		}
