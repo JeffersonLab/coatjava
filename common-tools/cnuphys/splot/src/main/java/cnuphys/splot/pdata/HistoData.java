@@ -448,6 +448,116 @@ public class HistoData {
 
         return new FitData(xArr, yArr, wArr);
     }
+    
+    /**
+     * Prepare arrays suitable for fitters from a symmetric window around a peak bin.
+     * <p>
+     * This is a convenience wrapper around {@link #prepareForFit(boolean, int, int, boolean)}.
+     *
+     * @param includeZeroBins include bins with count==0 if true
+     * @param peakBin the center bin (0-based)
+     * @param halfWindowBins number of bins to include on each side of {@code peakBin} (>= 0).
+     *        The total nominal span is {@code [peakBin-halfWindowBins, peakBin+halfWindowBins]}.
+     * @param poissonWeights if true, include Poisson weights (1/count for count>0)
+     * @return fit data (x=bin centers, y=counts); weights may be null
+     */
+    public FitData prepareForFitAroundPeak(boolean includeZeroBins,
+                                          int peakBin,
+                                          int halfWindowBins,
+                                          boolean poissonWeights) {
+        if (halfWindowBins < 0) {
+            throw new IllegalArgumentException("halfWindowBins must be >= 0");
+        }
+        int b0 = peakBin - halfWindowBins;
+        int b1 = peakBin + halfWindowBins;
+        return prepareForFit(includeZeroBins, b0, b1, poissonWeights);
+    }
+
+    /**
+     * Convenience overload: unit weights, symmetric window around a peak bin.
+     */
+    public FitData prepareForFitAroundPeak(boolean includeZeroBins,
+                                          int peakBin,
+                                          int halfWindowBins) {
+        return prepareForFitAroundPeak(includeZeroBins, peakBin, halfWindowBins, false);
+    }
+
+    /**
+     * Find the (0-based) bin index with the maximum count.
+     * If there are multiple maxima, returns the first.
+     *
+     * @return peak bin index, or -1 if histogram has no bins
+     */
+    public int findPeakBin() {
+        int nbin = getNumberBins();
+        if (nbin <= 0) {
+            return -1;
+        }
+        int peak = 0;
+        long best = counts[0];
+        for (int bin = 1; bin < nbin; bin++) {
+            long c = counts[bin];
+            if (c > best) {
+                best = c;
+                peak = bin;
+            }
+        }
+        return peak;
+    }
+
+    /**
+     * Find the (0-based) bin index with the maximum count within an inclusive bin range.
+     * If there are multiple maxima, returns the first.
+     *
+     * @param bin0 inclusive start bin (0-based; clamped)
+     * @param bin1 inclusive end bin (0-based; clamped)
+     * @return peak bin in the range, or -1 if histogram has no bins
+     */
+    public int findPeakBin(int bin0, int bin1) {
+        int nbin = getNumberBins();
+        if (nbin <= 0) {
+            return -1;
+        }
+
+        int b0 = clampBin(bin0, nbin);
+        int b1 = clampBin(bin1, nbin);
+        if (b0 > b1) {
+            int tmp = b0;
+            b0 = b1;
+            b1 = tmp;
+        }
+
+        int peak = b0;
+        long best = counts[b0];
+        for (int bin = b0 + 1; bin <= b1; bin++) {
+            long c = counts[bin];
+            if (c > best) {
+                best = c;
+                peak = bin;
+            }
+        }
+        return peak;
+    }
+
+    /**
+     * Convenience: automatically find the peak bin (global maximum) and then prepare
+     * fit arrays from a symmetric window around that peak.
+     *
+     * @param includeZeroBins include bins with count==0 if true
+     * @param halfWindowBins number of bins on each side of the peak (>= 0)
+     * @param poissonWeights if true, include Poisson weights
+     * @return fit data around the global peak; if histogram empty, returns empty arrays
+     */
+    public FitData prepareForFitAroundPeak(boolean includeZeroBins,
+                                          int halfWindowBins,
+                                          boolean poissonWeights) {
+        int peak = findPeakBin();
+        if (peak < 0) {
+            return new FitData(new double[0], new double[0], poissonWeights ? new double[0] : null);
+        }
+        return prepareForFitAroundPeak(includeZeroBins, peak, halfWindowBins, poissonWeights);
+    }
+
 
     private static double[] toDoubleArray(List<Double> list) {
         double[] a = new double[list.size()];
