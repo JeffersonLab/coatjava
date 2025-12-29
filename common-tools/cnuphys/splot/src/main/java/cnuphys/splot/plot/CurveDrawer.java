@@ -11,7 +11,6 @@ import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
-import cnuphys.splot.fit.CubicSpline;
 import cnuphys.splot.fit.ErfFit;
 import cnuphys.splot.fit.ErfcFit;
 import cnuphys.splot.fit.Fit;
@@ -26,6 +25,7 @@ import cnuphys.splot.pdata.DataColumn;
 import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.pdata.Histo2DData;
 import cnuphys.splot.pdata.HistoData;
+import cnuphys.splot.spline.CubicSpline;
 import cnuphys.splot.style.IStyled;
 import cnuphys.splot.style.Styled;
 import cnuphys.splot.style.SymbolDraw;

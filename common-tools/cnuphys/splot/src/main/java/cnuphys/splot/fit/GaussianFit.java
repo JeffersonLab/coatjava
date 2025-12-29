@@ -8,6 +8,8 @@ import java.awt.Point;
 import com.nr.model.FGauss;
 import com.nr.model.Fitmrq;
 
+import cnuphys.splot.spline.CubicSpline;
+
 /**
  * For fitting a sum of Gaussians to a curve (DataColumn)
  * 
