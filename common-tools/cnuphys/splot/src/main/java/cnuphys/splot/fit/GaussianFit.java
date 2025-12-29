@@ -29,11 +29,7 @@ public class GaussianFit extends Fitmrq implements IValueGetter {
 	 */
 	public GaussianFit(Fit fit) throws IllegalArgumentException {
 		super(fit.getX(), fit.getY(), fit.getSigmaY(), initialGuess(fit), _funcs, fit.getTolerance());
-		// set holds, then fit
 		fit.setFitType(FitType.GAUSSIANS);
-		for (FitHold fh : fit.getHolds()) {
-			hold(fh.index, fh.value);
-		}
 		fit();
 		fit.setFit(this);
 	}

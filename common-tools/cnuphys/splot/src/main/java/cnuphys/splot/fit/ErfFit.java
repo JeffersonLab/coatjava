@@ -26,10 +26,6 @@ public class ErfFit extends Fitmrq implements IValueGetter {
 		super(fit.getX(), fit.getY(), fit.getSigmaY(), initialGuess(fit), _funcs, fit.getTolerance());
 
 		fit.setFitType(FitType.ERF);
-		// set holds, then fit
-		for (FitHold fh : fit.getHolds()) {
-			hold(fh.index, fh.value);
-		}
 		fit();
 		fit.setFit(this);
 	}

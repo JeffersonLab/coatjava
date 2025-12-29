@@ -183,10 +183,10 @@ public enum FitType {
 				double covar[][] = ecfit.getCovarianceMatrix();
 				double chisq = ecfit.getChiSquare();
 
-				sb.append(paramStr("A", a[0], covar[0][0], curveFit.isHeld(0)));
-				sb.append(paramStr("B", a[1], covar[1][1], curveFit.isHeld(1)));
-				sb.append(paramStr(_MU, a[2], covar[2][2], curveFit.isHeld(2)));
-				sb.append(paramStr("S", a[3], covar[3][3], curveFit.isHeld(3)));
+				sb.append(paramStr("A", a[0], covar[0][0]));
+				sb.append(paramStr("B", a[1], covar[1][1]));
+				sb.append(paramStr(_MU, a[2], covar[2][2]));
+				sb.append(paramStr("S", a[3], covar[3][3]));
 				sb.append(colorStr("S/" + UnicodeSupport.SQRT + "2 = " + valStr(a[3] / Math.sqrt(2)), "gray") + _EOL);
 				sb.append(errorType(curveFit));
 				sb.append(chiSqString(chisq));
@@ -267,12 +267,8 @@ public enum FitType {
 		return htmlstr;
 	}
 
-	private static String paramStr(String name, double val, double var, boolean held) {
-		String s = "";
-		if (held) {
-			s = colorStr(_SP + "<b>[HELD]</b>" + _SP, "yellow", "black") + _SP;
-		}
-		return s + pmString(name, val, Math.sqrt(var)) + _EOL;
+	private static String paramStr(String name, double val, double var) {
+		return pmString(name, val, Math.sqrt(var)) + _EOL;
 	}
 
 	// header string

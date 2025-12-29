@@ -1,7 +1,5 @@
 package cnuphys.splot.fit;
 
-import java.util.Vector;
-
 import cnuphys.splot.pdata.DataColumn;
 import cnuphys.splot.pdata.HistoData;
 import cnuphys.splot.plot.Environment;
@@ -48,9 +46,6 @@ public class Fit {
 
 	// the x error data used for the fit
 	private double _sigmaX[];
-
-	// holds on the fit parameters
-	private Vector<FitHold> _holds = new Vector<FitHold>();
 
 	// this holds the fit object. It is probably an NR object like a Fitmrq
 	// or a Fitsvd
@@ -115,51 +110,6 @@ public class Fit {
 		return Math.min(xsize, ysize);
 	}
 
-	/**
-	 * Set a hold on a fit parameter. If there already is one it will be overwritten
-	 * using the new value.
-	 * 
-	 * @param index the index of the parameter
-	 * @param val   the value at which the parameter is held.
-	 */
-	public void hold(int index, double val) {
-
-		// already one for that index?
-		for (FitHold fh : _holds) {
-			if (fh.index == index) {
-				fh.value = val;
-				return;
-			}
-		}
-
-		// wasn't one, so create it
-		FitHold fh = new FitHold(index, val);
-		_holds.add(fh);
-	}
-
-	/**
-	 * Get the fit parameter holds
-	 * 
-	 * @return the fit parameter holds
-	 */
-	protected Vector<FitHold> getHolds() {
-		return _holds;
-	}
-
-	/**
-	 * Check whether a parameter was held
-	 * 
-	 * @param index the index of the parameter
-	 * @return <code>true</code> if the index was held
-	 */
-	public boolean isHeld(int index) {
-		for (FitHold fh : _holds) {
-			if (fh.index == index) {
-				return true;
-			}
-		}
-		return false;
-	}
 
 	/**
 	 * Get the x data for the fit

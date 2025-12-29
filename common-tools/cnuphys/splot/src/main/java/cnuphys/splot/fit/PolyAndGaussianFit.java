@@ -22,10 +22,6 @@ public class PolyAndGaussianFit extends Fitmrq implements IValueGetter {
 		_numPoly = fit.getPolynomialOrder() + 1;
 
 		fit.setFitType(FitType.POLYPLUSGAUSS);
-		// set holds, then fit
-		for (FitHold fh : fit.getHolds()) {
-			hold(fh.index, fh.value);
-		}
 
 		try {
 			fit();

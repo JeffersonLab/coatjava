@@ -389,9 +389,6 @@ public class CurveDrawer {
 		case ERFC:
 			if (yfit.isDirty()) {
 				try {
-					yfit.hold(0, 0);
-					yfit.hold(1, 0.5);
-					// FitUtilities.doFit(yfit, "cnuphys.splot.fit.ErfcFit");
 					FitUtilities.fitErfc(yfit);
 				}
 				catch (Exception e) {
