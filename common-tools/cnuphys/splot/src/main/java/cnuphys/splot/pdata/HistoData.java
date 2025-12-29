@@ -2,548 +2,656 @@ package cnuphys.splot.pdata;
 
 import java.awt.Point;
 import java.awt.Polygon;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+
 import cnuphys.splot.plot.DoubleFormat;
 import cnuphys.splot.plot.PlotCanvas;
 import cnuphys.splot.plot.PlotParameters;
 import cnuphys.splot.plot.UnicodeSupport;
 
 /**
- * Xontainer class for histogram data
- * 
- * @author heddle
+ * Container class for 1D histogram data.
+ * <p>
+ * Bin edges are stored in {@code grid[]} of length (numBins + 1). Counts are stored in
+ * {@code counts[]} of length numBins.
  *
+ * @author heddle
  */
 public class HistoData {
 
-	/** The XML root element name */
-	public static final String XmlRootElementName = "HistoData";
-
-	// cached statistical results
-	// an array with the mean in the 0 index,
-	// standard deviation is the 1 index, and rms in the 2 index
-	private double _stats[];
-
-	// out of range constants
-	private static int UNDERFLOW = -200;
-	private static int OVERFLOW = -100;
-
-	// this is the "curve" name
-	private String _name;
-
-	// some counts
-	private long _underCount;
-	private long _overCount;
-
-
-	// use rms or sigma in legend
-	private boolean _rmsInHistoLegend = true;
-
-	// draw sqrt(n) statistical errors
-	private boolean _statErrors;
-
-	// the bins--it includes the limits so there is one more number
-	// that the number of bins, eg {0, 1, 3, 7} means 3 bins. Note
-	// equal spacing is not required.
-	private double _grid[];
-
-	// the counts
-	private long[] _counts;
-
-	/**
-	 * The data for a 1D histogram where the bin spacing is uniform.
-	 * 
-	 * @param name    the curve name of the histogram
-	 * @param valMin  the data min
-	 * @param valMax  the data max
-	 * @param numBins the number of bins
-	 */
-	public HistoData(String name, double valMin, double valMax, int numBins) {
-		this(name, evenBins(valMin, valMax, numBins));
-	}
-	
-
-	/**
-	 * The data for a 1D histogram where the bin spacing is arbitrary (i.e., not
-	 * uniform)
-	 * 
-	 * @param name the curve name of the histogram
-	 * @param grid the binning grid. It must be in ascending order but is otherwise
-	 *             arbitrary.
-	 */
-	public HistoData(String name, double[] grid) {
-		_name = name;
-		_grid = grid;
-		clear();
-	}
-
-	/**
-	 * Get the name of the histogram
-	 * 
-	 * @return the name of the histogram
-	 */
-	public String getName() {
-		return _name;
-	}
-
-	/**
-	 * Set the name
-	 * 
-	 * @param name the name of the histogram
-	 */
-	public void setName(String name) {
-		_name = name;
-	}
-
-	// reset some data
-	private void reset() {
-		_underCount = 0;
-		_overCount = 0;
-		_stats = null;
-		int nbin = getNumberBins();
-		if (nbin > 0) {
-			_counts = new long[nbin];
-			for (int i = 0; i < nbin; i++) {
-				_counts[i] = 0;
-			}
-		}
-	}
-
-	/**
-	 * Get the count for a given bin
-	 * 
-	 * @param bin the bin
-	 * @return the count for that bin
-	 */
-	public long getCount(int bin) {
-		if (_counts == null) {
-			return 0;
-		}
-
-		if ((bin < 0) || (bin >= _counts.length)) {
-			return 0;
-		}
-
-		return _counts[bin];
-	}
-
-	/**
-	 * Clear the data
-	 */
-	public void clear() {
-		reset();
-	}
-
-	// get an array of equally spaced bins
-	// suitable for most histograms
-	private static double[] evenBins(double vmin, double vmax, int numBins) {
-		double grid[] = new double[numBins + 1];
-		double del = (vmax - vmin) / numBins;
-
-		grid[0] = vmin;
-		grid[numBins] = vmax;
-		for (int i = 1; i < numBins; i++) {
-			grid[i] = vmin + i * del;
-		}
-		return grid;
-	}
-
-	/**
-	 * Get the means and standard deviation
-	 * 
-	 * @return an array with the mean in the 0 index, standard deviation is the 1
-	 *         index, and rms in the 2 index
-	 */
-	public double[] getBasicStatistics() {
-
-		if (_stats != null) {
-			return _stats;
-		}
-
-		_stats = new double[3];
-		_stats[0] = Double.NaN;
-		_stats[1] = Double.NaN;
-		_stats[2] = Double.NaN;
-		int nbin = getNumberBins();
-		long totcount = getGoodCount();
-		if ((nbin > 0) && (totcount > 0)) {
-
-			double sum = 0;
-			double sumsq = 0;
-			for (int bin = 0; bin < nbin; bin++) {
-				double x = getBinMidValue(bin);
-				double wx = _counts[bin] * x;
-				sum += wx;
-				sumsq += x * wx;
-			}
-
-			double avgSq = sumsq / totcount;
-
-			_stats[0] = sum / totcount; // mean
-			_stats[1] = Math.sqrt(avgSq - (_stats[0] * _stats[0])); // stdDev
-			_stats[2] = Math.sqrt(avgSq); // rms
-		}
-
-		return _stats;
-	}
-
-	/**
-	 * A string displaying some statistics
-	 * 
-	 * @param useRms if <code>true</code> use rms, else use sigma
-	 * @return a string with statistics info
-	 */
-	public String statStr() {
-		double res[] = getBasicStatistics();
-		if (_rmsInHistoLegend) {
-			return String.format(UnicodeSupport.SMALL_MU + ": %-4.2g " + "rms: %-4.2g under: %d over: %d", res[0], res[2], _underCount, _overCount);
-		}
-		else {
-			return String.format(UnicodeSupport.SMALL_MU + ": %-4.2g " + UnicodeSupport.SMALL_SIGMA + ": %-4.2g under: %d over: %d",
-					res[0], res[1], _underCount, _overCount);
-		}
-	}
-
-	/**
-	 * Get the counts
-	 * 
-	 * @return the counts array
-	 */
-	public long[] getCounts() {
-		return _counts;
-	}
-
-	/**
-	 * Get the number on entries in the histogram (excluding underflows and
-	 * overflows)
-	 * 
-	 * @return the number of entries
-	 */
-	public long getGoodCount() {
-
-		long sum = 0;
-		if (_counts != null) {
-			for (long lv : _counts) {
-				sum += lv;
-			}
-		}
-		return sum;
-	}
-
-	/**
-	 * Get the total count, including the unders and overs
-	 * 
-	 * @return the total count, including the unders and overs
-	 */
-	public long getTotalCount() {
-		return getGoodCount() + getUnderCount() + getOverCount();
-	}
-
-	/**
-	 * Get the number on entries in the histogram that were below the minimum value
-	 * 
-	 * @return the number of entries below the minimum value
-	 */
-	public long getUnderCount() {
-		return _underCount;
-	}
-
-	/**
-	 * Get the number on entries in the histogram that were above the maximum value
-	 * 
-	 * @return the number of entries above the maximum value
-	 */
-	public long getOverCount() {
-		return _overCount;
-	}
-
-	/**
-	 * Get the minimum "x" value. This is the minimum of the range being binned.
-	 * 
-	 * @return the minimum "x" value
-	 */
-	public double getMinX() {
-		return (_grid == null) ? Double.NaN : _grid[0];
-	}
-
-	/**
-	 * Get the minimum value. This is the maximum of the range being binned.
-	 * 
-	 * @return the minimum "x" value
-	 */
-	public double getMaxX() {
-		return (_grid == null) ? Double.NaN : _grid[_grid.length - 1];
-	}
-
-	/**
-	 * Get the minimum "y" value. The y axis corresponds to "counts", so this always
-	 * returns 0
-	 */
-	public double getMinY() {
-		return 0.;
-	}
-
-	/**
-	 * Get the maximum "y" value. The y axis corresponds to "counts", so this always
-	 * returns the count of the bin with the most counts.
-	 */
-	public double getMaxY() {
-		if (_counts == null) {
-			return 1;
-		}
-
-		long maxCount = 1;
-		for (long bc : _counts) {
-			maxCount = Math.max(maxCount, bc);
-		}
-
-		return maxCount;
-	}
-
-	/**
-	 * Add a value to the histogram
-	 * 
-	 * @param value the value to ad
-	 */
-	public void add(double value) {
-		_stats = null;
-		int bin = getBin(value);
-		if (bin == UNDERFLOW) {
-			_underCount++;
-		}
-		else if (bin == OVERFLOW) {
-			_overCount++;
-		}
-		else {
-			_counts[bin]++;
-		}
-
-	}
-
-	/**
-	 * Set a bin to a given count
-	 * 
-	 * @param val   the x val will determine bin
-	 * @param count the count
-	 */
-	public void setCount(double val, int count) {
-		_stats = null;
-		int bin = getBin(val);
-		if (bin == UNDERFLOW) {
-			_underCount += count;
-		}
-		else if (bin == OVERFLOW) {
-			_overCount += count;
-		}
-		else {
-			_counts[bin] = count;
-		}
-	}
-
-	/**
-	 * Get the number of bins
-	 * 
-	 * @return the number of bins
-	 */
-	public int getNumberBins() {
-		return (_grid == null) ? 0 : _grid.length - 1;
-	}
-
-	/**
-	 * Get the "x" value of the middle of the bin
-	 * 
-	 * @param bin the bin in question
-	 * @return the mid value
-	 */
-	public double getBinMidValue(int bin) {
-		if ((bin < 0) || (bin >= getNumberBins())) {
-			return Double.NaN;
-		}
-		return 0.5 * (_grid[bin] + _grid[bin + 1]);
-	}
-
-	/**
-	 * Get the "x" value of the right side of the bin
-	 * 
-	 * @param bin the bin in question
-	 * @return the x value of the right side
-	 */
-	public double getBinMaxX(int bin) {
-		if ((bin < 0) || (bin >= getNumberBins())) {
-			return Double.NaN;
-		}
-		return _grid[bin + 1];
-	}
-
-	/**
-	 * Get the "x" value of the left side of the bin
-	 * 
-	 * @param bin the bin in question
-	 * @return the x value of the left side
-	 */
-	public double getBinMinX(int bin) {
-		if ((bin < 0) || (bin >= getNumberBins())) {
-			return Double.NaN;
-		}
-		return _grid[bin];
-	}
-
-	/**
-	 * Get the bin for a given value. Will return the zero-based bin number or
-	 * UNDERFLOW or OVERFLOW.
-	 * 
-	 * @param val the value.
-	 * @return return the bin: [0..(numBin-1)] or an error
-	 */
-	public int getBin(double val) {
-		if (val < getMinX()) {
-			return UNDERFLOW;
-		}
-		else if (val > getMaxX()) {
-			return OVERFLOW;
-		}
-
-		int index = Arrays.binarySearch(_grid, val);
-		// unlikely, but maybe we are exactly on a value
-		if (index < 0) {
-			index = -(index + 1); // now the insertion point.
-		}
-		int bin = index - 1;
-
-		bin = Math.max(0, Math.min(_grid.length - 2, bin));
-		return bin;
-	}
-
-	/**
-	 * Get the status string
-	 * 
-	 * @param canvas     the plot canvas
-	 * @param histo      the histo data object
-	 * @param mousePoint where the mouse is
-	 * @param wp         the data coordinates of the mouse
-	 * @return a status string
-	 */
-	public static String statusString(PlotCanvas canvas, HistoData histo, Point mousePoint, Point.Double wp) {
-		String s = null;
-
-		Polygon poly = GetPolygon(canvas, histo);
-		if (poly.contains(mousePoint)) {
-			int bin = histo.getBin(wp.x);
-
-			PlotParameters params = canvas.getParameters();
-			String minstr = DoubleFormat.doubleFormat(histo.getBinMinX(bin), params.getNumDecimalX(),
-					params.getMinExponentX());
-			String maxstr = DoubleFormat.doubleFormat(histo.getBinMaxX(bin), params.getNumDecimalX(),
-					params.getMinExponentX());
-			
-			String name = histo.getName();
-			if ((name != null) && (name.length() > 0)) {
-				name = "[" + name + "]";
-			}
-			else {
-				name = "";
-			}
-
-			s = name + " bin: " + bin + " [" + minstr + " - " + maxstr + "]";
-			s += " counts: " + histo.getCount(bin);
-		}
-
-		return s;
-	}
-
-	/**
-	 * Get the drawing polygon
-	 * 
-	 * @param canvas the drawing canvas
-	 * @param histo  the histo data
-	 * @return the polygon
-	 */
-	public static Polygon GetPolygon(PlotCanvas canvas, HistoData histo) {
-		Polygon poly = new Polygon();
-		long counts[] = histo.getCounts();
-		Point pp = new Point();
-		Point.Double wp = new Point.Double();
-
-		for (int bin = 0; bin < histo.getNumberBins(); bin++) {
-			double xmin = histo.getBinMinX(bin);
-			double xmax = histo.getBinMaxX(bin);
-			double y = counts[bin];
-
-			if (bin == 0) {
-				wp.setLocation(xmin, 0);
-				canvas.worldToLocal(pp, wp);
-				poly.addPoint(pp.x, pp.y);
-			}
-
-			wp.setLocation(xmin, y);
-			canvas.worldToLocal(pp, wp);
-			poly.addPoint(pp.x, pp.y);
-			wp.setLocation(xmax, y);
-			canvas.worldToLocal(pp, wp);
-			poly.addPoint(pp.x, pp.y);
-
-			if (bin == (histo.getNumberBins() - 1)) {
-				wp.setLocation(xmax, 0);
-				canvas.worldToLocal(pp, wp);
-				poly.addPoint(pp.x, pp.y);
-			}
-		}
-		return poly;
-	}
-
-	/**
-	 * Set whether we use rms or sigma in histogram legends
-	 * 
-	 * @param useRMS if <code>true</code> use rms, else use sigma
-	 */
-	public void setRmsInHistoLegend(boolean useRMS) {
-		_rmsInHistoLegend = useRMS;
-	}
-
-	/**
-	 * Check whether we use rms or sigma in histogram legends
-	 * 
-	 * @return <code>true</code> use rms, else use sigma
-	 */
-	public boolean useRmsInHistoLegend() {
-		return _rmsInHistoLegend;
-	}
-
-	/**
-	 * Set whether we draw sqrt(n) statistical errors
-	 * 
-	 * @param statErr if <code>true</code> draw statistical errors
-	 */
-	public void setDrawStatisticalErrors(boolean statErr) {
-		_statErrors = statErr;
-	}
-
-	/**
-	 * Check whether we draw sqrt(n) statistical errors
-	 * 
-	 * @return <code>true</code> if <code>true</code> draw statistical errors
-	 */
-	public boolean drawStatisticalErrors() {
-		return _statErrors;
-	}
-
-	public String maxBinString() {
-		long maxCount = -1;
-		long counts[] = getCounts();
-		for (long lv : counts) {
-			maxCount = Math.max(maxCount, lv);
-		}
-		if (maxCount < 1) {
-			return "";
-		}
-
-		String s = "Max count: " + maxCount + " in 1-based bin(s):";
-		for (int bin = 0; bin < getNumberBins(); bin++) {
-
-			if (counts[bin] == maxCount) {
-				s += " " + (bin + 1); // make it 1-based
-			}
-		}
-		return s;
-	}
+    /** The XML root element name. */
+    public static final String XmlRootElementName = "HistoData";
+
+    /** Sentinel returned by {@link #getBin(double)} for values below the histogram range. */
+    private static final int UNDERFLOW = -200;
+
+    /** Sentinel returned by {@link #getBin(double)} for values above the histogram range. */
+    private static final int OVERFLOW = -100;
+
+    /**
+     * Cached statistical results: mean in index 0, standard deviation in index 1, rms in index 2.
+     * Null means cache is invalid and must be recomputed.
+     */
+    private double[] stats;
+
+    /** Histogram name (used as curve name). */
+    private String name;
+
+    /** Underflow and overflow counts (values outside the range). */
+    private long underCount;
+    private long overCount;
+
+    /** Use rms or sigma in legend. */
+    private boolean rmsInHistoLegend = true;
+
+    /** Draw sqrt(n) statistical errors. */
+    private boolean statErrors;
+
+    /** Bin edges (length = numBins + 1). Must be strictly ascending. */
+    private final double[] grid;
+
+    /** Bin counts (length = numBins). */
+    private final long[] counts;
+
+    /**
+     * The data for a 1D histogram where the bin spacing is uniform.
+     *
+     * @param name    histogram name
+     * @param valMin  range minimum
+     * @param valMax  range maximum
+     * @param numBins number of bins (>= 1)
+     */
+    public HistoData(String name, double valMin, double valMax, int numBins) {
+        this(name, evenBins(valMin, valMax, numBins));
+    }
+
+    /**
+     * The data for a 1D histogram where the bin spacing is arbitrary (i.e., not uniform).
+     *
+     * @param name histogram name
+     * @param grid bin edge array in strictly ascending order (length >= 2)
+     */
+    public HistoData(String name, double[] grid) {
+        this.name = name;
+        this.grid = validateAndCopyGrid(grid);
+        this.counts = new long[getNumberBins()];
+        clear();
+    }
+
+    /** @return the name of the histogram. */
+    public String getName() {
+        return name;
+    }
+
+    /** Set the histogram name. */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /** Reset counts and cached statistics. */
+    private void reset() {
+        underCount = 0L;
+        overCount = 0L;
+        stats = null;
+        Arrays.fill(counts, 0L);
+    }
+
+    /** Clear histogram data (same as reset). */
+    public void clear() {
+        reset();
+    }
+
+    /** @return number of bins. */
+    public int getNumberBins() {
+        return grid.length - 1;
+    }
+
+    /** @return a defensive copy of the bin-edge grid. */
+    public double[] getGridCopy() {
+        return grid.clone();
+    }
+
+    /** @return the counts array (live). */
+    public long[] getCounts() {
+        return counts;
+    }
+
+    /** @return a defensive copy of the counts array. */
+    public long[] getCountsCopy() {
+        return counts.clone();
+    }
+
+    /** Get the count for a given bin. */
+    public long getCount(int bin) {
+        if (bin < 0 || bin >= counts.length) {
+            return 0L;
+        }
+        return counts[bin];
+    }
+
+    /**
+     * Get the number of entries in the histogram (excluding underflows and overflows).
+     *
+     * @return total in-range count
+     */
+    public long getGoodCount() {
+        long sum = 0L;
+        for (long c : counts) {
+            sum += c;
+        }
+        return sum;
+    }
+
+    /** @return total count including under/overflows. */
+    public long getTotalCount() {
+        return getGoodCount() + getUnderCount() + getOverCount();
+    }
+
+    /** @return underflow count. */
+    public long getUnderCount() {
+        return underCount;
+    }
+
+    /** @return overflow count. */
+    public long getOverCount() {
+        return overCount;
+    }
+
+    /** @return minimum x value (left edge of first bin). */
+    public double getMinX() {
+        return grid[0];
+    }
+
+    /** @return maximum x value (right edge of last bin). */
+    public double getMaxX() {
+        return grid[grid.length - 1];
+    }
+
+    /** @return minimum y value (always 0 for histograms). */
+    public double getMinY() {
+        return 0.0;
+    }
+
+    /** @return maximum y value (max bin count, at least 1). */
+    public double getMaxY() {
+        long max = 1L;
+        for (long c : counts) {
+            max = Math.max(max, c);
+        }
+        return max;
+    }
+
+    /** Add one value to the histogram. */
+    public void add(double value) {
+        stats = null;
+        int bin = getBin(value);
+        if (bin == UNDERFLOW) {
+            underCount++;
+        } else if (bin == OVERFLOW) {
+            overCount++;
+        } else {
+            counts[bin]++;
+        }
+    }
+
+    /**
+     * Set a bin to a given count (value determines which bin).
+     * Counts outside range are accumulated into under/over counts.
+     */
+    public void setCount(double val, int count) {
+        stats = null;
+        int bin = getBin(val);
+        if (bin == UNDERFLOW) {
+            underCount += count;
+        } else if (bin == OVERFLOW) {
+            overCount += count;
+        } else {
+            counts[bin] = count;
+        }
+    }
+
+    /** @return bin midpoint x value. */
+    public double getBinMidValue(int bin) {
+        if (bin < 0 || bin >= getNumberBins()) {
+            return Double.NaN;
+        }
+        return 0.5 * (grid[bin] + grid[bin + 1]);
+    }
+
+    /** @return left edge of bin. */
+    public double getBinMinX(int bin) {
+        if (bin < 0 || bin >= getNumberBins()) {
+            return Double.NaN;
+        }
+        return grid[bin];
+    }
+
+    /** @return right edge of bin. */
+    public double getBinMaxX(int bin) {
+        if (bin < 0 || bin >= getNumberBins()) {
+            return Double.NaN;
+        }
+        return grid[bin + 1];
+    }
+
+    /** @return bin width (right-left). */
+    public double getBinWidth(int bin) {
+        if (bin < 0 || bin >= getNumberBins()) {
+            return Double.NaN;
+        }
+        return grid[bin + 1] - grid[bin];
+    }
+
+    /**
+     * Get the bin for a given value.
+     *
+     * @param val the value
+     * @return bin index in [0..numBins-1], or {@link #UNDERFLOW}/{@link #OVERFLOW}
+     */
+    public int getBin(double val) {
+        if (val < getMinX()) {
+            return UNDERFLOW;
+        }
+        if (val > getMaxX()) {
+            return OVERFLOW;
+        }
+
+        int index = Arrays.binarySearch(grid, val);
+        if (index < 0) {
+            index = -(index + 1); // insertion point
+        }
+        int bin = index - 1;
+        return Math.max(0, Math.min(grid.length - 2, bin));
+    }
+
+    /**
+     * Get mean, standard deviation, and rms.
+     *
+     * @return array: [mean, stdDev, rms]
+     */
+    public double[] getBasicStatistics() {
+        if (stats != null) {
+            return stats;
+        }
+
+        stats = new double[] { Double.NaN, Double.NaN, Double.NaN };
+
+        int nbin = getNumberBins();
+        long tot = getGoodCount();
+        if (nbin > 0 && tot > 0) {
+            double sum = 0.0;
+            double sumsq = 0.0;
+
+            for (int bin = 0; bin < nbin; bin++) {
+                double x = getBinMidValue(bin);
+                double w = counts[bin];
+                sum += w * x;
+                sumsq += w * x * x;
+            }
+
+            double mean = sum / tot;
+            double avgSq = sumsq / tot;
+
+            stats[0] = mean;
+            stats[1] = Math.sqrt(Math.max(0.0, avgSq - mean * mean));
+            stats[2] = Math.sqrt(Math.max(0.0, avgSq));
+        }
+
+        return stats;
+    }
+
+    /**
+     * A string displaying mean and either rms or sigma plus under/over counts.
+     *
+     * @return stats string
+     */
+    public String statStr() {
+        double[] res = getBasicStatistics();
+        if (rmsInHistoLegend) {
+            return String.format(UnicodeSupport.SMALL_MU + ": %-4.2g rms: %-4.2g under: %d over: %d",
+                    res[0], res[2], underCount, overCount);
+        }
+        return String.format(UnicodeSupport.SMALL_MU + ": %-4.2g " + UnicodeSupport.SMALL_SIGMA + ": %-4.2g under: %d over: %d",
+                res[0], res[1], underCount, overCount);
+    }
+
+    /** Set whether we use rms or sigma in histogram legends. */
+    public void setRmsInHistoLegend(boolean useRMS) {
+        this.rmsInHistoLegend = useRMS;
+    }
+
+    /** @return true to use rms, false to use sigma. */
+    public boolean useRmsInHistoLegend() {
+        return rmsInHistoLegend;
+    }
+
+    /** Set whether we draw sqrt(n) statistical errors. */
+    public void setDrawStatisticalErrors(boolean statErr) {
+        this.statErrors = statErr;
+    }
+
+    /** @return true if statistical errors are drawn. */
+    public boolean drawStatisticalErrors() {
+        return statErrors;
+    }
+
+    /**
+     * Return a string describing the max bin(s) (1-based indices).
+     */
+    public String maxBinString() {
+        long maxCount = -1;
+        for (long lv : counts) {
+            maxCount = Math.max(maxCount, lv);
+        }
+        if (maxCount < 1) {
+            return "";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("Max count: ").append(maxCount).append(" in 1-based bin(s):");
+        for (int bin = 0; bin < getNumberBins(); bin++) {
+            if (counts[bin] == maxCount) {
+                sb.append(' ').append(bin + 1);
+            }
+        }
+        return sb.toString();
+    }
+
+    // ------------------------------------------------------------------------
+    // "Prepare for fit" helper
+    // ------------------------------------------------------------------------
+
+    /**
+     * Lightweight container for (x,y[,w]) vectors prepared from histogram bins.
+     * <p>
+     * If {@code weights} is null, the caller can treat it as "unit weights".
+     */
+    public static final class FitData {
+        public final double[] x;
+        public final double[] y;
+        public final double[] weights; // may be null
+
+        public FitData(double[] x, double[] y, double[] weights) {
+            this.x = x;
+            this.y = y;
+            this.weights = weights;
+        }
+    }
+
+    /**
+     * Prepare arrays suitable for the fitters:
+     * <ul>
+     *   <li>{@code x[i]} = bin center</li>
+     *   <li>{@code y[i]} = count in bin (as double)</li>
+     * </ul>
+     *
+     * @param includeZeroBins if false, bins with count==0 are skipped
+     * @return fit data with unit weights (weights == null)
+     */
+    public FitData prepareForFit(boolean includeZeroBins) {
+        return prepareForFit(includeZeroBins, getMinX(), getMaxX(), false);
+    }
+
+    /**
+     * Prepare arrays suitable for the fitters:
+     * <ul>
+     *   <li>{@code x[i]} = bin center</li>
+     *   <li>{@code y[i]} = count in bin (as double)</li>
+     *   <li>{@code weights[i]} (optional) = 1/sigmaY^2 using Poisson sigmaY = sqrt(count)</li>
+     * </ul>
+     *
+     * <p>Poisson weights behavior:
+     * <ul>
+     *   <li>count &gt; 0: sigma = sqrt(count), weight = 1/count</li>
+     *   <li>count == 0: if included, weight is set to 1 (gentle) rather than infinite</li>
+     * </ul>
+     *
+     * @param includeZeroBins include bins with count==0 if true
+     * @param xmin inclusive x-range (bin center) filter
+     * @param xmax inclusive x-range (bin center) filter
+     * @param poissonWeights if true, include weights suitable for count data
+     * @return fit data; weights may be null if poissonWeights=false
+     */
+    public FitData prepareForFit(boolean includeZeroBins, double xmin, double xmax, boolean poissonWeights) {
+        List<Double> xs = new ArrayList<>();
+        List<Double> ys = new ArrayList<>();
+        List<Double> ws = poissonWeights ? new ArrayList<>() : null;
+
+        int nbin = getNumberBins();
+        for (int bin = 0; bin < nbin; bin++) {
+            long c = counts[bin];
+            if (!includeZeroBins && c == 0L) {
+                continue;
+            }
+
+            double xc = getBinMidValue(bin);
+            if (xc < xmin || xc > xmax) {
+                continue;
+            }
+
+            xs.add(xc);
+            ys.add((double) c);
+
+            if (poissonWeights) {
+                // weight = 1/sigma^2; sigma=sqrt(c) => weight=1/c for c>0
+                double w = (c > 0L) ? (1.0 / c) : 1.0;
+                ws.add(w);
+            }
+        }
+
+        double[] xArr = toDoubleArray(xs);
+        double[] yArr = toDoubleArray(ys);
+        double[] wArr = (ws == null) ? null : toDoubleArray(ws);
+
+        return new FitData(xArr, yArr, wArr);
+    }
+
+    private static double[] toDoubleArray(List<Double> list) {
+        double[] a = new double[list.size()];
+        for (int i = 0; i < a.length; i++) {
+            a[i] = list.get(i);
+        }
+        return a;
+    }
+    
+    /**
+     * Prepare arrays suitable for the fitters using an inclusive bin-index range.
+     * <p>
+     * The returned arrays are built from bin centers and bin counts:
+     * <ul>
+     *   <li>{@code x[i]} = center of bin</li>
+     *   <li>{@code y[i]} = count in bin (as double)</li>
+     *   <li>{@code weights[i]} (optional) = 1/sigmaY^2 using Poisson sigmaY = sqrt(count)</li>
+     * </ul>
+     *
+     * @param includeZeroBins include bins with count==0 if true
+     * @param bin0 inclusive starting bin index (0-based). Values outside range are clamped.
+     * @param bin1 inclusive ending bin index (0-based). Values outside range are clamped.
+     * @param poissonWeights if true, include weights suitable for count data
+     * @return fit data; weights may be null if poissonWeights=false
+     */
+    public FitData prepareForFit(boolean includeZeroBins, int bin0, int bin1, boolean poissonWeights) {
+        int nbin = getNumberBins();
+        if (nbin <= 0) {
+            return new FitData(new double[0], new double[0], poissonWeights ? new double[0] : null);
+        }
+
+        int b0 = clampBin(bin0, nbin);
+        int b1 = clampBin(bin1, nbin);
+        if (b0 > b1) {
+            int tmp = b0;
+            b0 = b1;
+            b1 = tmp;
+        }
+
+        // Count how many bins will be included
+        int keep = 0;
+        for (int bin = b0; bin <= b1; bin++) {
+            long c = counts[bin];
+            if (!includeZeroBins && c == 0L) {
+                continue;
+            }
+            keep++;
+        }
+
+        double[] xArr = new double[keep];
+        double[] yArr = new double[keep];
+        double[] wArr = poissonWeights ? new double[keep] : null;
+
+        int j = 0;
+        for (int bin = b0; bin <= b1; bin++) {
+            long c = counts[bin];
+            if (!includeZeroBins && c == 0L) {
+                continue;
+            }
+
+            double xc = getBinMidValue(bin);
+            xArr[j] = xc;
+            yArr[j] = (double) c;
+
+            if (poissonWeights) {
+                // weight = 1/sigma^2; sigma=sqrt(c) => weight=1/c for c>0
+                // for c==0 (if included), use a gentle finite weight
+                wArr[j] = (c > 0L) ? (1.0 / c) : 1.0;
+            }
+
+            j++;
+        }
+
+        return new FitData(xArr, yArr, wArr);
+    }
+
+    /**
+     * Convenience overload: prepare fit vectors for an inclusive bin range with unit weights.
+     */
+    public FitData prepareForFit(boolean includeZeroBins, int bin0, int bin1) {
+        return prepareForFit(includeZeroBins, bin0, bin1, false);
+    }
+
+    private static int clampBin(int bin, int nbin) {
+        if (bin < 0) return 0;
+        if (bin >= nbin) return nbin - 1;
+        return bin;
+    }
+
+
+    // ------------------------------------------------------------------------
+    // UI helpers: status string and polygon
+    // ------------------------------------------------------------------------
+
+    /**
+     * Get the status string.
+     *
+     * @param canvas     plot canvas
+     * @param histo      histogram data
+     * @param mousePoint current mouse point (local coords)
+     * @param wp         mouse point in world coords
+     * @return status string or null if not inside histogram polygon
+     */
+    public static String statusString(PlotCanvas canvas, HistoData histo, Point mousePoint, Point.Double wp) {
+        String s = null;
+
+        Polygon poly = GetPolygon(canvas, histo);
+        if (poly.contains(mousePoint)) {
+            int bin = histo.getBin(wp.x);
+
+            PlotParameters params = canvas.getParameters();
+            String minstr = DoubleFormat.doubleFormat(histo.getBinMinX(bin), params.getNumDecimalX(), params.getMinExponentX());
+            String maxstr = DoubleFormat.doubleFormat(histo.getBinMaxX(bin), params.getNumDecimalX(), params.getMinExponentX());
+
+            String name = histo.getName();
+            if (name != null && !name.isEmpty()) {
+                name = "[" + name + "]";
+            } else {
+                name = "";
+            }
+
+            s = name + " bin: " + bin + " [" + minstr + " - " + maxstr + "]";
+            s += " counts: " + histo.getCount(bin);
+        }
+
+        return s;
+    }
+
+    /**
+     * Get the drawing polygon.
+     *
+     * @param canvas plot canvas
+     * @param histo  histogram data
+     * @return polygon outlining the drawn histogram
+     */
+    public static Polygon GetPolygon(PlotCanvas canvas, HistoData histo) {
+        Polygon poly = new Polygon();
+        long[] counts = histo.getCounts();
+        Point pp = new Point();
+        Point.Double wp = new Point.Double();
+
+        for (int bin = 0; bin < histo.getNumberBins(); bin++) {
+            double xmin = histo.getBinMinX(bin);
+            double xmax = histo.getBinMaxX(bin);
+            double y = counts[bin];
+
+            if (bin == 0) {
+                wp.setLocation(xmin, 0);
+                canvas.worldToLocal(pp, wp);
+                poly.addPoint(pp.x, pp.y);
+            }
+
+            wp.setLocation(xmin, y);
+            canvas.worldToLocal(pp, wp);
+            poly.addPoint(pp.x, pp.y);
+            wp.setLocation(xmax, y);
+            canvas.worldToLocal(pp, wp);
+            poly.addPoint(pp.x, pp.y);
+
+            if (bin == (histo.getNumberBins() - 1)) {
+                wp.setLocation(xmax, 0);
+                canvas.worldToLocal(pp, wp);
+                poly.addPoint(pp.x, pp.y);
+            }
+        }
+        return poly;
+    }
+
+    // ------------------------------------------------------------------------
+    // Private helpers
+    // ------------------------------------------------------------------------
+
+    private static double[] evenBins(double vmin, double vmax, int numBins) {
+        if (numBins <= 0) {
+            throw new IllegalArgumentException("numBins must be >= 1");
+        }
+        if (!(vmax > vmin)) {
+            throw new IllegalArgumentException("valMax must be > valMin");
+        }
+
+        double[] grid = new double[numBins + 1];
+        double del = (vmax - vmin) / numBins;
+
+        grid[0] = vmin;
+        for (int i = 1; i < numBins; i++) {
+            grid[i] = vmin + i * del;
+        }
+        grid[numBins] = vmax;
+
+        return grid;
+    }
+
+    private static double[] validateAndCopyGrid(double[] grid) {
+        Objects.requireNonNull(grid, "grid");
+        if (grid.length < 2) {
+            throw new IllegalArgumentException("grid must have length >= 2");
+        }
+
+        double[] g = grid.clone();
+        for (int i = 1; i < g.length; i++) {
+            if (!(g[i] > g[i - 1])) {
+                throw new IllegalArgumentException("grid must be strictly ascending (duplicate or decreasing at index " + i + ")");
+            }
+        }
+        return g;
+    }
 }
