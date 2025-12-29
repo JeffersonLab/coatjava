@@ -417,7 +417,7 @@ public class Grid extends JFrame implements IValueGetter {
 		case 1:
 			ds.getCurveStyle(0).setFillColor(new Color(196, 196, 196, 64));
 			ds.getCurveStyle(0).setBorderColor(Color.black);
-			ds.getCurve(0).getFit().setFitType(FitType.NOLINE);
+			ds.getCurve(0).getFit().setFitType(FitType.NONE);
 			params.setMinExponentY(6);
 			params.setNumDecimalY(2);
 			break;
@@ -461,7 +461,7 @@ public class Grid extends JFrame implements IValueGetter {
 			ycols = ds.getAllColumnsByType(DataColumnType.Y);
 
 			for (DataColumn dc : ycols) {
-				dc.getFit().setFitType(FitType.NOLINE);
+				dc.getFit().setFitType(FitType.NONE);
 				dc.getStyle().setSymbolType(SymbolType.CIRCLE);
 				dc.getStyle().setSymbolSize(4);
 				dc.getStyle().setFillColor(fillColor);

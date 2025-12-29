@@ -198,9 +198,8 @@ public class FitEditorPanel extends JPanel {
 				carefulAdd(_gaussianCountSelector);
 				break;
 
-			case POLYPLUSGAUSS:
-				carefulAdd(_gaussianCountSelector);
-				carefulAdd(_polynomialOrderSelector);
+			case HARMONIC:
+				//TODO add harmonic selector
 				break;
 
 			default:
@@ -270,9 +269,8 @@ public class FitEditorPanel extends JPanel {
 			_gaussianCountSelector.setEnabled(true);
 			break;
 
-		case POLYPLUSGAUSS:
-			_polynomialOrderSelector.setEnabled(true);
-			_gaussianCountSelector.setEnabled(true);
+		case HARMONIC:
+			//TODO add harmonic selector
 			break;
 
 		default:

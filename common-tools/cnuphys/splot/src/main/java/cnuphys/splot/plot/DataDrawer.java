@@ -70,9 +70,6 @@ public class DataDrawer {
 			}
 			break;
 
-		case H2D:
-			CurveDrawer.drawHisto2D(g, _plotCanvas, ds.getColumn(0));
-			break;
 
 		case XYXY:
 			for (int i = 0; i < ds.getColumnCount() / 2; i++) {
@@ -85,9 +82,7 @@ public class DataDrawer {
 			CurveDrawer.drawCurve(g, _plotCanvas, ds.getColumn(0), ds.getColumn(1));
 			break;
 
-		case UNKNOWN:
-			System.err.println("Cannot draw UNKNOWN data set type");
-			break;
+
 		}
 
 		// restore the old clip

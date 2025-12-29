@@ -66,16 +66,6 @@ public class FitUtilities {
 	}
 
 	/**
-	 * A Gaussian and polynomial fit with errors
-	 * 
-	 * @param fit the fit data
-	 */
-	public static void fitGaussPlusPoly(Fit fit) throws IllegalArgumentException {
-		fixNullSig(fit);
-		new PolyAndGaussianFit(fit); // errors
-	}
-
-	/**
 	 * Checks whether an array is sorted in ascending order
 	 * 
 	 * @param val the array to check

@@ -13,7 +13,8 @@ import cnuphys.splot.style.EnumComboBox;
 
 public enum FitType {
 
-	NOLINE, CONNECT, STAIRS, LINE, POLYNOMIAL, GAUSSIANS, POLYPLUSGAUSS, ERF, ERFC, CUBICSPLINE;
+	NONE, CONNECT, STAIRS, LINE, POLYNOMIAL, GAUSSIANS, 
+	HARMONIC, ERF, ERFC, CUBICSPLINE;
 
 	// some hex colors
 	private static final String WHEAT = X11Colors.getX11ColorAsHex("WHEAT");
@@ -32,10 +33,10 @@ public enum FitType {
 		names.put(CUBICSPLINE, "Cubic Spline");
 		names.put(POLYNOMIAL, "Polynomial");
 		names.put(GAUSSIANS, "Gaussians");
-		names.put(POLYPLUSGAUSS, "Poly & Gaussians");
+		names.put(HARMONIC, "Harmonic");
 		names.put(ERF, "Erf Function");
 		names.put(ERFC, "Erfc Function");
-		names.put(NOLINE, "No Line");
+		names.put(NONE, "No Line");
 	}
 
 	private static final String _MU = UnicodeSupport.SMALL_MU;
@@ -91,7 +92,7 @@ public enum FitType {
 
 		switch (type) {
 
-		case NOLINE:
+		case NONE:
 			sb.append("No line.");
 			break;
 
@@ -221,35 +222,15 @@ public enum FitType {
 			}
 			break; // GAUSSIANS
 
-		case POLYPLUSGAUSS:
-			sb.append(header("Gaussian & Polynomial Fit:")
-					+ descript("y = " + _SUM + sub("A", "n") + "&thinsp;exp{-[(x-" + sub(_MU, "n") + ")/"
-							+ sub("S", "n") + "]<SUP>2</SUP>} + " + _SUM + sub("D", "m") + "&thinsp;x<SUP>m</SUP>"));
-			sb.append(info("Number of Gaussians: " + curveFit.getNumGaussian()));
-			sb.append(info("Polynomial Order: " + curveFit.getPolynomialOrder()));
-			sb.append(colorStr("<b>Gaussian Parameters</b>", "blue") + "<BR>");
+		case HARMONIC:
+			sb.append(header("Harmonic Fit:")
+					+ descript("FILL IN"));
+			sb.append(info("FILL ION"));
+			sb.append(colorStr("<b>Harmonic Parameters</b>", "blue") + "<BR>");
 
 			if (fit != null) {
-				PolyAndGaussianFit fpg = (PolyAndGaussianFit) fit;
 
-				for (int i = 0; i < fpg._numGauss; i++) {
-					int j = 3 * i;
-					sb.append(pmString(sub("A", i), fpg.a[j], Math.sqrt(fpg.covar[j][j])) + "<BR>");
-					j++;
-					sb.append(pmString(sub(_MU, i), fpg.a[j], Math.sqrt(fpg.covar[j][j])) + "<BR>");
-					j++;
-					sb.append(pmString(sub("S", i), fpg.a[j], Math.sqrt(fpg.covar[j][j])) + "<BR>");
-				}
-				// now the poly
-				sb.append(colorStr("<b>Polynomial Parameters</b>", "blue") + _EOL);
-				for (int i = 3 * fpg._numGauss; i < fpg.a.length; i++) {
-					int j = i - 3 * fpg._numGauss;
-					sb.append(pmString(sub("D", j), fpg.a[i], Math.sqrt(fpg.covar[i][i])) + _EOL);
-
-				}
-
-				sb.append(errorType(curveFit));
-				sb.append(chiSqString(fpg.chisq));
+				sb.append("FILL IN");
 			}
 			else {
 				sb.append(warning("GAUSSIAN PLUS POLY FIT PROBLEM"));

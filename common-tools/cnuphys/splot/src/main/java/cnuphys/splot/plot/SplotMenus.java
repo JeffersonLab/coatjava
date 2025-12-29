@@ -157,11 +157,8 @@ public class SplotMenus implements ActionListener {
 		}
 		else if (source == _axesItem) {
 			DataSetType type = _plotCanvas.getType();
-			// XYY, XYXY, XYEXYE, XYEEXYEE, H1D, H2D, STRIP, UNKNOWN;
 			switch (type) {
-			case UNKNOWN:
 			case H1D:
-			case H2D:
 			case STRIP:
 				JOptionPane.showMessageDialog(null, "Axes editing is not yet supported for this type of plot.",
 						"Not Supported", JOptionPane.INFORMATION_MESSAGE);

@@ -4,6 +4,7 @@ import java.awt.Point;
 import java.awt.Polygon;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
@@ -17,6 +18,16 @@ import cnuphys.splot.plot.UnicodeSupport;
  * <p>
  * Bin edges are stored in {@code grid[]} of length (numBins + 1). Counts are stored in
  * {@code counts[]} of length numBins.
+ *
+ * <h3>Fit preparation helpers</h3>
+ * This class includes helpers to build x/y vectors for least-squares fitting:
+ * <ul>
+ *   <li>x[i] = bin center</li>
+ *   <li>y[i] = bin count</li>
+ *   <li>optional Poisson weights: w[i] = 1/count for count&gt;0</li>
+ * </ul>
+ * It also includes several peak-finding strategies and "prepare around peak" convenience methods,
+ * including guarded versions that deal with edge proximity and minimum-point constraints.
  *
  * @author heddle
  */
@@ -369,7 +380,7 @@ public class HistoData {
      * <p>
      * If {@code weights} is null, the caller can treat it as "unit weights".
      */
-    public static final class FitData {
+    public static class FitData {
         public final double[] x;
         public final double[] y;
         public final double[] weights; // may be null
@@ -382,15 +393,26 @@ public class HistoData {
     }
 
     /**
-     * Prepare arrays suitable for the fitters:
-     * <ul>
-     *   <li>{@code x[i]} = bin center</li>
-     *   <li>{@code y[i]} = count in bin (as double)</li>
-     * </ul>
-     *
-     * @param includeZeroBins if false, bins with count==0 are skipped
-     * @return fit data with unit weights (weights == null)
+     * Fit prep result that also reports which peak bin and window were used.
+     * Useful for status/debug strings in the UI.
      */
+    public static final class FitWindowData extends FitData {
+        public final int peakBin;
+        public final int bin0;
+        public final int bin1;
+        public final int halfWindowBinsUsed;
+
+        public FitWindowData(double[] x, double[] y, double[] weights,
+                             int peakBin, int bin0, int bin1, int halfWindowBinsUsed) {
+            super(x, y, weights);
+            this.peakBin = peakBin;
+            this.bin0 = bin0;
+            this.bin1 = bin1;
+            this.halfWindowBinsUsed = halfWindowBinsUsed;
+        }
+    }
+
+    /** Prepare fit vectors over full x-range; optionally skip empty bins. */
     public FitData prepareForFit(boolean includeZeroBins) {
         return prepareForFit(includeZeroBins, getMinX(), getMaxX(), false);
     }
@@ -402,18 +424,6 @@ public class HistoData {
      *   <li>{@code y[i]} = count in bin (as double)</li>
      *   <li>{@code weights[i]} (optional) = 1/sigmaY^2 using Poisson sigmaY = sqrt(count)</li>
      * </ul>
-     *
-     * <p>Poisson weights behavior:
-     * <ul>
-     *   <li>count &gt; 0: sigma = sqrt(count), weight = 1/count</li>
-     *   <li>count == 0: if included, weight is set to 1 (gentle) rather than infinite</li>
-     * </ul>
-     *
-     * @param includeZeroBins include bins with count==0 if true
-     * @param xmin inclusive x-range (bin center) filter
-     * @param xmax inclusive x-range (bin center) filter
-     * @param poissonWeights if true, include weights suitable for count data
-     * @return fit data; weights may be null if poissonWeights=false
      */
     public FitData prepareForFit(boolean includeZeroBins, double xmin, double xmax, boolean poissonWeights) {
         List<Double> xs = new ArrayList<>();
@@ -436,9 +446,7 @@ public class HistoData {
             ys.add((double) c);
 
             if (poissonWeights) {
-                // weight = 1/sigma^2; sigma=sqrt(c) => weight=1/c for c>0
-                double w = (c > 0L) ? (1.0 / c) : 1.0;
-                ws.add(w);
+                ws.add(poissonWeightForCount(c));
             }
         }
 
@@ -448,23 +456,64 @@ public class HistoData {
 
         return new FitData(xArr, yArr, wArr);
     }
-    
+
+    /**
+     * Prepare arrays suitable for the fitters using an inclusive bin-index range.
+     */
+    public FitData prepareForFit(boolean includeZeroBins, int bin0, int bin1, boolean poissonWeights) {
+        int nbin = getNumberBins();
+        if (nbin <= 0) {
+            return new FitData(new double[0], new double[0], poissonWeights ? new double[0] : null);
+        }
+
+        int b0 = clampBin(bin0, nbin);
+        int b1 = clampBin(bin1, nbin);
+        if (b0 > b1) {
+            int tmp = b0;
+            b0 = b1;
+            b1 = tmp;
+        }
+
+        int keep = 0;
+        for (int bin = b0; bin <= b1; bin++) {
+            long c = counts[bin];
+            if (!includeZeroBins && c == 0L) {
+                continue;
+            }
+            keep++;
+        }
+
+        double[] xArr = new double[keep];
+        double[] yArr = new double[keep];
+        double[] wArr = poissonWeights ? new double[keep] : null;
+
+        int j = 0;
+        for (int bin = b0; bin <= b1; bin++) {
+            long c = counts[bin];
+            if (!includeZeroBins && c == 0L) {
+                continue;
+            }
+
+            xArr[j] = getBinMidValue(bin);
+            yArr[j] = (double) c;
+            if (poissonWeights) {
+                wArr[j] = poissonWeightForCount(c);
+            }
+            j++;
+        }
+
+        return new FitData(xArr, yArr, wArr);
+    }
+
+    /** Convenience overload: inclusive bin range, unit weights. */
+    public FitData prepareForFit(boolean includeZeroBins, int bin0, int bin1) {
+        return prepareForFit(includeZeroBins, bin0, bin1, false);
+    }
+
     /**
      * Prepare arrays suitable for fitters from a symmetric window around a peak bin.
-     * <p>
-     * This is a convenience wrapper around {@link #prepareForFit(boolean, int, int, boolean)}.
-     *
-     * @param includeZeroBins include bins with count==0 if true
-     * @param peakBin the center bin (0-based)
-     * @param halfWindowBins number of bins to include on each side of {@code peakBin} (>= 0).
-     *        The total nominal span is {@code [peakBin-halfWindowBins, peakBin+halfWindowBins]}.
-     * @param poissonWeights if true, include Poisson weights (1/count for count>0)
-     * @return fit data (x=bin centers, y=counts); weights may be null
      */
-    public FitData prepareForFitAroundPeak(boolean includeZeroBins,
-                                          int peakBin,
-                                          int halfWindowBins,
-                                          boolean poissonWeights) {
+    public FitData prepareForFitAroundPeak(boolean includeZeroBins, int peakBin, int halfWindowBins, boolean poissonWeights) {
         if (halfWindowBins < 0) {
             throw new IllegalArgumentException("halfWindowBins must be >= 0");
         }
@@ -473,17 +522,28 @@ public class HistoData {
         return prepareForFit(includeZeroBins, b0, b1, poissonWeights);
     }
 
-    /**
-     * Convenience overload: unit weights, symmetric window around a peak bin.
-     */
-    public FitData prepareForFitAroundPeak(boolean includeZeroBins,
-                                          int peakBin,
-                                          int halfWindowBins) {
+    /** Convenience overload: unit weights, symmetric window around a peak bin. */
+    public FitData prepareForFitAroundPeak(boolean includeZeroBins, int peakBin, int halfWindowBins) {
         return prepareForFitAroundPeak(includeZeroBins, peakBin, halfWindowBins, false);
     }
 
     /**
-     * Find the (0-based) bin index with the maximum count.
+     * Convenience: find global raw peak and prepare arrays around it.
+     */
+    public FitData prepareForFitAroundPeak(boolean includeZeroBins, int halfWindowBins, boolean poissonWeights) {
+        int peak = findPeakBin();
+        if (peak < 0) {
+            return new FitData(new double[0], new double[0], poissonWeights ? new double[0] : null);
+        }
+        return prepareForFitAroundPeak(includeZeroBins, peak, halfWindowBins, poissonWeights);
+    }
+
+    // ------------------------------------------------------------------------
+    // Peak finders
+    // ------------------------------------------------------------------------
+
+    /**
+     * Find the (0-based) bin index with the maximum count (raw).
      * If there are multiple maxima, returns the first.
      *
      * @return peak bin index, or -1 if histogram has no bins
@@ -508,10 +568,6 @@ public class HistoData {
     /**
      * Find the (0-based) bin index with the maximum count within an inclusive bin range.
      * If there are multiple maxima, returns the first.
-     *
-     * @param bin0 inclusive start bin (0-based; clamped)
-     * @param bin1 inclusive end bin (0-based; clamped)
-     * @return peak bin in the range, or -1 if histogram has no bins
      */
     public int findPeakBin(int bin0, int bin1) {
         int nbin = getNumberBins();
@@ -540,53 +596,15 @@ public class HistoData {
     }
 
     /**
-     * Convenience: automatically find the peak bin (global maximum) and then prepare
-     * fit arrays from a symmetric window around that peak.
-     *
-     * @param includeZeroBins include bins with count==0 if true
-     * @param halfWindowBins number of bins on each side of the peak (>= 0)
-     * @param poissonWeights if true, include Poisson weights
-     * @return fit data around the global peak; if histogram empty, returns empty arrays
+     * Find the peak bin using a flat moving-average smoothing.
      */
-    public FitData prepareForFitAroundPeak(boolean includeZeroBins,
-                                          int halfWindowBins,
-                                          boolean poissonWeights) {
-        int peak = findPeakBin();
-        if (peak < 0) {
-            return new FitData(new double[0], new double[0], poissonWeights ? new double[0] : null);
-        }
-        return prepareForFitAroundPeak(includeZeroBins, peak, halfWindowBins, poissonWeights);
-    }
-
-
-    private static double[] toDoubleArray(List<Double> list) {
-        double[] a = new double[list.size()];
-        for (int i = 0; i < a.length; i++) {
-            a[i] = list.get(i);
-        }
-        return a;
-    }
-    
-    /**
-     * Prepare arrays suitable for the fitters using an inclusive bin-index range.
-     * <p>
-     * The returned arrays are built from bin centers and bin counts:
-     * <ul>
-     *   <li>{@code x[i]} = center of bin</li>
-     *   <li>{@code y[i]} = count in bin (as double)</li>
-     *   <li>{@code weights[i]} (optional) = 1/sigmaY^2 using Poisson sigmaY = sqrt(count)</li>
-     * </ul>
-     *
-     * @param includeZeroBins include bins with count==0 if true
-     * @param bin0 inclusive starting bin index (0-based). Values outside range are clamped.
-     * @param bin1 inclusive ending bin index (0-based). Values outside range are clamped.
-     * @param poissonWeights if true, include weights suitable for count data
-     * @return fit data; weights may be null if poissonWeights=false
-     */
-    public FitData prepareForFit(boolean includeZeroBins, int bin0, int bin1, boolean poissonWeights) {
+    public int findPeakBinSmoothed(int bin0, int bin1, int radius, boolean ignoreZeroBins) {
         int nbin = getNumberBins();
         if (nbin <= 0) {
-            return new FitData(new double[0], new double[0], poissonWeights ? new double[0] : null);
+            return -1;
+        }
+        if (radius < 0) {
+            throw new IllegalArgumentException("radius must be >= 0");
         }
 
         int b0 = clampBin(bin0, nbin);
@@ -597,56 +615,371 @@ public class HistoData {
             b1 = tmp;
         }
 
-        // Count how many bins will be included
-        int keep = 0;
-        for (int bin = b0; bin <= b1; bin++) {
-            long c = counts[bin];
-            if (!includeZeroBins && c == 0L) {
-                continue;
-            }
-            keep++;
-        }
+        int bestBin = -1;
+        double bestScore = Double.NEGATIVE_INFINITY;
 
-        double[] xArr = new double[keep];
-        double[] yArr = new double[keep];
-        double[] wArr = poissonWeights ? new double[keep] : null;
-
-        int j = 0;
-        for (int bin = b0; bin <= b1; bin++) {
-            long c = counts[bin];
-            if (!includeZeroBins && c == 0L) {
+        for (int i = b0; i <= b1; i++) {
+            if (ignoreZeroBins && counts[i] == 0L) {
                 continue;
             }
 
-            double xc = getBinMidValue(bin);
-            xArr[j] = xc;
-            yArr[j] = (double) c;
+            int lo = Math.max(0, i - radius);
+            int hi = Math.min(nbin - 1, i + radius);
 
-            if (poissonWeights) {
-                // weight = 1/sigma^2; sigma=sqrt(c) => weight=1/c for c>0
-                // for c==0 (if included), use a gentle finite weight
-                wArr[j] = (c > 0L) ? (1.0 / c) : 1.0;
+            long sum = 0L;
+            int cnt = 0;
+            for (int j = lo; j <= hi; j++) {
+                sum += counts[j];
+                cnt++;
             }
 
-            j++;
+            double avg = (cnt > 0) ? ((double) sum / cnt) : Double.NEGATIVE_INFINITY;
+
+            if (avg > bestScore) {
+                bestScore = avg;
+                bestBin = i;
+            } else if (avg == bestScore && bestBin >= 0) {
+                if (counts[i] > counts[bestBin]) {
+                    bestBin = i;
+                }
+            }
         }
 
-        return new FitData(xArr, yArr, wArr);
+        return (bestBin >= 0) ? bestBin : findPeakBin(b0, b1);
+    }
+
+    /** Convenience: full-range flat-smoothed peak. */
+    public int findPeakBinSmoothed(int radius, boolean ignoreZeroBins) {
+        return findPeakBinSmoothed(0, getNumberBins() - 1, radius, ignoreZeroBins);
     }
 
     /**
-     * Convenience overload: prepare fit vectors for an inclusive bin range with unit weights.
+     * Find the peak bin using a triangular-kernel smoothing.
      */
-    public FitData prepareForFit(boolean includeZeroBins, int bin0, int bin1) {
-        return prepareForFit(includeZeroBins, bin0, bin1, false);
+    public int findPeakBinTriangularSmoothed(int bin0, int bin1, int radius, boolean ignoreZeroBins) {
+        int nbin = getNumberBins();
+        if (nbin <= 0) {
+            return -1;
+        }
+        if (radius < 0) {
+            throw new IllegalArgumentException("radius must be >= 0");
+        }
+
+        int b0 = clampBin(bin0, nbin);
+        int b1 = clampBin(bin1, nbin);
+        if (b0 > b1) {
+            int tmp = b0;
+            b0 = b1;
+            b1 = tmp;
+        }
+
+        int bestBin = -1;
+        double bestScore = Double.NEGATIVE_INFINITY;
+
+        for (int i = b0; i <= b1; i++) {
+            if (ignoreZeroBins && counts[i] == 0L) {
+                continue;
+            }
+
+            double score = triangularSmoothedScore(i, radius, nbin);
+
+            if (score > bestScore) {
+                bestScore = score;
+                bestBin = i;
+            } else if (score == bestScore && bestBin >= 0) {
+                long ci = counts[i];
+                long cb = counts[bestBin];
+                if (ci > cb) {
+                    bestBin = i;
+                } else if (ci == cb) {
+                    int mid = (b0 + b1) / 2;
+                    if (Math.abs(i - mid) < Math.abs(bestBin - mid)) {
+                        bestBin = i;
+                    }
+                }
+            }
+        }
+
+        return (bestBin >= 0) ? bestBin : findPeakBin(b0, b1);
     }
 
-    private static int clampBin(int bin, int nbin) {
-        if (bin < 0) return 0;
-        if (bin >= nbin) return nbin - 1;
-        return bin;
+    /** Convenience: full-range triangular-smoothed peak. */
+    public int findPeakBinTriangularSmoothed(int radius, boolean ignoreZeroBins) {
+        return findPeakBinTriangularSmoothed(0, getNumberBins() - 1, radius, ignoreZeroBins);
     }
 
+    /**
+     * Best-of-both-worlds peak:
+     * <ul>
+     *   <li>Primary: maximize triangular-smoothed score</li>
+     *   <li>If multiple adjacent bins tie (plateau), pick the most sensible raw bin within plateau</li>
+     * </ul>
+     */
+    public int findPeakBinBest(int bin0, int bin1, int smoothRadius, boolean ignoreZeroBins) {
+        int nbin = getNumberBins();
+        if (nbin <= 0) {
+            return -1;
+        }
+        if (smoothRadius < 0) {
+            throw new IllegalArgumentException("smoothRadius must be >= 0");
+        }
+
+        int b0 = clampBin(bin0, nbin);
+        int b1 = clampBin(bin1, nbin);
+        if (b0 > b1) {
+            int tmp = b0;
+            b0 = b1;
+            b1 = tmp;
+        }
+
+        if (smoothRadius == 0) {
+            return rawPeakWithPlateauHandling(b0, b1, ignoreZeroBins);
+        }
+
+        double bestScore = Double.NEGATIVE_INFINITY;
+        int p0 = -1;
+        int p1 = -1;
+
+        for (int i = b0; i <= b1; i++) {
+            if (ignoreZeroBins && counts[i] == 0L) {
+                continue;
+            }
+
+            double score = triangularSmoothedScore(i, smoothRadius, nbin);
+
+            if (score > bestScore) {
+                bestScore = score;
+                p0 = i;
+                p1 = i;
+            } else if (score == bestScore && p0 >= 0) {
+                if (i == p1 + 1) {
+                    p1 = i;
+                } else {
+                    // Non-contiguous tie: keep the plateau segment whose chosen raw representative is better.
+                    int oldChoice = chooseBestInPlateau(p0, p1, b0, b1);
+                    int newChoice = i;
+                    if (counts[newChoice] > counts[oldChoice]) {
+                        p0 = i;
+                        p1 = i;
+                    } else if (counts[newChoice] == counts[oldChoice]) {
+                        int mid = (b0 + b1) / 2;
+                        if (Math.abs(newChoice - mid) < Math.abs(oldChoice - mid)) {
+                            p0 = i;
+                            p1 = i;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (p0 < 0) {
+            return findPeakBin(b0, b1);
+        }
+        if (p0 == p1) {
+            return p0;
+        }
+        return chooseBestInPlateau(p0, p1, b0, b1);
+    }
+
+    /** Convenience: full-range best peak. */
+    public int findPeakBinBest(int smoothRadius, boolean ignoreZeroBins) {
+        return findPeakBinBest(0, getNumberBins() - 1, smoothRadius, ignoreZeroBins);
+    }
+
+    // ------------------------------------------------------------------------
+    // Peak-based fit-prep conveniences
+    // ------------------------------------------------------------------------
+
+    public FitData prepareForFitAroundSmoothedPeak(boolean includeZeroBins,
+                                                  int halfWindowBins,
+                                                  int smoothRadius,
+                                                  boolean ignoreZeroBins,
+                                                  boolean poissonWeights) {
+        int peak = findPeakBinSmoothed(smoothRadius, ignoreZeroBins);
+        if (peak < 0) {
+            return new FitData(new double[0], new double[0], poissonWeights ? new double[0] : null);
+        }
+        return prepareForFitAroundPeak(includeZeroBins, peak, halfWindowBins, poissonWeights);
+    }
+
+    public FitData prepareForFitAroundSmoothedPeak(boolean includeZeroBins,
+                                                  int bin0,
+                                                  int bin1,
+                                                  int halfWindowBins,
+                                                  int smoothRadius,
+                                                  boolean ignoreZeroBins,
+                                                  boolean poissonWeights) {
+        int peak = findPeakBinSmoothed(bin0, bin1, smoothRadius, ignoreZeroBins);
+        if (peak < 0) {
+            return new FitData(new double[0], new double[0], poissonWeights ? new double[0] : null);
+        }
+        return prepareForFitAroundPeak(includeZeroBins, peak, halfWindowBins, poissonWeights);
+    }
+
+    public FitData prepareForFitAroundTriangularSmoothedPeak(boolean includeZeroBins,
+                                                            int halfWindowBins,
+                                                            int smoothRadius,
+                                                            boolean ignoreZeroBins,
+                                                            boolean poissonWeights) {
+        int peak = findPeakBinTriangularSmoothed(smoothRadius, ignoreZeroBins);
+        if (peak < 0) {
+            return new FitData(new double[0], new double[0], poissonWeights ? new double[0] : null);
+        }
+        return prepareForFitAroundPeak(includeZeroBins, peak, halfWindowBins, poissonWeights);
+    }
+
+    public FitData prepareForFitAroundTriangularSmoothedPeak(boolean includeZeroBins,
+                                                            int bin0,
+                                                            int bin1,
+                                                            int halfWindowBins,
+                                                            int smoothRadius,
+                                                            boolean ignoreZeroBins,
+                                                            boolean poissonWeights) {
+        int peak = findPeakBinTriangularSmoothed(bin0, bin1, smoothRadius, ignoreZeroBins);
+        if (peak < 0) {
+            return new FitData(new double[0], new double[0], poissonWeights ? new double[0] : null);
+        }
+        return prepareForFitAroundPeak(includeZeroBins, peak, halfWindowBins, poissonWeights);
+    }
+
+    public FitData prepareForFitAroundBestPeak(boolean includeZeroBins,
+                                              int halfWindowBins,
+                                              int smoothRadius,
+                                              boolean ignoreZeroBins,
+                                              boolean poissonWeights) {
+        int peak = findPeakBinBest(smoothRadius, ignoreZeroBins);
+        if (peak < 0) {
+            return new FitData(new double[0], new double[0], poissonWeights ? new double[0] : null);
+        }
+        return prepareForFitAroundPeak(includeZeroBins, peak, halfWindowBins, poissonWeights);
+    }
+
+    public FitData prepareForFitAroundBestPeak(boolean includeZeroBins,
+                                              int bin0,
+                                              int bin1,
+                                              int halfWindowBins,
+                                              int smoothRadius,
+                                              boolean ignoreZeroBins,
+                                              boolean poissonWeights) {
+        int peak = findPeakBinBest(bin0, bin1, smoothRadius, ignoreZeroBins);
+        if (peak < 0) {
+            return new FitData(new double[0], new double[0], poissonWeights ? new double[0] : null);
+        }
+        return prepareForFitAroundPeak(includeZeroBins, peak, halfWindowBins, poissonWeights);
+    }
+
+    // ------------------------------------------------------------------------
+    // Guarded best-peak fit-prep (edge sanity + min-points safety)
+    // ------------------------------------------------------------------------
+
+    /**
+     * Prepare fit arrays around a robust peak, with:
+     * <ul>
+     *   <li>edge sanity: prefer peaks that can support the requested window fully</li>
+     *   <li>auto-shrink if peak is near edges</li>
+     *   <li>min-points safety after filtering; expand window to max if needed; optionally include zeros as last resort</li>
+     * </ul>
+     *
+     * @param includeZeroBins include bins with count==0 in returned fit vectors (if false, zeros are skipped)
+     * @param searchBin0 inclusive start bin to search for peak (0-based; clamped)
+     * @param searchBin1 inclusive end bin to search for peak (0-based; clamped)
+     * @param halfWindowBins requested half-window size (>= 0)
+     * @param smoothRadius smoothing radius for {@link #findPeakBinBest(int, int, int, boolean)} (>= 0)
+     * @param ignoreZeroBins if true, zero-count bins are skipped as PEAK candidates
+     * @param poissonWeights if true, include Poisson weights
+     * @param minPoints minimum number of points required after filtering (>= 1)
+     */
+    public FitWindowData prepareForFitAroundBestPeakGuarded(boolean includeZeroBins,
+                                                           int searchBin0,
+                                                           int searchBin1,
+                                                           int halfWindowBins,
+                                                           int smoothRadius,
+                                                           boolean ignoreZeroBins,
+                                                           boolean poissonWeights,
+                                                           int minPoints) {
+        int nbin = getNumberBins();
+        if (nbin <= 0) {
+            return new FitWindowData(new double[0], new double[0], poissonWeights ? new double[0] : null,
+                                     -1, 0, -1, 0);
+        }
+        if (halfWindowBins < 0) {
+            throw new IllegalArgumentException("halfWindowBins must be >= 0");
+        }
+        if (minPoints < 1) {
+            throw new IllegalArgumentException("minPoints must be >= 1");
+        }
+
+        int s0 = clampBin(searchBin0, nbin);
+        int s1 = clampBin(searchBin1, nbin);
+        if (s0 > s1) {
+            int tmp = s0;
+            s0 = s1;
+            s1 = tmp;
+        }
+
+        // Prefer peaks that can support the requested window fully.
+        int inner0 = s0 + halfWindowBins;
+        int inner1 = s1 - halfWindowBins;
+
+        int peak;
+        if (inner0 <= inner1) {
+            peak = findPeakBinBest(inner0, inner1, smoothRadius, ignoreZeroBins);
+        } else {
+            peak = findPeakBinBest(s0, s1, smoothRadius, ignoreZeroBins);
+        }
+
+        if (peak < 0) {
+            return new FitWindowData(new double[0], new double[0], poissonWeights ? new double[0] : null,
+                                     -1, 0, -1, 0);
+        }
+
+        int maxHalf = maxHalfWindowAround(peak, s0, s1, nbin);
+        int halfUsed = Math.min(halfWindowBins, maxHalf);
+
+        FitWindowData out = buildWindow(includeZeroBins, peak, halfUsed, s0, s1, poissonWeights);
+        if (out.x.length >= minPoints) {
+            return out;
+        }
+
+        // Expand to maximum possible window.
+        if (halfUsed < maxHalf) {
+            halfUsed = maxHalf;
+            out = buildWindow(includeZeroBins, peak, halfUsed, s0, s1, poissonWeights);
+            if (out.x.length >= minPoints) {
+                return out;
+            }
+        }
+
+        // Last resort: if user excluded zeros, try including them to satisfy minPoints.
+        if (!includeZeroBins) {
+            FitWindowData out2 = buildWindow(true, peak, halfUsed, s0, s1, poissonWeights);
+            if (out2.x.length >= minPoints) {
+                return out2;
+            }
+        }
+
+        // Still insufficient: return empty but keep metadata.
+        int b0 = Math.max(s0, peak - halfUsed);
+        int b1 = Math.min(s1, peak + halfUsed);
+        return new FitWindowData(new double[0], new double[0], poissonWeights ? new double[0] : null,
+                                 peak, b0, b1, halfUsed);
+    }
+
+    /** Convenience: guarded best-peak search over whole histogram. */
+    public FitWindowData prepareForFitAroundBestPeakGuarded(boolean includeZeroBins,
+                                                           int halfWindowBins,
+                                                           int smoothRadius,
+                                                           boolean ignoreZeroBins,
+                                                           boolean poissonWeights,
+                                                           int minPoints) {
+        return prepareForFitAroundBestPeakGuarded(includeZeroBins,
+                                                  0, getNumberBins() - 1,
+                                                  halfWindowBins,
+                                                  smoothRadius,
+                                                  ignoreZeroBins,
+                                                  poissonWeights,
+                                                  minPoints);
+    }
 
     // ------------------------------------------------------------------------
     // UI helpers: status string and polygon
@@ -730,6 +1063,136 @@ public class HistoData {
     // Private helpers
     // ------------------------------------------------------------------------
 
+    private static double[] toDoubleArray(List<Double> list) {
+        double[] a = new double[list.size()];
+        for (int i = 0; i < a.length; i++) {
+            a[i] = list.get(i);
+        }
+        return a;
+    }
+
+    private static int clampBin(int bin, int nbin) {
+        if (bin < 0) return 0;
+        if (bin >= nbin) return nbin - 1;
+        return bin;
+    }
+
+    private static double poissonWeightForCount(long c) {
+        // weight = 1/sigma^2, Poisson sigma=sqrt(c) => weight=1/c for c>0
+        // If c==0 and we included it, use a gentle finite weight (1.0).
+        return (c > 0L) ? (1.0 / c) : 1.0;
+    }
+
+    private double triangularSmoothedScore(int i, int radius, int nbin) {
+        int lo = Math.max(0, i - radius);
+        int hi = Math.min(nbin - 1, i + radius);
+
+        long weightedSum = 0L;
+        long weightSum = 0L;
+        for (int j = lo; j <= hi; j++) {
+            int d = Math.abs(j - i);
+            int w = (radius + 1 - d); // >= 1
+            weightedSum += (long) w * counts[j];
+            weightSum += w;
+        }
+        return (weightSum > 0L) ? ((double) weightedSum / weightSum) : Double.NEGATIVE_INFINITY;
+    }
+
+    private int rawPeakWithPlateauHandling(int b0, int b1, boolean ignoreZeroBins) {
+        long best = Long.MIN_VALUE;
+        int p0 = -1;
+        int p1 = -1;
+
+        for (int i = b0; i <= b1; i++) {
+            long c = counts[i];
+            if (ignoreZeroBins && c == 0L) {
+                continue;
+            }
+
+            if (c > best) {
+                best = c;
+                p0 = i;
+                p1 = i;
+            } else if (c == best && p0 >= 0) {
+                if (i == p1 + 1) {
+                    p1 = i;
+                } else {
+                    int mid = (b0 + b1) / 2;
+                    int oldChoice = chooseBestInPlateau(p0, p1, b0, b1);
+                    int newChoice = i;
+                    if (Math.abs(newChoice - mid) < Math.abs(oldChoice - mid)) {
+                        p0 = i;
+                        p1 = i;
+                    }
+                }
+            }
+        }
+
+        if (p0 < 0) {
+            return findPeakBin(b0, b1);
+        }
+        if (p0 == p1) {
+            return p0;
+        }
+        return chooseBestInPlateau(p0, p1, b0, b1);
+    }
+
+    private int chooseBestInPlateau(int p0, int p1, int b0, int b1) {
+        long bestRaw = Long.MIN_VALUE;
+        for (int i = p0; i <= p1; i++) {
+            bestRaw = Math.max(bestRaw, counts[i]);
+        }
+
+        int plateauMid = (p0 + p1) / 2;
+        int rangeMid = (b0 + b1) / 2;
+
+        int bestBin = p0;
+        int bestDistPlateau = Integer.MAX_VALUE;
+        int bestDistRange = Integer.MAX_VALUE;
+
+        for (int i = p0; i <= p1; i++) {
+            if (counts[i] != bestRaw) {
+                continue;
+            }
+            int dP = Math.abs(i - plateauMid);
+            int dR = Math.abs(i - rangeMid);
+
+            if (dP < bestDistPlateau) {
+                bestBin = i;
+                bestDistPlateau = dP;
+                bestDistRange = dR;
+            } else if (dP == bestDistPlateau) {
+                if (dR < bestDistRange) {
+                    bestBin = i;
+                    bestDistRange = dR;
+                }
+            }
+        }
+
+        return bestBin;
+    }
+
+    private int maxHalfWindowAround(int peak, int s0, int s1, int nbin) {
+        int maxLeft = peak - 0;
+        int maxRight = (nbin - 1) - peak;
+        int maxHalf = Math.min(maxLeft, maxRight);
+        maxHalf = Math.min(maxHalf, peak - s0);
+        maxHalf = Math.min(maxHalf, s1 - peak);
+        return Math.max(0, maxHalf);
+    }
+
+    private FitWindowData buildWindow(boolean includeZeroBins,
+                                      int peak,
+                                      int halfUsed,
+                                      int s0,
+                                      int s1,
+                                      boolean poissonWeights) {
+        int b0 = Math.max(s0, peak - halfUsed);
+        int b1 = Math.min(s1, peak + halfUsed);
+        FitData fd = prepareForFit(includeZeroBins, b0, b1, poissonWeights);
+        return new FitWindowData(fd.x, fd.y, fd.weights, peak, b0, b1, halfUsed);
+    }
+
     private static double[] evenBins(double vmin, double vmax, int numBins) {
         if (numBins <= 0) {
             throw new IllegalArgumentException("numBins must be >= 1");
@@ -759,9 +1222,64 @@ public class HistoData {
         double[] g = grid.clone();
         for (int i = 1; i < g.length; i++) {
             if (!(g[i] > g[i - 1])) {
-                throw new IllegalArgumentException("grid must be strictly ascending (duplicate or decreasing at index " + i + ")");
+                throw new IllegalArgumentException(
+                        "grid must be strictly ascending (duplicate or decreasing at index " + i + ")");
             }
         }
         return g;
     }
+    
+    @Override
+    public String toString() {
+        String nm = (name == null) ? "" : name.trim();
+
+        int nbin = getNumberBins();
+        long good = getGoodCount();
+        long total = getTotalCount();
+
+        double xmin = (grid != null && grid.length > 0) ? getMinX() : Double.NaN;
+        double xmax = (grid != null && grid.length > 0) ? getMaxX() : Double.NaN;
+
+        double[] st = getBasicStatistics(); // safe; caches
+        double mean = (st != null && st.length > 0) ? st[0] : Double.NaN;
+        double sigma = (st != null && st.length > 1) ? st[1] : Double.NaN;
+        double rms = (st != null && st.length > 2) ? st[2] : Double.NaN;
+
+        int peak = (nbin > 0) ? findPeakBin() : -1;
+        long peakCount = (peak >= 0) ? getCount(peak) : 0L;
+        double peakX = (peak >= 0) ? getBinMidValue(peak) : Double.NaN;
+
+        StringBuilder sb = new StringBuilder(160);
+        sb.append("HistoData");
+        if (!nm.isEmpty()) {
+            sb.append("[").append(nm).append("]");
+        }
+        sb.append("{bins=").append(nbin)
+          .append(", x=[").append(xmin).append(", ").append(xmax).append("]")
+          .append(", good=").append(good)
+          .append(", under=").append(underCount)
+          .append(", over=").append(overCount)
+          .append(", total=").append(total);
+
+        // Only add stats if they’re meaningful
+        if (!Double.isNaN(mean)) {
+            sb.append(", mean=").append(mean);
+        }
+        if (!Double.isNaN(sigma)) {
+            sb.append(", sigma=").append(sigma);
+        }
+        if (!Double.isNaN(rms)) {
+            sb.append(", rms=").append(rms);
+        }
+
+        if (peak >= 0) {
+            sb.append(", peakBin=").append(peak)
+              .append(", peakX=").append(peakX)
+              .append(", peakCount=").append(peakCount);
+        }
+
+        sb.append("}");
+        return sb.toString();
+    }
+
 }

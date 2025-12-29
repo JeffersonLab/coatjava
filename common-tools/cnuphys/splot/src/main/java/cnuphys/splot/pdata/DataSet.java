@@ -28,31 +28,11 @@ public class DataSet extends DefaultTableModel {
 	private EventListenerList _listenerList;
 
 	// the dataset type
-	private DataSetType _type = DataSetType.UNKNOWN;
+	private DataSetType _type;
 
 	// most sets do not have x errors
 	private boolean _hasXErrors;
 
-	/**
-	 * This constructor is for a 2D histogram
-	 * 
-	 * @param h2d
-	 */
-	public DataSet(Histo2DData h2d) throws DataSetException {
-		if (h2d == null) {
-			throw (new DataSetException("Must supply at least one histogram data object."));
-		}
-
-		_type = DataSetType.H2D;
-
-		// just one column
-		_columns.add(new DataColumn(DataColumnType.Y, h2d.getName()));
-		getColumn(0).setHistoData2D(h2d);
-		getColumn(0).initStyle();
-		getColumn(0).getStyle().setSymbolType(SymbolType.NOSYMBOL);
-		getColumn(0).initFit();
-
-	}
 
 	/**
 	 * This constructor is used for 1D histograms
@@ -168,10 +148,6 @@ public class DataSet extends DefaultTableModel {
 				HistoData hd = dc.getHistoData();
 				count =  hd.getTotalCount();
 			}
-			else if (is2DHistoSet()) {
-				Histo2DData h2d = dc.getHistoData2D();
-				count =  h2d.getTotalCount();
-			}
 			else {
 				count = dc.size();
 			}
@@ -217,9 +193,6 @@ public class DataSet extends DefaultTableModel {
 			System.err.println("[sPlot] Can not add curve for type: " + getType());
 			break;
 
-		case UNKNOWN:
-			System.err.println("[sPlot] Can not add curve for type: " + getType());
-			break;
 		}
 
 		return newCurve;
@@ -256,17 +229,10 @@ public class DataSet extends DefaultTableModel {
 			System.err.println("[sPlot] Can not add to curve for type: " + getType());
 			break;
 
-		case H2D:
-			System.err.println("[sPlot] Can not add to curve for type: " + getType());
-			break;
-
 		case STRIP:
 			System.err.println("[sPlot] Can not add to curve for type: " + getType());
 			break;
 
-		case UNKNOWN:
-			System.err.println("[sPlot] Can not add to curve for type: " + getType());
-			break;
 		}
 		notifyListeners();
 	}
@@ -289,14 +255,6 @@ public class DataSet extends DefaultTableModel {
 		return (_type == DataSetType.H1D);
 	}
 
-	/**
-	 * Check to see if this data set is for 2D Histograms
-	 * 
-	 * @return <code>true</code> if this is for 2D histograms
-	 */
-	public boolean is2DHistoSet() {
-		return (_type == DataSetType.H2D);
-	}
 
 	/**
 	 * Set all fits to dirty.
@@ -690,12 +648,6 @@ public class DataSet extends DefaultTableModel {
 		synchronized (_columns) {
 		int count = (vals == null) ? 0 : vals.length;
 
-		if (_type == DataSetType.H2D) {
-			if (count == 2) {
-				getColumn(0).histo2DAdd(vals[0], vals[1]);
-			}
-			return;
-		}
 
 		if (count > getColumnCount()) {
 			String msg = "Expected " + getColumnCount() + " values in add, but got: " + count;
@@ -832,10 +784,6 @@ public class DataSet extends DefaultTableModel {
 			if (is1DHistoSet()) {
 				HistoData hd = dc.getHistoData();
 				return hd.getNumberBins();
-			}
-			else if (is2DHistoSet()) {
-				Histo2DData h2d = dc.getHistoData2D();
-				return (h2d == null) ? 0 : 1;
 			}
 			else {
 				rowCount = dc.size();
