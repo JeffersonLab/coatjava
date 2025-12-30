@@ -4,5 +4,5 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jlab.coat</groupId>
   <artifactId>coat-libs</artifactId>
-  <version>13.0.1-SNAPSHOT</version>
+  <version>13.5.1-SNAPSHOT</version>
 </project>

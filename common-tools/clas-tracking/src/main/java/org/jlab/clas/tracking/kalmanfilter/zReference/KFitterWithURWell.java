@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 
-import org.jlab.clas.clas.math.FastMath;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.clas.tracking.kalmanfilter.AKFitter;
 import org.jlab.clas.tracking.kalmanfilter.AMeasVecs;

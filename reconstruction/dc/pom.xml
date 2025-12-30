@@ -37,6 +37,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.jlab.clas12.detector</groupId>
+      <artifactId>clas12detector-urwell</artifactId>
+      <version>13.5.1-SNAPSHOT</version>
+    </dependency>      
+    <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-tracking</artifactId>
       <version>13.5.1-SNAPSHOT</version>
