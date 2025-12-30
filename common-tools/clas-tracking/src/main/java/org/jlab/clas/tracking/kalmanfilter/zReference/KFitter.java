@@ -31,7 +31,7 @@ public class KFitter extends AKFitter {
     
     private static final double initialCMBlowupFactor = 70;
     
-    private StateVecs sv = new StateVecs();
+    public StateVecs sv = new StateVecs();
     private MeasVecs mv = new MeasVecs();
     private StateVec finalSmoothedStateVec = null;
     private StateVec finalTransportedStateVec = null;
@@ -45,7 +45,7 @@ public class KFitter extends AKFitter {
     private double chi2kf = 0;
     private double KFScale = 4;
 
-    private int svzLength;
+    public int svzLength;
 
     public int ConvStatus = 1;
 
@@ -861,7 +861,7 @@ public class KFitter extends AKFitter {
         
     // Since no vertex inforamtion, the starting point for path length is the final point at the last layer.
     // After vertex information is obtained, transition for the starting point from the final point to vertex will be taken.
-    private void calcFinalChisq(int sector, boolean nofilter) {
+    public void calcFinalChisq(int sector, boolean nofilter) {
         int k = svzLength - 1;
         this.chi2 = 0;
         double path = 0;
