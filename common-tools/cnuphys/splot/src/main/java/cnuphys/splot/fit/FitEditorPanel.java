@@ -9,7 +9,7 @@ import java.awt.event.ItemListener;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
 import cnuphys.splot.edit.VerticalFlowLayout;
-import cnuphys.splot.pdata.DataColumn;
+import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.pdata.HistoData;
 import cnuphys.splot.plot.CommonBorder;
 import cnuphys.splot.plot.Environment;
@@ -58,7 +58,7 @@ public class FitEditorPanel extends JPanel {
 
 		setLayout(new VerticalFlowLayout());
 
-		_fitSelector = FitType.getComboBox(FitType.LINE);
+		_fitSelector = CurveDrawingMethod.getComboBox(CurveDrawingMethod.NONE);
 
 		createPolySelector();
 		createNumGaussSelector();
@@ -173,7 +173,7 @@ public class FitEditorPanel extends JPanel {
 	 * 
 	 * @param curve the active curve
 	 */
-	public void reconfigure(DataColumn curve) {
+	public void reconfigure(OldDataColumn curve) {
 		if (curve == null) {
 			remove(_polynomialOrderSelector);
 			remove(_gaussianCountSelector);
@@ -186,11 +186,14 @@ public class FitEditorPanel extends JPanel {
 				carefulAdd(_histoCBPanel);
 			}
 
-			switch (curve.getFit().getFitType()) {
+			switch (curve.getCurveDrawingMethod()) {
 
 			case POLYNOMIAL:
 				remove(_gaussianCountSelector);
 				carefulAdd(_polynomialOrderSelector);
+				break;
+				
+			case GAUSSIAN:
 				break;
 
 			case GAUSSIANS:
@@ -200,6 +203,12 @@ public class FitEditorPanel extends JPanel {
 
 			case HARMONIC:
 				//TODO add harmonic selector
+				break;
+				
+			case ERF:
+				break;
+				
+			case ERFC:
 				break;
 
 			default:
@@ -237,18 +246,19 @@ public class FitEditorPanel extends JPanel {
 	 * 
 	 * @param fit the new choices
 	 */
-	public void setFit(DataColumn curve) {
+	public void setFit(OldDataColumn curve) {
 
 		if (curve.isHistogram1D()) {
 			HistoData hd = curve.getHistoData();
 			_rmsOrCB.setSelected(hd.useRmsInHistoLegend());
 		}
 
-		Fit fit = curve.getFit();
-		if (fit != null) {
-			_fitSelector.setSelectedItem(fit.getFitType().getName());
-			_polynomialOrderSelector.setValue(fit.getPolynomialOrder());
-			_gaussianCountSelector.setValue(fit.getNumGaussian());
+		CurveDrawingMethod cmd = curve.getCurveDrawingMethod();
+		if (cmd != null) {
+			//TODO is name() correct here?
+			_fitSelector.setSelectedItem(cmd.name());
+//			_polynomialOrderSelector.setValue(cmd.getPolynomialOrder());
+//			_gaussianCountSelector.setValue(fit.getNumGaussian());
 		}
 	}
 
@@ -257,7 +267,7 @@ public class FitEditorPanel extends JPanel {
 	 * 
 	 * @param type
 	 */
-	public void fitSpecific(FitType type) {
+	public void fitSpecific(CurveDrawingMethod type) {
 		switch (type) {
 		case POLYNOMIAL:
 			_polynomialOrderSelector.setEnabled(true);

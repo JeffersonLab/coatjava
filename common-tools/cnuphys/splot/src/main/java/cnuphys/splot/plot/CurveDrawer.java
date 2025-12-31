@@ -10,16 +10,9 @@ import java.awt.Stroke;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 
-import cnuphys.splot.fit.ErfFit;
-import cnuphys.splot.fit.ErfcFit;
-import cnuphys.splot.fit.Fit;
-import cnuphys.splot.fit.FitType;
-import cnuphys.splot.fit.FitUtilities;
-import cnuphys.splot.fit.GaussianFit;
+import cnuphys.splot.fit.CurveDrawingMethod;
 import cnuphys.splot.fit.IValueGetter;
-import cnuphys.splot.fit.LineFit;
-import cnuphys.splot.fit.PolyFit;
-import cnuphys.splot.pdata.DataColumn;
+import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.pdata.HistoData;
 import cnuphys.splot.spline.CubicSpline;
@@ -41,7 +34,7 @@ public class CurveDrawer {
 	 * @param plotCanvas  the plot canvas
 	 * @param histoColumn the column (should contain a HistData object)
 	 */
-	public static void drawHisto1D(Graphics g, PlotCanvas canvas, DataColumn histoColumn) {
+	public static void drawHisto1D(Graphics g, PlotCanvas canvas, OldDataColumn histoColumn) {
 
 		if (!histoColumn.isVisible()) {
 			return;
@@ -129,7 +122,7 @@ public class CurveDrawer {
 	 * @param xcol       the x data column
 	 * @param ycol       the y data column
 	 */
-	public static void drawCurve(Graphics g, PlotCanvas plotCanvas, DataColumn xcol, DataColumn ycol) {
+	public static void drawCurve(Graphics g, PlotCanvas plotCanvas, OldDataColumn xcol, OldDataColumn ycol) {
 		drawCurve(g, plotCanvas, xcol, ycol, null, null);
 	}
 
@@ -143,8 +136,8 @@ public class CurveDrawer {
 	 * @param xerrCol    the x error bar column (often <code>null</code>)
 	 * @param yerrCol    the y error bar column
 	 */
-	public static void drawCurve(Graphics g, PlotCanvas plotCanvas, DataColumn xcol, DataColumn ycol,
-			DataColumn xerrCol, DataColumn yerrCol) {
+	public static void drawCurve(Graphics g, PlotCanvas plotCanvas, OldDataColumn xcol, OldDataColumn ycol,
+			OldDataColumn xerrCol, OldDataColumn yerrCol) {
 
 		if (!ycol.isVisible()) {
 			return;
@@ -227,7 +220,7 @@ public class CurveDrawer {
 	}
 
 	// check whether a fit is drawable
-	private static boolean fitDrawable(DataColumn ycol) {
+	private static boolean fitDrawable(OldDataColumn ycol) {
 		if (ycol == null) {
 			return false;
 		}
@@ -246,7 +239,7 @@ public class CurveDrawer {
 		}
 
 		int size = fit.size();
-		if (fit.getFitType() == FitType.LINE) {
+		if (fit.getFitType() == CurveDrawingMethod.LINE) {
 			return (size > 1);
 		}
 		else {
@@ -279,7 +272,7 @@ public class CurveDrawer {
 		double x[] = yfit.getX();
 		double y[] = yfit.getY();
 
-		FitType fitType = yfit.getFitType();
+		CurveDrawingMethod fitType = yfit.getFitType();
 
 		switch (fitType) {
 		case NONE:

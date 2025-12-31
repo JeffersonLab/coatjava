@@ -3,9 +3,9 @@ package cnuphys.splot.example;
 import java.util.Collection;
 
 import cnuphys.splot.fit.FGaussian;
-import cnuphys.splot.fit.FitType;
-import cnuphys.splot.pdata.DataColumn;
-import cnuphys.splot.pdata.DataColumnType;
+import cnuphys.splot.fit.CurveDrawingMethod;
+import cnuphys.splot.pdata.OldDataColumn;
+import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.pdata.DataSetException;
 import cnuphys.splot.pdata.DataSetType;
@@ -94,9 +94,9 @@ public class Gaussians extends AExample {
 	@Override
 	public void setPreferences() {
 		DataSet ds = _canvas.getDataSet();
-		Collection<DataColumn> ycols = ds.getAllColumnsByType(DataColumnType.Y);
-		for (DataColumn dc : ycols) {
-			dc.getFit().setFitType(FitType.GAUSSIANS);
+		Collection<OldDataColumn> ycols = ds.getAllColumnsByType(DataColumnType.Y);
+		for (OldDataColumn dc : ycols) {
+			dc.getFit().setFitType(CurveDrawingMethod.GAUSSIANS);
 		}
 		PlotParameters params = _canvas.getParameters();
 		params.mustIncludeXZero(true);

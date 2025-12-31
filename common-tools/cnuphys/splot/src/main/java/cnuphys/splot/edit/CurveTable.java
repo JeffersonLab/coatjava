@@ -18,8 +18,8 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumn;
 
-import cnuphys.splot.pdata.DataColumn;
-import cnuphys.splot.pdata.DataColumnType;
+import cnuphys.splot.pdata.OldDataColumn;
+import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.plot.Environment;
 import cnuphys.splot.plot.PlotCanvas;
 
@@ -42,7 +42,7 @@ public class CurveTable extends JTable {
 	 * @param plotCanvas the plot
 	 */
 	public CurveTable(PlotCanvas plotCanvas) {
-		super(new CurveDataModel((Vector<DataColumn>) plotCanvas.getDataSet().getAllColumnsByType(DataColumnType.Y)));
+		super(new CurveDataModel((Vector<OldDataColumn>) plotCanvas.getDataSet().getAllColumnsByType(DataColumnType.Y)));
 
 		_canvas = plotCanvas;
 		setFont(_listFont);
@@ -170,7 +170,7 @@ public class CurveTable extends JTable {
 	 * 
 	 * @return the selected curve
 	 */
-	public DataColumn getSelectedCurve() {
+	public OldDataColumn getSelectedCurve() {
 		int selectedRow = getSelectedRow();
 		return getCurveModel().getCurveAtRow(selectedRow);
 	}

@@ -4,7 +4,7 @@ import java.awt.Color;
 
 import org.apache.commons.math3.distribution.NormalDistribution;
 
-import cnuphys.splot.fit.FitType;
+import cnuphys.splot.fit.CurveDrawingMethod;
 import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.pdata.DataSetException;
 import cnuphys.splot.pdata.HistoData;
@@ -69,11 +69,11 @@ public class TwoHisto extends AExample {
 
 		ds.getCurveStyle(0).setFillColor(new Color(196, 196, 196, 64));
 		ds.getCurveStyle(0).setBorderColor(Color.black);
-		ds.getCurve(0).getFit().setFitType(FitType.GAUSSIANS);
+		ds.getCurve(0).getFit().setFitType(CurveDrawingMethod.GAUSSIANS);
 
 		ds.getCurveStyle(1).setFillColor(new Color(196, 196, 196, 64));
 		ds.getCurveStyle(1).setBorderColor(Color.red);
-		ds.getCurve(1).getFit().setFitType(FitType.GAUSSIANS);
+		ds.getCurve(1).getFit().setFitType(CurveDrawingMethod.GAUSSIANS);
 
 		PlotParameters params = _canvas.getParameters();
 		params.setMinExponentY(6);

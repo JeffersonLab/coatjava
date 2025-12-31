@@ -3,10 +3,9 @@ package cnuphys.splot.plot;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.util.Collection;
-import cnuphys.splot.fit.Fit;
-import cnuphys.splot.fit.FitType;
-import cnuphys.splot.pdata.DataColumn;
-import cnuphys.splot.pdata.DataColumnType;
+import cnuphys.splot.fit.CurveDrawingMethod;
+import cnuphys.splot.pdata.OldDataColumn;
+import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.style.Styled;
 import cnuphys.splot.style.SymbolDraw;
@@ -61,7 +60,7 @@ public class Legend extends DraggableRectangle {
 		_numVisCurves = ds.getAllVisibleCurves().size();
 
 		if (_numVisCurves == 1) {
-			DataColumn dc = ds.getCurve(0);
+			OldDataColumn dc = ds.getCurve(0);
 			if (!dc.isHistogram1D()) {
 				return;
 			}
@@ -80,8 +79,8 @@ public class Legend extends DraggableRectangle {
 
 		int yi = y + VGAP;
 
-		Collection<DataColumn> ycols = ds.getAllColumnsByType(DataColumnType.Y);
-		for (DataColumn curve : ycols) {
+		Collection<OldDataColumn> ycols = ds.getAllColumnsByType(DataColumnType.Y);
+		for (OldDataColumn curve : ycols) {
 			if (curve.isVisible()) {
 				yi = drawColumnLegendInfo(g, yi, curve);
 			}
@@ -89,13 +88,13 @@ public class Legend extends DraggableRectangle {
 	}
 
 	// draw the info for the given y column
-	private int drawColumnLegendInfo(Graphics g, int y, DataColumn curve) {
+	private int drawColumnLegendInfo(Graphics g, int y, OldDataColumn curve) {
 		FontMetrics fm = _canvas.getFontMetrics(_params.getTextFont());
 		g.setFont(_params.getTextFont());
 		g.setColor(_params.getTextForeground());
 
 		Styled style = curve.getStyle();
-		Fit fit = curve.getFit();
+		CurveDrawingMethod cdm = curve.getCurveDrawingMethod();
 		int space = spaceNeeded(curve);
 		int yc = y + space / 2;
 
@@ -110,7 +109,7 @@ public class Legend extends DraggableRectangle {
 
 		g.drawString(legStr, x + width - _maxStringWidth - HGAP, yc + fm.getHeight() / 2);
 
-		if ((_numVisCurves > 1) && fit.getFit() != FitType.NONE) {
+		if ((_numVisCurves > 1) && cdm != CurveDrawingMethod.NONE) {
 			GraphicsUtilities.drawStyleLine(g, style.getFitLineColor(), style.getFitLineWidth(),
 					style.getFitLineStyle(), x + HGAP, yc, x + HGAP + _params.getLegendLineLength(), yc);
 		}
@@ -128,24 +127,24 @@ public class Legend extends DraggableRectangle {
 		_maxStringWidth = 0;
 		_extra = 0;
 
-		Collection<DataColumn> ycols = ds.getAllColumnsByType(DataColumnType.Y);
-		for (DataColumn dc : ycols) {
-			if (dc.isVisible()) {
+		Collection<OldDataColumn> curves = ds.getAllColumnsByType(DataColumnType.Y);
+		for (OldDataColumn curve : curves) {
+			if (curve.isVisible()) {
 
-				Fit fit = dc.getFit();
-				if ((_numVisCurves > 1) && fit.getFitType() != FitType.NONE) {
+				CurveDrawingMethod cdm = curve.getCurveDrawingMethod();
+				if ((_numVisCurves > 1) && cdm != CurveDrawingMethod.NONE) {
 					_extra = _params.getLegendLineLength();
 				}
 				else {
-					Styled style = dc.getStyle();
+					Styled style = curve.getStyle();
 					if (style.getSymbolType() != SymbolType.NOSYMBOL) {
 						_extra = Math.max(_extra, style.getSymbolSize());
 					}
 				}
 
-				String legStr = dc.getName();
-				if (dc.isHistogram1D()) {
-					legStr += (" " + dc.getHistoData().statStr());
+				String legStr = curve.getName();
+				if (curve.isHistogram1D()) {
+					legStr += (" " + curve.getHistoData().statStr());
 				}
 
 				int sw = fm.stringWidth(legStr);
@@ -163,8 +162,8 @@ public class Legend extends DraggableRectangle {
 		DataSet ds = _canvas.getDataSet();
 
 		int height = VGAP;
-		Collection<DataColumn> ycols = ds.getAllColumnsByType(DataColumnType.Y);
-		for (DataColumn curve : ycols) {
+		Collection<OldDataColumn> ycols = ds.getAllColumnsByType(DataColumnType.Y);
+		for (OldDataColumn curve : ycols) {
 			if (curve.isVisible()) {
 				height += (VGAP + spaceNeeded(curve));
 			}
@@ -174,7 +173,7 @@ public class Legend extends DraggableRectangle {
 	}
 
 	// get the vertical space needed for a curve
-	private int spaceNeeded(DataColumn curve) {
+	private int spaceNeeded(OldDataColumn curve) {
 		FontMetrics fm = _canvas.getFontMetrics(_params.getTextFont());
 		return Math.max(fm.getHeight(), curve.getStyle().getSymbolSize());
 	}

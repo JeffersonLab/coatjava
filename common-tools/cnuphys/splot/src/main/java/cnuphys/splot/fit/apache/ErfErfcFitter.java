@@ -3,24 +3,18 @@ package cnuphys.splot.fit.apache;
 import java.util.Arrays;
 import java.util.Objects;
 
-import org.apache.commons.math3.fitting.leastsquares.LeastSquaresBuilder;
-import org.apache.commons.math3.fitting.leastsquares.LeastSquaresOptimizer;
-import org.apache.commons.math3.fitting.leastsquares.LeastSquaresProblem;
 import org.apache.commons.math3.fitting.leastsquares.LevenbergMarquardtOptimizer;
+import org.apache.commons.math3.fitting.leastsquares.LeastSquaresOptimizer;
 import org.apache.commons.math3.fitting.leastsquares.MultivariateJacobianFunction;
 import org.apache.commons.math3.fitting.leastsquares.ParameterValidator;
+import org.apache.commons.math3.special.Erf;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
-import org.apache.commons.math3.linear.DiagonalMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
-import org.apache.commons.math3.optim.SimpleVectorValueChecker;
-import org.apache.commons.math3.special.Erf;
 import org.apache.commons.math3.util.Pair;
 
-import cnuphys.splot.fit.IPlottableFunction;
 import cnuphys.splot.fit.IValueGetter;
-import cnuphys.splot.fit.PlottableFunction;
 
 /**
  * Nonlinear least-squares fitter for scaled/shifted {@code erf} or {@code erfc}:
@@ -29,124 +23,131 @@ import cnuphys.splot.fit.PlottableFunction;
  *   y(x) = A * erf((x - x0)/sigma)  + B
  *   y(x) = A * erfc((x - x0)/sigma) + B
  * </pre>
+ *
+ * <h3>Parameter ordering</h3>
+ * <ul>
+ *   <li>{@code params[0] = A}</li>
+ *   <li>{@code params[1] = x0}</li>
+ *   <li>{@code params[2] = sigma}</li>
+ *   <li>{@code params[3] = B}</li>
+ * </ul>
+ *
+ * <p>Enforces {@code sigma >= DEFAULT_MIN_SIGMA} by default.</p>
  */
 public final class ErfErfcFitter extends AbstractLeastSquaresFitter {
 
-    /** Which function to fit: erf or erfc. */
+    /** Which function to fit. */
     public enum Kind { ERF, ERFC }
 
-    /** Parameter indices (for readability). */
+    /** Parameter indices. */
     public static final int IDX_A = 0;
     public static final int IDX_X0 = 1;
     public static final int IDX_SIGMA = 2;
     public static final int IDX_B = 3;
 
-    /** Default minimum allowed sigma to avoid division by zero. */
+    /** Default minimum allowed sigma. */
     public static final double DEFAULT_MIN_SIGMA = 1e-12;
 
-    /** Which curve this fitter fits. */
     private final Kind kind;
 
     public ErfErfcFitter(Kind kind) {
-        this(kind, new LevenbergMarquardtOptimizer(), defaultGuesser(kind));
+        this(kind, new LevenbergMarquardtOptimizer());
     }
 
     public ErfErfcFitter(Kind kind, LeastSquaresOptimizer optimizer) {
-        this(kind, optimizer, defaultGuesser(kind));
-    }
-
-    public ErfErfcFitter(Kind kind, LeastSquaresOptimizer optimizer, IInitialGuess guesser) {
-        super(optimizer, guesser);
+        super(Objects.requireNonNull(optimizer, "optimizer"), (x, y, w) -> InitialGuess.guess(kind, x, y));
         this.kind = Objects.requireNonNull(kind, "kind");
     }
 
-    private static IInitialGuess defaultGuesser(final Kind kind) {
-        return (x, y, weights) -> InitialGuess.guess(kind, x, y);
+    public Kind getKind() {
+        return kind;
     }
 
-    public FitResult fit(double[] x, double[] y) {
-        return fit(x, y, null, null, null);
+    @Override
+    protected int getParameterCount() {
+        return 4;
     }
 
-    public FitResult fit(double[] x,
-                         double[] y,
+    @Override
+    protected String getModelName() {
+        return (kind == Kind.ERF) ? "ERF" : "ERFC";
+    }
+
+    @Override
+    protected MultivariateJacobianFunction model(double[] x) {
+        return new ErfErfcModel(kind, x);
+    }
+
+    @Override
+    protected double[] defaultInitialGuess(double[] x, double[] y, double[] weights) {
+        return InitialGuess.guess(kind, x, y);
+    }
+
+    @Override
+    protected ParameterValidator defaultValidator() {
+        double[] lo = { Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, DEFAULT_MIN_SIGMA, Double.NEGATIVE_INFINITY };
+        double[] hi = { Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY };
+        return clampingValidator(lo, hi);
+    }
+
+    /**
+     * Expert overload: fit with optional weights, optional bounds, and optional initial guess.
+     *
+     * @param x x data
+     * @param y y data
+     * @param weights optional weights (typically 1/sigmaY^2), may be null
+     * @param bounds optional bounds, may be null
+     * @param initialGuess optional initial guess, may be null
+     * @return fit result
+     */
+    public FitResult fit(double[] x, double[] y,
                          double[] weights,
                          ParameterBounds bounds,
                          double[] initialGuess) {
 
-        validateXY(x, y, 4);
-        final int n = x.length;
+        final double[] lo;
+        final double[] hi;
 
-        if (weights != null && weights.length != n) {
-            throw new IllegalArgumentException("weights length must match x/y length");
-        }
-        if (initialGuess != null && initialGuess.length != 4) {
-            throw new IllegalArgumentException("initialGuess must have length 4: [A, x0, sigma, B]");
-        }
-
-        final double[] start = selectInitialGuess(x, y, weights, initialGuess);
-
-        final ParameterValidator validator = new BoundValidator(
-                bounds != null ? bounds : ParameterBounds.unbounded(),
-                DEFAULT_MIN_SIGMA
-        );
-
-        final MultivariateJacobianFunction model = new ErfErfcModel(kind, x);
-
-        final LeastSquaresBuilder b = new LeastSquaresBuilder()
-                .start(start)
-                .model(model)
-                .target(y)
-                .parameterValidator(validator)
-                .maxIterations(2000)
-                .maxEvaluations(2000)
-                .checkerPair(new SimpleVectorValueChecker(1e-12, 1e-12));
-
-        if (weights != null) {
-            b.weight(new DiagonalMatrix(weights));
+        if (bounds == null) {
+            lo = new double[] { Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, DEFAULT_MIN_SIGMA, Double.NEGATIVE_INFINITY };
+            hi = new double[] { Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY };
+        } else {
+            lo = bounds.lower().clone();
+            hi = bounds.upper().clone();
+            lo[IDX_SIGMA] = Math.max(lo[IDX_SIGMA], DEFAULT_MIN_SIGMA);
         }
 
-        LeastSquaresProblem problem = b.build();
-        LeastSquaresOptimizer.Optimum opt = optimizer.optimize(problem);
-
-        final double[] p = opt.getPoint().toArray();
-        final RealMatrix cov = safeCovariances(opt, 1e-14);
-
-        return buildFitResult(kind.name(), p, cov, n, 4, opt);
+        return super.fit(x, y, weights, initialGuess, clampingValidator(lo, hi));
     }
 
-    public static double[] weightsFromSigmaY(double[] sigmaY) {
-        return AbstractLeastSquaresFitter.weightsFromSigmaY(sigmaY);
-    }
-
-    /**
-     * Create an {@link IValueGetter} that evaluates the fitted erf/erfc curve.
-     * The returned function clamps sigma to {@link #DEFAULT_MIN_SIGMA}.
-     */
+    @Override
     public IValueGetter asValueGetter(final FitResult fit) {
-        Objects.requireNonNull(fit, "fit");
+        if (fit == null || fit.params == null) {
+            throw new IllegalArgumentException("FitResult is null");
+        }
+        if (fit.params.length != getParameterCount()) {
+            throw new IllegalArgumentException(
+                "PolynomialFitter: expected " + getParameterCount() +
+                " parameters, got " + fit.params.length
+            );
+        }
 
-        final double A  = fit.params[IDX_A];
-        final double x0 = fit.params[IDX_X0];
-        final double s0 = fit.params[IDX_SIGMA];
-        final double B  = fit.params[IDX_B];
-
-        final double sigma = Math.max(Math.abs(s0), DEFAULT_MIN_SIGMA);
-        final Kind k = this.kind;
-
+        
+        
+        final double[] p = fit.params.clone();
         return (double x) -> {
+            double A = p[IDX_A];
+            double x0 = p[IDX_X0];
+            double sigma = p[IDX_SIGMA];
+            double B = p[IDX_B];
             double z = (x - x0) / sigma;
-            double f = (k == Kind.ERF) ? Erf.erf(z) : Erf.erfc(z);
+
+            double f = (kind == Kind.ERF) ? Erf.erf(z) : Erf.erfc(z);
             return A * f + B;
         };
     }
 
-    /** Convenience: wrap the fitted erf/erfc as an {@link IPlottableFunction}. */
-    public IPlottableFunction asPlottable(final FitResult fit, double xmin, double xmax) {
-        return new PlottableFunction(asValueGetter(fit), xmin, xmax);
-    }
-
-    /** Least-squares model + analytic Jacobian. */
+    /** Analytic model + Jacobian for erf/erfc. */
     private static final class ErfErfcModel implements MultivariateJacobianFunction {
         private final Kind kind;
         private final double[] x;
@@ -158,51 +159,61 @@ public final class ErfErfcFitter extends AbstractLeastSquaresFitter {
 
         @Override
         public Pair<RealVector, RealMatrix> value(final RealVector point) {
-            final double A = point.getEntry(IDX_A);
-            final double x0 = point.getEntry(IDX_X0);
-            final double sigma = point.getEntry(IDX_SIGMA);
-            final double B = point.getEntry(IDX_B);
+            final double[] p = point.toArray();
+            final double A = p[IDX_A];
+            final double x0 = p[IDX_X0];
+            final double sigma = p[IDX_SIGMA];
+            final double B = p[IDX_B];
 
             final int n = x.length;
             final double[] values = new double[n];
             final double[][] jac = new double[n][4];
 
-            final double s2 = sigma * sigma;
-            final double norm = Math.sqrt(Math.PI);
+            final double invSigma = 1.0 / sigma;
+            final double invSigma2 = invSigma * invSigma;
+            final double twoOverSqrtPi = 2.0 / Math.sqrt(Math.PI);
 
             for (int i = 0; i < n; i++) {
-                final double dx = x[i] - x0;
-                final double z = dx / sigma;
+                double z = (x[i] - x0) * invSigma;
 
-                final double erf = Erf.erf(z);
-                final double erfc = Erf.erfc(z);
+                double f = (kind == Kind.ERF) ? Erf.erf(z) : Erf.erfc(z);
+                double exp = Math.exp(-(z * z));
 
-                final double f = (kind == Kind.ERF) ? erf : erfc;
                 values[i] = A * f + B;
 
-                final double exp = Math.exp(-z * z);
-                final double dfdz = (kind == Kind.ERF ? (2.0 / norm) : (-2.0 / norm)) * exp;
+                // df/dz for erf is 2/sqrt(pi) * exp(-z^2)
+                // df/dz for erfc is -2/sqrt(pi) * exp(-z^2)
+                double dfdz = (kind == Kind.ERF ? +1.0 : -1.0) * twoOverSqrtPi * exp;
 
+                // dy/dA = f
                 jac[i][IDX_A] = f;
+                // dy/dx0 = A * df/dz * dz/dx0 = A * dfdz * (-1/sigma)
+                jac[i][IDX_X0] = A * dfdz * (-invSigma);
+                // dy/dsigma = A * df/dz * dz/dsigma where z=(x-x0)/sigma => dz/dsigma = -(x-x0)/sigma^2 = -z/sigma
+                jac[i][IDX_SIGMA] = A * dfdz * (-(x[i] - x0) * invSigma2);
+                // dy/dB = 1
                 jac[i][IDX_B] = 1.0;
-                jac[i][IDX_X0] = A * dfdz * (-1.0 / sigma);
-                jac[i][IDX_SIGMA] = A * dfdz * (-dx / s2);
             }
 
-            return new Pair<>(new ArrayRealVector(values, false),
-                              new Array2DRowRealMatrix(jac, false));
+            return new Pair<>(
+                    new ArrayRealVector(values, false),
+                    new Array2DRowRealMatrix(jac, false)
+            );
         }
     }
 
-    /** Bounds for [A, x0, sigma, B]. */
+    /** Bounds container for erf/erfc parameters. */
     public static final class ParameterBounds {
-        final double[] lower = new double[4];
-        final double[] upper = new double[4];
+        private final double[] lower = new double[4];
+        private final double[] upper = new double[4];
 
         private ParameterBounds(double[] lower, double[] upper) {
             System.arraycopy(lower, 0, this.lower, 0, 4);
             System.arraycopy(upper, 0, this.upper, 0, 4);
         }
+
+        public double[] lower() { return lower.clone(); }
+        public double[] upper() { return upper.clone(); }
 
         public static ParameterBounds unbounded() {
             double[] lo = { Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY };
@@ -223,43 +234,21 @@ public final class ErfErfcFitter extends AbstractLeastSquaresFitter {
             public Builder sigma(double lower, double upper) { lo[IDX_SIGMA] = lower; hi[IDX_SIGMA] = upper; return this; }
             public Builder b(double lower, double upper) { lo[IDX_B] = lower; hi[IDX_B] = upper; return this; }
 
-            public ParameterBounds build() {
-                return new ParameterBounds(lo, hi);
-            }
+            public ParameterBounds build() { return new ParameterBounds(lo, hi); }
         }
     }
 
-    /** Enforces bounds and sigma >= minSigma using clamping. */
-    private static final class BoundValidator implements ParameterValidator {
-        private final ParameterBounds bounds;
-        private final double minSigma;
-
-        BoundValidator(ParameterBounds bounds, double minSigma) {
-            this.bounds = bounds;
-            this.minSigma = minSigma;
-        }
-
-        @Override
-        public RealVector validate(RealVector params) {
-            double[] p = params.toArray();
-            p[IDX_SIGMA] = Math.max(p[IDX_SIGMA], minSigma);
-
-            for (int i = 0; i < 4; i++) {
-                double lo = bounds.lower[i];
-                double hi = bounds.upper[i];
-                if (Double.isFinite(lo)) p[i] = Math.max(p[i], lo);
-                if (Double.isFinite(hi)) p[i] = Math.min(p[i], hi);
-            }
-            return new ArrayRealVector(p, false);
-        }
-    }
-
-    /** Heuristic initial guess for [A, x0, sigma, B]. */
-    public static final class InitialGuess {
+    /** Heuristic initial guess. */
+    static final class InitialGuess {
         private InitialGuess() {}
 
         public static double[] guess(Kind kind, double[] x, double[] y) {
             final int n = x.length;
+            if (n == 0) {
+                return new double[] { 1, 0, 1, 0 };
+            }
+
+            // Sort by x to interpret endpoints robustly.
             Integer[] idx = new Integer[n];
             for (int i = 0; i < n; i++) idx[i] = i;
             Arrays.sort(idx, (i, j) -> Double.compare(x[i], x[j]));
@@ -267,49 +256,32 @@ public final class ErfErfcFitter extends AbstractLeastSquaresFitter {
             double yLeft = y[idx[0]];
             double yRight = y[idx[n - 1]];
 
+            // For erf: transitions from low to high (or high to low), similar for erfc but reversed.
             double B = 0.5 * (yLeft + yRight);
             double A = 0.5 * (yRight - yLeft);
+
             if (kind == Kind.ERFC) {
+                // erfc decreases for increasing z; flip sign convention
                 A = -A;
             }
 
-            double x0 = x[idx[0]];
-            double best = Double.POSITIVE_INFINITY;
-            for (int k = 0; k < n; k++) {
-                int i = idx[k];
-                double d = Math.abs(y[i] - B);
-                if (d < best) {
-                    best = d;
-                    x0 = x[i];
+            // x0: approximate midpoint of transition from yLeft to yRight
+            double target = B; // midpoint
+            int best = idx[0];
+            double bestErr = Double.POSITIVE_INFINITY;
+            for (int i = 0; i < n; i++) {
+                double err = Math.abs(y[i] - target);
+                if (err < bestErr) {
+                    bestErr = err;
+                    best = i;
                 }
             }
+            double x0 = x[best];
 
-            double target = (kind == Kind.ERF)
-                    ? (A * Erf.erf(1.0) + B)
-                    : (A * Erf.erfc(1.0) + B);
-
-            double xAtTarget = Double.NaN;
-            best = Double.POSITIVE_INFINITY;
-            for (int k = 0; k < n; k++) {
-                int i = idx[k];
-                double d = Math.abs(y[i] - target);
-                if (d < best) {
-                    best = d;
-                    xAtTarget = x[i];
-                }
-            }
-
-            double sigma;
-            if (Double.isFinite(xAtTarget)) {
-                sigma = Math.abs(xAtTarget - x0);
-            } else {
-                double span = x[idx[n - 1]] - x[idx[0]];
-                sigma = Math.max(span / 6.0, DEFAULT_MIN_SIGMA);
-            }
-
-            if (!(sigma > 0.0) || !Double.isFinite(sigma)) {
-                sigma = DEFAULT_MIN_SIGMA;
-            }
+            // sigma: rough scale from x-range
+            double xmin = x[idx[0]], xmax = x[idx[n - 1]];
+            double sigma = 0.1 * Math.max(1e-12, (xmax - xmin));
+            sigma = Math.max(DEFAULT_MIN_SIGMA, sigma);
 
             return new double[] { A, x0, sigma, B };
         }

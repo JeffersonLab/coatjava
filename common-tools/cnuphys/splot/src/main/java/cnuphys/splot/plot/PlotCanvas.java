@@ -34,11 +34,10 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import cnuphys.splot.edit.DataEditor;
 import cnuphys.splot.edit.PlotPreferencesDialog;
 import cnuphys.splot.pdata.DataChangeListener;
-import cnuphys.splot.pdata.DataColumn;
+import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.pdata.DataSetException;
 import cnuphys.splot.pdata.DataSetType;
-import cnuphys.splot.pdata.Histo2DData;
 import cnuphys.splot.pdata.HistoData;
 import cnuphys.splot.pdata.NiceScale;
 import cnuphys.splot.rubberband.IRubberbanded;
@@ -519,7 +518,7 @@ public class PlotCanvas extends JComponent
 			_locationString = String.format("<html>(x, y) = (%7.2g, %-7.2g)<br>count = %d", _workPoint.x, _workPoint.y, _dataSet.size());
 
 			if (_dataSet.is1DHistoSet()) {
-				Vector<DataColumn> ycols = (Vector<DataColumn>) _dataSet.getAllVisibleCurves();
+				Vector<OldDataColumn> ycols = (Vector<OldDataColumn>) _dataSet.getAllVisibleCurves();
 				int size = ycols.size();
 
 				for (int i = 0; i < size; i++) {

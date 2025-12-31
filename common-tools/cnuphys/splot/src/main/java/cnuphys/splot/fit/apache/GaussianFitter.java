@@ -3,31 +3,35 @@ package cnuphys.splot.fit.apache;
 import java.util.Arrays;
 import java.util.Objects;
 
-import org.apache.commons.math3.fitting.leastsquares.LeastSquaresBuilder;
-import org.apache.commons.math3.fitting.leastsquares.LeastSquaresOptimizer;
-import org.apache.commons.math3.fitting.leastsquares.LeastSquaresProblem;
 import org.apache.commons.math3.fitting.leastsquares.LevenbergMarquardtOptimizer;
+import org.apache.commons.math3.fitting.leastsquares.LeastSquaresOptimizer;
 import org.apache.commons.math3.fitting.leastsquares.MultivariateJacobianFunction;
 import org.apache.commons.math3.fitting.leastsquares.ParameterValidator;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
-import org.apache.commons.math3.linear.DiagonalMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
-import org.apache.commons.math3.optim.SimpleVectorValueChecker;
-import org.apache.commons.math3.util.FastMath;
 import org.apache.commons.math3.util.Pair;
 
-import cnuphys.splot.fit.IPlottableFunction;
 import cnuphys.splot.fit.IValueGetter;
-import cnuphys.splot.fit.PlottableFunction;
-
 /**
- * Nonlinear least-squares fitter for a 4-parameter Gaussian:
+ * Nonlinear least-squares fitter for a 4-parameter Gaussian with baseline:
  *
  * <pre>
  *   y(x) = A * exp(-(x - mu)^2 / (2*sigma^2)) + B
  * </pre>
+ *
+ * <h3>Parameter ordering</h3>
+ * <ul>
+ *   <li>{@code params[0] = A}</li>
+ *   <li>{@code params[1] = mu}</li>
+ *   <li>{@code params[2] = sigma}</li>
+ *   <li>{@code params[3] = B}</li>
+ * </ul>
+ *
+ * <h3>Bounds / validation</h3>
+ * This fitter enforces {@code sigma >= DEFAULT_MIN_SIGMA} by default using a parameter
+ * clamping validator. Optional bounds can also be supplied via {@link ParameterBounds}.
  */
 public final class GaussianFitter extends AbstractLeastSquaresFitter {
 
@@ -37,121 +41,118 @@ public final class GaussianFitter extends AbstractLeastSquaresFitter {
     public static final int IDX_SIGMA = 2;
     public static final int IDX_B = 3;
 
-    /** Default minimum allowed sigma to avoid division by zero. */
+    /** Default minimum allowed sigma to avoid division by zero and ill-conditioned Jacobians. */
     public static final double DEFAULT_MIN_SIGMA = 1e-12;
 
-    /** Create with LM optimizer and default initial guess. */
+    /** Create with a Levenberg-Marquardt optimizer and a robust default guesser. */
     public GaussianFitter() {
-        this(new LevenbergMarquardtOptimizer(), defaultGuesser());
+        this(new LevenbergMarquardtOptimizer());
     }
 
-    /** Create with custom optimizer and default initial guess. */
+    /** Create with a custom optimizer and robust default guesser. */
     public GaussianFitter(LeastSquaresOptimizer optimizer) {
-        this(optimizer, defaultGuesser());
-    }
-
-    /** Create with custom optimizer and custom initial guess strategy. */
-    public GaussianFitter(LeastSquaresOptimizer optimizer, IInitialGuess guesser) {
-        super(optimizer, guesser);
+        super(Objects.requireNonNull(optimizer, "optimizer"), defaultGuesser());
     }
 
     private static IInitialGuess defaultGuesser() {
-        return (x, y, weights) -> InitialGuess.guess(x, y);
+        return (x, y, w) -> InitialGuess.guess(x, y);
     }
 
-    /** Fit with unit weights. */
-    public FitResult fit(double[] x, double[] y) {
-        return fit(x, y, null, null, null);
+    @Override
+    protected int getParameterCount() {
+        return 4;
+    }
+
+    @Override
+    protected String getModelName() {
+        return "GAUSSIAN";
+    }
+
+    @Override
+    protected MultivariateJacobianFunction model(double[] x) {
+        return new GaussianModel(x);
+    }
+
+    @Override
+    protected double[] defaultInitialGuess(double[] x, double[] y, double[] weights) {
+        // weights do not materially change a simple gaussian heuristic guess
+        return InitialGuess.guess(x, y);
+    }
+
+    @Override
+    protected ParameterValidator defaultValidator() {
+        // Unbounded except sigma >= DEFAULT_MIN_SIGMA
+        double[] lo = { Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, DEFAULT_MIN_SIGMA, Double.NEGATIVE_INFINITY };
+        double[] hi = { Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY };
+        return clampingValidator(lo, hi);
     }
 
     /**
-     * Fit Gaussian with optional weights, bounds, and initial guess.
+     * Expert overload: fit with optional weights, optional bounds, and optional initial guess.
+     *
+     * <p>If {@code bounds} is null, only {@code sigma >= DEFAULT_MIN_SIGMA} is enforced.</p>
      *
      * @param x x data
      * @param y y data
-     * @param weights optional diagonal weights; larger = more trusted. Typically weights = 1/sigmaY^2.
-     * @param bounds optional parameter bounds; if null, unbounded except sigma clamped to minSigma
-     * @param initialGuess optional [A, mu, sigma, B]; if null, a heuristic guess is computed
+     * @param weights optional weights (typically 1/sigmaY^2), may be null
+     * @param bounds optional bounds, may be null
+     * @param initialGuess optional initial guess, may be null
+     * @return fit result
      */
-    public FitResult fit(double[] x,
-                         double[] y,
+    public FitResult fit(double[] x, double[] y,
                          double[] weights,
                          ParameterBounds bounds,
                          double[] initialGuess) {
 
-        validateXY(x, y, 4);
-        final int n = x.length;
+        final double[] lo;
+        final double[] hi;
 
-        if (weights != null && weights.length != n) {
-            throw new IllegalArgumentException("weights length must match x/y length");
-        }
-        if (initialGuess != null && initialGuess.length != 4) {
-            throw new IllegalArgumentException("initialGuess must have length 4: [A, mu, sigma, B]");
-        }
-
-        final double[] start = selectInitialGuess(x, y, weights, initialGuess);
-
-        final ParameterValidator validator = new BoundValidator(
-                bounds != null ? bounds : ParameterBounds.unbounded(),
-                DEFAULT_MIN_SIGMA
-        );
-
-        final MultivariateJacobianFunction model = new GaussianModel(x);
-
-        final LeastSquaresBuilder b = new LeastSquaresBuilder()
-                .start(start)
-                .model(model)
-                .target(y)
-                .parameterValidator(validator)
-                .maxIterations(2000)
-                .maxEvaluations(2000)
-                .checkerPair(new SimpleVectorValueChecker(1e-12, 1e-12));
-
-        if (weights != null) {
-            b.weight(new DiagonalMatrix(weights));
+        if (bounds == null) {
+            lo = new double[] { Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, DEFAULT_MIN_SIGMA, Double.NEGATIVE_INFINITY };
+            hi = new double[] { Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY };
+        } else {
+            lo = bounds.lower().clone();
+            hi = bounds.upper().clone();
+            // Always enforce min sigma.
+            lo[IDX_SIGMA] = Math.max(lo[IDX_SIGMA], DEFAULT_MIN_SIGMA);
         }
 
-        LeastSquaresProblem problem = b.build();
-        LeastSquaresOptimizer.Optimum opt = optimizer.optimize(problem);
-
-        final double[] p = opt.getPoint().toArray();
-        final RealMatrix cov = safeCovariances(opt, 1e-14);
-
-        return buildFitResult("GAUSSIAN", p, cov, n, 4, opt);
-    }
-
-    /** weights[i] = 1/(sigmaY[i]^2). */
-    public static double[] weightsFromSigmaY(double[] sigmaY) {
-        return AbstractLeastSquaresFitter.weightsFromSigmaY(sigmaY);
+        ParameterValidator v = clampingValidator(lo, hi);
+        return super.fit(x, y, weights, initialGuess, v);
     }
 
     /**
-     * Create an {@link IValueGetter} that evaluates the fitted Gaussian curve.
-     * The returned function clamps sigma to {@link #DEFAULT_MIN_SIGMA}.
+     * Build a value getter using the fitted parameters.
+     *
+     * @param fit fit result
+     * @return an evaluator for the fitted Gaussian
      */
+    @Override
     public IValueGetter asValueGetter(final FitResult fit) {
         Objects.requireNonNull(fit, "fit");
-
-        final double A = fit.params[IDX_A];
-        final double mu = fit.params[IDX_MU];
-        final double s0 = fit.params[IDX_SIGMA];
-        final double B = fit.params[IDX_B];
-
-        final double sigma = Math.max(Math.abs(s0), DEFAULT_MIN_SIGMA);
-        final double twoS2 = 2.0 * sigma * sigma;
-
+        if (fit == null || fit.params == null) {
+            throw new IllegalArgumentException("FitResult is null");
+        }
+        if (fit.params.length != getParameterCount()) {
+            throw new IllegalArgumentException(
+                "PolynomialFitter: expected " + getParameterCount() +
+                " parameters, got " + fit.params.length
+            );
+        }
+        
+       final double[] p = fit.params.clone();
         return (double x) -> {
-            double dx = x - mu;
-            return A * Math.exp(-(dx * dx) / twoS2) + B;
+            double A = p[IDX_A];
+            double mu = p[IDX_MU];
+            double sigma = p[IDX_SIGMA];
+            double B = p[IDX_B];
+
+            double z = (x - mu) / sigma;
+            return A * Math.exp(-0.5 * z * z) + B;
         };
     }
 
-    /** Convenience: wrap the fitted Gaussian as an {@link IPlottableFunction}. */
-    public IPlottableFunction asPlottable(final FitResult fit, double xmin, double xmax) {
-        return new PlottableFunction(asValueGetter(fit), xmin, xmax);
-    }
-
-    /** Model + analytic Jacobian. */
+    /** Analytic model + Jacobian for Gaussian-with-baseline. */
     private static final class GaussianModel implements MultivariateJacobianFunction {
         private final double[] x;
 
@@ -161,53 +162,78 @@ public final class GaussianFitter extends AbstractLeastSquaresFitter {
 
         @Override
         public Pair<RealVector, RealMatrix> value(final RealVector point) {
-            double A = point.getEntry(IDX_A);
-            double mu = point.getEntry(IDX_MU);
-            double sigma = point.getEntry(IDX_SIGMA);
-            double B = point.getEntry(IDX_B);
+            final double[] p = point.toArray();
+            final double A = p[IDX_A];
+            final double mu = p[IDX_MU];
+            final double sigma = p[IDX_SIGMA];
+            final double B = p[IDX_B];
 
-            int n = x.length;
-            double[] values = new double[n];
-            double[][] jac = new double[n][4];
+            final int n = x.length;
+            final double[] values = new double[n];
+            final double[][] jac = new double[n][4];
 
-            double s2 = sigma * sigma;
+            final double invSigma = 1.0 / sigma;
+            final double invSigma2 = invSigma * invSigma;
 
             for (int i = 0; i < n; i++) {
                 double dx = x[i] - mu;
-                double e = FastMath.exp(-(dx * dx) / (2.0 * s2));
+                double z = dx * invSigma;
+                double e = Math.exp(-0.5 * z * z);
 
                 values[i] = A * e + B;
 
-                jac[i][IDX_A] = e;                     // dy/dA
-                jac[i][IDX_MU] = A * e * (dx / s2);     // dy/dmu
-                jac[i][IDX_SIGMA] = A * e * (dx * dx) / (sigma * s2); // dy/dsigma
-                jac[i][IDX_B] = 1.0;                    // dy/dB
+                // dy/dA = e
+                jac[i][IDX_A] = e;
+                // dy/dmu = A*e*(dx/sigma^2)
+                jac[i][IDX_MU] = A * e * (dx * invSigma2);
+                // dy/dsigma = A*e*(dx^2/sigma^3)
+                jac[i][IDX_SIGMA] = A * e * (dx * dx) * (invSigma2 * invSigma);
+                // dy/dB = 1
+                jac[i][IDX_B] = 1.0;
             }
 
-            return new Pair<>(new ArrayRealVector(values, false), new Array2DRowRealMatrix(jac, false));
+            return new Pair<>(
+                    new ArrayRealVector(values, false),
+                    new Array2DRowRealMatrix(jac, false)
+            );
         }
     }
 
-    /** Bounds for [A, mu, sigma, B]. */
+    /**
+     * Simple bounds container for the Gaussian parameters. Use +/-infinity for unbounded.
+     */
     public static final class ParameterBounds {
-        final double[] lower = new double[4];
-        final double[] upper = new double[4];
+        private final double[] lower = new double[4];
+        private final double[] upper = new double[4];
 
         private ParameterBounds(double[] lower, double[] upper) {
             System.arraycopy(lower, 0, this.lower, 0, 4);
             System.arraycopy(upper, 0, this.upper, 0, 4);
         }
 
+        /** @return a defensive copy of lower bounds. */
+        public double[] lower() {
+            return lower.clone();
+        }
+
+        /** @return a defensive copy of upper bounds. */
+        public double[] upper() {
+            return upper.clone();
+        }
+
+        /** @return unbounded bounds (all parameters +/-infinity). */
         public static ParameterBounds unbounded() {
             double[] lo = { Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY };
             double[] hi = { Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY };
             return new ParameterBounds(lo, hi);
         }
 
+        /** @return builder for bounds. */
         public static Builder builder() {
             return new Builder();
         }
 
+        /** Fluent builder for bounds. */
         public static final class Builder {
             private final double[] lo = { Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY };
             private final double[] hi = { Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY };
@@ -223,92 +249,65 @@ public final class GaussianFitter extends AbstractLeastSquaresFitter {
         }
     }
 
-    /** Enforces bounds and sigma >= minSigma using clamping. */
-    private static final class BoundValidator implements ParameterValidator {
-        private final ParameterBounds bounds;
-        private final double minSigma;
-
-        BoundValidator(ParameterBounds bounds, double minSigma) {
-            this.bounds = bounds;
-            this.minSigma = minSigma;
-        }
-
-        @Override
-        public RealVector validate(RealVector params) {
-            double[] p = params.toArray();
-            p[IDX_SIGMA] = Math.max(p[IDX_SIGMA], minSigma);
-
-            for (int i = 0; i < 4; i++) {
-                double lo = bounds.lower[i];
-                double hi = bounds.upper[i];
-                if (Double.isFinite(lo)) p[i] = Math.max(p[i], lo);
-                if (Double.isFinite(hi)) p[i] = Math.min(p[i], hi);
-            }
-            return new ArrayRealVector(p, false);
-        }
-    }
-
-    /** Heuristic initial guess for [A, mu, sigma, B]. */
-    public static final class InitialGuess {
+    /** Heuristic initial guess for Gaussian parameters. */
+    static final class InitialGuess {
         private InitialGuess() {}
 
         public static double[] guess(double[] x, double[] y) {
-            int n = x.length;
+            final int n = x.length;
+            if (n == 0) {
+                return new double[] { 1, 0, 1, 0 };
+            }
 
+            // Baseline guess: median-ish from endpoints.
             Integer[] idx = new Integer[n];
             for (int i = 0; i < n; i++) idx[i] = i;
             Arrays.sort(idx, (i, j) -> Double.compare(x[i], x[j]));
 
-            int iMin = idx[0], iMax = idx[0];
-            for (int k = 1; k < n; k++) {
-                int i = idx[k];
-                if (y[i] < y[iMin]) iMin = i;
-                if (y[i] > y[iMax]) iMax = i;
-            }
-
-            double yMin = y[iMin];
-            double yMax = y[iMax];
-
-            double B = yMin;
-            double A = yMax - yMin;
-            double mu = x[iMax];
-
             double yLeft = y[idx[0]];
             double yRight = y[idx[n - 1]];
-            double dLeftToMax = Math.abs(yLeft - yMax);
-            double dRightToMax = Math.abs(yRight - yMax);
-            double dLeftToMin = Math.abs(yLeft - yMin);
-            double dRightToMin = Math.abs(yRight - yMin);
+            double B = 0.5 * (yLeft + yRight);
 
-            boolean looksLikeDip = (dLeftToMax + dRightToMax) < (dLeftToMin + dRightToMin);
-            if (looksLikeDip) {
-                B = yMax;
-                A = yMin - yMax;  // negative
-                mu = x[iMin];
+            // Peak amplitude and mu guess from max deviation above baseline.
+            int imax = 0;
+            double maxVal = Double.NEGATIVE_INFINITY;
+            for (int i = 0; i < n; i++) {
+                double v = y[i];
+                if (v > maxVal) {
+                    maxVal = v;
+                    imax = i;
+                }
+            }
+            double mu = x[imax];
+            double A = maxVal - B;
+            if (!Double.isFinite(A) || A == 0.0) {
+                A = 1.0;
             }
 
+            // Sigma guess from half-maximum width (crude fallback).
             double half = B + 0.5 * A;
-            double xL = Double.NaN, xR = Double.NaN;
+            double x1 = mu, x2 = mu;
+            boolean foundLeft = false, foundRight = false;
 
-            double bestL = Double.POSITIVE_INFINITY, bestR = Double.POSITIVE_INFINITY;
-            for (int k = 0; k < n; k++) {
-                int i = idx[k];
-                double xi = x[i];
-                double di = Math.abs(y[i] - half);
-                if (xi <= mu && di < bestL) { bestL = di; xL = xi; }
-                if (xi >= mu && di < bestR) { bestR = di; xR = xi; }
+            for (int k = imax; k >= 0; k--) {
+                if (y[k] <= half) { x1 = x[k]; foundLeft = true; break; }
+            }
+            for (int k = imax; k < n; k++) {
+                if (y[k] <= half) { x2 = x[k]; foundRight = true; break; }
             }
 
             double sigma;
-            if (Double.isFinite(xL) && Double.isFinite(xR) && xR > xL) {
-                double fwhm = (xR - xL);
-                sigma = fwhm / (2.0 * Math.sqrt(2.0 * Math.log(2.0)));
+            if (foundLeft && foundRight) {
+                double fwhm = Math.abs(x2 - x1);
+                sigma = fwhm / 2.354820045; // FWHM = 2*sqrt(2 ln 2)*sigma
             } else {
-                double xSpan = x[idx[n - 1]] - x[idx[0]];
-                sigma = Math.max(xSpan / 10.0, DEFAULT_MIN_SIGMA);
+                // fallback to a fraction of x-range
+                double xmin = x[0], xmax = x[0];
+                for (double xv : x) { xmin = Math.min(xmin, xv); xmax = Math.max(xmax, xv); }
+                sigma = 0.1 * Math.max(1e-12, (xmax - xmin));
             }
 
-            if (!(sigma > 0.0) || !Double.isFinite(sigma)) {
+            if (!Double.isFinite(sigma) || sigma < DEFAULT_MIN_SIGMA) {
                 sigma = DEFAULT_MIN_SIGMA;
             }
 

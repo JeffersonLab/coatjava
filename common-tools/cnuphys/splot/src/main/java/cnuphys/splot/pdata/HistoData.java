@@ -4,7 +4,6 @@ import java.awt.Point;
 import java.awt.Polygon;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
@@ -32,9 +31,6 @@ import cnuphys.splot.plot.UnicodeSupport;
  * @author heddle
  */
 public class HistoData {
-
-    /** The XML root element name. */
-    public static final String XmlRootElementName = "HistoData";
 
     /** Sentinel returned by {@link #getBin(double)} for values below the histogram range. */
     private static final int UNDERFLOW = -200;

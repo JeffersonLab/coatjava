@@ -201,7 +201,7 @@ public class DataTable extends JTable {
 
 				if (val != _currentValue) {
 					((DefaultTableModel) getModel()).fireTableDataChanged();
-					DataColumn dc = null;
+					OldDataColumn dc = null;
 					DataSet ds = (DataSet) getModel();
 					ds.setAllFitsDirty();
 				}

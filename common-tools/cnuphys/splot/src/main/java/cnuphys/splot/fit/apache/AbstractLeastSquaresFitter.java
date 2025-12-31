@@ -2,20 +2,40 @@ package cnuphys.splot.fit.apache;
 
 import java.util.Objects;
 
+import org.apache.commons.math3.fitting.leastsquares.LeastSquaresBuilder;
 import org.apache.commons.math3.fitting.leastsquares.LeastSquaresOptimizer;
+import org.apache.commons.math3.fitting.leastsquares.LeastSquaresProblem;
+import org.apache.commons.math3.fitting.leastsquares.MultivariateJacobianFunction;
+import org.apache.commons.math3.fitting.leastsquares.ParameterValidator;
+import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.DiagonalMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.RealVector;
+import org.apache.commons.math3.optim.SimpleVectorValueChecker;
+
+import cnuphys.splot.fit.IValueGetter;
 
 /**
  * Base class for least-squares fitters built on Apache Commons Math 3.x
  * {@code fitting.leastsquares}.
  *
- * <p>This class centralizes:
+ * <p>This class centralizes the common fit pipeline:
  * <ul>
- *   <li>x/y validation</li>
+ *   <li>x/y/weights validation</li>
  *   <li>weights-from-sigma helper</li>
- *   <li>safe covariance extraction</li>
- *   <li>uniform initial-guess plumbing via {@link IInitialGuess}</li>
- *   <li>standard {@link FitResult} diagnostics: cost, chi-square, dof, reduced chi-square, RMS</li>
+ *   <li>least-squares problem builder wiring</li>
+ *   <li>optimizer execution</li>
+ *   <li>best-effort covariance extraction</li>
+ *   <li>uniform {@link FitResult} creation</li>
+ * </ul>
+ *
+ * <p>Concrete fitters typically only implement:
+ * <ul>
+ *   <li>{@link #getParameterCount()}</li>
+ *   <li>{@link #model(double[])}</li>
+ *   <li>optionally {@link #defaultInitialGuess(double[], double[], double[])}</li>
+ *   <li>optionally {@link #defaultValidator()}</li>
+ *   <li>optionally {@link #getModelName()}</li>
  * </ul>
  *
  * <h3>Chi-square note (Commons Math 3.6.1)</h3>
@@ -23,10 +43,10 @@ import org.apache.commons.math3.linear.RealMatrix;
  * <pre>
  *   chiSquare = cost^2
  * </pre>
- * If you supply weights as {@code 1/sigmaY^2} in a diagonal weight matrix, this is the conventional
- * weighted chi-square.
+ * If you supply weights as {@code 1/sigmaY^2} in a diagonal weight matrix, this corresponds
+ * to the conventional weighted chi-square.
  */
-public abstract class AbstractLeastSquaresFitter {
+public abstract class AbstractLeastSquaresFitter implements IFitter {
 
     /** Optimizer used for the fit (often Levenberg-Marquardt). */
     protected final LeastSquaresOptimizer optimizer;
@@ -34,9 +54,133 @@ public abstract class AbstractLeastSquaresFitter {
     /** Initial-guess strategy used when the caller does not provide an explicit guess. */
     protected final IInitialGuess initialGuesser;
 
+    /**
+     * Maximum iterations used by the least-squares problem (Commons Math builder).
+     * Subclasses may override via {@link #getMaxIterations()}.
+     */
+    protected final int maxIterations;
+
+    /**
+     * Maximum evaluations used by the least-squares problem (Commons Math builder).
+     * Subclasses may override via {@link #getMaxEvaluations()}.
+     */
+    protected final int maxEvaluations;
+
+    /**
+     * Absolute/relative thresholds used by the default convergence checker.
+     * Subclasses may override via {@link #getChecker()}.
+     */
+    protected final SimpleVectorValueChecker checker;
+
+    /**
+     * Covariance extraction threshold passed to {@code Optimum.getCovariances(threshold)}.
+     * Subclasses may override via {@link #getCovarianceThreshold()}.
+     */
+    protected final double covarianceThreshold;
+
+    /**
+     * Construct a fitter with default iteration/evaluation/checker settings.
+     *
+     * @param optimizer optimizer instance (e.g. Levenberg-Marquardt)
+     * @param initialGuesser fallback initial-guess strategy (non-null)
+     */
     protected AbstractLeastSquaresFitter(LeastSquaresOptimizer optimizer, IInitialGuess initialGuesser) {
+        this(optimizer, initialGuesser,
+                2000,
+                2000,
+                new SimpleVectorValueChecker(1e-12, 1e-12),
+                1e-14);
+    }
+
+    /**
+     * Construct a fitter with explicit common configuration.
+     *
+     * @param optimizer optimizer instance
+     * @param initialGuesser fallback initial guess strategy
+     * @param maxIterations maximum iterations for the least-squares builder
+     * @param maxEvaluations maximum evaluations for the least-squares builder
+     * @param checker convergence checker (may be null for none)
+     * @param covarianceThreshold threshold passed to getCovariances
+     */
+    protected AbstractLeastSquaresFitter(LeastSquaresOptimizer optimizer,
+                                        IInitialGuess initialGuesser,
+                                        int maxIterations,
+                                        int maxEvaluations,
+                                        SimpleVectorValueChecker checker,
+                                        double covarianceThreshold) {
         this.optimizer = Objects.requireNonNull(optimizer, "optimizer");
         this.initialGuesser = Objects.requireNonNull(initialGuesser, "initialGuesser");
+        this.maxIterations = maxIterations;
+        this.maxEvaluations = maxEvaluations;
+        this.checker = checker;
+        this.covarianceThreshold = covarianceThreshold;
+    }
+
+    /** @return number of parameters for this fitter. */
+    protected abstract int getParameterCount();
+
+    /**
+     * Build the model + analytic (or numeric) Jacobian for this fitter, given x values.
+     *
+     * @param x x data (length n)
+     * @return a {@link MultivariateJacobianFunction} compatible with Commons Math least-squares
+     */
+    protected abstract MultivariateJacobianFunction model(double[] x);
+
+    /**
+     * Default initial guess used if the caller does not provide an explicit override.
+     * The default implementation delegates to the {@link #initialGuesser}.
+     *
+     * <p>Subclasses may override if they have a better model-specific guess.
+     *
+     * @param x x data
+     * @param y y data
+     * @param weights optional weights (may be null)
+     * @return initial parameter vector of length {@link #getParameterCount()}
+     */
+    protected double[] defaultInitialGuess(double[] x, double[] y, double[] weights) {
+        return initialGuesser.guess(x, y, weights);
+    }
+
+    /**
+     * Default validator/bounds policy (optional).
+     *
+     * <p>Return null for "no validation". For simple bound constraints, consider using
+     * {@link #clampingValidator(double[], double[])}.
+     *
+     * @return a parameter validator or null
+     */
+    protected ParameterValidator defaultValidator() {
+        return null;
+    }
+
+    /**
+     * Model name used in the {@link FitResult}. Subclasses may override (e.g. "POLY_3").
+     *
+     * @return the model name label
+     */
+    protected String getModelName() {
+        return getClass().getSimpleName();
+    }
+
+    /** @return max iterations used for the least-squares problem. */
+    protected int getMaxIterations() {
+        return maxIterations;
+    }
+
+    /** @return max evaluations used for the least-squares problem. */
+    protected int getMaxEvaluations() {
+        return maxEvaluations;
+    }
+
+    /** @return the convergence checker (may be null). */
+    protected SimpleVectorValueChecker getChecker() {
+        return checker;
+    }
+
+    /** @return the covariance extraction threshold. */
+    protected double getCovarianceThreshold() {
+        return covarianceThreshold;
     }
 
     /**
@@ -65,6 +209,30 @@ public abstract class AbstractLeastSquaresFitter {
     }
 
     /**
+     * Validate weights array.
+     *
+     * <p>Commons Math accepts any real diagonal matrix as weights, but for typical least-squares usage,
+     * weights should be finite and non-negative (often {@code 1/sigma^2}).
+     *
+     * @param weights optional weights array
+     * @param n expected length
+     */
+    protected static void validateWeights(double[] weights, int n) {
+        if (weights == null) {
+            return;
+        }
+        if (weights.length != n) {
+            throw new IllegalArgumentException("weights length must match x/y length");
+        }
+        for (int i = 0; i < n; i++) {
+            double w = weights[i];
+            if (!Double.isFinite(w) || w < 0.0) {
+                throw new IllegalArgumentException("weights must be finite and >= 0; bad value at index " + i);
+            }
+        }
+    }
+
+    /**
      * Convenience: build weights from y-uncertainties.
      * <p>{@code weights[i] = 1/(sigmaY[i]^2)}.
      *
@@ -85,6 +253,46 @@ public abstract class AbstractLeastSquaresFitter {
     }
 
     /**
+     * Create a {@link ParameterValidator} that clamps parameters to {@code [lower[i], upper[i]]}.
+     * Use +/-infinity for "no bound".
+     *
+     * <p>This is a simple, robust bounds strategy compatible with Commons Math least-squares.
+     * It is not a hard-constraint optimizer; it repairs invalid steps by clamping.
+     *
+     * @param lower lower bounds (length p)
+     * @param upper upper bounds (length p)
+     * @return clamping validator
+     */
+    protected static ParameterValidator clampingValidator(final double[] lower, final double[] upper) {
+        Objects.requireNonNull(lower, "lower");
+        Objects.requireNonNull(upper, "upper");
+        if (lower.length != upper.length) {
+            throw new IllegalArgumentException("lower/upper must have same length");
+        }
+
+        return new ParameterValidator() {
+            @Override
+            public RealVector validate(RealVector params) {
+                final double[] p = params.toArray();
+                final int n = Math.min(p.length, lower.length);
+
+                for (int i = 0; i < n; i++) {
+                    double lo = lower[i];
+                    double hi = upper[i];
+
+                    if (Double.isFinite(lo) && p[i] < lo) {
+                        p[i] = lo;
+                    }
+                    if (Double.isFinite(hi) && p[i] > hi) {
+                        p[i] = hi;
+                    }
+                }
+                return new ArrayRealVector(p, false);
+            }
+        };
+    }
+
+    /**
      * Best-effort covariance extraction; returns null if unavailable (singular, ill-conditioned, etc.).
      */
     protected static RealMatrix safeCovariances(LeastSquaresOptimizer.Optimum opt, double threshold) {
@@ -94,6 +302,8 @@ public abstract class AbstractLeastSquaresFitter {
             return null;
         }
     }
+    
+    public abstract IValueGetter asValueGetter(final FitResult fit);
 
     /**
      * Create a {@link FitResult} from an Apache least-squares optimum.
@@ -136,16 +346,108 @@ public abstract class AbstractLeastSquaresFitter {
     }
 
     /**
-     * Uniform initial-guess selection:
-     * <ul>
-     *   <li>If {@code explicitGuess != null}, returns a defensive copy.</li>
-     *   <li>Otherwise delegates to {@link #initialGuesser}.</li>
-     * </ul>
+     * Fit with no weights, no initial guess override, and no parameter validator override.
+     *
+     * @param x the x data
+     * @param y the y data
+     * @return the fit result
      */
-    protected double[] selectInitialGuess(double[] x, double[] y, double[] weights, double[] explicitGuess) {
-        if (explicitGuess != null) {
-            return explicitGuess.clone();
+    @Override
+    public final FitResult fit(double[] x, double[] y) {
+        return fit(x, y, null, null, null);
+    }
+
+    /**
+     * Fit with weights but no initial guess override and no parameter validator override.
+     *
+     * @param x the x data
+     * @param y the y data
+     * @param weights the weights where w = 1/(sigmaY^2)
+     * @return the fit result
+     */
+    @Override
+    public final FitResult fit(double[] x, double[] y, double[] weights) {
+        return fit(x, y, weights, null, null);
+    }
+
+    /**
+     * Full fit entry point. This is the common least-squares pipeline for all derived fitters.
+     *
+     * @param x x data
+     * @param y y data
+     * @param weights optional weights (length n), typically {@code 1/sigmaY^2}; may be null
+     * @param initialGuessOverride optional explicit initial guess (length p); may be null
+     * @param validatorOverride optional explicit parameter validator; may be null
+     * @return FitResult
+     */
+    public final FitResult fit(double[] x, double[] y,
+                               double[] weights,
+                               double[] initialGuessOverride,
+                               ParameterValidator validatorOverride) {
+
+        // Basic validation.
+        validateXY(x, y, 2);
+        final int n = x.length;
+
+        validateWeights(weights, n);
+
+        final int p = getParameterCount();
+        if (p <= 0) {
+            throw new IllegalStateException("parameter count must be > 0");
         }
-        return initialGuesser.guess(x, y, weights);
+
+        // Initial guess.
+        final double[] start;
+        if (initialGuessOverride != null) {
+            if (initialGuessOverride.length != p) {
+                throw new IllegalArgumentException("initialGuessOverride must have length " + p);
+            }
+            start = initialGuessOverride.clone();
+        } else {
+            double[] guess = defaultInitialGuess(x, y, weights);
+            if (guess == null) {
+                throw new IllegalStateException("defaultInitialGuess returned null");
+            }
+            if (guess.length != p) {
+                throw new IllegalArgumentException("defaultInitialGuess must return length " + p);
+            }
+            start = guess;
+        }
+
+        // Model + validator.
+        final MultivariateJacobianFunction m = Objects.requireNonNull(model(x), "model(x) returned null");
+        final ParameterValidator v = (validatorOverride != null) ? validatorOverride : defaultValidator();
+
+        // Build the least-squares problem.
+        final LeastSquaresBuilder b = new LeastSquaresBuilder()
+                .start(start)
+                .model(m)
+                .target(y)
+                .maxIterations(getMaxIterations())
+                .maxEvaluations(getMaxEvaluations());
+
+        final SimpleVectorValueChecker c = getChecker();
+        if (c != null) {
+            b.checkerPair(c);
+        }
+
+        if (v != null) {
+            b.parameterValidator(v);
+        }
+
+        if (weights != null) {
+            b.weight(new DiagonalMatrix(weights));
+        }
+
+        final LeastSquaresProblem problem = b.build();
+
+        // Optimize.
+        final LeastSquaresOptimizer.Optimum opt = optimizer.optimize(problem);
+
+        // Package results.
+        final double[] params = opt.getPoint().toArray();
+        final RealMatrix cov = safeCovariances(opt, getCovarianceThreshold());
+
+        return buildFitResult(getModelName(), params, cov, n, p, opt);
     }
 }

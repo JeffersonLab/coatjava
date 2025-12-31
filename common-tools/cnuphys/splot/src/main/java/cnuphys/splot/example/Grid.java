@@ -20,10 +20,10 @@ import javax.swing.JMenuItem;
 import org.apache.commons.math3.distribution.NormalDistribution;
 
 import cnuphys.splot.fit.FGaussian;
-import cnuphys.splot.fit.FitType;
+import cnuphys.splot.fit.CurveDrawingMethod;
 import cnuphys.splot.fit.IValueGetter;
-import cnuphys.splot.pdata.DataColumn;
-import cnuphys.splot.pdata.DataColumnType;
+import cnuphys.splot.pdata.OldDataColumn;
+import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.pdata.DataSetException;
 import cnuphys.splot.pdata.DataSetType;
@@ -404,9 +404,9 @@ public class Grid extends JFrame implements IValueGetter {
 
 		switch (index) {
 		case 0:
-			Collection<DataColumn> ycols = ds.getAllColumnsByType(DataColumnType.Y);
-			for (DataColumn dc : ycols) {
-				dc.getFit().setFitType(FitType.ERF);
+			Collection<OldDataColumn> ycols = ds.getAllColumnsByType(DataColumnType.Y);
+			for (OldDataColumn dc : ycols) {
+				dc.getFit().setFitType(CurveDrawingMethod.ERF);
 			}
 			params.addPlotLine(new HorizontalLine(canvas, 0));
 			params.addPlotLine(new HorizontalLine(canvas, 1));
@@ -417,7 +417,7 @@ public class Grid extends JFrame implements IValueGetter {
 		case 1:
 			ds.getCurveStyle(0).setFillColor(new Color(196, 196, 196, 64));
 			ds.getCurveStyle(0).setBorderColor(Color.black);
-			ds.getCurve(0).getFit().setFitType(FitType.NONE);
+			ds.getCurve(0).getFit().setFitType(CurveDrawingMethod.NONE);
 			params.setMinExponentY(6);
 			params.setNumDecimalY(2);
 			break;
@@ -435,8 +435,8 @@ public class Grid extends JFrame implements IValueGetter {
 
 		case 3:
 			ycols = ds.getAllColumnsByType(DataColumnType.Y);
-			for (DataColumn dc : ycols) {
-				dc.getFit().setFitType(FitType.GAUSSIANS);
+			for (OldDataColumn dc : ycols) {
+				dc.getFit().setFitType(CurveDrawingMethod.GAUSSIANS);
 			}
 			params.mustIncludeXZero(true);
 			params.mustIncludeYZero(true);
@@ -446,11 +446,11 @@ public class Grid extends JFrame implements IValueGetter {
 			ds.getCurveStyle(0).setFillColor(new Color(196, 196, 196, 64));
 			ds.getCurveStyle(0).setBorderColor(Color.black);
 			ds.getCurveStyle(0).setBorderColor(Color.black);
-			ds.getCurve(0).getFit().setFitType(FitType.GAUSSIANS);
+			ds.getCurve(0).getFit().setFitType(CurveDrawingMethod.GAUSSIANS);
 
 			ds.getCurveStyle(1).setFillColor(new Color(196, 196, 196, 64));
 			ds.getCurveStyle(1).setBorderColor(Color.red);
-			ds.getCurve(1).getFit().setFitType(FitType.GAUSSIANS);
+			ds.getCurve(1).getFit().setFitType(CurveDrawingMethod.GAUSSIANS);
 
 			params.setMinExponentY(6);
 			params.setNumDecimalY(0);
@@ -460,8 +460,8 @@ public class Grid extends JFrame implements IValueGetter {
 			Color fillColor = new Color(255, 0, 0, 96);
 			ycols = ds.getAllColumnsByType(DataColumnType.Y);
 
-			for (DataColumn dc : ycols) {
-				dc.getFit().setFitType(FitType.NONE);
+			for (OldDataColumn dc : ycols) {
+				dc.getFit().setFitType(CurveDrawingMethod.NONE);
 				dc.getStyle().setSymbolType(SymbolType.CIRCLE);
 				dc.getStyle().setSymbolSize(4);
 				dc.getStyle().setFillColor(fillColor);

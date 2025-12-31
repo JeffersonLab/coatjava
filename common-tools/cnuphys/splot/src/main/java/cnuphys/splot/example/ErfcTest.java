@@ -3,9 +3,9 @@ package cnuphys.splot.example;
 import java.awt.Color;
 import java.util.Collection;
 
-import cnuphys.splot.fit.FitType;
-import cnuphys.splot.pdata.DataColumn;
-import cnuphys.splot.pdata.DataColumnType;
+import cnuphys.splot.fit.CurveDrawingMethod;
+import cnuphys.splot.pdata.OldDataColumn;
+import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.pdata.DataSetException;
 import cnuphys.splot.pdata.DataSetType;
@@ -87,9 +87,9 @@ public class ErfcTest extends AExample {
 	@Override
 	public void setPreferences() {
 		DataSet ds = _canvas.getDataSet();
-		Collection<DataColumn> ycols = ds.getAllColumnsByType(DataColumnType.Y);
-		for (DataColumn dc : ycols) {
-			dc.getFit().setFitType(FitType.ERFC);
+		Collection<OldDataColumn> ycols = ds.getAllColumnsByType(DataColumnType.Y);
+		for (OldDataColumn dc : ycols) {
+			dc.getFit().setFitType(CurveDrawingMethod.ERFC);
 		}
 		PlotParameters params = _canvas.getParameters();
 		params.addPlotLine(new HorizontalLine(_canvas, 0));

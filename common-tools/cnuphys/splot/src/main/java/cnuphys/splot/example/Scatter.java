@@ -3,9 +3,9 @@ package cnuphys.splot.example;
 import java.awt.Color;
 import java.util.Collection;
 
-import cnuphys.splot.fit.FitType;
-import cnuphys.splot.pdata.DataColumn;
-import cnuphys.splot.pdata.DataColumnType;
+import cnuphys.splot.fit.CurveDrawingMethod;
+import cnuphys.splot.pdata.OldDataColumn;
+import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.pdata.DataSetException;
 import cnuphys.splot.pdata.DataSetType;
@@ -63,10 +63,10 @@ public class Scatter extends AExample {
 	public void setPreferences() {
 		Color fillColor = new Color(255, 0, 0, 96);
 		DataSet ds = _canvas.getDataSet();
-		Collection<DataColumn> ycols = ds.getAllColumnsByType(DataColumnType.Y);
+		Collection<OldDataColumn> ycols = ds.getAllColumnsByType(DataColumnType.Y);
 
-		for (DataColumn dc : ycols) {
-			dc.getFit().setFitType(FitType.LINE);
+		for (OldDataColumn dc : ycols) {
+			dc.getFit().setFitType(CurveDrawingMethod.LINE);
 			dc.getStyle().setSymbolType(SymbolType.CIRCLE);
 			dc.getStyle().setSymbolSize(4);
 			dc.getStyle().setFillColor(fillColor);

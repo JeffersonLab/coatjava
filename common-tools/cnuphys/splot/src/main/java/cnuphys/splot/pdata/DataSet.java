@@ -6,840 +6,955 @@ import java.util.Vector;
 
 import javax.swing.event.EventListenerList;
 import javax.swing.table.DefaultTableModel;
-import cnuphys.splot.fit.Fit;
-import cnuphys.splot.fit.FitType;
+
+import org.apache.commons.math3.fitting.leastsquares.LevenbergMarquardtOptimizer;
+
+import cnuphys.splot.fit.CurveDrawingMethod;
+import cnuphys.splot.fit.apache.ErfErfcFitter;
+import cnuphys.splot.fit.apache.FitResult;
+import cnuphys.splot.fit.apache.GaussianFitter;
+import cnuphys.splot.fit.apache.HarmonicFitter;
+import cnuphys.splot.fit.apache.IInitialGuess;
+import cnuphys.splot.fit.apache.MultiGaussianFitter;
+import cnuphys.splot.fit.apache.PolynomialFitter;
 import cnuphys.splot.plot.DoubleFormat;
 import cnuphys.splot.style.IStyled;
 import cnuphys.splot.style.Styled;
 import cnuphys.splot.style.SymbolType;
 
 /**
- * This is essentially a table of not necessarily equal length columns.
- * 
+ * A {@code DataSet} is a table model backed by a list of {@link OldDataColumn}s.
+ * <p>
+ * DataSet supports multiple structural layouts defined by {@link DataSetType}:
+ * </p>
+ * <ul>
+ *   <li>{@link DataSetType#XYXY}: repeated (X,Y) column pairs</li>
+ *   <li>{@link DataSetType#XYEXYE}: repeated (X,Y,YERR) column triplets</li>
+ *   <li>{@link DataSetType#H1D}: one or more 1D histograms (each histogram is a Y column)</li>
+ *   <li>{@link DataSetType#STRIP}: a simple strip chart dataset (X,Y)</li>
+ * </ul>
+ *
+ * <h3>Curve drawing + fitting</h3>
+ * Each Y column (also called a "curve") has a {@link CurveDrawingMethod}.
+ * When the method requires a fit or spline, {@link #doCurveFits(boolean)} computes and
+ * caches the result on the corresponding {@link OldDataColumn}.
+ *
+ * <p>
+ * <strong>MVC note:</strong> This class currently performs fitting directly (violates MVC),
+ * intentionally, to get everything functional. You can later refactor fitting into a controller/service.
+ * </p>
+ *
  * @author heddle
- * 
  */
+@SuppressWarnings("serial")
 public class DataSet extends DefaultTableModel {
 
-	// the data
-	Vector<DataColumn> _columns = new Vector<DataColumn>();
 
-	// List of dataset change listeners
-	private EventListenerList _listenerList;
+	// ------------------------------------------------------------------------
+	// Core data
+	// ------------------------------------------------------------------------
 
-	// the dataset type
-	private DataSetType _type;
+	/** Column storage. */
+	private final Vector<OldDataColumn> _columns = new Vector<>();
 
-	// most sets do not have x errors
-	private boolean _hasXErrors;
+	/** Dataset change listeners. */
+	private final EventListenerList _listenerList = new EventListenerList();
 
+	/** Dataset type. */
+	private final DataSetType _type;
+
+	// ------------------------------------------------------------------------
+	// Constructors
+	// ------------------------------------------------------------------------
 
 	/**
-	 * This constructor is used for 1D histograms
-	 * 
-	 * @param histos an array of histo data objects
+	 * Construct a 1D histogram dataset from one or more {@link HistoData} objects.
+	 * Each histogram becomes a Y column.
+	 *
+	 * @param histos histogram data objects (must be non-null and length &gt;= 1)
+	 * @throws DataSetException if no histograms are supplied
 	 */
 	public DataSet(HistoData... histos) throws DataSetException {
-		if ((histos == null) || (histos.length < 1)) {
-			throw (new DataSetException("Must supply at least one histogram data object."));
+		if (histos == null || histos.length < 1) {
+			throw new DataSetException("Must supply at least one histogram data object.");
 		}
 		_type = DataSetType.H1D;
 
-		int colCount = histos.length;
-
-		// create a y column for each histogram
-		for (int i = 0; i < colCount; i++) {
+		for (int i = 0; i < histos.length; i++) {
 			HistoData hd = histos[i];
 			if (hd != null) {
-				_columns.add(new DataColumn(DataColumnType.Y, hd.getName()));
-				getColumn(i).setHistoData(hd);
-				getColumn(i).initStyle();
-				getColumn(i).getStyle().setSymbolType(SymbolType.NOSYMBOL);
-				getColumn(i).initFit();
+				OldDataColumn y = new OldDataColumn(DataColumnType.Y, hd.getName());
+				y.setHistoData(hd);
+				y.initStyle();
+				y.getStyle().setSymbolType(SymbolType.NOSYMBOL);
+				_columns.add(y);
 			}
 		}
 	}
 
 	/**
-	 * Create a dataset for a simple strip chart
-	 * 
-	 * @param stripData the StripData data object
-	 * @param colNames  should be just two of them
+	 * Create a dataset for a simple strip chart (X,Y) and attach it to the provided
+	 * {@link StripData} object.
+	 *
+	 * @param stripData the strip chart backing data
+	 * @param colNames  column names (expected length 2: xName, yName)
 	 */
 	public DataSet(StripData stripData, String... colNames) {
+		super(colNames, 0);
 		_type = DataSetType.STRIP;
-		_columns.add(new DataColumn(DataColumnType.X, colNames[0]));
-		_columns.add(new DataColumn(DataColumnType.Y, colNames[1]));
+
+		_columns.add(new OldDataColumn(DataColumnType.X, colNames[0]));
+		_columns.add(new OldDataColumn(DataColumnType.Y, colNames[1]));
+
+		// default curve style + drawing method for strip chart
 		getColumn(1).initStyle();
-		getColumn(1).initFit();
-		getColumn(1).getFit().setFitType(FitType.STAIRS);
-		stripData.setDataSet(this);
+		getColumn(1).setCurveDrawingMethod(CurveDrawingMethod.STAIRS);
+
+		if (stripData != null) {
+			stripData.setDataSet(this);
+		}
 	}
 
 	/**
-	 * Create a dataset of a specific type
-	 * 
-	 * @param type     the dataset type
-	 * @param colNames the column names. There should be one name for every expected
-	 *                 column based on the type.
-	 * @throws DataSetException When the number of columns is inconsistent with the
-	 *                          type
+	 * Create a dataset of the given structural type using column names.
+	 *
+	 * @param type     dataset type
+	 * @param colNames column names; must match the structural expectations of {@code type}
+	 * @throws DataSetException if the number of columns is incompatible with {@code type}
 	 */
 	public DataSet(DataSetType type, String... colNames) throws DataSetException {
 		super(colNames, 0);
+
+		if (type == null) {
+			throw new DataSetException("DataSetType is null.");
+		}
 		_type = type;
-		int colCount = (colNames == null) ? 0 : colNames.length;
+
+		final int colCount = (colNames == null) ? 0 : colNames.length;
 
 		switch (type) {
 
 		case XYXY:
-			// repeated x,y columns. Number of columns should be divisible by
-			// two
-
 			if ((colCount % 2) != 0) {
 				throw new DataSetException("The number of columns " + colCount + " is not divisible by 2.");
 			}
 			for (int i = 0; i < colCount / 2; i++) {
 				int j = i * 2;
-				_columns.add(new DataColumn(DataColumnType.X, colNames[j]));
-				_columns.add(new DataColumn(DataColumnType.Y, colNames[j + 1]));
+				_columns.add(new OldDataColumn(DataColumnType.X, colNames[j]));
+				_columns.add(new OldDataColumn(DataColumnType.Y, colNames[j + 1]));
 				getColumn(j + 1).initStyle();
-				getColumn(j + 1).initFit();
 			}
 			break;
 
 		case XYEXYE:
-			// repeated x,y,yerr. Number of columns should be divisible by three
-
 			if ((colCount % 3) != 0) {
-				throw new DataSetException(
-						"The number of columns for type XYEXYE " + colCount + " is not divisible by 3.");
+				throw new DataSetException("The number of columns for type XYEXYE " + colCount + " is not divisible by 3.");
 			}
 			for (int i = 0; i < colCount / 3; i++) {
 				int j = i * 3;
-				_columns.add(new DataColumn(DataColumnType.X, colNames[j]));
-				_columns.add(new DataColumn(DataColumnType.Y, colNames[j + 1]));
-				_columns.add(new DataColumn(DataColumnType.YERR, colNames[j + 2]));
+				_columns.add(new OldDataColumn(DataColumnType.X, colNames[j]));
+				_columns.add(new OldDataColumn(DataColumnType.Y, colNames[j + 1]));
+				_columns.add(new OldDataColumn(DataColumnType.YERR, colNames[j + 2]));
 				getColumn(j + 1).initStyle();
-				getColumn(j + 1).initFit();
 			}
 			break;
 
 		case H1D:
-			throw (new DataSetException("Use DataSet(HistoData[]) constructor for 1D histograms."));
+			throw new DataSetException("Use DataSet(HistoData...) constructor for 1D histograms.");
 
-		default:
-			break;
+		case STRIP:
+			// handled by strip ctor
+			throw new DataSetException("Use DataSet(StripData, ...) constructor for STRIP data.");
 		}
 	}
-	
+
+	// ------------------------------------------------------------------------
+	// Curve fitting (Apache fitters)
+	// ------------------------------------------------------------------------
+
 	/**
-	 * Get the number of data points in the first column of
-	 * a plot.
-	 * @return the number of data points
+	 * Perform curve fits / spline construction for all Y columns.
+	 * <p>
+	 * What is computed depends on each Y column's {@link CurveDrawingMethod}.
+	 * Results are cached on the {@link OldDataColumn}:
+	 * </p>
+	 * <ul>
+	 *   <li>{@link CurveDrawingMethod#CUBICSPLINE}: sets {@link OldDataColumn#setCubicSpline(CubicSpline)}</li>
+	 *   <li>Fit-based methods: sets {@link OldDataColumn#setFitResult(FitResult)}</li>
+	 * </ul>
+	 *
+	 * <p>
+	 * For histogram datasets ({@link DataSetType#H1D}), fitting uses bin centers and counts
+	 * as (x,y) via {@link HistoData#prepareForFit(boolean, double, double, boolean)} which
+	 * also provides weights.
+	 * </p>
+	 *
+	 * @param force if true, recompute even if column is not marked dirty
+	 */
+	public void doCurveFits(boolean force) {
+
+		for (OldDataColumn ycol : _columns) {
+			if (ycol.getType() != DataColumnType.Y) {
+				continue;
+			}
+			if (!force && !ycol.isDirty()) {
+				continue;
+			}
+
+			// clear cached artifacts
+			ycol.setFitResult(null);
+			ycol.setCubicSpline(null);
+
+			try {
+				final CurveDrawingMethod method = ycol.getCurveDrawingMethod();
+
+				switch (method) {
+
+				case NONE:
+				case CONNECT:
+				case STAIRS:
+					// nothing to compute
+					break;
+
+				case CUBICSPLINE: {
+					FitVectors v = buildFitVectors(ycol);
+					if (v != null && v.x.length >= 2) {
+						ycol.setCubicSpline(new cnuphys.splot.spline.CubicSpline(v.x, v.y));
+					}
+					break;
+				}
+
+				case POLYNOMIAL: {
+				    FitVectors v = buildFitVectors(ycol);
+				    if (v != null && v.x.length >= 2) {
+				        int degree = ycol.getPolynomialDegree();
+				        PolynomialFitter pf = new PolynomialFitter(degree);
+				        ycol.setFitResult(fitWithOptionalWeights(pf, v));
+				    }
+				    break;
+				}
+
+				case GAUSSIAN: {
+					FitVectors v = buildFitVectors(ycol);
+					if (v != null && v.x.length >= 2) {
+						GaussianFitter gf = new GaussianFitter();
+						ycol.setFitResult(fitWithOptionalWeights(gf, v));
+					}
+					break;
+				}
+
+				case GAUSSIANS: {
+				    FitVectors v = buildFitVectors(ycol);
+				    if (v != null && v.x.length >= 2) {
+				        int nGauss = ycol.getOrder();
+				        MultiGaussianFitter mg = new MultiGaussianFitter(nGauss);
+				        ycol.setFitResult(fitWithOptionalWeights(mg, v));
+				    }
+				    break;
+				}
+
+				case HARMONIC: {
+				    FitVectors v = buildFitVectors(ycol);
+				    if (v != null && v.x.length >= 2) {
+
+				        // Interpret per-curve "order" as omega scan resolution (omegaSteps).
+				        // If user leaves it small (e.g., 2 default used for multi-gauss), fall back to fitter default.
+				        int omegaSteps = ycol.getOrder();
+				        if (omegaSteps < 10) {
+				            omegaSteps = HarmonicFitter.DEFAULT_OMEGA_STEPS;
+				        }
+
+				        IInitialGuess guesser =
+				                HarmonicFitter.defaultGuesser(
+				                        true, // withOffset (matches HarmonicFitter() default)
+				                        omegaSteps,
+				                        HarmonicFitter.DEFAULT_MIN_CYCLES_OVER_SPAN,
+				                        HarmonicFitter.DEFAULT_MAX_CYCLES_OVER_SPAN);
+
+				        HarmonicFitter hf = new HarmonicFitter(
+				                true,
+				                new LevenbergMarquardtOptimizer(),
+				                guesser);
+
+				        ycol.setFitResult(fitWithOptionalWeights(hf, v));
+				    }
+				    break;
+				}
+
+				case ERF: {
+					FitVectors v = buildFitVectors(ycol);
+					if (v != null && v.x.length >= 2) {
+						ErfErfcFitter ef = new ErfErfcFitter(ErfErfcFitter.Kind.ERF);
+						ycol.setFitResult(fitWithOptionalWeights(ef, v));
+					}
+					break;
+				}
+
+				case ERFC: {
+					FitVectors v = buildFitVectors(ycol);
+					if (v != null && v.x.length >= 2) {
+						ErfErfcFitter ef = new ErfErfcFitter(ErfErfcFitter.Kind.ERFC);
+						ycol.setFitResult(fitWithOptionalWeights(ef, v));
+					}
+					break;
+				}
+				}
+			}
+			catch (Exception e) {
+				// fail soft: leave artifacts null
+				ycol.setFitResult(null);
+				ycol.setCubicSpline(null);
+			}
+			finally {
+				ycol.setDirty(false);
+			}
+		}
+	}
+
+	/**
+	 * Common pattern: if weights exist, call the weighted fit overload; otherwise call fit(x,y).
+	 * <p>
+	 * Each fitter defines its own {@code ParameterBounds} inner type, so we do not try to share
+	 * a bounds object here. For now we pass {@code null} bounds and {@code null} initial guesses.
+	 * These can be wired in later (per-fitter) when you add UI controls.
+	 * </p>
+	 *
+	 * @param fitter a concrete fitter instance
+	 * @param v fit vectors
+	 * @return fit result or null
+	 */
+	private static FitResult fitWithOptionalWeights(Object fitter, FitVectors v) {
+		if (v == null) {
+			return null;
+		}
+
+		// Unweighted overloads
+		if (v.weights == null) {
+			if (fitter instanceof PolynomialFitter) {
+				return ((PolynomialFitter) fitter).fit(v.x, v.y);
+			}
+			if (fitter instanceof GaussianFitter) {
+				return ((GaussianFitter) fitter).fit(v.x, v.y);
+			}
+			if (fitter instanceof MultiGaussianFitter) {
+				return ((MultiGaussianFitter) fitter).fit(v.x, v.y);
+			}
+			if (fitter instanceof HarmonicFitter) {
+				return ((HarmonicFitter) fitter).fit(v.x, v.y);
+			}
+			if (fitter instanceof ErfErfcFitter) {
+				return ((ErfErfcFitter) fitter).fit(v.x, v.y);
+			}
+			return null;
+		}
+
+		// Weighted overloads: bounds + initialGuess are fitter-specific, so pass null for now.
+		double[] initialGuess = null;
+
+		if (fitter instanceof PolynomialFitter) {
+			return ((PolynomialFitter) fitter).fit(v.x, v.y, v.weights,
+					(PolynomialFitter.ParameterBounds) null, initialGuess);
+		}
+		if (fitter instanceof GaussianFitter) {
+			return ((GaussianFitter) fitter).fit(v.x, v.y, v.weights,
+					(GaussianFitter.ParameterBounds) null, initialGuess);
+		}
+		if (fitter instanceof MultiGaussianFitter) {
+			return ((MultiGaussianFitter) fitter).fit(v.x, v.y, v.weights,
+					(MultiGaussianFitter.ParameterBounds) null, initialGuess);
+		}
+		if (fitter instanceof HarmonicFitter) {
+			return ((HarmonicFitter) fitter).fit(v.x, v.y, v.weights,
+					(HarmonicFitter.ParameterBounds) null, initialGuess);
+		}
+		if (fitter instanceof ErfErfcFitter) {
+			return ((ErfErfcFitter) fitter).fit(v.x, v.y, v.weights,
+					(ErfErfcFitter.ParameterBounds) null, initialGuess);
+		}
+
+		return null;
+	}
+
+
+	// ------------------------------------------------------------------------
+	// Fit vector preparation
+	// ------------------------------------------------------------------------
+
+	/**
+	 * Small container for fit vectors.
+	 */
+	private static final class FitVectors {
+		final double[] x;
+		final double[] y;
+		final double[] weights; // may be null
+
+		FitVectors(double[] x, double[] y, double[] weights) {
+			this.x = x;
+			this.y = y;
+			this.weights = weights;
+		}
+	}
+
+	/**
+	 * Build x/y/(optional weights) vectors for fitting a Y column.
+	 * <p>
+	 * Histogram datasets use {@link HistoData#prepareForFit} (x=bin centers, y=counts).
+	 * XYEXYE datasets convert YERR into weights using w=1/sigma^2.
+	 * Other datasets use unit weights (null weights).
+	 * </p>
+	 *
+	 * @param ycol a Y column
+	 * @return vectors, or null if insufficient data
+	 */
+	private FitVectors buildFitVectors(OldDataColumn ycol) {
+		if (ycol == null) {
+			return null;
+		}
+
+		// Histogram case
+		if (is1DHistoSet()) {
+			HistoData hd = ycol.getHistoData();
+			if (hd == null) {
+				return null;
+			}
+			HistoData.FitData fd = hd.prepareForFit(false, hd.getMinX(), hd.getMaxX(), true);
+			if (fd == null || fd.x == null || fd.y == null || fd.x.length < 2) {
+				return null;
+			}
+			return new FitVectors(fd.x, fd.y, fd.weights);
+		}
+
+		// XY/STRIP case
+		OldDataColumn xcol = getCorrespondingXColumn(ycol);
+		if (xcol == null) {
+			return null;
+		}
+
+		double[] x = xcol.getMinimalCopy();
+		double[] y = ycol.getMinimalCopy();
+		if (x == null || y == null) {
+			return null;
+		}
+
+		int n = Math.min(x.length, y.length);
+		if (n < 2) {
+			return null;
+		}
+
+		double[] weights = null;
+
+		// XYEXYE: convert sigma (yerr) to weights
+		if (_type == DataSetType.XYEXYE) {
+			OldDataColumn eCol = getCorrespondingYErrColumn(ycol);
+			if (eCol != null) {
+				double[] sigma = eCol.getMinimalCopy();
+				if (sigma != null) {
+					n = Math.min(n, sigma.length);
+					if (n < 2) {
+						return null;
+					}
+					weights = sigmaToWeights(sigma, n);
+				}
+			}
+		}
+
+		// trim to n
+		if (x.length != n) {
+			double[] xt = new double[n];
+			System.arraycopy(x, 0, xt, 0, n);
+			x = xt;
+		}
+		if (y.length != n) {
+			double[] yt = new double[n];
+			System.arraycopy(y, 0, yt, 0, n);
+			y = yt;
+		}
+
+		return new FitVectors(x, y, weights);
+	}
+
+	private static double[] sigmaToWeights(double[] sigma, int n) {
+		double[] w = new double[n];
+		for (int i = 0; i < n; i++) {
+			double s = sigma[i];
+			if (!(s > 0.0)) {
+				w[i] = 1.0;
+			}
+			else {
+				double inv = 1.0 / s;
+				w[i] = inv * inv;
+			}
+		}
+		return w;
+	}
+
+	// ------------------------------------------------------------------------
+	// Column correspondence
+	// ------------------------------------------------------------------------
+
+	/**
+	 * Get the corresponding X column for a given Y column based on dataset type.
+	 *
+	 * @param yColumn a Y column
+	 * @return the corresponding X column, or null if not applicable
+	 */
+	public OldDataColumn getCorrespondingXColumn(OldDataColumn yColumn) {
+		if (yColumn == null || yColumn.getType() != DataColumnType.Y) {
+			return null;
+		}
+
+		int yIndex = _columns.indexOf(yColumn);
+		if (yIndex < 0) {
+			return null;
+		}
+
+		switch (_type) {
+		case XYXY:
+			// (X,Y) pairs: Y is odd index
+			return ((yIndex % 2) == 1) ? _columns.get(yIndex - 1) : null;
+
+		case XYEXYE:
+			// (X,Y,YERR) triplets: Y is index % 3 == 1
+			return ((yIndex % 3) == 1) ? _columns.get(yIndex - 1) : null;
+
+		case STRIP:
+			// fixed X,Y
+			return _columns.isEmpty() ? null : _columns.get(0);
+
+		case H1D:
+		default:
+			return null;
+		}
+	}
+
+	/**
+	 * Get the corresponding YERR column for a given Y column (only for XYEXYE datasets).
+	 *
+	 * @param yColumn a Y column
+	 * @return the corresponding YERR column, or null
+	 */
+	private OldDataColumn getCorrespondingYErrColumn(OldDataColumn yColumn) {
+		if (_type != DataSetType.XYEXYE || yColumn == null || yColumn.getType() != DataColumnType.Y) {
+			return null;
+		}
+		int yIndex = _columns.indexOf(yColumn);
+		if (yIndex < 0) {
+			return null;
+		}
+
+		// triplets: X,Y,YERR
+		if ((yIndex % 3) == 1) {
+			int eIndex = yIndex + 1;
+			if (eIndex < _columns.size() && _columns.get(eIndex).getType() == DataColumnType.YERR) {
+				return _columns.get(eIndex);
+			}
+		}
+		return null;
+	}
+
+	// ------------------------------------------------------------------------
+	// Basic dataset info
+	// ------------------------------------------------------------------------
+
+	/**
+	 * Number of points (rows) as implied by the first column.
+	 * Histogram datasets report total count of the first histogram.
+	 *
+	 * @return data count, or -1 if no columns exist
 	 */
 	public long size() {
-
-		long count = -1;
-		if (getColumnCount() != 0) {
-			DataColumn dc = _columns.firstElement();
-
-			if (is1DHistoSet()) {
-				HistoData hd = dc.getHistoData();
-				count =  hd.getTotalCount();
-			}
-			else {
-				count = dc.size();
-			}
+		if (getColumnCount() == 0) {
+			return -1;
 		}
-		return count;
-	}
-
-
-	// XYY, XYXY, XYEXYE, XYEEXYEE, H1D, UNKNOWN;
-
-	/**
-	 * Add a curve to an existing data set. For now limited to type XYXY only.
-	 * 
-	 * @param xname the name for the new xdata (ignored for some types)
-	 * @param yname the name for the new y data
-	 */
-	public DataColumn addCurve(String xname, String yname) {
-
-		DataColumn newCurve = null;
-
-		switch (getType()) {
-
-		case XYXY:
-			addColumn(xname);
-			addColumn(yname);
-			_columns.add(new DataColumn(DataColumnType.X, xname));
-
-			newCurve = new DataColumn(DataColumnType.Y, yname);
-			newCurve.initFit();
-			newCurve.initStyle();
-			_columns.add(newCurve);
-			break;
-
-		case XYEXYE:
-			System.err.println("[sPlot] Can not add curve for type: " + getType());
-			break;
-
-		case H1D:
-			System.err.println("[sPlot] Can not add curve for type: " + getType());
-			break;
-
-		case STRIP:
-			System.err.println("[sPlot] Can not add curve for type: " + getType());
-			break;
-
+		OldDataColumn dc = _columns.firstElement();
+		if (is1DHistoSet()) {
+			HistoData hd = dc.getHistoData();
+			return (hd == null) ? -1 : hd.getTotalCount();
 		}
-
-		return newCurve;
+		return dc.size();
 	}
 
 	/**
-	 * Add data to a specific curve. For now limited to type XYXY only.
-	 * 
-	 */
-	public void addToCurve(int curveIndex, double... vals) throws DataSetException {
-
-		int count = getColumnCount();
-
-		switch (getType()) {
-
-		case XYXY:
-			int curveCount = count / 2;
-			if (curveIndex < curveCount) {
-				DataColumn xcol = _columns.get(2 * curveIndex);
-				DataColumn ycol = _columns.get(2 * curveIndex + 1);
-				xcol.add(vals[0]);
-				ycol.add(vals[1]);
-			}
-			else {
-				System.err.println("[sPlot] Curve index out of range for type: " + getType());
-			}
-			break;
-
-		case XYEXYE:
-			System.err.println("[sPlot] Can not add to curve for type: " + getType());
-			break;
-
-		case H1D:
-			System.err.println("[sPlot] Can not add to curve for type: " + getType());
-			break;
-
-		case STRIP:
-			System.err.println("[sPlot] Can not add to curve for type: " + getType());
-			break;
-
-		}
-		notifyListeners();
-	}
-
-	/**
-	 * Check to see if this data set has x errors
-	 * 
-	 * @return <code>true</code> if this set has x errors
-	 */
-	public boolean hasXErrors() {
-		return _hasXErrors;
-	}
-
-	/**
-	 * Check to see if this data set is for 1D Histograms
-	 * 
-	 * @return <code>true</code> if this is for 1D histograms
+	 * @return true if this dataset is a 1D histogram dataset
 	 */
 	public boolean is1DHistoSet() {
-		return (_type == DataSetType.H1D);
+		return _type == DataSetType.H1D;
 	}
 
-
 	/**
-	 * Set all fits to dirty.
+	 * Mark all Y columns as dirty (forces refit/spline on next {@link #doCurveFits(boolean)}).
 	 */
 	public void setAllFitsDirty() {
-		for (DataColumn dc : _columns) {
-			if (dc.getFit() != null) {
-				dc.getFit().setDirty();
+		for (OldDataColumn dc : _columns) {
+			if (dc.getType() == DataColumnType.Y) {
+				dc.setDirty(true);
 			}
 		}
 	}
 
 	/**
-	 * Get a curve from an index. E.g., f the index is 0 it will return the 1st Y
-	 * column. Y Columns are also known as "curves".
-	 * 
-	 * @param index the index
-	 * @return the corresponding curve
+	 * Get a curve (Y column) by curve index (0..numCurves-1).
+	 * For XYXY and XYEXYE, curves are the Y columns in order.
+	 * For H1D, each histogram is a curve.
+	 *
+	 * @param index curve index
+	 * @return the Y column
 	 */
-	public DataColumn getCurve(int index) {
-		Vector<DataColumn> ycols = (Vector<DataColumn>) getAllColumnsByType(DataColumnType.Y);
-
-		if ((ycols == null) || (index >= ycols.size())) {
-			return null;
+	public OldDataColumn getCurve(int index) {
+		if (is1DHistoSet()) {
+			return _columns.get(index);
 		}
 
-		return ycols.get(index);
+		if (_type == DataSetType.XYXY) {
+			return _columns.get(2 * index + 1);
+		}
+		// XYEXYE: X,Y,YERR
+		return _columns.get(3 * index + 1);
 	}
 
 	/**
-	 * Get a x column from an index. E.g., f the index is 0 it will return the 1st X
-	 * column.
-	 * 
-	 * @param index the index
-	 * @return the corresponding X column
+	 * Get the X column corresponding to a given curve index.
+	 * Not meaningful for H1D datasets.
+	 *
+	 * @param index curve index
+	 * @return x column or null
 	 */
-	public DataColumn getXColumn(int index) {
-		Vector<DataColumn> xcols = (Vector<DataColumn>) getAllColumnsByType(DataColumnType.X);
-
-		if ((xcols == null) || (index >= xcols.size())) {
+	public OldDataColumn getXColumn(int index) {
+		if (is1DHistoSet()) {
 			return null;
 		}
-
-		return xcols.get(index);
+		if (_type == DataSetType.XYXY) {
+			return _columns.get(2 * index);
+		}
+		// XYEXYE
+		return _columns.get(3 * index);
 	}
 
 	/**
-	 * Get the style for the curve at the given index.
-	 * 
-	 * @param index the curve index.
-	 * @return the style
+	 * Convenience: style for a curve index.
+	 *
+	 * @param index curve index
+	 * @return the curve's style
 	 */
 	public IStyled getCurveStyle(int index) {
-		DataColumn curve = getCurve(index);
-		return (curve == null) ? null : curve.getStyle();
+		return getCurve(index).getStyle();
 	}
 
 	/**
-	 * Compute the "standard" standard deviation (divide variance by N) using an
-	 * accurate one-pass method.
-	 * 
-	 * @param x the data
-	 * @return the standard deviation
+	 * Compute standard deviation of a primitive array.
+	 *
+	 * @param x array
+	 * @return standard deviation (population)
 	 */
 	public static double standardDev(double x[]) {
-		if ((x == null) || (x.length == 0)) {
-			return Double.NaN;
-		}
-
-		int n = x.length;
-		if (n == 1) {
-			return 0;
-		}
-
-		double m = x[0];
-		double q = 0;
-		for (int k = 2; k <= n; k++) {
-			double fac = (x[k - 1] - m);
-			double fac2 = fac / k;
-			m = m + fac2;
-			q = q + (k - 1) * fac * fac2;
-		}
-		double var = q / n;
-
-		if (var <= 0.) {
+		if (x == null || x.length < 2) {
 			return 0.0;
 		}
-		return Math.sqrt(var);
+		double sum = 0.0;
+		for (double v : x) {
+			sum += v;
+		}
+		double mean = sum / x.length;
 
+		double ss = 0.0;
+		for (double v : x) {
+			double d = v - mean;
+			ss += d * d;
+		}
+		double var = ss / x.length;
+		return (var <= 0.0) ? 0.0 : Math.sqrt(var);
 	}
 
 	/**
-	 * Get the DataSet type
-	 * 
-	 * @return the data set type
+	 * @return dataset type
 	 */
 	public DataSetType getType() {
 		return _type;
 	}
 
 	/**
-	 * Get the minimum value of a column
-	 * 
-	 * @param index the index of the column
-	 * @return the minimum value of the x data
+	 * Get minimum of a column by index.
+	 *
+	 * @param index column index
+	 * @return minimum value
 	 */
 	public double getColumnMin(int index) {
 		return getColumn(index).getMinValue();
 	}
 
 	/**
-	 * Get the maximum value of a column
-	 * 
-	 * @param index the index of the column
-	 * @return the maximum value of the x data
+	 * Get maximum of a column by index.
+	 *
+	 * @param index column index
+	 * @return maximum value
 	 */
 	public double getColumnMax(int index) {
 		return getColumn(index).getMaxValue();
 	}
 
 	/**
-	 * Get a collection of all the curves that are set visible.
-	 * 
-	 * @return a collection of all the curves that are set visible.
+	 * @return all visible curves (Y columns with visible=true)
 	 */
-	public Collection<DataColumn> getAllVisibleCurves() {
-		Vector<DataColumn> v = new Vector<DataColumn>();
-		for (DataColumn col : _columns) {
-			if (col.getType() == DataColumnType.Y) {
-				if (col.isVisible()) {
-					v.add(col);
-				}
+	public Collection<OldDataColumn> getAllVisibleCurves() {
+		Vector<OldDataColumn> curves = new Vector<>();
+		for (OldDataColumn dc : _columns) {
+			if (dc.getType() == DataColumnType.Y && dc.isVisible()) {
+				curves.add(dc);
 			}
 		}
-		return v;
+		return curves;
 	}
 
-	/**
-	 * Get all curves, visible or not
-	 * 
-	 * @return a collection of all the curves, visible or not
-	 */
-	public Collection<DataColumn> getAllCurves() {
-		Vector<DataColumn> v = new Vector<DataColumn>();
-		for (DataColumn col : _columns) {
-			if (col.getType() == DataColumnType.Y) {
-				v.add(col);
-			}
-		}
-		return v;
-	}
+	// ------------------------------------------------------------------------
+	// Data min/max convenience (legacy behavior retained)
+	// ------------------------------------------------------------------------
 
 	/**
-	 * Get a count of all the curves
-	 * 
-	 * @return a count of all the curves
-	 */
-	public int getCurveCount() {
-		Collection<DataColumn> v = getAllCurves();
-		return v.size();
-	}
-
-	/**
-	 * Has any data been added
-	 * 
-	 * @return <code>true<.code> if any data has been added.
-	 */
-	public boolean dataAdded() {
-		for (DataColumn col : _columns) {
-			if (col.getType() == DataColumnType.Y) {
-				if (col.size() > 0) {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * Get all the columns of a given type. For example, all the Y columns
-	 * 
-	 * @param type the type to match
-	 * @return all the matching columns
-	 */
-	public Collection<DataColumn> getAllColumnsByType(DataColumnType type) {
-		Vector<DataColumn> v = new Vector<DataColumn>();
-		for (DataColumn col : _columns) {
-			if (col.getType() == type) {
-				v.add(col);
-			}
-		}
-		return v;
-	}
-
-	/**
-	 * Get all the histo data
-	 * 
-	 * @return a collection of the histo data
-	 */
-	public Vector<HistoData> getAllHistos() {
-		Vector<HistoData> v = new Vector<HistoData>();
-		if (is1DHistoSet()) {
-			Collection<DataColumn> ycols = getAllColumnsByType(DataColumnType.Y);
-			if (!ycols.isEmpty()) {
-				for (DataColumn yc : ycols) {
-					if (yc.isHistogram1D()) {
-						v.add(yc.getHistoData());
-					}
-					else {
-						System.err.println("All Y columns in a HistoDataset must be hitograms");
-						System.exit(1);
-					}
-				}
-			}
-		}
-		else {
-			System.err.println("Should not be asking for histos in a non-histo dataset.");
-			System.exit(1);
-		}
-		return v;
-	}
-
-	/**
-	 * Convenience method to get the minimum value of the x data
-	 * 
-	 * @return the minimum value of the x data
+	 * Convenience: get overall minimum X value among X columns.
+	 *
+	 * @return minimum x value
 	 */
 	public double getXmin() {
-		double xmin = Double.POSITIVE_INFINITY;
-		if (is1DHistoSet()) {
-			Vector<HistoData> histos = getAllHistos();
-			if (!histos.isEmpty()) {
-				for (HistoData hd : histos) {
-					xmin = Math.min(xmin, hd.getMinX());
-				}
-			}
-		}
-		else {
-			xmin = getDataMin(DataColumnType.X);
-		}
-		return xmin;
+		return getDataMin(DataColumnType.X);
 	}
 
 	/**
-	 * Convenience method to get the maximum value of the x data
-	 * 
-	 * @return the minimum value of the x data
+	 * Convenience: get overall maximum X value among X columns.
+	 *
+	 * @return maximum x value
 	 */
 	public double getXmax() {
-
-		double xmax = Double.NEGATIVE_INFINITY;
-		if (is1DHistoSet()) {
-			Vector<HistoData> histos = getAllHistos();
-			if (!histos.isEmpty()) {
-				for (HistoData hd : histos) {
-					xmax = Math.max(xmax, hd.getMaxX());
-				}
-			}
-		}
-		else {
-			xmax = getDataMax(DataColumnType.X);
-		}
-		return xmax;
+		return getDataMax(DataColumnType.X);
 	}
 
 	/**
-	 * Convenience function to get the minimum value of the y data. If there is more
-	 * than one y column, it returns the overall minimum.
-	 * 
-	 * @return the minimum value of the y data
+	 * Convenience: get overall minimum Y value among Y columns.
+	 *
+	 * @return minimum y value
 	 */
 	public double getYmin() {
-		double ymin = Double.POSITIVE_INFINITY;
-		if (is1DHistoSet()) {
-			Vector<HistoData> histos = getAllHistos();
-			if (!histos.isEmpty()) {
-				for (HistoData hd : histos) {
-					ymin = Math.min(ymin, hd.getMinY());
-				}
-			}
-		}
-		else {
-			ymin = getDataMin(DataColumnType.Y);
-		}
-		return ymin;
+		return getDataMin(DataColumnType.Y);
 	}
 
 	/**
-	 * Convenience function to get the maximum value of the y data. If there is more
-	 * than one y column, it returns the overall maximum.
-	 * 
-	 * @return the maximum value of the y data
+	 * Convenience: get overall maximum Y value among Y columns.
+	 *
+	 * @return maximum y value
 	 */
 	public double getYmax() {
-		double ymax = Double.NEGATIVE_INFINITY;
-		if (is1DHistoSet()) {
-			Vector<HistoData> histos = getAllHistos();
-			if (!histos.isEmpty()) {
-				for (HistoData hd : histos) {
-					ymax = Math.max(ymax, hd.getMaxY());
-				}
-			}
-		}
-		else {
-			ymax = getDataMax(DataColumnType.Y);
-		}
-		return ymax;
+		return getDataMax(DataColumnType.Y);
 	}
 
-	/**
-	 * Get the overall min for all columns of the given type
-	 * 
-	 * @param type the type to match
-	 * @return the overall min for the given type
-	 */
-	public double getDataMin(DataColumnType type) {
-		if (is1DHistoSet()) {
-			System.err.println("Should not be calling \"getDataMin\" for histo datasets");
-			System.exit(1);
-		}
-
-		double vmin = Double.POSITIVE_INFINITY;
-
-		for (DataColumn dc : _columns) {
+	private double getDataMin(DataColumnType type) {
+		double min = Double.POSITIVE_INFINITY;
+		for (OldDataColumn dc : _columns) {
 			if (dc.getType() == type) {
-				vmin = Math.min(vmin, dc.getMinValue());
+				min = Math.min(min, dc.getMinValue());
 			}
 		}
-		return vmin;
+		return min;
 	}
 
-	/**
-	 * Get the overall max for all columns of the given type
-	 * 
-	 * @param type the type to match
-	 * @return the overall max for the given type
-	 */
-	public double getDataMax(DataColumnType type) {
-		if (is1DHistoSet()) {
-			System.err.println("Should not be calling \"getDataMax\" for histo datasets");
-			System.exit(1);
-		}
-
-		double vmax = Double.NEGATIVE_INFINITY;
-
-		for (DataColumn dc : _columns) {
+	private double getDataMax(DataColumnType type) {
+		double max = Double.NEGATIVE_INFINITY;
+		for (OldDataColumn dc : _columns) {
 			if (dc.getType() == type) {
-				vmax = Math.max(vmax, dc.getMaxValue());
+				max = Math.max(max, dc.getMaxValue());
 			}
 		}
-		return vmax;
+		return max;
 	}
 
+	// ------------------------------------------------------------------------
+	// Table / mutation API (legacy signatures retained)
+	// ------------------------------------------------------------------------
+
 	/**
-	 * Get the minimal array of a column. The minimal array is a copy from the
-	 * underlying GrowableArray that is the same size as the amount of real data.
-	 * 
-	 * @param index the column index
-	 * @return the minimal array
+	 * Get the minimal array for a column (a tight copy of active data).
+	 *
+	 * @param index column index
+	 * @return minimal array (may be null/empty depending on column implementation)
 	 */
 	public double[] getMinimalArray(int index) {
 		return getColumn(index).getMinimalCopy();
 	}
 
 	/**
-	 * Get the size of the real data, This is the same as the row count.
-	 * 
-	 * @return the data count
+	 * Size of real data (same as row count for normal datasets).
+	 *
+	 * @return number of rows
 	 */
 	public int getSize() {
 		return getRowCount();
 	}
 
 	/**
-	 * Get the fit for a given column
-	 * 
-	 * @param index the column index
-	 * @return the fit for the column
-	 */
-	public Fit getFit(int index) {
-		return getColumn(index).getFit();
-	}
-
-	/**
-	 * Add data values. This is the only entry point.
-	 * 
-	 * @param vals a variable number of entries for the columns
+	 * Add one row of values.
+	 * <p>
+	 * For XYXY / XYEXYE / STRIP the number of vals must match column count.
+	 * For H1D this is not used (histograms are updated via {@link OldDataColumn#add(double)}).
+	 * </p>
+	 *
+	 * @param vals row values
+	 * @throws DataSetException if wrong number of values
 	 */
 	public void add(double... vals) throws DataSetException {
 
-		synchronized (_columns) {
-		int count = (vals == null) ? 0 : vals.length;
-
-
-		if (count > getColumnCount()) {
-			String msg = "Expected " + getColumnCount() + " values in add, but got: " + count;
-			throw new DataSetException(msg);
+		if (vals == null) {
+			throw new DataSetException("Null add(double... vals).");
+		}
+		if (vals.length != getColumnCount()) {
+			throw new DataSetException("Wrong number of values: got " + vals.length + " expected " + getColumnCount());
 		}
 
-		for (int i = 0; i < count; i++) {
+		for (int i = 0; i < vals.length; i++) {
 			getColumn(i).add(vals[i]);
 		}
-		}
 
+		// notify table + listeners
+		fireTableDataChanged();
 		notifyListeners();
 	}
 
 	/**
-	 * Add data value to a specific column.
-	 * 
-	 * @param column the column
-	 * @param val    the value
+	 * Add a single value to a given column (used by some live-update modes).
+	 *
+	 * @param column column index
+	 * @param val value to add
+	 * @throws DataSetException if column is invalid
 	 */
 	public void add(int column, double val) throws DataSetException {
-
-		if (column >= getColumnCount()) {
-			String msg = "In DataSet add, only " + getColumnCount() + " columns, but got column index of : " + column;
-			throw new DataSetException(msg);
+		if (column < 0 || column >= getColumnCount()) {
+			throw new DataSetException("Bad column index: " + column);
 		}
-
 		getColumn(column).add(val);
-
+		fireTableDataChanged();
 		notifyListeners();
 	}
 
 	/**
-	 * Clear all the data.
+	 * Clear all columns and notify listeners.
 	 */
 	public void clear() {
-		for (DataColumn dc : _columns) {
+		for (OldDataColumn dc : _columns) {
 			dc.clear();
 		}
+		fireTableDataChanged();
 		notifyListeners();
 	}
 
-	// notify listeners of a change in the data
+	/**
+	 * Notify {@link DataChangeListener}s that data changed.
+	 */
 	public void notifyListeners() {
-
-//		fireTableDataChanged();
-
-		if (_listenerList == null) {
-			return;
-		}
-
-		// Guaranteed to return a non-null array
 		Object[] listeners = _listenerList.getListenerList();
-
-		// This weird loop is the bullet proof way of notifying all listeners.
-		// for (int i = listeners.length - 2; i >= 0; i -= 2) {
-		// order is flipped so it goes in order as added
-		for (int i = 0; i < listeners.length; i += 2) {
+		for (int i = listeners.length - 2; i >= 0; i -= 2) {
 			if (listeners[i] == DataChangeListener.class) {
-				DataChangeListener listener = (DataChangeListener) listeners[i + 1];
-				listener.dataSetChanged(this);
+				((DataChangeListener) listeners[i + 1]).dataSetChanged(this);
 			}
-
 		}
 	}
 
 	/**
-	 * Add a data change listener
-	 * 
-	 * @param DataChangeListener the listener to add
+	 * Add a dataset change listener.
+	 *
+	 * @param listener listener to add
 	 */
-	public void addDataChangeListener(DataChangeListener DataChangeListener) {
-
-		if (_listenerList == null) {
-			_listenerList = new EventListenerList();
+	public void addDataChangeListener(DataChangeListener listener) {
+		if (listener != null) {
+			_listenerList.add(DataChangeListener.class, listener);
 		}
-
-		// avoid adding duplicates
-		_listenerList.remove(DataChangeListener.class, DataChangeListener);
-		_listenerList.add(DataChangeListener.class, DataChangeListener);
 	}
 
 	/**
-	 * Remove a DataChangeListener.
-	 * 
-	 * @param DataChangeListener the DataChangeListener to remove.
+	 * Remove a dataset change listener.
+	 *
+	 * @param listener listener to remove
 	 */
-
-	public void removeDataChangeListener(DataChangeListener DataChangeListener) {
-
-		if ((DataChangeListener == null) || (_listenerList == null)) {
-			return;
+	public void removeDataChangeListener(DataChangeListener listener) {
+		if (listener != null) {
+			_listenerList.remove(DataChangeListener.class, listener);
 		}
-
-		_listenerList.remove(DataChangeListener.class, DataChangeListener);
 	}
 
 	/**
-	 * Get the style for a column
-	 * 
-	 * @param index the column index
-	 * @return the style for this dataset
+	 * Convenience: style for a column.
+	 *
+	 * @param index column index
+	 * @return style (may be null if not initialized)
 	 */
 	public Styled getColumnStyle(int index) {
 		return getColumn(index).getStyle();
 	}
 
 	/**
-	 * Get all the data columns
-	 * 
-	 * @return all the data columns
+	 * @return all columns in this dataset
 	 */
-	public Collection<DataColumn> getColumns() {
+	public Collection<OldDataColumn> getColumns() {
 		return _columns;
 	}
 
 	/**
-	 * Get the column at a specific index
-	 * 
-	 * @param index the column index
-	 * @return the column at a specific index
+	 * Get a column by index.
+	 *
+	 * @param index column index
+	 * @return data column
 	 */
-	public DataColumn getColumn(int index) {
+	public OldDataColumn getColumn(int index) {
 		return _columns.get(index);
 	}
 
+	// ------------------------------------------------------------------------
+	// DefaultTableModel overrides (kept compatible with existing UI behavior)
+	// ------------------------------------------------------------------------
+
 	@Override
 	public int getRowCount() {
-
-		int rowCount = 0;
-		if (getColumnCount() != 0) {
-			DataColumn dc = _columns.firstElement();
-
-			if (is1DHistoSet()) {
-				HistoData hd = dc.getHistoData();
-				return hd.getNumberBins();
-			}
-			else {
-				rowCount = dc.size();
-			}
+		if (_columns == null || _columns.isEmpty()) {
+			return 0;
 		}
-		return rowCount;
+		// For histogram datasets, table view isn't a conventional row model;
+		// keep legacy behavior: report size of first column.
+		OldDataColumn dc = _columns.firstElement();
+		return dc.size();
 	}
 
 	@Override
 	public int getColumnCount() {
-		return _columns == null ? 0 : _columns.size();
+		return (_columns == null) ? 0 : _columns.size();
 	}
 
 	@Override
 	public Class<?> getColumnClass(int columnIndex) {
-		return DataColumn.class;
+		return Double.class;
 	}
 
 	@Override
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
-		if (columnIndex >= getColumnCount()) {
-			return false;
-		}
-		DataColumn col = getColumn(columnIndex);
-		return rowIndex < col.size();
+		// keep legacy behavior: editable
+		return true;
 	}
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
-		DataColumn dc = getColumn(columnIndex);
-
-		if (rowIndex >= dc.size()) {
-			return "";
-		}
-
+		OldDataColumn dc = getColumn(columnIndex);
 		double val = dc.get(rowIndex);
 
-		if (Double.isNaN(val)) {
-			return "";
-		}
-
-		double split[] = intFract(-val);
-		boolean asInt = (split[0] != 0.) && Math.abs(split[1]) < 1.0e-6;
-
+		// mimic legacy formatting: integers show as int, others as ~4 decimals
+		double[] ifrac = intFract(val);
+		boolean asInt = Math.abs(ifrac[1]) < 1.0e-12;
 		String s = asInt ? DoubleFormat.doubleFormat(val, 0) : DoubleFormat.doubleFormat(val, 4, 2);
-		return s;
+		return Double.valueOf(s);
+	}
+
+	@Override
+	public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
+		OldDataColumn dc = getColumn(columnIndex);
+		dc.set(rowIndex, (Double) aValue);
 	}
 
 	private static double[] intFract(double d) {
 		BigDecimal bd = BigDecimal.valueOf(d);
 		return new double[] { bd.intValue(), bd.remainder(BigDecimal.ONE).doubleValue() };
-	}
-
-	@Override
-	public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
-		DataColumn dc = getColumn(columnIndex);
-		dc.set(rowIndex, (Double) aValue);
 	}
 }

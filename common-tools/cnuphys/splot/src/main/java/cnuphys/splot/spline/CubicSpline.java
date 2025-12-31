@@ -85,6 +85,48 @@ public class CubicSpline implements IValueGetter {
     }
 
     /**
+     * Number of spline knots.
+     *
+     * @return number of x points defining the spline
+     */
+    public int size() {
+        return (_x == null) ? 0 : _x.length;
+    }
+
+    /**
+     * Minimum x value of the spline domain.
+     *
+     * @return minimum x, or NaN if undefined
+     */
+    public double xmin() {
+        if (_x == null || _x.length == 0) {
+            return Double.NaN;
+        }
+        return _x[0];
+    }
+
+    /**
+     * Maximum x value of the spline domain.
+     *
+     * @return maximum x, or NaN if undefined
+     */
+    public double xmax() {
+        if (_x == null || _x.length == 0) {
+            return Double.NaN;
+        }
+        return _x[_x.length - 1];
+    }
+
+    /**
+     * Whether the spline is properly initialized.
+     *
+     * @return true if x/y arrays are non-null and have length ≥ 2
+     */
+    public boolean isValid() {
+        return (_x != null && _y != null && _x.length >= 2 && _x.length == _y.length);
+    }
+
+    /**
      * Evaluate the natural cubic spline interpolant.
      * <p>
      * The interval containing {@code x} is found with a binary search, then the standard cubic-spline

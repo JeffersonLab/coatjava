@@ -20,9 +20,9 @@ import javax.swing.event.ListSelectionListener;
 
 import cnuphys.splot.fit.Fit;
 import cnuphys.splot.fit.FitEditorPanel;
-import cnuphys.splot.fit.FitType;
-import cnuphys.splot.pdata.DataColumn;
-import cnuphys.splot.pdata.DataColumnType;
+import cnuphys.splot.fit.CurveDrawingMethod;
+import cnuphys.splot.pdata.OldDataColumn;
+import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.pdata.HistoData;
 import cnuphys.splot.plot.CommonBorder;
 import cnuphys.splot.plot.Environment;
@@ -82,7 +82,7 @@ public class CurveEditorPanel extends JPanel implements ActionListener, Property
 	}
 
 	// new curve has been selected
-	private void curveChanged(DataColumn curve) {
+	private void curveChanged(OldDataColumn curve) {
 		// a new curve was selected, which might be null
 		// set all editors accordingly
 
@@ -122,9 +122,9 @@ public class CurveEditorPanel extends JPanel implements ActionListener, Property
 		JPanel nPanel = getOpaquePanel();
 		nPanel.setLayout(new BorderLayout(0, 4));
 
-		Collection<DataColumn> ycols = _plotCanvas.getDataSet().getAllColumnsByType(DataColumnType.Y);
-		final DefaultListModel<DataColumn> model = new DefaultListModel<DataColumn>();
-		for (DataColumn dc : ycols) {
+		Collection<OldDataColumn> ycols = _plotCanvas.getDataSet().getAllColumnsByType(DataColumnType.Y);
+		final DefaultListModel<OldDataColumn> model = new DefaultListModel<OldDataColumn>();
+		for (OldDataColumn dc : ycols) {
 			model.addElement(dc);
 		}
 
@@ -134,7 +134,7 @@ public class CurveEditorPanel extends JPanel implements ActionListener, Property
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
 				if (!e.getValueIsAdjusting()) {
-					DataColumn curve = _curveTable.getSelectedCurve();
+					OldDataColumn curve = _curveTable.getSelectedCurve();
 					// might be null!
 
 					if (curve != null) {
@@ -191,7 +191,7 @@ public class CurveEditorPanel extends JPanel implements ActionListener, Property
 
 			@Override
 			public void colorChanged(Component component, Color color) {
-				DataColumn curve = _curveTable.getSelectedCurve();
+				OldDataColumn curve = _curveTable.getSelectedCurve();
 				if (curve != null) {
 
 					if (component == _stylePanel.getSymbolColor()) {
@@ -263,7 +263,7 @@ public class CurveEditorPanel extends JPanel implements ActionListener, Property
 	// put the text in the text area
 	private void setTextArea() {
 		_textArea.setText("");
-		DataColumn curve = _curveTable.getSelectedCurve();
+		OldDataColumn curve = _curveTable.getSelectedCurve();
 		if (curve != null) {
 			_textArea.setText(curve.getFit().getFitString(curve));
 		}
@@ -272,7 +272,7 @@ public class CurveEditorPanel extends JPanel implements ActionListener, Property
 	@Override
 	public void actionPerformed(ActionEvent e) {
 
-		DataColumn curve = _curveTable.getSelectedCurve();
+		OldDataColumn curve = _curveTable.getSelectedCurve();
 		if (curve == null) {
 			return;
 		}
@@ -300,7 +300,7 @@ public class CurveEditorPanel extends JPanel implements ActionListener, Property
 		}
 		else if (source == _fitPanel.getFitSelector()) {
 			EnumComboBox ecb = (EnumComboBox) source;
-			FitType fitType = FitType.getValue((String) ecb.getSelectedItem());
+			CurveDrawingMethod fitType = CurveDrawingMethod.getValue((String) ecb.getSelectedItem());
 
 			if (curve.getFit().getFitType() != fitType) {
 				curve.getFit().setFitType(fitType);
@@ -334,7 +334,7 @@ public class CurveEditorPanel extends JPanel implements ActionListener, Property
 		}
 
 		// all other props rely on having a non null curve
-		DataColumn curve = _curveTable.getSelectedCurve();
+		OldDataColumn curve = _curveTable.getSelectedCurve();
 		if (curve == null) {
 			return;
 		}

@@ -1,24 +1,16 @@
 package cnuphys.splot.fit.apache;
 
-import java.util.Objects;
-
-import org.apache.commons.math3.fitting.leastsquares.LeastSquaresBuilder;
-import org.apache.commons.math3.fitting.leastsquares.LeastSquaresOptimizer;
-import org.apache.commons.math3.fitting.leastsquares.LeastSquaresProblem;
 import org.apache.commons.math3.fitting.leastsquares.LevenbergMarquardtOptimizer;
+import org.apache.commons.math3.fitting.leastsquares.LeastSquaresOptimizer;
 import org.apache.commons.math3.fitting.leastsquares.MultivariateJacobianFunction;
 import org.apache.commons.math3.fitting.leastsquares.ParameterValidator;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
-import org.apache.commons.math3.linear.DiagonalMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
-import org.apache.commons.math3.optim.SimpleVectorValueChecker;
 import org.apache.commons.math3.util.Pair;
 
-import cnuphys.splot.fit.IPlottableFunction;
 import cnuphys.splot.fit.IValueGetter;
-import cnuphys.splot.fit.PlottableFunction;
 
 /**
  * Polynomial least-squares fitter using Apache Commons Math 3.x least-squares API.
@@ -33,12 +25,12 @@ import cnuphys.splot.fit.PlottableFunction;
  *   params[k] = c_k
  * </pre>
  *
- * <p>Initial guess:
+ * <h3>Initial guess</h3>
  * If the caller does not supply an initial guess, the fitter computes a weighted
  * linear least-squares solution (via {@link LinearLeastSquaresGuesser}) which is
  * an excellent starting point (often already the solution) for polynomials.
  */
-public final class PolynomialFitter extends AbstractLeastSquaresFitter {
+public final class PolynomialFitter extends AbstractLeastSquaresFitter implements IFitter {
 
     /** Polynomial degree N (number of parameters is N+1). */
     private final int degree;
@@ -50,43 +42,34 @@ public final class PolynomialFitter extends AbstractLeastSquaresFitter {
 
     /** Convenience: fit a polynomial of a given degree with supplied weights. */
     public static FitResult fit(int degree, double[] x, double[] y, double[] weights) {
-        return new PolynomialFitter(degree).fit(x, y, weights, null, null);
+        return new PolynomialFitter(degree).fit(x, y, weights);
     }
 
-    /** Create a polynomial fitter for a given degree using Levenberg-Marquardt and default initial guess. */
+    /**
+     * Create a polynomial fitter for a given degree using Levenberg-Marquardt and a robust default guess.
+     *
+     * @param degree polynomial degree (>= 0)
+     */
     public PolynomialFitter(int degree) {
-        this(degree, new LevenbergMarquardtOptimizer(), defaultGuesser(degree));
+        this(degree, new LevenbergMarquardtOptimizer());
     }
 
-    /** Create with custom optimizer and default initial guess. */
+    /**
+     * Create a polynomial fitter for a given degree with a custom optimizer.
+     *
+     * @param degree polynomial degree (>= 0)
+     * @param optimizer least-squares optimizer
+     */
     public PolynomialFitter(int degree, LeastSquaresOptimizer optimizer) {
-        this(degree, optimizer, defaultGuesser(degree));
-    }
+        // For polynomials, we prefer the weighted linear LS guess over generic heuristics.
+        // Still pass a non-null initialGuesser to satisfy base class invariants; it is used only
+        // if defaultInitialGuess(...) is overridden in the future or returns null (it does not).
+        super(optimizer, (x, y, w) -> defaultLinearLsGuess(degree, x, y, w));
 
-    /** Create with custom optimizer and custom initial guess strategy. */
-    public PolynomialFitter(int degree, LeastSquaresOptimizer optimizer, IInitialGuess guesser) {
-        super(optimizer, guesser);
         if (degree < 0) {
             throw new IllegalArgumentException("degree must be >= 0");
         }
         this.degree = degree;
-    }
-
-    private static IInitialGuess defaultGuesser(final int degree) {
-        return (x, y, weights) -> {
-            final int n = x.length;
-            final int p = degree + 1;
-
-            final double[][] A = new double[n][p];
-            for (int i = 0; i < n; i++) {
-                double pow = 1.0;
-                for (int k = 0; k < p; k++) {
-                    A[i][k] = pow;
-                    pow *= x[i];
-                }
-            }
-            return LinearLeastSquaresGuesser.solve(A, y, weights);
-        };
     }
 
     /** @return polynomial degree. */
@@ -94,19 +77,38 @@ public final class PolynomialFitter extends AbstractLeastSquaresFitter {
         return degree;
     }
 
-    /** Fit with unit weights. */
-    public FitResult fit(double[] x, double[] y) {
-        return fit(x, y, null, null, null);
+    @Override
+    protected int getParameterCount() {
+        return degree + 1;
+    }
+
+    @Override
+    protected String getModelName() {
+        return "POLY_" + degree;
+    }
+
+    @Override
+    protected MultivariateJacobianFunction model(double[] x) {
+        return new PolynomialModel(x, degree);
+    }
+
+    @Override
+    protected double[] defaultInitialGuess(double[] x, double[] y, double[] weights) {
+        return defaultLinearLsGuess(degree, x, y, weights);
     }
 
     /**
      * Fit with optional weights, bounds, and explicit initial guess.
      *
+     * <p>This is an "expert" overload that adapts polynomial coefficient bounds to the base class
+     * {@link ParameterValidator} mechanism.
+     *
      * @param x x data
      * @param y y data
      * @param weights optional weights (length n). Typically weights = 1/sigmaY^2.
      * @param bounds optional coefficient bounds; if null, unbounded
-     * @param initialGuess optional coefficients length degree+1; if null, uses initialGuesser
+     * @param initialGuess optional coefficients length degree+1; if null, uses default guess
+     * @return FitResult
      */
     public FitResult fit(double[] x,
                          double[] y,
@@ -114,55 +116,38 @@ public final class PolynomialFitter extends AbstractLeastSquaresFitter {
                          ParameterBounds bounds,
                          double[] initialGuess) {
 
-        validateXY(x, y, 2);
-        final int n = x.length;
+        final int p = getParameterCount();
 
-        if (weights != null && weights.length != n) {
-            throw new IllegalArgumentException("weights length must match x/y length");
+        final ParameterValidator v;
+        if (bounds == null) {
+            v = null; // unbounded
+        } else {
+            if (bounds.size() != p) {
+                throw new IllegalArgumentException("bounds parameter count mismatch: expected " + p);
+            }
+            v = clampingValidator(bounds.lower(), bounds.upper());
         }
 
-        final int p = degree + 1;
-        if (initialGuess != null && initialGuess.length != p) {
-            throw new IllegalArgumentException("initialGuess must have length " + p + " (degree+1)");
-        }
-
-        final double[] start = selectInitialGuess(x, y, weights, initialGuess);
-
-        final ParameterValidator validator = new BoundValidator(bounds != null ? bounds : ParameterBounds.unbounded(p));
-        final MultivariateJacobianFunction model = new PolynomialModel(x, degree);
-
-        final LeastSquaresBuilder b = new LeastSquaresBuilder()
-                .start(start)
-                .model(model)
-                .target(y)
-                .parameterValidator(validator)
-                .maxIterations(2000)
-                .maxEvaluations(2000)
-                .checkerPair(new SimpleVectorValueChecker(1e-12, 1e-12));
-
-        if (weights != null) {
-            b.weight(new DiagonalMatrix(weights));
-        }
-
-        LeastSquaresProblem problem = b.build();
-        LeastSquaresOptimizer.Optimum opt = optimizer.optimize(problem);
-
-        final double[] coeff = opt.getPoint().toArray();
-        final RealMatrix cov = safeCovariances(opt, 1e-14);
-
-        return buildFitResult("POLY_" + degree, coeff, cov, n, p, opt);
-    }
-
-    /** weights[i] = 1/(sigmaY[i]^2). */
-    public static double[] weightsFromSigmaY(double[] sigmaY) {
-        return AbstractLeastSquaresFitter.weightsFromSigmaY(sigmaY);
+        return super.fit(x, y, weights, initialGuess, v);
     }
 
     /**
      * Create an {@link IValueGetter} that evaluates this polynomial using Horner's method.
+     *
+     * @param fit fit result produced by this fitter
+     * @return value getter
      */
+    @Override
     public IValueGetter asValueGetter(final FitResult fit) {
-        Objects.requireNonNull(fit, "fit");
+        if (fit == null || fit.params == null) {
+            throw new IllegalArgumentException("FitResult is null");
+        }
+        if (fit.params.length != getParameterCount()) {
+            throw new IllegalArgumentException(
+                "PolynomialFitter: expected " + getParameterCount() +
+                " parameters, got " + fit.params.length
+            );
+        }
         final double[] c = fit.params.clone();
         return (double x) -> {
             double y = 0.0;
@@ -173,34 +158,42 @@ public final class PolynomialFitter extends AbstractLeastSquaresFitter {
         };
     }
 
-    /** Convenience: wrap the fitted polynomial as an {@link IPlottableFunction}. */
-    public IPlottableFunction asPlottable(final FitResult fit, double xmin, double xmax) {
-        return new PlottableFunction(asValueGetter(fit), xmin, xmax);
-    }
+ 
+    /**
+     * Build a weighted (or unweighted) linear least-squares initial guess for polynomial coefficients.
+     *
+     * @param degree polynomial degree
+     * @param x x data
+     * @param y y data
+     * @param weights optional weights (may be null)
+     * @return coefficient vector length degree+1
+     */
+    private static double[] defaultLinearLsGuess(final int degree, double[] x, double[] y, double[] weights) {
+        final int n = x.length;
+        final int p = degree + 1;
 
-    /** Convenience: plot over the data range. */
-    public IPlottableFunction asPlottableOverDataRange(final FitResult fit, double[] x) {
-        Objects.requireNonNull(x, "x");
-        if (x.length == 0) {
-            throw new IllegalArgumentException("x is empty");
+        final double[][] A = new double[n][p];
+        for (int i = 0; i < n; i++) {
+            double pow = 1.0;
+            for (int k = 0; k < p; k++) {
+                A[i][k] = pow;
+                pow *= x[i];
+            }
         }
-        double xmin = x[0], xmax = x[0];
-        for (double v : x) {
-            xmin = Math.min(xmin, v);
-            xmax = Math.max(xmax, v);
-        }
-        if (!(xmax > xmin)) {
-            double eps = (xmin == 0.0) ? 1.0 : Math.abs(xmin) * 1e-6;
-            xmin -= eps;
-            xmax += eps;
-        }
-        return asPlottable(fit, xmin, xmax);
+        return LinearLeastSquaresGuesser.solve(A, y, weights);
     }
 
     /**
      * Least-squares model for polynomial with analytic Jacobian.
-     * Value: y_i = sum_{k=0..deg} c_k x_i^k
-     * Jacobian row i: [1, x, x^2, ..., x^deg]
+     *
+     * <p>Value:
+     * <pre>
+     *   y_i = sum_{k=0..deg} c_k x_i^k
+     * </pre>
+     * Jacobian row i:
+     * <pre>
+     *   [ 1, x, x^2, ..., x^deg ]
+     * </pre>
      */
     private static final class PolynomialModel implements MultivariateJacobianFunction {
         private final double[] x;
@@ -244,16 +237,35 @@ public final class PolynomialFitter extends AbstractLeastSquaresFitter {
 
     /**
      * Coefficient bounds for c0..cN. Use +/-infinity for "no bound".
+     *
+     * <p>This is retained as a polynomial-friendly API, but the actual enforcement is handled
+     * through the base class {@link ParameterValidator} mechanism (via clamping).
      */
     public static final class ParameterBounds {
-        final double[] lower;
-        final double[] upper;
+        private final double[] lower;
+        private final double[] upper;
 
         private ParameterBounds(double[] lower, double[] upper) {
             this.lower = lower;
             this.upper = upper;
         }
 
+        /** @return number of parameters (degree+1). */
+        public int size() {
+            return lower.length;
+        }
+
+        /** @return defensive copy of lower bounds. */
+        public double[] lower() {
+            return lower.clone();
+        }
+
+        /** @return defensive copy of upper bounds. */
+        public double[] upper() {
+            return upper.clone();
+        }
+
+        /** Create unbounded bounds for nParams parameters. */
         public static ParameterBounds unbounded(int nParams) {
             double[] lo = new double[nParams];
             double[] hi = new double[nParams];
@@ -264,10 +276,12 @@ public final class PolynomialFitter extends AbstractLeastSquaresFitter {
             return new ParameterBounds(lo, hi);
         }
 
+        /** Builder for coefficient bounds for a given degree. */
         public static Builder builder(int degree) {
             return new Builder(degree);
         }
 
+        /** Builder for per-coefficient bounds. */
         public static final class Builder {
             private final double[] lo;
             private final double[] hi;
@@ -282,7 +296,14 @@ public final class PolynomialFitter extends AbstractLeastSquaresFitter {
                 }
             }
 
-            /** Set bounds on coefficient c_k. */
+            /**
+             * Set bounds on coefficient c_k.
+             *
+             * @param k coefficient index
+             * @param lower lower bound (use -infinity for none)
+             * @param upper upper bound (use +infinity for none)
+             * @return this builder
+             */
             public Builder coeff(int k, double lower, double upper) {
                 if (k < 0 || k >= lo.length) {
                     throw new IllegalArgumentException("coefficient index out of range: " + k);
@@ -292,31 +313,10 @@ public final class PolynomialFitter extends AbstractLeastSquaresFitter {
                 return this;
             }
 
+            /** @return bounds instance. */
             public ParameterBounds build() {
-                return new ParameterBounds(lo, hi);
+                return new ParameterBounds(lo.clone(), hi.clone());
             }
-        }
-    }
-
-    /** Enforces coefficient bounds using clamping. */
-    private static final class BoundValidator implements ParameterValidator {
-        private final ParameterBounds bounds;
-
-        BoundValidator(ParameterBounds bounds) {
-            this.bounds = bounds;
-        }
-
-        @Override
-        public RealVector validate(RealVector params) {
-            double[] p = params.toArray();
-            int n = Math.min(p.length, Math.min(bounds.lower.length, bounds.upper.length));
-            for (int i = 0; i < n; i++) {
-                double lo = bounds.lower[i];
-                double hi = bounds.upper[i];
-                if (Double.isFinite(lo)) p[i] = Math.max(p[i], lo);
-                if (Double.isFinite(hi)) p[i] = Math.min(p[i], hi);
-            }
-            return new ArrayRealVector(p, false);
         }
     }
 }

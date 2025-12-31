@@ -1,30 +1,47 @@
 package cnuphys.splot.pdata;
 
+import java.util.Arrays;
+
 /**
- * This class supports named arrays that grow. They are an alternative to
- * Vectors or ArrayLists. The advantages are speed and usage for those cases
- * where arrays are more convenient. Clients only have access to minimal copies
- * which can be used as "just the right size" arrays.
- * 
- * @author heddle
- * 
+ * A fast, primitive {@code double} buffer that grows as needed.
+ * <p>
+ * This is a lightweight alternative to {@code ArrayList<Double>} that avoids boxing.
+ * It also tracks the minimum and maximum values over the <em>active</em> region
+ * {@code [0, size)} and keeps those values accurate across {@link #add(double)},
+ * {@link #removeFirst()}, {@link #set(int, double)}, and {@link #clear()}.
+ * </p>
+ * <p>
+ * Notes:
+ * <ul>
+ *   <li>The backing array may be larger than {@link #size()}.</li>
+ *   <li>Only indices {@code 0 .. size-1} are considered part of the data.</li>
+ *   <li>{@link #getMinimalCopy()} returns an empty array when size is 0 (never null).</li>
+ * </ul>
+ * </p>
+ *
+ * @author heddle (original)
  */
 public class GrowableArray {
 
-	// the actual array
+	/** The backing array (capacity may exceed {@link #_dataLen}). */
 	protected double _data[];
 
-	// the current size (amount of data, not capacity) of the array
-	// this will be the size of the minimal copy
+	/** Current number of data values in use. */
 	protected int _dataLen;
 
-	// the increment when the array must grow
+	/**
+	 * Legacy fixed increment (retained for API/backward compatibility).
+	 * <p>
+	 * The implementation now uses geometric growth for performance, but we keep
+	 * this field since existing code/config might set it.
+	 * </p>
+	 */
 	protected int _increment;
 
-	// the initial capacity
+	/** Initial capacity. */
 	protected int _initCap;
 
-	// min and max data values
+	/** Min and max of active data (0..size-1). */
 	protected double _minValue;
 	protected double _maxValue;
 
@@ -36,150 +53,253 @@ public class GrowableArray {
 	}
 
 	/**
-	 * Create a GrowableArray
-	 * 
-	 * @param initCap   the initial capacity
-	 * @param increment the increment when the array grows.
+	 * Create a GrowableArray.
+	 *
+	 * @param initCap   the initial capacity (if &lt;= 0, defaults to 16)
+	 * @param increment legacy increment when the array grows (if &lt;= 0, defaults to 16)
 	 */
 	public GrowableArray(int initCap, int increment) {
-		_initCap = initCap;
-		_increment = increment;
+		_initCap = (initCap > 0) ? initCap : 16;
+		_increment = (increment > 0) ? increment : 16;
 		clear();
 	}
 
 	/**
 	 * Get the number of real data in the array, which in general is less than the
-	 * length of the array. This is the effective length of the array, so loops
-	 * should go from 0 to this value minus 1.
-	 * 
-	 * @return the number of real data.
+	 * capacity of the backing array.
+	 *
+	 * @return the number of active data values
 	 */
 	public int size() {
 		return _dataLen;
 	}
 
 	/**
-	 * Get the minimal copy of the data array. This copies the actual data into a
-	 * new array of just the right size. This new array can be used normally, i.e.,
-	 * it is safe to use its <code>length</code>.
-	 * 
-	 * @return a copy of the data array of just the right length
+	 * True if {@link #size()} is zero.
+	 *
+	 * @return true if empty
+	 */
+	public boolean isEmpty() {
+		return _dataLen == 0;
+	}
+
+	/**
+	 * Get a copy of the active data region as a "just the right size" array.
+	 *
+	 * @return a copy of the data of length {@link #size()} (never null)
 	 */
 	public double[] getMinimalCopy() {
 		if (_dataLen == 0) {
-			return null;
+			return new double[0];
 		}
-		double acopy[] = new double[_dataLen];
-
-		try {
-			System.arraycopy(_data, 0, acopy, 0, _dataLen);
-		}
-		catch (Exception e) {
-
-			System.err.println("Exception in GrowableArray.getMinimalCopy: " + e.getMessage());
-			System.err.println("_dataLen: " + _dataLen);
-		}
-		return acopy;
+		return Arrays.copyOf(_data, _dataLen);
 	}
 
 	/**
-	 * removes the first entry and moves all other entries up one
+	 * Removes the first entry and shifts all other entries down by one.
+	 * <p>
+	 * This is an O(n) operation. If you do this frequently (sliding window),
+	 * consider a ring buffer structure instead.
+	 * </p>
 	 */
 	public void removeFirst() {
-		if (_dataLen > 0) {
-			_dataLen--;
+		if (_dataLen <= 0) {
+			return;
+		}
 
-			_minValue = Double.POSITIVE_INFINITY;
-			_maxValue = Double.NEGATIVE_INFINITY;
-			for (int i = 0; i < _dataLen; i++) {
-				_data[i] = _data[i + 1];
-				_minValue = Math.min(_data[i], _minValue);
-				_maxValue = Math.max(_data[i], _maxValue);
-			}
+		// shift left by one
+		System.arraycopy(_data, 1, _data, 0, _dataLen - 1);
+		_dataLen--;
+
+		// keep debug behavior of setting the freed slot to NaN
+		if (_dataLen >= 0 && _dataLen < _data.length) {
 			_data[_dataLen] = Double.NaN;
 		}
+
+		// recompute min/max accurately
+		recomputeMinMax();
 	}
 
 	/**
-	 * Add a value to the array, growing it if necessary.
-	 * 
+	 * Add a value to the end of the array, growing if needed.
+	 *
 	 * @param val the value to add
 	 */
 	public void add(double val) {
-		if (_dataLen == _data.length) {
-			double newArray[] = new double[_dataLen + _increment];
-			System.arraycopy(_data, 0, newArray, 0, _dataLen);
-
-			// fill empty space with NaNs
-			for (int i = _dataLen; i < newArray.length; i++) {
-				newArray[i] = Double.NaN;
-			}
-			_data = newArray;
-		}
+		ensureCapacity(_dataLen + 1);
 		_data[_dataLen] = val;
 		_dataLen++;
 
-		// fix min and max vals
+		// Update min/max accurately (O(1))
 		if (_dataLen == 1) {
 			_minValue = val;
 			_maxValue = val;
-		}
-		else {
+		} else {
 			_minValue = Math.min(_minValue, val);
 			_maxValue = Math.max(_maxValue, val);
 		}
 	}
 
 	/**
-	 * Get the minimum data value
-	 * 
-	 * @return the minimum data value
+	 * Get the minimum value over the active data.
+	 *
+	 * @return min value, or NaN if empty
 	 */
 	public double getMinValue() {
 		return _minValue;
 	}
 
 	/**
-	 * Get the maximum data value
-	 * 
-	 * @return the maximum data value
+	 * Get the maximum value over the active data.
+	 *
+	 * @return max value, or NaN if empty
 	 */
 	public double getMaxValue() {
 		return _maxValue;
 	}
 
 	/**
-	 * Reset the data array to the initial capacity and fill with all NaNs.
+	 * Reset the buffer to its initial capacity and clear contents.
+	 * <p>
+	 * For backward compatibility with the original class, the backing array is
+	 * filled with NaNs.
+	 * </p>
 	 */
 	public void clear() {
 		_data = new double[_initCap];
 		_dataLen = 0;
-		for (int i = 0; i < _initCap; i++) {
-			_data[i] = Double.NaN;
-		}
+
+		// Preserve original behavior: fill with NaNs
+		Arrays.fill(_data, Double.NaN);
 
 		_minValue = Double.NaN;
 		_maxValue = Double.NaN;
 	}
 
 	/**
-	 * Get the value at the given index
-	 * 
-	 * @param index the index
+	 * Get the value at the given index.
+	 *
+	 * @param index the index (0..size-1)
 	 * @return the value at the index
+	 * @throws IndexOutOfBoundsException if index is out of range
 	 */
 	public double get(int index) {
+		rangeCheck(index);
 		return _data[index];
 	}
 
 	/**
-	 * Set the value at the given index
-	 * 
-	 * @param index the index
-	 * @param val   the value at the index
+	 * Set the value at the given index.
+	 * <p>
+	 * Min/max are kept accurate. If you replace an element that currently equals
+	 * the min or max, this may trigger an O(n) rescan.
+	 * </p>
+	 *
+	 * @param index the index (0..size-1)
+	 * @param val   the new value
+	 * @throws IndexOutOfBoundsException if index is out of range
 	 */
 	public void set(int index, double val) {
+		rangeCheck(index);
+
+		double old = _data[index];
 		_data[index] = val;
+
+		if (_dataLen == 0) {
+			_minValue = Double.NaN;
+			_maxValue = Double.NaN;
+			return;
+		}
+
+		// Fast-path updates:
+		// - If we're growing min/max, update in O(1)
+		// - If we overwrote the current min or max, we must rescan to stay correct
+		boolean mightNeedRescan = false;
+
+		if (!Double.isNaN(_minValue) && old == _minValue) {
+			mightNeedRescan = true;
+		}
+		if (!Double.isNaN(_maxValue) && old == _maxValue) {
+			mightNeedRescan = true;
+		}
+
+		if (mightNeedRescan) {
+			recomputeMinMax();
+		} else {
+			_minValue = Double.isNaN(_minValue) ? val : Math.min(_minValue, val);
+			_maxValue = Double.isNaN(_maxValue) ? val : Math.max(_maxValue, val);
+		}
 	}
 
+	// ------------------------------------------------------------------------
+	// Internal helpers
+	// ------------------------------------------------------------------------
+
+	private void rangeCheck(int index) {
+		if (index < 0 || index >= _dataLen) {
+			throw new IndexOutOfBoundsException(
+					"index=" + index + " out of range [0," + (_dataLen - 1) + "]");
+		}
+	}
+
+	/**
+	 * Ensure capacity for at least {@code minCapacity} elements.
+	 * <p>
+	 * Uses geometric growth (roughly 1.5x) for speed, but guarantees at least
+	 * {@code +_increment} growth as a lower bound to keep legacy intent.
+	 * </p>
+	 */
+	private void ensureCapacity(int minCapacity) {
+		if (_data == null) {
+			_data = new double[Math.max(_initCap, minCapacity)];
+			Arrays.fill(_data, Double.NaN);
+			return;
+		}
+		if (minCapacity <= _data.length) {
+			return;
+		}
+
+		int oldCap = _data.length;
+
+		// geometric growth: newCap = oldCap + oldCap/2 + 1
+		int newCap = oldCap + (oldCap >> 1) + 1;
+
+		// also respect legacy increment as a minimum growth step
+		newCap = Math.max(newCap, oldCap + _increment);
+
+		// ensure we meet required minCapacity
+		newCap = Math.max(newCap, minCapacity);
+
+		double[] newArray = Arrays.copyOf(_data, newCap);
+
+		// Preserve original debugging behavior: fill new region with NaN
+		Arrays.fill(newArray, oldCap, newCap, Double.NaN);
+
+		_data = newArray;
+	}
+
+	/** Recompute min and max over the active data region. */
+	private void recomputeMinMax() {
+		if (_dataLen <= 0) {
+			_minValue = Double.NaN;
+			_maxValue = Double.NaN;
+			return;
+		}
+
+		double min = _data[0];
+		double max = _data[0];
+
+		for (int i = 1; i < _dataLen; i++) {
+			double v = _data[i];
+			if (v < min) {
+				min = v;
+			}
+			if (v > max) {
+				max = v;
+			}
+		}
+
+		_minValue = min;
+		_maxValue = max;
+	}
 }
