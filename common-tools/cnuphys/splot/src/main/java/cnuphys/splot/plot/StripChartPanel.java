@@ -13,9 +13,7 @@ import javax.swing.SwingConstants;
 
 import cnuphys.splot.fit.IValueGetter;
 import cnuphys.splot.pdata.PlotDataException;
-import cnuphys.splot.pdata.StripData;
-import cnuphys.splot.plot.old.PlotCanvas;
-import cnuphys.splot.plot.old.PlotParameters;
+import cnuphys.splot.pdata.StripChartCurve;
 import cnuphys.splot.style.SymbolType;
 
 public class StripChartPanel extends JPanel {
@@ -185,7 +183,7 @@ public class StripChartPanel extends JPanel {
 	 * @throws PlotDataException
 	 */
 	protected DataSet createDataSet() throws PlotDataException {
-		StripData sd = new StripData("Data", _capacity, _getter, _interval);
+		StripChartCurve sd = new StripChartCurve("Data", _capacity, _getter, _interval);
 		return new DataSet(sd, "x", "y");
 	}
 
@@ -195,7 +193,7 @@ public class StripChartPanel extends JPanel {
 		_canvas.getPlotTicks().setNumMajorTickY(3);
 		_canvas.getPlotTicks().setNumMinorTickY(0);
 		
-		DataSet ds = _canvas.getDataSet();
+		DataSet ds = _canvas.getPlotData();
 		ds.getCurveStyle(0).setFitLineColor(Color.red);
 		ds.getCurveStyle(0).setFillColor(new Color(128, 0, 0, 48));
 		ds.getCurveStyle(0).setSymbolType(SymbolType.NOSYMBOL);

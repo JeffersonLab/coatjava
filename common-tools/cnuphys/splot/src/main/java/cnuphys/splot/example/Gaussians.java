@@ -9,7 +9,7 @@ import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.pdata.PlotDataException;
 import cnuphys.splot.pdata.PlotDataType;
-import cnuphys.splot.plot.old.PlotParameters;
+import cnuphys.splot.plot.PlotParameters;
 
 public class Gaussians extends AExample {
 
@@ -59,7 +59,7 @@ public class Gaussians extends AExample {
 
 		int num = 50;
 		double dx = 10.0 / num;
-		DataSet ds = _canvas.getDataSet();
+		DataSet ds = _canvas.getPlotData();
 
 		for (int i = 0; i < 40; i++) {
 
@@ -93,7 +93,7 @@ public class Gaussians extends AExample {
 
 	@Override
 	public void setPreferences() {
-		DataSet ds = _canvas.getDataSet();
+		DataSet ds = _canvas.getPlotData();
 		Collection<OldDataColumn> ycols = ds.getAllColumnsByType(DataColumnType.Y);
 		for (OldDataColumn dc : ycols) {
 			dc.getFit().setFitType(CurveDrawingMethod.GAUSSIANS);

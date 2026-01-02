@@ -1,7 +1,5 @@
 package cnuphys.splot.plot;
 
-import cnuphys.splot.plot.old.PlotCanvas;
-
 public class VerticalLine extends PlotLine {
 
 	// the x value of the vertical line

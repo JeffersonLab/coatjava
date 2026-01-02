@@ -28,11 +28,15 @@ import cnuphys.splot.style.Styled;
  * @author heddle
  */
 public abstract class ACurve {
+	
+	/** Synchronizes mutations and snapshots. */
+	protected final Object lock = new Object();
+
 
 	/** Used to assign stable-ish style ids. */
 	private static int styleCount = 0;
 
-	/** Per-curve order/count knob for methods that need an integer order. */
+	/** Per-curve order/count knob for fit methods that need an integer order. */
 	private int order = 2;
 
 	/** Default polynomial degree used when method is POLYNOMIAL. */
@@ -49,7 +53,7 @@ public abstract class ACurve {
 
 	/**
 	 * Cached fit evaluator. This is stored at fit-time because FitResult does not
-	 * expose the fitter that produced it.
+	 * expose the fitter that produced it. This is a way to treat the fit as a function.
 	 */
 	private IValueGetter fitValueGetter;
 
@@ -68,7 +72,8 @@ public abstract class ACurve {
 	/** Curve change listeners. */
 	private final EventListenerList curveListenerList = new EventListenerList();
 
-	/** Update batching depth. */
+	/** Update batching depth. Default value of 0 means no batching
+	 * of curve change notifications */
 	private int updateDepth;
 
 	/** Pending change flags while batching. */
@@ -95,7 +100,8 @@ public abstract class ACurve {
 	public abstract void doFit(boolean force);
 
 	/**
-	 * Get curve length (number of points or effective points).
+	 * Get curve length (number of points or effective points
+	 * in the data columns).
 	 *
 	 * @return curve length
 	 */
@@ -114,12 +120,9 @@ public abstract class ACurve {
 		return null;
 	}
 
-	/** @return curve name */
-	public final String getName() {
-		return name;
-	}
-
-	/** Convenience alias (older code). */
+	/** The curve name. 
+	 * @return the curve name
+	 */
 	public final String name() {
 		return name;
 	}
@@ -160,21 +163,6 @@ public abstract class ACurve {
 	}
 
 	/**
-	 * Set the fit result only.
-	 * <p>
-	 * This clears the cached evaluator, since without the fitter we cannot rebuild it.
-	 * Normally callers should use {@link #setFitArtifacts(FitResult, IValueGetter)}.
-	 * </p>
-	 *
-	 * @param fitResult the fit result (may be null)
-	 */
-	public void setFitResult(FitResult fitResult) {
-		this.fitResult = fitResult;
-		this.fitValueGetter = null;
-		markFitChanged();
-	}
-
-	/**
 	 * Set both the fit result and the corresponding cached evaluator (preferred).
 	 *
 	 * @param fitResult      fit result (may be null)
@@ -182,16 +170,16 @@ public abstract class ACurve {
 	 */
 	public final void setFitArtifacts(FitResult fitResult, IValueGetter fitValueGetter) {
 		this.fitResult = fitResult;
-		this.fitValueGetter = fitValueGetter;
+		this.fitValueGetter = fitValueGetter; //used to draw fit
 		markFitChanged();
 	}
 
-	/** @return curve style */
+	/** @return the curve style */
 	public Styled getStyle() {
 		return style;
 	}
 
-	/** Set curve style. */
+	/** Set the curve style. */
 	public void setStyle(Styled style) {
 		this.style = style;
 		fireCurveChanged(CurveChangeType.STYLE);
@@ -292,53 +280,82 @@ public abstract class ACurve {
 		cubicSpline = null;
 	}
 
+	/** Mark data changed: clear computed artifacts and notify listeners. */
 	protected final void markDataChanged() {
 		clearComputedArtifacts();
 		fireCurveChanged(CurveChangeType.DATA);
 	}
-
+	
+	/** Notify listeners that data has changed. */
 	public final void dataChanged() {
 		markDataChanged();
 	}
 
+	/** Mark style changed: clear computed artifacts and notify listeners. */
 	protected final void markStyleChanged() {
-		clearComputedArtifacts();
+		dirty = true; //other artifacts unchanged
 		fireCurveChanged(CurveChangeType.STYLE);
 	}
 
+	/** Notify listeners that style has changed. */
 	public final void styleChanged() {
 		markStyleChanged();
 	}
-
+	
+	/** Mark fit changed: notify listeners. */
 	protected final void markFitChanged() {
 		fireCurveChanged(CurveChangeType.FIT);
 	}
 
+	/** For batching */
 	public final void beginUpdate() {
 		updateDepth++;
 	}
 
+	/** For batching */
 	public final void endUpdate() {
 		if (updateDepth > 0) {
 			updateDepth--;
 		}
+		
+		//batching complete
 		if (updateDepth == 0) {
 			flushPendingChanges();
 		}
 	}
+	
+	/** @return the minimum x value for this curve */
+	public abstract double xMin();
+	
+	/** @return the maximum x value for this curve */
+	public abstract double xMax();
+	
+	/** @return the minimum y value for this curve */
+	public abstract double yMin();
+	
+	/** @return the maximum y value for this curve */
+	public abstract double yMax();
 
+	/**
+	 * Add a curve change listener.
+	 * @param listener
+	 */
 	public final void addCurveChangeListener(CurveChangeListener listener) {
 		if (listener != null) {
 			curveListenerList.add(CurveChangeListener.class, listener);
 		}
 	}
 
+	/** Remove a curve change listener. 
+	 * @param listener the listener to remove
+	 */
 	public final void removeCurveChangeListener(CurveChangeListener listener) {
 		if (listener != null) {
 			curveListenerList.remove(CurveChangeListener.class, listener);
 		}
 	}
 
+	/** Notify listeners of curve change. */
 	protected final void fireCurveChanged(CurveChangeType type) {
 		if (type == null) {
 			return;
@@ -367,6 +384,7 @@ public abstract class ACurve {
 		}
 	}
 
+	/** Flush any pending changes after batching. */
 	private void flushPendingChanges() {
 		if (pendingData) {
 			pendingData = false;
@@ -382,9 +400,21 @@ public abstract class ACurve {
 		}
 	}
 
+	/** Initialize style with unique style ID. */
 	protected void initStyle() {
 		style = new Styled(styleCount++);
 	}
+	
+	/**
+	 * Obtain a consistent snapshot of the current data, suitable for plotting
+	 * without locking.
+	 *
+	 * @return snapshot containing primitive arrays of x and y data. Those arrays
+	 *         are what should be used for plotting; they are copies of the internal
+	 *         data. This is thread-safe.
+	 *
+	 */
+	public abstract Snapshot snapshot();
 
 	@Override
 	public String toString() {

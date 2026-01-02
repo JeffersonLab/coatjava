@@ -5,8 +5,6 @@ import java.awt.Graphics;
 import java.util.Collection;
 import cnuphys.splot.fit.CurveDrawingMethod;
 import cnuphys.splot.pdata.OldDataColumn;
-import cnuphys.splot.plot.old.PlotCanvas;
-import cnuphys.splot.plot.old.PlotParameters;
 import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.style.Styled;
@@ -49,7 +47,7 @@ public class Legend extends DraggableRectangle {
 	 */
 	public void draw(Graphics g) {
 		// System.err.println(toString());
-		DataSet ds = _canvas.getDataSet();
+		DataSet ds = _canvas.getPlotData();
 
 		if (ds == null) {
 			return;
@@ -124,7 +122,7 @@ public class Legend extends DraggableRectangle {
 	// get required width of the legend
 	private int getLegendWidth() {
 		FontMetrics fm = _canvas.getFontMetrics(_params.getTextFont());
-		DataSet ds = _canvas.getDataSet();
+		DataSet ds = _canvas.getPlotData();
 
 		_maxStringWidth = 0;
 		_extra = 0;
@@ -161,7 +159,7 @@ public class Legend extends DraggableRectangle {
 
 	// get required height of the legend
 	private int getLegendHeight() {
-		DataSet ds = _canvas.getDataSet();
+		DataSet ds = _canvas.getPlotData();
 
 		int height = VGAP;
 		Collection<OldDataColumn> ycols = ds.getAllColumnsByType(DataColumnType.Y);

@@ -3,7 +3,6 @@ package cnuphys.splot.plot;
 import java.awt.Graphics;
 import java.awt.Point;
 
-import cnuphys.splot.plot.old.PlotCanvas;
 import cnuphys.splot.style.Styled;
 
 /**

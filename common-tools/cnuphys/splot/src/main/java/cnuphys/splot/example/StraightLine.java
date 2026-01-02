@@ -38,7 +38,7 @@ public class StraightLine extends AExample {
 
 	@Override
 	public void fillData() {
-		DataSet ds = _canvas.getDataSet();
+		DataSet ds = _canvas.getPlotData();
 		for (int i = 0; i < x.length; i++) {
 			try {
 				ds.add(x[i], y[i], sig[i]);

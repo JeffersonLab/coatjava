@@ -2,7 +2,7 @@ package cnuphys.splot.edit;
 
 import java.awt.BorderLayout;
 
-import cnuphys.splot.plot.old.PlotCanvas;
+import cnuphys.splot.plot.PlotCanvas;
 
 public class CurveEditorDialog extends SimpleDialog {
 

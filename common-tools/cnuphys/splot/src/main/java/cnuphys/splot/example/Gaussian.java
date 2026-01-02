@@ -9,7 +9,7 @@ import cnuphys.splot.fit.CurveDrawingMethod;
 import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.pdata.PlotDataException;
 import cnuphys.splot.pdata.PlotDataType;
-import cnuphys.splot.plot.old.PlotParameters;
+import cnuphys.splot.plot.PlotParameters;
 
 public class Gaussian extends AExample {
 
@@ -46,7 +46,7 @@ public class Gaussian extends AExample {
 		double sig = 0.2;
 	    NormalDistribution normDev = new NormalDistribution(mu, sig);
 
-		DataSet ds = _canvas.getDataSet();
+		DataSet ds = _canvas.getPlotData();
 		Random rand = new Random();
 		for (int i = 0; i < n; i++) {
 			double x = 2.0 * rand.nextDouble();
@@ -62,7 +62,7 @@ public class Gaussian extends AExample {
 
 	@Override
 	public void setPreferences() {
-		DataSet ds = _canvas.getDataSet();
+		DataSet ds = _canvas.getPlotData();
 		ds.getCurveStyle(0).setFillColor(new Color(196, 196, 196, 64));
 		ds.getCurveStyle(0).setBorderColor(Color.black);
 		ds.getCurve(0).getFit().setFitType(CurveDrawingMethod.GAUSSIANS);

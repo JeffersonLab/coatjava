@@ -4,7 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 
 import cnuphys.splot.plot.GeneralPlotParamPanel;
-import cnuphys.splot.plot.old.PlotCanvas;
+import cnuphys.splot.plot.PlotCanvas;
 
 public class PlotPreferencesDialog extends SimpleDialog {
 

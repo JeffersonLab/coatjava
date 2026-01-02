@@ -9,10 +9,18 @@ import java.awt.Rectangle;
 import java.awt.Stroke;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
+import java.util.Objects;
 
 import cnuphys.splot.fit.CurveDrawingMethod;
 import cnuphys.splot.fit.IValueGetter;
-import cnuphys.splot.plot.old.PlotCanvas;
+import cnuphys.splot.fit.apache.FitResult;
+import cnuphys.splot.pdata.ACurve;
+import cnuphys.splot.pdata.Curve;
+import cnuphys.splot.pdata.HistoCurve;
+import cnuphys.splot.pdata.HistoData;
+import cnuphys.splot.pdata.PlotData;
+import cnuphys.splot.pdata.Snapshot;
+import cnuphys.splot.pdata.StripChartCurve;
 import cnuphys.splot.spline.CubicSpline;
 import cnuphys.splot.style.IStyled;
 import cnuphys.splot.style.Styled;
@@ -22,26 +30,107 @@ import cnuphys.splot.style.SymbolType;
 public class CurveDrawer {
 
 	private static final Color _transGray = new Color(80, 80, 80, 16);
+	
 
+	/**
+	 * Draw a curve with x and y error bars
+	 * 
+	 * @param g          the graphics context
+	 * @param plotCanvas the plot canvas
+	 * @param xcol       the x data column
+	 * @param ycol       the y data column
+	 * @param xerrCol    the x error bar column (often <code>null</code>)
+	 * @param yerrCol    the y error bar column
+	 */
+	public static void drawCurve(Graphics g, PlotCanvas plotCanvas, ACurve curve) {
 
+		Objects.requireNonNull(curve, "curve");
+		Objects.requireNonNull(plotCanvas, "plotCanvas");
+		
+		if (!curve.isVisible()) {
+			return;
+		}
+		
+		if (curve instanceof Curve) {
+			drawXYCurve(g, plotCanvas, (Curve)curve);
+		}
+		else if (curve instanceof StripChartCurve) {
+			drawStripChart(g, plotCanvas, (StripChartCurve) curve);
+		}
+		else if (curve instanceof HistoCurve) {
+			drawHisto1D(g, plotCanvas, (HistoCurve) curve);
+		}
+		else {
+			System.err.println("Unsupported curve type in drawCurve " + curve.name());
+			return;
+		}
+		
+		//draw the fit
+		drawFit(g, plotCanvas, curve);
+	}
+
+	private static void drawFit(Graphics g, PlotCanvas plotCanvas, ACurve curve) {
+		FitResult fr = curve.fitResult();
+		if (fr == null) {
+			return;
+		}
+		IValueGetter ivg = curve.getFitValueGetter();
+		if (ivg == null) {
+			return;
+		}
+		
+		IStyled style = curve.getStyle();
+		Point2D.Double wp = new Point2D.Double();
+		Point p0 = new Point();
+		Point p1 = new Point();
+
+		Graphics2D g2 = (Graphics2D) g;
+
+		Stroke oldStroke = g2.getStroke();
+		g2.setStroke(GraphicsUtilities.getStroke(style.getFitLineWidth(), style.getFitLineStyle()));
+
+		Color fitColor = style.getFitLineColor();
+		if (fitColor == null) {
+			return;
+		}
+		g2.setColor(fitColor);
+		
+		
+	}
+
+	/**
+	 * Draw a standard XY(with optional errors) curve
+	 * 
+	 * @param g           the graphics context
+	 * @param plotCanvas  the plot canvas
+	 * @param curve 	the XY(E)curve to be drawn
+	 */
+	public static void drawXYCurve(Graphics g, PlotCanvas canvas, Curve curve) {
+	}
+	
+	/**
+	 * Draw a strip chart
+	 * 
+	 * @param g           the graphics context
+	 * @param plotCanvas  the plot canvas
+	 * @param stripChartCurve the strip chart curve
+	 */
+	public static void drawStripChart(Graphics g, PlotCanvas canvas, StripChartCurve stripChartCurve) {
+	}
 
 	/**
 	 * Draw a 1D histogram
 	 * 
 	 * @param g           the graphics context
 	 * @param plotCanvas  the plot canvas
-	 * @param histoColumn the column (should contain a HistData object)
+	 * @param histoCurve the histogram curve
 	 */
-	public static void drawHisto1D(Graphics g, PlotCanvas canvas, OldDataColumn histoColumn) {
+	private static void drawHisto1D(Graphics g, PlotCanvas canvas, HistoCurve histoCurve) {
 
-		if (!histoColumn.isVisible()) {
-			return;
-		}
-
-		HistoData hd = histoColumn.getHistoData();
+		HistoData hd = histoCurve.getHistoData();
 
 		Polygon poly = HistoData.GetPolygon(canvas, hd);
-		IStyled style = histoColumn.getStyle();
+		IStyled style = histoCurve.getStyle();
 
 		g.setColor(style.getFillColor());
 		g.fillPolygon(poly);
@@ -112,17 +201,6 @@ public class CurveDrawer {
 
 	}
 
-	/**
-	 * Draw a curve with no error bars
-	 * 
-	 * @param g          the graphics context
-	 * @param plotCanvas the plot canvas
-	 * @param xcol       the x data column
-	 * @param ycol       the y data column
-	 */
-	public static void drawCurve(Graphics g, PlotCanvas plotCanvas, OldDataColumn xcol, OldDataColumn ycol) {
-		drawCurve(g, plotCanvas, xcol, ycol, null, null);
-	}
 
 	/**
 	 * Draw a curve with x and y error bars
@@ -134,19 +212,20 @@ public class CurveDrawer {
 	 * @param xerrCol    the x error bar column (often <code>null</code>)
 	 * @param yerrCol    the y error bar column
 	 */
-	public static void drawCurve(Graphics g, PlotCanvas plotCanvas, OldDataColumn xcol, OldDataColumn ycol,
-			OldDataColumn xerrCol, OldDataColumn yerrCol) {
+	public static void XdrawCurve(Graphics g, PlotCanvas plotCanvas, ACurve curve) {
 
-		if (!ycol.isVisible()) {
+		if (!curve.isVisible()) {
 			return;
 		}
 
 		Point2D.Double wp = new Point2D.Double();
 		Point p0 = new Point();
 		Point p1 = new Point();
+		
+		Snapshot snapshot = curve.snapshot();
 
-		double x[] = xcol.getMinimalCopy();
-		double y[] = ycol.getMinimalCopy();
+		double x[] = snapshot.x;
+		double y[] = snapshot.y;
 
 		if ((x == null) || (x.length < 1)) {
 			return;
@@ -157,6 +236,7 @@ public class CurveDrawer {
 
 		double ysig[] = null;
 		double xsig[] = null;
+		
 		if (xerrCol != null) {
 			xsig = xerrCol.getMinimalCopy();
 		}
@@ -424,13 +504,13 @@ public class CurveDrawer {
 		Point pp = new Point();
 		Point.Double wp = new Point.Double();
 
-		DataSet ds = plotCanvas.getDataSet();
-		double ymid = 0.5 * (ds.getYmin() + ds.getYmax());
+		PlotData ds = plotCanvas.getPlotData();
+		double ymid = 0.5 * (ds.yMin() + ds.yMax());
 
-		wp.setLocation(ds.getXmin(), ymid);
+		wp.setLocation(ds.xMin(), ymid);
 		plotCanvas.worldToLocal(pp, wp);
 		int xsmin = pp.x;
-		wp.setLocation(ds.getXmax(), ymid);
+		wp.setLocation(ds.xMax(), ymid);
 		plotCanvas.worldToLocal(pp, wp);
 		int xsmax = pp.x;
 

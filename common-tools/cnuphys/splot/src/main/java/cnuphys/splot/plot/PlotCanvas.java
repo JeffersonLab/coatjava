@@ -1,4 +1,4 @@
-package cnuphys.splot.plot.old;
+package cnuphys.splot.plot;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -32,10 +32,11 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import cnuphys.splot.edit.PlotPreferencesDialog;
+import cnuphys.splot.pdata.ACurve;
+import cnuphys.splot.pdata.CurveChangeType;
 import cnuphys.splot.pdata.DataChangeListener;
 import cnuphys.splot.pdata.PlotDataException;
 import cnuphys.splot.pdata.PlotDataType;
-import cnuphys.splot.plot.NiceScale;
 import cnuphys.splot.pdata.HistoData;
 import cnuphys.splot.pdata.PlotData;
 import cnuphys.splot.rubberband.IRubberbanded;
@@ -85,9 +86,6 @@ public class PlotCanvas extends JComponent
 	// plot parameters
 	protected PlotParameters _parameters;
 
-	// work point
-	private Point2D.Double _workPoint = new Point2D.Double();
-
 	// plot ticks
 	private PlotTicks _plotTicks;
 
@@ -119,12 +117,12 @@ public class PlotCanvas extends JComponent
 	/**
 	 * Create a plot canvas for plotting a dataset
 	 * 
-	 * @param dataSet   the dataset to plot. It might contain many curves
+	 * @param plotData   the dataset to plot. It might contain many curves
 	 * @param plotTitle the plot title
 	 * @param xLabel    the x axis label
 	 * @param yLabel    the y axis label
 	 */
-	public PlotCanvas(PlotData dataSet, String plotTitle, String xLabel, String yLabel) {
+	public PlotCanvas(PlotData plotData, String plotTitle, String xLabel, String yLabel) {
 		
 		if (_dataFilePath == null) {
 			_dataFilePath = Environment.getInstance().getHomeDirectory();
@@ -138,16 +136,16 @@ public class PlotCanvas extends JComponent
 		_plotTicks = new PlotTicks(this);
 
 		// default to xy plot no errors
-		if (dataSet == null) {
+		if (plotData == null) {
 			try {
-				dataSet = new PlotData(PlotDataType.XYXY, "X", "Y");
+				plotData = new PlotData(PlotDataType.XYXY, "X", "Y");
 			}
 			catch (PlotDataException e) {
 				e.printStackTrace();
 			}
 		}
 
-		setDataSet(dataSet);
+		setPlotData(plotData);
 
 		ComponentAdapter componentAdapter = new ComponentAdapter() {
 			@Override
@@ -228,26 +226,21 @@ public class PlotCanvas extends JComponent
 	 * 
 	 * @param ds the new dataset
 	 */
-	public void setDataSet(PlotData ds) {
+	public void setPlotData(PlotData ds) {
 
 		_plotData = ds;
 		
 		ds.removeDataChangeListener(this);
 		ds.addDataChangeListener(this);
-
-		
-		if (_plotData != null) {
-			_plotData.notifyListeners();
-		}
 		repaint();
 	}
 
 	/**
-	 * Get the underlying dataset
+	 * Get the underlying plot data
 	 * 
-	 * @return the underlying dataset
+	 * @return the underlying plot data
 	 */
-	public PlotData getDataSet() {
+	public PlotData getPlotData() {
 		return _plotData;
 	}
 
@@ -261,7 +254,7 @@ public class PlotCanvas extends JComponent
 	}
 
 	/**
-	 * Set the world system based on the dataset This is where the plot limits are
+	 * Set the world system based on the plot data This is where the plot limits are
 	 * set.
 	 */
 	public void setWorldSystem() {
@@ -270,20 +263,20 @@ public class PlotCanvas extends JComponent
 			_worldSystem = new Rectangle2D.Double();
 		}
 
-		// watch for no dataset
+		// watch for no plot data
 		if (_plotData == null) {
 			_worldSystem.setFrame(0, 0, 1, 1);
 			return;
 		}
 
-		double xmin = _plotData.getXmin();
+		double xmin = _plotData.xMin();
 		if (Double.isNaN(xmin)) {
 			return;
 		}
 
-		double xmax = _plotData.getXmax();
-		double ymin = _plotData.getYmin();
-		double ymax = _plotData.getYmax();
+		double xmax = _plotData.xMax();
+		double ymin = _plotData.yMin();
+		double ymax = _plotData.yMax();
 
 		PlotParameters params = getParameters();
 		
@@ -509,23 +502,23 @@ public class PlotCanvas extends JComponent
 		else {
 			// pp.x -= _activeBounds.x;
 			// pp.y -= _activeBounds.y;
-			localToWorld(pp, _workPoint);
-			_locationString = String.format("<html>(x, y) = (%7.2g, %-7.2g)<br>count = %d", _workPoint.x, _workPoint.y, _plotData.size());
-
-			if (_plotData.is1DHistoSet()) {
-				Vector<OldDataColumn> ycols = (Vector<OldDataColumn>) _plotData.getAllVisibleCurves();
-				int size = ycols.size();
-
-				for (int i = 0; i < size; i++) {
-					HistoData hd = ycols.get(i).getHistoData();
-					String s = HistoData.statusString(this, hd, pp, _workPoint);
-					if (s != null) {
-						Color lc = ycols.get(i).getStyle().getFitLineColor();
-						_locationString += "&nbsp&nbsp" + colorStr(s, GraphicsUtilities.colorToHex(lc));
-						// break;
-					}
-				}
-			}
+//			localToWorld(pp, _workPoint);
+//			_locationString = String.format("<html>(x, y) = (%7.2g, %-7.2g)<br>count = %d", _workPoint.x, _workPoint.y, _plotData.size());
+//
+//			if (_plotData.is1DHistoSet()) {
+//				Vector<OldDataColumn> ycols = (Vector<OldDataColumn>) _plotData.getAllVisibleCurves();
+//				int size = ycols.size();
+//
+//				for (int i = 0; i < size; i++) {
+//					HistoData hd = ycols.get(i).getHistoData();
+//					String s = HistoData.statusString(this, hd, pp, _workPoint);
+//					if (s != null) {
+//						Color lc = ycols.get(i).getStyle().getFitLineColor();
+//						_locationString += "&nbsp&nbsp" + colorStr(s, GraphicsUtilities.colorToHex(lc));
+//						// break;
+//					}
+//				}
+//			}
 
 		}
 	}
@@ -626,7 +619,7 @@ public class PlotCanvas extends JComponent
 
 			if (CommonToolBar.BOXZOOM.equals(command) && (_rubberband == null)) {
 
-				if (getDataSet().is1DHistoSet()) {
+				if (getPlotData().getType() == PlotDataType.H1D) {
 
 					if (e.isShiftDown()) {
 						_rubberband = new Rubberband(this, this, Rubberband.Policy.XONLY);
@@ -781,16 +774,6 @@ public class PlotCanvas extends JComponent
 
 		localToWorld(rbrect, _worldSystem);
 
-//		if (getDataSet().is1DHistoSet()) {
-//			// preserve full y
-//			double y = _worldSystem.y;
-//			double h = _worldSystem.height;
-//			localToWorld(rbrect, _worldSystem);
-//			_worldSystem.y = y;
-//			_worldSystem.height = h;
-//		}
-//		else {
-//		}
 		_rubberband = null;
 		repaint();
 	}
@@ -937,22 +920,17 @@ public class PlotCanvas extends JComponent
 	}
 
 	/**
-	 * Used so another object can tell the plot canvas to fire a propert change
+	 * Used so another object can tell the plot canvas to fire a property change
 	 * event
 	 * 
-	 * @param propName
-	 * @param oldValue
-	 * @param newValue
+	 * @param propName the property name
+	 * @param oldValue the old value
+	 * @param newValue the new value
 	 */
 	public void remoteFirePropertyChange(String propName, Object oldValue, Object newValue) {
 		firePropertyChange(propName, oldValue, newValue);
 	}
 
-	@Override
-	public void tableChanged(TableModelEvent e) {
-		setWorldSystem();
-		needsRedraw(false);
-	}
 
 	/**
 	 * Get the canavas's plot ticks
@@ -976,7 +954,7 @@ public class PlotCanvas extends JComponent
 	}
 
 	@Override
-	public void dataSetChanged(DataSet dataSet) {
+	public void dataSetChanged(PlotData plotData, ACurve curve, CurveChangeType type) {
 		setWorldSystem();
 		needsRedraw(false);
 	}

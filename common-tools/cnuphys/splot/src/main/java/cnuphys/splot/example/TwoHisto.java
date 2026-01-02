@@ -7,7 +7,7 @@ import org.apache.commons.math3.distribution.NormalDistribution;
 import cnuphys.splot.fit.CurveDrawingMethod;
 import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.pdata.PlotDataException;
-import cnuphys.splot.plot.old.PlotParameters;
+import cnuphys.splot.plot.PlotParameters;
 import cnuphys.splot.pdata.HistoData;
 
 public class TwoHisto extends AExample {
@@ -50,7 +50,7 @@ public class TwoHisto extends AExample {
 		sig = 20.0;
 	    NormalDistribution normDev2 = new NormalDistribution(mu, sig);
 
-		DataSet ds = _canvas.getDataSet();
+		DataSet ds = _canvas.getPlotData();
 		for (int i = 0; i < n; i++) {
 			double y1 = normDev1.sample();
 			double y2 = normDev2.sample();
@@ -65,7 +65,7 @@ public class TwoHisto extends AExample {
 
 	@Override
 	public void setPreferences() {
-		DataSet ds = _canvas.getDataSet();
+		DataSet ds = _canvas.getPlotData();
 
 		ds.getCurveStyle(0).setFillColor(new Color(196, 196, 196, 64));
 		ds.getCurveStyle(0).setBorderColor(Color.black);

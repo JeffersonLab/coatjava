@@ -16,7 +16,6 @@ import cnuphys.splot.edit.CurveEditorDialog;
 import cnuphys.splot.edit.DialogUtilities;
 import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.pdata.PlotDataType;
-import cnuphys.splot.plot.old.PlotCanvas;
 
 public class SplotMenus implements ActionListener {
 
@@ -171,7 +170,7 @@ public class SplotMenus implements ActionListener {
 		}
 
 		else if (source == _clearItem) {
-			DataSet ds = _plotCanvas.getDataSet();
+			DataSet ds = _plotCanvas.getPlotData();
 			PlotDataType dsType = null;
 			if (ds != null) {
 				dsType = ds.getType();

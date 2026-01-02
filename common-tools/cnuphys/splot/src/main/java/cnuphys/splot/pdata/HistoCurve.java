@@ -168,6 +168,42 @@ public class HistoCurve extends ACurve {
 		}
 	}
 
+	
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public double xMin() {
+		return histoData == null ? Double.NaN : histoData.getMinX();
+	}
+
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public double xMax() {
+		return histoData == null ? Double.NaN : histoData.getMaxX();
+	}
+
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public double yMin() {
+		return histoData == null ? Double.NaN : histoData.getMinY();
+	}
+
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public double yMax() {
+		return histoData == null ? Double.NaN : histoData.getMaxY();
+	}
 	// ------------------------------------------------------------
 	// Histogram mutation API
 	// ------------------------------------------------------------
@@ -177,8 +213,10 @@ public class HistoCurve extends ACurve {
 	 *
 	 * @param x sample value
 	 */
-	public void fill(double x) {
-		histoData.add(x);
+	public void add(double x) {
+		synchronized (lock) {
+			histoData.add(x);
+		}
 		markDataChanged();
 	}
 
@@ -188,5 +226,11 @@ public class HistoCurve extends ACurve {
 	public void clearData() {
 		histoData.clear();
 		markDataChanged();
+	}
+
+	@Override
+	public Snapshot snapshot() {
+		FitVectors fv = fitVectors();
+		return new Snapshot(fv.x, fv.y);
 	}
 }

@@ -19,8 +19,6 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.border.Border;
 
-import cnuphys.splot.plot.old.PlotCanvas;
-import cnuphys.splot.plot.old.PlotParameters;
 import cnuphys.splot.toolbar.CommonToolBar;
 
 public class PlotPanel extends JPanel implements PropertyChangeListener {

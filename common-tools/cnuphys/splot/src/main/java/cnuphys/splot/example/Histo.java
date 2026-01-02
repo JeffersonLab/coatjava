@@ -7,7 +7,7 @@ import org.apache.commons.math3.distribution.NormalDistribution;
 import cnuphys.splot.fit.CurveDrawingMethod;
 import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.pdata.PlotDataException;
-import cnuphys.splot.plot.old.PlotParameters;
+import cnuphys.splot.plot.PlotParameters;
 import cnuphys.splot.pdata.HistoData;
 
 public class Histo extends AExample {
@@ -45,7 +45,7 @@ public class Histo extends AExample {
 		double sig = 10.0;
 	    NormalDistribution normDev = new NormalDistribution(mu, sig);
 
-		DataSet ds = _canvas.getDataSet();
+		DataSet ds = _canvas.getPlotData();
 		for (int i = 0; i < n; i++) {
 			double y = normDev.sample();
 			try {
@@ -59,7 +59,7 @@ public class Histo extends AExample {
 
 	@Override
 	public void setPreferences() {
-		DataSet ds = _canvas.getDataSet();
+		DataSet ds = _canvas.getPlotData();
 		ds.getCurveStyle(0).setFillColor(new Color(196, 196, 196, 64));
 		ds.getCurveStyle(0).setBorderColor(Color.black);
 		ds.getCurve(0).getFit().setFitType(CurveDrawingMethod.GAUSSIANS);

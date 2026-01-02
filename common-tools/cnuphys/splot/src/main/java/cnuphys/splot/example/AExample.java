@@ -11,9 +11,9 @@ import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.pdata.PlotDataException;
 import cnuphys.splot.plot.Environment;
 import cnuphys.splot.plot.GraphicsUtilities;
+import cnuphys.splot.plot.PlotCanvas;
 import cnuphys.splot.plot.PlotPanel;
 import cnuphys.splot.plot.SplotMenus;
-import cnuphys.splot.plot.old.PlotCanvas;
 
 /**
  * A template class for plot examples

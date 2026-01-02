@@ -7,8 +7,6 @@ import java.awt.GridLayout;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import cnuphys.splot.plot.old.PlotCanvas;
-
 public class GeneralPlotParamPanel extends APreferencePanel {
 
 	// title text field

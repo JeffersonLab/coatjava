@@ -8,7 +8,7 @@ import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.pdata.PlotDataException;
 import cnuphys.splot.pdata.PlotDataType;
-import cnuphys.splot.plot.old.PlotParameters;
+import cnuphys.splot.plot.PlotParameters;
 
 public class TwoLinesWithErrors extends AExample {
 
@@ -40,7 +40,7 @@ public class TwoLinesWithErrors extends AExample {
 
 	@Override
 	public void fillData() {
-		DataSet ds = _canvas.getDataSet();
+		DataSet ds = _canvas.getPlotData();
 		for (int i = 0; i < 15; i++) {
 			try {
 				if (i < 10) {
@@ -61,7 +61,7 @@ public class TwoLinesWithErrors extends AExample {
 
 	@Override
 	public void setPreferences() {
-		DataSet ds = _canvas.getDataSet();
+		DataSet ds = _canvas.getPlotData();
 		Collection<OldDataColumn> ycols = ds.getAllColumnsByType(DataColumnType.Y);
 		for (OldDataColumn dc : ycols) {
 			dc.getFit().setFitType(CurveDrawingMethod.POLYNOMIAL);

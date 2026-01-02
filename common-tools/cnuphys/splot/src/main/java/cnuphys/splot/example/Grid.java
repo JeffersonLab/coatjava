@@ -28,14 +28,14 @@ import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.pdata.PlotDataException;
 import cnuphys.splot.pdata.PlotDataType;
 import cnuphys.splot.pdata.HistoData;
-import cnuphys.splot.pdata.StripData;
+import cnuphys.splot.pdata.StripChartCurve;
 import cnuphys.splot.plot.Environment;
 import cnuphys.splot.plot.HorizontalLine;
 import cnuphys.splot.plot.LimitsMethod;
+import cnuphys.splot.plot.PlotCanvas;
 import cnuphys.splot.plot.PlotGrid;
+import cnuphys.splot.plot.PlotParameters;
 import cnuphys.splot.plot.VerticalLine;
-import cnuphys.splot.plot.old.PlotCanvas;
-import cnuphys.splot.plot.old.PlotParameters;
 import cnuphys.splot.style.SymbolType;
 
 @SuppressWarnings("serial")
@@ -133,7 +133,7 @@ public class Grid extends JFrame implements IValueGetter {
 			return new DataSet(PlotDataType.XYEXYE, getColumnNames(index));
 
 		case 2:
-			StripData sd = new StripData("Memory", 25, this, 2000);
+			StripChartCurve sd = new StripChartCurve("Memory", 25, this, 2000);
 			return new DataSet(sd, "time", "Memory Usage (MB)");
 
 		case 3:
@@ -264,7 +264,7 @@ public class Grid extends JFrame implements IValueGetter {
 	// fill the plot data based on index
 	public void fillData(PlotCanvas canvas, int index) {
 
-		DataSet ds = canvas.getDataSet();
+		DataSet ds = canvas.getPlotData();
 
 		switch (index) {
 		case 0:
@@ -393,7 +393,7 @@ public class Grid extends JFrame implements IValueGetter {
 	// set the preferences
 	public void setPreferences(PlotCanvas canvas, int index) {
 
-		DataSet ds = canvas.getDataSet();
+		DataSet ds = canvas.getPlotData();
 		PlotParameters params = canvas.getParameters();
 
 		params.setTitleFont(_titleFont);
@@ -411,7 +411,7 @@ public class Grid extends JFrame implements IValueGetter {
 			params.addPlotLine(new HorizontalLine(canvas, 0));
 			params.addPlotLine(new HorizontalLine(canvas, 1));
 			params.setLegendDrawing(false);
-			canvas.getDataSet().getCurveStyle(0).setFillColor(new Color(0, 0, 240, 128));
+			canvas.getPlotData().getCurveStyle(0).setFillColor(new Color(0, 0, 240, 128));
 			break;
 
 		case 1:

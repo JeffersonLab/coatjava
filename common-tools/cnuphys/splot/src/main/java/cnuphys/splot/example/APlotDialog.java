@@ -11,9 +11,9 @@ import javax.swing.JMenuBar;
 import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.pdata.PlotDataException;
 import cnuphys.splot.plot.GraphicsUtilities;
+import cnuphys.splot.plot.PlotCanvas;
 import cnuphys.splot.plot.PlotPanel;
 import cnuphys.splot.plot.SplotMenus;
-import cnuphys.splot.plot.old.PlotCanvas;
 
 public abstract class APlotDialog extends JDialog {
 

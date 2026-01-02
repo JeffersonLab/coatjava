@@ -5,7 +5,7 @@ import java.awt.GridLayout;
 import javax.swing.JPanel;
 
 import cnuphys.splot.plot.CommonBorder;
-import cnuphys.splot.plot.old.PlotCanvas;
+import cnuphys.splot.plot.PlotCanvas;
 
 public class AxesLimitsPanel extends JPanel {
 	

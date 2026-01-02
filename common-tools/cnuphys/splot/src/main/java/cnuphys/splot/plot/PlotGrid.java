@@ -6,7 +6,6 @@ import java.util.Vector;
 import javax.swing.JPanel;
 
 import cnuphys.splot.pdata.DataSet;
-import cnuphys.splot.plot.old.PlotCanvas;
 
 public class PlotGrid extends JPanel {
 
@@ -92,7 +91,7 @@ public class PlotGrid extends JPanel {
 	 */
 	public DataSet getDataSet(int row, int col) {
 		PlotCanvas canvas = getPlotCanvas(row, col);
-		return (canvas == null) ? null : canvas.getDataSet();
+		return (canvas == null) ? null : canvas.getPlotData();
 	}
 
 }

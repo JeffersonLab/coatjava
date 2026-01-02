@@ -25,7 +25,7 @@ import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.pdata.HistoData;
 import cnuphys.splot.plot.CommonBorder;
 import cnuphys.splot.plot.Environment;
-import cnuphys.splot.plot.old.PlotCanvas;
+import cnuphys.splot.plot.PlotCanvas;
 import cnuphys.splot.style.EnumComboBox;
 import cnuphys.splot.style.IStyled;
 import cnuphys.splot.style.LineStyle;
@@ -122,7 +122,7 @@ public class CurveEditorPanel extends JPanel implements ActionListener, Property
 		JPanel nPanel = getOpaquePanel();
 		nPanel.setLayout(new BorderLayout(0, 4));
 
-		Collection<OldDataColumn> ycols = _plotCanvas.getDataSet().getAllColumnsByType(DataColumnType.Y);
+		Collection<OldDataColumn> ycols = _plotCanvas.getPlotData().getAllColumnsByType(DataColumnType.Y);
 		final DefaultListModel<OldDataColumn> model = new DefaultListModel<OldDataColumn>();
 		for (OldDataColumn dc : ycols) {
 			model.addElement(dc);
@@ -170,7 +170,7 @@ public class CurveEditorPanel extends JPanel implements ActionListener, Property
 
 	// add the style editor
 	private void addStyle(JPanel addPanel) {
-		_stylePanel = new StyleEditorPanel(_plotCanvas.getDataSet().getType());
+		_stylePanel = new StyleEditorPanel(_plotCanvas.getPlotData().getType());
 
 		if (_stylePanel.getSymbolSelector() != null) {
 			_stylePanel.getSymbolSelector().addActionListener(this);

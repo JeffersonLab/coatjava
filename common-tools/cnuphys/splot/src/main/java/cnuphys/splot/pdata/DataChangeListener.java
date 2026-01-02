@@ -9,5 +9,5 @@ public interface DataChangeListener extends EventListener {
 	 * 
 	 * @param plotData the dataSet that changed
 	 */
-	public void dataSetChanged(PlotData plotData);
+	public void dataSetChanged(PlotData plotData, ACurve curve, CurveChangeType type);
 }

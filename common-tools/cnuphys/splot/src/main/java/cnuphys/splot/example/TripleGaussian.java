@@ -10,8 +10,8 @@ import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.pdata.PlotDataException;
 import cnuphys.splot.pdata.PlotDataType;
 import cnuphys.splot.plot.HorizontalLine;
+import cnuphys.splot.plot.PlotParameters;
 import cnuphys.splot.plot.VerticalLine;
-import cnuphys.splot.plot.old.PlotParameters;
 
 public class TripleGaussian extends AExample {
 
@@ -50,7 +50,7 @@ public class TripleGaussian extends AExample {
 
 		int num = 50;
 		double dx = 10.0 / num;
-		DataSet ds = _canvas.getDataSet();
+		DataSet ds = _canvas.getPlotData();
 
 		for (int i = 0; i < 50; i++) {
 
@@ -75,7 +75,7 @@ public class TripleGaussian extends AExample {
 
 	@Override
 	public void setPreferences() {
-		DataSet ds = _canvas.getDataSet();
+		DataSet ds = _canvas.getPlotData();
 		Collection<OldDataColumn> ycols = ds.getAllColumnsByType(DataColumnType.Y);
 		for (OldDataColumn dc : ycols) {
 			dc.getFit().setFitType(CurveDrawingMethod.GAUSSIANS);

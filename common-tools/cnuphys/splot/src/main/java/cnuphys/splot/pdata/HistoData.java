@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.Objects;
 
 import cnuphys.splot.plot.DoubleFormat;
+import cnuphys.splot.plot.PlotCanvas;
+import cnuphys.splot.plot.PlotParameters;
 import cnuphys.splot.plot.UnicodeSupport;
-import cnuphys.splot.plot.old.PlotCanvas;
-import cnuphys.splot.plot.old.PlotParameters;
 
 /**
  * Container class for 1D histogram data.

@@ -10,8 +10,8 @@ import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.pdata.PlotDataException;
 import cnuphys.splot.pdata.PlotDataType;
 import cnuphys.splot.plot.HorizontalLine;
+import cnuphys.splot.plot.PlotParameters;
 import cnuphys.splot.plot.VerticalLine;
-import cnuphys.splot.plot.old.PlotParameters;
 import cnuphys.splot.style.SymbolType;
 
 public class Scatter extends AExample {
@@ -44,7 +44,7 @@ public class Scatter extends AExample {
 
 	@Override
 	public void fillData() {
-		DataSet ds = _canvas.getDataSet();
+		DataSet ds = _canvas.getPlotData();
 		for (int i = 0; i < 1000; i++) {
 			// demo that the data can be added out of order
 			double x = -0.5 + Math.random();
@@ -62,7 +62,7 @@ public class Scatter extends AExample {
 	@Override
 	public void setPreferences() {
 		Color fillColor = new Color(255, 0, 0, 96);
-		DataSet ds = _canvas.getDataSet();
+		DataSet ds = _canvas.getPlotData();
 		Collection<OldDataColumn> ycols = ds.getAllColumnsByType(DataColumnType.Y);
 
 		for (OldDataColumn dc : ycols) {

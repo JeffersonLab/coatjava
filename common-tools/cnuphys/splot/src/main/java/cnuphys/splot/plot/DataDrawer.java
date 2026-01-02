@@ -3,10 +3,11 @@ package cnuphys.splot.plot;
 import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.Shape;
+import java.util.Collection;
 import java.util.Vector;
 
+import cnuphys.splot.pdata.ACurve;
 import cnuphys.splot.pdata.PlotData;
-import cnuphys.splot.plot.old.PlotCanvas;
 
 public class DataDrawer {
 
@@ -23,19 +24,21 @@ public class DataDrawer {
 	}
 
 	/**
-	 * Draw a data set on the canvas
+	 * Draw a data set on the canvas.Draws the optional fixed lines, then the
+	 * curves.
 	 * 
 	 * @param g  the graphics context
 	 * @param plotData the PlotData to draw.
 	 */
 	public void draw(Graphics g, PlotData plotData) {
 
-		if ((plotData == null) || plotData.getSize() < 1) {
+		//if no curves, bail
+		if ((plotData == null) || plotData.size() < 1) {
 			return;
 		}
 
+		//clip checks
 		if (!(g.getClip().intersects(_plotCanvas.getActiveBounds()))) {
-//			System.err.println("CLIP SKIP");
 			return;
 		}
 
@@ -49,42 +52,21 @@ public class DataDrawer {
 
 		g.setClip(clipRect);
 
-		// any fixed lines?
+		// any fixed  horizontal or verticallines?
 		Vector<PlotLine> lines = _plotCanvas.getParameters().getPlotLines();
 		if (!lines.isEmpty()) {
 			for (PlotLine line : lines) {
 				line.draw(g);
 			}
 		}
-
-		switch (plotData.getType()) {
-		case XYEXYE:
-			for (int i = 0; i < plotData.getColumnCount() / 3; i++) {
-				int j = 3 * i;
-				CurveDrawer.drawCurve(g, _plotCanvas, plotData.getColumn(j), plotData.getColumn(j + 1), null, plotData.getColumn(j + 2));
+		
+		Collection<ACurve> curves = plotData.getCurves();
+		for (ACurve curve : curves) {
+			if (curve.isVisible()) {
+				CurveDrawer.drawCurve(g, _plotCanvas, curve);
 			}
-			break;
-
-		case H1D:
-			for (int i = 0; i < plotData.getColumnCount(); i++) {
-				CurveDrawer.drawHisto1D(g, _plotCanvas, plotData.getColumn(i));
-			}
-			break;
-
-
-		case XYXY:
-			for (int i = 0; i < plotData.getColumnCount() / 2; i++) {
-				int j = 2 * i;
-				CurveDrawer.drawCurve(g, _plotCanvas, plotData.getColumn(j), plotData.getColumn(j + 1));
-			}
-			break;
-
-		case STRIP:
-			CurveDrawer.drawCurve(g, _plotCanvas, plotData.getColumn(0), plotData.getColumn(1));
-			break;
-
-
 		}
+
 
 		// restore the old clip
 		g.setClip(oldClip);

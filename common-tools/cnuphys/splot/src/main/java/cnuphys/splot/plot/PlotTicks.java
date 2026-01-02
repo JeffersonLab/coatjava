@@ -1,4 +1,4 @@
-package cnuphys.splot.plot.old;
+package cnuphys.splot.plot;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -8,9 +8,10 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.geom.Point2D;
-import cnuphys.splot.pdata.DataSet;
+
+import cnuphys.splot.pdata.HistoCurve;
 import cnuphys.splot.pdata.HistoData;
-import cnuphys.splot.plot.Environment;
+import cnuphys.splot.pdata.PlotData;
 
 public class PlotTicks {
 
@@ -50,7 +51,7 @@ public class PlotTicks {
 	 * @param drawBinVal the value
 	 */
 	public void setDrawBinValue(boolean drawBinVal) {
-		if (_plotCanvas._plotData.is1DHistoSet()) {
+		if (_plotCanvas.getPlotData().isHistogramData()) {
 			drawBinValue = drawBinVal;
 		}
 	}
@@ -104,16 +105,17 @@ public class PlotTicks {
 	private void drawBinValues(Graphics g, double xmin, double xmax, double yc, int ticklen, int numtick, Rectangle ab,
 			boolean drawVal) {
 
-		DataSet ds = _plotCanvas.getDataSet();
-		if (!ds.is1DHistoSet()) {
+		PlotData ds = _plotCanvas.getPlotData();
+		if (!ds.isHistogramData()) {
 			return;
 		}
-		HistoData hd = ds.getColumn(0).getHistoData();
+		
+		HistoCurve hc = (HistoCurve)(ds.getCurve(0));
+		HistoData hd = hc.getHistoData();
 		if (hd == null) {
 			return;
 		}
 
-		PlotParameters params = _plotCanvas.getParameters();
 		FontMetrics fm = _plotCanvas.getFontMetrics(_tickFont);
 		double delx = (xmax - xmin) / (numtick + 1);
 

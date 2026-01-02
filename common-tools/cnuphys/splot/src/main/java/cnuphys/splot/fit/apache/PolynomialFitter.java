@@ -1,6 +1,9 @@
 package cnuphys.splot.fit.apache;
 
 import org.apache.commons.math3.fitting.leastsquares.LevenbergMarquardtOptimizer;
+
+import java.util.Random;
+
 import org.apache.commons.math3.fitting.leastsquares.LeastSquaresOptimizer;
 import org.apache.commons.math3.fitting.leastsquares.MultivariateJacobianFunction;
 import org.apache.commons.math3.fitting.leastsquares.ParameterValidator;
@@ -319,4 +322,51 @@ public final class PolynomialFitter extends AbstractLeastSquaresFitter implement
             }
         }
     }
+    
+    // Example main for testing
+    public static void main(String[] args) {
+    	
+    	Random rand = new Random();
+    	int n = 100;
+    	double dx = 0.1;
+    	
+    	double[] xdata = new double[n];
+    	double[] ydata = new double[n];
+    	double[] edata = new double[n];
+       	double[] weights = new double[n];
+           	
+   	
+    	double m = 1.23;
+    	double b = 1.0;
+    	
+    	for (int i = 0; i < n; i++) {
+			xdata[i] = i * dx;
+			double jitter = 0.05 * rand.nextDouble();
+			ydata[i] = m * xdata[i] + b + jitter;
+			edata[i] = 0.1*Math.abs(ydata[i]);
+			weights[i] = 1.0/(1e-20 + edata[i]*edata[i]);
+		}
+    			
+
+		PolynomialFitter fitter = new PolynomialFitter(1); // Linear fit
+		FitResult result = fitter.fit(xdata, ydata);
+
+		System.out.println("Fitted parameters (no errors):");
+		for (int i = 0; i < result.nParams(); i++) {
+			System.out.printf("c%d = %.4f%n", i, result.param(i));
+		}
+		System.out.println("chiSquare: " + result.chiSquare);
+		System.out.println("chiSquareReduced: " + result.chiSquareReduced);
+		
+		//now with errors
+		FitResult result2 = fitter.fit(xdata, ydata, weights);
+		System.out.println("Fitted parameters (with errors):");
+		for (int i = 0; i < result2.nParams(); i++) {
+			System.out.printf("c%d = %.4f%n", i, result2.param(i));
+		}
+		System.out.println("chiSquare: " + result2.chiSquare);
+		System.out.println("chiSquareReduced: " + result2.chiSquareReduced);
+
+	}
+    
 }

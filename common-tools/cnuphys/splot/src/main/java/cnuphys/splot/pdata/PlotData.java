@@ -7,6 +7,8 @@ import java.util.Objects;
 
 import javax.swing.event.EventListenerList;
 
+import cnuphys.splot.debug.ListenerDebugger;
+
 /**
  * A lightweight, UI-agnostic container for the data backing a plot.
  * <p>
@@ -24,7 +26,7 @@ import javax.swing.event.EventListenerList;
  * </ul>
  *
  * <h3>Threading</h3>
- * {@code PlotData} is not synchronized. If curves are updated from a background sampler (e.g. {@link StripData}),
+ * {@code PlotData} is not synchronized. If curves are updated from a background sampler (e.g. {@link StripChartCurve}),
  * the view should use its existing snapshot/copy strategy when rendering.
  *
  * @author heddle
@@ -59,7 +61,8 @@ public class PlotData implements CurveChangeListener {
 				throw new PlotDataException("Histogram data object " + i + " is null.");
 			}
 			HistoCurve hc = new HistoCurve(hd.name(), hd);
-			addCurveInternal(hc);
+			addCurve(hc);
+
 		}
 	}
 
@@ -69,17 +72,12 @@ public class PlotData implements CurveChangeListener {
 	 * @param stripData the strip chart backing data (non-null)
 	 * @throws PlotDataException if the strip data does not provide a curve
 	 */
-	public PlotData(StripData stripData) throws PlotDataException {
+	public PlotData(StripChartCurve stripData) throws PlotDataException {
 		if (stripData == null) {
 			throw new IllegalArgumentException("StripData object is null.");
 		}
 		type = PlotDataType.STRIP;
-
-		ACurve c = stripData.getCurve();
-		if (c == null) {
-			throw new PlotDataException("StripData.getCurve() returned null.");
-		}
-		addCurveInternal(c);
+		addCurve(stripData);
 	}
 
 	/**
@@ -110,7 +108,7 @@ public class PlotData implements CurveChangeListener {
 				DataColumn yData = new DataColumn(colNames[j + 1]);
 				String name = yData.name();
 				Curve curve = new Curve(name, xData, yData, null);
-				addCurveInternal(curve);
+				addCurve(curve);
 			}
 			break;
 		}
@@ -127,7 +125,7 @@ public class PlotData implements CurveChangeListener {
 				DataColumn eData = new DataColumn(colNames[j + 2]);
 				String name = yData.name();
 				Curve curve = new Curve(name, xData, yData, eData);
-				addCurveInternal(curve);
+				addCurve(curve);
 			}
 			break;
 		}
@@ -159,6 +157,13 @@ public class PlotData implements CurveChangeListener {
 	public ACurve getCurve(int index) {
 		return curves.get(index);
 	}
+	/**
+	 * Determine if this is histogram plot data.
+	 * @return true if histogram plot data
+	 */
+	public boolean isHistogramData() {
+		return (type == PlotDataType.H1D);
+	}
 
 	/**
 	 * Add a curve to this plot model.
@@ -170,37 +175,9 @@ public class PlotData implements CurveChangeListener {
 		Objects.requireNonNull(curve, "curve");
 		boolean added = curves.add(curve);
 		if (added) {
-			hookCurve(curve);
-			notifyListeners();
+			curve.addCurveChangeListener(this);
 		}
 		return added;
-	}
-
-	/**
-	 * Remove a curve from this plot model.
-	 *
-	 * @param curve the curve to remove (non-null)
-	 * @return {@code true} if removed
-	 */
-	public boolean removeCurve(ACurve curve) {
-		Objects.requireNonNull(curve, "curve");
-		boolean removed = curves.remove(curve);
-		if (removed) {
-			unhookCurve(curve);
-			notifyListeners();
-		}
-		return removed;
-	}
-
-	/** Remove all curves from this plot model. */
-	public void clear() {
-		if (!curves.isEmpty()) {
-			for (ACurve c : curves) {
-				unhookCurve(c);
-			}
-			curves.clear();
-			notifyListeners();
-		}
 	}
 
 	/**
@@ -213,46 +190,25 @@ public class PlotData implements CurveChangeListener {
 		}
 		ArrayList<ACurve> matches = new ArrayList<>();
 		for (ACurve c : curves) {
-			if (c != null && name.equals(c.getName())) {
+			if (c != null && name.equals(c.name())) {
 				matches.add(c);
 			}
 		}
 		return matches;
 	}
 
-	/** Internal add that also hooks curve-level listeners. */
-	private void addCurveInternal(ACurve curve) {
-		curves.add(curve);
-		hookCurve(curve);
-	}
-
-	/** Register to receive curve change events so we can forward them to plot listeners. */
-	private void hookCurve(ACurve curve) {
-		if (curve != null) {
-			curve.addCurveChangeListener(this);
-		}
-	}
-
-	/** Unregister from curve change events. */
-	private void unhookCurve(ACurve curve) {
-		if (curve != null) {
-			curve.removeCurveChangeListener(this);
-		}
-	}
-
 	/** Curve-level notification (forwarded to {@link DataChangeListener}s). */
 	@Override
 	public void curveChanged(ACurve curve, CurveChangeType type) {
-		// For now, PlotData listeners only know "something changed".
-		notifyListeners();
+		notifyListeners(curve, type);
 	}
 
 	/** Notify {@link DataChangeListener}s that the plot model changed. */
-	public void notifyListeners() {
+	public void notifyListeners(ACurve curve, CurveChangeType type) {
 		Object[] listeners = listenerList.getListenerList();
 		for (int i = listeners.length - 2; i >= 0; i -= 2) {
 			if (listeners[i] == DataChangeListener.class) {
-				((DataChangeListener) listeners[i + 1]).dataSetChanged(this);
+				((DataChangeListener) listeners[i + 1]).dataSetChanged(this, curve, type);
 			}
 		}
 	}
@@ -270,4 +226,65 @@ public class PlotData implements CurveChangeListener {
 			listenerList.remove(DataChangeListener.class, listener);
 		}
 	}
+	
+	/** @return the minimum x value over all curves. */
+	public double xMin() {
+		if (curves.isEmpty()) {
+			return Double.NaN;
+		}
+		double xmin = Double.POSITIVE_INFINITY;
+		for (ACurve curve : curves) {
+			double cxmin = curve.xMin();
+			if (cxmin < xmin) {
+				xmin = cxmin;
+			}
+		}
+		return xmin;
+	}
+	
+	/** @return the maximum x value over all curves. */
+	public double xMax() {
+		if (curves.isEmpty()) {
+			return Double.NaN;
+		}
+		double xmax = Double.NEGATIVE_INFINITY;
+		for (ACurve curve : curves) {
+			double cxmax = curve.xMax();
+			if (cxmax > xmax) {
+				xmax = cxmax;
+			}
+		}
+		return xmax;
+	}	
+	
+	/** @return the minimum y value over all curves. */
+	public double yMin() {
+		if (curves.isEmpty()) {
+			return Double.NaN;
+		}
+		double ymin = Double.POSITIVE_INFINITY;
+		for (ACurve curve : curves) {
+			double cymin = curve.yMin();
+			if (cymin < ymin) {
+				ymin = cymin;
+			}
+		}
+		return ymin;
+	}
+	
+	/** @return the maximum y value over all curves. */
+	public double yMax() {
+		if (curves.isEmpty()) {
+			return Double.NaN;
+		}
+		double ymax = Double.NEGATIVE_INFINITY;
+		for (ACurve curve : curves) {
+			double cymax = curve.yMax();
+			if (cymax > ymax) {
+				ymax = cymax;
+			}
+		}
+		return ymax;
+	}
+	
 }

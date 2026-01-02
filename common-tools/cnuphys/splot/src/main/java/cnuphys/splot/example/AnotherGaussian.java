@@ -56,7 +56,7 @@ public class AnotherGaussian extends AExample {
 
 	@Override
 	public void fillData() {
-		DataSet ds = _canvas.getDataSet();
+		DataSet ds = _canvas.getPlotData();
 
 		for (int i = 0; i < rawData.length; i += 3) {
 
@@ -72,7 +72,7 @@ public class AnotherGaussian extends AExample {
 
 	@Override
 	public void setPreferences() {
-		DataSet ds = _canvas.getDataSet();
+		DataSet ds = _canvas.getPlotData();
 		Collection<OldDataColumn> ycols = ds.getAllColumnsByType(DataColumnType.Y);
 		for (OldDataColumn dc : ycols) {
 			dc.getFit().setFitType(CurveDrawingMethod.GAUSSIANS);

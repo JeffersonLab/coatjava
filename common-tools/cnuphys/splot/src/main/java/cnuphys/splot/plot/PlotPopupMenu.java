@@ -2,8 +2,6 @@ package cnuphys.splot.plot;
 
 import javax.swing.JPopupMenu;
 
-import cnuphys.splot.plot.old.PlotCanvas;
-
 public class PlotPopupMenu extends JPopupMenu {
 
     // the owner canvas

@@ -13,8 +13,8 @@ import javax.swing.JPanel;
 
 import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.plot.LimitsMethod;
-import cnuphys.splot.plot.old.PlotCanvas;
-import cnuphys.splot.plot.old.PlotParameters;
+import cnuphys.splot.plot.PlotCanvas;
+import cnuphys.splot.plot.PlotParameters;
 import cnuphys.splot.style.EnumComboBox;
 
 public class OneAxisLimitsPanel extends JPanel implements ActionListener {
@@ -62,7 +62,7 @@ public class OneAxisLimitsPanel extends JPanel implements ActionListener {
 	public OneAxisLimitsPanel(PlotCanvas canvas, Axis axis) {
 		_canvas = canvas;
 		_params = _canvas.getParameters();
-		_dataSet = _canvas.getDataSet();
+		_dataSet = _canvas.getPlotData();
 		_axis = axis;
 		setLayout(new BorderLayout(4, 4));
 		

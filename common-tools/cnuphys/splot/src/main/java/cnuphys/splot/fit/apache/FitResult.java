@@ -46,6 +46,20 @@ public final class FitResult {
     /** Evaluations used by an iterative optimizer; may be 0 for closed-form fits. */
     public final int evaluations;
 
+    /**
+	 * Create a fit result.
+	 *
+	 * @param model           optional model identifier (may be null)
+	 * @param params          best-fit parameters
+	 * @param covariance      optional covariance matrix (may be null)
+	 * @param cost            least-squares cost
+	 * @param chiSquare       chi-square
+	 * @param dof             degrees of freedom
+	 * @param chiSquareReduced reduced chi-square
+	 * @param rms             RMS of residuals
+	 * @param iterations      iterations used (0 if not applicable)
+	 * @param evaluations     evaluations used (0 if not applicable)
+	 */
     public FitResult(String model,
                      double[] params,
                      RealMatrix covariance,

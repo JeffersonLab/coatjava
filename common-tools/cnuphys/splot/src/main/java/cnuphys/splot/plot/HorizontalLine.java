@@ -1,7 +1,5 @@
 package cnuphys.splot.plot;
 
-import cnuphys.splot.plot.old.PlotCanvas;
-
 public class HorizontalLine extends PlotLine {
 
 	// the y value of the horizontal line

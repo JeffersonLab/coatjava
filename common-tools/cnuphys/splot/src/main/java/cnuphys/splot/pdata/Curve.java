@@ -19,10 +19,20 @@ import cnuphys.splot.spline.CubicSpline;
  */
 public class Curve extends ACurve {
 
+	// Data columns for x, y, and (optional) e (y error bars)
 	private final DataColumn xData;
 	private final DataColumn yData;
 	private final DataColumn eData;
 
+	/**
+	 * Create a standard XY curve.
+	 *
+	 * @param name  the curve name
+	 * @param xData the x data column
+	 * @param yData the y data column
+	 * @param eData the (optional) y-error data column (may be null)
+	 * @throws PlotDataException if the data columns have inconsistent lengths
+	 */
 	public Curve(String name, DataColumn xData, DataColumn yData, DataColumn eData) throws PlotDataException {
 
 		super(name);
@@ -34,7 +44,9 @@ public class Curve extends ACurve {
 			throw new PlotDataException("Inconsistent data lengths in curve: " + name);
 		}
 	}
-
+	
+	
+	// Check that x, y, (e) data lengths are consistent
 	private boolean consistentData() {
 		int n = xData.size();
 		return yData.size() == n && (eData == null || eData.size() == n);
@@ -45,14 +57,29 @@ public class Curve extends ACurve {
 		return xData.size();
 	}
 
+	/**
+	 * Get the x data column.
+	 *
+	 * @return the x data column
+	 */
 	public DataColumn xData() {
 		return xData;
 	}
 
+	/**
+	 * Get the y data column.
+	 *
+	 * @return the y data column
+	 */
 	public DataColumn yData() {
 		return yData;
 	}
-
+	
+	/**
+	 * Get the (optional) y-error data column.
+	 *
+	 * @return the y-error data column (may be null)
+	 */
 	public DataColumn eData() {
 		return eData;
 	}
@@ -107,6 +134,8 @@ public class Curve extends ACurve {
 			case CUBICSPLINE: {
 				FitVectors v = new FitVectors(xData, yData, eData);
 				if (v != null && v.length() >= 2) {
+					//note a CubicSpline is just an interpolator, no fitting involved
+					//it implements IValurGetter
 					setCubicSpline(new CubicSpline(v.x, v.y));
 				}
 				break;
@@ -142,21 +171,41 @@ public class Curve extends ACurve {
 	// ------------------------------------------------------------
 
 	public void add(double x, double y) {
-		xData.add(x);
-		yData.add(y);
-		if (eData != null) {
-			eData.add(0.0);
+		synchronized (lock) {
+			xData.add(x);
+			yData.add(y);
+			if (eData != null) {
+				eData.add(0.0);
+			}
 		}
 		markDataChanged();
 	}
+	
+	/**
+	 * Obtain a consistent snapshot of the current data, suitable for plotting
+	 * without locking.
+	 *
+	 * @return snapshot containing primitive arrays of x and y data. Those arrays
+	 *         are what should be used for plotting; they are copies of the internal
+	 *         data. This is thread-safe.
+	 *
+	 */
+	public Snapshot snapshot() {
+		synchronized (lock) {
+			return new Snapshot(xData.values(), yData.values());
+		}
+	}
+
 
 	public void add(double x, double y, double ey) {
 		if (eData == null) {
 			throw new IllegalStateException("This curve has no error column (eData is null).");
 		}
-		xData.add(x);
-		yData.add(y);
-		eData.add(ey);
+		synchronized (lock) {
+			xData.add(x);
+			yData.add(y);
+			eData.add(ey);
+		}
 		markDataChanged();
 	}
 
@@ -166,11 +215,14 @@ public class Curve extends ACurve {
 		if (x.length != y.length) {
 			throw new IllegalArgumentException("x and y lengths differ: " + x.length + " vs " + y.length);
 		}
-		for (int i = 0; i < x.length; i++) {
-			xData.add(x[i]);
-			yData.add(y[i]);
-			if (eData != null) {
-				eData.add(0.0);
+		synchronized (lock) {
+
+			for (int i = 0; i < x.length; i++) {
+				xData.add(x[i]);
+				yData.add(y[i]);
+				if (eData != null) {
+					eData.add(0.0);
+				}
 			}
 		}
 		markDataChanged();
@@ -201,5 +253,41 @@ public class Curve extends ACurve {
 			eData.clear();
 		}
 		markDataChanged();
+	}
+
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public double xMin() {
+		return xData == null ? Double.NaN : xData.getMin();
+	}
+
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public double xMax() {
+		return xData == null ? Double.NaN : xData.getMax();
+	}
+
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public double yMin() {
+		return yData == null ? Double.NaN : yData.getMin();
+	}
+
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public double yMax() {
+		return yData == null ? Double.NaN : yData.getMax();
 	}
 }
