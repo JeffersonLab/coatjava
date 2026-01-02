@@ -12,9 +12,10 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
 import cnuphys.splot.fit.IValueGetter;
-import cnuphys.splot.pdata.DataSet;
-import cnuphys.splot.pdata.DataSetException;
+import cnuphys.splot.pdata.PlotDataException;
 import cnuphys.splot.pdata.StripData;
+import cnuphys.splot.plot.old.PlotCanvas;
+import cnuphys.splot.plot.old.PlotParameters;
 import cnuphys.splot.style.SymbolType;
 
 public class StripChartPanel extends JPanel {
@@ -48,7 +49,7 @@ public class StripChartPanel extends JPanel {
 		try {
 			_canvas = new PlotCanvas(createDataSet(), title, xLabel, yLabel);
 		}
-		catch (DataSetException e) {
+		catch (PlotDataException e) {
 			e.printStackTrace();
 			return;
 		}
@@ -181,9 +182,9 @@ public class StripChartPanel extends JPanel {
 	/**
 	 * Create the data set
 	 * @return the data set
-	 * @throws DataSetException
+	 * @throws PlotDataException
 	 */
-	protected DataSet createDataSet() throws DataSetException {
+	protected DataSet createDataSet() throws PlotDataException {
 		StripData sd = new StripData("Data", _capacity, _getter, _interval);
 		return new DataSet(sd, "x", "y");
 	}

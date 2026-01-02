@@ -6,14 +6,14 @@ import org.apache.commons.math3.distribution.NormalDistribution;
 
 import cnuphys.splot.fit.CurveDrawingMethod;
 import cnuphys.splot.pdata.DataSet;
-import cnuphys.splot.pdata.DataSetException;
+import cnuphys.splot.pdata.PlotDataException;
+import cnuphys.splot.plot.old.PlotParameters;
 import cnuphys.splot.pdata.HistoData;
-import cnuphys.splot.plot.PlotParameters;
 
 public class Histo extends AExample {
 
 	@Override
-	protected DataSet createDataSet() throws DataSetException {
+	protected DataSet createDataSet() throws PlotDataException {
 		HistoData h1 = new HistoData("Histo 1", 0.0, 100.0, 50);
 		return new DataSet(h1);
 	}
@@ -51,7 +51,7 @@ public class Histo extends AExample {
 			try {
 				ds.add(y);
 			}
-			catch (DataSetException e) {
+			catch (PlotDataException e) {
 				e.printStackTrace();
 			}
 		}

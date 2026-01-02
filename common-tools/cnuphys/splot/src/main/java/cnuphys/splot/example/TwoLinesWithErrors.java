@@ -6,15 +6,15 @@ import cnuphys.splot.fit.CurveDrawingMethod;
 import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.pdata.DataSet;
-import cnuphys.splot.pdata.DataSetException;
-import cnuphys.splot.pdata.DataSetType;
-import cnuphys.splot.plot.PlotParameters;
+import cnuphys.splot.pdata.PlotDataException;
+import cnuphys.splot.pdata.PlotDataType;
+import cnuphys.splot.plot.old.PlotParameters;
 
 public class TwoLinesWithErrors extends AExample {
 
 	@Override
-	protected DataSet createDataSet() throws DataSetException {
-		return new DataSet(DataSetType.XYEXYE, getColumnNames());
+	protected DataSet createDataSet() throws PlotDataException {
+		return new DataSet(PlotDataType.XYEXYE, getColumnNames());
 	}
 
 	@Override
@@ -51,7 +51,7 @@ public class TwoLinesWithErrors extends AExample {
 					ds.add(i, i + 2 * Math.random(), 2.0 * Math.random());
 				}
 			}
-			catch (DataSetException e) {
+			catch (PlotDataException e) {
 				e.printStackTrace();
 				System.exit(1);
 			}

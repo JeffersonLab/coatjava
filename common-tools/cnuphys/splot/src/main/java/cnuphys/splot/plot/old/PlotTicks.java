@@ -1,4 +1,4 @@
-package cnuphys.splot.plot;
+package cnuphys.splot.plot.old;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -10,6 +10,7 @@ import java.awt.Rectangle;
 import java.awt.geom.Point2D;
 import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.pdata.HistoData;
+import cnuphys.splot.plot.Environment;
 
 public class PlotTicks {
 
@@ -49,7 +50,7 @@ public class PlotTicks {
 	 * @param drawBinVal the value
 	 */
 	public void setDrawBinValue(boolean drawBinVal) {
-		if (_plotCanvas._dataSet.is1DHistoSet()) {
+		if (_plotCanvas._plotData.is1DHistoSet()) {
 			drawBinValue = drawBinVal;
 		}
 	}

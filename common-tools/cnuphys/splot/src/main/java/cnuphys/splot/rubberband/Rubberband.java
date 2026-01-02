@@ -13,7 +13,7 @@ import java.awt.event.MouseMotionAdapter;
 import java.awt.image.BufferedImage;
 
 import cnuphys.splot.plot.GraphicsUtilities;
-import cnuphys.splot.plot.PlotCanvas;
+import cnuphys.splot.plot.old.PlotCanvas;
 
 public final class Rubberband {
 

@@ -5,7 +5,8 @@ import java.awt.Rectangle;
 import java.awt.Shape;
 import java.util.Vector;
 
-import cnuphys.splot.pdata.DataSet;
+import cnuphys.splot.pdata.PlotData;
+import cnuphys.splot.plot.old.PlotCanvas;
 
 public class DataDrawer {
 
@@ -25,11 +26,11 @@ public class DataDrawer {
 	 * Draw a data set on the canvas
 	 * 
 	 * @param g  the graphics context
-	 * @param ds the DataSet to draw.
+	 * @param plotData the PlotData to draw.
 	 */
-	public void draw(Graphics g, DataSet ds) {
+	public void draw(Graphics g, PlotData plotData) {
 
-		if ((ds == null) || ds.getSize() < 1) {
+		if ((plotData == null) || plotData.getSize() < 1) {
 			return;
 		}
 
@@ -56,30 +57,30 @@ public class DataDrawer {
 			}
 		}
 
-		switch (ds.getType()) {
+		switch (plotData.getType()) {
 		case XYEXYE:
-			for (int i = 0; i < ds.getColumnCount() / 3; i++) {
+			for (int i = 0; i < plotData.getColumnCount() / 3; i++) {
 				int j = 3 * i;
-				CurveDrawer.drawCurve(g, _plotCanvas, ds.getColumn(j), ds.getColumn(j + 1), null, ds.getColumn(j + 2));
+				CurveDrawer.drawCurve(g, _plotCanvas, plotData.getColumn(j), plotData.getColumn(j + 1), null, plotData.getColumn(j + 2));
 			}
 			break;
 
 		case H1D:
-			for (int i = 0; i < ds.getColumnCount(); i++) {
-				CurveDrawer.drawHisto1D(g, _plotCanvas, ds.getColumn(i));
+			for (int i = 0; i < plotData.getColumnCount(); i++) {
+				CurveDrawer.drawHisto1D(g, _plotCanvas, plotData.getColumn(i));
 			}
 			break;
 
 
 		case XYXY:
-			for (int i = 0; i < ds.getColumnCount() / 2; i++) {
+			for (int i = 0; i < plotData.getColumnCount() / 2; i++) {
 				int j = 2 * i;
-				CurveDrawer.drawCurve(g, _plotCanvas, ds.getColumn(j), ds.getColumn(j + 1));
+				CurveDrawer.drawCurve(g, _plotCanvas, plotData.getColumn(j), plotData.getColumn(j + 1));
 			}
 			break;
 
 		case STRIP:
-			CurveDrawer.drawCurve(g, _plotCanvas, ds.getColumn(0), ds.getColumn(1));
+			CurveDrawer.drawCurve(g, _plotCanvas, plotData.getColumn(0), plotData.getColumn(1));
 			break;
 
 

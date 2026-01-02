@@ -28,9 +28,9 @@ public final class FitVectors {
 
 	/**
 	 * Optional weights (length n) or null. Convention:
-	 * {@code weights[i] = 1/(sigmaY[i]^2)}.
+	 * {@code w[i] = 1/(sigmaY[i]^2)}.
 	 */
-	public final double[] weights;
+	public final double[] w;
 
 	/**
 	 * Create fit vectors from raw arrays.
@@ -64,7 +64,7 @@ public final class FitVectors {
 	    this.y = y.clone();
 
 	    if (weights == null) {
-	        this.weights = null;
+	        this.w = null;
 	    } else {
 	        double[] w = weights.clone();
 	        // Optional sanitation: keep weights finite and non-negative
@@ -74,7 +74,7 @@ public final class FitVectors {
 	                w[i] = 0.0;
 	            }
 	        }
-	        this.weights = w;
+	        this.w = w;
 	    }
 	}
 
@@ -101,29 +101,29 @@ public final class FitVectors {
 			if (ecol.size() != y.length) {
 				throw new IllegalArgumentException("E (error) column length must match Y length");
 			}
-			this.weights = new double[ecol.size()];
+			this.w = new double[ecol.size()];
 			for (int i = 0; i < ecol.size(); i++) {
 				double e = ecol.get(i);
 				// weights from errors, w = 1/(e^2); invalid/unknown errors => w = 0 (ignore)
 				if (Double.isFinite(e) && e > 0.0) {
-					weights[i] = 1.0 / (e * e);
+					w[i] = 1.0 / (e * e);
 				} else {
-					weights[i] = 0.0;
+					w[i] = 0.0;
 				}
 			}
 		} else {
-			this.weights = null;
+			this.w = null;
 		}
 	}
 
 	/** @return number of points. */
-	public int n() {
+	public int length() {
 		return x.length;
 	}
 
 	/** @return true if weights are present (array is non-null). */
 	public boolean hasWeights() {
-		return weights != null;
+		return w != null;
 	}
 
 	/**
@@ -131,10 +131,10 @@ public final class FitVectors {
 	 *         avoid degenerate weighted problems when all weights are 0.
 	 */
 	public boolean hasAnyPositiveWeight() {
-		if (weights == null) {
+		if (w == null) {
 			return false;
 		}
-		for (double w : weights) {
+		for (double w : w) {
 			if (w > 0.0 && Double.isFinite(w)) {
 				return true;
 			}
@@ -150,7 +150,7 @@ public final class FitVectors {
 	 */
 	public boolean isUsable() {
 		return x != null && y != null && x.length == y.length && x.length >= 2
-				&& (weights == null || weights.length == x.length);
+				&& (w == null || w.length == x.length);
 	}
 	
 	

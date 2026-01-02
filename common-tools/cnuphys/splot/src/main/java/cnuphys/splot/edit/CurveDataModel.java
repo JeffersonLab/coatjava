@@ -109,7 +109,7 @@ public class CurveDataModel extends DefaultTableModel {
 			return curve.isVisible();
 
 		case NAME_COLUMN:
-			return curve.getName();
+			return curve.name();
 		}
 
 		return null;

@@ -5,6 +5,8 @@ import java.awt.Graphics;
 import java.util.Collection;
 import cnuphys.splot.fit.CurveDrawingMethod;
 import cnuphys.splot.pdata.OldDataColumn;
+import cnuphys.splot.plot.old.PlotCanvas;
+import cnuphys.splot.plot.old.PlotParameters;
 import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.style.Styled;
@@ -98,7 +100,7 @@ public class Legend extends DraggableRectangle {
 		int space = spaceNeeded(curve);
 		int yc = y + space / 2;
 
-		String legStr = curve.getName();
+		String legStr = curve.name();
 		if (legStr == null) {
 			legStr = "";
 		}
@@ -142,7 +144,7 @@ public class Legend extends DraggableRectangle {
 					}
 				}
 
-				String legStr = curve.getName();
+				String legStr = curve.name();
 				if (curve.isHistogram1D()) {
 					legStr += (" " + curve.getHistoData().statStr());
 				}

@@ -19,19 +19,19 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import cnuphys.splot.fit.Fit;
-import cnuphys.splot.fit.FitEditorPanel;
 import cnuphys.splot.fit.CurveDrawingMethod;
 import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.pdata.HistoData;
 import cnuphys.splot.plot.CommonBorder;
 import cnuphys.splot.plot.Environment;
-import cnuphys.splot.plot.PlotCanvas;
+import cnuphys.splot.plot.old.PlotCanvas;
 import cnuphys.splot.style.EnumComboBox;
 import cnuphys.splot.style.IStyled;
 import cnuphys.splot.style.LineStyle;
 import cnuphys.splot.style.StyleEditorPanel;
 import cnuphys.splot.style.SymbolType;
+import cnuphys.splot.ui.FitEditorPanel;
 
 /**
  * Used to edit parameters for curves on a plot
@@ -138,7 +138,7 @@ public class CurveEditorPanel extends JPanel implements ActionListener, Property
 					// might be null!
 
 					if (curve != null) {
-						System.err.println("selected curve " + curve.getName());
+						System.err.println("selected curve " + curve.name());
 					}
 					curveChanged(curve);
 				}

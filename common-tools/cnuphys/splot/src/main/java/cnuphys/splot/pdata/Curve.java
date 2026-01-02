@@ -13,145 +13,79 @@ import cnuphys.splot.fit.apache.PolynomialFitter;
 import cnuphys.splot.spline.CubicSpline;
 
 /**
- * A standard XY curve consisting of X, Y, and (optional) E data.
- *
- * <p>
- * This concrete curve supplies the data columns and delegates fitting to
- * Apache-based fitters via {@link IFitter}. All fit state is owned by
- * {@link ACurve}.
- * </p>
+ * A standard XY curve consisting of X, Y, and (optional) E (y-error) data.
  *
  * @author heddle
  */
 public class Curve extends ACurve {
 
-	// X data
 	private final DataColumn xData;
-
-	// Y data
 	private final DataColumn yData;
-
-	// E (Y error bar) data (may be null)
 	private final DataColumn eData;
 
-	/**
-	 * Create a curve with the given data.
-	 *
-	 * @param name  the name of the curve (for the legend)
-	 * @param xData the X data
-	 * @param yData the Y data
-	 * @param eData the E (Y error bar) data (can be null)
-	 * @throws DataSetException if data lengths are inconsistent
-	 */
-	public Curve(String name, DataColumn xData, DataColumn yData, DataColumn eData) throws DataSetException {
+	public Curve(String name, DataColumn xData, DataColumn yData, DataColumn eData) throws PlotDataException {
 
 		super(name);
-		this.xData = Objects.requireNonNull(xData, "X data column is null");
-		this.yData = Objects.requireNonNull(yData, "Y data column is null");
+		this.xData = Objects.requireNonNull(xData, "xData");
+		this.yData = Objects.requireNonNull(yData, "yData");
 		this.eData = eData;
 
 		if (!consistentData()) {
-			throw new DataSetException("Inconsistent data lengths in curve: " + name);
+			throw new PlotDataException("Inconsistent data lengths in curve: " + name);
 		}
 	}
 
-	/** Check data length consistency. */
 	private boolean consistentData() {
 		int n = xData.size();
 		return yData.size() == n && (eData == null || eData.size() == n);
 	}
 
-	/** {@inheritDoc} */
 	@Override
 	public int length() {
 		return xData.size();
 	}
 
-	/** Build fit vectors from the current data columns. */
-	private FitVectors buildFitVectors() {
-		return new FitVectors(xData, yData, eData);
+	public DataColumn xData() {
+		return xData;
 	}
 
-	/**
-	 * Factory for creating a fitter appropriate to the current drawing method.
-	 *
-	 * @param method curve drawing method
-	 * @return a fitter, or {@code null} if the method is not a fit
-	 */
-	private IFitter createFitter(CurveDrawingMethod method) {
-
-		switch (method) {
-
-		case POLYNOMIAL:
-			return new PolynomialFitter(getPolynomialDegree());
-
-		case ERF:
-			return new ErfErfcFitter(ErfErfcFitter.Kind.ERF);
-
-		case GAUSSIAN:
-			return new GaussianFitter();
-
-		case GAUSSIANS:
-			// "order" interpreted as number of Gaussians
-			return new MultiGaussianFitter(Math.max(1, getOrder()), true);
-
-		case HARMONIC:
-			return new HarmonicFitter(true);
-
-		default:
-			return null;
-		}
+	public DataColumn yData() {
+		return yData;
 	}
 
-	/**
-	 * Create a fitter appropriate to the current {@link CurveDrawingMethod} and
-	 * knobs (polynomial degree, order).
-	 *
-	 * <p>
-	 * Returns {@code null} for non-fit drawing methods.
-	 * </p>
-	 */
+	public DataColumn eData() {
+		return eData;
+	}
+
 	@Override
 	protected IFitter createFitterForCurrentMethod() {
 
-		final CurveDrawingMethod method = getCurveDrawingMethod();
-
-		switch (method) {
+		switch (getCurveDrawingMethod()) {
 
 		case POLYNOMIAL:
-			// degree is stored in ACurve
 			return new PolynomialFitter(getPolynomialDegree());
 
 		case ERF:
-			// If you later add ERFC as a separate method, map it here
 			return new ErfErfcFitter(ErfErfcFitter.Kind.ERF);
 
 		case GAUSSIAN:
 			return new GaussianFitter();
 
 		case GAUSSIANS:
-			// "order" interpreted as number of gaussians
+			// "order" interpreted as number of Gaussians. (Constructor: (count, includeBaseline))
 			return new MultiGaussianFitter(Math.max(1, getOrder()), true);
 
 		case HARMONIC:
-			// If your HarmonicFitter has more knobs (omega scan steps, etc.),
-			// wire them here using getOrder() or a dedicated getter.
+			// HarmonicFitter constructors don't take an order. Use offset form as default.
 			return new HarmonicFitter(true);
 
 		default:
-			// NONE, CONNECT, STAIRS, CUBICSPLINE, etc.
 			return null;
 		}
 	}
 
-	/**
-	 * Perform a curve computation (fit or spline) depending on the
-	 * {@link CurveDrawingMethod}.
-	 *
-	 * @param force {@code true} to force recomputation even if not dirty
-	 */
 	@Override
-	public void doCurveFit(boolean force) {
+	public void doFit(boolean force) {
 
 		if (!force && !isDirty()) {
 			return;
@@ -160,57 +94,112 @@ public class Curve extends ACurve {
 		try {
 			final CurveDrawingMethod method = getCurveDrawingMethod();
 
-			// Always clear stale artifacts first
+			// Clear stale artifacts first (fitResult, fitValueGetter, spline, etc.)
 			clearComputedArtifacts();
 
 			switch (method) {
 
-			// Pure drawing modes: nothing to compute
 			case NONE:
 			case CONNECT:
 			case STAIRS:
 				break;
 
-			case CUBICSPLINE:
-				if (length() >= 2) {
-					setCubicSpline(new CubicSpline(xData.values(), yData.values()));
+			case CUBICSPLINE: {
+				FitVectors v = new FitVectors(xData, yData, eData);
+				if (v != null && v.length() >= 2) {
+					setCubicSpline(new CubicSpline(v.x, v.y));
 				}
 				break;
+			}
 
-			// All fit-based modes
 			case POLYNOMIAL:
 			case ERF:
-			case GAUSSIANS:
-			case HARMONIC:
 			case GAUSSIAN:
+			case GAUSSIANS:
+			case HARMONIC: {
 				IFitter fitter = createFitterForCurrentMethod();
 				if (fitter != null) {
 					FitVectors v = new FitVectors(xData, yData, eData);
-					setFitResult(fitWithOptionalWeights(fitter, v));
+					FitResult fr = fitWithOptionalWeights(fitter, v);
+					setFitArtifacts(fr, (fr == null) ? null : fitter.asValueGetter(fr));
 				}
 				break;
-
 			}
+
+			default:
+				break;
+			}
+
 		} catch (Exception e) {
-			// Fail soft: leave fit artifacts null
-			clearComputedArtifacts();
+			// Fail soft: artifacts already cleared by clearComputedArtifacts()
 		} finally {
 			setDirty(false);
 		}
 	}
 
-	/** @return the X data column. */
-	public DataColumn xData() {
-		return xData;
+	// ------------------------------------------------------------
+	// Data append helpers
+	// ------------------------------------------------------------
+
+	public void add(double x, double y) {
+		xData.add(x);
+		yData.add(y);
+		if (eData != null) {
+			eData.add(0.0);
+		}
+		markDataChanged();
 	}
 
-	/** @return the Y data column. */
-	public DataColumn yData() {
-		return yData;
+	public void add(double x, double y, double ey) {
+		if (eData == null) {
+			throw new IllegalStateException("This curve has no error column (eData is null).");
+		}
+		xData.add(x);
+		yData.add(y);
+		eData.add(ey);
+		markDataChanged();
 	}
 
-	/** @return the E (Y error bar) column, or null. */
-	public DataColumn eData() {
-		return eData;
+	public void addAll(double[] x, double[] y) {
+		Objects.requireNonNull(x, "x");
+		Objects.requireNonNull(y, "y");
+		if (x.length != y.length) {
+			throw new IllegalArgumentException("x and y lengths differ: " + x.length + " vs " + y.length);
+		}
+		for (int i = 0; i < x.length; i++) {
+			xData.add(x[i]);
+			yData.add(y[i]);
+			if (eData != null) {
+				eData.add(0.0);
+			}
+		}
+		markDataChanged();
+	}
+
+	public void addAll(double[] x, double[] y, double[] ey) {
+		if (eData == null) {
+			throw new IllegalStateException("This curve has no error column (eData is null).");
+		}
+		Objects.requireNonNull(x, "x");
+		Objects.requireNonNull(y, "y");
+		Objects.requireNonNull(ey, "ey");
+		if (x.length != y.length || x.length != ey.length) {
+			throw new IllegalArgumentException("lengths differ: x=" + x.length + " y=" + y.length + " ey=" + ey.length);
+		}
+		for (int i = 0; i < x.length; i++) {
+			xData.add(x[i]);
+			yData.add(y[i]);
+			eData.add(ey[i]);
+		}
+		markDataChanged();
+	}
+
+	public void clearData() {
+		xData.clear();
+		yData.clear();
+		if (eData != null) {
+			eData.clear();
+		}
+		markDataChanged();
 	}
 }

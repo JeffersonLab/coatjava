@@ -1,4 +1,4 @@
-package cnuphys.splot.plot;
+package cnuphys.splot.plot.old;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -31,15 +31,13 @@ import javax.swing.Timer;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import cnuphys.splot.edit.DataEditor;
 import cnuphys.splot.edit.PlotPreferencesDialog;
 import cnuphys.splot.pdata.DataChangeListener;
-import cnuphys.splot.pdata.OldDataColumn;
-import cnuphys.splot.pdata.DataSet;
-import cnuphys.splot.pdata.DataSetException;
-import cnuphys.splot.pdata.DataSetType;
+import cnuphys.splot.pdata.PlotDataException;
+import cnuphys.splot.pdata.PlotDataType;
+import cnuphys.splot.plot.NiceScale;
 import cnuphys.splot.pdata.HistoData;
-import cnuphys.splot.pdata.NiceScale;
+import cnuphys.splot.pdata.PlotData;
 import cnuphys.splot.rubberband.IRubberbanded;
 import cnuphys.splot.rubberband.Rubberband;
 import cnuphys.splot.toolbar.CommonToolBar;
@@ -47,8 +45,9 @@ import cnuphys.splot.toolbar.IToolBarListener;
 import cnuphys.splot.toolbar.ToolBarButton;
 import cnuphys.splot.toolbar.ToolBarToggleButton;
 
+@SuppressWarnings("serial")
 public class PlotCanvas extends JComponent
-		implements MouseListener, MouseMotionListener, IRubberbanded, IToolBarListener, TableModelListener, DataChangeListener {
+		implements MouseListener, MouseMotionListener, IRubberbanded, IToolBarListener, DataChangeListener {
 
 	public static final String DONEDRAWINGPROP = "Done Drawing";
 	public static final String TITLECHANGEPROP = "Plot Title Change";
@@ -81,7 +80,7 @@ public class PlotCanvas extends JComponent
 	protected AffineTransform _worldToLocal;
 
 	// dataset being plotted
-	protected DataSet _dataSet;
+	protected PlotData _plotData;
 
 	// plot parameters
 	protected PlotParameters _parameters;
@@ -125,7 +124,7 @@ public class PlotCanvas extends JComponent
 	 * @param xLabel    the x axis label
 	 * @param yLabel    the y axis label
 	 */
-	public PlotCanvas(DataSet dataSet, String plotTitle, String xLabel, String yLabel) {
+	public PlotCanvas(PlotData dataSet, String plotTitle, String xLabel, String yLabel) {
 		
 		if (_dataFilePath == null) {
 			_dataFilePath = Environment.getInstance().getHomeDirectory();
@@ -141,9 +140,9 @@ public class PlotCanvas extends JComponent
 		// default to xy plot no errors
 		if (dataSet == null) {
 			try {
-				dataSet = new DataSet(DataSetType.XYXY, "X", "Y");
+				dataSet = new PlotData(PlotDataType.XYXY, "X", "Y");
 			}
-			catch (DataSetException e) {
+			catch (PlotDataException e) {
 				e.printStackTrace();
 			}
 		}
@@ -164,9 +163,6 @@ public class PlotCanvas extends JComponent
 		_plotPopup = new PlotPopupMenu(this);
 		setComponentPopupMenu(_plotPopup);
 
-		if (dataSet != null) {
-			dataSet.addTableModelListener(this);
-		}
 
 		addComponentListener(componentAdapter);
 		addMouseListener(this);
@@ -196,8 +192,8 @@ public class PlotCanvas extends JComponent
 	 * 
 	 * @return the data set type
 	 */
-	public DataSetType getType() {
-		return _dataSet.getType();
+	public PlotDataType getType() {
+		return _plotData.getType();
 	}
 
 	/**
@@ -232,18 +228,17 @@ public class PlotCanvas extends JComponent
 	 * 
 	 * @param ds the new dataset
 	 */
-	public void setDataSet(DataSet ds) {
+	public void setDataSet(PlotData ds) {
 
-		_dataSet = ds;
+		_plotData = ds;
 		
 		ds.removeDataChangeListener(this);
 		ds.addDataChangeListener(this);
 
 		
-		if (_dataSet != null) {
-			_dataSet.notifyListeners();
+		if (_plotData != null) {
+			_plotData.notifyListeners();
 		}
-//		setWorldSystem();
 		repaint();
 	}
 
@@ -252,8 +247,8 @@ public class PlotCanvas extends JComponent
 	 * 
 	 * @return the underlying dataset
 	 */
-	public DataSet getDataSet() {
-		return _dataSet;
+	public PlotData getDataSet() {
+		return _plotData;
 	}
 
 	/**
@@ -276,19 +271,19 @@ public class PlotCanvas extends JComponent
 		}
 
 		// watch for no dataset
-		if (_dataSet == null) {
+		if (_plotData == null) {
 			_worldSystem.setFrame(0, 0, 1, 1);
 			return;
 		}
 
-		double xmin = _dataSet.getXmin();
+		double xmin = _plotData.getXmin();
 		if (Double.isNaN(xmin)) {
 			return;
 		}
 
-		double xmax = _dataSet.getXmax();
-		double ymin = _dataSet.getYmin();
-		double ymax = _dataSet.getYmax();
+		double xmax = _plotData.getXmax();
+		double ymin = _plotData.getYmin();
+		double ymax = _plotData.getYmax();
 
 		PlotParameters params = getParameters();
 		
@@ -348,7 +343,7 @@ public class PlotCanvas extends JComponent
 		setAffineTransforms();
 
 		// draw the data
-		_dataDrawer.draw(g, _dataSet);
+		_dataDrawer.draw(g, _plotData);
 
 		// frame the active area
 		g.setColor(Color.black);
@@ -498,7 +493,7 @@ public class PlotCanvas extends JComponent
 	public void mouseMoved(MouseEvent e) {
 
 		// System.err.println("Plot Canvas MMoved");
-		if (_dataSet == null) {
+		if (_plotData == null) {
 			return;
 		}
 
@@ -515,10 +510,10 @@ public class PlotCanvas extends JComponent
 			// pp.x -= _activeBounds.x;
 			// pp.y -= _activeBounds.y;
 			localToWorld(pp, _workPoint);
-			_locationString = String.format("<html>(x, y) = (%7.2g, %-7.2g)<br>count = %d", _workPoint.x, _workPoint.y, _dataSet.size());
+			_locationString = String.format("<html>(x, y) = (%7.2g, %-7.2g)<br>count = %d", _workPoint.x, _workPoint.y, _plotData.size());
 
-			if (_dataSet.is1DHistoSet()) {
-				Vector<OldDataColumn> ycols = (Vector<OldDataColumn>) _dataSet.getAllVisibleCurves();
+			if (_plotData.is1DHistoSet()) {
+				Vector<OldDataColumn> ycols = (Vector<OldDataColumn>) _plotData.getAllVisibleCurves();
 				int size = ycols.size();
 
 				for (int i = 0; i < size; i++) {
@@ -939,15 +934,6 @@ public class PlotCanvas extends JComponent
 		PlotPreferencesDialog prefEditor = new PlotPreferencesDialog(this);
 		prefEditor.setVisible(true);
 		prefEditor.toFront();
-	}
-
-	/**
-	 * Show the data editor
-	 */
-	public void showDataEditor() {
-		DataEditor dataEditor = new DataEditor(this);
-		dataEditor.setVisible(true);
-		dataEditor.toFront();
 	}
 
 	/**

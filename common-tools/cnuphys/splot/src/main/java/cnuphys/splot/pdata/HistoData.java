@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.Objects;
 
 import cnuphys.splot.plot.DoubleFormat;
-import cnuphys.splot.plot.PlotCanvas;
-import cnuphys.splot.plot.PlotParameters;
 import cnuphys.splot.plot.UnicodeSupport;
+import cnuphys.splot.plot.old.PlotCanvas;
+import cnuphys.splot.plot.old.PlotParameters;
 
 /**
  * Container class for 1D histogram data.
@@ -89,7 +89,7 @@ public class HistoData {
     }
 
     /** @return the name of the histogram. */
-    public String getName() {
+    public String name() {
         return name;
     }
 
@@ -1001,7 +1001,7 @@ public class HistoData {
             String minstr = DoubleFormat.doubleFormat(histo.getBinMinX(bin), params.getNumDecimalX(), params.getMinExponentX());
             String maxstr = DoubleFormat.doubleFormat(histo.getBinMaxX(bin), params.getNumDecimalX(), params.getMinExponentX());
 
-            String name = histo.getName();
+            String name = histo.name();
             if (name != null && !name.isEmpty()) {
                 name = "[" + name + "]";
             } else {

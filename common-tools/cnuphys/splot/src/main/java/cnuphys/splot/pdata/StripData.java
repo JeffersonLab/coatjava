@@ -8,36 +8,23 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 import cnuphys.splot.fit.IValueGetter;
+import cnuphys.splot.fit.CurveDrawingMethod;
 
 /**
  * Backing data model for a strip chart / time-series plot.
  *
  * <p>This class periodically samples a provided {@link IValueGetter} and appends
  * (t, y) points into bounded X and Y columns. When capacity is reached, the oldest
- * samples are dropped ("scrolls off the left").</p>
+ * points are discarded.</p>
  *
- * <h3>Threading</h3>
- * <p>Sampling runs on a background thread. The data columns are mutated under an
- * internal lock. Plotters should use {@link #snapshot()} to obtain a consistent
- * copy of the data for drawing without needing to synchronize on the model.</p>
- *
- * <p>If your plot is Swing-based and you want repaint on the EDT, provide an
- * {@link #setOnSample(Runnable)} callback that posts a repaint using
- * {@code SwingUtilities.invokeLater(...)}.</p>
+ * @author heddle
  */
 public class StripData {
 
-    /** Name (often used for legend / series label). */
     private final String name;
-
-    /** Maximum number of samples retained. Must be >= 2. */
-    private int capacity;
-
-    /** Produces the next value given time in seconds. */
-    private final IValueGetter valueGetter;
-
-    /** Sampling period in milliseconds. Must be > 0. */
-    private long intervalMs;
+    private volatile int capacity;
+    private volatile IValueGetter valueGetter;
+    private volatile long intervalMs;
 
     /** Time when sampling started (ms since epoch). */
     private volatile long startTimeMs;
@@ -48,6 +35,9 @@ public class StripData {
     /** Series data columns. Mutated under {@link #lock}. */
     private final DataColumn xData;
     private final DataColumn yData;
+
+    /** Lazily-created curve view over the live x/y columns. */
+    private volatile Curve curve;
 
     /** Synchronizes mutations and snapshots. */
     private final Object lock = new Object();
@@ -60,32 +50,30 @@ public class StripData {
     private ScheduledFuture<?> future;
 
     /**
-     * Create strip-chart data.
+     * Create strip chart (time series) data.
      *
-     * @param name        series name
-     * @param xData       x data column to fill (non-null)
-     * @param yData       y data column to fill (non-null)
-     * @param capacity    max number of retained samples (>= 2)
-     * @param valueGetter value source; called as {@code valueGetter.value(tSeconds)} (non-null)
-     * @param intervalMs  update interval in milliseconds (> 0)
+     * @param name curve/series name
+     * @param capacity max samples retained (must be >= 2)
+     * @param valueGetter supplier of y(t) values (may be null if externally driven)
+     * @param intervalMs sampling interval in milliseconds
      */
-    public StripData(String name,
-                     DataColumn xData,
-                     DataColumn yData,
-                     int capacity,
-                     IValueGetter valueGetter,
-                     long intervalMs) {
-
+    public StripData(String name, int capacity, IValueGetter valueGetter, long intervalMs) {
         this.name = Objects.requireNonNull(name, "name");
-        this.xData = Objects.requireNonNull(xData, "xData");
-        this.yData = Objects.requireNonNull(yData, "yData");
-        this.valueGetter = Objects.requireNonNull(valueGetter, "valueGetter");
-
         setCapacity(capacity);
-        setIntervalMs(intervalMs);
+        this.valueGetter = valueGetter;
+        this.intervalMs = Math.max(1, intervalMs);
 
-        // Dedicated single-thread scheduler, daemon thread so app can exit cleanly.
-        this.scheduler = Executors.newSingleThreadScheduledExecutor(new DaemonThreadFactory("StripData-" + name));
+        this.xData = new DataColumn("t");
+        this.yData = new DataColumn(name);
+
+        this.scheduler = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+            @Override
+            public Thread newThread(Runnable r) {
+                Thread t = new Thread(r, "StripData-" + name);
+                t.setDaemon(true);
+                return t;
+            }
+        });
     }
 
     /** @return the series name. */
@@ -103,14 +91,42 @@ public class StripData {
         return yData;
     }
 
+    /**
+     * Get an {@link ACurve} view over this strip chart's live (x,y) columns.
+     * <p>
+     * The returned curve is backed directly by the internal {@link DataColumn}s. Do not replace those
+     * columns; instead, append samples via {@link #addSample(double, double)} or the sampler.
+     * </p>
+     *
+     * @return a live {@link Curve} view of this strip data (never null)
+     */
+    public Curve getCurve() {
+        Curve c = curve;
+        if (c != null) {
+            return c;
+        }
+        synchronized (lock) {
+            if (curve == null) {
+                try {
+                    curve = new Curve(name, xData, yData, null);
+                    // A reasonable default for strip charts; callers may override.
+                    curve.setCurveDrawingMethod(CurveDrawingMethod.STAIRS);
+                } catch (PlotDataException e) {
+                    // Should not happen because x/y are maintained consistently under lock.
+                    throw new IllegalStateException("Failed to create strip chart Curve for " + name, e);
+                }
+            }
+            return curve;
+        }
+    }
+
     /** @return current capacity (max samples retained). */
     public int getCapacity() {
         return capacity;
     }
 
     /**
-     * Set the capacity (max samples retained). If the current size exceeds the new capacity,
-     * oldest samples are dropped immediately.
+     * Set capacity (max retained samples).
      *
      * @param capacity must be >= 2
      */
@@ -132,56 +148,52 @@ public class StripData {
     }
 
     /**
-     * Set the sampling interval. If currently running, restarts the schedule.
+     * Set sampling interval.
      *
-     * @param intervalMs must be > 0
+     * @param intervalMs milliseconds (coerced to >= 1)
      */
     public void setIntervalMs(long intervalMs) {
-        if (intervalMs <= 0) {
-            throw new IllegalArgumentException("intervalMs must be > 0");
-        }
-        this.intervalMs = intervalMs;
-
-        // If running, restart to apply the new period.
+        this.intervalMs = Math.max(1, intervalMs);
         if (running) {
-            stop();
-            start();
+            restart();
         }
     }
 
+    /** @return the value getter (may be null). */
+    public IValueGetter getValueGetter() {
+        return valueGetter;
+    }
+
+    /** Set the value getter (may be null for externally driven strip data). */
+    public void setValueGetter(IValueGetter valueGetter) {
+        this.valueGetter = valueGetter;
+    }
+
     /**
-     * Set an optional callback invoked after each appended sample.
-     * Typical usage in Swing: {@code setOnSample(() -> SwingUtilities.invokeLater(panel::repaint));}
+     * Set a callback to run after a sample is appended (e.g., request repaint).
      *
-     * @param onSample callback or null
+     * @param onSample callback, may be null
      */
     public void setOnSample(Runnable onSample) {
         this.onSample = onSample;
     }
 
-    /** @return true if actively sampling. */
+    /** @return true if sampling is active. */
     public boolean isRunning() {
         return running;
     }
 
-    /**
-     * Start sampling. Safe to call multiple times; subsequent calls do nothing if already running.
-     */
+    /** Start periodic sampling. No-op if already running. */
     public void start() {
         if (running) {
             return;
         }
         running = true;
         startTimeMs = System.currentTimeMillis();
-
-        future = scheduler.scheduleAtFixedRate(this::sampleOnceSafe, intervalMs, intervalMs, TimeUnit.MILLISECONDS);
+        schedule();
     }
 
-    /**
-     * Stop sampling. Safe to call multiple times.
-     *
-     * <p>This cancels the scheduled task but keeps the scheduler alive so you can {@link #start()} again.</p>
-     */
+    /** Stop periodic sampling. No-op if not running. */
     public void stop() {
         running = false;
         if (future != null) {
@@ -190,22 +202,84 @@ public class StripData {
         }
     }
 
-    /**
-     * Permanently shut down this StripData (cannot be restarted).
-     * Use when the owning plot is being disposed.
-     */
-    public void shutdown() {
+    /** Restart sampling with current interval. */
+    private void restart() {
         stop();
-        scheduler.shutdownNow();
+        start();
+    }
+
+    /** Schedule periodic sampling task. */
+    private void schedule() {
+        if (future != null) {
+            future.cancel(false);
+        }
+        future = scheduler.scheduleAtFixedRate(() -> sampleOnce(), 0, intervalMs, TimeUnit.MILLISECONDS);
+    }
+
+    /** Sample once from the value getter. */
+    private void sampleOnce() {
+        IValueGetter vg = valueGetter;
+        if (!running || vg == null) {
+            return;
+        }
+
+        long nowMs = System.currentTimeMillis();
+        double tSeconds = (nowMs - startTimeMs) / 1000.0;
+        double y = vg.value(tSeconds);
+
+        addSample(tSeconds, y);
     }
 
     /**
-     * Clear all retained samples.
+     * Snapshot the current data into primitive arrays for drawing without holding locks.
+     *
+     * @return snapshot with x and y arrays
      */
-    public void clear() {
+    public Snapshot snapshot() {
         synchronized (lock) {
-            xData.clear();
-            yData.clear();
+            int n = xData.size();
+            double[] x = new double[n];
+            double[] y = new double[n];
+            for (int i = 0; i < n; i++) {
+                x[i] = xData.get(i);
+                y[i] = yData.get(i);
+            }
+            return new Snapshot(x, y);
+        }
+    }
+
+    /** Holds a snapshot of x/y data. */
+    public static final class Snapshot {
+        public final double[] x;
+        public final double[] y;
+        Snapshot(double[] x, double[] y) {
+            this.x = x;
+            this.y = y;
+        }
+        public int length() { return x.length; }
+    }
+
+    /** Trim oldest points until size <= capacity. Call under lock. */
+    private void trimToCapacityLocked() {
+        int over = xData.size() - capacity;
+        for (int i = 0; i < over; i++) {
+            xData.remove(0);
+            yData.remove(0);
+        }
+    }
+
+    /** Clear all data. */
+    public void clear() {
+        Curve c = getCurve();
+        c.beginUpdate();
+        try {
+            synchronized (lock) {
+                xData.clear();
+                yData.clear();
+            }
+            c.dataChanged();
+        } finally {
+            c.endUpdate();
         }
     }
 
@@ -217,110 +291,29 @@ public class StripData {
      * @param y value
      */
     public void addSample(double tSeconds, double y) {
-        synchronized (lock) {
-            trimOneIfFullLocked();
-            xData.add(tSeconds);
-            yData.add(y);
-        }
-        fireOnSample();
-    }
-
-    /**
-     * Obtain a consistent snapshot of the current data, suitable for plotting without locking.
-     *
-     * @return snapshot containing primitive arrays
-     */
-    public Snapshot snapshot() {
-        synchronized (lock) {
-            return new Snapshot(xData.values(), yData.values());
-        }
-    }
-
-    // ------------------------ Internals ------------------------
-
-    private void sampleOnceSafe() {
+        // Ensure curve exists so that listeners (via PlotData) can be notified.
+        Curve c = getCurve();
+        c.beginUpdate();
         try {
-            if (!running) {
-                return;
-            }
-            double tSeconds = (System.currentTimeMillis() - startTimeMs) / 1000.0;
-            double y = valueGetter.value(tSeconds);
-
             synchronized (lock) {
-                trimOneIfFullLocked();
-                xData.add(tSeconds);
-                yData.add(y);
+                xData.add(Double.valueOf(tSeconds));
+                yData.add(Double.valueOf(y));
+                trimToCapacityLocked();
             }
-
-            fireOnSample();
+            c.dataChanged();
+        } finally {
+            c.endUpdate();
         }
-        catch (Throwable t) {
-            // Fail soft: stop sampling on unexpected exceptions to avoid runaway logs.
-            stop();
-        }
-    }
 
-    private void fireOnSample() {
         Runnable r = onSample;
         if (r != null) {
-            try {
-                r.run();
-            } catch (Throwable ignored) {
-                // fail soft
-            }
+            r.run();
         }
     }
 
-    private void trimOneIfFullLocked() {
-        while (xData.size() >= capacity) {
-            // DataColumn extends DataList extends ArrayList, so "remove(0)" is available.
-            // This is O(n), but capacity is typically small; if you need huge series,
-            // we can swap in a ring buffer.
-            xData.remove(0);
-            yData.remove(0);
-        }
-    }
-
-    private void trimToCapacityLocked() {
-        while (xData.size() > capacity) {
-            xData.remove(0);
-            yData.remove(0);
-        }
-    }
-
-    /**
-     * Immutable snapshot of strip data.
-     */
-    public static final class Snapshot {
-        public final double[] x;
-        public final double[] y;
-
-        private Snapshot(double[] x, double[] y) {
-            this.x = x;
-            this.y = y;
-        }
-
-        public int length() {
-            return x.length;
-        }
-    }
-
-    /**
-     * Simple daemon thread factory for the sampler thread.
-     */
-    private static final class DaemonThreadFactory implements ThreadFactory {
-        private final String baseName;
-
-        private DaemonThreadFactory(String baseName) {
-            this.baseName = baseName;
-        }
-
-        @Override
-        public Thread newThread(Runnable r) {
-            Thread t = new Thread(r, baseName);
-            t.setDaemon(true);
-            t.setPriority(Thread.NORM_PRIORITY);
-            return t;
-        }
+    /** Shutdown scheduler when done with this instance. */
+    public void shutdown() {
+        stop();
+        scheduler.shutdownNow();
     }
 }

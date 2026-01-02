@@ -6,8 +6,8 @@ import cnuphys.splot.fit.CurveDrawingMethod;
 import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.pdata.DataSet;
-import cnuphys.splot.pdata.DataSetException;
-import cnuphys.splot.pdata.DataSetType;
+import cnuphys.splot.pdata.PlotDataException;
+import cnuphys.splot.pdata.PlotDataType;
 
 public class AnotherGaussian extends AExample {
 
@@ -29,8 +29,8 @@ public class AnotherGaussian extends AExample {
 			0.000000, 0.000000, 32800.000000, 0.000000, 0.000000 };
 
 	@Override
-	protected DataSet createDataSet() throws DataSetException {
-		return new DataSet(DataSetType.XYEXYE, getColumnNames());
+	protected DataSet createDataSet() throws PlotDataException {
+		return new DataSet(PlotDataType.XYEXYE, getColumnNames());
 	}
 
 	@Override
@@ -63,7 +63,7 @@ public class AnotherGaussian extends AExample {
 			try {
 				ds.add(rawData[i], rawData[i + 1], rawData[i + 2]);
 			}
-			catch (DataSetException e) {
+			catch (PlotDataException e) {
 				e.printStackTrace();
 				System.exit(1);
 			}

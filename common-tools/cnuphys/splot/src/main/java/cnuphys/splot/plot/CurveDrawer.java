@@ -12,9 +12,7 @@ import java.awt.geom.Point2D;
 
 import cnuphys.splot.fit.CurveDrawingMethod;
 import cnuphys.splot.fit.IValueGetter;
-import cnuphys.splot.pdata.OldDataColumn;
-import cnuphys.splot.pdata.DataSet;
-import cnuphys.splot.pdata.HistoData;
+import cnuphys.splot.plot.old.PlotCanvas;
 import cnuphys.splot.spline.CubicSpline;
 import cnuphys.splot.style.IStyled;
 import cnuphys.splot.style.Styled;

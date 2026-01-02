@@ -1,8 +1,12 @@
-package cnuphys.splot.plot;
+package cnuphys.splot.plot.old;
 
 import java.awt.Color;
 import java.awt.Font;
 import java.util.Vector;
+
+import cnuphys.splot.plot.Environment;
+import cnuphys.splot.plot.LimitsMethod;
+import cnuphys.splot.plot.PlotLine;
 
 public class PlotParameters {
 	

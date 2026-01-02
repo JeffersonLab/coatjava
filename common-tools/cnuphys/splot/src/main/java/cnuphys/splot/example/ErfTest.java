@@ -7,10 +7,10 @@ import cnuphys.splot.fit.CurveDrawingMethod;
 import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.pdata.DataSet;
-import cnuphys.splot.pdata.DataSetException;
-import cnuphys.splot.pdata.DataSetType;
+import cnuphys.splot.pdata.PlotDataException;
+import cnuphys.splot.pdata.PlotDataType;
 import cnuphys.splot.plot.HorizontalLine;
-import cnuphys.splot.plot.PlotParameters;
+import cnuphys.splot.plot.old.PlotParameters;
 
 public class ErfTest extends AExample {
 
@@ -45,8 +45,8 @@ public class ErfTest extends AExample {
 			0, };
 
 	@Override
-	protected DataSet createDataSet() throws DataSetException {
-		return new DataSet(DataSetType.XYEXYE, getColumnNames());
+	protected DataSet createDataSet() throws PlotDataException {
+		return new DataSet(PlotDataType.XYEXYE, getColumnNames());
 	}
 
 	@Override
@@ -77,7 +77,7 @@ public class ErfTest extends AExample {
 			try {
 				ds.add(_rawdata[i], _rawdata[i + 1], _rawdata[i + 2]);
 			}
-			catch (DataSetException e) {
+			catch (PlotDataException e) {
 				e.printStackTrace();
 				System.exit(1);
 			}

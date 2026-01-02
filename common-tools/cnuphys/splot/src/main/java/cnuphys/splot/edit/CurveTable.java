@@ -21,7 +21,7 @@ import javax.swing.table.TableColumn;
 import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.plot.Environment;
-import cnuphys.splot.plot.PlotCanvas;
+import cnuphys.splot.plot.old.PlotCanvas;
 
 public class CurveTable extends JTable {
 

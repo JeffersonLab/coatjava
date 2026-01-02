@@ -4,6 +4,9 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Rectangle;
 
+import cnuphys.splot.plot.old.PlotCanvas;
+import cnuphys.splot.plot.old.PlotParameters;
+
 /**
  * A legend like rectangle for extra text
  * 

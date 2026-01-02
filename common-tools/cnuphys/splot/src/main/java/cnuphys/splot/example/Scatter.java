@@ -7,18 +7,18 @@ import cnuphys.splot.fit.CurveDrawingMethod;
 import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.pdata.DataSet;
-import cnuphys.splot.pdata.DataSetException;
-import cnuphys.splot.pdata.DataSetType;
+import cnuphys.splot.pdata.PlotDataException;
+import cnuphys.splot.pdata.PlotDataType;
 import cnuphys.splot.plot.HorizontalLine;
-import cnuphys.splot.plot.PlotParameters;
 import cnuphys.splot.plot.VerticalLine;
+import cnuphys.splot.plot.old.PlotParameters;
 import cnuphys.splot.style.SymbolType;
 
 public class Scatter extends AExample {
 
 	@Override
-	protected DataSet createDataSet() throws DataSetException {
-		return new DataSet(DataSetType.XYXY, getColumnNames());
+	protected DataSet createDataSet() throws PlotDataException {
+		return new DataSet(PlotDataType.XYXY, getColumnNames());
 	}
 
 	@Override
@@ -53,7 +53,7 @@ public class Scatter extends AExample {
 			try {
 				ds.add(x, y);
 			}
-			catch (DataSetException e) {
+			catch (PlotDataException e) {
 				e.printStackTrace();
 			}
 		}

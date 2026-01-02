@@ -7,15 +7,15 @@ import org.apache.commons.math3.distribution.NormalDistribution;
 
 import cnuphys.splot.fit.CurveDrawingMethod;
 import cnuphys.splot.pdata.DataSet;
-import cnuphys.splot.pdata.DataSetException;
-import cnuphys.splot.pdata.DataSetType;
-import cnuphys.splot.plot.PlotParameters;
+import cnuphys.splot.pdata.PlotDataException;
+import cnuphys.splot.pdata.PlotDataType;
+import cnuphys.splot.plot.old.PlotParameters;
 
 public class Gaussian extends AExample {
 
 	@Override
-	protected DataSet createDataSet() throws DataSetException {
-		return new DataSet(DataSetType.XYEXYE, getColumnNames());
+	protected DataSet createDataSet() throws PlotDataException {
+		return new DataSet(PlotDataType.XYEXYE, getColumnNames());
 	}
 
 	@Override
@@ -54,7 +54,7 @@ public class Gaussian extends AExample {
 			double e = 0.2*rand.nextDouble();
 		    try {
 				ds.add(x, y, e);
-			} catch (DataSetException e1) {
+			} catch (PlotDataException e1) {
 				e1.printStackTrace();
 			}
 		}

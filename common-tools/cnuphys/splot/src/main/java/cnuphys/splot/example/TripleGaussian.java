@@ -7,17 +7,17 @@ import cnuphys.splot.fit.CurveDrawingMethod;
 import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.pdata.DataSet;
-import cnuphys.splot.pdata.DataSetException;
-import cnuphys.splot.pdata.DataSetType;
+import cnuphys.splot.pdata.PlotDataException;
+import cnuphys.splot.pdata.PlotDataType;
 import cnuphys.splot.plot.HorizontalLine;
-import cnuphys.splot.plot.PlotParameters;
 import cnuphys.splot.plot.VerticalLine;
+import cnuphys.splot.plot.old.PlotParameters;
 
 public class TripleGaussian extends AExample {
 
 	@Override
-	protected DataSet createDataSet() throws DataSetException {
-		return new DataSet(DataSetType.XYEXYE, getColumnNames());
+	protected DataSet createDataSet() throws PlotDataException {
+		return new DataSet(PlotDataType.XYEXYE, getColumnNames());
 	}
 
 	@Override
@@ -61,7 +61,7 @@ public class TripleGaussian extends AExample {
 			try {
 				ds.add(x, -spreadFactor() * y, sig);
 			}
-			catch (DataSetException e) {
+			catch (PlotDataException e) {
 				e.printStackTrace();
 				System.exit(1);
 			}

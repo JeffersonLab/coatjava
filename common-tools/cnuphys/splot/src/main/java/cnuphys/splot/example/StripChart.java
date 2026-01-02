@@ -4,16 +4,16 @@ import java.awt.Color;
 
 import cnuphys.splot.fit.IValueGetter;
 import cnuphys.splot.pdata.DataSet;
-import cnuphys.splot.pdata.DataSetException;
+import cnuphys.splot.pdata.PlotDataException;
 import cnuphys.splot.pdata.StripData;
 import cnuphys.splot.plot.LimitsMethod;
-import cnuphys.splot.plot.PlotParameters;
+import cnuphys.splot.plot.old.PlotParameters;
 import cnuphys.splot.style.SymbolType;
 
 public class StripChart extends AExample implements IValueGetter {
 
 	@Override
-	protected DataSet createDataSet() throws DataSetException {
+	protected DataSet createDataSet() throws PlotDataException {
 		StripData sd = new StripData("Memory", 25, this, 2000);
 		return new DataSet(sd, "time", "Memory Usage (MB)");
 	}

@@ -13,341 +13,180 @@ import cnuphys.splot.fit.apache.PolynomialFitter;
 import cnuphys.splot.spline.CubicSpline;
 
 /**
- * Histogram-backed curve that plugs into the {@link ACurve} fitting/drawing-method
- * architecture.
+ * Histogram-backed curve that integrates {@link HistoData} into the {@link ACurve}
+ * fitting and drawing framework.
  *
- * <p>A histogram is not stored as raw X/Y points; it is stored as bins + counts
- * in {@link HistoData}. When a fit (or spline) is requested, this class generates
- * temporary X/Y/(optional weights) vectors from the histogram:</p>
- *
- * <ul>
- *   <li>x[i] = bin center</li>
- *   <li>y[i] = count in bin</li>
- *   <li>optional weights are typically Poisson (w = 1/count for count&gt;0)</li>
- * </ul>
- *
- * <p>All model fitting is delegated to the existing Apache fitters via {@link IFitter}.
- * The resulting {@link FitResult} is cached in {@link ACurve} just like for an XYE {@code Curve}.</p>
+ * @author heddle
  */
 public class HistoCurve extends ACurve {
 
-    /** Histogram storage (bins + counts). */
-    private final HistoData histo;
-
-    // --------------------------------------------------------------------
-    // Fit-prep policy knobs
-    // --------------------------------------------------------------------
-
-    /** If false (default), bins with y==0 are excluded from fit vectors. */
-    private boolean includeZeroBins = false;
-
-    /** If true (default), use Poisson weights (w=1/count for count>0). */
-    private boolean poissonWeights = true;
-
-    /** Strategy for selecting which bins become fit vectors. */
-    public enum FitWindowMode {
-        /** Use the full histogram range (minX..maxX). */
-        FULL_RANGE,
-
-        /**
-         * Use a window around the best peak with guarding (edge handling, minimum points).
-         * This is often the best default for peak fitting.
-         */
-        AROUND_BEST_PEAK_GUARDED
-    }
-
-    private FitWindowMode fitWindowMode = FitWindowMode.FULL_RANGE;
-
-    /** Half window size in bins for around-peak strategies. */
-    private int halfWindowBins = 10;
-
-    /**
-     * Smoothing radius (in bins) used by guarded peak search.
-     * 0 disables smoothing; small values like 1–3 are typical.
-     */
-    private int smoothRadius = 2;
-
-    /**
-     * If true, peak search ignores zero bins even if {@link #includeZeroBins} is true.
-     * Usually you want this true.
-     */
-    private boolean ignoreZeroBinsInPeakSearch = true;
-
-    /** Minimum number of points required by guarded peak fit vector prep. */
-    private int minPoints = 6;
-
-    /**
-     * Create a histogram curve backed by the given histogram data.
-     *
-     * @param name  curve name (legend label)
-     * @param histo histogram data (non-null)
-     */
-    public HistoCurve(String name, HistoData histo) {
-        super(name);
-        this.histo = Objects.requireNonNull(histo, "histo is null");
-    }
-
-    /** @return the backing histogram data. */
-    public HistoData histoData() {
-        return histo;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public int length() {
-        // Interpret "length" as number of histogram bins.
-        return histo.getNumberBins();
-    }
-
-    // --------------------------------------------------------------------
-    // Configuration setters (invalidate computed artifacts)
-    // --------------------------------------------------------------------
-
-    public boolean isIncludeZeroBins() {
-        return includeZeroBins;
-    }
-
-    public void setIncludeZeroBins(boolean includeZeroBins) {
-        this.includeZeroBins = includeZeroBins;
-        clearComputedArtifacts(); // marks dirty too (per your refactor)
-    }
-
-    public boolean isPoissonWeights() {
-        return poissonWeights;
-    }
-
-    public void setPoissonWeights(boolean poissonWeights) {
-        this.poissonWeights = poissonWeights;
-        clearComputedArtifacts();
-    }
-
-    public FitWindowMode getFitWindowMode() {
-        return fitWindowMode;
-    }
-
-    public void setFitWindowMode(FitWindowMode mode) {
-        this.fitWindowMode = (mode == null) ? FitWindowMode.FULL_RANGE : mode;
-        clearComputedArtifacts();
-    }
-
-    public int getHalfWindowBins() {
-        return halfWindowBins;
-    }
-
-    public void setHalfWindowBins(int halfWindowBins) {
-        this.halfWindowBins = Math.max(1, halfWindowBins);
-        clearComputedArtifacts();
-    }
-
-    public int getSmoothRadius() {
-        return smoothRadius;
-    }
-
-    public void setSmoothRadius(int smoothRadius) {
-        this.smoothRadius = Math.max(0, smoothRadius);
-        clearComputedArtifacts();
-    }
-
-    public boolean isIgnoreZeroBinsInPeakSearch() {
-        return ignoreZeroBinsInPeakSearch;
-    }
-
-    public void setIgnoreZeroBinsInPeakSearch(boolean ignoreZeroBinsInPeakSearch) {
-        this.ignoreZeroBinsInPeakSearch = ignoreZeroBinsInPeakSearch;
-        clearComputedArtifacts();
-    }
-
-    public int getMinPoints() {
-        return minPoints;
-    }
-
-    public void setMinPoints(int minPoints) {
-        this.minPoints = Math.max(2, minPoints);
-        clearComputedArtifacts();
-    }
-
-    // --------------------------------------------------------------------
-    // Fit/spline execution
-    // --------------------------------------------------------------------
-
-    /** Build fit vectors from the histogram using the configured fit window strategy. */
-    private FitVectors buildFitVectorsFromHistogram() {
-
-        switch (fitWindowMode) {
-
-            case AROUND_BEST_PEAK_GUARDED: {
-                HistoData.FitWindowData fw = histo.prepareForFitAroundBestPeakGuarded(
-                        includeZeroBins,
-                        halfWindowBins,
-                        smoothRadius,
-                        ignoreZeroBinsInPeakSearch,
-                        poissonWeights,
-                        minPoints);
-
-                // Guarded method can return empty arrays if it can’t satisfy constraints.
-                if (fw == null || fw.x == null || fw.x.length < 2) {
-                    return null;
-                }
-                return new FitVectors(fw.x, fw.y, fw.weights);
-            }
-
-            case FULL_RANGE:
-            default: {
-                HistoData.FitData fd = histo.prepareForFit(
-                        includeZeroBins,
-                        histo.getMinX(),
-                        histo.getMaxX(),
-                        poissonWeights);
-
-                if (fd == null || fd.x == null || fd.x.length < 2) {
-                    return null;
-                }
-                return new FitVectors(fd.x, fd.y, fd.weights);
-            }
-        }
-    }
-
-    /** Create a fitter appropriate to the current drawing method and knobs stored in {@link ACurve}. */
-    private IFitter createFitter(CurveDrawingMethod method) {
-        switch (method) {
-
-            case POLYNOMIAL:
-                return new PolynomialFitter(getPolynomialDegree());
-
-            case ERF:
-                return new ErfErfcFitter(ErfErfcFitter.Kind.ERF);
-
-            case GAUSSIAN:
-                return new GaussianFitter();
-
-            case GAUSSIANS:
-                // "order" interpreted as number of Gaussians (>= 1)
-                return new MultiGaussianFitter(Math.max(1, getOrder()), true);
-
-            case HARMONIC:
-                return new HarmonicFitter(true);
-
-            default:
-                return null;
-        }
-    }
-    
+	/** Backing histogram data. */
+	private final HistoData histoData;
 
 	/**
-	 * Create a fitter appropriate to the current {@link CurveDrawingMethod} and
-	 * knobs (polynomial degree, order).
+	 * Create a histogram-backed curve.
 	 *
+	 * @param name      curve name (legend label)
+	 * @param histoData backing histogram data (non-null)
+	 */
+	public HistoCurve(String name, HistoData histoData) {
+		super(name);
+		this.histoData = Objects.requireNonNull(histoData, "histoData");
+	}
+
+	/** @return the backing histogram data */
+	public HistoData getHistoData() {
+		return histoData;
+	}
+
+	/**
+	 * Length is defined as the number of bins.
+	 */
+	@Override
+	public int length() {
+		return histoData.getNumberBins();
+	}
+
+	/**
+	 * Build fit vectors from histogram bin centers and bin counts.
 	 * <p>
-	 * Returns {@code null} for non-fit drawing methods.
+	 * Bin centers are computed from the histogram grid edges:
+	 * {@code center[i] = 0.5*(grid[i] + grid[i+1])}.
 	 * </p>
+	 */
+	private FitVectors fitVectors() {
+		final int n = histoData.getNumberBins();
+		if (n < 1) {
+			return new FitVectors(new double[0], new double[0], null);
+		}
+
+		final double[] grid = histoData.getGridCopy(); // length n+1
+		final long[] counts = histoData.getCountsCopy(); // length n
+
+		// Defensive: if something is inconsistent, fail soft with empty vectors.
+		if (grid == null || grid.length != n + 1 || counts == null || counts.length != n) {
+			return new FitVectors(new double[0], new double[0], null);
+		}
+
+		final double[] x = new double[n];
+		final double[] y = new double[n];
+
+		for (int i = 0; i < n; i++) {
+			x[i] = 0.5 * (grid[i] + grid[i + 1]);
+			y[i] = (double) counts[i];
+		}
+
+		return new FitVectors(x, y, null);
+	}
+
+	/**
+	 * Create a fitter appropriate for the current curve drawing method.
 	 */
 	@Override
 	protected IFitter createFitterForCurrentMethod() {
 
-		final CurveDrawingMethod method = getCurveDrawingMethod();
-
-		switch (method) {
+		switch (getCurveDrawingMethod()) {
 
 		case POLYNOMIAL:
-			// degree is stored in ACurve
 			return new PolynomialFitter(getPolynomialDegree());
 
 		case ERF:
-			// If you later add ERFC as a separate method, map it here
 			return new ErfErfcFitter(ErfErfcFitter.Kind.ERF);
 
 		case GAUSSIAN:
 			return new GaussianFitter();
 
 		case GAUSSIANS:
-			// "order" interpreted as number of gaussians
+			// "order" interpreted as number of Gaussians
 			return new MultiGaussianFitter(Math.max(1, getOrder()), true);
 
 		case HARMONIC:
-			// If your HarmonicFitter has more knobs (omega scan steps, etc.),
-			// wire them here using getOrder() or a dedicated getter.
+			// HarmonicFitter has no order parameter; default to offset form
 			return new HarmonicFitter(true);
 
 		default:
-			// NONE, CONNECT, STAIRS, CUBICSPLINE, etc.
 			return null;
 		}
 	}
 
-    /**
-     * Compute fit or spline artifacts as required by the current {@link CurveDrawingMethod}.
-     *
-     * @param force true to recompute even if not dirty
-     */
-    @Override
-    public void doCurveFit(boolean force) {
+	/**
+	 * Perform a curve computation (fit or spline) depending on the
+	 * {@link CurveDrawingMethod}.
+	 *
+	 * @param force {@code true} to force recomputation even if not dirty
+	 */
+	@Override
+	public void doFit(boolean force) {
 
-        if (!force && !isDirty()) {
-            return;
-        }
+		if (!force && !isDirty()) {
+			return;
+		}
 
-        try {
-            final CurveDrawingMethod method = getCurveDrawingMethod();
+		try {
+			final CurveDrawingMethod method = getCurveDrawingMethod();
 
-            // Always clear stale artifacts before recompute
-            clearComputedArtifacts();
+			// Clear stale artifacts first
+			clearComputedArtifacts();
 
-            switch (method) {
+			switch (method) {
 
-                // Pure drawing styles: nothing to compute
-                case NONE:
-                case CONNECT:
-                case STAIRS:
-                    break;
+			case NONE:
+			case CONNECT:
+			case STAIRS:
+				break;
 
-                case CUBICSPLINE: {
-                    // Spline over bin centers/counts (unweighted)
-                    HistoData.FitData fd = histo.prepareForFit(
-                            includeZeroBins,
-                            histo.getMinX(),
-                            histo.getMaxX(),
-                            false);
+			case CUBICSPLINE: {
+				FitVectors v = fitVectors();
+				if (v != null && v.length() >= 2) {
+					setCubicSpline(new CubicSpline(v.x, v.y));
+				}
+				break;
+			}
 
-                    if (fd != null && fd.x != null && fd.x.length >= 2) {
-                        setCubicSpline(new CubicSpline(fd.x, fd.y));
-                    }
-                    break;
-                }
+			case POLYNOMIAL:
+			case ERF:
+			case GAUSSIAN:
+			case GAUSSIANS:
+			case HARMONIC: {
+				IFitter fitter = createFitterForCurrentMethod();
+				if (fitter != null) {
+					FitVectors v = fitVectors();
+					FitResult fr = fitWithOptionalWeights(fitter, v);
+					setFitArtifacts(fr, (fr == null) ? null : fitter.asValueGetter(fr));
+				}
+				break;
+			}
 
-                // Fit-based styles
-                case POLYNOMIAL:
-                case ERF:
-                case GAUSSIANS:
-                case HARMONIC:
-                case GAUSSIAN: {
+			default:
+				break;
+			}
 
-                    IFitter fitter = createFitter(method);
-                    if (fitter == null) {
-                        break;
-                    }
+		} catch (Exception e) {
+			// Fail soft: artifacts already cleared
+		} finally {
+			setDirty(false);
+		}
+	}
 
-                    FitVectors v = buildFitVectorsFromHistogram();
-                    if (v == null) {
-                        setFitResult(null);
-                        break;
-                    }
+	// ------------------------------------------------------------
+	// Histogram mutation API
+	// ------------------------------------------------------------
 
-                    FitResult fr = fitWithOptionalWeights(fitter, v);
-                    setFitResult(fr);
-                    break;
-                }
+	/**
+	 * Fill the histogram with a single sample.
+	 *
+	 * @param x sample value
+	 */
+	public void fill(double x) {
+		histoData.add(x);
+		markDataChanged();
+	}
 
-                default:
-                    break;
-            }
-        }
-        catch (Exception e) {
-            // Fail soft: leave artifacts null
-            setFitResult(null);
-            setCubicSpline(null);
-        }
-        finally {
-            setDirty(false);
-        }
-    }
+	/**
+	 * Clear histogram contents and statistics.
+	 */
+	public void clearData() {
+		histoData.clear();
+		markDataChanged();
+	}
 }

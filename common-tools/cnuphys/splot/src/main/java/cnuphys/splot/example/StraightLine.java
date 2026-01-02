@@ -1,8 +1,8 @@
 package cnuphys.splot.example;
 
 import cnuphys.splot.pdata.DataSet;
-import cnuphys.splot.pdata.DataSetException;
-import cnuphys.splot.pdata.DataSetType;
+import cnuphys.splot.pdata.PlotDataException;
+import cnuphys.splot.pdata.PlotDataType;
 
 public class StraightLine extends AExample {
 
@@ -11,8 +11,8 @@ public class StraightLine extends AExample {
 	static double sig[] = { 0.085087, 0.086192, 0.087027 };
 
 	@Override
-	protected DataSet createDataSet() throws DataSetException {
-		return new DataSet(DataSetType.XYEXYE, getColumnNames());
+	protected DataSet createDataSet() throws PlotDataException {
+		return new DataSet(PlotDataType.XYEXYE, getColumnNames());
 	}
 
 	@Override
@@ -43,7 +43,7 @@ public class StraightLine extends AExample {
 			try {
 				ds.add(x[i], y[i], sig[i]);
 			}
-			catch (DataSetException e) {
+			catch (PlotDataException e) {
 				e.printStackTrace();
 			}
 		}

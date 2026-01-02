@@ -13,8 +13,8 @@ import javax.swing.JPanel;
 
 import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.plot.LimitsMethod;
-import cnuphys.splot.plot.PlotCanvas;
-import cnuphys.splot.plot.PlotParameters;
+import cnuphys.splot.plot.old.PlotCanvas;
+import cnuphys.splot.plot.old.PlotParameters;
 import cnuphys.splot.style.EnumComboBox;
 
 public class OneAxisLimitsPanel extends JPanel implements ActionListener {

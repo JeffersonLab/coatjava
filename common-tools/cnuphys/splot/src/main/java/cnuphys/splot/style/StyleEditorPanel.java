@@ -9,7 +9,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 
 import cnuphys.splot.edit.ColorLabel;
-import cnuphys.splot.pdata.DataSetType;
+import cnuphys.splot.pdata.PlotDataType;
 import cnuphys.splot.plot.CommonBorder;
 import cnuphys.splot.plot.DoubleFormat;
 import cnuphys.splot.plot.Environment;
@@ -46,7 +46,7 @@ public class StyleEditorPanel extends JPanel {
 	/**
 	 * Create the stye editing panel.
 	 */
-	public StyleEditorPanel(DataSetType type) {
+	public StyleEditorPanel(PlotDataType type) {
 		addContent(type);
 		setBorder(new CommonBorder("Style"));
 
@@ -54,12 +54,12 @@ public class StyleEditorPanel extends JPanel {
 	}
 
 	// add the content
-	private void addContent(DataSetType type) {
+	private void addContent(PlotDataType type) {
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
 		// symbol panel
 		JPanel symPan = null;
-		if (type != DataSetType.H1D) {
+		if (type != PlotDataType.H1D) {
 			symPan = flowPanel(FlowLayout.LEFT);
 			_symbolSelector = SymbolType.getComboBox(SymbolType.NOSYMBOL);
 			_symbolColor = new ColorLabel(null, Color.black, _font, "Symbol");
@@ -98,7 +98,7 @@ public class StyleEditorPanel extends JPanel {
 		borderPanel.add(_fitLineStyleSelector);
 		borderPanel.add(_fitLineColor);
 
-		if (type != DataSetType.H1D) {
+		if (type != PlotDataType.H1D) {
 			String labels[] = { "4", "8", "12", "16", "20", "24", "28" };
 			_symbolSizeSelector = new TextFieldSlider(4, 28, 8, _font, 1, labels, 180, 40, "Symbol Size") {
 
@@ -156,7 +156,7 @@ public class StyleEditorPanel extends JPanel {
 			add(symPan);
 		}
 		add(borderPanel);
-		if (type != DataSetType.H1D) {
+		if (type != PlotDataType.H1D) {
 			add(_symbolSizeSelector);
 		}
 		add(_lineSizeSelector);

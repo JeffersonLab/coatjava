@@ -7,7 +7,7 @@ public interface DataChangeListener extends EventListener {
 	/**
 	 * A data set changed
 	 * 
-	 * @param dataSet the dataSet that changed
+	 * @param plotData the dataSet that changed
 	 */
-	public void dataSetChanged(DataSet dataSet);
+	public void dataSetChanged(PlotData plotData);
 }

@@ -25,17 +25,17 @@ import cnuphys.splot.fit.IValueGetter;
 import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.pdata.DataSet;
-import cnuphys.splot.pdata.DataSetException;
-import cnuphys.splot.pdata.DataSetType;
+import cnuphys.splot.pdata.PlotDataException;
+import cnuphys.splot.pdata.PlotDataType;
 import cnuphys.splot.pdata.HistoData;
 import cnuphys.splot.pdata.StripData;
 import cnuphys.splot.plot.Environment;
 import cnuphys.splot.plot.HorizontalLine;
 import cnuphys.splot.plot.LimitsMethod;
-import cnuphys.splot.plot.PlotCanvas;
 import cnuphys.splot.plot.PlotGrid;
-import cnuphys.splot.plot.PlotParameters;
 import cnuphys.splot.plot.VerticalLine;
+import cnuphys.splot.plot.old.PlotCanvas;
+import cnuphys.splot.plot.old.PlotParameters;
 import cnuphys.splot.style.SymbolType;
 
 @SuppressWarnings("serial")
@@ -99,7 +99,7 @@ public class Grid extends JFrame implements IValueGetter {
 
 				_plotGrid.addPlotCanvas(_canvases[index]);
 			}
-			catch (DataSetException e) {
+			catch (PlotDataException e) {
 				e.printStackTrace();
 				return;
 			}
@@ -124,20 +124,20 @@ public class Grid extends JFrame implements IValueGetter {
 	}
 
 	//get the dataset based in the plot index
-	protected DataSet createDataSet(int index) throws DataSetException {
+	protected DataSet createDataSet(int index) throws PlotDataException {
 		switch (index) {
 		case 0:
-			return new DataSet(DataSetType.XYEXYE, getColumnNames(index));
+			return new DataSet(PlotDataType.XYEXYE, getColumnNames(index));
 
 		case 1:
-			return new DataSet(DataSetType.XYEXYE, getColumnNames(index));
+			return new DataSet(PlotDataType.XYEXYE, getColumnNames(index));
 
 		case 2:
 			StripData sd = new StripData("Memory", 25, this, 2000);
 			return new DataSet(sd, "time", "Memory Usage (MB)");
 
 		case 3:
-			return new DataSet(DataSetType.XYEXYE, getColumnNames(index));
+			return new DataSet(PlotDataType.XYEXYE, getColumnNames(index));
 
 		case 4:
 			HistoData h1 = new HistoData("Histo 1", 0.0, 100.0, 50);
@@ -145,7 +145,7 @@ public class Grid extends JFrame implements IValueGetter {
 			return new DataSet(h1, h2);
 
 		case 5:
-			return new DataSet(DataSetType.XYXY, getColumnNames(index));
+			return new DataSet(PlotDataType.XYXY, getColumnNames(index));
 
 		}
 
@@ -275,7 +275,7 @@ public class Grid extends JFrame implements IValueGetter {
 					double e = ErfTest._rawdata[i+2];
 					ds.add(x, y, e);
 				}
-				catch (DataSetException e) {
+				catch (PlotDataException e) {
 					e.printStackTrace();
 					System.exit(1);
 				}
@@ -296,7 +296,7 @@ public class Grid extends JFrame implements IValueGetter {
 				double e = 0.2*rand.nextDouble();
 			    try {
 					ds.add(x, y, e);
-				} catch (DataSetException e1) {
+				} catch (PlotDataException e1) {
 					e1.printStackTrace();
 				}
 			}
@@ -342,7 +342,7 @@ public class Grid extends JFrame implements IValueGetter {
 					ds.add(x[0], spreadFactor() * y[0], sig[0], x[1], spreadFactor() * y[1], sig[1], x[2],
 							spreadFactor() * y[2], sig[2]);
 				}
-				catch (DataSetException e) {
+				catch (PlotDataException e) {
 					e.printStackTrace();
 					System.exit(1);
 				}
@@ -365,7 +365,7 @@ public class Grid extends JFrame implements IValueGetter {
 				try {
 					ds.add(y1, y2);
 				}
-				catch (DataSetException e) {
+				catch (PlotDataException e) {
 					e.printStackTrace();
 				}
 			}
@@ -380,7 +380,7 @@ public class Grid extends JFrame implements IValueGetter {
 				try {
 					ds.add(xx, yy);
 				}
-				catch (DataSetException e) {
+				catch (PlotDataException e) {
 					e.printStackTrace();
 				}
 			}

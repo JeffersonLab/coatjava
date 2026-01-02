@@ -6,6 +6,7 @@ import java.util.Vector;
 import javax.swing.JPanel;
 
 import cnuphys.splot.pdata.DataSet;
+import cnuphys.splot.plot.old.PlotCanvas;
 
 public class PlotGrid extends JPanel {
 

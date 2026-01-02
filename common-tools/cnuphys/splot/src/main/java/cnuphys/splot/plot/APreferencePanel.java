@@ -5,6 +5,8 @@ import java.awt.event.KeyListener;
 
 import javax.swing.JPanel;
 
+import cnuphys.splot.plot.old.PlotCanvas;
+
 /**
  * A base class for panels that will be used as tabs on the Preferences dialog
  * 

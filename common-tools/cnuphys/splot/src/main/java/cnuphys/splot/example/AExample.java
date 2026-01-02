@@ -8,12 +8,12 @@ import java.awt.event.WindowEvent;
 import javax.swing.JFrame;
 import javax.swing.JMenuBar;
 import cnuphys.splot.pdata.DataSet;
-import cnuphys.splot.pdata.DataSetException;
+import cnuphys.splot.pdata.PlotDataException;
 import cnuphys.splot.plot.Environment;
 import cnuphys.splot.plot.GraphicsUtilities;
-import cnuphys.splot.plot.PlotCanvas;
 import cnuphys.splot.plot.PlotPanel;
 import cnuphys.splot.plot.SplotMenus;
+import cnuphys.splot.plot.old.PlotCanvas;
 
 /**
  * A template class for plot examples
@@ -46,7 +46,7 @@ public abstract class AExample extends JFrame {
 		try {
 			_canvas = new PlotCanvas(createDataSet(), getPlotTitle(), getXAxisLabel(), getYAxisLabel());
 		}
-		catch (DataSetException e) {
+		catch (PlotDataException e) {
 			e.printStackTrace();
 			return;
 		}
@@ -76,7 +76,7 @@ public abstract class AExample extends JFrame {
 		return _canvas;
 	}
 
-	protected abstract DataSet createDataSet() throws DataSetException;
+	protected abstract DataSet createDataSet() throws PlotDataException;
 
 	protected abstract String[] getColumnNames();
 
