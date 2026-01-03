@@ -1,10 +1,12 @@
-package cnuphys.splot.fit.apache;
+package cnuphys.splot.fit;
 
 import java.util.Arrays;
+import java.util.stream.IntStream;
 
 import org.apache.commons.math3.linear.RealMatrix;
 
-import cnuphys.splot.fit.Evaluator;
+import cnuphys.splot.plot.SmartDoubleFormatter;
+import cnuphys.splot.plot.UnicodeSupport;
 
 /**
  * Generic result for a (weighted) least-squares fit.
@@ -14,13 +16,17 @@ import cnuphys.splot.fit.Evaluator;
  * polynomial, etc.).
  */
 public final class FitResult {
-
-    /** Optional model identifier (e.g. "Gaussian", "Polynomial", "Erf"). */
-    public final String model;
+	
+	//helpers from unicode
+	public static final String CHI = UnicodeSupport.SMALL_CHI;
+	public static final String CHISQ = CHI + UnicodeSupport.SUPER2;
 
     /** Best-fit parameters. Interpretation depends on the model. */
     public final double[] params;
 
+    /** Gets descriptive strings from fitter */
+    public IFitStringGetter stringGetter;
+    
     /** Optional covariance matrix of parameters (p x p), or null if unavailable. */
     public final RealMatrix covariance;
 
@@ -54,7 +60,7 @@ public final class FitResult {
     /**
 	 * Create a fit result.
 	 *
-	 * @param model           optional model identifier (may be null)
+	 * @param stringGetter    acess to descriptive strings about fitter
 	 * @param params          best-fit parameters
 	 * @param covariance      optional covariance matrix (may be null)
 	 * @param cost            least-squares cost
@@ -65,7 +71,7 @@ public final class FitResult {
 	 * @param iterations      iterations used (0 if not applicable)
 	 * @param evaluations     evaluations used (0 if not applicable)
 	 */
-    protected FitResult(String model,
+    protected FitResult(IFitStringGetter stringGetter,
                      double[] params,
                      RealMatrix covariance,
                      double cost,
@@ -76,7 +82,7 @@ public final class FitResult {
                      int iterations,
                      int evaluations) {
 
-        this.model = model;
+    	this.stringGetter = stringGetter;
         this.params = params.clone();
         this.covariance = covariance;
         this.cost = cost;
@@ -180,15 +186,28 @@ public final class FitResult {
 
     @Override
     public String toString() {
-        return "FitResult[" + model +
-                ", params=" + Arrays.toString(params) +
-                ", cost=" + cost +
-                ", chiSq=" + chiSquare +
-                ", chiSqRed=" + chiSquareReduced +
-                ", dof=" + dof +
-                ", rms=" + rms +
-                ", it=" + iterations +
-                ", eval=" + evaluations +
-                "]";
+    	
+    	StringBuilder sb = new StringBuilder();
+    	sb.append("FitResult:\n");
+    	sb.append(" Model: " + stringGetter.modelName() + "\n");
+    	sb.append(" Form: " + stringGetter.functionForm() + "\n");
+    	sb.append(" Parameters:\n");
+  
+    	IntStream.range(0, params.length)
+        .forEach(i ->
+            sb.append(String.format(" %s = %.3g%n", stringGetter.parameterName(i), params[i]))
+        );  
+      	sb.append(String.format(" %s: %.3g\n", CHISQ, chiSquare));
+    	sb.append(String.format(" %s/DoF: " + doubleFormat(chiSquareReduced, 3) + "\n", CHISQ));
+    	sb.append(" Degrees of Freedom: " + dof + "\n");
+    	sb.append(String.format(" RMS: %.3g\n", rms));
+    	sb.append(" Iterations: " + iterations + "\n");
+    	sb.append(" Evaluations: " + evaluations + "\n");
+    	return sb.toString();
     }
+    
+    // Helper to format doubles
+	private String doubleFormat(double value, int sigFig) {
+		return SmartDoubleFormatter.doubleFormat(value, sigFig);
+	}
 }

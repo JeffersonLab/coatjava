@@ -1,4 +1,4 @@
-package cnuphys.splot.fit.apache;
+package cnuphys.splot.fit;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -13,7 +13,7 @@ import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.util.Pair;
 
-import cnuphys.splot.fit.Evaluator;
+import cnuphys.splot.pdata.FitVectors;
 /**
  * Nonlinear least-squares fitter for a 4-parameter Gaussian with baseline:
  *
@@ -33,13 +33,16 @@ import cnuphys.splot.fit.Evaluator;
  * This fitter enforces {@code sigma >= DEFAULT_MIN_SIGMA} by default using a parameter
  * clamping validator. Optional bounds can also be supplied via {@link ParameterBounds}.
  */
-public final class GaussianFitter extends AbstractLeastSquaresFitter {
+public final class GaussianFitter extends ALeastSquaresFitter {
 
     /** Parameter indices. */
     public static final int IDX_A = 0;
     public static final int IDX_MU = 1;
     public static final int IDX_SIGMA = 2;
     public static final int IDX_B = 3;
+    
+    /** Parameter names. */
+    public static final String[] paramNames = { "A", "μ", "σ", "B" };
 
     /** Default minimum allowed sigma to avoid division by zero and ill-conditioned Jacobians. */
     public static final double DEFAULT_MIN_SIGMA = 1e-12;
@@ -61,11 +64,6 @@ public final class GaussianFitter extends AbstractLeastSquaresFitter {
     @Override
     protected int getParameterCount() {
         return 4;
-    }
-
-    @Override
-    protected String getModelName() {
-        return "GAUSSIAN";
     }
 
     @Override
@@ -314,4 +312,71 @@ public final class GaussianFitter extends AbstractLeastSquaresFitter {
             return new double[] { A, mu, sigma, B };
         }
     }
+    
+    //------- descriptive string section -----------------
+ 	@Override
+ 	public String modelName() {
+ 		return "Gaussian";
+ 	}
+
+ 	@Override
+ 	public String functionForm() {
+ 		return String.format("y(x)=%se^[-(x-%s)%s/(2%s%s)] + %s", 
+ 				paramNames[0], paramNames[1], SUP2, paramNames[2], SUP2, paramNames[3]);
+ 	}
+
+ 	/**
+ 	 * Get the parameter name for the given index.
+ 	 * 
+ 	 * @param index the parameter index
+ 	 * @return the parameter name
+ 	 */
+ 	@Override
+ 	public String parameterName(int index) {
+ 		if (index < 0 || index >= getParameterCount()) {
+ 			throw new IllegalArgumentException("bad parameter index in Gaussian fit: " + index);
+ 		}
+
+ 		return paramNames[index];
+ 	}
+
+ 	@Override
+ 	public IFitStringGetter getStringGetter() {
+ 		return this;
+ 	}
+ 	
+ 	//--------------------- test main -----------------------
+ 	public static void main(String arg[]) {
+ 		final double mu = 1.2;
+ 		final double sigma = 0.3;
+ 		final double A = 2.0;
+ 		final double B = 0.5;
+ 		int n = 50;
+ 		
+ 		
+ 		Evaluator eval = (double x) -> {
+ 			double z = (x - mu) / sigma;
+ 			return A * Math.exp(-0.5 * z * z) + B;
+ 		};
+ 		
+ 		FitVectors testData = FitVectors.testData(eval, -1.0, 3.0, n, 4.0, 5.0);
+ 		GaussianFitter fitter = new GaussianFitter();
+ 		FitResult result = fitter.fit(testData.x, testData.y, testData.w);
+ 		System.out.println("True parameters: ");
+ 			System.out.print(" A = " + A);
+ 			System.out.print(" mu = " + mu);
+ 			System.out.print(" sigma = " + sigma);
+ 			System.out.println(" B = " + B);
+ 		System.out.println(result);
+ 		
+ 		//print data and fit values
+		for (int i = 0; i < (n-1); i+=10) {
+			double xv = testData.x[i];
+			double yv = result.evaluator.value(xv);
+			System.out.printf("x=%.3f fit y=%.3f data y=%.3f%n", xv, yv, testData.y[i]);
+		}
+
+ 		
+ 	
+ 	}	
 }

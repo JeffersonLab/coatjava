@@ -1,6 +1,9 @@
 package cnuphys.splot.pdata;
 
 import java.util.Objects;
+import java.util.concurrent.ThreadLocalRandom;
+
+import cnuphys.splot.fit.Evaluator;
 
 /**
  * Immutable fit vectors (x, y, optional weights) used by the Apache
@@ -153,5 +156,67 @@ public final class FitVectors {
 				&& (w == null || w.length == x.length);
 	}
 	
+	/**
+	 * Generate test data (with randomness)for fitting.
+	 * 
+	 * @param evaluator the evaluator to generate y values
+	 * @param xStart    starting x value
+	 * @param xEnd      ending x value
+	 * @param jitterPercent percentage jitter to apply to y values. The jitter is
+	 * computed as a random percentage [0, jitterPercentage] of the y value.
+	 * @param sigmaYPercent  percentage of y value to use as sigmaY. The sigmaY is
+	 * computed as a random percentage [0, jitterPercentage] of the y value.
+	 * @param nPoints   number of points evenly spaced between xStart and xEnd
+	 * @return the fit vectors, with weights derived from sigmaY by w = 1/(sigmaY^2)
+	 */
+	public static FitVectors testData(Evaluator evaluator, double xStart, double xEnd, int nPoints,
+	        double jitterPercent, double sigmaYPercent) {
+
+	    Objects.requireNonNull(evaluator, "evaluator cannot be null");
+
+	    if (nPoints < 2) {
+	        throw new IllegalArgumentException("nPoints must be >= 2");
+	    }
+
+	    final double[] x = new double[nPoints];
+	    final double[] y = new double[nPoints];
+	    final double[] w = new double[nPoints];
+
+	    final double jp = Math.max(0.0, jitterPercent) / 100.0;
+	    final double sp = Math.max(0.0, sigmaYPercent) / 100.0;
+
+	    final double dx = (xEnd - xStart) / (nPoints - 1.0);
+	    final ThreadLocalRandom rng = ThreadLocalRandom.current();
+
+	    for (int i = 0; i < nPoints; i++) {
+	        double xi = xStart + i * dx;
+	        x[i] = xi;
+
+	        double yTrue = evaluator.value(xi);
+
+	        // Apply multiplicative jitter about the true value (symmetric).
+	        double jitterFrac = (jp == 0.0) ? 0.0 : rng.nextDouble(-jp, jp);
+	        double yi = yTrue * (1.0 + jitterFrac);
+	        y[i] = yi;
+
+	        // sigmaY as a random fraction of the signal scale.
+	        // Baseline scale avoids sigma==0 when yTrue ~ 0.
+	        double scale = Math.abs(yTrue);
+	        if (!(scale > 0.0) || !Double.isFinite(scale)) {
+	            scale = 1.0;
+	        }
+
+	        double sigma = (sp == 0.0) ? 0.0 : scale * rng.nextDouble(0.0, sp);
+
+	        // Convert sigma to weight w = 1/(sigma^2). Invalid/zero sigma => w = 0 (ignored).
+	        if (Double.isFinite(sigma) && sigma > 0.0) {
+	            w[i] = 1.0 / (sigma * sigma);
+	        } else {
+	            w[i] = 0.0;
+	        }
+	    }
+
+	    return new FitVectors(x, y, w);
+	}
 	
 }

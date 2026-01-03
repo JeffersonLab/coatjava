@@ -1,17 +1,38 @@
 package cnuphys.splot.plot;
 
 public class UnicodeSupport {
+	
+	//subscripts and superscripts
+	public static final String SUB0 = "\u2080";
+	public static final String SUB1 = "\u2081";
+	public static final String SUB2 = "\u2082";
+	public static final String SUB3 = "\u2083";
+	public static final String SUB4 = "\u2084";
+	public static final String SUB5 = "\u2085";
+	public static final String SUB6 = "\u2086";
+	public static final String SUB7 = "\u2087";
+	public static final String SUB8 = "\u2088";
+	public static final String SUB9 = "\u2089";
+	public static final String SUPER0 = "\u2070";
+	public static final String SUPER1 = "\u00B9";
+	public static final String SUPER2 = "\u00B2";
+	public static final String SUPER3 = "\u00B3";
+	public static final String SUPER4 = "\u2074";
+	public static final String SUPER5 = "\u2075";
+	public static final String SUPER6 = "\u2076";
+	public static final String SUPER7 = "\u2077";
+	public static final String SUPER8 = "\u2078";
+	public static final String SUPER9 = "\u2079";
+
+	public static final String SUPERN = "\u207F";
+	public static final String SUBN = "\u2099";
+
 
 	public static final String SUPERPLUS = "\u207A";
 	public static final String SUPERMINUS = "\u207B";
 	public static final String DEGREE = "\u00B0";
 	public static final String TIMES = "\u2715";
-	public static final String SUPER2 = "\u00B2";
-	public static final String SUBZERO = "\u2080";
-	public static final String SUPERZERO = "\u2070";
 
-	public static final String SUBN = "\u2099";
-	public static final String SUPERN = "\u207F";
 
 	public static final String PLUSMINUS = "\u00B1";
 	public static final String APPROX = "\u2248";

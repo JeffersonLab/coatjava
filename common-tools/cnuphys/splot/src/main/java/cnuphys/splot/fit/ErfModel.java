@@ -1,4 +1,4 @@
-package cnuphys.splot.fit.apache;
+package cnuphys.splot.fit;
 
 import org.apache.commons.math3.analysis.ParametricUnivariateFunction;
 import org.apache.commons.math3.special.Erf;

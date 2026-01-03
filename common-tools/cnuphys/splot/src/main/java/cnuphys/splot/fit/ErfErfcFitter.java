@@ -1,4 +1,4 @@
-package cnuphys.splot.fit.apache;
+package cnuphys.splot.fit;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -14,7 +14,7 @@ import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.util.Pair;
 
-import cnuphys.splot.fit.Evaluator;
+import cnuphys.splot.pdata.FitVectors;
 
 /**
  * Nonlinear least-squares fitter for scaled/shifted {@code erf} or {@code erfc}:
@@ -34,7 +34,7 @@ import cnuphys.splot.fit.Evaluator;
  *
  * <p>Enforces {@code sigma >= DEFAULT_MIN_SIGMA} by default.</p>
  */
-public final class ErfErfcFitter extends AbstractLeastSquaresFitter {
+public final class ErfErfcFitter extends ALeastSquaresFitter {
 
     /** Which function to fit. */
     public enum Kind { ERF, ERFC }
@@ -44,6 +44,10 @@ public final class ErfErfcFitter extends AbstractLeastSquaresFitter {
     public static final int IDX_X0 = 1;
     public static final int IDX_SIGMA = 2;
     public static final int IDX_B = 3;
+    
+    /** Base Parameter names. */
+    public static final String[] paramNames = { "A", "x" + SUB0, "σ", "B" };
+
 
     /** Default minimum allowed sigma. */
     public static final double DEFAULT_MIN_SIGMA = 1e-12;
@@ -66,11 +70,6 @@ public final class ErfErfcFitter extends AbstractLeastSquaresFitter {
     @Override
     protected int getParameterCount() {
         return 4;
-    }
-
-    @Override
-    protected String getModelName() {
-        return (kind == Kind.ERF) ? "ERF" : "ERFC";
     }
 
     @Override
@@ -286,4 +285,72 @@ public final class ErfErfcFitter extends AbstractLeastSquaresFitter {
             return new double[] { A, x0, sigma, B };
         }
     }
+    
+    //------- descriptive string section -----------------
+ 	@Override
+ 	public String modelName() {
+ 		return kind == Kind.ERF ? "erf" 
+ 				: "erfc";
+  	}
+
+ 	@Override
+ 	public String functionForm() {
+ 		if (kind == Kind.ERF) {
+ 			return "y(x) = A * erf[(x - x0)/σ] + B";
+ 		} else {
+ 			return "y(x) = A * erfc[(x - x0)/σ] + B";
+ 		}
+  	}
+
+ 	/**
+ 	 * Get the parameter name for the given index.
+ 	 * 
+ 	 * @param index the parameter index
+ 	 * @return the parameter name
+ 	 */
+ 	@Override
+ 	public String parameterName(int index) {
+ 		if (index < 0 || index >= getParameterCount()) {
+ 			throw new IllegalArgumentException("bad parameter index in erf/erfc fit: " + index);
+ 		}
+
+ 		return paramNames[index];
+ 	}
+
+ 	@Override
+ 	public IFitStringGetter getStringGetter() {
+ 		return this;
+ 	}
+ 	
+ 	//------------------ test main -----------------------
+ 	public static void main(String[] args) {
+ 		double A = 2.0;
+ 		double x0 = 1.0;
+ 		double sigma = 0.5;
+ 		double B = 0.1;
+ 		int n = 100;
+ 		
+ 		Evaluator erfcEval = (double x) -> {
+ 			double z = (x - x0) / sigma;
+ 			return A * Erf.erfc(z) + B;
+ 		};
+ 		
+ 		FitVectors testData = FitVectors.testData(erfcEval, -4.0, 4.0, n, 3.0, 3.0);
+ 		ErfErfcFitter fitter = new ErfErfcFitter(Kind.ERFC);
+ 		FitResult result = fitter.fit(testData.x, testData.y, testData.w);
+		System.out.println("True parameters: ");
+			System.out.print(" A = " + A);
+			System.out.print(" x0 = " + x0);
+			System.out.print(" sigma = " + sigma);
+			System.out.println(" B = " + B);
+		System.out.println(result);
+
+		// print data and fit values
+		for (int i = 0; i < (n - 1); i += 10) {
+			double xv = testData.x[i];
+			double yv = result.evaluator.value(xv);
+			System.out.printf("x=%.3f fit y=%.3f data y=%.3f%n", xv, yv, testData.y[i]);
+		}
+	}
+ 
 }

@@ -1,4 +1,4 @@
-package cnuphys.splot.fit.apache;
+package cnuphys.splot.fit;
 
 /**
  * Provides an initial parameter guess for a curve fitter.

@@ -25,7 +25,6 @@ public class FitEditorPanel extends JPanel {
 	// properties changed
 	public static final String POLYNOMIALORDERPROP = "Polynomial Order";
 	public static final String GAUSSIANNUMPROP = "Number of Gaussians";
-	public static final String HARMONICORDERPROP = "Harmonic Order";
 	public static final String USERMSPROP = "Use RMS in Legend";
 	public static final String STATERRPROP = "Show Stat Errors";
 
@@ -40,9 +39,6 @@ public class FitEditorPanel extends JPanel {
 
 	// number of gaussians
 	protected TextFieldSlider _gaussianCountSelector;
-
-	// harmonic order (Fourier order)
-	protected TextFieldSlider _harmonicOrderSelector;
 
 	// use rms or sigma for histo
 	protected JCheckBox _rmsOrCB;
@@ -69,7 +65,6 @@ public class FitEditorPanel extends JPanel {
 
 		createPolySelector();
 		createNumGaussSelector();
-		createHarmonicOrderSelector();
 		createRMSOrSigmaCB();
 		createStatErrorCB();
 
@@ -176,36 +171,6 @@ public class FitEditorPanel extends JPanel {
 		};
 	}
 
-	// create the selector for harmonic order (Fourier order)
-	private void createHarmonicOrderSelector() {
-
-		// Default order used in the data model when switching to HARMONIC is typically large (e.g. 300).
-		// Keep the range broad enough for typical use while still being manageable in the UI.
-		String labels[] = { "1", "100", "200", "300", "400", "500" };
-		_harmonicOrderSelector = new TextFieldSlider(1, 500, 300, _font, 0, labels, 180, 40, "Harmonic Order") {
-
-			@Override
-			public double sliderValueToRealValue() {
-				return getValue();
-			}
-
-			@Override
-			public int realValueToSliderValue(double val) {
-				return (int) val;
-			}
-
-			@Override
-			public String valueString(double val) {
-				return "" + getValue();
-			}
-
-			@Override
-			public void valueChanged() {
-				firePropertyChange(HARMONICORDERPROP, -1, _harmonicOrderSelector.getValue());
-			}
-
-		};
-	}
 
 	/**
 	 * Reconfigure fit widgets based on fit type
@@ -216,7 +181,6 @@ public class FitEditorPanel extends JPanel {
 		// Remove everything that is method- or curve-type-specific.
 		carefulRemove(_polynomialOrderSelector);
 		carefulRemove(_gaussianCountSelector);
-		carefulRemove(_harmonicOrderSelector);
 		carefulRemove(_histoCBPanel);
 
 		if (curve == null) {
@@ -238,9 +202,6 @@ public class FitEditorPanel extends JPanel {
 		case GAUSSIANS:
 			carefulAdd(_gaussianCountSelector);
 			break;
-		case HARMONIC:
-			carefulAdd(_harmonicOrderSelector);
-			break;
 		default:
 			// none
 			break;
@@ -257,7 +218,6 @@ public class FitEditorPanel extends JPanel {
 		_fitSelector.setEnabled(enabled);
 		_polynomialOrderSelector.setEnabled(enabled);
 		_gaussianCountSelector.setEnabled(enabled);
-		_harmonicOrderSelector.setEnabled(enabled);
 		_rmsOrCB.setEnabled(enabled);
 		_statErrorCB.setEnabled(enabled);
 	}
@@ -306,7 +266,6 @@ public class FitEditorPanel extends JPanel {
 		// Per-curve knobs (now stored on ACurve)
 		_polynomialOrderSelector.setValue(curve.getPolynomialDegree());
 		_gaussianCountSelector.setValue(curve.getOrder());
-		_harmonicOrderSelector.setValue(curve.getOrder());
 	}
 
 	/**
@@ -319,25 +278,16 @@ public class FitEditorPanel extends JPanel {
 		case POLYNOMIAL:
 			_polynomialOrderSelector.setEnabled(true);
 			_gaussianCountSelector.setEnabled(false);
-			_harmonicOrderSelector.setEnabled(false);
 			break;
 
 		case GAUSSIANS:
 			_polynomialOrderSelector.setEnabled(false);
 			_gaussianCountSelector.setEnabled(true);
-			_harmonicOrderSelector.setEnabled(false);
-			break;
-
-		case HARMONIC:
-			_polynomialOrderSelector.setEnabled(false);
-			_gaussianCountSelector.setEnabled(false);
-			_harmonicOrderSelector.setEnabled(true);
 			break;
 
 		default:
 			_polynomialOrderSelector.setEnabled(false);
 			_gaussianCountSelector.setEnabled(false);
-			_harmonicOrderSelector.setEnabled(false);
 			break;
 		}
 	}
@@ -367,15 +317,6 @@ public class FitEditorPanel extends JPanel {
 	 */
 	public TextFieldSlider getNumGaussianSelector() {
 		return _gaussianCountSelector;
-	}
-
-	/**
-	 * Get the harmonic order slider.
-	 *
-	 * @return harmonic order slider
-	 */
-	public TextFieldSlider getHarmonicOrderSelector() {
-		return _harmonicOrderSelector;
 	}
 
 	/**

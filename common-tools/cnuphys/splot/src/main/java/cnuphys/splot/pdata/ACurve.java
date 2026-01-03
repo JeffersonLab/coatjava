@@ -4,8 +4,8 @@ import javax.swing.event.EventListenerList;
 
 import cnuphys.splot.fit.CurveDrawingMethod;
 import cnuphys.splot.fit.Evaluator;
-import cnuphys.splot.fit.apache.FitResult;
-import cnuphys.splot.fit.apache.IFitter;
+import cnuphys.splot.fit.FitResult;
+import cnuphys.splot.fit.IFitter;
 import cnuphys.splot.spline.CubicSpline;
 import cnuphys.splot.style.Styled;
 
@@ -23,7 +23,7 @@ import cnuphys.splot.style.Styled;
  * <h3>Fit evaluator</h3>
  * {@link FitResult} intentionally does not expose the fitter that produced it.
  * Therefore, when a fit is performed, the curve caches the corresponding
- * {@link Evaluator} produced by {@link IFitter#asEvaluator(FitResult)} at fit-time.
+ * {@link Evaluator} produced at fit-time.
  *
  * @author heddle
  */
@@ -31,7 +31,6 @@ public abstract class ACurve {
 	
 	/** Synchronizes mutations and snapshots. */
 	protected final Object lock = new Object();
-
 
 	/** Used to assign stable-ish style ids. */
 	private static int styleCount = 0;
@@ -50,12 +49,6 @@ public abstract class ACurve {
 
 	/** Latest fit result (may be null). */
 	private FitResult fitResult;
-
-	/**
-	 * Cached fit evaluator. This is stored at fit-time because FitResult does not
-	 * expose the fitter that produced it. This is a way to treat the fit as a function.
-	 */
-	private Evaluator fitValueGetter;
 
 	/** Curve name (legend label). */
 	private String name;
@@ -159,18 +152,19 @@ public abstract class ACurve {
 	 * @return evaluator for the current fit, or null if none
 	 */
 	public final Evaluator getFitValueGetter() {
-		return fitValueGetter;
+		if (fitResult == null) {
+			return null;
+		}
+		return fitResult.evaluator;
 	}
 
 	/**
-	 * Set both the fit result and the corresponding cached evaluator (preferred).
+	 * Set the fit result 
 	 *
-	 * @param fitResult      fit result (may be null)
-	 * @param fitValueGetter evaluator corresponding to {@code fitResult} (may be null)
+	 * @param fitResult fit result (may be null)
 	 */
-	public final void setFitArtifacts(FitResult fitResult, Evaluator fitValueGetter) {
+	public final void setFitResult(FitResult fitResult) {
 		this.fitResult = fitResult;
-		this.fitValueGetter = fitValueGetter; //used to draw fit
 		markFitChanged();
 	}
 
@@ -276,7 +270,6 @@ public abstract class ACurve {
 	void clearComputedArtifacts() {
 		dirty = true;
 		fitResult = null;
-		fitValueGetter = null;
 		cubicSpline = null;
 	}
 

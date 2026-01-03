@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
 
-import cnuphys.splot.fit.apache.FitResult;
 import cnuphys.splot.plot.DoubleFormat;
 import cnuphys.splot.plot.UnicodeSupport;
 import cnuphys.splot.plot.X11Colors;
@@ -45,9 +44,6 @@ public enum CurveDrawingMethod {
 	/** Multiple Gaussian fit (sum of Gaussians). */
 	GAUSSIANS,
 
-	/** Harmonic (Fourier-like) fit. */
-	HARMONIC,
-
 	/** Error function fit. */
 	ERF,
 
@@ -68,7 +64,6 @@ public enum CurveDrawingMethod {
 		DISPLAY_NAMES.put(POLYNOMIAL, "Polynomial");
 		DISPLAY_NAMES.put(GAUSSIAN, "Gaussian");
 		DISPLAY_NAMES.put(GAUSSIANS, "Gaussians");
-		DISPLAY_NAMES.put(HARMONIC, "Harmonic");
 		DISPLAY_NAMES.put(ERF, "Erf Function");
 		DISPLAY_NAMES.put(ERFC, "Erfc Function");
 		DISPLAY_NAMES.put(NONE, "No Line");
@@ -200,9 +195,6 @@ public enum CurveDrawingMethod {
 			appendMultipleGaussians(sb, object);
 			break;
 
-		case HARMONIC:
-			appendHarmonic(sb, object);
-			break;
 		}
 
 		return sb.toString();
@@ -339,63 +331,7 @@ public enum CurveDrawingMethod {
 		}
 	}
 
-	private static void appendHarmonic(StringBuilder sb, Object object) {
-		if (!(object instanceof FitResult)) {
-			sb.append(warning("fit info not available."));
-			return;
-		}
 
-		FitResult fitResult = (FitResult) object;
-
-		sb.append(header("Harmonic Fit:"))
-		  .append(descript(" y = A<SUB>0</SUB> + "
-				+ _SUM + sub(" [A", 1) + "&thinsp;cos(" + sub("", 1) + "&thinsp;x) + "
-				+ _SUM + sub(" [B", 1) + "&thinsp;sin(" + sub("", 1) + "&thinsp;x)"));
-
-		sb.append(info(chiSqString(fitResult.chiSquare) + _SP
-				+ "DOF = " + fitResult.dof + _SP
-				+ "Reduced " + chiSqString(fitResult.chiSquareReduced)));
-
-		sb.append(colorStr("<b>Harmonic Parameters</b>", "blue")).append(_EOL);
-
-		int nParams = fitResult.nParams();
-		if (nParams <= 0) {
-			sb.append(warning("No parameters returned in FitResult."));
-			return;
-		}
-
-		// Typical parameterization:
-		//   p0 = A0
-		//   then pairs (A1,B1), (A2,B2), ... => total = 1 + 2*N
-		double a0 = fitResult.param(0);
-		double varA0 = varianceDiag(fitResult, 0);
-		sb.append(paramStr("A" + sub("", 0), a0, varA0));
-
-		int remaining = nParams - 1;
-		int nHarm = remaining / 2;
-
-		for (int k = 1; k <= nHarm; k++) {
-			int ia = 2 * (k - 1) + 1;
-			int ib = ia + 1;
-
-			double a = fitResult.param(ia);
-			double varA = varianceDiag(fitResult, ia);
-			sb.append(paramStr("A" + sub("", k), a, varA));
-
-			if (ib < nParams) {
-				double b = fitResult.param(ib);
-				double varB = varianceDiag(fitResult, ib);
-				sb.append(paramStr("B" + sub("", k), b, varB));
-			}
-		}
-
-		// If odd extras exist, show generically
-		for (int i = 1 + 2 * nHarm; i < nParams; i++) {
-			double v = fitResult.param(i);
-			double var = varianceDiag(fitResult, i);
-			sb.append(paramStr("P" + sub("", i), v, var));
-		}
-	}
 
 	// ------------------------------------------------------------------------
 	// Formatting helpers

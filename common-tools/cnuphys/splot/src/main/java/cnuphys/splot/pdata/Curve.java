@@ -3,13 +3,12 @@ package cnuphys.splot.pdata;
 import java.util.Objects;
 
 import cnuphys.splot.fit.CurveDrawingMethod;
-import cnuphys.splot.fit.apache.ErfErfcFitter;
-import cnuphys.splot.fit.apache.FitResult;
-import cnuphys.splot.fit.apache.GaussianFitter;
-import cnuphys.splot.fit.apache.HarmonicFitter;
-import cnuphys.splot.fit.apache.IFitter;
-import cnuphys.splot.fit.apache.MultiGaussianFitter;
-import cnuphys.splot.fit.apache.PolynomialFitter;
+import cnuphys.splot.fit.ErfErfcFitter;
+import cnuphys.splot.fit.FitResult;
+import cnuphys.splot.fit.GaussianFitter;
+import cnuphys.splot.fit.IFitter;
+import cnuphys.splot.fit.MultiGaussianFitter;
+import cnuphys.splot.fit.PolynomialFitter;
 import cnuphys.splot.spline.CubicSpline;
 
 /**
@@ -102,10 +101,6 @@ public class Curve extends ACurve {
 			// "order" interpreted as number of Gaussians. (Constructor: (count, includeBaseline))
 			return new MultiGaussianFitter(Math.max(1, getOrder()), true);
 
-		case HARMONIC:
-			// HarmonicFitter constructors don't take an order. Use offset form as default.
-			return new HarmonicFitter(true);
-
 		default:
 			return null;
 		}
@@ -144,13 +139,12 @@ public class Curve extends ACurve {
 			case POLYNOMIAL:
 			case ERF:
 			case GAUSSIAN:
-			case GAUSSIANS:
-			case HARMONIC: {
+			case GAUSSIANS: {
 				IFitter fitter = createFitterForCurrentMethod();
 				if (fitter != null) {
 					FitVectors v = new FitVectors(xData, yData, eData);
 					FitResult fr = fitWithOptionalWeights(fitter, v);
-					setFitArtifacts(fr, (fr == null) ? null : fitter.asEvaluator(fr));
+					setFitResult(fr);
 				}
 				break;
 			}

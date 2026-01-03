@@ -13,7 +13,7 @@ import java.util.Objects;
 
 import cnuphys.splot.fit.CurveDrawingMethod;
 import cnuphys.splot.fit.Evaluator;
-import cnuphys.splot.fit.apache.FitResult;
+import cnuphys.splot.fit.FitResult;
 import cnuphys.splot.pdata.ACurve;
 import cnuphys.splot.pdata.Curve;
 import cnuphys.splot.pdata.HistoCurve;
@@ -478,13 +478,6 @@ public class CurveDrawer {
 			drawValueGetter(g2, plotCanvas, nrpfit);
 			break;
 
-
-		case HARMONIC:
-			//TODO implement harmonic fit drawing
-			if (yfit.isDirty()) {
-			}
-			break;
-		}
 
 		g2.setStroke(oldStroke);
 	}

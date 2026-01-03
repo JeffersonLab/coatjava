@@ -1,5 +1,6 @@
-package cnuphys.splot.fit.apache;
+package cnuphys.splot.fit;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 import org.apache.commons.math3.fitting.leastsquares.LevenbergMarquardtOptimizer;
@@ -12,7 +13,7 @@ import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.util.Pair;
 
-import cnuphys.splot.fit.Evaluator;
+import cnuphys.splot.pdata.FitVectors;
 
 /**
  * Fit a sum of Gaussians (optionally with a constant baseline).
@@ -32,26 +33,43 @@ import cnuphys.splot.fit.Evaluator;
  *
  * <p>By default we enforce {@code sigma_k >= DEFAULT_MIN_SIGMA} for all components.</p>
  */
-public final class MultiGaussianFitter extends AbstractLeastSquaresFitter {
+public final class MultiGaussianFitter extends ALeastSquaresFitter {
 
     public static final double DEFAULT_MIN_SIGMA = 1e-12;
 
-    private final int m;
+    private final int m; // number of Gaussians
     private final boolean includeBaseline;
 
+    /** Base Parameter names. */
+    public static final String[] paramNames = { "A", "μ", "σ", "B" };
+
+    /**
+     * Create a MultiGaussianFitter.
+     * @param m number of Gaussian components (must be >= 1)
+     * @param includeBaseline true to include constant baseline term
+     */
     public MultiGaussianFitter(int m, boolean includeBaseline) {
         this(m, includeBaseline, new LevenbergMarquardtOptimizer());
     }
 
+    /**
+	 * Create a MultiGaussianFitter.
+	 *
+	 * @param m number of Gaussian components (must be >= 1 and <= 6)
+	 * @param includeBaseline true to include constant baseline term
+	 * @param optimizer least squares optimizer to use
+	 */
     public MultiGaussianFitter(int m, boolean includeBaseline, LeastSquaresOptimizer optimizer) {
         super(Objects.requireNonNull(optimizer, "optimizer"),
               (x, y, w) -> InitialGuess.guess(m, includeBaseline, x, y));
         if (m <= 0) throw new IllegalArgumentException("m must be >= 1");
+        if (m > 6) throw new IllegalArgumentException("m must be <= 6 to keep fit manageable");
         this.m = m;
         this.includeBaseline = includeBaseline;
     }
 
-    public int getComponentCount() {
+    /** Number of Gaussian components. */
+    public int numGaussians() {
         return m;
     }
 
@@ -62,11 +80,6 @@ public final class MultiGaussianFitter extends AbstractLeastSquaresFitter {
     @Override
     protected int getParameterCount() {
         return 3 * m + (includeBaseline ? 1 : 0);
-    }
-
-    @Override
-    protected String getModelName() {
-        return includeBaseline ? ("MULTI_GAUSS_" + m + "_WITH_B") : ("MULTI_GAUSS_" + m);
     }
 
     @Override
@@ -367,4 +380,90 @@ public final class MultiGaussianFitter extends AbstractLeastSquaresFitter {
             return out;
         }
     }
+    
+    //------- descriptive string section -----------------
+   	@Override
+   	public String modelName() {
+   		if (includeBaseline) {
+   			return "MultiGaussian with baseline\n Num Gaussians = " + m;
+   		}
+   		return "MultiGaussian num = " + m;
+   	}
+
+   	@Override
+   	public String functionForm() {
+		if (includeBaseline) {
+			return String.format("y(x)=%s%s%s%se^[-(x-%s%s)%s/(2%s%s%s)] + B", CAPSIG, SUBN,
+					paramNames[0], SUBN, paramNames[1], SUBN, SUP2,
+					paramNames[2], SUBN, SUP2);
+		}
+		return String.format("y(x)=%s%s%s%se^[-(x-%s%s)%s/(2%s%s%s)]", CAPSIG, SUBN,
+				paramNames[0], SUBN, paramNames[1], SUBN, SUP2,
+				paramNames[2], SUBN, SUP2);
+	}
+
+   	/**
+   	 * Get the parameter name for the given index.
+   	 * 
+   	 * @param index the parameter index
+   	 * @return the parameter name
+   	 */
+   	@Override
+   	public String parameterName(int index) {
+   		if (index < 0 || index >= getParameterCount()) {
+   			throw new IllegalArgumentException("bad parameter index in Gaussian fit: " + index);
+   		}
+   		
+   		if (includeBaseline && (index == getParameterCount() - 1)) {
+   			return "B";
+   		}
+   		int component = index % 3;
+   		int sub = index / 3;
+
+   		return paramNames[component] + subArray[sub];
+   	}
+
+   	@Override
+   	public IFitStringGetter getStringGetter() {
+   		return this;
+   	}
+   	
+ 	//--------------------- test main -----------------------
+ 	public static void main(String arg[]) {
+		final double[] mu = {1.2, 3.3};
+ 		final double[] sigma = {0.3, 0.2};
+ 		final double[] A = {2.0, 1.1};
+ 		final double B = 0.5;
+ 		int n = 100;
+ 		int m = A.length;
+
+ 		Evaluator eval = (double x) -> {
+ 			double sum = 0;
+ 			for (int k = 0; k < m; k++) {
+ 				double dx = x - mu[k];
+ 				double z = dx / sigma[k];
+ 				sum += A[k] * Math.exp(-0.5 * z * z);
+ 			}
+ 			sum += B;
+ 			return sum;
+ 		};
+ 		
+ 		FitVectors testData = FitVectors.testData(eval, -1.0, 7.0, n, 4.0, 5.0);
+ 		MultiGaussianFitter fitter = new MultiGaussianFitter(m, true);
+ 		FitResult result = fitter.fit(testData.x, testData.y, testData.w);
+ 		System.out.println("True parameters: ");
+			System.out.print(" A = " + Arrays.toString(A) + "\n");
+			System.out.print(" mu = " + Arrays.toString(mu) + "\n");
+			System.out.print(" sigma = " + Arrays.toString(sigma) + "\n");
+			System.out.println(" B = " + B);
+		System.out.println(result);
+ 		
+ 		//print data and fit values
+		for (int i = 0; i < (n-1); i+=10) {
+			double xv = testData.x[i];
+			double yv = result.evaluator.value(xv);
+			System.out.printf("x=%.3f fit y=%.3f data y=%.3f%n", xv, yv, testData.y[i]);
+		}
+
+ 	}
 }

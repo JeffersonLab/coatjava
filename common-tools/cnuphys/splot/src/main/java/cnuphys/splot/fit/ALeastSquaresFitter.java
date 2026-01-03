@@ -1,4 +1,4 @@
-package cnuphys.splot.fit.apache;
+package cnuphys.splot.fit;
 
 import java.util.Objects;
 
@@ -13,7 +13,7 @@ import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.optim.SimpleVectorValueChecker;
 
-import cnuphys.splot.fit.Evaluator;
+import cnuphys.splot.plot.UnicodeSupport;
 
 /**
  * Base class for least-squares fitters built on Apache Commons Math 3.x
@@ -46,7 +46,29 @@ import cnuphys.splot.fit.Evaluator;
  * If you supply weights as {@code 1/sigmaY^2} in a diagonal weight matrix, this corresponds
  * to the conventional weighted chi-square.
  */
-public abstract class AbstractLeastSquaresFitter implements IFitter {
+public abstract class ALeastSquaresFitter implements IFitter, IFitStringGetter {
+	
+	//helpers from unicode
+	public static final String SUB0 = UnicodeSupport.SUB0;
+	public static final String SUB1 = UnicodeSupport.SUB1;
+	public static final String SUB2 = UnicodeSupport.SUB2;
+	public static final String SUBN = UnicodeSupport.SUBN;
+	public static final String SUP0 = UnicodeSupport.SUPER0;
+	public static final String SUP1 = UnicodeSupport.SUPER1;
+	public static final String SUP2 = UnicodeSupport.SUPER2;
+	public static final String SUPN = UnicodeSupport.SUPERN;
+	public static final String MU = UnicodeSupport.SMALL_MU;
+	public static final String SMALLSIG = UnicodeSupport.SMALL_SIGMA;
+	public static final String CAPSIG = UnicodeSupport.CAPITAL_SIGMA;
+	public static final String OMEGA = UnicodeSupport.SMALL_OMEGA;
+	public static final String PHI = UnicodeSupport.SMALL_PHI;
+	
+	public String[] subArray = {SUB0, SUB1, SUB2, UnicodeSupport.SUB3,
+			                   UnicodeSupport.SUB4, UnicodeSupport.SUB5,
+			                   UnicodeSupport.SUB6, UnicodeSupport.SUB7,
+			                   UnicodeSupport.SUB8, UnicodeSupport.SUB9};
+	
+	
 
     /** Optimizer used for the fit (often Levenberg-Marquardt). */
     protected final LeastSquaresOptimizer optimizer;
@@ -84,7 +106,7 @@ public abstract class AbstractLeastSquaresFitter implements IFitter {
      * @param optimizer optimizer instance (e.g. Levenberg-Marquardt)
      * @param initialGuesser fallback initial-guess strategy (non-null)
      */
-    protected AbstractLeastSquaresFitter(LeastSquaresOptimizer optimizer, IInitialGuess initialGuesser) {
+    protected ALeastSquaresFitter(LeastSquaresOptimizer optimizer, IInitialGuess initialGuesser) {
         this(optimizer, initialGuesser,
                 2000,
                 2000,
@@ -102,7 +124,7 @@ public abstract class AbstractLeastSquaresFitter implements IFitter {
      * @param checker convergence checker (may be null for none)
      * @param covarianceThreshold threshold passed to getCovariances
      */
-    protected AbstractLeastSquaresFitter(LeastSquaresOptimizer optimizer,
+    protected ALeastSquaresFitter(LeastSquaresOptimizer optimizer,
                                         IInitialGuess initialGuesser,
                                         int maxIterations,
                                         int maxEvaluations,
@@ -153,16 +175,6 @@ public abstract class AbstractLeastSquaresFitter implements IFitter {
     protected ParameterValidator defaultValidator() {
         return null;
     }
-
-    /**
-     * Model name used in the {@link FitResult}. Subclasses may override (e.g. "POLY_3").
-     *
-     * @return the model name label
-     */
-    protected String getModelName() {
-        return getClass().getSimpleName();
-    }
-
     /** @return max iterations used for the least-squares problem. */
     protected int getMaxIterations() {
         return maxIterations;
@@ -303,12 +315,20 @@ public abstract class AbstractLeastSquaresFitter implements IFitter {
         }
     }
     
+    /**
+	 * Create an evaluator for the fit result.
+	 *
+	 * @param fit the fit result
+	 * @return an evaluator
+	 */
+    
     public abstract Evaluator asEvaluator(final FitResult fit);
 
     /**
      * Create a {@link FitResult} from an Apache least-squares optimum.
      *
      * @param modelName label for FitResult
+     * @param modelFunction model function as a string
      * @param params fitted parameters
      * @param covariance covariance matrix or null
      * @param nPoints number of data points
@@ -316,36 +336,33 @@ public abstract class AbstractLeastSquaresFitter implements IFitter {
      * @param opt optimizer optimum
      * @return FitResult
      */
-    protected static FitResult buildFitResult(String modelName,
-                                              double[] params,
-                                              RealMatrix covariance,
-                                              int nPoints,
-                                              int nParams,
-                                              LeastSquaresOptimizer.Optimum opt) {
+    protected static FitResult buildFitResult(IFitStringGetter stringGetter,
+    		double[] params,
+    		RealMatrix covariance,
+            int nPoints,
+            int nParams,
+            LeastSquaresOptimizer.Optimum opt) {
 
-        final double cost = opt.getCost();
-        final double chiSq = cost * cost;
+		final double cost = opt.getCost();
+		final double chiSq = cost * cost;
 
-        final int dof = Math.max(1, nPoints - nParams);
-        final double chiSqReduced = chiSq / dof;
+		final int dof = Math.max(1, nPoints - nParams);
+		final double chiSqReduced = chiSq / dof;
 
-        final double rms = opt.getRMS();
+		final double rms = opt.getRMS();
 
-        FitResult fr = new FitResult(
-                modelName,
-                params,
-                covariance,
-                cost,
-                chiSq,
-                dof,
-                chiSqReduced,
-                rms,
-                opt.getIterations(),
-                opt.getEvaluations()
-        );
-         return fr;
-    }
-
+		FitResult fr = new FitResult(stringGetter, params, covariance, cost, chiSq, dof, chiSqReduced, rms,
+				opt.getIterations(), opt.getEvaluations());
+		return fr;
+	}
+   
+    /**
+     * Get the descriptive string getter for this fitter.
+     * @return the string getter
+     */
+    public abstract IFitStringGetter getStringGetter();
+    
+ 
     /**
      * Fit with no weights, no initial guess override, and no parameter validator override.
      *
@@ -449,9 +466,9 @@ public abstract class AbstractLeastSquaresFitter implements IFitter {
         final double[] params = opt.getPoint().toArray();
         final RealMatrix cov = safeCovariances(opt, getCovarianceThreshold());
 
-        FitResult fr = buildFitResult(getModelName(), params, cov, n, p, opt);
+        FitResult fr = buildFitResult(getStringGetter(), params, cov, n, p, opt);
         
-        // set the evaluator so can treat as a function
+        // set the evaluator so can treat the fit as a function useful for plotting
         fr.setEvaluator(asEvaluator(fr));
         return fr;
     }

@@ -1,4 +1,4 @@
-package cnuphys.splot.fit.apache;
+package cnuphys.splot.fit;
 
 import org.apache.commons.math3.fitting.leastsquares.LevenbergMarquardtOptimizer;
 
@@ -13,7 +13,7 @@ import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.util.Pair;
 
-import cnuphys.splot.fit.Evaluator;
+import cnuphys.splot.pdata.FitVectors;
 
 /**
  * Polynomial least-squares fitter using Apache Commons Math 3.x least-squares API.
@@ -33,7 +33,7 @@ import cnuphys.splot.fit.Evaluator;
  * linear least-squares solution (via {@link LinearLeastSquaresGuesser}) which is
  * an excellent starting point (often already the solution) for polynomials.
  */
-public final class PolynomialFitter extends AbstractLeastSquaresFitter implements IFitter {
+public final class PolynomialFitter extends ALeastSquaresFitter implements IFitter {
 
     /** Polynomial degree N (number of parameters is N+1). */
     private final int degree;
@@ -83,11 +83,6 @@ public final class PolynomialFitter extends AbstractLeastSquaresFitter implement
     @Override
     protected int getParameterCount() {
         return degree + 1;
-    }
-
-    @Override
-    protected String getModelName() {
-        return "POLY_" + degree;
     }
 
     @Override
@@ -347,51 +342,83 @@ public final class PolynomialFitter extends AbstractLeastSquaresFitter implement
 		return sb.toString();
 	}
     
+
+    //------- descriptive string section -----------------
+	@Override
+	public String modelName() {
+		return "Polynomial of Degree: " + degree;
+	}
+
+	@Override
+	public String functionForm() {
+		if (degree == 1) {
+			return "y(x)=mx+b";
+		} else if (degree == 2) {
+			return "y(x)=c₀+c₁x+c₂x²";
+		}
+	
+		return String.format("y(x)=c%s+c%sx+c%sx%s+...+ c%sx%s", SUB0, SUB1, SUB2, SUP2, SUBN, SUPN);
+	}
+
+	/**
+	 * Get the parameter name for the given index.
+	 * 
+	 * @param index the parameter index
+	 * @return the parameter name
+	 */
+	@Override
+	public String parameterName(int index) {
+		if (index < 0 || index >= getParameterCount()) {
+			throw new IllegalArgumentException("bad parameter index: " + index);
+		}
+		
+		if (degree == 1) {
+			if (index == 0) {
+				return "b";
+			} else {
+				return "m";
+			}
+		}
+
+		if (index < 10) {
+			return "c" + subArray[index];
+		}
+		return "c" + index;
+	}
+
+	@Override
+	public IFitStringGetter getStringGetter() {
+		return this;
+	}
+    
+    
     // Example main for testing
     public static void main(String[] args) {
     	
-    	Random rand = new Random();
+    	final double m = 3.3; // slope
+    	final double b = -0.4; // intercept
     	int n = 100;
-    	double dx = 0.1;
     	
-    	double[] xdata = new double[n];
-    	double[] ydata = new double[n];
-    	double[] edata = new double[n];
-       	double[] weights = new double[n];
-           	
-   	
-    	double m = 1.23;
-    	double b = 1.0;
-    	
-    	for (int i = 0; i < n; i++) {
-			xdata[i] = i * dx;
-			double jitter = 0.05 * rand.nextDouble();
-			ydata[i] = m * xdata[i] + b + jitter;
-			edata[i] = 0.1*Math.abs(ydata[i]);
-			weights[i] = 1.0/(1e-20 + edata[i]*edata[i]);
-		}
-    			
-
+        Evaluator evaluator = new Evaluator() {
+    		@Override	
+    		public double value(double x) {
+    			return m * x + b;
+    		}
+        };
+        
+        //test data
+        FitVectors testData = FitVectors.testData(evaluator, 0.0, 10.0, n, 5, 10);
+ 
 		PolynomialFitter fitter = new PolynomialFitter(1); // Linear fit
-		FitResult result = fitter.fit(xdata, ydata);
-
-		System.out.println(fitter.resultString(result));
+		FitResult result = fitter.fit(testData.x, testData.y, testData.w);
+		System.out.println("Truth: m = " + m + " b = " + b);
+		System.out.println(result);
 		for (int i = 0; i < (n-1); i+=10) {
-			double xv = xdata[i];
+			double xv = testData.x[i];
 			double yv = result.evaluator.value(xv);
-			System.out.printf("x=%.3f fit y=%.3f data y=%.3f%n", xv, yv, ydata[i]);
-		}
-		
-		//now with errors
-		FitResult result2 = fitter.fit(xdata, ydata, weights);
-		System.out.println(fitter.resultString(result2));
-
-		for (int i = 0; i < (n-1); i+=10) {
-			double xv = xdata[i];
-			double yv = result.evaluator.value(xv);
-			System.out.printf("x=%.3f fit y=%.3f data y=%.3f%n", xv, yv, ydata[i]);
+			System.out.printf("x=%.3f fit y=%.3f data y=%.3f%n", xv, yv, testData.y[i]);
 		}
 
 	}
-    
+
 }
