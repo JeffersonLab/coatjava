@@ -21,7 +21,7 @@ import org.apache.commons.math3.distribution.NormalDistribution;
 
 import cnuphys.splot.fit.FGaussian;
 import cnuphys.splot.fit.CurveDrawingMethod;
-import cnuphys.splot.fit.IValueGetter;
+import cnuphys.splot.fit.Evaluator;
 import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.pdata.DataSet;
@@ -39,7 +39,7 @@ import cnuphys.splot.plot.VerticalLine;
 import cnuphys.splot.style.SymbolType;
 
 @SuppressWarnings("serial")
-public class Grid extends JFrame implements IValueGetter {
+public class Grid extends JFrame implements Evaluator {
 
 	private static int NUMPLOTS = 6;
 	

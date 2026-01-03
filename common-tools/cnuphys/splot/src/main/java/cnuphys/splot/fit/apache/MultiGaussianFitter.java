@@ -12,7 +12,7 @@ import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.util.Pair;
 
-import cnuphys.splot.fit.IValueGetter;
+import cnuphys.splot.fit.Evaluator;
 
 /**
  * Fit a sum of Gaussians (optionally with a constant baseline).
@@ -133,7 +133,7 @@ public final class MultiGaussianFitter extends AbstractLeastSquaresFitter {
     }
 
     @Override
-    public IValueGetter asValueGetter(final FitResult fit) {
+    public Evaluator asEvaluator(final FitResult fit) {
         if (fit == null || fit.params == null) {
             throw new IllegalArgumentException("FitResult is null");
         }

@@ -3,7 +3,7 @@ package cnuphys.splot.pdata;
 import javax.swing.event.EventListenerList;
 
 import cnuphys.splot.fit.CurveDrawingMethod;
-import cnuphys.splot.fit.IValueGetter;
+import cnuphys.splot.fit.Evaluator;
 import cnuphys.splot.fit.apache.FitResult;
 import cnuphys.splot.fit.apache.IFitter;
 import cnuphys.splot.spline.CubicSpline;
@@ -23,7 +23,7 @@ import cnuphys.splot.style.Styled;
  * <h3>Fit evaluator</h3>
  * {@link FitResult} intentionally does not expose the fitter that produced it.
  * Therefore, when a fit is performed, the curve caches the corresponding
- * {@link IValueGetter} produced by {@link IFitter#asValueGetter(FitResult)} at fit-time.
+ * {@link Evaluator} produced by {@link IFitter#asEvaluator(FitResult)} at fit-time.
  *
  * @author heddle
  */
@@ -55,7 +55,7 @@ public abstract class ACurve {
 	 * Cached fit evaluator. This is stored at fit-time because FitResult does not
 	 * expose the fitter that produced it. This is a way to treat the fit as a function.
 	 */
-	private IValueGetter fitValueGetter;
+	private Evaluator fitValueGetter;
 
 	/** Curve name (legend label). */
 	private String name;
@@ -158,7 +158,7 @@ public abstract class ACurve {
 	 *
 	 * @return evaluator for the current fit, or null if none
 	 */
-	public final IValueGetter getFitValueGetter() {
+	public final Evaluator getFitValueGetter() {
 		return fitValueGetter;
 	}
 
@@ -168,7 +168,7 @@ public abstract class ACurve {
 	 * @param fitResult      fit result (may be null)
 	 * @param fitValueGetter evaluator corresponding to {@code fitResult} (may be null)
 	 */
-	public final void setFitArtifacts(FitResult fitResult, IValueGetter fitValueGetter) {
+	public final void setFitArtifacts(FitResult fitResult, Evaluator fitValueGetter) {
 		this.fitResult = fitResult;
 		this.fitValueGetter = fitValueGetter; //used to draw fit
 		markFitChanged();

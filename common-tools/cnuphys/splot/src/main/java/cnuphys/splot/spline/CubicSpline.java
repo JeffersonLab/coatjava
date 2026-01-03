@@ -9,7 +9,7 @@ import org.apache.commons.math3.analysis.UnivariateFunction;
 import org.apache.commons.math3.analysis.solvers.BrentSolver;
 import org.apache.commons.math3.exception.NoBracketingException;
 
-import cnuphys.splot.fit.IValueGetter;
+import cnuphys.splot.fit.Evaluator;
 
 
 /**
@@ -39,7 +39,7 @@ import cnuphys.splot.fit.IValueGetter;
  * If {@code x} is outside {@code [x[0], x[n-1]]}, this implementation clamps to the nearest endpoint
  * (returns {@code y[0]} or {@code y[n-1]}).
  */
-public class CubicSpline implements IValueGetter {
+public class CubicSpline implements Evaluator {
 
     /** Knot x-values (strictly increasing). */
     private final double[] _x;

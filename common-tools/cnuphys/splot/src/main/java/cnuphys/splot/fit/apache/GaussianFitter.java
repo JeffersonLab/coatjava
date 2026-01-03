@@ -13,7 +13,7 @@ import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.util.Pair;
 
-import cnuphys.splot.fit.IValueGetter;
+import cnuphys.splot.fit.Evaluator;
 /**
  * Nonlinear least-squares fitter for a 4-parameter Gaussian with baseline:
  *
@@ -128,7 +128,7 @@ public final class GaussianFitter extends AbstractLeastSquaresFitter {
      * @return an evaluator for the fitted Gaussian
      */
     @Override
-    public IValueGetter asValueGetter(final FitResult fit) {
+    public Evaluator asEvaluator(final FitResult fit) {
         Objects.requireNonNull(fit, "fit");
         if (fit == null || fit.params == null) {
             throw new IllegalArgumentException("FitResult is null");

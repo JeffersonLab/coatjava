@@ -152,7 +152,7 @@ public class HistoCurve extends ACurve {
 				if (fitter != null) {
 					FitVectors v = fitVectors();
 					FitResult fr = fitWithOptionalWeights(fitter, v);
-					setFitArtifacts(fr, (fr == null) ? null : fitter.asValueGetter(fr));
+					setFitArtifacts(fr, (fr == null) ? null : fitter.asEvaluator(fr));
 				}
 				break;
 			}

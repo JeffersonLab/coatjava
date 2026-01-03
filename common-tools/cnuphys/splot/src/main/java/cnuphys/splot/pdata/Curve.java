@@ -150,7 +150,7 @@ public class Curve extends ACurve {
 				if (fitter != null) {
 					FitVectors v = new FitVectors(xData, yData, eData);
 					FitResult fr = fitWithOptionalWeights(fitter, v);
-					setFitArtifacts(fr, (fr == null) ? null : fitter.asValueGetter(fr));
+					setFitArtifacts(fr, (fr == null) ? null : fitter.asEvaluator(fr));
 				}
 				break;
 			}

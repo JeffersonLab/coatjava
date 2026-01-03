@@ -13,7 +13,7 @@ import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.optim.SimpleVectorValueChecker;
 
-import cnuphys.splot.fit.IValueGetter;
+import cnuphys.splot.fit.Evaluator;
 
 /**
  * Base class for least-squares fitters built on Apache Commons Math 3.x
@@ -303,7 +303,7 @@ public abstract class AbstractLeastSquaresFitter implements IFitter {
         }
     }
     
-    public abstract IValueGetter asValueGetter(final FitResult fit);
+    public abstract Evaluator asEvaluator(final FitResult fit);
 
     /**
      * Create a {@link FitResult} from an Apache least-squares optimum.
@@ -331,7 +331,7 @@ public abstract class AbstractLeastSquaresFitter implements IFitter {
 
         final double rms = opt.getRMS();
 
-        return new FitResult(
+        FitResult fr = new FitResult(
                 modelName,
                 params,
                 covariance,
@@ -343,6 +343,7 @@ public abstract class AbstractLeastSquaresFitter implements IFitter {
                 opt.getIterations(),
                 opt.getEvaluations()
         );
+         return fr;
     }
 
     /**
@@ -448,6 +449,10 @@ public abstract class AbstractLeastSquaresFitter implements IFitter {
         final double[] params = opt.getPoint().toArray();
         final RealMatrix cov = safeCovariances(opt, getCovarianceThreshold());
 
-        return buildFitResult(getModelName(), params, cov, n, p, opt);
+        FitResult fr = buildFitResult(getModelName(), params, cov, n, p, opt);
+        
+        // set the evaluator so can treat as a function
+        fr.setEvaluator(asEvaluator(fr));
+        return fr;
     }
 }

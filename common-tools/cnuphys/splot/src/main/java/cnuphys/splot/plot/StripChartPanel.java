@@ -11,7 +11,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
-import cnuphys.splot.fit.IValueGetter;
+import cnuphys.splot.fit.Evaluator;
 import cnuphys.splot.pdata.PlotDataException;
 import cnuphys.splot.pdata.StripChartCurve;
 import cnuphys.splot.style.SymbolType;
@@ -20,7 +20,7 @@ public class StripChartPanel extends JPanel {
 
 	protected PlotCanvas _canvas;
 	
-	private IValueGetter _getter;
+	private Evaluator _getter;
 	private int _capacity;
 	private long _interval;
 	
@@ -38,7 +38,7 @@ public class StripChartPanel extends JPanel {
 	 * @param dataSet   the data set
 	 * @param plotTitle the title of the plot
 	 */
-	public StripChartPanel(String title, String xLabel, String yLabel, IValueGetter getter, int capacity, long interval) {
+	public StripChartPanel(String title, String xLabel, String yLabel, Evaluator getter, int capacity, long interval) {
 		
 		_getter = getter;
 		_capacity = capacity;

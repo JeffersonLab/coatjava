@@ -4,6 +4,8 @@ import java.util.Arrays;
 
 import org.apache.commons.math3.linear.RealMatrix;
 
+import cnuphys.splot.fit.Evaluator;
+
 /**
  * Generic result for a (weighted) least-squares fit.
  * <p>
@@ -45,6 +47,9 @@ public final class FitResult {
 
     /** Evaluations used by an iterative optimizer; may be 0 for closed-form fits. */
     public final int evaluations;
+    
+    /** "Use as a function" evaluator for the fit. */
+    public Evaluator evaluator;
 
     /**
 	 * Create a fit result.
@@ -60,7 +65,7 @@ public final class FitResult {
 	 * @param iterations      iterations used (0 if not applicable)
 	 * @param evaluations     evaluations used (0 if not applicable)
 	 */
-    public FitResult(String model,
+    protected FitResult(String model,
                      double[] params,
                      RealMatrix covariance,
                      double cost,
@@ -82,6 +87,14 @@ public final class FitResult {
         this.iterations = iterations;
         this.evaluations = evaluations;
     }
+    
+    /**
+     * Set the evaluator.
+     * @param evaluator
+     */
+    public void setEvaluator(Evaluator evaluator) {
+		this.evaluator = evaluator;
+	}
 
     /** @return number of parameters. */
     public int nParams() {

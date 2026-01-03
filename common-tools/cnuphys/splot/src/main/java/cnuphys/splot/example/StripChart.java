@@ -2,7 +2,7 @@ package cnuphys.splot.example;
 
 import java.awt.Color;
 
-import cnuphys.splot.fit.IValueGetter;
+import cnuphys.splot.fit.Evaluator;
 import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.pdata.PlotDataException;
 import cnuphys.splot.pdata.StripChartCurve;
@@ -10,7 +10,7 @@ import cnuphys.splot.plot.LimitsMethod;
 import cnuphys.splot.plot.PlotParameters;
 import cnuphys.splot.style.SymbolType;
 
-public class StripChart extends AExample implements IValueGetter {
+public class StripChart extends AExample implements Evaluator {
 
 	@Override
 	protected DataSet createDataSet() throws PlotDataException {

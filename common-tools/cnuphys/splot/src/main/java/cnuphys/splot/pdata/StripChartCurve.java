@@ -7,13 +7,13 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
-import cnuphys.splot.fit.IValueGetter;
+import cnuphys.splot.fit.Evaluator;
 
 /**
  * Backing data model for a strip chart / time-series plot.
  *
  * <p>
- * This class periodically samples a provided {@link IValueGetter} and appends
+ * This class periodically samples a provided {@link Evaluator} and appends
  * (t, y) points into bounded X and Y columns. When capacity is reached, the
  * oldest samples are dropped ("scrolls off the left").
  * </p>
@@ -40,7 +40,7 @@ public class StripChartCurve extends ACurve {
 	private int capacity;
 
 	/** Produces the next value given time in seconds. */
-	private final IValueGetter accumulator;
+	private final Evaluator accumulator;
 
 	/** Sampling period in milliseconds. Must be > 0. */
 	private long intervalMs;
@@ -73,7 +73,7 @@ public class StripChartCurve extends ACurve {
 	 *                    {@code accumulator.value(tSeconds)} (non-null)
 	 * @param intervalMs  update interval in milliseconds (> 0)
 	 */
-	public StripChartCurve(String name, String xName, String yName, int capacity, IValueGetter accumulator, long intervalMs) {
+	public StripChartCurve(String name, String xName, String yName, int capacity, Evaluator accumulator, long intervalMs) {
 		super(name);
 		this.accumulator = Objects.requireNonNull(accumulator, "accumulator");
 		xData = new DataColumn(xName);

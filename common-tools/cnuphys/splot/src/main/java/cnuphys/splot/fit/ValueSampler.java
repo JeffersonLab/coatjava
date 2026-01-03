@@ -2,9 +2,10 @@ package cnuphys.splot.fit;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
- * Utility methods for sampling {@link IValueGetter} functions
+ * Utility methods for sampling {@link Evaluator} functions
  * for plotting or further analysis.
  */
 public final class ValueSampler {
@@ -22,14 +23,12 @@ public final class ValueSampler {
      * @param n     number of sample points (n >= 2)
      * @return array { xs, ys } each of length n
      */
-    public static double[][] sampleUniform(IValueGetter f,
+    public static double[][] sampleUniform(Evaluator f,
                                            double xmin,
                                            double xmax,
                                            int n) {
 
-        if (f == null) {
-            throw new IllegalArgumentException("IValueGetter is null");
-        }
+       	Objects.requireNonNull(f, "Evaluator is null");
         if (n < 2) {
             throw new IllegalArgumentException("n must be >= 2");
         }
@@ -58,13 +57,9 @@ public final class ValueSampler {
      * @param xs x values
      * @return y values (same length as xs)
      */
-    public static double[] sampleAt(IValueGetter f, double[] xs) {
-        if (f == null) {
-            throw new IllegalArgumentException("IValueGetter is null");
-        }
-        if (xs == null) {
-            throw new IllegalArgumentException("xs is null");
-        }
+    public static double[] sampleAt(Evaluator f, double[] xs) {
+    	Objects.requireNonNull(xs, "xs is null");
+    	Objects.requireNonNull(f, "Evaluator is null");
 
         double[] ys = new double[xs.length];
         for (int i = 0; i < xs.length; i++) {
@@ -83,7 +78,7 @@ public final class ValueSampler {
      * @param n     nominal number of samples
      * @return array { xs, ys } with only finite points retained
      */
-    public static double[][] sampleUniformFinite(IValueGetter f,
+    public static double[][] sampleUniformFinite(Evaluator f,
                                                  double xmin,
                                                  double xmax,
                                                  int n) {

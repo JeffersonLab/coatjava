@@ -12,7 +12,7 @@ import java.awt.geom.Point2D;
 import java.util.Objects;
 
 import cnuphys.splot.fit.CurveDrawingMethod;
-import cnuphys.splot.fit.IValueGetter;
+import cnuphys.splot.fit.Evaluator;
 import cnuphys.splot.fit.apache.FitResult;
 import cnuphys.splot.pdata.ACurve;
 import cnuphys.splot.pdata.Curve;
@@ -74,7 +74,7 @@ public class CurveDrawer {
 		if (fr == null) {
 			return;
 		}
-		IValueGetter ivg = curve.getFitValueGetter();
+		Evaluator ivg = curve.getFitValueGetter();
 		if (ivg == null) {
 			return;
 		}
@@ -490,7 +490,7 @@ public class CurveDrawer {
 	}
 
 	// draw a value getter
-	private static void drawValueGetter(Graphics2D g, PlotCanvas plotCanvas, IValueGetter ivg) {
+	private static void drawValueGetter(Graphics2D g, PlotCanvas plotCanvas, Evaluator ivg) {
 
 		if (ivg == null) {
 			return;

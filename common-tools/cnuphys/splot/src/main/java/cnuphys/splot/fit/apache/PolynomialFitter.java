@@ -13,7 +13,7 @@ import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.apache.commons.math3.util.Pair;
 
-import cnuphys.splot.fit.IValueGetter;
+import cnuphys.splot.fit.Evaluator;
 
 /**
  * Polynomial least-squares fitter using Apache Commons Math 3.x least-squares API.
@@ -135,13 +135,13 @@ public final class PolynomialFitter extends AbstractLeastSquaresFitter implement
     }
 
     /**
-     * Create an {@link IValueGetter} that evaluates this polynomial using Horner's method.
+     * Create an {@link Evaluator} that evaluates this polynomial using Horner's method.
      *
      * @param fit fit result produced by this fitter
      * @return value getter
      */
     @Override
-    public IValueGetter asValueGetter(final FitResult fit) {
+    public Evaluator asEvaluator(final FitResult fit) {
         if (fit == null || fit.params == null) {
             throw new IllegalArgumentException("FitResult is null");
         }
@@ -323,6 +323,30 @@ public final class PolynomialFitter extends AbstractLeastSquaresFitter implement
         }
     }
     
+    /**
+	 * Create a result string for the polynomial fitter.
+	 * This is a simple string, not an html string.
+	 * @param fr the fit result
+	 * @return the result string
+	 */
+    public String resultString(FitResult fr) {
+    	StringBuilder sb = new StringBuilder();
+		sb.append("Polynomial Fitter: degree = " + degree + "\n");
+		sb.append("y(x) = c0 + c1 x + c2 x^2 + ... + cN x^N\n");
+		if (fr == null) {
+			sb.append("No fit result.");
+		} else {
+			sb.append("Fitted parameters:\n");
+			for (int i = 0; i < fr.nParams(); i++) {
+				sb.append(String.format("c%d = %.4f%n", i, fr.param(i)));
+			}
+			sb.append("chiSquare: " + fr.chiSquare + "\n");
+			sb.append("chiSquareReduced: " + fr.chiSquareReduced + "\n");
+		}
+		
+		return sb.toString();
+	}
+    
     // Example main for testing
     public static void main(String[] args) {
     	
@@ -351,21 +375,22 @@ public final class PolynomialFitter extends AbstractLeastSquaresFitter implement
 		PolynomialFitter fitter = new PolynomialFitter(1); // Linear fit
 		FitResult result = fitter.fit(xdata, ydata);
 
-		System.out.println("Fitted parameters (no errors):");
-		for (int i = 0; i < result.nParams(); i++) {
-			System.out.printf("c%d = %.4f%n", i, result.param(i));
+		System.out.println(fitter.resultString(result));
+		for (int i = 0; i < (n-1); i+=10) {
+			double xv = xdata[i];
+			double yv = result.evaluator.value(xv);
+			System.out.printf("x=%.3f fit y=%.3f data y=%.3f%n", xv, yv, ydata[i]);
 		}
-		System.out.println("chiSquare: " + result.chiSquare);
-		System.out.println("chiSquareReduced: " + result.chiSquareReduced);
 		
 		//now with errors
 		FitResult result2 = fitter.fit(xdata, ydata, weights);
-		System.out.println("Fitted parameters (with errors):");
-		for (int i = 0; i < result2.nParams(); i++) {
-			System.out.printf("c%d = %.4f%n", i, result2.param(i));
+		System.out.println(fitter.resultString(result2));
+
+		for (int i = 0; i < (n-1); i+=10) {
+			double xv = xdata[i];
+			double yv = result.evaluator.value(xv);
+			System.out.printf("x=%.3f fit y=%.3f data y=%.3f%n", xv, yv, ydata[i]);
 		}
-		System.out.println("chiSquare: " + result2.chiSquare);
-		System.out.println("chiSquareReduced: " + result2.chiSquareReduced);
 
 	}
     

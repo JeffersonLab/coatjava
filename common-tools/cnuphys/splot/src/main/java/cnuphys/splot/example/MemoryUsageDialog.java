@@ -5,7 +5,7 @@ import java.awt.Font;
 
 import javax.swing.JFrame;
 
-import cnuphys.splot.fit.IValueGetter;
+import cnuphys.splot.fit.Evaluator;
 import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.pdata.PlotDataException;
 import cnuphys.splot.pdata.StripChartCurve;
@@ -14,7 +14,7 @@ import cnuphys.splot.plot.LimitsMethod;
 import cnuphys.splot.plot.PlotParameters;
 import cnuphys.splot.style.SymbolType;
 
-public class MemoryUsageDialog extends APlotDialog implements IValueGetter {
+public class MemoryUsageDialog extends APlotDialog implements Evaluator {
 
 	private static Font _titleFont = Environment.getInstance().getCommonFont(12);
 	private static Font _statusFont = Environment.getInstance().getCommonFont(9);
