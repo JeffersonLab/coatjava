@@ -21,7 +21,6 @@ import cnuphys.splot.pdata.HistoData;
 import cnuphys.splot.pdata.PlotData;
 import cnuphys.splot.pdata.Snapshot;
 import cnuphys.splot.pdata.StripChartCurve;
-import cnuphys.splot.spline.CubicSpline;
 import cnuphys.splot.style.IStyled;
 import cnuphys.splot.style.Styled;
 import cnuphys.splot.style.SymbolDraw;
@@ -58,45 +57,16 @@ public class CurveDrawer {
 			drawStripChart(g, plotCanvas, (StripChartCurve) curve);
 		}
 		else if (curve instanceof HistoCurve) {
-			drawHisto1D(g, plotCanvas, (HistoCurve) curve);
+			drawHistoCurve(g, plotCanvas, (HistoCurve) curve);
 		}
 		else {
 			System.err.println("Unsupported curve type in drawCurve " + curve.name());
 			return;
 		}
 		
-		//draw the fit
-		drawFit(g, plotCanvas, curve);
 	}
 
-	private static void drawFit(Graphics g, PlotCanvas plotCanvas, ACurve curve) {
-		FitResult fr = curve.fitResult();
-		if (fr == null) {
-			return;
-		}
-		Evaluator ivg = curve.getFitValueGetter();
-		if (ivg == null) {
-			return;
-		}
-		
-		IStyled style = curve.getStyle();
-		Point2D.Double wp = new Point2D.Double();
-		Point p0 = new Point();
-		Point p1 = new Point();
 
-		Graphics2D g2 = (Graphics2D) g;
-
-		Stroke oldStroke = g2.getStroke();
-		g2.setStroke(GraphicsUtilities.getStroke(style.getFitLineWidth(), style.getFitLineStyle()));
-
-		Color fitColor = style.getFitLineColor();
-		if (fitColor == null) {
-			return;
-		}
-		g2.setColor(fitColor);
-		
-		
-	}
 
 	/**
 	 * Draw a standard XY(with optional errors) curve
@@ -106,7 +76,58 @@ public class CurveDrawer {
 	 * @param curve 	the XY(E)curve to be drawn
 	 */
 	public static void drawXYCurve(Graphics g, PlotCanvas canvas, Curve curve) {
+		if (!curve.isVisible()) {
+			return;
+		}
+		
+		if (curve.isDirty()) {
+			curve.doFit(true);
+		}
+
+		Point2D.Double wp = new Point2D.Double();
+		Point p0 = new Point();
+		Point p1 = new Point();
+
+		//get threadsafe copy of the data
+		Snapshot snapshot = curve.snapshot();
+
+		double x[] = snapshot.x;
+		double y[] = snapshot.y;
+		double ysig[] = snapshot.e; // can be null
+
+		if ((x == null) || (x.length < 1)) {
+			return;
+		}
+		
+		//draw the fit line or basic connector lines
+		drawFitOrLines(g, canvas, curve, x, y);
+
+
+		// symbols?
+		Styled style = curve.getStyle();
+
+		if (style.getSymbolType() != SymbolType.NOSYMBOL) {
+			for (int i = 0; i < x.length; i++) {
+
+				//draw sigmaY error bars
+				if (ysig != null) {
+					double y0 = y[i] - ysig[i];
+					double y1 = y[i] + ysig[i];
+					wp.setLocation(x[i], y0);
+					canvas.worldToLocal(p0, wp);
+					wp.setLocation(x[i], y1);
+					canvas.worldToLocal(p1, wp);
+					g.drawLine(p0.x, p0.y, p1.x, p1.y);
+				}
+
+				wp.setLocation(x[i], y[i]);
+				canvas.worldToLocal(p0, wp);
+				SymbolDraw.drawSymbol(g, p0.x, p0.y, style);
+
+			}
+		}
 	}
+
 	
 	/**
 	 * Draw a strip chart
@@ -125,7 +146,7 @@ public class CurveDrawer {
 	 * @param plotCanvas  the plot canvas
 	 * @param histoCurve the histogram curve
 	 */
-	private static void drawHisto1D(Graphics g, PlotCanvas canvas, HistoCurve histoCurve) {
+	private static void drawHistoCurve(Graphics g, PlotCanvas canvas, HistoCurve histoCurve) {
 
 		HistoData hd = histoCurve.getHistoData();
 
@@ -156,17 +177,9 @@ public class CurveDrawer {
 			y[bin] = counts[bin];
 			err[bin] = Math.sqrt(y[bin]);
 		}
-
-		// draw a fit
-		Fit yfit = histoColumn.getFit();
-		if (yfit != null) {
-			yfit.setX(x);
-			yfit.setY(y);
-			yfit.setSigmaY(null);
-			if (fitDrawable(histoColumn)) {
-				drawFit(g, canvas, yfit, histoColumn.getStyle());
-			}
-		}
+		
+		// draw the fit line
+		drawFitOrLines(g, canvas, histoCurve, x, y);
 
 		// draw statistical errors
 		if (hd.drawStatisticalErrors()) {
@@ -191,7 +204,6 @@ public class CurveDrawer {
 		}
 
 		// draw the bin borders
-		// TODO make optional
 		Rectangle b = canvas.getActiveBounds();
 		int n = poly.npoints;
 		g.setColor(borderColor);
@@ -201,137 +213,19 @@ public class CurveDrawer {
 
 	}
 
-
+	
 	/**
-	 * Draw a curve with x and y error bars
+	 * Draw the fit or basic no-fit connections for the given curve
 	 * 
 	 * @param g          the graphics context
+	 * 
 	 * @param plotCanvas the plot canvas
-	 * @param xcol       the x data column
-	 * @param ycol       the y data column
-	 * @param xerrCol    the x error bar column (often <code>null</code>)
-	 * @param yerrCol    the y error bar column
+	 * 
+	 * @param curve      the curve
 	 */
-	public static void XdrawCurve(Graphics g, PlotCanvas plotCanvas, ACurve curve) {
-
-		if (!curve.isVisible()) {
-			return;
-		}
-
-		Point2D.Double wp = new Point2D.Double();
-		Point p0 = new Point();
-		Point p1 = new Point();
+	private static void drawFitOrLines(Graphics g, PlotCanvas canvas, ACurve curve, double x[], double y[]) {
 		
-		Snapshot snapshot = curve.snapshot();
-
-		double x[] = snapshot.x;
-		double y[] = snapshot.y;
-
-		if ((x == null) || (x.length < 1)) {
-			return;
-		}
-		if ((y == null) || (y.length < 1)) {
-			return;
-		}
-
-		double ysig[] = null;
-		double xsig[] = null;
-		
-		if (xerrCol != null) {
-			xsig = xerrCol.getMinimalCopy();
-		}
-		if (yerrCol != null) {
-			ysig = yerrCol.getMinimalCopy();
-		}
-
-		// is there a fit?
-		Fit yfit = ycol.getFit();
-		if (yfit != null) {
-			if (yfit.isDirty()) {
-				yfit.setX(x);
-				yfit.setY(y);
-				yfit.setSigmaX(xsig);
-				yfit.setSigmaY(ysig);
-			}
-			if (fitDrawable(ycol)) {
-				drawFit(g, plotCanvas, yfit, ycol.getStyle());
-			}
-		}
-
-		// symbols?
-		Styled style = ycol.getStyle();
-
-		if (style == null) {
-			return;
-		}
-
-		if (style.getSymbolType() != SymbolType.NOSYMBOL) {
-			for (int i = 0; i < x.length; i++) {
-
-				if (xsig != null) {
-					double x0 = x[i] - xsig[i];
-					double x1 = x[i] + xsig[i];
-					wp.setLocation(x0, y[i]);
-					plotCanvas.worldToLocal(p0, wp);
-					wp.setLocation(x1, y[i]);
-					plotCanvas.worldToLocal(p1, wp);
-					g.drawLine(p0.x, p0.y, p1.x, p1.y);
-				}
-
-				if (ysig != null) {
-					double y0 = y[i] - ysig[i];
-					double y1 = y[i] + ysig[i];
-					wp.setLocation(x[i], y0);
-					plotCanvas.worldToLocal(p0, wp);
-					wp.setLocation(x[i], y1);
-					plotCanvas.worldToLocal(p1, wp);
-					g.drawLine(p0.x, p0.y, p1.x, p1.y);
-				}
-
-				wp.setLocation(x[i], y[i]);
-				plotCanvas.worldToLocal(p0, wp);
-				SymbolDraw.drawSymbol(g, p0.x, p0.y, style);
-
-			}
-		}
-
-	}
-
-	// check whether a fit is drawable
-	private static boolean fitDrawable(OldDataColumn ycol) {
-		if (ycol == null) {
-			return false;
-		}
-
-		Fit fit = ycol.getFit();
-
-		if (fit == null) {
-			return false;
-		}
-
-		if (ycol.isHistogram1D()) {
-			HistoData hd = ycol.getHistoData();
-			if ((hd == null) || (hd.getGoodCount() < 3)) {
-				return false;
-			}
-		}
-
-		int size = fit.size();
-		if (fit.getFitType() == CurveDrawingMethod.LINE) {
-			return (size > 1);
-		}
-		else {
-			return (size > 2);
-		}
-	}
-
-	// draw the fit
-	private static void drawFit(Graphics g, PlotCanvas plotCanvas, Fit yfit, IStyled style) {
-
-		if (yfit.size() < 2) {
-			return;
-		}
-
+		IStyled style = curve.getStyle();
 		Point2D.Double wp = new Point2D.Double();
 		Point p0 = new Point();
 		Point p1 = new Point();
@@ -346,40 +240,34 @@ public class CurveDrawer {
 			return;
 		}
 		g2.setColor(fitColor);
-
-		double x[] = yfit.getX();
-		double y[] = yfit.getY();
-
-		CurveDrawingMethod fitType = yfit.getFitType();
-
-		switch (fitType) {
+		CurveDrawingMethod drawMethod = curve.getCurveDrawingMethod();
+		
+		switch (drawMethod) {
 		case NONE:
 			break;
 
-		case CONNECT:
-			FitUtilities.parallelSort(x, y);
+		case CONNECT:  // simple connections
 			wp.setLocation(x[0], y[0]);
-			plotCanvas.worldToLocal(p0, wp);
+			canvas.worldToLocal(p0, wp);
 
 			for (int i = 1; i < x.length; i++) {
 				wp.setLocation(x[i], y[i]);
-				plotCanvas.worldToLocal(p1, wp);
+				canvas.worldToLocal(p1, wp);
 				g2.drawLine(p0.x, p0.y, p1.x, p1.y);
 				p0.setLocation(p1);
 			}
 			break;
 
 		case STAIRS:
-			FitUtilities.parallelSort(x, y);
 			wp.setLocation(x[0], y[0]);
-			plotCanvas.worldToLocal(p0, wp);
+			canvas.worldToLocal(p0, wp);
 
-			Rectangle rr = plotCanvas.getActiveBounds();
+			Rectangle rr = canvas.getActiveBounds();
 			int bottom = rr.y + rr.height;
 
 			for (int i = 1; i < x.length; i++) {
 				wp.setLocation(x[i], y[i]);
-				plotCanvas.worldToLocal(p1, wp);
+				canvas.worldToLocal(p1, wp);
 
 				g2.setColor(style.getFillColor());
 				g.fillRect(p0.x, p0.y, p1.x - p0.x, bottom - p0.y);
@@ -389,103 +277,49 @@ public class CurveDrawer {
 				g2.drawLine(p1.x, p0.y, p1.x, p1.y);
 				p0.setLocation(p1);
 			}
-			break;
-
-		case LINE:
-			if (yfit.isDirty()) {
-				try {
-					FitUtilities.fitStraightLine(yfit);
-				}
-				catch (Exception e) {
-					System.err.println("Line Fit FAILED");
-					yfit.setDirty();
-					return;
-				}
-			}
-			LineFit lfit = (LineFit) yfit.getFit();
-			drawValueGetter(g2, plotCanvas, lfit);
-			break;
-
-		case ERF:
-			if (yfit.isDirty()) {
-				try {
-					// FitUtilities.doFit(yfit, "cnuphys.splot.fit.ErfFit");
-					FitUtilities.fitErf(yfit);
-				}
-				catch (Exception e) {
-					System.err.println("Erf Fit FAILED");
-					yfit.setDirty();
-					return;
-				}
-			}
-
-			ErfFit efit = (ErfFit) yfit.getFit();
-			drawValueGetter(g2, plotCanvas, efit);
-
-			break;
-
-		case ERFC:
-			if (yfit.isDirty()) {
-				try {
-					FitUtilities.fitErfc(yfit);
-				}
-				catch (Exception e) {
-					System.err.println("Erfc Fit FAILED");
-					yfit.setDirty();
-					return;
-				}
-			}
-
-			ErfcFit ecfit = (ErfcFit) yfit.getFit();
-			drawValueGetter(g2, plotCanvas, ecfit);
-
-			break;
-
-		case GAUSSIANS:
-			if (yfit.isDirty()) {
-				System.err.println("Gaussian fit with errors num: " + yfit.getNumGaussian());
-				try {
-					// FitUtilities.doFit(yfit,
-					// "cnuphys.splot.fit.GaussianFit");
-					FitUtilities.fitGaussians(yfit);
-				}
-				catch (Exception e) {
-					System.err.println("Gaussian Fit FAILED: " + e.getMessage());
-					yfit.setDirty();
-					return;
-				}
-			}
-
-			GaussianFit ngfit = (GaussianFit) yfit.getFit();
-			drawValueGetter(g2, plotCanvas, ngfit);
+			
 			break;
 
 		case CUBICSPLINE:
-			FitUtilities.parallelSort(x, y);
-			if (yfit.isDirty()) {
-				yfit.setFit(new CubicSpline(x, y));
+			Evaluator ivg = curve.getCubicSpline();
+			if (ivg == null) {
+				System.err.println("Cubic spline fit is null for curve " + curve.name());
+				return;
 			}
-			CubicSpline nrcubic = (CubicSpline) yfit.getFit();
-			drawValueGetter(g2, plotCanvas, nrcubic);
+			drawEvaluator(g2, canvas, ivg);
 			break;
 
-		case POLYNOMIAL:
-			if (yfit.isDirty()) {
-				FitUtilities.fitPoly(yfit);
+			//all the true fits
+		default:
+			FitResult fr = curve.fitResult();
+			if (fr == null) {
+				//no fit result
+				System.err.println("No fit result for curve " + curve.name());
+				return;
 			}
-
-			PolyFit nrpfit = (PolyFit) yfit.getFit();
-			drawValueGetter(g2, plotCanvas, nrpfit);
+			
+			//this is the evaluator for the fit
+			ivg = curve.getFitValueGetter();
+			System.err.println("Fit evaluator is null in CurveDrawer");
+			if (ivg == null) {
+				return;
+			}
+			drawEvaluator(g2, canvas, ivg);
 			break;
-
-
+		}
+		
+		
 		g2.setStroke(oldStroke);
 	}
 
+		
+
+
 	// draw a value getter
-	private static void drawValueGetter(Graphics2D g, PlotCanvas plotCanvas, Evaluator ivg) {
+	private static void drawEvaluator(Graphics2D g, PlotCanvas plotCanvas, Evaluator ivg) {
 
 		if (ivg == null) {
+			System.err.println("Evaluator is null in CurveDrawer");
 			return;
 		}
 

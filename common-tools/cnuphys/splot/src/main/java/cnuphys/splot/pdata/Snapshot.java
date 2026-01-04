@@ -7,8 +7,15 @@ package cnuphys.splot.pdata;
  *
  */
 public final class Snapshot {
+	
+	/** The x data */
 	public final double[] x;
+	
+	/** The y data */
 	public final double[] y;
+	
+	/** The error data (sigmaY) */
+	public final double[] e;
 
 	/**
 	 * Create a snapshot. Presumably the object

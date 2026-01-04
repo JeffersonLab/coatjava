@@ -186,7 +186,7 @@ public class Curve extends ACurve {
 	 */
 	public Snapshot snapshot() {
 		synchronized (lock) {
-			return new Snapshot(xData.values(), yData.values());
+			return new Snapshot(xData.values(), yData.values(), eData == null ? null : eData.values());
 		}
 	}
 

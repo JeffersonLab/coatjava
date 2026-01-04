@@ -5,11 +5,11 @@ import java.util.Vector;
 
 import javax.swing.JPanel;
 
-import cnuphys.splot.pdata.DataSet;
+import cnuphys.splot.pdata.PlotData;
 
+@SuppressWarnings("serial")
 public class PlotGrid extends JPanel {
 
-	private int _numRow;
 	private int _numCol;
 	private Vector<PlotPanel> _panels = new Vector<PlotPanel>();
 
@@ -20,7 +20,6 @@ public class PlotGrid extends JPanel {
 	 * @param numCol the number of columns
 	 */
 	public PlotGrid(int numRow, int numCol) {
-		_numRow = numRow;
 		_numCol = numCol;
 		setLayout(new GridLayout(numRow, numCol, 2, 2));
 	}
@@ -89,7 +88,7 @@ public class PlotGrid extends JPanel {
 	 * @param col the column index
 	 * @return the dataset or <code>null</code>.
 	 */
-	public DataSet getDataSet(int row, int col) {
+	public PlotData getPlotData(int row, int col) {
 		PlotCanvas canvas = getPlotCanvas(row, col);
 		return (canvas == null) ? null : canvas.getPlotData();
 	}
