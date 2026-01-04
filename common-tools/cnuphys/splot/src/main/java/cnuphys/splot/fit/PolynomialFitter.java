@@ -391,10 +391,9 @@ public final class PolynomialFitter extends ALeastSquaresFitter implements IFitt
 		return this;
 	}
     
-    
-    // Example main for testing
-    public static void main(String[] args) {
-    	
+	// Linear test
+	private static void testLinear() {
+	  	
     	final double m = 3.3; // slope
     	final double b = -0.4; // intercept
     	int n = 100;
@@ -411,6 +410,7 @@ public final class PolynomialFitter extends ALeastSquaresFitter implements IFitt
  
 		PolynomialFitter fitter = new PolynomialFitter(1); // Linear fit
 		FitResult result = fitter.fit(testData.x, testData.y, testData.w);
+		System.out.println("\n===== Linear Fit Test  =====");
 		System.out.println("Truth: m = " + m + " b = " + b);
 		System.out.println(result);
 		for (int i = 0; i < (n-1); i+=10) {
@@ -418,7 +418,43 @@ public final class PolynomialFitter extends ALeastSquaresFitter implements IFitt
 			double yv = result.evaluator.value(xv);
 			System.out.printf("x=%.3f fit y=%.3f data y=%.3f%n", xv, yv, testData.y[i]);
 		}
-
+		
+	}
+	
+	// Cubic test
+	private static void testCubic() {
+		final double c0 = 1.0;
+		final double c1 = -2.0;
+		final double c2 = 0.5;
+		final double c3 = 0.1;
+		int n = 200;
+		
+		Evaluator evaluator = new Evaluator() {
+			@Override	
+			public double value(double x) {
+				return c0 + c1 * x + c2 * x * x + c3 * x * x * x;
+			}
+		};
+		
+		//test data
+		FitVectors testData = FitVectors.testData(evaluator, -10.0, 10.0, n, 20, 50);
+		PolynomialFitter fitter = new PolynomialFitter(3); // Cubic fit
+		FitResult result = fitter.fit(testData.x, testData.y, testData.w);
+		System.out.println("\n===== Cubic Fit Test  =====");
+		System.out.println("Truth: c0 = " + c0 + " c1 = " + c1 + " c2 = " + c2 + " c3 = " + c3);
+		System.out.println(result);
+		for (int i = 0; i < (n-1); i+=20) {
+			double xv = testData.x[i];
+			double yv = result.evaluator.value(xv);
+			System.out.printf("x=%.3f fit y=%.3f data y=%.3f%n", xv, yv, testData.y[i]);
+		}
+		
+	}
+    
+    // Example main for testing
+    public static void main(String[] args) {
+    	testLinear();
+		testCubic();
 	}
 
 }
