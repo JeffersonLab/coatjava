@@ -5,6 +5,7 @@ import java.awt.Graphics;
 import java.util.Collection;
 import cnuphys.splot.fit.CurveDrawingMethod;
 import cnuphys.splot.pdata.OldDataColumn;
+import cnuphys.splot.pdata.PlotData;
 import cnuphys.splot.pdata.OldDataColumn;
 import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.style.Styled;
@@ -47,24 +48,18 @@ public class Legend extends DraggableRectangle {
 	 */
 	public void draw(Graphics g) {
 		// System.err.println(toString());
-		DataSet ds = _canvas.getPlotData();
+		PlotData plotData = _canvas.getPlotData();
 
-		if (ds == null) {
+		if (plotData == null) {
 			return;
 		}
 
-		if (ds.getAllVisibleCurves().isEmpty()) {
+		if (plotData.getVisibleCurves().isEmpty()) {
 			return;
 		}
 
-		_numVisCurves = ds.getAllVisibleCurves().size();
+		_numVisCurves = plotData.getVisibleCurves().size();
 
-		if (_numVisCurves == 1) {
-			OldDataColumn dc = ds.getCurve(0);
-			if (!dc.isHistogram1D()) {
-				return;
-			}
-		}
 
 		width = getLegendWidth();
 		height = getLegendHeight();
@@ -79,7 +74,7 @@ public class Legend extends DraggableRectangle {
 
 		int yi = y + VGAP;
 
-		Collection<OldDataColumn> ycols = ds.getAllColumnsByType(DataColumnType.Y);
+		Collection<OldDataColumn> ycols = plotData.getAllColumnsByType(DataColumnType.Y);
 		for (OldDataColumn curve : ycols) {
 			if (curve.isVisible()) {
 				yi = drawColumnLegendInfo(g, yi, curve);

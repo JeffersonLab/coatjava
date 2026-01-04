@@ -147,6 +147,17 @@ public class PlotData implements CurveChangeListener {
 	public List<ACurve> getCurves() {
 		return Collections.unmodifiableList(curves);
 	}
+	
+	/** @return a list of visible curves. */
+	public List<ACurve> getVisibleCurves() {
+		ArrayList<ACurve> visibleCurves = new ArrayList<>();
+		for (ACurve curve : curves) {
+			if (curve.isVisible()) {
+				visibleCurves.add(curve);
+			}
+		}
+		return visibleCurves;
+	}
 
 	/** @return curve count. */
 	public int size() {
