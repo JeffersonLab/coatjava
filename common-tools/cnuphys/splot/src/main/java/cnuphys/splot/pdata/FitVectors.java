@@ -21,7 +21,7 @@ import cnuphys.splot.fit.Evaluator;
  * if an error column is provided, that it matches Y length as well.
  * </p>
  */
-public final class FitVectors {
+public class FitVectors {
 
 	/** x data (length n). */
 	public final double[] x;

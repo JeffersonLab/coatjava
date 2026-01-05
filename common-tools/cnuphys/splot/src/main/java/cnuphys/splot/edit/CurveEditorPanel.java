@@ -18,10 +18,10 @@ import javax.swing.JScrollPane;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import cnuphys.splot.fit.Fit;
 import cnuphys.splot.fit.CurveDrawingMethod;
-import cnuphys.splot.pdata.OldDataColumn;
-import cnuphys.splot.pdata.OldDataColumn;
+import cnuphys.splot.fit.FitResult;
+import cnuphys.splot.pdata.ACurve;
+import cnuphys.splot.pdata.HistoCurve;
 import cnuphys.splot.pdata.HistoData;
 import cnuphys.splot.plot.CommonBorder;
 import cnuphys.splot.plot.Environment;
@@ -31,7 +31,6 @@ import cnuphys.splot.style.IStyled;
 import cnuphys.splot.style.LineStyle;
 import cnuphys.splot.style.StyleEditorPanel;
 import cnuphys.splot.style.SymbolType;
-import cnuphys.splot.ui.FitEditorPanel;
 
 /**
  * Used to edit parameters for curves on a plot
@@ -39,6 +38,7 @@ import cnuphys.splot.ui.FitEditorPanel;
  * @author heddle
  *
  */
+@SuppressWarnings("serial")
 public class CurveEditorPanel extends JPanel implements ActionListener, PropertyChangeListener {
 
 	// the underlying plot canvas
@@ -82,7 +82,7 @@ public class CurveEditorPanel extends JPanel implements ActionListener, Property
 	}
 
 	// new curve has been selected
-	private void curveChanged(OldDataColumn curve) {
+	private void curveChanged(ACurve curve) {
 		// a new curve was selected, which might be null
 		// set all editors accordingly
 
@@ -91,7 +91,7 @@ public class CurveEditorPanel extends JPanel implements ActionListener, Property
 			// _showCurve.setSelected(curve.isVisible());
 			_stylePanel.setStyle(curve.getStyle());
 			_fitPanel.setFit(curve);
-			_fitPanel.fitSpecific(curve.getFit().getFitType());
+			_fitPanel.fitSpecific(curve.getCurveDrawingMethod());
 		}
 
 		_fitPanel.reconfigure(curve);
@@ -122,10 +122,10 @@ public class CurveEditorPanel extends JPanel implements ActionListener, Property
 		JPanel nPanel = getOpaquePanel();
 		nPanel.setLayout(new BorderLayout(0, 4));
 
-		Collection<OldDataColumn> ycols = _plotCanvas.getPlotData().getAllColumnsByType(DataColumnType.Y);
-		final DefaultListModel<OldDataColumn> model = new DefaultListModel<OldDataColumn>();
-		for (OldDataColumn dc : ycols) {
-			model.addElement(dc);
+		Collection<ACurve> curves = _plotCanvas.getPlotData().getCurves();
+		final DefaultListModel<ACurve> model = new DefaultListModel<ACurve>();
+		for (ACurve curve : curves) {
+			model.addElement(curve);
 		}
 
 		_curveTable = new CurveTable(_plotCanvas);
@@ -134,12 +134,8 @@ public class CurveEditorPanel extends JPanel implements ActionListener, Property
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
 				if (!e.getValueIsAdjusting()) {
-					OldDataColumn curve = _curveTable.getSelectedCurve();
+					ACurve curve = _curveTable.getSelectedCurve();
 					// might be null!
-
-					if (curve != null) {
-						System.err.println("selected curve " + curve.name());
-					}
 					curveChanged(curve);
 				}
 			}
@@ -191,7 +187,7 @@ public class CurveEditorPanel extends JPanel implements ActionListener, Property
 
 			@Override
 			public void colorChanged(Component component, Color color) {
-				OldDataColumn curve = _curveTable.getSelectedCurve();
+				ACurve curve = _curveTable.getSelectedCurve();
 				if (curve != null) {
 
 					if (component == _stylePanel.getSymbolColor()) {
@@ -208,7 +204,7 @@ public class CurveEditorPanel extends JPanel implements ActionListener, Property
 
 			}
 
-		};
+		};	
 
 		if (_stylePanel.getSymbolColor() != null) {
 			_stylePanel.getSymbolColor().setColorListener(iccl);
@@ -263,16 +259,19 @@ public class CurveEditorPanel extends JPanel implements ActionListener, Property
 	// put the text in the text area
 	private void setTextArea() {
 		_textArea.setText("");
-		OldDataColumn curve = _curveTable.getSelectedCurve();
+		ACurve curve = _curveTable.getSelectedCurve();
 		if (curve != null) {
-			_textArea.setText(curve.getFit().getFitString(curve));
+			FitResult fr = curve.fitResult();
+			if (fr != null) {
+				_textArea.setText(fr.htmlSummary());
+			}
 		}
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
 
-		OldDataColumn curve = _curveTable.getSelectedCurve();
+		ACurve curve = _curveTable.getSelectedCurve();
 		if (curve == null) {
 			return;
 		}
@@ -302,9 +301,9 @@ public class CurveEditorPanel extends JPanel implements ActionListener, Property
 			EnumComboBox ecb = (EnumComboBox) source;
 			CurveDrawingMethod fitType = CurveDrawingMethod.getValue((String) ecb.getSelectedItem());
 
-			if (curve.getFit().getFitType() != fitType) {
-				curve.getFit().setFitType(fitType);
-				_fitPanel.fitSpecific(curve.getFit().getFitType());
+			if (curve.getCurveDrawingMethod() != fitType) {
+				curve.setCurveMethod(fitType);
+				_fitPanel.fitSpecific(curve.getCurveDrawingMethod());
 
 				_fitPanel.reconfigure(curve);
 				validate();
@@ -334,7 +333,7 @@ public class CurveEditorPanel extends JPanel implements ActionListener, Property
 		}
 
 		// all other props rely on having a non null curve
-		OldDataColumn curve = _curveTable.getSelectedCurve();
+		ACurve curve = _curveTable.getSelectedCurve();
 		if (curve == null) {
 			return;
 		}
@@ -361,34 +360,41 @@ public class CurveEditorPanel extends JPanel implements ActionListener, Property
 
 		else if (FitEditorPanel.POLYNOMIALORDERPROP.equals(evt.getPropertyName())) {
 			int porder = (Integer) evt.getNewValue();
-			Fit fit = curve.getFit();
-			if (fit.getPolynomialOrder() != porder) {
-				fit.setPolynomialOrder(porder);
+			int fitOrder = curve.getFitOrder();
+			if (fitOrder != porder) {
+				curve.setFitOrder(porder);
 				_plotCanvas.repaint();
 			}
 		}
 
 		else if (FitEditorPanel.GAUSSIANNUMPROP.equals(evt.getPropertyName())) {
 			int ngauss = (Integer) evt.getNewValue();
-			Fit fit = curve.getFit();
-			if (fit.getNumGaussian() != ngauss) {
-				fit.setNumGaussian(ngauss);
+			int fitOrder = curve.getFitOrder();
+			if (fitOrder != ngauss) {
+				curve.setFitOrder(ngauss);
 				_plotCanvas.repaint();
 			}
 		}
 
 		else if (FitEditorPanel.USERMSPROP.equals(evt.getPropertyName())) {
-			boolean useRMS = (Boolean) evt.getNewValue();
-			HistoData hd = curve.getHistoData();
-			hd.setRmsInHistoLegend(useRMS);
-			_plotCanvas.repaint();
+			if (curve.isHistogram()) {
+				HistoCurve hcurve = (HistoCurve) curve;
+				boolean useRMS = (Boolean) evt.getNewValue();
+				HistoData hd = hcurve.getHistoData();
+				hd.setRmsInHistoLegend(useRMS);
+				_plotCanvas.repaint();
+			}
 		}
 
 		else if (FitEditorPanel.STATERRPROP.equals(evt.getPropertyName())) {
-			boolean statErr = (Boolean) evt.getNewValue();
-			HistoData hd = curve.getHistoData();
-			hd.setDrawStatisticalErrors(statErr);
-			_plotCanvas.repaint();
+			if (curve.isHistogram()) {
+				HistoCurve hcurve = (HistoCurve) curve;
+				boolean statErr = (Boolean) evt.getNewValue();
+				HistoData hd = hcurve.getHistoData();
+				hd.setDrawStatisticalErrors(statErr);
+				_plotCanvas.repaint();
+			}
+			
 		}
 
 	}

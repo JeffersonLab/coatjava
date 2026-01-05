@@ -87,7 +87,7 @@ public class HistoCurve extends ACurve {
 		switch (getCurveDrawingMethod()) {
 
 		case POLYNOMIAL:
-			return new PolynomialFitter(getPolynomialDegree());
+			return new PolynomialFitter(getFitOrder());
 
 		case ERF:
 			return new ErfErfcFitter(ErfErfcFitter.Kind.ERF);
@@ -97,7 +97,7 @@ public class HistoCurve extends ACurve {
 
 		case GAUSSIANS:
 			// "order" interpreted as number of Gaussians
-			return new MultiGaussianFitter(Math.max(1, getOrder()), true);
+			return new MultiGaussianFitter(Math.max(1, getFitOrder()), true);
 
 		default:
 			return null;

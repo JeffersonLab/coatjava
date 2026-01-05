@@ -66,18 +66,16 @@ public class StripChartCurve extends ACurve {
 	 * Create strip-chart data.
 	 *
 	 * @param name        series name
-	 * @param xName       x data column name
-	 * @param yName       y data column name
 	 * @param capacity    max number of retained samples (>= 2)
 	 * @param accumulator value source; called as
 	 *                    {@code accumulator.value(tSeconds)} (non-null)
 	 * @param intervalMs  update interval in milliseconds (> 0)
 	 */
-	public StripChartCurve(String name, String xName, String yName, int capacity, Evaluator accumulator, long intervalMs) {
+	public StripChartCurve(String name, int capacity, Evaluator accumulator, long intervalMs) {
 		super(name);
 		this.accumulator = Objects.requireNonNull(accumulator, "accumulator");
-		xData = new DataColumn(xName);
-		yData = new DataColumn(yName);
+		xData = new DataColumn();
+		yData = new DataColumn();
 
 		setCapacity(capacity);
 		setIntervalMs(intervalMs);
@@ -354,7 +352,7 @@ public class StripChartCurve extends ACurve {
 	// Simple test
 	public static void main(String[] args) {
 		
-		StripChartCurve sd = new StripChartCurve("test", "time", "value", 10, t -> Math.sin(t), 1000);
+		StripChartCurve sd = new StripChartCurve("test", 10, t -> Math.sin(t), 1000);
 		Runnable r = () -> {
 			System.err.println("Sampled. Size = " + sd.length());
 		};

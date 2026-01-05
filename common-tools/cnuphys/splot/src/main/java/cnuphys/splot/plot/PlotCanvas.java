@@ -20,7 +20,7 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.List;
-import java.util.Vector;
+import java.util.Objects;
 
 import javax.imageio.ImageIO;
 import javax.imageio.stream.ImageOutputStream;
@@ -29,18 +29,16 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
+
 import cnuphys.splot.edit.PlotPreferencesDialog;
 import cnuphys.splot.pdata.ACurve;
 import cnuphys.splot.pdata.CurveChangeType;
 import cnuphys.splot.pdata.DataChangeListener;
 import cnuphys.splot.pdata.HistoCurve;
-import cnuphys.splot.pdata.PlotDataException;
-import cnuphys.splot.pdata.PlotDataType;
 import cnuphys.splot.pdata.HistoData;
 import cnuphys.splot.pdata.PlotData;
+import cnuphys.splot.pdata.PlotDataType;
 import cnuphys.splot.rubberband.IRubberbanded;
 import cnuphys.splot.rubberband.Rubberband;
 import cnuphys.splot.toolbar.CommonToolBar;
@@ -106,7 +104,7 @@ public class PlotCanvas extends JComponent
 
 	// for rubberbanding
 	private Rubberband _rubberband;
-	
+
 	// reusable point
 	public Point2D.Double _workPoint = new Point2D.Double();
 
@@ -121,14 +119,15 @@ public class PlotCanvas extends JComponent
 
 	/**
 	 * Create a plot canvas for plotting a dataset
-	 * 
+	 *
 	 * @param plotData   the dataset to plot. It might contain many curves
 	 * @param plotTitle the plot title
 	 * @param xLabel    the x axis label
 	 * @param yLabel    the y axis label
 	 */
 	public PlotCanvas(PlotData plotData, String plotTitle, String xLabel, String yLabel) {
-		
+
+		Objects.requireNonNull(plotData, "plotData");
 		if (_dataFilePath == null) {
 			_dataFilePath = Environment.getInstance().getHomeDirectory();
 		}
@@ -140,15 +139,6 @@ public class PlotCanvas extends JComponent
 		_parameters.setYLabel(yLabel);
 		_plotTicks = new PlotTicks(this);
 
-		// default to xy plot no errors
-		if (plotData == null) {
-			try {
-				plotData = new PlotData(PlotDataType.XYXY, "X", "Y");
-			}
-			catch (PlotDataException e) {
-				e.printStackTrace();
-			}
-		}
 
 		setPlotData(plotData);
 
@@ -187,12 +177,12 @@ public class PlotCanvas extends JComponent
 			}
 		};
 		new Timer(delay, taskPerformer).start();
-		
+
 	}
-	
+
 	/**
 	 * Get the DataSet type
-	 * 
+	 *
 	 * @return the data set type
 	 */
 	public PlotDataType getType() {
@@ -201,7 +191,7 @@ public class PlotCanvas extends JComponent
 
 	/**
 	 * Get the plot title
-	 * 
+	 *
 	 * @return the plot title
 	 */
 	public String getTitle() {
@@ -210,7 +200,7 @@ public class PlotCanvas extends JComponent
 
 	/**
 	 * Get the plot parameters
-	 * 
+	 *
 	 * @return the plot parameters
 	 */
 	public PlotParameters getParameters() {
@@ -219,7 +209,7 @@ public class PlotCanvas extends JComponent
 
 	/**
 	 * Set the parent component, probably a PlotPanel
-	 * 
+	 *
 	 * @param parent the optional parent component
 	 */
 	public void setParent(Component parent) {
@@ -228,21 +218,21 @@ public class PlotCanvas extends JComponent
 
 	/**
 	 * Set a new data set for the canvas
-	 * 
-	 * @param ds the new dataset
+	 *
+	 * @param plotData the new dataset
 	 */
-	public void setPlotData(PlotData ds) {
+	public void setPlotData(PlotData plotData) {
 
-		_plotData = ds;
-		
-		ds.removeDataChangeListener(this);
-		ds.addDataChangeListener(this);
+		_plotData = plotData;
+
+		plotData.removeDataChangeListener(this);
+		plotData.addDataChangeListener(this);
 		repaint();
 	}
 
 	/**
 	 * Get the underlying plot data
-	 * 
+	 *
 	 * @return the underlying plot data
 	 */
 	public PlotData getPlotData() {
@@ -251,7 +241,7 @@ public class PlotCanvas extends JComponent
 
 	/**
 	 * Get the world boundary
-	 * 
+	 *
 	 * @return the world boundary
 	 */
 	public Rectangle.Double getWorld() {
@@ -263,7 +253,7 @@ public class PlotCanvas extends JComponent
 	 * set.
 	 */
 	public void setWorldSystem() {
-		
+
 		if (_worldSystem == null) {
 			_worldSystem = new Rectangle2D.Double();
 		}
@@ -283,39 +273,41 @@ public class PlotCanvas extends JComponent
 		double ymin = _plotData.yMin();
 		double ymax = _plotData.yMax();
 
+		//the limits methods are in the plot parameters
+		//defaults are ALGORITHMICLIMITS
 		PlotParameters params = getParameters();
-		
+
 		LimitsMethod xMethod = params.getXLimitsMethod();
 		LimitsMethod yMethod = params.getYLimitsMethod();
-		
+
 		switch (xMethod) {
 		case MANUALLIMITS:
 			xmin = params.getManualXMin();
 			xmax = params.getManualXMax();
 			break;
-			
+
 		case ALGORITHMICLIMITS:
 			NiceScale ns = new NiceScale(xmin, xmax, _plotTicks.getNumMajorTickX() + 2, _parameters.includeXZero());
 			xmin = ns.getNiceMin();
 			xmax = ns.getNiceMax();
 			break;
-			
+
 		case USEDATALIMITS:  //do nothing
 			break;
 		}
-		
+
 		switch (yMethod) {
 		case MANUALLIMITS:
 			ymin = params.getManualYMin();
 			ymax = params.getManualYMax();
 			break;
-			
+
 		case ALGORITHMICLIMITS:
 			NiceScale ns = new NiceScale(ymin, ymax, _plotTicks.getNumMajorTickY() + 2, _parameters.includeYZero());
 			ymin = ns.getNiceMin();
 			ymax = ns.getNiceMax();
 			break;
-			
+
 		case USEDATALIMITS:  //do nothing
 			break;
 		}
@@ -325,7 +317,7 @@ public class PlotCanvas extends JComponent
 
 	/**
 	 * Paint the canvas
-	 * 
+	 *
 	 * @param g the graphics context
 	 */
 	@Override
@@ -364,7 +356,7 @@ public class PlotCanvas extends JComponent
 
 	/**
 	 * Data is being added, possibly very quickly, so lets schedule a redraw
-	 * 
+	 *
 	 * @param rescale if <code>true</code> the world system will also be rescaled
 	 */
 	public void needsRedraw(boolean rescale) {
@@ -374,7 +366,7 @@ public class PlotCanvas extends JComponent
 
 	/**
 	 * Get the active plot area
-	 * 
+	 *
 	 * @return the active plot area
 	 */
 	public Rectangle getActiveBounds() {
@@ -449,7 +441,7 @@ public class PlotCanvas extends JComponent
 
 	/**
 	 * The mouse has been dragged over the plot canvas
-	 * 
+	 *
 	 * @param e the mouseEvent
 	 */
 	@Override
@@ -484,7 +476,7 @@ public class PlotCanvas extends JComponent
 
 	/**
 	 * The mouse has moved over the plot canvas
-	 * 
+	 *
 	 * @param e the mouseEvent
 	 */
 	@Override
@@ -508,7 +500,7 @@ public class PlotCanvas extends JComponent
 			 pp.x -= _activeBounds.x;
 			 pp.y -= _activeBounds.y;
 			localToWorld(pp, _workPoint);
-			_locationString = String.format("<html>(x, y) = (%7.2g, %-7.2g)<br>count = %d", _workPoint.x, _workPoint.y, _plotData.size());
+			_locationString = String.format("<html>(x, y) = (%7.2g, %-7.2g)", _workPoint.x, _workPoint.y);
 
 			if (_plotData.isHistoData()) {
 				List<ACurve> curves = _plotData.getVisibleCurves();
@@ -562,7 +554,7 @@ public class PlotCanvas extends JComponent
 
 	/**
 	 * Get the last updated location string
-	 * 
+	 *
 	 * @return
 	 */
 	public String getLocationString() {
@@ -571,16 +563,13 @@ public class PlotCanvas extends JComponent
 
 	/**
 	 * The mouse has been clicked on the plot canvas
-	 * 
+	 *
 	 * @param e the mouseEvent
 	 */
 	@Override
 	public void mouseClicked(MouseEvent e) {
 
-		if (_rubberband != null) {
-			return;
-		}
-		if (_parameters.isLegendDrawn() && _legend.contains(e.getPoint())) {
+		if ((_rubberband != null) || (_parameters.isLegendDrawn() && _legend.contains(e.getPoint()))) {
 			return;
 		}
 
@@ -603,7 +592,7 @@ public class PlotCanvas extends JComponent
 
 	/**
 	 * The mouse has been pressed on plot canvas
-	 * 
+	 *
 	 * @param e the mouseEvent
 	 */
 	@Override
@@ -652,7 +641,7 @@ public class PlotCanvas extends JComponent
 
 	/**
 	 * The mouse has been released on plot canvas. A release comes before the click
-	 * 
+	 *
 	 * @param e the mouseEvent
 	 */
 	@Override
@@ -667,7 +656,7 @@ public class PlotCanvas extends JComponent
 
 	/**
 	 * The mouse has entered the area of the plot canvas
-	 * 
+	 *
 	 * @param e the mouseEvent
 	 */
 	@Override
@@ -677,7 +666,7 @@ public class PlotCanvas extends JComponent
 
 	/**
 	 * The mouse has exited the area of the plot canvas
-	 * 
+	 *
 	 * @param e the mouseEvent
 	 */
 	@Override
@@ -686,7 +675,7 @@ public class PlotCanvas extends JComponent
 
 	/**
 	 * This converts a screen or pixel point to a world point.
-	 * 
+	 *
 	 * @param pp contains the local (screen-pixel) point.
 	 * @param wp will hold the resultant world point.
 	 */
@@ -698,7 +687,7 @@ public class PlotCanvas extends JComponent
 
 	/**
 	 * This converts a screen or pixel rectangle to a world rectangle.
-	 * 
+	 *
 	 * @param pr contains the local (screen-pixel) rectangle.
 	 * @param wr will hold the resultant world rectangle.
 	 */
@@ -723,7 +712,7 @@ public class PlotCanvas extends JComponent
 
 	/**
 	 * This converts a world point to a screen or pixel point.
-	 * 
+	 *
 	 * @param pp will hold the resultant local (screen-pixel) point.
 	 * @param wp contains world point.
 	 */
@@ -785,7 +774,7 @@ public class PlotCanvas extends JComponent
 
 	/**
 	 * Center the plot world at the click.
-	 * 
+	 *
 	 * @param pp
 	 */
 	public void recenterAtClick(Point pp) {
@@ -799,7 +788,7 @@ public class PlotCanvas extends JComponent
 
 	/**
 	 * Scale the canvas by a given amount
-	 * 
+	 *
 	 * @param amount the factor to scale by
 	 */
 	public void scale(double amount) {
@@ -927,7 +916,7 @@ public class PlotCanvas extends JComponent
 	/**
 	 * Used so another object can tell the plot canvas to fire a property change
 	 * event
-	 * 
+	 *
 	 * @param propName the property name
 	 * @param oldValue the old value
 	 * @param newValue the new value
@@ -939,7 +928,7 @@ public class PlotCanvas extends JComponent
 
 	/**
 	 * Get the canavas's plot ticks
-	 * 
+	 *
 	 * @return the plot ticks
 	 */
 	public PlotTicks getPlotTicks() {

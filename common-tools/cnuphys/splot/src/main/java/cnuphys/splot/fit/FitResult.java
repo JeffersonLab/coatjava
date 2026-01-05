@@ -183,6 +183,36 @@ public final class FitResult {
         double p = param(i);
         return new double[] { p - s, p + s };
     }
+    
+    /**
+	 * HTML summary of the fit result.
+	 * 
+	 * @return HTML string
+	 */
+    public String htmlSummary() {
+    	String BR = "<br>";
+    	StringBuilder sb = new StringBuilder();
+    	sb.append("<html><body>");
+    	
+    	
+    	sb.append("<b>Fit Result:</b>" + BR);
+    	sb.append(" Model: " + stringGetter.modelName() + BR);
+    	sb.append(" Form: " + stringGetter.functionForm() + BR);
+    	sb.append("<b> Parameters:</b>" + BR);
+    	
+    	IntStream.range(0, params.length)
+		.forEach(i ->
+			sb.append(String.format(" %s = %.3g%n", stringGetter.parameterName(i), params[i]) + BR)
+		);  
+	  	sb.append(String.format(" %s: %.3g%n", CHISQ, chiSquare) + BR);
+	  	sb.append(String.format(" %s/DoF: " + doubleFormat(chiSquareReduced, 3) + "%n", CHISQ) + BR);
+	  	sb.append(" Degrees of Freedom: " + dof + BR);
+	  	sb.append(String.format(" RMS: %.3g%n", rms) + BR);
+	  	sb.append(" Iterations: " + iterations + BR);
+	  	sb.append(" Evaluations: " + evaluations + BR);
+	  			sb.append("</body></html>");
+    	return sb.toString();
+    }
 
     @Override
     public String toString() {

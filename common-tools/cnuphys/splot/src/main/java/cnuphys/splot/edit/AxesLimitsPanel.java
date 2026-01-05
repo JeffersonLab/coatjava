@@ -7,10 +7,8 @@ import javax.swing.JPanel;
 import cnuphys.splot.plot.CommonBorder;
 import cnuphys.splot.plot.PlotCanvas;
 
+@SuppressWarnings("serial")
 public class AxesLimitsPanel extends JPanel {
-	
-	//the plot canvas
-	private PlotCanvas _canvas;
 	
 	//the two panels for t x and y axes
 	private OneAxisLimitsPanel  _xPanel;
@@ -21,8 +19,6 @@ public class AxesLimitsPanel extends JPanel {
 	 * @param canvas
 	 */
 	public AxesLimitsPanel(PlotCanvas canvas) {
-		_canvas = canvas;
-		
 		setLayout(new GridLayout(2, 1, 4, 4));
 		
 		_xPanel = new OneAxisLimitsPanel(canvas, OneAxisLimitsPanel.Axis.X);

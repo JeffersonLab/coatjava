@@ -101,16 +101,16 @@ public class PlotTicks {
 
 	}
 
-	// draw hisogram bin values
+	// draw histogram bin values
 	private void drawBinValues(Graphics g, double xmin, double xmax, double yc, int ticklen, int numtick, Rectangle ab,
 			boolean drawVal) {
 
-		PlotData ds = _plotCanvas.getPlotData();
-		if (!ds.isHistogramData()) {
+		PlotData plotData = _plotCanvas.getPlotData();
+		if (!plotData.isHistogramData()) {
 			return;
 		}
 		
-		HistoCurve hc = (HistoCurve)(ds.getCurve(0));
+		HistoCurve hc = (HistoCurve)(plotData.getCurve(0));
 		HistoData hd = hc.getHistoData();
 		if (hd == null) {
 			return;

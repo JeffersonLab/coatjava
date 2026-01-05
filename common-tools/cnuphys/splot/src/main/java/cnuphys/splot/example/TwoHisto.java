@@ -64,7 +64,7 @@ public class TwoHisto extends AExample {
 	}
 
 	@Override
-	public void setPreferences() {
+	public void setParameters() {
 		DataSet ds = _canvas.getPlotData();
 
 		ds.getCurveStyle(0).setFillColor(new Color(196, 196, 196, 64));

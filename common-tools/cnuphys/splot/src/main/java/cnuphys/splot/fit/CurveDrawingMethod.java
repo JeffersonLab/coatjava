@@ -4,9 +4,6 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
 
-import cnuphys.splot.plot.DoubleFormat;
-import cnuphys.splot.plot.UnicodeSupport;
-import cnuphys.splot.plot.X11Colors;
 import cnuphys.splot.spline.CubicSpline;
 import cnuphys.splot.style.EnumComboBox;
 
@@ -110,302 +107,28 @@ public enum CurveDrawingMethod {
 	public static EnumComboBox getComboBox(CurveDrawingMethod defaultChoice) {
 		return new EnumComboBox(DISPLAY_NAMES, defaultChoice);
 	}
-
-	// ------------------------------------------------------------------------
-	// Fit/draw description HTML
-	// ------------------------------------------------------------------------
-
-	private static final String _MU = UnicodeSupport.SMALL_MU;
-	private static final String _SUM = UnicodeSupport.CAPITAL_SIGMA;
-	private static final String _EOL = "<BR>";
-	private static final String _SP = "&nbsp;";
-
-	private static final String DARKGREEN = X11Colors.getX11ColorAsHex("Dark GREEN");
-
+	
 	/**
-	 * Get an HTML string describing the draw method and (when applicable) the fit result.
-	 * <p>
-	 * Expected object types by method:
-	 * </p>
-	 * <ul>
-	 *   <li>{@link #CUBICSPLINE}: {@link CubicSpline} (optional)</li>
-	 *   <li>Fit methods: {@link FitResult} (optional)</li>
-	 * </ul>
+	 * Obtain the {@link CurveDrawingMethod} corresponding to a display string
+	 * returned by an {@link EnumComboBox}.
 	 *
-	 * @param object the associated result object (may be {@code null})
-	 * @return HTML string (line breaks via {@code <BR>})
+	 * @param displayName the display string (may be {@code null})
+	 * @return the corresponding {@code CurveDrawingMethod}, or {@code null} if
+	 *         no match is found
 	 */
-	public String getFitHtml(Object object) {
-		StringBuilder sb = new StringBuilder(1024);
-
-		switch (this) {
-
-		case NONE:
-			sb.append("No lines.");
-			break;
-
-		case CONNECT:
-			sb.append("Connect the points.");
-			break;
-
-		case STAIRS:
-			sb.append("Staircase connection.");
-			break;
-
-		case CUBICSPLINE:
-		    sb.append(header("Cubic Spline:"));
-		    sb.append("Natural cubic spline interpolation");
-		    if (object instanceof CubicSpline) {
-		        CubicSpline cs = (CubicSpline) object;
-		        if (cs.isValid()) {
-		            sb.append(_EOL);
-		            sb.append(info("Knots = " + cs.size()
-		                    + _SP + "Range: ["
-		                    + DoubleFormat.doubleFormat(cs.xmin(), 6)
-		                    + ", "
-		                    + DoubleFormat.doubleFormat(cs.xmax(), 6)
-		                    + "]"));
-		        } else {
-		            sb.append(_EOL);
-		            sb.append(warning("Spline object is not valid."));
-		        }
-		    } else {
-		        sb.append(_EOL);
-		        sb.append(warning("Spline object not provided; only method description shown."));
-		    }
-		    break;
-
-		case POLYNOMIAL:
-			appendPolynomial(sb, object);
-			break;
-
-		case ERF:
-			appendErfErfc(sb, object, false);
-			break;
-
-		case ERFC:
-			appendErfErfc(sb, object, true);
-			break;
-
-		case GAUSSIAN:
-			appendSingleGaussian(sb, object);
-			break;
-
-		case GAUSSIANS:
-			appendMultipleGaussians(sb, object);
-			break;
-
+	public static CurveDrawingMethod getValue(String displayName) {
+		if (displayName == null) {
+			return null;
 		}
 
-		return sb.toString();
-	}
-
-	// ------------------------------------------------------------------------
-	// Fit-specific builders
-	// ------------------------------------------------------------------------
-
-	private static void appendPolynomial(StringBuilder sb, Object object) {
-		if (!(object instanceof FitResult)) {
-			sb.append(warning("fit info not available."));
-			return;
-		}
-
-		FitResult fitResult = (FitResult) object;
-		int degree = fitResult.nParams() - 1;
-
-		sb.append(header("Polynomial Fit (degree " + degree + "):"));
-		sb.append(descript("y = A<SUB>0</SUB> + A<SUB>1</SUB>&thinsp;x + A<SUB>2</SUB>&thinsp;x<SUP>2</SUP> + ... + A<SUB>"
-				+ degree + "</SUB>&thinsp;x<SUP>" + degree + "</SUP>"));
-		sb.append(info(chiSqString(fitResult.chiSquare) + _SP + "DOF = " + fitResult.dof + _SP
-				+ "Reduced " + chiSqString(fitResult.chiSquareReduced)));
-
-		sb.append(colorStr("<b>Polynomial Coefficients</b>", "blue")).append(_EOL);
-
-		for (int i = 0; i < fitResult.nParams(); i++) {
-			double val = fitResult.param(i);
-			double var = varianceDiag(fitResult, i);
-			sb.append(paramStr("A" + sub("", i), val, var));
-		}
-	}
-
-	private static void appendErfErfc(StringBuilder sb, Object object, boolean complement) {
-		if (!(object instanceof FitResult)) {
-			sb.append(warning("fit info not available."));
-			return;
-		}
-
-		FitResult fitResult = (FitResult) object;
-		String which = complement ? "Erfc" : "Erf";
-
-		sb.append(header(which + " Fit:"))
-		  .append(descript("y = A + B&thinsp;" + which + "[(x-" + _MU + ")/S]"));
-		sb.append(info(chiSqString(fitResult.chiSquare) + _SP
-				+ "DOF = " + fitResult.dof + _SP
-				+ "Reduced " + chiSqString(fitResult.chiSquareReduced)));
-
-		sb.append(colorStr("<b>" + which + " Parameters</b>", "blue")).append(_EOL);
-
-		// Expected parameterization: [A, B, mu, S]
-		String[] names = { "A", "B", _MU, "S" };
-		int n = Math.min(fitResult.nParams(), names.length);
-
-		for (int i = 0; i < n; i++) {
-			double val = fitResult.param(i);
-			double var = varianceDiag(fitResult, i);
-			sb.append(paramStr(names[i], val, var));
-		}
-
-		// If someone later adds extra parameters, show them generically
-		for (int i = n; i < fitResult.nParams(); i++) {
-			double val = fitResult.param(i);
-			double var = varianceDiag(fitResult, i);
-			sb.append(paramStr("P" + sub("", i), val, var));
-		}
-	}
-
-	private static void appendSingleGaussian(StringBuilder sb, Object object) {
-		if (!(object instanceof FitResult)) {
-			sb.append(warning("fit info not available."));
-			return;
-		}
-
-		FitResult fitResult = (FitResult) object;
-
-		sb.append(header("Gaussian Fit:"))
-		  .append(descript(" y = A&thinsp;exp{-[(x-" + _MU + ")/S]<SUP>2</SUP>}"));
-		sb.append(info(chiSqString(fitResult.chiSquare) + _SP
-				+ "DOF = " + fitResult.dof + _SP
-				+ "Reduced " + chiSqString(fitResult.chiSquareReduced)));
-
-		sb.append(colorStr("<b>Gaussian Parameters</b>", "blue")).append(_EOL);
-
-		// Expected: [A, mu, S]
-		String[] names = { "A", _MU, "S" };
-		int n = Math.min(fitResult.nParams(), names.length);
-
-		for (int i = 0; i < n; i++) {
-			double val = fitResult.param(i);
-			double var = varianceDiag(fitResult, i);
-			sb.append(paramStr(names[i], val, var));
-		}
-
-		for (int i = n; i < fitResult.nParams(); i++) {
-			double val = fitResult.param(i);
-			double var = varianceDiag(fitResult, i);
-			sb.append(paramStr("P" + sub("", i), val, var));
-		}
-	}
-
-	private static void appendMultipleGaussians(StringBuilder sb, Object object) {
-		if (!(object instanceof FitResult)) {
-			sb.append(warning("fit info not available."));
-			return;
-		}
-
-		FitResult fitResult = (FitResult) object;
-		int nGauss = fitResult.nParams() / 3;
-
-		sb.append(header("Multiple Gaussian Fit (" + nGauss + " Gaussians):"));
-		sb.append(descript(" y = " + _SUM + sub(" [A", 1) + "&thinsp;exp{-[(x-" + sub("", 1)
-				+ ")/" + sub("S", 1) + "]<SUP>2</SUP>}"));
-		sb.append(info(chiSqString(fitResult.chiSquare) + _SP
-				+ "DOF = " + fitResult.dof + _SP
-				+ "Reduced " + chiSqString(fitResult.chiSquareReduced)));
-
-		sb.append(colorStr("<b>Gaussian Parameters</b>", "blue")).append(_EOL);
-
-		for (int i = 0; i < nGauss; i++) {
-			sb.append(colorStr("<b>Gaussian " + (i + 1) + "</b>", DARKGREEN)).append(_EOL);
-
-			double valA = fitResult.param(3 * i);
-			double varA = varianceDiag(fitResult, 3 * i);
-			sb.append(paramStr("A" + sub("", i + 1), valA, varA));
-
-			double valMu = fitResult.param(3 * i + 1);
-			double varMu = varianceDiag(fitResult, 3 * i + 1);
-			sb.append(paramStr(_MU + sub("", i + 1), valMu, varMu));
-
-			double valS = fitResult.param(3 * i + 2);
-			double varS = varianceDiag(fitResult, 3 * i + 2);
-			sb.append(paramStr("S" + sub("", i + 1), valS, varS));
-		}
-	}
-
-
-
-	// ------------------------------------------------------------------------
-	// Formatting helpers
-	// ------------------------------------------------------------------------
-
-	private static double varianceDiag(FitResult fitResult, int i) {
-		if (fitResult == null || fitResult.covariance == null) {
-			return Double.NaN;
-		}
-		try {
-			if (i < 0 || i >= fitResult.covariance.getRowDimension()) {
-				return Double.NaN;
+		for (Map.Entry<CurveDrawingMethod, String> entry : DISPLAY_NAMES.entrySet()) {
+			if (displayName.equals(entry.getValue())) {
+				return entry.getKey();
 			}
-			return fitResult.covariance.getEntry(i, i);
 		}
-		catch (Exception e) {
-			return Double.NaN;
-		}
+
+		return null;
 	}
 
-	// <FONT style="BACKGROUND-COLOR: yellow">next </FONT>
-	private static String colorStr(String s, String fg, String bg) {
-		StringBuffer sb = new StringBuffer(512);
-		sb.append("<FONT style=\"");
-		if (bg != null) {
-			sb.append("BACKGROUND-COLOR: " + bg + "; ");
-		}
-		if (fg != null) {
-			sb.append("COLOR: " + fg);
-		}
-		sb.append("\">" + s + "</FONT>");
-		return sb.toString();
-	}
 
-	private static String colorStr(String s, String fg) {
-		return colorStr(s, fg, null);
-	}
-
-	private static String warning(String msg) {
-		return colorStr(msg, "red") + _EOL;
-	}
-
-	private static String header(String s) {
-		return "<b>" + s + "</b>" + _EOL;
-	}
-
-	private static String descript(String s) {
-		return colorStr(s, "black") + _EOL;
-	}
-
-	private static String info(String s) {
-		return colorStr(s, "black") + _EOL;
-	}
-
-	private static String chiSqString(double chiSq) {
-		return "<i>&chi;<SUP>2</SUP></i> = " + DoubleFormat.doubleFormat(chiSq, 6);
-	}
-
-	private static String paramStr(String name, double val, double var) {
-		StringBuffer sb = new StringBuffer(256);
-		sb.append(colorStr(name, "black") + " = " + DoubleFormat.doubleFormat(val, 6));
-		if (!Double.isNaN(var) && var >= 0.0) {
-			double sigma = Math.sqrt(var);
-			sb.append(_SP + colorStr("&plusmn;", "black") + _SP + DoubleFormat.doubleFormat(sigma, 6));
-		}
-		sb.append(_EOL);
-		return sb.toString();
-	}
-
-	private static String sub(String s, int ss) {
-		return s + "<SUB>" + ss + "</SUB>";
-	}
-
-	private static String sub(String s, String ss) {
-		return s + "<SUB>" + ss + "</SUB>";
-	}
 }

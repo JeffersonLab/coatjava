@@ -35,11 +35,11 @@ public abstract class ACurve {
 	/** Used to assign stable-ish style ids. */
 	private static int styleCount = 0;
 
-	/** Per-curve order/count knob for fit methods that need an integer order. */
-	private int order = 2;
-
-	/** Default polynomial degree used when method is POLYNOMIAL. */
-	private int polynomialDegree = 3;
+	/** Per-curve order/count knob for fit methods that need an integer order.
+	 * For multiGaussian, this is the number of Gaussians; for polynomial
+	 * this is the polynomial degree.
+	 */
+	private int fitOrder = 2;
 
 	/** Visibility flag (UI). */
 	private boolean visible = true;
@@ -222,25 +222,22 @@ public abstract class ACurve {
 		markStyleChanged();
 	}
 
-	/** @return per-curve order/count (>= 1) */
-	public int getOrder() {
-		return order;
+	/** Get the per-curve order/count knob for fit methods that need an integer order.
+	 * For multiGaussian, this is the number of Gaussians; for polynomial
+	 * this is the polynomial degree.
+	 * @return per-curve order/count (>= 1)
+	 */
+	public int getFitOrder() {
+		return fitOrder;
 	}
 
-	/** Set per-curve order/count. */
-	public void setOrder(int order) {
-		this.order = Math.max(1, order);
-		markStyleChanged();
-	}
-
-	/** @return polynomial degree (>= 0) */
-	public int getPolynomialDegree() {
-		return polynomialDegree;
-	}
-
-	/** Set polynomial degree. */
-	public void setPolynomialDegree(int degree) {
-		polynomialDegree = Math.max(0, degree);
+	/** set the per-curve order/count knob for fit methods that need an integer order.
+	 * For multiGaussian, this is the number of Gaussians; for polynomial
+	 * this is the polynomial degree.
+	 * @param order per-curve order/count (>= 1)
+	 */
+	public void setFitOrder(int order) {
+		this.fitOrder = Math.max(1, order);
 		markStyleChanged();
 	}
 

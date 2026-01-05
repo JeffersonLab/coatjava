@@ -331,13 +331,13 @@ public class CurveDrawer {
 		Point pp = new Point();
 		Point.Double wp = new Point.Double();
 
-		PlotData ds = plotCanvas.getPlotData();
-		double ymid = 0.5 * (ds.yMin() + ds.yMax());
+		PlotData plotData = plotCanvas.getPlotData();
+		double ymid = 0.5 * (plotData.yMin() + plotData.yMax());
 
-		wp.setLocation(ds.xMin(), ymid);
+		wp.setLocation(plotData.xMin(), ymid);
 		plotCanvas.worldToLocal(pp, wp);
 		int xsmin = pp.x;
-		wp.setLocation(ds.xMax(), ymid);
+		wp.setLocation(plotData.xMax(), ymid);
 		plotCanvas.worldToLocal(pp, wp);
 		int xsmax = pp.x;
 

@@ -9,15 +9,6 @@ package cnuphys.splot.pdata;
 public class DataColumn extends DataList {
 
     /**
-     * Create a data column with the given name.
-     *
-     * @param name column name
-     */
-    public DataColumn(String name) {
-        super(name);
-    }
-
-    /**
      * Get mean of the data in this column.
      *
      * @return mean, or NaN if empty

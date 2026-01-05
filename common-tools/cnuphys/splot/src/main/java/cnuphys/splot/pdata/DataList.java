@@ -12,27 +12,18 @@ import java.util.Collection;
 @SuppressWarnings("serial")
 public class DataList extends ArrayList<Double> {
 
-    private final String name;
-
     private double min = Double.POSITIVE_INFINITY;
     private double max = Double.NEGATIVE_INFINITY;
 
     /**
      * Create a data list with the given name.
      *
-     * @param name the name of the column (may be null, but discouraged)
      */
-    public DataList(String name) {
+    public DataList() {
         super();
-        this.name = name;
     }
 
-    /** @return the name of the column. */
-    public String name() {
-        return name;
-    }
-
-    @Override
+   @Override
     public boolean add(Double value) {
         if (value != null) {
             if (value < min) {

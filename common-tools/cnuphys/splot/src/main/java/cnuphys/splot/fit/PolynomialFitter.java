@@ -2,8 +2,6 @@ package cnuphys.splot.fit;
 
 import org.apache.commons.math3.fitting.leastsquares.LevenbergMarquardtOptimizer;
 
-import java.util.Random;
-
 import org.apache.commons.math3.fitting.leastsquares.LeastSquaresOptimizer;
 import org.apache.commons.math3.fitting.leastsquares.MultivariateJacobianFunction;
 import org.apache.commons.math3.fitting.leastsquares.ParameterValidator;
@@ -316,32 +314,7 @@ public final class PolynomialFitter extends ALeastSquaresFitter implements IFitt
                 return new ParameterBounds(lo.clone(), hi.clone());
             }
         }
-    }
-    
-    /**
-	 * Create a result string for the polynomial fitter.
-	 * This is a simple string, not an html string.
-	 * @param fr the fit result
-	 * @return the result string
-	 */
-    public String resultString(FitResult fr) {
-    	StringBuilder sb = new StringBuilder();
-		sb.append("Polynomial Fitter: degree = " + degree + "\n");
-		sb.append("y(x) = c0 + c1 x + c2 x^2 + ... + cN x^N\n");
-		if (fr == null) {
-			sb.append("No fit result.");
-		} else {
-			sb.append("Fitted parameters:\n");
-			for (int i = 0; i < fr.nParams(); i++) {
-				sb.append(String.format("c%d = %.4f%n", i, fr.param(i)));
-			}
-			sb.append("chiSquare: " + fr.chiSquare + "\n");
-			sb.append("chiSquareReduced: " + fr.chiSquareReduced + "\n");
-		}
-		
-		return sb.toString();
-	}
-    
+    }   
 
     //------- descriptive string section -----------------
 	@Override

@@ -43,7 +43,7 @@ public class StripChart extends AExample implements Evaluator {
 	}
 
 	@Override
-	public void setPreferences() {
+	public void setParameters() {
 		DataSet ds = _canvas.getPlotData();
 		ds.getCurveStyle(0).setFitLineColor(Color.red);
 		ds.getCurveStyle(0).setFillColor(new Color(128, 0, 0, 48));

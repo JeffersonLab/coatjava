@@ -43,7 +43,7 @@ public class GrowingHisto extends AExample {
 	}
 
 	@Override
-	public void setPreferences() {
+	public void setParameters() {
 		DataSet ds = _canvas.getPlotData();
 		ds.getCurveStyle(0).setFillColor(new Color(196, 196, 196, 64));
 		ds.getCurveStyle(0).setFitLineColor(Color.black);

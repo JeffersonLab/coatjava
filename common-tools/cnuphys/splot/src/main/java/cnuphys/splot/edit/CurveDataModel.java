@@ -1,11 +1,11 @@
 package cnuphys.splot.edit;
 
-import java.util.Vector;
-
+import java.util.List;
 import javax.swing.table.DefaultTableModel;
 
-import cnuphys.splot.pdata.OldDataColumn;
+import cnuphys.splot.pdata.ACurve;
 
+@SuppressWarnings("serial")
 public class CurveDataModel extends DefaultTableModel {
 
 	/**
@@ -25,7 +25,7 @@ public class CurveDataModel extends DefaultTableModel {
 	protected static final int columnWidths[] = { 30, 220 };
 
 	// the model data
-	protected Vector<OldDataColumn> _data;
+	protected List<ACurve> _data;
 
 	/**
 	 * Constructor
@@ -37,7 +37,7 @@ public class CurveDataModel extends DefaultTableModel {
 	/**
 	 * Constructor
 	 */
-	public CurveDataModel(Vector<OldDataColumn> curves) {
+	public CurveDataModel(List<ACurve> curves) {
 		super(colNames, 2);
 		setData(curves);
 	}
@@ -75,7 +75,7 @@ public class CurveDataModel extends DefaultTableModel {
 
 	@Override
 	public void setValueAt(Object value, int row, int col) {
-		OldDataColumn curve = _data.elementAt(row);
+		ACurve curve = _data.get(row);
 		switch (col) {
 
 		case VIS_COLUMN:
@@ -97,7 +97,7 @@ public class CurveDataModel extends DefaultTableModel {
 	@Override
 	public Object getValueAt(int row, int col) {
 
-		OldDataColumn curve = _data.elementAt(row);
+		ACurve curve = _data.get(row);
 
 		if (curve == null) {
 			return null;
@@ -120,7 +120,7 @@ public class CurveDataModel extends DefaultTableModel {
 	 * 
 	 * @param curve the new object to add to the model.
 	 */
-	public synchronized void add(OldDataColumn curve) {
+	public synchronized void add(ACurve curve) {
 		if (curve != null) {
 			_data.add(curve);
 		}
@@ -136,7 +136,7 @@ public class CurveDataModel extends DefaultTableModel {
 	 * 
 	 * @param curve the curveto remove.
 	 */
-	public synchronized void remove(OldDataColumn curve) {
+	public synchronized void remove(ACurve curve) {
 		if (curve != null) {
 			_data.remove(curve);
 		}
@@ -154,7 +154,7 @@ public class CurveDataModel extends DefaultTableModel {
 	/**
 	 * @param data the data to set
 	 */
-	public synchronized void setData(Vector<OldDataColumn> data) {
+	public synchronized void setData(List<ACurve> data) {
 		_data = data;
 	}
 
@@ -164,14 +164,14 @@ public class CurveDataModel extends DefaultTableModel {
 	 * @param row the zero based row
 	 * @return the curve corresponding to the row.
 	 */
-	public OldDataColumn getCurveAtRow(int row) {
+	public ACurve getCurveAtRow(int row) {
 		if ((_data == null) || (row < 0)) {
 			return null;
 		}
 		if (row >= _data.size()) {
 			return null;
 		}
-		return _data.elementAt(row);
+		return _data.get(row);
 	}
 
 }

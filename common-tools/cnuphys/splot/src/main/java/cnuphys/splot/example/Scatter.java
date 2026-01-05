@@ -60,7 +60,7 @@ public class Scatter extends AExample {
 	}
 
 	@Override
-	public void setPreferences() {
+	public void setParameters() {
 		Color fillColor = new Color(255, 0, 0, 96);
 		DataSet ds = _canvas.getPlotData();
 		Collection<OldDataColumn> ycols = ds.getAllColumnsByType(DataColumnType.Y);

@@ -71,7 +71,7 @@ public class AnotherGaussian extends AExample {
 	}
 
 	@Override
-	public void setPreferences() {
+	public void setParameters() {
 		DataSet ds = _canvas.getPlotData();
 		Collection<OldDataColumn> ycols = ds.getAllColumnsByType(DataColumnType.Y);
 		for (OldDataColumn dc : ycols) {

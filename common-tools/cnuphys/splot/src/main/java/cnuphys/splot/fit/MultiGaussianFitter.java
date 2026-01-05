@@ -435,11 +435,11 @@ public final class MultiGaussianFitter extends ALeastSquaresFitter {
  		final double[] A = {2.0, 1.1};
  		final double B = 0.5;
  		int n = 100;
- 		int m = A.length;
+ 		int numGauss = A.length;
 
  		Evaluator eval = (double x) -> {
  			double sum = 0;
- 			for (int k = 0; k < m; k++) {
+ 			for (int k = 0; k < numGauss; k++) {
  				double dx = x - mu[k];
  				double z = dx / sigma[k];
  				sum += A[k] * Math.exp(-0.5 * z * z);
@@ -449,7 +449,7 @@ public final class MultiGaussianFitter extends ALeastSquaresFitter {
  		};
  		
  		FitVectors testData = FitVectors.testData(eval, -1.0, 7.0, n, 4.0, 5.0);
- 		MultiGaussianFitter fitter = new MultiGaussianFitter(m, true);
+ 		MultiGaussianFitter fitter = new MultiGaussianFitter(numGauss, true);
  		FitResult result = fitter.fit(testData.x, testData.y, testData.w);
  		System.out.println("True parameters: ");
 			System.out.print(" A = " + Arrays.toString(A) + "\n");

@@ -28,14 +28,11 @@ public class SplotMenus implements ActionListener {
 	private PlotCanvas _plotCanvas;
 
 	// the menus
-	protected JMenu _fileMenu;
 	protected JMenu _editMenu;
 
 	// the menu items
-	protected JMenuItem _quitItem;
 	protected JMenuItem _prefItem;
 	protected JMenuItem _curveItem;
-	protected JMenuItem _axesItem;
 
 	protected JCheckBoxMenuItem _showExtraCB;
 
@@ -69,24 +66,11 @@ public class SplotMenus implements ActionListener {
 		makeEditMenu(canvas, container);
 	}
 
-	// make the file menu
-	protected void makeFileMenu(Container container, boolean addQuit) {
-		_fileMenu = new JMenu("File");
-
-		if (addQuit) {
-//			_fileMenu.addSeparator();
-			_quitItem = addMenuItem("Quit", 'Q', _fileMenu);
-		}
-		container.add(_fileMenu);
-	}
-
 	// make the edit menu
 	protected void makeEditMenu(PlotCanvas canvas, Container container) {
 		_editMenu = new JMenu("Edit");
 		_prefItem = addMenuItem("Preferences...", 'P', _editMenu);
-//		_dataItem = addMenuItem("Data...", 'D', _editMenu);
 		_curveItem = addMenuItem("Curves...", 'C', _editMenu);
-		_axesItem = addMenuItem("Axes...", 'A', _editMenu);
 		_editMenu.addSeparator();
 		_showExtraCB = addMenuCheckBox("Show any Extra Text", _editMenu, canvas.getParameters().extraDrawing());
 		container.add(_editMenu);
@@ -141,10 +125,7 @@ public class SplotMenus implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 		Object source = e.getSource();
 
-		if (source == _quitItem) {
-			System.exit(0);
-		}
-		else if (source == _prefItem) {
+		if (source == _prefItem) {
 			_plotCanvas.showPreferencesEditor();
 		}
 
@@ -154,20 +135,6 @@ public class SplotMenus implements ActionListener {
 			cd.selectFirstCurve();
 			cd.setVisible(true);
 		}
-		else if (source == _axesItem) {
-			PlotDataType type = _plotCanvas.getType();
-			switch (type) {
-			case H1D:
-			case STRIP:
-				JOptionPane.showMessageDialog(null, "Axes editing is not yet supported for this type of plot.",
-						"Not Supported", JOptionPane.INFORMATION_MESSAGE);
-				break;
-
-			default:
-				break;
-			}
-		}
-
 		else if (source == _showExtraCB) {
 			_plotCanvas.getParameters().setExtraDrawing(_showExtraCB.isSelected());
 			_plotCanvas.repaint();
@@ -183,14 +150,6 @@ public class SplotMenus implements ActionListener {
 		return _plotCanvas;
 	}
 
-	/**
-	 * Get the file menu
-	 * 
-	 * @return the file menu
-	 */
-	public JMenu getFileMenu() {
-		return _fileMenu;
-	}
 
 	/**
 	 * Get the edit menu
@@ -199,15 +158,6 @@ public class SplotMenus implements ActionListener {
 	 */
 	public JMenu getEditMenu() {
 		return _editMenu;
-	}
-
-	/**
-	 * Get the quit item (might be null)
-	 * 
-	 * @return the quit item
-	 */
-	public JMenuItem getQuitItem() {
-		return _quitItem;
 	}
 
 	/**

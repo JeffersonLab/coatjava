@@ -1,4 +1,4 @@
-package cnuphys.splot.fit;
+package cnuphys.splot.edit;
 
 import java.awt.Component;
 import java.awt.FlowLayout;
@@ -8,14 +8,17 @@ import java.awt.event.ItemListener;
 
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
-import cnuphys.splot.edit.VerticalFlowLayout;
-import cnuphys.splot.pdata.DataColumn;
+
+import cnuphys.splot.fit.CurveDrawingMethod;
+import cnuphys.splot.pdata.ACurve;
+import cnuphys.splot.pdata.HistoCurve;
 import cnuphys.splot.pdata.HistoData;
 import cnuphys.splot.plot.CommonBorder;
 import cnuphys.splot.plot.Environment;
 import cnuphys.splot.plot.TextFieldSlider;
 import cnuphys.splot.style.EnumComboBox;
 
+@SuppressWarnings("serial")
 public class FitEditorPanel extends JPanel {
 
 	// properties changed
@@ -54,7 +57,6 @@ public class FitEditorPanel extends JPanel {
 
 	// add the components
 	private void addContent() {
-		// setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
 		setLayout(new VerticalFlowLayout());
 
@@ -79,8 +81,8 @@ public class FitEditorPanel extends JPanel {
 	// create the selector for the number of polygons
 	private void createPolySelector() {
 
-		String labels[] = { "0", "2", "4", "6", "8", "10", "12", "14", "16" };
-		_polynomialOrderSelector = new TextFieldSlider(0, 16, 2, _font, 1, labels, 180, 40, "Polynomial Order") {
+		String labels[] = { "1", "2", "3", "4", "5", "6", "7", "8" };
+		_polynomialOrderSelector = new TextFieldSlider(1, 8, 2, _font, 0, labels, 180, 40, "Polynomial Order") {
 
 			@Override
 			public double sliderValueToRealValue() {
@@ -168,54 +170,44 @@ public class FitEditorPanel extends JPanel {
 		};
 	}
 
+
 	/**
 	 * Reconfigure fit widgets based on fit type
 	 * 
 	 * @param curve the active curve
 	 */
-	public void reconfigure(DataColumn curve) {
+	public void reconfigure(ACurve curve) {
+		// Remove everything that is method- or curve-type-specific.
+		carefulRemove(_polynomialOrderSelector);
+		carefulRemove(_gaussianCountSelector);
+		carefulRemove(_histoCBPanel);
+
 		if (curve == null) {
-			remove(_polynomialOrderSelector);
-			remove(_gaussianCountSelector);
-			remove(_histoCBPanel);
-		}
-		else {
-
-			if (curve.isHistogram1D()) {
-				HistoData hd = curve.getHistoData();
-				carefulAdd(_histoCBPanel);
-			}
-
-			switch (curve.getCurveDrawingMethod()) {
-
-			case POLYNOMIAL:
-				remove(_gaussianCountSelector);
-				carefulAdd(_polynomialOrderSelector);
-				break;
-				
-			case GAUSSIAN:
-				break;
-
-			case GAUSSIANS:
-				remove(_polynomialOrderSelector);
-				carefulAdd(_gaussianCountSelector);
-				break;
-
-				
-			case ERF:
-				break;
-				
-			case ERFC:
-				break;
-
-			default:
-				remove(_polynomialOrderSelector);
-				remove(_gaussianCountSelector);
-				break;
-			}
+			revalidate();
+			repaint();
+			return;
 		}
 
-		// super.validate();
+		// Histogram-only widgets.
+		if (curve.isHistogram()) {
+			carefulAdd(_histoCBPanel);
+		}
+
+		// Method-specific widgets.
+		switch (curve.getCurveDrawingMethod()) {
+		case POLYNOMIAL:
+			carefulAdd(_polynomialOrderSelector);
+			break;
+		case GAUSSIANS:
+			carefulAdd(_gaussianCountSelector);
+			break;
+		default:
+			// none
+			break;
+		}
+
+		revalidate();
+		repaint();
 	}
 
 	// set components enabled
@@ -238,31 +230,47 @@ public class FitEditorPanel extends JPanel {
 		add(comp);
 	}
 
+	private void carefulRemove(Component comp) {
+		for (Component c : this.getComponents()) {
+			if (c == comp) {
+				remove(comp);
+				return;
+			}
+		}
+	}
+
 	/**
 	 * FitEditorPanel Set the choices
 	 * 
-	 * @param fit the new choices
+	 * @param curve the curve whose fit-related settings should be reflected in the UI
 	 */
-	public void setFit(DataColumn curve) {
+	public void setFit(ACurve curve) {
+		if (curve == null) {
+			return;
+		}
 
-		if (curve.isHistogram1D()) {
-			HistoData hd = curve.getHistoData();
+		// Histogram-specific settings
+		if (curve.isHistogram()) {
+			HistoData hd = ((HistoCurve) curve).getHistoData();
 			_rmsOrCB.setSelected(hd.useRmsInHistoLegend());
+			_statErrorCB.setSelected(hd.drawStatisticalErrors());
 		}
 
 		CurveDrawingMethod cmd = curve.getCurveDrawingMethod();
 		if (cmd != null) {
-			//TODO is name() correct here?
-			_fitSelector.setSelectedItem(cmd.name());
-//			_polynomialOrderSelector.setValue(cmd.getPolynomialOrder());
-//			_gaussianCountSelector.setValue(fit.getNumGaussian());
+			// EnumComboBox historically used the enum's name() string.
+			_fitSelector.setSelectedItem(cmd.getDisplayName());
 		}
+
+		// Per-curve knobs (now stored on ACurve)
+		_polynomialOrderSelector.setValue(curve.getFitOrder());
+		_gaussianCountSelector.setValue(curve.getFitOrder());
 	}
 
 	/**
 	 * Further enable/disable based on fit type
 	 * 
-	 * @param type
+	 * @param type the active curve drawing method
 	 */
 	public void fitSpecific(CurveDrawingMethod type) {
 		switch (type) {
@@ -284,16 +292,16 @@ public class FitEditorPanel extends JPanel {
 	}
 
 	/**
-	 * Get the line selector
+	 * Get the fit selector.
 	 * 
-	 * @return the line selector
+	 * @return the fit selector
 	 */
 	public EnumComboBox getFitSelector() {
 		return _fitSelector;
 	}
 
 	/**
-	 * Get the polynomial order slider
+	 * Get the polynomial order slider.
 	 * 
 	 * @return polynomial order slider
 	 */
@@ -302,7 +310,7 @@ public class FitEditorPanel extends JPanel {
 	}
 
 	/**
-	 * Get the number of gaussian slider
+	 * Get the number of gaussian slider.
 	 * 
 	 * @return number of gaussian slider
 	 */
@@ -311,7 +319,7 @@ public class FitEditorPanel extends JPanel {
 	}
 
 	/**
-	 * Get the rms or sigma check box
+	 * Get the rms or sigma check box.
 	 * 
 	 * @return the rms or sigma check box
 	 */
@@ -320,7 +328,7 @@ public class FitEditorPanel extends JPanel {
 	}
 
 	/**
-	 * Get the draw stat error check box
+	 * Get the draw stat error check box.
 	 * 
 	 * @return the draw stat error checkbox
 	 */

@@ -82,51 +82,61 @@ public class PlotData implements CurveChangeListener {
 	 * Create plot data with specified data set type and column names.
 	 *
 	 * @param type     the data set type (non-null)
-	 * @param colNames the column names (interpretation depends on {@code type})
+	 * @param curveNames a curve is created for each curve name. Must be non-null
+	 * and contain at least one name. The names should not be null.
+	 * @param fitOrders optional fit orders for each curve (may be null). If
+	 * non-null, the length must match the number of curve names. This fit orders are
+	 * assigned to each curve via {@link Curve#setFitOrder(int)}. They are only relevant
+	 * for MultiGaussian (no. of Gaussians) and Polynomial (polynomial degree) fits. 
 	 * @throws PlotDataException if there is a problem creating the data set
 	 */
-	public PlotData(PlotDataType type, String... colNames) throws PlotDataException {
-		if (type == null) {
-			throw new PlotDataException("PlotDataType is null.");
+	public PlotData(PlotDataType type, String[] curveNames, int[] fitOrders) throws PlotDataException {
+ 		
+		Objects.requireNonNull(type, "type");
+		Objects.requireNonNull(curveNames, "curveNames");
+		
+		int curveCount = curveNames.length;
+		if (curveCount < 1) {
+			throw new PlotDataException("Must supply at least one curve name.");
 		}
+		
+		//fit orders can be null, but if not null lengths must match
+		if (fitOrders != null) {
+			if (fitOrders.length != curveCount) {
+				throw new PlotDataException("If fit orders are supplied, their count must match the number of curve names.");
+			}
+		}
+		
 		this.type = type;
-
-		final int colCount = (colNames == null) ? 0 : colNames.length;
 
 		switch (type) {
 
-		case XYXY: {
-			if ((colCount % 2) != 0) {
-				throw new PlotDataException("The number of columns " + colCount + " is not divisible by 2.");
-			}
-			int curveCount = colCount / 2;
+		case XYXY: 
 			for (int i = 0; i < curveCount; i++) {
-				int j = i * 2;
-				DataColumn xData = new DataColumn(colNames[j]);
-				DataColumn yData = new DataColumn(colNames[j + 1]);
-				String name = yData.name();
-				Curve curve = new Curve(name, xData, yData, null);
+				DataColumn xData = new DataColumn();
+				DataColumn yData = new DataColumn();
+				Curve curve = new Curve(curveNames[i], xData, yData, null);
+				if (fitOrders != null) {
+					curve.setFitOrder(fitOrders[i]);
+				}
 				addCurve(curve);
 			}
 			break;
-		}
+		
 
-		case XYEXYE: {
-			if ((colCount % 3) != 0) {
-				throw new PlotDataException("The number of columns for type XYEXYE " + colCount + " is not divisible by 3.");
-			}
-			int curveCount = colCount / 3;
+		case XYEXYE: 
 			for (int i = 0; i < curveCount; i++) {
-				int j = i * 3;
-				DataColumn xData = new DataColumn(colNames[j]);
-				DataColumn yData = new DataColumn(colNames[j + 1]);
-				DataColumn eData = new DataColumn(colNames[j + 2]);
-				String name = yData.name();
-				Curve curve = new Curve(name, xData, yData, eData);
+				DataColumn xData = new DataColumn();
+				DataColumn yData = new DataColumn();
+				DataColumn eData = new DataColumn();
+				Curve curve = new Curve(curveNames[i], xData, yData, eData);
+				if (fitOrders != null) {
+					curve.setFitOrder(fitOrders[i]);
+				}
 				addCurve(curve);
 			}
 			break;
-		}
+		
 
 		case H1D:
 			throw new PlotDataException("Use PlotData(HistoData...) constructor for 1D histograms.");

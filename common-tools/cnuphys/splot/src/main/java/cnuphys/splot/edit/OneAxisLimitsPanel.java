@@ -11,12 +11,13 @@ import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import cnuphys.splot.pdata.DataSet;
+import cnuphys.splot.pdata.PlotData;
 import cnuphys.splot.plot.LimitsMethod;
 import cnuphys.splot.plot.PlotCanvas;
 import cnuphys.splot.plot.PlotParameters;
 import cnuphys.splot.style.EnumComboBox;
 
+@SuppressWarnings("serial")
 public class OneAxisLimitsPanel extends JPanel implements ActionListener {
 	
 	public enum Axis {X, Y}
@@ -36,7 +37,7 @@ public class OneAxisLimitsPanel extends JPanel implements ActionListener {
 	private double _max1;
 	
 	//the data set
-	private DataSet _dataSet;
+	private PlotData _dataSet;
 	
 	//current data limits
 	private double _dataMin;
@@ -82,8 +83,8 @@ public class OneAxisLimitsPanel extends JPanel implements ActionListener {
 			_min1 = _params.getManualXMin();
 			_max1 = _params.getManualXMax();
 			
-			_dataMin = _dataSet.getXmin();
-			_dataMax = _dataSet.getXmax();
+			_dataMin = _dataSet.xMin();
+			_dataMax = _dataSet.xMax();
 			label = new JLabel("X axis method");
 			break;
 			
@@ -92,8 +93,8 @@ public class OneAxisLimitsPanel extends JPanel implements ActionListener {
 			_min1 = _params.getManualYMin();
 			_max1 = _params.getManualYMax();
 			
-			_dataMin = _dataSet.getYmin();
-			_dataMax = _dataSet.getYmax();
+			_dataMin = _dataSet.yMin();
+			_dataMax = _dataSet.yMax();
 			label = new JLabel("Y axis method");
 		break;
 		}

@@ -1,9 +1,6 @@
 package cnuphys.splot.example;
 
 import java.awt.Color;
-import java.util.Random;
-
-import org.apache.commons.math3.distribution.NormalDistribution;
 
 import cnuphys.splot.fit.CurveDrawingMethod;
 import cnuphys.splot.fit.Evaluator;
@@ -17,7 +14,8 @@ public class Gaussian extends AExample {
 
 	@Override
 	protected PlotData createPlotData() throws PlotDataException {
-		return new PlotData(PlotDataType.XYEXYE, getColumnNames());
+		String[] curveNames = { "Gaussian Fit" };
+		return new PlotData(PlotDataType.XYEXYE, curveNames, null);
 	}
 
 	@Override
@@ -72,14 +70,17 @@ public class Gaussian extends AExample {
 	}
 
 	@Override
-	public void setPreferences() {
-		PlotData ds = _canvas.getPlotData();
-		ds.getCurve(0).getStyle().setFillColor(new Color(196, 196, 196, 64));
-		ds.getCurve(0).getStyle().setBorderColor(Color.black);
-		ds.getCurve(0).setCurveMethod(CurveDrawingMethod.GAUSSIAN);
+	public void setParameters() {
+		PlotData plotData = _canvas.getPlotData();
+		
+		//symbol fill color
+		plotData.getCurve(0).getStyle().setFillColor(new Color(32, 32, 32, 64));
+		
+		//symbol border color
+		plotData.getCurve(0).getStyle().setBorderColor(Color.darkGray);
+		plotData.getCurve(0).setCurveMethod(CurveDrawingMethod.GAUSSIAN);
 		PlotParameters params = _canvas.getParameters();
-		params.setMinExponentY(6);
-		params.setNumDecimalY(2);
+		params.setMinExponentY(6).setNumDecimalY(2);
 	}
 	
 	public static void main(String arg[]) {

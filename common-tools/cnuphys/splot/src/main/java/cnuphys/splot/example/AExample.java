@@ -54,7 +54,7 @@ public abstract class AExample extends JFrame {
 		setJMenuBar(mb);
 		_menus = new SplotMenus(_canvas, mb, true);
 		fillData();
-		setPreferences();
+		setParameters();
 		final PlotPanel ppanel = new PlotPanel(_canvas);
 
 		ppanel.setPreferredSize(new Dimension(750, 700));
@@ -97,6 +97,6 @@ public abstract class AExample extends JFrame {
 	public abstract void fillData();
 
 	// set the preferences
-	public abstract void setPreferences();
+	public abstract void setParameters();
 
 }

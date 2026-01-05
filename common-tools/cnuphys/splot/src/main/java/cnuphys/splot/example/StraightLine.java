@@ -1,18 +1,25 @@
 package cnuphys.splot.example;
 
+import java.awt.Color;
+
+import cnuphys.splot.fit.CurveDrawingMethod;
 import cnuphys.splot.pdata.PlotData;
 import cnuphys.splot.pdata.PlotDataException;
 import cnuphys.splot.pdata.PlotDataType;
+import cnuphys.splot.plot.PlotParameters;
 
+@SuppressWarnings("serial")
 public class StraightLine extends AExample {
 
-	static double x[] = { 3, 4, 5 };
-	static double y[] = { 238.065830, 323.394672, 409.656607 };
-	static double sig[] = { 0.085087, 0.086192, 0.087027 };
+	static double x[] = { 3, 2.5, 3.5, 4, 5 };
+	static double y[] = { 238.0, 280.0, 310, 321.0, 420.0 };
+	static double sig[] = { 14.7, 12.1, 13.1, 20.0, 8.0 };
 
 	@Override
 	protected PlotData createPlotData() throws PlotDataException {
-		return new PlotData(PlotDataType.XYEXYE, getColumnNames());
+		String[] curveNames = { "Linear Fit" };
+		int[] fitOrders = { 1 }; // linear fit
+		return new PlotData(PlotDataType.XYEXYE, curveNames, fitOrders);
 	}
 
 	@Override
@@ -38,14 +45,24 @@ public class StraightLine extends AExample {
 
 	@Override
 	public void fillData() {
-		PlotData ds = _canvas.getPlotData();
+		PlotData plotData = _canvas.getPlotData();
 		for (int i = 0; i < x.length; i++) {
-			ds.add(x[i], y[i], sig[i]);
+			plotData.add(x[i], y[i], sig[i]);
 		}
 	}
 
 	@Override
-	public void setPreferences() {
+	public void setParameters() {
+		PlotData plotData = _canvas.getPlotData();
+		
+		//symbol fill color
+		plotData.getCurve(0).getStyle().setFillColor(new Color(32, 32, 32, 64));
+		
+		//symbol border color
+		plotData.getCurve(0).getStyle().setBorderColor(Color.darkGray);
+		plotData.getCurve(0).setCurveMethod(CurveDrawingMethod.POLYNOMIAL);
+		PlotParameters params = _canvas.getParameters();
+		params.setMinExponentY(6).setNumDecimalY(2);
 	}
 
 	public static void main(String arg[]) {

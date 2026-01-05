@@ -5,7 +5,6 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
-import java.util.Vector;
 
 import javax.swing.DefaultCellEditor;
 import javax.swing.JCheckBox;
@@ -18,14 +17,12 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumn;
 
-import cnuphys.splot.pdata.OldDataColumn;
-import cnuphys.splot.pdata.OldDataColumn;
+import cnuphys.splot.pdata.ACurve;
 import cnuphys.splot.plot.Environment;
 import cnuphys.splot.plot.PlotCanvas;
 
+@SuppressWarnings("serial")
 public class CurveTable extends JTable {
-
-	private DefaultTableCellRenderer def_renderer = new DefaultTableCellRenderer();
 
 	private PlotCanvas _canvas;
 
@@ -42,7 +39,7 @@ public class CurveTable extends JTable {
 	 * @param plotCanvas the plot
 	 */
 	public CurveTable(PlotCanvas plotCanvas) {
-		super(new CurveDataModel((Vector<OldDataColumn>) plotCanvas.getPlotData().getAllColumnsByType(DataColumnType.Y)));
+		super(new CurveDataModel(plotCanvas.getPlotData().getCurves()));
 
 		_canvas = plotCanvas;
 		setFont(_listFont);
@@ -170,7 +167,7 @@ public class CurveTable extends JTable {
 	 * 
 	 * @return the selected curve
 	 */
-	public OldDataColumn getSelectedCurve() {
+	public ACurve getSelectedCurve() {
 		int selectedRow = getSelectedRow();
 		return getCurveModel().getCurveAtRow(selectedRow);
 	}

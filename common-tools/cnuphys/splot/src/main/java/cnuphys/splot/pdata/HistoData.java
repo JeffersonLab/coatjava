@@ -371,28 +371,12 @@ public class HistoData {
     // "Prepare for fit" helper
     // ------------------------------------------------------------------------
 
-    /**
-     * Lightweight container for (x,y[,w]) vectors prepared from histogram bins.
-     * <p>
-     * If {@code weights} is null, the caller can treat it as "unit weights".
-     */
-    public static class FitData {
-        public final double[] x;
-        public final double[] y;
-        public final double[] weights; // may be null
-
-        public FitData(double[] x, double[] y, double[] weights) {
-            this.x = x;
-            this.y = y;
-            this.weights = weights;
-        }
-    }
-
+ 
     /**
      * Fit prep result that also reports which peak bin and window were used.
      * Useful for status/debug strings in the UI.
      */
-    public static final class FitWindowData extends FitData {
+    public static final class FitWindowData extends FitVectors {
         public final int peakBin;
         public final int bin0;
         public final int bin1;
@@ -409,7 +393,7 @@ public class HistoData {
     }
 
     /** Prepare fit vectors over full x-range; optionally skip empty bins. */
-    public FitData prepareForFit(boolean includeZeroBins) {
+    public FitVectors prepareForFit(boolean includeZeroBins) {
         return prepareForFit(includeZeroBins, getMinX(), getMaxX(), false);
     }
 
@@ -421,7 +405,7 @@ public class HistoData {
      *   <li>{@code weights[i]} (optional) = 1/sigmaY^2 using Poisson sigmaY = sqrt(count)</li>
      * </ul>
      */
-    public FitData prepareForFit(boolean includeZeroBins, double xmin, double xmax, boolean poissonWeights) {
+    public FitVectors prepareForFit(boolean includeZeroBins, double xmin, double xmax, boolean poissonWeights) {
         List<Double> xs = new ArrayList<>();
         List<Double> ys = new ArrayList<>();
         List<Double> ws = poissonWeights ? new ArrayList<>() : null;
@@ -450,16 +434,16 @@ public class HistoData {
         double[] yArr = toDoubleArray(ys);
         double[] wArr = (ws == null) ? null : toDoubleArray(ws);
 
-        return new FitData(xArr, yArr, wArr);
+        return new FitVectors(xArr, yArr, wArr);
     }
 
     /**
      * Prepare arrays suitable for the fitters using an inclusive bin-index range.
      */
-    public FitData prepareForFit(boolean includeZeroBins, int bin0, int bin1, boolean poissonWeights) {
+    public FitVectors prepareForFit(boolean includeZeroBins, int bin0, int bin1, boolean poissonWeights) {
         int nbin = getNumberBins();
         if (nbin <= 0) {
-            return new FitData(new double[0], new double[0], poissonWeights ? new double[0] : null);
+            return new FitVectors(new double[0], new double[0], poissonWeights ? new double[0] : null);
         }
 
         int b0 = clampBin(bin0, nbin);
@@ -498,18 +482,18 @@ public class HistoData {
             j++;
         }
 
-        return new FitData(xArr, yArr, wArr);
+        return new FitVectors(xArr, yArr, wArr);
     }
 
     /** Convenience overload: inclusive bin range, unit weights. */
-    public FitData prepareForFit(boolean includeZeroBins, int bin0, int bin1) {
+    public FitVectors prepareForFit(boolean includeZeroBins, int bin0, int bin1) {
         return prepareForFit(includeZeroBins, bin0, bin1, false);
     }
 
     /**
      * Prepare arrays suitable for fitters from a symmetric window around a peak bin.
      */
-    public FitData prepareForFitAroundPeak(boolean includeZeroBins, int peakBin, int halfWindowBins, boolean poissonWeights) {
+    public FitVectors prepareForFitAroundPeak(boolean includeZeroBins, int peakBin, int halfWindowBins, boolean poissonWeights) {
         if (halfWindowBins < 0) {
             throw new IllegalArgumentException("halfWindowBins must be >= 0");
         }
@@ -519,17 +503,17 @@ public class HistoData {
     }
 
     /** Convenience overload: unit weights, symmetric window around a peak bin. */
-    public FitData prepareForFitAroundPeak(boolean includeZeroBins, int peakBin, int halfWindowBins) {
+    public FitVectors prepareForFitAroundPeak(boolean includeZeroBins, int peakBin, int halfWindowBins) {
         return prepareForFitAroundPeak(includeZeroBins, peakBin, halfWindowBins, false);
     }
 
     /**
      * Convenience: find global raw peak and prepare arrays around it.
      */
-    public FitData prepareForFitAroundPeak(boolean includeZeroBins, int halfWindowBins, boolean poissonWeights) {
+    public FitVectors prepareForFitAroundPeak(boolean includeZeroBins, int halfWindowBins, boolean poissonWeights) {
         int peak = findPeakBin();
         if (peak < 0) {
-            return new FitData(new double[0], new double[0], poissonWeights ? new double[0] : null);
+            return new FitVectors(new double[0], new double[0], poissonWeights ? new double[0] : null);
         }
         return prepareForFitAroundPeak(includeZeroBins, peak, halfWindowBins, poissonWeights);
     }
@@ -786,19 +770,19 @@ public class HistoData {
     // Peak-based fit-prep conveniences
     // ------------------------------------------------------------------------
 
-    public FitData prepareForFitAroundSmoothedPeak(boolean includeZeroBins,
+    public FitVectors prepareForFitAroundSmoothedPeak(boolean includeZeroBins,
                                                   int halfWindowBins,
                                                   int smoothRadius,
                                                   boolean ignoreZeroBins,
                                                   boolean poissonWeights) {
         int peak = findPeakBinSmoothed(smoothRadius, ignoreZeroBins);
         if (peak < 0) {
-            return new FitData(new double[0], new double[0], poissonWeights ? new double[0] : null);
+            return new FitVectors(new double[0], new double[0], poissonWeights ? new double[0] : null);
         }
         return prepareForFitAroundPeak(includeZeroBins, peak, halfWindowBins, poissonWeights);
     }
 
-    public FitData prepareForFitAroundSmoothedPeak(boolean includeZeroBins,
+    public FitVectors prepareForFitAroundSmoothedPeak(boolean includeZeroBins,
                                                   int bin0,
                                                   int bin1,
                                                   int halfWindowBins,
@@ -807,62 +791,11 @@ public class HistoData {
                                                   boolean poissonWeights) {
         int peak = findPeakBinSmoothed(bin0, bin1, smoothRadius, ignoreZeroBins);
         if (peak < 0) {
-            return new FitData(new double[0], new double[0], poissonWeights ? new double[0] : null);
+            return new FitVectors(new double[0], new double[0], poissonWeights ? new double[0] : null);
         }
         return prepareForFitAroundPeak(includeZeroBins, peak, halfWindowBins, poissonWeights);
     }
 
-    public FitData prepareForFitAroundTriangularSmoothedPeak(boolean includeZeroBins,
-                                                            int halfWindowBins,
-                                                            int smoothRadius,
-                                                            boolean ignoreZeroBins,
-                                                            boolean poissonWeights) {
-        int peak = findPeakBinTriangularSmoothed(smoothRadius, ignoreZeroBins);
-        if (peak < 0) {
-            return new FitData(new double[0], new double[0], poissonWeights ? new double[0] : null);
-        }
-        return prepareForFitAroundPeak(includeZeroBins, peak, halfWindowBins, poissonWeights);
-    }
-
-    public FitData prepareForFitAroundTriangularSmoothedPeak(boolean includeZeroBins,
-                                                            int bin0,
-                                                            int bin1,
-                                                            int halfWindowBins,
-                                                            int smoothRadius,
-                                                            boolean ignoreZeroBins,
-                                                            boolean poissonWeights) {
-        int peak = findPeakBinTriangularSmoothed(bin0, bin1, smoothRadius, ignoreZeroBins);
-        if (peak < 0) {
-            return new FitData(new double[0], new double[0], poissonWeights ? new double[0] : null);
-        }
-        return prepareForFitAroundPeak(includeZeroBins, peak, halfWindowBins, poissonWeights);
-    }
-
-    public FitData prepareForFitAroundBestPeak(boolean includeZeroBins,
-                                              int halfWindowBins,
-                                              int smoothRadius,
-                                              boolean ignoreZeroBins,
-                                              boolean poissonWeights) {
-        int peak = findPeakBinBest(smoothRadius, ignoreZeroBins);
-        if (peak < 0) {
-            return new FitData(new double[0], new double[0], poissonWeights ? new double[0] : null);
-        }
-        return prepareForFitAroundPeak(includeZeroBins, peak, halfWindowBins, poissonWeights);
-    }
-
-    public FitData prepareForFitAroundBestPeak(boolean includeZeroBins,
-                                              int bin0,
-                                              int bin1,
-                                              int halfWindowBins,
-                                              int smoothRadius,
-                                              boolean ignoreZeroBins,
-                                              boolean poissonWeights) {
-        int peak = findPeakBinBest(bin0, bin1, smoothRadius, ignoreZeroBins);
-        if (peak < 0) {
-            return new FitData(new double[0], new double[0], poissonWeights ? new double[0] : null);
-        }
-        return prepareForFitAroundPeak(includeZeroBins, peak, halfWindowBins, poissonWeights);
-    }
 
     // ------------------------------------------------------------------------
     // Guarded best-peak fit-prep (edge sanity + min-points safety)
@@ -1185,8 +1118,8 @@ public class HistoData {
                                       boolean poissonWeights) {
         int b0 = Math.max(s0, peak - halfUsed);
         int b1 = Math.min(s1, peak + halfUsed);
-        FitData fd = prepareForFit(includeZeroBins, b0, b1, poissonWeights);
-        return new FitWindowData(fd.x, fd.y, fd.weights, peak, b0, b1, halfUsed);
+        FitVectors fd = prepareForFit(includeZeroBins, b0, b1, poissonWeights);
+        return new FitWindowData(fd.x, fd.y, fd.w, peak, b0, b1, halfUsed);
     }
 
     private static double[] evenBins(double vmin, double vmax, int numBins) {
