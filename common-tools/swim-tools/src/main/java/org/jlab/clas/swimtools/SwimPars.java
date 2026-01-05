@@ -2,6 +2,10 @@ package org.jlab.clas.swimtools;
 
 import org.apache.commons.math3.util.FastMath;
 
+/**
+ *
+ * @author ziegler
+ */
 public class SwimPars {
     
     final double SWIMZMINMOM = 0.75; // GeV/c

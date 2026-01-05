@@ -6,6 +6,7 @@ import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
 
 /**
+ * FIXME:  Can any of these be removed?
  * 
  * @author baltzell
  */
