@@ -7,6 +7,10 @@ import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
 
+/**
+ *
+ * @author ziegler
+ */
 public class Stoppers {
     
     public static class CylindricalBoundarySwimStopper implements IStopper {
