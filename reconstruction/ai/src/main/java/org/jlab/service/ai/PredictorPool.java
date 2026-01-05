@@ -9,9 +9,9 @@ import java.util.logging.Logger;
 
 public class PredictorPool <T,U> {
     
-        final BlockingQueue<Predictor<T, U>> pool;
+        final BlockingQueue<Predictor<T,U>> pool;
 
-        public PredictorPool(int size, ZooModel<T, U> model) {
+        public PredictorPool(int size, ZooModel<T,U> model) {
             pool = new ArrayBlockingQueue<>(size);
             for (int i=0; i<size; i++) {
                 try {
@@ -22,11 +22,11 @@ public class PredictorPool <T,U> {
             }
         }
 
-        public Predictor<T, U> take() throws InterruptedException {
+        public Predictor<T,U> take() throws InterruptedException {
             return pool.take();
         }
 
-        public void put(Predictor<T, U> p) throws InterruptedException {
+        public void put(Predictor<T,U> p) throws InterruptedException {
             if (p!=null) pool.put(p);
         }
 
