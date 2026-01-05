@@ -15,7 +15,8 @@ import org.jlab.jnp.hipo4.io.HipoReader;
 import org.json.JSONObject;
 
 /**
- *
+ * Emulate DecoderReader for EVIO files, or HipoToHipoReader for HIPO files.
+ * 
  * @author baltzell
  */
 public class Clas12Reader extends AbstractEventReaderService<Object> {
