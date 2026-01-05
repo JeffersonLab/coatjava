@@ -3,25 +3,25 @@ package cnuphys.splot.example;
 import java.util.Collection;
 
 import cnuphys.splot.fit.CurveDrawingMethod;
-import cnuphys.splot.pdata.OldDataColumn;
-import cnuphys.splot.pdata.OldDataColumn;
-import cnuphys.splot.pdata.DataSet;
+import cnuphys.splot.fit.Evaluator;
+import cnuphys.splot.pdata.ACurve;
+import cnuphys.splot.pdata.Curve;
+import cnuphys.splot.pdata.FitVectors;
+import cnuphys.splot.pdata.PlotData;
 import cnuphys.splot.pdata.PlotDataException;
 import cnuphys.splot.pdata.PlotDataType;
 import cnuphys.splot.plot.PlotParameters;
 
+@SuppressWarnings("serial")
 public class TwoLinesWithErrors extends AExample {
 
 	@Override
-	protected DataSet createPlotData() throws PlotDataException {
-		return new DataSet(PlotDataType.XYEXYE, getColumnNames());
+	protected PlotData createPlotData() throws PlotDataException {
+		String[] curveNames = { "Line 1", "Line 2" };
+		int[] fitOrders = { 1, 1 }; // linear fits
+		return new PlotData(PlotDataType.XYEXYE, curveNames, fitOrders);
 	}
 
-	@Override
-	protected String[] getColumnNames() {
-		String names[] = { "X1", "Y1", "E1", "X2", "Y2", "E2" };
-		return names;
-	}
 
 	@Override
 	protected String getXAxisLabel() {
@@ -37,34 +37,67 @@ public class TwoLinesWithErrors extends AExample {
 	protected String getPlotTitle() {
 		return "<html>Sample Plot X<SUP>2</SUP> vs. Q<SUP>2</SUP>";
 	}
+	
+	//test data for line 1
+	private FitVectors line1Data() {
+		final double m = 3.3; // slope
+		final double b = -0.4; // intercept
+		int n = 40;
+
+		Evaluator evaluator = new Evaluator() {
+			@Override
+			public double value(double x) {
+				return m * x + b;
+			}
+		};
+
+		// test data
+		return FitVectors.testData(evaluator, 0.0, 10.0, n, 10, 20);
+	}
+	
+	//test data for line 2
+	private FitVectors line2Data() {
+		final double m = -1.7; // slope
+		final double b =8; // intercept
+		int n = 20;
+
+		Evaluator evaluator = new Evaluator() {
+			@Override
+			public double value(double x) {
+				return m * x + b;
+			}
+		};
+
+		// test data
+		return FitVectors.testData(evaluator, 0.0, 10.0, n, 6, 11);
+	}
 
 	@Override
 	public void fillData() {
-		DataSet ds = _canvas.getPlotData();
-		for (int i = 0; i < 15; i++) {
-			try {
-				if (i < 10) {
-					ds.add(i, i + 2 * Math.random(), 2.0 * Math.random(), i + 0.5, 10 - i + 2 * Math.random(),
-							2.0 * Math.random());
-				}
-				else {
-					ds.add(i, i + 2 * Math.random(), 2.0 * Math.random());
-				}
-			}
-			catch (PlotDataException e) {
-				e.printStackTrace();
-				System.exit(1);
-			}
-			// ds.add(i, i);
+		FitVectors fv1 = line1Data();
+		FitVectors fv2 = line2Data();
+		Curve curve1 = (Curve) _canvas.getPlotData().getCurve(0);
+		Curve curve2 = (Curve) _canvas.getPlotData().getCurve(1);
+		
+		for (int i = 0; i < fv1.x.length; i++) {
+			double e = 1.0 / Math.sqrt(1.0e-12 + fv1.w[i]);
+			curve1.add(fv1.x[i], fv1.y[i], e);
 		}
+		
+		for (int i = 0; i < fv2.x.length; i++) {
+			double e = 1.0 / Math.sqrt(1.0e-12 + fv2.w[i]);
+			curve2.add(fv2.x[i], fv2.y[i], e);
+		}
+		
+
 	}
 
 	@Override
 	public void setParameters() {
-		DataSet ds = _canvas.getPlotData();
-		Collection<OldDataColumn> ycols = ds.getAllColumnsByType(DataColumnType.Y);
-		for (OldDataColumn dc : ycols) {
-			dc.getFit().setFitType(CurveDrawingMethod.POLYNOMIAL);
+		PlotData plotData = _canvas.getPlotData();
+		Collection<ACurve> curves = plotData.getCurves();
+		for (ACurve dc : curves) {
+			dc.setCurveMethod(CurveDrawingMethod.POLYNOMIAL);
 		}
 
 		// many options controlled via plot parameters

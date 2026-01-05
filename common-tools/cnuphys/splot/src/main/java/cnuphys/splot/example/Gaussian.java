@@ -19,12 +19,6 @@ public class Gaussian extends AExample {
 	}
 
 	@Override
-	protected String[] getColumnNames() {
-		String names[] = { "X", "Y", "E" };
-		return names;
-	}
-
-	@Override
 	protected String getXAxisLabel() {
 		return "x";
 	}
@@ -54,7 +48,7 @@ public class Gaussian extends AExample {
  			return A * Math.exp(-0.5 * z * z) + B;
  		};
  		
- 		FitVectors testData = FitVectors.testData(eval, -1.0, 3.0, n, 4.0, 10.0);		
+ 		FitVectors testData = FitVectors.testData(eval, -1.0, 3.0, n, 4.0, 40.0);		
 		
 		for (int i = 0; i < n; i++) {
 			double x = testData.x[i];

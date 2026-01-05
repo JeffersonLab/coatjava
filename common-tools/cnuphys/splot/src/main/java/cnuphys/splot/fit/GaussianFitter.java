@@ -47,7 +47,7 @@ public final class GaussianFitter extends ALeastSquaresFitter {
     /** Default minimum allowed sigma to avoid division by zero and ill-conditioned Jacobians. */
     public static final double DEFAULT_MIN_SIGMA = 1e-12;
 
-    /** Create with a Levenberg-Marquardt optimizer and a robust default guesser. */
+     /** Create with a Levenberg-Marquardt optimizer and a robust default guesser. */
     public GaussianFitter() {
         this(new LevenbergMarquardtOptimizer());
     }

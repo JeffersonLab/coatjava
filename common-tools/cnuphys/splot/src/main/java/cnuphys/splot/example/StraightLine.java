@@ -23,12 +23,6 @@ public class StraightLine extends AExample {
 	}
 
 	@Override
-	protected String[] getColumnNames() {
-		String names[] = { "X1", "Y1", "E1" };
-		return names;
-	}
-
-	@Override
 	protected String getXAxisLabel() {
 		return "<html>x data  X<SUB>M</SUB><SUP>2</SUP>";
 	}

@@ -42,7 +42,7 @@ public final class MultiGaussianFitter extends ALeastSquaresFitter {
 
     /** Base Parameter names. */
     public static final String[] paramNames = { "A", "μ", "σ", "B" };
-
+    
     /**
      * Create a MultiGaussianFitter.
      * @param m number of Gaussian components (must be >= 1)

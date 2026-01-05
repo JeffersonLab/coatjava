@@ -81,9 +81,6 @@ public abstract class AExample extends JFrame {
 	 */
 	protected abstract PlotData createPlotData() throws PlotDataException;
 
-	/** get the column names */
-	protected abstract String[] getColumnNames();
-
 	/** get the x axis label */
 	protected abstract String getXAxisLabel();
 

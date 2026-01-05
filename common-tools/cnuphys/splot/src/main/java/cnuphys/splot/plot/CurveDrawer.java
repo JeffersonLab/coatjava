@@ -312,17 +312,12 @@ public class CurveDrawer {
 		g2.setStroke(oldStroke);
 	}
 
-		
-
-
 	// draw a value getter
 	private static void drawEvaluator(Graphics2D g, PlotCanvas plotCanvas, Evaluator ivg) {
 
-		if (ivg == null) {
-			System.err.println("Evaluator is null in CurveDrawer");
-			return;
-		}
-
+		Objects.requireNonNull(plotCanvas, "plotCanvas");
+		Objects.requireNonNull(ivg, "evaluator");
+	
 		// the plot screen rectangle
 		Rectangle rect = plotCanvas.getActiveBounds();
 		int iy = rect.y;
@@ -341,8 +336,6 @@ public class CurveDrawer {
 		plotCanvas.worldToLocal(pp, wp);
 		int xsmax = pp.x;
 
-		// xsmin = Math.max(rect.x, xsmin);
-		// xsmax = Math.min(rect.x + rect.width, xsmax);
 		xsmin = rect.x;
 		xsmax = rect.x + rect.width;
 

@@ -54,7 +54,7 @@ public final class PolynomialFitter extends ALeastSquaresFitter implements IFitt
     public PolynomialFitter(int degree) {
         this(degree, new LevenbergMarquardtOptimizer());
     }
-
+    
     /**
      * Create a polynomial fitter for a given degree with a custom optimizer.
      *

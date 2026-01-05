@@ -54,6 +54,12 @@ public final class ErfErfcFitter extends ALeastSquaresFitter {
 
     private final Kind kind;
 
+	 /**
+	  * Create an Erf/Erfc fitter with default optimizer (Levenberg-Marquardt).
+	  *
+	  * @param kind which function to fit
+	  */
+
     public ErfErfcFitter(Kind kind) {
         this(kind, new LevenbergMarquardtOptimizer());
     }

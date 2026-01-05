@@ -20,6 +20,7 @@ public final class FitResult {
 	//helpers from unicode
 	public static final String CHI = UnicodeSupport.SMALL_CHI;
 	public static final String CHISQ = CHI + UnicodeSupport.SUPER2;
+	public static final String PLUSMINUS = UnicodeSupport.PLUSMINUS;
 
     /** Best-fit parameters. Interpretation depends on the model. */
     public final double[] params;
@@ -56,11 +57,11 @@ public final class FitResult {
     
     /** "Use as a function" evaluator for the fit. */
     public Evaluator evaluator;
-
+    
     /**
 	 * Create a fit result.
 	 *
-	 * @param stringGetter    acess to descriptive strings about fitter
+	 * @param stringGetter    access to descriptive strings about fitter
 	 * @param params          best-fit parameters
 	 * @param covariance      optional covariance matrix (may be null)
 	 * @param cost            least-squares cost
@@ -151,39 +152,7 @@ public final class FitResult {
         return (v > 0.0 && Double.isFinite(v)) ? Math.sqrt(v) : Double.NaN;
     }
 
-    /**
-     * Correlation coefficient between parameters i and j:
-     * corr(i,j) = cov(i,j) / sqrt(cov(i,i) cov(j,j)).
-     * Returns NaN if unavailable.
-     */
-    public double correlation(int i, int j) {
-        if (covariance == null) {
-            return Double.NaN;
-        }
-        if (i < 0 || j < 0 ||
-            i >= covariance.getRowDimension() || j >= covariance.getRowDimension() ||
-            i >= covariance.getColumnDimension() || j >= covariance.getColumnDimension()) {
-            return Double.NaN;
-        }
-        double cii = covariance.getEntry(i, i);
-        double cjj = covariance.getEntry(j, j);
-        if (!(cii > 0.0) || !(cjj > 0.0)) {
-            return Double.NaN;
-        }
-        double cij = covariance.getEntry(i, j);
-        return cij / Math.sqrt(cii * cjj);
-    }
-
-    /** Convenience: one-sigma interval [p-σ, p+σ] for parameter i (NaNs if unavailable). */
-    public double[] oneSigmaInterval(int i) {
-        double s = paramStdError(i);
-        if (!Double.isFinite(s)) {
-            return new double[] { Double.NaN, Double.NaN };
-        }
-        double p = param(i);
-        return new double[] { p - s, p + s };
-    }
-    
+ 
     /**
 	 * HTML summary of the fit result.
 	 * 
@@ -202,12 +171,12 @@ public final class FitResult {
     	
     	IntStream.range(0, params.length)
 		.forEach(i ->
-			sb.append(String.format(" %s = %.3g%n", stringGetter.parameterName(i), params[i]) + BR)
+			sb.append(String.format(" %s = %.3g%s%.3g%n", 
+					stringGetter.parameterName(i), params[i], PLUSMINUS, paramStdError(i)) + BR)
 		);  
 	  	sb.append(String.format(" %s: %.3g%n", CHISQ, chiSquare) + BR);
 	  	sb.append(String.format(" %s/DoF: " + doubleFormat(chiSquareReduced, 3) + "%n", CHISQ) + BR);
-	  	sb.append(" Degrees of Freedom: " + dof + BR);
-	  	sb.append(String.format(" RMS: %.3g%n", rms) + BR);
+	  	sb.append(" DoF: " + dof + BR);
 	  	sb.append(" Iterations: " + iterations + BR);
 	  	sb.append(" Evaluations: " + evaluations + BR);
 	  			sb.append("</body></html>");

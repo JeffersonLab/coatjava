@@ -99,7 +99,7 @@ public abstract class ALeastSquaresFitter implements IFitter, IFitStringGetter {
      * Subclasses may override via {@link #getCovarianceThreshold()}.
      */
     protected final double covarianceThreshold;
-
+  
     /**
      * Construct a fitter with default iteration/evaluation/checker settings.
      *
