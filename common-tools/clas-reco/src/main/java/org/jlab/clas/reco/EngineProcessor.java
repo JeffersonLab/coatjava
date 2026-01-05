@@ -375,7 +375,7 @@ public class EngineProcessor {
     public static void main(String[] args){
         OptionParser parser = new OptionParser("recon-util");
         parser.addRequired("-o","output.hipo");
-        parser.addRequired("-i","input.hipo");
+        parser.addRequired("-i","input.evio/hipo");
         parser.setRequiresInputList(false);
         parser.addOption("-c","0","use default configuration [0 - no, 1 - yes/default, 2 - all services] ");
         parser.addOption("-s","-1","number of events to skip");
