@@ -93,7 +93,7 @@ jobs:
         run: |
           tar czvf coatjava.tar.gz coatjava
           tar czvf clara.tar.gz clara
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: build_${{ matrix.runner }}
           retention-days: 1
@@ -138,7 +138,7 @@ jobs:
         run: validation/jacoco-aggregate.sh
       - name: publish jacoco report
         if: ${{ matrix.JAVA_VERSION == env.JAVA_VERSION }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: jacoco_report
           path: publish/
