@@ -467,7 +467,7 @@ public class ECEngine extends ReconstructionEngine {
         String variationName = Optional.ofNullable(this.getEngineConfigString("variation")).orElse("default");
         if(!(ECCommon.geomVariation.equals("default"))) variationName = ECCommon.geomVariation;
         LOGGER.log(Level.INFO,"GEOMETRY VARIATION IS "+variationName);
-        ECCommon.ecDetector =  GeometryFactory.getDetector(DetectorType.ECAL,11,variationName);
+        ECCommon.ecDetector =  GeometryFactory.getDetector(DetectorType.ECAL,runNumber,variationName);
     }
     
 }
