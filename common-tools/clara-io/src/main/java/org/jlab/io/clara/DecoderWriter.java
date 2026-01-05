@@ -22,11 +22,12 @@ import org.json.JSONObject;
 /**
  * Combined with DecoderReader, a port of the standard "decoder" to CLARA.
  *
- * 1. Converts EVIO to HIPO, translation tables, pulse extraction
- * 2. Copies special banks on-the-fly to new tag-1 events
- * 3. Caches helicity states and scaler readouts, for later use in post-processing.
- * 4. Upon close, writes the helicity sequence to HEL::flip banks in new tag-1 events.
- * 
+ * 1. Copies certain banks on-the-fly to new tag-1 events
+ * 2. Caches helicity states and scaler readouts, for later use in post-processing
+ * 3. Writes the helicity sequence to HEL::flip banks in new tag-1 events
+ * 4. Adds .hipo to the output filename, if necessary
+ * 5. Runs post-processing, writing tag-1 information to all events 
+ *
  * @author baltzell
  */
 public class DecoderWriter extends HipoToHipoWriter {
@@ -43,7 +44,6 @@ public class DecoderWriter extends HipoToHipoWriter {
     boolean postprocess;
 
     private void init(JSONObject opts) {
-        postprocess = false;
         fullSchema = new SchemaFactory();
         fullSchema.initFromDirectory(FileUtils.getEnvironmentPath("CLAS12DIR","etc/bankdefs/hipo4"));
         runConfig = new Bank(fullSchema.getSchema("RUN::config"));
@@ -52,7 +52,7 @@ public class DecoderWriter extends HipoToHipoWriter {
         scalers = new DaqScalersSequence(fullSchema);
         conman = new ConstantsManager();
         conman.init("/runcontrol/hwp","/runcontrol/helicity");
-        if (opts.has("postprocess")) postprocess = opts.getBoolean("postprocess");
+        postprocess = opts.optBoolean("postprocess", false);
         if (opts.has("variation")) conman.setVariation(opts.getString("variation"));
         if (opts.has("timestamp")) conman.setTimeStamp(opts.getString("timestamp"));
         tag1banks = new Bank[TAG1BANKS.length];

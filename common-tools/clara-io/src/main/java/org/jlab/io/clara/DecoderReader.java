@@ -16,6 +16,10 @@ import org.json.JSONObject;
 /**
  * Combined with DecoderWriter, a port of the standard "decoder" to CLARA.
  * 
+ * 1. Convert EVIO to HIPO
+ * 2. CCDB translation tables, c/s/c -> s/l/c/o
+ * 3. Pulse extraction, e.g., Mode-1 FADC250
+ * 
  * @author baltzell
  */
 public class DecoderReader extends AbstractEventReaderService<EvioSource> {
