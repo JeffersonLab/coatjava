@@ -7,8 +7,6 @@ import java.util.Objects;
 
 import javax.swing.event.EventListenerList;
 
-import cnuphys.splot.debug.ListenerDebugger;
-
 /**
  * A lightweight, UI-agnostic container for the data backing a plot.
  * <p>
@@ -141,6 +139,14 @@ public class PlotData implements CurveChangeListener {
 	/** @return the plot data type. */
 	public PlotDataType getType() {
 		return type;
+	}
+	
+	/**
+	 * Determine if this is histogram plot data.
+	 * @return true if histogram plot data
+	 */
+	public boolean isHistoData() {
+		return (type == PlotDataType.H1D);
 	}
 
 	/** @return an unmodifiable view of the curves. */
@@ -298,4 +304,54 @@ public class PlotData implements CurveChangeListener {
 		return ymax;
 	}
 	
+	public void add(double... vals) {
+		switch (type) {
+		case XYXY: 
+			if ((vals.length % 2) != 0) {
+				throw new IllegalArgumentException("The number of values " + vals.length + " is not divisible by 2.");
+			}
+			int curveCount = vals.length / 2;
+			if (curveCount != curves.size()) {
+				throw new IllegalArgumentException("The number of curves " + curves.size() + " does not match the number of value pairs " + curveCount);
+			}
+			for (int i = 0; i < curveCount; i++) {
+				int j = i * 2;
+				ACurve curve = curves.get(i);
+				if (curve instanceof Curve) {
+					((Curve) curve).add(vals[j], vals[j + 1]);
+				} else {
+					throw new IllegalArgumentException("Curve at index " + i + " is not a Curve instance.");
+				}
+			}
+			break;
+			
+			case XYEXYE: 
+				if ((vals.length % 3) != 0) {
+					throw new IllegalArgumentException("The number of values " + vals.length + " is not divisible by 3.");
+				}
+				curveCount = vals.length / 3;
+				if (curveCount != curves.size()) {
+					throw new IllegalArgumentException("The number of curves " + curves.size() + " does not match the number of value triplets " + curveCount);
+				}
+				for (int i = 0; i < curveCount; i++) {
+					int j = i * 3;
+					ACurve curve = curves.get(i);
+					if (curve instanceof Curve) {
+						((Curve) curve).add(vals[j], vals[j + 1], vals[j + 2]);
+					} else {
+						throw new IllegalArgumentException("Curve at index " + i + " is not a Curve instance.");
+					}
+				}
+				break;
+				
+				case H1D:
+					break;
+					
+					case STRIP:
+						break;
+
+		}
+	}
+	
+
 }

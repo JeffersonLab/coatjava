@@ -225,6 +225,6 @@ public class HistoCurve extends ACurve {
 	@Override
 	public Snapshot snapshot() {
 		FitVectors fv = fitVectors();
-		return new Snapshot(fv.x, fv.y);
+		return new Snapshot(fv.x, fv.y, null);
 	}
 }

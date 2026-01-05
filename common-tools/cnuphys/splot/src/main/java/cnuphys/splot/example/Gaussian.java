@@ -6,7 +6,9 @@ import java.util.Random;
 import org.apache.commons.math3.distribution.NormalDistribution;
 
 import cnuphys.splot.fit.CurveDrawingMethod;
-import cnuphys.splot.pdata.DataSet;
+import cnuphys.splot.fit.Evaluator;
+import cnuphys.splot.pdata.FitVectors;
+import cnuphys.splot.pdata.PlotData;
 import cnuphys.splot.pdata.PlotDataException;
 import cnuphys.splot.pdata.PlotDataType;
 import cnuphys.splot.plot.PlotParameters;
@@ -14,8 +16,8 @@ import cnuphys.splot.plot.PlotParameters;
 public class Gaussian extends AExample {
 
 	@Override
-	protected DataSet createDataSet() throws PlotDataException {
-		return new DataSet(PlotDataType.XYEXYE, getColumnNames());
+	protected PlotData createPlotData() throws PlotDataException {
+		return new PlotData(PlotDataType.XYEXYE, getColumnNames());
 	}
 
 	@Override
@@ -41,31 +43,40 @@ public class Gaussian extends AExample {
 
 	@Override
 	public void fillData() {
-		int n = 100;
-		double mu = 1.0;
-		double sig = 0.2;
-	    NormalDistribution normDev = new NormalDistribution(mu, sig);
-
-		DataSet ds = _canvas.getPlotData();
-		Random rand = new Random();
+		
+		final double mu = 1.2;
+ 		final double sigma = 0.3;
+ 		final double A = 2.0;
+ 		final double B = 0.5;
+ 		int n = 50;
+ 		
+ 		
+ 		Evaluator eval = (double x) -> {
+ 			double z = (x - mu) / sigma;
+ 			return A * Math.exp(-0.5 * z * z) + B;
+ 		};
+ 		
+ 		FitVectors testData = FitVectors.testData(eval, -1.0, 3.0, n, 4.0, 10.0);		
+		
 		for (int i = 0; i < n; i++) {
-			double x = 2.0 * rand.nextDouble();
-			double y = normDev.density(x) + 0.2*(rand.nextDouble() - 0.5);
-			double e = 0.2*rand.nextDouble();
-		    try {
-				ds.add(x, y, e);
-			} catch (PlotDataException e1) {
-				e1.printStackTrace();
-			}
+			double x = testData.x[i];
+			double y = testData.y[i];
+			double w = testData.w[i];
+			
+			//convert weight to error
+	    	double e = 1.0 / Math.sqrt(1.0e-12 + w);
+			_canvas.getPlotData().add(x, y, e);
+
 		}
+		
 	}
 
 	@Override
 	public void setPreferences() {
-		DataSet ds = _canvas.getPlotData();
-		ds.getCurveStyle(0).setFillColor(new Color(196, 196, 196, 64));
-		ds.getCurveStyle(0).setBorderColor(Color.black);
-		ds.getCurve(0).getFit().setFitType(CurveDrawingMethod.GAUSSIANS);
+		PlotData ds = _canvas.getPlotData();
+		ds.getCurve(0).getStyle().setFillColor(new Color(196, 196, 196, 64));
+		ds.getCurve(0).getStyle().setBorderColor(Color.black);
+		ds.getCurve(0).setCurveMethod(CurveDrawingMethod.GAUSSIAN);
 		PlotParameters params = _canvas.getParameters();
 		params.setMinExponentY(6);
 		params.setNumDecimalY(2);

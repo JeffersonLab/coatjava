@@ -14,7 +14,7 @@ import cnuphys.splot.plot.PlotParameters;
 public class Gaussians extends AExample {
 
 	@Override
-	protected DataSet createDataSet() throws PlotDataException {
+	protected DataSet createPlotData() throws PlotDataException {
 		return new DataSet(PlotDataType.XYEXYE, getColumnNames());
 	}
 

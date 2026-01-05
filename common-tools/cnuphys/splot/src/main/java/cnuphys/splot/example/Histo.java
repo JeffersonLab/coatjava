@@ -13,7 +13,7 @@ import cnuphys.splot.pdata.HistoData;
 public class Histo extends AExample {
 
 	@Override
-	protected DataSet createDataSet() throws PlotDataException {
+	protected DataSet createPlotData() throws PlotDataException {
 		HistoData h1 = new HistoData("Histo 1", 0.0, 100.0, 50);
 		return new DataSet(h1);
 	}

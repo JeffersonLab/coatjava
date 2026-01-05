@@ -14,9 +14,14 @@ import javax.swing.KeyStroke;
 
 import cnuphys.splot.edit.CurveEditorDialog;
 import cnuphys.splot.edit.DialogUtilities;
-import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.pdata.PlotDataType;
 
+/**
+ * This class creates and manages the menus for sPlot.
+ * 
+ * @author heddle
+ *
+ */
 public class SplotMenus implements ActionListener {
 
 	// the owner canvas
@@ -29,8 +34,6 @@ public class SplotMenus implements ActionListener {
 	// the menu items
 	protected JMenuItem _quitItem;
 	protected JMenuItem _prefItem;
-	protected JMenuItem _dataItem;
-	protected JMenuItem _clearItem;
 	protected JMenuItem _curveItem;
 	protected JMenuItem _axesItem;
 
@@ -86,8 +89,6 @@ public class SplotMenus implements ActionListener {
 		_axesItem = addMenuItem("Axes...", 'A', _editMenu);
 		_editMenu.addSeparator();
 		_showExtraCB = addMenuCheckBox("Show any Extra Text", _editMenu, canvas.getParameters().extraDrawing());
-		_editMenu.addSeparator();
-		_clearItem = addMenuItem("Clear Data", '\0', _editMenu);
 		container.add(_editMenu);
 	}
 
@@ -146,9 +147,7 @@ public class SplotMenus implements ActionListener {
 		else if (source == _prefItem) {
 			_plotCanvas.showPreferencesEditor();
 		}
-		else if (source == _dataItem) {
-			_plotCanvas.showDataEditor();
-		}
+
 		else if (source == _curveItem) {
 			CurveEditorDialog cd = new CurveEditorDialog(_plotCanvas);
 			DialogUtilities.centerDialog(cd);
@@ -169,38 +168,6 @@ public class SplotMenus implements ActionListener {
 			}
 		}
 
-		else if (source == _clearItem) {
-			DataSet ds = _plotCanvas.getPlotData();
-			PlotDataType dsType = null;
-			if (ds != null) {
-				dsType = ds.getType();
-			}
-//			_plotCanvas.clearPlot();
-
-			if (dsType != null) {
-				ds.clear();
-			}
-//			if (dsType != null) {
-//				try {
-//
-//					if (dsType == DataSetType.H1D) {
-//						ds = new DataSet(ds.getColumn(0).getHistoData());
-//					}
-//					else if (dsType == DataSetType.H2D) {
-//						ds = new DataSet(ds.getColumn(0).getHistoData2D());
-//					}
-//					else {
-//						ds = new DataSet(dsType);
-//					}
-//					_plotCanvas.setDataSet(ds);
-//				}
-//				catch (DataSetException e1) {
-//					e1.printStackTrace();
-//				}
-//			}
-			
-			_plotCanvas.needsRedraw(true);
-		}
 		else if (source == _showExtraCB) {
 			_plotCanvas.getParameters().setExtraDrawing(_showExtraCB.isSelected());
 			_plotCanvas.repaint();
@@ -250,15 +217,6 @@ public class SplotMenus implements ActionListener {
 	 */
 	public JMenuItem getPreferencesItem() {
 		return _prefItem;
-	}
-
-	/**
-	 * Get the clear (canvas) item
-	 * 
-	 * @return the clear item
-	 */
-	public JMenuItem getClearItem() {
-		return _clearItem;
 	}
 
 	/**

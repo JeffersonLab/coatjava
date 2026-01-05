@@ -300,8 +300,8 @@ public class CurveDrawer {
 			
 			//this is the evaluator for the fit
 			ivg = curve.getFitValueGetter();
-			System.err.println("Fit evaluator is null in CurveDrawer");
 			if (ivg == null) {
+				System.err.println("Fit evaluator is null in CurveDrawer");
 				return;
 			}
 			drawEvaluator(g2, canvas, ivg);

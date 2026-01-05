@@ -17,7 +17,7 @@ import cnuphys.splot.style.SymbolType;
 public class Scatter extends AExample {
 
 	@Override
-	protected DataSet createDataSet() throws PlotDataException {
+	protected DataSet createPlotData() throws PlotDataException {
 		return new DataSet(PlotDataType.XYXY, getColumnNames());
 	}
 

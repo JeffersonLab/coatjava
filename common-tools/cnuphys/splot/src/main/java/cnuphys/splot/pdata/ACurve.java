@@ -203,13 +203,21 @@ public abstract class ACurve {
 	public CurveDrawingMethod getCurveDrawingMethod() {
 		return curveMethod;
 	}
+	
+	/**
+	 * Convenience method to determine if this curve is a histogram curve.
+	 * @return true if histogram curve
+	 */
+	public boolean isHistogram() {
+		return this instanceof HistoCurve;
+	}
 
 	/**
 	 * Set curve drawing method and mark style changed.
 	 *
 	 * @param method method (null treated as NONE)
 	 */
-	public void setCurveDrawingMethod(CurveDrawingMethod method) {
+	public void setCurveMethod(CurveDrawingMethod method) {
 		curveMethod = (method == null) ? CurveDrawingMethod.NONE : method;
 		markStyleChanged();
 	}

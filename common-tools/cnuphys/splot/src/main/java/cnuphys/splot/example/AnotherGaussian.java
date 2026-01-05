@@ -29,7 +29,7 @@ public class AnotherGaussian extends AExample {
 			0.000000, 0.000000, 32800.000000, 0.000000, 0.000000 };
 
 	@Override
-	protected DataSet createDataSet() throws PlotDataException {
+	protected DataSet createPlotData() throws PlotDataException {
 		return new DataSet(PlotDataType.XYEXYE, getColumnNames());
 	}
 

@@ -13,7 +13,7 @@ import cnuphys.splot.style.SymbolType;
 public class StripChart extends AExample implements Evaluator {
 
 	@Override
-	protected DataSet createDataSet() throws PlotDataException {
+	protected DataSet createPlotData() throws PlotDataException {
 		StripChartCurve sd = new StripChartCurve("Memory", 25, this, 2000);
 		return new DataSet(sd, "time", "Memory Usage (MB)");
 	}

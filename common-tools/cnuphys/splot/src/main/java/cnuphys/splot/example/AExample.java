@@ -7,9 +7,8 @@ import java.awt.event.WindowEvent;
 
 import javax.swing.JFrame;
 import javax.swing.JMenuBar;
-import cnuphys.splot.pdata.DataSet;
+import cnuphys.splot.pdata.PlotData;
 import cnuphys.splot.pdata.PlotDataException;
-import cnuphys.splot.plot.Environment;
 import cnuphys.splot.plot.GraphicsUtilities;
 import cnuphys.splot.plot.PlotCanvas;
 import cnuphys.splot.plot.PlotPanel;
@@ -21,6 +20,7 @@ import cnuphys.splot.plot.SplotMenus;
  * @author heddle
  * 
  */
+@SuppressWarnings("serial")
 public abstract class AExample extends JFrame {
 
 	// the plot canvas
@@ -32,8 +32,6 @@ public abstract class AExample extends JFrame {
 	public AExample() {
 		super("sPlot");
 
-		System.out.println("Environment: " + Environment.getInstance());
-
 		// set up what to do if the window is closed
 		WindowAdapter windowAdapter = new WindowAdapter() {
 			@Override
@@ -44,7 +42,7 @@ public abstract class AExample extends JFrame {
 		addWindowListener(windowAdapter);
 
 		try {
-			_canvas = new PlotCanvas(createDataSet(), getPlotTitle(), getXAxisLabel(), getYAxisLabel());
+			_canvas = new PlotCanvas(createPlotData(), getPlotTitle(), getXAxisLabel(), getYAxisLabel());
 		}
 		catch (PlotDataException e) {
 			e.printStackTrace();
@@ -76,14 +74,23 @@ public abstract class AExample extends JFrame {
 		return _canvas;
 	}
 
-	protected abstract DataSet createDataSet() throws PlotDataException;
+	/**
+	 * Create the plot data
+	 * @return the plot data
+	 * @throws PlotDataException
+	 */
+	protected abstract PlotData createPlotData() throws PlotDataException;
 
+	/** get the column names */
 	protected abstract String[] getColumnNames();
 
+	/** get the x axis label */
 	protected abstract String getXAxisLabel();
 
+	/** get the y axis label */
 	protected abstract String getYAxisLabel();
 
+	/** get the plot title */
 	protected abstract String getPlotTitle();
 
 	// fill the plot data

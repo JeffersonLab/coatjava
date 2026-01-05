@@ -223,7 +223,7 @@ public class StripChartCurve extends ACurve {
 	 */
 	public Snapshot snapshot() {
 		synchronized (lock) {
-			return new Snapshot(xData.values(), yData.values());
+			return new Snapshot(xData.values(), yData.values(), null);
 		}
 	}
 

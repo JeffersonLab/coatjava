@@ -23,10 +23,12 @@ public final class Snapshot {
 	 * and is locking the backing data during the copy.
 	 * @param x the x data
 	 * @param y the y data
+	 * @param e the error data (sigmaY) may be null
 	 */
-	public Snapshot(double[] x, double[] y) {
+	public Snapshot(double[] x, double[] y, double [] e) {
 		this.x = x;
 		this.y = y;
+		this.e = e;
 	}
 
 	/**

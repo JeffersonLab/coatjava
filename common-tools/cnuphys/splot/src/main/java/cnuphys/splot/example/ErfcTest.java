@@ -45,7 +45,7 @@ public class ErfcTest extends AExample {
 			0, };
 
 	@Override
-	protected DataSet createDataSet() throws PlotDataException {
+	protected DataSet createPlotData() throws PlotDataException {
 		return new DataSet(PlotDataType.XYEXYE, getColumnNames());
 	}
 

@@ -19,6 +19,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.List;
 import java.util.Vector;
 
 import javax.imageio.ImageIO;
@@ -35,6 +36,7 @@ import cnuphys.splot.edit.PlotPreferencesDialog;
 import cnuphys.splot.pdata.ACurve;
 import cnuphys.splot.pdata.CurveChangeType;
 import cnuphys.splot.pdata.DataChangeListener;
+import cnuphys.splot.pdata.HistoCurve;
 import cnuphys.splot.pdata.PlotDataException;
 import cnuphys.splot.pdata.PlotDataType;
 import cnuphys.splot.pdata.HistoData;
@@ -104,6 +106,9 @@ public class PlotCanvas extends JComponent
 
 	// for rubberbanding
 	private Rubberband _rubberband;
+	
+	// reusable point
+	public Point2D.Double _workPoint = new Point2D.Double();
 
 	// gives xy of mouse in plot coordinates
 	private String _locationString = " ";
@@ -438,7 +443,7 @@ public class PlotCanvas extends JComponent
 			_worldToLocal = _localToWorld.createInverse();
 		}
 		catch (NoninvertibleTransformException e) {
-			// e.printStackTrace();
+			 e.printStackTrace();
 		}
 	}
 
@@ -500,25 +505,25 @@ public class PlotCanvas extends JComponent
 			_locationString = " ";
 		}
 		else {
-			// pp.x -= _activeBounds.x;
-			// pp.y -= _activeBounds.y;
-//			localToWorld(pp, _workPoint);
-//			_locationString = String.format("<html>(x, y) = (%7.2g, %-7.2g)<br>count = %d", _workPoint.x, _workPoint.y, _plotData.size());
-//
-//			if (_plotData.is1DHistoSet()) {
-//				Vector<OldDataColumn> ycols = (Vector<OldDataColumn>) _plotData.getAllVisibleCurves();
-//				int size = ycols.size();
-//
-//				for (int i = 0; i < size; i++) {
-//					HistoData hd = ycols.get(i).getHistoData();
-//					String s = HistoData.statusString(this, hd, pp, _workPoint);
-//					if (s != null) {
-//						Color lc = ycols.get(i).getStyle().getFitLineColor();
-//						_locationString += "&nbsp&nbsp" + colorStr(s, GraphicsUtilities.colorToHex(lc));
-//						// break;
-//					}
-//				}
-//			}
+			 pp.x -= _activeBounds.x;
+			 pp.y -= _activeBounds.y;
+			localToWorld(pp, _workPoint);
+			_locationString = String.format("<html>(x, y) = (%7.2g, %-7.2g)<br>count = %d", _workPoint.x, _workPoint.y, _plotData.size());
+
+			if (_plotData.isHistoData()) {
+				List<ACurve> curves = _plotData.getVisibleCurves();
+
+				for (ACurve curve : curves) {
+					HistoCurve hc = (HistoCurve) curve;
+					HistoData hd = hc.getHistoData();
+					String s = HistoData.statusString(this, hd, pp, _workPoint);
+					if (s != null) {
+						Color lc = curve.getStyle().getFitLineColor();
+						_locationString += "&nbsp&nbsp" + colorStr(s, GraphicsUtilities.colorToHex(lc));
+						// break;
+					}
+				}
+			}
 
 		}
 	}

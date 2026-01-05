@@ -13,7 +13,7 @@ import cnuphys.splot.plot.PlotParameters;
 public class TwoLinesWithErrors extends AExample {
 
 	@Override
-	protected DataSet createDataSet() throws PlotDataException {
+	protected DataSet createPlotData() throws PlotDataException {
 		return new DataSet(PlotDataType.XYEXYE, getColumnNames());
 	}
 

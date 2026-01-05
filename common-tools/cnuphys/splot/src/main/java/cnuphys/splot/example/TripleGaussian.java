@@ -16,7 +16,7 @@ import cnuphys.splot.plot.VerticalLine;
 public class TripleGaussian extends AExample {
 
 	@Override
-	protected DataSet createDataSet() throws PlotDataException {
+	protected DataSet createPlotData() throws PlotDataException {
 		return new DataSet(PlotDataType.XYEXYE, getColumnNames());
 	}
 

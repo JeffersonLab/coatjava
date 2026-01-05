@@ -1,6 +1,6 @@
 package cnuphys.splot.example;
 
-import cnuphys.splot.pdata.DataSet;
+import cnuphys.splot.pdata.PlotData;
 import cnuphys.splot.pdata.PlotDataException;
 import cnuphys.splot.pdata.PlotDataType;
 
@@ -11,8 +11,8 @@ public class StraightLine extends AExample {
 	static double sig[] = { 0.085087, 0.086192, 0.087027 };
 
 	@Override
-	protected DataSet createDataSet() throws PlotDataException {
-		return new DataSet(PlotDataType.XYEXYE, getColumnNames());
+	protected PlotData createPlotData() throws PlotDataException {
+		return new PlotData(PlotDataType.XYEXYE, getColumnNames());
 	}
 
 	@Override
@@ -38,14 +38,9 @@ public class StraightLine extends AExample {
 
 	@Override
 	public void fillData() {
-		DataSet ds = _canvas.getPlotData();
+		PlotData ds = _canvas.getPlotData();
 		for (int i = 0; i < x.length; i++) {
-			try {
-				ds.add(x[i], y[i], sig[i]);
-			}
-			catch (PlotDataException e) {
-				e.printStackTrace();
-			}
+			ds.add(x[i], y[i], sig[i]);
 		}
 	}
 
