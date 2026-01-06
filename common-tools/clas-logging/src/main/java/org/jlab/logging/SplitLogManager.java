@@ -45,13 +45,15 @@ public class SplitLogManager extends LogManager {
 
     // clear handlers
     logger.setUseParentHandlers(false);
+    for(var handler : logger.getHandlers())
+      logger.removeHandler(handler);
 
     // log message formatting
     if(includePrefix)
       // "[source] level: message throwable_backtrace\n"
       System.setProperty(
           "java.util.logging.SimpleFormatter.format",
-          "[" + logger.getName().replaceAll(".*\\.","") + "] %4$s: %5$s%6$s%n");
+          "%4$s: [" + logger.getName().replaceAll(".*\\.","") + "] %5$s%6$s%n");
     else
       // "level: message throwable_backtrace\n"
       System.setProperty(
