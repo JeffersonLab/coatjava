@@ -54,11 +54,11 @@ public class ModeAHDC extends HipoExtractor  {
     //wfType 1 ⇒ saturing
     //wfType 0 ⇒ OK
     
-    public static class AHDCPulse extends Pulse {
-        public long time_ZS;
-        public int binMax;
-        public int numberOfBins;
-        public int effectiveNumberOfBins;
+    private static class AHDCPulse extends Pulse {
+        private long time_ZS;
+        private int binMax;
+        private int numberOfBins;
+        private int effectiveNumberOfBins;
         private short[] samples;
     }
     
