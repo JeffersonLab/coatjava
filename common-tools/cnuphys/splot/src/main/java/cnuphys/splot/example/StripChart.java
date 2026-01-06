@@ -44,11 +44,11 @@ public class StripChart extends AExample implements Evaluator {
 
 	@Override
 	public void setParameters() {
-		DataSet ds = _canvas.getPlotData();
+		DataSet ds = canvas.getPlotData();
 		ds.getCurveStyle(0).setFitLineColor(Color.red);
 		ds.getCurveStyle(0).setFillColor(new Color(128, 0, 0, 48));
 		ds.getCurveStyle(0).setSymbolType(SymbolType.NOSYMBOL);
-		PlotParameters params = _canvas.getParameters();
+		PlotParameters params = canvas.getParameters();
 		params.setMinExponentY(6);
 		params.setNumDecimalY(2);
 		params.setXLimitsMethod(LimitsMethod.USEDATALIMITS);

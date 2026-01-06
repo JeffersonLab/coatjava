@@ -50,7 +50,7 @@ public class TwoHisto extends AExample {
 		sig = 20.0;
 	    NormalDistribution normDev2 = new NormalDistribution(mu, sig);
 
-		DataSet ds = _canvas.getPlotData();
+		DataSet ds = canvas.getPlotData();
 		for (int i = 0; i < n; i++) {
 			double y1 = normDev1.sample();
 			double y2 = normDev2.sample();
@@ -65,7 +65,7 @@ public class TwoHisto extends AExample {
 
 	@Override
 	public void setParameters() {
-		DataSet ds = _canvas.getPlotData();
+		DataSet ds = canvas.getPlotData();
 
 		ds.getCurveStyle(0).setFillColor(new Color(196, 196, 196, 64));
 		ds.getCurveStyle(0).setBorderColor(Color.black);
@@ -75,7 +75,7 @@ public class TwoHisto extends AExample {
 		ds.getCurveStyle(1).setBorderColor(Color.red);
 		ds.getCurve(1).getFit().setFitType(CurveDrawingMethod.GAUSSIANS);
 
-		PlotParameters params = _canvas.getParameters();
+		PlotParameters params = canvas.getParameters();
 		params.setMinExponentY(6);
 		params.setNumDecimalY(0);
 	}

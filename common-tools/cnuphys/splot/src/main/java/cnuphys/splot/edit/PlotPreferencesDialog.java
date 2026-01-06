@@ -3,9 +3,20 @@ package cnuphys.splot.edit;
 import java.awt.BorderLayout;
 import java.awt.Component;
 
-import cnuphys.splot.plot.GeneralPlotParamPanel;
+import javax.swing.JTabbedPane;
+
 import cnuphys.splot.plot.PlotCanvas;
 
+/**
+ * A more comprehensive PlotParameters editor with tabs for:
+ * <ul>
+ *   <li>Labels</li>
+ *   <li>Axes</li>
+ *   <li>Legend</li>
+ *   <li>Extra</li>
+ * </ul>
+ */
+@SuppressWarnings("serial")
 public class PlotPreferencesDialog extends SimpleDialog {
 
 	protected PlotCanvas _plotCanvas;
@@ -14,79 +25,65 @@ public class PlotPreferencesDialog extends SimpleDialog {
 	protected static final String APPLY = "Apply";
 	protected static final String CLOSE = "Close";
 
-	// plot labels and title
-	protected GeneralPlotParamPanel _genPanel;
-	
-	//axes limits
-	private AxesLimitsPanel _axesPanel;
+	private JTabbedPane _tabs;
 
-	/**
-	 * Edit the plot preferences
-	 * 
-	 * @param plotCanvas the plot being edited
-	 */
+	private LabelsTabPanel _labelsPanel;
+	private AxesTabPanel _axesPanel;
+	private LegendTabPanel _legendPanel;
+	private ExtraTabPanel _extraPanel;
+
 	public PlotPreferencesDialog(PlotCanvas plotCanvas) {
 		super("Plot Preferences", plotCanvas, true, APPLY, CLOSE);
 
-		// note components already created by super constructor
 		_plotCanvas = plotCanvas;
+
 		addCenter();
-		addNorth();
 		pack();
 	}
 
-	/**
-	 * can do preparation--for example a component might be added on
-	 * "createCenterComponent" but a reference needed in "addNorthComponent"
-	 */
 	@Override
 	protected void prepare() {
 		_plotCanvas = (PlotCanvas) _userObject;
 	}
 
 	/**
-	 * Override to create the component that goes in the center. Usually this is the
-	 * "main" component.
-	 * 
-	 * @return the component that is placed in the center
-	 */
-	private Component addNorth() {
-		// _tabbedPane = new JTabbedPane();
-
-		_genPanel = new GeneralPlotParamPanel(_plotCanvas);
-
-		add(_genPanel, BorderLayout.NORTH);
-		return _genPanel;
-	}
-	
-	/**
-	 * Override to create the component that goes in the center. Usually this is the
-	 * "main" component.
-	 * 
-	 * @return the component that is placed in the center
+	 * Build the tabbed editor in the dialog center.
 	 */
 	protected Component addCenter() {
-		_axesPanel = new AxesLimitsPanel(_plotCanvas);
-		add(_axesPanel, BorderLayout.CENTER);
-		return _axesPanel;
+		_tabs = new JTabbedPane();
+
+		_labelsPanel = new LabelsTabPanel(_plotCanvas);
+		_axesPanel   = new AxesTabPanel(_plotCanvas);
+		_legendPanel = new LegendTabPanel(_plotCanvas);
+		_extraPanel  = new ExtraTabPanel(_plotCanvas);
+
+		_tabs.addTab("Labels", _labelsPanel);
+		_tabs.addTab("Axes", _axesPanel);
+		_tabs.addTab("Legend", _legendPanel);
+		_tabs.addTab("Extra", _extraPanel);
+
+		add(_tabs, BorderLayout.CENTER);
+		return _tabs;
 	}
 
-	/**
-	 * A button was hit. The default behavior is to shutdown the dialog.
-	 * 
-	 * @param command the label on the button that was hit.
-	 */
 	@Override
 	protected void handleCommand(String command) {
 		if (CLOSE.equals(command)) {
 			setVisible(false);
+			return;
 		}
-		else if (APPLY.equals(command)) {
-			_genPanel.apply();
-			_axesPanel.apply();
-			_plotCanvas.setWorldSystem();
+
+		if (APPLY.equals(command)) {
+
+			_labelsPanel.apply();
+			boolean axesAffectWorld = _axesPanel.apply(); // returns true if we should recompute world
+			_legendPanel.apply();
+			_extraPanel.apply();
+
+			if (axesAffectWorld) {
+				_plotCanvas.setWorldSystem();
+			}
 			_plotCanvas.repaint();
 		}
 	}
-
 }

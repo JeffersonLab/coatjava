@@ -326,11 +326,6 @@ public class CurveEditorPanel extends JPanel implements ActionListener, Property
 			setTextArea();
 			return;
 		}
-		else if (PlotCanvas.DATACLEAREDPROP.equals(evt.getPropertyName())) {
-			// all plot data cleared
-			_curveTable.clear();
-			return;
-		}
 
 		// all other props rely on having a non null curve
 		ACurve curve = _curveTable.getSelectedCurve();

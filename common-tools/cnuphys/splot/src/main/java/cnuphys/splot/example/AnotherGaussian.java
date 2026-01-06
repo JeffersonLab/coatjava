@@ -52,7 +52,7 @@ public class AnotherGaussian extends AExample {
 
 	@Override
 	public void fillData() {
-		PlotData plotData = _canvas.getPlotData();
+		PlotData plotData = canvas.getPlotData();
 		Curve curve = (Curve) plotData.getCurve(0);
 
 		for (int i = 0; i < rawData.length; i += 3) {
@@ -62,25 +62,26 @@ public class AnotherGaussian extends AExample {
 
 	@Override
 	public void setParameters() {
-		PlotData plotData = _canvas.getPlotData();
+		PlotData plotData = canvas.getPlotData();
 		
+		Curve curve = (Curve) plotData.getCurve(0);
 		//symbol fill color
-		plotData.getCurve(0).getStyle().setFillColor(X11Colors.getX11Color("dark sea green"));
+		curve.getStyle().setFillColor(X11Colors.getX11Color("dark sea green"));
 		
 		//symbol border color
-		plotData.getCurve(0).getStyle().setBorderColor(X11Colors.getX11Color("dark red"));
-		plotData.getCurve(0).setCurveMethod(CurveDrawingMethod.GAUSSIAN);
-		PlotParameters params = _canvas.getParameters();
+		curve.getStyle().setBorderColor(X11Colors.getX11Color("dark red"));
+		curve.setCurveMethod(CurveDrawingMethod.GAUSSIAN);
+		PlotParameters params = canvas.getParameters();
 		params.setMinExponentY(6).setNumDecimalY(2);
 
 	}
 
 	public static void main(String arg[]) {
-		final AnotherGaussian example = new AnotherGaussian();
 
 		javax.swing.SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
+				AnotherGaussian example = new AnotherGaussian();
 				example.setVisible(true);
 			}
 		});

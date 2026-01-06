@@ -76,8 +76,8 @@ public class TwoLinesWithErrors extends AExample {
 	public void fillData() {
 		FitVectors fv1 = line1Data();
 		FitVectors fv2 = line2Data();
-		Curve curve1 = (Curve) _canvas.getPlotData().getCurve(0);
-		Curve curve2 = (Curve) _canvas.getPlotData().getCurve(1);
+		Curve curve1 = (Curve) canvas.getPlotData().getCurve(0);
+		Curve curve2 = (Curve) canvas.getPlotData().getCurve(1);
 		
 		for (int i = 0; i < fv1.x.length; i++) {
 			double e = 1.0 / Math.sqrt(1.0e-12 + fv1.w[i]);
@@ -94,24 +94,24 @@ public class TwoLinesWithErrors extends AExample {
 
 	@Override
 	public void setParameters() {
-		PlotData plotData = _canvas.getPlotData();
+		PlotData plotData = canvas.getPlotData();
 		Collection<ACurve> curves = plotData.getCurves();
 		for (ACurve dc : curves) {
 			dc.setCurveMethod(CurveDrawingMethod.POLYNOMIAL);
 		}
 
 		// many options controlled via plot parameters
-		PlotParameters params = _canvas.getParameters();
+		PlotParameters params = canvas.getParameters();
 		params.mustIncludeXZero(true);
 		params.mustIncludeYZero(true);
 	}
 
 	public static void main(String arg[]) {
-		final TwoLinesWithErrors example = new TwoLinesWithErrors();
 
 		javax.swing.SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
+				TwoLinesWithErrors example = new TwoLinesWithErrors();
 				example.setVisible(true);
 			}
 		});

@@ -51,8 +51,6 @@ public class PlotParameters {
 	private boolean _drawExtra = true;
 	private String[] _extraStrings;
 
-	// color scale
-	private boolean _drawGradient = false;
 
 	private Font _titleFont = Environment.getInstance().getCommonFont(20);
 	private Font _axesLabelFont = Environment.getInstance().getCommonFont(14);
@@ -338,6 +336,7 @@ public class PlotParameters {
 	 * @return this parameters instance (for chaining)
 	 */
 	public PlotParameters setTitleFont(Font font) {
+		_canvas.remoteFirePropertyChange(PlotCanvas.TITLEFONTCHANGE, _titleFont, font);
 		_titleFont = font;
 		return this;
 	}
@@ -358,6 +357,7 @@ public class PlotParameters {
 	 * @return this parameters instance (for chaining)
 	 */
 	public PlotParameters setAxesFont(Font font) {
+		_canvas.remoteFirePropertyChange(PlotCanvas.AXESFONTCHANGE, _axesLabelFont, font);
 		_axesLabelFont = font;
 		return this;
 	}
@@ -378,6 +378,7 @@ public class PlotParameters {
 	 * @return this parameters instance (for chaining)
 	 */
 	public PlotParameters setStatusFont(Font font) {
+		_canvas.remoteFirePropertyChange(PlotCanvas.STATUSFONTCHANGE, _statusFont, font);
 		_statusFont = font;
 		return this;
 	}
@@ -478,7 +479,7 @@ public class PlotParameters {
 	 * @return this parameters instance (for chaining)
 	 */
 	public PlotParameters setPlotTitle(String title) {
-		_canvas.remoteFirePropertyChange(PlotCanvas.TITLECHANGEPROP, getPlotTitle(), title);
+		_canvas.remoteFirePropertyChange(PlotCanvas.TITLETEXTCHANGE, getPlotTitle(), title);
 		_plotTitle = title;
 		return this;
 	}
@@ -508,7 +509,7 @@ public class PlotParameters {
 	 * @return this parameters instance (for chaining)
 	 */
 	public PlotParameters setXLabel(String label) {
-		_canvas.remoteFirePropertyChange(PlotCanvas.XLABELCHANGEPROP, getXLabel(), label);
+		_canvas.remoteFirePropertyChange(PlotCanvas.XLABELTEXTCHANGE, getXLabel(), label);
 		_xLabel = label;
 		return this;
 	}
@@ -520,7 +521,7 @@ public class PlotParameters {
 	 * @return this parameters instance (for chaining)
 	 */
 	public PlotParameters setYLabel(String label) {
-		_canvas.remoteFirePropertyChange(PlotCanvas.YLABELCHANGEPROP, getYLabel(), label);
+		_canvas.remoteFirePropertyChange(PlotCanvas.YLABELTEXTCHANGE, getYLabel(), label);
 		_yLabel = label;
 		return this;
 	}
@@ -562,26 +563,6 @@ public class PlotParameters {
 	 */
 	public PlotParameters setLegendDrawing(boolean draw) {
 		_drawLegend = draw;
-		return this;
-	}
-
-	/**
-	 * Check whether we should draw a gradient (color scale).
-	 *
-	 * @return whether we should draw a gradient
-	 */
-	public boolean gradientDrawing() {
-		return _drawGradient;
-	}
-
-	/**
-	 * Set whether we should draw a gradient (color scale).
-	 *
-	 * @param draw the new drawing flag
-	 * @return this parameters instance (for chaining)
-	 */
-	public PlotParameters setGradientDrawing(boolean draw) {
-		_drawGradient = draw;
 		return this;
 	}
 

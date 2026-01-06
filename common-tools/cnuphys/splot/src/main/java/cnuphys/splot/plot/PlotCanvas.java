@@ -51,10 +51,12 @@ public class PlotCanvas extends JComponent
 		implements MouseListener, MouseMotionListener, IRubberbanded, IToolBarListener, DataChangeListener {
 
 	public static final String DONEDRAWINGPROP = "Done Drawing";
-	public static final String TITLECHANGEPROP = "Plot Title Change";
-	public static final String XLABELCHANGEPROP = "X Label Change";
-	public static final String YLABELCHANGEPROP = "Y Label Change";
-	public static final String DATACLEAREDPROP = "Data Cleared";
+	public static final String TITLETEXTCHANGE = "Title Text";
+	public static final String TITLEFONTCHANGE = "Title Font";
+	public static final String XLABELTEXTCHANGE = "X Label Text";
+	public static final String YLABELTEXTCHANGE = "Y Label Text";
+	public static final String AXESFONTCHANGE   = "Axes Font";
+	public static final String STATUSFONTCHANGE = "Status Font";
 
 	// used to fire property changes. Transient.
 	private long drawCount = 0;
@@ -109,7 +111,7 @@ public class PlotCanvas extends JComponent
 	public Point2D.Double _workPoint = new Point2D.Double();
 
 	// gives xy of mouse in plot coordinates
-	private String _locationString = " ";
+	private String _statusString = " ";
 
 	// toolbar controlling plot
 	private CommonToolBar _toolbar;
@@ -490,19 +492,27 @@ public class PlotCanvas extends JComponent
 		Point pp = e.getPoint();
 
 		if ((_activeBounds == null) || (_worldSystem == null)) {
-			_locationString = " ";
+			_statusString = " ";
 		}
 
 		else if (!activeBoundsContains(pp.x, pp.y)) {
-			_locationString = " ";
+			_statusString = " ";
 		}
 		else {
 			 pp.x -= _activeBounds.x;
 			 pp.y -= _activeBounds.y;
 			localToWorld(pp, _workPoint);
-			_locationString = String.format("<html>(x, y) = (%7.2g, %-7.2g)", _workPoint.x, _workPoint.y);
+			_statusString = String.format("<html>(x, y) = (%7.2g, %-7.2g)", _workPoint.x, _workPoint.y);
 
-			if (_plotData.isHistoData()) {
+			if (_plotData.isXYData()) {
+				List<ACurve> curves = _plotData.getVisibleCurves();
+
+				for (ACurve curve : curves) {
+					String numStr = String.format("<html><b> %s</b>: %d points ", curve.name(), curve.length());
+					_statusString += "&nbsp&nbsp" + numStr;
+				}
+			}
+			else if (_plotData.isHistoData()) {
 				List<ACurve> curves = _plotData.getVisibleCurves();
 
 				for (ACurve curve : curves) {
@@ -511,7 +521,7 @@ public class PlotCanvas extends JComponent
 					String s = HistoData.statusString(this, hd, pp, _workPoint);
 					if (s != null) {
 						Color lc = curve.getStyle().getFitLineColor();
-						_locationString += "&nbsp&nbsp" + colorStr(s, GraphicsUtilities.colorToHex(lc));
+						_statusString += "&nbsp&nbsp" + colorStr(s, GraphicsUtilities.colorToHex(lc));
 						// break;
 					}
 				}
@@ -558,7 +568,7 @@ public class PlotCanvas extends JComponent
 	 * @return
 	 */
 	public String getLocationString() {
-		return _locationString;
+		return _statusString;
 	}
 
 	/**

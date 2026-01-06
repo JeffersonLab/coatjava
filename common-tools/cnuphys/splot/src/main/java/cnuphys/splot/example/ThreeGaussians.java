@@ -12,48 +12,54 @@ import cnuphys.splot.pdata.PlotDataType;
 import cnuphys.splot.plot.PlotParameters;
 
 @SuppressWarnings("serial")
-public class Gaussian extends AExample {
+public class ThreeGaussians extends AExample {
 	
-	private static final String curveName = "Gaussian Fit";
+	private static final String curveName = "3 Gaussian Fit";
 
 	@Override
 	protected PlotData createPlotData() throws PlotDataException {
 		String[] curveNames = {curveName };
-		return new PlotData(PlotDataType.XYEXYE, curveNames, null);
+		int[] fitOrders = {3}; // fit to 3 gaussians
+		return new PlotData(PlotDataType.XYEXYE, curveNames, fitOrders);
 	}
+
 
 	@Override
 	protected String getXAxisLabel() {
-		return "x";
+		return "<html>x <b>data</b>";
 	}
 
 	@Override
 	protected String getYAxisLabel() {
-		return "y";
+		return "<html>y <b>data</b>";
 	}
 
 	@Override
 	protected String getPlotTitle() {
-		return "Sample Gaussian Fit";
+		return "<html>Fit to Three Gaussians";
 	}
 
 	@Override
 	public void fillData() {
-		
-		final double mu = 1.2;
- 		final double sigma = 0.3;
- 		final double A = 2.0;
+		final double[] mu = {1.2, 3.3, 5.3};
+ 		final double[] sigma = {0.5, 0.5, 0.4};
+ 		final double[] A = {2.0, 1.5, 1.1};
  		final double B = 0.5;
- 		int n = 50;
- 		
- 		
+ 		int n = 100;
+ 		int numGauss = A.length;
+
  		Evaluator eval = (double x) -> {
- 			double z = (x - mu) / sigma;
- 			return A * Math.exp(-0.5 * z * z) + B;
+ 			double sum = 0;
+ 			for (int k = 0; k < numGauss; k++) {
+ 				double dx = x - mu[k];
+ 				double z = dx / sigma[k];
+ 				sum += A[k] * Math.exp(-0.5 * z * z);
+ 			}
+ 			sum += B;
+ 			return sum;
  		};
  		
- 		FitVectors testData = FitVectors.testData(eval, -1.0, 3.0, n, 4.0, 40.0);		
-		
+		FitVectors testData = FitVectors.testData(eval, -1.0, 7.0, n, 4.0, 5.0);
 		for (int i = 0; i < n; i++) {
 			double x = testData.x[i];
 			double y = testData.y[i];
@@ -68,8 +74,9 @@ public class Gaussian extends AExample {
 			curve.add(x, y, e);
 
 		}
-		
+		 
 	}
+
 
 	@Override
 	public void setParameters() {
@@ -80,19 +87,25 @@ public class Gaussian extends AExample {
 		
 		//symbol border color
 		plotData.getCurve(0).getStyle().setBorderColor(Color.darkGray);
-		plotData.getCurve(0).setCurveMethod(CurveDrawingMethod.GAUSSIAN);
+		plotData.getCurve(0).setCurveMethod(CurveDrawingMethod.GAUSSIANS);
 		PlotParameters params = canvas.getParameters();
 		params.setMinExponentY(6).setNumDecimalY(2);
-	}
-	
-	// Since we are using Swing, we need to start things off on the
-	// event dispatch thread (EDT).
-	public static void main(String arg[]) {
+		params.mustIncludeXZero(true);
+		params.mustIncludeYZero(true);
 
+		String extra[] = { "This is an extra string", "This is a longer extra string",
+				"This is an even longer extra string",
+				"This box, like the Legend, is draggable." };
+		params.setExtraStrings(extra);
+
+	}
+
+	public static void main(String arg[]) {
+	
 		javax.swing.SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-				Gaussian example = new Gaussian();
+				ThreeGaussians example = new ThreeGaussians();
 				example.setVisible(true);
 			}
 		});

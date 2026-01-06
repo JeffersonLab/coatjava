@@ -3,7 +3,8 @@ package cnuphys.splot.pdata;
 import java.util.Objects;
 
 import cnuphys.splot.fit.CurveDrawingMethod;
-import cnuphys.splot.fit.ErfErfcFitter;
+import cnuphys.splot.fit.ErfFitter;
+import cnuphys.splot.fit.ErfcFitter;
 import cnuphys.splot.fit.FitResult;
 import cnuphys.splot.fit.GaussianFitter;
 import cnuphys.splot.fit.IFitter;
@@ -90,7 +91,10 @@ public class HistoCurve extends ACurve {
 			return new PolynomialFitter(getFitOrder());
 
 		case ERF:
-			return new ErfErfcFitter(ErfErfcFitter.Kind.ERF);
+			return new ErfFitter();
+
+		case ERFC:
+			return new ErfcFitter();
 
 		case GAUSSIAN:
 			return new GaussianFitter();
@@ -140,6 +144,7 @@ public class HistoCurve extends ACurve {
 
 			case POLYNOMIAL:
 			case ERF:
+			case ERFC:
 			case GAUSSIAN:
 			case GAUSSIANS: {
 				IFitter fitter = createFitterForCurrentMethod();

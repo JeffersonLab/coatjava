@@ -158,11 +158,24 @@ public class PlotData implements CurveChangeListener {
 	}
 	
 	/**
-	 * Determine if this is histogram plot data.
+	 * Convenience method to determine if this is histogram plot data.
 	 * @return true if histogram plot data
 	 */
 	public boolean isHistoData() {
 		return (type == PlotDataType.H1D);
+	}
+	
+	
+	public boolean isXYData() {
+		return (type == PlotDataType.XYEXYE) || (type == PlotDataType.XYXY);
+	}
+	
+	/**
+	 * Determine if this is strip chart plot data.
+	 * @return true if strip chart plot data
+	 */
+	public boolean isStripData() {
+		return (type == PlotDataType.STRIP);
 	}
 
 	/** @return an unmodifiable view of the curves. */

@@ -34,10 +34,7 @@ import cnuphys.splot.pdata.FitVectors;
  *
  * <p>Enforces {@code sigma >= DEFAULT_MIN_SIGMA} by default.</p>
  */
-public final class ErfErfcFitter extends ALeastSquaresFitter {
-
-    /** Which function to fit. */
-    public enum Kind { ERF, ERFC }
+public final class ErfcFitter extends ALeastSquaresFitter {
 
     /** Parameter indices. */
     public static final int IDX_A = 0;
@@ -52,25 +49,18 @@ public final class ErfErfcFitter extends ALeastSquaresFitter {
     /** Default minimum allowed sigma. */
     public static final double DEFAULT_MIN_SIGMA = 1e-12;
 
-    private final Kind kind;
-
 	 /**
-	  * Create an Erf/Erfc fitter with default optimizer (Levenberg-Marquardt).
+	  * Create an Erfc fitter with default optimizer (Levenberg-Marquardt).
 	  *
 	  * @param kind which function to fit
 	  */
 
-    public ErfErfcFitter(Kind kind) {
-        this(kind, new LevenbergMarquardtOptimizer());
+    public ErfcFitter() {
+        this(new LevenbergMarquardtOptimizer());
     }
 
-    public ErfErfcFitter(Kind kind, LeastSquaresOptimizer optimizer) {
-        super(Objects.requireNonNull(optimizer, "optimizer"), (x, y, w) -> InitialGuess.guess(kind, x, y));
-        this.kind = Objects.requireNonNull(kind, "kind");
-    }
-
-    public Kind getKind() {
-        return kind;
+    public ErfcFitter(LeastSquaresOptimizer optimizer) {
+        super(Objects.requireNonNull(optimizer, "optimizer"), (x, y, w) -> InitialGuess.guess(x, y));
     }
 
     @Override
@@ -80,12 +70,12 @@ public final class ErfErfcFitter extends ALeastSquaresFitter {
 
     @Override
     protected MultivariateJacobianFunction model(double[] x) {
-        return new ErfErfcModel(kind, x);
+        return new ErfcModel(x);
     }
 
     @Override
     protected double[] defaultInitialGuess(double[] x, double[] y, double[] weights) {
-        return InitialGuess.guess(kind, x, y);
+        return InitialGuess.guess(x, y);
     }
 
     @Override
@@ -147,19 +137,17 @@ public final class ErfErfcFitter extends ALeastSquaresFitter {
             double B = p[IDX_B];
             double z = (x - x0) / sigma;
 
-            double f = (kind == Kind.ERF) ? Erf.erf(z) : Erf.erfc(z);
+            double f = Erf.erfc(z);
             return A * f + B;
         };
     }
 
-    /** Analytic model + Jacobian for erf/erfc. */
-    private static final class ErfErfcModel implements MultivariateJacobianFunction {
-        private final Kind kind;
+    /** Analytic model + Jacobian for erfc. */
+    private static final class ErfcModel implements MultivariateJacobianFunction {
         private final double[] x;
 
-        ErfErfcModel(Kind kind, double[] x) {
-            this.kind = kind;
-            this.x = x.clone();
+        ErfcModel(double[] x) {
+             this.x = x.clone();
         }
 
         @Override
@@ -181,14 +169,13 @@ public final class ErfErfcFitter extends ALeastSquaresFitter {
             for (int i = 0; i < n; i++) {
                 double z = (x[i] - x0) * invSigma;
 
-                double f = (kind == Kind.ERF) ? Erf.erf(z) : Erf.erfc(z);
+                double f = Erf.erfc(z);
                 double exp = Math.exp(-(z * z));
 
                 values[i] = A * f + B;
 
-                // df/dz for erf is 2/sqrt(pi) * exp(-z^2)
                 // df/dz for erfc is -2/sqrt(pi) * exp(-z^2)
-                double dfdz = (kind == Kind.ERF ? +1.0 : -1.0) * twoOverSqrtPi * exp;
+                double dfdz = -twoOverSqrtPi * exp;
 
                 // dy/dA = f
                 jac[i][IDX_A] = f;
@@ -207,7 +194,7 @@ public final class ErfErfcFitter extends ALeastSquaresFitter {
         }
     }
 
-    /** Bounds container for erf/erfc parameters. */
+    /** Bounds container for erfc parameters. */
     public static final class ParameterBounds {
         private final double[] lower = new double[4];
         private final double[] upper = new double[4];
@@ -247,7 +234,7 @@ public final class ErfErfcFitter extends ALeastSquaresFitter {
     static final class InitialGuess {
         private InitialGuess() {}
 
-        public static double[] guess(Kind kind, double[] x, double[] y) {
+        public static double[] guess(double[] x, double[] y) {
             final int n = x.length;
             if (n == 0) {
                 return new double[] { 1, 0, 1, 0 };
@@ -264,11 +251,9 @@ public final class ErfErfcFitter extends ALeastSquaresFitter {
             // For erf: transitions from low to high (or high to low), similar for erfc but reversed.
             double B = 0.5 * (yLeft + yRight);
             double A = 0.5 * (yRight - yLeft);
-
-            if (kind == Kind.ERFC) {
-                // erfc decreases for increasing z; flip sign convention
-                A = -A;
-            }
+            
+            //because erfc goes down with increasing z
+            A = -A;
 
             // x0: approximate midpoint of transition from yLeft to yRight
             double target = B; // midpoint
@@ -293,20 +278,15 @@ public final class ErfErfcFitter extends ALeastSquaresFitter {
     }
     
     //------- descriptive string section -----------------
- 	@Override
- 	public String modelName() {
- 		return kind == Kind.ERF ? "erf" 
- 				: "erfc";
-  	}
+	@Override
+	public String modelName() {
+		return "Complementary Error Function Fit";
+	}
 
- 	@Override
- 	public String functionForm() {
- 		if (kind == Kind.ERF) {
- 			return "y(x) = A * erf[(x - x0)/σ] + B";
- 		} else {
- 			return "y(x) = A * erfc[(x - x0)/σ] + B";
- 		}
-  	}
+	@Override
+	public String functionForm() {
+		return "y(x) = A * erfc[(x - x0)/σ] + B";
+	}
 
  	/**
  	 * Get the parameter name for the given index.
@@ -317,7 +297,7 @@ public final class ErfErfcFitter extends ALeastSquaresFitter {
  	@Override
  	public String parameterName(int index) {
  		if (index < 0 || index >= getParameterCount()) {
- 			throw new IllegalArgumentException("bad parameter index in erf/erfc fit: " + index);
+ 			throw new IllegalArgumentException("bad parameter index in erfc fit: " + index);
  		}
 
  		return paramNames[index];
@@ -328,39 +308,7 @@ public final class ErfErfcFitter extends ALeastSquaresFitter {
  		return this;
  	}
  	
- 	//------------------ test methods -----------------------
- 	
- 	// Test the Erf fitter
- 	private static void testErf() {
-		double A = 2.0;
-		double x0 = 1.0;
-		double sigma = 0.5;
-		double B = 0.1;
-		int n = 100;
 
-		Evaluator erfEval = (double x) -> {
-			double z = (x - x0) / sigma;
-			return A * Erf.erf(z) + B;
-		};
-
-		FitVectors testData = FitVectors.testData(erfEval, -4.0, 4.0, n, 3.0, 3.0);
-		ErfErfcFitter fitter = new ErfErfcFitter(Kind.ERF);
-		FitResult result = fitter.fit(testData.x, testData.y, testData.w);
-		System.out.println("\n===== Erf Fit Test  =====");
-		System.out.println("True parameters: ");
-		System.out.print(" A = " + A);
-		System.out.print(" x0 = " + x0);
-		System.out.print(" sigma = " + sigma);
-		System.out.println(" B = " + B);
-		System.out.println(result);
-
-		// print data and fit values
-		for (int i = 0; i < (n - 1); i += 10) {
-			double xv = testData.x[i];
-			double yv = result.evaluator.value(xv);
-			System.out.printf("x=%.3f fit y=%.3f data y=%.3f%n", xv, yv, testData.y[i]);
-		}
-	}
  	
  	// Test the Erfc fitter
  	public static void testErfc() {
@@ -376,7 +324,7 @@ public final class ErfErfcFitter extends ALeastSquaresFitter {
  		};
  		
  		FitVectors testData = FitVectors.testData(erfcEval, -4.0, 4.0, n, 3.0, 3.0);
- 		ErfErfcFitter fitter = new ErfErfcFitter(Kind.ERFC);
+ 		ErfcFitter fitter = new ErfcFitter();
  		FitResult result = fitter.fit(testData.x, testData.y, testData.w);
 		System.out.println("\n===== Erfc Fit Test  =====");
 		System.out.println("True parameters: ");
@@ -395,7 +343,6 @@ public final class ErfErfcFitter extends ALeastSquaresFitter {
  	}
  	//------------------ test main -----------------------
  	public static void main(String[] args) {
- 		testErf();
  		testErfc();
  	}
  

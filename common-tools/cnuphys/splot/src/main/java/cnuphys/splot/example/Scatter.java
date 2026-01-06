@@ -5,12 +5,11 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.swing.SwingUtilities;
-import javax.swing.Timer;
 
 import cnuphys.splot.fit.CurveDrawingMethod;
 import cnuphys.splot.pdata.Curve;
@@ -24,78 +23,79 @@ import cnuphys.splot.style.SymbolType;
 
 /**
  * <p>
- * Scatter (DAQ simulation using lock-free queue + EDT drain). A Stress test.
+ * <b>Scatter (DAQ enqueue stress test)</b>
  * </p>
  *
  * <p>
- * This example simulates a data acquisition system where one or more background
- * producer threads generate points asynchronously. Producers never touch Swing
- * or mutate the plot model directly. Instead they enqueue points into a
- * lock-free {@link ConcurrentLinkedQueue}.
+ * This example is intentionally designed as a <em>thread stress test</em> that simulates a
+ * streaming data-acquisition (DAQ) system.
  * </p>
  *
+ * <h2>What is being tested</h2>
+ * <ul>
+ *   <li>Many background producer threads concurrently call {@link Curve#enqueue(double, double)}.</li>
+ *   <li>The EDT periodically drains queued points into the curve's data columns using
+ *       {@link Curve#startPendingDrainTimer(int, int)} (which calls {@link Curve#drainPendingOnEDT(int)}).</li>
+ *   <li>Rendering/fitting happens as usual on the EDT with a consistently-mutated model.</li>
+ * </ul>
+ *
  * <p>
- * A Swing {@link Timer} (which executes on the EDT) periodically drains the queue
- * and calls {@link Curve#add(double, double)}. This ensures all plot model mutation
- * occurs on the EDT, while still allowing realistic asynchronous acquisition.
+ * This is the correct way to stress concurrency <b>without</b> reintroducing races between painting
+ * and model mutation. The old “unsafe mode” (background threads calling {@code curve.add(...)})
+ * is now prevented by EDT guards and should fail fast.
  * </p>
+ *
+ * <h2>Key design choice</h2>
+ * <p>
+ * {@link #fillData()} is intentionally a no-op. Data arrives over time via producers.
+ * </p>
+ *
+ * <h2>Tuning knobs</h2>
+ * <ul>
+ *   <li>{@link #PRODUCER_COUNT} - number of concurrent DAQ sources</li>
+ *   <li>{@link #PRODUCER_PERIOD_MS} - point production interval per source</li>
+ *   <li>{@link #DRAIN_PERIOD_MS} - EDT drain frequency</li>
+ *   <li>{@link #MAX_DRAIN_PER_TICK} - max points applied per drain tick</li>
+ *   <li>{@link #MAX_POINTS} - max points retained in the curve (demonstrates stop enqueuing)</li>
+ * </ul>
  */
 @SuppressWarnings("serial")
 public class Scatter extends AExample {
 
-	// ----------------------------
-	// DAQ / stress knobs
-	// ----------------------------
+	// --------------------------------------------------------------------
+	// Stress / DAQ knobs
+	// --------------------------------------------------------------------
 
-	/** Number of background producer threads simulating independent acquisition sources. */
-	private static final int PRODUCER_COUNT = 3;
+	/** Number of concurrent producer threads simulating independent acquisition sources. */
+	private static final int PRODUCER_COUNT = 6;
 
-	/** Producer period per point (ms). Smaller = more points. */
-	private static final int PRODUCER_PERIOD_MS = 2;
+	/** Per-producer delay between points (ms). Smaller means higher rate and more stress. */
+	private static final int PRODUCER_PERIOD_MS = 1;
 
-	/**
-	 * EDT drain period (ms). Smaller = lower latency but more EDT overhead.
-	 * Typical values: 10–50 ms.
-	 */
+	/** How often the EDT drains queued points (ms). Typical: 10-50 ms. */
 	private static final int DRAIN_PERIOD_MS = 20;
 
-	/**
-	 * Maximum number of points to drain per EDT tick.
-	 * This prevents the EDT from getting stuck draining forever if producers outrun it.
-	 */
-	private static final int MAX_DRAIN_PER_TICK = 2000;
+	/** Maximum number of queued points applied to the model per drain tick. */
+	private static final int MAX_DRAIN_PER_TICK = 3000;
+	
+	/** Maximum number of points to retain in the curve (demonstrate stop enquinmg). */
+	private static final int MAX_POINTS = 50000;
 
-	// ----------------------------
+
+	// --------------------------------------------------------------------
 	// State
-	// ----------------------------
+	// --------------------------------------------------------------------
 
-	private final AtomicBoolean _running = new AtomicBoolean(false);
-	private final List<Thread> _producers = new ArrayList<>();
+	private final AtomicBoolean running = new AtomicBoolean(false);
+	private final List<Thread> producers = new ArrayList<>();
+	private volatile Curve curve;
+	private final AtomicInteger appliedCount = new AtomicInteger();
 
-	/** Lock-free queue used to transfer points from producer threads to the EDT. */
-	private final ConcurrentLinkedQueue<Point2D> _queue = new ConcurrentLinkedQueue<>();
-
-	/** Swing timer that drains the queue on the EDT. */
-	private Timer _drainTimer;
-
-	/** The curve that receives points (mutated only on EDT). */
-	private volatile Curve _curve;
-
-	/** Simple immutable point record for queue transport. */
-	private static final class Point2D {
-		final double x;
-		final double y;
-
-		Point2D(double x, double y) {
-			this.x = x;
-			this.y = y;
-		}
-	}
 
 	@Override
 	protected PlotData createPlotData() throws PlotDataException {
 		String[] curveNames = { "Data" };
-		int[] fitOrders = { 1 };
+		int[] fitOrders = { 1 }; // linear fit
 		return new PlotData(PlotDataType.XYXY, curveNames, fitOrders);
 	}
 
@@ -106,7 +106,7 @@ public class Scatter extends AExample {
 
 	@Override
 	protected String getPlotTitle() {
-		return "Scatter Plot (DAQ Queue → EDT Drain)";
+		return "Scatter Plot (DAQ enqueue stress test)";
 	}
 
 	@Override
@@ -115,20 +115,24 @@ public class Scatter extends AExample {
 	}
 
 	/**
-	 * Intentionally does nothing. Data is streamed in asynchronously by producer threads.
+	 * No-op by design.
+	 * <p>
+	 * This example simulates streaming acquisition rather than batch initialization.
+	 * Data arrives asynchronously via background producers calling {@link Curve#enqueue(double, double)}.
+	 * </p>
 	 */
 	@Override
 	public void fillData() {
-		// no-op by design
+		// no-op
 	}
 
 	@Override
 	public void setParameters() {
 		Color fillColor = new Color(128, 0, 0, 96);
 
-		PlotData plotData = _canvas.getPlotData();
+		PlotData plotData = canvas.getPlotData();
 		final Curve dc = (Curve) plotData.getFirstCurve();
-		_curve = dc;
+		curve = dc;
 
 		dc.setCurveMethod(CurveDrawingMethod.POLYNOMIAL);
 		dc.getStyle().setSymbolType(SymbolType.CIRCLE);
@@ -138,13 +142,14 @@ public class Scatter extends AExample {
 		dc.getStyle().setFitLineColor(Color.black);
 		dc.getStyle().setFitLineWidth(2.0f);
 
-		PlotParameters params = _canvas.getParameters();
+		PlotParameters params = canvas.getParameters();
 		params.mustIncludeXZero(true);
 		params.mustIncludeYZero(true);
-		params.addPlotLine(new HorizontalLine(_canvas, 0));
-		params.addPlotLine(new VerticalLine(_canvas, 0));
+		params.addPlotLine(new HorizontalLine(canvas, 0));
+		params.addPlotLine(new VerticalLine(canvas, 0));
 		params.setLegendDrawing(true);
 
+		// Lifecycle: start/stop DAQ threads with the window.
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowOpened(WindowEvent e) {
@@ -164,113 +169,112 @@ public class Scatter extends AExample {
 	}
 
 	/**
-	 * Start background producers and the EDT drain timer.
+	 * Start the DAQ simulation:
+	 * <ul>
+	 *   <li>Start the curve's EDT drain timer.</li>
+	 *   <li>Start background producers that continuously {@code enqueue(x,y)}.</li>
+	 * </ul>
 	 */
 	private void startDaq() {
-		if (_curve == null) {
+		final Curve c = curve;
+		if (c == null) {
 			return;
 		}
-		if (!_running.compareAndSet(false, true)) {
+		if (!running.compareAndSet(false, true)) {
 			return;
 		}
 
-		// Start EDT drain timer first (EDT)
-		SwingUtilities.invokeLater(() -> {
-			if (_drainTimer != null) {
-				_drainTimer.stop();
-			}
-			_drainTimer = new Timer(DRAIN_PERIOD_MS, e -> drainQueueOnEdt());
-			_drainTimer.setCoalesce(true); // coalesce events if EDT is busy
-			_drainTimer.start();
-		});
+		// Start EDT drain timer on EDT (best practice for Swing timer lifecycles).
+		SwingUtilities.invokeLater(() ->
+	    c.startPendingDrainTimer(DRAIN_PERIOD_MS, MAX_DRAIN_PER_TICK,
+	        drained -> {
+	            int total = appliedCount.addAndGet(drained);
+	            if (total >= MAX_POINTS) {
+	                stopDaq();
+	            }
+	        })
+	);
 
-		// Start producer threads
+		// Start producer threads (background)
 		for (int i = 0; i < PRODUCER_COUNT; i++) {
 			final int id = i;
-			Thread t = new Thread(() -> producerLoop(id), "ScatterProducer-" + id);
+			Thread t = new Thread(() -> producerLoop(id), "ScatterDAQ-" + id);
 			t.setDaemon(true);
-			_producers.add(t);
+			producers.add(t);
 			t.start();
 		}
 	}
 
 	/**
-	 * Stop producers and stop the EDT drain timer.
+	 * Stop DAQ simulation:
+	 * <ul>
+	 *   <li>Stop producers.</li>
+	 *   <li>Stop drain timer.</li>
+	 *   <li>Optionally clear pending queue.</li>
+	 * </ul>
 	 */
 	private void stopDaq() {
-		_running.set(false);
+		running.set(false);
 
-		for (Thread t : _producers) {
+		for (Thread t : producers) {
 			t.interrupt();
 		}
-		_producers.clear();
+		producers.clear();
 
-		SwingUtilities.invokeLater(() -> {
-			if (_drainTimer != null) {
-				_drainTimer.stop();
-				_drainTimer = null;
-			}
-		});
-
-		_queue.clear();
+		final Curve c = curve;
+		if (c != null) {
+			SwingUtilities.invokeLater(() -> {
+				c.stopPendingDrainTimer();
+				// Optional: if you want “stop means stop immediately”, clear any queued points:
+				// c.clearPending();
+			});
+		}
 	}
 
 	/**
-	 * Background producer loop: generates points and offers them to the lock-free queue.
-	 * Producers never touch Swing, never call curve.add, never repaint, etc.
+	 * Background DAQ producer loop.
+	 * <p>
+	 * Generates random points and enqueues them. This intentionally creates contention on the
+	 * lock-free queue and stresses the enqueue path.
+	 * </p>
+	 *
+	 * @param producerId producer identifier (debugging)
 	 */
 	private void producerLoop(int producerId) {
-		ThreadLocalRandom rng = ThreadLocalRandom.current();
+	    final ThreadLocalRandom rng = ThreadLocalRandom.current();
+	    long startNs = System.nanoTime();
+	    while (running.get() && !Thread.currentThread().isInterrupted()) {
 
-		while (_running.get() && !Thread.currentThread().isInterrupted()) {
-			double x = -0.5 + rng.nextDouble();
-			double y = x + 0.2 * (rng.nextDouble() - 0.5);
+	        double t = (System.nanoTime() - startNs) * 1e-9;   // seconds since start
 
-			_queue.offer(new Point2D(x, y));
+	        // Slowly varying "true" model: y = m(t)*x + b(t)
+	        double m = 0.2 + 1.6 * (0.5 + 0.5 * Math.sin(0.15 * t)); // ranges ~0.2..1.8
+	        double b = 0.30 * Math.sin(0.07 * t);                   // small intercept drift
 
-			try {
-				Thread.sleep(PRODUCER_PERIOD_MS);
-			} catch (InterruptedException ie) {
-				Thread.currentThread().interrupt();
-				break;
-			}
-		}
+	        double x = -0.5 + rng.nextDouble();
+	        double noise = 0.25 * (rng.nextDouble() - 0.5);         // bigger noise -> more motion
+	        double y = m * x + b + noise;
+
+	        final Curve c = curve;
+	        if (c != null) {
+	            c.enqueue(x, y);
+	        }
+
+	        try {
+	            Thread.sleep(PRODUCER_PERIOD_MS);
+	        } catch (InterruptedException e) {
+	            Thread.currentThread().interrupt();
+	            break;
+	        }
+	    }
 	}
 
-	/**
-	 * Drain the queue and add points to the curve.
-	 *
-	 * <p>
-	 * This method must run on the EDT (it is called by a Swing Timer), so it is safe
-	 * to mutate the plot model here.
-	 * </p>
-	 */
-	private void drainQueueOnEdt() {
-		// Defensive: ensure we are on EDT
-		if (!SwingUtilities.isEventDispatchThread()) {
-			SwingUtilities.invokeLater(this::drainQueueOnEdt);
-			return;
-		}
 
-		Curve c = _curve;
-		if (c == null) {
-			return;
-		}
-
-		int drained = 0;
-		Point2D p;
-
-		while (drained < MAX_DRAIN_PER_TICK && (p = _queue.poll()) != null) {
-			c.add(p.x, p.y);
-			drained++;
-		}
-
-		// Optional: if you want faster catch-up when backlog is large,
-		// you can drain more aggressively or temporarily shorten the timer interval.
+	public static void main(String[] args) {
+		javax.swing.SwingUtilities.invokeLater(() -> {
+			final Scatter example = new Scatter();
+			example.setVisible(true);
+		});
 	}
 
-	public static void main(String[] arg) {
-		final Scatter example = new Scatter();
-		SwingUtilities.invokeLater(() -> example.setVisible(true));
-	}
 }

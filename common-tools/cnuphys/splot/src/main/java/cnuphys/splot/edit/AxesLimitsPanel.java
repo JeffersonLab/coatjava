@@ -11,8 +11,8 @@ import cnuphys.splot.plot.PlotCanvas;
 public class AxesLimitsPanel extends JPanel {
 	
 	//the two panels for t x and y axes
-	private OneAxisLimitsPanel  _xPanel;
-	private OneAxisLimitsPanel  _yPanel;
+	private OneAxisLimitsPanel  xPanel;
+	private OneAxisLimitsPanel  yPanel;
 
 	/**
 	 * Create the panel for editing the axes limits
@@ -21,18 +21,18 @@ public class AxesLimitsPanel extends JPanel {
 	public AxesLimitsPanel(PlotCanvas canvas) {
 		setLayout(new GridLayout(2, 1, 4, 4));
 		
-		_xPanel = new OneAxisLimitsPanel(canvas, OneAxisLimitsPanel.Axis.X);
-		_yPanel = new OneAxisLimitsPanel(canvas, OneAxisLimitsPanel.Axis.Y);
+		xPanel = new OneAxisLimitsPanel(canvas, OneAxisLimitsPanel.Axis.X);
+		yPanel = new OneAxisLimitsPanel(canvas, OneAxisLimitsPanel.Axis.Y);
 		
 		setBorder(new CommonBorder("Axes Limits"));
 		
-		add(_xPanel);
-		add(_yPanel);
+		add(xPanel);
+		add(yPanel);
 	}
 	
 	/** Apply any changes */
 	public void apply() {
-		_xPanel.apply();
-		_yPanel.apply();
+		xPanel.apply();
+		yPanel.apply();
 	}
 }

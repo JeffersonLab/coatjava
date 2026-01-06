@@ -24,10 +24,10 @@ import cnuphys.splot.plot.SplotMenus;
 public abstract class AExample extends JFrame {
 
 	// the plot canvas
-	protected PlotCanvas _canvas;
+	protected PlotCanvas canvas;
 
 	// the menus and items
-	protected SplotMenus _menus;
+	protected SplotMenus menus;
 
 	public AExample() {
 		super("sPlot");
@@ -42,7 +42,7 @@ public abstract class AExample extends JFrame {
 		addWindowListener(windowAdapter);
 
 		try {
-			_canvas = new PlotCanvas(createPlotData(), getPlotTitle(), getXAxisLabel(), getYAxisLabel());
+			canvas = new PlotCanvas(createPlotData(), getPlotTitle(), getXAxisLabel(), getYAxisLabel());
 		}
 		catch (PlotDataException e) {
 			e.printStackTrace();
@@ -52,10 +52,10 @@ public abstract class AExample extends JFrame {
 		// add the menu bar
 		JMenuBar mb = new JMenuBar();
 		setJMenuBar(mb);
-		_menus = new SplotMenus(_canvas, mb, true);
+		menus = new SplotMenus(canvas, mb, true);
 		fillData();
 		setParameters();
-		final PlotPanel ppanel = new PlotPanel(_canvas);
+		final PlotPanel ppanel = new PlotPanel(canvas);
 
 		ppanel.setPreferredSize(new Dimension(750, 700));
 
@@ -71,7 +71,7 @@ public abstract class AExample extends JFrame {
 	 * @return the plot canvas
 	 */
 	public PlotCanvas getPlotCanvas() {
-		return _canvas;
+		return canvas;
 	}
 
 	/**

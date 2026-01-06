@@ -1,5 +1,6 @@
 package cnuphys.splot.pdata;
 
+import javax.swing.SwingUtilities;
 import javax.swing.event.EventListenerList;
 
 import cnuphys.splot.fit.CurveDrawingMethod;
@@ -11,40 +12,82 @@ import cnuphys.splot.style.Styled;
 
 /**
  * Base class for all plottable curves (XY curves, histogram curves, strip-chart curves, etc.).
- * <p>
- * An {@code ACurve} supports:
+ *
+ * <h2>Responsibilities</h2>
  * <ul>
- *   <li>Visibility and style</li>
- *   <li>Curve drawing methods (fit-based, spline, etc.)</li>
- *   <li>Curve-level change notifications (data/style/fit)</li>
- *   <li>Batched updates via {@link #beginUpdate()} / {@link #endUpdate()}</li>
+ *   <li><b>State</b>: name, visibility, style, drawing method, per-curve fit “order” knob.</li>
+ *   <li><b>Computed artifacts</b>: fit results/evaluator and spline cache.</li>
+ *   <li><b>Notifications</b>: curve-level change events for data/style/fit.</li>
+ *   <li><b>Batching</b>: coalescing multiple changes into a single notification burst.</li>
  * </ul>
  *
- * <h3>Fit evaluator</h3>
- * {@link FitResult} intentionally does not expose the fitter that produced it.
- * Therefore, when a fit is performed, the curve caches the corresponding
- * {@link Evaluator} produced at fit-time.
+ * <h2>Thread-safety policy</h2>
+ * <p>
+ * This library is Swing-based. Curve change notifications commonly lead (directly or indirectly)
+ * to {@code repaint()} on a plot canvas. Swing requires UI updates to occur on the
+ * <b>Event Dispatch Thread (EDT)</b>. Therefore:
+ * </p>
+ * <ul>
+ *   <li>All methods that <b>notify listeners</b> must be called on the EDT.</li>
+ *   <li>Data integrity within a curve is typically protected by {@link #lock} in subclasses,
+ *       but {@link #lock} does not make Swing notifications thread-safe by itself.</li>
+ * </ul>
+ *
+ * <p>
+ * For streaming / DAQ scenarios, the recommended pattern is:
+ * </p>
+ * <pre>
+ * producer threads → enqueue points (lock-free queue) → EDT drains → curve.add(...)
+ * </pre>
+ *
+ * <h2>Dirty flag and cache invalidation</h2>
+ * <p>
+ * The curve may cache computed artifacts such as a {@link FitResult} or {@link CubicSpline}.
+ * When data or relevant rendering parameters change, those artifacts must be invalidated and
+ * the curve marked {@linkplain #isDirty() dirty}.
+ * </p>
+ *
+ * <p>
+ * Use:
+ * </p>
+ * <ul>
+ *   <li>{@link #markDataChanged()} when the underlying data values have changed.</li>
+ *   <li>{@link #markStyleChanged()} when appearance or drawing configuration has changed.</li>
+ *   <li>{@link #markFitChanged()} when a fit result has been updated (e.g., after {@link #doFit(boolean)}).</li>
+ * </ul>
  *
  * @author heddle
  */
 public abstract class ACurve {
-	
-	/** Synchronizes mutations and snapshots. */
+
+	/**
+	 * Lock object intended for subclasses to synchronize data mutation and snapshot creation.
+	 * <p>
+	 * This lock is about <b>data consistency</b> (e.g., keeping x/y arrays aligned). It does not
+	 * automatically make Swing notifications safe; notifications are enforced to be EDT-only.
+	 * </p>
+	 */
 	protected final Object lock = new Object();
 
 	/** Used to assign stable-ish style ids. */
 	private static int styleCount = 0;
 
-	/** Per-curve order/count knob for fit methods that need an integer order.
-	 * For multiGaussian, this is the number of Gaussians; for polynomial
-	 * this is the polynomial degree.
+	/**
+	 * Per-curve order/count knob for fit methods that need an integer order.
+	 * <ul>
+	 *   <li>Polynomial: polynomial degree</li>
+	 *   <li>Multi-Gaussian: number of Gaussians</li>
+	 * </ul>
 	 */
 	private int fitOrder = 2;
 
 	/** Visibility flag (UI). */
 	private boolean visible = true;
 
-	/** Dirty flag: data changed and cached artifacts are invalid. */
+	/**
+	 * Dirty flag: indicates that cached artifacts (fit/spline) are invalid and should be recomputed
+	 * before rendering if the current drawing method requires them.
+	 */
 	private boolean dirty = true;
 
 	/** Latest fit result (may be null). */
@@ -56,7 +99,7 @@ public abstract class ACurve {
 	/** Style for drawing. */
 	private Styled style;
 
-	/** Cached cubic spline for {@link CurveDrawingMethod#CUBICSPLINE}. */
+	/** Cached cubic spline for {@link CurveDrawingMethod#CUBICSPLINE} (may be null). */
 	private CubicSpline cubicSpline;
 
 	/** How the curve should be drawn. */
@@ -65,8 +108,12 @@ public abstract class ACurve {
 	/** Curve change listeners. */
 	private final EventListenerList curveListenerList = new EventListenerList();
 
-	/** Update batching depth. Default value of 0 means no batching
-	 * of curve change notifications */
+	/**
+	 * Update batching depth. A value of 0 means notifications are delivered immediately.
+	 * <p>
+	 * Batching is intended for EDT use.
+	 * </p>
+	 */
 	private int updateDepth;
 
 	/** Pending change flags while batching. */
@@ -85,27 +132,23 @@ public abstract class ACurve {
 	}
 
 	/**
-	 * Perform a curve fit (or compute derived artifacts like splines), depending on
-	 * the configured curve drawing method.
+	 * Perform a curve fit (or compute derived artifacts like splines), depending on the configured
+	 * curve drawing method.
 	 *
 	 * @param force true to force a refit even if not dirty
 	 */
 	public abstract void doFit(boolean force);
 
 	/**
-	 * Get curve length (number of points or effective points
-	 * in the data columns).
+	 * Get curve length (number of points or effective points in the data columns).
 	 *
 	 * @return curve length
 	 */
 	public abstract int length();
 
 	/**
-	 * Hook: subclasses that support fit-based curve methods may override this to provide
-	 * the appropriate fitter for the current drawing method and per-curve knobs.
-	 * <p>
-	 * Default implementation returns {@code null}.
-	 * </p>
+	 * Hook: subclasses may override to provide an appropriate fitter for the current drawing method
+	 * and per-curve knobs.
 	 *
 	 * @return a fitter for the current method, or null if not applicable
 	 */
@@ -113,21 +156,22 @@ public abstract class ACurve {
 		return null;
 	}
 
-	/** The curve name. 
-	 * @return the curve name
-	 */
+	/** @return the curve name (legend label) */
 	public final String name() {
 		return name;
 	}
 
 	/**
 	 * Set curve name.
+	 * <p>
+	 * This is a UI/style-affecting change. Must be called on the EDT.
+	 * </p>
 	 *
 	 * @param name curve name
 	 */
 	public final void setName(String name) {
 		this.name = name;
-		fireCurveChanged(CurveChangeType.STYLE);
+		markStyleChanged();
 	}
 
 	/** @return true if visible */
@@ -135,10 +179,17 @@ public abstract class ACurve {
 		return visible;
 	}
 
-	/** Set curve visibility. */
+	/**
+	 * Set curve visibility.
+	 * <p>
+	 * This is a UI/style-affecting change. Must be called on the EDT.
+	 * </p>
+	 *
+	 * @param visible visibility flag
+	 */
 	public void setVisible(boolean visible) {
 		this.visible = visible;
-		fireCurveChanged(CurveChangeType.STYLE);
+		markStyleChanged();
 	}
 
 	/** @return the current fit result (may be null) */
@@ -152,14 +203,14 @@ public abstract class ACurve {
 	 * @return evaluator for the current fit, or null if none
 	 */
 	public final Evaluator getFitValueGetter() {
-		if (fitResult == null) {
-			return null;
-		}
-		return fitResult.evaluator;
+		return (fitResult == null) ? null : fitResult.evaluator;
 	}
 
 	/**
-	 * Set the fit result 
+	 * Set the fit result and notify listeners that the fit has changed.
+	 * <p>
+	 * Must be called on the EDT.
+	 * </p>
 	 *
 	 * @param fitResult fit result (may be null)
 	 */
@@ -173,10 +224,17 @@ public abstract class ACurve {
 		return style;
 	}
 
-	/** Set the curve style. */
+	/**
+	 * Set the curve style.
+	 * <p>
+	 * This is a UI/style-affecting change. Must be called on the EDT.
+	 * </p>
+	 *
+	 * @param style new style
+	 */
 	public void setStyle(Styled style) {
 		this.style = style;
-		fireCurveChanged(CurveChangeType.STYLE);
+		markStyleChanged();
 	}
 
 	/** @return true if curve is dirty */
@@ -184,7 +242,13 @@ public abstract class ACurve {
 		return dirty;
 	}
 
-	/** Set dirty flag. */
+	/**
+	 * Set dirty flag.
+	 * <p>
+	 * This method does not notify listeners. Prefer {@link #markDataChanged()} or
+	 * {@link #markStyleChanged()} when you want notifications.
+	 * </p>
+	 */
 	public void setDirty(boolean dirty) {
 		this.dirty = dirty;
 	}
@@ -194,7 +258,12 @@ public abstract class ACurve {
 		return cubicSpline;
 	}
 
-	/** Set cached cubic spline. */
+	/**
+	 * Set cached cubic spline.
+	 * <p>
+	 * This does not notify listeners; it is typically called during {@link #doFit(boolean)}.
+	 * </p>
+	 */
 	public void setCubicSpline(CubicSpline cubicSpline) {
 		this.cubicSpline = cubicSpline;
 	}
@@ -203,9 +272,10 @@ public abstract class ACurve {
 	public CurveDrawingMethod getCurveDrawingMethod() {
 		return curveMethod;
 	}
-	
+
 	/**
 	 * Convenience method to determine if this curve is a histogram curve.
+	 *
 	 * @return true if histogram curve
 	 */
 	public boolean isHistogram() {
@@ -213,7 +283,11 @@ public abstract class ACurve {
 	}
 
 	/**
-	 * Set curve drawing method and mark style changed.
+	 * Set curve drawing method.
+	 * <p>
+	 * This is a style/configuration change and invalidates computed artifacts.
+	 * Must be called on the EDT.
+	 * </p>
 	 *
 	 * @param method method (null treated as NONE)
 	 */
@@ -222,18 +296,22 @@ public abstract class ACurve {
 		markStyleChanged();
 	}
 
-	/** Get the per-curve order/count knob for fit methods that need an integer order.
-	 * For multiGaussian, this is the number of Gaussians; for polynomial
-	 * this is the polynomial degree.
+	/**
+	 * Get the per-curve order/count knob for fit methods that need an integer order.
+	 *
 	 * @return per-curve order/count (>= 1)
 	 */
 	public int getFitOrder() {
 		return fitOrder;
 	}
 
-	/** set the per-curve order/count knob for fit methods that need an integer order.
-	 * For multiGaussian, this is the number of Gaussians; for polynomial
-	 * this is the polynomial degree.
+	/**
+	 * Set the per-curve order/count knob for fit methods that need an integer order.
+	 * <p>
+	 * This affects fitting/drawing behavior, so it is treated as a style/config change and
+	 * invalidates computed artifacts. Must be called on the EDT.
+	 * </p>
+	 *
 	 * @param order per-curve order/count (>= 1)
 	 */
 	public void setFitOrder(int order) {
@@ -245,6 +323,7 @@ public abstract class ACurve {
 	 * Common pattern: if weights exist, call the weighted fit overload; otherwise call fit(x,y).
 	 * <p>
 	 * This utility performs small sanity checks on {@link FitVectors} before delegating to the fitter.
+	 * </p>
 	 */
 	protected FitResult fitWithOptionalWeights(IFitter fitter, FitVectors v) {
 		if (fitter == null || v == null || v.length() < 2) {
@@ -266,77 +345,113 @@ public abstract class ACurve {
 	}
 
 	/**
-	 * Clear computed artifacts (fit result, fit evaluator, spline cache) and mark dirty.
+	 * Clear computed artifacts (fit result and spline cache) and mark dirty.
 	 * <p>
-	 * This does <b>not</b> notify listeners. Use {@link #markDataChanged()} or
+	 * This method does <b>not</b> notify listeners. Use {@link #markDataChanged()} or
 	 * {@link #markStyleChanged()} when you want notifications.
 	 * </p>
 	 */
 	void clearComputedArtifacts() {
-		setDirty(true);
 		fitResult = null;
 		cubicSpline = null;
+		setDirty(true);
 	}
 
-	/** Mark data changed: clear computed artifacts and notify listeners. */
+	/**
+	 * Mark data changed: invalidate computed artifacts and notify listeners.
+	 * <p>
+	 * Must be called on the EDT (notifications typically lead to repaint).
+	 * </p>
+	 */
 	protected final void markDataChanged() {
+		requireEdt("markDataChanged");
 		clearComputedArtifacts();
 		fireCurveChanged(CurveChangeType.DATA);
 	}
-	
-	/** Notify listeners that data has changed. */
+
+	/** Notify listeners that data has changed (EDT-only). */
 	public final void dataChanged() {
 		markDataChanged();
 	}
 
-	/** Mark style changed: clear computed artifacts and notify listeners. */
+	/**
+	 * Mark style/configuration changed: invalidate computed artifacts and notify listeners.
+	 * <p>
+	 * Must be called on the EDT. Style/config changes may affect derived artifacts (fit/spline),
+	 * so this method clears computed artifacts as well.
+	 * </p>
+	 */
 	protected final void markStyleChanged() {
-		setDirty(true);
+		requireEdt("markStyleChanged");
+		clearComputedArtifacts();
 		fireCurveChanged(CurveChangeType.STYLE);
 	}
 
-	/** Notify listeners that style has changed. */
+	/** Notify listeners that style has changed (EDT-only). */
 	public final void styleChanged() {
 		markStyleChanged();
 	}
-	
-	/** Mark fit changed: notify listeners. */
+
+	/**
+	 * Mark fit changed: notify listeners.
+	 * <p>
+	 * Must be called on the EDT.
+	 * </p>
+	 */
 	protected final void markFitChanged() {
+		requireEdt("markFitChanged");
 		fireCurveChanged(CurveChangeType.FIT);
 	}
 
-	/** For batching */
+	/**
+	 * Begin batching curve change notifications.
+	 * <p>
+	 * While batching (depth &gt; 0), calls to {@link #fireCurveChanged(CurveChangeType)} do not notify
+	 * listeners immediately; instead they set pending flags. When {@link #endUpdate()} returns the
+	 * depth to 0, pending flags are flushed.
+	 * </p>
+	 * <p>
+	 * Must be called on the EDT.
+	 * </p>
+	 */
 	public final void beginUpdate() {
+		requireEdt("beginUpdate");
 		updateDepth++;
 	}
 
-	/** For batching */
+	/**
+	 * End batching curve change notifications.
+	 * <p>
+	 * When the batch depth returns to 0, pending changes are flushed.
+	 * Must be called on the EDT.
+	 * </p>
+	 */
 	public final void endUpdate() {
+		requireEdt("endUpdate");
 		if (updateDepth > 0) {
 			updateDepth--;
 		}
-		
-		//batching complete
 		if (updateDepth == 0) {
 			flushPendingChanges();
 		}
 	}
-	
+
 	/** @return the minimum x value for this curve */
 	public abstract double xMin();
-	
+
 	/** @return the maximum x value for this curve */
 	public abstract double xMax();
-	
+
 	/** @return the minimum y value for this curve */
 	public abstract double yMin();
-	
+
 	/** @return the maximum y value for this curve */
 	public abstract double yMax();
 
 	/**
 	 * Add a curve change listener.
-	 * @param listener
+	 *
+	 * @param listener listener to add (ignored if null)
 	 */
 	public final void addCurveChangeListener(CurveChangeListener listener) {
 		if (listener != null) {
@@ -344,8 +459,10 @@ public abstract class ACurve {
 		}
 	}
 
-	/** Remove a curve change listener. 
-	 * @param listener the listener to remove
+	/**
+	 * Remove a curve change listener.
+	 *
+	 * @param listener listener to remove (ignored if null)
 	 */
 	public final void removeCurveChangeListener(CurveChangeListener listener) {
 		if (listener != null) {
@@ -353,7 +470,15 @@ public abstract class ACurve {
 		}
 	}
 
-	/** Notify listeners of curve change. */
+	/**
+	 * Notify listeners of a curve change.
+	 * <p>
+	 * This method assumes EDT usage; higher-level methods enforce EDT.
+	 * When batching is active (updateDepth &gt; 0), the change is recorded as pending.
+	 * </p>
+	 *
+	 * @param type change type (ignored if null)
+	 */
 	protected final void fireCurveChanged(CurveChangeType type) {
 		if (type == null) {
 			return;
@@ -382,8 +507,14 @@ public abstract class ACurve {
 		}
 	}
 
-	/** Flush any pending changes after batching. */
+	/**
+	 * Flush any pending changes after batching completes.
+	 * <p>
+	 * Must be called on the EDT.
+	 * </p>
+	 */
 	private void flushPendingChanges() {
+		// Chosen ordering: DATA, FIT, STYLE (consistent and predictable)
 		if (pendingData) {
 			pendingData = false;
 			fireCurveChanged(CurveChangeType.DATA);
@@ -398,24 +529,37 @@ public abstract class ACurve {
 		}
 	}
 
-	/** Initialize style with unique style ID. */
+	/** Initialize style with a unique style ID. */
 	protected void initStyle() {
 		style = new Styled(styleCount++);
 	}
-	
+
 	/**
-	 * Obtain a consistent snapshot of the current data, suitable for plotting
-	 * without locking.
+	 * Obtain a consistent snapshot of the current data, suitable for plotting without locking.
+	 * <p>
+	 * Subclasses should return copies of their internal primitive arrays (or equivalent immutable state),
+	 * typically while synchronizing on {@link #lock}.
+	 * </p>
 	 *
-	 * @return snapshot containing primitive arrays of x and y data. Those arrays
-	 *         are what should be used for plotting; they are copies of the internal
-	 *         data. This is thread-safe.
-	 *
+	 * @return snapshot of plot-ready data
 	 */
 	public abstract Snapshot snapshot();
 
 	@Override
 	public String toString() {
 		return name();
+	}
+
+	/**
+	 * Ensure that the current thread is the Swing EDT.
+	 *
+	 * @param operation operation name used in the exception message
+	 * @throws IllegalStateException if not on EDT
+	 */
+	protected final void requireEdt(String operation) {
+		if (!SwingUtilities.isEventDispatchThread()) {
+			throw new IllegalStateException(operation + " must be called on the Swing EDT. "
+					+ "For background threads, use enqueue(...) + drainPendingOnEDT(...).");
+		}
 	}
 }

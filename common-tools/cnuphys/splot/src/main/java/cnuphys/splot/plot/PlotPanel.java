@@ -21,6 +21,7 @@ import javax.swing.border.Border;
 
 import cnuphys.splot.toolbar.CommonToolBar;
 
+@SuppressWarnings("serial")
 public class PlotPanel extends JPanel implements PropertyChangeListener {
 
 	// the underlying plot canvas
@@ -301,17 +302,30 @@ public class PlotPanel extends JPanel implements PropertyChangeListener {
 
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
-		if (PlotCanvas.TITLECHANGEPROP.equals(evt.getPropertyName())) {
+		if (PlotCanvas.TITLETEXTCHANGE.equals(evt.getPropertyName())) {
 			_titleLabel.setText((String) evt.getNewValue());
 			_titleLabel.repaint();
 		}
-		else if (PlotCanvas.XLABELCHANGEPROP.equals(evt.getPropertyName())) {
+		else if (PlotCanvas.XLABELTEXTCHANGE.equals(evt.getPropertyName())) {
 			_xLabel.setText((String) evt.getNewValue());
 			_xLabel.repaint();
 		}
-		else if (PlotCanvas.YLABELCHANGEPROP.equals(evt.getPropertyName())) {
+		else if (PlotCanvas.YLABELTEXTCHANGE.equals(evt.getPropertyName())) {
 			_yLabel.setText((String) evt.getNewValue());
 			_yLabel.repaint();
+		}
+		else if (PlotCanvas.TITLEFONTCHANGE.equals(evt.getPropertyName())) {
+			Font font = (Font) evt.getNewValue();
+			_titleLabel.setFont(font);
+		}
+		else if (PlotCanvas.AXESFONTCHANGE.equals(evt.getPropertyName())) {
+			Font font = (Font) evt.getNewValue();
+			_xLabel.setFont(font);
+			_yLabel.setFont(font);
+		}
+		else if (PlotCanvas.STATUSFONTCHANGE.equals(evt.getPropertyName())) {
+			Font font = (Font) evt.getNewValue();
+			_status.setFont(font);
 		}
 
 	}
