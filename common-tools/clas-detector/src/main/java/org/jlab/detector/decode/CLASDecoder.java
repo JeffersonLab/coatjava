@@ -719,6 +719,8 @@ public class CLASDecoder {
             if(evioEvent.getHandler().getStructure()!=null){
                 try {
 
+                    codaDecoder.cacheBranches(evioEvent);
+
                     dataList = codaDecoder.getDataEntries( (EvioDataEvent) event);
                     
                     List<FADCData> fadcPacked = codaDecoder.getADCEntries((EvioDataEvent) event);
