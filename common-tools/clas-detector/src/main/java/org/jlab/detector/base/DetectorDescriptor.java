@@ -88,6 +88,14 @@ public class DetectorDescriptor implements Comparable<DetectorDescriptor> {
         this.dt_COMPONENT = comp;
     }
 
+    public final void setSectorLayerComponentOrderType(int sector, int layer, int comp, int order, int type) {
+        this.dt_SECTOR = sector;
+        this.dt_LAYER  = layer;
+        this.dt_COMPONENT = comp;
+        this.dt_ORDER = order;
+        this.detectorType = DetectorType.getType(type);
+    }
+
     public static int generateHashCode(int s, int l, int c){
         return  ((s<<24)&0xFF000000)|
                 ((l<<16)&0x00FF0000)|(c&0x0000FFFF);
@@ -99,7 +107,6 @@ public class DetectorDescriptor implements Comparable<DetectorDescriptor> {
                 (this.dt_COMPONENT&0x00000FFF);
         return hash;
     }
-   
     
     public void copy(DetectorDescriptor desc){
         this.hw_SLOT    = desc.hw_SLOT;
@@ -118,7 +125,6 @@ public class DetectorDescriptor implements Comparable<DetectorDescriptor> {
                 this.dt_COMPONENT.equals(desc.dt_COMPONENT)) return true;
         return false;
     }
-    
     
     public static String getName(String base, int... ids){
         StringBuilder str = new StringBuilder();
