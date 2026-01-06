@@ -5,10 +5,12 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 
 import cnuphys.splot.fit.CurveDrawingMethod;
 import cnuphys.splot.pdata.Curve;
@@ -22,94 +24,78 @@ import cnuphys.splot.style.SymbolType;
 
 /**
  * <p>
- * <b>Scatter (Thread-Safety / Data-Acquisition Stress Test)</b>
+ * Scatter (DAQ simulation using lock-free queue + EDT drain). A Stress test.
  * </p>
  *
  * <p>
- * This example intentionally simulates a <em>live data acquisition (DAQ)</em>
- * system in which data points arrive asynchronously from one or more
- * background threads while the plot is actively rendering.
+ * This example simulates a data acquisition system where one or more background
+ * producer threads generate points asynchronously. Producers never touch Swing
+ * or mutate the plot model directly. Instead they enqueue points into a
+ * lock-free {@link ConcurrentLinkedQueue}.
  * </p>
  *
  * <p>
- * Unlike most examples, {@link #fillData()} is deliberately a no-op.
- * Instead, one or more feeder threads continuously generate and add
- * random points to a {@link Curve} over time.
- * </p>
- *
- * <p>
- * The primary purpose of this example is to:
- * </p>
- * <ul>
- *   <li>Stress-test thread safety of {@link Curve} and related model classes</li>
- *   <li>Expose race conditions between data mutation and rendering</li>
- *   <li>Simulate realistic streaming data (e.g. detectors, sensors, monitors)</li>
- * </ul>
- *
- * <p>
- * The example supports two operating modes:
- * </p>
- * <ul>
- *   <li>
- *     <b>Unsafe / stress mode</b> — background threads call {@code Curve.add()}
- *     directly. This is intentionally dangerous and may expose concurrency bugs.
- *   </li>
- *   <li>
- *     <b>Safe mode</b> — background threads enqueue data additions onto the
- *     Swing Event Dispatch Thread (EDT).
- *   </li>
- * </ul>
- *
- * <p>
- * Toggle this behavior via {@link #ADD_ON_EDT}.
- * </p>
- *
- * <p>
- * <b>Important:</b> If failures occur only in unsafe mode but not in EDT mode,
- * that is a strong indication that synchronization or buffering is needed
- * inside the data model.
+ * A Swing {@link Timer} (which executes on the EDT) periodically drains the queue
+ * and calls {@link Curve#add(double, double)}. This ensures all plot model mutation
+ * occurs on the EDT, while still allowing realistic asynchronous acquisition.
  * </p>
  */
 @SuppressWarnings("serial")
 public class Scatter extends AExample {
 
-	/**
-	 * Controls how data points are added:
-	 * <ul>
-	 *   <li>{@code true}  → additions are serialized on the EDT (thread-safe)</li>
-	 *   <li>{@code false} → additions occur on background threads (stress test)</li>
-	 * </ul>
-	 */
-	private static final boolean ADD_ON_EDT = false;
+	// ----------------------------
+	// DAQ / stress knobs
+	// ----------------------------
+
+	/** Number of background producer threads simulating independent acquisition sources. */
+	private static final int PRODUCER_COUNT = 3;
+
+	/** Producer period per point (ms). Smaller = more points. */
+	private static final int PRODUCER_PERIOD_MS = 2;
 
 	/**
-	 * Number of concurrent feeder threads simulating independent
-	 * data acquisition sources.
+	 * EDT drain period (ms). Smaller = lower latency but more EDT overhead.
+	 * Typical values: 10–50 ms.
 	 */
-	private static final int FEEDER_COUNT = 3;
+	private static final int DRAIN_PERIOD_MS = 20;
 
 	/**
-	 * Delay (milliseconds) between successive data points per feeder.
-	 * Smaller values increase contention and stress.
+	 * Maximum number of points to drain per EDT tick.
+	 * This prevents the EDT from getting stuck draining forever if producers outrun it.
 	 */
-	private static final int FEED_PERIOD_MS = 2;
+	private static final int MAX_DRAIN_PER_TICK = 2000;
 
-	/** Running flag controlling feeder thread lifetime */
+	// ----------------------------
+	// State
+	// ----------------------------
+
 	private final AtomicBoolean _running = new AtomicBoolean(false);
+	private final List<Thread> _producers = new ArrayList<>();
 
-	/** Active feeder threads */
-	private final List<Thread> _feeders = new ArrayList<>();
+	/** Lock-free queue used to transfer points from producer threads to the EDT. */
+	private final ConcurrentLinkedQueue<Point2D> _queue = new ConcurrentLinkedQueue<>();
 
-	/** The curve receiving streamed data */
+	/** Swing timer that drains the queue on the EDT. */
+	private Timer _drainTimer;
+
+	/** The curve that receives points (mutated only on EDT). */
 	private volatile Curve _curve;
 
-	/**
-	 * Create a simple XY plot with a single curve.
-	 */
+	/** Simple immutable point record for queue transport. */
+	private static final class Point2D {
+		final double x;
+		final double y;
+
+		Point2D(double x, double y) {
+			this.x = x;
+			this.y = y;
+		}
+	}
+
 	@Override
 	protected PlotData createPlotData() throws PlotDataException {
 		String[] curveNames = { "Data" };
-		int[] fitOrders = { 1 }; // linear fit
+		int[] fitOrders = { 1 };
 		return new PlotData(PlotDataType.XYXY, curveNames, fitOrders);
 	}
 
@@ -120,7 +106,7 @@ public class Scatter extends AExample {
 
 	@Override
 	protected String getPlotTitle() {
-		return "Scatter Plot (DAQ Thread-Safety Test)";
+		return "Scatter Plot (DAQ Queue → EDT Drain)";
 	}
 
 	@Override
@@ -129,25 +115,13 @@ public class Scatter extends AExample {
 	}
 
 	/**
-	 * <p>
-	 * Intentionally does nothing.
-	 * </p>
-	 *
-	 * <p>
-	 * In this example, data is not batch-loaded at startup.
-	 * Instead, it is streamed asynchronously by background threads
-	 * to mimic a live data acquisition system.
-	 * </p>
+	 * Intentionally does nothing. Data is streamed in asynchronously by producer threads.
 	 */
 	@Override
 	public void fillData() {
 		// no-op by design
 	}
 
-	/**
-	 * Configure curve appearance, plot parameters, and lifecycle hooks
-	 * that start and stop the data feeder threads.
-	 */
 	@Override
 	public void setParameters() {
 		Color fillColor = new Color(128, 0, 0, 96);
@@ -171,30 +145,28 @@ public class Scatter extends AExample {
 		params.addPlotLine(new VerticalLine(_canvas, 0));
 		params.setLegendDrawing(true);
 
-		// Tie feeder lifecycle to window lifecycle
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowOpened(WindowEvent e) {
-				startFeeders();
+				startDaq();
 			}
 
 			@Override
 			public void windowClosing(WindowEvent e) {
-				stopFeeders();
+				stopDaq();
 			}
 
 			@Override
 			public void windowClosed(WindowEvent e) {
-				stopFeeders();
+				stopDaq();
 			}
 		});
 	}
 
 	/**
-	 * Start background threads that continuously generate and feed
-	 * random data points to the curve.
+	 * Start background producers and the EDT drain timer.
 	 */
-	private void startFeeders() {
+	private void startDaq() {
 		if (_curve == null) {
 			return;
 		}
@@ -202,63 +174,63 @@ public class Scatter extends AExample {
 			return;
 		}
 
-		for (int i = 0; i < FEEDER_COUNT; i++) {
+		// Start EDT drain timer first (EDT)
+		SwingUtilities.invokeLater(() -> {
+			if (_drainTimer != null) {
+				_drainTimer.stop();
+			}
+			_drainTimer = new Timer(DRAIN_PERIOD_MS, e -> drainQueueOnEdt());
+			_drainTimer.setCoalesce(true); // coalesce events if EDT is busy
+			_drainTimer.start();
+		});
+
+		// Start producer threads
+		for (int i = 0; i < PRODUCER_COUNT; i++) {
 			final int id = i;
-			Thread t = new Thread(() -> feederLoop(id), "ScatterFeeder-" + id);
+			Thread t = new Thread(() -> producerLoop(id), "ScatterProducer-" + id);
 			t.setDaemon(true);
-			_feeders.add(t);
+			_producers.add(t);
 			t.start();
 		}
 	}
 
 	/**
-	 * Stop all active feeder threads.
+	 * Stop producers and stop the EDT drain timer.
 	 */
-	private void stopFeeders() {
+	private void stopDaq() {
 		_running.set(false);
-		for (Thread t : _feeders) {
+
+		for (Thread t : _producers) {
 			t.interrupt();
 		}
-		_feeders.clear();
+		_producers.clear();
+
+		SwingUtilities.invokeLater(() -> {
+			if (_drainTimer != null) {
+				_drainTimer.stop();
+				_drainTimer = null;
+			}
+		});
+
+		_queue.clear();
 	}
 
 	/**
-	 * Main loop for a single data feeder.
-	 *
-	 * <p>
-	 * Each iteration generates one random (x,y) point and attempts
-	 * to add it to the curve.
-	 * </p>
-	 *
-	 * @param feederId identifier for debugging/logging
+	 * Background producer loop: generates points and offers them to the lock-free queue.
+	 * Producers never touch Swing, never call curve.add, never repaint, etc.
 	 */
-	private void feederLoop(int feederId) {
+	private void producerLoop(int producerId) {
 		ThreadLocalRandom rng = ThreadLocalRandom.current();
 
 		while (_running.get() && !Thread.currentThread().isInterrupted()) {
+			double x = -0.5 + rng.nextDouble();
+			double y = x + 0.2 * (rng.nextDouble() - 0.5);
 
-			final double x = -0.5 + rng.nextDouble();
-			final double y = x + 0.2 * (rng.nextDouble() - 0.5);
-
-			if (ADD_ON_EDT) {
-				// Safe mode: serialize updates on the EDT
-				SwingUtilities.invokeLater(() -> {
-					Curve c = _curve;
-					if (c != null) {
-						c.add(x, y);
-					}
-				});
-			} else {
-				// Stress mode: update directly from background thread
-				Curve c = _curve;
-				if (c != null) {
-					c.add(x, y);
-				}
-			}
+			_queue.offer(new Point2D(x, y));
 
 			try {
-				Thread.sleep(FEED_PERIOD_MS);
-			} catch (InterruptedException e) {
+				Thread.sleep(PRODUCER_PERIOD_MS);
+			} catch (InterruptedException ie) {
 				Thread.currentThread().interrupt();
 				break;
 			}
@@ -266,8 +238,37 @@ public class Scatter extends AExample {
 	}
 
 	/**
-	 * Launch the example.
+	 * Drain the queue and add points to the curve.
+	 *
+	 * <p>
+	 * This method must run on the EDT (it is called by a Swing Timer), so it is safe
+	 * to mutate the plot model here.
+	 * </p>
 	 */
+	private void drainQueueOnEdt() {
+		// Defensive: ensure we are on EDT
+		if (!SwingUtilities.isEventDispatchThread()) {
+			SwingUtilities.invokeLater(this::drainQueueOnEdt);
+			return;
+		}
+
+		Curve c = _curve;
+		if (c == null) {
+			return;
+		}
+
+		int drained = 0;
+		Point2D p;
+
+		while (drained < MAX_DRAIN_PER_TICK && (p = _queue.poll()) != null) {
+			c.add(p.x, p.y);
+			drained++;
+		}
+
+		// Optional: if you want faster catch-up when backlog is large,
+		// you can drain more aggressively or temporarily shorten the timer interval.
+	}
+
 	public static void main(String[] arg) {
 		final Scatter example = new Scatter();
 		SwingUtilities.invokeLater(() -> example.setVisible(true));
