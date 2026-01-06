@@ -4,6 +4,7 @@ import java.awt.Color;
 
 import cnuphys.splot.fit.CurveDrawingMethod;
 import cnuphys.splot.fit.Evaluator;
+import cnuphys.splot.pdata.Curve;
 import cnuphys.splot.pdata.FitVectors;
 import cnuphys.splot.pdata.PlotData;
 import cnuphys.splot.pdata.PlotDataException;
@@ -11,10 +12,12 @@ import cnuphys.splot.pdata.PlotDataType;
 import cnuphys.splot.plot.PlotParameters;
 
 public class Gaussian extends AExample {
+	
+	private static final String curveName = "Gaussian Fit";
 
 	@Override
 	protected PlotData createPlotData() throws PlotDataException {
-		String[] curveNames = { "Gaussian Fit" };
+		String[] curveNames = {curveName };
 		return new PlotData(PlotDataType.XYEXYE, curveNames, null);
 	}
 
@@ -57,7 +60,10 @@ public class Gaussian extends AExample {
 			
 			//convert weight to error
 	    	double e = 1.0 / Math.sqrt(1.0e-12 + w);
-			_canvas.getPlotData().add(x, y, e);
+	    	
+	    	Curve curve = (Curve) _canvas.getPlotData().getCurve(curveName);
+	    	
+			curve.add(x, y, e);
 
 		}
 		

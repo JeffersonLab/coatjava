@@ -7,6 +7,8 @@ import java.util.Objects;
 
 import javax.swing.event.EventListenerList;
 
+import cnuphys.splot.debug.ListenerDebugger;
+
 /**
  * A lightweight, UI-agnostic container for the data backing a plot.
  * <p>
@@ -144,6 +146,10 @@ public class PlotData implements CurveChangeListener {
 		case STRIP:
 			throw new PlotDataException("Use PlotData(StripData) constructor for STRIP data.");
 		}
+		
+		//if debugging is needed
+		ListenerDebugger.getInstance().attachPlotData(this);
+
 	}
 
 	/** @return the plot data type. */
@@ -184,6 +190,33 @@ public class PlotData implements CurveChangeListener {
 	public ACurve getCurve(int index) {
 		return curves.get(index);
 	}
+	
+	/** 
+	 * Convenience: get a curve by name. 
+	 * @param name the curve name
+	 * @return the curve with the given name, or null if not found
+	 */
+	public ACurve getCurve(String name) {
+		for (ACurve curve : curves) {
+			if (curve.name().equals(name)) {
+				return curve;
+			}
+		}
+		return null;
+	}
+	
+	/** 
+	 * Convenience: get the first curve. Often there is only one.
+	 * @return the first curve, or null if there are no curves
+	 */
+	public ACurve getFirstCurve() {
+		if (curves.isEmpty()) {
+			return null;
+		}
+		return curves.get(0);
+	}
+	
+	
 	/**
 	 * Determine if this is histogram plot data.
 	 * @return true if histogram plot data
@@ -207,22 +240,7 @@ public class PlotData implements CurveChangeListener {
 		return added;
 	}
 
-	/**
-	 * Find all curves whose {@link ACurve#getName()} matches the given name.
-	 * Names are treated as labels and are not assumed unique.
-	 */
-	public List<ACurve> findCurvesByName(String name) {
-		if (name == null) {
-			return Collections.emptyList();
-		}
-		ArrayList<ACurve> matches = new ArrayList<>();
-		for (ACurve c : curves) {
-			if (c != null && name.equals(c.name())) {
-				matches.add(c);
-			}
-		}
-		return matches;
-	}
+
 
 	/** Curve-level notification (forwarded to {@link DataChangeListener}s). */
 	@Override
@@ -314,54 +332,6 @@ public class PlotData implements CurveChangeListener {
 		return ymax;
 	}
 	
-	public void add(double... vals) {
-		switch (type) {
-		case XYXY: 
-			if ((vals.length % 2) != 0) {
-				throw new IllegalArgumentException("The number of values " + vals.length + " is not divisible by 2.");
-			}
-			int curveCount = vals.length / 2;
-			if (curveCount != curves.size()) {
-				throw new IllegalArgumentException("The number of curves " + curves.size() + " does not match the number of value pairs " + curveCount);
-			}
-			for (int i = 0; i < curveCount; i++) {
-				int j = i * 2;
-				ACurve curve = curves.get(i);
-				if (curve instanceof Curve) {
-					((Curve) curve).add(vals[j], vals[j + 1]);
-				} else {
-					throw new IllegalArgumentException("Curve at index " + i + " is not a Curve instance.");
-				}
-			}
-			break;
-			
-			case XYEXYE: 
-				if ((vals.length % 3) != 0) {
-					throw new IllegalArgumentException("The number of values " + vals.length + " is not divisible by 3.");
-				}
-				curveCount = vals.length / 3;
-				if (curveCount != curves.size()) {
-					throw new IllegalArgumentException("The number of curves " + curves.size() + " does not match the number of value triplets " + curveCount);
-				}
-				for (int i = 0; i < curveCount; i++) {
-					int j = i * 3;
-					ACurve curve = curves.get(i);
-					if (curve instanceof Curve) {
-						((Curve) curve).add(vals[j], vals[j + 1], vals[j + 2]);
-					} else {
-						throw new IllegalArgumentException("Curve at index " + i + " is not a Curve instance.");
-					}
-				}
-				break;
-				
-				case H1D:
-					break;
-					
-					case STRIP:
-						break;
-
-		}
-	}
 	
 
 }

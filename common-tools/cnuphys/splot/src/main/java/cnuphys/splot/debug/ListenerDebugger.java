@@ -9,7 +9,7 @@ import cnuphys.splot.pdata.PlotData;
 public class ListenerDebugger implements DataChangeListener {
 	
 	/** Enable or disable the listener debugger */
-	public static boolean ENABLED = true;
+	public static boolean ENABLED = false;
 	
 	/** Singleton instance */
 	public static ListenerDebugger INSTANCE;

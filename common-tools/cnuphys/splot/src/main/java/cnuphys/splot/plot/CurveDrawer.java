@@ -6,6 +6,7 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.awt.Stroke;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
@@ -30,6 +31,7 @@ public class CurveDrawer {
 
 	private static final Color _transGray = new Color(80, 80, 80, 16);
 	
+	protected final Object lock = new Object();
 
 	/**
 	 * Draw a curve with x and y error bars
@@ -225,6 +227,10 @@ public class CurveDrawer {
 	 */
 	private static void drawFitOrLines(Graphics g, PlotCanvas canvas, ACurve curve, double x[], double y[]) {
 		
+		if (curve.isDirty()) {
+			System.err.println("Curve is dirty in drawFitOrLines for curve " + curve.name());
+		}
+	        
 		IStyled style = curve.getStyle();
 		Point2D.Double wp = new Point2D.Double();
 		Point p0 = new Point();
@@ -353,8 +359,18 @@ public class CurveDrawer {
 			else {
 				poly.lineTo(pp.x, pp.y);
 			}
-		}
+		}	
+		
+		Graphics2D g2 = (Graphics2D) g;
+        Object oldAA = g2.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                RenderingHints.VALUE_ANTIALIAS_ON);
+
 		g.draw(poly);
+				//restore
+		if (oldAA != null) {
+			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA);
+		}
 	}
 
 }

@@ -1,14 +1,14 @@
 package cnuphys.splot.example;
 
-import java.util.Collection;
-
 import cnuphys.splot.fit.CurveDrawingMethod;
-import cnuphys.splot.pdata.OldDataColumn;
-import cnuphys.splot.pdata.OldDataColumn;
-import cnuphys.splot.pdata.DataSet;
+import cnuphys.splot.pdata.Curve;
+import cnuphys.splot.pdata.PlotData;
 import cnuphys.splot.pdata.PlotDataException;
 import cnuphys.splot.pdata.PlotDataType;
+import cnuphys.splot.plot.PlotParameters;
+import cnuphys.splot.plot.X11Colors;
 
+@SuppressWarnings("serial")
 public class AnotherGaussian extends AExample {
 
 
@@ -29,15 +29,11 @@ public class AnotherGaussian extends AExample {
 			0.000000, 0.000000, 32800.000000, 0.000000, 0.000000 };
 
 	@Override
-	protected DataSet createPlotData() throws PlotDataException {
-		return new DataSet(PlotDataType.XYEXYE, getColumnNames());
+	protected PlotData createPlotData() throws PlotDataException {
+		String[] curveNames = {"Gussian" };
+		return new PlotData(PlotDataType.XYEXYE, curveNames, null);
 	}
 
-	@Override
-	protected String[] getColumnNames() {
-		String names[] = { "X", "Y", "E" };
-		return names;
-	}
 
 	@Override
 	protected String getXAxisLabel() {
@@ -56,28 +52,26 @@ public class AnotherGaussian extends AExample {
 
 	@Override
 	public void fillData() {
-		DataSet ds = _canvas.getPlotData();
+		PlotData plotData = _canvas.getPlotData();
+		Curve curve = (Curve) plotData.getCurve(0);
 
 		for (int i = 0; i < rawData.length; i += 3) {
-
-			try {
-				ds.add(rawData[i], rawData[i + 1], rawData[i + 2]);
-			}
-			catch (PlotDataException e) {
-				e.printStackTrace();
-				System.exit(1);
-			}
+			curve.add(rawData[i], rawData[i + 1], rawData[i + 2]);
 		}
 	}
 
 	@Override
 	public void setParameters() {
-		DataSet ds = _canvas.getPlotData();
-		Collection<OldDataColumn> ycols = ds.getAllColumnsByType(DataColumnType.Y);
-		for (OldDataColumn dc : ycols) {
-			dc.getFit().setFitType(CurveDrawingMethod.GAUSSIANS);
-			dc.getFit().setNumGaussian(1);
-		}
+		PlotData plotData = _canvas.getPlotData();
+		
+		//symbol fill color
+		plotData.getCurve(0).getStyle().setFillColor(X11Colors.getX11Color("dark sea green"));
+		
+		//symbol border color
+		plotData.getCurve(0).getStyle().setBorderColor(X11Colors.getX11Color("dark red"));
+		plotData.getCurve(0).setCurveMethod(CurveDrawingMethod.GAUSSIAN);
+		PlotParameters params = _canvas.getParameters();
+		params.setMinExponentY(6).setNumDecimalY(2);
 
 	}
 

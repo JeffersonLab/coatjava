@@ -171,8 +171,9 @@ public class Curve extends ACurve {
 			if (eData != null) {
 				eData.add(0.0);
 			}
+
+			markDataChanged();
 		}
-		markDataChanged();
 	}
 	
 	/**
@@ -190,7 +191,6 @@ public class Curve extends ACurve {
 		}
 	}
 
-
 	public void add(double x, double y, double ey) {
 		if (eData == null) {
 			throw new IllegalStateException("This curve has no error column (eData is null).");
@@ -199,8 +199,8 @@ public class Curve extends ACurve {
 			xData.add(x);
 			yData.add(y);
 			eData.add(ey);
+			markDataChanged();
 		}
-		markDataChanged();
 	}
 
 	public void addAll(double[] x, double[] y) {
@@ -218,8 +218,10 @@ public class Curve extends ACurve {
 					eData.add(0.0);
 				}
 			}
+			
+			markDataChanged();
 		}
-		markDataChanged();
+		
 	}
 
 	public void addAll(double[] x, double[] y, double[] ey) {
@@ -232,12 +234,15 @@ public class Curve extends ACurve {
 		if (x.length != y.length || x.length != ey.length) {
 			throw new IllegalArgumentException("lengths differ: x=" + x.length + " y=" + y.length + " ey=" + ey.length);
 		}
-		for (int i = 0; i < x.length; i++) {
-			xData.add(x[i]);
-			yData.add(y[i]);
-			eData.add(ey[i]);
+		synchronized (lock) {
+
+			for (int i = 0; i < x.length; i++) {
+				xData.add(x[i]);
+				yData.add(y[i]);
+				eData.add(ey[i]);
+			}
+			markDataChanged();
 		}
-		markDataChanged();
 	}
 
 	public void clearData() {

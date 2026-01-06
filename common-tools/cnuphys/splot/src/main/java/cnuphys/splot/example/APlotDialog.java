@@ -8,7 +8,7 @@ import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JMenuBar;
 
-import cnuphys.splot.pdata.DataSet;
+import cnuphys.splot.pdata.PlotData;
 import cnuphys.splot.pdata.PlotDataException;
 import cnuphys.splot.plot.GraphicsUtilities;
 import cnuphys.splot.plot.PlotCanvas;
@@ -34,7 +34,7 @@ public abstract class APlotDialog extends JDialog {
 
 		try {
 
-			DataSet dataSet = createDataSet();
+			PlotData dataSet = createPlotData();
 			String plotTitle = getPlotTitle();
 			String xLabel = getXAxisLabel();
 			String yLabel = getYAxisLabel();
@@ -57,7 +57,7 @@ public abstract class APlotDialog extends JDialog {
 
 		add(ppanel, BorderLayout.CENTER);
 
-		// add user compoenents
+		// add user components
 		addNorth();
 		addSouth();
 		addEast();
@@ -106,7 +106,7 @@ public abstract class APlotDialog extends JDialog {
 		return _canvas;
 	}
 
-	protected abstract DataSet createDataSet() throws PlotDataException;
+	protected abstract PlotData createPlotData() throws PlotDataException;
 
 	protected abstract String[] getColumnNames();
 
