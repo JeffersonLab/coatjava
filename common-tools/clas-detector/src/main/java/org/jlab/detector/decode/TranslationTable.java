@@ -1,5 +1,6 @@
 package org.jlab.detector.decode;
 
+import java.util.stream.Collectors;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.calib.utils.ConstantsManager;
@@ -45,6 +46,16 @@ public class TranslationTable extends IndexedTable {
             }
         }
     }
+
+    public void dump() {
+        for (Object key : getList().getMap().keySet()) {
+            int[] idx = IndexedTable.DEFAULT_GENERATOR.getIndices((long)key, 0,1,2);
+            System.out.print(String.format("%d/%d/%d ", idx[0],idx[1],idx[2]));
+            System.out.print(getIntegersByHash((long)key).stream().
+                map(String::valueOf).collect(Collectors.joining("/")));
+            System.out.print("\n");
+        }
+    }
     
     public static final DetectorType[] TYPES = new DetectorType[]{
         DetectorType.FTCAL,DetectorType.FTHODO,DetectorType.FTTRK,
@@ -71,5 +82,6 @@ public class TranslationTable extends IndexedTable {
         for (int i=0; i<TYPES.length; i++)
             tt.add(TYPES[i],conman.getConstants(18779,STYPES[i]));
         tt.show();
+        tt.dump();
     }
 }
