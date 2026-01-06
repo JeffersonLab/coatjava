@@ -82,7 +82,7 @@ public class RecoBankWriter {
         }
         for (int i = 0; i < trackAIResults.size(); i++) {
             Pair<Integer, Integer> pair = trackAIResults.get(i);
-            bank.setInt("track_id", i, pair.getKey());
+            bank.setInt("trackid", i, pair.getKey());
             bank.setInt("matched_atof_hit_id", i, pair.getValue());
         }
         event.appendBank(bank);

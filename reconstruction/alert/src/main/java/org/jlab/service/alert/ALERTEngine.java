@@ -3,7 +3,6 @@ package org.jlab.service.alert;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.io.File;
-import java.util.*;
 
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.geom.base.Detector;
@@ -16,10 +15,6 @@ import org.jlab.io.hipo.HipoDataSync;
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.clas.swimtools.Swim;
 
-import org.jlab.rec.ahdc.AI.InterCluster;
-import org.jlab.rec.ahdc.AI.PreClustering;
-import org.jlab.rec.ahdc.Hit.Hit;
-import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import org.jlab.rec.alert.TrackMatchingAI.ModelTrackMatching;
 
 import org.jlab.rec.alert.banks.RecoBankWriter;
@@ -153,12 +148,12 @@ public class ALERTEngine extends ReconstructionEngine {
         ArrayList<Pair<Integer, Integer>> matched_ATOF_hit_id = new ArrayList<>();
 
         for (int i = 0; i < bank_AHDCtracks.rows(); i++) {
-            int track_id = bank_AHDCtracks.getInt("track_id", i);
+            int track_id = bank_AHDCtracks.getInt("trackid", i);
 
             // Get all interclusters for this track
             ArrayList<Pair<Float, Float>> interClusters = new ArrayList<>();
             for (int j = 0; j < bank_AHDCInterclusters.rows(); j++) {
-                int intercluster_track_id = bank_AHDCInterclusters.getInt("track_id", j);
+                int intercluster_track_id = bank_AHDCInterclusters.getInt("trackid", j);
                 if (intercluster_track_id == track_id) {
                     float x = bank_AHDCInterclusters.getFloat("x", j);
                     float y = bank_AHDCInterclusters.getFloat("y", j);
