@@ -1102,6 +1102,7 @@ public class TrackCandListFinder {
                                         trjFind, fitStateVec,
                                         fitStateVec.getZ(),
                                         DcDetector, dcSwim);
+                                
                                 // add candidate to list of tracks
                                 if (cand.fit_Successful = true) {
                                     cands.add(cand);                                    
