@@ -95,7 +95,7 @@ public class DCDenoiseEngine extends ReconstructionEngine {
                     int layer = bank.getByte(1,r);
                     int wire = bank.getShort(2,r);
                     byte order = bank.getByte(3,r);
-                    if ((order==0)||(order==10)) {
+                    if ((order==0)||(order==10)||(order==40)||(order==50)||(order==60)||(order==70)||(order==80)||(order==90)) {
                         batchInput[sector-1][layer-1][wire-1]=1.0f;
                         anySectorPresent = true;
                     }
@@ -177,9 +177,18 @@ public class DCDenoiseEngine extends ReconstructionEngine {
             int sector = b.getByte(0,row)-1;
             int layer=b.getByte(1,row)-1;
             int wire=b.getShort(2,row)-1;
-            if (data[sector][layer][wire]<threshold) {
-                if(b.getByte(3,row)==0) b.setByte(3,row,(byte)60);
-                if(b.getByte(3,row)==10) b.setByte(3,row,(byte)90);
+            int order = b.getByte(3,row);
+            if (data[sector][layer][wire]>=threshold) {
+                if(order==0 || order == 40) b.setByte(3,row,(byte)0);
+                else if(order==50 || order == 60) b.setByte(3,row,(byte)50);
+                else if(order==10 || order == 70) b.setByte(3,row,(byte)10);
+                else if(order==80 || order == 90) b.setByte(3,row,(byte)80);
+            }
+            else{
+                if(order==0 || order == 40) b.setByte(3,row,(byte)40);
+                else if(order==50 || order == 60) b.setByte(3,row,(byte)60);
+                else if(order==10 || order == 70) b.setByte(3,row,(byte)70);
+                else if(order==80 || order == 90) b.setByte(3,row,(byte)90);
             }
         }
     }

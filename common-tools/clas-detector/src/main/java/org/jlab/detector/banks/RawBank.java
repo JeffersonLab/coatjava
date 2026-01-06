@@ -59,11 +59,23 @@ public class RawBank extends FilteredBank {
             OrderType.NOISE3,
             OrderType.BGREMOVED
         };
+        public static final OrderType[] NOISE4 = new OrderType[] {
+            OrderType.NOMINAL,
+            OrderType.NOISE1,
+            OrderType.BGADDED_NOMINAL,
+            OrderType.BGADDED_NOISE1
+        }; // for old model
+        public static final OrderType[] NOISE5 = new OrderType[] {
+            OrderType.NOMINAL,
+            OrderType.NOISE2,
+            OrderType.BGADDED_NOMINAL,
+            OrderType.BGADDED_NOISE2
+        }; // for new model
         public static final OrderType[] DEFAULT = NOISE1;
         public static final OrderType[] NODENOISE = NOISE3;
     }
 
-    public static enum OrderType {
+    public static enum OrderType { 
         NOMINAL         (  0),  // normal hits retained by denoising level-0
         BGADDED_NOMINAL ( 10),  // hits added by background merging and retained by level-0
         BGREMOVED       ( 20),  // hits removed during background merging 
