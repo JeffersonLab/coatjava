@@ -926,11 +926,13 @@ public class TrackCandListFinder {
                             cand.set_Id(cands.size() + 1);
                             cand.set_CovMat(kFZRef.finalStateVec.CM);
                             
-                            Point3D VTCS = cand.get(cand.size()-1).getCoordsInTiltedSector(cand.get_Vtx0().x(), cand.get_Vtx0().y(), cand.get_Vtx0().z());
-                            double deltaPathToVtx =  kFZRef.getDeltaPathToVtx(cand.get(cand.size()-1).get_Sector(), VTCS.z());
+                            if (cand.get_Vtx0() != null) {
+                                Point3D VTCS = cand.get(cand.size()-1).getCoordsInTiltedSector(cand.get_Vtx0().x(), cand.get_Vtx0().y(), cand.get_Vtx0().z());
+                                double deltaPathToVtx =  kFZRef.getDeltaPathToVtx(cand.get(cand.size()-1).get_Sector(), VTCS.z());
                             
-                            List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef, deltaPathToVtx);
-                            cand.setStateVecs(kfStateVecsAlongTrajectory);
+                                List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef, deltaPathToVtx);
+                                cand.setStateVecs(kfStateVecsAlongTrajectory);
+                            }
 
                             // add candidate to list of tracks	
                             cands.add(cand);
@@ -1103,12 +1105,14 @@ public class TrackCandListFinder {
                                         trjFind, fitStateVec,
                                         fitStateVec.getZ(),
                                         DcDetector, dcSwim);
+
+                                if (cand.get_Vtx0() != null) {
+                                    Point3D VTCS = cand.get(cand.size()-1).getCoordsInTiltedSector(cand.get_Vtx0().x(), cand.get_Vtx0().y(), cand.get_Vtx0().z());
+                                    double deltaPathToVtx =  kFZRef.getDeltaPathToVtx(cand.get(cand.size()-1).get_Sector(), VTCS.z());
                                 
-                                Point3D VTCS = cand.get(cand.size()-1).getCoordsInTiltedSector(cand.get_Vtx0().x(), cand.get_Vtx0().y(), cand.get_Vtx0().z());
-                                double deltaPathToVtx =  kFZRef.getDeltaPathToVtx(cand.get(cand.size()-1).get_Sector(), VTCS.z());
-                                
-                                List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef, deltaPathToVtx);
-                                cand.setStateVecs(kfStateVecsAlongTrajectory);                                  
+                                    List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef, deltaPathToVtx);
+                                    cand.setStateVecs(kfStateVecsAlongTrajectory);
+                                }
                                 
                                 // add candidate to list of tracks
                                 if (cand.fit_Successful = true) {
