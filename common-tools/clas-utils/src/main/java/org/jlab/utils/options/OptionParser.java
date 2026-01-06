@@ -192,7 +192,7 @@ public class OptionParser {
 
     private void setVerbosity(String level) {
         try {
-            this.logLevel = Level.parse(level);
+            this.logLevel = Level.parse(level.toUpperCase());
             SplitLogManagerConfig.INSTANCE.setDefaultLevel(this.logLevel);
         }
         catch (IllegalArgumentException e) {
@@ -231,7 +231,7 @@ public class OptionParser {
      */
     public static void overrideLogLevel(String level, String... classList) {
         for(var className : classList)
-            System.setProperty(className + ".level", level);
+            System.setProperty(className + ".level", level.toUpperCase());
     }
 
     /**
