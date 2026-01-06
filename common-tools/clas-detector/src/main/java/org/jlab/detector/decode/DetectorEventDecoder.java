@@ -28,6 +28,7 @@ public class DetectorEventDecoder {
     List<DetectorType> keysTrans    = null;
     List<DetectorType> keysFitter   = null;
     List<DetectorType> keysFilter   = null;
+    List<DetectorType> keysMicromega= null;
 
     private int runNumber = 10;
 
@@ -121,7 +122,9 @@ public class DetectorEventDecoder {
 
         scalerManager.init(Arrays.asList(new String[]{"/runcontrol/fcup","/runcontrol/slm","/runcontrol/hwp",
                                                       "/runcontrol/helicity","/daq/config/scalers/dsc1"}));
-        
+       
+        keysMicromega = Arrays.asList(new DetectorType[]{DetectorType.BMT,DetectorType.FMT,DetectorType.FTTRK});
+
         checkTables();
     }
 
@@ -200,10 +203,7 @@ public class DetectorEventDecoder {
                 IndexedTable daq = tables.get(j);
                 DetectorType type = keysFitter.get(j);
                 //custom MM fitter
-            	if( ( (type == DetectorType.BMT)&&(data.getDescriptor().getType().getName().equals("BMT")) )
-                 || ( (type == DetectorType.FMT)&&(data.getDescriptor().getType().getName().equals("FMT")) )
-                 //|| ( (type == DetectorType.AHDC)&&(data.getDescriptor().getType().getName().equals("AHDC")) )
-                 || ( (type == DetectorType.FTTRK)&&(data.getDescriptor().getType().getName().equals("FTTRK")) ) ){
+                if (data.getDescriptor().getType() == type && keysMicromega.contains(keysFitter.get(j))) {
                     short adcOffset = (short) daq.getDoubleValueByHash("adc_offset", hash0);
                     double fineTimeStampResolution = (byte) daq.getDoubleValueByHash("dream_clock", hash0);
                     double samplingTime = (byte) daq.getDoubleValueByHash("sampling_time", hash0);
@@ -222,7 +222,7 @@ public class DetectorEventDecoder {
                         int nsb = daq.getIntValueByHash("nsb", hash);
                         int tet = daq.getIntValueByHash("tet", hash);
                         int ped = 0;
-                        if(type == DetectorType.RF&&data.getDescriptor().getType().getName().equals("RF")) {
+                        if(data.getDescriptor().getType() == DetectorType.RF && type == DetectorType.RF) {
                             ped = daq.getIntValueByHash("pedestal", hash);
                         }
                         if(data.getADCSize()>0){
