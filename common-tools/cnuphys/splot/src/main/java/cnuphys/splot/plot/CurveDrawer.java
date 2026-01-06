@@ -227,9 +227,6 @@ public class CurveDrawer {
 	 */
 	private static void drawFitOrLines(Graphics g, PlotCanvas canvas, ACurve curve, double x[], double y[]) {
 		
-		if (curve.isDirty()) {
-			System.err.println("Curve is dirty in drawFitOrLines for curve " + curve.name());
-		}
 	        
 		IStyled style = curve.getStyle();
 		Point2D.Double wp = new Point2D.Double();
@@ -299,6 +296,9 @@ public class CurveDrawer {
 		default:
 			FitResult fr = curve.fitResult();
 			if (fr == null) {
+				if (curve.isDirty()) {
+					System.err.println("Curve is dirty in drawFitOrLines for curve " + curve.name());
+				}
 				//no fit result
 				System.err.println("No fit result for curve " + curve.name());
 				return;

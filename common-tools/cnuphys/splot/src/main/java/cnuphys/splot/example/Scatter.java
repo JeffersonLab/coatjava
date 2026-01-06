@@ -80,7 +80,7 @@ public class Scatter extends AExample {
 	 *   <li>{@code false} → additions occur on background threads (stress test)</li>
 	 * </ul>
 	 */
-	private static final boolean ADD_ON_EDT = true;
+	private static final boolean ADD_ON_EDT = false;
 
 	/**
 	 * Number of concurrent feeder threads simulating independent

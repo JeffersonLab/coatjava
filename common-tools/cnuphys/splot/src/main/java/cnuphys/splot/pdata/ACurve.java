@@ -273,7 +273,7 @@ public abstract class ACurve {
 	 * </p>
 	 */
 	void clearComputedArtifacts() {
-		dirty = true;
+		setDirty(true);
 		fitResult = null;
 		cubicSpline = null;
 	}
@@ -291,7 +291,7 @@ public abstract class ACurve {
 
 	/** Mark style changed: clear computed artifacts and notify listeners. */
 	protected final void markStyleChanged() {
-		dirty = true; //other artifacts unchanged
+		setDirty(true);
 		fireCurveChanged(CurveChangeType.STYLE);
 	}
 
