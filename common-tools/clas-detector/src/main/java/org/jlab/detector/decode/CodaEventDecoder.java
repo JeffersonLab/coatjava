@@ -1337,9 +1337,8 @@ public class CodaEventDecoder {
     public List<DetectorDataDgtz> getDataEntries_Scalers(EvioDataEvent event){
 
         List<DetectorDataDgtz> scalerEntries = new ArrayList<>();
-        for(EvioTreeBranch branch : branchList){
-            int  crate = branch.getTag();
-            for(EvioNode node : branch.getNodes()){
+        for(int crate : branchMap.keySet()) {
+            for(EvioNode node : branchMap.get(crate).getNodes()){
                 if(node.getTag()==57637 || node.getTag()==57621){
                     int num = node.getNum();
                     int[] intData =  ByteDataTransformer.toIntArray(node.getStructureBuffer(true));
@@ -1414,11 +1413,9 @@ public class CodaEventDecoder {
     }
 
     public List<DetectorDataDgtz> getDataEntries_VTP(EvioDataEvent event){
-
         List<DetectorDataDgtz> vtpEntries = new ArrayList<>();
-        for(EvioTreeBranch branch : branchList){
-            int  crate = branch.getTag();
-            for(EvioNode node : branch.getNodes()){
+        for(int crate : branchMap.keySet()) {
+            for(EvioNode node : branchMap.get(crate).getNodes()){
                 if(node.getTag()==57634){
                     int[] intData =  ByteDataTransformer.toIntArray(node.getStructureBuffer(true));
                     for(int loop = 0; loop < intData.length; loop++){
@@ -1439,13 +1436,9 @@ public class CodaEventDecoder {
      * @return
      */
     public List<DetectorDataDgtz>  getDataEntries_TDC(EvioDataEvent event){
-
         List<DetectorDataDgtz> tdcEntries = new ArrayList<>();
-
-        for(EvioTreeBranch branch : branchList){
-            int  crate = branch.getTag();
-            EvioTreeBranch cbranch = this.getEventBranch(branchList, branch.getTag());
-            for(EvioNode node : cbranch.getNodes()){
+        for(int crate : branchMap.keySet()) {
+            for(EvioNode node : branchMap.get(crate).getNodes()){
                 if(node.getTag()==57607){
                     int[] intData = ByteDataTransformer.toIntArray(node.getStructureBuffer(true));
                     for(int loop = 2; loop < intData.length; loop++){
@@ -1472,10 +1465,8 @@ public class CodaEventDecoder {
     public List<DetectorDataDgtz>  getDataEntries_TI(EvioDataEvent event){
 
         List<DetectorDataDgtz> tiEntries = new ArrayList<>();
-        for(EvioTreeBranch branch : branchList){
-            int  crate = branch.getTag();
-            EvioTreeBranch cbranch = this.getEventBranch(branchList, branch.getTag());
-            for(EvioNode node : cbranch.getNodes()){
+        for(int crate : branchMap.keySet()) {
+            for(EvioNode node : branchMap.get(crate).getNodes()){
                 if(node.getTag()==57610){
                     long[] longData = ByteDataTransformer.toLongArray(node.getStructureBuffer(true));
                     int[]  intData  = ByteDataTransformer.toIntArray(node.getStructureBuffer(true));
