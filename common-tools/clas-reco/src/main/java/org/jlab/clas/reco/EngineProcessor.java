@@ -1,6 +1,8 @@
 package org.jlab.clas.reco;
 
 import java.io.File;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.file.Files;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -15,6 +17,12 @@ import org.jlab.utils.options.OptionParser;
 import org.jlab.clara.engine.EngineData;
 import org.jlab.clara.engine.EngineDataType;
 import java.util.Arrays;
+import org.jlab.coda.jevio.EvioException;
+import org.jlab.detector.decode.CLASDecoder4;
+import org.jlab.io.evio.EvioDataEvent;
+import org.jlab.io.evio.EvioSource;
+import org.jlab.io.hipo.HipoDataEvent;
+import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
 import org.json.JSONObject;
 import org.jlab.utils.ClaraYaml;
@@ -33,6 +41,8 @@ public class EngineProcessor {
     private boolean updateDictionary = true;
     private SchemaFactory banksToKeep = null;
     private final List<String> schemaExempt = Arrays.asList("RUN::config","DC::tdc");
+
+    private CLASDecoder4 decoder = new CLASDecoder4();
 
     public EngineProcessor(){}
 
@@ -284,57 +294,72 @@ public class EngineProcessor {
         this.processFile(file, output, -1, -1);
     }
 
-    /**
+    public void processEvent(DataEvent event, HipoDataSync writer) {
+        processEvent(event);
+        removeBanks(event);
+        writer.writeEvent(event);
+    }
+
+    public void processFile(HipoDataSource reader, HipoDataSync writer, int skipEvents, int maxEvents) {
+        if (updateDictionary==true) updateDictionary(reader, writer);
+        ProgressPrintout progress = new ProgressPrintout();
+        int eventsRead = 0;
+        while (reader.hasEvent()) {
+            DataEvent event = reader.getNextEvent();
+            eventsRead++;
+            if (skipEvents <= 0 || eventsRead > skipEvents) processEvent(event, writer);
+            if (maxEvents > 0 && eventsRead > maxEvents+skipEvents) break;
+            progress.updateStatus();
+        }
+        progress.showStatus();
+        writer.close();
+    }
+
+    public void processFile(EvioSource reader, HipoDataSync writer, int skipEvents, int maxEvents) {
+        ProgressPrintout progress = new ProgressPrintout();
+        int eventsRead = 0;
+        while (reader.hasEvent()) {
+            eventsRead++;
+            try {
+                ByteBuffer bb = reader.getEventBuffer(eventsRead, true);
+                if (skipEvents <= 0 || eventsRead > skipEvents) {
+                    EvioDataEvent evio = new EvioDataEvent(bb.array(), ByteOrder.LITTLE_ENDIAN);
+                    Event hipo = decoder.getDecodedEvent(evio, -1, eventsRead, null, null);
+                    HipoDataEvent hipo2 = new HipoDataEvent(hipo, decoder.getSchemaFactory());
+                    processEvent(hipo2, writer);
+                }
+                if (maxEvents > 0 && eventsRead > maxEvents+skipEvents) break;
+            } catch (EvioException ex) {
+                System.getLogger(EngineProcessor.class.getName()).log(System.Logger.Level.ERROR, (String) null, ex);
+            }
+            progress.updateStatus();
+        }
+        progress.showStatus();
+        writer.close();
+    }
+
+    /**}
      * process entire file through engine chain.
-     * @param file input file name to process
+     * @param input input file name to process
      * @param output output filename
      * @param nskip number of events to skip
      * @param nevents number of events to process
      */
-    public void processFile(String file, String output, int nskip, int nevents){
-        if(file.endsWith(".hipo")==true||file.endsWith(".h5")==true
-                ||file.endsWith(".h4")==true){
+    public void processFile(String input, String output, int nskip, int nevents) {
+        HipoDataSync writer = new HipoDataSync();
+        writer.setCompressionType(2);
+        if (input.endsWith(".hipo")  ||  input.endsWith(".h5") || input.endsWith(".h4")) {
             HipoDataSource reader = new HipoDataSource();
-            reader.open(file);
-            
-            int eventCounter = 0;
-            HipoDataSync   writer = new HipoDataSync();
-            writer.setCompressionType(2);
-
-            // this doesn't work (before or after "open"):
-            //if (this.banksToKeep != null)
-            //    writer.getWriter().getSchemaFactory().reduce(banksToKeep.getSchemaKeys());
-
+            reader.open(input);
             writer.open(output);
-
-            if(updateDictionary==true)
-                updateDictionary(reader, writer);
-           
-            if(nskip>0 && nevents>0) nevents += nskip;
-            
-            ProgressPrintout  progress = new ProgressPrintout();
-            while(reader.hasEvent()==true){
-                DataEvent event = reader.getNextEvent();
-                if(nskip<=0 || eventCounter>nskip) {
-                    processEvent(event);
-
-                    // this works:
-                    removeBanks(event);
-
-                    writer.writeEvent(event);
-                }
-                eventCounter++;
-                if(nevents>0){
-                    if(eventCounter>nevents) break;
-                }
-                progress.updateStatus();
-            }
-            progress.showStatus();
-            writer.close();
+            processFile(reader, writer, nskip, nevents);
         } else {
-            LOGGER.info("\n\n>>>> error in file extension (use .hipo,.h4 or .h5)\n>>>> how is this not simple ?\n");
+            LOGGER.info(() -> "No HIPO file extension found, assuming this is an EVIO file:  "+input);
+            EvioSource reader = new EvioSource();
+            reader.open(input);
+            writer.open(output);
+            processFile(reader, writer, nskip, nevents);
         }
-        
     }
 
     /**
@@ -350,7 +375,7 @@ public class EngineProcessor {
     public static void main(String[] args){
         OptionParser parser = new OptionParser("recon-util");
         parser.addRequired("-o","output.hipo");
-        parser.addRequired("-i","input.hipo");
+        parser.addRequired("-i","input.evio/hipo");
         parser.setRequiresInputList(false);
         parser.addOption("-c","0","use default configuration [0 - no, 1 - yes/default, 2 - all services] ");
         parser.addOption("-s","-1","number of events to skip");
