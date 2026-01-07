@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jlab.coda.jevio.ByteDataTransformer;
@@ -40,6 +41,7 @@ public class CodaEventDecoder {
     private final List<Integer> triggerWords = new ArrayList<>();
     JsonObject  epicsData = new JsonObject();
     List<EvioTreeBranch> branchList = null;
+    TreeMap<Integer,EvioTreeBranch> branchMap = null;
 
     private int tiMaster = -1; 
 
@@ -55,11 +57,11 @@ public class CodaEventDecoder {
      */
     void cacheBranches(EvioDataEvent event) {
         branchList = getEventBranches(event);
-        //branchMap = new TreeMap<>();
-        //for (EvioTreeBranch branch : branchList) {
-        //    if (!branchMap.containsKey(branch.getTag()))
-        //        branchMap.put(branch.getTag(), branch);
-        //}
+        branchMap = new TreeMap<>();
+        for (EvioTreeBranch branch : branchList) {
+            if (!branchMap.containsKey(branch.getTag()))
+                branchMap.put(branch.getTag(), branch);
+        }
     }
 
     /**
@@ -340,10 +342,7 @@ public class CodaEventDecoder {
      * @return
      */
     public EvioTreeBranch  getEventBranch(List<EvioTreeBranch> branches, int tag){
-        for(EvioTreeBranch branch : branches){
-            if(branch.getTag()==tag) return branch;
-        }
-        return null;
+        return branchMap.getOrDefault(tag, null);
     }
 
     public void readHeaderBank(Integer crate, EvioNode node, EvioDataEvent event){
