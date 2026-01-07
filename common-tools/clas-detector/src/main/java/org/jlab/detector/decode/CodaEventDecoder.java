@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import org.jlab.coda.jevio.ByteDataTransformer;
 import org.jlab.coda.jevio.CompositeData;
 import org.jlab.coda.jevio.DataType;
@@ -40,7 +41,6 @@ public class CodaEventDecoder {
     private byte helicityLevel3 = HelicityBit.UDF.value();
     private final List<Integer> triggerWords = new ArrayList<>();
     JsonObject  epicsData = new JsonObject();
-    List<EvioTreeBranch> branchList = null;
     TreeMap<Integer,EvioTreeBranch> branchMap = null;
 
     private int tiMaster = -1; 
@@ -56,9 +56,8 @@ public class CodaEventDecoder {
      * @param event 
      */
     void cacheBranches(EvioDataEvent event) {
-        branchList = getEventBranches(event);
         branchMap = new TreeMap<>();
-        for (EvioTreeBranch branch : branchList) {
+        for (EvioTreeBranch branch : getEventBranches(event)) {
             if (!branchMap.containsKey(branch.getTag()))
                 branchMap.put(branch.getTag(), branch);
         }
@@ -86,7 +85,7 @@ public class CodaEventDecoder {
         this.setTriggerBits(0);
         List<DetectorDataDgtz>  rawEntries = new ArrayList<>();
         this.setTimeStamp(event);
-        for(EvioTreeBranch branch : branchList){
+        for(EvioTreeBranch branch : branchMap.values()){
             List<DetectorDataDgtz>  list = this.getDataEntries(event,branch.getTag());
             if(list != null){
                 rawEntries.addAll(list);
@@ -201,7 +200,7 @@ public class CodaEventDecoder {
 
     public List<FADCData> getADCEntries(EvioDataEvent event){
         List<FADCData>  entries = new ArrayList<>();
-        for(EvioTreeBranch branch : branchList){
+        for(EvioTreeBranch branch : branchMap.values()){
             List<FADCData>  list = this.getADCEntries(event,branch.getTag());
             if(list != null){
                 entries.addAll(list);
@@ -212,7 +211,7 @@ public class CodaEventDecoder {
 
     public List<FADCData> getADCEntries(EvioDataEvent event, int crate){
         List<FADCData>  entries = new ArrayList<>();
-        EvioTreeBranch cbranch = this.getEventBranch(branchList, crate);
+        EvioTreeBranch cbranch = this.getEventBranch(branchMap.values().stream().collect(Collectors.toList()), crate);
         if(cbranch == null ) return null;
         for(EvioNode node : cbranch.getNodes()){
             if(node.getTag()==57638){
@@ -224,7 +223,7 @@ public class CodaEventDecoder {
 
     public List<FADCData> getADCEntries(EvioDataEvent event, int crate, int tagid){
         List<FADCData>  adc = new ArrayList<>();
-        EvioTreeBranch cbranch = this.getEventBranch(branchList, crate);
+        EvioTreeBranch cbranch = this.getEventBranch(branchMap.values().stream().collect(Collectors.toList()), crate);
         if(cbranch == null ) return null;
         for(EvioNode node : cbranch.getNodes()){
            if(node.getTag()==tagid){
@@ -244,7 +243,7 @@ public class CodaEventDecoder {
      */
     public List<DetectorDataDgtz> getDataEntries(EvioDataEvent event, int crate){
         List<DetectorDataDgtz>   bankEntries = new ArrayList<>();
-        EvioTreeBranch cbranch = this.getEventBranch(branchList, crate);
+        EvioTreeBranch cbranch = this.getEventBranch(branchMap.values().stream().collect(Collectors.toList()), crate);
         if(cbranch == null ) return null;
         for (EvioNode node : cbranch.getNodes()) {
             if (node.getTag() == 57615) {
@@ -335,6 +334,7 @@ public class CodaEventDecoder {
         }
         return branches;
     }
+
     /**
      * returns branch with with given tag
      * @param branches
@@ -1231,7 +1231,7 @@ public class CodaEventDecoder {
 
     public void getDataEntries_EPICS(EvioDataEvent event){
         epicsData = new JsonObject();
-        for(EvioTreeBranch branch : branchList){
+        for(EvioTreeBranch branch : branchMap.values()){
             for(EvioNode node : branch.getNodes()){
                 if(node.getTag()==57620) {
                     byte[] stringData =  ByteDataTransformer.toByteArray(node.getStructureBuffer(true));
@@ -1257,7 +1257,7 @@ public class CodaEventDecoder {
 
     public HelicityDecoderData getDataEntries_HelicityDecoder(EvioDataEvent event){
         HelicityDecoderData data = null;
-        for(EvioTreeBranch branch : branchList){
+        for(EvioTreeBranch branch : branchMap.values()){
             for(EvioNode node : branch.getNodes()){
                 if(node.getTag()==57651) {
                     
