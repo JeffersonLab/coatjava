@@ -246,58 +246,47 @@ public class CodaEventDecoder {
         if(cbranch == null ) return null;
         for (EvioNode node : cbranch.getNodes()) {
             if (node.getTag() == 57615) {
-                //  This is regular integrated pulse mode, used for FTOF
-                // FTCAL and EC/PCAL
                 this.tiMaster = crate;
                 this.readHeaderBank(crate, node, event);
             }
         }
         for(EvioNode node : cbranch.getNodes()){
-
-            if(node.getTag()==57617){
-                //  This is regular integrated pulse mode, used for FTOF
-                // FTCAL and EC/PCAL
-                return this.getDataEntries_57617(crate, node, event);
-            }
-            else if(node.getTag()==57603){
-                //  This is regular integrated pulse mode, used for streaming
-                return this.getDataEntries_57603(crate, node, event);
-            }
-            else if(node.getTag()==57602){
-                //  This is regular integrated pulse mode, used for FTOF
-                // FTCAL and EC/PCAL
-                return this.getDataEntries_57602(crate, node, event);
-            }
-            else if(node.getTag()==57601){
-                //  This is regular integrated pulse mode, used for FTOF
-                // FTCAL and EC/PCAL
-                return this.getDataEntries_57601(crate, node, event);
-            }
-            else if(node.getTag()==57627){
-                //  This is regular integrated pulse mode, used for MM
-                return this.getDataEntries_57627(crate, node, event);
-            }
-            else if(node.getTag()==57640){
-                //  This is bit-packed pulse mode, used for MM
-                return this.getDataEntries_57640(crate, node, event);
-            }
-            else if(node.getTag()==57622){
-                //  This is regular DCRB bank with TDCs only
-                return this.getDataEntries_57622(crate, node, event);
-            }
-            else if(node.getTag()==57648){
-                //  This is DCRB bank with TDCs and widths
-                return this.getDataEntries_57648(crate, node, event);
-            }
-            else if(node.getTag()==57636){
-                //  RICH TDC data
-                return this.getDataEntries_57636(crate, node, event);
-            } else if (node.getTag() == 57657) {
-              //  ATOF Petiroc TDC data 
-              return this.getDataEntries_57657(crate, node, event);
-            } else if (node.getTag() == 57641) {
-              //  RTPC  data decoding
-              return this.getDataEntries_57641(crate, node, event);
+            switch (node.getTag()) {
+                case 57617:
+                    //  This is regular integrated pulse mode, used for FTOF/FTCAL/ECAL
+                    return this.getDataEntries_57617(crate, node, event);
+                case 57603:
+                    //  This is regular integrated pulse mode, used for streaming
+                    return this.getDataEntries_57603(crate, node, event);
+                case 57602:
+                    //  This is regular integrated pulse mode, used for FTOF/FTCAL/ECAL
+                    return this.getDataEntries_57602(crate, node, event);
+                case 57601:
+                    //  This is regular integrated pulse mode, used for FTOF/FTCAL/ECAL
+                    return this.getDataEntries_57601(crate, node, event);
+                case 57627:
+                    //  This is regular integrated pulse mode, used for MM
+                    return this.getDataEntries_57627(crate, node, event);
+                case 57640:
+                    //  This is bit-packed pulse mode, used for MM
+                    return this.getDataEntries_57640(crate, node, event);
+                case 57622:
+                    //  This is regular DCRB bank with TDCs only
+                    return this.getDataEntries_57622(crate, node, event);
+                case 57648:
+                    //  This is DCRB bank with TDCs and widths
+                    return this.getDataEntries_57648(crate, node, event);
+                case 57636:
+                    //  RICH TDC data
+                    return this.getDataEntries_57636(crate, node, event);
+                case 57657:
+                    //  ATOF Petiroc TDC data
+                    return this.getDataEntries_57657(crate, node, event);
+                case 57641:
+                    //  RTPC  data decoding
+                    return this.getDataEntries_57641(crate, node, event);
+                default:
+                    break;
             }
         }
         return bankEntries;
@@ -311,12 +300,10 @@ public class CodaEventDecoder {
     public List<EvioTreeBranch>  getEventBranches(EvioDataEvent event){
         ArrayList<EvioTreeBranch>  branches = new ArrayList<>();
         try {
-
             List<EvioNode>  eventNodes = event.getStructureHandler().getNodes();
             if(eventNodes==null){
                 return branches;
             }
-
             for(EvioNode node : eventNodes){
                 EvioTreeBranch eBranch = new EvioTreeBranch(node.getTag(),node.getNum());
                 List<EvioNode>  childNodes = node.getChildNodes();
@@ -327,7 +314,6 @@ public class CodaEventDecoder {
                     branches.add(eBranch);
                 }
             }
-
         } catch (EvioException ex) {
             Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
         }
