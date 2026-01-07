@@ -223,8 +223,6 @@ public class DetectorEventDecoder {
                             adc.setTimeWord(this.extendedFitter.t0);
                             adc.setPedestal((short) this.extendedFitter.ped);
                         }
-                    }
-                    for(int i = 0; i < data.getADCSize(); i++){
                         data.getADCData(i).setADC(nsa, nsb);
                     }
                 }
