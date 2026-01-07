@@ -197,7 +197,7 @@ public class CurveEditorPanel extends JPanel implements ActionListener, Property
 						curve.getStyle().setBorderColor(_stylePanel.getBorderColor().getColor());
 					}
 					else if (component == _stylePanel.getFitLineColor()) {
-						curve.getStyle().setFitLineColor(_stylePanel.getFitLineColor().getColor());
+						curve.getStyle().setLineColor(_stylePanel.getFitLineColor().getColor());
 					}
 					_plotCanvas.repaint();
 				}
@@ -291,8 +291,8 @@ public class CurveEditorPanel extends JPanel implements ActionListener, Property
 			EnumComboBox ecb = (EnumComboBox) source;
 			LineStyle lineStyle = LineStyle.getValue((String) ecb.getSelectedItem());
 
-			if (curve.getStyle().getFitLineStyle() != lineStyle) {
-				curve.getStyle().setFitLineStyle(lineStyle);
+			if (curve.getStyle().getLineStyle() != lineStyle) {
+				curve.getStyle().setLineStyle(lineStyle);
 				_plotCanvas.repaint();
 			}
 
@@ -347,8 +347,8 @@ public class CurveEditorPanel extends JPanel implements ActionListener, Property
 			float fwidth = (lwidth / 2.f);
 			IStyled style = curve.getStyle();
 			System.err.println("Setting line width to: " + fwidth);
-			if (style.getFitLineWidth() != fwidth) {
-				style.setFitLineWidth(fwidth);
+			if (style.getLineWidth() != fwidth) {
+				style.setLineWidth(fwidth);
 				_plotCanvas.repaint();
 			}
 		}

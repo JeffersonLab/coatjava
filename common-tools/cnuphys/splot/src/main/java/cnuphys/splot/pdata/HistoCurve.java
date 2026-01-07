@@ -1,6 +1,9 @@
 package cnuphys.splot.pdata;
 
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.swing.SwingUtilities;
 
 import cnuphys.splot.fit.CurveDrawingMethod;
 import cnuphys.splot.fit.ErfFitter;
@@ -16,16 +19,40 @@ import cnuphys.splot.spline.CubicSpline;
  * Histogram-backed curve that integrates {@link HistoData} into the {@link ACurve}
  * fitting and drawing framework.
  *
+ * <h2>Thread-safety</h2>
+ * <p>
+ * The {@link ACurve} contract requires that notifications (e.g. {@link #markDataChanged()})
+ * occur on the Swing Event Dispatch Thread (EDT). This class preserves that contract while
+ * allowing histogram filling from any thread:
+ * </p>
+ * <ul>
+ *   <li>If {@link #add(double)} or {@link #addAll(double[])} are called on the EDT, they apply
+ *       immediately and notify once.</li>
+ *   <li>If called off the EDT, values are enqueued and a coalesced EDT drain is scheduled.
+ *       The drain applies many samples in bulk and notifies once.</li>
+ * </ul>
+ *
  * @author heddle
  */
 public class HistoCurve extends ACurve {
 
 	/** Backing histogram data. */
 	private final HistoData histoData;
-	
-	// thread safety
+
+	/** Thread-safe staging of samples from non-EDT threads. */
 	private final PendingQueue<Double> pending = new PendingQueue<>();
 
+	/**
+	 * Coalescing latch: ensures we only post one drain runnable to the EDT at a time,
+	 * no matter how many background threads call {@link #add(double)}.
+	 */
+	private final AtomicBoolean drainScheduled = new AtomicBoolean(false);
+
+	/**
+	 * Maximum number of pending samples to apply per single EDT drain pass.
+	 * Keeps the EDT responsive under heavy producer rates.
+	 */
+	private static final int DEFAULT_DRAIN_MAX = 10_000;
 
 	/**
 	 * Create a histogram-backed curve.
@@ -83,34 +110,6 @@ public class HistoCurve extends ACurve {
 		return new FitVectors(x, y, null);
 	}
 
-	/**
-	 * Create a fitter appropriate for the current curve drawing method.
-	 */
-	@Override
-	protected IFitter createFitterForCurrentMethod() {
-
-		switch (getCurveDrawingMethod()) {
-
-		case POLYNOMIAL:
-			return new PolynomialFitter(getFitOrder());
-
-		case ERF:
-			return new ErfFitter();
-
-		case ERFC:
-			return new ErfcFitter();
-
-		case GAUSSIAN:
-			return new GaussianFitter();
-
-		case GAUSSIANS:
-			// "order" interpreted as number of Gaussians
-			return new MultiGaussianFitter(Math.max(1, getFitOrder()), true);
-
-		default:
-			return null;
-		}
-	}
 
 	/**
 	 * Perform a curve computation (fit or spline) depending on the
@@ -171,8 +170,6 @@ public class HistoCurve extends ACurve {
 		}
 	}
 
-	
-
 	/**
 	 * {@inheritDoc}
 	 */
@@ -180,7 +177,6 @@ public class HistoCurve extends ACurve {
 	public double xMin() {
 		return histoData == null ? Double.NaN : histoData.getMinX();
 	}
-
 
 	/**
 	 * {@inheritDoc}
@@ -190,7 +186,6 @@ public class HistoCurve extends ACurve {
 		return histoData == null ? Double.NaN : histoData.getMaxX();
 	}
 
-
 	/**
 	 * {@inheritDoc}
 	 */
@@ -199,7 +194,6 @@ public class HistoCurve extends ACurve {
 		return histoData == null ? Double.NaN : histoData.getMinY();
 	}
 
-
 	/**
 	 * {@inheritDoc}
 	 */
@@ -207,70 +201,135 @@ public class HistoCurve extends ACurve {
 	public double yMax() {
 		return histoData == null ? Double.NaN : histoData.getMaxY();
 	}
+
 	// ------------------------------------------------------------
 	// Histogram mutation API
 	// ------------------------------------------------------------
 
 	/**
-	 * Add a value to the histogram. This method must be called from the EDT.
+	 * Add a value to the histogram.
+	 * <p>
+	 * Safe from any thread. Off-EDT calls enqueue and schedule a coalesced EDT drain.
+	 * The {@link ACurve} notification contract is preserved: {@link #markDataChanged()}
+	 * is invoked on the EDT only.
+	 * </p>
+	 *
 	 * @param x the value to add
 	 */
 	public void add(double x) {
-		requireEdt("HistoCurve.add");
+		if (!SwingUtilities.isEventDispatchThread()) {
+			enqueue(x);
+			scheduleDrain();
+			return;
+		}
+
 		synchronized (lock) {
 			histoData.add(x);
-			markDataChanged();
 		}
+		markDataChanged();
 	}
 
 	/**
-	 * Add multiple values to the histogram. This method must be called from the EDT.
-	 * @param x the values to add
+	 * Add multiple values to the histogram.
+	 * <p>
+	 * Safe from any thread. Off-EDT calls enqueue and schedule a coalesced EDT drain.
+	 * The {@link ACurve} notification contract is preserved: {@link #markDataChanged()}
+	 * is invoked on the EDT only.
+	 * </p>
+	 *
+	 * @param x the values to add (non-null)
 	 */
 	public void addAll(double[] x) {
-		requireEdt("HistoCurve.addAll");
+		Objects.requireNonNull(x, "x");
+
+		if (!SwingUtilities.isEventDispatchThread()) {
+			enqueueAll(x);
+			scheduleDrain();
+			return;
+		}
+
 		synchronized (lock) {
 			histoData.addAll(x);
-			markDataChanged();
 		}
+		markDataChanged();
 	}
 
 	/**
 	 * Enqueue a value to be added to the histogram later on the EDT.
 	 * This method should be used by background worker threads.
+	 *
 	 * @param x the value to enqueue
 	 */
-	public void enqueue(double x) {
+	private void enqueue(double x) {
 		pending.enqueue(x);
 	}
 
 	/**
 	 * Enqueue multiple values to be added to the histogram later on the EDT.
 	 * This method should be used by background worker threads.
-	 * @param x the values to enqueue
+	 *
+	 * @param x the values to enqueue (non-null)
 	 */
-	public void enqueueAll(double[] x) {
+	private void enqueueAll(double[] x) {
+		Objects.requireNonNull(x, "x");
 		for (double v : x) {
 			pending.enqueue(v);
 		}
 	}
 
-	// EDT only
+	/**
+	 * Drain pending enqueued values on the EDT and apply them to the histogram.
+	 * <p>
+	 * This method is EDT-only because it ultimately fires {@link #markDataChanged()}.
+	 * </p>
+	 *
+	 * @param max maximum number of values to apply in this drain pass
+	 * @return number of drained values
+	 */
 	public int drainPendingOnEDT(int max) {
+		requireEdt("HistoCurve.drainPendingOnEDT");
 		return pending.drainPendingOnEDT(max, batch -> {
 			synchronized (lock) {
 				for (double v : batch) {
 					histoData.add(v);
 				}
-				markDataChanged();
 			}
+			markDataChanged();
 		});
 	}
 
 	/**
+	 * Schedule a coalesced drain pass on the EDT.
+	 * <p>
+	 * If multiple background threads call this repeatedly, only one drain runnable
+	 * is posted until it begins execution.
+	 * </p>
+	 */
+	private void scheduleDrain() {
+		if (drainScheduled.compareAndSet(false, true)) {
+			SwingUtilities.invokeLater(() -> {
+				drainScheduled.set(false);
+
+				// Apply a bounded chunk to keep EDT responsive.
+				int drained = drainPendingOnEDT(DEFAULT_DRAIN_MAX);
+
+				// If we likely hit the cap, there may be more pending; schedule another pass.
+				if (drained >= DEFAULT_DRAIN_MAX) {
+					scheduleDrain();
+				}
+			});
+		}
+	}
+
+	/**
 	 * Clear histogram contents and statistics.
+	 * <p>
+	 * EDT-only by default, preserving the existing behavior. If you decide you want
+	 * this to be thread-safe later, it can follow the same enqueue/schedule pattern.
+	 * </p>
 	 */
 	public void clearData() {
+		requireEdt("HistoCurve.clearData");
 		histoData.clear();
 		markDataChanged();
 	}

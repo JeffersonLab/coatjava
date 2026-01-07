@@ -106,11 +106,14 @@ public class Legend extends DraggableRectangle {
 		g.drawString(legStr, x + width - _maxStringWidth - HGAP, yc + fm.getHeight() / 2);
 
 		if ((_numVisCurves > 0) && cdm != CurveDrawingMethod.NONE) {
-			GraphicsUtilities.drawStyleLine(g, style.getFitLineColor(), style.getFitLineWidth(),
-					style.getFitLineStyle(), x + HGAP, yc, x + HGAP + _params.getLegendLineLength(), yc);
+			GraphicsUtilities.drawStyleLine(g, style.getLineColor(), style.getLineWidth(),
+					style.getLineStyle(), x + HGAP, yc, x + HGAP + _params.getLegendLineLength(), yc);
 		}
 
-		SymbolDraw.drawSymbol(g, x + HGAP + _extra / 2, yc, curve.getStyle());
+		// draw symbol if any but only for xy curves
+		if (curve.isXYCurve()) {
+			SymbolDraw.drawSymbol(g, x + HGAP + _extra / 2, yc, curve.getStyle());
+		}
 
 		return y + space + VGAP;
 	}

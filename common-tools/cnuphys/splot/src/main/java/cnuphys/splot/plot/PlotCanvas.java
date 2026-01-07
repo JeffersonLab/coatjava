@@ -41,7 +41,7 @@ import cnuphys.splot.pdata.PlotData;
 import cnuphys.splot.pdata.PlotDataType;
 import cnuphys.splot.rubberband.IRubberbanded;
 import cnuphys.splot.rubberband.Rubberband;
-import cnuphys.splot.toolbar.CommonToolBar;
+import cnuphys.splot.toolbar.PlotToolBar;
 import cnuphys.splot.toolbar.IToolBarListener;
 import cnuphys.splot.toolbar.ToolBarButton;
 import cnuphys.splot.toolbar.ToolBarToggleButton;
@@ -114,7 +114,7 @@ public class PlotCanvas extends JComponent
 	private String _statusString = " ";
 
 	// toolbar controlling plot
-	private CommonToolBar _toolbar;
+	private PlotToolBar _toolbar;
 
 	// popup menu
 	private PlotPopupMenu _plotPopup;
@@ -183,9 +183,9 @@ public class PlotCanvas extends JComponent
 	}
 
 	/**
-	 * Get the DataSet type
+	 * Get the PlotData type
 	 *
-	 * @return the data set type
+	 * @return the plot data type
 	 */
 	public PlotDataType getType() {
 		return _plotData.getType();
@@ -223,7 +223,7 @@ public class PlotCanvas extends JComponent
 	 *
 	 * @param plotData the new dataset
 	 */
-	public void setPlotData(PlotData plotData) {
+	protected void setPlotData(PlotData plotData) {
 
 		_plotData = plotData;
 
@@ -313,6 +313,50 @@ public class PlotCanvas extends JComponent
 		case USEDATALIMITS:  //do nothing
 			break;
 		}
+		
+		// ------------------------------------------------------------------
+		// Guard against degenerate or invalid ranges.
+		//
+		// With USEDATALIMITS (common for strip charts), the very first sample
+		// can yield xmin == xmax and/or ymin == ymax. That creates a world
+		// rectangle with zero width/height, which in turn produces a non-
+		// invertible AffineTransform (scale=0) in setAffineTransforms().
+		//
+		// We expand zero (or near-zero) ranges slightly to keep transforms
+		// invertible and allow the plot to draw immediately.
+		// ------------------------------------------------------------------
+		if (!Double.isFinite(xmin) || !Double.isFinite(xmax) || !Double.isFinite(ymin) || !Double.isFinite(ymax)) {
+		    _worldSystem.setFrame(0, 0, 1, 1);
+		    return;
+		}
+
+		// Ensure min <= max
+		if (xmax < xmin) {
+		    double tmp = xmin;
+		    xmin = xmax;
+		    xmax = tmp;
+		}
+		if (ymax < ymin) {
+		    double tmp = ymin;
+		    ymin = ymax;
+		    ymax = tmp;
+		}
+
+		double dx = xmax - xmin;
+		double dy = ymax - ymin;
+
+		// Expand any zero/near-zero range
+		if (Math.abs(dx) < 1.0e-12) {
+		    double pad = (Math.abs(xmin) > 0) ? (0.01 * Math.abs(xmin)) : 1.0;
+		    xmin -= pad;
+		    xmax += pad;
+		}
+		if (Math.abs(dy) < 1.0e-12) {
+		    double pad = (Math.abs(ymin) > 0) ? (0.01 * Math.abs(ymin)) : 1.0;
+		    ymin -= pad;
+		    ymax += pad;
+		}
+
 
 		_worldSystem.setFrame(xmin, ymin, xmax - xmin, ymax - ymin);
 	}
@@ -520,7 +564,7 @@ public class PlotCanvas extends JComponent
 					HistoData hd = hc.getHistoData();
 					String s = HistoData.statusString(this, hd, pp, _workPoint);
 					if (s != null) {
-						Color lc = curve.getStyle().getFitLineColor();
+						Color lc = curve.getStyle().getLineColor();
 						_statusString += "&nbsp&nbsp" + colorStr(s, GraphicsUtilities.colorToHex(lc));
 						// break;
 					}
@@ -585,11 +629,8 @@ public class PlotCanvas extends JComponent
 
 		String command = toolbarCommand();
 
-		if (CommonToolBar.CENTER.equals(command)) {
-			recenterAtClick(e.getPoint());
-		}
-		else if ((SwingUtilities.isLeftMouseButton(e) && e.isControlDown())) {
-			if (CommonToolBar.POINTER.equals(command)) {
+		if ((SwingUtilities.isLeftMouseButton(e) && e.isControlDown())) {
+			if (PlotToolBar.POINTER.equals(command)) {
 				_plotPopup.show(e.getComponent(), e.getX(), e.getY());
 			}
 
@@ -621,7 +662,7 @@ public class PlotCanvas extends JComponent
 
 		else {
 
-			if (CommonToolBar.BOXZOOM.equals(command) && (_rubberband == null)) {
+			if (PlotToolBar.BOXZOOM.equals(command) && (_rubberband == null)) {
 
 				if (getPlotData().getType() == PlotDataType.H1D) {
 
@@ -646,7 +687,7 @@ public class PlotCanvas extends JComponent
 
 	// get the active toolbar toggle butto command
 	private String toolbarCommand() {
-		return (_toolbar != null) ? _toolbar.getActiveCommand() : CommonToolBar.POINTER;
+		return (_toolbar != null) ? _toolbar.getActiveCommand() : PlotToolBar.POINTER;
 	}
 
 	/**
@@ -783,20 +824,6 @@ public class PlotCanvas extends JComponent
 	}
 
 	/**
-	 * Center the plot world at the click.
-	 *
-	 * @param pp
-	 */
-	public void recenterAtClick(Point pp) {
-		Point.Double wp = new Point.Double();
-		localToWorld(pp, wp);
-
-		_worldSystem.x = wp.x - _worldSystem.width / 2;
-		_worldSystem.y = wp.y - _worldSystem.height / 2;
-		repaint();
-	}
-
-	/**
 	 * Scale the canvas by a given amount
 	 *
 	 * @param amount the factor to scale by
@@ -817,27 +844,27 @@ public class PlotCanvas extends JComponent
 	}
 
 	@Override
-	public void buttonPressed(CommonToolBar toolbar, ToolBarButton button) {
+	public void buttonPressed(PlotToolBar toolbar, ToolBarButton button) {
 		_toolbar = toolbar;
 		doButtonAction(button.getActionCommand());
 	}
 
 	public void doButtonAction(String command) {
-		if (CommonToolBar.ZOOMIN.equals(command)) {
+		if (PlotToolBar.ZOOMIN.equals(command)) {
 			scale(0.85);
 		}
-		if (CommonToolBar.ZOOMOUT.equals(command)) {
+		if (PlotToolBar.ZOOMOUT.equals(command)) {
 			scale(1. / 0.85);
 		}
-		if (CommonToolBar.WORLD.equals(command)) {
+		if (PlotToolBar.WORLD.equals(command)) {
 			setWorldSystem();
 			repaint();
 		}
-		if (CommonToolBar.PRINT.equals(command)) {
+		if (PlotToolBar.PRINT.equals(command)) {
 			print();
 		}
 
-		if (CommonToolBar.PNG.equals(command)) {
+		if (PlotToolBar.PNG.equals(command)) {
 			takePicture();
 		}
 	}
@@ -910,7 +937,7 @@ public class PlotCanvas extends JComponent
 	}
 
 	@Override
-	public void toggleButtonActivated(CommonToolBar toolbar, ToolBarToggleButton button) {
+	public void toggleButtonActivated(PlotToolBar toolbar, ToolBarToggleButton button) {
 		_toolbar = toolbar;
 	}
 

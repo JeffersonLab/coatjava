@@ -1,12 +1,28 @@
 package cnuphys.splot.pdata;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
+import java.util.function.IntConsumer;
+import java.util.function.IntSupplier;
+
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import javax.swing.event.EventListenerList;
 
 import cnuphys.splot.fit.CurveDrawingMethod;
+import cnuphys.splot.fit.ErfFitter;
+import cnuphys.splot.fit.ErfcFitter;
 import cnuphys.splot.fit.Evaluator;
 import cnuphys.splot.fit.FitResult;
+import cnuphys.splot.fit.GaussianFitter;
 import cnuphys.splot.fit.IFitter;
+import cnuphys.splot.fit.MultiGaussianFitter;
+import cnuphys.splot.fit.PolynomialFitter;
 import cnuphys.splot.spline.CubicSpline;
 import cnuphys.splot.style.Styled;
 
@@ -120,6 +136,12 @@ public abstract class ACurve {
 	private boolean pendingData;
 	private boolean pendingStyle;
 	private boolean pendingFit;
+	
+	/**
+	 * Latch used by {@link #scheduleDrainOnce(Runnable)} to ensure we post at most
+	 * one drain runnable to the EDT at a time.
+	 */
+	private final AtomicBoolean drainScheduled = new AtomicBoolean(false);
 
 	/**
 	 * Create a curve with the given name.
@@ -131,6 +153,7 @@ public abstract class ACurve {
 		initStyle();
 	}
 
+	
 	/**
 	 * Perform a curve fit (or compute derived artifacts like splines), depending on the configured
 	 * curve drawing method.
@@ -153,8 +176,26 @@ public abstract class ACurve {
 	 * @return a fitter for the current method, or null if not applicable
 	 */
 	protected IFitter createFitterForCurrentMethod() {
-		return null;
-	}
+		switch (getCurveDrawingMethod()) {
+		case POLYNOMIAL:
+			return new PolynomialFitter(getFitOrder());
+
+		case ERF:
+			return new ErfFitter();
+
+		case ERFC:
+			return new ErfcFitter();
+
+		case GAUSSIAN:
+			return new GaussianFitter();
+
+		case GAUSSIANS:
+			// "order" interpreted as number of Gaussians. (Constructor: (count, includeBaseline))
+			return new MultiGaussianFitter(Math.max(1, getFitOrder()), true);
+
+		default:
+			return null;
+		}	}
 
 	/** @return the curve name (legend label) */
 	public final String name() {
@@ -280,6 +321,24 @@ public abstract class ACurve {
 	 */
 	public boolean isHistogram() {
 		return this instanceof HistoCurve;
+	}
+	
+	/**
+	 * Convenience method to determine if this curve is a strip chart curve.
+	 *
+	 * @return true if strip chart curve
+	 */
+	public boolean isStripChart() {
+		return this instanceof StripChartCurve;
+	}
+	
+	/**
+	 * Convenience method to determine if this curve is an XY curve.
+	 *
+	 * @return true if XY curve
+	 */
+	public boolean isXYCurve() {
+		return this instanceof Curve;
 	}
 
 	/**
@@ -566,42 +625,74 @@ public abstract class ACurve {
 	// ====================================================================
 	// Pending-queue infrastructure for background producers
 	// ====================================================================
+	
+	/**
+	 * Schedule a drain operation to run later on the Swing EDT, coalescing multiple
+	 * requests into a single posted runnable.
+	 * <p>
+	 * This is intended for curves whose {@code add(...)} methods are safe to call
+	 * from any thread: background calls enqueue data, then call this method to
+	 * ensure the queued data is applied on the EDT.
+	 * </p>
+	 *
+	 * <p>
+	 * If many threads call this repeatedly, only the first call posts a runnable;
+	 * subsequent calls are coalesced until the posted runnable begins execution.
+	 * </p>
+	 *
+	 * @param drainOnEdt code that must execute on the EDT (typically calls
+	 *                   {@code drainPendingOnEDT(...)} in the subclass)
+	 */
+	protected final void scheduleDrainOnce(Runnable drainOnEdt) {
+		Objects.requireNonNull(drainOnEdt, "drainOnEdt");
+		if (drainScheduled.compareAndSet(false, true)) {
+			SwingUtilities.invokeLater(() -> {
+				drainScheduled.set(false);
+				drainOnEdt.run();
+			});
+		}
+	}
 
 	/**
-	 * Generic pending-queue helper for curves that receive data from
-	 * background threads but must apply mutations on the Swing EDT.
-	 *
+	 * A reusable pending-queue helper for streaming/DAQ scenarios.
 	 * <p>
-	 * This class centralizes:
-	 * <ul>
-	 *   <li>Lock-free enqueueing</li>
-	 *   <li>Pending / lifetime counters</li>
-	 *   <li>EDT-enforced draining</li>
-	 *   <li>Optional Swing Timer-based draining</li>
-	 * </ul>
+	 * Producer threads enqueue items lock-free. Application occurs later on the EDT
+	 * via {@link #drainPendingOnEDT(int, Consumer)}.
+	 * </p>
 	 *
-	 * <p>
-	 * Subclasses decide what the pending payload represents and how a
-	 * drained batch is applied.
+	 * @param <T> pending item payload type (e.g. a point, a sample value, etc.)
 	 */
 	protected static final class PendingQueue<T> {
 
-		private final java.util.concurrent.ConcurrentLinkedQueue<T> queue =
-				new java.util.concurrent.ConcurrentLinkedQueue<>();
+		private final ConcurrentLinkedQueue<T> queue = new ConcurrentLinkedQueue<>();
+		private final AtomicLong pendingCount = new AtomicLong(0);
+		private final AtomicLong totalEnqueued = new AtomicLong(0);
+		private volatile Timer timer;
 
-		private final java.util.concurrent.atomic.AtomicLong pendingCount =
-				new java.util.concurrent.atomic.AtomicLong(0);
-
-		private final java.util.concurrent.atomic.AtomicLong totalEnqueued =
-				new java.util.concurrent.atomic.AtomicLong(0);
-
-		private javax.swing.Timer timer;
-
-		/** Enqueue from any thread (lock-free). */
+		/** Enqueue an item (thread-safe, lock-free). */
 		public void enqueue(T item) {
+			Objects.requireNonNull(item, "item");
 			queue.add(item);
 			pendingCount.incrementAndGet();
 			totalEnqueued.incrementAndGet();
+		}
+
+		/**
+		 * Enqueue multiple items (thread-safe, lock-free).
+		 *
+		 * @param items items to enqueue (non-null, no null elements)
+		 */
+		public void enqueueAll(List<? extends T> items) {
+			Objects.requireNonNull(items, "items");
+			for (T it : items) {
+				enqueue(it);
+			}
+		}
+
+		/** Clear any queued (not-yet-applied) items. */
+		public void clear() {
+			queue.clear();
+			pendingCount.set(0);
 		}
 
 		/** @return approximate number of pending items */
@@ -609,33 +700,32 @@ public abstract class ACurve {
 			return pendingCount.get();
 		}
 
-		/** @return total number of items ever enqueued */
+		/** @return total number of items ever enqueued (monotonic) */
 		public long getTotalEnqueued() {
 			return totalEnqueued.get();
 		}
 
 		/**
-		 * Drain up to {@code max} items on the EDT and apply them.
+		 * Drain up to {@code max} items on the EDT and apply them in one batch.
 		 *
 		 * @param max maximum number of items to drain
-		 * @param applier called once with a non-empty batch
-		 * @return number of items drained
+		 * @param applier called on the EDT with a non-empty batch of items
+		 * @return number of drained items
+		 * @throws IllegalStateException if called off the Swing EDT
 		 */
-		public int drainPendingOnEDT(int max,
-				java.util.function.Consumer<java.util.List<T>> applier) {
-
-			requireEdt("drainPendingOnEDT");
-
+		public int drainPendingOnEDT(int max, Consumer<List<T>> applier) {
+			if (!SwingUtilities.isEventDispatchThread()) {
+				throw new IllegalStateException("drainPendingOnEDT must be called on the Swing EDT.");
+			}
+			Objects.requireNonNull(applier, "applier");
 			if (max <= 0) {
 				return 0;
 			}
 
-			java.util.ArrayList<T> batch =
-					new java.util.ArrayList<>(Math.min(max, 256));
+			final ArrayList<T> batch = new ArrayList<>(Math.min(max, 256));
 
 			T item;
 			int drained = 0;
-
 			while (drained < max && (item = queue.poll()) != null) {
 				pendingCount.decrementAndGet();
 				batch.add(item);
@@ -645,33 +735,45 @@ public abstract class ACurve {
 			if (!batch.isEmpty()) {
 				applier.accept(batch);
 			}
-
 			return drained;
 		}
 
 		/**
-		 * Start a Swing timer that periodically drains the queue on the EDT.
+		 * Start a Swing {@link Timer} that periodically drains queued items on the EDT.
+		 *
+		 * @param periodMs timer period in milliseconds; if {@code periodMs <= 0}, no timer is started
+		 * @param maxPerTick maximum number of items to drain per tick (prevents EDT starvation)
+		 * @param drainAction action that performs the drain and returns drained count (EDT)
+		 * @param drainedCallback optional callback invoked on the EDT with the drained count
 		 */
 		public void startDrainTimer(int periodMs,
 				int maxPerTick,
-				java.util.function.IntSupplier drainAction) {
+				IntSupplier drainAction,
+				IntConsumer drainedCallback) {
 
+			stopDrainTimer();
 			if (periodMs <= 0) {
 				return;
 			}
+			Objects.requireNonNull(drainAction, "drainAction");
+			
+			timer = new Timer(periodMs, e -> {
+				int drained = drainAction.getAsInt();
+				if (drainedCallback != null) {
+					drainedCallback.accept(drained);
+				}
+			});
 
-			stopDrainTimer();
-
-			timer = new javax.swing.Timer(periodMs, e -> drainAction.getAsInt());
 			timer.setCoalesce(true);
 			timer.start();
 		}
 
-		/** Stop any active drain timer. */
+		/** Stop the drain timer if running. */
 		public void stopDrainTimer() {
-			if (timer != null) {
-				timer.stop();
-				timer = null;
+			Timer t = timer;
+			timer = null;
+			if (t != null) {
+				t.stop();
 			}
 		}
 	}

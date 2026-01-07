@@ -12,6 +12,7 @@ import cnuphys.splot.pdata.HistoCurve;
 import cnuphys.splot.pdata.HistoData;
 import cnuphys.splot.pdata.PlotData;
 
+@SuppressWarnings("serial")
 public class Histo extends AExample {
 
 	@Override
@@ -59,11 +60,10 @@ public class Histo extends AExample {
 		style.setBorderColor(Color.black);
 		
 		//basic example, not fitting
-		hc.setCurveMethod(CurveDrawingMethod.NONE);
+		hc.setCurveMethod(CurveDrawingMethod.GAUSSIAN);
 		PlotParameters params = canvas.getParameters();
 		params.setMinExponentY(6);
 		params.setNumDecimalY(0);
-
 	}
 
 	// ---------------------------------------------------------------

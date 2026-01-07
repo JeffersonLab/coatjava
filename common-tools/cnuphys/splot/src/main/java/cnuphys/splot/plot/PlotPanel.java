@@ -19,7 +19,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.border.Border;
 
-import cnuphys.splot.toolbar.CommonToolBar;
+import cnuphys.splot.toolbar.PlotToolBar;
 
 @SuppressWarnings("serial")
 public class PlotPanel extends JPanel implements PropertyChangeListener {
@@ -43,7 +43,7 @@ public class PlotPanel extends JPanel implements PropertyChangeListener {
 	public static int STANDARD = 0;
 
 	// toolbar
-	protected CommonToolBar _toolbar;
+	protected PlotToolBar _toolbar;
 
 	protected int _decorations;
 
@@ -135,7 +135,7 @@ public class PlotPanel extends JPanel implements PropertyChangeListener {
 		PlotParameters parameters = _canvas.getParameters();
 
 		// toolbar
-		_toolbar = new CommonToolBar(SwingConstants.HORIZONTAL) {
+		_toolbar = new PlotToolBar(_canvas) {
 			@Override
 			public void paint(Graphics g) {
 				// exclude from print

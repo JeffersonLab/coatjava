@@ -139,6 +139,30 @@ public class CurveDrawer {
 	 * @param stripChartCurve the strip chart curve
 	 */
 	public static void drawStripChart(Graphics g, PlotCanvas canvas, StripChartCurve stripChartCurve) {
+		
+		Objects.requireNonNull(stripChartCurve, "stripChartCurve");
+		Objects.requireNonNull(canvas, "canvas");
+		
+		if (!stripChartCurve.isVisible()) {
+			return;
+		}
+		
+		if (stripChartCurve.isDirty()) {
+			stripChartCurve.doFit(true);
+		}
+		
+        //get threadsafe copy of the data
+		Snapshot snapshot = stripChartCurve.snapshot();
+
+		double x[] = snapshot.x;
+		double y[] = snapshot.y;
+
+		if ((x == null) || (x.length < 1)) {
+			return;
+		}
+
+		// draw the fit line or basic connector lines
+		drawFitOrLines(g, canvas, stripChartCurve, x, y);
 	}
 
 	/**
@@ -164,10 +188,6 @@ public class CurveDrawer {
 		Color borderColor = style.getBorderColor();
 		if (borderColor == null) {
 			borderColor = _transGray;
-		}
-		else {
-			// borderColor = new Color(borderColor.getRed(), borderColor.getGreen(),
-			// borderColor.getBlue(), 16);
 		}
 		g.setColor(borderColor);
 		g.drawPolygon(poly);
@@ -239,13 +259,13 @@ public class CurveDrawer {
 		Graphics2D g2 = (Graphics2D) g;
 
 		Stroke oldStroke = g2.getStroke();
-		g2.setStroke(GraphicsUtilities.getStroke(style.getFitLineWidth(), style.getFitLineStyle()));
+		g2.setStroke(style.getStroke());
 
-		Color fitColor = style.getFitLineColor();
-		if (fitColor == null) {
+		Color lineColor = style.getLineColor();
+		if (lineColor == null) {
 			return;
 		}
-		g2.setColor(fitColor);
+		g2.setColor(lineColor);
 		CurveDrawingMethod drawMethod = curve.getCurveDrawingMethod();
 		
 		switch (drawMethod) {
@@ -278,7 +298,7 @@ public class CurveDrawer {
 				g2.setColor(style.getFillColor());
 				g.fillRect(p0.x, p0.y, p1.x - p0.x, bottom - p0.y);
 
-				g2.setColor(style.getFitLineColor());
+				g2.setColor(style.getLineColor());
 				g2.drawLine(p0.x, p0.y, p1.x, p0.y);
 				g2.drawLine(p1.x, p0.y, p1.x, p1.y);
 				p0.setLocation(p1);

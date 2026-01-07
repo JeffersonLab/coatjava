@@ -3,9 +3,11 @@ package cnuphys.splot.pdata;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.IntConsumer;
 
+import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 
 import cnuphys.splot.fit.CurveDrawingMethod;
@@ -26,49 +28,22 @@ import cnuphys.splot.spline.CubicSpline;
  * {@code Curve} supports two distinct modes of use:
  * </p>
  *
- * <h3>1) Immediate mutation via {@code add(...)} / {@code addAll(...)}</h3>
+ * <h3>1) Thread-safe mutation via {@code add(...)} / {@code addAll(...)}</h3>
  * <p>
- * Methods such as {@link #add(double, double)} and {@link #addAll(double[], double[])} append data
- * immediately and then call {@link #markDataChanged()}, which fires a curve-change event that
- * typically leads to a Swing repaint.
+ * Methods such as {@link #add(double, double)} and {@link #addAll(double[], double[])} may be called
+ * from <em>any</em> thread. They preserve the {@link ACurve} contract that notifications occur on
+ * the Swing EDT:
  * </p>
- * <p>
- * Because UI notifications ultimately touch Swing, these immediate mutation methods should be
- * called from the <b>Swing Event Dispatch Thread (EDT)</b> in typical interactive applications.
- * (Internally they synchronize on {@link #lock} to keep the columns consistent.)
- * </p>
+ * <ul>
+ *   <li>If called on the EDT, they apply immediately and fire a DATA change event.</li>
+ *   <li>If called off the EDT, they enqueue points and schedule a coalesced EDT drain pass. The drain
+ *       applies a batch and then fires a single consolidated DATA change event.</li>
+ * </ul>
  *
  * <h3>2) Streaming / DAQ mode via {@code enqueue(...)} + {@code drainPendingOnEDT(...)}</h3>
  * <p>
- * For data acquisition (DAQ) and other streaming scenarios where points arrive on background threads,
- * this class provides a lock-free staging queue:
- * </p>
- * <ul>
- *   <li>{@link #enqueue(double, double)} / {@link #enqueue(double, double, double)} may be called from <em>any</em> thread.</li>
- *   <li>{@link #drainPendingOnEDT(int)} must be called on the <b>EDT</b> to apply queued points.</li>
- * </ul>
- *
- * <p>
- * The intended pattern is:
- * </p>
- *
- * <pre>
- * background producer threads  --enqueue-->  Curve.pending queue
- *                                  |
- *                                  v
- * Swing Timer (EDT)           --drain-->    curve data columns + single DATA event
- * </pre>
- *
- * <p>
- * The drain operation is batched: many queued points are appended and then a single
- * {@link #markDataChanged()} is fired, preventing a repaint/event storm.
- * </p>
- *
- * <h2>Fitting and caching</h2>
- * <p>
- * Fit results and spline caches are invalidated by {@link #markDataChanged()}, which calls
- * {@code clearComputedArtifacts()} in the base class. Rendering code typically calls
- * {@link #doFit(boolean)} when needed.
+ * Background producer threads may call {@link #enqueue(double, double)} / {@link #enqueue(double, double, double)}
+ * and the UI (EDT) drains periodically using {@link #drainPendingOnEDT(int)} (often via {@link #startPendingDrainTimer}).
  * </p>
  *
  * @author heddle
@@ -103,12 +78,20 @@ public class Curve extends ACurve {
 
 	/**
 	 * Optional convenience timer that drains {@link #pending} on the EDT.
-	 * <p>
-	 * This is useful for examples and small apps. Larger apps may prefer a single timer at the
-	 * canvas/model level to drain all curves.
-	 * </p>
 	 */
 	private volatile Timer pendingDrainTimer;
+
+	/**
+	 * Coalescing latch: ensures we only post one drain runnable to the EDT at a time,
+	 * no matter how many background threads call {@link #add} / {@link #addAll}.
+	 */
+	private final AtomicBoolean drainScheduled = new AtomicBoolean(false);
+
+	/**
+	 * Maximum points to apply per scheduled drain pass. This prevents the EDT from being
+	 * monopolized if producers temporarily outrun the UI.
+	 */
+	private static final int DEFAULT_DRAIN_MAX = 10_000;
 
 	/**
 	 * Create a standard XY curve.
@@ -159,51 +142,6 @@ public class Curve extends ACurve {
 	}
 
 	@Override
-	protected IFitter createFitterForCurrentMethod() {
-		switch (getCurveDrawingMethod()) {
-		case POLYNOMIAL:
-			return new PolynomialFitter(getFitOrder());
-
-		case ERF:
-			return new ErfFitter();
-			
-		case ERFC:
-			return new ErfcFitter();
-
-		case GAUSSIAN:
-			return new GaussianFitter();
-
-		case GAUSSIANS:
-			// "order" interpreted as number of Gaussians. (Constructor: (count, includeBaseline))
-			return new MultiGaussianFitter(Math.max(1, getFitOrder()), true);
-
-		default:
-			return null;
-		}
-	}
-
-	/**
-	 * Compute derived artifacts needed for rendering: fit results or cubic spline cache, depending on
-	 * {@link #getCurveDrawingMethod()}.
-	 *
-	 * <p>
-	 * This method is typically called from the rendering pipeline. In Swing, rendering occurs on the EDT,
-	 * and callers should treat {@code doFit} as an EDT operation.
-	 * </p>
-	 *
-	 * <p>
-	 * Implementation notes:
-	 * </p>
-	 * <ul>
-	 *   <li>If {@code force==false} and the curve is not dirty, this method returns immediately.</li>
-	 *   <li>On entry, stale artifacts are cleared.</li>
-	 *   <li>If computation succeeds, {@link #setDirty(boolean)} is set to {@code false}.</li>
-	 *   <li>If computation fails (exception, insufficient data, fitter returns null), the curve remains dirty.</li>
-	 * </ul>
-	 *
-	 * @param force force recomputation even if not dirty
-	 */
-	@Override
 	public void doFit(boolean force) {
 		requireEdt("doFit");
 		if (!force && !isDirty()) {
@@ -215,7 +153,6 @@ public class Curve extends ACurve {
 		try {
 			final CurveDrawingMethod method = getCurveDrawingMethod();
 
-			// Clear stale artifacts (fitResult, spline, etc.) before recomputing
 			clearComputedArtifacts();
 
 			switch (method) {
@@ -223,7 +160,6 @@ public class Curve extends ACurve {
 			case NONE:
 			case CONNECT:
 			case STAIRS:
-				// No derived artifacts required
 				success = true;
 				break;
 
@@ -238,15 +174,13 @@ public class Curve extends ACurve {
 
 			case POLYNOMIAL:
 			case ERF:
-		    case ERFC:
+			case ERFC:
 			case GAUSSIAN:
 			case GAUSSIANS: {
 				IFitter fitter = createFitterForCurrentMethod();
 				if (fitter != null) {
 					FitVectors v = new FitVectors(xData, yData, eData);
 					FitResult fr = fitWithOptionalWeights(fitter, v);
-					// Note: setFitResult may notify listeners depending on ACurve implementation.
-					// In typical usage doFit is invoked on EDT during rendering, so this is acceptable.
 					setFitResult(fr);
 					success = (fr != null);
 				}
@@ -254,14 +188,12 @@ public class Curve extends ACurve {
 			}
 
 			default:
-				// Unknown/unsupported method
 				break;
 			}
 
 		} catch (Exception e) {
-			// Fail soft: artifacts already cleared by clearComputedArtifacts()
+			// Fail soft
 		} finally {
-			// Only clear dirty when we actually produced what we needed.
 			if (success) {
 				setDirty(false);
 			}
@@ -269,56 +201,80 @@ public class Curve extends ACurve {
 	}
 
 	// --------------------------------------------------------------------
-	// Immediate append API (mutates now + fires DATA change)
+	// Immediate append API (NOW THREAD-SAFE)
 	// --------------------------------------------------------------------
 
 	/**
-	 * Append a point immediately and fire a DATA change event.
+	 * Append a point and fire a DATA change event.
 	 * <p>
-	 * For Swing applications, prefer calling this on the EDT. For background producers,
-	 * use {@link #enqueue(double, double)} and drain on the EDT.
+	 * Safe to call from any thread. Off-EDT calls enqueue and schedule a coalesced EDT drain.
 	 * </p>
 	 */
 	public void add(double x, double y) {
-		super.requireEdt("add(x, y)");
+		if (!SwingUtilities.isEventDispatchThread()) {
+			enqueue(x, y);
+			scheduleDrain();
+			return;
+		}
+
 		synchronized (lock) {
 			xData.add(x);
 			yData.add(y);
 			if (eData != null) {
 				eData.add(0.0);
 			}
-			markDataChanged();
 		}
+		markDataChanged(); // EDT-only (ACurve contract)
 	}
 
 	/**
-	 * Append a point with Y error immediately and fire a DATA change event.
+	 * Append a point with Y error and fire a DATA change event.
+	 * <p>
+	 * Safe to call from any thread. Off-EDT calls enqueue and schedule a coalesced EDT drain.
+	 * </p>
 	 *
 	 * @throws IllegalStateException if this curve has no error column (eData is null)
 	 */
 	public void add(double x, double y, double ey) {
-		super.requireEdt("add(x, y, e)");
 		if (eData == null) {
 			throw new IllegalStateException("This curve has no error column (eData is null).");
 		}
+
+		if (!SwingUtilities.isEventDispatchThread()) {
+			enqueue(x, y, ey);
+			scheduleDrain();
+			return;
+		}
+
 		synchronized (lock) {
 			xData.add(x);
 			yData.add(y);
 			eData.add(ey);
-			markDataChanged();
 		}
+		markDataChanged(); // EDT-only
 	}
 
 	/**
-	 * Append many points immediately and fire a single DATA change event.
+	 * Append many points and fire a single DATA change event.
+	 * <p>
+	 * Safe to call from any thread. Off-EDT calls enqueue and schedule a coalesced EDT drain.
+	 * </p>
 	 */
 	public void addAll(double[] x, double[] y) {
-		super.requireEdt("addAll x[], y[]");
 		Objects.requireNonNull(x, "x");
 		Objects.requireNonNull(y, "y");
 		if (x.length != y.length) {
 			throw new IllegalArgumentException("x and y lengths differ: " + x.length + " vs " + y.length);
 		}
+
+		if (!SwingUtilities.isEventDispatchThread()) {
+			for (int i = 0; i < x.length; i++) {
+				enqueue(x[i], y[i]);
+			}
+			scheduleDrain();
+			return;
+		}
+
 		synchronized (lock) {
 			for (int i = 0; i < x.length; i++) {
 				xData.add(x[i]);
@@ -327,17 +283,19 @@ public class Curve extends ACurve {
 					eData.add(0.0);
 				}
 			}
-			markDataChanged();
 		}
+		markDataChanged(); // EDT-only
 	}
 
 	/**
-	 * Append many points with Y errors immediately and fire a single DATA change event.
+	 * Append many points with Y errors and fire a single DATA change event.
+	 * <p>
+	 * Safe to call from any thread. Off-EDT calls enqueue and schedule a coalesced EDT drain.
+	 * </p>
 	 *
 	 * @throws IllegalStateException if this curve has no error column (eData is null)
 	 */
 	public void addAll(double[] x, double[] y, double[] ey) {
-		super.requireEdt("addAll x[], y[], ey[]");
 		if (eData == null) {
 			throw new IllegalStateException("This curve has no error column (eData is null).");
 		}
@@ -348,24 +306,72 @@ public class Curve extends ACurve {
 			throw new IllegalArgumentException(
 					"lengths differ: x=" + x.length + " y=" + y.length + " ey=" + ey.length);
 		}
+
+		if (!SwingUtilities.isEventDispatchThread()) {
+			for (int i = 0; i < x.length; i++) {
+				enqueue(x[i], y[i], ey[i]);
+			}
+			scheduleDrain();
+			return;
+		}
+
 		synchronized (lock) {
 			for (int i = 0; i < x.length; i++) {
 				xData.add(x[i]);
 				yData.add(y[i]);
 				eData.add(ey[i]);
 			}
-			markDataChanged();
+		}
+		markDataChanged(); // EDT-only
+	}
+
+	/**
+	 * Schedule a coalesced drain pass on the EDT.
+	 * <p>
+	 * If multiple background threads call this repeatedly, only one drain runnable
+	 * is posted until it begins execution.
+	 * </p>
+	 */
+	private void scheduleDrain() {
+		if (drainScheduled.compareAndSet(false, true)) {
+			SwingUtilities.invokeLater(() -> {
+				drainScheduled.set(false);
+
+				// Apply a bounded chunk to keep EDT responsive.
+				int drained = drainPendingOnEDT(DEFAULT_DRAIN_MAX);
+
+				// If we likely hit the cap, schedule another pass.
+				if (drained >= DEFAULT_DRAIN_MAX && getPendingCount() > 0) {
+					scheduleDrain();
+				}
+			});
 		}
 	}
+
+	// --------------------------------------------------------------------
+	// Clear/snapshot/min/max (unchanged)
+	// --------------------------------------------------------------------
 
 	/**
 	 * Clear all data from this curve and fire a DATA change event.
 	 * <p>
-	 * This method synchronizes on {@link #lock} to avoid racing with {@link #snapshot()} or appends.
+	 * Thread-safe: may be called from any thread. If called off the EDT, the clear is
+	 * performed later on the EDT and coalesced with other scheduled drains.
+	 * </p>
+	 * <p>
+	 * Note: this also clears any queued (not-yet-applied) points so the curve truly becomes empty.
 	 * </p>
 	 */
 	public void clearData() {
-		super.requireEdt("clearData");
+		if (!javax.swing.SwingUtilities.isEventDispatchThread()) {
+			// Make the curve truly empty: discard not-yet-applied points.
+			clearPending();
+
+			// Coalesce with any scheduled drains; run the clear on the EDT.
+			scheduleDrainOnce(() -> clearData());
+			return;
+		}
+
 		synchronized (lock) {
 			xData.clear();
 			yData.clear();
@@ -376,12 +382,6 @@ public class Curve extends ACurve {
 		}
 	}
 
-	/**
-	 * Obtain a consistent snapshot of the current data, suitable for plotting without further locking.
-	 * <p>
-	 * The returned arrays are copies of the internal data at the moment of the snapshot.
-	 * </p>
-	 */
 	@Override
 	public Snapshot snapshot() {
 		synchronized (lock) {
@@ -410,36 +410,15 @@ public class Curve extends ACurve {
 	}
 
 	// --------------------------------------------------------------------
-	// Streaming / DAQ API (any thread enqueue, EDT drains in batches)
+	// Streaming / DAQ API (unchanged)
 	// --------------------------------------------------------------------
 
-	/**
-	 * Enqueue a point for later application on the EDT.
-	 * <p>
-	 * Thread-safe: may be called from any thread. This method does not mutate the curve's internal
-	 * data columns and does not fire any events.
-	 * </p>
-	 *
-	 * <p>
-	 * To apply queued points, call {@link #drainPendingOnEDT(int)} from the EDT (often via a Swing Timer),
-	 * or use {@link #startPendingDrainTimer(int, int)} for a simple built-in drainer.
-	 * </p>
-	 */
-	public void enqueue(double x, double y) {
+	private void enqueue(double x, double y) {
 		pending.offer(new PendingPoint(x, y));
 		pendingCount.incrementAndGet();
 	}
 
-	/**
-	 * Enqueue a point with Y error for later application on the EDT.
-	 * <p>
-	 * Thread-safe: may be called from any thread. This method does not mutate the curve's internal
-	 * data columns and does not fire any events.
-	 * </p>
-	 *
-	 * @throws IllegalStateException if this curve has no error column (eData is null)
-	 */
-	public void enqueue(double x, double y, double ey) {
+	private void enqueue(double x, double y, double ey) {
 		if (eData == null) {
 			throw new IllegalStateException("This curve has no error column (eData is null).");
 		}
@@ -447,33 +426,10 @@ public class Curve extends ACurve {
 		pendingCount.incrementAndGet();
 	}
 
-	/**
-	 * Approximate number of queued points awaiting drain.
-	 * <p>
-	 * This is intended for monitoring/backpressure. It is maintained separately because
-	 * {@link ConcurrentLinkedQueue#size()} is O(n).
-	 * </p>
-	 */
 	public long getPendingCount() {
 		return pendingCount.get();
 	}
 
-	/**
-	 * Drain queued points and apply them to the curve.
-	 * <p>
-	 * <b>This method must be called on the EDT.</b> It removes up to {@code max} points from the queue,
-	 * appends them to the internal data columns, then fires a single DATA change event via
-	 * {@link #markDataChanged()}.
-	 * </p>
-	 *
-	 * <p>
-	 * The {@code max} parameter prevents the EDT from being monopolized if producers temporarily outrun the UI.
-	 * </p>
-	 *
-	 * @param max maximum number of points to apply; {@code max <= 0} drains none
-	 * @return number of points applied
-	 * @throws IllegalStateException if called off the EDT
-	 */
 	public int drainPendingOnEDT(int max) {
 		requireEdt("drainPendingOnEDT");
 		if (max <= 0) {
@@ -483,7 +439,6 @@ public class Curve extends ACurve {
 		int drained = 0;
 		PendingPoint p;
 
-		// Poll without holding 'lock' to keep the critical section short.
 		final ArrayList<PendingPoint> batch = new ArrayList<>(Math.min(max, 256));
 		while (drained < max && (p = pending.poll()) != null) {
 			pendingCount.decrementAndGet();
@@ -503,45 +458,17 @@ public class Curve extends ACurve {
 					appendNoNotify(pp.x, pp.y);
 				}
 			}
-			// One invalidation + one notification for the whole batch.
 			markDataChanged();
 		}
 
 		return drained;
 	}
 
-	/**
-	 * Start a Swing Timer that periodically drains queued points on the EDT.
-	 * <p>
-	 * This is a convenience for examples and small applications. If a timer is already running, it is
-	 * stopped and replaced.
-	 * </p>
-	 *
-	 * @param periodMs  timer period in milliseconds (typical 10–50). If {@code periodMs <= 0}, no timer is started.
-	 * @param maxPerTick maximum points to drain per timer tick (prevents EDT starvation). Values <= 0 are treated as 1.
-	 */
 	public void startPendingDrainTimer(int periodMs, int maxPerTick) {
 		startPendingDrainTimer(periodMs, maxPerTick, null);
 	}
-	
-	/**
-	 * Start a Swing Timer that periodically drains queued points on the EDT and
-	 * reports how many points were applied per tick.
-	 * <p>
-	 * This is a convenience for streaming / DAQ-style applications that want
-	 * to monitor accumulation or stop after a threshold.
-	 * </p>
-	 *
-	 * @param periodMs  timer period in milliseconds (typical 10–50).
-	 *                  If {@code periodMs <= 0}, no timer is started.
-	 * @param maxPerTick maximum points to drain per timer tick
-	 *                   (prevents EDT starvation). Values <= 0 are treated as 1.
-	 * @param drainedCallback optional callback invoked on the EDT with the
-	 *                        number of points drained this tick.
-	 */
-	public void startPendingDrainTimer(int periodMs,
-	                                   int maxPerTick,
-	                                   IntConsumer drainedCallback) {
+
+	public void startPendingDrainTimer(int periodMs, int maxPerTick, IntConsumer drainedCallback) {
 
 		stopPendingDrainTimer();
 		if (periodMs <= 0) {
@@ -561,7 +488,6 @@ public class Curve extends ACurve {
 		pendingDrainTimer.start();
 	}
 
-	/** Stop the pending-drain Swing Timer if running. */
 	public void stopPendingDrainTimer() {
 		Timer t = pendingDrainTimer;
 		pendingDrainTimer = null;
@@ -570,12 +496,6 @@ public class Curve extends ACurve {
 		}
 	}
 
-	/**
-	 * Clear all queued (not-yet-applied) points.
-	 * <p>
-	 * This does not affect already-applied curve data; it only clears the staging queue.
-	 * </p>
-	 */
 	public void clearPending() {
 		pending.clear();
 		pendingCount.set(0);
@@ -585,12 +505,6 @@ public class Curve extends ACurve {
 	// Internal append helpers (no notifications)
 	// --------------------------------------------------------------------
 
-	/**
-	 * Append one point without firing any events.
-	 * <p>
-	 * Caller must hold {@link #lock}. This method only mutates data storage.
-	 * </p>
-	 */
 	private void appendNoNotify(double x, double y) {
 		xData.add(x);
 		yData.add(y);
@@ -599,14 +513,6 @@ public class Curve extends ACurve {
 		}
 	}
 
-	/**
-	 * Append one point with error without firing any events.
-	 * <p>
-	 * Caller must hold {@link #lock}. This method only mutates data storage.
-	 * </p>
-	 *
-	 * @throws IllegalStateException if this curve has no error column
-	 */
 	private void appendNoNotify(double x, double y, double ey) {
 		if (eData == null) {
 			throw new IllegalStateException("This curve has no error column (eData is null).");
@@ -616,12 +522,6 @@ public class Curve extends ACurve {
 		eData.add(ey);
 	}
 
-	/**
-	 * Immutable point record used for staging queue transport.
-	 * <p>
-	 * Instances are safe to share across threads.
-	 * </p>
-	 */
 	private static final class PendingPoint {
 		final double x;
 		final double y;

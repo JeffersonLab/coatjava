@@ -205,15 +205,28 @@ public class HistoData {
     }
     
     /**
-     * Add multiple samples efficiently.
+     * Add many values to the histogram.
+     * <p>
+     * This is a bulk variant of {@link #add(double)} that invalidates cached statistics once.
+     * Counts outside range are accumulated into under/over-flow counts.
+     * </p>
      *
-     * @param values array of samples
+     * @param values array of samples (non-null)
      */
     public void addAll(double[] values) {
-    	stats = null;
-    	for (double v : values) {
-    		add(v);
-    	}
+        Objects.requireNonNull(values, "values");
+        stats = null;
+
+        for (double v : values) {
+            int bin = getBin(v);
+            if (bin == UNDERFLOW) {
+                underCount++;
+            } else if (bin == OVERFLOW) {
+                overCount++;
+            } else {
+                counts[bin]++;
+            }
+        }
     }
 
 

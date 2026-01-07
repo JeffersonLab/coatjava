@@ -1,6 +1,9 @@
 package cnuphys.splot.style;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
+
+import cnuphys.splot.plot.GraphicsUtilities;
 
 public interface IStyled {
 
@@ -38,7 +41,7 @@ public interface IStyled {
 	 * @return the fit line color.
 	 */
 
-	public Color getFitLineColor();
+	public Color getLineColor();
 
 	/**
 	 * Get the color used for auxiliary lines.
@@ -53,7 +56,7 @@ public interface IStyled {
 	 * 
 	 * @param fitColor the fit color.
 	 */
-	public void setFitLineColor(Color fitColor);
+	public void setLineColor(Color fitColor);
 
 	/**
 	 * Set the color used for auxiliary lines.
@@ -67,7 +70,7 @@ public interface IStyled {
 	 * 
 	 * @return the line style for fits.
 	 */
-	public LineStyle getFitLineStyle();
+	public LineStyle getLineStyle();
 
 	/**
 	 * Get the style used for drawing fits.
@@ -81,7 +84,7 @@ public interface IStyled {
 	 * 
 	 * @param lineStyle the fit line style.
 	 */
-	public void setFitLineStyle(LineStyle lineStyle);
+	public void setLineStyle(LineStyle lineStyle);
 
 	/**
 	 * Set the style used for drawing auxiliary lines.
@@ -109,7 +112,7 @@ public interface IStyled {
 	 * 
 	 * @return the fit line width in pixels.
 	 */
-	public float getFitLineWidth();
+	public float getLineWidth();
 
 	/**
 	 * Get the line width for drawing auxiliary lines.
@@ -123,7 +126,7 @@ public interface IStyled {
 	 * 
 	 * @param lineWidth the line width in pixels.
 	 */
-	public void setFitLineWidth(float lineWidth);
+	public void setLineWidth(float lineWidth);
 
 	/**
 	 * Set the line width for drawing auxiliary lines.
@@ -146,4 +149,12 @@ public interface IStyled {
 	 */
 	public void setSymbolSize(int symbolSize);
 
+	/**
+	 * Get the stroke used for drawing fits.
+	 * 
+	 * @return the stroke used for drawing fits.
+	 */
+	public default BasicStroke getStroke() {
+		return (BasicStroke) GraphicsUtilities.getStroke(getLineWidth(), getLineStyle());
+	}
 }

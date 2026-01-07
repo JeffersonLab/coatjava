@@ -106,7 +106,7 @@ public class Scatter extends AExample {
 
 	@Override
 	protected String getPlotTitle() {
-		return "Scatter Plot (DAQ enqueue stress test)";
+		return "Scatter Plot (DAQ thread-safety stress test)";
 	}
 
 	@Override
@@ -118,7 +118,7 @@ public class Scatter extends AExample {
 	 * No-op by design.
 	 * <p>
 	 * This example simulates streaming acquisition rather than batch initialization.
-	 * Data arrives asynchronously via background producers calling {@link Curve#enqueue(double, double)}.
+	 * Data arrives asynchronously via background producer threads.
 	 * </p>
 	 */
 	@Override
@@ -139,8 +139,8 @@ public class Scatter extends AExample {
 		dc.getStyle().setSymbolSize(4);
 		dc.getStyle().setFillColor(fillColor);
 		dc.getStyle().setBorderColor(null);
-		dc.getStyle().setFitLineColor(Color.black);
-		dc.getStyle().setFitLineWidth(2.0f);
+		dc.getStyle().setLineColor(Color.black);
+		dc.getStyle().setLineWidth(2.0f);
 
 		PlotParameters params = canvas.getParameters();
 		params.mustIncludeXZero(true);
@@ -172,7 +172,7 @@ public class Scatter extends AExample {
 	 * Start the DAQ simulation:
 	 * <ul>
 	 *   <li>Start the curve's EDT drain timer.</li>
-	 *   <li>Start background producers that continuously {@code enqueue(x,y)}.</li>
+	 *   <li>Start background producers that continuously {@code add(x,y)}.</li>
 	 * </ul>
 	 */
 	private void startDaq() {
@@ -234,8 +234,8 @@ public class Scatter extends AExample {
 	/**
 	 * Background DAQ producer loop.
 	 * <p>
-	 * Generates random points and enqueues them. This intentionally creates contention on the
-	 * lock-free queue and stresses the enqueue path.
+	 * Generates random points and adds them. This intentionally creates contention on the
+	 * lock-free queue and stresses the thread safety.
 	 * </p>
 	 *
 	 * @param producerId producer identifier (debugging)
@@ -257,7 +257,7 @@ public class Scatter extends AExample {
 
 	        final Curve c = curve;
 	        if (c != null) {
-	            c.enqueue(x, y);
+	            c.add(x, y);
 	        }
 
 	        try {

@@ -210,7 +210,7 @@ public class StyleEditorPanel extends JPanel {
 				_symbolSelector.setSelectedItem(style.getSymbolType().getName());
 			}
 			if (_fitLineStyleSelector != null) {
-				_fitLineStyleSelector.setSelectedItem(style.getFitLineStyle().getName());
+				_fitLineStyleSelector.setSelectedItem(style.getLineStyle().getName());
 			}
 			if (_symbolColor != null) {
 				_symbolColor.setColor(style.getFillColor());
@@ -219,7 +219,7 @@ public class StyleEditorPanel extends JPanel {
 				_borderColor.setColor(style.getBorderColor());
 			}
 			if (_fitLineColor != null) {
-				_fitLineColor.setColor(style.getFitLineColor());
+				_fitLineColor.setColor(style.getLineColor());
 			}
 			if (_symbolSizeSelector != null) {
 				_symbolSizeSelector.setValue(style.getSymbolSize());

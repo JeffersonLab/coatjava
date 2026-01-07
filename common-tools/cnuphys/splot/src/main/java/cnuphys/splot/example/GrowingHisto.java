@@ -5,23 +5,23 @@ import java.awt.Color;
 import org.apache.commons.math3.distribution.NormalDistribution;
 
 import cnuphys.splot.fit.CurveDrawingMethod;
-import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.pdata.PlotDataException;
+import cnuphys.splot.plot.PlotCanvas;
 import cnuphys.splot.plot.PlotParameters;
+import cnuphys.splot.style.IStyled;
+import cnuphys.splot.pdata.HistoCurve;
 import cnuphys.splot.pdata.HistoData;
+import cnuphys.splot.pdata.PlotData;
 
+@SuppressWarnings("serial")
 public class GrowingHisto extends AExample {
 
 	@Override
-	protected DataSet createPlotData() throws PlotDataException {
+	protected PlotData createPlotData() throws PlotDataException {
 		HistoData h1 = new HistoData("Histo 1", 0.0, 100.0, 50);
-		return new DataSet(h1);
+		return new PlotData(h1);
 	}
 
-	@Override
-	protected String[] getColumnNames() {
-		return null;
-	}
 
 	@Override
 	protected String getXAxisLabel() {
@@ -35,59 +35,72 @@ public class GrowingHisto extends AExample {
 
 	@Override
 	protected String getPlotTitle() {
-		return "Sample 1D Histogram";
+		return "Growing Histogram Thread Test";
 	}
 
 	@Override
 	public void fillData() {
+		//no op, data added by background tread
 	}
 
 	@Override
 	public void setParameters() {
-		DataSet ds = canvas.getPlotData();
-		ds.getCurveStyle(0).setFillColor(new Color(196, 196, 196, 64));
-		ds.getCurveStyle(0).setFitLineColor(Color.black);
-		ds.getCurve(0).getFit().setFitType(CurveDrawingMethod.GAUSSIANS);
+	    HistoCurve hc = (HistoCurve) canvas.getPlotData().getCurve(0);
+	    IStyled style = hc.getStyle();
+		style.setFillColor(new Color(196, 196, 196, 64));
+		style.setBorderColor(Color.black);
+		
+		//basic example, not fitting
+		hc.setCurveMethod(CurveDrawingMethod.GAUSSIAN);
 		PlotParameters params = canvas.getParameters();
 		params.setMinExponentY(6);
 		params.setNumDecimalY(0);
 	}
+	
+	private static void addData(final PlotCanvas canvas, final long maxCount, final int increment, NormalDistribution normDev) {
+	    final HistoCurve hc = (HistoCurve) canvas.getPlotData().getCurve(0);
+	    
+	    final double[] x = new double[increment];
+
+		Runnable runner = new Runnable() {
+			@Override
+			public void run() {
+				int count = 0;
+				while (count < maxCount) {
+					count += increment;
+					for (int i = 0; i < increment; i++) {
+						x[i] = normDev.sample();
+					}
+					hc.addAll(x);
+					try {
+						Thread.sleep(100);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		};
+		
+		Thread sourceThread = new Thread(runner);
+		sourceThread.start();
+	    
+	}
 
 	public static void main(String arg[]) {
-		final GrowingHisto example = new GrowingHisto();
 
 		javax.swing.SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
+				GrowingHisto example = new GrowingHisto();
 				example.setVisible(true);
+				double mu = 50.0;
+				double sig = 10.0;
+			    NormalDistribution normDev = new NormalDistribution(mu, sig);
+				addData(example.getPlotCanvas(), 100000, 100, normDev);
 			}
 		});
 
-		System.err.println("Ready...");
 
-		int n = 10000;
-		double mu = 50.0;
-		double sig = 10.0;
-	    NormalDistribution normDev = new NormalDistribution(mu, sig);
-
-		final DataSet ds = example.getPlotCanvas().getPlotData();
-
-		while (true) {
-			try {
-				double y = normDev.sample();
-				try {
-					ds.add(y);
-					example.getPlotCanvas().needsRedraw(true);
-				}
-				catch (PlotDataException e) {
-					e.printStackTrace();
-				}
-				Thread.sleep(250);
-			}
-			catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
 
 	}
 }

@@ -27,8 +27,6 @@ public class ToolBarButton extends JButton {
 
 		setActionCommand(actionCommand);
 		ImageIcon imageIcon = ImageManager.getInstance().loadImageIcon(imageFileName);
-		setFocusPainted(true);
-		setBorderPainted(true);
 
 		String bareName = new String(imageFileName);
 		int index = bareName.indexOf(".");
@@ -36,9 +34,11 @@ public class ToolBarButton extends JButton {
 			bareName = bareName.substring(0, index);
 		}
 
+		setFocusPainted(false);
 		setToolTipText(toolTip);
 		setIcon(imageIcon);
 		setRolloverEnabled(true);
+		setBorderPainted(false);
 
 	}
 

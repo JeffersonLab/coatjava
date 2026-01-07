@@ -8,16 +8,18 @@ import java.awt.event.ItemListener;
 import java.util.Enumeration;
 
 import javax.swing.AbstractButton;
-import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
+import javax.swing.SwingConstants;
 import javax.swing.event.EventListenerList;
 
+import cnuphys.splot.pdata.PlotDataType;
 import cnuphys.splot.plot.Environment;
+import cnuphys.splot.plot.PlotCanvas;
 
-public class CommonToolBar extends JToolBar implements ActionListener, ItemListener {
+public class PlotToolBar extends JToolBar implements ActionListener, ItemListener {
 
 	// make all the toggle buttons mutually exclusive
 	private ButtonGroup _buttonGroup = new ButtonGroup();
@@ -28,9 +30,6 @@ public class CommonToolBar extends JToolBar implements ActionListener, ItemListe
 	// box zoom
 	private ToolBarToggleButton _boxZoomButton;
 
-	// recenter button
-	private ToolBarToggleButton _recenterButton;
-
 	// List of toolBar listeners
 	private EventListenerList _listenerList;
 
@@ -40,42 +39,48 @@ public class CommonToolBar extends JToolBar implements ActionListener, ItemListe
 	public static final String POINTER = "POINTER";
 	public static final String PRINT = "PRINT";
 	public static final String BOXZOOM = "BOXZOOM";
-	public static final String CENTER = "CENTER";
 	public static final String WORLD = "WORLD";
 	public static final String PNG = "PNG";
+	
+	
+	//plot data type
+	private PlotDataType type;
 
 	/**
-	 * Creates a new tool bar with a specified name and orientation. All other
-	 * constructors call this constructor.
+	 * Creates a new plot tool bar r.
 	 * 
 	 * @param orientation the initial orientation -- it must be either
 	 *                    <code>HORIZONTAL</code> or <code>VERTICAL</code>
 	 */
-	public CommonToolBar(int orientation) {
-		super("toolBar", orientation);
+	public PlotToolBar(PlotCanvas canvas) {
+		super("toolBar", SwingConstants.HORIZONTAL);
 		setFloatable(false);
 
-		Environment.getInstance().commonize(this, null);
-		setBorder(BorderFactory.createEtchedBorder());
+		this.type = canvas.getPlotData().getType();
 
 		_pointerButton = new ToolBarToggleButton("images/pointer.gif", "Make selections", POINTER, 3, 1,
 				"images/pointercursor.gif");
 		_pointerButton.setSelected(true);
 		add(_pointerButton);
+		
+		switch (type) {
+		case XYEXYE:
+		case XYXY:
+		case H1D:
+			_boxZoomButton = new ToolBarToggleButton("images/box_zoom.gif", "Zoom to area", BOXZOOM, 3, 1,
+					"images/box_zoomcursor.gif");
+			add(_boxZoomButton);
+			addHGap(8);
+			add(new ToolBarButton("images/world.gif", "Include all data", WORLD));
+			add(new ToolBarButton("images/zoom_in.gif", "Zoom in", ZOOMIN));
+			add(new ToolBarButton("images/zoom_out.gif", "Zoom out", ZOOMOUT));
+			break;
+		case STRIP:
+			break;
+		}
 
-		_boxZoomButton = new ToolBarToggleButton("images/box_zoom.gif", "Zoom to area", BOXZOOM, 3, 1,
-				"images/box_zoomcursor.gif");
-		add(_boxZoomButton);
-
-		_recenterButton = new ToolBarToggleButton("images/center.gif", "Recenter the plot", CENTER, -1, -1,
-				"images/centercursor.gif");
-
-		add(_recenterButton);
 
 		addHGap(8);
-		add(new ToolBarButton("images/zoom_in.gif", "Zoom in", ZOOMIN));
-		add(new ToolBarButton("images/zoom_out.gif", "Zoom out", ZOOMOUT));
-		add(new ToolBarButton("images/world.gif", "Include all data", WORLD));
 		add(new ToolBarButton("images/printer.gif", "Print the plot", PRINT));
 		add(new ToolBarButton("images/camera.gif", "Save as PNG", PNG));
 	}
@@ -89,9 +94,6 @@ public class CommonToolBar extends JToolBar implements ActionListener, ItemListe
 		}
 		else if (s.equals(BOXZOOM)) {
 			_boxZoomButton.setSelected(true);
-		}
-		else if (s.equals(CENTER)) {
-			_recenterButton.setSelected(true);
 		}
 		else {
 			_pointerButton.setSelected(true);

@@ -130,7 +130,7 @@ public class Styled implements IStyled {
 	}
 
 	@Override
-	public Color getFitLineColor() {
+	public Color getLineColor() {
 		if (_fitColor == null) {
 			return _borderColor;
 		}
@@ -138,12 +138,12 @@ public class Styled implements IStyled {
 	}
 
 	@Override
-	public LineStyle getFitLineStyle() {
+	public LineStyle getLineStyle() {
 		return _fitLineStyle;
 	}
 
 	@Override
-	public float getFitLineWidth() {
+	public float getLineWidth() {
 		return _fitLineWidth;
 	}
 
@@ -163,7 +163,7 @@ public class Styled implements IStyled {
 	}
 
 	@Override
-	public void setFitLineColor(Color fitColor) {
+	public void setLineColor(Color fitColor) {
 		_fitColor = fitColor;
 	}
 
@@ -173,7 +173,7 @@ public class Styled implements IStyled {
 	 * @param lineStyle the new line style
 	 */
 	@Override
-	public void setFitLineStyle(LineStyle lineStyle) {
+	public void setLineStyle(LineStyle lineStyle) {
 		_fitLineStyle = lineStyle;
 	}
 
@@ -183,7 +183,7 @@ public class Styled implements IStyled {
 	 * @param lineWidth the new line width
 	 */
 	@Override
-	public void setFitLineWidth(float lineWidth) {
+	public void setLineWidth(float lineWidth) {
 		_fitLineWidth = lineWidth;
 	}
 

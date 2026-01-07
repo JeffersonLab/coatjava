@@ -195,7 +195,7 @@ public class StripChartPanel extends JPanel {
 		_canvas.getPlotTicks().setNumMinorTickY(0);
 		
 		PlotData ds = _canvas.getPlotData();
-		ds.getCurve(0).getStyle().setFitLineColor(Color.red);
+		ds.getCurve(0).getStyle().setLineColor(Color.red);
 		ds.getCurve(0).getStyle().setFillColor(new Color(128, 0, 0, 48));
 		ds.getCurve(0).getStyle().setSymbolType(SymbolType.NOSYMBOL);
 		PlotParameters params = _canvas.getParameters();
