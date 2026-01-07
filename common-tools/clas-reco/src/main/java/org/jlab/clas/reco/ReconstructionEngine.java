@@ -434,7 +434,6 @@ public abstract class ReconstructionEngine implements Engine {
             try {
                 this.processDataEvent(dataevent);
                 ByteBuffer  bbo = dataevent.getEventBuffer();
-                //byte[] buffero = bbo.array();
                 output.setData(mt, bbo);
             } catch (Exception e) {
                 String msg = String.format("Error processing input event%n%n%s", ClaraUtil.reportException(e));
@@ -446,42 +445,6 @@ public abstract class ReconstructionEngine implements Engine {
         }
 
         return input;
-        /*
-        if (!mt.equalsIgnoreCase()) {
-            String msg = String.format("Wrong input type: %s", mt);
-            output.setStatus(EngineStatus.ERROR);
-            output.setDescription(msg);
-            return output;
-        }*/
-        /*
-        EvioDataEvent dataevent = null;
-
-        try {
-            ByteBuffer bb = (ByteBuffer) input.getData();
-            byte[] buffer = bb.array();
-            ByteOrder endianness = bb.order();
-            dataevent = new EvioDataEvent(buffer, endianness, EvioFactory.getDictionary());
-        } catch (Exception e) {
-            String msg = String.format("Error reading input event%n%n%s", ClaraUtil.reportException(e));
-            output.setStatus(EngineStatus.ERROR);
-            output.setDescription(msg);
-            return output;
-        }
-
-        try {
-            this.processDataEvent(dataevent);
-            ByteBuffer  bbo = dataevent.getEventBuffer();
-            //byte[] buffero = bbo.array();
-            output.setData(mt, bbo);
-        } catch (Exception e) {
-            String msg = String.format("Error processing input event%n%n%s", ClaraUtil.reportException(e));
-            output.setStatus(EngineStatus.ERROR);
-            output.setDescription(msg);
-            return output;
-        }
-
-        return output;
-        */
     }
 
     @Override
