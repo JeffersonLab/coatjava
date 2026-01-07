@@ -12,10 +12,44 @@ import org.jlab.coda.jevio.EvioNode;
 import org.jlab.detector.decode.DetectorDataDgtz.ADCData;
 import org.jlab.detector.decode.DetectorDataDgtz.TDCData;
 import org.jlab.io.evio.EvioDataEvent;
+import org.jlab.io.evio.EvioTreeBranch;
 import org.jlab.utils.data.DataUtils;
 
+/**
+ * All static methods from CodaEventDecoder.
+ * 
+ * @author baltzell
+ */
 public class CodaDecoders {
     
+    /**
+     * Returns an array of the branches in the event.
+     * @param event
+     * @return
+     */
+    public static List<EvioTreeBranch> getEventBranches(EvioDataEvent event){
+        ArrayList<EvioTreeBranch>  branches = new ArrayList<>();
+        try {
+            List<EvioNode> eventNodes = event.getStructureHandler().getNodes();
+            if (eventNodes==null) {
+                return branches;
+            }
+            for (EvioNode node : eventNodes){
+                EvioTreeBranch eBranch = new EvioTreeBranch(node.getTag(),node.getNum());
+                List<EvioNode>  childNodes = node.getChildNodes();
+                if (childNodes!=null){
+                    for (EvioNode child : childNodes){
+                        eBranch.addNode(child);
+                    }
+                    branches.add(eBranch);
+                }
+            }
+        } catch (EvioException ex) {
+            Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return branches;
+    }
+
     public static void printByteBuffer(ByteBuffer buffer, int max, int columns){
         int n = max;
         if(buffer.capacity()<max) n = buffer.capacity();

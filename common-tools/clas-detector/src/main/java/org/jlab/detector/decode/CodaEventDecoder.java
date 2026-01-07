@@ -4,11 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.TreeMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.jlab.coda.jevio.ByteDataTransformer;
 import org.jlab.coda.jevio.DataType;
-import org.jlab.coda.jevio.EvioException;
 import org.jlab.coda.jevio.EvioNode;
 import org.jlab.detector.decode.DetectorDataDgtz.HelicityDecoderData;
 import org.jlab.detector.decode.DetectorDataDgtz.SCALERData;
@@ -19,7 +16,6 @@ import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.evio.EvioSource;
 import org.jlab.io.evio.EvioTreeBranch;
 import org.jlab.utils.data.DataUtils;
-
 import org.jlab.jnp.utils.json.JsonObject;
 
 /**
@@ -53,7 +49,7 @@ public class CodaEventDecoder {
      */
     void cacheBranches(EvioDataEvent event) {
         branchMap = new TreeMap<>();
-        for (EvioTreeBranch branch : getEventBranches(event)) {
+        for (EvioTreeBranch branch : CodaDecoders.getEventBranches(event)) {
             if (!branchMap.containsKey(branch.getTag()))
                 branchMap.put(branch.getTag(), branch);
         }
@@ -97,34 +93,6 @@ public class CodaEventDecoder {
         this.getDataEntries_EPICS(event);
 
         return rawEntries;
-    }
-
-    public JsonObject getEpicsData(){
-        return this.epicsData;
-    }
-
-    public List<Integer> getTriggerWords(){
-        return this.triggerWords;
-    }
-
-    public int getRunNumber(){
-        return this.runNumber;
-    }
-
-    public int getEventNumber(){
-        return this.eventNumber;
-    }
-
-    public int getUnixTime(){
-        return this.unixTime;
-    }
-
-    public long getTimeStamp() {
-        return this.timeStamp;
-    }
-
-    public byte getHelicityLevel3() {
-        return this.helicityLevel3;
     }
 
     public void setTimeStamp(EvioDataEvent event) {
@@ -173,51 +141,6 @@ public class CodaEventDecoder {
             if(tiSync) ts = tiEntries.get(i0).getTimeStamp();
         }
         this.timeStamp = ts ;
-    }
-
-    public long getTriggerBits() {
-        return triggerBits;
-    }
-
-    public void setTriggerBits(long triggerBits) {
-        this.triggerBits = triggerBits;
-    }
-
-    public List<FADCData> getADCEntries(EvioDataEvent event){
-        List<FADCData>  entries = new ArrayList<>();
-        for(EvioTreeBranch branch : branchMap.values()){
-            List<FADCData>  list = this.getADCEntries(event,branch.getTag());
-            if(list != null){
-                entries.addAll(list);
-            }
-        }
-        return entries;
-    }
-
-    public List<FADCData> getADCEntries(EvioDataEvent event, int crate){
-        List<FADCData>  entries = new ArrayList<>();
-        EvioTreeBranch cbranch = branchMap.getOrDefault(crate, null);
-        if(cbranch == null ) return null;
-        for(EvioNode node : cbranch.getNodes()){
-            if(node.getTag()==57638){
-                return CodaDecoders.getDataEntries_57638(crate, node, event);
-            }
-        }
-        return entries;
-    }
-
-    public List<FADCData> getADCEntries(EvioDataEvent event, int crate, int tagid){
-        List<FADCData>  adc = new ArrayList<>();
-        EvioTreeBranch cbranch = branchMap.getOrDefault(crate, null);
-        if(cbranch == null ) return null;
-        for(EvioNode node : cbranch.getNodes()){
-           if(node.getTag()==tagid){
-                //  This is regular integrated pulse mode, used for FTOF
-                // FTCAL and EC/PCAL
-                return CodaDecoders.getADCEntries_Tag(crate, node, event,tagid);
-            }
-        }
-        return adc;
     }
 
     /**
@@ -276,34 +199,6 @@ public class CodaEventDecoder {
             }
         }
         return bankEntries;
-    }
-
-    /**
-     * Returns an array of the branches in the event.
-     * @param event
-     * @return
-     */
-    public List<EvioTreeBranch> getEventBranches(EvioDataEvent event){
-        ArrayList<EvioTreeBranch>  branches = new ArrayList<>();
-        try {
-            List<EvioNode>  eventNodes = event.getStructureHandler().getNodes();
-            if(eventNodes==null){
-                return branches;
-            }
-            for(EvioNode node : eventNodes){
-                EvioTreeBranch eBranch = new EvioTreeBranch(node.getTag(),node.getNum());
-                List<EvioNode>  childNodes = node.getChildNodes();
-                if(childNodes!=null){
-                    for(EvioNode child : childNodes){
-                        eBranch.addNode(child);
-                    }
-                    branches.add(eBranch);
-                }
-            }
-        } catch (EvioException ex) {
-            Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return branches;
     }
 
     public void readHeaderBank(Integer crate, EvioNode node, EvioDataEvent event){
@@ -518,50 +413,6 @@ public class CodaEventDecoder {
         return scalerEntries;
     }
 
-    public List<DetectorDataDgtz> getDataEntries_VTP(EvioDataEvent event){
-        List<DetectorDataDgtz> vtpEntries = new ArrayList<>();
-        for(int crate : branchMap.keySet()) {
-            for(EvioNode node : branchMap.get(crate).getNodes()){
-                if(node.getTag()==57634){
-                    int[] intData =  ByteDataTransformer.toIntArray(node.getStructureBuffer(true));
-                    for(int loop = 0; loop < intData.length; loop++){
-                        int  dataEntry = intData[loop];
-                        DetectorDataDgtz   entry = new DetectorDataDgtz(crate,0,0);
-                        entry.addVTP(new VTPData(dataEntry));
-                        vtpEntries.add(entry);
-                    }
-                }
-            }
-        }
-        return vtpEntries;
-    }
-    /**
-     * reads the TDC values from the bank with tag = 57607, decodes
-     * them and returns a list of digitized detector object.
-     * @param event
-     * @return
-     */
-    public List<DetectorDataDgtz>  getDataEntries_TDC(EvioDataEvent event){
-        List<DetectorDataDgtz> tdcEntries = new ArrayList<>();
-        for(int crate : branchMap.keySet()) {
-            for(EvioNode node : branchMap.get(crate).getNodes()){
-                if(node.getTag()==57607){
-                    int[] intData = ByteDataTransformer.toIntArray(node.getStructureBuffer(true));
-                    for(int loop = 2; loop < intData.length; loop++){
-                        int  dataEntry = intData[loop];
-                        int  slot      = DataUtils.getInteger(dataEntry, 27, 31 );
-                        int  chan      = DataUtils.getInteger(dataEntry, 19, 25);
-                        int  value     = DataUtils.getInteger(dataEntry,  0, 18);
-                        DetectorDataDgtz   entry = new DetectorDataDgtz(crate,slot,chan);
-                        entry.addTDC(new TDCData(value));
-                        tdcEntries.add(entry);
-                    }
-                }
-            }
-        }
-        return tdcEntries;
-    }
-
     /**
      * decoding bank that contains TI time stamp.
      * @param event
@@ -603,6 +454,124 @@ public class CodaEventDecoder {
         }
 
         return tiEntries;
+    }
+
+    public List<DetectorDataDgtz> getDataEntries_VTP(EvioDataEvent event){
+        List<DetectorDataDgtz> vtpEntries = new ArrayList<>();
+        for(int crate : branchMap.keySet()) {
+            for(EvioNode node : branchMap.get(crate).getNodes()){
+                if(node.getTag()==57634){
+                    int[] intData =  ByteDataTransformer.toIntArray(node.getStructureBuffer(true));
+                    for(int loop = 0; loop < intData.length; loop++){
+                        int  dataEntry = intData[loop];
+                        DetectorDataDgtz   entry = new DetectorDataDgtz(crate,0,0);
+                        entry.addVTP(new VTPData(dataEntry));
+                        vtpEntries.add(entry);
+                    }
+                }
+            }
+        }
+        return vtpEntries;
+    }
+
+    /**
+     * reads the TDC values from the bank with tag = 57607, decodes
+     * them and returns a list of digitized detector object.
+     * @param event
+     * @return
+     */
+    public List<DetectorDataDgtz>  getDataEntries_TDC(EvioDataEvent event){
+        List<DetectorDataDgtz> tdcEntries = new ArrayList<>();
+        for(int crate : branchMap.keySet()) {
+            for(EvioNode node : branchMap.get(crate).getNodes()){
+                if(node.getTag()==57607){
+                    int[] intData = ByteDataTransformer.toIntArray(node.getStructureBuffer(true));
+                    for(int loop = 2; loop < intData.length; loop++){
+                        int  dataEntry = intData[loop];
+                        int  slot      = DataUtils.getInteger(dataEntry, 27, 31 );
+                        int  chan      = DataUtils.getInteger(dataEntry, 19, 25);
+                        int  value     = DataUtils.getInteger(dataEntry,  0, 18);
+                        DetectorDataDgtz   entry = new DetectorDataDgtz(crate,slot,chan);
+                        entry.addTDC(new TDCData(value));
+                        tdcEntries.add(entry);
+                    }
+                }
+            }
+        }
+        return tdcEntries;
+    }
+
+    public List<FADCData> getADCEntries(EvioDataEvent event){
+        List<FADCData>  entries = new ArrayList<>();
+        for(EvioTreeBranch branch : branchMap.values()){
+            List<FADCData>  list = this.getADCEntries(event,branch.getTag());
+            if(list != null){
+                entries.addAll(list);
+            }
+        }
+        return entries;
+    }
+
+    public List<FADCData> getADCEntries(EvioDataEvent event, int crate){
+        List<FADCData>  entries = new ArrayList<>();
+        EvioTreeBranch cbranch = branchMap.getOrDefault(crate, null);
+        if(cbranch == null ) return null;
+        for(EvioNode node : cbranch.getNodes()){
+            if(node.getTag()==57638){
+                return CodaDecoders.getDataEntries_57638(crate, node, event);
+            }
+        }
+        return entries;
+    }
+
+    public List<FADCData> getADCEntries(EvioDataEvent event, int crate, int tagid){
+        List<FADCData>  adc = new ArrayList<>();
+        EvioTreeBranch cbranch = branchMap.getOrDefault(crate, null);
+        if(cbranch == null ) return null;
+        for(EvioNode node : cbranch.getNodes()){
+           if(node.getTag()==tagid){
+                //  This is regular integrated pulse mode, used for FTOF
+                // FTCAL and EC/PCAL
+                return CodaDecoders.getADCEntries_Tag(crate, node, event,tagid);
+            }
+        }
+        return adc;
+    }
+
+    public JsonObject getEpicsData(){
+        return this.epicsData;
+    }
+
+    public List<Integer> getTriggerWords(){
+        return this.triggerWords;
+    }
+
+    public int getRunNumber(){
+        return this.runNumber;
+    }
+
+    public int getEventNumber(){
+        return this.eventNumber;
+    }
+
+    public int getUnixTime(){
+        return this.unixTime;
+    }
+
+    public long getTimeStamp() {
+        return this.timeStamp;
+    }
+
+    public byte getHelicityLevel3() {
+        return this.helicityLevel3;
+    }
+
+    public long getTriggerBits() {
+        return triggerBits;
+    }
+
+    public void setTriggerBits(long triggerBits) {
+        this.triggerBits = triggerBits;
     }
 
     public static void main(String[] args){
