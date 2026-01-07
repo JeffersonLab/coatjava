@@ -184,11 +184,13 @@ public class DetectorEventDecoder {
             int channel  = data.getDescriptor().getChannel();
             long hash    = IndexedTable.DEFAULT_GENERATOR.hashCode(crate,slot,channel);
             long hash0   = IndexedTable.DEFAULT_GENERATOR.hashCode(0,0,0);
+            boolean ismm = keysMicromega.contains(data.getDescriptor().getType());
+
             for (int j=0; j<keysFitter.size(); ++j) {
                 IndexedTable daq = tables.get(j);
                 DetectorType type = keysFitter.get(j);
                 //custom MM fitter
-                if (data.getDescriptor().getType() == type && keysMicromega.contains(keysFitter.get(j))) {
+                if (ismm && data.getDescriptor().getType() == type) {
                     short adcOffset = (short) daq.getDoubleValueByHash("adc_offset", hash0);
                     double fineTimeStampResolution = (byte) daq.getDoubleValueByHash("dream_clock", hash0);
                     double samplingTime = (byte) daq.getDoubleValueByHash("sampling_time", hash0);
@@ -231,7 +233,6 @@ public class DetectorEventDecoder {
             }
         }
     }
-
 
     public void filterTDCs(List<DetectorDataDgtz>  detectorData){
         int maxMultiplicity = 1;
