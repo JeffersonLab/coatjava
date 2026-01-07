@@ -45,7 +45,6 @@ if [ $# -ge 1 ]; then
     export JYPATH=${JYPATH:+${JYPATH}:}$COATJAVA_CLASSPATH
   fi
 fi
-
 function split_cli {
     jvm_options=()
     class_options=()
@@ -56,5 +55,7 @@ function split_cli {
             *)  class_options+=($1) && shift ;;
         esac
     done
+    jvm_options+=(--enable-native-access=ALL-UNNAMED)
+    jvm_options+=(--sun-misc-unsafe-memory-access=allow)
 }
 
