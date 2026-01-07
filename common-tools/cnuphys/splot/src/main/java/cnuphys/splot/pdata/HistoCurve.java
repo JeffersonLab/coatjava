@@ -22,6 +22,10 @@ public class HistoCurve extends ACurve {
 
 	/** Backing histogram data. */
 	private final HistoData histoData;
+	
+	// thread safety
+	private final PendingQueue<Double> pending = new PendingQueue<>();
+
 
 	/**
 	 * Create a histogram-backed curve.
@@ -208,15 +212,59 @@ public class HistoCurve extends ACurve {
 	// ------------------------------------------------------------
 
 	/**
-	 * Fill the histogram with a single sample.
-	 *
-	 * @param x sample value
+	 * Add a value to the histogram. This method must be called from the EDT.
+	 * @param x the value to add
 	 */
 	public void add(double x) {
+		requireEdt("HistoCurve.add");
 		synchronized (lock) {
 			histoData.add(x);
+			markDataChanged();
 		}
-		markDataChanged();
+	}
+
+	/**
+	 * Add multiple values to the histogram. This method must be called from the EDT.
+	 * @param x the values to add
+	 */
+	public void addAll(double[] x) {
+		requireEdt("HistoCurve.addAll");
+		synchronized (lock) {
+			histoData.addAll(x);
+			markDataChanged();
+		}
+	}
+
+	/**
+	 * Enqueue a value to be added to the histogram later on the EDT.
+	 * This method should be used by background worker threads.
+	 * @param x the value to enqueue
+	 */
+	public void enqueue(double x) {
+		pending.enqueue(x);
+	}
+
+	/**
+	 * Enqueue multiple values to be added to the histogram later on the EDT.
+	 * This method should be used by background worker threads.
+	 * @param x the values to enqueue
+	 */
+	public void enqueueAll(double[] x) {
+		for (double v : x) {
+			pending.enqueue(v);
+		}
+	}
+
+	// EDT only
+	public int drainPendingOnEDT(int max) {
+		return pending.drainPendingOnEDT(max, batch -> {
+			synchronized (lock) {
+				for (double v : batch) {
+					histoData.add(v);
+				}
+				markDataChanged();
+			}
+		});
 	}
 
 	/**

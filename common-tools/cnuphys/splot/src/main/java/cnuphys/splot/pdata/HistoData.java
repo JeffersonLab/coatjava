@@ -203,6 +203,19 @@ public class HistoData {
             counts[bin]++;
         }
     }
+    
+    /**
+     * Add multiple samples efficiently.
+     *
+     * @param values array of samples
+     */
+    public void addAll(double[] values) {
+    	stats = null;
+    	for (double v : values) {
+    		add(v);
+    	}
+    }
+
 
     /**
      * Set a bin to a given count (value determines which bin).

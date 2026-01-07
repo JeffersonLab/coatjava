@@ -151,6 +151,9 @@ public class CurveDrawer {
 	private static void drawHistoCurve(Graphics g, PlotCanvas canvas, HistoCurve histoCurve) {
 
 		HistoData hd = histoCurve.getHistoData();
+		if (histoCurve.isDirty()) {
+			histoCurve.doFit(true);
+		}
 
 		Polygon poly = HistoData.GetPolygon(canvas, hd);
 		IStyled style = histoCurve.getStyle();

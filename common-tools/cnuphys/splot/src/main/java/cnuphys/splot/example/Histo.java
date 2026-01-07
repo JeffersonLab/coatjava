@@ -5,22 +5,19 @@ import java.awt.Color;
 import org.apache.commons.math3.distribution.NormalDistribution;
 
 import cnuphys.splot.fit.CurveDrawingMethod;
-import cnuphys.splot.pdata.DataSet;
 import cnuphys.splot.pdata.PlotDataException;
 import cnuphys.splot.plot.PlotParameters;
+import cnuphys.splot.style.IStyled;
+import cnuphys.splot.pdata.HistoCurve;
 import cnuphys.splot.pdata.HistoData;
+import cnuphys.splot.pdata.PlotData;
 
 public class Histo extends AExample {
 
 	@Override
-	protected DataSet createPlotData() throws PlotDataException {
+	protected PlotData createPlotData() throws PlotDataException {
 		HistoData h1 = new HistoData("Histo 1", 0.0, 100.0, 50);
-		return new DataSet(h1);
-	}
-
-	@Override
-	protected String[] getColumnNames() {
-		return null;
+		return new PlotData(h1);
 	}
 
 	@Override
@@ -45,36 +42,37 @@ public class Histo extends AExample {
 		double sig = 10.0;
 	    NormalDistribution normDev = new NormalDistribution(mu, sig);
 
-		DataSet ds = canvas.getPlotData();
+	    //since this is the EDT thread, we can use add directly. If
+	    //it was a background thread, we would use enqueue 
+	    HistoCurve hc = (HistoCurve) canvas.getPlotData().getCurve(0);
 		for (int i = 0; i < n; i++) {
-			double y = normDev.sample();
-			try {
-				ds.add(y);
-			}
-			catch (PlotDataException e) {
-				e.printStackTrace();
-			}
+			double val = normDev.sample();
+			hc.add(val);
 		}
 	}
 
 	@Override
 	public void setParameters() {
-		DataSet ds = canvas.getPlotData();
-		ds.getCurveStyle(0).setFillColor(new Color(196, 196, 196, 64));
-		ds.getCurveStyle(0).setBorderColor(Color.black);
-		ds.getCurve(0).getFit().setFitType(CurveDrawingMethod.GAUSSIANS);
+	    HistoCurve hc = (HistoCurve) canvas.getPlotData().getCurve(0);
+	    IStyled style = hc.getStyle();
+		style.setFillColor(new Color(196, 196, 196, 64));
+		style.setBorderColor(Color.black);
+		
+		//basic example, not fitting
+		hc.setCurveMethod(CurveDrawingMethod.NONE);
 		PlotParameters params = canvas.getParameters();
 		params.setMinExponentY(6);
 		params.setNumDecimalY(0);
 
 	}
 
+	// ---------------------------------------------------------------
 	public static void main(String arg[]) {
-		final Histo example = new Histo();
 
 		javax.swing.SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
+				Histo example = new Histo();
 				example.setVisible(true);
 			}
 		});
