@@ -225,6 +225,8 @@ public class DetectorEventDecoder {
                         }
                         data.getADCData(i).setADC(nsa, nsb);
                     }
+                    // first one wins:
+                    break;
                 }
             }
         }
