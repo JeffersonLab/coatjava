@@ -12,7 +12,6 @@ import ai.djl.inference.Predictor;
 import ai.djl.ndarray.NDArray;
 import ai.djl.ndarray.NDList;
 import ai.djl.ndarray.NDManager;
-import ai.djl.ndarray.types.Shape;
 import ai.djl.repository.zoo.Criteria;
 import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.repository.zoo.ZooModel;
@@ -22,8 +21,6 @@ import ai.djl.translate.Translator;
 import ai.djl.translate.TranslatorContext;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jlab.clas.reco.ReconstructionEngine;
@@ -57,27 +54,8 @@ public class DCClsComboEngine extends ReconstructionEngine {
     
     final static int SUPERLAYERS = 6;    
     
-    // -------- Predictor Pool --------
-    public static class PredictorPool {
-        final BlockingQueue<Predictor<float[][], float[]>> pool;
-        public PredictorPool(int size, ZooModel<float[][], float[]> model) {
-            pool = new ArrayBlockingQueue<>(size);
-            for (int i=0; i<size; i++) {
-                try {
-                    pool.add(model.newPredictor());
-                } catch (Exception e) {
-                    Logger.getLogger(PredictorPool.class.getName()).log(Level.WARNING, "Failed to create predictor", e);
-                }
-            }
-        }
-        public Predictor<float[][], float[]> take() throws InterruptedException { return pool.take(); }
-        public void put(Predictor<float[][], float[]> p) throws InterruptedException { if (p!=null) pool.put(p); }
-        public void shutdownAll() { for (Predictor p: pool) { try { p.close(); } catch (Exception ignored) {} } }
-    }
-    
     public DCClsComboEngine() {
         super("DCClsComboEngine","tongtong","1.0");
-        
     }
 
     @Override
