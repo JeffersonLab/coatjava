@@ -556,10 +556,124 @@ public abstract class ACurve {
 	 * @param operation operation name used in the exception message
 	 * @throws IllegalStateException if not on EDT
 	 */
-	protected final void requireEdt(String operation) {
+	protected static final void requireEdt(String operation) {
 		if (!SwingUtilities.isEventDispatchThread()) {
 			throw new IllegalStateException(operation + " must be called on the Swing EDT. "
 					+ "For background threads, use enqueue(...) + drainPendingOnEDT(...).");
 		}
 	}
+	
+	// ====================================================================
+	// Pending-queue infrastructure for background producers
+	// ====================================================================
+
+	/**
+	 * Generic pending-queue helper for curves that receive data from
+	 * background threads but must apply mutations on the Swing EDT.
+	 *
+	 * <p>
+	 * This class centralizes:
+	 * <ul>
+	 *   <li>Lock-free enqueueing</li>
+	 *   <li>Pending / lifetime counters</li>
+	 *   <li>EDT-enforced draining</li>
+	 *   <li>Optional Swing Timer-based draining</li>
+	 * </ul>
+	 *
+	 * <p>
+	 * Subclasses decide what the pending payload represents and how a
+	 * drained batch is applied.
+	 */
+	protected static final class PendingQueue<T> {
+
+		private final java.util.concurrent.ConcurrentLinkedQueue<T> queue =
+				new java.util.concurrent.ConcurrentLinkedQueue<>();
+
+		private final java.util.concurrent.atomic.AtomicLong pendingCount =
+				new java.util.concurrent.atomic.AtomicLong(0);
+
+		private final java.util.concurrent.atomic.AtomicLong totalEnqueued =
+				new java.util.concurrent.atomic.AtomicLong(0);
+
+		private javax.swing.Timer timer;
+
+		/** Enqueue from any thread (lock-free). */
+		public void enqueue(T item) {
+			queue.add(item);
+			pendingCount.incrementAndGet();
+			totalEnqueued.incrementAndGet();
+		}
+
+		/** @return approximate number of pending items */
+		public long getPendingCount() {
+			return pendingCount.get();
+		}
+
+		/** @return total number of items ever enqueued */
+		public long getTotalEnqueued() {
+			return totalEnqueued.get();
+		}
+
+		/**
+		 * Drain up to {@code max} items on the EDT and apply them.
+		 *
+		 * @param max maximum number of items to drain
+		 * @param applier called once with a non-empty batch
+		 * @return number of items drained
+		 */
+		public int drainPendingOnEDT(int max,
+				java.util.function.Consumer<java.util.List<T>> applier) {
+
+			requireEdt("drainPendingOnEDT");
+
+			if (max <= 0) {
+				return 0;
+			}
+
+			java.util.ArrayList<T> batch =
+					new java.util.ArrayList<>(Math.min(max, 256));
+
+			T item;
+			int drained = 0;
+
+			while (drained < max && (item = queue.poll()) != null) {
+				pendingCount.decrementAndGet();
+				batch.add(item);
+				drained++;
+			}
+
+			if (!batch.isEmpty()) {
+				applier.accept(batch);
+			}
+
+			return drained;
+		}
+
+		/**
+		 * Start a Swing timer that periodically drains the queue on the EDT.
+		 */
+		public void startDrainTimer(int periodMs,
+				int maxPerTick,
+				java.util.function.IntSupplier drainAction) {
+
+			if (periodMs <= 0) {
+				return;
+			}
+
+			stopDrainTimer();
+
+			timer = new javax.swing.Timer(periodMs, e -> drainAction.getAsInt());
+			timer.setCoalesce(true);
+			timer.start();
+		}
+
+		/** Stop any active drain timer. */
+		public void stopDrainTimer() {
+			if (timer != null) {
+				timer.stop();
+				timer = null;
+			}
+		}
+	}
+
 }

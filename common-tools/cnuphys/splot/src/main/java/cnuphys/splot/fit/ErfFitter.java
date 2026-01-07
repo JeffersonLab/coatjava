@@ -48,15 +48,18 @@ public final class ErfFitter extends ALeastSquaresFitter {
     /** Default minimum allowed sigma. */
     public static final double DEFAULT_MIN_SIGMA = 1e-12;
 
+	/**
+	 * Create an Erf fitter with default optimizer (Levenberg-Marquardt).
+	 */
+	public ErfFitter() {
+		this(new LevenbergMarquardtOptimizer());
+	}
 
-	 /**
-	  * Create an Erf fitter with default optimizer (Levenberg-Marquardt).
-	  */
-
-    public ErfFitter() {
-        this(new LevenbergMarquardtOptimizer());
-    }
-
+	/**
+	 * Create an Erf fitter with the given optimizer.
+	 *
+	 * @param optimizer the least-squares optimizer to use
+	 */
     public ErfFitter(LeastSquaresOptimizer optimizer) {
         super(Objects.requireNonNull(optimizer, "optimizer"), (x, y, w) -> InitialGuess.guess(x, y));
     }
@@ -126,7 +129,6 @@ public final class ErfFitter extends ALeastSquaresFitter {
             );
         }
 
-        
         
         final double[] p = fit.params.clone();
         return (double x) -> {
