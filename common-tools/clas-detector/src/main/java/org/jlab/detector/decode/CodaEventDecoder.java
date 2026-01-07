@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import org.jlab.coda.jevio.ByteDataTransformer;
 import org.jlab.coda.jevio.CompositeData;
 import org.jlab.coda.jevio.DataType;
@@ -211,7 +210,7 @@ public class CodaEventDecoder {
 
     public List<FADCData> getADCEntries(EvioDataEvent event, int crate){
         List<FADCData>  entries = new ArrayList<>();
-        EvioTreeBranch cbranch = this.getEventBranch(branchMap.values().stream().collect(Collectors.toList()), crate);
+        EvioTreeBranch cbranch = branchMap.getOrDefault(crate, null);
         if(cbranch == null ) return null;
         for(EvioNode node : cbranch.getNodes()){
             if(node.getTag()==57638){
@@ -223,7 +222,7 @@ public class CodaEventDecoder {
 
     public List<FADCData> getADCEntries(EvioDataEvent event, int crate, int tagid){
         List<FADCData>  adc = new ArrayList<>();
-        EvioTreeBranch cbranch = this.getEventBranch(branchMap.values().stream().collect(Collectors.toList()), crate);
+        EvioTreeBranch cbranch = branchMap.getOrDefault(crate, null);
         if(cbranch == null ) return null;
         for(EvioNode node : cbranch.getNodes()){
            if(node.getTag()==tagid){
@@ -243,7 +242,7 @@ public class CodaEventDecoder {
      */
     public List<DetectorDataDgtz> getDataEntries(EvioDataEvent event, int crate){
         List<DetectorDataDgtz>   bankEntries = new ArrayList<>();
-        EvioTreeBranch cbranch = this.getEventBranch(branchMap.values().stream().collect(Collectors.toList()), crate);
+        EvioTreeBranch cbranch = branchMap.getOrDefault(crate, null);
         if(cbranch == null ) return null;
         for (EvioNode node : cbranch.getNodes()) {
             if (node.getTag() == 57615) {
@@ -333,16 +332,6 @@ public class CodaEventDecoder {
             Logger.getLogger(CodaEventDecoder.class.getName()).log(Level.SEVERE, null, ex);
         }
         return branches;
-    }
-
-    /**
-     * returns branch with with given tag
-     * @param branches
-     * @param tag
-     * @return
-     */
-    public EvioTreeBranch  getEventBranch(List<EvioTreeBranch> branches, int tag){
-        return branchMap.getOrDefault(tag, null);
     }
 
     public void readHeaderBank(Integer crate, EvioNode node, EvioDataEvent event){
