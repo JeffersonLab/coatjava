@@ -79,16 +79,15 @@ public class CodaEventDecoder {
     }
 
     /**
-     * Load map by crate(?). 
+     * Load map by crate. 
      *
      * @param event 
      */
-    void cacheBranches(EvioDataEvent event) {
+    private void cacheBranches(EvioDataEvent event) {
         branchMap = new TreeMap<>();
-        for (EvioTreeBranch branch : CodaDecoders.getEventBranches(event)) {
+        for (EvioTreeBranch branch : CodaDecoders.getEventBranches(event))
             if (!branchMap.containsKey(branch.getTag()))
                 branchMap.put(branch.getTag(), branch);
-        }
     }
 
     /**
@@ -99,6 +98,8 @@ public class CodaEventDecoder {
      * @return
      */
     public List<DetectorDataDgtz> getDataEntries(EvioDataEvent event){
+
+        cacheBranches(event);
         
         //int event_size = event.getHandler().getStructure().getByteBuffer().array().length;
         // This had been inserted to accommodate large EVIO events that
