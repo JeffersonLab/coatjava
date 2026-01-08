@@ -558,18 +558,6 @@ public class CodaEventDecoder {
         return entries;
     }
 
-    private List<FADCData> getADCEntries(EvioDataEvent event, int crate, int tagid){
-        List<FADCData>  adc = new ArrayList<>();
-        EvioTreeBranch cbranch = branchMap.getOrDefault(crate, null);
-        if(cbranch == null ) return null;
-        for(EvioNode node : cbranch.getNodes()){
-           if(node.getTag()==tagid){
-                return CodaDecoders.getADCEntries_Tag(crate, node, event,tagid);
-            }
-        }
-        return adc;
-    }
-
     public static void main(String[] args){
         EvioSource reader = new EvioSource();
         reader.open("/Users/devita/clas_004013.evio.1000");
