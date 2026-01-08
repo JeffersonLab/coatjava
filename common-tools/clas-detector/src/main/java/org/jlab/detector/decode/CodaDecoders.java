@@ -758,6 +758,13 @@ public class CodaDecoders {
         return entries;
     }
 
+    /**
+     * FADC250, Mode-1, bitpacked
+     * @param crate
+     * @param node
+     * @param event
+     * @return 
+     */
     public static List<FADCData> getDataEntries_57638(Integer crate, EvioNode node, EvioDataEvent event){
         List<FADCData>  entries = new ArrayList<>();
         if(node.getTag()==57638){

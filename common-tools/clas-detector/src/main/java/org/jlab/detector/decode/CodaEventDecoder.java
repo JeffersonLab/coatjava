@@ -42,6 +42,42 @@ public class CodaEventDecoder {
 
     public CodaEventDecoder(){}
 
+    public JsonObject getEpicsData(){
+        return this.epicsData;
+    }
+
+    public List<Integer> getTriggerWords(){
+        return this.triggerWords;
+    }
+
+    public int getRunNumber(){
+        return this.runNumber;
+    }
+
+    public int getEventNumber(){
+        return this.eventNumber;
+    }
+
+    public int getUnixTime(){
+        return this.unixTime;
+    }
+
+    public long getTimeStamp() {
+        return this.timeStamp;
+    }
+
+    public byte getHelicityLevel3() {
+        return this.helicityLevel3;
+    }
+
+    public long getTriggerBits() {
+        return triggerBits;
+    }
+
+    public void setTriggerBits(long triggerBits) {
+        this.triggerBits = triggerBits;
+    }
+
     /**
      * Load map by crate(?). 
      *
@@ -95,61 +131,13 @@ public class CodaEventDecoder {
         return rawEntries;
     }
 
-    public void setTimeStamp(EvioDataEvent event) {
-
-        long ts = -1;
-
-        List<DetectorDataDgtz> tiEntries = this.getDataEntries_TI(event);
-                
-        if(tiEntries.size()==1) {
-            ts = tiEntries.get(0).getTimeStamp();
-        }
-        else if(tiEntries.size()>1) {
-            // check sychronization
-            boolean tiSync=true;
-            int  i0 = -1;
-            // set reference timestamp from first entry which is not the tiMaster nor PCIE:
-            for(int i=0; i<tiEntries.size(); i++) {
-                if(tiEntries.get(i).getDescriptor().getCrate() != this.tiMaster) {
-                    if (!PCIE_ROCS.contains(tiEntries.get(i).getDescriptor().getCrate())) {
-                        i0 = i;
-                        break;
-                    }
-                }   
-            }
-            for(int i=0; i<tiEntries.size(); i++) {
-                long deltaTS = 0;
-                long offsetT = 0;
-                // Allow/require 5-click offset for PCIE ROCs:
-                if( PCIE_ROCS.contains(tiEntries.get(i).getDescriptor().getCrate() )) offsetT = 5;
-                // Add 1-click tolerance for "TI master" (FIXME:  this should be an offset too(?)):
-                if(tiEntries.get(i).getDescriptor().getCrate()==this.tiMaster) deltaTS = deltaTS + 1;
-                if(Math.abs(tiEntries.get(i).getTimeStamp()-offsetT-tiEntries.get(i0).getTimeStamp())>deltaTS) {
-                    tiSync=false;
-                    if(this.timeStampErrors<100) {
-                        System.err.println("WARNING: mismatch in TI time stamps: crate " 
-                                        + tiEntries.get(i).getDescriptor().getCrate() + " reports " 
-                                        + tiEntries.get(i).getTimeStamp() + " instead of the " + tiEntries.get(i0).getTimeStamp()
-                                        + " from crate " + tiEntries.get(i0).getDescriptor().getCrate());
-                    }
-                    else if(this.timeStampErrors==100) {
-                        System.err.println("WARNING: reached the maximum number of timeStamp errors (100), supressing future warnings.");
-                    }
-                    this.timeStampErrors++;
-                }
-            }
-            if(tiSync) ts = tiEntries.get(i0).getTimeStamp();
-        }
-        this.timeStamp = ts ;
-    }
-
     /**
      * returns list of decoded data in the event for given crate.
      * @param event
      * @param crate
      * @return
      */
-    public List<DetectorDataDgtz> getDataEntries(EvioDataEvent event, int crate){
+    private List<DetectorDataDgtz> getDataEntries(EvioDataEvent event, int crate){
         List<DetectorDataDgtz>   bankEntries = new ArrayList<>();
         EvioTreeBranch cbranch = branchMap.getOrDefault(crate, null);
         if(cbranch == null ) return null;
@@ -201,7 +189,55 @@ public class CodaEventDecoder {
         return bankEntries;
     }
 
-    public void readHeaderBank(Integer crate, EvioNode node, EvioDataEvent event){
+    private void setTimeStamp(EvioDataEvent event) {
+
+        long ts = -1;
+
+        List<DetectorDataDgtz> tiEntries = this.getDataEntries_TI(event);
+                
+        if(tiEntries.size()==1) {
+            ts = tiEntries.get(0).getTimeStamp();
+        }
+        else if(tiEntries.size()>1) {
+            // check sychronization
+            boolean tiSync=true;
+            int  i0 = -1;
+            // set reference timestamp from first entry which is not the tiMaster nor PCIE:
+            for(int i=0; i<tiEntries.size(); i++) {
+                if(tiEntries.get(i).getDescriptor().getCrate() != this.tiMaster) {
+                    if (!PCIE_ROCS.contains(tiEntries.get(i).getDescriptor().getCrate())) {
+                        i0 = i;
+                        break;
+                    }
+                }   
+            }
+            for(int i=0; i<tiEntries.size(); i++) {
+                long deltaTS = 0;
+                long offsetT = 0;
+                // Allow/require 5-click offset for PCIE ROCs:
+                if( PCIE_ROCS.contains(tiEntries.get(i).getDescriptor().getCrate() )) offsetT = 5;
+                // Add 1-click tolerance for "TI master" (FIXME:  this should be an offset too(?)):
+                if(tiEntries.get(i).getDescriptor().getCrate()==this.tiMaster) deltaTS = deltaTS + 1;
+                if(Math.abs(tiEntries.get(i).getTimeStamp()-offsetT-tiEntries.get(i0).getTimeStamp())>deltaTS) {
+                    tiSync=false;
+                    if(this.timeStampErrors<100) {
+                        System.err.println("WARNING: mismatch in TI time stamps: crate " 
+                                        + tiEntries.get(i).getDescriptor().getCrate() + " reports " 
+                                        + tiEntries.get(i).getTimeStamp() + " instead of the " + tiEntries.get(i0).getTimeStamp()
+                                        + " from crate " + tiEntries.get(i0).getDescriptor().getCrate());
+                    }
+                    else if(this.timeStampErrors==100) {
+                        System.err.println("WARNING: reached the maximum number of timeStamp errors (100), supressing future warnings.");
+                    }
+                    this.timeStampErrors++;
+                }
+            }
+            if(tiSync) ts = tiEntries.get(i0).getTimeStamp();
+        }
+        this.timeStamp = ts ;
+    }
+
+    private void readHeaderBank(Integer crate, EvioNode node, EvioDataEvent event){
 
         if(node.getDataTypeObj()==DataType.INT32||node.getDataTypeObj()==DataType.UINT32){
             try {
@@ -230,7 +266,7 @@ public class CodaEventDecoder {
         }
     }
 
-    public void getDataEntries_EPICS(EvioDataEvent event){
+    private void getDataEntries_EPICS(EvioDataEvent event){
         epicsData = new JsonObject();
         for(EvioTreeBranch branch : branchMap.values()){
             for(EvioNode node : branch.getNodes()){
@@ -335,7 +371,7 @@ public class CodaEventDecoder {
         return data;
     }
 
-    public List<DetectorDataDgtz> getDataEntries_Scalers(EvioDataEvent event){
+    private List<DetectorDataDgtz> getDataEntries_Scalers(EvioDataEvent event){
 
         List<DetectorDataDgtz> scalerEntries = new ArrayList<>();
         for(int crate : branchMap.keySet()) {
@@ -418,7 +454,7 @@ public class CodaEventDecoder {
      * @param event
      * @return
      */
-    public List<DetectorDataDgtz>  getDataEntries_TI(EvioDataEvent event){
+    private List<DetectorDataDgtz>  getDataEntries_TI(EvioDataEvent event){
 
         List<DetectorDataDgtz> tiEntries = new ArrayList<>();
         for(int crate : branchMap.keySet()) {
@@ -456,7 +492,7 @@ public class CodaEventDecoder {
         return tiEntries;
     }
 
-    public List<DetectorDataDgtz> getDataEntries_VTP(EvioDataEvent event){
+    private List<DetectorDataDgtz> getDataEntries_VTP(EvioDataEvent event){
         List<DetectorDataDgtz> vtpEntries = new ArrayList<>();
         for(int crate : branchMap.keySet()) {
             for(EvioNode node : branchMap.get(crate).getNodes()){
@@ -480,7 +516,7 @@ public class CodaEventDecoder {
      * @param event
      * @return
      */
-    public List<DetectorDataDgtz>  getDataEntries_TDC(EvioDataEvent event){
+    private List<DetectorDataDgtz>  getDataEntries_TDC(EvioDataEvent event){
         List<DetectorDataDgtz> tdcEntries = new ArrayList<>();
         for(int crate : branchMap.keySet()) {
             for(EvioNode node : branchMap.get(crate).getNodes()){
@@ -505,14 +541,12 @@ public class CodaEventDecoder {
         List<FADCData>  entries = new ArrayList<>();
         for(EvioTreeBranch branch : branchMap.values()){
             List<FADCData>  list = this.getADCEntries(event,branch.getTag());
-            if(list != null){
-                entries.addAll(list);
-            }
+            if (list != null) entries.addAll(list);
         }
         return entries;
     }
 
-    public List<FADCData> getADCEntries(EvioDataEvent event, int crate){
+    private List<FADCData> getADCEntries(EvioDataEvent event, int crate){
         List<FADCData>  entries = new ArrayList<>();
         EvioTreeBranch cbranch = branchMap.getOrDefault(crate, null);
         if(cbranch == null ) return null;
@@ -524,54 +558,16 @@ public class CodaEventDecoder {
         return entries;
     }
 
-    public List<FADCData> getADCEntries(EvioDataEvent event, int crate, int tagid){
+    private List<FADCData> getADCEntries(EvioDataEvent event, int crate, int tagid){
         List<FADCData>  adc = new ArrayList<>();
         EvioTreeBranch cbranch = branchMap.getOrDefault(crate, null);
         if(cbranch == null ) return null;
         for(EvioNode node : cbranch.getNodes()){
            if(node.getTag()==tagid){
-                //  This is regular integrated pulse mode, used for FTOF
-                // FTCAL and EC/PCAL
                 return CodaDecoders.getADCEntries_Tag(crate, node, event,tagid);
             }
         }
         return adc;
-    }
-
-    public JsonObject getEpicsData(){
-        return this.epicsData;
-    }
-
-    public List<Integer> getTriggerWords(){
-        return this.triggerWords;
-    }
-
-    public int getRunNumber(){
-        return this.runNumber;
-    }
-
-    public int getEventNumber(){
-        return this.eventNumber;
-    }
-
-    public int getUnixTime(){
-        return this.unixTime;
-    }
-
-    public long getTimeStamp() {
-        return this.timeStamp;
-    }
-
-    public byte getHelicityLevel3() {
-        return this.helicityLevel3;
-    }
-
-    public long getTriggerBits() {
-        return triggerBits;
-    }
-
-    public void setTriggerBits(long triggerBits) {
-        this.triggerBits = triggerBits;
     }
 
     public static void main(String[] args){
