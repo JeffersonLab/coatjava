@@ -46,6 +46,8 @@ public class ALERTEngine extends ReconstructionEngine {
      */
     private RecoBankWriter rbc;
 
+    Detector ATOF; // ALERT ATOF detector
+
     /**
      *  Current run number being processed.
      *  TODO: why atomic here and nowhere else? 
@@ -81,6 +83,10 @@ public class ALERTEngine extends ReconstructionEngine {
         rbc = new RecoBankWriter();
 
         modelTrackMatching = new ModelTrackMatching();
+
+        AlertTOFFactory factory = new AlertTOFFactory();
+        DatabaseConstantProvider cp = new DatabaseConstantProvider(11, "default");
+        ATOF = factory.createDetectorCLAS(cp);
 
         if(this.getEngineConfigString("Mode")!=null) {
             //if (Objects.equals(this.getEngineConfigString("Mode"), Mode.AI_Track_Finding.name()))
@@ -160,11 +166,9 @@ public class ALERTEngine extends ReconstructionEngine {
                     interClusters.add(new Pair<>(x, y));
                 }
             }
+            if (interClusters.size() != 5) continue;
 
             try {
-                AlertTOFFactory factory = new AlertTOFFactory();
-                DatabaseConstantProvider cp = new DatabaseConstantProvider(11, "default");
-                Detector ATOF = factory.createDetectorCLAS(cp);
 
                 float[] pred = modelTrackMatching.prediction(interClusters);
                 int sector_pred = (int) pred[0];
