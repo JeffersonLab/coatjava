@@ -202,7 +202,7 @@ public class DetectorEventDecoder {
                     adc.setIntegral((int) (mvtFitter.integral));
                     adc.setTimeStamp(mvtFitter.timestamp);
                     // first one wins:
-                    //break;
+                    break;
                 }
                 else if(daq.hasEntryByHash(hash)==true){
                     int nsa = daq.getIntValueByHash("nsa", hash);
@@ -230,7 +230,7 @@ public class DetectorEventDecoder {
                         data.getADCData(i).setADC(nsa, nsb);
                     }
                     // first one wins:
-                    //break;
+                    break;
                 }
             }
         }
