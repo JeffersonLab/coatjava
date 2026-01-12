@@ -135,9 +135,5 @@ public class AdaptiveSwim extends ASwim {
         return null;
     }
 
-    @Override
-    public double[] SwimToDCA(SwimTrajectory trk2) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
 
 }

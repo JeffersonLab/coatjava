@@ -11,18 +11,17 @@ import org.jlab.geom.prim.Vector3D;
 public abstract class ASwim extends SwimPars implements ISwim {
 
     @Override
-    public double[] SwimToPlaneTiltSecSys(int sector, double z_cm) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
+    public double[] SwimToPlaneBoundary(double d_cm, Vector3D n) {
+        // Normalize the normal - should already be done, but just in case
+        Vector3D nhat = n.asUnit();
 
-    @Override
-    public double[] SwimToPlaneTiltSecSysBdlXZPlane(int sector, double z_cm) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public double[] SwimToPlaneBoundary(double d_cm, Vector3D n, int dir) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        // Point on the plane at distance d_cm from origin
+        Point3D p = new Point3D(
+            nhat.x() * d_cm,
+            nhat.y() * d_cm,
+            nhat.z() * d_cm
+        );
+        return SwimPlane(nhat, p, accuracy);
     }
 
     @Override
@@ -32,6 +31,11 @@ public abstract class ASwim extends SwimPars implements ISwim {
 
     @Override
     public double[] SwimToCylinder(double radius) {
+        return SwimGenCylinder(new Point3D(0,0,-1), new Point3D(0,0,1), radius, accuracy);
+    }
+    
+    @Override
+    public double[] SwimRho(double radius, double accuracy) {
         return SwimGenCylinder(new Point3D(0,0,-1), new Point3D(0,0,1), radius, accuracy);
     }
 

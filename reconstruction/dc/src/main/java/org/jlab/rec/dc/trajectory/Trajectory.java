@@ -218,19 +218,19 @@ public class Trajectory extends ArrayList<Cross> {
 
             // swim backward from HTCC to Target
             if(surface.getDetectorType() == DetectorType.TARGET) {
-                int   dir = -1;
+                //int   dir = -1;
                 float b[] = new float[3];
                 dcSwim.BfieldLab(v.x(), v.y(), v.z(), b);
                 dcSwim.SetSwimParameters(last.getPoint().x(),     last.getPoint().y(),     last.getPoint().z(), 
                                         -last.getMomentum().x(), -last.getMomentum().y(), -last.getMomentum().z(), 
                                         -q);
-                double[] tPars = dcSwim.SwimToPlaneBoundary(surface.getD(), surface.getNormal(), dir);
+                double[] tPars = dcSwim.SwimToPlaneBoundary(surface.getD(), surface.getNormal());
                 if(tPars==null || surface.distanceFromPlane(tPars[0], tPars[1], tPars[2])>TOLERANCE) return;
                 this.addTrajectoryPoint(tPars[0], tPars[1], tPars[2], -tPars[3], -tPars[4], -tPars[5], last.getPath()-tPars[6], last.getiBdl()-tPars[7], surface);
             }
             // swim forward from vertex to FMT and from HTCC to FD planes
             else {
-                int dir = 1;
+                //int dir = 1;
                 double path = 0;
                 double bdl  = 0;
                 if(surface.getDetectorType() == DetectorType.FMT) {
@@ -242,7 +242,7 @@ public class Trajectory extends ArrayList<Cross> {
                     path = htccPars[6];
                     bdl  = htccPars[7];
                 }
-                double[] tPars = dcSwim.SwimToPlaneBoundary(surface.getD(), surface.getNormal(), dir);
+                double[] tPars = dcSwim.SwimToPlaneBoundary(surface.getD(), surface.getNormal());
                 if(tPars==null) return;
                 double MAXDIST = -99;
                 if(surface.getDetectorType() == DetectorType.RICH) MAXDIST = -1;
