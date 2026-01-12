@@ -526,7 +526,7 @@ public class TrackCandListFinder {
         double theta_n = ((double) (sector - 1)) * Math.toRadians(60.);
         double x_n = Math.cos(theta_n);
         double y_n = Math.sin(theta_n);
-        double[] Vt = dcSwim.SwimToPlaneBoundary(0, new Vector3D(x_n, y_n, 0), -1);
+        double[] Vt = dcSwim.SwimToPlaneBoundary(0, new Vector3D(x_n, y_n, 0));
 
         if (Vt == null) {
             return;
@@ -672,7 +672,7 @@ public class TrackCandListFinder {
         //double x_n = Math.cos(theta_n);
         //double y_n = Math.sin(theta_n);
         //double d = x_n*xB + y_n*yB; 
-        //Vt = dcSwim.SwimToPlaneBoundary(d, new Vector3D(x_n, y_n, 0), -1); 
+        //Vt = dcSwim.SwimToPlaneBoundary(d, new Vector3D(x_n, y_n, 0)); 
         //if(Vt==null)
         //    return;
         double xOrFix = Vt[0];
