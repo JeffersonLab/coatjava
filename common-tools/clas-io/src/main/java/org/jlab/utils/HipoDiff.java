@@ -54,53 +54,6 @@ public class HipoDiff {
     static ArrayList<SortedBank> banksB = new ArrayList<>();
     static HashMap<String, HashMap<String, Integer>> badEntries = new HashMap<>();
 
-    public static void main(String args[]) {
-
-        OptionParser op = new OptionParser("hipo-diff");
-        op.addOption("-t", "0.00001", "absolute tolerance for comparisons");
-        op.addOption("-n", "-1", "number of events");
-        op.addOption("-q", null, "quiet mode");
-        op.addOption("-Q", null, "verbose mode");
-        op.addOption("-b", null, "name of bank to diff");
-        op.addOption("-s", null, "sort on column index");
-        op.setRequiresInputList(true);
-        op.parse(args);
-        if (op.getInputList().size() != 2) {
-            System.out.println(op.getUsageString());
-            System.out.println("ERROR:  Exactly 2 input files are required.");
-            System.exit(1);
-        }
-
-        if (op.getOption("-s").stringValue() != null) {
-            String[] stmp = op.getOption("-s").stringValue().split(",");
-            sortIndex = new int[stmp.length];
-            for (int i = 0; i < stmp.length; i++) sortIndex[i] = Integer.parseInt(stmp[i]);
-        }
-        verboseMode = op.getOption("-Q").stringValue() != null;
-        quietMode = op.getOption("-q").stringValue() != null;
-        nmax = op.getOption("-n").intValue();
-        tolerance = op.getOption("-t").doubleValue();
-
-        HipoReader readerA = new HipoReader();
-        HipoReader readerB = new HipoReader();
-        readerA.open(op.getInputList().get(0));
-        readerB.open(op.getInputList().get(1));
-        SchemaFactory sf = readerA.getSchemaFactory();
-        runConfigBank = new Bank(sf.getSchema("RUN::config"));
-
-        if (op.getOption("-b").stringValue() == null) {
-            for (Schema s : sf.getSchemaList()) {
-                banksA.add(new SortedBank(s));
-                banksB.add(new SortedBank(s));
-            }
-        } else {
-            banksA.add(new SortedBank(sf.getSchema(op.getOption("-b").stringValue())));
-            banksB.add(new SortedBank(sf.getSchema(op.getOption("-b").stringValue())));
-        }
-
-        compare(readerA, readerB);
-    }
-
     public static void compare(HipoReader a, HipoReader b) {
         Event eventA = new Event();
         Event eventB = new Event();
@@ -208,4 +161,52 @@ public class HipoDiff {
             }
         }
     }
+
+    public static void main(String args[]) {
+
+        OptionParser op = new OptionParser("hipo-diff");
+        op.addOption("-t", "0.00001", "absolute tolerance for comparisons");
+        op.addOption("-n", "-1", "number of events");
+        op.addOption("-q", null, "quiet mode");
+        op.addOption("-Q", null, "verbose mode");
+        op.addOption("-b", null, "name of bank to diff");
+        op.addOption("-s", null, "sort on column index");
+        op.setRequiresInputList(true);
+        op.parse(args);
+        if (op.getInputList().size() != 2) {
+            System.out.println(op.getUsageString());
+            System.out.println("ERROR:  Exactly 2 input files are required.");
+            System.exit(1);
+        }
+
+        if (op.getOption("-s").stringValue() != null) {
+            String[] stmp = op.getOption("-s").stringValue().split(",");
+            sortIndex = new int[stmp.length];
+            for (int i = 0; i < stmp.length; i++) sortIndex[i] = Integer.parseInt(stmp[i]);
+        }
+        verboseMode = op.getOption("-Q").stringValue() != null;
+        quietMode = op.getOption("-q").stringValue() != null;
+        nmax = op.getOption("-n").intValue();
+        tolerance = op.getOption("-t").doubleValue();
+
+        HipoReader readerA = new HipoReader();
+        HipoReader readerB = new HipoReader();
+        readerA.open(op.getInputList().get(0));
+        readerB.open(op.getInputList().get(1));
+        SchemaFactory sf = readerA.getSchemaFactory();
+        runConfigBank = new Bank(sf.getSchema("RUN::config"));
+
+        if (op.getOption("-b").stringValue() == null) {
+            for (Schema s : sf.getSchemaList()) {
+                banksA.add(new SortedBank(s));
+                banksB.add(new SortedBank(s));
+            }
+        } else {
+            banksA.add(new SortedBank(sf.getSchema(op.getOption("-b").stringValue())));
+            banksB.add(new SortedBank(sf.getSchema(op.getOption("-b").stringValue())));
+        }
+
+        compare(readerA, readerB);
+    }
+
 }
