@@ -11,6 +11,7 @@ import org.apache.commons.math3.linear.RealVector;
 import org.jlab.clas.pdg.PDGDatabase;
 import org.jlab.clas.pdg.PDGParticle;
 import org.jlab.clas.tracking.kalmanfilter.Material;
+import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.Track.Track;
@@ -32,6 +33,7 @@ public class KalmanFilter {
 
 	private final int Niter = 40; // number of iterations for the Kalman Filter
 	private boolean IsVtxDefined = false; // implemented but not used yet
+	private double[] vertex_resolutions = {0.09, 1e10}; //  {error in r squared in mm^2, error in z squared in mm^2}
 
 	private void propagation(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {
 
@@ -44,6 +46,30 @@ public class KalmanFilter {
 			final double      tesla             = 0.001;
 			final double[]    B                 = {0.0, 0.0, magfield / 10 * tesla};
 			HashMap<String, Material> materialHashMap = MaterialMap.generateMaterials();
+			// Recover the vertex of the electron
+			if (event.hasBank("REC::Particle")) {
+				DataBank recBank = event.getBank("REC::Particle");
+				int row = 0;
+				while ((!IsVtxDefined) && row < recBank.rows()) {
+					if (recBank.getInt("pid", row) == 11) {
+						IsVtxDefined = true;
+						vz_constraint = recBank.getFloat("vz",row);
+						////////////////////////////////////////
+						/// compute electron resolution here
+						/// it depends en p and theta
+						/// the fine tuning will be done later
+						/// ////////////////////////////////////
+						//double px = recBank.getFloat("px",row);
+						//double py = recBank.getFloat("py",row);
+						//double pz = recBank.getFloat("pz",row);
+						//double p = Math.sqrt(px*px+py*py+pz*pz);
+						//double theta = Math.acos(pz/p);
+						vertex_resolutions[0] = 0.09;
+						vertex_resolutions[1] = 6400;//4 + 1e10*theta + 1e10*p;
+					}
+					row++;
+				}
+			}
 					
             // Loop over tracks
 			int trackId = 0;
@@ -53,7 +79,7 @@ public class KalmanFilter {
 			    // Initialize state vector
 			    double x0  = 0.0;
 			    double y0  = 0.0;
-			    double z0  = track.get_Z0();
+			    double z0  = IsVtxDefined ? vz_constraint : track.get_Z0();
 			    double px0 = track.get_px();
 			    double py0 = track.get_py();
 			    double pz0 = track.get_pz();
@@ -76,7 +102,7 @@ public class KalmanFilter {
 			    RealVector initialStateEstimate   = new ArrayRealVector(stepper.y);
 			    RealMatrix initialErrorCovariance = MatrixUtils.createRealMatrix(new double[][]{{50.0, 0.0, 0.0, 0.0, 0.0, 0.0}, {0.0, 50.0, 0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 900.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 100.00, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0, 100.00, 0.0}, {0.0, 0.0, 0.0, 0.0, 0.0, 900.0}});
 				KFitter TrackFitter = new KFitter(initialStateEstimate, initialErrorCovariance, stepper, propagator, materialHashMap);
-			    TrackFitter.setVertexDefined(IsVtxDefined);
+				if (IsVtxDefined) TrackFitter.setVertexResolution(vertex_resolutions);
 		 	    
 				// Loop over number of iterations
 			    for (int k = 0; k < Niter; k++) {
