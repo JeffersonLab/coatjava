@@ -11,6 +11,39 @@ import org.jlab.utils.options.OptionParser;
 
 public class HipoDiff {
 
+    /**
+     * Bank sortable by any integer columns.
+     */
+    static class SortedBank extends Bank {
+        SortedBank(Schema s) { super(s); }
+        /**
+         * @param index the bank column indices to sort on
+         * @return the sorted row indices
+         */
+        int[] getSorted(int... index) {
+            int[] rows = new int[getRows()];
+            for (int row = 0; row < rows.length; row++) rows[row] = row;
+            // bubble sort:
+            for (int i = 0; i < rows.length - 1; i++) {
+                for (int j = 0; j < rows.length - i - 1; j++) {
+                    for (int idx : index) {
+                        if (idx >= this.getSchema().getElements()) break;
+                        int x1 = getInt(idx, rows[j]);
+                        int x2 = getInt(idx, rows[j + 1]);
+                        if (x1 > x2) {
+                            int tmp = rows[j];
+                            rows[j] = rows[j + 1];
+                            rows[j + 1] = tmp;
+                            break;
+                        }
+                        else if (x1 < x2) break;
+                    }
+                }
+            }
+            return rows;
+        }
+    }
+
     static int nrow = 0;
     static int nevent = -1;
     static int nentry = 0;
@@ -179,39 +212,6 @@ public class HipoDiff {
             if (mismatch) {
                 nbadrow++;
             }
-        }
-    }
-
-    /**
-     * Bank sortable by any integer columns.
-     */
-    static class SortedBank extends Bank {
-        SortedBank(Schema s) { super(s); }
-        /**
-         * @param index the bank column indices to sort on
-         * @return the sorted row indices
-         */
-        int[] getSorted(int... index) {
-            int[] rows = new int[getRows()];
-            for (int row = 0; row < rows.length; row++) rows[row] = row;
-            // bubble sort:
-            for (int i = 0; i < rows.length - 1; i++) {
-                for (int j = 0; j < rows.length - i - 1; j++) {
-                    for (int idx : index) {
-                        if (idx >= this.getSchema().getElements()) break;
-                        int x1 = getInt(idx, rows[j]);
-                        int x2 = getInt(idx, rows[j + 1]);
-                        if (x1 > x2) {
-                            int tmp = rows[j];
-                            rows[j] = rows[j + 1];
-                            rows[j + 1] = tmp;
-                            break;
-                        }
-                        else if (x1 < x2) break;
-                    }
-                }
-            }
-            return rows;
         }
     }
 }
