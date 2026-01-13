@@ -29,6 +29,7 @@ public class HipoDiff {
             for (int i = 0; i < rows.length - 1; i++) {
                 for (int j = 0; j < rows.length - i - 1; j++) {
                     for (int idx : index) {
+                        if (idx >= this.getSchema().getElements()) break;
                         int x1 = getInt(idx, rows[j]);
                         int x2 = getInt(idx, rows[j + 1]);
                         if (x1 > x2) {
