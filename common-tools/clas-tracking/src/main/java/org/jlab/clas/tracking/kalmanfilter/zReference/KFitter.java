@@ -31,7 +31,7 @@ public class KFitter extends AKFitter {
     
     private static final double initialCMBlowupFactor = 70;
     
-    public StateVecs sv = new StateVecs();
+    private StateVecs sv = new StateVecs();
     private MeasVecs mv = new MeasVecs();
     private StateVec finalSmoothedStateVec = null;
     private StateVec finalTransportedStateVec = null;
@@ -45,7 +45,7 @@ public class KFitter extends AKFitter {
     private double chi2kf = 0;
     private double KFScale = 4;
 
-    public int svzLength;
+    private int svzLength;
 
     public int ConvStatus = 1;
 
@@ -60,7 +60,7 @@ public class KFitter extends AKFitter {
     Matrix result = new Matrix();
     Matrix result_inv = new Matrix();
     Matrix adj = new Matrix();
-
+    
     public KFitter(boolean filter, int iterations, int dir, Swim swim, double Z[], Libr mo) {
         super(filter, iterations, dir, swim, mo);
         this.Z = Z;
@@ -1156,6 +1156,14 @@ public class KFitter extends AKFitter {
     
     public double getNDFDAF(){
         return ndfDAF;
+    }
+        
+    public void setSvzLength(int svzlength){
+        this.svzLength = svzlength;
+    }
+    
+    public int getSvzLength(){
+        return svzLength;
     }
 
     public void printlnMeasVecs() {

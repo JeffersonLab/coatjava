@@ -266,9 +266,9 @@ public class TrackCandListFinder {
 		
                 org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec finalSV = svs.new StateVec(initSV);
                 rk.SwimToZ(sector, finalSV, dcSwim, measSurfaces.get(measSurfaces.size()-1).wireLine[0].end().z(), new float[3]);
-                kFZRef.sv.transported(true).put(measSurfaces.size()-1, finalSV);
+                kFZRef.getStateVecs().transported(true).put(measSurfaces.size()-1, finalSV);
                 
-                kFZRef.svzLength = measSurfaces.size();
+                kFZRef.setSvzLength(measSurfaces.size());
                 kFZRef.calcFinalChisq(sector, true);
                                 
                 StateVec stateVec = new StateVec(finalSV.x,
