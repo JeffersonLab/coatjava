@@ -53,7 +53,7 @@ public class KalmanFilter {
 				while ((!IsVtxDefined) && row < recBank.rows()) {
 					if (recBank.getInt("pid", row) == 11) {
 						IsVtxDefined = true;
-						vz_constraint = recBank.getFloat("vz",row);
+						vz_constraint = 10*recBank.getFloat("vz",row); // mm
 						////////////////////////////////////////
 						/// compute electron resolution here
 						/// it depends en p and theta
