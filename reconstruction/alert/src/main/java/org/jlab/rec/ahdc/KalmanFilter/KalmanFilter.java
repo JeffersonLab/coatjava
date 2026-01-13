@@ -34,7 +34,8 @@ public class KalmanFilter {
 	private final int Niter = 40; // number of iterations for the Kalman Filter
 	private boolean IsVtxDefined = false; // implemented but not used yet
 	private double[] vertex_resolutions = {0.09, 1e10}; //  {error in r squared in mm^2, error in z squared in mm^2}
-	private double clas_alignement = 60; // mm,  CLAS and AHDc don't necessary have the same alignement (ZERO), estimation fro real and run 22712 // this parameter may be subject to calibration
+	// mm,  CLAS and AHDC don't necessary have the same alignement (ZERO), this parameter may be subject to calibration
+	private double clas_alignement = 0;
 
 	private void propagation(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {
 
