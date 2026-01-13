@@ -35,6 +35,8 @@ public class DetectorEventDecoder {
     private ExtendedFADCFitter extendedFitter = new ExtendedFADCFitter();
     private MVTFitter mvtFitter = new MVTFitter();
 
+    private TranslationTable translator = new TranslationTable();
+
     public DetectorEventDecoder(boolean development){
         if(development==true){
             this.initDecoderDev();
@@ -56,6 +58,11 @@ public class DetectorEventDecoder {
     }
 
     public void setRunNumber(int run){
+        if (run != this.runNumber) {
+            translator = new TranslationTable();
+            for (int i=0; i<keysTrans.size(); i++)
+                translator.add(keysTrans.get(i), translationManager.getConstants(run, tablesTrans.get(i)));
+        }
         this.runNumber = run;
     }
 
@@ -143,44 +150,21 @@ public class DetectorEventDecoder {
      */
     public void translate(List<DetectorDataDgtz>  detectorData){
 
-        // Preload CCDB tables:
-        ArrayList<IndexedTable> tables = new ArrayList<>();
-        for (String name : tablesTrans) {
-            tables.add(translationManager.getConstants(runNumber, name));
-        }
+        for (DetectorDataDgtz d : detectorData) {
 
-        for (DetectorDataDgtz data : detectorData) {
+            // Get the hardware indexing for this detector data object:
+            long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(d.getDescriptor().getCrate(),
+                d.getDescriptor().getSlot(), d.getDescriptor().getChannel());
 
-            // Get the hardware indexing for this detector hit:
-            int crate    = data.getDescriptor().getCrate();
-            int slot     = data.getDescriptor().getSlot();
-            int channel  = data.getDescriptor().getChannel();
-            long hash    = IndexedTable.DEFAULT_GENERATOR.hashCode(crate,slot,channel);
-            
-            // Try to find it in the translation tables:
-            for (int j=0; j<tablesTrans.size(); ++j) {
+            if (translator.hasEntryByHash(hash)) {
 
-                IndexedTable t = tables.get(j);
+                // The tanslated detector indexing:
+                List<Integer> x = translator.getIntegersByHash(hash);
 
-                // Found it; now set the detector indexing for this hit:
-                if (t.hasEntryByHash(hash)) {
-
-                    int sector    = t.getIntValueByHash(0, hash);
-                    int layer     = t.getIntValueByHash(1, hash);
-                    int component = t.getIntValueByHash(2, hash);
-                    int order     = t.getIntValueByHash(3, hash);
-
-                    data.getDescriptor().setSectorLayerComponent(sector, layer, component);
-                    data.getDescriptor().setOrder(order);
-                    data.getDescriptor().setType(keysTrans.get(j));
-
-                    for(int i = 0; i < data.getADCSize(); i++) data.getADCData(i).setOrder(order);
-                    for(int i = 0; i < data.getTDCSize(); i++) data.getTDCData(i).setOrder(order);
-
-                    // Assume there's only one instance of this crate/slot/channel
-                    // in all translation tables, and we found it, so stop:
-                    break;
-                }
+                // Set the translated detector indexing:
+                d.getDescriptor().setSectorLayerComponentOrderType(x.get(0),x.get(1),x.get(2),x.get(3),x.get(4));
+                for (int i=0; i<d.getADCSize(); i++) d.getADCData(i).setOrder(x.get(3));
+                for (int i=0; i<d.getTDCSize(); i++) d.getTDCData(i).setOrder(x.get(3));
             }
         }
     }
