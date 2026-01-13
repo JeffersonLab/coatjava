@@ -34,6 +34,7 @@ public class KalmanFilter {
 	private final int Niter = 40; // number of iterations for the Kalman Filter
 	private boolean IsVtxDefined = false; // implemented but not used yet
 	private double[] vertex_resolutions = {0.09, 1e10}; //  {error in r squared in mm^2, error in z squared in mm^2}
+	private double clas_alignement = 60; // mm,  CLAS and AHDc don't necessary have the same alignement (ZERO), estimation fro real and run 22712 // this parameter may be subject to calibration
 
 	private void propagation(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {
 
@@ -53,7 +54,7 @@ public class KalmanFilter {
 				while ((!IsVtxDefined) && row < recBank.rows()) {
 					if (recBank.getInt("pid", row) == 11) {
 						IsVtxDefined = true;
-						vz_constraint = 10*recBank.getFloat("vz",row); // mm
+						vz_constraint = 10*recBank.getFloat("vz",row) - clas_alignement; // mm
 						////////////////////////////////////////
 						/// compute electron resolution here
 						/// it depends en p and theta
