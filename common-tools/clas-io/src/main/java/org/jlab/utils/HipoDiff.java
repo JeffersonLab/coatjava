@@ -12,11 +12,20 @@ import org.jlab.utils.options.OptionParser;
 
 public class HipoDiff {
 
+    /**
+     * Bank sortable by any integer columns.
+     * 
+     */
     static class SortedBank extends Bank {
         SortedBank(Schema s) { super(s); }
+        /**
+         * @param index the bank column indices to sort on
+         * @return the sorted row indices
+         */
         int[] getSorted(int... index) {
             int[] rows = new int[getRows()];
             for (int row = 0; row < rows.length; row++) rows[row] = row;
+            // bubble sort:
             for (int i = 0; i < rows.length - 1; i++) {
                 for (int j = 0; j < rows.length - i - 1; j++) {
                     for (int idx : index) {
