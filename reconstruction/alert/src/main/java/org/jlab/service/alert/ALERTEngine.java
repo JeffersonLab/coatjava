@@ -187,11 +187,11 @@ public class ALERTEngine extends ReconstructionEngine {
                 int matchHitId = -1;
 
                 for (int k = 0; k < bank_ATOFHits.rows(); k++) {
-                    int component = bank.getInt("component", k);
+                    int component = bank_ATOFHits.getInt("component", k);
                     if (component == 10) continue;
 
-                    int sector = bank.getInt("sector", k);
-                    int layer = bank.getInt("layer", k);
+                    int sector = bank_ATOFHits.getInt("sector", k);
+                    int layer = bank_ATOFHits.getInt("layer", k);
 
                     ATOFHit hit = new ATOFHit(sector, layer, component, 0, 0, 0, 0, ATOF);
 
@@ -216,6 +216,7 @@ public class ALERTEngine extends ReconstructionEngine {
 
             
         }
+        rbc.appendTrackMatchingAIBank(event, matched_ATOF_hit_id);
         return true;
     }
 
