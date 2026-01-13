@@ -30,7 +30,6 @@ public class HipoDiff {
     static HashMap<String, HashMap<String, Integer>> badEntries = new HashMap<>();
 
     public static void main(String args[]) {
-
         OptionParser op = new OptionParser("hipo-diff");
         op.addOption("-t", "0.00001", "absolute tolerance for comparisons");
         op.addOption("-n", "-1", "number of events");
@@ -45,7 +44,6 @@ public class HipoDiff {
             System.out.println("ERROR:  Exactly 2 input files are required.");
             System.exit(1);
         }
-
         if (op.getOption("-s").stringValue() != null) {
             String[] stmp = op.getOption("-s").stringValue().split(",");
             sortIndex = new int[stmp.length];
@@ -216,5 +214,4 @@ public class HipoDiff {
             return rows;
         }
     }
-
 }
