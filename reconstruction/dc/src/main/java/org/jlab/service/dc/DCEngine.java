@@ -14,6 +14,7 @@ import org.jlab.rec.urwell.reader.URWellReader;
 import org.jlab.clas.tracking.kalmanfilter.zReference.KFitter;
 import org.jlab.clas.tracking.kalmanfilter.zReference.KFitterWithURWell;
 import org.jlab.clas.tracking.kalmanfilter.zReference.DAFilter;
+import org.jlab.rec.ai.dcHBTrackState.HBTrackStateEstimator;
 
 public class DCEngine extends ReconstructionEngine {
 
@@ -43,6 +44,9 @@ public class DCEngine extends ReconstructionEngine {
     private String   dafAnnealingFactorsTB = null;
     private String   dafAnnealingFactorsTBWithURWell = null;
     private String pickedURWellRegions = "R1R2";
+    
+    protected String hbTSEModelFileInbending = "transformer_32d_4h_3l_inbending.pt"; // AI model file for HB track state estimator for inbending runs  
+    protected String hbTSEModelFileOutbending = "transformer_32d_4h_3l_outbending.pt"; // AI model file for HB track state estimator for outbending runs  
     
     public static final Logger LOGGER = Logger.getLogger(ReconstructionEngine.class.getName());
 
@@ -146,8 +150,16 @@ public class DCEngine extends ReconstructionEngine {
         if(this.getEngineConfigString("pickedURWellRegions")!=null){ 
             pickedURWellRegions=this.getEngineConfigString("pickedURWellRegions");
             URWellReader.setPickedURWellRegions(pickedURWellRegions);    
+        }        
+                    
+        if (getEngineConfigString("hbTSEModelFileInbending") != null){
+            hbTSEModelFileInbending = getEngineConfigString("hbTSEModelFileInbending");
         }
         
+        if (getEngineConfigString("hbTSEModelFileOutbending") != null){
+            hbTSEModelFileOutbending = getEngineConfigString("hbTSEModelFileOutbending");
+        }
+               
         // Set geometry shifts for alignment code
         if(this.getEngineConfigString("alignmentShifts")!=null) {
             String[] alignmentShift = this.getEngineConfigString("alignmentShifts").split(",");
