@@ -12,6 +12,7 @@ import org.jlab.rec.dc.Constants;
 import org.jlab.rec.dc.banks.Banks;
 import org.jlab.clas.tracking.kalmanfilter.zReference.KFitter;
 import org.jlab.clas.tracking.kalmanfilter.zReference.DAFilter;
+import org.jlab.rec.ai.dcHBTrackState.HBTrackStateEstimator;
 
 public class DCEngine extends ReconstructionEngine {
 
@@ -38,6 +39,9 @@ public class DCEngine extends ReconstructionEngine {
     protected boolean  useDAF         = true;
     private String   dafChi2Cut     = null;
     private String   dafAnnealingFactorsTB = null;
+    
+    protected String hbTSEModelFileInbending = "transformer_32d_4h_3l_inbending.pt"; // AI model file for HB track state estimator for inbending runs  
+    protected String hbTSEModelFileOutbending = "transformer_32d_4h_3l_outbending.pt"; // AI model file for HB track state estimator for outbending runs  
     
     public static final Logger LOGGER = Logger.getLogger(ReconstructionEngine.class.getName());
 
@@ -126,6 +130,14 @@ public class DCEngine extends ReconstructionEngine {
         if(this.getEngineConfigString("dafAnnealingFactorsTB")!=null){ 
             dafAnnealingFactorsTB=this.getEngineConfigString("dafAnnealingFactorsTB");
             KFitter.setDafAnnealingFactorsTB(dafAnnealingFactorsTB);
+        }
+                    
+        if (getEngineConfigString("hbTSEModelFileInbending") != null){
+            hbTSEModelFileInbending = getEngineConfigString("hbTSEModelFileInbending");
+        }
+        
+        if (getEngineConfigString("hbTSEModelFileOutbending") != null){
+            hbTSEModelFileOutbending = getEngineConfigString("hbTSEModelFileOutbending");
         }
                
         // Set geometry shifts for alignment code
