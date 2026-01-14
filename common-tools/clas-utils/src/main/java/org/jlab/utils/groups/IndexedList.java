@@ -327,10 +327,22 @@ public class IndexedList<T> {
         }
 
         /**
+         * Retrieves an array of the requested indices.
+         * 
+         * @param indices
+         * @return 
+         */
+        public int[] getIndices(long hashcode, int... indices) {
+            int[] ret = new int[indices.length];
+            for (int i=0; i<ret.length; i++)
+                ret[i] = getIndex(hashcode, i);
+            return ret;
+        }
+
+        /**
          * Returns a formatted string representing all indices in the hash key.
          *
          * @param hashcode the encoded long key
-         * @param length the number of indices to extract
          * @return a string representation of the indices
          */
         public String getString(long hashcode) {
