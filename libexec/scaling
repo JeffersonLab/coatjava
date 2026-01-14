@@ -38,11 +38,11 @@ def benchmark(cfg, threads):
     exiting,benchmarks = False,collections.OrderedDict()
     cmd = ['run-clara',
             '-c',cfg.c,
-            '-n',str(cfg.e*threads),
+            '-n',str(cfg.e*int(threads)),
             '-t',str(threads),
             '-y',cfg.y,
             '-o',f'tmp-scaling-{threads}',
-            cfg.input]
+            cfg.i]
     for line in run(cmd):
         cols = line.split()
         print(line)

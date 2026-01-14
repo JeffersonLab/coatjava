@@ -1,5 +1,5 @@
 
-set terminal qt size 1000,700
+set terminal svg size 1000,700
 
 set multiplot layout 2,2
 set datafile columnheaders
