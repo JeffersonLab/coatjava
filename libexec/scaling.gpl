@@ -36,15 +36,15 @@ set size 0.6,1.0
 set origin 0.4,0.0
 set title 'Engines'
 set key outside right vertical
-#if (exists("uberMode")) {
-#    plot datafile \
-#           using 1:($7)  pt 7 with points title columnhead(7) ,\
-#        '' using 1:($8)  pt 7 with points title columnhead(8) ,\
-#        '' using 1:($9)  pt 7 with points title columnhead(9) ,\
-#        '' using 1:($10) pt 7 with points title columnhead(10) ,\
-#        '' using 1:($11) pt 7 with points title columnhead(11) ,\
-#        '' using 1:($12) pt 7 with points title columnhead(12) ,\
-#} else {
+if (exists("uberMode")) {
+    plot datafile \
+           using 1:($7)  pt 7 with points title columnhead(7) ,\
+        '' using 1:($8)  pt 7 with points title columnhead(8) ,\
+        '' using 1:($9)  pt 7 with points title columnhead(9) ,\
+        '' using 1:($10) pt 7 with points title columnhead(10) ,\
+        '' using 1:($11) pt 7 with points title columnhead(11) ,\
+        '' using 1:($12) pt 7 with points title columnhead(12) ,\
+} else {
     plot datafile \
            using 1:($6)  pt 7 with points title columnhead(6) ,\
         '' using 1:($7)  pt 7 with points title columnhead(7) ,\
@@ -74,14 +74,12 @@ set key outside right vertical
         '' using 1:($31) pt 6 with points title columnhead(31) ,\
         '' using 1:($32) pt 6 with points title columnhead(32) ,\
         '' using 1:($33) pt 6 with points title columnhead(33)
-#}
+}
 
 set title 'Throughput'
 set ylabel 'Rate [Hz]'
 set size 0.4,0.5
 set origin 0,0
-#set size 0.7,0.5
-#set origin 0.12,0
 unset key
 f(x) = m*x
 fit [0:24] f(x) datafile using 1:(1/$2*1e3) via m
