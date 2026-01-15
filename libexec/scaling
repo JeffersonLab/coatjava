@@ -82,7 +82,7 @@ def table(benchmarks):
     for b in benchmarks:
         threads,benchmark = b[0],b[1]
         row = [threads]
-        for k in ['Event','Avg','Total','Orch','Services']:
+        for k in ['Avg','Total','Orch','Services']:
             if k in benchmark:
                 if k == 'Services':
                     row.extend(benchmark[k].values())
