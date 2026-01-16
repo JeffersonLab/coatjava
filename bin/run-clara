@@ -54,7 +54,7 @@ inputs=$@
 # Configure JVM memory settings (overridedable via $JAVA_OPTS):
 gb_init=$((threads))
 gb_max=$((threads+2))
-[ $threads -gt 1 ] && ! [ -z ${large+x} ] gb_max=$((threads*2))
+[ $threads -gt 1 ] && ! [ -z ${large+x} ] && gb_max=$((threads*2))
 java_opts="-Xms${gb_init}g -Xmx${gb_max}g"
 
 # Check configuration:
