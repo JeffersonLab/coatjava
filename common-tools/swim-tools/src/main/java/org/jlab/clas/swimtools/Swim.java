@@ -200,7 +200,7 @@ public class Swim extends ASwim {
     // Geometry-based stoppers
     // ------------------------------------------------------------------------
 
-    @Override
+//    @Override
     public double[] SwimToCylinder(double radius) {
         if (SwimUnPhys) return null;
         return swimWithStopper(new CylindricalBoundarySwimStopper(radius));

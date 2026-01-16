@@ -29,10 +29,10 @@ public abstract class ASwim extends SwimPars implements ISwim {
         return SwimPlane(new Vector3D(0,0,1), new Point3D(0,0,z_cm), accuracy);
     }
 
-    @Override
-    public double[] SwimToCylinder(double radius) {
-        return SwimGenCylinder(new Point3D(0,0,-1), new Point3D(0,0,1), radius, accuracy);
-    }
+    //@Override
+    //public double[] SwimToCylinder(double radius) {
+    //    return SwimGenCylinder(new Point3D(0,0,-1), new Point3D(0,0,1), radius, accuracy);
+    //}
     
     @Override
     public double[] SwimRho(double radius, double accuracy) {

@@ -12,7 +12,7 @@ interface ISwim {
 
     public double[] SwimToPlaneLab(double z_cm);
 
-    public double[] SwimToCylinder(double Rad);
+    //public double[] SwimToCylinder(double Rad);
 
     public double[] SwimRho(double radius, double accuracy);
 

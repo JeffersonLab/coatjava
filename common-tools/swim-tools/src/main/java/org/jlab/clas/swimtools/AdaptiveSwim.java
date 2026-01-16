@@ -15,8 +15,6 @@ import cnuphys.adaptiveSwim.AdaptiveSwimResult;
 import cnuphys.adaptiveSwim.AdaptiveSwimmer;
 import cnuphys.adaptiveSwim.geometry.Plane;
 
-import cnuphys.swim.SwimTrajectory;
-
 public class AdaptiveSwim extends ASwim {
 
     private static double[] convert(AdaptiveSwimResult result, double p) {
