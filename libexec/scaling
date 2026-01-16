@@ -32,14 +32,18 @@ def run(cmd):
         pass
 
 def benchmark(cfg, threads):
-    import sys,shutil,collections
-    if not shutil.which('run-clara'):
-        sys.exit('run-clara is not in $PATH')
+    import os,sys,shutil,collections
+    run_clara = shutil.which('run-clara')
+    if not run_clara:
+        run_clara = cfg.c + '/plugins/clas12/bin/run-clara'
+        if not os.path.exists(run_clara):
+            sys.exit('run-clara is not in $PATH')
     exiting,benchmarks = False,collections.OrderedDict()
-    cmd = ['run-clara',
+    cmd = [run_clara,
             '-c',cfg.c,
             '-n',str(cfg.e*int(threads)),
             '-t',str(threads),
+            '-l',
             '-y',cfg.y,
             '-o',f'tmp-scaling-{threads}',
             cfg.i]
@@ -75,7 +79,7 @@ def table(benchmarks):
     table = []
     header = [ 'Threads' ]
     b = benchmarks[0][1]
-    header.extend([x for x in b if x != 'Services'])
+    header.extend([x for x in b if x != 'Services' and x != 'Event'])
     if 'Services' in b:
         header.extend(b['Services'].keys())
     table.append(header)
