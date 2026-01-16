@@ -52,7 +52,10 @@ public class DCHBTrackingAI extends DCEngine {
         hbTSEstimatorInbending = new HBTrackStateEstimator(hbTSEModelFileInbending);
         hbTSEstimatorOutbending = new HBTrackStateEstimator(hbTSEModelFileOutbending);         
     }
-    
+ 
+    @Override
+    public void detectorChanged(int run) {}
+
     @Override
     public void setDropBanks() {
         super.registerOutputBank(this.getBanks().getHitsBank());
@@ -64,7 +67,7 @@ public class DCHBTrackingAI extends DCEngine {
     }
     
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         
         int run = this.getRun(event);
         if(run==0) {
