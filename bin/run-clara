@@ -55,6 +55,7 @@ inputs=$@
 gb_init=$((threads))
 gb_max=$((threads+2))
 [ $threads -gt 1 ] && ! [ -z ${large+x} ] && gb_max=$((threads*2))
+>>>>>>> ce5e07f62 (adjust run-clara memory calculation)
 java_opts="-Xms${gb_init}g -Xmx${gb_max}g"
 
 # Check configuration:
