@@ -1,3 +1,4 @@
+set terminal svg size 1000,700
 
 # parse command line arguments:
 datafile = 'scaling.txt'
@@ -12,44 +13,52 @@ if (ARGC > 0) {
     }
 }
 
-set terminal svg size 1000,700
-
 set multiplot layout 2,2
 set datafile columnheaders
-set title font 'sans,14'
-set key box
-set xlabel 'Threads'
-set ylabel 'Event Time [ms]'
 set yrange [0:]
 
-set key outside top center horizontal
-set size 0.4,0.5
-set origin 0.0,0.5
+set xlabel 'Threads'
+set ylabel 'Rate [Hz]'
+set size 0.4,0.45
+set origin 0.0,0.55
+unset key
+f(x) = m*x
+
+fit [0:24] f(x) datafile using 1:(1/$2*1e3) via m
+plot datafile using 1:(1/$2*1e3) pt 7, f(x)
+
+set xlabel 'Threads'
+set ylabel 'Event Time [ms]'
+set key box outside top center horizontal
+set size 0.4,0.55
+set origin 0.0,0.0
+
 plot datafile \
-           using 1:((column($#)))   pt 7 with points title 'Total' ,\
+           using 1:((column($#)))   pt 7 with points title 'Total'  ,\
+        '' using 1:(($5*$1))        pt 7 with points title 'N-Readers'  ,\
         '' using 1:($5)             pt 9 with points title 'Reader' ,\
         '' using 1:((column($#-1))) pt 9 with points title 'Writer' ,\
-        '' using 1:(($5*$1))        pt 7 with points title 'IOver'
-        #'' using 1:(($2*$1))        pt 7 with points title columnhead(2)
 
+#set logscale y
 set size 0.6,1.0
 set origin 0.4,0.0
-set title 'Engines'
 set key outside right vertical
+
 if (exists("uberMode")) {
     plot datafile \
-           using 1:($7)  pt 7 with points title columnhead(7) ,\
-        '' using 1:($8)  pt 7 with points title columnhead(8) ,\
-        '' using 1:($9)  pt 7 with points title columnhead(9) ,\
+           using 1:($6)  pt 7 with points title columnhead(7)  ,\
+        '' using 1:($7)  pt 7 with points title columnhead(7)  ,\
+        '' using 1:($8)  pt 7 with points title columnhead(8)  ,\
+        '' using 1:($9)  pt 7 with points title columnhead(9)  ,\
         '' using 1:($10) pt 7 with points title columnhead(10) ,\
         '' using 1:($11) pt 7 with points title columnhead(11) ,\
         '' using 1:($12) pt 7 with points title columnhead(12) ,\
 } else {
     plot datafile \
-           using 1:($6)  pt 7 with points title columnhead(6) ,\
-        '' using 1:($7)  pt 7 with points title columnhead(7) ,\
-        '' using 1:($8)  pt 7 with points title columnhead(8) ,\
-        '' using 1:($9)  pt 7 with points title columnhead(9) ,\
+           using 1:($6)  pt 7 with points title columnhead(6)  ,\
+        '' using 1:($7)  pt 7 with points title columnhead(7)  ,\
+        '' using 1:($8)  pt 7 with points title columnhead(8)  ,\
+        '' using 1:($9)  pt 7 with points title columnhead(9)  ,\
         '' using 1:($10) pt 7 with points title columnhead(10) ,\
         '' using 1:($11) pt 7 with points title columnhead(11) ,\
         '' using 1:($12) pt 7 with points title columnhead(12) ,\
@@ -73,15 +82,6 @@ if (exists("uberMode")) {
         '' using 1:($30) pt 6 with points title columnhead(30) ,\
         '' using 1:($31) pt 6 with points title columnhead(31) ,\
         '' using 1:($32) pt 6 with points title columnhead(32) ,\
-        '' using 1:($33) pt 6 with points title columnhead(33)
+        '' using 1:($33) pt 6 with points title columnhead(33) ,\
 }
-
-set title 'Throughput'
-set ylabel 'Rate [Hz]'
-set size 0.4,0.5
-set origin 0,0
-unset key
-f(x) = m*x
-fit [0:24] f(x) datafile using 1:(1/$2*1e3) via m
-plot datafile using 1:(1/$2*1e3) pt 7, f(x)
 
