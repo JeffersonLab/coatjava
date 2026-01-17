@@ -3,20 +3,14 @@
 def cli():
     import os,sys,argparse
     cli = argparse.ArgumentParser(description='CLARA scaling test')
-    cli.add_argument('-P',help='plot only',action='store_true')
-    cli.add_argument('-y',help='YAML file',default=None)
+    cli.add_argument('-y',help='YAML file',required=True)
     cli.add_argument('-c',help='CLARA_HOME path',default=os.getenv('CLARA_HOME',None))
     cli.add_argument('-t',help='threads (default=4,8)',default='4,8')
     cli.add_argument('-e',help='events per thread',default=100,type=int)
-    cli.add_argument('-i',help='input data file',default=None)
+    cli.add_argument('-i',help='input data file',required=True)
     cfg = cli.parse_args()
     cfg.t = cfg.t.split(',')
-    if cfg.P:
-        cfg.i = 'scaling.txt'
-    else:
-        if cfg.y is None: sys.exit('-y YAML is required w/o -P')
-        if cfg.c is None: sys.exit('-c or $CLARA_HOME is required w/o -P')
-    if cfg.i is None: sys.exit('-i is required')
+    if cfg.c is None: sys.exit('-c or $CLARA_HOME is required.')
     return cfg
 
 def run(cmd):
@@ -106,10 +100,9 @@ def save(benchmarks):
 
 if __name__ == '__main__':
     cfg = cli()
-    if not cfg.P:
-        benchmarks = []
-        for threads in cfg.t:
-            benchmarks.append([threads, benchmark(cfg, threads)])
-        show(benchmarks)
-        save(benchmarks)
+    benchmarks = []
+    for threads in cfg.t:
+        benchmarks.append([threads, benchmark(cfg, threads)])
+    show(benchmarks)
+    save(benchmarks)
 
