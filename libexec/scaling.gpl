@@ -63,11 +63,13 @@ set xlabel 'Threads'
 set ylabel 'Event Rate [Hz]'
 set size 0.4,0.45
 set origin 0.0,0.55
-unset key
+set key nobox inside top left
 f(x) = m*x
+m = 2
 
 fit [0:24] f(x) datafile using 1:(1/$2*1e3) via m
-plot datafile using 1:(1/$2*1e3) pt 7, f(x)
+rate = sprintf('%.1f Hz/CPU',m)
+plot datafile using 1:(1/$2*1e3) pt 7 notitle, f(x) title rate
 
 set xlabel 'Threads'
 set ylabel 'Event Time [ms]'
