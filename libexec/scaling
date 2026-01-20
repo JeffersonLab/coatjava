@@ -101,6 +101,7 @@ def save(benchmarks):
 
 if __name__ == '__main__':
     cfg = cli()
+    import os
     benchmarks = []
     for threads in cfg.t:
         os.makedirs('tmp-scaling-'+threads)
