@@ -25,7 +25,7 @@ def run(cmd):
     if p.returncode != 0:
         pass
 
-def benchmark(cfg, threads):
+def benchmark(cfg, threads, log):
     import os,sys,shutil,collections
     run_clara = shutil.which('run-clara')
     if not run_clara:
@@ -44,6 +44,7 @@ def benchmark(cfg, threads):
     for line in run(cmd):
         cols = line.split()
         print(line)
+        log.write(line+'\n')
         try:
             if line.find('Benchmark results:') >= 0:
                 exiting = True
@@ -102,7 +103,9 @@ if __name__ == '__main__':
     cfg = cli()
     benchmarks = []
     for threads in cfg.t:
-        benchmarks.append([threads, benchmark(cfg, threads)])
+        os.makedirs('tmp-scaling-'+threads)
+        with open(f'tmp-scaling-{threads}/run-clara.log','w') as log:
+            benchmarks.append([threads, benchmark(cfg, threads, log)])
     show(benchmarks)
     save(benchmarks)
 
