@@ -206,6 +206,32 @@ public class Hit implements Comparable<Hit> {
 		System.out.println("h1 compare to h2 : " + h1.compareTo(h2));
 		System.out.println("h2 compare to h1 : " + h2.compareTo(h1));
 		System.out.println("h1 compare to h3 : " + h1.compareTo(h3));
+
+		System.out.println("/////////////////////////"); 
+		System.out.println("Test AHDC geometry"); 
+		System.out.println(""); 
+		System.out.println("s  : sector"); 
+		System.out.println("sl : super layer"); 
+		System.out.println("l  : layer"); 
+		System.out.println("c  : component"); 
+		System.out.println("/////////////////////////"); 
+		System.out.println("------------------------------------------------------------------------------"); 
+		System.out.println("                |            origin            |             end"); 
+		System.out.println("------------------------------------------------------------------------------"); 
+		System.out.println("s   sl  l   c   |     x         y        z     |     x        y        z"); 
+		System.out.println("------------------------------------------------------------------------------");
+		for (int s = 1; s <= factory.getNumSectors(); s++) {
+			for (int sl = 1; sl <= factory.getSector(s).getNumSuperlayers(); sl++) {
+				for (int l = 1; l <= factory.getSector(s).getSuperlayer(sl).getNumLayers(); l++) {
+					for (int c = 1; c <= factory.getSector(s).getSuperlayer(sl).getLayer(l).getNumComponents(); c++) {
+						Line3D line = factory.getSector(s).getSuperlayer(sl).getLayer(l).getComponent(c).getLine();
+						Point3D end = line.end();
+						Point3D origin = line.origin();
+						System.out.printf("%2d  %2d  %2d  %2d  |  %7.3f  %7.3f  %7.3f  |  %7.3f  %7.3f  %7.3f\n", s, sl, l, c, origin.x(), origin.y(), origin.z(), end.x(), end.y(), end.z());
+					}
+				}
+			}
+		}
     }
 
 }
