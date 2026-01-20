@@ -1,4 +1,4 @@
-# COATJAVA
+# COATJAVA 
 [![Build Status](https://github.com/jeffersonlab/coatjava/workflows/Coatjava-CI/badge.svg)](https://github.com/jeffersonlab/coatjava/actions)
 [![Validation Status](https://github.com/JeffersonLab/coatjava/actions/workflows/validation.yml/badge.svg)](https://github.com/JeffersonLab/coatjava/actions/workflows/validation.yml)
 [![Coverage](https://badgen.net/static/JaCoCo/coverage/purple)](https://jeffersonlab.github.io/coatjava/jacoco)
