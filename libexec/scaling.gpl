@@ -1,51 +1,131 @@
+set terminal svg size 1000,700 enhanced font 'Verdana, 14'
+set palette maxcolors 8
+set palette defined ( \
+    0 '#A6CEE3',\
+    1 '#1F78B4',\
+    2 '#B2DF8A',\
+    3 '#33A02C',\
+    4 '#FB9A99',\
+    5 '#E31A1C',\
+    6 '#FDBF6F',\
+    7 '#FF7F00' )
+set style line 1 pt 7 lt 1 lc rgb '#A6CEE3' # light blue
+set style line 2 pt 7 lt 1 lc rgb '#1F78B4' # dark blue
+set style line 3 pt 7 lt 1 lc rgb '#B2DF8A' # light green
+set style line 4 pt 7 lt 1 lc rgb '#33A02C' # dark green
+set style line 5 pt 7 lt 1 lc rgb '#FB9A99' # light red
+set style line 6 pt 7 lt 1 lc rgb '#E31A1C' # dark red
+set style line 7 pt 7 lt 1 lc rgb '#FDBF6F' # light orange
+set style line 8 pt 7 lt 1 lc rgb '#FF7F00' # dark orange
+set style line 11 pt 11 lt 1 lc rgb '#A6CEE3' # light blue
+set style line 12 pt 11 lt 1 lc rgb '#1F78B4' # dark blue
+set style line 13 pt 11 lt 1 lc rgb '#B2DF8A' # light green
+set style line 14 pt 11 lt 1 lc rgb '#33A02C' # dark green
+set style line 15 pt 11 lt 1 lc rgb '#FB9A99' # light red
+set style line 16 pt 11 lt 1 lc rgb '#E31A1C' # dark red
+set style line 17 pt 11 lt 1 lc rgb '#FDBF6F' # light orange
+set style line 18 pt 11 lt 1 lc rgb '#FF7F00' # dark orange
+set style line 21 pt 8 lt 1 lc rgb '#A6CEE3' # light blue
+set style line 22 pt 8 lt 1 lc rgb '#1F78B4' # dark blue
+set style line 23 pt 8 lt 1 lc rgb '#B2DF8A' # light green
+set style line 24 pt 8 lt 1 lc rgb '#33A02C' # dark green
+set style line 25 pt 8 lt 1 lc rgb '#FB9A99' # light red
+set style line 26 pt 8 lt 1 lc rgb '#E31A1C' # dark red
+set style line 27 pt 8 lt 1 lc rgb '#FDBF6F' # light orange
+set style line 28 pt 8 lt 1 lc rgb '#FF7F00' # dark orange
+set style line 31 pt 6 lt 1 lc rgb '#A6CEE3' # light blue
+set style line 32 pt 6 lt 1 lc rgb '#1F78B4' # dark blue
+set style line 33 pt 6 lt 1 lc rgb '#B2DF8A' # light green
+set style line 34 pt 6 lt 1 lc rgb '#33A02C' # dark green
+set style line 35 pt 6 lt 1 lc rgb '#FB9A99' # light red
+set style line 36 pt 6 lt 1 lc rgb '#E31A1C' # dark red
+set style line 37 pt 6 lt 1 lc rgb '#FDBF6F' # light orange
+set style line 38 pt 6 lt 1 lc rgb '#FF7F00' # dark orange
 
-set terminal svg size 1000,700
+# parse command line arguments:
+datafile = 'scaling.txt'
+if (ARGC > 0) {
+    if (ARGV[1] eq "-u") {
+        uberMode = 1
+        if (ARGC > 1) {
+            datafile = ARGV[ARGC]
+        }
+    } else {
+        datafile = ARGV[ARGC]
+    }
+}
 
 set multiplot layout 2,2
 set datafile columnheaders
-set title font 'sans,14'
-set key box
-set xlabel 'Threads'
-set ylabel 'Event Time [ms]'
 set yrange [0:]
 
-set title 'I/O'
-set key outside right width 2
-plot 'scaling.txt' \
-           using 1:(($2*$1))        pt 7 with points title columnhead(2) ,\
-        '' using 1:((column($#)))   pt 7 with points title 'Total' ,\
-        '' using 1:($6)             pt 7 with points title 'Reader' ,\
-        '' using 1:((column($#-1))) pt 7 with points title 'Writer' ,\
-        '' using 1:(($6*$1))        pt 7 with points title 'IOver' ,\
-
-set title 'Engines'
-
-# data-ai-uber.yml:
-#plot 'scaling.txt' \
-#           using 1:($7)  pt 7 with points title columnhead(7) ,\
-#        '' using 1:($8)  pt 7 with points title columnhead(8) ,\
-#        '' using 1:($9)  pt 7 with points title columnhead(9) ,\
-#        '' using 1:($10) pt 7 with points title columnhead(10) ,\
-#        '' using 1:($11) pt 7 with points title columnhead(11) ,\
-#        '' using 1:($12) pt 7 with points title columnhead(12) ,\
-
-# rgd-clarode.yml:
-plot 'scaling.txt' \
-           using 1:($7)  pt 7 with points title columnhead(7) ,\
-        '' using 1:($14) pt 7 with points title columnhead(14) ,\
-        '' using 1:($15) pt 7 with points title columnhead(15) ,\
-        '' using 1:($16) pt 7 with points title columnhead(16) ,\
-        '' using 1:($26) pt 9 with points title columnhead(26) ,\
-        '' using 1:($19) pt 7 with points title columnhead(19) ,\
-        '' using 1:($28) pt 9 with points title columnhead(28) ,\
-        '' using 1:($33) pt 9 with points title columnhead(33) ,\
-
-set title 'Throughput'
-set ylabel 'Rate [Hz]'
-set size 0.7,0.5
-set origin 0.12,0
-unset key
+set xlabel 'Threads'
+set ylabel 'Event Rate [Hz]'
+set size 0.4,0.45
+set origin 0.0,0.55
+set key nobox inside top left
 f(x) = m*x
-fit [0:24] f(x) 'scaling.txt' using 1:(1/$2*1e3) via m
-plot 'scaling.txt' using 1:(1/$2*1e3) pt 7, f(x)
+m = 2
+
+fit [0:24] f(x) datafile using 1:(1/$2*1e3) via m
+rate = sprintf('%.1f Hz/CPU',m)
+plot datafile using 1:(1/$2*1e3) pt 7 notitle, f(x) title rate
+
+set xlabel 'Threads'
+set ylabel 'Event Time [ms]'
+set key nobox outside top center horizontal
+set size 0.4,0.55
+set origin 0.0,0.0
+
+plot datafile \
+           using 1:((column($#)))   pt 7  with points title 'Total'  ,\
+        '' using 1:(($5*$1))        pt 7  with points title 'N-Readers'  ,\
+        '' using 1:($5)             pt 9  with points title 'Reader' ,\
+        '' using 1:((column($#-1))) pt 11 with points title 'Writer' ,\
+
+#set logscale y
+set size 0.6,1.0
+set origin 0.4,0.0
+set key outside right vertical
+
+if (exists("uberMode")) {
+    plot datafile \
+           using 1:($6)  pt 7 with points title columnhead(6)  ,\
+        '' using 1:($7)  pt 7 with points title columnhead(7)  ,\
+        '' using 1:($8)  pt 7 with points title columnhead(8)  ,\
+        '' using 1:($9)  pt 7 with points title columnhead(9)  ,\
+        '' using 1:($10) pt 7 with points title columnhead(10) ,\
+        '' using 1:($11) pt 7 with points title columnhead(11) ,\
+        '' using 1:($12) pt 7 with points title columnhead(12) ,\
+} else {
+    plot datafile \
+           using 1:($6)  ls 1  with points title columnhead(6)  ,\
+        '' using 1:($7)  ls 2  with points title columnhead(7)  ,\
+        '' using 1:($8)  ls 3  with points title columnhead(8)  ,\
+        '' using 1:($9)  ls 4  with points title columnhead(9)  ,\
+        '' using 1:($10) ls 5  with points title columnhead(10) ,\
+        '' using 1:($11) ls 6  with points title columnhead(11) ,\
+        '' using 1:($12) ls 7  with points title columnhead(12) ,\
+        '' using 1:($13) ls 8  with points title columnhead(13) ,\
+        '' using 1:($14) ls 11 with points title columnhead(14) ,\
+        '' using 1:($15) ls 12 with points title columnhead(15) ,\
+        '' using 1:($16) ls 13 with points title columnhead(16) ,\
+        '' using 1:($17) ls 14 with points title columnhead(17) ,\
+        '' using 1:($18) ls 15 with points title columnhead(18) ,\
+        '' using 1:($19) ls 16 with points title columnhead(19) ,\
+        '' using 1:($20) ls 17 with points title columnhead(20) ,\
+        '' using 1:($21) ls 18 with points title columnhead(21) ,\
+        '' using 1:($22) ls 21 with points title columnhead(22) ,\
+        '' using 1:($23) ls 22 with points title columnhead(23) ,\
+        '' using 1:($24) ls 23 with points title columnhead(24) ,\
+        '' using 1:($25) ls 24 with points title columnhead(25) ,\
+        '' using 1:($26) ls 25 with points title columnhead(26) ,\
+        '' using 1:($27) ls 26 with points title columnhead(27) ,\
+        '' using 1:($28) ls 27 with points title columnhead(28) ,\
+        '' using 1:($29) ls 28 with points title columnhead(29) ,\
+        '' using 1:($30) ls 31 with points title columnhead(30) ,\
+        '' using 1:($31) ls 32 with points title columnhead(31) ,\
+        '' using 1:($32) ls 33 with points title columnhead(32) ,\
+        '' using 1:($33) ls 34 with points title columnhead(33) ,\
+}
 
