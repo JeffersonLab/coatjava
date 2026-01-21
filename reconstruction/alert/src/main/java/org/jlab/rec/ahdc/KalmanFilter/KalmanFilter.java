@@ -90,9 +90,6 @@ public class KalmanFilter {
 			    // Read list of hits
 			    ArrayList<Hit> AHDC_hits = track.getHits();
 				Collections.sort(AHDC_hits); // sorted following the compareTo() method in Hit.java
-
-			    double zbeam = 0;
-			    if(IsVtxDefined)zbeam = vz_constraint;
 			
 			    // Start propagation
 			    Stepper     stepper    = new Stepper(y);
@@ -122,7 +119,7 @@ public class KalmanFilter {
 					}
 					// Backward propagation (first layer to beamline)
 					{
-						Hit hit = new Hit_beam(0, 0, zbeam);
+						Hit hit = new Hit_beam(0, 0, vz_constraint);
 						TrackFitter.predict(hit, false);
 						TrackFitter.correct(hit);
 					}
