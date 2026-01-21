@@ -164,11 +164,11 @@ public class KalmanFilter {
                     hit.setTrackId(trackId);
                     sum_adc += hit.getADC();
                     sum_residuals += hit.getResidual();
-                    chi2 += Math.pow(hit.getResidual(),2.0);
+                    chi2 += Math.pow(hit.getResidual()/hit.get_MeasurementNoise().getEntry(0,0),2.0);
 			    }
 			    track.set_sum_adc(sum_adc);
 			    track.set_sum_residuals(sum_residuals);
-			    track.set_chi2(chi2);
+			    track.set_chi2(chi2/(AHDC_hits.size()-3));
 			    track.set_p_drift_kf(p_drift);
 			    track.set_dEdx_kf(sum_adc/s);
 			    track.set_path_kf(s);
