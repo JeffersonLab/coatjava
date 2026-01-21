@@ -1,0 +1,2 @@
+#!/bin/bash
+echo $(numactl -H | grep "^node $1 cpus:" | awk '{for(i=4;i<=NF;++i)print$i}') | sed 's/ /,/g'
