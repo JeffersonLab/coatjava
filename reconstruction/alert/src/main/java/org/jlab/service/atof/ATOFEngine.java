@@ -60,7 +60,7 @@ public class ATOFEngine extends ReconstructionEngine {
         if (!event.hasBank("RUN::config")) {
             return true;
         }
-        float startTime = 0;
+        Float startTime = null;
         if(useStartTime)
         {
             //This assumes the FD reconstruction produced an event with good startTime
@@ -101,14 +101,11 @@ public class ATOFEngine extends ReconstructionEngine {
         //projector.projectTracks(event);
         //rbc.appendMatchBanks(event, projector.getProjections());
 
-        // Why do we have to "find" hits? 
         //Hit finder init
         HitFinder hitfinder = new HitFinder();
         hitfinder.findHits(event, ATOF, startTime);
-
         ArrayList<ATOFHit> WedgeHits = hitfinder.getWedgeHits();
         ArrayList<BarHit> BarHits = hitfinder.getBarHits();
-        
         //Exit if hit lists are empty
         if (WedgeHits.isEmpty() && BarHits.isEmpty()) {
             //			System.out.println("No hits : ");

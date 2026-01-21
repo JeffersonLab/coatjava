@@ -5,7 +5,6 @@ import java.util.Collections;
 import org.jlab.geom.base.Detector;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
-import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
 
 /**
  * The {@code HitFinder} class finds hits in the atof.
@@ -64,7 +63,7 @@ public class HitFinder {
      * @param atof the {@link Detector} representing the atof geometry to match
      * the sector/layer/component to x/y/z.
      */
-    public void findHits(DataEvent event, Detector atof, float startTime) {
+    public void findHits(DataEvent event, Detector atof, Float startTime) {
         //For each event a list of bar hits and a list of wedge hits are filled
         this.barHits.clear();
         this.wedgeHits.clear();
