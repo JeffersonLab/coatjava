@@ -179,10 +179,12 @@ public class Hit implements Comparable<Hit> {
 	}
 
     public RealMatrix get_MeasurementNoise() {
+		double mean_error = 0.471; // mm (no difference between adc and time)
 		double error_on_adc = (1.15146*raw_adc + 437.63)/(3.21187*raw_adc + 878.855); // mm
 		double error_on_time = (0.4423*time + 13.7215)/(0.846038*time + 31.9867); // mm
+		double error = error_on_adc*error_on_time/mean_error; // mm
 		
-		return new Array2DRowRealMatrix(new double[][]{{Math.pow(error_on_adc,2) + Math.pow(error_on_time,2)}}); // mm^2
+		return new Array2DRowRealMatrix(new double[][]{{Math.pow(error, 2)}}); // mm^2
 		//return new Array2DRowRealMatrix(new double[][]{{0.09}});
 	}
 
