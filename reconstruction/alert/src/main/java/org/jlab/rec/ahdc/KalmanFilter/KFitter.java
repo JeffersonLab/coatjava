@@ -29,7 +29,7 @@ public class KFitter {
     // masses/energies in MeV
 	private final double     electron_mass_c2 = PhysicsConstants.massElectron() * 1000;
 	private final double     proton_mass_c2   = PhysicsConstants.massProton() * 1000;
-	private boolean isvertexdefined = false;
+	private double[] vertex_resolutions = {0.09,1e10}; // default values // dr^2 and dz^2 in mm^2
 
 	public KFitter(final RealVector initialStateEstimate, final RealMatrix initialErrorCovariance, final Stepper stepper, final Propagator propagator, final HashMap<String, Material> materialHashMap) {
 		this.stateEstimation = initialStateEstimate;
@@ -93,15 +93,14 @@ public class KFitter {
 		RealVector h;
 		// check if the hit is the beamline
 		if (hit.getRadius() < 1) {
-            double z_beam_res_sq = 1.e10;//in mm
-			if(isvertexdefined)z_beam_res_sq = 4.0;//assuming 2. mm resolution
+			// the diagonal elements are the squared errors in r, phi, z
 			measurementNoise =
-					new Array2DRowRealMatrix(
-							new double[][]{
-									{0.09, 0.0000, 0.0000},
-									{0.00, 1e10, 0.0000},
-								        {0.00, 0.0000, z_beam_res_sq}
-							});//3x3
+				new Array2DRowRealMatrix(
+					new double[][]{
+						{vertex_resolutions[0], 0.0000, 0.0000},
+						{0.00, 1e10, 0.0000},
+						{0.00, 0.0000, vertex_resolutions[1]}
+					});//3x3
 			measurementMatrix  = H_beam(stateEstimation);//6x3
 			h = h_beam(stateEstimation);//3x1
 			z = hit.get_Vector_beam();//0!
@@ -274,7 +273,10 @@ public class KFitter {
 	public RealMatrix getErrorCovarianceMatrix() {
 		return errorCovariance.copy();
 	}
-
-	public void setVertexDefined(boolean isvtxdef) {isvertexdefined = isvtxdef;}
+	
+	public void setVertexResolution(double[] res) {
+		vertex_resolutions[0] = res[0];
+		vertex_resolutions[1] = res[1];
+	}
 
 }
