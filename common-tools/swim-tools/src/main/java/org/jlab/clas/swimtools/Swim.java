@@ -64,6 +64,15 @@ public class Swim {
     }
 
     /**
+     * Set max swimming path length
+     *
+     * @param maxPathLength
+     */
+    public void setMaxPathLength(double _maxPathLength) {
+        this._maxPathLength = _maxPathLength;
+    }
+
+    /**
      *
      * @param direction
      *            +1 for out -1 for in

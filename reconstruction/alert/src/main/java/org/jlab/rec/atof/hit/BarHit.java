@@ -1,6 +1,9 @@
 package org.jlab.rec.atof.hit;
 
+import org.jlab.io.base.DataEvent;
+import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.rec.atof.constants.Parameters;
+import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
 
 /**
  *
@@ -14,9 +17,36 @@ public class BarHit extends ATOFHit {
 
     //A bar hit is the combination of a downstream and upstream hits
     private ATOFHit hitUp, hitDown;
+    //Effective velocity read from CCDB
+    double vEff;
 
     public ATOFHit getHitUp() {
         return hitUp;
+    }
+    
+    /**
+     * Computes bar time sum and check if it is around 
+     * the value the hits were aligned to. For now,
+     * 40ns cut. When calibrations are final, it should
+     * be refined to reflect the resolution.
+     * 
+     */
+    public boolean isInTime() {
+        //Undefined start time is when useStartTime option is false in the yaml
+        //for example for usage with simulations
+        //-> we keep all the hits
+        if(this.hitUp.getStartTime() == null) return true;
+        double timeShift = 0;
+        //TO DO: make this more robust
+        //For FT electron for which the startTime is set at -1000
+        //We need to shift where the cut is applied
+        //2180 = 2*1090 = 1000+90 for FD start time around 90ns
+        //if the data start time is not around 90, this will be a problem
+        if(this.hitUp.getStartTime()<0) timeShift = 2180;
+        if(Math.abs(this.hitUp.getTime()+this.hitDown.getTime()
+                        -timeShift)<40)
+            return true;
+        return false;
     }
 
     public void setHitUp(ATOFHit hit_up) {
@@ -36,7 +66,7 @@ public class BarHit extends ATOFHit {
      * 
      */
     public final void computeZ() {
-        this.setZ(Parameters.VEFF/2. * (hitUp.getTime() - hitDown.getTime()));
+        this.setZ(this.vEff/2. * (hitUp.getTime() - hitDown.getTime()));
     }
 
     /**
@@ -46,17 +76,19 @@ public class BarHit extends ATOFHit {
      * 
      */
     public final void computeTime() {
-        //We pick the most energetic signal as the timing signal
-        double time_at_sipm, distance_to_sipm;
-        if(this.hitDown.getEnergy() > this.hitUp.getEnergy()) {
-            time_at_sipm = this.hitDown.getTime();
-            distance_to_sipm = Parameters.LENGTH_ATOF/2. - this.getZ();
-        }
-        else {
-            time_at_sipm = this.hitUp.getTime();
-            distance_to_sipm = Parameters.LENGTH_ATOF/2. + this.getZ();
-        }
-        this.setTime(time_at_sipm - distance_to_sipm/Parameters.VEFF);
+    //Select the most energetic hit as the timing reference
+    final boolean useDownstream = hitDown.getEnergy() > hitUp.getEnergy();
+    final double sipmTime   = useDownstream ? hitDown.getTime() : hitUp.getTime();
+    //veff correction
+    //t0 has already been removed.
+    //distance to SiPM is L/2+-z, part of it is absorbed into the t0 as:
+    //t0 = 2*offset+L/veff
+    //t_hit = t_u/d - 2*offset/2 -/+ tud/2 - 1/veff(L/2 -/+ z)
+    //t_hit = t_u/d - (t0)/2 -/+ tud/2 +/- z/veff
+    //Only the z part remains
+    final double zDirection = useDownstream ? +this.getZ() : -this.getZ();
+    final double correctedTime = sipmTime + zDirection / vEff;
+    this.setTime(correctedTime);
     }
 
     /**
@@ -88,6 +120,11 @@ public class BarHit extends ATOFHit {
         this.setComponent(10);
         this.setX(hit_up.getX());
         this.setY(hit_up.getY());
+        
+        //CCDB readout for the effective velocity
+        int key = this.getSector()*10000 + this.getLayer()*1000 + this.getComponent()*10;
+        double[] vEffTable = CalibrationConstantsLoader.ATOF_EFFECTIVE_VELOCITY.get(key);
+        this.vEff = vEffTable[0];
         this.computeZ();
         this.computeTime();
         this.computeEnergy();

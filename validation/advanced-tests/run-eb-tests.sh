@@ -1,10 +1,12 @@
 #!/bin/bash
 
 webDir=http://clasweb.jlab.org/clas12offline/distribution/coatjava/validation_files/eb
-webVersion=5.11-fid-tm-r11
+webVersion=5.11-fid-tm-dc2-r11
 webDir=$webDir/$webVersion
+webDir=./data/$webVersion
 
 # coatjava must already be built at ../../coatjava/
+# and input test data files at ./data
 
 # whether to use CLARA (0=no)
 useClara=0
@@ -116,13 +118,13 @@ then
         # install clara
         if ! [ -d clara_installation ]
         then
-            ../../install-clara clara_installation
+            ../../bin/install-clara clara_installation
         fi
     fi
 
     # download test files, if necessary:
-    wget -N --no-check-certificate $webDir/${stub}.hipo
-    if [ $? != 0 ] ; then echo "wget validation files failure" ; exit 1 ; fi
+    #wget -N --no-check-certificate $webDir/${stub}.hipo
+    #if [ $? != 0 ] ; then echo "wget validation files failure" ; exit 1 ; fi
 
     # update the schema dictionary:  (no longer necessary now that recon-util does it)
     #rm -f up_${stub}.hipo
@@ -134,7 +136,7 @@ then
     then
         GEOMDBVAR=$geoDbVariation
         export GEOMDBVAR
-        ../../coatjava/bin/recon-util -i ${stub}.hipo -o out_${stub}.hipo -c 2
+        ../../coatjava/bin/recon-util -l FINE -i ${webDir}/${stub}.hipo -o out_${stub}.hipo -c 2
     else
         echo "set inputDir $PWD/" > cook.clara
         echo "set outputDir $PWD/" >> cook.clara

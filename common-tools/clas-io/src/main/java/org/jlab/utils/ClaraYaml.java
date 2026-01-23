@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.utils.system.ClasUtilsFile;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.yaml.snakeyaml.Yaml;
@@ -21,19 +22,19 @@ import org.yaml.snakeyaml.Yaml;
  */
 public class ClaraYaml {
 
-    private Yaml yaml = null;
     private JSONObject json = null;
 
     public ClaraYaml(String filename) {
         InputStream input;
         try {
             input = new FileInputStream(filename);
-            this.yaml = new Yaml();
+            Yaml yaml = new Yaml();
             Map<String, Object> yamlConf = (Map<String, Object>) yaml.load(input);
             this.json = new JSONObject(yamlConf);
         } catch (FileNotFoundException ex) {
             Logger.getLogger(ClaraYaml.class.getName()).log(Level.SEVERE, null, ex);
         }
+        setStockSchemaDirectory();
     }
 
     /**
@@ -93,6 +94,44 @@ public class ClaraYaml {
         return null;
     }
 
+    public String getSchemaDirectory() {
+        return schemaDirectory();
+    }
+
+    /**
+     * Set the schema_dir directory.
+     * @param dir path to schema_dir directory
+     */ 
+    public void setSchemaDirectory(String dir) {
+        if (!json.has("configuration"))
+            json.put("configuration",new JSONObject());
+        if (!json.getJSONObject("configuration").has("io_services")) 
+            json.getJSONObject("configuration").put("io-services",new JSONObject());
+        if (!json.getJSONObject("configuration").getJSONObject("io-services").has("writer"))
+            json.getJSONObject("configuration").getJSONObject("io-services").put("writer",new JSONObject());
+        this.json.getJSONObject("configuration").getJSONObject("io-services").
+            getJSONObject("writer").put("schema_dir",dir);
+    }
+   
+    /**
+     * Set the schema_dir, assuming it's currently the short (basename) of a
+     * "stock" schema, but only if it doesn't already look like an absolute path.
+     */
+    public final void setStockSchemaDirectory() {
+        String s = getSchemaDirectory();
+        if (s != null && !s.trim().startsWith("/")) 
+            setSchemaDirectory(getStockSchemaDirectory(s));
+    }
+
+    /**
+     * Convert short (base)name into absolute path, for "stock" schema.
+     * @param name
+     * @return 
+     */
+    public static String getStockSchemaDirectory(String name) {
+        return ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4/singles/"+name);
+    }
+
     /**
      * Get the service's configuration as presented by CLARA.
      * @param serviceName
@@ -135,10 +174,12 @@ public class ClaraYaml {
     }
 
     public static void main(String[] args) {
-        ClaraYaml yaml = new ClaraYaml("/Users/baltzell/data-ai.yaml");
+        ClaraYaml yaml = new ClaraYaml(System.getenv("HOME")+"/sw/coatjava/github/etc/services/data-ai.yaml");
         yaml.show();
-        yaml.showFiltered("DCCR");
         yaml.showFiltered("EBTB");
+        yaml.setSchemaDirectory("dst");
+        yaml.setStockSchemaDirectory();
+        yaml.show();
     }
 
 }

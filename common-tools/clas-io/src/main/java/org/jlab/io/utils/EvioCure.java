@@ -7,7 +7,6 @@ import java.util.logging.Logger;
 import org.jlab.coda.jevio.EventWriter;
 import org.jlab.coda.jevio.EvioException;
 import org.jlab.coda.jevio.EvioReader;
-import org.jlab.logging.DefaultLogger;
 
 /**
  *
@@ -18,7 +17,6 @@ public class EvioCure {
     private static final Logger LOGGER = Logger.getLogger(EvioCure.class.getName());
 
     public static void main(String[] args) {
-        DefaultLogger.debug();
 
         String inputFile = args[0];
         String outputFile = args[1];

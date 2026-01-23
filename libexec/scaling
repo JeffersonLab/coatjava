@@ -1,0 +1,112 @@
+#!/usr/bin/env python3
+
+def cli():
+    import os,sys,argparse
+    cli = argparse.ArgumentParser(description='CLARA scaling test')
+    cli.add_argument('-y',help='YAML file',required=True)
+    cli.add_argument('-c',help='CLARA_HOME path',default=os.getenv('CLARA_HOME',None))
+    cli.add_argument('-t',help='threads (default=4,8)',default='4,8')
+    cli.add_argument('-e',help='events per thread',default=100,type=int)
+    cli.add_argument('-i',help='input data file',required=True)
+    cfg = cli.parse_args()
+    cfg.t = cfg.t.split(',')
+    if cfg.c is None: sys.exit('-c or $CLARA_HOME is required.')
+    return cfg
+
+def run(cmd):
+    import subprocess
+    print('run >>> '+' '.join(cmd))
+    p = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,universal_newlines=True,encoding='latin-1')
+    for line in iter(p.stdout.readline, ''):
+        line = line.strip()
+        if len(line) > 0:
+            yield line
+    p.wait()
+    if p.returncode != 0:
+        pass
+
+def benchmark(cfg, threads, log):
+    import os,sys,shutil,collections
+    run_clara = shutil.which('run-clara')
+    if not run_clara:
+        run_clara = cfg.c + '/plugins/clas12/bin/run-clara'
+        if not os.path.exists(run_clara):
+            sys.exit('run-clara is not in $PATH')
+    exiting,benchmarks = False,collections.OrderedDict()
+    cmd = [run_clara,
+            '-c',cfg.c,
+            '-n',str(cfg.e*int(threads)),
+            '-t',str(threads),
+            '-l',
+            '-y',cfg.y,
+            '-o',f'tmp-scaling-{threads}',
+            cfg.i]
+    for line in run(cmd):
+        cols = line.split()
+        print(line)
+        log.write(line+'\n')
+        try:
+            if line.find('Benchmark results:') >= 0:
+                exiting = True
+            elif line.find('Processing is complete') >= 0:
+                exiting = False
+            elif len(cols) > 20:
+                if line.find('Processed') >= 0:
+                    benchmarks['Event'] = float(cols[12])
+            elif exiting:
+                # catch-all for services:
+                if len(cols) > 14:
+                    if 'Services' not in benchmarks:
+                        benchmarks['Services'] = collections.OrderedDict()
+                    benchmarks['Services'][cols[2]] = float(cols[14])
+                # FIXME:  what are these, why don't they add up?
+                elif line.find('Average processing time') >= 0:
+                    benchmarks['Avg'] = float(cols[6])
+                elif line.find('Total processing time') >= 0:
+                    benchmarks['Total'] = float(cols[6])
+                elif line.find('Total orchestrator time') >= 0:
+                    benchmarks['Orch'] = float(cols[6])
+        except ValueError:
+            pass
+    return benchmarks
+
+def table(benchmarks):
+    table = []
+    header = [ 'Threads' ]
+    b = benchmarks[0][1]
+    header.extend([x for x in b if x != 'Services' and x != 'Event'])
+    if 'Services' in b:
+        header.extend(b['Services'].keys())
+    table.append(header)
+    for b in benchmarks:
+        threads,benchmark = b[0],b[1]
+        row = [threads]
+        for k in ['Avg','Total','Orch','Services']:
+            if k in benchmark:
+                if k == 'Services':
+                    row.extend(benchmark[k].values())
+                else:
+                    row.append(benchmark[k])
+        table.append(row)
+    return table
+
+def show(benchmarks):
+    for row in table(benchmarks):
+        print(' '.join([str(x) for x in row])) 
+
+def save(benchmarks):
+    with open('scaling.txt','w') as f:
+        for row in table(benchmarks):
+            f.write(' '.join([str(x) for x in row])+'\n') 
+
+if __name__ == '__main__':
+    cfg = cli()
+    import os
+    benchmarks = []
+    for threads in cfg.t:
+        os.makedirs('tmp-scaling-'+threads)
+        with open(f'tmp-scaling-{threads}/run-clara.log','w') as log:
+            benchmarks.append([threads, benchmark(cfg, threads, log)])
+    show(benchmarks)
+    save(benchmarks)
+

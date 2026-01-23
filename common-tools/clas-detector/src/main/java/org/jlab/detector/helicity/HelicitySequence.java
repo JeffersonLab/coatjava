@@ -456,7 +456,7 @@ public class HelicitySequence {
         }
 
         LOGGER.info(
-            "HWP       ERRORS:  "+hwpErrors+
+            "\nHWP       ERRORS:  "+hwpErrors+
             "\nSYNC      ERRORS:  "+syncErrors+
             "\nQUARTET   ERRORS:  "+quartetErrors+
             "\nBIGGAP    ERRORS:  "+bigGapErrors+

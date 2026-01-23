@@ -92,35 +92,35 @@ public abstract class HipoExtractor implements IExtractor {
     }
 
     protected static void copyIndices(Bank src, Bank dest, int isrc, int idest) {
-        dest.putByte("sector", idest, src.getByte("sector",isrc));
-        dest.putByte("layer", idest, src.getByte("layer",isrc));
-        dest.putShort("component", idest, src.getShort("component",isrc));
-        dest.putByte("order", idest, src.getByte("order",isrc));
+        dest.putByte(0, idest, src.getByte(0,isrc));
+        dest.putByte(1, idest, src.getByte(1,isrc));
+        dest.putShort(2, idest, src.getShort(2,isrc));
+        dest.putByte(3, idest, src.getByte(3,isrc));
         dest.putShort("windex", idest, (short)isrc);
     }
 
     protected static void copyIndices(DataBank src, DataBank dest, int isrc, int idest) {
-        dest.setByte("sector", idest, src.getByte("sector",isrc));
-        dest.setByte("layer", idest, src.getByte("layer",isrc));
-        dest.setShort("component", idest, src.getShort("component",isrc));
-        dest.setByte("order", idest, src.getByte("order",isrc));
+        dest.setByte(0, idest, src.getByte(0,isrc));
+        dest.setByte(1, idest, src.getByte(1,isrc));
+        dest.setShort(2, idest, src.getShort(2,isrc));
+        dest.setByte(3, idest, src.getByte(3,isrc));
         dest.setShort("windex", idest, (short)isrc);
     }
 
     protected static int[] getIndices(Bank bank, int row) {
         return new int[] {
-            bank.getShort("sector", row),
-            bank.getShort("layer", row),
-            bank.getShort("component", row),
-            bank.getShort("order", row)};
+            bank.getShort(0, row),
+            bank.getShort(1, row),
+            bank.getShort(2, row),
+            bank.getShort(3, row)};
     }
 
     protected static int[] getIndices(DataBank bank, int row) {
         return new int[] {
-            bank.getShort("sector", row),
-            bank.getShort("layer", row),
-            bank.getShort("component", row),
-            bank.getShort("order", row)};
+            bank.getShort(0, row),
+            bank.getShort(1, row),
+            bank.getShort(2, row),
+            bank.getShort(3, row)};
     }
 
     protected List<Pulse> getPulses(int n, IndexedTable it, DataBank wfBank) {
@@ -128,7 +128,7 @@ public abstract class HipoExtractor implements IExtractor {
         short[] samples = new short[n];
         for (int i=0; i<wfBank.rows(); ++i) {
             for (int j=0; j<n; ++j)
-                samples[j] = wfBank.getShort(String.format("s%d",j+1), i);
+                samples[j] = wfBank.getShort(j+5, i);
             long timestamp = wfBank.getLong("timestamp",i);
             int time = wfBank.getInt("time",i);
             List<Pulse> p = it==null ? extract(null, i, timestamp, time, samples) :
@@ -146,7 +146,7 @@ public abstract class HipoExtractor implements IExtractor {
         short[] samples = new short[n];
         for (int i=0; i<wfBank.getRows(); ++i) {
             for (int j=0; j<n; ++j)
-                samples[j] = wfBank.getShort(String.format("s%d",j+1), i);
+                samples[j] = wfBank.getShort(j+5, i);
                 // FIXME:  Can speed this up (but looks like not for DataBank?):
                 //samples[j] = wfBank.getShort(String.format(5+j,j+1), i);
             int time = wfBank.getInt("time",i);

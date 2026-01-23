@@ -1,5 +1,40 @@
 # Developer Notes
 
+## Controlling Log Levels
+
+To control the log level of a class with a `Logger`, use properties. For example, use `java` options:
+```
+-Dorg.jlab.detector.helicity.HelicityGenerator.level=FINEST   # sets HelicityGenerator level to FINEST
+-D.level=FINE   # sets the level of all loggers to FINE
+```
+
+Alternatively, make a logging `.properties` file, and set the level of each of your classes for which you want to use a non-default level; use the property name `className.level`, for example:
+```
+# my_levels.properties
+org.jlab.detector.helicity.HelicityGenerator.level = FINEST
+org.jlab.detector.calib.utils.RCDBProvider.level = FINER
+```
+or use `.level` for the global level:
+```
+# my_levels.properties
+.level = FINE
+```
+To use this `.properties` file, run with the `java` option
+```
+-Djava.util.logging.config.file=my_levels.properties
+```
+Then, here are some examples for using it with `recon-util`:
+```bash
+recon-util [ARGS] -- -Djava.util.logging.config.file=my_levels.properties   # use your .properties file
+recon-util [ARGS] -- -D.level=ALL   # set the global level to ALL (very verbose!)
+recon-util [ARGS] -- -D.level=OFF   # silence the loggers
+```
+From high to low, the levels are `SEVERE, WARNING, INFO, CONFIG, FINE, FINER, FINEST` (see `java.util.logging.Level` documentation).
+You may also use levels `ALL` or `OFF`, for everything or nothing, respectively.
+
+> [!NOTE]
+> These properties may compete with the log level set by `OptionParser`'s option `-l`, potentially overriding that level. For example, `postprocess` and `decoder` use `OptionParser`.
+
 ## Bumping Version Number and Deploying
 
 Deploying a new version requires a new version number, named `$VERSION` in this

@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.base.GeometryFactory;
@@ -263,40 +262,41 @@ public class TableLoader {
         
         for(int s = 0; s<6; s++ ){ // loop over sectors
             for(int r = 0; r<6; r++ ){ //loop over slys
+
+                long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(s+1,r+1,0);
+                
                 // Fill constants
-                FracDmaxAtMinVel[s][r] = t2dPressure.getDoubleValue("c1_a0", s+1,r+1,0)
-                        +t2dPressure.getDoubleValue("c1_a1", s+1,r+1,0)*dp*dpscale;
-                v0[s][r] = t2dPressure.getDoubleValue("v0_a0", s+1,r+1,0)
-                        +t2dPressure.getDoubleValue("v0_a1", s+1,r+1,0)*dp*dpscale
-                        +t2dPressure.getDoubleValue("v0_a2", s+1,r+1,0)*dp*dp*dp2scale;
-                vmid[s][r] = t2dPressure.getDoubleValue("vmid_a0", s+1,r+1,0)
-                        +t2dPressure.getDoubleValue("vmid_a1", s+1,r+1,0)*dp*dpscale
-                        +t2dPressure.getDoubleValue("vmid_a2", s+1,r+1,0)*dp*dp*dp2scale;
-                distbeta[s][r] = t2dPressure.getDoubleValue("distbeta_a0", s+1,r+1,0)
-                        +t2dPressure.getDoubleValue("distbeta_a1", s+1,r+1,0)*dp*dpscale
-                        +t2dPressure.getDoubleValue("distbeta_a2", s+1,r+1,0)*dp*dp*dp2scale;
+                FracDmaxAtMinVel[s][r] = t2dPressure.getDoubleValueByHash("c1_a0", hash)
+                        +t2dPressure.getDoubleValueByHash("c1_a1", hash)*dp*dpscale;
+                v0[s][r] = t2dPressure.getDoubleValueByHash("v0_a0", hash)
+                        +t2dPressure.getDoubleValueByHash("v0_a1", hash)*dp*dpscale
+                        +t2dPressure.getDoubleValueByHash("v0_a2", hash)*dp*dp*dp2scale;
+                vmid[s][r] = t2dPressure.getDoubleValueByHash("vmid_a0", hash)
+                        +t2dPressure.getDoubleValueByHash("vmid_a1", hash)*dp*dpscale
+                        +t2dPressure.getDoubleValueByHash("vmid_a2", hash)*dp*dp*dp2scale;
+                distbeta[s][r] = t2dPressure.getDoubleValueByHash("distbeta_a0", hash)
+                        +t2dPressure.getDoubleValueByHash("distbeta_a1", hash)*dp*dpscale
+                        +t2dPressure.getDoubleValueByHash("distbeta_a2", hash)*dp*dp*dp2scale;
                 if(r>1 && r<4) {
-                    delta_bfield_coefficient[s][r] = t2dPressure.getDoubleValue("delta_bfield_a0", s+1,r+1,0)
-                            +t2dPressure.getDoubleValue("delta_bfield_a1", s+1,r+1,0)*dp*dpscale
-                            +t2dPressure.getDoubleValue("delta_bfield_a2", s+1,r+1,0)*dp*dp*dp2scale
-                            +t2dPressure.getDoubleValue("delta_bfield_a1", s+1,r+1,0)*dp*dpscale
-                            +t2dPressure.getDoubleValue("delta_bfield_a2", s+1,r+1,0)*dp*dp*dp2scale;
-                    b1[s][r] = t2dPressure.getDoubleValue("b1_a0", s+1,r+1,0)
-                            +t2dPressure.getDoubleValue("b1_a1", s+1,r+1,0)*dp*dpscale
-                            +t2dPressure.getDoubleValue("b1_a2", s+1,r+1,0)*dp*dp*dp2scale;
-                    b2[s][r] = t2dPressure.getDoubleValue("b2_a0", s+1,r+1,0)
-                            +t2dPressure.getDoubleValue("b2_a1", s+1,r+1,0)*dp*dpscale
-                            +t2dPressure.getDoubleValue("b2_a2", s+1,r+1,0)*dp*dp*dp2scale;
-                    b3[s][r] = t2dPressure.getDoubleValue("b3_a0", s+1,r+1,0)
-                            +t2dPressure.getDoubleValue("b3_a1", s+1,r+1,0)*dp*dpscale
-                            +t2dPressure.getDoubleValue("b3_a2", s+1,r+1,0)*dp*dp*dp2scale;
-                    b4[s][r] = t2dPressure.getDoubleValue("b4_a0", s+1,r+1,0)
-                            +t2dPressure.getDoubleValue("b4_a1", s+1,r+1,0)*dp*dpscale
-                            +t2dPressure.getDoubleValue("b4_a2", s+1,r+1,0)*dp*dp*dp2scale;
+                    delta_bfield_coefficient[s][r] = t2dPressure.getDoubleValueByHash("delta_bfield_a0", hash)
+                            +t2dPressure.getDoubleValueByHash("delta_bfield_a1", hash)*dp*dpscale
+                            +t2dPressure.getDoubleValueByHash("delta_bfield_a2", hash)*dp*dp*dp2scale;
+                    b1[s][r] = t2dPressure.getDoubleValueByHash("b1_a0", hash)
+                            +t2dPressure.getDoubleValueByHash("b1_a1", hash)*dp*dpscale
+                            +t2dPressure.getDoubleValueByHash("b1_a2", hash)*dp*dp*dp2scale;
+                    b2[s][r] = t2dPressure.getDoubleValueByHash("b2_a0", hash)
+                            +t2dPressure.getDoubleValueByHash("b2_a1", hash)*dp*dpscale
+                            +t2dPressure.getDoubleValueByHash("b2_a2", hash)*dp*dp*dp2scale;
+                    b3[s][r] = t2dPressure.getDoubleValueByHash("b3_a0", hash)
+                            +t2dPressure.getDoubleValueByHash("b3_a1", hash)*dp*dpscale
+                            +t2dPressure.getDoubleValueByHash("b3_a2", hash)*dp*dp*dp2scale;
+                    b4[s][r] = t2dPressure.getDoubleValueByHash("b4_a0", hash)
+                            +t2dPressure.getDoubleValueByHash("b4_a1", hash)*dp*dpscale
+                            +t2dPressure.getDoubleValueByHash("b4_a2", hash)*dp*dp*dp2scale;
                 }
-                Tmax[s][r] = t2dPressure.getDoubleValue("tmax_a0", s+1,r+1,0)
-                        +t2dPressure.getDoubleValue("tmax_a1", s+1,r+1,0)*dp*dpscale
-                        +t2dPressure.getDoubleValue("tmax_a2", s+1,r+1,0)*dp*dp*dp2scale;
+                Tmax[s][r] = t2dPressure.getDoubleValueByHash("tmax_a0", hash)
+                        +t2dPressure.getDoubleValueByHash("tmax_a1", hash)*dp*dpscale
+                        +t2dPressure.getDoubleValueByHash("tmax_a2", hash)*dp*dp*dp2scale;
             }
         }
     }
@@ -369,12 +369,11 @@ public class TableLoader {
         //CCDBTables 1 =  "/calibration/dc/time_to_distance/t2d";
         //CCDBTables 2 =  "/calibration/dc/time_corrections/T0_correction";	
         if (T2DLOADED) return;
-        
+        System.out.println(" FILLING T2D TABLE ....");
         FillAlpha();
         getConstants(t2dPressure,  t2dPressRef,  pressure);
         FillTable();
-        
-        System.out.println(" T2D TABLE FILLED.....");
+        System.out.println(" T2D TABLE FILLED.");
         T2DLOADED = true;
      }
     

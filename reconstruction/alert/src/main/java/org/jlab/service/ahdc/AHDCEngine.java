@@ -14,20 +14,21 @@ import org.jlab.rec.ahdc.Distance.Distance;
 import org.jlab.rec.ahdc.HelixFit.HelixFitJava;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.Hit.HitReader;
-import org.jlab.rec.ahdc.Hit.TrueHit;
 import org.jlab.rec.ahdc.HoughTransform.HoughTransform;
 import org.jlab.rec.ahdc.KalmanFilter.KalmanFilter;
 import org.jlab.rec.ahdc.KalmanFilter.MaterialMap;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import org.jlab.rec.ahdc.PreCluster.PreClusterFinder;
 import org.jlab.rec.ahdc.Track.Track;
-import org.jlab.rec.ahdc.Mode;
+import org.jlab.rec.ahdc.ModeTrackFinding;
 import java.io.File;
 import java.util.*;
+import java.util.logging.Logger;
+
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.geom.detector.alert.AHDC.AlertDCDetector;
 import org.jlab.geom.detector.alert.AHDC.AlertDCFactory;
-import org.jlab.rec.constants.CalibrationConstantsLoader;
+import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
 import org.jlab.detector.pulse.ModeAHDC;
 
 /** AHDCEngine reconstruction service.
@@ -39,37 +40,25 @@ import org.jlab.detector.pulse.ModeAHDC;
  *
  */
 public class AHDCEngine extends ReconstructionEngine {
+    static final Logger LOGGER = Logger.getLogger(AHDCEngine.class.getName());
 
-    private boolean                   simulation;
-
-    /** 
-     * String name for track seedsfinding method.
-     *  Options are:
-     *  - "distance"
-     *  - "hough"
-     *
-     *  \todo remove bool use_AI_for_trackfinding and use option string above.
-     */
-    private String                    findingMethod;
+    private boolean simulation;
 
     /// Material Map used by Kalman filter
     private HashMap<String, Material> materialMap;
 
-    /// \todo better name... Model of what?
-    private Model model;
-
-    /// \todo better name... mode for what?
-    private Mode mode = Mode.CV_Track_Finding;
+    private ModelTrackFinding modelTrackFinding;
+    private ModeTrackFinding modeTrackFinding = ModeTrackFinding.AI_Track_Finding;
+    static final double TRACK_FINDING_AI_THRESHOLD = 0.2;
+    static final int MAX_HITS_FOR_AI = 300;
 
     private AlertDCDetector factory = null;
     private ModeAHDC ahdcExtractor = new ModeAHDC();
 
-    public AHDCEngine() {
-        super("ALERT", "ouillon", "1.0.1");
-    }
+    public AHDCEngine() { super("ALERT", "ouillon", "1.0.1"); }
 
-    public boolean init(Mode m) {
-        mode = m;
+    public boolean init(ModeTrackFinding m) {
+        modeTrackFinding = m;
         return init();
     }
 
@@ -77,24 +66,21 @@ public class AHDCEngine extends ReconstructionEngine {
     public boolean init() {
 
         factory = (new AlertDCFactory()).createDetectorCLAS(new DatabaseConstantProvider());
-        
-        simulation    = false;
-        findingMethod = "distance";
+        simulation = false;
 
-        if (materialMap == null) {
-            materialMap = MaterialMap.generateMaterials();
-        }
+        if (materialMap == null) materialMap = MaterialMap.generateMaterials();
 
         if(this.getEngineConfigString("Mode")!=null) {
-            if (Objects.equals(this.getEngineConfigString("Mode"), Mode.AI_Track_Finding.name()))
-                mode = Mode.AI_Track_Finding;
-
-            if (Objects.equals(this.getEngineConfigString("Mode"), Mode.CV_Track_Finding.name()))
-                mode = Mode.CV_Track_Finding;
+            if (Objects.equals(this.getEngineConfigString("Mode"), ModeTrackFinding.AI_Track_Finding.name()))
+                modeTrackFinding = ModeTrackFinding.AI_Track_Finding;
+            else if (Objects.equals(this.getEngineConfigString("Mode"), ModeTrackFinding.CV_Distance.name()))
+                modeTrackFinding = ModeTrackFinding.CV_Distance;
+            else if (Objects.equals(this.getEngineConfigString("Mode"), ModeTrackFinding.CV_Hough.name()))
+                modeTrackFinding = ModeTrackFinding.CV_Hough;
         }
 
-        if (mode == Mode.AI_Track_Finding) {
-            model = new Model();
+        if (modeTrackFinding == ModeTrackFinding.AI_Track_Finding) {
+            modelTrackFinding = new ModelTrackFinding();
         }
 
         // Requires calibration constants
@@ -105,7 +91,10 @@ public class AHDCEngine extends ReconstructionEngine {
                 "/calibration/alert/atof/effective_velocity",
                 "/calibration/alert/atof/time_walk",
                 "/calibration/alert/atof/attenuation",
-                "/calibration/alert/atof/time_offsets"
+                "/calibration/alert/atof/time_offsets",
+                "/calibration/alert/ahdc/gains",
+		"/calibration/alert/ahdc/time_over_threshold"
+		
         };
         requireConstants(Arrays.asList(alertTables));
         
@@ -121,119 +110,112 @@ public class AHDCEngine extends ReconstructionEngine {
     @Override
     public boolean processDataEvent(DataEvent event) {
 
-        int    runNo          = 10; // needed here?
-        int    eventNo        = 777; // same
+        double magfield = 50.0; // what is this? The full magnetic field strength in kGauss (factor * 50kGauss)
 
-        double magfield       = 50.0;  // what is this?
-        double magfieldfactor = 1;     // why is this here?
+        if(event.hasBank("MC::Particle")) simulation = true;
 
-	if(event.hasBank("MC::Particle")){
-	    simulation = true;
-	}
-
-        // TODO: this code should perhaps be in the if statement MC::Particle
         ahdcExtractor.update(30, null, event, "AHDC::wf", "AHDC::adc");
 
         if (event.hasBank("RUN::config")) {
             DataBank bank = event.getBank("RUN::config");
-            runNo          = bank.getInt("run", 0);
-            eventNo        = bank.getInt("event", 0);
-            magfieldfactor = bank.getFloat("solenoid", 0);
-            if (runNo <= 0) {
-                System.err.println("AHDCEngine:  got run <= 0 in RUN::config, skipping event.");
+            int newRun = bank.getInt("run", 0);
+            float magfieldfactor = bank.getFloat("solenoid", 0);
+            if (newRun <= 0) {
+                LOGGER.warning("AHDCEngine:  got run <= 0 in RUN::config, skipping event.");
                 return false;
             }
-            int newRun = Run;        
-            newRun = runNo; 
             // Load the constants
             //-------------------
-            if(Run!=newRun) {
-                CalibrationConstantsLoader.Load(newRun, this.getConstantsManager()); 
+            if(Run != newRun) {
+                CalibrationConstantsLoader.Load(newRun, this.getConstantsManager());
                 Run = newRun;
             }
+
+            /// What is this? The field value in the RUN::config bank is a scaling factor (between -1 and 1) of the full field
+            /// The kalman filter use the field in kG not Tesla
+            magfield = 50 * magfieldfactor;
         }
 
-        /// What is this? 
-        magfield = 50 * magfieldfactor;
+
 
         if (event.hasBank("AHDC::adc")) {
-            // I) Read raw hit
-            HitReader hitRead = new HitReader(event, factory, simulation);
+            // I) Read raw hits
+            HitReader hitReader = new HitReader(event, factory, simulation);
+            ArrayList<Hit> AHDC_Hits = hitReader.get_AHDCHits();
 
-            ArrayList<Hit>     AHDC_Hits     = hitRead.get_AHDCHits();
-            if(simulation){
-                ArrayList<TrueHit> TrueAHDC_Hits = hitRead.get_TrueAHDCHits();
-            }
-            //System.out.println("AHDC_Hits size " + AHDC_Hits.size());
-
-            // II) Create PreCluster
-            ArrayList<PreCluster> AHDC_PreClusters = new ArrayList<>();
+            // II) Create PreClusters
             PreClusterFinder preclusterfinder = new PreClusterFinder();
-            preclusterfinder.findPreCluster(AHDC_Hits);
-            AHDC_PreClusters = preclusterfinder.get_AHDCPreClusters();
-            //System.out.println("AHDC_PreClusters size " + AHDC_PreClusters.size());
+            preclusterfinder.findPreclusters(AHDC_Hits);
+            ArrayList<PreCluster> AHDC_PreClusters = preclusterfinder.get_AHDCPreClusters();
 
-            // III) Create Cluster
-            ClusterFinder clusterfinder = new ClusterFinder();
-            clusterfinder.findCluster(AHDC_PreClusters);
-            ArrayList<Cluster> AHDC_Clusters = clusterfinder.get_AHDCClusters();
-            //System.out.println("AHDC_Clusters size " + AHDC_Clusters.size());
 
-            // IV) Track Finder
+            // III) Track Finding: Input = PreClusters, Output = Tracks
+            // During track finding we build Clusters and InterClusters. Each of these objects must be assigned a Track ID so we can:
+            //   - identify which track they belong to,
+            //   - write them properly into the output banks later,
+            //   - and reuse them downstream in the ALERT Engine.
+            //
+            // If using AI-based track finding, tracks are identified using inter-clusters.
+            // Otherwise, the conventional methods (Hough Transform or distance) use clusters.
+
+            // Safety check: if too many hits, rely on conventional track finding
+            if (AHDC_Hits.size() > MAX_HITS_FOR_AI) {
+                LOGGER.info("Too many AHDC_Hits in AHDC::adc, rely on conventional track finding for this event");
+                modeTrackFinding = ModeTrackFinding.CV_Distance;
+            }
+
             ArrayList<Track> AHDC_Tracks = new ArrayList<>();
-            ArrayList<TrackPrediction> predictions = new ArrayList<>();
 
-            // If there is too much hits, we rely on to the conventional track finding
-            if (AHDC_Hits.size() > 300) mode = Mode.CV_Track_Finding;
+            if (modeTrackFinding == ModeTrackFinding.AI_Track_Finding) {
+                // 1) Create inter-clusters from pre-clusters
+                PreClustering preClustering = new PreClustering();
+                ArrayList<InterCluster> inter_clusters = preClustering.mergePreclusters(AHDC_PreClusters);
+                
+                // 2) Create track candidates from inter-clusters
+                ArrayList<ArrayList<InterCluster>> tracks_candidates = new ArrayList<>();
+                TrackCandidatesGenerator trackCandidatesGenerator = new TrackCandidatesGenerator();
+                boolean success = trackCandidatesGenerator.getAllPossibleTrack(inter_clusters, tracks_candidates);
 
-            if (mode == Mode.CV_Track_Finding) {
-                if (findingMethod.equals("distance")) {
-                    // IV) a) Distance method
-                    //System.out.println("using distance");
+                if (!success) {
+                    LOGGER.severe("Too many track candidates find by the AI, exiting...");
+                    return false;
+                }
+
+                // 3) Use AI model to evaluate track candidates
+                ArrayList<TrackPrediction> predictions = new ArrayList<>();
+                try {
+                    AIPrediction aiPrediction = new AIPrediction();
+                    predictions = aiPrediction.prediction(tracks_candidates, modelTrackFinding);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+
+                // 4) Use the output for the AI model to select the good tracks among the candidates
+                for (TrackPrediction t : predictions) {
+                    if (t.getPrediction() > TRACK_FINDING_AI_THRESHOLD) AHDC_Tracks.add(new Track(t.getClusters()));
+                }
+                // The assignment of Track ID to all objects is done in the Kalman filter step below 
+                // I don't know if it is a good idea.
+            }
+            else {
+                // Conventional Track Finding: Hough Transform or Distance: use cluster informations to find tracks
+                // 1) Create clusters from pre-clusters
+                ClusterFinder clusterfinder = new ClusterFinder();
+                clusterfinder.findCluster(AHDC_PreClusters);
+                ArrayList<Cluster> AHDC_Clusters = clusterfinder.get_AHDCClusters();
+                
+                // 2) Find tracks using the selected conventional method
+                if (modeTrackFinding == ModeTrackFinding.CV_Distance) {
                     Distance distance = new Distance();
                     distance.find_track(AHDC_Clusters);
                     AHDC_Tracks = distance.get_AHDCTracks();
-                } else if (findingMethod.equals("hough")) {
-                    // IV) b) Hough Transform method
-                    //System.out.println("using hough");
+                }
+                else if (modeTrackFinding == ModeTrackFinding.CV_Hough) {
                     HoughTransform houghtransform = new HoughTransform();
                     houghtransform.find_tracks(AHDC_Clusters);
                     AHDC_Tracks = houghtransform.get_AHDCTracks();
                 }
             }
-            if (mode == Mode.AI_Track_Finding) {
-                // AI ---------------------------------------------------------------------------------
-                AHDC_Hits.sort(new Comparator<Hit>() {
-                    @Override
-                    public int compare(Hit a1, Hit a2) {
-                        return Double.compare(a1.getRadius(), a2.getRadius());
-                    }
-                });
-                PreClustering preClustering = new PreClustering();
-                ArrayList<PreCluster> preClustersAI = preClustering.find_preclusters_for_AI(AHDC_Hits);
-                ArrayList<PreclusterSuperlayer> preclusterSuperlayers = preClustering.merge_preclusters(preClustersAI);
-                TrackConstruction trackConstruction = new TrackConstruction();
-                ArrayList<ArrayList<PreclusterSuperlayer>> tracks = new ArrayList<>();
-                boolean sucess = trackConstruction.get_all_possible_track(preclusterSuperlayers, tracks);
-
-                if (!sucess) {
-                    System.err.println("Too much tracks candidates, exit");
-                    return false;
-                }
-
-                try {
-                    AIPrediction aiPrediction = new AIPrediction();
-                    predictions = aiPrediction.prediction(tracks, model.getModel());
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-
-                for (TrackPrediction t : predictions) {
-                    if (t.getPrediction() > 0.2)
-                        AHDC_Tracks.add(new Track(t.getClusters()));
-                }
-            }
-            // ------------------------------------------------------------------------------------
 
 
             //Temporary track method ONLY for MC with no background;
@@ -255,37 +237,43 @@ public class AHDCEngine extends ReconstructionEngine {
 
               HelixFitJava h = new HelixFitJava();
               track.setPositionAndMomentum(h.HelixFit(nbOfPoints, szPos, 1));
-              // double p = 150.0;//MeV/c
-              // double phi          = Math.atan2(szPos[0][1], szPos[0][0]);
-              // double x_0[] = {0.0, 0.0, 0.0, p*Math.sin(phi),
-              // p*Math.cos(phi), 0.0}; track.setPositionAndMomentumVec(x_0);
             }
 
             // VI) Kalman Filter
-            // System.out.println("AHDC_Tracks = " + AHDC_Tracks);
-            KalmanFilter kalmanFitter = new KalmanFilter(AHDC_Tracks, event, simulation);
+            KalmanFilter kalmanFitter = new KalmanFilter(AHDC_Tracks, event, magfield, simulation);
+
             // VII) Write bank
             RecoBankWriter writer = new RecoBankWriter();
 
             DataBank recoHitsBank       = writer.fillAHDCHitsBank(event, AHDC_Hits);
             DataBank recoPreClusterBank = writer.fillPreClustersBank(event, AHDC_PreClusters);
+            ArrayList<Cluster> AHDC_Clusters = new ArrayList<>();
+            for (Track track : AHDC_Tracks) {
+                AHDC_Clusters.addAll(track.get_Clusters());
+            }
             DataBank recoClusterBank    = writer.fillClustersBank(event, AHDC_Clusters);
             DataBank recoTracksBank     = writer.fillAHDCTrackBank(event, AHDC_Tracks);
             DataBank recoKFTracksBank   = writer.fillAHDCKFTrackBank(event, AHDC_Tracks);
-            DataBank AIPredictionBanks = writer.fillAIPrediction(event, predictions);
+
+            ArrayList<InterCluster> all_interclusters = new ArrayList<>();
+            for (Track track : AHDC_Tracks) {
+                all_interclusters.addAll(track.getInterclusters());
+            }
+            DataBank recoInterClusterBank = writer.fillInterClusterBank(event, all_interclusters);
+            // DataBank AIPredictionBanks = writer.fillAIPrediction(event, predictions);
 
             event.appendBank(recoHitsBank);
             event.appendBank(recoPreClusterBank);
             event.appendBank(recoClusterBank);
             event.appendBank(recoTracksBank);
             event.appendBank(recoKFTracksBank);
-            event.appendBank(AIPredictionBanks);
+            event.appendBank(recoInterClusterBank);
+            // event.appendBank(AIPredictionBanks);
 
             if (simulation) {
                 DataBank recoMCBank = writer.fillAHDCMCTrackBank(event);
                 event.appendBank(recoMCBank);
             }
-
 
         }
         return true;
@@ -298,7 +286,7 @@ public class AHDCEngine extends ReconstructionEngine {
         int    nEvent     = 0;
         int    maxEvent   = 10;
         int    myEvent    = 3;
-        String inputFile  = "merged_10.hipo";
+        String inputFile  = "output1.hipo";
         String outputFile = "output.hipo";
 
         if (new File(outputFile).delete()) System.out.println("output.hipo is delete.");
@@ -308,17 +296,20 @@ public class AHDCEngine extends ReconstructionEngine {
         AHDCEngine en = new AHDCEngine();
 
         HipoDataSource reader = new HipoDataSource();
-        HipoDataSync   writer = new HipoDataSync();
 
-        en.init();
+        // en.init();
+        en.init(ModeTrackFinding.AI_Track_Finding);
 
         reader.open(inputFile);
+        // SchemaFactory factory = reader.getReader().getSchemaFactory();
+        HipoDataSync   writer = new HipoDataSync();
         writer.open(outputFile);
 
         while (reader.hasEvent() && nEvent < maxEvent) {
             nEvent++;
             // if (nEvent % 100 == 0) System.out.println("nEvent = " + nEvent);
             DataEvent event = reader.getNextEvent();
+            System.out.println("Event: " + nEvent);
 
             // if (nEvent != myEvent) continue;
             // System.out.println("***********  NEXT EVENT ************");

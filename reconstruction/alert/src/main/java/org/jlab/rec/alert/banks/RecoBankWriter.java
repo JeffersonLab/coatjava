@@ -5,6 +5,8 @@ import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.alert.projections.TrackProjection;
 
+import ai.djl.util.Pair;
+
 /**
  * The ALERT {@code RecoBankWriter} writes the banks needed for the ALERT
  * reconstruction: track projections.
@@ -69,6 +71,22 @@ public class RecoBankWriter {
         } else {
             return 1;
         }
+        return 0;
+    }
+
+    public int appendTrackMatchingAIBank(DataEvent event, ArrayList<Pair<Integer, Integer>> trackAIResults) {
+        DataBank bank = event.createBank("ALERT::ai:projections", trackAIResults.size());
+        if (bank == null) {
+            System.err.println("COULD NOT CREATE A ALERT::ai:projections BANK!!!!!!");
+            return 1;
+        }
+        for (int i = 0; i < trackAIResults.size(); i++) {
+            Pair<Integer, Integer> pair = trackAIResults.get(i);
+            bank.setInt("trackid", i, pair.getKey());
+            bank.setInt("matched_atof_hit_id", i, pair.getValue());
+        }
+        event.appendBank(bank);
+
         return 0;
     }
 

@@ -30,7 +30,6 @@ import org.jlab.groot.base.GStyle;
 import org.jlab.groot.data.GraphErrors;
 import org.jlab.groot.graphics.EmbeddedCanvasTabbed;
 import org.jlab.groot.group.DataGroup;
-import org.jlab.logging.DefaultLogger;
 import org.jlab.rec.cvt.bmt.BMTGeometry;
 import org.jlab.rec.cvt.bmt.BMTType;
 import org.jlab.rec.cvt.bmt.CCDBConstantsLoader;
@@ -513,13 +512,13 @@ public class Geometry {
      * @param args
      */
     public static void main(String[] args) {
-        DefaultLogger.debug();
         OptionParser parser = new OptionParser("Compare CVT geometries from two variations");
         parser.setRequiresInputList(false);
         parser.addOption("-var1",   "default",        "geometry variation 1");
         parser.addOption("-var2",   "rgb_spring2019", "geometry variation 2");
         parser.addOption("-offset", "0",              "compensate for the average offset of SVT-R1 strip upstream end (1)");
         parser.parse(args);
+        parser.syncLogLevel(LOGGER);
         
         int run = 11;
         String var1 = parser.getOption("-var1").stringValue();

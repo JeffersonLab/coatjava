@@ -8,8 +8,10 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.logging.Logger;
 import java.util.logging.Level;
-import org.jlab.logging.DefaultLogger;
+import org.jlab.logging.SplitLogManager;
+import org.jlab.logging.SplitLogManagerConfig;
 
 /**
  *
@@ -25,6 +27,7 @@ public class OptionParser {
     private String                             program = "undefined";
     private boolean                  requiresInputList = true;
     private String                  programDescription = "";
+    private Level                             logLevel = Level.INFO; // default log level
     
     public OptionParser(){
         init();
@@ -36,7 +39,7 @@ public class OptionParser {
     }
    
     private void init() {
-        addOption("-l","FINE","logging verbosity level");
+        addOption("-l",this.logLevel.toString(),"logging verbosity level");
         addOption("-v",null,"print version");
         addOption("-h",null,"print help");
     }
@@ -48,7 +51,7 @@ public class OptionParser {
     public void setRequiresInputList(boolean flag){
         this.requiresInputList = flag;
     }
-    
+
     public void addRequired(String key){
         OptionValue option = new OptionValue(key);
         requiredOptions.put(key, option);
@@ -176,6 +179,7 @@ public class OptionParser {
             }
         }
         if (this.requiresInputList && this.parsedInputList.isEmpty()) {
+            printUsage();
             System.err.println(" \n*** ERROR *** Empty Input List.");
             System.exit(101);
         }
@@ -188,7 +192,8 @@ public class OptionParser {
 
     private void setVerbosity(String level) {
         try {
-            DefaultLogger.initialize(Level.parse(level));
+            this.logLevel = Level.parse(level.toUpperCase());
+            SplitLogManagerConfig.INSTANCE.setDefaultLevel(this.logLevel);
         }
         catch (IllegalArgumentException e) {
             System.err.println("Invalid -l java.util.logging.Level:  "+level);
@@ -213,18 +218,40 @@ public class OptionParser {
             return "coatjava version ???";
         }
     }
-    
+
+    public Level getLogLevel() {
+        return this.logLevel;
+    }
+
+    /**
+     * Set the log level of a list of classes to your preferred level.
+     * Use this to override the user's choice of logging level for certain classes.
+     * @param level the log level
+     * @param classList string names of the classes
+     */
+    public static void overrideLogLevel(String level, String... classList) {
+        for(var className : classList)
+            System.setProperty(className + ".level", level.toUpperCase());
+    }
+
+    /**
+     * Set the log level to be consistent with the level set by the user's {@code -l} option
+     * @param externalLogger an external {@code Logger} instance, typically one owned by the owner of this {@code OptionParser} instance
+     */
+    public void syncLogLevel(Logger externalLogger) {
+        SplitLogManager.configureLevel(externalLogger, this.logLevel);
+    }
+
     public static void main(String[] args){
-        OptionParser parser = new OptionParser();
+        if (args.length == 0) args = new String[]{"-o","out.dat","in.dat"};
+        OptionParser parser = new OptionParser("PotionParser");
         parser.addRequired("-o");
         parser.addOption("-r", "10");
         parser.addOption("-t", "25.0");
         parser.addOption("-d", "35");
-        parser.addOption("-h","helpless");
-        parser.addOption("-v","versionless");
-        if (args.length == 0) parser.parse("-o","out.dat","in.dat");
-        else parser.parse(args);
-        parser.show();        
+        parser.show();
+        parser.parse(args);
+        System.out.println("INPUTLIST:  "+parser.getInputList());
         parser.parse("-h");
     }
 }

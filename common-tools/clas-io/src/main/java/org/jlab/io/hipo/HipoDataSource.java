@@ -130,7 +130,7 @@ public class HipoDataSource implements DataSource {
         int counter = 0;
         while(reader.hasEvent()==true){
             DataEvent  event = reader.getNextEvent();
-            System.out.println("EVENT # " + counter);
+            LOGGER.log(Level.INFO, "EVENT # " + counter);
             event.show();
             counter++;
         }

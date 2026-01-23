@@ -69,7 +69,7 @@ public class LundSupport {
 	 *
 	 * @return the singleton object.
 	 */
-	public static LundSupport getInstance() {
+	public static synchronized LundSupport getInstance() {
 		if (instance == null) {
 			instance = new LundSupport();
 			instance.initStyles();

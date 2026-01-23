@@ -6,7 +6,7 @@ export MALLOC_ARENA_MAX=1
 
 split_cli $@
 
-java -Xmx1536m -Xms1024m -XX:+UseSerialGC ${jvm_options[@]} \
+java ${JAVA_OPTS-} -Xmx1536m -Xms1024m -XX:+UseSerialGC ${jvm_options[@]} \
     -cp ${COATJAVA_CLASSPATH:-''} \
     org.jlab.analysis.eventmerger.EventMerger \
     ${class_options[@]}

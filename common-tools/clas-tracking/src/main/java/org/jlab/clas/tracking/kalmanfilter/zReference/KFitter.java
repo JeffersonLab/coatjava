@@ -60,7 +60,7 @@ public class KFitter extends AKFitter {
     Matrix result = new Matrix();
     Matrix result_inv = new Matrix();
     Matrix adj = new Matrix();
-
+    
     public KFitter(boolean filter, int iterations, int dir, Swim swim, double Z[], Libr mo) {
         super(filter, iterations, dir, swim, mo);
         this.Z = Z;
@@ -861,7 +861,7 @@ public class KFitter extends AKFitter {
         
     // Since no vertex inforamtion, the starting point for path length is the final point at the last layer.
     // After vertex information is obtained, transition for the starting point from the final point to vertex will be taken.
-    private void calcFinalChisq(int sector, boolean nofilter) {
+    public void calcFinalChisq(int sector, boolean nofilter) {
         int k = svzLength - 1;
         this.chi2 = 0;
         double path = 0;
@@ -1156,6 +1156,14 @@ public class KFitter extends AKFitter {
     
     public double getNDFDAF(){
         return ndfDAF;
+    }
+        
+    public void setSvzLength(int svzlength){
+        this.svzLength = svzlength;
+    }
+    
+    public int getSvzLength(){
+        return svzLength;
     }
 
     public void printlnMeasVecs() {

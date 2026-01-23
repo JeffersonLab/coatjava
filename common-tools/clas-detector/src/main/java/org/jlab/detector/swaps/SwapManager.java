@@ -10,7 +10,6 @@ import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
-import org.jlab.logging.DefaultLogger;
 import org.jlab.utils.groups.IndexedTable;
 
 /**
@@ -56,8 +55,6 @@ public final class SwapManager {
     private ConstantsManager currConman = null;
     private SchemaFactory schema = null;
 
-    private static SwapManager instance = null;
-
     public Set<String> getDetectors() {
         return this.detsToBanks.keySet();
     }
@@ -68,32 +65,7 @@ public final class SwapManager {
         return this.detsToBanks.get(detectorName);
     }
     
-    private SwapManager() {}
-    
-    public static SwapManager getInstance() {
-        if (instance == null) {
-            instance = new SwapManager();
-        }
-        return instance;
-    }
-
-    /**
-     * @param detectorNames
-     * @param prevTimestamp in CCDB format:  MM/DD/YYYY
-     * @param currTimestamp in CCDB format:  MM/DD/YYYY
-     */
-    public SwapManager(List<String> detectorNames, String prevTimestamp,String currTimestamp) {
-        this.initialize(detectorNames, prevTimestamp, currTimestamp);    
-    }
-
-    /**
-     * @param detectorNames
-     * @param previous timestamp/variation used for translation tables during decoding
-     * @param current timestamp/variation with correct translation tables
-     */
-    public SwapManager(List<String> detectorNames,ConstantsManager previous,ConstantsManager current) {
-        this.initialize(detectorNames, previous, current);
-    }
+    public SwapManager() {}
 
     /**
      * @param detectorNames
@@ -266,16 +238,14 @@ public final class SwapManager {
     }
 
     public static void main(String[] args) {
-        
-        DefaultLogger.debug();
 
-        SwapManager man1 = new SwapManager(Arrays.asList("DC"),"08/10/2020","10/13/2024");
-        System.err.println(man1.banksToTables.get("DC::tot"));
+        SwapManager man = new SwapManager();
+        System.out.println(Arrays.toString(man.get(11014, "/daq/tt/bmt",3,5,320,0)));
 
-        SwapManager noman = getInstance();
-        System.out.println(Arrays.toString(noman.get(11014, "/daq/tt/bmt",3,5,320,0)));
-        
-        SwapManager man = new SwapManager(Arrays.asList("BMT"),"08/10/2020","10/13/2020");
+        man.initialize(Arrays.asList("DC"),"08/10/2020","10/13/2024");
+        System.err.println(man.banksToTables.get("DC::tot"));
+
+        man.initialize(Arrays.asList("BMT"),"08/10/2020","10/13/2020");
         man.get(11014,man.getTable("BMT"),"sector",3,6,8,0);
         System.out.println("SwapManager:\n"+man);
         System.out.println(man.get(11014,man.getTable("BMT"),"sector",99,22,33,44));

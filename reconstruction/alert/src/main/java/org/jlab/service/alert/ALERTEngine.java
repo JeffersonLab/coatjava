@@ -3,19 +3,25 @@ package org.jlab.service.alert;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.io.File;
-import java.util.*;
 
+import org.jlab.detector.calib.utils.DatabaseConstantProvider;
+import org.jlab.geom.base.Detector;
+import org.jlab.geom.detector.alert.ATOF.AlertTOFFactory;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.io.hipo.HipoDataSync;
 
 import org.jlab.clas.reco.ReconstructionEngine;
-import org.jlab.clas.tracking.kalmanfilter.Material;
 import org.jlab.clas.swimtools.Swim;
+
+import org.jlab.rec.alert.TrackMatchingAI.ModelTrackMatching;
 
 import org.jlab.rec.alert.banks.RecoBankWriter;
 import org.jlab.rec.alert.projections.TrackProjector;
+import org.jlab.rec.atof.hit.ATOFHit;
+
+import ai.djl.util.Pair;
 
 
 /** 
@@ -40,6 +46,8 @@ public class ALERTEngine extends ReconstructionEngine {
      */
     private RecoBankWriter rbc;
 
+    Detector ATOF; // ALERT ATOF detector
+
     /**
      *  Current run number being processed.
      *  TODO: why atomic here and nowhere else? 
@@ -47,7 +55,9 @@ public class ALERTEngine extends ReconstructionEngine {
     private final AtomicInteger run = new AtomicInteger(0);
 
     private double b; //Magnetic field
-    
+
+    private ModelTrackMatching modelTrackMatching;
+
     public void setB(double B) {
         this.b = B;
     }
@@ -72,6 +82,11 @@ public class ALERTEngine extends ReconstructionEngine {
 
         rbc = new RecoBankWriter();
 
+        modelTrackMatching = new ModelTrackMatching();
+
+        AlertTOFFactory factory = new AlertTOFFactory();
+        DatabaseConstantProvider cp = new DatabaseConstantProvider(11, "default");
+        ATOF = factory.createDetectorCLAS(cp);
 
         if(this.getEngineConfigString("Mode")!=null) {
             //if (Objects.equals(this.getEngineConfigString("Mode"), Mode.AI_Track_Finding.name()))
@@ -126,6 +141,79 @@ public class ALERTEngine extends ReconstructionEngine {
         projector.projectTracks(event);
         rbc.appendMatchBanks(event, projector.getProjections());
 
+        /// ---------------------------------------------------------------------------------------
+        /// Track matching using AI ---------------------------------------------------------------
+
+        if (event == null)  return false; // TODO: is it useful?
+        if (!event.hasBank("AHDC::track")) return false;
+
+        DataBank bank_AHDCtracks = event.getBank("AHDC::track");
+        DataBank bank_AHDCInterclusters = event.getBank("AHDC::interclusters");
+        DataBank bank_ATOFHits = event.getBank("ATOF::hits");
+
+        ArrayList<Pair<Integer, Integer>> matched_ATOF_hit_id = new ArrayList<>();
+
+        for (int i = 0; i < bank_AHDCtracks.rows(); i++) {
+            int track_id = bank_AHDCtracks.getInt("trackid", i);
+
+            // Get all interclusters for this track
+            ArrayList<Pair<Float, Float>> interClusters = new ArrayList<>();
+            for (int j = 0; j < bank_AHDCInterclusters.rows(); j++) {
+                int intercluster_track_id = bank_AHDCInterclusters.getInt("trackid", j);
+                if (intercluster_track_id == track_id) {
+                    float x = bank_AHDCInterclusters.getFloat("x", j);
+                    float y = bank_AHDCInterclusters.getFloat("y", j);
+                    interClusters.add(new Pair<>(x, y));
+                }
+            }
+            if (interClusters.size() != 5) continue;
+
+            try {
+
+                float[] pred = modelTrackMatching.prediction(interClusters);
+                int sector_pred = (int) pred[0];
+                int layer_pred = (int) pred[1];
+                int wedge_pred = (int) pred[2];
+
+                ATOFHit hit_pred = new ATOFHit(sector_pred, layer_pred, wedge_pred, 0, 0, 0, 0f, ATOF);
+                double pred_x = hit_pred.getX();
+                double pred_y = hit_pred.getY();
+                double pred_z = hit_pred.getZ();
+
+                double threshold = 20.0;
+                double minDistanceSquared = threshold * threshold;
+
+                ATOFHit matchAtofHit = null; // Could be used later
+                int matchHitId = -1;
+
+                for (int k = 0; k < bank_ATOFHits.rows(); k++) {
+                    int component = bank_ATOFHits.getInt("component", k);
+                    if (component == 10) continue;
+
+                    int sector = bank_ATOFHits.getInt("sector", k);
+                    int layer = bank_ATOFHits.getInt("layer", k);
+
+                    ATOFHit hit = new ATOFHit(sector, layer, component, 0, 0, 0, 0f, ATOF);
+
+                    double dx = pred_x - hit.getX();
+                    double dy = pred_y - hit.getY();
+                    double dz = pred_z - hit.getZ();
+
+                    double distanceSquared = dx * dx + dy * dy + dz * dz;
+
+                    if (distanceSquared < minDistanceSquared) {
+                        minDistanceSquared = distanceSquared;
+                        matchAtofHit = hit;
+                        matchHitId = bank_ATOFHits.getInt("id", k);
+                    }
+                }
+                matched_ATOF_hit_id.add(new Pair<>(track_id, matchHitId));
+
+            } catch (Exception ex) {
+                System.out.println("Exception in ALERTEngine processDataEvent: " + ex); // TODO: proper logging
+            }
+        }
+        rbc.appendTrackMatchingAIBank(event, matched_ATOF_hit_id);
         return true;
     }
 

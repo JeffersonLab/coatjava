@@ -1,0 +1,34 @@
+configuration:
+  global:
+    variation: rgd_fall2023
+  io-services:
+    writer:
+      schema_dir: dst
+  services:
+    1ST:
+      magfieldSolenoidMap: Symm_solenoid_r601_phi1_z1201_13June2018.dat
+      magfieldTorusMap: Full_torus_r251_phi181_z251_25Jan2021.dat
+    HB:
+      run: "19000"
+io-services:
+  reader:
+    class: org.jlab.io.clara.DecoderReader
+    name: DecoderReader
+  writer:
+    class: org.jlab.io.clara.DecoderWriter
+    name: DecoderWriter
+services:
+  - class: org.jlab.service.uber.Uber$First
+    name: 1ST
+  - class: org.jlab.service.uber.Uber$ForwardTagger
+    name: FT
+  - class: org.jlab.service.uber.Uber$Central
+    name: CD
+  - class: org.jlab.service.uber.Uber$HitBasedCV
+    name: HB
+  - class: org.jlab.service.uber.Uber$TimeBasedCV
+    name: TB
+  - class: org.jlab.service.uber.Uber$Last
+    name: NTH
+mime-types:
+  - binary/data-hipo

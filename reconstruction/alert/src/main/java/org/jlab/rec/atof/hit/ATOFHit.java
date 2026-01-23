@@ -3,8 +3,8 @@ package org.jlab.rec.atof.hit;
 import org.jlab.geom.base.*;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.rec.atof.constants.Parameters;
-import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
 
 /**
  *
@@ -18,14 +18,16 @@ import java.util.logging.Logger;
 public class ATOFHit {
 
     static final Logger LOGGER = Logger.getLogger(ATOFHit.class.getName());
-
+    
     private int sector, layer, component, order;
     private int tdc, tot;
+    private Float startTime;
     private double time, energy, x, y, z;
     private String type;
     private boolean isInACluster;
     private int associatedClusterIndex;
     int idTDC;
+    
 
     public int getSector() {
         return sector;
@@ -77,6 +79,10 @@ public class ATOFHit {
 
     public double getTime() {
         return time;
+    }
+    
+    public Float getStartTime() {
+        return this.startTime;
     }
 
     public void setTime(double time) {
@@ -184,29 +190,63 @@ public class ATOFHit {
      * unsupported.
      */
     public final int convertTdcToTime() {
-        double tdc2time, veff, distance_to_sipm;
+        //Converting tdc to ns, event start time correction
+        this.time = Parameters.TDC2TIME*this.tdc;
+        //If the startTime has been defined, remove it
+        if(this.startTime!= null) this.time -= this.startTime;
+
+        //TODO: When table structure evolves, pay attention to order.
+        //Key for the current channel 
+        int key = this.sector*10000 + this.layer*1000 + this.component*10 + 0;//this.order;
+    
+        //Time offsets
+        double[] timeOffsets = CalibrationConstantsLoader.ATOF_TIME_OFFSETS.get(key);
+        double t0 = timeOffsets[0];
+        
+        //tud is used to store the bar up - bar down alignment
+        double tud = timeOffsets[1];
+        //The rest of the constants are not used for now
+        /*double twb = timeOffsets[2];
+        double xtra1 = timeOffsets[3];
+        double xtra2 = timeOffsets[4];*/
+        
+        //TW corrections TO BE IMPLEMENTED
+        /*
+        double[] timeWalks = CalibrationConstantsLoader.ATOF_TIME_WALK.get(key);
+	double tw0 = timeWalks[0];
+        double tw1 = timeWalks[1];
+        double tw2 = timeWalks[2];
+        double tw3 = timeWalks[3];
+        double dtw0 = timeWalks[4];
+        double dtw1 = timeWalks[5];
+        double dtw2 = timeWalks[6];
+        double dtw3 = timeWalks[7];
+        double chi2ndf = timeWalks[8];*/
+        
+        double veff, distance_to_sipm, timeOffset;
         if (null == this.type) {
             LOGGER.finest("Null hit type, cannot convert tdc to time.");
             return 1;
         } else {
             switch (this.type) {
                 case "wedge" -> {
-                    tdc2time = Parameters.TDC2TIME;
                     veff = Parameters.VEFF;
                     //Wedge hits are placed at the center of wedges and sipm at their top
                     distance_to_sipm = Parameters.WEDGE_THICKNESS / 2.;
+                    timeOffset = - t0;
                 }
                 case "bar up" -> {
-                    tdc2time = Parameters.TDC2TIME;
                     veff = Parameters.VEFF;
                     //The distance will be computed at barhit level when z information is available
                     distance_to_sipm = 0;
+                    //t0 for bars is the sum of up+down channels->need 1/2
+                    timeOffset = - tud/2. - t0/2;
                 }
                 case "bar down" -> {
-                    tdc2time = Parameters.TDC2TIME;
                     veff = Parameters.VEFF;
                     //The distance will be computed at barhit level when z information is available
                     distance_to_sipm = 0;
+                    timeOffset = + tud/2. - t0/2;
                 }
                 case "bar" -> {
                     LOGGER.finest("Bar hit type, cannot convert tdc to time.");
@@ -218,8 +258,8 @@ public class ATOFHit {
                 }
             }
         }
-        //Hit time. Will need implementation of offsets.
-        this.time = tdc2time * this.tdc - distance_to_sipm / veff;
+        //Hit time.
+        this.time = this.time - distance_to_sipm / veff + timeOffset;
         return 0;
     }
 
@@ -363,13 +403,14 @@ public class ATOFHit {
      * @param atof Detector object representing the atof, used to calculate
      * spatial coordinates.
      */
-    public ATOFHit(int sector, int layer, int component, int order, int tdc, int tot, Detector atof) {
+    public ATOFHit(int sector, int layer, int component, int order, int tdc, int tot, Float startTime, Detector atof) {
         this.sector = sector;
         this.layer = layer;
         this.component = component;
         this.order = order;
         this.tdc = tdc;
         this.tot = tot;
+        this.startTime = startTime;
         this.isInACluster = false;
 
         this.makeType();

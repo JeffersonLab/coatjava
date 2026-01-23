@@ -2,6 +2,7 @@ package org.jlab.rec.ahdc.Banks;
 
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
+import org.jlab.rec.ahdc.AI.InterCluster;
 import org.jlab.rec.ahdc.AI.TrackPrediction;
 import org.jlab.rec.ahdc.Cluster.Cluster;
 import org.jlab.rec.ahdc.Hit.Hit;
@@ -25,8 +26,9 @@ public class RecoBankWriter {
 			bank.setInt("wire", i, hitList.get(i).getWireId());
 			bank.setDouble("doca", i, hitList.get(i).getDoca());
 			bank.setDouble("residual", i, hitList.get(i).getResidual());
-			bank.setDouble("residual_prefit", i, hitList.get(i).getResidualPrefit());
 			bank.setDouble("time", i, hitList.get(i).getTime());
+			bank.setInt("adc", i, (int) hitList.get(i).getADC());
+			bank.setDouble("timeOverThreshold", i, hitList.get(i).getToT());
 			bank.setInt("trackid", i, hitList.get(i).getTrackId());
 		}
 
@@ -112,7 +114,6 @@ public class RecoBankWriter {
 			bank.setFloat("p_drift", row, (float) track.get_p_drift());
 			bank.setFloat("chi2", row, (float) track.get_chi2());
 			bank.setFloat("sum_residuals", row, (float) track.get_sum_residuals());
-
 			row++;
 		}
 
@@ -174,6 +175,23 @@ public class RecoBankWriter {
 			bank.setFloat("y5", row, (float) track.getSuperpreclusters().get(4).getY());
 
 			bank.setFloat("pred", row, track.getPrediction());
+			row++;
+		}
+
+		return bank;
+	}
+
+	public DataBank fillInterClusterBank(DataEvent event, ArrayList<InterCluster> interClusters) {
+
+		int nInterClusters = interClusters.size();
+		DataBank bank = event.createBank("AHDC::interclusters", nInterClusters);
+
+		int row = 0;
+
+		for (InterCluster interCluster : interClusters) {
+			bank.setInt("trackid", row, (int) interCluster.getTrackId());
+			bank.setFloat("x", row, (float) interCluster.getX());
+			bank.setFloat("y", row, (float) interCluster.getY());
 			row++;
 		}
 

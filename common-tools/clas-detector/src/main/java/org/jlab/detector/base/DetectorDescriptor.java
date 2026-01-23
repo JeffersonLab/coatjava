@@ -1,10 +1,4 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.jlab.detector.base;
-
 
 /**
  *
@@ -12,38 +6,36 @@ package org.jlab.detector.base;
  */
 public class DetectorDescriptor implements Comparable<DetectorDescriptor> {
 
-    private DetectorType  detectorType = DetectorType.UNDEFINED;
+    private DetectorType detectorType = DetectorType.UNDEFINED;
     private Integer hw_CRATE     = 0;
     private Integer hw_SLOT      = 0;
     private Integer hw_CHANNEL   = 0;
-    
+
     private Integer dt_SECTOR    = 0;
     private Integer dt_LAYER     = 0;
     private Integer dt_COMPONENT = 0;
-    
-    private Integer dt_ORDER     = 0; // This is the order in the bank
-    // defines ADCL,ADCR,TDCL,TDCR (1,2,3,4)
-    
-    public DetectorDescriptor(){
-        
-    }
-    
+
+    // FIXME:  Is this correct?
+    // This order in the bank defines ADCL,ADCR,TDCL,TDCR (1,2,3,4):
+    private Integer dt_ORDER     = 0;
+
+    public DetectorDescriptor() {}
+
     public DetectorDescriptor(DetectorType type){
         this.detectorType = type;
     }
-    
+
     public DetectorDescriptor(String name){
         this.detectorType = DetectorType.getType(name);
     }
-    
+
     public DetectorDescriptor getCopy(){
         DetectorDescriptor newDesc = new DetectorDescriptor(this.detectorType);
         newDesc.setCrateSlotChannel(this.getCrate(), this.getSlot(), this.getChannel());
         newDesc.setSectorLayerComponent(this.getSector(), this.getLayer(), this.getComponent());
-
         return newDesc;
     }
-    
+
     public int getCrate(){ return this.hw_CRATE;}
     public int getChannel() { return this.hw_CHANNEL;}
     public int getComponent(){ return this.dt_COMPONENT;}
@@ -55,7 +47,7 @@ public class DetectorDescriptor implements Comparable<DetectorDescriptor> {
     public void setSector(int sector){
         this.dt_SECTOR=sector;
     }
-    
+
     public void setOrder(int order){        
         this.dt_ORDER = order;
         if(this.dt_ORDER<0||this.dt_ORDER>3){
@@ -63,7 +55,7 @@ public class DetectorDescriptor implements Comparable<DetectorDescriptor> {
             this.dt_ORDER = 0;
         }
     }
-    
+
     public int[] getCSC() {
         return new int[]{hw_CRATE,hw_SLOT,hw_CHANNEL};
     }
@@ -71,9 +63,9 @@ public class DetectorDescriptor implements Comparable<DetectorDescriptor> {
     public int[] getSLCO() {
         return new int[]{dt_SECTOR,dt_LAYER,dt_COMPONENT,dt_ORDER};
     }
-    
+
     public DetectorType getType(){ return this.detectorType;}
-    
+
     public final void setType(DetectorType type){
         this.detectorType = type;
     }
@@ -94,19 +86,33 @@ public class DetectorDescriptor implements Comparable<DetectorDescriptor> {
         this.dt_COMPONENT = comp;
     }
 
+    public final void setSectorLayerComponentOrder(int sector, int layer, int comp, int order) {
+        this.dt_SECTOR = sector;
+        this.dt_LAYER  = layer;
+        this.dt_COMPONENT = comp;
+        this.dt_ORDER = order;
+    }
+
+    public final void setSectorLayerComponentOrderType(int sector, int layer, int comp, int order, int type) {
+        this.dt_SECTOR = sector;
+        this.dt_LAYER  = layer;
+        this.dt_COMPONENT = comp;
+        this.dt_ORDER = order;
+        this.detectorType = DetectorType.getType(type);
+    }
+
     public static int generateHashCode(int s, int l, int c){
         return  ((s<<24)&0xFF000000)|
                 ((l<<16)&0x00FF0000)|(c&0x0000FFFF);
     }
-    
+
     public int getHashCode(){
         int hash = ((this.dt_SECTOR<<24)&0xFF000000)|
                 ((this.dt_LAYER<<16)&0x00FF0000)| ((this.dt_ORDER<<12) & 0x0000F000) |
                 (this.dt_COMPONENT&0x00000FFF);
         return hash;
     }
-   
-    
+
     public void copy(DetectorDescriptor desc){
         this.hw_SLOT    = desc.hw_SLOT;
         this.hw_CRATE   = desc.hw_CRATE;
@@ -116,7 +122,7 @@ public class DetectorDescriptor implements Comparable<DetectorDescriptor> {
         this.dt_LAYER     = desc.dt_LAYER;
         this.dt_COMPONENT = desc.dt_COMPONENT;
     }
-    
+
     public boolean compare(DetectorDescriptor desc){
         if(this.detectorType.equals(desc.detectorType)&&
                 this.dt_SECTOR.equals(desc.dt_SECTOR)&&
@@ -124,8 +130,7 @@ public class DetectorDescriptor implements Comparable<DetectorDescriptor> {
                 this.dt_COMPONENT.equals(desc.dt_COMPONENT)) return true;
         return false;
     }
-    
-    
+
     public static String getName(String base, int... ids){
         StringBuilder str = new StringBuilder();
         str.append(base);
@@ -134,7 +139,7 @@ public class DetectorDescriptor implements Comparable<DetectorDescriptor> {
         if(ids.length>2) str.append(String.format("_C_%d", ids[2]));
         return str.toString();
     }
-    
+
     public static String getTitle(String base, int... ids){
         StringBuilder str = new StringBuilder();
         if(ids.length>0) str.append(String.format(" SECTOR %d", ids[0]));
@@ -142,7 +147,7 @@ public class DetectorDescriptor implements Comparable<DetectorDescriptor> {
         if(ids.length>2) str.append(String.format(" UNIT %d", ids[2]));
         return str.toString();
     }
-    
+
     @Override
     public String toString(){
         return String.format("D [%6s ] C/S/C [%4d %4d %4d ]  S/L/C [%4d %4d %4d ] ORDER = %2d", 
@@ -158,7 +163,5 @@ public class DetectorDescriptor implements Comparable<DetectorDescriptor> {
         } else {
             return 1;
         }
-        //return 0;
-        //return 1;
     }
 }

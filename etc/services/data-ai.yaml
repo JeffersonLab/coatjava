@@ -70,11 +70,9 @@ configuration:
 ## uncomment the following two lines for compatibility with alignments before the DC fixes
 #    dcMinistagger: "NOTONREFWIRE"
 #    dcFeedthroughs: "OFF"
-#  io-services:
-#    writer:
-#      schema_dir: "absolute-path-to-schema-folder"
-#      for example:
-#      schema_dir: "/home/clas12-1/chef/myClara/plugins/clas12/etc/bankdefs/dst"
+  io-services:
+    writer:
+      schema_dir: dst
   services:
     MAGFIELDS:
       magfieldSolenoidMap: Symm_solenoid_r601_phi1_z1201_13June2018.dat

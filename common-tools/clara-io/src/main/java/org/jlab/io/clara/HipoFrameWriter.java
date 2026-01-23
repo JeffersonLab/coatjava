@@ -8,6 +8,7 @@ import org.jlab.jnp.hipo4.data.DataFrame;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.io.HipoWriterStream;
 import org.jlab.jnp.utils.file.FileUtils;
+import org.jlab.utils.ClaraYaml;
 import org.json.JSONObject;
 
 /**
@@ -47,9 +48,14 @@ public class HipoFrameWriter extends AbstractEventWriterService<HipoWriterStream
     }
 
     private String getSchemaDirectory(JSONObject opts) {
-        return opts.has(CONF_SCHEMA)
-                ? opts.getString(CONF_SCHEMA)
-                : FileUtils.getEnvironmentPath("CLAS12DIR", "etc/bankdefs/hipo4");
+        String s = FileUtils.getEnvironmentPath("CLAS12DIR", "etc/bankdefs/hipo4");
+        if (opts.has(CONF_SCHEMA)) {
+            s = opts.getString(CONF_SCHEMA).trim();
+            // If it's not already an absolute path, assume it's the name of a
+            // stock schema that comes with COATJAVA and get the full path to it:
+            if (!s.startsWith("/")) s = ClaraYaml.getStockSchemaDirectory(s);
+        }
+        return s;
     }
 
     private String[] getFilterString(JSONObject opts){

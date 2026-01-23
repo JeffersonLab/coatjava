@@ -1,25 +1,46 @@
 version: 2
 
-registries:
-  clas12maven:
-    type: maven-repository
-    url: https://clasweb.jlab.org/clas12maven
-  jhep:
-    type: maven-repository
-    url: https://clasweb.jlab.org/jhep/maven
+# registries: FIXME: disabled, see <https://github.com/JeffersonLab/coatjava/issues/915>
+#   clas12maven:
+#     type: maven-repository
+#     url: https://clasweb.jlab.org/.clas12maven
+#   jhep:
+#     type: maven-repository
+#     url: https://clasweb.jlab.org/.jhep/maven
 
 updates:
   - package-ecosystem: "maven"
     directory: "/"
+    cooldown:
+      default-days: 14
     schedule:
       interval: "weekly"
-    registries:
-      - clas12maven
-      - jhep
+    commit-message:
+      prefix: "build(deps)"
     ignore:
       - dependency-name: "org.jlab:groot" # since version numbers are not in order
       - dependency-name: "org.ejml:ejml-simple" # keep version the same as `j4ml:j4ml-clas12:jar:0.9-SNAPSHOT`; see pull requests #636 and #632
+      - dependency-name: "org.openjfx:javafx-base"
+        versions: [">= 24"] # version 24 requires JAVA_VERSION 22+
+      - dependency-name: "org.openjfx:javafx-graphics"
+        versions: [">= 24"] # version 24 requires JAVA_VERSION 22+
+      - dependency-name: "org.openjfx:javafx-fxml"
+        versions: [">= 24"] # version 24 requires JAVA_VERSION 22+
+    groups:
+      javafx:
+        patterns:
+          - "org.openjfx:javafx-*"
   - package-ecosystem: "github-actions"
     directory: "/"
+    cooldown:
+      default-days: 14
     schedule:
       interval: "weekly"
+    commit-message:
+      prefix: "ci(deps)"
+  - package-ecosystem: "gitsubmodule"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    commit-message:
+      prefix: "chore(submodule)"
