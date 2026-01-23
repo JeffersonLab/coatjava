@@ -95,9 +95,10 @@ JAVA_OPTS="$JAVA_OPTS -Djava.util.logging.manager=org.jlab.logging.SplitLogManag
 if $java_quiet; then
   JAVA_OPTS="$JAVA_OPTS -Djava.util.logging.config.file=$CLAS12DIR/etc/logging/logging.properties"
 else
-  case ${java_log_level^^} in
+  java_log_level_upcase=$(echo $java_log_level | tr '[:lower:]' '[:upper:]')
+  case ${java_log_level_upcase} in
     SEVERE|WARNING|INFO|CONFIG|FINE|FINER|FINEST|ALL|OFF)
-      JAVA_OPTS="$JAVA_OPTS -D.level=${java_log_level^^}"
+      JAVA_OPTS="$JAVA_OPTS -D.level=${java_log_level_upcase}"
       ;;
     *)
       error "unknown Java log level '$java_log_level'"
