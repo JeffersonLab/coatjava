@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 import org.jlab.coda.jevio.ByteDataTransformer;
 import org.jlab.coda.jevio.CompositeData;
 import org.jlab.coda.jevio.DataType;
+import org.jlab.coda.jevio.EvioCompactStructureHandler;
 import org.jlab.coda.jevio.EvioException;
 import org.jlab.coda.jevio.EvioNode;
 import org.jlab.detector.decode.DetectorDataDgtz.ADCData;
@@ -309,6 +310,8 @@ public class CodaEventDecoder {
         ArrayList<EvioTreeBranch>  branches = new ArrayList<>();
         try {
 
+            EvioCompactStructureHandler ecsh = event.getStructureHandler();
+            if (ecsh == null) return branches;
             List<EvioNode>  eventNodes = event.getStructureHandler().getNodes();
             if(eventNodes==null){
                 return branches;
