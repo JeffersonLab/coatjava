@@ -1,0 +1,18 @@
+#!/bin/bash
+
+csv=gold.csv
+cache=~/pin-gold.txt
+IFS=$'\n'
+
+for x in $(tail -n +2 $csv)
+do
+    x=${x//[[:space:]]/}
+    run=${x##*,}
+    period=${x%%,*}
+    stub=${period}_${run}
+    data=$(grep ${run} $cache | grep 1$)
+    decoder4u -n 10000 -o $stub.hipo $data >& $stub.log &
+done
+
+wait
+
