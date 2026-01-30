@@ -15,8 +15,8 @@ public class HipoDiff {
     /**
      * Bank sortable by any integer columns.
      */
-    static class SortedBank extends Bank {
-        SortedBank(Schema s) { super(s); }
+    static class DiffBank extends Bank {
+        DiffBank(Schema s) { super(s); }
         /**
          * @param index the bank column indices to sort on
          * @return the sorted row indices
@@ -43,6 +43,10 @@ public class HipoDiff {
             }
             return rows;
         }
+        /**
+         * @param b the bank to compare with
+         * @return the resulting diff bank
+         */
         public Bank getDiff(Bank b) {
             Bank diff = new Bank(getSchema());
             int rows = Math.min(getRows(), b.getRows());
@@ -96,8 +100,8 @@ public class HipoDiff {
     static HipoWriter writer;
     static Event event;
 
-    static ArrayList<SortedBank> banksA = new ArrayList<>();
-    static ArrayList<SortedBank> banksB = new ArrayList<>();
+    static ArrayList<DiffBank> banksA = new ArrayList<>();
+    static ArrayList<DiffBank> banksB = new ArrayList<>();
     static HashMap<String, HashMap<String, Integer>> badEntries = new HashMap<>();
 
     public static void main(String args[]) {
@@ -135,12 +139,12 @@ public class HipoDiff {
 
         if (op.getOption("-b").stringValue() == null) {
             for (Schema s : sf.getSchemaList()) {
-                banksA.add(new SortedBank(s));
-                banksB.add(new SortedBank(s));
+                banksA.add(new DiffBank(s));
+                banksB.add(new DiffBank(s));
             }
         } else {
-            banksA.add(new SortedBank(sf.getSchema(op.getOption("-b").stringValue())));
-            banksB.add(new SortedBank(sf.getSchema(op.getOption("-b").stringValue())));
+            banksA.add(new DiffBank(sf.getSchema(op.getOption("-b").stringValue())));
+            banksB.add(new DiffBank(sf.getSchema(op.getOption("-b").stringValue())));
         }
 
         if (op.getOption("-o").stringValue() != null) {
@@ -188,7 +192,7 @@ public class HipoDiff {
         return ret;
     }
 
-    public static int compare(SortedBank a, SortedBank b) {
+    public static int compare(DiffBank a, DiffBank b) {
         int ret=0;
         if (a.getRows() != b.getRows()) {
             System.out.println("========================= Different number of rows:");
