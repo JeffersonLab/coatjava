@@ -185,7 +185,7 @@ public class HipoDiff {
             if (writer != null) {
                 event.reset();
                 event.write(banksA.get(i).getDiff(banksB.get(i)));
-                writer.addEvent(a);
+                writer.addEvent(event);
             }
             ret += compare(banksA.get(i), banksB.get(i));
         }
