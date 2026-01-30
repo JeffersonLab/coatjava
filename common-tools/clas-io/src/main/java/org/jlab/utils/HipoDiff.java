@@ -7,6 +7,7 @@ import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.Schema;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
+import org.jlab.jnp.hipo4.io.HipoWriter;
 import org.jlab.utils.options.OptionParser;
 
 public class HipoDiff {
@@ -57,6 +58,7 @@ public class HipoDiff {
     static boolean verboseMode;
     static boolean quietMode;
     static Bank runConfigBank;
+    static HipoWriter writer;
 
     static ArrayList<SortedBank> banksA = new ArrayList<>();
     static ArrayList<SortedBank> banksB = new ArrayList<>();
@@ -70,6 +72,7 @@ public class HipoDiff {
         op.addOption("-Q", null, "verbose mode");
         op.addOption("-b", null, "name of bank to diff");
         op.addOption("-s", null, "sort on column index");
+        op.addOption("-o", null, "output HIPO diff file");
         op.setRequiresInputList(true);
         op.parse(args);
         if (op.getInputList().size() != 2) {
@@ -104,6 +107,12 @@ public class HipoDiff {
             banksB.add(new SortedBank(sf.getSchema(op.getOption("-b").stringValue())));
         }
 
+        if (op.getOption("-o").stringValue() != null) {
+            writer = new HipoWriter();
+            writer.getSchemaFactory().copy(readerA.getSchemaFactory());
+            writer.open(op.getOption("-o").stringValue());
+        }
+
         compare(readerA, readerB);
     }
 
@@ -133,7 +142,12 @@ public class HipoDiff {
         for (int i = 0; i < banksA.size(); i++) {
             a.read(banksA.get(i));
             b.read(banksB.get(i));
-            ret += compare(banksA.get(i), banksB.get(i));
+            int x = compare(banksA.get(i), banksB.get(i));
+            if (x != 0 && writer != null) {
+                // FIXME:  need the new diff event here
+                writer.addEvent(a);
+            }
+            ret += x;
         }
         return ret;
     }
