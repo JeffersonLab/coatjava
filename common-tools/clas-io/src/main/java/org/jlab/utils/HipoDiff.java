@@ -53,8 +53,7 @@ public class HipoDiff {
             int ncols = getSchema().getElements();
             for (int row = 0; row < rows; row++) {
                 for (int col = 0; col < ncols; col++) {
-                    int ftype = getSchema().getType(col);
-                    switch (ftype) {
+                    switch (getSchema().getType(col)) {
                         case 1: // byte
                             diff.putByte(col, row, (byte)(b.getByte(col,row) - getByte(col,row)));
                             break;
