@@ -43,6 +43,41 @@ public class HipoDiff {
             }
             return rows;
         }
+        public Bank getDiff(Bank b) {
+            Bank diff = new Bank(getSchema());
+            int rows = Math.min(getRows(), b.getRows());
+            int ncols = getSchema().getElements();
+            for (int row = 0; row < rows; row++) {
+                for (int col = 0; col < ncols; col++) {
+                    int ftype = getSchema().getType(col);
+                    String fname = getSchema().getElementName(col);
+                    switch (ftype) {
+                        case 1: // byte
+                            diff.putByte(fname, row, (byte)(b.getByte(fname,row) - getByte(fname,row)));
+                            break;
+                        case 2: // short
+                            diff.putShort(fname, row, (short)(b.getShort(fname,row) - getShort(fname,row)));
+                            break;
+                        case 3: // int
+                            diff.putInt(fname, row, b.getInt(fname,row) - getInt(fname,row));
+                            break;
+                        case 4: // float
+                            diff.putFloat(fname, row, b.getFloat(fname,row) - getFloat(fname,row));
+                            break;
+                        case 5: // double
+                            diff.putDouble(fname, row, b.getDouble(fname,row) - getDouble(fname,row));
+                            break;
+                        case 6: // long
+                            diff.putLong(fname, row, b.getLong(fname,row) - getLong(fname,row));
+                            break;
+                        default:
+                            // unhandled type (arrays, etc.)
+                            break;
+                    }
+                }
+            }
+            return diff;
+        }
     }
 
     static int nrow = 0;
@@ -59,6 +94,7 @@ public class HipoDiff {
     static boolean quietMode;
     static Bank runConfigBank;
     static HipoWriter writer;
+    static Event event;
 
     static ArrayList<SortedBank> banksA = new ArrayList<>();
     static ArrayList<SortedBank> banksB = new ArrayList<>();
@@ -142,12 +178,12 @@ public class HipoDiff {
         for (int i = 0; i < banksA.size(); i++) {
             a.read(banksA.get(i));
             b.read(banksB.get(i));
-            int x = compare(banksA.get(i), banksB.get(i));
-            if (x != 0 && writer != null) {
-                // FIXME:  need the new diff event here
+            if (writer != null) {
+                event.reset();
+                event.write(banksA.get(i).getDiff(banksB.get(i)));
                 writer.addEvent(a);
             }
-            ret += x;
+            ret += compare(banksA.get(i), banksB.get(i));
         }
         return ret;
     }
