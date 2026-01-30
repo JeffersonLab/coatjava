@@ -107,7 +107,8 @@ public class HipoDiff {
         compare(readerA, readerB);
     }
 
-    public static void compare(HipoReader a, HipoReader b) {
+    public static int compare(HipoReader a, HipoReader b) {
+        int ret=0;
         Event eventA = new Event();
         Event eventB = new Event();
         while (a.hasNext() && b.hasNext() && (nmax < 1 || nevent < nmax)) {
@@ -115,7 +116,7 @@ public class HipoDiff {
             a.nextEvent(eventA);
             b.nextEvent(eventB);
             eventA.read(runConfigBank);
-            compare(eventA, eventB);
+            ret += compare(eventA, eventB);
         }
         System.out.println("\n Analyzed " + nevent + " with " + nbadevent + " bad banks");
         System.out.println(nbadrow + "/" + nrow + " mismatched rows");
@@ -124,17 +125,21 @@ public class HipoDiff {
             System.out.println(name + " " + badEntries.get(name));
         }
         System.exit(nbadevent + nbadrow + nbadentry);
+        return ret;
     }
 
-    public static void compare(Event a, Event b) {
+    public static int compare(Event a, Event b) {
+        int ret = 0;
         for (int i = 0; i < banksA.size(); i++) {
             a.read(banksA.get(i));
             b.read(banksB.get(i));
-            compare(banksA.get(i), banksB.get(i));
+            ret += compare(banksA.get(i), banksB.get(i));
         }
+        return ret;
     }
 
-    public static void compare(SortedBank a, SortedBank b) {
+    public static int compare(SortedBank a, SortedBank b) {
+        int ret=0;
         if (a.getRows() != b.getRows()) {
             System.out.println("========================= Different number of rows:");
             runConfigBank.show();
@@ -142,7 +147,7 @@ public class HipoDiff {
             b.show();
             nbadevent++;
             System.out.println("=========================");
-            return;
+            return ++ret;
         }
         int[] rowsA = sortIndex == null ? null : a.getSorted(sortIndex);
         int[] rowsB = sortIndex == null ? null : b.getSorted(sortIndex);
@@ -207,11 +212,13 @@ public class HipoDiff {
                         m.put(elementName, 0);
                     }
                     m.put(elementName, m.get(elementName) + 1);
+                    ret++;
                 }
             }
             if (mismatch) {
                 nbadrow++;
             }
         }
+        return 0;
     }
 }
