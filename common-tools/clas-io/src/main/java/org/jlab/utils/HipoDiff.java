@@ -54,25 +54,24 @@ public class HipoDiff {
             for (int row = 0; row < rows; row++) {
                 for (int col = 0; col < ncols; col++) {
                     int ftype = getSchema().getType(col);
-                    String fname = getSchema().getElementName(col);
                     switch (ftype) {
                         case 1: // byte
-                            diff.putByte(fname, row, (byte)(b.getByte(fname,row) - getByte(fname,row)));
+                            diff.putByte(col, row, (byte)(b.getByte(col,row) - getByte(col,row)));
                             break;
                         case 2: // short
-                            diff.putShort(fname, row, (short)(b.getShort(fname,row) - getShort(fname,row)));
+                            diff.putShort(col, row, (short)(b.getShort(col,row) - getShort(col,row)));
                             break;
                         case 3: // int
-                            diff.putInt(fname, row, b.getInt(fname,row) - getInt(fname,row));
+                            diff.putInt(col, row, b.getInt(col,row) - getInt(col,row));
                             break;
                         case 4: // float
-                            diff.putFloat(fname, row, b.getFloat(fname,row) - getFloat(fname,row));
+                            diff.putFloat(col, row, b.getFloat(col,row) - getFloat(col,row));
                             break;
                         case 5: // double
-                            diff.putDouble(fname, row, b.getDouble(fname,row) - getDouble(fname,row));
+                            diff.putDouble(col, row, b.getDouble(col,row) - getDouble(col,row));
                             break;
                         case 6: // long
-                            diff.putLong(fname, row, b.getLong(fname,row) - getLong(fname,row));
+                            diff.putLong(col, row, b.getLong(col,row) - getLong(col,row));
                             break;
                         default:
                             // unhandled type (arrays, etc.)
