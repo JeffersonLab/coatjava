@@ -1,6 +1,5 @@
 package org.jlab.service.eb;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
