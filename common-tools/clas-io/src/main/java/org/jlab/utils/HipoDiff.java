@@ -152,6 +152,8 @@ public class HipoDiff {
         }
 
         compare(readerA, readerB);
+
+        if (writer != null) writer.close();
     }
 
     public static int compare(HipoReader a, HipoReader b) {
