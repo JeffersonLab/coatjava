@@ -337,7 +337,7 @@ public class CLASDecoder {
             tdcBANK.putByte( 0, i, (byte) tdcDGTZ.get(i).getDescriptor().getCrate());
             tdcBANK.putByte( 1, i, (byte) tdcDGTZ.get(i).getDescriptor().getSlot());
             tdcBANK.putShort(2, i, (short) tdcDGTZ.get(i).getDescriptor().getChannel());
-            tdcBANK.putInt(  3, i, tdcDGTZ.get(i).getTDCData(0).getTime());
+            tdcBANK.putInt(  4, i, tdcDGTZ.get(i).getTDCData(0).getTime());
         }
         return tdcBANK;
     }
