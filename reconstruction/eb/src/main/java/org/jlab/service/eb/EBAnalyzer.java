@@ -350,7 +350,7 @@ public class EBAnalyzer {
     }
     public void assignPids(DetectorEvent event,final boolean useStartTimeFromFT) {
 
-        PIDHypothesis pidHyp = new PIDHypothesis();
+        PIDHypothesis pidHyp = new PIDHypothesis(event.getEventHeader().getTorus());
         pidHyp.setEvent(event);
         pidHyp.setUseStartTimeFromFT(useStartTimeFromFT);
 
@@ -382,12 +382,13 @@ public class EBAnalyzer {
 
     public class PIDHypothesis {
 
+        private float torus = 0;
         private int theoryPID = -1;
         private double PIDquality = 0.0;
         private DetectorEvent event;
         private boolean useStartTimeFromFT = false;
 
-        public PIDHypothesis() {}
+        public PIDHypothesis(float t) {torus=t;}
 
         public void setEvent(DetectorEvent e) {event = e;}
 
@@ -405,7 +406,9 @@ public class EBAnalyzer {
             
             final boolean pidFromTimingCheck = pid==pidFromTiming && p.getTheoryBeta(pid)>0;
            
-            final boolean isElectron = EBUtil.isSimpleElectron(p,ccdb);
+            final boolean isElectron = Math.abs(torus)>1e-8 ? 
+                EBUtil.isSimpleElectron(p,ccdb) :
+                EBUtil.isZeroFieldElectron(p, ccdb);
             
             final boolean htccSignalCheck = p.getNphe(DetectorType.HTCC)>ccdb.getDouble(EBCCDBEnum.HTCC_NPHE_CUT);
             final boolean ltccSignalCheck = p.getNphe(DetectorType.LTCC)>ccdb.getDouble(EBCCDBEnum.LTCC_NPHE_CUT);

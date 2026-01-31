@@ -99,6 +99,27 @@ public class EBUtil {
        
         return true;
     }
+     
+    /**
+     * Perform a basic true/false identification for electrons.
+     */
+    public static boolean isZeroFieldElectron(DetectorParticle p,EBCCDBConstants ccdb) {
+
+        // require ECAL:
+        final int sector = p.getSector(DetectorType.ECAL);
+        if (sector<1) return false;
+       
+        // requre HTCC photoelectrons:
+        final double nphe = p.getNphe(DetectorType.HTCC);
+        if (nphe < ccdb.getDouble(EBCCDBEnum.HTCC_NPHE_CUT)) return false;
+
+        // require PCAL minimum energy:
+        final double minPcalEnergy = ccdb.getSectorDouble(EBCCDBEnum.ELEC_PCAL_min_energy,sector);
+        final double pcalEnergy = p.getEnergy(DetectorType.ECAL,DetectorLayer.PCAL);
+        if (pcalEnergy < minPcalEnergy) return false;
+      
+        return true;
+    }
 
     /**
      * Calculate timing resolution from EventBuilder constants:
