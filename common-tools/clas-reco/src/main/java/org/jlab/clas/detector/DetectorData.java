@@ -521,12 +521,9 @@ public class DetectorData {
                 }
                 bank.setShort("index", row, (short) p.getTrackIndex());
                 bank.setShort("pindex", row, (short) i);
-                for (int ii = 0; ii < 5; ii++) {
-                    for (int jj = 0; jj < 5; jj++) {
+                for (int ii = 0; ii < 6; ii++) {
+                    for (int jj = 0; jj < 6; jj++) {
                         String varName = String.format("C%d%d", ii + 1, jj + 1);
-                        if (bank.getDescriptor().hasEntry(varName) != true) {
-                            continue;
-                        }
                         bank.setFloat(varName, row, p.getCovMatrix(ii, jj));
                     }
                 }
@@ -595,11 +592,8 @@ public class DetectorData {
                     }
                 }
                 if (covBank != null) {
-                    final int dimCovMat = 5;
+                    final int dimCovMat = 6;
                     for (int ii = 0; ii < covBank.rows(); ii++) {
-                        if (covBank.getInt("id", ii) != trkId) {
-                            continue;
-                        }
                         for (int jj = 1; jj <= dimCovMat; jj++) {
                             for (int kk = 1; kk <= dimCovMat; kk++) {
                                 float ele = covBank.getFloat(String.format("C%d%d", jj, kk), ii);
