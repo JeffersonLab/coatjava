@@ -1,7 +1,8 @@
 #!/bin/bash
 
+exe=decoder4u -n 10000
 csv=gold.csv
-cache=~/pin-gold.txt
+cache=$(cd $(dirname ${BASH_SOURCE[0]}) &> /dev/null && pwd)/pin-gold.txt
 IFS=$'\n'
 
 for x in $(tail -n +2 $csv)
@@ -11,7 +12,7 @@ do
     period=${x%%,*}
     stub=${period}_${run}
     data=$(grep ${run} $cache | grep 1$)
-    decoder4u -n 10000 -o $stub.hipo $data >& $stub.log &
+    $exe -o $stub.hipo $data >& $stub.log &
 done
 
 wait
