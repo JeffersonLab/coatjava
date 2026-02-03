@@ -482,7 +482,8 @@ class TriggerOptions {
             final double nsigma = SamplingFractions.getNSigma(11,p,ccdb);
             final double minPcalEnergy = ccdb.getSectorDouble(EBCCDBEnum.ELEC_PCAL_min_energy,sector);
             if (Math.abs(torus) <1e-8) {
-                if (p.getEnergy(DetectorType.ECAL,1) > minPcalEnergy) {
+                if (p.getEnergy(DetectorType.ECAL,1) > minPcalEnergy &&
+                    p.getEnergy(DetectorType.ECAL) > 0.5) {
                     score += 100;
                 }
             }

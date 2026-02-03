@@ -118,7 +118,8 @@ public class EBUtil {
         final double pcalEnergy = p.getEnergy(DetectorType.ECAL,DetectorLayer.PCAL);
         if (pcalEnergy < minPcalEnergy) return false;
       
-        return true;
+        // require PCAL+ECAL minimum energy 500 MeV:
+        return p.getEnergy(DetectorType.ECAL) > 0.5;
     }
 
     /**
