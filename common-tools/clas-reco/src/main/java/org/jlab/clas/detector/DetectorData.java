@@ -522,7 +522,7 @@ public class DetectorData {
                 bank.setShort("index", row, (short) p.getTrackIndex());
                 bank.setShort("pindex", row, (short) i);
                 for (int ii = 0; ii < 6; ii++) {
-                    for (int jj = 0; jj < 6; jj++) {
+                    for (int jj = ii; jj < 6; jj++) {
                         String varName = String.format("C%d%d", ii + 1, jj + 1);
                         bank.setFloat(varName, row, p.getCovMatrix(ii, jj));
                     }
@@ -598,7 +598,7 @@ public class DetectorData {
                             continue;
                         }
                         for (int jj = 1; jj <= dimCovMat; jj++) {
-                            for (int kk = 1; kk <= dimCovMat; kk++) {
+                            for (int kk = jj; kk <= dimCovMat; kk++) {
                                 float ele = covBank.getFloat(String.format("C%d%d", jj, kk), ii);
                                 track.setCovMatrix(jj - 1, kk - 1, ele);
                             }
