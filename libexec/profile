@@ -27,6 +27,9 @@ stub=${stub%%.*}
 which asprof >& /dev/null
 [ "$?" -ne 0 ] && echo 'ERROR:  asprof is not in $PATH.' && exit 9
 
+which recon-util >& /dev/null
+[ "$?" -ne 0 ] && echo 'ERROR:  recon-util is not in $PATH.' && exit 9
+
 recon-util -y $yaml -n $nevents -o pro_$stub.hipo -i $data >& pro_$stub.log &
 pid_bash=$!
 
