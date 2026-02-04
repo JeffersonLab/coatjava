@@ -1,4 +1,4 @@
-package org.jlab.service.urwell;
+package org.jlab.service.urwt;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,20 +8,20 @@ import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
 
 /**
- * URWell in-layer cluster
+ * URWT in-layer cluster
  * 
  * @author bondi, devita
  */
-public class URWellCluster extends ArrayList<URWellStrip> {
+public class URWTCluster extends ArrayList<URWRStrip> {
    
     
-    private DetectorDescriptor  desc          = new DetectorDescriptor(DetectorType.URWELL);
+    private DetectorDescriptor  desc          = new DetectorDescriptor(DetectorType.URWT);
     private int                 id;  
     private Line3D              clusterLine   = new Line3D();
     public int                  indexMaxStrip = -1;
     private byte                clusterStatus =  1;
     
-    public URWellCluster(URWellStrip strip){
+    public URWTCluster(URWRStrip strip){
         this.desc.setSectorLayerComponent(strip.getDescriptor().getSector(), 
                                           strip.getDescriptor().getLayer(), 0);
         this.add(strip);
@@ -53,7 +53,7 @@ public class URWellCluster extends ArrayList<URWellStrip> {
     
     public double getEnergy(){
         double energy = 0.0;
-        for(URWellStrip strip : this){
+        for(URWRStrip strip : this){
             energy += strip.getEnergy();
         }
         return energy;
@@ -61,7 +61,7 @@ public class URWellCluster extends ArrayList<URWellStrip> {
     
     public double getTime(){
         double time = 0.0;
-        for(URWellStrip strip : this){
+        for(URWRStrip strip : this){
             time += strip.getTime()*strip.getEnergy();
         }
         time /= this.getEnergy();
@@ -75,7 +75,7 @@ public class URWellCluster extends ArrayList<URWellStrip> {
             return 0.0;
     }
 
-    public URWellStrip getSeedStrip() {
+    public URWRStrip getSeedStrip() {
     	    return this.get(this.indexMaxStrip);
     }
     
@@ -83,8 +83,8 @@ public class URWellCluster extends ArrayList<URWellStrip> {
         return this.get(this.indexMaxStrip).getDescriptor().getComponent();
     }
     
-    public boolean  addStrip(URWellStrip strip){
-        for(URWellStrip s : this){
+    public boolean  addStrip(URWRStrip strip){
+        for(URWRStrip s : this){
             if(s.isNeighbour(strip)){
                 this.add(strip);
                 if(strip.getEnergy()>this.get(indexMaxStrip).getEnergy()){
@@ -99,7 +99,7 @@ public class URWellCluster extends ArrayList<URWellStrip> {
     
     public int getADC(){
         int adc = 0;
-        for(URWellStrip s : this){
+        for(URWRStrip s : this){
             adc+= s.getADC();
         }
         return adc;
@@ -111,7 +111,7 @@ public class URWellCluster extends ArrayList<URWellStrip> {
     
     public void setClusterId(int id){
         this.id = id;
-        for(URWellStrip strip : this){
+        for(URWRStrip strip : this){
             strip.setClusterId(id);
         }
     }
@@ -155,20 +155,20 @@ public class URWellCluster extends ArrayList<URWellStrip> {
     }
     
     
-    public static List<URWellCluster> createClusters(List<URWellStrip> stripList){
+    public static List<URWTCluster> createClusters(List<URWRStrip> stripList){
     	
-        List<URWellCluster>  clusterList = new ArrayList<>();
+        List<URWTCluster>  clusterList = new ArrayList<>();
         
         if(!stripList.isEmpty()){
             for(int loop = 0; loop < stripList.size(); loop++){ //Loop over all strips 
                 boolean stripAdded = false;                
-                for(URWellCluster  cluster : clusterList) {
+                for(URWTCluster  cluster : clusterList) {
                     if(cluster.addStrip(stripList.get(loop))){ //Add adjacent strip to newly seeded peak
                         stripAdded = true;
                     }
                 }
                 if(!stripAdded){
-                    URWellCluster  newPeak = new URWellCluster(stripList.get(loop)); //Non-adjacent strip seeds new peak
+                    URWTCluster  newPeak = new URWTCluster(stripList.get(loop)); //Non-adjacent strip seeds new peak
                     clusterList.add(newPeak);
                 }
             }
@@ -180,9 +180,9 @@ public class URWellCluster extends ArrayList<URWellStrip> {
         return clusterList;
     }   
     
-    public static List<URWellCluster> getClusters(List<URWellCluster> clusters, int sector, int layer) {
-        List<URWellCluster> selectedClusters = new ArrayList<>();
-        for(URWellCluster cluster : clusters) {
+    public static List<URWTCluster> getClusters(List<URWTCluster> clusters, int sector, int layer) {
+        List<URWTCluster> selectedClusters = new ArrayList<>();
+        for(URWTCluster cluster : clusters) {
             if(cluster.getSector()==sector && cluster.getLayer()==layer)
                 selectedClusters.add(cluster);
         }
@@ -196,7 +196,7 @@ public class URWellCluster extends ArrayList<URWellStrip> {
                 this.desc.getSector(),this.desc.getLayer(), this.getEnergy()));
         str.append(this.clusterLine.toString());
         str.append("\n");
-        for(URWellStrip strip : this){
+        for(URWRStrip strip : this){
             str.append("\t\t");
             str.append(strip.toString());
             str.append("\n");

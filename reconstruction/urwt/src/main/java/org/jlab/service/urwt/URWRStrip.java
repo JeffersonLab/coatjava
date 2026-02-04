@@ -1,4 +1,4 @@
-package org.jlab.service.urwell;
+package org.jlab.service.urwt;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,21 +6,21 @@ import org.jlab.detector.banks.RawDataBank;
 import org.jlab.detector.base.DetectorDescriptor;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.calib.utils.ConstantsManager;
-import org.jlab.detector.geant4.v2.URWELL.URWellStripFactory;
+import org.jlab.detector.geant4.v2.URWT.URWTStripFactory;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.io.base.DataEvent;
 
 /**
- * URWell strip, defined based on ADC bank information and 3D line provided 
+ * URWT strip, defined based on ADC bank information and 3D line provided 
  * by the geometry service 
  * 
  * @author bondi, devita
  */
 
 
-public class URWellStrip implements Comparable {
+public class URWRStrip implements Comparable {
     
-    private DetectorDescriptor  desc = new DetectorDescriptor(DetectorType.URWELL);
+    private DetectorDescriptor  desc = new DetectorDescriptor(DetectorType.URWT);
     
     private int      chamber = 0;
     
@@ -36,11 +36,11 @@ public class URWellStrip implements Comparable {
     private double      time = 0;
     
     
-    public URWellStrip(int sector, int layer, int component){
+    public URWRStrip(int sector, int layer, int component){
         this.desc.setSectorLayerComponent(sector, layer, component);
     }
 
-    public URWellStrip(int sector, int layer, int component, int ADC, int TDC){
+    public URWRStrip(int sector, int layer, int component, int ADC, int TDC){
         this.desc.setSectorLayerComponent(sector, layer, component);
         this.ADC = ADC;
         this.TDC = TDC;
@@ -135,7 +135,7 @@ public class URWellStrip implements Comparable {
         this.status = status;
     }
     
-    public boolean isNeighbour(URWellStrip strip){
+    public boolean isNeighbour(URWRStrip strip){
         if(strip.getDescriptor().getSector()==this.desc.getSector()&&
            strip.getDescriptor().getLayer()==this.desc.getLayer()){
             int s1 = strip.getDescriptor().getComponent();
@@ -145,13 +145,13 @@ public class URWellStrip implements Comparable {
         return false;
     }
     
-    public boolean isInTime(URWellStrip strip) {
-        return Math.abs(this.getTime() - strip.getTime()) < URWellConstants.COINCTIME;
+    public boolean isInTime(URWRStrip strip) {
+        return Math.abs(this.getTime() - strip.getTime()) < URWTConstants.COINCTIME;
     }     
     
     @Override
     public int compareTo(Object o) {
-        URWellStrip ob = (URWellStrip) o;
+        URWRStrip ob = (URWRStrip) o;
         if(ob.getDescriptor().getSector()     < this.desc.getSector())    return  1;
         if(ob.getDescriptor().getSector()     > this.desc.getSector())    return -1;
         if(ob.getDescriptor().getLayer()      < this.desc.getLayer())     return  1;
@@ -161,14 +161,14 @@ public class URWellStrip implements Comparable {
         return -1;
     }
     
-    public static List<URWellStrip> getStrips(DataEvent event, URWellStripFactory factory, ConstantsManager ccdb) {
+    public static List<URWRStrip> getStrips(DataEvent event, URWTStripFactory factory, ConstantsManager ccdb) {
         
-        List<URWellStrip> strips = new ArrayList<>();
+        List<URWRStrip> strips = new ArrayList<>();
         
-        if(event.hasBank("URWELL::adc")){
-            RawDataBank bank = new RawDataBank("URWELL::adc");
+        if(event.hasBank("URWT::adc")){
+            RawDataBank bank = new RawDataBank("URWT::adc");
             bank.read(event);
-            //DataBank bank = event.getBank("URWELL::adc");
+            //DataBank bank = event.getBank("URWT::adc");
             for(int i = 0; i < bank.rows(); i++){
                 int  sector = bank.getByte("sector", i);
                 int   layer = bank.getByte("layer", i); 
@@ -176,19 +176,19 @@ public class URWellStrip implements Comparable {
                 int     adc = bank.getInt("ADC", i);
                 double time = bank.getFloat("time", i);
                         
-                URWellStrip  strip = new URWellStrip(sector,  layer,   comp); 
+                URWRStrip  strip = new URWRStrip(sector,  layer,   comp); 
                 
 //                strip.setTriggerPhase(triggerPhase);
                 strip.setId(bank.trueIndex(i)+1);
                 strip.setADC(adc);
                 strip.setTDC((int) time);
-                strip.setEnergy(strip.ADC*URWellConstants.ADCTOENERGY);
-                strip.setTime(strip.TDC*URWellConstants.TDCTOTIME);
+                strip.setEnergy(strip.ADC*URWTConstants.ADCTOENERGY);
+                strip.setTime(strip.TDC*URWTConstants.TDCTOTIME);
                 strip.setLine(factory.getStrip(sector, layer, comp)); 
-                strip.setChamber(factory.getChamberIndex(comp)+1);
+//                strip.setChamber(factory.getChamberIndex(comp)+1);
                 strip.setStatus(0);
                 
-                if(strip.getEnergy()>URWellConstants.THRESHOLD) strips.add(strip);
+                if(strip.getEnergy()>URWTConstants.THRESHOLD) strips.add(strip);
 
             }
         }         
