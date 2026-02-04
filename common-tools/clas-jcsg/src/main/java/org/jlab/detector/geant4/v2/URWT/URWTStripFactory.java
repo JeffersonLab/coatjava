@@ -24,20 +24,22 @@ public final class URWTStripFactory extends AbstractMPGDTrapezoidStripFactory {
 
     /**
      * Build using an already-configured DatabaseConstantProvider.
+     * @param cp
+     * @param variation
      */
-public URWTStripFactory(DatabaseConstantProvider cp, String variation) {
-    super(URWTConstants.getInstance(), new URWTGeant4Factory(cp, variation));
+    public URWTStripFactory(DatabaseConstantProvider cp, String variation) {
+        super(URWTConstants.getInstance(), new URWTGeant4Factory(cp, variation));
 
-    URWTConstants.connect(cp);
+        URWTConstants.connect(cp);
 
-    for (Geant4Basic v : geo.getAllVolumes()) {
-        if (v.getName() != null) {
-            volumeByName.put(v.getName(), v);
+        for (Geant4Basic v : geo.getAllVolumes()) {
+            if (v.getName() != null) {
+                volumeByName.put(v.getName(), v);
+            }
         }
-    }
 
-    buildAll();
-}
+        buildAll();
+    }
 
     /**
      * Convenience constructor: internally creates a DatabaseConstantProvider.

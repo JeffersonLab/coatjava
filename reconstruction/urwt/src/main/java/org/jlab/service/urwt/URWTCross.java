@@ -1,4 +1,4 @@
-package org.jlab.service.urwell;
+package org.jlab.service.urwt;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,7 +10,7 @@ import org.jlab.geom.prim.Vector3D;
  * URWell V-W clusters
  * @author devita
  */
-public class URWellCross {
+public class URWTCross {
 
     private int id;
     
@@ -28,7 +28,7 @@ public class URWellCross {
     
     
     
-    public URWellCross(URWellCluster c1, URWellCluster c2) {
+    public URWTCross(URWTCluster c1, URWTCluster c2) {
         
         Vector3D  dir = c1.getLine().direction().cross(c2.getLine().direction());
         Plane3D plane = new Plane3D(c1.getLine().origin(), c1.getLine().direction().cross(dir));
@@ -36,7 +36,7 @@ public class URWellCross {
         int nint = plane.intersectionSegment(c2.getLine(), point);
         if(nint==1) {
             this.sector = c1.getSector();
-            this.region = (c1.getLayer()-1)/(URWellConstants.NLAYER/URWellConstants.NREGION)+1;
+            this.region = (c1.getLayer()-1)/(URWTConstants.NLAYER/URWTConstants.NREGION)+1;
             this.cross  = point;
             this.energy = c1.getEnergy() + c2.getEnergy();
             this.time   = (c1.getTime() + c2.getTime())/2;
@@ -89,20 +89,20 @@ public class URWellCross {
         return status;
     }
 
-    public static List<URWellCross> createCrosses(List<URWellCluster> clusters) {
+    public static List<URWTCross> createCrosses(List<URWTCluster> clusters) {
         
-        List<URWellCross> crosses = new ArrayList<>();
+        List<URWTCross> crosses = new ArrayList<>();
         
-        for(int is=0; is<URWellConstants.NSECTOR; is++) {
-            for(int ir=0; ir<URWellConstants.NREGION; ir++) {
-                List<URWellCluster> clustersV = URWellCluster.getClusters(clusters, is+1, (URWellConstants.NLAYER/URWellConstants.NREGION)*ir+1);
-                List<URWellCluster> clustersW = URWellCluster.getClusters(clusters, is+1, (URWellConstants.NLAYER/URWellConstants.NREGION)*ir+2);
+        for(int is=0; is<URWTConstants.NSECTOR; is++) {
+            for(int ir=0; ir<URWTConstants.NREGION; ir++) {
+                List<URWTCluster> clustersV = URWTCluster.getClusters(clusters, is+1, (URWTConstants.NLAYER/URWTConstants.NREGION)*ir+1);
+                List<URWTCluster> clustersW = URWTCluster.getClusters(clusters, is+1, (URWTConstants.NLAYER/URWTConstants.NREGION)*ir+2);
                 
-                for(URWellCluster v : clustersV) {
-                    for(URWellCluster w : clustersW) {
+                for(URWTCluster v : clustersV) {
+                    for(URWTCluster w : clustersW) {
                         
                         if(v.getChamber()==w.getChamber()) {
-                            URWellCross cross = new URWellCross(v, w);
+                            URWTCross cross = new URWTCross(v, w);
                             if(cross.point()!=null) crosses.add(cross);
                             cross.setId(crosses.size());
                         }
