@@ -307,6 +307,18 @@ public class EBAnalyzer {
         }
     }
 
+    public void assignElectronMomenta(DetectorEvent de) {
+        final int np = de.getParticles().size();
+        for (int ii=0; ii<np; ii++) {
+            if (de.getParticle(ii).getCharge() != 0) continue;
+            DetectorParticle p = de.getParticle(ii);
+            if (abs(p.getPid()) == 11) {
+                p.vector().setMag(p.getEnergy(DetectorType.ECAL) / 
+                    SamplingFractions.getMean(11,p,ccdb));
+            }
+        }
+    }
+
     public void assignBetas(DetectorEvent event,final boolean useStartTimeFromFT){
 
         final double startTime = useStartTimeFromFT ?
