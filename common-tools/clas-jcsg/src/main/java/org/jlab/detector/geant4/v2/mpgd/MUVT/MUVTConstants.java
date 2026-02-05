@@ -1,25 +1,25 @@
-package org.jlab.detector.geant4.v2.URWT;
+package org.jlab.detector.geant4.v2.MPGD.MUVT;
 
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
-import org.jlab.detector.geant4.v2.mpgd.trapezoid.AbstractMPGDTrapezoidConstants;
+import org.jlab.detector.geant4.v2.MPGD.trapezoid.MPGDTrapezoidConstants;
 
 /**
  * URWT-specific constants.
  */
-public final class URWTConstants extends AbstractMPGDTrapezoidConstants {
+public final class MUVTConstants extends MPGDTrapezoidConstants {
 
 
-    private static final URWTConstants INSTANCE =
-            new URWTConstants(
-                    "/test/urwt/",       // CCDB base path
-                    "urwt_global",       // global table name
-                    "urwt_material"  // material table name
+    private static final MUVTConstants INSTANCE =
+            new MUVTConstants(
+                    "/test/muvt/",       // CCDB base path
+                    "muvt_global",       // global table name
+                    "muvt_material"     // material table name
             );
 
     /**
      * Private constructor: only the singleton instance is used.
      */
-    private URWTConstants(String ccdbPath,
+    private MUVTConstants(String ccdbPath,
                           String globalTable,
                           String materialTable) {
         super(ccdbPath, globalTable, materialTable);
@@ -29,7 +29,7 @@ public final class URWTConstants extends AbstractMPGDTrapezoidConstants {
      * Returns the singleton instance for URWT constants.
      * @return 
      */
-    public static URWTConstants getInstance() {
+    public static MUVTConstants getInstance() {
         return INSTANCE;
     }
 
@@ -38,7 +38,7 @@ public final class URWTConstants extends AbstractMPGDTrapezoidConstants {
      * {@link DatabaseConstantProvider}.Usage:
    DatabaseConstantProvider cp = new DatabaseConstantProvider(run, variation);
    URWTConstants.connect(cp);
-   // now URWTConstants.getInstance() is fully initialized
+   // now MUVTConstants.getInstance() is fully initialized
      *
      * @param cp
      * @return 

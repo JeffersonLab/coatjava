@@ -1,4 +1,4 @@
-package org.jlab.detector.geant4.v2.mpgd.trapezoid;
+package org.jlab.detector.geant4.v2.MPGD.trapezoid;
 
 import eu.mihosoft.vrl.v3d.Vector3d;
 import org.jlab.detector.volume.Geant4Basic;
@@ -17,16 +17,16 @@ import java.util.List;
  * Base class implementing strip/surface/plane geometry for trapezoidal MPGD
  * detectors.
  */
-public abstract class AbstractMPGDTrapezoidStripFactory {
+public abstract class MPGDTrapezoidStripFactory {
 
     // ------------------------------------------------------------------------
     //  Inputs
     // ------------------------------------------------------------------------
-    protected final AbstractMPGDTrapezoidConstants C;
-    protected final AbstractMPGDTrapezoidGeant4Factory geo;
+    protected final MPGDTrapezoidConstants C;
+    protected final MPGDTrapezoidGeant4Factory geo;
 
-    protected AbstractMPGDTrapezoidStripFactory(AbstractMPGDTrapezoidConstants constants,
-            AbstractMPGDTrapezoidGeant4Factory geantFactory) {
+    protected MPGDTrapezoidStripFactory(MPGDTrapezoidConstants constants,
+            MPGDTrapezoidGeant4Factory geantFactory) {
         this.C = constants;
         this.geo = geantFactory;
     }
@@ -264,7 +264,7 @@ public abstract class AbstractMPGDTrapezoidStripFactory {
      */
     protected StripConstants buildStripConstants(int region, int layer) {
 
-        AbstractMPGDTrapezoidGeant4Factory.SectorDimensions phys
+        MPGDTrapezoidGeant4Factory.SectorDimensions phys
                 = geo.getSectorDimensionsPhysical(region - 1);
 
         StripConstants sc = new StripConstants();
