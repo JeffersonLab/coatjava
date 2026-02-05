@@ -209,6 +209,10 @@ public class Track {
 		for(InterCluster interCluster : this._InterClusters) {
 			interCluster.setTrackId(_trackId);
 		}
+		// set trackId for hits
+		for (Hit hit : this.hits) {
+			hit.setTrackId(_trackId);
+		}
 	}
 	public void set_n_hits(int _n_hits) { n_hits = _n_hits;}
 	public void set_sum_adc(int _sum_adc) { sum_adc = _sum_adc;}

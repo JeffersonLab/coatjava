@@ -29,6 +29,8 @@ import org.jlab.rec.ahdc.Track.Track;
  */
 public class KalmanFilter {
 
+	public KalmanFilter() {}
+
     public KalmanFilter(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {propagation(tracks, event, magfield, IsMC);}
 
 	private final int Niter = 40; // number of iterations for the Kalman Filter
@@ -74,10 +76,7 @@ public class KalmanFilter {
 			}
 					
             // Loop over tracks
-			int trackId = 0;
 			for (Track track : tracks) {
-			    trackId++;
-			    track.set_trackId(trackId);
 			    // Initialize state vector
 			    double x0  = 0.0;
 			    double y0  = 0.0;
@@ -158,7 +157,6 @@ public class KalmanFilter {
 			    double sum_residuals = 0;
 			    double chi2 = 0;
 			    for (Hit hit : AHDC_hits) {
-                    hit.setTrackId(trackId);
                     sum_adc += hit.getADC();
                     sum_residuals += hit.getResidual();
                     chi2 += Math.pow(hit.getResidual(),2)/hit.get_MeasurementNoise().getEntry(0,0);

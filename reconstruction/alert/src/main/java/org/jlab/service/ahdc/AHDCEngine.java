@@ -222,7 +222,10 @@ public class AHDCEngine extends ReconstructionEngine {
             //AHDC_Tracks.add(new Track(AHDC_Hits));
 
             // V) Global fit
+            int trackid = 0;
             for (Track track : AHDC_Tracks) {
+              trackid++;
+              track.set_trackId(trackid);
               int nbOfPoints = track.get_Clusters().size();
 
               double[][] szPos = new double[nbOfPoints][3];
@@ -240,7 +243,7 @@ public class AHDCEngine extends ReconstructionEngine {
             }
 
             // VI) Kalman Filter
-            KalmanFilter kalmanFitter = new KalmanFilter(AHDC_Tracks, event, magfield, simulation);
+            //KalmanFilter kalmanFitter = new KalmanFilter(AHDC_Tracks, event, magfield, simulation);
 
             // VII) Write bank
             RecoBankWriter writer = new RecoBankWriter();
@@ -262,6 +265,7 @@ public class AHDCEngine extends ReconstructionEngine {
             DataBank recoInterClusterBank = writer.fillInterClusterBank(event, all_interclusters);
             // DataBank AIPredictionBanks = writer.fillAIPrediction(event, predictions);
 
+            event.removeBanks("AHDC::hits","AHDC::preclusters","AHDC::clusters","AHDC::track","AHDC::kftrack","AHDC::mc","AHDC::ai:prediction");
             event.appendBank(recoHitsBank);
             event.appendBank(recoPreClusterBank);
             event.appendBank(recoClusterBank);
