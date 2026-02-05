@@ -170,6 +170,12 @@ public class EBEngine extends ReconstructionEngine {
         EBAnalyzer analyzer = new EBAnalyzer(ccdb,rf);
         analyzer.processEvent(eb.getEvent());
 
+        // Overwrite electron momentum for zero-field:
+        // FIXME: replace string check
+        if (this.getName().contains("HB") && Math.abs(head.getTorus()) < 1e-8) {
+            analyzer.assignElectronMomenta(eb.getEvent());
+        }
+
         // Add Forward Tagger particles:
         eb.processForwardTagger(de);
 
