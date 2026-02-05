@@ -8,7 +8,7 @@ import javax.swing.JFrame;
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
-import org.jlab.detector.geant4.v2.MPGD.URWT.URWTStripFactory;
+import org.jlab.detector.geant4.v2.MPGD2.URWT.URWTStripFactory;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.groot.data.H1F;
 import org.jlab.groot.fitter.DataFitter;

@@ -1,4 +1,4 @@
-package org.jlab.detector.geant4.v2.MPGD.trapezoid;
+package org.jlab.detector.geant4.v2.MPGD2.trapezoid;
 
 import eu.mihosoft.vrl.v3d.Vector3d;
 import org.jlab.detector.volume.Geant4Basic;
