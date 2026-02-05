@@ -1,4 +1,4 @@
-package org.jlab.detector.geant4.v2.MPGD2.trapezoid;
+package org.jlab.detector.geant4.v2.MPGD.trapezoid;
 
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 
