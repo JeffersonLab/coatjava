@@ -18,22 +18,15 @@ public final class MUVTGeant4Factory extends MPGDTrapezoidGeant4Factory {
 
     private final String variation;
 
+
     public MUVTGeant4Factory(DatabaseConstantProvider cp, String variation) {
-        super(MUVTConstants.getInstance(), "muvt");
+        super(new MUVTConstants(cp));
         this.variation = variation;
-        MUVTConstants.connect(cp);
-        init();
     }
 
-    public MUVTGeant4Factory(String variation, int run) {
-        super(MUVTConstants.getInstance(), "muvt");
+    public MUVTGeant4Factory(int run, String variation) {
+        super(new MUVTConstants(run, variation));
         this.variation = variation;
-
-        DatabaseConstantProvider cp = new DatabaseConstantProvider(run, variation);
-        MUVTConstants.connect(cp);
-        cp.disconnect();
-
-        init();
     }
 
 
@@ -53,7 +46,7 @@ public final class MUVTGeant4Factory extends MPGDTrapezoidGeant4Factory {
             variation = args[1];
         }
 
-        MUVTGeant4Factory factory = new MUVTGeant4Factory(variation, run);
+        MUVTGeant4Factory factory = new MUVTGeant4Factory(run, variation);
 
         System.out.println("MUVT geometry for run " + run + " (variation=\"" + variation + "\")");
         System.out.println("Total volumes: " + factory.getAllVolumes().size());

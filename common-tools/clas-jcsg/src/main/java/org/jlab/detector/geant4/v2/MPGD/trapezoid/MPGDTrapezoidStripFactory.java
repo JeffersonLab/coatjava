@@ -25,10 +25,9 @@ public abstract class MPGDTrapezoidStripFactory {
     protected final MPGDTrapezoidConstants C;
     protected final MPGDTrapezoidGeant4Factory geo;
 
-    protected MPGDTrapezoidStripFactory(MPGDTrapezoidConstants constants,
-            MPGDTrapezoidGeant4Factory geantFactory) {
+    protected MPGDTrapezoidStripFactory(MPGDTrapezoidConstants constants) {
         this.C = constants;
-        this.geo = geantFactory;
+        this.geo = new MPGDTrapezoidGeant4Factory(constants);
     }
 
     /**
@@ -223,7 +222,7 @@ public abstract class MPGDTrapezoidStripFactory {
     }
 }
         
-    return "rg_" + geo.detectorName + "_" + region
+    return "rg_" + C.detectorName + "_" + region
             + "_s" + sector
             + "_l" + layer
             + "_matC" + matC;
@@ -265,7 +264,7 @@ public abstract class MPGDTrapezoidStripFactory {
     protected StripConstants buildStripConstants(int region, int layer) {
 
         MPGDTrapezoidGeant4Factory.SectorDimensions phys
-                = geo.getSectorDimensionsPhysical(region - 1);
+                = geo.getSectorActiveVolumeDimensions(region - 1);
 
         StripConstants sc = new StripConstants();
         sc.yHalf = phys.halfHeight();
