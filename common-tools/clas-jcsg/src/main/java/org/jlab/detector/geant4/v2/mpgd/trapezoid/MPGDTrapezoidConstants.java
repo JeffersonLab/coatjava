@@ -1,4 +1,4 @@
-package org.jlab.detector.geant4.v2.mpgd.trapezoid;
+package org.jlab.detector.geant4.v2.MPGD.trapezoid;
 
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 
@@ -11,13 +11,13 @@ import java.util.logging.Logger;
  * Concrete detectors (e.g. URWT) should extend this class and provide: - CCDB
  * base path - global table name - material table name
  */
-public abstract class AbstractMPGDTrapezoidConstants {
+public abstract class MPGDTrapezoidConstants {
 
     // ------------------------------------------------------------------------
     //  Logging / verbosity
     // ------------------------------------------------------------------------
     public static final Logger LOGGER
-            = Logger.getLogger(AbstractMPGDTrapezoidConstants.class.getName());
+            = Logger.getLogger(MPGDTrapezoidConstants.class.getName());
 
     public static boolean VERBOSE = false;
 
@@ -98,7 +98,7 @@ public abstract class AbstractMPGDTrapezoidConstants {
      * @param materialTableName name of the material table (e.g.
      * "urwt_material_geo")
      */
-    protected AbstractMPGDTrapezoidConstants(String ccdbPath,
+    protected MPGDTrapezoidConstants(String ccdbPath,
             String globalTableName,
             String materialTableName) {
         this.ccdbPath = ccdbPath;

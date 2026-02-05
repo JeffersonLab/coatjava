@@ -1,20 +1,20 @@
-package org.jlab.detector.geant4.v2.MUVT;
+package org.jlab.detector.geant4.v2.MPGD.MUVT;
 
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
-import org.jlab.detector.geant4.v2.mpgd.trapezoid.AbstractMPGDTrapezoidGeant4Factory;
+import org.jlab.detector.geant4.v2.MPGD.trapezoid.MPGDTrapezoidGeant4Factory;
 
 /**
  * Geant4 factory for the muCLAS Forward Vertex Tracker (muVT).
  *
  * This class specializes the generic
- * {@link AbstractMPGDTrapezoidGeant4Factory} by:
+ * {@link MPGDTrapezoidGeant4Factory} by:
  *  - passing the MUVT-specific constants
  *  - using "MUVT" as detector name in volume names
  *
  * All the geometry construction (sectors, regions, material stack)
  * is implemented in the base class.
  */
-public final class MUVTGeant4Factory extends AbstractMPGDTrapezoidGeant4Factory {
+public final class MUVTGeant4Factory extends MPGDTrapezoidGeant4Factory {
 
     private final String variation;
 

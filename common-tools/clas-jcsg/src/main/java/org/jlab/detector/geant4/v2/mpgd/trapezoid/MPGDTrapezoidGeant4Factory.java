@@ -1,4 +1,4 @@
-package org.jlab.detector.geant4.v2.mpgd.trapezoid;
+package org.jlab.detector.geant4.v2.MPGD.trapezoid;
 
 import eu.mihosoft.vrl.v3d.Vector3d;
 import org.jlab.detector.geant4.v2.Geant4Factory;
@@ -15,17 +15,17 @@ import java.util.Map;
  * per region
  *
  * The exact geometry parameters and material stack are taken from an
- * {@link AbstractMPGDTrapezoidConstants} instance.
+ * {@link MPGDTrapezoidConstants} instance.
  *
  * Concrete detectors should: - extend this class - pass the appropriate
  * constants + detector name in the constructor
  */
-public abstract class AbstractMPGDTrapezoidGeant4Factory extends Geant4Factory {
+public abstract class MPGDTrapezoidGeant4Factory extends Geant4Factory {
 
     /**
      * Detector constants (geometry + materials from CCDB).
      */
-    protected final AbstractMPGDTrapezoidConstants C;
+    protected final MPGDTrapezoidConstants C;
 
     /**
      * Short detector name used in volume names (e.g. "uRWT").
@@ -47,7 +47,7 @@ public abstract class AbstractMPGDTrapezoidGeant4Factory extends Geant4Factory {
      * paths/table names)
      * @param detectorName short detector name used in volume names
      */
-    protected AbstractMPGDTrapezoidGeant4Factory(AbstractMPGDTrapezoidConstants constants,
+    protected MPGDTrapezoidGeant4Factory(MPGDTrapezoidConstants constants,
             String detectorName) {
         this.C = constants;
         this.detectorName = detectorName;
@@ -122,7 +122,7 @@ public abstract class AbstractMPGDTrapezoidGeant4Factory extends Geant4Factory {
 
         double twidth_Check = 2 * halfLargeBase * Math.sin(Math.toRadians(C.THOPEN));
 
-        if (AbstractMPGDTrapezoidConstants.VERBOSE) {
+        if (MPGDTrapezoidConstants.VERBOSE) {
             System.out.printf("C.TWIDT=%.3f vs %.3f", C.TWIDTH, twidth_Check);
 
             System.out.printf("YMIN=%.3f", YMIN);
@@ -149,10 +149,10 @@ public abstract class AbstractMPGDTrapezoidGeant4Factory extends Geant4Factory {
 
         SectorDimensions phys = getSectorDimensionsPhysical(region);
 
-        double halfThickness = phys.halfThickness() + AbstractMPGDTrapezoidConstants.ZENLARGEMENT;
-        double halfHeight = phys.halfHeight() + AbstractMPGDTrapezoidConstants.YENLARGEMENT;
-        double halfLargeBase = phys.halfLargeBase() + AbstractMPGDTrapezoidConstants.XENLARGEMENT;
-        double halfSmallBase = phys.halfSmallBase() + AbstractMPGDTrapezoidConstants.XENLARGEMENT;
+        double halfThickness = phys.halfThickness() + MPGDTrapezoidConstants.ZENLARGEMENT;
+        double halfHeight = phys.halfHeight() + MPGDTrapezoidConstants.YENLARGEMENT;
+        double halfLargeBase = phys.halfLargeBase() + MPGDTrapezoidConstants.XENLARGEMENT;
+        double halfSmallBase = phys.halfSmallBase() + MPGDTrapezoidConstants.XENLARGEMENT;
 
         return new SectorDimensions(halfThickness, halfHeight, halfLargeBase, halfSmallBase, phys.tiltRad());
     }
@@ -172,7 +172,7 @@ public abstract class AbstractMPGDTrapezoidGeant4Factory extends Geant4Factory {
                 * (Math.tan(Math.toRadians(C.THMAX - C.THTILT))
                 + Math.tan(Math.toRadians(C.THTILT - C.THMIN)));
 
-        if (AbstractMPGDTrapezoidConstants.VERBOSE) {
+        if (MPGDTrapezoidConstants.VERBOSE) {
             System.out.printf(
                     "SectorHeight [%s] region=%d : baseDistance=%.3f THMIN=%.3f THMAX=%.3f THTILT=%.3f -> height=%.3f%n",
                     detectorName,
@@ -297,18 +297,18 @@ public abstract class AbstractMPGDTrapezoidGeant4Factory extends Geant4Factory {
         double totalThickness = 2.0 * halfThickness;
         double accumulatedThickness = 0.0;
 
-        for (Map.Entry<Integer, Map<Integer, AbstractMPGDTrapezoidConstants.LayerComponentInfo>> layerEntry
+        for (Map.Entry<Integer, Map<Integer, MPGDTrapezoidConstants.LayerComponentInfo>> layerEntry
                 : C.getDetectorStructure().entrySet()) {
 
             int LayerId = layerEntry.getKey();
-            Map<Integer, AbstractMPGDTrapezoidConstants.LayerComponentInfo> componentMap
+            Map<Integer, MPGDTrapezoidConstants.LayerComponentInfo> componentMap
                     = layerEntry.getValue();
 
-            for (Map.Entry<Integer, AbstractMPGDTrapezoidConstants.LayerComponentInfo> componentEntry
+            for (Map.Entry<Integer, MPGDTrapezoidConstants.LayerComponentInfo> componentEntry
                     : componentMap.entrySet()) {
 
                 int materialComponentId = componentEntry.getKey();
-                AbstractMPGDTrapezoidConstants.LayerComponentInfo info = componentEntry.getValue();
+                MPGDTrapezoidConstants.LayerComponentInfo info = componentEntry.getValue();
 
                 double thick = info.thickness;
 
