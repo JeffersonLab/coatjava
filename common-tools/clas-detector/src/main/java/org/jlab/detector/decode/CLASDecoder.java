@@ -319,9 +319,9 @@ public class CLASDecoder {
             adcBANK.putByte( 0, i, (byte) adcDGTZ.get(i).getDescriptor().getCrate());
             adcBANK.putByte( 1, i, (byte) adcDGTZ.get(i).getDescriptor().getSlot());
             adcBANK.putShort(2, i, (short) adcDGTZ.get(i).getDescriptor().getChannel());
-            adcBANK.putInt(  3, i, adcDGTZ.get(i).getADCData(0).getADC());
-            adcBANK.putFloat(4, i, (float) adcDGTZ.get(i).getADCData(0).getTime());
-            adcBANK.putShort(5, i, (short) adcDGTZ.get(i).getADCData(0).getPedestal());
+            adcBANK.putInt(  4, i, adcDGTZ.get(i).getADCData(0).getADC());
+            adcBANK.putFloat(5, i, (float) adcDGTZ.get(i).getADCData(0).getTime());
+            adcBANK.putShort(6, i, (short) adcDGTZ.get(i).getADCData(0).getPedestal());
         }
         return adcBANK;
     }
@@ -337,7 +337,7 @@ public class CLASDecoder {
             tdcBANK.putByte( 0, i, (byte) tdcDGTZ.get(i).getDescriptor().getCrate());
             tdcBANK.putByte( 1, i, (byte) tdcDGTZ.get(i).getDescriptor().getSlot());
             tdcBANK.putShort(2, i, (short) tdcDGTZ.get(i).getDescriptor().getChannel());
-            tdcBANK.putInt(  3, i, tdcDGTZ.get(i).getTDCData(0).getTime());
+            tdcBANK.putInt(  4, i, tdcDGTZ.get(i).getTDCData(0).getTime());
         }
         return tdcBANK;
     }

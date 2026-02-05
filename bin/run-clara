@@ -52,14 +52,9 @@ shift $((OPTIND-1))
 inputs=$@
 
 # Configure JVM memory settings (overridedable via $JAVA_OPTS):
-if [ -z ${large+x} ]
-then
-    gb_max=$((threads<3?threads+2:threads+2-threads/4))
-    gb_init=$((threads<3?threads:threads-threads/3))
-else
-    gb_max=$((threads<3?threads+2:threads+2-threads/8))
-    gb_init=$((threads<3?threads:threads-threads/6))
-fi
+gb_init=$((threads))
+gb_max=$((threads+2))
+[ $threads -gt 1 ] && ! [ -z ${large+x} ] && gb_max=$((threads*2))
 java_opts="-Xms${gb_init}g -Xmx${gb_max}g"
 
 # Check configuration:
@@ -100,9 +95,10 @@ JAVA_OPTS="$JAVA_OPTS -Djava.util.logging.manager=org.jlab.logging.SplitLogManag
 if $java_quiet; then
   JAVA_OPTS="$JAVA_OPTS -Djava.util.logging.config.file=$CLAS12DIR/etc/logging/logging.properties"
 else
-  case ${java_log_level^^} in
+  java_log_level_upcase=$(echo $java_log_level | tr '[:lower:]' '[:upper:]')
+  case ${java_log_level_upcase} in
     SEVERE|WARNING|INFO|CONFIG|FINE|FINER|FINEST|ALL|OFF)
-      JAVA_OPTS="$JAVA_OPTS -D.level=${java_log_level^^}"
+      JAVA_OPTS="$JAVA_OPTS -D.level=${java_log_level_upcase}"
       ;;
     *)
       error "unknown Java log level '$java_log_level'"
