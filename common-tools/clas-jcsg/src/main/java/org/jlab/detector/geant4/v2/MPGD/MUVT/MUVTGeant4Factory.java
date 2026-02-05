@@ -1,7 +1,7 @@
-package org.jlab.detector.geant4.v2.MPGD2.MUVT;
+package org.jlab.detector.geant4.v2.MPGD.MUVT;
 
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
-import org.jlab.detector.geant4.v2.MPGD2.trapezoid.MPGDTrapezoidGeant4Factory;
+import org.jlab.detector.geant4.v2.MPGD.trapezoid.MPGDTrapezoidGeant4Factory;
 
 /**
  * Geant4 factory for the muCLAS Forward Vertex Tracker (muVT).
