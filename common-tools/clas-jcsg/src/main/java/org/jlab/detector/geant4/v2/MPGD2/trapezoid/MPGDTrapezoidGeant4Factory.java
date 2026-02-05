@@ -1,4 +1,4 @@
-package org.jlab.detector.geant4.v2.MPGD.trapezoid;
+package org.jlab.detector.geant4.v2.MPGD2.trapezoid;
 
 import eu.mihosoft.vrl.v3d.Vector3d;
 import org.jlab.detector.geant4.v2.Geant4Factory;
@@ -145,7 +145,7 @@ public abstract class MPGDTrapezoidGeant4Factory extends Geant4Factory {
      * @param region
      * @return
      */
-    public SectorDimensions getSectorDimensionsContainer(int region) {
+    public SectorDimensions getSectorContainerDimensions(int region) {
 
         SectorDimensions phys = getSectorDimensionsPhysical(region);
 
@@ -205,7 +205,7 @@ public abstract class MPGDTrapezoidGeant4Factory extends Geant4Factory {
         double YMIN = W2TGT * Math.sin(Math.toRadians(C.THMIN)); // distance from beamline (Y)
         double ZMIN = W2TGT * Math.cos(Math.toRadians(C.THMIN)); // Z of the bottom base
 
-        SectorDimensions dimCont = this.getSectorDimensionsContainer(iregion);
+        SectorDimensions dimCont = this.getSectorContainerDimensions(iregion);
         double sectorHeight = 2 * dimCont.halfHeight();
 
         vCenter.x = 0.0;
@@ -231,7 +231,7 @@ public abstract class MPGDTrapezoidGeant4Factory extends Geant4Factory {
     public Geant4Basic createSector(int isector, int iregion) {
 
         SectorDimensions dimPhys = this.getSectorDimensionsPhysical(iregion);
-        SectorDimensions dimCont = this.getSectorDimensionsContainer(iregion);
+        SectorDimensions dimCont = this.getSectorContainerDimensions(iregion);
 
         Geant4Basic sectorVolume = createSectorVolume(isector, iregion, dimCont);
         populateSectorWithDetectorStructure(sectorVolume, isector, iregion, dimPhys);

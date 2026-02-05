@@ -1,4 +1,4 @@
-package org.jlab.detector.geant4.v2.MPGD.trapezoid;
+package org.jlab.detector.geant4.v2.MPGD2.trapezoid;
 
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 
@@ -101,7 +101,7 @@ public abstract class MPGDTrapezoidConstants {
     protected MPGDTrapezoidConstants(String ccdbPath,
             String globalTableName,
             String materialTableName) {
-        this.ccdbPath = ccdbPath;
+        this.ccdbPath = ccdbPath.endsWith("/") ? ccdbPath : ccdbPath + "/";
         this.globalTableName = globalTableName;
         this.materialTableName = materialTableName;
     }
