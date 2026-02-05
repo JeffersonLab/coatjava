@@ -25,29 +25,27 @@ public final class MUVTStripFactory extends MPGDTrapezoidStripFactory {
     /**
      * Build using an already-configured DatabaseConstantProvider.
      */
-public MUVTStripFactory(DatabaseConstantProvider cp, String variation) {
-    super(MUVTConstants.getInstance(), new MUVTGeant4Factory(cp, variation));
+    public MUVTStripFactory(DatabaseConstantProvider cp, String variation) {
+        super(new MUVTConstants(cp));
 
-    MUVTConstants.connect(cp);
 
-    for (Geant4Basic v : geo.getAllVolumes()) {
-        if (v.getName() != null) {
-            volumeByName.put(v.getName(), v);
+        for (Geant4Basic v : geo.getAllVolumes()) {
+            if (v.getName() != null) {
+                volumeByName.put(v.getName(), v);
+            }
         }
+
+        buildAll();
     }
 
-    buildAll();
-}
 
     /**
      * Convenience constructor: internally creates a DatabaseConstantProvider.
+     * @param run
+     * @param variation
      */
-    public MUVTStripFactory(String variation, int run) {
-        super(MUVTConstants.getInstance(), new MUVTGeant4Factory(variation, run));
-
-        DatabaseConstantProvider cp = new DatabaseConstantProvider(run, variation);
-        MUVTConstants.connect(cp);
-        cp.disconnect();
+    public MUVTStripFactory(int run, String variation) {
+        super(new MUVTConstants(run, variation));
 
         for (Geant4Basic v : geo.getAllVolumes()) {
             if (v.getName() != null) {
@@ -78,12 +76,12 @@ public MUVTStripFactory(DatabaseConstantProvider cp, String variation) {
         int run = 11;
         String variation = "default";
 
-        if (args.length > 0) {
+            if (args.length > 0) {
             try { run = Integer.parseInt(args[0]); } catch (Exception ignored) {}
         }
         if (args.length > 1) variation = args[1];
 
-        MUVTStripFactory sf = new MUVTStripFactory(variation, run);
+        MUVTStripFactory sf = new MUVTStripFactory(run, variation);
 
         int sector = 2;
         int layer  = 12;

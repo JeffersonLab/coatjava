@@ -40,8 +40,8 @@ public class URWTEngine extends ReconstructionEngine {
 
         // init ConstantsManager to read constants from CCDB
         String variationName = Optional.ofNullable(this.getEngineConfigString("variation")).orElse("default");
-        DatabaseConstantProvider cp = new DatabaseConstantProvider(11, variationName);
-        factory = new URWTStripFactory(cp, variationName);
+        
+        factory = new URWTStripFactory(11, variationName);
         // register output banks for drop option        
         this.registerOutputBank("URWT::hits");
         this.registerOutputBank("URWT::clusters");

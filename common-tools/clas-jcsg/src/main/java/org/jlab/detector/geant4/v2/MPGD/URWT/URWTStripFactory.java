@@ -25,12 +25,9 @@ public final class URWTStripFactory extends MPGDTrapezoidStripFactory {
     /**
      * Build using an already-configured DatabaseConstantProvider.
      * @param cp
-     * @param variation
      */
-    public URWTStripFactory(DatabaseConstantProvider cp, String variation) {
-        super(URWTConstants.getInstance(), new URWTGeant4Factory(cp, variation));
-
-        URWTConstants.connect(cp);
+    public URWTStripFactory(DatabaseConstantProvider cp) {
+        super(new URWTConstants(cp));
 
         for (Geant4Basic v : geo.getAllVolumes()) {
             if (v.getName() != null) {
@@ -43,13 +40,11 @@ public final class URWTStripFactory extends MPGDTrapezoidStripFactory {
 
     /**
      * Convenience constructor: internally creates a DatabaseConstantProvider.
+     * @param run
+     * @param variation
      */
-    public URWTStripFactory(String variation, int run) {
-        super(URWTConstants.getInstance(), new URWTGeant4Factory(variation, run));
-
-        DatabaseConstantProvider cp = new DatabaseConstantProvider(run, variation);
-        URWTConstants.connect(cp);
-        cp.disconnect();
+    public URWTStripFactory(int run, String variation) {
+        super(new URWTConstants(run, variation));
 
         for (Geant4Basic v : geo.getAllVolumes()) {
             if (v.getName() != null) {
@@ -88,7 +83,7 @@ public final class URWTStripFactory extends MPGDTrapezoidStripFactory {
         }
         if (args.length > 1) variation = args[1];
 
-        URWTStripFactory sf = new URWTStripFactory(variation, run);
+        URWTStripFactory sf = new URWTStripFactory(run, variation);
 
         int sector = 1;
         int layer  = 4;

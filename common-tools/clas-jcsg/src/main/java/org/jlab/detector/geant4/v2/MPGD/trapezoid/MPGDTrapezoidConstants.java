@@ -11,7 +11,7 @@ import java.util.logging.Logger;
  * Concrete detectors (e.g. URWT) should extend this class and provide: - CCDB
  * base path - global table name - material table name
  */
-public abstract class MPGDTrapezoidConstants {
+public class MPGDTrapezoidConstants {
 
     // ------------------------------------------------------------------------
     //  Logging / verbosity
@@ -39,6 +39,11 @@ public abstract class MPGDTrapezoidConstants {
      */
     protected final String materialTableName;
 
+    /**
+     * Short detector name used in volume names (e.g. "uRWT").
+     */
+    public final String detectorName;
+    
     // ------------------------------------------------------------------------
     //  Geometry parameters (from global table)
     // ------------------------------------------------------------------------
@@ -99,11 +104,13 @@ public abstract class MPGDTrapezoidConstants {
      * "urwt_material_geo")
      */
     protected MPGDTrapezoidConstants(String ccdbPath,
-            String globalTableName,
-            String materialTableName) {
+                                     String globalTableName,
+                                     String materialTableName,
+                                     String detectorName) {
         this.ccdbPath = ccdbPath.endsWith("/") ? ccdbPath : ccdbPath + "/";
         this.globalTableName = globalTableName;
         this.materialTableName = materialTableName;
+        this.detectorName = detectorName;
     }
 
     /**
@@ -125,10 +132,10 @@ public abstract class MPGDTrapezoidConstants {
      * @param cp
      * @return
      */
-    public DatabaseConstantProvider loadFrom(DatabaseConstantProvider cp) {
+    public DatabaseConstantProvider load(DatabaseConstantProvider cp) {
         cp.loadTable(ccdbPath + globalTableName);
         cp.loadTable(ccdbPath + materialTableName);
-        load(cp);
+        getConstants(cp);
         return cp;
     }
 
@@ -139,7 +146,7 @@ public abstract class MPGDTrapezoidConstants {
      *
      * @param cp
      */
-    public synchronized void load(DatabaseConstantProvider cp) {
+    public synchronized void getConstants(DatabaseConstantProvider cp) {
 
         // --------------------------- Global table ---------------------------
         String globalBase = ccdbPath + globalTableName;

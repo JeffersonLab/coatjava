@@ -20,17 +20,12 @@ import java.util.Map;
  * Concrete detectors should: - extend this class - pass the appropriate
  * constants + detector name in the constructor
  */
-public abstract class MPGDTrapezoidGeant4Factory extends Geant4Factory {
+public class MPGDTrapezoidGeant4Factory extends Geant4Factory {
 
     /**
      * Detector constants (geometry + materials from CCDB).
      */
     protected final MPGDTrapezoidConstants C;
-
-    /**
-     * Short detector name used in volume names (e.g. "uRWT").
-     */
-    protected final String detectorName;
 
     public static record SectorDimensions(
             double halfThickness,
@@ -45,12 +40,10 @@ public abstract class MPGDTrapezoidGeant4Factory extends Geant4Factory {
     /**
      * @param constants detector constants (already configured with CCDB
      * paths/table names)
-     * @param detectorName short detector name used in volume names
      */
-    protected MPGDTrapezoidGeant4Factory(MPGDTrapezoidConstants constants,
-            String detectorName) {
+    protected MPGDTrapezoidGeant4Factory(MPGDTrapezoidConstants constants) {
         this.C = constants;
-        this.detectorName = detectorName;
+        this.init();
     }
 
     // ------------------------------------------------------------------------
@@ -61,7 +54,7 @@ public abstract class MPGDTrapezoidGeant4Factory extends Geant4Factory {
      *
      * This must be called after the constants have been loaded from CCDB.
      */
-    protected void init() {
+    protected final void init() {
 
         // World volume for this detector
         motherVolume = new G4World("root");
@@ -97,7 +90,7 @@ public abstract class MPGDTrapezoidGeant4Factory extends Geant4Factory {
      * @param region
      * @return
      */
-    public SectorDimensions getSectorDimensionsPhysical(int region) {
+    public SectorDimensions getSectorActiveVolumeDimensions(int region) {
 
         double baseDistance = C.TGTDET + region * C.DZ;
 
@@ -130,7 +123,7 @@ public abstract class MPGDTrapezoidGeant4Factory extends Geant4Factory {
             System.out.printf(
                     "SectorDimensionsPhysical [%s] region=%d : height=%.3f | halfT=%.3f halfH=%.3f "
                     + "halfLarge=%.3f halfSmall=%.3f tilt(deg)=%.3f%n",
-                    detectorName, region, sectorHeight,
+                    C.detectorName, region, sectorHeight,
                     halfThickness, halfHeight,
                     halfLargeBase, halfSmallBase,
                     C.THTILT
@@ -147,7 +140,7 @@ public abstract class MPGDTrapezoidGeant4Factory extends Geant4Factory {
      */
     public SectorDimensions getSectorContainerDimensions(int region) {
 
-        SectorDimensions phys = getSectorDimensionsPhysical(region);
+        SectorDimensions phys = getSectorActiveVolumeDimensions(region);
 
         double halfThickness = phys.halfThickness() + MPGDTrapezoidConstants.ZENLARGEMENT;
         double halfHeight = phys.halfHeight() + MPGDTrapezoidConstants.YENLARGEMENT;
@@ -175,7 +168,7 @@ public abstract class MPGDTrapezoidGeant4Factory extends Geant4Factory {
         if (MPGDTrapezoidConstants.VERBOSE) {
             System.out.printf(
                     "SectorHeight [%s] region=%d : baseDistance=%.3f THMIN=%.3f THMAX=%.3f THTILT=%.3f -> height=%.3f%n",
-                    detectorName,
+                    C.detectorName,
                     region,
                     baseDistance,
                     C.THMIN, C.THMAX, C.THTILT,
@@ -230,7 +223,7 @@ public abstract class MPGDTrapezoidGeant4Factory extends Geant4Factory {
      */
     public Geant4Basic createSector(int isector, int iregion) {
 
-        SectorDimensions dimPhys = this.getSectorDimensionsPhysical(iregion);
+        SectorDimensions dimPhys = this.getSectorActiveVolumeDimensions(iregion);
         SectorDimensions dimCont = this.getSectorContainerDimensions(iregion);
 
         Geant4Basic sectorVolume = createSectorVolume(isector, iregion, dimCont);
@@ -260,7 +253,7 @@ public abstract class MPGDTrapezoidGeant4Factory extends Geant4Factory {
         Vector3d vCenter = this.getCenterCoordinate(isector, iregion);
 
         Geant4Basic sectorVolume = new G4Trap(
-                "region_" + detectorName + "_" + (iregion + 1) + "_s" + (isector + 1),
+                "region_" + C.detectorName + "_" + (iregion + 1) + "_s" + (isector + 1),
                 sectorDZ, -sectorTtilt, Math.toRadians(90.0),
                 sectorDY, sectorDX0, sectorDX1, 0.0,
                 sectorDY, sectorDX0, sectorDX1, 0.0
@@ -334,7 +327,7 @@ public abstract class MPGDTrapezoidGeant4Factory extends Geant4Factory {
                 );
 
                 matVolume.setName(
-                        "rg_" + detectorName + "_" + (iregion + 1)
+                        "rg_" + C.detectorName + "_" + (iregion + 1)
                         + "_s" + (isector + 1)
                         + "_l" + (LayerId + iregion * 2)
                         + "_matC" + materialComponentId

@@ -18,21 +18,13 @@ public final class URWTGeant4Factory extends MPGDTrapezoidGeant4Factory {
     private final String variation;
 
     public URWTGeant4Factory(DatabaseConstantProvider cp, String variation) {
-        super(URWTConstants.getInstance(), "urwt");
+        super(new URWTConstants(cp));
         this.variation = variation;
-        URWTConstants.connect(cp);
-        init();
     }
 
-    public URWTGeant4Factory(String variation, int run) {
-        super(URWTConstants.getInstance(), "urwt");
+    public URWTGeant4Factory(int run, String variation) {
+        super(new URWTConstants(run, variation));
         this.variation = variation;
-
-        DatabaseConstantProvider cp = new DatabaseConstantProvider(run, variation);
-        URWTConstants.connect(cp);
-        cp.disconnect();
-
-        init();
     }
 
     /**
@@ -41,7 +33,7 @@ public final class URWTGeant4Factory extends MPGDTrapezoidGeant4Factory {
      * @return
      */
     @Override
-    public SectorDimensions getSectorDimensionsPhysical(int region) {
+    public SectorDimensions getSectorActiveVolumeDimensions(int region) {
 
         if (variation != null && variation.toLowerCase().contains("proto")) {
 
@@ -56,7 +48,7 @@ public final class URWTGeant4Factory extends MPGDTrapezoidGeant4Factory {
             return new SectorDimensions(halfThickness, halfHeight, halfLargeBase, halfSmallBase, tiltRad);
         }
 
-        return super.getSectorDimensionsPhysical(region);
+        return super.getSectorActiveVolumeDimensions(region);
     }
 
     /**
@@ -84,7 +76,7 @@ public final class URWTGeant4Factory extends MPGDTrapezoidGeant4Factory {
             variation = args[1];
         }
 
-        URWTGeant4Factory factory = new URWTGeant4Factory(variation, run);
+        URWTGeant4Factory factory = new URWTGeant4Factory(run, variation);
 
         System.out.println("uRWT geometry for run " + run + " (variation=\"" + variation + "\")");
         System.out.println("Total volumes: " + factory.getAllVolumes().size());
