@@ -443,13 +443,17 @@ public class Track extends Trajectory implements Comparable<Track>{
                         };
         double[][] jmT = mo.MatrixTranspose(jm);
         
-        //jt: Jacobi matrix for transformation from (x, y, z, θ, φ, p) in the tilted sector frame to (x’, y’, z’, θ’, φ’, p’) in the sector frame (rotate 250 around y)
-        double numerator11 = Constants.SIN25 * Math.cos(theta) * Math.cos(phi) + Constants.COS25 * Math.sin(theta);
-        double numerator12 = -Constants.SIN25 * Math.sin(theta) * Math.sin(phi);
-        double denominator1 = Math.sqrt(1 - Math.pow(Constants.SIN25*Math.sin(theta)*Math.cos(phi) - Constants.COS25*Math.cos(theta), 2));         
-        double numerator21 = Constants.SIN25 * Math.sin(phi);
-        double numerator22 = Constants.COS25 * Math.pow(Math.sin(theta),2) + Constants.SIN25 * Math.sin(theta) * Math.cos(theta) * Math.cos(phi);
-        double denoninator2 = Math.pow(Math.sin(theta) * Math.sin(phi), 2) + Math.pow(Constants.COS25 * Math.sin(theta) * Math.cos(phi) +  Constants.SIN25 * Math.cos(theta),2);
+        //jt: Jacobi matrix for transformation from (x, y, z, θ, φ, p) in the tilted sector frame to (x’, y’, z’, θ’, φ’, p’) in the sector frame (rotate 25 degree around y)
+        double sinTheta = Math.sin(theta);
+        double cosTheta = Math.cos(theta);
+        double sinPhi = Math.sin(phi);
+        double cosPhi = Math.cos(phi);
+        double numerator11 = Constants.SIN25 * cosTheta * cosPhi + Constants.COS25 * sinTheta;
+        double numerator12 = -Constants.SIN25 * sinTheta * sinPhi;
+        double denominator1 = Math.sqrt(1 - Math.pow(Constants.SIN25*sinTheta*cosPhi - Constants.COS25*cosTheta, 2));         
+        double numerator21 = Constants.SIN25 * sinPhi;
+        double numerator22 = Constants.COS25 * Math.pow(sinTheta,2) + Constants.SIN25 * sinTheta * cosTheta * cosPhi;
+        double denoninator2 = Math.pow(sinTheta * sinPhi, 2) + Math.pow(Constants.COS25 * sinTheta * cosPhi +  Constants.SIN25 * cosTheta,2);
         double[][] jt = {{Constants.COS25, 0, Constants.SIN25, 0, 0, 0}, {0, 1, 0, 0, 0, 0}, {-Constants.SIN25, 0, Constants.COS25, 0, 0, 0}, 
                          {0, 0, 0, numerator11/denominator1, numerator12/denominator1, 0}, {0, 0, 0, numerator21/denoninator2, numerator22/denoninator2, 0}, {0, 0, 0, 0, 0, 1}
                         };
