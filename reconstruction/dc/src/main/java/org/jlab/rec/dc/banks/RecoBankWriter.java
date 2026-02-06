@@ -555,50 +555,69 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
     public DataBank fillHBTrajectoryBank(DataEvent event, List<Track> candlist) {
         return this.fillTrajectoryBank(event, candlist);
     }
-    
+        
     /**
      *
      * @param event hipo event
      * @param candlist tracks
-     * @return covariance matrix from HB fits to be used for starting TB tracking
+     * @return covariance matrix for momentum and vertex in lab frame
      */
-    private DataBank fillTrackCovMatBank(DataEvent event, List<Track> candlist) {
+    private DataBank fillTrackCovMatLabBank(DataEvent event, List<Track> candlist) {
 
         DataBank bank = event.createBank(bankNames.getCovmatBank(), candlist.size());
 
         for (int i = 0; i < candlist.size(); i++) {
             bank.setShort("id", i, (short) candlist.get(i).get_Id());
-            if(candlist.get(i).get_CovMat()!=null) {
-                bank.setFloat("C11", i, (float) candlist.get(i).get_CovMat().get(0, 0));
-                bank.setFloat("C12", i, (float) candlist.get(i).get_CovMat().get(0, 1));
-                bank.setFloat("C13", i, (float) candlist.get(i).get_CovMat().get(0, 2));
-                bank.setFloat("C14", i, (float) candlist.get(i).get_CovMat().get(0, 3));
-                bank.setFloat("C15", i, (float) candlist.get(i).get_CovMat().get(0, 4));
-                bank.setFloat("C21", i, (float) candlist.get(i).get_CovMat().get(1, 0));
-                bank.setFloat("C22", i, (float) candlist.get(i).get_CovMat().get(1, 1));
-                bank.setFloat("C23", i, (float) candlist.get(i).get_CovMat().get(1, 2));
-                bank.setFloat("C24", i, (float) candlist.get(i).get_CovMat().get(1, 3));
-                bank.setFloat("C25", i, (float) candlist.get(i).get_CovMat().get(1, 4));
-                bank.setFloat("C31", i, (float) candlist.get(i).get_CovMat().get(2, 0));
-                bank.setFloat("C32", i, (float) candlist.get(i).get_CovMat().get(2, 1));
-                bank.setFloat("C33", i, (float) candlist.get(i).get_CovMat().get(2, 2));
-                bank.setFloat("C34", i, (float) candlist.get(i).get_CovMat().get(2, 3));
-                bank.setFloat("C35", i, (float) candlist.get(i).get_CovMat().get(2, 4));
-                bank.setFloat("C41", i, (float) candlist.get(i).get_CovMat().get(3, 0));
-                bank.setFloat("C42", i, (float) candlist.get(i).get_CovMat().get(3, 1));
-                bank.setFloat("C43", i, (float) candlist.get(i).get_CovMat().get(3, 2));
-                bank.setFloat("C44", i, (float) candlist.get(i).get_CovMat().get(3, 3));
-                bank.setFloat("C45", i, (float) candlist.get(i).get_CovMat().get(3, 4));
-                bank.setFloat("C51", i, (float) candlist.get(i).get_CovMat().get(4, 0));
-                bank.setFloat("C52", i, (float) candlist.get(i).get_CovMat().get(4, 1));
-                bank.setFloat("C53", i, (float) candlist.get(i).get_CovMat().get(4, 2));
-                bank.setFloat("C54", i, (float) candlist.get(i).get_CovMat().get(4, 3));
-                bank.setFloat("C55", i, (float) candlist.get(i).get_CovMat().get(4, 4));
+            if(candlist.get(i).get_CMInLab()!=null) {
+                double[][] CM = candlist.get(i).get_CMInLab();
+                bank.setFloat("C11", i, (float) CM[0][0]);
+                bank.setFloat("C12", i, (float) CM[0][1]);
+                bank.setFloat("C13", i, (float) CM[0][2]);
+                bank.setFloat("C14", i, (float) CM[0][3]);
+                bank.setFloat("C15", i, (float) CM[0][4]);
+                bank.setFloat("C16", i, (float) CM[0][5]);
+                
+                bank.setFloat("C21", i, (float) CM[1][0]);
+                bank.setFloat("C22", i, (float) CM[1][1]);
+                bank.setFloat("C23", i, (float) CM[1][2]);
+                bank.setFloat("C24", i, (float) CM[1][3]);
+                bank.setFloat("C25", i, (float) CM[1][4]);
+                bank.setFloat("C26", i, (float) CM[1][5]);
+                
+                bank.setFloat("C31", i, (float) CM[2][0]);
+                bank.setFloat("C32", i, (float) CM[2][1]);
+                bank.setFloat("C33", i, (float) CM[2][2]);
+                bank.setFloat("C34", i, (float) CM[2][3]);
+                bank.setFloat("C35", i, (float) CM[2][4]);
+                bank.setFloat("C36", i, (float) CM[2][5]);
+                
+                bank.setFloat("C41", i, (float) CM[3][0]);
+                bank.setFloat("C42", i, (float) CM[3][1]);
+                bank.setFloat("C43", i, (float) CM[3][2]);
+                bank.setFloat("C44", i, (float) CM[3][3]);
+                bank.setFloat("C45", i, (float) CM[3][4]);
+                bank.setFloat("C46", i, (float) CM[3][5]);
+                
+                bank.setFloat("C51", i, (float) CM[4][0]);
+                bank.setFloat("C52", i, (float) CM[4][1]);
+                bank.setFloat("C53", i, (float) CM[4][2]);
+                bank.setFloat("C54", i, (float) CM[4][3]);
+                bank.setFloat("C55", i, (float) CM[4][4]);
+                bank.setFloat("C56", i, (float) CM[4][5]);
+                
+                bank.setFloat("C61", i, (float) CM[5][0]);
+                bank.setFloat("C62", i, (float) CM[5][1]);
+                bank.setFloat("C63", i, (float) CM[5][2]);
+                bank.setFloat("C64", i, (float) CM[5][3]);
+                bank.setFloat("C65", i, (float) CM[5][4]);
+                bank.setFloat("C66", i, (float) CM[5][5]);
+               
             }
         }
         //bank.show();
         return bank;
     }
+    
      /**
      *
      * @param event the EvioEvent
@@ -1171,7 +1190,7 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
                     this.fillTBCrossesBank(event, crosses),
                     this.fillTBTracksBank(event, trkcands),
                     this.fillTrajectoryBank(event, trkcands),
-                    this.fillTrackCovMatBank(event, trkcands)
+                    this.fillTrackCovMatLabBank(event, trkcands)
                     );
         }
         if (crosses != null && trkcands == null) {
@@ -1212,7 +1231,7 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
                     this.fillTBURWellCrossesBank(event, urCrosses),
                     this.fillTBTracksBank(event, trkcands),
                     this.fillTrajectoryBank(event, trkcands),
-                    this.fillTrackCovMatBank(event, trkcands)
+                    this.fillTrackCovMatLabBank(event, trkcands)
                     );
         }
         if (crosses != null && trkcands == null) {
