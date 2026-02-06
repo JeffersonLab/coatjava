@@ -11,6 +11,8 @@ import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.trajectory.StateVec;
 import org.jlab.rec.dc.trajectory.Trajectory;
+import org.jlab.clas.tracking.utilities.MatrixOps;
+import org.jlab.clas.tracking.utilities.MatrixOps.Libr;
 
 /**
  * A class representing track candidates in the DC.  A track has a trajectory represented by an ensemble of geometrical state vectors along its path, 
@@ -42,6 +44,7 @@ public class Track extends Trajectory implements Comparable<Track>{
     private int _Q;
     private double _P;
     private Matrix _CovMat;
+    private double[][] _CMInLab = new double[6][6];
 
     private Point3D _Region3CrossPoint;
     private Point3D _Region3CrossDir;
@@ -396,6 +399,94 @@ public class Track extends Trajectory implements Comparable<Track>{
         this._CovMat = _CovMat;
     }
     
+    /**
+     * 
+     * @return covariance matrix in lab frame
+     */
+    public double[][] get_CMInLab() {
+        return _CMInLab;
+    }
+    
+     /**
+     * 
+     * @param _CMInLab covariance matrix in lab frame
+     */
+    public void set_CMInLab(double[][] _CMInLab) {
+        this._CMInLab = _CMInLab;
+    }
+    
+    public void transCMToGlobal(){
+        MatrixOps mo = new MatrixOps(Libr.EJML);
+        
+        int sector = this.getSector();
+        
+        int charge = this.get_Q();
+        double p = this.get_P();                
+        
+        Vector3D momGlobal = this.get_pAtOrig();
+        Cross C = this.get(this.size() - 1);
+        Point3D momLocal = C.getCoordsInTiltedSector(momGlobal.x(), momGlobal.y(), momGlobal.z());
+        if(momLocal.z() == 0) set_CMInLab(new double[6][6]);
+        double tx = momLocal.x()/momLocal.z();
+        double ty = momLocal.y()/momLocal.z();
+        double theta = Math.atan(Math.sqrt(tx*tx + ty*ty));
+        double phi = Math.atan2(ty, tx);
+        
+        //jm: Jacobi matrix for transformation from (x, y, tx, ty, Q) to (x, y, z, θ, φ, p) in the tilted sector frame
+        double dpdQ = -charge * p * p;
+        double dphidtx = -ty / (tx*tx + ty*ty);
+        double dphidty = tx / (tx*tx + ty*ty);
+        double dthetadtx = tx/(1 + tx*tx + ty*ty)/Math.sqrt(tx*tx + ty*ty);
+        double dthetadty = ty/(1 + tx*tx + ty*ty)/Math.sqrt(tx*tx + ty*ty);
+        double[][] jm = {{1, 0, 0, 0, 0}, {0, 1, 0, 0, 0}, {0, 0, 0, 0, 0},
+                         {0, 0, dthetadtx, dthetadty, 0}, {0, 0, dphidtx, dphidty, 0}, {0, 0, 0, 0, dpdQ}
+                        };
+        double[][] jmT = mo.MatrixTranspose(jm);
+        
+        //jt: Jacobi matrix for transformation from (x, y, z, θ, φ, p) in the tilted sector frame to (x’, y’, z’, θ’, φ’, p’) in the sector frame (rotate 25 degree around y)
+        double sinTheta = Math.sin(theta);
+        double cosTheta = Math.cos(theta);
+        double sinPhi = Math.sin(phi);
+        double cosPhi = Math.cos(phi);
+        double numerator11 = Constants.SIN25 * cosTheta * cosPhi + Constants.COS25 * sinTheta;
+        double numerator12 = -Constants.SIN25 * sinTheta * sinPhi;
+        double denominator1 = Math.sqrt(1 - Math.pow(Constants.SIN25*sinTheta*cosPhi - Constants.COS25*cosTheta, 2));         
+        double numerator21 = Constants.SIN25 * sinPhi;
+        double numerator22 = Constants.COS25 * Math.pow(sinTheta,2) + Constants.SIN25 * sinTheta * cosTheta * cosPhi;
+        double denoninator2 = Math.pow(sinTheta * sinPhi, 2) + Math.pow(Constants.COS25 * sinTheta * cosPhi +  Constants.SIN25 * cosTheta,2);
+        double[][] jt = {{Constants.COS25, 0, Constants.SIN25, 0, 0, 0}, {0, 1, 0, 0, 0, 0}, {-Constants.SIN25, 0, Constants.COS25, 0, 0, 0}, 
+                         {0, 0, 0, numerator11/denominator1, numerator12/denominator1, 0}, {0, 0, 0, numerator21/denoninator2, numerator22/denoninator2, 0}, {0, 0, 0, 0, 0, 1}
+                        };
+        double[][] jtT = mo.MatrixTranspose(jt);
+        
+        //js: Jacobi matrix for transformation from  (x’, y’, z’, θ’, φ’, p’)  to (x’’, y’’, z’’, θ’’, φ’’, p’’)  in the lab frame (rotate around z’)
+        double[][] js = {{Constants.COSSECTOR60[sector - 1], -Constants.SINSECTOR60[sector - 1], 0, 0, 0, 0}, {Constants.SINSECTOR60[sector - 1], Constants.COSSECTOR60[sector - 1], 0, 0, 0, 0}, {0, 0, 1, 0, 0, 0}, 
+                         {0, 0, 0, 1, 0, 0}, {0, 0, 0, 0, 1, 0}, {0, 0, 0, 0, 0, 1}
+                        };
+        double[][] jsT = mo.MatrixTranspose(js);
+        
+        Matrix CM = this.get_CovMat();
+        double[][] CMOrig = {
+                                {CM.get(0, 0), CM.get(0, 1), CM.get(0, 2), CM.get(0, 3), CM.get(0, 4)},
+                                {CM.get(1, 0), CM.get(1, 1), CM.get(1, 2), CM.get(1, 3), CM.get(1, 4)},
+                                {CM.get(2, 0), CM.get(2, 1), CM.get(2, 2), CM.get(2, 3), CM.get(2, 4)},
+                                {CM.get(3, 0), CM.get(3, 1), CM.get(3, 2), CM.get(3, 3), CM.get(3, 4)},
+                                {CM.get(4, 0), CM.get(4, 1), CM.get(4, 2), CM.get(4, 3), CM.get(4, 4)}
+            
+                            };
+                
+        double[][] transCM1 = mo.MatrixMultiplication(jm, CMOrig);
+        double[][] transCM2 = mo.MatrixMultiplication(transCM1, jmT);
+        
+        double[][] transCM3 = mo.MatrixMultiplication(jt, transCM2);
+        double[][] transCM4 = mo.MatrixMultiplication(transCM3, jtT);
+        
+        double[][] transCM5 = mo.MatrixMultiplication(js, transCM4);
+        double[][] transCM6 = mo.MatrixMultiplication(transCM5, jsT);
+                      
+        set_CMInLab(transCM6);
+     }
+                
     /**
      * 
      * @param fitConvergenceStatus fit convergence status 0 if OK, 1 if the fit exits before converging
