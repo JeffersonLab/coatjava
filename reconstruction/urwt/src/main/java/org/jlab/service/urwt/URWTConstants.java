@@ -1,10 +1,10 @@
-package org.jlab.service.urwell;
+package org.jlab.service.urwt;
 
 /**
  *
  * @author bondi, devita
  */
-public class URWellConstants {
+public class URWTConstants {
     
     
     // geometry
@@ -16,7 +16,7 @@ public class URWellConstants {
     public final static int[] STRIPMIN = {   1,  543, 1171}; // lower strip number
     public final static int[] STRIPMAX = { 542, 1170, 1884}; // higher strip number
     public final static double PITCH = 0.1; // mm
-    public final static double[] STEREO = { 10.0, 10.0 };
+    public final static double[] STEREO = { 29.5, 29.5};
 
     // strips
     public final static double THRESHOLD = 0;

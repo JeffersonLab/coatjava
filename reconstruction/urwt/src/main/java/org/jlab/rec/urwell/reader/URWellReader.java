@@ -21,22 +21,22 @@ public class URWellReader{
         
     public URWellReader(DataEvent event) {
         
-        if(event.hasBank("URWELL::hits"))
-            this.readHits(event.getBank("URWELL::hits"));
-        if(event.hasBank("URWELL::clusters"))
-            this.readClusters(event.getBank("URWELL::clusters"));
-        if(event.hasBank("URWELL::crosses"))
-            this.readCrosses(event.getBank("URWELL::crosses"));
+        if(event.hasBank("URWT::hits"))
+            this.readHits(event.getBank("URWT::hits"));
+        if(event.hasBank("URWT::clusters"))
+            this.readClusters(event.getBank("URWT::clusters"));
+        if(event.hasBank("URWT::crosses"))
+            this.readCrosses(event.getBank("URWT::crosses"));
     }
     
     public URWellReader(DataEvent event, String type) {
-        if(event.hasBank("URWELL::clusters"))
-                this.readClusters(event.getBank("URWELL::clusters"));
+        if(event.hasBank("URWT::clusters"))
+                this.readClusters(event.getBank("URWT::clusters"));
         
         
         if(type == "HB"){            
-            if(event.hasBank("URWELL::crosses"))
-                this.readCrosses(event.getBank("URWELL::crosses"));
+            if(event.hasBank("URWT::crosses"))
+                this.readCrosses(event.getBank("URWT::crosses"));
         }
         else if(type == "TB"){ 
             if(event.hasBank("HitBasedTrkg::HBURWellCrosses"))

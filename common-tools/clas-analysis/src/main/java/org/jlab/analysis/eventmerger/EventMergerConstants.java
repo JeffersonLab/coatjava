@@ -36,7 +36,7 @@ public class EventMergerConstants {
     public static final String[] TDCBANKTYPES = {"tot","tdc"};
     
     public static final String[] ADCDETECTORS = {"BAND","BMT", "BST","CND","CTOF","ECAL","FMT","FTCAL",
-                                                  "FTHODO","FTOF","FTTRK","HTCC","LTCC","URWELL"};
+                                                  "FTHODO","FTOF","FTTRK","HTCC","LTCC","URWT"};
     public static final String[] TDCDETECTORS = {"BAND","CND","CTOF","DC","ECAL","FTOF"};
                                                                                                   
     

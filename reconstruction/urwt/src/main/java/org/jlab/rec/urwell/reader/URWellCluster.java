@@ -4,7 +4,7 @@ import org.jlab.detector.base.DetectorDescriptor;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Line3D;
-import org.jlab.service.urwell.URWellConstants;
+import org.jlab.service.urwt.URWTConstants;
 
 /**
  *
@@ -14,7 +14,7 @@ import org.jlab.service.urwell.URWellConstants;
 public class URWellCluster {
     
     private int id = -1;
-    private DetectorDescriptor desc = new DetectorDescriptor(DetectorType.URWELL);
+    private DetectorDescriptor desc = new DetectorDescriptor(DetectorType.URWT);
     private int size = 0;
     private double energy = 0;
     private double time = 0;
@@ -28,7 +28,7 @@ public class URWellCluster {
         this.size = size;
         this.energy = energy;
         this.time = time;
-        stereo = Math.pow(-1, layer) * URWellConstants.STEREO[(layer-1)/2]; // stereo angle is negative for odd layers, while positive for even layers
+        stereo = Math.pow(-1, layer) * URWTConstants.STEREO[(layer-1)/2]; // stereo angle is negative for odd layers, while positive for even layers
         
         Point3D pointOriginLocal = new Point3D();
         pointOriginLocal.copy(pointOrigin);

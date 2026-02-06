@@ -19,7 +19,7 @@ import org.jlab.rec.dc.hit.Hit;
 import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
 import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.urwell.reader.URWellCross;
-import org.jlab.service.urwell.URWellConstants;
+import org.jlab.service.urwt.URWTConstants;
 import org.jlab.utils.groups.IndexedTable;
 
 /**
@@ -253,7 +253,7 @@ public class ClusterFinder {
                         List<URWellCross> matchedURWellCrosses = new ArrayList();
                         for(int i = 0; i < seletedURWellCrosses.size(); i++){
                             URWellCross seletedURWellCross = seletedURWellCrosses.get(i);
-                            if(Math.abs(seletedURWellCross.getResidule()) < URWellConstants.URWELLRESIDUALCUT[seletedURWellCross.region()-1]){                                
+                            if(Math.abs(seletedURWellCross.getResidule()) < URWTConstants.URWELLRESIDUALCUT[seletedURWellCross.region()-1]){                                
                                 matchedURWellCrosses.add(seletedURWellCross);
                             }                            
                         }
@@ -304,7 +304,7 @@ public class ClusterFinder {
                                     List<URWellCross> seletedRemainingSmallResiURWellCross = ct.FindURWellCrossWithSmallestResidual(cls, selectedRemainingURWellCrosses, cf);
                                     List<URWellCross> seletedRemainingSMallResiURWellCrossWithResidualCut = new ArrayList();
                                     for(URWellCross crs : seletedRemainingSmallResiURWellCross){
-                                        if(Math.abs(crs.getResidule()) < URWellConstants.URWELLRESIDUALCUT[crs.region()-1]){
+                                        if(Math.abs(crs.getResidule()) < URWTConstants.URWELLRESIDUALCUT[crs.region()-1]){
                                             seletedRemainingSMallResiURWellCrossWithResidualCut.add(crs);
                                         }                                        
                                     }

@@ -10,7 +10,7 @@ import org.jlab.rec.dc.cross.Cross;
 import trackfitter.fitter.LineFitter;
 import Jama.Matrix;
 import org.jlab.rec.urwell.reader.URWellCross;
-import org.jlab.service.urwell.URWellConstants;
+import org.jlab.service.urwt.URWTConstants;
 /**
  * A driver class to find the trajectory of a track candidate.  NOTE THAT THE PATH TO FIELD MAPS IS SET BY THE CLARA_SERVICES ENVIRONMENT VAR.
  *
@@ -230,8 +230,8 @@ public class TrajectoryWithURWellFinder {
                 y[i+2] = urCross.local().y();
                 z[i+2] = urCross.local().z();
 
-                x_err[i+2] = URWellConstants.URWELLXRESOLUTIONHB;
-                y_err[i+2] = URWellConstants.URWELLYRESOLUTIONHB;
+                x_err[i+2] = URWTConstants.URWELLXRESOLUTIONHB;
+                y_err[i+2] = URWTConstants.URWELLYRESOLUTIONHB;
             }
 
             x_fitCoeff = quadraticLRFit(z, x, x_err);
@@ -266,8 +266,8 @@ public class TrajectoryWithURWellFinder {
                 y[i+3] = urCross.local().y();
                 z[i+3] = urCross.local().z();
 
-                x_err[i+3] = URWellConstants.URWELLXRESOLUTIONHB;
-                y_err[i+3] = URWellConstants.URWELLYRESOLUTIONHB;
+                x_err[i+3] = URWTConstants.URWELLXRESOLUTIONHB;
+                y_err[i+3] = URWTConstants.URWELLYRESOLUTIONHB;
             }
 
             x_fitCoeff = quadraticLRFit(z, x, x_err);

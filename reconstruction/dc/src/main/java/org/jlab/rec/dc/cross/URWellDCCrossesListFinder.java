@@ -17,7 +17,7 @@ import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
 import org.jlab.utils.groups.IndexedTable;
 import trackfitter.fitter.LineFitter;
 import org.jlab.rec.urwell.reader.URWellCross;
-import org.jlab.service.urwell.URWellConstants;
+import org.jlab.service.urwt.URWTConstants;
 
 /**
  * A class to build 4-crosses or 3-crosses combos
@@ -129,8 +129,8 @@ public class URWellDCCrossesListFinder {
                                         Z[i+3] = urCross.local().z();
                                         Y[i+3] = urCross.local().y();
                                         X[i+3] = urCross.local().x();
-                                        errX[i+3] = URWellConstants.URWELLXRESOLUTIONHB;
-                                        errY[i+3] = URWellConstants.URWELLYRESOLUTIONHB;     
+                                        errX[i+3] = URWTConstants.URWELLXRESOLUTIONHB;
+                                        errY[i+3] = URWTConstants.URWELLYRESOLUTIONHB;     
                                     }
 
                                     // ignore point errors and assume the track vertex is close to the origin
@@ -212,8 +212,8 @@ public class URWellDCCrossesListFinder {
                                             Z[3] = urCross.local().z();
                                             Y[3] = urCross.local().y();
                                             X[3] = urCross.local().x();
-                                            errX[3] = URWellConstants.URWELLXRESOLUTIONHB;
-                                            errY[3] = URWellConstants.URWELLYRESOLUTIONHB;
+                                            errX[3] = URWTConstants.URWELLXRESOLUTIONHB;
+                                            errY[3] = URWTConstants.URWELLYRESOLUTIONHB;
                                             // ignore point errors and assume the track vertex is close to the origin
                                             for (int j = 0; j < 6; j++) {
                                                 this.clear(qf1.fitResult[j]);
@@ -244,7 +244,7 @@ public class URWellDCCrossesListFinder {
                                             if (c3.isPseudoCross == false) {
                                                 fitchsq += ((qf1.fitResult[1][2] - c3.get_Point().y()) / c3.get_PointErr().y()) * ((qf1.fitResult[1][2] - c3.get_Point().y()) / c3.get_PointErr().y());
                                             }
-                                            //fitchsq += ((qf1.fitResult[1][3] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB) * ((qf1.fitResult[1][3] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB);
+                                            //fitchsq += ((qf1.fitResult[1][3] - urCross.local().y()) / URWTConstants.URWELLYRESOLUTIONHB) * ((qf1.fitResult[1][3] - urCross.local().y()) / URWTConstants.URWELLYRESOLUTIONHB);
 
                                             // fit the  projection with a line -- the track is ~ constant in phi
                                             LineFitter linefit = new LineFitter();
@@ -301,8 +301,8 @@ public class URWellDCCrossesListFinder {
                                                 Z[i+3] = urCross.local().z();
                                                 Y[i+3] = urCross.local().y();
                                                 X[i+3] = urCross.local().x();
-                                                errX[i+3] = URWellConstants.URWELLXRESOLUTIONHB;
-                                                errY[i+3] = URWellConstants.URWELLYRESOLUTIONHB;
+                                                errX[i+3] = URWTConstants.URWELLXRESOLUTIONHB;
+                                                errY[i+3] = URWTConstants.URWELLYRESOLUTIONHB;
                                             }
                                             // ignore point errors and assume the track vertex is close to the origin
                                             for (int j = 0; j < 6; j++) {
@@ -402,8 +402,8 @@ public class URWellDCCrossesListFinder {
                                     Z[2] = urCross.local().z();
                                     Y[2] = urCross.local().y();
                                     X[2] = urCross.local().x();
-                                    errX[2] = URWellConstants.URWELLXRESOLUTIONHB;
-                                    errY[2] = URWellConstants.URWELLYRESOLUTIONHB;
+                                    errX[2] = URWTConstants.URWELLXRESOLUTIONHB;
+                                    errY[2] = URWTConstants.URWELLYRESOLUTIONHB;
                                     // ignore point errors and assume the track vertex is close to the origin
                                     for (int j = 0; j < 6; j++) {
                                         this.clear(qf1.fitResult[j]);
@@ -429,7 +429,7 @@ public class URWellDCCrossesListFinder {
                                     if (c3.isPseudoCross == false) {
                                         fitchsq += ((qf1.fitResult[1][1] - c3.get_Point().y()) / c3.get_PointErr().y()) * ((qf1.fitResult[1][1] - c3.get_Point().y()) / c3.get_PointErr().y());
                                     }
-                                    //fitchsq += ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB) * ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB);
+                                    //fitchsq += ((qf1.fitResult[1][2] - urCross.local().y()) / URWTConstants.URWELLYRESOLUTIONHB) * ((qf1.fitResult[1][2] - urCross.local().y()) / URWTConstants.URWELLYRESOLUTIONHB);
 
                                     // fit the  projection with a line -- the track is ~ constant in phi
                                     LineFitter linefit = new LineFitter();
@@ -479,8 +479,8 @@ public class URWellDCCrossesListFinder {
                                         Z[i+2] = urCross.local().z();
                                         Y[i+2] = urCross.local().y();
                                         X[i+2] = urCross.local().x();
-                                        errX[i+2] = URWellConstants.URWELLXRESOLUTIONHB;
-                                        errY[i+2] = URWellConstants.URWELLYRESOLUTIONHB;
+                                        errX[i+2] = URWTConstants.URWELLXRESOLUTIONHB;
+                                        errY[i+2] = URWTConstants.URWELLYRESOLUTIONHB;
                                     }
                                     // ignore point errors and assume the track vertex is close to the origin
                                     for (int j = 0; j < 6; j++) {
@@ -569,8 +569,8 @@ public class URWellDCCrossesListFinder {
                                         Z[i+2] = urCross.local().z();
                                         Y[i+2] = urCross.local().y();
                                         X[i+2] = urCross.local().x();
-                                        errX[i+2] = URWellConstants.URWELLXRESOLUTIONHB;
-                                        errY[i+2] = URWellConstants.URWELLYRESOLUTIONHB;
+                                        errX[i+2] = URWTConstants.URWELLXRESOLUTIONHB;
+                                        errY[i+2] = URWTConstants.URWELLYRESOLUTIONHB;
                                     }
 
                                 // ignore point errors and assume the track vertex is close to the origin
@@ -639,8 +639,8 @@ public class URWellDCCrossesListFinder {
                                         Z[2] = urCross.local().z();
                                         Y[2] = urCross.local().y();
                                         X[2] = urCross.local().x();
-                                        errX[2] = URWellConstants.URWELLXRESOLUTIONHB;
-                                        errY[2] = URWellConstants.URWELLYRESOLUTIONHB;
+                                        errX[2] = URWTConstants.URWELLXRESOLUTIONHB;
+                                        errY[2] = URWTConstants.URWELLYRESOLUTIONHB;
                                         // ignore point errors and assume the track vertex is close to the origin
                                         for (int j = 0; j < 6; j++) {
                                             this.clear(qf1.fitResult[j]);
@@ -666,7 +666,7 @@ public class URWellDCCrossesListFinder {
                                         if (c3.isPseudoCross == false) {
                                             fitchsq += ((qf1.fitResult[1][1] - c3.get_Point().y()) / c3.get_PointErr().y()) * ((qf1.fitResult[1][1] - c3.get_Point().y()) / c3.get_PointErr().y());
                                         }
-                                        //fitchsq += ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB) * ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB);
+                                        //fitchsq += ((qf1.fitResult[1][2] - urCross.local().y()) / URWTConstants.URWELLYRESOLUTIONHB) * ((qf1.fitResult[1][2] - urCross.local().y()) / URWTConstants.URWELLYRESOLUTIONHB);
 
                                         // fit the  projection with a line -- the track is ~ constant in phi
                                         LineFitter linefit = new LineFitter();
@@ -715,8 +715,8 @@ public class URWellDCCrossesListFinder {
                                             Z[i+2] = urCross.local().z();
                                             Y[i+2] = urCross.local().y();
                                             X[i+2] = urCross.local().x();
-                                            errX[i+2] = URWellConstants.URWELLXRESOLUTIONHB;
-                                            errY[i+2] = URWellConstants.URWELLYRESOLUTIONHB;
+                                            errX[i+2] = URWTConstants.URWELLXRESOLUTIONHB;
+                                            errY[i+2] = URWTConstants.URWELLYRESOLUTIONHB;
                                         }
                                         // ignore point errors and assume the track vertex is close to the origin
                                         for (int j = 0; j < 6; j++) {
@@ -806,8 +806,8 @@ public class URWellDCCrossesListFinder {
                                     Z[i+2] = urCross.local().z();
                                     Y[i+2] = urCross.local().y();
                                     X[i+2] = urCross.local().x();
-                                    errX[i+2] = URWellConstants.URWELLXRESOLUTIONHB;
-                                    errY[i+2] = URWellConstants.URWELLYRESOLUTIONHB;
+                                    errX[i+2] = URWTConstants.URWELLXRESOLUTIONHB;
+                                    errY[i+2] = URWTConstants.URWELLYRESOLUTIONHB;
                                 }
 
                                 // ignore point errors and assume the track vertex is close to the origin
@@ -878,8 +878,8 @@ public class URWellDCCrossesListFinder {
                                         Z[2] = urCross.local().z();
                                         Y[2] = urCross.local().y();
                                         X[2] = urCross.local().x();
-                                        errX[2] = URWellConstants.URWELLXRESOLUTIONHB;
-                                        errY[2] = URWellConstants.URWELLYRESOLUTIONHB;
+                                        errX[2] = URWTConstants.URWELLXRESOLUTIONHB;
+                                        errY[2] = URWTConstants.URWELLYRESOLUTIONHB;
 
                                         // ignore point errors and assume the track vertex is close to the origin
                                         for (int j = 0; j < 6; j++) {
@@ -906,7 +906,7 @@ public class URWellDCCrossesListFinder {
                                         if (c2.isPseudoCross == false) {
                                             fitchsq += ((qf1.fitResult[1][1] - c2.get_Point().y()) / c2.get_PointErr().y()) * ((qf1.fitResult[1][1] - c2.get_Point().y()) / c2.get_PointErr().y());
                                         }
-                                        //fitchsq += ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB) * ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB);
+                                        //fitchsq += ((qf1.fitResult[1][2] - urCross.local().y()) / URWTConstants.URWELLYRESOLUTIONHB) * ((qf1.fitResult[1][2] - urCross.local().y()) / URWTConstants.URWELLYRESOLUTIONHB);
 
                                         // fit the  projection with a line -- the track is ~ constant in phi
                                         LineFitter linefit = new LineFitter();
@@ -956,8 +956,8 @@ public class URWellDCCrossesListFinder {
                                             Z[i+2] = urCross.local().z();
                                             Y[i+2] = urCross.local().y();
                                             X[i+2] = urCross.local().x();
-                                            errX[i+2] = URWellConstants.URWELLXRESOLUTIONHB;
-                                            errY[i+2] = URWellConstants.URWELLYRESOLUTIONHB;
+                                            errX[i+2] = URWTConstants.URWELLXRESOLUTIONHB;
+                                            errY[i+2] = URWTConstants.URWELLYRESOLUTIONHB;
                                         }
 
                                         // ignore point errors and assume the track vertex is close to the origin
@@ -1107,8 +1107,8 @@ public class URWellDCCrossesListFinder {
                                     Z[3] = urCross.local().z();
                                     Y[3] = urCross.local().y();
                                     X[3] = urCross.local().x();
-                                    errX[3] = URWellConstants.URWELLXRESOLUTIONHB;
-                                    errY[3] = URWellConstants.URWELLYRESOLUTIONHB;
+                                    errX[3] = URWTConstants.URWELLXRESOLUTIONHB;
+                                    errY[3] = URWTConstants.URWELLYRESOLUTIONHB;
                                     // ignore point errors and assume the track vertex is close to the origin
                                     for (int j = 0; j < 6; j++) {
                                         this.clear(qf1.fitResult[j]);
@@ -1139,7 +1139,7 @@ public class URWellDCCrossesListFinder {
                                     if (c3.isPseudoCross == false) {
                                         fitchsq += ((qf1.fitResult[1][2] - c3.get_Point().y()) / c3.get_PointErr().y()) * ((qf1.fitResult[1][2] - c3.get_Point().y()) / c3.get_PointErr().y());
                                     }
-                                    //fitchsq += ((qf1.fitResult[1][3] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB) * ((qf1.fitResult[1][3] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB);
+                                    //fitchsq += ((qf1.fitResult[1][3] - urCross.local().y()) / URWTConstants.URWELLYRESOLUTIONHB) * ((qf1.fitResult[1][3] - urCross.local().y()) / URWTConstants.URWELLYRESOLUTIONHB);
 
                                     // fit the  projection with a line -- the track is ~ constant in phi
                                     LineFitter linefit = new LineFitter();
@@ -1202,8 +1202,8 @@ public class URWellDCCrossesListFinder {
                                         Z[i+3] = urCross.local().z();
                                         Y[i+3] = urCross.local().y();
                                         X[i+3] = urCross.local().x();
-                                        errX[i+3] = URWellConstants.URWELLXRESOLUTIONHB;
-                                        errY[i+3] = URWellConstants.URWELLYRESOLUTIONHB;
+                                        errX[i+3] = URWTConstants.URWELLXRESOLUTIONHB;
+                                        errY[i+3] = URWTConstants.URWELLYRESOLUTIONHB;
                                     }
                                     // ignore point errors and assume the track vertex is close to the origin
                                     for (int j = 0; j < 6; j++) {
@@ -1392,8 +1392,8 @@ public class URWellDCCrossesListFinder {
                                 Z[2] = urCross.local().z();
                                 Y[2] = urCross.local().y();
                                 X[2] = urCross.local().x();
-                                errX[2] = URWellConstants.URWELLXRESOLUTIONHB;
-                                errY[2] = URWellConstants.URWELLYRESOLUTIONHB;
+                                errX[2] = URWTConstants.URWELLXRESOLUTIONHB;
+                                errY[2] = URWTConstants.URWELLYRESOLUTIONHB;
 
                                 // ignore point errors and assume the track vertex is close to the origin
                                 for (int j = 0; j < 6; j++) {
@@ -1420,7 +1420,7 @@ public class URWellDCCrossesListFinder {
                                 if (c3.isPseudoCross == false) {
                                     fitchsq += ((qf1.fitResult[1][1] - c3.get_Point().y()) / c3.get_PointErr().y()) * ((qf1.fitResult[1][1] - c3.get_Point().y()) / c3.get_PointErr().y());
                                 }
-                                //fitchsq += ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB) * ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB);
+                                //fitchsq += ((qf1.fitResult[1][2] - urCross.local().y()) / URWTConstants.URWELLYRESOLUTIONHB) * ((qf1.fitResult[1][2] - urCross.local().y()) / URWTConstants.URWELLYRESOLUTIONHB);
 
                                 // fit the  projection with a line -- the track is ~ constant in phi
                                 LineFitter linefit = new LineFitter();
@@ -1477,8 +1477,8 @@ public class URWellDCCrossesListFinder {
                                     Z[i+2] = urCross.local().z();
                                     Y[i+2] = urCross.local().y();
                                     X[i+2] = urCross.local().x();
-                                    errX[i+2] = URWellConstants.URWELLXRESOLUTIONHB;
-                                    errY[i+2] = URWellConstants.URWELLYRESOLUTIONHB;
+                                    errX[i+2] = URWTConstants.URWELLXRESOLUTIONHB;
+                                    errY[i+2] = URWTConstants.URWELLYRESOLUTIONHB;
                                 }
 
                                 // ignore point errors and assume the track vertex is close to the origin
@@ -1563,8 +1563,8 @@ public class URWellDCCrossesListFinder {
                                 Z[2] = urCross.local().z();
                                 Y[2] = urCross.local().y();
                                 X[2] = urCross.local().x();
-                                errX[2] = URWellConstants.URWELLXRESOLUTIONHB;
-                                errY[2] = URWellConstants.URWELLYRESOLUTIONHB;
+                                errX[2] = URWTConstants.URWELLXRESOLUTIONHB;
+                                errY[2] = URWTConstants.URWELLYRESOLUTIONHB;
 
                                 // ignore point errors and assume the track vertex is close to the origin
                                 for (int j = 0; j < 6; j++) {
@@ -1591,7 +1591,7 @@ public class URWellDCCrossesListFinder {
                                 if (c3.isPseudoCross == false) {
                                     fitchsq += ((qf1.fitResult[1][1] - c3.get_Point().y()) / c3.get_PointErr().y()) * ((qf1.fitResult[1][1] - c3.get_Point().y()) / c3.get_PointErr().y());
                                 }
-                                fitchsq += ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB) * ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB);
+                                fitchsq += ((qf1.fitResult[1][2] - urCross.local().y()) / URWTConstants.URWELLYRESOLUTIONHB) * ((qf1.fitResult[1][2] - urCross.local().y()) / URWTConstants.URWELLYRESOLUTIONHB);
                                 
                                 // fit the  projection with a line -- the track is ~ constant in phi
                                 LineFitter linefit = new LineFitter();
@@ -1648,8 +1648,8 @@ public class URWellDCCrossesListFinder {
                                     Z[i+2] = urCross.local().z();
                                     Y[i+2] = urCross.local().y();
                                     X[i+2] = urCross.local().x();
-                                    errX[i+2] = URWellConstants.URWELLXRESOLUTIONHB;
-                                    errY[i+2] = URWellConstants.URWELLYRESOLUTIONHB;
+                                    errX[i+2] = URWTConstants.URWELLXRESOLUTIONHB;
+                                    errY[i+2] = URWTConstants.URWELLYRESOLUTIONHB;
                                 }
 
                                 // ignore point errors and assume the track vertex is close to the origin
@@ -1736,8 +1736,8 @@ public class URWellDCCrossesListFinder {
                                 Z[2] = urCross.local().z();
                                 Y[2] = urCross.local().y();
                                 X[2] = urCross.local().x();
-                                errX[2] = URWellConstants.URWELLXRESOLUTIONHB;
-                                errY[2] = URWellConstants.URWELLYRESOLUTIONHB;
+                                errX[2] = URWTConstants.URWELLXRESOLUTIONHB;
+                                errY[2] = URWTConstants.URWELLYRESOLUTIONHB;
 
                                 // ignore point errors and assume the track vertex is close to the origin
                                 for (int j = 0; j < 6; j++) {
@@ -1764,7 +1764,7 @@ public class URWellDCCrossesListFinder {
                                 if (c2.isPseudoCross == false) {
                                     fitchsq += ((qf1.fitResult[1][1] - c2.get_Point().y()) / c2.get_PointErr().y()) * ((qf1.fitResult[1][1] - c2.get_Point().y()) / c2.get_PointErr().y());
                                 }
-                                //fitchsq += ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB) * ((qf1.fitResult[1][2] - urCross.local().y()) / URWellConstants.URWELLYRESOLUTIONHB);
+                                //fitchsq += ((qf1.fitResult[1][2] - urCross.local().y()) / URWTConstants.URWELLYRESOLUTIONHB) * ((qf1.fitResult[1][2] - urCross.local().y()) / URWTConstants.URWELLYRESOLUTIONHB);
                                 
                                 // fit the  projection with a line -- the track is ~ constant in phi
                                 LineFitter linefit = new LineFitter();
@@ -1821,8 +1821,8 @@ public class URWellDCCrossesListFinder {
                                     Z[i+2] = urCross.local().z();
                                     Y[i+2] = urCross.local().y();
                                     X[i+2] = urCross.local().x();
-                                    errX[i+2] = URWellConstants.URWELLXRESOLUTIONHB;
-                                    errY[i+2] = URWellConstants.URWELLYRESOLUTIONHB;
+                                    errX[i+2] = URWTConstants.URWELLXRESOLUTIONHB;
+                                    errY[i+2] = URWTConstants.URWELLYRESOLUTIONHB;
                                 }
 
                                 // ignore point errors and assume the track vertex is close to the origin
@@ -1889,8 +1889,8 @@ public class URWellDCCrossesListFinder {
         List<List<URWellCross>> uRWellCrossPairs = new ArrayList();
         for(URWellCross crsR1 : urCrossesR1){
             for(URWellCross crsR2 : urCrossesR2){
-                if(crsR1.sector() == crsR2.sector() && Math.abs(crsR1.local().x() - crsR2.local().x()) < URWellConstants.URWELLDIFFX 
-                        && Math.abs(crsR1.local().y() - crsR2.local().y()) < URWellConstants.URWELLDIFFY){
+                if(crsR1.sector() == crsR2.sector() && Math.abs(crsR1.local().x() - crsR2.local().x()) < URWTConstants.URWELLDIFFX 
+                        && Math.abs(crsR1.local().y() - crsR2.local().y()) < URWTConstants.URWELLDIFFY){
                         List<URWellCross> urCrossPair = new ArrayList();
                         urCrossPair.add(crsR1);
                         urCrossPair.add(crsR2);

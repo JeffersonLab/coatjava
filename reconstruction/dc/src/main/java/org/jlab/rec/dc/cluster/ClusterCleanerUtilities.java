@@ -16,7 +16,7 @@ import org.jlab.rec.dc.hit.Hit;
 import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.rec.urwell.reader.URWellCross;
-import org.jlab.service.urwell.URWellConstants;
+import org.jlab.service.urwt.URWTConstants;
 
 public class ClusterCleanerUtilities {
 
@@ -449,7 +449,7 @@ public class ClusterCleanerUtilities {
                 List<URWellCross> matchedURWellCrossesInLineWithResidualCut = new ArrayList();
                 for(int i =0; i < matchedURWellCrossesInLine.size(); i++){  
                     URWellCross crs = matchedURWellCrossesInLine.get(i);
-                    if(Math.abs(crs.getResidule()) < URWellConstants.URWELLRESIDUALCUT[crs.region()-1]){
+                    if(Math.abs(crs.getResidule()) < URWTConstants.URWELLRESIDUALCUT[crs.region()-1]){
                         matchedURWellCrossesInLineWithResidualCut.add(crs);
                     }
                 }
@@ -551,7 +551,7 @@ public class ClusterCleanerUtilities {
             List<URWellCross> matchedURWellCrossWithResidualCut = new ArrayList();
             for(int i = 0; i < matchedURWellCross.size(); i++){
                 URWellCross crs = matchedURWellCross.get(i);
-                if(Math.abs(crs.getResidule()) < URWellConstants.URWELLRESIDUALCUT[crs.region()-1]){
+                if(Math.abs(crs.getResidule()) < URWTConstants.URWELLRESIDUALCUT[crs.region()-1]){
                     matchedURWellCrossWithResidualCut.add(crs);
                 }                
             }
@@ -579,7 +579,7 @@ public class ClusterCleanerUtilities {
         List<URWellCross> selectedCrosses = new ArrayList();
         for(URWellCross crs : crosses){
             double y = crs.getLyRelativeDCSL1LC(); 
-            if(Math.abs(y - lyMinDC) < URWellConstants.YDISTURWELLTOMOSTLEFTLAYERLC[crs.region()-1] || Math.abs(y - lyMaxDC) < URWellConstants.YDISTURWELLTOMOSTLEFTLAYERLC[crs.region()-1]){              
+            if(Math.abs(y - lyMinDC) < URWTConstants.YDISTURWELLTOMOSTLEFTLAYERLC[crs.region()-1] || Math.abs(y - lyMaxDC) < URWTConstants.YDISTURWELLTOMOSTLEFTLAYERLC[crs.region()-1]){              
                 selectedCrosses.add(crs);
             }
         }
@@ -641,7 +641,7 @@ public class ClusterCleanerUtilities {
         else if(selectedCrossR1 != null && selectedCrossR2 != null){
             double absDiffX = Math.abs(selectedCrossR1.local().x() - selectedCrossR2.local().x());
             double absDiffY = Math.abs(selectedCrossR1.local().y() - selectedCrossR2.local().y());
-            if(absDiffX < URWellConstants.URWELLDIFFX && absDiffY < URWellConstants.URWELLDIFFY){
+            if(absDiffX < URWTConstants.URWELLDIFFX && absDiffY < URWTConstants.URWELLDIFFY){
                 selectedCrosses.add(selectedCrossR1);
                 selectedCrosses.add(selectedCrossR2);
             }

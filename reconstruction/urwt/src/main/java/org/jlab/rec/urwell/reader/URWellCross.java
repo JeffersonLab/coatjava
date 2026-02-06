@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import org.jlab.detector.base.DetectorDescriptor;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.geom.prim.Point3D;
-import org.jlab.service.urwell.URWellConstants;
+import org.jlab.service.urwt.URWTConstants;
 /**
  *
  * @author Tongtong Cao
@@ -13,7 +13,7 @@ import org.jlab.service.urwell.URWellConstants;
 
 public class URWellCross {
 
-    private DetectorDescriptor desc = new DetectorDescriptor(DetectorType.URWELL);
+    private DetectorDescriptor desc = new DetectorDescriptor(DetectorType.URWT);
     private Point3D global;
     private Point3D local; // Points in local coordinates
     private int region;
@@ -26,8 +26,8 @@ public class URWellCross {
     private int tid = -1; // Track id;
     private URWellCluster cls1 = null;
     private URWellCluster cls2 = null;
-    private static double _lxRelativeDCSL1[] = {1 - (URWellConstants.DCSL1L1ZTSC - URWellConstants.URWELLLOCALZ[0])/URWellConstants.INTERVALDCSL1L1L2TSC, 
-                                                1 - (URWellConstants.DCSL1L1ZTSC - URWellConstants.URWELLLOCALZ[1])/URWellConstants.INTERVALDCSL1L1L2TSC}; // x of R1 relative to DC SL1 in LC    
+    private static double _lxRelativeDCSL1[] = {1 - (URWTConstants.DCSL1L1ZTSC - URWTConstants.URWELLLOCALZ[0])/URWTConstants.INTERVALDCSL1L1L2TSC, 
+                                                1 - (URWTConstants.DCSL1L1ZTSC - URWTConstants.URWELLLOCALZ[1])/URWTConstants.INTERVALDCSL1L1L2TSC}; // x of R1 relative to DC SL1 in LC    
     private double _lyRelativeDCSL1 = -999; // y of uRWell cross relative to DC SL1 in LC 
     private double _xRelativeDCSL1AtPlaneY0TSC = -999; // x of R1 cross relative to DC SL1 at the plan y = 0 in TSC 
     private double _xRelativeDCSL2AtPlaneY0TSC = -999; // x of R1 cross relative to DC SL2 at the plan y = 0 in TSC
@@ -222,7 +222,7 @@ public class URWellCross {
     private double getLyRelativeToDCSL1LC(){
         if(local != null) {
             double xAlongDCSL1PlaneY0TSC = local.x()  - local.y() * Math.tan(Math.toRadians(6));
-            double lyRelativeDCSL1 = (xAlongDCSL1PlaneY0TSC - URWellConstants.DCSL1L1W1XTSC) * Math.cos(Math.toRadians(6))/URWellConstants.INTERVALDCSL1L1L2TSC + URWellConstants.YDCSL1L1W1LC;
+            double lyRelativeDCSL1 = (xAlongDCSL1PlaneY0TSC - URWTConstants.DCSL1L1W1XTSC) * Math.cos(Math.toRadians(6))/URWTConstants.INTERVALDCSL1L1L2TSC + URWTConstants.YDCSL1L1W1LC;
             return lyRelativeDCSL1;
         }
         else return -999;
@@ -241,8 +241,8 @@ public class URWellCross {
     }
     
     private double getXErrRelativeToDCAtPlaneY0TSCHB(){
-        return Math.sqrt(URWellConstants.URWELLXRESOLUTIONHB * URWellConstants.URWELLXRESOLUTIONHB + 
-                URWellConstants.URWELLYRESOLUTIONHB * URWellConstants.URWELLYRESOLUTIONHB * Math.tan(Math.toRadians(6)) * Math.tan(Math.toRadians(6)));
+        return Math.sqrt(URWTConstants.URWELLXRESOLUTIONHB * URWTConstants.URWELLXRESOLUTIONHB + 
+                URWTConstants.URWELLYRESOLUTIONHB * URWTConstants.URWELLYRESOLUTIONHB * Math.tan(Math.toRadians(6)) * Math.tan(Math.toRadians(6)));
     }
     
     public double getXRelativeDCSL1AtPlaneY0TSC(){

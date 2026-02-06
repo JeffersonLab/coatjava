@@ -10,7 +10,7 @@ import org.jlab.detector.base.DetectorType;
 
 public class URWellHit {
 
-    private DetectorDescriptor desc = new DetectorDescriptor(DetectorType.URWELL);
+    private DetectorDescriptor desc = new DetectorDescriptor(DetectorType.URWT);
     private double energy = 0;
     private double time = 0;
 
