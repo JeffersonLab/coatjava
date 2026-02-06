@@ -33,7 +33,7 @@
     <module>swaps</module>
     <module>raster</module>
     <module>vtx</module>
-    <module>urwell</module>
+    <module>urwt</module>
     <module>alert</module>
     <module>bg</module>
     <module>postproc</module>
