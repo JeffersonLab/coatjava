@@ -1,10 +1,10 @@
-package org.jlab.service.urwell;
+package org.jlab.service.urwt;
 
 /**
  *
  * @author bondi, devita
  */
-public class URWellConstants {
+public class URWTConstants {
     
     
     // geometry
