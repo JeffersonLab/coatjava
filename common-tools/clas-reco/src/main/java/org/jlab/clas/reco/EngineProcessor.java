@@ -312,7 +312,6 @@ public class EngineProcessor {
             progress.updateStatus();
         }
         progress.showStatus();
-        writer.close();
     }
 
     public void processFile(EvioSource reader, HipoDataSync writer, int skipEvents, int maxEvents) {
@@ -335,7 +334,6 @@ public class EngineProcessor {
             progress.updateStatus();
         }
         progress.showStatus();
-        writer.close();
     }
 
     /**}
@@ -360,6 +358,7 @@ public class EngineProcessor {
             writer.open(output);
             processFile(reader, writer, nskip, nevents);
         }
+        writer.close();
     }
 
     /**
