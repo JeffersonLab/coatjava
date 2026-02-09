@@ -285,6 +285,14 @@ public class ALERTEngine extends ReconstructionEngine {
         org.jlab.rec.ahdc.Banks.RecoBankWriter ahdc_writer = new org.jlab.rec.ahdc.Banks.RecoBankWriter();
         DataBank recoKFTracksBank   = ahdc_writer.fillAHDCKFTrackBank(event, AHDC_tracks);
         event.appendBank(recoKFTracksBank);
+        // update the AHDC::hits bank : fill the residuals
+        event.removeBank("AHDC::hits");
+        ArrayList<Hit> AHDC_hits = new ArrayList<>();
+        for (Track track : AHDC_tracks) {
+            AHDC_hits.addAll(track.getHits());
+        }     
+        DataBank recoKFHitsBank = ahdc_writer.fillAHDCHitsBank(event, AHDC_hits);
+        event.appendBank(recoKFHitsBank); // remark: only  hits assocuated to a track are saved
  
 
         return true;
