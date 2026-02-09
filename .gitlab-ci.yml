@@ -60,13 +60,6 @@ build:
       - coatjava.tar.gz
       - clara.tar.gz
 
-.depana:
-  allow_failure: true
-  stage: build
-  script:
-    - libexec/dependency-tree.sh
-    - libexec/dependency-analysis.sh
-
 download:
   stage: build
   script:

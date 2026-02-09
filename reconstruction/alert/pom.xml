@@ -127,7 +127,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
-        <version>3.9.0</version>
+        <version>3.10.0</version>
         <executions>
           <execution>
             <id>copy-dependencies</id>
@@ -141,15 +141,6 @@
             </configuration>
           </execution>
         </executions>
-        <configuration>
-          <ignoredUnusedDeclaredDependencies> <!-- tell 'dependency:analyze' to not complain that these are unused -->
-            <ignoredUnusedDeclaredDependency>ai.djl:model-zoo</ignoredUnusedDeclaredDependency>
-            <ignoredUnusedDeclaredDependency>ai.djl.pytorch:pytorch-model-zoo</ignoredUnusedDeclaredDependency>
-            <ignoredUnusedDeclaredDependency>ai.djl.pytorch:pytorch-engine</ignoredUnusedDeclaredDependency>
-            <ignoredUnusedDeclaredDependency>ai.djl.pytorch:pytorch-native-cpu</ignoredUnusedDeclaredDependency>
-            <ignoredUnusedDeclaredDependency>ai.djl.pytorch:pytorch-jni</ignoredUnusedDeclaredDependency>
-          </ignoredUnusedDeclaredDependencies>
-        </configuration>
       </plugin>
     </plugins>
   </build>
