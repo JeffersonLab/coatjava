@@ -1,9 +1,11 @@
 package org.jlab.service.alert;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.io.File;
 
+import org.jlab.clas.reco.ReconstructionEngine;
+import org.jlab.clas.swimtools.Swim;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.geom.base.Detector;
 import org.jlab.geom.detector.alert.ATOF.AlertTOFFactory;
@@ -11,15 +13,19 @@ import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.io.hipo.HipoDataSync;
-
-import org.jlab.clas.reco.ReconstructionEngine;
-import org.jlab.clas.swimtools.Swim;
-
 import org.jlab.rec.alert.TrackMatchingAI.ModelTrackMatching;
-
 import org.jlab.rec.alert.banks.RecoBankWriter;
 import org.jlab.rec.alert.projections.TrackProjector;
 import org.jlab.rec.atof.hit.ATOFHit;
+import org.jlab.rec.ahdc.KalmanFilter.KalmanFilter;
+import org.jlab.rec.ahdc.Hit.Hit;
+import org.jlab.geom.detector.alert.AHDC.AlertDCDetector;
+import org.jlab.geom.detector.alert.AHDC.AlertDCFactory;
+import org.jlab.rec.ahdc.Track.Track;
+import org.jlab.clas.pdg.PDGDatabase;
+import org.jlab.clas.pdg.PDGParticle;
+
+
 
 import ai.djl.util.Pair;
 
@@ -47,6 +53,7 @@ public class ALERTEngine extends ReconstructionEngine {
     private RecoBankWriter rbc;
 
     Detector ATOF; // ALERT ATOF detector
+    private AlertDCDetector AHDC; // ALERT AHDC detector
 
     /**
      *  Current run number being processed.
@@ -87,6 +94,7 @@ public class ALERTEngine extends ReconstructionEngine {
         AlertTOFFactory factory = new AlertTOFFactory();
         DatabaseConstantProvider cp = new DatabaseConstantProvider(11, "default");
         ATOF = factory.createDetectorCLAS(cp);
+        AHDC = (new AlertDCFactory()).createDetectorCLAS(new DatabaseConstantProvider());
 
         if(this.getEngineConfigString("Mode")!=null) {
             //if (Objects.equals(this.getEngineConfigString("Mode"), Mode.AI_Track_Finding.name()))
@@ -116,9 +124,9 @@ public class ALERTEngine extends ReconstructionEngine {
             return true;
         }
 
-        DataBank bank = event.getBank("RUN::config");
+        DataBank runBank = event.getBank("RUN::config");
 
-        int newRun = bank.getInt("run", 0);
+        int newRun = runBank.getInt("run", 0);
         if (newRun == 0) {
             return true;
         }
@@ -214,6 +222,79 @@ public class ALERTEngine extends ReconstructionEngine {
             }
         }
         rbc.appendTrackMatchingAIBank(event, matched_ATOF_hit_id);
+
+        ///////////////////////////////////////////
+        /// Kalmam Filter
+        /// ///////////////////////////////////////
+        
+        // read the list of tracks/hits from the banks AHDC::track and AHDC::hits
+        if (!event.hasBank("AHDC::track")) {return false;}
+        DataBank trackBank = event.getBank("AHDC::track");
+        DataBank hitBank = event.getBank("AHDC::hits");
+        ArrayList<Track> AHDC_tracks = new ArrayList<>();
+        for (int row = 0; row < trackBank.rows(); row++) {
+            int trackid = trackBank.getInt("trackid", row);
+            ArrayList<Hit> AHDC_hits = new ArrayList<>();
+            for (int hit_row = 0; hit_row < hitBank.rows(); hit_row++) {
+                if(trackid == hitBank.getInt("trackid", hit_row)) {
+                    int id = hitBank.getShort("id", hit_row);
+                    int superlayer = hitBank.getByte("superlayer", hit_row);
+                    int layer = hitBank.getByte("layer", hit_row);
+                    int wire = hitBank.getInt("wire", hit_row);
+                    int adc = hitBank.getInt("adc", hit_row);
+                    double doca = hitBank.getDouble("doca", hit_row);
+                    double time = hitBank.getDouble("time", hit_row);
+                    double tot = hitBank.getDouble("timeOverThreshold", hit_row);
+                    // warning : adc is the calibrated one, we need the adc for the Kalman filter
+                    Hit hit = new Hit(id, superlayer, layer, wire, doca, adc, time);
+                    hit.setWirePosition(AHDC);
+                    hit.setTrackId(trackid);
+                    hit.setADC(adc);
+                    hit.setToT(tot);
+                    AHDC_hits.add(hit);
+                }
+            }
+            AHDC_tracks.add(new Track(AHDC_hits));
+            // Initialise the position and the momentum using the information of the AHDC::track
+            // position : mm
+            // momentum : MeV
+            double x = trackBank.getFloat("x", row);
+            double y = trackBank.getFloat("y", row);
+            double z = trackBank.getFloat("z", row);
+            double px = trackBank.getFloat("px", row);
+            double py = trackBank.getFloat("py", row);
+            double pz = trackBank.getFloat("pz", row);
+            double[] vec = {x, y, z, px, py, pz};
+            AHDC_tracks.get(row).setPositionAndMomentumVec(vec);
+            AHDC_tracks.get(row).set_trackId(trackid);
+        }
+        // intialise the Kalman Filter
+        double magfieldfactor = runBank.getFloat("solenoid", 0);
+        double magfield = 50*magfieldfactor;
+        boolean IsMC = event.hasBank("MC::Particle");
+        PDGParticle proton = PDGDatabase.getParticleById(2212);
+        int Niter = 40;
+        KalmanFilter KF = new KalmanFilter(proton, Niter);
+        ///////////////////////////////////////////////////////
+        // first propagation : each AHDC_tracks will be fitted
+        ///////////////////////////////////////////////////////
+        KF.propagation(AHDC_tracks, event, magfield, IsMC);
+        /////////////////////////////////////////////
+        // write the AHDC::kftrack bank in the event
+        /////////////////////////////////////////////
+        org.jlab.rec.ahdc.Banks.RecoBankWriter ahdc_writer = new org.jlab.rec.ahdc.Banks.RecoBankWriter();
+        DataBank recoKFTracksBank   = ahdc_writer.fillAHDCKFTrackBank(event, AHDC_tracks);
+        event.appendBank(recoKFTracksBank);
+        // update the AHDC::hits bank : fill the residuals
+        event.removeBank("AHDC::hits");
+        ArrayList<Hit> AHDC_hits = new ArrayList<>();
+        for (Track track : AHDC_tracks) {
+            AHDC_hits.addAll(track.getHits());
+        }     
+        DataBank recoKFHitsBank = ahdc_writer.fillAHDCHitsBank(event, AHDC_hits);
+        event.appendBank(recoKFHitsBank); // remark: only  hits assocuated to a track are saved
+ 
+
         return true;
     }
 
