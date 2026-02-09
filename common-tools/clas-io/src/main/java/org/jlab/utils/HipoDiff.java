@@ -7,6 +7,7 @@ import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.Schema;
 import org.jlab.jnp.hipo4.data.SchemaFactory;
+import org.jlab.jnp.hipo4.io.HipoWriter;
 import org.jlab.utils.options.OptionParser;
 
 public class HipoDiff {
@@ -14,8 +15,8 @@ public class HipoDiff {
     /**
      * Bank sortable by any integer columns.
      */
-    static class SortedBank extends Bank {
-        SortedBank(Schema s) { super(s); }
+    static class DiffBank extends Bank {
+        DiffBank(Schema s) { super(s); }
         /**
          * @param index the bank column indices to sort on
          * @return the sorted row indices
@@ -42,6 +43,43 @@ public class HipoDiff {
             }
             return rows;
         }
+        /**
+         * @param b the bank to compare with
+         * @return the resulting diff bank
+         */
+        public Bank getDiff(Bank b) {
+            Bank diff = new Bank(getSchema());
+            int rows = Math.min(getRows(), b.getRows());
+            int ncols = getSchema().getElements();
+            for (int row = 0; row < rows; row++) {
+                for (int col = 0; col < ncols; col++) {
+                    switch (getSchema().getType(col)) {
+                        case 1: // byte
+                            diff.putByte(col, row, (byte)(b.getByte(col,row) - getByte(col,row)));
+                            break;
+                        case 2: // short
+                            diff.putShort(col, row, (short)(b.getShort(col,row) - getShort(col,row)));
+                            break;
+                        case 3: // int
+                            diff.putInt(col, row, b.getInt(col,row) - getInt(col,row));
+                            break;
+                        case 4: // float
+                            diff.putFloat(col, row, b.getFloat(col,row) - getFloat(col,row));
+                            break;
+                        case 5: // double
+                            diff.putDouble(col, row, b.getDouble(col,row) - getDouble(col,row));
+                            break;
+                        case 6: // long
+                            diff.putLong(col, row, b.getLong(col,row) - getLong(col,row));
+                            break;
+                        default:
+                            // unhandled type (arrays, etc.)
+                            break;
+                    }
+                }
+            }
+            return diff;
+        }
     }
 
     static int nrow = 0;
@@ -57,9 +95,11 @@ public class HipoDiff {
     static boolean verboseMode;
     static boolean quietMode;
     static Bank runConfigBank;
+    static HipoWriter writer;
+    static Event event;
 
-    static ArrayList<SortedBank> banksA = new ArrayList<>();
-    static ArrayList<SortedBank> banksB = new ArrayList<>();
+    static ArrayList<DiffBank> banksA = new ArrayList<>();
+    static ArrayList<DiffBank> banksB = new ArrayList<>();
     static HashMap<String, HashMap<String, Integer>> badEntries = new HashMap<>();
 
     public static void main(String args[]) {
@@ -70,6 +110,7 @@ public class HipoDiff {
         op.addOption("-Q", null, "verbose mode");
         op.addOption("-b", null, "name of bank to diff");
         op.addOption("-s", null, "sort on column index");
+        op.addOption("-o", null, "output HIPO diff file");
         op.setRequiresInputList(true);
         op.parse(args);
         if (op.getInputList().size() != 2) {
@@ -96,18 +137,27 @@ public class HipoDiff {
 
         if (op.getOption("-b").stringValue() == null) {
             for (Schema s : sf.getSchemaList()) {
-                banksA.add(new SortedBank(s));
-                banksB.add(new SortedBank(s));
+                banksA.add(new DiffBank(s));
+                banksB.add(new DiffBank(s));
             }
         } else {
-            banksA.add(new SortedBank(sf.getSchema(op.getOption("-b").stringValue())));
-            banksB.add(new SortedBank(sf.getSchema(op.getOption("-b").stringValue())));
+            banksA.add(new DiffBank(sf.getSchema(op.getOption("-b").stringValue())));
+            banksB.add(new DiffBank(sf.getSchema(op.getOption("-b").stringValue())));
+        }
+
+        if (op.getOption("-o").stringValue() != null) {
+            writer = new HipoWriter();
+            writer.getSchemaFactory().copy(readerA.getSchemaFactory());
+            writer.open(op.getOption("-o").stringValue());
         }
 
         compare(readerA, readerB);
+
+        if (writer != null) writer.close();
     }
 
-    public static void compare(HipoReader a, HipoReader b) {
+    public static int compare(HipoReader a, HipoReader b) {
+        int ret=0;
         Event eventA = new Event();
         Event eventB = new Event();
         while (a.hasNext() && b.hasNext() && (nmax < 1 || nevent < nmax)) {
@@ -115,7 +165,7 @@ public class HipoDiff {
             a.nextEvent(eventA);
             b.nextEvent(eventB);
             eventA.read(runConfigBank);
-            compare(eventA, eventB);
+            ret += compare(eventA, eventB);
         }
         System.out.println("\n Analyzed " + nevent + " with " + nbadevent + " bad banks");
         System.out.println(nbadrow + "/" + nrow + " mismatched rows");
@@ -124,17 +174,26 @@ public class HipoDiff {
             System.out.println(name + " " + badEntries.get(name));
         }
         System.exit(nbadevent + nbadrow + nbadentry);
+        return ret;
     }
 
-    public static void compare(Event a, Event b) {
+    public static int compare(Event a, Event b) {
+        int ret = 0;
         for (int i = 0; i < banksA.size(); i++) {
             a.read(banksA.get(i));
             b.read(banksB.get(i));
-            compare(banksA.get(i), banksB.get(i));
+            if (writer != null) {
+                event.reset();
+                event.write(banksA.get(i).getDiff(banksB.get(i)));
+                writer.addEvent(event);
+            }
+            ret += compare(banksA.get(i), banksB.get(i));
         }
+        return ret;
     }
 
-    public static void compare(SortedBank a, SortedBank b) {
+    public static int compare(DiffBank a, DiffBank b) {
+        int ret=0;
         if (a.getRows() != b.getRows()) {
             System.out.println("========================= Different number of rows:");
             runConfigBank.show();
@@ -142,7 +201,7 @@ public class HipoDiff {
             b.show();
             nbadevent++;
             System.out.println("=========================");
-            return;
+            return ++ret;
         }
         int[] rowsA = sortIndex == null ? null : a.getSorted(sortIndex);
         int[] rowsB = sortIndex == null ? null : b.getSorted(sortIndex);
@@ -207,11 +266,13 @@ public class HipoDiff {
                         m.put(elementName, 0);
                     }
                     m.put(elementName, m.get(elementName) + 1);
+                    ret++;
                 }
             }
             if (mismatch) {
                 nbadrow++;
             }
         }
+        return 0;
     }
 }

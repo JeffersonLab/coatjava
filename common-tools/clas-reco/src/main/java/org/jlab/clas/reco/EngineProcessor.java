@@ -141,7 +141,7 @@ public class EngineProcessor {
         String[] names = new String[]{
             "MAGFIELDS",
             "FTCAL", "FTHODO", "FTTRK", "FTEB",
-            "URWELL", "DCCR", "DCHB","FTOFHB","EC","RASTER",
+            "URWT", "DCCR", "DCHB","FTOFHB","EC","RASTER",
             "CVTFP","CTOF","CND","BAND",
             "HTCC","LTCC","EBHB",
             "DCTB","FMT","FTOFTB","CVT","EBTB",
@@ -154,7 +154,7 @@ public class EngineProcessor {
             "org.jlab.rec.ft.hodo.FTHODOEngine",
             "org.jlab.rec.ft.trk.FTTRKEngine",
             "org.jlab.rec.ft.FTEBEngine",
-            "org.jlab.service.urwell.URWellEngine",
+            "org.jlab.service.urwt.URWTEngine",
             "org.jlab.service.dc.DCHBClustering",
             "org.jlab.service.dc.DCHBPostClusterConv",
             "org.jlab.service.ftof.FTOFHBEngine",
@@ -312,7 +312,6 @@ public class EngineProcessor {
             progress.updateStatus();
         }
         progress.showStatus();
-        writer.close();
     }
 
     public void processFile(EvioSource reader, HipoDataSync writer, int skipEvents, int maxEvents) {
@@ -335,7 +334,6 @@ public class EngineProcessor {
             progress.updateStatus();
         }
         progress.showStatus();
-        writer.close();
     }
 
     /**}
@@ -360,6 +358,7 @@ public class EngineProcessor {
             writer.open(output);
             processFile(reader, writer, nskip, nevents);
         }
+        writer.close();
     }
 
     /**
