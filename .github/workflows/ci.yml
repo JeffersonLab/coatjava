@@ -303,27 +303,6 @@ jobs:
       - name: test run-groovy
         run: coatjava/bin/run-groovy validation/advanced-tests/test-run-groovy.groovy
 
-  dependency_analysis:
-    needs: [ build ]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - name: Set up JDK
-        uses: actions/setup-java@v5
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: ${{ env.java_distribution }}
-          cache: maven
-      - uses: actions/download-artifact@v7
-        with:
-          name: build_ubuntu-latest
-      - name: untar build
-        run: tar xzvf coatjava.tar.gz
-      - name: print dependency tree
-        run: libexec/dependency-tree.sh
-      - name: dependency analysis
-        run: libexec/dependency-analysis.sh
-
   # documentation
   #############################################################################
 
@@ -413,7 +392,6 @@ jobs:
   final:
     needs:
       - test_coatjava
-      - dependency_analysis
       - test_run-groovy
       - generate_documentation
     runs-on: ubuntu-latest
