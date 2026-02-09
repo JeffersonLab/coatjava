@@ -318,9 +318,9 @@ cp external-dependencies/jclara-4.3-SNAPSHOT.jar $prefix_dir/lib/utils
 # build (and test)
 unset CLAS12DIR
 if $runUnitTests; then
-  $mvn install # also runs unit tests
+  $mvn install -DskipTests=false
 else
-  $mvn install -DskipTests
+  $mvn install
 fi
 
 # run spotbugs
