@@ -251,6 +251,7 @@
 
     <plugins> <!-- plugins inherited by all child POMs -->
 
+      <!-- static analysis -->
       <plugin>
         <groupId>com.github.spotbugs</groupId>
         <artifactId>spotbugs-maven-plugin</artifactId>
@@ -260,6 +261,7 @@
         </configuration>
       </plugin>
 
+      <!-- documentation generation -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
@@ -280,6 +282,7 @@
         </executions>
       </plugin>
 
+      <!-- general settings -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -289,7 +292,6 @@
           <encoding>UTF-8</encoding>
         </configuration>
       </plugin>
-
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
@@ -299,6 +301,7 @@
         </configuration>
       </plugin>
 
+      <!-- JAR -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
@@ -323,6 +326,33 @@
         </configuration>
       </plugin>
 
+      <!-- dependency analysis -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>3.10.0</version>
+        <executions>
+          <execution>
+            <id>analyze</id>
+            <goals>
+              <goal>analyze-only</goal>
+            </goals>
+            <configuration>
+              <failOnWarning>true</failOnWarning>
+              <!-- ignore certain "unused but declared" warnings -->
+              <ignoredUnusedDeclaredDependencies>
+                <ignoredUnusedDeclaredDependency>ai.djl:model-zoo</ignoredUnusedDeclaredDependency>
+                <ignoredUnusedDeclaredDependency>ai.djl.pytorch:pytorch-model-zoo</ignoredUnusedDeclaredDependency>
+                <ignoredUnusedDeclaredDependency>ai.djl.pytorch:pytorch-engine</ignoredUnusedDeclaredDependency>
+                <ignoredUnusedDeclaredDependency>ai.djl.pytorch:pytorch-native-cpu</ignoredUnusedDeclaredDependency>
+                <ignoredUnusedDeclaredDependency>ai.djl.pytorch:pytorch-jni</ignoredUnusedDeclaredDependency>
+              </ignoredUnusedDeclaredDependencies>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- dependency convergence -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
@@ -347,6 +377,7 @@
         </executions>
       </plugin>
 
+      <!-- coverage -->
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
