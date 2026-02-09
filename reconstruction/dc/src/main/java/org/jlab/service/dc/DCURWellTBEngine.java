@@ -296,8 +296,9 @@ public class DCURWellTBEngine extends DCEngine {
                     }
 
                     // get CovMat at vertex
-                    Point3D VTCS = crosses.get(0).getCoordsInSector(TrackArray1.get_Vtx0().x(), TrackArray1.get_Vtx0().y(), TrackArray1.get_Vtx0().z());
-                    TrackArray1.set_CovMat(kFZRef.propagateToVtx(crosses.get(0).get_Sector(), VTCS.z()));
+                    Point3D VTCS = TrackArray1.get(TrackArray1.size()-1).getCoordsInTiltedSector(TrackArray1.get_Vtx0().x(), TrackArray1.get_Vtx0().y(), TrackArray1.get_Vtx0().z());
+                    TrackArray1.set_CovMat(kFZRef.propagateToVtx(TrackArray1.get(TrackArray1.size()-1).get_Sector(), VTCS.z()));                    
+                    TrackArray1.transCMToGlobal(); 
 
                     if (TrackArray1.isGood()) {
                         trkcands.add(TrackArray1);
@@ -339,8 +340,9 @@ public class DCURWellTBEngine extends DCEngine {
                     }
 
                     // get CovMat at vertex
-                    Point3D VTCS = crosses.get(0).getCoordsInSector(TrackArray1.get_Vtx0().x(), TrackArray1.get_Vtx0().y(), TrackArray1.get_Vtx0().z());
-                    TrackArray1.set_CovMat(kFZRef.propagateToVtx(crosses.get(0).get_Sector(), VTCS.z()));
+                    Point3D VTCS = TrackArray1.get(TrackArray1.size()-1).getCoordsInTiltedSector(TrackArray1.get_Vtx0().x(), TrackArray1.get_Vtx0().y(), TrackArray1.get_Vtx0().z());
+                    TrackArray1.set_CovMat(kFZRef.propagateToVtx(TrackArray1.get(TrackArray1.size()-1).get_Sector(), VTCS.z()));                    
+                    TrackArray1.transCMToGlobal(); 
 
                     if (TrackArray1.isGood()) {
                         trkcands.add(TrackArray1);
