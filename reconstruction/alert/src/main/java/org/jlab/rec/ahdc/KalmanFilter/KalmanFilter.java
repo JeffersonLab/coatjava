@@ -138,7 +138,7 @@ public class KalmanFilter {
 
 			    
 			    RealVector x_out = TrackFitter.getStateEstimationVector();
-			    track.setPositionAndMomentumForKF(x_out);
+			    track.setPositionAndMomentumVec(x_out.toArray());
 
 			    // Post fit propagation (no correction) to set the residuals
 			    KFitter PostFitPropagator = new KFitter(TrackFitter.getStateEstimationVector(), initialErrorCovariance, new Stepper(TrackFitter.getStateEstimationVector().toArray()), new Propagator(RK4), materialHashMap);
@@ -164,9 +164,9 @@ public class KalmanFilter {
 			    track.set_sum_adc(sum_adc);
 			    track.set_sum_residuals(sum_residuals);
 			    track.set_chi2(chi2/(AHDC_hits.size()-3));
-			    track.set_p_drift_kf(p_drift);
-			    track.set_dEdx_kf(sum_adc/s);
-			    track.set_path_kf(s);
+			    track.set_p_drift(p_drift);
+			    track.set_dEdx(sum_adc/s);
+			    track.set_path(s);
 			    track.set_n_hits(AHDC_hits.size());
 			}//end of loop on track candidates
 		} catch (Exception e) {

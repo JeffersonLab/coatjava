@@ -120,6 +120,7 @@ public class RecoBankWriter {
 		return bank;
 	}
 
+	/// Here the relavant informations of the tracks are filled in the Kalman Filter
 	public DataBank fillAHDCKFTrackBank(DataEvent event, ArrayList<Track> tracks) {
 
 		DataBank bank = event.createBank("AHDC::kftrack", tracks.size());
@@ -128,12 +129,12 @@ public class RecoBankWriter {
 
 		for (Track track : tracks) {
 			if (track == null) continue;
-			double x  = track.getX0_kf();
-			double y  = track.getY0_kf();
-			double z  = track.getZ0_kf();
-			double px = track.getPx0_kf();
-			double py = track.getPy0_kf();
-			double pz = track.getPz0_kf();
+			double x  = track.get_X0();
+			double y  = track.get_Y0();
+			double z  = track.get_Z0();
+			double px = track.get_px();
+			double py = track.get_py();
+			double pz = track.get_pz();
 
 			bank.setInt("trackid", row, (int) track.get_trackId());
 			bank.setFloat("x", row, (float) x);
@@ -144,9 +145,9 @@ public class RecoBankWriter {
 			bank.setFloat("pz", row, (float) pz);
 			bank.setInt("n_hits", row, (int) track.get_n_hits());
 			bank.setInt("sum_adc", row, (int) track.get_sum_adc());
-			bank.setFloat("path", row, (float) track.get_path_kf());
-			bank.setFloat("dEdx", row, (float) track.get_dEdx_kf());
-			bank.setFloat("p_drift", row, (float) track.get_p_drift_kf());
+			bank.setFloat("path", row, (float) track.get_path());
+			bank.setFloat("dEdx", row, (float) track.get_dEdx());
+			bank.setFloat("p_drift", row, (float) track.get_p_drift());
 			bank.setFloat("chi2", row, (float) track.get_chi2());
 			bank.setFloat("sum_residuals", row, (float) track.get_sum_residuals());
 
