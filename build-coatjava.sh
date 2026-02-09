@@ -10,7 +10,6 @@ set -o pipefail
 ################################################################################
 
 cleanBuild=false
-anaDepends=false
 runSpotBugs=false
 downloadMaps=true
 downloadNets=true
@@ -46,7 +45,6 @@ DATA RETRIEVAL OPTIONS
 TESTING OPTIONS
     --spotbugs        also run spotbugs plugin
     --unittests       also run unit tests
-    --depana          run dependency analysis (only)
     --data            download test data (requires option `--lfs`)
 
 MAVEN OPTIONS
@@ -70,7 +68,10 @@ do
     --nonets)    downloadNets=false ;;
     --unittests) runUnitTests=true  ;;
     --clean)     cleanBuild=true    ;;
-    --depana)    anaDepends=true    ;;
+    --depana)
+      echo "ERROR: option \`$xx\` has been removed; dependency tree printout and analysis now happen automatically in the Maven build lifecycle" >&2
+      exit 1
+      ;;
     --quiet)
       mvnArgs+=(--quiet --batch-mode)
       wgetArgs+=(--quiet)
@@ -86,7 +87,7 @@ do
     --clara) installClara=true   ;;
     --data)  downloadData=true   ;;
     --xrootd)
-      echo "ERROR: option \`$xx\` is deprecated; use \`--help\` for guidance" >&2
+      echo "ERROR: option \`$xx\` has been removed; use \`--help\` for guidance" >&2
       exit 1
       ;;
     -h|--help)
@@ -147,13 +148,6 @@ if $cleanBuild || [ "$dataRetrieval" = "wipe" ]; then
   [ "$dataRetrieval" = "wipe" ] && echo "[+] REMOVED RETRIEVED DATA" || echo "[+] NOTE: retrieved data not removed; use \`--wipe\` if you need to remove them"
   $cleanBuild && echo "[+] DONE CLEANING; rerun without \`--clean\` to build"
   exit
-fi
-
-# run dependency analysis and exit
-if $anaDepends; then
-  libexec/dependency-analysis.sh
-  libexec/dependency-tree.sh
-  exit 0
 fi
 
 
