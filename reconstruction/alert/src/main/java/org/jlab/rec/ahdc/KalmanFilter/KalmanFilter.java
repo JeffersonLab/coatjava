@@ -29,23 +29,23 @@ import org.jlab.rec.ahdc.Track.Track;
  */
 public class KalmanFilter {
 
-	public KalmanFilter() {}
+	public KalmanFilter(PDGParticle particle, int Niter) {this.particle = particle; this.Niter = Niter;}
 
     public KalmanFilter(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {propagation(tracks, event, magfield, IsMC);}
 
-	private final int Niter = 40; // number of iterations for the Kalman Filter
+	private PDGParticle particle;
+	private int Niter = 40; // number of iterations for the Kalman Filter
 	private boolean IsVtxDefined = false; // implemented but not used yet
 	private double[] vertex_resolutions = {0.09, 1e10}; //  {error in r squared in mm^2, error in z squared in mm^2}
 	// mm,  CLAS and AHDC don't necessary have the same alignement (ZERO), this parameter may be subject to calibration
 	private double clas_alignement = -54;
 
-	private void propagation(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {
+	public void propagation(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {
 
 		try {
 			double vz_constraint = 0; // to be linked to the electron vertex
 
 			// Initialization ---------------------------------------------------------------------
-			final PDGParticle proton            = PDGDatabase.getParticleById(2212);
 			final int         numberOfVariables = 6;
 			final double      tesla             = 0.001;
 			final double[]    B                 = {0.0, 0.0, magfield / 10 * tesla};
@@ -92,7 +92,7 @@ public class KalmanFilter {
 			
 			    // Start propagation
 			    Stepper     stepper    = new Stepper(y);
-			    RungeKutta4 RK4        = new RungeKutta4(proton, numberOfVariables, B);
+			    RungeKutta4 RK4        = new RungeKutta4(particle, numberOfVariables, B);
 			    Propagator  propagator = new Propagator(RK4);
 
 			    // Initialization of the Kalman Fitter
