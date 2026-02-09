@@ -15,7 +15,6 @@ import org.jlab.rec.ahdc.HelixFit.HelixFitJava;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.Hit.HitReader;
 import org.jlab.rec.ahdc.HoughTransform.HoughTransform;
-import org.jlab.rec.ahdc.KalmanFilter.KalmanFilter;
 import org.jlab.rec.ahdc.KalmanFilter.MaterialMap;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import org.jlab.rec.ahdc.PreCluster.PreClusterFinder;
@@ -100,7 +99,7 @@ public class AHDCEngine extends ReconstructionEngine {
         
         this.getConstantsManager().setVariation("default");
         
-        this.registerOutputBank("AHDC::hits","AHDC::preclusters","AHDC::clusters","AHDC::track","AHDC::kftrack","AHDC::mc","AHDC::ai:prediction");
+        this.registerOutputBank("AHDC::hits","AHDC::preclusters","AHDC::clusters","AHDC::track","AHDC::mc","AHDC::ai:prediction");
 
         return true;
     }
@@ -242,9 +241,6 @@ public class AHDCEngine extends ReconstructionEngine {
               track.setPositionAndMomentum(h.HelixFit(nbOfPoints, szPos, 1));
             }
 
-            // VI) Kalman Filter
-            //KalmanFilter kalmanFitter = new KalmanFilter(AHDC_Tracks, event, magfield, simulation);
-
             // VII) Write bank
             RecoBankWriter writer = new RecoBankWriter();
 
@@ -256,7 +252,7 @@ public class AHDCEngine extends ReconstructionEngine {
             }
             DataBank recoClusterBank    = writer.fillClustersBank(event, AHDC_Clusters);
             DataBank recoTracksBank     = writer.fillAHDCTrackBank(event, AHDC_Tracks);
-            DataBank recoKFTracksBank   = writer.fillAHDCKFTrackBank(event, AHDC_Tracks);
+            //DataBank recoKFTracksBank   = writer.fillAHDCKFTrackBank(event, AHDC_Tracks);
 
             ArrayList<InterCluster> all_interclusters = new ArrayList<>();
             for (Track track : AHDC_Tracks) {
@@ -265,12 +261,11 @@ public class AHDCEngine extends ReconstructionEngine {
             DataBank recoInterClusterBank = writer.fillInterClusterBank(event, all_interclusters);
             // DataBank AIPredictionBanks = writer.fillAIPrediction(event, predictions);
 
-            event.removeBanks("AHDC::hits","AHDC::preclusters","AHDC::clusters","AHDC::track","AHDC::kftrack","AHDC::mc","AHDC::ai:prediction");
+            //event.removeBanks("AHDC::hits","AHDC::preclusters","AHDC::clusters","AHDC::track","AHDC::kftrack","AHDC::mc","AHDC::ai:prediction");
             event.appendBank(recoHitsBank);
             event.appendBank(recoPreClusterBank);
             event.appendBank(recoClusterBank);
             event.appendBank(recoTracksBank);
-            event.appendBank(recoKFTracksBank);
             event.appendBank(recoInterClusterBank);
             // event.appendBank(AIPredictionBanks);
 
