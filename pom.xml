@@ -334,7 +334,9 @@
         <executions>
           <execution>
             <id>analyze</id>
+            <phase>verify</phase>
             <goals>
+              <goal>tree</goal>
               <goal>analyze-only</goal>
             </goals>
             <configuration>
