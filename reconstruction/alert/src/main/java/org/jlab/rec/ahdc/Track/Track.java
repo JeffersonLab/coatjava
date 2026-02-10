@@ -1,5 +1,7 @@
 package org.jlab.rec.ahdc.Track;
 
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.jlab.rec.ahdc.AI.InterCluster;
 import org.jlab.rec.ahdc.Cluster.Cluster;
@@ -35,6 +37,14 @@ public class Track {
 	private double dEdx    = 0;  ///< deposited energy per path length (adc/mm)
 	private double p_drift = 0;  ///< momentum in the drift region (MeV)
 	private double path    = 0;  ///< length of the track (mm)
+	// for the error matrix: first 3 lines in mm^2; last 3 lines in MeV^2
+	RealMatrix errorCovarianceMatrix = MatrixUtils.createRealMatrix(new double[][]{
+		{50  , 0.0 , 0.0 , 0.0 , 0.0 , 0.0}, 
+		{0.0 , 50  , 0.0 , 0.0 , 0.0 , 0.0}, 
+		{0.0 , 0.0 , 900 , 0.0 , 0.0 , 0.0}, 
+		{0.0 , 0.0 , 0.0 , 100 , 0.0 , 0.0}, 
+		{0.0 , 0.0 , 0.0 , 0.0 , 100 , 0.0}, 
+		{0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 900}});
 
     // AHDC::aiprediction
     private int predicted_ATOF_sector = -1;
@@ -187,6 +197,8 @@ public class Track {
 	public double get_dEdx() {return dEdx;}
 	public double get_p_drift() {return p_drift;}
 	public double get_path() {return path;}
+	public RealMatrix getErrorCovarianceMatrix() {return errorCovarianceMatrix;}
+	public void setErrorCovarianceMatrix(RealMatrix errorCovarianceMatrix) {this.errorCovarianceMatrix = errorCovarianceMatrix;}
 
     // AHDC::aiprediction
     public void set_predicted_ATOF_sector(int s) {predicted_ATOF_sector = s;}
