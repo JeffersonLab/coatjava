@@ -2,6 +2,7 @@ package org.jlab.service.alert;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.jlab.clas.reco.ReconstructionEngine;
@@ -134,7 +135,8 @@ public class ALERTEngine extends ReconstructionEngine {
         if (run.get() == 0 || (run.get() != 0 && run.get() != newRun)) {
             run.set(newRun);
         }
-        
+
+        /* 
         //Do we need to read the event vx,vy,vz?
         //If not, this part can be moved in the initialization of the engine.
         double eventVx=0,eventVy=0,eventVz=0; //They should be in CM
@@ -143,6 +145,7 @@ public class ALERTEngine extends ReconstructionEngine {
         float magField[] = new float[3];
         swim.BfieldLab(eventVx, eventVy, eventVz, magField); 
         this.b = Math.sqrt(Math.pow(magField[0],2) + Math.pow(magField[1],2) + Math.pow(magField[2],2));
+        */
 
         TrackProjector projector = new TrackProjector();
         projector.setB(this.b);
@@ -275,10 +278,35 @@ public class ALERTEngine extends ReconstructionEngine {
         PDGParticle proton = PDGDatabase.getParticleById(2212);
         int Niter = 40;
         KalmanFilter KF = new KalmanFilter(proton, Niter);
+
         ///////////////////////////////////////////////////////
         // first propagation : each AHDC_tracks will be fitted
         ///////////////////////////////////////////////////////
         KF.propagation(AHDC_tracks, event, magfield, IsMC);
+
+        /////////////////////////////////////
+        /// Clean bad hits
+        /// /////////////////////////////////
+        //System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>  TEST");
+        double sigma = 0.5; // mm
+        for (Track track : AHDC_tracks) {
+            ArrayList<Hit> AHDC_hits = track.getHits();
+            Iterator<Hit> it = AHDC_hits.iterator();
+            while (it.hasNext()) {
+                Hit hit = it.next();
+                //System.out.printf("> Hit : %2d %f\n", hit.getId(), hit.getResidual());
+                if (Math.abs(hit.getResidual()) > 3*sigma) {
+                    it.remove();
+                }
+            }
+        }
+
+        ///////////////////////////////////////////////////////
+        // second propagation : each AHDC_tracks will be fitted
+        ///////////////////////////////////////////////////////
+        KF.set_Niter(15);
+        KF.propagation(AHDC_tracks, event, magfield, IsMC);
+
         /////////////////////////////////////////////
         // write the AHDC::kftrack bank in the event
         /////////////////////////////////////////////
