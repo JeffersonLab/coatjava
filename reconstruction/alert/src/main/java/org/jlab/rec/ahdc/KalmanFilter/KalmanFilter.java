@@ -174,6 +174,6 @@ public class KalmanFilter {
 			//System.out.println("======> Kalman Filter Error");
 		}
 	}
-	void set_Niter(int Niter) {this.Niter = Niter;}
-	void set_particle(PDGParticle particle) {this.particle = particle;}
+	public void set_Niter(int Niter) {this.Niter = Niter;}
+	public void set_particle(PDGParticle particle) {this.particle = particle;}
 }
