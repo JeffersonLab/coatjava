@@ -136,7 +136,7 @@ public class ALERTEngine extends ReconstructionEngine {
             run.set(newRun);
         }
 
-        /* 
+        
         //Do we need to read the event vx,vy,vz?
         //If not, this part can be moved in the initialization of the engine.
         double eventVx=0,eventVy=0,eventVz=0; //They should be in CM
@@ -145,7 +145,7 @@ public class ALERTEngine extends ReconstructionEngine {
         float magField[] = new float[3];
         swim.BfieldLab(eventVx, eventVy, eventVz, magField); 
         this.b = Math.sqrt(Math.pow(magField[0],2) + Math.pow(magField[1],2) + Math.pow(magField[2],2));
-        */
+        
 
         TrackProjector projector = new TrackProjector();
         projector.setB(this.b);
