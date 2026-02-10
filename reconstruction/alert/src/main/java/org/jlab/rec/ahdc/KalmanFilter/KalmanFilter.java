@@ -80,8 +80,8 @@ public class KalmanFilter {
             // Loop over tracks
 			for (Track track : tracks) {
 			    // Initialize state vector
-			    double x0  = 0.0;
-			    double y0  = 0.0;
+			    double x0  = (counter < 2) ? 0.0 : track.get_X0();
+			    double y0  = (counter < 2) ? 0.0 : track.get_Y0();
 			    double z0  = (IsVtxDefined && counter < 2) ? vz_constraint : track.get_Z0();
 			    double px0 = track.get_px();
 			    double py0 = track.get_py();
