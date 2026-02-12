@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.TreeMap;
+import java.util.LinkedHashMap;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 import org.jlab.logging.SplitLogManager;
@@ -19,9 +19,9 @@ import org.jlab.logging.SplitLogManagerConfig;
  */
 public class OptionParser {
   
-    private Map<String,OptionValue> optionsDescriptors = new TreeMap<>();    
-    private Map<String,OptionValue>    requiredOptions = new TreeMap<>();
-    private Map<String,OptionValue>      parsedOptions = new TreeMap<>();
+    private Map<String,OptionValue> optionsDescriptors = new LinkedHashMap<>();    
+    private Map<String,OptionValue>    requiredOptions = new LinkedHashMap<>();
+    private Map<String,OptionValue>      parsedOptions = new LinkedHashMap<>();
     private Set<String>               overridenOptions = new HashSet<>();
     private List<String>               parsedInputList = new ArrayList<>();
     private String                             program = "undefined";
