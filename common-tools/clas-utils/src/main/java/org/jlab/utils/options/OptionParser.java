@@ -129,11 +129,6 @@ public class OptionParser {
     }
     
     public void printUsage(){
-        System.out.println("\n\n");
-        System.out.println("*******************************************");
-        System.out.println("*      PROGRAM USAGE : by OptionParser    *");
-        System.out.println("*******************************************");
-        System.out.println("\n\n");
         System.out.println(this.getUsageString());
         System.out.println("\n\n");
     }
