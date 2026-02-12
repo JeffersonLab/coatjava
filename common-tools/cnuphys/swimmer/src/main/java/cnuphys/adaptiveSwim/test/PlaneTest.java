@@ -8,6 +8,7 @@ import java.util.ArrayList;
 
 import cnuphys.CLAS12Swim.CLAS12SwimResult;
 import cnuphys.CLAS12Swim.CLAS12Swimmer;
+import cnuphys.CLAS12Swim.CommonsMathCLAS12Swimmer;
 import cnuphys.adaptiveSwim.AdaptiveSwimException;
 import cnuphys.adaptiveSwim.AdaptiveSwimResult;
 import cnuphys.adaptiveSwim.AdaptiveSwimmer;
@@ -48,7 +49,10 @@ public class PlaneTest {
 	    		"status", "xf_c12", "yf_c12", "zf_c12", "s_c12", "npnt_c12", "dist_c12");
 
 		AdaptiveSwimmer adaptiveSwimmer = new AdaptiveSwimmer(); //new
-		CLAS12Swimmer swimmer = new CLAS12Swimmer();
+//		CLAS12Swimmer swimmer = new CLAS12Swimmer();
+		CommonsMathCLAS12Swimmer apacheSwimmer = new CommonsMathCLAS12Swimmer(); //new "new swimmer" with commons math integrator
+		apacheSwimmer.setLegacyComparable(true);
+
 
 		CLAS12SwimResult c12Res;
 
@@ -99,9 +103,12 @@ public class PlaneTest {
 
 			data = testDataCM[i];
 			// C12
-			c12Res = swimmer.swimPlane(data.charge, data.xo, data.yo, data.zo, data.p, data.theta,
+			c12Res = apacheSwimmer.swimPlane(data.charge, data.xo, data.yo, data.zo, data.p, data.theta,
 					data.phi, c12Plane[i],
 					data.accuracy, data.sMax, data.stepSize, c12Tolerance);
+//			c12Res = swimmer.swimPlane(data.charge, data.xo, data.yo, data.zo, data.p, data.theta,
+//					data.phi, c12Plane[i],
+//					data.accuracy, data.sMax, data.stepSize, c12Tolerance);
 
 			delC12 += planeSwimResult(writer, data.plane, c12Res);
 			nsC12 += c12Res.getNStep();
@@ -155,11 +162,15 @@ public class PlaneTest {
 			for (int i = 0; i < testDataCM.length; i++) {
 
 				data = testDataCM[i];
+				
+				// apache
+				apacheSwimmer.swimPlane(data.charge, data.xo, data.yo, data.zo, data.p, data.theta, data.phi, c12Plane[i],
+						data.accuracy, data.sMax, data.stepSize, c12Tolerance);
+
 
 				// c12
-
-				swimmer.swimPlane(data.charge, data.xo, data.yo, data.zo, data.p, data.theta, data.phi, c12Plane[i],
-						data.accuracy, data.sMax, data.stepSize, c12Tolerance);
+//				swimmer.swimPlane(data.charge, data.xo, data.yo, data.zo, data.p, data.theta, data.phi, c12Plane[i],
+//						data.accuracy, data.sMax, data.stepSize, c12Tolerance);
 
 			} // for
 		}

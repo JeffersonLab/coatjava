@@ -1,10 +1,28 @@
 package cnuphys.CLAS12Swim;
 
 /**
- * The most basic CLAS12 listener. It never terminates the integration. The
- * slover will terminate the integration when the pathlength reaches its target
- * value sMax.
+ * Base ODE step listener used by {@link CLAS12Swimmer} to observe integration progress
+ * and optionally terminate the swim.
+ * <p>
+ * This “basic” listener never requests termination on its own; the integrator will
+ * stop when the configured maximum path length {@code sMax} is reached. Specialized
+ * subclasses (e.g., z, rho, plane, cylinder) override termination checks to stop when
+ * a target condition is met within a requested accuracy.
+ * </p>
+ *
+ * <h2>State vector convention</h2>
+ * The state vector {@code u} passed to and stored by this listener has length 6:
+ * <ul>
+ *   <li>{@code u[0..2]} = position (x, y, z) in cm</li>
+ *   <li>{@code u[3..5]} = direction cosines (tx, ty, tz) = (px/p, py/p, pz/p), dimensionless</li>
+ * </ul>
+ *
+ * <h2>Neutral particles</h2>
+ * For {@code q = 0} the swimmer can optionally bypass ODE integration and propagate in a
+ * straight line. Whether a listener can compute a straight-line intersection depends on the
+ * target geometry; this is controlled by {@link #_canMakeStraightLine}.
  */
+
 public class CLAS12Listener implements ODEStepListener {
 
 	/**

@@ -27,115 +27,158 @@ import javax.swing.border.TitledBorder;
 
 import cnuphys.CLAS12Swim.CLAS12SwimResult;
 import cnuphys.CLAS12Swim.CLAS12Swimmer;
+import cnuphys.CLAS12Swim.CommonsMathCLAS12Swimmer;
+import cnuphys.CLAS12Swim.ICLAS12Swimmer;
 import cnuphys.swim.SwimTrajectory;
 import cnuphys.swim.Swimming;
 
+/**
+ * A dialog for configuring and executing particle swimming within the CLAS12 environment.
+ * It allows users to select particles, set initial kinematic conditions, choose 
+ * integration algorithms, and select the specific swimmer implementation.
+ */
 @SuppressWarnings("serial")
 public class LundTrackDialog extends JDialog {
 
-	public enum SWIM_ALGORITHM {STANDARD, FIXEDZ, FIXEDRHO}
+	/**
+	 * Enum defining the available swimming algorithms.
+	 */
+	public enum SWIM_ALGORITHM {
+		/** Standard integration until sMax is reached. */
+		STANDARD, 
+		/** Integration until a specific Z coordinate is reached. */
+		FIXEDZ, 
+		/** Integration until a specific radial distance (rho) is reached. */
+		FIXEDRHO
+	}
+	
+	/**
+	 * Enum defining the available swimmer implementations.
+	 */
+	public enum SWIMMER_TYPE {
+		/** The default CLAS12 swimmer implementation. */
+		CLAS12, 
+		/** An implementation based on Apache Commons Math. */
+		COMMONS_MATH
+	}
 
+	/** The currently selected swimming algorithm. */
 	private SWIM_ALGORITHM _algorithm = SWIM_ALGORITHM.STANDARD;
+	
+	/** The currently selected swimmer implementation. */
+	private SWIMMER_TYPE _swimmerType = SWIMMER_TYPE.CLAS12;
 
+	/** Response code for cancelation. */
 	private static final int CANCEL_RESPONSE = 1;
 
-	// combo box for selecting the particle
+	/** Combo box for selecting the particle type. */
 	private LundComboBox _lundComboBox;
-
-	// for selecting energy
-	// private JTextField _energyTextField;
-
-	// text field for gamma
+	
+	/** Text field displaying relativistic gamma. */
 	private JTextField _relativisticGamma;
-
-	// text field for beta
+	
+	/** Text field displaying relativistic beta. */
 	private JTextField _relativisticBeta;
-
-	// text field for total energy
+	
+	/** Text field displaying total energy. */
 	private JTextField _totalEnergyTextField;
-
-	// text field for momentum
+	
+	/** Text field for entering momentum magnitude. */
 	private JTextField _momentumTextField;
-
-	// text field for mass
+	
+	/** Text field displaying particle mass. */
 	private JTextField _massTextField;
-
-	// starts the swimming
+	
+	/** Button to trigger the swim operation. */
 	private JButton _swimButton;
-
-	// text field for x vertex
+	
+	/** Text field for vertex X coordinate. */
 	private JTextField _vertexX;
-
-	// text field for y vertex
+	
+	/** Text field for vertex Y coordinate. */
 	private JTextField _vertexY;
-
-	// text field for z vertex
+	
+	/** Text field for vertex Z coordinate. */
 	private JTextField _vertexZ;
-
-	// text field for initial theta
+	
+	/** Text field for initial polar angle theta. */
 	private JTextField _theta;
-
-	// text field for initial phi
+	
+	/** Text field for initial azimuthal angle phi. */
 	private JTextField _phi;
 
-	// use standard cutoff
+	/** Radio button for standard algorithm selection. */
 	private JRadioButton _standardRB;
-
-	// fixed z cutoff
+	
+	/** Radio button for Fixed Z algorithm selection. */
 	private JRadioButton _fixedZRB;
-
-	// fixed z cutoff
+	
+	/** Radio button for Fixed Rho algorithm selection. */
 	private JRadioButton _fixedRhoRB;
+	
+	/** Radio button for CLAS12 swimmer selection. */
+	private JRadioButton _clas12SwimmerRB;
+	
+	/** Radio button for Commons Math swimmer selection. */
+	private JRadioButton _commonsMathSwimmerRB;
 
-	// fixed Rho value
+	/** Text field for the target radial value in Fixed Rho. */
 	private JTextField _fixedRho;
-
-	// fixed Z value
+	
+	/** Text field for the target Z value in Fixed Z. */
 	private JTextField _fixedZ;
-
-	// max S value
+	
+	/** Text field for the maximum path length. */
 	private JTextField _sMax;
-
-
-	// accuracy in fixed z
+	
+	/** Text field for integration accuracy (microns). */
 	private JTextField _accuracy;
 
-	// old (and default_ momentum in GeV/c
+	/** Stores the previously valid momentum to handle parsing errors. */
 	private double _oldMomentum = 2.0;
 
-	// only need one swimmer
-
-	// unicode strings
+	/** Unicode string for Greek letter Beta. */
 	public static final String SMALL_BETA = "\u03B2";
+	/** Unicode string for Greek letter Gamma. */
 	public static final String SMALL_GAMMA = "\u03B3";
+	/** Unicode string for Greek letter Theta. */
 	public static final String SMALL_THETA = "\u03B8";
+	/** Unicode string for Greek letter Phi. */
 	public static final String SMALL_PHI = "\u03C6";
+	/** Unicode string for squared superscript. */
 	public static final String SUPER2 = "\u00B2";
+	/** Unicode string for Greek letter Rho. */
 	public static final String SMALL_RHO = "\u03C1";
 
-	// usual relativistic quantities
+	/** Calculated relativistic gamma. */
 	private double _gamma;
+	/** Calculated relativistic beta. */
 	private double _beta;
-	private double _energy; // total energy
+	/** Calculated total energy. */
+	private double _energy; 
 
-	// for labels
+	/** Label for Relativistic Gamma. */
 	private static final String RELGAMMA = "Relativistic " + SMALL_GAMMA;
+	/** Label for Relativistic Beta. */
 	private static final String RELBETA = "Relativistic " + SMALL_BETA;
+	/** Label for Total Energy. */
 	private static final String TOTENERGY = "Total Energy";
+	/** Label for Momentum. */
 	private static final String MOMENTUMMAG = "Momentum";
+	/** Label for Mass. */
 	private static final String MASS = "Mass";
 
-	// singleton
+	/** Singleton instance of the dialog. */
 	private static LundTrackDialog instance;
 
 	/**
-	 * Create a dialog used to swim a particle
+	 * Private constructor for the LundTrackDialog singleton.
+	 * Initializes UI components and window listeners.
 	 */
 	private LundTrackDialog() {
 		setTitle("Swim a Particle");
 		setModal(false);
 
-		// close is like a cancel
 		WindowAdapter wa = new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent we) {
@@ -149,11 +192,12 @@ public class LundTrackDialog extends JDialog {
 		centerComponent(this);
 	}
 
-	//create the algorithm buttons
+	/**
+	 * Creates and configures the radio buttons for algorithm selection.
+	 * @param bg The ButtonGroup to which the radio buttons are added.
+	 */
 	private void createAlgorithmButtons(ButtonGroup bg) {
-
 		ActionListener al = new ActionListener() {
-
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (_standardRB.isSelected()) {
@@ -165,17 +209,13 @@ public class LundTrackDialog extends JDialog {
 				else if (_fixedRhoRB.isSelected()) {
 					_algorithm = SWIM_ALGORITHM.FIXEDRHO;
 				}
-
 				fixState();
 			}
-
 		};
 
 		_standardRB = new JRadioButton("Standard");
 		_fixedZRB = new JRadioButton("Fixed Z");
-
 		_fixedRhoRB = new JRadioButton("Fixed " + SMALL_RHO);
-
 
 		_standardRB.setSelected((_algorithm == SWIM_ALGORITHM.STANDARD));
 		_fixedZRB.setSelected((_algorithm == SWIM_ALGORITHM.FIXEDZ));
@@ -192,36 +232,36 @@ public class LundTrackDialog extends JDialog {
 		fixState();
 	}
 
-
-	//fix the state of the dialog
+	/**
+	 * Updates the enabled state of coordinate text fields based on 
+	 * the selected algorithm.
+	 */
 	private void fixState() {
 		_fixedZ.setEnabled(_fixedZRB.isSelected());
 		_fixedRho.setEnabled(_fixedRhoRB.isSelected());
 	}
 
 	/**
-	 * Access to the dialog singleton
-	 *
-	 * @return the dialog (set visible)
+	 * Returns the singleton instance of the LundTrackDialog.
+	 * @return The LundTrackDialog instance, made visible.
 	 */
 	public static LundTrackDialog getInstance() {
 		if (instance == null) {
 			instance = new LundTrackDialog();
 		}
-
 		instance.setVisible(true);
 		return instance;
 	}
 
-	// add all the widgets
+	/**
+	 * Orchestrates the addition of all UI subpanels to the dialog.
+	 */
 	private void addComponents() {
 		setLayout(new BorderLayout(6, 6));
-
 		Box box = Box.createVerticalBox();
 		box.add(Box.createVerticalStrut(6));
 
 		ActionListener al = new ActionListener() {
-
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				selectedParticle();
@@ -232,26 +272,23 @@ public class LundTrackDialog extends JDialog {
 		_lundComboBox.addActionListener(al);
 		box.add(paddedPanel(20, 6, _lundComboBox));
 
-		// add the energy selection panel
 		box.add(Box.createVerticalStrut(6));
 		box.add(energyPanel());
 
-		// add the direction selection panel
 		box.add(Box.createVerticalStrut(6));
 		box.add(initConditionsPanel());
 
-		// add the vertex selection panel
 		box.add(Box.createVerticalStrut(6));
 		box.add(vertexPanel());
 
-		// integration cutoff panel
+		box.add(Box.createVerticalStrut(6));
+		box.add(swimmerSelectionPanel());
+
 		box.add(Box.createVerticalStrut(6));
 		box.add(cutoffPanel());
 
-		// the swim button
 		_swimButton = new JButton("Swim");
 		_swimButton.addActionListener(new ActionListener() {
-
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				setMomentum();
@@ -262,25 +299,69 @@ public class LundTrackDialog extends JDialog {
 		add(box, BorderLayout.CENTER);
 		add(paddedPanel(50, 6, _swimButton), BorderLayout.SOUTH);
 
-		// padding
 		add(Box.createHorizontalStrut(4), BorderLayout.EAST);
 		add(Box.createHorizontalStrut(4), BorderLayout.WEST);
 
-		selectedParticle(); // selects the default
+		selectedParticle(); 
 	}
 
 	/**
-	 * Swim the particle
+	 * Creates the subpanel for choosing between different swimmer implementations.
+	 * @return A JPanel containing the swimmer selection radio buttons.
+	 */
+	private JPanel swimmerSelectionPanel() {
+		ButtonGroup bg = new ButtonGroup();
+		
+		ActionListener al = new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (_clas12SwimmerRB.isSelected()) {
+					_swimmerType = SWIMMER_TYPE.CLAS12;
+				} else {
+					_swimmerType = SWIMMER_TYPE.COMMONS_MATH;
+				}
+			}
+		};
+
+		_clas12SwimmerRB = new JRadioButton("CLAS12 Swimmer");
+		_commonsMathSwimmerRB = new JRadioButton("Commons Math Swimmer");
+		
+		_clas12SwimmerRB.setSelected(_swimmerType == SWIMMER_TYPE.CLAS12);
+		_commonsMathSwimmerRB.setSelected(_swimmerType == SWIMMER_TYPE.COMMONS_MATH);
+
+		_clas12SwimmerRB.addActionListener(al);
+		_commonsMathSwimmerRB.addActionListener(al);
+
+		bg.add(_clas12SwimmerRB);
+		bg.add(_commonsMathSwimmerRB);
+
+		JPanel spanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+		spanel.add(_clas12SwimmerRB);
+		spanel.add(_commonsMathSwimmerRB);
+
+		JPanel panel = new JPanel();
+		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+		panel.add(spanel);
+		panel.setBorder(new CommonBorder("Swimmer Selection"));
+		return panel;
+	}
+
+	/**
+	 * Executes the swimming process using the configured particle, kinematics, 
+	 * algorithm, and swimmer implementation.
 	 */
 	private void doCommonSwim() {
-
-		// use the CLAS12Swimmer
-		CLAS12Swimmer swimmer = new CLAS12Swimmer();
+		ICLAS12Swimmer swimmer;
+		if (_swimmerType == SWIMMER_TYPE.COMMONS_MATH) {
+			swimmer = new CommonsMathCLAS12Swimmer();
+			((CommonsMathCLAS12Swimmer) swimmer).setLegacyComparable(true);
+		} else {
+			swimmer = new CLAS12Swimmer();
+		}
+		
 		CLAS12SwimResult result = null;
-
 		LundId lid = _lundComboBox.getSelectedId();
 
-		// note entirs are in cm, as they should be
 		double xo = Double.parseDouble(_vertexX.getText());
 		double yo = Double.parseDouble(_vertexY.getText());
 		double zo = Double.parseDouble(_vertexZ.getText());
@@ -288,62 +369,49 @@ public class LundTrackDialog extends JDialog {
 		double theta = Double.parseDouble(_theta.getText());
 		double phi = Double.parseDouble(_phi.getText());
 
-		double stepSize = 1e-4; // cm
-		double sMax = Double.parseDouble(_sMax.getText()); // cm;
+		double stepSize = 1e-4; 
+		double sMax = Double.parseDouble(_sMax.getText()); 
 
 		double tolerance = 1.0e-6;
-
 		SwimTrajectory traj = null;
 
 		switch (_algorithm) {
-
 		case STANDARD:
 			result = swimmer.swim(lid.getCharge(), xo, yo, zo, momentum, theta, phi, sMax, stepSize, tolerance);
 			break;
-
 		case FIXEDZ:
-			// convert accuracy from microns to cm
 			double accuracy = Double.parseDouble(_accuracy.getText()) / 1.0e4;
-			double ztarget = Double.parseDouble(_fixedZ.getText()); // cm
+			double ztarget = Double.parseDouble(_fixedZ.getText()); 
 			result = swimmer.swimZ(lid.getCharge(), xo, yo, zo, momentum, theta, phi, ztarget, accuracy, sMax, stepSize,
 					tolerance);
 			break;
-
 		case FIXEDRHO:
-			// convert accuracy from microns to meters
 			accuracy = Double.parseDouble(_accuracy.getText()) / 1.0e4;
-			double rhotarget = Double.parseDouble(_fixedRho.getText()); // cm
+			double rhotarget = Double.parseDouble(_fixedRho.getText()); 
 			result = swimmer.swimRho(lid.getCharge(), xo, yo, zo, momentum, theta, phi, rhotarget, accuracy, sMax, stepSize,
 					tolerance);
 			break;
-		} // switch
+		} 
 
 		if (result != null) {
 			traj = result.getTrajectory();
 			traj.setLundId(lid);
 			traj.computeBDL(swimmer.getProbe());
 			Swimming.addMCTrajectory(traj);
-
 			System.out.println(result.toString());
 		}
-
 	}
 
-
-
-
 	/**
-	 * Create a Box that has a prompt, text field, and unit string
-	 *
-	 * @param prompt
-	 * @param tf
-	 * @param units
-	 * @param promptWidth
-	 * @return a Box holding a labeled text field
+	 * Utility method to create a horizontally aligned box with a prompt, text field, and units.
+	 * @param prompt The label text.
+	 * @param tf The JTextField component.
+	 * @param units The unit label text.
+	 * @param promptWidth Fixed width for the prompt label.
+	 * @return A Box containing the labeled components.
 	 */
 	private Box labeledTextField(String prompt, JTextField tf, String units, final int promptWidth) {
 		Box box = Box.createHorizontalBox();
-
 		JLabel plabel = new JLabel(prompt) {
 			@Override
 			public Dimension getPreferredSize() {
@@ -361,101 +429,86 @@ public class LundTrackDialog extends JDialog {
 			box.add(Box.createHorizontalStrut(6));
 			box.add(new JLabel(units));
 		}
-
 		return box;
 	}
 
 	/**
-	 * A new particle was selected
+	 * Handles particle selection changes.
 	 */
 	private void selectedParticle() {
-		// System.err.println("Selected particle: " +
-		// _lundComboBox.getSelectedId());
 		setMomentum();
 	}
 
 	/**
-	 * Create the panel for setting the vertex
-	 *
-	 * @return the panel holding the vertex pane
+	 * Creates the subpanel for configuring the track vertex.
+	 * @return A JPanel with vertex coordinate fields.
 	 */
 	private JPanel vertexPanel() {
 		JPanel panel = new JPanel();
 		Box box = Box.createVerticalBox();
-
 		_vertexX = new JTextField(8);
 		_vertexY = new JTextField(8);
 		_vertexZ = new JTextField(8);
-
 		_vertexX.setText("0.0");
 		_vertexY.setText("0.0");
 		_vertexZ.setText("0.0");
-
 		box.add(labeledTextField("X:", _vertexX, "cm", 20));
 		box.add(Box.createVerticalStrut(5));
 		box.add(labeledTextField("Y:", _vertexY, "cm", 20));
 		box.add(Box.createVerticalStrut(5));
 		box.add(labeledTextField("Z:", _vertexZ, "cm", 20));
 		box.add(Box.createVerticalStrut(5));
-
 		panel.add(box);
 		panel.setBorder(new CommonBorder("Track Vertex"));
 		return panel;
 	}
 
-	// initial conditions
+	/**
+	 * Creates the subpanel for initial momentum and direction.
+	 * @return A JPanel with momentum, theta, and phi fields.
+	 */
 	private JPanel initConditionsPanel() {
 		JPanel panel = new JPanel();
 		Box box = Box.createVerticalBox();
 		_momentumTextField = new JTextField(8);
 		_momentumTextField.setEditable(true);
-
 		_momentumTextField.setText("" + String.format("%-9.5f", _oldMomentum));
 		_momentumTextField.addActionListener(new ActionListener() {
-
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				setMomentum();
 			}
 		});
-
 		box.add(labeledTextField(MOMENTUMMAG, _momentumTextField, "GeV/c", -1));
-
 		_theta = new JTextField(8);
 		_phi = new JTextField(8);
-
 		_theta.setText("15.0");
 		_phi.setText("0.0");
-
 		box.add(labeledTextField(SMALL_THETA, _theta, "deg", 20));
 		box.add(Box.createVerticalStrut(5));
 		box.add(labeledTextField(SMALL_PHI, _phi, "deg", 20));
 		box.add(Box.createVerticalStrut(5));
-
 		panel.add(box);
 		panel.setBorder(new CommonBorder("Initial Momentum and Direction"));
 		return panel;
 	}
 
-	// create the cutoff panel
+	/**
+	 * Creates the subpanel for integration cutoff controls.
+	 * @return A JPanel with cutoff and accuracy settings.
+	 */
 	private JPanel cutoffPanel() {
-
 		_fixedZ = new JTextField(8);
 		_fixedRho = new JTextField(8);
 		_sMax = new JTextField(8);
-
 		_accuracy = new JTextField(8);
-
 		_fixedRho.setText("100.0");
 		_fixedZ.setText("575.0");
-       _sMax.setText("800.0");
+		_sMax.setText("800.0");
 		_accuracy.setText("10");
-
-
 		JPanel panel = new JPanel();
 		Box box = Box.createVerticalBox();
 		box.add(cutoffType());
-
 		box.add(Box.createVerticalStrut(5));
 		box.add(labeledTextField("      Stopping Z", _fixedZ, "cm", -1));
 		box.add(Box.createVerticalStrut(5));
@@ -465,23 +518,23 @@ public class LundTrackDialog extends JDialog {
 		box.add(Box.createVerticalStrut(5));
 		box.add(labeledTextField("        Accuracy", _accuracy, "microns", -1));
 		box.add(Box.createVerticalStrut(5));
-
 		panel.add(box);
 		panel.setBorder(new CommonBorder("Integration Controls"));
 		return panel;
 	}
 
+	/**
+	 * Creates the component for selecting the algorithm type.
+	 * @return A JPanel containing algorithm radio buttons.
+	 */
 	private JPanel cutoffType() {
-
 		ButtonGroup bg = new ButtonGroup();
-
 		createAlgorithmButtons(bg);
 		JPanel spanel = new JPanel();
 		spanel.setLayout(new FlowLayout(FlowLayout.LEFT, 6, 0));
 		spanel.add(_standardRB);
 		spanel.add(_fixedZRB);
 		spanel.add(_fixedRhoRB);
-
 		JPanel panel = new JPanel();
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 		panel.add(spanel);
@@ -489,25 +542,20 @@ public class LundTrackDialog extends JDialog {
 	}
 
 	/**
-	 * Create the panel that allows the user to select the energy
-	 *
-	 * @return the panel for selecting the energy.
+	 * Creates the subpanel for displaying particle energy and mass information.
+	 * @return A JPanel with particle kinematic information.
 	 */
 	private JPanel energyPanel() {
 		JPanel panel = new JPanel();
-
 		Box box = Box.createVerticalBox();
-
 		_massTextField = new JTextField(8);
 		_relativisticGamma = new JTextField(8);
 		_relativisticBeta = new JTextField(8);
 		_totalEnergyTextField = new JTextField(8);
-
 		disable(_massTextField);
 		disable(_relativisticGamma);
 		disable(_relativisticBeta);
 		disable(_totalEnergyTextField);
-
 		box.add(Box.createVerticalStrut(5));
 		box.add(labeledTextField(MASS, _massTextField, " GeV/c" + SUPER2, -1));
 		box.add(Box.createVerticalStrut(5));
@@ -517,22 +565,25 @@ public class LundTrackDialog extends JDialog {
 		box.add(Box.createVerticalStrut(5));
 		box.add(labeledTextField(TOTENERGY, _totalEnergyTextField, " GeV", -1));
 		box.add(Box.createVerticalStrut(5));
-		box.add(Box.createVerticalStrut(5));
-
 		panel.add(box);
 		panel.setBorder(new CommonBorder("Particle Energy"));
 		return panel;
 	}
 
+	/**
+	 * Disables a text field and styles it as read-only.
+	 * @param tf The JTextField to disable.
+	 */
 	private void disable(JTextField tf) {
 		tf.setEditable(false);
 		tf.setBackground(Color.black);
 		tf.setForeground(Color.cyan);
 	}
 
-	// set the momentum
+	/**
+	 * Calculates and updates relativistic values based on the current momentum.
+	 */
 	private void setMomentum() {
-
 		double momentum = 0.0;
 		try {
 			momentum = Double.parseDouble(_momentumTextField.getText());
@@ -541,40 +592,36 @@ public class LundTrackDialog extends JDialog {
 			_momentumTextField.setText("" + String.format("%-9.5f", _oldMomentum));
 			return;
 		}
-
 		_oldMomentum = momentum;
 		LundId lid = _lundComboBox.getSelectedId();
-		// mass GeV
 		double mass = lid.getMass();
-
 		_energy = Math.sqrt(momentum * momentum + mass * mass);
-
 		_gamma = _energy / mass;
 		_beta = Math.sqrt(1.0 - 1.0 / (_gamma * _gamma));
-
 		_relativisticGamma.setText(String.format("%-9.5f", _gamma));
 		_relativisticBeta.setText(String.format("%-13.9f", _beta));
 		_massTextField.setText(String.format("%-10.6f", mass));
 		_totalEnergyTextField.setText(String.format("%-9.5f", _energy));
 	}
 
-	// user has hit ok or cancel
+	/**
+	 * Closes the dialog.
+	 * @param reason Integer code indicating why the dialog is closing.
+	 */
 	private void doClose(int reason) {
 		setVisible(false);
 	}
 
 	/**
-	 * Create a nice padded panel.
-	 *
-	 * @param hpad      the pixel pad on the left and right
-	 * @param vpad      the pixel pad on the top and bottom
-	 * @param component the main component placed in the center.
-	 * @return the padded panel
+	 * Creates a padded JPanel around a component.
+	 * @param hpad Horizontal padding.
+	 * @param vpad Vertical padding.
+	 * @param component The centered component.
+	 * @return The padded JPanel.
 	 */
 	public static JPanel paddedPanel(int hpad, int vpad, Component component) {
 		JPanel panel = new JPanel();
 		panel.setLayout(new BorderLayout());
-
 		if (hpad > 0) {
 			panel.add(Box.createHorizontalStrut(hpad), BorderLayout.WEST);
 			panel.add(Box.createHorizontalStrut(hpad), BorderLayout.EAST);
@@ -583,61 +630,53 @@ public class LundTrackDialog extends JDialog {
 			panel.add(Box.createVerticalStrut(vpad), BorderLayout.NORTH);
 			panel.add(Box.createVerticalStrut(vpad), BorderLayout.SOUTH);
 		}
-
 		panel.add(component, BorderLayout.CENTER);
 		return panel;
 	}
 
 	/**
-	 * Center a component.
-	 *
-	 * @param component The Component to center.
-	 * @param dh        offset from horizontal center.
-	 * @param dv        offset from vertical center.
+	 * Centers a component on the screen.
+	 * @param component The component to center.
 	 */
 	public static void centerComponent(Component component) {
-
-		if (component == null) {
-			return;
-		}
-
+		if (component == null) return;
 		try {
 			Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 			Dimension componentSize = component.getSize();
-			if (componentSize.height > screenSize.height) {
-				componentSize.height = screenSize.height;
-			}
-			if (componentSize.width > screenSize.width) {
-				componentSize.width = screenSize.width;
-			}
-
+			if (componentSize.height > screenSize.height) componentSize.height = screenSize.height;
+			if (componentSize.width > screenSize.width) componentSize.width = screenSize.width;
 			int x = ((screenSize.width - componentSize.width) / 2);
 			int y = ((screenSize.height - componentSize.height) / 2);
-
 			component.setLocation(x, y);
-
 		} catch (Exception e) {
 			component.setLocation(200, 200);
 			e.printStackTrace();
 		}
 	}
 
-	// for a nice border
+	/**
+	 * A custom titled border for dialog subpanels.
+	 */
 	public class CommonBorder extends TitledBorder {
-
+		/** Default etched border. */
 		public Border etched = BorderFactory.createEtchedBorder();
+		/** Default font for the title. */
 		public Font font = new Font("SandSerif", Font.PLAIN, 9);
-
+		
+		/** Default constructor. */
 		public CommonBorder() {
 			super(BorderFactory.createEtchedBorder());
 			setTitleColor(Color.blue);
 			setTitleFont(font);
 		}
-
+		
+		/**
+		 * Constructor with a specific title.
+		 * @param title The border title.
+		 */
 		public CommonBorder(String title) {
 			this();
 			setTitle(title);
 		}
 	}
-
 }

@@ -8,6 +8,7 @@ import java.util.Random;
 import cnuphys.CLAS12Swim.CLAS12SwimResult;
 import cnuphys.CLAS12Swim.CLAS12Swimmer;
 import cnuphys.CLAS12Swim.CLAS12Values;
+import cnuphys.CLAS12Swim.CommonsMathCLAS12Swimmer;
 import cnuphys.adaptiveSwim.AdaptiveSwimException;
 import cnuphys.adaptiveSwim.AdaptiveSwimResult;
 import cnuphys.adaptiveSwim.AdaptiveSwimmer;
@@ -39,8 +40,10 @@ public class ZTest {
 	    		"status", "xf_c12", "yf_c12", "zf_c12", "s_c12", "npnt_s12", "dZ_c12");
 
 
-		AdaptiveSwimmer adaptiveSwimmer = new AdaptiveSwimmer(); //adaptive
-		CLAS12Swimmer clas12Swimmer = new CLAS12Swimmer(); //DP
+		AdaptiveSwimmer adaptiveSwimmer = new AdaptiveSwimmer(); //old "new swimmer"
+		CLAS12Swimmer clas12Swimmer = new CLAS12Swimmer(); //new "new swimmer"
+//		CommonsMathCLAS12Swimmer apacheSwimmer = new CommonsMathCLAS12Swimmer(); //new "new swimmer" with commons math integrator
+//		apacheSwimmer.setLegacyComparable(true);
 
 		//results for adaptive
 		AdaptiveSwimResult result = new AdaptiveSwimResult(true);
@@ -104,6 +107,8 @@ public class ZTest {
 			// C12
 			CLAS12SwimResult c12Res = clas12Swimmer.swimZ(charge, 100*xo, 100*yo, 100*zo, p, theta, phi, 100*zTarg,
 					100*accuracy, 100*sMax, 100*h, c12Tolerance);
+//			CLAS12SwimResult c12Res = apacheSwimmer.swimZ(charge, 100*xo, 100*yo, 100*zo, p, theta, phi, 100*zTarg,
+//					100*accuracy, 100*sMax, 100*h, c12Tolerance);
 			delC12 += c12SwimResult(writer, 100*zTarg, c12Res);
 			nsC12 += c12Res.getNStep();
 
@@ -177,6 +182,8 @@ public class ZTest {
 			// C12
 			clas12Swimmer.swimZ(charge, 100*xo, 100*yo, 100*zo, p, theta, phi,
 					100*zTarg, 100*accuracy, 100*sMax, 100*h, c12Tolerance);
+//			apacheSwimmer.swimZ(charge, 100*xo, 100*yo, 100*zo, p, theta, phi,
+//					100*zTarg, 100*accuracy, 100*sMax, 100*h, c12Tolerance);
 		}
 
 		c12Time = bean.getCurrentThreadCpuTime() - start;

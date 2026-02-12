@@ -12,7 +12,7 @@ import cnuphys.magfield.RotatedCompositeProbe;
 /**
  * The adaptive step size swimmer for CLAS12.
  */
-public final class CLAS12Swimmer {
+public final class CLAS12Swimmer implements ICLAS12Swimmer {
 
 	
 	// Speed of light in m/s
@@ -44,10 +44,10 @@ public final class CLAS12Swimmer {
 	// min momentum in GeV/c
 	private double MINMOMENTUM = 5e-05; // GeV/c
 
-	// Minimum integration step size in meters
+	// Minimum integration step size in cm
 	private double MINSTEPSIZE = 1.0e-6; // cm
 
-	// Maximum integration step size in meters
+	// Maximum integration step size in cm
 	private double MAXSTEPSIZE = Double.POSITIVE_INFINITY; // cm
 
 	// The magnetic field probe.

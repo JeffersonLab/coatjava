@@ -6,6 +6,7 @@ import cnuphys.magfield.FieldProbe;
 import cnuphys.magfield.RotatedCompositeProbe;
 import cnuphys.swim.SwimTrajectory;
 
+@SuppressWarnings("serial")
 public class CLAS12Trajectory extends SwimTrajectory {
 
 	private double[] _s = new double[200];
@@ -20,6 +21,7 @@ public class CLAS12Trajectory extends SwimTrajectory {
 	public void add(double s, double[] u) {
 		addS(s);
 		super.add(u);
+		_bdlValue = Double.NaN;
 	}
 
 	public void replaceLastPoint(double s, double[] u) {
@@ -31,7 +33,10 @@ public class CLAS12Trajectory extends SwimTrajectory {
 	}
 
 	public void removeLastPoint() {
-		if (_sSize > 0) removePoint(_sSize - 1);
+		if (_sSize > 0) {
+			removePoint(_sSize - 1);
+			_bdlValue = Double.NaN;
+		}
 	}
 
 	public void removePoint(int index) {
@@ -39,6 +44,7 @@ public class CLAS12Trajectory extends SwimTrajectory {
 			System.arraycopy(_s, index + 1, _s, index, _sSize - index - 1);
 			_sSize--;
 			remove(index);
+			_bdlValue = Double.NaN;
 		}
 	}
 
@@ -58,6 +64,7 @@ public class CLAS12Trajectory extends SwimTrajectory {
 	public void clear() {
 		super.clear();
 		_sSize = 0;
+		_bdlValue = Double.NaN;
 	}
 
 	@Override

@@ -1,9 +1,45 @@
 package cnuphys.CLAS12Swim;
 
 /**
- * This holds the results of a swim. It gets them from the listener, so in
- * effect this is a wrapper for convenience and clarity.
+ * Result container returned by all {@code CLAS12Swimmer} swim operations.
+ * <p>
+ * A {@code CLAS12SwimResult} encapsulates:
+ * <ul>
+ *   <li>the final particle state at termination,</li>
+ *   <li>the reason the swim terminated,</li>
+ *   <li>the accumulated path length,</li>
+ *   <li>optionally, the full trajectory sampled along the path.</li>
+ * </ul>
+ *
+ * <h2>Termination semantics</h2>
+ * A swim may terminate because:
+ * <ul>
+ *   <li>a target surface was reached within the requested accuracy,</li>
+ *   <li>a requested path length {@code sMax} was reached,</li>
+ *   <li>the distance of closest approach (DOCA) converged,</li>
+ *   <li>or an internal failure or limit condition occurred.</li>
+ * </ul>
+ *
+ * The specific termination condition is encoded in {@link #getStatus()},
+ * and convenience predicates such as {@link #isSuccess()} are provided.
+ *
+ * <h2>State representation</h2>
+ * The final state is stored internally as:
+ * <ul>
+ *   <li>position components (x, y, z) in cm,</li>
+ *   <li>direction cosines (tx, ty, tz) = (px/p, py/p, pz/p), dimensionless.</li>
+ * </ul>
+ *
+ * <h2>Trajectory storage</h2>
+ * Depending on how the swim was configured, the result may contain a sampled
+ * trajectory. Trajectories are typically used for visualization or debugging
+ * and may be {@code null} if not requested.
+ *
+ * <p>
+ * This class is a passive data container and is not thread-safe for mutation.
+ * </p>
  */
+
 public class CLAS12SwimResult {
 
 	private CLAS12Listener _listener;
@@ -52,22 +88,57 @@ public class CLAS12SwimResult {
 	}
 
 	/**
-	 * Get the status of the swim. The values are the CLAS12Swimmer constants:
-	 * SWIM_SUCCESS or SWIM_TARGET_MISSED.
+	 * Get the termination status code for the swim.
+	 * <p>
+	 * The value is one of the {@link CLAS12Swimmer} status constants, e.g.
+	 * {@link CLAS12Swimmer#SWIM_SUCCESS}, {@link CLAS12Swimmer#SWIM_TARGET_MISSED},
+	 * or {@link CLAS12Swimmer#BELOW_MIN_MOMENTUM}.
+	 * </p>
 	 *
-	 * @return the status of the swim
+	 * @return integer status code indicating how the swim terminated
 	 */
 	public int getStatus() {
 		return _listener.getStatus();
 	}
-
+	
 	/**
-	 * Get the final state vector
+	 * Get a copy of the final state vector.
+	 * <p>
+	 * The state vector {@code u} has length 6 and is interpreted as:
+	 * <ul>
+	 *   <li>{@code u[0..2]} = position (x, y, z) in cm</li>
+	 *   <li>{@code u[3..5]} = direction cosines (tx, ty, tz), dimensionless</li>
+	 * </ul>
+	 * </p>
+	 * <p>
+	 * The returned array is a defensive copy and may be modified by the caller.
+	 * </p>
 	 *
-	 * @return the final state vector
+	 * @return a copy of the final state vector
 	 */
 	public double[] getFinalU() {
-		return _listener.getU();
+		double[] u = _listener.getU();
+		return (u == null) ? null : u.clone();
+	}
+
+	/**
+	 * Determine whether the swim terminated successfully.
+	 * <p>
+	 * A successful termination indicates that the swimmer reached the requested target condition
+	 * (such as a surface, target {@code z}, target {@code ρ}, distance of closest approach,
+	 * or maximum path length) within the specified accuracy, and without encountering an internal
+	 * failure condition.
+	 * </p>
+	 * <p>
+	 * If this method returns {@code false}, the final state stored in this result still represents
+	 * the particle state at the point where the swim terminated (for example, due to exceeding
+	 * {@code sMax} or failing to converge).
+	 * </p>
+	 *
+	 * @return {@code true} if the swim terminated successfully; {@code false} otherwise
+	 */
+	public boolean isSuccess() {
+		return getStatus() == CLAS12Swimmer.SWIM_SUCCESS;
 	}
 
 	/**
