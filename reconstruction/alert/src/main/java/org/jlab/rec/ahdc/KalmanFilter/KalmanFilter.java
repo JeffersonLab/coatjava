@@ -109,8 +109,8 @@ public class KalmanFilter {
 				// for the error matrix: first 3 lines in mm^2; last 3 lines in MeV^2
 			    RealVector initialStateEstimate   = new ArrayRealVector(stepper.y);
 			    //RealMatrix initialErrorCovariance = MatrixUtils.createRealMatrix(new double[][]{{50.0, 0.0, 0.0, 0.0, 0.0, 0.0}, {0.0, 50.0, 0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 900.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 100.00, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0, 100.00, 0.0}, {0.0, 0.0, 0.0, 0.0, 0.0, 900.0}});
-				// RealMatrix initialErrorCovariance = track.getErrorCovarianceMatrix();
 				// System.out.println(">>>>>>>>>>  Error matrix: start (" + counter + ")\n" + format.format(track.getErrorCovarianceMatrix()));
+				RealMatrix initialErrorCovariance = track.getErrorCovarianceMatrix();
 				KFitter TrackFitter = new KFitter(initialStateEstimate, initialErrorCovariance, stepper, propagator, materialHashMap);
 				if (IsVtxDefined) TrackFitter.setVertexResolution(vertex_resolutions);
 		 	    
