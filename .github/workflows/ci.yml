@@ -265,7 +265,7 @@ jobs:
       - uses: actions/download-artifact@v7
         with:
           name: build_${{ matrix.runner }}
-      - uses: cvmfs-contrib/github-action-cvmfs@v5
+      - uses: cvmfs-contrib/github-action-cvmfs@v5.4
         with:
           cvmfs_repositories: 'oasis.opensciencegrid.org'
       - name: untar build
