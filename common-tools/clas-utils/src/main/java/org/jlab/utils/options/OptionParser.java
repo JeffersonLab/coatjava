@@ -130,7 +130,6 @@ public class OptionParser {
     
     public void printUsage(){
         System.out.println(this.getUsageString());
-        System.out.println("\n\n");
     }
    
     public void parse(String... args) {
