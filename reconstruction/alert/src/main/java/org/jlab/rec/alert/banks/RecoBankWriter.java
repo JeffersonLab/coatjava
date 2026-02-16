@@ -5,7 +5,7 @@ import java.util.List;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.alert.projections.TrackProjection;
-import org.jlab.rec.alert.AIpid.PIDResult;
+//import org.jlab.rec.alert.AIpid.PIDResult;
 
 import ai.djl.util.Pair;
 
@@ -92,7 +92,7 @@ public class RecoBankWriter {
         return 0;
     }
     
-    public static DataBank fillAIPIDBank(DataEvent event, List<PIDResult> results) {
+/*    public static DataBank fillAIPIDBank(DataEvent event, List<PIDResult> results) {
         DataBank bank = event.createBank("ALERT::ai:pid", results.size());
 
         for (int i = 0; i < results.size(); i++) {
@@ -109,7 +109,7 @@ public class RecoBankWriter {
         }
         return bank;
     }
-    
+*/    
     // @skuditha: Testing... Delete afterwards!
     
     public static DataBank fillAIPIDBank(DataEvent event) {
