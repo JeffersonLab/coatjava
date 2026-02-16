@@ -67,13 +67,15 @@ public class Track {
 		this.y0  = 0.0;
 		this.z0  = 0.0;
 		double p = 150.0;//MeV/c
-		//take first hit.
-		Hit hit = hitslist.get(0);
-		double phi          = Math.atan2(hit.getY(), hit.getX());
-		//hitslist.
-		this.px0  = p*Math.sin(phi);
-		this.py0  = p*Math.cos(phi);
-		this.pz0  = 0.0;
+		if (hitslist.size() > 0) {
+			//take first hit.
+			Hit hit = hitslist.get(0);
+			double phi          = Math.atan2(hit.getY(), hit.getX());
+			//hitslist.
+			this.px0  = p*Math.sin(phi);
+			this.py0  = p*Math.cos(phi);
+			this.pz0  = 0.0;
+		}
     }
 
 	public void setPositionAndMomentum(HelixFitObject helixFitObject) {
