@@ -5,11 +5,13 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.rec.ahdc.AI.InterCluster;
 import org.jlab.rec.ahdc.AI.TrackPrediction;
 import org.jlab.rec.ahdc.Cluster.Cluster;
+import org.jlab.rec.ahdc.Cluster.DocaCluster;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import org.jlab.rec.ahdc.Track.Track;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class RecoBankWriter {
 
@@ -198,4 +200,22 @@ public class RecoBankWriter {
 
 		return bank;
 	}
+
+	public DataBank fillAHDCDocaClustersBank(DataEvent event, ArrayList<DocaCluster> docaclusters) {
+
+        if (docaclusters == null || docaclusters.size() == 0) return null;
+
+		DataBank bank = event.createBank("AHDC::docaclusters", docaclusters.size());
+
+		for (int i = 0; i < docaclusters.size(); i++) {
+			bank.setFloat("x", i, (float) docaclusters.get(i).get_X());
+			bank.setFloat("y", i, (float) docaclusters.get(i).get_Y());
+			bank.setFloat("z", i, (float) docaclusters.get(i).get_Z());
+			bank.setFloat("weight", i, (float) docaclusters.get(i).get_Weight());
+			bank.setInt("pattern", i, (int) docaclusters.get(i).get_Pattern());
+			bank.setInt("idx", i, (int) docaclusters.get(i).get_ClusterIndex());			
+		}
+
+        return bank;
+    }
 }
