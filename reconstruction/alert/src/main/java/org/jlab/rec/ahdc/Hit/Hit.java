@@ -188,11 +188,6 @@ public class Hit implements Comparable<Hit> {
 		//return new Array2DRowRealMatrix(new double[][]{{0.09}});
 	}
 
-	// a signature for KalmanFilter.Hit_beam
-	public RealVector get_Vector_beam() {
-		return null;
-	}
-
 	public double distance(Point3D point3D) {
 		return this.wireLine.distance(point3D).length();
 	}

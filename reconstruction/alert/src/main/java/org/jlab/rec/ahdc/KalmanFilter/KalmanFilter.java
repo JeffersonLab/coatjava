@@ -15,6 +15,7 @@ import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.Track.Track;
+import org.jlab.rec.ahdc.KalmanFilter.Hit_atofBar;
 
 import org.apache.commons.math3.linear.RealMatrixFormat;
 
@@ -49,6 +50,7 @@ public class KalmanFilter {
 	// 					" ; ",        // row separator
 	// 					new java.text.DecimalFormat(" 0.0000;-0.0000")
 	// 				);
+	HashMap<Integer, Hit_atofBar> ATOF_hits = null;
 
 	public void propagation(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {
 
@@ -122,6 +124,14 @@ public class KalmanFilter {
 						TrackFitter.correct(hit);
 					
                     }
+					// Forward propagation towards the ATOF bar
+					{	
+						Hit hit = ATOF_hits.get(track.get_trackId());
+						if (hit != null) {
+							TrackFitter.predict(hit, true);
+							TrackFitter.correct(hit);
+						}
+					}
 					// Backward propagation (last layer to first layer)
 					for (int i = AHDC_hits.size() - 2; i >= 0; i--) {
 						Hit hit = AHDC_hits.get(i);
@@ -178,5 +188,9 @@ public class KalmanFilter {
 		}
 	}
 	public void set_Niter(int Niter) {this.Niter = Niter;}
+	public int get_Niter() {return this.Niter;}
 	public void set_particle(PDGParticle particle) {this.particle = particle;}
+	public PDGParticle get_particle() {return this.particle;}
+	public void set_ATOF_hits(HashMap<Integer, Hit_atofBar> ATOF_hits){ this.ATOF_hits = ATOF_hits;};
+	public HashMap<Integer, Hit_atofBar> get_ATOF_hits() { return this.ATOF_hits;}
 }

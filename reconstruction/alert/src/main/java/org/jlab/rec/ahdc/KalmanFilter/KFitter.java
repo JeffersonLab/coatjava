@@ -92,7 +92,8 @@ public class KFitter {
 		RealMatrix measurementMatrix;
 		RealVector h;
 		// check if the hit is the beamline
-		if (hit.getRadius() < 1) {
+		//if (hit.getRadius() < 1) {
+		if (hit instanceof Hit_beam) {
 			// the diagonal elements are the squared errors in r, phi, z
 			measurementNoise =
 				new Array2DRowRealMatrix(
@@ -103,8 +104,22 @@ public class KFitter {
 					});//3x3
 			measurementMatrix  = H_beam(stateEstimation);//6x3
 			h = h_beam(stateEstimation);//3x1
-			z = hit.get_Vector_beam();//0!
-		} 
+			z = hit.get_Vector();//0!
+		}
+		// check if the hit is an ATOF bar
+		else if (hit instanceof Hit_atofBar) {
+			// the diagonal elements are the squared errors in r, phi, z
+			measurementNoise =
+				new Array2DRowRealMatrix(
+					new double[][]{
+						{9, 0.0000, 0.0000},
+						{0.00, 9, 0.0000},
+						{0.00, 0.0000, 100}
+					});//3x3
+			measurementMatrix  = H_beam(stateEstimation);//6x3
+			h = h_beam(stateEstimation);//3x1
+			z = hit.get_Vector();//0!
+		}
 		// else, it is an AHDC hits
 		else {
             measurementNoise = hit.get_MeasurementNoise();//1x1

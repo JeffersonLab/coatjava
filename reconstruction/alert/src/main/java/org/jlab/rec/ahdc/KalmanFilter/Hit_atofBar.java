@@ -7,28 +7,26 @@ import org.jlab.geom.prim.Point3D;
 import org.jlab.rec.ahdc.Hit.Hit;
 
 /**
+ * Same philosophy as Hit_beam
  * A weird object that just wants to be considered as a Hit
  * The methods that matters are : distance(), getLine(), get_Vector_beam(), getRadius()
  * 
- * @author Mathieu Ouillon
- * @author Éric Fuchey 
  * @author Felix Touchte Codjo
  */
-public class Hit_beam extends Hit {
-
-	private double x,y,z;
+public class Hit_atofBar extends Hit {
+    private double x,y,z;
 	private double r,phi;
-    Line3D beamline;
+    Line3D barline;
 
-	public Hit_beam(double x, double y , double z) {
-		super(0,0,0,0, 0, 0, -1); 
-		this.x = x;
-		this.y = y;
-		this.z = z;
-		this.r = Math.hypot(x,y);
-		this.phi = Math.atan2(y,x);
-        beamline = new Line3D(x,y,0,x,y,1); // a line parallel to the beam axis
-	}
+    public Hit_atofBar(double x, double y, double z) {
+        super(0,0,0,0, 0, 0, -1); 
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.r = Math.sqrt(x*x + y*y);
+        this.phi = Math.atan2(y, x);
+        barline = new Line3D(x,y,0,x,y,1); // a line parallel to the beam axis
+    }
 
 	@Override
 	public RealVector get_Vector() {
@@ -37,12 +35,12 @@ public class Hit_beam extends Hit {
 	
 	@Override
 	public Line3D getLine() {
-		return beamline;
+		return barline;
     }
 
 	@Override
 	public double distance(Point3D point3D) {
-		return this.beamline.distance(point3D).length();
+		return this.barline.distance(point3D).length();
 	}
 
 	@Override

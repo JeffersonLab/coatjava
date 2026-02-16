@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.HashMap;
 
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.clas.swimtools.Swim;
@@ -18,6 +19,7 @@ import org.jlab.rec.alert.TrackMatchingAI.ModelTrackMatching;
 import org.jlab.rec.alert.banks.RecoBankWriter;
 import org.jlab.rec.alert.projections.TrackProjector;
 import org.jlab.rec.atof.hit.ATOFHit;
+import org.jlab.rec.ahdc.KalmanFilter.Hit_atofBar;
 import org.jlab.rec.ahdc.KalmanFilter.KalmanFilter;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.geom.detector.alert.AHDC.AlertDCDetector;
@@ -230,7 +232,7 @@ public class ALERTEngine extends ReconstructionEngine {
         /// Kalmam Filter
         /// ///////////////////////////////////////
         
-        // read the list of tracks/hits from the banks AHDC::track and AHDC::hits
+        /// Read the list of tracks/hits from the banks AHDC::track and AHDC::hits
         if (!event.hasBank("AHDC::track")) {return false;}
         DataBank trackBank = event.getBank("AHDC::track");
         DataBank hitBank = event.getBank("AHDC::hits");
@@ -271,7 +273,7 @@ public class ALERTEngine extends ReconstructionEngine {
             AHDC_tracks.get(row).setPositionAndMomentumVec(vec);
             AHDC_tracks.get(row).set_trackId(trackid);
         }
-        // intialise the Kalman Filter
+        /// Intialise the Kalman Filter
         double magfieldfactor = runBank.getFloat("solenoid", 0);
         double magfield = 50*magfieldfactor;
         boolean IsMC = event.hasBank("MC::Particle");
@@ -279,37 +281,64 @@ public class ALERTEngine extends ReconstructionEngine {
         int Niter = 40;
         KalmanFilter KF = new KalmanFilter(proton, Niter);
 
-        ///////////////////////////////////////////////////////
-        // first propagation : each AHDC_tracks will be fitted
-        ///////////////////////////////////////////////////////
+        /// Add ATOF hit
+        HashMap<Integer, Hit_atofBar> ATOF_hits = new HashMap<>();
+        for (Pair<Integer, Integer> pair : matched_ATOF_hit_id) {
+            int trackid = pair.getKey();
+            int atofid = pair.getKey();
+            if (trackid > 0 && atofid > 0) {
+                // look fod the sector and the layer of this ATOF wedge
+                int sector = -1;
+                int layer = -1;
+                for (int row = 0; row < bank_ATOFHits.rows(); row++) {
+                    if (bank_ATOFHits.getShort("id", row) == atofid) {
+                        sector = bank_ATOFHits.getInt("sector", row);
+                        layer = bank_ATOFHits.getInt("layer", row);
+                    }
+                }
+                // now look for the bar
+                // with the same layer id or plus/minus 1
+                if (sector > 0 && layer > 0) {
+                    double x = 0, y = 0, z = 0;
+                    for (int row = 0; row < bank_ATOFHits.rows(); row++) { 
+                        if (bank_ATOFHits.getInt("sector", row) == sector && bank_ATOFHits.getInt("component", row) == 10) {
+                            if (bank_ATOFHits.getInt("layer", row) == layer || bank_ATOFHits.getInt("layer", row) == layer-1 || bank_ATOFHits.getInt("layer", row) == layer+1) {
+                                x = bank_ATOFHits.getFloat("x", row);
+                                y = bank_ATOFHits.getFloat("y", row);
+                                z = bank_ATOFHits.getFloat("z", row);
+                            }
+                        }
+                    }
+                    if (Math.abs(x) > 0 && Math.abs(y) > 0) {
+                        Hit_atofBar hit = new Hit_atofBar(x, y, z);
+                        ATOF_hits.put(trackid, hit);
+                    }
+                }
+            }
+        }
+        KF.set_ATOF_hits(ATOF_hits);
+
+        /// First propagation : each AHDC_tracks will be fitted
         KF.propagation(AHDC_tracks, event, magfield, IsMC);
 
-        /////////////////////////////////////
         /// Clean bad hits
-        /// /////////////////////////////////
-        //System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>  TEST");
         double sigma = 0.5; // mm
         for (Track track : AHDC_tracks) {
             ArrayList<Hit> AHDC_hits = track.getHits();
             Iterator<Hit> it = AHDC_hits.iterator();
             while (it.hasNext()) {
                 Hit hit = it.next();
-                //System.out.printf("> Hit : %2d %f\n", hit.getId(), hit.getResidual());
                 if (Math.abs(hit.getResidual()) > 3*sigma) {
                     it.remove();
                 }
             }
         }
 
-        ///////////////////////////////////////////////////////
-        // second propagation : each AHDC_tracks will be fitted
-        ///////////////////////////////////////////////////////
+        /// Second propagation : each AHDC_tracks will be fitted
         KF.set_Niter(15);
         KF.propagation(AHDC_tracks, event, magfield, IsMC);
 
-        /////////////////////////////////////////////
-        // write the AHDC::kftrack bank in the event
-        /////////////////////////////////////////////
+        /// write the AHDC::kftrack bank in the event
         org.jlab.rec.ahdc.Banks.RecoBankWriter ahdc_writer = new org.jlab.rec.ahdc.Banks.RecoBankWriter();
         DataBank recoKFTracksBank   = ahdc_writer.fillAHDCKFTrackBank(event, AHDC_tracks);
         event.appendBank(recoKFTracksBank);
