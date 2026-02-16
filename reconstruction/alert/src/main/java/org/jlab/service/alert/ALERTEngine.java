@@ -15,9 +15,9 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.io.hipo.HipoDataSync;
 import org.jlab.rec.alert.TrackMatchingAI.ModelTrackMatching;
-import org.jlab.rec.alert.AIpid.PIDModel;
-import org.jlab.rec.alert.AIpid.PIDPrediction;
-import org.jlab.rec.alert.AIpid.PIDResult;
+//import org.jlab.rec.alert.AIpid.PIDModel;
+//import org.jlab.rec.alert.AIpid.PIDPrediction;
+//import org.jlab.rec.alert.AIpid.PIDResult;
 import org.jlab.rec.alert.banks.RecoBankWriter;
 import org.jlab.rec.alert.projections.TrackProjector;
 import org.jlab.rec.atof.hit.ATOFHit;
@@ -247,7 +247,7 @@ public class ALERTEngine extends ReconstructionEngine {
             //ZooModel<float[], float[]> pidModel;
             
 
-            ArrayList<PIDResult> pidResults;
+            //ArrayList<PIDResult> pidResults;
             
 
             try {
