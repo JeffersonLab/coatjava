@@ -1,5 +1,6 @@
 package org.jlab.service.alert;
 
+import ai.djl.repository.zoo.ZooModel;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -14,6 +15,9 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.io.hipo.HipoDataSync;
 import org.jlab.rec.alert.TrackMatchingAI.ModelTrackMatching;
+import org.jlab.rec.alert.AIpid.PIDModel;
+import org.jlab.rec.alert.AIpid.PIDPrediction;
+import org.jlab.rec.alert.AIpid.PIDResult;
 import org.jlab.rec.alert.banks.RecoBankWriter;
 import org.jlab.rec.alert.projections.TrackProjector;
 import org.jlab.rec.atof.hit.ATOFHit;
@@ -222,7 +226,44 @@ public class ALERTEngine extends ReconstructionEngine {
             }
         }
         rbc.appendTrackMatchingAIBank(event, matched_ATOF_hit_id);
+        
+        /////////////////////////////////////////////
+        /// AI PID
+        ////////////////////////////////////////////
+        
 
+        // Requires:
+        //  - AHDC::track
+        //  - ATOF::clusters
+        //  - ALERT::ai:projections (trackid, matched_atof_hit_id) produced by track-matching AI
+
+        if (event.hasBank("AHDC::track")
+                && event.hasBank("ATOF::clusters")
+                && event.hasBank("ALERT::ai:projections")) {
+
+            DataBank bank_tracks   = event.getBank("AHDC::track");
+            DataBank bank_clusters = event.getBank("ATOF::clusters");
+            DataBank bank_links    = event.getBank("ALERT::ai:projections");
+            //ZooModel<float[], float[]> pidModel;
+            
+
+            ArrayList<PIDResult> pidResults;
+            
+
+            try {
+                //pidModel = PIDModel.getModel();
+                //pidResults = PIDPrediction.prediction(bank_tracks, bank_clusters, bank_links, pidModel);
+            
+                //DataBank pidBank = RecoBankWriter.fillAIPIDBank(event, pidResults);
+                DataBank pidBank = RecoBankWriter.fillAIPIDBank(event);
+                event.appendBank(pidBank);
+
+            } catch (Exception ex) {
+                System.out.println("Exception in ALERTEngine AI PID: " + ex);
+            }
+        }
+
+        
         ///////////////////////////////////////////
         /// Kalmam Filter
         /// ///////////////////////////////////////
