@@ -67,6 +67,21 @@
     ]
   },
   {
+    "name": "ALERT::ai:pid",
+    "group": 23000,
+    "item": 33,
+    "entries": [
+      {"name":"trackid",    "type":"I", "info":"AHDC trackid"},
+      {"name":"clusterid",  "type":"I", "info":"ATOF cluster id"},
+      {"name":"pid",        "type":"I", "info":"argmax PID"},
+      {"name":"prob_2212",  "type":"F", "info":"P(pid=2212)"},
+      {"name":"prob_45",    "type":"F", "info":"P(pid=45)"},
+      {"name":"prob_46",    "type":"F", "info":"P(pid=46)"},
+      {"name":"prob_47",    "type":"F", "info":"P(pid=47)"},
+      {"name":"prob_49",    "type":"F", "info":"P(pid=49)"}
+    ]
+  },
+  {
     "name": "ATOF::hits",
     "group": 22500,
     "item": 21,
