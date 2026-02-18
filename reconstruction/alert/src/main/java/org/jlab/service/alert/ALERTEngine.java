@@ -15,9 +15,7 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.io.hipo.HipoDataSync;
 import org.jlab.rec.alert.TrackMatchingAI.ModelTrackMatching;
-//import org.jlab.rec.alert.AIpid.PIDModel;
-//import org.jlab.rec.alert.AIpid.PIDPrediction;
-//import org.jlab.rec.alert.AIpid.PIDResult;
+import org.jlab.rec.alert.AIPID.ModelPrePID;
 import org.jlab.rec.alert.banks.RecoBankWriter;
 import org.jlab.rec.alert.projections.TrackProjector;
 import org.jlab.rec.atof.hit.ATOFHit;
@@ -68,6 +66,7 @@ public class ALERTEngine extends ReconstructionEngine {
     private double b; //Magnetic field
 
     private ModelTrackMatching modelTrackMatching;
+    private ModelPrePID modelPrePID;
 
     public void setB(double B) {
         this.b = B;
@@ -94,6 +93,7 @@ public class ALERTEngine extends ReconstructionEngine {
         rbc = new RecoBankWriter();
 
         modelTrackMatching = new ModelTrackMatching();
+        modelPrePID = new ModelPrePID();
 
         AlertTOFFactory factory = new AlertTOFFactory();
         DatabaseConstantProvider cp = new DatabaseConstantProvider(11, "default");
@@ -227,41 +227,76 @@ public class ALERTEngine extends ReconstructionEngine {
         }
         rbc.appendTrackMatchingAIBank(event, matched_ATOF_hit_id);
         
-        /////////////////////////////////////////////
-        /// AI PID
-        ////////////////////////////////////////////
-        
+        // ---------------------------------------------------------------------------------------
+        // PrePID using AI (AHDC::track + ATOF::clusters matched via ALERT::ai:projections)
+        // ---------------------------------------------------------------------------------------
+        if (event.hasBank("ALERT::ai:projections") && event.hasBank("ATOF::clusters")) {
 
-        // Requires:
-        //  - AHDC::track
-        //  - ATOF::clusters
-        //  - ALERT::ai:projections (trackid, matched_atof_hit_id) produced by track-matching AI
+            DataBank bankProj = event.getBank("ALERT::ai:projections");
+            DataBank bankTrk  = event.getBank("AHDC::track");
+            DataBank bankClu  = event.getBank("ATOF::clusters");
 
-        if (event.hasBank("AHDC::track")
-                && event.hasBank("ATOF::clusters")
-                && event.hasBank("ALERT::ai:projections")) {
+            ArrayList<org.jlab.rec.alert.AIPID.PrePIDResult> prepid_results = new ArrayList<>();
 
-            DataBank bank_tracks   = event.getBank("AHDC::track");
-            DataBank bank_clusters = event.getBank("ATOF::clusters");
-            DataBank bank_links    = event.getBank("ALERT::ai:projections");
-            //ZooModel<float[], float[]> pidModel;
-            
+            for (int i = 0; i < bankProj.rows(); i++) {
 
-            //ArrayList<PIDResult> pidResults;
-            
+                int trackid = bankProj.getInt("trackid", i);
+                int clusterid = bankProj.getInt("matched_atof_hit_id", i); // maps to ATOF::clusters.id
 
-            try {
-                //pidModel = PIDModel.getModel();
-                //pidResults = PIDPrediction.prediction(bank_tracks, bank_clusters, bank_links, pidModel);
-            
-                //DataBank pidBank = RecoBankWriter.fillAIPIDBank(event, pidResults);
-                DataBank pidBank = RecoBankWriter.fillAIPIDBank(event);
-                event.appendBank(pidBank);
+                int trkRow = -1;
+                for (int r = 0; r < bankTrk.rows(); r++) {
+                    if (bankTrk.getInt("trackid", r) == trackid) { trkRow = r; break; }
+                }
+                if (trkRow < 0) continue;
 
-            } catch (Exception ex) {
-                System.out.println("Exception in ALERTEngine AI PID: " + ex);
+                int cluRow = -1;
+                for (int r = 0; r < bankClu.rows(); r++) {
+                    if (bankClu.getInt("id", r) == clusterid) { cluRow = r; break; }
+                }
+                if (cluRow < 0) continue;
+
+                // Build feature vector float[23] in the exact training order
+                float[] x = new float[23];
+
+                // AHDC::track (13)
+                x[0]  = bankTrk.getFloat("x", trkRow);
+                x[1]  = bankTrk.getFloat("y", trkRow);
+                x[2]  = bankTrk.getFloat("z", trkRow);
+                x[3]  = bankTrk.getFloat("px", trkRow);
+                x[4]  = bankTrk.getFloat("py", trkRow);
+                x[5]  = bankTrk.getFloat("pz", trkRow);
+                x[6]  = bankTrk.getInt("n_hits", trkRow);
+                x[7]  = bankTrk.getInt("sum_adc", trkRow);
+                x[8]  = bankTrk.getFloat("path", trkRow);
+                x[9]  = bankTrk.getFloat("dEdx", trkRow);
+                x[10] = bankTrk.getFloat("p_drift", trkRow);
+                x[11] = bankTrk.getFloat("chi2", trkRow);
+                x[12] = bankTrk.getFloat("sum_residuals", trkRow);
+
+                // ATOF::clusters (10)
+                x[13] = bankClu.getInt("n_bar", cluRow);
+                x[14] = bankClu.getInt("n_wedge", cluRow);
+                x[15] = bankClu.getFloat("time", cluRow);
+                x[16] = bankClu.getFloat("x", cluRow);
+                x[17] = bankClu.getFloat("y", cluRow);
+                x[18] = bankClu.getFloat("z", cluRow);
+                x[19] = bankClu.getFloat("energy", cluRow);
+                x[20] = bankClu.getFloat("pathlength", cluRow);
+                x[21] = bankClu.getFloat("inpathlength", cluRow);
+                x[22] = bankClu.getInt("projID", cluRow);
+
+                try {
+                    float[] pred = modelPrePID.prediction(x);
+                    int prepid = (int) pred[0];
+                    prepid_results.add(new org.jlab.rec.alert.AIPID.PrePIDResult(trackid, clusterid, prepid));
+                } catch (Exception ex) {
+                    System.out.println("Exception in ALERTEngine PrePID: " + ex);
+                }
             }
+
+            rbc.appendPrePIDBank(event, prepid_results);
         }
+
 
         
         ///////////////////////////////////////////
