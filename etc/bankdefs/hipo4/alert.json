@@ -66,10 +66,21 @@
       {"name": "matched_atof_hit_id", "type": "I", "info": "id of the matched ATOF hit, -1 if no hit was matched"}
     ]
   },
+    {
+    "name": "ALERT::ai:prepid",
+    "group": 23000,
+    "item": 33,
+    "info": "AI-assisted PrePID to be used for Kalman Filter",
+    "entries": [
+      {"name":"trackid",    "type":"I", "info":"AHDC trackid"},
+      {"name":"clusterid",  "type":"I", "info":"ATOF cluster id"},
+      {"name":"prepid",        "type":"I", "info":"argmax PID"}
+     ]
+  },
   {
     "name": "ALERT::ai:pid",
     "group": 23000,
-    "item": 33,
+    "item": 34,
     "entries": [
       {"name":"trackid",    "type":"I", "info":"AHDC trackid"},
       {"name":"clusterid",  "type":"I", "info":"ATOF cluster id"},
