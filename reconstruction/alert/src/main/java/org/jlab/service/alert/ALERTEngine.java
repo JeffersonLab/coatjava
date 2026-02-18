@@ -300,12 +300,23 @@ public class ALERTEngine extends ReconstructionEngine {
                 // with the same layer id or plus/minus 1
                 if (sector > 0 && layer > 0) {
                     double x = 0, y = 0, z = 0;
+                    boolean IsFound = false;
                     for (int row = 0; row < bank_ATOFHits.rows(); row++) { 
+                        // we can have several bars for a given wegde
+                        // for now, the vz resolution is not better for bar hits with lower or bigger energy
+                        // let just take the first one we see
                         if (bank_ATOFHits.getInt("sector", row) == sector && bank_ATOFHits.getInt("component", row) == 10) {
-                            if (bank_ATOFHits.getInt("layer", row) == layer || bank_ATOFHits.getInt("layer", row) == layer-1 || bank_ATOFHits.getInt("layer", row) == layer+1) {
+                            if (!IsFound && (bank_ATOFHits.getInt("layer", row) == layer || bank_ATOFHits.getInt("layer", row) == layer-1 || bank_ATOFHits.getInt("layer", row) == layer+1)) {
                                 x = bank_ATOFHits.getFloat("x", row);
                                 y = bank_ATOFHits.getFloat("y", row);
                                 z = bank_ATOFHits.getFloat("z", row);
+                                // x, y correspond to the center of the bar
+                                // let's move to the surface
+                                double r = Math.sqrt(x*x+y*y);
+                                double dr = 3; // width of the bar
+                                x = (r-dr/2)*x/r;
+                                y = (r-dr/2)*y/r;
+                                IsFound = true;
                             }
                         }
                     }
