@@ -92,43 +92,25 @@ public class RecoBankWriter {
         return 0;
     }
     
-/*    public static DataBank fillAIPIDBank(DataEvent event, List<PIDResult> results) {
-        DataBank bank = event.createBank("ALERT::ai:pid", results.size());
+    public int appendPrePIDBank(DataEvent event, ArrayList<org.jlab.rec.alert.AIPID.PrePIDResult> results) {
+
+        DataBank bank = event.createBank("ALERT::ai:prepid", results.size());
+        if (bank == null) {
+            System.err.println("COULD NOT CREATE A ALERT::ai:prepid BANK!!!!!!");
+            return 1;
+        }
 
         for (int i = 0; i < results.size(); i++) {
-            PIDResult r = results.get(i);
-            bank.setInt("trackid", i, r.getTrackid());
-            bank.setInt("clusterid", i, r.getClusterid());
-            bank.setInt("pid", i, r.getPid());
-
-            bank.setFloat("prob_2212", i, r.prob2212());
-            bank.setFloat("prob_45",   i, r.prob45());
-            bank.setFloat("prob_46",   i, r.prob46());
-            bank.setFloat("prob_47",   i, r.prob47());
-            bank.setFloat("prob_49",   i, r.prob49());
+            org.jlab.rec.alert.AIPID.PrePIDResult r = results.get(i);
+            bank.setInt("trackid", i, r.trackid);
+            bank.setInt("clusterid", i, r.clusterid);
+            bank.setInt("prepid", i, r.prepid);
         }
-        return bank;
+
+        event.appendBank(bank);
+        return 0;
     }
-*/    
-    // @skuditha: Testing... Delete afterwards!
-    
-    public static DataBank fillAIPIDBank(DataEvent event) {
-        DataBank bank = event.createBank("ALERT::ai:pid", 1);
 
-
-            //PIDResult r = results.get(i);
-            bank.setInt("trackid", 0, -99);
-            bank.setInt("clusterid", 0, -99);
-            bank.setInt("pid", 0, 0);
-
-            bank.setFloat("prob_2212", 0, 0.0f);
-            bank.setFloat("prob_45",   0, 0.0f);
-            bank.setFloat("prob_46",   0, 0.0f);
-            bank.setFloat("prob_47",   0, 0.0f);
-            bank.setFloat("prob_49",   0, 0.0f);
-        
-        return bank;
-    }
 
     /**
      * @param args the command line arguments
