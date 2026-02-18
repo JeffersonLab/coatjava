@@ -1,6 +1,8 @@
 package org.jlab.rec.ahdc.KalmanFilter;
 
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
@@ -19,6 +21,7 @@ public class Hit_beam extends Hit {
 	private double x,y,z;
 	private double r,phi;
     Line3D beamline;
+	RealMatrix measurementNoise = null;
 
 	public Hit_beam(double x, double y , double z) {
 		super(0,0,0,0, 0, 0, -1); 
@@ -33,6 +36,15 @@ public class Hit_beam extends Hit {
 	@Override
 	public RealVector get_Vector() {
 		return new ArrayRealVector(new double[] {this.r, this.phi, this.z});
+	}
+
+	@Override
+	public RealMatrix get_MeasurementNoise() {
+		return measurementNoise;
+	}
+
+	public void set_MeasurementNoise(RealMatrix measurementNoise) {
+		this.measurementNoise= measurementNoise;
 	}
 	
 	@Override

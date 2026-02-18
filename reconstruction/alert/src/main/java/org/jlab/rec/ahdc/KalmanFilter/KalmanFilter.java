@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
@@ -15,7 +16,6 @@ import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.Track.Track;
-import org.jlab.rec.ahdc.KalmanFilter.Hit_atofBar;
 
 import org.apache.commons.math3.linear.RealMatrixFormat;
 
@@ -50,7 +50,7 @@ public class KalmanFilter {
 	// 					" ; ",        // row separator
 	// 					new java.text.DecimalFormat(" 0.0000;-0.0000")
 	// 				);
-	HashMap<Integer, Hit_atofBar> ATOF_hits = null;
+	HashMap<Integer, Hit_beam> ATOF_hits = null;
 
 	public void propagation(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {
 
@@ -130,11 +130,11 @@ public class KalmanFilter {
 						if (hit != null) {
 							TrackFitter.predict(hit, true);
 							TrackFitter.correct(hit);
+							// Backward propagation to the last ahdc layer
+							Hit hhit = AHDC_hits.get(AHDC_hits.size()-1);
+							TrackFitter.predict(hhit, false);
+							TrackFitter.correct(hhit);
 						}
-						// propagation to the last ahdc layer
-						Hit hhit = AHDC_hits.get(AHDC_hits.size()-1);
-						TrackFitter.predict(hhit, false);
-						TrackFitter.correct(hhit);
 					}
 					// Backward propagation (last layer to first layer)
 					for (int i = AHDC_hits.size() - 2; i >= 0; i--) {
@@ -144,7 +144,14 @@ public class KalmanFilter {
 					}
 					// Backward propagation (first layer to beamline)
 					{
-						Hit hit = new Hit_beam(0, 0, vz_constraint);
+						Hit_beam hit = new Hit_beam(0, 0, vz_constraint);
+						RealMatrix measurementNoise = new Array2DRowRealMatrix(
+                                                        new double[][]{
+                                                            {vertex_resolutions[0], 0.0000, 0.0000},
+                                                            {0.00, 1e10, 0.0000},
+                                                            {0.00, 0.0000, vertex_resolutions[1]}
+                                                        });//3x3;
+                        hit.set_MeasurementNoise(measurementNoise);
 						TrackFitter.predict(hit, false);
 						TrackFitter.correct(hit);
 					}
@@ -195,6 +202,6 @@ public class KalmanFilter {
 	public int get_Niter() {return this.Niter;}
 	public void set_particle(PDGParticle particle) {this.particle = particle;}
 	public PDGParticle get_particle() {return this.particle;}
-	public void set_ATOF_hits(HashMap<Integer, Hit_atofBar> ATOF_hits){ this.ATOF_hits = ATOF_hits;};
-	public HashMap<Integer, Hit_atofBar> get_ATOF_hits() { return this.ATOF_hits;}
+	public void set_ATOF_hits(HashMap<Integer, Hit_beam> ATOF_hits){ this.ATOF_hits = ATOF_hits;};
+	public HashMap<Integer, Hit_beam> get_ATOF_hits() { return this.ATOF_hits;}
 }

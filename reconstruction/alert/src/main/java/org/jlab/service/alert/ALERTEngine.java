@@ -19,12 +19,14 @@ import org.jlab.rec.alert.TrackMatchingAI.ModelTrackMatching;
 import org.jlab.rec.alert.banks.RecoBankWriter;
 import org.jlab.rec.alert.projections.TrackProjector;
 import org.jlab.rec.atof.hit.ATOFHit;
-import org.jlab.rec.ahdc.KalmanFilter.Hit_atofBar;
+import org.jlab.rec.ahdc.KalmanFilter.Hit_beam;
 import org.jlab.rec.ahdc.KalmanFilter.KalmanFilter;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.geom.detector.alert.AHDC.AlertDCDetector;
 import org.jlab.geom.detector.alert.AHDC.AlertDCFactory;
 import org.jlab.rec.ahdc.Track.Track;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.RealMatrix;
 import org.jlab.clas.pdg.PDGDatabase;
 import org.jlab.clas.pdg.PDGParticle;
 
@@ -157,7 +159,6 @@ public class ALERTEngine extends ReconstructionEngine {
         /// ---------------------------------------------------------------------------------------
         /// Track matching using AI ---------------------------------------------------------------
 
-        if (event == null)  return false; // TODO: is it useful?
         if (!event.hasBank("AHDC::track")) return false;
 
         DataBank bank_AHDCtracks = event.getBank("AHDC::track");
@@ -282,46 +283,39 @@ public class ALERTEngine extends ReconstructionEngine {
         KalmanFilter KF = new KalmanFilter(proton, Niter);
 
         /// Add ATOF hit
-        HashMap<Integer, Hit_atofBar> ATOF_hits = new HashMap<>();
+        HashMap<Integer, Hit_beam> ATOF_hits = new HashMap<>();
         for (Pair<Integer, Integer> pair : matched_ATOF_hit_id) {
             int trackid = pair.getKey();
             int atofid = pair.getKey();
             if (trackid > 0 && atofid > 0) {
-                // look fod the sector and the layer of this ATOF wedge
-                int sector = -1;
-                int layer = -1;
+                // recover the wedge
                 for (int row = 0; row < bank_ATOFHits.rows(); row++) {
                     if (bank_ATOFHits.getShort("id", row) == atofid) {
-                        sector = bank_ATOFHits.getInt("sector", row);
-                        layer = bank_ATOFHits.getInt("layer", row);
-                    }
-                }
-                // now look for the bar
-                // with the same layer id or plus/minus 1
-                if (sector > 0 && layer > 0) {
-                    double x = 0, y = 0, z = 0;
-                    boolean IsFound = false;
-                    for (int row = 0; row < bank_ATOFHits.rows(); row++) { 
-                        // we can have several bars for a given wegde
-                        // for now, the vz resolution is not better for bar hits with lower or bigger energy
-                        // let just take the first one we see
-                        if (bank_ATOFHits.getInt("sector", row) == sector && bank_ATOFHits.getInt("component", row) == 10) {
-                            if (!IsFound && (bank_ATOFHits.getInt("layer", row) == layer || bank_ATOFHits.getInt("layer", row) == layer-1 || bank_ATOFHits.getInt("layer", row) == layer+1)) {
-                                x = bank_ATOFHits.getFloat("x", row);
-                                y = bank_ATOFHits.getFloat("y", row);
-                                z = bank_ATOFHits.getFloat("z", row);
-                                // x, y correspond to the center of the bar
-                                // let's move to the surface
-                                double r = Math.sqrt(x*x+y*y);
-                                double dr = 3; // width of the bar
-                                x = (r-dr/2)*x/r;
-                                y = (r-dr/2)*y/r;
-                                IsFound = true;
-                            }
-                        }
-                    }
-                    if (Math.abs(x) > 0 && Math.abs(y) > 0) {
-                        Hit_atofBar hit = new Hit_atofBar(x, y, z);
+                        double x = bank_ATOFHits.getFloat("x", row);
+                        double y = bank_ATOFHits.getFloat("y", row);
+                        double z = bank_ATOFHits.getFloat("z", row);
+                        // A Hit_beam can be used to store the relevant information of the ATOF wedge hit
+                        // To Do: unify Hit and Hit_beam: e.g they should implements the same interface
+                        Hit_beam hit = new Hit_beam(x, y, z);
+                            // error on r
+                        double wedge_width = 20; //mm
+                        double dr2 = Math.pow(wedge_width, 2)/12; // mm^2
+                            // error on phi
+                        double open_angle = Math.toRadians(6); // deg
+                        double dphi2 = Math.pow(open_angle, 2)/12;
+                            // error on z
+                        double wedge_length = 27.7; //mm
+                        double dz2 = Math.pow(wedge_length, 2)/12;
+                        //     // error on z (from elastics data)
+                        // double dz2 = 1400; // mm^2
+                        
+                        RealMatrix measurementNoise = new Array2DRowRealMatrix(
+                                                        new double[][]{
+                                                            {dr2, 0.0000, 0.0000},
+                                                            {0.00, dphi2, 0.0000},
+                                                            {0.00, 0.0000, dz2}
+                                                        });//3x3;
+                        hit.set_MeasurementNoise(measurementNoise);
                         ATOF_hits.put(trackid, hit);
                     }
                 }
