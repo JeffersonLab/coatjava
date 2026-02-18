@@ -112,9 +112,9 @@ public class KFitter {
 			measurementNoise =
 				new Array2DRowRealMatrix(
 					new double[][]{
-						{9, 0.0000, 0.0000},
+						{0, 0.0000, 0.0000},
 						{0.00, 9, 0.0000},
-						{0.00, 0.0000, 100}
+						{0.00, 0.0000, 6400}
 					});//3x3
 			measurementMatrix  = H_beam(stateEstimation);//6x3
 			h = h_beam(stateEstimation);//3x1
