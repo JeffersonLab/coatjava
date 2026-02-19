@@ -51,17 +51,15 @@ public class ModelPrePID {
                 long idx = probs.argMax(1).getLong();  // returns shape (1), take scalar
                 int prepid = CLASS_IDS[(int) idx];
 
-                // Return just the PID as float (matches the TrackMatching style: float[] output)
+                // Return just the PID as float
                 return new float[]{(float) prepid};
             }
         };
 
-        // Match TrackMatching model settings
         System.setProperty("ai.djl.pytorch.num_interop_threads", "1");
         System.setProperty("ai.djl.pytorch.num_threads", "1");
         System.setProperty("ai.djl.pytorch.graph_optimizer", "false");
 
-        // Uses your requested deployment path via CLASResources
         String path = CLASResources.getResourcePath("etc/data/nnet/rg-l/model_PrePID/");
 
         Criteria<float[], float[]> criteria = Criteria.builder()
