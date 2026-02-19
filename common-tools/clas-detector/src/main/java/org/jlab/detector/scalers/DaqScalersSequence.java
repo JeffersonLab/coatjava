@@ -362,18 +362,35 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
      */
     public void fixClockRollover() {
         boolean modified = true;
+        // ungated clock
         while (modified) {
             modified = false;
             for (int i=this.scalers.size()-1; i>0; --i) {
                 Dsc2Scaler previous = this.scalers.get(i-1).dsc2;
-                Dsc2Scaler next = this.scalers.get(i).dsc2;
+                Dsc2Scaler next     = this.scalers.get(i).dsc2;
                 if (previous.clock > next.clock) {
                     for (int j=i; j<this.scalers.size(); ++j) {
-                        if (j==i) System.out.print( String.format("FIXING CLOCK ROLLOVER:  %d %d -> ",this.scalers.get(j).dsc2.clock,this.scalers.get(j).dsc2.gatedClock));
+                        if (j==i) System.out.print( String.format("FIXING UNGATED CLOCK ROLLOVER:  %d -> ",this.scalers.get(j).dsc2.clock));
                         this.scalers.get(j).dsc2.clock += 2*(long)Integer.MAX_VALUE;
-                        // The gated clock also rolls over (but it's triggered by the ungated clock, not itself!?):
+                        if (j==i) System.out.println(String.format("%d",this.scalers.get(j).dsc2.clock));
+                    }
+                    modified = true;
+                    break;
+                }
+            }
+        }
+        // repeat for gated clock
+        modified = true;
+        while (modified) {
+            modified = false;
+            for (int i=this.scalers.size()-1; i>0; --i) {
+                Dsc2Scaler previous = this.scalers.get(i-1).dsc2;
+                Dsc2Scaler next     = this.scalers.get(i).dsc2;
+                if (previous.gatedClock > next.gatedClock) {
+                    for (int j=i; j<this.scalers.size(); ++j) {
+                        if (j==i) System.out.print( String.format("FIXING GATED CLOCK ROLLOVER:  %d -> ",this.scalers.get(j).dsc2.gatedClock));
                         this.scalers.get(j).dsc2.gatedClock += 2*(long)Integer.MAX_VALUE;
-                        if (j==i) System.out.println(String.format("%d %d",this.scalers.get(j).dsc2.clock,this.scalers.get(j).dsc2.gatedClock));
+                        if (j==i) System.out.println(String.format("%d",this.scalers.get(j).dsc2.gatedClock));
                     }
                     modified = true;
                     break;
