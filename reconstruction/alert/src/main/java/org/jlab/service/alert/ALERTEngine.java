@@ -241,7 +241,7 @@ public class ALERTEngine extends ReconstructionEngine {
             for (int i = 0; i < bankProj.rows(); i++) {
 
                 int trackid = bankProj.getInt("trackid", i);
-                int clusterid = bankProj.getInt("matched_atof_hit_id", i); // maps to ATOF::clusters.id
+                int clusterid = bankProj.getInt("matched_atof_hit_id", i); // TODO: Fix to hit_id instead of clusterid
 
                 int trkRow = -1;
                 for (int r = 0; r < bankTrk.rows(); r++) {
