@@ -361,25 +361,6 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
      * 2.  Assume any subsequent clock decrease is a rollover. 
      */
     public void fixClockRollover() {
-        boolean modified = true;
-        while (modified) {
-            modified = false;
-            for (int i=this.scalers.size()-1; i>0; --i) {
-                Dsc2Scaler previous = this.scalers.get(i-1).dsc2;
-                Dsc2Scaler next = this.scalers.get(i).dsc2;
-                if (previous.clock > next.clock) {
-                    for (int j=i; j<this.scalers.size(); ++j) {
-                        if (j==i) System.out.print( String.format("FIXING CLOCK ROLLOVER:  %d %d -> ",this.scalers.get(j).dsc2.clock,this.scalers.get(j).dsc2.gatedClock));
-                        this.scalers.get(j).dsc2.clock += 2*(long)Integer.MAX_VALUE;
-                        // The gated clock also rolls over (but it's triggered by the ungated clock, not itself!?):
-                        this.scalers.get(j).dsc2.gatedClock += 2*(long)Integer.MAX_VALUE;
-                        if (j==i) System.out.println(String.format("%d %d",this.scalers.get(j).dsc2.clock,this.scalers.get(j).dsc2.gatedClock));
-                    }
-                    modified = true;
-                    break;
-                }
-            }
-        }
     }
     
     public static void main(String[] args) {
