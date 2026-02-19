@@ -18,9 +18,11 @@ import org.jlab.utils.CLASResources;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.logging.Logger;
 
 public class ModelPrePID {
-
+    
+    static final Logger LOGGER = Logger.getLogger(ModelPrePID.class.getName());
     // Must match training class order
     private static final int[] CLASS_IDS = new int[]{2212, 45, 46, 47, 49};
 
@@ -87,10 +89,14 @@ public class ModelPrePID {
         return model;
     }
 
-    /** Returns float[]{prepid} where prepid in {2212,45,46,47,49}. */
+    /** Returns float[]{prepid} where prepid in {2212,45,46,47,49}.
+     * @param features23
+     * @return 
+     * @throws ai.djl.translate.TranslateException */
     public float[] prediction(float[] features23) throws TranslateException {
         if (features23 == null || features23.length != 23) {
-            throw new IllegalArgumentException("PrePID input must be float[23]");
+            LOGGER.warning("PrePID input must be float[23]");
+            return null;
         }
         Predictor<float[], float[]> predictor = model.newPredictor();
         return predictor.predict(features23);

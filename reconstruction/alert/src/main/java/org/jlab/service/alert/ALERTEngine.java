@@ -1,6 +1,7 @@
 package org.jlab.service.alert;
 
 import ai.djl.repository.zoo.ZooModel;
+import ai.djl.translate.TranslateException;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -26,10 +27,12 @@ import org.jlab.geom.detector.alert.AHDC.AlertDCFactory;
 import org.jlab.rec.ahdc.Track.Track;
 import org.jlab.clas.pdg.PDGDatabase;
 import org.jlab.clas.pdg.PDGParticle;
+import java.util.logging.Logger;
 
 
 
 import ai.djl.util.Pair;
+import org.jlab.rec.alert.AIPID.PrePIDResult;
 
 
 /** 
@@ -53,7 +56,7 @@ public class ALERTEngine extends ReconstructionEngine {
      *
      */
     private RecoBankWriter rbc;
-
+    static final Logger LOGGER = Logger.getLogger(ModelPrePID.class.getName());
     Detector ATOF; // ALERT ATOF detector
     private AlertDCDetector AHDC; // ALERT AHDC detector
 
@@ -236,13 +239,14 @@ public class ALERTEngine extends ReconstructionEngine {
             DataBank bankTrk  = event.getBank("AHDC::track");
             DataBank bankClu  = event.getBank("ATOF::clusters");
 
-            ArrayList<org.jlab.rec.alert.AIPID.PrePIDResult> prepid_results = new ArrayList<>();
+            ArrayList<PrePIDResult> prepid_results = new ArrayList<>();
 
             for (int i = 0; i < bankProj.rows(); i++) {
 
                 int trackid = bankProj.getInt("trackid", i);
                 int clusterid = bankProj.getInt("matched_atof_hit_id", i); // TODO: Fix to hit_id instead of clusterid
-
+                
+                // TODO: refactor this to replace this with single line
                 int trkRow = -1;
                 for (int r = 0; r < bankTrk.rows(); r++) {
                     if (bankTrk.getInt("trackid", r) == trackid) { trkRow = r; break; }
@@ -288,9 +292,9 @@ public class ALERTEngine extends ReconstructionEngine {
                 try {
                     float[] pred = modelPrePID.prediction(x);
                     int prepid = (int) pred[0];
-                    prepid_results.add(new org.jlab.rec.alert.AIPID.PrePIDResult(trackid, clusterid, prepid, pred[1], pred[2], pred[3], pred[4], pred[5]));
-                } catch (Exception ex) {
-                    System.out.println("Exception in ALERTEngine PrePID: " + ex);
+                    prepid_results.add(new PrePIDResult(trackid, clusterid, prepid, pred[1], pred[2], pred[3], pred[4], pred[5]));
+                } catch (TranslateException ex) {
+                    LOGGER.warning(() -> "Exception in ALERTEngine PrePID: " + ex);
                 }
             }
 
