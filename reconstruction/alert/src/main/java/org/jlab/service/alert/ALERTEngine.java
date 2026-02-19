@@ -296,6 +296,7 @@ public class ALERTEngine extends ReconstructionEngine {
                         double z = bank_ATOFHits.getFloat("z", row);
                         // A Hit_beam can be used to store the relevant information of the ATOF wedge hit
                         // To Do: unify Hit and Hit_beam: e.g they should implements the same interface
+                        z -= 3.23; // Include the shift between AHDC and ATOF ~ 2.5 cm (what is the origin of this shift?)
                         Hit_beam hit = new Hit_beam(x, y, z);
                             // error on r
                         double wedge_width = 20; //mm
@@ -315,6 +316,8 @@ public class ALERTEngine extends ReconstructionEngine {
                                                             {0.00, dphi2, 0.0000},
                                                             {0.00, 0.0000, dz2}
                                                         });//3x3;
+                        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                        // we should also include the error to select the wrong wedge !
                         hit.set_MeasurementNoise(measurementNoise);
                         ATOF_hits.put(trackid, hit);
                     }
