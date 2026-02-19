@@ -260,7 +260,7 @@ public class ALERTEngine extends ReconstructionEngine {
                     AHDC_hits.add(hit);
                 }
             }
-            AHDC_tracks.add(new Track(AHDC_hits));
+            Track track = new Track(AHDC_hits);
             // Initialise the position and the momentum using the information of the AHDC::track
             // position : mm
             // momentum : MeV
@@ -271,8 +271,9 @@ public class ALERTEngine extends ReconstructionEngine {
             double py = trackBank.getFloat("py", row);
             double pz = trackBank.getFloat("pz", row);
             double[] vec = {x, y, z, px, py, pz};
-            AHDC_tracks.get(row).setPositionAndMomentumVec(vec);
-            AHDC_tracks.get(row).set_trackId(trackid);
+            track.setPositionAndMomentumVec(vec);
+            track.set_trackId(trackid);
+            AHDC_tracks.add(track);
         }
         /// Intialise the Kalman Filter
         double magfieldfactor = runBank.getFloat("solenoid", 0);
@@ -286,7 +287,7 @@ public class ALERTEngine extends ReconstructionEngine {
         HashMap<Integer, Hit_beam> ATOF_hits = new HashMap<>();
         for (Pair<Integer, Integer> pair : matched_ATOF_hit_id) {
             int trackid = pair.getKey();
-            int atofid = pair.getKey();
+            int atofid = pair.getValue();
             if (trackid > 0 && atofid > 0) {
                 // recover the wedge
                 for (int row = 0; row < bank_ATOFHits.rows(); row++) {
@@ -296,7 +297,7 @@ public class ALERTEngine extends ReconstructionEngine {
                         double z = bank_ATOFHits.getFloat("z", row);
                         // A Hit_beam can be used to store the relevant information of the ATOF wedge hit
                         // To Do: unify Hit and Hit_beam: e.g they should implements the same interface
-                        z -= 3.23; // Include the shift between AHDC and ATOF ~ 2.5 cm (what is the origin of this shift?)
+                        z -= 32.3; // Include the shift between AHDC and ATOF ~ 2.5 cm (what is the origin of this shift?)
                         Hit_beam hit = new Hit_beam(x, y, z);
                             // error on r
                         double wedge_width = 20; //mm
@@ -320,6 +321,7 @@ public class ALERTEngine extends ReconstructionEngine {
                         // we should also include the error to select the wrong wedge !
                         hit.set_MeasurementNoise(measurementNoise);
                         ATOF_hits.put(trackid, hit);
+                        //System.out.println("trackid : " + trackid + " atofid : " + atofid);
                     }
                 }
             }
