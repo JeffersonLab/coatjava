@@ -70,7 +70,7 @@
     "name": "ALERT::ai:prepid",
     "group": 23000,
     "item": 33,
-    "info": "AI-assisted PrePID to be used for Kalman Filter",
+    "info": "ALERT AI-assisted PrePID to be used for Kalman Filter",
     "entries": [
       {"name":"trackid",    "type":"I", "info":"AHDC trackid"},
       {"name":"clusterid",  "type":"I", "info":"ATOF cluster id"},
@@ -86,6 +86,7 @@
     "name": "ALERT::ai:pid",
     "group": 23000,
     "item": 34,
+    "info": "AI-assisted PID for ALERT",
     "entries": [
       {"name":"trackid",    "type":"I", "info":"AHDC trackid"},
       {"name":"clusterid",  "type":"I", "info":"ATOF cluster id"},
