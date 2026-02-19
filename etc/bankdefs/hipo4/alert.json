@@ -74,7 +74,12 @@
     "entries": [
       {"name":"trackid",    "type":"I", "info":"AHDC trackid"},
       {"name":"clusterid",  "type":"I", "info":"ATOF cluster id"},
-      {"name":"prepid",        "type":"I", "info":"argmax PID"}
+      {"name":"prepid",        "type":"I", "info":"argmax PID"}.
+      {"name":"p2212",    "type":"F", "info":"P(pid=2212)"},
+      {"name":"p45",    "type":"F", "info":"P(pid=45)"},
+      {"name":"p46",    "type":"F", "info":"P(pid=46)"},
+      {"name":"p47",    "type":"F", "info":"P(pid=47)"},
+      {"name":"p49",    "type":"F", "info":"P(pid=49)"}
      ]
   },
   {

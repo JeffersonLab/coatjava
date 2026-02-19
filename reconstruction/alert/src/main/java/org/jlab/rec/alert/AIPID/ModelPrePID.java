@@ -41,18 +41,24 @@ public class ModelPrePID {
 
             @Override
             public float[] processOutput(TranslatorContext ctx, NDList ndList) {
-                // TorchScript model returns logits tensor of shape (1,5)
-                NDArray logits = ndList.get(0);
+                NDArray logits = ndList.get(0);      // (1,5)
+                NDArray probs = logits.softmax(1);   // (1,5)
 
-                // Softmax over class dimension
-                NDArray probs = logits.softmax(1); // (1,5)
+                float[] p = probs.toFloatArray();    // length 5 (row-major)
 
-                // Argmax -> class index 0..4
-                long idx = probs.argMax(1).getLong();  // returns shape (1), take scalar
-                int prepid = CLASS_IDS[(int) idx];
+                // argmax
+                int bestIdx = 0;
+                float best = p[0];
+                for (int k = 1; k < 5; k++) {
+                    if (p[k] > best) { best = p[k]; bestIdx = k; }
+                }
+                int prepid = CLASS_IDS[bestIdx];
 
-                // Return just the PID as float
-                return new float[]{(float) prepid};
+                // Return: prepid + probabilities in fixed class order
+                return new float[]{
+                    (float) prepid,
+                    p[0], p[1], p[2], p[3], p[4]
+                };
             }
         };
 

@@ -288,7 +288,7 @@ public class ALERTEngine extends ReconstructionEngine {
                 try {
                     float[] pred = modelPrePID.prediction(x);
                     int prepid = (int) pred[0];
-                    prepid_results.add(new org.jlab.rec.alert.AIPID.PrePIDResult(trackid, clusterid, prepid));
+                    prepid_results.add(new org.jlab.rec.alert.AIPID.PrePIDResult(trackid, clusterid, prepid, pred[1], pred[2], pred[3], pred[4], pred[5]));
                 } catch (Exception ex) {
                     System.out.println("Exception in ALERTEngine PrePID: " + ex);
                 }

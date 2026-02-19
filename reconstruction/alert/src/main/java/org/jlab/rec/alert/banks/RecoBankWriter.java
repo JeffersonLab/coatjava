@@ -105,6 +105,11 @@ public class RecoBankWriter {
             bank.setInt("trackid", i, r.trackid);
             bank.setInt("clusterid", i, r.clusterid);
             bank.setInt("prepid", i, r.prepid);
+            bank.setFloat("p2212", i, r.p2212);
+            bank.setFloat("p45", i, r.p45);
+            bank.setFloat("p46", i, r.p46);
+            bank.setFloat("p47", i, r.p47);
+            bank.setFloat("p49", i, r.p49);
         }
 
         event.appendBank(bank);
