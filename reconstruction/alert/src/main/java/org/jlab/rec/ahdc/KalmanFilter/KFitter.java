@@ -39,7 +39,7 @@ public class KFitter {
 		this.materialHashMap = materialHashMap;
 	}
 
-	public void predict(Hit hit, boolean direction) throws Exception {
+	public void predict(KFHit hit, boolean direction) throws Exception {
 		// Initialization
 		stepper.initialize(direction);
 		Stepper stepper1 = new Stepper(stepper.y);
@@ -86,7 +86,7 @@ public class KFitter {
 		errorCovariance = (transitionMatrix.multiply(errorCovariance.multiply(transitionMatrixT))).add(processNoise);
 	}
 
-	public void correct(Hit hit) {
+	public void correct(KFHit hit) {
         RealVector z;
 		RealMatrix measurementNoise;
 		RealMatrix measurementMatrix;
@@ -132,6 +132,7 @@ public class KFitter {
 		stepper.y = stateEstimation.toArray();
 	}
 
+	// specific to AHDC hits
 	public double residual(Hit hit) {
 		double d = hit.distance( new Point3D( stateEstimation.getEntry(0), stateEstimation.getEntry(1), stateEstimation.getEntry(2) ) );
 		return hit.getDoca()-d;
@@ -141,7 +142,7 @@ public class KFitter {
         this.errorCovariance = initialErrorCovariance;  
     }
     
-	private RealMatrix F(Hit hit, Stepper stepper1) throws Exception {
+	private RealMatrix F(KFHit hit, Stepper stepper1) throws Exception {
 
 		double[] dfdx  = subfunctionF(hit, stepper1, 0);
 		double[] dfdy  = subfunctionF(hit, stepper1, 1);
@@ -154,7 +155,7 @@ public class KFitter {
 				{dfdx[0], dfdy[0], dfdz[0], dfdpx[0], dfdpy[0], dfdpz[0]}, {dfdx[1], dfdy[1], dfdz[1], dfdpx[1], dfdpy[1], dfdpz[1]}, {dfdx[2], dfdy[2], dfdz[2], dfdpx[2], dfdpy[2], dfdpz[2]}, {dfdx[3], dfdy[3], dfdz[3], dfdpx[3], dfdpy[3], dfdpz[3]}, {dfdx[4], dfdy[4], dfdz[4], dfdpx[4], dfdpy[4], dfdpz[4]}, {dfdx[5], dfdy[5], dfdz[5], dfdpx[5], dfdpy[5], dfdpz[5]}});
 	}
 
-	double[] subfunctionF(Hit hit, Stepper stepper1, int i) throws Exception {
+	double[] subfunctionF(KFHit hit, Stepper stepper1, int i) throws Exception {
 		double  h             = 1e-8;// in mm
 		Stepper stepper_plus  = new Stepper(stepper1.y);
 		Stepper stepper_minus = new Stepper(stepper1.y);
@@ -179,13 +180,13 @@ public class KFitter {
 	}
 
 	// Measurement matrix in 1x1 dimension: minimize distance - doca
-	private RealVector h(RealVector x, Hit hit) {
+	private RealVector h(RealVector x, KFHit hit) {
 		double d = hit.distance(new Point3D(x.getEntry(0), x.getEntry(1), x.getEntry(2)));
 		return MatrixUtils.createRealVector(new double[]{d});
 	}
 
 	// Jacobian matrix of the measurement with respect to (x, y, z, px, py, pz)
-	private RealMatrix H(RealVector x, Hit hit) {
+	private RealMatrix H(RealVector x, KFHit hit) {
 
 		double ddocadx  = subfunctionH(x, hit, 0);
 		double ddocady  = subfunctionH(x, hit, 1);
@@ -198,7 +199,7 @@ public class KFitter {
 			{ddocadx, ddocady, ddocadz, ddocadpx, ddocadpy, ddocadpz}});
 	}
 
-	double subfunctionH(RealVector x, Hit hit, int i) {
+	double subfunctionH(RealVector x, KFHit hit, int i) {
 		double     h       = 1e-8;// in mm
 		RealVector x_plus  = x.copy();
 		RealVector x_minus = x.copy();

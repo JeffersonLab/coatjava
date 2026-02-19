@@ -42,14 +42,14 @@ public class KalmanFilter {
 	private double clas_alignement = -54;
 	double vz_constraint = 0;
 	private int counter = 0; // number of utilisation of the Kalman Filter
-	// RealMatrixFormat format =
-	// 				new RealMatrixFormat(
-	// 					"[\n", "\n]",     // matrix start/end
-	// 					"[", "]",     // row start/end
-	// 					",\n",         // column separator
-	// 					" ; ",        // row separator
-	// 					new java.text.DecimalFormat(" 0.0000;-0.0000")
-	// 				);
+	RealMatrixFormat format =
+					new RealMatrixFormat(
+						"[\n", "\n]",     // matrix start/end
+						"[", "]",     // row start/end
+						",\n",         // column separator
+						" ; ",        // row separator
+						new java.text.DecimalFormat(" 0.0000;-0.0000")
+					);
 	HashMap<Integer, Hit_beam> ATOF_hits = null;
 
 	public void propagation(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {
@@ -126,7 +126,7 @@ public class KalmanFilter {
                     }
 					// Forward propagation towards the ATOF bar
 					{	
-						Hit hit = ATOF_hits.get(track.get_trackId());
+						Hit_beam hit = ATOF_hits.get(track.get_trackId());
 						if (hit != null) {
 							TrackFitter.predict(hit, true);
 							TrackFitter.correct(hit);
@@ -134,6 +134,9 @@ public class KalmanFilter {
 							Hit hhit = AHDC_hits.get(AHDC_hits.size()-1);
 							TrackFitter.predict(hhit, false);
 							TrackFitter.correct(hhit);
+							//System.out.println("trackid : " + track.get_trackId() + " hit : " + format.format(hit.get_MeasurementNoise()));
+						} else {
+							//System.out.println("************** No match for this track");
 						}
 					}
 					// Backward propagation (last layer to first layer)

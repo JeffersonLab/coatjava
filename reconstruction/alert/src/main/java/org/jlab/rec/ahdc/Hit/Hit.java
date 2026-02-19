@@ -9,8 +9,9 @@ import org.jlab.geom.detector.alert.AHDC.AlertDCDetector;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.detector.alert.AHDC.AlertDCFactory;
+import org.jlab.rec.ahdc.KalmanFilter.KFHit;
 
-public class Hit implements Comparable<Hit> {
+public class Hit implements Comparable<Hit>, KFHit {
 
 	private final int    id;
 	private final int    superLayerId;
@@ -106,10 +107,12 @@ public class Hit implements Comparable<Hit> {
 		return doca;
 	}
 
+	@Override
     public Line3D getLine() {
         return wireLine;
     }
 
+	@Override
     public double getRadius() {
         return radius;
     }
@@ -174,10 +177,12 @@ public class Hit implements Comparable<Hit> {
 		this.trackId = _trackId;
 	}
 
+	@Override
 	public RealVector get_Vector() {
 		return new ArrayRealVector(new double[]{this.doca});
 	}
 
+	@Override
     public RealMatrix get_MeasurementNoise() {
 		double mean_error = 0.471; // mm (no difference between adc and time)
 		double error_on_adc = (1.15146*raw_adc + 437.63)/(3.21187*raw_adc + 878.855); // mm
@@ -188,6 +193,7 @@ public class Hit implements Comparable<Hit> {
 		//return new Array2DRowRealMatrix(new double[][]{{0.09}});
 	}
 
+	@Override
 	public double distance(Point3D point3D) {
 		return this.wireLine.distance(point3D).length();
 	}

@@ -6,17 +6,16 @@ import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
-import org.jlab.rec.ahdc.Hit.Hit;
 
 /**
- * A weird object that just wants to be considered as a Hit
- * The methods that matters are : distance(), getLine(), get_Vector_beam(), getRadius()
+ * Implement a hit for which the state vector is a 3x1 matrix (r, phi, z)
+ * e.g beamline, ATOF wedges/bars
  * 
  * @author Mathieu Ouillon
  * @author Éric Fuchey 
  * @author Felix Touchte Codjo
  */
-public class Hit_beam extends Hit {
+public class Hit_beam implements KFHit {
 
 	private double x,y,z;
 	private double r,phi;
@@ -24,7 +23,6 @@ public class Hit_beam extends Hit {
 	RealMatrix measurementNoise = null;
 
 	public Hit_beam(double x, double y , double z) {
-		super(0,0,0,0, 0, 0, -1); 
 		this.x = x;
 		this.y = y;
 		this.z = z;

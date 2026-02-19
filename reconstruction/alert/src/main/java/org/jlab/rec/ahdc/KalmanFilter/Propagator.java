@@ -1,13 +1,10 @@
 package org.jlab.rec.ahdc.KalmanFilter;
 
-//import java.util.Arrays;
-
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.clas.tracking.kalmanfilter.Material;
 import java.util.HashMap;
-import org.jlab.rec.ahdc.Hit.Hit;
 
 /**
  * Is responsible of the propagation
@@ -27,7 +24,7 @@ public class Propagator {
 	}
     
     // Propagate the stepper toward the next hit
-	void propagate(Stepper stepper, Hit hit, HashMap<String, Material> materialHashMap) {
+	void propagate(Stepper stepper, KFHit hit, HashMap<String, Material> materialHashMap) {
 		
 		// Do not allow more than 10000 steps (very critical cases)
 		final int    maxNbOfStep = 10000;
@@ -161,7 +158,7 @@ public class Propagator {
 
 	}
 
-	public RealVector f(Stepper stepper, Hit hit, HashMap<String, Material> materialHashMap) {
+	public RealVector f(Stepper stepper, KFHit hit, HashMap<String, Material> materialHashMap) {
 		propagate(stepper, hit, materialHashMap);
 		return new ArrayRealVector(stepper.y);
 	}
