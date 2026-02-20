@@ -371,7 +371,7 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
                 if (previous.clock > next.clock) {
                     for (int j=i; j<this.scalers.size(); ++j) {
                         if (j==i) System.out.print( String.format("FIXING UNGATED CLOCK ROLLOVER:  %d -> ",this.scalers.get(j).dsc2.clock));
-                        this.scalers.get(j).dsc2.clock += 2*(long)Integer.MAX_VALUE;
+                        this.scalers.get(j).dsc2.clock += previous.clock - next.clock;
                         if (j==i) System.out.println(String.format("%d",this.scalers.get(j).dsc2.clock));
                     }
                     modified = true;
@@ -389,7 +389,7 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
                 if (previous.gatedClock > next.gatedClock) {
                     for (int j=i; j<this.scalers.size(); ++j) {
                         if (j==i) System.out.print( String.format("FIXING GATED CLOCK ROLLOVER:  %d -> ",this.scalers.get(j).dsc2.gatedClock));
-                        this.scalers.get(j).dsc2.gatedClock += 2*(long)Integer.MAX_VALUE;
+                        this.scalers.get(j).dsc2.gatedClock += previous.gatedClock - next.gatedClock;
                         if (j==i) System.out.println(String.format("%d",this.scalers.get(j).dsc2.gatedClock));
                     }
                     modified = true;
