@@ -489,16 +489,128 @@ public final class CommonsMathCLAS12Swimmer implements ICLAS12Swimmer {
         return new CLAS12SwimResult(listener);
     }
 
+    /**
+     * Swim to a fixed target z (cm) in a given CLAS12 sector using the RotatedComposite field.
+     * <p>
+     * This mirrors {@link CLAS12Swimmer#sectorSwimZ(...)} in spirit: it is only valid when the
+     * active probe is a {@link RotatedCompositeProbe}. If not, it prints an error and returns {@code null}.
+     * </p>
+     */
     @Override
-    public CLAS12SwimResult sectorSwimZ(int sector, int q, double xo, double yo, double zo, double p, double theta,
-                                        double phi, double zTarget, double accuracy, double sMax, double h,
-                                        double tolerance) {
-        // Skeleton note:
-        // If probe is a RotatedCompositeProbe, you can rotate the initial conditions into
-        // sector coordinates, call swimZ, then rotate the resulting trajectory back.
-        // CLAS12Swimmer already does this; mirror its approach for apples-to-apples.
-        throw new UnsupportedOperationException("Not implemented yet (Commons Math swimmer)");
+    public CLAS12SwimResult sectorSwimZ(int sector, int q,
+                                       double xo, double yo, double zo,
+                                       double p, double theta, double phi,
+                                       double zTarget, double accuracy,
+                                       double sMax, double h, double tolerance) {
+
+        // Must use rotated field (match CLAS12Swimmer behavior)
+        if (!(probe instanceof RotatedCompositeProbe)) {
+            System.err.println("sectorSwimZ only valid with RotatedCompositeProbe.");
+            return null;
+        }
+
+        final CLAS12Values ivals = new CLAS12Values(q, xo, yo, zo, p, theta, phi);
+        final CLAS12ZListener listener = new CLAS12ZListener(ivals, zTarget, accuracy, sMax);
+
+        if (p < minMomentum) {
+            listener.setStatus(CLAS12Swimmer.BELOW_MIN_MOMENTUM);
+            return new CLAS12SwimResult(listener);
+        }
+
+        if (q == 0 && listener.canMakeStraightLine()) {
+            listener.straightLine();
+            return new CLAS12SwimResult(listener);
+        }
+
+        final double[] y = ivals.getU().clone();
+
+        final SectorSwimEquations ode =
+                new SectorSwimEquations(sector, q, p, probe);
+
+        // --- Same tuning logic as working swimZ ---
+        final double targetMiss = legacyComparable ? 1.0e-5 : accuracy;
+        final double successTol = legacyComparable ? targetMiss : accuracy;
+
+        final double absPos = legacyComparable
+                ? 1.0e-5
+                : Math.max(1.0e-12, tolerance);
+
+        final double absDir = legacyComparable ? 1.0e-5 : 1.0e-10;
+        final double rel    = legacyComparable ? 1.0e-9 : 1.0e-12;
+
+        final double[] absTol = { absPos, absPos, absPos, absDir, absDir, absDir };
+        final double[] relTol = { rel, rel, rel, rel, rel, rel };
+
+        final DormandPrince54Integrator integrator =
+                new DormandPrince54Integrator(
+                        Math.max(minStepSize, 1.0e-12),
+                        Math.max(maxStepSize, minStepSize),
+                        absTol,
+                        relTol
+                );
+
+        final double h0 = Math.max(minStepSize, Math.min(Math.abs(h), maxStepSize));
+        integrator.setInitialStepSize(h0);
+
+        integrator.addStepHandler(new StepHandler() {
+            @Override
+            public void init(double s0, double[] y0, double sEnd) { }
+
+            @Override
+            public void handleStep(StepInterpolator interpolator, boolean isLast) {
+                double s = interpolator.getCurrentTime();
+                double[] state = interpolator.getInterpolatedState().clone();
+                listener.accept(s, state);
+            }
+        });
+
+        final HitFlag hit = new HitFlag();
+
+        EventHandler zEvent = new EventHandler() {
+
+            @Override
+            public void init(double s0, double[] y0, double sEnd) { }
+
+            @Override
+            public double g(double s, double[] y) {
+                return y[2] - zTarget;
+            }
+
+            @Override
+            public Action eventOccurred(double s, double[] y, boolean increasing) {
+                hit.hit = true;
+                return Action.STOP;
+            }
+
+            @Override
+            public void resetState(double s, double[] y) { }
+        };
+
+        double maxCheckInterval = Math.max(0.5, h0);
+        double eventConv = Math.max(1.0e-12, targetMiss);
+
+        integrator.addEventHandler(zEvent, maxCheckInterval, eventConv, 200);
+
+        double sFinal;
+
+        try {
+            sFinal = integrator.integrate(ode, 0.0, y, sMax, y);
+        } catch (Exception ex) {
+            listener.setStatus(CLAS12Swimmer.SWIM_TARGET_MISSED);
+            return new CLAS12SwimResult(listener);
+        }
+
+        listener.accept(sFinal, y.clone());
+
+        if (hit.hit && Math.abs(listener.getU()[2] - zTarget) <= successTol) {
+            listener.setStatus(CLAS12Swimmer.SWIM_SUCCESS);
+        } else {
+            listener.setStatus(CLAS12Swimmer.SWIM_TARGET_MISSED);
+        }
+
+        return new CLAS12SwimResult(listener);
     }
+
 
     @Override
     public CLAS12SwimResult swimRho(int q, double xo, double yo, double zo, double p, double theta, double phi,
@@ -672,6 +784,101 @@ public final class CommonsMathCLAS12Swimmer implements ICLAS12Swimmer {
             yDot[5] = alpha * (y[3] * By - y[4] * Bx);
         }
     }
+    
+    /**
+     * Sector-aware ODE system for sector-dependent swimming with a {@link RotatedCompositeProbe}.
+     * <p>
+     * The independent variable is the path length {@code s} in cm.
+     * </p>
+     *
+     * <p>
+     * This implementation tries to call a sector-aware method on the probe via reflection:
+     * {@code field(int sector, float x, float y, float z, float[] b)}.
+     * If not found (or invocation fails), it falls back to {@code probe.field(x,y,z,b)}.
+     * </p>
+     */
+    private static final class SectorSwimEquations implements FirstOrderDifferentialEquations {
+
+        private final int sector;
+        private final FieldProbe probe;
+        private final double alpha;      // 1/(kG*cm), matches CLAS12SwimODE
+        private final float[] b = new float[3];
+
+        private long fieldEvaluations = 0L;
+
+        // Cached reflective call (lazy init)
+        private transient java.lang.reflect.Method sectorFieldMethod;
+        private transient boolean searched = false;
+
+        SectorSwimEquations(int sector, int q, double p, FieldProbe probe) {
+            this.sector = sector;
+            this.probe = probe;
+            this.alpha = 1.0e-14 * q * CLAS12Swimmer.C / p;
+        }
+
+        @Override
+        public int getDimension() {
+            return 6;
+        }
+
+        long getFieldEvaluations() {
+            return fieldEvaluations;
+        }
+
+        @Override
+        public void computeDerivatives(double s, double[] y, double[] yDot) {
+
+            double Bx = 0.0, By = 0.0, Bz = 0.0;
+
+            if (probe != null) {
+                if (!searched) {
+                    searched = true;
+                    sectorFieldMethod = findSectorFieldMethod(probe.getClass());
+                }
+
+                boolean ok = false;
+
+                if (sectorFieldMethod != null) {
+                    try {
+                        // signature: (int, float, float, float, float[])
+                        sectorFieldMethod.invoke(probe, sector, (float) y[0], (float) y[1], (float) y[2], b);
+                        ok = true;
+                    } catch (Throwable t) {
+                        // Disable and fall back for remainder of this swim
+                        sectorFieldMethod = null;
+                    }
+                }
+
+                if (!ok) {
+                    probe.field((float) y[0], (float) y[1], (float) y[2], b);
+                }
+
+                fieldEvaluations++;
+                Bx = b[0];
+                By = b[1];
+                Bz = b[2];
+            }
+
+            // dr/ds = t
+            yDot[0] = y[3];
+            yDot[1] = y[4];
+            yDot[2] = y[5];
+
+            // dt/ds = alpha * (t x B)
+            yDot[3] = alpha * (y[4] * Bz - y[5] * By);
+            yDot[4] = alpha * (y[5] * Bx - y[3] * Bz);
+            yDot[5] = alpha * (y[3] * By - y[4] * Bx);
+        }
+
+        private static java.lang.reflect.Method findSectorFieldMethod(Class<?> cls) {
+            try {
+                return cls.getMethod("field", int.class, float.class, float.class, float.class, float[].class);
+            } catch (NoSuchMethodException e) {
+                return null;
+            }
+        }
+    }
+
 
     private static final class HitFlag {
         boolean hit = false;

@@ -46,8 +46,6 @@ public class CLAS12SectorSwimODE extends CLAS12SwimODE {
 		double Bz = 0.0;
 
 		if (_probe != null) {
-
-//			float b[] = new float[3];
 			_probe.field(_sector, (float) u[0], (float) u[1], (float) u[2], b);
 
 			Bx = b[0];

@@ -12,98 +12,118 @@ import cnuphys.magfield.MagneticFields.FieldType;
  */
 public final class TestSuite {
 
-    private TestSuite() {}
+	private TestSuite() {
+	}
 
-    public static void main(String[] args) {
+	public static void main(String[] args) {
 		MagneticFields.getInstance().initializeMagneticFields();
 		MagneticFields.getInstance().setActiveField(FieldType.COMPOSITE);
 
+		// ------------------------------------------------------------------
+		// Random test data (deterministic for regression)
+		// ------------------------------------------------------------------
+		RandomTestData data = new RandomTestData(2000, // number of samples
+				12345L // RNG seed
+		);
 
+		// ------------------------------------------------------------------
+		// Swimmers
+		// ------------------------------------------------------------------
+		ICLAS12Swimmer legacy = new CLAS12Swimmer();
 
-        // ------------------------------------------------------------------
-        // Random test data (deterministic for regression)
-        // ------------------------------------------------------------------
-        RandomTestData data = new RandomTestData(
-                2000,      // number of samples
-                12345L     // RNG seed
-        );
+		CommonsMathCLAS12Swimmer commons = new CommonsMathCLAS12Swimmer();
+		commons.setLegacyComparable(true); // match ~1e-5 miss scale
+		// commons.setRecordTrajectory(false); // critical for fair timing
 
-        // ------------------------------------------------------------------
-        // Swimmers
-        // ------------------------------------------------------------------
-        ICLAS12Swimmer legacy = new CLAS12Swimmer();
+		// ------------------------------------------------------------------
+		// Basic swim (fixed path length) test
+		// ------------------------------------------------------------------
+		BasicSwimTest basicTest = new BasicSwimTest(1000.0, // sMax (cm)
+				0.1, // h (cm)
+				1e-5 // tolerance
+		);
 
-        CommonsMathCLAS12Swimmer commons = new CommonsMathCLAS12Swimmer();
-        commons.setLegacyComparable(true);    // match ~1e-5 miss scale
-  //      commons.setRecordTrajectory(false);   // critical for fair timing
+		basicTest.maxMismatchPrint = 10;
+		basicTest.warmupIters = 200;
+		basicTest.timedIters = 25000;
 
-        
-        // ------------------------------------------------------------------
-        // Basic swim (fixed path length) test
-        // ------------------------------------------------------------------
-        BasicSwimTest basicTest = new BasicSwimTest(
-                1000.0,  // sMax (cm)
-                0.1,     // h (cm)
-                1e-5     // tolerance
-        );
+		basicTest.runCompare(legacy, "CLAS12", commons, "APACHE", data);
 
-        basicTest.maxMismatchPrint = 10;
-        basicTest.warmupIters = 200;
-        basicTest.timedIters = 5000;
+		// ------------------------------------------------------------------
+		// SwimZ test
+		// ------------------------------------------------------------------
+		SwimZTest zTest = new SwimZTest(300.0, // zTarget (cm)
+				1e-5, // accuracy (cm)
+				1000.0, // sMax (cm)
+				0.1, // h (cm)
+				1e-5 // tolerance
+		);
 
-        basicTest.runCompare(legacy, "CLAS12", commons, "APACHE", data);
+		zTest.maxMismatchPrint = 10;
+		zTest.warmupIters = 200;
+		zTest.timedIters = 25000;
 
-// ------------------------------------------------------------------
-        // SwimZ test
-        // ------------------------------------------------------------------
-        SwimZTest zTest = new SwimZTest(
-                300.0,    // zTarget (cm)
-                1e-5,     // accuracy (cm)
-                1000.0,   // sMax (cm)
-                0.1,      // h (cm)
-                1e-5      // tolerance
-        );
+		zTest.runCompare(legacy, "CLAS12", commons, "APACHE", data);
 
-        zTest.maxMismatchPrint = 10;
-        zTest.warmupIters = 200;
-        zTest.timedIters = 5000;
+		// ------------------------------------------------------------------
+		// SwimRho test
+		// ------------------------------------------------------------------
+		SwimRhoTest rhoTest = new SwimRhoTest(100.0, // rhoTarget (cm)
+				1e-5, // accuracy (cm)
+				1000.0, // sMax (cm)
+				0.1, // h (cm)
+				1e-5 // tolerance
+		);
 
-        zTest.runCompare(legacy, "CLAS12", commons, "APACHE", data);
+		rhoTest.maxMismatchPrint = 10;
+		rhoTest.warmupIters = 200;
+		rhoTest.timedIters = 25000;
 
-        // ------------------------------------------------------------------
-        // SwimRho test
-        // ------------------------------------------------------------------
-        SwimRhoTest rhoTest = new SwimRhoTest(
-                100.0,    // rhoTarget (cm)
-                1e-5,     // accuracy (cm)
-                1000.0,   // sMax (cm)
-                0.1,      // h (cm)
-                1e-5      // tolerance
-        );
+		rhoTest.runCompare(legacy, "CLAS12", commons, "APACHE", data);
 
-        rhoTest.maxMismatchPrint = 10;
-        rhoTest.warmupIters = 200;
-        rhoTest.timedIters = 5000;
+		// ------------------------------------------------------------------
+		// SwimPlane test
+		// ------------------------------------------------------------------
+		// A slightly tilted plane passing through (0,0,300 cm). The Plane constructor
+		// normalizes the normal.
+		SwimPlaneTest planeTest = new SwimPlaneTest(0.20, 0.10, 1.00, // plane normal (dimensionless)
+				0.0, 0.0, 300.0, // point on plane (cm)
+				1e-5, // accuracy (cm)
+				1000.0, // sMax (cm)
+				0.1, // h (cm)
+				1e-5 // tolerance
+		);
 
-        rhoTest.runCompare(legacy, "CLAS12", commons, "APACHE", data);
+		planeTest.maxMismatchPrint = 10;
+		planeTest.warmupIters = 200;
+		planeTest.timedIters = 25000;
 
-        // ------------------------------------------------------------------
-        // SwimPlane test
-        // ------------------------------------------------------------------
-        // A slightly tilted plane passing through (0,0,300 cm). The Plane constructor normalizes the normal.
-        SwimPlaneTest planeTest = new SwimPlaneTest(
-                0.20, 0.10, 1.00,   // plane normal (dimensionless)
-                0.0,  0.0,  300.0,  // point on plane (cm)
-                1e-5,               // accuracy (cm)
-                1000.0,             // sMax (cm)
-                0.1,                // h (cm)
-                1e-5                // tolerance
-        );
+		planeTest.runCompare(legacy, "CLAS12", commons, "APACHE", data);
 
-        planeTest.maxMismatchPrint = 10;
-        planeTest.warmupIters = 200;
-        planeTest.timedIters = 5000;
+		// sector swimZ test
+		MagneticFields.getInstance().setActiveField(FieldType.COMPOSITEROTATED);
+		legacy = new CLAS12Swimmer();
+		commons = new CommonsMathCLAS12Swimmer();
+		commons.setLegacyComparable(true); // match ~1e-5 miss scale
+		if (legacy.sectorSwimZ(1, 1, 0, 0, 0, 1.0, 30.0, 0.0, 300.0, 1e-5, 1000.0, 0.1, 1e-5) == null) {
+			System.out.println();
+			System.out.println("SectorSwimZTest skipped: active field probe is not RotatedCompositeProbe.");
+			System.out.println(
+					"Tip: configure MagneticFields to use the rotated composite field before running this test.");
+		} else {
+			SectorSwimZTest sectorZTest = new SectorSwimZTest(5, // sector
+					300.0, // zTarget (cm)
+					1e-5, // accuracy (cm)
+					1000.0, // sMax (cm)
+					0.1, // h (cm)
+					1e-5 // tolerance
+			);
+			sectorZTest.maxMismatchPrint = 10;
+			sectorZTest.warmupIters = 200;
+			sectorZTest.timedIters = 5000;
 
-        planeTest.runCompare(legacy, "CLAS12", commons, "APACHE", data);
-    }
+			sectorZTest.runCompare(legacy, "LEGACY", commons, "CM", data);
+		}
+
+	}
 }
