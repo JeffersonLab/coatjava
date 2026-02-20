@@ -330,7 +330,7 @@ public class Swim {
             }
 
             if (szr != null) {
-                double bdl = szr.sectorGetBDLXZPlane(sector, PC.RCF_z.getProbe());
+                double bdl = szr.sectorGetBDL(sector, PC.RCF_z.getProbe());
                 double pathLength = szr.getPathLength(); // already in cm
 
                 SwimZStateVector last = szr.last();
