@@ -12,6 +12,7 @@ import org.jlab.utils.groups.IndexedList;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import org.jlab.detector.geant4.v2.MPGD.trapezoid.MPGDTrapezoidConstants.SectorDimensions;
 
 /**
  * Base class implementing strip/surface/plane geometry for trapezoidal MPGD
@@ -253,7 +254,7 @@ public abstract class MPGDTrapezoidStripFactory {
     // ------------------------------------------------------------------------
     /**
      * Build StripConstants using: - XY trapezoid from
-     * geo.getSectorDimensionsPhysical(region) (NOT enlarged) - zReadoutLocal
+     * C.getSectorActiveVolumeDimensions(region) (NOT enlarged) - zReadoutLocal
      * from CCDB sensitive thickness (findReadoutZLocal) - pitch/width/stereo
      * from CCDB
      *
@@ -263,8 +264,8 @@ public abstract class MPGDTrapezoidStripFactory {
      */
     protected StripConstants buildStripConstants(int region, int layer) {
 
-        MPGDTrapezoidGeant4Factory.SectorDimensions phys
-                = geo.getSectorActiveVolumeDimensions(region - 1);
+        SectorDimensions phys
+               = C.getSectorActiveVolumeDimensions(region - 1);
 
         StripConstants sc = new StripConstants();
         sc.yHalf = phys.halfHeight();
