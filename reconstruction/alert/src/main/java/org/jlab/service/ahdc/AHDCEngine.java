@@ -10,6 +10,8 @@ import org.jlab.rec.ahdc.AI.*;
 import org.jlab.rec.ahdc.Banks.RecoBankWriter;
 import org.jlab.rec.ahdc.Cluster.Cluster;
 import org.jlab.rec.ahdc.Cluster.ClusterFinder;
+import org.jlab.rec.ahdc.Cluster.DocaClusterRefiner;
+import org.jlab.rec.ahdc.Cluster.DocaCluster;
 import org.jlab.rec.ahdc.Distance.Distance;
 import org.jlab.rec.ahdc.HelixFit.HelixFitJava;
 import org.jlab.rec.ahdc.Hit.Hit;
@@ -215,23 +217,19 @@ public class AHDCEngine extends ReconstructionEngine {
 
             // V) Global fit
             int trackid = 0;
+            ArrayList<DocaCluster> all_docaClusters = new ArrayList<>();
             for (Track track : AHDC_Tracks) {
               trackid++;
               track.set_trackId(trackid);
-              int nbOfPoints = track.get_Clusters().size();
-
-              double[][] szPos = new double[nbOfPoints][3];
-
-              int j = 0;
-              for (Cluster cluster : track.get_Clusters()) {
-                szPos[j][0] = cluster.get_X();
-                szPos[j][1] = cluster.get_Y();
-                szPos[j][2] = cluster.get_Z();
-                j++;
+              List<Cluster> originalClusters = track.get_Clusters();
+              ArrayList<DocaCluster> docaClusters = DocaClusterRefiner.buildRefinedClusters(originalClusters);
+              all_docaClusters.addAll(docaClusters);
+              if (docaClusters == null || docaClusters.size() < 3) {
+                // not enough points, skip helix fit
+                continue;
               }
-
               HelixFitJava h = new HelixFitJava();
-              track.setPositionAndMomentum(h.HelixFit(nbOfPoints, szPos, 1));
+              track.setPositionAndMomentum(h.helix_fit_with_doca_selection(docaClusters, 1));
             }
 
             // VII) Write bank
@@ -245,6 +243,7 @@ public class AHDCEngine extends ReconstructionEngine {
             }
             DataBank recoClusterBank    = writer.fillClustersBank(event, AHDC_Clusters);
             DataBank recoTracksBank     = writer.fillAHDCTrackBank(event, AHDC_Tracks);
+            DataBank clustersDocaBank   = writer.fillAHDCDocaClustersBank(event, all_docaClusters);
 
             ArrayList<InterCluster> all_interclusters = new ArrayList<>();
             for (Track track : AHDC_Tracks) {
@@ -259,6 +258,7 @@ public class AHDCEngine extends ReconstructionEngine {
             event.appendBank(recoClusterBank);
             event.appendBank(recoTracksBank);
             event.appendBank(recoInterClusterBank);
+            event.appendBank(clustersDocaBank);
             // event.appendBank(AIPredictionBanks);
 
             if (simulation) {

@@ -29,6 +29,18 @@
     </repository>
   </repositories>
 
+  <profiles>
+    <profile> <!-- skip unit tests by default -->
+      <id>skip-tests</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <skipTests>true</skipTests>
+      </properties>
+    </profile>
+  </profiles>
+
   <!-- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
 
   <dependencyManagement>
