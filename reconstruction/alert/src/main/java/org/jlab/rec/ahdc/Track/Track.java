@@ -35,16 +35,7 @@ public class Track {
 	private double dEdx    = 0;  ///< deposited energy per path length (adc/mm)
 	private double p_drift = 0;  ///< momentum in the drift region (MeV)
 	private double path    = 0;  ///< length of the track (mm)
-	// AHDC::kftrack
-	private double x0_kf  = 0;
-	private double y0_kf  = 0;
-	private double z0_kf  = 0;
-	private double px0_kf = 0;
-	private double py0_kf = 0;
-	private double pz0_kf = 0;
-	private double dEdx_kf    = 0;  ///< deposited energy per path length (adc/mm)
-	private double p_drift_kf = 0;  ///< momentum in the drift region (MeV)
-	private double path_kf    = 0;  ///< length of the track (mm)
+
     // AHDC::aiprediction
     private int predicted_ATOF_sector = -1;
     private int predicted_ATOF_layer = -1;
@@ -91,15 +82,6 @@ public class Track {
 		this.px0 = x[3];
 		this.py0 = x[4];
 		this.pz0 = x[5];
-	}
-
-	public void setPositionAndMomentumForKF(RealVector x) {
-		this.x0_kf  = x.getEntry(0);
-		this.y0_kf  = x.getEntry(1);
-		this.z0_kf  = x.getEntry(2);
-		this.px0_kf = x.getEntry(3);
-		this.py0_kf = x.getEntry(4);
-		this.pz0_kf = x.getEntry(5);
 	}
 
 	private void generateHitList() {
@@ -174,31 +156,6 @@ public class Track {
 		return pz0;
 	}
 
-	public double getX0_kf() {
-		return x0_kf;
-	}
-
-	public double getY0_kf() {
-		return y0_kf;
-	}
-
-	public double getZ0_kf() {
-		return z0_kf;
-	}
-
-	public double getPx0_kf() {
-		return px0_kf;
-	}
-
-	public double getPy0_kf() {
-		return py0_kf;
-	}
-
-	public double getPz0_kf() {
-		return pz0_kf;
-	}
-
-	// Same for Track and KFTrack	
 	public void set_trackId(int _trackId) { 
 		trackId = _trackId;
 		// set trackId for clusters
@@ -208,6 +165,10 @@ public class Track {
 		// set trackId for interclusters
 		for(InterCluster interCluster : this._InterClusters) {
 			interCluster.setTrackId(_trackId);
+		}
+		// set trackId for hits
+		for (Hit hit : this.hits) {
+			hit.setTrackId(_trackId);
 		}
 	}
 	public void set_n_hits(int _n_hits) { n_hits = _n_hits;}
@@ -226,14 +187,6 @@ public class Track {
 	public double get_dEdx() {return dEdx;}
 	public double get_p_drift() {return p_drift;}
 	public double get_path() {return path;}
-	
-	// AHDC::kftrack
-	public void set_dEdx_kf(double _dEdx_kf) { dEdx_kf = _dEdx_kf;}
-	public void set_p_drift_kf(double _p_drift_kf) { p_drift_kf = _p_drift_kf;}
-	public void set_path_kf(double _path_kf) { path_kf = _path_kf;}
-	public double get_dEdx_kf() {return dEdx_kf;}
-	public double get_p_drift_kf() {return p_drift_kf;}
-	public double get_path_kf() {return path_kf;}
 
     // AHDC::aiprediction
     public void set_predicted_ATOF_sector(int s) {predicted_ATOF_sector = s;}

@@ -10,12 +10,13 @@ import org.jlab.rec.ahdc.AI.*;
 import org.jlab.rec.ahdc.Banks.RecoBankWriter;
 import org.jlab.rec.ahdc.Cluster.Cluster;
 import org.jlab.rec.ahdc.Cluster.ClusterFinder;
+import org.jlab.rec.ahdc.Cluster.DocaClusterRefiner;
+import org.jlab.rec.ahdc.Cluster.DocaCluster;
 import org.jlab.rec.ahdc.Distance.Distance;
 import org.jlab.rec.ahdc.HelixFit.HelixFitJava;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.Hit.HitReader;
 import org.jlab.rec.ahdc.HoughTransform.HoughTransform;
-import org.jlab.rec.ahdc.KalmanFilter.KalmanFilter;
 import org.jlab.rec.ahdc.KalmanFilter.MaterialMap;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import org.jlab.rec.ahdc.PreCluster.PreClusterFinder;
@@ -100,7 +101,7 @@ public class AHDCEngine extends ReconstructionEngine {
         
         this.getConstantsManager().setVariation("default");
         
-        this.registerOutputBank("AHDC::hits","AHDC::preclusters","AHDC::clusters","AHDC::track","AHDC::kftrack","AHDC::mc","AHDC::ai:prediction");
+        this.registerOutputBank("AHDC::hits","AHDC::preclusters","AHDC::clusters","AHDC::track","AHDC::mc","AHDC::ai:prediction");
 
         return true;
     }
@@ -110,8 +111,6 @@ public class AHDCEngine extends ReconstructionEngine {
     @Override
     public boolean processDataEvent(DataEvent event) {
 
-        double magfield = 50.0; // what is this? The full magnetic field strength in kGauss (factor * 50kGauss)
-
         if(event.hasBank("MC::Particle")) simulation = true;
 
         ahdcExtractor.update(30, null, event, "AHDC::wf", "AHDC::adc");
@@ -119,7 +118,6 @@ public class AHDCEngine extends ReconstructionEngine {
         if (event.hasBank("RUN::config")) {
             DataBank bank = event.getBank("RUN::config");
             int newRun = bank.getInt("run", 0);
-            float magfieldfactor = bank.getFloat("solenoid", 0);
             if (newRun <= 0) {
                 LOGGER.warning("AHDCEngine:  got run <= 0 in RUN::config, skipping event.");
                 return false;
@@ -130,10 +128,6 @@ public class AHDCEngine extends ReconstructionEngine {
                 CalibrationConstantsLoader.Load(newRun, this.getConstantsManager());
                 Run = newRun;
             }
-
-            /// What is this? The field value in the RUN::config bank is a scaling factor (between -1 and 1) of the full field
-            /// The kalman filter use the field in kG not Tesla
-            magfield = 50 * magfieldfactor;
         }
 
 
@@ -222,25 +216,21 @@ public class AHDCEngine extends ReconstructionEngine {
             //AHDC_Tracks.add(new Track(AHDC_Hits));
 
             // V) Global fit
+            int trackid = 0;
+            ArrayList<DocaCluster> all_docaClusters = new ArrayList<>();
             for (Track track : AHDC_Tracks) {
-              int nbOfPoints = track.get_Clusters().size();
-
-              double[][] szPos = new double[nbOfPoints][3];
-
-              int j = 0;
-              for (Cluster cluster : track.get_Clusters()) {
-                szPos[j][0] = cluster.get_X();
-                szPos[j][1] = cluster.get_Y();
-                szPos[j][2] = cluster.get_Z();
-                j++;
+              trackid++;
+              track.set_trackId(trackid);
+              List<Cluster> originalClusters = track.get_Clusters();
+              ArrayList<DocaCluster> docaClusters = DocaClusterRefiner.buildRefinedClusters(originalClusters);
+              all_docaClusters.addAll(docaClusters);
+              if (docaClusters == null || docaClusters.size() < 3) {
+                // not enough points, skip helix fit
+                continue;
               }
-
               HelixFitJava h = new HelixFitJava();
-              track.setPositionAndMomentum(h.HelixFit(nbOfPoints, szPos, 1));
+              track.setPositionAndMomentum(h.helix_fit_with_doca_selection(docaClusters, 1));
             }
-
-            // VI) Kalman Filter
-            KalmanFilter kalmanFitter = new KalmanFilter(AHDC_Tracks, event, magfield, simulation);
 
             // VII) Write bank
             RecoBankWriter writer = new RecoBankWriter();
@@ -253,7 +243,7 @@ public class AHDCEngine extends ReconstructionEngine {
             }
             DataBank recoClusterBank    = writer.fillClustersBank(event, AHDC_Clusters);
             DataBank recoTracksBank     = writer.fillAHDCTrackBank(event, AHDC_Tracks);
-            DataBank recoKFTracksBank   = writer.fillAHDCKFTrackBank(event, AHDC_Tracks);
+            DataBank clustersDocaBank   = writer.fillAHDCDocaClustersBank(event, all_docaClusters);
 
             ArrayList<InterCluster> all_interclusters = new ArrayList<>();
             for (Track track : AHDC_Tracks) {
@@ -262,12 +252,13 @@ public class AHDCEngine extends ReconstructionEngine {
             DataBank recoInterClusterBank = writer.fillInterClusterBank(event, all_interclusters);
             // DataBank AIPredictionBanks = writer.fillAIPrediction(event, predictions);
 
+            //event.removeBanks("AHDC::hits","AHDC::preclusters","AHDC::clusters","AHDC::track","AHDC::kftrack","AHDC::mc","AHDC::ai:prediction");
             event.appendBank(recoHitsBank);
             event.appendBank(recoPreClusterBank);
             event.appendBank(recoClusterBank);
             event.appendBank(recoTracksBank);
-            event.appendBank(recoKFTracksBank);
             event.appendBank(recoInterClusterBank);
+            event.appendBank(clustersDocaBank);
             // event.appendBank(AIPredictionBanks);
 
             if (simulation) {
