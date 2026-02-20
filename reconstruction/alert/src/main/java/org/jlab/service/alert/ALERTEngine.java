@@ -19,7 +19,7 @@ import org.jlab.rec.alert.TrackMatchingAI.ModelTrackMatching;
 import org.jlab.rec.alert.banks.RecoBankWriter;
 import org.jlab.rec.alert.projections.TrackProjector;
 import org.jlab.rec.atof.hit.ATOFHit;
-import org.jlab.rec.ahdc.KalmanFilter.Hit_beam;
+import org.jlab.rec.ahdc.KalmanFilter.RadialKFHit;
 import org.jlab.rec.ahdc.KalmanFilter.KalmanFilter;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.geom.detector.alert.AHDC.AlertDCDetector;
@@ -284,7 +284,7 @@ public class ALERTEngine extends ReconstructionEngine {
         KalmanFilter KF = new KalmanFilter(proton, Niter);
 
         /// Add ATOF hit
-        HashMap<Integer, Hit_beam> ATOF_hits = new HashMap<>();
+        HashMap<Integer, RadialKFHit> ATOF_hits = new HashMap<>();
         for (Pair<Integer, Integer> pair : matched_ATOF_hit_id) {
             int trackid = pair.getKey();
             int atofid = pair.getValue();
@@ -298,7 +298,7 @@ public class ALERTEngine extends ReconstructionEngine {
                         // A Hit_beam can be used to store the relevant information of the ATOF wedge hit
                         // To Do: unify Hit and Hit_beam: e.g they should implements the same interface
                         z -= 32.3; // Include the shift between AHDC and ATOF ~ 2.5 cm (what is the origin of this shift?)
-                        Hit_beam hit = new Hit_beam(x, y, z);
+                        RadialKFHit hit = new RadialKFHit(x, y, z);
                             // error on r
                         double wedge_width = 20; //mm
                         double dr2 = Math.pow(wedge_width, 2)/12; // mm^2

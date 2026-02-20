@@ -1,6 +1,5 @@
 package org.jlab.rec.ahdc.KalmanFilter;
 
-import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
@@ -15,16 +14,13 @@ import org.jlab.geom.prim.Point3D;
  * @author Éric Fuchey 
  * @author Felix Touchte Codjo
  */
-public class Hit_beam implements KFHit {
+public class RadialKFHit implements KFHit {
 
-	private double x,y,z;
-	private double r,phi;
+	private double r,phi,z;
     Line3D beamline;
 	RealMatrix measurementNoise = null;
 
-	public Hit_beam(double x, double y , double z) {
-		this.x = x;
-		this.y = y;
+	public RadialKFHit(double x, double y , double z) {
 		this.z = z;
 		this.r = Math.hypot(x,y);
 		this.phi = Math.atan2(y,x);

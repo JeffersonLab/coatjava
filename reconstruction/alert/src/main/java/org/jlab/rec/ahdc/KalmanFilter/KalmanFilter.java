@@ -50,7 +50,7 @@ public class KalmanFilter {
 						" ; ",        // row separator
 						new java.text.DecimalFormat(" 0.0000;-0.0000")
 					);
-	HashMap<Integer, Hit_beam> ATOF_hits = null;
+	HashMap<Integer, RadialKFHit> ATOF_hits = null;
 
 	public void propagation(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {
 
@@ -126,7 +126,7 @@ public class KalmanFilter {
                     }
 					// Forward propagation towards the ATOF bar
 					{	
-						Hit_beam hit = ATOF_hits.get(track.get_trackId());
+						RadialKFHit hit = ATOF_hits.get(track.get_trackId());
 						if (hit != null) {
 							TrackFitter.predict(hit, true);
 							TrackFitter.correct(hit);
@@ -147,7 +147,7 @@ public class KalmanFilter {
 					}
 					// Backward propagation (first layer to beamline)
 					{
-						Hit_beam hit = new Hit_beam(0, 0, vz_constraint);
+						RadialKFHit hit = new RadialKFHit(0, 0, vz_constraint);
 						RealMatrix measurementNoise = new Array2DRowRealMatrix(
                                                         new double[][]{
                                                             {vertex_resolutions[0], 0.0000, 0.0000},
@@ -205,6 +205,6 @@ public class KalmanFilter {
 	public int get_Niter() {return this.Niter;}
 	public void set_particle(PDGParticle particle) {this.particle = particle;}
 	public PDGParticle get_particle() {return this.particle;}
-	public void set_ATOF_hits(HashMap<Integer, Hit_beam> ATOF_hits){ this.ATOF_hits = ATOF_hits;};
-	public HashMap<Integer, Hit_beam> get_ATOF_hits() { return this.ATOF_hits;}
+	public void set_ATOF_hits(HashMap<Integer, RadialKFHit> ATOF_hits){ this.ATOF_hits = ATOF_hits;};
+	public HashMap<Integer, RadialKFHit> get_ATOF_hits() { return this.ATOF_hits;}
 }

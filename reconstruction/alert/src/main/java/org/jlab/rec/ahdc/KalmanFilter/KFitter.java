@@ -93,7 +93,7 @@ public class KFitter {
 		RealVector h;
 		// check if the hit is the beamline
 		//if (hit.getRadius() < 1) {
-		if (hit instanceof Hit_beam) {
+		if (hit instanceof RadialKFHit) {
 			// the diagonal elements are the squared errors in r, phi, z
 			measurementNoise = hit.get_MeasurementNoise();
 			measurementMatrix  = H_beam(stateEstimation);//6x3
