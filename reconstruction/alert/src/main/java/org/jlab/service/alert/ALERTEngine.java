@@ -283,7 +283,7 @@ public class ALERTEngine extends ReconstructionEngine {
         int Niter = 40;
         KalmanFilter KF = new KalmanFilter(proton, Niter);
 
-        /// Add ATOF hit
+        /// Add ATOF wedge hits
         HashMap<Integer, RadialKFHit> ATOF_hits = new HashMap<>();
         for (Pair<Integer, Integer> pair : matched_ATOF_hit_id) {
             int trackid = pair.getKey();
@@ -295,9 +295,7 @@ public class ALERTEngine extends ReconstructionEngine {
                         double x = bank_ATOFHits.getFloat("x", row);
                         double y = bank_ATOFHits.getFloat("y", row);
                         double z = bank_ATOFHits.getFloat("z", row);
-                        // A Hit_beam can be used to store the relevant information of the ATOF wedge hit
-                        // To Do: unify Hit and Hit_beam: e.g they should implements the same interface
-                        z -= 32.3; // Include the shift between AHDC and ATOF ~ 2.5 cm (what is the origin of this shift?)
+                        z -= 32.3; // there is a shift between AHDC and ATOF (still don't know why) !
                         RadialKFHit hit = new RadialKFHit(x, y, z);
                             // error on r
                         double wedge_width = 20; //mm
@@ -308,8 +306,6 @@ public class ALERTEngine extends ReconstructionEngine {
                             // error on z
                         double wedge_length = 27.7; //mm
                         double dz2 = Math.pow(wedge_length, 2)/12;
-                        //     // error on z (from elastics data)
-                        // double dz2 = 1400; // mm^2
                         
                         RealMatrix measurementNoise = new Array2DRowRealMatrix(
                                                         new double[][]{
@@ -317,11 +313,8 @@ public class ALERTEngine extends ReconstructionEngine {
                                                             {0.00, dphi2, 0.0000},
                                                             {0.00, 0.0000, dz2}
                                                         });//3x3;
-                        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                        // we should also include the error to select the wrong wedge !
-                        hit.set_MeasurementNoise(measurementNoise);
+                        hit.setMeasurementNoise(measurementNoise);
                         ATOF_hits.put(trackid, hit);
-                        //System.out.println("trackid : " + trackid + " atofid : " + atofid);
                     }
                 }
             }
@@ -331,7 +324,7 @@ public class ALERTEngine extends ReconstructionEngine {
         /// First propagation : each AHDC_tracks will be fitted
         KF.propagation(AHDC_tracks, event, magfield, IsMC);
 
-        /// Clean bad hits
+        /// Clean AHDC bad hits
         double sigma = 0.5; // mm
         for (Track track : AHDC_tracks) {
             ArrayList<Hit> AHDC_hits = track.getHits();
@@ -359,7 +352,7 @@ public class ALERTEngine extends ReconstructionEngine {
             AHDC_hits.addAll(track.getHits());
         }     
         DataBank recoKFHitsBank = ahdc_writer.fillAHDCHitsBank(event, AHDC_hits);
-        event.appendBank(recoKFHitsBank); // remark: only  hits assocuated to a track are saved
+        event.appendBank(recoKFHitsBank); // remark: only  hits associated to a track are saved
  
 
         return true;

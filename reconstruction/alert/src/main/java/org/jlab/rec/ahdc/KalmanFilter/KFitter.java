@@ -87,25 +87,11 @@ public class KFitter {
 	}
 
 	public void correct(KFHit hit) {
-        RealVector z;
-		RealMatrix measurementNoise;
-		RealMatrix measurementMatrix;
-		RealVector h;
-		// check if the hit is the beamline
-		//if (hit.getRadius() < 1) {
-		if (hit instanceof RadialKFHit) {
-			// the diagonal elements are the squared errors in r, phi, z
-			measurementNoise = hit.get_MeasurementNoise();
-			measurementMatrix  = H_beam(stateEstimation);//6x3
-			h = h_beam(stateEstimation);//3x1
-			z = hit.get_Vector();//0!
-		}
-		else {
-            measurementNoise = hit.get_MeasurementNoise();//1x1
-            measurementMatrix = H(stateEstimation, hit);//6x1
-            h = h(stateEstimation, hit);//1x1
-			z = hit.get_Vector();//1x1
-		}
+        RealVector z = hit.MeasurementVector();
+		RealVector h = hit.ProjectionFunction(stateEstimation);
+
+		RealMatrix measurementNoise = hit.MeasurementNoiseMatrix();
+		RealMatrix measurementMatrix = hit.ProjectionMatrix(stateEstimation);
 		RealMatrix measurementMatrixT = measurementMatrix.transpose();
 
 		// S = H * P(k) * H' + R
@@ -179,87 +165,6 @@ public class KFitter {
 		return new double[]{dxdi, dydi, dzdi, dpxdi, dpydi, dpzdi};
 	}
 
-	// Measurement matrix in 1x1 dimension: minimize distance - doca
-	private RealVector h(RealVector x, KFHit hit) {
-		double d = hit.distance(new Point3D(x.getEntry(0), x.getEntry(1), x.getEntry(2)));
-		return MatrixUtils.createRealVector(new double[]{d});
-	}
-
-	// Jacobian matrix of the measurement with respect to (x, y, z, px, py, pz)
-	private RealMatrix H(RealVector x, KFHit hit) {
-
-		double ddocadx  = subfunctionH(x, hit, 0);
-		double ddocady  = subfunctionH(x, hit, 1);
-		double ddocadz  = subfunctionH(x, hit, 2);
-		double ddocadpx = subfunctionH(x, hit, 3);
-		double ddocadpy = subfunctionH(x, hit, 4);
-		double ddocadpz = subfunctionH(x, hit, 5);
-		
-		return MatrixUtils.createRealMatrix(new double[][]{
-			{ddocadx, ddocady, ddocadz, ddocadpx, ddocadpy, ddocadpz}});
-	}
-
-	double subfunctionH(RealVector x, KFHit hit, int i) {
-		double     h       = 1e-8;// in mm
-		RealVector x_plus  = x.copy();
-		RealVector x_minus = x.copy();
-
-		x_plus.setEntry(i, x_plus.getEntry(i) + h);
-		x_minus.setEntry(i, x_minus.getEntry(i) - h);
-
-		double doca_plus  = h(x_plus, hit).getEntry(0);
-		double doca_minus = h(x_minus, hit).getEntry(0);
-
-		return (doca_plus - doca_minus) / (2 * h);
-	}
-	
-	// Measurement matrix for the beamline (Hit_beam) in dimeansion 3x1
-	private RealVector h_beam(RealVector x) {
-
-		double xx = x.getEntry(0);
-		double yy = x.getEntry(1);
-		double zz = x.getEntry(2);
-
-		double r = Math.hypot(xx, yy);
-		double phi = Math.atan2(yy, xx);
-
-		return MatrixUtils.createRealVector(new double[]{r, phi, zz});
-	}
-	
-	// Jacobian matrix of the measurement for the beamline with respect to (x, y, z, px, py, pz)
-	private RealMatrix H_beam(RealVector x) {
-
-		double xx = x.getEntry(0);
-		double yy = x.getEntry(1);
-
-		double drdx = (xx) / (Math.hypot(xx, yy));
-		double drdy = (yy) / (Math.hypot(xx, yy));
-		double drdz = 0.0;
-		double drdpx = 0.0;
-		double drdpy = 0.0;
-		double drdpz = 0.0;
-
-		double dphidx = -(yy) / (xx * xx + yy * yy);
-		double dphidy = (xx) / (xx * xx + yy * yy);
-		double dphidz = 0.0;
-		double dphidpx = 0.0;
-		double dphidpy = 0.0;
-		double dphidpz = 0.0;
-
-		double dzdx = 0.0;
-		double dzdy = 0.0;
-		double dzdz = 1.0;
-		double dzdpx = 0.0;
-		double dzdpy = 0.0;
-		double dzdpz = 0.0;
-
-		return MatrixUtils.createRealMatrix(
-				new double[][]{
-						{drdx, drdy, drdz, drdpx, drdpy, drdpz},
-						{dphidx, dphidy, dphidz, dphidpx, dphidpy, dphidpz},
-						{dzdx, dzdy, dzdz, dzdpx, dzdpy, dzdpz}
-				});
-	}
 
 	public RealVector getStateEstimationVector() {
 		return stateEstimation.copy();

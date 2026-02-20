@@ -154,7 +154,7 @@ public class KalmanFilter {
                                                             {0.00, 1e10, 0.0000},
                                                             {0.00, 0.0000, vertex_resolutions[1]}
                                                         });//3x3;
-                        hit.set_MeasurementNoise(measurementNoise);
+                        hit.setMeasurementNoise(measurementNoise);
 						TrackFitter.predict(hit, false);
 						TrackFitter.correct(hit);
 					}
@@ -186,7 +186,7 @@ public class KalmanFilter {
 			    for (Hit hit : AHDC_hits) {
                     sum_adc += hit.getADC();
                     sum_residuals += hit.getResidual();
-                    chi2 += Math.pow(hit.getResidual(),2)/hit.get_MeasurementNoise().getEntry(0,0);
+                    chi2 += Math.pow(hit.getResidual(),2)/hit.MeasurementNoiseMatrix().getEntry(0,0);
 			    }
 			    track.set_sum_adc(sum_adc);
 			    track.set_sum_residuals(sum_residuals);

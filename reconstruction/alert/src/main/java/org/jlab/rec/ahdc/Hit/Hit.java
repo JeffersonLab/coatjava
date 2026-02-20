@@ -2,6 +2,7 @@ package org.jlab.rec.ahdc.Hit;
 
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
@@ -178,12 +179,12 @@ public class Hit implements Comparable<Hit>, KFHit {
 	}
 
 	@Override
-	public RealVector get_Vector() {
+	public RealVector MeasurementVector() {
 		return new ArrayRealVector(new double[]{this.doca});
 	}
 
 	@Override
-    public RealMatrix get_MeasurementNoise() {
+    public RealMatrix MeasurementNoiseMatrix() {
 		double mean_error = 0.471; // mm (no difference between adc and time)
 		double error_on_adc = (1.15146*raw_adc + 437.63)/(3.21187*raw_adc + 878.855); // mm
 		double error_on_time = (0.4423*time + 13.7215)/(0.846038*time + 31.9867); // mm
@@ -191,6 +192,42 @@ public class Hit implements Comparable<Hit>, KFHit {
 		
 		return new Array2DRowRealMatrix(new double[][]{{Math.pow(error, 2)}}); // mm^2
 		//return new Array2DRowRealMatrix(new double[][]{{0.09}});
+	}
+
+	// Projection function
+	@Override
+	public RealVector ProjectionFunction(RealVector x) {
+		double d = this.distance(new Point3D(x.getEntry(0), x.getEntry(1), x.getEntry(2)));
+		return MatrixUtils.createRealVector(new double[]{d});
+	}
+
+	// Jacobian matrix of the measurement with respect to (x, y, z, px, py, pz)
+	@Override
+	public RealMatrix ProjectionMatrix(RealVector x) {
+
+		double ddocadx  = partialProjectionMatrix(x, 0);
+		double ddocady  = partialProjectionMatrix(x, 1);
+		double ddocadz  = partialProjectionMatrix(x, 2);
+		double ddocadpx = partialProjectionMatrix(x, 3);
+		double ddocadpy = partialProjectionMatrix(x, 4);
+		double ddocadpz = partialProjectionMatrix(x, 5);
+		
+		return MatrixUtils.createRealMatrix(new double[][]{
+			{ddocadx, ddocady, ddocadz, ddocadpx, ddocadpy, ddocadpz}});
+	}
+
+	private double partialProjectionMatrix(RealVector x, int i) {
+		double     h       = 1e-8;// in mm
+		RealVector x_plus  = x.copy();
+		RealVector x_minus = x.copy();
+
+		x_plus.setEntry(i, x_plus.getEntry(i) + h);
+		x_minus.setEntry(i, x_minus.getEntry(i) - h);
+
+		double doca_plus  = this.ProjectionFunction(x_plus).getEntry(0);
+		double doca_minus = this.ProjectionFunction(x_minus).getEntry(0);
+
+		return (doca_plus - doca_minus) / (2 * h);
 	}
 
 	@Override
