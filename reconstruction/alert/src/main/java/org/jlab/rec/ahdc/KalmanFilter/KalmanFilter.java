@@ -6,10 +6,8 @@ import java.util.HashMap;
 
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
-import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
-import org.jlab.clas.pdg.PDGDatabase;
 import org.jlab.clas.pdg.PDGParticle;
 import org.jlab.clas.tracking.kalmanfilter.Material;
 import org.jlab.io.base.DataBank;
@@ -17,7 +15,6 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.Track.Track;
 
-import org.apache.commons.math3.linear.RealMatrixFormat;
 
 /**
  * This is the main routine of the Kalman Filter. The fit is done by a KFitter
@@ -32,8 +29,6 @@ public class KalmanFilter {
 
 	public KalmanFilter(PDGParticle particle, int Niter) {this.particle = particle; this.Niter = Niter;}
 
-    public KalmanFilter(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {propagation(tracks, event, magfield, IsMC);}
-
 	private PDGParticle particle;
 	private int Niter = 40; // number of iterations for the Kalman Filter
 	private boolean IsVtxDefined = false; // implemented but not used yet
@@ -42,14 +37,6 @@ public class KalmanFilter {
 	private double clas_alignement = -54;
 	double vz_constraint = 0;
 	private int counter = 0; // number of utilisation of the Kalman Filter
-	RealMatrixFormat format =
-					new RealMatrixFormat(
-						"[\n", "\n]",     // matrix start/end
-						"[", "]",     // row start/end
-						",\n",         // column separator
-						" ; ",        // row separator
-						new java.text.DecimalFormat(" 0.0000;-0.0000")
-					);
 	HashMap<Integer, RadialKFHit> ATOF_hits = null;
 
 	public void propagation(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {
@@ -70,18 +57,17 @@ public class KalmanFilter {
 					if (recBank.getInt("pid", row) == 11) {
 						IsVtxDefined = true;
 						vz_constraint = 10*recBank.getFloat("vz",row) - (IsMC ? 0 : clas_alignement); // mm
-						////////////////////////////////////////
-						/// compute electron resolution here
-						/// it depends en p and theta
-						/// the fine tuning will be done later
-						/// ////////////////////////////////////
+						
+						// TO DO: compute electron resolution as function of p and theta
+						// the fine tuning will be done later
 						//double px = recBank.getFloat("px",row);
 						//double py = recBank.getFloat("py",row);
 						//double pz = recBank.getFloat("pz",row);
 						//double p = Math.sqrt(px*px+py*py+pz*pz);
 						//double theta = Math.acos(pz/p);
+
 						vertex_resolutions[0] = 0.09;
-						vertex_resolutions[1] = 64;//4 + 1e10*theta + 1e10*p;
+						vertex_resolutions[1] = 64;
 					}
 					row++;
 				}
@@ -110,8 +96,6 @@ public class KalmanFilter {
 			    // Initialization of the Kalman Fitter
 				// for the error matrix: first 3 lines in mm^2; last 3 lines in MeV^2
 			    RealVector initialStateEstimate   = new ArrayRealVector(stepper.y);
-			    //RealMatrix initialErrorCovariance = MatrixUtils.createRealMatrix(new double[][]{{50.0, 0.0, 0.0, 0.0, 0.0, 0.0}, {0.0, 50.0, 0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 900.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 100.00, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0, 100.00, 0.0}, {0.0, 0.0, 0.0, 0.0, 0.0, 900.0}});
-				// System.out.println(">>>>>>>>>>  Error matrix: start (" + counter + ")\n" + format.format(track.getErrorCovarianceMatrix()));
 				RealMatrix initialErrorCovariance = track.getErrorCovarianceMatrix();
 				KFitter TrackFitter = new KFitter(initialStateEstimate, initialErrorCovariance, stepper, propagator, materialHashMap);
 				if (IsVtxDefined) TrackFitter.setVertexResolution(vertex_resolutions);
@@ -134,9 +118,6 @@ public class KalmanFilter {
 							Hit hhit = AHDC_hits.get(AHDC_hits.size()-1);
 							TrackFitter.predict(hhit, false);
 							TrackFitter.correct(hhit);
-							//System.out.println("trackid : " + track.get_trackId() + " hit : " + format.format(hit.get_MeasurementNoise()));
-						} else {
-							//System.out.println("************** No match for this track");
 						}
 					}
 					// Backward propagation (last layer to first layer)
@@ -164,8 +145,6 @@ public class KalmanFilter {
 			    RealVector x_out = TrackFitter.getStateEstimationVector();
 			    track.setPositionAndMomentumVec(x_out.toArray());
 				track.setErrorCovarianceMatrix(TrackFitter.getErrorCovarianceMatrix());
-				// System.out.println(">>>>>>>>>>  Error matrix: end (" + counter + ")\n" + format.format(track.getErrorCovarianceMatrix()));
-				// System.out.println("> vz : " + track.get_Z0());
 
 			    // Post fit propagation (no correction) to set the residuals
 			    KFitter PostFitPropagator = new KFitter(TrackFitter.getStateEstimationVector(), initialErrorCovariance, new Stepper(TrackFitter.getStateEstimationVector().toArray()), new Propagator(RK4), materialHashMap);
@@ -198,7 +177,6 @@ public class KalmanFilter {
 			}//end of loop on track candidates
 		} catch (Exception e) {
 			//e.printStackTrace();
-			//System.out.println("======> Kalman Filter Error");
 		}
 	}
 	public void set_Niter(int Niter) {this.Niter = Niter;}
