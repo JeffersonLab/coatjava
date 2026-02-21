@@ -369,9 +369,10 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
                 Dsc2Scaler previous = this.scalers.get(i-1).dsc2;
                 Dsc2Scaler next     = this.scalers.get(i).dsc2;
                 if (previous.clock > next.clock) {
+                    var corr = previous.clock - next.clock + 1;
                     for (int j=i; j<this.scalers.size(); ++j) {
                         if (j==i) System.out.print( String.format("FIXING UNGATED CLOCK ROLLOVER:  %d -> ",this.scalers.get(j).dsc2.clock));
-                        this.scalers.get(j).dsc2.clock += previous.clock - next.clock;
+                        this.scalers.get(j).dsc2.clock += corr;
                         if (j==i) System.out.println(String.format("%d",this.scalers.get(j).dsc2.clock));
                     }
                     modified = true;
@@ -387,9 +388,10 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
                 Dsc2Scaler previous = this.scalers.get(i-1).dsc2;
                 Dsc2Scaler next     = this.scalers.get(i).dsc2;
                 if (previous.gatedClock > next.gatedClock) {
+                    var corr = previous.gatedClock - next.gatedClock + 1;
                     for (int j=i; j<this.scalers.size(); ++j) {
                         if (j==i) System.out.print( String.format("FIXING GATED CLOCK ROLLOVER:  %d -> ",this.scalers.get(j).dsc2.gatedClock));
-                        this.scalers.get(j).dsc2.gatedClock += previous.gatedClock - next.gatedClock;
+                        this.scalers.get(j).dsc2.gatedClock += corr;
                         if (j==i) System.out.println(String.format("%d",this.scalers.get(j).dsc2.gatedClock));
                     }
                     modified = true;
