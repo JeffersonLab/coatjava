@@ -368,12 +368,19 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
             for (int i=this.scalers.size()-1; i>0; --i) {
                 Dsc2Scaler previous = this.scalers.get(i-1).dsc2;
                 Dsc2Scaler next     = this.scalers.get(i).dsc2;
-                if (previous.clock > next.clock) {
-                    var corr = previous.clock - next.clock + 1;
+                long corr           = previous.clock - next.clock + 1;
+                boolean is_rollover = previous.clock > next.clock;
+                boolean is_gap      = corr <= -2*(long)Integer.MAX_VALUE;
+                if (is_rollover || is_gap) {
+                    if(is_gap) corr = -corr;
                     for (int j=i; j<this.scalers.size(); ++j) {
                         if (j==i) System.out.print( String.format("FIXING UNGATED CLOCK ROLLOVER:  %d -> ",this.scalers.get(j).dsc2.clock));
                         this.scalers.get(j).dsc2.clock += corr;
-                        if (j==i) System.out.println(String.format("%d",this.scalers.get(j).dsc2.clock));
+                        if (j==i) {
+                          System.out.println(String.format("%d",this.scalers.get(j).dsc2.clock));
+                          System.out.println((double)corr/(2*(long)Integer.MAX_VALUE));
+                          if(is_gap) System.out.println("GAP!");
+                        }
                     }
                     modified = true;
                     break;
@@ -387,12 +394,19 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
             for (int i=this.scalers.size()-1; i>0; --i) {
                 Dsc2Scaler previous = this.scalers.get(i-1).dsc2;
                 Dsc2Scaler next     = this.scalers.get(i).dsc2;
-                if (previous.gatedClock > next.gatedClock) {
-                    var corr = previous.gatedClock - next.gatedClock + 1;
+                long corr           = previous.gatedClock - next.gatedClock + 1;
+                boolean is_rollover = previous.gatedClock > next.gatedClock;
+                boolean is_gap      = corr <= -2*(long)Integer.MAX_VALUE;
+                if (is_rollover || is_gap) {
+                    if(is_gap) corr = -corr;
                     for (int j=i; j<this.scalers.size(); ++j) {
                         if (j==i) System.out.print( String.format("FIXING GATED CLOCK ROLLOVER:  %d -> ",this.scalers.get(j).dsc2.gatedClock));
                         this.scalers.get(j).dsc2.gatedClock += corr;
-                        if (j==i) System.out.println(String.format("%d",this.scalers.get(j).dsc2.gatedClock));
+                        if (j==i) {
+                          System.out.println(String.format("%d",this.scalers.get(j).dsc2.gatedClock));
+                          System.out.println((double)corr/(2*(long)Integer.MAX_VALUE));
+                          if(is_gap) System.out.println("GAP!");
+                        }
                     }
                     modified = true;
                     break;
