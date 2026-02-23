@@ -118,8 +118,13 @@ public class DaqScalers {
      * @return 
      */
     public static DaqScalers create(Bank rawScalerBank,IndexedTable fcupTable,IndexedTable slmTable,IndexedTable helTable,double seconds) {
+        System.out.println("espio 5");
+        System.out.println("espio struck scalers construct start");
         StruckScalers struck = StruckScalers.read(rawScalerBank,fcupTable,slmTable,helTable);
+        System.out.println("espio struck scalers construct stop");
+        System.out.println("call espio 6");
         Dsc2Scaler dsc2 = new Dsc2Scaler(rawScalerBank,fcupTable,slmTable,seconds);
+        System.out.println("call espio DaqScalers() default constructor");
         DaqScalers ds = new DaqScalers();
         ds.dsc2 = dsc2;
         ds.struck = struck;
@@ -150,7 +155,11 @@ public class DaqScalers {
      * @return  
      */
     public static DaqScalers create(Bank rawScalerBank,IndexedTable fcupTable,IndexedTable slmTable,IndexedTable helTable,IndexedTable dscTable) {
+        System.out.println("espio 1");
+        System.out.println("call espio 2");
         Dsc2Scaler dsc2 = new Dsc2Scaler(rawScalerBank,fcupTable,slmTable,dscTable);
+        System.out.println("returned to espio 1");
+        System.out.println("call espio 5");
         return DaqScalers.create(rawScalerBank,fcupTable,slmTable,helTable,dsc2.getGatedClockSeconds());
     }
 
@@ -168,9 +177,13 @@ public class DaqScalers {
      * @return  
      */
     public static DaqScalers create(Bank rawScalerBank,IndexedTable fcupTable,IndexedTable slmTable,IndexedTable helTable,IndexedTable dscTable,long clock,long gatedClock) {
+        System.out.println("espio 0");
+        System.out.println("call espio 1");
         DaqScalers ds = DaqScalers.create(rawScalerBank,fcupTable,slmTable,helTable,dscTable);
+        System.out.println("returned to espio 0 after call espio 1");
         ds.dsc2.setClock(clock);
         ds.dsc2.setGatedClock(gatedClock);
+        System.out.println("call espio 3 from espio 0");
         ds.dsc2.calibrate(fcupTable, slmTable);
         return ds;
     }

@@ -38,8 +38,11 @@ public class Dsc2Scaler extends DaqScaler{
      * @param seconds dwell time, provided in case the clock rolls over
      */
     public Dsc2Scaler(Bank bank, IndexedTable fcupTable, IndexedTable slmTable, double seconds) {
+        System.out.println("espio 6");
         this.clockFreq=1e6;
+        System.out.println("harpuia hardcoded DSC: " + this.clockFreq);
         this.read(bank);
+        System.out.println("call espio 7");
         this.calibrate(fcupTable,slmTable,seconds);
     }
 
@@ -50,8 +53,11 @@ public class Dsc2Scaler extends DaqScaler{
      * @param dscTable /daq/config/scalers/dsc1 CCDB table
      */
     public Dsc2Scaler(Bank bank, IndexedTable fcupTable, IndexedTable slmTable, IndexedTable dscTable) {
+        System.out.println("espio 2");
         this.clockFreq = dscTable.getIntValue("frequency", 0,0,0);
+        System.out.println("harpuia from CCDB for DSC2: " + this.clockFreq);
         this.read(bank);
+        System.out.println("call espio 3");
         this.calibrate(fcupTable,slmTable);
     }
 
@@ -64,7 +70,9 @@ public class Dsc2Scaler extends DaqScaler{
      * @param seconds 
      */
     protected final void calibrate(IndexedTable fcupTable, IndexedTable slmTable, double seconds) {
+        System.out.println("espio 7");
         if (this.fcup>0) {
+            System.out.println("call espio 4 from espio 7");
             super.calibrate(fcupTable,slmTable,seconds,seconds*((double)this.gatedFcup)/this.fcup);
         }
     }

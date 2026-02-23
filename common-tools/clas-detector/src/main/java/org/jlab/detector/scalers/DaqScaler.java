@@ -72,6 +72,8 @@ public class DaqScaler {
      * @param liveSeconds live dwell time
      */
     protected void calibrate(IndexedTable fcupTable,IndexedTable slmTable,double seconds,double liveSeconds) {
+        System.out.println("espio 4");
+        System.out.println("jet the hawk: " + this.clockFreq);
 
         if (this.clock > 0) {
             final double fcup_slope  = fcupTable.getDoubleValue("slope",0,0,0);  // Hz/nA
@@ -88,15 +90,19 @@ public class DaqScaler {
             this.livetime = (double)this.gatedClock / this.clock;
 
             if (fcup_atten<1e-8 || fcup_slope<1e-8) {
+                System.out.println("kitsunami use SLM");
                 this.beamCharge = this.beamChargeSLM;
                 this.beamChargeGated = this.beamChargeGatedSLM;
             }
             else {
+                System.out.println("kitsunami use fcup");
                 q  = (double)this.fcup      - fcup_offset * seconds;
                 qg = (double)this.gatedFcup - fcup_offset * liveSeconds;
                 this.beamCharge = q * fcup_atten / fcup_slope;
                 this.beamChargeGated = qg * fcup_atten / fcup_slope;
             }
+            System.out.println("           kitsunami G = " + this.beamChargeGated);
+            System.out.println("           kitsunami U = " + this.beamCharge);
         }
     }
 
@@ -106,6 +112,9 @@ public class DaqScaler {
      * @param slmTable  /runcontrol/slm CCDB table
      */
     protected final void calibrate(IndexedTable fcupTable,IndexedTable slmTable) {
+        System.out.println("espio 3");
+        System.out.println("jet the hawk: " + this.clockFreq);
+        System.out.println("call espio 4");
         this.calibrate(fcupTable,slmTable,this.getClockSeconds(),this.getGatedClockSeconds());
     }
 }

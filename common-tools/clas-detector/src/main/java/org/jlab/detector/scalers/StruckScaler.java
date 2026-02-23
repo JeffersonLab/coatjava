@@ -165,6 +165,7 @@ public class StruckScaler extends DaqScaler {
 
     public StruckScaler() {
         this.clockFreq = 1e6;
+        System.out.println("harpuia hardcoded StruckScaler(): " + this.clockFreq);
     }
 
     /**
@@ -179,6 +180,7 @@ public class StruckScaler extends DaqScaler {
 
         // the STRUCK's clock is 1 MHz
         this.clockFreq = 1e6;
+        System.out.println("harpuia hardcoded StruckScaler(table, table, table): " + this.clockFreq);
 
         // Here we're going to assume the stable period is the same Struck
         // period throughout a single readout.  Almost always correct ...
