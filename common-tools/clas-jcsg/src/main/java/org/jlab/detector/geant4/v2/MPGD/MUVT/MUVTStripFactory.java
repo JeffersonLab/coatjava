@@ -24,8 +24,9 @@ public final class MUVTStripFactory extends MPGDTrapezoidStripFactory {
 
     /**
      * Build using an already-configured DatabaseConstantProvider.
+     * @param cp
      */
-    public MUVTStripFactory(DatabaseConstantProvider cp, String variation) {
+    public MUVTStripFactory(DatabaseConstantProvider cp) {
         super(new MUVTConstants(cp));
 
 
