@@ -1,4 +1,4 @@
-package org.jlab.rec.recoiltof.hit;
+package org.jlab.rec.rtof.hit;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -11,7 +11,7 @@ import org.jlab.io.base.DataEvent;
  * <p>
  * Uses recoil tof tdc bank information
  *
- * Creates a {@link ArrayList} of {@link BarHit} for bar hits read.
+ * Creates a {@link ArrayList} of {@link RTOFHit} for rtof hits read.
  *
  * </p>
  *
@@ -20,24 +20,24 @@ import org.jlab.io.base.DataEvent;
 public class HitFinder {
 
     /**
-     * list of bar hits
+     * list of rtof hits
      */
-    private ArrayList<BarHit> barHits;
+    private ArrayList<RTOFHit> rtofHits;
 
     /**
      * Default constructor that initializes the list of hits as new empty lists.
      */
     public HitFinder() {
-        this.barHits = new ArrayList<>();
+        this.rtofHits = new ArrayList<>();
     }
 
-    // Getter and Setter for barHits
-    public ArrayList<BarHit> getBarHits() {
-        return barHits;
+    // Getter and Setter for rtofHits
+    public ArrayList<RTOFHit> getRTOFHits() {
+        return rtofHits;
     }
 
-    public void setBarHits(ArrayList<BarHit> bar_hits) {
-        this.barHits = bar_hits;
+    public void setRTOFHits(ArrayList<RTOFHit> rtof_hits) {
+        this.rtofHits = rtof_hits;
     }
 
     /**
@@ -46,14 +46,14 @@ public class HitFinder {
      *
      */
     public void findHits(DataEvent event) {
-        //For each event a list of bar hits is filled
-        this.barHits.clear();
-        //They are read from the RECOILTOF TDC bank
-        DataBank bank = event.getBank("RECOILTOF::tdc");
+        //For each event a list of rtof hits is filled
+        this.rtofHits.clear();
+        //They are read from the RTOF TDC bank
+        DataBank bank = event.getBank("RTOF::tdc");
         int nt = bank.rows(); // number of hits
         //Hits in the bar downstream and upstream will be matched
-        ArrayList<RECOILTOFHit> hit_up = new ArrayList<>();
-        ArrayList<RECOILTOFHit> hit_down = new ArrayList<>();
+        ArrayList<RTOFRawHit> hit_up = new ArrayList<>();
+        ArrayList<RTOFRawHit> hit_down = new ArrayList<>();
         
         //Looping through all hits
         for (int i = 0; i < nt; i++) {
@@ -66,7 +66,7 @@ public class HitFinder {
             int tot = bank.getInt("ToT", i);
 
             //Building a Hit
-            RECOILTOFHit hit = new RECOILTOFHit(sector, row, column, order, tdc, tot);
+            RTOFRawHit hit = new RTOFRawHit(sector, row, column, order, tdc, tot);
             if (hit.getEnergy() < 0.01) {
                 continue; //energy threshold
             }
@@ -89,26 +89,26 @@ public class HitFinder {
 
         //Starting loop through up hits in the bar
         for (int i_up = 0; i_up < hit_up.size(); i_up++) {
-            RECOILTOFHit this_hit_up = hit_up.get(i_up);
+            RTOFRawHit this_hit_up = hit_up.get(i_up);
             int countMatches = 0;
             //Starting loop through down hits in the bar
             for (int i_down = 0; i_down < hit_down.size(); i_down++) {
-                RECOILTOFHit this_hit_down = hit_down.get(i_down);
-                //Matching the hits: if same bar and different order, they make up a bar hit
+                RTOFRawHit this_hit_down = hit_down.get(i_down);
+                //Matching the hits: if same bar and different order, they make up a rtof hit
                 if (this_hit_up.matchBar(this_hit_down)) {
                     if (countMatches > 0) {
                         //If the up hit was already involved in a match, do not make an additionnal match
                         //Chosing to ignore double matches for now because it happened for <1% of events in cosmic runs
                         continue;
                     }
-                    BarHit this_bar_hit = new BarHit(this_hit_down, this_hit_up);
-                    this.barHits.add(this_bar_hit);
+                    RTOFHit this_rtof_hit = new RTOFHit(this_hit_down, this_hit_up);
+                    this.rtofHits.add(this_rtof_hit);
                     countMatches++;
                 }
             }
         }
         //Once all has been listed, hits are sorted by energy
-        Collections.sort(this.barHits, (hit1, hit2) -> Double.compare(hit2.getEnergy(), hit1.getEnergy()));
+        Collections.sort(this.rtofHits, (hit1, hit2) -> Double.compare(hit2.getEnergy(), hit1.getEnergy()));
     }
 
     /**

@@ -1,4 +1,4 @@
-package org.jlab.service.recoiltof;
+package org.jlab.service.rtof;
 
 import java.util.ArrayList;
 
@@ -9,23 +9,23 @@ import org.jlab.io.base.DataEvent;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.io.hipo.HipoDataSource;
-import org.jlab.rec.recoiltof.banks.RecoBankWriter;
-import org.jlab.rec.recoiltof.cluster.RECOILTOFCluster;
-import org.jlab.rec.recoiltof.cluster.ClusterFinder;
-import org.jlab.rec.recoiltof.hit.RECOILTOFHit;
-import org.jlab.rec.recoiltof.hit.BarHit;
-import org.jlab.rec.recoiltof.hit.HitFinder;
+import org.jlab.rec.rtof.banks.RecoBankWriter;
+import org.jlab.rec.rtof.cluster.RTOFCluster;
+import org.jlab.rec.rtof.cluster.ClusterFinder;
+import org.jlab.rec.rtof.hit.RTOFRawHit;
+import org.jlab.rec.rtof.hit.RTOFHit;
+import org.jlab.rec.rtof.hit.HitFinder;
 
 /**
- * Service to return reconstructed RECOILTOF hits and clusters
+ * Service to return reconstructed RTOF hits and clusters
  *
  * @author npilleux, Nilanga Wickramaarachchi
  *
  */
-public class RECOILTOFEngine extends ReconstructionEngine {
+public class RTOFEngine extends ReconstructionEngine {
 
-    public RECOILTOFEngine() {
-        super("RECOILTOF", "Nilanga Wickramaarachchi", "1.0");
+    public RTOFEngine() {
+        super("RTOF", "Nilanga Wickramaarachchi", "1.0");
     }
 
     RecoBankWriter rbc;
@@ -55,10 +55,10 @@ public class RECOILTOFEngine extends ReconstructionEngine {
         HitFinder hitfinder = new HitFinder();
         hitfinder.findHits(event);
 
-        ArrayList<BarHit> BarHits = hitfinder.getBarHits();
+        ArrayList<RTOFHit> RTOFHits = hitfinder.getRTOFHits();
         
         //Exit if hit list is empty
-        if (BarHits.isEmpty()) {
+        if (RTOFHits.isEmpty()) {
             //			System.out.println("No hits : ");
             //			event.show();
             return true;
@@ -66,10 +66,10 @@ public class RECOILTOFEngine extends ReconstructionEngine {
         
         ClusterFinder clusterFinder = new ClusterFinder();
         clusterFinder.makeClusters(event,hitfinder);
-        ArrayList<RECOILTOFCluster> Clusters = clusterFinder.getClusters();
+        ArrayList<RTOFCluster> Clusters = clusterFinder.getClusters();
 
-        if (BarHits.size() != 0) {
-            rbc.appendRECOILTOFBanks(event, BarHits, Clusters);
+        if (RTOFHits.size() != 0) {
+            rbc.appendRTOFBanks(event, RTOFHits, Clusters);
         }
         return true;
     }
@@ -78,7 +78,7 @@ public class RECOILTOFEngine extends ReconstructionEngine {
     public boolean init() {
         rbc = new RecoBankWriter();
 
-        this.registerOutputBank("RECOILTOF::hits", "RECOILTOF::clusters");
+        this.registerOutputBank("RTOF::hits", "RTOF::clusters");
 
         return true;
     }

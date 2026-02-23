@@ -1,8 +1,8 @@
-package org.jlab.rec.recoiltof.hit;
+package org.jlab.rec.rtof.hit;
 
 import org.jlab.geom.base.*;
 import org.jlab.geom.prim.Point3D;
-import org.jlab.rec.recoiltof.constants.Parameters;
+import org.jlab.rec.rtof.constants.Parameters;
 
 /**
  *
@@ -12,7 +12,7 @@ import org.jlab.rec.recoiltof.constants.Parameters;
  *
  * @author npilleux, Nilanga Wickramaarachchi 
  */
-public class RECOILTOFHit {
+public class RTOFRawHit {
 
     private int sector, row, column, order;
     private int tdc, tot;
@@ -326,7 +326,7 @@ public class RECOILTOFHit {
     }
 
     /**
-     * Compares two RECOILTOFHit objects to check if they match in the bar.
+     * Compares two RTOFRawHit objects to check if they match in the bar.
      * <ul>
      * <li>If the sector or row or column of the two hits do not match, the method
      * returns {@code false}.</li>
@@ -336,10 +336,10 @@ public class RECOILTOFHit {
      * If none of these conditions are violated, the method returns
      * {@code true}, indicating the two hits match.
      *
-     * @param hit2match The RECOILTOFHit object to compare with the current instance.
+     * @param hit2match The RTOFRawHit object to compare with the current instance.
      * @return {@code true} if the hits match; {@code false} otherwise.
      */
-    public boolean matchBar(RECOILTOFHit hit2match) {
+    public boolean matchBar(RTOFRawHit hit2match) {
         if (this.getSector() != hit2match.getSector()) {
             //Two hits in different sectors
             return false;
@@ -380,7 +380,7 @@ public class RECOILTOFHit {
      * @param tot ToT value.
      *
      */
-    public RECOILTOFHit(int sector, int row, int column, int order, int tdc, int tot) {
+    public RTOFRawHit(int sector, int row, int column, int order, int tdc, int tot) {
         this.sector = sector;
         this.row = row;
         this.column = column;
@@ -395,7 +395,7 @@ public class RECOILTOFHit {
         this.calculateXYZ();
     }
 
-    public RECOILTOFHit() {
+    public RTOFRawHit() {
     }
 
     /**

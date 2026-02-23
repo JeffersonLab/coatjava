@@ -598,7 +598,7 @@
     ]
   },
   {
-    "name" : "RECOILTOF::tdc",
+    "name" : "RTOF::tdc",
     "group": 22700,
     "item" : 12,
     "info": "TDC bank for the RECOIL TOF",

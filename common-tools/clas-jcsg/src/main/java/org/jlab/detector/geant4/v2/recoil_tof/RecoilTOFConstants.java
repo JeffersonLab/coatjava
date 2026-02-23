@@ -1,11 +1,11 @@
-package org.jlab.detector.geant4.v2.recoil_tof;
+package org.jlab.detector.geant4.v2.rtof;
 
 
 import org.jlab.detector.calib.utils.DatabaseConstantProvider; 
 import org.jlab.geom.prim.Point3D;
 
 
-public class RecoilTOFConstants {
+public class RTOFConstants {
 
     public final static int NSECTORS    = 2;    //number of sectors
     public final static int NROWS     = 5;    //number of rows of bars in a sector

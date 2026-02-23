@@ -1,38 +1,38 @@
-package org.jlab.rec.recoiltof.hit;
+package org.jlab.rec.rtof.hit;
 
-import org.jlab.rec.recoiltof.constants.Parameters;
+import org.jlab.rec.rtof.constants.Parameters;
 
 /**
  *
- * Represents a hit in the recoil tof bar. Extends class RECOILTOFHit. Is further defined
- * by the two hits upstream and downstream composing a full bar hit. y position,
+ * Represents a hit in the recoil tof bar. Extends class RTOFRawHit. Is further defined
+ * by the two hits upstream and downstream composing a full rtof hit. y position,
  * time and energy are defined from the up/down hits.
  *
  * @author npilleux, Nilanga Wickramaarachchi 
  */
-public class BarHit extends RECOILTOFHit {
+public class RTOFHit extends RTOFRawHit {
 
-    //A bar hit is the combination of a downstream and upstream hits
-    private RECOILTOFHit hitUp, hitDown;
+    //A rtof hit is the combination of a downstream and upstream hits
+    private RTOFRawHit hitUp, hitDown;
 
-    public RECOILTOFHit getHitUp() {
+    public RTOFRawHit getHitUp() {
         return hitUp;
     }
 
-    public void setHitUp(RECOILTOFHit hit_up) {
+    public void setHitUp(RTOFRawHit hit_up) {
         this.hitUp = hit_up;
     }
 
-    public RECOILTOFHit getHitDown() {
+    public RTOFRawHit getHitDown() {
         return hitDown;
     }
 
-    public void setHitDown(RECOILTOFHit hit_down) {
+    public void setHitDown(RTOFRawHit hit_down) {
         this.hitDown = hit_down;
     }
 
     /**
-     * Computes bar hit y local coordinate from up/downstream hit times.
+     * Computes rtof hit y local coordinate from up/downstream hit times.
      * 
      */
     public final void computeLocalY() {
@@ -40,7 +40,7 @@ public class BarHit extends RECOILTOFHit {
     }
 
     /**
-     * Computes bar hit y coordinate in the global coordinate system. 
+     * Computes rtof hit y coordinate in the global coordinate system. 
      *
      */
     public final void computeGlobalY() {
@@ -70,7 +70,7 @@ public class BarHit extends RECOILTOFHit {
 
     
     /**
-     * Computes bar hit time from up/downstream hit times.
+     * Computes rtof hit time from up/downstream hit times.
      * The time is set as the time of the most energetic hit.
      * It is corrected for propagation time.
      * 
@@ -92,9 +92,9 @@ public class BarHit extends RECOILTOFHit {
     }
 
     /**
-     * Computes bar hit energy from up/downstream hits.
+     * Computes rtof hit energy from up/downstream hits.
      * The energy of the up/downstream hits is corrected for attenuation now that y is known.
-     * The energy of the bar hit is the sum of the energy of the up/downstream hits.
+     * The energy of the rtof hit is the sum of the energy of the up/downstream hits.
      * 
      */
     public final void computeEnergy() {
@@ -112,7 +112,7 @@ public class BarHit extends RECOILTOFHit {
         this.setEnergy(Edep_up + Edep_down);
     }
 
-    public BarHit(RECOILTOFHit hit_down, RECOILTOFHit hit_up) {
+    public RTOFHit(RTOFRawHit hit_down, RTOFRawHit hit_up) {
         boolean hits_match = hit_down.matchBar(hit_up);
         if (!hits_match) {
             throw new UnsupportedOperationException("Hits do not match \n");
@@ -134,10 +134,10 @@ public class BarHit extends RECOILTOFHit {
         this.setTot((hit_down.getTot() + hit_up.getTot()));
     }
 
-    public BarHit() {
+    public RTOFHit() {
         super();
         this.setType("bar");
-        this.setOrder(2);//Fake order for bar hits
+        this.setOrder(2);//Fake order for rtof hits
     }
 
     /**

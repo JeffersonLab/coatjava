@@ -1,16 +1,16 @@
-package org.jlab.rec.recoiltof.cluster;
+package org.jlab.rec.rtof.cluster;
 
 import java.util.ArrayList;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
-import org.jlab.rec.recoiltof.constants.Parameters;
-import org.jlab.rec.recoiltof.hit.RECOILTOFHit;
-import org.jlab.rec.recoiltof.hit.BarHit;
+import org.jlab.rec.rtof.constants.Parameters;
+import org.jlab.rec.rtof.hit.RTOFRawHit;
+import org.jlab.rec.rtof.hit.RTOFHit;
 
 /**
- * The {@code RECOILTOFCluster} represents clusters in the recoil tof
+ * The {@code RTOFCluster} represents clusters in the recoil tof
  *
  * <p>
  * Create clusters and compute their basic properties from the hits composing
@@ -19,12 +19,12 @@ import org.jlab.rec.recoiltof.hit.BarHit;
  *
  * @author pilleux, Nilanga Wickramaarachchi 
  */
-public class RECOILTOFCluster {
+public class RTOFCluster {
 
     /**
      * list of hits in the bars.
      */
-    ArrayList<BarHit> barHits;
+    ArrayList<RTOFHit> rtofHits;
     /**
      * cluster properties:position [cm], time [ns], energy[MeV], 
      * type of the maximum hit (to set resolutions) and index and sector of the maximum hit.
@@ -33,12 +33,12 @@ public class RECOILTOFCluster {
     String typeMaxHit;
     int indexMaxHit, sectorMaxHit;
 
-    public ArrayList<BarHit> getBarHits() {
-        return barHits;
+    public ArrayList<RTOFHit> getRTOFHits() {
+        return rtofHits;
     }
 
-    public void setBarHits(ArrayList<BarHit> bar_hits) {
-        this.barHits = bar_hits;
+    public void setRTOFHits(ArrayList<RTOFHit> rtof_hits) {
+        this.rtofHits = rtof_hits;
     }
 
     public double getX() {
@@ -119,14 +119,14 @@ public class RECOILTOFCluster {
     public final void computeClusterProperties() {
         this.energy = 0;
         double max_energy = -1;
-        RECOILTOFHit max_energy_hit = new RECOILTOFHit();
+        RTOFRawHit max_energy_hit = new RTOFRawHit();
 
-        for (int i_bar = 0; i_bar < this.barHits.size(); i_bar++) {
-            BarHit this_bar_hit = this.barHits.get(i_bar);
-            double this_energy = this_bar_hit.getEnergy();
+        for (int i_bar = 0; i_bar < this.rtofHits.size(); i_bar++) {
+            RTOFHit this_rtof_hit = this.rtofHits.get(i_bar);
+            double this_energy = this_rtof_hit.getEnergy();
             this.energy += this_energy;
             if (this_energy > max_energy) {
-                max_energy_hit = this_bar_hit;
+                max_energy_hit = this_rtof_hit;
                 max_energy = this_energy;
             }
         }
@@ -148,8 +148,8 @@ public class RECOILTOFCluster {
      */
     public double getEdepBar() {
         double energy = 0;
-        for (int i = 0; i < this.barHits.size(); i++) {
-            RECOILTOFHit this_hit = this.barHits.get(i);
+        for (int i = 0; i < this.rtofHits.size(); i++) {
+            RTOFRawHit this_hit = this.rtofHits.get(i);
             energy += this_hit.getEnergy();
         }
         return energy;
@@ -170,10 +170,10 @@ public class RECOILTOFCluster {
      * Retrieve the hit with maximal energy in the cluster. It must have been
      * computed previously.
      *
-     * @return a RECOILTOFHit that is the maximal energy hit in the cluster
+     * @return a RTOFRawHit that is the maximal energy hit in the cluster
      *
      */
-    public final RECOILTOFHit getMaxHit() {
+    public final RTOFRawHit getMaxHit() {
         if (this.typeMaxHit == null) {
             System.out.print("You did not compute the maximal hit! \n");
             return null;
@@ -184,7 +184,7 @@ public class RECOILTOFCluster {
         } else {
             switch (this.typeMaxHit) {
                 case "bar" -> {
-                    return this.barHits.get(this.indexMaxHit);
+                    return this.rtofHits.get(this.indexMaxHit);
                 }
                 default -> {
                     System.out.print("Unrecognized type! \n");
@@ -202,8 +202,8 @@ public class RECOILTOFCluster {
      */
     public int getTot() {
         int tot = 0;
-        for (int i = 0; i < this.barHits.size(); i++) {
-            BarHit this_hit = this.barHits.get(i);
+        for (int i = 0; i < this.rtofHits.size(); i++) {
+            RTOFHit this_hit = this.rtofHits.get(i);
             tot += this_hit.getTot();
         }
         return tot;
@@ -223,11 +223,11 @@ public class RECOILTOFCluster {
      * Constructor that initializes the list of bar hits
      * and computes the cluster properties.
      *
-     * @param bar_hits a {@link ArrayList} of {@link BarHit}.
+     * @param rtof_hits a {@link ArrayList} of {@link RTOFHit}.
      *
      */
-    public RECOILTOFCluster(ArrayList<BarHit> bar_hits) {
-        this.barHits = bar_hits;
+    public RTOFCluster(ArrayList<RTOFHit> rtof_hits) {
+        this.rtofHits = rtof_hits;
         this.computeClusterProperties();
     }
 
@@ -235,12 +235,12 @@ public class RECOILTOFCluster {
      * Constructor that initializes the list of bar hits
      * and computes the cluster properties.
      *
-     * @param bar_hits a {@link ArrayList} of {@link BarHit}.
+     * @param rtof_hits a {@link ArrayList} of {@link RTOFHit}.
      * @param event a {@link DataEvent} with which track matching will be done.
      *
      */
-    public RECOILTOFCluster(ArrayList<BarHit> bar_hits, DataEvent event) {
-        this.barHits = bar_hits;
+    public RTOFCluster(ArrayList<RTOFHit> rtof_hits, DataEvent event) {
+        this.rtofHits = rtof_hits;
         this.computeClusterProperties();
     }
 

@@ -1,4 +1,4 @@
-package org.jlab.rec.recoiltof.constants;
+package org.jlab.rec.rtof.constants;
 
 /**
  *

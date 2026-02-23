@@ -1,17 +1,17 @@
-package org.jlab.rec.recoiltof.cluster;
+package org.jlab.rec.rtof.cluster;
 
 import java.util.ArrayList;
 import org.jlab.io.base.DataEvent;
-import org.jlab.rec.recoiltof.constants.Parameters;
-import org.jlab.rec.recoiltof.hit.RECOILTOFHit;
-import org.jlab.rec.recoiltof.hit.BarHit;
-import org.jlab.rec.recoiltof.hit.HitFinder;
+import org.jlab.rec.rtof.constants.Parameters;
+import org.jlab.rec.rtof.hit.RTOFRawHit;
+import org.jlab.rec.rtof.hit.RTOFHit;
+import org.jlab.rec.rtof.hit.HitFinder;
 
 /**
  * The {@code ClusterFinder} class builds clusters in the recoil tof
  *
  * <p>
- * Uses found hits information. Creates a {@link RECOILTOFCluster} matching them.
+ * Uses found hits information. Creates a {@link RTOFCluster} matching them.
  * </p>
  *
  * @author pilleux, Nilanga Wickramaarachchi
@@ -21,25 +21,25 @@ public class ClusterFinder {
     /**
      * list of clusters.
      */
-    private ArrayList<RECOILTOFCluster> clusters;
+    private ArrayList<RTOFCluster> clusters;
 
     /**
      * Sets the list of clusters.
      *
-     * @param clusters a {@link ArrayList} of {@link RECOILTOFCluster}.
+     * @param clusters a {@link ArrayList} of {@link RTOFCluster}.
      *
      */
-    public void setClusters(ArrayList<RECOILTOFCluster> clusters) {
+    public void setClusters(ArrayList<RTOFCluster> clusters) {
         this.clusters = clusters;
     }
 
     /**
      * Gets the list of clusters.
      *
-     * @return a {@link ArrayList} of {@link RECOILTOFCluster}.
+     * @return a {@link ArrayList} of {@link RTOFCluster}.
      *
      */
-    public ArrayList<RECOILTOFCluster> getClusters() {
+    public ArrayList<RTOFCluster> getClusters() {
         return clusters;
     }
 
@@ -56,23 +56,23 @@ public class ClusterFinder {
      *
      *
      * @param <T> The type of the hit objects, which must extend
-     * {@link RECOILTOFHit}. This allows the method to work with different types of
-     * hits that are subclasses of {@link RECOILTOFHit} (e.g., {@link BarHit}).
+     * {@link RTOFRawHit}. This allows the method to work with different types of
+     * hits that are subclasses of {@link RTOFRawHit} (e.g., {@link RTOFHit}).
      * @param i The index from which hits are read in the list to compare
      * against the current hit.
      * @param hits The list of hits to be clustered, can be any subclass of
-     * {@link RECOILTOFHit}.
+     * {@link RTOFRawHit}.
      * @param this_hit The hit currently being considered for clustering.
      * @param sigma_y The threshold for the y-distance [mm] between the hits.
      * @param sigma_t The threshold for the time difference [ns] between the
      * hits.
      * @param cluster_id The ID of the cluster being formed.
      * @param this_cluster_hits The list that will store the clustered hits.
-     * This list can accept hits of type RECOILTOFHit or BarHit. Clustered hits are
+     * This list can accept hits of type RTOFRawHit or RTOFHit. Clustered hits are
      * added to this list.
      *
      */
-    public <T extends RECOILTOFHit> void clusterHits(int i, ArrayList<T> hits, RECOILTOFHit this_hit, Number sigma_y, double sigma_t, int cluster_id, ArrayList<? super T> this_cluster_hits) {
+    public <T extends RTOFRawHit> void clusterHits(int i, ArrayList<T> hits, RTOFRawHit this_hit, Number sigma_y, double sigma_t, int cluster_id, ArrayList<? super T> this_cluster_hits) {
         // Loop through less energetic clusters
         for (int j = i + 1; j < hits.size(); j++) {
             T other_hit = hits.get(j);
@@ -118,25 +118,25 @@ public class ClusterFinder {
         int cluster_id = 1;
 
         //Getting the list of hits, they must have been ordered by energy already
-        ArrayList<BarHit> bar_hits = hitfinder.getBarHits();
+        ArrayList<RTOFHit> rtof_hits = hitfinder.getRTOFHits();
 
         //Loop through all bar hits
-        for (int i_bar = 0; i_bar < bar_hits.size(); i_bar++) {
-            BarHit this_bar_hit = bar_hits.get(i_bar);
+        for (int i_bar = 0; i_bar < rtof_hits.size(); i_bar++) {
+            RTOFHit this_rtof_hit = rtof_hits.get(i_bar);
             //Skip hits that have already been clustered
-            if (this_bar_hit.getIsInACluster()) {
+            if (this_rtof_hit.getIsInACluster()) {
                 continue;
             }
 
-            ArrayList<BarHit> this_cluster_bar_hits = new ArrayList<>();
-            this_bar_hit.setIsInACluster(true);
-            this_bar_hit.setAssociatedClusterIndex(cluster_id);
-            this_cluster_bar_hits.add(this_bar_hit);
+            ArrayList<RTOFHit> this_cluster_rtof_hits = new ArrayList<>();
+            this_rtof_hit.setIsInACluster(true);
+            this_rtof_hit.setAssociatedClusterIndex(cluster_id);
+            this_cluster_rtof_hits.add(this_rtof_hit);
 
             //Matching bar hits in clusters
-            clusterHits(i_bar, bar_hits, this_bar_hit, sigma_y, sigma_t, cluster_id, this_cluster_bar_hits);
+            clusterHits(i_bar, rtof_hits, this_rtof_hit, sigma_y, sigma_t, cluster_id, this_cluster_rtof_hits);
 
-            RECOILTOFCluster cluster = new RECOILTOFCluster(this_cluster_bar_hits, event);
+            RTOFCluster cluster = new RTOFCluster(this_cluster_rtof_hits, event);
             clusters.add(cluster);
             cluster_id++;
         }

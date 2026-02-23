@@ -1,4 +1,4 @@
-package org.jlab.detector.geant4.v2.recoil_tof;
+package org.jlab.detector.geant4.v2.rtof;
 
 import eu.mihosoft.vrl.v3d.Vector3d;
 import org.jlab.detector.geant4.v2.Geant4Factory;
@@ -12,14 +12,14 @@ import org.jlab.detector.calib.utils.DatabaseConstantProvider;
  * 
  * @author Nilanga Wickramaarachchi
  */
-public final class RecoilTOFGeant4Factory extends Geant4Factory {
+public final class RTOFGeant4Factory extends Geant4Factory {
     
-    private int nSectors  = RecoilTOFConstants.NSECTORS;
-    private int nRows = RecoilTOFConstants.NROWS;
-    private int nCols = RecoilTOFConstants.NCOLUMNS;
+    private int nSectors  = RTOFConstants.NSECTORS;
+    private int nRows = RTOFConstants.NROWS;
+    private int nCols = RTOFConstants.NCOLUMNS;
     
-    public RecoilTOFGeant4Factory( DatabaseConstantProvider cp) {
-        RecoilTOFConstants.connect(cp );
+    public RTOFGeant4Factory( DatabaseConstantProvider cp) {
+        RTOFConstants.connect(cp );
         this.init(cp);
     }
     
@@ -41,9 +41,9 @@ public final class RecoilTOFGeant4Factory extends Geant4Factory {
         int is=isector;
         Vector3d vCenter = new Vector3d(0, 0, 0);
         
-	vCenter.x = (-1+is*2)*(RecoilTOFConstants.RADIUS)*Math.sin(Math.toRadians(RecoilTOFConstants.HORIZONTAL_OPENING_ANGLE/2+RecoilTOFConstants.HORIZONTAL_STARTING_ANGLE));
+	vCenter.x = (-1+is*2)*(RTOFConstants.RADIUS)*Math.sin(Math.toRadians(RTOFConstants.HORIZONTAL_OPENING_ANGLE/2+RTOFConstants.HORIZONTAL_STARTING_ANGLE));
 	vCenter.y = 0;
-	vCenter.z =RecoilTOFConstants.RADIUS*Math.cos(Math.toRadians(RecoilTOFConstants.HORIZONTAL_OPENING_ANGLE/2+RecoilTOFConstants.HORIZONTAL_STARTING_ANGLE));
+	vCenter.z =RTOFConstants.RADIUS*Math.cos(Math.toRadians(RTOFConstants.HORIZONTAL_OPENING_ANGLE/2+RTOFConstants.HORIZONTAL_STARTING_ANGLE));
         return vCenter;
     }
 
@@ -51,16 +51,16 @@ public final class RecoilTOFGeant4Factory extends Geant4Factory {
     
     public Geant4Basic createSector(int isector, int nRows, int nCols ) {
 
-        double hlx = RecoilTOFConstants.WIDTH/2+1;
-        double hly  = RecoilTOFConstants.LENGTH/2+1;
-        double hlz = RecoilTOFConstants.THICKNESS/2+1; 
+        double hlx = RTOFConstants.WIDTH/2+1;
+        double hly  = RTOFConstants.LENGTH/2+1;
+        double hlz = RTOFConstants.THICKNESS/2+1; 
 
         Vector3d vCenter = this.getCenterCoordinate(isector);
 
 	Geant4Basic sectorVolume = new G4Box("recoil_tof_sector" + (isector + 1), hlx, hly, hlz);
 
-	if(isector==0) sectorVolume.rotate("yxz",Math.toRadians((RecoilTOFConstants.HORIZONTAL_OPENING_ANGLE/2+RecoilTOFConstants.HORIZONTAL_STARTING_ANGLE)),0,0);
-	if(isector==1) sectorVolume.rotate("yxz",Math.toRadians(-(RecoilTOFConstants.HORIZONTAL_OPENING_ANGLE/2+RecoilTOFConstants.HORIZONTAL_STARTING_ANGLE)),0,0);
+	if(isector==0) sectorVolume.rotate("yxz",Math.toRadians((RTOFConstants.HORIZONTAL_OPENING_ANGLE/2+RTOFConstants.HORIZONTAL_STARTING_ANGLE)),0,0);
+	if(isector==1) sectorVolume.rotate("yxz",Math.toRadians(-(RTOFConstants.HORIZONTAL_OPENING_ANGLE/2+RTOFConstants.HORIZONTAL_STARTING_ANGLE)),0,0);
         sectorVolume.translate(vCenter.x, vCenter.y, vCenter.z);
         sectorVolume.setId(isector + 1, 0, 0);
 	
@@ -84,24 +84,24 @@ public final class RecoilTOFGeant4Factory extends Geant4Factory {
     
     public Geant4Basic createBar(int iSector, int iRow, int iCol) {
         
-	int nCols = RecoilTOFConstants.NCOLUMNS;
+	int nCols = RTOFConstants.NCOLUMNS;
 
-	double barDX = RecoilTOFConstants.BAR_WIDTH/2;
+	double barDX = RTOFConstants.BAR_WIDTH/2;
 	double barDY;
 
-	if (iRow == (nRows - 1) / 2) barDY = RecoilTOFConstants.SHORT_BAR_LENGTH/2;
-	else barDY = RecoilTOFConstants.LONG_BAR_LENGTH/2;
+	if (iRow == (nRows - 1) / 2) barDY = RTOFConstants.SHORT_BAR_LENGTH/2;
+	else barDY = RTOFConstants.LONG_BAR_LENGTH/2;
 
-	double barDZ = RecoilTOFConstants.BAR_THICKNESS/2;
+	double barDZ = RTOFConstants.BAR_THICKNESS/2;
         
 	Geant4Basic barVolume = new G4Box("bar_sector" + (iSector + 1) + "_row" + (iRow + 1) + "_column" + (iCol + 1), barDX, barDY, barDZ);
 
 	// Constants for positioning
-	double y_start = -(RecoilTOFConstants.LENGTH - RecoilTOFConstants.LONG_BAR_LENGTH)/2;  // Starting Y position
-	double x_spacing = RecoilTOFConstants.BAR_WIDTH;
-	double x_start = -(RecoilTOFConstants.WIDTH - x_spacing)/2;  // starting X position
-	double dy_long = RecoilTOFConstants.LONG_BAR_LENGTH;
-	double dy_short = RecoilTOFConstants.SHORT_BAR_LENGTH;
+	double y_start = -(RTOFConstants.LENGTH - RTOFConstants.LONG_BAR_LENGTH)/2;  // Starting Y position
+	double x_spacing = RTOFConstants.BAR_WIDTH;
+	double x_start = -(RTOFConstants.WIDTH - x_spacing)/2;  // starting X position
+	double dy_long = RTOFConstants.LONG_BAR_LENGTH;
+	double dy_short = RTOFConstants.SHORT_BAR_LENGTH;
 
 	//Position calculation
 	double z_pos = 0;
@@ -132,9 +132,9 @@ public final class RecoilTOFGeant4Factory extends Geant4Factory {
     public static void main(String[] args) {
         DatabaseConstantProvider cp = new DatabaseConstantProvider(11, "default");
 
-        RecoilTOFConstants.connect(cp);
+        RTOFConstants.connect(cp);
         
-        RecoilTOFGeant4Factory factory = new RecoilTOFGeant4Factory(cp);
+        RTOFGeant4Factory factory = new RTOFGeant4Factory(cp);
             
         factory.getAllVolumes().forEach(volume -> {
             System.out.println(volume.gemcString());

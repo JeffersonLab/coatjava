@@ -1,9 +1,9 @@
 [
   {
-    "name": "RECOILTOF::hits",
+    "name": "RTOF::hits",
     "group": 22700,
     "item": 21,
-    "info": "Reconstructed RECOILTOF hits",
+    "info": "Reconstructed RTOF hits",
     "entries": [		
       {
         "name": "id",
@@ -48,10 +48,10 @@
       }
     ]
   },{
-    "name": "RECOILTOF::clusters",
+    "name": "RTOF::clusters",
     "group": 22700,
     "item": 22,
-    "info": "Clusters in RECOILTOF",
+    "info": "Clusters in RTOF",
     "entries": [		
       {
         "name": "id",
