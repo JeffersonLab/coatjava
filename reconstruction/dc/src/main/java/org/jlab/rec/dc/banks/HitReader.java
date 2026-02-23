@@ -15,6 +15,7 @@ import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
 
 import org.jlab.detector.banks.RawBank.OrderType;
 import org.jlab.detector.banks.RawDataBank;
+import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 import org.jlab.rec.dc.Constants;
@@ -290,6 +291,7 @@ public class HitReader {
         return grpHits;
     }
 
+    private final Map<Integer, Integer> tid2pindex = new HashMap<>();
     private final Map<Integer, Integer> id2tid = new HashMap<>();
     private final Map<Integer, Double> id2tidB = new HashMap<>();
     private final Map<Integer, Double> id2tidtProp = new HashMap<>();
@@ -312,9 +314,11 @@ public class HitReader {
         0: this.getConstantsManager().getConstants(newRun, "/calibration/dc/signal_generation/doca_resolution"),
         1: this.getConstantsManager().getConstants(newRun, "/calibration/dc/time_to_distance/t2d")
         */
-        String bankName    = bankNames.getInputHitsBank();
-        String pointName   = bankNames.getInputIdsBank();
-        String recBankName = bankNames.getRecEventBank();
+        String bankName      = bankNames.getInputHitsBank();
+        String pointName     = bankNames.getInputIdsBank();
+        String recBankName   = bankNames.getRecEventBank();
+        String partBankName  = bankNames.getRecPartBank();
+        String trackBankName = bankNames.getRecTrackBank();
         
         LOGGER.log(Level.FINEST,"Reading hb banks for "+ bankName + ", " + pointName + " " + recBankName);
         
@@ -324,6 +328,26 @@ public class HitReader {
             //    System.err.println("there is no HB dc bankAI for "+_names[0]);
             return;
         }
+
+        double T_Start = 0;
+        if (!event.hasBank(recBankName) || event.getBank(recBankName).getFloat("startTime", 0)==-1000) 
+            return;
+        else if (!event.hasBank("MC::Particle") &&
+             event.getBank("RUN::config").getInt("run", 0) > 100) {
+            T_Start = event.getBank(recBankName).getFloat("startTime", 0);
+        }  
+        
+        tid2pindex.clear();
+        if (event.hasBank(partBankName) && event.hasBank(trackBankName)) {
+            DataBank trackBank = event.getBank(trackBankName);
+            for (int i = 0; i < trackBank.rows(); i++) {
+                if (trackBank.getByte("detector", i) == DetectorType.DC.getDetectorId()) {
+                    tid2pindex.put(trackBank.getShort("index", i)+1, // assume trkId is index+1
+                              (int)trackBank.getShort("pindex", i));
+                }
+            }
+        }
+        
         id2tid.clear();
         id2tidB.clear();
         id2tidtFlight.clear();
@@ -385,8 +409,9 @@ public class HitReader {
             }
         }
 
-        int size = layer.length;
+        DataBank partBank  = event.getBank(partBankName);
 
+        int size = layer.length;
         for (int i = 0; i < size; i++) {
             //use only hits that have been fit to a track
             if (trkID[i] == -1) {
@@ -394,24 +419,6 @@ public class HitReader {
             }
             
             double T_0 = 0;
-            double T_Start = 0;
-            
-            if (!event.hasBank(recBankName)) {
-                continue;
-            }
-            
-            if (event.hasBank(recBankName) && 
-                    event.getBank(recBankName).getFloat("startTime", 0)==-1000) {
-                continue;
-            } 
-            
-            if (!event.hasBank("MC::Particle") &&
-                    event.getBank("RUN::config").getInt("run", 0) > 100) {
-                //T_0 = this.getT0(sector[i], slayer[i], layer[i], wire[i], T0, T0ERR)[0];
-                if (event.hasBank(recBankName))
-                    T_Start = event.getBank(recBankName).getFloat("startTime", 0);
-            }  
-            
             T_0 = this.getT0(sector[i], slayer[i], layer[i], wire[i], t0s)[0];
             FittedHit hit = new FittedHit(sector[i], slayer[i], layer[i], wire[i], tdc[i], jitter[i], id[i]);
             hit.set_Id(id[i]);
@@ -420,8 +427,11 @@ public class HitReader {
             hit.setTStart(T_Start);
             hit.setTProp(tProp[i]);
             //hit.setTFlight(tFlight[i]);
-            hit.set_Beta(this.readBeta(event, trkID[i]));
-            this.setBetaFlag(event, trkID[i], hit, hit.get_Beta());//reset beta for out of range assuming the pion hypothesis and setting a flag
+            int pindex = -1;
+            if(tid2pindex.containsKey(trkID[i])) 
+                pindex = tid2pindex.get(trkID[i]);
+            hit.set_Beta(this.readBeta(partBank, pindex));
+            this.setBetaFlag(partBank, pindex, hit, hit.get_Beta());//reset beta for out of range assuming the pion hypothesis and setting a flag
             hit.setTFlight(tFlight[i]/hit.get_Beta0to1());
             //resetting TFlight after beta has been obtained
             //hit.set_SignalTimeOfFlight(); 
@@ -593,11 +603,11 @@ public class HitReader {
 //    }
 
     //betaFlag:0 = OK; -1 = negative; 1 = less than lower cut (0.15); 2 = greater than 1.15 (from HBEB beta vs p plots for data)
-    private void setBetaFlag(DataEvent event, int trkId, FittedHit hit, double beta) {
+    private void setBetaFlag(DataBank partBank, int pindex, FittedHit hit, double beta) {
         if(beta<0.15) {
             if(beta<0) {
                 hit.betaFlag = -1;
-                this.setToPionHypothesis(event, trkId, hit);
+                this.setToPionHypothesis(partBank, pindex, hit);
             } else {
                 hit.betaFlag = 1;
             }
@@ -606,33 +616,20 @@ public class HitReader {
             hit.betaFlag = 2;
         }
     }
-    private void setToPionHypothesis(DataEvent event, int trkId, FittedHit hit) {
+    private void setToPionHypothesis(DataBank partBank, int pindex, FittedHit hit) {
         double piMass = 0.13957018;
-        String partBankName = bankNames.getRecPartBank();
-        String trackBankName = bankNames.getRecTrackBank();
         double px=0;
         double py=0;
         double pz=0;
-        if (!event.hasBank(partBankName) || !event.hasBank(trackBankName))
+        if (pindex<0)
             return ;
-        DataBank bank = event.getBank(trackBankName);
-
-        int rows = bank.rows();
-        for (int i = 0; i < rows; i++) {
-            if (bank.getByte("detector", i) == 6 &&
-                    bank.getShort("index", i) == trkId - 1) {
-                px = event.getBank(partBankName).getFloat("px",
-                        bank.getShort("pindex", i));
-                py = event.getBank(partBankName).getFloat("py",
-                        bank.getShort("pindex", i));
-                pz = event.getBank(partBankName).getFloat("pz",
-                        bank.getShort("pindex", i));
-            }
-        }
+        px = partBank.getFloat("px", pindex);
+        py = partBank.getFloat("py", pindex);
+        pz = partBank.getFloat("pz", pindex);
         
         double p = Math.sqrt(px*px+py*py+pz*pz);
         if(p == 0) {
-            //System.err.println("DC Track not matched in EB");
+           //System.err.println("DC Track not matched in EB");
             return;
         }
         
@@ -640,24 +637,11 @@ public class HitReader {
         hit.set_Beta(beta);
     }
     
-    private double readBeta(DataEvent event, int trkId) {
+    private double readBeta(DataBank partBank, int pindex) {
         double _beta = 1.0;
-        String partBankName = bankNames.getRecPartBank();
-        String trackBankName = bankNames.getRecTrackBank();
-        if (!event.hasBank(partBankName) || !event.hasBank(trackBankName))
-            return _beta;
-        DataBank bank = event.getBank(trackBankName);
-
-        int rows = bank.rows();
-        for (int i = 0; i < rows; i++) {
-            if (bank.getByte("detector", i) == 6 &&
-                    bank.getShort("index", i) == trkId - 1) {
-                _beta = event.getBank(partBankName).getFloat("beta",
-                        bank.getShort("pindex", i));
-            }
+        if(pindex>=0) {
+            _beta = partBank.getFloat("beta", pindex);  
         }
-        //if(_beta>1.0)
-        //    _beta=1.0;
         return _beta;
     }
 
