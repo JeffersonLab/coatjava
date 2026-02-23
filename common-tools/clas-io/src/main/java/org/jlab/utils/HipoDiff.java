@@ -271,7 +271,8 @@ public class HipoDiff {
             }
             if (mismatch) {
                 nbadrow++;
-            }
+a.show();
+b.show();            }
         }
         return 0;
     }

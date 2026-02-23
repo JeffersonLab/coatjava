@@ -292,10 +292,7 @@ public class HitReader {
     }
 
     private final Map<Integer, Integer> tid2pindex = new HashMap<>();
-    private final Map<Integer, Integer> id2tid = new HashMap<>();
-    private final Map<Integer, Double> id2tidB = new HashMap<>();
-    private final Map<Integer, Double> id2tidtProp = new HashMap<>();
-    private final Map<Integer, Double> id2tidtFlight = new HashMap<>();
+    private final Map<Integer, Integer> id2index = new HashMap<>();
     
     private final Map<Integer, double[]> aimatch = new HashMap<>();
 
@@ -348,107 +345,75 @@ public class HitReader {
             }
         }
         
-        id2tid.clear();
-        id2tidB.clear();
-        id2tidtFlight.clear();
-        id2tidtProp.clear();
+        id2index.clear();
         
         DataBank pbank = event.getBank(pointName);
+        DataBank partBank  = event.getBank(partBankName);
         for (int i = 0; i < pbank.rows(); i++) {
-            id2tid.put((int)pbank.getShort("id", i), (int)pbank.getShort("tid", i));
-            id2tidB.put((int)pbank.getShort("id", i), (double)pbank.getFloat("B", i));
-            id2tidtFlight.put((int)pbank.getShort("id", i), (double)pbank.getFloat("TFlight", i));
-            id2tidtProp.put((int)pbank.getShort("id", i), (double)pbank.getFloat("TProp", i));
+            id2index.put((int)pbank.getShort("id", i), i);
         }
         
         DataBank bank = event.getBank(bankName);
         int rows = bank.rows();
 
-        int[] id = new int[rows];
-        int[] status = new int[rows];
-        int[] sector = new int[rows];
-        int[] slayer = new int[rows];
-        int[] layer = new int[rows];
-        int[] wire = new int[rows];
-        int[] tdc = new int[rows];
-        int[] jitter = new int[rows];
-        int[] LR = new int[rows];
-        double[] B = new double[rows];
-        int[] clusterID = new int[rows];
-        int[] trkID = new int[rows];
-        double[] tProp = new double[rows];
-        double[] tFlight = new double[rows];
-        double[] trkDoca = new double[rows];
-
         for (int i = 0; i < rows; i++) {
-            id[i] = bank.getShort("id", i);
-            status[i] = bank.getShort("status", i);
-            sector[i] = bank.getByte("sector", i);
-            slayer[i] = bank.getByte("superlayer", i);
-            layer[i] = bank.getByte("layer", i);
-            wire[i] = bank.getShort("wire", i);
-            tdc[i] = bank.getInt("TDC", i);
-            jitter[i] = bank.getByte("jitter", i);
-            id[i] = bank.getShort("id", i);
-            LR[i] = bank.getByte("LR", i);
-           
-            trkDoca[i] = bank.getFloat("trkDoca", i);
-            clusterID[i] = bank.getShort("clusterID", i);
-            trkID[i] = -1;
-            if(this.id2tid.containsKey(id[i]) ){
-                trkID[i]    = this.id2tid.get(id[i]);
-                 B[i]       = this.id2tidB.get(id[i]);
-                 tProp[i]   = this.id2tidtProp.get(id[i]);
-                 tFlight[i] = this.id2tidtFlight.get(id[i]);
-            }
             
-            if (event.hasBank("MC::Particle") ||
-                    event.getBank("RUN::config").getInt("run", 0) < 100) {
-                tProp[i] = 0;
-                tFlight[i] = 0;
-            }
-        }
-
-        DataBank partBank  = event.getBank(partBankName);
-
-        int size = layer.length;
-        for (int i = 0; i < size; i++) {
-            //use only hits that have been fit to a track
-            if (trkID[i] == -1) {
+            int id = bank.getShort("id", i);
+            
+            if(!this.id2index.containsKey(id))
                 continue;
-            }
-            
+
+            int status = bank.getShort("status", i);
+            int sector = bank.getByte("sector", i);
+            int slayer = bank.getByte("superlayer", i);
+            int layer = bank.getByte("layer", i);
+            int wire = bank.getShort("wire", i);
+            int tdc = bank.getInt("TDC", i);
+            int jitter = bank.getByte("jitter", i);
+            FittedHit hit = new FittedHit(sector, slayer, layer, wire, tdc, jitter, id);
+            hit.set_Id(id);
+
+            int index = this.id2index.get(id);
+            int trkID = pbank.getShort("tid", index);
+            double B  = pbank.getFloat("B", index);
             double T_0 = 0;
-            T_0 = this.getT0(sector[i], slayer[i], layer[i], wire[i], t0s)[0];
-            FittedHit hit = new FittedHit(sector[i], slayer[i], layer[i], wire[i], tdc[i], jitter[i], id[i]);
-            hit.set_Id(id[i]);
-            hit.setB(B[i]);
+            double TFlight = 0;
+            double TProp = 0;
+            if (!event.hasBank("MC::Particle") &&
+                 event.getBank("RUN::config").getInt("run", 0) >= 100) {
+                TProp   = pbank.getFloat("TProp", index);
+                TFlight = pbank.getFloat("TFlight", index);
+            }    
+
+            T_0 = this.getT0(sector, slayer, layer, wire, t0s)[0];
+
             hit.setT0(T_0);
             hit.setTStart(T_Start);
-            hit.setTProp(tProp[i]);
-            //hit.setTFlight(tFlight[i]);
+            hit.setB(B);
+            hit.setTProp(TProp);
+            hit.setTFlight(TFlight);
+      
             int pindex = -1;
-            if(tid2pindex.containsKey(trkID[i])) 
-                pindex = tid2pindex.get(trkID[i]);
+            if(tid2pindex.containsKey(trkID)) 
+                pindex = tid2pindex.get(trkID);
             hit.set_Beta(this.readBeta(partBank, pindex));
             this.setBetaFlag(partBank, pindex, hit, hit.get_Beta());//reset beta for out of range assuming the pion hypothesis and setting a flag
-            hit.setTFlight(tFlight[i]/hit.get_Beta0to1());
-            //resetting TFlight after beta has been obtained
-            //hit.set_SignalTimeOfFlight(); 
-            double T0Sub = (tdc[i] - tProp[i] - tFlight[i] - T_0);
+            hit.setTFlight(TFlight/hit.get_Beta0to1());
+
+            double T0Sub = (tdc - TProp - TFlight - T_0);
 
             if (Constants.getInstance().isUSETSTART()) {
                 T0Sub -= T_Start;
             }
             hit.set_Time(T0Sub);
-            hit.set_LeftRightAmb(LR[i]);
+            hit.set_LeftRightAmb(bank.getByte("LR", i));
             hit.set_TrkgStatus(0);
             hit.calc_CellSize(detector);
             hit.calc_GeomCorr(detector, 0);
-            hit.set_ClusFitDoca(trkDoca[i]);
-            hit.set_TimeToDistance(event, 0.0, B[i], time2dist, tde);
+            hit.set_ClusFitDoca(bank.getFloat("trkDoca", i));
+            hit.set_TimeToDistance(event, 0.0, B, time2dist, tde);
 
-            hit.set_QualityFac(status[i]);
+            hit.set_QualityFac(status);
             if (hit.get_Doca() > hit.get_CellSize()) {
                 hit.set_OutOfTimeFlag(true);
                 hit.set_QualityFac(3);
@@ -456,9 +421,9 @@ public class HitReader {
             if (hit.get_Time() < 0)
                 hit.set_QualityFac(2);
             
-            hit.set_DocaErr(hit.get_PosErr(event, B[i], docares, time2dist, tde));
-            hit.set_AssociatedClusterID(clusterID[i]);
-            hit.set_AssociatedHBTrackID(trkID[i]); 
+            hit.set_DocaErr(hit.get_PosErr(event, B, docares, time2dist, tde));
+            hit.set_AssociatedClusterID(bank.getShort("clusterID", i));
+            hit.set_AssociatedHBTrackID(trkID); 
             
             //if(hit.betaFlag == 0)
             if(passHit(hit.betaFlag)) {
