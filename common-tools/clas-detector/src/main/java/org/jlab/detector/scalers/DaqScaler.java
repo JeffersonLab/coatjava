@@ -81,6 +81,14 @@ public class DaqScaler {
             final double slm_offset  = slmTable.getDoubleValue("offset",0,0,0);  // Hz
             final double slm_atten   = slmTable.getDoubleValue("atten",0,0,0);   // attenuation
 
+            // increase clock frequency by this factor
+            // double clockFreqFactor = 10.0;
+            // seconds     /= clockFreqFactor;
+            // liveSeconds /= clockFreqFactor;
+
+            // String prefix = String.format("TICK [%s]", this.getClass().getSimpleName());
+            // System.out.println(String.format("%s freq(orig)=%f seconds=%f liveSeconds=%f ", prefix, this.clockFreq, seconds, liveSeconds) + this.toString());
+
             double q  = (double)this.slm      - slm_offset * seconds;
             double qg = (double)this.gatedSlm - slm_offset * liveSeconds;
             this.beamChargeSLM = q * slm_atten / slm_slope;
@@ -90,13 +98,17 @@ public class DaqScaler {
             if (fcup_atten<1e-8 || fcup_slope<1e-8) {
                 this.beamCharge = this.beamChargeSLM;
                 this.beamChargeGated = this.beamChargeGatedSLM;
+                // System.out.println(String.format("%s [slm]:   %f  %f", prefix, this.beamChargeGated, this.beamCharge));
             }
             else {
                 q  = (double)this.fcup      - fcup_offset * seconds;
                 qg = (double)this.gatedFcup - fcup_offset * liveSeconds;
                 this.beamCharge = q * fcup_atten / fcup_slope;
                 this.beamChargeGated = qg * fcup_atten / fcup_slope;
+                // System.out.println(String.format("%s [fcup]:  %f  %f", prefix, this.beamChargeGated, this.beamCharge));
             }
+            // if(this.getClass().getSimpleName().equals("Dsc2Scaler"))
+            //   System.out.println(String.format("%s  %f  %f  %s", prefix, this.beamChargeGated, this.beamCharge, this.toString()));
         }
     }
 

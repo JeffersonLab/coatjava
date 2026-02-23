@@ -53,7 +53,7 @@ public class StruckScaler extends DaqScaler {
 
     @Override
     public String toString() {
-        return String.format("i=%s h=%d q=%d %s",this.interval,this.helicity.value(),this.quartet.value(),super.toString());
+        return String.format("[STRUCK] i=%s h=%d q=%d %s",this.interval,this.helicity.value(),this.quartet.value(),super.toString());
     }
 
     /**
