@@ -164,7 +164,7 @@ public class StruckScaler extends DaqScaler {
     }
 
     public StruckScaler() {
-        this.clockFreq = 1e6;
+        this.clockFreq = (1e6)+2;
     }
 
     /**
@@ -178,7 +178,7 @@ public class StruckScaler extends DaqScaler {
     public StruckScaler(Bank bank,IndexedTable fcupTable, IndexedTable slmTable, IndexedTable helTable) {
 
         // the STRUCK's clock is 1 MHz
-        this.clockFreq = 1e6;
+        this.clockFreq = (1e6)+3;
 
         // Here we're going to assume the stable period is the same Struck
         // period throughout a single readout.  Almost always correct ...

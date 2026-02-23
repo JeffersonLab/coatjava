@@ -74,6 +74,18 @@ public class DaqScaler {
     protected void calibrate(IndexedTable fcupTable,IndexedTable slmTable,double seconds,double liveSeconds) {
 
         if (this.clock > 0) {
+
+            String prefix = String.format("clockbug [%s]", this.getClass().getSimpleName());
+            if(Math.abs(this.clockFreq - ((1e6)+1)) < 0.1)
+              System.err.println(String.format("%s: used hard-coded clockFreq from Dsc2Scaler(bank,table,table,seconds)", prefix));
+            else if(Math.abs(this.clockFreq - ((1e6)+2)) < 0.1)
+              System.err.println(String.format("%s: used hard-coded clockFreq from StruckScaler()", prefix));
+            else if(Math.abs(this.clockFreq - ((1e6)+3)) < 0.1)
+              System.err.println(String.format("%s: used hard-coded clockFreq from StruckScaler(table,table,table)", prefix));
+            else
+              System.err.println(String.format("%s: clockFreq OK (value=%f)", prefix, this.clockFreq));
+            System.err.println(String.format("%s: %s", prefix, this.toString()));
+
             final double fcup_slope  = fcupTable.getDoubleValue("slope",0,0,0);  // Hz/nA
             final double fcup_offset = fcupTable.getDoubleValue("offset",0,0,0); // Hz
             final double fcup_atten  = fcupTable.getDoubleValue("atten",0,0,0);  // attenuation
@@ -97,6 +109,7 @@ public class DaqScaler {
                 this.beamCharge = q * fcup_atten / fcup_slope;
                 this.beamChargeGated = qg * fcup_atten / fcup_slope;
             }
+            System.err.println(String.format("%s: beamCharge=%f  beamChargeGated=%f", prefix, this.beamCharge, this.beamChargeGated));
         }
     }
 
