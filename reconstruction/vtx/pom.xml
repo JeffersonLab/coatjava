@@ -4,41 +4,41 @@
 
   <groupId>org.jlab.clas12.detector</groupId>
   <artifactId>clas12detector-vtx</artifactId>
-  <version>13.7.0-SNAPSHOT</version>
+  <version>13.7.1-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <parent>
     <groupId>org.jlab.clas12</groupId>
     <artifactId>reconstruction</artifactId>
-    <version>13.7.0-SNAPSHOT</version>
+    <version>13.7.1-SNAPSHOT</version>
   </parent>
 
   <dependencies>
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>swim-tools</artifactId>
-      <version>13.7.0-SNAPSHOT</version>
+      <version>13.7.1-SNAPSHOT</version>
       <type>jar</type>
     </dependency>
     <dependency>
       <groupId>cnuphys</groupId>
       <artifactId>swimmer</artifactId>
-      <version>13.7.0-SNAPSHOT</version>
+      <version>13.7.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-reco</artifactId>
-      <version>13.7.0-SNAPSHOT</version>
+      <version>13.7.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-io</artifactId>
-      <version>13.7.0-SNAPSHOT</version>
+      <version>13.7.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-geometry</artifactId>
-      <version>13.7.0-SNAPSHOT</version>
+      <version>13.7.1-SNAPSHOT</version>
     </dependency>
   </dependencies>
 
