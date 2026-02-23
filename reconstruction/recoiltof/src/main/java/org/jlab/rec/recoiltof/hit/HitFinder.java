@@ -59,14 +59,14 @@ public class HitFinder {
         for (int i = 0; i < nt; i++) {
             //Getting their properties
             int sector = bank.getInt("sector", i);
-            int row = bank.getInt("row", i);
-            int column = bank.getInt("column", i);
+            int layer = bank.getInt("layer", i);
+            int component = bank.getInt("component", i);
             int order = bank.getInt("order", i);
             int tdc = bank.getInt("TDC", i);
             int tot = bank.getInt("ToT", i);
 
             //Building a Hit
-            RTOFRawHit hit = new RTOFRawHit(sector, row, column, order, tdc, tot);
+            RTOFRawHit hit = new RTOFRawHit(sector, layer, component, order, tdc, tot);
             if (hit.getEnergy() < 0.01) {
                 continue; //energy threshold
             }

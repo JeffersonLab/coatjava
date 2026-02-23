@@ -14,13 +14,13 @@
         "type": "I",
         "info": "recoil tof sector"
       }, {
-        "name": "row",
+        "name": "layer",
         "type": "I",
-        "info": "recoil tof row"			    
+        "info": "recoil tof layer"			    
       },{
-        "name": "column",
+        "name": "component",
         "type": "I",
-        "info": "recoil tof column" 
+        "info": "recoil tof component" 
       },{
         "name": "time",
         "type": "F",
@@ -58,7 +58,7 @@
         "type": "S",
         "info": "hit id"
       }, {
-        "name": "N_bar",
+        "name": "size",
         "type": "I",
         "info": "number of hits from the bars"
       },{

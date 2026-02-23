@@ -604,8 +604,8 @@
     "info": "TDC bank for the RECOIL TOF",
     "entries":[
       { "name":"sector"    , "type":"B", "info":"sector"},
-      { "name":"row"     , "type":"B", "info":"row"},
-      { "name":"column" , "type":"B", "info":"column"},
+      { "name":"layer"     , "type":"B", "info":"layer"},
+      { "name":"component" , "type":"B", "info":"component"},
       { "name":"order"     , "type":"B", "info":"order: 2 - TDCL , 3 - TDCR"},
       { "name":"TDC"       , "type":"I", "info":"TDC value"},
       { "name":"ToT"       , "type":"I", "info":"Time Over Threshold"}
