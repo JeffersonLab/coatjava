@@ -4,7 +4,7 @@ event=cpu
 format=flat
 seconds=12
 usage="Usage:  profile [-h] [-s seconds] [-w seconds] [-e event] [-f format] [--] executable args"
-usage2="Usage:  profile [-h] [-s seconds] [-w seconds] [-e cpu|alloc|nativemem|lock|cache-misses] [-f flat|traces|collapsed|flamegraph|tree|jfr|otlp] [--] executable args"
+usage2="Usage:  profile [options] executable args\nOptions:\n\t[-h] [-s seconds] [-w seconds]\n\t[-e cpu|alloc|nativemem|lock|cache-misses]\n\t[-f flat|traces|collapsed|flamegraph|tree|jfr|otlp]"
 
 while getopts s:f:e:o:w:h opt
 do
@@ -14,7 +14,7 @@ do
         e) event=$OPTARG ;;
         o) stub=$OPTARG ;;
         w) warmup=$OPTARG ;;
-        h) echo $usage2 && exit 0 ;;
+        h) echo -e $usage2 && exit 0 ;;
         --) break ;;
         \?) echo $usage && exit 1 ;;
 #        :) echo $usage && exit 2 ;;
