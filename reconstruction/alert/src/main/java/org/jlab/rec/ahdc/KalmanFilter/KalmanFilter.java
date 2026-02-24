@@ -3,6 +3,7 @@ package org.jlab.rec.ahdc.KalmanFilter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Random;
 
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
@@ -14,6 +15,13 @@ import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.Track.Track;
+
+import org.jlab.detector.calib.utils.DatabaseConstantProvider;
+import org.jlab.geom.base.Component;
+import org.jlab.geom.detector.alert.ATOF.AlertTOFDetector;
+import org.jlab.geom.detector.alert.ATOF.AlertTOFFactory;
+import org.jlab.geom.prim.Point3D;
+import java.util.Random;
 
 
 /**
@@ -38,6 +46,9 @@ public class KalmanFilter {
 	double vz_constraint = 0;
 	private int counter = 0; // number of utilisation of the Kalman Filter
 	HashMap<Integer, RadialKFHit> ATOF_hits = null;
+	HashMap<Integer, ArrayList<int[]>> ATOF_hits_predicted = new HashMap<>();
+	//ArrayList<int[]> ATOF_hits_predicted = new ArrayList<>(); // list of sector, layer, component (for now : only wedges)
+	AlertTOFDetector ATOFdet = null;
 
 	public void propagation(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {
 
@@ -154,6 +165,73 @@ public class KalmanFilter {
 						hit.setResidual(PostFitPropagator.residual(hit));
 					}
 			    }
+				// using the PostFit Propagator: check for new ATOF wegdes (fit based)
+				{	
+					// The midpoint of each wedge is locate on the same radius (distance with respect to the beamline)
+					// We project the AHDC track in this radius
+					Point3D midpoint = ATOFdet.getSector(0).getSuperlayer(1).getLayer(0).getComponent(0).getMidpoint();
+					double radius = midpoint.distance(new Point3D(0,0,midpoint.z()));
+					RadialSurfaceKFHit hit = new RadialSurfaceKFHit(radius);
+					// do the propagation
+					PostFitPropagator.predict(hit, true);
+					// get state vector
+					double[] vec = PostFitPropagator.getStateEstimationVector().toArray();
+					double vx = vec[0];
+					double vy = vec[1];
+					double vz = vec[2];
+					//System.out.printf("Initial position in ATOF : x (%.2f) y(%.2f) z (%.2f) r(%.2f)\n", vx, vy, vz, Math.sqrt(vx*vx + vy*vy));
+					// translate vz with respect the ATOF center
+					// Warning: we corrently have a mislagnement between AHDC and ATOF that need to be investigated or fixed
+					vz += 32.7; // mm , temporary
+					int[] atof_coordinates = predict_wedge(ATOFdet, new Point3D(vx, vy, vz));
+					int sector = atof_coordinates[0];
+					int layer = atof_coordinates[1];
+					int wedge = atof_coordinates[2];
+					
+					// find adjacent layer and sector
+					int sector_plus = sector;
+					int sector_minus = sector;
+					int layer_plus = layer+1;
+					int layer_minus = layer-1;
+					if (layer == 0) {
+						sector_plus = sector;
+						sector_minus = Math.floorMod(sector-1, 15);
+						layer_plus = layer+1;
+						layer_minus = 3;
+					}
+					else if (layer == 3) {
+						sector_plus = Math.floorMod(sector+1, 15);
+						sector_minus = sector;
+						layer_plus = 0;
+						layer_minus = layer-1;
+					}
+					// Here are all the adjacents wedges (maximum 8)
+					//ATOF_hits_predicted.clear(); // clean first
+					ArrayList<int[]> listOfWedges = new ArrayList<>();
+					listOfWedges.add(new int[]{sector, layer, wedge});
+					if (wedge-1 >= 0) {
+						listOfWedges.add(new int[]{sector, layer, wedge-1});
+						listOfWedges.add(new int[]{sector_plus, layer_plus, wedge-1});
+						listOfWedges.add(new int[]{sector_minus, layer_minus, wedge-1});
+					} 
+					if (wedge+1 <= 9) {
+						listOfWedges.add(new int[]{sector, layer, wedge+1});
+						listOfWedges.add(new int[]{sector_plus, layer_plus, wedge+1});
+						listOfWedges.add(new int[]{sector_minus, layer_minus, wedge+1});
+					}
+					ATOF_hits_predicted.put(track.get_trackId(), listOfWedges);
+
+
+
+					// if (listOfWedges != null) {
+					// 	int nn = 0;
+					// 	for (int[] res : listOfWedges) {
+					// 		nn++;
+					// 		System.out.printf("%d) Predicted wedge : sector (% 2d) layer (% 2d) wedge (% 2d)\n", nn, res[0], res[1], res[2]);
+					// 	}
+					// }
+					
+				}
 			    
                 // Fill track and hit bank
 				// TO DO : s and p_drift have to be checked to be sure they represent what we want
@@ -174,9 +252,13 @@ public class KalmanFilter {
 			    track.set_dEdx(sum_adc/s);
 			    track.set_path(s);
 			    track.set_n_hits(AHDC_hits.size());
+
+				
+
 			}//end of loop on track candidates
 		} catch (Exception e) {
 			//e.printStackTrace();
+			//System.out.println("Error in Kalman Filter");
 		}
 	}
 	public void set_Niter(int Niter) {this.Niter = Niter;}
@@ -185,4 +267,98 @@ public class KalmanFilter {
 	public PDGParticle get_particle() {return this.particle;}
 	public void set_ATOF_hits(HashMap<Integer, RadialKFHit> ATOF_hits){ this.ATOF_hits = ATOF_hits;};
 	public HashMap<Integer, RadialKFHit> get_ATOF_hits() { return this.ATOF_hits;}
+	public HashMap<Integer, ArrayList<int[]>> get_ATOF_hits_predicted() {return this.ATOF_hits_predicted;}
+
+	// Test
+	public static void main(String[] args) {
+		// ATOF detector
+		AlertTOFDetector atof = (new AlertTOFFactory()).createDetectorCLAS(new DatabaseConstantProvider());
+
+		int Npts = 1000;
+		int counter = 0;
+		int err = 0;
+		for (int i = 0; i < Npts; i++) {
+			Random rand = new Random();
+			int true_sector = rand.nextInt(15);
+			int true_layer = rand.nextInt(4);
+			int true_wedge = rand.nextInt(10);
+			
+			Component comp = atof.getSector(true_sector).getSuperlayer(1).getLayer(true_layer).getComponent(true_wedge);
+				// top face
+			Point3D p0 = comp.getVolumePoint(0);
+			Point3D p1 = comp.getVolumePoint(1);
+			Point3D p2 = comp.getVolumePoint(2);
+			Point3D p3 = comp.getVolumePoint(3);
+				// bottom face
+			Point3D p4 = comp.getVolumePoint(4);
+			Point3D p5 = comp.getVolumePoint(5);
+			Point3D p6 = comp.getVolumePoint(6);
+			Point3D p7 = comp.getVolumePoint(7);
+
+			// Random point int he current wedge volume
+			//Point3D pt = p0.lerp(p7, Math.random());
+			//Point3D pt = comp.getMidpoint();
+			double t0 = rand.nextDouble(1);
+			double t1 = rand.nextDouble(1-t0);
+			double t2 = rand.nextDouble(1-t0-t1);
+			double t3 = 1-t0-t1-t2;
+			//System.out.printf("t0 + t1 + t2 + t3 = %f\n", t0+t1+t2+t3);
+			double t4 = rand.nextDouble(1);
+			double t5 = rand.nextDouble(1-t4);
+			double t6 = rand.nextDouble(1-t4-t5);
+			double t7 = 1-t4-t5-t6;
+			//System.out.printf("t4 + t5 + t6 + t7 = %f\n", t4+t5+t6+t7);
+			double x_top = t0*p0.x() + t1*p1.x() + t2*p2.x() + t3*p3.x();
+			double y_top = t0*p0.y() + t1*p1.y() + t2*p2.y() + t3*p3.y();
+			double x_bot = t4*p4.x() + t5*p5.x() + t6*p6.x() + t7*p7.x();
+			double y_bot = t4*p4.y() + t5*p5.y() + t6*p6.y() + t7*p7.y();
+			Point3D pt_top = new Point3D(x_top, y_top, p0.z());
+			Point3D pt_bot = new Point3D(x_bot, y_bot, p4.z());
+			Point3D pt = pt_top.lerp(pt_bot, Math.random());
+			//System.out.printf("distance from midpoint : %f\n", comp.getMidpoint().distance(pt));
+
+			// Test the algoritm
+			int[] res = KalmanFilter.predict_wedge(atof, pt);
+
+			if (res[0] == true_sector && res[1] == true_layer && res[2] == true_wedge) {
+				counter++;
+			} else {
+				err++;
+				System.out.printf("%d) Initial wedge   : sector (% 2d) layer (% 2d) wedge (% 2d)\n", err, true_sector, true_layer, true_wedge);
+				System.out.printf("%d) Predicted wedge : sector (% 2d) layer (% 2d) wedge (% 2d)\n", err, res[0], res[1], res[2]);
+			}
+		} 
+		System.out.printf("Nb of testing : %d\n", Npts);
+		System.out.printf("Nb of success : %d   (%.2f %%)\n", counter, 100.0*counter/Npts);
+	}
+
+	static public int[] predict_wedge(AlertTOFDetector atof, Point3D pt) {
+		// find the wedge
+		int wedge = -1;
+		double dz = 1e10;
+		for (int c = 0; c < atof.getSector(0).getSuperlayer(1).getLayer(0).getNumComponents(); c++) {
+			Point3D midpoint = atof.getSector(0).getSuperlayer(1).getLayer(0).getComponent(c).getMidpoint();
+			if (Math.abs(midpoint.z()-pt.z()) < dz) {
+				dz = Math.abs(midpoint.z()-pt.z());
+				wedge = c;
+			}
+		}
+		// find sector and layer
+		int sector = -1;
+		int layer = -1;
+		double d = 1e10;
+		for (int s = 0; s < atof.getNumSectors(); s++) {
+			for (int l = 0; l < atof.getSector(s).getSuperlayer(1).getNumLayers(); l++) {
+				Point3D midpoint = atof.getSector(s).getSuperlayer(1).getLayer(l).getComponent(wedge).getMidpoint();
+				if (midpoint.distance(pt) < d) {
+					d = midpoint.distance(pt);
+					sector = s;
+					layer = l;
+				}
+			}
+        }
+		return new int[] {sector, layer, wedge};
+	}
+
+	public void set_ATOF_detector(AlertTOFDetector atof) { this.ATOFdet = atof;}
 }

@@ -11,6 +11,7 @@ import org.jlab.clas.swimtools.Swim;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.geom.base.Detector;
 import org.jlab.geom.detector.alert.ATOF.AlertTOFFactory;
+import org.jlab.geom.detector.alert.ATOF.AlertTOFDetector;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.hipo.HipoDataSource;
@@ -57,7 +58,7 @@ public class ALERTEngine extends ReconstructionEngine {
      */
     private RecoBankWriter rbc;
 
-    Detector ATOF; // ALERT ATOF detector
+    private AlertTOFDetector ATOF; // ALERT ATOF detector
     private AlertDCDetector AHDC; // ALERT AHDC detector
 
     /**
@@ -320,9 +321,58 @@ public class ALERTEngine extends ReconstructionEngine {
             }
         }
         KF.set_ATOF_hits(ATOF_hits);
+        KF.set_ATOF_detector(ATOF);
 
         /// First propagation : each AHDC_tracks will be fitted
         KF.propagation(AHDC_tracks, event, magfield, IsMC);
+
+        // Get ATOF wedges predicted
+        HashMap<Integer, ArrayList<int[]>> ATOF_hits_predicted = KF.get_ATOF_hits_predicted();
+        for (Track track : AHDC_tracks) {
+            int trackid = track.get_trackId();
+            // if the AI has no match for this track, look for the predicted ones
+            if (ATOF_hits.get(trackid) == null) {
+                ArrayList<int[]> predicted_wedges = ATOF_hits_predicted.get(trackid);
+                boolean IsHitSelected = false;
+                int i = 0;
+                while (i < predicted_wedges.size() && !IsHitSelected) {
+                    int sector = predicted_wedges.get(i)[0];
+                    int layer = predicted_wedges.get(i)[1];
+                    int wedge = predicted_wedges.get(i)[2];
+                    for (int row = 0; row < bank_ATOFHits.rows(); row++) {
+                        if (bank_ATOFHits.getInt("sector", row) == sector && bank_ATOFHits.getInt("layer", row) == layer && bank_ATOFHits.getInt("component", row) == wedge) {
+                            // create a RadialKFHit
+                            double x = bank_ATOFHits.getFloat("x", row);
+                            double y = bank_ATOFHits.getFloat("y", row);
+                            double z = bank_ATOFHits.getFloat("z", row);
+                            z -= 32.3; // there is a shift between AHDC and ATOF (still don't know why) !
+                            RadialKFHit hit = new RadialKFHit(x, y, z);
+                                // error on r
+                            double wedge_width = 20; //mm
+                            double dr2 = Math.pow(wedge_width, 2)/12; // mm^2
+                                // error on phi
+                            double open_angle = Math.toRadians(6); // deg
+                            double dphi2 = Math.pow(open_angle, 2)/12;
+                                // error on z
+                            double wedge_length = 27.7; //mm
+                            double dz2 = Math.pow(wedge_length, 2)/12;
+                            
+                            RealMatrix measurementNoise = new Array2DRowRealMatrix(
+                                                            new double[][]{
+                                                                {dr2, 0.0000, 0.0000},
+                                                                {0.00, dphi2, 0.0000},
+                                                                {0.00, 0.0000, dz2}
+                                                            });//3x3;
+                            hit.setMeasurementNoise(measurementNoise);
+                            ATOF_hits.put(trackid, hit);
+
+                            IsHitSelected = true;
+                            break;
+                        }
+                    } // end loop over ATOF bank rows
+                } //end loop over predicted ATOF hits
+            } // end if 
+        } // end loop over tracks
 
         /// Clean AHDC bad hits
         double sigma = 0.5; // mm
