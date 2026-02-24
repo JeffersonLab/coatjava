@@ -8,7 +8,7 @@ do
     y=$b/$(basename $x)
     stub=$(basename $x)
     stub=${stub%%.*}
-    hipo-diff -q 1 -s 0,1,2 -n 1000 $x $y >& $stub.log &
+    hipo-diff -q 1 -s 0,1,2 -n 10000 $x $y >& $stub.log &
 done
 
 wait
