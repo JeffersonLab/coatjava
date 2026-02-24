@@ -18,14 +18,14 @@ import org.jlab.geom.prim.Point3D;
 public class RadialKFHit implements KFHit {
 
 	private double r,phi,z;
-    Line3D beamline;
+    Line3D line;
 	RealMatrix measurementNoise = null;
 
 	public RadialKFHit(double x, double y , double z) {
 		this.z = z;
 		this.r = Math.hypot(x,y);
 		this.phi = Math.atan2(y,x);
-        beamline = new Line3D(x,y,0,x,y,1); // a line parallel to the beam axis
+        line = new Line3D(x,y,0,x,y,1); // a line parallel to the beam axis
 	}
 
 	@Override
@@ -44,12 +44,12 @@ public class RadialKFHit implements KFHit {
 	
 	@Override
 	public Line3D getLine() {
-		return beamline;
+		return line;
     }
 
 	@Override
 	public double distance(Point3D point3D) {
-		return this.beamline.distance(point3D).length();
+		return this.line.distance(point3D).length();
 	}
 
 	@Override
