@@ -605,10 +605,10 @@
     "entries":[
       { "name":"sector"    , "type":"B", "info":"sector"},
       { "name":"layer"     , "type":"B", "info":"layer"},
-      { "name":"component" , "type":"B", "info":"component"},
-      { "name":"order"     , "type":"B", "info":"order: 2 - TDCL , 3 - TDCR"},
-      { "name":"TDC"       , "type":"I", "info":"TDC value"},
-      { "name":"ToT"       , "type":"I", "info":"Time Over Threshold"}
+      { "name":"component" , "type":"S", "info":"component"},
+      { "name":"order"     , "type":"S", "info":"order: 2 - TDCL , 3 - TDCR"},
+      { "name":"TDC"       , "type":"S", "info":"TDC value"},
+      { "name":"ToT"       , "type":"S", "info":"Time Over Threshold"}
     ]
   },
   {

@@ -11,15 +11,15 @@
         "info": "hit id"
       }, {
         "name": "sector",
-        "type": "I",
+        "type": "B",
         "info": "recoil tof sector"
       }, {
         "name": "layer",
-        "type": "I",
+        "type": "B",
         "info": "recoil tof layer"			    
       },{
         "name": "component",
-        "type": "I",
+        "type": "B",
         "info": "recoil tof component" 
       },{
         "name": "time",
@@ -59,11 +59,11 @@
         "info": "hit id"
       }, {
         "name": "size",
-        "type": "I",
+        "type": "S",
         "info": "number of hits from the bars"
       },{
         "name": "sector",
-        "type": "I",
+        "type": "B",
         "info": "sector number"
       },{
         "name": "time",
