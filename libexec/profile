@@ -3,7 +3,7 @@
 event=cpu
 format=flat
 seconds=12
-usage="Usage:  profile [-h] [-s seconds] [-w seconds] [-e event] [-f format] [--] executable args"
+usage1="Usage:  profile [-h] [-s seconds] [-w seconds] [-e event] [-f format] [--] executable args"
 usage2="Usage:  profile [options] executable args\nOptions:\n\t[-h] [-s seconds] [-w seconds]\n\t[-e cpu|alloc|nativemem|lock|cache-misses]\n\t[-f flat|traces|collapsed|flamegraph|tree|jfr|otlp]"
 
 while getopts s:f:e:o:w:h opt
@@ -16,8 +16,8 @@ do
         w) warmup=$OPTARG ;;
         h) echo -e $usage2 && exit 0 ;;
         --) break ;;
-        \?) echo $usage && exit 1 ;;
-#        :) echo $usage && exit 2 ;;
+        \?) echo $usage1 && exit 1 ;;
+#        :) echo $usage1 && exit 2 ;;
     esac
 done
 
@@ -26,10 +26,10 @@ executable=$1
 arguments=${@:2}
 
 which asprof >& /dev/null
-[ "$?" -ne 0 ] && echo 'ERROR:  asprof is not in $PATH.' && exit 3
+[ "$?" -ne 0 ] && echo 'ERROR:  asprof is not in $PATH.' && echo -e $usage2 && exit 3
 
 which $executable >& /dev/null
-[ "$?" -ne 0 ] && echo "ERROR:  $executable is not in \$PATH." && exit 4
+[ "$?" -ne 0 ] && echo "ERROR:  $executable is not in \$PATH." && echo -e $usage2 && exit 4
 
 echo "Running asprof on '$executable $arguments' ..."
 
