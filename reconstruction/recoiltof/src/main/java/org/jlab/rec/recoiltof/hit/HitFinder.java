@@ -58,12 +58,12 @@ public class HitFinder {
         //Looping through all hits
         for (int i = 0; i < nt; i++) {
             //Getting their properties
-            int sector = bank.getInt("sector", i);
-            int layer = bank.getInt("layer", i);
-            int component = bank.getInt("component", i);
-            int order = bank.getInt("order", i);
-            int tdc = bank.getInt("TDC", i);
-            int tot = bank.getInt("ToT", i);
+            int sector = bank.getByte("sector", i);
+            int layer = bank.getByte("layer", i);
+            int component = bank.getByte("component", i);
+            int order = bank.getShort("order", i);
+            int tdc = bank.getShort("TDC", i);
+            int tot = bank.getShort("ToT", i);
 
             //Building a Hit
             RTOFRawHit hit = new RTOFRawHit(sector, layer, component, order, tdc, tot);

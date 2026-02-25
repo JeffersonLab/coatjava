@@ -605,7 +605,7 @@
     "entries":[
       { "name":"sector"    , "type":"B", "info":"sector"},
       { "name":"layer"     , "type":"B", "info":"layer"},
-      { "name":"component" , "type":"S", "info":"component"},
+      { "name":"component" , "type":"B", "info":"component"},
       { "name":"order"     , "type":"S", "info":"order: 2 - TDCL , 3 - TDCR"},
       { "name":"TDC"       , "type":"S", "info":"TDC value"},
       { "name":"ToT"       , "type":"S", "info":"Time Over Threshold"}

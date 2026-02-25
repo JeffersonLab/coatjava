@@ -41,9 +41,9 @@ public class RecoBankWriter {
         for (int i = 0; i < hitList.size(); i++) {
             bank.setShort("id", i, (short) (i + 1));
             bank.setShort("clusterid", i, (short) hitList.get(i).getAssociatedClusterIndex());
-            bank.setInt("sector", i, (int) hitList.get(i).getSector());
-            bank.setInt("layer", i, (int) hitList.get(i).getRow());
-            bank.setInt("component", i, (int) hitList.get(i).getColumn());
+            bank.setByte("sector", i, (byte) hitList.get(i).getSector());
+            bank.setByte("layer", i, (byte) hitList.get(i).getRow());
+            bank.setByte("component", i, (byte) hitList.get(i).getColumn());
             bank.setFloat("time", i, (float) hitList.get(i).getTime());
             bank.setFloat("x", i, (float) (hitList.get(i).getX()));
             bank.setFloat("y", i, (float) (hitList.get(i).getY()));
@@ -75,8 +75,8 @@ public class RecoBankWriter {
 
         for (int i = 0; i < clusterList.size(); i++) {
             bank.setShort("id", i, (short) (i + 1));
-            bank.setInt("size", i, (int) clusterList.get(i).getRTOFHits().size());
-	    bank.setInt("sector", i, (int) clusterList.get(i).getSectorMaxHit());
+            bank.setShort("size", i, (short) clusterList.get(i).getRTOFHits().size());
+	    bank.setByte("sector", i, (byte) clusterList.get(i).getSectorMaxHit());
             bank.setFloat("time", i, (float) clusterList.get(i).getTime());
             bank.setFloat("x", i, (float) (clusterList.get(i).getX()));
             bank.setFloat("y", i, (float) (clusterList.get(i).getY()));
