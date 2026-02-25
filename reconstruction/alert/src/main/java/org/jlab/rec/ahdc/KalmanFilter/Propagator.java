@@ -92,9 +92,8 @@ public class Propagator {
 				}
 				else {
 					// the distance between the step is not so big but the distance with respect to the hit starts to increase
-					// so, go back to the previous step (the best we have) and stop the propagation, set the default step size
+					// so, go back to the previous step (the best we have) and stop the propagation
 					stepper.copyContent(prev_stepper);
-					stepper.h = 0.5;
 					break;
 				}
 			}
