@@ -172,11 +172,6 @@ public class KFitter {
 	public RealMatrix getErrorCovarianceMatrix() {
 		return errorCovariance.copy();
 	}
-	
-	public void setVertexResolution(double[] res) {
-		vertex_resolutions[0] = res[0];
-		vertex_resolutions[1] = res[1];
-	}
 
 	/** Return a copy of the stepper. It is like a snapshot of the propagation. */
 	public Stepper getStepper() {return new Stepper(stepper);}

@@ -84,7 +84,17 @@ public class KalmanFilter {
 					row++;
 				}
 			}
-					
+
+			// Define the beamline as an axtra hit for the track fitting
+			RadialKFHit hit_beam = new RadialKFHit(0, 0, vz_constraint);
+			RealMatrix measurementNoise = new Array2DRowRealMatrix(
+											new double[][]{
+												{vertex_resolutions[0], 0.0000, 0.0000},
+												{0.00, 1e10, 0.0000},
+												{0.00, 0.0000, vertex_resolutions[1]}
+											});//3x3;
+			hit_beam.setMeasurementNoise(measurementNoise);
+
             // Loop over tracks
 			for (Track track : tracks) {
 			    // Initialize state vector
@@ -109,7 +119,6 @@ public class KalmanFilter {
 			    RealVector initialStateEstimate   = new ArrayRealVector(y);
 				RealMatrix initialErrorCovariance = track.getErrorCovarianceMatrix();
 				KFitter TrackFitter = new KFitter(initialStateEstimate, initialErrorCovariance, propagator, materialHashMap);
-				if (IsVtxDefined) TrackFitter.setVertexResolution(vertex_resolutions);
 		 	    
 				// Loop over number of iterations
 			    for (int k = 0; k < Niter; k++) {
@@ -139,16 +148,8 @@ public class KalmanFilter {
 					}
 					// Backward propagation (first layer to beamline)
 					{
-						RadialKFHit hit = new RadialKFHit(0, 0, vz_constraint);
-						RealMatrix measurementNoise = new Array2DRowRealMatrix(
-                                                        new double[][]{
-                                                            {vertex_resolutions[0], 0.0000, 0.0000},
-                                                            {0.00, 1e10, 0.0000},
-                                                            {0.00, 0.0000, vertex_resolutions[1]}
-                                                        });//3x3;
-                        hit.setMeasurementNoise(measurementNoise);
-						TrackFitter.predict(hit, false);
-						TrackFitter.correct(hit);
+						TrackFitter.predict(hit_beam, false);
+						TrackFitter.correct(hit_beam);
 					}
 
 			    }
