@@ -1,4 +1,4 @@
-package org.jlab.rec.ahdc.Cluster;
+package org.jlab.rec.ahdc.DocaCluster;
 
 /**
  * DocaCluster is a "refined" cluster space point built from
