@@ -167,53 +167,8 @@ public class KalmanFilter {
 						hit.setResidual(PostFitPropagator.residual(hit));
 					}
 			    }
-				// Projection towards the ATOF surfaces
-				// R1 : lower surface of an ATOF bar
-				// R2 : upper surface of an ATOF bar = lower surface of an ATOF wedge
-				// R3 : upper surface of an ATOF wedge
-				Point3D pR1 = ATOFdet.getSector(0).getSuperlayer(0).getLayer(0).getComponent(10).getVolumePoint(0);
-				Point3D pR2 = ATOFdet.getSector(0).getSuperlayer(0).getLayer(0).getComponent(10).getVolumePoint(2);
-				Point3D pR3 = ATOFdet.getSector(0).getSuperlayer(1).getLayer(0).getComponent(0).getVolumePoint(2);
-				double R1 = Math.hypot(pR1.x(), pR1.y());
-				double R2 = Math.hypot(pR2.x(), pR2.y());
-				double R3 = Math.hypot(pR3.x(), pR3.y());
-				
-				System.out.println("ATOF surface R2 : " + R2);
-				System.out.println("ATOF surface R3 : " + R3);
-				{	
-					// From last AHDC hit to surface R1
-					RadialSurfaceKFHit hitR1 = new RadialSurfaceKFHit(R1);
-					PostFitPropagator.predict(hitR1, true);
-					double[] vecR1 = PostFitPropagator.getStateEstimationVector().toArray();
-					Point3D posR1 = new Point3D(vecR1[0], vecR1[1], vecR1[2]);
-					posR1.translateXYZ(0, 0, atof_alignement);
-					int[] idR1 = predict_bar(ATOFdet, posR1);
-					System.out.println("ATOF surface R1 : " + R1);
-					System.out.printf ("   final position : x (.2f) y (.2f) z (.2f)\n", posR1.x(), posR1.y(), posR1.z());
-					System.out.printf ("   ---> sector (2d) layer (2d) component (2d)\n", idR1[0], idR1[1], idR1[2]);
-					// From surface R1 to surface R2
-					RadialSurfaceKFHit hitR2 = new RadialSurfaceKFHit(R2);
-					PostFitPropagator.predict(hitR2, true);
-					double[] vecR2 = PostFitPropagator.getStateEstimationVector().toArray();
-					Point3D posR2 = new Point3D(vecR2[0], vecR2[1], vecR2[2]);
-					posR2.translateXYZ(0, 0, atof_alignement);
-					int[] idR2 = predict_wedge(ATOFdet, posR2);
-					System.out.println("ATOF surface R2 : " + R2);
-					System.out.printf ("   final position : x (.2f) y (.2f) z (.2f)\n", posR2.x(), posR2.y(), posR2.z());
-					System.out.printf ("   ---> sector (2d) layer (2d) component (2d)\n", idR2[0], idR2[1], idR2[2]);
-					// From surface R2 to surface R3
-					RadialSurfaceKFHit hitR3 = new RadialSurfaceKFHit(R3);
-					PostFitPropagator.predict(hitR3, true);
-					double[] vecR3 = PostFitPropagator.getStateEstimationVector().toArray();
-					Point3D posR3 = new Point3D(vecR3[0], vecR3[1], vecR3[2]);
-					posR3.translateXYZ(0, 0, atof_alignement);
-					int[] idR3 = predict_wedge(ATOFdet, posR3);
-					System.out.println("ATOF surface R3 : " + R3);
-					System.out.printf ("   final position : x (.2f) y (.2f) z (.2f)\n", posR3.x(), posR3.y(), posR3.z());
-					System.out.printf ("   ---> sector (2d) layer (2d) component (2d)\n", idR3[0], idR3[1], idR3[2]);
-				}
-			    
-                // Fill track and hit bank
+
+				// Fill track and hit bank
 				// TO DO : s and p_drift have to be checked to be sure they represent what we want
 			    double s = PostFitPropagator.stepper.sTot;
 			    double p_drift = PostFitPropagator.stepper.p();
@@ -232,6 +187,51 @@ public class KalmanFilter {
 			    track.set_dEdx(sum_adc/s);
 			    track.set_path(s);
 			    track.set_n_hits(AHDC_hits.size());
+
+				// Projection towards the ATOF surfaces
+				// R1 : lower surface of an ATOF bar
+				// R2 : upper surface of an ATOF bar = lower surface of an ATOF wedge
+				// R3 : upper surface of an ATOF wedge
+				Point3D pR1 = ATOFdet.getSector(0).getSuperlayer(0).getLayer(0).getComponent(10).getVolumePoint(0);
+				Point3D pR2 = ATOFdet.getSector(0).getSuperlayer(0).getLayer(0).getComponent(10).getVolumePoint(2);
+				Point3D pR3 = ATOFdet.getSector(0).getSuperlayer(1).getLayer(0).getComponent(0).getVolumePoint(2);
+				double R1 = Math.hypot(pR1.x(), pR1.y());
+				double R2 = Math.hypot(pR2.x(), pR2.y());
+				double R3 = Math.hypot(pR3.x(), pR3.y());
+				{	
+					// From last AHDC hit to surface R1
+					RadialSurfaceKFHit hitR1 = new RadialSurfaceKFHit(R1);
+					PostFitPropagator.predict(hitR1, true);
+					double[] vecR1 = PostFitPropagator.getStateEstimationVector().toArray();
+					Point3D posR1 = new Point3D(vecR1[0], vecR1[1], vecR1[2]);
+					posR1.translateXYZ(0, 0, atof_alignement);
+					int[] idR1 = predict_bar(ATOFdet, posR1);
+					System.out.println("ATOF surface R1 : " + R1);
+					System.out.printf ("   final position : x (%.2f) y (%.2f) z (%.2f) --> R (%.2f)\n", posR1.x(), posR1.y(), posR1.z(), Math.hypot(posR1.x(), posR1.y()));
+					System.out.printf ("   ---> sector (%2d) layer (%2d) component (%2d)\n", idR1[0], idR1[1], idR1[2]);
+					// From surface R1 to surface R2
+					RadialSurfaceKFHit hitR2 = new RadialSurfaceKFHit(R2);
+					PostFitPropagator.predict(hitR2, true);
+					double[] vecR2 = PostFitPropagator.getStateEstimationVector().toArray();
+					Point3D posR2 = new Point3D(vecR2[0], vecR2[1], vecR2[2]);
+					posR2.translateXYZ(0, 0, atof_alignement);
+					int[] idR2 = predict_wedge(ATOFdet, posR2);
+					System.out.println("ATOF surface R2 : " + R2);
+					System.out.printf ("   final position : x (%.2f) y (%.2f) z (%.2f)\n", posR2.x(), posR2.y(), posR2.z());
+					System.out.printf ("   ---> sector (%2d) layer (%2d) component (%2d)\n", idR2[0], idR2[1], idR2[2]);
+					// From surface R2 to surface R3
+					RadialSurfaceKFHit hitR3 = new RadialSurfaceKFHit(R3);
+					PostFitPropagator.predict(hitR3, true);
+					double[] vecR3 = PostFitPropagator.getStateEstimationVector().toArray();
+					Point3D posR3 = new Point3D(vecR3[0], vecR3[1], vecR3[2]);
+					posR3.translateXYZ(0, 0, atof_alignement);
+					int[] idR3 = predict_wedge(ATOFdet, posR3);
+					System.out.println("ATOF surface R3 : " + R3);
+					System.out.printf ("   final position : x (%.2f) y (%.2f) z (%.2f)\n", posR3.x(), posR3.y(), posR3.z());
+					System.out.printf ("   ---> sector (%2d) layer (%2d) component (%2d)\n", idR3[0], idR3[1], idR3[2]);
+				}
+			    
+                
 
 				
 
