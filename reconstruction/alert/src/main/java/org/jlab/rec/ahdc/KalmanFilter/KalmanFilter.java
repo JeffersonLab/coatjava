@@ -41,8 +41,9 @@ public class KalmanFilter {
 	private int Niter = 40; // number of iterations for the Kalman Filter
 	private boolean IsVtxDefined = false; // implemented but not used yet
 	private double[] vertex_resolutions = {0.09, 1e10}; //  {error in r squared in mm^2, error in z squared in mm^2}
-	// mm,  CLAS and AHDC don't necessary have the same alignement (ZERO), this parameter may be subject to calibration
-	private double clas_alignement = -54;
+	// mm,  they the misalignement with respect to the AHDC
+	private double clas_alignement = +54;
+	private double atof_alignement = -32.7;
 	double vz_constraint = 0;
 	private int counter = 0; // number of utilisation of the Kalman Filter
 	HashMap<Integer, RadialKFHit> ATOF_hits = null;
@@ -67,7 +68,7 @@ public class KalmanFilter {
 				while ((!IsVtxDefined) && row < recBank.rows()) {
 					if (recBank.getInt("pid", row) == 11) {
 						IsVtxDefined = true;
-						vz_constraint = 10*recBank.getFloat("vz",row) - (IsMC ? 0 : clas_alignement); // mm
+						vz_constraint = 10*recBank.getFloat("vz",row) + (IsMC ? 0 : clas_alignement); // mm
 						
 						// TO DO: compute electron resolution as function of p and theta
 						// the fine tuning will be done later
@@ -159,78 +160,57 @@ public class KalmanFilter {
 
 			    // Post fit propagation (no correction) to set the residuals
 			    KFitter PostFitPropagator = new KFitter(TrackFitter.getStateEstimationVector(), initialErrorCovariance, new Stepper(TrackFitter.getStateEstimationVector().toArray()), new Propagator(RK4), materialHashMap);
+				// Projection towards AHDC hits
 			    for (Hit hit : AHDC_hits) {
                     PostFitPropagator.predict(hit, true);
 					if( hit.getId()>0){ // for the beamline the hit id is 0, so we only look at AHDC hits
 						hit.setResidual(PostFitPropagator.residual(hit));
 					}
 			    }
-				// using the PostFit Propagator: check for new ATOF wegdes (fit based)
+				// Projection towards the ATOF surfaces
+				// R1 : lower surface of an ATOF bar
+				// R2 : upper surface of an ATOF bar = lower surface of an ATOF wedge
+				// R3 : upper surface of an ATOF wedge
+				Point3D pR1 = ATOFdet.getSector(0).getSuperlayer(0).getLayer(0).getComponent(10).getVolumePoint(0);
+				Point3D pR2 = ATOFdet.getSector(0).getSuperlayer(0).getLayer(0).getComponent(10).getVolumePoint(2);
+				Point3D pR3 = ATOFdet.getSector(0).getSuperlayer(1).getLayer(0).getComponent(0).getVolumePoint(2);
+				double R1 = Math.hypot(pR1.x(), pR1.y());
+				double R2 = Math.hypot(pR2.x(), pR2.y());
+				double R3 = Math.hypot(pR3.x(), pR3.y());
+				
+				System.out.println("ATOF surface R2 : " + R2);
+				System.out.println("ATOF surface R3 : " + R3);
 				{	
-					// The midpoint of each wedge is locate on the same radius (distance with respect to the beamline)
-					// We project the AHDC track in this radius
-					Point3D midpoint = ATOFdet.getSector(0).getSuperlayer(1).getLayer(0).getComponent(0).getMidpoint();
-					double radius = midpoint.distance(new Point3D(0,0,midpoint.z()));
-					RadialSurfaceKFHit hit = new RadialSurfaceKFHit(radius);
-					// do the propagation
-					PostFitPropagator.predict(hit, true);
-					// get state vector
-					double[] vec = PostFitPropagator.getStateEstimationVector().toArray();
-					double vx = vec[0];
-					double vy = vec[1];
-					double vz = vec[2];
-					//System.out.printf("Initial position in ATOF : x (%.2f) y(%.2f) z (%.2f) r(%.2f)\n", vx, vy, vz, Math.sqrt(vx*vx + vy*vy));
-					// translate vz with respect the ATOF center
-					// Warning: we corrently have a mislagnement between AHDC and ATOF that need to be investigated or fixed
-					vz += 32.7; // mm , temporary
-					int[] atof_coordinates = predict_wedge(ATOFdet, new Point3D(vx, vy, vz));
-					int sector = atof_coordinates[0];
-					int layer = atof_coordinates[1];
-					int wedge = atof_coordinates[2];
-					
-					// find adjacent layer and sector
-					int sector_plus = sector;
-					int sector_minus = sector;
-					int layer_plus = layer+1;
-					int layer_minus = layer-1;
-					if (layer == 0) {
-						sector_plus = sector;
-						sector_minus = Math.floorMod(sector-1, 15);
-						layer_plus = layer+1;
-						layer_minus = 3;
-					}
-					else if (layer == 3) {
-						sector_plus = Math.floorMod(sector+1, 15);
-						sector_minus = sector;
-						layer_plus = 0;
-						layer_minus = layer-1;
-					}
-					// Here are all the adjacents wedges (maximum 8)
-					//ATOF_hits_predicted.clear(); // clean first
-					ArrayList<int[]> listOfWedges = new ArrayList<>();
-					listOfWedges.add(new int[]{sector, layer, wedge});
-					if (wedge-1 >= 0) {
-						listOfWedges.add(new int[]{sector, layer, wedge-1});
-						listOfWedges.add(new int[]{sector_plus, layer_plus, wedge-1});
-						listOfWedges.add(new int[]{sector_minus, layer_minus, wedge-1});
-					} 
-					if (wedge+1 <= 9) {
-						listOfWedges.add(new int[]{sector, layer, wedge+1});
-						listOfWedges.add(new int[]{sector_plus, layer_plus, wedge+1});
-						listOfWedges.add(new int[]{sector_minus, layer_minus, wedge+1});
-					}
-					ATOF_hits_predicted.put(track.get_trackId(), listOfWedges);
-
-
-
-					// if (listOfWedges != null) {
-					// 	int nn = 0;
-					// 	for (int[] res : listOfWedges) {
-					// 		nn++;
-					// 		System.out.printf("%d) Predicted wedge : sector (% 2d) layer (% 2d) wedge (% 2d)\n", nn, res[0], res[1], res[2]);
-					// 	}
-					// }
-					
+					// From last AHDC hit to surface R1
+					RadialSurfaceKFHit hitR1 = new RadialSurfaceKFHit(R1);
+					PostFitPropagator.predict(hitR1, true);
+					double[] vecR1 = PostFitPropagator.getStateEstimationVector().toArray();
+					Point3D posR1 = new Point3D(vecR1[0], vecR1[1], vecR1[2]);
+					posR1.translateXYZ(0, 0, atof_alignement);
+					int[] idR1 = predict_bar(ATOFdet, posR1);
+					System.out.println("ATOF surface R1 : " + R1);
+					System.out.printf ("   final position : x (.2f) y (.2f) z (.2f)\n", posR1.x(), posR1.y(), posR1.z());
+					System.out.printf ("   ---> sector (2d) layer (2d) component (2d)\n", idR1[0], idR1[1], idR1[2]);
+					// From surface R1 to surface R2
+					RadialSurfaceKFHit hitR2 = new RadialSurfaceKFHit(R2);
+					PostFitPropagator.predict(hitR2, true);
+					double[] vecR2 = PostFitPropagator.getStateEstimationVector().toArray();
+					Point3D posR2 = new Point3D(vecR2[0], vecR2[1], vecR2[2]);
+					posR2.translateXYZ(0, 0, atof_alignement);
+					int[] idR2 = predict_wedge(ATOFdet, posR2);
+					System.out.println("ATOF surface R2 : " + R2);
+					System.out.printf ("   final position : x (.2f) y (.2f) z (.2f)\n", posR2.x(), posR2.y(), posR2.z());
+					System.out.printf ("   ---> sector (2d) layer (2d) component (2d)\n", idR2[0], idR2[1], idR2[2]);
+					// From surface R2 to surface R3
+					RadialSurfaceKFHit hitR3 = new RadialSurfaceKFHit(R3);
+					PostFitPropagator.predict(hitR3, true);
+					double[] vecR3 = PostFitPropagator.getStateEstimationVector().toArray();
+					Point3D posR3 = new Point3D(vecR3[0], vecR3[1], vecR3[2]);
+					posR3.translateXYZ(0, 0, atof_alignement);
+					int[] idR3 = predict_wedge(ATOFdet, posR3);
+					System.out.println("ATOF surface R3 : " + R3);
+					System.out.printf ("   final position : x (.2f) y (.2f) z (.2f)\n", posR3.x(), posR3.y(), posR3.z());
+					System.out.printf ("   ---> sector (2d) layer (2d) component (2d)\n", idR3[0], idR3[1], idR3[2]);
 				}
 			    
                 // Fill track and hit bank
@@ -257,7 +237,7 @@ public class KalmanFilter {
 
 			}//end of loop on track candidates
 		} catch (Exception e) {
-			//e.printStackTrace();
+			e.printStackTrace();
 			//System.out.println("Error in Kalman Filter");
 		}
 	}
@@ -331,7 +311,9 @@ public class KalmanFilter {
 		System.out.printf("Nb of testing : %d\n", Npts);
 		System.out.printf("Nb of success : %d   (%.2f %%)\n", counter, 100.0*counter/Npts);
 	}
-
+	/** 
+	 * @param pt is defined in the center of the ATOF
+	 */
 	static public int[] predict_wedge(AlertTOFDetector atof, Point3D pt) {
 		// find the wedge
 		int wedge = -1;
@@ -358,6 +340,67 @@ public class KalmanFilter {
 			}
         }
 		return new int[] {sector, layer, wedge};
+	}
+
+	/** 
+	 * @param pt is defined in the center of the ATOF
+	 */
+	static public int[] predict_bar(AlertTOFDetector atof, Point3D pt) {
+		// find sector and layer
+		int sector = -1;
+		int layer = -1;
+		double d = 1e10;
+		for (int s = 0; s < atof.getNumSectors(); s++) {
+			for (int l = 0; l < atof.getSector(s).getSuperlayer(0).getNumLayers(); l++) {
+				Point3D midpoint = atof.getSector(s).getSuperlayer(0).getLayer(l).getComponent(10).getMidpoint();
+				double distance = midpoint.vectorTo(pt).rho();
+				if (distance < d) {
+					d = distance;
+					sector = s;
+					layer = l;
+				}
+			}
+        }
+		return new int[] {sector, layer, 10};
+	}
+
+	public ArrayList<int[]> get_adjacent_wedges(int[] identifiers) {
+		int sector = identifiers[0];
+		int layer  = identifiers[1];
+		int wedge  = identifiers[2];
+		
+		// find adjacent layer and sector
+		int sector_plus = sector;
+		int sector_minus = sector;
+		int layer_plus = layer+1;
+		int layer_minus = layer-1;
+		if (layer == 0) {
+			sector_plus = sector;
+			sector_minus = Math.floorMod(sector-1, 15);
+			layer_plus = layer+1;
+			layer_minus = 3;
+		}
+		else if (layer == 3) {
+			sector_plus = Math.floorMod(sector+1, 15);
+			sector_minus = sector;
+			layer_plus = 0;
+			layer_minus = layer-1;
+		}
+		// Here are all the adjacents wedges (maximum 8)
+		ArrayList<int[]> listOfWedges = new ArrayList<>();
+		listOfWedges.add(new int[]{sector_plus, layer_plus, wedge});
+		listOfWedges.add(new int[]{sector_plus, layer_plus, wedge});
+		if (wedge-1 >= 0) {
+			listOfWedges.add(new int[]{sector, layer, wedge-1});
+			listOfWedges.add(new int[]{sector_plus, layer_plus, wedge-1});
+			listOfWedges.add(new int[]{sector_minus, layer_minus, wedge-1});
+		} 
+		if (wedge+1 <= 9) {
+			listOfWedges.add(new int[]{sector, layer, wedge+1});
+			listOfWedges.add(new int[]{sector_plus, layer_plus, wedge+1});
+			listOfWedges.add(new int[]{sector_minus, layer_minus, wedge+1});
+		}
+		return listOfWedges;
 	}
 
 	public void set_ATOF_detector(AlertTOFDetector atof) { this.ATOFdet = atof;}
