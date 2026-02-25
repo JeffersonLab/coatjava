@@ -1,5 +1,7 @@
 package org.jlab.service.alert;
 
+import ai.djl.repository.zoo.ZooModel;
+import ai.djl.translate.TranslateException;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -17,6 +19,7 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.io.hipo.HipoDataSync;
 import org.jlab.rec.alert.TrackMatchingAI.ModelTrackMatching;
+import org.jlab.rec.alert.AIPID.ModelPrePID;
 import org.jlab.rec.alert.banks.RecoBankWriter;
 import org.jlab.rec.alert.projections.TrackProjector;
 import org.jlab.rec.atof.hit.ATOFHit;
@@ -30,10 +33,12 @@ import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.jlab.clas.pdg.PDGDatabase;
 import org.jlab.clas.pdg.PDGParticle;
+import java.util.logging.Logger;
 
 
 
 import ai.djl.util.Pair;
+import org.jlab.rec.alert.AIPID.PrePIDResult;
 
 
 /** 
@@ -57,8 +62,8 @@ public class ALERTEngine extends ReconstructionEngine {
      *
      */
     private RecoBankWriter rbc;
-
-    private AlertTOFDetector ATOF; // ALERT ATOF detector
+    static final Logger LOGGER = Logger.getLogger(ModelPrePID.class.getName());
+    AlertTOFDetector ATOF; // ALERT ATOF detector
     private AlertDCDetector AHDC; // ALERT AHDC detector
 
     /**
@@ -70,6 +75,7 @@ public class ALERTEngine extends ReconstructionEngine {
     private double b; //Magnetic field
 
     private ModelTrackMatching modelTrackMatching;
+    private ModelPrePID modelPrePID;
 
     public void setB(double B) {
         this.b = B;
@@ -96,6 +102,7 @@ public class ALERTEngine extends ReconstructionEngine {
         rbc = new RecoBankWriter();
 
         modelTrackMatching = new ModelTrackMatching();
+        modelPrePID = new ModelPrePID();
 
         AlertTOFFactory factory = new AlertTOFFactory();
         DatabaseConstantProvider cp = new DatabaseConstantProvider(11, "default");
@@ -229,7 +236,92 @@ public class ALERTEngine extends ReconstructionEngine {
             }
         }
         rbc.appendTrackMatchingAIBank(event, matched_ATOF_hit_id);
+        
+        // ---------------------------------------------------------------------------------------
+        // PrePID using AI (AHDC::track + ATOF::clusters matched via ALERT::ai:projections)
+        // ---------------------------------------------------------------------------------------
+        if (event.hasBank("ALERT::ai:projections") && event.hasBank("AHDC::track") && event.hasBank("ATOF::hits")) {
 
+            DataBank bankProj = event.getBank("ALERT::ai:projections");
+            DataBank bankTrk  = event.getBank("AHDC::track");
+            DataBank bankHit  = event.getBank("ATOF::hits");
+
+            ArrayList<PrePIDResult> prepid_results = new ArrayList<>();
+
+            for (int i = 0; i < bankProj.rows(); i++) {
+
+                int trackid = bankProj.getInt("trackid", i);
+                int hitid = bankProj.getInt("matched_atof_hit_id", i); // TODO: Fix to hit_id instead of clusterid
+                
+                // TODO: refactor this to replace this with single line
+                int trkRow = -1;
+                for (int r = 0; r < bankTrk.rows(); r++) {
+                    if (bankTrk.getInt("trackid", r) == trackid) { trkRow = r; break; }
+                }
+                if (trkRow < 0) continue;
+
+                int hitRow = -1;
+                for (int r = 0; r < bankHit.rows(); r++) {
+                    if (bankHit.getInt("id", r) == hitid) { hitRow = r; break; }
+                }
+                if (hitRow < 0) continue;
+
+                // Build feature vector float[23] in the exact training order
+                float[] x = new float[23];
+
+                // AHDC::track (13)
+                x[0]  = bankTrk.getFloat("x", trkRow);
+                x[1]  = bankTrk.getFloat("y", trkRow);
+                x[2]  = bankTrk.getFloat("z", trkRow);
+                x[3]  = bankTrk.getFloat("px", trkRow);
+                x[4]  = bankTrk.getFloat("py", trkRow);
+                x[5]  = bankTrk.getFloat("pz", trkRow);
+                x[6]  = bankTrk.getInt("n_hits", trkRow);
+                x[7]  = bankTrk.getInt("sum_adc", trkRow);
+                x[8]  = bankTrk.getFloat("path", trkRow);
+                x[9]  = bankTrk.getFloat("dEdx", trkRow);
+                x[10] = bankTrk.getFloat("p_drift", trkRow);
+                x[11] = bankTrk.getFloat("chi2", trkRow);
+                x[12] = bankTrk.getFloat("sum_residuals", trkRow);
+
+                /*// ATOF::clusters (10)
+                x[13] = bankClu.getInt("n_bar", cluRow);
+                x[14] = bankClu.getInt("n_wedge", cluRow);
+                x[15] = bankClu.getFloat("time", cluRow);
+                x[16] = bankClu.getFloat("x", cluRow);
+                x[17] = bankClu.getFloat("y", cluRow);
+                x[18] = bankClu.getFloat("z", cluRow);
+                x[19] = bankClu.getFloat("energy", cluRow);
+                x[20] = bankClu.getFloat("pathlength", cluRow);
+                x[21] = bankClu.getFloat("inpathlength", cluRow);
+                x[22] = bankClu.getInt("projID", cluRow);*/
+                
+                // ATOF::Hits (Temporarily updating to the same 10 slots as ATOF Clusters would have if it worked)
+                x[13] = 0f;
+                x[14] = 0f;
+                x[15] = bankHit.getFloat("time", hitRow);
+                x[16] = bankHit.getFloat("x", hitRow);
+                x[17] = bankHit.getFloat("y", hitRow);
+                x[18] = bankHit.getFloat("z", hitRow);
+                x[19] = bankHit.getFloat("energy", hitRow);
+                x[20] = 0f;
+                x[21] = 0f;
+                x[22] = 0f;
+
+                try {
+                    float[] pred = modelPrePID.prediction(x);
+                    int prepid = (int) pred[0];
+                    prepid_results.add(new PrePIDResult(trackid, hitid, prepid, pred[1], pred[2], pred[3], pred[4], pred[5]));
+                } catch (TranslateException ex) {
+                    LOGGER.warning(() -> "Exception in ALERTEngine PrePID: " + ex);
+                }
+            }
+
+            rbc.appendPrePIDBank(event, prepid_results);
+        }
+
+
+        
         ///////////////////////////////////////////
         /// Kalmam Filter
         /// ///////////////////////////////////////
