@@ -21,7 +21,6 @@ import org.jlab.geom.base.Component;
 import org.jlab.geom.detector.alert.ATOF.AlertTOFDetector;
 import org.jlab.geom.detector.alert.ATOF.AlertTOFFactory;
 import org.jlab.geom.prim.Point3D;
-import java.util.Random;
 
 
 /**

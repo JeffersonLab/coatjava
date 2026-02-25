@@ -28,7 +28,6 @@ public class KFitter {
     // masses/energies in MeV
 	private final double     electron_mass_c2 = PhysicsConstants.massElectron() * 1000;
 	private final double     proton_mass_c2   = PhysicsConstants.massProton() * 1000;
-	private double[] vertex_resolutions = {0.09,1e10}; // default values // dr^2 and dz^2 in mm^2
 
 	public KFitter(final RealVector initialStateEstimate, final RealMatrix initialErrorCovariance, final Propagator propagator, final HashMap<String, Material> materialHashMap) {
 		this.stateEstimation = initialStateEstimate;
