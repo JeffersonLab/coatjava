@@ -1,7 +1,8 @@
-package org.jlab.rec.ahdc.Cluster;
+package org.jlab.rec.ahdc.DocaCluster;
 
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
+import org.jlab.rec.ahdc.Cluster.Cluster;
 
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
