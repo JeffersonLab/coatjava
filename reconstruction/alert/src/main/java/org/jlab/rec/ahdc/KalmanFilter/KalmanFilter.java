@@ -100,16 +100,15 @@ public class KalmanFilter {
 			    ArrayList<Hit> AHDC_hits = track.getHits();
 				Collections.sort(AHDC_hits); // sorted following the compareTo() method in Hit.java
 			
-			    // Start propagation
-			    Stepper     stepper    = new Stepper(y);
+			    // Initialize propagator
 			    RungeKutta4 RK4        = new RungeKutta4(particle, numberOfVariables, B);
 			    Propagator  propagator = new Propagator(RK4);
 
 			    // Initialization of the Kalman Fitter
 				// for the error matrix: first 3 lines in mm^2; last 3 lines in MeV^2
-			    RealVector initialStateEstimate   = new ArrayRealVector(stepper.y);
+			    RealVector initialStateEstimate   = new ArrayRealVector(y);
 				RealMatrix initialErrorCovariance = track.getErrorCovarianceMatrix();
-				KFitter TrackFitter = new KFitter(initialStateEstimate, initialErrorCovariance, stepper, propagator, materialHashMap);
+				KFitter TrackFitter = new KFitter(initialStateEstimate, initialErrorCovariance, propagator, materialHashMap);
 				if (IsVtxDefined) TrackFitter.setVertexResolution(vertex_resolutions);
 		 	    
 				// Loop over number of iterations
@@ -159,7 +158,7 @@ public class KalmanFilter {
 				track.setErrorCovarianceMatrix(TrackFitter.getErrorCovarianceMatrix());
 
 			    // Post fit propagation (no correction) to set the residuals
-			    KFitter PostFitPropagator = new KFitter(TrackFitter.getStateEstimationVector(), initialErrorCovariance, new Stepper(TrackFitter.getStateEstimationVector().toArray()), new Propagator(RK4), materialHashMap);
+			    KFitter PostFitPropagator = new KFitter(TrackFitter.getStateEstimationVector(), initialErrorCovariance, new Propagator(RK4), materialHashMap);
 				// Projection towards AHDC hits
 			    for (Hit hit : AHDC_hits) {
                     PostFitPropagator.predict(hit, true);
@@ -170,8 +169,9 @@ public class KalmanFilter {
 
 				// Fill track and hit bank
 				// TO DO : s and p_drift have to be checked to be sure they represent what we want
-			    double s = PostFitPropagator.stepper.sTot;
-			    double p_drift = PostFitPropagator.stepper.p();
+				Stepper current_stepper = PostFitPropagator.getStepper();
+			    double s = current_stepper.sTot;
+			    double p_drift = current_stepper.p();
 			    int sum_adc = 0;
 			    double sum_residuals = 0;
 			    double chi2 = 0;

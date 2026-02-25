@@ -21,7 +21,7 @@ public class KFitter {
 
 	private       RealVector stateEstimation;
     private       RealMatrix errorCovariance;
-	public final  Stepper    stepper;
+	private       Stepper    stepper;
 	private final Propagator propagator;
 	private final HashMap<String, Material> materialHashMap;
 	public        double     chi2 = 0;
@@ -30,10 +30,10 @@ public class KFitter {
 	private final double     proton_mass_c2   = PhysicsConstants.massProton() * 1000;
 	private double[] vertex_resolutions = {0.09,1e10}; // default values // dr^2 and dz^2 in mm^2
 
-	public KFitter(final RealVector initialStateEstimate, final RealMatrix initialErrorCovariance, final Stepper stepper, final Propagator propagator, final HashMap<String, Material> materialHashMap) {
+	public KFitter(final RealVector initialStateEstimate, final RealMatrix initialErrorCovariance, final Propagator propagator, final HashMap<String, Material> materialHashMap) {
 		this.stateEstimation = initialStateEstimate;
 		this.errorCovariance = initialErrorCovariance;
-		this.stepper         = stepper;
+		this.stepper         = new Stepper(initialStateEstimate.toArray());
 		this.propagator      = propagator;
 		this.materialHashMap = materialHashMap;
 	}
@@ -177,5 +177,8 @@ public class KFitter {
 		vertex_resolutions[0] = res[0];
 		vertex_resolutions[1] = res[1];
 	}
+
+	/** Return a copy of the stepper. It is like a snapshot of the propagation. */
+	public Stepper getStepper() {return new Stepper(stepper);}
 
 }
