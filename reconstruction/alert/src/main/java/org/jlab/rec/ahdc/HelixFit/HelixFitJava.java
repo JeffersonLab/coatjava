@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jlab.rec.ahdc.Cluster.DocaCluster;
+import org.jlab.rec.ahdc.DocaCluster.DocaCluster;
 
 /** Helix Fit.
  *
