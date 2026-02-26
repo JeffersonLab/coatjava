@@ -15,8 +15,7 @@ import org.jlab.utils.options.OptionParser;
 
 /**
  * Efficiency matrix calculator based solely on the MC::GenMatch truth-matching
- * bank (which is purely hit-based), and a pid assignment match in MC::Particle
- * and REC::Particle.
+ * bank, and a pid assignment match in MC::Particle and REC::Particle.
  * 
  * @author baltzell
  */
