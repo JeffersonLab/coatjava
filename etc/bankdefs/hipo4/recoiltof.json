@@ -28,15 +28,15 @@
       },{
         "name": "x",
         "type": "F",
-        "info": "x position in mm"
+        "info": "x position in cm"
       }, {
         "name": "y",
         "type": "F",
-        "info": "y position in mm"
+        "info": "y position in cm"
       }, {
         "name": "z",
         "type": "F",
-        "info": "z position in mm"
+        "info": "z position in cm"
       },{
         "name": "energy",
         "type": "F",
@@ -72,15 +72,15 @@
       },{
         "name": "x",
         "type": "F",
-        "info": "x position in mm"
+        "info": "x position in cm"
       }, {
         "name": "y",
         "type": "F",
-        "info": "y position in mm"
+        "info": "y position in cm"
       }, {
         "name": "z",
         "type": "F",
-        "info": "z position in mm"
+        "info": "z position in cm"
       },{
         "name": "energy",
         "type": "F",

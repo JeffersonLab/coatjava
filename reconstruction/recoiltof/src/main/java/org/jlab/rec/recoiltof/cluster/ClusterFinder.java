@@ -49,7 +49,7 @@ public class ClusterFinder {
      * proximity.
      *
      * Hits are compared based on their y difference, which
-     * is distance in mm and time difference.
+     * is distance in cm and time difference.
      *
      * If the hit satisfies all conditions, it is marked as clustered and added
      * to the cluster hit list.
@@ -63,7 +63,7 @@ public class ClusterFinder {
      * @param hits The list of hits to be clustered, can be any subclass of
      * {@link RTOFRawHit}.
      * @param this_hit The hit currently being considered for clustering.
-     * @param sigma_y The threshold for the y-distance [mm] between the hits.
+     * @param sigma_y The threshold for the y-distance [cm] between the hits.
      * @param sigma_t The threshold for the time difference [ns] between the
      * hits.
      * @param cluster_id The ID of the cluster being formed.
@@ -82,7 +82,7 @@ public class ClusterFinder {
             }
             // Check the distance between the hits
             double delta_T = Math.abs(this_hit.getTime() - other_hit.getTime());
-            //The y distance is a distance in mm 
+            //The y distance is a distance in cm 
             Boolean condition_y;
 	    double delta_Y = Math.abs(this_hit.getY() - other_hit.getY());
 	    condition_y = (delta_Y <= sigma_y.doubleValue());
@@ -106,7 +106,7 @@ public class ClusterFinder {
      * @param hitfinder the {@link HitFinder} containing the hits that were
      * found
      *
-     * @param sigma_y the tolerance for clustering in y [mm]
+     * @param sigma_y the tolerance for clustering in y [cm]
      *
      * @param sigma_t the tolerance for clustering in time [ns]
      *

@@ -249,7 +249,7 @@ public class RTOFRawHit {
     }
 
     /**
-     * Calculates spatial coordinates (mm) for the hit based on row and column number of the bar within a sector.
+     * Calculates spatial coordinates (cm) for the hit based on row and column number of the bar within a sector.
      * The row and column variables are obtained from the bank information.
      *
      * @return 0 if the coordinates were successfully set, or 1 if the hit type
