@@ -1,0 +1,10 @@
+#!/bin/bash
+
+[ "$#" -ne 2 ] && echo 'Usage:  git-lfs-wget URI subpath' && exit 1
+subdir=$(echo $1 | awk -F/ '{print$NF}' | awk -F. '{print$1}')
+GIT_LFS_SKIP_SMUDGE=1 git clone $1
+cd $subdir
+git lfs install --skip-smudge
+git config lfs.fetchinclude "$2"
+git lfs pull
+
