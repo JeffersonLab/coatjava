@@ -207,7 +207,7 @@ public class Truth {
         return m;
     }
 
-    public boolean checkEfficiencies(Map<Integer,Float> pids) {
+    private boolean checkEfficiencies(Map<Integer,Float> pids) {
         boolean good = true;
         for (int pid : pids.keySet()) {
             if (get(pid, pid) < pids.get(pid)) {
@@ -218,8 +218,18 @@ public class Truth {
             }
         }
         return good;
-    } 
-    
+    }
+
+    /**
+     * Efficiency cut values specificed as pid1:eff1[pid2:eff2[...]]
+     * For example, 2212:0.9,11:0.95 is 90% for proton and 95% for electron.
+     * @param arg
+     * @return whether all efficiency cuts pass
+     */
+    public boolean checkEfficiencies(String arg) {
+        return checkEfficiencies(parseEfficiencyString(arg));
+    }
+
     public static void main(String[] args) {
         OptionParser o = new OptionParser("trutheff");
         o.addOption("-e", "", "efficiency requirement (e.g. 321:0.9,11:0.95");
