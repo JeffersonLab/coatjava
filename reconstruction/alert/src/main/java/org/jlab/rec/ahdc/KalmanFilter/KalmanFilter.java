@@ -47,7 +47,6 @@ public class KalmanFilter {
 	private int counter = 0; // number of utilisation of the Kalman Filter
 	HashMap<Integer, RadialKFHit> ATOF_hits = null;
 	HashMap<Integer, ArrayList<int[]>> ATOF_hits_predicted = new HashMap<>();
-	//ArrayList<int[]> ATOF_hits_predicted = new ArrayList<>(); // list of sector, layer, component (for now : only wedges)
 	AlertTOFDetector ATOFdet = null;
 
 	public void propagation(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {
@@ -202,34 +201,52 @@ public class KalmanFilter {
 					// From last AHDC hit to surface R1
 					RadialSurfaceKFHit hitR1 = new RadialSurfaceKFHit(R1);
 					PostFitPropagator.predict(hitR1, true);
+					Stepper stepperR1 = PostFitPropagator.getStepper();
 					double[] vecR1 = PostFitPropagator.getStateEstimationVector().toArray();
 					Point3D posR1 = new Point3D(vecR1[0], vecR1[1], vecR1[2]);
 					posR1.translateXYZ(0, 0, atof_alignement);
 					int[] idR1 = predict_bar(ATOFdet, posR1);
-					System.out.println("ATOF surface R1 : " + R1);
-					System.out.printf ("   final position : x (%.2f) y (%.2f) z (%.2f) --> R (%.2f)\n", posR1.x(), posR1.y(), posR1.z(), Math.hypot(posR1.x(), posR1.y()));
-					System.out.printf ("   ---> sector (%2d) layer (%2d) component (%2d)\n", idR1[0], idR1[1], idR1[2]);
+					track.set_ATOF_S1_stepper(stepperR1);
+					if (Math.abs(stepperR1.r() - R1) < 1.5*stepperR1.h) {
+						track.set_ATOF_region(1);
+						if (counter < 2) track.set_ATOF_component(10000*idR1[0] + 100*idR1[1] + idR1[2]);
+					}
+					
+
+						// System.out.println("###########################################################");
+						// System.out.println("ATOF surface R1 : " + R1);
+						// System.out.printf ("   final position : x (%f) y (%f) z (%f) --> R (%f)\n", posR1.x(), posR1.y(), posR1.z(), Math.hypot(posR1.x(), posR1.y()));
+						// System.out.println("   stepper.h : " + PostFitPropagator.getStepper().h);
+						// System.out.printf ("   ---> sector (%2d) layer (%2d) component (%2d)\n", idR1[0], idR1[1], idR1[2]);
+
 					// From surface R1 to surface R2
 					RadialSurfaceKFHit hitR2 = new RadialSurfaceKFHit(R2);
 					PostFitPropagator.predict(hitR2, true);
+					Stepper stepperR2 = PostFitPropagator.getStepper();
 					double[] vecR2 = PostFitPropagator.getStateEstimationVector().toArray();
 					Point3D posR2 = new Point3D(vecR2[0], vecR2[1], vecR2[2]);
 					posR2.translateXYZ(0, 0, atof_alignement);
 					int[] idR2 = predict_wedge(ATOFdet, posR2);
-					System.out.println("ATOF surface R2 : " + R2);
-					System.out.printf ("   final position : x (%.2f) y (%.2f) z (%.2f)\n", posR2.x(), posR2.y(), posR2.z());
-					System.out.printf ("   ---> sector (%2d) layer (%2d) component (%2d)\n", idR2[0], idR2[1], idR2[2]);
+					track.set_ATOF_S2_stepper(stepperR2);
+					if (Math.abs(stepperR2.r() - R2) < 1.5*stepperR2.h) {
+						track.set_ATOF_region(2);
+						if (counter < 2) track.set_ATOF_component(10000*idR2[0] + 100*idR2[1] + idR2[2]);
+					}
 					// From surface R2 to surface R3
 					RadialSurfaceKFHit hitR3 = new RadialSurfaceKFHit(R3);
 					PostFitPropagator.predict(hitR3, true);
+					Stepper stepperR3 = PostFitPropagator.getStepper();
 					double[] vecR3 = PostFitPropagator.getStateEstimationVector().toArray();
 					Point3D posR3 = new Point3D(vecR3[0], vecR3[1], vecR3[2]);
 					posR3.translateXYZ(0, 0, atof_alignement);
 					int[] idR3 = predict_wedge(ATOFdet, posR3);
-					System.out.println("ATOF surface R3 : " + R3);
-					System.out.printf ("   final position : x (%.2f) y (%.2f) z (%.2f)\n", posR3.x(), posR3.y(), posR3.z());
-					System.out.printf ("   ---> sector (%2d) layer (%2d) component (%2d)\n", idR3[0], idR3[1], idR3[2]);
-				}
+					track.set_ATOF_S3_stepper(stepperR3);
+					if (Math.abs(stepperR3.r() - R3) < 1.5*stepperR3.h) {
+						track.set_ATOF_region(3);
+						//if (counter < 2) track.set_ATOF_component(10000*idR3[0] + 100*idR3[1] + idR3[2]);
+					}
+
+				} // end propagation towards ATOF surface
 			    
                 
 

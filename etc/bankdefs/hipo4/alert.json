@@ -408,6 +408,74 @@
         "name": "sum_residuals",
         "type": "F",
         "info": "Sum of residuals (mm)"
+      }, {
+        "name": "atof_region",
+        "type": "I",
+        "info": "a flag to know if a track reach S1, S2, or S3; is n if Sn is reached; is 0 otherwise"
+      }, {
+        "name": "atof_s1_x",
+        "type": "F",
+        "info": "x position of the track if it reaches the surface s1"
+      }, {
+        "name": "atof_s1_y",
+        "type": "F",
+        "info": "y position of the track if it reaches the surface s1"
+      }, {
+        "name": "atof_s1_z",
+        "type": "F",
+        "info": "z position of the track if it reaches the surface s1"
+      }, {
+        "name": "atof_s1_path",
+        "type": "F",
+        "info": "total path from the  beamline to the surface s1"
+      }, {
+        "name": "atof_s1_p",
+        "type": "F",
+        "info": "momentum whith which the track reaches the surface s1"
+      }, {
+        "name": "atof_s2_x",
+        "type": "F",
+        "info": "x position of the track if it reaches the surface s2"
+      }, {
+        "name": "atof_s2_y",
+        "type": "F",
+        "info": "y position of the track if it reaches the surface s2"
+      }, {
+        "name": "atof_s2_z",
+        "type": "F",
+        "info": "z position of the track if it reaches the surface s2"
+      }, {
+        "name": "atof_s2_path",
+        "type": "F",
+        "info": "total path from the  beamline to the surface s2"
+      }, {
+        "name": "atof_s2_p",
+        "type": "F",
+        "info": "momentum whith which the track reaches the surface s2"
+      }, {
+        "name": "atof_s3_x",
+        "type": "F",
+        "info": "x position of the track if it reaches the surface s3"
+      }, {
+        "name": "atof_s3_y",
+        "type": "F",
+        "info": "y position of the track if it reaches the surface s3"
+      }, {
+        "name": "atof_s3_z",
+        "type": "F",
+        "info": "z position of the track if it reaches the surface s3"
+      }, {
+        "name": "atof_s3_path",
+        "type": "F",
+        "info": "total path from the  beamline to the surface s3"
+      }, {
+        "name": "atof_s3_p",
+        "type": "F",
+        "info": "momentum whith which the track reaches the surface s3"
+      }, {
+        "name": "atof_component",
+        "type": "I",
+        "info": "sector*10000 + layer*100 + component : of the lower surface of a bar or the lower surface of a wedge depending or not the track reached these surfaces, priority is given to the wedges"
       }
     ]
   }, {

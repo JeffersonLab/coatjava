@@ -7,6 +7,7 @@ import org.jlab.rec.ahdc.AI.InterCluster;
 import org.jlab.rec.ahdc.Cluster.Cluster;
 import org.jlab.rec.ahdc.HelixFit.HelixFitObject;
 import org.jlab.rec.ahdc.Hit.Hit;
+import org.jlab.rec.ahdc.KalmanFilter.Stepper;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import org.jlab.rec.ahdc.PreCluster.PreClusterFinder;
 import org.jlab.rec.ahdc.AI.PreClustering;
@@ -45,6 +46,19 @@ public class Track {
 		{0.0 , 0.0 , 0.0 , 100 , 0.0 , 0.0}, 
 		{0.0 , 0.0 , 0.0 , 0.0 , 100 , 0.0}, 
 		{0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 900}});
+	// Position and momentum when the track crosses the ATOF surface
+	// S1 : lower surface of an ATOF bar
+	// S2 : upper surface of an ATOF bar = lower surface of an ATOF wedge
+	// S3 : upper surface of an ATOF wedge
+	Stepper ATOF_S1_stepper;
+	Stepper ATOF_S2_stepper;
+	Stepper ATOF_S3_stepper;
+	double ATOF_S1_radius;
+	double ATOF_S2_radius;
+	double ATOF_S3_radius;
+	int ATOF_region = 0; // is n if the trach reaches Sn, 0 otherwise (i.e does not reach S1)
+	int ATOF_component = 0; // predicted wedge (or bar if region is 1) just after the first fit (KF1)
+
 
     // AHDC::aiprediction
     private int predicted_ATOF_sector = -1;
@@ -209,5 +223,17 @@ public class Track {
     public int get_predicted_ATOF_sector() {return predicted_ATOF_sector;}
     public int get_predicted_ATOF_layer() {return predicted_ATOF_layer;}
     public int get_predicted_ATOF_wedge() {return predicted_ATOF_wedge;}
+
+	// Projection of the Track on the ATOF surfaces
+	public void set_ATOF_S1_stepper(Stepper _stepper) {this.ATOF_S1_stepper = _stepper;}
+	public void set_ATOF_S2_stepper(Stepper _stepper) {this.ATOF_S2_stepper = _stepper;}
+	public void set_ATOF_S3_stepper(Stepper _stepper) {this.ATOF_S3_stepper = _stepper;}
+	public void set_ATOF_region(int _n) {this.ATOF_region = _n;}
+	public void set_ATOF_component(int _comp) {this.ATOF_component = _comp;}
+	public Stepper get_ATOF_S1_stepper() {return this.ATOF_S1_stepper;}
+	public Stepper get_ATOF_S2_stepper() {return this.ATOF_S2_stepper;}
+	public Stepper get_ATOF_S3_stepper() {return this.ATOF_S3_stepper;}
+	public int get_ATOF_region() {return this.ATOF_region;}
+	public int get_ATOF_component() {return this.ATOF_component;}
 
 }
