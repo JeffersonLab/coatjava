@@ -216,9 +216,9 @@ public class Truth {
         r.open(o.getInputList().get(0));
         Truth t = new Truth(r.getSchemaFactory());
         t.add(o.getInputList());
-        System.out.println(t.toTable());
-        System.out.println(t.toJson());
         System.out.println(t.toMarkdown());
+        System.out.println(t.toJson());
+        System.out.println(t.toTable());
         boolean good = true;
         for (int pid : pids.keySet()) {
             if (t.get(pid, pid) < pids.get(pid)) {
