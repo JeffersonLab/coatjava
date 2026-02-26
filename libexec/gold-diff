@@ -1,7 +1,9 @@
 #!/bin/bash
 
-a=development
-b=redecodering2
+[ "$#" -ne 2 ] && echo 'Usage:  gold-diff dir1 dir2' && exit 1
+
+a=$1
+b=$2
 
 for x in $a/*.hipo
 do
