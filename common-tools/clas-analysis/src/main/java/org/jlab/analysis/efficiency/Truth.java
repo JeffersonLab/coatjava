@@ -188,10 +188,31 @@ public class Truth {
         return s.toString();
     }
 
+    private static TreeMap<Integer,Float> parseEfficiencyString(String arg) {
+        TreeMap<Integer,Float> m = new TreeMap<>();
+        if (arg.contains(",")) {
+            for (String s : arg.split(","))
+                m.putAll(parseEfficiencyString(s));
+        }
+        else if (arg.contains(":")) {
+            String[] x = arg.split(":");
+            try {
+                if (x.length == 2) m.put(Integer.valueOf(x[0]), Float.valueOf(x[1]));
+                else throw new RuntimeException("Invalid pid specification:  "+arg);
+            }
+            catch (NumberFormatException e) {
+                throw new RuntimeException("Invalid pid specification:  "+arg);
+            }
+        }
+        return m;
+    }
+    
     public static void main(String[] args) {
         OptionParser o = new OptionParser("trutheff");
+        o.addOption("-e", "", "efficiency requirement (e.g. 321:0.9,11:0.95");
         o.setRequiresInputList(true);
         o.parse(args);
+        TreeMap<Integer,Float> pids = parseEfficiencyString(o.getOption("-e").stringValue());
         HipoReader r = new HipoReader();
         r.open(o.getInputList().get(0));
         Truth t = new Truth(r.getSchemaFactory());
@@ -199,6 +220,16 @@ public class Truth {
         System.out.println(t.toTable());
         System.out.println(t.toJson());
         System.out.println(t.toMarkdown());
+        boolean good = true;
+        for (int pid : pids.keySet()) {
+            if (t.get(pid, pid) < pids.get(pid)) {
+                System.err.println(String.format(
+                    ">>> trutheff:error: pid %d efficiency is %f, below %f limit",
+                    pid, t.get(pid,pid), pids.get(pid)));
+                good = false;
+            }
+        }
+        if (!good) System.exit(7);
     }
 
 }
