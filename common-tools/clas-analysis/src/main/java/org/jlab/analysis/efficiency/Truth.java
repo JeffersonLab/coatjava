@@ -3,6 +3,7 @@ package org.jlab.analysis.efficiency;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
@@ -187,7 +188,7 @@ public class Truth {
         return s.toString();
     }
 
-    private static TreeMap<Integer,Float> parseEfficiencyString(String arg) {
+    private static Map<Integer,Float> parseEfficiencyString(String arg) {
         TreeMap<Integer,Float> m = new TreeMap<>();
         if (arg.contains(",")) {
             for (String s : arg.split(","))
@@ -205,13 +206,26 @@ public class Truth {
         }
         return m;
     }
+
+    public boolean checkEfficiencies(Map<Integer,Float> pids) {
+        boolean good = true;
+        for (int pid : pids.keySet()) {
+            if (get(pid, pid) < pids.get(pid)) {
+                System.err.println(String.format(
+                    ">>> trutheff:  pid %d efficiency is %f, below %f limit",
+                    pid, get(pid,pid), pids.get(pid)));
+                good = false;
+            }
+        }
+        return good;
+    } 
     
     public static void main(String[] args) {
         OptionParser o = new OptionParser("trutheff");
         o.addOption("-e", "", "efficiency requirement (e.g. 321:0.9,11:0.95");
         o.setRequiresInputList(true);
         o.parse(args);
-        TreeMap<Integer,Float> pids = parseEfficiencyString(o.getOption("-e").stringValue());
+        Map<Integer,Float> pids = parseEfficiencyString(o.getOption("-e").stringValue());
         HipoReader r = new HipoReader();
         r.open(o.getInputList().get(0));
         Truth t = new Truth(r.getSchemaFactory());
@@ -219,16 +233,7 @@ public class Truth {
         System.out.println(t.toMarkdown());
         System.out.println(t.toJson());
         System.out.println(t.toTable());
-        boolean good = true;
-        for (int pid : pids.keySet()) {
-            if (t.get(pid, pid) < pids.get(pid)) {
-                System.err.println(String.format(
-                    ">>> trutheff:error: pid %d efficiency is %f, below %f limit",
-                    pid, t.get(pid,pid), pids.get(pid)));
-                good = false;
-            }
-        }
-        if (!good) System.exit(7);
+        if (!t.checkEfficiencies(pids)) System.exit(7);
     }
 
 }
