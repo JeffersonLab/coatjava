@@ -353,20 +353,22 @@ public class ALERTEngine extends ReconstructionEngine {
                     AHDC_hits.add(hit);
                 }
             }
-            Track track = new Track(AHDC_hits);
-            // Initialise the position and the momentum using the information of the AHDC::track
-            // position : mm
-            // momentum : MeV
-            double x = trackBank.getFloat("x", row);
-            double y = trackBank.getFloat("y", row);
-            double z = trackBank.getFloat("z", row);
-            double px = trackBank.getFloat("px", row);
-            double py = trackBank.getFloat("py", row);
-            double pz = trackBank.getFloat("pz", row);
-            double[] vec = {x, y, z, px, py, pz};
-            track.setPositionAndMomentumVec(vec);
-            track.set_trackId(trackid);
-            AHDC_tracks.add(track);
+            if (AHDC_hits.size() > 0) {
+                Track track = new Track(AHDC_hits);
+                // Initialise the position and the momentum using the information of the AHDC::track
+                // position : mm
+                // momentum : MeV
+                double x = trackBank.getFloat("x", row);
+                double y = trackBank.getFloat("y", row);
+                double z = trackBank.getFloat("z", row);
+                double px = trackBank.getFloat("px", row);
+                double py = trackBank.getFloat("py", row);
+                double pz = trackBank.getFloat("pz", row);
+                double[] vec = {x, y, z, px, py, pz};
+                track.setPositionAndMomentumVec(vec);
+                track.set_trackId(trackid);
+                AHDC_tracks.add(track);
+            }
         }
         /// Intialise the Kalman Filter
         double magfieldfactor = runBank.getFloat("solenoid", 0);

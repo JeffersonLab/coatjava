@@ -156,25 +156,33 @@ public class RecoBankWriter {
 
 			// track projection on ATOF surface S1
 			Stepper stepper_s1 = track.get_ATOF_S1_stepper();
-			bank.setFloat("atof_s1_x", row, (float) stepper_s1.y[0]);
-			bank.setFloat("atof_s1_y", row, (float) stepper_s1.y[1]);
-			bank.setFloat("atof_s1_z", row, (float) stepper_s1.y[2]);
-			bank.setFloat("atof_s1_path", row, (float) stepper_s1.sTot);
-			bank.setFloat("atof_s1_p", row, (float) stepper_s1.p());
+			if (stepper_s1 != null) {
+				bank.setFloat("atof_s1_x", row, (float) stepper_s1.y[0]);
+				bank.setFloat("atof_s1_y", row, (float) stepper_s1.y[1]);
+				bank.setFloat("atof_s1_z", row, (float) stepper_s1.y[2]);
+				bank.setFloat("atof_s1_path", row, (float) stepper_s1.sTot);
+				bank.setFloat("atof_s1_p", row, (float) stepper_s1.p());
+			}
+			
 			// track projection on ATOF surface S2
 			Stepper stepper_s2 = track.get_ATOF_S2_stepper();
-			bank.setFloat("atof_s2_x", row, (float) stepper_s2.y[0]);
-			bank.setFloat("atof_s2_y", row, (float) stepper_s2.y[1]);
-			bank.setFloat("atof_s2_z", row, (float) stepper_s2.y[2]);
-			bank.setFloat("atof_s2_path", row, (float) stepper_s2.sTot);
-			bank.setFloat("atof_s2_p", row, (float) stepper_s2.p());
+			if (stepper_s2 != null) {
+				bank.setFloat("atof_s2_x", row, (float) stepper_s2.y[0]);
+				bank.setFloat("atof_s2_y", row, (float) stepper_s2.y[1]);
+				bank.setFloat("atof_s2_z", row, (float) stepper_s2.y[2]);
+				bank.setFloat("atof_s2_path", row, (float) stepper_s2.sTot);
+				bank.setFloat("atof_s2_p", row, (float) stepper_s2.p());
+			}
+			
 			// track projection on ATOF surface S3
 			Stepper stepper_s3 = track.get_ATOF_S3_stepper();
-			bank.setFloat("atof_s3_x", row, (float) stepper_s3.y[0]);
-			bank.setFloat("atof_s3_y", row, (float) stepper_s3.y[1]);
-			bank.setFloat("atof_s3_z", row, (float) stepper_s3.y[2]);
-			bank.setFloat("atof_s3_path", row, (float) stepper_s3.sTot);
-			bank.setFloat("atof_s3_p", row, (float) stepper_s3.p());
+			if (stepper_s3 != null) {
+				bank.setFloat("atof_s3_x", row, (float) stepper_s3.y[0]);
+				bank.setFloat("atof_s3_y", row, (float) stepper_s3.y[1]);
+				bank.setFloat("atof_s3_z", row, (float) stepper_s3.y[2]);
+				bank.setFloat("atof_s3_path", row, (float) stepper_s3.sTot);
+				bank.setFloat("atof_s3_p", row, (float) stepper_s3.p());
+			}
 			
 			bank.setInt("atof_region", row, track.get_ATOF_region());
 			bank.setInt("atof_component", row, track.get_ATOF_component());

@@ -209,7 +209,7 @@ public class KalmanFilter {
 					track.set_ATOF_S1_stepper(stepperR1);
 					if (Math.abs(stepperR1.r() - R1) < 1.5*stepperR1.h) {
 						track.set_ATOF_region(1);
-						if (counter < 2) track.set_ATOF_component(10000*idR1[0] + 100*idR1[1] + idR1[2]);
+						if (counter < 2 && idR1 != null) track.set_ATOF_component(10000*idR1[0] + 100*idR1[1] + idR1[2]);
 					}
 					
 
@@ -230,7 +230,7 @@ public class KalmanFilter {
 					track.set_ATOF_S2_stepper(stepperR2);
 					if (Math.abs(stepperR2.r() - R2) < 1.5*stepperR2.h) {
 						track.set_ATOF_region(2);
-						if (counter < 2) track.set_ATOF_component(10000*idR2[0] + 100*idR2[1] + idR2[2]);
+						if (counter < 2 && idR2 != null) track.set_ATOF_component(10000*idR2[0] + 100*idR2[1] + idR2[2]);
 					}
 					// From surface R2 to surface R3
 					RadialSurfaceKFHit hitR3 = new RadialSurfaceKFHit(R3);
@@ -243,7 +243,7 @@ public class KalmanFilter {
 					track.set_ATOF_S3_stepper(stepperR3);
 					if (Math.abs(stepperR3.r() - R3) < 1.5*stepperR3.h) {
 						track.set_ATOF_region(3);
-						//if (counter < 2) track.set_ATOF_component(10000*idR3[0] + 100*idR3[1] + idR3[2]);
+						//if (counter < 2 && idR3 != null) track.set_ATOF_component(10000*idR3[0] + 100*idR3[1] + idR3[2]);
 					}
 
 				} // end propagation towards ATOF surface
@@ -342,6 +342,7 @@ public class KalmanFilter {
 				wedge = c;
 			}
 		}
+		if (wedge == -1) return null;
 		// find sector and layer
 		int sector = -1;
 		int layer = -1;
@@ -356,7 +357,11 @@ public class KalmanFilter {
 				}
 			}
         }
-		return new int[] {sector, layer, wedge};
+		if (sector == -1 || layer == -1) {
+			return null;
+		} else {
+			return new int[] {sector, layer, wedge};
+		}
 	}
 
 	/** 
@@ -378,7 +383,11 @@ public class KalmanFilter {
 				}
 			}
         }
-		return new int[] {sector, layer, 10};
+		if (sector == -1 || layer == -1) {
+			return null;
+		} else {
+			return new int[] {sector, layer, 10};
+		}
 	}
 
 	public ArrayList<int[]> get_adjacent_wedges(int[] identifiers) {
