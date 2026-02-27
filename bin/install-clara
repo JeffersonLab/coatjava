@@ -3,7 +3,7 @@
 set -e
 
 # Default versions:
-grapes=2.20
+grapes=2.21
 clara=5.0.2
 
 function error() {
