@@ -133,9 +133,11 @@ public class KalmanFilter {
 							TrackFitter.predict(hit, true);
 							TrackFitter.correct(hit);
 							// Backward propagation to the last ahdc layer
-							Hit hhit = AHDC_hits.get(AHDC_hits.size()-1);
-							TrackFitter.predict(hhit, false);
-							TrackFitter.correct(hhit);
+							if (AHDC_hits.size() > 0) {
+								Hit hhit = AHDC_hits.get(AHDC_hits.size()-1);
+								TrackFitter.predict(hhit, false);
+								TrackFitter.correct(hhit);
+							}
 						}
 					}
 					// Backward propagation (last layer to first layer)
