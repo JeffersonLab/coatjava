@@ -187,6 +187,11 @@ public class RecoBankWriter {
 			bank.setInt("atof_region", row, track.get_ATOF_region());
 			bank.setInt("atof_component", row, track.get_ATOF_component());
 
+			// tmp
+			bank.setInt("atof_s1_comp", row, track.get_ATOF_S1_component());
+			bank.setInt("atof_s2_comp", row, track.get_ATOF_S2_component());
+			bank.setInt("atof_s3_comp", row, track.get_ATOF_S3_component());
+
 			row++;
 		}
 
