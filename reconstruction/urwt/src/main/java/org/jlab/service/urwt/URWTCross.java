@@ -28,30 +28,23 @@ public class URWTCross {
     
     
     
-    public URWTCross(URWTCluster c1, URWTCluster c2) {
-        
-        Vector3D  dir = c1.getLine().direction().cross(c2.getLine().direction());
-        Plane3D plane = new Plane3D(c1.getLine().origin(), c1.getLine().direction().cross(dir));
-        Point3D point = new Point3D();
-        int nint = plane.intersectionSegment(c2.getLine(), point);
-        if(nint==1) {
-            this.sector = c1.getSector();
-            this.region = (c1.getLayer()-1)/(URWTConstants.NLAYER/URWTConstants.NREGION)+1;
-            this.cross  = point;
-            this.energy = c1.getEnergy() + c2.getEnergy();
-            this.time   = (c1.getTime() + c2.getTime())/2;
-            this.cluster1 = c1.getId();
-            this.cluster2 = c2.getId();
-            this.status = 0;
-            /*
-            if(Math.abs(c1.getEnergy()-c2.getEnergy())>URWTConstants.deltaE) 
-                this.status += 1;
-            if(Math.abs(c1.getTime()-c2.getTime())>URWTConstants.deltaT)     
-                this.status += 2;
-            if(Math.abs(this.time - URWTConstants.meanT)>1.2*URWTConstants.deltaT)
-                this.status += 4;
-            */
-        }
+    public URWTCross(URWTCluster c1, URWTCluster c2) {        
+        this.sector = c1.getSector();
+        this.region = (c1.getLayer()-1)/(URWTConstants.NLAYER/URWTConstants.NREGION)+1;
+        this.cross  = c1.getLine().distance(c2.getLine()).midpoint();
+        this.energy = c1.getEnergy() + c2.getEnergy();
+        this.time   = (c1.getTime() + c2.getTime())/2;
+        this.cluster1 = c1.getId();
+        this.cluster2 = c2.getId();
+        this.status = 0;
+        /*
+        if(Math.abs(c1.getEnergy()-c2.getEnergy())>URWTConstants.deltaE) 
+            this.status += 1;
+        if(Math.abs(c1.getTime()-c2.getTime())>URWTConstants.deltaT)     
+            this.status += 2;
+        if(Math.abs(this.time - URWTConstants.meanT)>1.2*URWTConstants.deltaT)
+            this.status += 4;
+        */
     }
 
     public void setId(int id) {

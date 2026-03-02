@@ -25,9 +25,8 @@ public class URWellCross {
     private int status = -1;
     private int tid = -1; // Track id;
     private URWellCluster cls1 = null;
-    private URWellCluster cls2 = null;
-    private static double _lxRelativeDCSL1[] = {1 - (URWTConstants.DCSL1L1ZTSC - URWTConstants.URWELLLOCALZ[0])/URWTConstants.INTERVALDCSL1L1L2TSC, 
-                                                1 - (URWTConstants.DCSL1L1ZTSC - URWTConstants.URWELLLOCALZ[1])/URWTConstants.INTERVALDCSL1L1L2TSC}; // x of R1 relative to DC SL1 in LC    
+    private URWellCluster cls2 = null; 
+    private double _lxRelativeDCSL1 = -999; // x of uRWell cross relative to DC SL1 in LC 
     private double _lyRelativeDCSL1 = -999; // y of uRWell cross relative to DC SL1 in LC 
     private double _xRelativeDCSL1AtPlaneY0TSC = -999; // x of R1 cross relative to DC SL1 at the plan y = 0 in TSC 
     private double _xRelativeDCSL2AtPlaneY0TSC = -999; // x of R1 cross relative to DC SL2 at the plan y = 0 in TSC
@@ -50,6 +49,7 @@ public class URWellCross {
         this.cluster1 = cluster1;
         this.cluster2 = cluster2;
         this.status =  status;
+        this._lxRelativeDCSL1 = getLxRelativeToDCSL1LC();
         this._lyRelativeDCSL1 = getLyRelativeToDCSL1LC();
         this._xRelativeDCSL1AtPlaneY0TSC = getXRelativeToDCSL1AtPlaneY0TSC();
         this._xRelativeDCSL2AtPlaneY0TSC = getXRelativeToDCSL2AtPlaneY0TSC();  
@@ -68,6 +68,7 @@ public class URWellCross {
         this.cluster1 = cluster1;
         this.cluster2 = cluster2;
         this.status =  status;
+        this._lxRelativeDCSL1 = getLxRelativeToDCSL1LC();
         this._lyRelativeDCSL1 = getLyRelativeToDCSL1LC();
         this._xRelativeDCSL1AtPlaneY0TSC = getXRelativeToDCSL1AtPlaneY0TSC();
         this._xRelativeDCSL2AtPlaneY0TSC = getXRelativeToDCSL2AtPlaneY0TSC(); 
@@ -215,8 +216,15 @@ public class URWellCross {
         return cluster;
     }
     
-    public static double getLxRelativeDCSL1LC(int region){
-        return _lxRelativeDCSL1[region-1];
+    private double getLxRelativeToDCSL1LC(){     
+        if(local != null) {
+            return 1 - (URWTConstants.DCSL1L1ZTSC - local.z())/URWTConstants.INTERVALDCSL1L1L2TSC;
+        }
+        else return -999;
+    }
+    
+    public double getLxRelativeDCSL1LC(){        
+        return _lxRelativeDCSL1;
     }
         
     private double getLyRelativeToDCSL1LC(){

@@ -425,7 +425,7 @@ public class ClusterCleanerUtilities {
             List<URWellCross> crossesInLine = new ArrayList();
             for (URWellCross crs : crosses) {
 
-                double rho = URWellCross.getLxRelativeDCSL1LC(crs.region());
+                double rho = crs.getLxRelativeDCSL1LC();
                 double phi = crs.getLyRelativeDCSL1LC();
 
                 for (int j_t = 0; j_t < N_t; j_t++) {
@@ -604,7 +604,7 @@ public class ClusterCleanerUtilities {
            cf.SetFitArray(cls, "LC"); 
            cf.addURWellLC(crs);
            cf.Fit(cls, true); 
-           double x = URWellCross.getLxRelativeDCSL1LC(crs.region());
+           double x = crs.getLxRelativeDCSL1LC();
            double y = crs.getLyRelativeDCSL1LC();
            double residual = cls.get_clusterLineFitSlope() * x + cls.get_clusterLineFitIntercept() - y;
            if(Math.abs(residual) < absResidualMinR1){
@@ -620,7 +620,7 @@ public class ClusterCleanerUtilities {
            cf.SetFitArray(cls, "LC"); 
            cf.addURWellLC(crs);
            cf.Fit(cls, true); 
-           double x = URWellCross.getLxRelativeDCSL1LC(crs.region());
+           double x = crs.getLxRelativeDCSL1LC();
            double y = crs.getLyRelativeDCSL1LC();
            double residual = cls.get_clusterLineFitSlope() * x + cls.get_clusterLineFitIntercept() - y;
            if(Math.abs(residual) < absResidualMinR2){
@@ -1262,7 +1262,7 @@ public class ClusterCleanerUtilities {
                 cf.SetFitArray(cls, "LC");
                 cf.addURWellLC(crs);
                 cf.Fit(cls, true);
-                double x = URWellCross.getLxRelativeDCSL1LC(crs.region());
+                double x = crs.getLxRelativeDCSL1LC();
                 double y = crs.getLyRelativeDCSL1LC();
                 residual += Math.abs(cls.get_clusterLineFitSlope() * x + cls.get_clusterLineFitIntercept() - y);
                 

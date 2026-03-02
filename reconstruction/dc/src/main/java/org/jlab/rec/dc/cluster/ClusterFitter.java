@@ -86,7 +86,7 @@ public class ClusterFitter {
      * @param crs URWell cross
      */
     public void addURWellLC(URWellCross crs){
-        x.add( URWellCross.getLxRelativeDCSL1LC(crs.region()));
+        x.add( crs.getLxRelativeDCSL1LC());
         ex.add((double) 0);
         y.add(crs.getLyRelativeDCSL1LC());
         ey.add(0.5);
