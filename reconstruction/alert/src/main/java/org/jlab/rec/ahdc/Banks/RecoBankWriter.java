@@ -1,5 +1,6 @@
 package org.jlab.rec.ahdc.Banks;
 
+import org.apache.commons.math3.linear.RealMatrix;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.ahdc.AI.InterCluster;
@@ -185,12 +186,31 @@ public class RecoBankWriter {
 			}
 			
 			bank.setInt("atof_region", row, track.get_ATOF_region());
-			bank.setInt("atof_component", row, track.get_ATOF_component());
 
 			// tmp
 			bank.setInt("atof_s1_comp", row, track.get_ATOF_S1_component());
 			bank.setInt("atof_s2_comp", row, track.get_ATOF_S2_component());
 			bank.setInt("atof_s3_comp", row, track.get_ATOF_S3_component());
+
+			// error on atof_sn_(x,y,z)
+			RealMatrix atof_s1_errorMatrix = track.get_ATOF_S1_errorMatrix();
+			RealMatrix atof_s2_errorMatrix = track.get_ATOF_S2_errorMatrix();
+			RealMatrix atof_s3_errorMatrix = track.get_ATOF_S3_errorMatrix();
+			if (atof_s1_errorMatrix != null) {
+				bank.setFloat("atof_s1_sigma_x", row, (float) Math.sqrt(atof_s1_errorMatrix.getEntry(0, 0)));
+				bank.setFloat("atof_s1_sigma_y", row, (float) Math.sqrt(atof_s1_errorMatrix.getEntry(1, 1)));
+				bank.setFloat("atof_s1_sigma_z", row, (float) Math.sqrt(atof_s1_errorMatrix.getEntry(2, 2)));
+			}
+			if (atof_s2_errorMatrix != null) {
+				bank.setFloat("atof_s2_sigma_x", row, (float) Math.sqrt(atof_s2_errorMatrix.getEntry(0, 0)));
+				bank.setFloat("atof_s2_sigma_y", row, (float) Math.sqrt(atof_s2_errorMatrix.getEntry(1, 1)));
+				bank.setFloat("atof_s2_sigma_z", row, (float) Math.sqrt(atof_s2_errorMatrix.getEntry(2, 2)));
+			}
+			if (atof_s3_errorMatrix != null) {
+				bank.setFloat("atof_s3_sigma_x", row, (float) Math.sqrt(atof_s3_errorMatrix.getEntry(0, 0)));
+				bank.setFloat("atof_s3_sigma_y", row, (float) Math.sqrt(atof_s3_errorMatrix.getEntry(1, 1)));
+				bank.setFloat("atof_s3_sigma_z", row, (float) Math.sqrt(atof_s3_errorMatrix.getEntry(2, 2)));
+			}
 
 			row++;
 		}

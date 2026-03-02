@@ -45,8 +45,8 @@ public class KalmanFilter {
 	private double atof_alignement = -32.7;
 	double vz_constraint = 0;
 	private int counter = 0; // number of utilisation of the Kalman Filter
-	HashMap<Integer, RadialKFHit> ATOF_hits = null;
-	HashMap<Integer, ArrayList<int[]>> ATOF_hits_predicted = new HashMap<>();
+	HashMap<Integer, RadialKFHit> ATOF_hits = null; // trackid vs KFHit
+	HashMap<Integer, ArrayList<int[]>> ATOF_hits_predicted = new HashMap<>(); // trackid vs (sector, layer, wedge)
 	AlertTOFDetector ATOFdet = null;
 
 	public void propagation(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {
@@ -211,8 +211,10 @@ public class KalmanFilter {
 					track.set_ATOF_S1_stepper(stepperR1);
 					if (Math.abs(stepperR1.r() - R1) < 1.5*stepperR1.h) {
 						track.set_ATOF_region(1);
-						if (counter < 2 && idR1 != null) track.set_ATOF_component(10000*idR1[0] + 100*idR1[1] + idR1[2]);
-						if (counter < 2 && idR1 != null) track.set_ATOF_S1_component(10000*idR1[0] + 100*idR1[1] + idR1[2]);
+						if (counter < 2 && idR1 != null) {
+							track.set_ATOF_S1_component(10000*idR1[0] + 100*idR1[1] + idR1[2]);
+							track.set_ATOF_S1_errorMatrix(PostFitPropagator.getErrorCovarianceMatrix());
+						}
 					}
 					
 
@@ -233,8 +235,10 @@ public class KalmanFilter {
 					track.set_ATOF_S2_stepper(stepperR2);
 					if (Math.abs(stepperR2.r() - R2) < 1.5*stepperR2.h) {
 						track.set_ATOF_region(2);
-						if (counter < 2 && idR2 != null) track.set_ATOF_component(10000*idR2[0] + 100*idR2[1] + idR2[2]);
-						if (counter < 2 && idR2 != null) track.set_ATOF_S2_component(10000*idR2[0] + 100*idR2[1] + idR2[2]);
+						if (counter < 2 && idR2 != null) {
+							track.set_ATOF_S2_component(10000*idR2[0] + 100*idR2[1] + idR2[2]);
+							track.set_ATOF_S2_errorMatrix(PostFitPropagator.getErrorCovarianceMatrix());
+						}
 					}
 					// From surface R2 to surface R3
 					RadialSurfaceKFHit hitR3 = new RadialSurfaceKFHit(R3);
@@ -247,7 +251,10 @@ public class KalmanFilter {
 					track.set_ATOF_S3_stepper(stepperR3);
 					if (Math.abs(stepperR3.r() - R3) < 1.5*stepperR3.h) {
 						track.set_ATOF_region(3);
-						if (counter < 2 && idR3 != null) track.set_ATOF_S3_component(10000*idR3[0] + 100*idR3[1] + idR3[2]);
+						if (counter < 2 && idR3 != null) {
+							track.set_ATOF_S3_component(10000*idR3[0] + 100*idR3[1] + idR3[2]);
+							track.set_ATOF_S3_errorMatrix(PostFitPropagator.getErrorCovarianceMatrix());
+						}
 					}
 
 				} // end propagation towards ATOF surface

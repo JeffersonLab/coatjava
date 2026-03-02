@@ -38,7 +38,7 @@ public class Track {
 	private double dEdx    = 0;  ///< deposited energy per path length (adc/mm)
 	private double p_drift = 0;  ///< momentum in the drift region (MeV)
 	private double path    = 0;  ///< length of the track (mm)
-	// for the error matrix: first 3 lines in mm^2; last 3 lines in MeV^2
+	// for the error matrix: first 3 lines in mm^2; last 3 lines in MeV^2 (in the beamline)
 	RealMatrix errorCovarianceMatrix = MatrixUtils.createRealMatrix(new double[][]{
 		{50  , 0.0 , 0.0 , 0.0 , 0.0 , 0.0}, 
 		{0.0 , 50  , 0.0 , 0.0 , 0.0 , 0.0}, 
@@ -57,12 +57,16 @@ public class Track {
 	double ATOF_S2_radius;
 	double ATOF_S3_radius;
 	int ATOF_region = 0; // is n if the trach reaches Sn, 0 otherwise (i.e does not reach S1)
-	int ATOF_component = -1; // predicted wedge (or bar if region is 1) just after the first fit (KF1)
 
 	// tmp
 	int ATOF_S1_component = -1;
 	int ATOF_S2_component = -1;
 	int ATOF_S3_component = -1;
+	
+	// tmp : compatible with stepper: need to access error in x,y,z
+	RealMatrix ATOF_S1_errorMatrix;
+	RealMatrix ATOF_S2_errorMatrix;
+	RealMatrix ATOF_S3_errorMatrix;
 
 
     // AHDC::aiprediction
@@ -234,12 +238,10 @@ public class Track {
 	public void set_ATOF_S2_stepper(Stepper _stepper) {this.ATOF_S2_stepper = _stepper;}
 	public void set_ATOF_S3_stepper(Stepper _stepper) {this.ATOF_S3_stepper = _stepper;}
 	public void set_ATOF_region(int _n) {this.ATOF_region = _n;}
-	public void set_ATOF_component(int _comp) {this.ATOF_component = _comp;}
 	public Stepper get_ATOF_S1_stepper() {return this.ATOF_S1_stepper;}
 	public Stepper get_ATOF_S2_stepper() {return this.ATOF_S2_stepper;}
 	public Stepper get_ATOF_S3_stepper() {return this.ATOF_S3_stepper;}
 	public int get_ATOF_region() {return this.ATOF_region;}
-	public int get_ATOF_component() {return this.ATOF_component;}
 
 	// tmp
 	public int get_ATOF_S1_component() {return this.ATOF_S1_component;}
@@ -248,6 +250,13 @@ public class Track {
 	public void set_ATOF_S1_component(int _comp) {this.ATOF_S1_component = _comp;}
 	public void set_ATOF_S2_component(int _comp) {this.ATOF_S2_component = _comp;}
 	public void set_ATOF_S3_component(int _comp) {this.ATOF_S3_component = _comp;}
+
+	public RealMatrix get_ATOF_S1_errorMatrix() {return this.ATOF_S1_errorMatrix;}
+	public RealMatrix get_ATOF_S2_errorMatrix() {return this.ATOF_S2_errorMatrix;}
+	public RealMatrix get_ATOF_S3_errorMatrix() {return this.ATOF_S3_errorMatrix;}
+	public void set_ATOF_S1_errorMatrix(RealMatrix _matrix) { this.ATOF_S1_errorMatrix = _matrix;}
+	public void set_ATOF_S2_errorMatrix(RealMatrix _matrix) { this.ATOF_S2_errorMatrix = _matrix;}
+	public void set_ATOF_S3_errorMatrix(RealMatrix _matrix) { this.ATOF_S3_errorMatrix = _matrix;}
 
 
 }

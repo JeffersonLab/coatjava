@@ -473,10 +473,6 @@
         "type": "F",
         "info": "momentum whith which the track reaches the surface s3"
       }, {
-        "name": "atof_component",
-        "type": "I",
-        "info": "sector*10000 + layer*100 + component : of the lower surface of a bar or the lower surface of a wedge depending or not the track reached these surfaces, priority is given to the wedges"
-      }, {
         "name": "atof_s1_comp",
         "type": "I",
         "info": "sector*10000 + layer*100 + component : atof component on s1"
@@ -488,6 +484,42 @@
         "name": "atof_s3_comp",
         "type": "I",
         "info": "sector*10000 + layer*100 + component : atof component on s1"
+      }, {
+        "name": "atof_s1_sigma_x",
+        "type": "F",
+        "info": "error in atof_s1_x"
+      }, {
+        "name": "atof_s1_sigma_y",
+        "type": "F",
+        "info": "error in atof_s1_y"
+      }, {
+        "name": "atof_s1_sigma_z",
+        "type": "F",
+        "info": "error in atof_s1_z"
+      }, {
+        "name": "atof_s2_sigma_x",
+        "type": "F",
+        "info": "error in atof_s2_x"
+      }, {
+        "name": "atof_s2_sigma_y",
+        "type": "F",
+        "info": "error in atof_s2_y"
+      }, {
+        "name": "atof_s2_sigma_z",
+        "type": "F",
+        "info": "error in atof_s2_z"
+      }, {
+        "name": "atof_s3_sigma_x",
+        "type": "F",
+        "info": "error in atof_s3_x"
+      }, {
+        "name": "atof_s3_sigma_y",
+        "type": "F",
+        "info": "error in atof_s3_y"
+      }, {
+        "name": "atof_s3_sigma_z",
+        "type": "F",
+        "info": "error in atof_s3_z"
       }
     ]
   }, {
