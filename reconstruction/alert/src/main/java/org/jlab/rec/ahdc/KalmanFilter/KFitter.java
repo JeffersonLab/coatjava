@@ -30,8 +30,8 @@ public class KFitter {
 	private final double     proton_mass_c2   = PhysicsConstants.massProton() * 1000;
 
 	public KFitter(final RealVector initialStateEstimate, final RealMatrix initialErrorCovariance, final Propagator propagator, final HashMap<String, Material> materialHashMap) {
-		this.stateEstimation = initialStateEstimate;
-		this.errorCovariance = initialErrorCovariance;
+		this.stateEstimation = initialStateEstimate.copy();
+		this.errorCovariance = initialErrorCovariance.copy();
 		this.stepper         = new Stepper(initialStateEstimate.toArray());
 		this.propagator      = propagator;
 		this.materialHashMap = materialHashMap;
