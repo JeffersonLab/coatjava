@@ -9,25 +9,29 @@ import cnuphys.magfield.FastMath;
 public class CLAS12Values {
 
 	/** The integer charge */
-	public int q;
+	public final int q;
 
 	/** The coordinate x in cm */
-	public double x;
+	public final double x;
 
 	/** The y coordinate in cm */
-	public double y;
+	public final double y;
 
 	/** The z coordinate of in cm */
-	public double z;
+	public final double z;
 
 	/** The momentum in GeV/c */
-	public double p;
+	public final double p;
 
 	/** The DIRECTIONAL polar angle in degrees, i.e. theta component of p */
-	public double theta;
+	public final double theta;
 
 	/** The azimuthal angle in degrees */
-	public double phi;
+	public final double phi;
+	
+	public final double tx;
+	public final double ty;
+	public final double tz;
 
 	/**
 	 * Store the initial conditions of a swim
@@ -48,6 +52,12 @@ public class CLAS12Values {
 		this.p = p;
 		this.theta = theta;
 		this.phi = phi;
+		double thetaRad = Math.toRadians(theta);
+		double phiRad = Math.toRadians(phi);
+		double sinTheta = Math.sin(thetaRad);
+		tx = sinTheta * Math.cos(phiRad);
+		ty = sinTheta * Math.sin(phiRad);
+		tz = Math.cos(thetaRad);
 	}
 
 	/**
@@ -67,6 +77,10 @@ public class CLAS12Values {
 		x = u[0];
 		y = u[1];
 		z = u[2];
+		
+		tx = u[3];
+		ty = u[4];
+		tz = u[5];
 
 		// norm should be 1
 		double norm = Math.sqrt(u[3] * u[3] + u[4] * u[4] + u[5] * u[5]);

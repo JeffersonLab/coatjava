@@ -7,7 +7,6 @@ import cnuphys.magfield.FieldProbe;
 import cnuphys.magfield.RotatedCompositeProbe;
 
 import org.apache.commons.math3.ode.FirstOrderDifferentialEquations;
-import org.apache.commons.math3.ode.FirstOrderIntegrator;
 import org.apache.commons.math3.ode.events.EventHandler;
 import org.apache.commons.math3.ode.sampling.StepHandler;
 import org.apache.commons.math3.ode.sampling.StepInterpolator;
@@ -253,9 +252,9 @@ public final class CommonsMathCLAS12Swimmer implements ICLAS12Swimmer {
         final FirstOrderDifferentialEquations ode = new SwimEquations(q, p, probe);
 
         // Per-component tolerances
-        final double absPos = legacyComparable ? 1e-5 : Math.max(1e-12, tolerance);
-        final double absDir = legacyComparable ? 1e-5 : 1e-10;
-        final double rel    = legacyComparable ? 1e-5 : 1e-12;
+        final double absPos = legacyComparable ? 1.0e-5 : Math.max(1.0e-12, tolerance); // cm
+        final double absDir = legacyComparable ? 1.0e-5 : 1.0e-10;                      // dimensionless
+        final double rel    = legacyComparable ? 1.0e-9 : 1.0e-12;
 
         final double[] absTol = new double[] { absPos, absPos, absPos, absDir, absDir, absDir };
         final double[] relTol = new double[] { rel, rel, rel, rel, rel, rel };
