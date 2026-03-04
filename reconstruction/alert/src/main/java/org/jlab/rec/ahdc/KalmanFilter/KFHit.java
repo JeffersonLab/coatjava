@@ -2,7 +2,6 @@ package org.jlab.rec.ahdc.KalmanFilter;
 
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
-import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
 /**
  * An interface to unify the hits used the Kalman Filter (e.g AHDC hits, ATOF hits, beamline)

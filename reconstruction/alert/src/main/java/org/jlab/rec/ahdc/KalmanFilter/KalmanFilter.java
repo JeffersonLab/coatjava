@@ -1,18 +1,14 @@
 package org.jlab.rec.ahdc.KalmanFilter;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Random;
 
-import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.jlab.clas.pdg.PDGParticle;
 import org.jlab.clas.tracking.kalmanfilter.Material;
-import org.jlab.io.base.DataBank;
-import org.jlab.io.base.DataEvent;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.Track.Track;
 
@@ -36,20 +32,21 @@ public class KalmanFilter {
 
 	public KalmanFilter(PDGParticle particle, int Niter) {this.particle = particle; this.Niter = Niter;}
 
+	HashMap<String, Material> materialHashMap = MaterialMap.generateMaterials();
+
 	private PDGParticle particle;
 	private int Niter = 40; // number of iterations for the Kalman Filter
 	private boolean IsVtxDefined = false; // implemented but not used yet
-	private double[] vertex_resolutions = {0.09, 1e10}; //  {error in r squared in mm^2, error in z squared in mm^2}
-	// mm,  they the misalignement with respect to the AHDC
-	private double clas_alignement = +54;
-	private double atof_alignement = -32.7;
-	double vz_constraint = 0;
-	private int counter = 0; // number of utilisation of the Kalman Filter
-	HashMap<Integer, RadialKFHit> ATOF_hits = null; // trackid vs KFHit
-	HashMap<Integer, ArrayList<int[]>> ATOF_hits_predicted = new HashMap<>(); // trackid vs (sector, layer, wedge)
-	AlertTOFDetector ATOFdet = null;
+	private double vz_constraint = 0;
+	// mm,  they are the misalignement with respect to the AHDC: the are defined in ALERTEngine
+	private double clas_alignement = 0;
+	private double atof_alignement = 0;
 
-	public void propagation(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {
+	private int counter = 0; // number of utilisation of the Kalman Filter
+	HashMap<Integer, ArrayList<int[]>> ATOF_hits_predicted = new HashMap<>(); // trackid vs (sector, layer, wedge)
+	AlertTOFDetector ATOFdet = null; // a reference to the ATOF geometry
+
+	public void propagation(ArrayList<Track> tracks, final double magfield, boolean IsMC) {
 
 		try {
 			counter++;
@@ -58,44 +55,11 @@ public class KalmanFilter {
 			final int         numberOfVariables = 6;
 			final double      tesla             = 0.001;
 			final double[]    B                 = {0.0, 0.0, magfield / 10 * tesla};
-			HashMap<String, Material> materialHashMap = MaterialMap.generateMaterials();
-			// Recover the vertex of the electron
-			if (event.hasBank("REC::Particle") && !IsVtxDefined) { // as we run the KF several times, !IsVtxDefined prevent to look for the vertex again
-				DataBank recBank = event.getBank("REC::Particle");
-				int row = 0;
-				while ((!IsVtxDefined) && row < recBank.rows()) {
-					if (recBank.getInt("pid", row) == 11) {
-						IsVtxDefined = true;
-						vz_constraint = 10*recBank.getFloat("vz",row) + (IsMC ? 0 : clas_alignement); // mm
-						
-						// TO DO: compute electron resolution as function of p and theta
-						// the fine tuning will be done later
-						//double px = recBank.getFloat("px",row);
-						//double py = recBank.getFloat("py",row);
-						//double pz = recBank.getFloat("pz",row);
-						//double p = Math.sqrt(px*px+py*py+pz*pz);
-						//double theta = Math.acos(pz/p);
-
-						vertex_resolutions[0] = 0.09;
-						vertex_resolutions[1] = 64;
-					}
-					row++;
-				}
-			}
-
-			// Define the beamline as an axtra hit for the track fitting
-			RadialKFHit hit_beam = new RadialKFHit(0, 0, vz_constraint);
-			RealMatrix measurementNoise = new Array2DRowRealMatrix(
-											new double[][]{
-												{vertex_resolutions[0], 0.0000, 0.0000},
-												{0.00, 1e10, 0.0000},
-												{0.00, 0.0000, vertex_resolutions[1]}
-											});//3x3;
-			hit_beam.setMeasurementNoise(measurementNoise);
+			
 
             // Loop over tracks
 			for (Track track : tracks) {
-			    // Initialize state vector
+			    /// Initialize state vector
 			    double x0  = 0.0;
 			    double y0  = 0.0;
 			    double z0  = (IsVtxDefined && counter < 2) ? vz_constraint : track.get_Z0();
@@ -104,71 +68,82 @@ public class KalmanFilter {
 			    double pz0 = track.get_pz();
 
 			    double[]     y   = new double[]{x0, y0, z0, px0, py0, pz0};
-			    // Read list of hits
+
+			    /// Read list of hits
+				RadialKFHit beam_hit = track.getBeamlineHit();
 			    ArrayList<Hit> AHDC_hits = track.getHits();
-				Collections.sort(AHDC_hits); // sorted following the compareTo() method in Hit.java
+				ArrayList<RadialKFHit> ATOF_hits = track.getATOFHits();
 			
-			    // Initialize propagator
+			    /// Initialize propagator
 			    RungeKutta4 RK4        = new RungeKutta4(particle, numberOfVariables, B);
 			    Propagator  propagator = new Propagator(RK4);
 
-			    // Initialization of the Kalman Fitter
-				// for the error matrix: first 3 lines in mm^2; last 3 lines in MeV^2
+			    /// Initialization of the Kalman Fitter
 			    RealVector initialStateEstimate   = new ArrayRealVector(y);
 				RealMatrix initialErrorCovariance = track.getErrorCovarianceMatrix();
 				KFitter TrackFitter = new KFitter(initialStateEstimate, initialErrorCovariance, propagator, materialHashMap);
 		 	    
 				// Loop over number of iterations
 			    for (int k = 0; k < Niter; k++) {
-					// Forward propagation
+					
+					// Forward propagation in AHDC
 					for (Hit hit : AHDC_hits) {
                         TrackFitter.predict(hit, true);
 						TrackFitter.correct(hit);
 					
                     }
-					// Forward propagation towards the ATOF bar
-					{	
-						RadialKFHit hit = ATOF_hits.get(track.get_trackId());
-						if (hit != null) {
+
+					// Take into account ATOF hits
+					if (!AHDC_hits.isEmpty() && !ATOF_hits.isEmpty()) {
+						// Forward propagation in ATOF
+						for (KFHit hit : ATOF_hits) {	
 							TrackFitter.predict(hit, true);
 							TrackFitter.correct(hit);
-							// Backward propagation to the last ahdc layer
-							if (AHDC_hits.size() > 0) {
-								Hit hhit = AHDC_hits.get(AHDC_hits.size()-1);
-								TrackFitter.predict(hhit, false);
-								TrackFitter.correct(hhit);
-							}
+						}
+						// Backward propagation in ATOF
+						for (int i = ATOF_hits.size()-2; i >= 0; i--){
+							KFHit hit = ATOF_hits.get(i);
+							TrackFitter.predict(hit, false);
+							TrackFitter.correct(hit);
+						}
+						// Backward propagation to the last AHDC layer
+						{
+							Hit hit = AHDC_hits.getLast();
+							TrackFitter.predict(hit, false);
+							TrackFitter.correct(hit);
 						}
 					}
-					// Backward propagation (last layer to first layer)
-					for (int i = AHDC_hits.size() - 2; i >= 0; i--) {
+					
+					// Backward propagation (from AHDC last layer to first AHDC layer)
+					for (int i = AHDC_hits.size()-2; i >= 0; i--) {
 						Hit hit = AHDC_hits.get(i);
 						TrackFitter.predict(hit, false);
 						TrackFitter.correct(hit);
 					}
-					// Backward propagation (first layer to beamline)
+
+					// Backward propagation (from first AHDC layer to beamline)
 					{
-						TrackFitter.predict(hit_beam, false);
-						TrackFitter.correct(hit_beam);
+						TrackFitter.predict(beam_hit, false);
+						TrackFitter.correct(beam_hit);
 					}
 
-			    }
+			    } // end loop over nb. iteration
 
+				/// Output: position and momentum
 			    RealVector x_out = TrackFitter.getStateEstimationVector();
 			    track.setPositionAndMomentumVec(x_out.toArray());
 				track.setErrorCovarianceMatrix(TrackFitter.getErrorCovarianceMatrix());
 
-			    // Post fit propagation (no correction) to set the residuals
+			    /// Post fit propagation (no correction)
 			    KFitter PostFitPropagator = new KFitter(TrackFitter.getStateEstimationVector(), initialErrorCovariance, new Propagator(RK4), materialHashMap);
-				// Projection towards AHDC hits
+
+				// Forward propagation in AHDC
 			    for (Hit hit : AHDC_hits) {
                     PostFitPropagator.predict(hit, true);
-					if( hit.getId()>0){ // for the beamline the hit id is 0, so we only look at AHDC hits
-						hit.setResidual(PostFitPropagator.residual(hit));
-					}
+					hit.setResidual(PostFitPropagator.residual(hit)); // output: residual
 			    }
 
-				// Fill track and hit bank
+				// Fill values for AHDC::kftrack
 				// TO DO : s and p_drift have to be checked to be sure they represent what we want
 				Stepper current_stepper = PostFitPropagator.getStepper();
 			    double s = current_stepper.sTot;
@@ -189,6 +164,11 @@ public class KalmanFilter {
 			    track.set_path(s);
 			    track.set_n_hits(AHDC_hits.size());
 
+
+				////////
+				/// Revision of the code: I'm here
+				/// /////
+
 				// Projection towards the ATOF surfaces
 				// R1 : lower surface of an ATOF bar
 				// R2 : upper surface of an ATOF bar = lower surface of an ATOF wedge
@@ -199,7 +179,7 @@ public class KalmanFilter {
 				double R1 = Math.hypot(pR1.x(), pR1.y());
 				double R2 = Math.hypot(pR2.x(), pR2.y());
 				double R3 = Math.hypot(pR3.x(), pR3.y());
-				{	
+				{
 					// From last AHDC hit to surface R1
 					RadialSurfaceKFHit hitR1 = new RadialSurfaceKFHit(R1);
 					PostFitPropagator.predict(hitR1, true);
@@ -270,11 +250,9 @@ public class KalmanFilter {
 		}
 	}
 	public void set_Niter(int Niter) {this.Niter = Niter;}
-	public int get_Niter() {return this.Niter;}
-	public void set_particle(PDGParticle particle) {this.particle = particle;}
+	public int  get_Niter() {return this.Niter;}
+	public void        set_particle(PDGParticle particle) {this.particle = particle;}
 	public PDGParticle get_particle() {return this.particle;}
-	public void set_ATOF_hits(HashMap<Integer, RadialKFHit> ATOF_hits){ this.ATOF_hits = ATOF_hits;};
-	public HashMap<Integer, RadialKFHit> get_ATOF_hits() { return this.ATOF_hits;}
 	public HashMap<Integer, ArrayList<int[]>> get_ATOF_hits_predicted() {return this.ATOF_hits_predicted;}
 
 	// Test
@@ -441,4 +419,8 @@ public class KalmanFilter {
 	}
 
 	public void set_ATOF_detector(AlertTOFDetector atof) { this.ATOFdet = atof;}
+	public void set_clas_alignement(double _shift) {this.clas_alignement = _shift;}
+	public void set_atof_alignement(double _shift) {this.atof_alignement = _shift;}
+	public void set_vz_constraint(double _vz) {this.vz_constraint = _vz;}
+	public void set_vertex_flag(boolean _flag) {this.IsVtxDefined = _flag;}
 }

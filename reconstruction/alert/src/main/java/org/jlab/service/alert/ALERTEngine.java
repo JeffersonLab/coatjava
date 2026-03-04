@@ -4,6 +4,7 @@ import ai.djl.repository.zoo.ZooModel;
 import ai.djl.translate.TranslateException;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.HashMap;
@@ -326,8 +327,42 @@ public class ALERTEngine extends ReconstructionEngine {
         /// Kalmam Filter
         /// ///////////////////////////////////////
         
-        /// Read the list of tracks/hits from the banks AHDC::track and AHDC::hits
+        /// Pre conditions
         if (!event.hasBank("AHDC::track")) {return false;}
+        if (!event.hasBank("AHDC::hits")) {return false;}
+
+        /// tmp: misalignement with respect to the center of the AHDC (mm)
+        double clas_alignement = +54;
+        double atof_alignement = -32.7;
+
+        /// Read the electron vertex
+        double vz_electron = 0;
+        double[] vz_error2 = {0.09, 1e10, 1e10}; // mm^2, radians^2, mm^2, error on r, phi, z
+        boolean IsVertexDefined = false;
+        if (event.hasBank("REC::Particle")) {
+            DataBank recBank = event.getBank("REC::Particle");
+            for (int row = 0; row < recBank.rows(); row++) {
+                if (recBank.getInt("pid", row) == 11) {
+                    vz_electron = 10*recBank.getFloat("vz",row); // conversion in mm
+                    IsVertexDefined = true;
+                    
+
+                    //double px = recBank.getFloat("px",row);
+                    //double py = recBank.getFloat("py",row);
+                    //double pz = recBank.getFloat("pz",row);
+                    //double p = Math.sqrt(px*px+py*py+pz*pz);
+                    //double theta = Math.acos(pz/p);
+                    
+                    // set the resolutions on r and z! to be done
+                    vz_error2[0] = 0.09; // should depend on p and theta
+                    vz_error2[2] = 64; // should depend on p and theta
+
+                    break; // only look at the first electron
+                }
+            }
+        }
+
+        /// Read the list of tracks/hits from the banks AHDC::track and AHDC::hits
         DataBank trackBank = event.getBank("AHDC::track");
         DataBank hitBank = event.getBank("AHDC::hits");
         ArrayList<Track> AHDC_tracks = new ArrayList<>();
@@ -344,7 +379,7 @@ public class ALERTEngine extends ReconstructionEngine {
                     double doca = hitBank.getDouble("doca", hit_row);
                     double time = hitBank.getDouble("time", hit_row);
                     double tot = hitBank.getDouble("timeOverThreshold", hit_row);
-                    // warning : adc is the calibrated one, we need the adc for the Kalman filter
+                    // warning : adc is the calibrated one, we need the adc for the Kalman filter !
                     Hit hit = new Hit(id, superlayer, layer, wire, doca, adc, time);
                     hit.setWirePosition(AHDC);
                     hit.setTrackId(trackid);
@@ -354,6 +389,7 @@ public class ALERTEngine extends ReconstructionEngine {
                 }
             }
             if (AHDC_hits.size() > 0) {
+                Collections.sort(AHDC_hits); // sorted following the compareTo() method in Hit.java
                 Track track = new Track(AHDC_hits);
                 // Initialise the position and the momentum using the information of the AHDC::track
                 // position : mm
@@ -370,16 +406,24 @@ public class ALERTEngine extends ReconstructionEngine {
                 AHDC_tracks.add(track);
             }
         }
-        /// Intialise the Kalman Filter
-        double magfieldfactor = runBank.getFloat("solenoid", 0);
-        double magfield = 50*magfieldfactor;
-        boolean IsMC = event.hasBank("MC::Particle");
-        PDGParticle proton = PDGDatabase.getParticleById(2212);
-        int Niter = 40;
-        KalmanFilter KF = new KalmanFilter(proton, Niter);
 
-        /// Add ATOF wedge hits
-        HashMap<Integer, RadialKFHit> ATOF_hits = new HashMap<>();
+        /// Associate the electron vertex (the beamline hit) to each track
+        boolean IsMC = event.hasBank("MC::Particle");
+        double vz_constraint = vz_electron + (IsMC ? 0 : clas_alignement); // we don't have the misalignment in simulation
+        for (Track track : AHDC_tracks) {
+            RadialKFHit hit_beam = new RadialKFHit(0, 0, vz_constraint);
+            RealMatrix measurementNoise = new Array2DRowRealMatrix(
+											new double[][]{
+												{vz_error2[0], 0.0000      , 0.0000},
+												{0.0000      , vz_error2[1], 0.0000},
+												{0.0000      , 0.0000      , vz_error2[2]}
+											});//3x3;
+			hit_beam.setMeasurementNoise(measurementNoise);
+            track.setBeamlineHit(hit_beam);
+        }
+
+        /// Look for ATOF wedge hits predicted by the AI
+        HashMap<Integer, RadialKFHit> map_ATOF_hits = new HashMap<>();
         for (Pair<Integer, Integer> pair : matched_ATOF_hit_id) {
             int trackid = pair.getKey();
             int atofid = pair.getValue();
@@ -390,7 +434,7 @@ public class ALERTEngine extends ReconstructionEngine {
                         double x = bank_ATOFHits.getFloat("x", row);
                         double y = bank_ATOFHits.getFloat("y", row);
                         double z = bank_ATOFHits.getFloat("z", row);
-                        z -= 32.3; // there is a shift between AHDC and ATOF (still don't know why) !
+                        z += atof_alignement; // there is a shift between AHDC and ATOF (still don't know why) !
                         RadialKFHit hit = new RadialKFHit(x, y, z);
                             // error on r
                         double wedge_width = 20; //mm
@@ -409,16 +453,34 @@ public class ALERTEngine extends ReconstructionEngine {
                                                             {0.00, 0.0000, dz2}
                                                         });//3x3;
                         hit.setMeasurementNoise(measurementNoise);
-                        ATOF_hits.put(trackid, hit);
+                        map_ATOF_hits.put(trackid, hit);
                     }
                 }
             }
         }
-        KF.set_ATOF_hits(ATOF_hits);
-        KF.set_ATOF_detector(ATOF);
 
-        /// First propagation : each AHDC_tracks will be fitted
-        KF.propagation(AHDC_tracks, event, magfield, IsMC);
+        /// Associate the ATOF hits to each track
+        for (Track track : AHDC_tracks) {
+            RadialKFHit hit = map_ATOF_hits.get(track.get_trackId());
+            ArrayList<RadialKFHit> list = new ArrayList<>();
+            if (hit != null) list.add(hit); // for now, we only consider one hit in the ATOF
+            track.setATOFHits(list);
+        }
+
+        /// Intialise the Kalman Filter
+        double magfieldfactor = runBank.getFloat("solenoid", 0);
+        double magfield = 50*magfieldfactor;
+        PDGParticle proton = PDGDatabase.getParticleById(2212);
+        int Niter = 40;
+        KalmanFilter KF = new KalmanFilter(proton, Niter);
+        KF.set_ATOF_detector(ATOF); // Reference the ATOF geometry in the Kalman Filter
+        KF.set_clas_alignement(clas_alignement);
+        KF.set_atof_alignement(atof_alignement);
+        KF.set_vz_constraint(vz_constraint);
+        KF.set_vertex_flag(IsVertexDefined);
+
+        /// Do a first propagation
+        KF.propagation(AHDC_tracks, magfield, IsMC);
 
         // // Get ATOF wedges predicted
         // HashMap<Integer, ArrayList<int[]>> ATOF_hits_predicted = KF.get_ATOF_hits_predicted();
@@ -483,7 +545,7 @@ public class ALERTEngine extends ReconstructionEngine {
 
         /// Second propagation : each AHDC_tracks will be fitted
         KF.set_Niter(15);
-        KF.propagation(AHDC_tracks, event, magfield, IsMC);
+        KF.propagation(AHDC_tracks, magfield, IsMC);
 
         /// write the AHDC::kftrack bank in the event
         org.jlab.rec.ahdc.Banks.RecoBankWriter ahdc_writer = new org.jlab.rec.ahdc.Banks.RecoBankWriter();

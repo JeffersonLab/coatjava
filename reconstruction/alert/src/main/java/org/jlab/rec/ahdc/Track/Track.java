@@ -7,6 +7,7 @@ import org.jlab.rec.ahdc.AI.InterCluster;
 import org.jlab.rec.ahdc.Cluster.Cluster;
 import org.jlab.rec.ahdc.HelixFit.HelixFitObject;
 import org.jlab.rec.ahdc.Hit.Hit;
+import org.jlab.rec.ahdc.KalmanFilter.RadialKFHit;
 import org.jlab.rec.ahdc.KalmanFilter.Stepper;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import org.jlab.rec.ahdc.PreCluster.PreClusterFinder;
@@ -21,7 +22,9 @@ public class Track {
 	private       List<Cluster>  _Clusters = new ArrayList<>();
 	private       List<InterCluster>  _InterClusters = new ArrayList<>();
 	private       boolean        _Used     = false;
-	private final ArrayList<Hit> hits      = new ArrayList<>();
+	private final ArrayList<Hit> hits      = new ArrayList<>(); // AHDC hits
+	private ArrayList<RadialKFHit> ATOF_hits = new ArrayList<>();
+	private RadialKFHit beamline_hit = null;
 	
 	private int    trackId = -1; ///< id of the track
 	private int    n_hits  = 0;  ///< number of hits
@@ -141,6 +144,17 @@ public class Track {
 	public ArrayList<Hit> getHits() {
 		return hits;
 	}
+
+	public ArrayList<RadialKFHit> getATOFHits() {
+		return this.ATOF_hits;
+	}
+
+	public RadialKFHit getBeamlineHit() {
+		return this.beamline_hit;
+	}
+
+	public void setATOFHits(ArrayList<RadialKFHit> _ATOF_hits) {this.ATOF_hits = _ATOF_hits;}
+	public void setBeamlineHit(RadialKFHit _beamline_hit) {this.beamline_hit = _beamline_hit;}
 
 	@Override
 	public String toString() {
