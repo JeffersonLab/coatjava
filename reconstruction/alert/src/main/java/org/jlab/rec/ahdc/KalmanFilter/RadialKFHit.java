@@ -41,11 +41,6 @@ public class RadialKFHit implements KFHit {
 	public void setMeasurementNoise(RealMatrix measurementNoise) {
 		this.measurementNoise= measurementNoise;
 	}
-	
-	@Override
-	public Line3D getLine() {
-		return line;
-    }
 
 	@Override
 	public double distance(Point3D point3D) {

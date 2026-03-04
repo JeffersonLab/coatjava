@@ -10,7 +10,6 @@ import org.jlab.geom.prim.Point3D;
  * @author Felix Touchte Codjo
  */
 public interface KFHit {
-	public Line3D getLine();
 	public double distance(Point3D point3D);
 	public double getRadius();
 	/** Return the measurement encoded in this KFHit */

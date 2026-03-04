@@ -108,7 +108,6 @@ public class Hit implements Comparable<Hit>, KFHit {
 		return doca;
 	}
 
-	@Override
     public Line3D getLine() {
         return wireLine;
     }

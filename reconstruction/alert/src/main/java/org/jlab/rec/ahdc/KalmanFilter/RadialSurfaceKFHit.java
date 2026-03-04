@@ -33,11 +33,6 @@ public class RadialSurfaceKFHit implements KFHit {
 	public RealMatrix MeasurementNoiseMatrix() {
 		return new Array2DRowRealMatrix(new double[][]{{1e-8}});
 	}
-	
-	@Override
-	public Line3D getLine() {
-		return null;
-    }
 
 	@Override
 	public double distance(Point3D point3D) {
