@@ -32,14 +32,14 @@ public class URWTConstants {
     public final static double meanT = 180 + 550;
     
      //// Todo: Should come from uRWell geometry package
-    public static final double URWELLLOCALZ[]  = {223, 226}; // cm
+    public static final double URWELLLOCALZ[]  = {223.0, 226.0}; // cm
     
     // resolution for cross measures
     public static final double URWELLXRESOLUTIONHB = 0.17; // cm
-    public static final double URWELLYRESOLUTIONHB = 0.95; // cm
+    public static final double URWELLYRESOLUTIONHB = 0.89; // cm
     
     // resolution for cluster measures
-    public static final double URWELLRESOLUTIONHB[] = {1.0, 1.0}; // cm
+    public static final double URWELLRESOLUTIONHB[] = {1.5, 1.5}; // cm
     public static final double URWELLRESOLUTIONTB[] = {0.17, 0.17}; // cm
     
     
@@ -54,7 +54,7 @@ public class URWTConstants {
     public static double DCSL1L1W1XTSC = -83.7509153; // cm; x for layer1 of SL1 in TSC
     public static double YDCSL1L1W1LC = 1.7320508075688772; // cm; y for layer1 of SL1 in TSC
       
-    public static final double YDISTURWELLTOMOSTLEFTLAYERLC[] = {2.2, 1.8}; // Absolute of Y difference between uRWell and most left layer of DC-SL1 in LC, separately for R1 and R2
+    public static final double YDISTURWELLTOMOSTLEFTLAYERLC[] = {2.4, 1.8}; // Absolute of Y difference between uRWell and most left layer of DC-SL1 in LC, separately for R1 and R2
     public static final double URWELLRESIDUALCUT[] = {0.10, 0.12}; // cut for absolute uRWell resdial after DC-uRWell fitting in LC, separately for R1 and R2
 
 }
