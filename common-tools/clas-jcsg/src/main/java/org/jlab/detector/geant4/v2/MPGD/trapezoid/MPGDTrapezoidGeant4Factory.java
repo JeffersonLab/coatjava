@@ -5,6 +5,7 @@ import org.jlab.detector.geant4.v2.Geant4Factory;
 import org.jlab.detector.volume.G4Trap;
 import org.jlab.detector.volume.G4World;
 import org.jlab.detector.volume.Geant4Basic;
+import org.jlab.detector.geant4.v2.MPGD.trapezoid.MPGDTrapezoidConstants.SectorDimensions;
 
 import java.util.Map;
 
@@ -26,16 +27,6 @@ public class MPGDTrapezoidGeant4Factory extends Geant4Factory {
      * Detector constants (geometry + materials from CCDB).
      */
     protected final MPGDTrapezoidConstants C;
-
-    public static record SectorDimensions(
-            double halfThickness,
-            double halfHeight,
-            double halfLargeBase,
-            double halfSmallBase,
-            double tiltRad
-            ) {
-
-    }
 
     /**
      * @param constants detector constants (already configured with CCDB
@@ -69,149 +60,6 @@ public class MPGDTrapezoidGeant4Factory extends Geant4Factory {
     }
 
     // ------------------------------------------------------------------------
-    //  Sector geometry helpers
-    // ------------------------------------------------------------------------
-    /**
-     * Computes the total thickness (mm) of a sector by summing the thickness of
-     * all material volumes.
-     *
-     * @return
-     */
-    public double getSectorThickness() {
-        return C.getDetectorStructure().values()
-                .stream()
-                .flatMap(componentMap -> componentMap.values().stream())
-                .mapToDouble(info -> info.thickness)
-                .sum();
-    }
-
-    /**
-     *
-     * @param region
-     * @return
-     */
-    public SectorDimensions getSectorActiveVolumeDimensions(int region) {
-
-        double baseDistance = C.TGTDET + region * C.DZ;
-
-        double sectorHeight = baseDistance
-                * (Math.tan(Math.toRadians(C.THMAX - C.THTILT))
-                + Math.tan(Math.toRadians(C.THTILT - C.THMIN)));
-
-        double halfThickness = this.getSectorThickness() / 2.0;
-        double halfHeight = sectorHeight / 2.0;
-
-        // Distance from target to the bottom base along the tilted axis
-        double W2TGT = (C.TGTDET + region * C.DZ)
-                / Math.cos(Math.toRadians(C.THTILT - C.THMIN));
-
-        double YMIN = W2TGT * Math.sin(Math.toRadians(C.THMIN)); // distance from beamline (Y)        
-        double h = sectorHeight * Math.cos(Math.toRadians(C.THTILT));
-        double halfSmallBase = 0.5 * (YMIN * Math.tan(Math.toRadians(C.THOPEN) / 2));
-
-        double halfLargeBase = halfSmallBase + sectorHeight * Math.tan(Math.toRadians(C.THOPEN / 2.0));
-
-        double tiltRad = Math.toRadians(C.THTILT);
-
-        double twidth_Check = 2 * halfLargeBase * Math.sin(Math.toRadians(C.THOPEN));
-
-        if (MPGDTrapezoidConstants.VERBOSE) {
-            System.out.printf("C.TWIDT=%.3f vs %.3f", C.TWIDTH, twidth_Check);
-
-            System.out.printf("YMIN=%.3f", YMIN);
-
-            System.out.printf(
-                    "SectorDimensionsPhysical [%s] region=%d : height=%.3f | halfT=%.3f halfH=%.3f "
-                    + "halfLarge=%.3f halfSmall=%.3f tilt(deg)=%.3f%n",
-                    C.detectorName, region, sectorHeight,
-                    halfThickness, halfHeight,
-                    halfLargeBase, halfSmallBase,
-                    C.THTILT
-            );
-        }
-
-        return new SectorDimensions(halfThickness, halfHeight, halfLargeBase, halfSmallBase, tiltRad);
-    }
-
-    /**
-     *
-     * @param region
-     * @return
-     */
-    public SectorDimensions getSectorContainerDimensions(int region) {
-
-        SectorDimensions phys = getSectorActiveVolumeDimensions(region);
-
-        double halfThickness = phys.halfThickness() + MPGDTrapezoidConstants.ZENLARGEMENT;
-        double halfHeight = phys.halfHeight() + MPGDTrapezoidConstants.YENLARGEMENT;
-        double halfLargeBase = phys.halfLargeBase() + MPGDTrapezoidConstants.XENLARGEMENT;
-        double halfSmallBase = phys.halfSmallBase() + MPGDTrapezoidConstants.XENLARGEMENT;
-
-        return new SectorDimensions(halfThickness, halfHeight, halfLargeBase, halfSmallBase, phys.tiltRad());
-    }
-
-    /**
-     * Computes the sector height (longitudinal extension in the RZ plane) for a
-     * given region.
-     *
-     * @param region
-     * @return
-     */
-    public double getSectorHeight(int region) {
-
-        double baseDistance = C.TGTDET + region * C.DZ;
-
-        double sectorHeight = baseDistance
-                * (Math.tan(Math.toRadians(C.THMAX - C.THTILT))
-                + Math.tan(Math.toRadians(C.THTILT - C.THMIN)));
-
-        if (MPGDTrapezoidConstants.VERBOSE) {
-            System.out.printf(
-                    "SectorHeight [%s] region=%d : baseDistance=%.3f THMIN=%.3f THMAX=%.3f THTILT=%.3f -> height=%.3f%n",
-                    C.detectorName,
-                    region,
-                    baseDistance,
-                    C.THMIN, C.THMAX, C.THTILT,
-                    sectorHeight
-            );
-        }
-
-        return sectorHeight;
-    }
-
-    /**
-     * Computes the barycenter coordinates of a given sector/region in the
-     * CLAS12 coordinate system.
-     *
-     * @param isector
-     * @param iregion
-     * @return
-     */
-    public Vector3d getCenterCoordinate(int isector, int iregion) {
-
-        Vector3d vCenter = new Vector3d(0, 0, 0);
-
-        // Distance from target to the bottom base along the tilted axis
-        double W2TGT = (C.TGTDET + iregion * C.DZ)
-                / Math.cos(Math.toRadians(C.THTILT - C.THMIN));
-
-        double YMIN = W2TGT * Math.sin(Math.toRadians(C.THMIN)); // distance from beamline (Y)
-        double ZMIN = W2TGT * Math.cos(Math.toRadians(C.THMIN)); // Z of the bottom base
-
-        SectorDimensions dimCont = this.getSectorContainerDimensions(iregion);
-        double sectorHeight = 2 * dimCont.halfHeight();
-
-        vCenter.x = 0.0;
-        vCenter.y = (sectorHeight / 2.0) * Math.cos(Math.toRadians(C.THTILT)) + YMIN;
-        vCenter.z = -(sectorHeight / 2.0) * Math.sin(Math.toRadians(C.THTILT)) + ZMIN;
-
-        // Rotate to the correct sector around Z (assumes 6 sectors, 60° apart)
-        vCenter.rotateZ(-Math.toRadians(90.0 - isector * 60.0));
-
-        return vCenter;
-    }
-
-    // ------------------------------------------------------------------------
     //  Sector + material volume construction
     // ------------------------------------------------------------------------
     /**
@@ -223,8 +71,8 @@ public class MPGDTrapezoidGeant4Factory extends Geant4Factory {
      */
     public Geant4Basic createSector(int isector, int iregion) {
 
-        SectorDimensions dimPhys = this.getSectorActiveVolumeDimensions(iregion);
-        SectorDimensions dimCont = this.getSectorContainerDimensions(iregion);
+        SectorDimensions dimPhys = C.getSectorActiveVolumeDimensions(iregion);
+        SectorDimensions dimCont = C.getSectorContainerDimensions(iregion);
 
         Geant4Basic sectorVolume = createSectorVolume(isector, iregion, dimCont);
         populateSectorWithDetectorStructure(sectorVolume, isector, iregion, dimPhys);
@@ -250,7 +98,7 @@ public class MPGDTrapezoidGeant4Factory extends Geant4Factory {
         double sectorDX0 = dimSect.halfSmallBase();
         double sectorTtilt = dimSect.tiltRad();
 
-        Vector3d vCenter = this.getCenterCoordinate(isector, iregion);
+        Vector3d vCenter = C.getCenterCoordinate(isector, iregion);
 
         Geant4Basic sectorVolume = new G4Trap(
                 "region_" + C.detectorName + "_" + (iregion + 1) + "_s" + (isector + 1),

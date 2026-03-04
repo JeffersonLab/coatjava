@@ -3,6 +3,7 @@ package org.jlab.analysis.efficiency;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
@@ -15,8 +16,7 @@ import org.jlab.utils.options.OptionParser;
 
 /**
  * Efficiency matrix calculator based solely on the MC::GenMatch truth-matching
- * bank (which is purely hit-based), and a pid assignment match in MC::Particle
- * and REC::Particle.
+ * bank, and a pid assignment match in MC::Particle and REC::Particle.
  * 
  * @author baltzell
  */
@@ -188,17 +188,62 @@ public class Truth {
         return s.toString();
     }
 
+    private static Map<Integer,Float> parseEfficiencyString(String arg) {
+        TreeMap<Integer,Float> m = new TreeMap<>();
+        if (arg.contains(",")) {
+            for (String s : arg.split(","))
+                m.putAll(parseEfficiencyString(s));
+        }
+        else if (arg.contains(":")) {
+            String[] x = arg.split(":");
+            try {
+                if (x.length == 2) m.put(Integer.valueOf(x[0]), Float.valueOf(x[1]));
+                else throw new RuntimeException("Invalid pid specification:  "+arg);
+            }
+            catch (NumberFormatException e) {
+                throw new RuntimeException("Invalid pid specification:  "+arg);
+            }
+        }
+        return m;
+    }
+
+    private boolean checkEfficiencies(Map<Integer,Float> pids) {
+        boolean good = true;
+        for (int pid : pids.keySet()) {
+            if (get(pid, pid) < pids.get(pid)) {
+                System.err.println(String.format(
+                    ">>> trutheff:  pid %d efficiency is %f, below %f limit",
+                    pid, get(pid,pid), pids.get(pid)));
+                good = false;
+            }
+        }
+        return good;
+    }
+
+    /**
+     * Efficiency cut values specificed as pid1:eff1[pid2:eff2[...]]
+     * For example, 2212:0.9,11:0.95 is 90% for proton and 95% for electron.
+     * @param arg
+     * @return whether all efficiency cuts pass
+     */
+    public boolean checkEfficiencies(String arg) {
+        return checkEfficiencies(parseEfficiencyString(arg));
+    }
+
     public static void main(String[] args) {
         OptionParser o = new OptionParser("trutheff");
+        o.addOption("-e", "", "efficiency requirement (e.g. 321:0.9,11:0.95");
         o.setRequiresInputList(true);
         o.parse(args);
+        Map<Integer,Float> pids = parseEfficiencyString(o.getOption("-e").stringValue());
         HipoReader r = new HipoReader();
         r.open(o.getInputList().get(0));
         Truth t = new Truth(r.getSchemaFactory());
         t.add(o.getInputList());
-        System.out.println(t.toTable());
-        System.out.println(t.toJson());
         System.out.println(t.toMarkdown());
+        System.out.println(t.toJson());
+        System.out.println(t.toTable());
+        if (!t.checkEfficiencies(pids)) System.exit(7);
     }
 
 }
