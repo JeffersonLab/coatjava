@@ -10,8 +10,8 @@ import org.jlab.rec.ahdc.AI.*;
 import org.jlab.rec.ahdc.Banks.RecoBankWriter;
 import org.jlab.rec.ahdc.Cluster.Cluster;
 import org.jlab.rec.ahdc.Cluster.ClusterFinder;
-import org.jlab.rec.ahdc.Cluster.DocaClusterRefiner;
-import org.jlab.rec.ahdc.Cluster.DocaCluster;
+import org.jlab.rec.ahdc.DocaCluster.DocaClusterRefiner;
+import org.jlab.rec.ahdc.DocaCluster.DocaCluster;
 import org.jlab.rec.ahdc.Distance.Distance;
 import org.jlab.rec.ahdc.HelixFit.HelixFitJava;
 import org.jlab.rec.ahdc.Hit.Hit;
@@ -218,13 +218,14 @@ public class AHDCEngine extends ReconstructionEngine {
             // V) Global fit
             int trackid = 0;
             ArrayList<DocaCluster> all_docaClusters = new ArrayList<>();
+            AHDC_Tracks.removeIf(track -> track.get_Clusters().size() < 3);
             for (Track track : AHDC_Tracks) {
               trackid++;
               track.set_trackId(trackid);
               List<Cluster> originalClusters = track.get_Clusters();
               ArrayList<DocaCluster> docaClusters = DocaClusterRefiner.buildRefinedClusters(originalClusters);
               all_docaClusters.addAll(docaClusters);
-              if (docaClusters == null || docaClusters.size() < 3) {
+              if (docaClusters == null || docaClusters.size() < 3 || originalClusters == null || originalClusters.size() < 3) {
                 // not enough points, skip helix fit
                 continue;
               }
