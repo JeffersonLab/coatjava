@@ -1,33 +1,42 @@
 #!/bin/bash
 
-set -e
-
-# configure:
-event=cpu #nativemem
+event=cpu
 format=flat
-nevents=1000
 seconds=12
-yaml=etc/services/data-ai-uber.yml
-while getopts y:n:f:e:s:h opt
+usage1="Usage:  profile [-h] [-s seconds] [-w seconds] [-e event] [-f format] [--] executable args"
+usage2="Usage:  profile [options] executable args\nOptions:\n\t[-h] [-s seconds] [-w seconds]\n\t[-e cpu|alloc|nativemem|lock|cache-misses]\n\t[-f flat|traces|collapsed|flamegraph|tree|jfr|otlp]"
+
+while getopts s:f:e:o:w:h opt
 do
     case $opt in
         s) seconds=$OPTARG ;;
-        y) yaml=$OPTARG ;;
-        n) nevents=$OPTARG ;;
         f) format=$OPTARG ;;
         e) event=$OPTARG ;;
-        h) echo "\nUsage:  profile [-y YAML] [-n #] [-e EVENT] datafile" && exit 0 ;;
+        o) stub=$OPTARG ;;
+        w) warmup=$OPTARG ;;
+        h) echo -e $usage2 && exit 0 ;;
+        --) break ;;
+        \?) echo $usage1 && exit 1 ;;
+#        :) echo $usage1 && exit 2 ;;
     esac
 done
+
 shift $((OPTIND-1))
-data=$1
-stub=$(basename $data)
-stub=${stub%%.*}
+executable=$1
+arguments=${@:2}
 
 which asprof >& /dev/null
-[ "$?" -ne 0 ] && echo 'ERROR:  asprof is not in $PATH.' && exit 9
+[ "$?" -ne 0 ] && echo 'ERROR:  asprof is not in $PATH.' && echo -e $usage2 && exit 3
 
-recon-util -y $yaml -n $nevents -o pro_$stub.hipo -i $data >& pro_$stub.log &
+which $executable >& /dev/null
+[ "$?" -ne 0 ] && echo "ERROR:  $executable is not in \$PATH." && echo -e $usage2 && exit 4
+
+echo "Running asprof on '$executable $arguments' ..."
+
+set -e
+
+$executable $arguments >& asprof_$stub.log
+
 pid_bash=$!
 
 echo PID1=$pid_bash
@@ -38,14 +47,15 @@ echo PID2=$pid_java
 
 ps waux && ps -p $pid_java
 
-echo "Waiting for 60 seconds of CoatJava warmup ..."
-for x in $(seq 60); do let y=60-$x && echo -e -n "\r$y ..." && sleep 1; done
+echo "Waiting for $warmup seconds of warmup ..."
+for x in $(seq $warmup); do let y=$warmup-$x && echo -e -n "\r$y ..." && sleep 1; done
 
-tail -n 42 pro_$stub.log
+# This 42 is probably for recon-util:
+tail -n 42 asprof_$stub.log
 
-asprof --title "Coatjava - asprof - $event"  -e $event \
-    -d $seconds -o $format -f pro_${format}_${event}_$stub $pid_java
+asprof --title "Coatjava:asprof:$executable:$event"  -e $event \
+    -d $seconds -o $format -f asprof_${format}_${event}_$stub $pid_java
 
 kill -9 $pid_java
-rm -f pro_$stub.hipo
+rm -f asprof_$stub.hipo
 

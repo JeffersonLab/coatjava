@@ -15,40 +15,13 @@ import org.jlab.detector.geant4.v2.MPGD.trapezoid.MPGDTrapezoidGeant4Factory;
  */
 public final class URWTGeant4Factory extends MPGDTrapezoidGeant4Factory {
 
-    private final String variation;
 
     public URWTGeant4Factory(DatabaseConstantProvider cp, String variation) {
-        super(new URWTConstants(cp));
-        this.variation = variation;
+        super(new URWTConstants(cp, variation));
     }
 
     public URWTGeant4Factory(int run, String variation) {
         super(new URWTConstants(run, variation));
-        this.variation = variation;
-    }
-
-    /**
-     *
-     * @param region
-     * @return
-     */
-    @Override
-    public SectorDimensions getSectorActiveVolumeDimensions(int region) {
-
-        if (variation != null && variation.toLowerCase().contains("proto")) {
-
-            double halfThickness = this.getSectorThickness() / 2.0;
-            double tiltRad = Math.toRadians(C.THTILT);
-
-            // da vertici (mm)
-            double halfLargeBase = 72.71785;
-            double halfSmallBase = 50.44350;
-            double halfHeight = 24.74554;
-
-            return new SectorDimensions(halfThickness, halfHeight, halfLargeBase, halfSmallBase, tiltRad);
-        }
-
-        return super.getSectorActiveVolumeDimensions(region);
     }
 
     /**
