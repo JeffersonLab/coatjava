@@ -11,6 +11,7 @@ import org.apache.commons.math3.linear.RealVector;
 import org.jlab.clas.pdg.PDGDatabase;
 import org.jlab.clas.pdg.PDGParticle;
 import org.jlab.clas.tracking.kalmanfilter.Material;
+import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.Track.Track;
@@ -28,32 +29,58 @@ import org.jlab.rec.ahdc.Track.Track;
  */
 public class KalmanFilter {
 
+	public KalmanFilter(PDGParticle particle, int Niter) {this.particle = particle; this.Niter = Niter;}
+
     public KalmanFilter(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {propagation(tracks, event, magfield, IsMC);}
 
-	private final int Niter = 40; // number of iterations for the Kalman Filter
+	private PDGParticle particle;
+	private int Niter = 40; // number of iterations for the Kalman Filter
 	private boolean IsVtxDefined = false; // implemented but not used yet
+	private double[] vertex_resolutions = {0.09, 1e10}; //  {error in r squared in mm^2, error in z squared in mm^2}
+	// mm,  CLAS and AHDC don't necessary have the same alignement (ZERO), this parameter may be subject to calibration
+	private double clas_alignement = -54;
 
-	private void propagation(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {
+	public void propagation(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {
 
 		try {
 			double vz_constraint = 0; // to be linked to the electron vertex
 
 			// Initialization ---------------------------------------------------------------------
-			final PDGParticle proton            = PDGDatabase.getParticleById(2212);
 			final int         numberOfVariables = 6;
 			final double      tesla             = 0.001;
 			final double[]    B                 = {0.0, 0.0, magfield / 10 * tesla};
 			HashMap<String, Material> materialHashMap = MaterialMap.generateMaterials();
+			// Recover the vertex of the electron
+			if (event.hasBank("REC::Particle")) {
+				DataBank recBank = event.getBank("REC::Particle");
+				int row = 0;
+				while ((!IsVtxDefined) && row < recBank.rows()) {
+					if (recBank.getInt("pid", row) == 11) {
+						IsVtxDefined = true;
+						vz_constraint = 10*recBank.getFloat("vz",row) - (IsMC ? 0 : clas_alignement); // mm
+						////////////////////////////////////////
+						/// compute electron resolution here
+						/// it depends en p and theta
+						/// the fine tuning will be done later
+						/// ////////////////////////////////////
+						//double px = recBank.getFloat("px",row);
+						//double py = recBank.getFloat("py",row);
+						//double pz = recBank.getFloat("pz",row);
+						//double p = Math.sqrt(px*px+py*py+pz*pz);
+						//double theta = Math.acos(pz/p);
+						vertex_resolutions[0] = 0.09;
+						vertex_resolutions[1] = 64;//4 + 1e10*theta + 1e10*p;
+					}
+					row++;
+				}
+			}
 					
             // Loop over tracks
-			int trackId = 0;
 			for (Track track : tracks) {
-			    trackId++;
-			    track.set_trackId(trackId);
 			    // Initialize state vector
 			    double x0  = 0.0;
 			    double y0  = 0.0;
-			    double z0  = track.get_Z0();
+			    double z0  = IsVtxDefined ? vz_constraint : track.get_Z0();
 			    double px0 = track.get_px();
 			    double py0 = track.get_py();
 			    double pz0 = track.get_pz();
@@ -62,13 +89,10 @@ public class KalmanFilter {
 			    // Read list of hits
 			    ArrayList<Hit> AHDC_hits = track.getHits();
 				Collections.sort(AHDC_hits); // sorted following the compareTo() method in Hit.java
-
-			    double zbeam = 0;
-			    if(IsVtxDefined)zbeam = vz_constraint;
 			
 			    // Start propagation
 			    Stepper     stepper    = new Stepper(y);
-			    RungeKutta4 RK4        = new RungeKutta4(proton, numberOfVariables, B);
+			    RungeKutta4 RK4        = new RungeKutta4(particle, numberOfVariables, B);
 			    Propagator  propagator = new Propagator(RK4);
 
 			    // Initialization of the Kalman Fitter
@@ -76,7 +100,7 @@ public class KalmanFilter {
 			    RealVector initialStateEstimate   = new ArrayRealVector(stepper.y);
 			    RealMatrix initialErrorCovariance = MatrixUtils.createRealMatrix(new double[][]{{50.0, 0.0, 0.0, 0.0, 0.0, 0.0}, {0.0, 50.0, 0.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 900.0, 0.0, 0.0, 0.0}, {0.0, 0.0, 0.0, 100.00, 0.0, 0.0}, {0.0, 0.0, 0.0, 0.0, 100.00, 0.0}, {0.0, 0.0, 0.0, 0.0, 0.0, 900.0}});
 				KFitter TrackFitter = new KFitter(initialStateEstimate, initialErrorCovariance, stepper, propagator, materialHashMap);
-			    TrackFitter.setVertexDefined(IsVtxDefined);
+				if (IsVtxDefined) TrackFitter.setVertexResolution(vertex_resolutions);
 		 	    
 				// Loop over number of iterations
 			    for (int k = 0; k < Niter; k++) {
@@ -94,7 +118,7 @@ public class KalmanFilter {
 					}
 					// Backward propagation (first layer to beamline)
 					{
-						Hit hit = new Hit_beam(0, 0, zbeam);
+						Hit hit = new Hit_beam(0, 0, vz_constraint);
 						TrackFitter.predict(hit, false);
 						TrackFitter.correct(hit);
 					}
@@ -114,7 +138,7 @@ public class KalmanFilter {
 
 			    
 			    RealVector x_out = TrackFitter.getStateEstimationVector();
-			    track.setPositionAndMomentumForKF(x_out);
+			    track.setPositionAndMomentumVec(x_out.toArray());
 
 			    // Post fit propagation (no correction) to set the residuals
 			    KFitter PostFitPropagator = new KFitter(TrackFitter.getStateEstimationVector(), initialErrorCovariance, new Stepper(TrackFitter.getStateEstimationVector().toArray()), new Propagator(RK4), materialHashMap);
@@ -133,17 +157,16 @@ public class KalmanFilter {
 			    double sum_residuals = 0;
 			    double chi2 = 0;
 			    for (Hit hit : AHDC_hits) {
-                    hit.setTrackId(trackId);
                     sum_adc += hit.getADC();
                     sum_residuals += hit.getResidual();
-                    chi2 += Math.pow(hit.getResidual(),2.0);
+                    chi2 += Math.pow(hit.getResidual(),2)/hit.get_MeasurementNoise().getEntry(0,0);
 			    }
 			    track.set_sum_adc(sum_adc);
 			    track.set_sum_residuals(sum_residuals);
-			    track.set_chi2(chi2);
-			    track.set_p_drift_kf(p_drift);
-			    track.set_dEdx_kf(sum_adc/s);
-			    track.set_path_kf(s);
+			    track.set_chi2(chi2/(AHDC_hits.size()-3));
+			    track.set_p_drift(p_drift);
+			    track.set_dEdx(sum_adc/s);
+			    track.set_path(s);
 			    track.set_n_hits(AHDC_hits.size());
 			}//end of loop on track candidates
 		} catch (Exception e) {
@@ -151,5 +174,6 @@ public class KalmanFilter {
 			//System.out.println("======> Kalman Filter Error");
 		}
 	}
-
+	void set_Niter(int Niter) {this.Niter = Niter;}
+	void set_particle(PDGParticle particle) {this.particle = particle;}
 }

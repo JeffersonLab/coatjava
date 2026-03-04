@@ -1,9 +1,11 @@
 package org.jlab.rec.alert.banks;
 
 import java.util.ArrayList;
+import java.util.List;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.alert.projections.TrackProjection;
+//import org.jlab.rec.alert.AIpid.PIDResult;
 
 import ai.djl.util.Pair;
 
@@ -82,13 +84,38 @@ public class RecoBankWriter {
         }
         for (int i = 0; i < trackAIResults.size(); i++) {
             Pair<Integer, Integer> pair = trackAIResults.get(i);
-            bank.setInt("track_id", i, pair.getKey());
+            bank.setInt("trackid", i, pair.getKey());
             bank.setInt("matched_atof_hit_id", i, pair.getValue());
         }
         event.appendBank(bank);
 
         return 0;
     }
+    
+    public int appendPrePIDBank(DataEvent event, ArrayList<org.jlab.rec.alert.AIPID.PrePIDResult> results) {
+
+        DataBank bank = event.createBank("ALERT::ai:prepid", results.size());
+        if (bank == null) {
+            System.err.println("COULD NOT CREATE A ALERT::ai:prepid BANK!!!!!!");
+            return 1;
+        }
+
+        for (int i = 0; i < results.size(); i++) {
+            org.jlab.rec.alert.AIPID.PrePIDResult r = results.get(i);
+            bank.setInt("trackid", i, r.trackid);
+            bank.setInt("clusterid", i, r.clusterid);
+            bank.setInt("prepid", i, r.prepid);
+            bank.setFloat("p2212", i, r.p2212);
+            bank.setFloat("p45", i, r.p45);
+            bank.setFloat("p46", i, r.p46);
+            bank.setFloat("p47", i, r.p47);
+            bank.setFloat("p49", i, r.p49);
+        }
+
+        event.appendBank(bank);
+        return 0;
+    }
+
 
     /**
      * @param args the command line arguments

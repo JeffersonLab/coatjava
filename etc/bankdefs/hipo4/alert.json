@@ -66,6 +66,38 @@
       {"name": "matched_atof_hit_id", "type": "I", "info": "id of the matched ATOF hit, -1 if no hit was matched"}
     ]
   },
+    {
+    "name": "ALERT::ai:prepid",
+    "group": 23000,
+    "item": 33,
+    "info": "ALERT AI-assisted PrePID to be used for Kalman Filter",
+    "entries": [
+      {"name":"trackid",    "type":"I", "info":"AHDC trackid"},
+      {"name":"clusterid",  "type":"I", "info":"ATOF cluster id"},
+      {"name":"prepid",        "type":"I", "info":"argmax PID"},
+      {"name":"p2212",    "type":"F", "info":"P(pid=2212)"},
+      {"name":"p45",    "type":"F", "info":"P(pid=45)"},
+      {"name":"p46",    "type":"F", "info":"P(pid=46)"},
+      {"name":"p47",    "type":"F", "info":"P(pid=47)"},
+      {"name":"p49",    "type":"F", "info":"P(pid=49)"}
+     ]
+  },
+  {
+    "name": "ALERT::ai:pid",
+    "group": 23000,
+    "item": 34,
+    "info": "AI-assisted PID for ALERT",
+    "entries": [
+      {"name":"trackid",    "type":"I", "info":"AHDC trackid"},
+      {"name":"clusterid",  "type":"I", "info":"ATOF cluster id"},
+      {"name":"pid",        "type":"I", "info":"argmax PID"},
+      {"name":"prob_2212",  "type":"F", "info":"P(pid=2212)"},
+      {"name":"prob_45",    "type":"F", "info":"P(pid=45)"},
+      {"name":"prob_46",    "type":"F", "info":"P(pid=46)"},
+      {"name":"prob_47",    "type":"F", "info":"P(pid=47)"},
+      {"name":"prob_49",    "type":"F", "info":"P(pid=49)"}
+    ]
+  },
   {
     "name": "ATOF::hits",
     "group": 22500,
@@ -191,19 +223,23 @@
       }, {
         "name": "doca",
         "type": "D",
-        "info": "distance od closest approch (mm) is actually the distance from time2distance calibration"
+        "info": "distance of closest approch (mm) is actually the distance from time2distance calibration"
       }, {
-	"name": "residual",
-	"type": "D",
-	"info": "residual (mm) is distance from time2distance calibration minus the distance of closest approach computed at the Kalman Filter stage"
+        "name": "residual",
+        "type": "D",
+        "info": "residual (mm) calculated by the Kalman Filter"
       }, {
-	"name": "residual_prefit",
-	"type": "D",
-	"info": "residual pre-fit (mm)"
+        "name": "time",
+        "type": "D",
+        "info": "calibrated time (ns)"
+        }, {
+        "name": "adc",
+        "type": "I",
+        "info": "calibrated ADC"
       }, {
-	"name": "time",
-	"type": "D",
-	"info": "time (ns) is leadingEdgeTime from AHDC::adc minus t0 from calibration"
+        "name": "timeOverThreshold",
+        "type": "D",
+        "info": "calibrated time over threshold (ns)"
       }, {
         "name": "trackid",
         "type": "I",
@@ -435,6 +471,20 @@
       {"name": "trackid", "type": "I", "info": "track id"},
       {"name": "x", "type": "F", "info": "x info (mm)"},
       {"name": "y", "type": "F", "info": "y info (mm)"}
+    ]
+  },
+  {
+    "name": "AHDC::docaclusters",
+    "group": 23000,
+    "item": 126,
+    "info": "Doca-refined cluster space points",
+    "entries": [
+      {"name": "x",             "type": "F", "info": "refined x (mm)"},
+      {"name": "y",             "type": "F", "info": "refined y (mm)"},
+      {"name": "z",             "type": "F", "info": "refined z (mm)"},
+      {"name": "weight",        "type": "F", "info": "refined point weight"},
+      {"name": "pattern",       "type": "I", "info": "hit pattern: 11,12,21,22"},
+      {"name": "idx", "type": "I", "info": "index of original AHDC::clusters row"}
     ]
   }
 ]

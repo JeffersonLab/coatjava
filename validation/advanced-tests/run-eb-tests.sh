@@ -118,7 +118,7 @@ then
         # install clara
         if ! [ -d clara_installation ]
         then
-            ../../install-clara clara_installation
+            ../../bin/install-clara clara_installation
         fi
     fi
 
@@ -136,7 +136,7 @@ then
     then
         GEOMDBVAR=$geoDbVariation
         export GEOMDBVAR
-        ../../coatjava/bin/recon-util -i ${webDir}/${stub}.hipo -o out_${stub}.hipo -c 2
+        ../../coatjava/bin/recon-util -l FINE -i ${webDir}/${stub}.hipo -o out_${stub}.hipo -c 2
     else
         echo "set inputDir $PWD/" > cook.clara
         echo "set outputDir $PWD/" >> cook.clara

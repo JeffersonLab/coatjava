@@ -34,6 +34,8 @@ import org.jlab.clas.tracking.kalmanfilter.zReference.StateVecs;
 import org.jlab.clas.tracking.utilities.MatrixOps.Libr;
 import org.jlab.clas.tracking.utilities.RungeKuttaDoca;
 
+import org.jlab.rec.ai.dcHBTrackState.HBTrackStateEstimator;
+
 /**
  * A class with a method implementing an algorithm that finds lists of track
  * candidates in the DC
@@ -203,6 +205,106 @@ public class TrackCandListFinder {
         q *= (int) -1 * Math.signum(TORSCALE); // flip the charge according to the field scale
 
         return q;
+    }
+    
+    public List<Track> getTrackCandsAI(CrossList crossList, DCGeant4Factory DcDetector, Swim dcSwim, HBTrackStateEstimator hbTSEstimator){
+        List<Track> cands = new ArrayList();
+        
+        for (List<Cross> aCrossList : crossList) {
+            Track cand = new Track();
+
+            if (aCrossList.size() == 3 && this.PassNSuperlayerTracking(aCrossList, cand)) {
+                cand.addAll(aCrossList);
+                cand.setSector(aCrossList.get(0).get_Sector());
+                int sector = cand.getSector();
+                
+                List<Surface> measSurfaces = getMeasSurfaces(cand, DcDetector);
+
+                int numHits = 0;
+                for(Surface surf : measSurfaces){
+                    numHits += surf.nMeas;
+                }
+                float[][] hits = new float[numHits][5];
+                int indexHit = 0;
+                for(int i = 0; i < measSurfaces.size(); i++){
+                    hits[indexHit][0] = (float)measSurfaces.get(i).doca[0];
+                    hits[indexHit][1] = (float)measSurfaces.get(i).wireLine[0].origin().x();
+                    hits[indexHit][2] = (float)measSurfaces.get(i).wireLine[0].end().x();
+                    hits[indexHit][3] = (float)measSurfaces.get(i).wireLine[0].end().y();
+                    hits[indexHit][4] = (float)measSurfaces.get(i).wireLine[0].end().z();
+
+                    indexHit++;
+
+                    if(measSurfaces.get(i).nMeas == 2){                
+                        hits[indexHit][0] = (float)measSurfaces.get(i).doca[1];
+                        hits[indexHit][1] = (float)measSurfaces.get(i).wireLine[1].origin().x();
+                        hits[indexHit][2] = (float)measSurfaces.get(i).wireLine[1].end().x();
+                        hits[indexHit][3] = (float)measSurfaces.get(i).wireLine[1].end().y();
+                        hits[indexHit][4] = (float)measSurfaces.get(i).wireLine[1].end().z();
+
+                        indexHit++;
+                    }                                
+                } 
+
+                float[] estSV = hbTSEstimator.predict(hits);
+                StateVecs svs = new StateVecs();
+                org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
+                initSV.x = estSV[0];
+                initSV.y = estSV[1];
+                initSV.z = 229.; // State vector at z = 229 for AI training samples
+                initSV.tx = estSV[2];
+                initSV.ty = estSV[3];
+                initSV.Q = estSV[4];
+                                 
+                RungeKuttaDoca rk = new RungeKuttaDoca();
+                rk.SwimToZ(sector, initSV, dcSwim, measSurfaces.get(0).wireLine[0].end().z(), new float[3]); 
+                
+                KFitter kFZRef = new KFitter(true, 1, 1, dcSwim, Constants.getInstance().Z, Libr.JNP);
+                Matrix initCMatrix = new Matrix();                       
+                initSV.CM = new Matrix();                 
+                kFZRef.init(measSurfaces, initSV);						
+		
+                org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec finalSV = svs.new StateVec(initSV);
+                rk.SwimToZ(sector, finalSV, dcSwim, measSurfaces.get(measSurfaces.size()-1).wireLine[0].end().z(), new float[3]);
+                kFZRef.getStateVecs().transported(true).put(measSurfaces.size()-1, finalSV);
+                
+                kFZRef.setSvzLength(measSurfaces.size());
+                kFZRef.calcFinalChisq(sector, true);
+                                
+                StateVec stateVec = new StateVec(finalSV.x,
+                                finalSV.y, finalSV.tx, finalSV.ty);
+                int q = (int) Math.signum(finalSV.Q);
+                double p = 1. / Math.abs(finalSV.Q);
+                stateVec.setZ(finalSV.z);
+
+                //set the track parameters 
+                cand.set_P(p);
+                cand.set_Q(q);
+
+                // candidate parameters 
+                cand.set_FitChi2(kFZRef.chi2);
+                cand.set_FitNDF(kFZRef.NDF);
+
+                cand.setFinalStateVec(stateVec);
+                cand.set_Id(cands.size() + 1);
+                this.setTrackPars(cand, null,
+                        null, stateVec,
+                        stateVec.getZ(),
+                        DcDetector, dcSwim);
+                
+                if(cand.get_Vtx0() != null){
+                    Point3D VTCS = cand.get(cand.size()-1).getCoordsInTiltedSector(cand.get_Vtx0().x(), cand.get_Vtx0().y(), cand.get_Vtx0().z());
+                    double deltaPathToVtx =  kFZRef.getDeltaPathToVtx(sector, VTCS.z());
+
+                    List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef, deltaPathToVtx);
+                    cand.setStateVecs(kfStateVecsAlongTrajectory);                                  
+                }
+
+                if (kFZRef.chi2 < Constants.MAXCHI2) cands.add(cand);                                              
+            }
+        }
+        
+        return cands;
     }
 
     /**
@@ -926,11 +1028,13 @@ public class TrackCandListFinder {
                             cand.set_Id(cands.size() + 1);
                             cand.set_CovMat(kFZRef.finalStateVec.CM);
                             
-                            Point3D VTCS = cand.get(cand.size()-1).getCoordsInTiltedSector(cand.get_Vtx0().x(), cand.get_Vtx0().y(), cand.get_Vtx0().z());
-                            double deltaPathToVtx =  kFZRef.getDeltaPathToVtx(cand.get(cand.size()-1).get_Sector(), VTCS.z());
+                            if (cand.get_Vtx0() != null) {
+                                Point3D VTCS = cand.get(cand.size()-1).getCoordsInTiltedSector(cand.get_Vtx0().x(), cand.get_Vtx0().y(), cand.get_Vtx0().z());
+                                double deltaPathToVtx =  kFZRef.getDeltaPathToVtx(cand.get(cand.size()-1).get_Sector(), VTCS.z());
                             
-                            List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef, deltaPathToVtx);
-                            cand.setStateVecs(kfStateVecsAlongTrajectory);
+                                List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef, deltaPathToVtx);
+                                cand.setStateVecs(kfStateVecsAlongTrajectory);
+                            }
 
                             // add candidate to list of tracks	
                             cands.add(cand);
@@ -1103,12 +1207,14 @@ public class TrackCandListFinder {
                                         trjFind, fitStateVec,
                                         fitStateVec.getZ(),
                                         DcDetector, dcSwim);
+
+                                if (cand.get_Vtx0() != null) {
+                                    Point3D VTCS = cand.get(cand.size()-1).getCoordsInTiltedSector(cand.get_Vtx0().x(), cand.get_Vtx0().y(), cand.get_Vtx0().z());
+                                    double deltaPathToVtx =  kFZRef.getDeltaPathToVtx(cand.get(cand.size()-1).get_Sector(), VTCS.z());
                                 
-                                Point3D VTCS = cand.get(cand.size()-1).getCoordsInTiltedSector(cand.get_Vtx0().x(), cand.get_Vtx0().y(), cand.get_Vtx0().z());
-                                double deltaPathToVtx =  kFZRef.getDeltaPathToVtx(cand.get(cand.size()-1).get_Sector(), VTCS.z());
-                                
-                                List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef, deltaPathToVtx);
-                                cand.setStateVecs(kfStateVecsAlongTrajectory);                                  
+                                    List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef, deltaPathToVtx);
+                                    cand.setStateVecs(kfStateVecsAlongTrajectory);
+                                }
                                 
                                 // add candidate to list of tracks
                                 if (cand.fit_Successful = true) {

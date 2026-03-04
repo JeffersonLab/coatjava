@@ -7,11 +7,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.TreeMap;
+import java.util.LinkedHashMap;
 import java.util.logging.Logger;
 import java.util.logging.Level;
-import org.jlab.logging.SplitLogger;
-import org.jlab.logging.SplitLoggerConfig;
+import org.jlab.logging.SplitLogManager;
+import org.jlab.logging.SplitLogManagerConfig;
 
 /**
  *
@@ -19,9 +19,9 @@ import org.jlab.logging.SplitLoggerConfig;
  */
 public class OptionParser {
   
-    private Map<String,OptionValue> optionsDescriptors = new TreeMap<>();    
-    private Map<String,OptionValue>    requiredOptions = new TreeMap<>();
-    private Map<String,OptionValue>      parsedOptions = new TreeMap<>();
+    private Map<String,OptionValue> optionsDescriptors = new LinkedHashMap<>();    
+    private Map<String,OptionValue>    requiredOptions = new LinkedHashMap<>();
+    private Map<String,OptionValue>      parsedOptions = new LinkedHashMap<>();
     private Set<String>               overridenOptions = new HashSet<>();
     private List<String>               parsedInputList = new ArrayList<>();
     private String                             program = "undefined";
@@ -129,13 +129,7 @@ public class OptionParser {
     }
     
     public void printUsage(){
-        System.out.println("\n\n");
-        System.out.println("*******************************************");
-        System.out.println("*      PROGRAM USAGE : by OptionParser    *");
-        System.out.println("*******************************************");
-        System.out.println("\n\n");
         System.out.println(this.getUsageString());
-        System.out.println("\n\n");
     }
    
     public void parse(String... args) {
@@ -179,6 +173,7 @@ public class OptionParser {
             }
         }
         if (this.requiresInputList && this.parsedInputList.isEmpty()) {
+            printUsage();
             System.err.println(" \n*** ERROR *** Empty Input List.");
             System.exit(101);
         }
@@ -191,8 +186,8 @@ public class OptionParser {
 
     private void setVerbosity(String level) {
         try {
-            this.logLevel = Level.parse(level);
-            SplitLoggerConfig.INSTANCE.setDefaultLevel(this.logLevel);
+            this.logLevel = Level.parse(level.toUpperCase());
+            SplitLogManagerConfig.INSTANCE.setDefaultLevel(this.logLevel);
         }
         catch (IllegalArgumentException e) {
             System.err.println("Invalid -l java.util.logging.Level:  "+level);
@@ -230,7 +225,7 @@ public class OptionParser {
      */
     public static void overrideLogLevel(String level, String... classList) {
         for(var className : classList)
-            System.setProperty(className + ".level", level);
+            System.setProperty(className + ".level", level.toUpperCase());
     }
 
     /**
@@ -238,7 +233,7 @@ public class OptionParser {
      * @param externalLogger an external {@code Logger} instance, typically one owned by the owner of this {@code OptionParser} instance
      */
     public void syncLogLevel(Logger externalLogger) {
-        SplitLogger.configureLevel(externalLogger, this.logLevel);
+        SplitLogManager.configureLevel(externalLogger, this.logLevel);
     }
 
     public static void main(String[] args){

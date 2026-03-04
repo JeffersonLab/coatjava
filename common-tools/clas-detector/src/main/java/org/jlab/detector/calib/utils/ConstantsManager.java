@@ -13,7 +13,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jlab.utils.groups.IndexedTable;
-import org.jlab.logging.SplitLogger;
+import org.jlab.logging.SplitLogManager;
 
 /**
  *
@@ -23,7 +23,10 @@ public class ConstantsManager {
 
     public static final int DBERROR_SLEEP_SECONDS=3;
 
-    private static Logger LOGGER = SplitLogger.create(ConstantsManager.class.getName(), false);
+    private static Logger LOGGER = Logger.getLogger(ConstantsManager.class.getName());
+    static {
+        SplitLogManager.configureHandlers(LOGGER, false);
+    }
 
     private DatabaseConstantsDescriptor defaultDescriptor = new DatabaseConstantsDescriptor();
     private volatile Map<Integer, DatabaseConstantsDescriptor> runConstants = new LinkedHashMap<Integer, DatabaseConstantsDescriptor>();
@@ -127,7 +130,7 @@ public class ConstantsManager {
             }
         }
 
-        LOGGER.log(Level.FINE, "[ConstantsManager] --->  loading table for run = " + run);
+        LOGGER.log(Level.INFO, "[ConstantsManager] --->  loading table for run = " + run);
         DatabaseConstantsDescriptor desc = defaultDescriptor.getCopy(run);
         DatabaseConstantProvider provider = new DatabaseConstantProvider(run, this.databaseVariation, this.timeStamp);
 
@@ -139,7 +142,8 @@ public class ConstantsManager {
             try {
                 IndexedTable  table = provider.readTable(tableName, desc.getTableIndices().get(i));
                 desc.getMap().put(tk.get(i), table);
-                LOGGER.log(Level.FINE, String.format("***** >>> adding : %14s / table = %s", tk.get(i), tableName));
+                LOGGER.log(Level.INFO, "***** >>> add table = {0}", tableName);
+                LOGGER.log(Level.FINEST, "              key = {0}", tk.get(i));
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, e.getMessage());
                 LOGGER.log(Level.SEVERE, "[ConstantsManager] ---> error reading table : " + tableName);
@@ -182,7 +186,10 @@ public class ConstantsManager {
      */
     public static class DatabaseConstantsDescriptor {
         
-        Logger LOGGER = SplitLogger.create(DatabaseConstantsDescriptor.class.getName(), false);
+        private static Logger LOGGER = Logger.getLogger(DatabaseConstantsDescriptor.class.getName());
+        static {
+          SplitLogManager.configureHandlers(LOGGER, false);
+        }
 
         private String  descName   = "descriptor";
         private int     runNumber  = 10;

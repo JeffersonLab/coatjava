@@ -17,8 +17,10 @@ public class Hit implements Comparable<Hit> {
 	private final int    layerId;
 	private final int    wireId;
 	private final double doca;
-	private final double adc;
+	private final double raw_adc;
 	private final double time;
+	private double tot;
+	private double adc;
 
     private Line3D wireLine;
 	private double  phi;
@@ -27,7 +29,6 @@ public class Hit implements Comparable<Hit> {
 	private boolean use = false;
 	private double  x;
 	private double  y;
-	private double  residual_prefit;
 	private double  residual;
 	private int	trackId;
 
@@ -38,9 +39,8 @@ public class Hit implements Comparable<Hit> {
 		this.layerId      = _Layer;
 		this.wireId       = _Wire;
 		this.doca         = _Doca;
-		this.adc          = _ADC;
+		this.raw_adc          = _ADC;
 		this.time 	  = _Time;
-		this.residual_prefit = 0.0;
 		this.residual        = 0.0;
 		this.trackId	     = -1; // not defined yet
 	}
@@ -142,18 +142,26 @@ public class Hit implements Comparable<Hit> {
 		return residual;
 	}
 
-	public double getResidualPrefit() {
-		return residual_prefit;
-	}
-
 	public void setResidual(double resid) {
 		this.residual = resid;
 	}
 
-	public void setResidualPrefit(double resid) {
-		this.residual_prefit = resid;
+	public void setToT(double _tot) {
+		this.tot = _tot;
 	}
-	
+
+	public double getToT() {
+		return tot;
+	}
+
+	public void setADC(double _adc) {
+		this.adc = _adc;
+	}
+
+	public double getRawADC() {
+		return raw_adc;
+	}
+
 	public double getTime() {
 		return time;
 	}
@@ -171,7 +179,13 @@ public class Hit implements Comparable<Hit> {
 	}
 
     public RealMatrix get_MeasurementNoise() {
-		return new Array2DRowRealMatrix(new double[][]{{0.09}});
+		double mean_error = 0.471; // mm (no difference between adc and time)
+		double error_on_adc = (1.15146*raw_adc + 437.63)/(3.21187*raw_adc + 878.855); // mm
+		double error_on_time = (0.4423*time + 13.7215)/(0.846038*time + 31.9867); // mm
+		double error = error_on_adc*error_on_time/mean_error; // mm
+		
+		return new Array2DRowRealMatrix(new double[][]{{Math.pow(error, 2)}}); // mm^2
+		//return new Array2DRowRealMatrix(new double[][]{{0.09}});
 	}
 
 	// a signature for KalmanFilter.Hit_beam
@@ -198,6 +212,32 @@ public class Hit implements Comparable<Hit> {
 		System.out.println("h1 compare to h2 : " + h1.compareTo(h2));
 		System.out.println("h2 compare to h1 : " + h2.compareTo(h1));
 		System.out.println("h1 compare to h3 : " + h1.compareTo(h3));
+
+		System.out.println("/////////////////////////"); 
+		System.out.println("Test AHDC geometry"); 
+		System.out.println(""); 
+		System.out.println("s  : sector"); 
+		System.out.println("sl : super layer"); 
+		System.out.println("l  : layer"); 
+		System.out.println("c  : component"); 
+		System.out.println("/////////////////////////"); 
+		System.out.println("------------------------------------------------------------------------------"); 
+		System.out.println("                |            origin            |             end"); 
+		System.out.println("------------------------------------------------------------------------------"); 
+		System.out.println("s   sl  l   c   |     x         y        z     |     x        y        z"); 
+		System.out.println("------------------------------------------------------------------------------");
+		for (int s = 1; s <= factory.getNumSectors(); s++) {
+			for (int sl = 1; sl <= factory.getSector(s).getNumSuperlayers(); sl++) {
+				for (int l = 1; l <= factory.getSector(s).getSuperlayer(sl).getNumLayers(); l++) {
+					for (int c = 1; c <= factory.getSector(s).getSuperlayer(sl).getLayer(l).getNumComponents(); c++) {
+						Line3D line = factory.getSector(s).getSuperlayer(sl).getLayer(l).getComponent(c).getLine();
+						Point3D end = line.end();
+						Point3D origin = line.origin();
+						System.out.printf("%2d  %2d  %2d  %2d  |  %7.3f  %7.3f  %7.3f  |  %7.3f  %7.3f  %7.3f\n", s, sl, l, c, origin.x(), origin.y(), origin.z(), end.x(), end.y(), end.z());
+					}
+				}
+			}
+		}
     }
 
 }

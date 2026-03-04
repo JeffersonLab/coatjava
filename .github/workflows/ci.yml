@@ -37,7 +37,7 @@ jobs:
   download_test_data:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         id: cache
         with:
           key: raw_test_data # fixed key will always hit; clear cache to trigger cache miss
@@ -88,12 +88,12 @@ jobs:
       - name: build
         run: |
           ./build-coatjava.sh --lfs --no-progress -T${{ env.nthreads }}
-          ./install-clara -b -c ./coatjava ./clara
+          ./bin/install-clara -b -c ./coatjava ./clara
       - name: tar # tarball to preserve permissions
         run: |
           tar czvf coatjava.tar.gz coatjava
           tar czvf clara.tar.gz clara
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: build_${{ matrix.runner }}
           retention-days: 1
@@ -138,7 +138,7 @@ jobs:
         run: validation/jacoco-aggregate.sh
       - name: publish jacoco report
         if: ${{ matrix.JAVA_VERSION == env.JAVA_VERSION }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: jacoco_report
           path: publish/
@@ -158,7 +158,7 @@ jobs:
       - uses: cvmfs-contrib/github-action-cvmfs@v5
         with:
           cvmfs_repositories: 'oasis.opensciencegrid.org'
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           name: build_ubuntu-latest
       - name: untar build
@@ -180,10 +180,10 @@ jobs:
       - uses: cvmfs-contrib/github-action-cvmfs@v5
         with:
           cvmfs_repositories: 'oasis.opensciencegrid.org'
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           name: build_ubuntu-latest
-      - uses: actions/cache/restore@v4
+      - uses: actions/cache/restore@v5
         with:
           key: raw_test_data
           path: |
@@ -193,7 +193,7 @@ jobs:
       - name: run test
         run: |
           ls -lhtr
-          ./coatjava/bin/decoder -n 10000 -o dog.hipo ./clas_018779.evio.00001
+          ./coatjava/bin/decoder -l FINE -n 10000 -o dog.hipo ./clas_018779.evio.00001
 
   test_clara:
     needs: [ build, download_test_data ]
@@ -212,10 +212,10 @@ jobs:
         uses: cvmfs-contrib/github-action-cvmfs@v5
         with:
           cvmfs_repositories: 'oasis.opensciencegrid.org'
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           name: build_ubuntu-latest
-      - uses: actions/cache/restore@v4
+      - uses: actions/cache/restore@v5
         with:
           key: raw_test_data
           path: |
@@ -262,7 +262,7 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
           cache: maven
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           name: build_${{ matrix.runner }}
       - uses: cvmfs-contrib/github-action-cvmfs@v5
@@ -295,34 +295,13 @@ jobs:
         uses: wtfjoke/setup-groovy@v3
         with:
           groovy-version: ${{ env.groovy_version }}
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           name: build_ubuntu-latest
       - name: untar build
         run: tar xzvf coatjava.tar.gz
       - name: test run-groovy
         run: coatjava/bin/run-groovy validation/advanced-tests/test-run-groovy.groovy
-
-  dependency_analysis:
-    needs: [ build ]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - name: Set up JDK
-        uses: actions/setup-java@v5
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: ${{ env.java_distribution }}
-          cache: maven
-      - uses: actions/download-artifact@v6
-        with:
-          name: build_ubuntu-latest
-      - name: untar build
-        run: tar xzvf coatjava.tar.gz
-      - name: print dependency tree
-        run: libexec/dependency-tree.sh
-      - name: dependency analysis
-        run: libexec/dependency-analysis.sh
 
   # documentation
   #############################################################################
@@ -339,7 +318,7 @@ jobs:
         run: docs/mkdocs/generate.sh pages
       ### jacoco
       - name: download jacoco report artifact
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: jacoco_report
           path: pages/jacoco
@@ -392,7 +371,7 @@ jobs:
       TAG_NAME: ${{ github.ref_name }}
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           name: build_ubuntu-latest
       - name: rename artifact
@@ -413,7 +392,6 @@ jobs:
   final:
     needs:
       - test_coatjava
-      - dependency_analysis
       - test_run-groovy
       - generate_documentation
     runs-on: ubuntu-latest

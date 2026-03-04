@@ -60,13 +60,6 @@ build:
       - coatjava.tar.gz
       - clara.tar.gz
 
-.depana:
-  allow_failure: true
-  stage: build
-  script:
-    - libexec/dependency-tree.sh
-    - libexec/dependency-analysis.sh
-
 download:
   stage: build
   script:
@@ -148,7 +141,7 @@ decoder:
   dependencies: [build,download]
   script:
     - tar -xzf clara.tar.gz
-    - decoder -n 1000 -o clas_018779_00001.hipo clas_018779.evio.00001
+    - decoder -l FINE -n 1000 -o clas_018779_00001.hipo clas_018779.evio.00001
   artifacts:
     when: always
     expire_in: 1 day
