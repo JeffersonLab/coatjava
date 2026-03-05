@@ -2,7 +2,6 @@ package org.jlab.rec.ahdc.Track;
 
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
-import org.apache.commons.math3.linear.RealVector;
 import org.jlab.rec.ahdc.AI.InterCluster;
 import org.jlab.rec.ahdc.Cluster.Cluster;
 import org.jlab.rec.ahdc.HelixFit.HelixFitObject;
@@ -60,17 +59,6 @@ public class Track {
 	double ATOF_S2_radius;
 	double ATOF_S3_radius;
 	int ATOF_region = 0; // is n if the trach reaches Sn, 0 otherwise (i.e does not reach S1)
-
-	// tmp
-	int ATOF_S1_component = -1;
-	int ATOF_S2_component = -1;
-	int ATOF_S3_component = -1;
-	
-	// tmp : compatible with stepper: need to access error in x,y,z
-	RealMatrix ATOF_S1_errorMatrix;
-	RealMatrix ATOF_S2_errorMatrix;
-	RealMatrix ATOF_S3_errorMatrix;
-
 
     // AHDC::aiprediction
     private int predicted_ATOF_sector = -1;
@@ -256,21 +244,5 @@ public class Track {
 	public Stepper get_ATOF_S2_stepper() {return this.ATOF_S2_stepper;}
 	public Stepper get_ATOF_S3_stepper() {return this.ATOF_S3_stepper;}
 	public int get_ATOF_region() {return this.ATOF_region;}
-
-	// tmp
-	public int get_ATOF_S1_component() {return this.ATOF_S1_component;}
-	public int get_ATOF_S2_component() {return this.ATOF_S2_component;}
-	public int get_ATOF_S3_component() {return this.ATOF_S3_component;}
-	public void set_ATOF_S1_component(int _comp) {this.ATOF_S1_component = _comp;}
-	public void set_ATOF_S2_component(int _comp) {this.ATOF_S2_component = _comp;}
-	public void set_ATOF_S3_component(int _comp) {this.ATOF_S3_component = _comp;}
-
-	public RealMatrix get_ATOF_S1_errorMatrix() {return this.ATOF_S1_errorMatrix;}
-	public RealMatrix get_ATOF_S2_errorMatrix() {return this.ATOF_S2_errorMatrix;}
-	public RealMatrix get_ATOF_S3_errorMatrix() {return this.ATOF_S3_errorMatrix;}
-	public void set_ATOF_S1_errorMatrix(RealMatrix _matrix) { this.ATOF_S1_errorMatrix = _matrix;}
-	public void set_ATOF_S2_errorMatrix(RealMatrix _matrix) { this.ATOF_S2_errorMatrix = _matrix;}
-	public void set_ATOF_S3_errorMatrix(RealMatrix _matrix) { this.ATOF_S3_errorMatrix = _matrix;}
-
 
 }

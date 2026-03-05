@@ -1,6 +1,5 @@
 package org.jlab.service.alert;
 
-import ai.djl.repository.zoo.ZooModel;
 import ai.djl.translate.TranslateException;
 import java.io.File;
 import java.util.ArrayList;
@@ -12,7 +11,6 @@ import java.util.HashMap;
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
-import org.jlab.geom.base.Detector;
 import org.jlab.geom.detector.alert.ATOF.AlertTOFFactory;
 import org.jlab.geom.detector.alert.ATOF.AlertTOFDetector;
 import org.jlab.io.base.DataBank;
