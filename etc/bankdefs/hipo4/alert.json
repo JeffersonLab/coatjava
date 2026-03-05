@@ -472,6 +472,10 @@
         "name": "atof_s3_p",
         "type": "F",
         "info": "momentum whith which the track reaches the surface s3"
+      }, {
+      "name": "atof_match",
+      "type": "B",
+      "info": "1 if there is a ATOF match, 0 if not"
       }
     ]
   }, {

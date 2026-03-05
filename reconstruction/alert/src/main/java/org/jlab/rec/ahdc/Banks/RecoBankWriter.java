@@ -184,6 +184,7 @@ public class RecoBankWriter {
 			}
 			
 			bank.setInt("atof_region", row, track.get_ATOF_region());
+			bank.setByte("atof_match", row, (byte) ((track.getATOFHits().size() > 0) ? 1 : 0));
 
 			row++;
 		}
