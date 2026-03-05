@@ -7,7 +7,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.detector.base.DetectorType;
+import org.jlab.detector.geant4.v2.MPGD.MUVT.MUVTStripFactory;
+import org.jlab.geom.prim.Line3D;
+import org.jlab.geom.prim.Plane3D;
 import org.jlab.geom.prim.Point3D;
+import org.jlab.geom.prim.Vector3D;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 
@@ -368,7 +372,7 @@ public class MUVTTrack {
 //        }
 //    }
     
-    public List<MUVTTrack> getDCTracks(DataEvent event, Swim swimmer) {
+    public List<MUVTTrack> getDCTracks(DataEvent event, Swim swimmer, MUVTStripFactory factory) {
         
         Map<Integer, MUVTTrack> trackmap = new LinkedHashMap<>();        
         
@@ -406,23 +410,38 @@ public class MUVTTrack {
                 trk.setPy(momLocal.y());
                 trk.setPz(momLocal.z());
                 trk.setStatus(1);
-                trackmap.put(id,trk);                            
-            }
-            for (int i = 0; i < trajBank.rows(); i++) {
-                if (trajBank.getByte("detector", i) == DetectorType.FMT.getDetectorId()) { 
-                    int id    = trajBank.getShort("id", i);
-                    int layer = trajBank.getByte("layer", i);
-                    MUVTTrajectory trj = new MUVTTrajectory(layer,
-                                                    trajBank.getFloat("x", i),
-                                                    trajBank.getFloat("y", i),
-                                                    trajBank.getFloat("z", i),
-                                                    trajBank.getFloat("tx", i),
-                                                    trajBank.getFloat("ty", i),
-                                                    trajBank.getFloat("tz", i),
-                                                    trajBank.getFloat("path", i));
-                    trackmap.get(id).setDCTraj(trj);                
+                trackmap.put(id,trk);                         
+                
+                Line3D vertexToPlane = new Line3D();
+                factory.getPlane(trk.getSector(), 1).distance(new Point3D(vx, vy, vz), vertexToPlane);
+                if(vertexToPlane.direction().dot(new Vector3D(px,py,pz))>0) {
+                    swimmer.SetSwimParameters(vx, vy, vz, px, py, pz, trk.getQ());
+                    for(int il=0; il<MUVTConstants.NLAYER/2; il++) {
+                        int layer = il*2+1;
+                        Plane3D plane = factory.getPlane(trk.getSector(), layer);
+                        double[] traj =swimmer.SwimToPlaneBoundary(plane.point().toVector3D().dot(plane.normal()), plane.normal(), 1);
+                        if(traj!=null) {
+                            trk.setDCTraj(new MUVTTrajectory(layer    , traj[0], traj[1], traj[2], traj[3], traj[4], traj[5], traj[6]));
+                            trk.setDCTraj(new MUVTTrajectory(layer + 1, traj[0], traj[1], traj[2], traj[3], traj[4], traj[5], traj[6]));
+                        }
+                    }
                 }
             }
+//            for (int i = 0; i < trajBank.rows(); i++) {
+//                if (trajBank.getByte("detector", i) == DetectorType.FMT.getDetectorId()) { 
+//                    int id    = trajBank.getShort("id", i);
+//                    int layer = trajBank.getByte("layer", i);
+//                    MUVTTrajectory trj = new MUVTTrajectory(layer,
+//                                                    trajBank.getFloat("x", i),
+//                                                    trajBank.getFloat("y", i),
+//                                                    trajBank.getFloat("z", i),
+//                                                    trajBank.getFloat("tx", i),
+//                                                    trajBank.getFloat("ty", i),
+//                                                    trajBank.getFloat("tz", i),
+//                                                    trajBank.getFloat("path", i));
+//                    trackmap.get(id).setDCTraj(trj);                
+//                }
+//            }
         }
         List<MUVTTrack> tracks = new ArrayList<>();
         for(Entry<Integer,MUVTTrack> entry: trackmap.entrySet()) {
