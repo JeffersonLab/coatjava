@@ -30,7 +30,7 @@ public class MUVTConstants {
     public final static double COINCTIME = 100;
     
     // rMax difference between cross's clusters energy
-    public static double CROSSDELTAE = 200;
+    public static double CROSSDELTAE = 2000;
 
     // DC-tracks to FMT-clusters matching parameter
     public static double CIRCLECONFUSION = 12; // cm
@@ -87,8 +87,8 @@ public class MUVTConstants {
     
     public static Transformation3D toTiltedSectorFrame(int sector) {
         Transformation3D t = new Transformation3D();
-        t.rotateZ(-60 * (sector-1));
-        t.rotateZ(-TILT);
+        t.rotateZ(Math.toRadians(-60 * (sector-1)));
+        t.rotateY(Math.toRadians(-TILT));
         return t;
     }
 
