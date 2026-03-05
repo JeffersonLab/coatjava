@@ -6,7 +6,7 @@ import org.jlab.detector.banks.RawDataBank;
 import org.jlab.detector.base.DetectorDescriptor;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.calib.utils.ConstantsManager;
-import org.jlab.detector.geant4.v2.URWELL.URWellStripFactory;
+import org.jlab.detector.geant4.v2.MPGD.MUVT.MUVTStripFactory;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.io.base.DataEvent;
 
@@ -20,7 +20,7 @@ import org.jlab.io.base.DataEvent;
 
 public class MUVTStrip implements Comparable {
     
-    private DetectorDescriptor  desc = new DetectorDescriptor(DetectorType.URWELL);
+    private DetectorDescriptor  desc = new DetectorDescriptor(DetectorType.MUVT);
     
     private int      chamber = 0;
     
@@ -161,14 +161,13 @@ public class MUVTStrip implements Comparable {
         return -1;
     }
     
-    public static List<MUVTStrip> getStrips(DataEvent event, URWellStripFactory factory, ConstantsManager ccdb) {
+    public static List<MUVTStrip> getStrips(DataEvent event, MUVTStripFactory factory, ConstantsManager ccdb) {
         
         List<MUVTStrip> strips = new ArrayList<>();
         
-        if(event.hasBank("URWELL::adc")){
-            RawDataBank bank = new RawDataBank("URWELL::adc");
+        if(event.hasBank("MUVT::adc")){
+            RawDataBank bank = new RawDataBank("MUVT::adc");
             bank.read(event);
-            //DataBank bank = event.getBank("URWELL::adc");
             for(int i = 0; i < bank.rows(); i++){
                 int  sector = bank.getByte("sector", i);
                 int   layer = bank.getByte("layer", i); 
@@ -185,7 +184,7 @@ public class MUVTStrip implements Comparable {
                 strip.setEnergy(strip.ADC*MUVTConstants.ADCTOENERGY);
                 strip.setTime(strip.TDC*MUVTConstants.TDCTOTIME);
                 strip.setLine(factory.getStrip(sector, layer, comp)); 
-                strip.setChamber(factory.getChamberIndex(comp)+1);
+                strip.setChamber(1);
                 strip.setStatus(0);
                 
                 if(strip.getEnergy()>MUVTConstants.THRESHOLD) strips.add(strip);
