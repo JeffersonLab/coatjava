@@ -84,7 +84,7 @@ public class MUVTEngine extends ReconstructionEngine {
                 
         // === DC TRACKS ===========================================================================
         MUVTTrack trk = new MUVTTrack();
-        List<MUVTTrack> tracks = trk.getDCTracks(event, swimmer);
+        List<MUVTTrack> tracks = trk.getDCTracks(event, swimmer, factory);
         if(tracks.isEmpty()) return true;
 
         // === SEEDS =============================================================================
