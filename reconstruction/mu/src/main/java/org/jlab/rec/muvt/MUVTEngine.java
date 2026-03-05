@@ -98,7 +98,7 @@ public class MUVTEngine extends ReconstructionEngine {
                     
                 MUVTCross cross = crosses.get(j);                    
                 
-                MUVTTrajectory trj = track.getDCTraj((MUVTConstants.NLAYER/MUVTConstants.NREGION)*cross.getRegion()+1);
+                MUVTTrajectory trj = track.getDCTraj((MUVTConstants.NLAYER/MUVTConstants.NREGION)*cross.getRegion()-1);
                 if (trj==null || track.getSector()!=cross.getSector()) continue; 
 
                 // Match the layers from traj.
