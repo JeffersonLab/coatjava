@@ -36,15 +36,18 @@ public class KalmanFilter {
 
 	private PDGParticle particle;
 	private int Niter = 40; // number of iterations for the Kalman Filter
-	private boolean IsVtxDefined = false; // implemented but not used yet
 	private double vz_constraint = 0;
+	private boolean IsVtxDefined = false; // implemented but not used yet
+	private boolean projBasedAtofPrediction = false; // flag to do or not a projection based prediction of the ATOF hits
+
 	// mm,  they are the misalignement with respect to the AHDC: the are defined in ALERTEngine
 	private double clas_alignement = 0;
 	private double atof_alignement = 0;
 
 	private int counter = 0; // number of utilisation of the Kalman Filter
+	
+	AlertTOFDetector ATOFdet = null; // reference to the ATOF geometry
 	HashMap<Integer, ArrayList<int[]>> ATOF_hits_predicted = new HashMap<>(); // trackid vs (sector, layer, wedge)
-	AlertTOFDetector ATOFdet = null; // a reference to the ATOF geometry
 
 	public void propagation(ArrayList<Track> tracks, final double magfield, boolean IsMC) {
 
@@ -164,85 +167,60 @@ public class KalmanFilter {
 			    track.set_path(s);
 			    track.set_n_hits(AHDC_hits.size());
 
+				/// At the end of the PostFit porpagation to the last layer of the AHDC
+				/// we project the track on the ATOF surface without any AI ATOF hit indication 
+				if (projBasedAtofPrediction && ATOFdet != null) {
+					// Projection towards the ATOF surfaces
+					// R1 : radius of the lower surface of an ATOF bar
+					// R2 : radius of the upper surface of an ATOF bar = lower surface of an ATOF wedge
+					// R3 : radius of the upper surface of an ATOF wedge
+					// Illustration of an ATOF component : p0 and p3 are the points on the lower surface; p1 and p2 are the points on the upper surface
+					//  p2 ---------- p1
+					//   \			  /
+					//    \          /
+					// 	  p3 ------ p0
+					Point3D pR1 = ATOFdet.getSector(0).getSuperlayer(0).getLayer(0).getComponent(10).getVolumePoint(0);
+					Point3D pR2 = ATOFdet.getSector(0).getSuperlayer(0).getLayer(0).getComponent(10).getVolumePoint(2);
+					Point3D pR3 = ATOFdet.getSector(0).getSuperlayer(1).getLayer(0).getComponent(0).getVolumePoint(2);
+					double R1 = Math.hypot(pR1.x(), pR1.y());
+					double R2 = Math.hypot(pR2.x(), pR2.y());
+					double R3 = Math.hypot(pR3.x(), pR3.y());
 
-				////////
-				/// Revision of the code: I'm here
-				/// /////
-
-				// Projection towards the ATOF surfaces
-				// R1 : lower surface of an ATOF bar
-				// R2 : upper surface of an ATOF bar = lower surface of an ATOF wedge
-				// R3 : upper surface of an ATOF wedge
-				Point3D pR1 = ATOFdet.getSector(0).getSuperlayer(0).getLayer(0).getComponent(10).getVolumePoint(0);
-				Point3D pR2 = ATOFdet.getSector(0).getSuperlayer(0).getLayer(0).getComponent(10).getVolumePoint(2);
-				Point3D pR3 = ATOFdet.getSector(0).getSuperlayer(1).getLayer(0).getComponent(0).getVolumePoint(2);
-				double R1 = Math.hypot(pR1.x(), pR1.y());
-				double R2 = Math.hypot(pR2.x(), pR2.y());
-				double R3 = Math.hypot(pR3.x(), pR3.y());
-				{
-					// From last AHDC hit to surface R1
+					/// From last AHDC hit to surface R1
 					RadialSurfaceKFHit hitR1 = new RadialSurfaceKFHit(R1);
 					PostFitPropagator.predict(hitR1, true);
 					Stepper stepperR1 = PostFitPropagator.getStepper();
-					double[] vecR1 = PostFitPropagator.getStateEstimationVector().toArray();
-					Point3D posR1 = new Point3D(vecR1[0], vecR1[1], vecR1[2]);
-					posR1.translateXYZ(0, 0, atof_alignement);
-					int[] idR1 = predict_bar(ATOFdet, posR1);
-					track.set_ATOF_S1_stepper(stepperR1);
+					track.set_ATOF_S1_stepper(stepperR1); // to store : x,y,z, path, p in AHDC::kftrack
 					if (Math.abs(stepperR1.r() - R1) < 1.5*stepperR1.h) {
-						track.set_ATOF_region(1);
-						if (counter < 2 && idR1 != null) {
-							track.set_ATOF_S1_component(10000*idR1[0] + 100*idR1[1] + idR1[2]);
-							track.set_ATOF_S1_errorMatrix(PostFitPropagator.getErrorCovarianceMatrix());
-						}
+						track.set_ATOF_region(1); // indicate if we reach this surface or not
 					}
 					
-
-						// System.out.println("###########################################################");
-						// System.out.println("ATOF surface R1 : " + R1);
-						// System.out.printf ("   final position : x (%f) y (%f) z (%f) --> R (%f)\n", posR1.x(), posR1.y(), posR1.z(), Math.hypot(posR1.x(), posR1.y()));
-						// System.out.println("   stepper.h : " + PostFitPropagator.getStepper().h);
-						// System.out.printf ("   ---> sector (%2d) layer (%2d) component (%2d)\n", idR1[0], idR1[1], idR1[2]);
-
-					// From surface R1 to surface R2
+					/// From surface R1 to surface R2
 					RadialSurfaceKFHit hitR2 = new RadialSurfaceKFHit(R2);
 					PostFitPropagator.predict(hitR2, true);
 					Stepper stepperR2 = PostFitPropagator.getStepper();
+					track.set_ATOF_S2_stepper(stepperR2); // to store : x,y,z, path, p in AHDC::kftrack
+					if (Math.abs(stepperR2.r() - R2) < 1.5*stepperR2.h) {
+						track.set_ATOF_region(2); // indicate if we reach this surface or not
+					}
+						// predict the wedge
 					double[] vecR2 = PostFitPropagator.getStateEstimationVector().toArray();
 					Point3D posR2 = new Point3D(vecR2[0], vecR2[1], vecR2[2]);
 					posR2.translateXYZ(0, 0, atof_alignement);
-					int[] idR2 = predict_wedge(ATOFdet, posR2);
-					track.set_ATOF_S2_stepper(stepperR2);
-					if (Math.abs(stepperR2.r() - R2) < 1.5*stepperR2.h) {
-						track.set_ATOF_region(2);
-						if (counter < 2 && idR2 != null) {
-							track.set_ATOF_S2_component(10000*idR2[0] + 100*idR2[1] + idR2[2]);
-							track.set_ATOF_S2_errorMatrix(PostFitPropagator.getErrorCovarianceMatrix());
-						}
-					}
-					// From surface R2 to surface R3
+					ATOF_hits_predicted.put(track.get_trackId(), predict_adjacent_wedges(ATOFdet, posR2));
+					
+
+					/// From surface R2 to surface R3
 					RadialSurfaceKFHit hitR3 = new RadialSurfaceKFHit(R3);
 					PostFitPropagator.predict(hitR3, true);
 					Stepper stepperR3 = PostFitPropagator.getStepper();
-					double[] vecR3 = PostFitPropagator.getStateEstimationVector().toArray();
-					Point3D posR3 = new Point3D(vecR3[0], vecR3[1], vecR3[2]);
-					posR3.translateXYZ(0, 0, atof_alignement);
-					int[] idR3 = predict_wedge(ATOFdet, posR3);
-					track.set_ATOF_S3_stepper(stepperR3);
+					track.set_ATOF_S3_stepper(stepperR3); // to store : x,y,z, path, p in AHDC::kftrack
 					if (Math.abs(stepperR3.r() - R3) < 1.5*stepperR3.h) {
-						track.set_ATOF_region(3);
-						if (counter < 2 && idR3 != null) {
-							track.set_ATOF_S3_component(10000*idR3[0] + 100*idR3[1] + idR3[2]);
-							track.set_ATOF_S3_errorMatrix(PostFitPropagator.getErrorCovarianceMatrix());
-						}
+						track.set_ATOF_region(3); // indicate if we reach this surface or not
 					}
 
 				} // end propagation towards ATOF surface
 			    
-                
-
-				
-
 			}//end of loop on track candidates
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -379,10 +357,15 @@ public class KalmanFilter {
 		}
 	}
 
-	public ArrayList<int[]> get_adjacent_wedges(int[] identifiers) {
-		int sector = identifiers[0];
-		int layer  = identifiers[1];
-		int wedge  = identifiers[2];
+	public ArrayList<int[]> predict_adjacent_wedges(AlertTOFDetector atof, Point3D pt) {
+		int[] closest_wedge_id = predict_wedge(atof, pt);
+		if (closest_wedge_id == null) {
+			return new ArrayList<int[]>(); // an empty list
+		}
+
+		int sector = closest_wedge_id[0];
+		int layer  = closest_wedge_id[1];
+		int wedge  = closest_wedge_id[2];
 		
 		// find adjacent layer and sector
 		int sector_plus = sector;
@@ -401,10 +384,11 @@ public class KalmanFilter {
 			layer_plus = 0;
 			layer_minus = layer-1;
 		}
-		// Here are all the adjacents wedges (maximum 8)
+		// Here are all the adjacents wedges (maximum 9)
 		ArrayList<int[]> listOfWedges = new ArrayList<>();
+		listOfWedges.add(new int[]{sector, layer, wedge});
 		listOfWedges.add(new int[]{sector_plus, layer_plus, wedge});
-		listOfWedges.add(new int[]{sector_plus, layer_plus, wedge});
+		listOfWedges.add(new int[]{sector_minus, layer_minus, wedge});
 		if (wedge-1 >= 0) {
 			listOfWedges.add(new int[]{sector, layer, wedge-1});
 			listOfWedges.add(new int[]{sector_plus, layer_plus, wedge-1});
@@ -415,6 +399,14 @@ public class KalmanFilter {
 			listOfWedges.add(new int[]{sector_plus, layer_plus, wedge+1});
 			listOfWedges.add(new int[]{sector_minus, layer_minus, wedge+1});
 		}
+
+		// order the list following the distance to the initial point
+		listOfWedges.sort((a,b) -> {
+			double da = atof.getSector(a[0]).getSuperlayer(1).getLayer(a[1]).getComponent(a[2]).getMidpoint().distance(pt);
+			double db = atof.getSector(b[0]).getSuperlayer(1).getLayer(b[1]).getComponent(b[2]).getMidpoint().distance(pt);
+			return Double.compare(da, db);
+		});
+
 		return listOfWedges;
 	}
 
@@ -423,4 +415,5 @@ public class KalmanFilter {
 	public void set_atof_alignement(double _shift) {this.atof_alignement = _shift;}
 	public void set_vz_constraint(double _vz) {this.vz_constraint = _vz;}
 	public void set_vertex_flag(boolean _flag) {this.IsVtxDefined = _flag;}
+	public void set_atofPrediction_flag(boolean _flag) {this.projBasedAtofPrediction = _flag;}
 }
