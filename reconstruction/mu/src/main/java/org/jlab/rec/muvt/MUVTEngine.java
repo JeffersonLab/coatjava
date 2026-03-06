@@ -108,8 +108,8 @@ public class MUVTEngine extends ReconstructionEngine {
                     trackCrosses[cross.getRegion()-1].add(cross);
                 }
             }
-            System.out.println();
-            for(int j=0; j<trackCrosses.length; j++) System.out.print(trackCrosses[j].size() + " "); 
+//            System.out.println();
+//            for(int j=0; j<trackCrosses.length; j++) System.out.print(trackCrosses[j].size() + " "); 
                     
             List<List<MUVTCross>> segments = new ArrayList<>();
             List<MUVTCross> end = new ArrayList<>();
@@ -140,7 +140,7 @@ public class MUVTEngine extends ReconstructionEngine {
                     }
                 }
             }
-            System.out.print(segments.size());
+//            System.out.print(segments.size());
             if(!segments.isEmpty()) {
                 segments.sort(Comparator.comparingInt(List<MUVTCross>::size).reversed());
                 for(MUVTCross cross : segments.get(0)) {
