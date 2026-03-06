@@ -30,7 +30,7 @@ public enum DetectorType {
     HEL       (20, "HEL"),
     BAND      (21, "BAND"),
     RASTER    (22, "RASTER"),
-    URWELL    (23, "URWELL"),
+    URWT      (23, "URWT"),
     AHDC      (24, "AHDC"),
     ATOF      (25, "ATOF"),
     RECOIL    (26, "RECOIL"),

@@ -1,7 +1,14 @@
 package org.jlab.rec.ahdc.HelixFit;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.jlab.rec.ahdc.DocaCluster.DocaCluster;
 
 /** Helix Fit.
  *
@@ -14,6 +21,51 @@ public class HelixFitJava {
     /** \todo What does this method do
      *  \what does its name even mean?
      */
+
+	private static class CircleParams {
+		double xc;
+		double yc;
+		double R;
+		boolean ok;
+
+		CircleParams(boolean ok) {
+			this.ok = ok;
+		}
+
+		CircleParams(double xc, double yc, double R) {
+			this.xc = xc;
+			this.yc = yc;
+			this.R  = R;
+			this.ok = true;
+		}
+	}
+
+	// circle through origin (0,0), p1, p2
+	private static CircleParams circleThroughOrigin(double x1, double y1,
+													double x2, double y2) {
+		double det = x1 * y2 - x2 * y1;
+		if (Math.abs(det) < 1e-6) {
+			// points are colinear with origin, no unique circle
+			return new CircleParams(false);
+		}
+		double rhs1 = 0.5 * (x1 * x1 + y1 * y1);
+		double rhs2 = 0.5 * (x2 * x2 + y2 * y2);
+
+		double xc = ( rhs1 * y2 - rhs2 * y1) / det;
+		double yc = (-rhs1 * x2 + rhs2 * x1) / det;
+		double R  = Math.sqrt(xc * xc + yc * yc);
+
+		if (R < 1e-3) return new CircleParams(false);
+		return new CircleParams(xc, yc, R);
+	}
+
+	// wrap angle into [-pi, pi]
+	private static double wrapPi(double a) {
+		while (a >  Math.PI) a -= 2.0 * Math.PI;
+		while (a < -Math.PI) a += 2.0 * Math.PI;
+		return a;
+	}
+
 	void rwsmav(double r[], double a[], double v[], int n)
 	{
 	    //  Author: Martin Poppe. r[n] = a[n,n]*v[n]
@@ -828,6 +880,96 @@ public class HelixFitJava {
 
 	  }
 
+	  private HelixFitObject helix_fit_weighted(int PointNum, double[][] szPos,
+											double[] weights, int fit_track_to_beamline) 
+	  {
+		double Rho, A, B, Phi, Theta, X0, Y0, Z0, DCA, Chi2;
+		int kMaxHit = 200;
+		double PI = Math.acos(0.0)*2.0;
+
+		int jj;
+		double my_phi;
+		double[] rf  = new double[kMaxHit];
+		double[] pf  = new double[kMaxHit];
+		double[] wfi = new double[kMaxHit];
+		double[] zf  = new double[kMaxHit];
+		double[] wzf = new double[kMaxHit];
+
+		int iopt;
+		int npt;
+		double[] vv0  = new double[5];
+		double[] ee0  = new double[15];
+		double  ch2ph = 0.0;
+		double  ch2z  = 0.0;
+		double[] del  = new double[kMaxHit];
+		double[] delz = new double[kMaxHit];
+
+		double phi0;
+
+		if (PointNum >= kMaxHit) PointNum = kMaxHit - 1;
+		npt = PointNum;
+
+		for (jj = 0; jj < npt; jj++) {
+			// r,phi,z coordinate
+			rf[jj] = Math.sqrt(szPos[jj][0]*szPos[jj][0] + szPos[jj][1]*szPos[jj][1]);
+			pf[jj] = Math.atan(szPos[jj][1]/szPos[jj][0]); //phi angle
+
+			if (szPos[jj][1] > 0 && szPos[jj][0] < 0) pf[jj] += PI;
+			if (szPos[jj][1] < 0 && szPos[jj][0] < 0) pf[jj] += PI;
+			if (szPos[jj][1] < 0 && szPos[jj][0] > 0) pf[jj] += 2*PI;
+			if (pf[jj] > 2*PI) pf[jj] -= 2*PI;
+
+			zf[jj] = szPos[jj][2];
+
+			double w = 1.0;
+			if (weights != null && jj < weights.length && weights[jj] > 0.0) {
+				w = weights[jj];
+			}
+			// wfi, wzf are treated as 1/sigma^2; for now we directly use w.
+			wfi[jj] = w;
+			wzf[jj] = w;
+		}
+
+		if (fit_track_to_beamline == 1) {
+			rf[npt]  = 0.0001;
+			pf[npt]  = 0.0;
+			zf[npt]  = 0.0;
+			wfi[npt] = 1.0;
+			wzf[npt] = 0.0; // do not constrain z at the beamline point
+			npt++;
+		}
+
+		iopt = 1;
+		rwfthc(npt, rf, pf, wfi, zf, wzf, iopt, vv0, ee0, ch2ph, ch2z, del, delz);
+
+		// --- same reconstruction as original helix_fit ---
+		Rho  = 1.0 / vv0[0];
+		phi0 = vv0[2];
+
+		my_phi = phi0 + PI;
+		if (vv0[0] < 0.0) my_phi += PI;
+		if (my_phi >  PI) my_phi -= 2.0*PI;
+		if (my_phi < -PI) my_phi += 2.0*PI;
+
+		A = -Math.sin(my_phi)*(-vv0[3] + Math.abs(1.0/vv0[0]));
+		B =  Math.cos(my_phi)*(-vv0[3] + Math.abs(1.0/vv0[0]));
+
+		Phi = vv0[2];
+		if (Phi >  PI) Phi -= 2*PI;
+		if (Phi < -PI) Phi += 2*PI;
+
+		Theta = PI/2.0 - Math.atan(vv0[1]);
+
+		X0 = -Math.sin(my_phi)*(-vv0[3]);
+		Y0 =  Math.cos(my_phi)*(-vv0[3]);
+		Z0 =  vv0[4];
+
+		DCA  = Math.abs(vv0[3]);
+		Chi2 = (npt > 5) ? (ch2ph + ch2z/(npt - 5)) : 9999.9;
+
+		return new HelixFitObject(Rho, A, B, Phi, Theta, X0, Y0, Z0, DCA, Chi2);
+	  }
+	  
 	  /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 	  public HelixFitObject HelixFit(int PointNum, double szPos[][], int fit_track_to_beamline)// double R, double A, double B,
 	    //double Phi_deg, double Theta_deg, double Z0, int fit_track_to_beamline )
@@ -855,4 +997,220 @@ public class HelixFitJava {
 	    return h;
 	  }
 
+// Public weighted wrapper (similar to the original HelixFit)
+	  public HelixFitObject HelixFitWeighted(int PointNum, double[][] szPos,
+										double[] weights, int fit_track_to_beamline) {
+
+		double PI = Math.acos(0.0)*2.0;
+
+		HelixFitObject h = helix_fit_weighted(PointNum, szPos, weights, fit_track_to_beamline);
+
+		double Phi_deg   = Math.toDegrees(h.get_Phi());
+		if (Phi_deg >= 180)  Phi_deg -= 360;
+		if (Phi_deg < -180)  Phi_deg += 360;
+
+		double Theta_deg = Math.toDegrees(h.get_Theta());
+
+		h.set_Phi(Phi_deg);
+		h.set_Theta(Theta_deg);
+
+		return h;
+	}
+
+	  public HelixFitObject helix_fit_with_doca_selection(List<DocaCluster> docaClusters,
+														int fit_track_to_beamline) {
+
+		HelixFitObject badFit = new HelixFitObject(0,0,0,0,0,0,0,0,0,9999.9);
+
+		if (docaClusters == null || docaClusters.isEmpty()) {
+			return badFit;
+		}
+
+		// ---------------------- Set clusterIndex layers ----------------------
+		Map<Integer, List<DocaCluster>> layerMap = new HashMap<>();
+		for (DocaCluster dc : docaClusters) {
+			int layer = dc.get_ClusterIndex();
+			layerMap.computeIfAbsent(layer, k -> new ArrayList<>()).add(dc);
+		}
+
+		if (layerMap.size() < 2) {
+			// Not enough layers to do inner/outer selection
+			// fall back to a simple unweighted helix fit with all docaClusters
+			int n = docaClusters.size();
+			double[][] szPos = new double[n][3];
+			for (int i = 0; i < n; i++) {
+				DocaCluster dc = docaClusters.get(i);
+				szPos[i][0] = dc.get_X();
+				szPos[i][1] = dc.get_Y();
+				szPos[i][2] = dc.get_Z();
+			}
+			return helix_fit_weighted(n, szPos, null, fit_track_to_beamline);
+		}
+
+		// sort layers to get inner/outer and in-between
+		List<Integer> layers = new ArrayList<>(layerMap.keySet());
+		Collections.sort(layers);
+		int innerLayer = layers.get(0);
+		int outerLayer = layers.get(layers.size() - 1);
+
+		List<DocaCluster> innerList = layerMap.get(innerLayer);
+		List<DocaCluster> outerList = layerMap.get(outerLayer);
+
+		if (innerList.isEmpty() || outerList.isEmpty()) {
+			// fall back
+			int n = docaClusters.size();
+			double[][] szPos = new double[n][3];
+			for (int i = 0; i < n; i++) {
+				DocaCluster dc = docaClusters.get(i);
+				szPos[i][0] = dc.get_X();
+				szPos[i][1] = dc.get_Y();
+				szPos[i][2] = dc.get_Z();
+			}
+			return helix_fit_weighted(n, szPos, null, fit_track_to_beamline);
+		}
+
+		// ---------------------- scan all (inner, outer) combinations ----------------------
+		double bestChi2 = Double.POSITIVE_INFINITY;
+		Map<Integer, DocaCluster> bestChoiceByLayer = null;
+
+		for (DocaCluster dcIn : innerList) {
+			double x1 = dcIn.get_X();
+			double y1 = dcIn.get_Y();
+			double z1 = dcIn.get_Z();
+
+			for (DocaCluster dcOut : outerList) {
+				double x2 = dcOut.get_X();
+				double y2 = dcOut.get_Y();
+				double z2 = dcOut.get_Z();
+
+				// circle through origin and the two docaClusters
+				CircleParams circ = circleThroughOrigin(x1, y1, x2, y2);
+				if (!circ.ok) continue;
+
+				double xc = circ.xc;
+				double yc = circ.yc;
+				double R  = circ.R;
+
+				// angles around circle center for the two endpoints
+				double phi1 = Math.atan2(y1 - yc, x1 - xc);
+				double phi2 = Math.atan2(y2 - yc, x2 - xc);
+				double dphi21 = wrapPi(phi2 - phi1);
+				if (Math.abs(dphi21) < 1e-4) continue;
+
+				// For this trial helix, compute chi2:
+				// for each layer choose the docaCluster with minimal weighted 3D residual.
+				double chi2 = 0.0;
+				Map<Integer, DocaCluster> choiceThisPair = new HashMap<>();
+
+				for (int layer : layers) {
+					List<DocaCluster> candList = layerMap.get(layer);
+					if (candList == null || candList.isEmpty()) {
+						chi2 = Double.POSITIVE_INFINITY;
+						break;
+					}
+
+					double bestLayerValue = Double.POSITIVE_INFINITY;
+					DocaCluster bestLayerDc = null;
+
+					for (DocaCluster dc : candList) {
+						double x = dc.get_X();
+						double y = dc.get_Y();
+						double z = dc.get_Z();
+
+						double phi = Math.atan2(y - yc, x - xc);
+						double dphi = wrapPi(phi - phi1);
+						double frac = dphi / dphi21; // s / s_total
+
+						// predicted point on circle (same phi)
+						double xPred = xc + R * Math.cos(phi);
+						double yPred = yc + R * Math.sin(phi);
+						// linear z(s)
+						double zPred = z1 + (z2 - z1) * frac;
+
+						double dx = x - xPred;
+						double dy = y - yPred;
+						double dz = z - zPred;
+						double res2 = dx * dx + dy * dy + dz * dz;
+
+						double w = dc.get_Weight();
+						if (w <= 0) w = 1.0;
+
+						double value = w * res2;
+
+						if (value < bestLayerValue) {
+							bestLayerValue = value;
+							bestLayerDc    = dc;
+						}
+					}
+
+					if (bestLayerDc == null) {
+						chi2 = Double.POSITIVE_INFINITY;
+						break;
+					}
+
+					chi2 += bestLayerValue;
+					choiceThisPair.put(layer, bestLayerDc);
+				}
+
+				if (chi2 < bestChi2) {
+					bestChi2 = chi2;
+					bestChoiceByLayer = choiceThisPair;
+				}
+			}
+		}
+
+		// ---------------------- if no reasonable combination，return ----------------------
+		if (bestChoiceByLayer == null || bestChoiceByLayer.isEmpty()) {
+			int n = docaClusters.size();
+			double[][] szPos = new double[n][3];
+			for (int i = 0; i < n; i++) {
+				DocaCluster dc = docaClusters.get(i);
+				szPos[i][0] = dc.get_X();
+				szPos[i][1] = dc.get_Y();
+				szPos[i][2] = dc.get_Z();
+			}
+			return helix_fit_weighted(n, szPos, null, fit_track_to_beamline);
+		}
+
+		// ----------------------  4 points from best combination，then use original helix_fit ----------------------
+		List<Integer> bestLayers = new ArrayList<>(bestChoiceByLayer.keySet());
+		Collections.sort(bestLayers);
+
+		int nPoints = bestLayers.size();
+		double[][] szPosSel = new double[nPoints][3];
+
+		for (int i = 0; i < nPoints; i++) {
+			int layer = bestLayers.get(i);
+			DocaCluster dc = bestChoiceByLayer.get(layer);
+			szPosSel[i][0] = dc.get_X();
+			szPosSel[i][1] = dc.get_Y();
+			szPosSel[i][2] = dc.get_Z();
+		}
+
+		// weights = null => all weights = 1.0 inside helix_fit_weighted
+
+	    double PI=Math.acos(0.0)*2;
+	    //double Rho=0,Phi=0,Theta=0,X0=0,Y0=0,DCA=0,Chi2=0;
+            double Phi_deg;
+            double Theta_deg;
+            
+	    HelixFitObject h = helix_fit_weighted(nPoints, szPosSel, null, fit_track_to_beamline);;
+	    
+	    Phi_deg=Math.toDegrees(h.get_Phi());
+            if(Phi_deg >= 180){
+                Phi_deg -= 360;
+            }
+            if(Phi_deg < -180){
+                Phi_deg += 360;
+            }
+	    Theta_deg=Math.toDegrees(h.get_Theta()); 
+            h.set_Phi(Phi_deg);
+            h.set_Theta(Theta_deg);
+            
+	    return h;
+
+	}
+
 }
+
+

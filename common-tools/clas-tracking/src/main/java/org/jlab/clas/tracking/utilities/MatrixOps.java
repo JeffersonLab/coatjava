@@ -128,7 +128,7 @@ public class MatrixOps {
 
         for(int i = 0; i < r; i++) {
             for (int j = 0; j < c; j++) {
-                result[i][j] = arr1[j][i];
+                result[j][i] = arr1[i][j];
             }
         }
         arr1 = null;

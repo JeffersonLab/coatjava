@@ -4,10 +4,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Optional;
 
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.clas.swimtools.Swim;
-import org.jlab.detector.geant4.v2.URWELL.URWellStripFactory;
+import org.jlab.detector.geant4.v2.MPGD.MUVT.MUVTStripFactory;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.utils.groups.IndexedTable;
@@ -25,7 +26,7 @@ public class MUVTEngine extends ReconstructionEngine {
 
     boolean debug = false;
 
-    public static URWellStripFactory factory = new URWellStripFactory();
+    public MUVTStripFactory factory = null;
 
     public MUVTEngine() {
         super("MUVT", "ziegler", "5.0");
@@ -34,22 +35,15 @@ public class MUVTEngine extends ReconstructionEngine {
     @Override
     public boolean init() {
         
-        // Get the constants for the correct variation
-        String variation = this.getEngineConfigString("variation");
-        if (variation!=null) {
-            System.out.println("["+this.getName()+"] " +
-                    "run with MUVT geometry variation based on yaml = " + variation);
-        }
-        else {
-            variation = "default";
-            System.out.println("["+this.getName()+"] run with MUVT default geometry");
-        }
+        String variationName = Optional.ofNullable(this.getEngineConfigString("variation")).orElse("default");
         
+        factory = new MUVTStripFactory(11, variationName);
+
         String[] tables = new String[]{
             "/geometry/beam/position"
         };
         requireConstants(Arrays.asList(tables));
-        this.getConstantsManager().setVariation(variation);
+        this.getConstantsManager().setVariation(variationName);
         // Register output banks
         super.registerOutputBank("MUVT::hits");
         super.registerOutputBank("MUVT::clusters");
@@ -90,7 +84,7 @@ public class MUVTEngine extends ReconstructionEngine {
                 
         // === DC TRACKS ===========================================================================
         MUVTTrack trk = new MUVTTrack();
-        List<MUVTTrack> tracks = trk.getDCTracks(event, swimmer);
+        List<MUVTTrack> tracks = trk.getDCTracks(event, swimmer, factory);
         if(tracks.isEmpty()) return true;
 
         // === SEEDS =============================================================================
@@ -104,7 +98,7 @@ public class MUVTEngine extends ReconstructionEngine {
                     
                 MUVTCross cross = crosses.get(j);                    
                 
-                MUVTTrajectory trj = track.getDCTraj((MUVTConstants.NLAYER/MUVTConstants.NREGION)*cross.getRegion()+1);
+                MUVTTrajectory trj = track.getDCTraj((MUVTConstants.NLAYER/MUVTConstants.NREGION)*cross.getRegion()-1);
                 if (trj==null || track.getSector()!=cross.getSector()) continue; 
 
                 // Match the layers from traj.

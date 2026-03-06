@@ -4,7 +4,7 @@
 
   <groupId>org.jlab.clas</groupId>
   <artifactId>coatjava</artifactId>
-  <version>13.5.2-SNAPSHOT</version>
+  <version>13.7.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <properties>
@@ -28,6 +28,18 @@
       <url>https://clasweb.jlab.org/.jhep/maven</url>
     </repository>
   </repositories>
+
+  <profiles>
+    <profile> <!-- skip unit tests by default -->
+      <id>skip-tests</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <skipTests>true</skipTests>
+      </properties>
+    </profile>
+  </profiles>
 
   <!-- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
 
@@ -62,7 +74,7 @@
       <dependency>
         <groupId>org.yaml</groupId>
         <artifactId>snakeyaml</artifactId>
-        <version>2.5</version>
+        <version>2.6</version>
       </dependency>
 
       <dependency>
@@ -251,6 +263,29 @@
 
     <plugins> <!-- plugins inherited by all child POMs -->
 
+      <!-- Java version enforcer -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>3.6.2</version>
+        <executions>
+          <execution>
+            <id>enforce-java</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <requireJavaVersion>
+                  <version>[21,)</version>
+                </requireJavaVersion>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- static analysis -->
       <plugin>
         <groupId>com.github.spotbugs</groupId>
         <artifactId>spotbugs-maven-plugin</artifactId>
@@ -260,6 +295,7 @@
         </configuration>
       </plugin>
 
+      <!-- documentation generation -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
@@ -280,16 +316,16 @@
         </executions>
       </plugin>
 
+      <!-- general settings -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.14.1</version>
+        <version>3.15.0</version>
         <configuration>
           <release>21</release> <!-- CI variable `JAVA_VERSION` must match this; see also dependabot configuration -->
           <encoding>UTF-8</encoding>
         </configuration>
       </plugin>
-
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
@@ -299,6 +335,7 @@
         </configuration>
       </plugin>
 
+      <!-- JAR -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
@@ -323,6 +360,35 @@
         </configuration>
       </plugin>
 
+      <!-- dependency analysis -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>3.10.0</version>
+        <executions>
+          <execution>
+            <id>analyze</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>tree</goal>
+              <goal>analyze-only</goal>
+            </goals>
+            <configuration>
+              <failOnWarning>true</failOnWarning>
+              <!-- ignore certain "unused but declared" warnings -->
+              <ignoredUnusedDeclaredDependencies>
+                <ignoredUnusedDeclaredDependency>ai.djl:model-zoo</ignoredUnusedDeclaredDependency>
+                <ignoredUnusedDeclaredDependency>ai.djl.pytorch:pytorch-model-zoo</ignoredUnusedDeclaredDependency>
+                <ignoredUnusedDeclaredDependency>ai.djl.pytorch:pytorch-engine</ignoredUnusedDeclaredDependency>
+                <ignoredUnusedDeclaredDependency>ai.djl.pytorch:pytorch-native-cpu</ignoredUnusedDeclaredDependency>
+                <ignoredUnusedDeclaredDependency>ai.djl.pytorch:pytorch-jni</ignoredUnusedDeclaredDependency>
+              </ignoredUnusedDeclaredDependencies>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- dependency convergence -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
@@ -347,6 +413,7 @@
         </executions>
       </plugin>
 
+      <!-- coverage -->
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>

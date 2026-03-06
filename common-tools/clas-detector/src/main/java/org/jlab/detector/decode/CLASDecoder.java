@@ -30,6 +30,9 @@ import org.jlab.utils.system.ClasUtilsFile;
  * @author gavalian
  */
 public class CLASDecoder {
+       
+    // truncate EVIO waveforms longer than this:
+    final static int MAX_BANK_WF_LENGTH = 30;
 
     protected DetectorEventDecoder detectorDecoder = null;
     protected SchemaFactory           schemaFactory = new SchemaFactory();
@@ -203,7 +206,7 @@ public class CLASDecoder {
             b.putLong( 4, i, a.get(i).getADCData(0).getTimeStamp());
             b.putInt("time", i, (int)a.get(i).getADCData(0).getTime());
             DetectorDataDgtz.ADCData xxx = a.get(i).getADCData(0);
-            for (int j=0; j<xxx.getPulseSize(); ++j)
+            for (int j=0; j<xxx.getPulseSize() && j<MAX_BANK_WF_LENGTH; ++j)
                 b.putShort(j+5, i, xxx.getPulseValue(j));
         }
         return b;
@@ -319,9 +322,9 @@ public class CLASDecoder {
             adcBANK.putByte( 0, i, (byte) adcDGTZ.get(i).getDescriptor().getCrate());
             adcBANK.putByte( 1, i, (byte) adcDGTZ.get(i).getDescriptor().getSlot());
             adcBANK.putShort(2, i, (short) adcDGTZ.get(i).getDescriptor().getChannel());
-            adcBANK.putInt(  3, i, adcDGTZ.get(i).getADCData(0).getADC());
-            adcBANK.putFloat(4, i, (float) adcDGTZ.get(i).getADCData(0).getTime());
-            adcBANK.putShort(5, i, (short) adcDGTZ.get(i).getADCData(0).getPedestal());
+            adcBANK.putInt(  4, i, adcDGTZ.get(i).getADCData(0).getADC());
+            adcBANK.putFloat(5, i, (float) adcDGTZ.get(i).getADCData(0).getTime());
+            adcBANK.putShort(6, i, (short) adcDGTZ.get(i).getADCData(0).getPedestal());
         }
         return adcBANK;
     }
@@ -337,7 +340,7 @@ public class CLASDecoder {
             tdcBANK.putByte( 0, i, (byte) tdcDGTZ.get(i).getDescriptor().getCrate());
             tdcBANK.putByte( 1, i, (byte) tdcDGTZ.get(i).getDescriptor().getSlot());
             tdcBANK.putShort(2, i, (short) tdcDGTZ.get(i).getDescriptor().getChannel());
-            tdcBANK.putInt(  3, i, tdcDGTZ.get(i).getTDCData(0).getTime());
+            tdcBANK.putInt(  4, i, tdcDGTZ.get(i).getTDCData(0).getTime());
         }
         return tdcBANK;
     }

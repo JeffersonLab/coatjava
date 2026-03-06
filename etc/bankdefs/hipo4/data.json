@@ -643,10 +643,10 @@
     ]
   },
 {
-    "name" : "URWELL::adc",
+    "name" : "URWT::adc",
     "group": 22300,
     "item" : 11,
-    "info": "ADC bank for the URWELL",
+    "info": "ADC bank for the URWT",
     "entries":[
       { "name":"sector"    , "type":"B", "info":"sector (11-63)"},
       { "name":"layer"     , "type":"B", "info":"layer (1-2)"},

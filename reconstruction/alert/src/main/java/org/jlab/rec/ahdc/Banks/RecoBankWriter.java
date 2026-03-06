@@ -5,11 +5,13 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.rec.ahdc.AI.InterCluster;
 import org.jlab.rec.ahdc.AI.TrackPrediction;
 import org.jlab.rec.ahdc.Cluster.Cluster;
+import org.jlab.rec.ahdc.DocaCluster.DocaCluster;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import org.jlab.rec.ahdc.Track.Track;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class RecoBankWriter {
 
@@ -120,6 +122,7 @@ public class RecoBankWriter {
 		return bank;
 	}
 
+	/// Here the relavant informations of the tracks are filled in the Kalman Filter
 	public DataBank fillAHDCKFTrackBank(DataEvent event, ArrayList<Track> tracks) {
 
 		DataBank bank = event.createBank("AHDC::kftrack", tracks.size());
@@ -128,12 +131,12 @@ public class RecoBankWriter {
 
 		for (Track track : tracks) {
 			if (track == null) continue;
-			double x  = track.getX0_kf();
-			double y  = track.getY0_kf();
-			double z  = track.getZ0_kf();
-			double px = track.getPx0_kf();
-			double py = track.getPy0_kf();
-			double pz = track.getPz0_kf();
+			double x  = track.get_X0();
+			double y  = track.get_Y0();
+			double z  = track.get_Z0();
+			double px = track.get_px();
+			double py = track.get_py();
+			double pz = track.get_pz();
 
 			bank.setInt("trackid", row, (int) track.get_trackId());
 			bank.setFloat("x", row, (float) x);
@@ -144,9 +147,9 @@ public class RecoBankWriter {
 			bank.setFloat("pz", row, (float) pz);
 			bank.setInt("n_hits", row, (int) track.get_n_hits());
 			bank.setInt("sum_adc", row, (int) track.get_sum_adc());
-			bank.setFloat("path", row, (float) track.get_path_kf());
-			bank.setFloat("dEdx", row, (float) track.get_dEdx_kf());
-			bank.setFloat("p_drift", row, (float) track.get_p_drift_kf());
+			bank.setFloat("path", row, (float) track.get_path());
+			bank.setFloat("dEdx", row, (float) track.get_dEdx());
+			bank.setFloat("p_drift", row, (float) track.get_p_drift());
 			bank.setFloat("chi2", row, (float) track.get_chi2());
 			bank.setFloat("sum_residuals", row, (float) track.get_sum_residuals());
 
@@ -197,4 +200,22 @@ public class RecoBankWriter {
 
 		return bank;
 	}
+
+	public DataBank fillAHDCDocaClustersBank(DataEvent event, ArrayList<DocaCluster> docaclusters) {
+
+        if (docaclusters == null || docaclusters.size() == 0) return null;
+
+		DataBank bank = event.createBank("AHDC::docaclusters", docaclusters.size());
+
+		for (int i = 0; i < docaclusters.size(); i++) {
+			bank.setFloat("x", i, (float) docaclusters.get(i).get_X());
+			bank.setFloat("y", i, (float) docaclusters.get(i).get_Y());
+			bank.setFloat("z", i, (float) docaclusters.get(i).get_Z());
+			bank.setFloat("weight", i, (float) docaclusters.get(i).get_Weight());
+			bank.setInt("pattern", i, (int) docaclusters.get(i).get_Pattern());
+			bank.setInt("idx", i, (int) docaclusters.get(i).get_ClusterIndex());			
+		}
+
+        return bank;
+    }
 }
