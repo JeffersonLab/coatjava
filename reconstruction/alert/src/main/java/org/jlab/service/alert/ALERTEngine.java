@@ -472,7 +472,6 @@ public class ALERTEngine extends ReconstructionEngine {
         int Niter = 40;
         KalmanFilter KF = new KalmanFilter(proton, Niter);
         KF.set_ATOF_detector(ATOF); // Reference the ATOF geometry in the Kalman Filter
-        KF.set_clas_alignement(clas_alignement);
         KF.set_atof_alignement(atof_alignement);
         KF.set_vz_constraint(vz_constraint);
         KF.set_vertex_flag(IsVertexDefined);

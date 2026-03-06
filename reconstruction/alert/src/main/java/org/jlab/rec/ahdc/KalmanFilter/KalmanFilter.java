@@ -41,7 +41,6 @@ public class KalmanFilter {
 	private boolean projBasedAtofPrediction = false; // flag to do or not a projection based prediction of the ATOF hits
 
 	// mm,  they are the misalignement with respect to the AHDC: the are defined in ALERTEngine
-	private double clas_alignement = 0;
 	private double atof_alignement = 0;
 
 	private int counter = 0; // number of utilisation of the Kalman Filter
@@ -411,7 +410,6 @@ public class KalmanFilter {
 	}
 
 	public void set_ATOF_detector(AlertTOFDetector atof) { this.ATOFdet = atof;}
-	public void set_clas_alignement(double _shift) {this.clas_alignement = _shift;}
 	public void set_atof_alignement(double _shift) {this.atof_alignement = _shift;}
 	public void set_vz_constraint(double _vz) {this.vz_constraint = _vz;}
 	public void set_vertex_flag(boolean _flag) {this.IsVtxDefined = _flag;}
