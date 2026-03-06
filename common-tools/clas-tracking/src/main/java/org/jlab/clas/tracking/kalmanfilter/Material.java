@@ -59,7 +59,7 @@ public class Material {
         return new Material(this.name, newThickness, this.density, this.ZoverA, this.X0, this.IeV, this.units);
     }
     // RDV make units a property of the material
-    public double getEloss(double p, double mass) {
+    public double getEloss(double p, double mass, int charge) {
         if(mass==0) return 0;
         double beta = p / Math.sqrt(p * p + mass * mass);
         double s = PhysicsConstants.massElectron() / mass;
@@ -69,9 +69,13 @@ public class Material {
         double K = 0.000307075 * units.value() * units.value(); //  GeV mol-1 cm2
         double I = this.IeV * 1E-9;
         double logterm = 2. * PhysicsConstants.massElectron() * beta * beta * gamma * gamma * Wmax / (I * I);
-        double dE = this.thickness * this.density * K * this.ZoverA
+        double dE = this.thickness * this.density * K * charge * charge *this.ZoverA
                 * (0.5 * Math.log(logterm) - beta * beta) / beta / beta; //in GeV
         return dE;
+    }
+
+    public double getEloss(double p, double mass) {
+        return getEloss(p, mass, 1);
     }
 
     @Override
