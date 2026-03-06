@@ -59,6 +59,13 @@ public class Material {
         return new Material(this.name, newThickness, this.density, this.ZoverA, this.X0, this.IeV, this.units);
     }
     // RDV make units a property of the material
+    /**
+     * Compute the energy loss.
+     * 
+     * @param p momentum of the particle crossing the material volume
+     * @param mass mass of the particle crossing the material volume
+     * @param charge charge (in unit of e) of the particle crossing the material volume
+     */
     public double getEloss(double p, double mass, int charge) {
         if(mass==0) return 0;
         double beta = p / Math.sqrt(p * p + mass * mass);
@@ -74,6 +81,12 @@ public class Material {
         return dE;
     }
 
+    /**
+     * Compute the energy loss assuming the charge is 1. See {@link Material#getEloss(double, double, int)}.
+     * 
+     * @param p momentum of the particle crossing the material volume
+     * @param mass mass of the particle crossing the material volume
+     */
     public double getEloss(double p, double mass) {
         return getEloss(p, mass, 1);
     }
