@@ -161,7 +161,7 @@ public class MUVTEngine extends ReconstructionEngine {
         
         // Iterate on list to run the fit.
         for(int i=0; i<filtedTracks.size(); i++) {
-            MUVTTrack track = tracks.get(i);                
+            MUVTTrack track = filtedTracks.get(i);                
                             
             // Set status and stop if there are not at least two measurements to fit against.
             List<MUVTCluster> trackClusters = track.getClusters();           
