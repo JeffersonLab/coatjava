@@ -1,6 +1,5 @@
 package org.jlab.service.eb;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -170,6 +169,10 @@ public class EBEngine extends ReconstructionEngine {
         // Do PID etc:
         EBAnalyzer analyzer = new EBAnalyzer(ccdb,rf);
         analyzer.processEvent(eb.getEvent());
+
+        // Overwrite electron momentum for zero-field:
+        if (Math.abs(head.getTorus()) < 1e-8)
+            analyzer.assignElectronMomenta(eb.getEvent());
 
         // Add Forward Tagger particles:
         eb.processForwardTagger(de);
