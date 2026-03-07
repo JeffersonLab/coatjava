@@ -1,8 +1,8 @@
 #!/bin/bash
 
-exe='decoder4u -n 10000'
+exe=$1
 csv=gold.csv
-cache=pin-gold.txt
+cache=gold.pin
 
 if ! [ -f $csv ] || ! [ -f $cache ]
 then
@@ -21,7 +21,7 @@ do
     period=${x%%,*}
     stub=${period}_${run}
     data=$(grep ${run} $cache | grep 1$)
-    $exe -o $stub.hipo $data >& $stub.log &
+    $@ -o $stub.hipo $data >& $stub.log &
 done
 
 wait
