@@ -19,7 +19,6 @@ if [ "${1-}" != '--no-classpath' ]; then
   jar_dirs=(
     $CLAS12DIR/lib/clas # prioritize the shaded JAR
     $CLAS12DIR/lib/services
-    $CLAS12DIR/lib/utils
   )
   for jar_dir in ${jar_dirs[@]}; do
     if [ -d $jar_dir ]; then
