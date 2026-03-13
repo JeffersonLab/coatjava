@@ -745,10 +745,12 @@ public class CLASDecoder {
 
                     int runNumberCoda = codaDecoder.getRunNumber();
                     this.setRunNumber(runNumberCoda);
-                   
-                    detectorDecoder.translate(dataList);
-                    detectorDecoder.fitPulses(dataList);
-                    detectorDecoder.filterTDCs(dataList);
+                  
+                    if (runNumberCoda > 0) {
+                        detectorDecoder.translate(dataList);
+                        detectorDecoder.fitPulses(dataList);
+                        detectorDecoder.filterTDCs(dataList);
+                    }
 
                     if(this.decoderDebugMode>0){
                         System.out.println("\n>>>>>>>>> TRANSLATED data");
