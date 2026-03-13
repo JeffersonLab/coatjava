@@ -18,10 +18,11 @@ public final class TestSuite {
 	public static void main(String[] args) {
 		
 		boolean runBaseTest = false; // set to false to skip base test
-		boolean runRoundTripTest = true; // set to false to skip round-trip test
+		boolean runRoundTripTest = false; // set to false to skip round-trip test
 		boolean runSwimZTest = false; // set to false to skip SwimZ test
 		boolean runSwimRhoTest = false; // set to false to skip SwimR
 		boolean runSwimPlaneTest = false; // set to false to skip SwimPlane test
+		boolean runSwimCylinderTest = true; // set to false to skip SwimCylinder test
 		boolean runSectorSwimZTest = false; // set to false to skip sector SwimZ test
 		
 		
@@ -31,7 +32,7 @@ public final class TestSuite {
 		// ------------------------------------------------------------------
 		// Random test data (deterministic for regression)
 		// ------------------------------------------------------------------
-		RandomTestData data = new RandomTestData(2000, // number of samples
+		RandomTestData data = new RandomTestData(20000, // number of samples
 				192345L // RNG seed
 		);
 
@@ -69,7 +70,7 @@ public final class TestSuite {
 			// ------------------------------------------------------------------
 			// Start at the vertex (0,0,0), random q=±1, p in [0.5,6] GeV/c, isotropic
 			// direction.
-			RandomTestData roundTripData = RoundTripSwimTest.createData(2000, // trials
+			RandomTestData roundTripData = RoundTripSwimTest.createData(20000, // trials
 					24680L, // seed (independent of other tests)
 					0.5, // pMin (GeV/c)
 					6.0 // pMax (GeV/c)
@@ -144,6 +145,31 @@ public final class TestSuite {
 			planeTest.timedIters = 25000;
 
 			planeTest.runCompare(legacy, "CLAS12", commons, "APACHE", data);
+		}
+
+
+		if (runSwimCylinderTest) {
+			// ------------------------------------------------------------------
+			// SwimCylinder test
+			// ------------------------------------------------------------------
+			// An infinite cylinder whose axis is parallel to z but offset from the origin,
+			// so this is not identical to a rho swim.
+			double[] c1 = {30.0, 0.0, -100.0};  // point on axis (cm)
+			double[] c2 = {30.0, 0.0,  500.0};  // point on axis (cm)
+			SwimCylinderTest cylinderTest = new SwimCylinderTest(
+					c1, c2,
+					40.0,   // radius (cm)
+					1e-5,   // accuracy (cm)
+					1000.0, // sMax (cm)
+					0.1,    // h (cm)
+					1e-5    // tolerance
+			);
+
+			cylinderTest.maxMismatchPrint = 10;
+			cylinderTest.warmupIters = 200;
+			cylinderTest.timedIters = 25000;
+
+			cylinderTest.runCompare(legacy, "CLAS12", commons, "APACHE", data);
 		}
 
 		if (runSectorSwimZTest) {

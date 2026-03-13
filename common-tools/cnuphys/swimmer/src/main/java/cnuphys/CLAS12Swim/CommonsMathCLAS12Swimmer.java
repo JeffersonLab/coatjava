@@ -100,7 +100,7 @@ public final class CommonsMathCLAS12Swimmer implements ICLAS12Swimmer {
      * <p><b>Units:</b> positions in cm, momentum in GeV/c, angles in degrees, path length in cm.</p>
      *
      * <p>
-     * When {@code legacyComparable} is {@code true}, this method intentionally avoids “over-solving”
+     * When {@code legacyComparable} is {@code true}, this method intentionally avoids  over-solving 
      * and targets a modest z-miss scale (~1e-5 cm) for speed comparisons.
      * </p>
      */
@@ -308,14 +308,121 @@ public final class CommonsMathCLAS12Swimmer implements ICLAS12Swimmer {
     public CLAS12SwimResult swimCylinder(int q, double xo, double yo, double zo, double p, double theta, double phi,
                                          double[] p1, double[] p2, double r, double accuracy, double sMax, double h,
                                          double tolerance) {
-        throw new UnsupportedOperationException("Not implemented yet (Commons Math swimmer)");
+        Cylinder targetCylinder = new Cylinder(p1, p2, r);
+        return swimCylinder(q, xo, yo, zo, p, theta, phi, targetCylinder, accuracy, sMax, h, tolerance);
     }
 
     @Override
     public CLAS12SwimResult swimCylinder(int q, double xo, double yo, double zo, double p, double theta, double phi,
                                          Cylinder targetCylinder, double accuracy, double sMax, double h,
                                          double tolerance) {
-        throw new UnsupportedOperationException("Not implemented yet (Commons Math swimmer)");
+
+        // If the target cylinder is centered on the z axis, this is exactly a rho swim.
+        if (targetCylinder.centeredOnZ()) {
+            return swimRho(q, xo, yo, zo, p, theta, phi, targetCylinder.radius, accuracy, sMax, h, tolerance);
+        }
+
+        final CLAS12Values ivals = new CLAS12Values(q, xo, yo, zo, p, theta, phi);
+        final CLAS12CylinderListener listener =
+                new CLAS12CylinderListener(ivals, targetCylinder, accuracy, sMax);
+
+        // Momentum guard
+        if (p < minMomentum) {
+            listener.setStatus(CLAS12Swimmer.BELOW_MIN_MOMENTUM);
+            return new CLAS12SwimResult(listener);
+        }
+
+        // Neutral shortcut is intentionally not used here unless the cylinder reduces to rho.
+        // CLAS12CylinderListener disables exact straight-line handling.
+
+        final double[] y = ivals.getU().clone();
+        final SwimEquations ode = new SwimEquations(q, p, probe);
+
+        // legacyComparable tuning (same philosophy as swimZ/swimPlane)
+        final double targetMiss = legacyComparable ? 1.0e-5 : accuracy;
+        final double successTol = legacyComparable ? targetMiss : accuracy;
+
+        final double absPos = legacyComparable ? 1.0e-5 : Math.max(1.0e-12, tolerance);
+        final double absDir = legacyComparable ? 1.0e-5 : 1.0e-10;
+        final double rel    = legacyComparable ? 1.0e-9 : 1.0e-12;
+
+        final double[] absTol = { absPos, absPos, absPos, absDir, absDir, absDir };
+        final double[] relTol = { rel, rel, rel, rel, rel, rel };
+
+        final DormandPrince54Integrator integrator =
+                new DormandPrince54Integrator(
+                        Math.max(minStepSize, 1.0e-12),
+                        Math.max(maxStepSize, minStepSize),
+                        absTol,
+                        relTol
+                );
+
+        final double h0 = Math.max(minStepSize, Math.min(Math.abs(h), maxStepSize));
+        integrator.setInitialStepSize(h0);
+
+        integrator.addStepHandler(new StepHandler() {
+            @Override
+            public void init(double s0, double[] y0, double sEnd) { }
+
+            @Override
+            public void handleStep(StepInterpolator interpolator, boolean isLast) {
+                final double s = interpolator.getCurrentTime();
+                final double[] state = interpolator.getInterpolatedState().clone();
+                listener.accept(s, state);
+            }
+        });
+
+        // Cylinder event: signed distance to surface = 0.
+        // Keep checks reasonably frequent to reduce any chance of stepping over the cylinder.
+        final HitFlag hit = new HitFlag();
+
+        final EventHandler cylinderEvent = new EventHandler() {
+            @Override
+            public void init(double s0, double[] y0, double sEnd) { }
+
+            @Override
+            public double g(double s, double[] y) {
+                return targetCylinder.signedDistance(y[0], y[1], y[2]);
+            }
+
+            @Override
+            public Action eventOccurred(double s, double[] y, boolean increasing) {
+                hit.hit = true;
+                return Action.STOP;
+            }
+
+            @Override
+            public void resetState(double s, double[] y) { }
+        };
+
+        final double maxCheckInterval = Math.min(Math.max(0.5, h0), 5.0);
+        final double eventConv = Math.max(1.0e-12, targetMiss);
+
+        integrator.addEventHandler(cylinderEvent, maxCheckInterval, eventConv, 200);
+
+        double sFinal;
+        try {
+            sFinal = integrator.integrate(ode, 0.0, y, sMax, y);
+        } catch (Exception ex) {
+            listener.setStatus(CLAS12Swimmer.SWIM_TARGET_MISSED);
+            return new CLAS12SwimResult(listener);
+        }
+
+        // Ensure final point is recorded
+        listener.accept(sFinal, y.clone());
+
+        // Status
+        double dist = targetCylinder.distance(listener.getU()[0],
+                                              listener.getU()[1],
+                                              listener.getU()[2]);
+
+        if (hit.hit && dist <= successTol) {
+            listener.setStatus(CLAS12Swimmer.SWIM_SUCCESS);
+        } else {
+            listener.setStatus(CLAS12Swimmer.SWIM_TARGET_MISSED);
+        }
+
+        return new CLAS12SwimResult(listener);
     }
 
     @Override
@@ -803,8 +910,7 @@ public final class CommonsMathCLAS12Swimmer implements ICLAS12Swimmer {
         private final double alpha;      // 1/(kG*cm), matches CLAS12SwimODE
         private final float[] b = new float[3];
 
-        private long fieldEvaluations = 0L;
-
+ 
         // Cached reflective call (lazy init)
         private transient java.lang.reflect.Method sectorFieldMethod;
         private transient boolean searched = false;
@@ -818,10 +924,6 @@ public final class CommonsMathCLAS12Swimmer implements ICLAS12Swimmer {
         @Override
         public int getDimension() {
             return 6;
-        }
-
-        long getFieldEvaluations() {
-            return fieldEvaluations;
         }
 
         @Override
@@ -852,7 +954,7 @@ public final class CommonsMathCLAS12Swimmer implements ICLAS12Swimmer {
                     probe.field((float) y[0], (float) y[1], (float) y[2], b);
                 }
 
-                fieldEvaluations++;
+  
                 Bx = b[0];
                 By = b[1];
                 Bz = b[2];

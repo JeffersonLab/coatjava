@@ -29,10 +29,10 @@ public abstract class ATest {
     protected int maxMismatchPrint = 8;
 
     /** Warmup iterations for timing. */
-    protected int warmupIters = 200;
+    protected int warmupIters = 300;
 
     /** Timed iterations for timing. */
-    protected int timedIters = 2000;
+    protected int timedIters = 20000;
 
     /**
      * Create a short test name used in reports.
