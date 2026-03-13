@@ -311,10 +311,6 @@ cp -r libexec $prefix_dir/
 which python3 >& /dev/null && python=python3 || python=python
 $python etc/bankdefs/util/bankSplit.py $prefix_dir/etc/bankdefs/hipo4 || exit 1
 
-# FIXME:  this is still needed by one of the tests
-mkdir -p $prefix_dir/lib/utils
-cp external-dependencies/jclara-4.3-SNAPSHOT.jar $prefix_dir/lib/utils
-
 # build (and test)
 unset CLAS12DIR
 if $runUnitTests; then
