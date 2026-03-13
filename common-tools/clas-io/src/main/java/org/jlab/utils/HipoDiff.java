@@ -1,7 +1,9 @@
 package org.jlab.utils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import org.jlab.jnp.hipo4.io.HipoReader;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
@@ -109,6 +111,7 @@ public class HipoDiff {
         op.addOption("-q", null, "quiet mode");
         op.addOption("-Q", null, "verbose mode");
         op.addOption("-b", null, "name of bank to diff");
+        op.addOption("-B",   "", "names of banks to ignore (comma separated)");
         op.addOption("-s", null, "sort on column index");
         op.addOption("-o", null, "output HIPO diff file");
         op.setRequiresInputList(true);
@@ -135,10 +138,13 @@ public class HipoDiff {
         SchemaFactory sf = readerA.getSchemaFactory();
         runConfigBank = new Bank(sf.getSchema("RUN::config"));
 
+        List<String> ignoreBanks = Arrays.asList(op.getOption("-B").stringValue().split(","));
         if (op.getOption("-b").stringValue() == null) {
             for (Schema s : sf.getSchemaList()) {
-                banksA.add(new DiffBank(s));
-                banksB.add(new DiffBank(s));
+                if (!ignoreBanks.contains(s.getName())) {
+                    banksA.add(new DiffBank(s));
+                    banksB.add(new DiffBank(s));
+                }
             }
         } else {
             banksA.add(new DiffBank(sf.getSchema(op.getOption("-b").stringValue())));
