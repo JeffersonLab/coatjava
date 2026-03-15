@@ -203,8 +203,6 @@
           <artifactSet>
             <excludes>
               <exclude>cnuphys:cnuphys</exclude>
-              <exclude>cnuphys:bCNU</exclude>
-              <exclude>cnuphys:bCNU3D</exclude>
               <exclude>cnuphys:jogl-all</exclude>
               <exclude>cnuphys:jogl</exclude>
               <exclude>cnuphys:gluegen</exclude>
