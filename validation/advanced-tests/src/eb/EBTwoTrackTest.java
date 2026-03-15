@@ -1,12 +1,10 @@
 package eb;
 
 import java.io.File;
-import org.junit.Test;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
-import static org.junit.Assert.*;
 
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
@@ -78,7 +76,19 @@ public class EBTwoTrackTest {
     Map <Integer,List<Integer>> recSciMap=new HashMap<Integer,List<Integer>>();
     Map <Integer,List<Integer>> recTrkMap=new HashMap<Integer,List<Integer>>();
 
-    @Test
+    void assertEquals(boolean a, boolean b) {
+        if (a!=b) {
+            System.err.println("Assertion Failed!");
+            System.exit(3);
+        }
+    }
+    void assertEquals(String msg, int a, int b) {
+        if (a!=b) {
+            System.err.println(msg);
+            System.exit(3);
+        }
+    }
+
     public void main() {
         String fileName=System.getProperty("INPUTFILE");
         File file = new File(fileName);
