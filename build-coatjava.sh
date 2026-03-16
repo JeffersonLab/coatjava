@@ -355,6 +355,11 @@ for pom in $(find common-tools -name pom.xml); do
   #   install_jars $pom $prefix_dir/lib/services
   fi
 done
+
+# install CLARA jar in separate directory:
+mvn org.apache.maven.plugins:maven-dependency-plugin:3.10.0:copy \
+     -Dartifact=org.jlab.coda:jclara:4.3:jar -DoutputDirectory=$prefix_dir/lib/utils -DstripVersion=false
+
 echo "installed coatjava to: $prefix_dir"
 
 # install clara
