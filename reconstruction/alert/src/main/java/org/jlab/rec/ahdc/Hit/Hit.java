@@ -35,6 +35,16 @@ public class Hit implements Comparable<Hit>, KFHit {
 	private int	trackId;
 
     //updated constructor with ADC
+	/**
+	 * 
+	 * @param _Id is AHDC::adc row id + 1
+	 * @param _Super_layer super layer id
+	 * @param _Layer layer id
+	 * @param _Wire wire id 
+	 * @param _Doca distance from the timing information using the time2distance, matches {@link Hit.#time}
+	 * @param _ADC raw ADC
+	 * @param _Time calibrated time
+	 */
 	public Hit(int _Id, int _Super_layer, int _Layer, int _Wire, double _Doca, double _ADC, double _Time) {
 		this.id           = _Id;
 		this.superLayerId = _Super_layer;
@@ -139,6 +149,7 @@ public class Hit implements Comparable<Hit>, KFHit {
 
 	public double getPhi() {return phi;}
 
+	/** Get calibrated ADC */
 	public double getADC() {return adc;}
 
 	public double getResidual() {
@@ -149,18 +160,22 @@ public class Hit implements Comparable<Hit>, KFHit {
 		this.residual = resid;
 	}
 
+	/** Set calibrated ToT */
 	public void setToT(double _tot) {
 		this.tot = _tot;
 	}
 
+	/** Get calibrated ToT */
 	public double getToT() {
 		return tot;
 	}
 
+	/** Set calibrated ADC */
 	public void setADC(double _adc) {
 		this.adc = _adc;
 	}
 
+	/** Get raw ADC */
 	public double getRawADC() {
 		return raw_adc;
 	}
