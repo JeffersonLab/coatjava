@@ -38,7 +38,6 @@ public class KalmanFilter {
 	private int Niter = 40; // number of iterations for the Kalman Filter
 	private double vz_constraint = 0;
 	private boolean IsVtxDefined = false; // implemented but not used yet
-	private boolean projBasedAtofPrediction = false; // flag to do or not a projection based prediction of the ATOF hits
 
 	// mm,  they are the misalignement with respect to the AHDC: the are defined in ALERTEngine
 	private double atof_alignement = 0;
@@ -161,9 +160,9 @@ public class KalmanFilter {
 			    track.set_p_drift(p_drift);
 			    track.set_path(s);
 
-				/// At the end of the PostFit porpagation to the last layer of the AHDC
+				/// At the end of the PostFit propagation towards the last layer of the AHDC
 				/// we project the track on the ATOF surface without any AI ATOF hit indication 
-				if (projBasedAtofPrediction && ATOFdet != null) {
+				if (ATOFdet != null) {
 					// Projection towards the ATOF surfaces
 					// R1 : radius of the lower surface of an ATOF bar
 					// R2 : radius of the upper surface of an ATOF bar = lower surface of an ATOF wedge
@@ -408,5 +407,4 @@ public class KalmanFilter {
 	public void set_atof_alignement(double _shift) {this.atof_alignement = _shift;}
 	public void set_vz_constraint(double _vz) {this.vz_constraint = _vz;}
 	public void set_vertex_flag(boolean _flag) {this.IsVtxDefined = _flag;}
-	public void set_atofPrediction_flag(boolean _flag) {this.projBasedAtofPrediction = _flag;}
 }

@@ -477,7 +477,6 @@ public class ALERTEngine extends ReconstructionEngine {
         KF.set_vertex_flag(IsVertexDefined);
 
         /// Do a first propagation
-        KF.set_atofPrediction_flag(true);
         KF.propagation(AHDC_tracks, magfield, IsMC);
 
         /// Look at the new ATOF hits predicted after projection of the track on the lower surface of the ATOF wedges
@@ -546,7 +545,6 @@ public class ALERTEngine extends ReconstructionEngine {
 
         /// Second propagation : each AHDC_tracks will be fitted
         KF.set_Niter(15);
-        KF.set_atofPrediction_flag(false);
         KF.propagation(AHDC_tracks, magfield, IsMC);
 
         /// write the AHDC::kftrack bank in the event
