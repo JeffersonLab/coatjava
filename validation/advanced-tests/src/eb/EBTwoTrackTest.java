@@ -89,7 +89,7 @@ public class EBTwoTrackTest {
         }
     }
 
-    public void main() {
+    public static void main(String[] args) {
         String fileName=System.getProperty("INPUTFILE");
         File file = new File(fileName);
         if (!file.exists() || file.isDirectory()) {
