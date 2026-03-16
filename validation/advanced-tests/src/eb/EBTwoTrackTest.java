@@ -19,8 +19,6 @@ import org.jlab.analysis.math.ClasMath;
  *
  * Analyze EB efficiencies based on Joseph's 2-particle test events.
  *
- * TODO:  Inherit process/checkResults to subclasses for FD/CD/FT
- * TODO:  Write a more general purpose test based on MC::Particle bank.
  * TODO:  Rewrite this from scratch.  Meanwhile, can't live without it.
  * 
  * @author baltzell
@@ -76,13 +74,13 @@ public class EBTwoTrackTest {
     Map <Integer,List<Integer>> recSciMap=new HashMap<Integer,List<Integer>>();
     Map <Integer,List<Integer>> recTrkMap=new HashMap<Integer,List<Integer>>();
 
-    void assertEquals(boolean a, boolean b) {
+    static void assertEquals(boolean a, boolean b) {
         if (a!=b) {
             System.err.println("Assertion Failed!");
             System.exit(3);
         }
     }
-    void assertEquals(String msg, int a, int b) {
+    static void assertEquals(String msg, int a, int b) {
         if (a!=b) {
             System.err.println(msg);
             System.exit(3);
@@ -90,8 +88,15 @@ public class EBTwoTrackTest {
     }
 
     public static void main(String[] args) {
+        EBTwoTrackTest t = new EBTwoTrackTest();
+        t.go();
+    }
+
+    public void go() {
+
         String fileName=System.getProperty("INPUTFILE");
         File file = new File(fileName);
+
         if (!file.exists() || file.isDirectory()) {
             System.err.println("Cannot find input file.");
             assertEquals(false, true);
