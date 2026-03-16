@@ -3,6 +3,7 @@ package org.jlab.service.alert;
 import ai.djl.translate.TranslateException;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -33,6 +34,7 @@ import org.apache.commons.math3.linear.RealMatrix;
 import org.jlab.clas.pdg.PDGDatabase;
 import org.jlab.clas.pdg.PDGParticle;
 import java.util.logging.Logger;
+import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
 
 
 
@@ -112,6 +114,20 @@ public class ALERTEngine extends ReconstructionEngine {
             //if (Objects.equals(this.getEngineConfigString("Mode"), Mode.AI_Track_Finding.name()))
             //    mode = Mode.AI_Track_Finding;
         }
+
+        // Requires calibration constants
+        String[] alertTables = new String[] {
+            "/calibration/alert/ahdc/time_offsets",
+            "/calibration/alert/ahdc/time_to_distance",
+            "/calibration/alert/ahdc/raw_hit_cuts",
+            "/calibration/alert/atof/effective_velocity",
+            "/calibration/alert/atof/time_walk",
+            "/calibration/alert/atof/attenuation",
+            "/calibration/alert/atof/time_offsets",
+            "/calibration/alert/ahdc/gains",
+            "/calibration/alert/ahdc/time_over_threshold"
+        };
+        requireConstants(Arrays.asList(alertTables));
         return true;
     }
 
@@ -378,7 +394,13 @@ public class ALERTEngine extends ReconstructionEngine {
                     double time = hitBank.getDouble("time", hit_row);
                     double tot = hitBank.getDouble("timeOverThreshold", hit_row);
                     // warning : adc is the calibrated one, we need the adc for the Kalman filter !
-                    Hit hit = new Hit(id, superlayer, layer, wire, doca, adc, time);
+                    int sector = 1; // constant value
+                    int key_value = sector*10000 + (superlayer*10 + layer)*100 + wire;
+                    double raw_adc = adc;
+                    double[] adc_gain = CalibrationConstantsLoader.AHDC_ADC_GAINS.get(key_value);
+                    if (adc_gain != null) raw_adc = adc/adc_gain[0];
+                    //System.out.println("adc : " + adc + " raw_adc : " + raw_adc);
+                    Hit hit = new Hit(id, superlayer, layer, wire, doca, raw_adc, time);
                     hit.setWirePosition(AHDC);
                     hit.setTrackId(trackid);
                     hit.setADC(adc);
