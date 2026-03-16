@@ -299,18 +299,5 @@ public class ToAscii {
 		}
 	}
 	
-//	<mfield>
-//    <description name="torus_version3.0" factory="ASCII" comment="clas12 superconducting torus"/>
-//    <symmetry type="cylindrical_3d" format="map" integration="ClassicalRK4" minStep="1*mm"/>
-//    <map>
-//        <coordinate>
-//            <first  name="azimuthal"    npoints="0" min="0" max="360" units="deg"/>
-//            <second name="transverse"   npoints="10" min="0" max="500" units="cm"/>
-//            <third  name="longitudinal" npoints="10" min="100" max="600" units="cm"/>
-//        </coordinate>
-//        <field unit="kilogauss"/>
-//        <interpolation type="none"/>
-//    </map>
-//</mfield>
 
 }
