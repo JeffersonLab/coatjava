@@ -206,6 +206,7 @@
               <exclude>cnuphys:jogl-all</exclude>
               <exclude>cnuphys:jogl</exclude>
               <exclude>cnuphys:gluegen</exclude>
+              <exclude>org.jlab.coda:jclara</exclude>
               <exclude>org.jacoco</exclude>
             </excludes>
           </artifactSet>
