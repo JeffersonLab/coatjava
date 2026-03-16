@@ -26,8 +26,6 @@ public class Track {
 	private RadialKFHit beamline_hit = null;
 	
 	private int    trackId = -1; ///< id of the track
-	//private int    n_hits  = 0;  ///< number of hits
-	//private int    sum_adc = 0;  ///< sum of adc (adc)
 	private double sum_residuals = 0; ///< sum of residuals (mm)
 	private double chi2    = 0;  ///< sum of residuals^2 (mm^2)
 	// AHDC::track
@@ -37,7 +35,6 @@ public class Track {
 	private double px0 = 0;
 	private double py0 = 0;
 	private double pz0 = 0;
-	private double dEdx    = 0;  ///< deposited energy per path length (adc/mm)
 	private double p_drift = 0;  ///< momentum in the drift region (MeV)
 	private double path    = 0;  ///< length of the track (mm)
 	// for the error matrix: first 3 lines in mm^2; last 3 lines in MeV^2 (in the beamline)
@@ -234,20 +231,14 @@ public class Track {
 	public double get_chi2() {return chi2;}
 	public double get_sum_residuals() {return sum_residuals;}
 	// AHDC::track
-	public void set_dEdx(double _dEdx) { dEdx = _dEdx;}
 	public void set_p_drift(double _p_drift) { p_drift = _p_drift;}
 	public void set_path(double _path) { path = _path;}
 	public double get_dEdx() {
 		if (path <= 0) {
-			dEdx = 0;
+			return 0;
 		}else {
-			int sum = 0;
-			for (Hit h : hits) {
-				sum += (int) Math.round(h.getADC());
-			}
-			dEdx = sum/path; 
+			return get_sum_adc()/path; 
 		}
-		return dEdx;
 	}
 	public double get_p_drift() {return p_drift;}
 	public double get_path() {return path;}
