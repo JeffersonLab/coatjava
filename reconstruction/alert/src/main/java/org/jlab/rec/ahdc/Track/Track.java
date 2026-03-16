@@ -99,6 +99,8 @@ public class Track {
 		this.px0 = helixFitObject.get_px();
 		this.py0 = helixFitObject.get_py();
 		this.pz0 = helixFitObject.get_pz();
+		this.chi2 = helixFitObject.get_Chi2();
+		this.path = helixFitObject.get_path();
 	}
 
 	public void setPositionAndMomentumVec(double[] x) {
@@ -213,15 +215,40 @@ public class Track {
 	public void set_chi2(double _chi2) { chi2 = _chi2;}
 	public void set_sum_residuals(double _sum_residuals) { sum_residuals = _sum_residuals;}
 	public int    get_trackId() {return trackId;}
-	public int    get_n_hits() {return n_hits;}
-	public int    get_sum_adc() {return sum_adc;}
+	public int    get_n_hits() {
+    	if (hits == null) {
+    	    return 0;
+    	}
+    	return hits.size();
+	}
+	public int    get_sum_adc() {
+		if (hits == null || hits.isEmpty()) {
+			return 0;
+		}
+		int sum = 0;
+		for (Hit h : hits) {
+			sum += (int) Math.round(h.getADC());
+		}
+		return sum;
+	}
 	public double get_chi2() {return chi2;}
 	public double get_sum_residuals() {return sum_residuals;}
 	// AHDC::track
 	public void set_dEdx(double _dEdx) { dEdx = _dEdx;}
 	public void set_p_drift(double _p_drift) { p_drift = _p_drift;}
 	public void set_path(double _path) { path = _path;}
-	public double get_dEdx() {return dEdx;}
+	public double get_dEdx() {
+		if (path <= 0) {
+			dEdx = 0;
+		}else {
+			int sum = 0;
+			for (Hit h : hits) {
+				sum += (int) Math.round(h.getADC());
+			}
+			dEdx = sum/path; 
+		}
+		return dEdx;
+	}
 	public double get_p_drift() {return p_drift;}
 	public double get_path() {return path;}
 	public RealMatrix getErrorCovarianceMatrix() {return errorCovarianceMatrix;}
