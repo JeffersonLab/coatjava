@@ -26,8 +26,8 @@ public class Track {
 	private RadialKFHit beamline_hit = null;
 	
 	private int    trackId = -1; ///< id of the track
-	private int    n_hits  = 0;  ///< number of hits
-	private int    sum_adc = 0;  ///< sum of adc (adc)
+	//private int    n_hits  = 0;  ///< number of hits
+	//private int    sum_adc = 0;  ///< sum of adc (adc)
 	private double sum_residuals = 0; ///< sum of residuals (mm)
 	private double chi2    = 0;  ///< sum of residuals^2 (mm^2)
 	// AHDC::track
@@ -210,8 +210,8 @@ public class Track {
 			hit.setTrackId(_trackId);
 		}
 	}
-	public void set_n_hits(int _n_hits) { n_hits = _n_hits;}
-	public void set_sum_adc(int _sum_adc) { sum_adc = _sum_adc;}
+	//public void set_n_hits(int _n_hits) { n_hits = _n_hits;}
+	//public void set_sum_adc(int _sum_adc) { sum_adc = _sum_adc;}
 	public void set_chi2(double _chi2) { chi2 = _chi2;}
 	public void set_sum_residuals(double _sum_residuals) { sum_residuals = _sum_residuals;}
 	public int    get_trackId() {return trackId;}

@@ -158,13 +158,13 @@ public class KalmanFilter {
                     sum_residuals += hit.getResidual();
                     chi2 += Math.pow(hit.getResidual(),2)/hit.MeasurementNoiseMatrix().getEntry(0,0);
 			    }
-			    track.set_sum_adc(sum_adc);
+			    //track.set_sum_adc(sum_adc);
 			    track.set_sum_residuals(sum_residuals);
 			    track.set_chi2(chi2/(AHDC_hits.size()-3));
 			    track.set_p_drift(p_drift);
 			    track.set_dEdx(sum_adc/s);
 			    track.set_path(s);
-			    track.set_n_hits(AHDC_hits.size());
+			    //track.set_n_hits(AHDC_hits.size());
 
 				/// At the end of the PostFit porpagation to the last layer of the AHDC
 				/// we project the track on the ATOF surface without any AI ATOF hit indication 
