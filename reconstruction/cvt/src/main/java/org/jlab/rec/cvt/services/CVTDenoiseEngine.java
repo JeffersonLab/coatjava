@@ -104,7 +104,7 @@ class Hit {
     int layer; // 1 to 6 for SVT, and 7 to 12 for BMT
     int sector;
     int strip;
-    int index; // Index of hits in a strip in case that there are multiple hits in a strip
+    int index; // Index of hits in a strip, in case that there are multiple hits in a strip
     
     public Hit(int layer, int sector, int strip, int index) {
         this.layer = layer;
@@ -140,14 +140,14 @@ public class CVTDenoiseEngine extends ReconstructionEngine {
     private static final int NFEATURES = 9; // Number of features for input of models
     
     // Inputs are from BST and BMT adc banks    
-    final static String BST_BANK = "BST::adc";
-    final static String BMT_BANK = "BMT::adc";
+    final static String BST_BANK = "BST::Hits";
+    final static String BMT_BANK = "BMT::Hits";
     
     // Model files and thresholds for the three models; They could be set in yaml files
     final static String CONF_MODEL_FILES[] = {"modelFile1", "modelFile2", "modelFile3"};
     final static String CONF_THRESHOLDS[] = {"threshold1", "threshold2", "threshold3"};         
     String[] modelFiles = {"classifier_torchscript_sector1_noCSWeight_weightInTraining.pt", "classifier_torchscript_sector2_noCSWeight_weightInTraining.pt", "classifier_torchscript_sector3_noCSWeight_weightInTraining.pt"};
-    float[] thresholds = {0.025f, 0.025f, 0.025f}; // To be determined
+    float[] thresholds = {0.1f, 0.1f, 0.1f}; // To be determined
     
     // Number of threshold for predictor pools    
     final static String CONF_THREADS = "threads";    
@@ -245,41 +245,37 @@ public class CVTDenoiseEngine extends ReconstructionEngine {
         for(int i = 0; i < bst_bank.rows(); i++){
             int sector = bst_bank.getByte("sector", i);
             int layer = bst_bank.getByte("layer", i);
-            int strip = bst_bank.getShort("component",i);
-            int order = bst_bank.getByte("order", i);
-            int adc = bst_bank.getInt("ADC", i);
+            int strip = bst_bank.getShort("strip",i);
             
             Hit hit = new Hit(layer, sector, strip, nHitsLayerSectorStrip_BST[layer-1][sector-1][strip-1]++);
             
-            if(order == 0 || order == 10){
-                Line3D line = Geometry.getInstance().getSVT().getStrip(layer, sector, strip);                             
-                float[] features = {strip, (float)(line.origin().x()/10.), (float)(line.end().x()/10.), (float)(line.origin().y()/10.), 
-                    (float)(line.end().y()/10.), (float)(line.origin().z()/10.), (float)(line.end().z()/10.), sector, layer}; // unit conversion from mm to cm for end points               
-                
-                for(int f = 0; f < NFEATURES - 1; f++){
-                    float min = minVals[f][layer-1];
-                    float max = maxVals[f][layer-1];
-                    features[f] = (features[f] - min) / (max-min);
-                }                
-                features[NFEATURES-1] = (features[NFEATURES-1] - 1) / (NLAYERS - 1);                
-                
-                List<Integer> sectionList = getSectionList(layer, sector);
-                for(int section : sectionList){
-                    for(int f = 0; f < NFEATURES; f++){
-                        x[section - 1][nHits[section - 1]][f] = features[f];
-                    }
-                    
-                    mask[section - 1][nHits[section - 1]] = 1.0f;
-                    
-                    maps[section - 1].put(nHits[section - 1], hit);
+            Line3D line = Geometry.getInstance().getSVT().getStrip(layer, sector, strip);                             
+            float[] features = {strip, (float)(line.origin().x()/10.), (float)(line.end().x()/10.), (float)(line.origin().y()/10.), 
+                (float)(line.end().y()/10.), (float)(line.origin().z()/10.), (float)(line.end().z()/10.), sector, layer}; // unit conversion from mm to cm for end points               
 
-                    nHits[section - 1]++;
-                    if(nHits[section - 1] == MAX_HITS) {
-                        Logger.getLogger(CVTDenoiseEngine.class.getName()).log(Level.SEVERE, "Number of hits is over maximum limit!");
-                        return true;
-                    }
-                } 
-            }
+            for(int f = 0; f < NFEATURES - 1; f++){
+                float min = minVals[f][layer-1];
+                float max = maxVals[f][layer-1];
+                features[f] = (features[f] - min) / (max-min);
+            }                
+            features[NFEATURES-1] = (features[NFEATURES-1] - 1) / (NLAYERS - 1);                
+
+            List<Integer> sectionList = getSectionList(layer, sector);
+            for(int section : sectionList){
+                for(int f = 0; f < NFEATURES; f++){
+                    x[section - 1][nHits[section - 1]][f] = features[f];
+                }
+
+                mask[section - 1][nHits[section - 1]] = 1.0f;
+
+                maps[section - 1].put(nHits[section - 1], hit);
+
+                nHits[section - 1]++;
+                if(nHits[section - 1] == MAX_HITS) {
+                    Logger.getLogger(CVTDenoiseEngine.class.getName()).log(Level.SEVERE, "Number of hits is over maximum limit!");
+                    return true;
+                }
+            } 
         }
         
         // Read BMT bank and set input for models
@@ -287,64 +283,64 @@ public class CVTDenoiseEngine extends ReconstructionEngine {
         for(int i = 0; i < bmt_bank.rows(); i++){
             int sector = bmt_bank.getByte("sector", i);
             int layer = bmt_bank.getByte("layer", i);
-            int strip = bmt_bank.getShort("component",i);
-            int order = bmt_bank.getByte("order", i);
-            int adc = bst_bank.getInt("ADC", i);
+            int strip = bmt_bank.getShort("strip",i);
             
             Hit hit = new Hit(layer+6, sector, strip, nHitsLayerSectorStrip_BMT[layer-1][sector-1][strip-1]++);
             
-            if(order == 0 || order == 10){
-                Point3D originPoint, endPoint;                
-                int region = (layer + 1) / 2; // Get region number for a BMT layer; layers 1, 4, 6 for BMT-C layers, and layers 2, 3, 5 for BMT-Z
-                if(layer == 2 || layer ==3 || layer == 5) {
-                    Line3D line = Geometry.getInstance().getBMT().getLCZstrip(region, sector, strip, swimmer);
-                    originPoint = line.origin();
-                    endPoint = line.origin();
-                }
-                else {
-                    Arc3D arcLine = Geometry.getInstance().getBMT().getCstrip(region, sector, strip);
-                    originPoint = arcLine.origin();
-                    endPoint = arcLine.end();
-                }
-                
-                layer += 6;
-                float[] features = {strip, (float)(originPoint.x()/10.), (float)(endPoint.x()/10.), (float)(originPoint.y()/10.), 
-                    (float)(endPoint.y()/10.), (float)(originPoint.z()/10.), (float)(endPoint.z()/10.), sector, layer}; // unit conversion from mm to cm for end points  
-                
-                for(int f = 0; f < NFEATURES - 1; f++){
-                    float min = minVals[f][layer-1];
-                    float max = maxVals[f][layer-1];
-                    features[f] = (features[f] - min) / (max-min);
-                }                
-                features[NFEATURES-1] = (features[NFEATURES-1] - 1) / (NLAYERS - 1);
-                            
-                List<Integer> sectionList = getSectionList(layer, sector);
-                for(int section : sectionList){
-                    for(int f = 0; f < NFEATURES; f++){
-                        x[section - 1][nHits[section - 1]][f] = features[f];
-                    }                    
-                    
-                    mask[section - 1][nHits[section - 1]] = 1.0f;
-                    
-                    maps[section - 1].put(nHits[section - 1], hit);
-
-                    nHits[section - 1]++;
-                    if(nHits[section - 1] == MAX_HITS) {
-                        Logger.getLogger(CVTDenoiseEngine.class.getName()).log(Level.SEVERE, "Number of hits is over maximum limit!");
-                        return true;
-                    }
-                } 
+            Point3D originPoint, endPoint;                
+            int region = (layer + 1) / 2; // Get region number for a BMT layer; layers 1, 4, 6 for BMT-C layers, and layers 2, 3, 5 for BMT-Z
+            if(layer == 2 || layer ==3 || layer == 5) {
+                Line3D line = Geometry.getInstance().getBMT().getLCZstrip(region, sector, strip, swimmer);
+                originPoint = line.origin();
+                endPoint = line.origin();
             }
+            else {
+                Arc3D arcLine = Geometry.getInstance().getBMT().getCstrip(region, sector, strip);
+                originPoint = arcLine.origin();
+                endPoint = arcLine.end();
+            }
+
+            layer += 6;
+            float[] features = {strip, (float)(originPoint.x()/10.), (float)(endPoint.x()/10.), (float)(originPoint.y()/10.), 
+                (float)(endPoint.y()/10.), (float)(originPoint.z()/10.), (float)(endPoint.z()/10.), sector, layer}; // unit conversion from mm to cm for end points  
+
+            for(int f = 0; f < NFEATURES - 1; f++){
+                float min = minVals[f][layer-1];
+                float max = maxVals[f][layer-1];
+                features[f] = (features[f] - min) / (max-min);
+            }                
+            features[NFEATURES-1] = (features[NFEATURES-1] - 1) / (NLAYERS - 1);
+
+            List<Integer> sectionList = getSectionList(layer, sector);
+            for(int section : sectionList){
+                for(int f = 0; f < NFEATURES; f++){
+                    x[section - 1][nHits[section - 1]][f] = features[f];
+                }                    
+
+                mask[section - 1][nHits[section - 1]] = 1.0f;
+
+                maps[section - 1].put(nHits[section - 1], hit);
+
+                nHits[section - 1]++;
+                if(nHits[section - 1] == MAX_HITS) {
+                    Logger.getLogger(CVTDenoiseEngine.class.getName()).log(Level.SEVERE, "Number of hits is over maximum limit!");
+                    return true;
+                }
+            }             
         }        
+                
+        // AI-based hit classification.
+        // The status is encoded in a byte (3-bit bitmask).
+        //
+        // Each bit corresponds to one section:
+        // Section 1 <-> bit 0
+        // Section 2 <-> bit 1
+        // Section 3 <-> bit 2
+        //
+        // Bit value:
+        // 0 = noise
+        // 1 = signal 
         
-        // Apply models for prediction of hits
-        // Status for a hit with order of 0:
-        // 0: rejected
-        // 1: accepted by section 1
-        // 2: accepted by section 2
-        // 3: accepted by section 3
-        // 12: accepted by sections 1 & 2; Note: a hit is shared by secton 1 & 2, and is accpcted by both section
-        // 23: accepted by sections 2 & 3; Note: a hit is shared by secton 2 & 3, and is accpcted by both section                
         int maxIndex_BST = Integer.MIN_VALUE;
         for (int i = 0; i < nHitsLayerSectorStrip_BST.length; i++) {
             for (int j = 0; j < nHitsLayerSectorStrip_BST[i].length; j++) {
@@ -377,10 +373,7 @@ public class CVTDenoiseEngine extends ReconstructionEngine {
                     float[][] preds = predictor.predict(input);
                     for(int i = 0; i < nHits[s]; i++){                                                
                         Hit hit = maps[s].get(i);
-                        byte status = statuses[hit.getLayer()-1][hit.getSector()-1][hit.getStrip() - 1][hit.getIndex()];
-                        if(preds[i][0] > thresholds[s]) statuses[hit.getLayer()-1][hit.getSector()-1][hit.getStrip() - 1][hit.getIndex()] = (byte) (status * 10 + s + 1);                  
-                        //if(statuses[hit.getLayer()-1][hit.getSector()-1][hit.getStrip() - 1][hit.getIndex()] < 0 || statuses[hit.getLayer()-1][hit.getSector()-1][hit.getStrip() - 1][hit.getIndex()] > 123) 
-                        //    System.out.println(preds[i][0] + "  " + s + "  " + i + "  " + hit.getLayer() + "  " + hit.getSector() + "  " + hit.getStrip() + "  " + hit.getIndex()  + "  " + statuses[hit.getLayer()-1][hit.getSector()-1][hit.getStrip() - 1][hit.getIndex()]);
+                        if(preds[i][0] > thresholds[s]) statuses[hit.getLayer()-1][hit.getSector()-1][hit.getStrip() - 1][hit.getIndex()] |= (byte) (1 << s);                          
                     }
                 } finally {
                     predictors[s].put(predictor);
@@ -482,28 +475,24 @@ public class CVTDenoiseEngine extends ReconstructionEngine {
         for (int row=0; row<bst_bank.rows(); row++) {
             int sector = bst_bank.getByte("sector", row);
             int layer = bst_bank.getByte("layer", row);
-            int strip = bst_bank.getShort("component",row);
-            int order = bst_bank.getByte("order", row);
+            int strip = bst_bank.getShort("strip", row);
             
             byte status = statuses[layer-1][sector-1][strip-1][nHitsLayerSectorStrip_BST[layer-1][sector-1][strip-1]];            
             nHitsLayerSectorStrip_BST[layer-1][sector-1][strip-1]++;
             
-            if(order == 0) bst_bank.setByte("order",row,status);
-            else if(order == 10) bst_bank.setByte("order",row, (byte)(100 + status)); // For noise hit with original order of 10, 100 is added into status from prediction
+            bst_bank.setByte("ai", row, status);
         }
         
         int[][][] nHitsLayerSectorStrip_BMT = new int[6][3][1152]; // Number of hits in a strip
         for (int row=0; row<bmt_bank.rows(); row++) {
             int sector = bmt_bank.getByte("sector", row);
             int layer = bmt_bank.getByte("layer", row);
-            int strip = bmt_bank.getShort("component",row);
-            int order = bmt_bank.getByte("order", row);
+            int strip = bmt_bank.getShort("strip", row);
             
             byte status = statuses[layer+5][sector-1][strip-1][nHitsLayerSectorStrip_BMT[layer-1][sector-1][strip-1]]; // For BMT, Layer from 1 to 6 in bank, while layer from 7 to 12 in model
             nHitsLayerSectorStrip_BMT[layer-1][sector-1][strip-1]++;
             
-            if(order == 0) bmt_bank.setByte("order",row, status);
-            else if(order == 10) bmt_bank.setByte("order",row, (byte)(100 + status)); // For noise hit with original order of 10, 100 is added into status from prediction
+            bmt_bank.setByte("ai", row, status);
         }
     }
     

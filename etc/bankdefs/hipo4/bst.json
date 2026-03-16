@@ -120,7 +120,8 @@
         {"name":"trkingStat",     "type":"B", "info":"tracking status"},
         {"name":"clusterID",      "type":"S", "info":"associated cluster ID"},
         {"name":"trkID",          "type":"S", "info":"associated track ID"},
-        {"name":"status",         "type":"B", "info":"status (0=good)"}
+        {"name":"status",         "type":"B", "info":"status (0=good)"},
+        {"name":"ai",             "type":"B", "info":"3 bits corresponds to 3 sections; 1 = singal and 0 = noise"}
         ]
   },
   {
