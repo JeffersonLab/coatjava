@@ -121,7 +121,7 @@
         {"name":"clusterID",      "type":"S", "info":"associated cluster ID"},
         {"name":"trkID",          "type":"S", "info":"associated track ID"},
         {"name":"status",         "type":"B", "info":"status (0=good)"},
-        {"name":"ai",             "type":"B", "info":"3 bits corresponds to 3 sections; 1 = singal and 0 = noise"}
+        {"name":"ai",             "type":"B", "info":"bits [0-2] : noise flags for sections 1-3 (1 = noise, 0 = signal); bits [3-5] : hit presence for sections 1-3 (1 = hit present, 0 = no hit)"}
         ]
   },
   {
