@@ -13,22 +13,6 @@ public class ToAscii {
 	
 	private static boolean _csv;
 
-	// convert the transverse solenoid to ascii
-	private static void transverseToAscii(TransverseSolenoid transSol, String path) {
-		File asciiFile = new File(path);
-
-
-		try {
-			DataOutputStream dos = new DataOutputStream(new FileOutputStream(asciiFile));
-			writeAsciiHeader(dos, transSol);
-			writeTransverseData(dos, transSol);
-			dos.close();
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-	
 	/**
 	 * Write the Torus to Ascii
 	 */
@@ -83,49 +67,6 @@ public class ToAscii {
 			e.printStackTrace();
 		}
 		System.out.println("done");
-	}
-
-	private static void writeTransverseData(DataOutputStream dos, TransverseSolenoid transSol) {
-		//needed from torus
-		GridCoordinate xCoord = transSol.getXCoordinate();
-		GridCoordinate yCoord = transSol.getYCoordinate();
-		GridCoordinate zCoord = transSol.getZCoordinate();
-		
-		for (int xidx = 0; xidx < xCoord.getNumPoints(); xidx++) {			
-			double x = 10*xCoord.getValue(xidx);
-			
-			System.out.println("x = " + x);
-			
-			for (int yidx = 0; yidx < yCoord.getNumPoints(); yidx++) {
-				double y = 10*yCoord.getValue(yidx);
-
-				for (int zidx = 0; zidx < zCoord.getNumPoints(); zidx++) {
-					double z = 10*zCoord.getValue(zidx);
-					
-					int compositeIndex = transSol.getCompositeIndex(xidx, yidx, zidx);
-					
-					float bx = transSol.getB1(compositeIndex)/10f;
-					float by = transSol.getB2(compositeIndex)/10f;
-					float bz = transSol.getB3(compositeIndex)/10f;
-					
-					String s = null;
-					
-					s = String.format("%-3.0f %-3.0f %-3.0f %s %s %s", 
-							x, y, z, vStr(bx), vStr(by), vStr(bz));
-					
-					s = s.replace("   ", " ");
-					s = s.replace("  ", " ");		
-					s = s.replace("0E", "E");		
-					s = s.replace("0E", "E");		
-					s = s.replace("0E", "E");		
-					s = s.replace("0E", "E");		
-					s = s.replace("E+00", "");		
-					
-					stringLn(dos, 0, s);
-				}
-			}
-		}
-
 	}
 
 	
@@ -259,32 +200,6 @@ public class ToAscii {
 		return String.format("%11.4E", val);
 	}
 	
-	private static void writeAsciiHeader(DataOutputStream dos, TransverseSolenoid transSol) {
-		GridCoordinate xCoord = transSol.getXCoordinate();
-		GridCoordinate yCoord = transSol.getYCoordinate();
-		GridCoordinate zCoord = transSol.getZCoordinate();
-		
-		
-		stringLn(dos, 0, "<mfield>");
-		stringLn(dos, 2, "<description name=\"transverseSolenoidMarch2021\" factory=\"ASCII\" comment=\"polarized target magnet\"/>");
-		stringLn(dos, 2, "<symmetry type=\"cartesian_3d\" format=\"map\" integration=\"ClassicalRK4\" minStep=\"0.1*mm\"/>");
-
-		stringLn(dos, 2, "<map>");
-		stringLn(dos, 4, "<coordinate>");
-
-		writeCoord(dos, 6, xCoord, "first", "azimuthal", "deg", 10);
-		writeCoord(dos, 6, yCoord, "second", "transverse", "mm", 10);
-		writeCoord(dos, 6, zCoord, "third", "longitudinal", "mm", 10);
-		
-		stringLn(dos, 4, "</coordinate>");
-		stringLn(dos, 4, "<field unit=\"T\"/>");
-		
-		
-		stringLn(dos, 2, "</map>");
-		stringLn(dos, 0, "</mfield>");
-
-	}
-	
 	private static void writeAsciiHeader(DataOutputStream dos, Torus torus) {
 		
 		//needed from torus
@@ -324,18 +239,7 @@ public class ToAscii {
 		
 		stringLn(dos, leadingSpace, s);
 	}
-
-	private static void writeCoord(DataOutputStream dos, int leadingSpace, GridCoordinate coord, String ordinal, String name, String unit, double scale) {
-		int np = coord.getNumPoints();
-		int min = (int)(scale*coord.getMin());
-		int max = (int)(scale*coord.getMax());
 		
-		String s = String.format("<%s name=\"%s\" npoints=\"%d\" min=\"%d.0\" max=\"%d.0\"/>", 
-				ordinal, name, np, min, max);
-		
-		stringLn(dos, leadingSpace, s);
-	}
-
 	private static void stringLn(DataOutputStream dos, int leadingSpace, String str) {
 		
 		try {
@@ -395,30 +299,5 @@ public class ToAscii {
 		}
 	}
 	
-	public static void main(String arg[]) {
-		//log for the transverse field
-		
-		String homeDir = System.getProperty("user.home");
-		File file = new File(homeDir + "/transverse", "Full_transsolenoid_x161_y161_z321_March2021.dat");
-		
-		if (file.exists()) {
-			System.out.println("Found file: " + file.getAbsolutePath());
-			
-			try {
-				TransverseSolenoid solenoid = TransverseSolenoid.fromBinaryFile(file);
-				solenoid.printConfiguration(System.out);
-				
-				
-				String path = homeDir + "/transverse/transverseSolenoidMarch2021.txt";
-				
-				transverseToAscii(solenoid, path);
-				
-				System.out.println("Done.");
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			}
-		} else {
-			System.err.println("File does not exist: " + file.getAbsolutePath());
-		}
-	}
+
 }
