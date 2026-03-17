@@ -29,7 +29,6 @@ import java.util.logging.Logger;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.geom.detector.alert.AHDC.AlertDCDetector;
 import org.jlab.geom.detector.alert.AHDC.AlertDCFactory;
-import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
 import org.jlab.detector.pulse.ModeAHDC;
 
 /** AHDCEngine reconstruction service.
@@ -83,23 +82,6 @@ public class AHDCEngine extends ReconstructionEngine {
         if (modeTrackFinding == ModeTrackFinding.AI_Track_Finding) {
             modelTrackFinding = new ModelTrackFinding();
         }
-
-        // Requires calibration constants
-        String[] alertTables = new String[] {
-            	"/calibration/alert/ahdc/time_offsets",
-                "/calibration/alert/ahdc/time_to_distance",
-                "/calibration/alert/ahdc/raw_hit_cuts",
-                "/calibration/alert/atof/effective_velocity",
-                "/calibration/alert/atof/time_walk",
-                "/calibration/alert/atof/attenuation",
-                "/calibration/alert/atof/time_offsets",
-                "/calibration/alert/ahdc/gains",
-		"/calibration/alert/ahdc/time_over_threshold"
-		
-        };
-        requireConstants(Arrays.asList(alertTables));
-        
-        this.getConstantsManager().setVariation("default");
         
         this.registerOutputBank("AHDC::hits","AHDC::preclusters","AHDC::clusters","AHDC::track","AHDC::mc","AHDC::ai:prediction");
 
@@ -121,12 +103,6 @@ public class AHDCEngine extends ReconstructionEngine {
             if (newRun <= 0) {
                 LOGGER.warning("AHDCEngine:  got run <= 0 in RUN::config, skipping event.");
                 return false;
-            }
-            // Load the constants
-            //-------------------
-            if(Run != newRun) {
-                CalibrationConstantsLoader.Load(newRun, this.getConstantsManager());
-                Run = newRun;
             }
         }
 
