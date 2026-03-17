@@ -139,7 +139,7 @@ public class CVTDenoiseEngine extends ReconstructionEngine {
     private static final int MAX_HITS = 450; // Maximum of hits for each layer
     private static final int NFEATURES = 9; // Number of features for input of models
     
-    // Inputs are from BST and BMT adc banks    
+    // Inputs are from BST and BMT hit banks    
     final static String BST_BANK = "BST::Hits";
     final static String BMT_BANK = "BMT::Hits";
     
@@ -328,19 +328,7 @@ public class CVTDenoiseEngine extends ReconstructionEngine {
                 }
             }             
         }        
-                
-        // AI-based hit classification.
-        // The status is encoded in a byte (3-bit bitmask).
-        //
-        // Each bit corresponds to one section:
-        // Section 1 <-> bit 0
-        // Section 2 <-> bit 1
-        // Section 3 <-> bit 2
-        //
-        // Bit value:
-        // 0 = noise
-        // 1 = signal 
-        
+                        
         int maxIndex_BST = Integer.MIN_VALUE;
         for (int i = 0; i < nHitsLayerSectorStrip_BST.length; i++) {
             for (int j = 0; j < nHitsLayerSectorStrip_BST[i].length; j++) {
@@ -363,6 +351,10 @@ public class CVTDenoiseEngine extends ReconstructionEngine {
         }        
         int maxIndex = Math.max(maxIndex_BST, maxIndex_BMT);
         
+        // AI-based hit classification.
+        // Hit status is encoded in a single byte:
+        // bits [0–2] : noise flags for sections 1–3 (1 = noise, 0 = signal)
+        // bits [3–5] : hit presence for sections 1–3 (1 = hit present, 0 = no hit)
         byte[][][][] statuses = new byte[NLAYERS][18][1152][maxIndex+1];        
         for(int s = 0; s < NSECTIONS; s++){
             CVTInput input = new CVTInput(x[s],mask[s]);
@@ -373,7 +365,8 @@ public class CVTDenoiseEngine extends ReconstructionEngine {
                     float[][] preds = predictor.predict(input);
                     for(int i = 0; i < nHits[s]; i++){                                                
                         Hit hit = maps[s].get(i);
-                        if(preds[i][0] > thresholds[s]) statuses[hit.getLayer()-1][hit.getSector()-1][hit.getStrip() - 1][hit.getIndex()] |= (byte) (1 << s);                          
+                        statuses[hit.getLayer()-1][hit.getSector()-1][hit.getStrip() - 1][hit.getIndex()] |= (byte) (1 << (s+3));  
+                        if(preds[i][0] < thresholds[s]) statuses[hit.getLayer()-1][hit.getSector()-1][hit.getStrip() - 1][hit.getIndex()] |= (byte) (1 << s);                      
                     }
                 } finally {
                     predictors[s].put(predictor);
