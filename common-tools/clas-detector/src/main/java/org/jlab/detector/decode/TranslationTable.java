@@ -6,8 +6,8 @@ import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.calib.utils.ConstantsManager;
 
 /**
- * A global, CCDB/IndexedTable, DAQ translation table.  Technically, just an IndexedTable
- * assuming the format (c/s/c/s/l/c/o) and appended by a DetectorType column.  
+ * An IndexedTable assuming the standard, /daq/tt CCDB format (c/s/c/s/l/c/o),
+ * appended by a DetectorType column.  A global CCDB translation table.  
  *
  * @author baltzell
  */
