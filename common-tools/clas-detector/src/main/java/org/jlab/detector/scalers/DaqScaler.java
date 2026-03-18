@@ -75,16 +75,38 @@ public class DaqScaler {
 
         if (this.clock > 0) {
 
+            // complain if a hard-coded clock frequency was used
             String prefix = String.format("clockbug [%s]", this.getClass().getSimpleName());
-            if(Math.abs(this.clockFreq - ((1e6)+1)) < 0.1)
+            boolean clockbug = false;
+            if(Math.abs(this.clockFreq - ((1e6)+1)) < 0.1) {
               System.err.println(String.format("%s: used hard-coded clockFreq from Dsc2Scaler(bank,table,table,seconds)", prefix));
-            else if(Math.abs(this.clockFreq - ((1e6)+2)) < 0.1)
+              clockbug = true;
+            }
+            else if(Math.abs(this.clockFreq - ((1e6)+2)) < 0.1) {
               System.err.println(String.format("%s: used hard-coded clockFreq from StruckScaler()", prefix));
-            else if(Math.abs(this.clockFreq - ((1e6)+3)) < 0.1)
+              clockbug = true;
+            }
+            else if(Math.abs(this.clockFreq - ((1e6)+3)) < 0.1) {
               System.err.println(String.format("%s: used hard-coded clockFreq from StruckScaler(table,table,table)", prefix));
+              clockbug = true;
+            }
             else
               System.err.println(String.format("%s: clockFreq OK (value=%f)", prefix, this.clockFreq));
-            System.err.println(String.format("%s: %s", prefix, this.toString()));
+
+            // the hard-coded clock frequency is 1 MHz, but if it was used, it'll be 1 MHz + a few Hz; correct it now, along
+            // with the `seconds` and `liveSeconds`
+            if(clockbug) {
+              seconds     *= this.clockFreq / 1e6;
+              liveSeconds *= this.clockFreq / 1e6;
+              this.clockFreq = 1e6;
+            }
+
+            // print the clock
+            System.err.println(String.format("%s: toString: %s", prefix, this.toString()));
+
+            // ==================================================================================
+            // original code
+            // ==================================================================================
 
             final double fcup_slope  = fcupTable.getDoubleValue("slope",0,0,0);  // Hz/nA
             final double fcup_offset = fcupTable.getDoubleValue("offset",0,0,0); // Hz
@@ -109,7 +131,36 @@ public class DaqScaler {
                 this.beamCharge = q * fcup_atten / fcup_slope;
                 this.beamChargeGated = qg * fcup_atten / fcup_slope;
             }
-            System.err.println(String.format("%s: beamCharge=%f  beamChargeGated=%f", prefix, this.beamCharge, this.beamChargeGated));
+
+            // ==================================================================================
+
+            // print the beamCharge from the original code
+            System.err.println(String.format("%s: clockFreq@%f  beamCharge=%f  beamChargeGated=%f", prefix, this.clockFreq, this.beamCharge, this.beamChargeGated));
+
+            // now redo the calculation as if the clock frequency were 100 kHz
+            double clockFreq100   = 100000;
+            double seconds100     = seconds     * this.clockFreq / clockFreq100;
+            double liveSeconds100 = liveSeconds * this.clockFreq / clockFreq100;
+            double beamCharge100;
+            double beamChargeGated100;
+
+            double q100  = (double)this.slm      - slm_offset * seconds100;
+            double qg100 = (double)this.gatedSlm - slm_offset * liveSeconds100;
+            double beamChargeSLM100 = q100 * slm_atten / slm_slope;
+            double beamChargeGatedSLM100 = qg100 * slm_atten / slm_slope;
+            // double livetime100 = (double)this.gatedClock / this.clock;
+
+            if (fcup_atten<1e-8 || fcup_slope<1e-8) {
+                beamCharge100 = beamChargeSLM100;
+                beamChargeGated100 = beamChargeGatedSLM100;
+            }
+            else {
+                q100  = (double)this.fcup      - fcup_offset * seconds100;
+                qg100 = (double)this.gatedFcup - fcup_offset * liveSeconds100;
+                beamCharge100 = q100 * fcup_atten / fcup_slope;
+                beamChargeGated100 = qg100 * fcup_atten / fcup_slope;
+            }
+            System.err.println(String.format("%s: clockFreq@%f  beamCharge=%f  beamChargeGated=%f", prefix, clockFreq100, beamCharge100, beamChargeGated100));
         }
     }
 
