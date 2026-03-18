@@ -8,6 +8,7 @@ def cli():
     cli.add_argument('-t',help='threads (default=4,8)',default='4,8')
     cli.add_argument('-e',help='events per thread',default=100,type=int)
     cli.add_argument('-i',help='input data file',required=True)
+    cli.add_argument('-N',help='NUMA socket',default=-1,type=int,choices=[0,1])
     cfg = cli.parse_args()
     cfg.t = cfg.t.split(',')
     if cfg.c is None: sys.exit('-c or $CLARA_HOME is required.')
@@ -25,22 +26,42 @@ def run(cmd):
     if p.returncode != 0:
         pass
 
-def benchmark(cfg, threads, log):
-    import os,sys,shutil,collections
+def find_run_clara(cfg):
+    import os,shutil
     run_clara = shutil.which('run-clara')
     if not run_clara:
-        run_clara = cfg.c + '/plugins/clas12/bin/run-clara'
-        if not os.path.exists(run_clara):
-            sys.exit('run-clara is not in $PATH')
+        if os.path.exists(cfg.c + '/plugins/clas12/bin/run-clara'):
+            run_clara = cfg.c + '/plugins/clas12/bin/run-clara'
+        else:
+            print('ERROR:  Cannot find run-clara, e.g., in $PATH')
+    return run_clara
+
+def get_numa_cpus(node):
+    for line in run(['numactl','-H']):
+        if line.startswith(f'node {node} cpus:'):
+            for col in line.strip().split()[3:]:
+                yield col
+
+def benchmark(cfg, threads, log):
+    import os,sys,collections
+    run_clara = find_run_clara(cfg)
+    if not run_clara:
+        sys.exit('run-clara is not in $PATH')
     exiting,benchmarks = False,collections.OrderedDict()
-    cmd = [run_clara,
+    cmd = []
+    # use taskset:
+    if cfg.N >= 0:
+        taskset = os.path.dirname(os.path.realpath(__file__))+'/taskset'
+        cmd.extend(['taskset','-c',','.join(get_numa_cpus(cfg.N))])
+    # add the run-clara command:
+    cmd.extend([run_clara,
             '-c',cfg.c,
             '-n',str(cfg.e*int(threads)),
             '-t',str(threads),
             '-l',
             '-y',cfg.y,
             '-o',f'tmp-scaling-{threads}',
-            cfg.i]
+            cfg.i])
     for line in run(cmd):
         cols = line.split()
         print(line)
