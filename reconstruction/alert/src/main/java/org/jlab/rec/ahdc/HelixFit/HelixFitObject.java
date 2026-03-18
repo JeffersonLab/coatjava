@@ -16,7 +16,8 @@ public class HelixFitObject {
     private double _DCA;
     private double _Chi2;
     private double _magfield;
-    
+    private double _path;
+
     public HelixFitObject(){
         //default constructor
     }
@@ -33,6 +34,7 @@ public class HelixFitObject {
         _DCA = DCA;
         _Chi2 = Chi2;
         _magfield = 50;
+        _path = 0;
     }
     public double get_Rho(){
         return _Rho;
@@ -82,6 +84,9 @@ public class HelixFitObject {
     public double get_Chi2(){
         return _Chi2;
     }
+    public void set_Chi2(double Chi2){
+        _Chi2 = Chi2;
+    }
     public double get_Mom(){
         return 0.3*_magfield*Math.abs(_Rho)/(10*Math.sin(Math.toRadians(_Theta)));
     }
@@ -103,5 +108,10 @@ public class HelixFitObject {
     public void set_magfield(double magfield){
         _magfield = magfield;
     }
-    
+    public double get_path(){
+        return _path;
+    }
+    public void set_path(double path){
+        _path = path;
+    }    
 }
