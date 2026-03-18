@@ -54,8 +54,7 @@ public class URWTEngine extends ReconstructionEngine {
     @Override
     public void detectorChanged(int runNumber) {
         String variationName = Optional.ofNullable(this.getEngineConfigString("variation")).orElse("default");
-        DatabaseConstantProvider cp = new DatabaseConstantProvider(runNumber, variationName);
-        factory.init(cp, false, URWellConstants.NREGION);
+        factory = new URWTStripFactory(runNumber, variationName);
     }
 
     @Override
