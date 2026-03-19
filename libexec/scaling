@@ -27,13 +27,13 @@ def run(cmd):
         pass
 
 def find_run_clara(cfg):
-    import os,shutil
+    import os,sys,shutil
     run_clara = shutil.which('run-clara')
     if not run_clara:
         if os.path.exists(cfg.c + '/plugins/clas12/bin/run-clara'):
             run_clara = cfg.c + '/plugins/clas12/bin/run-clara'
         else:
-            print('ERROR:  Cannot find run-clara, e.g., in $PATH')
+            sys.exit('ERROR:  Cannot find run-clara in $PATH or CLARA installation.')
     return run_clara
 
 def get_numa_cpus(node):
@@ -43,10 +43,7 @@ def get_numa_cpus(node):
                 yield col
 
 def benchmark(cfg, threads, log):
-    import os,sys,collections
-    run_clara = find_run_clara(cfg)
-    if not run_clara:
-        sys.exit('run-clara is not in $PATH')
+    import os,collections
     exiting,benchmarks = False,collections.OrderedDict()
     cmd = []
     # use taskset:
@@ -54,7 +51,7 @@ def benchmark(cfg, threads, log):
         taskset = os.path.dirname(os.path.realpath(__file__))+'/taskset'
         cmd.extend(['taskset','-c',','.join(get_numa_cpus(cfg.N))])
     # add the run-clara command:
-    cmd.extend([run_clara,
+    cmd.extend([find_run_clara(cfg),
             '-c',cfg.c,
             '-n',str(cfg.e*int(threads)),
             '-t',str(threads),
