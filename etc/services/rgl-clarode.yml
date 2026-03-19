@@ -1,26 +1,11 @@
-mime-types:
-  - binary/data-hipo
-configuration:
-  global:
-    variation: rge_spring2024
-    timestamp: 10/08/2025-17:00:00
-  io-services:
-    writer:
-      schema_dir: full
-  services:
-    MAGFIELDS:
-      magfieldSolenoidMap: Symm_solenoid_r601_phi1_z1201_13June2018.dat
-      magfieldTorusMap: Full_torus_r251_phi181_z251_25Jan2021.dat
 io-services:
   reader:
-    class: org.jlab.io.clara.DecoderReader
-    name: DecoderReader
+    class: org.jlab.io.clara.Clas12Reader
+    name: Clas12Reader
   writer:
     class: org.jlab.io.clara.DecoderWriter
     name: DecoderWriter
 services:
-  - class: org.jlab.service.ai.DCDenoiseEngine
-    name: DCDN
   - class: org.jlab.clas.swimtools.MagFieldsEngine
     name: MAGFIELDS
   - class: org.jlab.rec.ft.cal.FTCALEngine
@@ -29,6 +14,8 @@ services:
     name: FTHODO
   - class: org.jlab.rec.ft.FTEBEngine
     name: FTEB
+  - class: org.jlab.service.ai.DCDenoiseEngine
+    name: DCDN
   - class: org.jlab.service.dc.DCHBClustering
     name: DCCR
   - class: org.jlab.service.dc.DCHBPostClusterConv
@@ -57,3 +44,21 @@ services:
     name: EBTB
   - class: org.jlab.rec.rich.RICHEBEngine
     name: RICH
+  - class: org.jlab.service.atof.ATOFEngine
+    name: ATOF
+  - class: org.jlab.service.ahdc.AHDCEngine
+    name: AHDC
+configuration:
+  global:
+    variation: rgl_spring2025
+  io-services:
+    writer:
+      schema_dir: dst
+  services:
+    MAGFIELDS:
+      magfieldSolenoidMap: Symm_solenoid_r601_phi1_z1201_13June2018.dat
+      magfieldTorusMap: Full_torus_r251_phi181_z251_25Jan2021.dat
+    AHDC:
+      Mode: "AI_Track_Finding"
+mime-types:
+  - binary/data-hipo
