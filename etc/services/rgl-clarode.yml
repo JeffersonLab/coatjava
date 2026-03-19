@@ -50,7 +50,7 @@ services:
     name: AHDC
 configuration:
   global:
-    variation: rge_spring2024
+    variation: rgl_spring2025
   io-services:
     writer:
       schema_dir: dst
