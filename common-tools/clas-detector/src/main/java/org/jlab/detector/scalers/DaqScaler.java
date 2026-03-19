@@ -78,6 +78,7 @@ public class DaqScaler {
             // complain if a hard-coded clock frequency was used
             String prefix = String.format("clockbug [%s]", this.getClass().getSimpleName());
             boolean clockbug = false;
+            System.err.println(String.format("%s: -----------", prefix));
             if(Math.abs(this.clockFreq - ((1e6)+1)) < 0.1) {
               System.err.println(String.format("%s: used hard-coded clockFreq from Dsc2Scaler(bank,table,table,seconds)", prefix));
               clockbug = true;
@@ -129,6 +130,7 @@ public class DaqScaler {
             }
 
             // print the beam charge
+            System.err.println(String.format("%s: fcup_offset=%f  fcup_slope=%f  fcup_atten=%f", prefix, fcup_offset, fcup_slope, fcup_atten));
             System.err.println(String.format("%s: clockFreq=%f  beamCharge=%f  beamChargeGated=%f", prefix, this.clockFreq, this.beamCharge, this.beamChargeGated));
         }
     }
