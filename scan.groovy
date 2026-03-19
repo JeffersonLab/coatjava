@@ -1,7 +1,4 @@
-// a more general monitor, for things like <sinPhiH> or helicity
-// - this reads DST files or skim files
-// - can be run on slurm
-// - note: search for 'CUT' to find which cuts are applied
+// print `RUN::scaler`
 
 import org.jlab.jnp.hipo4.io.HipoReader;
 import org.jlab.jnp.hipo4.data.Event;

@@ -104,10 +104,6 @@ public class DaqScaler {
             // print the clock
             System.err.println(String.format("%s: toString: %s", prefix, this.toString()));
 
-            // ==================================================================================
-            // original code
-            // ==================================================================================
-
             final double fcup_slope  = fcupTable.getDoubleValue("slope",0,0,0);  // Hz/nA
             final double fcup_offset = fcupTable.getDoubleValue("offset",0,0,0); // Hz
             final double fcup_atten  = fcupTable.getDoubleValue("atten",0,0,0);  // attenuation
@@ -132,35 +128,8 @@ public class DaqScaler {
                 this.beamChargeGated = qg * fcup_atten / fcup_slope;
             }
 
-            // ==================================================================================
-
-            // print the beamCharge from the original code
-            System.err.println(String.format("%s: clockFreq@%f  beamCharge=%f  beamChargeGated=%f", prefix, this.clockFreq, this.beamCharge, this.beamChargeGated));
-
-            // now redo the calculation as if the clock frequency were 100 kHz
-            double clockFreq100   = 100000;
-            double seconds100     = seconds     * this.clockFreq / clockFreq100;
-            double liveSeconds100 = liveSeconds * this.clockFreq / clockFreq100;
-            double beamCharge100;
-            double beamChargeGated100;
-
-            double q100  = (double)this.slm      - slm_offset * seconds100;
-            double qg100 = (double)this.gatedSlm - slm_offset * liveSeconds100;
-            double beamChargeSLM100 = q100 * slm_atten / slm_slope;
-            double beamChargeGatedSLM100 = qg100 * slm_atten / slm_slope;
-            // double livetime100 = (double)this.gatedClock / this.clock;
-
-            if (fcup_atten<1e-8 || fcup_slope<1e-8) {
-                beamCharge100 = beamChargeSLM100;
-                beamChargeGated100 = beamChargeGatedSLM100;
-            }
-            else {
-                q100  = (double)this.fcup      - fcup_offset * seconds100;
-                qg100 = (double)this.gatedFcup - fcup_offset * liveSeconds100;
-                beamCharge100 = q100 * fcup_atten / fcup_slope;
-                beamChargeGated100 = qg100 * fcup_atten / fcup_slope;
-            }
-            System.err.println(String.format("%s: clockFreq@%f  beamCharge=%f  beamChargeGated=%f", prefix, clockFreq100, beamCharge100, beamChargeGated100));
+            // print the beam charge
+            System.err.println(String.format("%s: clockFreq=%f  beamCharge=%f  beamChargeGated=%f", prefix, this.clockFreq, this.beamCharge, this.beamChargeGated));
         }
     }
 

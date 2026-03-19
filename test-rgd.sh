@@ -2,6 +2,8 @@
 set -euo pipefail
 sep() { echo '=================================================================================='; }
 # ./build-coatjava.sh -T8 --clara
+
+### test with local RG-D test file (as done in the CI)
 rm -vfr tmp
 coatjava/bin/run-clara \
   -y etc/services/rgd-clarode.yml \
@@ -16,4 +18,4 @@ grep \
   '^clockbug.*' \
   $(find tmp/log -type f -name '*dpe.log')
 sep
-run-groovy scan.groovy tmp/rec_clas_018779.evio.01339.hipo
+coatjava/bin/run-groovy scan.groovy tmp/rec_clas_018779.evio.01339.hipo
