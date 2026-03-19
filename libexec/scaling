@@ -4,14 +4,17 @@ def cli():
     import os,sys,argparse
     cli = argparse.ArgumentParser(description='CLARA scaling test')
     cli.add_argument('-y',help='YAML file',required=True)
-    cli.add_argument('-c',help='CLARA_HOME path',default=os.getenv('CLARA_HOME',None))
+    cli.add_argument('-c',help='CLARA_HOME path (default=$CLARA_HOME)',default=os.getenv('CLARA_HOME',None))
     cli.add_argument('-t',help='threads (default=4,8)',default='4,8')
-    cli.add_argument('-e',help='events per thread',default=100,type=int)
+    cli.add_argument('-e',help='events per thread (default=555)',default=555,type=int)
     cli.add_argument('-i',help='input data file',required=True)
     cli.add_argument('-N',help='NUMA socket',default=-1,type=int,choices=[0,1])
     cfg = cli.parse_args()
     cfg.t = cfg.t.split(',')
-    if cfg.c is None: sys.exit('-c or $CLARA_HOME is required.')
+    if cfg.c is None:
+        sys.exit('ERROR:  cannot find CLARA installation, -c or $CLARA_HOME required.')
+    if cfg.N >= 0 and not shutil.which('numactl'):
+        sys.exit('ERROR:  numactl is not in $PATH, -N option not supported.')
     return cfg
 
 def run(cmd):
@@ -26,15 +29,14 @@ def run(cmd):
     if p.returncode != 0:
         pass
 
-def find_run_clara(cfg):
+def find_run_clara(clara_home):
     import os,sys,shutil
-    run_clara = shutil.which('run-clara')
-    if not run_clara:
-        if os.path.exists(cfg.c + '/plugins/clas12/bin/run-clara'):
-            run_clara = cfg.c + '/plugins/clas12/bin/run-clara'
-        else:
-            sys.exit('ERROR:  Cannot find run-clara in $PATH or CLARA installation.')
-    return run_clara
+    if shutil.which('run-clara')
+        return shutil.which('run-clara')
+    elif os.path.exists(clara_home + '/plugins/clas12/bin/run-clara'):
+        return clara_home + '/plugins/clas12/bin/run-clara'
+    else:
+        sys.exit('ERROR:  Cannot find run-clara in $PATH or CLARA installation.')
 
 def get_numa_cpus(node):
     for line in run(['numactl','-H']):
@@ -49,7 +51,7 @@ def benchmark(cfg, threads, log):
     if cfg.N >= 0:
         cmd.extend(['taskset','-c',','.join(get_numa_cpus(cfg.N))])
     # add the run-clara command:
-    cmd.extend([find_run_clara(cfg),
+    cmd.extend([find_run_clara(cfg.c),
             '-c',cfg.c,
             '-n',str(cfg.e*int(threads)),
             '-t',str(threads),
