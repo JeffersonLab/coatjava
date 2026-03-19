@@ -43,12 +43,10 @@ def get_numa_cpus(node):
                 yield col
 
 def benchmark(cfg, threads, log):
-    import os,collections
-    exiting,benchmarks = False,collections.OrderedDict()
+    import collections
     cmd = []
     # use taskset:
     if cfg.N >= 0:
-        taskset = os.path.dirname(os.path.realpath(__file__))+'/taskset'
         cmd.extend(['taskset','-c',','.join(get_numa_cpus(cfg.N))])
     # add the run-clara command:
     cmd.extend([find_run_clara(cfg),
@@ -59,6 +57,7 @@ def benchmark(cfg, threads, log):
             '-y',cfg.y,
             '-o',f'tmp-scaling-{threads}',
             cfg.i])
+    exiting,benchmarks = False,collections.OrderedDict()
     for line in run(cmd):
         cols = line.split()
         print(line)
