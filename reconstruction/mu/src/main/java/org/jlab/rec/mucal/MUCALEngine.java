@@ -1,4 +1,4 @@
-package org.jlab.rec.ft.cal;
+package org.jlab.rec.mucal;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,59 +19,59 @@ import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.hipo.HipoDataSource;
 
 
-public class FTCALEngine extends ReconstructionEngine {
+public class MUCALEngine extends ReconstructionEngine {
 
-    public FTCALEngine() {
-        super("FTCAL", "devita", "3.0");
-    }
+	public MUCALEngine() {
+		super("MUCAL", "devita", "3.0");
+	}
 
-    FTCALReconstruction reco;
-    
-    @Override
-    public boolean init() {
-        reco = new FTCALReconstruction();
-        reco.debugMode=0;
+	MUCALReconstruction reco;
+	
+	@Override
+	public boolean init() {
+		reco = new MUCALReconstruction();
+		reco.debugMode=0;
 
-        String[]  tables = new String[]{ 
-                "/calibration/ft/ftcal/charge_to_energy",
-                "/calibration/ft/ftcal/time_offsets",
-                "/calibration/ft/ftcal/time_walk",
-                "/calibration/ft/ftcal/status",
-                "/calibration/ft/ftcal/thresholds",
-                "/calibration/ft/ftcal/cluster",
-                "/calibration/ft/ftcal/energycorr"
-        };
-        requireConstants(Arrays.asList(tables));
-        this.getConstantsManager().setVariation("default");
+                String[]  tables = new String[]{ 
+                    "/calibration/ft/ftcal/charge_to_energy",
+                    "/calibration/ft/ftcal/time_offsets",
+                    "/calibration/ft/ftcal/time_walk",
+                    "/calibration/ft/ftcal/status",
+                    "/calibration/ft/ftcal/thresholds",
+                    "/calibration/ft/ftcal/cluster",
+                    "/calibration/ft/ftcal/energycorr"
+                };
+                requireConstants(Arrays.asList(tables));
+                this.getConstantsManager().setVariation("default");
 
-        this.registerOutputBank("FTCAL::hits","FTCAL::clusters");
+                this.registerOutputBank("MUCAL::hits","MUCAL::clusters");
+                
+                return true;
+	}
 
-        return true;
-    }
-
-    @Override
-    public boolean processDataEvent(DataEvent event) {
-        List<FTCALHit>     allHits           = new ArrayList();
-        List<FTCALHit>     selectedHits      = new ArrayList();
-        List<FTCALCluster> clusters          = new ArrayList();
+	@Override
+	public boolean processDataEvent(DataEvent event) {
+            List<MUCALHit>     allHits           = new ArrayList();
+            List<MUCALHit>     selectedHits      = new ArrayList();
+            List<MUCALCluster> clusters          = new ArrayList();
             
-        // update calibration constants based on run number if changed
-        int run = setRunConditionsParameters(event);
+            // update calibration constants based on run number if changed
+            int run = setRunConditionsParameters(event);
 
-        if(run>=0) {
-            // get hits fron banks
-            allHits = reco.initFTCAL(event,this.getConstantsManager(), run);
-            // select good hits and order them by energy
-            selectedHits = reco.selectHits(allHits,this.getConstantsManager(), run);
-            // create clusters
-            clusters = reco.findClusters(selectedHits, this.getConstantsManager(), run);
-            // set cluster status
-            reco.selectClusters(clusters, this.getConstantsManager(), run);
-            // write output banks
-            reco.writeBanks(event, selectedHits, clusters, this.getConstantsManager(), run);
-        }
-        return true;
-    }
+            if(run>=0) {
+                // get hits fron banks
+                allHits = reco.initMUCAL(event,this.getConstantsManager(), run);
+                // select good hits and order them by energy
+                selectedHits = reco.selectHits(allHits,this.getConstantsManager(), run);
+                // create clusters
+                clusters = reco.findClusters(selectedHits, this.getConstantsManager(), run);
+                // set cluster status
+                reco.selectClusters(clusters, this.getConstantsManager(), run);
+                // write output banks
+                reco.writeBanks(event, selectedHits, clusters, this.getConstantsManager(), run);
+            }
+            return true;
+	}
 
     public int setRunConditionsParameters(DataEvent event) {
         int run = -1;
@@ -87,13 +87,13 @@ public class FTCALEngine extends ReconstructionEngine {
             DataBank bank = event.getBank("RUN::config");
             run = bank.getInt("run",0);
         }
-    
+	
         return run;
     }
 
     
     public static void main (String arg[])  {
-		FTCALEngine cal = new FTCALEngine();
+		MUCALEngine cal = new MUCALEngine();
 		cal.init();
 		//		String input = "/Users/devita/Work/clas12/simulations/clas12Tags/4.4.0/out.hipo";
 //		String input = "/home/filippi/clas/ForwardTracker/DATA/out_realGeo_noMagField.data";
@@ -126,8 +126,8 @@ public class FTCALEngine extends ReconstructionEngine {
 
             DetectorEvent detectorEvent = DetectorData.readDetectorEvent(event);
             PhysicsEvent            gen = detectorEvent.getGeneratedEvent();
-            if(event.hasBank("FTCAL::clusters")) {
-                DataBank bank = event.getBank("FTCAL::clusters");
+            if(event.hasBank("MUCAL::clusters")) {
+                DataBank bank = event.getBank("MUCAL::clusters");
                 int nrows = bank.rows();
                 for(int i=0; i<nrows;i++) {
                     h1.fill(bank.getFloat("energy",i));
@@ -141,7 +141,7 @@ public class FTCALEngine extends ReconstructionEngine {
                        h2.fill(bank.getFloat("energy",i)-gen.getGeneratedParticle(0).vector().p());
                        h3.fill(Math.toDegrees(cluster.theta()-gen.getGeneratedParticle(0).theta()));
                        h4.fill(Math.toDegrees(cluster.phi()-gen.getGeneratedParticle(0).phi()));
-}
+                    }
                 }
             }
         }
