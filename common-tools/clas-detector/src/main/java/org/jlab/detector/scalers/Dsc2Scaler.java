@@ -38,7 +38,7 @@ public class Dsc2Scaler extends DaqScaler{
      * @param seconds dwell time, provided in case the clock rolls over
      */
     public Dsc2Scaler(Bank bank, IndexedTable fcupTable, IndexedTable slmTable, double seconds) {
-        this.clockFreq=1e6;
+        this.clockFreq=1e6; // FIXME: this is what's actually used
         this.read(bank);
         this.calibrate(fcupTable,slmTable,seconds);
     }
