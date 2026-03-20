@@ -10,6 +10,7 @@ import org.jlab.geom.prim.Arc3D;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Transformation3D;
+import org.jlab.geom.prim.Vector3D;
 
 /**
  *
@@ -57,7 +58,9 @@ public abstract class AMeasVecs {
     	
     	Surface surf = this.measurements.get(stateVec.k).surface;
     	Point3D point = new Point3D(stateVec.x, stateVec.y, stateVec.z);
-    	double h = hDoca(point, surf.wireLine[0]);
+        Vector3D dir = new Vector3D(stateVec.tx, stateVec.ty, 1);
+        Line3D line = new Line3D(point, dir);
+    	double h = hDoca(line, surf.wireLine[0]);
 
     	double signMeas = 1;
     	double sign = 1;
@@ -73,7 +76,7 @@ public abstract class AMeasVecs {
     	
         //USE THE DOUBLE HIT
         if(surf.doca[1]!=-99) { 
-            h = hDoca(point, surf.wireLine[1]);
+            h = hDoca(line, surf.wireLine[1]);
 
             signMeas = Math.signum(surf.doca[1]);
             sign = Math.signum(h);
@@ -85,13 +88,20 @@ public abstract class AMeasVecs {
     }
     
     // Return a signed doca for DC
-    public double hDoca(Point3D point, Line3D wireLine) {              
+    // Suppose that trajectory is line at the given layer, which is defined by the state vector with point(x, y, z) and dir(tx, ty, 1)
+    public double hDoca(Line3D trajLine, Line3D wireLine) {              
         
+        // Define sign of calculated doca to be consistent with LR definition of measured doca
         Line3D WL = new Line3D();
         WL.copy(wireLine);
-        WL.copy(WL.distance(point));
+        WL.copy(WL.distance(trajLine.origin()));
         
-        return WL.length()*Math.signum(WL.direction().x());    
+        // Get a line, which is commonly perpendicular to trajectory line and wire line
+        Line3D cpLine = new Line3D();
+        cpLine.copy(trajLine);
+        cpLine.copy(cpLine.distance(wireLine));
+        
+        return cpLine.length()*Math.signum(WL.direction().x());  
     }
        
     public double dhURWell(StateVec stateVec) {
