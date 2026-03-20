@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 def cli():
-    import os,argparse
+    import os,shutil,argparse
     cli = argparse.ArgumentParser(description='CLARA scaling test')
     cli.add_argument('-y','--yaml',   metavar='YAML',help='path to YAML file',required=True)
     cli.add_argument('-c','--clara',  metavar='DIR',help='CLARA_HOME path (default=$CLARA_HOME)',default=os.getenv('CLARA_HOME',None))
@@ -12,16 +12,15 @@ def cli():
     cfg = cli.parse_args()
     cfg.threads = cfg.threads.split(',')
     cfg.run_clara = find_run_clara(cfg.clara)
-    import sys,shutil
     if not cfg.clara:
-        sys.exit('ERROR:  cannot find CLARA installation, -c or $CLARA_HOME required')
+        cli.error('cannot find CLARA installation via -c or $CLARA_HOME')
     if not cfg.run_clara:
-        sys.exit('ERROR:  Cannot find run-clara in $PATH or CLARA installation')
+        cli.error('cannot find run-clara in $PATH or CLARA installation')
     if cfg.numa is not None:
         if not shutil.which('numactl'):
-            sys.exit('ERROR:  numactl is not in $PATH, -N option not supported')
+            cli.error('numactl is not in $PATH, --numa option not supported')
         if len(list(get_numa_cpus(cfg.numa))) == 0:
-            sys.exit('ERROR:  invalid NUMA node:  {cfg.numa}')
+            cli.error('invalid --numa node:  {cfg.numa}')
         cfg.numa = ','.join(list(get_numa_cpus(cfg.numa)))
     return cfg
 
