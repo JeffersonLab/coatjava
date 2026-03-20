@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jlab.rec.ahdc.Cluster.DocaCluster;
+import org.jlab.rec.ahdc.DocaCluster.DocaCluster;
 
 /** Helix Fit.
  *
@@ -997,7 +997,81 @@ public class HelixFitJava {
 	    return h;
 	  }
 
-// Public weighted wrapper (similar to the original HelixFit)
+	// Compute the path length along the helix described by h,
+	// for the portion where the radial distance to the beamline
+	// (sqrt(x^2 + y^2)) is between rMin and rMax [mm].
+	private double computePathFromHelix(HelixFitObject h, double rMin, double rMax) {
+
+		// Helix parameters from the fit
+		double A   = h.get_A();   // circle center X in XY-plane
+		double B   = h.get_B();   // circle center Y in XY-plane
+		double X0  = h.get_X0();  // point of closest approach in XY
+		double Y0  = h.get_Y0();
+		double thDeg = h.get_Theta(); // already stored in degrees in the wrapper
+		double theta = Math.toRadians(thDeg); // convert to radians for sin()
+
+		// Circle radius in XY-plane
+		double R = Math.sqrt((X0 - A)*(X0 - A) + (Y0 - B)*(Y0 - B));
+		if (R < 1e-6) {
+			// Degenerate circle
+			return 0.0;
+		}
+
+		// Distance from origin to circle center
+		double C = Math.sqrt(A*A + B*B);
+
+		// Minimal / maximal distance from the circle to the origin
+		double Dmin = Math.abs(C - R);
+		double Dmax = C + R;
+
+		// If there is no overlap between [rMin, rMax] and [Dmin, Dmax], path = 0
+		if (rMax <= Dmin || rMin >= Dmax) {
+			return 0.0;
+		}
+
+		// Clip the requested radial window to what the circle actually covers
+		double rIn  = Math.max(rMin, Dmin);
+		double rOut = Math.min(rMax, Dmax);
+		if (rOut <= rIn) {
+			return 0.0;
+		}
+
+		// Helper constants for r^2(psi) = C0 + 2 R C cos(psi)
+		double C0 = A*A + B*B + R*R;
+
+		// Helper to compute psi(r) in [0,π] from r:
+		// cos(psi) = (r^2 - C0)/(2 R C)
+		java.util.function.DoubleFunction<Double> psiOfR = (double r) -> {
+			double num = r*r - C0;
+			double den = 2.0 * R * C;
+			if (Math.abs(den) < 1e-12) {
+				return 0.0;
+			}
+			double u = num / den;
+			// Clamp to [-1,1] to avoid NaN from acos
+			if (u >  1.0) u =  1.0;
+			if (u < -1.0) u = -1.0;
+			return Math.acos(u);  // in [0, π]
+		};
+
+		double psiIn  = psiOfR.apply(rIn);
+		double psiOut = psiOfR.apply(rOut);
+
+		double dPsi = Math.abs(psiOut - psiIn);
+
+		// ds/dpsi = R / sin(theta)
+		double sinTheta = Math.sin(theta);
+		if (Math.abs(sinTheta) < 1e-6) {
+			// Track almost parallel to the beam; this formula is ill-defined.
+			// Return 0 for safety or some large sentinel.
+			return 0.0;
+		}
+
+		double path = (R / sinTheta) * dPsi;
+
+		return path;
+	}
+    // Public weighted wrapper (similar to the original HelixFit)
 	  public HelixFitObject HelixFitWeighted(int PointNum, double[][] szPos,
 										double[] weights, int fit_track_to_beamline) {
 
@@ -1188,14 +1262,17 @@ public class HelixFitJava {
 		}
 
 		// weights = null => all weights = 1.0 inside helix_fit_weighted
+		// Use the DOCa-based bestChi2 as helix chi2
 
 	    double PI=Math.acos(0.0)*2;
 	    //double Rho=0,Phi=0,Theta=0,X0=0,Y0=0,DCA=0,Chi2=0;
             double Phi_deg;
             double Theta_deg;
             
-	    HelixFitObject h = helix_fit_weighted(nPoints, szPosSel, null, fit_track_to_beamline);;
-	    
+	    HelixFitObject h = helix_fit_weighted(nPoints, szPosSel, null, fit_track_to_beamline);
+	    h.set_Chi2(bestChi2);
+		double path = computePathFromHelix(h, 30.0, 70.0);
+		h.set_path(path);
 	    Phi_deg=Math.toDegrees(h.get_Phi());
             if(Phi_deg >= 180){
                 Phi_deg -= 360;
@@ -1212,5 +1289,3 @@ public class HelixFitJava {
 	}
 
 }
-
-

@@ -12,6 +12,7 @@ import org.jlab.utils.groups.IndexedList;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import org.jlab.detector.geant4.v2.MPGD.trapezoid.MPGDTrapezoidConstants.SectorDimensions;
 
 /**
  * Base class implementing strip/surface/plane geometry for trapezoidal MPGD
@@ -253,7 +254,7 @@ public abstract class MPGDTrapezoidStripFactory {
     // ------------------------------------------------------------------------
     /**
      * Build StripConstants using: - XY trapezoid from
-     * geo.getSectorDimensionsPhysical(region) (NOT enlarged) - zReadoutLocal
+     * C.getSectorActiveVolumeDimensions(region) (NOT enlarged) - zReadoutLocal
      * from CCDB sensitive thickness (findReadoutZLocal) - pitch/width/stereo
      * from CCDB
      *
@@ -263,8 +264,8 @@ public abstract class MPGDTrapezoidStripFactory {
      */
     protected StripConstants buildStripConstants(int region, int layer) {
 
-        MPGDTrapezoidGeant4Factory.SectorDimensions phys
-                = geo.getSectorActiveVolumeDimensions(region - 1);
+        SectorDimensions phys
+               = C.getSectorActiveVolumeDimensions(region - 1);
 
         StripConstants sc = new StripConstants();
         sc.yHalf = phys.halfHeight();
@@ -336,7 +337,7 @@ public abstract class MPGDTrapezoidStripFactory {
         Vector3d nXY = new Vector3d(ca, -sa, 0.0);
         double rhs = (internalIndex + 0.5) * c.pitch;
 
-        List<Vector3d> inters = new ArrayList<>(4);
+        List<Vector3d> inters = new ArrayList<>();
 
         for (Vector3d[] e : tr.edges()) {
             Vector3d P = new Vector3d(0, 0, 0);
@@ -359,8 +360,14 @@ public abstract class MPGDTrapezoidStripFactory {
                 double d2 = dx * dx + dy * dy;
                 if (d2 > best) {
                     best = d2;
-                    a = inters.get(i);
-                    b = inters.get(j);
+                    if(dy>0) {
+                        a = inters.get(i);
+                        b = inters.get(j);
+                    }
+                    else {
+                        a = inters.get(j);
+                        b = inters.get(i);                    
+                    }
                 }
             }
         }
@@ -418,9 +425,9 @@ public abstract class MPGDTrapezoidStripFactory {
             tmp.add(s);
         }
 
-        tmp.sort(Comparator
-                .comparingDouble((StripGeom s) -> s.orderXLocal)
-                .thenComparingInt(s -> s.internalIndex));
+//        tmp.sort(Comparator
+//                .comparingDouble((StripGeom s) -> s.orderXLocal)
+//                .thenComparingInt(s -> s.internalIndex));
 
         int comp = 1;
         for (StripGeom s : tmp) {

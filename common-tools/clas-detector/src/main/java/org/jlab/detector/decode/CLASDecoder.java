@@ -30,6 +30,9 @@ import org.jlab.utils.system.ClasUtilsFile;
  * @author gavalian
  */
 public class CLASDecoder {
+       
+    // truncate EVIO waveforms longer than this:
+    final static int MAX_BANK_WF_LENGTH = 30;
 
     protected DetectorEventDecoder detectorDecoder = null;
     protected SchemaFactory           schemaFactory = new SchemaFactory();
@@ -203,7 +206,7 @@ public class CLASDecoder {
             b.putLong( 4, i, a.get(i).getADCData(0).getTimeStamp());
             b.putInt("time", i, (int)a.get(i).getADCData(0).getTime());
             DetectorDataDgtz.ADCData xxx = a.get(i).getADCData(0);
-            for (int j=0; j<xxx.getPulseSize(); ++j)
+            for (int j=0; j<xxx.getPulseSize() && j<MAX_BANK_WF_LENGTH; ++j)
                 b.putShort(j+5, i, xxx.getPulseValue(j));
         }
         return b;
@@ -742,10 +745,12 @@ public class CLASDecoder {
 
                     int runNumberCoda = codaDecoder.getRunNumber();
                     this.setRunNumber(runNumberCoda);
-                   
-                    detectorDecoder.translate(dataList);
-                    detectorDecoder.fitPulses(dataList);
-                    detectorDecoder.filterTDCs(dataList);
+                  
+                    if (runNumberCoda > 0) {
+                        detectorDecoder.translate(dataList);
+                        detectorDecoder.fitPulses(dataList);
+                        detectorDecoder.filterTDCs(dataList);
+                    }
 
                     if(this.decoderDebugMode>0){
                         System.out.println("\n>>>>>>>>> TRANSLATED data");
