@@ -11,9 +11,9 @@ def cli():
     cli.add_argument('datafile', help='input EVIO/HIPO data file')
     cfg = cli.parse_args()
     cfg.threads = cfg.threads.split(',')
-    cfg.run_clara = find_run_clara(cfg.clara)
     if not cfg.clara:
         cli.error('cannot find CLARA installation via -c or $CLARA_HOME')
+    cfg.run_clara = find_run_clara(cfg.clara)
     if not cfg.run_clara:
         cli.error('cannot find run-clara in $PATH or CLARA installation')
     if cfg.numa is not None:
