@@ -74,6 +74,11 @@ public class DaqScaler {
     protected void calibrate(IndexedTable fcupTable,IndexedTable slmTable,double seconds,double liveSeconds) {
 
         if (this.clock > 0) {
+
+            String prefix = String.format("clocktest [%s]", this.getClass().getSimpleName());
+            System.out.println(String.format("%s: -----------", prefix));
+            System.out.println(String.format("%s: toString: %s", prefix, this.toString()));
+
             final double fcup_slope  = fcupTable.getDoubleValue("slope",0,0,0);  // Hz/nA
             final double fcup_offset = fcupTable.getDoubleValue("offset",0,0,0); // Hz
             final double fcup_atten  = fcupTable.getDoubleValue("atten",0,0,0);  // attenuation
@@ -97,6 +102,10 @@ public class DaqScaler {
                 this.beamCharge = q * fcup_atten / fcup_slope;
                 this.beamChargeGated = qg * fcup_atten / fcup_slope;
             }
+
+            System.out.println(String.format("%s: BANK fcup=%f  fcupGated=%f", prefix, this.fcup, this.gatedFcup));
+            System.out.println(String.format("%s: CCDB fcup_offset=%f  fcup_slope=%f  fcup_atten=%f", prefix, fcup_offset, fcup_slope, fcup_atten));
+            System.out.println(String.format("%s: clockFreq=%f  beamCharge=%f  beamChargeGated=%f", prefix, this.clockFreq, this.beamCharge, this.beamChargeGated));
         }
     }
 
