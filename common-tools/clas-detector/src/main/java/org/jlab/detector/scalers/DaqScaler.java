@@ -103,7 +103,7 @@ public class DaqScaler {
                 this.beamChargeGated = qg * fcup_atten / fcup_slope;
             }
 
-            System.out.println(String.format("%s: BANK fcup=%f  fcupGated=%f", prefix, this.fcup, this.gatedFcup));
+            System.out.println(String.format("%s: BANK fcup=%d  fcupGated=%d", prefix, this.fcup, this.gatedFcup));
             System.out.println(String.format("%s: CCDB fcup_offset=%f  fcup_slope=%f  fcup_atten=%f", prefix, fcup_offset, fcup_slope, fcup_atten));
             System.out.println(String.format("%s: clockFreq=%f  beamCharge=%f  beamChargeGated=%f", prefix, this.clockFreq, this.beamCharge, this.beamChargeGated));
         }
