@@ -34,6 +34,10 @@ public enum DetectorType {
     AHDC      (24, "AHDC"),
     ATOF      (25, "ATOF"),
     RECOIL    (26, "RECOIL"),
+    MUCAL     (28, "MUCAL"),
+    MUVT      (29, "MUVT"),
+    MURT      (30, "MURT"),
+    MURH      (31, "MURH"),
     TARGET    (100, "TARGET"),
     MAGNETS   (101, "MAGNETS");
     
