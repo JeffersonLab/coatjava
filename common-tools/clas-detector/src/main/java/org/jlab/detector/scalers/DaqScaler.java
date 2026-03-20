@@ -78,6 +78,7 @@ public class DaqScaler {
             String prefix = String.format("clocktest [%s]", this.getClass().getSimpleName());
             System.out.println(String.format("%s: -----------", prefix));
             System.out.println(String.format("%s: toString: %s", prefix, this.toString()));
+            System.out.println(String.format("%s: seconds=%f  liveSeconds=%f", prefix, seconds, liveSeconds));
 
             final double fcup_slope  = fcupTable.getDoubleValue("slope",0,0,0);  // Hz/nA
             final double fcup_offset = fcupTable.getDoubleValue("offset",0,0,0); // Hz
