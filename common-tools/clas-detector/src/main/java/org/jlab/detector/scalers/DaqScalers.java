@@ -150,8 +150,12 @@ public class DaqScalers {
      * @return  
      */
     public static DaqScalers create(Bank rawScalerBank,IndexedTable fcupTable,IndexedTable slmTable,IndexedTable helTable,IndexedTable dscTable) {
+        StruckScalers struck = StruckScalers.read(rawScalerBank,fcupTable,slmTable,helTable);
         Dsc2Scaler dsc2 = new Dsc2Scaler(rawScalerBank,fcupTable,slmTable,dscTable);
-        return DaqScalers.create(rawScalerBank,fcupTable,slmTable,helTable,dsc2.getGatedClockSeconds());
+        DaqScalers ds = new DaqScalers();
+        ds.dsc2 = dsc2;
+        ds.struck = struck;
+        return ds;
     }
 
     /**
