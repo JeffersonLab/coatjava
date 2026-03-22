@@ -59,5 +59,5 @@ java -DCLAS12DIR="$COAT" -Xmx1536m -Xms1024m -cp $classPath -DINPUTFILE=out_${st
 if [ $? != 0 ] ; then echo "EBTwoTrackTest unit test failure" ; exit 1 ; else echo "EBTwoTrackTest passed unit tests" ; fi
 
 # run truth-efficiency calculator:
-$COAT/bin/trutheff ./out_${stub}.hipo
+../../coatjava/bin/trutheff ./out_${stub}.hipo
 
