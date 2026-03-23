@@ -263,28 +263,6 @@
 
     <plugins> <!-- plugins inherited by all child POMs -->
 
-      <!-- Java version enforcer -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-enforcer-plugin</artifactId>
-        <version>3.6.2</version>
-        <executions>
-          <execution>
-            <id>enforce-java</id>
-            <goals>
-              <goal>enforce</goal>
-            </goals>
-            <configuration>
-              <rules>
-                <requireJavaVersion>
-                  <version>[21,)</version>
-                </requireJavaVersion>
-              </rules>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
       <!-- static analysis -->
       <plugin>
         <groupId>com.github.spotbugs</groupId>
@@ -388,12 +366,13 @@
         </executions>
       </plugin>
 
-      <!-- dependency convergence -->
+      <!-- enforcers -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
         <version>3.6.2</version>
         <executions>
+          <!-- dependency convergence -->
           <execution>
             <id>enforce-dependency-convergence</id>
             <goals>
@@ -407,6 +386,20 @@
                     <exclude>com.google.protobuf:protobuf-java</exclude> <!-- `org.jlab.ccdbrcdb:ccdbrcdb` use v3, but `org.jlab.coda.xmsg` uses v2 -->
                   </excludes>
                 </dependencyConvergence>
+              </rules>
+            </configuration>
+          </execution>
+          <!-- Java version enforcer -->
+          <execution>
+            <id>enforce-java</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <requireJavaVersion>
+                  <version>[21,)</version>
+                </requireJavaVersion>
               </rules>
             </configuration>
           </execution>
