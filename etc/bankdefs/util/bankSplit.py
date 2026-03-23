@@ -97,11 +97,11 @@ ecrerun.extend(["ECAL::tdc","ECAL::adc"])
 
 # DC alignment and AI-tracking validation schema:
 dcalign = list(dst)
-dcalign.extend(["ai::tracks", "aidn::tracks", "TimeBasedTrkg::AIClusters", "TimeBasedTrkg::AIHits", "TimeBasedTrkg::AISegments", "TimeBasedTrkg::AITracks", "TimeBasedTrkg::TBClusters", "TimeBasedTrkg::TBHits", "TimeBasedTrkg::TBSegments", "TimeBasedTrkg::TBSegmentTrajectory", "TimeBasedTrkg::TBTracks"])
+dcalign.extend(["ai::tracks", "aidn::tracks", "DC::tdc", "DC::tot", "TimeBasedTrkg::AIClusters", "TimeBasedTrkg::AIHits", "TimeBasedTrkg::AISegments", "TimeBasedTrkg::AITracks", "TimeBasedTrkg::TBClusters", "TimeBasedTrkg::TBHits", "TimeBasedTrkg::TBSegments", "TimeBasedTrkg::TBSegmentTrajectory", "TimeBasedTrkg::TBTracks"])
 
 # DC HV studies schema:
 dchv = list(dsthb)
-dchv.extend(["DC::tdc","DC::tot","DC::jitter", "HitBasedTrkg::HBClusters", "HitBasedTrkg::HBHitTrkId", "HitBasedTrkg::HBHits", "HitBasedTrkg::HBSegmentTrajectory", "HitBasedTrkg::HBSegments", "HitBasedTrkg::HBTracks", "HitBasedTrkg::Hits", "HitBasedTrkg::Trajectory", "TimeBasedTrkg::TBClusters", "TimeBasedTrkg::TBHits", "TimeBasedTrkg::TBSegments", "TimeBasedTrkg::TBSegmentTrajectory", "TimeBasedTrkg::TBTracks"])
+dchv.extend(["DC::tdc","DC::tot","DC::jitter", "HitBasedTrkg::Clusters", "HitBasedTrkg::HBClusters", "HitBasedTrkg::HBHitTrkId", "HitBasedTrkg::HBHits", "HitBasedTrkg::HBSegmentTrajectory", "HitBasedTrkg::HBSegments", "HitBasedTrkg::HBTracks", "HitBasedTrkg::Hits", "HitBasedTrkg::Trajectory", "TimeBasedTrkg::TBClusters", "TimeBasedTrkg::TBHits", "TimeBasedTrkg::TBSegments", "TimeBasedTrkg::TBSegmentTrajectory", "TimeBasedTrkg::TBTracks"])
 
 # Level3 validation schema:
 level3 = list(dst)
