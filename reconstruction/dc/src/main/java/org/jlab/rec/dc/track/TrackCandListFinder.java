@@ -290,8 +290,7 @@ public class TrackCandListFinder {
                 this.setTrackPars(cand, null,
                         null, stateVec,
                         stateVec.getZ(),
-                        DcDetector, dcSwim);
-                
+                        DcDetector, dcSwim);               
 
                 List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
                 cand.setStateVecs(kfStateVecsAlongTrajectory);                                  
