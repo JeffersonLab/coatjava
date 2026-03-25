@@ -148,7 +148,7 @@ public class DatabaseConstantProvider implements ConstantProvider {
 
         LOGGER.log(Level.INFO, String.format("[DB] ---> open %s | %s | %s | %s", runNumber, variation, databaseDate, address));
         
-        provider.connect();
+        provider.connect(); // FIXME: this function call resets log levels, e.g. of jminuit
         
         if(provider.isConnected()){
             LOGGER.log(Level.FINE,"[DB] --->  database connection  : success");

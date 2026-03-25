@@ -10,6 +10,9 @@ import java.util.logging.LogManager;
  */
 public class SplitLogManager extends LogManager {
 
+  /** whether or not this manager is managing */
+  private static final boolean isManaging = SplitLogManager.class.getName().equals(System.getProperty("java.util.logging.manager"));
+
   /**
    * create a new {@link Logger} instance
    * @param name the name of the logger
@@ -17,6 +20,7 @@ public class SplitLogManager extends LogManager {
    */
   @Override
   public Logger getLogger(String name) {
+    warnIfNotManaging("getLogger");
     Logger logger = super.getLogger(name);
     if(logger != null)
       configureHandlers(logger, true);
@@ -30,6 +34,7 @@ public class SplitLogManager extends LogManager {
    */
   @Override
   public synchronized boolean addLogger(Logger logger) {
+    warnIfNotManaging("addLogger");
     boolean added = super.addLogger(logger);
     if(added)
       configureHandlers(logger, true);
@@ -42,6 +47,10 @@ public class SplitLogManager extends LogManager {
    * @param includePrefix whether or not to include a prefix in the formatting
    */
   public static void configureHandlers(Logger logger, boolean includePrefix) {
+
+    // do nothing, if `SplitLogManager` is not the log manager
+    // if(!isManaging)
+    //   return;
 
     // clear handlers
     logger.setUseParentHandlers(false);
@@ -121,9 +130,21 @@ public class SplitLogManager extends LogManager {
    * @param level the {@code Level} to apply
    */
   public static void configureLevel(Logger logger, Level level) {
+    // if(!isManaging)
+    //   return;
+    warnIfNotManaging("configureLevel");
     logger.setLevel(level);
     for(var handler : logger.getHandlers())
       handler.setLevel(level);
+  }
+
+  /**
+   * warn, if this log manager is not the manager
+   * @param src the source of the warning, such as a function name
+   */
+  private static void warnIfNotManaging(String src) {
+    if(!isManaging)
+      System.err.println("WARNING: SplitLogManager is not the LogManager, but its '" + src + "' was called");
   }
 
 }
