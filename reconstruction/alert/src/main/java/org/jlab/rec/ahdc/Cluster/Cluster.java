@@ -4,6 +4,9 @@ import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
 
 import java.util.ArrayList;
+import org.jlab.geom.detector.alert.AHDC.AlertDCFactory;
+import org.jlab.geom.prim.Line3D;
+import org.jlab.geom.prim.Point3D;
 
 /**
  * Cluster are compose by 2 PreCluster on layer with a different stereo angle
@@ -11,9 +14,9 @@ import java.util.ArrayList;
 public class Cluster {
 
 	private int                   _trackId = -1;
-	private double                _StereoAngle = 20.0;
-	private double                _DeltaZ = 300.0;
-	private double                _Zoffset = 150.0;
+	private double                _StereoAngle = 20.0;//not used
+	private double                _DeltaZ = 300;//not used 
+	private double                _Zoffset = 150;//not used
 
 	private double                _Radius;
 	private double                _Phi;
@@ -26,6 +29,23 @@ public class Cluster {
 	private double                _V;
 	private ArrayList<PreCluster> _PreClusters_list;
 
+	private static Line3D representativeLine(PreCluster pc) {
+		if (pc == null || pc.get_hits_list() == null || pc.get_hits_list().isEmpty()) {
+			return null;
+		}
+		Hit h = pc.get_hits_list().get(0);
+		return h.getLine();
+	}
+	public static double getStereoAngleDeg(int superlayerId) {
+		switch (superlayerId) {
+			case 0: return -19.1489;
+			case 1: return -19.2857;
+			case 2: return -20.0;
+			case 3: return -20.6897;
+			case 4: return -20.0;
+			default: return -20.0;
+		}
+	}
 
 	public Cluster(PreCluster precluster, PreCluster other_precluster) {
 		this._PreClusters_list = new ArrayList<>();
@@ -33,7 +53,14 @@ public class Cluster {
 		_PreClusters_list.add(other_precluster);
 		this._Radius = (precluster.get_Radius() + other_precluster.get_Radius()) / 2;
 
-		this._Z      = ((other_precluster.get_Phi() - precluster.get_Phi()) / (Math.toRadians(_StereoAngle) * Math.pow(-1, precluster.get_Super_layer()-1) - Math.toRadians(_StereoAngle) * Math.pow(-1, other_precluster.get_Super_layer()-1))) * _DeltaZ - _Zoffset;
+		Line3D line1 = representativeLine(precluster);
+		Point3D end1 = line1.end();
+		Point3D start1 = line1.origin();
+		double DeltaZ = end1.z()-start1.z();
+		double Zref = end1.z();
+		double StereoAnglep = getStereoAngleDeg(precluster.get_Super_layer());
+		double StereoAngleo = getStereoAngleDeg(other_precluster.get_Super_layer());
+		this._Z      = ((precluster.get_Phi() - other_precluster.get_Phi()) / (Math.toRadians(StereoAnglep) * Math.pow(-1, precluster.get_Super_layer()-1) - Math.toRadians(StereoAngleo) * Math.pow(-1, other_precluster.get_Super_layer()-1))) * DeltaZ + Zref;
 
 		double x1     = -precluster.get_Radius() * Math.sin(precluster.get_Phi());
 		double y1     = -precluster.get_Radius() * Math.cos(precluster.get_Phi());
