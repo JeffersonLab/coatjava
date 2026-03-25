@@ -49,8 +49,8 @@ public class SplitLogManager extends LogManager {
   public static void configureHandlers(Logger logger, boolean includePrefix) {
 
     // do nothing, if `SplitLogManager` is not the log manager
-    // if(!isManaging)
-    //   return;
+    if(!isManaging)
+      return;
 
     // clear handlers
     logger.setUseParentHandlers(false);
@@ -130,8 +130,8 @@ public class SplitLogManager extends LogManager {
    * @param level the {@code Level} to apply
    */
   public static void configureLevel(Logger logger, Level level) {
-    // if(!isManaging)
-    //   return;
+    if(!isManaging)
+      return;
     warnIfNotManaging("configureLevel");
     logger.setLevel(level);
     for(var handler : logger.getHandlers())
