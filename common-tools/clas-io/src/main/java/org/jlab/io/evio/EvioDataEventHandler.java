@@ -47,7 +47,7 @@ public class EvioDataEventHandler {
         try {
             structure = new EvioCompactStructureHandler(evioBuffer,DataType.BANK);
             eventNodes = structure.getChildNodes();
-        } catch (EvioException ex) {
+        } catch (EvioException | IndexOutOfBoundsException | NullPointerException ex) {
             Logger.getLogger(EvioDataEvent.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
