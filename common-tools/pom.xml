@@ -4,13 +4,13 @@
 
   <groupId>org.jlab.clas</groupId>
   <artifactId>common-tools</artifactId>
-  <version>13.7.1-SNAPSHOT</version>
+  <version>13.8.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <parent>
     <groupId>org.jlab.clas</groupId>
     <artifactId>coatjava</artifactId>
-    <version>13.7.1-SNAPSHOT</version>
+    <version>13.8.1-SNAPSHOT</version>
   </parent>
 
   <modules>

@@ -1,17 +1,41 @@
 #!/usr/bin/env python3
 
 def cli():
-    import os,sys,argparse
+    import os,shutil,argparse
     cli = argparse.ArgumentParser(description='CLARA scaling test')
-    cli.add_argument('-y',help='YAML file',required=True)
-    cli.add_argument('-c',help='CLARA_HOME path',default=os.getenv('CLARA_HOME',None))
-    cli.add_argument('-t',help='threads (default=4,8)',default='4,8')
-    cli.add_argument('-e',help='events per thread',default=100,type=int)
-    cli.add_argument('-i',help='input data file',required=True)
+    cli.add_argument('-y','--yaml',   metavar='YAML',help='path to YAML file',required=True)
+    cli.add_argument('-c','--clara',  metavar='DIR',help='CLARA_HOME path (default=$CLARA_HOME)',default=os.getenv('CLARA_HOME',None))
+    cli.add_argument('-t','--threads',metavar='#',help='threads (default=4,8)',default='4,8')
+    cli.add_argument('-e','--events', metavar='#',help='events per thread (default=555)',default=555,type=int)
+    cli.add_argument('-N','--numa',   metavar='#',help='NUMA socket (default=None, choices=[0,1])',default=None,type=int,choices=[0,1])
+    cli.add_argument('datafile', help='input EVIO/HIPO data file')
     cfg = cli.parse_args()
-    cfg.t = cfg.t.split(',')
-    if cfg.c is None: sys.exit('-c or $CLARA_HOME is required.')
+    cfg.threads = cfg.threads.split(',')
+    if not cfg.clara:
+        cli.error('cannot find CLARA installation via -c or $CLARA_HOME')
+    cfg.run_clara = find_run_clara(cfg.clara)
+    if not cfg.run_clara:
+        cli.error('cannot find run-clara in $PATH or CLARA installation')
+    if cfg.numa is not None:
+        if not shutil.which('numactl'):
+            cli.error('numactl is not in $PATH, --numa option not supported')
+        if len(list(get_numa_cpus(cfg.numa))) == 0:
+            cli.error('invalid --numa node:  {cfg.numa}')
+        cfg.numa = ','.join(list(get_numa_cpus(cfg.numa)))
     return cfg
+
+def find_run_clara(clara_home):
+    import os,shutil
+    if shutil.which('run-clara'):
+        return shutil.which('run-clara')
+    elif os.path.exists(clara_home + '/plugins/clas12/bin/run-clara'):
+        return clara_home + '/plugins/clas12/bin/run-clara'
+
+def get_numa_cpus(node):
+    for line in run(['numactl','-H']):
+        if line.startswith(f'node {node} cpus:'):
+            for col in line.strip().split()[3:]:
+                yield col
 
 def run(cmd):
     import subprocess
@@ -26,21 +50,21 @@ def run(cmd):
         pass
 
 def benchmark(cfg, threads, log):
-    import os,sys,shutil,collections
-    run_clara = shutil.which('run-clara')
-    if not run_clara:
-        run_clara = cfg.c + '/plugins/clas12/bin/run-clara'
-        if not os.path.exists(run_clara):
-            sys.exit('run-clara is not in $PATH')
-    exiting,benchmarks = False,collections.OrderedDict()
-    cmd = [run_clara,
-            '-c',cfg.c,
-            '-n',str(cfg.e*int(threads)),
+    import collections
+    cmd = []
+    # use taskset:
+    if cfg.numa is not None:
+        cmd.extend(['taskset','-c',cfg.numa])
+    # add the run-clara command:
+    cmd.extend([cfg.run_clara,
+            '-c',cfg.clara,
+            '-n',str(cfg.events*int(threads)),
             '-t',str(threads),
             '-l',
-            '-y',cfg.y,
+            '-y',cfg.yaml,
             '-o',f'tmp-scaling-{threads}',
-            cfg.i]
+            cfg.datafile])
+    exiting,benchmarks = False,collections.OrderedDict()
     for line in run(cmd):
         cols = line.split()
         print(line)
@@ -103,7 +127,7 @@ if __name__ == '__main__':
     cfg = cli()
     import os
     benchmarks = []
-    for threads in cfg.t:
+    for threads in cfg.threads:
         os.makedirs('tmp-scaling-'+threads)
         with open(f'tmp-scaling-{threads}/run-clara.log','w') as log:
             benchmarks.append([threads, benchmark(cfg, threads, log)])
