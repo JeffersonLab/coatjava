@@ -744,9 +744,9 @@ public class CLASDecoder {
                     }
 
                     int runNumberCoda = codaDecoder.getRunNumber();
-                    this.setRunNumber(runNumberCoda);
                   
                     if (runNumberCoda > 0) {
+                        this.setRunNumber(runNumberCoda);
                         detectorDecoder.translate(dataList);
                         detectorDecoder.fitPulses(dataList);
                         detectorDecoder.filterTDCs(dataList);
