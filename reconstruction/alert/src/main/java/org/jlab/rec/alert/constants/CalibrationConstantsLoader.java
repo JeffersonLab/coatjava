@@ -24,21 +24,22 @@ public class CalibrationConstantsLoader {
 
     // Maps for constants from database
     // AHDC
-    public static Map<Integer, double[]> AHDC_TIME_OFFSETS         = new HashMap<>(); ///< {t0,dt0,extra1,extra2,chi2ndf}
-    public static Map<Integer, double[]> AHDC_TIME_TO_DISTANCE     = new HashMap<>(); ///< {p0..p5, dp0..dp5, chi2ndf}
-    public static Map<Integer, double[]> AHDC_RAW_HIT_CUTS         = new HashMap<>(); ///< {t_min,t_max,tot_min,tot_max,adc_min,adc_max,ped_min,ped_max}
-
+    public static Map<Integer, double[]> AHDC_TIME_OFFSETS           = new HashMap<>(); ///< {t0,dt0,extra1,extra2,chi2ndf}
+    public static Map<Integer, double[]> AHDC_TIME_TO_DISTANCE       = new HashMap<>(); ///< {p0..p5, dp0..dp5, chi2ndf}
+	public static Map<Integer, double[]> AHDC_TIME_TO_DISTANCE_WIRE  = new HashMap<>(); ///< T2D function for every wire
+    public static Map<Integer, double[]> AHDC_RAW_HIT_CUTS           = new HashMap<>(); ///< {t_min,t_max,tot_min,tot_max,adc_min,adc_max,ped_min,ped_max}
+                                                                     
     // UPDATED SCHEMA: keys (sector,layer,component), columns: gainCorr,dgainCorr,extra1,extra2,extra3
-    public static Map<Integer, double[]> AHDC_ADC_GAINS            = new HashMap<>(); ///< {gainCorr, dgainCorr, extra1, extra2, extra3}
-
+    public static Map<Integer, double[]> AHDC_ADC_GAINS              = new HashMap<>(); ///< {gainCorr, dgainCorr, extra1, extra2, extra3}
+                                                                     
     // NEW ToT TABLE: keys (sector,layer,component), columns: totCorr,dtotCorr,extra1,extra2,extra3
-    public static Map<Integer, double[]> AHDC_TIME_OVER_THRESHOLD  = new HashMap<>(); ///< {totCorr, dtotCorr, extra1, extra2, extra3}
-
-    // ATOF
-    public static Map<Integer, double[]> ATOF_EFFECTIVE_VELOCITY   = new HashMap<>(); ///< {veff,dveff,extra1,extra2}
-    public static Map<Integer, double[]> ATOF_TIME_WALK            = new HashMap<>(); ///< {tw0..tw3, dtw0..dtw3, chi2ndf}
-    public static Map<Integer, double[]> ATOF_ATTENUATION_LENGTH   = new HashMap<>(); ///< {attlen,dattlen,extra1,extra2}
-    public static Map<Integer, double[]> ATOF_TIME_OFFSETS         = new HashMap<>(); ///< {t0,upstream_downstream,wedge_bar,extra1,extra2}
+    public static Map<Integer, double[]> AHDC_TIME_OVER_THRESHOLD    = new HashMap<>(); ///< {totCorr, dtotCorr, extra1, extra2, extra3}
+                                                                     
+    // ATOF                                                          
+    public static Map<Integer, double[]> ATOF_EFFECTIVE_VELOCITY     = new HashMap<>(); ///< {veff,dveff,extra1,extra2}
+    public static Map<Integer, double[]> ATOF_TIME_WALK              = new HashMap<>(); ///< {tw0..tw3, dtw0..dtw3, chi2ndf}
+    public static Map<Integer, double[]> ATOF_ATTENUATION_LENGTH     = new HashMap<>(); ///< {attlen,dattlen,extra1,extra2}
+    public static Map<Integer, double[]> ATOF_TIME_OFFSETS           = new HashMap<>(); ///< {t0,upstream_downstream,wedge_bar,extra1,extra2}
 
     public static synchronized void Load(int runno, ConstantsManager manager) {
 
@@ -46,6 +47,7 @@ public class CalibrationConstantsLoader {
 
         IndexedTable ahdc_timeOffsets        = manager.getConstants(runno, "/calibration/alert/ahdc/time_offsets");
         IndexedTable ahdc_time2distance      = manager.getConstants(runno, "/calibration/alert/ahdc/time_to_distance");
+		IndexedTable ahdc_time2distanceWire  = manager.getConstants(runno, "/calibration/alert/ahdc/time_to_distance_wire");
         IndexedTable ahdc_rawHitCuts         = manager.getConstants(runno, "/calibration/alert/ahdc/raw_hit_cuts");
 
         // Gains table (UPDATED SCHEMA)
@@ -105,6 +107,37 @@ public class CalibrationConstantsLoader {
             double params[] = { p0, p1, p2, p3, p4, p5, dp0, dp1, dp2, dp3, dp4, dp5, chi2ndf };
             AHDC_TIME_TO_DISTANCE.put(Integer.valueOf(key), params);
         }
+		
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // AHDC time to distance per wire
+		// See implimentation and functional form in reconstruction/alert/src/main/java/org/jlab/rec/ahdc/Hit/HitReader.java
+        for (int i = 0; i < ahdc_time2distanceWire.getRowCount(); i++) {
+            int sector    = Integer.parseInt((String) ahdc_time2distanceWire.getValueAt(i, 0));
+            int layer     = Integer.parseInt((String) ahdc_time2distanceWire.getValueAt(i, 1));
+            int component = Integer.parseInt((String) ahdc_time2distanceWire.getValueAt(i, 2));
+
+            double p1_int   = ahdc_time2distanceWire.getDoubleValue("p1_int",   sector, layer, component);
+            double p1_slope = ahdc_time2distanceWire.getDoubleValue("p1_slope", sector, layer, component);
+            double p2_int   = ahdc_time2distanceWire.getDoubleValue("p2_int",   sector, layer, component);
+            double p2_slope = ahdc_time2distanceWire.getDoubleValue("p2_slope", sector, layer, component);
+            double p3_int   = ahdc_time2distanceWire.getDoubleValue("p3_int",   sector, layer, component);
+            double p3_slope = ahdc_time2distanceWire.getDoubleValue("p3_slope", sector, layer, component);
+			double t1_x0    = ahdc_time2distanceWire.getDoubleValue("t1_x0",    sector, layer, component);
+			double t1_width = ahdc_time2distanceWire.getDoubleValue("t1_width", sector, layer, component);
+            double t2_x0    = ahdc_time2distanceWire.getDoubleValue("t2_x0",    sector, layer, component);
+			double t2_width	= ahdc_time2distanceWire.getDoubleValue("t2_width", sector, layer, component);
+            double z0     	= ahdc_time2distanceWire.getDoubleValue("z0",     	sector, layer, component);
+            double z1     	= ahdc_time2distanceWire.getDoubleValue("z1",     	sector, layer, component);
+			double z2     	= ahdc_time2distanceWire.getDoubleValue("z2",     	sector, layer, component);
+			double extra1   = ahdc_time2distanceWire.getDoubleValue("extra1",   sector, layer, component);
+			double extra2   = ahdc_time2distanceWire.getDoubleValue("extra2",   sector, layer, component);
+            double chi2ndf  = ahdc_time2distanceWire.getDoubleValue("chi2ndf", 	sector, layer, component);
+
+            int key = sector * 10000 + layer * 100 + component;
+            double params[] = { p1_int, p1_slope, p2_int, p2_slope, p3_int, p3_slope, t1_x0, t1_width, t2_x0, t2_width, z0, z1, z2, extra1, extra2, chi2ndf };
+            AHDC_TIME_TO_DISTANCE_WIRE.put(Integer.valueOf(key), params);
+        }
+		
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // AHDC raw hit cuts
