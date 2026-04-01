@@ -4,20 +4,20 @@
 
   <groupId>org.jlab.clas</groupId>
   <artifactId>clas-detector</artifactId>
-  <version>13.8.1-SNAPSHOT</version>
+  <version>13.8.2-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <parent>
     <groupId>org.jlab.clas</groupId>
     <artifactId>common-tools</artifactId>
-    <version>13.8.1-SNAPSHOT</version>
+    <version>13.8.2-SNAPSHOT</version>
   </parent>
 
   <dependencies>
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-utils</artifactId>
-      <version>13.8.1-SNAPSHOT</version>
+      <version>13.8.2-SNAPSHOT</version>
     </dependency>
 
     <dependency>
@@ -43,19 +43,19 @@
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-io</artifactId>
-      <version>13.8.1-SNAPSHOT</version>
+      <version>13.8.2-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-geometry</artifactId>
-      <version>13.8.1-SNAPSHOT</version>
+      <version>13.8.2-SNAPSHOT</version>
     </dependency>
 
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-logging</artifactId>
-      <version>13.8.1-SNAPSHOT</version>
+      <version>13.8.2-SNAPSHOT</version>
     </dependency>
 
     <dependency>
