@@ -23,6 +23,7 @@ import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.groups.IndexedTableViewer;
 import org.jlab.utils.system.FileSystemExecScan;
 import org.jlab.logging.SplitLogManager;
+import org.jlab.logging.LogLevelGuard;
 
 /**
  *
@@ -34,6 +35,7 @@ public class DatabaseConstantProvider implements ConstantProvider {
     static {
         SplitLogManager.configureHandlers(LOGGER, false);
     }
+    private LogLevelGuard logGuard = new LogLevelGuard("org.freehep.math.minuit");
     
     private final HashMap<String,String[]> constantContainer = new HashMap<>();
     private final boolean PRINT_ALL = true;
@@ -148,7 +150,9 @@ public class DatabaseConstantProvider implements ConstantProvider {
 
         LOGGER.log(Level.INFO, String.format("[DB] ---> open %s | %s | %s | %s", runNumber, variation, databaseDate, address));
         
+        logGuard.save();
         provider.connect();
+        logGuard.restore();
         
         if(provider.isConnected()){
             LOGGER.log(Level.FINE,"[DB] --->  database connection  : success");

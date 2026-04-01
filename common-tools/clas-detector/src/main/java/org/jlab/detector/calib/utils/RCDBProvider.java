@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jlab.logging.SplitLogManager;
+import org.jlab.logging.LogLevelGuard;
 
 import org.rcdb.RCDB;
 import org.rcdb.Condition;
@@ -38,6 +39,7 @@ public class RCDBProvider {
     static {
         SplitLogManager.configureHandlers(LOGGER, false);
     }
+    private LogLevelGuard logGuard = new LogLevelGuard("org.freehep.math.minuit");
 
     public static final String DEFAULTADDRESS = "mysql://rcdb@clasdb.jlab.org/rcdb";
 
@@ -89,7 +91,9 @@ public class RCDBProvider {
         provider = RCDB.createProvider(address);
         try {
             LOGGER.log(Level.FINE,"[RCDB] --->  open connection with : " + address);
+            logGuard.save();
             provider.connect();
+            logGuard.restore();
         }
         catch (Exception e) {
             LOGGER.log(Level.SEVERE,"",e);
