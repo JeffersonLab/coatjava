@@ -25,7 +25,6 @@ public class CalibrationConstantsLoader {
     // Maps for constants from database
     // AHDC
     public static Map<Integer, double[]> AHDC_TIME_OFFSETS           = new HashMap<>(); ///< {t0,dt0,extra1,extra2,chi2ndf}
-    public static Map<Integer, double[]> AHDC_TIME_TO_DISTANCE       = new HashMap<>(); ///< {p0..p5, dp0..dp5, chi2ndf}
 	public static Map<Integer, double[]> AHDC_TIME_TO_DISTANCE_WIRE  = new HashMap<>(); ///< T2D function for every wire
     public static Map<Integer, double[]> AHDC_RAW_HIT_CUTS           = new HashMap<>(); ///< {t_min,t_max,tot_min,tot_max,adc_min,adc_max,ped_min,ped_max}
                                                                      
@@ -46,7 +45,6 @@ public class CalibrationConstantsLoader {
         if (CSTLOADED) return;
 
         IndexedTable ahdc_timeOffsets        = manager.getConstants(runno, "/calibration/alert/ahdc/time_offsets");
-        IndexedTable ahdc_time2distance      = manager.getConstants(runno, "/calibration/alert/ahdc/time_to_distance");
 		IndexedTable ahdc_time2distanceWire  = manager.getConstants(runno, "/calibration/alert/ahdc/time_to_distance_wire");
         IndexedTable ahdc_rawHitCuts         = manager.getConstants(runno, "/calibration/alert/ahdc/raw_hit_cuts");
 
@@ -78,65 +76,38 @@ public class CalibrationConstantsLoader {
             double params[] = { t0, dt0, extra1, extra2, chi2ndf };
             AHDC_TIME_OFFSETS.put(Integer.valueOf(key), params);
         }
-
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // AHDC time to distance
-        // Caution, this table has only one row
-        // the corresponding identifiers are (sector, layer, component) == (1,1,1)
-        // but it applies for all AHDC wires !
-        for (int i = 0; i < ahdc_time2distance.getRowCount(); i++) {
-            int sector    = Integer.parseInt((String) ahdc_time2distance.getValueAt(i, 0));
-            int layer     = Integer.parseInt((String) ahdc_time2distance.getValueAt(i, 1));
-            int component = Integer.parseInt((String) ahdc_time2distance.getValueAt(i, 2));
-
-            double p0      = ahdc_time2distance.getDoubleValue("p0",      sector, layer, component);
-            double p1      = ahdc_time2distance.getDoubleValue("p1",      sector, layer, component);
-            double p2      = ahdc_time2distance.getDoubleValue("p2",      sector, layer, component);
-            double p3      = ahdc_time2distance.getDoubleValue("p3",      sector, layer, component);
-            double p4      = ahdc_time2distance.getDoubleValue("p4",      sector, layer, component);
-            double p5      = ahdc_time2distance.getDoubleValue("p5",      sector, layer, component);
-            double dp0     = ahdc_time2distance.getDoubleValue("dp0",     sector, layer, component);
-            double dp1     = ahdc_time2distance.getDoubleValue("dp1",     sector, layer, component);
-            double dp2     = ahdc_time2distance.getDoubleValue("dp2",     sector, layer, component);
-            double dp3     = ahdc_time2distance.getDoubleValue("dp3",     sector, layer, component);
-            double dp4     = ahdc_time2distance.getDoubleValue("dp4",     sector, layer, component);
-            double dp5     = ahdc_time2distance.getDoubleValue("dp5",     sector, layer, component);
-            double chi2ndf = ahdc_time2distance.getDoubleValue("chi2ndf", sector, layer, component);
-
-            int key = sector * 10000 + layer * 100 + component;
-            double params[] = { p0, p1, p2, p3, p4, p5, dp0, dp1, dp2, dp3, dp4, dp5, chi2ndf };
-            AHDC_TIME_TO_DISTANCE.put(Integer.valueOf(key), params);
-        }
 		
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // AHDC time to distance per wire
-		// See implimentation and functional form in reconstruction/alert/src/main/java/org/jlab/rec/ahdc/Hit/HitReader.java
-        for (int i = 0; i < ahdc_time2distanceWire.getRowCount(); i++) {
-            int sector    = Integer.parseInt((String) ahdc_time2distanceWire.getValueAt(i, 0));
-            int layer     = Integer.parseInt((String) ahdc_time2distanceWire.getValueAt(i, 1));
-            int component = Integer.parseInt((String) ahdc_time2distanceWire.getValueAt(i, 2));
+		// See implementation and functional form in reconstruction/alert/src/main/java/org/jlab/rec/ahdc/Hit/HitReader.java
+		if(ahdc_time2distanceWire != null){
+			for (int i = 0; i < ahdc_time2distanceWire.getRowCount(); i++) {
+				int sector    = Integer.parseInt((String) ahdc_time2distanceWire.getValueAt(i, 0));
+				int layer     = Integer.parseInt((String) ahdc_time2distanceWire.getValueAt(i, 1));
+				int component = Integer.parseInt((String) ahdc_time2distanceWire.getValueAt(i, 2));
 
-            double p1_int   = ahdc_time2distanceWire.getDoubleValue("p1_int",   sector, layer, component);
-            double p1_slope = ahdc_time2distanceWire.getDoubleValue("p1_slope", sector, layer, component);
-            double p2_int   = ahdc_time2distanceWire.getDoubleValue("p2_int",   sector, layer, component);
-            double p2_slope = ahdc_time2distanceWire.getDoubleValue("p2_slope", sector, layer, component);
-            double p3_int   = ahdc_time2distanceWire.getDoubleValue("p3_int",   sector, layer, component);
-            double p3_slope = ahdc_time2distanceWire.getDoubleValue("p3_slope", sector, layer, component);
-			double t1_x0    = ahdc_time2distanceWire.getDoubleValue("t1_x0",    sector, layer, component);
-			double t1_width = ahdc_time2distanceWire.getDoubleValue("t1_width", sector, layer, component);
-            double t2_x0    = ahdc_time2distanceWire.getDoubleValue("t2_x0",    sector, layer, component);
-			double t2_width	= ahdc_time2distanceWire.getDoubleValue("t2_width", sector, layer, component);
-            double z0     	= ahdc_time2distanceWire.getDoubleValue("z0",     	sector, layer, component);
-            double z1     	= ahdc_time2distanceWire.getDoubleValue("z1",     	sector, layer, component);
-			double z2     	= ahdc_time2distanceWire.getDoubleValue("z2",     	sector, layer, component);
-			double extra1   = ahdc_time2distanceWire.getDoubleValue("extra1",   sector, layer, component);
-			double extra2   = ahdc_time2distanceWire.getDoubleValue("extra2",   sector, layer, component);
-            double chi2ndf  = ahdc_time2distanceWire.getDoubleValue("chi2ndf", 	sector, layer, component);
+				double p1_int   = ahdc_time2distanceWire.getDoubleValue("p1_int",   sector, layer, component);
+				double p1_slope = ahdc_time2distanceWire.getDoubleValue("p1_slope", sector, layer, component);
+				double p2_int   = ahdc_time2distanceWire.getDoubleValue("p2_int",   sector, layer, component);
+				double p2_slope = ahdc_time2distanceWire.getDoubleValue("p2_slope", sector, layer, component);
+				double p3_int   = ahdc_time2distanceWire.getDoubleValue("p3_int",   sector, layer, component);
+				double p3_slope = ahdc_time2distanceWire.getDoubleValue("p3_slope", sector, layer, component);
+				double t1_x0    = ahdc_time2distanceWire.getDoubleValue("t1_x0",    sector, layer, component);
+				double t1_width = ahdc_time2distanceWire.getDoubleValue("t1_width", sector, layer, component);
+				double t2_x0    = ahdc_time2distanceWire.getDoubleValue("t2_x0",    sector, layer, component);
+				double t2_width	= ahdc_time2distanceWire.getDoubleValue("t2_width", sector, layer, component);
+				double z0     	= ahdc_time2distanceWire.getDoubleValue("z0",     	sector, layer, component);
+				double z1     	= ahdc_time2distanceWire.getDoubleValue("z1",     	sector, layer, component);
+				double z2     	= ahdc_time2distanceWire.getDoubleValue("z2",     	sector, layer, component);
+				double extra1   = ahdc_time2distanceWire.getDoubleValue("extra1",   sector, layer, component);
+				double extra2   = ahdc_time2distanceWire.getDoubleValue("extra2",   sector, layer, component);
+				double chi2ndf  = ahdc_time2distanceWire.getDoubleValue("chi2ndf", 	sector, layer, component);
 
-            int key = sector * 10000 + layer * 100 + component;
-            double params[] = { p1_int, p1_slope, p2_int, p2_slope, p3_int, p3_slope, t1_x0, t1_width, t2_x0, t2_width, z0, z1, z2, extra1, extra2, chi2ndf };
-            AHDC_TIME_TO_DISTANCE_WIRE.put(Integer.valueOf(key), params);
-        }
+				int key = sector * 10000 + layer * 100 + component;
+				double params[] = { p1_int, p1_slope, p2_int, p2_slope, p3_int, p3_slope, t1_x0, t1_width, t2_x0, t2_width, z0, z1, z2, extra1, extra2, chi2ndf };
+				AHDC_TIME_TO_DISTANCE_WIRE.put(Integer.valueOf(key), params);
+			}
+		}
 		
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////

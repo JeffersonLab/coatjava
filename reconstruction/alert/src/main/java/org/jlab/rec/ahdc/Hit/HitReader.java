@@ -22,7 +22,11 @@ public class HitReader {
 	public double T2Dfunction(int key, double time){
 		double[] time2distance = CalibrationConstantsLoader.AHDC_TIME_TO_DISTANCE_WIRE.get(key);
 		if (time2distance == null){
-			throw new IllegalStateException("Missing CCDB /calibration/alert/ahdc/time_to_distance for key=" + key + " (check run/variation + key mapping)");
+			throw new IllegalStateException("Missing CCDB /calibration/alert/ahdc/time_to_distance_wire for key=" + key + " (check run/variation + key mapping)");
+		}
+		
+		if (time2distance[7] == 0.0 || time2distance[9] == 0.0){
+			throw new IllegalStateException("Incorrect table values in CCDB /calibration/alert/ahdc/time_to_distance_wire. t1_width ("+ time2distance[7] +") or t2_width ("+time2distance[9]+") for key: " + key + " must not equal zero.  Please check database table issues.");
 		}
 		
 		// T2D function consists of three 1st order polynomials (p1, p2, p3) and two transition functions (t1, t2).
