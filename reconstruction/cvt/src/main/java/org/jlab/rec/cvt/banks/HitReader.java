@@ -133,11 +133,13 @@ public class HitReader {
                 // create the strip object for the BMT
                 Strip BmtStrip = new Strip(strip, ADCtoEdep, time);
                 BmtStrip.setStatus(status.getIntValue("status", sector, layer, strip));
-                if(Constants.getInstance().timeCuts) {
+                if(Constants.getInstance().timeCuts
+                        && !Constants.getInstance().QDCDATSample) {
                     if(time!=0 && (time<tmin || time>tmax))
                         BmtStrip.setStatus(2);// calculate the strip parameters for the BMT hit
                 }
-                if(Constants.getInstance().bmtHVCuts) {
+                if(Constants.getInstance().bmtHVCuts 
+                        && !Constants.getInstance().QDCDATSample) {
                     if(bmtStripVoltage!=null && bmtStripVoltage.hasEntry(sector,layer,0) && 
                             bmtStripVoltageThresh!=null && bmtStripVoltageThresh.hasEntry(sector,layer,0)) {
                         double hv  = bmtStripVoltage.getDoubleValue("HV", sector,layer,0); 
@@ -299,7 +301,8 @@ public class HitReader {
                 if(tdcs.containsKey(key)) {
                     time = tdcs.get(key);
                     //time tag
-                    if(Constants.getInstance().useSVTTimingCuts) {
+                    if(Constants.getInstance().useSVTTimingCuts && 
+                            !Constants.getInstance().QDCDATSample) {
                         if(this.passTimingCuts(ADC, time)==false) 
                             continue;
                         }
