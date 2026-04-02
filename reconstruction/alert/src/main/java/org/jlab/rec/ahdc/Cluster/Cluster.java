@@ -36,17 +36,24 @@ public class Cluster {
 		Hit h = pc.get_hits_list().get(0);
 		return h.getLine();
 	}
-	public static double getStereoAngleDeg(int superlayerId) {
-		switch (superlayerId) {
-			case 0: return -19.1489;
-			case 1: return -19.2857;
-			case 2: return -20.0;
-			case 3: return -20.6897;
-			case 4: return -20.0;
-			default: return -20.0;
-		}
+	private static double wrapPi(double a) {
+		while (a > Math.PI)  a -= 2.0 * Math.PI;
+		while (a < -Math.PI) a += 2.0 * Math.PI;
+		return a;
 	}
+	private static double stereoTwistFromLine(Line3D line) {
+		if (line == null) {
+			return 0.0;
+		}
 
+		Point3D p0 = line.origin();
+		Point3D p1 = line.end();
+
+		double phi0 = Math.atan2(p0.y(), p0.x());
+		double phi1 = Math.atan2(p1.y(), p1.x());
+
+		return wrapPi(phi1 - phi0);
+	}
 	public Cluster(PreCluster precluster, PreCluster other_precluster) {
 		this._PreClusters_list = new ArrayList<>();
 		_PreClusters_list.add(precluster);
@@ -54,13 +61,14 @@ public class Cluster {
 		this._Radius = (precluster.get_Radius() + other_precluster.get_Radius()) / 2;
 
 		Line3D line1 = representativeLine(precluster);
+		Line3D line2 = representativeLine(other_precluster);
 		Point3D end1 = line1.end();
 		Point3D start1 = line1.origin();
 		double DeltaZ = end1.z()-start1.z();
 		double Zref = end1.z();
-		double StereoAnglep = getStereoAngleDeg(precluster.get_Super_layer());
-		double StereoAngleo = getStereoAngleDeg(other_precluster.get_Super_layer());
-		this._Z      = ((precluster.get_Phi() - other_precluster.get_Phi()) / (Math.toRadians(StereoAnglep) * Math.pow(-1, precluster.get_Super_layer()-1) - Math.toRadians(StereoAngleo) * Math.pow(-1, other_precluster.get_Super_layer()-1))) * DeltaZ + Zref;
+		double StereoAnglep = stereoTwistFromLine(line1);
+		double StereoAngleo = stereoTwistFromLine(line2);
+		this._Z      = ((precluster.get_Phi() - other_precluster.get_Phi()) / (StereoAnglep - StereoAngleo)) * DeltaZ + Zref;
 
 		double x1     = -precluster.get_Radius() * Math.sin(precluster.get_Phi());
 		double y1     = -precluster.get_Radius() * Math.cos(precluster.get_Phi());
