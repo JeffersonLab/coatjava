@@ -14,10 +14,6 @@ import org.jlab.geom.prim.Point3D;
 public class Cluster {
 
 	private int                   _trackId = -1;
-	private double                _StereoAngle = 20.0;//not used
-	private double                _DeltaZ = 300;//not used 
-	private double                _Zoffset = 150;//not used
-
 	private double                _Radius;
 	private double                _Phi;
 	private double                _Z;
