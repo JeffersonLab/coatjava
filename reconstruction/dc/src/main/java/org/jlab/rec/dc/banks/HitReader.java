@@ -127,9 +127,9 @@ public class HitReader {
             
             DataBank bankTS = event.getBank(bankNames.getTimeStampBank());
             for(int i=0; i<bankTS.rows(); i++) {
-                int  crate     = bankTS.getByte("crate", i);
-                int  slot      = bankTS.getByte("slot", i);
-                long timestamp = bankTS.getLong("timestamp", i);
+                int  crate     = bankTS.getByte(0, i);
+                int  slot      = bankTS.getByte(1, i);
+                long timestamp = bankTS.getLong(2, i);
                 if(swapBits) {
                     timestamp = (Long) (((timestamp&0x0000ffffff000000L)>>24)|((timestamp&0x0000000000ffffffL)<<24));
                 }
