@@ -1,4 +1,4 @@
-package org.jlab.asdf;
+package org.jlab.io.banks;
 public class ALERT__ai_pid {
     public static final short trackid = 0;
     public static final short clusterid = 1;

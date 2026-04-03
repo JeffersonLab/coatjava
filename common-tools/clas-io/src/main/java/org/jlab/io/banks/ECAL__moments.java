@@ -1,4 +1,4 @@
-package org.jlab.asdf;
+package org.jlab.io.banks;
 public class ECAL__moments {
     public static final short distU = 0;
     public static final short distV = 1;

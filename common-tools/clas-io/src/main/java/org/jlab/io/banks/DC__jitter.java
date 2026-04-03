@@ -1,4 +1,4 @@
-package org.jlab.asdf;
+package org.jlab.io.banks;
 public class DC__jitter {
     public static final short crate = 0;
     public static final short slot = 1;

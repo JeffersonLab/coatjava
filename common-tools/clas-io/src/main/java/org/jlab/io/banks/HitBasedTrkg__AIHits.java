@@ -1,4 +1,4 @@
-package org.jlab.asdf;
+package org.jlab.io.banks;
 public class HitBasedTrkg__AIHits {
     public static final short id = 0;
     public static final short indexTDC = 1;

@@ -1,4 +1,4 @@
-package org.jlab.asdf;
+package org.jlab.io.banks;
 public class CVTRec__SeedClusters {
     public static final short id = 0;
     public static final short Clus1_ID = 1;

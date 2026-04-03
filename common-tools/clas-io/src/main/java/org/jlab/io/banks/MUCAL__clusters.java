@@ -1,4 +1,4 @@
-package org.jlab.asdf;
+package org.jlab.io.banks;
 public class MUCAL__clusters {
     public static final short size = 0;
     public static final short id = 1;

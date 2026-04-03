@@ -1,4 +1,4 @@
-package org.jlab.asdf;
+package org.jlab.io.banks;
 public class ALERT__projections {
     public static final short id = 0;
     public static final short trackid = 1;

@@ -1,4 +1,4 @@
-package org.jlab.asdf;
+package org.jlab.io.banks;
 public class DC__doca {
     public static final short LR = 0;
     public static final short doca = 1;

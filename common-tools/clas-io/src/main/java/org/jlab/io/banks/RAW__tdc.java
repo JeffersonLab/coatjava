@@ -1,4 +1,4 @@
-package org.jlab.asdf;
+package org.jlab.io.banks;
 public class RAW__tdc {
     public static final short crate = 0;
     public static final short slot = 1;

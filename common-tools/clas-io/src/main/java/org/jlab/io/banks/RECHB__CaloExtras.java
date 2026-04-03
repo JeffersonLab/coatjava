@@ -1,4 +1,4 @@
-package org.jlab.asdf;
+package org.jlab.io.banks;
 public class RECHB__CaloExtras {
     public static final short dbstU = 0;
     public static final short dbstV = 1;

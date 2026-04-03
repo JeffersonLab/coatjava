@@ -1,4 +1,4 @@
-package org.jlab.asdf;
+package org.jlab.io.banks;
 public class MC__True {
     public static final short detector = 0;
     public static final short pid = 1;
