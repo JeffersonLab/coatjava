@@ -1,0 +1,37 @@
+package org.jlab.asdf;
+public class RICH__calib {
+    public static final short hindex = 0;
+    public static final short pindex = 1;
+    public static final short sector = 2;
+    public static final short pmt = 3;
+    public static final short anode = 4;
+    public static final short x = 5;
+    public static final short y = 6;
+    public static final short z = 7;
+    public static final short time = 8;
+    public static final short rawtime = 9;
+    public static final short duration = 10;
+    public static final short status = 11;
+    public static final short used = 12;
+    public static final short emilay = 13;
+    public static final short emico = 14;
+    public static final short enico = 15;
+    public static final short emqua = 16;
+    public static final short start_time = 17;
+    public static final short traced_the = 18;
+    public static final short traced_phi = 19;
+    public static final short traced_hitx = 20;
+    public static final short traced_hity = 21;
+    public static final short traced_hitz = 22;
+    public static final short traced_path = 23;
+    public static final short traced_time = 24;
+    public static final short traced_nrfl = 25;
+    public static final short traced_nrfr = 26;
+    public static final short traced_1rfl = 27;
+    public static final short traced_layers = 28;
+    public static final short traced_compos = 29;
+    public static final short traced_etaC = 30;
+    public static final short etac_ref = 31;
+    public static final short etac_rms = 32;
+    public static final short prob = 33;
+}

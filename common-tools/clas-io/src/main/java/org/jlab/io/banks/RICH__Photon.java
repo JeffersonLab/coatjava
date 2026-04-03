@@ -1,0 +1,32 @@
+package org.jlab.asdf;
+public class RICH__Photon {
+    public static final short id = 0;
+    public static final short hindex = 1;
+    public static final short pindex = 2;
+    public static final short type = 3;
+    public static final short used = 4;
+    public static final short start_time = 5;
+    public static final short traced_the = 6;
+    public static final short traced_phi = 7;
+    public static final short traced_hitx = 8;
+    public static final short traced_hity = 9;
+    public static final short traced_hitz = 10;
+    public static final short traced_path = 11;
+    public static final short traced_time = 12;
+    public static final short traced_stime = 13;
+    public static final short traced_nrfl = 14;
+    public static final short traced_nrfr = 15;
+    public static final short traced_1rfl = 16;
+    public static final short traced_layers = 17;
+    public static final short traced_compos = 18;
+    public static final short traced_etaC = 19;
+    public static final short traced_aeron = 20;
+    public static final short traced_dthe = 21;
+    public static final short traced_dphi = 22;
+    public static final short eff = 23;
+    public static final short back = 24;
+    public static final short hypo_pid = 25;
+    public static final short etac_ref = 26;
+    public static final short etac_rms = 27;
+    public static final short prob = 28;
+}

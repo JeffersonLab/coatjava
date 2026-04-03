@@ -1,0 +1,32 @@
+package org.jlab.asdf;
+public class DC__calib {
+    public static final short id = 0;
+    public static final short status = 1;
+    public static final short sector = 2;
+    public static final short superlayer = 3;
+    public static final short layer = 4;
+    public static final short wire = 5;
+    public static final short TDC = 6;
+    public static final short jitter = 7;
+    public static final short doca = 8;
+    public static final short docaError = 9;
+    public static final short trkDoca = 10;
+    public static final short timeResidual = 11;
+    public static final short fitResidual = 12;
+    public static final short DAFWeight = 13;
+    public static final short LR = 14;
+    public static final short X = 15;
+    public static final short Z = 16;
+    public static final short B = 17;
+    public static final short Alpha = 18;
+    public static final short TProp = 19;
+    public static final short TFlight = 20;
+    public static final short T0 = 21;
+    public static final short TStart = 22;
+    public static final short dDoca = 23;
+    public static final short clusterID = 24;
+    public static final short trkID = 25;
+    public static final short time = 26;
+    public static final short beta = 27;
+    public static final short tBeta = 28;
+}
