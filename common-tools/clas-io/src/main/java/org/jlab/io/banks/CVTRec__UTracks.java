@@ -1,0 +1,35 @@
+package org.jlab.asdf;
+public class CVTRec__UTracks {
+    public static final short ID = 0;
+    public static final short nKFIters = 1;
+    public static final short c_x = 2;
+    public static final short c_y = 3;
+    public static final short c_z = 4;
+    public static final short c_ux = 5;
+    public static final short c_uy = 6;
+    public static final short c_uz = 7;
+    public static final short pathlength = 8;
+    public static final short q = 9;
+    public static final short p = 10;
+    public static final short pt = 11;
+    public static final short phi0 = 12;
+    public static final short tandip = 13;
+    public static final short z0 = 14;
+    public static final short d0 = 15;
+    public static final short cov_d02 = 16;
+    public static final short cov_d0phi0 = 17;
+    public static final short cov_d0rho = 18;
+    public static final short cov_phi02 = 19;
+    public static final short cov_phi0rho = 20;
+    public static final short cov_rho2 = 21;
+    public static final short cov_z02 = 22;
+    public static final short cov_z0tandip = 23;
+    public static final short cov_tandip2 = 24;
+    public static final short chi2 = 25;
+    public static final short ndf = 26;
+    public static final short pid = 27;
+    public static final short seedID = 28;
+    public static final short xb = 29;
+    public static final short yb = 30;
+    public static final short status = 31;
+}
