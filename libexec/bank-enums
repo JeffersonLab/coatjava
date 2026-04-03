@@ -6,7 +6,7 @@ for x in glob.glob(f'{idir}/*.json'):
     for bank in json.load(open(x,'r')):
         class_name = bank['name'].replace(':','_');
         with open(f'{odir}/{class_name}.java','w') as f:
-            f.write('package org.jlab.asdf;\n')
+            f.write('package org.jlab.io.banks;\n')
             f.write(f'public class {class_name} {{\n')
             for i,entry in enumerate(bank['entries']):
                 var_name = entry['name']
