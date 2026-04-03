@@ -1,0 +1,33 @@
+package org.jlab.asdf;
+public class CTOF__calib {
+    public static final short id = 0;
+    public static final short status = 1;
+    public static final short trackid = 2;
+    public static final short component = 3;
+    public static final short energy = 4;
+    public static final short time = 5;
+    public static final short x = 6;
+    public static final short y = 7;
+    public static final short z = 8;
+    public static final short tx = 9;
+    public static final short ty = 10;
+    public static final short tz = 11;
+    public static final short adc1 = 12;
+    public static final short adc2 = 13;
+    public static final short tdc1 = 14;
+    public static final short tdc2 = 15;
+    public static final short pindex = 16;
+    public static final short pid = 17;
+    public static final short charge = 18;
+    public static final short px = 19;
+    public static final short py = 20;
+    public static final short pz = 21;
+    public static final short vx = 22;
+    public static final short vy = 23;
+    public static final short vz = 24;
+    public static final short vt = 25;
+    public static final short chi2 = 26;
+    public static final short NDF = 27;
+    public static final short pathLength = 28;
+    public static final short pathLengthThruBar = 29;
+}
