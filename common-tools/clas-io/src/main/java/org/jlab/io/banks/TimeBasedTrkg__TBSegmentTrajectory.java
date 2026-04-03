@@ -1,4 +1,4 @@
-package org.jlab.asdf;
+package org.jlab.io.banks;
 public class TimeBasedTrkg__TBSegmentTrajectory {
     public static final short segmentID = 0;
     public static final short sector = 1;

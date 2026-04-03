@@ -1,4 +1,4 @@
-package org.jlab.asdf;
+package org.jlab.io.banks;
 public class FTCAL__hits {
     public static final short idx = 0;
     public static final short idy = 1;

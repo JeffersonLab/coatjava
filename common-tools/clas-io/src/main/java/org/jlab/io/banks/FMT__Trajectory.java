@@ -1,4 +1,4 @@
-package org.jlab.asdf;
+package org.jlab.io.banks;
 public class FMT__Trajectory {
     public static final short index = 0;
     public static final short detector = 1;

@@ -1,4 +1,4 @@
-package org.jlab.asdf;
+package org.jlab.io.banks;
 public class MC__Header {
     public static final short run = 0;
     public static final short event = 1;

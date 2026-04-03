@@ -1,4 +1,4 @@
-package org.jlab.asdf;
+package org.jlab.io.banks;
 public class MC__RecMatch {
     public static final short pindex = 0;
     public static final short mcindex = 1;

@@ -1,4 +1,4 @@
-package org.jlab.asdf;
+package org.jlab.io.banks;
 public class RECAI__Particle {
     public static final short pid = 0;
     public static final short px = 1;

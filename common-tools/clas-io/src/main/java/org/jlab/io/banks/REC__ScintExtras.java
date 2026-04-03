@@ -1,4 +1,4 @@
-package org.jlab.asdf;
+package org.jlab.io.banks;
 public class REC__ScintExtras {
     public static final short dedx = 0;
     public static final short size = 1;

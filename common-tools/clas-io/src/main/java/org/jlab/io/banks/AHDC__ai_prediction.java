@@ -1,4 +1,4 @@
-package org.jlab.asdf;
+package org.jlab.io.banks;
 public class AHDC__ai_prediction {
     public static final short x1 = 0;
     public static final short y1 = 1;

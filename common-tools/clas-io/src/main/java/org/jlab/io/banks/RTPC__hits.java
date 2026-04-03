@@ -1,4 +1,4 @@
-package org.jlab.asdf;
+package org.jlab.io.banks;
 public class RTPC__hits {
     public static final short trkID = 0;
     public static final short id = 1;

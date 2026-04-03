@@ -1,4 +1,4 @@
-package org.jlab.asdf;
+package org.jlab.io.banks;
 public class HitBasedTrkg__HBSegmentTrajectory {
     public static final short segmentID = 0;
     public static final short sector = 1;

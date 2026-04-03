@@ -1,4 +1,4 @@
-package org.jlab.asdf;
+package org.jlab.io.banks;
 public class RICH__calib {
     public static final short hindex = 0;
     public static final short pindex = 1;

@@ -1,4 +1,4 @@
-package org.jlab.asdf;
+package org.jlab.io.banks;
 public class RECAI__VertDoca {
     public static final short index1 = 0;
     public static final short index2 = 1;
