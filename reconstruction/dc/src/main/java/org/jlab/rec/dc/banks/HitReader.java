@@ -356,6 +356,8 @@ public class HitReader {
         double[] tFlight = new double[rows];
         double[] trkDoca = new double[rows];
 
+        boolean ismc = event.hasBank("MC::Particle") ? true : event.getBank("RUN::config").getInt("run",0)<=100;
+
         for (int i = 0; i < rows; i++) {
             id[i] = bank.getShort("id", i);
             status[i] = bank.getShort("status", i);
@@ -378,8 +380,7 @@ public class HitReader {
                  tFlight[i] = this.id2tidtFlight.get(id[i]);
             }
             
-            if (event.hasBank("MC::Particle") ||
-                    event.getBank("RUN::config").getInt("run", 0) < 100) {
+            if (ismc) {
                 tProp[i] = 0;
                 tFlight[i] = 0;
             }
@@ -400,16 +401,13 @@ public class HitReader {
                 continue;
             }
             
-            if (event.hasBank(recBankName) && 
-                    event.getBank(recBankName).getFloat("startTime", 0)==-1000) {
+            if (event.getBank(recBankName).getFloat("startTime", 0)==-1000) {
                 continue;
             } 
             
-            if (!event.hasBank("MC::Particle") &&
-                    event.getBank("RUN::config").getInt("run", 0) > 100) {
+            if (!ismc) {
                 //T_0 = this.getT0(sector[i], slayer[i], layer[i], wire[i], T0, T0ERR)[0];
-                if (event.hasBank(recBankName))
-                    T_Start = event.getBank(recBankName).getFloat("startTime", 0);
+                T_Start = event.getBank(recBankName).getFloat("startTime", 0);
             }  
             
             T_0 = this.getT0(sector[i], slayer[i], layer[i], wire[i], t0s)[0];
