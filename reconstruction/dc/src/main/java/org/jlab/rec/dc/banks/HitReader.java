@@ -394,21 +394,16 @@ public class HitReader {
                 continue;
             }
             
-            double T_0 = 0;
-            double T_Start = 0;
-            
             if (!event.hasBank(recBankName)) {
                 continue;
             }
             
-            if (event.getBank(recBankName).getFloat("startTime", 0)==-1000) {
+            double T_0 = 0;
+            double T_Start = ismc ? 0 : event.getBank(recBankName).getFloat("startTime", 0);
+            
+            if (T_Start == -1000) {
                 continue;
             } 
-            
-            if (!ismc) {
-                //T_0 = this.getT0(sector[i], slayer[i], layer[i], wire[i], T0, T0ERR)[0];
-                T_Start = event.getBank(recBankName).getFloat("startTime", 0);
-            }  
             
             T_0 = this.getT0(sector[i], slayer[i], layer[i], wire[i], t0s)[0];
             FittedHit hit = new FittedHit(sector[i], slayer[i], layer[i], wire[i], tdc[i], jitter[i], id[i]);
