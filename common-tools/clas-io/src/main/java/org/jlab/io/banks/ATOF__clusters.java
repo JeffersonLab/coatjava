@@ -1,4 +1,4 @@
-package org.jlab.asdf;
+package org.jlab.io.banks;
 public class ATOF__clusters {
     public static final short id = 0;
     public static final short n_bar = 1;

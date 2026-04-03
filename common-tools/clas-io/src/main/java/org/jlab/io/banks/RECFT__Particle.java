@@ -1,4 +1,4 @@
-package org.jlab.asdf;
+package org.jlab.io.banks;
 public class RECFT__Particle {
     public static final short pid = 0;
     public static final short vt = 1;

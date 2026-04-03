@@ -1,4 +1,4 @@
-package org.jlab.asdf;
+package org.jlab.io.banks;
 public class RECHB__Traj {
     public static final short pindex = 0;
     public static final short index = 1;

@@ -1,4 +1,4 @@
-package org.jlab.asdf;
+package org.jlab.io.banks;
 public class FMT__Clusters {
     public static final short index = 0;
     public static final short sector = 1;

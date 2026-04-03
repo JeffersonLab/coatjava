@@ -1,4 +1,4 @@
-package org.jlab.asdf;
+package org.jlab.io.banks;
 public class BMT__adc {
     public static final short sector = 0;
     public static final short layer = 1;

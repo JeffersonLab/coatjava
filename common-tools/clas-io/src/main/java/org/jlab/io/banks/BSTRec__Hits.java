@@ -1,4 +1,4 @@
-package org.jlab.asdf;
+package org.jlab.io.banks;
 public class BSTRec__Hits {
     public static final short ID = 0;
     public static final short sector = 1;

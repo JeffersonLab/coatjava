@@ -1,4 +1,4 @@
-package org.jlab.asdf;
+package org.jlab.io.banks;
 public class RTPC__pos {
     public static final short step = 0;
     public static final short time = 1;

@@ -1,4 +1,4 @@
-package org.jlab.asdf;
+package org.jlab.io.banks;
 public class RUN__scaler {
     public static final short fcupgated = 0;
     public static final short fcup = 1;

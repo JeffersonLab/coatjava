@@ -1,4 +1,4 @@
-package org.jlab.asdf;
+package org.jlab.io.banks;
 public class MC__Event {
     public static final short npart = 0;
     public static final short atarget = 1;

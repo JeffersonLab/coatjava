@@ -1,4 +1,4 @@
-package org.jlab.asdf;
+package org.jlab.io.banks;
 public class TimeBasedTrkg__AISegments {
     public static final short id = 0;
     public static final short status = 1;
