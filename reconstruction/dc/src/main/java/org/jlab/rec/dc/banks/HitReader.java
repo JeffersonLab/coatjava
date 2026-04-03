@@ -357,6 +357,8 @@ public class HitReader {
         double[] trkDoca = new double[rows];
 
         boolean ismc = event.hasBank("MC::Particle") ? true : event.getBank("RUN::config").getInt("run",0)<=100;
+            
+        double T_Start = ismc || !event.hasBank(recBankName) ? 0 : event.getBank(recBankName).getFloat("startTime", 0);
 
         for (int i = 0; i < rows; i++) {
             id[i] = bank.getShort("id", i);
@@ -399,8 +401,6 @@ public class HitReader {
             }
             
             double T_0 = 0;
-            double T_Start = ismc ? 0 : event.getBank(recBankName).getFloat("startTime", 0);
-            
             if (T_Start == -1000) {
                 continue;
             } 
