@@ -614,12 +614,10 @@ public class HitReader {
         for (int i = 0; i < rows; i++) {
             if (bank.getByte("detector", i) == 6 &&
                     bank.getShort("index", i) == trkId - 1) {
-                px = event.getBank(partBankName).getFloat("px",
-                        bank.getShort("pindex", i));
-                py = event.getBank(partBankName).getFloat("py",
-                        bank.getShort("pindex", i));
-                pz = event.getBank(partBankName).getFloat("pz",
-                        bank.getShort("pindex", i));
+                short pindex = bank.getShort("pindex",i);
+                px = event.getBank(partBankName).getFloat("px",pindex);
+                py = event.getBank(partBankName).getFloat("py",pindex);
+                pz = event.getBank(partBankName).getFloat("pz",pindex);
             }
         }
         
