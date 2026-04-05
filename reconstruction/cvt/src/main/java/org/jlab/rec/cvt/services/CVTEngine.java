@@ -93,7 +93,8 @@ public class CVTEngine extends ReconstructionEngine {
     private boolean  useDAF         = true;
     private String   dafChi2CutTarget     = null;
     private String   dafChi2CutBST     = null;
-    private String   dafChi2CutBMT     = null;
+    private String   dafChi2CutBMTC     = null;
+    private String   dafChi2CutBMTZ     = null;
     private String   dafAnnealingFactors = null;
     
     public CVTEngine(String name) {
@@ -479,10 +480,15 @@ public class CVTEngine extends ReconstructionEngine {
             DAFilter.setDafChi2CutBST(Double.valueOf(dafChi2CutBST));            
         }  
         
-        if(this.getEngineConfigString("dafChi2CutBMT")!=null) {
-            dafChi2CutBMT=this.getEngineConfigString("dafChi2CutBMT");
-            DAFilter.setDafChi2CutBMT(Double.valueOf(dafChi2CutBMT));            
+        if(this.getEngineConfigString("dafChi2CutBMTC")!=null) {
+            dafChi2CutBMTC=this.getEngineConfigString("dafChi2CutBMTC");
+            DAFilter.setDafChi2CutBMTC(Double.valueOf(dafChi2CutBMTC));            
         }  
+        
+        if(this.getEngineConfigString("dafChi2CutBMTZ")!=null) {
+            dafChi2CutBMTZ=this.getEngineConfigString("dafChi2CutBMTZ");
+            DAFilter.setDafChi2CutBMTZ(Double.valueOf(dafChi2CutBMTZ));            
+        }        
 
         if(this.getEngineConfigString("dafAnnealingFactors")!=null){ 
             dafAnnealingFactors=this.getEngineConfigString("dafAnnealingFactors");

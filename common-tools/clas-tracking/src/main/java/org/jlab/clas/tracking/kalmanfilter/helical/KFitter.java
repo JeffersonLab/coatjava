@@ -593,7 +593,8 @@ public class KFitter extends AKFitter {
         int layerType = 2;
         if(layer == 0) layerType = 1;
         else if(layer >= 4 && layer <=9) layerType = 2;
-        else if(layer >= 12 && layer <=17) layerType = 3;
+        else if(layer == 12 || layer == 15 || layer == 17) layerType = 3;
+        else if(layer == 13 || layer == 14 || layer == 16) layerType = 4;
         double weight = daf.calc_updatedWeight(residual, annealingFactor, layerType);
         vave.setWeightDAF(weight);        
         

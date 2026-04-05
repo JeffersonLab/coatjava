@@ -88,7 +88,7 @@ public class Track extends Trajectory implements Comparable<Track> {
         this.kfIterations = kf.numIter;
         this.setNDF(kf.getNDF());
         this.setNDFDAF(kf.getNDFDAF());
-        this.setChi2(kf.getChi2(0));
+        this.setChi2(kf.getChi2(1));
         this.setSecondaryChi2(kf.getChi2(1));
         this.setSecondaryNDF(kf.getNDF(1));
         this.setSecondaryNDFDAF(kf.getNDFDAF(1));
