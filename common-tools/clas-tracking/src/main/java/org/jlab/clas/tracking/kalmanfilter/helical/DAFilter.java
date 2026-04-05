@@ -8,7 +8,8 @@ public class DAFilter {
     
     private static double dafChi2CutTarget = 9;
     private static double dafChi2CutBST = 4;
-    private static double dafChi2CutBMT = 1;
+    private static double dafChi2CutBMTC = 1;
+    private static double dafChi2CutBMTZ = 1;
          
     private double _var;
     private double _weight;
@@ -32,9 +33,13 @@ public class DAFilter {
         dafChi2CutBST = chi2Cut;
     }
     
-    public static void setDafChi2CutBMT(double chi2Cut){
-        dafChi2CutBMT = chi2Cut;
+    public static void setDafChi2CutBMTC(double chi2Cut){
+        dafChi2CutBMTC = chi2Cut;
     }
+    
+    public static void setDafChi2CutBMTZ(double chi2Cut){
+        dafChi2CutBMTZ = chi2Cut;
+    }    
     
     public double get_EffectiveVar(){
         return _var/_weight;
@@ -47,8 +52,10 @@ public class DAFilter {
                      break;
             case 2:  dafChi2Cut = dafChi2CutBST;
                      break;
-            case 3:  dafChi2Cut = dafChi2CutBMT;
+            case 3:  dafChi2Cut = dafChi2CutBMTC;
                      break;
+            case 4:  dafChi2Cut = dafChi2CutBMTZ;
+                     break;                     
             default: dafChi2Cut = 4;
                      break;
         }
