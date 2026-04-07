@@ -44,8 +44,11 @@ public class MUHDEngine extends ReconstructionEngine {
                 return true;
 	}
 
+    @Override
+    public void detectorChanged(int run) {}
+
 	@Override
-	public boolean processDataEvent(DataEvent event) {
+	public boolean processDataEventUser(DataEvent event) {
 
             // update calibration constants based on run number if changed
             int run = setRunConditionsParameters(event);
