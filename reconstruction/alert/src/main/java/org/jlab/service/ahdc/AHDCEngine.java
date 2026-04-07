@@ -94,10 +94,21 @@ public class AHDCEngine extends ReconstructionEngine {
                 "/calibration/alert/atof/attenuation",
                 "/calibration/alert/atof/time_offsets",
                 "/calibration/alert/ahdc/gains",
-		"/calibration/alert/ahdc/time_over_threshold"
+		        "/calibration/alert/ahdc/time_over_threshold"
 		
         };
-        requireConstants(Arrays.asList(alertTables));
+
+        // New code to handle the fact that some tables have 3 columns and some have 4 columns
+        Map<String, Integer> tableMap = new HashMap<>();
+        for (String table : alertTables) {
+            if (table.equals("/calibration/alert/atof/time_offsets") ||
+                table.equals("/calibration/alert/atof/time_walk")) {
+                tableMap.put(table, 4);
+            } else {
+                tableMap.put(table, 3);
+            }
+        }
+        requireConstants(tableMap);
         
         this.getConstantsManager().setVariation("default");
         
