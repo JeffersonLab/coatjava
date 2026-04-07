@@ -49,8 +49,11 @@ public class MUCALEngine extends ReconstructionEngine {
                 return true;
 	}
 
+    @Override
+    public void detectorChanged(int run) {}
+
 	@Override
-	public boolean processDataEvent(DataEvent event) {
+	public boolean processDataEventUser(DataEvent event) {
             List<MUCALHit>     allHits           = new ArrayList();
             List<MUCALHit>     selectedHits      = new ArrayList();
             List<MUCALCluster> clusters          = new ArrayList();
