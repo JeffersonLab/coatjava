@@ -209,9 +209,10 @@ public class DocaClusterRefiner {
         double dz = e.z() - o.z();
 
         // New origin: (tangent.x, tangent.y, original_z)
-        Point3D oShift = new Point3D(tangentXY.x, tangentXY.y, o.z());
-        Point3D eShift = new Point3D(oShift.x() + dx, oShift.y() + dy, oShift.z() + dz);
-
+        //Point3D oShift = new Point3D(tangentXY.x, tangentXY.y, o.z());
+        //Point3D eShift = new Point3D(oShift.x() + dx, oShift.y() + dy, oShift.z() + dz);
+        Point3D eShift = new Point3D(tangentXY.x, tangentXY.y, e.z());
+        Point3D oShift = new Point3D(tangentXY.x - dx, tangentXY.y - dy, e.z() - dz);
         return new Line3D(oShift, eShift);
     }
 
