@@ -47,7 +47,7 @@ public class DCEngine extends ReconstructionEngine {
     
     protected String hbTSEModelFileInbending = "transformer_32d_4h_3l_inbending.pt"; // AI model file for HB track state estimator for inbending runs  
     protected String hbTSEModelFileOutbending = "transformer_32d_4h_3l_outbending.pt"; // AI model file for HB track state estimator for outbending runs  
-    
+         
     public static final Logger LOGGER = Logger.getLogger(ReconstructionEngine.class.getName());
 
 

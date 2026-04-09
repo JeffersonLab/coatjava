@@ -12,7 +12,6 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.hit.Hit;
 import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
-import org.jlab.clas.swimtools.Swimmer;
 
 import org.jlab.detector.banks.RawBank.OrderType;
 import org.jlab.detector.banks.RawDataBank;
@@ -54,8 +53,6 @@ public class HitReader {
     private List<Hit> _DCHits;
     private List<FittedHit> _HBHits; //hit-based tracking hit information
     private List<FittedHit> _TBHits; //time-based tracking hit information
-    
-    private final double timeBuf = 25.0;
 
     private static final Logger LOGGER = Logger.getLogger(HitReader.class.getName());
 
@@ -208,51 +205,17 @@ public class HitReader {
 
                 double timeCutMin = 0;
                 double timeCutMax = 0;
-                double timeCutLC = 0;
 
                 int region = ((superlayer + 1) / 2);
-
-                switch (region) {
-                    case 1:
-                        timeCutMin = tdccuts.getIntValue("MinEdge", 0, region, 0);
-                        timeCutMax = tdccuts.getIntValue("MaxEdge", 0, region, 0);
-                        break;
-                    case 2:
-                        if (wire <= 56) {
-                            timeCutLC = tdccuts.getIntValue("LinearCoeff", 0, region, 1);
-                            timeCutMin = tdccuts.getIntValue("MinEdge", 0, region, 1);
-                            timeCutMax = tdccuts.getIntValue("MaxEdge", 0, region, 1);
-                        }
-                        if (wire > 56) {
-                            timeCutLC = tdccuts.getIntValue("LinearCoeff", 0, region, 56);
-                            timeCutMin = tdccuts.getIntValue("MinEdge", 0, region, 56);
-                            timeCutMax = tdccuts.getIntValue("MaxEdge", 0, region, 56);
-                        }
-                        break;
-                    case 3:
-                        timeCutMin = tdccuts.getIntValue("MinEdge", 0, region, 0);
-                        timeCutMax = tdccuts.getIntValue("MaxEdge", 0, region, 0)+timeBuf;
-                        break;
-                }
+                long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(0,region,wire);
+                timeCutMin = tdccuts.getIntValueByHash("min", hash);
+                timeCutMax = tdccuts.getIntValueByHash("max", hash);
+         
                 boolean passTimingCut = false;
 
-                if (region == 1 && tdc > timeCutMin && tdc < timeCutMax)
+                if (tdc > timeCutMin && tdc < timeCutMax)
                     passTimingCut = true;
-                if (region == 2) {
-                    double Bscale = Swimmer.getTorScale() * Swimmer.getTorScale();
-                    if (wire >= 56) {
-                        if (tdc > timeCutMin &&
-                                tdc < timeCutMax + timeCutLC * (double) (112 - wire / 56) * Bscale)
-                            passTimingCut = true;
-                    } else {
-                        if (tdc > timeCutMin &&
-                                tdc < timeCutMax + timeCutLC * (double) (56 - wire / 56) * Bscale)
-                            passTimingCut = true;
-                    }
-                }
-                if (region == 3 && tdc > timeCutMin && tdc < timeCutMax)
-                    passTimingCut = true;
-
+                
                 if (passTimingCut) { // cut on spurious hits
                     Hit hit = new Hit(sector, superlayer, layer, wire, tdc, jitter, (index + 1));
                     hit.calc_CellSize(detector);
@@ -263,7 +226,6 @@ public class HitReader {
                 }
             }
         }
-
     }
     
     public Map<Integer, ArrayList<FittedHit>> read_Hits(DataEvent event) {
@@ -707,8 +669,8 @@ public class HitReader {
         int cable = this.getCableID1to6(layer, wire);
         int slot = this.getSlotID1to7(wire);
 
-        double t0  = t0Table.getDoubleValue("T0Correction", sector, superlayer, slot, cable);
-        double t0E = t0Table.getDoubleValue("T0Error", sector, superlayer, slot, cable);
+        double t0  = t0Table.getDoubleValue("t0correction", sector, superlayer, slot, cable);
+        double t0E = t0Table.getDoubleValue("t0error", sector, superlayer, slot, cable);
 
         T0Corr[0] = t0;
         T0Corr[1] = t0E;

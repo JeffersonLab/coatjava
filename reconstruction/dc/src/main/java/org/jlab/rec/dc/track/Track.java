@@ -82,7 +82,6 @@ public class Track extends Trajectory implements Comparable<Track>{
     private Point3D _URWellPLocalR2;
     private boolean isAITrack = false;
     
-          
     public Track() {
     }
     

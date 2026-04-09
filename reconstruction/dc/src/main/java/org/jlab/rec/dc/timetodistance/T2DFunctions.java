@@ -321,7 +321,7 @@ public class T2DFunctions {
         double time = 0;
         // alpha correction 
         double cos30minusalpha=Math.cos(Math.toRadians(30.-alpha));
-        double dmaxalpha = dmax*cos30minusalpha;
+        double dmaxalpha = dmax*cos30minusalpha; 
         double xhatalpha = x/dmaxalpha;
         //   rcapital is an intermediate parameter
         double rcapital = R*dmax;
