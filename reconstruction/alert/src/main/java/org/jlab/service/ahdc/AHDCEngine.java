@@ -64,6 +64,8 @@ public class AHDCEngine extends ReconstructionEngine {
     private Map<Integer, double[]> ahdcAdcGains;
     private Map<Integer, double[]> ahdcTimeOverThreshold;
 
+    int Run = -1;
+
     public AHDCEngine() { super("ALERT", "ouillon", "1.0.1"); }
 
     public boolean init(ModeTrackFinding m) {
@@ -79,18 +81,9 @@ public class AHDCEngine extends ReconstructionEngine {
 
         if (materialMap == null) materialMap = MaterialMap.generateMaterials();
 
-        if(this.getEngineConfigString("Mode")!=null) {
-            if (Objects.equals(this.getEngineConfigString("Mode"), ModeTrackFinding.AI_Track_Finding.name()))
-                modeTrackFinding = ModeTrackFinding.AI_Track_Finding;
-            else if (Objects.equals(this.getEngineConfigString("Mode"), ModeTrackFinding.CV_Distance.name()))
-                modeTrackFinding = ModeTrackFinding.CV_Distance;
-            else if (Objects.equals(this.getEngineConfigString("Mode"), ModeTrackFinding.CV_Hough.name()))
-                modeTrackFinding = ModeTrackFinding.CV_Hough;
-        }
-
-        if (modeTrackFinding == ModeTrackFinding.AI_Track_Finding) {
-            modelTrackFinding = new ModelTrackFinding();
-        }
+        String modeConfig = this.getEngineConfigString("Mode");
+        if (modeConfig != null) modeTrackFinding = ModeTrackFinding.valueOf(modeConfig);
+        if (modeTrackFinding == ModeTrackFinding.AI_Track_Finding) modelTrackFinding = new ModelTrackFinding();
 
         // Requires AHDC calibration constants
         Map<String, Integer> tableMap = new HashMap<>();
@@ -108,21 +101,20 @@ public class AHDCEngine extends ReconstructionEngine {
         return true;
     }
 
-    int Run = -1;
-
+    
     private void loadAHDCConstants(int run) {
         ConstantsManager manager = this.getConstantsManager();
 
-        IndexedTable tblTimeOffsets   = manager.getConstants(run, "/calibration/alert/ahdc/time_offsets");
-        IndexedTable tblTime2Dist     = manager.getConstants(run, "/calibration/alert/ahdc/time_to_distance");
-        IndexedTable tblRawHitCuts    = manager.getConstants(run, "/calibration/alert/ahdc/raw_hit_cuts");
-        IndexedTable tblAdcGains      = manager.getConstants(run, "/calibration/alert/ahdc/gains");
+        IndexedTable tblTimeOffsets       = manager.getConstants(run, "/calibration/alert/ahdc/time_offsets");
+        IndexedTable tblTime2Dist         = manager.getConstants(run, "/calibration/alert/ahdc/time_to_distance");
+        IndexedTable tblRawHitCuts        = manager.getConstants(run, "/calibration/alert/ahdc/raw_hit_cuts");
+        IndexedTable tblAdcGains          = manager.getConstants(run, "/calibration/alert/ahdc/gains");
         IndexedTable tblTimeOverThreshold = manager.getConstants(run, "/calibration/alert/ahdc/time_over_threshold");
 
-        ahdcTimeOffsets      = new HashMap<>();
-        ahdcTimeToDistance   = new HashMap<>();
-        ahdcRawHitCuts       = new HashMap<>();
-        ahdcAdcGains         = new HashMap<>();
+        ahdcTimeOffsets       = new HashMap<>();
+        ahdcTimeToDistance    = new HashMap<>();
+        ahdcRawHitCuts        = new HashMap<>();
+        ahdcAdcGains          = new HashMap<>();
         ahdcTimeOverThreshold = new HashMap<>();
 
         // Time offsets
@@ -187,6 +179,8 @@ public class AHDCEngine extends ReconstructionEngine {
             int layer     = Integer.parseInt((String) tblAdcGains.getValueAt(i, 1));
             int component = Integer.parseInt((String) tblAdcGains.getValueAt(i, 2));
             int key = sector * 10000 + layer * 100 + component;
+
+            // TODO: Try and catch here that is weird no? 
             double extra1 = 0.0, extra2 = 0.0, extra3 = 0.0;
             try { extra1 = tblAdcGains.getDoubleValue("extra1", sector, layer, component); } catch (Exception e) {}
             try { extra2 = tblAdcGains.getDoubleValue("extra2", sector, layer, component); } catch (Exception e) {}
@@ -237,13 +231,9 @@ public class AHDCEngine extends ReconstructionEngine {
             }
         }
 
-
-
         if (event.hasBank("AHDC::adc")) {
             // I) Read raw hits
-            HitReader hitReader = new HitReader(event, factory, simulation,
-                    ahdcRawHitCuts, ahdcTimeOffsets, ahdcTimeToDistance,
-                    ahdcTimeOverThreshold, ahdcAdcGains);
+            HitReader hitReader = new HitReader(event, factory, simulation, ahdcRawHitCuts, ahdcTimeOffsets, ahdcTimeToDistance, ahdcTimeOverThreshold, ahdcAdcGains);
             ArrayList<Hit> AHDC_Hits = hitReader.get_AHDCHits();
 
             // II) Create PreClusters
@@ -360,7 +350,6 @@ public class AHDCEngine extends ReconstructionEngine {
                 all_interclusters.addAll(track.getInterclusters());
             }
             DataBank recoInterClusterBank = writer.fillInterClusterBank(event, all_interclusters);
-            // DataBank AIPredictionBanks = writer.fillAIPrediction(event, predictions);
 
             //event.removeBanks("AHDC::hits","AHDC::preclusters","AHDC::clusters","AHDC::track","AHDC::kftrack","AHDC::mc","AHDC::ai:prediction");
             event.appendBank(recoHitsBank);
@@ -369,7 +358,6 @@ public class AHDCEngine extends ReconstructionEngine {
             event.appendBank(recoTracksBank);
             event.appendBank(recoInterClusterBank);
             event.appendBank(clustersDocaBank);
-            // event.appendBank(AIPredictionBanks);
 
             if (simulation) {
                 DataBank recoMCBank = writer.fillAHDCMCTrackBank(event);
