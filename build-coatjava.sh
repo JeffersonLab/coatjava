@@ -311,6 +311,10 @@ cp -r libexec $prefix_dir/
 which python3 >& /dev/null && python=python3 || python=python
 $python etc/bankdefs/util/bankSplit.py $prefix_dir/etc/bankdefs/hipo4 || exit 1
 
+# use maven to copy a CLARA jar to a separate directory:
+mvn org.apache.maven.plugins:maven-dependency-plugin:3.10.0:copy \
+     -Dartifact=org.jlab.coda:jclara:4.3:jar -DoutputDirectory=$prefix_dir/lib/utils -DstripVersion=false
+
 # build (and test)
 unset CLAS12DIR
 if $runUnitTests; then
@@ -324,7 +328,6 @@ if $runSpotBugs; then
   libexec/spotbugs.sh ${mvnArgs[@]:-} || (echo "ERROR: spotbugs failure" >&2 && exit 1)
   echo "spotbugs spotted no bugs!"
 fi
-
 
 ################################################################################
 # install
@@ -355,10 +358,6 @@ for pom in $(find common-tools -name pom.xml); do
   #   install_jars $pom $prefix_dir/lib/services
   fi
 done
-
-# install CLARA jar in separate directory:
-mvn org.apache.maven.plugins:maven-dependency-plugin:3.10.0:copy \
-     -Dartifact=org.jlab.coda:jclara:4.3:jar -DoutputDirectory=$prefix_dir/lib/utils -DstripVersion=false
 
 echo "installed coatjava to: $prefix_dir"
 
