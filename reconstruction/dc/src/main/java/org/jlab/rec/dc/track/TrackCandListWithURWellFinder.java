@@ -1005,8 +1005,6 @@ public class TrackCandListWithURWellFinder {
                         continue;
                     }
 
-                    List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
-
                     StateVec fn = new StateVec();
                     if (!kFZRef.setFitFailed && kFZRef.finalStateVec != null) {
                         fn.set(kFZRef.finalStateVec.x, kFZRef.finalStateVec.y, kFZRef.finalStateVec.tx, kFZRef.finalStateVec.ty);
@@ -1025,7 +1023,15 @@ public class TrackCandListWithURWellFinder {
                             cand.set_FitConvergenceStatus(kFZRef.ConvStatus);
                             cand.set_Id(cands.size() + 1);
                             cand.set_CovMat(kFZRef.finalStateVec.CM);
-                            cand.setStateVecs(kfStateVecsAlongTrajectory);
+                            
+                            if (cand.get_Vtx0() != null) {
+                                Point3D VTCS = cand.get(cand.size()-1).getCoordsInTiltedSector(cand.get_Vtx0().x(), cand.get_Vtx0().y(), cand.get_Vtx0().z());
+                                double deltaPathToVtx =  kFZRef.getDeltaPathToVtx(cand.get(cand.size()-1).get_Sector(), VTCS.z());
+                            
+                                List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef, deltaPathToVtx);
+                                cand.setStateVecs(kfStateVecsAlongTrajectory);
+                            }                            
+                            
 
                             // add candidate to list of tracks	
                             cands.add(cand);
@@ -1174,9 +1180,7 @@ public class TrackCandListWithURWellFinder {
                         kFZRef.init(measSurfaces, initSV);	                        
 						
                         kFZRef.runFitter();
-                        List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
-                        List<URWellStateVec> kfStateVecsURWell = setKFStateVecsURWell(kFZRef);
-                        
+                                                
                         if (kFZRef.finalStateVec == null) {
                             continue;
                         } else {
@@ -1197,16 +1201,25 @@ public class TrackCandListWithURWellFinder {
                                 cand.set_FitNDF(kFZRef.NDF);
                                 cand.set_FitConvergenceStatus(kFZRef.ConvStatus);
 
-                                cand.set_CovMat(kFZRef.finalStateVec.CM);
-                                cand.setStateVecs(kfStateVecsAlongTrajectory);
-                                cand.setURWellStateVecs(kfStateVecsURWell);
-
+                                cand.set_CovMat(kFZRef.finalStateVec.CM);                                
                                 cand.setFinalStateVec(fitStateVec);
                                 cand.set_Id(cands.size() + 1);   
                                 this.setTrackPars(cand, traj,
                                         trjFind, fitStateVec,
                                         fitStateVec.getZ(),
                                         DcDetector, dcSwim);
+                                
+                                if (cand.get_Vtx0() != null) {
+                                    Point3D VTCS = cand.get(cand.size()-1).getCoordsInTiltedSector(cand.get_Vtx0().x(), cand.get_Vtx0().y(), cand.get_Vtx0().z());
+                                    double deltaPathToVtx =  kFZRef.getDeltaPathToVtx(cand.get(cand.size()-1).get_Sector(), VTCS.z());
+
+                                    List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef, deltaPathToVtx);
+                                    List<URWellStateVec> kfStateVecsURWell = setKFStateVecsURWell(kFZRef, deltaPathToVtx);
+                                    
+                                    cand.setStateVecs(kfStateVecsAlongTrajectory);
+                                    cand.setURWellStateVecs(kfStateVecsURWell);
+                                }  
+                                
                                 // add candidate to list of tracks
                                 if (cand.fit_Successful = true) {
                                     cands.add(cand);                                    
@@ -1345,7 +1358,6 @@ public class TrackCandListWithURWellFinder {
                     kFZRef.init(measSurfaces, initSV);	                        
 
                     kFZRef.runFitter();
-                    List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
 
                     if (kFZRef.finalStateVec == null) {
                         continue;
@@ -1367,8 +1379,7 @@ public class TrackCandListWithURWellFinder {
                             cand.set_FitNDF(kFZRef.NDF);
                             cand.set_FitConvergenceStatus(kFZRef.ConvStatus);
 
-                            cand.set_CovMat(kFZRef.finalStateVec.CM);
-                            cand.setStateVecs(kfStateVecsAlongTrajectory);                                    							
+                            cand.set_CovMat(kFZRef.finalStateVec.CM);                                    							
 
                             cand.setFinalStateVec(fitStateVec);
                             cand.set_Id(cands.size() + 1); 
@@ -1376,6 +1387,15 @@ public class TrackCandListWithURWellFinder {
                                     trjFind, fitStateVec,
                                     fitStateVec.getZ(),
                                     DcDetector, dcSwim);
+                            
+                            if (cand.get_Vtx0() != null) {
+                                    Point3D VTCS = cand.get(cand.size()-1).getCoordsInTiltedSector(cand.get_Vtx0().x(), cand.get_Vtx0().y(), cand.get_Vtx0().z());
+                                    double deltaPathToVtx =  kFZRef.getDeltaPathToVtx(cand.get(cand.size()-1).get_Sector(), VTCS.z());
+                                
+                                    List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef, deltaPathToVtx);
+                                    cand.setStateVecs(kfStateVecsAlongTrajectory);
+                            }
+                            
                             // add candidate to list of tracks
                             if (cand.fit_Successful = true) {
                                 cands.add(cand);                                    
@@ -1457,8 +1477,6 @@ public class TrackCandListWithURWellFinder {
                     kFZRef.init(measSurfaces, initSV);	                        
 
                     kFZRef.runFitter();
-                    List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
-                    List<URWellStateVec> kfStateVecsURWell = setKFStateVecsURWell(kFZRef);
 
                     if (kFZRef.finalStateVec == null) {
                         continue;
@@ -1481,8 +1499,6 @@ public class TrackCandListWithURWellFinder {
                             cand.set_FitConvergenceStatus(kFZRef.ConvStatus);
 
                             cand.set_CovMat(kFZRef.finalStateVec.CM);
-                            cand.setStateVecs(kfStateVecsAlongTrajectory);
-                            cand.setURWellStateVecs(kfStateVecsURWell);
 
                             cand.setFinalStateVec(fitStateVec);
                             cand.set_Id(cands.size() + 1);  
@@ -1490,6 +1506,18 @@ public class TrackCandListWithURWellFinder {
                                     trjFind, fitStateVec,
                                     fitStateVec.getZ(),
                                     DcDetector, dcSwim);
+                            
+                            if (cand.get_Vtx0() != null) {
+                                    Point3D VTCS = cand.get(cand.size()-1).getCoordsInTiltedSector(cand.get_Vtx0().x(), cand.get_Vtx0().y(), cand.get_Vtx0().z());
+                                    double deltaPathToVtx =  kFZRef.getDeltaPathToVtx(cand.get(cand.size()-1).get_Sector(), VTCS.z());
+
+                                    List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef, deltaPathToVtx);
+                                    List<URWellStateVec> kfStateVecsURWell = setKFStateVecsURWell(kFZRef, deltaPathToVtx);
+                                    
+                                    cand.setStateVecs(kfStateVecsAlongTrajectory);
+                                    cand.setURWellStateVecs(kfStateVecsURWell);
+                            } 
+                            
                             // add candidate to list of tracks
                             if (cand.fit_Successful = true) {
                                 cands.add(cand);                                    
@@ -1505,7 +1533,7 @@ public class TrackCandListWithURWellFinder {
         return cands;
     }
     
-    public List<org.jlab.rec.dc.trajectory.StateVec> setKFStateVecsAlongTrajectory(KFitter kFZRef) {
+    public List<org.jlab.rec.dc.trajectory.StateVec> setKFStateVecsAlongTrajectory(KFitter kFZRef, double deltaPathToVtx) {
     	List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = new ArrayList<>();
     	
     	for(int i = 0; i < kFZRef.kfStateVecsAlongTrajectory.size(); i++) {
@@ -1513,7 +1541,7 @@ public class TrackCandListWithURWellFinder {
             org.jlab.rec.dc.trajectory.StateVec sv = new org.jlab.rec.dc.trajectory.StateVec(svc.x, svc.y, svc.tx, svc.ty);
             sv.setZ(svc.z);
             sv.setB(svc.B);
-            sv.setPathLength(svc.getPathLength());  
+            sv.setPathLength(svc.getPathLength() + deltaPathToVtx);  
             sv.setProjector(svc.getProjector());
             sv.setProjectorDoca(svc.getProjectorDoca());
             kfStateVecsAlongTrajectory.add(sv);
@@ -1522,12 +1550,12 @@ public class TrackCandListWithURWellFinder {
     	return kfStateVecsAlongTrajectory;
     }
 
-    public List<URWellStateVec> setKFStateVecsURWell(KFitterWithURWell kFZRef) {
+    public List<URWellStateVec> setKFStateVecsURWell(KFitterWithURWell kFZRef, double deltaPathToVtx) {
         List<URWellStateVec> svs = new ArrayList();
         
         if (!kFZRef.kfStateVecsURWell.isEmpty()) {
             for(org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec svc : kFZRef.kfStateVecsURWell){
-                URWellStateVec sv = new URWellStateVec(svc.x, svc.y, svc.z, svc.tx, svc.ty, svc.Q, svc.B, svc.getPathLength());                
+                URWellStateVec sv = new URWellStateVec(svc.x, svc.y, svc.z, svc.tx, svc.ty, svc.Q, svc.B, svc.getPathLength() + deltaPathToVtx);                
                 sv.setLayer(svc.getLayer());
                 svs.add(sv);
             }
@@ -1536,7 +1564,7 @@ public class TrackCandListWithURWellFinder {
         return svs;        
     }
 
-    public List<org.jlab.rec.dc.trajectory.StateVec> setKFStateVecsAlongTrajectory(KFitterWithURWell kFZRef) {
+    public List<org.jlab.rec.dc.trajectory.StateVec> setKFStateVecsAlongTrajectory(KFitterWithURWell kFZRef, double deltaPathToVtx) {
     	List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = new ArrayList<>();
     	
     	for(int i = 0; i < kFZRef.kfStateVecsAlongTrajectory.size(); i++) {
@@ -1544,7 +1572,7 @@ public class TrackCandListWithURWellFinder {
             org.jlab.rec.dc.trajectory.StateVec sv = new org.jlab.rec.dc.trajectory.StateVec(svc.x, svc.y, svc.tx, svc.ty);
             sv.setZ(svc.z);
             sv.setB(svc.B);
-            sv.setPathLength(svc.getPathLength());  
+            sv.setPathLength(svc.getPathLength() + deltaPathToVtx);  
             sv.setProjector(svc.getProjector());
             sv.setProjectorDoca(svc.getProjectorDoca());
             kfStateVecsAlongTrajectory.add(sv);

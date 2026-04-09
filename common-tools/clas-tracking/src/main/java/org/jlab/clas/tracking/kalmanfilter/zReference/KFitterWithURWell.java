@@ -1050,7 +1050,7 @@ public class KFitterWithURWell extends AKFitter {
             boolean forward = false;
             sv.transport(sector, k, 0, sVec, mv, this.getSwimmer(), forward);
             StateVec svc = sv.transported(forward).get(0);
-            path += svc.deltaPath;
+            path += (forward ? 1 : -1) * svc.deltaPath;
             svc.setPathLength(path);
             
             if (mv.measurements.get(0).surface.type == Type.PLANEWITHSTRIP) {                
@@ -1096,7 +1096,7 @@ public class KFitterWithURWell extends AKFitter {
                 }
                 
                 svc = sv.transported(forward).get(k1 + 1);
-                path += svc.deltaPath;
+                path += (forward ? 1 : -1) * svc.deltaPath;
                 svc.setPathLength(path);
 
                 if (mv.measurements.get(k1 + 1).surface.type == Type.PLANEWITHSTRIP) {                
@@ -1163,7 +1163,7 @@ public class KFitterWithURWell extends AKFitter {
             sv.transport(sector, k, 0, sVec, mv, this.getSwimmer(), forward);
 
             StateVec svc = sv.transported(forward).get(0);
-            path += svc.deltaPath;
+            path += (forward ? 1 : -1) * svc.deltaPath;
             svc.setPathLength(path);
             
             if(mv.measurements.get(0).surface.type == Type.PLANEWITHSTRIP){
@@ -1259,7 +1259,7 @@ public class KFitterWithURWell extends AKFitter {
                 }
                 
                 svc = sv.transported(forward).get(k1 + 1);
-                path += svc.deltaPath;
+                path += (forward ? 1 : -1) * svc.deltaPath;
                 svc.setPathLength(path);
                                 
                 if(mv.measurements.get(k1 + 1).surface.type == Type.PLANEWITHSTRIP){
@@ -1352,6 +1352,10 @@ public class KFitterWithURWell extends AKFitter {
     public Matrix propagateToVtx(int sector, double Zf) {
         return sv.transport(sector, finalStateVec.k, Zf, finalStateVec, mv, this.getSwimmer());
     }
+
+    public double getDeltaPathToVtx(int sector, double Zf) {
+        return sv.getDeltaPath(sector, finalStateVec.k, Zf, finalStateVec, mv, this.getSwimmer());
+    }    
 
     @Override
     public void runFitter(AStateVecs sv, AMeasVecs mv) {

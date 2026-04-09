@@ -266,10 +266,7 @@ public class DCURWellTBEngine extends DCEngine {
                 org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec initSV = svs.new StateVec(0);
                 getInitState(TrackArray1, measSurfaces.get(0).measPoint.z(), initSV, kFZRef, dcSwim, new float[3]);
                 kFZRef.initFromHB(measSurfaces, initSV, TrackArray1.get(0).get(0).get(0).get_Beta(), useDAF);
-                kFZRef.runFitter(useDAF);
-                    
-                List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
-                List<URWellStateVec> kfStateVecsURWell = setKFStateVecsURWell(kFZRef);
+                kFZRef.runFitter(useDAF);                    
 
                 StateVec fn = new StateVec();
                 if (kFZRef.setFitFailed==false && kFZRef.finalStateVec!=null) { 
@@ -288,8 +285,6 @@ public class DCURWellTBEngine extends DCEngine {
                     TrackArray1.set_FitChi2(kFZRef.chi2);
                     TrackArray1.set_FitNDF(kFZRef.NDF);
                     TrackArray1.set_NDFDAF(kFZRef.getNDFDAF());
-                    TrackArray1.setStateVecs(kfStateVecsAlongTrajectory);
-                    TrackArray1.setURWellStateVecs(kfStateVecsURWell);
                     TrackArray1.set_FitConvergenceStatus(kFZRef.ConvStatus);
                     if (TrackArray1.get_Vtx0().toVector3D().mag() > 500) {
                         continue;
@@ -298,7 +293,13 @@ public class DCURWellTBEngine extends DCEngine {
                     // get CovMat at vertex
                     Point3D VTCS = TrackArray1.get(TrackArray1.size()-1).getCoordsInTiltedSector(TrackArray1.get_Vtx0().x(), TrackArray1.get_Vtx0().y(), TrackArray1.get_Vtx0().z());
                     TrackArray1.set_CovMat(kFZRef.propagateToVtx(TrackArray1.get(TrackArray1.size()-1).get_Sector(), VTCS.z()));                    
-                    TrackArray1.transCMToGlobal(); 
+                    TrackArray1.transCMToGlobal();
+                    
+                    double deltaPathToVtx =  kFZRef.getDeltaPathToVtx(TrackArray1.get(TrackArray1.size()-1).get_Sector(), VTCS.z());                                
+                    List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef, deltaPathToVtx);
+                    List<URWellStateVec> kfStateVecsURWell = setKFStateVecsURWell(kFZRef, deltaPathToVtx);
+                    TrackArray1.setStateVecs(kfStateVecsAlongTrajectory);
+                    TrackArray1.setURWellStateVecs(kfStateVecsURWell);
 
                     if (TrackArray1.isGood()) {
                         trkcands.add(TrackArray1);
@@ -314,8 +315,6 @@ public class DCURWellTBEngine extends DCEngine {
                 kFZRef.initFromHB(measSurfaces, initSV, TrackArray1.get(0).get(0).get(0).get_Beta(), useDAF);
                 kFZRef.runFitter(useDAF);
 
-                List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef);
-
                 StateVec fn = new StateVec();
                 if (kFZRef.setFitFailed==false && kFZRef.finalStateVec!=null) { 
                     // set the state vector at the last measurement site
@@ -333,7 +332,6 @@ public class DCURWellTBEngine extends DCEngine {
                     TrackArray1.set_FitChi2(kFZRef.chi2);
                     TrackArray1.set_FitNDF(kFZRef.NDF);
                     TrackArray1.set_NDFDAF(kFZRef.getNDFDAF());
-                    TrackArray1.setStateVecs(kfStateVecsAlongTrajectory);
                     TrackArray1.set_FitConvergenceStatus(kFZRef.ConvStatus);
                     if (TrackArray1.get_Vtx0().toVector3D().mag() > 500) {
                         continue;
@@ -343,6 +341,10 @@ public class DCURWellTBEngine extends DCEngine {
                     Point3D VTCS = TrackArray1.get(TrackArray1.size()-1).getCoordsInTiltedSector(TrackArray1.get_Vtx0().x(), TrackArray1.get_Vtx0().y(), TrackArray1.get_Vtx0().z());
                     TrackArray1.set_CovMat(kFZRef.propagateToVtx(TrackArray1.get(TrackArray1.size()-1).get_Sector(), VTCS.z()));                    
                     TrackArray1.transCMToGlobal(); 
+                    
+                    double deltaPathToVtx =  kFZRef.getDeltaPathToVtx(TrackArray1.get(TrackArray1.size()-1).get_Sector(), VTCS.z());                                
+                    List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef, deltaPathToVtx);
+                    TrackArray1.setStateVecs(kfStateVecsAlongTrajectory); 
 
                     if (TrackArray1.isGood()) {
                         trkcands.add(TrackArray1);
@@ -397,7 +399,7 @@ public class DCURWellTBEngine extends DCEngine {
         return true;
     }
 
-    public List<org.jlab.rec.dc.trajectory.StateVec> setKFStateVecsAlongTrajectory(KFitterWithURWell kFZRef) {
+    public List<org.jlab.rec.dc.trajectory.StateVec> setKFStateVecsAlongTrajectory(KFitterWithURWell kFZRef, double deltaPathToVtx) {
     	List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = new ArrayList<>();
     	
     	for(int i = 0; i < kFZRef.kfStateVecsAlongTrajectory.size(); i++) {
@@ -405,7 +407,7 @@ public class DCURWellTBEngine extends DCEngine {
     	    org.jlab.rec.dc.trajectory.StateVec sv = new org.jlab.rec.dc.trajectory.StateVec(svc.x, svc.y, svc.tx, svc.ty);
             sv.setZ(svc.z);
             sv.setB(svc.B);
-            sv.setPathLength(svc.getPathLength()); 
+            sv.setPathLength(svc.getPathLength() + deltaPathToVtx); 
             sv.setProjector(svc.getProjector());
             sv.setProjectorDoca(svc.getProjectorDoca());
             sv.setDAFWeight(svc.getFinalDAFWeight());
@@ -416,12 +418,12 @@ public class DCURWellTBEngine extends DCEngine {
     	return kfStateVecsAlongTrajectory;
     }
     
-    public List<URWellStateVec> setKFStateVecsURWell(KFitterWithURWell kFZRef) {
+    public List<URWellStateVec> setKFStateVecsURWell(KFitterWithURWell kFZRef, double deltaPathToVtx) {
         List<URWellStateVec> svs = new ArrayList();
         
         if (!kFZRef.kfStateVecsURWell.isEmpty()) {
             for(org.jlab.clas.tracking.kalmanfilter.AStateVecs.StateVec svc : kFZRef.kfStateVecsURWell){
-                URWellStateVec sv = new URWellStateVec(svc.x, svc.y, svc.z, svc.tx, svc.ty, svc.Q, svc.B, svc.getPathLength());
+                URWellStateVec sv = new URWellStateVec(svc.x, svc.y, svc.z, svc.tx, svc.ty, svc.Q, svc.B, svc.getPathLength() + deltaPathToVtx);
                 sv.setLayer(svc.getLayer());
                 sv.setDAFWeight(svc.getFinalDAFWeight());
                 svs.add(sv);
@@ -431,7 +433,7 @@ public class DCURWellTBEngine extends DCEngine {
         return svs;        
     }
     
-    public List<org.jlab.rec.dc.trajectory.StateVec> setKFStateVecsAlongTrajectory(KFitter kFZRef) {
+    public List<org.jlab.rec.dc.trajectory.StateVec> setKFStateVecsAlongTrajectory(KFitter kFZRef, double deltaPathToVtx) {
     	List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = new ArrayList<>();
     	
     	for(int i = 0; i < kFZRef.kfStateVecsAlongTrajectory.size(); i++) {
@@ -439,7 +441,7 @@ public class DCURWellTBEngine extends DCEngine {
             org.jlab.rec.dc.trajectory.StateVec sv = new org.jlab.rec.dc.trajectory.StateVec(svc.x, svc.y, svc.tx, svc.ty);            
             sv.setZ(svc.z);
             sv.setB(svc.B);
-            sv.setPathLength(svc.getPathLength()); 
+            sv.setPathLength(svc.getPathLength() + deltaPathToVtx); 
             sv.setProjector(svc.getProjector());
             sv.setProjectorDoca(svc.getProjectorDoca());
             sv.setDAFWeight(svc.getFinalDAFWeight());
