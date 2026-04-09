@@ -26,11 +26,9 @@ import java.io.File;
 import java.util.*;
 import java.util.logging.Logger;
 
-import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.geom.detector.alert.AHDC.AlertDCDetector;
 import org.jlab.geom.detector.alert.AHDC.AlertDCFactory;
-import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.detector.pulse.ModeAHDC;
 
@@ -58,12 +56,12 @@ public class AHDCEngine extends ReconstructionEngine {
     private AlertDCDetector factory = null;
     private ModeAHDC ahdcExtractor = new ModeAHDC();
 
-    // AHDC calibration maps (instance-level, rebuilt on run change)
-    private Map<Integer, double[]> ahdcTimeOffsets;
-    private Map<Integer, double[]> ahdcTimeToDistance;
-    private Map<Integer, double[]> ahdcRawHitCuts;
-    private Map<Integer, double[]> ahdcAdcGains;
-    private Map<Integer, double[]> ahdcTimeOverThreshold;
+    // AHDC calibration tables (instance-level, refreshed on run change)
+    private IndexedTable ahdcTimeOffsets;
+    private IndexedTable ahdcTimeToDistanceWire;
+    private IndexedTable ahdcRawHitCuts;
+    private IndexedTable ahdcAdcGains;
+    private IndexedTable ahdcTimeOverThreshold;
 
     int Run = -1;
 
@@ -102,115 +100,6 @@ public class AHDCEngine extends ReconstructionEngine {
         return true;
     }
 
-    
-    private void loadAHDCConstants(int run) {
-        ConstantsManager manager = this.getConstantsManager();
-
-        IndexedTable tblTimeOffsets       = manager.getConstants(run, "/calibration/alert/ahdc/time_offsets");
-        IndexedTable tblTime2Dist         = manager.getConstants(run, "/calibration/alert/ahdc/time_to_distance");
-        IndexedTable tblRawHitCuts        = manager.getConstants(run, "/calibration/alert/ahdc/raw_hit_cuts");
-        IndexedTable tblAdcGains          = manager.getConstants(run, "/calibration/alert/ahdc/gains");
-        IndexedTable tblTimeOverThreshold = manager.getConstants(run, "/calibration/alert/ahdc/time_over_threshold");
-
-        ahdcTimeOffsets       = new HashMap<>();
-        ahdcTimeToDistance    = new HashMap<>();
-        ahdcRawHitCuts        = new HashMap<>();
-        ahdcAdcGains          = new HashMap<>();
-        ahdcTimeOverThreshold = new HashMap<>();
-
-        // Time offsets
-        for (int i = 0; i < tblTimeOffsets.getRowCount(); i++) {
-            int sector    = Integer.parseInt((String) tblTimeOffsets.getValueAt(i, 0));
-            int layer     = Integer.parseInt((String) tblTimeOffsets.getValueAt(i, 1));
-            int component = Integer.parseInt((String) tblTimeOffsets.getValueAt(i, 2));
-            int key = sector * 10000 + layer * 100 + component;
-            ahdcTimeOffsets.put(key, new double[]{
-                tblTimeOffsets.getDoubleValue("t0",      sector, layer, component),
-                tblTimeOffsets.getDoubleValue("dt0",     sector, layer, component),
-                tblTimeOffsets.getDoubleValue("extra1",  sector, layer, component),
-                tblTimeOffsets.getDoubleValue("extra2",  sector, layer, component),
-                tblTimeOffsets.getDoubleValue("chi2ndf", sector, layer, component)
-            });
-        }
-
-        // Time to distance
-        for (int i = 0; i < tblTime2Dist.getRowCount(); i++) {
-            int sector    = Integer.parseInt((String) tblTime2Dist.getValueAt(i, 0));
-            int layer     = Integer.parseInt((String) tblTime2Dist.getValueAt(i, 1));
-            int component = Integer.parseInt((String) tblTime2Dist.getValueAt(i, 2));
-            int key = sector * 10000 + layer * 100 + component;
-            ahdcTimeToDistance.put(key, new double[]{
-                tblTime2Dist.getDoubleValue("p0",      sector, layer, component),
-                tblTime2Dist.getDoubleValue("p1",      sector, layer, component),
-                tblTime2Dist.getDoubleValue("p2",      sector, layer, component),
-                tblTime2Dist.getDoubleValue("p3",      sector, layer, component),
-                tblTime2Dist.getDoubleValue("p4",      sector, layer, component),
-                tblTime2Dist.getDoubleValue("p5",      sector, layer, component),
-                tblTime2Dist.getDoubleValue("dp0",     sector, layer, component),
-                tblTime2Dist.getDoubleValue("dp1",     sector, layer, component),
-                tblTime2Dist.getDoubleValue("dp2",     sector, layer, component),
-                tblTime2Dist.getDoubleValue("dp3",     sector, layer, component),
-                tblTime2Dist.getDoubleValue("dp4",     sector, layer, component),
-                tblTime2Dist.getDoubleValue("dp5",     sector, layer, component),
-                tblTime2Dist.getDoubleValue("chi2ndf", sector, layer, component)
-            });
-        }
-
-        // Raw hit cuts
-        for (int i = 0; i < tblRawHitCuts.getRowCount(); i++) {
-            int sector    = Integer.parseInt((String) tblRawHitCuts.getValueAt(i, 0));
-            int layer     = Integer.parseInt((String) tblRawHitCuts.getValueAt(i, 1));
-            int component = Integer.parseInt((String) tblRawHitCuts.getValueAt(i, 2));
-            int key = sector * 10000 + layer * 100 + component;
-            ahdcRawHitCuts.put(key, new double[]{
-                tblRawHitCuts.getDoubleValue("t_min",   sector, layer, component),
-                tblRawHitCuts.getDoubleValue("t_max",   sector, layer, component),
-                tblRawHitCuts.getDoubleValue("tot_min", sector, layer, component),
-                tblRawHitCuts.getDoubleValue("tot_max", sector, layer, component),
-                tblRawHitCuts.getDoubleValue("adc_min", sector, layer, component),
-                tblRawHitCuts.getDoubleValue("adc_max", sector, layer, component),
-                tblRawHitCuts.getDoubleValue("ped_min", sector, layer, component),
-                tblRawHitCuts.getDoubleValue("ped_max", sector, layer, component)
-            });
-        }
-
-        // ADC gains
-        for (int i = 0; i < tblAdcGains.getRowCount(); i++) {
-            int sector    = Integer.parseInt((String) tblAdcGains.getValueAt(i, 0));
-            int layer     = Integer.parseInt((String) tblAdcGains.getValueAt(i, 1));
-            int component = Integer.parseInt((String) tblAdcGains.getValueAt(i, 2));
-            int key = sector * 10000 + layer * 100 + component;
-
-            // TODO: Try and catch here that is weird no? 
-            double extra1 = 0.0, extra2 = 0.0, extra3 = 0.0;
-            try { extra1 = tblAdcGains.getDoubleValue("extra1", sector, layer, component); } catch (Exception e) {}
-            try { extra2 = tblAdcGains.getDoubleValue("extra2", sector, layer, component); } catch (Exception e) {}
-            try { extra3 = tblAdcGains.getDoubleValue("extra3", sector, layer, component); } catch (Exception e) {}
-            ahdcAdcGains.put(key, new double[]{
-                tblAdcGains.getDoubleValue("gainCorr",  sector, layer, component),
-                tblAdcGains.getDoubleValue("dgainCorr", sector, layer, component),
-                extra1, extra2, extra3
-            });
-        }
-
-        // Time over threshold
-        for (int i = 0; i < tblTimeOverThreshold.getRowCount(); i++) {
-            int sector    = Integer.parseInt((String) tblTimeOverThreshold.getValueAt(i, 0));
-            int layer     = Integer.parseInt((String) tblTimeOverThreshold.getValueAt(i, 1));
-            int component = Integer.parseInt((String) tblTimeOverThreshold.getValueAt(i, 2));
-            int key = sector * 10000 + layer * 100 + component;
-            double extra1 = 0.0, extra2 = 0.0, extra3 = 0.0;
-            try { extra1 = tblTimeOverThreshold.getDoubleValue("extra1", sector, layer, component); } catch (Exception e) {}
-            try { extra2 = tblTimeOverThreshold.getDoubleValue("extra2", sector, layer, component); } catch (Exception e) {}
-            try { extra3 = tblTimeOverThreshold.getDoubleValue("extra3", sector, layer, component); } catch (Exception e) {}
-            ahdcTimeOverThreshold.put(key, new double[]{
-                tblTimeOverThreshold.getDoubleValue("totCorr",  sector, layer, component),
-                tblTimeOverThreshold.getDoubleValue("dtotCorr", sector, layer, component),
-                extra1, extra2, extra3
-            });
-        }
-    }
-
     @Override
     public boolean processDataEvent(DataEvent event) {
 
@@ -225,17 +114,21 @@ public class AHDCEngine extends ReconstructionEngine {
                 LOGGER.warning("AHDCEngine:  got run <= 0 in RUN::config, skipping event.");
                 return false;
             }
-            // Load the constants
-            //-------------------
             if(Run != newRun) {
-                loadAHDCConstants(newRun);
+                ahdcTimeOffsets        = this.getConstantsManager().getConstants(newRun, "/calibration/alert/ahdc/time_offsets");
+                ahdcTimeToDistanceWire = this.getConstantsManager().getConstants(newRun, "/calibration/alert/ahdc/time_to_distance_wire");
+                ahdcRawHitCuts         = this.getConstantsManager().getConstants(newRun, "/calibration/alert/ahdc/raw_hit_cuts");
+                ahdcAdcGains           = this.getConstantsManager().getConstants(newRun, "/calibration/alert/ahdc/gains");
+                ahdcTimeOverThreshold  = this.getConstantsManager().getConstants(newRun, "/calibration/alert/ahdc/time_over_threshold");
                 Run = newRun;
             }
         }
 
         if (event.hasBank("AHDC::adc")) {
             // I) Read raw hits
-            HitReader hitReader = new HitReader(event, factory, simulation, ahdcRawHitCuts, ahdcTimeOffsets, ahdcTimeToDistance, ahdcTimeOverThreshold, ahdcAdcGains);
+            HitReader hitReader = new HitReader(event, factory, simulation,
+                    ahdcRawHitCuts, ahdcTimeOffsets, ahdcTimeToDistanceWire,
+                    ahdcTimeOverThreshold, ahdcAdcGains);
             ArrayList<Hit> AHDC_Hits = hitReader.get_AHDCHits();
 
             // II) Create PreClusters
