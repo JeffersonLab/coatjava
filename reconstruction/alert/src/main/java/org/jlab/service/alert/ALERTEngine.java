@@ -346,6 +346,7 @@ public class ALERTEngine extends ReconstructionEngine {
                     AHDC_hits.add(hit);
                 }
             }
+            if (AHDC_hits.isEmpty()) continue; // It can happen that a track has no associated hit, in this case we skip it for the Kalman Filter
             AHDC_tracks.add(new Track(AHDC_hits));
             // Initialise the position and the momentum using the information of the AHDC::track
             // position : mm
