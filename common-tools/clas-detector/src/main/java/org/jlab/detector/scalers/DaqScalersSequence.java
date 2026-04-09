@@ -406,8 +406,9 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
                                     break;
                             }
                             if (j==i) {
-                                if (Math.abs( ((double)diff/ROLLOVER) - 1 ) > 0.01) {
-                                    logger.warning("found " + clock_name + " rollover of unexpected size " + diff + " (expected about " + ROLLOVER + ")");
+                                double rat = Math.abs((double)diff/ROLLOVER) - 1;
+                                if (Math.abs(rat) > 0.001) {
+                                    logger.warning("found " + clock_name + " rollover of unexpected size; off by " + rat*100 + "%");
                                 }
                             }
                         }
