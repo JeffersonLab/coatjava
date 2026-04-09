@@ -3,8 +3,8 @@ package org.jlab.rec.atof.hit;
 import org.jlab.geom.base.*;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.rec.atof.constants.Parameters;
+import java.util.Map;
 import java.util.logging.Logger;
-import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
 
 /**
  *
@@ -27,6 +27,7 @@ public class ATOFHit {
     private boolean isInACluster;
     private int associatedClusterIndex;
     int idTDC;
+    private Map<Integer, double[]> atofTimeOffsets;
     
 
     public int getSector() {
@@ -196,11 +197,13 @@ public class ATOFHit {
         if(this.startTime!= null) this.time -= this.startTime;
 
         //TODO: When table structure evolves, pay attention to order.
-        //Key for the current channel 
+        //Key for the current channel
         int key = this.sector*10000 + this.layer*1000 + this.component*10 + 0;//this.order;
-    
+
         //Time offsets
-        double[] timeOffsets = CalibrationConstantsLoader.ATOF_TIME_OFFSETS.get(key);
+        if (atofTimeOffsets == null) return 0;
+        double[] timeOffsets = atofTimeOffsets.get(key);
+        if (timeOffsets == null) return 1;
         double t0 = timeOffsets[0];
         
         //tud is used to store the bar up - bar down alignment
@@ -403,7 +406,8 @@ public class ATOFHit {
      * @param atof Detector object representing the atof, used to calculate
      * spatial coordinates.
      */
-    public ATOFHit(int sector, int layer, int component, int order, int tdc, int tot, Float startTime, Detector atof) {
+    public ATOFHit(int sector, int layer, int component, int order, int tdc, int tot, Float startTime, Detector atof,
+                   Map<Integer, double[]> atofTimeOffsets) {
         this.sector = sector;
         this.layer = layer;
         this.component = component;
@@ -411,6 +415,7 @@ public class ATOFHit {
         this.tdc = tdc;
         this.tot = tot;
         this.startTime = startTime;
+        this.atofTimeOffsets = atofTimeOffsets;
         this.isInACluster = false;
 
         this.makeType();

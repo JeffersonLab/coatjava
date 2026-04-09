@@ -19,7 +19,8 @@ import org.jlab.rec.atof.cluster.ClusterFinder;
 import org.jlab.rec.atof.hit.ATOFHit;
 import org.jlab.rec.atof.hit.BarHit;
 import org.jlab.rec.atof.hit.HitFinder;
-import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
+import org.jlab.detector.calib.utils.ConstantsManager;
+import org.jlab.utils.groups.IndexedTable;
 
 /**
  * Service to return reconstructed ATOF hits and clusters
@@ -54,7 +55,91 @@ public class ATOFEngine extends ReconstructionEngine {
     }
 
     int Run = -1;
-    
+
+    // ATOF calibration maps (instance-level, rebuilt on run change)
+    private Map<Integer, double[]> atofEffectiveVelocity;
+    private Map<Integer, double[]> atofTimeWalk;
+    private Map<Integer, double[]> atofAttenuationLength;
+    private Map<Integer, double[]> atofTimeOffsets;
+
+    private void loadATOFConstants(int run) {
+        ConstantsManager manager = this.getConstantsManager();
+
+        IndexedTable tblEffVel    = manager.getConstants(run, "/calibration/alert/atof/effective_velocity");
+        IndexedTable tblTimeWalk  = manager.getConstants(run, "/calibration/alert/atof/time_walk");
+        IndexedTable tblAttLen    = manager.getConstants(run, "/calibration/alert/atof/attenuation");
+        IndexedTable tblTimeOff   = manager.getConstants(run, "/calibration/alert/atof/time_offsets");
+
+        atofEffectiveVelocity = new HashMap<>();
+        atofTimeWalk          = new HashMap<>();
+        atofAttenuationLength = new HashMap<>();
+        atofTimeOffsets       = new HashMap<>();
+
+        // Effective velocity
+        for (int i = 0; i < tblEffVel.getRowCount(); i++) {
+            int sector    = Integer.parseInt((String) tblEffVel.getValueAt(i, 0));
+            int layer     = Integer.parseInt((String) tblEffVel.getValueAt(i, 1));
+            int component = Integer.parseInt((String) tblEffVel.getValueAt(i, 2));
+            int key = sector * 10000 + layer * 1000 + component * 10;
+            atofEffectiveVelocity.put(key, new double[]{
+                tblEffVel.getDoubleValue("veff",   sector, layer, component),
+                tblEffVel.getDoubleValue("dveff",  sector, layer, component),
+                tblEffVel.getDoubleValue("extra1", sector, layer, component),
+                tblEffVel.getDoubleValue("extra2", sector, layer, component)
+            });
+        }
+
+        // Time walk
+        for (int i = 0; i < tblTimeWalk.getRowCount(); i++) {
+            int sector    = Integer.parseInt((String) tblTimeWalk.getValueAt(i, 0));
+            int layer     = Integer.parseInt((String) tblTimeWalk.getValueAt(i, 1));
+            int component = Integer.parseInt((String) tblTimeWalk.getValueAt(i, 2));
+            int order     = Integer.parseInt((String) tblTimeWalk.getValueAt(i, 3));
+            int key = sector * 10000 + layer * 1000 + component * 10 + order;
+            atofTimeWalk.put(key, new double[]{
+                tblTimeWalk.getDoubleValue("tw0",     sector, layer, component, order),
+                tblTimeWalk.getDoubleValue("tw1",     sector, layer, component, order),
+                tblTimeWalk.getDoubleValue("tw2",     sector, layer, component, order),
+                tblTimeWalk.getDoubleValue("tw3",     sector, layer, component, order),
+                tblTimeWalk.getDoubleValue("dtw0",    sector, layer, component, order),
+                tblTimeWalk.getDoubleValue("dtw1",    sector, layer, component, order),
+                tblTimeWalk.getDoubleValue("dtw2",    sector, layer, component, order),
+                tblTimeWalk.getDoubleValue("dtw3",    sector, layer, component, order),
+                tblTimeWalk.getDoubleValue("chi2ndf", sector, layer, component, order)
+            });
+        }
+
+        // Attenuation length
+        for (int i = 0; i < tblAttLen.getRowCount(); i++) {
+            int sector    = Integer.parseInt((String) tblAttLen.getValueAt(i, 0));
+            int layer     = Integer.parseInt((String) tblAttLen.getValueAt(i, 1));
+            int component = Integer.parseInt((String) tblAttLen.getValueAt(i, 2));
+            int key = sector * 10000 + layer * 1000 + component * 10;
+            atofAttenuationLength.put(key, new double[]{
+                tblAttLen.getDoubleValue("attlen",  sector, layer, component),
+                tblAttLen.getDoubleValue("dattlen", sector, layer, component),
+                tblAttLen.getDoubleValue("extra1",  sector, layer, component),
+                tblAttLen.getDoubleValue("extra2",  sector, layer, component)
+            });
+        }
+
+        // Time offsets
+        for (int i = 0; i < tblTimeOff.getRowCount(); i++) {
+            int sector    = Integer.parseInt((String) tblTimeOff.getValueAt(i, 0));
+            int layer     = Integer.parseInt((String) tblTimeOff.getValueAt(i, 1));
+            int component = Integer.parseInt((String) tblTimeOff.getValueAt(i, 2));
+            int order     = Integer.parseInt((String) tblTimeOff.getValueAt(i, 3));
+            int key = sector * 10000 + layer * 1000 + component * 10 + order;
+            atofTimeOffsets.put(key, new double[]{
+                tblTimeOff.getDoubleValue("t0",                  sector, layer, component, order),
+                tblTimeOff.getDoubleValue("upstream_downstream", sector, layer, component, order),
+                tblTimeOff.getDoubleValue("wedge_bar",           sector, layer, component, order),
+                tblTimeOff.getDoubleValue("extra1",              sector, layer, component, order),
+                tblTimeOff.getDoubleValue("extra2",              sector, layer, component, order)
+            });
+        }
+    }
+
     @Override
     public boolean processDataEvent(DataEvent event) {
         if (!event.hasBank("RUN::config")) {
@@ -80,11 +165,12 @@ public class ATOFEngine extends ReconstructionEngine {
             System.err.println("ATOFEngine:  got run <= 0 in RUN::config, skipping event.");
             return false;
         }
-        int newRun = runNo; 
-            // Load the constants
+        int newRun = runNo;
+        // Load the constants
         if(Run!=newRun) {
-            CalibrationConstantsLoader.Load(newRun, this.getConstantsManager());
-            }
+            loadATOFConstants(newRun);
+            Run = newRun;
+        }
         
         ////Do we need to read the event vx,vy,vz?
         ////If not, this part can be moved in the initialization of the engine.
@@ -103,7 +189,7 @@ public class ATOFEngine extends ReconstructionEngine {
 
         //Hit finder init
         HitFinder hitfinder = new HitFinder();
-        hitfinder.findHits(event, ATOF, startTime);
+        hitfinder.findHits(event, ATOF, startTime, atofTimeOffsets, atofEffectiveVelocity);
         ArrayList<ATOFHit> WedgeHits = hitfinder.getWedgeHits();
         ArrayList<BarHit> BarHits = hitfinder.getBarHits();
         //Exit if hit lists are empty
@@ -131,26 +217,12 @@ public class ATOFEngine extends ReconstructionEngine {
         DatabaseConstantProvider cp = new DatabaseConstantProvider(11, "default");
         this.ATOF = factory.createDetectorCLAS(cp);
         
-        String[] alertTables = new String[] {
-            	"/calibration/alert/ahdc/time_offsets",
-                "/calibration/alert/ahdc/time_to_distance",
-                "/calibration/alert/ahdc/raw_hit_cuts",
-                "/calibration/alert/atof/effective_velocity",
-                "/calibration/alert/atof/time_walk",
-                "/calibration/alert/atof/attenuation",
-                "/calibration/alert/atof/time_offsets"
-        };
-        
+        // Requires ATOF calibration constants
         Map<String, Integer> tableMap = new HashMap<>();
-        for (String table : alertTables) {
-            if (table.equals("/calibration/alert/atof/time_offsets") ||
-                table.equals("/calibration/alert/atof/time_walk")) {
-                tableMap.put(table, 4);
-            } else {
-                tableMap.put(table, 3);
-            }
-        }
-
+        tableMap.put("/calibration/alert/atof/effective_velocity", 3);
+        tableMap.put("/calibration/alert/atof/time_walk", 4);
+        tableMap.put("/calibration/alert/atof/attenuation", 3);
+        tableMap.put("/calibration/alert/atof/time_offsets", 4);
         requireConstants(tableMap);
         this.getConstantsManager().setVariation("default");
         this.registerOutputBank("ATOF::hits", "ATOF::clusters");

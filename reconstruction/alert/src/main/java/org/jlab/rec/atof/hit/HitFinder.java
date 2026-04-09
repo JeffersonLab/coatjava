@@ -2,6 +2,7 @@ package org.jlab.rec.atof.hit;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Map;
 import org.jlab.geom.base.Detector;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
@@ -63,7 +64,9 @@ public class HitFinder {
      * @param atof the {@link Detector} representing the atof geometry to match
      * the sector/layer/component to x/y/z.
      */
-    public void findHits(DataEvent event, Detector atof, Float startTime) {
+    public void findHits(DataEvent event, Detector atof, Float startTime,
+                         Map<Integer, double[]> atofTimeOffsets,
+                         Map<Integer, double[]> atofEffectiveVelocity) {
         //For each event a list of bar hits and a list of wedge hits are filled
         this.barHits.clear();
         this.wedgeHits.clear();
@@ -89,7 +92,7 @@ public class HitFinder {
             int tot = bank.getInt("ToT", i);
 
             //Building a Hit
-            ATOFHit hit = new ATOFHit(sector, layer, component, order, tdc, tot, startTime, atof);
+            ATOFHit hit = new ATOFHit(sector, layer, component, order, tdc, tot, startTime, atof, atofTimeOffsets);
             if (hit.getEnergy() < 0.01) {
                 continue; //energy threshold
             }
@@ -124,7 +127,7 @@ public class HitFinder {
                 //Matching the hits: if same module and different order, they make up a bar hit
                 if (this_hit_up.matchBar(this_hit_down)) {
                     //Bar hits are matched to ahdc tracks and listed
-                    BarHit this_bar_hit = new BarHit(this_hit_down, this_hit_up);
+                    BarHit this_bar_hit = new BarHit(this_hit_down, this_hit_up, atofEffectiveVelocity);
                     //Only add bar hits for which the time sum is in time
                     if(!this_bar_hit.isInTime()) continue;
                     this.barHits.add(this_bar_hit);

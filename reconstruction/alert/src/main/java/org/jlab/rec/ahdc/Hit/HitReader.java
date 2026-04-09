@@ -1,12 +1,12 @@
 package org.jlab.rec.ahdc.Hit;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.detector.banks.RawDataBank;
 import org.jlab.geom.detector.alert.AHDC.AlertDCDetector;
-import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
 
 public class HitReader {
 
@@ -14,13 +14,23 @@ public class HitReader {
     private ArrayList<TrueHit> _TrueAHDCHits;
     private boolean sim = false;
 
-    public HitReader(DataEvent event, AlertDCDetector detector, boolean simulation) {
+    public HitReader(DataEvent event, AlertDCDetector detector, boolean simulation,
+                     Map<Integer, double[]> rawHitCuts,
+                     Map<Integer, double[]> timeOffsets,
+                     Map<Integer, double[]> timeToDistance,
+                     Map<Integer, double[]> timeOverThreshold,
+                     Map<Integer, double[]> adcGains) {
         sim = simulation;
-        fetch_AHDCHits(event, detector);
+        fetch_AHDCHits(event, detector, rawHitCuts, timeOffsets, timeToDistance, timeOverThreshold, adcGains);
         if (simulation) fetch_TrueAHDCHits(event);
     }
 
-    public final void fetch_AHDCHits(DataEvent event, AlertDCDetector detector) {
+    public final void fetch_AHDCHits(DataEvent event, AlertDCDetector detector,
+                                     Map<Integer, double[]> rawHitCutsMap,
+                                     Map<Integer, double[]> timeOffsetsMap,
+                                     Map<Integer, double[]> timeToDistanceMap,
+                                     Map<Integer, double[]> timeOverThresholdMap,
+                                     Map<Integer, double[]> adcGainsMap) {
 
         ArrayList<Hit> hits = new ArrayList<>();
 
@@ -60,12 +70,9 @@ public class HitReader {
             // -----------------------------
             // Raw hit cuts
             // -----------------------------
-	    // double[] rawHitCuts = CalibrationConstantsLoader.AHDC_RAW_HIT_CUTS.get(key_value);
-            //if (rawHitCuts == null) continue;
-
-
-           double[] rawHitCuts = CalibrationConstantsLoader.AHDC_RAW_HIT_CUTS.get(key_value);
-           if (rawHitCuts == null) {throw new IllegalStateException("Missing CCDB table /calibration/alert/ahdc/raw_hit_cuts for key=" + key_value+ " (check run/variation + key mapping)");
+           double[] rawHitCuts = rawHitCutsMap.get(key_value);
+           if (rawHitCuts == null) {
+               throw new IllegalStateException("Missing CCDB table /calibration/alert/ahdc/raw_hit_cuts for key=" + key_value + " (check run/variation + key mapping)");
            }
 	    
             double t_min   = rawHitCuts[0];
@@ -80,24 +87,15 @@ public class HitReader {
             // -----------------------------
             // Time calibration + t->d
             // -----------------------------
-            //double[] timeOffsets = CalibrationConstantsLoader.AHDC_TIME_OFFSETS.get(key_value);
-            //if (timeOffsets == null) continue;
-
-	    //  double[] timeOffsets = CalibrationConstantsLoader.AHDC_TIME_OFFSETS.get(key_value);
-            //if (timeOffsets == null) {
-	    //throw new IllegalStateException("Missing AHDC time_offsets for key=" + key_value);
-	    //}
-
-	  double[] timeOffsets = CalibrationConstantsLoader.AHDC_TIME_OFFSETS.get(key_value);
-	    
+          double[] timeOffsets = timeOffsetsMap.get(key_value);
           if (timeOffsets == null) {
-           throw new IllegalStateException("Missing CCDB /calibration/alert/ahdc/time_offsets for key=" + key_value + " (check run/variation + key mapping)");
+              throw new IllegalStateException("Missing CCDB /calibration/alert/ahdc/time_offsets for key=" + key_value + " (check run/variation + key mapping)");
           }
 
 
 
       
-          double[] time2distance = CalibrationConstantsLoader.AHDC_TIME_TO_DISTANCE.get(10101);
+          double[] time2distance = timeToDistanceMap.get(10101);
          if (time2distance == null) continue;
 
             double t0 = timeOffsets[0];
@@ -117,7 +115,7 @@ public class HitReader {
             // -----------------------------
             double totUsed = timeOverThreshold;
             if (!sim) {
-                double[] totArr = CalibrationConstantsLoader.AHDC_TIME_OVER_THRESHOLD.get(key_value);
+                double[] totArr = timeOverThresholdMap.get(key_value);
                 if (totArr != null && totArr.length > 0) {
                     double totCorr = totArr[0];
                     totUsed = timeOverThreshold * totCorr;
@@ -157,7 +155,7 @@ public class HitReader {
             // -----------------------------
             double adcCal = adcRaw;
             if (!sim) {
-                double[] gainArr = CalibrationConstantsLoader.AHDC_ADC_GAINS.get(key_value);
+                double[] gainArr = adcGainsMap.get(key_value);
                 if (gainArr != null && gainArr.length > 0) {
                     double gainCorr = gainArr[0];
                     adcCal = adcRaw * gainCorr;
