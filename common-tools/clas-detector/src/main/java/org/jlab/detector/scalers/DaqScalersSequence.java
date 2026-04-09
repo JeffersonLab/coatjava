@@ -361,60 +361,65 @@ public class DaqScalersSequence implements Comparator<DaqScalers> {
      * 2.  Assume any subsequent clock decrease is a rollover. 
      */
     public void fixClockRollover() {
-        boolean modified = true;
-        // ungated clock
-        while (modified) {
-            modified = false;
-            for (int i=this.scalers.size()-1; i>0; --i) {
-                Dsc2Scaler previous = this.scalers.get(i-1).dsc2;
-                Dsc2Scaler next     = this.scalers.get(i).dsc2;
-                long corr           = previous.clock - next.clock + 1;
-                boolean is_rollover = previous.clock > next.clock;
-                boolean is_gap      = corr <= -2*(long)Integer.MAX_VALUE;
-                if (is_rollover || is_gap) {
-                    if(is_gap) corr = -corr;
-                    for (int j=i; j<this.scalers.size(); ++j) {
-                        if (j==i) System.out.print( String.format("FIXING UNGATED CLOCK ROLLOVER:  %d -> ",this.scalers.get(j).dsc2.clock));
-                        this.scalers.get(j).dsc2.clock += corr;
-                        if (j==i) {
-                          System.out.println(String.format("%d",this.scalers.get(j).dsc2.clock));
-                          System.out.println((double)corr/(2*(long)Integer.MAX_VALUE));
-                          if(is_gap) System.out.println("GAP!");
-                        }
+        // fixed rollover size
+        final long ROLLOVER = 2*(long)Integer.MAX_VALUE;
+        // loop over ungated and gated, to apply correction separately for each
+        final int is_ungated = 0;
+        final int is_gated   = 1;
+        for (int clk : List.of(is_ungated, is_gated)) {
+            boolean modified = true;
+            while (modified) {
+                modified = false;
+                for (int i=this.scalers.size()-1; i>0; --i) {
+                    Dsc2Scaler previous = this.scalers.get(i-1).dsc2;
+                    Dsc2Scaler next     = this.scalers.get(i).dsc2;
+                    String  clock_name;
+                    long    diff;
+                    boolean is_rollover;
+                    switch (clk) {
+                        case is_ungated:
+                            clock_name  = "ungated clock";
+                            diff        = previous.clock - next.clock + 1;
+                            is_rollover = previous.clock > next.clock;
+                            break;
+                        default: // is_gated
+                            clock_name  = "gated clock";
+                            diff        = previous.gatedClock - next.gatedClock + 1;
+                            is_rollover = previous.gatedClock > next.gatedClock;
+                            break;
                     }
-                    modified = true;
-                    break;
-                }
-            }
-        }
-        // repeat for gated clock
-        modified = true;
-        while (modified) {
-            modified = false;
-            for (int i=this.scalers.size()-1; i>0; --i) {
-                Dsc2Scaler previous = this.scalers.get(i-1).dsc2;
-                Dsc2Scaler next     = this.scalers.get(i).dsc2;
-                long corr           = previous.gatedClock - next.gatedClock + 1;
-                boolean is_rollover = previous.gatedClock > next.gatedClock;
-                boolean is_gap      = corr <= -2*(long)Integer.MAX_VALUE;
-                if (is_rollover || is_gap) {
-                    if(is_gap) corr = -corr;
-                    for (int j=i; j<this.scalers.size(); ++j) {
-                        if (j==i) System.out.print( String.format("FIXING GATED CLOCK ROLLOVER:  %d -> ",this.scalers.get(j).dsc2.gatedClock));
-                        this.scalers.get(j).dsc2.gatedClock += corr;
-                        if (j==i) {
-                          System.out.println(String.format("%d",this.scalers.get(j).dsc2.gatedClock));
-                          System.out.println((double)corr/(2*(long)Integer.MAX_VALUE));
-                          if(is_gap) System.out.println("GAP!");
+                    boolean is_gap = diff <= -ROLLOVER / 2;
+                    if (is_rollover || is_gap) {
+                        for (int j=i; j<this.scalers.size(); ++j) {
+                            switch (clk) {
+                                case is_ungated:
+                                    if (j==i)   logger.info( String.format("fixing ungated clock rollover:  %d ->", this.scalers.get(j).dsc2.clock));
+                                    if (is_gap) this.scalers.get(j).dsc2.clock -= ROLLOVER;
+                                    else        this.scalers.get(j).dsc2.clock += ROLLOVER;
+                                    if (j==i)   logger.info( String.format("                             -> %d", this.scalers.get(j).dsc2.clock));
+                                    break;
+                                default: // is_gated
+                                    if (j==i)   logger.info( String.format("fixing gated clock rollover:  %d ->", this.scalers.get(j).dsc2.gatedClock));
+                                    if (is_gap) this.scalers.get(j).dsc2.gatedClock -= ROLLOVER;
+                                    else        this.scalers.get(j).dsc2.gatedClock += ROLLOVER;
+                                    if (j==i)   logger.info( String.format("                           -> %d", this.scalers.get(j).dsc2.gatedClock));
+                                    break;
+                            }
+                            if (j==i) {
+                                if (Math.abs( ((double)diff/ROLLOVER) - 1 ) > 0.01) {
+                                    logger.warning("found " + clock_name + " rollover of unexpected size " + diff + " (expected about " + ROLLOVER + ")");
+                                }
+                            }
                         }
+                        modified = true;
+                        break;
                     }
-                    modified = true;
-                    break;
                 }
             }
         }
     }
-    
+
+
     public static void main(String[] args) {
         
         final String dir = System.getenv("HOME")+"/data/";
