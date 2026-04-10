@@ -35,7 +35,6 @@ public class FilteredBank {
         filterVar = variableName;
     }
 
-
     /**
      * @param schema schema for the bank to filter
      * @param variableName name of the variable to filter on 
@@ -100,6 +99,16 @@ public class FilteredBank {
     }
 
     /**
+     * 
+     * @param column
+     * @param index
+     * @return 
+     */
+    public int getByte(int column, int index ){
+        return bank.getByte(column, indexList.get(index));
+    }
+
+    /**
      * @param varName name of the bank variable
      * @param index filtered index to retrieve
      * @return value for the filtered index
@@ -109,12 +118,32 @@ public class FilteredBank {
     }
 
     /**
+     * 
+     * @param column
+     * @param index
+     * @return 
+     */
+    public int getShort(int column, int index ){
+        return bank.getShort(column, indexList.get(index));
+    }
+
+    /**
      * @param varName name of the bank variable
      * @param index filtered index to retrieve
      * @return value for the filtered index
      */
     public int getInt(String varName, int index ){
         return bank.getInt(varName, indexList.get(index));
+    }
+    
+    /**
+     * 
+     * @param column
+     * @param index
+     * @return 
+     */
+    public int getInt(int column, int index) {
+        return bank.getInt(column, indexList.get(index));
     }
 
     /**
@@ -127,12 +156,32 @@ public class FilteredBank {
     }
 
     /**
+     * 
+     * @param column
+     * @param index
+     * @return 
+     */
+    public long getLong(int column, int index ){
+        return bank.getLong(column, indexList.get(index));
+    }
+
+    /**
      * @param varName name of the bank variable
      * @param index filtered index to retrieve
      * @return value for the filtered index
      */
     public float getFloat(String varName, int index ){
         return bank.getFloat(varName, indexList.get(index));
+    }
+
+    /**
+     * 
+     * @param column
+     * @param index
+     * @return 
+     */
+    public float getFloat(int column, int index ){
+        return bank.getFloat(column, indexList.get(index));
     }
 
     /**
