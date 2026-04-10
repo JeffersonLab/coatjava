@@ -8,6 +8,7 @@ import org.jlab.clas.pdg.PDGDatabase;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jlab.io.banks.MC__True;
 
 /**
  *
@@ -510,14 +511,14 @@ public class TruthMatch extends ReconstructionEngine {
 
         for (int i = 0; i < mctrue.rows(); i++) {
             MCHit hit = new MCHit();
-            hit.pid = mctrue.getInt("pid", i);
-            hit.otid = mctrue.getInt("otid", i) - 1;
-            hit.hitn = mctrue.getInt("hitn", i) - 1;
-            hit.detector = mctrue.getByte("detector", i);
+            hit.pid = mctrue.getInt(MC__True.pid, i);
+            hit.otid = mctrue.getInt(MC__True.otid, i) - 1;
+            hit.hitn = mctrue.getInt(MC__True.hitn, i) - 1;
+            hit.detector = mctrue.getByte(MC__True.detector, i);
 
-            int tid = mctrue.getInt("tid", i) - 1;  // in MC::True tid starts 
+            int tid = mctrue.getInt(MC__True.tid, i) - 1;  // in MC::True tid starts 
             //  from one, so subtracting 1 to match to the row number in the MC::Particle bank
-            int mtid = mctrue.getInt("mtid", i);
+            int mtid = mctrue.getInt(MC__True.mtid, i);
 
             /**
              * In the original version of Truth Matching, before adding the
