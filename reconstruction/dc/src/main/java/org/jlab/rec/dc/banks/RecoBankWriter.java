@@ -3,7 +3,6 @@ package org.jlab.rec.dc.banks;
 import java.util.ArrayList;
 import java.util.List;
 import org.jlab.detector.base.DetectorType;
-
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.dc.cluster.FittedCluster;
@@ -12,8 +11,22 @@ import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.hit.Hit;
 import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.track.Track;
+import trackfitter.fitter.utilities.ProbChi2perNDF;
 
-import trackfitter.fitter.utilities.*;
+import org.jlab.io.banks.HitBasedTrkg__HBCrosses;
+import org.jlab.io.banks.HitBasedTrkg__HBHitTrkId;
+import org.jlab.io.banks.HitBasedTrkg__HBSegments;
+import org.jlab.io.banks.HitBasedTrkg__HBTracks;
+import org.jlab.io.banks.HitBasedTrkg__Hits;
+import org.jlab.io.banks.HitBasedTrkg__Clusters;
+import org.jlab.io.banks.TimeBasedTrkg__TBClusters;
+import org.jlab.io.banks.TimeBasedTrkg__TBCovMat;
+import org.jlab.io.banks.TimeBasedTrkg__TBCrosses;
+import org.jlab.io.banks.TimeBasedTrkg__TBHits;
+import org.jlab.io.banks.TimeBasedTrkg__TBSegments;
+import org.jlab.io.banks.TimeBasedTrkg__TBTracks;
+import org.jlab.io.banks.TimeBasedTrkg__Trajectory;
+
 
 /**
  * A class to fill the reconstructed DC banks
@@ -100,7 +113,6 @@ public class RecoBankWriter {
 
     public DataBank fillHBHitsBank(DataEvent event, List<FittedHit> hitlist) {
         String name = bankNames.getHitsBank();
-        
         int rejCnt = 0;
         for (int i = 0; i < hitlist.size(); i++) {
 //            if (hitlist.get(i).get_Id() == -1 /*|| hitlist.get(i).get_Id()==0*/) { //PASS1
@@ -115,29 +127,27 @@ public class RecoBankWriter {
             if (hitlist.get(i).get_Id() == -1 || hitlist.get(i).get_Id()==0) {
                 rejCnt++;
                 continue;
+            }
+
+            bank.setShort(HitBasedTrkg__Hits.id, i-rejCnt, (short) hitlist.get(i).get_Id());
+            bank.setShort(HitBasedTrkg__Hits.status, i-rejCnt, (short) hitlist.get(i).get_QualityFac());
+            bank.setByte(HitBasedTrkg__Hits.superlayer, i-rejCnt, (byte) hitlist.get(i).get_Superlayer());
+            bank.setByte(HitBasedTrkg__Hits.layer, i-rejCnt, (byte) hitlist.get(i).get_Layer());
+            bank.setByte(HitBasedTrkg__Hits.sector, i-rejCnt, (byte) hitlist.get(i).get_Sector());
+            bank.setShort(HitBasedTrkg__Hits.wire, i-rejCnt, (short) hitlist.get(i).get_Wire());
+            bank.setFloat(HitBasedTrkg__Hits.docaError, i-rejCnt, (float) hitlist.get(i).get_DocaErr());
+            bank.setFloat(HitBasedTrkg__Hits.trkDoca, i-rejCnt, (float) hitlist.get(i).get_ClusFitDoca());
+            bank.setFloat(HitBasedTrkg__Hits.LocX, i-rejCnt, (float) hitlist.get(i).get_lX());
+            bank.setFloat(HitBasedTrkg__Hits.LocY, i-rejCnt, (float) hitlist.get(i).get_lY());
+            bank.setFloat(HitBasedTrkg__Hits.X, i-rejCnt, (float) hitlist.get(i).get_X());
+            bank.setFloat(HitBasedTrkg__Hits.Z, i-rejCnt, (float) hitlist.get(i).get_Z());
+            bank.setByte(HitBasedTrkg__Hits.LR, i-rejCnt, (byte) hitlist.get(i).get_LeftRightAmb());
+            bank.setShort(HitBasedTrkg__Hits.clusterID, i-rejCnt, (short) hitlist.get(i).get_AssociatedClusterID());
+            bank.setInt(HitBasedTrkg__Hits.TDC,i-rejCnt,hitlist.get(i).get_TDC());
+            bank.setByte(HitBasedTrkg__Hits.jitter,i, (byte) hitlist.get(i).getJitter());
         }
-
-        bank.setShort("id", i-rejCnt, (short) hitlist.get(i).get_Id());
-        bank.setShort("status", i-rejCnt, (short) hitlist.get(i).get_QualityFac());
-        bank.setByte("superlayer", i-rejCnt, (byte) hitlist.get(i).get_Superlayer());
-        bank.setByte("layer", i-rejCnt, (byte) hitlist.get(i).get_Layer());
-        bank.setByte("sector", i-rejCnt, (byte) hitlist.get(i).get_Sector());
-        bank.setShort("wire", i-rejCnt, (short) hitlist.get(i).get_Wire());
-        bank.setFloat("docaError", i-rejCnt, (float) hitlist.get(i).get_DocaErr());
-        bank.setFloat("trkDoca", i-rejCnt, (float) hitlist.get(i).get_ClusFitDoca());
-        bank.setFloat("LocX", i-rejCnt, (float) hitlist.get(i).get_lX());
-        bank.setFloat("LocY", i-rejCnt, (float) hitlist.get(i).get_lY());
-        bank.setFloat("X", i-rejCnt, (float) hitlist.get(i).get_X());
-        bank.setFloat("Z", i-rejCnt, (float) hitlist.get(i).get_Z());
-        bank.setByte("LR", i-rejCnt, (byte) hitlist.get(i).get_LeftRightAmb());
-        bank.setShort("clusterID", i-rejCnt, (short) hitlist.get(i).get_AssociatedClusterID());
-        bank.setInt("TDC",i-rejCnt,hitlist.get(i).get_TDC());
-        bank.setByte("jitter",i, (byte) hitlist.get(i).getJitter());
         
-    }
-
-    return bank;
-
+        return bank;
     }   
     
     public DataBank fillHBHitsTrkIdBank(DataEvent event, List<FittedHit> hitlist) {
@@ -162,11 +172,11 @@ public class RecoBankWriter {
                 rejCnt++;
                 continue;
             } 
-            bank.setShort("id", i-rejCnt, (short) hitlist.get(i).get_Id());
-            bank.setShort("tid", i-rejCnt, (short) hitlist.get(i).get_AssociatedHBTrackID());
-            bank.setFloat("B", i-rejCnt, (float) hitlist.get(i).getB());
-            bank.setFloat("TProp", i-rejCnt, (float) hitlist.get(i).getTProp());
-            bank.setFloat("TFlight", i-rejCnt, (float) hitlist.get(i).getTFlight());
+            bank.setShort(HitBasedTrkg__HBHitTrkId.id, i-rejCnt, (short) hitlist.get(i).get_Id());
+            bank.setShort(HitBasedTrkg__HBHitTrkId.tid, i-rejCnt, (short) hitlist.get(i).get_AssociatedHBTrackID());
+            bank.setFloat(HitBasedTrkg__HBHitTrkId.B, i-rejCnt, (float) hitlist.get(i).getB());
+            bank.setFloat(HitBasedTrkg__HBHitTrkId.TProp, i-rejCnt, (float) hitlist.get(i).getTProp());
+            bank.setFloat(HitBasedTrkg__HBHitTrkId.TFlight, i-rejCnt, (float) hitlist.get(i).getTFlight());
 //            if(i>0 && hitlist.get(i).getSector()==hitlist.get(i-1).getSector() && 
 //                     hitlist.get(i).get_Superlayer()==hitlist.get(i-1).get_Superlayer() && 
 //                     hitlist.get(i).get_Layer()==hitlist.get(i-1).get_Layer() && 
@@ -215,24 +225,24 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
         }
         double chi2 = 0;
 
-        bank.setShort("id", i, (short) cluslist.get(i).get_Id());
+        bank.setShort(HitBasedTrkg__Clusters.id, i, (short) cluslist.get(i).get_Id());
         int status = 0;
         if(cluslist.get(i).size()<6)
             status = 1;
-        bank.setShort("status", i, (short) status);
-        bank.setByte("superlayer", i, (byte) cluslist.get(i).get_Superlayer());
-        bank.setByte("sector", i, (byte) cluslist.get(i).get_Sector());
+        bank.setShort(HitBasedTrkg__Clusters.status, i, (short) status);
+        bank.setByte(HitBasedTrkg__Clusters.superlayer, i, (byte) cluslist.get(i).get_Superlayer());
+        bank.setByte(HitBasedTrkg__Clusters.sector, i, (byte) cluslist.get(i).get_Sector());
 
-        bank.setFloat("avgWire", i, (float) cluslist.get(i).getAvgwire());
-        bank.setByte("size", i, (byte) cluslist.get(i).size());
+        bank.setFloat(HitBasedTrkg__Clusters.avgWire, i, (float) cluslist.get(i).getAvgwire());
+        bank.setByte(HitBasedTrkg__Clusters.size, i, (byte) cluslist.get(i).size());
 
         double fitSlope = cluslist.get(i).get_clusterLineFitSlope();
         double fitInterc = cluslist.get(i).get_clusterLineFitIntercept();
 
-        bank.setFloat("fitSlope", i, (float) fitSlope);
-        bank.setFloat("fitSlopeErr", i, (float) cluslist.get(i).get_clusterLineFitSlopeErr());
-        bank.setFloat("fitInterc", i, (float) fitInterc);
-        bank.setFloat("fitIntercErr", i, (float) cluslist.get(i).get_clusterLineFitInterceptErr());
+        bank.setFloat(HitBasedTrkg__Clusters.fitSlope, i, (float) fitSlope);
+        bank.setFloat(HitBasedTrkg__Clusters.fitSlopeErr, i, (float) cluslist.get(i).get_clusterLineFitSlopeErr());
+        bank.setFloat(HitBasedTrkg__Clusters.fitInterc, i, (float) fitInterc);
+        bank.setFloat(HitBasedTrkg__Clusters.fitIntercErr, i, (float) cluslist.get(i).get_clusterLineFitInterceptErr());
 
         for (int j = 0; j < cluslist.get(i).size(); j++) {
             if (j < hitIdxArray.length) {
@@ -242,7 +252,7 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
             double residual = cluslist.get(i).get(j).get_ClusFitDoca() / (cluslist.get(i).get(j).get_CellSize() / Math.sqrt(12.));
             chi2 += residual * residual;
         }
-        bank.setFloat("fitChisqProb", i, (float) ProbChi2perNDF.prob(chi2, cluslist.get(i).size() - 2));
+        bank.setFloat(HitBasedTrkg__Clusters.fitChisqProb, i, (float) ProbChi2perNDF.prob(chi2, cluslist.get(i).size() - 2));
 
         for (int j = 0; j < hitIdxArray.length; j++) {
             String hitStrg = "Hit";
@@ -279,25 +289,25 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
 
             double chi2 = 0;
 
-            bank.setShort("id", i, (short) seglist.get(i).get_Id());
-            bank.setByte("superlayer", i, (byte) seglist.get(i).get_Superlayer());
-            bank.setByte("sector", i, (byte) seglist.get(i).get_Sector());
+            bank.setShort(HitBasedTrkg__HBSegments.id, i, (short) seglist.get(i).get_Id());
+            bank.setByte(HitBasedTrkg__HBSegments.superlayer, i, (byte) seglist.get(i).get_Superlayer());
+            bank.setByte(HitBasedTrkg__HBSegments.sector, i, (byte) seglist.get(i).get_Sector());
 
             FittedCluster cls = seglist.get(i).get_fittedCluster();
-            bank.setShort("Cluster_ID", i, (short) cls.get_Id());
+            bank.setShort(HitBasedTrkg__HBSegments.Cluster_ID, i, (short) cls.get_Id());
 
-            bank.setFloat("avgWire", i, (float) cls.getAvgwire());
-            bank.setByte("size", i, (byte) seglist.get(i).size());
+            bank.setFloat(HitBasedTrkg__HBSegments.avgWire, i, (float) cls.getAvgwire());
+            bank.setByte(HitBasedTrkg__HBSegments.size, i, (byte) seglist.get(i).size());
 
-            bank.setFloat("fitSlope", i, (float) cls.get_clusterLineFitSlope());
-            bank.setFloat("fitSlopeErr", i, (float) cls.get_clusterLineFitSlopeErr());
-            bank.setFloat("fitInterc", i, (float) cls.get_clusterLineFitIntercept());
-            bank.setFloat("fitIntercErr", i, (float) cls.get_clusterLineFitInterceptErr());
+            bank.setFloat(HitBasedTrkg__HBSegments.fitSlope, i, (float) cls.get_clusterLineFitSlope());
+            bank.setFloat(HitBasedTrkg__HBSegments.fitSlopeErr, i, (float) cls.get_clusterLineFitSlopeErr());
+            bank.setFloat(HitBasedTrkg__HBSegments.fitInterc, i, (float) cls.get_clusterLineFitIntercept());
+            bank.setFloat(HitBasedTrkg__HBSegments.fitIntercErr, i, (float) cls.get_clusterLineFitInterceptErr());
 
-            bank.setFloat("SegEndPoint1X", i, (float) seglist.get(i).get_SegmentEndPoints()[0]);
-            bank.setFloat("SegEndPoint1Z", i, (float) seglist.get(i).get_SegmentEndPoints()[1]);
-            bank.setFloat("SegEndPoint2X", i, (float) seglist.get(i).get_SegmentEndPoints()[2]);
-            bank.setFloat("SegEndPoint2Z", i, (float) seglist.get(i).get_SegmentEndPoints()[3]);
+            bank.setFloat(HitBasedTrkg__HBSegments.SegEndPoint1X, i, (float) seglist.get(i).get_SegmentEndPoints()[0]);
+            bank.setFloat(HitBasedTrkg__HBSegments.SegEndPoint1Z, i, (float) seglist.get(i).get_SegmentEndPoints()[1]);
+            bank.setFloat(HitBasedTrkg__HBSegments.SegEndPoint2X, i, (float) seglist.get(i).get_SegmentEndPoints()[2]);
+            bank.setFloat(HitBasedTrkg__HBSegments.SegEndPoint2Z, i, (float) seglist.get(i).get_SegmentEndPoints()[3]);
 
             for (int j = 0; j < seglist.get(i).size(); j++) {
                 if (seglist.get(i).get_Id() == -1) {
@@ -310,7 +320,7 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
                 double residual = seglist.get(i).get(j).get_ClusFitDoca() / (seglist.get(i).get(j).get_CellSize() / Math.sqrt(12.));
                 chi2 += residual * residual;
             }
-            bank.setFloat("fitChisqProb", i, (float) ProbChi2perNDF.prob(chi2, seglist.get(i).size() - 2));
+            bank.setFloat(HitBasedTrkg__HBSegments.fitChisqProb, i, (float) ProbChi2perNDF.prob(chi2, seglist.get(i).size() - 2));
 
             for (int j = 0; j < hitIdxArray.length; j++) {
                 String hitStrg = "Hit";
@@ -343,24 +353,24 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
         int index=0;
         for (Cross aCrosslist : crosslist) {
             if (aCrosslist.get_Id() != -1) {
-                bank.setShort("id", index, (short) aCrosslist.get_Id());
-                bank.setShort("status", index, (short) 0);
-                bank.setByte("sector", index, (byte) aCrosslist.get_Sector());
-                bank.setByte("region", index, (byte) aCrosslist.get_Region());
-                bank.setFloat("x", index, (float) aCrosslist.get_Point().x());
-                bank.setFloat("y", index, (float) aCrosslist.get_Point().y());
-                bank.setFloat("z", index, (float) aCrosslist.get_Point().z());
-                bank.setFloat("err_x", index, (float) aCrosslist.get_PointErr().x());
-                bank.setFloat("err_y", index, (float) aCrosslist.get_PointErr().y());
-                bank.setFloat("err_z", index, (float) aCrosslist.get_PointErr().z());
-                bank.setFloat("ux", index, (float) aCrosslist.get_Dir().x());
-                bank.setFloat("uy", index, (float) aCrosslist.get_Dir().y());
-                bank.setFloat("uz", index, (float) aCrosslist.get_Dir().z());
-                bank.setFloat("err_ux", index, (float) aCrosslist.get_DirErr().x());
-                bank.setFloat("err_uy", index, (float) aCrosslist.get_DirErr().y());
-                bank.setFloat("err_uz", index, (float) aCrosslist.get_DirErr().z());
-                bank.setShort("Segment1_ID", index, (short) aCrosslist.get_Segment1().get_Id());
-                bank.setShort("Segment2_ID", index, (short) aCrosslist.get_Segment2().get_Id());
+                bank.setShort(HitBasedTrkg__HBCrosses.id, index, (short) aCrosslist.get_Id());
+                bank.setShort(HitBasedTrkg__HBCrosses.status, index, (short) 0);
+                bank.setByte(HitBasedTrkg__HBCrosses.sector, index, (byte) aCrosslist.get_Sector());
+                bank.setByte(HitBasedTrkg__HBCrosses.region, index, (byte) aCrosslist.get_Region());
+                bank.setFloat(HitBasedTrkg__HBCrosses.x, index, (float) aCrosslist.get_Point().x());
+                bank.setFloat(HitBasedTrkg__HBCrosses.y, index, (float) aCrosslist.get_Point().y());
+                bank.setFloat(HitBasedTrkg__HBCrosses.z, index, (float) aCrosslist.get_Point().z());
+                bank.setFloat(HitBasedTrkg__HBCrosses.err_x, index, (float) aCrosslist.get_PointErr().x());
+                bank.setFloat(HitBasedTrkg__HBCrosses.err_y, index, (float) aCrosslist.get_PointErr().y());
+                bank.setFloat(HitBasedTrkg__HBCrosses.err_z, index, (float) aCrosslist.get_PointErr().z());
+                bank.setFloat(HitBasedTrkg__HBCrosses.ux, index, (float) aCrosslist.get_Dir().x());
+                bank.setFloat(HitBasedTrkg__HBCrosses.uy, index, (float) aCrosslist.get_Dir().y());
+                bank.setFloat(HitBasedTrkg__HBCrosses.uz, index, (float) aCrosslist.get_Dir().z());
+                bank.setFloat(HitBasedTrkg__HBCrosses.err_ux, index, (float) aCrosslist.get_DirErr().x());
+                bank.setFloat(HitBasedTrkg__HBCrosses.err_uy, index, (float) aCrosslist.get_DirErr().y());
+                bank.setFloat(HitBasedTrkg__HBCrosses.err_uz, index, (float) aCrosslist.get_DirErr().z());
+                bank.setShort(HitBasedTrkg__HBCrosses.Segment1_ID, index, (short) aCrosslist.get_Segment1().get_Id());
+                bank.setShort(HitBasedTrkg__HBCrosses.Segment2_ID, index, (short) aCrosslist.get_Segment2().get_Id());
                 index++;
             }
         }
@@ -372,42 +382,42 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
         DataBank bank = event.createBank(name, candlist.size()); 
 
         for (int i = 0; i < candlist.size(); i++) {
-            bank.setShort("id", i, (short) candlist.get(i).get_Id());
-            bank.setByte("sector", i, (byte) candlist.get(i).getSector());
-            bank.setByte("q", i, (byte) candlist.get(i).get_Q());
-            //bank.setShort("status", i, (short) (100+candlist.get(i).get_Status()*10+candlist.get(i).get_MissingSuperlayer()));
-            bank.setShort("status", i, (short) candlist.get(i).getBitStatus());
+            bank.setShort(HitBasedTrkg__HBTracks.id, i, (short) candlist.get(i).get_Id());
+            bank.setByte(HitBasedTrkg__HBTracks.sector, i, (byte) candlist.get(i).getSector());
+            bank.setByte(HitBasedTrkg__HBTracks.q, i, (byte) candlist.get(i).get_Q());
+            //bank.setShort(HitBasedTrkg__HBTracks.status, i, (short) (100+candlist.get(i).get_Status()*10+candlist.get(i).get_MissingSuperlayer()));
+            bank.setShort(HitBasedTrkg__HBTracks.status, i, (short) candlist.get(i).getBitStatus());
             if(candlist.get(i).get_PreRegion1CrossPoint()!=null) {
-                bank.setFloat("c1_x", i, (float) candlist.get(i).get_PreRegion1CrossPoint().x());
-                bank.setFloat("c1_y", i, (float) candlist.get(i).get_PreRegion1CrossPoint().y());
-                bank.setFloat("c1_z", i, (float) candlist.get(i).get_PreRegion1CrossPoint().z());
-                bank.setFloat("c1_ux", i, (float) candlist.get(i).get_PreRegion1CrossDir().x());
-                bank.setFloat("c1_uy", i, (float) candlist.get(i).get_PreRegion1CrossDir().y());
-                bank.setFloat("c1_uz", i, (float) candlist.get(i).get_PreRegion1CrossDir().z());
+                bank.setFloat(HitBasedTrkg__HBTracks.c1_x, i, (float) candlist.get(i).get_PreRegion1CrossPoint().x());
+                bank.setFloat(HitBasedTrkg__HBTracks.c1_y, i, (float) candlist.get(i).get_PreRegion1CrossPoint().y());
+                bank.setFloat(HitBasedTrkg__HBTracks.c1_z, i, (float) candlist.get(i).get_PreRegion1CrossPoint().z());
+                bank.setFloat(HitBasedTrkg__HBTracks.c1_ux, i, (float) candlist.get(i).get_PreRegion1CrossDir().x());
+                bank.setFloat(HitBasedTrkg__HBTracks.c1_uy, i, (float) candlist.get(i).get_PreRegion1CrossDir().y());
+                bank.setFloat(HitBasedTrkg__HBTracks.c1_uz, i, (float) candlist.get(i).get_PreRegion1CrossDir().z());
             }
             if(candlist.get(i).get_PostRegion3CrossPoint()!=null) {
-                bank.setFloat("c3_x", i, (float) candlist.get(i).get_PostRegion3CrossPoint().x());
-                bank.setFloat("c3_y", i, (float) candlist.get(i).get_PostRegion3CrossPoint().y());
-                bank.setFloat("c3_z", i, (float) candlist.get(i).get_PostRegion3CrossPoint().z());
-                bank.setFloat("c3_ux", i, (float) candlist.get(i).get_PostRegion3CrossDir().x());
-                bank.setFloat("c3_uy", i, (float) candlist.get(i).get_PostRegion3CrossDir().y());
-                bank.setFloat("c3_uz", i, (float) candlist.get(i).get_PostRegion3CrossDir().z());
+                bank.setFloat(HitBasedTrkg__HBTracks.c3_x, i, (float) candlist.get(i).get_PostRegion3CrossPoint().x());
+                bank.setFloat(HitBasedTrkg__HBTracks.c3_y, i, (float) candlist.get(i).get_PostRegion3CrossPoint().y());
+                bank.setFloat(HitBasedTrkg__HBTracks.c3_z, i, (float) candlist.get(i).get_PostRegion3CrossPoint().z());
+                bank.setFloat(HitBasedTrkg__HBTracks.c3_ux, i, (float) candlist.get(i).get_PostRegion3CrossDir().x());
+                bank.setFloat(HitBasedTrkg__HBTracks.c3_uy, i, (float) candlist.get(i).get_PostRegion3CrossDir().y());
+                bank.setFloat(HitBasedTrkg__HBTracks.c3_uz, i, (float) candlist.get(i).get_PostRegion3CrossDir().z());
             }
             if(candlist.get(i).get_Region1TrackX()!=null) {
-                bank.setFloat("t1_x", i, (float) candlist.get(i).get_Region1TrackX().x());
-                bank.setFloat("t1_y", i, (float) candlist.get(i).get_Region1TrackX().y());
-                bank.setFloat("t1_z", i, (float) candlist.get(i).get_Region1TrackX().z());
-                bank.setFloat("t1_px", i, (float) candlist.get(i).get_Region1TrackP().x());
-                bank.setFloat("t1_py", i, (float) candlist.get(i).get_Region1TrackP().y());
-                bank.setFloat("t1_pz", i, (float) candlist.get(i).get_Region1TrackP().z());
+                bank.setFloat(HitBasedTrkg__HBTracks.t1_x, i, (float) candlist.get(i).get_Region1TrackX().x());
+                bank.setFloat(HitBasedTrkg__HBTracks.t1_y, i, (float) candlist.get(i).get_Region1TrackX().y());
+                bank.setFloat(HitBasedTrkg__HBTracks.t1_z, i, (float) candlist.get(i).get_Region1TrackX().z());
+                bank.setFloat(HitBasedTrkg__HBTracks.t1_px, i, (float) candlist.get(i).get_Region1TrackP().x());
+                bank.setFloat(HitBasedTrkg__HBTracks.t1_py, i, (float) candlist.get(i).get_Region1TrackP().y());
+                bank.setFloat(HitBasedTrkg__HBTracks.t1_pz, i, (float) candlist.get(i).get_Region1TrackP().z());
             }
-            bank.setFloat("pathlength", i, (float) candlist.get(i).get_TotPathLen());
-            bank.setFloat("Vtx0_x", i, (float) candlist.get(i).get_Vtx0().x());
-            bank.setFloat("Vtx0_y", i, (float) candlist.get(i).get_Vtx0().y());
-            bank.setFloat("Vtx0_z", i, (float) candlist.get(i).get_Vtx0().z());
-            bank.setFloat("p0_x", i, (float) candlist.get(i).get_pAtOrig().x());
-            bank.setFloat("p0_y", i, (float) candlist.get(i).get_pAtOrig().y());
-            bank.setFloat("p0_z", i, (float) candlist.get(i).get_pAtOrig().z());
+            bank.setFloat(HitBasedTrkg__HBTracks.pathlength, i, (float) candlist.get(i).get_TotPathLen());
+            bank.setFloat(HitBasedTrkg__HBTracks.Vtx0_x, i, (float) candlist.get(i).get_Vtx0().x());
+            bank.setFloat(HitBasedTrkg__HBTracks.Vtx0_y, i, (float) candlist.get(i).get_Vtx0().y());
+            bank.setFloat(HitBasedTrkg__HBTracks.Vtx0_z, i, (float) candlist.get(i).get_Vtx0().z());
+            bank.setFloat(HitBasedTrkg__HBTracks.p0_x, i, (float) candlist.get(i).get_pAtOrig().x());
+            bank.setFloat(HitBasedTrkg__HBTracks.p0_y, i, (float) candlist.get(i).get_pAtOrig().y());
+            bank.setFloat(HitBasedTrkg__HBTracks.p0_z, i, (float) candlist.get(i).get_pAtOrig().z());
             //fill associated IDs
             for(int r = 0; r < 3; r++) {
                 bank.setShort("Cross"+String.valueOf(r+1)+"_ID", 
@@ -430,16 +440,15 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
                         i, (short) candlist.get(i).getSingleSuperlayer().get_fittedCluster().get_Id());
             }
                 
-            bank.setFloat("chi2", i, (float) candlist.get(i).get_FitChi2());
-            bank.setShort("ndf", i, (short) candlist.get(i).get_FitNDF());
-            bank.setFloat("x", i, (float) candlist.get(i).getFinalStateVec().x());
-            bank.setFloat("y", i, (float) candlist.get(i).getFinalStateVec().y());
-            bank.setFloat("z", i, (float) candlist.get(i).getFinalStateVec().getZ());
-            bank.setFloat("tx", i, (float) candlist.get(i).getFinalStateVec().tanThetaX());
-            bank.setFloat("ty", i, (float) candlist.get(i).getFinalStateVec().tanThetaY());
+            bank.setFloat(HitBasedTrkg__HBTracks.chi2, i, (float) candlist.get(i).get_FitChi2());
+            bank.setShort(HitBasedTrkg__HBTracks.ndf, i, (short) candlist.get(i).get_FitNDF());
+            bank.setFloat(HitBasedTrkg__HBTracks.x, i, (float) candlist.get(i).getFinalStateVec().x());
+            bank.setFloat(HitBasedTrkg__HBTracks.y, i, (float) candlist.get(i).getFinalStateVec().y());
+            bank.setFloat(HitBasedTrkg__HBTracks.z, i, (float) candlist.get(i).getFinalStateVec().getZ());
+            bank.setFloat(HitBasedTrkg__HBTracks.tx, i, (float) candlist.get(i).getFinalStateVec().tanThetaX());
+            bank.setFloat(HitBasedTrkg__HBTracks.ty, i, (float) candlist.get(i).getFinalStateVec().tanThetaY());
             
         }
-        //bank.show();
         return bank;
     }
         
@@ -458,54 +467,52 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
         DataBank bank = event.createBank(bankNames.getCovmatBank(), candlist.size());
 
         for (int i = 0; i < candlist.size(); i++) {
-            bank.setShort("id", i, (short) candlist.get(i).get_Id());
+            bank.setShort(TimeBasedTrkg__TBCovMat.id, i, (short) candlist.get(i).get_Id());
             if(candlist.get(i).get_CMInLab()!=null) {
                 double[][] CM = candlist.get(i).get_CMInLab();
-                bank.setFloat("C11", i, (float) CM[0][0]);
-                bank.setFloat("C12", i, (float) CM[0][1]);
-                bank.setFloat("C13", i, (float) CM[0][2]);
-                bank.setFloat("C14", i, (float) CM[0][3]);
-                bank.setFloat("C15", i, (float) CM[0][4]);
-                bank.setFloat("C16", i, (float) CM[0][5]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C11, i, (float) CM[0][0]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C12, i, (float) CM[0][1]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C13, i, (float) CM[0][2]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C14, i, (float) CM[0][3]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C15, i, (float) CM[0][4]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C16, i, (float) CM[0][5]);
                 
-                bank.setFloat("C21", i, (float) CM[1][0]);
-                bank.setFloat("C22", i, (float) CM[1][1]);
-                bank.setFloat("C23", i, (float) CM[1][2]);
-                bank.setFloat("C24", i, (float) CM[1][3]);
-                bank.setFloat("C25", i, (float) CM[1][4]);
-                bank.setFloat("C26", i, (float) CM[1][5]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C21, i, (float) CM[1][0]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C22, i, (float) CM[1][1]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C23, i, (float) CM[1][2]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C24, i, (float) CM[1][3]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C25, i, (float) CM[1][4]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C26, i, (float) CM[1][5]);
                 
-                bank.setFloat("C31", i, (float) CM[2][0]);
-                bank.setFloat("C32", i, (float) CM[2][1]);
-                bank.setFloat("C33", i, (float) CM[2][2]);
-                bank.setFloat("C34", i, (float) CM[2][3]);
-                bank.setFloat("C35", i, (float) CM[2][4]);
-                bank.setFloat("C36", i, (float) CM[2][5]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C31, i, (float) CM[2][0]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C32, i, (float) CM[2][1]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C33, i, (float) CM[2][2]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C34, i, (float) CM[2][3]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C35, i, (float) CM[2][4]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C36, i, (float) CM[2][5]);
                 
-                bank.setFloat("C41", i, (float) CM[3][0]);
-                bank.setFloat("C42", i, (float) CM[3][1]);
-                bank.setFloat("C43", i, (float) CM[3][2]);
-                bank.setFloat("C44", i, (float) CM[3][3]);
-                bank.setFloat("C45", i, (float) CM[3][4]);
-                bank.setFloat("C46", i, (float) CM[3][5]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C41, i, (float) CM[3][0]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C42, i, (float) CM[3][1]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C43, i, (float) CM[3][2]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C44, i, (float) CM[3][3]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C45, i, (float) CM[3][4]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C46, i, (float) CM[3][5]);
                 
-                bank.setFloat("C51", i, (float) CM[4][0]);
-                bank.setFloat("C52", i, (float) CM[4][1]);
-                bank.setFloat("C53", i, (float) CM[4][2]);
-                bank.setFloat("C54", i, (float) CM[4][3]);
-                bank.setFloat("C55", i, (float) CM[4][4]);
-                bank.setFloat("C56", i, (float) CM[4][5]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C51, i, (float) CM[4][0]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C52, i, (float) CM[4][1]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C53, i, (float) CM[4][2]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C54, i, (float) CM[4][3]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C55, i, (float) CM[4][4]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C56, i, (float) CM[4][5]);
                 
-                bank.setFloat("C61", i, (float) CM[5][0]);
-                bank.setFloat("C62", i, (float) CM[5][1]);
-                bank.setFloat("C63", i, (float) CM[5][2]);
-                bank.setFloat("C64", i, (float) CM[5][3]);
-                bank.setFloat("C65", i, (float) CM[5][4]);
-                bank.setFloat("C66", i, (float) CM[5][5]);
-               
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C61, i, (float) CM[5][0]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C62, i, (float) CM[5][1]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C63, i, (float) CM[5][2]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C64, i, (float) CM[5][3]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C65, i, (float) CM[5][4]);
+                bank.setFloat(TimeBasedTrkg__TBCovMat.C66, i, (float) CM[5][5]);
             }
         }
-        //bank.show();
         return bank;
     }
     
@@ -525,61 +532,61 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
             }
             if(hitlist.get(i).get_TrkResid()==999)
                 hitlist.get(i).set_AssociatedTBTrackID(-1);
-            bank.setShort("id", i, (short) hitlist.get(i).get_Id());
-            bank.setShort("status", i, (short) hitlist.get(i).get_QualityFac());
-            bank.setByte("superlayer", i, (byte) hitlist.get(i).get_Superlayer());
-            bank.setByte("layer", i, (byte) hitlist.get(i).get_Layer());
-            bank.setByte("sector", i, (byte) hitlist.get(i).get_Sector());
-            bank.setShort("wire", i, (short) hitlist.get(i).get_Wire());
+            bank.setShort(TimeBasedTrkg__TBHits.id, i, (short) hitlist.get(i).get_Id());
+            bank.setShort(TimeBasedTrkg__TBHits.status, i, (short) hitlist.get(i).get_QualityFac());
+            bank.setByte(TimeBasedTrkg__TBHits.superlayer, i, (byte) hitlist.get(i).get_Superlayer());
+            bank.setByte(TimeBasedTrkg__TBHits.layer, i, (byte) hitlist.get(i).get_Layer());
+            bank.setByte(TimeBasedTrkg__TBHits.sector, i, (byte) hitlist.get(i).get_Sector());
+            bank.setShort(TimeBasedTrkg__TBHits.wire, i, (short) hitlist.get(i).get_Wire());
 
-            bank.setFloat("X", i, (float) hitlist.get(i).get_X());
-            bank.setFloat("Z", i, (float) hitlist.get(i).get_Z());
-            bank.setByte("LR", i, (byte) hitlist.get(i).get_LeftRightAmb());
+            bank.setFloat(TimeBasedTrkg__TBHits.X, i, (float) hitlist.get(i).get_X());
+            bank.setFloat(TimeBasedTrkg__TBHits.Z, i, (float) hitlist.get(i).get_Z());
+            bank.setByte(TimeBasedTrkg__TBHits.LR, i, (byte) hitlist.get(i).get_LeftRightAmb());
 
             if(bank.getDescriptor().hasEntry("time")){
-               bank.setFloat("time", i, (float) (hitlist.get(i).get_Time() - hitlist.get(i).get_DeltaTimeBeta()));
+               bank.setFloat(TimeBasedTrkg__TBHits.time, i, (float) (hitlist.get(i).get_Time() - hitlist.get(i).get_DeltaTimeBeta()));
             }
             if(bank.getDescriptor().hasEntry("tBeta")){
-               bank.setFloat("tBeta", i, (float) hitlist.get(i).get_DeltaTimeBeta());
+               bank.setFloat(TimeBasedTrkg__TBHits.tBeta, i, (float) hitlist.get(i).get_DeltaTimeBeta());
             }
             if(bank.getDescriptor().hasEntry("dDoca")){
-               bank.setFloat("dDoca", i, (float) hitlist.get(i).get_DeltaDocaBeta());
+               bank.setFloat(TimeBasedTrkg__TBHits.dDoca, i, (float) hitlist.get(i).get_DeltaDocaBeta());
             }
             if(bank.getDescriptor().hasEntry("fitResidual")){
-               bank.setFloat("fitResidual", i, (float) hitlist.get(i).get_TrkResid());
+               bank.setFloat(TimeBasedTrkg__TBHits.fitResidual, i, (float) hitlist.get(i).get_TrkResid());
             }
             if(bank.getDescriptor().hasEntry("Alpha")){
-               bank.setFloat("Alpha", i, (float) hitlist.get(i).getAlpha());
+               bank.setFloat(TimeBasedTrkg__TBHits.Alpha, i, (float) hitlist.get(i).getAlpha());
             }
-            bank.setFloat("doca", i, (float) hitlist.get(i).get_Doca());
-            bank.setFloat("docaError", i, (float) hitlist.get(i).get_DocaErr());
-            bank.setFloat("trkDoca", i, (float) hitlist.get(i).get_ClusFitDoca());
+            bank.setFloat(TimeBasedTrkg__TBHits.doca, i, (float) hitlist.get(i).get_Doca());
+            bank.setFloat(TimeBasedTrkg__TBHits.docaError, i, (float) hitlist.get(i).get_DocaErr());
+            bank.setFloat(TimeBasedTrkg__TBHits.trkDoca, i, (float) hitlist.get(i).get_ClusFitDoca());
 
-            bank.setShort("clusterID", i, (short) hitlist.get(i).get_AssociatedClusterID());
-            bank.setByte("trkID", i, (byte) hitlist.get(i).get_AssociatedTBTrackID());
-            bank.setFloat("timeResidual", i, (float) hitlist.get(i).get_TimeResidual());
-            bank.setFloat("DAFWeight", i, (float) hitlist.get(i).getDAFWeight());
+            bank.setShort(TimeBasedTrkg__TBHits.clusterID, i, (short) hitlist.get(i).get_AssociatedClusterID());
+            bank.setByte(TimeBasedTrkg__TBHits.trkID, i, (byte) hitlist.get(i).get_AssociatedTBTrackID());
+            bank.setFloat(TimeBasedTrkg__TBHits.timeResidual, i, (float) hitlist.get(i).get_TimeResidual());
+            bank.setFloat(TimeBasedTrkg__TBHits.DAFWeight, i, (float) hitlist.get(i).getDAFWeight());
             
-            bank.setInt("TDC",i,hitlist.get(i).get_TDC());
-            bank.setByte("jitter",i, (byte) hitlist.get(i).getJitter());
-            bank.setFloat("B", i, (float) hitlist.get(i).getB());
-            bank.setFloat("TProp", i, (float) hitlist.get(i).getTProp());
-            bank.setFloat("TFlight", i, (float) hitlist.get(i).getTFlight());
-            bank.setFloat("T0", i, (float) hitlist.get(i).getT0());
-            bank.setFloat("TStart", i, (float) hitlist.get(i).getTStart());
+            bank.setInt(TimeBasedTrkg__TBHits.TDC,i,hitlist.get(i).get_TDC());
+            bank.setByte(TimeBasedTrkg__TBHits.jitter,i, (byte) hitlist.get(i).getJitter());
+            bank.setFloat(TimeBasedTrkg__TBHits.B, i, (float) hitlist.get(i).getB());
+            bank.setFloat(TimeBasedTrkg__TBHits.TProp, i, (float) hitlist.get(i).getTProp());
+            bank.setFloat(TimeBasedTrkg__TBHits.TFlight, i, (float) hitlist.get(i).getTFlight());
+            bank.setFloat(TimeBasedTrkg__TBHits.T0, i, (float) hitlist.get(i).getT0());
+            bank.setFloat(TimeBasedTrkg__TBHits.TStart, i, (float) hitlist.get(i).getTStart());
             if(bank.getDescriptor().hasEntry("beta")){
-               bank.setFloat("beta", i, (float) hitlist.get(i).get_Beta());
+               bank.setFloat(TimeBasedTrkg__TBHits.beta, i, (float) hitlist.get(i).get_Beta());
             }
             if(hitlist.get(i).get_AssociatedTBTrackID()>-1 && !event.hasBank("MC::Particle")) {
                 if(hitlist.get(i).getSignalPropagTimeAlongWire()==0 || hitlist.get(i).get_AssociatedTBTrackID()<1) {
-                    bank.setFloat("TProp", i, (float) hitlist.get(i).getTProp()); //old value if track fit failed
+                    bank.setFloat(TimeBasedTrkg__TBHits.TProp, i, (float) hitlist.get(i).getTProp()); //old value if track fit failed
                 } else {
-                    bank.setFloat("TProp", i, (float) hitlist.get(i).getSignalPropagTimeAlongWire()); //new calculated value
+                    bank.setFloat(TimeBasedTrkg__TBHits.TProp, i, (float) hitlist.get(i).getSignalPropagTimeAlongWire()); //new calculated value
                 }
                 if(hitlist.get(i).getSignalTimeOfFlight()==0 || hitlist.get(i).get_AssociatedTBTrackID()<1) {
-                    bank.setFloat("TFlight", i, (float) hitlist.get(i).getTFlight());
+                    bank.setFloat(TimeBasedTrkg__TBHits.TFlight, i, (float) hitlist.get(i).getTFlight());
                 } else {
-                    bank.setFloat("TFlight", i, (float) hitlist.get(i).getSignalTimeOfFlight());
+                    bank.setFloat(TimeBasedTrkg__TBHits.TFlight, i, (float) hitlist.get(i).getSignalTimeOfFlight());
                 }
             }
 
@@ -608,24 +615,21 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
             }
             double chi2 = 0;
 
-            bank.setShort("id", i, (short) cluslist.get(i).get_Id());
-//            int status =0;
-//            if(cluslist.get(i).size()<6)
-//                status = 1;
-            bank.setShort("status", i, (short) 0);
-            bank.setByte("superlayer", i, (byte) cluslist.get(i).get_Superlayer());
-            bank.setByte("sector", i, (byte) cluslist.get(i).get_Sector());
+            bank.setShort(TimeBasedTrkg__TBClusters.id, i, (short) cluslist.get(i).get_Id());
+            bank.setShort(TimeBasedTrkg__TBClusters.status, i, (short) 0);
+            bank.setByte(TimeBasedTrkg__TBClusters.superlayer, i, (byte) cluslist.get(i).get_Superlayer());
+            bank.setByte(TimeBasedTrkg__TBClusters.sector, i, (byte) cluslist.get(i).get_Sector());
 
-            bank.setFloat("avgWire", i, (float) cluslist.get(i).getAvgwire());
-            bank.setByte("size", i, (byte) cluslist.get(i).size());
+            bank.setFloat(TimeBasedTrkg__TBClusters.avgWire, i, (float) cluslist.get(i).getAvgwire());
+            bank.setByte(TimeBasedTrkg__TBClusters.size, i, (byte) cluslist.get(i).size());
 
             double fitSlope = cluslist.get(i).get_clusterLineFitSlope();
             double fitInterc = cluslist.get(i).get_clusterLineFitIntercept();
 
-            bank.setFloat("fitSlope", i, (float) fitSlope);
-            bank.setFloat("fitSlopeErr", i, (float) cluslist.get(i).get_clusterLineFitSlopeErr());
-            bank.setFloat("fitInterc", i, (float) fitInterc);
-            bank.setFloat("fitIntercErr", i, (float) cluslist.get(i).get_clusterLineFitInterceptErr());
+            bank.setFloat(TimeBasedTrkg__TBClusters.fitSlope, i, (float) fitSlope);
+            bank.setFloat(TimeBasedTrkg__TBClusters.fitSlopeErr, i, (float) cluslist.get(i).get_clusterLineFitSlopeErr());
+            bank.setFloat(TimeBasedTrkg__TBClusters.fitInterc, i, (float) fitInterc);
+            bank.setFloat(TimeBasedTrkg__TBClusters.fitIntercErr, i, (float) cluslist.get(i).get_clusterLineFitInterceptErr());
 
             for (int j = 0; j < cluslist.get(i).size(); j++) {
                 if (j < hitIdxArray.length) {
@@ -635,7 +639,7 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
                 double residual = cluslist.get(i).get(j).get_ClusFitDoca() / (cluslist.get(i).get(j).get_CellSize() / Math.sqrt(12.));
                 chi2 += residual * residual;
             }
-            bank.setFloat("fitChisqProb", i, (float) ProbChi2perNDF.prob(chi2, cluslist.get(i).size() - 2));
+            bank.setFloat(TimeBasedTrkg__TBClusters.fitChisqProb, i, (float) ProbChi2perNDF.prob(chi2, cluslist.get(i).size() - 2));
 
             for (int j = 0; j < hitIdxArray.length; j++) {
                 String hitStrg = "Hit";
@@ -646,7 +650,6 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
         }
 
         return bank;
-
     }
 
     /**
@@ -671,25 +674,25 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
 
             double chi2 = 0;
 
-            bank.setShort("id", i, (short) seglist.get(i).get_Id());
-            bank.setShort("status", i, (short) seglist.get(i).get_Status());
-            bank.setByte("superlayer", i, (byte) seglist.get(i).get_Superlayer());
-            bank.setByte("sector", i, (byte) seglist.get(i).get_Sector());
+            bank.setShort(TimeBasedTrkg__TBSegments.id, i, (short) seglist.get(i).get_Id());
+            bank.setShort(TimeBasedTrkg__TBSegments.status, i, (short) seglist.get(i).get_Status());
+            bank.setByte(TimeBasedTrkg__TBSegments.superlayer, i, (byte) seglist.get(i).get_Superlayer());
+            bank.setByte(TimeBasedTrkg__TBSegments.sector, i, (byte) seglist.get(i).get_Sector());
             FittedCluster cls = seglist.get(i).get_fittedCluster();
-            bank.setShort("Cluster_ID", i, (short) cls.get_Id());
+            bank.setShort(TimeBasedTrkg__TBSegments.Cluster_ID, i, (short) cls.get_Id());
 
-            bank.setFloat("avgWire", i, (float) cls.getAvgwire());
-            bank.setByte("size", i, (byte) seglist.get(i).size());
-            bank.setFloat("fitSlope", i, (float) cls.get_clusterLineFitSlope());
-            bank.setFloat("fitSlopeErr", i, (float) cls.get_clusterLineFitSlopeErr());
-            bank.setFloat("fitInterc", i, (float) cls.get_clusterLineFitIntercept());
-            bank.setFloat("fitIntercErr", i, (float) cls.get_clusterLineFitInterceptErr());
-            bank.setFloat("resiSum", i, (float) seglist.get(i).get_ResiSum());
-            bank.setFloat("timeSum", i, (float) seglist.get(i).get_TimeSum());
-            bank.setFloat("SegEndPoint1X", i, (float) seglist.get(i).get_SegmentEndPoints()[0]);
-            bank.setFloat("SegEndPoint1Z", i, (float) seglist.get(i).get_SegmentEndPoints()[1]);
-            bank.setFloat("SegEndPoint2X", i, (float) seglist.get(i).get_SegmentEndPoints()[2]);
-            bank.setFloat("SegEndPoint2Z", i, (float) seglist.get(i).get_SegmentEndPoints()[3]);
+            bank.setFloat(TimeBasedTrkg__TBSegments.avgWire, i, (float) cls.getAvgwire());
+            bank.setByte(TimeBasedTrkg__TBSegments.size, i, (byte) seglist.get(i).size());
+            bank.setFloat(TimeBasedTrkg__TBSegments.fitSlope, i, (float) cls.get_clusterLineFitSlope());
+            bank.setFloat(TimeBasedTrkg__TBSegments.fitSlopeErr, i, (float) cls.get_clusterLineFitSlopeErr());
+            bank.setFloat(TimeBasedTrkg__TBSegments.fitInterc, i, (float) cls.get_clusterLineFitIntercept());
+            bank.setFloat(TimeBasedTrkg__TBSegments.fitIntercErr, i, (float) cls.get_clusterLineFitInterceptErr());
+            bank.setFloat(TimeBasedTrkg__TBSegments.resiSum, i, (float) seglist.get(i).get_ResiSum());
+            bank.setFloat(TimeBasedTrkg__TBSegments.timeSum, i, (float) seglist.get(i).get_TimeSum());
+            bank.setFloat(TimeBasedTrkg__TBSegments.SegEndPoint1X, i, (float) seglist.get(i).get_SegmentEndPoints()[0]);
+            bank.setFloat(TimeBasedTrkg__TBSegments.SegEndPoint1Z, i, (float) seglist.get(i).get_SegmentEndPoints()[1]);
+            bank.setFloat(TimeBasedTrkg__TBSegments.SegEndPoint2X, i, (float) seglist.get(i).get_SegmentEndPoints()[2]);
+            bank.setFloat(TimeBasedTrkg__TBSegments.SegEndPoint2Z, i, (float) seglist.get(i).get_SegmentEndPoints()[3]);
 
             for (int j = 0; j < seglist.get(i).size(); j++) {
                 if (j < hitIdxArray.length) {
@@ -699,7 +702,7 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
                 double residual = seglist.get(i).get(j).get_ClusFitDoca() / (seglist.get(i).get(j).get_CellSize() / Math.sqrt(12.));
                 chi2 += residual * residual;
             }
-            bank.setFloat("fitChisqProb", i, (float) ProbChi2perNDF.prob(chi2, seglist.get(i).size() - 2));
+            bank.setFloat(TimeBasedTrkg__TBSegments.fitChisqProb, i, (float) ProbChi2perNDF.prob(chi2, seglist.get(i).size() - 2));
 
             for (int j = 0; j < hitIdxArray.length; j++) {
                 String hitStrg = "Hit";
@@ -731,24 +734,24 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
         int index=0;
         for (Cross aCrosslist : crosslist) {
             if (aCrosslist.get_Id() != -1) {
-                bank.setShort("id", index, (short) aCrosslist.get_Id());
-                bank.setShort("status", index, (short) (aCrosslist.get_Segment1().get_Status() + aCrosslist.get_Segment2().get_Status()));
-                bank.setByte("sector", index, (byte) aCrosslist.get_Sector());
-                bank.setByte("region", index, (byte) aCrosslist.get_Region());
-                bank.setFloat("x", index, (float) aCrosslist.get_Point().x());
-                bank.setFloat("y", index, (float) aCrosslist.get_Point().y());
-                bank.setFloat("z", index, (float) aCrosslist.get_Point().z());
-                bank.setFloat("err_x", index, (float) aCrosslist.get_PointErr().x());
-                bank.setFloat("err_y", index, (float) aCrosslist.get_PointErr().y());
-                bank.setFloat("err_z", index, (float) aCrosslist.get_PointErr().z());
-                bank.setFloat("ux", index, (float) aCrosslist.get_Dir().x());
-                bank.setFloat("uy", index, (float) aCrosslist.get_Dir().y());
-                bank.setFloat("uz", index, (float) aCrosslist.get_Dir().z());
-                bank.setFloat("err_ux", index, (float) aCrosslist.get_DirErr().x());
-                bank.setFloat("err_uy", index, (float) aCrosslist.get_DirErr().y());
-                bank.setFloat("err_uz", index, (float) aCrosslist.get_DirErr().z());
-                bank.setShort("Segment1_ID", index, (short) aCrosslist.get_Segment1().get_Id());
-                bank.setShort("Segment2_ID", index, (short) aCrosslist.get_Segment2().get_Id());
+                bank.setShort(TimeBasedTrkg__TBCrosses.id, index, (short) aCrosslist.get_Id());
+                bank.setShort(TimeBasedTrkg__TBCrosses.status, index, (short) (aCrosslist.get_Segment1().get_Status() + aCrosslist.get_Segment2().get_Status()));
+                bank.setByte(TimeBasedTrkg__TBCrosses.sector, index, (byte) aCrosslist.get_Sector());
+                bank.setByte(TimeBasedTrkg__TBCrosses.region, index, (byte) aCrosslist.get_Region());
+                bank.setFloat(TimeBasedTrkg__TBCrosses.x, index, (float) aCrosslist.get_Point().x());
+                bank.setFloat(TimeBasedTrkg__TBCrosses.y, index, (float) aCrosslist.get_Point().y());
+                bank.setFloat(TimeBasedTrkg__TBCrosses.z, index, (float) aCrosslist.get_Point().z());
+                bank.setFloat(TimeBasedTrkg__TBCrosses.err_x, index, (float) aCrosslist.get_PointErr().x());
+                bank.setFloat(TimeBasedTrkg__TBCrosses.err_y, index, (float) aCrosslist.get_PointErr().y());
+                bank.setFloat(TimeBasedTrkg__TBCrosses.err_z, index, (float) aCrosslist.get_PointErr().z());
+                bank.setFloat(TimeBasedTrkg__TBCrosses.ux, index, (float) aCrosslist.get_Dir().x());
+                bank.setFloat(TimeBasedTrkg__TBCrosses.uy, index, (float) aCrosslist.get_Dir().y());
+                bank.setFloat(TimeBasedTrkg__TBCrosses.uz, index, (float) aCrosslist.get_Dir().z());
+                bank.setFloat(TimeBasedTrkg__TBCrosses.err_ux, index, (float) aCrosslist.get_DirErr().x());
+                bank.setFloat(TimeBasedTrkg__TBCrosses.err_uy, index, (float) aCrosslist.get_DirErr().y());
+                bank.setFloat(TimeBasedTrkg__TBCrosses.err_uz, index, (float) aCrosslist.get_DirErr().z());
+                bank.setShort(TimeBasedTrkg__TBCrosses.Segment1_ID, index, (short) aCrosslist.get_Segment1().get_Id());
+                bank.setShort(TimeBasedTrkg__TBCrosses.Segment2_ID, index, (short) aCrosslist.get_Segment2().get_Id());
                 index++;
             }
         }
@@ -768,42 +771,42 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
             bank.setShort("id", i, (short) candlist.get(i).get_Id());
             
             //bank.setShort("status", i, (short) (100+candlist.get(i).get_Status()*10+candlist.get(i).get_MissingSuperlayer()));
-            bank.setShort("status", i, (short) candlist.get(i).getBitStatus());
-            bank.setByte("sector", i, (byte) candlist.get(i).getSector());
-            bank.setByte("q", i, (byte) candlist.get(i).get_Q());
-            //bank.setFloat("p", i, (float) candlist.get(i).get_P());
+            bank.setShort(TimeBasedTrkg__TBTracks.status, i, (short) candlist.get(i).getBitStatus());
+            bank.setByte(TimeBasedTrkg__TBTracks.sector, i, (byte) candlist.get(i).getSector());
+            bank.setByte(TimeBasedTrkg__TBTracks.q, i, (byte) candlist.get(i).get_Q());
+            //bank.setFloat(TimeBasedTrkg__TBTracks.p, i, (float) candlist.get(i).get_P());
             if(candlist.get(i).get_PreRegion1CrossPoint()!=null) {
-                bank.setFloat("c1_x", i, (float) candlist.get(i).get_PreRegion1CrossPoint().x());
-                bank.setFloat("c1_y", i, (float) candlist.get(i).get_PreRegion1CrossPoint().y());
-                bank.setFloat("c1_z", i, (float) candlist.get(i).get_PreRegion1CrossPoint().z());
-                bank.setFloat("c1_ux", i, (float) candlist.get(i).get_PreRegion1CrossDir().x());
-                bank.setFloat("c1_uy", i, (float) candlist.get(i).get_PreRegion1CrossDir().y());
-                bank.setFloat("c1_uz", i, (float) candlist.get(i).get_PreRegion1CrossDir().z());
+                bank.setFloat(TimeBasedTrkg__TBTracks.c1_x, i, (float) candlist.get(i).get_PreRegion1CrossPoint().x());
+                bank.setFloat(TimeBasedTrkg__TBTracks.c1_y, i, (float) candlist.get(i).get_PreRegion1CrossPoint().y());
+                bank.setFloat(TimeBasedTrkg__TBTracks.c1_z, i, (float) candlist.get(i).get_PreRegion1CrossPoint().z());
+                bank.setFloat(TimeBasedTrkg__TBTracks.c1_ux, i, (float) candlist.get(i).get_PreRegion1CrossDir().x());
+                bank.setFloat(TimeBasedTrkg__TBTracks.c1_uy, i, (float) candlist.get(i).get_PreRegion1CrossDir().y());
+                bank.setFloat(TimeBasedTrkg__TBTracks.c1_uz, i, (float) candlist.get(i).get_PreRegion1CrossDir().z());
             }
             if(candlist.get(i).get_PostRegion3CrossPoint()!=null) {
-                bank.setFloat("c3_x", i, (float) candlist.get(i).get_PostRegion3CrossPoint().x());
-                bank.setFloat("c3_y", i, (float) candlist.get(i).get_PostRegion3CrossPoint().y());
-                bank.setFloat("c3_z", i, (float) candlist.get(i).get_PostRegion3CrossPoint().z());
-                bank.setFloat("c3_ux", i, (float) candlist.get(i).get_PostRegion3CrossDir().x());
-                bank.setFloat("c3_uy", i, (float) candlist.get(i).get_PostRegion3CrossDir().y());
-                bank.setFloat("c3_uz", i, (float) candlist.get(i).get_PostRegion3CrossDir().z());
+                bank.setFloat(TimeBasedTrkg__TBTracks.c3_x, i, (float) candlist.get(i).get_PostRegion3CrossPoint().x());
+                bank.setFloat(TimeBasedTrkg__TBTracks.c3_y, i, (float) candlist.get(i).get_PostRegion3CrossPoint().y());
+                bank.setFloat(TimeBasedTrkg__TBTracks.c3_z, i, (float) candlist.get(i).get_PostRegion3CrossPoint().z());
+                bank.setFloat(TimeBasedTrkg__TBTracks.c3_ux, i, (float) candlist.get(i).get_PostRegion3CrossDir().x());
+                bank.setFloat(TimeBasedTrkg__TBTracks.c3_uy, i, (float) candlist.get(i).get_PostRegion3CrossDir().y());
+                bank.setFloat(TimeBasedTrkg__TBTracks.c3_uz, i, (float) candlist.get(i).get_PostRegion3CrossDir().z());
             }
             if(candlist.get(i).get_Region1TrackX()!=null) {
-                bank.setFloat("t1_x", i, (float) candlist.get(i).get_Region1TrackX().x());
-                bank.setFloat("t1_y", i, (float) candlist.get(i).get_Region1TrackX().y());
-                bank.setFloat("t1_z", i, (float) candlist.get(i).get_Region1TrackX().z());
-                bank.setFloat("t1_px", i, (float) candlist.get(i).get_Region1TrackP().x());
-                bank.setFloat("t1_py", i, (float) candlist.get(i).get_Region1TrackP().y());
-                bank.setFloat("t1_pz", i, (float) candlist.get(i).get_Region1TrackP().z());
+                bank.setFloat(TimeBasedTrkg__TBTracks.t1_x, i, (float) candlist.get(i).get_Region1TrackX().x());
+                bank.setFloat(TimeBasedTrkg__TBTracks.t1_y, i, (float) candlist.get(i).get_Region1TrackX().y());
+                bank.setFloat(TimeBasedTrkg__TBTracks.t1_z, i, (float) candlist.get(i).get_Region1TrackX().z());
+                bank.setFloat(TimeBasedTrkg__TBTracks.t1_px, i, (float) candlist.get(i).get_Region1TrackP().x());
+                bank.setFloat(TimeBasedTrkg__TBTracks.t1_py, i, (float) candlist.get(i).get_Region1TrackP().y());
+                bank.setFloat(TimeBasedTrkg__TBTracks.t1_pz, i, (float) candlist.get(i).get_Region1TrackP().z());
             }
             
-            bank.setFloat("pathlength", i, (float) candlist.get(i).get_TotPathLen());
-            bank.setFloat("Vtx0_x", i, (float) candlist.get(i).get_Vtx0().x());
-            bank.setFloat("Vtx0_y", i, (float) candlist.get(i).get_Vtx0().y());
-            bank.setFloat("Vtx0_z", i, (float) candlist.get(i).get_Vtx0().z());
-            bank.setFloat("p0_x", i, (float) candlist.get(i).get_pAtOrig().x());
-            bank.setFloat("p0_y", i, (float) candlist.get(i).get_pAtOrig().y());
-            bank.setFloat("p0_z", i, (float) candlist.get(i).get_pAtOrig().z());
+            bank.setFloat(TimeBasedTrkg__TBTracks.pathlength, i, (float) candlist.get(i).get_TotPathLen());
+            bank.setFloat(TimeBasedTrkg__TBTracks.Vtx0_x, i, (float) candlist.get(i).get_Vtx0().x());
+            bank.setFloat(TimeBasedTrkg__TBTracks.Vtx0_y, i, (float) candlist.get(i).get_Vtx0().y());
+            bank.setFloat(TimeBasedTrkg__TBTracks.Vtx0_z, i, (float) candlist.get(i).get_Vtx0().z());
+            bank.setFloat(TimeBasedTrkg__TBTracks.p0_x, i, (float) candlist.get(i).get_pAtOrig().x());
+            bank.setFloat(TimeBasedTrkg__TBTracks.p0_y, i, (float) candlist.get(i).get_pAtOrig().y());
+            bank.setFloat(TimeBasedTrkg__TBTracks.p0_z, i, (float) candlist.get(i).get_pAtOrig().z());
            //fill associated IDs
             for(int r = 0; r < 3; r++) {
                 bank.setShort("Cross"+String.valueOf(r+1)+"_ID", 
@@ -863,20 +866,20 @@ public DataBank fillHBClustersBank(DataEvent event, List<FittedCluster> cluslist
                 if (track.getTrajectory().get(j).getDetector() == DetectorType.DC.getDetectorId() && (track.getTrajectory().get(j).getLayer() - 6) % 6 != 0)
                     continue;  // save the last layer in a superlayer
 
-                bank.setShort("id",       i1, (short) track.get_Id());
-                bank.setByte("detector",  i1, (byte) track.getTrajectory().get(j).getDetector());
-                bank.setByte("sector",    i1, (byte) track.getSector());
-                bank.setByte("layer",     i1, (byte) track.getTrajectory().get(j).getLayer());
-                bank.setFloat("x",        i1, (float) track.getTrajectory().get(j).getPoint().x());
-                bank.setFloat("y",        i1, (float) track.getTrajectory().get(j).getPoint().y());
-                bank.setFloat("z",        i1, (float) track.getTrajectory().get(j).getPoint().z());
-                bank.setFloat("tx",       i1, (float) track.getTrajectory().get(j).getDirection().x());
-                bank.setFloat("ty",       i1, (float) track.getTrajectory().get(j).getDirection().y());
-                bank.setFloat("tz",       i1, (float) track.getTrajectory().get(j).getDirection().z());
-                bank.setFloat("B",        i1, (float) track.getTrajectory().get(j).getiBdl());
-                bank.setFloat("path",     i1, (float) track.getTrajectory().get(j).getPath());
-                bank.setFloat("dx",       i1, (float) track.getTrajectory().get(j).getDx());
-                bank.setFloat("edge",     i1, (float) track.getTrajectory().get(j).getEdge());
+                bank.setShort(TimeBasedTrkg__Trajectory.id,       i1, (short) track.get_Id());
+                bank.setByte(TimeBasedTrkg__Trajectory.detector,  i1, (byte) track.getTrajectory().get(j).getDetector());
+                bank.setByte(TimeBasedTrkg__Trajectory.sector,    i1, (byte) track.getSector());
+                bank.setByte(TimeBasedTrkg__Trajectory.layer,     i1, (byte) track.getTrajectory().get(j).getLayer());
+                bank.setFloat(TimeBasedTrkg__Trajectory.x,        i1, (float) track.getTrajectory().get(j).getPoint().x());
+                bank.setFloat(TimeBasedTrkg__Trajectory.y,        i1, (float) track.getTrajectory().get(j).getPoint().y());
+                bank.setFloat(TimeBasedTrkg__Trajectory.z,        i1, (float) track.getTrajectory().get(j).getPoint().z());
+                bank.setFloat(TimeBasedTrkg__Trajectory.tx,       i1, (float) track.getTrajectory().get(j).getDirection().x());
+                bank.setFloat(TimeBasedTrkg__Trajectory.ty,       i1, (float) track.getTrajectory().get(j).getDirection().y());
+                bank.setFloat(TimeBasedTrkg__Trajectory.tz,       i1, (float) track.getTrajectory().get(j).getDirection().z());
+                bank.setFloat(TimeBasedTrkg__Trajectory.B,        i1, (float) track.getTrajectory().get(j).getiBdl());
+                bank.setFloat(TimeBasedTrkg__Trajectory.path,     i1, (float) track.getTrajectory().get(j).getPath());
+                bank.setFloat(TimeBasedTrkg__Trajectory.dx,       i1, (float) track.getTrajectory().get(j).getDx());
+                bank.setFloat(TimeBasedTrkg__Trajectory.edge,     i1, (float) track.getTrajectory().get(j).getEdge());
                 i1++;
             }
         }
