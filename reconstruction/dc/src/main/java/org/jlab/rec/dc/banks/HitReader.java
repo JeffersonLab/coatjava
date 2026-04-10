@@ -17,6 +17,10 @@ import org.jlab.detector.banks.RawBank.OrderType;
 import org.jlab.detector.banks.RawDataBank;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
+import org.jlab.io.banks.DC__jitter;
+import org.jlab.io.banks.DC__tdc;
+import org.jlab.io.banks.HitBasedTrkg__HBHitTrkId;
+import org.jlab.io.banks.HitBasedTrkg__Hits;
 import org.jlab.rec.dc.Constants;
 import org.jlab.utils.groups.IndexedTable;
 
@@ -128,9 +132,9 @@ public class HitReader {
             
             DataBank bankTS = event.getBank(bankNames.getTimeStampBank());
             for(int i=0; i<bankTS.rows(); i++) {
-                int  crate     = bankTS.getByte("crate", i);
-                int  slot      = bankTS.getByte("slot", i);
-                long timestamp = bankTS.getLong("timestamp", i);
+                int  crate     = bankTS.getByte(DC__jitter.crate, i);
+                int  slot      = bankTS.getByte(DC__jitter.slot, i);
+                long timestamp = bankTS.getLong(DC__jitter.timestamp, i);
                 if(swapBits) {
                     timestamp = (Long) (((timestamp&0x0000ffffff000000L)>>24)|((timestamp&0x0000000000ffffffL)<<24));
                 }
@@ -186,13 +190,13 @@ public class HitReader {
         
         this.set_NumTDCBankRows(bankFiltered.rows());
         for (int i = 0; i < bankFiltered.rows(); i++) {
-            int sector     = bankFiltered.getByte("sector", i);
-            int layer      = (bankFiltered.getByte("layer", i)-1)%6 + 1;
-            int superlayer = (bankFiltered.getByte("layer", i)-1)/6 + 1;
-            int wire       = bankFiltered.getShort("component", i);
+            int sector     = bankFiltered.getByte(DC__tdc.sector, i);
+            int layer      = (bankFiltered.getByte(DC__tdc.layer, i)-1)%6 + 1;
+            int superlayer = (bankFiltered.getByte(DC__tdc.layer, i)-1)/6 + 1;
+            int wire       = bankFiltered.getShort(DC__tdc.component, i);
             int order      = bankFiltered.trueOrder(i);
-            int jitter     = this.getJitter(sector, bankFiltered.getByte("layer", i), wire, order);
-            int tdc        = bankFiltered.getInt("TDC", i) - jitter;
+            int jitter     = this.getJitter(sector, bankFiltered.getByte(DC__tdc.layer, i), wire, order);
+            int tdc        = bankFiltered.getInt(DC__tdc.TDC, i) - jitter;
             int index      = bankFiltered.trueIndex(i);
             
             boolean passHit = true;
@@ -246,15 +250,15 @@ public class HitReader {
 
         List<FittedHit> hits = new ArrayList<>();
         for (int i = 0; i < rows; i++) {
-            int id          = bank.getShort("id", i);
-            int sector      = bank.getByte("sector", i);
-            int slayer      = bank.getByte("superlayer", i);
-            int layer       = bank.getByte("layer", i);
-            int wire        = bank.getShort("wire", i);
-            int tdc         = bank.getInt("TDC", i);
-            int jitter      = bank.getByte("jitter", i);
-            int LR          = bank.getByte("LR", i);
-            int clusterID   = bank.getShort("clusterID", i);
+            int id          = bank.getShort(HitBasedTrkg__Hits.id, i);
+            int sector      = bank.getByte(HitBasedTrkg__Hits.sector, i);
+            int slayer      = bank.getByte(HitBasedTrkg__Hits.superlayer, i);
+            int layer       = bank.getByte(HitBasedTrkg__Hits.layer, i);
+            int wire        = bank.getShort(HitBasedTrkg__Hits.wire, i);
+            int tdc         = bank.getInt(HitBasedTrkg__Hits.TDC, i);
+            int jitter      = bank.getByte(HitBasedTrkg__Hits.jitter, i);
+            int LR          = bank.getByte(HitBasedTrkg__Hits.LR, i);
+            int clusterID   = bank.getShort(HitBasedTrkg__Hits.clusterID, i);
         
             //use only hits that have been fit to a track
             if (clusterID == -1) {
@@ -331,10 +335,10 @@ public class HitReader {
         
         DataBank pbank = event.getBank(pointName);
         for (int i = 0; i < pbank.rows(); i++) {
-            id2tid.put((int)pbank.getShort("id", i), (int)pbank.getShort("tid", i));
-            id2tidB.put((int)pbank.getShort("id", i), (double)pbank.getFloat("B", i));
-            id2tidtFlight.put((int)pbank.getShort("id", i), (double)pbank.getFloat("TFlight", i));
-            id2tidtProp.put((int)pbank.getShort("id", i), (double)pbank.getFloat("TProp", i));
+            id2tid.put((int)pbank.getShort(HitBasedTrkg__HBHitTrkId.id, i), (int)pbank.getShort(HitBasedTrkg__HBHitTrkId.tid, i));
+            id2tidB.put((int)pbank.getShort(HitBasedTrkg__HBHitTrkId.id, i), (double)pbank.getFloat(HitBasedTrkg__HBHitTrkId.B, i));
+            id2tidtFlight.put((int)pbank.getShort(HitBasedTrkg__HBHitTrkId.id, i), (double)pbank.getFloat(HitBasedTrkg__HBHitTrkId.TFlight, i));
+            id2tidtProp.put((int)pbank.getShort(HitBasedTrkg__HBHitTrkId.id, i), (double)pbank.getFloat(HitBasedTrkg__HBHitTrkId.TProp, i));
         }
         
         DataBank bank = event.getBank(bankName);
@@ -357,19 +361,18 @@ public class HitReader {
         double[] trkDoca = new double[rows];
 
         for (int i = 0; i < rows; i++) {
-            id[i] = bank.getShort("id", i);
-            status[i] = bank.getShort("status", i);
-            sector[i] = bank.getByte("sector", i);
-            slayer[i] = bank.getByte("superlayer", i);
-            layer[i] = bank.getByte("layer", i);
-            wire[i] = bank.getShort("wire", i);
-            tdc[i] = bank.getInt("TDC", i);
-            jitter[i] = bank.getByte("jitter", i);
-            id[i] = bank.getShort("id", i);
-            LR[i] = bank.getByte("LR", i);
-           
-            trkDoca[i] = bank.getFloat("trkDoca", i);
-            clusterID[i] = bank.getShort("clusterID", i);
+            id[i] = bank.getShort(HitBasedTrkg__Hits.id, i);
+            status[i] = bank.getShort(HitBasedTrkg__Hits.status, i);
+            sector[i] = bank.getByte(HitBasedTrkg__Hits.sector, i);
+            slayer[i] = bank.getByte(HitBasedTrkg__Hits.superlayer, i);
+            layer[i] = bank.getByte(HitBasedTrkg__Hits.layer, i);
+            wire[i] = bank.getShort(HitBasedTrkg__Hits.wire, i);
+            tdc[i] = bank.getInt(HitBasedTrkg__Hits.TDC, i);
+            jitter[i] = bank.getByte(HitBasedTrkg__Hits.jitter, i);
+            id[i] = bank.getShort(HitBasedTrkg__Hits.id, i);
+            LR[i] = bank.getByte(HitBasedTrkg__Hits.LR, i);
+            trkDoca[i] = bank.getFloat(HitBasedTrkg__Hits.trkDoca, i);
+            clusterID[i] = bank.getShort(HitBasedTrkg__Hits.clusterID, i);
             trkID[i] = -1;
             if(this.id2tid.containsKey(id[i]) ){
                 trkID[i]    = this.id2tid.get(id[i]);

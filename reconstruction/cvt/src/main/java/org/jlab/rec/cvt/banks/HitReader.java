@@ -9,6 +9,8 @@ import org.jlab.clas.swimtools.Swim;
 import org.jlab.detector.banks.RawDataBank;
 import org.jlab.detector.base.DetectorDescriptor;
 import org.jlab.detector.base.DetectorType;
+import org.jlab.io.banks.BMT__adc;
+import org.jlab.io.banks.BST__adc;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.cvt.Constants;
 import org.jlab.rec.cvt.Geometry;
@@ -112,11 +114,11 @@ public class HitReader {
                 //if (bankDGTZ.getInt("ADC", i) < 1) {
                     //continue; // gemc assigns strip value -1 for inefficiencies, we only consider strips with values between 1 to the maximum strip number for a given detector
                 //}                
-                int sector  = bankDGTZ.getByte("sector", i);
-                int layer   = bankDGTZ.getByte("layer", i);
-                int strip   = bankDGTZ.getShort("component", i);
-                double ADCtoEdep = bankDGTZ.getInt("ADC", i);
-                double time = bankDGTZ.getFloat("time", i);
+                int sector  = bankDGTZ.getByte(BMT__adc.sector, i);
+                int layer   = bankDGTZ.getByte(BMT__adc.layer, i);
+                int strip   = bankDGTZ.getShort(BMT__adc.component, i);
+                double ADCtoEdep = bankDGTZ.getInt(BMT__adc.ADC, i);
+                double time = bankDGTZ.getFloat(BMT__adc.time, i);
                 int order   = bankDGTZ.trueOrder(i);
                 //if (order == 1) {
                 //    continue;
@@ -248,8 +250,8 @@ public class HitReader {
             //The value adcStatus in ccdb is 1 for runs where ADC=-1 is not permitted and 0 for runs where ADC=-1 is permitted
             
             int adcStat = adcStatus.getIntValue("adcstatus", 0, 0, 0);
-            for (int i = 0; i < rows; i++) {     
-                int ADC = bankDGTZ.getInt("ADC", i);
+            for (int i = 0; i < rows; i++) {
+                int ADC = bankDGTZ.getInt(BST__adc.ADC, i);
                 if(ADCConvertor.isEventUnCorrupted(ADC, adcStat)==false) {
                     return;
                 }
@@ -259,11 +261,11 @@ public class HitReader {
             // first get tdcs
             Map<Integer, Double> tdcs = new HashMap<>();
             for (int i = 0; i < rows; i++) {                
-                if(bankDGTZ.getInt("ADC", i) < 0) {
-                    int sector = bankDGTZ.getByte("sector", i);
-                    int layer  = bankDGTZ.getByte("layer", i);
-                    int strip = bankDGTZ.getShort("component", i);
-                    double time = bankDGTZ.getFloat("time", i);
+                if(bankDGTZ.getInt(BST__adc.ADC, i) < 0) {
+                    int sector = bankDGTZ.getByte(BST__adc.sector, i);
+                    int layer  = bankDGTZ.getByte(BST__adc.layer, i);
+                    int strip = bankDGTZ.getShort(BST__adc.component, i);
+                    double time = bankDGTZ.getFloat(BST__adc.time, i);
                     
                     //if (order == 1) {
                     //    continue;
@@ -283,15 +285,15 @@ public class HitReader {
                 
             // then get real hits
             for (int i = 0; i < rows; i++) {
-                if (bankDGTZ.getInt("ADC", i) < 0) {
+                if (bankDGTZ.getInt(BST__adc.ADC, i) < 0) {
                     continue; // ignore hits TDC hits with ADC==-1 
                 }
-                int order   = bankDGTZ.getByte("order", i);
+                int order   = bankDGTZ.getByte(BST__adc.order, i);
+                int sector  = bankDGTZ.getByte(BST__adc.sector, i);
+                int layer   = bankDGTZ.getByte(BST__adc.layer, i);
+                int strip   = bankDGTZ.getShort(BST__adc.component, i);
+                int ADC     = bankDGTZ.getInt(BST__adc.ADC, i);
                 int id      = i + 1;
-                int sector  = bankDGTZ.getByte("sector", i);
-                int layer   = bankDGTZ.getByte("layer", i);
-                int strip   = bankDGTZ.getShort("component", i);
-                int ADC     = bankDGTZ.getInt("ADC", i);
                 double time = 0;//bankDGTZ.getFloat("time", i);
                 int tdcstrip = 1;
                 if(strip>128) tdcstrip = 129;
