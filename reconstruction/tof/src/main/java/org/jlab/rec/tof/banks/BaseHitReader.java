@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.jlab.detector.banks.RawDataBank;
+import org.jlab.io.banks.FTOF__adc;
+import org.jlab.io.banks.FTOF__tdc;
 import org.jlab.io.base.DataEvent;
 import org.jlab.utils.groups.IndexedTable;
 
@@ -99,13 +101,13 @@ public class BaseHitReader {
             ADCIdx2 = new int[bankSize];
 
             for (int i = 0; i < bankSize; i++) {
-                sectorADC[i] = bank.getByte("sector", i);
-                layerADC[i] = bank.getByte("layer", i);
-                componentADC[i] = bank.getShort("component", i);
+                sectorADC[i] = bank.getByte(FTOF__adc.sector, i);
+                layerADC[i] = bank.getByte(FTOF__adc.layer, i);
+                componentADC[i] = bank.getShort(FTOF__adc.component, i);
                 int order = bank.trueOrder(i);
-                int ADC = bank.getInt("ADC", i);
-                double time = bank.getFloat("time", i);
-                int pedestalADC = bank.getShort("ped", i);
+                int ADC = bank.getInt(FTOF__adc.ADC, i);
+                double time = bank.getFloat(FTOF__adc.time, i);
+                int pedestalADC = bank.getShort(FTOF__adc.ped, i);
 
                 ADC1[i] = -1;
                 ADC2[i] = -1;
@@ -163,11 +165,11 @@ public class BaseHitReader {
             TDCIdx2 = new int[bankSize];
 
             for (int i = 0; i < bankSize; i++) {
-                sectorTDC[i] = bank.getByte("sector", i);
-                layerTDC[i] = bank.getByte("layer", i);
-                componentTDC[i] = bank.getShort("component", i);
+                sectorTDC[i] = bank.getByte(FTOF__tdc.sector, i);
+                layerTDC[i] = bank.getByte(FTOF__tdc.layer, i);
+                componentTDC[i] = bank.getShort(FTOF__tdc.component, i);
                 int order = bank.trueOrder(i);
-                int TDC = bank.getInt("TDC", i);
+                int TDC = bank.getInt(FTOF__tdc.TDC, i);
 
                 TDC1[i] = -1;
                 TDC2[i] = -1;
