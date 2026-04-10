@@ -447,6 +447,22 @@
           </executions>
         </plugin>
 
+        <!-- delete auto-generated bank schema enums -->
+        <plugin>
+          <artifactId>maven-clean-plugin</artifactId>
+          <version>3.4.0</version>
+          <configuration>
+            <filesets>
+              <fileset>
+                <directory>common-tools/clas-io/src/main/java/org/jlab/io/banks</directory>
+                <includes>
+                  <include>**/*.java</include>
+                </includes>
+              </fileset>
+            </filesets>
+          </configuration>
+        </plugin>
+
         <!-- deployment configuration -->
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
