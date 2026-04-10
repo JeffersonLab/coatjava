@@ -13,6 +13,8 @@ import org.jlab.geom.base.Layer;
 import org.jlab.geom.component.ScintillatorPaddle;
 import org.jlab.groot.data.H1F;
 import org.jlab.groot.data.H2F;
+import org.jlab.io.banks.ECAL__adc;
+import org.jlab.io.banks.ECAL__tdc;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.utils.groups.IndexedList;
@@ -338,12 +340,11 @@ public class ECCommon {
         if(event.hasBank("ECAL::tdc")==true){
             RawDataBank  bank = new RawDataBank("ECAL::tdc");
             bank.read(event);
-            //DataBank  bank = event.getBank("ECAL::tdc");
             for(int i = 0; i < bank.rows(); i++){
-                int  is = bank.getByte("sector",i);
-                int  il = bank.getByte("layer",i);
-                int  ip = bank.getShort("component",i);    
-                int tdc = bank.getInt("TDC",i);
+                int  is = bank.getByte(ECAL__tdc.sector,i);
+                int  il = bank.getByte(ECAL__tdc.layer,i);
+                int  ip = bank.getShort(ECAL__tdc.component,i);    
+                int tdc = bank.getInt(ECAL__tdc.TDC,i);
                 
                 int istatus = status.getIntValue("status",is,il,ip);
                 
@@ -359,14 +360,14 @@ public class ECCommon {
         if(event.hasBank("ECAL::adc")==true){
             RawDataBank bank = new RawDataBank("ECAL::adc");
             bank.read(event);
-            //DataBank bank = event.getBank("ECAL::adc");
             for(int i = 0; i < bank.rows(); i++){
-                int  is = bank.getByte("sector", i);
-                int  il = bank.getByte("layer", i); 
-                int  ip = bank.getShort("component", i);
-                int adc = bank.getInt("ADC", i);
-                float t = bank.getFloat("time", i) + (float) tmf.getDoubleValue("offset",is,il,ip) // TDC-FADC offset (sector, layer, PMT)
-                                                   + (float)  fo.getDoubleValue("offset",is,il,0); // TDC-FADC offset (sector, layer) 
+                int  is = bank.getByte(ECAL__adc.sector, i);
+                int  il = bank.getByte(ECAL__adc.layer, i); 
+                int  ip = bank.getShort(ECAL__adc.component, i);
+                int adc = bank.getInt(ECAL__adc.ADC, i);
+                float t = bank.getFloat(ECAL__adc.time, i)
+                    + (float) tmf.getDoubleValue("offset",is,il,ip) // TDC-FADC offset (sector, layer, PMT)
+                    + (float)  fo.getDoubleValue("offset",is,il,0); // TDC-FADC offset (sector, layer) 
                 
                 int istatus = status.getIntValue("status",is,il,ip);
 
