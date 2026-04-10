@@ -6,6 +6,7 @@ import java.util.List;
 import org.jlab.detector.banks.RawDataBank;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
+import org.jlab.io.banks.FMT__adc;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.fmt.Constants;
@@ -270,11 +271,11 @@ public class Hit implements Comparable<Hit> {
                 bankDGTZ.read(event);
                 int rows = bankDGTZ.rows();
                 for (int i = 0; i < rows; i++) {
-                    int sector  = bankDGTZ.getByte("sector", i);
-                    int layer   = bankDGTZ.getByte("layer", i);
-                    int strip   = bankDGTZ.getShort("component", i);
-                    int ADC     = bankDGTZ.getInt("ADC", i);
-                    double time = bankDGTZ.getFloat("time", i);
+                    int sector  = bankDGTZ.getByte(FMT__adc.sector, i);
+                    int layer   = bankDGTZ.getByte(FMT__adc.layer, i);
+                    int strip   = bankDGTZ.getShort(FMT__adc.component, i);
+                    int ADC     = bankDGTZ.getInt(FMT__adc.ADC, i);
+                    double time = bankDGTZ.getFloat(FMT__adc.time, i);
 
                     if (strip == -1 || ADC == 0) continue;
                     
