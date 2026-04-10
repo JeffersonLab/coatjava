@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import org.jlab.detector.banks.RawDataBank;
 import org.jlab.detector.calib.utils.ConstantsManager;
+import org.jlab.io.banks.FTCAL__adc;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.evio.EvioDataBank;
@@ -210,11 +211,11 @@ public class FTCALReconstruction {
             bankDGTZ.read(event);
             int nrows = bankDGTZ.rows();
             for(int row = 0; row < nrows; row++){
-                int isector     = bankDGTZ.getByte("sector",row);
-                int ilayer      = bankDGTZ.getByte("layer",row);
-                int icomponent  = bankDGTZ.getShort("component",row);
-                int adc         = bankDGTZ.getInt("ADC",row);
-                float time      = bankDGTZ.getFloat("time",row);
+                int isector     = bankDGTZ.getByte(FTCAL__adc.sector,row);
+                int ilayer      = bankDGTZ.getByte(FTCAL__adc.layer,row);
+                int icomponent  = bankDGTZ.getShort(FTCAL__adc.component,row);
+                int adc         = bankDGTZ.getInt(FTCAL__adc.ADC,row);
+                float time      = bankDGTZ.getFloat(FTCAL__adc.time,row);
                 if(ilayer==0) ilayer=1; // fix for wrong layer in TT
                 if(adc!=-1 && time!=-1 && status.getIntValue("status", isector, ilayer, icomponent)==0){
                     FTCALHit hit = new FTCALHit(bankDGTZ.trueIndex(row),icomponent, adc, time, charge2Energy, timeOffsets, timeWalk, cluster);
