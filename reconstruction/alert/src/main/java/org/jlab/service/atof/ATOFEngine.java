@@ -12,14 +12,13 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.geom.base.Detector;
 import org.jlab.geom.detector.alert.ATOF.AlertTOFFactory;
-import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.rec.atof.banks.RecoBankWriter;
 import org.jlab.rec.atof.cluster.ATOFCluster;
 import org.jlab.rec.atof.cluster.ClusterFinder;
 import org.jlab.rec.atof.hit.ATOFHit;
 import org.jlab.rec.atof.hit.BarHit;
 import org.jlab.rec.atof.hit.HitFinder;
-import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
+import org.jlab.utils.groups.IndexedTable;
 
 /**
  * Service to return reconstructed ATOF hits and clusters
@@ -54,7 +53,13 @@ public class ATOFEngine extends ReconstructionEngine {
     }
 
     int Run = -1;
-    
+
+    // ATOF calibration tables (instance-level, refreshed on run change)
+    private IndexedTable atofEffectiveVelocity;
+    private IndexedTable atofTimeWalk;
+    private IndexedTable atofAttenuationLength;
+    private IndexedTable atofTimeOffsets;
+
     @Override
     public boolean processDataEvent(DataEvent event) {
         if (!event.hasBank("RUN::config")) {
@@ -80,11 +85,14 @@ public class ATOFEngine extends ReconstructionEngine {
             System.err.println("ATOFEngine:  got run <= 0 in RUN::config, skipping event.");
             return false;
         }
-        int newRun = runNo; 
-            // Load the constants
+        int newRun = runNo;
         if(Run!=newRun) {
-            CalibrationConstantsLoader.Load(newRun, this.getConstantsManager());
-            }
+            atofEffectiveVelocity = this.getConstantsManager().getConstants(newRun, "/calibration/alert/atof/effective_velocity");
+            atofTimeWalk          = this.getConstantsManager().getConstants(newRun, "/calibration/alert/atof/time_walk");
+            atofAttenuationLength = this.getConstantsManager().getConstants(newRun, "/calibration/alert/atof/attenuation");
+            atofTimeOffsets       = this.getConstantsManager().getConstants(newRun, "/calibration/alert/atof/time_offsets");
+            Run = newRun;
+        }
         
         ////Do we need to read the event vx,vy,vz?
         ////If not, this part can be moved in the initialization of the engine.
@@ -103,7 +111,7 @@ public class ATOFEngine extends ReconstructionEngine {
 
         //Hit finder init
         HitFinder hitfinder = new HitFinder();
-        hitfinder.findHits(event, ATOF, startTime);
+        hitfinder.findHits(event, ATOF, startTime, atofTimeOffsets, atofEffectiveVelocity);
         ArrayList<ATOFHit> WedgeHits = hitfinder.getWedgeHits();
         ArrayList<BarHit> BarHits = hitfinder.getBarHits();
         //Exit if hit lists are empty
@@ -131,26 +139,11 @@ public class ATOFEngine extends ReconstructionEngine {
         DatabaseConstantProvider cp = new DatabaseConstantProvider(11, "default");
         this.ATOF = factory.createDetectorCLAS(cp);
         
-        String[] alertTables = new String[] {
-            	"/calibration/alert/ahdc/time_offsets",
-                "/calibration/alert/ahdc/time_to_distance",
-                "/calibration/alert/ahdc/raw_hit_cuts",
-                "/calibration/alert/atof/effective_velocity",
-                "/calibration/alert/atof/time_walk",
-                "/calibration/alert/atof/attenuation",
-                "/calibration/alert/atof/time_offsets"
-        };
-        
         Map<String, Integer> tableMap = new HashMap<>();
-        for (String table : alertTables) {
-            if (table.equals("/calibration/alert/atof/time_offsets") ||
-                table.equals("/calibration/alert/atof/time_walk")) {
-                tableMap.put(table, 4);
-            } else {
-                tableMap.put(table, 3);
-            }
-        }
-
+        tableMap.put("/calibration/alert/atof/effective_velocity", 3);
+        tableMap.put("/calibration/alert/atof/time_walk", 4);
+        tableMap.put("/calibration/alert/atof/attenuation", 3);
+        tableMap.put("/calibration/alert/atof/time_offsets", 4);
         requireConstants(tableMap);
         this.getConstantsManager().setVariation("default");
         this.registerOutputBank("ATOF::hits", "ATOF::clusters");

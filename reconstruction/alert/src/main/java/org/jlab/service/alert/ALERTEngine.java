@@ -6,9 +6,13 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
+import org.jlab.utils.groups.IndexedTable;
 import org.jlab.geom.base.Detector;
 import org.jlab.geom.detector.alert.ATOF.AlertTOFFactory;
 import org.jlab.io.base.DataBank;
@@ -71,6 +75,9 @@ public class ALERTEngine extends ReconstructionEngine {
     private ModelTrackMatching modelTrackMatching;
     private ModelPrePID modelPrePID;
 
+    // AHDC calibration table (refreshed on run change)
+    private IndexedTable ahdcAdcGains;
+
     public void setB(double B) {
         this.b = B;
     }
@@ -102,6 +109,11 @@ public class ALERTEngine extends ReconstructionEngine {
         DatabaseConstantProvider cp = new DatabaseConstantProvider(11, "default");
         ATOF = factory.createDetectorCLAS(cp);
         AHDC = (new AlertDCFactory()).createDetectorCLAS(new DatabaseConstantProvider());
+
+        Map<String, Integer> tableMap = new HashMap<>();
+        tableMap.put("/calibration/alert/ahdc/gains", 3);
+        requireConstants(tableMap);
+        this.getConstantsManager().setVariation("default");
 
         if(this.getEngineConfigString("Mode")!=null) {
             //if (Objects.equals(this.getEngineConfigString("Mode"), Mode.AI_Track_Finding.name()))
@@ -140,6 +152,7 @@ public class ALERTEngine extends ReconstructionEngine {
 
         if (run.get() == 0 || (run.get() != 0 && run.get() != newRun)) {
             run.set(newRun);
+            ahdcAdcGains = this.getConstantsManager().getConstants(newRun, "/calibration/alert/ahdc/gains");
         }
         
         //Do we need to read the event vx,vy,vz?
@@ -190,7 +203,7 @@ public class ALERTEngine extends ReconstructionEngine {
                 int layer_pred = (int) pred[1];
                 int wedge_pred = (int) pred[2];
 
-                ATOFHit hit_pred = new ATOFHit(sector_pred, layer_pred, wedge_pred, 0, 0, 0, 0f, ATOF);
+                ATOFHit hit_pred = new ATOFHit(sector_pred, layer_pred, wedge_pred, 0, 0, 0, 0f, ATOF, null);
                 double pred_x = hit_pred.getX();
                 double pred_y = hit_pred.getY();
                 double pred_z = hit_pred.getZ();
@@ -208,7 +221,7 @@ public class ALERTEngine extends ReconstructionEngine {
                     int sector = bank_ATOFHits.getInt("sector", k);
                     int layer = bank_ATOFHits.getInt("layer", k);
 
-                    ATOFHit hit = new ATOFHit(sector, layer, component, 0, 0, 0, 0f, ATOF);
+                    ATOFHit hit = new ATOFHit(sector, layer, component, 0, 0, 0, 0f, ATOF, null);
 
                     double dx = pred_x - hit.getX();
                     double dy = pred_y - hit.getY();
@@ -346,6 +359,7 @@ public class ALERTEngine extends ReconstructionEngine {
                     AHDC_hits.add(hit);
                 }
             }
+            if (AHDC_hits.isEmpty()) continue; // It can happen that a track has no associated hit, in this case we skip it for the Kalman Filter
             AHDC_tracks.add(new Track(AHDC_hits));
             // Initialise the position and the momentum using the information of the AHDC::track
             // position : mm

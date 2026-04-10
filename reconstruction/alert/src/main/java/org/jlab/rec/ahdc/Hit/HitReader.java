@@ -1,12 +1,13 @@
 package org.jlab.rec.ahdc.Hit;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.detector.banks.RawDataBank;
 import org.jlab.geom.detector.alert.AHDC.AlertDCDetector;
-import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
+import org.jlab.utils.groups.IndexedTable;
 
 public class HitReader {
 
@@ -14,35 +15,50 @@ public class HitReader {
     private ArrayList<TrueHit> _TrueAHDCHits;
     private boolean sim = false;
 
-    public HitReader(DataEvent event, AlertDCDetector detector, boolean simulation) {
+    private IndexedTable rawHitCutsTable;
+    private IndexedTable timeOffsetsTable;
+    private IndexedTable timeToDistanceWireTable;
+    private IndexedTable timeOverThresholdTable;
+    private IndexedTable adcGainsTable;
+
+    public HitReader(DataEvent event, AlertDCDetector detector, boolean simulation,
+                     IndexedTable rawHitCuts,
+                     IndexedTable timeOffsets,
+                     IndexedTable timeToDistanceWire,
+                     IndexedTable timeOverThreshold,
+                     IndexedTable adcGains) {
         sim = simulation;
-        fetch_AHDCHits(event, detector);
+        fetch_AHDCHits(event, detector, rawHitCuts, timeOffsets, timeToDistanceWire, timeOverThreshold, adcGains);
         if (simulation) fetch_TrueAHDCHits(event);
     }
-	public double T2Dfunction(int key, double time){
-		double[] time2distance = CalibrationConstantsLoader.AHDC_TIME_TO_DISTANCE_WIRE.get(key);
-		if (time2distance == null){
-			throw new IllegalStateException("Missing CCDB /calibration/alert/ahdc/time_to_distance_wire for key=" + key + " (check run/variation + key mapping)");
-		}
-		
-		if (time2distance[7] == 0.0 || time2distance[9] == 0.0){
-			throw new IllegalStateException("Incorrect table values in CCDB /calibration/alert/ahdc/time_to_distance_wire. t1_width ("+ time2distance[7] +") or t2_width ("+time2distance[9]+") for key: " + key + " must not equal zero.  Please check database table issues.");
-		}
-		
+
+	public double T2Dfunction(int sector, int layer, int wire, double time){
+		long hash = timeToDistanceWireTable.getList().getIndexGenerator().hashCode(sector, layer, wire);
+		List<Double> t2d = timeToDistanceWireTable.getDoublesByHash(hash);
+
 		// T2D function consists of three 1st order polynomials (p1, p2, p3) and two transition functions (t1, t2).
-	
-		double p1 = (time2distance[0] + time2distance[1]*time);
-		double p2 = (time2distance[2] + time2distance[3]*time);
-		double p3 = (time2distance[4] + time2distance[5]*time);
-		
-		double t1 = 1.0/(1.0 + Math.exp(-(time - time2distance[6])/time2distance[7]));
-		double t2 = 1.0/(1.0 + Math.exp(-(time - time2distance[8])/time2distance[9]));
-		
-		double retval = (p1)*(1.0 - t1) + (t1)*(p2)*(1.0 - t2) + (t2)*(p3);
-		return retval;
+		// Column order: p1_int(0), p1_slope(1), p2_int(2), p2_slope(3), p3_int(4), p3_slope(5),
+		//               t1_x0(6), t1_width(7), t2_x0(8), t2_width(9), z0(10), z1(11), z2(12), extra1(13), extra2(14), chi2ndf(15)
+
+		double p1 = (t2d.get(0) + t2d.get(1)*time);
+		double p2 = (t2d.get(2) + t2d.get(3)*time);
+		double p3 = (t2d.get(4) + t2d.get(5)*time);
+
+		double t1 = 1.0/(1.0 + Math.exp(-(time - t2d.get(6))/t2d.get(7)));
+		double t2 = 1.0/(1.0 + Math.exp(-(time - t2d.get(8))/t2d.get(9)));
+
+		return (p1)*(1.0 - t1) + (t1)*(p2)*(1.0 - t2) + (t2)*(p3);
 	}
 
-	public final void fetch_AHDCHits(DataEvent event, AlertDCDetector detector) {
+	public final void fetch_AHDCHits(DataEvent event, AlertDCDetector detector,
+	                                 IndexedTable rawHitCuts, IndexedTable timeOffsets,
+	                                 IndexedTable timeToDistanceWire, IndexedTable totCorrTable,
+	                                 IndexedTable adcGains) {
+		this.rawHitCutsTable = rawHitCuts;
+		this.timeOffsetsTable = timeOffsets;
+		this.timeToDistanceWireTable = timeToDistanceWire;
+		this.timeOverThresholdTable = totCorrTable;
+		this.adcGainsTable = adcGains;
 
 		ArrayList<Hit> hits = new ArrayList<>();
 
@@ -63,7 +79,7 @@ public class HitReader {
 		for (int i = 0; i < bankDGTZ.rows(); i++) {
 
 			int id         = bankDGTZ.trueIndex(i) + 1;
-			int number     = bankDGTZ.getByte("layer", i);      // e.g. 11,12,21,... (this matches CCDB "layer")
+			int number     = bankDGTZ.getByte("layer", i);
 			int layer      = number % 10;
 			int superlayer = (number % 100) / 10;
 			int sector     = bankDGTZ.getInt("sector", i);
@@ -76,103 +92,52 @@ public class HitReader {
 			double adcOffset         = bankDGTZ.getFloat("ped", i);
 			int    wfType            = bankDGTZ.getShort("wfType", i);
 
-			// CCDB key
-			int key_value = sector * 10000 + number * 100 + wire;
-
-			// -----------------------------
 			// Raw hit cuts
-			// -----------------------------
-			// double[] rawHitCuts = CalibrationConstantsLoader.AHDC_RAW_HIT_CUTS.get(key_value);
-			//if (rawHitCuts == null) continue;
+			double t_min   = rawHitCutsTable.getDoubleValue("t_min",   sector, number, wire);
+			double t_max   = rawHitCutsTable.getDoubleValue("t_max",   sector, number, wire);
+			double tot_min = rawHitCutsTable.getDoubleValue("tot_min", sector, number, wire);
+			double tot_max = rawHitCutsTable.getDoubleValue("tot_max", sector, number, wire);
+			double adc_min = rawHitCutsTable.getDoubleValue("adc_min", sector, number, wire);
+			double adc_max = rawHitCutsTable.getDoubleValue("adc_max", sector, number, wire);
+			double ped_min = rawHitCutsTable.getDoubleValue("ped_min", sector, number, wire);
+			double ped_max = rawHitCutsTable.getDoubleValue("ped_max", sector, number, wire);
 
-
-			double[] rawHitCuts = CalibrationConstantsLoader.AHDC_RAW_HIT_CUTS.get(key_value);
-			if (rawHitCuts == null) {throw new IllegalStateException("Missing CCDB table /calibration/alert/ahdc/raw_hit_cuts for key=" + key_value+ " (check run/variation + key mapping)");
-		}
-	    
-		double t_min   = rawHitCuts[0];
-		double t_max   = rawHitCuts[1];
-		double tot_min = rawHitCuts[2];
-		double tot_max = rawHitCuts[3];
-		double adc_min = rawHitCuts[4];
-		double adc_max = rawHitCuts[5];
-		double ped_min = rawHitCuts[6];
-		double ped_max = rawHitCuts[7];
-
-		// -----------------------------
-		// Time calibration + t->d
-		// -----------------------------
-		//double[] timeOffsets = CalibrationConstantsLoader.AHDC_TIME_OFFSETS.get(key_value);
-		//if (timeOffsets == null) continue;
-
-		//  double[] timeOffsets = CalibrationConstantsLoader.AHDC_TIME_OFFSETS.get(key_value);
-		//if (timeOffsets == null) {
-			//throw new IllegalStateException("Missing AHDC time_offsets for key=" + key_value);
-			//}
-
-			double[] timeOffsets = CalibrationConstantsLoader.AHDC_TIME_OFFSETS.get(key_value);
-	    
-			if (timeOffsets == null) {
-				throw new IllegalStateException("Missing CCDB /calibration/alert/ahdc/time_offsets for key=" + key_value + " (check run/variation + key mapping)");
-			}
-		  
-         
-
-			double t0 = timeOffsets[0];
+			// Time calibration
+			double t0   = timeOffsetsTable.getDoubleValue("t0", sector, number, wire);
 			double time = leadingEdgeTime - t0 - startTime;
 
-			// -----------------------------
-			// ToT correction (new CCDB)
-			// convention: ToT_corr = ToT_raw * totCorr
-			// -----------------------------
+			// ToT correction
 			double totUsed = timeOverThreshold;
 			if (!sim) {
-				double[] totArr = CalibrationConstantsLoader.AHDC_TIME_OVER_THRESHOLD.get(key_value);
-				if (totArr != null && totArr.length > 0) {
-					double totCorr = totArr[0];
-					totUsed = timeOverThreshold * totCorr;
-				}
+				double totCorr = timeOverThresholdTable.getDoubleValue("totCorr", sector, number, wire);
+				if (totCorr != 0.0) totUsed = timeOverThreshold * totCorr;
 			}
 
-			// -----------------------------
 			// Hit selection (cuts)
-			// NOTE: we cut on totUsed (corrected ToT). If you want RAW-ToT cuts,
-			// replace totUsed with timeOverThreshold in the condition.
-			// -----------------------------
 			boolean passCuts =
 				(wfType <= 2) &&
-					(adcRaw >= adc_min) && (adcRaw <= adc_max) &&
-						(time   >= t_min)   && (time   <= t_max) &&
-							(timeOverThreshold >= tot_min) && (timeOverThreshold <= tot_max)&&
-								//(totUsed >= tot_min) && (totUsed <= tot_max) &&
-			(adcOffset >= ped_min) && (adcOffset <= ped_max);
+				(adcRaw >= adc_min) && (adcRaw <= adc_max) &&
+				(time   >= t_min)   && (time   <= t_max) &&
+				(timeOverThreshold >= tot_min) && (timeOverThreshold <= tot_max) &&
+				(adcOffset >= ped_min) && (adcOffset <= ped_max);
 
 			if (!passCuts && !sim) continue;
 
-			// -----------------------------
 			// DOCA from calibrated time
-			// -----------------------------
-			double doca = T2Dfunction(key_value,time);
-
+			double doca = T2Dfunction(sector, number, wire, time);
 			if (time < 0) doca = 0.0;
 
-			// -----------------------------
-			// ADC gain calibration (new gains schema: gainCorr is index 0)
-			// convention: ADC_cal = ADC_raw * gainCorr
-			// -----------------------------
+			// ADC gain calibration
 			double adcCal = adcRaw;
 			if (!sim) {
-				double[] gainArr = CalibrationConstantsLoader.AHDC_ADC_GAINS.get(key_value);
-				if (gainArr != null && gainArr.length > 0) {
-					double gainCorr = gainArr[0];
-					adcCal = adcRaw * gainCorr;
-				}
+				double gainCorr = adcGainsTable.getDoubleValue("gainCorr", sector, number, wire);
+				if (gainCorr != 0.0) adcCal = adcRaw * gainCorr;
 			}
 
 			Hit h = new Hit(id, superlayer, layer, wire, doca, adcRaw, time);
 			h.setWirePosition(detector);
-			h.setADC(adcCal); // place to store calibrated ADC
-			h.setToT(totUsed); // place to store caibrated ToT
+			h.setADC(adcCal);
+			h.setToT(totUsed);
 			hits.add(h);
 		}
 
