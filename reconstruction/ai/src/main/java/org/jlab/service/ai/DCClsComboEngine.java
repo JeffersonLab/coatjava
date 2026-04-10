@@ -24,6 +24,7 @@ import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jlab.clas.reco.ReconstructionEngine;
+import org.jlab.io.banks.HitBasedTrkg__Clusters;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.utils.system.ClasUtilsFile;
@@ -128,11 +129,11 @@ public class DCClsComboEngine extends ReconstructionEngine {
         int rows = bank.rows();
         for (int r = 0; r < rows; r++) {
 
-            int id          = bank.getInt("id", r);
-            int sector      = bank.getByte("sector", r);
-            int superlayer  = bank.getByte("superlayer", r);
-            float avgWire   = bank.getFloat("avgWire", r);
-            float fitSlope  = bank.getFloat("fitSlope", r);
+            int id          = bank.getInt(HitBasedTrkg__Clusters.id, r);
+            int sector      = bank.getByte(HitBasedTrkg__Clusters.sector, r);
+            int superlayer  = bank.getByte(HitBasedTrkg__Clusters.superlayer, r);
+            float avgWire   = bank.getFloat(HitBasedTrkg__Clusters.avgWire, r);
+            float fitSlope  = bank.getFloat(HitBasedTrkg__Clusters.fitSlope, r);
 
             DCCluster cls = new DCCluster(id, sector, superlayer, avgWire, fitSlope);
             allClusterList.add(cls);
