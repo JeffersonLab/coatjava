@@ -4,13 +4,13 @@
 
   <groupId>org.jlab.clas</groupId>
   <artifactId>clas-utils</artifactId>
-  <version>13.8.2-SNAPSHOT</version>
+  <version>13.8.3-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <parent>
     <groupId>org.jlab.clas</groupId>
     <artifactId>common-tools</artifactId>
-    <version>13.8.2-SNAPSHOT</version>
+    <version>13.8.3-SNAPSHOT</version>
   </parent>
 
   <dependencies>
@@ -22,7 +22,7 @@
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-logging</artifactId>
-      <version>13.8.2-SNAPSHOT</version>
+      <version>13.8.3-SNAPSHOT</version>
     </dependency>
   </dependencies>
 
