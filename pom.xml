@@ -263,6 +263,30 @@
 
     <plugins> <!-- plugins inherited by all child POMs -->
 
+      <!-- generate bank shcema enums --> 
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+          <execution>
+            <id>bank-schema-enums</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <inherited>false</inherited> <!-- make this one NOT inherited -->
+            <configuration>
+              <target>
+                <exec executable="python3">
+                  <arg value="libexec/bank-schema-enums"/>
+                </exec>
+              </target>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
       <!-- static analysis -->
       <plugin>
         <groupId>com.github.spotbugs</groupId>
@@ -428,6 +452,22 @@
     <pluginManagement>
       <plugins> <!-- plugin configurations (unused in child POMs unless declared) -->
 
+        <!-- delete auto-generated bank schema enums during clean phase -->
+        <plugin>
+          <artifactId>maven-clean-plugin</artifactId>
+          <version>3.4.0</version>
+          <configuration>
+            <filesets>
+              <fileset>
+                <directory>common-tools/clas-io/src/main/java/org/jlab/io/banks</directory>
+                <includes>
+                  <include>**/*.java</include>
+                </includes>
+              </fileset>
+            </filesets>
+          </configuration>
+        </plugin>
+
         <!-- generate minimal POM files for deployment, containing GAV (groupID, artifactId, version) -->
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
@@ -445,22 +485,6 @@
               </goals>
             </execution>
           </executions>
-        </plugin>
-
-        <!-- delete auto-generated bank schema enums -->
-        <plugin>
-          <artifactId>maven-clean-plugin</artifactId>
-          <version>3.4.0</version>
-          <configuration>
-            <filesets>
-              <fileset>
-                <directory>common-tools/clas-io/src/main/java/org/jlab/io/banks</directory>
-                <includes>
-                  <include>**/*.java</include>
-                </includes>
-              </fileset>
-            </filesets>
-          </configuration>
         </plugin>
 
         <!-- deployment configuration -->
