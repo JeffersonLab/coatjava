@@ -17,12 +17,15 @@ import org.jlab.detector.banks.RawBank.OrderType;
 import org.jlab.detector.banks.RawDataBank;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
+import org.jlab.rec.dc.Constants;
+import org.jlab.utils.groups.IndexedTable;
+
 import org.jlab.io.banks.DC__jitter;
 import org.jlab.io.banks.DC__tdc;
 import org.jlab.io.banks.HitBasedTrkg__HBHitTrkId;
 import org.jlab.io.banks.HitBasedTrkg__Hits;
-import org.jlab.rec.dc.Constants;
-import org.jlab.utils.groups.IndexedTable;
+import org.jlab.io.banks.REC__Track;
+import org.jlab.io.banks.ai__tracks;
 
 /**
  * A class to fill in lists of hits corresponding to DC reconstructed hits
@@ -496,17 +499,17 @@ public class HitReader {
         for (int j = 0; j < bankAI.rows(); j++) {
             Ids  = new int[6];
             tPars = new double[4];
-            Ids[0] = (int)bankAI.getShort("c1", j); // clusId in superlayer 1
-            Ids[1] = (int)bankAI.getShort("c2", j);
-            Ids[2] = (int)bankAI.getShort("c3", j);
-            Ids[3] = (int)bankAI.getShort("c4", j);
-            Ids[4] = (int)bankAI.getShort("c5", j);
-            Ids[5] = (int)bankAI.getShort("c6", j); // clusId in superlayer 6
+            Ids[0] = (int)bankAI.getShort(ai__tracks.c1, j); // clusId in superlayer 1
+            Ids[1] = (int)bankAI.getShort(ai__tracks.c2, j);
+            Ids[2] = (int)bankAI.getShort(ai__tracks.c3, j);
+            Ids[3] = (int)bankAI.getShort(ai__tracks.c4, j);
+            Ids[4] = (int)bankAI.getShort(ai__tracks.c5, j);
+            Ids[5] = (int)bankAI.getShort(ai__tracks.c6, j); // clusId in superlayer 6
             
-            tPars[0] = (double)bankAI.getFloat("p", j);
-            tPars[1] = (double)bankAI.getFloat("theta", j);
-            tPars[2] = (double)bankAI.getFloat("phi", j);
-            tPars[3] = (double)bankAI.getByte("id", j);
+            tPars[0] = (double)bankAI.getFloat(ai__tracks.p, j);
+            tPars[1] = (double)bankAI.getFloat(ai__tracks.theta, j);
+            tPars[2] = (double)bankAI.getFloat(ai__tracks.phi, j);
+            tPars[3] = (double)bankAI.getByte(ai__tracks.id, j);
             
             aimatch.clear();
             for (int k = 0; k < 6; k++) {
@@ -518,9 +521,14 @@ public class HitReader {
 
                 if(clusterID>0) {
                     if(this.aimatch.containsKey(clusterID)) { 
-                        Hit hit = new Hit(bank.getByte("sector", i), bank.getByte("superlayer", i), 
-                            bank.getByte("layer", i), bank.getShort("wire", i), bank.getInt("TDC", i), bank.getByte("jitter", i), bank.getShort("id", i));
-                        hit.set_Id(bank.getShort("id", i));
+                        Hit hit = new Hit(bank.getByte(HitBasedTrkg__Hits.sector, i),
+                            bank.getByte(HitBasedTrkg__Hits.superlayer, i), 
+                            bank.getByte(HitBasedTrkg__Hits.layer, i),
+                            bank.getShort(HitBasedTrkg__Hits.wire, i),
+                            bank.getInt(HitBasedTrkg__Hits.TDC, i),
+                            bank.getByte(HitBasedTrkg__Hits.jitter, i),
+                            bank.getShort(HitBasedTrkg__Hits.id, i));
+                        hit.set_Id(bank.getShort(HitBasedTrkg__Hits.id, i));
                         hit.calc_CellSize(detector);
                         double posError = hit.get_CellSize() / Math.sqrt(12.);
                         hit.set_DocaErr(posError);
@@ -622,14 +630,14 @@ public class HitReader {
 
         int rows = bank.rows();
         for (int i = 0; i < rows; i++) {
-            if (bank.getByte("detector", i) == 6 &&
-                    bank.getShort("index", i) == trkId - 1) {
+            if (bank.getByte(REC__Track.detector, i) == 6 &&
+                    bank.getShort(REC__Track.index, i) == trkId - 1) {
                 px = event.getBank(partBankName).getFloat("px",
-                        bank.getShort("pindex", i));
+                        bank.getShort(REC__Track.pindex, i));
                 py = event.getBank(partBankName).getFloat("py",
-                        bank.getShort("pindex", i));
+                        bank.getShort(REC__Track.pindex, i));
                 pz = event.getBank(partBankName).getFloat("pz",
-                        bank.getShort("pindex", i));
+                        bank.getShort(REC__Track.pindex, i));
             }
         }
         
