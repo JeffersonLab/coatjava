@@ -2,20 +2,14 @@ package org.jlab.rec.rich;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
-import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
-import org.jlab.io.evio.EvioDataBank;
 import org.jlab.io.evio.EvioDataEvent;
 import org.jlab.io.hipo.HipoDataEvent;
 
-import javax.swing.JFrame;
 import org.jlab.detector.banks.RawDataBank;
-import org.jlab.groot.graphics.EmbeddedCanvas;
-import org.jlab.groot.data.H1F;
-import org.jlab.groot.data.H2F;
 
 import org.jlab.detector.geom.RICH.RICHGeoFactory;
+import org.jlab.io.banks.RICH__tdc;
 
 public class RICHPMTReconstruction {
 
@@ -182,11 +176,11 @@ public class RICHPMTReconstruction {
             bankDGTZ.read(event);
             int nrows = bankDGTZ.rows();
             for(int row = 0; row < nrows; row++){
-                int isector     = bankDGTZ.getByte("sector",row);
-                int ilayer      = bankDGTZ.getByte("layer",row);
-                int icomponent  = bankDGTZ.getShort("component",row);
+                int isector     = bankDGTZ.getByte(RICH__tdc.sector,row);
+                int ilayer      = bankDGTZ.getByte(RICH__tdc.layer,row);
+                int icomponent  = bankDGTZ.getShort(RICH__tdc.component,row);
                 int iorder      = bankDGTZ.trueOrder(row);
-                int itdc        = bankDGTZ.getInt("TDC",row);
+                int itdc        = bankDGTZ.getInt(RICH__tdc.TDC,row);
                 if(ilayer<0)ilayer=ilayer+256;
 		if(debugMode>=2)System.out.print(" --> Edge "+row+" sec "+isector+" lay "+ilayer+" comp "+icomponent+" order "+iorder+" tdc "+itdc+"\n");
                 if(itdc!=-1){
