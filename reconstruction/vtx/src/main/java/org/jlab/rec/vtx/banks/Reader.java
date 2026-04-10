@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.jlab.io.banks.REC__Particle;
+import org.jlab.io.banks.REC__Track;
+import org.jlab.io.banks.REC__UTrack;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.vtx.Particle;
@@ -55,13 +58,13 @@ public class Reader {
         if(utrkBankEB!=null) {
             int nrows2 = utrkBankEB.rows();
             for(int loop = 0; loop < nrows2; loop++){
-                int uindex = utrkBankEB.getInt("index", loop);
-                double px = utrkBankEB.getFloat("px", loop);
-                double py = utrkBankEB.getFloat("py", loop);
-                double pz = utrkBankEB.getFloat("pz", loop);
-                double vx = utrkBankEB.getFloat("vx", loop);
-                double vy = utrkBankEB.getFloat("vy", loop);
-                double vz = utrkBankEB.getFloat("vz", loop);
+                int uindex = utrkBankEB.getInt(REC__UTrack.index, loop);
+                double px = utrkBankEB.getFloat(REC__UTrack.px, loop);
+                double py = utrkBankEB.getFloat(REC__UTrack.py, loop);
+                double pz = utrkBankEB.getFloat(REC__UTrack.pz, loop);
+                double vx = utrkBankEB.getFloat(REC__UTrack.vx, loop);
+                double vy = utrkBankEB.getFloat(REC__UTrack.vy, loop);
+                double vz = utrkBankEB.getFloat(REC__UTrack.vz, loop);
                 double[] t = new double[]{px,py,pz,vx,vy,vz};
                 uTrkMap.put(uindex, t);
             }
@@ -69,12 +72,12 @@ public class Reader {
         if(recBankEB!=null) {
             int nrows = recBankEB.rows();
             for(int loop = 0; loop < nrows; loop++){
-                double px = recBankEB.getFloat("px", loop);
-                double py = recBankEB.getFloat("py", loop);
-                double pz = recBankEB.getFloat("pz", loop);
-                double vx = recBankEB.getFloat("vx", loop);
-                double vy = recBankEB.getFloat("vy", loop);
-                double vz = recBankEB.getFloat("vz", loop);
+                double px = recBankEB.getFloat(REC__Particle.px, loop);
+                double py = recBankEB.getFloat(REC__Particle.py, loop);
+                double pz = recBankEB.getFloat(REC__Particle.pz, loop);
+                double vx = recBankEB.getFloat(REC__Particle.vx, loop);
+                double vy = recBankEB.getFloat(REC__Particle.vy, loop);
+                double vz = recBankEB.getFloat(REC__Particle.vz, loop);
                 double[] t = new double[]{px,py,pz,vx,vy,vz};
                 pTrkMap.put(loop, t);
             }
@@ -82,13 +85,13 @@ public class Reader {
         if(trkBankEB!=null) {
             int nrows2 = trkBankEB.rows();
             for(int loop = 0; loop < nrows2; loop++){
-                int pindex = trkBankEB.getInt("pindex", loop);
-                int detector = trkBankEB.getInt("detector", loop);
-                qMap.put(pindex, trkBankEB.getInt("q", loop));
+                int pindex = trkBankEB.getInt(REC__Track.pindex, loop);
+                int detector = trkBankEB.getInt(REC__Track.detector, loop);
+                qMap.put(pindex, trkBankEB.getInt(REC__Track.q, loop));
                 
                 if(detector!=5) 
                     continue;
-                int index = trkBankEB.getInt("index", loop);
+                int index = trkBankEB.getInt(REC__Track.index, loop);
                 if(uTrkMap.containsKey(index) && pTrkMap.containsKey(pindex)) {
                     pTrkMap.put(pindex, uTrkMap.get(index));
                 }
@@ -97,17 +100,17 @@ public class Reader {
         if(recBankEB!=null && trkBankEB!=null) {
             int nrows = recBankEB.rows();
             for(int loop = 0; loop < nrows; loop++){
-                int pid = recBankEB.getInt("pid", loop);
+                int pid = recBankEB.getInt(REC__Particle.pid, loop);
                 int q = 0;
                 if(qMap.containsKey(loop))
                     q = qMap.get(loop);
                 if(q==0) continue;
-                double px = recBankEB.getFloat("px", loop);
-                double py = recBankEB.getFloat("py", loop);
-                double pz = recBankEB.getFloat("pz", loop);
-                double vx = recBankEB.getFloat("vx", loop);
-                double vy = recBankEB.getFloat("vy", loop);
-                double vz = recBankEB.getFloat("vz", loop);
+                double px = recBankEB.getFloat(REC__Particle.px, loop);
+                double py = recBankEB.getFloat(REC__Particle.py, loop);
+                double pz = recBankEB.getFloat(REC__Particle.pz, loop);
+                double vx = recBankEB.getFloat(REC__Particle.vx, loop);
+                double vy = recBankEB.getFloat(REC__Particle.vy, loop);
+                double vz = recBankEB.getFloat(REC__Particle.vz, loop);
                 if(this.updateWithUTrack && pTrkMap.containsKey(loop)) {
                     double[] t = pTrkMap.get(loop);
                     px = t[0];
