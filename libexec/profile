@@ -35,15 +35,13 @@ echo "Running asprof on '$executable $arguments' ..."
 
 set -e
 
-$executable $arguments >& asprof_$stub.log
+$executable $arguments >& asprof_$stub.log &
 
-pid_bash=$!
+pid_exec=$!
 
-echo PID1=$pid_bash
 sleep 5
-pid_java=$(pgrep -P "$pid_bash")
 
-echo PID2=$pid_java
+pid_java=$(pgrep -P "$pid_exec")
 
 ps waux && ps -p $pid_java
 
