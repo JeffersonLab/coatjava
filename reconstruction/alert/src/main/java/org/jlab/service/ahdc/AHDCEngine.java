@@ -1,7 +1,6 @@
 package org.jlab.service.ahdc;
 
 import org.jlab.clas.reco.ReconstructionEngine;
-import org.jlab.clas.tracking.kalmanfilter.Material;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.hipo.HipoDataSource;
@@ -17,7 +16,6 @@ import org.jlab.rec.ahdc.HelixFit.HelixFitJava;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.Hit.HitReader;
 import org.jlab.rec.ahdc.HoughTransform.HoughTransform;
-import org.jlab.rec.ahdc.KalmanFilter.MaterialMap;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import org.jlab.rec.ahdc.PreCluster.PreClusterFinder;
 import org.jlab.rec.ahdc.Track.Track;
@@ -43,10 +41,7 @@ import org.jlab.detector.pulse.ModeAHDC;
 public class AHDCEngine extends ReconstructionEngine {
     static final Logger LOGGER = Logger.getLogger(AHDCEngine.class.getName());
 
-    private boolean simulation;
-
-    /// Material Map used by Kalman filter
-    private HashMap<String, Material> materialMap;
+    private boolean simulation = false;
 
     private ModelTrackFinding modelTrackFinding;
     private ModeTrackFinding modeTrackFinding = ModeTrackFinding.AI_Track_Finding;
@@ -76,9 +71,6 @@ public class AHDCEngine extends ReconstructionEngine {
     public boolean init() {
 
         factory = (new AlertDCFactory()).createDetectorCLAS(new DatabaseConstantProvider());
-        simulation = false;
-
-        if (materialMap == null) materialMap = MaterialMap.generateMaterials();
 
         String modeConfig = this.getEngineConfigString("Mode");
         if (modeConfig != null) modeTrackFinding = ModeTrackFinding.valueOf(modeConfig);
@@ -92,10 +84,8 @@ public class AHDCEngine extends ReconstructionEngine {
         tableMap.put("/calibration/alert/ahdc/time_over_threshold", 3);
 
         requireConstants(tableMap);
-        
-        this.getConstantsManager().setVariation("default");
-        
-        this.registerOutputBank("AHDC::hits","AHDC::preclusters","AHDC::clusters","AHDC::track","AHDC::mc","AHDC::ai:prediction");
+        this.getConstantsManager().setVariation("default");    
+        this.registerOutputBank("AHDC::hits","AHDC::preclusters","AHDC::clusters","AHDC::track","AHDC::mc","AHDC::ai:prediction","AHDC::interclusters","AHDC::docaclusters");
 
         return true;
     }
@@ -147,14 +137,15 @@ public class AHDCEngine extends ReconstructionEngine {
             // Otherwise, the conventional methods (Hough Transform or distance) use clusters.
 
             // Safety check: if too many hits, rely on conventional track finding
+            ModeTrackFinding effectiveMode = modeTrackFinding;
             if (AHDC_Hits.size() > MAX_HITS_FOR_AI) {
                 LOGGER.info("Too many AHDC_Hits in AHDC::adc, rely on conventional track finding for this event");
-                modeTrackFinding = ModeTrackFinding.CV_Distance;
+                effectiveMode = ModeTrackFinding.CV_Distance;
             }
 
             ArrayList<Track> AHDC_Tracks = new ArrayList<>();
 
-            if (modeTrackFinding == ModeTrackFinding.AI_Track_Finding) {
+            if (effectiveMode == ModeTrackFinding.AI_Track_Finding) {
                 // 1) Create inter-clusters from pre-clusters
                 PreClustering preClustering = new PreClustering();
                 ArrayList<InterCluster> inter_clusters = preClustering.mergePreclusters(AHDC_PreClusters);
@@ -193,12 +184,12 @@ public class AHDCEngine extends ReconstructionEngine {
                 ArrayList<Cluster> AHDC_Clusters = clusterfinder.get_AHDCClusters();
                 
                 // 2) Find tracks using the selected conventional method
-                if (modeTrackFinding == ModeTrackFinding.CV_Distance) {
+                if (effectiveMode == ModeTrackFinding.CV_Distance) {
                     Distance distance = new Distance();
                     distance.find_track(AHDC_Clusters);
                     AHDC_Tracks = distance.get_AHDCTracks();
                 }
-                else if (modeTrackFinding == ModeTrackFinding.CV_Hough) {
+                else if (effectiveMode == ModeTrackFinding.CV_Hough) {
                     HoughTransform houghtransform = new HoughTransform();
                     houghtransform.find_tracks(AHDC_Clusters);
                     AHDC_Tracks = houghtransform.get_AHDCTracks();
