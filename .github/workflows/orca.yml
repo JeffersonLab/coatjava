@@ -11,6 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  if: false
   orca:
     # do not run on forks or dependabot PRs
     if: |
