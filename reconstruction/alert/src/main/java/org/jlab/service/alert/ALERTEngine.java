@@ -359,14 +359,14 @@ public class ALERTEngine extends ReconstructionEngine {
                     AHDC_hits.add(hit);
                 }
             }
-            if (AHDC_hits.isEmpty()) {
-                LOGGER.warning("ALERTEngine: AHDC::track row " + row
-                    + " (trackid=" + trackid + ") has no matching hits in AHDC::hits, skipping");
-                continue;
-            }
             // Initialise the position and the momentum using the information of the AHDC::track
             // position : mm
             // momentum : MeV
+            // Invariant: AHDC_hits is non-empty. AHDCEngine's AI_Track_Finding path only writes
+            // tracks whose clusters hold >= 6 precluster hits (see AHDCEngine:206 filter and
+            // TrackPrediction cluster pairing), and those same Hit instances are the ones
+            // serialised to AHDC::hits. If this ever flips, the get(0) inside
+            // Track(ArrayList<Hit>) fails loudly here, which is the right signal.
             Track newTrack = new Track(AHDC_hits);
             double[] vec = {
                 trackBank.getFloat("x",  row),
