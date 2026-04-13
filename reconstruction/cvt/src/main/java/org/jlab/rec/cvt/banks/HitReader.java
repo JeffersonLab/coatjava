@@ -117,7 +117,11 @@ public class HitReader {
                 int strip   = bankDGTZ.getShort("component", i);
                 double ADCtoEdep = bankDGTZ.getInt("ADC", i);
                 double time = bankDGTZ.getFloat("time", i);
-                int order   = bankDGTZ.trueOrder(i);
+                int order   = bankDGTZ.getByte("order", i);;
+                if(Constants.getInstance().timeCuts
+                        && !Constants.getInstance().QDCDATSample) {
+                    order = bankDGTZ.trueOrder(i);
+                } 
                 //if (order == 1) {
                 //    continue;
                 //}
