@@ -359,20 +359,26 @@ public class ALERTEngine extends ReconstructionEngine {
                     AHDC_hits.add(hit);
                 }
             }
-            if (AHDC_hits.isEmpty()) continue; // It can happen that a track has no associated hit, in this case we skip it for the Kalman Filter
-            AHDC_tracks.add(new Track(AHDC_hits));
+            if (AHDC_hits.isEmpty()) {
+                LOGGER.warning("ALERTEngine: AHDC::track row " + row
+                    + " (trackid=" + trackid + ") has no matching hits in AHDC::hits, skipping");
+                continue;
+            }
             // Initialise the position and the momentum using the information of the AHDC::track
             // position : mm
             // momentum : MeV
-            double x = trackBank.getFloat("x", row);
-            double y = trackBank.getFloat("y", row);
-            double z = trackBank.getFloat("z", row);
-            double px = trackBank.getFloat("px", row);
-            double py = trackBank.getFloat("py", row);
-            double pz = trackBank.getFloat("pz", row);
-            double[] vec = {x, y, z, px, py, pz};
-            AHDC_tracks.get(row).setPositionAndMomentumVec(vec);
-            AHDC_tracks.get(row).set_trackId(trackid);
+            Track newTrack = new Track(AHDC_hits);
+            double[] vec = {
+                trackBank.getFloat("x",  row),
+                trackBank.getFloat("y",  row),
+                trackBank.getFloat("z",  row),
+                trackBank.getFloat("px", row),
+                trackBank.getFloat("py", row),
+                trackBank.getFloat("pz", row)
+            };
+            newTrack.setPositionAndMomentumVec(vec);
+            newTrack.set_trackId(trackid);
+            AHDC_tracks.add(newTrack);
         }
         // intialise the Kalman Filter
         double magfieldfactor = runBank.getFloat("solenoid", 0);
