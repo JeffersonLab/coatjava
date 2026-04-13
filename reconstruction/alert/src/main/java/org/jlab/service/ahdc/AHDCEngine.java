@@ -169,12 +169,26 @@ public class AHDCEngine extends ReconstructionEngine {
                     throw new RuntimeException(e);
                 }
 
-                // 4) Use the output for the AI model to select the good tracks among the candidates
+                // 4) Select good tracks via greedy non-overlap: sort predictions by score
+                //    descending, accept the highest-scoring prediction, mark its PreClusters
+                //    as claimed, and skip any later prediction that reuses a claimed PreCluster.
+                //    The AI candidate generator routinely emits overlapping predictions (each
+                //    PreCluster can feed several combinations), and because set_trackId mutates
+                //    the shared Hit references in place, a naive "accept all above threshold"
+                //    pass would let later tracks silently steal earlier tracks' hits and leave
+                //    them orphaned in AHDC::hits. Greedy selection enforces one-hit-one-track.
+                predictions.sort((a, b) -> Float.compare(b.getPrediction(), a.getPrediction()));
+                Set<PreCluster> claimedPreclusters = new HashSet<>();
                 for (TrackPrediction t : predictions) {
-                    if (t.getPrediction() > TRACK_FINDING_AI_THRESHOLD) AHDC_Tracks.add(new Track(t.getClusters()));
+                    if (t.getPrediction() <= TRACK_FINDING_AI_THRESHOLD) continue;
+                    boolean overlaps = false;
+                    for (PreCluster pc : t.getPreclusters()) {
+                        if (claimedPreclusters.contains(pc)) { overlaps = true; break; }
+                    }
+                    if (overlaps) continue;
+                    claimedPreclusters.addAll(t.getPreclusters());
+                    AHDC_Tracks.add(new Track(t.getClusters()));
                 }
-                // The assignment of Track ID to all objects is done in the Kalman filter step below 
-                // I don't know if it is a good idea.
             }
             else {
                 // Conventional Track Finding: Hough Transform or Distance: use cluster informations to find tracks
