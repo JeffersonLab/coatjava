@@ -27,25 +27,25 @@ public class HitReader {
      * After construction, retrieve the results via {@link #get_AHDCHits()} and
      * (in simulation) {@link #get_TrueAHDCHits()}.
      *
-     * @param event              current event containing the {@code AHDC::adc} bank (and {@code MC::True} in sim)
-     * @param detector           AHDC geometry used to resolve wire positions on each hit
-     * @param simulation         {@code true} for Monte Carlo events; disables data-only cuts and corrections
-     * @param rawHitCuts         per-wire acceptance cuts (time, ToT, ADC, pedestal min/max)
-     * @param timeOffsets        per-wire {@code t0} offsets applied to the leading-edge time
-     * @param timeToDistanceWire per-wire T2D calibration coefficients used to convert time to DOCA
-     * @param timeOverThreshold  per-wire ToT correction factors (applied in data mode only)
-     * @param adcGains           per-wire ADC gain corrections (applied in data mode only)
+     * @param event                   current event containing the {@code AHDC::adc} bank (and {@code MC::True} in sim)
+     * @param detector                AHDC geometry used to resolve wire positions on each hit
+     * @param simulation              {@code true} for Monte Carlo events; disables data-only cuts and corrections
+     * @param rawHitCutsTable         per-wire acceptance cuts (time, ToT, ADC, pedestal min/max)
+     * @param timeOffsetsTable        per-wire {@code t0} offsets applied to the leading-edge time
+     * @param timeToDistanceWireTable per-wire T2D calibration coefficients used to convert time to DOCA
+     * @param timeOverThresholdTable  per-wire ToT correction factors (applied in data mode only)
+     * @param adcGainsTable           per-wire ADC gain corrections (applied in data mode only)
      */
-    public HitReader(DataEvent event, AlertDCDetector detector, boolean simulation, IndexedTable rawHitCuts, IndexedTable timeOffsets,
-					 IndexedTable timeToDistanceWire, IndexedTable timeOverThreshold, IndexedTable adcGains) {
+    public HitReader(DataEvent event, AlertDCDetector detector, boolean simulation, IndexedTable rawHitCutsTable, IndexedTable timeOffsetsTable,
+					 IndexedTable timeToDistanceWireTable, IndexedTable timeOverThresholdTable, IndexedTable adcGainsTable) {
         sim = simulation;
-        fetch_AHDCHits(event, detector, rawHitCuts, timeOffsets, timeToDistanceWire, timeOverThreshold, adcGains);
+        fetch_AHDCHits(event, detector, rawHitCutsTable, timeOffsetsTable, timeToDistanceWireTable, timeOverThresholdTable, adcGainsTable);
         if (simulation) fetch_TrueAHDCHits(event);
     }
 
 	/**
 	 * Converts a calibrated drift time into a distance-of-closest-approach (DOCA) for a
-	 * given wire, using the piecewise T2D calibration stored in {@code timeToDistanceWire}.
+	 * given wire, using the piecewise T2D calibration stored in {@code timeToDistanceWireTable}.
 	 *
 	 * <p>The result is a blend of three 1st-order polynomials {@code p1, p2, p3} stitched
 	 * together by two logistic transition functions {@code t1, t2}:
@@ -57,16 +57,16 @@ public class HitReader {
 	 * t1_x0(6), t1_width(7), t2_x0(8), t2_width(9), z0(10), z1(11), z2(12),
 	 * extra1(13), extra2(14), chi2ndf(15).
 	 *
-	 * @param sector             AHDC sector index
-	 * @param layer              packed layer index ({@code superlayer*10 + layer})
-	 * @param wire               wire (component) id within the layer
-	 * @param time               calibrated drift time in ns
-	 * @param timeToDistanceWire per-wire T2D calibration table
+	 * @param sector                  AHDC sector index
+	 * @param layer                   packed layer index ({@code superlayer*10 + layer})
+	 * @param wire                    wire (component) id within the layer
+	 * @param time                    calibrated drift time in ns
+	 * @param timeToDistanceWireTable per-wire T2D calibration table
 	 * @return the DOCA in mm
 	 */
-	private double T2Dfunction(int sector, int layer, int wire, double time, IndexedTable timeToDistanceWire){
-		long hash = timeToDistanceWire.getList().getIndexGenerator().hashCode(sector, layer, wire);
-		List<Double> t2d = timeToDistanceWire.getDoublesByHash(hash);
+	private double T2Dfunction(int sector, int layer, int wire, double time, IndexedTable timeToDistanceWireTable){
+		long hash = timeToDistanceWireTable.getList().getIndexGenerator().hashCode(sector, layer, wire);
+		List<Double> t2d = timeToDistanceWireTable.getDoublesByHash(hash);
 
 		double p1 = (t2d.get(0) + t2d.get(1)*time);
 		double p2 = (t2d.get(2) + t2d.get(3)*time);
@@ -93,16 +93,16 @@ public class HitReader {
 	 * </ol>
 	 * The resulting list is stored via {@link #set_AHDCHits(ArrayList)} (empty if the bank is absent).
 	 *
-	 * @param event                  current event
-	 * @param detector               AHDC geometry used to set each hit's wire position
-	 * @param rawHitCuts             per-wire acceptance cuts (data mode only)
-	 * @param timeOffsets            per-wire {@code t0}
-	 * @param timeToDistanceWire     per-wire T2D coefficients
-	 * @param timeOverThresholdTable per-wire ToT correction factors (data mode only)
-	 * @param adcGains               per-wire ADC gain corrections (data mode only)
+	 * @param event                   current event
+	 * @param detector                AHDC geometry used to set each hit's wire position
+	 * @param rawHitCutsTable         per-wire acceptance cuts (data mode only)
+	 * @param timeOffsetsTable        per-wire {@code t0}
+	 * @param timeToDistanceWireTable per-wire T2D coefficients
+	 * @param timeOverThresholdTable  per-wire ToT correction factors (data mode only)
+	 * @param adcGainsTable           per-wire ADC gain corrections (data mode only)
 	 */
-	private void fetch_AHDCHits(DataEvent event, AlertDCDetector detector, IndexedTable rawHitCuts, IndexedTable timeOffsets,
-	                            IndexedTable timeToDistanceWire, IndexedTable timeOverThresholdTable, IndexedTable adcGains) {
+	private void fetch_AHDCHits(DataEvent event, AlertDCDetector detector, IndexedTable rawHitCutsTable, IndexedTable timeOffsetsTable,
+	                            IndexedTable timeToDistanceWireTable, IndexedTable timeOverThresholdTable, IndexedTable adcGainsTable) {
 		ArrayList<Hit> hits = new ArrayList<>();
 
 		if (!event.hasBank("AHDC::adc")) {
@@ -136,7 +136,7 @@ public class HitReader {
 			int    wfType            = bankDGTZ.getShort("wfType", i);
 
 			// Time calibration
-			double t0   = timeOffsets.getDoubleValue("t0", sector, number, wire);
+			double t0   = timeOffsetsTable.getDoubleValue("t0", sector, number, wire);
 			double time = leadingEdgeTime - t0 - startTime;
 
 			// ToT correction
@@ -146,14 +146,15 @@ public class HitReader {
 				if (totCorr != 0.0) totUsed = timeOverThreshold * totCorr;
 
 				// Hit selection (cuts) — only applied on data, bypassed in sim
-				double t_min   = rawHitCuts.getDoubleValue("t_min",   sector, number, wire);
-				double t_max   = rawHitCuts.getDoubleValue("t_max",   sector, number, wire);
-				double tot_min = rawHitCuts.getDoubleValue("tot_min", sector, number, wire);
-				double tot_max = rawHitCuts.getDoubleValue("tot_max", sector, number, wire);
-				double adc_min = rawHitCuts.getDoubleValue("adc_min", sector, number, wire);
-				double adc_max = rawHitCuts.getDoubleValue("adc_max", sector, number, wire);
-				double ped_min = rawHitCuts.getDoubleValue("ped_min", sector, number, wire);
-				double ped_max = rawHitCuts.getDoubleValue("ped_max", sector, number, wire);
+				long hash = rawHitCutsTable.getList().getIndexGenerator().hashCode(sector, number, wire);
+				double t_min   = rawHitCutsTable.getDoubleValueByHash("t_min",   hash);
+				double t_max   = rawHitCutsTable.getDoubleValueByHash("t_max",   hash);
+				double tot_min = rawHitCutsTable.getDoubleValueByHash("tot_min", hash);
+				double tot_max = rawHitCutsTable.getDoubleValueByHash("tot_max", hash);
+				double adc_min = rawHitCutsTable.getDoubleValueByHash("adc_min", hash);
+				double adc_max = rawHitCutsTable.getDoubleValueByHash("adc_max", hash);
+				double ped_min = rawHitCutsTable.getDoubleValueByHash("ped_min", hash);
+				double ped_max = rawHitCutsTable.getDoubleValueByHash("ped_max", hash);
 
 				boolean passCuts =
 					(wfType <= 2) &&
@@ -166,12 +167,12 @@ public class HitReader {
 			}
 
 			// DOCA from calibrated time
-			double doca = (time < 0) ? 0.0 : T2Dfunction(sector, number, wire, time, timeToDistanceWire);
+			double doca = (time < 0) ? 0.0 : T2Dfunction(sector, number, wire, time, timeToDistanceWireTable);
 
 			// ADC gain calibration
 			double adcCal = adcRaw;
 			if (!sim) {
-				double gainCorr = adcGains.getDoubleValue("gainCorr", sector, number, wire);
+				double gainCorr = adcGainsTable.getDoubleValue("gainCorr", sector, number, wire);
 				if (gainCorr != 0.0) adcCal = adcRaw * gainCorr;
 			}
 

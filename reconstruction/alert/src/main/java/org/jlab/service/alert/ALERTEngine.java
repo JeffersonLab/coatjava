@@ -76,7 +76,7 @@ public class ALERTEngine extends ReconstructionEngine {
     private ModelPrePID modelPrePID;
 
     // AHDC calibration table (refreshed on run change)
-    private IndexedTable ahdcAdcGains;
+    private IndexedTable ahdcAdcGainsTable;
 
     public void setB(double B) {
         this.b = B;
@@ -152,7 +152,7 @@ public class ALERTEngine extends ReconstructionEngine {
 
         if (run.get() == 0 || (run.get() != 0 && run.get() != newRun)) {
             run.set(newRun);
-            ahdcAdcGains = this.getConstantsManager().getConstants(newRun, "/calibration/alert/ahdc/gains");
+            ahdcAdcGainsTable = this.getConstantsManager().getConstants(newRun, "/calibration/alert/ahdc/gains");
         }
         
         //Do we need to read the event vx,vy,vz?

@@ -52,11 +52,11 @@ public class AHDCEngine extends ReconstructionEngine {
     private ModeAHDC ahdcExtractor = new ModeAHDC();
 
     // AHDC calibration tables (instance-level, refreshed on run change)
-    private IndexedTable ahdcTimeOffsets;
-    private IndexedTable ahdcTimeToDistanceWire;
-    private IndexedTable ahdcRawHitCuts;
-    private IndexedTable ahdcAdcGains;
-    private IndexedTable ahdcTimeOverThreshold;
+    private IndexedTable ahdcTimeOffsetsTable;
+    private IndexedTable ahdcTimeToDistanceWireTable;
+    private IndexedTable ahdcRawHitCutsTable;
+    private IndexedTable ahdcAdcGainsTable;
+    private IndexedTable ahdcTimeOverThresholdTable;
 
     int Run = -1;
 
@@ -105,11 +105,11 @@ public class AHDCEngine extends ReconstructionEngine {
                 return false;
             }
             if(Run != newRun) {
-                ahdcTimeOffsets        = this.getConstantsManager().getConstants(newRun, "/calibration/alert/ahdc/time_offsets");
-                ahdcTimeToDistanceWire = this.getConstantsManager().getConstants(newRun, "/calibration/alert/ahdc/time_to_distance_wire");
-                ahdcRawHitCuts         = this.getConstantsManager().getConstants(newRun, "/calibration/alert/ahdc/raw_hit_cuts");
-                ahdcAdcGains           = this.getConstantsManager().getConstants(newRun, "/calibration/alert/ahdc/gains");
-                ahdcTimeOverThreshold  = this.getConstantsManager().getConstants(newRun, "/calibration/alert/ahdc/time_over_threshold");
+                ahdcTimeOffsetsTable        = this.getConstantsManager().getConstants(newRun, "/calibration/alert/ahdc/time_offsets");
+                ahdcTimeToDistanceWireTable = this.getConstantsManager().getConstants(newRun, "/calibration/alert/ahdc/time_to_distance_wire");
+                ahdcRawHitCutsTable         = this.getConstantsManager().getConstants(newRun, "/calibration/alert/ahdc/raw_hit_cuts");
+                ahdcAdcGainsTable           = this.getConstantsManager().getConstants(newRun, "/calibration/alert/ahdc/gains");
+                ahdcTimeOverThresholdTable  = this.getConstantsManager().getConstants(newRun, "/calibration/alert/ahdc/time_over_threshold");
                 Run = newRun;
             }
         }
@@ -117,8 +117,8 @@ public class AHDCEngine extends ReconstructionEngine {
         if (event.hasBank("AHDC::adc")) {
             // I) Read raw hits
             HitReader hitReader = new HitReader(event, factory, simulation,
-                    ahdcRawHitCuts, ahdcTimeOffsets, ahdcTimeToDistanceWire,
-                    ahdcTimeOverThreshold, ahdcAdcGains);
+                    ahdcRawHitCutsTable, ahdcTimeOffsetsTable, ahdcTimeToDistanceWireTable,
+                    ahdcTimeOverThresholdTable, ahdcAdcGainsTable);
             ArrayList<Hit> AHDC_Hits = hitReader.get_AHDCHits();
 
             // II) Create PreClusters
