@@ -29,7 +29,7 @@ import java.util.logging.Logger;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.geom.detector.alert.AHDC.AlertDCDetector;
 import org.jlab.geom.detector.alert.AHDC.AlertDCFactory;
-import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
+import org.jlab.utils.groups.IndexedTable;
 import org.jlab.detector.pulse.ModeAHDC;
 
 /** AHDCEngine reconstruction service.
@@ -56,6 +56,15 @@ public class AHDCEngine extends ReconstructionEngine {
     private AlertDCDetector factory = null;
     private ModeAHDC ahdcExtractor = new ModeAHDC();
 
+    // AHDC calibration tables (instance-level, refreshed on run change)
+    private IndexedTable ahdcTimeOffsets;
+    private IndexedTable ahdcTimeToDistanceWire;
+    private IndexedTable ahdcRawHitCuts;
+    private IndexedTable ahdcAdcGains;
+    private IndexedTable ahdcTimeOverThreshold;
+
+    int Run = -1;
+
     public AHDCEngine() { super("ALERT", "ouillon", "1.0.1"); }
 
     public boolean init(ModeTrackFinding m) {
@@ -71,33 +80,18 @@ public class AHDCEngine extends ReconstructionEngine {
 
         if (materialMap == null) materialMap = MaterialMap.generateMaterials();
 
-        if(this.getEngineConfigString("Mode")!=null) {
-            if (Objects.equals(this.getEngineConfigString("Mode"), ModeTrackFinding.AI_Track_Finding.name()))
-                modeTrackFinding = ModeTrackFinding.AI_Track_Finding;
-            else if (Objects.equals(this.getEngineConfigString("Mode"), ModeTrackFinding.CV_Distance.name()))
-                modeTrackFinding = ModeTrackFinding.CV_Distance;
-            else if (Objects.equals(this.getEngineConfigString("Mode"), ModeTrackFinding.CV_Hough.name()))
-                modeTrackFinding = ModeTrackFinding.CV_Hough;
-        }
+        String modeConfig = this.getEngineConfigString("Mode");
+        if (modeConfig != null) modeTrackFinding = ModeTrackFinding.valueOf(modeConfig);
+        if (modeTrackFinding == ModeTrackFinding.AI_Track_Finding) modelTrackFinding = new ModelTrackFinding();
 
-        if (modeTrackFinding == ModeTrackFinding.AI_Track_Finding) {
-            modelTrackFinding = new ModelTrackFinding();
-        }
+        Map<String, Integer> tableMap = new HashMap<>();
+        tableMap.put("/calibration/alert/ahdc/time_offsets", 3);
+        tableMap.put("/calibration/alert/ahdc/time_to_distance_wire", 3);
+        tableMap.put("/calibration/alert/ahdc/raw_hit_cuts", 3);
+        tableMap.put("/calibration/alert/ahdc/gains", 3);
+        tableMap.put("/calibration/alert/ahdc/time_over_threshold", 3);
 
-        // Requires calibration constants
-        String[] alertTables = new String[] {
-            	"/calibration/alert/ahdc/time_offsets",
-                "/calibration/alert/ahdc/time_to_distance",
-                "/calibration/alert/ahdc/raw_hit_cuts",
-                "/calibration/alert/atof/effective_velocity",
-                "/calibration/alert/atof/time_walk",
-                "/calibration/alert/atof/attenuation",
-                "/calibration/alert/atof/time_offsets",
-                "/calibration/alert/ahdc/gains",
-		"/calibration/alert/ahdc/time_over_threshold"
-		
-        };
-        requireConstants(Arrays.asList(alertTables));
+        requireConstants(tableMap);
         
         this.getConstantsManager().setVariation("default");
         
@@ -105,8 +99,6 @@ public class AHDCEngine extends ReconstructionEngine {
 
         return true;
     }
-
-    int Run = -1;
 
     @Override
     public boolean processDataEvent(DataEvent event) {
@@ -122,19 +114,21 @@ public class AHDCEngine extends ReconstructionEngine {
                 LOGGER.warning("AHDCEngine:  got run <= 0 in RUN::config, skipping event.");
                 return false;
             }
-            // Load the constants
-            //-------------------
             if(Run != newRun) {
-                CalibrationConstantsLoader.Load(newRun, this.getConstantsManager());
+                ahdcTimeOffsets        = this.getConstantsManager().getConstants(newRun, "/calibration/alert/ahdc/time_offsets");
+                ahdcTimeToDistanceWire = this.getConstantsManager().getConstants(newRun, "/calibration/alert/ahdc/time_to_distance_wire");
+                ahdcRawHitCuts         = this.getConstantsManager().getConstants(newRun, "/calibration/alert/ahdc/raw_hit_cuts");
+                ahdcAdcGains           = this.getConstantsManager().getConstants(newRun, "/calibration/alert/ahdc/gains");
+                ahdcTimeOverThreshold  = this.getConstantsManager().getConstants(newRun, "/calibration/alert/ahdc/time_over_threshold");
                 Run = newRun;
             }
         }
 
-
-
         if (event.hasBank("AHDC::adc")) {
             // I) Read raw hits
-            HitReader hitReader = new HitReader(event, factory, simulation);
+            HitReader hitReader = new HitReader(event, factory, simulation,
+                    ahdcRawHitCuts, ahdcTimeOffsets, ahdcTimeToDistanceWire,
+                    ahdcTimeOverThreshold, ahdcAdcGains);
             ArrayList<Hit> AHDC_Hits = hitReader.get_AHDCHits();
 
             // II) Create PreClusters
@@ -218,13 +212,14 @@ public class AHDCEngine extends ReconstructionEngine {
             // V) Global fit
             int trackid = 0;
             ArrayList<DocaCluster> all_docaClusters = new ArrayList<>();
+            AHDC_Tracks.removeIf(track -> track.get_Clusters().size() < 3);
             for (Track track : AHDC_Tracks) {
               trackid++;
               track.set_trackId(trackid);
               List<Cluster> originalClusters = track.get_Clusters();
               ArrayList<DocaCluster> docaClusters = DocaClusterRefiner.buildRefinedClusters(originalClusters);
               all_docaClusters.addAll(docaClusters);
-              if (docaClusters == null || docaClusters.size() < 3) {
+              if (docaClusters == null || docaClusters.size() < 3 || originalClusters == null || originalClusters.size() < 3) {
                 // not enough points, skip helix fit
                 continue;
               }
@@ -250,7 +245,6 @@ public class AHDCEngine extends ReconstructionEngine {
                 all_interclusters.addAll(track.getInterclusters());
             }
             DataBank recoInterClusterBank = writer.fillInterClusterBank(event, all_interclusters);
-            // DataBank AIPredictionBanks = writer.fillAIPrediction(event, predictions);
 
             //event.removeBanks("AHDC::hits","AHDC::preclusters","AHDC::clusters","AHDC::track","AHDC::kftrack","AHDC::mc","AHDC::ai:prediction");
             event.appendBank(recoHitsBank);
@@ -259,7 +253,6 @@ public class AHDCEngine extends ReconstructionEngine {
             event.appendBank(recoTracksBank);
             event.appendBank(recoInterClusterBank);
             event.appendBank(clustersDocaBank);
-            // event.appendBank(AIPredictionBanks);
 
             if (simulation) {
                 DataBank recoMCBank = writer.fillAHDCMCTrackBank(event);

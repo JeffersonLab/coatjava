@@ -3,7 +3,7 @@
 set -e
 
 # Default versions:
-grapes=2.21
+grapes=2.24
 clara=5.0.2
 
 function error() {
@@ -62,8 +62,7 @@ function build_clara {
 }
 
 function build_grapes {
-    #git clone --branch $grapes --depth 1 https://code.jlab.org/hallb/clas12/coatjava/grapes
-    git clone --depth 1 https://code.jlab.org/hallb/clas12/coatjava/grapes
+    git clone --depth 1 --branch $grapes https://github.com/jeffersonlab/grapes
     cd grapes && mvn package && cd -
 }
 
