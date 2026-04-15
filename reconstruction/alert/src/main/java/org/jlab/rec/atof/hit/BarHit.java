@@ -106,7 +106,7 @@ public class BarHit extends ATOFHit {
         this.setEnergy(Edep_up + Edep_down);
     }
 
-    public BarHit(ATOFHit hit_down, ATOFHit hit_up, IndexedTable atofEffectiveVelocity) {
+    public BarHit(ATOFHit hit_down, ATOFHit hit_up, IndexedTable atofEffectiveVelocityTable) {
         boolean hits_match = hit_down.matchBar(hit_up);
         if (!hits_match) {
             throw new UnsupportedOperationException("Hits do not match \n");
@@ -122,7 +122,7 @@ public class BarHit extends ATOFHit {
         this.setY(hit_up.getY());
 
         //CCDB readout for the effective velocity
-        this.vEff = atofEffectiveVelocity.getDoubleValue("veff", this.getSector(), this.getLayer(), this.getComponent());
+        this.vEff = atofEffectiveVelocityTable.getDoubleValue("veff", this.getSector(), this.getLayer(), this.getComponent());
         this.computeZ();
         this.computeTime();
         this.computeEnergy();
