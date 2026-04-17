@@ -172,9 +172,9 @@ public class DetectorEventDecoder {
     public void fitPulses(List<DetectorDataDgtz> detectorData) {
 
         // preload CCDB tables once:
-        ArrayList<IndexedTable> tables = new ArrayList<>();
-        for (String name : tablesFitter) {
-            tables.add(fitterManager.getConstants(runNumber, name));
+        HashMap<DetectorType, IndexedTable> tables = new HashMap<>();
+        for (int i=0; i<tablesFitter.size(); i++) {
+            tables.put(keysFitter.get(i), fitterManager.getConstants(runNumber, tablesFitter.get(i)));
         }
 
         final long hash0 = IndexedTable.DEFAULT_GENERATOR.hashCode(0,0,0);
@@ -187,9 +187,8 @@ public class DetectorEventDecoder {
             int channel  = data.getDescriptor().getChannel();
             DetectorType type = data.getDescriptor().getType();
 
-            int idx = keysFitter.indexOf(type);
-            if (idx < 0) continue;
-            IndexedTable daqTable = tables.get(idx);
+            if (!keysFitter.contains(type)) continue;
+            IndexedTable daqTable = tables.get(type);
             
             if (keysMicromega.contains(type)) {
                 short adcOffset = (short) daqTable.getDoubleValueByHash("adc_offset", hash0);
