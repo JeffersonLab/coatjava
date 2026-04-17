@@ -55,7 +55,10 @@ public class MUVTEngine extends ReconstructionEngine {
     }
 
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public void detectorChanged(int run) {}
+
+    @Override
+    public boolean processDataEventUser(DataEvent event) {
         // Initial setup.
         if(debug) System.out.println("\nNew event");
         

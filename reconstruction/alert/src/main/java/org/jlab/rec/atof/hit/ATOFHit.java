@@ -4,7 +4,7 @@ import org.jlab.geom.base.*;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.rec.atof.constants.Parameters;
 import java.util.logging.Logger;
-import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
+import org.jlab.utils.groups.IndexedTable;
 
 /**
  *
@@ -27,6 +27,7 @@ public class ATOFHit {
     private boolean isInACluster;
     private int associatedClusterIndex;
     int idTDC;
+    private IndexedTable atofTimeOffsetsTable;
     
 
     public int getSector() {
@@ -195,16 +196,11 @@ public class ATOFHit {
         //If the startTime has been defined, remove it
         if(this.startTime!= null) this.time -= this.startTime;
 
-        //TODO: When table structure evolves, pay attention to order.
-        //Key for the current channel 
-        int key = this.sector*10000 + this.layer*1000 + this.component*10 + 0;//this.order;
-    
         //Time offsets
-        double[] timeOffsets = CalibrationConstantsLoader.ATOF_TIME_OFFSETS.get(key);
-        double t0 = timeOffsets[0];
-        
-        //tud is used to store the bar up - bar down alignment
-        double tud = timeOffsets[1];
+        if (atofTimeOffsetsTable == null) return 0;
+        int order0 = 0;
+        double t0  = atofTimeOffsetsTable.getDoubleValue("t0",                  this.sector, this.layer, this.component, order0);
+        double tud = atofTimeOffsetsTable.getDoubleValue("upstream_downstream", this.sector, this.layer, this.component, order0);
         //The rest of the constants are not used for now
         /*double twb = timeOffsets[2];
         double xtra1 = timeOffsets[3];
@@ -403,7 +399,8 @@ public class ATOFHit {
      * @param atof Detector object representing the atof, used to calculate
      * spatial coordinates.
      */
-    public ATOFHit(int sector, int layer, int component, int order, int tdc, int tot, Float startTime, Detector atof) {
+    public ATOFHit(int sector, int layer, int component, int order, int tdc, int tot, Float startTime, Detector atof,
+                   IndexedTable atofTimeOffsetsTable) {
         this.sector = sector;
         this.layer = layer;
         this.component = component;
@@ -411,6 +408,7 @@ public class ATOFHit {
         this.tdc = tdc;
         this.tot = tot;
         this.startTime = startTime;
+        this.atofTimeOffsetsTable = atofTimeOffsetsTable;
         this.isInACluster = false;
 
         this.makeType();

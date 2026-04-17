@@ -1,14 +1,11 @@
 #!/bin/bash
 
-# coatjava must already be built at ../../coatjava/
+# WARNING:  coatjava must already be built at ../../coatjava/
 # and input test data files at ./data
 
-#set -x # print every command executed
-
-input_dir=./data/5.11-fid-tm-dc2-r11
-
+set -e
 source ../../coatjava/libexec/env.sh
-
+input_dir=./data/5.11-fid-tm-dc2-r11
 classPath="${COATJAVA_CLASSPATH}:../lib/*:src/"
 
 # check arguments:
@@ -55,9 +52,8 @@ rm -f out_${stub}.hipo
 ../../coatjava/bin/recon-util -l FINE -i ${input_dir}/${stub}.hipo -o out_${stub}.hipo -c 2
 
 # run EB tests:
-java -DCLAS12DIR="$COAT" -Xmx1536m -Xms1024m -cp $classPath -DINPUTFILE=out_${stub}.hipo eb.EBTwoTrackTest
+java -Xmx1536m -Xms1024m -cp $classPath -DINPUTFILE=out_${stub}.hipo eb.EBTwoTrackTest
 if [ $? != 0 ] ; then echo "EBTwoTrackTest unit test failure" ; exit 1 ; else echo "EBTwoTrackTest passed unit tests" ; fi
 
 # run truth-efficiency calculator:
 ../../coatjava/bin/trutheff ./out_${stub}.hipo
-
