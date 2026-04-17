@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.jlab.detector.banks.RawBank.OrderType;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.calib.utils.ConstantsManager;
@@ -131,9 +132,9 @@ public class DetectorEventDecoder {
         keysMicromega.add(DetectorType.FMT);
         keysMicromega.add(DetectorType.FTTRK);
         
-        translationManager.init((List)translations.values());
+        translationManager.init(translations.values().stream().collect(Collectors.toList()));
 
-        fitterManager.init((List)fitters.values());
+        fitterManager.init(fitters.values().stream().collect(Collectors.toList()));
 
         scalerManager.init(Arrays.asList(new String[]{"/runcontrol/fcup","/runcontrol/slm","/runcontrol/hwp",
                                                       "/runcontrol/helicity","/daq/config/scalers/dsc1"}));
@@ -141,7 +142,7 @@ public class DetectorEventDecoder {
     }
 
     public void checkTables() {
-        List<String> tables = (List)translations.values();
+        List<String> tables = (List)translations.values().stream().collect(Collectors.toList());
         for (int i=0; i<tables.size(); i++) {
             IndexedTable t = translationManager.getConstants(runNumber, tables.get(i));
             for (int j=0; j<i; j++)
@@ -179,8 +180,8 @@ public class DetectorEventDecoder {
 
         // preload CCDB tables once:
         HashMap<DetectorType, IndexedTable> tables = new HashMap<>();
-        for (DetectorType t : translations.keySet()) {
-            tables.put(t, fitterManager.getConstants(runNumber, translations.get(t)));
+        for (DetectorType t : fitters.keySet()) {
+            tables.put(t, fitterManager.getConstants(runNumber, fitters.get(t)));
         }
 
         final long hash0 = IndexedTable.DEFAULT_GENERATOR.hashCode(0,0,0);
@@ -193,7 +194,7 @@ public class DetectorEventDecoder {
             int channel  = data.getDescriptor().getChannel();
             DetectorType type = data.getDescriptor().getType();
 
-            if (!translations.containsKey(type)) continue;
+            if (!fitters.containsKey(type)) continue;
             
             IndexedTable daqTable = tables.get(type);
             
