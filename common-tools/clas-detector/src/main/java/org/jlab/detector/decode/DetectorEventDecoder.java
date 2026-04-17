@@ -169,7 +169,7 @@ public class DetectorEventDecoder {
         }
     }
 
-    public void fitPulses(List<DetectorDataDgtz>  detectorData){
+    public void fitPulses(List<DetectorDataDgtz> detectorData) {
 
         // preload CCDB tables once:
         ArrayList<IndexedTable> tables = new ArrayList<>();
@@ -179,41 +179,41 @@ public class DetectorEventDecoder {
 
         final long hash0 = IndexedTable.DEFAULT_GENERATOR.hashCode(0,0,0);
 
-        for(DetectorDataDgtz data : detectorData){
+        for (DetectorDataDgtz data : detectorData) {
+
             if (data.getADCSize() == 0) continue;
             int crate    = data.getDescriptor().getCrate();
             int slot     = data.getDescriptor().getSlot();
             int channel  = data.getDescriptor().getChannel();
-            long hash    = IndexedTable.DEFAULT_GENERATOR.hashCode(crate,slot,channel);
-            boolean ismm = keysMicromega.contains(data.getDescriptor().getType());
+            DetectorType type = data.getDescriptor().getType();
 
-            for (int j=0; j<keysFitter.size(); ++j) {
-                IndexedTable daqTable = tables.get(j);
-                DetectorType tableType = keysFitter.get(j);
-                //custom MM fitter
-                if (ismm && data.getDescriptor().getType() == tableType) {
-                    short adcOffset = (short) daqTable.getDoubleValueByHash("adc_offset", hash0);
-                    double fineTimeStampResolution = (byte) daqTable.getDoubleValueByHash("dream_clock", hash0);
-                    double samplingTime = (byte) daqTable.getDoubleValueByHash("sampling_time", hash0);
-                    int sparseSample = daqTable.getIntValueByHash("sparse", hash0);
-                    ADCData adc = data.getADCData(0);
-                    mvtFitter.fit(adcOffset, fineTimeStampResolution, samplingTime, adc.getPulseArray(), adc.getTimeStamp(), sparseSample);
-                    adc.setHeight((short) (mvtFitter.adcMax));
-                    adc.setTime((int) (mvtFitter.timeMax));
-                    adc.setIntegral((int) (mvtFitter.integral));
-                    adc.setTimeStamp(mvtFitter.timestamp);
-                    // first one wins:
-                    break;
-                }
-                else if(daqTable.hasEntryByHash(hash)==true){
+            int idx = keysFitter.indexOf(type);
+            if (idx < 0) continue;
+            IndexedTable daqTable = tables.get(idx);
+            
+            if (keysMicromega.contains(type)) {
+                short adcOffset = (short) daqTable.getDoubleValueByHash("adc_offset", hash0);
+                double fineTimeStampResolution = (byte) daqTable.getDoubleValueByHash("dream_clock", hash0);
+                double samplingTime = (byte) daqTable.getDoubleValueByHash("sampling_time", hash0);
+                int sparseSample = daqTable.getIntValueByHash("sparse", hash0);
+                ADCData adc = data.getADCData(0);
+                mvtFitter.fit(adcOffset, fineTimeStampResolution, samplingTime, adc.getPulseArray(), adc.getTimeStamp(), sparseSample);
+                adc.setHeight((short) (mvtFitter.adcMax));
+                adc.setTime((int) (mvtFitter.timeMax));
+                adc.setIntegral((int) (mvtFitter.integral));
+                adc.setTimeStamp(mvtFitter.timestamp);
+            }
+            else {
+                long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(crate,slot,channel);
+                if (daqTable.hasEntryByHash(hash)==true){
                     int nsa = daqTable.getIntValueByHash("nsa", hash);
                     int nsb = daqTable.getIntValueByHash("nsb", hash);
                     int tet = daqTable.getIntValueByHash("tet", hash);
                     int ped = 0;
-                    if(data.getDescriptor().getType() == DetectorType.RF && tableType == DetectorType.RF) {
+                    if (data.getDescriptor().getType() == DetectorType.RF && type == DetectorType.RF)  {
                         ped = daqTable.getIntValueByHash("pedestal", hash);
                     }
-                    for(int i = 0; i < data.getADCSize(); i++){
+                    for (int i = 0; i < data.getADCSize(); i++) {
                         ADCData adc = data.getADCData(i);
                         if(adc.getPulseSize()>0){
                             try {
@@ -230,8 +230,6 @@ public class DetectorEventDecoder {
                         }
                         data.getADCData(i).setADC(nsa, nsb);
                     }
-                    // first one wins:
-                    break;
                 }
             }
         }
