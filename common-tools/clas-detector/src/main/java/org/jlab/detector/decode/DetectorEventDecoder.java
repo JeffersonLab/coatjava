@@ -188,14 +188,14 @@ public class DetectorEventDecoder {
             boolean ismm = keysMicromega.contains(data.getDescriptor().getType());
 
             for (int j=0; j<keysFitter.size(); ++j) {
-                IndexedTable daq = tables.get(j);
-                DetectorType type = keysFitter.get(j);
+                IndexedTable daqTable = tables.get(j);
+                DetectorType tableType = keysFitter.get(j);
                 //custom MM fitter
-                if (ismm && data.getDescriptor().getType() == type) {
-                    short adcOffset = (short) daq.getDoubleValueByHash("adc_offset", hash0);
-                    double fineTimeStampResolution = (byte) daq.getDoubleValueByHash("dream_clock", hash0);
-                    double samplingTime = (byte) daq.getDoubleValueByHash("sampling_time", hash0);
-                    int sparseSample = daq.getIntValueByHash("sparse", hash0);
+                if (ismm && data.getDescriptor().getType() == tableType) {
+                    short adcOffset = (short) daqTable.getDoubleValueByHash("adc_offset", hash0);
+                    double fineTimeStampResolution = (byte) daqTable.getDoubleValueByHash("dream_clock", hash0);
+                    double samplingTime = (byte) daqTable.getDoubleValueByHash("sampling_time", hash0);
+                    int sparseSample = daqTable.getIntValueByHash("sparse", hash0);
                     ADCData adc = data.getADCData(0);
                     mvtFitter.fit(adcOffset, fineTimeStampResolution, samplingTime, adc.getPulseArray(), adc.getTimeStamp(), sparseSample);
                     adc.setHeight((short) (mvtFitter.adcMax));
@@ -205,13 +205,13 @@ public class DetectorEventDecoder {
                     // first one wins:
                     break;
                 }
-                else if(daq.hasEntryByHash(hash)==true){
-                    int nsa = daq.getIntValueByHash("nsa", hash);
-                    int nsb = daq.getIntValueByHash("nsb", hash);
-                    int tet = daq.getIntValueByHash("tet", hash);
+                else if(daqTable.hasEntryByHash(hash)==true){
+                    int nsa = daqTable.getIntValueByHash("nsa", hash);
+                    int nsb = daqTable.getIntValueByHash("nsb", hash);
+                    int tet = daqTable.getIntValueByHash("tet", hash);
                     int ped = 0;
-                    if(data.getDescriptor().getType() == DetectorType.RF && type == DetectorType.RF) {
-                        ped = daq.getIntValueByHash("pedestal", hash);
+                    if(data.getDescriptor().getType() == DetectorType.RF && tableType == DetectorType.RF) {
+                        ped = daqTable.getIntValueByHash("pedestal", hash);
                     }
                     for(int i = 0; i < data.getADCSize(); i++){
                         ADCData adc = data.getADCData(i);
