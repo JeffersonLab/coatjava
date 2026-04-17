@@ -177,13 +177,14 @@ public class DetectorEventDecoder {
             tables.add(fitterManager.getConstants(runNumber, name));
         }
 
+        final long hash0 = IndexedTable.DEFAULT_GENERATOR.hashCode(0,0,0);
+
         for(DetectorDataDgtz data : detectorData){
             if (data.getADCSize() == 0) continue;
             int crate    = data.getDescriptor().getCrate();
             int slot     = data.getDescriptor().getSlot();
             int channel  = data.getDescriptor().getChannel();
             long hash    = IndexedTable.DEFAULT_GENERATOR.hashCode(crate,slot,channel);
-            long hash0   = IndexedTable.DEFAULT_GENERATOR.hashCode(0,0,0);
             boolean ismm = keysMicromega.contains(data.getDescriptor().getType());
 
             for (int j=0; j<keysFitter.size(); ++j) {
