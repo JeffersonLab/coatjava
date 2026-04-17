@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import org.jlab.detector.banks.RawBank.OrderType;
@@ -22,14 +23,11 @@ public class DetectorEventDecoder {
     ConstantsManager fitterManager      = new ConstantsManager();
     ConstantsManager scalerManager      = new ConstantsManager();
 
-    List<String> tablesTrans  = null;
-    List<String> tablesFitter = null;
-
-    List<DetectorType> keysTrans    = null;
-    List<DetectorType> keysFitter   = null;
-    List<DetectorType> keysFilter   = null;
-    List<DetectorType> keysMicromega= null;
-
+    HashSet<DetectorType> keysFilter;
+    HashSet<DetectorType> keysMicromega;
+    HashMap<DetectorType,String> translations;
+    HashMap<DetectorType,String> fitters;
+    
     private int runNumber = 10;
 
     private ExtendedFADCFitter extendedFitter = new ExtendedFADCFitter();
@@ -38,11 +36,7 @@ public class DetectorEventDecoder {
     private TranslationTable translator = new TranslationTable();
 
     public DetectorEventDecoder(boolean development){
-        if(development==true){
-            this.initDecoderDev();
-        } else {
-            this.initDecoder();
-        }
+        this.initDecoder();
     }
 
     public void setTimestamp(String timestamp) {
@@ -60,8 +54,9 @@ public class DetectorEventDecoder {
     public void setRunNumber(int run){
         if (run != this.runNumber) {
             translator = new TranslationTable();
-            for (int i=0; i<keysTrans.size(); i++)
-                translator.add(keysTrans.get(i), translationManager.getConstants(run, tablesTrans.get(i)));
+            for (DetectorType t : translations.keySet()) {
+                translator.add(t, translationManager.getConstants(run, translations.get(t)));
+            }
         }
         this.runNumber = run;
     }
@@ -84,62 +79,73 @@ public class DetectorEventDecoder {
         this.initDecoder();
     }
 
-    public final void initDecoderDev(){
-        keysTrans = Arrays.asList(new DetectorType[]{ DetectorType.HTCC,DetectorType.BST,DetectorType.RTPC} );
-        tablesTrans = Arrays.asList(new String[]{ "/daq/tt/clasdev/htcc","/daq/tt/clasdev/svt","/daq/tt/clasdev/rtpc" });
-        keysFitter   = Arrays.asList(new DetectorType[]{DetectorType.HTCC});
-        tablesFitter = Arrays.asList(new String[]{"/daq/fadc/clasdev/htcc"});
-        translationManager.init(tablesTrans);
-        fitterManager.init(tablesFitter);
-        scalerManager.init(Arrays.asList(new String[]{"/runcontrol/fcup","/runcontrol/slm","/runcontrol/hwp",
-                                                      "/runcontrol/helicity","/daq/config/scalers/dsc1"}));
-    }
-
     public final void initDecoder(){
 
-        // Detector translation table
-        keysTrans = Arrays.asList(new DetectorType[]{DetectorType.FTCAL,DetectorType.FTHODO,DetectorType.FTTRK,DetectorType.LTCC,DetectorType.ECAL,DetectorType.FTOF,
-                                               DetectorType.HTCC,DetectorType.DC,DetectorType.CTOF,DetectorType.CND,DetectorType.BST,DetectorType.RF,DetectorType.BMT,DetectorType.FMT,
-                                               DetectorType.RICH,DetectorType.HEL,DetectorType.BAND,DetectorType.RTPC,
-                                               DetectorType.RASTER,DetectorType.ATOF,DetectorType.AHDC
-        });
-        tablesTrans = Arrays.asList(new String[]{
-            "/daq/tt/ftcal","/daq/tt/fthodo","/daq/tt/fttrk","/daq/tt/ltcc",
-            "/daq/tt/ec","/daq/tt/ftof","/daq/tt/htcc","/daq/tt/dc","/daq/tt/ctof","/daq/tt/cnd","/daq/tt/svt",
-            "/daq/tt/rf","/daq/tt/bmt","/daq/tt/fmt","/daq/tt/rich2","/daq/tt/hel","/daq/tt/band","/daq/tt/rtpc",
-            "/daq/tt/raster","/daq/tt/atof","/daq/tt/ahdc"
-        });
-        translationManager.init(tablesTrans);
+        keysFilter = new HashSet<>();
+        keysMicromega= new HashSet<>();
+        translations = new HashMap<>();
+        fitters = new HashMap<>();
+    
+        translations.put(DetectorType.FTCAL,  "/daq/tt/ftcal");
+        translations.put(DetectorType.FTHODO, "/daq/tt/fthodo");
+        translations.put(DetectorType.FTTRK,  "/daq/tt/fttrk");
+        translations.put(DetectorType.LTCC,   "/daq/tt/ltcc");
+        translations.put(DetectorType.ECAL,   "/daq/tt/ec");
+        translations.put(DetectorType.FTOF,   "/daq/tt/ftof");
+        translations.put(DetectorType.HTCC,   "/daq/tt/htcc");
+        translations.put(DetectorType.DC,     "/daq/tt/dc");
+        translations.put(DetectorType.CTOF,   "/daq/tt/ctof");
+        translations.put(DetectorType.CND,    "/daq/tt/cnd");
+        translations.put(DetectorType.BST,    "/daq/tt/svt");
+        translations.put(DetectorType.RF,     "/daq/tt/rf");
+        translations.put(DetectorType.BMT,    "/daq/tt/bmt");
+        translations.put(DetectorType.FMT,    "/daq/tt/fmt");
+        translations.put(DetectorType.RICH,   "/daq/tt/rich2");
+        translations.put(DetectorType.HEL,    "/daq/tt/hel");
+        translations.put(DetectorType.BAND,   "/daq/tt/band");
+        translations.put(DetectorType.RTPC,   "/daq/tt/rtpc");
+        translations.put(DetectorType.RASTER, "/daq/tt/raster");
+        translations.put(DetectorType.ATOF,   "/daq/tt/atof");
+        translations.put(DetectorType.AHDC,   "/daq/tt/ahdc");
         
-        // ADC waveform fitter translation table
-        keysFitter   = Arrays.asList(new DetectorType[]{DetectorType.FTCAL,DetectorType.FTHODO,DetectorType.FTTRK,DetectorType.FTOF,DetectorType.LTCC,
-                                                  DetectorType.ECAL,DetectorType.HTCC,DetectorType.CTOF,DetectorType.CND,DetectorType.BMT,
-                                                  DetectorType.FMT,DetectorType.HEL,DetectorType.RF,DetectorType.BAND,DetectorType.RASTER,
-                                                  DetectorType.AHDC});
-        tablesFitter = Arrays.asList(new String[]{
-            "/daq/fadc/ftcal","/daq/fadc/fthodo","/daq/config/fttrk","/daq/fadc/ftof","/daq/fadc/ltcc",
-            "/daq/fadc/ec", "/daq/fadc/htcc","/daq/fadc/ctof","/daq/fadc/cnd","/daq/config/bmt",
-            "/daq/config/fmt","/daq/fadc/hel","/daq/fadc/rf","/daq/fadc/band","/daq/fadc/raster",
-            "/daq/config/ahdc"
-        });
-        fitterManager.init(tablesFitter);
+        fitters.put(DetectorType.FTCAL,  "/daq/fadc/ftcal");
+        fitters.put(DetectorType.FTHODO, "/daq/fadc/fthodo");
+        fitters.put(DetectorType.FTTRK,  "/daq/fadc/fttrk");
+        fitters.put(DetectorType.FTOF,   "/daq/fadc/ftof");
+        fitters.put(DetectorType.LTCC,   "/daq/fadc/ltcc");
+        fitters.put(DetectorType.ECAL,   "/daq/fadc/ec");
+        fitters.put(DetectorType.HTCC,   "/daq/fadc/htcc");
+        fitters.put(DetectorType.CTOF,   "/daq/fadc/ctof");
+        fitters.put(DetectorType.CND,    "/daq/fadc/cnd");
+        fitters.put(DetectorType.BMT,    "/daq/fadc/bmt");
+        fitters.put(DetectorType.FMT,    "/daq/fadc/fmt");
+        fitters.put(DetectorType.HEL,    "/daq/fadc/hel");
+        fitters.put(DetectorType.RF,     "/daq/fadc/rf");
+        fitters.put(DetectorType.BAND,   "/daq/fadc/band");
+        fitters.put(DetectorType.RASTER, "/daq/fadc/raster");
+        fitters.put(DetectorType.AHDC,   "/daq/fadc/ahdc");
+        
+        keysFilter.add(DetectorType.DC);
+        
+        keysMicromega.add(DetectorType.BMT);
+        keysMicromega.add(DetectorType.FMT);
+        keysMicromega.add(DetectorType.FTTRK);
+        
+        translationManager.init((List)translations.values());
 
-        // Data filter list
-        keysFilter   = Arrays.asList(new DetectorType[]{DetectorType.DC});
+        fitterManager.init((List)fitters.values());
 
         scalerManager.init(Arrays.asList(new String[]{"/runcontrol/fcup","/runcontrol/slm","/runcontrol/hwp",
                                                       "/runcontrol/helicity","/daq/config/scalers/dsc1"}));
-
-        keysMicromega = Arrays.asList(new DetectorType[]{DetectorType.BMT,DetectorType.FMT,DetectorType.FTTRK});
-
         checkTables();
     }
 
     public void checkTables() {
-        for (int i=0; i<tablesTrans.size(); i++) {
-            IndexedTable t = translationManager.getConstants(runNumber, tablesTrans.get(i));
+        List<String> tables = (List)translations.values();
+        for (int i=0; i<tables.size(); i++) {
+            IndexedTable t = translationManager.getConstants(runNumber, tables.get(i));
             for (int j=0; j<i; j++)
-                t.conflicts(translationManager.getConstants(runNumber, tablesTrans.get(j)));
+                t.conflicts(translationManager.getConstants(runNumber, tables.get(j)));
         }
     }
 
@@ -173,8 +179,8 @@ public class DetectorEventDecoder {
 
         // preload CCDB tables once:
         HashMap<DetectorType, IndexedTable> tables = new HashMap<>();
-        for (int i=0; i<tablesFitter.size(); i++) {
-            tables.put(keysFitter.get(i), fitterManager.getConstants(runNumber, tablesFitter.get(i)));
+        for (DetectorType t : translations.keySet()) {
+            tables.put(t, fitterManager.getConstants(runNumber, translations.get(t)));
         }
 
         final long hash0 = IndexedTable.DEFAULT_GENERATOR.hashCode(0,0,0);
@@ -187,7 +193,8 @@ public class DetectorEventDecoder {
             int channel  = data.getDescriptor().getChannel();
             DetectorType type = data.getDescriptor().getType();
 
-            if (!keysFitter.contains(type)) continue;
+            if (!translations.containsKey(type)) continue;
+            
             IndexedTable daqTable = tables.get(type);
             
             if (keysMicromega.contains(type)) {
