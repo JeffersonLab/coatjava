@@ -154,8 +154,9 @@ public class DetectorEventDecoder {
     }
 
     /**
-     * applies translation table to the digitized data to translate
-     * crate,slot channel to sector layer component.
+     * Apply CCDB /daq/tt translation tables to the digitized data to translate
+     * crate/slot/channel to sector/layer/component/order.
+     * 
      * @param detectorData
      */
     public void translate(List<DetectorDataDgtz>  detectorData){
@@ -179,6 +180,11 @@ public class DetectorEventDecoder {
         }
     }
 
+    /**
+     * Use CCDB /daq/fadc tables to convert waveforms to pulses.
+     * 
+     * @param detectorData 
+     */
     public void fitPulses(List<DetectorDataDgtz> detectorData) {
 
         final long hash0 = IndexedTable.DEFAULT_GENERATOR.hashCode(0,0,0);
@@ -186,15 +192,12 @@ public class DetectorEventDecoder {
         for (DetectorDataDgtz data : detectorData) {
 
             if (data.getADCSize() == 0) continue;
-            int crate    = data.getDescriptor().getCrate();
-            int slot     = data.getDescriptor().getSlot();
-            int channel  = data.getDescriptor().getChannel();
-            DetectorType type = data.getDescriptor().getType();
 
-            if (!tableFitter.containsKey(type)) continue;
-            
+            DetectorType type = data.getDescriptor().getType();
+            if (!tablesFitter.containsKey(type)) continue;
             IndexedTable daqTable = tablesFitter.get(type);
-            
+           
+            // For MM, assume crate/slot/channel=0/0/0 for table lookup:
             if (keysMicromega.contains(type)) {
                 short adcOffset = (short) daqTable.getDoubleValueByHash("adc_offset", hash0);
                 double fineTimeStampResolution = (byte) daqTable.getDoubleValueByHash("dream_clock", hash0);
@@ -207,9 +210,14 @@ public class DetectorEventDecoder {
                 adc.setIntegral((int) (mvtFitter.integral));
                 adc.setTimeStamp(mvtFitter.timestamp);
             }
+
+            // Otherwise, use crate/slot/channel to find the table entry:
             else {
-                long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(crate,slot,channel);
-                if (daqTable.hasEntryByHash(hash)==true){
+                long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(
+                        data.getDescriptor().getCrate(),
+                        data.getDescriptor().getSlot(),
+                        data.getDescriptor().getChannel());
+                if (daqTable.hasEntryByHash(hash)) {
                     int nsa = daqTable.getIntValueByHash("nsa", hash);
                     int nsb = daqTable.getIntValueByHash("nsb", hash);
                     int tet = daqTable.getIntValueByHash("tet", hash);
@@ -223,8 +231,8 @@ public class DetectorEventDecoder {
                             try {
                                 extendedFitter.fit(nsa, nsb, tet, ped, adc.getPulseArray());
                             } catch (Exception e) {
-                                System.out.println(">>>> error : fitting pulse "
-                                    +  crate + " / " + slot + " / " + channel);
+                                System.err.println(">>>> error : fitting pulse "+data.getDescriptor().getCrate()+
+                                    " / "+data.getDescriptor().getSlot()+" / "+data.getDescriptor().getChannel());
                             }
                             int adc_corrected = extendedFitter.adc + extendedFitter.ped*(nsa+nsb);
                             adc.setHeight((short) this.extendedFitter.pulsePeakValue);
