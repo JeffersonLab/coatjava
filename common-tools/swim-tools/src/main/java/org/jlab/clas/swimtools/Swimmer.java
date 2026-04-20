@@ -1,15 +1,13 @@
 package org.jlab.clas.swimtools;
-import cnuphys.magfield.MagneticFields;
 
 import java.util.HashMap;
-import java.util.logging.Level;
 import java.util.logging.Logger;
+import cnuphys.magfield.MagneticFields;
 
 /**
  *
  * @author ziegler, heddle
  */
-
 
 public class Swimmer {
 

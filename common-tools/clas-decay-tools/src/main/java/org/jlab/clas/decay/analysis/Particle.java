@@ -997,7 +997,7 @@ public class Particle {
         } else {
             swim.SetSwimParameters(vxch, vych, vzch, 
                 -pxch, -pych, -pzch, -q);
-            double[] tr1 = swim.SwimToPlaneBoundary((vzvo-buffer),new Vector3D(0,0,1), -1);
+            double[] tr1 = swim.SwimToPlaneBoundary((vzvo-buffer),new Vector3D(0,0,1));
             
             swim.SetSwimParameters(tr1[0], tr1[1], tr1[2], -tr1[3], -tr1[4], -tr1[5], q);
         }

@@ -444,7 +444,7 @@ public class Track {
         double d = p.dot(n);
         if(v.dot(n)<d) {
         swim.SetSwimParameters(x, y, z, px, py, pz, q);
-            return swim.SwimToPlaneBoundary(p.dot(n), n, 1);
+            return swim.SwimToPlaneBoundary(p.dot(n), n);
         }
         else {
             return null;
