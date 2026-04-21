@@ -45,7 +45,7 @@ public class KFitter extends AKFitter {
     private int iterNum;
 
     private double chi2kf = 0;
-    private double KFScale = 4;
+    private static double KFScale = 4;
 
     private int svzLength;
 
@@ -74,6 +74,10 @@ public class KFitter extends AKFitter {
             for(int i = 0; i < strs.length; i++)
                 dafAnnealingFactorsTB.add(Double.valueOf(strs[i]));       
     }
+    
+    public static void setKFScale(double scale){
+        KFScale = scale;
+    }  
 
     public final void init(List<Surface> measSurfaces, StateVec initSV) {
         finalSmoothedStateVec = null;

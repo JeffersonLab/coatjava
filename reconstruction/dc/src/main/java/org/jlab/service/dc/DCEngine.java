@@ -39,6 +39,7 @@ public class DCEngine extends ReconstructionEngine {
     protected boolean  useDAF         = true;
     private String   dafChi2Cut     = null;
     private String   dafAnnealingFactorsTB = null;
+    private String   kfScale     = null;
     
     protected String hbTSEModelFileInbending = "transformer_32d_4h_3l_inbending.pt"; // AI model file for HB track state estimator for inbending runs  
     protected String hbTSEModelFileOutbending = "transformer_32d_4h_3l_outbending.pt"; // AI model file for HB track state estimator for outbending runs  
@@ -131,6 +132,11 @@ public class DCEngine extends ReconstructionEngine {
             dafAnnealingFactorsTB=this.getEngineConfigString("dafAnnealingFactorsTB");
             KFitter.setDafAnnealingFactorsTB(dafAnnealingFactorsTB);
         }
+        
+        if(this.getEngineConfigString("kfScale")!=null) {
+            kfScale=this.getEngineConfigString("kfScale");
+            KFitter.setKFScale(Double.valueOf(kfScale));
+        }        
                     
         if (getEngineConfigString("hbTSEModelFileInbending") != null){
             hbTSEModelFileInbending = getEngineConfigString("hbTSEModelFileInbending");
