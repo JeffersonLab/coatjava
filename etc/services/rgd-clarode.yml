@@ -19,12 +19,14 @@ configuration:
       outputBankPrefix: "HB"
 io-services:
   reader:
-    class: org.jlab.io.clara.Clas12Reader
-    name: Clas12Reader
+    class: org.jlab.io.clara.EvioToEvioReader
+    name: EvioReader
   writer:
     class: org.jlab.io.clara.DecoderWriter
     name: DecoderWriter
 services:
+  - class: org.jlab.clas.reco.DecodingEngine
+    name: DECO
   - class: org.jlab.service.ai.DCDenoiseEngine
     name: DCDN
   - class: org.jlab.clas.swimtools.MagFieldsEngine
