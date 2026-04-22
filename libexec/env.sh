@@ -2,6 +2,12 @@
 
 export CLAS12DIR=$(cd $(dirname ${BASH_SOURCE[0]:-$0})/.. && pwd -P)
 
+export PATH=$CLAS12DIR/bin:$PATH
+
+if [ "${1-}" = '--shell' ]; then
+    return
+fi
+
 # Set default field maps (but do not override user's env):
 if [ -z "${COAT_MAGFIELD_TORUSMAP-}" ]; then
     export COAT_MAGFIELD_TORUSMAP=Symm_torus_r2501_phi16_z251_24Apr2018.dat
