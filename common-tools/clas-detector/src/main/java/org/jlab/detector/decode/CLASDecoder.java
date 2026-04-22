@@ -792,4 +792,8 @@ public class CLASDecoder {
 
         return decodedEvent;
     }
+
+    public Event getDecodedEvent(EvioDataEvent rawEvent) {
+        return getDecodedEvent(rawEvent, -1, -1, null, null);
+    }
 }
