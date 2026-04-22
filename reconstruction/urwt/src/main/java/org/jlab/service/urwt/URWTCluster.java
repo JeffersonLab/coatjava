@@ -121,36 +121,31 @@ public class URWTCluster extends ArrayList<URWRStrip> {
         Point3D pointOrigin = new Point3D(0.0,0.0,0.0);
         Point3D pointEnd    = new Point3D(0.0,0.0,0.0);
         
-        double logSumm = 0.0;
         double summE   = 0.0;
         
         for(int i = 0; i < this.size(); i++){
             Line3D line = this.get(i).getLine();
             
             double energy    = this.get(i).getEnergy();
-            double energymev = energy*1000.0;
-            double        le = Math.log(energymev);
             
-            pointOrigin.setX(pointOrigin.x()+line.origin().x()*le);
-            pointOrigin.setY(pointOrigin.y()+line.origin().y()*le);
-            pointOrigin.setZ(pointOrigin.z()+line.origin().z()*le);
+            pointOrigin.setX(pointOrigin.x()+line.origin().x()*energy);
+            pointOrigin.setY(pointOrigin.y()+line.origin().y()*energy);
+            pointOrigin.setZ(pointOrigin.z()+line.origin().z()*energy);
             
-            pointEnd.setX(pointEnd.x()+line.end().x()*le);
-            pointEnd.setY(pointEnd.y()+line.end().y()*le);
-            pointEnd.setZ(pointEnd.z()+line.end().z()*le);
-
-            logSumm += le;
+            pointEnd.setX(pointEnd.x()+line.end().x()*energy);
+            pointEnd.setY(pointEnd.y()+line.end().y()*energy);
+            pointEnd.setZ(pointEnd.z()+line.end().z()*energy);
             
             summE   += energy;
         }
                 
         this.clusterLine.set(
-                pointOrigin.x()/logSumm,
-                pointOrigin.y()/logSumm,
-                pointOrigin.z()/logSumm,
-                pointEnd.x()/logSumm,
-                pointEnd.y()/logSumm,
-                pointEnd.z()/logSumm
+                pointOrigin.x()/summE,
+                pointOrigin.y()/summE,
+                pointOrigin.z()/summE,
+                pointEnd.x()/summE,
+                pointEnd.y()/summE,
+                pointEnd.z()/summE
         );
     }
     
