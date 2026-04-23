@@ -127,7 +127,7 @@ function get_host_ip() {
 }
 function get_dpe_port() {
     local ports
-    ports=$(seq 7000 20 8000)
+    ports=$(seq 8000 20 9000)
     command -v shuf >/dev/null 2>&1 && ports=$(echo "$ports" | shuf)
     for port in $ports
     do
@@ -152,8 +152,10 @@ then
         --session recon --max-cores $threads \
         --max-sockets 5120 --report 5 \
         2>&1 | tee $CLARA_USER_DATA/log/dpe.log &
+    pid=$!
+    trap "kill -9 $pid; exit" EXIT 
     set +v
-    #echo "Sleeping 7 ......." && sleep 7
+    sleep 1
     unset JAVA_OPTS
     set -v
     $CLARA_HOME/bin/clara-orchestrator \
