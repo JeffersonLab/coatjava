@@ -55,12 +55,15 @@ public class CLASDecoder {
         schemaFactory.initFromDirectory(dir);
     }
 
-    public SchemaFactory getSchemaFactory(){
-        return schemaFactory;
+    public CLASDecoder(CLASDecoder d) {
+        codaDecoder = new CodaEventDecoder();
+        detectorDecoder = new DetectorEventDecoder(d.detectorDecoder);
+        String dir = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4");
+        schemaFactory.initFromDirectory(dir);
     }
 
-    public void shareManagers(CLASDecoder d) {
-        detectorDecoder.shareManagers(d.detectorDecoder);
+    public SchemaFactory getSchemaFactory(){
+        return schemaFactory;
     }
 
     public void setVariation(String variation) {

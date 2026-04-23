@@ -23,10 +23,12 @@ import org.json.JSONObject;
  */
 public class DecodingEngine implements Engine {
 
+    static final int POOL_SIZE = 64;
+    static final Set<EngineDataType> ED_TYPES = ClaraUtil.buildDataTypes(
+        Clas12Types.EVIO,Clas12Types.HIPO,EngineDataType.JSON,EngineDataType.STRING);
+
     SchemaFactory schema;
     BlockingQueue<CLASDecoder> pool;
-    static Set<EngineDataType> edtypes = ClaraUtil.buildDataTypes(
-        Clas12Types.EVIO,Clas12Types.HIPO,EngineDataType.JSON,EngineDataType.STRING);
 
     public DecodingEngine() {
         schema = new SchemaFactory();
@@ -34,9 +36,9 @@ public class DecodingEngine implements Engine {
     }
 
     @Override
-    public Set<EngineDataType> getInputDataTypes() { return edtypes; }
+    public Set<EngineDataType> getInputDataTypes() { return ED_TYPES; }
     @Override
-    public Set<EngineDataType> getOutputDataTypes() { return edtypes; }
+    public Set<EngineDataType> getOutputDataTypes() { return ED_TYPES; }
     @Override
     public EngineData executeGroup(Set<EngineData> set) { return null; }
     @Override
@@ -55,20 +57,19 @@ public class DecodingEngine implements Engine {
     @Override
     public EngineData configure(EngineData ed) {
         JSONObject j = new JSONObject(ed.getData());
-        pool = new ArrayBlockingQueue<>(64);
+        pool = new ArrayBlockingQueue<>(POOL_SIZE);
         CLASDecoder d0 = new CLASDecoder();
         if (j.has("variation")) d0.setVariation(j.getString("variation"));
         if (j.has("timestamp")) d0.setVariation(j.getString("timestamp"));
-        for (int i=0; i<64; i++) {
-            CLASDecoder d = i==0 ? d0 : new CLASDecoder();
-            if (i > 0) d.shareManagers(d0);
-            pool.add(d);
+        for (int i=0; i<POOL_SIZE; i++) {
+            pool.add(i==0 ? d0 : new CLASDecoder(d0));
         }
         return ed;
     }
 
     @Override
     public EngineData execute(EngineData input) {
+
         EngineData output = input;
         EvioDataEvent evio;
         HipoDataEvent hipo;
@@ -82,7 +83,7 @@ public class DecodingEngine implements Engine {
             output.setDescription(msg);
             return output;
         }
-        
+
         try {
             CLASDecoder d = pool.take();
             hipo = new HipoDataEvent(d.getDecodedEvent(evio),schema);
