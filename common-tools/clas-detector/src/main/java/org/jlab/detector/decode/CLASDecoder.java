@@ -59,6 +59,10 @@ public class CLASDecoder {
         return schemaFactory;
     }
 
+    public void shareManagers(CLASDecoder d) {
+        detectorDecoder.shareManagers(d.detectorDecoder);
+    }
+
     public void setVariation(String variation) {
         detectorDecoder.setVariation(variation);
     }
