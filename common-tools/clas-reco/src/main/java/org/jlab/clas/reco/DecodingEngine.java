@@ -24,14 +24,19 @@ import org.json.JSONObject;
 public class DecodingEngine implements Engine {
 
     SchemaFactory schema;
-
     BlockingQueue<CLASDecoder> pool;
+    static Set<EngineDataType> edtypes = ClaraUtil.buildDataTypes(
+        Clas12Types.EVIO,Clas12Types.HIPO,EngineDataType.JSON,EngineDataType.STRING);
 
     public DecodingEngine() {
         schema = new SchemaFactory();
         schema.initFromDirectory(System.getenv("CLAS12DIR") + "/etc/bankdefs/hipo4");
     }
-   
+
+    @Override
+    public Set<EngineDataType> getInputDataTypes() { return edtypes; }
+    @Override
+    public Set<EngineDataType> getOutputDataTypes() { return edtypes; }
     @Override
     public EngineData executeGroup(Set<EngineData> set) { return null; }
     @Override
@@ -46,16 +51,6 @@ public class DecodingEngine implements Engine {
     public void reset() {}
     @Override
     public void destroy() {}
-
-    @Override
-    public Set<EngineDataType> getInputDataTypes() {
-        return ClaraUtil.buildDataTypes(Clas12Types.EVIO);
-    }
-
-    @Override
-    public Set<EngineDataType> getOutputDataTypes() {
-        return ClaraUtil.buildDataTypes(Clas12Types.HIPO);
-    }
 
     @Override
     public EngineData configure(EngineData ed) {
