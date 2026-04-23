@@ -36,11 +36,11 @@ public class URWTConstants {
     
     // resolution for cross measures
     public static final double URWELLXRESOLUTIONHB = 0.17; // cm
-    public static final double URWELLYRESOLUTIONHB = 0.89; // cm
+    public static final double URWELLYRESOLUTIONHB = 0.75; // cm
     
     // resolution for cluster measures
-    public static final double URWELLRESOLUTIONHB[] = {1.5, 1.5}; // cm
-    public static final double URWELLRESOLUTIONTB[] = {0.17, 0.17}; // cm
+    public static final double URWELLRESOLUTIONHB[] = {0.67, 0.67}; // cm
+    public static final double URWELLRESOLUTIONTB[] = {0.11, 0.11}; // cm
     
     
     //
@@ -55,6 +55,6 @@ public class URWTConstants {
     public static double YDCSL1L1W1LC = 1.7320508075688772; // cm; y for layer1 of SL1 in TSC
       
     public static final double YDISTURWELLTOMOSTLEFTLAYERLC[] = {2.4, 1.8}; // Absolute of Y difference between uRWell and most left layer of DC-SL1 in LC, separately for R1 and R2
-    public static final double URWELLRESIDUALCUT[] = {0.10, 0.12}; // cut for absolute uRWell resdial after DC-uRWell fitting in LC, separately for R1 and R2
+    public static final double URWELLRESIDUALCUT[] = {0.84, 0.1}; // 3-sigma cut for absolute uRWell resdial after DC-uRWell fitting in LC, separately for R1 and R2
 
 }
