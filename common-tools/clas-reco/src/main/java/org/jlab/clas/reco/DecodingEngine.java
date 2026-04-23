@@ -61,10 +61,12 @@ public class DecodingEngine implements Engine {
     public EngineData configure(EngineData ed) {
         JSONObject j = new JSONObject(ed.getData());
         pool = new ArrayBlockingQueue<>(64);
+        CLASDecoder d0 = new CLASDecoder();
         for (int i=0; i<64; i++) {
-            CLASDecoder d = new CLASDecoder();
+            CLASDecoder d = i==0 ? d0 : new CLASDecoder();
             if (j.has("variation")) d.setVariation(j.getString("variation"));
             if (j.has("timestamp")) d.setVariation(j.getString("timestamp"));
+            if (i > 0) d.shareManagers(d0);
             pool.add(d);
         }
         return ed;
