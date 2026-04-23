@@ -133,17 +133,17 @@ public class DetectorEventDecoder {
 
         // Data filter list
         keysFilter   = Arrays.asList(new DetectorType[]{DetectorType.DC});
+        
+        keysMicromega = Arrays.asList(new DetectorType[]{DetectorType.BMT,DetectorType.FMT,DetectorType.FTTRK});
 
         if (!sharedManagers) {
             translationManager.init(tablesTrans);
             fitterManager.init(tablesFitter);
             scalerManager.init(Arrays.asList(new String[]{"/runcontrol/fcup","/runcontrol/slm","/runcontrol/hwp",
                                                           "/runcontrol/helicity","/daq/config/scalers/dsc1"}));
+            checkTables();
         }
 
-        keysMicromega = Arrays.asList(new DetectorType[]{DetectorType.BMT,DetectorType.FMT,DetectorType.FTTRK});
-
-        checkTables();
     }
 
     public void checkTables() {
