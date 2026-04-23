@@ -3,6 +3,9 @@ package org.jlab.clas.reco;
 import java.util.Set;
 import java.util.HashSet;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import org.jlab.clara.base.ClaraUtil;
 import org.jlab.clara.engine.Engine;
 import org.jlab.clara.engine.EngineData;
@@ -21,7 +24,8 @@ import org.json.JSONObject;
 public class DecodingEngine implements Engine {
 
     SchemaFactory schema;
-    CLASDecoder decoder;
+
+    BlockingQueue<CLASDecoder> pool;
 
     public DecodingEngine() {
         schema = new SchemaFactory();
@@ -56,8 +60,13 @@ public class DecodingEngine implements Engine {
     @Override
     public EngineData configure(EngineData ed) {
         JSONObject j = new JSONObject(ed.getData());
-        if (j.has("variation")) decoder.setVariation(j.getString("variation"));
-        if (j.has("timestamp")) decoder.setVariation(j.getString("timestamp"));
+        pool = new ArrayBlockingQueue<>(64);
+        for (int i=0; i<64; i++) {
+            CLASDecoder d = new CLASDecoder();
+            if (j.has("variation")) d.setVariation(j.getString("variation"));
+            if (j.has("timestamp")) d.setVariation(j.getString("timestamp"));
+            pool.add(d);
+        }
         return ed;
     }
 
@@ -68,7 +77,8 @@ public class DecodingEngine implements Engine {
         HipoDataEvent hipo;
         try {
             ByteBuffer bb = (ByteBuffer) input.getData();
-            evio = new EvioDataEvent(bb.array(), bb.order());
+            //evio = new EvioDataEvent(bb.array(), bb.order());
+            evio = new EvioDataEvent(bb.array(), ByteOrder.LITTLE_ENDIAN);
         } catch (Exception e) {
             String msg = String.format("Error reading input event%n%n%s", ClaraUtil.reportException(e));
             output.setStatus(EngineStatus.ERROR);
@@ -77,7 +87,9 @@ public class DecodingEngine implements Engine {
         }
         
         try {
-            hipo = new HipoDataEvent(decoder.getDecodedEvent(evio),schema);
+            CLASDecoder d = pool.take();
+            hipo = new HipoDataEvent(d.getDecodedEvent(evio),schema);
+            pool.put(d);
             output.setData("binary/data-hipo", hipo.getHipoEvent());
         } catch (Exception e) {
             String msg = String.format("Error processing input event%n%n%s", ClaraUtil.reportException(e));
