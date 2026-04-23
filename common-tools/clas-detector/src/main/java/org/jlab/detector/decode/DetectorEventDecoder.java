@@ -18,6 +18,7 @@ import org.jlab.utils.groups.IndexedTable;
  */
 public class DetectorEventDecoder {
 
+    boolean sharedManagers = false;
     ConstantsManager translationManager = new ConstantsManager();
     ConstantsManager fitterManager      = new ConstantsManager();
     ConstantsManager scalerManager      = new ConstantsManager();
@@ -43,6 +44,18 @@ public class DetectorEventDecoder {
         } else {
             this.initDecoder();
         }
+    }
+
+    public DetectorEventDecoder(){
+        this.initDecoder();
+    }
+
+    public DetectorEventDecoder(DetectorEventDecoder d) {
+        translationManager = d.translationManager;
+        fitterManager = d.fitterManager;
+        scalerManager = d.scalerManager;
+        sharedManagers = true;
+        initDecoder();
     }
 
     public void setTimestamp(String timestamp) {
@@ -80,16 +93,6 @@ public class DetectorEventDecoder {
                 getValue()).floatValue();
     }
 
-    public void shareManagers(DetectorEventDecoder d) {
-        translationManager = d.translationManager;
-        fitterManager = d.fitterManager;
-        scalerManager = d.scalerManager;
-    }
-
-    public DetectorEventDecoder(){
-        this.initDecoder();
-    }
-
     public final void initDecoderDev(){
         keysTrans = Arrays.asList(new DetectorType[]{ DetectorType.HTCC,DetectorType.BST,DetectorType.RTPC} );
         tablesTrans = Arrays.asList(new String[]{ "/daq/tt/clasdev/htcc","/daq/tt/clasdev/svt","/daq/tt/clasdev/rtpc" });
@@ -115,7 +118,6 @@ public class DetectorEventDecoder {
             "/daq/tt/rf","/daq/tt/bmt","/daq/tt/fmt","/daq/tt/rich2","/daq/tt/hel","/daq/tt/band","/daq/tt/rtpc",
             "/daq/tt/raster","/daq/tt/atof","/daq/tt/ahdc"
         });
-        translationManager.init(tablesTrans);
         
         // ADC waveform fitter translation table
         keysFitter   = Arrays.asList(new DetectorType[]{DetectorType.FTCAL,DetectorType.FTHODO,DetectorType.FTTRK,DetectorType.FTOF,DetectorType.LTCC,
@@ -128,13 +130,16 @@ public class DetectorEventDecoder {
             "/daq/config/fmt","/daq/fadc/hel","/daq/fadc/rf","/daq/fadc/band","/daq/fadc/raster",
             "/daq/config/ahdc"
         });
-        fitterManager.init(tablesFitter);
 
         // Data filter list
         keysFilter   = Arrays.asList(new DetectorType[]{DetectorType.DC});
 
-        scalerManager.init(Arrays.asList(new String[]{"/runcontrol/fcup","/runcontrol/slm","/runcontrol/hwp",
-                                                      "/runcontrol/helicity","/daq/config/scalers/dsc1"}));
+        if (!sharedManagers) {
+            translationManager.init(tablesTrans);
+            fitterManager.init(tablesFitter);
+            scalerManager.init(Arrays.asList(new String[]{"/runcontrol/fcup","/runcontrol/slm","/runcontrol/hwp",
+                                                          "/runcontrol/helicity","/daq/config/scalers/dsc1"}));
+        }
 
         keysMicromega = Arrays.asList(new DetectorType[]{DetectorType.BMT,DetectorType.FMT,DetectorType.FTTRK});
 
