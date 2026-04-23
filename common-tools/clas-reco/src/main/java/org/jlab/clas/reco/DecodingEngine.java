@@ -69,7 +69,6 @@ public class DecodingEngine implements Engine {
 
     @Override
     public EngineData execute(EngineData input) {
-
         EngineData output = input;
         EvioDataEvent evio;
         HipoDataEvent hipo;
@@ -83,7 +82,6 @@ public class DecodingEngine implements Engine {
             output.setDescription(msg);
             return output;
         }
-
         try {
             CLASDecoder d = pool.take();
             hipo = new HipoDataEvent(d.getDecodedEvent(evio),schema);
