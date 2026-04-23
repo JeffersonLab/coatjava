@@ -152,6 +152,8 @@ then
         --session recon --max-cores $threads \
         --max-sockets 5120 --report 5 \
         2>&1 | tee $CLARA_USER_DATA/log/dpe.log &
+    pid=$!
+    trap "kill -9 $pid; exit" EXIT 
     set +v
     sleep 1
     unset JAVA_OPTS
