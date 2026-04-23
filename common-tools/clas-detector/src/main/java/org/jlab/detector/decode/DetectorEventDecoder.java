@@ -80,6 +80,12 @@ public class DetectorEventDecoder {
                 getValue()).floatValue();
     }
 
+    public void shareManagers(DetectorEventDecoder d) {
+        translationManager = d.translationManager;
+        fitterManager = d.fitterManager;
+        scalerManager = d.scalerManager;
+    }
+
     public DetectorEventDecoder(){
         this.initDecoder();
     }
