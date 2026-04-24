@@ -91,7 +91,7 @@ jobs:
           tar czvf clara.tar.gz clara
       - uses: actions/upload-artifact@v7
         with:
-          name: build_macos-latest
+          name: build_macos
           retention-days: 1
           path: |
               coatjava.tar.gz
