@@ -61,7 +61,7 @@ jobs:
   # build
   #############################################################################
 
-  build_macos:
+  build-macos:
     strategy:
       fail-fast: true
     runs-on: macos-latest
