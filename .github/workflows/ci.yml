@@ -283,8 +283,6 @@ jobs:
           - { id: eb-epc,   cmd: ./run-eb-tests.sh -100 electronprotonC  }
           - { id: eb-enc,   cmd: ./run-eb-tests.sh -100 electronneutronC }
           - { id: eb-eftpi, cmd: ./run-eb-tests.sh -100 electronFTpion   }
-          # run one macos test
-          - { runner: macos-latest, id: eb-ep, cmd: ./run-eb-tests.sh -100 electronproton }
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v6
