@@ -310,6 +310,36 @@ jobs:
           echo "COMMAND: ${{ matrix.cmd }}"
           ${{ matrix.cmd }}
 
+  test_coatjava_macos:
+    needs: [ build_macos ]
+    strategy:
+      fail-fast: true
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.java_distribution }}
+          cache: maven
+      - uses: actions/download-artifact@v8
+        with:
+          name: build_macos
+      - uses: cvmfs-contrib/github-action-cvmfs@v5
+        with:
+          cvmfs_repositories: 'oasis.opensciencegrid.org'
+      - name: untar build
+        run: |
+          tar xzvf coatjava.tar.gz
+          tar xzvf clara.tar.gz
+      - name: run test
+        run: |
+          git lfs install
+          git submodule update --init validation/advanced-tests/data
+          cd validation/advanced-tests
+          ./run-eb-tests.sh -100 electronproton
+
   test_run-groovy:
     needs: [ build ]
     runs-on: ubuntu-latest
