@@ -62,8 +62,6 @@ jobs:
   #############################################################################
 
   build_macos:
-    strategy:
-      fail-fast: true
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v6
@@ -98,8 +96,6 @@ jobs:
               clara.tar.gz
 
   build:
-    strategy:
-      fail-fast: true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -229,8 +225,6 @@ jobs:
 
   test_clara:
     needs: [ build, download_test_data ]
-    strategy:
-      fail-fast: true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -266,8 +260,6 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        runner:
-          - ubuntu-latest
         id:
           - kpp
           - eb-ep
@@ -283,7 +275,7 @@ jobs:
           - { id: eb-epc,   cmd: ./run-eb-tests.sh -100 electronprotonC  }
           - { id: eb-enc,   cmd: ./run-eb-tests.sh -100 electronneutronC }
           - { id: eb-eftpi, cmd: ./run-eb-tests.sh -100 electronFTpion   }
-    runs-on: ${{ matrix.runner }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - name: Set up JDK
@@ -294,7 +286,7 @@ jobs:
           cache: maven
       - uses: actions/download-artifact@v8
         with:
-          name: build_${{ matrix.runner }}
+          name: build_ubuntu-latest
       - uses: cvmfs-contrib/github-action-cvmfs@v5
         with:
           cvmfs_repositories: 'oasis.opensciencegrid.org'
@@ -312,8 +304,6 @@ jobs:
 
   test_coatjava_macos:
     needs: [ build_macos ]
-    strategy:
-      fail-fast: true
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v6
