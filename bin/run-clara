@@ -153,7 +153,7 @@ then
         --max-sockets 5120 --report 5 \
         2>&1 | tee $CLARA_USER_DATA/log/dpe.log &
     set +v
-    sleep 1
+    #echo "Sleeping 7 ......." && sleep 7
     unset JAVA_OPTS
     set -v
     $CLARA_HOME/bin/clara-orchestrator \
