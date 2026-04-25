@@ -53,6 +53,6 @@ public class EvioToEvioReader extends AbstractEventReaderService<EvioCompactRead
 
     @Override
     protected EngineDataType getDataType() {
-        return Clas12Types.HIPO;
+        return Clas12Types.EVIO;
     }
 }
