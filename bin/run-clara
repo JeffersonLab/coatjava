@@ -127,7 +127,7 @@ function get_host_ip() {
 }
 function get_dpe_port() {
     local ports
-    ports=$(seq 8000 20 9000)
+    ports=$(seq 49152 20 65535)
     command -v shuf >/dev/null 2>&1 && ports=$(echo "$ports" | shuf)
     for port in $ports
     do
