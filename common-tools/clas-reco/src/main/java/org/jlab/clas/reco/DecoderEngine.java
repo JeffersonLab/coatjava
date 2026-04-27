@@ -21,7 +21,7 @@ import org.json.JSONObject;
  *
  * @author baltzell
  */
-public class DecodingEngine implements Engine {
+public class DecoderEngine implements Engine {
 
     static final int POOL_SIZE = 64;
     static final Set<EngineDataType> ED_TYPES = ClaraUtil.buildDataTypes(
@@ -30,7 +30,7 @@ public class DecodingEngine implements Engine {
     SchemaFactory schema;
     BlockingQueue<CLASDecoder> pool;
 
-    public DecodingEngine() {
+    public DecoderEngine() {
         schema = new SchemaFactory();
         schema.initFromDirectory(System.getenv("CLAS12DIR") + "/etc/bankdefs/hipo4");
     }
