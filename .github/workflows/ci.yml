@@ -100,11 +100,7 @@ jobs:
   build:
     strategy:
       fail-fast: true
-      matrix:
-        runner:
-          - ubuntu-latest
-          - macos-latest
-    runs-on: ${{ matrix.runner }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -131,7 +127,7 @@ jobs:
           tar czvf clara.tar.gz clara
       - uses: actions/upload-artifact@v7
         with:
-          name: build_${{ matrix.runner }}
+          name: build
           retention-days: 1
           path: |
               coatjava.tar.gz
