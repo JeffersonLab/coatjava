@@ -25,7 +25,7 @@ io-services:
     class: org.jlab.io.clara.DecoderWriter
     name: DecoderWriter
 services:
-  - class: org.jlab.clas.reco.DecodingEngine
+  - class: org.jlab.clas.reco.DecoderEngine
     name: DECO
   - class: org.jlab.service.ai.DCDenoiseEngine
     name: DCDN
