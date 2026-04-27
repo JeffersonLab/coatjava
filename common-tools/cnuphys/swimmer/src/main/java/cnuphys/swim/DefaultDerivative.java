@@ -2,25 +2,29 @@ package cnuphys.swim;
 
 import cnuphys.magfield.FieldProbe;
 import cnuphys.rk4.IDerivative;
+import java.util.Arrays;
 
 public class DefaultDerivative implements IDerivative {
 
         // ddvcs parameters
         //geometry
-        private static double[] THETA_SHIELD = {6.64, 41.3}; // min,max polar angle (deg)
-        private static double[] THETA_ECAL = {6.64, 30};     // min,max polar angle (deg)
-        private static double[] RHO_SHIELD = {60.0, 140};    // min,max distance from (0,0,0) at theta=25 deg
-        private static double[] RHO_ECAL = {60.0, 80.0};     // min,max distance from (0,0,0) at theta=25 deg
-        private static double TAN25 = Math.tan(Math.toRadians(25));
-        private static double COS25 = Math.cos(Math.toRadians(25));
+        private static final double[] SHIELD_RMAX = {45.7, 61.4, 74.0, 78.4, 79.8, 79.8, 88.25, 62.79, 15.01};   // polycone rmax (cm)
+        private static final double[] SHIELD_RMIN = {302., 40.2, 9.88, 10.52, 10.52, 11.33, 13.48, 15.0, 15.0};  // polycone rmin (cm)
+        private static final double[] SHIELD_Z    = {52.0, 69.6, 83.7, 88.8, 88.8, 95.1, 113.23, 125.1, 147.38}; // polycone z (cm)
+        private static final double[] ECAL_RMAX   = {30.11, 36.06, 40.1, 9.88}; // polycone rmax (cm)
+        private static final double[] ECAL_RMIN   = {30.1, 7.28, 8.15, 9.87};   // polycone rmin (cm)
+        private static final double[] ECAL_Z      = {52.0, 62.5, 69.6, 83.6};   // polycone z (cm)
+        private static final double[] Z_RANGE     = {SHIELD_Z[0], SHIELD_Z[SHIELD_Z.length-1]};
+        private static final double[] RHO_RANGE   = {Arrays.stream(ECAL_RMIN).min().getAsDouble(), 
+                                                     Arrays.stream(SHIELD_RMAX).max().getAsDouble()}; 
         // eloss
-        private static double EMASS = 0.511E-3;
-        private static double MUMASS = 105.66E-3;
-        private static double K = 0.000307075; //  GeV mol-1 cm2
+        private static final double EMASS = 0.511E-3;
+        private static final double MUMASS = 105.66E-3;
+        private static final double K = 0.000307075; //  GeV mol-1 cm2
         // materials
-        private static double[] IeV = {823E-9, 600.7E-9}; // GeV
-        private static double[] DENSITY = {11.35, 8.3};   // g/cm3
-        private static double[] ZOVERA = {0.39573, 0.41315};
+        private static final double[] IeV = {823E-9, 600.7E-9}; // GeV
+        private static final double[] DENSITY = {11.35, 8.3*0.95};   // g/cm3 ^0.95 accounts for crystals/mother-volume filling factor
+        private static final double[] ZOVERA = {0.39573, 0.41315};
         
 	private FieldProbe _probe;
         
@@ -140,17 +144,23 @@ public class DefaultDerivative implements IDerivative {
          */
         public double getEloss(double p, double x, double y, double z, double dx) {
            
-            double dz = Math.sqrt(x*x+y*y)*TAN25;
-            double r  = (z+dz)*COS25;
+            double r  = Math.sqrt(x*x+y*y);
             double r_cm = r * 100; // convert to cm
-            double theta = Math.toDegrees(Math.acos(z/Math.sqrt(x*x+y*y+z*z))); // degree
+            double z_cm = z * 100; // convert to cm
             
-            if(r_cm<RHO_SHIELD[0] || r_cm>RHO_SHIELD[1] || theta<THETA_SHIELD[0] || theta>THETA_SHIELD[1])
+            if(r_cm<RHO_RANGE[0] || r_cm>RHO_RANGE[1] || z_cm<Z_RANGE[0] || z_cm>Z_RANGE[1])
                     return 0;
           
-            int imat = 0;
-            if(r_cm<RHO_ECAL[1] && theta<THETA_ECAL[1]){
-                    imat = 1;
+            int imat = -1;
+          
+            if(this.isInPolycone(SHIELD_Z ,SHIELD_RMIN, SHIELD_RMAX, z_cm, r_cm)) {
+                imat = 0;
+            }
+            else if(this.isInPolycone(ECAL_Z, ECAL_RMIN, ECAL_RMAX, z_cm, r_cm)) {
+                imat = 1;
+            }
+            else {
+                return 0;
             }
             
             double beta = p / Math.sqrt(p * p + MUMASS * MUMASS);
@@ -163,5 +173,10 @@ public class DefaultDerivative implements IDerivative {
             double dE = dx * 100 * DENSITY[imat] * K * ZOVERA[imat]
                     * (0.5 * Math.log(logterm) - beta * beta) / beta / beta; //in GeV
             return dE;
+        }
+        
+        private boolean isInPolycone(double[] Z, double[] RI, double[] RO, double z, double r){
+            int iz = Arrays.binarySearch(Z, z);
+            return iz>0 && r>RI[iz] && r<RO[iz];
         }
 }
