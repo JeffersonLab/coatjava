@@ -394,7 +394,7 @@ jobs:
           libexec/build-javadocs.sh
           mv target/reports/apidocs pages/javadoc
       ### upload artifacts
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-pages-artifact@v5
         with:
           retention-days: 7
           path: pages/
