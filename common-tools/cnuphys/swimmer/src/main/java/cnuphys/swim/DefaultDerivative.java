@@ -177,6 +177,12 @@ public class DefaultDerivative implements IDerivative {
         
         private boolean isInPolycone(double[] Z, double[] RI, double[] RO, double z, double r){
             int iz = Arrays.binarySearch(Z, z);
-            return iz>0 && r>RI[iz] && r<RO[iz];
+            if(iz>0 && iz<Z.length) {
+                double ri = RI[iz-1] + (RI[iz]-RI[iz-1])*(z-Z[iz-1])/(Z[iz]-Z[iz-1]);
+                double ro = RO[iz-1] + (RO[iz]-RO[iz-1])*(z-Z[iz-1])/(Z[iz]-Z[iz-1]);
+                return r>ri && r<ro;
+            }
+            return false;
+          
         }
 }
