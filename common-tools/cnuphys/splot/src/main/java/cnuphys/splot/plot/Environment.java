@@ -7,7 +7,6 @@ import java.util.Iterator;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageWriter;
 import javax.swing.JComponent;
-import javax.swing.UIManager;
 
 public final class Environment {
 
@@ -233,22 +232,6 @@ public final class Environment {
 	@Override
 	public Object clone() throws CloneNotSupportedException {
 		throw new CloneNotSupportedException();
-	}
-
-	/**
-	 * Get the UIManager's choice for panel background color
-	 * 
-	 * @return the UIManager's choice for panel background color
-	 */
-	public Color getDefaultPanelBackgroundColor() {
-		if (_defaultPanelBackgroundColor == null) {
-			_defaultPanelBackgroundColor = UIManager.getColor("Panel.background");
-			if (_defaultPanelBackgroundColor == null) {
-				_defaultPanelBackgroundColor = new Color(238, 238, 238);
-			}
-		}
-
-		return _defaultPanelBackgroundColor;
 	}
 
 	/**

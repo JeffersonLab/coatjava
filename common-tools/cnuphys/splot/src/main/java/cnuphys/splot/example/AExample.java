@@ -32,9 +32,6 @@ public abstract class AExample extends JFrame {
 	public AExample() {
 		super("sPlot");
 
-		// Initialize look and feel
-		GraphicsUtilities.initializeLookAndFeel();
-
 		System.out.println("Environment: " + Environment.getInstance());
 
 		// set up what to do if the window is closed

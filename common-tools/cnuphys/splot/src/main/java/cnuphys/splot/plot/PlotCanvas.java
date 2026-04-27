@@ -62,8 +62,6 @@ public class PlotCanvas extends JComponent
 
 	// default values for margins
 	private int _topMargin = 10;
-//	private int _leftMargin = 30;
-//	private int _bottomMargin = 30;
 	private int _rightMargin = 10;
 
 	// for saving files
@@ -256,18 +254,6 @@ public class PlotCanvas extends JComponent
 //		setWorldSystem();
 		repaint();
 	}
-
-//	/**
-//	 * Clear the plot of all data. It will have a null dataset.
-//	 */
-//	public void clearPlot() {
-//		_dataSet = null;
-//		setWorldSystem();
-//		_parameters.setPlotTitle("No Plot");
-//
-//		firePropertyChange(DATACLEAREDPROP, 0, 1);
-//		repaint();
-//	}
 
 	/**
 	 * Get the underlying dataset

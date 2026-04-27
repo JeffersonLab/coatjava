@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public class CompositeProbe extends FieldProbe {
 
-	protected ArrayList<FieldProbe> probes = new ArrayList<FieldProbe>();
+	protected ArrayList<FieldProbe> probes = new ArrayList<>();
 
 	/**
 	 * Create a composite probe from a composite field.

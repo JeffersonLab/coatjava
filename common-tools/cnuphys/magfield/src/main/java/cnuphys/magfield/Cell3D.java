@@ -1,7 +1,5 @@
 package cnuphys.magfield;
 
-import java.io.PrintStream;
-
 /**
  * Cells are used by the probes. 3D cells for the torus, 2D cells for the
  * solenoid.

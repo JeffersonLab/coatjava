@@ -45,7 +45,7 @@ public class SNRClusterFinder {
 			int maxCount = maxShift + 1;
 			int count = 0;
 			
-			for (int wire = 0; wire < _params.getNumWire(); wire++) {
+			for (byte wire = 0; wire < _params.getNumWire(); wire++) {
 
 				boolean inLeft = _params.leftSegments.checkBit(wire);
 				boolean inRight = _params.rightSegments.checkBit(wire);
@@ -110,8 +110,8 @@ public class SNRClusterFinder {
 	}
 	
 	//fill the wire lists
-	private void fillWireLists(SNRCluster cluster, int segStartWire, int direction) {
-		for (int lay = 0; lay < _params.getNumLayer(); lay++) {
+	private void fillWireLists(SNRCluster cluster, byte segStartWire, int direction) {
+		for (byte lay = 0; lay < _params.getNumLayer(); lay++) {
 			_params.addHitsInMask(lay, segStartWire, direction, cluster.wireLists[lay]);
 		}
 

@@ -30,9 +30,6 @@ public abstract class APlotDialog extends JDialog {
 		_properties = properties;
 		setLayout(new BorderLayout(4, 4));
 
-		// Initialize look and feel
-		GraphicsUtilities.initializeLookAndFeel();
-
 		// System.out.println("Environment: " + Environment.getInstance());
 
 		try {

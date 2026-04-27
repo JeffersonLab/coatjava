@@ -47,7 +47,7 @@ public class SNRCluster {
 	 * @param layer the zero-based layer, for CLAS12 [0..5]
 	 * @param wire the zero-based wire, for CLAS12 [0..111]
 	 */
-	public void add(int layer, int wire) {
+	public void add(byte layer, byte wire) {
 		wireLists[layer].add(wire);
 	}
 	
@@ -56,7 +56,7 @@ public class SNRCluster {
 	 * @param wire the zero-based wire, for CLAS12 [0..111]
 	 * @param numMissing the number of missing layers required
 	 */
-	public void addSegmentStart(int wire) {
+	public void addSegmentStart(byte wire) {
 		segmentStartList.add(wire);
 	}
 		

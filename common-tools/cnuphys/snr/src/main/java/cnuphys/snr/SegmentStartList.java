@@ -7,7 +7,7 @@ import java.util.ArrayList;
  * @author heddle This is used in the stage 2 analysis, not in the basic SNR one
  *         stage analysis
  */
-public class SegmentStartList extends ArrayList<Integer> {
+public class SegmentStartList extends ArrayList<Byte> {
 
 	/**
 	 * Holds a list of segment starts for a cluster

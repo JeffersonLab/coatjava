@@ -28,11 +28,22 @@ public class SwimTrajectory2D {
 
 	// the 2D path
 	private Point.Double[] _path;
+	
+	private boolean _zEffect; // whether the z effect is on or off
+	
+	// the z values if zeffect is used
+	private double[] _zValues;
 
 	// which CLAS sector we are in (parallel)
 	private byte _sector[];
 
 	private boolean _sectorChange[];
+	
+	public SwimTrajectory2D(SwimTrajectory trajectory, IProjector projector) {
+		this(trajectory, projector, false);
+		_zEffect = false;
+		_zValues = null;
+	}
 
 	/**
 	 * Create a 2D trajectory from the 3D trajectory
@@ -40,21 +51,23 @@ public class SwimTrajectory2D {
 	 * @param trajectory the 3D trajectory from a swim
 	 * @param projector  projects 3D to 2D
 	 */
-	public SwimTrajectory2D(SwimTrajectory trajectory, IProjector projector) {
+	public SwimTrajectory2D(SwimTrajectory trajectory, IProjector projector, boolean zEffect) {
 		_trajectory3D = trajectory;
-		
-		if (_trajectory3D.getGeneratedParticleRecord() == null) {
-			System.err.println("NULL GenPart in SwimTrajectory2D (A)");
-			(new Throwable()).printStackTrace();
-			
-		}
-		
+		_zEffect = zEffect;
 		
 		int size = (trajectory == null) ? 0 : trajectory.size();
 
 		if (size > 1) {
 
 			_path = new Point.Double[size];
+			
+			if (_zEffect) {
+				// for z effect, we need the z values
+				_zValues = new double[size];
+			} else {
+				_zValues = null;
+			}
+			
 			_sector = new byte[size];
 			_sectorChange = new boolean[size];
 			_sectorChange[0] = false;
@@ -70,6 +83,10 @@ public class SwimTrajectory2D {
 
 				// for sector this is just the usual worldFromLabXYZ
 				projector.project(v3d, _path[index]);
+				if (_zEffect) {
+					// for z effect, we need the z values
+					_zValues[index] = v3d[2];
+				} 
 				index++;
 			}
 
@@ -197,6 +214,19 @@ public class SwimTrajectory2D {
 	public Point.Double[] getPath() {
 		return _path;
 	}
+	
+	/**
+	 * Get the z values if z effect is used
+	 * 
+	 * @return the z values (or null)
+	 */
+	public double[] getZValues() {
+		if (_zEffect) {
+			return _zValues;
+		} else {
+			return null;
+		}
+	}
 
 	/**
 	 * Add to the feedback strings
@@ -283,7 +313,6 @@ public class SwimTrajectory2D {
 		}
 
 		int len = _path.length;
-		Point.Double wpi = new Point.Double();
 		double minDist = Double.POSITIVE_INFINITY;
 		for (int i = 1; i < len; i++) {
 			Point.Double wp0 = _path[i - 1];

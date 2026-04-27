@@ -8,8 +8,8 @@ public class BeamLineStopper implements IStopper {
 
         private double _xB;
         private double _yB;
-        
-        
+
+
         double min = Double.POSITIVE_INFINITY;
         public BeamLineStopper(double xB, double yB) {
                 // DC reconstruction units are cm. Swim units are m. Hence scale by
@@ -22,8 +22,9 @@ public class BeamLineStopper implements IStopper {
         public boolean stopIntegration(double t, double[] y) {
 
                 double r = Math.sqrt((_xB-y[0]* 100.) * (_xB-y[0]* 100.) + (_yB-y[1]* 100.) * (_yB-y[1]* 100.));
-                if(r<min && y[2]<2.0) //start at about 2 meters before target.  Avoid inbending stopping when P dir changes
-                    min = r;
+                if(r<min && y[2]<2.0) { //start at about 2 meters before target.  Avoid inbending stopping when P dir changes
+					min = r;
+				}
                 return (r > min );
 
         }
@@ -48,13 +49,13 @@ public class BeamLineStopper implements IStopper {
         public void setFinalT(double finalPathLength) {
                 _finalPathLength = finalPathLength;
         }
-        
-        
+
+
         //test vals
         // distBetweenSaves = .0005 m
 
 	/**
-	 * 
+	 *
 	 * @param charge
 	 * @param charge           the charge: -1 for electron, 1 for proton, etc
 	 * @param xo               the x vertex position in meters
@@ -84,7 +85,7 @@ public class BeamLineStopper implements IStopper {
 
 		// use the current active probe
             Swimmer swimmer = new Swimmer();
-    
+
             BeamLineStopper stopper = new BeamLineStopper(xB, yB);
 
             SwimTrajectory st = swimmer.swim(charge, xo, yo, zo, pTot, theta, phi, stopper, maxS, stepSize,
@@ -92,7 +93,7 @@ public class BeamLineStopper implements IStopper {
             if(st==null) {
                 return null;
             }
-            
+
             st.computeBDL(swimmer.getProbe());
             // st.computeBDL(compositeField);
 

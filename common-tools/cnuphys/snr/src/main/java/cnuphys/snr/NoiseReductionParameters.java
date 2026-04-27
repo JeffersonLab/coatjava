@@ -517,12 +517,12 @@ public class NoiseReductionParameters {
 	 * @param direction either left (0) or right (1)
 	 * @param list the list to add to
 	 */
-	public void addHitsInMask(int layer, int wire, int direction, WireList list) {
+	public void addHitsInMask(byte layer, byte wire, int direction, WireList list) {
 		
 		if (direction == LEFT_LEAN) {
 			int shift = _leftLayerShifts[layer];
 			int maxWire = Integer.min(_numWire-1, wire+shift);
-			for (int tw = wire; tw <= maxWire; tw++) {
+			for (byte tw = wire; tw <= maxWire; tw++) {
 				if (_cleanData[layer].checkBit(tw)) {
 					list.add(tw);
 				}
@@ -531,7 +531,7 @@ public class NoiseReductionParameters {
 		else {
 			int shift = _rightLayerShifts[layer];
 			int minWire = Integer.max(0, wire-shift);
-			for (int tw = wire; tw >= minWire; tw--) {
+			for (byte tw = wire; tw >= minWire; tw--) {
 				if (_cleanData[layer].checkBit(tw)) {
 					list.add(tw);
 				}

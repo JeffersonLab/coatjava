@@ -9,7 +9,7 @@ import java.util.Comparator;
  * @author heddle
  * A wire list is a list of wires (0-based) For CLAS12 [0..111]
  */
-public class WireList extends ArrayList<Integer> {
+public class WireList extends ArrayList<Byte> {
 	
 	//the number of wires
 	private int _numWires;
@@ -26,11 +26,11 @@ public class WireList extends ArrayList<Integer> {
 	}
 		
 	public void sort() {
-		Comparator<Integer> comp = new Comparator<Integer>() {
+		Comparator<Byte> comp = new Comparator<Byte>() {
 			
 
 			@Override
-			public int compare(Integer o1, Integer o2) {
+			public int compare(Byte o1, Byte o2) {
 				
 				double del1 = delFromAverage(o1);
 				double del2 = delFromAverage(o2);
@@ -42,7 +42,7 @@ public class WireList extends ArrayList<Integer> {
 		Collections.sort(this, comp);
 	}
 	
-	public double delFromAverage(int wire) {
+	public double delFromAverage(byte wire) {
 		if (Double.isNaN(_avgWire)) {
 			_avgWire = averageWirePosition();
 		}
@@ -61,7 +61,7 @@ public class WireList extends ArrayList<Integer> {
 	 * @return <code>true</code> as required.
 	 */
 	@Override
-	public boolean add(Integer wire) {
+	public boolean add(Byte wire) {
 		if ((wire < 0) || (wire >= _numWires)) {
 			System.err.println("Bad wire index on WireList add: " +  wire);
 		}
@@ -74,7 +74,7 @@ public class WireList extends ArrayList<Integer> {
 	@Override
 	public boolean remove(Object o) {
 		_avgWire = Double.NaN;
-		return super.remove((Integer)o);
+		return super.remove((Byte)o);
 	}
 	
 	/**
@@ -82,7 +82,7 @@ public class WireList extends ArrayList<Integer> {
 	 * @param wire the 0-based wire index
 	 * @return the repeat count
 	 */
-	public int getCount(int wire) {
+	public int getCount(byte wire) {
 		return counts[wire];
 	}
 	
@@ -126,7 +126,7 @@ public class WireList extends ArrayList<Integer> {
 		int totalCount = 0;
 		
 		double sum = 0;
-		for (int wire : this) {
+		for (byte wire : this) {
 			sum += counts[wire]*wire;
 			totalCount += counts[wire];
 		}
@@ -152,7 +152,7 @@ public class WireList extends ArrayList<Integer> {
 			return false;
 		}
 		
-		for (Integer e : wl) {
+		for (Byte e : wl) {
 			if (!contains(e)) {
 				return false;
 			}

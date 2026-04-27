@@ -5,6 +5,7 @@ import java.util.Vector;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
+import javax.swing.WindowConstants;
 
 public class LundComboBox extends JComboBox {
 
@@ -24,11 +25,11 @@ public class LundComboBox extends JComboBox {
 			return lundId.getName() + s;
 		}
 
-	};
+	}
 
 	/**
 	 * Constructor for a particle combobox
-	 * 
+	 *
 	 * @param chargedOnly
 	 *            if <> only add charged particles
 	 * @param maxMass
@@ -43,7 +44,7 @@ public class LundComboBox extends JComboBox {
 		// convert maxMass to GeV
 		maxMass /= 1000.;
 
-		Vector<LundComboBoxItem> v = new Vector<LundComboBoxItem>();
+		Vector<LundComboBoxItem> v = new Vector<>();
 		for (LundId lid : LundSupport.getInstance().getLundIds()) {
 			if (lid.getMass() < maxMass) {
 				if (!chargedOnly || (lid.getCharge() != 0)) {
@@ -72,7 +73,7 @@ public class LundComboBox extends JComboBox {
 	public static void main(String args[]) {
 		javax.swing.JFrame testFrame = new javax.swing.JFrame("test frame");
 		java.awt.Container cp = testFrame.getContentPane();
-		testFrame.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
+		testFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
 		cp.setLayout(new BorderLayout(4, 0));
 

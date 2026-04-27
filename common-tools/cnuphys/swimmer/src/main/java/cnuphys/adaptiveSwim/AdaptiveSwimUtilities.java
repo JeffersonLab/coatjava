@@ -4,200 +4,143 @@ import cnuphys.rk4.ButcherTableau;
 import cnuphys.rk4.IDerivative;
 
 public class AdaptiveSwimUtilities {
-	
-	public enum DebugLevel  {OFF, ON, VERBOSE};
-	
-	//the debul level
-	private static DebugLevel _debugLevel = DebugLevel.OFF;
-
-	//tolerance when swimmimg to a max path length
-//	public static final double SMAX_TOLERANCE = 1.0e-4;  //meters
 
 	//step size limits in meters
 	public static final double MIN_STEPSIZE = 1.0e-8; // meters
-	
+
 	//maximum number of integration steps
-	public static int MAX_NUMSTEP = 2000; 
-	
-	
+	public static final int MAX_NUMSTEP = 2000;
+
+	//limit warning prints
+	private static int _warningCount = 0;
+
+
 	/**
-	 * Basic adaptive step size driver that tries to integrate from s = 0 to s = sf,
-	 * where sf is in the stopper object. Often this will terminate because the stopper
-	 * stops the integration before sf is reached.
-	 * 
+	 * Basic adaptive step size driver that tries to swim until a stop condition
+	 * is met.
+	 *
 	 * @param h            the step size at the start
 	 * @param deriv        the derivative computer (interface). This is where the
 	 *                     problem specificity resides.
-	 * @param stopper      will be used to exit the
-	 *                     integration early because some condition has been
-	 *                     reached.
+	 * @param stopper      will be used to exit the swimming
 	 * @param advancer     takes the next single step
 	 * @param eps          tolerance (e.g., 1.0e-6)
-	 * @param uf           will hold final state vector
-	 *                     
 	 * @return the number of steps used.
 	 * @throw AdaptiveSwimException
 	 */
 	public static int driver(double h, IDerivative deriv, IAdaptiveStopper stopper,
-			IAdaptiveAdvance advancer, double eps, double uf[]) throws AdaptiveSwimException {
-		
-		// get the dimensionality of the problem. e.g, 6 if u = (x, y, z, tx, ty, tz)
-		double[] u0 = stopper.getU();
-		int nDim = u0.length;
-		
-				
-		// ut is the running value of the state vector,
-		// typically [x, y, z, tx, ty, tz]
-		double ut[] = new double[nDim];
-		
-		//du is for derivatives
-		double du[] = new double[nDim];
+			IAdaptiveAdvance advancer, double eps) throws AdaptiveSwimException {
 
-		//init the final value to be the same as the start value
-		System.arraycopy(u0, 0, uf, 0, nDim);
-		
+
+		//workspace
+		// ut is the running value of the state vector,
+		// [x, y, z, tx, ty, tz]
+		double _ut[] = new double[AdaptiveSwimmer.DIM];
+
+		//du is for derivatives
+		double _du[] = new double[AdaptiveSwimmer.DIM];
+
+
+		double _unew[] = new double[AdaptiveSwimmer.DIM];
+
+
+		//init the new value to be the same as the curent value
+		System.arraycopy(stopper.getU(), 0, _unew, 0, AdaptiveSwimmer.DIM);
+
 		//track the number of steps
 		int nstep = 0;
-				
+
+		double snew = stopper.getS();
+
 		AdaptiveStepResult result = new AdaptiveStepResult();
-		
-		//keep taking single steps until we reach the upper limit 
+
+		//keep taking single steps until we reach the upper limit
 		//or the stopper stops us
 		while (nstep < MAX_NUMSTEP) {
-			System.arraycopy(uf, 0, ut, 0, nDim);
+			System.arraycopy(_unew, 0, _ut, 0, AdaptiveSwimmer.DIM);
 
 			//compute derivs at current step
-			deriv.derivative(stopper.getS(), ut, du);
-			advancer.advance(stopper.getS(), ut, du, h, deriv, uf, eps, result);
-			
+			deriv.derivative(stopper.getS(), _ut, _du);
+			advancer.advance(stopper.getS(), _ut, _du, h, deriv, _unew, eps, result);
+
 			double hnew = result.getHNew();
-			
+
 			h = Math.max(MIN_STEPSIZE, Math.min(stopper.getMaxStepSize(), hnew));
-			double snew = result.getSNew();
-			
+			snew = result.getSNew();
+
 			nstep++;
-			
+
 			//will the stopper terminate?
-			if (stopper.stopIntegration(snew, uf)) {
+			if (stopper.stopIntegration(snew, _unew)) {
 				return nstep;
-			} 
+			}
 
 		}
-		
+
+		if (_warningCount < 4) {
+			System.err.println("In the adaptive swimmer, the step count reached the max limit of " + MAX_NUMSTEP +
+					" which usually indicates bad stopper logic.");
+			System.err.println(" snew = " +  snew);
+			System.err.println(String.format("ut = (%11.7f, %11.7f, %11.7f)", _ut[0], _ut[1], _ut[2]));
+			_warningCount++;
+		}
+
 		return nstep;
 	}
 
-	/**
-	 * Take a single step using basic fourth order RK
-	 * 
-	 * @param s     the independent variable
-	 * @param u     the current state vector
-	 * @param du    the current derivatives
-	 * @param h     the step size
-	 * @param deriv can compute the rhs of the diffy q
-	 * @param uf    the state vector after the step
-	 */
-	public static void singleRK4Step(final double s, double[] u, double[] du, final double h, IDerivative deriv, double[] uf) {
 
-		int nDim = u.length;
-
-		// note that du (input) is k1
-		double k1[] = du; // the current derivatives
-
-		double k2[] = new double[nDim];
-		double k3[] = new double[nDim];
-		double k4[] = new double[nDim];
-		double utemp[] = new double[nDim];
-
-		double hh = h * 0.5; // half step
-		double h6 = h / 6.0;
-
-		// advance t to mid point
-		double sMid = s + hh;
-
-		// first step: initial derivs to midpoint
-		for (int i = 0; i < nDim; i++) {
-			utemp[i] = u[i] + hh * k1[i];
-		}
-		deriv.derivative(sMid, utemp, k2);
-
-		// 2nd step (like 1st, but use midpoint just computed derivs dyt)
-		for (int i = 0; i < nDim; i++) {
-			utemp[i] = u[i] + hh * k2[i];
-		}
-		deriv.derivative(sMid, utemp, k3);
-
-		// third (full) step
-		for (int i = 0; i < nDim; i++) {
-			utemp[i] = u[i] + h * k3[i];
-		}
-		deriv.derivative(s + h, utemp, k4);
-
-		for (int i = 0; i < nDim; i++) {
-			uf[i] = u[i] + h6 * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]);
-		}
-
-	}
-	
-	
 	/**
 	 * Take a single step using a Butcher tableau
-	 * 
+	 *
 	 * @param s     the independent variable
-	 * @param u     the current state vector
+	 * @param u0    the current state vector
 	 * @param du    the current derivatives
 	 * @param h     the step size
 	 * @param deriv can compute the rhs of the diffy q
 	 * @param uf    the state vector after the step (output)
+	 * uf cannot be the same as u0
 	 * @param error the error estimate (output)
 	 * @param tableau the Butcher tableau
 	 */
-	public static void singleButcherStep(double s, double[] u, double[] du, double h, IDerivative deriv, double[] uf,
-			double[] error, ButcherTableau tableau) {
-		
-		int nDim = u.length;
+	public static void singleButcherStep(double s, double[] u0, double[] du, double h, IDerivative deriv, double[] uf,
+			double[] error, ButcherTableau tableau, double k[][], double[] utemp) {
+
 		int numStage = tableau.getNumStage();
 
-		double utemp[] = new double[nDim];
-		double k[][] = new double[numStage + 1][];
-		k[0] = null; // not used
-
 		// k1 is just h*du
-		k[1] = new double[nDim];
-		for (int i = 0; i < nDim; i++) {
+		for (int i = 0; i < AdaptiveSwimmer.DIM; i++) {
 			k[1][i] = h * du[i];
 		}
 
 		// fill the numStage k vectors
 		for (int stage = 2; stage <= numStage; stage++) {
-			k[stage] =new double[nDim];
 
 			double ts = s + tableau.c(stage);
-			for (int i = 0; i < nDim; i++) {
-				utemp[i] = u[i];
+			for (int i = 0; i < AdaptiveSwimmer.DIM; i++) {
+				utemp[i] = u0[i];
 				for (int ss = 1; ss < stage; ss++) {
 					utemp[i] += tableau.a(stage, ss) * k[ss][i];
 				}
 			}
 			deriv.derivative(ts, utemp, k[stage]);
-			for (int i = 0; i < nDim; i++) {
+			for (int i = 0; i < AdaptiveSwimmer.DIM; i++) {
 				k[stage][i] *= h;
 			}
 		}
-		
-		for (int i = 0; i < nDim; i++) {
+
+		for (int i = 0; i < AdaptiveSwimmer.DIM; i++) {
 			double sum = 0.0;
 			for (int stage = 1; stage <= numStage; stage++) {
 				sum += tableau.b(stage) * k[stage][i];
 			}
-			uf[i] = u[i] + sum;
+			uf[i] = u0[i] + sum;
 		}
 
 		// compute error?
 		if (tableau.isAugmented() && (error != null)) {
 
 			// absolute error
-			for (int i = 0; i < nDim; i++) {
+			for (int i = 0; i < AdaptiveSwimmer.DIM; i++) {
 				error[i] = 0.0;
 				// error diff 4th and 5th order
 				for (int stage = 1; stage <= numStage; stage++) {
@@ -205,48 +148,14 @@ public class AdaptiveSwimUtilities {
 				}
 			}
 
-			// relative error
-			// for (int i = 0; i < nDim; i++) {
-			// double sum = 0.0;
-			// for (int s = 1; s <= numStage; s++) {
-			// sum += tableau.bstar(s)*k[s][i];
-			// }
-			// double ystar = y[i] + sum;
-			// error[i] = relativeDiff(yout[i], ystar);
-			// }
-
-			// for (int i = 0; i < nDim; i++) {
-			// System.out.print(String.format("[%-12.5e] ", error[i]));
-			// }
-			// System.out.println();
-
 		}
 
 
 	}
-	
-	/**
-	 * Set the debug level
-	 * @param level the new debug level
-	 */
-	public static void setDebugLevel(DebugLevel level) {
-		_debugLevel = level;
-	}
-
-
-	/**
-	 * Set the maximum number of steps beyond which an error occurs
-	 * @param maxSteps the maximum number of steps. Default is 2000.
-	 */
-	public static void setMaxNumberSteps(int maxSteps) {
-		MAX_NUMSTEP = maxSteps;
-	}
-	
-
 
 	/**
 	 * Get the sector [1..6] from the phi value
-	 * 
+	 *
 	 * @param phi the value of phi in degrees
 	 * @return the sector [1..6]
 	 */
@@ -277,6 +186,27 @@ public class AdaptiveSwimUtilities {
 		}
 		return 1;
 	}
+
+	/**
+	 * Get just the x y z location of the state vector in cm
+	 * @param u the state vector
+	 * @return the x y z location of the state vector in cm
+	 */
+	public static String uStringXYZ(double u[]) {
+		return String.format("(%11.8f, %11.8f, %11.8f) cm", 100*u[0], 100*u[1], 100*u[2]);
+	}
+
+	/**
+	 * Get just the x y z location of the state vector in cm
+	 * with a prepended message
+	 * @param u the state vector
+	 * @return the x y z location of the state vector in cm
+	 * with a prepended message
+	 */
+	public static String uStringXYZ(String message, double u[]) {
+		return message + " " + uStringXYZ(u);
+	}
+
 
 
 }

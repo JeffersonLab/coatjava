@@ -1,6 +1,6 @@
 package cnuphys.swim;
 
-import java.awt.Point;
+import java.awt.geom.Point2D;
 
 public interface IProjector {
 
@@ -13,5 +13,5 @@ public interface IProjector {
      * @param wp
      *            the resulting 2D world point
 	 */
-	public void project(double p3d[], Point.Double wp);
+	public void project(double p3d[], Point2D.Double wp);
 }

@@ -1,6 +1,7 @@
 package cnuphys.lund;
 
-import java.util.Vector;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.table.DefaultTableModel;
 
@@ -34,7 +35,7 @@ public class TrajectoryTableModel extends DefaultTableModel {
 	};
 
 	// the model data
-	protected Vector<TrajectoryRowData> data = new Vector<TrajectoryRowData>(25);
+	protected List<TrajectoryRowData> data = new ArrayList<>(25);
 
 	/**
 	 * Constructor
@@ -45,7 +46,7 @@ public class TrajectoryTableModel extends DefaultTableModel {
 
 	/**
 	 * Get the number of columns
-	 * 
+	 *
 	 * @return the number of columns
 	 */
 	@Override
@@ -55,7 +56,7 @@ public class TrajectoryTableModel extends DefaultTableModel {
 
 	/**
 	 * Get the number of rows
-	 * 
+	 *
 	 * @return the number of rows
 	 */
 	@Override
@@ -68,7 +69,7 @@ public class TrajectoryTableModel extends DefaultTableModel {
 
 	/**
 	 * Get the value at a given row and column
-	 * 
+	 *
 	 * @return the value at a given row and column
 	 */
 	@Override
@@ -96,7 +97,7 @@ public class TrajectoryTableModel extends DefaultTableModel {
 
 				case 3:
 					return getStr(traj.getMass(), 3);
-					
+
 				case 4:
 					return "" + traj.getCharge();
 
@@ -123,10 +124,10 @@ public class TrajectoryTableModel extends DefaultTableModel {
 
 				case 12:
 					return getStr(traj.getMass() + traj.getKineticEnergy(), 3);
-					
+
 				case 13:
 					return "" + traj.getStatus();
-					
+
 				case 14:
 					return traj.getSource();
 				}
@@ -154,7 +155,7 @@ public class TrajectoryTableModel extends DefaultTableModel {
 	 * @param data
 	 *            the data to set
 	 */
-	public void setData(Vector<TrajectoryRowData> data) {
+	public void setData(List<TrajectoryRowData> data) {
 		this.data = data;
 		fireTableDataChanged();
 	}
