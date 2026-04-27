@@ -147,7 +147,7 @@ public class DefaultDerivative implements IDerivative {
             double r  = Math.sqrt(x*x+y*y);
             double r_cm = r * 100; // convert to cm
             double z_cm = z * 100; // convert to cm
-            
+
             if(r_cm<RHO_RANGE[0] || r_cm>RHO_RANGE[1] || z_cm<Z_RANGE[0] || z_cm>Z_RANGE[1])
                     return 0;
           
@@ -177,6 +177,7 @@ public class DefaultDerivative implements IDerivative {
         
         private boolean isInPolycone(double[] Z, double[] RI, double[] RO, double z, double r){
             int iz = Arrays.binarySearch(Z, z);
+            if(iz<0) iz = -iz -1;
             if(iz>0 && iz<Z.length) {
                 double ri = RI[iz-1] + (RI[iz]-RI[iz-1])*(z-Z[iz-1])/(Z[iz]-Z[iz-1]);
                 double ro = RO[iz-1] + (RO[iz]-RO[iz-1])*(z-Z[iz-1])/(Z[iz]-Z[iz-1]);
