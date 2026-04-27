@@ -129,36 +129,31 @@ public class MUVTCluster extends ArrayList<MUVTStrip> {
         Point3D pointOrigin = new Point3D(0.0,0.0,0.0);
         Point3D pointEnd    = new Point3D(0.0,0.0,0.0);
         
-        double logSumm = 0.0;
-        double summE   = 0.0;
+        double summWE = 0.0;
         
         for(int i = 0; i < this.size(); i++){
             Line3D line = this.get(i).getLine();
             
-            double energy    = this.get(i).getEnergy();
-            double energymev = energy*1000.0;
-            double        le = Math.log(energymev);
+            double we = this.get(i).getEnergy();
             
-            pointOrigin.setX(pointOrigin.x()+line.origin().x()*le);
-            pointOrigin.setY(pointOrigin.y()+line.origin().y()*le);
-            pointOrigin.setZ(pointOrigin.z()+line.origin().z()*le);
+            pointOrigin.setX(pointOrigin.x()+line.origin().x()*we);
+            pointOrigin.setY(pointOrigin.y()+line.origin().y()*we);
+            pointOrigin.setZ(pointOrigin.z()+line.origin().z()*we);
             
-            pointEnd.setX(pointEnd.x()+line.end().x()*le);
-            pointEnd.setY(pointEnd.y()+line.end().y()*le);
-            pointEnd.setZ(pointEnd.z()+line.end().z()*le);
+            pointEnd.setX(pointEnd.x()+line.end().x()*we);
+            pointEnd.setY(pointEnd.y()+line.end().y()*we);
+            pointEnd.setZ(pointEnd.z()+line.end().z()*we);
 
-            logSumm += le;
-            
-            summE   += energy;
-        }
+            summWE += we;
+       }
                 
         this.clusterLine.set(
-                pointOrigin.x()/logSumm,
-                pointOrigin.y()/logSumm,
-                pointOrigin.z()/logSumm,
-                pointEnd.x()/logSumm,
-                pointEnd.y()/logSumm,
-                pointEnd.z()/logSumm
+                pointOrigin.x()/summWE,
+                pointOrigin.y()/summWE,
+                pointOrigin.z()/summWE,
+                pointEnd.x()/summWE,
+                pointEnd.y()/summWE,
+                pointEnd.z()/summWE
         );
         this.clusterLineTS = MUVTConstants.toTiltedSectorFrame(this.desc.getSector(), clusterLine);
     }
