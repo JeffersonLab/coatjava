@@ -519,10 +519,10 @@ public class Constants {
             int crate   = tt.getList().getIndexGenerator().getIndex((long)key, 0);
             int slot    = tt.getList().getIndexGenerator().getIndex((long)key, 1);
             int channel = tt.getList().getIndexGenerator().getIndex((long)key, 2);
-            int sector  = tt.getIntValue("sector",    crate,slot,channel);
-            int layer   = tt.getIntValue("layer",     crate,slot,channel);
-            int comp    = tt.getIntValue("component", crate,slot,channel);
-            int order   = tt.getIntValue("order",     crate,slot,channel);
+            int sector  = tt.getIntValueByHash(0, (long)key);
+            int layer   = tt.getIntValueByHash(1, (long)key);
+            int comp    = tt.getIntValueByHash(2, (long)key);
+            int order   = tt.getIntValueByHash(3, (long)key);
             reverse.addEntry(sector, layer, comp, order);
             reverse.setIntValue(crate,   "crate",   sector, layer, comp, order);
             reverse.setIntValue(slot,    "slot",    sector, layer, comp, order);
