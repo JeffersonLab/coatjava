@@ -29,6 +29,7 @@ public class DecoderEngine implements Engine {
 
     SchemaFactory schema;
     BlockingQueue<CLASDecoder> pool;
+    int constantsShared = 16;
 
     public DecoderEngine() {
         schema = new SchemaFactory();
@@ -56,13 +57,19 @@ public class DecoderEngine implements Engine {
 
     @Override
     public EngineData configure(EngineData ed) {
-        JSONObject j = new JSONObject(ed.getData());
+        JSONObject json = new JSONObject(ed.getData());
         pool = new ArrayBlockingQueue<>(POOL_SIZE);
-        CLASDecoder d0 = new CLASDecoder();
-        if (j.has("variation")) d0.setVariation(j.getString("variation"));
-        if (j.has("timestamp")) d0.setVariation(j.getString("timestamp"));
+        CLASDecoder d0 = null;
         for (int i=0; i<POOL_SIZE; i++) {
-            pool.add(i==0 ? d0 : new CLASDecoder(d0));
+            if (i % constantsShared == 0) {
+                d0 = new CLASDecoder();
+                if (json.has("variation")) d0.setVariation(json.getString("variation"));
+                if (json.has("timestamp")) d0.setVariation(json.getString("timestamp"));
+                pool.add(d0);
+            }
+            else {
+                pool.add(new CLASDecoder(d0));
+            }
         }
         return ed;
     }
