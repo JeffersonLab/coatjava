@@ -61,7 +61,7 @@ def benchmark(cfg, threads, log):
     # add the run-clara command:
     cmd.extend([cfg.run_clara,
             '-c',cfg.clara,
-            '-n',str(cfg.events*int(threads)),
+            '-n',str(cfg.events),
             '-t',str(threads),
             '-l',
             '-y',cfg.yaml,
