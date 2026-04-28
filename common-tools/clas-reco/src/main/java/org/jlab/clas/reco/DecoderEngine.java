@@ -61,7 +61,7 @@ public class DecoderEngine implements Engine {
         pool = new ArrayBlockingQueue<>(POOL_SIZE);
         CLASDecoder d0 = null;
         for (int i=0; i<POOL_SIZE; i++) {
-            if (i % constantsShared == 0) {
+            if (i / constantsShared == 0) {
                 d0 = new CLASDecoder();
                 if (json.has("variation")) d0.setVariation(json.getString("variation"));
                 if (json.has("timestamp")) d0.setVariation(json.getString("timestamp"));
