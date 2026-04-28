@@ -39,7 +39,7 @@ public class CLASDecoder {
     private boolean              isRunNumberFixed = false;
     private int                  decoderDebugMode = 0;
     private ModeAHDC                ahdcExtractor = new ModeAHDC();
-    private RCDBManager               rcdbManager = new RCDBManager();
+    private static RCDBManager        rcdbManager = new RCDBManager();
 
     public CLASDecoder(boolean development){
         codaDecoder = new CodaEventDecoder();
