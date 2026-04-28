@@ -162,10 +162,9 @@ public class MUVTEngine extends ReconstructionEngine {
         // Iterate on list to run the fit.
         for(int i=0; i<filtedTracks.size(); i++) {
             MUVTTrack track = filtedTracks.get(i);                
-                            
-            // Set status and stop if there are not at least two measurements to fit against.
             List<MUVTCluster> trackClusters = track.getClusters();           
-
+            track.toLocal(trackClusters.get(0).getSector());
+            
             kf = new KFitter(track, swimmer, 0);            
             
             kf.runFitter(track.getSector());
@@ -182,8 +181,8 @@ public class MUVTEngine extends ReconstructionEngine {
                 // swim to beamline to get vertex parameters
                 int charge = (int)Math.signum(sv.Q);
                 
-                Point3D posGlobal = track.transLocaltoGlobal(track.getSector(), sv.x, sv.y, sv.z);                
-                Point3D momGlobal = track.transLocaltoGlobal(track.getSector(), sv.getPx()/sv.getP()*track.getP(), sv.getPy()/sv.getP()*track.getP(), sv.getPz()/sv.getP()*track.getP());  
+                Point3D posGlobal = MUVTConstants.toLab(track.getSector(), sv.x, sv.y, sv.z);                
+                Point3D momGlobal = MUVTConstants.toLab(track.getSector(), sv.getPx()/sv.getP()*track.getP(), sv.getPy()/sv.getP()*track.getP(), sv.getPz()/sv.getP()*track.getP());  
                 
                 swimmer.SetSwimParameters(posGlobal.x(),posGlobal.y(),posGlobal.z(), -momGlobal.x(),-momGlobal.y(),-momGlobal.z(),-charge);
                 double[] Vt = swimmer.SwimToBeamLine(xB, yB);

@@ -87,7 +87,7 @@ public class MUVTConstants {
     
     public static Transformation3D toTiltedSectorFrame(int sector) {
         Transformation3D t = new Transformation3D();
-        t.rotateZ(Math.toRadians(-60 * (sector-1)));
+        t.rotateZ(Math.toRadians(-2*Math.PI/NSECTOR * (sector-1)));
         t.rotateY(Math.toRadians(-TILT));
         return t;
     }
@@ -95,6 +95,13 @@ public class MUVTConstants {
     public static Transformation3D toLab(int sector) {
         Transformation3D inverse = new Transformation3D(MUVTConstants.toTiltedSectorFrame(sector));
         return inverse.inverse();
+    }
+
+
+    public static Point3D toLab(int sector, double x, double y, double z) {
+        Point3D local = new Point3D(x,y,z);
+        MUVTConstants.toLab(sector).apply(local);
+        return local;
     }
 
     public static Point3D toTiltedSectorFrame(int sector, Point3D p) {

@@ -397,18 +397,13 @@ public class MUVTTrack {
                 double px = trackBank.getFloat("p0_x", i);
                 double py = trackBank.getFloat("p0_y", i);
                 double pz = trackBank.getFloat("p0_z", i);
-                
-                
-                Point3D vertexLocal = transGlobaltoLocal(trk.getSector(), vx, vy, vz);
-                
-                Point3D momLocal = transGlobaltoLocal(trk.getSector(), px, py, pz);
-                
-                trk.setX(vertexLocal.x());
-                trk.setY(vertexLocal.y());
-                trk.setZ(vertexLocal.z());
-                trk.setPx(momLocal.x());
-                trk.setPy(momLocal.y());
-                trk.setPz(momLocal.z());
+                                
+                trk.setX(vx);
+                trk.setY(vy);
+                trk.setZ(vz);
+                trk.setPx(px);
+                trk.setPy(py);
+                trk.setPz(pz);
                 trk.setStatus(1);
                 trackmap.put(id,trk);                         
                 
@@ -450,21 +445,28 @@ public class MUVTTrack {
         return tracks;
     }
     
-    public Point3D transGlobaltoLocal(int sector, double x, double y, double z){
-        Point3D point = new Point3D(x, y, z);
-        point.rotateZ(Math.toRadians(-60 * (sector - 1)));
-        point.rotateY(Math.toRadians(-25)); 
-        
-        return point;
+    public void toLocal(int sector) {
+        Point3D v = MUVTConstants.toTiltedSectorFrame(sector, _x, _y, _z);
+        Point3D p = MUVTConstants.toTiltedSectorFrame(sector, _px, _py, _pz);
+        this.setSector(sector);
+        this.setX(v.x());
+        this.setY(v.y());
+        this.setZ(v.z());
+        this.setPx(p.x());
+        this.setPy(p.y());
+        this.setPz(p.z());
     }
-    
-    public Point3D transLocaltoGlobal(int sector, double x, double y, double z){
-        Point3D point = new Point3D(x, y, z);
-        point.rotateY(Math.toRadians(25));         
-        point.rotateZ(Math.toRadians(60 * (sector - 1)));
-        
-        return point;
-    }    
+
+    public void toGlobal() {
+        Point3D v = MUVTConstants.toTiltedSectorFrame(_sector, _x, _y, _z);
+        Point3D p = MUVTConstants.toTiltedSectorFrame(_sector, _px, _py, _pz);
+        this.setX(v.x());
+        this.setY(v.y());
+        this.setZ(v.z());
+        this.setPx(p.x());
+        this.setPy(p.y());
+        this.setPz(p.z());
+    }
 
     @Override
     public String toString() {
