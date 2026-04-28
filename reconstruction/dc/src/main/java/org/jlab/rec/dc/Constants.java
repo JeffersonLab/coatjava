@@ -524,9 +524,11 @@ public class Constants {
             int comp    = tt.getIntValueByHash(2, (long)key);
             int order   = tt.getIntValueByHash(3, (long)key);
             reverse.addEntry(sector, layer, comp, order);
-            reverse.setIntValue(crate,   "crate",   sector, layer, comp, order);
-            reverse.setIntValue(slot,    "slot",    sector, layer, comp, order);
-            reverse.setIntValue(channel, "channel", sector, layer, comp, order);
+            long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(sector,layer,comp,order);
+            reverse.setIntValueByHash(crate,   0, hash);
+            reverse.setIntValueByHash(crate,   1, hash);
+            reverse.setIntValueByHash(slot,    2, hash);
+            reverse.setIntValueByHash(channel, 3, hash);
         }
         reverseTTs.put(run, reverse);
     }
