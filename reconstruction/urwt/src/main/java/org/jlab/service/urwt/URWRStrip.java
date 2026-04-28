@@ -181,7 +181,7 @@ public class URWRStrip implements Comparable {
 //                strip.setTriggerPhase(triggerPhase);
                 strip.setId(bank.trueIndex(i)+1);
                 strip.setADC(adc);
-                strip.setTDC((int) time);
+                strip.setTDC((int)Math.round(time));
                 strip.setEnergy(strip.ADC*URWTConstants.ADCTOENERGY);
                 strip.setTime(strip.TDC*URWTConstants.TDCTOTIME);
                 strip.setLine(factory.getStrip(sector, layer, comp)); 
