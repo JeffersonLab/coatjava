@@ -458,8 +458,8 @@ public class MUVTTrack {
     }
 
     public void toGlobal() {
-        Point3D v = MUVTConstants.toTiltedSectorFrame(_sector, _x, _y, _z);
-        Point3D p = MUVTConstants.toTiltedSectorFrame(_sector, _px, _py, _pz);
+        Point3D v = MUVTConstants.toLab(_sector, _x, _y, _z);
+        Point3D p = MUVTConstants.toLab(_sector, _px, _py, _pz);
         this.setX(v.x());
         this.setY(v.y());
         this.setZ(v.z());

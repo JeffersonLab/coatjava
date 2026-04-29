@@ -87,7 +87,7 @@ public class MUVTConstants {
     
     public static Transformation3D toTiltedSectorFrame(int sector) {
         Transformation3D t = new Transformation3D();
-        t.rotateZ(Math.toRadians(-2*Math.PI/NSECTOR * (sector-1)));
+        t.rotateZ(-2*Math.PI/NSECTOR * (sector-1));
         t.rotateY(Math.toRadians(-TILT));
         return t;
     }
