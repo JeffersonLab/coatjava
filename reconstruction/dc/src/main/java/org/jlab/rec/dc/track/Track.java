@@ -206,23 +206,7 @@ public class Track extends Trajectory implements Comparable<Track>{
     public void set_URWellPLocalR2(Point3D uRWellPLocalR2) {
         this._URWellPLocalR2 = uRWellPLocalR2;
     }            
-    
-    /**
-     * 
-     * @return URWell cross of track
-     */
-    public List<URWellCross> get_URWellCrosses() {
-        return urCrosses;
-    }
-    /**
-     * 
-     * @param urCross URWell cross
-     */
-    public void set_URWellCrosses(List<URWellCross> urCrosses) {
-        this.urCrosses.clear();
-        this.urCrosses.addAll(urCrosses);
-    }
-    
+        
     /**
      * 
      * @return missing superlayer of the track

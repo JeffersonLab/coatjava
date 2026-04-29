@@ -113,6 +113,7 @@ public class DCURWellTBEngine extends DCEngine {
         List<Segment> segments = new ArrayList<>();
         List<Cross> crosses = new ArrayList<>();
         List<Track> trkcands = new ArrayList<>();
+        List<URWellCross> urCrossesOnTrks = new ArrayList<URWellCross>();
         
         LOGGER.log(Level.FINEST, "TB AI "+ this.getName());
         //instantiate bank writer
@@ -207,7 +208,7 @@ public class DCURWellTBEngine extends DCEngine {
             List<URWellCross> uRWellCrossesHB = new ArrayList();
             if(urcross1_id > 0){
                 for(URWellCross crs: urCrosses){
-                    if(crs.id() == urcross1_id){
+                    if(crs.id() == urcross1_id && crs.get_tid() == HBtrk.get_Id()){
                         uRWellCrossesHB.add(crs);
                         break;
                     }
@@ -215,7 +216,7 @@ public class DCURWellTBEngine extends DCEngine {
             }
             if(urcross2_id > 0){
                 for(URWellCross crs: urCrosses){
-                    if(crs.id() == urcross2_id){
+                    if(crs.id() == urcross2_id && crs.get_tid() == HBtrk.get_Id()){
                         uRWellCrossesHB.add(crs);
                         break;
                     }
@@ -300,6 +301,8 @@ public class DCURWellTBEngine extends DCEngine {
                     List<URWellStateVec> kfStateVecsURWell = setKFStateVecsURWell(kFZRef, deltaPathToVtx);
                     TrackArray1.setStateVecs(kfStateVecsAlongTrajectory);
                     TrackArray1.setURWellStateVecs(kfStateVecsURWell);
+                    
+                    urCrossesOnTrks.addAll(TrackArray1.get_URWellCrosses());
 
                     if (TrackArray1.isGood()) {
                         trkcands.add(TrackArray1);
@@ -394,7 +397,7 @@ public class DCURWellTBEngine extends DCEngine {
             return true;
         }        
         
-        rbc.fillAllTBBanks(event, fhits, clusters, segments, crosses, urCrosses, trkcands);
+        rbc.fillAllTBBanks(event, fhits, clusters, segments, crosses, urCrossesOnTrks, trkcands);
 
         return true;
     }
