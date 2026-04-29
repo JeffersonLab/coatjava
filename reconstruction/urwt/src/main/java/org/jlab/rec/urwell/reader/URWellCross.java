@@ -272,4 +272,21 @@ public class URWellCross {
     public double getResidule(){
         return residual;
     }
+    
+    public URWellCross clone(){
+        URWellCross crsClone = new URWellCross(this.id, this.sector(), this.region, this.position().x(), this.position().y(), this.position().z(), this.energy, this.time, this.cluster1, this.cluster2, this.status);
+        crsClone.set_tid(this.tid);
+        crsClone.setCluster1(this.getCluster1());
+        crsClone.setCluster2(this.getCluster2());
+        crsClone.status =  this.status;
+        crsClone._lxRelativeDCSL1 = this.getLxRelativeToDCSL1LC();
+        crsClone._lyRelativeDCSL1 = this.getLyRelativeToDCSL1LC();
+        crsClone._xRelativeDCSL1AtPlaneY0TSC = this.getXRelativeToDCSL1AtPlaneY0TSC();
+        crsClone._xRelativeDCSL2AtPlaneY0TSC = this.getXRelativeToDCSL2AtPlaneY0TSC(); 
+        crsClone._xErrRelativeDCAtPlaneY0TSCHB = this.getXErrRelativeToDCAtPlaneY0TSCHB(); 
+        crsClone.getURWellStateVecs().clear();
+        crsClone.getURWellStateVecs().addAll(this.getURWellStateVecs());
+                    
+        return crsClone;
+    }
 }

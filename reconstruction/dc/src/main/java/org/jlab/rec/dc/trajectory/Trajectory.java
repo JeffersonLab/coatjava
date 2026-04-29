@@ -51,7 +51,9 @@ public class Trajectory extends ArrayList<Cross> {
      */
     public void set_URWellCrosses(List<URWellCross> urCrosses) {
         this.urCrosses.clear();
-        this.urCrosses.addAll(urCrosses);
+        for(URWellCross crs : urCrosses){
+            this.urCrosses.add(crs.clone());
+        }
     }
     
     private double a; // Parameter a for fitting function in xz plane: f(x) = a*z^2 + b*z + c
