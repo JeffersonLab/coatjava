@@ -67,6 +67,7 @@ set key nobox inside top left
 f(x) = m*x
 m = 2
 
+set fit nolog
 fit [0:24] f(x) datafile using 1:(1/$2*1e3) via m
 rate = sprintf('%.1f Hz/CPU',m)
 plot datafile using 1:(1/$2*1e3) pt 7 notitle, f(x) title rate
@@ -83,7 +84,6 @@ plot datafile \
         '' using 1:($5)             pt 9  with points title 'Reader' ,\
         '' using 1:((column($#-1))) pt 11 with points title 'Writer' ,\
 
-#set logscale y
 set size 0.6,1.0
 set origin 0.4,0.0
 set key outside right vertical
