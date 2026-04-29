@@ -67,6 +67,7 @@ set key nobox inside top left
 f(x) = m*x
 m = 2
 
+set fit quiet
 set fit nolog
 fit [0:24] f(x) datafile using 1:(1/$2*1e3) via m
 rate = sprintf('%.1f Hz/CPU',m)
