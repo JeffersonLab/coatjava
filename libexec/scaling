@@ -19,9 +19,9 @@ def cli():
     if cfg.numa is not None:
         if not shutil.which('numactl'):
             cli.error('numactl is not in $PATH, --numa option not supported')
-        if len(list(get_numa_cpus(cfg.numa))) == 0:
+        cfg.numa = list(get_numa_cpus(cfg.numa))
+        if len(cfg.numa) == 0:
             cli.error('invalid --numa node:  {cfg.numa}')
-        cfg.numa = ','.join(list(get_numa_cpus(cfg.numa)))
     return cfg
 
 def find_run_clara(clara_home):
@@ -54,7 +54,7 @@ def benchmark(cfg, threads, log):
     cmd = []
     # use taskset:
     if cfg.numa is not None:
-        cmd.extend(['taskset','-c',cfg.numa])
+        cmd.extend(['taskset','-c',','.join(cfg.numa[:int(threads)])])
     # add the run-clara command:
     cmd.extend([cfg.run_clara,
             '-c',cfg.clara,
