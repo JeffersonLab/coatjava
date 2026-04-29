@@ -123,6 +123,22 @@ def save(benchmarks):
         for row in table(benchmarks):
             f.write(' '.join([str(x) for x in row])+'\n') 
 
+def plot():
+    import os,shutil,subprocess
+    if shutil.which('gnuplot'):
+        g = os.path.dirname(os.path.abspath(__file__))+'/scaling.gpl'
+        r = subprocess.run(['gnuplot',g], capture_output=True, text=True)
+        if r.returncode == 0:
+            with open('scaling.svg','w') as f:
+                f.write(r.stdout)
+                print('Info:  created scaling.svg from scaling.txt and scaling.gpl!')
+        else:
+            print(r.stdout)
+            print(r.stderr)
+            print('Error:  gnuplot failed!')
+    else:
+        print('Warning:  gnuplot is not in $PATH.')
+
 if __name__ == '__main__':
     cfg = cli()
     import os
@@ -133,4 +149,5 @@ if __name__ == '__main__':
             benchmarks.append([threads, benchmark(cfg, threads, log)])
     show(benchmarks)
     save(benchmarks)
+    plot()
 
