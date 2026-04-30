@@ -228,7 +228,7 @@ public class TableLoader {
         return bin;
     }
     
-    private static synchronized void FillAlpha() {
+    private static void FillAlpha() {
         for(int icosalpha =0; icosalpha<maxBinIdxAlpha+1; icosalpha++) {
 
             double cos30minusalphaM = Math.cos(Math.toRadians(30.)) + (double) 
@@ -252,7 +252,7 @@ public class TableLoader {
 
     public static boolean useP = true;
 
-    public static synchronized void getConstants(IndexedTable t2dPressure, IndexedTable t2dPressRef, IndexedTable pressure){
+    private static void getConstants(IndexedTable t2dPressure, IndexedTable t2dPressRef, IndexedTable pressure){
         double p_ref = t2dPressRef.getDoubleValue("pressure", 0,0,0);
         double p = pressure.getDoubleValue("value", 0,0,3);
         double dp = p - p_ref;
@@ -302,7 +302,8 @@ public class TableLoader {
             }
         }
     }
-    public static synchronized void FillTable() {
+
+    private static void FillTable() {
         double stepSize = 0.00010;
         for(int s = 0; s<6; s++ ){ // loop over sectors
             for(int r = 0; r<6; r++ ){ //loop over slys
@@ -365,6 +366,7 @@ public class TableLoader {
         
         TableLoader.fillMissingTableBins();
     }
+
     public static synchronized void Fill(IndexedTable t2dPressure, IndexedTable t2dPressRef, IndexedTable pressure) {
         
         //CCDBTables 0 =  "/calibration/dc/signal_generation/doca_resolution";
@@ -413,7 +415,7 @@ public class TableLoader {
      * @param superlayer superlayer 
      * @return returns time (ns) when given inputs of distance x (cm), local angle alpha (degrees) and magnitude of bfield (Tesla).  
      */
-    public static synchronized double calc_Time(double x, double alpha, double bfield, int sector, int superlayer) {
+    public static double calc_Time(double x, double alpha, double bfield, int sector, int superlayer) {
         int s = sector - 1;
         int r = superlayer - 1;
         double dmax = 2.*Constants.getInstance().wpdist[r]; 
@@ -430,7 +432,7 @@ public class TableLoader {
        
     }
     
-    public static synchronized double getDeltaTimeBeta(double x, double beta, double distbeta, double v_0) {
+    public static double getDeltaTimeBeta(double x, double beta, double distbeta, double v_0) {
       
         double value = (0.5*Math.pow(beta*beta*distbeta,3)*x/(Math.pow(beta*beta*distbeta,3)+x*x*x))/v_0;
         
