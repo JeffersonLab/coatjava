@@ -249,7 +249,9 @@ public class TableLoader {
         AlphaBounds[0][0] = 0;
         AlphaBounds[5][1] = 30;
     }
+
     public static boolean useP = true;
+
     public static synchronized void getConstants(IndexedTable t2dPressure, IndexedTable t2dPressRef, IndexedTable pressure){
         double p_ref = t2dPressRef.getDoubleValue("pressure", 0,0,0);
         double p = pressure.getDoubleValue("value", 0,0,3);
