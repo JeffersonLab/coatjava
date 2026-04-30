@@ -7,21 +7,30 @@ def cli():
     cli.add_argument('-c','--clara',  metavar='DIR',help='CLARA_HOME path (default=$CLARA_HOME)',default=os.getenv('CLARA_HOME',None))
     cli.add_argument('-t','--threads',metavar='#',help='threads (default=4,8)',default='4,8')
     cli.add_argument('-e','--events', metavar='#',help='events per thread (default=555)',default=555,type=int)
-    cli.add_argument('-N','--numa',   metavar='#',help='NUMA socket (default=None, choices=[0,1])',default=None,type=int,choices=[0,1])
+    cli.add_argument('-N','--numa',   metavar='#',help='restrict to a NUMA socket (choices=[0,1])',default=None,type=int,choices=[0,1])
+    cli.add_argument('-C','--cpus',   metavar='#',help='restrict to a CPU list (e.g. 0,1)',default=None)
     cli.add_argument('datafile', help='input EVIO/HIPO data file')
     cfg = cli.parse_args()
     cfg.threads = cfg.threads.split(',')
-    if not cfg.clara:
-        cli.error('cannot find CLARA installation via -c or $CLARA_HOME')
-    cfg.run_clara = find_run_clara(cfg.clara)
-    if not cfg.run_clara:
-        cli.error('cannot find run-clara in $PATH or CLARA installation')
-    if cfg.numa is not None:
+    if cfg.cpus is not None:
+        try:
+            cfg.cpus = ','.join([str(int(i)) for i in cfg.cpus.split(',')])
+        except Exception as e:
+            cli.error('invalid --cpus argument:  {cfg.cpus}')
+        if cfg.numa is not None:
+            import warnings
+            warnings.warn('ignoring --numa argument, --cpus takes precedence')
+    elif cfg.numa is not None:
         if not shutil.which('numactl'):
             cli.error('numactl is not in $PATH, --numa option not supported')
         cfg.numa = list(get_numa_cpus(cfg.numa))
         if len(cfg.numa) == 0:
             cli.error('invalid --numa node:  {cfg.numa}')
+    if not cfg.clara:
+        cli.error('cannot find CLARA installation via -c or $CLARA_HOME')
+    cfg.run_clara = find_run_clara(cfg.clara)
+    if not cfg.run_clara:
+        cli.error('cannot find run-clara in $PATH or CLARA installation')
     return cfg
 
 def find_run_clara(clara_home):
@@ -52,8 +61,10 @@ def run(cmd):
 def benchmark(cfg, threads, log):
     import collections
     cmd = []
-    # use taskset:
-    if cfg.numa is not None:
+    # use taskset for thread affinity:
+    if cfg.cpus is not None:
+        cmd.extend(['taskset','-c',cfg.cpus])
+    elif cfg.numa is not None:
         cmd.extend(['taskset','-c',','.join(cfg.numa[:int(threads)])])
     # add the run-clara command:
     cmd.extend([cfg.run_clara,
