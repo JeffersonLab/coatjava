@@ -526,9 +526,8 @@ public class Constants {
             reverse.addEntry(sector, layer, comp, order);
             long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(sector,layer,comp,order);
             reverse.setIntValueByHash(crate,   0, hash);
-            reverse.setIntValueByHash(crate,   1, hash);
-            reverse.setIntValueByHash(slot,    2, hash);
-            reverse.setIntValueByHash(channel, 3, hash);
+            reverse.setIntValueByHash(slot,    1, hash);
+            reverse.setIntValueByHash(channel, 2, hash);
         }
         reverseTTs.put(run, reverse);
     }
