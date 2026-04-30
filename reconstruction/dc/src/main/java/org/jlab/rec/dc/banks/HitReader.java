@@ -186,12 +186,12 @@ public class HitReader {
         
         this.set_NumTDCBankRows(bankFiltered.rows());
         for (int i = 0; i < bankFiltered.rows(); i++) {
-            int sector     = bankFiltered.getByte("sector", i);
-            int layer      = (bankFiltered.getByte("layer", i)-1)%6 + 1;
-            int superlayer = (bankFiltered.getByte("layer", i)-1)/6 + 1;
-            int wire       = bankFiltered.getShort("component", i);
+            int sector     = bankFiltered.getByte(0, i);
+            int layer      = (bankFiltered.getByte(1, i)-1)%6 + 1;
+            int superlayer = (bankFiltered.getByte(1, i)-1)/6 + 1;
+            int wire       = bankFiltered.getShort(2, i);
             int order      = bankFiltered.trueOrder(i);
-            int jitter     = this.getJitter(sector, bankFiltered.getByte("layer", i), wire, order);
+            int jitter     = this.getJitter(sector, bankFiltered.getByte(1, i), wire, order);
             int tdc        = bankFiltered.getInt("TDC", i) - jitter;
             int index      = bankFiltered.trueIndex(i);
             
