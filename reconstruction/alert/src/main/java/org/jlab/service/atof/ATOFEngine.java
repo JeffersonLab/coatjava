@@ -55,10 +55,10 @@ public class ATOFEngine extends ReconstructionEngine {
     int Run = -1;
 
     // ATOF calibration tables (instance-level, refreshed on run change)
-    private IndexedTable atofEffectiveVelocity;
-    private IndexedTable atofTimeWalk;
-    private IndexedTable atofAttenuationLength;
-    private IndexedTable atofTimeOffsets;
+    private IndexedTable atofEffectiveVelocityTable;
+    private IndexedTable atofTimeWalkTable;
+    private IndexedTable atofAttenuationLengthTable;
+    private IndexedTable atofTimeOffsetsTable;
 
     @Override
     public boolean processDataEvent(DataEvent event) {
@@ -87,10 +87,10 @@ public class ATOFEngine extends ReconstructionEngine {
         }
         int newRun = runNo;
         if(Run!=newRun) {
-            atofEffectiveVelocity = this.getConstantsManager().getConstants(newRun, "/calibration/alert/atof/effective_velocity");
-            atofTimeWalk          = this.getConstantsManager().getConstants(newRun, "/calibration/alert/atof/time_walk");
-            atofAttenuationLength = this.getConstantsManager().getConstants(newRun, "/calibration/alert/atof/attenuation");
-            atofTimeOffsets       = this.getConstantsManager().getConstants(newRun, "/calibration/alert/atof/time_offsets");
+            atofEffectiveVelocityTable = this.getConstantsManager().getConstants(newRun, "/calibration/alert/atof/effective_velocity");
+            atofTimeWalkTable          = this.getConstantsManager().getConstants(newRun, "/calibration/alert/atof/time_walk");
+            atofAttenuationLengthTable = this.getConstantsManager().getConstants(newRun, "/calibration/alert/atof/attenuation");
+            atofTimeOffsetsTable       = this.getConstantsManager().getConstants(newRun, "/calibration/alert/atof/time_offsets");
             Run = newRun;
         }
         
@@ -111,7 +111,7 @@ public class ATOFEngine extends ReconstructionEngine {
 
         //Hit finder init
         HitFinder hitfinder = new HitFinder();
-        hitfinder.findHits(event, ATOF, startTime, atofTimeOffsets, atofEffectiveVelocity);
+        hitfinder.findHits(event, ATOF, startTime, atofTimeOffsetsTable, atofEffectiveVelocityTable);
         ArrayList<ATOFHit> WedgeHits = hitfinder.getWedgeHits();
         ArrayList<BarHit> BarHits = hitfinder.getBarHits();
         //Exit if hit lists are empty

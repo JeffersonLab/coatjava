@@ -76,7 +76,7 @@ public class ALERTEngine extends ReconstructionEngine {
     private ModelPrePID modelPrePID;
 
     // AHDC calibration table (refreshed on run change)
-    private IndexedTable ahdcAdcGains;
+    private IndexedTable ahdcAdcGainsTable;
 
     public void setB(double B) {
         this.b = B;
@@ -152,7 +152,7 @@ public class ALERTEngine extends ReconstructionEngine {
 
         if (run.get() == 0 || (run.get() != 0 && run.get() != newRun)) {
             run.set(newRun);
-            ahdcAdcGains = this.getConstantsManager().getConstants(newRun, "/calibration/alert/ahdc/gains");
+            ahdcAdcGainsTable = this.getConstantsManager().getConstants(newRun, "/calibration/alert/ahdc/gains");
         }
         
         //Do we need to read the event vx,vy,vz?
@@ -359,20 +359,26 @@ public class ALERTEngine extends ReconstructionEngine {
                     AHDC_hits.add(hit);
                 }
             }
-            if (AHDC_hits.isEmpty()) continue; // It can happen that a track has no associated hit, in this case we skip it for the Kalman Filter
-            AHDC_tracks.add(new Track(AHDC_hits));
             // Initialise the position and the momentum using the information of the AHDC::track
             // position : mm
             // momentum : MeV
-            double x = trackBank.getFloat("x", row);
-            double y = trackBank.getFloat("y", row);
-            double z = trackBank.getFloat("z", row);
-            double px = trackBank.getFloat("px", row);
-            double py = trackBank.getFloat("py", row);
-            double pz = trackBank.getFloat("pz", row);
-            double[] vec = {x, y, z, px, py, pz};
-            AHDC_tracks.get(row).setPositionAndMomentumVec(vec);
-            AHDC_tracks.get(row).set_trackId(trackid);
+            // Invariant: AHDC_hits is non-empty. AHDCEngine's AI_Track_Finding path uses greedy
+            // non-overlap selection so each PreCluster (and thus each Hit) belongs to at most one
+            // surviving track, so the set_trackId stamping is unambiguous and every AHDC::track
+            // row has matching AHDC::hits rows. If this invariant ever flips, the get(0) inside
+            // Track(ArrayList<Hit>) fails loudly here, which is the right signal.
+            Track newTrack = new Track(AHDC_hits);
+            double[] vec = {
+                trackBank.getFloat("x",  row),
+                trackBank.getFloat("y",  row),
+                trackBank.getFloat("z",  row),
+                trackBank.getFloat("px", row),
+                trackBank.getFloat("py", row),
+                trackBank.getFloat("pz", row)
+            };
+            newTrack.setPositionAndMomentumVec(vec);
+            newTrack.set_trackId(trackid);
+            AHDC_tracks.add(newTrack);
         }
         // intialise the Kalman Filter
         double magfieldfactor = runBank.getFloat("solenoid", 0);

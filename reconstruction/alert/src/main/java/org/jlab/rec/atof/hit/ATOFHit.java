@@ -27,7 +27,7 @@ public class ATOFHit {
     private boolean isInACluster;
     private int associatedClusterIndex;
     int idTDC;
-    private IndexedTable atofTimeOffsets;
+    private IndexedTable atofTimeOffsetsTable;
     
 
     public int getSector() {
@@ -197,10 +197,10 @@ public class ATOFHit {
         if(this.startTime!= null) this.time -= this.startTime;
 
         //Time offsets
-        if (atofTimeOffsets == null) return 0;
+        if (atofTimeOffsetsTable == null) return 0;
         int order0 = 0;
-        double t0  = atofTimeOffsets.getDoubleValue("t0",                  this.sector, this.layer, this.component, order0);
-        double tud = atofTimeOffsets.getDoubleValue("upstream_downstream", this.sector, this.layer, this.component, order0);
+        double t0  = atofTimeOffsetsTable.getDoubleValue("t0",                  this.sector, this.layer, this.component, order0);
+        double tud = atofTimeOffsetsTable.getDoubleValue("upstream_downstream", this.sector, this.layer, this.component, order0);
         //The rest of the constants are not used for now
         /*double twb = timeOffsets[2];
         double xtra1 = timeOffsets[3];
@@ -400,7 +400,7 @@ public class ATOFHit {
      * spatial coordinates.
      */
     public ATOFHit(int sector, int layer, int component, int order, int tdc, int tot, Float startTime, Detector atof,
-                   IndexedTable atofTimeOffsets) {
+                   IndexedTable atofTimeOffsetsTable) {
         this.sector = sector;
         this.layer = layer;
         this.component = component;
@@ -408,7 +408,7 @@ public class ATOFHit {
         this.tdc = tdc;
         this.tot = tot;
         this.startTime = startTime;
-        this.atofTimeOffsets = atofTimeOffsets;
+        this.atofTimeOffsetsTable = atofTimeOffsetsTable;
         this.isInACluster = false;
 
         this.makeType();
