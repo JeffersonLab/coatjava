@@ -2,6 +2,7 @@ package org.jlab.rec.cvt.cross;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.geom.prim.Line3D;
 
@@ -344,7 +345,13 @@ public class Cross extends ArrayList<Cluster> implements Comparable<Cross> {
     public Cluster getCluster2() {
         return _clus2;
     }
-
+    public List<Cluster> getClusters() {
+        List<Cluster> cls = new ArrayList<>();
+        cls.add(_clus1);
+        if(_clus2!=null) cls.add(_clus2);
+        return cls;
+    }
+    
     public Cross getMatchedZCross() {
         return _MatchedZCross;
     }
@@ -584,7 +591,9 @@ public class Cross extends ArrayList<Cluster> implements Comparable<Cross> {
     
     @Override
     public String toString() {
-    	return this.printInfo();
+    	String str = this.printInfo() + "\n";
+        for(Cluster c: this.getClusters()) str = str + c.toString() + "\n";
+        return str;
     }
     
     public String printInfo() {

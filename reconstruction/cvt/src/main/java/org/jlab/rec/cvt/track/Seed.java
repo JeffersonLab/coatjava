@@ -44,6 +44,8 @@ public class Seed implements Comparable<Seed>{
     public double percentTruthMatch;
     public double totpercentTruthMatch;
     public int FirstPassIdx;
+    public boolean failed;
+    public int penalty;
     
     public Seed() {
     }
@@ -161,9 +163,15 @@ public class Seed implements Comparable<Seed>{
     }
 
     public List<Cluster> getClusters() {
+        Collections.sort(_Clusters);
         return _Clusters;
     }
 
+    public void add_Cluster(Cluster cluster) {
+        this._Clusters.add(cluster);
+        Collections.sort(_Clusters);
+    }
+    
     public void add_Clusters(List<Cluster> clusters) {
         this._Clusters.addAll(clusters);
         Collections.sort(_Clusters);
@@ -437,13 +445,13 @@ public class Seed implements Comparable<Seed>{
 //        }
 //        if(nSVT==0)
 //            System.out.println("no SVT? "+this.toString());
-        if(Constants.getInstance().seedingDebugMode) {
-            System.out.println("Pass SSA , c2 ok "+(this.getChi2() <= Constants.CHI2CUTSSA * (this.getNDF() + 5)) 
-                    +" ndf ok "+ (this.getNDF() >= Constants.NDFCUT) 
-                    +" r ok "+ (this.getHelix().radius() >= Constants.getInstance().getRCUT()) 
-                    +" dz ok "+ (Math.abs(Geometry.getInstance().getTargetZOffset()-this.getHelix().getZ0()) <= Geometry.getInstance().getTargetHalfLength()+Constants.getInstance().getZRANGE()) 
-                    +" ");
-        }
+//        if(Constants.getInstance().seedingDebugMode) {
+//            System.out.println("Pass SSA , c2 ok "+(this.getChi2() <= Constants.CHI2CUTSSA * (this.getNDF() + 5)) 
+//                    +" ndf ok "+ (this.getNDF() >= Constants.NDFCUT) 
+//                    +" r ok "+ (this.getHelix().radius() >= Constants.getInstance().getRCUT()) 
+//                    +" dz ok "+ (Math.abs(Geometry.getInstance().getTargetZOffset()-this.getHelix().getZ0()) <= Geometry.getInstance().getTargetHalfLength()+Constants.getInstance().getZRANGE()) 
+//                    +" ");
+//        }
         boolean pass = true;
         if(Double.isNaN(this.getChi2())) 
             pass = false;
@@ -647,7 +655,7 @@ public class Seed implements Comparable<Seed>{
                          Math.toDegrees(this.getHelix().getPhiAtDCA()), this.getHelix().getZ0(), this.getHelix().getTanDip(),
                          this.getNDF(), this.getChi2(), this.getStatus());
             for(Cross c: this.getCrosses()) str = str + c.toString() + "\n";
-            for(Cluster c: this.getClusters()) str = str + c.toString() + "\n";
+            //for(Cluster c: this.getClusters()) str = str + c.toString() + "\n";
         } else {
             
             for(Cross c: this.getCrosses()) str = str + c.toString() + "\n";
@@ -750,6 +758,21 @@ public class Seed implements Comparable<Seed>{
         return ovlrem2;
     }
     
+    private Map<Long, Point3D> _trajectory;
+    /**
+     * @return the _trajectory
+     */
+    public Map<Long, Point3D> getTrajectory() {
+        return _trajectory;
+    }
+
+    /**
+     * @param _trajectory the _trajectory to set
+     */
+    public void setTrajectory(Map<Long, Point3D> _trajectory) {
+        this._trajectory = _trajectory;
+    }
+    
     public class Key implements Comparable<Key> {
 
         public int[] crossIds = new int[9];
@@ -784,4 +807,57 @@ public class Seed implements Comparable<Seed>{
             return R[7];
         }
     }
+    
+    @Override
+    public Seed clone() {
+        Seed copy = new Seed();
+
+        copy.id = this.id;
+        copy.status = this.status;
+        copy.doca = this.doca;
+        copy.rho = this.rho;
+        copy.phi = this.phi;
+
+        copy._circleFitChi2PerNDF = this._circleFitChi2PerNDF;
+        copy._lineFitChi2PerNDF = this._lineFitChi2PerNDF;
+        copy._NDF = this._NDF;
+        copy._chi2 = this._chi2;
+
+        copy.percentTruthMatch = this.percentTruthMatch;
+        copy.totpercentTruthMatch = this.totpercentTruthMatch;
+        copy.FirstPassIdx = this.FirstPassIdx;
+        copy.penalty = this.penalty;
+        copy.failed = this.failed;
+        copy.sortingMethod = this.sortingMethod;
+
+        // Helix: keep same reference unless you have a trusted Helix copy constructor.
+        copy._Helix = this._Helix;
+
+        // Shallow-copy cross and cluster objects, but use new list containers.
+        copy._Crosses = (this._Crosses == null) ? null : new ArrayList<>(this._Crosses);
+        copy._Clusters = (this._Clusters == null) ? null : new ArrayList<>(this._Clusters);
+
+        // Overlapping seeds: new container, same seed references.
+        copy._overlappingSeed = (this._overlappingSeed == null) ? null : new ArrayList<>(this._overlappingSeed);
+
+        // Deep-copy trajectory map values.
+        if (this._trajectory != null) {
+            copy._trajectory = new HashMap<>();
+            for (Map.Entry<Long, Point3D> e : this._trajectory.entrySet()) {
+                Point3D p = e.getValue();
+                copy._trajectory.put(e.getKey(), p == null ? null : new Point3D(p));
+            }
+        } else {
+            copy._trajectory = null;
+        }
+
+        // Score: keep same reference unless CandidateScore also gets a clone/copy constructor.
+        //copy._score = this._score;
+
+        // Rebuild key against copied crosses.
+        copy._key = (copy._Crosses == null) ? null : copy.new Key(copy);
+
+        return copy;
+    }
+    
 }

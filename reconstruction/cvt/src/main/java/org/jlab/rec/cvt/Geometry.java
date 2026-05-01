@@ -34,6 +34,7 @@ import org.jlab.rec.cvt.bmt.BMTGeometry;
 import org.jlab.rec.cvt.bmt.BMTType;
 import org.jlab.rec.cvt.bmt.CCDBConstantsLoader;
 import org.jlab.rec.cvt.measurement.Measurements;
+import org.jlab.rec.cvt.patternrec.RoadSurfaces;
 import org.jlab.rec.cvt.svt.SVTGeometry;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.utils.options.OptionParser;
@@ -118,6 +119,7 @@ public class Geometry {
     public synchronized static void initialize(String variation, int run, IndexedTable svtLorentz, IndexedTable bmtVoltage) {
         if(!LOADED) {
             Geometry.getInstance().load(variation, run, svtLorentz, bmtVoltage);
+            RoadSurfaces.getRoadSurfaces();
             LOADED = true;
         }
     }

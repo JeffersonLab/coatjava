@@ -126,11 +126,11 @@ public class CrossMaker {
         int rid = 0; // cross id
         //loop over the clusters
         // inner clusters
-        for (Cluster inlayerclus : svt_innerlayrclus) {
+        for (Cluster inlayerclus : svt_innerlayrclus) { 
            if(inlayerclus.getTotalEnergy()<SVTParameters.ETOTCUT)
                 continue;
             // outer clusters
-            for (Cluster outlayerclus : svt_outerlayrclus) {
+            for (Cluster outlayerclus : svt_outerlayrclus) { 
                 if(outlayerclus.getTotalEnergy()<SVTParameters.ETOTCUT)
                     continue;
                 // the diffence in layers between outer and inner is 1 for a double layer
@@ -147,31 +147,12 @@ public class CrossMaker {
                 if ((inlayerclus.getMinStrip() + outlayerclus.getMinStrip() > SVTParameters.MINSTRIPSUM)
                         && (inlayerclus.getMaxStrip() + outlayerclus.getMaxStrip() < SVTParameters.MAXSTRIPSUM)) { // the intersection is valid
 
-                    // define new cross 
-                    Cross this_cross = new Cross(DetectorType.BST, BMTType.UNDEFINED, inlayerclus.getSector(), inlayerclus.getRegion(), rid++);
-                    // cluster1 is the inner layer cluster
-                    this_cross.setCluster1(inlayerclus);
-                    // cluster2 is the outer layer cluster
-                    this_cross.setCluster2(outlayerclus);
-                    this_cross.setId(rid);
-                    // sets the cross parameters (point3D and associated error) from the SVT geometry
-                    this_cross.updateSVTCross(null); 
-                    // the uncorrected point obtained from default estimate that the track is at 90 deg wrt the module should not be null
-                    if (this_cross.getPoint0() != null) {
-                        double zo = this_cross.getCluster2().getLine().origin().z();
-                        double ze = this_cross.getCluster2().getLine().end().z();
-                        double z = this_cross.getPoint0().z();
-                        double range = Math.abs(ze-zo)+SVTParameters.CROSSZCUT;
-                        if(Math.abs(z-zo)<range && Math.abs(z-ze)<range ) {
-                            //pass the cross to the arraylist of crosses
-                            this_cross.setId(crosses.size() + 1);
-                            this_cross.setDetector(DetectorType.BST);
-                            calcCentErr(this_cross, this_cross.getCluster1());
-                            calcCentErr(this_cross, this_cross.getCluster2());
-
-                            crosses.add(this_cross);
-                        }
-                    }
+//                     define new cross 
+                      Cross this_cross = this.makeCross(inlayerclus, outlayerclus);
+                      if(this_cross!=null) {
+                           this_cross.setId(crosses.size() + 1);
+                           crosses.add(this_cross);
+                      }
                 }
             }
         }
@@ -182,6 +163,31 @@ public class CrossMaker {
         return crosses;
     }
 
+    public Cross makeCross(Cluster inlayerclus, Cluster outlayerclus) {
+        Cross this_cross = new Cross(DetectorType.BST, BMTType.UNDEFINED, inlayerclus.getSector(), inlayerclus.getRegion(), 0);
+        // cluster1 is the inner layer cluster
+        this_cross.setCluster1(inlayerclus);
+        // cluster2 is the outer layer cluster
+        this_cross.setCluster2(outlayerclus);
+        // sets the cross parameters (point3D and associated error) from the SVT geometry
+        this_cross.updateSVTCross(null); 
+        // the uncorrected point obtained from default estimate that the track is at 90 deg wrt the module should not be null
+        if (this_cross.getPoint0() != null) {
+            double zo = this_cross.getCluster2().getLine().origin().z();
+            double ze = this_cross.getCluster2().getLine().end().z();
+            double z = this_cross.getPoint0().z();
+            double range = Math.abs(ze-zo)+SVTParameters.CROSSZCUT;
+            if(Math.abs(z-zo)<range && Math.abs(z-ze)<range ) {
+                //pass the cross to the arraylist of crosses
+                this_cross.setDetector(DetectorType.BST);
+                calcCentErr(this_cross, this_cross.getCluster1());
+                calcCentErr(this_cross, this_cross.getCluster2());
+                return this_cross;
+            }
+        }
+        return null;
+    }
+    
     public void calcCentErr(Cross c, Cluster Cluster1) {
         double Z = Geometry.getInstance().getSVT().toLocal(Cluster1.getLayer(),
                                                  Cluster1.getSector(),

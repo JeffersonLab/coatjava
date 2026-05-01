@@ -26,11 +26,14 @@ import org.jlab.rec.cvt.track.TrackSeederSVTLinker;
 
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Map.Entry;
+import java.util.Set;
 import org.jlab.clas.tracking.kalmanfilter.AKFitter;
 import org.jlab.clas.tracking.kalmanfilter.Surface;
 import org.jlab.clas.tracking.kalmanfilter.Units;
 import org.jlab.clas.tracking.kalmanfilter.helical.KFitter;
+import org.jlab.detector.banks.RawDataBank;
 import org.jlab.detector.base.DetectorType;
 
 import org.jlab.io.base.DataBank;
@@ -53,6 +56,99 @@ import org.jlab.rec.cvt.trajectory.Ray;
  */
 public class RecUtilities {
 
+    
+    public static final int N_PADDLES = 48;
+    public static final double WIDTH = 360.0 / N_PADDLES;  // 7.5 degrees
+    public static double CTOFRADIUS = 251.1; //mm
+    public static double CTOFTHKN = 30.226;
+    
+    
+    public static int[] getPaddleForSeed(Seed seed, double xb, double yb) {
+            Point3D  v = seed.getHelix().getVertex(); 
+            Vector3D p = seed.getHelix().getPXYZ(Constants.getSolenoidMagnitude());
+            if(Constants.getInstance().seedingDebugMode)
+                System.out.println("Base Seed vtx = "+v.toString()+"  p = "+p.toString());
+            int charge = (int) (Math.signum(Constants.getSolenoidScale())*seed.getHelix().getCharge());
+            if(Constants.getSolenoidMagnitude()<0.001)
+                charge = 1;
+
+            org.jlab.clas.tracking.trackrep.Helix hlx = new org.jlab.clas.tracking.trackrep.Helix(v.x(),v.y(),v.z(),p.x(),p.y(),p.z(), charge,
+                            Constants.getSolenoidMagnitude(), xb , yb, Units.MM);
+            
+            return getPaddlesForHelix(hlx);
+    }
+    
+    public static int[] getPaddlesForHelix(org.jlab.clas.tracking.trackrep.Helix helix) {
+        int[] pdls = new int[3];
+        double mradius = CTOFRADIUS +CTOFTHKN / 2.0;
+        for(int i =-1; i<2; i++) {
+            double radius = mradius+(double)i*CTOFTHKN / 2.0;
+            pdls[i+1]=getPaddleForHelix(helix, radius);
+            
+        }
+        if(Constants.getInstance().seedingDebugMode)
+                System.out.println("Paddles for helix : "+pdls[0]+", "+pdls[1]+", "+pdls[2]);
+        return pdls;
+    }
+    
+    public static int getPaddleForHelix(org.jlab.clas.tracking.trackrep.Helix helix, double radius) {
+        Point3D point = helix.getHelixPointAtR(radius);
+        double phiDeg = Math.toDegrees(Math.atan2(point.y(), point.x()));
+        int paddle = getCTOFPaddle(phiDeg);
+        return paddle;
+    }
+    
+    /**
+     * Returns the CTOF paddle number (1..48) for a given phi angle in degrees.
+     * Paddle 1 starts at 0° and ends at 7.5°, paddle 2 starts at 7.5°, etc.
+     * 
+     * @param phiDeg input phi angle in degrees (can be negative or >360)
+     * @return paddle number in [1..48]
+     */
+    public static int getCTOFPaddle(double phiDeg) {
+        
+        // normalize phi to [0,360)
+        double phiNorm = phiDeg % 360.0;
+        if (phiNorm < 0) phiNorm += 360.0;
+
+        // determine bin index
+        int paddle = (int) Math.floor(phiNorm / WIDTH) + 1;
+
+        // wrap-around safety
+        if (paddle > N_PADDLES) paddle = N_PADDLES;
+        return paddle;
+    }
+    
+    public static Set<Integer> getCTOFHitPaddles(DataEvent event) {
+        Set<Integer> paddlesADC = new HashSet<>();
+        Set<Integer> paddles = new HashSet<>();
+        String detADC = "CTOF";
+        detADC += "::adc";
+        String detTDC = "CTOF";
+        detTDC += "::tdc";
+
+        if (event.hasBank(detADC) == false && event.hasBank(detTDC) == false) {
+            return paddles;
+        }
+        if (event.hasBank(detADC) == true) {
+            RawDataBank bank = new RawDataBank(detADC);
+            bank.read(event);
+            int bankSize = bank.rows();
+            for (int i = 0; i < bankSize; i++) {
+                paddlesADC.add(bank.getShort("component", i));
+            }
+        }
+        if (event.hasBank(detTDC) == true) {
+            RawDataBank bank = new RawDataBank(detTDC);
+            bank.read(event);
+            int bankSize = bank.rows();
+            for (int i = 0; i < bankSize; i++) {
+                if(paddlesADC.contains(bank.getShort("component", i)))
+                    paddles.add(bank.getShort("component", i));
+            }
+        }
+        return paddles;
+    }
      public void CleanupSpuriousSVTCrosses(List<Cross> crosses, List<Track> trks) {
         List<Cross> rmCrosses = new ArrayList<>();
         
@@ -350,7 +446,7 @@ public class RecUtilities {
         // if any lost cluster with doca better than the seed is found, save it
         List<Cluster> clustersOnTrack = new ArrayList<>();
         for(Entry<Integer,Cluster> entry : clusterMap.entrySet()) {
-            if(entry.getValue().getAssociatedTrackID()==-1 && entry.getValue().flagForExclusion) clustersOnTrack.add(entry.getValue());
+            if(entry.getValue().getAssociatedTrackID()==-1 && !entry.getValue().flagForExclusion) clustersOnTrack.add(entry.getValue());
         }
         return clustersOnTrack;
     }

@@ -2,7 +2,6 @@ package org.jlab.rec.cvt.services;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -16,22 +15,21 @@ import org.jlab.rec.cvt.banks.RecoBankWriter;
 import org.jlab.rec.cvt.cluster.Cluster;
 import org.jlab.rec.cvt.cross.Cross;
 import org.jlab.rec.cvt.hit.Hit;
-import org.jlab.rec.cvt.patternrec.RoadSurfaces;
-import org.jlab.rec.cvt.patternrec.SVTSeeder;
-import org.jlab.rec.cvt.patternrec.SeedExtender;
 import org.jlab.rec.cvt.track.Seed;
+import org.jlab.rec.cvt.track.StraightTrack;
 import org.jlab.rec.cvt.track.Track;
 import org.jlab.rec.cvt.trajectory.StateVec;
 import org.jlab.utils.groups.IndexedTable;
 
 /**
  * Service to return reconstructed TRACKS
- * format
+ * Current Service used in Data Processing
+ * 
  *
  * @author ziegler
  *
  */
-public class CVTEngine extends ReconstructionEngine {
+public class CVTEngineDefault extends ReconstructionEngine {
 
 
     /**
@@ -60,7 +58,7 @@ public class CVTEngine extends ReconstructionEngine {
     
     // run-time options
     private int     pid = 0;
-    private int     kfIterations = 9;
+    private int     kfIterations = 5;
     private boolean kfFilterOn = true;
     private boolean initFromMc = false;    
     
@@ -94,11 +92,11 @@ public class CVTEngine extends ReconstructionEngine {
     private double rcut = 120.0;
     private double z0cut = 10;
     
-    public CVTEngine(String name) {
+    public CVTEngineDefault(String name) {
         super(name, "ziegler", "6.0");
     }
 
-    public CVTEngine() {
+    public CVTEngineDefault() {
         super("CVTEngine", "ziegler", "6.0");
     }
 
@@ -139,20 +137,16 @@ public class CVTEngine extends ReconstructionEngine {
         this.initConstantsTables();
         this.registerBanks();
         this.printConfiguration();
-        //_writer = new HipoDataSync();
-        //_writer.open(wf);
-        
         return true;    
     }
-    //private HipoDataSync _writer;
-    //private String wf = "../failedTrks.hipo";
+    
     public final void setOutputBankPrefix(String prefix) {
         this.bankPrefix = prefix;
     }
 
     public void registerBanks() {
         String prefix = bankPrefix;
-        if(Constants.getInstance().isCosmics || Constants.getInstance().testRoads) prefix = "Rec";
+        if(Constants.getInstance().isCosmics) prefix = "Rec";
         this.setBmtHitBank("BMT" + prefix + "::Hits");
         this.setBmtClusterBank("BMT" + prefix + "::Clusters");
         this.setBmtCrossBank("BMT" + prefix + "::Crosses");
@@ -301,97 +295,62 @@ public class CVTEngine extends ReconstructionEngine {
         IndexedTable adcStatus            = this.getConstantsManager().getConstants(run, "/calibration/svt/adcstatus");
         
         Geometry.getInstance().initialize(this.getConstantsManager().getVariation(), run, svtLorentz, bmtVoltage);
-        double xB = beamPos.getDoubleValue("x_offset", 0, 0, 0)*10;
-        double yB = beamPos.getDoubleValue("y_offset", 0, 0, 0)*10;
-        int polarity = (int) Math.signum(Constants.getSolenoidScale());
+        
         CVTReconstruction reco = new CVTReconstruction(swimmer);
         
         Set<Integer> paddles = RecUtilities.getCTOFHitPaddles(event);
-        
+        //System.out.println("PADDLES "+paddles.toString());
         if (paddles.isEmpty()) return true;
 
         List<ArrayList<Hit>>         hits = reco.readHits(event, svtStatus, bmtStatus, bmtTime, 
                                                             bmtStripVoltage, bmtStripThreshold,
                                                             adcStatus);
         List<ArrayList<Cluster>> clusters = reco.findClusters();
-        List<Cluster> saClusters = new ArrayList<>();
         List<ArrayList<Cross>>    crosses = reco.findCrosses();
         
-        //create the list of svt clusters that are not in a cross
-        Set<Integer> cids = new HashSet<>();
-        for(Cross c : crosses.get(0)) {
-            cids.add(c.getCluster1().getId());
-            cids.add(c.getCluster2().getId());
-        }
-        if(Constants.getInstance().seedingDebugMode)
-            System.out.println("ALL CLUSTERS:");
-        for(Cluster cl : clusters.get(0)) {
-            if(Constants.getInstance().seedingDebugMode)
-                System.out.println(cl.toString());
-            if(!cids.contains(cl.getId())) 
-                saClusters.add(cl);
-        }
-        //initialize the seeder
-        SVTSeeder ssd = new SVTSeeder(swimmer, xB, yB);
-        SeedExtender sse = new SeedExtender(swimmer, xB, yB);
-        //test new pattern recognition algorithm
-        List<Seed> seeds = ssd.findSeeds(crosses.get(0), polarity, paddles, saClusters) ;
-        List<Track> ctoftracks = new ArrayList<>();
-
-        int sidx=1;
-        for(Seed s : seeds) {
-            s.setId(sidx++);
-             sse.extendSeedToBMT(s, crosses.get(1));
-        }
-        //
-        // Keep only fitted seeds that match CTOF
-        seeds = ssd.keepSeedsMatchingCTOF(seeds, paddles, xB, yB);
-        if(Constants.getInstance().testRoads) {
-            for(Seed s : seeds) {
-                s.percentTruthMatch=ssd.getMCSeedPurity(s);
-            }
-        }
-        // Debug: keep only seeds with X% purity
-        //seeds = ssd.keepSeedsWithPurity(seeds, -1.0);
-        //seeds = ssd.rejectSeedsWithBgClus(seeds);
-//        if(seeds.isEmpty()) {
-//            _writer.writeEvent(event);
-//        } 
-//        if(event.getBank("RUN::config").getInt("event", 0)==659564) _writer.close();
-//        
-        
-        if(!seeds.isEmpty()) {
-            
-            TracksFromTargetRec  tf = new TracksFromTargetRec(swimmer, xB, yB);
-            List<Track> rtracks = tf.getTracks(seeds, event, this.isInitFromMc(), 
-                                                this.isKfFilterOn(), 
-                                                this.getKfIterations(), 
-                                                this.getPid());
-
-            Track.removeOverlappingTracks(rtracks);
-            
-            for(Track t : rtracks) { 
-                boolean ctofmatch = false;
-                for (StateVec stVec : t.getTrajectory()) { 
-                    if(stVec.getSurfaceDetector()!=4) continue;
-                    if(stVec.getSurfaceDetector()==4) { 
-                        double sx = stVec.x();
-                        double sy = stVec.y();
-                        double phiDeg = Math.toDegrees(Math.atan2(sy, sx));
-                        int paddle = RoadSurfaces.getCTOFPaddle(phiDeg); 
-                        if(paddles.contains(paddle)) {
-                            ctofmatch = true;
-                        }
-                    }
-                }
-                if(ctofmatch)
-                    ctoftracks.add(t);
-            }
-            tf.zeroOutAssociatedIds(hits, clusters, crosses);
-            tf.finalizeTracks(ctoftracks);
-        }
-        
+                
         List<DataBank> banks = new ArrayList<>();
+
+        if(crosses != null) {
+            if(Constants.getInstance().isCosmics) {
+                CosmicTracksRec trackFinder = new CosmicTracksRec();
+                List<StraightTrack>  seeds = trackFinder.getSeeds(event, clusters.get(0), clusters.get(1), crosses);
+                List<StraightTrack> tracks = trackFinder.getTracks(event, this.isInitFromMc(), 
+                                                                          this.isKfFilterOn(), 
+                                                                          this.getKfIterations());
+                if(seeds!=null) banks.add(RecoBankWriter.fillStraightSeedsBank(event, seeds, "CVTRec::CosmicSeeds"));
+                if(tracks!=null) {
+                    banks.add(RecoBankWriter.fillStraightTracksBank(event, tracks, "CVTRec::Cosmics"));
+                    banks.add(RecoBankWriter.fillStraightTracksTrajectoryBank(event, tracks, "CVTRec::Trajectory"));
+                    banks.add(RecoBankWriter.fillStraightTrackKFTrajectoryBank(event, tracks, "CVTRec::KFTrajectory"));
+                }            
+            } 
+            else {
+                double[] xyBeam = CVTReconstruction.getBeamSpot(event, beamPos);
+                TracksFromTargetRec  trackFinder = new TracksFromTargetRec(swimmer, xyBeam);
+                trackFinder.totTruthHits = reco.getTotalNbTruHits();
+                List<Seed>   seeds = trackFinder.getSeeds(clusters, crosses);
+                
+                
+                List<Track> tracks = trackFinder.getTracks(event, this.isInitFromMc(), 
+                                                                  this.isKfFilterOn(), 
+                                                                  this.getKfIterations(), 
+                                                                  true, this.getPid());
+                
+                
+
+                if(seeds!=null) {
+                    banks.add(RecoBankWriter.fillSeedBank(event, seeds, this.getSeedBank()));
+                    banks.add(RecoBankWriter.fillSeedClusBank(event, seeds, this.getSeedClusBank()));
+                }
+                if(tracks!=null) {
+                    banks.add(RecoBankWriter.fillTrackBank(event, tracks, this.getTrackBank()));
+    //                banks.add(RecoBankWriter.fillTrackCovMatBank(event, tracks, this.getCovMat()));
+                    banks.add(RecoBankWriter.fillTrajectoryBank(event, tracks, this.getTrajectoryBank()));
+                    banks.add(RecoBankWriter.fillKFTrajectoryBank(event, tracks, this.getKFTrajectoryBank()));
+                }
+            }
+        }
         banks.add(RecoBankWriter.fillSVTHitBank(event, hits.get(0), this.getSvtHitBank()));
         banks.add(RecoBankWriter.fillBMTHitBank(event, hits.get(1), this.getBmtHitBank()));
         banks.add(RecoBankWriter.fillSVTClusterBank(event, clusters.get(0), this.getSvtClusterBank()));
@@ -399,16 +358,6 @@ public class CVTEngine extends ReconstructionEngine {
         banks.add(RecoBankWriter.fillSVTCrossBank(event, crosses.get(0), this.getSvtCrossBank()));
         banks.add(RecoBankWriter.fillBMTCrossBank(event, crosses.get(1), this.getBmtCrossBank()));
 
-        if(!seeds.isEmpty()) {
-            banks.add(RecoBankWriter.fillSeedBank(event, seeds, this.getSeedBank()));
-            banks.add(RecoBankWriter.fillSeedClusBank(event, seeds, this.getSeedClusBank()));
-        }
-        if(!ctoftracks.isEmpty()) {
-            banks.add(RecoBankWriter.fillTrackBank(event, ctoftracks, this.getTrackBank()));
-            //banks.add(RecoBankWriter.fillTrackCovMatBank(event, ctoftracks, this.getCovMat()));
-            banks.add(RecoBankWriter.fillTrajectoryBank(event, ctoftracks, this.getTrajectoryBank()));
-            banks.add(RecoBankWriter.fillKFTrajectoryBank(event, ctoftracks, this.getKFTrajectoryBank()));
-        }
         event.appendBanks(banks.toArray(new DataBank[0]));
             
         

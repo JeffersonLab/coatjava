@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import org.jlab.clas.pdg.PDGDatabase;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.clas.tracking.kalmanfilter.helical.KFitter;
@@ -64,7 +65,11 @@ public class TracksFromTargetRec {
         this.xb = beamPos[0];
         this.yb = beamPos[1];
     }
-    
+    public TracksFromTargetRec(Swim swimmer, double x, double y) {
+        this.swimmer = swimmer;
+        this.xb = x;
+        this.yb = y;
+    }
        
     public List<Seed> getSeeds(List<ArrayList<Cluster>> clusters, List<ArrayList<Cross>> crosses) {
         this.init();
@@ -175,7 +180,109 @@ public class TracksFromTargetRec {
         // Got seeds;
         return seeds;
     }
-    
+    public List<Track> getTracks(List<Seed> seeds, DataEvent event, boolean initFromMc, boolean kfFilterOn, int kfIterations, 
+                                 int elossPid) {
+        
+        double solenoidScale = Constants.getInstance().getSolenoidScale();
+        double solenoidValue = Constants.getInstance().getSolenoidMagnitude(); // already the absolute value
+        
+        List<Track> tracks = new ArrayList<>();
+        KFitter kf = new KFitter(kfFilterOn, kfIterations, Constants.KFDIR, swimmer, Constants.getInstance().KFMatrixLibrary);
+        kf.polarity = (int) Math.signum(Constants.getSolenoidScale()); 
+        KFitter kf2 = new KFitter(false, 1, Constants.KFDIR, swimmer, Constants.getInstance().KFMatrixLibrary);
+        kf2.polarity = (int) Math.signum(Constants.getSolenoidScale());
+        Measurements measure = new Measurements(xb, yb, Constants.getInstance().kfBeamSpotConstraint());
+        for (Seed seed : seeds) { 
+            if(seed.getId()<0) continue;
+            int pid = elossPid;
+            //seed.update_Crosses();
+            //System.out.println("Seed"+seed.toString());
+            List<Surface> surfaces = measure.getMeasurements(seed);
+            
+            if(pid==0) pid = this.getTrackPid(event, seed.getId()); 
+            Point3D  v = seed.getHelix().getVertex(); 
+            Vector3D p = seed.getHelix().getPXYZ(solenoidValue);
+            if(Constants.getInstance().seedingDebugMode)
+                System.out.println("Fit Seed vtx = "+v.toString()+" Seed p = "+p.toString());
+            
+            if(Constants.getInstance().preElossCorrection && pid!=Constants.DEFAULTPID) {
+                double pcorr = measure.getELoss(p.mag(), PDGDatabase.getParticleMass(pid));
+                p.scale(pcorr/p.mag());
+            }
+            
+            int charge = (int) (Math.signum(solenoidScale)*seed.getHelix().getCharge());
+            if(solenoidValue<0.001)
+                charge = 1;
+
+            double[] pars = recUtil.mcTrackPars(event);
+            if(initFromMc) {
+                v = new Point3D(pars[0],pars[1],pars[2]);
+                p = new Vector3D(pars[3],pars[4],pars[5]);
+                if(solenoidValue<0.001) p.scale(100/p.mag());
+            }
+            Helix hlx = new Helix(v.x(),v.y(),v.z(),p.x(),p.y(),p.z(), charge,
+                            solenoidValue, xb , yb, Units.MM);
+            double[][] cov = Constants.COVHELIX;
+            
+            //if(solenoidValue>0.001 && Constants.LIGHTVEL * seed.getHelix().radius() *solenoidValue<Constants.getInstance().getPTCUT())
+            if(solenoidValue>0.001 && seed.getHelix().radius() <Constants.getInstance().getRCUT())    
+                continue;
+            if(Constants.getInstance().seedingDebugMode)
+                System.out.println("initializing fitter...for "+seed.toString());
+            kf.init(hlx, cov, xb, yb, 0, surfaces, PDGDatabase.getParticleMass(pid));
+            kf.runFitter();
+            
+            if(Constants.getInstance().seedingDebugMode)
+                System.out.println("KF status ... failed "+kf.setFitFailed+" ndf "+kf.NDF+" helix "+kf.getHelix());
+            if (kf.setFitFailed == false && kf.NDF>0 && kf.getHelix()!=null) { 
+                Track fittedTrack = new Track(seed, kf, pid);
+                fittedTrack.update_Crosses(seed.getId(), xb, yb);
+                for(Cross c : fittedTrack) { 
+                    if(c.getDetector()==DetectorType.BST) {
+                        c.getCluster1().setAssociatedTrackID(0);
+                        c.getCluster2().setAssociatedTrackID(0);
+                    }
+                }
+                if(Constants.getInstance().seedingDebugMode)
+                    System.out.println("KF vtx = "+fittedTrack.getSecondaryHelix().getVertex().toString());
+                tracks.add(fittedTrack);
+            } else {
+                kf2.init(hlx, cov, xb, yb, 0, surfaces, PDGDatabase.getParticleMass(pid));
+                kf2.runFitter();
+                if (kf2.setFitFailed == false && kf2.NDF>0 && kf2.getHelix()!=null) { 
+                    Track fittedTrack = new Track(seed, kf2, pid);
+                    fittedTrack.update_Crosses(seed.getId(), xb, yb);
+                    for(Cross c : fittedTrack) { 
+                        if(c.getDetector()==DetectorType.BST) {
+                            c.getCluster1().setAssociatedTrackID(0);
+                            c.getCluster2().setAssociatedTrackID(0);
+                        }
+                    }
+                    if(Constants.getInstance().seedingDebugMode)
+                        System.out.println("KF2  = "+fittedTrack.toString());
+                    tracks.add(fittedTrack);
+                }
+            }
+        }
+        
+        if(!tracks.isEmpty()) {
+            // do a final cleanup
+            //Track.removeOverlappingTracks(tracks); 
+            //if(tracks.isEmpty()) System.out.println("Error: no tracks left after overlap remover");
+            
+            // update crosses and clusters on track
+            for(int it = 0; it < tracks.size(); it++) {
+                int id = it + 1;
+                tracks.get(it).setId(id); 
+                tracks.get(it).findTrajectory(swimmer, Geometry.getInstance().geOuterSurfaces());
+                tracks.get(it).update_Crosses(id, xb, yb);
+                tracks.get(it).update_Clusters(id);
+                tracks.get(it).setTrackCovMat(recUtil.getCovMatInTrackRep(tracks.get(it)));
+                if(Constants.getInstance().seedingDebugMode) System.out.println("Passed " + tracks.get(it).toString());
+            }
+        }
+        return tracks;
+    }
     public List<Track> getTracks(DataEvent event, boolean initFromMc, boolean kfFilterOn, int kfIterations, 
                                  boolean searchMissingCls, int elossPid) {
         if(this.CVTseeds==null) return null;
@@ -548,4 +655,31 @@ public class TracksFromTargetRec {
             CVTseeds.clear();
     }
 
+    public void finalizeTracks(List<Track> tracks) {
+        if (tracks == null || tracks.isEmpty()) return;
+
+        // (Optional) remove overlapping tracks: keep commented if original behavior required overlap removal
+        // Track.removeOverlappingTracks(tracks);
+
+        for (int i = 0; i < tracks.size(); i++) {
+            int id = i + 1;
+            Track tr = tracks.get(i);
+            tr.setId(id);
+            tr.findTrajectory(swimmer, Geometry.getInstance().geOuterSurfaces());
+            tr.update_Crosses(id, xb, yb);
+            tr.update_Clusters(id);
+            tr.setTrackCovMat(recUtil.getCovMatInTrackRep(tr));
+        }
+    }
+
+    public void zeroOutAssociatedIds(List<ArrayList<Hit>> hits, List<ArrayList<Cluster>> clusters, List<ArrayList<Cross>> crosses) {
+        for(int i = 0; i < 2; i++) {
+            for(Hit o : hits.get(i))
+                o.setAssociatedTrackID(-1);
+            for(Cluster o : clusters.get(i))
+                o.setAssociatedTrackID(-1);
+            for(Cross o : crosses.get(i))
+                o.setAssociatedTrackID(-1);
+        }
+    }
 }

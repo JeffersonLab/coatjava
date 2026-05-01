@@ -27,7 +27,8 @@ public class CVTReconstruction {
     private List<ArrayList<Hit>>     CVThits     = new ArrayList<>();
     private List<ArrayList<Cluster>> CVTclusters = new ArrayList<>();
     private List<ArrayList<Cross>>   CVTcrosses  = new ArrayList<>();
-
+    private int  MAXSVTCLSIZE = 2;
+    private int  MAXBMTCLSIZE = 6;
     private Swim swimmer;
 
     public CVTReconstruction() {
@@ -87,10 +88,10 @@ public class CVTReconstruction {
         //2) find the clusters from these hits
         ClusterFinder clusFinder = new ClusterFinder();
         if(this.getSVThits().size()>0) {
-            clusters.addAll(clusFinder.findClusters(this.getSVThits()));
+            clusters.addAll(clusFinder.findClusters(this.getSVThits(), MAXSVTCLSIZE));
         }     
         if(this.getBMThits().size() > 0) {
-            clusters.addAll(clusFinder.findClusters(this.getBMThits())); 
+            clusters.addAll(clusFinder.findClusters(this.getBMThits(), MAXBMTCLSIZE)); 
         }
         
         CVTclusters.add(new ArrayList<>());

@@ -1,5 +1,6 @@
 package org.jlab.rec.cvt.trajectory;
 
+import org.jlab.clas.tracking.kalmanfilter.Units;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
 
@@ -83,6 +84,15 @@ public class Helix {
         this.setCovMatrix(kfCov);
     }
     
+    public org.jlab.clas.tracking.trackrep.Helix getKFHelix() {
+
+        Point3D v = this.getVertex();
+        Vector3D p = this.getPXYZ(Constants.getSolenoidMagnitude());
+        int charge = (int) (Math.signum(Constants.getSolenoidScale()) * this.getCharge());
+
+        return new org.jlab.clas.tracking.trackrep.Helix(v.x(), v.y(), v.z(), p.x(), p.y(), p.z(),
+                                       charge, Constants.getSolenoidMagnitude(), xb, yb, Units.MM);
+    }
     public double getXb() {
         return xb;
     }

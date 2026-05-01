@@ -870,11 +870,20 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
 
     @Override
     public String toString() {
-        String str = String.format("Cluster id=%d %s %s layer=%d sector=%d centroid=%.3f value=%.3f error=%.3f resolution=%.3f phi=%.3f phi0=%.3f size=%d", 
+        String str = String.format("Cluster id=%d %s %s layer=%d sector=%d centroid=%.3f purity=%.3f error=%.3f resolution=%.3f phi=%.3f phi0=%.3f size=%d", 
                                     this.getId(), this.getDetector(), this.getType(), this.getLayer(), this.getSector(), this.getCentroid(),
-                                    this.getCentroidValue(), this.getCentroidError(), this.getResolution(), this.getPhi(), this.getPhi0(), this.size());
+                                    this.getMCPurity(), this.getCentroidError(), this.getResolution(), this.getPhi(), this.getPhi0(), this.size());
         return str;
     }
 
+    public double getMCPurity() {
+        double ei =0;
+        double et =0;
+        for(Hit h : this) {
+            et +=h.getStrip().getEdep();
+            if(h.MCstatus==0) ei+=h.getStrip().getEdep();
+        }
+        return 100*ei/(double) et;
+    }
 
 }

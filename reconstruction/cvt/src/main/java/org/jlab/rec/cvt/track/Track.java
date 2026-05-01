@@ -1,12 +1,15 @@
 package org.jlab.rec.cvt.track;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
 import org.jlab.clas.pdg.PDGDatabase;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.clas.tracking.kalmanfilter.AKFitter.HitOnTrack;
@@ -295,7 +298,39 @@ public class Track extends Trajectory implements Comparable<Track> {
 
         return true;
     }
-
+    double W_MISS=15;
+    public double computeSeedScore() 
+    {
+        Map<Integer, Integer> tj = new HashMap<>();
+        for (StateVec stVec : this.getTrajectory()) {
+            if(stVec.getSurfaceDetector()!=5) continue;
+            tj.put(stVec.getSurfaceLayer(), stVec.getSurfaceSector());
+        }
+        Set<Integer> missingLayers = new HashSet<>();
+        for(int i =0; i<12; i++) {
+            missingLayers.add(i+1);
+        }
+        Set<Integer> activeLayers = new HashSet<>();
+        for(Cluster c : this.getSeed().getClusters()) {
+            int layer = c.getLayer();
+            if(c.getDetector()==DetectorType.BMT)
+                layer+=6;
+            activeLayers.add(layer);
+        }
+        missingLayers.removeAll(activeLayers);
+        
+        int inFidCnt=0;
+        for(Integer layer : missingLayers) {
+            if(tj.containsKey(layer)) {
+                if(tj.get(layer)!=0) inFidCnt++;
+            }
+        }
+        double chi2red = this.getChi2() / Math.max(this.getSeed().getClusters().size()-5, 1);
+        double score = chi2red + W_MISS * inFidCnt ;
+        return score;
+    }
+    private double _score = Double.POSITIVE_INFINITY;
+    
     @Override
     public int hashCode() {
         final int prime = 101;
@@ -306,7 +341,7 @@ public class Track extends Trajectory implements Comparable<Track> {
 
     @Override
     public int compareTo(Track tr) {
-       
+        
         if(this.getNDF()>1 && tr.getNDF()>1) {
             int ProbComp  = this.getChi2() < tr.getChi2() ? -1 : this.getChi2() == tr.getChi2() ? 0 : 1;
             int OtherComp = this.getNDF() > tr.getNDF() ? -1 : this.getNDF() == tr.getNDF() ? 0 : 1;
@@ -361,7 +396,7 @@ public class Track extends Trajectory implements Comparable<Track> {
     public boolean overlapWith(Track o) {
         int[] t1id = getTrackKey(this);
         int[] t2id = getTrackKey(o);   
-        for(int i =0; i<9; i++){
+        for(int i =0; i<t1id.length; i++){
             if(t1id[i]==-1 || t2id[i]==-1) continue;
             if(t1id[i]==t2id[i]) return true;
         }
@@ -467,6 +502,20 @@ public class Track extends Trajectory implements Comparable<Track> {
         }
         _status = passKFFlag*(nSVT*1000+nBMTZ*100+nBMTC*10+this.getSeed().getStatus());
     }
+
+    /**
+     * @return the _score
+     */
+    public double getScore() {
+        return _score;
+    }
+
+    /**
+     * @param _score the _score to set
+     */
+    public void setScore(double _score) {
+        this._score = _score;
+    }
     
     /**
      * @return the trackCovMat
@@ -563,22 +612,38 @@ public class Track extends Trajectory implements Comparable<Track> {
         this.setTrajectory((ArrayList<StateVec>) stateVecs);
     }
     
-    private  static int[]  getTrackKey(Track track) {
-        int[] cids  = new int[9];
-        for (int i = 0; i < track.size(); i++) {
-            Cross c =  track.get(i);
-            if(c.getDetector()==DetectorType.BST) {
-                cids[c.getRegion()-1] = c.getId();
-            } else {
-                if(c.getDetector()==DetectorType.BMT) {
-                    int lyr = c.getCluster1().getLayer()+3;
-                    cids[lyr-1] = c.getId();
-                }
-            }                
+    private static int[] getTrackKey(Track track) {
+        int[] cids = new int[12];
+        Arrays.fill(cids, -1);
+        
+        for (int i = 0; i < track.getSeed().getClusters().size(); i++) {
+            Cluster c = track.getSeed().getClusters().get(i);
+            if (c.getDetector() == DetectorType.BST) {
+                cids[c.getLayer() - 1] = c.getId();
+            } else if (c.getDetector() == DetectorType.BMT) {
+                int lyr = c.getLayer() + 6;
+                cids[lyr - 1] = c.getId();
+            }
         }
         return cids;
-        
     }
+    
+    private static int[] getTrackKey_Crosses(Track track) {
+        int[] cids = new int[9];
+        Arrays.fill(cids, -1);
+
+        for (int i = 0; i < track.size(); i++) {
+            Cross c = track.get(i);
+            if (c.getDetector() == DetectorType.BST) {
+                cids[c.getRegion() - 1] = c.getId();
+            } else if (c.getDetector() == DetectorType.BMT) {
+                int lyr = c.getCluster1().getLayer() + 3;
+                cids[lyr - 1] = c.getId();
+            }
+        }
+        return cids;
+    }
+    
     private int _tempId; //pattern rec id
     public int getTempId() {
         return _tempId;
@@ -588,55 +653,84 @@ public class Track extends Trajectory implements Comparable<Track> {
         this._tempId = _tempId;
     }
     private List<Integer> overlapsIds= new ArrayList<>();
-    public static void removeOverlappingTracks(List<Track> tracks) {
-            if(tracks==null)
-                return;
-        Map<Integer, Track>  map = new HashMap<>();    
-        Map<Integer, Track>  selectedTracks = new HashMap<>();  
-        for (int i = 0; i < tracks.size(); i++) {
-            Track t1 = tracks.get(i);
-            t1.setTempId(i+1);
-            map.put(i+1, t1);
+        private static boolean overlaps(Track t1, Track t2) {
+        int[] cids1 = getTrackKey(t1);
+        int[] cids2 = getTrackKey(t2);
+
+        int nShared = 0;
+        for (int k = 0; k < cids1.length; k++) {
+            if (cids1[k] != -1 && cids1[k] == cids2[k]) {
+                nShared++;
+            }
         }
+
+        // use >= 1 if that is the intended policy
+        return nShared >= 1;
+    }
+
+    public static void removeOverlappingTracks(List<Track> tracks) {
+        if (tracks == null || tracks.isEmpty()) return;
+
+        Map<Integer, Track> map = new HashMap<>();
+        Set<Integer> visited = new HashSet<>();
+        List<Track> selected = new ArrayList<>();
+
+        for (int i = 0; i < tracks.size(); i++) {
+            Track t = tracks.get(i);
+            double score = t.computeSeedScore();
+            t.setScore(score);
+            t.setTempId(i + 1);
+            t.overlapsIds.clear();
+            map.put(t.getTempId(), t);
+        }
+
+        // Build adjacency
         for (int i = 0; i < tracks.size(); i++) {
             Track t1 = tracks.get(i);
-            int[] cids = getTrackKey(t1);
-            for (int j = 0;j < tracks.size(); j++) {
-                boolean ov = false;
-                if(i==j) continue;
+            for (int j = i + 1; j < tracks.size(); j++) {
                 Track t2 = tracks.get(j);
-                int[] cids2 = getTrackKey(t2);
-                for(int k  =  0; k<9; k++) {
-                    if(cids[k]!=-1) {
-                        if(cids[k]==cids2[k]) {
-                            ov=true;
-                        }
+                if (overlaps(t1, t2)) {
+                    t1.overlapsIds.add(t2.getTempId());
+                    t2.overlapsIds.add(t1.getTempId());
+                }
+            }
+        }
+
+        // Find connected components
+        for (Track seed : tracks) {
+            int seedId = seed.getTempId();
+            if (visited.contains(seedId)) continue;
+
+            List<Track> component = new ArrayList<>();
+            Queue<Integer> q = new ArrayDeque<>();
+            q.add(seedId);
+            visited.add(seedId);
+
+            while (!q.isEmpty()) {
+                int id = q.poll();
+                Track t = map.get(id);
+                if (t == null) continue;
+
+                component.add(t);
+
+                for (int nid : t.overlapsIds) {
+                    if (!visited.contains(nid)) {
+                        visited.add(nid);
+                        q.add(nid);
                     }
                 }
-                if(ov==true)  {
-                    t1.overlapsIds.add(t2.getTempId()); 
-                }
             }
+
+            //Collections.sort(component);
+            component.sort(Comparator.comparing(Track::getScore));
+            selected.add(component.get(0));
         }
-        for (int i = 0; i < tracks.size(); i++) {
-            List<Track> ovlTracks =  new ArrayList<>();
-            Track t1 = tracks.get(i);
-            ovlTracks.add(t1); 
-            for(int ii =0; ii< t1.overlapsIds.size(); ii++) { 
-                ovlTracks.add(map.get(t1.overlapsIds.get(ii))); 
-            }
-           
-            Collections.sort(ovlTracks);
-            selectedTracks.put(ovlTracks.get(0).getTempId(),ovlTracks.get(0));
-            
-        }
-            
-        Collection<Track> values = selectedTracks.values();
-            
-        tracks.removeAll(tracks);
-        tracks.addAll(new ArrayList<>(values));
+
+        tracks.clear();
+        tracks.addAll(selected);
     }
-    
+
+
     public static void checkForOverlaps(List<Track> tracks, String msg) {
         for (int i = 0; i < tracks.size(); i++) {
             Track t1 = tracks.get(i);
@@ -657,7 +751,7 @@ public class Track extends Trajectory implements Comparable<Track> {
                      Math.toDegrees(this.getHelix().getPhiAtDCA()), this.getHelix().getZ0(), this.getHelix().getTanDip(),
                      this.getNDF(), this.getChi2(), this.getSeed().getStatus(), this.getKFIterations(), this.getStatus());
         for(Cross c: this) str = str + c.toString() + "\n";
-        for(Cluster c: this.getSeed().getClusters()) str = str + c.toString() + "\n";
+        //for(Cluster c: this.getSeed().getClusters()) str = str + c.toString() + "\n";
         return str;
     }
 
