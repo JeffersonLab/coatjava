@@ -157,6 +157,7 @@
          *   3. split the run between neighboring maxima
          *   4. enforce the hard maximum size
          */
+        
         private List<ArrayList<Hit>> splitClusterHits(List<Hit> rawHits, int maxClusterSize) {
             ArrayList<Hit> hits = new ArrayList<>(rawHits);
             hits.sort(Comparator.comparingInt(h -> h.getStrip().getStrip()));
