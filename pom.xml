@@ -231,7 +231,7 @@
       <dependency>
         <groupId>com.google.code.gson</groupId>
         <artifactId>gson</artifactId>
-        <version>2.13.1</version> <!-- WARNING: if changed, see `docs/dependency_conflicts.md` -->
+        <version>2.14.0</version> <!-- WARNING: if changed, see `docs/dependency_conflicts.md` -->
       </dependency>
 
       <!-- resolve conflict between `j4ml:j4ml-clas12` and `clas-tracking`
