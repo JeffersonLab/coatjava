@@ -229,18 +229,15 @@ public class TableLoader {
     }
     
     private static synchronized void FillAlpha() {
+        final double cos30 = Math.cos(Math.toRadians(30.));
         for(int icosalpha =0; icosalpha<maxBinIdxAlpha+1; icosalpha++) {
-
-            double cos30minusalphaM = Math.cos(Math.toRadians(30.)) + (double) 
-                    (icosalpha)*(1. - Math.cos(Math.toRadians(30.)))/5.;
+            double cos30minusalphaM = cos30 + (double) (icosalpha)*(1. - cos30)/5.;
             double alphaM = -(Math.toDegrees(Math.acos(cos30minusalphaM)) - 30);
             AlphaMid[icosalpha]= alphaM;
-            double cos30minusalphaU = Math.cos(Math.toRadians(30.)) + (double) 
-                    (icosalpha+0.5)*(1. - Math.cos(Math.toRadians(30.)))/5.;
+            double cos30minusalphaU = cos30 + (double) (icosalpha+0.5)*(1. - cos30)/5.;
             double alphaU = -(Math.toDegrees(Math.acos(cos30minusalphaU)) - 30);
             AlphaBounds[icosalpha][1] = alphaU;
-            double cos30minusalphaL = Math.cos(Math.toRadians(30.)) + (double) 
-                    (icosalpha-0.5)*(1. - Math.cos(Math.toRadians(30.)))/5.;
+            double cos30minusalphaL = cos30 + (double) (icosalpha-0.5)*(1. - cos30)/5.;
             double alphaL = -(Math.toDegrees(Math.acos(cos30minusalphaL)) - 30);
             AlphaBounds[icosalpha][0] = alphaL;
         }
