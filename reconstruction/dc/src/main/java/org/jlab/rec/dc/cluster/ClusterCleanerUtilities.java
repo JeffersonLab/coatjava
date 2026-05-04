@@ -20,6 +20,7 @@ public class ClusterCleanerUtilities {
     private List<ArrayList<Hit>> sortedHits;
 
     public ClusterCleanerUtilities() {
+        sortedHits = new ArrayList<>();
         for(int l = 0; l < 6; l++) sortedHits.add(new ArrayList<>());
     }
 
