@@ -1361,12 +1361,11 @@ public class Swim {
         
         @Override
         public boolean stopIntegration(double t, double[] y) {
-           
             Point3D dcaCand = new Point3D(y[0],y[1],y[2]); 
             double maxDoca = Double.POSITIVE_INFINITY;
-            
-            for(Line3D l : polylines) {
-                double doca = l.distance(dcaCand).length();
+            int nlines = polylines.size();
+            for(int i=0; i<nlines; i++) {
+                double doca = polylines.get(i).distance(dcaCand).length();
                 if (doca < maxDoca) {
                     maxDoca = doca;
                 } 
@@ -1376,7 +1375,6 @@ public class Swim {
                 return false;
             }
             return true;
-            
         }
 
         /**
