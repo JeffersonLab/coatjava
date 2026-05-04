@@ -86,6 +86,35 @@ public class Cluster {
 		this._Z = Z;
 	}
 
+	/** Build a Cluster from a single PreCluster (one layer of a superlayer).
+	 *  Used by the GNN path when a track covers a superlayer on only one
+	 *  stereo layer — no stereo pair is available, so Z is taken from the
+	 *  average wire-midpoint z of the PreCluster's hits rather than from a
+	 *  stereo-angle computation. DocaClusterRefiner falls back to a degenerate
+	 *  DocaCluster when {@code get_PreClusters_list().size() != 2}, so
+	 *  downstream is unaffected. */
+	public Cluster(PreCluster precluster) {
+		this._PreClusters_list = new ArrayList<>();
+		_PreClusters_list.add(precluster);
+		this._Radius   = precluster.get_Radius();
+		this._Phi      = precluster.get_Phi();
+		this._X        = precluster.get_X();
+		this._Y        = precluster.get_Y();
+		this._Num_wire = (int) precluster.get_Num_wire();
+		double r2 = this._X * this._X + this._Y * this._Y;
+		if (r2 > 0.0) {
+			this._U = this._X / r2;
+			this._V = this._Y / r2;
+		}
+		double zSum = 0.0;
+		int    zCount = 0;
+		for (Hit h : precluster.get_hits_list()) {
+			Line3D line = h.getLine();
+			if (line != null) { zSum += line.midpoint().z(); zCount++; }
+		}
+		this._Z = (zCount > 0) ? zSum / zCount : 0.0;
+	}
+
 	@Override
 	public String toString() {
 		return "Cluster{" + "_X=" + _X + ", _Y=" + _Y + ", _Z=" + _Z + '}';

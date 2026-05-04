@@ -36,6 +36,7 @@ import org.jlab.rec.ahdc.PreCluster.PreClusterFinder;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.TrackFinding.AITrackFinder;
 import org.jlab.rec.ahdc.TrackFinding.DistanceTrackFinder;
+import org.jlab.rec.ahdc.TrackFinding.GNNTrackFinder;
 import org.jlab.rec.ahdc.TrackFinding.HoughTrackFinder;
 import org.jlab.rec.ahdc.TrackFinding.TrackFinder;
 import org.jlab.rec.ahdc.TrackFinding.TrackFinderResult;
@@ -137,13 +138,14 @@ public class ALERTEngine extends ReconstructionEngine {
         requireConstants(tableMap);
         this.getConstantsManager().setVariation("default");
 
-        ModeTrackFinding mode = ModeTrackFinding.AI_Track_Finding;
+        ModeTrackFinding mode = ModeTrackFinding.MLP_Track_Finding;
         String modeConfig = this.getEngineConfigString("Mode");
         if (modeConfig != null) mode = ModeTrackFinding.valueOf(modeConfig);
         switch (mode) {
-            case AI_Track_Finding: trackFinder = new AITrackFinder();      break;
-            case CV_Distance:      trackFinder = new DistanceTrackFinder(); break;
-            case CV_Hough:         trackFinder = new HoughTrackFinder();    break;
+            case MLP_Track_Finding: trackFinder = new AITrackFinder();      break;
+            case CV_Distance:       trackFinder = new DistanceTrackFinder(); break;
+            case CV_Hough:          trackFinder = new HoughTrackFinder();    break;
+            case GNN_Track_Finding: trackFinder = new GNNTrackFinder();      break;
         }
 
         this.registerOutputBank(
@@ -218,8 +220,11 @@ public class ALERTEngine extends ReconstructionEngine {
             // II) Track Finding via the strategy selected in init() (ALERT.Mode YAML key).
             // The implementation owns its own preclustering, cluster building, and any
             // mode-specific safety fallbacks (e.g. AITrackFinder delegates to Distance
-            // when the hit count exceeds its MAX_HITS_FOR_AI threshold).
-            TrackFinderResult trackResult = trackFinder.findTracks(AHDC_Hits);
+            // when the hit count exceeds its MAX_HITS_FOR_AI threshold). The ATOF bank
+            // is passed for finders that build joint AHDC+ATOF graphs (GNN); the
+            // AHDC-only finders inherit the default and ignore it.
+            DataBank atofHitsBankForGNN = event.hasBank("ATOF::hits") ? event.getBank("ATOF::hits") : null;
+            TrackFinderResult trackResult = trackFinder.findTracks(AHDC_Hits, atofHitsBankForGNN);
             if (!trackResult.isValid()) {
                 return false;
             }
@@ -494,7 +499,7 @@ public class ALERTEngine extends ReconstructionEngine {
             // Initialise the position and the momentum using the information of the AHDC::track
             // position : mm
             // momentum : MeV
-            // Invariant: AHDC_hits is non-empty. AHDCEngine's AI_Track_Finding path uses greedy
+            // Invariant: AHDC_hits is non-empty. AHDCEngine's MLP_Track_Finding path uses greedy
             // non-overlap selection so each PreCluster (and thus each Hit) belongs to at most one
             // surviving track, so the set_trackId stamping is unambiguous and every AHDC::track
             // row has matching AHDC::hits rows. If this invariant ever flips, the get(0) inside
