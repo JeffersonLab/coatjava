@@ -6,7 +6,7 @@ def cli():
     cli.add_argument('-y','--yaml',   metavar='YAML',help='path to YAML file',required=True)
     cli.add_argument('-c','--clara',  metavar='DIR',help='CLARA_HOME path (default=$CLARA_HOME)',default=os.getenv('CLARA_HOME',None))
     cli.add_argument('-t','--threads',metavar='#',help='threads (default=4,8)',default='4,8')
-    cli.add_argument('-e','--events', metavar='#',help='events per threads (default=2555)',default=2555,type=int)
+    cli.add_argument('-e','--events', metavar='#',help='events per thread (default=555)',default=555,type=int)
     cli.add_argument('-N','--numa',   metavar='#',help='restrict to a NUMA socket (choices=[0,1])',type=int,choices=[0,1])
     cli.add_argument('-C','--cpus',   metavar='#',help='restrict to a CPU list (e.g. 0,1,2,3)')
     cli.add_argument('-T','--cputhr', metavar='#',help='restrict to same number of CPUs as threads') 
@@ -59,7 +59,7 @@ def benchmark(cfg, threads, log):
     # add the run-clara command:
     cmd.extend([cfg.run_clara,
             '-c',cfg.clara,
-            '-n',str(cfg.events),
+            '-n',str(cfg.events*int(threads)),
             '-t',str(threads),
             '-l',
             '-y',cfg.yaml,
