@@ -3,7 +3,6 @@ package org.jlab.rec.dc.cluster;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.jlab.clas.clas.math.FastMath;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 
 import org.jlab.geom.prim.Line3D;
@@ -16,23 +15,22 @@ import org.jlab.rec.dc.Constants;
 
 public class ClusterFitter {
 
-
     /**
      * Fits a cluster to a line
      *
      */
     private LineFitPars FitPars;
-    private final List<ArrayList<Double>> FitArray = new ArrayList<ArrayList<Double>>(); 
-    private final List<Double> x = new ArrayList<Double>();
-    private final List<Double> y = new ArrayList<Double>();
-    private final List<Double> ex = new ArrayList<Double>();
-    private final List<Double> ey = new ArrayList<Double>();
+    private final List<ArrayList<Double>> FitArray = new ArrayList<>(); 
+    private final List<Double> x = new ArrayList<>();
+    private final List<Double> y = new ArrayList<>();
+    private final List<Double> ex = new ArrayList<>();
+    private final List<Double> ey = new ArrayList<>();
     private final double stereo = Constants.COS6;
     
     private String CoordinateSystem; // LC= local, TSC = tilted Sector
-    public ClusterFitter() {
-        // TODO Auto-generated constructor stub
-    }
+
+    public ClusterFitter() {}
+
     public void reset() {
         for(int i =0; i<FitArray.size(); i++)
             FitArray.get(i).clear();
@@ -42,19 +40,11 @@ public class ClusterFitter {
         ex.clear();
         ey.clear();
     }
+
     public void SetFitArray(FittedCluster clus, String system) {
 
         Collections.sort(clus);
-        //for(int i =0; i<FitArray.size(); i++)
-        //    FitArray.get(i).clear();
         reset();
-        //double[][] fitArray = new double[4][clus.size()];
-        //double[] x = new double[clus.size()];
-        //double[] y = new double[clus.size()];
-        //double[] ex = new double[clus.size()];
-        //double[] ey = new double[clus.size()];
-        
-        
         for (int i = 0; i < clus.size(); i++) {
             if (system.equals("LC")) {
                 CoordinateSystem = "LC"; // local coordinate grid Delta_z = 1
@@ -77,8 +67,8 @@ public class ClusterFitter {
         FitArray.add((ArrayList<Double>) ex);
         FitArray.add((ArrayList<Double>) y);
         FitArray.add((ArrayList<Double>) ey);
-        
     }
+
     /**
      * 
      * @param clus fitted cluster
@@ -148,7 +138,6 @@ public class ClusterFitter {
 
         } else {
             System.err.println("Cluster Fit Params not set!!!");
-
         }
     }
 
@@ -320,5 +309,4 @@ public class ClusterFitter {
         return isBW;
     }
 
-    
 }
