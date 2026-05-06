@@ -216,12 +216,12 @@ public class ClusterFinder {
 
         for (FittedCluster clus : selectedClusList) {
 
-            cf.SetFitArray(clus, "LC"); 
+            cf.SetFitArray(clus, org.jlab.rec.dc.cluster.ClusterFitter.CoordSys.LC); 
             cf.Fit(clus, true);
             if(!ct.isExceptionalFittedCluster(clus) && clus.get_fitProb()<Constants.HITBASEDTRKGMINFITHI2PROB) { 
                 ct.IsolatedHitsPruner(clus);
                 //Refit
-                cf.SetFitArray(clus, "LC"); 
+                cf.SetFitArray(clus, org.jlab.rec.dc.cluster.ClusterFitter.CoordSys.LC); 
                 cf.Fit(clus, true);
             }
             if (clus.get_fitProb() > Constants.HITBASEDTRKGMINFITHI2PROB  ){         
@@ -246,7 +246,7 @@ public class ClusterFinder {
                     //fhit.set_AssociatedClusterID(clus.get_Id());
                 }
                 
-                cf.SetFitArray(clus, "TSC"); 
+                cf.SetFitArray(clus, org.jlab.rec.dc.cluster.ClusterFitter.CoordSys.TSC); 
                 cf.Fit(clus, true); 
                 cf.SetResidualDerivedParams(clus, false, false, DcDetector); //calcTimeResidual=false, resetLRAmbig=false, local= false
                 
@@ -273,7 +273,7 @@ public class ClusterFinder {
                 }
                 clus.removeAll(rmHits);
                 clus.addAll(addHits);
-                cf.SetFitArray(clus, "TSC");
+                cf.SetFitArray(clus, org.jlab.rec.dc.cluster.ClusterFitter.CoordSys.TSC);
                 cf.Fit(clus, false);
                 cf.SetSegmentLineParameters(clus.get(0).get_Z(), clus);
                 if (clus != null ) {
@@ -318,7 +318,7 @@ public class ClusterFinder {
 
         for (FittedCluster clus : clusters) {
             if (clus != null) {
-                cf.SetFitArray(clus, "TSC");
+                cf.SetFitArray(clus, org.jlab.rec.dc.cluster.ClusterFitter.CoordSys.TSC);
                 cf.Fit(clus, true);
                 cf.SetResidualDerivedParams(clus, true, false, dcDetector); //calcTimeResidual=false, resetLRAmbig=false 
                 cf.Fit(clus, false);
@@ -476,7 +476,7 @@ public class ClusterFinder {
                     }
 
                 }
-                cf.SetFitArray(Clus2, "TSC");
+                cf.SetFitArray(Clus2, org.jlab.rec.dc.cluster.ClusterFitter.CoordSys.TSC);
                 cf.Fit(Clus2, true);
 
                 if (Math.abs(clus.get_Chisq() - Clus2.get_Chisq()) < 1) {
@@ -488,7 +488,7 @@ public class ClusterFinder {
 
         for (FittedCluster clus : clusters) {
 
-            cf.SetFitArray(clus, "TSC");
+            cf.SetFitArray(clus, org.jlab.rec.dc.cluster.ClusterFitter.CoordSys.TSC);
             cf.Fit(clus, true);
 
             // update the hits
@@ -500,7 +500,7 @@ public class ClusterFinder {
             double prevChi2 = 999999999;
             double trkAngleFinal = 0;
             while (Chi2Diff > 0) {
-                cf.SetFitArray(clus, "TSC");
+                cf.SetFitArray(clus, org.jlab.rec.dc.cluster.ClusterFitter.CoordSys.TSC);
                 cf.Fit(clus, true);
                 Chi2Diff = prevChi2 - clus.get_Chisq();
                 if (Chi2Diff > 0) {
@@ -519,11 +519,11 @@ public class ClusterFinder {
             for (FittedHit fhit : clus) {
                 fhit.updateHitPositionWithTime(event, trkAngleFinal, fhit.getB(), tab, DcDetector, tde);
             }
-            cf.SetFitArray(clus, "TSC");
+            cf.SetFitArray(clus, org.jlab.rec.dc.cluster.ClusterFitter.CoordSys.TSC);
             cf.Fit(clus, true);
             cf.SetResidualDerivedParams(clus, true, false, DcDetector); //calcTimeResidual=false, resetLRAmbig=false 
 
-            cf.SetFitArray(clus, "TSC");
+            cf.SetFitArray(clus, org.jlab.rec.dc.cluster.ClusterFitter.CoordSys.TSC);
             cf.Fit(clus, false);
 
             cf.SetSegmentLineParameters(clus.get(0).get_Z(), clus);
@@ -582,7 +582,7 @@ public class ClusterFinder {
 
                     int status = 0;
                     //fit
-                    cf.SetFitArray(clus, "LC");
+                    cf.SetFitArray(clus, org.jlab.rec.dc.cluster.ClusterFitter.CoordSys.LC);
                     cf.Fit(clus, true);
 
                     for (Hit hit : allhits) {

@@ -194,7 +194,7 @@ public class ClusterCleanerUtilities {
             if((!isExceptionalCluster(newClus) && nLayers >= Constants.DC_MIN_NLAYERS) 
                     || (isExceptionalCluster(newClus) && nLayers >= Constants.DC_MIN_NLAYERS - 1)) {                            
                 //require consistency with line
-                cf.SetFitArray(newClus, "LC");
+                cf.SetFitArray(newClus, org.jlab.rec.dc.cluster.ClusterFitter.CoordSys.LC);
                 cf.Fit(newClus, true);
                 if ((nLayers == 6 && newClus.get_fitProb() > 0.9) ||  (nLayers == 5 && newClus.get_fitProb() > 0.85)
                         || (nLayers == 4 && newClus.get_fitProb() > 0.75) || (nLayers == 3 && newClus.get_fitProb() > 0.65)) {
@@ -213,7 +213,7 @@ public class ClusterCleanerUtilities {
         int newcid = nextClsStartIndex;
         for (FittedCluster cluster : splitclusters) {
             cluster.set_Id(newcid++);
-            cf.SetFitArray(cluster, "LC");
+            cf.SetFitArray(cluster, org.jlab.rec.dc.cluster.ClusterFitter.CoordSys.LC);
             cf.Fit(cluster, true);
 
             FittedCluster bestCls = OverlappingClusterResolver(cluster, splitclusters);
@@ -229,7 +229,7 @@ public class ClusterCleanerUtilities {
         List<FittedCluster> selectedClusList2 = new ArrayList<>();
         for (FittedCluster cluster : selectedClusList) {
             cluster.set_Id(newcid++);
-            cf.SetFitArray(cluster, "LC");
+            cf.SetFitArray(cluster, org.jlab.rec.dc.cluster.ClusterFitter.CoordSys.LC);
             cf.Fit(cluster, true);
 
             FittedCluster bestCls = OverlappingClusterResolver(cluster, selectedClusList);
@@ -569,7 +569,7 @@ public class ClusterCleanerUtilities {
             }
         }
 
-        return cf.BestClusterSelector(arrayOfClus, "TSC");
+        return cf.BestClusterSelector(arrayOfClus, org.jlab.rec.dc.cluster.ClusterFitter.CoordSys.TSC);
 
     }
 
@@ -680,7 +680,7 @@ public class ClusterCleanerUtilities {
         //	for(FittedHit h : c)
         //		LOGGER.log(Level.INFO, h.printInfo());
         //}
-        FittedCluster BestCluster = cf.BestClusterSelector(clusters, "LC");
+        FittedCluster BestCluster = cf.BestClusterSelector(clusters, org.jlab.rec.dc.cluster.ClusterFitter.CoordSys.LC);
         //LOGGER.log(Level.INFO, "  ---> selected cluster  : ");
         //for(FittedHit h : BestCluster)
         //	LOGGER.log(Level.INFO, h.printInfo());
@@ -971,8 +971,7 @@ public class ClusterCleanerUtilities {
             clusters.add(newClus);
         }
 
-        FittedCluster BestCluster = cf.BestClusterSelector(clusters, "LC");
-        return BestCluster;
+        return cf.BestClusterSelector(clusters, org.jlab.rec.dc.cluster.ClusterFitter.CoordSys.LC);
     }
     
     /**

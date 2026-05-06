@@ -142,7 +142,7 @@ public class RoadFinder  {
                 fpseudoCluster.add(pseudoHit);
             }
 
-            cf.SetFitArray(fpseudoCluster, "TSC");
+            cf.SetFitArray(fpseudoCluster, org.jlab.rec.dc.cluster.ClusterFitter.CoordSys.TSC);
             cf.Fit(fpseudoCluster, true);
 
             cf.SetSegmentLineParameters(fpseudoCluster.get(0).get_Z(), fpseudoCluster) ;
@@ -179,7 +179,7 @@ public class RoadFinder  {
             pseudoHit.calc_GeomCorr(DcDetector, 0);
             fpseudoCluster.add(pseudoHit);
     }
-     cf.SetFitArray(fpseudoCluster, "TSC");
+     cf.SetFitArray(fpseudoCluster, org.jlab.rec.dc.cluster.ClusterFitter.CoordSys.TSC);
      cf.Fit(fpseudoCluster, true);
 
      cf.SetSegmentLineParameters(fpseudoCluster.get(0).get_Z(), fpseudoCluster) ;
