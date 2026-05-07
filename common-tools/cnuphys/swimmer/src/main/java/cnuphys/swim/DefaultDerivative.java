@@ -9,7 +9,7 @@ public class DefaultDerivative implements IDerivative {
         // ddvcs parameters
         //geometry
         private static final double[] SHIELD_RMAX = {45.7, 61.4, 74.0, 78.4, 79.8, 79.8, 88.25, 62.79, 15.01};   // polycone rmax (cm)
-        private static final double[] SHIELD_RMIN = {302., 40.2, 9.88, 10.52, 10.52, 11.33, 13.48, 15.0, 15.0};  // polycone rmin (cm)
+        private static final double[] SHIELD_RMIN = {30.2, 40.2, 9.88, 10.52, 10.52, 11.33, 13.48, 15.0, 15.0};  // polycone rmin (cm)
         private static final double[] SHIELD_Z    = {52.0, 69.6, 83.7, 88.8, 88.8, 95.1, 113.23, 125.1, 147.38}; // polycone z (cm)
         private static final double[] ECAL_RMAX   = {30.11, 36.06, 40.1, 9.88}; // polycone rmax (cm)
         private static final double[] ECAL_RMIN   = {30.1, 7.28, 8.15, 9.87};   // polycone rmin (cm)
@@ -37,6 +37,7 @@ public class DefaultDerivative implements IDerivative {
 	// p is in GeV/c
 	private double _alpha;
         
+        private double _totalPath = 0;
         private double _totalEnergyLoss = 0;
         private double _energyLoss = 0;
 	
@@ -121,6 +122,7 @@ public class DefaultDerivative implements IDerivative {
             double energyFinal = energyOrigin + _energyLoss;
             _momentum =  Math.sqrt(energyFinal*energyFinal - MUMASS*MUMASS);
             _alpha = 1.0e-9 * _charge * Swimmer.C / _momentum;
+            if(_energyLoss!=0) _totalPath +=dx;
             _totalEnergyLoss += _energyLoss;
         }
         
