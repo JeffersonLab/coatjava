@@ -3,7 +3,6 @@ package org.jlab.rec.dc.trajectory;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jlab.clas.clas.math.FastMath;
 import org.jlab.rec.dc.cluster.Cluster;
 import org.jlab.rec.dc.cluster.ClusterFitter;
 import org.jlab.rec.dc.cluster.FittedCluster;
@@ -39,8 +38,6 @@ public class RoadFinder  {
         List<ArrayList<ArrayList<Segment>>> superLayerLists = new ArrayList<>();
         for(int sec=0; sec<6; sec++)  {
             ArrayList<ArrayList<Segment>> sLyrs = new ArrayList<>();
-            ArrayList<ArrayList<ArrayList<Segment>>> rLyrs = new ArrayList<>();
-            
             for(int sly=0; sly<6; sly++) {
                 sLyrs.add(new ArrayList<>());
             }
