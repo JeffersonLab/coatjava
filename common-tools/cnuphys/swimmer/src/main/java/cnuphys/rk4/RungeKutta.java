@@ -778,13 +778,14 @@ public class RungeKutta {
                             yttemp[i] = yt[i];
                         }
                     
-			// use derivs at previous t
+                        // Calculate energy loss, update momentum and alpha, and accumulate energy loss into totalEnergyLoss
+                        deriv.energyLossUpdate(yttemp, h);
+
+                        // use derivs at previous t
 			deriv.derivative(t, yt, dydt);
                         
 			advancer.advance(t, yt, dydt, h, deriv, yt, null); // yt is updated                         
                         
-                        // Calculate energy loss, update momentum and alpha, and accumulate energy loss into totalEnergyLoss
-                        deriv.energyLossUpdate(yttemp, h);
                         
 			t += h;
 
