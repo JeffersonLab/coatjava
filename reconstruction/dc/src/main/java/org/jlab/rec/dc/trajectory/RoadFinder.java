@@ -5,14 +5,14 @@ import java.util.List;
 
 import org.jlab.rec.dc.cluster.Cluster;
 import org.jlab.rec.dc.cluster.ClusterFitter;
+import org.jlab.rec.dc.cluster.ClusterFitter.CoordSys;
 import org.jlab.rec.dc.cluster.FittedCluster;
 import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.segment.Segment;
 import org.jlab.rec.dc.Constants;
-
-import Jama.Matrix;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 
+import Jama.Matrix;
 
 public class RoadFinder  {
 
@@ -30,8 +30,6 @@ public class RoadFinder  {
      * @return list of segments corresponding to pseudo-segments
      */
     public List<Road> findRoads(List<Segment> segs, DCGeant4Factory DcDetector) {
-        //QuadraticFit qf = new QuadraticFit();
-        //initialize the lists
 
         List<Road> Roads = new ArrayList<>();
         
@@ -51,11 +49,9 @@ public class RoadFinder  {
         }
         for(int sec=0; sec<6; sec++)  {
             for(int sly=0; sly<6; sly++) {
-                //if(superLayerLists.get(sec).get(sly).size()==0) { // add a blank to each superlayer
                 Segment blank = new Segment(new FittedCluster(new Cluster(sec+1, sly+1, -1)));
                 blank.set_Id(-10);
                 superLayerLists.get(sec).get(sly).add(blank);
-                //}
             }
         }
         int roadId =1;
@@ -98,8 +94,6 @@ public class RoadFinder  {
 
     public Segment findRoadMissingSegment(List<Segment> segList, DCGeant4Factory DcDetector, double[] a)  { 
         
-        //his.fitRoad((ArrayList<Segment>) segList, DcDetector);
-     
         Segment pseudoSeg = null;
         if(segList.size()<3) { // make pseudo-segment for missing segment
             // find missing segment superlayer
@@ -139,7 +133,7 @@ public class RoadFinder  {
                 fpseudoCluster.add(pseudoHit);
             }
 
-            cf.SetFitArray(fpseudoCluster, org.jlab.rec.dc.cluster.ClusterFitter.CoordSys.TSC);
+            cf.SetFitArray(fpseudoCluster, CoordSys.TSC);
             cf.Fit(fpseudoCluster, true);
 
             cf.SetSegmentLineParameters(fpseudoCluster.get(0).get_Z(), fpseudoCluster) ;
@@ -148,6 +142,7 @@ public class RoadFinder  {
         }
         return pseudoSeg;
     }
+
     /**
      * 
      * @param pseudoSeg
@@ -156,13 +151,13 @@ public class RoadFinder  {
      * @return redo the fit (not used)
      */
     private Segment reFit(Segment pseudoSeg, ArrayList<Segment> segList, DCGeant4Factory DcDetector ) {
-            qf.init();
-            this.fitRoad(segList, DcDetector);
+        qf.init();
+        this.fitRoad(segList, DcDetector);
 
-            Cluster pseudoCluster = new Cluster(segList.get(0).get_Sector(),pseudoSeg.get_Superlayer(),-1);
-            FittedCluster fpseudoCluster = new FittedCluster(pseudoCluster);
+        Cluster pseudoCluster = new Cluster(segList.get(0).get_Sector(),pseudoSeg.get_Superlayer(),-1);
+        FittedCluster fpseudoCluster = new FittedCluster(pseudoCluster);
 
-            for(int l = 0; l<6; l++) {
+        for(int l = 0; l<6; l++) {
             int layer = l+1;
             double z = DcDetector.getWireMidpoint(pseudoSeg.get_Sector()-1, pseudoSeg.get_Superlayer()-1,layer-1,0).z;
             double trkX = qf.a[0]*z*z+qf.a[1]*z+qf.a[2]; 
@@ -175,16 +170,16 @@ public class RoadFinder  {
             pseudoHit.updateHitPosition(DcDetector);
             pseudoHit.calc_GeomCorr(DcDetector, 0);
             fpseudoCluster.add(pseudoHit);
-    }
-     cf.SetFitArray(fpseudoCluster, org.jlab.rec.dc.cluster.ClusterFitter.CoordSys.TSC);
-     cf.Fit(fpseudoCluster, true);
+        }
+        cf.SetFitArray(fpseudoCluster, CoordSys.TSC);
+        cf.Fit(fpseudoCluster, true);
 
-     cf.SetSegmentLineParameters(fpseudoCluster.get(0).get_Z(), fpseudoCluster) ;
-     Segment pseudoSeg1 = new Segment(fpseudoCluster);
-
-     pseudoSeg1.set_fitPlane(DcDetector);	
-
-     return pseudoSeg1;
+        cf.SetSegmentLineParameters(fpseudoCluster.get(0).get_Z(), fpseudoCluster) ;
+        Segment pseudoSeg1 = new Segment(fpseudoCluster);
+        
+        pseudoSeg1.set_fitPlane(DcDetector);	
+     
+        return pseudoSeg1;
     }
 
     private boolean fitRoad(ArrayList<Segment> segList, DCGeant4Factory DcDetector) {

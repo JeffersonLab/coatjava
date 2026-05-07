@@ -3,7 +3,6 @@ package org.jlab.rec.dc.cluster;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.jlab.detector.geant4.v2.DCGeant4Factory;
 
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
@@ -12,6 +11,7 @@ import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.track.fit.basefit.LineFitPars;
 import org.jlab.rec.dc.track.fit.basefit.LineFitter;
 import org.jlab.rec.dc.Constants; 
+import org.jlab.detector.geant4.v2.DCGeant4Factory;
 
 public class ClusterFitter {
 

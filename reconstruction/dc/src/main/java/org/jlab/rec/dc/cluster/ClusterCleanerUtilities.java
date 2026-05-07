@@ -3,19 +3,17 @@ package org.jlab.rec.dc.cluster;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.logging.Logger;
-import org.jlab.detector.geant4.v2.DCGeant4Factory;
-import org.jlab.io.base.DataEvent;
 
+import org.jlab.io.base.DataEvent;
 import org.jlab.rec.dc.Constants;
+import org.jlab.rec.dc.cluster.ClusterFitter.CoordSys;
 import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.hit.Hit;
 import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
 import org.jlab.utils.groups.IndexedTable;
+import org.jlab.detector.geant4.v2.DCGeant4Factory;
 
 public class ClusterCleanerUtilities {
-
-    private static final Logger LOGGER = Logger.getLogger(ClusterCleanerUtilities.class.getName());
 
     private List<ArrayList<Hit>> sortedHits;
 
@@ -194,7 +192,7 @@ public class ClusterCleanerUtilities {
             if((!isExceptionalCluster(newClus) && nLayers >= Constants.DC_MIN_NLAYERS) 
                     || (isExceptionalCluster(newClus) && nLayers >= Constants.DC_MIN_NLAYERS - 1)) {                            
                 //require consistency with line
-                cf.SetFitArray(newClus, org.jlab.rec.dc.cluster.ClusterFitter.CoordSys.LC);
+                cf.SetFitArray(newClus, CoordSys.LC);
                 cf.Fit(newClus, true);
                 if ((nLayers == 6 && newClus.get_fitProb() > 0.9) ||  (nLayers == 5 && newClus.get_fitProb() > 0.85)
                         || (nLayers == 4 && newClus.get_fitProb() > 0.75) || (nLayers == 3 && newClus.get_fitProb() > 0.65)) {
@@ -213,7 +211,7 @@ public class ClusterCleanerUtilities {
         int newcid = nextClsStartIndex;
         for (FittedCluster cluster : splitclusters) {
             cluster.set_Id(newcid++);
-            cf.SetFitArray(cluster, org.jlab.rec.dc.cluster.ClusterFitter.CoordSys.LC);
+            cf.SetFitArray(cluster, CoordSys.LC);
             cf.Fit(cluster, true);
 
             FittedCluster bestCls = OverlappingClusterResolver(cluster, splitclusters);
@@ -229,7 +227,7 @@ public class ClusterCleanerUtilities {
         List<FittedCluster> selectedClusList2 = new ArrayList<>();
         for (FittedCluster cluster : selectedClusList) {
             cluster.set_Id(newcid++);
-            cf.SetFitArray(cluster, org.jlab.rec.dc.cluster.ClusterFitter.CoordSys.LC);
+            cf.SetFitArray(cluster, CoordSys.LC);
             cf.Fit(cluster, true);
 
             FittedCluster bestCls = OverlappingClusterResolver(cluster, selectedClusList);
@@ -569,7 +567,7 @@ public class ClusterCleanerUtilities {
             }
         }
 
-        return cf.BestClusterSelector(arrayOfClus, org.jlab.rec.dc.cluster.ClusterFitter.CoordSys.TSC);
+        return cf.BestClusterSelector(arrayOfClus, CoordSys.TSC);
 
     }
 
@@ -680,7 +678,7 @@ public class ClusterCleanerUtilities {
         //	for(FittedHit h : c)
         //		LOGGER.log(Level.INFO, h.printInfo());
         //}
-        FittedCluster BestCluster = cf.BestClusterSelector(clusters, org.jlab.rec.dc.cluster.ClusterFitter.CoordSys.LC);
+        FittedCluster BestCluster = cf.BestClusterSelector(clusters, CoordSys.LC);
         //LOGGER.log(Level.INFO, "  ---> selected cluster  : ");
         //for(FittedHit h : BestCluster)
         //	LOGGER.log(Level.INFO, h.printInfo());
@@ -752,13 +750,14 @@ public class ClusterCleanerUtilities {
         return overlapingClusters.get(0);
 
     }
-/**
+
+    /**
      * Prunes the input hit list to remove noise candidates; the algorithm finds
      * contiguous hits in a layer (column) and removes hits according to the
      * number (Nc) of such contiguous hits in a given layer.If Nc=3, keep only
- the middle hit If Nc=4, keep only the first and last hit in that column;
- if Nc > 4, keep the first 2 and last 2 hits in that column, if Nc > 10
- remove all hits in that column.
+     * the middle hit If Nc=4, keep only the first and last hit in that column;
+     * if Nc > 4, keep the first 2 and last 2 hits in that column, if Nc > 10
+     * remove all hits in that column.
      *
      * @param hits the unfitted hits
      * @return 
@@ -971,7 +970,7 @@ public class ClusterCleanerUtilities {
             clusters.add(newClus);
         }
 
-        return cf.BestClusterSelector(clusters, org.jlab.rec.dc.cluster.ClusterFitter.CoordSys.LC);
+        return cf.BestClusterSelector(clusters, CoordSys.LC);
     }
     
     /**
