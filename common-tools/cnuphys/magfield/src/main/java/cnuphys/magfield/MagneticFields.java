@@ -1387,14 +1387,14 @@ public class MagneticFields {
 	public boolean hasActiveTorus() {
 
 		if (_activeField != null) {
-			if (_activeField instanceof Torus) {
+            if (_activeField instanceof CompositeField) {
+				return ((CompositeField) _activeField).hasTorus();
+            } else if (_activeField instanceof CompositeProbe) {
+				return ((CompositeProbe) _activeField).hasTorus();
+			} else if (_activeField instanceof Torus) {
 				return true;
 			} else if (_activeField instanceof TorusProbe) {
 				return true;
-			} else if (_activeField instanceof CompositeProbe) {
-				return ((CompositeProbe) _activeField).hasTorus();
-			} else if (_activeField instanceof CompositeField) {
-				return ((CompositeField) _activeField).hasTorus();
 			}
 		}
 
@@ -1408,15 +1408,15 @@ public class MagneticFields {
 	 */
 	public boolean hasActiveSolenoid() {
 		if (_activeField != null) {
-			if (_activeField instanceof Solenoid) {
+            if (_activeField instanceof CompositeField) {
+				return ((CompositeField) _activeField).hasSolenoid();
+			} else if (_activeField instanceof CompositeProbe) {
+				return ((CompositeProbe) _activeField).hasSolenoid();
+			} else if (_activeField instanceof Solenoid) {
 				return true;
 			} else if (_activeField instanceof SolenoidProbe) {
 				return true;
-			} else if (_activeField instanceof CompositeProbe) {
-				return ((CompositeProbe) _activeField).hasSolenoid();
-			} else if (_activeField instanceof CompositeField) {
-				return ((CompositeField) _activeField).hasSolenoid();
-			}
+            }
 		}
 
 		return false;
