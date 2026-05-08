@@ -72,6 +72,12 @@ public class MagneticFields {
 	// which field is active
 	private IMagField _activeField;
 
+    // whether the active field is a torus:
+    private boolean _hasActiveTorus = false;
+
+    // whether the active field is a solenoid:
+    private boolean _hasActiveSolenoid = false;
+   
 	// types of fields
 	public enum FieldType {
 		TORUS, SOLENOID, COMPOSITE, COMPOSITEROTATED, ZEROFIELD
@@ -181,7 +187,7 @@ public class MagneticFields {
 		_torus = readTorus(path);
 
 		if (activeFieldWasTorus) {
-			_activeField = _torus;
+			setActiveField(_torus);
 		}
 
 		if (_torus != null) {
@@ -266,7 +272,7 @@ public class MagneticFields {
 		_solenoid = readSolenoid(file.getAbsolutePath(), isTransverse);
 
 		if (activeFieldWasSolenoid) {
-			_activeField = _solenoid;
+			setActiveField(_solenoid);
 		}
 
 		if (_solenoid != null) {
@@ -479,6 +485,57 @@ public class MagneticFields {
 		return s;
 	}
 
+	private boolean getActiveTorus() {
+
+		if (_activeField != null) {
+			if (_activeField instanceof Torus) {
+				return true;
+			} else if (_activeField instanceof TorusProbe) {
+				return true;
+			} else if (_activeField instanceof CompositeProbe) {
+				return ((CompositeProbe) _activeField).hasTorus();
+			} else if (_activeField instanceof CompositeField) {
+				return ((CompositeField) _activeField).hasTorus();
+			}
+		}
+
+		return false;
+	}
+
+	private boolean getActiveSolenoid() {
+		if (_activeField != null) {
+			if (_activeField instanceof Solenoid) {
+				return true;
+			} else if (_activeField instanceof SolenoidProbe) {
+				return true;
+			} else if (_activeField instanceof CompositeProbe) {
+				return ((CompositeProbe) _activeField).hasSolenoid();
+			} else if (_activeField instanceof CompositeField) {
+				return ((CompositeField) _activeField).hasSolenoid();
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Check whether we have an active torus field
+	 *
+	 * @return <code>true</code> if we have a torus
+	 */
+    public boolean hasActiveTorus() {
+        return _hasActiveTorus;
+    }
+    
+	/**
+	 * Check whether we have an active solenoid field
+	 *
+	 * @return <code>true</code> if we have a solenoid
+	 */
+    public boolean hasActiveSolenoid() {
+        return _hasActiveSolenoid;
+    }
+
 	/**
 	 * Sets the active field
 	 *
@@ -486,6 +543,8 @@ public class MagneticFields {
 	 */
 	public void setActiveField(IMagField field) {
 		_activeField = field;
+       _hasActiveTorus = getActiveTorus(); 
+       _hasActiveSolenoid = getActiveSolenoid(); 
 	}
 
 	/**
@@ -500,18 +559,28 @@ public class MagneticFields {
 		switch (ftype) {
 		case TORUS:
 			_activeField = _torus;
+            _hasActiveTorus = true;
+            _hasActiveSolenoid = false;
 			break;
 		case SOLENOID:
 			_activeField = _solenoid;
+            _hasActiveTorus = false;
+            _hasActiveSolenoid = true;
 			break;
 		case COMPOSITE:
 			_activeField = _compositeField;
+            _hasActiveTorus = _compositeField.hasTorus();
+            _hasActiveSolenoid = _compositeField.hasSolenoid();
 			break;
 		case COMPOSITEROTATED:
 			_activeField = _rotatedCompositeField;
+            _hasActiveTorus = _rotatedCompositeField.hasTorus();
+            _hasActiveSolenoid = _rotatedCompositeField.hasSolenoid();
 			break;
 		case ZEROFIELD:
 			_activeField = null;
+            _hasActiveTorus = false;
+            _hasActiveSolenoid = false;
 			break;
 		}
 
@@ -1377,49 +1446,6 @@ public class MagneticFields {
 		}
 
 		notifyListeners();
-	}
-
-	/**
-	 * Check whether we have an active torus field
-	 *
-	 * @return <code>true</code> if we have a torus
-	 */
-	public boolean hasActiveTorus() {
-
-		if (_activeField != null) {
-			if (_activeField instanceof Torus) {
-				return true;
-			} else if (_activeField instanceof TorusProbe) {
-				return true;
-			} else if (_activeField instanceof CompositeProbe) {
-				return ((CompositeProbe) _activeField).hasTorus();
-			} else if (_activeField instanceof CompositeField) {
-				return ((CompositeField) _activeField).hasTorus();
-			}
-		}
-
-		return false;
-	}
-
-	/**
-	 * Check whether we have an active solenoid field
-	 *
-	 * @return <code>true</code> if we have a solenoid
-	 */
-	public boolean hasActiveSolenoid() {
-		if (_activeField != null) {
-			if (_activeField instanceof Solenoid) {
-				return true;
-			} else if (_activeField instanceof SolenoidProbe) {
-				return true;
-			} else if (_activeField instanceof CompositeProbe) {
-				return ((CompositeProbe) _activeField).hasSolenoid();
-			} else if (_activeField instanceof CompositeField) {
-				return ((CompositeField) _activeField).hasSolenoid();
-			}
-		}
-
-		return false;
 	}
 
 	/**
