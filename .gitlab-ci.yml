@@ -188,14 +188,26 @@ profile:
     paths:
       - "asprof*.html"
 
+scaling:
+  extends: .clon
+  allow_failure: true
+  script:
+    - ./clara/plugins/clas12/libexec/scaling -c ./clara -y ./etc/services/rgd-clarode.yml -t 8,12,18,24 $EVIOFILE
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - scaling.svg
+
 pages:
   stage: deploy
-  needs: [profile,docs]
-  dependencies: [profile,docs]
+  needs: [profile,scaling,docs]
+  dependencies: [profile,scaling,docs]
   script:
     - cp -r pages public
     - mkdir public/perf
     - cp asprof*.html public/perf
+    - cp scaling.svg public/perf
   pages: true
   artifacts:
     expire_in: 1 week

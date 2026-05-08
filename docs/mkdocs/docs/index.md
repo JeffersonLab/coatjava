@@ -12,4 +12,8 @@
 ---
 
 ## Reports
-- [Coverage Report](jacoco/index.html)
+- [Jacoco Coverage](jacoco/index.html)
+- [Scaling Test](perf/scaling.svg)
+- [Cpu Profiling](perf/asprof_cpu.html)
+- [Alloc Profiling](perf/asprof_alloc.html)
+- [Lock Profiling](perf/asprof_lock.html)
