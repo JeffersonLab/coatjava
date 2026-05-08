@@ -9,7 +9,7 @@ def cli():
     cli.add_argument('-e','--events', metavar='#',help='events per thread (default=555)',default=555,type=int)
     cli.add_argument('-N','--numa',   metavar='#',help='restrict to a NUMA socket (choices=[0,1])',choices=[0,1])
     cli.add_argument('-C','--cpus',   metavar='#',help='restrict to a CPU list (e.g. 0,1,2,3)')
-    cli.add_argument('-T','--cputhr', metavar='#',help='restrict to same number of CPUs as threads (first NUMA socket only)') 
+    cli.add_argument('-T','--cputhr', metavar='#',help='restrict to same number of CPUs as threads')
     cli.add_argument('datafile', help='input EVIO/HIPO data file')
     cfg = cli.parse_args()
     cfg.threads = cfg.threads.split(',')
@@ -27,10 +27,12 @@ def cli():
         except Exception as e:
             cli.error('invalid --cpus argument:  {cfg.cpus}')
     elif cfg.numa or cfg.cputhr:
+        if not cfg.numa:
+            cfg.numa = 0
         if not shutil.which('numactl'):
             cli.error('numactl is not in $PATH, --numa option not supported')
         for x in run(['numactl','-H']):
-            if x.startswith(f'node {cfg.node} cpus:'):
+            if x.startswith(f'node {cfg.numa} cpus:'):
                 cfg.cpus = ','.join([str(int(i)) for i in x.strip().split()[3:]])
                 break
         if not cfg.cpus:
