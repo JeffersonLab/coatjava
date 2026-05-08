@@ -623,9 +623,10 @@ public class Cross extends ArrayList<Cluster> implements Comparable<Cross> {
             return_val = ((RegComp == 0) ? IDComp : RegComp);
         }
         else {
-            
-            int RegComp = this.getOrderedRegion() < arg.getOrderedRegion() ? -1 : 
-                          this.getOrderedRegion() == arg.getOrderedRegion() ? 0 : 1;
+           
+            int thisreg = this.getOrderedRegion();
+            int argreg  = arg.getOrderedRegion();
+            int RegComp = thisreg < argreg ? -1 : thisreg == argreg ? 0 : 1;
             
             // check that is not BMTC for phi comparison
             if( Double.isNaN(arg.getPoint().x())==false &&  Double.isNaN(this.getPoint().x())==false ) {
