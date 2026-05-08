@@ -11,6 +11,9 @@ import java.util.ArrayList;
 @SuppressWarnings("serial")
 public class CompositeField extends ArrayList<IMagField> implements IMagField {
 
+    boolean hasTorus;
+    boolean hasSolenoid;
+    
 	/**
 	 * Checks whether the field has been set to always return zero.
 	 * 
@@ -43,6 +46,9 @@ public class CompositeField extends ArrayList<IMagField> implements IMagField {
 			}
 		}
 
+		hasSolenoid = field instanceof Solenoid;
+		hasTorus = field instanceof Torus;
+
 		return super.add(field);
 	}
 
@@ -69,13 +75,7 @@ public class CompositeField extends ArrayList<IMagField> implements IMagField {
 	 * @return <code>true</code> if we have a torus
 	 */
 	public boolean hasTorus() {
-		for (IMagField field : this) {
-			if (field instanceof Torus) {
-				return true;
-			}
-		}
-
-		return false;
+        return hasTorus;
 	}
 
 	/**
@@ -84,13 +84,7 @@ public class CompositeField extends ArrayList<IMagField> implements IMagField {
 	 * @return <code>true</code> if we have a solenoid
 	 */
 	public boolean hasSolenoid() {
-		for (IMagField field : this) {
-			if (field instanceof Solenoid) {
-				return true;
-			}
-		}
-
-		return false;
+        return hasSolenoid;
 	}
 	
 	/**
