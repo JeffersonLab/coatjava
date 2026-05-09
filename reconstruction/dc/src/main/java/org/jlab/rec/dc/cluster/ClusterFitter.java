@@ -25,9 +25,6 @@ public class ClusterFitter {
             this.id = id;
             this.name = name;
         }
-        public boolean equals(CoordSys other) {
-            return this.id == other.id;
-        }
     }
 
     private CoordSys coordinateSystem;
