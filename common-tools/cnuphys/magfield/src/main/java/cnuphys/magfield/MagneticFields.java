@@ -543,8 +543,14 @@ public class MagneticFields {
 	 */
 	public void setActiveField(IMagField field) {
 		_activeField = field;
-       _hasActiveTorus = getActiveTorus(); 
-       _hasActiveSolenoid = getActiveSolenoid(); 
+        _hasActiveTorus = getActiveTorus(); 
+        _hasActiveSolenoid = getActiveSolenoid(); 
+	}
+
+	private void resetActiveField() {
+		_activeField = null;
+        _hasActiveTorus = false;
+        _hasActiveSolenoid = false;
 	}
 
 	/**
@@ -1088,21 +1094,19 @@ public class MagneticFields {
 		}
 
 		// set the default active field
-		_activeField = null;
+		resetActiveField();
 		if ((_torus != null) && (_solenoid != null)) {
-			_activeField = _compositeField;
+			setActiveField(_compositeField);
 		}
 		else if ((_torus != null) && (_solenoid != null)) {
-			_activeField = _compositeField;
+			setActiveField(_compositeField);
 		}
-
 		else if (_torus != null) {
-			_activeField = _torus;
+			setActiveField(_torus);
 		}
 		else if (_solenoid != null) {
-			_activeField = _solenoid;
+			setActiveField(_solenoid);
 		}
-
 	}
 
 	// final initialziation
@@ -1203,19 +1207,19 @@ public class MagneticFields {
 		Object source = ae.getSource();
 
 		if (source == _torusItem) {
-			_activeField = _torus;
+			setActiveField(_torus);
 		}
 		else if (source == _solenoidItem) {
-			_activeField = _solenoid;
+			setActiveField(_solenoid);
 		} 
 		else if (source == _bothItem) {
-			_activeField = _compositeField;
+			setActiveField(_compositeField);
 		} 
 		else if ((_bothRotatedItem != null) && (source == _bothRotatedItem)) {
-			_activeField = _rotatedCompositeField;
+			setActiveField(_rotatedCompositeField);
 		} 
 		else if (source == _zeroItem) {
-			_activeField = null;
+			resetActiveField();
 		}
 		else if (source == _interpolateItem) {
 			MagneticField.setInterpolate(true);
