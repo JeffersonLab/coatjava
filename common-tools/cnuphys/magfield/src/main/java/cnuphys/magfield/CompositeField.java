@@ -46,10 +46,16 @@ public class CompositeField extends ArrayList<IMagField> implements IMagField {
 			}
 		}
 
-		_hasSolenoid = field instanceof Solenoid;
-		_hasTorus = field instanceof Torus;
-
-		return super.add(field);
+        _hasSolenoid = false;
+        _hasTorus = false;
+		if (super.add(field)) {
+            for (IMagField ifield : this) {
+                if (ifield instanceof Solenoid) _hasSolenoid = true;
+                if (ifield instanceof Torus) _hasTorus = true;
+            }
+            return true;
+        }
+        return false;
 	}
 
 	@Override
