@@ -99,8 +99,8 @@ public class CompositeField extends ArrayList<IMagField> implements IMagField {
 	 * @return <code>true</code> if we have a transverse solenoid
 	 */
 	public boolean hasTransverseSolenoid() {
-		for (int i=0; i<this.size(); i++) {
-			if (this.get(i) instanceof TransverseSolenoid) {
+		for (IMagField field : this) {
+			if (field instanceof TransverseSolenoid) {
 				return true;
 			}
 		}
@@ -111,8 +111,8 @@ public class CompositeField extends ArrayList<IMagField> implements IMagField {
 	@Override
 	public float getB1(int index) {
 		float b = 0f;
-		for (int i=0; i<this.size(); i++) {
-			b += this.get(i).getB1(index);
+		for (IMagField field : this) {
+			b += field.getB1(index);
 		}
 		return b;
 	}
@@ -120,8 +120,8 @@ public class CompositeField extends ArrayList<IMagField> implements IMagField {
 	@Override
 	public float getB2(int index) {
 		float b = 0f;
-		for (int i=0; i<this.size(); i++) {
-			b += this.get(i).getB2(index);
+		for (IMagField field : this) {
+			b += field.getB2(index);
 		}
 		return b;
 	}
@@ -129,8 +129,8 @@ public class CompositeField extends ArrayList<IMagField> implements IMagField {
 	@Override
 	public float getB3(int index) {
 		float b = 0f;
-		for (int i=0; i<this.size(); i++) {
-			b += this.get(i).getB3(index);
+		for (IMagField field : this) {
+			b += field.getB3(index);
 		}
 		return b;
 	}
@@ -138,8 +138,8 @@ public class CompositeField extends ArrayList<IMagField> implements IMagField {
 	@Override
 	public float getMaxFieldMagnitude() {
 		float max = 0;
-		for (int i=0; i<this.size(); i++) {
-			max = Math.max(max, this.get(i).getMaxFieldMagnitude());
+		for (IMagField field : this) {
+			max = Math.max(max, field.getMaxFieldMagnitude());
 		}
 		return max;
 	}
@@ -157,15 +157,16 @@ public class CompositeField extends ArrayList<IMagField> implements IMagField {
 	@Override
 	public void printConfiguration(PrintStream ps) {
 		ps.println("COMPOSITE FIELD");
-		for (int i=0; i<this.size(); i++) {
-			this.get(i).printConfiguration(ps);
+		for (IMagField field : this) {
+			field.printConfiguration(ps);
+
 		}
 	}
 
 	@Override
 	public boolean contains(double x, double y, double z) {
-		for (int i=0; i<this.size(); i++) {
-			if (this.get(i).contains(x, y, z)) {
+		for (IMagField field : this) {
+			if (field.contains(x, y, z)) {
 				return true;
 			}
 		}
