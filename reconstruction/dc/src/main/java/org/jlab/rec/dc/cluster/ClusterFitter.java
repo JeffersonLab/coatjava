@@ -236,7 +236,8 @@ public class ClusterFitter {
         FittedCluster BestCluster = null;
         double bestChisq = 999999999.;
 
-        for (int i=0; i<clusters.size(); i++) {
+        int size = clusters.size();
+        for (int i=0; i<size; i++) {
             if (isBrickWall(clusters.get(i))) {
                 int LRSum=0;
                 for(int j=0; j<clusters.get(i).size(); j++) {
@@ -298,10 +299,11 @@ public class ClusterFitter {
         }
         else {
             int sumWireNum = 0;
-            for (int i=0; i<clusCand.size(); i++) {
+            int size = clusCand.size();
+            for (int i=0; i<size; i++) {
                 sumWireNum += clusCand.get(i).get_Wire();
             }
-            for (int i=0; i<clusCand.size(); i++) {
+            for (int i=0; i<size; i++) {
                 if (clusCand.get(i).get_Wire()*clusCand.size()!=sumWireNum) {
                     isBW = false;
                     break;
