@@ -5,7 +5,7 @@
 
 set -e
 source ../../coatjava/libexec/env.sh
-input_dir=./data/6.0-fid-r11
+input_dir=./data/6.0-r11
 classPath="${COATJAVA_CLASSPATH}:../lib/*:src/"
 
 # check arguments:
