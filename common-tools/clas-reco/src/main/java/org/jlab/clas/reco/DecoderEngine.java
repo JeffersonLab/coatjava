@@ -78,30 +78,36 @@ public class DecoderEngine implements Engine {
 
     @Override
     public EngineData execute(EngineData input) {
+
         EngineData output = input;
-        EvioDataEvent evio;
-        HipoDataEvent hipo;
-        try {
-            ByteBuffer bb = (ByteBuffer) input.getData();
-            //evio = new EvioDataEvent(bb.array(), bb.order());
-            evio = new EvioDataEvent(bb.array(), ByteOrder.LITTLE_ENDIAN);
-        } catch (Exception e) {
-            String msg = String.format("Error reading input event%n%n%s", ClaraUtil.reportException(e));
-            output.setStatus(EngineStatus.ERROR);
-            output.setDescription(msg);
-            return output;
+       
+        // if it's EVIO, decode it, otherwise just pass it along
+        if (input.getMimeType().equals("binary/data-evio")) {
+            EvioDataEvent evio;
+            try {
+                ByteBuffer bb = (ByteBuffer) input.getData();
+                //evio = new EvioDataEvent(bb.array(), bb.order());
+                evio = new EvioDataEvent(bb.array(), ByteOrder.LITTLE_ENDIAN);
+            } catch (Exception e) {
+                String msg = String.format("Error reading input event%n%n%s", ClaraUtil.reportException(e));
+                output.setStatus(EngineStatus.ERROR);
+                output.setDescription(msg);
+                return output;
+            }
+            HipoDataEvent hipo;
+            try {
+                CLASDecoder d = pool.take();
+                hipo = new HipoDataEvent(d.getDecodedEvent(evio),schema);
+                pool.put(d);
+                output.setData("binary/data-hipo", hipo.getHipoEvent());
+            } catch (Exception e) {
+                String msg = String.format("Error processing input event%n%n%s", ClaraUtil.reportException(e));
+                output.setStatus(EngineStatus.ERROR);
+                output.setDescription(msg);
+                return output;
+            }
         }
-        try {
-            CLASDecoder d = pool.take();
-            hipo = new HipoDataEvent(d.getDecodedEvent(evio),schema);
-            pool.put(d);
-            output.setData("binary/data-hipo", hipo.getHipoEvent());
-        } catch (Exception e) {
-            String msg = String.format("Error processing input event%n%n%s", ClaraUtil.reportException(e));
-            output.setStatus(EngineStatus.ERROR);
-            output.setDescription(msg);
-            return output;
-        }
+
         return output;
     }
 }
