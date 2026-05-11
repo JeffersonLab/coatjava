@@ -240,11 +240,13 @@ public class ClusterFitter {
         for (int i=0; i<size; i++) {
             if (isBrickWall(clusters.get(i))) {
                 int LRSum=0;
-                for(int j=0; j<clusters.get(i).size(); j++) {
+                int size2 = clusters.get(i).size();
+                for (int j=0; j<size2; j++) {
                     LRSum += clusters.get(i).get(j).get_LeftRightAmb();
                 }
-                if(LRSum!=0)
+                if (LRSum != 0) {
                     continue;
+                }
             }
             // set the array of measurements according to the system used in the analysis
             SetFitArray(clusters.get(i), system);
