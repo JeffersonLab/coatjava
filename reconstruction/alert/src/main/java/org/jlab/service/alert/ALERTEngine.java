@@ -129,9 +129,11 @@ public class ALERTEngine extends ReconstructionEngine {
         modelPrePID = new ModelPrePID();
 
         AlertTOFFactory factory = new AlertTOFFactory();
+        
+        // One CCDB session for both ATOF and AHDC geometry.
         DatabaseConstantProvider cp = new DatabaseConstantProvider(11, "default");
         ATOF = factory.createDetectorCLAS(cp);
-        AHDC = (new AlertDCFactory()).createDetectorCLAS(new DatabaseConstantProvider());
+        AHDC = (new AlertDCFactory()).createDetectorCLAS(cp);
 
         Map<String, Integer> tableMap = new HashMap<>();
         tableMap.put("/calibration/alert/ahdc/gains", 3);
@@ -333,50 +335,60 @@ public class ALERTEngine extends ReconstructionEngine {
             }
             if (interClusters.size() != 5) continue;
 
+            float[] pred;
             try {
-
-                float[] pred = modelTrackMatching.prediction(interClusters);
-                int sector_pred = (int) pred[0];
-                int layer_pred = (int) pred[1];
-                int wedge_pred = (int) pred[2];
-
-                ATOFHit hit_pred = new ATOFHit(sector_pred, layer_pred, wedge_pred, 0, 0, 0, 0f, ATOF, null);
-                double pred_x = hit_pred.getX();
-                double pred_y = hit_pred.getY();
-                double pred_z = hit_pred.getZ();
-
-                double threshold = 20.0;
-                double minDistanceSquared = threshold * threshold;
-
-                ATOFHit matchAtofHit = null; // Could be used later
-                int matchHitId = -1;
-
-                for (int k = 0; k < bank_ATOFHits.rows(); k++) {
-                    int component = bank_ATOFHits.getInt("component", k);
-                    if (component == 10) continue;
-
-                    int sector = bank_ATOFHits.getInt("sector", k);
-                    int layer = bank_ATOFHits.getInt("layer", k);
-
-                    ATOFHit hit = new ATOFHit(sector, layer, component, 0, 0, 0, 0f, ATOF, null);
-
-                    double dx = pred_x - hit.getX();
-                    double dy = pred_y - hit.getY();
-                    double dz = pred_z - hit.getZ();
-
-                    double distanceSquared = dx * dx + dy * dy + dz * dz;
-
-                    if (distanceSquared < minDistanceSquared) {
-                        minDistanceSquared = distanceSquared;
-                        matchAtofHit = hit;
-                        matchHitId = bank_ATOFHits.getInt("id", k);
-                    }
-                }
-                matched_ATOF_hit_id.add(new Pair<>(track_id, matchHitId));
-
-            } catch (Exception ex) {
-                System.out.println("Exception in ALERTEngine processDataEvent: " + ex); // TODO: proper logging
+                pred = modelTrackMatching.prediction(interClusters);
+            } catch (TranslateException ex) {
+                LOGGER.warning(() -> "Exception in ALERTEngine track matching: " + ex);
+                continue;
             }
+            int sector_pred = (int) pred[0];
+            int layer_pred = (int) pred[1];
+            int wedge_pred = (int) pred[2];
+
+            // The matching model's three argmax heads can land outside the ATOF
+            // ranges (sectors 0-14, layers 0-3, wedges 0-9) when the input
+            // interclusters fall outside its training distribution; the ATOFHit
+            // geometry lookup chain returns null on a miss and would NPE.
+            if (sector_pred < 0 || sector_pred >= 15
+                    || layer_pred < 0 || layer_pred >= 4
+                    || wedge_pred < 0 || wedge_pred >= 10) {
+                continue;
+            }
+
+            ATOFHit hit_pred = new ATOFHit(sector_pred, layer_pred, wedge_pred, 0, 0, 0, 0f, ATOF, null);
+            double pred_x = hit_pred.getX();
+            double pred_y = hit_pred.getY();
+            double pred_z = hit_pred.getZ();
+
+            double threshold = 20.0;
+            double minDistanceSquared = threshold * threshold;
+
+            ATOFHit matchAtofHit = null; // Could be used later
+            int matchHitId = -1;
+
+            for (int k = 0; k < bank_ATOFHits.rows(); k++) {
+                int component = bank_ATOFHits.getInt("component", k);
+                if (component == 10) continue;
+
+                int sector = bank_ATOFHits.getInt("sector", k);
+                int layer = bank_ATOFHits.getInt("layer", k);
+
+                ATOFHit hit = new ATOFHit(sector, layer, component, 0, 0, 0, 0f, ATOF, null);
+
+                double dx = pred_x - hit.getX();
+                double dy = pred_y - hit.getY();
+                double dz = pred_z - hit.getZ();
+
+                double distanceSquared = dx * dx + dy * dy + dz * dz;
+
+                if (distanceSquared < minDistanceSquared) {
+                    minDistanceSquared = distanceSquared;
+                    matchAtofHit = hit;
+                    matchHitId = bank_ATOFHits.getInt("id", k);
+                }
+            }
+            matched_ATOF_hit_id.add(new Pair<>(track_id, matchHitId));
         }
         rbc.appendTrackMatchingAIBank(event, matched_ATOF_hit_id);
         
