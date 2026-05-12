@@ -18,7 +18,6 @@ import org.jlab.utils.groups.IndexedTable;
  */
 public class DetectorEventDecoder {
 
-    boolean sharedManagers = false;
     ConstantsManager translationManager = new ConstantsManager();
     ConstantsManager fitterManager      = new ConstantsManager();
     ConstantsManager scalerManager      = new ConstantsManager();
@@ -54,8 +53,7 @@ public class DetectorEventDecoder {
         translationManager = d.translationManager;
         fitterManager = d.fitterManager;
         scalerManager = d.scalerManager;
-        sharedManagers = true;
-        initDecoder();
+        initDecoder(false);
     }
 
     public void setTimestamp(String timestamp) {
@@ -104,7 +102,11 @@ public class DetectorEventDecoder {
                                                       "/runcontrol/helicity","/daq/config/scalers/dsc1"}));
     }
 
-    public final void initDecoder(){
+    public final void initDecoder() {
+        initDecoder(true);
+    }
+
+    public final void initDecoder(boolean initializeManagers){
 
         // Detector translation table
         keysTrans = Arrays.asList(new DetectorType[]{DetectorType.FTCAL,DetectorType.FTHODO,DetectorType.FTTRK,DetectorType.LTCC,DetectorType.ECAL,DetectorType.FTOF,
@@ -136,7 +138,7 @@ public class DetectorEventDecoder {
         
         keysMicromega = Arrays.asList(new DetectorType[]{DetectorType.BMT,DetectorType.FMT,DetectorType.FTTRK});
 
-        if (!sharedManagers) {
+        if (initializeManagers) {
             translationManager.init(tablesTrans);
             fitterManager.init(tablesFitter);
             scalerManager.init(Arrays.asList(new String[]{"/runcontrol/fcup","/runcontrol/slm","/runcontrol/hwp",
