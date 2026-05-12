@@ -26,8 +26,12 @@ public class Clas12Reader extends AbstractEventReaderService<Object> {
         if (path.toString().endsWith(".hipo")) {
             type = Clas12Types.HIPO;
             HipoReader r = new HipoReader();
-            r.open(path.toString());
-            return r;
+            try {
+                r.open(path.toString());
+                return r;
+            } catch (Exception e) {
+                throw new EventReaderException(e);
+            }
         }
         else {
             type = Clas12Types.EVIO;
