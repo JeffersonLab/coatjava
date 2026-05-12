@@ -238,7 +238,7 @@ public class ClusterFitter {
 
         int size = clusters.size();
         for (int i=0; i<size; i++) {
-            FittedClusters cluster = clusters.get(i);
+            FittedCluster cluster = clusters.get(i);
             if (isBrickWall(cluster)) {
                 int LRSum=0;
                 int size2 = cluster.size();
