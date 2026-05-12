@@ -39,7 +39,7 @@ public class EvioToEvioReader extends AbstractEventReaderService<EvioCompactRead
 
     @Override
     public ByteOrder readByteOrder() throws EventReaderException {
-        return ByteOrder.LITTLE_ENDIAN; //reader.getFileByteOrder();
+        return reader.getFileByteOrder();
     }
 
     @Override
