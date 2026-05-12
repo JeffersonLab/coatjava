@@ -608,16 +608,17 @@ public class HitReader {
         double pz=0;
         if (!event.hasBank(partBankName) || !event.hasBank(trackBankName))
             return ;
-        DataBank bank = event.getBank(trackBankName);
+        DataBank tbank = event.getBank(trackBankName);
+        DataBank pbank = event.getBank(partBankName);
 
-        int rows = bank.rows();
+        int rows = tbank.rows();
         for (int i = 0; i < rows; i++) {
-            if (bank.getByte("detector", i) == 6 &&
-                    bank.getShort("index", i) == trkId - 1) {
-                short pindex = bank.getShort("pindex",i);
-                px = event.getBank(partBankName).getFloat("px",pindex);
-                py = event.getBank(partBankName).getFloat("py",pindex);
-                pz = event.getBank(partBankName).getFloat("pz",pindex);
+            if (tbank.getByte("detector", i) == 6 &&
+                tbank.getShort("index", i) == trkId - 1) {
+                short pindex = tbank.getShort("pindex",i);
+                px = pbank.getFloat("px",pindex);
+                py = pbank.getFloat("py",pindex);
+                pz = pbank.getFloat("pz",pindex);
             }
         }
         
