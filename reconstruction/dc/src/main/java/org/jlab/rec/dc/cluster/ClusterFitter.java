@@ -238,20 +238,21 @@ public class ClusterFitter {
 
         int size = clusters.size();
         for (int i=0; i<size; i++) {
-            if (isBrickWall(clusters.get(i))) {
+            FittedClusters cluster = clusters.get(i);
+            if (isBrickWall(cluster)) {
                 int LRSum=0;
-                int size2 = clusters.get(i).size();
+                int size2 = cluster.size();
                 for (int j=0; j<size2; j++) {
-                    LRSum += clusters.get(i).get(j).get_LeftRightAmb();
+                    LRSum += cluster.get(j).get_LeftRightAmb();
                 }
                 if (LRSum != 0) {
                     continue;
                 }
             }
             // set the array of measurements according to the system used in the analysis
-            SetFitArray(clusters.get(i), system);
+            SetFitArray(cluster, system);
             // do the fit and get the chisq
-            Fit(clusters.get(i), true);
+            Fit(cluster, true);
             if (FitPars == null) {
                 continue;
             }
@@ -259,7 +260,7 @@ public class ClusterFitter {
 
             if (chisq < bestChisq) {
                 bestChisq = chisq;
-                BestCluster = clusters.get(i);
+                BestCluster = cluster;
             }
         }
         
@@ -306,7 +307,7 @@ public class ClusterFitter {
                 sumWireNum += clusCand.get(i).get_Wire();
             }
             for (int i=0; i<size; i++) {
-                if (clusCand.get(i).get_Wire()*clusCand.size()!=sumWireNum) {
+                if (clusCand.get(i).get_Wire()*size != sumWireNum) {
                     isBW = false;
                     break;
                 }
