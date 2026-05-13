@@ -12,7 +12,6 @@ import org.jlab.detector.base.DetectorDescriptor;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.geom.prim.Arc3D;
 import org.jlab.geom.prim.Cylindrical3D;
-import org.jlab.geom.prim.Plane3D;
 import org.jlab.geom.prim.Transformation3D;
 import org.jlab.rec.cvt.Geometry;
 import org.jlab.rec.cvt.bmt.BMTType;
@@ -725,12 +724,12 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
         Surface surface = null;
         
         if(this.getDetector()==DetectorType.BST) {
-            Point3D endPt1 = this.getLine().origin();
-            Point3D endPt2 = this.getLine().end();
+            //Point3D endPt1 = this.getLine().origin();
+            //Point3D endPt2 = this.getLine().end();
 //            org.jlab.clas.tracking.objects.Strip strp = new org.jlab.clas.tracking.objects.Strip(this.getId(), this.getCentroid(), 
 //                                                                                                 endPt1.x(), endPt1.y(), endPt1.z(),
 //                                                                                                 endPt2.x(), endPt2.y(), endPt2.z());
-            Plane3D plane = new Plane3D(endPt1, this.getN());
+            //Plane3D plane = new Plane3D(endPt1, this.getN());
             surface = Geometry.getInstance().getSVT().getSurface(this.getLayer(), this.getSector(), this.getId(), 
                                                        this.getCentroid(), this.getLine());
             surface.hemisphere = Math.signum(this.center().y());
@@ -803,8 +802,6 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
         int return_val = ((CompPhi == 0) ? return_val1 : CompPhi);
 
         return return_val;
-        
-        
     }
 
     private double PhiInRange(double phi) {
@@ -866,22 +863,22 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
 
     public void update(int trackId, HitOnTrack traj) {
         
-        Point3D  trackPos = new Point3D(traj.x, traj.y, traj.z);
-        Vector3D trackDir = new Vector3D(traj.px, traj.py, traj.pz).asUnit();
+        Point3D trackPos = new Point3D(traj.x, traj.y, traj.z);
                 
         this.setAssociatedTrackID(trackId);
         this.setCentroidResidual(traj.residual);
         this.setSeedResidual(trackPos); 
         this.setTrakInters(trackPos);
-
         
-        if(this.getDetector()==DetectorType.BMT && this.getType()==BMTType.C) {  
-            this.setS(this.getAxis().direction().asUnit());
-            this.setN(this.getAxis().distance(trackPos).direction().asUnit());
-            this.setL(this.getS().cross(this.getN()).asUnit());
-        }
-        if(this.getDetector()==DetectorType.BMT && this.getType()==BMTType.Z) {  
-            this.setCentroidResidual(traj.residual*this.getTile().baseArc().radius());    
+        if(this.getDetector() == DetectorType.BMT) {
+            if (this.getType() == BMTType.C) {  
+                this.setS(this.getAxis().direction().asUnit());
+                this.setN(this.getAxis().distance(trackPos).direction().asUnit());
+                this.setL(this.getS().cross(this.getN()).asUnit());
+            }
+            else if (this.getType() == BMTType.Z) {  
+                this.setCentroidResidual(traj.residual*this.getTile().baseArc().radius());
+            }
         }
         
         for (Hit hit : this) {
