@@ -76,34 +76,29 @@ public class ClusterCleanerUtilities {
         /// determined.
         /// This is a preliminary pattern recognition method used to identify
         /// reconstructed hits belonging to the same track-segment.
-        int N_t = 180;
+        final int N_t = 180;
 
         // From this calculate the bin size in the theta accumulator array
-        double ThetaMin = 0.;
-        double ThetaMax = 2. * Math.PI;
-        double SizeThetaBin = (ThetaMax - ThetaMin) / ((double) N_t);
+        final double ThetaMin = 0.;
+        final double ThetaMax = 2. * Math.PI;
+        final double SizeThetaBin = (ThetaMax - ThetaMin) / ((double) N_t);
 
         // Define the dimension of the r accumulator array
-        int N_r = 130;
+        final int N_r = 130;
         // From this calculate the bin size in the theta accumulator array
-        double RMin = -130;
-        double RMax = 130;
+        final double RMin = -130;
+        final double RMax = 130;
+        final double dR = RMax - RMin;
 
-        int[][] R_Phi_Accumul;
-        R_Phi_Accumul = new int[N_r][N_t];
+        final int[][] R_Phi_Accumul = new int[N_r][N_t];
 
         // cache the cos and sin theta values [for performance improvement]
-        double[] cosTheta_RPhi_array;
-        double[] sinTheta_RPhi_array;
+        final double[] cosTheta_RPhi_array = new double[N_t];
+        final double[] sinTheta_RPhi_array = new double[N_t];
 
         // the values corresponding to the peaks in the array
-        double[] binrMaxR_Phi;
-        double[] bintMaxR_Phi;
-        binrMaxR_Phi = new double[N_r * N_t];
-        bintMaxR_Phi = new double[N_r * N_t];
-
-        cosTheta_RPhi_array = new double[N_t];
-        sinTheta_RPhi_array = new double[N_t];
+        final double[] binrMaxR_Phi = new double[N_r * N_t];
+        final double[] bintMaxR_Phi = new double[N_r * N_t];
 
         for (int j_t = 0; j_t < N_t; j_t++) {
             // theta_j in the middle of the bin :
@@ -125,7 +120,7 @@ public class ClusterCleanerUtilities {
                 // r_j corresponding to that theta_j:
                 double r_j = rho * cosTheta_RPhi_array[j_t] + phi * sinTheta_RPhi_array[j_t];
                 // this value of r_j falls into the following bin in the r array:
-                int j_r = (int) Math.floor(N_r * (r_j - RMin) / (float) (RMax - RMin));
+                int j_r = (int) Math.floor(N_r * (r_j - RMin) / (float) (dR));
 
                 // increase this accumulator cell:
                 R_Phi_Accumul[j_r][j_t]++;
@@ -179,11 +174,12 @@ public class ClusterCleanerUtilities {
                     // r_j corresponding to that theta_j:
                     double r_j = rho * cosTheta_RPhi_array[j_t] + phi * sinTheta_RPhi_array[j_t];
                     // this value of r_j falls into the following bin in the r array:
-                    int j_r = (int) Math.floor(N_r * (r_j - RMin) / (float) (RMax - RMin));
+                    int j_r = (int) Math.floor(N_r * (r_j - RMin) / (float) (dR));
 
                     // match bins:
                     if (j_r == binrMaxR_Phi[p] && j_t == bintMaxR_Phi[p]) {
                         newClus.add(clus.get(i));  // add this hit
+                        break; // it cannot be in any other theta bin
                     }
                 }
             }
@@ -242,15 +238,14 @@ public class ClusterCleanerUtilities {
         }
 
         int splitclusId = 1;
-        if (!selectedClusList2.isEmpty()) {
+        if (selectedClusList2.isEmpty()) {
+            selectedClusList2.add(clus); // if the splitting fails, then return the original cluster
+        }
+        else {
             for (FittedCluster cl : selectedClusList2) {
                 cl.set_Id(clus.get_Id() * 1000 + splitclusId);
                 splitclusId++;
             }
-        }
-
-        if (selectedClusList2.isEmpty()) {
-            selectedClusList2.add(clus); // if the splitting fails, then return the original cluster
         }
         return selectedClusList2;
     }
