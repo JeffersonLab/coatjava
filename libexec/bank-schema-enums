@@ -5,7 +5,7 @@ odir = 'common-tools/clas-io/src/main/java/org/jlab/io/banks'
 os.makedirs(odir, exist_ok=True)
 for x in glob.glob(f'{idir}/*.json'):
     for bank in json.load(open(x,'r')):
-        class_name = bank['name'].replace(':','_');
+        class_name = bank['name'].replace('::','_').replace(':','_')
         with open(f'{odir}/{class_name}.java','w') as f:
             f.write('package org.jlab.io.banks;\n')
             f.write(f'public class {class_name} {{\n')
