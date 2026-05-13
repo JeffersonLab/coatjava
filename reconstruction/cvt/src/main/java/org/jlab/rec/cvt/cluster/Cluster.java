@@ -268,7 +268,6 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
         double weightedZ1 = 0;                  // SVT/BMT strip centroid positions of endpoints
         double weightedZ2 = 0;                  // SVT/BMT strip centroid positions of endpoints
         double weightedZC = 0;                  // BMT strip centroid positions of strip midpoint
-        double weightedZ0 = 0;                  // BMT strip centroid positions of strip midpoint with no LC
         
         int nbhits = this.size();
         //sort for bmt detector
@@ -356,7 +355,6 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
                 weightedZC += strpEn * stCent.z();
                 weightedX0 += strpEn * stCent0.x();
                 weightedY0 += strpEn * stCent0.y();
-                weightedZ0 += strpEn * stCent0.z();
                 weightedStrp += strpEn * (double) strpNb;
                 weightedStrp0 += strpEn * (double) strpNb0;
                 
@@ -397,7 +395,6 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
             weightedZC /= totEn;
             weightedX0 /= totEn;
             weightedY0 /= totEn;
-            weightedZ0 /= totEn;
             weightedZ /= totEn;
             weightedPhi  = Math.atan2(weightedYC, weightedXC);
             weightedPhi0 = Math.atan2(weightedY0, weightedX0);
