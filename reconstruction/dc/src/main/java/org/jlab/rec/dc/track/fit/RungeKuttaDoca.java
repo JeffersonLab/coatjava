@@ -102,43 +102,46 @@ public class RungeKuttaDoca {
         fCov.covMat.set(computeCovMat(covMat.covMat, sF));
     }
 
+    private void linStep(double h, RK4Vec next, RK4Vec init, RK4Vec prev) {
+        next.x = init.tx + h*prev.tx;
+        next.y = init.ty + h*prev.ty;
+        next.dxdtx0 = init.dtxdtx0 + h*prev.dtxdtx0;
+        next.dxdty0 = init.dtxdty0 + h*prev.dtxdty0;
+        next.dxdq0  = init.dtxdq0  + h*prev.dtxdq0;
+        next.dydtx0 = init.dtydtx0 + h*prev.dtydtx0;
+        next.dydty0 = init.dtydty0 + h*prev.dtydty0;
+        next.dydq0  = init.dtydq0  + h*prev.dtydq0;
+    }
+
+    private void covStep(RK4Vec next, double qv) {
+        double Csq  = Csq(next.x, next.y);
+        double C    = C(Csq);
+        double Ax   = Ax(C, next.x, next.y);
+        double Ay   = Ay(C, next.x, next.y);
+        next.tx = qv * Ax(C, next.x, next.y);
+        next.ty = qv * Ay(C, next.x, next.y);
+        double dAx_dtx = dAx_dtx(C, Csq, Ax, next.x, next.y);
+        double dAx_dty = dAx_dty(C, Csq, Ax, next.x, next.y);
+        double dAy_dtx = dAy_dtx(C, Csq, Ay, next.x, next.y);
+        double dAy_dty = dAy_dty(C, Csq, Ay, next.x, next.y);
+        next.dtxdtx0 = dtx_dtx0(qv,     dAx_dtx, dAx_dty, next.dxdtx0, next.dydtx0);
+        next.dtxdty0 = dtx_dty0(qv,              dAx_dty, next.dxdty0, next.dydty0);
+        next.dtxdq0  = dtx_dq0( qv, Ax, dAx_dtx, dAx_dty, next.dxdq0,  next.dydq0);
+        next.dtydtx0 = dty_dtx0(qv,     dAy_dtx, dAy_dty, next.dxdtx0, next.dydtx0);
+        next.dtydty0 = dty_dty0(qv,              dAy_dty, next.dxdty0, next.dydty0);
+        next.dtydq0  = dty_dq0( qv, Ay, dAy_dtx, dAy_dty, next.dxdq0,  next.dydq0);
+    }
+    
     /** Perform one RK4 step, updating the covariance matrix. */
     private RK4Vec RK4step(int sector, double z0, double h, Swim swim,
                                RK4Vec sInit, RK4Vec sPrev, double qv) {
+
         RK4Vec sNext = new RK4Vec();
+
         swim.Bfield(sector, sInit.x + h*sPrev.x, sInit.y + h*sPrev.y, z0 + h, _b);
 
-        // State.
-        sNext.x = sInit.tx + h*sPrev.tx;
-        sNext.y = sInit.ty + h*sPrev.ty;
-
-        double Csq  = Csq(sNext.x, sNext.y);
-        double C    = C(Csq);
-        double Ax   = Ax(C, sNext.x, sNext.y);
-        double Ay   = Ay(C, sNext.x, sNext.y);
-
-        sNext.tx = qv * Ax;
-        sNext.ty = qv * Ay;
-
-        // Jacobian.
-        sNext.dxdtx0 = sInit.dtxdtx0 + h*sPrev.dtxdtx0;
-        sNext.dxdty0 = sInit.dtxdty0 + h*sPrev.dtxdty0;
-        sNext.dxdq0  = sInit.dtxdq0  + h*sPrev.dtxdq0;
-        sNext.dydtx0 = sInit.dtydtx0 + h*sPrev.dtydtx0;
-        sNext.dydty0 = sInit.dtydty0 + h*sPrev.dtydty0;
-        sNext.dydq0  = sInit.dtydq0  + h*sPrev.dtydq0;
-
-        double dAx_dtx = dAx_dtx(C, Csq, Ax, sNext.x, sNext.y);
-        double dAx_dty = dAx_dty(C, Csq, Ax, sNext.x, sNext.y);
-        double dAy_dtx = dAy_dtx(C, Csq, Ay, sNext.x, sNext.y);
-        double dAy_dty = dAy_dty(C, Csq, Ay, sNext.x, sNext.y);
-
-        sNext.dtxdtx0 = this.dtx_dtx0(qv,     dAx_dtx, dAx_dty, sNext.dxdtx0, sNext.dydtx0);
-        sNext.dtxdty0 = this.dtx_dty0(qv,              dAx_dty, sNext.dxdty0, sNext.dydty0);
-        sNext.dtxdq0  = this.dtx_dq0( qv, Ax, dAx_dtx, dAx_dty, sNext.dxdq0,  sNext.dydq0);
-        sNext.dtydtx0 = this.dty_dtx0(qv,     dAy_dtx, dAy_dty, sNext.dxdtx0, sNext.dydtx0);
-        sNext.dtydty0 = this.dty_dty0(qv,              dAy_dty, sNext.dxdty0, sNext.dydty0);
-        sNext.dtydq0  = this.dty_dq0( qv, Ay, dAy_dtx, dAy_dty, sNext.dxdq0,  sNext.dydq0);
+        linStep(h, sNext, sInit, sPrev);
+        covStep(sNext, qv);
 
         return sNext;
     }
