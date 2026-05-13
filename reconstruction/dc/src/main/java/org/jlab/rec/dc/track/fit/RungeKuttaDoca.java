@@ -1,8 +1,7 @@
 package org.jlab.rec.dc.track.fit;
 
-import java.util.ArrayList;
-import org.jlab.jnp.matrix.*;
 import org.jlab.clas.swimtools.Swim;
+import org.jlab.jnp.matrix.Matrix;
 
 /**
  * Swims a given state vector to a given Z position using Runge Kutta 4 transport.
@@ -240,13 +239,13 @@ public class RungeKuttaDoca {
     }
 
     // Auxiliary calculations.
-    private double C(double tx, double ty) {
+    private static double C(double tx, double ty) {
         return Math.sqrt(1 + tx*tx + ty*ty);
     }
-    private double C(double Csq) {
+    private static double C(double Csq) {
         return Math.sqrt(Csq);
     }
-    private double Csq(double tx, double ty) {
+    private static double Csq(double tx, double ty) {
         return 1 + tx*tx + ty*ty;
     }
 
@@ -271,22 +270,22 @@ public class RungeKuttaDoca {
     }
 
     // Total derivatives.
-    private double dtx_dtx0(double qv, double dAx_dtx, double dAx_dty,
+    private static double dtx_dtx0(double qv, double dAx_dtx, double dAx_dty,
                             double dtx_dtx0, double dty_dtx0) {
         return qv * (dAx_dtx*dtx_dtx0 + dAx_dty*dty_dtx0);
     }
-    private double dtx_dty0(double qv, double dAx_dty, double dtx_dty0, double dty_dty0) {
+    private static double dtx_dty0(double qv, double dAx_dty, double dtx_dty0, double dty_dty0) {
         return qv * (dAx_dty*dtx_dty0 + dAx_dty*dty_dty0);
     }
     private double dtx_dq0(double qv, double Ax, double dAx_dtx, double dAx_dty,
                            double dtx_dq0, double dty_dq0) {
         return v*Ax + qv * (dAx_dtx*dtx_dq0 + dAx_dty*dty_dq0);
     }
-    private double dty_dtx0(double qv, double dAy_dtx, double dAy_dty,
+    private static double dty_dtx0(double qv, double dAy_dtx, double dAy_dty,
                             double dtx_dtx0, double dty_dtx0) {
         return qv * (dAy_dtx*dtx_dtx0 + dAy_dty*dty_dtx0);
     }
-    private double dty_dty0(double qv, double dAy_dty, double dtx_dty0, double dty_dty0) {
+    private static double dty_dty0(double qv, double dAy_dty, double dtx_dty0, double dty_dty0) {
         return qv * (dAy_dty*dtx_dty0 + dAy_dty*dty_dty0);
     }
     private double dty_dq0(double qv, double Ay, double dAy_dtx, double dAy_dty,
