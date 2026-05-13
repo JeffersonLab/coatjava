@@ -323,11 +323,8 @@ public class ClusterCleanerUtilities {
         
         int index = 0;
         for(FittedHit hit: fClus) {
-   
             if (hit.get_Doca() < 0.4 * hit.get_CellSize()) {
                 hit.set_LeftRightAmb(0);
-            }
-            if (hit.get_LeftRightAmb() == 0) {
                 index++;
             }
         }
