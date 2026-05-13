@@ -47,6 +47,10 @@ public class Hit implements Comparable<Hit> {
         this._Strip = strip;
     }
 
+    public DetectorDescriptor getDescriptor() {
+        return _Descriptor;
+    }
+    
     public DetectorType getDetector() {
         return _Descriptor.getType();
     }
