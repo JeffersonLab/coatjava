@@ -3,7 +3,6 @@ package org.jlab.rec.cvt.track;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +61,6 @@ public class Track extends Trajectory implements Comparable<Track> {
     private int    secondaryNDF;                   // for track with no beamSpot information
     private int _status = 0;
 
-
     public Track(Helix helix) {
         super(helix);
         if (helix != null) {
@@ -97,7 +95,6 @@ public class Track extends Trajectory implements Comparable<Track> {
             this.setStatus(-1);
         }
     }
-    
         
     public Track(Seed seed, KFitter kf, int pid) {
         this(seed, kf);
@@ -162,7 +159,7 @@ public class Track extends Trajectory implements Comparable<Track> {
         return secondaryHelix;
     }
 
-    public void setSecondaryHelix(Helix secondaryHelix) {
+    public final void setSecondaryHelix(Helix secondaryHelix) {
         this.secondaryHelix = secondaryHelix;
     }
 
@@ -170,7 +167,7 @@ public class Track extends Trajectory implements Comparable<Track> {
         return secondaryChi2;
     }
 
-    public void setSecondaryChi2(double secondaryChi2) {
+    public final void setSecondaryChi2(double secondaryChi2) {
         this.secondaryChi2 = secondaryChi2;
     }
 
@@ -178,7 +175,7 @@ public class Track extends Trajectory implements Comparable<Track> {
         return secondaryNDF;
     }
 
-    public void setSecondaryNDF(int secondaryNDF) {
+    public final void setSecondaryNDF(int secondaryNDF) {
         this.secondaryNDF = secondaryNDF;
     }
 
@@ -205,8 +202,7 @@ public class Track extends Trajectory implements Comparable<Track> {
                 calcPt = 100;
                 setQ(1);
             }
-            double calcPz = 0;
-            calcPz = calcPt * helix.getTanDip();
+            double calcPz = calcPt * helix.getTanDip();
             double calcP = Math.sqrt(calcPt * calcPt + calcPz * calcPz);
             setPt(calcPt);
             setPz(calcPz);
@@ -217,6 +213,8 @@ public class Track extends Trajectory implements Comparable<Track> {
     /**
      * Updates the crosses positions based on trajectories or helix
      * @param trackId
+     * @param xb
+     * @param yb
      */
     public void update_Crosses(int trackId, double xb, double yb) {
         for (int i = 0; i < this.size(); i++) {
@@ -288,12 +286,7 @@ public class Track extends Trajectory implements Comparable<Track> {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        Track other = (Track) obj;
-        if (this.getId() != other.getId()) {
-            return false;
-        }
-
-        return true;
+        return this.getId() == ((Track)obj).getId();
     }
 
     @Override
@@ -328,9 +321,9 @@ public class Track extends Trajectory implements Comparable<Track> {
             return false;
         if(this.getNDF() < Constants.NDFCUT) 
             return false;
-        if(this.getHelix().radius() < Constants.getInstance().getRCUT()) 
+        if(this.getHelix().radius() < Constants.getRCUT()) 
             return false;
-        if(Math.abs(Geometry.getInstance().getTargetZOffset()-this.getHelix().getZ0()) > Geometry.getInstance().getTargetHalfLength()+Constants.getInstance().getZRANGE()) 
+        if(Math.abs(Geometry.getInstance().getTargetZOffset()-this.getHelix().getZ0()) > Geometry.getInstance().getTargetHalfLength()+Constants.getZRANGE()) 
             return false;
         else 
             return true;
@@ -396,7 +389,7 @@ public class Track extends Trajectory implements Comparable<Track> {
         return _PID;
     }
 
-    public void setPID(int _PID) {
+    public final void setPID(int _PID) {
         this._PID = _PID;
     }
     
@@ -445,13 +438,14 @@ public class Track extends Trajectory implements Comparable<Track> {
     public int getStatus() {
         return _status;
     }
-    public void setStatus(int passKFFlag) {
+    public final void setStatus(int passKFFlag) {
         //for status word:
         int nSVT  = 0;
         int nBMTZ = 0;
         int nBMTC = 0;
         // fills the list of cross ids for crosses belonging to that reconstructed track
-        for (int j = 0; j < this.size(); j++) {
+        int size = this.size();
+        for (int j = 0; j < size; j++) {
             // counter to get status word    
             if (this.get(j).getDetector() == DetectorType.BST) {
                 nSVT++;
@@ -565,7 +559,8 @@ public class Track extends Trajectory implements Comparable<Track> {
     
     private  static int[]  getTrackKey(Track track) {
         int[] cids  = new int[9];
-        for (int i = 0; i < track.size(); i++) {
+        int size = track.size();
+        for (int i = 0; i < size; i++) {
             Cross c =  track.get(i);
             if(c.getDetector()==DetectorType.BST) {
                 cids[c.getRegion()-1] = c.getId();
@@ -593,12 +588,13 @@ public class Track extends Trajectory implements Comparable<Track> {
                 return;
         Map<Integer, Track>  map = new HashMap<>();    
         Map<Integer, Track>  selectedTracks = new HashMap<>();  
-        for (int i = 0; i < tracks.size(); i++) {
+        final int size = tracks.size();
+        for (int i = 0; i < size; i++) {
             Track t1 = tracks.get(i);
             t1.setTempId(i+1);
             map.put(i+1, t1);
         }
-        for (int i = 0; i < tracks.size(); i++) {
+        for (int i = 0; i < size; i++) {
             Track t1 = tracks.get(i);
             int[] cids = getTrackKey(t1);
             for (int j = 0;j < tracks.size(); j++) {
@@ -606,10 +602,11 @@ public class Track extends Trajectory implements Comparable<Track> {
                 if(i==j) continue;
                 Track t2 = tracks.get(j);
                 int[] cids2 = getTrackKey(t2);
-                for(int k  =  0; k<9; k++) {
+                for(int k = 0; k < 9; k++) {
                     if(cids[k]!=-1) {
                         if(cids[k]==cids2[k]) {
                             ov=true;
+                            break;
                         }
                     }
                 }
@@ -618,7 +615,7 @@ public class Track extends Trajectory implements Comparable<Track> {
                 }
             }
         }
-        for (int i = 0; i < tracks.size(); i++) {
+        for (int i = 0; i < size; i++) {
             List<Track> ovlTracks =  new ArrayList<>();
             Track t1 = tracks.get(i);
             ovlTracks.add(t1); 
@@ -638,9 +635,10 @@ public class Track extends Trajectory implements Comparable<Track> {
     }
     
     public static void checkForOverlaps(List<Track> tracks, String msg) {
-        for (int i = 0; i < tracks.size(); i++) {
+        int size = tracks.size();
+        for (int i = 0; i < size; i++) {
             Track t1 = tracks.get(i);
-            for(int j=0; j<tracks.size(); j++ ) {
+            for(int j=0; j<size; j++ ) {
                 Track t2 = tracks.get(j);
                 if(i!=j && t1.overlapWith(t2)) {
                     System.out.println(msg + " " + "overlap");
@@ -648,7 +646,6 @@ public class Track extends Trajectory implements Comparable<Track> {
             }
         }        
     }
-
 
     @Override
     public String toString() {
@@ -660,9 +657,5 @@ public class Track extends Trajectory implements Comparable<Track> {
         for(Cluster c: this.getSeed().getClusters()) str = str + c.toString() + "\n";
         return str;
     }
-
-    
-
-    
 
 }
