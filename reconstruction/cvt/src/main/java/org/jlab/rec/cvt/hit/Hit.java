@@ -1,5 +1,6 @@
 package org.jlab.rec.cvt.hit;
 
+import org.jlab.detector.base.DetectorDescriptor;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
@@ -16,12 +17,8 @@ public class Hit implements Comparable<Hit> {
     // class implements Comparable interface to allow for sorting a collection of hits by wire number values
 
     private int _Id;		       //    Hit Id
-
-    private DetectorType _Detector;    //   the detector SVT or BMT
+    private DetectorDescriptor _Descriptor;
     private BMTType      _Type;        //   for the BMT, either C or Z
-
-    private int _Sector;      	       //   sector[1...24] for SVT, [1..3] for BMT
-    private int _Layer;    	       //   layer [1,...]
     private Strip _Strip;    	       //   Strip object
     
     private double _docaToTrk;              // 3-D distance of closest approach of the helix to the wire 
@@ -35,29 +32,34 @@ public class Hit implements Comparable<Hit> {
     public int MCstatus = -1;
     public boolean isCorrupted;
 
-    // constructor
-    public Hit(DetectorType detector, BMTType type, int sector, int layer, Strip strip) {
-        this._Detector = detector;     // 0 = SVT, 1 = BMT
-        this._Type     = type;               // set according to BMTType
-        this._Sector   = sector;
-        this._Layer    = layer;
+    public Hit(DetectorDescriptor descriptor, BMTType type, Strip strip) {
+        this._Descriptor = descriptor;
+        this._Type     = type;
         this._Strip    = strip;
-
+    }
+    
+    public Hit(DetectorType detector, BMTType type, int sector, int layer, Strip strip) {
+        this._Descriptor = new DetectorDescriptor();
+        this._Descriptor.setType(detector);
+        this._Descriptor.setSector(sector);
+        this._Descriptor.setLayer(layer);
+        this._Type = type;
+        this._Strip = strip;
     }
 
     public DetectorType getDetector() {
-        return _Detector;
+        return _Descriptor.getType();
     }
 
-    public void setDetector(DetectorType _detector) {
-        this._Detector = _detector;
+    public final void setDetector(DetectorType _detector) {
+        this._Descriptor.setType(_detector);
     }
 
     public BMTType getType() {
         return _Type;
     }
 
-    public void setType(BMTType type) {
+    public final void setType(BMTType type) {
         this._Type = type;
     }
 
@@ -66,7 +68,7 @@ public class Hit implements Comparable<Hit> {
      * @return the sector (1...24)
      */
     public int getSector() {
-        return _Sector;
+        return _Descriptor.getSector();
     }
 
     /**
@@ -74,8 +76,8 @@ public class Hit implements Comparable<Hit> {
      *
      * @param _Sector
      */
-    public void setSector(int _Sector) {
-        this._Sector = _Sector;
+    public final void setSector(int _Sector) {
+        this._Descriptor.setSector(_Sector);
     }
 
     /**
@@ -83,7 +85,7 @@ public class Hit implements Comparable<Hit> {
      * @return the layer (1...8)
      */
     public int getLayer() {
-        return _Layer;
+        return _Descriptor.getLayer();
     }
 
     /**
@@ -91,15 +93,15 @@ public class Hit implements Comparable<Hit> {
      *
      * @param _Layer
      */
-    public void setLayer(int _Layer) {
-        this._Layer = _Layer;
+    public final void setLayer(int _Layer) {
+        this._Descriptor.setLayer(_Layer);
     }
 
     public Strip getStrip() {
         return _Strip;
     }
 
-    public void setStrip(Strip _Strip) {
+    public final void setStrip(Strip _Strip) {
         this._Strip = _Strip;
     }
 
@@ -116,7 +118,7 @@ public class Hit implements Comparable<Hit> {
      *
      * @param _Id
      */
-    public void setId(int _Id) {
+    public final void setId(int _Id) {
         this._Id = _Id;
     }
 
@@ -125,7 +127,7 @@ public class Hit implements Comparable<Hit> {
      * @return region (1...4)
      */
     public int getRegion() {
-        return (int) (this._Layer + 1) / 2;
+        return (int) (this.getLayer() + 1) / 2;
     }
 
     /**
@@ -133,7 +135,7 @@ public class Hit implements Comparable<Hit> {
      * @return superlayer 1 or 2 in region (1...4)
      */
     public int getRegionSlayer() {
-        return (this._Layer + 1) % 2 + 1;
+        return (this.getLayer() + 1) % 2 + 1;
     }
 
     /**
