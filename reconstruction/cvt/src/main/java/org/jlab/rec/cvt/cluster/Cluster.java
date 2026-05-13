@@ -63,8 +63,44 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
     private Vector3D _s; //svt vector perpendicular to cluster pseudo-strip direction in the module plane or bmt vector perpendicular to cluster pseudo-strip in direction tangential to the cluster surface in the middle of the arc
     private Vector3D _n; //svt vector normal to the cluster module plane or bmt vector normal to the cluster surface in the middle of the arc
     public boolean flagForExclusion = false;
-    
+   
+    public Cluster(ArrayList<Hit> hits, int id) {
+        super(hits.size());
+        this._Id = id;
+        this._Detector = hits.get(0).getDetector();
+        this._Type = hits.get(0).getType();
+        this._Sector = hits.get(0).getSector();
+        this._Layer = hits.get(0).getLayer();
+        this._Tlayer = hits.get(0).getLayer();
+        if(this._Detector==DetectorType.BMT) 
+            this._Tlayer+=6;
+        this.addAll(hits);
+    }
 
+    public Cluster(int size, Hit hit, int id) {
+        super(size);
+        this._Id = id;
+        this._Detector = hit.getDetector();
+        this._Type = hit.getType();
+        this._Sector = hit.getSector();
+        this._Layer = hit.getLayer();
+        this._Tlayer = hit.getLayer();
+        if(this._Detector==DetectorType.BMT) 
+            this._Tlayer+=6;
+    }
+    
+    public Cluster(int size, DetectorType detector, BMTType type, int sector, int layer, int cid) {
+        super(size);
+        this._Detector = detector;
+        this._Type = type;
+        this._Sector = sector;
+        this._Layer = layer;
+        this._Id = cid;
+        this._Tlayer = layer;
+        if(detector==DetectorType.BMT) 
+            this._Tlayer+=6;
+    }
+    
     public Cluster(DetectorType detector, BMTType type, int sector, int layer, int cid) {
         this._Detector = detector;
         this._Type = type;
@@ -84,7 +120,7 @@ public class Cluster extends ArrayList<Hit> implements Comparable<Cluster> {
      * number.
      */
     public Cluster newCluster(Hit hit, int cid) {
-        return new Cluster(hit.getDetector(), hit.getType(), hit.getSector(), hit.getLayer(), cid);
+        return new Cluster(0, hit.getDetector(), hit.getType(), hit.getSector(), hit.getLayer(), cid);
     }
 
     public DetectorType getDetector() {

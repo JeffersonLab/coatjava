@@ -3,7 +3,6 @@ package org.jlab.rec.cvt.cluster;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.jlab.detector.base.DetectorType;
 import org.jlab.rec.cvt.hit.Hit;
 
 /**
@@ -51,7 +50,6 @@ public class ClusterFinder {
             }
 
         }
-        int cid = 1;  // cluster id, will increment with each new good cluster
 
         // for each layer and sector, a loop over the strips
         // is done to define clusters in that module's layer
@@ -77,10 +75,7 @@ public class ClusterFinder {
                         }
                     
                         // define new cluster 
-                        Cluster this_cluster = new Cluster(hits.get(0).getDetector(), hits.get(0).getType(), hits.get(0).getSector(), l + 1, cid++);
-                        this_cluster.setId(clusters.size() + 1);
-                        // add hits to the cluster
-                        this_cluster.addAll(hits); 
+                        Cluster this_cluster = new Cluster(hits, clusters.size()+1);
                         if(hits.size()>2) {
                             for(int hi = 1; hi<hits.size()-1; hi++) { //interpolate between neighboring strips
                                 if(hits.get(hi).getStrip().getEdep()<hits.get(hi-1).getStrip().getEdep()
@@ -89,17 +84,12 @@ public class ClusterFinder {
                                 }
                             }
                         }
-                        for (Hit h : hits) {
-                            h.setAssociatedClusterID(this_cluster.getId());
-                            //h.newClustering = true; //RDV fix me!
+                        int size = hits.size();
+                        for (int i=0; i<size; i++) {
+                            hits.get(i).setAssociatedClusterID(this_cluster.getId());
                         }
                         
                         this_cluster.calc_CentroidParams();
-                        //if(this_cluster.getDetector()==DetectorType.BST) {
-                        //    for (Hit h : this_cluster) {
-                        //        h.newClustering = false;
-                        //    }
-                        //}
                         Collections.sort(this_cluster);
                        
                         //make list of clusters
