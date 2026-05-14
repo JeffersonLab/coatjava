@@ -23,8 +23,6 @@ public class CLASDecoder4 extends CLASDecoder {
 
         OptionParser parser = CLASDecoder4U.getOptionParser();
         parser.addOption("-d", "0","debug mode, set >0 for more verbose output");
-        parser.addOption("-m", "run","translation tables source (use -m devel for development tables)");
-        parser.addOption("-b", "16","record buffer size in MB");
         parser.parse(args);
         List<String> inputList = parser.getInputList();
 
@@ -35,24 +33,12 @@ public class CLASDecoder4 extends CLASDecoder {
         }
 
         String modeDevel = parser.getOption("-m").stringValue();
-        boolean developmentMode = false;
-
-        if(modeDevel.compareTo("run")!=0&&modeDevel.compareTo("devel")!=0){
-            parser.printUsage();
-            System.out.println("\n >>>> error : mode has to be set to \"run\" or \"devel\" ");
-            System.exit(1);
-        }
-
-        if(modeDevel.compareTo("devel")==0){
-            developmentMode = true;
-        }
 
         String outputFile = parser.getOption("-o").stringValue();
         int compression = parser.getOption("-c").intValue();
-        int  recordsize = parser.getOption("-b").intValue();
         int debug = parser.getOption("-d").intValue();
 
-        CLASDecoder decoder = new CLASDecoder(developmentMode);
+        CLASDecoder decoder = new CLASDecoder();
 
         decoder.setDebugMode(debug);
 
