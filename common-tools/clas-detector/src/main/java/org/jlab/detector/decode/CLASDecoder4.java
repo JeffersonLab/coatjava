@@ -32,14 +32,11 @@ public class CLASDecoder4 extends CLASDecoder {
             System.exit(1);
         }
 
-        String modeDevel = parser.getOption("-m").stringValue();
-
         String outputFile = parser.getOption("-o").stringValue();
         int compression = parser.getOption("-c").intValue();
         int debug = parser.getOption("-d").intValue();
 
         CLASDecoder decoder = new CLASDecoder();
-
         decoder.setDebugMode(debug);
 
         HipoWriterSorted writer = new HipoWriterSorted();
