@@ -7,7 +7,6 @@ import java.util.List;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
-import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.track.fit.basefit.LineFitPars;
 import org.jlab.rec.dc.track.fit.basefit.LineFitter;
 import org.jlab.rec.dc.Constants; 
@@ -40,7 +39,9 @@ public class ClusterFitter {
     private final List<Double> ex = new ArrayList<>();
     private final List<Double> ey = new ArrayList<>();
     private final double stereo = Constants.COS6;
-   
+    
+    private String CoordinateSystem; // LC= local, TSC = tilted Sector
+
     public ClusterFitter() {}
 
     public void reset() {
@@ -57,6 +58,7 @@ public class ClusterFitter {
 
         Collections.sort(clus);
         reset();
+
         for (int i = 0; i < clus.size(); i++) {
             if (system.equals(CoordSys.LC)) {
                 coordinateSystem = CoordSys.LC; // local coordinate grid Delta_z = 1
@@ -246,18 +248,23 @@ public class ClusterFitter {
         FittedCluster BestCluster = null;
         double bestChisq = 999999999.;
 
-        for (FittedCluster clusCand : clusters) {
-            if(isBrickWall(clusCand)) {
+        int size = clusters.size();
+        for (int i=0; i<size; i++) {
+            FittedCluster cluster = clusters.get(i);
+            if (isBrickWall(cluster)) {
                 int LRSum=0;
-                for(FittedHit hit : clusCand) {
-                    LRSum+=hit.get_LeftRightAmb();
+                int size2 = cluster.size();
+                for (int j=0; j<size2; j++) {
+                    LRSum += cluster.get(j).get_LeftRightAmb();
                 }
-                if(LRSum!=0)
+                if (LRSum != 0) {
                     continue;
+                }
             }
-            SetFitArray(clusCand, system); // set the array of measurements according to the system used in the analysis
+            // set the array of measurements according to the system used in the analysis
+            SetFitArray(cluster, system);
             // do the fit and get the chisq
-            Fit(clusCand, true);
+            Fit(cluster, true);
             if (FitPars == null) {
                 continue;
             }
@@ -265,7 +272,7 @@ public class ClusterFitter {
 
             if (chisq < bestChisq) {
                 bestChisq = chisq;
-                BestCluster = clusCand;
+                BestCluster = cluster;
             }
         }
         
@@ -302,18 +309,22 @@ public class ClusterFitter {
      */
     private boolean isBrickWall(FittedCluster clusCand) {
         boolean isBW = true;
-        int sumWireNum = 0;
-        if(clusCand.size()!=6)
-            isBW=false;
-        
-        for(FittedHit hit : clusCand) {
-            sumWireNum+=hit.get_Wire();
+        if (clusCand.size() != 6) {
+            isBW = false;
         }
-        for(FittedHit hit : clusCand) {
-            if(hit.get_Wire()*clusCand.size()!=sumWireNum)
-                isBW = false;
-        }    
+        else {
+            int sumWireNum = 0;
+            int size = clusCand.size();
+            for (int i=0; i<size; i++) {
+                sumWireNum += clusCand.get(i).get_Wire();
+            }
+            for (int i=0; i<size; i++) {
+                if (clusCand.get(i).get_Wire()*size != sumWireNum) {
+                    isBW = false;
+                    break;
+                }
+            }
+        }
         return isBW;
     }
-
 }
