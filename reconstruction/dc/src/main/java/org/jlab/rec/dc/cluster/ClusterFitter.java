@@ -3,36 +3,33 @@ package org.jlab.rec.dc.cluster;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.jlab.clas.clas.math.FastMath;
 import org.jlab.detector.geant4.v2.DCGeant4Factory;
 
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
-import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.track.fit.basefit.LineFitPars;
 import org.jlab.rec.dc.track.fit.basefit.LineFitter;
 import org.jlab.rec.dc.Constants; 
 
 public class ClusterFitter {
 
-
     /**
      * Fits a cluster to a line
      *
      */
     private LineFitPars FitPars;
-    private final List<ArrayList<Double>> FitArray = new ArrayList<ArrayList<Double>>(); 
-    private final List<Double> x = new ArrayList<Double>();
-    private final List<Double> y = new ArrayList<Double>();
-    private final List<Double> ex = new ArrayList<Double>();
-    private final List<Double> ey = new ArrayList<Double>();
+    private final List<ArrayList<Double>> FitArray = new ArrayList<>(); 
+    private final List<Double> x = new ArrayList<>();
+    private final List<Double> y = new ArrayList<>();
+    private final List<Double> ex = new ArrayList<>();
+    private final List<Double> ey = new ArrayList<>();
     private final double stereo = Constants.COS6;
     
     private String CoordinateSystem; // LC= local, TSC = tilted Sector
-    public ClusterFitter() {
-        // TODO Auto-generated constructor stub
-    }
+
+    public ClusterFitter() {}
+
     public void reset() {
         for(int i =0; i<FitArray.size(); i++)
             FitArray.get(i).clear();
@@ -42,18 +39,11 @@ public class ClusterFitter {
         ex.clear();
         ey.clear();
     }
+
     public void SetFitArray(FittedCluster clus, String system) {
 
         Collections.sort(clus);
-        //for(int i =0; i<FitArray.size(); i++)
-        //    FitArray.get(i).clear();
         reset();
-        //double[][] fitArray = new double[4][clus.size()];
-        //double[] x = new double[clus.size()];
-        //double[] y = new double[clus.size()];
-        //double[] ex = new double[clus.size()];
-        //double[] ey = new double[clus.size()];
-        
         
         for (int i = 0; i < clus.size(); i++) {
             if (system.equals("LC")) {
@@ -77,8 +67,8 @@ public class ClusterFitter {
         FitArray.add((ArrayList<Double>) ex);
         FitArray.add((ArrayList<Double>) y);
         FitArray.add((ArrayList<Double>) ey);
-        
     }
+
     /**
      * 
      * @param clus fitted cluster
@@ -242,23 +232,27 @@ public class ClusterFitter {
      * @return the fitted cluster with the best fit chi2
      */
     public FittedCluster BestClusterSelector(List<FittedCluster> clusters, String system) {
-        //init
+
         FittedCluster BestCluster = null;
         double bestChisq = 999999999.;
-        //	double bestClusx0=0;
 
-        for (FittedCluster clusCand : clusters) {
-            if(isBrickWall(clusCand)) {
+        int size = clusters.size();
+        for (int i=0; i<size; i++) {
+            FittedCluster cluster = clusters.get(i);
+            if (isBrickWall(cluster)) {
                 int LRSum=0;
-                for(FittedHit hit : clusCand) {
-                    LRSum+=hit.get_LeftRightAmb();
+                int size2 = cluster.size();
+                for (int j=0; j<size2; j++) {
+                    LRSum += cluster.get(j).get_LeftRightAmb();
                 }
-                if(LRSum!=0)
+                if (LRSum != 0) {
                     continue;
+                }
             }
-            SetFitArray(clusCand, system); // set the array of measurements according to the system used in the analysis
+            // set the array of measurements according to the system used in the analysis
+            SetFitArray(cluster, system);
             // do the fit and get the chisq
-            Fit(clusCand, true);
+            Fit(cluster, true);
             if (FitPars == null) {
                 continue;
             }
@@ -266,14 +260,11 @@ public class ClusterFitter {
 
             if (chisq < bestChisq) {
                 bestChisq = chisq;
-                BestCluster = clusCand;
-                //		bestClusx0 = FitArray[0][0];
+                BestCluster = cluster;
             }
         }
-        //SetSegmentLineParameters(bestClusx0, BestCluster) ;
         
         return BestCluster;
-
     }
 
     /**
@@ -306,19 +297,23 @@ public class ClusterFitter {
      */
     private boolean isBrickWall(FittedCluster clusCand) {
         boolean isBW = true;
-        int sumWireNum = 0;
-        if(clusCand.size()!=6)
-            isBW=false;
-        
-        for(FittedHit hit : clusCand) {
-            sumWireNum+=hit.get_Wire();
+        if (clusCand.size() != 6) {
+            isBW = false;
         }
-        for(FittedHit hit : clusCand) {
-            if(hit.get_Wire()*clusCand.size()!=sumWireNum)
-                isBW = false;
-        }    
+        else {
+            int sumWireNum = 0;
+            int size = clusCand.size();
+            for (int i=0; i<size; i++) {
+                sumWireNum += clusCand.get(i).get_Wire();
+            }
+            for (int i=0; i<size; i++) {
+                if (clusCand.get(i).get_Wire()*size != sumWireNum) {
+                    isBW = false;
+                    break;
+                }
+            }
+        }
         return isBW;
     }
-
     
 }
