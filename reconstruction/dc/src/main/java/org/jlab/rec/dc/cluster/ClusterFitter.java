@@ -3,7 +3,6 @@ package org.jlab.rec.dc.cluster;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.jlab.detector.geant4.v2.DCGeant4Factory;
 
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
@@ -11,8 +10,23 @@ import org.jlab.geom.prim.Vector3D;
 import org.jlab.rec.dc.track.fit.basefit.LineFitPars;
 import org.jlab.rec.dc.track.fit.basefit.LineFitter;
 import org.jlab.rec.dc.Constants; 
+import org.jlab.detector.geant4.v2.DCGeant4Factory;
 
 public class ClusterFitter {
+
+    public static enum CoordSys {
+        LC  (1, "LC"),
+        TSC (2, "TSC"),
+        LTS (3, "LTS");
+        public int id;
+        public String name;
+        CoordSys(int id, String name) {
+            this.id = id;
+            this.name = name;
+        }
+    }
+
+    private CoordSys coordinateSystem;
 
     /**
      * Fits a cluster to a line
@@ -40,25 +54,24 @@ public class ClusterFitter {
         ey.clear();
     }
 
-    public void SetFitArray(FittedCluster clus, String system) {
+    public void SetFitArray(FittedCluster clus, CoordSys system) {
 
         Collections.sort(clus);
         reset();
-        
+
         for (int i = 0; i < clus.size(); i++) {
-            if (system.equals("LC")) {
-                CoordinateSystem = "LC"; // local coordinate grid Delta_z = 1
+            if (system.equals(CoordSys.LC)) {
+                coordinateSystem = CoordSys.LC; // local coordinate grid Delta_z = 1
                 x.add(i, clus.get(i).get_lX());
                 ex.add(i, (double) 0);
                 y.add(i, clus.get(i).get_lY());
                 ey.add(i, (double) 1);
             }
-            if (system.equals("TSC")) {
-                CoordinateSystem = "TSC"; // local tilted coordinate system Delta_z ~ cell size
+            if (system.equals(CoordSys.TSC)) {
+                coordinateSystem = CoordSys.TSC; // local tilted coordinate system Delta_z ~ cell size
                 x.add(i, clus.get(i).get_Z());
                 ex.add(i, (double) 0);
                 y.add(i, clus.get(i).get_X());
-                //ey[i]= clus.get(i).get_DocaErr(); //CODEFIX1
                 ey.add(i, clus.get(i).get_DocaErr() / stereo); 
             }
 
@@ -138,7 +151,6 @@ public class ClusterFitter {
 
         } else {
             System.err.println("Cluster Fit Params not set!!!");
-
         }
     }
 
@@ -199,7 +211,7 @@ public class ClusterFitter {
                 }
             }
             if (resetLRAmbig) {
-                if ((CoordinateSystem.equals("LC") && Math.abs(residual) < 0.01) || (CoordinateSystem.equals("LTS")
+                if ((coordinateSystem.equals(CoordSys.LC) && Math.abs(residual) < 0.01) || (coordinateSystem.equals(CoordSys.LTS)
                         && clus.get(i).get_Doca() / clus.get(i).get_CellSize() < 0.4)) { //  DOCA require to be larger than 40% of cell size for hit-based tracking LR assignment 
                     clus.get(i).set_LeftRightAmb(0);
                 }
@@ -231,7 +243,7 @@ public class ClusterFitter {
      * @param system coordinate system in which the fit is performed
      * @return the fitted cluster with the best fit chi2
      */
-    public FittedCluster BestClusterSelector(List<FittedCluster> clusters, String system) {
+    public FittedCluster BestClusterSelector(List<FittedCluster> clusters, CoordSys system) {
 
         FittedCluster BestCluster = null;
         double bestChisq = 999999999.;
@@ -315,5 +327,4 @@ public class ClusterFitter {
         }
         return isBW;
     }
-    
 }
