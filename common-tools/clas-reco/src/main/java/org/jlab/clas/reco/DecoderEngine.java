@@ -29,7 +29,7 @@ public class DecoderEngine implements Engine {
 
     SchemaFactory schema;
     BlockingQueue<CLASDecoder> pool;
-    int constantsShared = 16;
+    int constantsShared = 64;
 
     public DecoderEngine() {
         schema = new SchemaFactory();
