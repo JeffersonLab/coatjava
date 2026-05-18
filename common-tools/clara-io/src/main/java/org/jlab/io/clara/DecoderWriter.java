@@ -91,7 +91,9 @@ public class DecoderWriter extends HipoToHipoWriter {
         if (runConfig.getRows() > 0) {
             int unix = runConfig.getInt("unixTime",0);
             int evno = runConfig.getInt("event",0);
+            // if this event has a good unix time, store it for later:
             if (unix > 0) unixEventMap.put(evno, unix);
+            // otherwise update it with the latest unix time reading:
             else runConfig.putInt("unixTime",0, unixEventMap.get(unixEventMap.floorKey(evno)));
         }
         Event t = CLASDecoder4.createTaggedEvent((Event)event, runConfig, tag1banks);
