@@ -127,9 +127,10 @@ fi
 
 # change the version number, if different
 # NOTE: `maven-release-plugin` could be used to better automate the versioning
-# here, but since this deployment is _only_ done in the `coat-libs` POM (the
-# shaded JAR), and we also want to make a tarball with _all_ of the POMs at the
-# correct version number, we may as well do the version bump here
+# here, but since the deployment publishes a single coordinate
+# (org.jlab.coat:coat-libs:<ver>) and we also want to make a tarball with the
+# install tree at the correct version number, we may as well do the version
+# bump here
 if [ "$ver_current" != "$ver_deploy" ]; then
   log "change version number $ver_current -> $ver_deploy"
   $src_dir/libexec/version-bump.sh $ver_deploy
@@ -140,15 +141,33 @@ log "cleanly rebuild coatjava"
 $src_dir/build-coatjava.sh --clean
 $src_dir/build-coatjava.sh
 
-# deploy locally; no need to `clean deploy`, since we have already cleaned and re-built
-log "local deployment of coatjava version $ver_deploy"
-pom_files=(
-  $src_dir/common-tools/coat-libs/pom.xml
-  $src_dir/reconstruction/pom.xml
-)
-for pom_file in ${pom_files[@]}; do
-  mvn deploy -Dmaven.test.skip=true -f $pom_file
-done
+# deploy locally; no need to `clean deploy`, since we have already cleaned and re-built.
+#
+# Post-merge (T19), the project is a single root POM that produces:
+#   - target/coatjava-<ver>.jar              (primary thin jar; NOT deployed)
+#   - target/coatjava-<ver>-coat-libs.jar    (shaded uber-jar, attached via
+#                                             maven-shade-plugin classifier)
+#   - target/.flattened-pom.xml              (clean, external-deps-only POM
+#                                             from flatten-maven-plugin)
+#
+# The default `mvn deploy` lifecycle is suppressed in the root POM (see
+# maven-deploy-plugin <skip>true</skip>) because it would publish the wrong
+# GAV (org.jlab.coat:coatjava with a `coat-libs` classifier) rather than the
+# freestanding GAV org.jlab.coat:coat-libs that downstream consumers depend
+# on. Instead, we explicitly invoke `deploy:deploy-file` to publish the
+# shaded jar under the correct standalone artifactId, with the flattened POM
+# as its published .pom.
+log "local deployment of coat-libs version $ver_deploy"
+mvn deploy:deploy-file \
+  -Dmaven.test.skip=true \
+  -DrepositoryId=coat-libs \
+  -Durl=file://$deploy_dir \
+  -DgroupId=org.jlab.coat \
+  -DartifactId=coat-libs \
+  -Dversion=$ver_deploy \
+  -Dpackaging=jar \
+  -Dfile=$src_dir/target/coatjava-${ver_deploy}-coat-libs.jar \
+  -DgeneratePom=true
 
 # make a tarball too
 deploy_tarball=coatjava-${ver_deploy}.tar.gz
@@ -168,7 +187,6 @@ print_deployment
 if ! $dry_run; then
   log "now deploying..."
   scp -r $deploy_dir/org/jlab/coat/coat-libs/* $deployment_user@$deployment_host:/group/clas/www/clasweb/html/clas12maven/org/jlab/coat/coat-libs/.
-  scp -r $deploy_dir/org/jlab/clas12/detector/* $deployment_user@$deployment_host:/group/clas/www/clasweb/html/clas12maven/org/jlab/clas12/detector/.
   scp $deploy_tarball $deployment_user@$deployment_host:/group/clas/www/clasweb/html/clas12offline/distribution/coatjava/.
   log "...done"
 else
