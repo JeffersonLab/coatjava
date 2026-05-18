@@ -2,6 +2,7 @@ package org.jlab.io.clara;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import org.jlab.analysis.postprocess.Processor;
 import org.jlab.clara.std.services.EventWriterException;
@@ -38,6 +39,7 @@ public class DecoderWriter extends HipoToHipoWriter {
     Bank runConfig;
     Bank helicityAdc;
     ConstantsManager conman;
+    TreeMap<Integer,Integer> unixEventMap;
     TreeSet<HelicityState> helicities;
     DaqScalersSequence scalers;
     SchemaFactory fullSchema;
@@ -49,6 +51,7 @@ public class DecoderWriter extends HipoToHipoWriter {
         runConfig = new Bank(fullSchema.getSchema("RUN::config"));
         helicityAdc = new Bank(fullSchema.getSchema("HEL::adc"));
         helicities = new TreeSet<>();
+        unixEventMap = new TreeMap<>();
         scalers = new DaqScalersSequence(fullSchema);
         conman = new ConstantsManager();
         conman.init("/runcontrol/hwp","/runcontrol/helicity");
@@ -72,7 +75,7 @@ public class DecoderWriter extends HipoToHipoWriter {
             throw new EventWriterException(e);
         }
     }
-
+    
     /**
      * In addition to writing the incoming event, copies all tag-1 banks to new
      * tag-1 events and writes them, and stores helicity/scaler readings for later.
@@ -85,6 +88,8 @@ public class DecoderWriter extends HipoToHipoWriter {
         ((Event)event).read(runConfig);
         ((Event)event).read(helicityAdc);
         helicities.add(HelicityState.createFromFadcBank(helicityAdc, runConfig, conman));
+        if (runConfig.getRows() > 0)
+            unixEventMap.put(runConfig.getInt("event",0),runConfig.getInt("unixTime", 0));
         Event t = CLASDecoder4.createTaggedEvent((Event)event, runConfig, tag1banks);
         if (!t.isEmpty()) writer.addEvent(t, 1);
         super.writeEvent(event);
@@ -100,8 +105,9 @@ public class DecoderWriter extends HipoToHipoWriter {
         super.closeWriter();
         if (postprocess) postprocess();
         // keep the latest helicity/scaler reading for the next file:
-        while (helicities.size() > 60) helicities.pollFirst();
-        scalers.clear(10);
+        while (helicities.size() > 100) helicities.pollFirst();
+        while (unixEventMap.size() > 100) unixEventMap.pollFirstEntry();
+        scalers.clear(100);
     }
   
     private int getRunNumber() {
