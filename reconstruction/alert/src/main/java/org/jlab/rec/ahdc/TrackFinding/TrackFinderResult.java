@@ -1,22 +1,21 @@
 package org.jlab.rec.ahdc.TrackFinding;
 
-import org.jlab.rec.ahdc.Track.Track;
+import org.jlab.rec.ahdc.Track.TrackCandidate;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public class TrackFinderResult {
 
-    private final List<Track> tracks;
+    private final List<TrackCandidate> tracks;
     private final boolean valid;
 
-    public TrackFinderResult(List<Track> tracks, boolean valid) {
+    public TrackFinderResult(List<TrackCandidate> tracks, boolean valid) {
         this.tracks = tracks;
         this.valid = valid;
     }
 
-    public static TrackFinderResult ok(List<Track> tracks) {
+    public static TrackFinderResult ok(List<TrackCandidate> tracks) {
         return new TrackFinderResult(tracks, true);
     }
 
@@ -24,7 +23,7 @@ public class TrackFinderResult {
         return new TrackFinderResult(Collections.emptyList(), false);
     }
 
-    public List<Track> getTracks() {
+    public List<TrackCandidate> getTracks() {
         return tracks;
     }
 

@@ -4,7 +4,7 @@ import org.jlab.io.base.DataBank;
 import org.jlab.rec.ahdc.AI.GNNPrediction;
 import org.jlab.rec.ahdc.AI.ModelTrackFindingGNN;
 import org.jlab.rec.ahdc.Hit.Hit;
-import org.jlab.rec.ahdc.Track.Track;
+import org.jlab.rec.ahdc.Track.TrackCandidate;
 
 import java.util.ArrayList;
 import java.util.logging.Logger;
@@ -12,8 +12,8 @@ import java.util.logging.Logger;
 /** GravNet-based track finder. Builds a per-event hit graph from the AHDC
  *  hits and (when present) the ATOF::hits bank, runs the exported edge
  *  scorer, extracts tracks via connected components on edges with score
- *  &ge; 0.1, and packages each surviving track as a {@link Track} backed by
- *  per-superlayer {@link org.jlab.rec.ahdc.Cluster.Cluster}s.
+ *  &ge; 0.1, and packages each surviving track as a {@link TrackCandidate}
+ *  backed by per-superlayer {@link org.jlab.rec.ahdc.Cluster.Cluster}s.
  */
 public class GNNTrackFinder implements TrackFinder {
 
@@ -46,7 +46,7 @@ public class GNNTrackFinder implements TrackFinder {
             return TrackFinderResult.ok(new ArrayList<>());
         }
 
-        ArrayList<Track> tracks = predictor.prediction(ahdcHits, atofHitsBank, model);
+        ArrayList<TrackCandidate> tracks = predictor.prediction(ahdcHits, atofHitsBank, model);
         return TrackFinderResult.ok(tracks);
     }
 }

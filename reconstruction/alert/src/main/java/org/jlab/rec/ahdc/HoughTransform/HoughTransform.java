@@ -2,17 +2,17 @@ package org.jlab.rec.ahdc.HoughTransform;
 
 import org.jlab.rec.ahdc.Cluster.Cluster;
 import Jama.Matrix;
-import org.jlab.rec.ahdc.Track.Track;
+import org.jlab.rec.ahdc.Track.TrackCandidate;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class HoughTransform {
 
-    private ArrayList<Track> _AHDCTracks;
+    private ArrayList<TrackCandidate> _AHDCTrackCandidates;
 
     public HoughTransform(){
-        _AHDCTracks = new ArrayList<>();
+        _AHDCTrackCandidates = new ArrayList<>();
     }
 
     public void find_tracks(List<Cluster> AHDC_Clusters){
@@ -131,8 +131,8 @@ public class HoughTransform {
                 }
 
                 if(cluster_track.size() > 2){
-                    Track track = new Track(cluster_track);
-                    _AHDCTracks.add(track);
+                    TrackCandidate track = new TrackCandidate(cluster_track);
+                    _AHDCTrackCandidates.add(track);
                     for(Cluster cluster : cluster_track){AHDC_Clusters.remove(cluster);}
                 }
                 else{
@@ -153,11 +153,11 @@ public class HoughTransform {
         return list.stream().anyMatch(o -> o.get_Radius() == (radius) && o.get_Phi() == phi);
     }
 
-    public ArrayList<Track> get_AHDCTracks() {
-        return _AHDCTracks;
+    public ArrayList<TrackCandidate> get_AHDCTrackCandidates() {
+        return _AHDCTrackCandidates;
     }
 
-    public void set_AHDCTracks(ArrayList<Track> _AHDCTracks) {
-        this._AHDCTracks = _AHDCTracks;
+    public void set_AHDCTrackCandidates(ArrayList<TrackCandidate> _AHDCTrackCandidates) {
+        this._AHDCTrackCandidates = _AHDCTrackCandidates;
     }
 }

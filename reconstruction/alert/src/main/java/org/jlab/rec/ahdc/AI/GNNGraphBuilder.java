@@ -10,10 +10,9 @@ import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
 import org.jlab.io.base.DataBank;
 import org.jlab.rec.ahdc.Hit.Hit;
+import org.jlab.rec.ahdc.Track.AtofHitStub;
 
 /** Builds the graph tensors expected by the exported GNN edge scorer.
- *  Ports track-finding/gnn/dataset.py::build_graph — must stay byte-compatible
- *  with the training-time feature layout and normalization.
  */
 final class GNNGraphBuilder {
 
@@ -24,12 +23,16 @@ final class GNNGraphBuilder {
         final float[][] edgeAttr;       // shape [E, 9]
         /** nodeToSource[i] is the backing Hit for AHDC nodes, or null for ATOF nodes. */
         final Hit[]     nodeToSource;
+        /** nodeToAtof[i] is the backing ATOF hit for ATOF nodes, or null for AHDC nodes. */
+        final AtofHitStub[] nodeToAtof;
 
-        GraphInput(float[][] nodeFeatures, long[][] edgeIndex, float[][] edgeAttr, Hit[] nodeToSource) {
+        GraphInput(float[][] nodeFeatures, long[][] edgeIndex, float[][] edgeAttr,
+                   Hit[] nodeToSource, AtofHitStub[] nodeToAtof) {
             this.nodeFeatures = nodeFeatures;
             this.edgeIndex    = edgeIndex;
             this.edgeAttr     = edgeAttr;
             this.nodeToSource = nodeToSource;
+            this.nodeToAtof   = nodeToAtof;
         }
     }
 
@@ -43,6 +46,7 @@ final class GNNGraphBuilder {
         List<double[]> nodeBuf = new ArrayList<>();   // per-node raw floats (see NodeField indexes)
         List<Line3D>   nodeLine = new ArrayList<>();  // wire line for AHDC; null for ATOF
         List<Hit>      nodeHit  = new ArrayList<>();  // backing Hit for AHDC; null for ATOF
+        List<AtofHitStub> nodeAtof = new ArrayList<>(); // backing ATOF hit for ATOF; null for AHDC
 
         // --- AHDC nodes -------------------------------------------------------------
         for (int i = 0; i < nAhdc; i++) {
@@ -74,11 +78,11 @@ final class GNNGraphBuilder {
             });
             nodeLine.add(line);
             nodeHit.add(h);
+            nodeAtof.add(null);
         }
 
         // --- ATOF nodes -------------------------------------------------------------
-        // Deduplicate by (sector, layer, component) — inference-time variant of the
-        // Python dedup which also keys on track id (only needed at training time).
+        // Deduplicate by (sector, layer, component).
         if (atofHitsBank != null) {
             Set<Long> seen = new HashSet<>();
             int rows = atofHitsBank.rows();
@@ -106,6 +110,7 @@ final class GNNGraphBuilder {
                 });
                 nodeLine.add(null);
                 nodeHit.add(null);
+                nodeAtof.add(new AtofHitStub(sector, layer, component, x, y));
             }
         }
 
@@ -114,7 +119,7 @@ final class GNNGraphBuilder {
             return new GraphInput(new float[0][GNNConstants.NODE_FEAT_DIM],
                                   new long[][]{new long[0], new long[0]},
                                   new float[0][GNNConstants.EDGE_FEAT_DIM],
-                                  new Hit[0]);
+                                  new Hit[0], new AtofHitStub[0]);
         }
 
         // --- Node feature tensor [N, 10] --------------------------------------------
@@ -134,7 +139,6 @@ final class GNNGraphBuilder {
         }
 
         // --- Edge construction (directed, layer_gap in [1, MAX_LAYER_GAP]) -----------
-        // Mirrors Python's np.where(mask) on a non-symmetric mask.
         int[] absLayer = new int[n];
         double[] xRaw = new double[n];
         double[] yRaw = new double[n];
@@ -187,8 +191,6 @@ final class GNNGraphBuilder {
             Line3D ld = nodeLine.get(d);
             if (ls != null && ld != null) {
                 doca = ls.distance(ld).length();
-                // Python: z1 = cp_d.z, where cp_d is the point on line_s closest to line_d's midpoint
-                //         z2 = cp_s.z, where cp_s is the point on line_d closest to line_s's midpoint
                 z1 = clampZ(ls.distance(ld.midpoint()).origin().z());
                 z2 = clampZ(ld.distance(ls.midpoint()).origin().z());
             } else {
@@ -213,7 +215,8 @@ final class GNNGraphBuilder {
         }
 
         Hit[] nodeToHit = nodeHit.toArray(new Hit[0]);
-        return new GraphInput(nodeFeatures, edgeIndex, edgeAttr, nodeToHit);
+        AtofHitStub[] nodeToAtof = nodeAtof.toArray(new AtofHitStub[0]);
+        return new GraphInput(nodeFeatures, edgeIndex, edgeAttr, nodeToHit, nodeToAtof);
     }
 
     private static double clampZ(double z) {

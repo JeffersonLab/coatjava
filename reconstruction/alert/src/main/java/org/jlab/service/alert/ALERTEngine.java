@@ -43,6 +43,7 @@ import org.jlab.rec.ahdc.TrackFinding.TrackFinderResult;
 import org.jlab.geom.detector.alert.AHDC.AlertDCDetector;
 import org.jlab.geom.detector.alert.AHDC.AlertDCFactory;
 import org.jlab.rec.ahdc.Track.Track;
+import org.jlab.rec.ahdc.Track.TrackCandidate;
 import org.jlab.clas.pdg.PDGDatabase;
 import org.jlab.clas.pdg.PDGParticle;
 import java.util.List;
@@ -230,7 +231,7 @@ public class ALERTEngine extends ReconstructionEngine {
             if (!trackResult.isValid()) {
                 return false;
             }
-            ArrayList<Track> AHDC_Tracks = new ArrayList<>(trackResult.getTracks());
+            ArrayList<TrackCandidate> AHDC_Candidates = new ArrayList<>(trackResult.getTracks());
 
             // Preclusters are also written to AHDC::preclusters as a diagnostic bank;
             // PreClusterFinder is idempotent on Hit.use, so re-running it here is safe.
@@ -238,14 +239,21 @@ public class ALERTEngine extends ReconstructionEngine {
             preclusterfinder.findPreclusters(AHDC_Hits);
             ArrayList<PreCluster> AHDC_PreClusters = preclusterfinder.get_AHDCPreClusters();
 
-            // IV) Global fit: DOCA refinement + helix fit
+            // IV) Global fit: DOCA refinement + helix fit.
+            // Each surviving TrackCandidate is fitted into a Track; the fit is
+            // dispatched on the candidate's CandidateType (see the switch below).
             int trackid = 0;
             ArrayList<DocaCluster> all_docaClusters = new ArrayList<>();
-            AHDC_Tracks.removeIf(track -> track.get_Clusters().size() < 3);
-            for (Track track : AHDC_Tracks) {
+            AHDC_Candidates.removeIf(cand -> cand.get_Clusters().size() < 3);
+            ArrayList<Track> AHDC_Tracks = new ArrayList<>();
+            for (TrackCandidate cand : AHDC_Candidates) {
                 trackid++;
-                track.set_trackId(trackid);
-                List<Cluster> originalClusters = track.get_Clusters();
+                cand.set_trackId(trackid);
+                // Every surviving candidate yields an AHDC::track row, even if the
+                // helix fit below is skipped (its Track keeps zero parameters).
+                Track track = new Track(cand);
+                AHDC_Tracks.add(track);
+                List<Cluster> originalClusters = cand.get_Clusters();
                 ArrayList<DocaCluster> docaClusters = DocaClusterRefiner.buildRefinedClusters(originalClusters);
                 all_docaClusters.addAll(docaClusters);
                 if (docaClusters == null || docaClusters.size() < 3 || originalClusters == null || originalClusters.size() < 3) {
@@ -253,7 +261,18 @@ public class ALERTEngine extends ReconstructionEngine {
                     continue;
                 }
                 HelixFitJava h = new HelixFitJava();
-                track.setPositionAndMomentum(h.helix_fit_with_doca_selection(docaClusters, 1));
+                switch (cand.getType()) {
+                    case AHDC_ATOF:
+                        // EXTENSION HOOK: a future commit may incorporate
+                        // cand.getAtofHits() as an additional fit constraint here.
+                        // For now AHDC_ATOF fits exactly like AHDC_ONLY — the ATOF
+                        // hits are carried on the candidate, not yet fitted.
+                    case AHDC_ONLY:
+                    case AHDC_VERTEX:
+                    default:
+                        track.setPositionAndMomentum(h.helix_fit_with_doca_selection(docaClusters, 1));
+                        break;
+                }
             }
 
             // V) Replace AHDC::hits (now with trackId) and write track-finding output banks
@@ -508,15 +527,14 @@ public class ALERTEngine extends ReconstructionEngine {
                     AHDC_hits.add(hit);
                 }
             }
-            // Initialise the position and the momentum using the information of the AHDC::track
-            // position : mm
-            // momentum : MeV
+            // Rebuild a hits-only TrackCandidate and wrap it in a Track seeded
+            // with the banked helix-fit position/momentum (mm / MeV).
             // Invariant: AHDC_hits is non-empty. AHDCEngine's MLP_Track_Finding path uses greedy
             // non-overlap selection so each PreCluster (and thus each Hit) belongs to at most one
             // surviving track, so the set_trackId stamping is unambiguous and every AHDC::track
-            // row has matching AHDC::hits rows. If this invariant ever flips, the get(0) inside
-            // Track(ArrayList<Hit>) fails loudly here, which is the right signal.
-            Track newTrack = new Track(AHDC_hits);
+            // row has matching AHDC::hits rows.
+            TrackCandidate newCandidate = new TrackCandidate(AHDC_hits);
+            Track newTrack = new Track(newCandidate);
             double[] vec = {
                 trackBank.getFloat("x",  row),
                 trackBank.getFloat("y",  row),

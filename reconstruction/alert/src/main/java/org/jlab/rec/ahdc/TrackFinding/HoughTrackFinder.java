@@ -6,7 +6,7 @@ import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.HoughTransform.HoughTransform;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import org.jlab.rec.ahdc.PreCluster.PreClusterFinder;
-import org.jlab.rec.ahdc.Track.Track;
+import org.jlab.rec.ahdc.Track.TrackCandidate;
 
 import java.util.ArrayList;
 
@@ -24,7 +24,7 @@ public class HoughTrackFinder implements TrackFinder {
 
         HoughTransform hough = new HoughTransform();
         hough.find_tracks(clusters);
-        ArrayList<Track> tracks = hough.get_AHDCTracks();
+        ArrayList<TrackCandidate> tracks = hough.get_AHDCTrackCandidates();
 
         return TrackFinderResult.ok(tracks);
     }

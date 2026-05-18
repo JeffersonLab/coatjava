@@ -9,7 +9,7 @@ import org.jlab.rec.ahdc.AI.TrackPrediction;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import org.jlab.rec.ahdc.PreCluster.PreClusterFinder;
-import org.jlab.rec.ahdc.Track.Track;
+import org.jlab.rec.ahdc.Track.TrackCandidate;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -77,7 +77,7 @@ public class AITrackFinder implements TrackFinder {
         //    them orphaned in AHDC::hits. Greedy selection enforces one-hit-one-track.
         predictions.sort((a, b) -> Float.compare(b.getPrediction(), a.getPrediction()));
         Set<PreCluster> claimedPreclusters = new HashSet<>();
-        ArrayList<Track> tracks = new ArrayList<>();
+        ArrayList<TrackCandidate> tracks = new ArrayList<>();
         for (TrackPrediction t : predictions) {
             if (t.getPrediction() <= TRACK_FINDING_AI_THRESHOLD) continue;
             boolean overlaps = false;
@@ -86,7 +86,7 @@ public class AITrackFinder implements TrackFinder {
             }
             if (overlaps) continue;
             claimedPreclusters.addAll(t.getPreclusters());
-            tracks.add(new Track(t.getClusters()));
+            tracks.add(new TrackCandidate(t.getClusters()));
         }
         return TrackFinderResult.ok(tracks);
     }

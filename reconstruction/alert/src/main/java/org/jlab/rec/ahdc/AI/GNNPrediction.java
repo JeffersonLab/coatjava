@@ -11,22 +11,26 @@ import org.jlab.rec.ahdc.Cluster.Cluster;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import org.jlab.rec.ahdc.PreCluster.PreClusterFinder;
-import org.jlab.rec.ahdc.Track.Track;
+import org.jlab.rec.ahdc.Track.AtofHitStub;
+import org.jlab.rec.ahdc.Track.CandidateType;
+import org.jlab.rec.ahdc.Track.TrackCandidate;
 
 /** Orchestrates GNN-based track finding: builds the graph, runs the exported
  *  edge scorer, extracts tracks via connected components on edge scores
- *  thresholded at 0.1, and converts each node-set back into a {@link Track}
- *  carrying per-superlayer Clusters so the downstream helix fit / Kalman
- *  stages can consume it.
+ *  thresholded at 0.1, and converts each node-set back into a
+ *  {@link TrackCandidate} carrying per-superlayer Clusters so the downstream
+ *  helix fit / Kalman stages can consume it. Components that include ATOF
+ *  graph nodes yield {@code AHDC_ATOF} candidates with those ATOF hits
+ *  attached; the rest are {@code AHDC_ONLY}.
  */
 public final class GNNPrediction {
 
     private static final Logger LOGGER = Logger.getLogger(GNNPrediction.class.getName());
 
-    public ArrayList<Track> prediction(List<Hit> ahdcHits,
-                                       DataBank atofHitsBank,
-                                       ModelTrackFindingGNN model) {
-        ArrayList<Track> out = new ArrayList<>();
+    public ArrayList<TrackCandidate> prediction(List<Hit> ahdcHits,
+                                                DataBank atofHitsBank,
+                                                ModelTrackFindingGNN model) {
+        ArrayList<TrackCandidate> out = new ArrayList<>();
         if (ahdcHits == null || ahdcHits.isEmpty() || model == null) return out;
 
         GNNGraphBuilder.GraphInput g = GNNGraphBuilder.build(ahdcHits, atofHitsBank);
@@ -45,23 +49,32 @@ public final class GNNPrediction {
         }
 
         // Connected components at TRACK_SCORE_THRESHOLD, filtered to
-        // components of size >= MIN_TRACK_NODES — mirrors gnn/evaluate.py.
+        // components of size >= MIN_TRACK_NODES.
         List<int[]> trackNodeSets = SeedExtendTrackExtractor.extract(edgeScores, g.edgeIndex, nNodes);
 
         for (int[] nodes : trackNodeSets) {
-            // Collect just the AHDC Hits in this track — ATOF nodes were graph
-            // context only, they don't belong in AHDC::track or AHDC::hits.
+            // Split the component's nodes: AHDC Hits become the candidate's hits,
+            // ATOF nodes (when present) are attached so the candidate is typed
+            // AHDC_ATOF. Only AHDC hits feed AHDC::track / AHDC::hits.
             ArrayList<Hit> trackHits = new ArrayList<>(nodes.length);
+            ArrayList<AtofHitStub> trackAtof = new ArrayList<>();
             for (int n : nodes) {
                 Hit h = g.nodeToSource[n];
-                if (h != null) trackHits.add(h);
+                if (h != null) { trackHits.add(h); continue; }
+                AtofHitStub a = g.nodeToAtof[n];
+                if (a != null) trackAtof.add(a);
             }
             if (trackHits.isEmpty()) continue;
 
             ArrayList<Cluster> clusters = buildSuperlayerClusters(trackHits);
             if (clusters.size() < 3) continue;   // matches the downstream >=3 filter
 
-            out.add(new Track(clusters));
+            TrackCandidate candidate = new TrackCandidate(clusters);
+            if (!trackAtof.isEmpty()) {
+                candidate.setType(CandidateType.AHDC_ATOF);
+                for (AtofHitStub a : trackAtof) candidate.addAtofHit(a);
+            }
+            out.add(candidate);
         }
 
         return out;
