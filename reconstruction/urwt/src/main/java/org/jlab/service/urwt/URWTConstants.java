@@ -25,11 +25,16 @@ public class URWTConstants {
 
     // cluster
     public final static double COINCTIME = 100;
+    public final static double DELTATCLUSTER = 30.0;
     
     // cross
-    public final static double deltaE = 200;
-    public final static double deltaT = 50;
-    public final static double meanT = 180 + 550;
+    public final static double DELTAE = 6000;
+    public final static double DELTAT = 21.6;
+    public final static double MEANT = 104.45;
+    public final static double TIMEDIFF = 43.0;
+    
+    // HB
+    public final static double HBCOINCTIME = 30.0;
     
      //// Todo: Should come from uRWell geometry package
     public static final double URWELLLOCALZ[]  = {223.0, 226.0}; // cm

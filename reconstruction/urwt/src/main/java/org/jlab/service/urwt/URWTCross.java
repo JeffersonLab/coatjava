@@ -37,14 +37,18 @@ public class URWTCross {
         this.cluster1 = c1.getId();
         this.cluster2 = c2.getId();
         this.status = 0;
-        /*
-        if(Math.abs(c1.getEnergy()-c2.getEnergy())>URWTConstants.deltaE) 
+
+        if(Math.abs(this.time - URWTConstants.MEANT)>URWTConstants.DELTAT)
             this.status += 1;
-        if(Math.abs(c1.getTime()-c2.getTime())>URWTConstants.deltaT)     
+        if(Math.abs(c1.getTime()-c2.getTime())>URWTConstants.TIMEDIFF)     
             this.status += 2;
-        if(Math.abs(this.time - URWTConstants.meanT)>1.2*URWTConstants.deltaT)
+        if(c1.getStatus() != 0 || c2.getStatus() != 0)
             this.status += 4;
-        */
+        /*
+        if(Math.abs(c1.getEnergy()-c2.getEnergy())>URWTConstants.DELTAE) 
+            this.status += 4;
+        */        
+        
     }
 
     public void setId(int id) {

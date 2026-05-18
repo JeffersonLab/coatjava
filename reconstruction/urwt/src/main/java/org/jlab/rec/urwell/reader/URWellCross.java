@@ -35,6 +35,8 @@ public class URWellCross {
     List<URWellStateVec> stateVecs = new ArrayList(); // States on clusters after tracking
     
     private double residual = -1;
+    
+    private int NNTrkId = -1;
 
     public URWellCross(int id, int sector, int region, double x, double y, double z, double energy, double time, int cluster1, int cluster2, int status) {
         this.id = id;
@@ -271,6 +273,14 @@ public class URWellCross {
     
     public double getResidule(){
         return residual;
+    }
+    
+    public void setNNTrkId(int NNTrkId){
+        this.NNTrkId = NNTrkId;
+    }
+    
+    public int getNNTrkId(){
+        return NNTrkId;
     }
     
     public URWellCross clone(){

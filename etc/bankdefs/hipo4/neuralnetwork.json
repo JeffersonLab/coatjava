@@ -42,7 +42,9 @@
 	    {"name":"p",      "type":"F", "info":"momentum of the track"},
 	    {"name":"theta",  "type":"F", "info":"theta angle of the track"},
 	    {"name":"phi",    "type":"F", "info":"phi angle of the track"},
-	    {"name":"vz",     "type":"F", "info":"vertex Z component for predicted track"}
+	    {"name":"vz",     "type":"F", "info":"vertex Z component for predicted track"},
+            {"name":"ur1",     "type":"S", "info":"uRWell cross ID in region 1"},
+	    {"name":"ur2",     "type":"S", "info":"uRWell cross ID in region 2"}
 	    ]
     },
 

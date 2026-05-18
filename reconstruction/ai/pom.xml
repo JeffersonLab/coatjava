@@ -34,6 +34,12 @@
     </dependency>
 
     <dependency>
+      <groupId>org.jlab.clas</groupId>
+      <artifactId>clas-geometry</artifactId>
+      <version>13.8.3-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
       <groupId>ai.djl</groupId>
       <artifactId>api</artifactId>
     </dependency>

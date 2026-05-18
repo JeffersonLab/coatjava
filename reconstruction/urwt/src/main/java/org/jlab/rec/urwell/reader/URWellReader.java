@@ -151,8 +151,9 @@ public class URWellReader{
                 cross.setCluster1(urClusters);
                 cross.setCluster2(urClusters);
                 if(cluster1<=urClusters.size()) urClusters.get(cluster1-1).setCrossIndex(i);
-                if(cluster2<=urClusters.size()) urClusters.get(cluster2-1).setCrossIndex(i);    
-                urCrosses.add(cross);
+                if(cluster2<=urClusters.size()) urClusters.get(cluster2-1).setCrossIndex(i); 
+                if(status == 0) 
+                    urCrosses.add(cross);
             }
         }
     }

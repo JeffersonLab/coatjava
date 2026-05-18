@@ -21,6 +21,7 @@ public class URWellCluster {
     private int crossIndex = -1;
     private double stereo = 10.;
     private Line3D lineLocal = new Line3D();
+    private boolean isHBTimeCoinc = true;
 
     public URWellCluster(int id, int sector, int layer, int component, int size, double energy, double time, Point3D pointOrigin, Point3D pointEnd) {
         this.id = id;
@@ -83,5 +84,13 @@ public class URWellCluster {
     
     public Line3D getLineLocal(){
         return lineLocal;
-    }    
+    } 
+    
+    public void setIsHBTimeCoinc(boolean isHBTimeCoinc){
+        this.isHBTimeCoinc = isHBTimeCoinc;
+    }
+    
+    public boolean getIsHBTimeCoinc(){
+        return isHBTimeCoinc;
+    }
 }

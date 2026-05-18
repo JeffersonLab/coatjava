@@ -46,6 +46,7 @@ import org.jlab.rec.urwell.reader.URWellCross;
 import org.jlab.rec.urwell.reader.URWellReader;
 import org.jlab.rec.urwell.reader.URWellStateVec;
 import org.jlab.service.urwt.URWTConstants;
+import org.jlab.detector.base.DetectorType;
 
 /**
  *
@@ -186,6 +187,44 @@ public class DCURWellTBEngine extends DCEngine {
         List<URWellCross> urCrosses = uRWellReader.getUrwellCrosses();
         
         DataBank trkbank = event.getBank(this.getBanks().getInputTracksBank());
+        
+        // For uRWell coincidence with HB track in time
+        double startTime = -999;
+        Map<Integer, Double> map_trkIndex_beta = new HashMap();
+        Map<Integer, Double> map_urCrssId_pathLengthcls1 = new HashMap();
+        Map<Integer, Double> map_urCrssId_pathLengthcls2 = new HashMap();
+        if(event.hasBank(this.getBanks().getRecEventBank()) && event.hasBank(this.getBanks().getRecPartBank()) 
+                && event.hasBank(this.getBanks().getRecTrackBank()) && event.hasBank(this.getBanks().getInputURWellCrossesBank())){
+            DataBank recHBEventbank = event.getBank(this.getBanks().getRecEventBank());
+            DataBank recHBPartbank = event.getBank(this.getBanks().getRecPartBank());
+            DataBank recHBTrkbank = event.getBank(this.getBanks().getRecTrackBank());
+            DataBank hbURCrossBank = event.getBank(this.getBanks().getInputURWellCrossesBank());  
+            
+            startTime = recHBEventbank.getFloat("startTime", 0);
+            
+            Map<Integer, Integer> map_trkIndex_pIndex = new HashMap();            
+            for(int row = 0; row < recHBTrkbank.rows(); row++){
+                int detectorType = recHBTrkbank.getByte("detector", row);
+                if(detectorType == DetectorType.DC.getDetectorId()) map_trkIndex_pIndex.put((int)recHBTrkbank.getShort("index", row), (int)recHBTrkbank.getShort("pindex", row));
+            }
+            Map<Integer, Double> map_pIndex_beta = new HashMap();
+            for(int row = 0; row < recHBPartbank.rows(); row++){
+                map_pIndex_beta.put(row, (double)recHBPartbank.getFloat("beta", row));
+            }
+            for(int trkIndex : map_trkIndex_pIndex.keySet()){
+                int pId = map_trkIndex_pIndex.get(trkIndex);
+                if(map_pIndex_beta.containsKey(pId)) map_trkIndex_beta.put(trkIndex, map_pIndex_beta.get(pId));
+            }
+            
+            for(int row = 0; row < recHBTrkbank.rows(); row++){
+                int crsId = hbURCrossBank.getShort("id", row);
+                double pathLengthCluster1 = hbURCrossBank.getFloat("cluster1_pathLength", row);
+                double pathLengthCluster2 = hbURCrossBank.getFloat("cluster2_pathLength", row);
+                map_urCrssId_pathLengthcls1.put(crsId, pathLengthCluster1);
+                map_urCrssId_pathLengthcls2.put(crsId, pathLengthCluster2);
+            }                        
+        }
+        
         //DataBank trkcovbank = event.getBank("TimeBasedTrkg::TBCovMat");
         int trkrows = trkbank.rows();
         Track[] TrackArray = new Track[trkrows];
@@ -202,14 +241,14 @@ public class DCURWellTBEngine extends DCEngine {
                     trkbank.getFloat("tx", i), trkbank.getFloat("ty", i));
             HBFinalSV.setZ(trkbank.getFloat("z", i));
             HBtrk.setFinalStateVec(HBFinalSV);
-            
+                        
             int urcross1_id =  trkbank.getShort("URWellCross1_ID", i);
             int urcross2_id =  trkbank.getShort("URWellCross2_ID", i);
             List<URWellCross> uRWellCrossesHB = new ArrayList();
             if(urcross1_id > 0){
                 for(URWellCross crs: urCrosses){
                     if(crs.id() == urcross1_id && crs.get_tid() == HBtrk.get_Id()){
-                        uRWellCrossesHB.add(crs);
+                        uRWellCrossesHB.add(crs);                  
                         break;
                     }
                 }
@@ -222,7 +261,21 @@ public class DCURWellTBEngine extends DCEngine {
                     }
                 }
             }                        
-            HBtrk.set_URWellCrosses(uRWellCrossesHB);  
+            
+            // Set uRWell coincidence with HB track in time
+            if(startTime != -999 && map_trkIndex_beta.containsKey(i)){
+                double beta = map_trkIndex_beta.get(i);
+                for(URWellCross crs : uRWellCrossesHB){
+                    if(map_urCrssId_pathLengthcls1.containsKey(crs.id())){
+                        double flightTimeCluster1 = map_urCrssId_pathLengthcls1.get(crs.id()) / (beta * Constants.SPEEDLIGHT);
+                        double flightTimeCluster2 = map_urCrssId_pathLengthcls2.get(crs.id()) / (beta * Constants.SPEEDLIGHT);
+                        if(Math.abs(crs.getCluster1().time() - startTime - flightTimeCluster1) > URWTConstants.HBCOINCTIME) crs.getCluster1().setIsHBTimeCoinc(false);
+                        if(Math.abs(crs.getCluster2().time() - startTime - flightTimeCluster2) > URWTConstants.HBCOINCTIME) crs.getCluster2().setIsHBTimeCoinc(false);                                                 
+                    }
+                }
+            }
+            
+            HBtrk.set_URWellCrosses(uRWellCrossesHB);              
             
             TrackArray[HBtrk.get_Id()-1] = HBtrk; 
         }
@@ -668,14 +721,14 @@ public class DCURWellTBEngine extends DCEngine {
         List<URWellCross> urCrosses = trk.get_URWellCrosses();
         if(!urCrosses.isEmpty()){
             for(URWellCross urCross : urCrosses){
-                if(urCross.getCluster1() != null) {
+                if(urCross.getCluster1() != null && urCross.getCluster1().getIsHBTimeCoinc()) {
                     HitOnTrack urhot = new HitOnTrack(urCross.sector(), urCross.getCluster1().layer(), urCross.getCluster1().getLineLocal(),
                              URWTConstants.URWELLRESOLUTIONTB[0], urCross.getCluster1().getLineLocal().origin().z());            
                     urhot.isDCHit = false;
                     hOTS.add(urhot);
                 } 
 
-                if(urCross.getCluster2() != null) {
+                if(urCross.getCluster2() != null && urCross.getCluster2().getIsHBTimeCoinc()) {
                     HitOnTrack urhot = new HitOnTrack(urCross.sector(), urCross.getCluster2().layer(), urCross.getCluster2().getLineLocal(),
                              URWTConstants.URWELLRESOLUTIONTB[1], urCross.getCluster2().getLineLocal().origin().z());            
                     urhot.isDCHit = false;

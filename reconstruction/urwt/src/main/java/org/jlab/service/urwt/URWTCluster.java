@@ -19,14 +19,14 @@ public class URWTCluster extends ArrayList<URWRStrip> {
     private int                 id;  
     private Line3D              clusterLine   = new Line3D();
     public int                  indexMaxStrip = -1;
-    private byte                clusterStatus =  1;
+    private byte                clusterStatus =  0;
     
     public URWTCluster(URWRStrip strip){
         this.desc.setSectorLayerComponent(strip.getDescriptor().getSector(), 
                                           strip.getDescriptor().getLayer(), 0);
         this.add(strip);
         this.clusterLine.copy(strip.getLine());
-        this.indexMaxStrip = 0;
+        this.indexMaxStrip = 0;        
     }
     
     public int getId() {
@@ -164,6 +164,9 @@ public class URWTCluster extends ArrayList<URWRStrip> {
                 }
                 if(!stripAdded){
                     URWTCluster  newPeak = new URWTCluster(stripList.get(loop)); //Non-adjacent strip seeds new peak
+                    if(Math.abs(newPeak.getTime() - URWTConstants.MEANT)>URWTConstants.DELTATCLUSTER){
+                        newPeak.setStatus(1);
+                    }
                     clusterList.add(newPeak);
                 }
             }

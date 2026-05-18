@@ -117,7 +117,7 @@ public class Banks {
     public String getURWellDCClustersBank() {
         return this.getOutputBank("URWellDCClusters");
     }
-
+    
     public String getSegmentsBank() {
         return this.getOutputBank("Segments");
     }
@@ -128,6 +128,10 @@ public class Banks {
     
     public String getURWellCrossesBank() {
         return this.getOutputBank("URWellCrosses");
+    }
+    
+    public String getInputURWellCrossesBank() {
+        return this.getInputBank("URWellCrosses");
     }
 
     public String getTracksBank() {

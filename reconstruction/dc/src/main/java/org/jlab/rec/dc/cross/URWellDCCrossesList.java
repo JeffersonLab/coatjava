@@ -2,6 +2,7 @@ package org.jlab.rec.dc.cross;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
 import org.jlab.rec.dc.cross.CrossList;
 import org.jlab.rec.urwell.reader.URWellCross;
 import org.jlab.rec.dc.cross.Cross;
@@ -34,6 +35,16 @@ public class URWellDCCrossesList{
             }
         }
     }
+    
+    public void set_URWellDCCrossesList(CrossList crosslists, Map<Integer, List<URWellCross>> map_nnTrkId_urCrses){
+        for(List<Cross> crossList : crosslists){
+            int nnTrkId = crossList.get(0).get_Segment1().get(0).NNTrkId;
+            if(map_nnTrkId_urCrses.containsKey(nnTrkId)){
+                this.add_URWellDCCrosses(map_nnTrkId_urCrses.get(nnTrkId), crossList);
+            }
+            else this.add_URWellDCCrosses(new ArrayList(), crossList);
+        }
+    }    
     
     public void set_URWellDCCrossesList(List<URWellDCCrosses> urDCCrossesList){
         this.urDCCrossesList = urDCCrossesList;
