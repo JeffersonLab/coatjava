@@ -74,9 +74,6 @@ public class DCURComboEngine extends ReconstructionEngine {
     }
 
     @Override
-    public void detectorChanged(int run){}
-
-    @Override
     public boolean init() {
         System.setProperty("ai.djl.pytorch.num_interop_threads", "1");
         System.setProperty("ai.djl.pytorch.num_threads", "1");
@@ -113,7 +110,7 @@ public class DCURComboEngine extends ReconstructionEngine {
     }
     
     @Override
-    public boolean processDataEventUser(DataEvent event) {
+    public boolean processDataEvent(DataEvent event) {
         
         // load DC clusters from bank HitBasedTrkg::Clusters, and uRWell crosses from bank URWT::crosses     
         if (!event.hasBank(inputDCBank) || !event.hasBank(inputURBank)) return true;

@@ -36,7 +36,7 @@
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-geometry</artifactId>
-      <version>13.8.3-SNAPSHOT</version>
+      <version>13.8.2-SNAPSHOT</version>
     </dependency>
 
     <dependency>
