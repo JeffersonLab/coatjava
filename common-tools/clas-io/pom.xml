@@ -72,7 +72,7 @@
             <configuration>
               <target>
                 <exec executable="python3">
-                  <arg value="../../libexec/bank-schema-enums"/>
+                    <arg value="./bank-schema-enums"/>
                 </exec>
               </target>
             </configuration>
