@@ -1,7 +1,7 @@
 package org.jlab.rec.ahdc.Track;
 
 import org.jlab.rec.ahdc.AI.InterCluster;
-import org.jlab.rec.ahdc.Cluster.Cluster;
+import org.jlab.rec.ahdc.AHDCCluster.AHDCCluster;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import org.jlab.rec.ahdc.PreCluster.PreClusterFinder;
@@ -12,7 +12,7 @@ import java.util.List;
 
 /** A track candidate: the output of a track finder.
  *
- *  <p>A candidate is a set of hits grouped into {@link Cluster}s (and the
+ *  <p>A candidate is a set of hits grouped into {@link AHDCCluster}s (and the
  *  derived {@link InterCluster}s). It is <em>not</em> a fitted track — fitting
  *  consumes a {@code TrackCandidate} and produces a {@link Track}.</p>
  *
@@ -23,7 +23,7 @@ import java.util.List;
 public class TrackCandidate {
 
 	private       double         _Distance;
-	private       List<Cluster>  _Clusters = new ArrayList<>();
+	private       List<AHDCCluster>  _Clusters = new ArrayList<>();
 	private       List<InterCluster>  _InterClusters = new ArrayList<>();
 	private       boolean        _Used     = false;
 	private final ArrayList<Hit> hits      = new ArrayList<>();
@@ -43,7 +43,7 @@ public class TrackCandidate {
     private int predicted_ATOF_layer = -1;
     private int predicted_ATOF_wedge = -1;
 
-	public TrackCandidate(List<Cluster> clusters) {
+	public TrackCandidate(List<AHDCCluster> clusters) {
 		this._Clusters = clusters;
 		this._Distance = 0;
 		for (int i = 0; i < clusters.size() - 1; i++) {
@@ -58,7 +58,7 @@ public class TrackCandidate {
     }
 
 	private void generateHitList() {
-		for (Cluster cluster : _Clusters) {
+		for (AHDCCluster cluster : _Clusters) {
 			for (PreCluster preCluster : cluster.get_PreClusters_list()) {
 				hits.addAll(preCluster.get_hits_list());
 			}
@@ -89,7 +89,7 @@ public class TrackCandidate {
 		return _Distance;
 	}
 
-	public List<Cluster> get_Clusters() {
+	public List<AHDCCluster> get_Clusters() {
 		return _Clusters;
 	}
 
@@ -124,7 +124,7 @@ public class TrackCandidate {
 	public void set_trackId(int _trackId) {
 		trackId = _trackId;
 		// set trackId for clusters
-		for(Cluster cluster : this._Clusters) {
+		for(AHDCCluster cluster : this._Clusters) {
 			cluster.set_trackId(_trackId);
 		}
 		// set trackId for interclusters

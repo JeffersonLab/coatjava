@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.jlab.io.base.DataBank;
-import org.jlab.rec.ahdc.Cluster.Cluster;
+import org.jlab.rec.ahdc.AHDCCluster.AHDCCluster;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import org.jlab.rec.ahdc.PreCluster.PreClusterFinder;
@@ -66,7 +66,7 @@ public final class GNNPrediction {
             }
             if (trackHits.isEmpty()) continue;
 
-            ArrayList<Cluster> clusters = buildSuperlayerClusters(trackHits);
+            ArrayList<AHDCCluster> clusters = buildSuperlayerClusters(trackHits);
             if (clusters.size() < 3) continue;   // matches the downstream >=3 filter
 
             TrackCandidate candidate = new TrackCandidate(clusters);
@@ -80,13 +80,13 @@ public final class GNNPrediction {
         return out;
     }
 
-    /** One {@link Cluster} per superlayer built from two {@link PreCluster}s (one
+    /** One {@link AHDCCluster} per superlayer built from two {@link PreCluster}s (one
      *  per layer within the superlayer). Using real PreClusters — instead of the
-     *  3-arg {@code Cluster(x,y,z)} constructor — keeps
+     *  3-arg {@code AHDCCluster(x,y,z)} constructor — keeps
      *  {@code Track.generateHitList()} and {@code DocaClusterRefiner}'s stereo
      *  pairing working for GNN-discovered tracks just like they do for MLP tracks.
      */
-    private static ArrayList<Cluster> buildSuperlayerClusters(List<Hit> hits) {
+    private static ArrayList<AHDCCluster> buildSuperlayerClusters(List<Hit> hits) {
         // Feed the track's hits through the same preclustering the MLP path uses.
         // findPreclusters mutates its input (it calls setUse(true) on consumed
         // hits), so pass a copy and ensure each hit starts unmarked.
@@ -109,20 +109,20 @@ public final class GNNPrediction {
             if (prev == null || pc.get_Num_wire() > prev.get_Num_wire()) slot[layerIdx] = pc;
         }
 
-        ArrayList<Cluster> clusters = new ArrayList<>();
+        ArrayList<AHDCCluster> clusters = new ArrayList<>();
         // Iterate superlayers in ascending order to keep downstream output stable.
         // If both stereo layers have a PreCluster, pair them (full stereo cluster).
-        // If only one has hits, use the single-layer Cluster(PreCluster) ctor —
+        // If only one has hits, use the single-layer AHDCCluster(PreCluster) ctor —
         // DocaClusterRefiner handles PreClusters_list.size() != 2 with a
         // degenerate DocaCluster fallback, so the helix fit still runs.
         for (int sl = 1; sl <= 5; sl++) {
             PreCluster[] slot = bySuperlayer.get(sl);
             if (slot == null) continue;
             if (slot[0] != null && slot[1] != null) {
-                clusters.add(new Cluster(slot[0], slot[1]));
+                clusters.add(new AHDCCluster(slot[0], slot[1]));
             } else {
                 PreCluster single = (slot[0] != null) ? slot[0] : slot[1];
-                if (single != null) clusters.add(new Cluster(single));
+                if (single != null) clusters.add(new AHDCCluster(single));
             }
         }
         return clusters;

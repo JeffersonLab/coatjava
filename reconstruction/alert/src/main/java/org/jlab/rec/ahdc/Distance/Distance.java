@@ -1,6 +1,6 @@
 package org.jlab.rec.ahdc.Distance;
 
-import org.jlab.rec.ahdc.Cluster.Cluster;
+import org.jlab.rec.ahdc.AHDCCluster.AHDCCluster;
 import org.jlab.rec.ahdc.Track.TrackCandidate;
 
 import java.util.ArrayList;
@@ -20,7 +20,7 @@ public class Distance {
         _AHDCTrackCandidates = new ArrayList<>();
     }
 
-    public void find_track(List<Cluster> AHDC_Cluster){
+    public void find_track(List<AHDCCluster> AHDC_Cluster){
         find_track_4_clusters(AHDC_Cluster);
         find_track_3_clusters(AHDC_Cluster);
     }
@@ -41,14 +41,14 @@ public class Distance {
         return combinations;
     }
 
-    private void find_track_4_clusters(List<Cluster> AHDC_Cluster){
-        List<Cluster> clusters_to_remove = new ArrayList<>();
-        List<Cluster> layer1 = new ArrayList<>(); // List of all cluster with a radius equal 35
-        List<Cluster> layer2 = new ArrayList<>(); // List of all cluster with a radius equal 45
-        List<Cluster> layer3 = new ArrayList<>(); // List of all cluster with a radius equal 55
-        List<Cluster> layer4 = new ArrayList<>(); // List of all cluster with a radius equal 65
+    private void find_track_4_clusters(List<AHDCCluster> AHDC_Cluster){
+        List<AHDCCluster> clusters_to_remove = new ArrayList<>();
+        List<AHDCCluster> layer1 = new ArrayList<>(); // List of all cluster with a radius equal 35
+        List<AHDCCluster> layer2 = new ArrayList<>(); // List of all cluster with a radius equal 45
+        List<AHDCCluster> layer3 = new ArrayList<>(); // List of all cluster with a radius equal 55
+        List<AHDCCluster> layer4 = new ArrayList<>(); // List of all cluster with a radius equal 65
 
-        for(Cluster cluster : AHDC_Cluster){
+        for(AHDCCluster cluster : AHDC_Cluster){
             if(cluster.get_Radius() == 35){
                 layer1.add(cluster);
             }
@@ -62,15 +62,15 @@ public class Distance {
                 layer4.add(cluster);
             }
         }
-        List<List<Cluster>> merged_list = new ArrayList<>();
+        List<List<AHDCCluster>> merged_list = new ArrayList<>();
         merged_list.add(layer1);
         merged_list.add(layer2);
         merged_list.add(layer3);
         merged_list.add(layer4);
-        List<List<Cluster>> all_combinations = computeCombinations2(merged_list);
+        List<List<AHDCCluster>> all_combinations = computeCombinations2(merged_list);
 
         List<TrackCandidate> all_track = new ArrayList<>();
-        for(List<Cluster> combination : all_combinations){
+        for(List<AHDCCluster> combination : all_combinations){
             all_track.add(new TrackCandidate(combination));
         }
 
@@ -102,7 +102,7 @@ public class Distance {
                     ArrayList<Double> x_ = new ArrayList<>();
                     ArrayList<Double> y_ = new ArrayList<>();
                     ArrayList<Double> w_ = new ArrayList<>(); // weight for circlefit
-                    for(Cluster cluster : other_track.get_Clusters()){
+                    for(AHDCCluster cluster : other_track.get_Clusters()){
                         x_.add(cluster.get_X());
                         y_.add(cluster.get_Y());
                         w_.add(1.);
@@ -124,27 +124,27 @@ public class Distance {
             }
         }
 
-        List<Cluster> clusters_to_remove_without_double = new ArrayList<>();
-        for(Cluster cluster : clusters_to_remove){
+        List<AHDCCluster> clusters_to_remove_without_double = new ArrayList<>();
+        for(AHDCCluster cluster : clusters_to_remove){
             if(!containsCluster(clusters_to_remove_without_double, cluster.get_Phi(), cluster.get_Radius())){
                 clusters_to_remove_without_double.add(cluster);
             }
         }
 
-        for(Cluster cluster : clusters_to_remove_without_double){
+        for(AHDCCluster cluster : clusters_to_remove_without_double){
             AHDC_Cluster.remove(cluster);
         }
     }
 
-    public boolean containsCluster(final List<Cluster> list, double phi, double radius){
+    public boolean containsCluster(final List<AHDCCluster> list, double phi, double radius){
         return list.stream().anyMatch(o -> o.get_Radius() == (radius) && o.get_Phi() == phi);
     }
 
 
-   private ArrayList<ArrayList<Cluster>> combination(List<Cluster> arr, ArrayList<Cluster> data, int start,
+   private ArrayList<ArrayList<AHDCCluster>> combination(List<AHDCCluster> arr, ArrayList<AHDCCluster> data, int start,
                                            int end, int index, int r) {
 
-        ArrayList<ArrayList<Cluster>> all = new ArrayList<>();
+        ArrayList<ArrayList<AHDCCluster>> all = new ArrayList<>();
         if (index == r) {
             all.add(data);
         }
@@ -157,11 +157,11 @@ public class Distance {
         return all;
     }
 
-    private void find_track_3_clusters(List<Cluster> AHDC_Cluster){
-        ArrayList<ArrayList<Cluster>> all_combinations = combination(AHDC_Cluster, new ArrayList<Cluster>(),0, AHDC_Cluster.size()-1, 0, 3);
+    private void find_track_3_clusters(List<AHDCCluster> AHDC_Cluster){
+        ArrayList<ArrayList<AHDCCluster>> all_combinations = combination(AHDC_Cluster, new ArrayList<AHDCCluster>(),0, AHDC_Cluster.size()-1, 0, 3);
 
         List<TrackCandidate> all_track = new ArrayList<>();
-        for(List<Cluster> combination : all_combinations){
+        for(List<AHDCCluster> combination : all_combinations){
             all_track.add(new TrackCandidate(combination));
         }
 
@@ -193,7 +193,7 @@ public class Distance {
                     ArrayList<Double> x_ = new ArrayList<>();
                     ArrayList<Double> y_ = new ArrayList<>();
                     ArrayList<Double> w_ = new ArrayList<>(); // weight for circlefit
-                    for(Cluster cluster : other_track.get_Clusters()){
+                    for(AHDCCluster cluster : other_track.get_Clusters()){
                         x_.add(cluster.get_X());
                         y_.add(cluster.get_Y());
                         w_.add(1.);

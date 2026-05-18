@@ -1,6 +1,6 @@
 package org.jlab.rec.ahdc.HoughTransform;
 
-import org.jlab.rec.ahdc.Cluster.Cluster;
+import org.jlab.rec.ahdc.AHDCCluster.AHDCCluster;
 import Jama.Matrix;
 import org.jlab.rec.ahdc.Track.TrackCandidate;
 
@@ -15,7 +15,7 @@ public class HoughTransform {
         _AHDCTrackCandidates = new ArrayList<>();
     }
 
-    public void find_tracks(List<Cluster> AHDC_Clusters){
+    public void find_tracks(List<AHDCCluster> AHDC_Clusters){
         int matrix_size = 300;
         boolean delete = false;
         ArrayList<Integer> delete_i_max = new ArrayList<>();
@@ -23,7 +23,7 @@ public class HoughTransform {
 
         while(true){
             Matrix B = new Matrix(matrix_size + 1, matrix_size + 1, 0);
-            for (Cluster cluster : AHDC_Clusters) {
+            for (AHDCCluster cluster : AHDC_Clusters) {
                 double new_u = (cluster.get_U() + 0.06) / 0.12;
                 double new_v = (cluster.get_V() + 0.06) / 0.12;
                 B.set((int) (new_u * matrix_size), (int) (new_v * matrix_size), 1);
@@ -85,8 +85,8 @@ public class HoughTransform {
             double a = Math.cos(theta)/(2*rho);
             double b = Math.sin(theta)/(2*rho);
 
-            ArrayList<Cluster> possible_cluster_of_track = new ArrayList<>();
-            for(Cluster cluster : AHDC_Clusters){
+            ArrayList<AHDCCluster> possible_cluster_of_track = new ArrayList<>();
+            for(AHDCCluster cluster: AHDC_Clusters){
                 double distance = Math.abs(Math.sqrt(Math.pow((cluster.get_X() - a),2)  + Math.pow((cluster.get_Y() - b),2)) - r);
                 if(distance < 4){
                     possible_cluster_of_track.add(cluster);
@@ -97,10 +97,10 @@ public class HoughTransform {
                 double x_0 = possible_cluster_of_track.get(0).get_X();
                 double y_0 = possible_cluster_of_track.get(0).get_Y();
 
-                ArrayList<Cluster> cluster_track = new ArrayList<>();
-                ArrayList<Cluster> cluster_to_remove = new ArrayList<>();
+                ArrayList<AHDCCluster> cluster_track = new ArrayList<>();
+                ArrayList<AHDCCluster> cluster_to_remove = new ArrayList<>();
 
-                for(Cluster other_cluster : possible_cluster_of_track){
+                for(AHDCCluster other_cluster: possible_cluster_of_track){
                     double distance = Math.sqrt( (other_cluster.get_X() - x_0)*(other_cluster.get_X() - x_0)
                             + (other_cluster.get_Y() - y_0)*(other_cluster.get_Y() - y_0) );
                     if(distance < 50){
@@ -119,21 +119,21 @@ public class HoughTransform {
                     }
                 }
 
-                ArrayList<Cluster> cluster_to_remove_without_double = new ArrayList<>();
-                for(Cluster cluster : cluster_to_remove){
+                ArrayList<AHDCCluster> cluster_to_remove_without_double = new ArrayList<>();
+                for(AHDCCluster cluster: cluster_to_remove){
                     if(!containsCluster(cluster_to_remove_without_double, cluster.get_Phi(), cluster.get_Radius())){
                         cluster_to_remove_without_double.add(cluster);
                     }
                 }
 
-                for(Cluster cluster : cluster_to_remove_without_double){
+                for(AHDCCluster cluster: cluster_to_remove_without_double){
                     cluster_track.remove(cluster);
                 }
 
                 if(cluster_track.size() > 2){
                     TrackCandidate track = new TrackCandidate(cluster_track);
                     _AHDCTrackCandidates.add(track);
-                    for(Cluster cluster : cluster_track){AHDC_Clusters.remove(cluster);}
+                    for(AHDCCluster cluster: cluster_track){AHDC_Clusters.remove(cluster);}
                 }
                 else{
                     delete = true;
@@ -149,7 +149,7 @@ public class HoughTransform {
         }
     }
 
-    public boolean containsCluster(final List<Cluster> list, double phi, double radius){
+    public boolean containsCluster(final List<AHDCCluster> list, double phi, double radius){
         return list.stream().anyMatch(o -> o.get_Radius() == (radius) && o.get_Phi() == phi);
     }
 

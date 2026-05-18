@@ -1,7 +1,7 @@
 package org.jlab.rec.ahdc.TrackFinding;
 
-import org.jlab.rec.ahdc.Cluster.Cluster;
-import org.jlab.rec.ahdc.Cluster.ClusterFinder;
+import org.jlab.rec.ahdc.AHDCCluster.AHDCCluster;
+import org.jlab.rec.ahdc.AHDCCluster.AHDCClusterFinder;
 import org.jlab.rec.ahdc.Distance.Distance;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
@@ -18,9 +18,9 @@ public class DistanceTrackFinder implements TrackFinder {
         pcf.findPreclusters(hits);
         ArrayList<PreCluster> preclusters = pcf.get_AHDCPreClusters();
 
-        ClusterFinder cf = new ClusterFinder();
+        AHDCClusterFinder cf = new AHDCClusterFinder();
         cf.findCluster(preclusters);
-        ArrayList<Cluster> clusters = cf.get_AHDCClusters();
+        ArrayList<AHDCCluster> clusters = cf.get_AHDCClusters();
 
         Distance distance = new Distance();
         distance.find_track(clusters);

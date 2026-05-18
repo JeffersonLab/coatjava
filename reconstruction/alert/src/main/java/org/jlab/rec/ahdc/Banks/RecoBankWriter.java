@@ -4,7 +4,7 @@ import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
 import org.jlab.rec.ahdc.AI.InterCluster;
 import org.jlab.rec.ahdc.AI.TrackPrediction;
-import org.jlab.rec.ahdc.Cluster.Cluster;
+import org.jlab.rec.ahdc.AHDCCluster.AHDCCluster;
 import org.jlab.rec.ahdc.DocaCluster.DocaCluster;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
@@ -50,7 +50,7 @@ public class RecoBankWriter {
 		return bank;
 	}
 
-	public DataBank fillClustersBank(DataEvent event, ArrayList<Cluster> clusters) {
+	public DataBank fillClustersBank(DataEvent event, ArrayList<AHDCCluster> clusters) {
 		if (clusters == null || clusters.size() == 0) return null;
 
 		DataBank bank = event.createBank("AHDC::clusters", clusters.size());

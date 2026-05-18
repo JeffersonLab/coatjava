@@ -1,7 +1,7 @@
 package org.jlab.rec.ahdc.Track;
 
 import org.jlab.rec.ahdc.AI.InterCluster;
-import org.jlab.rec.ahdc.Cluster.Cluster;
+import org.jlab.rec.ahdc.AHDCCluster.AHDCCluster;
 import org.jlab.rec.ahdc.HelixFit.HelixFitObject;
 import org.jlab.rec.ahdc.Hit.Hit;
 
@@ -123,7 +123,7 @@ public class Track {
 	public int               get_sum_adc()       { return candidate.get_sum_adc(); }
 	public void              set_sum_adc(int s)   { candidate.set_sum_adc(s); }
 	public ArrayList<Hit>    getHits()            { return candidate.getHits(); }
-	public List<Cluster>     get_Clusters()       { return candidate.get_Clusters(); }
+	public List<AHDCCluster> get_Clusters()       { return candidate.get_Clusters(); }
 	public List<InterCluster> getInterclusters()  { return candidate.getInterclusters(); }
 	public double            get_Distance()       { return candidate.get_Distance(); }
 	public boolean           is_Used()            { return candidate.is_Used(); }

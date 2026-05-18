@@ -13,7 +13,7 @@ import java.util.logging.Logger;
  *  hits and (when present) the ATOF::hits bank, runs the exported edge
  *  scorer, extracts tracks via connected components on edges with score
  *  &ge; 0.1, and packages each surviving track as a {@link TrackCandidate}
- *  backed by per-superlayer {@link org.jlab.rec.ahdc.Cluster.Cluster}s.
+ *  backed by per-superlayer {@link org.jlab.rec.ahdc.AHDCCluster.AHDCCluster}s.
  */
 public class GNNTrackFinder implements TrackFinder {
 

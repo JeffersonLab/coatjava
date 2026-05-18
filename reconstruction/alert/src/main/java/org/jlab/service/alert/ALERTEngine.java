@@ -25,7 +25,7 @@ import org.jlab.rec.alert.banks.RecoBankWriter;
 import org.jlab.rec.alert.projections.TrackProjector;
 import org.jlab.rec.atof.hit.ATOFHit;
 import org.jlab.rec.ahdc.AI.InterCluster;
-import org.jlab.rec.ahdc.Cluster.Cluster;
+import org.jlab.rec.ahdc.AHDCCluster.AHDCCluster;
 import org.jlab.rec.ahdc.DocaCluster.DocaCluster;
 import org.jlab.rec.ahdc.DocaCluster.DocaClusterRefiner;
 import org.jlab.rec.ahdc.HelixFit.HelixFitJava;
@@ -253,7 +253,7 @@ public class ALERTEngine extends ReconstructionEngine {
                 // helix fit below is skipped (its Track keeps zero parameters).
                 Track track = new Track(cand);
                 AHDC_Tracks.add(track);
-                List<Cluster> originalClusters = cand.get_Clusters();
+                List<AHDCCluster> originalClusters = cand.get_Clusters();
                 ArrayList<DocaCluster> docaClusters = DocaClusterRefiner.buildRefinedClusters(originalClusters);
                 all_docaClusters.addAll(docaClusters);
                 if (docaClusters == null || docaClusters.size() < 3 || originalClusters == null || originalClusters.size() < 3) {
@@ -278,7 +278,7 @@ public class ALERTEngine extends ReconstructionEngine {
             // V) Replace AHDC::hits (now with trackId) and write track-finding output banks
             DataBank recoHitsBank        = ahdcWriter.fillAHDCHitsBank(event, AHDC_Hits);
             DataBank recoPreClusterBank  = ahdcWriter.fillPreClustersBank(event, AHDC_PreClusters);
-            ArrayList<Cluster> AHDC_Clusters = new ArrayList<>();
+            ArrayList<AHDCCluster> AHDC_Clusters = new ArrayList<>();
             for (Track track : AHDC_Tracks) {
                 AHDC_Clusters.addAll(track.get_Clusters());
             }
