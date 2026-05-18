@@ -88,8 +88,12 @@ public class DecoderWriter extends HipoToHipoWriter {
         ((Event)event).read(runConfig);
         ((Event)event).read(helicityAdc);
         helicities.add(HelicityState.createFromFadcBank(helicityAdc, runConfig, conman));
-        if (runConfig.getRows() > 0)
-            unixEventMap.put(runConfig.getInt("event",0),runConfig.getInt("unixTime", 0));
+        if (runConfig.getRows() > 0) {
+            int unix = runConfig.getInt("unixTime",0);
+            int evno = runConfig.getInt("event",0);
+            if (unix > 0) unixEventMap.put(evno, unix);
+            else runConfig.putInt("unixTime",0, unixEventMap.get(unixEventMap.floorKey(evno)));
+        }
         Event t = CLASDecoder4.createTaggedEvent((Event)event, runConfig, tag1banks);
         if (!t.isEmpty()) writer.addEvent(t, 1);
         super.writeEvent(event);
