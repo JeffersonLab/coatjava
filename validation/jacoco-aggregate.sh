@@ -1,14 +1,22 @@
 #!/bin/bash
-# simple script to aggregate jacoco results, until we figure out a better way
+# Prepare JaCoCo report for docs site CI.
+# With single-module Maven layout, target/site/jacoco/ is produced directly.
+# This script copies the single report to publish/ for CI artifact ingestion.
+
+set -e
 
 mkdir -p publish
-rm -r publish
+rm -rf publish
 mkdir -p publish
-for d in $(find -type d -name 'jacoco'); do
-  target=publish/$(echo $d | sed 's;^\./;;')
-  mkdir -p $target
-  cp -r $d/* $target/
-done
+
+# Single module: copy root target/site/jacoco directly
+if [ -d "target/site/jacoco" ]; then
+  cp -r target/site/jacoco publish/
+  echo "Copied target/site/jacoco to publish/jacoco"
+else
+  echo "ERROR: target/site/jacoco not found (build may not have run)" >&2
+  exit 1
+fi
 
 pushd publish
 
@@ -20,19 +28,8 @@ cat << EOF > index.html
 <body>
 <h1>JaCoCo Coverage Summary</h1>
 <ul>
-EOF
-
-indexPages=$(find . -name "index.html" | grep 'jacoco/index')
-[ -z "$indexPages" ] && echo "ERROR: no jacoco HTML pages found" >&2 && exit 1
-for indexPage in $indexPages; do
-  link=$(echo $indexPage | sed 's;^./;;')
-  name=$(echo $link | sed 's;/target/site/.*;;')
-  cat << EOF >> index.html
-<li><a href="$link">$name</a></li>
-EOF
-done
-
-cat << EOF >> index.html
+<li><a href="jacoco/index.html">JaCoCo Coverage Report</a></li>
+</ul>
 </body>
 </html>
 EOF

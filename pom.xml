@@ -2,21 +2,24 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.jlab.clas</groupId>
+  <!--
+    Unified single-module root POM for coatjava (see .sisyphus/plans/maven-merge.md).
+    Replaces the 50-POM multi-module aggregator. The primary jar is the thin
+    `coatjava-<version>.jar` (intra-project classes only); the shaded
+    `coat-libs-<version>.jar` is attached as a secondary artifact in T9
+    (maven-shade-plugin), preserving downstream-consumer compatibility.
+  -->
+
+  <groupId>org.jlab.coat</groupId>
   <artifactId>coatjava</artifactId>
   <version>13.8.4-SNAPSHOT</version>
-  <packaging>pom</packaging>
+  <packaging>jar</packaging>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <coat.deployment.url>file://myLocalMvnRepo</coat.deployment.url> <!-- must be consistent with 'deploy-coatjava.sh' -->
   </properties>
-
-  <modules>
-    <module>common-tools</module>
-    <module>reconstruction</module>
-  </modules>
 
   <repositories>
     <repository>
@@ -28,6 +31,13 @@
       <url>https://clasweb.jlab.org/.jhep/maven</url>
     </repository>
   </repositories>
+
+  <distributionManagement>
+    <repository>
+      <id>${project.artifactId}</id>
+      <url>${coat.deployment.url}</url>
+    </repository>
+  </distributionManagement>
 
   <profiles>
     <profile> <!-- skip unit tests by default -->
@@ -248,6 +258,214 @@
   </dependencyManagement>
 
   <!-- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
+  <!--
+    Union of all external <dependencies> from the 50 pre-merge child POMs.
+    Internal coordinates (org.jlab.clas*, org.jlab.coat*, org.jlab.clas12.detector,
+    and the in-tree cnuphys submodules magfield/snr/splot/swimmer/clas12) are now
+    intra-project source and do NOT appear here. External 3rd-party cnuphys deps
+    (numRec via T2 ABSORB-AS-SOURCE -> dropped; f2jutil -> kept) handled per T7
+    audit. See `.sisyphus/evidence/task-7/analyzer-audit.md`.
+  -->
+  <dependencies>
+
+    <!-- core CLAS12 I/O / framework -->
+    <dependency>
+      <groupId>org.jlab.coda</groupId>
+      <artifactId>jevio</artifactId>
+      <classifier>jar-with-dependencies</classifier>
+    </dependency>
+    <dependency>
+      <groupId>org.jlab.coda</groupId>
+      <artifactId>et</artifactId>
+      <version>14.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jlab.coda</groupId>
+      <artifactId>jclara</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jlab.coda</groupId>
+      <artifactId>jtools</artifactId>
+      <version>2.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jlab.coda</groupId>
+      <artifactId>xmsg</artifactId>
+      <version>2.3</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jlab.jnp</groupId>
+      <artifactId>jnp-hipo</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jlab.jnp</groupId>
+      <artifactId>jnp-hipo4</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jlab.ccdbrcdb</groupId>
+      <artifactId>ccdbrcdb</artifactId>
+    </dependency>
+
+    <!-- math / linear algebra / physics -->
+    <dependency>
+      <groupId>gov.nist.math</groupId>
+      <artifactId>jama</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jama</groupId>
+      <artifactId>jamapack</artifactId>
+      <version>1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jlab.plugins</groupId>
+      <artifactId>jMath</artifactId>
+      <version>1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jlab.plugins</groupId>
+      <artifactId>trackfitter</artifactId>
+      <version>1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-math3</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-text</artifactId>
+      <version>1.15.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.ejml</groupId>
+      <artifactId>ejml-simple</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.freehep</groupId>
+      <artifactId>jminuit</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>java3d</groupId>
+      <artifactId>vecmath</artifactId>
+      <version>1.3.1</version>
+    </dependency>
+
+    <!-- ML / AI -->
+    <dependency>
+      <groupId>j4ml</groupId>
+      <artifactId>j4ml-neuroph</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>j4ml</groupId>
+      <artifactId>j4ml-data</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>j4ml</groupId>
+      <artifactId>j4ml-clas12</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>ai.djl</groupId>
+      <artifactId>api</artifactId>
+    </dependency>
+    <!-- 'ai.djl' runtime dependencies (loaded via SPI / JNI; no compile imports;
+         covered by <ignoredUnusedDeclaredDependencies> below).
+         These are copied into coatjava/lib/services/ by the
+         maven-dependency-plugin copy-dependencies execution, preserving
+         pre-merge behavior of `reconstruction/alert/pom.xml`. -->
+    <dependency>
+      <groupId>ai.djl</groupId>
+      <artifactId>model-zoo</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>ai.djl.pytorch</groupId>
+      <artifactId>pytorch-model-zoo</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>ai.djl.pytorch</groupId>
+      <artifactId>pytorch-engine</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>ai.djl.pytorch</groupId>
+      <artifactId>pytorch-native-cpu</artifactId>
+      <classifier>linux-x86_64</classifier>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>ai.djl.pytorch</groupId>
+      <artifactId>pytorch-jni</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+
+    <!-- visualization / UI -->
+    <dependency>
+      <groupId>org.jlab</groupId>
+      <artifactId>groot</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-base</artifactId>
+      <classifier>linux</classifier>
+    </dependency>
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-graphics</artifactId>
+      <classifier>linux</classifier>
+    </dependency>
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-fxml</artifactId>
+      <classifier>linux</classifier>
+    </dependency>
+    <dependency>
+      <groupId>de.erichseifert</groupId>
+      <artifactId>vectorgraphics2d</artifactId>
+      <version>1.0</version>
+    </dependency>
+
+    <!-- 3rd-party cnuphys deps (numRec was ABSORBED-AS-SOURCE per T2; f2jutil stays external) -->
+    <dependency>
+      <groupId>cnuphys</groupId>
+      <artifactId>f2jutil</artifactId>
+      <version>1.0</version>
+    </dependency>
+
+    <!-- expression parser / utility -->
+    <dependency>
+      <groupId>net.objecthunter</groupId>
+      <artifactId>exp4j</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.json</groupId>
+      <artifactId>json</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.yaml</groupId>
+      <artifactId>snakeyaml</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.annotation</groupId>
+      <artifactId>jakarta.annotation-api</artifactId>
+    </dependency>
+
+    <!-- test -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+    </dependency>
+
+  </dependencies>
+
+  <!-- :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
 
   <build>
 
@@ -259,9 +477,27 @@
       </extension>
     </extensions>
 
+    <!-- src/main/resources filtering for pom.properties (preserves pre-merge coat-libs behavior) -->
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+        <includes>
+          <include>**/pom.properties</include>
+        </includes>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>false</filtering>
+        <excludes>
+          <exclude>**/pom.properties</exclude>
+        </excludes>
+      </resource>
+    </resources>
+
     <!-- .................................................................................. -->
 
-    <plugins> <!-- plugins inherited by all child POMs -->
+    <plugins>
 
       <!-- static analysis -->
       <plugin>
@@ -284,14 +520,6 @@
           <encoding>UTF-8</encoding>
           <doclint>none</doclint>
         </configuration>
-        <executions>
-          <execution>
-            <id>aggregate</id>
-            <goals>
-              <goal>aggregate</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
 
       <!-- general settings -->
@@ -313,7 +541,7 @@
         </configuration>
       </plugin>
 
-      <!-- JAR -->
+      <!-- JAR (thin) -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
@@ -338,7 +566,29 @@
         </configuration>
       </plugin>
 
-      <!-- dependency analysis -->
+      <!-- Surefire: set workingDirectory two levels deep so the legacy test
+           idiom `System.setProperty("CLAS12DIR", "../../")` (baked into
+           ATOFTest, AHDCTest, CVTReconstructionTest, DCReconstructionTest,
+           EBReconstructionTest, ECReconstructionTest) still resolves to
+           ${project.basedir} as it did pre-merge when Surefire ran from
+           reconstruction/<mod>/. Without this, those tests resolve
+           CLAS12DIR to the parent of the repo and cannot find bank schemas
+           under etc/bankdefs/hipo4/. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.5.3</version>
+        <configuration>
+          <workingDirectory>${project.build.directory}/surefire-cwd</workingDirectory>
+        </configuration>
+      </plugin>
+
+      <!-- dependency analysis + ai.djl runtime jar copy
+           - analyze-only enforces no-unused-declared at verify (per AGENTS.md)
+           - copy-dependencies preserves pre-merge behavior of
+             `reconstruction/alert/pom.xml`: copy ai.djl runtime jars into
+             coatjava/lib/services/ at package time, so they end up on the
+             runtime classpath via `libexec/env.sh`. -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
@@ -355,12 +605,35 @@
               <failOnWarning>true</failOnWarning>
               <!-- ignore certain "unused but declared" warnings -->
               <ignoredUnusedDeclaredDependencies>
+                <!-- DJL runtime SPI / JNI loaders (no compile-time imports) -->
                 <ignoredUnusedDeclaredDependency>ai.djl:model-zoo</ignoredUnusedDeclaredDependency>
                 <ignoredUnusedDeclaredDependency>ai.djl.pytorch:pytorch-model-zoo</ignoredUnusedDeclaredDependency>
                 <ignoredUnusedDeclaredDependency>ai.djl.pytorch:pytorch-engine</ignoredUnusedDeclaredDependency>
                 <ignoredUnusedDeclaredDependency>ai.djl.pytorch:pytorch-native-cpu</ignoredUnusedDeclaredDependency>
                 <ignoredUnusedDeclaredDependency>ai.djl.pytorch:pytorch-jni</ignoredUnusedDeclaredDependency>
+                <!-- T11: shaded-only deps (no compile imports in coatjava sources).
+                     Pre-merge these were declared in common-tools/coat-libs/pom.xml,
+                     which skipped the analyzer entirely (<skip>true</skip>). After
+                     merge they are top-level deps of the single project and the
+                     analyzer DOES see them; without these ignores `mvn verify`
+                     would fail with "Unused declared dependencies found".
+                     See .sisyphus/evidence/task-7/analyzer-audit.md §5-6. -->
+                <ignoredUnusedDeclaredDependency>de.erichseifert:vectorgraphics2d</ignoredUnusedDeclaredDependency>
+                <ignoredUnusedDeclaredDependency>net.objecthunter:exp4j</ignoredUnusedDeclaredDependency>
+                <ignoredUnusedDeclaredDependency>org.jama:jamapack</ignoredUnusedDeclaredDependency>
+                <ignoredUnusedDeclaredDependency>org.jlab.plugins:jMath</ignoredUnusedDeclaredDependency>
               </ignoredUnusedDeclaredDependencies>
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy-djl-runtime-jars</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/lib/services</outputDirectory>
+              <includeGroupIds>ai.djl</includeGroupIds>
             </configuration>
           </execution>
         </executions>
@@ -421,43 +694,234 @@
         </executions>
       </plugin>
 
+      <!-- shaded coat-libs uber-jar (T9, ported from pre-merge common-tools/coat-libs/pom.xml).
+           Attached as a secondary artifact alongside the primary thin
+           coatjava-<version>.jar; downstream consumers (iguana, mon12,
+           clas12calibration-dc, clas12alignment, ...) continue to depend
+           on org.jlab.coat:coat-libs:<version> and see byte-equivalent
+           class content per T28 parity check. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.6.2</version>
+        <executions>
+          <execution>
+            <id>shade-coat-libs</id>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <!-- minimal POM for the attached artifact is produced by flatten-maven-plugin (T10) -->
+              <createDependencyReducedPom>false</createDependencyReducedPom>
+              <!-- attach as secondary artifact: target/coatjava-<v>-coat-libs.jar gets renamed
+                   to coat-libs-<v>.jar by the install/deploy logic (see build-coatjava.sh, T20).
+                   Using finalName here would replace the primary thin jar, which we DO NOT want
+                   since lib/services/coatjava-<v>.jar needs to keep being the thin module. -->
+              <shadedArtifactAttached>true</shadedArtifactAttached>
+              <shadedClassifierName>coat-libs</shadedClassifierName>
+              <artifactSet>
+                <excludes>
+                  <!-- jclara stays on classpath via separate dep, not shaded -->
+                  <exclude>org.jlab.coda:jclara</exclude>
+                  <!-- jacoco runtime: NEVER shade into a published artifact -->
+                  <exclude>org.jacoco</exclude>
+                  <!-- ai.djl is delivered via lib/services/ (copy-dependencies execution above);
+                       must NOT be in coat-libs (pre-merge baseline confirms: ai/djl/* absent
+                       from coat-libs-13.8.4-SNAPSHOT.jar) -->
+                  <exclude>ai.djl:*</exclude>
+                  <exclude>ai.djl.pytorch:*</exclude>
+                  <!-- T28 parity exclusions: these deps are pulled in by ai.djl chain or
+                       declared directly in modules whose source code is now part of the
+                       merged tree, but pre-merge `common-tools/coat-libs/pom.xml` never
+                       depended on them so their classes were not shaded. Exclude here to
+                       preserve byte-equivalent class list for downstream consumers. -->
+                  <exclude>net.java.dev.jna:jna</exclude>
+                  <exclude>org.apache.commons:commons-compress</exclude>
+                  <exclude>commons-codec:commons-codec</exclude>
+                  <exclude>commons-io:commons-io</exclude>
+                  <exclude>jakarta.annotation:jakarta.annotation-api</exclude>
+                </excludes>
+              </artifactSet>
+              <filters>
+                <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <!-- signature and certificate files -->
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                    <!-- maven metadata about dependencies -->
+                    <exclude>META-INF/maven/**</exclude>
+                    <!-- module metadata -->
+                    <exclude>module-info.class</exclude>
+                    <!-- IDE files, etc. -->
+                    <exclude>.DS_Store</exclude>
+                    <exclude>.classpath</exclude>
+                    <exclude>.factorypath</exclude>
+                    <exclude>.project</exclude>
+                    <exclude>.settings</exclude>
+                  </excludes>
+                </filter>
+                <!-- T28 parity: drop reconstruction-only packages from the project's own
+                     classes. Pre-merge, reconstruction module JARs shipped exclusively
+                     in lib/services/ and were never shaded into coat-libs. Post-merge
+                     all source compiles into one target/classes/, so this filter is the
+                     only thing keeping reconstruction classes out of the uber-jar.
+
+                     EXCEPTION: org/jlab/rec/vtx/** + org/jlab/rec/service/vtx/** are
+                     KEPT in coat-libs per H1 cross-layer dep (pre-merge
+                     common-tools/clas-decay-tools depended on clas12detector-vtx,
+                     dragging those classes into the shade transitively). Verified by
+                     T28 baseline: org/jlab/rec/vtx/{Constants,DoubleSwim,Particle,
+                     Vertex,VertexFinder,banks/{Reader,Writer}}.class and
+                     org/jlab/rec/service/vtx/VTXEngine.class are present pre-merge.
+
+                     The exclusion list below enumerates exactly the reconstruction
+                     submodule package roots (must update if a new reconstruction module
+                     is added). Listing module-by-module makes intent obvious and avoids
+                     fragile Ant glob negation patterns. -->
+                <filter>
+                  <artifact>${project.groupId}:${project.artifactId}</artifact>
+                  <excludes>
+                    <exclude>org/jlab/rec/ahdc/**</exclude>
+                    <exclude>org/jlab/rec/ai/**</exclude>
+                    <exclude>org/jlab/rec/alert/**</exclude>
+                    <exclude>org/jlab/rec/atof/**</exclude>
+                    <exclude>org/jlab/rec/band/**</exclude>
+                    <exclude>org/jlab/rec/cnd/**</exclude>
+                    <exclude>org/jlab/rec/ctof/**</exclude>
+                    <exclude>org/jlab/rec/cvt/**</exclude>
+                    <exclude>org/jlab/rec/dc/**</exclude>
+                    <exclude>org/jlab/rec/eb/**</exclude>
+                    <exclude>org/jlab/rec/fmt/**</exclude>
+                    <exclude>org/jlab/rec/ft/**</exclude>
+                    <exclude>org/jlab/rec/ftof/**</exclude>
+                    <exclude>org/jlab/rec/htcc/**</exclude>
+                    <exclude>org/jlab/rec/mucal/**</exclude>
+                    <exclude>org/jlab/rec/muhd/**</exclude>
+                    <exclude>org/jlab/rec/muvt/**</exclude>
+                    <exclude>org/jlab/rec/rich/**</exclude>
+                    <exclude>org/jlab/rec/rtpc/**</exclude>
+                    <exclude>org/jlab/rec/tof/**</exclude>
+                    <!-- NOTE: org/jlab/rec/vtx/** intentionally NOT excluded (H1) -->
+                    <exclude>org/jlab/service/ahdc/**</exclude>
+                    <exclude>org/jlab/service/ai/**</exclude>
+                    <exclude>org/jlab/service/alert/**</exclude>
+                    <exclude>org/jlab/service/atof/**</exclude>
+                    <exclude>org/jlab/service/band/**</exclude>
+                    <exclude>org/jlab/service/bg/**</exclude>
+                    <exclude>org/jlab/service/cnd/**</exclude>
+                    <exclude>org/jlab/service/ctof/**</exclude>
+                    <exclude>org/jlab/service/dc/**</exclude>
+                    <exclude>org/jlab/service/eb/**</exclude>
+                    <exclude>org/jlab/service/ec/**</exclude>
+                    <exclude>org/jlab/service/fmt/**</exclude>
+                    <exclude>org/jlab/service/ftof/**</exclude>
+                    <exclude>org/jlab/service/htcc/**</exclude>
+                    <exclude>org/jlab/service/ltcc/**</exclude>
+                    <exclude>org/jlab/service/mc/**</exclude>
+                    <exclude>org/jlab/service/mltn/**</exclude>
+                    <exclude>org/jlab/service/postproc/**</exclude>
+                    <exclude>org/jlab/service/raster/**</exclude>
+                    <exclude>org/jlab/service/recoil/**</exclude>
+                    <exclude>org/jlab/service/rich/**</exclude>
+                    <exclude>org/jlab/service/rtpc/**</exclude>
+                    <exclude>org/jlab/service/swaps/**</exclude>
+                    <exclude>org/jlab/service/swim/**</exclude>
+                    <exclude>org/jlab/service/uber/**</exclude>
+                    <exclude>org/jlab/service/urwt/**</exclude>
+                    <!-- NOTE: org/jlab/service/vtx/** intentionally NOT excluded (H1) -->
+                    <exclude>org/jlab/display/**</exclude>
+                    <exclude>org/jlab/calibration/**</exclude>
+                  </excludes>
+                </filter>
+              </filters>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <manifestEntries>
+                    <!-- Hard-coded to "coat-libs" (NOT ${project.artifactId}) so the attached
+                         artifact's manifest matches the pre-merge coat-libs manifest exactly
+                         (T29 parity check). project.artifactId is "coatjava" post-merge. -->
+                    <Specification-Title>coat-libs</Specification-Title>
+                    <Specification-Version>${project.version}</Specification-Version>
+                    <Implementation-Title>coat-libs</Implementation-Title>
+                    <Implementation-Version>${project.version}</Implementation-Version>
+                    <Implementation-Vendor-Id>${project.groupId}</Implementation-Vendor-Id>
+                  </manifestEntries>
+                </transformer>
+              </transformers>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- flatten-maven-plugin (T10): produce target/.flattened-pom.xml with
+           only external dependencies + GAV info. Used by deploy-coatjava.sh
+           when publishing the coat-libs uber-jar via `mvn deploy:deploy-file
+           -DpomFile=target/.flattened-pom.xml`, so downstream consumers see
+           a clean POM with no internal-module dep references (post-merge
+           there are no internal modules, but the fatjar mode still strips
+           build plugin clutter and unused dependencyManagement). -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>flatten-maven-plugin</artifactId>
+        <version>1.7.3</version>
+        <configuration>
+          <flattenMode>fatjar</flattenMode>
+        </configuration>
+        <executions>
+          <execution>
+            <id>flatten</id>
+            <phase>package</phase>
+            <goals>
+              <goal>flatten</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- maven-deploy-plugin (T24): skip the default deploy lifecycle entirely.
+           Rationale: the default deploy would publish two GAVs we do NOT want:
+             1. org.jlab.coat:coatjava:<v>          (primary thin jar)
+             2. org.jlab.coat:coatjava:<v>:jar:coat-libs   (classifier-attached
+                shaded jar — wrong GAV; downstream consumers depend on the
+                freestanding artifactId `coat-libs`, not on a classifier of
+                `coatjava`)
+           Instead, deploy-coatjava.sh invokes `mvn deploy:deploy-file`
+           explicitly to publish ONLY org.jlab.coat:coat-libs:<v>, with the
+           flattened POM as its published .pom file. The <pomFile> config
+           below documents the intended pomFile location but has no effect
+           while <skip>true</skip> suppresses the default execution.
+           See .sisyphus/evidence/task-24/decision.md for the full rationale. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-deploy-plugin</artifactId>
+        <version>3.1.4</version>
+        <executions>
+          <!-- Skip ONLY the default lifecycle execution (default-deploy).
+               A plugin-level <skip>true</skip> would also suppress explicit
+               `mvn deploy:deploy-file` CLI invocations from
+               deploy-coatjava.sh — T35 dry-run caught exactly this regression
+               with "Skipping artifact deployment" output. Scoping skip to
+               the execution id leaves direct-mojo invocations functional. -->
+          <execution>
+            <id>default-deploy</id>
+            <configuration>
+              <skip>true</skip>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
     </plugins>
 
     <!-- .................................................................................. -->
 
     <pluginManagement>
-      <plugins> <!-- plugin configurations (unused in child POMs unless declared) -->
-
-        <!-- generate minimal POM files for deployment, containing GAV (groupID, artifactId, version) -->
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>flatten-maven-plugin</artifactId>
-          <version>1.7.3</version>
-          <configuration>
-            <flattenMode>fatjar</flattenMode>
-          </configuration>
-          <executions>
-            <execution>
-              <id>flatten</id>
-              <phase>package</phase>
-              <goals>
-                <goal>flatten</goal>
-              </goals>
-            </execution>
-          </executions>
-        </plugin>
-
-        <!-- deployment configuration -->
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-deploy-plugin</artifactId>
-          <version>3.1.4</version>
-          <configuration>
-            <!-- Use the minimal GAV POM -->
-            <pomFile>${project.build.directory}/.flattened-pom.xml</pomFile>
-          </configuration>
-        </plugin>
-
+      <plugins>
+        <!-- (no plugins currently in pluginManagement post-merge; left in
+             place for future per-execution overrides) -->
       </plugins>
     </pluginManagement>
 

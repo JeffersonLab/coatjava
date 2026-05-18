@@ -333,31 +333,37 @@ fi
 # install
 ################################################################################
 
-# NOTE: a maven plugin, such as `maven-assembly-plugin`, would be better, but it seems that they:
-# - require significantly more repetition of the module names and/or generation of additional XML file(s)
-# - seem to break thread safety of `mvn install`, i.e., we'd need to run `mvn package` first, then `mvn install`
-# - we just want copy the produced JAR files to a final installation directory, so the following bash code gets the job done without drama
-install_jars() {
-  src=$(dirname $1)
-  dest=$2
-  [ $# -ge 3 ] && filter="$3" || filter='*.jar'
-  if [ -d $src/target ]; then
-    for f in $(find $src/target -name $filter); do
-      mkdir -p $dest
-      cp $f $dest/
-    done
-  fi
-}
-for pom in $(find reconstruction -name pom.xml); do
-  install_jars $pom $prefix_dir/lib/services
+# Post-merge: the single root pom.xml produces two artifacts in target/
+#   - target/coatjava-<v>.jar               (thin jar, intra-project classes)
+#   - target/coatjava-<v>-coat-libs.jar     (shaded uber-jar, attached with
+#                                            classifier "coat-libs"; see
+#                                            maven-shade-plugin in pom.xml)
+# Install layout (libexec/env.sh puts lib/clas first on classpath; the shaded
+# uber-jar wins on duplicates):
+#   - lib/clas/coat-libs-<v>.jar     <- renamed from coatjava-<v>-coat-libs.jar
+#                                       (preserves downstream consumer file
+#                                       names: iguana, mon12, etc.)
+#   - lib/services/coatjava-<v>.jar  <- the thin jar
+mkdir -p $prefix_dir/lib/clas $prefix_dir/lib/services
+for f in $(find $src_dir/target -maxdepth 1 -name 'coatjava-*-coat-libs.jar'); do
+  fname=$(basename $f)
+  # strip the "coatjava-" prefix and "-coat-libs" classifier infix so the
+  # final filename is coat-libs-<v>.jar (matches pre-merge convention)
+  ver=${fname#coatjava-}
+  ver=${ver%-coat-libs.jar}
+  cp $f $prefix_dir/lib/clas/coat-libs-${ver}.jar
 done
-for pom in $(find common-tools -name pom.xml); do
-  if [[ "$pom" =~ coat-libs ]]; then
-    install_jars $pom $prefix_dir/lib/clas 'coat-libs-*.jar'
-  # else # FIXME, consumers may be need these after https://github.com/JeffersonLab/coatjava/pull/632 ; alternatively add needed deps to `coat-libs`
-  #   install_jars $pom $prefix_dir/lib/services
-  fi
+for f in $(find $src_dir/target -maxdepth 1 -name 'coatjava-*.jar' ! -name '*-coat-libs.jar' ! -name '*-sources.jar' ! -name '*-javadoc.jar'); do
+  cp $f $prefix_dir/lib/services/
 done
+# ai.djl runtime jars are deposited in target/lib/services/ by the
+# maven-dependency-plugin copy-djl-runtime-jars execution (pom.xml).
+# They must reach coatjava/lib/services/ so AHDCEngine etc. can resolve
+# ai/djl/translate/Translator at runtime (pre-merge: copied from
+# reconstruction/alert/target/lib/services/).
+if [ -d $src_dir/target/lib/services ]; then
+  cp $src_dir/target/lib/services/*.jar $prefix_dir/lib/services/
+fi
 
 echo "installed coatjava to: $prefix_dir"
 
