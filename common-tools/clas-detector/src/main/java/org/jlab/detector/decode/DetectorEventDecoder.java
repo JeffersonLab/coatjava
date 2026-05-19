@@ -1,7 +1,6 @@
 package org.jlab.detector.decode;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -105,18 +104,18 @@ public class DetectorEventDecoder {
         keysMicromega= new HashSet<>();
         tableTrans = new HashMap<>();
         tableFitter = new HashMap<>();
+
         keysFilter.add(DetectorType.DC);
 
         tableTrans.put(DetectorType.HTCC, "/daq/tt/clasdev/htcc");
         tableTrans.put(DetectorType.BST, "/daq/tt/clasdev/svt");
         tableTrans.put(DetectorType.RTPC, "/daq/tt/clasdev/rtpc");
-        translationManager.init(tableTrans.values().stream().collect(Collectors.toList()));
 
         tableFitter.put(DetectorType.HTCC, "/daq/fadc/clasdev/htcc");
+
+        translationManager.init(tableTrans.values().stream().collect(Collectors.toList()));
         fitterManager.init(tableFitter.values().stream().collect(Collectors.toList()));
-        
-        scalerManager.init(Arrays.asList(new String[]{"/runcontrol/fcup","/runcontrol/slm","/runcontrol/hwp",
-                                                      "/runcontrol/helicity","/daq/config/scalers/dsc1"}));
+        scalerManager.init("/runcontrol/slm","/runcontrol/hwp","/runcontrol/helicity","/daq/config/scalers/dsc1");
     }
 
     public final void initDecoder() {
@@ -156,7 +155,6 @@ public class DetectorEventDecoder {
         tableTrans.put(DetectorType.RASTER, "/daq/tt/raster");
         tableTrans.put(DetectorType.ATOF,   "/daq/tt/atof");
         tableTrans.put(DetectorType.AHDC,   "/daq/tt/ahdc");
-        translationManager.init(tableTrans.values().stream().collect(Collectors.toList()));
 
         tableFitter.put(DetectorType.FTCAL,  "/daq/fadc/ftcal");
         tableFitter.put(DetectorType.FTHODO, "/daq/fadc/fthodo");
@@ -174,10 +172,10 @@ public class DetectorEventDecoder {
         tableFitter.put(DetectorType.BAND,   "/daq/fadc/band");
         tableFitter.put(DetectorType.RASTER, "/daq/fadc/raster");
         tableFitter.put(DetectorType.AHDC,   "/daq/fadc/ahdc");
+        
+        translationManager.init(tableTrans.values().stream().collect(Collectors.toList()));
         fitterManager.init(tableFitter.values().stream().collect(Collectors.toList()));
- 
-        scalerManager.init(Arrays.asList(new String[]{"/runcontrol/fcup",
-            "/runcontrol/slm","/runcontrol/hwp","/runcontrol/helicity","/daq/config/scalers/dsc1"}));
+        scalerManager.init("/runcontrol/slm","/runcontrol/hwp","/runcontrol/helicity","/daq/config/scalers/dsc1");
 
         if (initializeManagers) {
             translationManager.init(tablesTrans);
