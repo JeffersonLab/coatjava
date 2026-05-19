@@ -51,11 +51,14 @@ public class URWTEngine extends ReconstructionEngine {
         return true;
     }
 
-
-
+    @Override
+    public void detectorChanged(int runNumber) {
+        String variationName = Optional.ofNullable(this.getEngineConfigString("variation")).orElse("default");
+        factory = new URWTStripFactory(runNumber, variationName);
+    }
 
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         
         List<URWRStrip>     strips = URWRStrip.getStrips(event, factory, this.getConstantsManager());
         List<URWTCluster> clusters = URWTCluster.createClusters(strips);
@@ -180,7 +183,7 @@ public class URWTEngine extends ReconstructionEngine {
         while(reader.hasEvent()) {
             DataEvent event = reader.getNextEvent();
 
-            engine.processDataEvent(event);
+            engine.processDataEventUser(event);
             
             double xtrue = 0;
             double ytrue = 0;

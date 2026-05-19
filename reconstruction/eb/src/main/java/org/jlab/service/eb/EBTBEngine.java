@@ -24,8 +24,8 @@ public class EBTBEngine extends EBEngine {
     }
 
     @Override
-    public boolean processDataEvent(DataEvent de) {
-        final boolean ret = super.processDataEvent(de,ebScalers);
+    public boolean processDataEventUser(DataEvent de) {
+        final boolean ret = super.processDataEventUser(de,ebScalers);
         this.linkTracks(de);
         return ret;
     }

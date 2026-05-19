@@ -271,14 +271,16 @@ jobs:
         id:
           - kpp
           - eb-ep
+          - eb-en
           - eb-eg
           - eb-epc
           - eb-enc
           - eb-eftpi
         include:
-          # run all tests on ubuntu
+          # run selected tests on ubuntu
           - { id: kpp,      cmd: ./run-advanced-tests.sh }
           - { id: eb-ep,    cmd: ./run-eb-tests.sh -100 electronproton   }
+          - { id: eb-en,    cmd: ./run-eb-tests.sh -100 electronneutron  }
           - { id: eb-eg,    cmd: ./run-eb-tests.sh -100 electrongamma    }
           - { id: eb-epc,   cmd: ./run-eb-tests.sh -100 electronprotonC  }
           - { id: eb-enc,   cmd: ./run-eb-tests.sh -100 electronneutronC }

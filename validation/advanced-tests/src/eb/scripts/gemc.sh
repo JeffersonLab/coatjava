@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 usage() { echo "Usage: $0 [-g GEMC] [-n NEV] [-p PARTS] [-c GCARD] [-m]" 1>&2; exit $1; }
 
 run=11
