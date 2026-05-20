@@ -3,8 +3,8 @@ io-services:
     class: org.jlab.io.clara.DecoderReader
     name: DecoderReader
   writer:
-    class: org.jlab.io.clara.DecoderWriter
-    name: DecoderWriter
+    class: org.jlab.io.clara.Clas12Writer
+    name: Clas12Writer
 services:
   # FIXME: replace with dummy/useful service
   - class: org.jlab.service.eb.EBTBEngine

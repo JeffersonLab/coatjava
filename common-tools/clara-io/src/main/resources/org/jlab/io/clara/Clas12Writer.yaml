@@ -1,6 +1,6 @@
 ---
-name: DecoderWriter
-engine: org.jlab.io.clara.DecoderWriter
+name: Clas12Writer
+engine: org.jlab.io.clara.Clas12Writer
 type: java
 
 author: Nathan Baltzell
