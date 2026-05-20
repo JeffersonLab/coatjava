@@ -547,12 +547,15 @@ public class CLASDecoder {
 
     public static Event createTaggedEvent(Event e, Bank runConfig, Bank... banks) {
         Event t = new Event();
+        e.read(runConfig);
+        if (runConfig.getRows()>0 && runConfig.getInt("unixtime",0)>0) {
+            t.write(runConfig);
+        }
         for (Bank b : banks) {
             e.read(b);
             if (b.getRows() > 0) t.write(b);
         }
-        if (!t.isEmpty()) {
-            e.read(runConfig);
+        if (!t.isEmpty() && !t.hasBank(runConfig.getSchema())) {
             t.write(runConfig);
         }
         return t;
