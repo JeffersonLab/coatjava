@@ -42,7 +42,7 @@ default:
     - export PATH=$CLARA_HOME/plugins/clas12/bin:$PATH
     - export PATH=$CLARA_HOME/bin:$PATH
     - export PATH=$COATJAVA/bin:$PATH
-    - tar -xzvf clara.tar.gz
+    - tar -xzf clara.tar.gz
 
 stages:
   - mirror
