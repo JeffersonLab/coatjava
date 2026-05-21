@@ -12,7 +12,7 @@ import org.jlab.jnp.hipo4.io.HipoReader;
 import org.json.JSONObject;
 
 /**
- * Just reads EVIO or HIPO, and passes it along.
+ * Just reads EVIO or HIPO and passes it along.
  * 
  * @author baltzell
  */

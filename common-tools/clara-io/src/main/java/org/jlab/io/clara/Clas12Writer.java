@@ -21,13 +21,12 @@ import org.jlab.jnp.utils.file.FileUtils;
 import org.json.JSONObject;
 
 /**
- * Combined with DecoderReader, a port of the standard "decoder" to CLARA.
- *
+ * 
  * 1. Copies certain banks on-the-fly to new tag-1 events
- * 2. Caches helicity states and scaler readouts, for later use in post-processing
- * 3. Writes the helicity sequence to HEL::flip banks in new tag-1 events
- * 4. Adds .hipo to the output filename, if necessary
- * 5. Runs post-processing, writing tag-1 information to all events 
+ * 2. Caches helicity states, scaler readouts, and unix time
+ * 3. Writes HEL::flip, RUN/HEL::scaler, and RUN::unix to new tag-1 events
+ * 4. Runs post-processing, writing tag-1 information to all events 
+ * 5. Adds .hipo to the output filename, if necessary
  *
  * @author baltzell
  */
