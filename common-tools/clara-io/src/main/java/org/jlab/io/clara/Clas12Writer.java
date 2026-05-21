@@ -31,7 +31,7 @@ import org.json.JSONObject;
  *
  * @author baltzell
  */
-public class DecoderWriter extends HipoToHipoWriter {
+public class Clas12Writer extends HipoToHipoWriter {
 
     static final String[] TAG1BANKS = {"RUN::scaler","HEL::scaler","RAW::scaler","RAW::epics","HEL::flip","COAT::config"};
 
