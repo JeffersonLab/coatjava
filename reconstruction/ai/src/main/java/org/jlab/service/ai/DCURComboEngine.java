@@ -72,6 +72,9 @@ public class DCURComboEngine extends ReconstructionEngine {
     public DCURComboEngine() {
         super("DCURComboEngine","tongtong","1.0");
     }
+    
+    @Override
+    public void detectorChanged(int run){}
 
     @Override
     public boolean init() {
@@ -110,7 +113,7 @@ public class DCURComboEngine extends ReconstructionEngine {
     }
     
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         
         // load DC clusters from bank HitBasedTrkg::Clusters, and uRWell crosses from bank URWT::crosses     
         if (!event.hasBank(inputDCBank) || !event.hasBank(inputURBank)) return true;

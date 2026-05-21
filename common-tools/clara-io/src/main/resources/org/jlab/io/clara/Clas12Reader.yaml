@@ -8,4 +8,4 @@ email: baltzell@jlab.org
 
 version: 0.1
 description:
-  Reads EVIO or HIPO events from a file, converting to HIPO via "decoding" if EVIO.
+  Reads EVIO or HIPO events from a file and passes them along unchanged.

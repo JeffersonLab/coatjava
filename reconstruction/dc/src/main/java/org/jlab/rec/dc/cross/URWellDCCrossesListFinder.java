@@ -1944,18 +1944,18 @@ public class URWellDCCrossesListFinder {
             fhit.updateHitPositionWithTime(event, trkAngle, fhit.getB(), tab, DcDetector, tde);
         }
 
-        cf.SetFitArray(_Segment1.get_fittedCluster(), "TSC");
+        cf.SetFitArray(_Segment1.get_fittedCluster(), ClusterFitter.CoordSys.TSC);
         cf.Fit(_Segment1.get_fittedCluster(), true);
         trkAngle = _Segment1.get_fittedCluster().get_clusterLineFitSlope();
 
         for (FittedHit fhit : _Segment1.get_fittedCluster()) {
             fhit.updateHitPositionWithTime(event, trkAngle, fhit.getB(), tab, DcDetector, tde);
         }
-        cf.SetFitArray(_Segment1.get_fittedCluster(), "TSC");
+        cf.SetFitArray(_Segment1.get_fittedCluster(), ClusterFitter.CoordSys.TSC);
         cf.Fit(_Segment1.get_fittedCluster(), true);
         cf.SetResidualDerivedParams(_Segment1.get_fittedCluster(), true, false, DcDetector); //calcTimeResidual=false, resetLRAmbig=false 
 
-        cf.SetFitArray(_Segment1.get_fittedCluster(), "TSC");
+        cf.SetFitArray(_Segment1.get_fittedCluster(), ClusterFitter.CoordSys.TSC);
         cf.Fit(_Segment1.get_fittedCluster(), false);
 
         cf.SetSegmentLineParameters(_Segment1.get_fittedCluster().get(0).get_Z(), _Segment1.get_fittedCluster());

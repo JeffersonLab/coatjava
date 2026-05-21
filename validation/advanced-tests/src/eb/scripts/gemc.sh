@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 usage() { echo "Usage: $0 [-g GEMC] [-n NEV] [-p PARTS] [-c GCARD] [-m]" 1>&2; exit $1; }
 
 run=11
@@ -65,8 +67,7 @@ function run_gemc () {
 
 for p in "${particles[@]}"
 do
-    [ -z ${multithread+} ] && args= || args=-m 
-    run_gemc -r $run -g $gemc -n $nevents -c $gcard -i $p.txt -o $p.hipo $args
+    run_gemc -r $run -g $gemc -n $nevents -c $gcard -i $p.txt -o $p.hipo
 done
 [ -z ${multithread+x} ] || wait
 

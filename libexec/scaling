@@ -5,37 +5,39 @@ def cli():
     cli = argparse.ArgumentParser(description='CLARA scaling test')
     cli.add_argument('-y','--yaml',   metavar='YAML',help='path to YAML file',required=True)
     cli.add_argument('-c','--clara',  metavar='DIR',help='CLARA_HOME path (default=$CLARA_HOME)',default=os.getenv('CLARA_HOME',None))
-    cli.add_argument('-t','--threads',metavar='#',help='threads (default=4,8)',default='4,8')
+    cli.add_argument('-t','--threads',metavar='#',help='threads (default=8,16,24,34,44)',default='8,16,24,34,44')
     cli.add_argument('-e','--events', metavar='#',help='events per thread (default=555)',default=555,type=int)
-    cli.add_argument('-N','--numa',   metavar='#',help='NUMA socket (default=None, choices=[0,1])',default=None,type=int,choices=[0,1])
+    cli.add_argument('-N','--numa',   metavar='#',help='restrict to a NUMA socket (choices=[0,1])',choices=[0,1])
+    cli.add_argument('-C','--cpus',   metavar='#',help='restrict to a CPU list (e.g. 0,1,2,3)')
+    cli.add_argument('-T','--cputhr', metavar='#',help='restrict to same number of CPUs as threads')
     cli.add_argument('datafile', help='input EVIO/HIPO data file')
     cfg = cli.parse_args()
     cfg.threads = cfg.threads.split(',')
     if not cfg.clara:
         cli.error('cannot find CLARA installation via -c or $CLARA_HOME')
-    cfg.run_clara = find_run_clara(cfg.clara)
-    if not cfg.run_clara:
-        cli.error('cannot find run-clara in $PATH or CLARA installation')
-    if cfg.numa is not None:
+    elif shutil.which('run-clara'):
+        cfg.run_clara = shutil.which('run-clara')
+    elif os.path.exists(clara_home + '/plugins/clas12/bin/run-clara'):
+        cfg.run_clara = clara_home + '/plugins/clas12/bin/run-clara'
+    else:
+        cli.error('cannot find run-clara in $PATH or $CLARA_HOME')
+    if cfg.cpus:
+        try:
+            cfg.cpus = ','.join([str(int(i)) for i in cfg.cpus.split(',')])
+        except Exception as e:
+            cli.error('invalid --cpus argument:  {cfg.cpus}')
+    elif cfg.numa or cfg.cputhr:
+        if not cfg.numa:
+            cfg.numa = 0
         if not shutil.which('numactl'):
             cli.error('numactl is not in $PATH, --numa option not supported')
-        if len(list(get_numa_cpus(cfg.numa))) == 0:
-            cli.error('invalid --numa node:  {cfg.numa}')
-        cfg.numa = ','.join(list(get_numa_cpus(cfg.numa)))
+        for x in run(['numactl','-H']):
+            if x.startswith(f'node {cfg.numa} cpus:'):
+                cfg.cpus = ','.join([str(int(i)) for i in x.strip().split()[3:]])
+                break
+        if not cfg.cpus:
+            cli.error('error determining cpu list for -C or -T')
     return cfg
-
-def find_run_clara(clara_home):
-    import os,shutil
-    if shutil.which('run-clara'):
-        return shutil.which('run-clara')
-    elif os.path.exists(clara_home + '/plugins/clas12/bin/run-clara'):
-        return clara_home + '/plugins/clas12/bin/run-clara'
-
-def get_numa_cpus(node):
-    for line in run(['numactl','-H']):
-        if line.startswith(f'node {node} cpus:'):
-            for col in line.strip().split()[3:]:
-                yield col
 
 def run(cmd):
     import subprocess
@@ -46,15 +48,16 @@ def run(cmd):
         if len(line) > 0:
             yield line
     p.wait()
-    if p.returncode != 0:
-        pass
 
 def benchmark(cfg, threads, log):
     import collections
     cmd = []
-    # use taskset:
-    if cfg.numa is not None:
-        cmd.extend(['taskset','-c',cfg.numa])
+    # use taskset for thread affinity:
+    if cfg.cpus:
+        if cfg.cputhr:
+            cmd.extend(['taskset','-c',','.join(cfg.cpus.split(',')[:threads])])
+        else:
+            cmd.extend(['taskset','-c',cfg.cpus])
     # add the run-clara command:
     cmd.extend([cfg.run_clara,
             '-c',cfg.clara,
@@ -123,6 +126,22 @@ def save(benchmarks):
         for row in table(benchmarks):
             f.write(' '.join([str(x) for x in row])+'\n') 
 
+def plot():
+    import os,shutil,subprocess
+    if shutil.which('gnuplot'):
+        g = os.path.dirname(os.path.abspath(__file__))+'/scaling.gpl'
+        r = subprocess.run(['gnuplot',g], capture_output=True, text=True)
+        if r.returncode == 0:
+            with open('scaling.svg','w') as f:
+                f.write(r.stdout)
+                print('Info:  created scaling.svg from scaling.txt and scaling.gpl!')
+        else:
+            print(r.stdout)
+            print(r.stderr)
+            print('Error:  gnuplot failed!')
+    else:
+        print('Warning:  gnuplot is not in $PATH.')
+
 if __name__ == '__main__':
     cfg = cli()
     import os
@@ -133,4 +152,5 @@ if __name__ == '__main__':
             benchmarks.append([threads, benchmark(cfg, threads, log)])
     show(benchmarks)
     save(benchmarks)
+    plot()
 

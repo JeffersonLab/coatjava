@@ -50,7 +50,6 @@ public class DCEngine extends ReconstructionEngine {
          
     public static final Logger LOGGER = Logger.getLogger(ReconstructionEngine.class.getName());
 
-
     public DCEngine(String name) {
         super(name,"ziegler","5.0");
     }
@@ -202,7 +201,7 @@ public class DCEngine extends ReconstructionEngine {
         
     
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         return true;
     }
 
@@ -227,6 +226,11 @@ public class DCEngine extends ReconstructionEngine {
         this.initBanks();
         this.setDropBanks();
         return true;
+    }
+
+    @Override
+    public void detectorChanged(int runNumber) {
+        Constants.getInstance().LoadGeometry(runNumber, geoVariation, shifts);
     }
 
     private void initBanks() {
