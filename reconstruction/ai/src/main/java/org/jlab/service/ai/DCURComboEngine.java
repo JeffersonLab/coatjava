@@ -48,12 +48,12 @@ public class DCURComboEngine extends ReconstructionEngine {
     final static String CONF_THRESHOLDS[] = {"threshold6DCCls2URCrs", "threshold6DCCls1URCrs", "threshold6DCCls", 
         "threshold5DCCls2URCrs", "threshold5DCCls1URCrs", "threshold5DCCls", 
         "threshold4DCCls2URCrs", "threshold4DCCls1URCrs"};  
-    String modelFiles[] ={"dcURCombo/mlp_6dccls_2urcrs.pt", "dcURCombo/mlp_6dccls_1urcrs.pt", "dcURCombo/mlp_6dccls.pt", 
-        "dcURCombo/mlp_5dccls_2urcrs.pt", "dcURCombo/mlp_5dccls_1urcrs.pt", "dcURCombo/mlp_5dccls.pt", 
+    String modelFiles[] ={"dcURCombo/mlp_6dccls_2urcrs.pt", "dcURCombo/mlp_6dccls_1urcrs.pt", "clsCombo/mlp_64h_4l_6cls.pt", 
+        "dcURCombo/mlp_5dccls_2urcrs.pt", "dcURCombo/mlp_5dccls_1urcrs.pt", "clsCombo/mlp_64h_3l_5cls.pt", 
         "dcURCombo/mlp_4dccls_2urcrs.pt", "dcURCombo/mlp_4dccls_1urcrs.pt"};
-    float thresholds[] ={0.95f, 0.95f, 0.95f, 
-        0.95f, 0.95f, 0.85f, 
-        0.85f, 0.05f};    
+    float thresholds[] ={0.96f, 0.97f, 0.95f, 
+        0.97f, 0.97f, 0.8f, 
+        0.4f, 0.2f};    
     
     PredictorPool predictors[] = new PredictorPool[8];
     
