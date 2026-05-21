@@ -18,6 +18,8 @@ io-services:
     class: org.jlab.io.clara.Clas12Writer
     name: Clas12Writer
 services:
+  - class: org.jlab.clas.reco.DecoderEngine
+    name: DECO
   - class: org.jlab.service.uber.Uber$First
     name: 1ST
   - class: org.jlab.service.uber.Uber$ForwardTagger

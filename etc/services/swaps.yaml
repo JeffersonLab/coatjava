@@ -1,5 +1,5 @@
 # Just an example of configuring SwapEngine.
-# Note, it must come before all other services.
+# Note, it must come before detector services.
 io-services:
   reader:
     class: org.jlab.io.clara.Clas12Reader
@@ -8,6 +8,8 @@ io-services:
     class: org.jlab.io.clara.Clas12Writer
     name: Clas12Writer
 services:
+  - class: org.jlab.clas.reco.DecoderEngine
+    name: DECO
   - class: org.jlab.service.swaps.SwapEngine
     name: SWAPS
 configuration:
