@@ -1,5 +1,6 @@
 package org.jlab.analysis.postprocess;
 
+import java.util.TreeMap;
 import java.util.logging.Logger;
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.detector.calib.utils.ConstantsManager;
@@ -100,6 +101,9 @@ public class Tag1ToEvent {
                 helSeq.initialize(parser.getInputList());
             }
 
+            // Initialize the unix-event map:
+            TreeMap<Integer,Integer> eventUnix = Processor.getEventUnixMap(schema, parser.getInputList());
+            
             // Loop over the input HIPO files:
             LOGGER.info("\n>>> Starting post-processing ...\n");
             for (String filename : parser.getInputList()) {
@@ -146,6 +150,17 @@ public class Tag1ToEvent {
                     // Write the modified banks back to the original event:
                     event.write(recEventBank);
                     event.write(helScalerBank);
+
+                    // Update RUN::config.unixtime:
+                    if (runConfigBank.getRows() > 0) {
+                        int evno = runConfigBank.getByte("event", 0);
+                        Integer unix = eventUnix.get(eventUnix.floorKey(evno));
+                        if (unix != null) {
+                            event.remove(runConfigBank.getSchema());
+                            runConfigBank.putInt("unixtime", 0, unix);
+                            event.write(runConfigBank);
+                        }
+                    }
 
                     // Write out the original event: 
                     writer.addEvent(event, event.getEventTag());
