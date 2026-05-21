@@ -79,7 +79,7 @@ public class Processor {
             helicitySequence = Util.getHelicity(preloadFiles, schemaFactory, restream, conman);
             if (rebuild) chargeSequence = DaqScalersSequence.rebuildSequence(1, conman, preloadFiles);
             else chargeSequence = DaqScalersSequence.readSequence(preloadFiles);
-            eventUnix = getEventUnixMap(preloadFiles); 
+            eventUnix = getEventUnixMap(schemaFactory, preloadFiles); 
         }
     }
 
@@ -103,11 +103,12 @@ public class Processor {
 
     /**
      * Load the mapping from event number to unix time
+     * @param schema
      * @param files
      * @return map 
      */
-    private TreeMap<Integer,Integer> getEventUnixMap(List<String> files) {
-        Bank unix = new Bank(schemaFactory.getSchema("RUN::unix"));
+    public static TreeMap<Integer,Integer> getEventUnixMap(SchemaFactory schema, List<String> files) {
+        Bank unix = new Bank(schema.getSchema("RUN::unix"));
         TreeMap<Integer,Integer> m = new TreeMap<>();
         Event e = new Event();
         for (String f : files) {
