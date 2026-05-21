@@ -2,6 +2,7 @@ package org.jlab.io.clara;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import org.jlab.analysis.postprocess.Processor;
 import org.jlab.clara.std.services.EventWriterException;
@@ -38,6 +39,7 @@ public class DecoderWriter extends HipoToHipoWriter {
     Bank runConfig;
     Bank helicityAdc;
     ConstantsManager conman;
+    TreeMap<Integer,Integer> eventUnix;
     TreeSet<HelicityState> helicities;
     DaqScalersSequence scalers;
     SchemaFactory fullSchema;
@@ -51,6 +53,7 @@ public class DecoderWriter extends HipoToHipoWriter {
         helicities = new TreeSet<>();
         scalers = new DaqScalersSequence(fullSchema);
         conman = new ConstantsManager();
+        eventUnix = new TreeMap<>();
         conman.init("/runcontrol/hwp","/runcontrol/helicity");
         postprocess = opts.optBoolean("postprocess", false);
         if (opts.has("variation")) conman.setVariation(opts.getString("variation"));
@@ -73,37 +76,37 @@ public class DecoderWriter extends HipoToHipoWriter {
         }
     }
 
-    /**
-     * In addition to writing the incoming event, copies all tag-1 banks to new
-     * tag-1 events and writes them, and stores helicity/scaler readings for later.
-     * @param event
-     * @throws EventWriterException 
-     */
     @Override
     protected void writeEvent(Object event) throws EventWriterException {
         scalers.add((Event)event);
         ((Event)event).read(runConfig);
         ((Event)event).read(helicityAdc);
+        if (runConfig.getRows() > 0) {
+            int unix = runConfig.getInt("unixtime",0);
+            int evno = runConfig.getInt("event",0);
+            if (unix > 0 && evno > 0) eventUnix.put(evno, unix);
+        }
         helicities.add(HelicityState.createFromFadcBank(helicityAdc, runConfig, conman));
         Event t = CLASDecoder4.createTaggedEvent((Event)event, runConfig, tag1banks);
         if (!t.isEmpty()) writer.addEvent(t, 1);
         super.writeEvent(event);
     }
 
-    /**
-     * In addition to closing the writer, creates and writes tag-1 events with
-     * HEL::flip bnks and clears old scaler/helicity readings.
-     */
     @Override
     protected void closeWriter() {
         HelicitySequence.writeFlips(fullSchema, writer, helicities);
+        writer.addEvent(getUnixEvent(runConfig),1);
         super.closeWriter();
         if (postprocess) postprocess();
         // keep the latest helicity/scaler reading for the next file:
         while (helicities.size() > 60) helicities.pollFirst();
         scalers.clear(10);
     }
-  
+ 
+    /**
+     * Get the first valid run number from a RUN::config bank.
+     * @return run
+     */
     private int getRunNumber() {
         Event e = new Event();
         HipoReader r = new HipoReader();
@@ -115,6 +118,27 @@ public class DecoderWriter extends HipoToHipoWriter {
                 return runConfig.getInt("run",0);
         }
         return 0;
+    }
+
+    /**
+     * Get a new event with a RUN::unix bank containing event-timestamp mapping,
+     * and the latest RUN::config bank.
+     * @param config
+     * @return 
+     */
+    private Event getUnixEvent(Bank config) {
+        Bank unix = new Bank(fullSchema.getSchema("RUN::unix"));
+        unix.setRows(eventUnix.size());
+        int row = 0;
+        for (int evno : eventUnix.keySet()) {
+            unix.putInt("event", row, evno);
+            unix.putInt("unixtime",row, eventUnix.get(evno));
+            row++;
+        }
+        Event e = new Event();
+        e.write(config);
+        e.write(unix);
+        return e;
     }
 
     /**
