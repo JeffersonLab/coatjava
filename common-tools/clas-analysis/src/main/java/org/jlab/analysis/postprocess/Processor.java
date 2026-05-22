@@ -1,9 +1,6 @@
 package org.jlab.analysis.postprocess;
 
-import java.io.File;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.TreeMap;
 
 import org.jlab.jnp.hipo4.data.Bank;
@@ -31,9 +28,6 @@ public class Processor {
 
     public static final String CCDB_TABLES[] = {"/runcontrol/fcup","/runcontrol/slm",
         "/runcontrol/helicity","/daq/config/scalers/dsc1","/runcontrol/hwp"};
-    public static final String DEF_PRELOAD_GLOB = "*.{hipo,h5}";
-
-    private final String outputPrefix = "tmp_";
 
     private Bank runConfig = null;
     private Bank recEvent = null;
@@ -76,20 +70,18 @@ public class Processor {
      * @return map 
      */
     public static TreeMap<Integer,Integer> getEventUnixMap(SchemaFactory schema, List<String> files) {
-        Bank unix = new Bank(schema.getSchema("RUN::unix"));
         TreeMap<Integer,Integer> m = new TreeMap<>();
         Event e = new Event();
+        Bank b = schema.getBank("RUN::unix");//new Bank(schema.getSchema("RUN::unix"));
         for (String f : files) {
             HipoReader r = new HipoReader();
             r.setTags(1);
             r.open(f);
             while (r.hasNext()) {
                 r.nextEvent(e);
-                e.read(unix);
-                int size = unix.getRows();
-                for (int i=0; i<size; i++) {
-                    m.put(unix.getInt("event",i), unix.getInt("unixtime",i));
-                }
+                e.read(b);
+                int size = b.getRows();
+                for (int i=0; i<size; i++) m.put(b.getInt("event",i), b.getInt("unixtime",i));
             }
             r.close();
         }
@@ -124,8 +116,8 @@ public class Processor {
     private void processEventHelicity(Event event, Bank runcfg, Bank recevt) {
         HelicityBit hb = helicitySequence.search(runcfg.getLong("timestamp", 0));
         HelicityBit hbraw = helicitySequence.getHalfWavePlate() ? HelicityBit.getFlipped(hb) : hb;
-        recevt.setByte("helicity",0,hb.value());
-        recevt.setByte("helicityRaw",0,hbraw.value());
+        recevt.putByte("helicity",0,hb.value());
+        recevt.putByte("helicityRaw",0,hbraw.value());
         Bank helScaler = new Bank(schemaFactory.getSchema("HEL::scaler"));
         event.read(helScaler);
         if (helScaler.getRows()>0) {
@@ -168,11 +160,14 @@ public class Processor {
      */
     private void processEventUnix(Event event, Bank runcfg) {
         if (runcfg.getRows() > 0) {
-            Integer unix = eventUnix.get(eventUnix.floorKey(runcfg.getInt("event",0)));
-            if (unix != null) {
-                event.remove(runcfg.getSchema());
-                runcfg.putInt("unixtime", 0, unix);
-                event.write(runcfg);
+            Integer key =  eventUnix.floorKey(runcfg.getInt("event",0));
+            if (key != null) {
+                Integer unix = eventUnix.get(key);
+                if (unix != null) {
+                    event.remove(runcfg.getSchema());
+                    runcfg.putInt("unixtime", 0, unix);
+                    event.write(runcfg);
+                }
             }
         }
     }
@@ -230,36 +225,6 @@ public class Processor {
                 if (chargeSequence != null) processEventScalers(runConfig, recEvent);
                 event.write(recEvent);
             }
-        }
-    }
-
-    /**
-     * Create rebuilt files from preload files.
-     * @param files
-     * @return map of rebuilt:preload files 
-     */
-    private Map<String,String> rebuild(String dir, List<String> files) {
-        File d = new File(dir);
-        if (!d.canWrite()) {
-            throw new RuntimeException("No write permissions on "+dir);
-        }
-        Map<String,String> rebuiltFiles = new HashMap<>();
-        for (String preloadFile : files) {
-            String rebuiltFile = dir+"/"+outputPrefix+preloadFile.replace(dir+"/","");
-            Util.rebuildScalers(conman, preloadFile, rebuiltFile);
-            rebuiltFiles.put(rebuiltFile,preloadFile);
-        }
-        return rebuiltFiles;
-    }
-
-    /**
-     * Replace files with new ones.
-     * @param files map of new:old filenames
-     */
-    private static void replace(Map<String,String> files) {
-        for (String rebuiltFile : files.keySet()) {
-            new File(files.get(rebuiltFile)).delete();
-            new File(rebuiltFile).renameTo(new File(files.get(rebuiltFile)));
         }
     }
 
