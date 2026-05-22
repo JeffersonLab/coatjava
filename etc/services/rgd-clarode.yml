@@ -20,7 +20,7 @@ configuration:
 io-services:
   reader:
     class: org.jlab.io.clara.Clas12Reader
-    name: EvioReader
+    name: Clas12Reader
   writer:
     class: org.jlab.io.clara.Clas12Writer
     name: Clas12Writer
