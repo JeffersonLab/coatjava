@@ -1,12 +1,13 @@
 package org.jlab.rec.ahdc.TrackFinding;
 
-import org.jlab.io.base.DataBank;
 import org.jlab.rec.ahdc.AI.GNNPrediction;
 import org.jlab.rec.ahdc.AI.ModelTrackFindingGNN;
 import org.jlab.rec.ahdc.Hit.Hit;
+import org.jlab.rec.ahdc.Track.AtofHitStub;
 import org.jlab.rec.ahdc.Track.TrackCandidate;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 /** GravNet-based track finder. Builds a per-event hit graph from the AHDC
@@ -31,14 +32,9 @@ public class GNNTrackFinder implements TrackFinder {
         this.predictor = new GNNPrediction();
     }
 
-    /** Without an ATOF bank the GNN still runs on AHDC-only graphs. */
+    /** With an empty {@code atofHits} list the GNN still runs on AHDC-only graphs. */
     @Override
-    public TrackFinderResult findTracks(ArrayList<Hit> hits) {
-        return findTracks(hits, null);
-    }
-
-    @Override
-    public TrackFinderResult findTracks(ArrayList<Hit> ahdcHits, DataBank atofHitsBank) {
+    public TrackFinderResult findTracks(ArrayList<Hit> ahdcHits, List<AtofHitStub> atofHits) {
         if (ahdcHits == null || ahdcHits.size() > MAX_HITS_FOR_GNN) {
             if (ahdcHits != null) {
                 LOGGER.info("Too many AHDC_Hits in AHDC::hits, skipping GNN track finding for this event");
@@ -46,7 +42,7 @@ public class GNNTrackFinder implements TrackFinder {
             return TrackFinderResult.ok(new ArrayList<>());
         }
 
-        ArrayList<TrackCandidate> tracks = predictor.prediction(ahdcHits, atofHitsBank, model);
+        ArrayList<TrackCandidate> tracks = predictor.prediction(ahdcHits, atofHits, model);
         return TrackFinderResult.ok(tracks);
     }
 }

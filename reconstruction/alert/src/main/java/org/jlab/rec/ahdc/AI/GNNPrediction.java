@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import org.jlab.io.base.DataBank;
 import org.jlab.rec.ahdc.AHDCCluster.AHDCCluster;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
@@ -28,12 +27,12 @@ public final class GNNPrediction {
     private static final Logger LOGGER = Logger.getLogger(GNNPrediction.class.getName());
 
     public ArrayList<TrackCandidate> prediction(List<Hit> ahdcHits,
-                                                DataBank atofHitsBank,
+                                                List<AtofHitStub> atofHits,
                                                 ModelTrackFindingGNN model) {
         ArrayList<TrackCandidate> out = new ArrayList<>();
         if (ahdcHits == null || ahdcHits.isEmpty() || model == null) return out;
 
-        GNNGraphBuilder.GraphInput g = GNNGraphBuilder.build(ahdcHits, atofHitsBank);
+        GNNGraphBuilder.GraphInput g = GNNGraphBuilder.build(ahdcHits, atofHits);
         int nNodes = g.nodeToSource.length;
         int nEdges = g.edgeIndex[0].length;
         if (nNodes < GNNConstants.MIN_NODES || nEdges == 0) {

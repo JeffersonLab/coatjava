@@ -9,10 +9,12 @@ import org.jlab.rec.ahdc.AI.TrackPrediction;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import org.jlab.rec.ahdc.PreCluster.PreClusterFinder;
+import org.jlab.rec.ahdc.Track.AtofHitStub;
 import org.jlab.rec.ahdc.Track.TrackCandidate;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -32,11 +34,11 @@ public class AITrackFinder implements TrackFinder {
     }
 
     @Override
-    public TrackFinderResult findTracks(ArrayList<Hit> hits) {
+    public TrackFinderResult findTracks(ArrayList<Hit> hits, List<AtofHitStub> atofHits) {
         // Safety: too many hits → fall back to conventional track finding for this event
         if (hits.size() > MAX_HITS_FOR_AI) {
             LOGGER.info("Too many AHDC_Hits in AHDC::adc, rely on conventional track finding for this event");
-            return fallback.findTracks(hits);
+            return fallback.findTracks(hits, atofHits);
         }
 
         // Preclustering

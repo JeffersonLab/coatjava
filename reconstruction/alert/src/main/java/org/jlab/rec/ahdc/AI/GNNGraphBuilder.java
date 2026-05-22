@@ -1,14 +1,11 @@
 package org.jlab.rec.ahdc.AI;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
-import org.jlab.io.base.DataBank;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.Track.AtofHitStub;
 
@@ -38,8 +35,9 @@ final class GNNGraphBuilder {
 
     private GNNGraphBuilder() {}
 
-    /** Build a graph from AHDC hits (required) plus the ATOF::hits bank (optional). */
-    static GraphInput build(List<Hit> ahdcHits, DataBank atofHitsBank) {
+    /** Build a graph from AHDC hits (required) plus the attached ATOF hits
+     *  (optional — pass empty/null when no ATOF is available). */
+    static GraphInput build(List<Hit> ahdcHits, List<AtofHitStub> atofHits) {
         int nAhdc = ahdcHits == null ? 0 : ahdcHits.size();
 
         // Node state buffers (grow as we append AHDC then ATOF nodes).
@@ -82,19 +80,12 @@ final class GNNGraphBuilder {
         }
 
         // --- ATOF nodes -------------------------------------------------------------
-        // Deduplicate by (sector, layer, component).
-        if (atofHitsBank != null) {
-            Set<Long> seen = new HashSet<>();
-            int rows = atofHitsBank.rows();
-            for (int r = 0; r < rows; r++) {
-                int sector    = atofHitsBank.getInt("sector", r);
-                int layer     = atofHitsBank.getInt("layer", r);
-                int component = atofHitsBank.getInt("component", r);
-                long key = (((long)sector * 1000L) + layer) * 1000L + component;
-                if (!seen.add(key)) continue;
-
-                double x = atofHitsBank.getFloat("x", r);
-                double y = atofHitsBank.getFloat("y", r);
+        // The caller supplies already-unique ATOF hits; no dedup needed here.
+        if (atofHits != null) {
+            for (AtofHitStub a : atofHits) {
+                int component = a.getComponent();
+                double x = a.getX();
+                double y = a.getY();
                 double radius = Math.hypot(x, y);
                 double phi = Math.atan2(y, x);
                 int absLayer = (component == 10) ? GNNConstants.ATOF_BAR_ABS_LAYER
@@ -110,7 +101,7 @@ final class GNNGraphBuilder {
                 });
                 nodeLine.add(null);
                 nodeHit.add(null);
-                nodeAtof.add(new AtofHitStub(sector, layer, component, x, y));
+                nodeAtof.add(a);
             }
         }
 

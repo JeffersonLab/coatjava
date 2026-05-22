@@ -6,14 +6,16 @@ import org.jlab.rec.ahdc.Distance.Distance;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import org.jlab.rec.ahdc.PreCluster.PreClusterFinder;
+import org.jlab.rec.ahdc.Track.AtofHitStub;
 import org.jlab.rec.ahdc.Track.TrackCandidate;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class DistanceTrackFinder implements TrackFinder {
 
     @Override
-    public TrackFinderResult findTracks(ArrayList<Hit> hits) {
+    public TrackFinderResult findTracks(ArrayList<Hit> hits, List<AtofHitStub> atofHits) {
         PreClusterFinder pcf = new PreClusterFinder();
         pcf.findPreclusters(hits);
         ArrayList<PreCluster> preclusters = pcf.get_AHDCPreClusters();

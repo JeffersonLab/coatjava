@@ -4,6 +4,9 @@ import ai.djl.repository.zoo.ZooModel;
 import ai.djl.translate.TranslateException;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import java.util.HashMap;
@@ -42,6 +45,7 @@ import org.jlab.rec.ahdc.TrackFinding.TrackFinder;
 import org.jlab.rec.ahdc.TrackFinding.TrackFinderResult;
 import org.jlab.geom.detector.alert.AHDC.AlertDCDetector;
 import org.jlab.geom.detector.alert.AHDC.AlertDCFactory;
+import org.jlab.rec.ahdc.Track.AtofHitStub;
 import org.jlab.rec.ahdc.Track.Track;
 import org.jlab.rec.ahdc.Track.TrackCandidate;
 import org.jlab.clas.pdg.PDGDatabase;
@@ -240,11 +244,11 @@ public class ALERTEngine extends ReconstructionEngine {
             // II) Track Finding via the strategy selected in init() (ALERT.Mode YAML key).
             // The implementation owns its own preclustering, cluster building, and any
             // mode-specific safety fallbacks (e.g. AITrackFinder delegates to Distance
-            // when the hit count exceeds its MAX_HITS_FOR_AI threshold). The ATOF bank
-            // is passed for finders that build joint AHDC+ATOF graphs (GNN); the
-            // AHDC-only finders inherit the default and ignore it.
-            DataBank atofHitsBankForGNN = event.hasBank("ATOF::hits") ? event.getBank("ATOF::hits") : null;
-            TrackFinderResult trackResult = trackFinder.findTracks(AHDC_Hits, atofHitsBankForGNN);
+            // when the hit count exceeds its MAX_HITS_FOR_AI threshold). The ATOF hits
+            // are passed for finders that build joint AHDC+ATOF graphs (GNN); the
+            // AHDC-only finders ignore them.
+            List<AtofHitStub> atofHitsForGNN = extractAtofHits(event);
+            TrackFinderResult trackResult = trackFinder.findTracks(AHDC_Hits, atofHitsForGNN);
             if (!trackResult.isValid()) {
                 return false;
             }
@@ -592,6 +596,30 @@ public class ALERTEngine extends ReconstructionEngine {
  
 
         return true;
+    }
+
+    /** Extract a deduplicated list of ATOF hits from {@code ATOF::hits} for the
+     *  GNN graph builder. Dedup key is {@code (sector, layer, component)} —
+     *  inference-time variant of the Python dedup which also keys on track id
+     *  (only needed at training time). Returns an empty list when the bank is
+     *  absent. */
+    private static List<AtofHitStub> extractAtofHits(DataEvent event) {
+        if (!event.hasBank("ATOF::hits")) return Collections.emptyList();
+        DataBank bank = event.getBank("ATOF::hits");
+        int rows = bank.rows();
+        Set<Long> seen = new HashSet<>();
+        ArrayList<AtofHitStub> hits = new ArrayList<>(rows);
+        for (int r = 0; r < rows; r++) {
+            int sector    = bank.getInt("sector", r);
+            int layer     = bank.getInt("layer", r);
+            int component = bank.getInt("component", r);
+            long key = (((long) sector * 1000L) + layer) * 1000L + component;
+            if (!seen.add(key)) continue;
+            double x = bank.getFloat("x", r);
+            double y = bank.getFloat("y", r);
+            hits.add(new AtofHitStub(sector, layer, component, x, y));
+        }
+        return hits;
     }
 
     /**
