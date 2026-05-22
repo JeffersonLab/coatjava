@@ -141,14 +141,14 @@ public class ALERTEngine extends ReconstructionEngine {
         requireConstants(tableMap);
         this.getConstantsManager().setVariation("default");
 
-        TrackFindingMode mode = TrackFindingMode.MLP_Track_Finding;
+        TrackFindingMode mode = TrackFindingMode.AI_MLP;
         String modeConfig = this.getEngineConfigString("Mode");
         if (modeConfig != null) mode = TrackFindingMode.valueOf(modeConfig);
         switch (mode) {
-            case MLP_Track_Finding: trackFinder = new AITrackFinder();       break;
+            case AI_MLP:            trackFinder = new AITrackFinder();       break;
             case CV_Distance:       trackFinder = new DistanceTrackFinder(); break;
             case CV_Hough:          trackFinder = new HoughTrackFinder();    break;
-            case GNN_Track_Finding: trackFinder = new GNNTrackFinder();      break;
+            case AI_GNN:            trackFinder = new GNNTrackFinder();      break;
         }
 
         this.registerOutputBank(
@@ -529,7 +529,7 @@ public class ALERTEngine extends ReconstructionEngine {
             }
             // Rebuild a hits-only TrackCandidate and wrap it in a Track seeded
             // with the banked helix-fit position/momentum (mm / MeV).
-            // Invariant: AHDC_hits is non-empty. AHDCEngine's MLP_Track_Finding path uses greedy
+            // Invariant: AHDC_hits is non-empty. The AI_MLP path uses greedy
             // non-overlap selection so each PreCluster (and thus each Hit) belongs to at most one
             // surviving track, so the set_trackId stamping is unambiguous and every AHDC::track
             // row has matching AHDC::hits rows.
