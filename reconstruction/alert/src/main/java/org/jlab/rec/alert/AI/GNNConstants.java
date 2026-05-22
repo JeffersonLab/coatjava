@@ -1,4 +1,4 @@
-package org.jlab.rec.ahdc.AI;
+package org.jlab.rec.alert.AI;
 
 /** Normalization and graph-construction constants for the GNN track finder.
  *  Mirrors track-finding/gnn/config.py — keep in sync with the training config.

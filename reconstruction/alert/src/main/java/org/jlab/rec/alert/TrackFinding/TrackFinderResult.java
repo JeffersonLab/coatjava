@@ -1,6 +1,6 @@
-package org.jlab.rec.ahdc.TrackFinding;
+package org.jlab.rec.alert.TrackFinding;
 
-import org.jlab.rec.ahdc.Track.TrackCandidate;
+import org.jlab.rec.alert.Track.TrackCandidate;
 
 import java.util.Collections;
 import java.util.List;

@@ -1,16 +1,16 @@
-package org.jlab.rec.ahdc.TrackFinding;
+package org.jlab.rec.alert.TrackFinding;
 
-import org.jlab.rec.ahdc.AI.AIPrediction;
-import org.jlab.rec.ahdc.AI.InterCluster;
-import org.jlab.rec.ahdc.AI.ModelTrackFinding;
-import org.jlab.rec.ahdc.AI.PreClustering;
-import org.jlab.rec.ahdc.AI.TrackCandidatesGenerator;
-import org.jlab.rec.ahdc.AI.TrackPrediction;
+import org.jlab.rec.alert.AI.AIPrediction;
+import org.jlab.rec.alert.AI.InterCluster;
+import org.jlab.rec.alert.AI.ModelTrackFinding;
+import org.jlab.rec.alert.AI.PreClustering;
+import org.jlab.rec.alert.AI.TrackCandidatesGenerator;
+import org.jlab.rec.alert.AI.TrackPrediction;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import org.jlab.rec.ahdc.PreCluster.PreClusterFinder;
-import org.jlab.rec.ahdc.Track.AtofHitStub;
-import org.jlab.rec.ahdc.Track.TrackCandidate;
+import org.jlab.rec.alert.Track.AtofHitStub;
+import org.jlab.rec.alert.Track.TrackCandidate;
 
 import java.util.ArrayList;
 import java.util.HashSet;

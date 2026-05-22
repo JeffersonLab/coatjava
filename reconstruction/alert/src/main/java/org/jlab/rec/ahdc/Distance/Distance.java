@@ -1,7 +1,7 @@
 package org.jlab.rec.ahdc.Distance;
 
 import org.jlab.rec.ahdc.AHDCCluster.AHDCCluster;
-import org.jlab.rec.ahdc.Track.TrackCandidate;
+import org.jlab.rec.alert.Track.TrackCandidate;
 
 import java.util.ArrayList;
 import java.util.Arrays;

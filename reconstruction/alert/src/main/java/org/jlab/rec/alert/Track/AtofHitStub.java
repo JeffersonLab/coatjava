@@ -1,4 +1,4 @@
-package org.jlab.rec.ahdc.Track;
+package org.jlab.rec.alert.Track;
 
 /** A minimal stand-in for an ATOF hit, attached to a {@link TrackCandidate} by
  *  the GNN graph.

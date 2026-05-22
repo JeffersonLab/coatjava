@@ -1,7 +1,7 @@
-package org.jlab.rec.ahdc.TrackFinding;
+package org.jlab.rec.alert.TrackFinding;
 
 import org.jlab.rec.ahdc.Hit.Hit;
-import org.jlab.rec.ahdc.Track.AtofHitStub;
+import org.jlab.rec.alert.Track.AtofHitStub;
 
 import java.util.ArrayList;
 import java.util.List;

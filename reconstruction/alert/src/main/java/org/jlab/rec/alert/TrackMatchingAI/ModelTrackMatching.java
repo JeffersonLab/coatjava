@@ -15,7 +15,7 @@ import ai.djl.translate.Translator;
 import ai.djl.translate.TranslatorContext;
 import ai.djl.util.Pair;
 
-import org.jlab.rec.ahdc.AI.InterCluster;
+import org.jlab.rec.alert.AI.InterCluster;
 import org.jlab.utils.CLASResources;
 
 import java.io.IOException;

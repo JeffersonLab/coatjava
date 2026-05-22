@@ -1,10 +1,10 @@
-package org.jlab.rec.ahdc.TrackFinding;
+package org.jlab.rec.alert.TrackFinding;
 
-import org.jlab.rec.ahdc.AI.GNNPrediction;
-import org.jlab.rec.ahdc.AI.ModelTrackFindingGNN;
+import org.jlab.rec.alert.AI.GNNPrediction;
+import org.jlab.rec.alert.AI.ModelTrackFindingGNN;
 import org.jlab.rec.ahdc.Hit.Hit;
-import org.jlab.rec.ahdc.Track.AtofHitStub;
-import org.jlab.rec.ahdc.Track.TrackCandidate;
+import org.jlab.rec.alert.Track.AtofHitStub;
+import org.jlab.rec.alert.Track.TrackCandidate;
 
 import java.util.ArrayList;
 import java.util.List;

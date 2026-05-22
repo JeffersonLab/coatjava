@@ -1,4 +1,4 @@
-package org.jlab.rec.ahdc.AI;
+package org.jlab.rec.alert.AI;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,9 +10,9 @@ import org.jlab.rec.ahdc.AHDCCluster.AHDCCluster;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import org.jlab.rec.ahdc.PreCluster.PreClusterFinder;
-import org.jlab.rec.ahdc.Track.AtofHitStub;
-import org.jlab.rec.ahdc.Track.CandidateType;
-import org.jlab.rec.ahdc.Track.TrackCandidate;
+import org.jlab.rec.alert.Track.AtofHitStub;
+import org.jlab.rec.alert.Track.CandidateType;
+import org.jlab.rec.alert.Track.TrackCandidate;
 
 /** Orchestrates GNN-based track finding: builds the graph, runs the exported
  *  edge scorer, extracts tracks via connected components on edge scores

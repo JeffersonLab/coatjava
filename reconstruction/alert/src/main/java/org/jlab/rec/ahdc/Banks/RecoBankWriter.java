@@ -2,13 +2,13 @@ package org.jlab.rec.ahdc.Banks;
 
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
-import org.jlab.rec.ahdc.AI.InterCluster;
-import org.jlab.rec.ahdc.AI.TrackPrediction;
+import org.jlab.rec.alert.AI.InterCluster;
+import org.jlab.rec.alert.AI.TrackPrediction;
 import org.jlab.rec.ahdc.AHDCCluster.AHDCCluster;
 import org.jlab.rec.ahdc.DocaCluster.DocaCluster;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
-import org.jlab.rec.ahdc.Track.Track;
+import org.jlab.rec.alert.Track.Track;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,4 +1,4 @@
-package org.jlab.rec.ahdc.AI;
+package org.jlab.rec.alert.AI;
 
 import java.io.IOException;
 import java.nio.file.Paths;

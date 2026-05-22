@@ -1,11 +1,11 @@
-package org.jlab.rec.ahdc.Track;
+package org.jlab.rec.alert.Track;
 
-import org.jlab.rec.ahdc.AI.InterCluster;
+import org.jlab.rec.alert.AI.InterCluster;
 import org.jlab.rec.ahdc.AHDCCluster.AHDCCluster;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import org.jlab.rec.ahdc.PreCluster.PreClusterFinder;
-import org.jlab.rec.ahdc.AI.PreClustering;
+import org.jlab.rec.alert.AI.PreClustering;
 
 import java.util.ArrayList;
 import java.util.List;

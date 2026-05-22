@@ -1,4 +1,4 @@
-package org.jlab.rec.ahdc.AI;
+package org.jlab.rec.alert.AI;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -7,7 +7,7 @@ import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
 import org.jlab.rec.ahdc.Hit.Hit;
-import org.jlab.rec.ahdc.Track.AtofHitStub;
+import org.jlab.rec.alert.Track.AtofHitStub;
 
 /** Builds the graph tensors expected by the exported GNN edge scorer.
  */

@@ -1,4 +1,4 @@
-package org.jlab.rec.ahdc.Track;
+package org.jlab.rec.alert.Track;
 
 /** Specialization of a {@link TrackCandidate}. The type a track finder assigns
  *  to a candidate dictates how the candidate is fitted downstream.

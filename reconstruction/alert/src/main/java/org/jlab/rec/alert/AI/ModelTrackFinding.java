@@ -1,4 +1,4 @@
-package org.jlab.rec.ahdc.AI;
+package org.jlab.rec.alert.AI;
 
 import ai.djl.MalformedModelException;
 import ai.djl.ndarray.NDArray;

@@ -1,4 +1,4 @@
-package org.jlab.rec.ahdc.AI;
+package org.jlab.rec.alert.AI;
 
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
