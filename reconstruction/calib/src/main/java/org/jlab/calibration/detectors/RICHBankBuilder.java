@@ -123,7 +123,7 @@ public class RICHBankBuilder extends CalibBankBuilder {
                     calib.setShort("msize",    row, clus.getShort("size", cluster-1));
                 }
                 else
-                    calib.setShort("pindex",   row, (short) -1);
+                    calib.setByte("pindex",    row, (byte) -1);
                 row++;
             }
             return calib;
