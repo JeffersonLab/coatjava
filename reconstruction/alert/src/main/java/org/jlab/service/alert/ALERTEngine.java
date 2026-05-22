@@ -55,11 +55,29 @@ import ai.djl.util.Pair;
 import org.jlab.rec.alert.AIPID.PrePIDResult;
 
 
-/** 
+/**
  * <h1>ALERTEngine reconstruction service.</h1>
+ *
+ * <h2>YAML configuration</h2>
+ *
+ * All settings the engine reads from the reconstruction YAML, shown with their
+ * default values:
+ *
+ * <pre>{@code
+ * services:
+ *   - class: org.jlab.service.alert.ALERTEngine
+ *     name: ALERT
+ *
+ * configuration:
+ *   services:
+ *     ALERT:
+ *       Mode: "AI_GNN"   # track-finding strategy; see TrackFindingMode
+ *                        # (AI_MLP | CV_Distance | CV_Hough | AI_GNN)
+ * }</pre>
  *
  * @author  Whit Armstrong
  * @author  Noemie Pilleux
+ * @author  Mathieu Ouillon
  * @since   2025-04-03
  */
 public class ALERTEngine extends ReconstructionEngine {
@@ -76,7 +94,7 @@ public class ALERTEngine extends ReconstructionEngine {
      *
      */
     private RecoBankWriter rbc;
-    static final Logger LOGGER = Logger.getLogger(ModelPrePID.class.getName());
+    static final Logger LOGGER = Logger.getLogger(ALERTEngine.class.getName());
     Detector ATOF; // ALERT ATOF detector
     private AlertDCDetector AHDC; // ALERT AHDC detector
 
@@ -93,8 +111,7 @@ public class ALERTEngine extends ReconstructionEngine {
 
     // AHDC track-finding strategy (driven by ALERT.Mode YAML key)
     private TrackFinder trackFinder;
-    private final org.jlab.rec.ahdc.Banks.RecoBankWriter ahdcWriter
-            = new org.jlab.rec.ahdc.Banks.RecoBankWriter();
+    private final org.jlab.rec.ahdc.Banks.RecoBankWriter ahdcWriter = new org.jlab.rec.ahdc.Banks.RecoBankWriter();
 
     // AHDC calibration table (refreshed on run change)
     private IndexedTable ahdcAdcGainsTable;
@@ -141,7 +158,7 @@ public class ALERTEngine extends ReconstructionEngine {
         requireConstants(tableMap);
         this.getConstantsManager().setVariation("default");
 
-        TrackFindingMode mode = TrackFindingMode.AI_MLP;
+        TrackFindingMode mode = TrackFindingMode.AI_GNN;
         String modeConfig = this.getEngineConfigString("Mode");
         if (modeConfig != null) mode = TrackFindingMode.valueOf(modeConfig);
         switch (mode) {
