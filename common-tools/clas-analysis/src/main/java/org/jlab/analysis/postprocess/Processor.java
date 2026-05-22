@@ -293,7 +293,6 @@ public class Processor {
 
         for (String f : o.getInputList()) {
             HipoReader reader = new HipoReader();
-            reader.setTags(0);
             reader.open(f);
             Event event = new Event();
             while (reader.hasNext()) {
