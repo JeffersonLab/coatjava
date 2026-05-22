@@ -1,10 +1,6 @@
 package org.jlab.analysis.postprocess;
 
 import java.io.File;
-import java.nio.file.FileSystems;
-import java.nio.file.PathMatcher;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,55 +43,30 @@ public class Processor {
     private HelicitySequenceDelayed helicitySequence = null;
     private TreeMap<Integer,Integer> eventUnix = null;
 
-    public Processor(File file, boolean restream, boolean rebuild) {
-        configure(Arrays.asList(file.getAbsolutePath()), restream, rebuild);
-    }
-    
-    public Processor(String dir, boolean restream, boolean rebuild) {
-        configure(findPreloadFiles(dir,DEF_PRELOAD_GLOB), restream, rebuild);
-    }
-
-    public Processor(String dir, String glob, boolean restream, boolean rebuild) {
-        configure(findPreloadFiles(dir,glob), restream, rebuild);
-    }
-
     public Processor(List<String> files, boolean restream, boolean rebuild) {
-        configure(files, restream, rebuild);
+        HipoReader r = new HipoReader();
+        r.open(files.get(0));
+        schemaFactory = r.getSchemaFactory();
+        r.close();
+        runConfig = new Bank(schemaFactory.getSchema("RUN::config"));
+        recEvent = new Bank(schemaFactory.getSchema("REC::Event"));
+        conman = new ConstantsManager();
+        conman.init(CCDB_TABLES);
+        helicitySequence = Util.getHelicity(files, schemaFactory, restream, conman);
+        if (rebuild) chargeSequence = DaqScalersSequence.rebuildSequence(1, conman, files);
+        else chargeSequence = DaqScalersSequence.readSequence(files);
+        eventUnix = getEventUnixMap(schemaFactory, files); 
     }
 
-    private void configure(List<String> preloadFiles, boolean restream, boolean rebuild) {
-        if (!preloadFiles.isEmpty()) {
-            HipoReader r = new HipoReader();
-            r.open(preloadFiles.get(0));
-            schemaFactory = r.getSchemaFactory();
-            r.close();
-            runConfig = new Bank(schemaFactory.getSchema("RUN::config"));
-            recEvent = new Bank(schemaFactory.getSchema("REC::Event"));
-            conman = new ConstantsManager();
-            conman.init(CCDB_TABLES);
-            helicitySequence = Util.getHelicity(preloadFiles, schemaFactory, restream, conman);
-            if (rebuild) chargeSequence = DaqScalersSequence.rebuildSequence(1, conman, preloadFiles);
-            else chargeSequence = DaqScalersSequence.readSequence(preloadFiles);
-            eventUnix = getEventUnixMap(schemaFactory, preloadFiles); 
-        }
-    }
-
-    /**
-     * Get a list of files to preload, from one directory and a glob.
-     * @param dir
-     * @param glob
-     * @return list of preload files 
-     */
-    private static List<String> findPreloadFiles(String dir, String glob) {
-        List<String> ret = new ArrayList<>();
-        if (dir != null) {
-            PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:"+dir+"/"+glob);
-            for (File f : (new File(dir)).listFiles()) {
-                if (matcher.matches(f.toPath()))
-                    ret.add(f.getPath());
-            }
-        }
-        return ret;
+    public Processor(List<String> files, SchemaFactory schema, HelicitySequenceDelayed h, DaqScalersSequence s) {
+        schemaFactory = schema;
+        helicitySequence = h;
+        chargeSequence = s;
+        runConfig = new Bank(schemaFactory.getSchema("RUN::config"));
+        recEvent = new Bank(schemaFactory.getSchema("REC::Event"));
+        conman = new ConstantsManager();
+        conman.init(CCDB_TABLES);
+        eventUnix = getEventUnixMap(schemaFactory, files);
     }
 
     /**
