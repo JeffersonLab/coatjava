@@ -238,6 +238,8 @@
             {"name":"time",           "type":"F", "info":"Hit time" },
             {"name":"rawtime",        "type":"F", "info":"Hit rawtime" },
             {"name":"duration",       "type":"S", "info":"Hit duration" },
+            {"name":"mchi2",          "type":"F", "info":"Track-cluster matching chi2 (if any)"},
+            {"name":"msize",          "type":"S", "info":"Cluster size"},
             {"name":"status",         "type":"S", "info":"Hit status" },
             {"name":"used",           "type":"B", "info":"eligible for PID in time (1=yes, 0=no) angle (10=yes, 0=no) hypo (100=by other) or cluster (2)"},
             {"name":"emilay",         "type":"B", "info":"aerogel layer of photon emission"},

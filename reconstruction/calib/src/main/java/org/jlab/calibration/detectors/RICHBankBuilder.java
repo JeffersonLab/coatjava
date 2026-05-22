@@ -35,6 +35,7 @@ public class RICHBankBuilder extends CalibBankBuilder {
         DataBank part = event.getBank("REC::Particle");
         DataBank rich = event.getBank("RICH::Particle");        
         DataBank hits = event.getBank("RICH::Hit");
+        DataBank clus = event.getBank("RICH::Cluster");
         DataBank phos = event.getBank("RICH::Photon");
             
         List<Integer> goodPhotons = new ArrayList<>();
@@ -45,9 +46,12 @@ public class RICHBankBuilder extends CalibBankBuilder {
         }
 
         Map<Integer,Integer> part2Rich = new HashMap<>();
+        Map<Integer,Integer> clus2Rich = new HashMap<>();
         for(int i=0; i<rich.rows(); i++) {
             int pindex = rich.getByte("pindex", i);
+            int hindex = rich.getShort("hindex", i);
             part2Rich.put(pindex, i);
+            clus2Rich.put(hindex, i);
         }
         
         List<Integer> goodClusters = new ArrayList<>();
@@ -99,6 +103,7 @@ public class RICHBankBuilder extends CalibBankBuilder {
                 row++;
             }
             for(int i : goodClusters) {
+                int cluster = hits.getShort("cluster", i);
                 calib.setShort("hindex",       row, (short) i);
                 calib.setByte( "sector",       row, (byte) hits.getShort("sector", i));
                 calib.setShort("pmt",          row, hits.getShort("pmt", i));
@@ -111,6 +116,14 @@ public class RICHBankBuilder extends CalibBankBuilder {
                 calib.setFloat("time",         row, hits.getFloat("time", i));
                 calib.setFloat("rawtime",      row, hits.getFloat("rawtime", i));
                 calib.setShort("duration",     row, hits.getShort("duration", i));
+                if(clus2Rich.containsKey(cluster-1)) {
+                    int rindex  = clus2Rich.get(cluster-1);
+                    calib.setShort("pindex",   row, rich.getShort("pindex", rindex));
+                    calib.setFloat("mchi2",    row, rich.getFloat("mchi2", rindex));
+                    calib.setShort("msize",    row, clus.getShort("size", cluster-1));
+                }
+                else
+                    calib.setShort("pindex",   row, (short) -1);
                 row++;
             }
             return calib;
