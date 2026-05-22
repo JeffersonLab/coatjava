@@ -22,6 +22,17 @@ import org.jlab.utils.CLASResources;
  *  Exported forward signature (see SingleGraphEdgeScorer):
  *    forward(x: float32[N, 10], edge_index: int64[2, E], edge_attr: float32[E, 9])
  *      -&gt; float32[E]   (sigmoid edge scores in [0, 1])
+ *
+ *  <p>DJL (Deep Java Library) is the inference engine used here. See its
+ *  documentation for the {@code Criteria} / {@code ZooModel} / {@code Predictor}
+ *  / {@code NDArray} APIs used below:
+ *  <ul>
+ *  <li><a href="https://docs.djl.ai/master/index.html">DJL docs (master)</a></li>
+ *  <li><a href="https://docs.djl.ai/master/docs/load_model.html">Loading a model</a>
+ *      (drives the {@link Criteria}/{@link ZooModel} block)</li>
+ *  <li><a href="https://docs.djl.ai/master/engines/pytorch/pytorch-engine/index.html">PyTorch engine</a>
+ *      (TorchScript inference)</li>
+ *  </ul>
  */
 public class ModelTrackFindingGNN {
 
