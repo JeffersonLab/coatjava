@@ -36,7 +36,6 @@
     <module>urwt</module>
     <module>alert</module>
     <module>bg</module>
-    <module>postproc</module>
     <module>recoil</module>
     <module>calib</module>
     <module>uber</module>
