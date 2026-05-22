@@ -118,7 +118,7 @@ public class RICHBankBuilder extends CalibBankBuilder {
                 calib.setShort("duration",     row, hits.getShort("duration", i));
                 if(clus2Rich.containsKey(cluster-1)) {
                     int rindex  = clus2Rich.get(cluster-1);
-                    calib.setShort("pindex",   row, rich.getShort("pindex", rindex));
+                    calib.setByte("pindex",    row, rich.getByte("pindex", rindex));
                     calib.setFloat("mchi2",    row, rich.getFloat("mchi2", rindex));
                     calib.setShort("msize",    row, clus.getShort("size", cluster-1));
                 }
