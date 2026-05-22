@@ -9,6 +9,8 @@ import java.util.Map;
  *  at a single threshold. Ports the {@code method="cc"} branch of
  *  {@code track-finding/gnn/inference.py::extract_tracks}, which is the
  *  extractor that gnn/evaluate.py uses.
+ * 
+ * Code from: <url> https://gitlab.com/MathieuOuillon/track-finding </url>
  */
 final class SeedExtendTrackExtractor {
 
