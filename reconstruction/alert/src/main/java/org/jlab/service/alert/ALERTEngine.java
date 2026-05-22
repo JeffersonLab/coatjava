@@ -30,7 +30,7 @@ import org.jlab.rec.ahdc.DocaCluster.DocaCluster;
 import org.jlab.rec.ahdc.DocaCluster.DocaClusterRefiner;
 import org.jlab.rec.ahdc.HelixFit.HelixFitJava;
 import org.jlab.rec.ahdc.KalmanFilter.KalmanFilter;
-import org.jlab.rec.ahdc.ModeTrackFinding;
+import org.jlab.rec.ahdc.TrackFindingMode;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import org.jlab.rec.ahdc.PreCluster.PreClusterFinder;
 import org.jlab.rec.ahdc.Hit.Hit;
@@ -141,11 +141,11 @@ public class ALERTEngine extends ReconstructionEngine {
         requireConstants(tableMap);
         this.getConstantsManager().setVariation("default");
 
-        ModeTrackFinding mode = ModeTrackFinding.MLP_Track_Finding;
+        TrackFindingMode mode = TrackFindingMode.MLP_Track_Finding;
         String modeConfig = this.getEngineConfigString("Mode");
-        if (modeConfig != null) mode = ModeTrackFinding.valueOf(modeConfig);
+        if (modeConfig != null) mode = TrackFindingMode.valueOf(modeConfig);
         switch (mode) {
-            case MLP_Track_Finding: trackFinder = new AITrackFinder();      break;
+            case MLP_Track_Finding: trackFinder = new AITrackFinder();       break;
             case CV_Distance:       trackFinder = new DistanceTrackFinder(); break;
             case CV_Hough:          trackFinder = new HoughTrackFinder();    break;
             case GNN_Track_Finding: trackFinder = new GNNTrackFinder();      break;

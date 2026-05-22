@@ -1,6 +1,6 @@
 package org.jlab.rec.ahdc;
 
-public enum ModeTrackFinding {
+public enum TrackFindingMode {
     MLP_Track_Finding,
     CV_Distance,
     CV_Hough,
