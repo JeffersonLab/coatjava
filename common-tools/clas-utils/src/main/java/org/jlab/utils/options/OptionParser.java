@@ -111,7 +111,7 @@ public class OptionParser {
         
         StringBuilder str = new StringBuilder();
         
-        str.append("     Usage : ").append(program).append(" ");
+        str.append("\n     Usage : ").append(program).append(" ");
         for(Map.Entry<String,OptionValue> entry : this.requiredOptions.entrySet()){
             str.append(entry.getKey()).append(" [").
                     append(entry.getValue().getDescription()).append("] ");
