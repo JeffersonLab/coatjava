@@ -330,10 +330,11 @@ public class HitReader {
         
         DataBank pbank = event.getBank(pointName);
         for (int i = 0; i < pbank.rows(); i++) {
-            id2tid.put((int)pbank.getShort("id", i), (int)pbank.getShort("tid", i));
-            id2tidB.put((int)pbank.getShort("id", i), (double)pbank.getFloat("B", i));
-            id2tidtFlight.put((int)pbank.getShort("id", i), (double)pbank.getFloat("TFlight", i));
-            id2tidtProp.put((int)pbank.getShort("id", i), (double)pbank.getFloat("TProp", i));
+            int id = pbank.getShort("id",i);
+            id2tid.put(id, (int)pbank.getShort("tid", i));
+            id2tidB.put(id, (double)pbank.getFloat("B", i));
+            id2tidtFlight.put(id, (double)pbank.getFloat("TFlight", i));
+            id2tidtProp.put(id, (double)pbank.getFloat("TProp", i));
         }
         
         DataBank bank = event.getBank(bankName);
