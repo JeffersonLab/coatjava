@@ -74,18 +74,18 @@ public class ClusterCleanerUtilities {
         /// determined.
         /// This is a preliminary pattern recognition method used to identify
         /// reconstructed hits belonging to the same track-segment.
-        int N_t = 180;
+        final int N_t = 180;
 
         // From this calculate the bin size in the theta accumulator array
-        double ThetaMin = 0.;
-        double ThetaMax = 2. * Math.PI;
-        double SizeThetaBin = (ThetaMax - ThetaMin) / ((double) N_t);
+        final double ThetaMin = 0.;
+        final double ThetaMax = 2. * Math.PI;
+        final double SizeThetaBin = (ThetaMax - ThetaMin) / ((double) N_t);
 
         // Define the dimension of the r accumulator array
-        int N_r = 130;
+        final int N_r = 130;
         // From this calculate the bin size in the theta accumulator array
-        double RMin = -130;
-        double RMax = 130;
+        final double RMin = -130;
+        final double RMax = 130;
 
         int[][] R_Phi_Accumul;
         R_Phi_Accumul = new int[N_r][N_t];
