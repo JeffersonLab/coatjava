@@ -6,8 +6,6 @@ io-services:
     class: org.jlab.io.clara.HipoToHipoWriter
     name: HipoToHipoWriter
 services:
-  - class: org.jlab.clas.reco.DecoderEngine
-    name: DECO
   - class: org.jlab.clas.swimtools.MagFieldsEngine
     name: MAGFIELDS
   - class: org.jlab.rec.ft.cal.FTCALEngine
