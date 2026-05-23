@@ -87,21 +87,15 @@ public class ClusterCleanerUtilities {
         final double RMin = -130;
         final double RMax = 130;
 
-        int[][] R_Phi_Accumul;
-        R_Phi_Accumul = new int[N_r][N_t];
+        int[][] R_Phi_Accumul = new int[N_r][N_t];
 
         // cache the cos and sin theta values [for performance improvement]
-        double[] cosTheta_RPhi_array;
-        double[] sinTheta_RPhi_array;
+        double[] cosTheta_RPhi_array = new double[N_t];
+        double[] sinTheta_RPhi_array = new double[N_t];
 
         // the values corresponding to the peaks in the array
-        double[] binrMaxR_Phi;
-        double[] bintMaxR_Phi;
-        binrMaxR_Phi = new double[N_r * N_t];
-        bintMaxR_Phi = new double[N_r * N_t];
-
-        cosTheta_RPhi_array = new double[N_t];
-        sinTheta_RPhi_array = new double[N_t];
+        double[] binrMaxR_Phi = new double[N_r * N_t];
+        double[] bintMaxR_Phi = new double[N_r * N_t];
 
         for (int j_t = 0; j_t < N_t; j_t++) {
             // theta_j in the middle of the bin :
