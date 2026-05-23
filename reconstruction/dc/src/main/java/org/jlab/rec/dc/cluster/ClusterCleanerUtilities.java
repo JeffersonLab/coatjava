@@ -86,6 +86,7 @@ public class ClusterCleanerUtilities {
         // From this calculate the bin size in the theta accumulator array
         final double RMin = -130;
         final double RMax = 130;
+        final double dR = RMax - RMin;
 
         int[][] R_Phi_Accumul = new int[N_r][N_t];
 
@@ -117,7 +118,7 @@ public class ClusterCleanerUtilities {
                 // r_j corresponding to that theta_j:
                 double r_j = rho * cosTheta_RPhi_array[j_t] + phi * sinTheta_RPhi_array[j_t];
                 // this value of r_j falls into the following bin in the r array:
-                int j_r = (int) Math.floor(N_r * (r_j - RMin) / (float) (RMax - RMin));
+                int j_r = (int) Math.floor(N_r * (r_j - RMin) / dR);
 
                 // increase this accumulator cell:
                 R_Phi_Accumul[j_r][j_t]++;
@@ -171,7 +172,7 @@ public class ClusterCleanerUtilities {
                     // r_j corresponding to that theta_j:
                     double r_j = rho * cosTheta_RPhi_array[j_t] + phi * sinTheta_RPhi_array[j_t];
                     // this value of r_j falls into the following bin in the r array:
-                    int j_r = (int) Math.floor(N_r * (r_j - RMin) / (float) (RMax - RMin));
+                    int j_r = (int) Math.floor(N_r * (r_j - RMin) / dR);
 
                     // match bins:
                     if (j_r == binrMaxR_Phi[p] && j_t == bintMaxR_Phi[p]) {
