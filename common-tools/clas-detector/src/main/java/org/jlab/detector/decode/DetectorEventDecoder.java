@@ -94,10 +94,6 @@ public class DetectorEventDecoder {
                 getValue()).floatValue();
     }
 
-    public DetectorEventDecoder(){
-        this.initDecoder();
-    }
-
     public final void initDecoderDev() {
 
         keysFilter = new HashSet<>();
@@ -173,18 +169,12 @@ public class DetectorEventDecoder {
         tableFitter.put(DetectorType.RASTER, "/daq/fadc/raster");
         tableFitter.put(DetectorType.AHDC,   "/daq/fadc/ahdc");
         
-        translationManager.init(tableTrans.values().stream().collect(Collectors.toList()));
-        fitterManager.init(tableFitter.values().stream().collect(Collectors.toList()));
-        scalerManager.init("/runcontrol/slm","/runcontrol/hwp","/runcontrol/helicity","/daq/config/scalers/dsc1");
-
         if (initializeManagers) {
-            translationManager.init(tablesTrans);
-            fitterManager.init(tablesFitter);
-            scalerManager.init(Arrays.asList(new String[]{"/runcontrol/fcup","/runcontrol/slm","/runcontrol/hwp",
-                                                          "/runcontrol/helicity","/daq/config/scalers/dsc1"}));
+            translationManager.init(tableTrans.values().stream().collect(Collectors.toList()));
+            fitterManager.init(tableFitter.values().stream().collect(Collectors.toList()));
+            scalerManager.init("/runcontrol/slm","/runcontrol/hwp","/runcontrol/helicity","/daq/config/scalers/dsc1");
             checkTables();
         }
-
     }
 
     public void checkTables() {
