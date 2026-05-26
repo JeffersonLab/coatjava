@@ -200,11 +200,14 @@ public class Processor {
      */
     private void processEventUnix(Event event, Bank runcfg) {
         if (runcfg.getRows() > 0) {
-            Integer unix = eventUnix.get(eventUnix.floorKey(runcfg.getInt("event",0)));
-            if (unix != null) {
-                event.remove(runcfg.getSchema());
-                runcfg.putInt("unixtime", 0, unix);
-                event.write(runcfg);
+            Integer key =  eventUnix.floorKey(runcfg.getInt("event",0));
+            if (key != null) {
+                Integer unix = eventUnix.get(key);
+                if (unix != null) {
+                    event.remove(runcfg.getSchema());
+                    runcfg.putInt("unixtime", 0, unix);
+                    event.write(runcfg);
+                }
             }
         }
     }
