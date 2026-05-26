@@ -2,7 +2,6 @@ package org.jlab.io.clara;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import org.jlab.analysis.postprocess.Processor;
@@ -146,9 +145,9 @@ public class Clas12Writer extends HipoToHipoWriter {
      */
     private void postprocess() {
         int d = conman.getConstants(getRunNumber(), "/runcontrol/helicity").getIntValue("delay",0,0,0);
-        HelicitySequenceDelayed helicity = new HelicitySequenceDelayed(d);
-        helicity.addStream(helicities);
-        Processor p = new Processor(List.of(filename), fullSchema, helicity, scalers);
+        HelicitySequenceDelayed h = new HelicitySequenceDelayed(d);
+        h.addStream(helicities);
+        Processor p = new Processor(fullSchema, h, scalers);
         HipoReader r = new HipoReader();
         r.open(filename);
         Event e = new Event();
