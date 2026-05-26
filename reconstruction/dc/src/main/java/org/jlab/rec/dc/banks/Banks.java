@@ -136,7 +136,7 @@ public class Banks {
 
     public String getCovmatBank() {
         return this.getOutputBank("CovMat");
-    }
+    }        
     
     public String getRecEventBank() {
         return this.getRecBank("Event");

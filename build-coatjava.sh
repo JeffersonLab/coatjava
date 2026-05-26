@@ -10,7 +10,6 @@ set -o pipefail
 ################################################################################
 
 cleanBuild=false
-anaDepends=false
 runSpotBugs=false
 downloadMaps=true
 downloadNets=true
@@ -46,7 +45,6 @@ DATA RETRIEVAL OPTIONS
 TESTING OPTIONS
     --spotbugs        also run spotbugs plugin
     --unittests       also run unit tests
-    --depana          run dependency analysis (only)
     --data            download test data (requires option `--lfs`)
 
 MAVEN OPTIONS
@@ -70,7 +68,10 @@ do
     --nonets)    downloadNets=false ;;
     --unittests) runUnitTests=true  ;;
     --clean)     cleanBuild=true    ;;
-    --depana)    anaDepends=true    ;;
+    --depana)
+      echo "ERROR: option \`$xx\` has been removed; dependency tree printout and analysis now happen automatically in the Maven build lifecycle" >&2
+      exit 1
+      ;;
     --quiet)
       mvnArgs+=(--quiet --batch-mode)
       wgetArgs+=(--quiet)
@@ -86,7 +87,7 @@ do
     --clara) installClara=true   ;;
     --data)  downloadData=true   ;;
     --xrootd)
-      echo "ERROR: option \`$xx\` is deprecated; use \`--help\` for guidance" >&2
+      echo "ERROR: option \`$xx\` has been removed; use \`--help\` for guidance" >&2
       exit 1
       ;;
     -h|--help)
@@ -147,13 +148,6 @@ if $cleanBuild || [ "$dataRetrieval" = "wipe" ]; then
   [ "$dataRetrieval" = "wipe" ] && echo "[+] REMOVED RETRIEVED DATA" || echo "[+] NOTE: retrieved data not removed; use \`--wipe\` if you need to remove them"
   $cleanBuild && echo "[+] DONE CLEANING; rerun without \`--clean\` to build"
   exit
-fi
-
-# run dependency analysis and exit
-if $anaDepends; then
-  libexec/dependency-analysis.sh
-  libexec/dependency-tree.sh
-  exit 0
 fi
 
 
@@ -317,16 +311,16 @@ cp -r libexec $prefix_dir/
 which python3 >& /dev/null && python=python3 || python=python
 $python etc/bankdefs/util/bankSplit.py $prefix_dir/etc/bankdefs/hipo4 || exit 1
 
-# FIXME:  this is still needed by one of the tests
-mkdir -p $prefix_dir/lib/utils
-cp external-dependencies/jclara-4.3-SNAPSHOT.jar $prefix_dir/lib/utils
+# use maven to copy a CLARA jar to a separate directory:
+mvn org.apache.maven.plugins:maven-dependency-plugin:3.10.0:copy \
+     -Dartifact=org.jlab.coda:jclara:4.3:jar -DoutputDirectory=$prefix_dir/lib/utils -DstripVersion=false
 
 # build (and test)
 unset CLAS12DIR
 if $runUnitTests; then
-  $mvn install # also runs unit tests
+  $mvn install -DskipTests=false
 else
-  $mvn install -DskipTests
+  $mvn install
 fi
 
 # run spotbugs
@@ -334,7 +328,6 @@ if $runSpotBugs; then
   libexec/spotbugs.sh ${mvnArgs[@]:-} || (echo "ERROR: spotbugs failure" >&2 && exit 1)
   echo "spotbugs spotted no bugs!"
 fi
-
 
 ################################################################################
 # install
@@ -365,9 +358,10 @@ for pom in $(find common-tools -name pom.xml); do
   #   install_jars $pom $prefix_dir/lib/services
   fi
 done
+
 echo "installed coatjava to: $prefix_dir"
 
 # install clara
-if $installClara; then ./install-clara -c $prefix_dir $clara_home; fi
+if $installClara; then ./bin/install-clara -c $prefix_dir $clara_home; fi
 
 echo "COATJAVA SUCCESSFULLY BUILT !"

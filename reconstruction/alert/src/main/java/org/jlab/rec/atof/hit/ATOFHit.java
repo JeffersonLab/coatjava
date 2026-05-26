@@ -4,7 +4,7 @@ import org.jlab.geom.base.*;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.rec.atof.constants.Parameters;
 import java.util.logging.Logger;
-import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
+import org.jlab.utils.groups.IndexedTable;
 
 /**
  *
@@ -21,13 +21,13 @@ public class ATOFHit {
     
     private int sector, layer, component, order;
     private int tdc, tot;
-    private float startTime;
+    private Float startTime;
     private double time, energy, x, y, z;
     private String type;
     private boolean isInACluster;
     private int associatedClusterIndex;
-    private double meanTimeAligned;
     int idTDC;
+    private IndexedTable atofTimeOffsetsTable;
     
 
     public int getSector() {
@@ -82,12 +82,8 @@ public class ATOFHit {
         return time;
     }
     
-    public double getStartTime() {
+    public Float getStartTime() {
         return this.startTime;
-    }
-    
-    public double getMeanTimeAligned(){
-        return this.meanTimeAligned;
     }
 
     public void setTime(double time) {
@@ -195,30 +191,16 @@ public class ATOFHit {
      * unsupported.
      */
     public final int convertTdcToTime() {
-        
         //Converting tdc to ns, event start time correction
-        this.time = Parameters.TDC2TIME*this.tdc - this.startTime;
+        this.time = Parameters.TDC2TIME*this.tdc;
+        //If the startTime has been defined, remove it
+        if(this.startTime!= null) this.time -= this.startTime;
 
-        //TODO: When table structure evolves, pay attention to order.
-        //Key for the current channel 
-        int key = this.sector*10000 + this.layer*1000 + this.component*10 + 0;//this.order;
-        //Key for the reference channel over which all the others sharing the same z are aligned 
-        int referenceModuleKey = this.component*10; 
-    
         //Time offsets
-        double[] timeOffsets = CalibrationConstantsLoader.ATOF_TIME_OFFSETS.get(key);
-        double[] timeOffsetsRef = CalibrationConstantsLoader.ATOF_TIME_OFFSETS.get(referenceModuleKey);
-        this.meanTimeAligned = timeOffsetsRef[0];
-        //The names below correspond to the CCDB entries
-        //They will most probably evolve
-        //For now let's say t0 is used to store the bar-to-bar and wedge-to-wedge alignments
-        double t0 = timeOffsets[0];
-        double tChannelToChannelPhiAlignment = (t0 - this.meanTimeAligned);
-        if(this.type=="bar up" || this.type=="bar down") //bar alignment is done with the sum of the two times
-            tChannelToChannelPhiAlignment=tChannelToChannelPhiAlignment/2.;
-        
-        //tud is used to store the bar up - bar down alignment
-        double tud = timeOffsets[1];
+        if (atofTimeOffsetsTable == null) return 0;
+        int order0 = 0;
+        double t0  = atofTimeOffsetsTable.getDoubleValue("t0",                  this.sector, this.layer, this.component, order0);
+        double tud = atofTimeOffsetsTable.getDoubleValue("upstream_downstream", this.sector, this.layer, this.component, order0);
         //The rest of the constants are not used for now
         /*double twb = timeOffsets[2];
         double xtra1 = timeOffsets[3];
@@ -237,8 +219,6 @@ public class ATOFHit {
         double dtw3 = timeWalks[7];
         double chi2ndf = timeWalks[8];*/
         
-        //Veff corrections TO BE IMPLEMENTED
-        
         double veff, distance_to_sipm, timeOffset;
         if (null == this.type) {
             LOGGER.finest("Null hit type, cannot convert tdc to time.");
@@ -249,19 +229,20 @@ public class ATOFHit {
                     veff = Parameters.VEFF;
                     //Wedge hits are placed at the center of wedges and sipm at their top
                     distance_to_sipm = Parameters.WEDGE_THICKNESS / 2.;
-                    timeOffset = - tChannelToChannelPhiAlignment;
+                    timeOffset = - t0;
                 }
                 case "bar up" -> {
                     veff = Parameters.VEFF;
                     //The distance will be computed at barhit level when z information is available
                     distance_to_sipm = 0;
-                    timeOffset = - tud/2. - tChannelToChannelPhiAlignment;
+                    //t0 for bars is the sum of up+down channels->need 1/2
+                    timeOffset = - tud/2. - t0/2;
                 }
                 case "bar down" -> {
                     veff = Parameters.VEFF;
                     //The distance will be computed at barhit level when z information is available
                     distance_to_sipm = 0;
-                    timeOffset = + tud/2. - tChannelToChannelPhiAlignment;
+                    timeOffset = + tud/2. - t0/2;
                 }
                 case "bar" -> {
                     LOGGER.finest("Bar hit type, cannot convert tdc to time.");
@@ -418,7 +399,8 @@ public class ATOFHit {
      * @param atof Detector object representing the atof, used to calculate
      * spatial coordinates.
      */
-    public ATOFHit(int sector, int layer, int component, int order, int tdc, int tot, float startTime, Detector atof) {
+    public ATOFHit(int sector, int layer, int component, int order, int tdc, int tot, Float startTime, Detector atof,
+                   IndexedTable atofTimeOffsetsTable) {
         this.sector = sector;
         this.layer = layer;
         this.component = component;
@@ -426,6 +408,7 @@ public class ATOFHit {
         this.tdc = tdc;
         this.tot = tot;
         this.startTime = startTime;
+        this.atofTimeOffsetsTable = atofTimeOffsetsTable;
         this.isInACluster = false;
 
         this.makeType();

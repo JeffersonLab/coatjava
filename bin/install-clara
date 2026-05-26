@@ -1,0 +1,152 @@
+#!/usr/bin/env bash
+
+set -e
+
+# Default versions:
+grapes=2.24
+clara=5.0.2
+
+function error() {
+    echo -e "\n$usage\n\n  Use option '-h' for more usage guidance.\n\nERROR:  $@"
+    exit 1
+}
+
+function get() {
+    [ "$debug" -eq 0 ] && wopts="--no-verbose" || wopts=""
+    [ "$#" -gt 1 ]     && topts="-C $2 -xz"    || topts="-xz"
+    [ "$debug" -gt 0 ] && topts+="v"
+    wget $wopts $1
+    tar $topts -f $(basename $1)
+}
+
+function install() {
+    find clara-cre -exec touch {} +
+    chmod -f -R a+r clara-cre
+    chmod -f a+x clara-cre/bin/*
+    mv clara-cre $clara_home
+}
+
+function litter() {
+    exit_code=$1
+    if [ -d "$tmp_dir" ]
+    then
+        if [ "$exit_code" -ne 0 ] || [ "$debug" -gt 1 ]
+        then
+            echo -e "\nSee temporary build directory for more info:\n\t$tmp_dir"
+        else
+            rm -rf $tmp_dir
+        fi
+    fi
+}
+
+function check() {
+    if compgen -G "$clara_home/lib/jclara-*.jar" > /dev/null
+    then
+        echo -e "\n\$CLARA_HOME installed at:\n\t$clara_home\n"
+    else
+        echo -e "\n\$CLARA_HOME installed but looks broken:\n\t$clara_home"
+    fi
+}
+
+function cleanup() {
+    exit_code=$?
+    [ "$exit_code" -eq 0 ] && install
+    litter $exit_code
+    [ "$exit_code" -eq 0 ] && check
+}
+
+function build_clara {
+    #git clone --branch $clara --depth 1 https://code.jlab.org/hallb/clas12/clara-java
+    git clone --depth 1 https://code.jlab.org/hallb/clas12/clara-java
+    cd clara-java && CLARA_HOME=$1 ./gradlew deploy && cd -
+}
+
+function build_grapes {
+    git clone --depth 1 --branch $grapes https://github.com/jeffersonlab/grapes
+    cd grapes && mvn package && cd -
+}
+
+trap cleanup EXIT
+
+# Configure:
+debug=0
+args=()
+usage="Usage:  install-clara [-v] [-b] [-c COATJAVA] [-f CLARA] [-g GRAPES] PATH"
+info="""
+- The default CLARA / GRAPES versions are $clara / $grapes
+- COATJAVA can also be specified as a local installation directory
+- If the COATJAVA version is not specified, it will try to auto-detect it.
+- [-v adds verbosity and disables cleanup]
+- [-b builds clara from source]"""
+
+while [[ $# -gt 0 ]]
+do
+    case $1 in
+        -h|--help) echo -e "\n$usage" && echo -e "$info" && exit 1 ;;
+        -f) clara="$2" && shift && shift ;;
+        -c) coatjava="$2" && shift && shift ;;
+        -g) grapes="$2" && shift && shift ;;
+        -b) build=1 && shift ;;
+        -v) let debug=$debug+1 && shift ;;
+        -*|--*)  echo -e "$usage\n\nUnknown option:  $1" && exit 1 ;;
+        *) args+=("$1") && shift ;;
+    esac
+done
+
+# Check requested installation path:
+clara_home="$args"
+[ "${#args[@]}" -lt 1 ] && error "Missing PATH argument"
+[ "${#args[@]}" -gt 1 ] && error "Extra PATH arguments:  ${args[@]:1}"
+[ -e "$clara_home" ]    && error "Installation PATH already exists:  $clara_home"
+mkdir -p $clara_home    || error "Cannot create installation PATH:  $clara_home"
+clara_home=$(cd $clara_home && pwd) && rmdir $clara_home
+
+# If the user didn't specify a coatjava version, try auto-detect the version:
+if [ -z ${coatjava+x} ]
+then
+    [ -e "$(dirname $0)/libexec/version.sh" ] || error "Failed to auto-detect.  COATJAVA version must be specified with '-c'"
+    coatjava=$($(dirname $0)/libexec/version.sh | sed 's/-SNAPSHOT//')
+fi
+
+# Detect local COATJAVA installation and convert into an absolute path:
+if compgen -G "$coatjava/lib/clas/coat-libs-*.jar" > /dev/null
+then
+    coatjava=$(cd $coatjava && pwd)
+    echo -e "\nUsing local COATJAVA installation:\n\t$coatjava"
+elif ! [[ "$coatjava" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)t?$ ]] # must be semver, or semver+"t"
+then
+    echo -e "\n\nWARNING:  COATJAVA doesn't look like a local installation nor version number:  $coatjava"
+fi
+
+# Do everything inside a new, temporary directory:
+[ -w "." ] || error "Current working directory is not writeable:  \$PWD=$PWD"
+tmp_dir=$(mktemp -d tmp.install-clara.XXXXXX)
+[ $? -ne 0 ] && error "Cannot create temporary directory:  $tmp_dir"
+tmp_dir=$(cd $tmp_dir && pwd)
+cd $tmp_dir
+
+# CLARA:
+if ! [ -z ${build+x} ]
+then
+    echo -e "\nBuilding CLARA from source ..."
+    build_clara $PWD/clara-cre
+else
+    echo -e "\nRetrieving CLARA version $clara ..."
+    get https://clasweb.jlab.org/clas12offline/distribution/clara/clara-cre-$clara.tar.gz
+fi
+
+# COATJAVA:
+if ! compgen -G "$coatjava/lib/clas/coat-libs-*.jar" > /dev/null
+then
+    echo -e "\nRetrieving COATJAVA version $coatjava ..."
+    get https://github.com/JeffersonLab/coatjava/releases/download/$coatjava/coatjava-$coatjava.tar.gz
+    coatjava=./coatjava-$coatjava
+fi
+mkdir -p clara-cre/plugins/clas12/config
+cp -Lr $coatjava/etc $coatjava/bin $coatjava/lib* clara-cre/plugins/clas12
+
+# GRAPES:
+echo -e "\nRetrieving GRAPES version $grapes ..."
+build_grapes $PWD/grapes
+mkdir -p clara-cre/plugins/grapes/lib/core/
+cp grapes/target/grapes-*core*.jar clara-cre/plugins/grapes/lib/core/

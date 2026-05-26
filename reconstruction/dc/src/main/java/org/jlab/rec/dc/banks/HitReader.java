@@ -114,7 +114,6 @@ public class HitReader {
            double period = timejitter.getDoubleValueByHash("period", hash);
            int    phase  = timejitter.getIntValueByHash("phase", hash);
            int    cycles = timejitter.getIntValueByHash("cycles", hash);
-
            if (cycles > 0) jitter = (int) (period * ((tiTimeStamp + phase) % cycles));
         }
         return jitter;
@@ -378,11 +377,6 @@ public class HitReader {
                  tFlight[i] = this.id2tidtFlight.get(id[i]);
             }
             
-            if (event.hasBank("MC::Particle") ||
-                    event.getBank("RUN::config").getInt("run", 0) < 100) {
-                tProp[i] = 0;
-                tFlight[i] = 0;
-            }
         }
 
         int size = layer.length;
@@ -405,12 +399,8 @@ public class HitReader {
                 continue;
             } 
             
-            if (!event.hasBank("MC::Particle") &&
-                    event.getBank("RUN::config").getInt("run", 0) > 100) {
-                //T_0 = this.getT0(sector[i], slayer[i], layer[i], wire[i], T0, T0ERR)[0];
-                if (event.hasBank(recBankName))
+            if (event.hasBank(recBankName))
                     T_Start = event.getBank(recBankName).getFloat("startTime", 0);
-            }  
             
             T_0 = this.getT0(sector[i], slayer[i], layer[i], wire[i], t0s)[0];
             FittedHit hit = new FittedHit(sector[i], slayer[i], layer[i], wire[i], tdc[i], jitter[i], id[i]);

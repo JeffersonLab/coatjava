@@ -35,16 +35,7 @@ public class Track {
 	private double dEdx    = 0;  ///< deposited energy per path length (adc/mm)
 	private double p_drift = 0;  ///< momentum in the drift region (MeV)
 	private double path    = 0;  ///< length of the track (mm)
-	// AHDC::kftrack
-	private double x0_kf  = 0;
-	private double y0_kf  = 0;
-	private double z0_kf  = 0;
-	private double px0_kf = 0;
-	private double py0_kf = 0;
-	private double pz0_kf = 0;
-	private double dEdx_kf    = 0;  ///< deposited energy per path length (adc/mm)
-	private double p_drift_kf = 0;  ///< momentum in the drift region (MeV)
-	private double path_kf    = 0;  ///< length of the track (mm)
+
     // AHDC::aiprediction
     private int predicted_ATOF_sector = -1;
     private int predicted_ATOF_layer = -1;
@@ -82,6 +73,8 @@ public class Track {
 		this.px0 = helixFitObject.get_px();
 		this.py0 = helixFitObject.get_py();
 		this.pz0 = helixFitObject.get_pz();
+		this.chi2 = helixFitObject.get_Chi2();
+		this.path = helixFitObject.get_path();
 	}
 
 	public void setPositionAndMomentumVec(double[] x) {
@@ -91,15 +84,6 @@ public class Track {
 		this.px0 = x[3];
 		this.py0 = x[4];
 		this.pz0 = x[5];
-	}
-
-	public void setPositionAndMomentumForKF(RealVector x) {
-		this.x0_kf  = x.getEntry(0);
-		this.y0_kf  = x.getEntry(1);
-		this.z0_kf  = x.getEntry(2);
-		this.px0_kf = x.getEntry(3);
-		this.py0_kf = x.getEntry(4);
-		this.pz0_kf = x.getEntry(5);
 	}
 
 	private void generateHitList() {
@@ -174,31 +158,6 @@ public class Track {
 		return pz0;
 	}
 
-	public double getX0_kf() {
-		return x0_kf;
-	}
-
-	public double getY0_kf() {
-		return y0_kf;
-	}
-
-	public double getZ0_kf() {
-		return z0_kf;
-	}
-
-	public double getPx0_kf() {
-		return px0_kf;
-	}
-
-	public double getPy0_kf() {
-		return py0_kf;
-	}
-
-	public double getPz0_kf() {
-		return pz0_kf;
-	}
-
-	// Same for Track and KFTrack	
 	public void set_trackId(int _trackId) { 
 		trackId = _trackId;
 		// set trackId for clusters
@@ -209,31 +168,52 @@ public class Track {
 		for(InterCluster interCluster : this._InterClusters) {
 			interCluster.setTrackId(_trackId);
 		}
+		// set trackId for hits
+		for (Hit hit : this.hits) {
+			hit.setTrackId(_trackId);
+		}
 	}
 	public void set_n_hits(int _n_hits) { n_hits = _n_hits;}
 	public void set_sum_adc(int _sum_adc) { sum_adc = _sum_adc;}
 	public void set_chi2(double _chi2) { chi2 = _chi2;}
 	public void set_sum_residuals(double _sum_residuals) { sum_residuals = _sum_residuals;}
 	public int    get_trackId() {return trackId;}
-	public int    get_n_hits() {return n_hits;}
-	public int    get_sum_adc() {return sum_adc;}
+	public int    get_n_hits() {
+    	if (hits == null) {
+    	    return 0;
+    	}
+    	return hits.size();
+	}
+	public int    get_sum_adc() {
+		if (hits == null || hits.isEmpty()) {
+			return 0;
+		}
+		int sum = 0;
+		for (Hit h : hits) {
+			sum += (int) Math.round(h.getADC());
+		}
+		return sum;
+	}
 	public double get_chi2() {return chi2;}
 	public double get_sum_residuals() {return sum_residuals;}
 	// AHDC::track
 	public void set_dEdx(double _dEdx) { dEdx = _dEdx;}
 	public void set_p_drift(double _p_drift) { p_drift = _p_drift;}
 	public void set_path(double _path) { path = _path;}
-	public double get_dEdx() {return dEdx;}
+	public double get_dEdx() {
+		if (path <= 0) {
+			dEdx = 0;
+		}else {
+			int sum = 0;
+			for (Hit h : hits) {
+				sum += (int) Math.round(h.getADC());
+			}
+			dEdx = sum/path; 
+		}
+		return dEdx;
+	}
 	public double get_p_drift() {return p_drift;}
 	public double get_path() {return path;}
-	
-	// AHDC::kftrack
-	public void set_dEdx_kf(double _dEdx_kf) { dEdx_kf = _dEdx_kf;}
-	public void set_p_drift_kf(double _p_drift_kf) { p_drift_kf = _p_drift_kf;}
-	public void set_path_kf(double _path_kf) { path_kf = _path_kf;}
-	public double get_dEdx_kf() {return dEdx_kf;}
-	public double get_p_drift_kf() {return p_drift_kf;}
-	public double get_path_kf() {return path_kf;}
 
     // AHDC::aiprediction
     public void set_predicted_ATOF_sector(int s) {predicted_ATOF_sector = s;}

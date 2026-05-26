@@ -81,5 +81,15 @@
         "entries":[
             { "name":"json"    , "type":"B", "info":"json character" }
         ]
+    },
+    {
+        "name" : "RUN::unix",
+        "group": 10000,
+        "item" : 18,
+        "info" : "Mapping between CODA event number and unix time",
+        "entries":[
+            { "name":"event"    , "type":"I", "info":"event number, from RUN::config.event" },
+            { "name":"unixtime" , "type":"I", "info":"unix time in seconds, from RUN::config.unixtime" }
+        ]
     }
 ]

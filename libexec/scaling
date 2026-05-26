@@ -1,22 +1,42 @@
 #!/usr/bin/env python3
 
 def cli():
-    import os,sys,argparse
+    import os,shutil,argparse
     cli = argparse.ArgumentParser(description='CLARA scaling test')
-    cli.add_argument('-P',help='plot only',action='store_true')
-    cli.add_argument('-y',help='YAML file',default=None)
-    cli.add_argument('-c',help='CLARA_HOME path',default=os.getenv('CLARA_HOME',None))
-    cli.add_argument('-t',help='threads (default=4,8)',default='4,8')
-    cli.add_argument('-e',help='events per thread',default=100,type=int)
-    cli.add_argument('-i',help='input data file',default=None)
+    cli.add_argument('-y','--yaml',   metavar='YAML',help='path to YAML file',required=True)
+    cli.add_argument('-c','--clara',  metavar='DIR',help='CLARA_HOME path (default=$CLARA_HOME)',default=os.getenv('CLARA_HOME',None))
+    cli.add_argument('-t','--threads',metavar='#',help='threads (default=8,16,24,34,44)',default='8,16,24,34,44')
+    cli.add_argument('-e','--events', metavar='#',help='events per thread (default=555)',default=555,type=int)
+    cli.add_argument('-N','--numa',   metavar='#',help='restrict to a NUMA socket (choices=[0,1])',choices=[0,1])
+    cli.add_argument('-C','--cpus',   metavar='#',help='restrict to a CPU list (e.g. 0,1,2,3)')
+    cli.add_argument('-T','--cputhr', metavar='#',help='restrict to same number of CPUs as threads')
+    cli.add_argument('datafile', help='input EVIO/HIPO data file')
     cfg = cli.parse_args()
-    cfg.t = cfg.t.split(',')
-    if cfg.P:
-        cfg.i = 'scaling.txt'
+    cfg.threads = cfg.threads.split(',')
+    if not cfg.clara:
+        cli.error('cannot find CLARA installation via -c or $CLARA_HOME')
+    elif shutil.which('run-clara'):
+        cfg.run_clara = shutil.which('run-clara')
+    elif os.path.exists(clara_home + '/plugins/clas12/bin/run-clara'):
+        cfg.run_clara = clara_home + '/plugins/clas12/bin/run-clara'
     else:
-        if cfg.y is None: sys.exit('-y YAML is required w/o -P')
-        if cfg.c is None: sys.exit('-c or $CLARA_HOME is required w/o -P')
-    if cfg.i is None: sys.exit('-i is required')
+        cli.error('cannot find run-clara in $PATH or $CLARA_HOME')
+    if cfg.cpus:
+        try:
+            cfg.cpus = ','.join([str(int(i)) for i in cfg.cpus.split(',')])
+        except Exception as e:
+            cli.error('invalid --cpus argument:  {cfg.cpus}')
+    elif cfg.numa or cfg.cputhr:
+        if not cfg.numa:
+            cfg.numa = 0
+        if not shutil.which('numactl'):
+            cli.error('numactl is not in $PATH, --numa option not supported')
+        for x in run(['numactl','-H']):
+            if x.startswith(f'node {cfg.numa} cpus:'):
+                cfg.cpus = ','.join([str(int(i)) for i in x.strip().split()[3:]])
+                break
+        if not cfg.cpus:
+            cli.error('error determining cpu list for -C or -T')
     return cfg
 
 def run(cmd):
@@ -28,24 +48,30 @@ def run(cmd):
         if len(line) > 0:
             yield line
     p.wait()
-    if p.returncode != 0:
-        pass
 
-def benchmark(cfg, threads):
-    import sys,shutil,collections
-    if not shutil.which('run-clara'):
-        sys.exit('run-clara is not in $PATH')
-    exiting,benchmarks = False,collections.OrderedDict()
-    cmd = ['run-clara',
-            '-c',cfg.c,
-            '-n',str(cfg.e*threads),
+def benchmark(cfg, threads, log):
+    import collections
+    cmd = []
+    # use taskset for thread affinity:
+    if cfg.cpus:
+        if cfg.cputhr:
+            cmd.extend(['taskset','-c',','.join(cfg.cpus.split(',')[:threads])])
+        else:
+            cmd.extend(['taskset','-c',cfg.cpus])
+    # add the run-clara command:
+    cmd.extend([cfg.run_clara,
+            '-c',cfg.clara,
+            '-n',str(cfg.events*int(threads)),
             '-t',str(threads),
-            '-y',cfg.y,
+            '-l',
+            '-y',cfg.yaml,
             '-o',f'tmp-scaling-{threads}',
-            cfg.input]
+            cfg.datafile])
+    exiting,benchmarks = False,collections.OrderedDict()
     for line in run(cmd):
         cols = line.split()
         print(line)
+        log.write(line+'\n')
         try:
             if line.find('Benchmark results:') >= 0:
                 exiting = True
@@ -75,14 +101,14 @@ def table(benchmarks):
     table = []
     header = [ 'Threads' ]
     b = benchmarks[0][1]
-    header.extend([x for x in b if x != 'Services'])
+    header.extend([x for x in b if x != 'Services' and x != 'Event'])
     if 'Services' in b:
         header.extend(b['Services'].keys())
     table.append(header)
     for b in benchmarks:
         threads,benchmark = b[0],b[1]
         row = [threads]
-        for k in ['Event','Avg','Total','Orch','Services']:
+        for k in ['Avg','Total','Orch','Services']:
             if k in benchmark:
                 if k == 'Services':
                     row.extend(benchmark[k].values())
@@ -100,73 +126,31 @@ def save(benchmarks):
         for row in table(benchmarks):
             f.write(' '.join([str(x) for x in row])+'\n') 
 
-gnuplot='''
-set terminal qt size 1000,700
-
-set multiplot layout 2,2
-set datafile columnheaders
-set title font 'sans,14'
-set key box
-set xlabel 'Threads'
-set ylabel 'Event Time [ms]'
-set yrange [0:]
-
-set title 'I/O'
-set key outside right width 2
-plot 'scaling.txt' \
-           using 1:(($2*$1))        pt 7 with points title columnhead(2) ,\
-        '' using 1:((column($#)))   pt 7 with points title 'Total' ,\
-        '' using 1:($6)             pt 7 with points title 'Reader' ,\
-        '' using 1:((column($#-1))) pt 7 with points title 'Writer' ,\
-        '' using 1:(($6*$1))        pt 7 with points title 'IOver' ,\
-
-set title 'Engines'
-
-# data-ai-uber.yml:
-#plot 'scaling.txt' \
-#           using 1:($7)  pt 7 with points title columnhead(7) ,\
-#        '' using 1:($8)  pt 7 with points title columnhead(8) ,\
-#        '' using 1:($9)  pt 7 with points title columnhead(9) ,\
-#        '' using 1:($10) pt 7 with points title columnhead(10) ,\
-#        '' using 1:($11) pt 7 with points title columnhead(11) ,\
-#        '' using 1:($12) pt 7 with points title columnhead(12) ,\
-
-# rgd-clarode.yml:
-plot 'scaling.txt' \
-           using 1:($7)  pt 7 with points title columnhead(7) ,\
-        '' using 1:($14) pt 7 with points title columnhead(14) ,\
-        '' using 1:($15) pt 7 with points title columnhead(15) ,\
-        '' using 1:($16) pt 7 with points title columnhead(16) ,\
-        '' using 1:($26) pt 9 with points title columnhead(26) ,\
-        '' using 1:($19) pt 7 with points title columnhead(19) ,\
-        '' using 1:($28) pt 9 with points title columnhead(28) ,\
-        '' using 1:($33) pt 9 with points title columnhead(33) ,\
-
-set title 'Throughput'
-set ylabel 'Rate [Hz]'
-set size 0.7,0.5
-set origin 0.12,0
-unset key
-f(x) = m*x
-fit [0:24] f(x) 'scaling.txt' using 1:(1/$2*1e3) via m
-plot 'scaling.txt' using 1:(1/$2*1e3) pt 7, f(x)
-'''
-
 def plot():
-    import tempfile
-    with tempfile.NamedTemporaryFile(mode='w') as f:
-        f.write(gnuplot)
-        f.flush()
-        list(run(['gnuplot','-p',f.name]))
-        input()
+    import os,shutil,subprocess
+    if shutil.which('gnuplot'):
+        g = os.path.dirname(os.path.abspath(__file__))+'/scaling.gpl'
+        r = subprocess.run(['gnuplot',g], capture_output=True, text=True)
+        if r.returncode == 0:
+            with open('scaling.svg','w') as f:
+                f.write(r.stdout)
+                print('Info:  created scaling.svg from scaling.txt and scaling.gpl!')
+        else:
+            print(r.stdout)
+            print(r.stderr)
+            print('Error:  gnuplot failed!')
+    else:
+        print('Warning:  gnuplot is not in $PATH.')
 
 if __name__ == '__main__':
     cfg = cli()
-    if not cfg.P:
-        benchmarks = []
-        for threads in cfg.t:
-            benchmarks.append([threads, benchmark(cfg, threads)])
-        show(benchmarks)
-        save(benchmarks)
+    import os
+    benchmarks = []
+    for threads in cfg.threads:
+        os.makedirs('tmp-scaling-'+threads)
+        with open(f'tmp-scaling-{threads}/run-clara.log','w') as log:
+            benchmarks.append([threads, benchmark(cfg, threads, log)])
+    show(benchmarks)
+    save(benchmarks)
     plot()
 

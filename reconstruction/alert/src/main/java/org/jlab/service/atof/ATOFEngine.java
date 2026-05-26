@@ -12,14 +12,13 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.geom.base.Detector;
 import org.jlab.geom.detector.alert.ATOF.AlertTOFFactory;
-import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.rec.atof.banks.RecoBankWriter;
 import org.jlab.rec.atof.cluster.ATOFCluster;
 import org.jlab.rec.atof.cluster.ClusterFinder;
 import org.jlab.rec.atof.hit.ATOFHit;
 import org.jlab.rec.atof.hit.BarHit;
 import org.jlab.rec.atof.hit.HitFinder;
-import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
+import org.jlab.utils.groups.IndexedTable;
 
 /**
  * Service to return reconstructed ATOF hits and clusters
@@ -54,13 +53,20 @@ public class ATOFEngine extends ReconstructionEngine {
     }
 
     int Run = -1;
-    
+
+    // ATOF calibration tables (instance-level, refreshed on run change)
+    private IndexedTable atofEffectiveVelocityTable;
+    private IndexedTable atofTimeWalkTable;
+    private IndexedTable atofAttenuationLengthTable;
+    private IndexedTable atofTimeOffsetsTable;
+
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
+
         if (!event.hasBank("RUN::config")) {
             return true;
         }
-        float startTime = 0;
+        Float startTime = null;
         if(useStartTime)
         {
             //This assumes the FD reconstruction produced an event with good startTime
@@ -80,11 +86,14 @@ public class ATOFEngine extends ReconstructionEngine {
             System.err.println("ATOFEngine:  got run <= 0 in RUN::config, skipping event.");
             return false;
         }
-        int newRun = runNo; 
-            // Load the constants
+        int newRun = runNo;
         if(Run!=newRun) {
-            CalibrationConstantsLoader.Load(newRun, this.getConstantsManager());
-            }
+            atofEffectiveVelocityTable = this.getConstantsManager().getConstants(newRun, "/calibration/alert/atof/effective_velocity");
+            atofTimeWalkTable          = this.getConstantsManager().getConstants(newRun, "/calibration/alert/atof/time_walk");
+            atofAttenuationLengthTable = this.getConstantsManager().getConstants(newRun, "/calibration/alert/atof/attenuation");
+            atofTimeOffsetsTable       = this.getConstantsManager().getConstants(newRun, "/calibration/alert/atof/time_offsets");
+            Run = newRun;
+        }
         
         ////Do we need to read the event vx,vy,vz?
         ////If not, this part can be moved in the initialization of the engine.
@@ -101,14 +110,11 @@ public class ATOFEngine extends ReconstructionEngine {
         //projector.projectTracks(event);
         //rbc.appendMatchBanks(event, projector.getProjections());
 
-        // Why do we have to "find" hits? 
         //Hit finder init
         HitFinder hitfinder = new HitFinder();
-        hitfinder.findHits(event, ATOF, startTime);
-
+        hitfinder.findHits(event, ATOF, startTime, atofTimeOffsetsTable, atofEffectiveVelocityTable);
         ArrayList<ATOFHit> WedgeHits = hitfinder.getWedgeHits();
         ArrayList<BarHit> BarHits = hitfinder.getBarHits();
-        
         //Exit if hit lists are empty
         if (WedgeHits.isEmpty() && BarHits.isEmpty()) {
             //			System.out.println("No hits : ");
@@ -127,6 +133,11 @@ public class ATOFEngine extends ReconstructionEngine {
     }
 
     @Override
+    public void detectorChanged(int run) {
+        // FIXME:  move geometry initialization here
+    }
+
+    @Override
     public boolean init() {
         rbc = new RecoBankWriter();
 
@@ -134,26 +145,11 @@ public class ATOFEngine extends ReconstructionEngine {
         DatabaseConstantProvider cp = new DatabaseConstantProvider(11, "default");
         this.ATOF = factory.createDetectorCLAS(cp);
         
-        String[] alertTables = new String[] {
-            	"/calibration/alert/ahdc/time_offsets",
-                "/calibration/alert/ahdc/time_to_distance",
-                "/calibration/alert/ahdc/raw_hit_cuts",
-                "/calibration/alert/atof/effective_velocity",
-                "/calibration/alert/atof/time_walk",
-                "/calibration/alert/atof/attenuation",
-                "/calibration/alert/atof/time_offsets"
-        };
-        
         Map<String, Integer> tableMap = new HashMap<>();
-        for (String table : alertTables) {
-            if (table.equals("/calibration/alert/atof/time_offsets") ||
-                table.equals("/calibration/alert/atof/time_walk")) {
-                tableMap.put(table, 4);
-            } else {
-                tableMap.put(table, 3);
-            }
-        }
-
+        tableMap.put("/calibration/alert/atof/effective_velocity", 3);
+        tableMap.put("/calibration/alert/atof/time_walk", 4);
+        tableMap.put("/calibration/alert/atof/attenuation", 3);
+        tableMap.put("/calibration/alert/atof/time_offsets", 4);
         requireConstants(tableMap);
         this.getConstantsManager().setVariation("default");
         this.registerOutputBank("ATOF::hits", "ATOF::clusters");

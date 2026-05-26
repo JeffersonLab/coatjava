@@ -62,10 +62,10 @@ services:
   - class: org.jlab.calibration.service.CalibBanksEngine
     name: CALIB
 configuration:
-#  global:
-#    variation: rga_fall2018_mc
-#    dcMinistagger: "NOTONREFWIRE"
-#    dcFeedthroughs: "OFF"
+  global:
+    variation: mc2026
+    dcMinistagger: "NOTONREFWIRE"
+    dcFeedthroughs: "OFF"
   io-services:
     writer:
       schema_dir: dst

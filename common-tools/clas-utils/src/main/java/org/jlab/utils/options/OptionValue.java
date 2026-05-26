@@ -53,4 +53,8 @@ public class OptionValue {
         arguments.remove(index);
         return true;
     }
+
+    public boolean isDefault() {
+        return this.optionValue==null || this.optionValue.equals(this.optionDefault);
+    }
 }

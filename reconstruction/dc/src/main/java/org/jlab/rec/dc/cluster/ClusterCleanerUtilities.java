@@ -3,28 +3,25 @@ package org.jlab.rec.dc.cluster;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.logging.Logger;
-import org.jlab.detector.geant4.v2.DCGeant4Factory;
-import org.jlab.io.base.DataEvent;
 
+import org.jlab.io.base.DataEvent;
 import org.jlab.rec.dc.Constants;
+import org.jlab.rec.dc.cluster.ClusterFitter.CoordSys;
 import org.jlab.rec.dc.hit.FittedHit;
 import org.jlab.rec.dc.hit.Hit;
 import org.jlab.rec.dc.timetodistance.TimeToDistanceEstimator;
 import org.jlab.utils.groups.IndexedTable;
+import org.jlab.detector.geant4.v2.DCGeant4Factory;
 
 public class ClusterCleanerUtilities {
 
-    private static final Logger LOGGER = Logger.getLogger(ClusterCleanerUtilities.class.getName());
+    private List<ArrayList<Hit>> sortedHits;
 
     public ClusterCleanerUtilities() {
-        List<ArrayList<Hit>> sortdHits = new ArrayList<>();
-        for(int l = 0; l < 6; l++) {
-            sortdHits.add(new ArrayList<>());
-        }
-        sortedHits = sortdHits;
+        sortedHits = new ArrayList<>();
+        for(int l = 0; l < 6; l++) sortedHits.add(new ArrayList<>());
     }
-    private List<ArrayList<Hit>> sortedHits = null;
+
     /**
      *
      * Pattern Recognition step for identifying clusters in a clump: Find the
@@ -195,7 +192,7 @@ public class ClusterCleanerUtilities {
             if((!isExceptionalCluster(newClus) && nLayers >= Constants.DC_MIN_NLAYERS) 
                     || (isExceptionalCluster(newClus) && nLayers >= Constants.DC_MIN_NLAYERS - 1)) {                            
                 //require consistency with line
-                cf.SetFitArray(newClus, "LC");
+                cf.SetFitArray(newClus, CoordSys.LC);
                 cf.Fit(newClus, true);
                 if ((nLayers == 6 && newClus.get_fitProb() > 0.9) ||  (nLayers == 5 && newClus.get_fitProb() > 0.85)
                         || (nLayers == 4 && newClus.get_fitProb() > 0.75) || (nLayers == 3 && newClus.get_fitProb() > 0.65)) {
@@ -214,13 +211,12 @@ public class ClusterCleanerUtilities {
         int newcid = nextClsStartIndex;
         for (FittedCluster cluster : splitclusters) {
             cluster.set_Id(newcid++);
-            cf.SetFitArray(cluster, "LC");
+            cf.SetFitArray(cluster, CoordSys.LC);
             cf.Fit(cluster, true);
 
             FittedCluster bestCls = OverlappingClusterResolver(cluster, splitclusters);
 
             if (bestCls != null) {
-
                 if (!(selectedClusList.contains(bestCls))) {
                     selectedClusList.add(bestCls);
                 }
@@ -231,13 +227,12 @@ public class ClusterCleanerUtilities {
         List<FittedCluster> selectedClusList2 = new ArrayList<>();
         for (FittedCluster cluster : selectedClusList) {
             cluster.set_Id(newcid++);
-            cf.SetFitArray(cluster, "LC");
+            cf.SetFitArray(cluster, CoordSys.LC);
             cf.Fit(cluster, true);
 
             FittedCluster bestCls = OverlappingClusterResolver(cluster, selectedClusList);
 
             if (bestCls != null) {
-
                 if (!(selectedClusList2.contains(bestCls))) {
                     selectedClusList2.add(bestCls);
                 }
@@ -283,12 +278,9 @@ public class ClusterCleanerUtilities {
      */
     public int count_nlayers_hit(Hit[] hits_inlayer) {
         int nlayr = 6;
-        Hit[] allhits_inlayer = new Hit[nlayr];
-        allhits_inlayer = hits_inlayer;
-        
         int nlayers_hit = 0;
         for (int la = 0; la < nlayr; la++) {
-            if (allhits_inlayer[la] != null) {
+            if (hits_inlayer[la] != null) {
                 nlayers_hit++;
             }
         }
@@ -341,7 +333,6 @@ public class ClusterCleanerUtilities {
             if (hit.get_LeftRightAmb() == 0) {
                 index++;
             }
-
         }
         if (index == 0) {
             return fClus; // cluster OK
@@ -445,7 +436,7 @@ public class ClusterCleanerUtilities {
             arrayOfClus.get(0).addAll(okClus);
             arrayOfClus.get(1).addAll(okClus);
         }
-        if (index == 2) {
+        else if (index == 2) {
             for (int i1 = 0; i1 < totNotLRClus.size(); i1++) {
                 for (int i2 = 2; i2 < totNotLRClus.size(); i2++) {
                     if (totNotLRClus.get(i1).get_Id() == totNotLRClus.get(i2).get_Id()) {
@@ -459,8 +450,7 @@ public class ClusterCleanerUtilities {
                 }
             }
         }
-
-        if (index == 3) {
+        else if (index == 3) {
             for (int i1 = 0; i1 < totNotLRClus.size(); i1++) {
                 for (int i2 = 2; i2 < totNotLRClus.size(); i2++) {
                     for (int i3 = 4; i3 < totNotLRClus.size(); i3++) {
@@ -479,8 +469,7 @@ public class ClusterCleanerUtilities {
                 }
             }
         }
-
-        if (index == 4) {
+        else if (index == 4) {
             for (int i1 = 0; i1 < totNotLRClus.size(); i1++) {
                 for (int i2 = 2; i2 < totNotLRClus.size(); i2++) {
                     for (int i3 = 4; i3 < totNotLRClus.size(); i3++) {
@@ -505,8 +494,7 @@ public class ClusterCleanerUtilities {
                 }
             }
         }
-
-        if (index == 5) {
+        else if (index == 5) {
             for (int i1 = 0; i1 < totNotLRClus.size(); i1++) {
                 for (int i2 = 2; i2 < totNotLRClus.size(); i2++) {
                     for (int i3 = 4; i3 < totNotLRClus.size(); i3++) {
@@ -538,8 +526,7 @@ public class ClusterCleanerUtilities {
                 }
             }
         }
-
-        if (index == 6) {
+        else if (index == 6) {
             for (int i1 = 0; i1 < totNotLRClus.size(); i1++) {
                 for (int i2 = 2; i2 < totNotLRClus.size(); i2++) {
                     for (int i3 = 4; i3 < totNotLRClus.size(); i3++) {
@@ -580,7 +567,7 @@ public class ClusterCleanerUtilities {
             }
         }
 
-        return cf.BestClusterSelector(arrayOfClus, "TSC");
+        return cf.BestClusterSelector(arrayOfClus, CoordSys.TSC);
 
     }
 
@@ -613,14 +600,14 @@ public class ClusterCleanerUtilities {
             if (hitsInLayer.isEmpty()) {
                 continue;
             }
-            if (hitsInLayer.size() == 1) {
+            else if (hitsInLayer.size() == 1) {
                 baseClusterHits.addAll(hitsInLayer); // safe all good hits to base cluster		
                 for (int j = 0; j < hitsInLayer.size(); j++) {
                     hitsInLayer.get(j).set_LeftRightAmb(0);
                     hitsInLayer.get(j).updateHitPositionWithTime(event, 1, hitsInLayer.get(j).getB(), tab, DcDetector, tde);
                 }
             }
-            if (hitsInLayer.size() == 2) {
+            else if (hitsInLayer.size() == 2) {
                 double docaSum = 0;
                 for (int j = 0; j < hitsInLayer.size(); j++) {
                     docaSum += hitsInLayer.get(j).get_Doca();
@@ -665,7 +652,6 @@ public class ClusterCleanerUtilities {
         }
 
         if (nbLyr > 0) {
-
             for (int[] get : Constants.getInstance().CombArray.get(nbLyr - 1)) {
                 ArrayList<FittedHit> hitsInClusterCand = new ArrayList<>();
                 hitsInClusterCand.addAll(baseClusterHits);
@@ -675,6 +661,7 @@ public class ClusterCleanerUtilities {
                 hitsInClusCandLists.add(hitsInClusterCand);
             }
         }
+
         for (int i = 0; i < hitsInClusCandLists.size(); i++) {
             FittedCluster newClus = new FittedCluster(clus.getBaseCluster());
             for (int i1 = 0; i1 < newClus.size(); i1++) {
@@ -691,7 +678,7 @@ public class ClusterCleanerUtilities {
         //	for(FittedHit h : c)
         //		LOGGER.log(Level.INFO, h.printInfo());
         //}
-        FittedCluster BestCluster = cf.BestClusterSelector(clusters, "LC");
+        FittedCluster BestCluster = cf.BestClusterSelector(clusters, CoordSys.LC);
         //LOGGER.log(Level.INFO, "  ---> selected cluster  : ");
         //for(FittedHit h : BestCluster)
         //	LOGGER.log(Level.INFO, h.printInfo());
@@ -763,13 +750,14 @@ public class ClusterCleanerUtilities {
         return overlapingClusters.get(0);
 
     }
-/**
+
+    /**
      * Prunes the input hit list to remove noise candidates; the algorithm finds
      * contiguous hits in a layer (column) and removes hits according to the
      * number (Nc) of such contiguous hits in a given layer.If Nc=3, keep only
- the middle hit If Nc=4, keep only the first and last hit in that column;
- if Nc > 4, keep the first 2 and last 2 hits in that column, if Nc > 10
- remove all hits in that column.
+     * the middle hit If Nc=4, keep only the first and last hit in that column;
+     * if Nc > 4, keep the first 2 and last 2 hits in that column, if Nc > 10
+     * remove all hits in that column.
      *
      * @param hits the unfitted hits
      * @return 
@@ -794,7 +782,7 @@ public class ClusterCleanerUtilities {
                 rmHits.removeAll(kHits);
                 sortedHits.get(l).removeAll(rmHits);
             }
-            if(sortedHits.get(l).size()>4 && sortedHits.get(l).size()<10) {
+            else if(sortedHits.get(l).size()>4 && sortedHits.get(l).size()<10) {
                 ArrayList<Hit> rmHits = (ArrayList<Hit>) sortedHits.get(l).clone();
                 ArrayList<Hit> kHits = new ArrayList<>();
                 kHits.add(sortedHits.get(l).get(0));
@@ -804,7 +792,7 @@ public class ClusterCleanerUtilities {
                 rmHits.removeAll(kHits);
                 sortedHits.get(l).removeAll(rmHits); 
             } 
-            if(sortedHits.get(l).size()>=10) 
+            else if(sortedHits.get(l).size()>=10) 
                 sortedHits.get(l).removeAll(sortedHits.get(l));
              
         }
@@ -861,13 +849,13 @@ public class ClusterCleanerUtilities {
                     fcluster.add(clus.get(i));
                 }
             }
-            if (layer == 6) // look of neighbor in previous layer
+            else if (layer == 6) // look of neighbor in previous layer
             {
                 if (HitArray[layer - 2][wire - 1] != null || HitArray[layer - 2][wire - 2] != null || HitArray[layer - 2][wire] != null || HitArray[layer - 1][wire - 2] != null || HitArray[layer - 1][wire] != null) {
                     fcluster.add(clus.get(i));
                 }
             }
-            if (layer > 1 && layer < 6) // look of neighbor in next and previous layers
+            else if (layer > 1 && layer < 6) // look of neighbor in next and previous layers
             {
                 if (HitArray[layer][wire - 1] != null || HitArray[layer][wire - 2] != null || HitArray[layer][wire] != null || HitArray[layer - 2][wire - 1] != null || HitArray[layer - 2][wire - 2] != null || HitArray[layer - 2][wire] != null || HitArray[layer - 1][wire - 2] != null || HitArray[layer - 1][wire] != null) {
                     fcluster.add(clus.get(i));
@@ -929,7 +917,7 @@ public class ClusterCleanerUtilities {
                 baseClusterHits.addAll(hitsInLayer); // safe all good hits to base cluster		
                 
             }
-            if (hitsInLayer.size() == 2) {
+            else if (hitsInLayer.size() == 2) {
                 double docaSum = 0;
                 for (int j = 0; j < hitsInLayer.size(); j++) {
                     docaSum += hitsInLayer.get(j).get_Residual();
@@ -963,7 +951,6 @@ public class ClusterCleanerUtilities {
         }
 
         if (nbLyr > 0) {
-
             for (int[] get : Constants.getInstance().CombArray.get(nbLyr - 1)) {
                 ArrayList<FittedHit> hitsInClusterCand = new ArrayList<>();
                 hitsInClusterCand.addAll(baseClusterHits);
@@ -973,6 +960,7 @@ public class ClusterCleanerUtilities {
                 hitsInClusCandLists.add(hitsInClusterCand);
             }
         }
+
         for (int i = 0; i < hitsInClusCandLists.size(); i++) {
             FittedCluster newClus = new FittedCluster(clus.getBaseCluster());
             for (int i1 = 0; i1 < newClus.size(); i1++) {
@@ -982,18 +970,7 @@ public class ClusterCleanerUtilities {
             clusters.add(newClus);
         }
 
-        // get the best cluster
-        //LOGGER.log(Level.INFO, " clusters for selection ");
-        //for(FittedCluster c : clusters) {
-        //	LOGGER.log(Level.INFO, c.printInfo());
-        //	for(FittedHit h : c)
-        //		LOGGER.log(Level.INFO, h.printInfo());
-        //}
-        FittedCluster BestCluster = cf.BestClusterSelector(clusters, "LC");
-        //LOGGER.log(Level.INFO, "  ---> selected cluster  : ");
-        //for(FittedHit h : BestCluster)
-        //	LOGGER.log(Level.INFO, h.printInfo());
-        return BestCluster;
+        return cf.BestClusterSelector(clusters, CoordSys.LC);
     }
     
     /**

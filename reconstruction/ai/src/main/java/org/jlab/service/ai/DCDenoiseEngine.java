@@ -17,8 +17,6 @@ import ai.djl.repository.zoo.ModelNotFoundException;
 import ai.djl.translate.TranslateException;
 
 import java.io.IOException;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -38,29 +36,11 @@ public class DCDenoiseEngine extends ReconstructionEngine {
     final static int WIRES = 112;
     final static int SECTORS= 6;
 
-    String modelFile = "cnn_autoenc_sector1_2b_48f_4x6k.pt";
-    float threshold = 0.03f;
+    String modelFile = "cnn_autoenc_allSectors_2b_48f_4x6k.pt";
+    float threshold = 0.025f;
     Criteria<float[][][], float[][][]> criteria;
     ZooModel<float[][][], float[][][]> model;
     PredictorPool predictors;
-
-    // -------- Predictor Pool --------
-    public static class PredictorPool {
-        final BlockingQueue<Predictor<float[][][], float[][][]>> pool;
-        public PredictorPool(int size, ZooModel<float[][][], float[][][]> model) {
-            pool = new ArrayBlockingQueue<>(size);
-            for (int i=0; i<size; i++) {
-                try {
-                    pool.add(model.newPredictor());
-                } catch (Exception e) {
-                    Logger.getLogger(PredictorPool.class.getName()).log(Level.WARNING, "Failed to create predictor", e);
-                }
-            }
-        }
-        public Predictor<float[][][], float[][][]> take() throws InterruptedException { return pool.take(); }
-        public void put(Predictor<float[][][], float[][][]> p) throws InterruptedException { if (p!=null) pool.put(p); }
-        public void shutdownAll() { for (Predictor p: pool) { try { p.close(); } catch (Exception ignored) {} } }
-    }
 
     public DCDenoiseEngine() {
         super("DenoiseEngine","lleztlab","1.0");
@@ -99,7 +79,11 @@ public class DCDenoiseEngine extends ReconstructionEngine {
     }
 
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public void detectorChanged(int run) {}
+
+    @Override
+    public boolean processDataEventUser(DataEvent event) {
+
         for (String bankName : BANK_NAMES) {
             if (!event.hasBank(bankName)) continue;
 

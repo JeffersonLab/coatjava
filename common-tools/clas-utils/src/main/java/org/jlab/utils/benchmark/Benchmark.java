@@ -25,10 +25,10 @@ public class Benchmark {
     
     public void printTimer(int seconds){
         TimerTask timerTask = new TimerTask() { 
-                @Override
-                public void run() { System.out.println(getInstance()); }
+            @Override
+            public void run() { System.out.println(benchmarkInstance); }
         };
-        updateTimer = new Timer("Benchmark");
+        updateTimer = new Timer("Benchmark", true);
         updateTimer.scheduleAtFixedRate(timerTask, 0, 1000*seconds);
     }
     
@@ -62,7 +62,7 @@ public class Benchmark {
     }
 
     public BenchmarkTimer getTotal(String name) {
-        BenchmarkTimer total = new BenchmarkTimer(name);
+        BenchmarkTimerTotal total = new BenchmarkTimerTotal(name);
         for (BenchmarkTimer b : timerStore.values())
             total.add(b);
         return total;

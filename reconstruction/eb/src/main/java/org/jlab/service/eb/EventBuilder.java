@@ -467,7 +467,7 @@ class TriggerOptions {
         this.charge = ch;
     }
     
-    public int getSoftwareTriggerScore(DetectorParticle p,EBCCDBConstants ccdb) {
+    public int getSoftwareTriggerScore(DetectorParticle p,EBCCDBConstants ccdb,float torus) {
 
         int score = 0;
 
@@ -475,14 +475,19 @@ class TriggerOptions {
         if(p.getNphe(DetectorType.HTCC) > npheCut){
             score += 10;
         }
-        
+
         final int sector = p.getSector(DetectorType.ECAL);
         if (sector > 0) {
             final double nSigmaCut = ccdb.getSectorDouble(EBCCDBEnum.ELEC_SF_nsigma,sector);
-            final double sfNSigma = SamplingFractions.getNSigma(11,p,ccdb);
+            final double nsigma = SamplingFractions.getNSigma(11,p,ccdb);
             final double minPcalEnergy = ccdb.getSectorDouble(EBCCDBEnum.ELEC_PCAL_min_energy,sector);
-            if(abs(sfNSigma) < nSigmaCut &&
-                    p.getEnergy(DetectorType.ECAL,1) > minPcalEnergy) {
+            if (Math.abs(torus) <1e-8) {
+                if (p.getEnergy(DetectorType.ECAL,1) > minPcalEnergy &&
+                    p.getEnergy(DetectorType.ECAL) > 0.5) {
+                    score += 100;
+                }
+            }
+            else if (abs(nsigma) < nSigmaCut && p.getEnergy(DetectorType.ECAL,1) > minPcalEnergy) {
                 score += 100;
             }
         }
@@ -503,7 +508,7 @@ class TriggerOptions {
         int maxScore = 0;
         for (int i=0; i<npart; i++) {
             DetectorParticle p = event.getParticle(i);
-            final int score = getSoftwareTriggerScore(p,ccdb);
+            final int score = getSoftwareTriggerScore(p,ccdb,event.getEventHeader().getTorus());
             if(score >= this.score_requirement) {
                 if (this.charge==p.getCharge()) {
                     p.setPid(this.id);

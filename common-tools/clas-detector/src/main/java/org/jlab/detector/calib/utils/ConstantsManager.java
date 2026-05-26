@@ -130,7 +130,7 @@ public class ConstantsManager {
             }
         }
 
-        LOGGER.log(Level.FINE, "[ConstantsManager] --->  loading table for run = " + run);
+        LOGGER.log(Level.INFO, "[ConstantsManager] --->  loading table for run = " + run);
         DatabaseConstantsDescriptor desc = defaultDescriptor.getCopy(run);
         DatabaseConstantProvider provider = new DatabaseConstantProvider(run, this.databaseVariation, this.timeStamp);
 
@@ -142,7 +142,8 @@ public class ConstantsManager {
             try {
                 IndexedTable  table = provider.readTable(tableName, desc.getTableIndices().get(i));
                 desc.getMap().put(tk.get(i), table);
-                LOGGER.log(Level.FINE, String.format("***** >>> adding : %14s / table = %s", tk.get(i), tableName));
+                LOGGER.log(Level.INFO, "***** >>> add table = {0}", tableName);
+                LOGGER.log(Level.FINEST, "              key = {0}", tk.get(i));
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, e.getMessage());
                 LOGGER.log(Level.SEVERE, "[ConstantsManager] ---> error reading table : " + tableName);

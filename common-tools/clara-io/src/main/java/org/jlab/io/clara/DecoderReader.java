@@ -14,7 +14,7 @@ import org.jlab.jnp.hipo4.data.Event;
 import org.json.JSONObject;
 
 /**
- * Combined with DecoderWriter, a port of the standard "decoder" to CLARA.
+ * The CLAS decoder.  Requires EVIO input.
  * 
  * @author baltzell
  */

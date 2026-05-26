@@ -56,7 +56,7 @@ public class CalibBanksEngine extends ReconstructionEngine {
     }
 
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         
         List<DataBank> banks = new ArrayList<>();
         
@@ -74,5 +74,8 @@ public class CalibBanksEngine extends ReconstructionEngine {
             event.appendBanks(banks.toArray(new DataBank[banks.size()]));
         return true;
     }
+
+    @Override
+    public void detectorChanged(int run) {}
 
 }

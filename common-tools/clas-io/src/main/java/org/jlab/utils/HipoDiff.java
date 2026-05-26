@@ -1,20 +1,124 @@
 package org.jlab.utils;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.TreeMap;
 import org.jlab.jnp.hipo4.io.HipoReader;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
 import org.jlab.jnp.hipo4.data.Schema;
-import java.util.HashMap;
+import org.jlab.jnp.hipo4.data.SchemaFactory;
+import org.jlab.jnp.hipo4.io.HipoWriter;
 import org.jlab.utils.options.OptionParser;
 
 public class HipoDiff {
 
-    public static void main(String args[]) {
+    /**
+     * Bank sortable by any integer columns.
+     */
+    static class DiffBank extends Bank {
+        DiffBank(Schema s) { super(s); }
+        /**
+         * @param index the bank column indices to sort on
+         * @return the sorted row indices
+         */
+        int[] getSorted(int... index) {
+            int[] rows = new int[getRows()];
+            for (int row = 0; row < rows.length; row++) rows[row] = row;
+            // bubble sort:
+            for (int i = 0; i < rows.length - 1; i++) {
+                for (int j = 0; j < rows.length - i - 1; j++) {
+                    for (int idx : index) {
+                        if (idx >= this.getSchema().getElements()) break;
+                        int x1 = getInt(idx, rows[j]);
+                        int x2 = getInt(idx, rows[j + 1]);
+                        if (x1 > x2) {
+                            int tmp = rows[j];
+                            rows[j] = rows[j + 1];
+                            rows[j + 1] = tmp;
+                            break;
+                        }
+                        else if (x1 < x2) break;
+                    }
+                }
+            }
+            return rows;
+        }
+        /**
+         * @param b the bank to compare with
+         * @return the resulting diff bank
+         */
+        public Bank getDiff(Bank b) {
+            Bank diff = new Bank(getSchema());
+            int rows = Math.min(getRows(), b.getRows());
+            int ncols = getSchema().getElements();
+            for (int row = 0; row < rows; row++) {
+                for (int col = 0; col < ncols; col++) {
+                    switch (getSchema().getType(col)) {
+                        case 1: // byte
+                            diff.putByte(col, row, (byte)(b.getByte(col,row) - getByte(col,row)));
+                            break;
+                        case 2: // short
+                            diff.putShort(col, row, (short)(b.getShort(col,row) - getShort(col,row)));
+                            break;
+                        case 3: // int
+                            diff.putInt(col, row, b.getInt(col,row) - getInt(col,row));
+                            break;
+                        case 4: // float
+                            diff.putFloat(col, row, b.getFloat(col,row) - getFloat(col,row));
+                            break;
+                        case 5: // double
+                            diff.putDouble(col, row, b.getDouble(col,row) - getDouble(col,row));
+                            break;
+                        case 6: // long
+                            diff.putLong(col, row, b.getLong(col,row) - getLong(col,row));
+                            break;
+                        default:
+                            // unhandled type (arrays, etc.)
+                            break;
+                    }
+                }
+            }
+            return diff;
+        }
+    }
 
+    static int nrow = 0;
+    static int nevent = -1;
+    static int nentry = 0;
+    static int nbadevent = 0;
+    static int nbadrow = 0;
+    static int nbadentry = 0;
+    static int[] sortIndex = null;
+
+    static int nmax;
+    static double tolerance;
+    static boolean verboseMode;
+    static boolean quietMode;
+    static boolean sortEvents;
+    static int tag;
+    static Bank runConfigBank;
+    static HipoWriter writer;
+    static Event event;
+
+    static ArrayList<DiffBank> banksA = new ArrayList<>();
+    static ArrayList<DiffBank> banksB = new ArrayList<>();
+    static HashMap<String, HashMap<String, Integer>> badEntries = new HashMap<>();
+
+    public static void main(String args[]) {
         OptionParser op = new OptionParser("hipo-diff");
         op.addOption("-t", "0.00001", "absolute tolerance for comparisons");
         op.addOption("-n", "-1", "number of events");
-        op.addRequired("-b", "name of bank to diff");
+        op.addOption("-q", null, "quiet mode");
+        op.addOption("-Q", null, "verbose mode");
+        op.addOption("-b", null, "name of bank to diff");
+        op.addOption("-B",   "", "names of banks to ignore (comma separated)");
+        op.addOption("-s", null, "column indices to sort on (comma separated)");
+        op.addOption("-e", null, "sort events by RUN::config.event");
+        op.addOption("-T",  "0", "event tag to compare");
+        op.addOption("-o", null, "output HIPO diff file");
         op.setRequiresInputList(true);
         op.parse(args);
         if (op.getInputList().size() != 2) {
@@ -22,117 +126,208 @@ public class HipoDiff {
             System.out.println("ERROR:  Exactly 2 input files are required.");
             System.exit(1);
         }
-
-        final String bankName = op.getOption("-b").stringValue();
-        final double tolerance = op.getOption("-t").doubleValue();
-        final int nmax = op.getOption("-n").intValue();
+        if (op.getOption("-s").stringValue() != null) {
+            String[] stmp = op.getOption("-s").stringValue().split(",");
+            sortIndex = new int[stmp.length];
+            for (int i = 0; i < stmp.length; i++) sortIndex[i] = Integer.parseInt(stmp[i]);
+        }
+        verboseMode = op.getOption("-Q").stringValue() != null;
+        quietMode = op.getOption("-q").stringValue() != null;
+        sortEvents = op.getOption("-e").stringValue() != null;
+        nmax = op.getOption("-n").intValue();
+        tolerance = op.getOption("-t").doubleValue();
+        tag = op.getOption("-T").intValue();
 
         HipoReader readerA = new HipoReader();
         HipoReader readerB = new HipoReader();
         readerA.open(op.getInputList().get(0));
         readerB.open(op.getInputList().get(1));
+        SchemaFactory sf = readerA.getSchemaFactory();
+        runConfigBank = new Bank(sf.getSchema("RUN::config"));
 
-        Schema schema = readerA.getSchemaFactory().getSchema(bankName);
-        Bank bankA = new Bank(schema);
-        Bank bankB = new Bank(schema);
+        List<String> ignoreBanks = Arrays.asList(op.getOption("-B").stringValue().split(","));
+        if (op.getOption("-b").stringValue() == null) {
+            for (Schema s : sf.getSchemaList()) {
+                if (!ignoreBanks.contains(s.getName())) {
+                    banksA.add(new DiffBank(s));
+                    banksB.add(new DiffBank(s));
+                }
+            }
+        } else {
+            banksA.add(new DiffBank(sf.getSchema(op.getOption("-b").stringValue())));
+            banksB.add(new DiffBank(sf.getSchema(op.getOption("-b").stringValue())));
+        }
 
-        Bank runConfigBank = new Bank(readerA.getSchemaFactory().getSchema("RUN::config"));
+        if (op.getOption("-o").stringValue() != null) {
+            writer = new HipoWriter();
+            writer.getSchemaFactory().copy(readerA.getSchemaFactory());
+            writer.open(op.getOption("-o").stringValue());
+        }
+
+        compare(tag, readerA, readerB);
+
+        if (writer != null) writer.close();
+    }
+
+    public static TreeMap<Integer,Integer> getEventMap(int tag, HipoReader reader) {
+        TreeMap<Integer,Integer> m = new TreeMap<>();
+        ArrayList<Integer> duplicates = new ArrayList<>();
         Event event = new Event();
-
-        int nevent = -1;
-        int nrow = 0;
-        int nentry = 0;
-        int nbadevent = 0;
-        int nbadrow = 0;
-        int nbadentry = 0;
-        HashMap<String, Integer> badEntries = new HashMap<>();
-
-        while (readerA.hasNext() && readerB.hasNext() && (nmax<1 || nevent<nmax)) {
-
-            if (++nevent % 10000 == 0) {
-                System.out.println("Analyzed " + nevent + " events");
-            }
-
-            readerA.nextEvent(event);
-            event.read(bankA);
-            readerB.nextEvent(event);
-            event.read(bankB);
-
+        for (int eventIndex=0; eventIndex<reader.getEventCount(); ++eventIndex) {
+            reader.getEvent(event, eventIndex);
+            if (event.getEventTag() != tag) continue;
             event.read(runConfigBank);
-
-            if (bankA.getRows() != bankB.getRows()) {
-                System.out.println("========================= Different number of rows:");
-                runConfigBank.show();
-                bankA.show();
-                bankB.show();
-                nbadevent++;
-                System.out.println("=========================");
-            }
-
-            else {
-                for (int i = 0; i < bankA.getRows(); i++) {
-                    boolean mismatch = false;
-                    nrow++;
-                    for (int j = 0; j < schema.getElements(); j++) {
-                        final int type = schema.getType(j);
-                        final String name = schema.getElementName(j);
-                        int element = -1;
-                        String values = "";
-                        nentry++;
-                        switch (type) {
-                            case 1:
-                                if (bankA.getByte(name, i) != bankB.getByte(name, i)) {
-                                    element = j;
-                                    values += bankA.getByte(name, i) + "/" + bankB.getByte(name, i);
-                                }
-                                break;
-                            case 2:
-                                if (bankA.getShort(name, i) != bankB.getShort(name, i)) {
-                                    element = j;
-                                    values += bankA.getShort(name, i) + "/" + bankB.getShort(name, i);
-                                }
-                                break;
-                            case 3:
-                                if (bankA.getInt(name, i) != bankB.getInt(name, i)) {
-                                    element = j;
-                                    values += bankA.getInt(name, i) + "/" + bankB.getInt(name, i);
-                                }
-                                break;
-                            case 4:
-                                if ((!Double.isNaN(bankA.getFloat(name, i)) || !Double.isNaN(bankB.getFloat(name, i)))
-                                        && (!Double.isInfinite(bankA.getFloat(name, i)) || !Double.isInfinite(bankB.getFloat(name, i)))
-                                        && Math.abs(bankA.getFloat(name, i) - bankB.getFloat(name, i)) > tolerance) {
-                                    element = j;
-                                    values += bankA.getFloat(name, i) + "/" + bankB.getFloat(name, i);
-                                }
-                                break;
-                        }
-                        if (element >= 0) {
-                            System.out.println("mismatch at event " + runConfigBank.getInt("event", 0)
-                                    + " in row " + i 
-                                    + " for variable " + name 
-                                    + " with values "  + values);
-                            mismatch = true;
-                            nbadentry++;
-                            if (badEntries.containsKey(schema.getElementName(element))) {
-                                int nbad = badEntries.get(schema.getElementName(element)) + 1;
-                                badEntries.replace(schema.getElementName(element), nbad);
-                            } else {
-                                badEntries.put(schema.getElementName(element), 1);
-                            }
-                        }
-                    }
-                    if (mismatch) {
-                        nbadrow++;
-                    }
+            if (runConfigBank.getRows() > 0) {
+                int eventNumber = runConfigBank.getInt("event",0);
+                if (m.containsKey(eventNumber)) {
+                    System.out.println("WARNING:  Duplicate event number " + eventNumber + " at event index " + eventIndex);
+                    duplicates.add(eventNumber);
+                }
+                else {
+                    m.put(eventNumber, eventIndex);
                 }
             }
         }
+        m.keySet().removeAll(duplicates);
+        return m;
+    }
+
+    public static int compare(int tag, HipoReader a, HipoReader b) {
+        int ret=0;
+        Event eventA = new Event();
+        Event eventB = new Event();
+        if (sortEvents) {
+            TreeMap<Integer,Integer> mapA = getEventMap(tag, a);
+            TreeMap<Integer,Integer> mapB = getEventMap(tag, b);
+            for (Integer eventNumber : mapA.keySet()) {
+                if (mapB.containsKey(eventNumber)){
+                    if (nmax > 0 && nevent >= nmax) break;
+                    if (++nevent % 5000 == 0) System.out.println("Analyzed " + nevent + " events");
+                    a.getEvent(eventA, mapA.get(eventNumber));
+                    b.getEvent(eventB, mapB.get(eventNumber));
+                    eventA.read(runConfigBank);
+                    ret += compare(eventA, eventB);
+                }
+            }
+        }
+        else {
+            a.setTags(tag);
+            b.setTags(tag);
+            while (a.hasNext() && b.hasNext() && (nmax < 1 || nevent < nmax)) {
+                if (++nevent % 5000 == 0) System.out.println("Analyzed " + nevent + " events");
+                a.nextEvent(eventA);
+                b.nextEvent(eventB);
+                eventA.read(runConfigBank);
+                ret += compare(eventA, eventB);
+            }
+        }
+
         System.out.println("\n Analyzed " + nevent + " with " + nbadevent + " bad banks");
         System.out.println(nbadrow + "/" + nrow + " mismatched rows");
         System.out.println(nbadentry + "/" + nentry + " mismatched entry");
         for (String name : badEntries.keySet()) {
             System.out.println(name + " " + badEntries.get(name));
         }
+        System.exit(nbadevent + nbadrow + nbadentry);
+        return ret;
+    }
+
+    public static int compare(Event a, Event b) {
+        int ret = 0;
+        for (int i = 0; i < banksA.size(); i++) {
+            a.read(banksA.get(i));
+            b.read(banksB.get(i));
+            if (writer != null) {
+                event.reset();
+                event.write(banksA.get(i).getDiff(banksB.get(i)));
+                writer.addEvent(event);
+            }
+            ret += compare(banksA.get(i), banksB.get(i));
+        }
+        return ret;
+    }
+
+    public static int compare(DiffBank a, DiffBank b) {
+        int ret=0;
+        if (a.getRows() != b.getRows()) {
+            System.out.println("========================= Different number of rows:");
+            runConfigBank.show();
+            a.show();
+            b.show();
+            nbadevent++;
+            System.out.println("=========================");
+            return ++ret;
+        }
+        int[] rowsA = sortIndex == null ? null : a.getSorted(sortIndex);
+        int[] rowsB = sortIndex == null ? null : b.getSorted(sortIndex);
+        for (int row = 0; row < a.getRows(); row++) {
+            boolean mismatch = false;
+            nrow++;
+            int rowA = sortIndex == null ? row : rowsA[row];
+            int rowB = sortIndex == null ? row : rowsB[row];
+            for (int j = 0; j < a.getSchema().getElements(); j++) {
+                final int type = a.getSchema().getType(j);
+                final String name = a.getSchema().getElementName(j);
+                int element = -1;
+                String values = "";
+                nentry++;
+                switch (type) {
+                    case 1:
+                        if (a.getByte(name, rowA) != b.getByte(name, rowB)) {
+                            element = j;
+                            values += a.getByte(name, rowA) + "/" + b.getByte(name, rowB);
+                        }
+                        break;
+                    case 2:
+                        if (a.getShort(name, rowA) != b.getShort(name, rowB)) {
+                            element = j;
+                            values += a.getShort(name, rowA) + "/" + b.getShort(name, rowB);
+                        }
+                        break;
+                    case 3:
+                        if (a.getInt(name, rowA) != b.getInt(name, rowB)) {
+                            element = j;
+                            values += a.getInt(name, rowA) + "/" + b.getInt(name, rowB);
+                        }
+                        break;
+                    case 4:
+                        if ((!Double.isNaN(a.getFloat(name, rowA)) || !Double.isNaN(b.getFloat(name, rowB)))
+                            && (!Double.isInfinite(a.getFloat(name, rowA)) || !Double.isInfinite(b.getFloat(name, rowB)))
+                            && Math.abs(a.getFloat(name, rowA) - b.getFloat(name, rowB)) > tolerance) {
+                            element = j;
+                            values += a.getFloat(name, rowA) + "/" + b.getFloat(name, rowB);
+                        }
+                        break;
+                }
+                if (element >= 0) {
+                    if (verboseMode) {
+                        System.out.println("Bank.show " + a.getSchema().getName());
+                        a.show();
+                        b.show();
+                    }
+                    if (!quietMode) {
+                        System.out.println(a.getSchema().getName() + " mismatch at event " + runConfigBank.getInt("event", 0)
+                            + " in row " + row + " for variable " + name + " with values " + values);
+                    }
+                    mismatch = true;
+                    nbadentry++;
+                    String bankName = a.getSchema().getName();
+                    String elementName = a.getSchema().getElementName(element);
+                    if (!badEntries.containsKey(bankName)) {
+                        badEntries.put(bankName, new HashMap<>());
+                    }
+                    HashMap<String, Integer> m = badEntries.get(bankName);
+                    if (!m.containsKey(elementName)) {
+                        m.put(elementName, 0);
+                    }
+                    m.put(elementName, m.get(elementName) + 1);
+                    ret++;
+                }
+            }
+            if (mismatch) {
+                nbadrow++;
+            }
+        }
+        return 0;
     }
 }
