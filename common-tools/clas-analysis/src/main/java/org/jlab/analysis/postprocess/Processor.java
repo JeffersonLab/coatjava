@@ -23,9 +23,6 @@ import org.jlab.detector.scalers.DaqScalers;
 import org.jlab.detector.scalers.DaqScalersSequence;
 import org.jlab.detector.helicity.HelicityBit;
 import org.jlab.detector.helicity.HelicitySequenceDelayed;
-import org.jlab.jnp.hipo4.io.HipoWriterSorted;
-import org.jlab.utils.options.OptionParser;
-import org.jlab.utils.system.ClasUtilsFile;
 
 /**
  *
@@ -57,10 +54,6 @@ public class Processor {
 
     public Processor(String dir, String glob, boolean restream, boolean rebuild) {
         configure(findPreloadFiles(dir,glob), restream, rebuild);
-    }
-
-    public Processor(List<String> files, boolean restream, boolean rebuild) {
-        configure(files, restream, rebuild);
     }
 
     public Processor(SchemaFactory schema, HelicitySequenceDelayed h, DaqScalersSequence s) {
@@ -302,48 +295,8 @@ public class Processor {
         }
     }
 
-    /**
-     * The "postprocess" program.
-     * @param args
-     */
     public static void main(String args[]) {
-
-        OptionParser o = new OptionParser("postprocess");
-        o.addOption("-f","0","reflip:  rebuild the HEL::flip bank");
-        o.addOption("-c","0","recharge:  rebuild the RUN/HEL::scaler banks");
-        o.addOption("-o",null,"merged output file path");
-        o.setRequiresInputList(true);
-        o.parse(args);
-
-        boolean restream = !o.getOption("-f").isDefault();
-        boolean rebuild = !o.getOption("-c").isDefault();
-
-        Processor post = new Processor(o.getInputList(), restream, rebuild);
-        
-        HipoWriterSorted writer = null;
-
-        if (!o.getOption("-o").isDefault()) {
-            writer = new HipoWriterSorted();
-            SchemaFactory schema = writer.getSchemaFactory();
-            schema.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4"));
-            writer.setCompressionType(2);
-            writer.open(o.getOption("-o").stringValue());
-        }
-
-        for (String f : o.getInputList()) {
-            HipoReader reader = new HipoReader();
-            reader.setTags(0);
-            reader.open(f);
-            Event event = new Event();
-            while (reader.hasNext()) {
-                reader.nextEvent(event);
-                post.processEvent(event);
-                if (writer != null) writer.addEvent(event);
-            }
-            reader.close();
-        }
-
-        if (writer != null) writer.close();
+        Processor p = new Processor(System.getenv("HOME")+"/tmp","r*.hipo",false,false);
     }
 
 }
