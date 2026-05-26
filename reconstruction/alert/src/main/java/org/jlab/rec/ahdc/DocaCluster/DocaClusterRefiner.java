@@ -2,7 +2,7 @@ package org.jlab.rec.ahdc.DocaCluster;
 
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
-import org.jlab.rec.ahdc.Cluster.Cluster;
+import org.jlab.rec.ahdc.AHDCCluster.AHDCCluster;
 
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
@@ -14,7 +14,7 @@ import java.util.Collections;
 /**
  * Build refined cluster space points using DOCA circles.
  *
- * For each original Cluster (2 PreClusters with stereo angle),
+ * For each original AHDCCluster (2 PreClusters with stereo angle),
  * if the hit multiplicity is (1,1), (1,2)/(2,1) or (2,2), we
  * construct new space points from circle-circle tangents.
  * Otherwise we fall back to the original (x,y,z) with weight 1.
@@ -284,18 +284,18 @@ public class DocaClusterRefiner {
     // =====================================================================
 
     /**
-     * Build a list of DocaCluster objects from the original list of Cluster.
-     * Each Cluster may generate multiple DocaCluster points.
+     * Build a list of DocaCluster objects from the original list of AHDCCluster.
+     * Each AHDCCluster may generate multiple DocaCluster points.
      */
 
-    public static ArrayList<DocaCluster> buildRefinedClusters(List<Cluster> clusters) {
+    public static ArrayList<DocaCluster> buildRefinedClusters(List<AHDCCluster> clusters) {
 
         ArrayList<DocaCluster> out = new ArrayList<>();
 
         if (clusters == null) return out;
 
         for (int idx = 0; idx < clusters.size(); idx++) {
-            Cluster cl = clusters.get(idx);
+            AHDCCluster cl = clusters.get(idx);
 
             ArrayList<PreCluster> pcs = cl.get_PreClusters_list();
             if (pcs == null || pcs.size() != 2) {
@@ -367,7 +367,7 @@ public class DocaClusterRefiner {
     // (1,1) case
     // =====================================================================
 
-    private static List<DocaCluster> refine11(Cluster oldCluster,
+    private static List<DocaCluster> refine11(AHDCCluster oldCluster,
                                             PreCluster pc1, Hit h1,
                                             PreCluster pc2, Hit h2,
                                             int clusterIndex) {
@@ -460,11 +460,11 @@ public class DocaClusterRefiner {
 
     /**
      * One precluster has 1 hit (singlePc, singleHits), the other has 2 hits (doublePc, doubleHits).
-     * singleIsFirst indicates whether in the original Cluster list ordering we had:
+     * singleIsFirst indicates whether in the original AHDCCluster list ordering we had:
      *   - true  : (pc1, pc2) = (singlePc, doublePc)
      *   - false : (pc1, pc2) = (doublePc, singlePc)
      */
-    private static List<DocaCluster> refine12(Cluster oldCluster,
+    private static List<DocaCluster> refine12(AHDCCluster oldCluster,
                                               PreCluster singlePc, ArrayList<Hit> singleHits,
                                               PreCluster doublePc, ArrayList<Hit> doubleHits,
                                               boolean singleIsFirst,
@@ -637,7 +637,7 @@ public class DocaClusterRefiner {
     // (2,2) case
     // =====================================================================
 
-    private static List<DocaCluster> refine22(Cluster oldCluster,
+    private static List<DocaCluster> refine22(AHDCCluster oldCluster,
                                               PreCluster pc1, ArrayList<Hit> hits1,
                                               PreCluster pc2, ArrayList<Hit> hits2,
                                               int clusterIndex) {
@@ -867,7 +867,7 @@ public class DocaClusterRefiner {
         return a - b * Math.floor(a / b);
     }
 
-    /** Compute Z using the same relation as Cluster constructor but with new φ values. */
+    /** Compute Z using the same relation as AHDCCluster constructor but with new φ values. */
     private static double computeZ(PreCluster pre1, PreCluster pre2,
                                    double phi1, double phi2) {
 

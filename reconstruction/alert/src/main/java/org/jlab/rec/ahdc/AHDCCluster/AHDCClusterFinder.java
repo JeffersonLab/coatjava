@@ -1,21 +1,21 @@
-package org.jlab.rec.ahdc.Cluster;
+package org.jlab.rec.ahdc.AHDCCluster;
 
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/** ClusterFinder
+/** AHDCClusterFinder
  *
  * \todo description of what it does and how it works
  *
  */
-public class ClusterFinder {
+public class AHDCClusterFinder {
 
-	private final ArrayList<Cluster> _AHDCClusters                 = new ArrayList<>();
-	private final ArrayList<Cluster> _list_with_maybe_same_cluster = new ArrayList<>();
+	private final ArrayList<AHDCCluster> _AHDCClusters                 = new ArrayList<>();
+	private final ArrayList<AHDCCluster> _list_with_maybe_same_cluster = new ArrayList<>();
 
-	public ClusterFinder() {}
+	public AHDCClusterFinder() {}
 
 	private void find_associate_cluster(PreCluster precluster, List<PreCluster> AHDC_precluster_list, int window, int minimal_distance, int super_layer, int layer, int associate_super_layer) {
 	    //System.out.println(" precluster superlayer " + precluster.get_Super_layer() + " ref superlayer " + super_layer + " layer " + precluster.get_Layer() + " ref " + layer);
@@ -52,7 +52,7 @@ public class ClusterFinder {
 				if (best_precluster != null) {
 					precluster.set_Used(true);
 					best_precluster.set_Used(true);
-					Cluster new_Cluster = new Cluster(precluster, best_precluster);
+					AHDCCluster new_Cluster = new AHDCCluster(precluster, best_precluster);
 					_list_with_maybe_same_cluster.add(new_Cluster);
 				}
 			}
@@ -81,18 +81,18 @@ public class ClusterFinder {
 			find_associate_cluster(precluster, AHDC_precluster_list, window, minimal_distance, 4, 2, 5);
 		}
 
-		for (Cluster cluster : _list_with_maybe_same_cluster) {
+		for (AHDCCluster cluster : _list_with_maybe_same_cluster) {
 			if (!containsCluster(_AHDCClusters, cluster.get_Phi(), cluster.get_Radius())) {
 				_AHDCClusters.add(cluster);
 			}
 		}
 	}
 
-	public boolean containsCluster(final List<Cluster> list, double phi, double radius) {
+	public boolean containsCluster(final List<AHDCCluster> list, double phi, double radius) {
 		return list.stream().anyMatch(o -> o.get_Radius() == (radius) && o.get_Phi() == phi);
 	}
 
-	public ArrayList<Cluster> get_AHDCClusters() {
+	public ArrayList<AHDCCluster> get_AHDCClusters() {
 		return _AHDCClusters;
 	}
 

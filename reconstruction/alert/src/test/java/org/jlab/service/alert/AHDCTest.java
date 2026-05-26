@@ -7,7 +7,6 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.analysis.physics.TestEvent;
 import org.jlab.service.ahdc.AHDCEngine;
-import org.jlab.rec.ahdc.ModeTrackFinding;
 
 /**
  *
@@ -23,12 +22,11 @@ public class AHDCTest {
     DataEvent event = TestEvent.get(DetectorType.AHDC);
     
     AHDCEngine engine = new AHDCEngine();
-    engine.init(ModeTrackFinding.AI_Track_Finding);
+    engine.init();
     engine.processDataEvent(event);
 
     event.show();
     event.getBank("AHDC::hits").show();
-    event.getBank("AHDC::clusters").show();
     
     assertEquals(event.hasBank("FAKE::Bank"), false);
     assertEquals(event.hasBank("AHDC::wf"), true);
