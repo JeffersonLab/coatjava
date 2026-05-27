@@ -225,7 +225,8 @@ jobs:
       - name: run test
         run: |
           ls -lhtr
-          ./coatjava/bin/decoder -l FINE -n 10000 -o dog.hipo ./clas_018779.evio.00001
+          ./coatjava/bin/decoder -l FINE -n 10000 -o dec.hipo clas_018779.evio.00001
+          ./coatjava/bin/postprocess -d 1 -q 1 -o pp.hipo dec.hipo
 
   test_clara:
     needs: [ build, download_test_data ]
