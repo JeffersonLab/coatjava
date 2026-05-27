@@ -153,7 +153,7 @@ public class Tag1ToEvent {
 
                     // Update RUN::config.unixtime:
                     if (runConfigBank.getRows() > 0) {
-                        int evno = runConfigBank.getByte("event", 0);
+                        int evno = runConfigBank.getInt("event", 0);
                         Integer key = eventUnix.floorKey(evno);
                         if (key != null) {
                             Integer unix = eventUnix.get(key);
