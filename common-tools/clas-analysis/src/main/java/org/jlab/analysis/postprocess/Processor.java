@@ -194,8 +194,8 @@ public class Processor {
     }
 
     /**
-     * Modify REC::Event for beam charge and livetime
-     * @param runcfg
+     * Modify RUN::config's unixtime and update the event
+     * @param event
      * @param runcfg 
      */
     private void processEventUnix(Event event, Bank runcfg) {
@@ -213,17 +213,20 @@ public class Processor {
     }
 
     /**
-     * Modify REC::Event for beam charge and livetime
-     * @param runcfg
+     * Modify RUN::config's unixtime and update the event
+     * @param event
      * @param runcfg 
      */
     private void processEventUnix(DataEvent event, DataBank runcfg) {
         if (runcfg.rows() > 0) {
-            Integer unix = eventUnix.get(eventUnix.floorKey(runcfg.getInt("event",0)));
-            if (unix != null) {
-                event.removeBank(runcfg.getDescriptor().getName());
-                runcfg.setInt("unixtime", 0, unix);
-                event.appendBank(runcfg);
+            Integer key = eventUnix.floorKey(runcfg.getInt("event",0));
+            if (key != null) {
+                Integer unix = eventUnix.get(key);
+                if (unix != null) {
+                    event.removeBank(runcfg.getDescriptor().getName());
+                    runcfg.setInt("unixtime", 0, unix);
+                    event.appendBank(runcfg);
+                }
             }
         }
     }
