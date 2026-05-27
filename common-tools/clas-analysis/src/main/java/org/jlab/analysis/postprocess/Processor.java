@@ -1,13 +1,6 @@
 package org.jlab.analysis.postprocess;
 
-import java.io.File;
-import java.nio.file.FileSystems;
-import java.nio.file.PathMatcher;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.TreeMap;
 
 import org.jlab.jnp.hipo4.data.Bank;
@@ -23,6 +16,9 @@ import org.jlab.detector.scalers.DaqScalers;
 import org.jlab.detector.scalers.DaqScalersSequence;
 import org.jlab.detector.helicity.HelicityBit;
 import org.jlab.detector.helicity.HelicitySequenceDelayed;
+import org.jlab.jnp.hipo4.io.HipoWriterSorted;
+import org.jlab.utils.options.OptionParser;
+import org.jlab.utils.system.ClasUtilsFile;
 
 /**
  *
@@ -32,9 +28,6 @@ public class Processor {
 
     public static final String CCDB_TABLES[] = {"/runcontrol/fcup","/runcontrol/slm",
         "/runcontrol/helicity","/daq/config/scalers/dsc1","/runcontrol/hwp"};
-    public static final String DEF_PRELOAD_GLOB = "*.{hipo,h5}";
-
-    private final String outputPrefix = "tmp_";
 
     private Bank runConfig = null;
     private Bank recEvent = null;
@@ -44,61 +37,30 @@ public class Processor {
     private HelicitySequenceDelayed helicitySequence = null;
     private TreeMap<Integer,Integer> eventUnix = null;
 
-    public Processor(File file, boolean restream, boolean rebuild) {
-        configure(Arrays.asList(file.getAbsolutePath()), restream, rebuild);
-    }
-    
-    public Processor(String dir, boolean restream, boolean rebuild) {
-        configure(findPreloadFiles(dir,DEF_PRELOAD_GLOB), restream, rebuild);
-    }
-
-    public Processor(String dir, String glob, boolean restream, boolean rebuild) {
-        configure(findPreloadFiles(dir,glob), restream, rebuild);
-    }
-
-    public Processor(SchemaFactory schema, HelicitySequenceDelayed h, DaqScalersSequence s) {
+    public Processor(List<String> files, boolean restream, boolean rebuild) {
+        HipoReader r = new HipoReader();
+        r.open(files.get(0));
+        schemaFactory = r.getSchemaFactory();
+        r.close();
+        runConfig = new Bank(schemaFactory.getSchema("RUN::config"));
+        recEvent = new Bank(schemaFactory.getSchema("REC::Event"));
         conman = new ConstantsManager();
         conman.init(CCDB_TABLES);
+        helicitySequence = Util.getHelicity(files, schemaFactory, restream, conman);
+        if (rebuild) chargeSequence = DaqScalersSequence.rebuildSequence(1, conman, files);
+        else chargeSequence = DaqScalersSequence.readSequence(files);
+        eventUnix = getEventUnixMap(schemaFactory, files); 
+    }
+
+    public Processor(List<String> files, SchemaFactory schema, HelicitySequenceDelayed h, DaqScalersSequence s) {
         schemaFactory = schema;
         helicitySequence = h;
         chargeSequence = s;
         runConfig = new Bank(schemaFactory.getSchema("RUN::config"));
         recEvent = new Bank(schemaFactory.getSchema("REC::Event"));
-    }
-
-    private void configure(List<String> preloadFiles, boolean restream, boolean rebuild) {
-        if (!preloadFiles.isEmpty()) {
-            HipoReader r = new HipoReader();
-            r.open(preloadFiles.get(0));
-            schemaFactory = r.getSchemaFactory();
-            r.close();
-            runConfig = new Bank(schemaFactory.getSchema("RUN::config"));
-            recEvent = new Bank(schemaFactory.getSchema("REC::Event"));
-            conman = new ConstantsManager();
-            conman.init(CCDB_TABLES);
-            helicitySequence = Util.getHelicity(preloadFiles, schemaFactory, restream, conman);
-            if (rebuild) chargeSequence = DaqScalersSequence.rebuildSequence(1, conman, preloadFiles);
-            else chargeSequence = DaqScalersSequence.readSequence(preloadFiles);
-            eventUnix = getEventUnixMap(schemaFactory, preloadFiles); 
-        }
-    }
-
-    /**
-     * Get a list of files to preload, from one directory and a glob.
-     * @param dir
-     * @param glob
-     * @return list of preload files 
-     */
-    private static List<String> findPreloadFiles(String dir, String glob) {
-        List<String> ret = new ArrayList<>();
-        if (dir != null) {
-            PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:"+dir+"/"+glob);
-            for (File f : (new File(dir)).listFiles()) {
-                if (matcher.matches(f.toPath()))
-                    ret.add(f.getPath());
-            }
-        }
-        return ret;
+        conman = new ConstantsManager();
+        conman.init(CCDB_TABLES);
+        eventUnix = getEventUnixMap(schemaFactory, files);
     }
 
     /**
@@ -108,20 +70,18 @@ public class Processor {
      * @return map 
      */
     public static TreeMap<Integer,Integer> getEventUnixMap(SchemaFactory schema, List<String> files) {
-        Bank unix = new Bank(schema.getSchema("RUN::unix"));
         TreeMap<Integer,Integer> m = new TreeMap<>();
         Event e = new Event();
+        Bank b = schema.getBank("RUN::unix");//new Bank(schema.getSchema("RUN::unix"));
         for (String f : files) {
             HipoReader r = new HipoReader();
             r.setTags(1);
             r.open(f);
             while (r.hasNext()) {
                 r.nextEvent(e);
-                e.read(unix);
-                int size = unix.getRows();
-                for (int i=0; i<size; i++) {
-                    m.put(unix.getInt("event",i), unix.getInt("unixtime",i));
-                }
+                e.read(b);
+                int size = b.getRows();
+                for (int i=0; i<size; i++) m.put(b.getInt("event",i), b.getInt("unixtime",i));
             }
             r.close();
         }
@@ -156,8 +116,8 @@ public class Processor {
     private void processEventHelicity(Event event, Bank runcfg, Bank recevt) {
         HelicityBit hb = helicitySequence.search(runcfg.getLong("timestamp", 0));
         HelicityBit hbraw = helicitySequence.getHalfWavePlate() ? HelicityBit.getFlipped(hb) : hb;
-        recevt.setByte("helicity",0,hb.value());
-        recevt.setByte("helicityRaw",0,hbraw.value());
+        recevt.putByte("helicity",0,hb.value());
+        recevt.putByte("helicityRaw",0,hbraw.value());
         Bank helScaler = new Bank(schemaFactory.getSchema("HEL::scaler"));
         event.read(helScaler);
         if (helScaler.getRows()>0) {
@@ -272,37 +232,46 @@ public class Processor {
     }
 
     /**
-     * Create rebuilt files from preload files.
-     * @param files
-     * @return map of rebuilt:preload files 
+     * The "postprocess" program.
+     * @param args
      */
-    private Map<String,String> rebuild(String dir, List<String> files) {
-        File d = new File(dir);
-        if (!d.canWrite()) {
-            throw new RuntimeException("No write permissions on "+dir);
-        }
-        Map<String,String> rebuiltFiles = new HashMap<>();
-        for (String preloadFile : files) {
-            String rebuiltFile = dir+"/"+outputPrefix+preloadFile.replace(dir+"/","");
-            Util.rebuildScalers(conman, preloadFile, rebuiltFile);
-            rebuiltFiles.put(rebuiltFile,preloadFile);
-        }
-        return rebuiltFiles;
-    }
-
-    /**
-     * Replace files with new ones.
-     * @param files map of new:old filenames
-     */
-    private static void replace(Map<String,String> files) {
-        for (String rebuiltFile : files.keySet()) {
-            new File(files.get(rebuiltFile)).delete();
-            new File(rebuiltFile).renameTo(new File(files.get(rebuiltFile)));
-        }
-    }
-
     public static void main(String args[]) {
-        Processor p = new Processor(System.getenv("HOME")+"/tmp","r*.hipo",false,false);
+
+        OptionParser o = new OptionParser("postprocess");
+        o.addOption("-f","0","reflip:  rebuild the HEL::flip bank");
+        o.addOption("-c","0","recharge:  rebuild the RUN/HEL::scaler banks");
+        o.addOption("-o",null,"merged output file path");
+        o.setRequiresInputList(true);
+        o.parse(args);
+
+        boolean restream = !o.getOption("-f").isDefault();
+        boolean rebuild = !o.getOption("-c").isDefault();
+
+        Processor post = new Processor(o.getInputList(), restream, rebuild);
+        
+        HipoWriterSorted writer = null;
+
+        if (!o.getOption("-o").isDefault()) {
+            writer = new HipoWriterSorted();
+            SchemaFactory schema = writer.getSchemaFactory();
+            schema.initFromDirectory(ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4"));
+            writer.setCompressionType(2);
+            writer.open(o.getOption("-o").stringValue());
+        }
+
+        for (String f : o.getInputList()) {
+            HipoReader reader = new HipoReader();
+            reader.open(f);
+            Event event = new Event();
+            while (reader.hasNext()) {
+                reader.nextEvent(event);
+                post.processEvent(event);
+                if (writer != null) writer.addEvent(event);
+            }
+            reader.close();
+        }
+
+        if (writer != null) writer.close();
     }
 
 }
