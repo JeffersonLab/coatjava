@@ -300,7 +300,7 @@ public class TableLoader {
         }
     }
 
-    private static void FillTable() {
+    public static void FillTable() {
         double stepSize = 0.00010;
         for(int s = 0; s<6; s++ ){ // loop over sectors
             for(int r = 0; r<6; r++ ){ //loop over slys
