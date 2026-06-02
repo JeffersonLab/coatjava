@@ -147,8 +147,8 @@ public final class MUCALGeant4Factory extends Geant4Factory {
         double CrminU = (Dat25deg+Clength/2.) * ( Math.tan(ThetaU) - Math.tan(ThetaU - ThetaMin) )*Math.cos(ThetaU);
         double CrmaxU = (Dat25deg+Clength/2.) * ( Math.tan(ThetaU) + Math.tan(ThetaMax - ThetaU) )*Math.cos(ThetaU);
         double microgap = 0.5*Length.mm;
-        double Cwidth = (CwidthU+CwidthD)/2 + microgap;
-        int nCrystal = 2*((int)(CrmaxU / Cwidth));
+        double Cwidth = (CwidthU+CwidthD)/2. + microgap;
+        int nCrystal = 2*((int)(CrmaxU / Cwidth)+100);// add 100 to get full coverage
         double paddlewidth = 10*Length.cm;
         double paddlethickness = 1.0*Length.cm;
         double gap = 0.5*Length.cm;
@@ -163,8 +163,8 @@ public final class MUCALGeant4Factory extends Geant4Factory {
 	    {
 		    for(int iY = 0; iY < nCrystal; iY++)
 		    {
-                centerX = - nCrystal/2.*Cwidth + iX*Cwidth + 0.5*Cwidth;
-                centerY = - nCrystal/2.*Cwidth + iY*Cwidth + 0.5*Cwidth;
+                centerX = - nCrystal/2.*Cwidth + (double)iX*Cwidth + 0.5*Cwidth;
+                centerY = - nCrystal/2.*Cwidth + (double)iY*Cwidth + 0.5*Cwidth;
 
                 x12 = (centerX - 0.5*Cwidth)*(centerX - 0.5*Cwidth);
                 x22 = (centerX + 0.5*Cwidth)*(centerX + 0.5*Cwidth);
