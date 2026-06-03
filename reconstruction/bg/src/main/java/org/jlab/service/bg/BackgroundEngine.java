@@ -40,6 +40,9 @@ public class BackgroundEngine extends ReconstructionEngine {
         return true;
     }
 
+    @Override
+    public void detectorChanged(int run){}
+
     public boolean init(String... filenames) {
         String detectors = getEngineConfigString(CONF_DETECTORS,"DC,FTOF");
         String orders = getEngineConfigString(CONF_ORDERS,"NOMINAL");
@@ -52,7 +55,7 @@ public class BackgroundEngine extends ReconstructionEngine {
     }
 
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         return bgmerger.mergeEvents(event);
     }
 

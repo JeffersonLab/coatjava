@@ -15,8 +15,6 @@ import org.jlab.detector.pulse.ModeAHDC;
 
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.evio.EvioDataEvent;
-import org.jlab.io.hipo.HipoDataEvent;
-import org.jlab.io.hipo.HipoDataSync;
 
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
@@ -38,18 +36,14 @@ public class CLASDecoder {
     protected SchemaFactory           schemaFactory = new SchemaFactory();
     private CodaEventDecoder          codaDecoder = null;
     private List<DetectorDataDgtz>       dataList = new ArrayList<>();
-    private HipoDataSync                   writer = null;
-    private HipoDataEvent               hipoEvent = null;
     private boolean              isRunNumberFixed = false;
     private int                  decoderDebugMode = 0;
     private ModeAHDC                ahdcExtractor = new ModeAHDC();
-    private RCDBManager               rcdbManager = new RCDBManager();
+    private static RCDBManager        rcdbManager = new RCDBManager();
 
     public CLASDecoder(boolean development){
         codaDecoder = new CodaEventDecoder();
         detectorDecoder = new DetectorEventDecoder(development);
-        writer = new HipoDataSync();
-        hipoEvent = (HipoDataEvent) writer.createEvent();
         String dir = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4");
         schemaFactory.initFromDirectory(dir);
     }
@@ -57,8 +51,13 @@ public class CLASDecoder {
     public CLASDecoder(){
         codaDecoder = new CodaEventDecoder();
         detectorDecoder = new DetectorEventDecoder();
-        writer = new HipoDataSync();
-        hipoEvent = (HipoDataEvent) writer.createEvent();
+        String dir = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4");
+        schemaFactory.initFromDirectory(dir);
+    }
+
+    public CLASDecoder(CLASDecoder d) {
+        codaDecoder = new CodaEventDecoder();
+        detectorDecoder = new DetectorEventDecoder(d.detectorDecoder);
         String dir = ClasUtilsFile.getResourceDir("CLAS12DIR", "etc/bankdefs/hipo4");
         schemaFactory.initFromDirectory(dir);
     }
@@ -744,11 +743,13 @@ public class CLASDecoder {
                     }
 
                     int runNumberCoda = codaDecoder.getRunNumber();
-                    this.setRunNumber(runNumberCoda);
-                   
-                    detectorDecoder.translate(dataList);
-                    detectorDecoder.fitPulses(dataList);
-                    detectorDecoder.filterTDCs(dataList);
+                  
+                    if (runNumberCoda > 0) {
+                        this.setRunNumber(runNumberCoda);
+                        detectorDecoder.translate(dataList);
+                        detectorDecoder.fitPulses(dataList);
+                        detectorDecoder.filterTDCs(dataList);
+                    }
 
                     if(this.decoderDebugMode>0){
                         System.out.println("\n>>>>>>>>> TRANSLATED data");
@@ -789,5 +790,9 @@ public class CLASDecoder {
             decodedEvent.write(b);
 
         return decodedEvent;
+    }
+
+    public Event getDecodedEvent(EvioDataEvent rawEvent) {
+        return getDecodedEvent(rawEvent, -1, -1, null, null);
     }
 }

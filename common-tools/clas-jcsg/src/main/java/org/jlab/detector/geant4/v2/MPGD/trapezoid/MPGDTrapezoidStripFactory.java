@@ -337,7 +337,7 @@ public abstract class MPGDTrapezoidStripFactory {
         Vector3d nXY = new Vector3d(ca, -sa, 0.0);
         double rhs = (internalIndex + 0.5) * c.pitch;
 
-        List<Vector3d> inters = new ArrayList<>(4);
+        List<Vector3d> inters = new ArrayList<>();
 
         for (Vector3d[] e : tr.edges()) {
             Vector3d P = new Vector3d(0, 0, 0);
@@ -360,8 +360,14 @@ public abstract class MPGDTrapezoidStripFactory {
                 double d2 = dx * dx + dy * dy;
                 if (d2 > best) {
                     best = d2;
-                    a = inters.get(i);
-                    b = inters.get(j);
+                    if(dy>0) {
+                        a = inters.get(i);
+                        b = inters.get(j);
+                    }
+                    else {
+                        a = inters.get(j);
+                        b = inters.get(i);                    
+                    }
                 }
             }
         }
@@ -419,9 +425,9 @@ public abstract class MPGDTrapezoidStripFactory {
             tmp.add(s);
         }
 
-        tmp.sort(Comparator
-                .comparingDouble((StripGeom s) -> s.orderXLocal)
-                .thenComparingInt(s -> s.internalIndex));
+//        tmp.sort(Comparator
+//                .comparingDouble((StripGeom s) -> s.orderXLocal)
+//                .thenComparingInt(s -> s.internalIndex));
 
         int comp = 1;
         for (StripGeom s : tmp) {

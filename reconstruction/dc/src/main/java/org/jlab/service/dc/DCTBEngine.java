@@ -43,6 +43,7 @@ import org.jlab.clas.tracking.kalmanfilter.zReference.KFitterStraight;
 import org.jlab.clas.tracking.kalmanfilter.zReference.StateVecs;
 import org.jlab.clas.tracking.utilities.MatrixOps.Libr;
 import org.jlab.clas.tracking.utilities.RungeKuttaDoca;
+import org.jlab.detector.base.DetectorType;
 
 public class DCTBEngine extends DCEngine {
     
@@ -70,7 +71,8 @@ public class DCTBEngine extends DCEngine {
     }
     
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
+
         int run = this.getRun(event);
         if(run==0) return true;
         
@@ -199,6 +201,24 @@ public class DCTBEngine extends DCEngine {
         }
         if(TrackArray==null) {
             return true; // HB tracks not saved correctly
+        }
+        if(Math.abs(Swimmer.getTorScale()) < 0.001 && 
+            event.hasBank(this.getBanks().getRecPartBank()) && 
+            event.hasBank(this.getBanks().getRecTrackBank())){
+            DataBank trackBank = event.getBank(this.getBanks().getRecTrackBank());
+            DataBank partBank  = event.getBank(this.getBanks().getRecPartBank());
+            for (int i = 0; i < trackBank.rows(); i++) {
+                if (trackBank.getByte("detector", i) == DetectorType.DC.getDetectorId()) {
+                    int pindex = trackBank.getShort("pindex", i);
+                    if(partBank.getInt("pid", i) == 11) {
+                        Track HBtrk = TrackArray[trackBank.getShort("index", i)];
+                        HBtrk.set_pAtOrig(new Vector3D(partBank.getFloat("px", pindex),
+                                                       partBank.getFloat("py", pindex),
+                                                       partBank.getFloat("pz", pindex)));
+                        HBtrk.set_P(HBtrk.get_pAtOrig().mag());
+                    }
+                }
+            }
         }
         for(Segment seg : segments) {
             if(seg.get(0).get_AssociatedHBTrackID()>0) {

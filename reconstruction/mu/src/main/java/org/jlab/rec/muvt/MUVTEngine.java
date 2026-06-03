@@ -55,7 +55,10 @@ public class MUVTEngine extends ReconstructionEngine {
     }
 
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public void detectorChanged(int run) {}
+
+    @Override
+    public boolean processDataEventUser(DataEvent event) {
         // Initial setup.
         if(debug) System.out.println("\nNew event");
         
@@ -108,8 +111,8 @@ public class MUVTEngine extends ReconstructionEngine {
                     trackCrosses[cross.getRegion()-1].add(cross);
                 }
             }
-            System.out.println();
-            for(int j=0; j<trackCrosses.length; j++) System.out.print(trackCrosses[j].size() + " "); 
+//            System.out.println();
+//            for(int j=0; j<trackCrosses.length; j++) System.out.print(trackCrosses[j].size() + " "); 
                     
             List<List<MUVTCross>> segments = new ArrayList<>();
             List<MUVTCross> end = new ArrayList<>();
@@ -140,7 +143,7 @@ public class MUVTEngine extends ReconstructionEngine {
                     }
                 }
             }
-            System.out.print(segments.size());
+//            System.out.print(segments.size());
             if(!segments.isEmpty()) {
                 segments.sort(Comparator.comparingInt(List<MUVTCross>::size).reversed());
                 for(MUVTCross cross : segments.get(0)) {
@@ -161,7 +164,7 @@ public class MUVTEngine extends ReconstructionEngine {
         
         // Iterate on list to run the fit.
         for(int i=0; i<filtedTracks.size(); i++) {
-            MUVTTrack track = tracks.get(i);                
+            MUVTTrack track = filtedTracks.get(i);                
                             
             // Set status and stop if there are not at least two measurements to fit against.
             List<MUVTCluster> trackClusters = track.getClusters();           

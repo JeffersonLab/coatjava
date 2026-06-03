@@ -6,6 +6,8 @@ import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.calib.utils.ConstantsManager;
 
 /**
+ * An IndexedTable assuming the standard, /daq/tt CCDB format (c/s/c/s/l/c/o),
+ * appended by a DetectorType column.  A global CCDB translation table.  
  *
  * @author baltzell
  */
@@ -15,6 +17,10 @@ public class TranslationTable extends IndexedTable {
         super(3,new String[]{"sector/I","layer/I","component/I","order/I","type/I"});
     };
 
+    /**
+     * Add a detector's entire translation table.
+     * 
+     */
     public void add(DetectorType dt, IndexedTable it) {
 
         for (Object key : it.getList().getMap().keySet()) {

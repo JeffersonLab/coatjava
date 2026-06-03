@@ -1,7 +1,7 @@
 package org.jlab.rec.ahdc.Distance;
 
-import org.jlab.rec.ahdc.Cluster.Cluster;
-import org.jlab.rec.ahdc.Track.Track;
+import org.jlab.rec.ahdc.AHDCCluster.AHDCCluster;
+import org.jlab.rec.alert.Track.TrackCandidate;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,13 +14,13 @@ import java.util.List;
  */ 
 public class Distance {
 
-    private ArrayList<Track> _AHDCTracks;
+    private ArrayList<TrackCandidate> _AHDCTrackCandidates;
 
     public Distance(){
-        _AHDCTracks = new ArrayList<>();
+        _AHDCTrackCandidates = new ArrayList<>();
     }
 
-    public void find_track(List<Cluster> AHDC_Cluster){
+    public void find_track(List<AHDCCluster> AHDC_Cluster){
         find_track_4_clusters(AHDC_Cluster);
         find_track_3_clusters(AHDC_Cluster);
     }
@@ -41,14 +41,14 @@ public class Distance {
         return combinations;
     }
 
-    private void find_track_4_clusters(List<Cluster> AHDC_Cluster){
-        List<Cluster> clusters_to_remove = new ArrayList<>();
-        List<Cluster> layer1 = new ArrayList<>(); // List of all cluster with a radius equal 35
-        List<Cluster> layer2 = new ArrayList<>(); // List of all cluster with a radius equal 45
-        List<Cluster> layer3 = new ArrayList<>(); // List of all cluster with a radius equal 55
-        List<Cluster> layer4 = new ArrayList<>(); // List of all cluster with a radius equal 65
+    private void find_track_4_clusters(List<AHDCCluster> AHDC_Cluster){
+        List<AHDCCluster> clusters_to_remove = new ArrayList<>();
+        List<AHDCCluster> layer1 = new ArrayList<>(); // List of all cluster with a radius equal 35
+        List<AHDCCluster> layer2 = new ArrayList<>(); // List of all cluster with a radius equal 45
+        List<AHDCCluster> layer3 = new ArrayList<>(); // List of all cluster with a radius equal 55
+        List<AHDCCluster> layer4 = new ArrayList<>(); // List of all cluster with a radius equal 65
 
-        for(Cluster cluster : AHDC_Cluster){
+        for(AHDCCluster cluster : AHDC_Cluster){
             if(cluster.get_Radius() == 35){
                 layer1.add(cluster);
             }
@@ -62,29 +62,29 @@ public class Distance {
                 layer4.add(cluster);
             }
         }
-        List<List<Cluster>> merged_list = new ArrayList<>();
+        List<List<AHDCCluster>> merged_list = new ArrayList<>();
         merged_list.add(layer1);
         merged_list.add(layer2);
         merged_list.add(layer3);
         merged_list.add(layer4);
-        List<List<Cluster>> all_combinations = computeCombinations2(merged_list);
+        List<List<AHDCCluster>> all_combinations = computeCombinations2(merged_list);
 
-        List<Track> all_track = new ArrayList<>();
-        for(List<Cluster> combination : all_combinations){
-            all_track.add(new Track(combination));
+        List<TrackCandidate> all_track = new ArrayList<>();
+        for(List<AHDCCluster> combination : all_combinations){
+            all_track.add(new TrackCandidate(combination));
         }
 
-        List<Track> tracks_possible = new ArrayList<>();
-        for(Track track : all_track){
+        List<TrackCandidate> tracks_possible = new ArrayList<>();
+        for(TrackCandidate track : all_track){
             if(track.get_Distance() < 45){
                 tracks_possible.add(track);
             }
         }
 
         double window = 3.8;
-        for(Track track : tracks_possible){
-            List<Track> tracks_with_close_starting_point = new ArrayList<>();
-            for(Track other_track : tracks_possible){
+        for(TrackCandidate track : tracks_possible){
+            List<TrackCandidate> tracks_with_close_starting_point = new ArrayList<>();
+            for(TrackCandidate other_track : tracks_possible){
                 if(other_track.get_Clusters().get(0).get_X() > track.get_Clusters().get(0).get_X() - window
                     && other_track.get_Clusters().get(0).get_X() < track.get_Clusters().get(0).get_X() + window
                     && other_track.get_Clusters().get(0).get_Y() > track.get_Clusters().get(0).get_Y() - window
@@ -97,12 +97,12 @@ public class Distance {
 
             if(tracks_with_close_starting_point.size() > 0){
                 double chisq_min = Double.MAX_VALUE;
-                Track best_track = null;
-                for(Track other_track : tracks_with_close_starting_point){
+                TrackCandidate best_track = null;
+                for(TrackCandidate other_track : tracks_with_close_starting_point){
                     ArrayList<Double> x_ = new ArrayList<>();
                     ArrayList<Double> y_ = new ArrayList<>();
                     ArrayList<Double> w_ = new ArrayList<>(); // weight for circlefit
-                    for(Cluster cluster : other_track.get_Clusters()){
+                    for(AHDCCluster cluster : other_track.get_Clusters()){
                         x_.add(cluster.get_X());
                         y_.add(cluster.get_Y());
                         w_.add(1.);
@@ -119,32 +119,32 @@ public class Distance {
                 }
                 if (best_track != null ){
                     clusters_to_remove.addAll(best_track.get_Clusters());
-                    _AHDCTracks.add(best_track);
+                    _AHDCTrackCandidates.add(best_track);
                 }
             }
         }
 
-        List<Cluster> clusters_to_remove_without_double = new ArrayList<>();
-        for(Cluster cluster : clusters_to_remove){
+        List<AHDCCluster> clusters_to_remove_without_double = new ArrayList<>();
+        for(AHDCCluster cluster : clusters_to_remove){
             if(!containsCluster(clusters_to_remove_without_double, cluster.get_Phi(), cluster.get_Radius())){
                 clusters_to_remove_without_double.add(cluster);
             }
         }
 
-        for(Cluster cluster : clusters_to_remove_without_double){
+        for(AHDCCluster cluster : clusters_to_remove_without_double){
             AHDC_Cluster.remove(cluster);
         }
     }
 
-    public boolean containsCluster(final List<Cluster> list, double phi, double radius){
+    public boolean containsCluster(final List<AHDCCluster> list, double phi, double radius){
         return list.stream().anyMatch(o -> o.get_Radius() == (radius) && o.get_Phi() == phi);
     }
 
 
-   private ArrayList<ArrayList<Cluster>> combination(List<Cluster> arr, ArrayList<Cluster> data, int start,
+   private ArrayList<ArrayList<AHDCCluster>> combination(List<AHDCCluster> arr, ArrayList<AHDCCluster> data, int start,
                                            int end, int index, int r) {
 
-        ArrayList<ArrayList<Cluster>> all = new ArrayList<>();
+        ArrayList<ArrayList<AHDCCluster>> all = new ArrayList<>();
         if (index == r) {
             all.add(data);
         }
@@ -157,25 +157,25 @@ public class Distance {
         return all;
     }
 
-    private void find_track_3_clusters(List<Cluster> AHDC_Cluster){
-        ArrayList<ArrayList<Cluster>> all_combinations = combination(AHDC_Cluster, new ArrayList<Cluster>(),0, AHDC_Cluster.size()-1, 0, 3);
+    private void find_track_3_clusters(List<AHDCCluster> AHDC_Cluster){
+        ArrayList<ArrayList<AHDCCluster>> all_combinations = combination(AHDC_Cluster, new ArrayList<AHDCCluster>(),0, AHDC_Cluster.size()-1, 0, 3);
 
-        List<Track> all_track = new ArrayList<>();
-        for(List<Cluster> combination : all_combinations){
-            all_track.add(new Track(combination));
+        List<TrackCandidate> all_track = new ArrayList<>();
+        for(List<AHDCCluster> combination : all_combinations){
+            all_track.add(new TrackCandidate(combination));
         }
 
-        List<Track> tracks_possible = new ArrayList<>();
-        for(Track track : all_track){
+        List<TrackCandidate> tracks_possible = new ArrayList<>();
+        for(TrackCandidate track : all_track){
             if(track.get_Distance() < 45){
                 tracks_possible.add(track);
             }
         }
 
         double window = 3.8;
-        for(Track track : tracks_possible) {
-            List<Track> tracks_with_close_starting_point = new ArrayList<>();
-            for (Track other_track : tracks_possible) {
+        for(TrackCandidate track : tracks_possible) {
+            List<TrackCandidate> tracks_with_close_starting_point = new ArrayList<>();
+            for (TrackCandidate other_track : tracks_possible) {
                 if (other_track.get_Clusters().get(0).get_X() > track.get_Clusters().get(0).get_X() - window
                         && other_track.get_Clusters().get(0).get_X() < track.get_Clusters().get(0).get_X() + window
                         && other_track.get_Clusters().get(0).get_Y() > track.get_Clusters().get(0).get_Y() - window
@@ -188,12 +188,12 @@ public class Distance {
 
             if(tracks_with_close_starting_point.size() > 0){
                 double chisq_min = Double.MAX_VALUE;
-                Track best_track = null;
-                for(Track other_track : tracks_with_close_starting_point){
+                TrackCandidate best_track = null;
+                for(TrackCandidate other_track : tracks_with_close_starting_point){
                     ArrayList<Double> x_ = new ArrayList<>();
                     ArrayList<Double> y_ = new ArrayList<>();
                     ArrayList<Double> w_ = new ArrayList<>(); // weight for circlefit
-                    for(Cluster cluster : other_track.get_Clusters()){
+                    for(AHDCCluster cluster : other_track.get_Clusters()){
                         x_.add(cluster.get_X());
                         y_.add(cluster.get_Y());
                         w_.add(1.);
@@ -209,17 +209,17 @@ public class Distance {
                     }
                 }
                 if (best_track != null ){
-                    _AHDCTracks.add(best_track);
+                    _AHDCTrackCandidates.add(best_track);
                 }
             }
         }
     }
 
-    public ArrayList<Track> get_AHDCTracks() {
-        return _AHDCTracks;
+    public ArrayList<TrackCandidate> get_AHDCTrackCandidates() {
+        return _AHDCTrackCandidates;
     }
 
-    public void set_AHDCTracks(ArrayList<Track> _AHDCTracks) {
-        this._AHDCTracks = _AHDCTracks;
+    public void set_AHDCTrackCandidates(ArrayList<TrackCandidate> _AHDCTrackCandidates) {
+        this._AHDCTrackCandidates = _AHDCTrackCandidates;
     }
 }

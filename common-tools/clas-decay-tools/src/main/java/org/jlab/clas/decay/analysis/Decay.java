@@ -584,8 +584,8 @@ public class Decay extends Particle {
         if(getVertBank()!=null) { 
             int nrows2 = getVertBank().rows();
             for(int loop2 = 0; loop2 < nrows2; loop2++){
-                if(p1.getIdx()-1==(int) getVertBank().getShort("index1", loop2)
-                        && p2.getIdx()-1==(int) getVertBank().getShort("index2", loop2)) {
+                if(p1.getIdx()==(int) getVertBank().getShort("index1", loop2)
+                        && p2.getIdx()==(int) getVertBank().getShort("index2", loop2)) {
                     p1.vIndex=loop2;
                     p2.vIndex=loop2;
                     
@@ -620,8 +620,8 @@ public class Decay extends Particle {
                     pass=true;
                     return pass;
                 }
-                if(p2.getIdx()-1==(int) getVertBank().getShort("index1", loop2)
-                        && p1.getIdx()-1==(int) getVertBank().getShort("index2", loop2)) {
+                if(p2.getIdx()==(int) getVertBank().getShort("index1", loop2)
+                        && p1.getIdx()==(int) getVertBank().getShort("index2", loop2)) {
                     p1.vIndex=loop2;
                     p2.vIndex=loop2;
                     //r =  (double) getVertBank().getFloat("r", loop2);

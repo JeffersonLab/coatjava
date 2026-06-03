@@ -1,7 +1,10 @@
 package org.jlab.utils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
+import java.util.TreeMap;
 import org.jlab.jnp.hipo4.io.HipoReader;
 import org.jlab.jnp.hipo4.data.Bank;
 import org.jlab.jnp.hipo4.data.Event;
@@ -94,6 +97,8 @@ public class HipoDiff {
     static double tolerance;
     static boolean verboseMode;
     static boolean quietMode;
+    static boolean sortEvents;
+    static int tag;
     static Bank runConfigBank;
     static HipoWriter writer;
     static Event event;
@@ -109,7 +114,10 @@ public class HipoDiff {
         op.addOption("-q", null, "quiet mode");
         op.addOption("-Q", null, "verbose mode");
         op.addOption("-b", null, "name of bank to diff");
-        op.addOption("-s", null, "sort on column index");
+        op.addOption("-B",   "", "names of banks to ignore (comma separated)");
+        op.addOption("-s", null, "column indices to sort on (comma separated)");
+        op.addOption("-e", null, "sort events by RUN::config.event");
+        op.addOption("-T",  "0", "event tag to compare");
         op.addOption("-o", null, "output HIPO diff file");
         op.setRequiresInputList(true);
         op.parse(args);
@@ -125,8 +133,10 @@ public class HipoDiff {
         }
         verboseMode = op.getOption("-Q").stringValue() != null;
         quietMode = op.getOption("-q").stringValue() != null;
+        sortEvents = op.getOption("-e").stringValue() != null;
         nmax = op.getOption("-n").intValue();
         tolerance = op.getOption("-t").doubleValue();
+        tag = op.getOption("-T").intValue();
 
         HipoReader readerA = new HipoReader();
         HipoReader readerB = new HipoReader();
@@ -135,10 +145,13 @@ public class HipoDiff {
         SchemaFactory sf = readerA.getSchemaFactory();
         runConfigBank = new Bank(sf.getSchema("RUN::config"));
 
+        List<String> ignoreBanks = Arrays.asList(op.getOption("-B").stringValue().split(","));
         if (op.getOption("-b").stringValue() == null) {
             for (Schema s : sf.getSchemaList()) {
-                banksA.add(new DiffBank(s));
-                banksB.add(new DiffBank(s));
+                if (!ignoreBanks.contains(s.getName())) {
+                    banksA.add(new DiffBank(s));
+                    banksB.add(new DiffBank(s));
+                }
             }
         } else {
             banksA.add(new DiffBank(sf.getSchema(op.getOption("-b").stringValue())));
@@ -151,22 +164,64 @@ public class HipoDiff {
             writer.open(op.getOption("-o").stringValue());
         }
 
-        compare(readerA, readerB);
+        compare(tag, readerA, readerB);
 
         if (writer != null) writer.close();
     }
 
-    public static int compare(HipoReader a, HipoReader b) {
+    public static TreeMap<Integer,Integer> getEventMap(int tag, HipoReader reader) {
+        TreeMap<Integer,Integer> m = new TreeMap<>();
+        ArrayList<Integer> duplicates = new ArrayList<>();
+        Event event = new Event();
+        for (int eventIndex=0; eventIndex<reader.getEventCount(); ++eventIndex) {
+            reader.getEvent(event, eventIndex);
+            if (event.getEventTag() != tag) continue;
+            event.read(runConfigBank);
+            if (runConfigBank.getRows() > 0) {
+                int eventNumber = runConfigBank.getInt("event",0);
+                if (m.containsKey(eventNumber)) {
+                    System.out.println("WARNING:  Duplicate event number " + eventNumber + " at event index " + eventIndex);
+                    duplicates.add(eventNumber);
+                }
+                else {
+                    m.put(eventNumber, eventIndex);
+                }
+            }
+        }
+        m.keySet().removeAll(duplicates);
+        return m;
+    }
+
+    public static int compare(int tag, HipoReader a, HipoReader b) {
         int ret=0;
         Event eventA = new Event();
         Event eventB = new Event();
-        while (a.hasNext() && b.hasNext() && (nmax < 1 || nevent < nmax)) {
-            if (++nevent % 5000 == 0) System.out.println("Analyzed " + nevent + " events");
-            a.nextEvent(eventA);
-            b.nextEvent(eventB);
-            eventA.read(runConfigBank);
-            ret += compare(eventA, eventB);
+        if (sortEvents) {
+            TreeMap<Integer,Integer> mapA = getEventMap(tag, a);
+            TreeMap<Integer,Integer> mapB = getEventMap(tag, b);
+            for (Integer eventNumber : mapA.keySet()) {
+                if (mapB.containsKey(eventNumber)){
+                    if (nmax > 0 && nevent >= nmax) break;
+                    if (++nevent % 5000 == 0) System.out.println("Analyzed " + nevent + " events");
+                    a.getEvent(eventA, mapA.get(eventNumber));
+                    b.getEvent(eventB, mapB.get(eventNumber));
+                    eventA.read(runConfigBank);
+                    ret += compare(eventA, eventB);
+                }
+            }
         }
+        else {
+            a.setTags(tag);
+            b.setTags(tag);
+            while (a.hasNext() && b.hasNext() && (nmax < 1 || nevent < nmax)) {
+                if (++nevent % 5000 == 0) System.out.println("Analyzed " + nevent + " events");
+                a.nextEvent(eventA);
+                b.nextEvent(eventB);
+                eventA.read(runConfigBank);
+                ret += compare(eventA, eventB);
+            }
+        }
+
         System.out.println("\n Analyzed " + nevent + " with " + nbadevent + " bad banks");
         System.out.println(nbadrow + "/" + nrow + " mismatched rows");
         System.out.println(nbadentry + "/" + nentry + " mismatched entry");

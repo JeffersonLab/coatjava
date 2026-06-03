@@ -3,7 +3,7 @@ package org.jlab.rec.atof.hit;
 import org.jlab.io.base.DataEvent;
 import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.rec.atof.constants.Parameters;
-import org.jlab.rec.alert.constants.CalibrationConstantsLoader;
+import org.jlab.utils.groups.IndexedTable;
 
 /**
  *
@@ -106,7 +106,7 @@ public class BarHit extends ATOFHit {
         this.setEnergy(Edep_up + Edep_down);
     }
 
-    public BarHit(ATOFHit hit_down, ATOFHit hit_up) {
+    public BarHit(ATOFHit hit_down, ATOFHit hit_up, IndexedTable atofEffectiveVelocityTable) {
         boolean hits_match = hit_down.matchBar(hit_up);
         if (!hits_match) {
             throw new UnsupportedOperationException("Hits do not match \n");
@@ -120,11 +120,9 @@ public class BarHit extends ATOFHit {
         this.setComponent(10);
         this.setX(hit_up.getX());
         this.setY(hit_up.getY());
-        
+
         //CCDB readout for the effective velocity
-        int key = this.getSector()*10000 + this.getLayer()*1000 + this.getComponent()*10;
-        double[] vEffTable = CalibrationConstantsLoader.ATOF_EFFECTIVE_VELOCITY.get(key);
-        this.vEff = vEffTable[0];
+        this.vEff = atofEffectiveVelocityTable.getDoubleValue("veff", this.getSector(), this.getLayer(), this.getComponent());
         this.computeZ();
         this.computeTime();
         this.computeEnergy();
