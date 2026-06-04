@@ -210,13 +210,18 @@ public class DataSourceProcessorPane extends JPanel implements ActionListener {
         DataSource source = filename.endsWith(".hipo") ?
             new HipoDataSource() : new EvioSource();
         source.open(filename);
-        this.dataProcessor.setSource(source);
+        dataProcessor.setSource(source);
         statusLabel.setText(dataProcessor.getStatusString());
         mediaPlay.setEnabled(false);
-        mediaPause.setEnabled(true);
-        mediaNext.setEnabled(true);
-        mediaPrev.setEnabled(true);
-        this.startProcessorTimer();
+        mediaPause.setEnabled(false);
+        mediaNext.setEnabled(false);
+        mediaPrev.setEnabled(false);
+        while (dataProcessor.dataSource.hasEvent()) {
+            DataEvent e = dataProcessor.dataSource.getNextEvent();
+            for(IDataEventListener processor : dataProcessor.eventListeners){
+                processor.dataEventAction(e);
+            }
+        }
     }
 
     @Override
