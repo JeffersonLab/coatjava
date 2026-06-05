@@ -134,7 +134,11 @@ public class ALERTEngine extends ReconstructionEngine {
     }
 
     @Override
-    public void detectorChanged(int run) {}
+    public void detectorChanged(int run) {
+        DatabaseConstantProvider cp = new DatabaseConstantProvider(run, "default");
+        ATOF = (new AlertTOFFactory()).createDetectorCLAS(cp);
+        AHDC = (new AlertDCFactory()).createDetectorCLAS(cp);
+    }
 
     /** 
      * ALERTEngine initialization.
@@ -148,13 +152,6 @@ public class ALERTEngine extends ReconstructionEngine {
 
         modelTrackMatching = new ModelTrackMatching();
         modelPrePID = new ModelPrePID();
-
-        AlertTOFFactory factory = new AlertTOFFactory();
-        
-        // One CCDB session for both ATOF and AHDC geometry.
-        DatabaseConstantProvider cp = new DatabaseConstantProvider(11, "default");
-        ATOF = factory.createDetectorCLAS(cp);
-        AHDC = (new AlertDCFactory()).createDetectorCLAS(cp);
 
         Map<String, Integer> tableMap = new HashMap<>();
         tableMap.put("/calibration/alert/ahdc/gains", 3);

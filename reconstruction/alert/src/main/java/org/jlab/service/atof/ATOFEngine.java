@@ -120,17 +120,15 @@ public class ATOFEngine extends ReconstructionEngine {
 
     @Override
     public void detectorChanged(int run) {
-        // FIXME:  move geometry initialization here
+        AlertTOFFactory factory = new AlertTOFFactory();
+        DatabaseConstantProvider cp = new DatabaseConstantProvider(run, "default");
+        this.ATOF = factory.createDetectorCLAS(cp);
     }
 
     @Override
     public boolean init() {
         rbc = new RecoBankWriter();
 
-        AlertTOFFactory factory = new AlertTOFFactory();
-        DatabaseConstantProvider cp = new DatabaseConstantProvider(11, "default");
-        this.ATOF = factory.createDetectorCLAS(cp);
-        
         Map<String, Integer> tableMap = new HashMap<>();
         tableMap.put("/calibration/alert/atof/effective_velocity", 3);
         tableMap.put("/calibration/alert/atof/time_walk", 4);
