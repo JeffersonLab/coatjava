@@ -582,6 +582,7 @@ public class ALERTEngine extends ReconstructionEngine {
         /////////////////////////////////////////////
         // write the AHDC::kftrack bank in the event
         /////////////////////////////////////////////
+        event.removeBank("AHDC::kftrack");
         org.jlab.rec.ahdc.Banks.RecoBankWriter ahdc_writer = new org.jlab.rec.ahdc.Banks.RecoBankWriter();
         DataBank recoKFTracksBank   = ahdc_writer.fillAHDCKFTrackBank(event, AHDC_tracks);
         event.appendBank(recoKFTracksBank);

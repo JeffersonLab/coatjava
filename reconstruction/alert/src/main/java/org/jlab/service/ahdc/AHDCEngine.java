@@ -98,6 +98,7 @@ public class AHDCEngine extends ReconstructionEngine {
             ArrayList<Hit> AHDC_Hits = hitReader.get_AHDCHits();
 
             RecoBankWriter writer = new RecoBankWriter();
+            event.removeBank("AHDC::hits");
             DataBank recoHitsBank = writer.fillAHDCHitsBank(event, AHDC_Hits);
             if (recoHitsBank != null) event.appendBank(recoHitsBank);
         }

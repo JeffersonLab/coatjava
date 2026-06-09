@@ -38,7 +38,7 @@ public class KalmanFilter {
 	private boolean IsVtxDefined = false; // implemented but not used yet
 	private double[] vertex_resolutions = {0.09, 1e10}; //  {error in r squared in mm^2, error in z squared in mm^2}
 	// mm,  CLAS and AHDC don't necessary have the same alignement (ZERO), this parameter may be subject to calibration
-	private double clas_alignement = -54;
+	private double clas_alignement = -75;
 
 	public void propagation(ArrayList<Track> tracks, DataEvent event, final double magfield, boolean IsMC) {
 
