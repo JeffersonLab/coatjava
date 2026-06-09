@@ -2,7 +2,6 @@ package org.jlab.rec.ahdc.KalmanFilter;
 
 import java.util.HashMap;
 
-import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
@@ -22,24 +21,23 @@ public class KFitter {
 
 	private       RealVector stateEstimation;
     private       RealMatrix errorCovariance;
-	public final  Stepper    stepper;
+	private       Stepper    stepper;
 	private final Propagator propagator;
 	private final HashMap<String, Material> materialHashMap;
 	public        double     chi2 = 0;
     // masses/energies in MeV
 	private final double     electron_mass_c2 = PhysicsConstants.massElectron() * 1000;
 	private final double     proton_mass_c2   = PhysicsConstants.massProton() * 1000;
-	private double[] vertex_resolutions = {0.09,1e10}; // default values // dr^2 and dz^2 in mm^2
 
-	public KFitter(final RealVector initialStateEstimate, final RealMatrix initialErrorCovariance, final Stepper stepper, final Propagator propagator, final HashMap<String, Material> materialHashMap) {
-		this.stateEstimation = initialStateEstimate;
-		this.errorCovariance = initialErrorCovariance;
-		this.stepper         = stepper;
+	public KFitter(final RealVector initialStateEstimate, final RealMatrix initialErrorCovariance, final Propagator propagator, final HashMap<String, Material> materialHashMap) {
+		this.stateEstimation = initialStateEstimate.copy();
+		this.errorCovariance = initialErrorCovariance.copy();
+		this.stepper         = new Stepper(initialStateEstimate.toArray());
 		this.propagator      = propagator;
 		this.materialHashMap = materialHashMap;
 	}
 
-	public void predict(Hit hit, boolean direction) throws Exception {
+	public void predict(KFHit hit, boolean direction) throws Exception {
 		// Initialization
 		stepper.initialize(direction);
 		Stepper stepper1 = new Stepper(stepper.y);
@@ -86,32 +84,12 @@ public class KFitter {
 		errorCovariance = (transitionMatrix.multiply(errorCovariance.multiply(transitionMatrixT))).add(processNoise);
 	}
 
-	public void correct(Hit hit) {
-        RealVector z;
-		RealMatrix measurementNoise;
-		RealMatrix measurementMatrix;
-		RealVector h;
-		// check if the hit is the beamline
-		if (hit.getRadius() < 1) {
-			// the diagonal elements are the squared errors in r, phi, z
-			measurementNoise =
-				new Array2DRowRealMatrix(
-					new double[][]{
-						{vertex_resolutions[0], 0.0000, 0.0000},
-						{0.00, 1e10, 0.0000},
-						{0.00, 0.0000, vertex_resolutions[1]}
-					});//3x3
-			measurementMatrix  = H_beam(stateEstimation);//6x3
-			h = h_beam(stateEstimation);//3x1
-			z = hit.get_Vector_beam();//0!
-		} 
-		// else, it is an AHDC hits
-		else {
-            measurementNoise = hit.get_MeasurementNoise();//1x1
-            measurementMatrix = H(stateEstimation, hit);//6x1
-            h = h(stateEstimation, hit);//1x1
-			z = hit.get_Vector();//1x1
-		}
+	public void correct(KFHit hit) {
+        RealVector z = hit.MeasurementVector();
+		RealVector h = hit.ProjectionFunction(stateEstimation);
+
+		RealMatrix measurementNoise = hit.MeasurementNoiseMatrix();
+		RealMatrix measurementMatrix = hit.ProjectionMatrix(stateEstimation);
 		RealMatrix measurementMatrixT = measurementMatrix.transpose();
 
 		// S = H * P(k) * H' + R
@@ -138,6 +116,7 @@ public class KFitter {
 		stepper.y = stateEstimation.toArray();
 	}
 
+	// specific to AHDC hits
 	public double residual(Hit hit) {
 		double d = hit.distance( new Point3D( stateEstimation.getEntry(0), stateEstimation.getEntry(1), stateEstimation.getEntry(2) ) );
 		return hit.getDoca()-d;
@@ -147,7 +126,7 @@ public class KFitter {
         this.errorCovariance = initialErrorCovariance;  
     }
     
-	private RealMatrix F(Hit hit, Stepper stepper1) throws Exception {
+	private RealMatrix F(KFHit hit, Stepper stepper1) throws Exception {
 
 		double[] dfdx  = subfunctionF(hit, stepper1, 0);
 		double[] dfdy  = subfunctionF(hit, stepper1, 1);
@@ -160,7 +139,7 @@ public class KFitter {
 				{dfdx[0], dfdy[0], dfdz[0], dfdpx[0], dfdpy[0], dfdpz[0]}, {dfdx[1], dfdy[1], dfdz[1], dfdpx[1], dfdpy[1], dfdpz[1]}, {dfdx[2], dfdy[2], dfdz[2], dfdpx[2], dfdpy[2], dfdpz[2]}, {dfdx[3], dfdy[3], dfdz[3], dfdpx[3], dfdpy[3], dfdpz[3]}, {dfdx[4], dfdy[4], dfdz[4], dfdpx[4], dfdpy[4], dfdpz[4]}, {dfdx[5], dfdy[5], dfdz[5], dfdpx[5], dfdpy[5], dfdpz[5]}});
 	}
 
-	double[] subfunctionF(Hit hit, Stepper stepper1, int i) throws Exception {
+	double[] subfunctionF(KFHit hit, Stepper stepper1, int i) throws Exception {
 		double  h             = 1e-8;// in mm
 		Stepper stepper_plus  = new Stepper(stepper1.y);
 		Stepper stepper_minus = new Stepper(stepper1.y);
@@ -184,87 +163,6 @@ public class KFitter {
 		return new double[]{dxdi, dydi, dzdi, dpxdi, dpydi, dpzdi};
 	}
 
-	// Measurement matrix in 1x1 dimension: minimize distance - doca
-	private RealVector h(RealVector x, Hit hit) {
-		double d = hit.distance(new Point3D(x.getEntry(0), x.getEntry(1), x.getEntry(2)));
-		return MatrixUtils.createRealVector(new double[]{d});
-	}
-
-	// Jacobian matrix of the measurement with respect to (x, y, z, px, py, pz)
-	private RealMatrix H(RealVector x, Hit hit) {
-
-		double ddocadx  = subfunctionH(x, hit, 0);
-		double ddocady  = subfunctionH(x, hit, 1);
-		double ddocadz  = subfunctionH(x, hit, 2);
-		double ddocadpx = subfunctionH(x, hit, 3);
-		double ddocadpy = subfunctionH(x, hit, 4);
-		double ddocadpz = subfunctionH(x, hit, 5);
-		
-		return MatrixUtils.createRealMatrix(new double[][]{
-			{ddocadx, ddocady, ddocadz, ddocadpx, ddocadpy, ddocadpz}});
-	}
-
-	double subfunctionH(RealVector x, Hit hit, int i) {
-		double     h       = 1e-8;// in mm
-		RealVector x_plus  = x.copy();
-		RealVector x_minus = x.copy();
-
-		x_plus.setEntry(i, x_plus.getEntry(i) + h);
-		x_minus.setEntry(i, x_minus.getEntry(i) - h);
-
-		double doca_plus  = h(x_plus, hit).getEntry(0);
-		double doca_minus = h(x_minus, hit).getEntry(0);
-
-		return (doca_plus - doca_minus) / (2 * h);
-	}
-	
-	// Measurement matrix for the beamline (Hit_beam) in dimeansion 3x1
-	private RealVector h_beam(RealVector x) {
-
-		double xx = x.getEntry(0);
-		double yy = x.getEntry(1);
-		double zz = x.getEntry(2);
-
-		double r = Math.hypot(xx, yy);
-		double phi = Math.atan2(yy, xx);
-
-		return MatrixUtils.createRealVector(new double[]{r, phi, zz});
-	}
-	
-	// Jacobian matrix of the measurement for the beamline with respect to (x, y, z, px, py, pz)
-	private RealMatrix H_beam(RealVector x) {
-
-		double xx = x.getEntry(0);
-		double yy = x.getEntry(1);
-
-		double drdx = (xx) / (Math.hypot(xx, yy));
-		double drdy = (yy) / (Math.hypot(xx, yy));
-		double drdz = 0.0;
-		double drdpx = 0.0;
-		double drdpy = 0.0;
-		double drdpz = 0.0;
-
-		double dphidx = -(yy) / (xx * xx + yy * yy);
-		double dphidy = (xx) / (xx * xx + yy * yy);
-		double dphidz = 0.0;
-		double dphidpx = 0.0;
-		double dphidpy = 0.0;
-		double dphidpz = 0.0;
-
-		double dzdx = 0.0;
-		double dzdy = 0.0;
-		double dzdz = 1.0;
-		double dzdpx = 0.0;
-		double dzdpy = 0.0;
-		double dzdpz = 0.0;
-
-		return MatrixUtils.createRealMatrix(
-				new double[][]{
-						{drdx, drdy, drdz, drdpx, drdpy, drdpz},
-						{dphidx, dphidy, dphidz, dphidpx, dphidpy, dphidpz},
-						{dzdx, dzdy, dzdz, dzdpx, dzdpy, dzdpz}
-				});
-	}
 
 	public RealVector getStateEstimationVector() {
 		return stateEstimation.copy();
@@ -273,10 +171,8 @@ public class KFitter {
 	public RealMatrix getErrorCovarianceMatrix() {
 		return errorCovariance.copy();
 	}
-	
-	public void setVertexResolution(double[] res) {
-		vertex_resolutions[0] = res[0];
-		vertex_resolutions[1] = res[1];
-	}
+
+	/** Return a copy of the stepper. It is like a snapshot of the propagation. */
+	public Stepper getStepper() {return new Stepper(stepper);}
 
 }

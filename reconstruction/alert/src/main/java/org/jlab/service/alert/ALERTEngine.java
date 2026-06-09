@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Iterator;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -17,6 +18,7 @@ import org.jlab.clas.swimtools.Swim;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.utils.groups.IndexedTable;
 import org.jlab.geom.base.Detector;
+import org.jlab.geom.detector.alert.ATOF.AlertTOFDetector;
 import org.jlab.geom.detector.alert.ATOF.AlertTOFFactory;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
@@ -33,6 +35,7 @@ import org.jlab.rec.ahdc.DocaCluster.DocaCluster;
 import org.jlab.rec.ahdc.DocaCluster.DocaClusterRefiner;
 import org.jlab.rec.ahdc.HelixFit.HelixFitJava;
 import org.jlab.rec.ahdc.KalmanFilter.KalmanFilter;
+import org.jlab.rec.ahdc.KalmanFilter.RadialKFHit;
 import org.jlab.rec.ahdc.TrackFindingMode;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import org.jlab.rec.ahdc.PreCluster.PreClusterFinder;
@@ -48,6 +51,8 @@ import org.jlab.geom.detector.alert.AHDC.AlertDCFactory;
 import org.jlab.rec.alert.Track.AtofHitStub;
 import org.jlab.rec.alert.Track.Track;
 import org.jlab.rec.alert.Track.TrackCandidate;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.RealMatrix;
 import org.jlab.clas.pdg.PDGDatabase;
 import org.jlab.clas.pdg.PDGParticle;
 import java.util.List;
@@ -99,7 +104,7 @@ public class ALERTEngine extends ReconstructionEngine {
      */
     private RecoBankWriter rbc;
     static final Logger LOGGER = Logger.getLogger(ALERTEngine.class.getName());
-    Detector ATOF; // ALERT ATOF detector
+    private AlertTOFDetector ATOF; // ALERT ATOF detector
     private AlertDCDetector AHDC; // ALERT AHDC detector
 
     /**
@@ -521,8 +526,42 @@ public class ALERTEngine extends ReconstructionEngine {
         /// Kalmam Filter
         /// ///////////////////////////////////////
         
-        // read the list of tracks/hits from the banks AHDC::track and AHDC::hits
+        /// Pre conditions
         if (!event.hasBank("AHDC::track")) {return false;}
+        if (!event.hasBank("AHDC::hits")) {return false;}
+
+        /// tmp: misalignement with respect to the center of the AHDC (mm)
+        double clas_alignement = +75;
+        double atof_alignement = 0;
+
+        /// Read the electron vertex
+        double vz_electron = 0;
+        double[] vz_error2 = {0.09, 1e10, 1e10}; // mm^2, radians^2, mm^2, error on r, phi, z
+        boolean IsVertexDefined = false;
+        if (event.hasBank("REC::Particle")) {
+            DataBank recBank = event.getBank("REC::Particle");
+            for (int row = 0; row < recBank.rows(); row++) {
+                if (recBank.getInt("pid", row) == 11) {
+                    vz_electron = 10*recBank.getFloat("vz",row); // conversion in mm
+                    IsVertexDefined = true;
+                    
+
+                    //double px = recBank.getFloat("px",row);
+                    //double py = recBank.getFloat("py",row);
+                    //double pz = recBank.getFloat("pz",row);
+                    //double p = Math.sqrt(px*px+py*py+pz*pz);
+                    //double theta = Math.acos(pz/p);
+                    
+                    // set the resolutions on r and z! to be done
+                    vz_error2[0] = 0.09; // should depend on p and theta
+                    vz_error2[2] = 64; // should depend on p and theta
+
+                    break; // only look at the first electron
+                }
+            }
+        }
+
+        /// Read the list of tracks/hits from the banks AHDC::track and AHDC::hits
         DataBank trackBank = event.getBank("AHDC::track");
         DataBank hitBank = event.getBank("AHDC::hits");
         ArrayList<Track> AHDC_tracks = new ArrayList<>();
@@ -568,25 +607,156 @@ public class ALERTEngine extends ReconstructionEngine {
             newTrack.set_trackId(trackid);
             AHDC_tracks.add(newTrack);
         }
-        // intialise the Kalman Filter
+
+        /// Associate the electron vertex (the beamline hit) to each track
+        boolean IsMC = event.hasBank("MC::Particle");
+        double vz_constraint = vz_electron + (IsMC ? 0 : clas_alignement); // we don't have the misalignment in simulation
+        for (Track track : AHDC_tracks) {
+            RadialKFHit hit_beam = new RadialKFHit(0, 0, vz_constraint);
+            RealMatrix measurementNoise = new Array2DRowRealMatrix(
+											new double[][]{
+												{vz_error2[0], 0.0000      , 0.0000},
+												{0.0000      , vz_error2[1], 0.0000},
+												{0.0000      , 0.0000      , vz_error2[2]}
+											});//3x3;
+			hit_beam.setMeasurementNoise(measurementNoise);
+            track.setBeamlineHit(hit_beam);
+        }
+
+        /// Look for ATOF wedge hits predicted by the AI
+        HashMap<Integer, RadialKFHit> map_ATOF_hits = new HashMap<>();
+        for (Pair<Integer, Integer> pair : matched_ATOF_hit_id) {
+            int trackid = pair.getKey();
+            int atofid = pair.getValue();
+            if (trackid > 0 && atofid > 0) {
+                // recover the wedge
+                for (int row = 0; row < bank_ATOFHits.rows(); row++) {
+                    if (bank_ATOFHits.getShort("id", row) == atofid) {
+                        double x = bank_ATOFHits.getFloat("x", row);
+                        double y = bank_ATOFHits.getFloat("y", row);
+                        double z = bank_ATOFHits.getFloat("z", row);
+                        z += atof_alignement; // there is a shift between AHDC and ATOF (still don't know why) !
+                        RadialKFHit hit = new RadialKFHit(x, y, z);
+                            // error on r
+                        double wedge_width = 20; //mm
+                        double dr2 = Math.pow(wedge_width, 2)/12; // mm^2
+                            // error on phi
+                        double open_angle = Math.toRadians(6); // deg
+                        double dphi2 = Math.pow(open_angle, 2)/12;
+                            // error on z
+                        double wedge_length = 27.7; //mm
+                        double dz2 = Math.pow(wedge_length, 2)/12;
+                        
+                        RealMatrix measurementNoise = new Array2DRowRealMatrix(
+                                                        new double[][]{
+                                                            {dr2, 0.0000, 0.0000},
+                                                            {0.00, dphi2, 0.0000},
+                                                            {0.00, 0.0000, dz2}
+                                                        });//3x3;
+                        hit.setMeasurementNoise(measurementNoise);
+                        map_ATOF_hits.put(trackid, hit);
+                    }
+                }
+            }
+        }
+
+        /// Associate the ATOF hits to each track
+        for (Track track : AHDC_tracks) {
+            RadialKFHit hit = map_ATOF_hits.get(track.get_trackId());
+            ArrayList<RadialKFHit> list = new ArrayList<>();
+            if (hit != null) list.add(hit); // for now, we only consider one hit in the ATOF
+            track.setATOFHits(list);
+        }
+
+        /// Intialise the Kalman Filter
         double magfieldfactor = runBank.getFloat("solenoid", 0);
         double magfield = 50*magfieldfactor;
-        boolean IsMC = event.hasBank("MC::Particle");
         PDGParticle proton = PDGDatabase.getParticleById(2212);
-        int Niter = 40;
+        int Niter = 25;
         KalmanFilter KF = new KalmanFilter(proton, Niter);
-        ///////////////////////////////////////////////////////
-        // first propagation : each AHDC_tracks will be fitted
-        ///////////////////////////////////////////////////////
-        KF.propagation(AHDC_tracks, event, magfield, IsMC);
-        /////////////////////////////////////////////
-        // write the AHDC::kftrack bank in the event
-        /////////////////////////////////////////////
+        KF.set_ATOF_detector(null);
+        //KF.set_ATOF_detector(ATOF); // Reference the ATOF geometry in the Kalman Filter
+        KF.set_atof_alignement(atof_alignement);
+        KF.set_vz_constraint(vz_constraint);
+        KF.set_vertex_flag(IsVertexDefined);
+
+        /// Do a first propagation
+        KF.propagation(AHDC_tracks, magfield, IsMC);
+
+        /// Look at the new ATOF hits predicted after projection of the track on the lower surface of the ATOF wedges
+        HashMap<Integer, ArrayList<int[]>> ATOF_hits_predicted = KF.get_ATOF_hits_predicted();
+        for (Track track : AHDC_tracks) {
+            int trackid = track.get_trackId();
+            ArrayList<int[]> possible_wedges = ATOF_hits_predicted.get(trackid);
+            boolean IsHitSelected = false;
+            if (possible_wedges != null) {
+                for (int[] id : possible_wedges) {
+                    int sector = id[0];
+                    int layer  = id[1];
+                    int wedge  = id[2];
+                    // check if this hit exist in ATOF::hits
+                    for (int row = 0; row < bank_ATOFHits.rows(); row++) {
+                        if (bank_ATOFHits.getInt("sector", row) == sector && bank_ATOFHits.getInt("layer", row) == layer && bank_ATOFHits.getInt("component", row) == wedge) {
+                            // create a RadialKFHit
+                            double x = bank_ATOFHits.getFloat("x", row);
+                            double y = bank_ATOFHits.getFloat("y", row);
+                            double z = bank_ATOFHits.getFloat("z", row);
+                            z += atof_alignement; // there is a shift between AHDC and ATOF (still don't know why) !
+                            RadialKFHit hit = new RadialKFHit(x, y, z);
+                                // error on r
+                            double wedge_width = 20; //mm
+                            double dr2 = Math.pow(wedge_width, 2)/12; // mm^2
+                                // error on phi
+                            double open_angle = Math.toRadians(6); // deg
+                            double dphi2 = Math.pow(open_angle, 2)/12;
+                                // error on z
+                            double wedge_length = 27.7; //mm
+                            double dz2 = Math.pow(wedge_length, 2)/12;
+                            
+                            RealMatrix measurementNoise = new Array2DRowRealMatrix(
+                                                            new double[][]{
+                                                                {dr2, 0.0000, 0.0000},
+                                                                {0.00, dphi2, 0.0000},
+                                                                {0.00, 0.0000, dz2}
+                                                            });//3x3;
+                            hit.setMeasurementNoise(measurementNoise);
+
+                            ArrayList<RadialKFHit> list = new ArrayList<>();
+                            list.add(hit); // for now, we only consider one hit in the ATOF
+                            track.setATOFHits(list); // update the list of the ATOF hit (i.e override AI ATOF hit if it exist)
+
+                            IsHitSelected = true;
+                            break;
+                        } // end id matching
+                    } // end loop over atof hit
+                    if (IsHitSelected) break;
+                }
+            }
+        }
+
+        /// Clean AHDC bad hits
+        double sigma = 0.5; // mm
+        for (Track track : AHDC_tracks) {
+            ArrayList<Hit> AHDC_hits = track.getHits();
+            Iterator<Hit> it = AHDC_hits.iterator();
+            while (it.hasNext()) {
+                Hit hit = it.next();
+                if (Math.abs(hit.getResidual()) > 3*sigma) {
+                    it.remove();
+                }
+            }
+        }
+
+        /// Second propagation : each AHDC_tracks will be fitted
+        KF.set_Niter(15);
+        KF.propagation(AHDC_tracks, magfield, IsMC);
+
+        /// Write the AHDC::kftrack bank in the event
         event.removeBank("AHDC::kftrack");
         org.jlab.rec.ahdc.Banks.RecoBankWriter ahdc_writer = new org.jlab.rec.ahdc.Banks.RecoBankWriter();
         DataBank recoKFTracksBank   = ahdc_writer.fillAHDCKFTrackBank(event, AHDC_tracks);
         event.appendBank(recoKFTracksBank);
-        // update the AHDC::hits bank : fill the residuals
+        /// Update the AHDC::hits bank : fill the residuals
         event.removeBank("AHDC::hits");
         ArrayList<Hit> AHDC_hits = new ArrayList<>();
         for (Track track : AHDC_tracks) {

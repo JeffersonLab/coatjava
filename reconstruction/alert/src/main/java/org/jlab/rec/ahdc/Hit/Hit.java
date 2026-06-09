@@ -2,6 +2,7 @@ package org.jlab.rec.ahdc.Hit;
 
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;
+import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
@@ -9,8 +10,9 @@ import org.jlab.geom.detector.alert.AHDC.AlertDCDetector;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.detector.alert.AHDC.AlertDCFactory;
+import org.jlab.rec.ahdc.KalmanFilter.KFHit;
 
-public class Hit implements Comparable<Hit> {
+public class Hit implements Comparable<Hit>, KFHit {
 
 	private final int    id;
 	private final int    superLayerId;
@@ -33,6 +35,16 @@ public class Hit implements Comparable<Hit> {
 	private int	trackId;
 
     //updated constructor with ADC
+	/**
+	 * 
+	 * @param _Id is AHDC::adc row id + 1
+	 * @param _Super_layer super layer id
+	 * @param _Layer layer id
+	 * @param _Wire wire id 
+	 * @param _Doca distance from the timing information using the time2distance, matches {@link Hit.#time}
+	 * @param _ADC raw ADC
+	 * @param _Time calibrated time
+	 */
 	public Hit(int _Id, int _Super_layer, int _Layer, int _Wire, double _Doca, double _ADC, double _Time) {
 		this.id           = _Id;
 		this.superLayerId = _Super_layer;
@@ -110,6 +122,7 @@ public class Hit implements Comparable<Hit> {
         return wireLine;
     }
 
+	@Override
     public double getRadius() {
         return radius;
     }
@@ -136,6 +149,7 @@ public class Hit implements Comparable<Hit> {
 
 	public double getPhi() {return phi;}
 
+	/** Get calibrated ADC */
 	public double getADC() {return adc;}
 
 	public double getResidual() {
@@ -146,18 +160,22 @@ public class Hit implements Comparable<Hit> {
 		this.residual = resid;
 	}
 
+	/** Set calibrated ToT */
 	public void setToT(double _tot) {
 		this.tot = _tot;
 	}
 
+	/** Get calibrated ToT */
 	public double getToT() {
 		return tot;
 	}
 
+	/** Set calibrated ADC */
 	public void setADC(double _adc) {
 		this.adc = _adc;
 	}
 
+	/** Get raw ADC */
 	public double getRawADC() {
 		return raw_adc;
 	}
@@ -174,11 +192,13 @@ public class Hit implements Comparable<Hit> {
 		this.trackId = _trackId;
 	}
 
-	public RealVector get_Vector() {
+	@Override
+	public RealVector MeasurementVector() {
 		return new ArrayRealVector(new double[]{this.doca});
 	}
 
-    public RealMatrix get_MeasurementNoise() {
+	@Override
+    public RealMatrix MeasurementNoiseMatrix() {
 		double mean_error = 0.471; // mm (no difference between adc and time)
 		double error_on_adc = (1.15146*raw_adc + 437.63)/(3.21187*raw_adc + 878.855); // mm
 		double error_on_time = (0.4423*time + 13.7215)/(0.846038*time + 31.9867); // mm
@@ -188,11 +208,43 @@ public class Hit implements Comparable<Hit> {
 		//return new Array2DRowRealMatrix(new double[][]{{0.09}});
 	}
 
-	// a signature for KalmanFilter.Hit_beam
-	public RealVector get_Vector_beam() {
-		return null;
+	// Projection function
+	@Override
+	public RealVector ProjectionFunction(RealVector x) {
+		double d = this.distance(new Point3D(x.getEntry(0), x.getEntry(1), x.getEntry(2)));
+		return MatrixUtils.createRealVector(new double[]{d});
 	}
 
+	// Jacobian matrix of the measurement with respect to (x, y, z, px, py, pz)
+	@Override
+	public RealMatrix ProjectionMatrix(RealVector x) {
+
+		double ddocadx  = partialProjectionMatrix(x, 0);
+		double ddocady  = partialProjectionMatrix(x, 1);
+		double ddocadz  = partialProjectionMatrix(x, 2);
+		double ddocadpx = partialProjectionMatrix(x, 3);
+		double ddocadpy = partialProjectionMatrix(x, 4);
+		double ddocadpz = partialProjectionMatrix(x, 5);
+		
+		return MatrixUtils.createRealMatrix(new double[][]{
+			{ddocadx, ddocady, ddocadz, ddocadpx, ddocadpy, ddocadpz}});
+	}
+
+	private double partialProjectionMatrix(RealVector x, int i) {
+		double     h       = 1e-8;// in mm
+		RealVector x_plus  = x.copy();
+		RealVector x_minus = x.copy();
+
+		x_plus.setEntry(i, x_plus.getEntry(i) + h);
+		x_minus.setEntry(i, x_minus.getEntry(i) - h);
+
+		double doca_plus  = this.ProjectionFunction(x_plus).getEntry(0);
+		double doca_minus = this.ProjectionFunction(x_minus).getEntry(0);
+
+		return (doca_plus - doca_minus) / (2 * h);
+	}
+
+	@Override
 	public double distance(Point3D point3D) {
 		return this.wireLine.distance(point3D).length();
 	}

@@ -7,6 +7,7 @@ import org.jlab.rec.alert.AI.TrackPrediction;
 import org.jlab.rec.ahdc.AHDCCluster.AHDCCluster;
 import org.jlab.rec.ahdc.DocaCluster.DocaCluster;
 import org.jlab.rec.ahdc.Hit.Hit;
+import org.jlab.rec.ahdc.KalmanFilter.Stepper;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import org.jlab.rec.alert.Track.Track;
 
@@ -152,6 +153,39 @@ public class RecoBankWriter {
 			bank.setFloat("p_drift", row, (float) track.get_p_drift());
 			bank.setFloat("chi2", row, (float) track.get_chi2());
 			bank.setFloat("sum_residuals", row, (float) track.get_sum_residuals());
+
+			// track projection on ATOF surface S1
+			Stepper stepper_s1 = track.get_ATOF_S1_stepper();
+			if (stepper_s1 != null) {
+				bank.setFloat("atof_s1_x", row, (float) stepper_s1.y[0]);
+				bank.setFloat("atof_s1_y", row, (float) stepper_s1.y[1]);
+				bank.setFloat("atof_s1_z", row, (float) stepper_s1.y[2]);
+				bank.setFloat("atof_s1_path", row, (float) stepper_s1.sTot);
+				bank.setFloat("atof_s1_p", row, (float) stepper_s1.p());
+			}
+			
+			// track projection on ATOF surface S2
+			Stepper stepper_s2 = track.get_ATOF_S2_stepper();
+			if (stepper_s2 != null) {
+				bank.setFloat("atof_s2_x", row, (float) stepper_s2.y[0]);
+				bank.setFloat("atof_s2_y", row, (float) stepper_s2.y[1]);
+				bank.setFloat("atof_s2_z", row, (float) stepper_s2.y[2]);
+				bank.setFloat("atof_s2_path", row, (float) stepper_s2.sTot);
+				bank.setFloat("atof_s2_p", row, (float) stepper_s2.p());
+			}
+			
+			// track projection on ATOF surface S3
+			Stepper stepper_s3 = track.get_ATOF_S3_stepper();
+			if (stepper_s3 != null) {
+				bank.setFloat("atof_s3_x", row, (float) stepper_s3.y[0]);
+				bank.setFloat("atof_s3_y", row, (float) stepper_s3.y[1]);
+				bank.setFloat("atof_s3_z", row, (float) stepper_s3.y[2]);
+				bank.setFloat("atof_s3_path", row, (float) stepper_s3.sTot);
+				bank.setFloat("atof_s3_p", row, (float) stepper_s3.p());
+			}
+			
+			bank.setInt("atof_region", row, track.get_ATOF_region());
+			bank.setByte("atof_match", row, (byte) ((track.getATOFHits().size() > 0) ? 1 : 0));
 
 			row++;
 		}
