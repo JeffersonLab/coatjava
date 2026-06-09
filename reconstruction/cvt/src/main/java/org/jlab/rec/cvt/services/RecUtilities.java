@@ -62,6 +62,19 @@ public class RecUtilities {
     public static double CTOFRADIUS = 251.1; //mm
     public static double CTOFTHKN = 30.226;
     
+    //for MC truth
+    public static int[] getPaddleForMCTrack(double x, double y, double z, 
+            double px, double py, double pz, int q, double xb, double yb) {
+        org.jlab.clas.tracking.trackrep.Helix hlx = new org.jlab.clas.tracking.trackrep.Helix(x,y,z,px,py,pz, q,
+                            Constants.getSolenoidMagnitude(), xb , yb, Units.MM);
+        return getPaddlesForHelix(hlx);
+    }
+    
+    public static int[] getPaddleForTrack(Track trk, double xb, double yb) {
+            org.jlab.clas.tracking.trackrep.Helix hlx = trk.getHelix().getKFHelix();
+            
+            return getPaddlesForHelix(hlx);
+    }
     
     public static int[] getPaddleForSeed(Seed seed, double xb, double yb) {
             Point3D  v = seed.getHelix().getVertex(); 
@@ -77,27 +90,44 @@ public class RecUtilities {
             
             return getPaddlesForHelix(hlx);
     }
-    
+    private static double ANGLEBUFFER = 1.0;
     public static int[] getPaddlesForHelix(org.jlab.clas.tracking.trackrep.Helix helix) {
         int[] pdls = new int[3];
         double mradius = CTOFRADIUS +CTOFTHKN / 2.0;
+        //for corner clippers
+        Point3D point0 = helix.getHelixPointAtR(CTOFRADIUS);
+        double phiDeg0 = Math.toDegrees(Math.atan2(point0.y(), point0.x()));
+        Point3D point1 = helix.getHelixPointAtR(CTOFRADIUS+CTOFTHKN);
+        double phiDeg1 = Math.toDegrees(Math.atan2(point1.y(), point1.x()));
+        double buff = ANGLEBUFFER;
+        if(getNormPhi(phiDeg1)<getNormPhi(phiDeg0))
+            buff=-ANGLEBUFFER;
         for(int i =-1; i<2; i++) {
             double radius = mradius+(double)i*CTOFTHKN / 2.0;
-            pdls[i+1]=getPaddleForHelix(helix, radius);
+            pdls[i+1]=getPaddleForHelix(helix, radius, (double)i*buff);
             
         }
         if(Constants.getInstance().seedingDebugMode)
-                System.out.println("Paddles for helix : "+pdls[0]+", "+pdls[1]+", "+pdls[2]);
+            System.out.println("Paddles for helix : "+pdls[0]+", "+pdls[1]+", "+pdls[2]);
         return pdls;
     }
     
-    public static int getPaddleForHelix(org.jlab.clas.tracking.trackrep.Helix helix, double radius) {
+    public static int getPaddleForHelix(org.jlab.clas.tracking.trackrep.Helix helix, double radius, double angleBuff) {
         Point3D point = helix.getHelixPointAtR(radius);
         double phiDeg = Math.toDegrees(Math.atan2(point.y(), point.x()));
-        int paddle = getCTOFPaddle(phiDeg);
+        int paddle = getCTOFPaddle(phiDeg+angleBuff); 
+        if(Constants.getInstance().seedingDebugMode)
+           System.out.println("phi for helix : "+phiDeg+" at radius "+radius);
         return paddle;
     }
     
+    public static double getNormPhi(double phiDeg) {
+       // normalize phi to [0,360)
+       double phiNorm = phiDeg % 360.0;
+       if (phiNorm < 0) phiNorm += 360.0;
+       
+       return phiNorm;
+    }
     /**
      * Returns the CTOF paddle number (1..48) for a given phi angle in degrees.
      * Paddle 1 starts at 0° and ends at 7.5°, paddle 2 starts at 7.5°, etc.
@@ -106,13 +136,9 @@ public class RecUtilities {
      * @return paddle number in [1..48]
      */
     public static int getCTOFPaddle(double phiDeg) {
-        
-        // normalize phi to [0,360)
-        double phiNorm = phiDeg % 360.0;
-        if (phiNorm < 0) phiNorm += 360.0;
-
+       
         // determine bin index
-        int paddle = (int) Math.floor(phiNorm / WIDTH) + 1;
+        int paddle = (int) Math.floor(getNormPhi(phiDeg) / WIDTH) + 1;
 
         // wrap-around safety
         if (paddle > N_PADDLES) paddle = N_PADDLES;
@@ -720,6 +746,39 @@ public class RecUtilities {
             }
         }
         return seedlist;
+    }
+    
+    public static List<double[]> getMCTracks(DataEvent event) {
+        List<double[]> values = new ArrayList<>();
+        
+        if (event.hasBank("MC::Particle") == false) {
+            return null;
+        }
+        DataBank bank = event.getBank("MC::Particle");
+        
+        // fills the arrays corresponding to the variables
+        if(bank!=null) {
+            for(int i = 0; i < bank.rows(); i++) {
+                double[] value = new double[7];
+                int    pid      = bank.getInt("pid", i);
+                double q = 0;
+                if(Math.abs(pid)/100==0) {
+                    q = -Math.signum(pid);
+                } else {
+                    q = Math.signum(pid);
+                }
+                value[0] = (double) bank.getFloat("vx", i)*10;
+                value[1] = (double) bank.getFloat("vy", i)*10;
+                value[2] = (double) bank.getFloat("vz", i)*10;
+                value[3] = (double) bank.getFloat("px", i);
+                value[4] = (double) bank.getFloat("py", i);
+                value[5] = (double) bank.getFloat("pz", i);
+                value[6] = q;
+                
+                values.add(value);
+            }
+        }
+        return values;
     }
     
     public double[] mcTrackPars(DataEvent event) {

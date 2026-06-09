@@ -21,6 +21,7 @@ public class Constants {
     public static double CAANGLE5=3.5;
     public boolean seedingDebugMode =false;
     public boolean testRoads=false;
+    public static boolean removeCTOFRequirement = false;
     
     
     // private constructor for a singleton

@@ -18,7 +18,6 @@ import org.jlab.rec.cvt.hit.Hit;
 import org.jlab.rec.cvt.track.Seed;
 import org.jlab.rec.cvt.track.StraightTrack;
 import org.jlab.rec.cvt.track.Track;
-import org.jlab.rec.cvt.trajectory.StateVec;
 import org.jlab.utils.groups.IndexedTable;
 
 /**
@@ -297,11 +296,6 @@ public class CVTEngineDefault extends ReconstructionEngine {
         Geometry.getInstance().initialize(this.getConstantsManager().getVariation(), run, svtLorentz, bmtVoltage);
         
         CVTReconstruction reco = new CVTReconstruction(swimmer);
-        
-        Set<Integer> paddles = RecUtilities.getCTOFHitPaddles(event);
-        //System.out.println("PADDLES "+paddles.toString());
-        if (paddles.isEmpty()) return true;
-
         List<ArrayList<Hit>>         hits = reco.readHits(event, svtStatus, bmtStatus, bmtTime, 
                                                             bmtStripVoltage, bmtStripThreshold,
                                                             adcStatus);

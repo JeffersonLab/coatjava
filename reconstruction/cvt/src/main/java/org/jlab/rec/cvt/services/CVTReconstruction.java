@@ -119,6 +119,8 @@ public class CVTReconstruction {
         if(crosses.get(0).size() > SVTParameters.MAXSVTCROSSES ) {
             crosses.get(0).clear();
         }
+        CVTcrosses = crosses;
+        
         return crosses;
     }
         

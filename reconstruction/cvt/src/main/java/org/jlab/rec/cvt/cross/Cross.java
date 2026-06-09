@@ -722,4 +722,66 @@ public class Cross extends ArrayList<Cluster> implements Comparable<Cross> {
 
     }
 
+    @Override
+    public Cross clone() {
+
+        Cross copy = new Cross(
+                this._Detector,
+                this._Type,
+                this._Sector,
+                this._Region,
+                this._Id
+        );
+
+        // primitive / immutable fields
+        copy.isInSeed = this.isInSeed;
+        copy.cCrossRadius = this.cCrossRadius;
+
+        copy._OrderedRegion = this._OrderedRegion;
+
+        copy._usedInXYcand = this._usedInXYcand;
+        copy._usedInZRcand = this._usedInZRcand;
+
+        copy.AssociatedTrackID = this.AssociatedTrackID;
+
+        // deep copy geometry objects
+        copy._Point = (this._Point != null)
+                ? new Point3D(this._Point)
+                : null;
+
+        copy._PointErr = (this._PointErr != null)
+                ? new Point3D(this._PointErr)
+                : null;
+
+        copy._Point0 = (this._Point0 != null)
+                ? new Point3D(this._Point0)
+                : null;
+
+        copy._PointErr0 = (this._PointErr0 != null)
+                ? new Point3D(this._PointErr0)
+                : null;
+
+        copy._Dir = (this._Dir != null)
+                ? new Vector3D(this._Dir)
+                : null;
+
+        copy._DirErr = (this._DirErr != null)
+                ? new Vector3D(this._DirErr)
+                : null;
+
+        // clusters
+        // shallow copy references unless Cluster has clone()
+        copy._clus1 = this._clus1;
+        copy._clus2 = this._clus2;
+
+        // matched crosses
+        // avoid recursive deep cloning
+        copy._MatchedZCross = this._MatchedZCross;
+        copy._MatchedCCross = this._MatchedCCross;
+
+        // copy ArrayList contents inherited from ArrayList<Cluster>
+        copy.addAll(this);
+
+        return copy;
+    }
 }

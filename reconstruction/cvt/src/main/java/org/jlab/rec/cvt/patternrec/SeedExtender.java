@@ -44,7 +44,7 @@ public class SeedExtender {
     public List<Cross> match2BMTCrosses(Seed s, Map<Integer, Surface> surfaceMap, List<Cross> bmtCrosses) {
         List<Cross> matches = new ArrayList<>(); 
         int penalty=0;
-        this.refineSeed(s);
+        double schi2 = this.refineSeed(s, true);
         Map<Long, Point3D> ktrj = s.getTrajectory();
         if(ktrj==null) return matches;
         
@@ -59,11 +59,22 @@ public class SeedExtender {
         for(long sl : ktrj.keySet()) {
             if(crs.containsKey(sl)) {  
                 List<Cross> crssl = crs.get(sl);
-                BMTType type = crssl.getFirst().getType();
+                BMTType type = crssl.get(0).getType();
                 Point3D p3 = ktrj.get(sl);
                 Cross c = this.findClosestCross(crssl, type, p3);
                 if(c!=null) {
                     matches.add(c);
+                    Seed sclone = s.clone();
+                    for(Cross cm : matches) {
+                        sclone.add_Cluster(cm.getCluster1());
+                    }
+                    sclone.add_Crosses(matches);
+                    double scchi2 = this.refineSeed(sclone, true);
+                    int lastEntryIdx = matches.size()-1;
+                    if(scchi2>schi2+1) {
+                        matches.remove(lastEntryIdx);
+                        penalty++;
+                    }
                 } else {
                     penalty++;
                 }
@@ -108,7 +119,7 @@ public class SeedExtender {
         if(layer==1 || layer==4 || layer==6) {
             metric = 10;
         } else {
-            metric = 1;
+            metric = 2;
         }
         
         if(minDelta < metric)
@@ -124,11 +135,11 @@ public class SeedExtender {
     /**
      * Using KFitter to refine the seed
      */
-    public void refineSeed(Seed seed) {
+    public double refineSeed(Seed seed, boolean update) {
         double solenoidScale = Constants.getInstance().getSolenoidScale();
         double solenoidValue = Constants.getInstance().getSolenoidMagnitude(); // already the absolute value
         Map<Integer, Point3D> trj = new HashMap<>();
-        
+        double svtChi2=0;
         KFitter kf = new KFitter(true, 5, Constants.KFDIR, swimmer, Constants.getInstance().KFMatrixLibrary);
         kf.polarity = (int) Math.signum(Constants.getSolenoidScale()); 
         
@@ -155,7 +166,7 @@ public class SeedExtender {
                         solenoidValue, xbeam , ybeam, Units.MM);
         double[][] cov = Constants.COVHELIX;
         if(solenoidValue>0.001 && seed.getHelix().radius() <Constants.getInstance().getRCUT())    
-            return ;
+            return 0;
         if(Constants.getInstance().seedingDebugMode)
             System.out.println("Refine seed initializing fitter...for "+seed.toString());
         kf.init(hlx, cov, xbeam, ybeam, 0, surfaces, PDGDatabase.getParticleMass(pid));
@@ -172,12 +183,17 @@ public class SeedExtender {
             Point3D  trackPos = new Point3D();
             Vector3D trackDir = new Vector3D();
             Map<Long, Point3D> ktrj = new HashMap<>();
+            
             if(kf.trajPoints!=null ) {
+                svtChi2=0;
                 for(int l = 1; l<=6; l++) {
                     int index = MLayer.getType(DetectorType.BST, l).getIndex();
                     AKFitter.HitOnTrack trajPoint = kf.trajPoints.get(index);
                     long key = (((long) trajPoint.sector) << 32) | (l & 0xffffffffL);
                     ktrj.put(key, new Point3D(trajPoint.x, trajPoint.y, trajPoint.z));
+                    double nResi = trajPoint.residual/surfaces.get(index).getError();
+                    svtChi2+= nResi*nResi;
+                    
                     int index2 = MLayer.getType(DetectorType.BMT, l).getIndex();
                     AKFitter.HitOnTrack trajPoint2 = kf.trajPoints.get(index2);
                     int l2 = l+6;
@@ -186,13 +202,15 @@ public class SeedExtender {
                     ktrj.put(key2, new Point3D(trajPoint2.x, trajPoint2.y, trajPoint2.z));
                 }
                 seed.setTrajectory(ktrj);
+            } else {
+                svtChi2=99999;
             }
             for(Cross c : seed.getCrosses()) {
-                if(kf.trajPoints!=null ) {
+                if(kf.trajPoints!=null && update) {
                     int layer = c.getCluster1().getLayer();
                     int index = MLayer.getType(c.getDetector(), layer).getIndex();
                     AKFitter.HitOnTrack traj = kf.trajPoints.get(index);
-                    if(traj==null) return; 
+                    if(traj==null) return 0; 
                     trackPos.set(traj.x, traj.y, traj.z);
                     trackDir.setXYZ(traj.px, traj.py, traj.pz);
                     c.update(trackPos, trackDir.asUnit());
@@ -201,6 +219,7 @@ public class SeedExtender {
         } else {
             seed.failed=true;
         }
+        return svtChi2;
     }
     
     public void extendSeedToBMT(Seed seed, List<Cross> bMTCrosses) {
@@ -216,8 +235,12 @@ public class SeedExtender {
         }
         sclone.add_Crosses(matchedBMTCrosses);
         sclone.fit(3, xbeam, ybeam, Constants.getSolenoidMagnitude());
-        sclone.update_Crosses(xbeam, ybeam);
-        refineSeed(sclone);
+        if(Constants.getInstance().seedingDebugMode) {
+            System.out.println("Extended seed:");
+            System.out.println(sclone.toString());
+        }
+        //sclone.update_Crosses(xbeam, ybeam);
+        refineSeed(sclone, true);
         List<Cross> matchedBMTCrosses2 = match2BMTCrosses(seed, surfaceMap,bMTCrosses);
         for(Cross c : matchedBMTCrosses2) {
             seed.add_Cluster(c.getCluster1());

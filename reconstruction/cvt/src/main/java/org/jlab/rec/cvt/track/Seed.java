@@ -267,6 +267,10 @@ public class Seed implements Comparable<Seed>{
     }
 
     public boolean fit(int fitIter, double xb, double yb, double bfield) {
+        return fit(fitIter, xb, yb, bfield, true);
+    }
+    
+    public boolean fit(int fitIter, double xb, double yb, double bfield, boolean updateCrosses) {
         
         List<Double> X = new ArrayList<>();
         List<Double> Y = new ArrayList<>();
@@ -391,7 +395,7 @@ public class Seed implements Comparable<Seed>{
             
             if (fitTrk.getchisq()[0] < chisqMax) {
                 chisqMax = fitTrk.getchisq()[0];
-                if(chisqMax<Constants.CIRCLEFIT_MAXCHI2) {
+                if(chisqMax<Constants.CIRCLEFIT_MAXCHI2 && updateCrosses) {
                     this.update_Crosses(xb,yb);
                 }
             }
@@ -455,7 +459,7 @@ public class Seed implements Comparable<Seed>{
         boolean pass = true;
         if(Double.isNaN(this.getChi2())) 
             pass = false;
-        if(this.getChi2() > Constants.CHI2CUTSSA * (this.getNDF() + 5)) 
+        if(this.getChi2() > Constants.CHI2CUTSSA * (this.getNDF() + 5) && this.getChi2()>0) 
             pass = false;
         if(this.getNDF() < Constants.NDFCUT) 
             pass = false;
@@ -833,9 +837,16 @@ public class Seed implements Comparable<Seed>{
         // Helix: keep same reference unless you have a trusted Helix copy constructor.
         copy._Helix = this._Helix;
 
-        // Shallow-copy cross and cluster objects, but use new list containers.
-        copy._Crosses = (this._Crosses == null) ? null : new ArrayList<>(this._Crosses);
+        // Shallow-copy cluster objects, but use new list containers.
         copy._Clusters = (this._Clusters == null) ? null : new ArrayList<>(this._Clusters);
+        // Deep-copy crosses objects,
+        if (this._Crosses != null) {
+            copy._Crosses = new ArrayList<>();
+            for(Cross c : this._Crosses) {
+                Cross cp = c.clone();
+                copy._Crosses.add(cp);
+            }
+        }
 
         // Overlapping seeds: new container, same seed references.
         copy._overlappingSeed = (this._overlappingSeed == null) ? null : new ArrayList<>(this._overlappingSeed);

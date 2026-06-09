@@ -301,12 +301,17 @@ public class CVTEngine extends ReconstructionEngine {
         IndexedTable adcStatus            = this.getConstantsManager().getConstants(run, "/calibration/svt/adcstatus");
         
         Geometry.getInstance().initialize(this.getConstantsManager().getVariation(), run, svtLorentz, bmtVoltage);
-        double xB = beamPos.getDoubleValue("x_offset", 0, 0, 0)*10;
-        double yB = beamPos.getDoubleValue("y_offset", 0, 0, 0)*10;
+        double[] xyBeam = CVTReconstruction.getBeamSpot(event, beamPos);
+        double xB = xyBeam[0];
+        double yB = xyBeam[1];
         int polarity = (int) Math.signum(Constants.getSolenoidScale());
         CVTReconstruction reco = new CVTReconstruction(swimmer);
         
         Set<Integer> paddles = RecUtilities.getCTOFHitPaddles(event);
+        if(Constants.removeCTOFRequirement) {
+            paddles.clear();
+            for(int ip=1; ip<49; ip++) paddles.add(ip);
+        }
         
         if (paddles.isEmpty()) return true;
 
@@ -337,11 +342,10 @@ public class CVTEngine extends ReconstructionEngine {
         //test new pattern recognition algorithm
         List<Seed> seeds = ssd.findSeeds(crosses.get(0), polarity, paddles, saClusters) ;
         List<Track> ctoftracks = new ArrayList<>();
-
         int sidx=1;
         for(Seed s : seeds) {
             s.setId(sidx++);
-             sse.extendSeedToBMT(s, crosses.get(1));
+            sse.extendSeedToBMT(s, crosses.get(1));
         }
         //
         // Keep only fitted seeds that match CTOF
@@ -367,26 +371,11 @@ public class CVTEngine extends ReconstructionEngine {
                                                 this.isKfFilterOn(), 
                                                 this.getKfIterations(), 
                                                 this.getPid());
-
-            Track.removeOverlappingTracks(rtracks);
+ 
+            ctoftracks = ssd.keepTracksMatchingCTOF(rtracks, paddles, xB, yB);
             
-            for(Track t : rtracks) { 
-                boolean ctofmatch = false;
-                for (StateVec stVec : t.getTrajectory()) { 
-                    if(stVec.getSurfaceDetector()!=4) continue;
-                    if(stVec.getSurfaceDetector()==4) { 
-                        double sx = stVec.x();
-                        double sy = stVec.y();
-                        double phiDeg = Math.toDegrees(Math.atan2(sy, sx));
-                        int paddle = RoadSurfaces.getCTOFPaddle(phiDeg); 
-                        if(paddles.contains(paddle)) {
-                            ctofmatch = true;
-                        }
-                    }
-                }
-                if(ctofmatch)
-                    ctoftracks.add(t);
-            }
+            Track.removeOverlappingTracks(ctoftracks);
+            
             tf.zeroOutAssociatedIds(hits, clusters, crosses);
             tf.finalizeTracks(ctoftracks);
         }

@@ -25,6 +25,7 @@ import org.jlab.rec.cvt.patternrec.fit.HelixClusterRoadFitter;
 import org.jlab.rec.cvt.services.RecUtilities;
 import org.jlab.rec.cvt.svt.SVTParameters;
 import org.jlab.rec.cvt.track.Seed;
+import org.jlab.rec.cvt.track.Track;
 
 /**
  *
@@ -96,19 +97,23 @@ public class SVTSeeder {
         }
 
         if (fittedSeeds.isEmpty()) {
+            if(Constants.getInstance().seedingDebugMode)
+                System.out.println("**************************** NO ACCEPTED SEEDS !!!!!!!!!!!!!!!!!!!!!!!!!");
             return fittedSeeds;
         }
 
         // Keep only fitted seeds that match CTOF
         fittedSeeds = keepSeedsMatchingCTOF(fittedSeeds, paddles, xbeam, ybeam);
         if (fittedSeeds.isEmpty()) {
+            if(Constants.getInstance().seedingDebugMode)
+                System.out.println("**************************** NO MATCH TO CTOF!!!!!!!!!!!!!!!!!!!!!!!!!");
             return fittedSeeds;
         }
         //Search for missing clusters
         List<Seed> clsRecSeeds = cr.recoverAll(fittedSeeds, ssaClusters, polarity);
         
         if(Constants.getInstance().seedingDebugMode){
-            System.out.println("Before overlap remover ");
+            System.out.println("**********************************************************************Before overlap remover *********************************************************************");
             for(Seed s : clsRecSeeds) System.out.println(s.toString());
         }
         
@@ -116,7 +121,7 @@ public class SVTSeeder {
         // Then remove overlaps on the CTOF-matched subset
         List<Seed> clsRecSeedsOlvRm = removeOverlappingSeedsWithRoadFit(clsRecSeeds, polarity);
         if(Constants.getInstance().seedingDebugMode){
-            System.out.println("After overlap remover ");
+            System.out.println("*********************************************************************After overlap remover *********************************************************************");
             for(Seed s : clsRecSeeds) System.out.println(s.toString());
         }
         return clsRecSeedsOlvRm;
@@ -628,8 +633,7 @@ public class SVTSeeder {
             return seed.getCircleFitChi2PerNDF();
         }
     }
-    
-    //CTOF matching 
+    ////CTOF matching 
     public List<Seed> keepSeedsMatchingCTOF(List<Seed> seeds,
                                          Set<Integer> paddles,
                                          double xb,
@@ -669,6 +673,46 @@ public class SVTSeeder {
         }
 
         return matchedSeeds;
+    }
+    //CTOF matching for tracks
+    public List<Track> keepTracksMatchingCTOF(List<Track> tracks,
+                                         Set<Integer> paddles,
+                                         double xb,
+                                         double yb) {
+        if (tracks == null || tracks.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        if (paddles == null || paddles.isEmpty()) {
+            return new ArrayList<>(tracks);
+        }
+
+        List<Track> matchedTracks = new ArrayList<>();
+        if (Constants.getInstance().seedingDebugMode) 
+                System.out.println("Tracks Before CTOF matching");
+        for (Track t : tracks) {
+            if (Constants.getInstance().seedingDebugMode) {
+                System.out.println(t.toString());
+            }
+
+            int[] spaddles = RecUtilities.getPaddleForTrack(t, xb, yb);
+
+            boolean matched = false;
+            if (spaddles != null) {
+                for (int spaddle : spaddles) { 
+                    if (paddles.contains(spaddle)) { 
+                        matched = true;
+                        break;
+                    }
+                }
+            }
+
+            if (matched) { 
+                matchedTracks.add(t);
+            }
+        }
+
+        return matchedTracks;
     }
     
     public List<Seed> rejectSeedsWithBgClus(List<Seed> seeds) {
