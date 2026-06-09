@@ -1,6 +1,5 @@
 package org.jlab.service.alert;
 
-import ai.djl.repository.zoo.ZooModel;
 import ai.djl.translate.TranslateException;
 import java.io.File;
 import java.util.ArrayList;
@@ -396,7 +395,7 @@ public class ALERTEngine extends ReconstructionEngine {
                 continue;
             }
 
-            ATOFHit hit_pred = new ATOFHit(sector_pred, layer_pred, wedge_pred, 0, 0, 0, 0f, ATOF, null);
+            ATOFHit hit_pred = new ATOFHit(sector_pred, layer_pred, wedge_pred, 0, 0, 0, 0f, ATOF, null, 0);
             double pred_x = hit_pred.getX();
             double pred_y = hit_pred.getY();
             double pred_z = hit_pred.getZ();
@@ -404,27 +403,25 @@ public class ALERTEngine extends ReconstructionEngine {
             double threshold = 20.0;
             double minDistanceSquared = threshold * threshold;
 
-            ATOFHit matchAtofHit = null; // Could be used later
             int matchHitId = -1;
 
             for (int k = 0; k < bank_ATOFHits.rows(); k++) {
                 int component = bank_ATOFHits.getInt("component", k);
                 if (component == 10) continue;
 
-                int sector = bank_ATOFHits.getInt("sector", k);
-                int layer = bank_ATOFHits.getInt("layer", k);
+                double hitX = bank_ATOFHits.getFloat("x", k);
+                double hitY = bank_ATOFHits.getFloat("y", k);
+                double hitZ = bank_ATOFHits.getFloat("z", k);
 
-                ATOFHit hit = new ATOFHit(sector, layer, component, 0, 0, 0, 0f, ATOF, null);
-
-                double dx = pred_x - hit.getX();
-                double dy = pred_y - hit.getY();
-                double dz = pred_z - hit.getZ();
+                double dx = pred_x - hitX;
+                double dy = pred_y - hitY;
+                double dz = pred_z - hitZ;
 
                 double distanceSquared = dx * dx + dy * dy + dz * dz;
 
                 if (distanceSquared < minDistanceSquared) {
                     minDistanceSquared = distanceSquared;
-                    matchAtofHit = hit;
+                    //matchAtofHit = hit;
                     matchHitId = bank_ATOFHits.getInt("id", k);
                 }
             }
