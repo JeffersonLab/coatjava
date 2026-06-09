@@ -1,4 +1,4 @@
-package org.jlab.rec.ahdc.AI;
+package org.jlab.rec.alert.AI;
 
 import org.apache.commons.lang3.mutable.MutableBoolean;
 

@@ -16,12 +16,11 @@ import org.jlab.rec.cvt.banks.RecoBankWriter;
 import org.jlab.rec.cvt.cluster.Cluster;
 import org.jlab.rec.cvt.cross.Cross;
 import org.jlab.rec.cvt.hit.Hit;
-import org.jlab.rec.cvt.patternrec.RoadSurfaces;
 import org.jlab.rec.cvt.patternrec.SVTSeeder;
 import org.jlab.rec.cvt.patternrec.SeedExtender;
 import org.jlab.rec.cvt.track.Seed;
+import org.jlab.rec.cvt.track.StraightTrack;
 import org.jlab.rec.cvt.track.Track;
-import org.jlab.rec.cvt.trajectory.StateVec;
 import org.jlab.utils.groups.IndexedTable;
 
 /**
@@ -32,7 +31,6 @@ import org.jlab.utils.groups.IndexedTable;
  *
  */
 public class CVTEngine extends ReconstructionEngine {
-
 
     /**
      * @param docacutsum the docacutsum to set
@@ -60,7 +58,7 @@ public class CVTEngine extends ReconstructionEngine {
     
     // run-time options
     private int     pid = 0;
-    private int     kfIterations = 9;
+    private int     kfIterations = 5;
     private boolean kfFilterOn = true;
     private boolean initFromMc = false;    
     
@@ -78,7 +76,7 @@ public class CVTEngine extends ReconstructionEngine {
     private boolean timeCuts            = true;
     private boolean hvCuts              = false;
     public boolean useSVTTimingCuts     =  false;
-    public boolean removeOverlappingSeeds = false;
+    public boolean removeOverlappingSeeds = true;
     public boolean flagSeeds = true;
     public boolean gemcIgnBMT0ADC = false;
     public boolean KFfailRecovery = true;
@@ -139,20 +137,23 @@ public class CVTEngine extends ReconstructionEngine {
         this.initConstantsTables();
         this.registerBanks();
         this.printConfiguration();
-        //_writer = new HipoDataSync();
-        //_writer.open(wf);
-        
-        return true;    
+        return true;
     }
-    //private HipoDataSync _writer;
-    //private String wf = "../failedTrks.hipo";
+
+    @Override
+    public void detectorChanged(int runNumber) {
+        IndexedTable svtLorentz = this.getConstantsManager().getConstants(runNumber, "/calibration/svt/lorentz_angle");
+        IndexedTable bmtVoltage = this.getConstantsManager().getConstants(runNumber, "/calibration/mvt/bmt_voltage");
+        Geometry.initialize(this.getConstantsManager().getVariation(), runNumber, svtLorentz, bmtVoltage);
+    }
+    
     public final void setOutputBankPrefix(String prefix) {
         this.bankPrefix = prefix;
     }
 
     public void registerBanks() {
         String prefix = bankPrefix;
-        if(Constants.getInstance().isCosmics || Constants.getInstance().testRoads) prefix = "Rec";
+        if(Constants.getInstance().isCosmics) prefix = "Rec";
         this.setBmtHitBank("BMT" + prefix + "::Hits");
         this.setBmtClusterBank("BMT" + prefix + "::Clusters");
         this.setBmtCrossBank("BMT" + prefix + "::Crosses");
@@ -284,23 +285,20 @@ public class CVTEngine extends ReconstructionEngine {
     }
     
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         
         Swim swimmer = new Swim();
         
         int run = this.getRun(event); 
         
         IndexedTable svtStatus          = this.getConstantsManager().getConstants(run, "/calibration/svt/status");
-        IndexedTable svtLorentz         = this.getConstantsManager().getConstants(run, "/calibration/svt/lorentz_angle");
         IndexedTable bmtStatus          = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_status");
         IndexedTable bmtTime            = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_time");
-        IndexedTable bmtVoltage         = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_voltage");
         IndexedTable bmtStripVoltage    = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_strip_voltage");
         IndexedTable bmtStripThreshold  = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_strip_voltage_thresholds");
         IndexedTable beamPos            = this.getConstantsManager().getConstants(run, "/geometry/beam/position");
         IndexedTable adcStatus            = this.getConstantsManager().getConstants(run, "/calibration/svt/adcstatus");
         
-        Geometry.getInstance().initialize(this.getConstantsManager().getVariation(), run, svtLorentz, bmtVoltage);
         double[] xyBeam = CVTReconstruction.getBeamSpot(event, beamPos);
         double xB = xyBeam[0];
         double yB = xyBeam[1];
@@ -347,7 +345,7 @@ public class CVTEngine extends ReconstructionEngine {
             s.setId(sidx++);
             sse.extendSeedToBMT(s, crosses.get(1));
         }
-        //
+        
         // Keep only fitted seeds that match CTOF
         seeds = ssd.keepSeedsMatchingCTOF(seeds, paddles, xB, yB);
         if(Constants.getInstance().testRoads) {
@@ -355,16 +353,7 @@ public class CVTEngine extends ReconstructionEngine {
                 s.percentTruthMatch=ssd.getMCSeedPurity(s);
             }
         }
-        // Debug: keep only seeds with X% purity
-        //seeds = ssd.keepSeedsWithPurity(seeds, -1.0);
-        //seeds = ssd.rejectSeedsWithBgClus(seeds);
-//        if(seeds.isEmpty()) {
-//            _writer.writeEvent(event);
-//        } 
-//        if(event.getBank("RUN::config").getInt("event", 0)==659564) _writer.close();
-//        
-        
-        if(!seeds.isEmpty()) {
+            if(!seeds.isEmpty()) {
             
             TracksFromTargetRec  tf = new TracksFromTargetRec(swimmer, xB, yB);
             List<Track> rtracks = tf.getTracks(seeds, event, this.isInitFromMc(), 
@@ -627,7 +616,6 @@ public class CVTEngine extends ReconstructionEngine {
         return cvtCovMatBank;
     }
     
-    
     public void printConfiguration() {            
         
         System.out.println("["+this.getName()+"] run with cosmics setting set to "+Constants.getInstance().isCosmics);        
@@ -660,7 +648,4 @@ public class CVTEngine extends ReconstructionEngine {
         
         
     }
-
-    
-
 }

@@ -1,4 +1,4 @@
-package org.jlab.rec.ahdc.Cluster;
+package org.jlab.rec.ahdc.AHDCCluster;
 
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.ahdc.PreCluster.PreCluster;
@@ -9,9 +9,9 @@ import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
 
 /**
- * Cluster are compose by 2 PreCluster on layer with a different stereo angle
+ * AHDCCluster are compose by 2 PreCluster on layer with a different stereo angle
  */
-public class Cluster {
+public class AHDCCluster {
 
 	private int                   _trackId = -1;
 	private double                _Radius;
@@ -50,7 +50,7 @@ public class Cluster {
 
 		return wrapPi(phi1 - phi0);
 	}
-	public Cluster(PreCluster precluster, PreCluster other_precluster) {
+	public AHDCCluster(PreCluster precluster, PreCluster other_precluster) {
 		this._PreClusters_list = new ArrayList<>();
 		_PreClusters_list.add(precluster);
 		_PreClusters_list.add(other_precluster);
@@ -80,15 +80,44 @@ public class Cluster {
 		this._V        = this._Y / (this._X * this._X + this._Y * this._Y);
 	}
 
-	public Cluster(double X, double Y, double Z) {
+	public AHDCCluster(double X, double Y, double Z) {
 		this._X = X;
 		this._Y = Y;
 		this._Z = Z;
 	}
 
+	/** Build an AHDCCluster from a single PreCluster (one layer of a superlayer).
+	 *  Used by the GNN path when a track covers a superlayer on only one
+	 *  stereo layer — no stereo pair is available, so Z is taken from the
+	 *  average wire-midpoint z of the PreCluster's hits rather than from a
+	 *  stereo-angle computation. DocaClusterRefiner falls back to a degenerate
+	 *  DocaCluster when {@code get_PreClusters_list().size() != 2}, so
+	 *  downstream is unaffected. */
+	public AHDCCluster(PreCluster precluster) {
+		this._PreClusters_list = new ArrayList<>();
+		_PreClusters_list.add(precluster);
+		this._Radius   = precluster.get_Radius();
+		this._Phi      = precluster.get_Phi();
+		this._X        = precluster.get_X();
+		this._Y        = precluster.get_Y();
+		this._Num_wire = (int) precluster.get_Num_wire();
+		double r2 = this._X * this._X + this._Y * this._Y;
+		if (r2 > 0.0) {
+			this._U = this._X / r2;
+			this._V = this._Y / r2;
+		}
+		double zSum = 0.0;
+		int    zCount = 0;
+		for (Hit h : precluster.get_hits_list()) {
+			Line3D line = h.getLine();
+			if (line != null) { zSum += line.midpoint().z(); zCount++; }
+		}
+		this._Z = (zCount > 0) ? zSum / zCount : 0.0;
+	}
+
 	@Override
 	public String toString() {
-		return "Cluster{" + "_X=" + _X + ", _Y=" + _Y + ", _Z=" + _Z + '}';
+		return "AHDCCluster{" + "_X=" + _X + ", _Y=" + _Y + ", _Z=" + _Z + '}';
 	}
 
 	public ArrayList<PreCluster> get_PreClusters_list() {

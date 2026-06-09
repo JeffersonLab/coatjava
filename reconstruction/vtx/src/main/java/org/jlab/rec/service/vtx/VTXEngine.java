@@ -50,7 +50,7 @@ public class VTXEngine extends ReconstructionEngine {
     }
     
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         this.FieldsConfig = this.getFieldsConfig();
         if (event.hasBank("RUN::config") == false) {
             System.err.println("RUN CONDITIONS NOT READ!");
@@ -118,5 +118,7 @@ public class VTXEngine extends ReconstructionEngine {
                    
     }
 
+    @Override
+    public void detectorChanged(int run) {}
     
 }

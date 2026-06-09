@@ -114,7 +114,6 @@ public class HitReader {
            double period = timejitter.getDoubleValueByHash("period", hash);
            int    phase  = timejitter.getIntValueByHash("phase", hash);
            int    cycles = timejitter.getIntValueByHash("cycles", hash);
-
            if (cycles > 0) jitter = (int) (period * ((tiTimeStamp + phase) % cycles));
         }
         return jitter;
@@ -331,10 +330,11 @@ public class HitReader {
         
         DataBank pbank = event.getBank(pointName);
         for (int i = 0; i < pbank.rows(); i++) {
-            id2tid.put((int)pbank.getShort("id", i), (int)pbank.getShort("tid", i));
-            id2tidB.put((int)pbank.getShort("id", i), (double)pbank.getFloat("B", i));
-            id2tidtFlight.put((int)pbank.getShort("id", i), (double)pbank.getFloat("TFlight", i));
-            id2tidtProp.put((int)pbank.getShort("id", i), (double)pbank.getFloat("TProp", i));
+            int id = pbank.getShort("id",i);
+            id2tid.put(id, (int)pbank.getShort("tid", i));
+            id2tidB.put(id, (double)pbank.getFloat("B", i));
+            id2tidtFlight.put(id, (double)pbank.getFloat("TFlight", i));
+            id2tidtProp.put(id, (double)pbank.getFloat("TProp", i));
         }
         
         DataBank bank = event.getBank(bankName);
@@ -378,11 +378,6 @@ public class HitReader {
                  tFlight[i] = this.id2tidtFlight.get(id[i]);
             }
             
-            if (event.hasBank("MC::Particle") ||
-                    event.getBank("RUN::config").getInt("run", 0) < 100) {
-                tProp[i] = 0;
-                tFlight[i] = 0;
-            }
         }
 
         int size = layer.length;
@@ -393,26 +388,17 @@ public class HitReader {
                 continue;
             }
             
-            double T_0 = 0;
-            double T_Start = 0;
-            
             if (!event.hasBank(recBankName)) {
                 continue;
             }
             
-            if (event.hasBank(recBankName) && 
-                    event.getBank(recBankName).getFloat("startTime", 0)==-1000) {
+            double T_Start = event.getBank(recBankName).getFloat("startTime", 0);
+
+            if (T_Start == -1000) {
                 continue;
             } 
             
-            if (!event.hasBank("MC::Particle") &&
-                    event.getBank("RUN::config").getInt("run", 0) > 100) {
-                //T_0 = this.getT0(sector[i], slayer[i], layer[i], wire[i], T0, T0ERR)[0];
-                if (event.hasBank(recBankName))
-                    T_Start = event.getBank(recBankName).getFloat("startTime", 0);
-            }  
-            
-            T_0 = this.getT0(sector[i], slayer[i], layer[i], wire[i], t0s)[0];
+            double T_0 = this.getT0(sector[i], slayer[i], layer[i], wire[i], t0s)[0];
             FittedHit hit = new FittedHit(sector[i], slayer[i], layer[i], wire[i], tdc[i], jitter[i], id[i]);
             hit.set_Id(id[i]);
             hit.setB(B[i]);

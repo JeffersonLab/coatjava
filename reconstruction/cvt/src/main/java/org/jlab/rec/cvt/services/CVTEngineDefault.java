@@ -3,7 +3,6 @@ package org.jlab.rec.cvt.services;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.clas.swimtools.Swim;
@@ -22,14 +21,12 @@ import org.jlab.utils.groups.IndexedTable;
 
 /**
  * Service to return reconstructed TRACKS
- * Current Service used in Data Processing
- * 
+ * format
  *
  * @author ziegler
  *
  */
 public class CVTEngineDefault extends ReconstructionEngine {
-
 
     /**
      * @param docacutsum the docacutsum to set
@@ -75,7 +72,7 @@ public class CVTEngineDefault extends ReconstructionEngine {
     private boolean timeCuts            = true;
     private boolean hvCuts              = false;
     public boolean useSVTTimingCuts     =  false;
-    public boolean removeOverlappingSeeds = false;
+    public boolean removeOverlappingSeeds = true;
     public boolean flagSeeds = true;
     public boolean gemcIgnBMT0ADC = false;
     public boolean KFfailRecovery = true;
@@ -136,7 +133,14 @@ public class CVTEngineDefault extends ReconstructionEngine {
         this.initConstantsTables();
         this.registerBanks();
         this.printConfiguration();
-        return true;    
+        return true;
+    }
+
+    @Override
+    public void detectorChanged(int runNumber) {
+        IndexedTable svtLorentz = this.getConstantsManager().getConstants(runNumber, "/calibration/svt/lorentz_angle");
+        IndexedTable bmtVoltage = this.getConstantsManager().getConstants(runNumber, "/calibration/mvt/bmt_voltage");
+        Geometry.initialize(this.getConstantsManager().getVariation(), runNumber, svtLorentz, bmtVoltage);
     }
     
     public final void setOutputBankPrefix(String prefix) {
@@ -277,25 +281,22 @@ public class CVTEngineDefault extends ReconstructionEngine {
     }
     
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         
         Swim swimmer = new Swim();
         
         int run = this.getRun(event); 
         
         IndexedTable svtStatus          = this.getConstantsManager().getConstants(run, "/calibration/svt/status");
-        IndexedTable svtLorentz         = this.getConstantsManager().getConstants(run, "/calibration/svt/lorentz_angle");
         IndexedTable bmtStatus          = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_status");
         IndexedTable bmtTime            = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_time");
-        IndexedTable bmtVoltage         = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_voltage");
         IndexedTable bmtStripVoltage    = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_strip_voltage");
         IndexedTable bmtStripThreshold  = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_strip_voltage_thresholds");
         IndexedTable beamPos            = this.getConstantsManager().getConstants(run, "/geometry/beam/position");
         IndexedTable adcStatus            = this.getConstantsManager().getConstants(run, "/calibration/svt/adcstatus");
         
-        Geometry.getInstance().initialize(this.getConstantsManager().getVariation(), run, svtLorentz, bmtVoltage);
-        
         CVTReconstruction reco = new CVTReconstruction(swimmer);
+        
         List<ArrayList<Hit>>         hits = reco.readHits(event, svtStatus, bmtStatus, bmtTime, 
                                                             bmtStripVoltage, bmtStripThreshold,
                                                             adcStatus);
@@ -331,8 +332,6 @@ public class CVTEngineDefault extends ReconstructionEngine {
                                                                   this.getKfIterations(), 
                                                                   true, this.getPid());
                 
-                
-
                 if(seeds!=null) {
                     banks.add(RecoBankWriter.fillSeedBank(event, seeds, this.getSeedBank()));
                     banks.add(RecoBankWriter.fillSeedClusBank(event, seeds, this.getSeedClusBank()));
@@ -581,7 +580,6 @@ public class CVTEngineDefault extends ReconstructionEngine {
         return cvtCovMatBank;
     }
     
-    
     public void printConfiguration() {            
         
         System.out.println("["+this.getName()+"] run with cosmics setting set to "+Constants.getInstance().isCosmics);        
@@ -614,7 +612,4 @@ public class CVTEngineDefault extends ReconstructionEngine {
         
         
     }
-
-    
-
 }

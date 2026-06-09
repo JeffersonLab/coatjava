@@ -1,29 +1,31 @@
 #!/bin/bash
 
 event=cpu
-format=flat
-seconds=12
-usage1="Usage:  profile [-h] [-s seconds] [-w seconds] [-e event] [-f format] [--] executable args"
-usage2="Usage:  profile [options] executable args\nOptions:\n\t[-h] [-s seconds] [-w seconds]\n\t[-e cpu|alloc|nativemem|lock|cache-misses]\n\t[-f flat|traces|collapsed|flamegraph|tree|jfr|otlp]"
+profile_seconds=30
+warmup_seconds=60
+usage1="Usage:  profile [-h] [-s seconds] [-w seconds] [-e event] [--] executable args"
+usage2="Usage:  profile [options] executable args\nOptions:\n\t[-h] [-s seconds] [-w seconds]\n\t[-e cpu|alloc|nativemem|lock|cache-misses]"
 
-while getopts s:f:e:o:w:h opt
+let tail_seconds=warmup_seconds-5
+let sleep_seconds=5
+
+while getopts s:e:o:w:h opt
 do
     case $opt in
-        s) seconds=$OPTARG ;;
-        f) format=$OPTARG ;;
+        s) profile_seconds=$OPTARG ;;
+        w) warmup_seconds=$OPTARG ;;
         e) event=$OPTARG ;;
         o) stub=$OPTARG ;;
-        w) warmup=$OPTARG ;;
         h) echo -e $usage2 && exit 0 ;;
         --) break ;;
         \?) echo $usage1 && exit 1 ;;
-#        :) echo $usage1 && exit 2 ;;
     esac
 done
 
 shift $((OPTIND-1))
 executable=$1
 arguments=${@:2}
+logfile=asprof$stub.log
 
 which asprof >& /dev/null
 [ "$?" -ne 0 ] && echo 'ERROR:  asprof is not in $PATH.' && echo -e $usage2 && exit 3
@@ -32,30 +34,36 @@ which $executable >& /dev/null
 [ "$?" -ne 0 ] && echo "ERROR:  $executable is not in \$PATH." && echo -e $usage2 && exit 4
 
 echo "Running asprof on '$executable $arguments' ..."
+sleep 1
+
+rm -f $logfile && touch $logfile
 
 set -e
-
-$executable $arguments >& asprof_$stub.log
+$executable $arguments >> $logfile 2>&1 &
+set +e
 
 pid_bash=$!
+echo info:  pid bash=$pid_bash, getting java ...
+sleep 1
+pid_java=$(pgrep -P $pid_bash)
+sleep 1
+# go 2 deep for run-clara:
+pid_java=$(pgrep -P $pid_java | head -n 1)
+echo info:  pid java=$pid_java
+tail -f $logfile &
+pid_tail=$!
+sleep $tail_seconds
+kill -9 $pid_tail
 
-echo PID1=$pid_bash
-sleep 5
-pid_java=$(pgrep -P "$pid_bash")
+set -e
+asprof -e $event -d $profile_seconds -f asprof_${event}$stub.html $pid_java >> $logfile 2>&1 &
+pid_asprof=$!
+set +e
 
-echo PID2=$pid_java
+tail -f $logfile &
+pid_tail=$!
 
-ps waux && ps -p $pid_java
-
-echo "Waiting for $warmup seconds of warmup ..."
-for x in $(seq $warmup); do let y=$warmup-$x && echo -e -n "\r$y ..." && sleep 1; done
-
-# This 42 is probably for recon-util:
-tail -n 42 asprof_$stub.log
-
-asprof --title "Coatjava:asprof:$executable:$event"  -e $event \
-    -d $seconds -o $format -f asprof_${format}_${event}_$stub $pid_java
-
+wait $pid_asprof
+kill -9 $pid_bash
+kill -9 $pid_tail
 kill -9 $pid_java
-rm -f asprof_$stub.hipo
-
