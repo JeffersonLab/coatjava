@@ -674,8 +674,8 @@ public class ALERTEngine extends ReconstructionEngine {
         PDGParticle proton = PDGDatabase.getParticleById(2212);
         int Niter = 25;
         KalmanFilter KF = new KalmanFilter(proton, Niter);
-        KF.set_ATOF_detector(null);
-        //KF.set_ATOF_detector(ATOF); // Reference the ATOF geometry in the Kalman Filter
+        //KF.set_ATOF_detector(null);
+        KF.set_ATOF_detector(ATOF); // Reference the ATOF geometry in the Kalman Filter
         KF.set_atof_alignement(atof_alignement);
         KF.set_vz_constraint(vz_constraint);
         KF.set_vertex_flag(IsVertexDefined);
