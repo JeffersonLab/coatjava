@@ -1,6 +1,7 @@
 package org.jlab.rec.rtof.hit;
 
 import org.jlab.rec.rtof.constants.Parameters;
+import org.jlab.detector.geant4.v2.rtof.RTOFConstants;
 
 /**
  *
@@ -46,10 +47,10 @@ public class RTOFHit extends RTOFRawHit {
     public final void computeGlobalY() {
 	double localY = this.getLocalY();
     
-	int nRows = Parameters.NROWS;
-	double y_start = -(Parameters.LENGTH - Parameters.LONG_BAR_LENGTH)/2;  // Starting Y position
-	double dy_long = Parameters.LONG_BAR_LENGTH;
-	double dy_short = Parameters.SHORT_BAR_LENGTH;
+	int nRows = RTOFConstants.NROWS;
+	double y_start = -(RTOFConstants.LENGTH - RTOFConstants.LONG_BAR_LENGTH)/2;  // Starting Y position
+	double dy_long = RTOFConstants.LONG_BAR_LENGTH;
+	double dy_short = RTOFConstants.SHORT_BAR_LENGTH;
 
         double y_pos; // y coordinate of the center of bar wrt to the global coordinate system
 	if(hitUp.getRow()-1 < (nRows - 1)/2)
@@ -80,13 +81,13 @@ public class RTOFHit extends RTOFRawHit {
         double time_at_sipm, distance_to_sipm;
         if(this.hitDown.getEnergy() > this.hitUp.getEnergy()) {
             time_at_sipm = this.hitDown.getTime();
-	    if(this.hitDown.getRow() == 3) distance_to_sipm = Parameters.SHORT_BAR_LENGTH/2. - this.getLocalY();
-	    else distance_to_sipm = Parameters.LONG_BAR_LENGTH/2. - this.getLocalY();
+	    if(this.hitDown.getRow() == 3) distance_to_sipm = RTOFConstants.SHORT_BAR_LENGTH/2. - this.getLocalY();
+	    else distance_to_sipm = RTOFConstants.LONG_BAR_LENGTH/2. - this.getLocalY();
         }
         else {
             time_at_sipm = this.hitUp.getTime();
-	    if(this.hitUp.getRow() == 3) distance_to_sipm = Parameters.SHORT_BAR_LENGTH/2. + this.getLocalY();
-            else distance_to_sipm = Parameters.LONG_BAR_LENGTH/2. + this.getLocalY();
+	    if(this.hitUp.getRow() == 3) distance_to_sipm = RTOFConstants.SHORT_BAR_LENGTH/2. + this.getLocalY();
+            else distance_to_sipm = RTOFConstants.LONG_BAR_LENGTH/2. + this.getLocalY();
         }
         this.setTime(time_at_sipm - distance_to_sipm/Parameters.VEFF);
     }
@@ -101,11 +102,11 @@ public class RTOFHit extends RTOFRawHit {
         this.computeLocalY();
         double distance_hit_to_sipm_up, distance_hit_to_sipm_down;
 	
-	if (hitUp.getRow() == 3) distance_hit_to_sipm_up = Parameters.SHORT_BAR_LENGTH / 2. + this.getLocalY();
-	else distance_hit_to_sipm_up = Parameters.LONG_BAR_LENGTH / 2. + this.getLocalY();
+	if (hitUp.getRow() == 3) distance_hit_to_sipm_up = RTOFConstants.SHORT_BAR_LENGTH / 2. + this.getLocalY();
+	else distance_hit_to_sipm_up = RTOFConstants.LONG_BAR_LENGTH / 2. + this.getLocalY();
 	
-	if (hitDown.getRow() == 3) distance_hit_to_sipm_down = Parameters.SHORT_BAR_LENGTH / 2. - this.getLocalY();
-	else distance_hit_to_sipm_down = Parameters.LONG_BAR_LENGTH / 2. - this.getLocalY();
+	if (hitDown.getRow() == 3) distance_hit_to_sipm_down = RTOFConstants.SHORT_BAR_LENGTH / 2. - this.getLocalY();
+	else distance_hit_to_sipm_down = RTOFConstants.LONG_BAR_LENGTH / 2. - this.getLocalY();
 	
         double Edep_up = hitUp.getEnergy() * Math.exp(distance_hit_to_sipm_up / Parameters.ATT_L);
         double Edep_down = hitDown.getEnergy() * Math.exp(distance_hit_to_sipm_down / Parameters.ATT_L);

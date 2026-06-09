@@ -3,6 +3,7 @@ package org.jlab.rec.rtof.hit;
 import org.jlab.geom.base.*;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.rec.rtof.constants.Parameters;
+import org.jlab.detector.geant4.v2.rtof.RTOFConstants;
 
 /**
  *
@@ -258,12 +259,12 @@ public class RTOFRawHit {
     public final int calculateXYZ() {
 
 	// Constants for positioning
-	int nRows = Parameters.NROWS;
-	double y_start = -(Parameters.LENGTH - Parameters.LONG_BAR_LENGTH)/2;  // Starting Y position
-	double x_spacing = Parameters.BAR_WIDTH;
-	double x_start = -(Parameters.WIDTH - x_spacing)/2;  // starting X position
-	double dy_long = Parameters.LONG_BAR_LENGTH;
-	double dy_short = Parameters.SHORT_BAR_LENGTH;
+	int nRows = RTOFConstants.NROWS;
+	double y_start = -(RTOFConstants.LENGTH - RTOFConstants.LONG_BAR_LENGTH)/2;  // Starting Y position
+	double x_spacing = RTOFConstants.BAR_WIDTH;
+	double x_start = -(RTOFConstants.WIDTH - x_spacing)/2;  // starting X position
+	double dy_long = RTOFConstants.LONG_BAR_LENGTH;
+	double dy_short = RTOFConstants.SHORT_BAR_LENGTH;
 
 	//Position calculation
 	double z_pos = 0;
@@ -286,9 +287,9 @@ public class RTOFRawHit {
 	double[] localCoords = {x_pos, y_pos, z_pos};
 	    	
 	// Calculate center coordinates for the sector
-	double sector_x = (-1+(this.sector-1)*2)*(Parameters.RADIUS)*Math.sin(Math.toRadians(Parameters.HORIZONTAL_OPENING_ANGLE/2+Parameters.HORIZONTAL_STARTING_ANGLE));
+	double sector_x = (-1+(this.sector-1)*2)*(RTOFConstants.RADIUS)*Math.sin(Math.toRadians(RTOFConstants.HORIZONTAL_OPENING_ANGLE/2+RTOFConstants.HORIZONTAL_STARTING_ANGLE));
 	double sector_y = 0;
-	double sector_z = Parameters.RADIUS*Math.cos(Math.toRadians(Parameters.HORIZONTAL_OPENING_ANGLE/2+Parameters.HORIZONTAL_STARTING_ANGLE));
+	double sector_z = RTOFConstants.RADIUS*Math.cos(Math.toRadians(RTOFConstants.HORIZONTAL_OPENING_ANGLE/2+RTOFConstants.HORIZONTAL_STARTING_ANGLE));
 
 	// Global coordinates of the sector
         double[] globalCoordsSector = {sector_x, sector_y, sector_z};
@@ -296,8 +297,8 @@ public class RTOFRawHit {
 	// Rotation angle in radians 
         double thetaY = 0;
 
-	if(this.sector==1) thetaY = Math.toRadians(-(Parameters.HORIZONTAL_OPENING_ANGLE/2+Parameters.HORIZONTAL_STARTING_ANGLE));
-	if(this.sector==2) thetaY = Math.toRadians(Parameters.HORIZONTAL_OPENING_ANGLE/2+Parameters.HORIZONTAL_STARTING_ANGLE);
+	if(this.sector==1) thetaY = Math.toRadians(-(RTOFConstants.HORIZONTAL_OPENING_ANGLE/2+RTOFConstants.HORIZONTAL_STARTING_ANGLE));
+	if(this.sector==2) thetaY = Math.toRadians(RTOFConstants.HORIZONTAL_OPENING_ANGLE/2+RTOFConstants.HORIZONTAL_STARTING_ANGLE);
 	
         // Rotation matrix around the Y-axis
         double[][] Ry = {

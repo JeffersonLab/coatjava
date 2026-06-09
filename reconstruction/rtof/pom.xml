@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.jlab.clas12.detector</groupId>
-  <artifactId>clas12detector-recoiltof</artifactId>
+  <artifactId>clas12detector-rtof</artifactId>
   <version>13.4.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
@@ -27,6 +27,13 @@
       <artifactId>clas-reco</artifactId>
       <version>13.4.0-SNAPSHOT</version>
     </dependency>
+    <dependency>
+      <groupId>org.jlab.clas</groupId>
+      <artifactId>clas-jcsg</artifactId>
+      <version>13.4.0-SNAPSHOT</version>
+    </dependency>
+  
+
     
   </dependencies>
   
