@@ -1,7 +1,5 @@
 package org.jlab.rec.atof.hit;
 
-import org.jlab.io.base.DataEvent;
-import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.rec.atof.constants.Parameters;
 import org.jlab.utils.groups.IndexedTable;
 

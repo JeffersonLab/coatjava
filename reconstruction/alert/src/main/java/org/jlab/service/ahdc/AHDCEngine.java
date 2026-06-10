@@ -46,13 +46,11 @@ public class AHDCEngine extends ReconstructionEngine {
 
     @Override
     public void detectorChanged(int run) {
-        // FIXME:  move geometry initialization here
+        factory = (new AlertDCFactory()).createDetectorCLAS(new DatabaseConstantProvider(run,"default"));
     }
 
     @Override
     public boolean init() {
-
-        factory = (new AlertDCFactory()).createDetectorCLAS(new DatabaseConstantProvider());
 
         Map<String, Integer> tableMap = new HashMap<>();
         tableMap.put("/calibration/alert/ahdc/time_offsets", 3);
