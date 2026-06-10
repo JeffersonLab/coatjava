@@ -1,10 +1,10 @@
-package org.jlab.service.recoil;
+package org.jlab.service.recoil.trk;
 
 /**
  *
  * @author bondi, devita,niccolai
  */
-public class RecoilConstants {
+public class RtrkConstants {
     
     
     // geometry

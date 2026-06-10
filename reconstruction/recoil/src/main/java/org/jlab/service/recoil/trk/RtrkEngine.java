@@ -1,4 +1,4 @@
-package org.jlab.service.recoil;
+package org.jlab.service.recoil.trk;
 
 import java.util.List;
 import java.util.Optional;
@@ -8,7 +8,7 @@ import javax.swing.JFrame;
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
-import org.jlab.detector.geant4.v2.recoil.RecoilStripFactory;
+import org.jlab.detector.geant4.v2.recoil.trk.RtrkStripFactory;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.groot.data.H1F;
 import org.jlab.groot.fitter.DataFitter;
@@ -25,14 +25,14 @@ import org.jlab.io.hipo.HipoDataSource;
  * 
  * @author bondi, devita, niccolai
  */
-public class RecoilEngine extends ReconstructionEngine {
+public class RtrkEngine extends ReconstructionEngine {
 
-    public static Logger LOGGER = Logger.getLogger(RecoilEngine.class.getName());
+    public static Logger LOGGER = Logger.getLogger(RtrkEngine.class.getName());
 
-    public static RecoilStripFactory factory = new RecoilStripFactory();
+    public static RtrkStripFactory factory = new RtrkStripFactory();
 
-    public RecoilEngine() {
-        super("Recoil","niccolai","1.0");
+    public RtrkEngine() {
+        super("Rtrk","niccolai","1.0");
     }
 
     @Override
@@ -41,11 +41,11 @@ public class RecoilEngine extends ReconstructionEngine {
         // init ConstantsManager to read constants from CCDB
         String variationName = Optional.ofNullable(this.getEngineConfigString("variation")).orElse("default");
         DatabaseConstantProvider cp = new DatabaseConstantProvider(11, variationName);
-        factory.init(cp, RecoilConstants.NREGION);
+        factory.init(cp, RtrkConstants.NREGION);
         // register output banks for drop option        
-        this.registerOutputBank("RECOIL::hits");
-        this.registerOutputBank("RECOIL::clusters");
-        this.registerOutputBank("RECOIL::crosses");
+        this.registerOutputBank("RTRK::hits");
+        this.registerOutputBank("RTRK::clusters");
+        this.registerOutputBank("RTRK::crosses");
 
         LOGGER.log(Level.INFO, "--> recoil is ready...");
         return true;
@@ -57,9 +57,9 @@ public class RecoilEngine extends ReconstructionEngine {
     @Override
     public boolean processDataEventUser(DataEvent event) {
         
-        List<RecoilStrip>     strips = RecoilStrip.getStrips(event, factory, this.getConstantsManager());
-        List<RecoilCluster> clusters = RecoilCluster.createClusters(strips);
-        List<RecoilCross>    crosses = RecoilCross.createCrosses(clusters);
+        List<RtrkStrip>     strips = RtrkStrip.getStrips(event, factory, this.getConstantsManager());
+        List<RtrkCluster> clusters = RtrkCluster.createClusters(strips);
+        List<RtrkCross>    crosses = RtrkCross.createCrosses(clusters);
         
         this.writeHipoBanks(event, strips, clusters, crosses);
         
@@ -68,11 +68,11 @@ public class RecoilEngine extends ReconstructionEngine {
 
     
     private void writeHipoBanks(DataEvent de, 
-                                List<RecoilStrip>     strips, 
-                                List<RecoilCluster> clusters, 
-                                List<RecoilCross>    crosses){
+                                List<RtrkStrip>     strips, 
+                                List<RtrkCluster> clusters, 
+                                List<RtrkCross>    crosses){
 	    
-        DataBank bankS = de.createBank("RECOIL::hits", strips.size());
+        DataBank bankS = de.createBank("RTRK::hits", strips.size());
         for(int h = 0; h < strips.size(); h++){
             bankS.setShort("id",        h, (short) strips.get(h).getId());
             bankS.setByte("sector",     h,  (byte) strips.get(h).getDescriptor().getSector());
@@ -84,7 +84,7 @@ public class RecoilEngine extends ReconstructionEngine {
             bankS.setShort("clusterId", h, (short) strips.get(h).getClusterId());
         }
         
-        DataBank bankC = de.createBank("RECOIL::clusters", clusters.size());        
+        DataBank bankC = de.createBank("RTRK::clusters", clusters.size());        
         for(int c = 0; c < clusters.size(); c++){
             bankC.setShort("id",       c, (short) clusters.get(c).getId());
             bankC.setByte("sector",    c,  (byte) clusters.get(c).get(0).getDescriptor().getSector());
@@ -102,7 +102,7 @@ public class RecoilEngine extends ReconstructionEngine {
             bankC.setShort("status",   c, (short) clusters.get(c).getStatus()); 
         }       
         
-        DataBank bankX = de.createBank("RECOIL::crosses", crosses.size());        
+        DataBank bankX = de.createBank("RTRK::crosses", crosses.size());        
         for(int c = 0; c < crosses.size(); c++){
             bankX.setShort("id",       c, (short) crosses.get(c).getId());
             bankX.setByte("sector",    c,  (byte) crosses.get(c).getSector());
@@ -153,14 +153,14 @@ public class RecoilEngine extends ReconstructionEngine {
     
     public static void main (String arg[])  {
 
-        RecoilEngine engine = new RecoilEngine();
+        RtrkEngine engine = new RtrkEngine();
         engine.init();
 
         String input = "/Users/devita/urwell3d.hipo";
 
         DataGroup dg = new DataGroup(3, 2);
         String[] axes = {"x", "y"};
-        for(int il=0; il<RecoilConstants.NLAYER; il++) {
+        for(int il=0; il<RtrkConstants.NLAYER; il++) {
             int layer = il+1;
             H1F h1 = new H1F("hiEnergyL"+layer, "Cluster Energy (eV)", "Counts", 100, 0., 1500.);         
             h1.setOptStat(Integer.parseInt("1111")); 
@@ -189,7 +189,7 @@ public class RecoilEngine extends ReconstructionEngine {
                 DataBank bankMC = event.getBank("MC::True");
                 for(int i=0; i<bankMC.rows(); i++) {
                     int detector = bankMC.getByte("detector",i);  
-                    if(detector==DetectorType.RECOIL.getDetectorId()) {
+                    if(detector==DetectorType.RTRK.getDetectorId()) {
                         xtrue = bankMC.getFloat("avgX",i);
                         ytrue = bankMC.getFloat("avgY",i);
                         ztrue = bankMC.getFloat("avgZ",i);
@@ -200,8 +200,8 @@ public class RecoilEngine extends ReconstructionEngine {
             }
             mc.rotateY(-Math.toRadians(25.0));
             System.out.println(mc);
-            if(event.hasBank("RECOIL::clusters")) {
-                DataBank bankC = event.getBank("RECOIL::clusters");
+            if(event.hasBank("RTRK::clusters")) {
+                DataBank bankC = event.getBank("RTRK::clusters");
                 bankC.show();
                 for(int i=0; i<bankC.rows(); i++) {
                     int    layer  = bankC.getByte("layer", i);
@@ -211,8 +211,8 @@ public class RecoilEngine extends ReconstructionEngine {
                     dg.getH1F("hiTimeL"+layer).fill(time);
                 }
             }
-            if(event.hasBank("RECOIL::crosses")) {
-                DataBank bankX = event.getBank("RECOIL::crosses");
+            if(event.hasBank("RTRK::crosses")) {
+                DataBank bankX = event.getBank("RTRK::crosses");
                 bankX.show();
                 for(int i=0; i<bankX.rows(); i++) {
                     double x = bankX.getFloat("x", i);
@@ -228,11 +228,11 @@ public class RecoilEngine extends ReconstructionEngine {
         }
         reader.close();
         
-        for(int i=0; i<RecoilConstants.NLAYER; i++) {
-           RecoilEngine.fitGauss(dg.getH1F("hiTimeL"+(i+1)));
-           RecoilEngine.fitGauss(dg.getH1F("hiSpace"+axes[i]));
+        for(int i=0; i<RtrkConstants.NLAYER; i++) {
+           RtrkEngine.fitGauss(dg.getH1F("hiTimeL"+(i+1)));
+           RtrkEngine.fitGauss(dg.getH1F("hiSpace"+axes[i]));
         }
-        JFrame frame = new JFrame("recoil Reconstruction");
+        JFrame frame = new JFrame("rtrk Reconstruction");
         frame.setSize(800,800);
         EmbeddedCanvas canvas = new EmbeddedCanvas();
         canvas.draw(dg);

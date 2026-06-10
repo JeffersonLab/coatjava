@@ -1,4 +1,4 @@
-package org.jlab.detector.geant4.v2.recoil;
+package org.jlab.detector.geant4.v2.recoil.trk;
 
 import eu.mihosoft.vrl.v3d.Vector3d;
 import java.util.List;
@@ -18,9 +18,9 @@ import org.jlab.utils.groups.IndexedList;
  * 
  * @author bondi, niccolai
  */
-public final class RecoilStripFactory {
+public final class RtrkStripFactory {
 
-    private RecoilGeant4Factory factory;
+    private RtrkGeant4Factory factory;
     private IndexedList<Line3D>  globalStrips = new IndexedList(3);
     private IndexedList<Line3D>  localStrips  = new IndexedList(3);
     private IndexedList<Plane3D> planeStrips  = new IndexedList(3);
@@ -29,16 +29,16 @@ public final class RecoilStripFactory {
     private int nChambers;
     private int nLayers;
     
-    public RecoilStripFactory() {
+    public RtrkStripFactory() {
     }
     
     /**
      * Create the strip factory based on constants from CCDB.
-     * Currently constants are defined in the RecoilConstants class. 
+     * Currently constants are defined in the RtrkConstants class. 
      * They will be moved to CCDB when finalized).
      * @param cp database provide
      */
-    public RecoilStripFactory(DatabaseConstantProvider cp) {
+    public RtrkStripFactory(DatabaseConstantProvider cp) {
         this.init(cp);
     }
     
@@ -52,12 +52,12 @@ public final class RecoilStripFactory {
    
     /**
      * Create the strip factory based on constants from CCDB.
-     * Currently constants are defined in the URWellConstants class.
+     * Currently constants are defined in the RtrkConstants class.
      * They will be moved to CCDB when finalized).
      * @param cp database provide
      * @param regions
      */
-    public RecoilStripFactory(DatabaseConstantProvider cp, int regions) {
+    public RtrkStripFactory(DatabaseConstantProvider cp, int regions) {
         this.init(cp, regions);
     }
     
@@ -67,11 +67,11 @@ public final class RecoilStripFactory {
      * @param regions
      */
     public void init(DatabaseConstantProvider cp, int regions) {
-        factory = new RecoilGeant4Factory(cp, regions);
-	nRegions  = Math.min(RecoilConstants.NMAXREGIONS, regions);
-	nSectors  = RecoilConstants.NSECTORS;
-	nChambers = RecoilConstants.NCHAMBERS;
-	nLayers   = RecoilConstants.NLAYERS;
+        factory = new RtrkGeant4Factory(cp, regions);
+	nRegions  = Math.min(RtrkConstants.NMAXREGIONS, regions);
+	nSectors  = RtrkConstants.NSECTORS;
+	nChambers = RtrkConstants.NCHAMBERS;
+	nLayers   = RtrkConstants.NLAYERS;
         this.fillStripLists();
 	//        this.fillPlaneLists();
     }
@@ -114,8 +114,8 @@ public final class RecoilStripFactory {
          * * number of strip in AB**
          */
 	
-	int nAB = (int) (2 * xHalf / RecoilConstants.PITCH);
-  	int nAC = (int) (2 * yHalf / RecoilConstants.PITCH);
+	int nAB = (int) (2 * xHalf / RtrkConstants.PITCH);
+  	int nAC = (int) (2 * yHalf / RtrkConstants.PITCH);
 
 	int nStrips = nAB + nAC;
 
@@ -190,9 +190,9 @@ public final class RecoilStripFactory {
 	    DY = -yHalf;
 	}
 	// ID of the strip
-	int nS =  (int) (DY / RecoilConstants.PITCH);	
+	int nS =  (int) (DY / RtrkConstants.PITCH);	
         int nCStrip = nS + (cStrip - 1);
-	double c = nCStrip * RecoilConstants.PITCH;
+	double c = nCStrip * RtrkConstants.PITCH;
 
         // Take 2 points in the strip straight line. They needs to define Line object 
         //u strips
@@ -307,9 +307,9 @@ public final class RecoilStripFactory {
 			 if ((layer) % 2 != 0) { //u strip
 			     DY = -yHalf;
 			 }
-			 int nS =  (int) (DY / RecoilConstants.PITCH);
+			 int nS =  (int) (DY / RtrkConstants.PITCH);
 			 int nCStrip = nS + (cStrip - 1);
-			 double c = nCStrip * RecoilConstants.PITCH;
+			 double c = nCStrip * RtrkConstants.PITCH;
 			 if (((layer) % 2 == 0 && c>-xHalf && c<xHalf)||((layer) % 2 != 0 && c>-yHalf && c<yHalf))
 			     {
 			 
@@ -339,7 +339,7 @@ public final class RecoilStripFactory {
     public Line3D toLocal(int sector, Line3D global) {
         Line3D local = new Line3D();
         local.copy(global);
-	local.rotateY((-1+sector*2)*Math.toRadians(1.5*RecoilConstants.HORIZONTHAL_OPENING_ANGLE+270));
+	local.rotateY((-1+sector*2)*Math.toRadians(1.5*RtrkConstants.HORIZONTHAL_OPENING_ANGLE+270));
         
         return local;
     }
@@ -367,9 +367,9 @@ public final class RecoilStripFactory {
 			 if (layer % 2 != 0) { //u strip
 			     DY = -yHalf;
 			 }
-			 int nS =  (int) (DY / RecoilConstants.PITCH);
+			 int nS =  (int) (DY / RtrkConstants.PITCH);
 			 int nCStrip = nS + (cStrip - 1);
-			 double c = nCStrip * RecoilConstants.PITCH;
+			 double c = nCStrip * RtrkConstants.PITCH;
 			 if ((layer % 2 == 0 && c>-xHalf && c<xHalf)||(layer % 2 != 0 && c>-yHalf && c<yHalf))
 			     {
 				 Plane3D plane = this.createPLane(sector, region, layer, strip);
@@ -439,11 +439,11 @@ public final class RecoilStripFactory {
     public static void main(String[] args) {
         DatabaseConstantProvider cp = new DatabaseConstantProvider(11, "default");
 
-        RecoilConstants.connect(cp);
+        RtrkConstants.connect(cp);
 
-        RecoilGeant4Factory factory = new RecoilGeant4Factory(cp,1);
+        RtrkGeant4Factory factory = new RtrkGeant4Factory(cp,1);
 
-        RecoilStripFactory factory2 = new RecoilStripFactory(cp,1);
+        RtrkStripFactory factory2 = new RtrkStripFactory(cp,1);
   
 	//        Plane3D plane = factory2.getPlane(6, 1, 200);
         //System.out.println(plane.toString());

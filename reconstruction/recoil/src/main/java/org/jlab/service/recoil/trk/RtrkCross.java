@@ -1,4 +1,4 @@
-package org.jlab.service.recoil;
+package org.jlab.service.recoil.trk;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,7 +10,7 @@ import org.jlab.geom.prim.Vector3D;
  * recoil V-W clusters
  * @author devita, niccolai
  */
-public class RecoilCross {
+public class RtrkCross {
 
     private int id;
     
@@ -28,7 +28,8 @@ public class RecoilCross {
     
     
     
-    public RecoilCross(RecoilCluster c1, RecoilCluster c2) {
+    
+    public RtrkCross(RtrkCluster c1, RtrkCluster c2) {
         
 	Vector3D  dir = c1.getLine().direction().cross(c2.getLine().direction());
         Plane3D plane = new Plane3D(c1.getLine().origin(), c1.getLine().direction().cross(dir));
@@ -36,7 +37,7 @@ public class RecoilCross {
         int nint = plane.intersectionSegment(c2.getLine(), point);
         if(nint==1) {
             this.sector = c1.getSector();
-            this.region = (c1.getLayer()-1)/(RecoilConstants.NLAYER/RecoilConstants.NREGION)+1;
+            this.region = (c1.getLayer()-1)/(RtrkConstants.NLAYER/RtrkConstants.NREGION)+1;
             this.cross  = point;
             this.energy = c1.getEnergy() + c2.getEnergy();
             this.time   = (c1.getTime() + c2.getTime())/2;
@@ -89,20 +90,20 @@ public class RecoilCross {
         return status;
     }
 
-    public static List<RecoilCross> createCrosses(List<RecoilCluster> clusters) {
+    public static List<RtrkCross> createCrosses(List<RtrkCluster> clusters) {
         
-        List<RecoilCross> crosses = new ArrayList<>();
+        List<RtrkCross> crosses = new ArrayList<>();
         
-        for(int is=0; is<RecoilConstants.NSECTOR; is++) {
-            for(int ir=0; ir<RecoilConstants.NREGION; ir++) {
-                List<RecoilCluster> clustersV = RecoilCluster.getClusters(clusters, is+1, (RecoilConstants.NLAYER/RecoilConstants.NREGION)*ir+1);
-                List<RecoilCluster> clustersW = RecoilCluster.getClusters(clusters, is+1, (RecoilConstants.NLAYER/RecoilConstants.NREGION)*ir+2);
+        for(int is=0; is<RtrkConstants.NSECTOR; is++) {
+            for(int ir=0; ir<RtrkConstants.NREGION; ir++) {
+                List<RtrkCluster> clustersV = RtrkCluster.getClusters(clusters, is+1, (RtrkConstants.NLAYER/RtrkConstants.NREGION)*ir+1);
+                List<RtrkCluster> clustersW = RtrkCluster.getClusters(clusters, is+1, (RtrkConstants.NLAYER/RtrkConstants.NREGION)*ir+2);
                 
-                for(RecoilCluster v : clustersV) {
-                    for(RecoilCluster w : clustersW) {
+                for(RtrkCluster v : clustersV) {
+                    for(RtrkCluster w : clustersW) {
                         
                         if(v.getChamber()==w.getChamber()) {
-                            RecoilCross cross = new RecoilCross(v, w);
+                            RtrkCross cross = new RtrkCross(v, w);
                             if(cross.point()!=null) crosses.add(cross);
                             cross.setId(crosses.size());
                         }

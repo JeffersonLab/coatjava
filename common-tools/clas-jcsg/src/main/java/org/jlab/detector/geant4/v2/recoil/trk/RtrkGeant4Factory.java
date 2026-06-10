@@ -1,4 +1,4 @@
-package org.jlab.detector.geant4.v2.recoil;
+package org.jlab.detector.geant4.v2.recoil.trk;
 
 import eu.mihosoft.vrl.v3d.Vector3d;
 import org.jlab.detector.geant4.v2.Geant4Factory;
@@ -16,30 +16,30 @@ import org.jlab.geometry.prim.Line3d;
 import org.jlab.geometry.prim.Straight;
 
 /**
- * Generate GEANT4 volume for the RECOIL detector
+ * Generate GEANT4 volume for the RECOIL tracker
  * 
  * @author bondi, niccolai
  */
-public final class RecoilGeant4Factory extends Geant4Factory {
+public final class RtrkGeant4Factory extends Geant4Factory {
     
-    private int nRegions  = RecoilConstants.NREGIONS;
-    private int nSectors  = RecoilConstants.NSECTORS;
-    private int nChambers = RecoilConstants.NCHAMBERS;
+    private int nRegions  = RtrkConstants.NREGIONS;
+    private int nSectors  = RtrkConstants.NSECTORS;
+    private int nChambers = RtrkConstants.NCHAMBERS;
     
      /**
      * Create the URWELL full geometry
      * @param cp
      * @param nRegions
      */
-    public RecoilGeant4Factory( DatabaseConstantProvider cp, int nRegions) {
-        RecoilConstants.connect(cp );
+    public RtrkGeant4Factory( DatabaseConstantProvider cp, int nRegions) {
+        RtrkConstants.connect(cp );
         this.init(cp, nRegions);
     }
     
     public void init(DatabaseConstantProvider cp, int regions ) {
    
         motherVolume = new G4World("root");
-            nRegions = Math.min(RecoilConstants.NMAXREGIONS, regions);
+            nRegions = Math.min(RtrkConstants.NMAXREGIONS, regions);
 
         for (int iregion = 0; iregion <regions ; iregion++) {
             for (int isector = 0; isector < nSectors; isector++) {
@@ -57,8 +57,8 @@ public final class RecoilGeant4Factory extends Geant4Factory {
      */
     public double getChamberThickness(){
         double chamberT =0;
-         for (int i=0; i< RecoilConstants.CHAMBERVOLUMESTHICKNESS.length; i++ )
-             chamberT+=RecoilConstants.CHAMBERVOLUMESTHICKNESS[i];
+         for (int i=0; i< RtrkConstants.CHAMBERVOLUMESTHICKNESS.length; i++ )
+             chamberT+=RtrkConstants.CHAMBERVOLUMESTHICKNESS[i];
          return chamberT;
     }
     
@@ -79,15 +79,15 @@ public final class RecoilGeant4Factory extends Geant4Factory {
 	int i=iregion;
         double[] SectorDimensions = new double[5];
 
-	SectorDimensions[0] = RecoilConstants.WIDTH[i]/2+1.;
-	SectorDimensions[1] = RecoilConstants.HEIGHT[i]/2+1.;
+	SectorDimensions[0] = RtrkConstants.WIDTH[i]/2+1.;
+	SectorDimensions[1] = RtrkConstants.HEIGHT[i]/2+1.;
 	SectorDimensions[2] = (this.getChamberThickness())/2.+1;
 	
-	/*	SectorDimensions[0] = (this.getChamberThickness())/2. + RecoilConstants.ZENLARGEMENT ;
-	SectorDimensions[1] = RecoilConstants.SECTORHEIGHT/2 + RecoilConstants.YENLARGEMENT ;
-	SectorDimensions[2] = RecoilConstants.DX0CHAMBER0 + RecoilConstants.XENLARGEMENT ;
-	SectorDimensions[3] = (SectorDimensions[1]*2)*Math.tan(Math.toRadians(RecoilConstants.THOPEN/2))+SectorDimensions[2];  
-	SectorDimensions[4] = Math.toRadians(RecoilConstants.THTILT);  
+	/*	SectorDimensions[0] = (this.getChamberThickness())/2. + RtrkConstants.ZENLARGEMENT ;
+	SectorDimensions[1] = RtrkConstants.SECTORHEIGHT/2 + RtrkConstants.YENLARGEMENT ;
+	SectorDimensions[2] = RtrkConstants.DX0CHAMBER0 + RtrkConstants.XENLARGEMENT ;
+	SectorDimensions[3] = (SectorDimensions[1]*2)*Math.tan(Math.toRadians(RtrkConstants.THOPEN/2))+SectorDimensions[2];  
+	SectorDimensions[4] = Math.toRadians(RtrkConstants.THTILT);  
         */
 	
         return SectorDimensions;
@@ -108,9 +108,9 @@ public final class RecoilGeant4Factory extends Geant4Factory {
 	int ir=iregion;
         Vector3d vCenter = new Vector3d(0, 0, 0);
         
-	vCenter.x = (-1+is*2)*(RecoilConstants.RADIUS[iregion])*Math.sin(Math.toRadians(1.5*RecoilConstants.HORIZONTHAL_OPENING_ANGLE));
+	vCenter.x = (-1+is*2)*(RtrkConstants.RADIUS[iregion])*Math.sin(Math.toRadians(1.5*RtrkConstants.HORIZONTHAL_OPENING_ANGLE));
 	vCenter.y = 0;
-	vCenter.z =RecoilConstants.RADIUS[iregion]*Math.cos(Math.toRadians(1.5*RecoilConstants.HORIZONTHAL_OPENING_ANGLE));
+	vCenter.z =RtrkConstants.RADIUS[iregion]*Math.cos(Math.toRadians(1.5*RtrkConstants.HORIZONTHAL_OPENING_ANGLE));
         return vCenter;
     }
     
@@ -133,28 +133,28 @@ public final class RecoilGeant4Factory extends Geant4Factory {
 
         Vector3d vCenter = this.getCenterCoordinate(isector,iregion);
                 // Sector construction
-	/*        Geant4Basic sectorVolume = new G4Trap("region_Recoil_" + (iregion + 1) + "_s" + (isector + 1),
+	/*        Geant4Basic sectorVolume = new G4Trap("region_Rtrk_" + (iregion + 1) + "_s" + (isector + 1),
                 regionDZ, -regionThilt, Math.toRadians(90.0),
                 regionDY, regionDX0, regionDX1, 0.0,
                 regionDY, regionDX0, regionDX1, 0.0);*/
 
-	Geant4Basic sectorVolume = new G4Box("region_recoil_" + (iregion + 1) + "_s" + (isector + 1),hlx,hly,hlz);
+	Geant4Basic sectorVolume = new G4Box("region_rtrk_" + (iregion + 1) + "_s" + (isector + 1),hlx,hly,hlz);
   	/*       sectorVolume.rotate("yxz", 0.0, regionThilt, Math.toRadians(90.0 - isector * 60.0));*/
-	sectorVolume.rotate("yxz",(-1+isector*2)*Math.toRadians(1.5*RecoilConstants.HORIZONTHAL_OPENING_ANGLE+270),0,0);
+	sectorVolume.rotate("yxz",(-1+isector*2)*Math.toRadians(1.5*RtrkConstants.HORIZONTHAL_OPENING_ANGLE+270),0,0);
         sectorVolume.translate(vCenter.x, vCenter.y, vCenter.z);
         sectorVolume.setId(isector + 1, iregion +1, 0, 0);
 	
                // Chambers construction
         for (int ich = 0; ich < Nchambers; ich++) {
 
-	    //           double y_chamber = (2*ich+1)*(RecoilConstants.SECTORHEIGHT/RecoilConstants.NCHAMBERS/2+0.05);
+	    //           double y_chamber = (2*ich+1)*(RtrkConstants.SECTORHEIGHT/RtrkConstants.NCHAMBERS/2+0.05);
 
             Geant4Basic chamberVolume = this.createChamber(isector, iregion, ich);
 
                 chamberVolume.setName("rg" + (iregion + 1) + "_s" + (isector + 1) + "_c" + (ich +1));
              
             chamberVolume.setMother(sectorVolume);
-            //chamberVolume.translate(0.0,y_chamber-RecoilConstants.SECTORHEIGHT/2,0. );
+            //chamberVolume.translate(0.0,y_chamber-RtrkConstants.SECTORHEIGHT/2,0. );
             chamberVolume.setId(isector + 1, iregion + 1, ich +1, 0);
          }
                
@@ -193,17 +193,17 @@ public final class RecoilGeant4Factory extends Geant4Factory {
         //double daughterDZ = chamberDim[2];
         
        
-        for (int i=0; i< RecoilConstants.CHAMBERVOLUMESTHICKNESS.length; i++ ){
+        for (int i=0; i< RtrkConstants.CHAMBERVOLUMESTHICKNESS.length; i++ ){
  
-            if(i==0) {daughterVolumeZ = RecoilConstants.CHAMBERVOLUMESTHICKNESS[i]/2 - (this.getChamberThickness())/2.;
-             } else daughterVolumeZ += RecoilConstants.CHAMBERVOLUMESTHICKNESS[i-1]/2 + RecoilConstants.CHAMBERVOLUMESTHICKNESS[i]/2;
+            if(i==0) {daughterVolumeZ = RtrkConstants.CHAMBERVOLUMESTHICKNESS[i]/2 - (this.getChamberThickness())/2.;
+             } else daughterVolumeZ += RtrkConstants.CHAMBERVOLUMESTHICKNESS[i-1]/2 + RtrkConstants.CHAMBERVOLUMESTHICKNESS[i]/2;
             
-            //daughterVolumeY = -daughterVolumeZ *Math.tan(Math.toRadians(RecoilConstants.THTILT));
+            //daughterVolumeY = -daughterVolumeZ *Math.tan(Math.toRadians(RtrkConstants.THTILT));
           
             
-	    Geant4Basic daughterVolume = new G4Box("daughter_volume", daughterDX, daughterDY, RecoilConstants.CHAMBERVOLUMESTHICKNESS[i]/2);
+	    Geant4Basic daughterVolume = new G4Box("daughter_volume", daughterDX, daughterDY, RtrkConstants.CHAMBERVOLUMESTHICKNESS[i]/2);
             
-	    daughterVolume.setName("rg" + (iRegion + 1) + "_s" + (iSector + 1) + "_c" + (iChamber +1) +"_"+RecoilConstants.CHAMBERVOLUMESNAME[i] );
+	    daughterVolume.setName("rg" + (iRegion + 1) + "_s" + (iSector + 1) + "_c" + (iChamber +1) +"_"+RtrkConstants.CHAMBERVOLUMESNAME[i] );
             
 	    daughterVolume.setMother(chamberVolume);
 	    daughterVolume.setPosition(0.0, daughterVolumeY,daughterVolumeZ);
@@ -217,8 +217,8 @@ public final class RecoilGeant4Factory extends Geant4Factory {
         
         double[] chamber_Dimensions = new double[5];
         int i = iregion;
-	chamber_Dimensions[0] = RecoilConstants.WIDTH[i]/2+0.1;
-	chamber_Dimensions[1] = RecoilConstants.HEIGHT[i]/2+0.1;
+	chamber_Dimensions[0] = RtrkConstants.WIDTH[i]/2+0.1;
+	chamber_Dimensions[1] = RtrkConstants.HEIGHT[i]/2+0.1;
 	chamber_Dimensions[2] = (this.getChamberThickness())/2. + 0.1;
 
         return chamber_Dimensions;
@@ -235,17 +235,17 @@ public final class RecoilGeant4Factory extends Geant4Factory {
 	int i = iregion;
         double[] chamber_daughter_Dimensions = new double[3];
         
-	/*	chamber_daughter_Dimensions[0] = RecoilConstants.SECTORHEIGHT/RecoilConstants.NCHAMBERS/2 ;
-	chamber_daughter_Dimensions[1] = (ichamber*RecoilConstants.SECTORHEIGHT/RecoilConstants.NCHAMBERS)
-	    * Math.tan(Math.toRadians(RecoilConstants.THOPEN/2.))
-	    + RecoilConstants.DX0CHAMBER0 ;
+	/*	chamber_daughter_Dimensions[0] = RtrkConstants.SECTORHEIGHT/RtrkConstants.NCHAMBERS/2 ;
+	chamber_daughter_Dimensions[1] = (ichamber*RtrkConstants.SECTORHEIGHT/RtrkConstants.NCHAMBERS)
+	    * Math.tan(Math.toRadians(RtrkConstants.THOPEN/2.))
+	    + RtrkConstants.DX0CHAMBER0 ;
 	
-	chamber_daughter_Dimensions[2] = (RecoilConstants.SECTORHEIGHT/RecoilConstants.NCHAMBERS)
-	    * Math.tan(Math.toRadians(RecoilConstants.THOPEN/2.))+chamber_daughter_Dimensions[1];
+	chamber_daughter_Dimensions[2] = (RtrkConstants.SECTORHEIGHT/RtrkConstants.NCHAMBERS)
+	    * Math.tan(Math.toRadians(RtrkConstants.THOPEN/2.))+chamber_daughter_Dimensions[1];
 	    */
 
-	chamber_daughter_Dimensions[0] = RecoilConstants.WIDTH[i]/2;
-	chamber_daughter_Dimensions[1] = RecoilConstants.HEIGHT[i]/2;
+	chamber_daughter_Dimensions[0] = RtrkConstants.WIDTH[i]/2;
+	chamber_daughter_Dimensions[1] = RtrkConstants.HEIGHT[i]/2;
 	
         return chamber_daughter_Dimensions;
     }
@@ -285,7 +285,7 @@ public final class RecoilGeant4Factory extends Geant4Factory {
         int r = region;
         int s = sector;
 
-        String volName = "region_Recoil_" + r + "_s" + s;
+        String volName = "region_Rtrk_" + r + "_s" + s;
         return this.getAllVolumes().stream()
                       .filter(volume -> (volume.getName().contains(volName)))
                       .findAny()
@@ -295,9 +295,9 @@ public final class RecoilGeant4Factory extends Geant4Factory {
     public static void main(String[] args) {
         DatabaseConstantProvider cp = new DatabaseConstantProvider(11, "default");
 
-        RecoilConstants.connect(cp);
+        RtrkConstants.connect(cp);
         
-        RecoilGeant4Factory factory = new RecoilGeant4Factory(cp, 1);
+        RtrkGeant4Factory factory = new RtrkGeant4Factory(cp, 1);
             
         factory.getAllVolumes().forEach(volume -> {
             System.out.println(volume.gemcString());
