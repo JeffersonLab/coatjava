@@ -12,6 +12,7 @@ import org.jlab.io.base.DataEvent;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.geom.base.Detector;
 import org.jlab.geom.detector.alert.ATOF.AlertTOFFactory;
+import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.rec.atof.banks.RecoBankWriter;
 import org.jlab.rec.atof.cluster.ATOFCluster;
 import org.jlab.rec.atof.cluster.ClusterFinder;
@@ -94,25 +95,10 @@ public class ATOFEngine extends ReconstructionEngine {
             atofTimeOffsetsTable       = this.getConstantsManager().getConstants(newRun, "/calibration/alert/atof/time_offsets");
             Run = newRun;
         }
-        
-        ////Do we need to read the event vx,vy,vz?
-        ////If not, this part can be moved in the initialization of the engine.
-        //double eventVx=0,eventVy=0,eventVz=0; //They should be in CM
-        ////Track Projector Initialisation with b field
-        //Swim swim = new Swim();
-        //float magField[] = new float[3];
-        //swim.BfieldLab(eventVx, eventVy, eventVz, magField); 
-        //this.b = Math.sqrt(Math.pow(magField[0],2) + Math.pow(magField[1],2) + Math.pow(magField[2],2));
-
-        ///// \todo move this to ALERTEngine
-        //TrackProjector projector = new TrackProjector();
-        //projector.setB(this.b);
-        //projector.projectTracks(event);
-        //rbc.appendMatchBanks(event, projector.getProjections());
 
         //Hit finder init
         HitFinder hitfinder = new HitFinder();
-        hitfinder.findHits(event, ATOF, startTime, atofTimeOffsetsTable, atofEffectiveVelocityTable);
+        hitfinder.findHits(event, ATOF, startTime, atofTimeOffsetsTable, atofEffectiveVelocityTable, Run);
         ArrayList<ATOFHit> WedgeHits = hitfinder.getWedgeHits();
         ArrayList<BarHit> BarHits = hitfinder.getBarHits();
         //Exit if hit lists are empty
@@ -134,17 +120,15 @@ public class ATOFEngine extends ReconstructionEngine {
 
     @Override
     public void detectorChanged(int run) {
-        // FIXME:  move geometry initialization here
+        AlertTOFFactory factory = new AlertTOFFactory();
+        DatabaseConstantProvider cp = new DatabaseConstantProvider(run, "default");
+        this.ATOF = factory.createDetectorCLAS(cp);
     }
 
     @Override
     public boolean init() {
         rbc = new RecoBankWriter();
 
-        AlertTOFFactory factory = new AlertTOFFactory();
-        DatabaseConstantProvider cp = new DatabaseConstantProvider(11, "default");
-        this.ATOF = factory.createDetectorCLAS(cp);
-        
         Map<String, Integer> tableMap = new HashMap<>();
         tableMap.put("/calibration/alert/atof/effective_velocity", 3);
         tableMap.put("/calibration/alert/atof/time_walk", 4);
@@ -165,5 +149,8 @@ public class ATOFEngine extends ReconstructionEngine {
     }
 
     public static void main(String arg[]) {
+
     }
 }
+    
+
