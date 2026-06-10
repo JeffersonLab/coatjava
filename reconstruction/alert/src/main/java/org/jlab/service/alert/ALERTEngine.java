@@ -574,8 +574,9 @@ public class ALERTEngine extends ReconstructionEngine {
                     double doca = hitBank.getDouble("doca", hit_row);
                     double time = hitBank.getDouble("time", hit_row);
                     double tot = hitBank.getDouble("timeOverThreshold", hit_row);
-                    // warning : adc is the calibrated one, we need the adc for the Kalman filter
-                    Hit hit = new Hit(id, superlayer, layer, wire, doca, adc, time);
+                    // use raw adc in the Kalman Filter
+                    double gainCorr = ahdcAdcGainsTable.getDoubleValue("gainCorr", 1, 10*superlayer+layer, wire);
+                    Hit hit = new Hit(id, superlayer, layer, wire, doca, adc/gainCorr, time);
                     hit.setWirePosition(AHDC);
                     hit.setTrackId(trackid);
                     hit.setADC(adc);
