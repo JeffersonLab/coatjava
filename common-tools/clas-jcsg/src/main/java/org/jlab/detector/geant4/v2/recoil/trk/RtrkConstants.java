@@ -1,13 +1,13 @@
-package org.jlab.detector.geant4.v2.recoil;
+package org.jlab.detector.geant4.v2.recoil.trk;
 
 
 import org.jlab.detector.calib.utils.DatabaseConstantProvider; 
 import org.jlab.geom.prim.Point3D;
 
 
-public class RecoilConstants {
+public class RtrkConstants {
 
-    private final static String CCDBPATH = "/geometry/recoil/";
+    private final static String CCDBPATH = "/geometry/recoil/trk/";
     
     public final static int NMAXREGIONS = 3;    //max number of regions 
     public final static int NREGIONS    = 3;    //number of regions 
