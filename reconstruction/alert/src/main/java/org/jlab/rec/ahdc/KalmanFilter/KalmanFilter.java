@@ -153,7 +153,7 @@ public class KalmanFilter {
 			    double chi2 = 0;
 			    for (Hit hit : AHDC_hits) {
                     sum_residuals += hit.getResidual();
-                    chi2 += Math.pow(hit.getResidual(),2)/hit.MeasurementNoiseMatrix().getEntry(0,0);
+                    chi2 += Math.pow(hit.getResidual(),2)/hit.getMeasurementNoiseMatrix().getEntry(0,0);
 			    }
 			    track.set_sum_residuals(sum_residuals);
 			    track.set_chi2(chi2/(AHDC_hits.size()-3));

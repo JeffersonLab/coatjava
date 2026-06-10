@@ -193,12 +193,12 @@ public class Hit implements Comparable<Hit>, KFHit {
 	}
 
 	@Override
-	public RealVector MeasurementVector() {
+	public RealVector getMeasurementVector() {
 		return new ArrayRealVector(new double[]{this.doca});
 	}
 
 	@Override
-    public RealMatrix MeasurementNoiseMatrix() {
+    public RealMatrix getMeasurementNoiseMatrix() {
 		double mean_error = 0.471; // mm (no difference between adc and time)
 		double error_on_adc = (1.15146*raw_adc + 437.63)/(3.21187*raw_adc + 878.855); // mm
 		double error_on_time = (0.4423*time + 13.7215)/(0.846038*time + 31.9867); // mm
@@ -210,14 +210,14 @@ public class Hit implements Comparable<Hit>, KFHit {
 
 	// Projection function
 	@Override
-	public RealVector ProjectionFunction(RealVector x) {
+	public RealVector getProjectionFunction(RealVector x) {
 		double d = this.distance(new Point3D(x.getEntry(0), x.getEntry(1), x.getEntry(2)));
 		return MatrixUtils.createRealVector(new double[]{d});
 	}
 
 	// Jacobian matrix of the measurement with respect to (x, y, z, px, py, pz)
 	@Override
-	public RealMatrix ProjectionMatrix(RealVector x) {
+	public RealMatrix getProjectionMatrix(RealVector x) {
 
 		double ddocadx  = partialProjectionMatrix(x, 0);
 		double ddocady  = partialProjectionMatrix(x, 1);
@@ -238,8 +238,8 @@ public class Hit implements Comparable<Hit>, KFHit {
 		x_plus.setEntry(i, x_plus.getEntry(i) + h);
 		x_minus.setEntry(i, x_minus.getEntry(i) - h);
 
-		double doca_plus  = this.ProjectionFunction(x_plus).getEntry(0);
-		double doca_minus = this.ProjectionFunction(x_minus).getEntry(0);
+		double doca_plus  = this.getProjectionFunction(x_plus).getEntry(0);
+		double doca_minus = this.getProjectionFunction(x_minus).getEntry(0);
 
 		return (doca_plus - doca_minus) / (2 * h);
 	}

@@ -29,12 +29,12 @@ public class RadialKFHit implements KFHit {
 	}
 
 	@Override
-	public RealVector MeasurementVector() {
+	public RealVector getMeasurementVector() {
 		return new ArrayRealVector(new double[] {this.r, this.phi, this.z});
 	}
 
 	@Override
-	public RealMatrix MeasurementNoiseMatrix() {
+	public RealMatrix getMeasurementNoiseMatrix() {
 		return measurementNoise;
 	}
 
@@ -54,7 +54,7 @@ public class RadialKFHit implements KFHit {
 	
 	// Projection function
 	@Override
-	public RealVector ProjectionFunction(RealVector x) {
+	public RealVector getProjectionFunction(RealVector x) {
 
 		double xx = x.getEntry(0);
 		double yy = x.getEntry(1);
@@ -68,7 +68,7 @@ public class RadialKFHit implements KFHit {
 
 	// Jacobian matrix of the measurement for the beamline with respect to (x, y, z, px, py, pz)
 	@Override
-	public RealMatrix ProjectionMatrix(RealVector x) {
+	public RealMatrix getProjectionMatrix(RealVector x) {
 
 		double xx = x.getEntry(0);
 		double yy = x.getEntry(1);

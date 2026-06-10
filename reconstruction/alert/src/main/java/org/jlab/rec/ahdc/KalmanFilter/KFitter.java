@@ -85,11 +85,11 @@ public class KFitter {
 	}
 
 	public void correct(KFHit hit) {
-        RealVector z = hit.MeasurementVector();
-		RealVector h = hit.ProjectionFunction(stateEstimation);
+        RealVector z = hit.getMeasurementVector();
+		RealVector h = hit.getProjectionFunction(stateEstimation);
 
-		RealMatrix measurementNoise = hit.MeasurementNoiseMatrix();
-		RealMatrix measurementMatrix = hit.ProjectionMatrix(stateEstimation);
+		RealMatrix measurementNoise = hit.getMeasurementNoiseMatrix();
+		RealMatrix measurementMatrix = hit.getProjectionMatrix(stateEstimation);
 		RealMatrix measurementMatrixT = measurementMatrix.transpose();
 
 		// S = H * P(k) * H' + R
