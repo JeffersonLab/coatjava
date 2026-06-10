@@ -141,6 +141,8 @@ public class ALERTEngine extends ReconstructionEngine {
     @Override
     public void detectorChanged(int run) {
         DatabaseConstantProvider cp = new DatabaseConstantProvider(run, "default");
+        cp.loadTable("/geometry/alert/ahdc/layer_alignment");
+        cp.loadTable("/geometry/alert/ahdc/wire_alignment");
         ATOF = (new AlertTOFFactory()).createDetectorCLAS(cp);
         AHDC = (new AlertDCFactory()).createDetectorCLAS(cp);
     }

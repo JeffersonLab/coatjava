@@ -30,7 +30,7 @@ import org.jlab.detector.pulse.ModeAHDC;
 public class AHDCEngine extends ReconstructionEngine {
     static final Logger LOGGER = Logger.getLogger(AHDCEngine.class.getName());
 
-    private AlertDCDetector factory = null;
+    private AlertDCDetector AHDCdet = null;
     private ModeAHDC ahdcExtractor = new ModeAHDC();
 
     // AHDC calibration tables (instance-level, refreshed on run change)
@@ -46,7 +46,10 @@ public class AHDCEngine extends ReconstructionEngine {
 
     @Override
     public void detectorChanged(int run) {
-        factory = (new AlertDCFactory()).createDetectorCLAS(new DatabaseConstantProvider(run,"default"));
+        DatabaseConstantProvider cp = new DatabaseConstantProvider(run, "default");
+        cp.loadTable("/geometry/alert/ahdc/layer_alignment");
+        cp.loadTable("/geometry/alert/ahdc/wire_alignment");
+        AHDCdet = (new AlertDCFactory()).createDetectorCLAS(cp);
     }
 
     @Override
@@ -90,7 +93,7 @@ public class AHDCEngine extends ReconstructionEngine {
 
         if (event.hasBank("AHDC::adc")) {
             boolean simulation = event.hasBank("MC::Particle");
-            HitReader hitReader = new HitReader(event, factory, simulation,
+            HitReader hitReader = new HitReader(event, AHDCdet, simulation,
                     ahdcRawHitCutsTable, ahdcTimeOffsetsTable, ahdcTimeToDistanceWireTable,
                     ahdcTimeOverThresholdTable, ahdcAdcGainsTable);
             ArrayList<Hit> AHDC_Hits = hitReader.get_AHDCHits();
