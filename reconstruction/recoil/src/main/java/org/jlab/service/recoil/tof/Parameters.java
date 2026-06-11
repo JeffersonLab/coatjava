@@ -1,5 +1,4 @@
-package org.jlab.rec.recoil.tof;
-import org.jlab.detector.geant4.v2.recoil.tof.RTOFConstants;
+package org.jlab.service.recoil.tof;
 
 /**
  *

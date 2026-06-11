@@ -2,18 +2,10 @@ package org.jlab.detector.geant4.v2.recoil.trk;
 
 import eu.mihosoft.vrl.v3d.Vector3d;
 import org.jlab.detector.geant4.v2.Geant4Factory;
-import org.jlab.detector.volume.G4Trap;
 import org.jlab.detector.volume.G4World;
 import org.jlab.detector.volume.G4Box;
-import org.jlab.detector.volume.G4Trd;
 import org.jlab.detector.volume.Geant4Basic;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
-import org.jlab.geom.prim.Line3D;
-import org.jlab.geom.prim.Point3D;
-import org.jlab.geom.prim.Plane3D;
-import org.jlab.geom.prim.Vector3D;
-import org.jlab.geometry.prim.Line3d;
-import org.jlab.geometry.prim.Straight;
 
 /**
  * Generate GEANT4 volume for the RECOIL tracker

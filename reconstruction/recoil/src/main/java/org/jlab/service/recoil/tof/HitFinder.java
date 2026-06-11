@@ -1,4 +1,4 @@
-package org.jlab.rec.recoil.tof;
+package org.jlab.service.recoil.tof;
 
 import java.util.ArrayList;
 import java.util.Collections;

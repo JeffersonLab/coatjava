@@ -1,8 +1,5 @@
-package org.jlab.rec.recoil.tof;
+package org.jlab.service.recoil.tof;
 
-import org.jlab.geom.base.*;
-import org.jlab.geom.prim.Point3D;
-import org.jlab.rec.recoil.tof.Parameters;
 import org.jlab.detector.geant4.v2.recoil.tof.RTOFConstants;
 
 /**
