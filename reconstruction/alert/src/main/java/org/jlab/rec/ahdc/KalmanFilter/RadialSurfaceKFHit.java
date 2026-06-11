@@ -5,7 +5,6 @@ import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
-import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
 
 /**
