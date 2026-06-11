@@ -1,11 +1,7 @@
-package org.jlab.rec.recoil.tof;
+package org.jlab.service.recoil.tof;
 
 import java.util.ArrayList;
 import org.jlab.io.base.DataEvent;
-import org.jlab.rec.recoil.tof.Parameters;
-import org.jlab.rec.recoil.tof.RTOFRawHit;
-import org.jlab.rec.recoil.tof.RTOFHit;
-import org.jlab.rec.recoil.tof.HitFinder;
 
 /**
  * The {@code ClusterFinder} class builds clusters in the recoil tof

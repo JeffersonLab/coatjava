@@ -1,12 +1,8 @@
-package org.jlab.rec.recoil.tof;
+package org.jlab.service.recoil.tof;
 
 import java.util.ArrayList;
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
-import org.jlab.rec.recoil.tof.RTOFCluster;
-import org.jlab.rec.recoil.tof.RTOFRawHit;
-import org.jlab.rec.recoil.tof.RTOFHit;
-
 
 /**
  * The {@code RecoBankWriter} writes the banks needed for the recoil tof

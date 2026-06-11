@@ -1,9 +1,6 @@
 package org.jlab.detector.geant4.v2.recoil.trk;
 
-
 import org.jlab.detector.calib.utils.DatabaseConstantProvider; 
-import org.jlab.geom.prim.Point3D;
-
 
 public class RtrkConstants {
 
