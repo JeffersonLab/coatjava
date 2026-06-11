@@ -99,7 +99,6 @@ public class Track {
 	public double get_chi2() {return chi2;}
 	public double get_sum_residuals() {return sum_residuals;}
 	// AHDC::track
-	public void set_dEdx(double _dEdx) { dEdx = _dEdx;}
 	public void set_p_drift(double _p_drift) { p_drift = _p_drift;}
 	public void set_path(double _path) { path = _path;}
 	public double get_dEdx() {
@@ -123,9 +122,7 @@ public class Track {
 	public int               get_trackId()       { return candidate.get_trackId(); }
 	public void              set_trackId(int id)  { candidate.set_trackId(id); }
 	public int               get_n_hits()        { return candidate.get_n_hits(); }
-	public void              set_n_hits(int n)    { candidate.set_n_hits(n); }
 	public int               get_sum_adc()       { return candidate.get_sum_adc(); }
-	public void              set_sum_adc(int s)   { candidate.set_sum_adc(s); }
 	public ArrayList<Hit>    getHits()            { return candidate.getHits(); }
 	public List<AHDCCluster> get_Clusters()       { return candidate.get_Clusters(); }
 	public List<InterCluster> getInterclusters()  { return candidate.getInterclusters(); }

@@ -29,8 +29,6 @@ public class TrackCandidate {
 	private final ArrayList<Hit> hits      = new ArrayList<>();
 
 	private int    trackId = -1; ///< id of the track
-	private int    n_hits  = 0;  ///< number of hits
-	private int    sum_adc = 0;  ///< sum of adc (adc)
 
 	/** Candidate specialization — defaults to AHDC-only; finders that build
 	 *  AHDC+ATOF candidates (GNN) override it via {@link #setType}. */
@@ -136,8 +134,6 @@ public class TrackCandidate {
 			hit.setTrackId(_trackId);
 		}
 	}
-	public void set_n_hits(int _n_hits) { n_hits = _n_hits;}
-	public void set_sum_adc(int _sum_adc) { sum_adc = _sum_adc;}
 	public int    get_trackId() {return trackId;}
 	public int    get_n_hits() {
     	if (hits == null) {
