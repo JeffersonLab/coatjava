@@ -22,12 +22,10 @@ public class RTOFConstants {
     public final static double LENGTH = (NROWS-1) * LONG_BAR_LENGTH + SHORT_BAR_LENGTH; 
     public final static double THICKNESS = 0.5; // cm
 
-
     public static DatabaseConstantProvider connect( DatabaseConstantProvider cp )
     {
-     
-            load(cp  );
-            return cp;
+        load(cp  );
+        return cp;
     }
 
     /**
@@ -35,14 +33,11 @@ public class RTOFConstants {
      * Please use a DatabaseConstantProvider to access CCDB and load the following tables:
      * @param cp a ConstantProvider that has loaded the necessary tables
      */
-    
     public static synchronized void load( DatabaseConstantProvider cp )
     {
-	//WIDTH = NCOLUMNS * BAR_WIDTH;                                                                        
+        //WIDTH = NCOLUMNS * BAR_WIDTH;                                                                        
         //LENGTH = (NROWS-1) * LONG_BAR_LENGTH + SHORT_BAR_LENGTH;                                            
         //THICKNESS = 0.5; // cm
     }
 
 }
-
-

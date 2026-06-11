@@ -22,38 +22,35 @@ import org.jlab.io.hipo.HipoDataSource;
 /**
  *
  * recoil reconstruction engine
- * 
+ *
  * @author bondi, devita, niccolai
  */
 public class RtrkEngine extends ReconstructionEngine {
-
+    
     public static Logger LOGGER = Logger.getLogger(RtrkEngine.class.getName());
-
+    
     public static RtrkStripFactory factory = new RtrkStripFactory();
-
+    
     public RtrkEngine() {
         super("Rtrk","niccolai","1.0");
     }
-
+    
     @Override
     public boolean init() {
-
+        
         // init ConstantsManager to read constants from CCDB
         String variationName = Optional.ofNullable(this.getEngineConfigString("variation")).orElse("default");
         DatabaseConstantProvider cp = new DatabaseConstantProvider(11, variationName);
         factory.init(cp, RtrkConstants.NREGION);
-        // register output banks for drop option        
+        // register output banks for drop option
         this.registerOutputBank("RTRK::hits");
         this.registerOutputBank("RTRK::clusters");
         this.registerOutputBank("RTRK::crosses");
-
+        
         LOGGER.log(Level.INFO, "--> recoil is ready...");
         return true;
     }
-
-
-
-
+    
     @Override
     public boolean processDataEventUser(DataEvent event) {
         
@@ -65,13 +62,12 @@ public class RtrkEngine extends ReconstructionEngine {
         
         return true;
     }
-
     
-    private void writeHipoBanks(DataEvent de, 
-                                List<RtrkStrip>     strips, 
-                                List<RtrkCluster> clusters, 
-                                List<RtrkCross>    crosses){
-	    
+    private void writeHipoBanks(DataEvent de,
+        List<RtrkStrip>     strips,
+        List<RtrkCluster> clusters,
+        List<RtrkCross>    crosses){
+        
         DataBank bankS = de.createBank("RTRK::hits", strips.size());
         for(int h = 0; h < strips.size(); h++){
             bankS.setShort("id",        h, (short) strips.get(h).getId());
@@ -79,12 +75,12 @@ public class RtrkEngine extends ReconstructionEngine {
             bankS.setByte("layer",      h,  (byte) strips.get(h).getDescriptor().getLayer());
             bankS.setShort("strip",     h, (short) strips.get(h).getDescriptor().getComponent());
             bankS.setFloat("energy",    h, (float) strips.get(h).getEnergy());
-            bankS.setFloat("time",      h, (float) strips.get(h).getTime());                
+            bankS.setFloat("time",      h, (float) strips.get(h).getTime());
             bankS.setShort("status",    h, (short) strips.get(h).getStatus());
             bankS.setShort("clusterId", h, (short) strips.get(h).getClusterId());
         }
         
-        DataBank bankC = de.createBank("RTRK::clusters", clusters.size());        
+        DataBank bankC = de.createBank("RTRK::clusters", clusters.size());
         for(int c = 0; c < clusters.size(); c++){
             bankC.setShort("id",       c, (short) clusters.get(c).getId());
             bankC.setByte("sector",    c,  (byte) clusters.get(c).get(0).getDescriptor().getSector());
@@ -99,10 +95,10 @@ public class RtrkEngine extends ReconstructionEngine {
             bankC.setFloat("ye",       c, (float) clusters.get(c).getLine().end().y());
             bankC.setFloat("ze",       c, (float) clusters.get(c).getLine().end().z());
             bankC.setShort("size",     c, (short) clusters.get(c).size());
-            bankC.setShort("status",   c, (short) clusters.get(c).getStatus()); 
-        }       
+            bankC.setShort("status",   c, (short) clusters.get(c).getStatus());
+        }
         
-        DataBank bankX = de.createBank("RTRK::crosses", crosses.size());        
+        DataBank bankX = de.createBank("RTRK::crosses", crosses.size());
         for(int c = 0; c < crosses.size(); c++){
             bankX.setShort("id",       c, (short) crosses.get(c).getId());
             bankX.setByte("sector",    c,  (byte) crosses.get(c).getSector());
@@ -112,13 +108,12 @@ public class RtrkEngine extends ReconstructionEngine {
             bankX.setFloat("x",        c, (float) crosses.get(c).point().x());
             bankX.setFloat("y",        c, (float) crosses.get(c).point().y());
             bankX.setFloat("z",        c, (float) crosses.get(c).point().z());
-            bankX.setShort("cluster1", c, (short) crosses.get(c).getCluster1()); 
-            bankX.setShort("cluster2", c, (short) crosses.get(c).getCluster2()); 
-            bankX.setShort("status",   c, (short) crosses.get(c).getStatus()); 
-        }       
+            bankX.setShort("cluster1", c, (short) crosses.get(c).getCluster1());
+            bankX.setShort("cluster2", c, (short) crosses.get(c).getCluster2());
+            bankX.setShort("status",   c, (short) crosses.get(c).getStatus());
+        }
         de.appendBanks(bankS,bankC,bankX);
     }
-
     
     public static void fitGauss(H1F histo) {
         double mean  = histo.getMean();
@@ -135,7 +130,7 @@ public class RtrkEngine extends ReconstructionEngine {
         f1.setParameter(0, amp);
         f1.setParameter(1, mean);
         f1.setParameter(2, sigma);
-            
+        
         if(amp>5) {
             f1.setParLimits(0, amp*0.2,   amp*1.2);
             f1.setParLimits(1, mean*0.5,  mean*1.5);
@@ -149,36 +144,36 @@ public class RtrkEngine extends ReconstructionEngine {
             f1.setRange(mean-2.0*sigma,mean+2.0*sigma);
             DataFitter.fit(f1, histo, "Q");
         }
-    }    
+    }
     
     public static void main (String arg[])  {
-
+        
         RtrkEngine engine = new RtrkEngine();
         engine.init();
-
+        
         String input = "/Users/devita/urwell3d.hipo";
-
+        
         DataGroup dg = new DataGroup(3, 2);
         String[] axes = {"x", "y"};
         for(int il=0; il<RtrkConstants.NLAYER; il++) {
             int layer = il+1;
-            H1F h1 = new H1F("hiEnergyL"+layer, "Cluster Energy (eV)", "Counts", 100, 0., 1500.);         
-            h1.setOptStat(Integer.parseInt("1111")); 
-            H1F h2 = new H1F("hiTimeL"+layer, "Cluster Time (ns)", "Counts", 100, 0., 400.);         
-            h2.setOptStat(Integer.parseInt("1111")); 
-            H1F h3 = new H1F("hiSpace"+axes[il], "Cross #Delta" + axes[il] + " (mm)", "Counts", 100, -2.0, 2.0);         
-            h3.setOptStat(Integer.parseInt("1111")); 
+            H1F h1 = new H1F("hiEnergyL"+layer, "Cluster Energy (eV)", "Counts", 100, 0., 1500.);
+            h1.setOptStat(Integer.parseInt("1111"));
+            H1F h2 = new H1F("hiTimeL"+layer, "Cluster Time (ns)", "Counts", 100, 0., 400.);
+            h2.setOptStat(Integer.parseInt("1111"));
+            H1F h3 = new H1F("hiSpace"+axes[il], "Cross #Delta" + axes[il] + " (mm)", "Counts", 100, -2.0, 2.0);
+            h3.setOptStat(Integer.parseInt("1111"));
             dg.addDataSet(h1, il*3 + 0);
             dg.addDataSet(h2, il*3 + 1);
             dg.addDataSet(h3, il*3 + 2);
         }
-
+        
         HipoDataSource  reader = new HipoDataSource();
         reader.open(input);
-
+        
         while(reader.hasEvent()) {
             DataEvent event = reader.getNextEvent();
-
+            
             engine.processDataEvent(event);
             
             double xtrue = 0;
@@ -188,7 +183,7 @@ public class RtrkEngine extends ReconstructionEngine {
             if(event.hasBank("MC::True")) {
                 DataBank bankMC = event.getBank("MC::True");
                 for(int i=0; i<bankMC.rows(); i++) {
-                    int detector = bankMC.getByte("detector",i);  
+                    int detector = bankMC.getByte("detector",i);
                     if(detector==DetectorType.RTRK.getDetectorId()) {
                         xtrue = bankMC.getFloat("avgX",i);
                         ytrue = bankMC.getFloat("avgY",i);
@@ -224,13 +219,13 @@ public class RtrkEngine extends ReconstructionEngine {
                     dg.getH1F("hiSpace"+axes[1]).fill(rec.y()-mc.y());
                 }
             }
-
+            
         }
         reader.close();
         
         for(int i=0; i<RtrkConstants.NLAYER; i++) {
-           RtrkEngine.fitGauss(dg.getH1F("hiTimeL"+(i+1)));
-           RtrkEngine.fitGauss(dg.getH1F("hiSpace"+axes[i]));
+            RtrkEngine.fitGauss(dg.getH1F("hiTimeL"+(i+1)));
+            RtrkEngine.fitGauss(dg.getH1F("hiSpace"+axes[i]));
         }
         JFrame frame = new JFrame("rtrk Reconstruction");
         frame.setSize(800,800);
@@ -238,10 +233,10 @@ public class RtrkEngine extends ReconstructionEngine {
         canvas.draw(dg);
         frame.add(canvas);
         frame.setLocationRelativeTo(null);
-        frame.setVisible(true);     
-
+        frame.setVisible(true);
+        
     }
-
+    
     @Override
     public void detectorChanged(int run) {}
 }
