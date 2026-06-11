@@ -46,7 +46,7 @@ public class RadialSurfaceKFHit implements KFHit {
 	
 	// Projection function
 	@Override
-	public RealVector getProjectionFunction(RealVector x) {
+	public RealVector getProjectionVector(RealVector x) {
 
 		double xx = x.getEntry(0);
 		double yy = x.getEntry(1);
@@ -74,6 +74,13 @@ public class RadialSurfaceKFHit implements KFHit {
 				new double[][]{
 						{drdx, drdy, drdz, drdpx, drdpy, drdpz}
 				});
+	}
+
+	@Override
+	public RealVector getInnovationVector(RealVector x) {
+		RealVector measured = getMeasurementVector();
+		RealVector predicted = getProjectionVector(x);
+		return measured.subtract(predicted);
 	}
 	
 }

@@ -85,8 +85,8 @@ public class KFitter {
 	}
 
 	public void correct(KFHit hit) {
-        RealVector z = hit.getMeasurementVector();
-		RealVector h = hit.getProjectionFunction(stateEstimation);
+        // RealVector z = hit.getMeasurementVector();
+		// RealVector h = hit.getProjectionVector(stateEstimation);
 
 		RealMatrix measurementNoise = hit.getMeasurementNoiseMatrix();
 		RealMatrix measurementMatrix = hit.getProjectionMatrix(stateEstimation);
@@ -96,7 +96,8 @@ public class KFitter {
 		RealMatrix S = measurementMatrix.multiply(errorCovariance).multiply(measurementMatrixT).add(measurementNoise);
 
 		// Inn = z(k) - h(xHat(k)-)
-		RealVector innovation = z.subtract(h);
+		//RealVector innovation = z.subtract(h);
+		RealVector innovation = hit.getInnovationVector(stateEstimation);
 
 		double chi2inc = innovation.dotProduct(MatrixUtils.inverse(S).operate(innovation));
 		chi2 += chi2inc;
