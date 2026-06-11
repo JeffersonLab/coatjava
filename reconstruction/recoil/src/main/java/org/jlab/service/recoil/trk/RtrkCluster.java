@@ -9,21 +9,21 @@ import org.jlab.geom.prim.Point3D;
 
 /**
  * recoil in-layer cluster
- * 
+ *
  * @author bondi, devita, niccolai
  */
 public class RtrkCluster extends ArrayList<RtrkStrip> {
-   
+    
     
     private DetectorDescriptor  desc          = new DetectorDescriptor(DetectorType.RTRK);
-    private int                 id;  
+    private int                 id;
     private Line3D              clusterLine   = new Line3D();
     public int                  indexMaxStrip = -1;
     private byte                clusterStatus =  1;
     
     public RtrkCluster(RtrkStrip strip){
-        this.desc.setSectorLayerComponent(strip.getDescriptor().getSector(), 
-                                          strip.getDescriptor().getLayer(), 0);
+        this.desc.setSectorLayerComponent(strip.getDescriptor().getSector(),
+            strip.getDescriptor().getLayer(), 0);
         this.add(strip);
         this.clusterLine.copy(strip.getLine());
         this.indexMaxStrip = 0;
@@ -49,7 +49,7 @@ public class RtrkCluster extends ArrayList<RtrkStrip> {
         return this.get(0).getChamber();
     }
     
-    public Line3D  getLine() {return this.clusterLine;}    
+    public Line3D  getLine() {return this.clusterLine;}
     
     public double getEnergy(){
         double energy = 0.0;
@@ -72,11 +72,11 @@ public class RtrkCluster extends ArrayList<RtrkStrip> {
         if(this.indexMaxStrip >= 0 && this.indexMaxStrip < this.size()){
             return this.get(indexMaxStrip).getTime();
         }
-            return 0.0;
+        return 0.0;
     }
-
+    
     public RtrkStrip getSeedStrip() {
-    	    return this.get(this.indexMaxStrip);
+        return this.get(this.indexMaxStrip);
     }
     
     public int      getMaxStrip(){
@@ -107,7 +107,7 @@ public class RtrkCluster extends ArrayList<RtrkStrip> {
     
     public void setStatus(int val) {this.clusterStatus+=val;}
     
-    public byte getStatus()  {return clusterStatus;}   
+    public byte getStatus()  {return clusterStatus;}
     
     public void setClusterId(int id){
         this.id = id;
@@ -115,7 +115,7 @@ public class RtrkCluster extends ArrayList<RtrkStrip> {
             strip.setClusterId(id);
         }
     }
-
+    
     public void redoClusterLine(){
         
         Point3D pointOrigin = new Point3D(0.0,0.0,0.0);
@@ -138,30 +138,29 @@ public class RtrkCluster extends ArrayList<RtrkStrip> {
             pointEnd.setX(pointEnd.x()+line.end().x()*le);
             pointEnd.setY(pointEnd.y()+line.end().y()*le);
             pointEnd.setZ(pointEnd.z()+line.end().z()*le);
-
+            
             logSumm += le;
             
             summE   += energy;
         }
-                
+        
         this.clusterLine.set(
-                pointOrigin.x()/logSumm,
-                pointOrigin.y()/logSumm,
-                pointOrigin.z()/logSumm,
-                pointEnd.x()/logSumm,
-                pointEnd.y()/logSumm,
-                pointEnd.z()/logSumm
+            pointOrigin.x()/logSumm,
+            pointOrigin.y()/logSumm,
+            pointOrigin.z()/logSumm,
+            pointEnd.x()/logSumm,
+            pointEnd.y()/logSumm,
+            pointEnd.z()/logSumm
         );
     }
     
-    
     public static List<RtrkCluster> createClusters(List<RtrkStrip> stripList){
-    	
+        
         List<RtrkCluster>  clusterList = new ArrayList<>();
         
         if(!stripList.isEmpty()){
-            for(int loop = 0; loop < stripList.size(); loop++){ //Loop over all strips 
-                boolean stripAdded = false;                
+            for(int loop = 0; loop < stripList.size(); loop++){ //Loop over all strips
+                boolean stripAdded = false;
                 for(RtrkCluster  cluster : clusterList) {
                     if(cluster.addStrip(stripList.get(loop))){ //Add adjacent strip to newly seeded peak
                         stripAdded = true;
@@ -178,7 +177,7 @@ public class RtrkCluster extends ArrayList<RtrkStrip> {
             clusterList.get(loop).redoClusterLine();
         }
         return clusterList;
-    }   
+    }
     
     public static List<RtrkCluster> getClusters(List<RtrkCluster> clusters, int sector, int layer) {
         List<RtrkCluster> selectedClusters = new ArrayList<>();
@@ -192,8 +191,8 @@ public class RtrkCluster extends ArrayList<RtrkStrip> {
     @Override
     public String toString(){
         StringBuilder str = new StringBuilder();
-        str.append(String.format("----> cluster  ( %3d %3d )  ENERGY = %12.5f\n", 
-                this.desc.getSector(),this.desc.getLayer(), this.getEnergy()));
+        str.append(String.format("----> cluster  ( %3d %3d )  ENERGY = %12.5f\n",
+            this.desc.getSector(),this.desc.getLayer(), this.getEnergy()));
         str.append(this.clusterLine.toString());
         str.append("\n");
         for(RtrkStrip strip : this){
@@ -204,9 +203,5 @@ public class RtrkCluster extends ArrayList<RtrkStrip> {
         
         return str.toString();
     }
-
     
-    
-
-
 }

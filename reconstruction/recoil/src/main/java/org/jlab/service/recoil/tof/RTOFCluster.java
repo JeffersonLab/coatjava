@@ -11,96 +11,95 @@ import org.jlab.io.base.DataEvent;
  * them.
  * </p>
  *
- * @author pilleux, Nilanga Wickramaarachchi 
+ * @author pilleux, Nilanga Wickramaarachchi
  */
 public class RTOFCluster {
-
+    
     /**
      * list of hits in the bars.
      */
     ArrayList<RTOFHit> rtofHits;
     /**
-     * cluster properties:position [cm], time [ns], energy[MeV], 
+     * cluster properties:position [cm], time [ns], energy[MeV],
      * type of the maximum hit (to set resolutions) and index and sector of the maximum hit.
      */
     double x, y, z, time, energy;
     String typeMaxHit;
     int indexMaxHit, sectorMaxHit;
-
+    
     public ArrayList<RTOFHit> getRTOFHits() {
         return rtofHits;
     }
-
+    
     public void setRTOFHits(ArrayList<RTOFHit> rtof_hits) {
         this.rtofHits = rtof_hits;
     }
-
+    
     public double getX() {
         return x;
     }
-
+    
     public void setX(double x) {
         this.x = x;
     }
-
+    
     public double getY() {
         return y;
     }
-
+    
     public void setY(double y) {
         this.y = y;
     }
-
+    
     public double getZ() {
         return z;
     }
-
+    
     public void setZ(double z) {
         this.z = z;
     }
-
+    
     public double getTime() {
         return time;
     }
-
+    
     public void setTime(double time) {
         this.time = time;
     }
-
+    
     public double getEnergy() {
         return energy;
     }
-
+    
     public void setEnergy(double energy) {
         this.energy = energy;
     }
-
-
+    
+    
     public String getTypeMaxHit() {
         return typeMaxHit;
     }
-
+    
     public void setTypeMaxHit(String typeMaxHit) {
         this.typeMaxHit = typeMaxHit;
     }
-
+    
     public int getIndexMaxHit() {
         return indexMaxHit;
     }
-
+    
     public void setIndexMaxHit(int indexMaxHit) {
         this.indexMaxHit = indexMaxHit;
     }
-
+    
     public int getSectorMaxHit() {
         return sectorMaxHit;
     }
-
+    
     public void setSectorMaxHit(int sectorMaxHit) {
         this.sectorMaxHit = sectorMaxHit;
     }
-
-
+    
     /**
      * Compute the cluster properties.
      *
@@ -114,7 +113,7 @@ public class RTOFCluster {
         this.energy = 0;
         double max_energy = -1;
         RTOFRawHit max_energy_hit = new RTOFRawHit();
-
+        
         for (int i_bar = 0; i_bar < this.rtofHits.size(); i_bar++) {
             RTOFHit this_rtof_hit = this.rtofHits.get(i_bar);
             double this_energy = this_rtof_hit.getEnergy();
@@ -124,15 +123,15 @@ public class RTOFCluster {
                 max_energy = this_energy;
             }
         }
-
+        
         this.time = max_energy_hit.getTime();
         this.x = max_energy_hit.getX();
         this.y = max_energy_hit.getY();
         this.z = max_energy_hit.getZ();
         this.typeMaxHit = max_energy_hit.getType();
-	this.sectorMaxHit = max_energy_hit.getSector();
+        this.sectorMaxHit = max_energy_hit.getSector();
     }
-
+    
     
     /**
      * Computes the energy deposited in the bars.
@@ -148,7 +147,7 @@ public class RTOFCluster {
         }
         return energy;
     }
-
+    
     /**
      * Compute the cluster phi angle in radians.
      *
@@ -158,7 +157,7 @@ public class RTOFCluster {
     public double getPhi() {
         return Math.atan2(this.y, this.x);
     }
-
+    
     
     /**
      * Retrieve the hit with maximal energy in the cluster. It must have been
@@ -187,7 +186,7 @@ public class RTOFCluster {
             }
         }
     }
-
+    
     /**
      * Computes the sum of TOT in the cluster.
      *
@@ -202,7 +201,7 @@ public class RTOFCluster {
         }
         return tot;
     }
-
+    
     /**
      * Returns the TDC of the maximal hit in the cluster.
      *
@@ -212,7 +211,7 @@ public class RTOFCluster {
     public int getTdc() {
         return this.getMaxHit().getTdc();
     }
-
+    
     /**
      * Constructor that initializes the list of bar hits
      * and computes the cluster properties.
@@ -224,7 +223,7 @@ public class RTOFCluster {
         this.rtofHits = rtof_hits;
         this.computeClusterProperties();
     }
-
+    
     /**
      * Constructor that initializes the list of bar hits
      * and computes the cluster properties.
@@ -237,12 +236,5 @@ public class RTOFCluster {
         this.rtofHits = rtof_hits;
         this.computeClusterProperties();
     }
-
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
-    }
-
+    
 }

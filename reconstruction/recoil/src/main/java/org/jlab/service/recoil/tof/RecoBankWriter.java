@@ -11,7 +11,7 @@ import org.jlab.io.base.DataEvent;
  * @author pilleux, Nilanga Wickramaarachchi
  */
 public class RecoBankWriter {
-
+    
     /**
      * Writes the bank of recoil tof hits.
      *
@@ -23,17 +23,17 @@ public class RecoBankWriter {
      *
      */
     public static DataBank fillRTOFRawHitBank(DataEvent event, ArrayList<RTOFHit> rtofHits) {
-
+        
         ArrayList<RTOFRawHit> hitList = new ArrayList<>();
         hitList.addAll(rtofHits);
-
+        
         DataBank bank = event.createBank("RTOF::hits", hitList.size());
-
+        
         if (bank == null) {
             System.err.println("COULD NOT CREATE A RTOF::hits BANK!!!!!!");
             return null;
         }
-
+        
         for (int i = 0; i < hitList.size(); i++) {
             bank.setShort("id", i, (short) (i + 1));
             bank.setShort("clusterid", i, (short) hitList.get(i).getAssociatedClusterIndex());
@@ -48,7 +48,7 @@ public class RecoBankWriter {
         }
         return bank;
     }
-
+    
     /**
      * Writes the bank of rtof clusters.
      *
@@ -61,18 +61,18 @@ public class RecoBankWriter {
      *
      */
     public static DataBank fillRTOFClusterBank(DataEvent event, ArrayList<RTOFCluster> clusterList) {
-
+        
         DataBank bank = event.createBank("RTOF::clusters", clusterList.size());
-
+        
         if (bank == null) {
             System.err.println("COULD NOT CREATE A RTOF::clusters BANK!!!!!!");
             return null;
         }
-
+        
         for (int i = 0; i < clusterList.size(); i++) {
             bank.setShort("id", i, (short) (i + 1));
             bank.setShort("size", i, (short) clusterList.get(i).getRTOFHits().size());
-	    bank.setByte("sector", i, (byte) clusterList.get(i).getSectorMaxHit());
+            bank.setByte("sector", i, (byte) clusterList.get(i).getSectorMaxHit());
             bank.setFloat("time", i, (float) clusterList.get(i).getTime());
             bank.setFloat("x", i, (float) (clusterList.get(i).getX()));
             bank.setFloat("y", i, (float) (clusterList.get(i).getY()));
@@ -81,8 +81,7 @@ public class RecoBankWriter {
         }
         return bank;
     }
-
-
+    
     /**
      * Appends the rtof banks to an event.
      *
@@ -96,29 +95,21 @@ public class RecoBankWriter {
      *
      */
     public int appendRTOFBanks(DataEvent event, ArrayList<RTOFHit> rtofHits, ArrayList<RTOFCluster> clusterList) {
-
+        
         DataBank hitbank = this.fillRTOFRawHitBank(event, rtofHits);
         if (hitbank != null) {
             event.appendBank(hitbank);
         } else {
             return 1;
         }
-
+        
         DataBank clusterbank = fillRTOFClusterBank(event, clusterList);
         if (clusterbank != null) {
             event.appendBank(clusterbank);
         } else {
             return 1;
         }
-
+        
         return 0;
     }
-    
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
-    }
-
 }
