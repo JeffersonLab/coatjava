@@ -2,7 +2,7 @@ package org.jlab.detector.geant4.v2.recoil.trk;
 
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 
-public class RtrkConstants {
+public class RTRKConstants {
     
     private final static String CCDBPATH = "/geometry/recoil/trk/";
     

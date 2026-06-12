@@ -8,7 +8,7 @@ import javax.swing.JFrame;
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
-import org.jlab.detector.geant4.v2.recoil.trk.RtrkStripFactory;
+import org.jlab.detector.geant4.v2.recoil.trk.RTRKStripFactory;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.groot.data.H1F;
 import org.jlab.groot.fitter.DataFitter;
@@ -25,14 +25,14 @@ import org.jlab.io.hipo.HipoDataSource;
  *
  * @author bondi, devita, niccolai
  */
-public class RtrkEngine extends ReconstructionEngine {
+public class RTRKEngine extends ReconstructionEngine {
     
-    public static Logger LOGGER = Logger.getLogger(RtrkEngine.class.getName());
+    public static Logger LOGGER = Logger.getLogger(RTRKEngine.class.getName());
     
-    public static RtrkStripFactory factory = new RtrkStripFactory();
+    public static RTRKStripFactory factory = new RTRKStripFactory();
     
-    public RtrkEngine() {
-        super("Rtrk","niccolai","1.0");
+    public RTRKEngine() {
+        super("RTRK","niccolai","1.0");
     }
     
     @Override
@@ -41,7 +41,7 @@ public class RtrkEngine extends ReconstructionEngine {
         // init ConstantsManager to read constants from CCDB
         String variationName = Optional.ofNullable(this.getEngineConfigString("variation")).orElse("default");
         DatabaseConstantProvider cp = new DatabaseConstantProvider(11, variationName);
-        factory.init(cp, RtrkConstants.NREGION);
+        factory.init(cp, RTRKConstants.NREGION);
         // register output banks for drop option
         this.registerOutputBank("RTRK::hits");
         this.registerOutputBank("RTRK::clusters");
@@ -54,9 +54,9 @@ public class RtrkEngine extends ReconstructionEngine {
     @Override
     public boolean processDataEventUser(DataEvent event) {
         
-        List<RtrkStrip>     strips = RtrkStrip.getStrips(event, factory, this.getConstantsManager());
-        List<RtrkCluster> clusters = RtrkCluster.createClusters(strips);
-        List<RtrkCross>    crosses = RtrkCross.createCrosses(clusters);
+        List<RTRKStrip>     strips = RTRKStrip.getStrips(event, factory, this.getConstantsManager());
+        List<RTRKCluster> clusters = RTRKCluster.createClusters(strips);
+        List<RTRKCross>    crosses = RTRKCross.createCrosses(clusters);
         
         this.writeHipoBanks(event, strips, clusters, crosses);
         
@@ -64,9 +64,9 @@ public class RtrkEngine extends ReconstructionEngine {
     }
     
     private void writeHipoBanks(DataEvent de,
-        List<RtrkStrip>     strips,
-        List<RtrkCluster> clusters,
-        List<RtrkCross>    crosses){
+        List<RTRKStrip>     strips,
+        List<RTRKCluster> clusters,
+        List<RTRKCross>    crosses){
         
         DataBank bankS = de.createBank("RTRK::hits", strips.size());
         for(int h = 0; h < strips.size(); h++){
@@ -148,14 +148,14 @@ public class RtrkEngine extends ReconstructionEngine {
     
     public static void main (String arg[])  {
         
-        RtrkEngine engine = new RtrkEngine();
+        RTRKEngine engine = new RTRKEngine();
         engine.init();
         
         String input = "/Users/devita/urwell3d.hipo";
         
         DataGroup dg = new DataGroup(3, 2);
         String[] axes = {"x", "y"};
-        for(int il=0; il<RtrkConstants.NLAYER; il++) {
+        for(int il=0; il<RTRKConstants.NLAYER; il++) {
             int layer = il+1;
             H1F h1 = new H1F("hiEnergyL"+layer, "Cluster Energy (eV)", "Counts", 100, 0., 1500.);
             h1.setOptStat(Integer.parseInt("1111"));
@@ -223,11 +223,11 @@ public class RtrkEngine extends ReconstructionEngine {
         }
         reader.close();
         
-        for(int i=0; i<RtrkConstants.NLAYER; i++) {
-            RtrkEngine.fitGauss(dg.getH1F("hiTimeL"+(i+1)));
-            RtrkEngine.fitGauss(dg.getH1F("hiSpace"+axes[i]));
+        for(int i=0; i<RTRKConstants.NLAYER; i++) {
+            RTRKEngine.fitGauss(dg.getH1F("hiTimeL"+(i+1)));
+            RTRKEngine.fitGauss(dg.getH1F("hiSpace"+axes[i]));
         }
-        JFrame frame = new JFrame("rtrk Reconstruction");
+        JFrame frame = new JFrame("RTRK Reconstruction");
         frame.setSize(800,800);
         EmbeddedCanvas canvas = new EmbeddedCanvas();
         canvas.draw(dg);
