@@ -2,6 +2,7 @@ package org.jlab.service.recoil.trk;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.jlab.detector.geant4.v2.recoil.trk.RTRKConstants;
 import org.jlab.detector.base.DetectorDescriptor;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.geom.prim.Line3D;

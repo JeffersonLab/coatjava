@@ -8,6 +8,7 @@ import javax.swing.JFrame;
 import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
+import org.jlab.detector.geant4.v2.recoil.trk.RTRKConstants;
 import org.jlab.detector.geant4.v2.recoil.trk.RTRKStripFactory;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.groot.data.H1F;
@@ -41,7 +42,7 @@ public class RTRKEngine extends ReconstructionEngine {
         // init ConstantsManager to read constants from CCDB
         String variationName = Optional.ofNullable(this.getEngineConfigString("variation")).orElse("default");
         DatabaseConstantProvider cp = new DatabaseConstantProvider(11, variationName);
-        factory.init(cp, RTRKConstants.NREGION);
+        factory.init(cp, RTRKConstants.NREGIONS);
         // register output banks for drop option
         this.registerOutputBank("RTRK::hits");
         this.registerOutputBank("RTRK::clusters");
@@ -155,7 +156,7 @@ public class RTRKEngine extends ReconstructionEngine {
         
         DataGroup dg = new DataGroup(3, 2);
         String[] axes = {"x", "y"};
-        for(int il=0; il<RTRKConstants.NLAYER; il++) {
+        for(int il=0; il<RTRKConstants.NLAYERS; il++) {
             int layer = il+1;
             H1F h1 = new H1F("hiEnergyL"+layer, "Cluster Energy (eV)", "Counts", 100, 0., 1500.);
             h1.setOptStat(Integer.parseInt("1111"));
@@ -223,7 +224,7 @@ public class RTRKEngine extends ReconstructionEngine {
         }
         reader.close();
         
-        for(int i=0; i<RTRKConstants.NLAYER; i++) {
+        for(int i=0; i<RTRKConstants.NLAYERS; i++) {
             RTRKEngine.fitGauss(dg.getH1F("hiTimeL"+(i+1)));
             RTRKEngine.fitGauss(dg.getH1F("hiSpace"+axes[i]));
         }
