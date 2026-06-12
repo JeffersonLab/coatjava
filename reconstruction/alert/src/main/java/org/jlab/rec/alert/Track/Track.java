@@ -1,9 +1,13 @@
 package org.jlab.rec.alert.Track;
 
 import org.jlab.rec.alert.AI.InterCluster;
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealMatrix;
 import org.jlab.rec.ahdc.AHDCCluster.AHDCCluster;
 import org.jlab.rec.ahdc.HelixFit.HelixFitObject;
 import org.jlab.rec.ahdc.Hit.Hit;
+import org.jlab.rec.ahdc.KalmanFilter.RadialKFHit;
+import org.jlab.rec.ahdc.KalmanFilter.Stepper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -95,7 +99,6 @@ public class Track {
 	public double get_chi2() {return chi2;}
 	public double get_sum_residuals() {return sum_residuals;}
 	// AHDC::track
-	public void set_dEdx(double _dEdx) { dEdx = _dEdx;}
 	public void set_p_drift(double _p_drift) { p_drift = _p_drift;}
 	public void set_path(double _path) { path = _path;}
 	public double get_dEdx() {
@@ -119,9 +122,7 @@ public class Track {
 	public int               get_trackId()       { return candidate.get_trackId(); }
 	public void              set_trackId(int id)  { candidate.set_trackId(id); }
 	public int               get_n_hits()        { return candidate.get_n_hits(); }
-	public void              set_n_hits(int n)    { candidate.set_n_hits(n); }
 	public int               get_sum_adc()       { return candidate.get_sum_adc(); }
-	public void              set_sum_adc(int s)   { candidate.set_sum_adc(s); }
 	public ArrayList<Hit>    getHits()            { return candidate.getHits(); }
 	public List<AHDCCluster> get_Clusters()       { return candidate.get_Clusters(); }
 	public List<InterCluster> getInterclusters()  { return candidate.getInterclusters(); }
@@ -140,4 +141,67 @@ public class Track {
 	public int  get_predicted_ATOF_sector()      { return candidate.get_predicted_ATOF_sector(); }
 	public int  get_predicted_ATOF_layer()       { return candidate.get_predicted_ATOF_layer(); }
 	public int  get_predicted_ATOF_wedge()       { return candidate.get_predicted_ATOF_wedge(); }
+
+	// Recent extension of the Kalman Filter 
+	/**
+	 * <p> Error covariance matrix of the measurment around the beamline</p>
+	 * 
+	 * <p> This quite useful when one plan to run the Kalman filter several times. This object stores the current status of the error covariance matrix at the end of the backward propagation of an iteration.</p>
+	 * 
+	 * <p> First 3 lines in mm^2; last 3 lines in MeV^2 (in the beamline) </p>
+	 */
+	RealMatrix errorCovarianceMatrix = MatrixUtils.createRealMatrix(new double[][]{
+		{50  , 0.0 , 0.0 , 0.0 , 0.0 , 0.0}, 
+		{0.0 , 50  , 0.0 , 0.0 , 0.0 , 0.0}, 
+		{0.0 , 0.0 , 900 , 0.0 , 0.0 , 0.0}, 
+		{0.0 , 0.0 , 0.0 , 100 , 0.0 , 0.0}, 
+		{0.0 , 0.0 , 0.0 , 0.0 , 100 , 0.0}, 
+		{0.0 , 0.0 , 0.0 , 0.0 , 0.0 , 900}});
+
+	/**
+	 * Get the starting error covariance matrix {@link #errorCovarianceMatrix} (around the beamline) for the current KF iteration. 
+	 */
+	public RealMatrix getErrorCovarianceMatrix() {return errorCovarianceMatrix;}
+
+	private ArrayList<RadialKFHit> ATOF_hits = new ArrayList<>();
+	private RadialKFHit beamline_hit = null;
+
+	public ArrayList<RadialKFHit> getATOFHits() {
+		return this.ATOF_hits;
+	}
+
+	public RadialKFHit getBeamlineHit() {
+		return this.beamline_hit;
+	}
+
+	public void setATOFHits(ArrayList<RadialKFHit> _ATOF_hits) {this.ATOF_hits = _ATOF_hits;}
+	
+	public void setBeamlineHit(RadialKFHit _beamline_hit) {this.beamline_hit = _beamline_hit;}
+
+	/**
+	 * Update the error covariance matrix {@link #errorCovarianceMatrix}
+	 */
+	public void setErrorCovarianceMatrix(RealMatrix errorCovarianceMatrix) {this.errorCovarianceMatrix = errorCovarianceMatrix;}
+
+	// Position and momentum when the track crosses the ATOF surface
+	// S1 : lower surface of an ATOF bar
+	// S2 : upper surface of an ATOF bar = lower surface of an ATOF wedge
+	// S3 : upper surface of an ATOF wedge
+	Stepper ATOF_S1_stepper;
+	Stepper ATOF_S2_stepper;
+	Stepper ATOF_S3_stepper;
+	double ATOF_S1_radius;
+	double ATOF_S2_radius;
+	double ATOF_S3_radius;
+	int ATOF_region = 0; // is n if the trach reaches Sn, 0 otherwise (i.e does not reach S1)
+
+	// Projection of the Track on the ATOF surfaces
+	public void set_ATOF_S1_stepper(Stepper _stepper) {this.ATOF_S1_stepper = _stepper;}
+	public void set_ATOF_S2_stepper(Stepper _stepper) {this.ATOF_S2_stepper = _stepper;}
+	public void set_ATOF_S3_stepper(Stepper _stepper) {this.ATOF_S3_stepper = _stepper;}
+	public void set_ATOF_region(int _n) {this.ATOF_region = _n;}
+	public Stepper get_ATOF_S1_stepper() {return this.ATOF_S1_stepper;}
+	public Stepper get_ATOF_S2_stepper() {return this.ATOF_S2_stepper;}
+	public Stepper get_ATOF_S3_stepper() {return this.ATOF_S3_stepper;}
+	public int get_ATOF_region() {return this.ATOF_region;}
 }
