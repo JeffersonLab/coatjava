@@ -6,6 +6,7 @@ import org.jlab.detector.banks.RawDataBank;
 import org.jlab.detector.base.DetectorDescriptor;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.calib.utils.ConstantsManager;
+import org.jlab.detector.geant4.v2.recoil.trk.RTRKConstants;
 import org.jlab.detector.geant4.v2.recoil.trk.RTRKStripFactory;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.io.base.DataEvent;
@@ -144,7 +145,7 @@ public class RTRKStrip implements Comparable {
     }
     
     public boolean isInTime(RTRKStrip strip) {
-        return Math.abs(this.getTime() - strip.getTime()) < RTRKConstants.COINCTIME;
+        return Math.abs(this.getTime() - strip.getTime()) < RTRKParameters.COINCTIME;
     }
     
     @Override
@@ -180,13 +181,13 @@ public class RTRKStrip implements Comparable {
 strip.setId(bank.trueIndex(i)+1);
 strip.setADC(adc);
 strip.setTDC((int) time);
-strip.setEnergy(strip.ADC*RTRKConstants.ADCTOENERGY);
-strip.setTime(strip.TDC*RTRKConstants.TDCTOTIME);
+strip.setEnergy(strip.ADC*RTRKParameters.ADCTOENERGY);
+strip.setTime(strip.TDC*RTRKParameters.TDCTOTIME);
 strip.setLine(factory.getStrip(sector, layer, comp));
 strip.setChamber(factory.getChamberIndex(comp)+1);
 strip.setStatus(0);
 
-if(strip.getEnergy()>RTRKConstants.THRESHOLD) strips.add(strip);
+if(strip.getEnergy()>RTRKParameters.THRESHOLD) strips.add(strip);
 
             }
         }

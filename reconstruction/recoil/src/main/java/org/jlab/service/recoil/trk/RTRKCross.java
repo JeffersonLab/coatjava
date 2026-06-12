@@ -2,6 +2,7 @@ package org.jlab.service.recoil.trk;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.jlab.detector.geant4.v2.recoil.trk.RTRKConstants;
 import org.jlab.geom.prim.Plane3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
@@ -34,7 +35,7 @@ public class RTRKCross {
         int nint = plane.intersectionSegment(c2.getLine(), point);
         if(nint==1) {
             this.sector = c1.getSector();
-            this.region = (c1.getLayer()-1)/(RTRKConstants.NLAYER/RTRKConstants.NREGION)+1;
+            this.region = (c1.getLayer()-1)/(RTRKConstants.NLAYERS/RTRKConstants.NREGIONS)+1;
             this.cross  = point;
             this.energy = c1.getEnergy() + c2.getEnergy();
             this.time   = (c1.getTime() + c2.getTime())/2;
@@ -91,10 +92,10 @@ public class RTRKCross {
         
         List<RTRKCross> crosses = new ArrayList<>();
         
-        for(int is=0; is<RTRKConstants.NSECTOR; is++) {
-            for(int ir=0; ir<RTRKConstants.NREGION; ir++) {
-                List<RTRKCluster> clustersV = RTRKCluster.getClusters(clusters, is+1, (RTRKConstants.NLAYER/RTRKConstants.NREGION)*ir+1);
-                List<RTRKCluster> clustersW = RTRKCluster.getClusters(clusters, is+1, (RTRKConstants.NLAYER/RTRKConstants.NREGION)*ir+2);
+        for(int is=0; is<RTRKConstants.NSECTORS; is++) {
+            for(int ir=0; ir<RTRKConstants.NREGIONS; ir++) {
+                List<RTRKCluster> clustersV = RTRKCluster.getClusters(clusters, is+1, (RTRKConstants.NLAYERS/RTRKConstants.NREGIONS)*ir+1);
+                List<RTRKCluster> clustersW = RTRKCluster.getClusters(clusters, is+1, (RTRKConstants.NLAYERS/RTRKConstants.NREGIONS)*ir+2);
                 
                 for(RTRKCluster v : clustersV) {
                     for(RTRKCluster w : clustersW) {

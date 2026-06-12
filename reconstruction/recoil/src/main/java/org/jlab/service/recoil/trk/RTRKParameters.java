@@ -4,10 +4,10 @@ package org.jlab.service.recoil.trk;
  *
  * @author bondi, devita,niccolai
  */
-public class RTRKConstants {
+public class RTRKParameters {
     
     // geometry
-    public final static int NSECTOR  = 2;
+   /*public final static int NSECTOR  = 2;
     public final static int NLAYER   = 6;
     public final static int NREGION  = 3;
     public final static int NCHAMBER = 1;
@@ -15,7 +15,7 @@ public class RTRKConstants {
     public final static int[] STRIPMIN = {   1, 352, 583}; // lower strip number
     public final static int[] STRIPMAX = { 351, 582, 834}; // higher strip number
     public final static double PITCH = 0.1; // mm
-    public final static double[] STEREO = { 0.0, 90.0 };
+    public final static double[] STEREO = { 0.0, 90.0 };*/
     
     // strips
     public final static double THRESHOLD = 0;
