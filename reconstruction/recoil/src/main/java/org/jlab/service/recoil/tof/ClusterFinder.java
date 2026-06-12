@@ -1,11 +1,7 @@
-package org.jlab.rec.recoil.tof;
+package org.jlab.service.recoil.tof;
 
 import java.util.ArrayList;
 import org.jlab.io.base.DataEvent;
-import org.jlab.rec.recoil.tof.Parameters;
-import org.jlab.rec.recoil.tof.RTOFRawHit;
-import org.jlab.rec.recoil.tof.RTOFHit;
-import org.jlab.rec.recoil.tof.HitFinder;
 
 /**
  * The {@code ClusterFinder} class builds clusters in the recoil tof
@@ -17,12 +13,12 @@ import org.jlab.rec.recoil.tof.HitFinder;
  * @author pilleux, Nilanga Wickramaarachchi
  */
 public class ClusterFinder {
-
+    
     /**
      * list of clusters.
      */
     private ArrayList<RTOFCluster> clusters;
-
+    
     /**
      * Sets the list of clusters.
      *
@@ -32,7 +28,7 @@ public class ClusterFinder {
     public void setClusters(ArrayList<RTOFCluster> clusters) {
         this.clusters = clusters;
     }
-
+    
     /**
      * Gets the list of clusters.
      *
@@ -42,7 +38,7 @@ public class ClusterFinder {
     public ArrayList<RTOFCluster> getClusters() {
         return clusters;
     }
-
+    
     
     /**
      * Cluster hits around a given hit, based on the time and geometric
@@ -82,23 +78,23 @@ public class ClusterFinder {
             }
             // Check the distance between the hits
             double delta_T = Math.abs(this_hit.getTime() - other_hit.getTime());
-            //The y distance is a distance in cm 
+            //The y distance is a distance in cm
             Boolean condition_y;
-	    double delta_Y = Math.abs(this_hit.getY() - other_hit.getY());
-	    condition_y = (delta_Y <= sigma_y.doubleValue());
-	
+            double delta_Y = Math.abs(this_hit.getY() - other_hit.getY());
+            condition_y = (delta_Y <= sigma_y.doubleValue());
+            
             //If hit is within limits, it is clustered
-	    if (condition_y) {
-		if (delta_T < sigma_t) {
-		    other_hit.setIsInACluster(true);
-		    other_hit.setAssociatedClusterIndex(cluster_id);
-		    this_cluster_hits.add(other_hit);
-		}
-	    }
-	}
+            if (condition_y) {
+                if (delta_T < sigma_t) {
+                    other_hit.setIsInACluster(true);
+                    other_hit.setAssociatedClusterIndex(cluster_id);
+                    this_cluster_hits.add(other_hit);
+                }
+            }
+        }
     }
-
-
+    
+    
     /**
      * Builds clusters in the {@link DateEvent} using hits found and stored in a
      * {@link HitFinder}.
@@ -112,14 +108,14 @@ public class ClusterFinder {
      *
      */
     public void makeClusters(HitFinder hitfinder, double sigma_y, double sigma_t, DataEvent event) {
-
+        
         //A list of clusters is built for each event
         clusters.clear();
         int cluster_id = 1;
-
+        
         //Getting the list of hits, they must have been ordered by energy already
         ArrayList<RTOFHit> rtof_hits = hitfinder.getRTOFHits();
-
+        
         //Loop through all bar hits
         for (int i_bar = 0; i_bar < rtof_hits.size(); i_bar++) {
             RTOFHit this_rtof_hit = rtof_hits.get(i_bar);
@@ -127,21 +123,21 @@ public class ClusterFinder {
             if (this_rtof_hit.getIsInACluster()) {
                 continue;
             }
-
+            
             ArrayList<RTOFHit> this_cluster_rtof_hits = new ArrayList<>();
             this_rtof_hit.setIsInACluster(true);
             this_rtof_hit.setAssociatedClusterIndex(cluster_id);
             this_cluster_rtof_hits.add(this_rtof_hit);
-
+            
             //Matching bar hits in clusters
             clusterHits(i_bar, rtof_hits, this_rtof_hit, sigma_y, sigma_t, cluster_id, this_cluster_rtof_hits);
-
+            
             RTOFCluster cluster = new RTOFCluster(this_cluster_rtof_hits, event);
             clusters.add(cluster);
             cluster_id++;
         }
     }
-
+    
     /**
      * Builds clusters in the {@link DataEvent} using hits found and stored in a
      * {@link HitFinder}.
@@ -154,20 +150,14 @@ public class ClusterFinder {
      */
     public void makeClusters(DataEvent event, HitFinder hitfinder) {
         makeClusters(hitfinder,
-                Parameters.SIGMA_Y_CLUSTERING,
-                Parameters.SIGMA_T_CLUSTERING, event);
+            Parameters.SIGMA_Y_CLUSTERING,
+            Parameters.SIGMA_T_CLUSTERING, event);
     }
-
+    
     /**
      * Default constructor that initializes the list clusters as new empty list.
      */
     public ClusterFinder() {
         clusters = new ArrayList<>();
-    }
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
     }
 }

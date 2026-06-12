@@ -11,7 +11,7 @@ import org.jlab.geom.prim.Vector3D;
  * @author devita, niccolai
  */
 public class RtrkCross {
-
+    
     private int id;
     
     private int sector;
@@ -26,12 +26,9 @@ public class RtrkCross {
     private double  time;
     private int     status;
     
-    
-    
-    
     public RtrkCross(RtrkCluster c1, RtrkCluster c2) {
         
-	Vector3D  dir = c1.getLine().direction().cross(c2.getLine().direction());
+        Vector3D  dir = c1.getLine().direction().cross(c2.getLine().direction());
         Plane3D plane = new Plane3D(c1.getLine().origin(), c1.getLine().direction().cross(dir));
         Point3D point = new Point3D();
         int nint = plane.intersectionSegment(c2.getLine(), point);
@@ -45,11 +42,11 @@ public class RtrkCross {
             this.cluster2 = c2.getId();
         }
     }
-
+    
     public void setId(int id) {
         this.id = id;
     }
-
+    
     public int getId() {
         return id;
     }
@@ -69,19 +66,19 @@ public class RtrkCross {
     public int getCluster1() {
         return cluster1;
     }
-
+    
     public int getCluster2() {
         return cluster2;
     }
-
+    
     public Point3D point() {
         return cross;
-    }   
-
+    }
+    
     public double getEnergy() {
         return energy;
     }
-
+    
     public double getTime() {
         return time;
     }
@@ -89,7 +86,7 @@ public class RtrkCross {
     public int getStatus() {
         return status;
     }
-
+    
     public static List<RtrkCross> createCrosses(List<RtrkCluster> clusters) {
         
         List<RtrkCross> crosses = new ArrayList<>();

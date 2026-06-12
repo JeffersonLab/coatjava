@@ -1,4 +1,4 @@
-package org.jlab.rec.recoil.tof;
+package org.jlab.service.recoil.tof;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,31 +15,31 @@ import org.jlab.io.base.DataEvent;
  *
  * </p>
  *
- * @author pilleux, Nilanga Wickramaarachchi 
+ * @author pilleux, Nilanga Wickramaarachchi
  */
 public class HitFinder {
-
+    
     /**
      * list of rtof hits
      */
     private ArrayList<RTOFHit> rtofHits;
-
+    
     /**
      * Default constructor that initializes the list of hits as new empty lists.
      */
     public HitFinder() {
         this.rtofHits = new ArrayList<>();
     }
-
+    
     // Getter and Setter for rtofHits
     public ArrayList<RTOFHit> getRTOFHits() {
         return rtofHits;
     }
-
+    
     public void setRTOFHits(ArrayList<RTOFHit> rtof_hits) {
         this.rtofHits = rtof_hits;
     }
-
+    
     /**
      *
      * @param event the {@link DataEvent} containing hits.
@@ -64,13 +64,13 @@ public class HitFinder {
             int order = bank.getShort("order", i);
             int tdc = bank.getShort("TDC", i);
             int tot = bank.getShort("ToT", i);
-
+            
             //Building a Hit
             RTOFRawHit hit = new RTOFRawHit(sector, layer, component, order, tdc, tot);
             if (hit.getEnergy() < 0.01) {
                 continue; //energy threshold
             }
-
+            
             //Sorting the hits into upstream and downstream bar hits
             //Lists are built for up/down bar to match them after
             if (null == hit.getType()) {
@@ -86,7 +86,7 @@ public class HitFinder {
                 }
             }
         }//End loop through all hits
-
+        
         //Starting loop through up hits in the bar
         for (int i_up = 0; i_up < hit_up.size(); i_up++) {
             RTOFRawHit this_hit_up = hit_up.get(i_up);
@@ -109,11 +109,5 @@ public class HitFinder {
         }
         //Once all has been listed, hits are sorted by energy
         Collections.sort(this.rtofHits, (hit1, hit2) -> Double.compare(hit2.getEnergy(), hit1.getEnergy()));
-    }
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
     }
 }
