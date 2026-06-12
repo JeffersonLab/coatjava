@@ -10,7 +10,7 @@ import org.jlab.geom.prim.Vector3D;
  * recoil V-W clusters
  * @author devita, niccolai
  */
-public class RtrkCross {
+public class RTRKCross {
     
     private int id;
     
@@ -26,7 +26,7 @@ public class RtrkCross {
     private double  time;
     private int     status;
     
-    public RtrkCross(RtrkCluster c1, RtrkCluster c2) {
+    public RTRKCross(RTRKCluster c1, RTRKCluster c2) {
         
         Vector3D  dir = c1.getLine().direction().cross(c2.getLine().direction());
         Plane3D plane = new Plane3D(c1.getLine().origin(), c1.getLine().direction().cross(dir));
@@ -34,7 +34,7 @@ public class RtrkCross {
         int nint = plane.intersectionSegment(c2.getLine(), point);
         if(nint==1) {
             this.sector = c1.getSector();
-            this.region = (c1.getLayer()-1)/(RtrkConstants.NLAYER/RtrkConstants.NREGION)+1;
+            this.region = (c1.getLayer()-1)/(RTRKConstants.NLAYER/RTRKConstants.NREGION)+1;
             this.cross  = point;
             this.energy = c1.getEnergy() + c2.getEnergy();
             this.time   = (c1.getTime() + c2.getTime())/2;
@@ -87,20 +87,20 @@ public class RtrkCross {
         return status;
     }
     
-    public static List<RtrkCross> createCrosses(List<RtrkCluster> clusters) {
+    public static List<RTRKCross> createCrosses(List<RTRKCluster> clusters) {
         
-        List<RtrkCross> crosses = new ArrayList<>();
+        List<RTRKCross> crosses = new ArrayList<>();
         
-        for(int is=0; is<RtrkConstants.NSECTOR; is++) {
-            for(int ir=0; ir<RtrkConstants.NREGION; ir++) {
-                List<RtrkCluster> clustersV = RtrkCluster.getClusters(clusters, is+1, (RtrkConstants.NLAYER/RtrkConstants.NREGION)*ir+1);
-                List<RtrkCluster> clustersW = RtrkCluster.getClusters(clusters, is+1, (RtrkConstants.NLAYER/RtrkConstants.NREGION)*ir+2);
+        for(int is=0; is<RTRKConstants.NSECTOR; is++) {
+            for(int ir=0; ir<RTRKConstants.NREGION; ir++) {
+                List<RTRKCluster> clustersV = RTRKCluster.getClusters(clusters, is+1, (RTRKConstants.NLAYER/RTRKConstants.NREGION)*ir+1);
+                List<RTRKCluster> clustersW = RTRKCluster.getClusters(clusters, is+1, (RTRKConstants.NLAYER/RTRKConstants.NREGION)*ir+2);
                 
-                for(RtrkCluster v : clustersV) {
-                    for(RtrkCluster w : clustersW) {
+                for(RTRKCluster v : clustersV) {
+                    for(RTRKCluster w : clustersW) {
                         
                         if(v.getChamber()==w.getChamber()) {
-                            RtrkCross cross = new RtrkCross(v, w);
+                            RTRKCross cross = new RTRKCross(v, w);
                             if(cross.point()!=null) crosses.add(cross);
                             cross.setId(crosses.size());
                         }

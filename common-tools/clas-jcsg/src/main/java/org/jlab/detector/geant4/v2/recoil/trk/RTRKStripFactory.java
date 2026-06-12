@@ -18,9 +18,9 @@ import org.jlab.utils.groups.IndexedList;
  *
  * @author bondi, niccolai
  */
-public final class RtrkStripFactory {
+public final class RTRKStripFactory {
     
-    private RtrkGeant4Factory factory;
+    private RTRKGeant4Factory factory;
     private IndexedList<Line3D>  globalStrips = new IndexedList(3);
     private IndexedList<Line3D>  localStrips  = new IndexedList(3);
     private IndexedList<Plane3D> planeStrips  = new IndexedList(3);
@@ -29,16 +29,16 @@ public final class RtrkStripFactory {
     private int nChambers;
     private int nLayers;
     
-    public RtrkStripFactory() {
+    public RTRKStripFactory() {
     }
     
     /**
      * Create the strip factory based on constants from CCDB.
-     * Currently constants are defined in the RtrkConstants class.
+     * Currently constants are defined in the RTRKConstants class.
      * They will be moved to CCDB when finalized).
      * @param cp database provide
      */
-    public RtrkStripFactory(DatabaseConstantProvider cp) {
+    public RTRKStripFactory(DatabaseConstantProvider cp) {
         this.init(cp);
     }
     
@@ -52,12 +52,12 @@ public final class RtrkStripFactory {
     
     /**
      * Create the strip factory based on constants from CCDB.
-     * Currently constants are defined in the RtrkConstants class.
+     * Currently constants are defined in the RTRKConstants class.
      * They will be moved to CCDB when finalized).
      * @param cp database provide
      * @param regions
      */
-    public RtrkStripFactory(DatabaseConstantProvider cp, int regions) {
+    public RTRKStripFactory(DatabaseConstantProvider cp, int regions) {
         this.init(cp, regions);
     }
     
@@ -67,11 +67,11 @@ public final class RtrkStripFactory {
      * @param regions
      */
     public void init(DatabaseConstantProvider cp, int regions) {
-        factory = new RtrkGeant4Factory(cp, regions);
-        nRegions  = Math.min(RtrkConstants.NMAXREGIONS, regions);
-        nSectors  = RtrkConstants.NSECTORS;
-        nChambers = RtrkConstants.NCHAMBERS;
-        nLayers   = RtrkConstants.NLAYERS;
+        factory = new RTRKGeant4Factory(cp, regions);
+        nRegions  = Math.min(RTRKConstants.NMAXREGIONS, regions);
+        nSectors  = RTRKConstants.NSECTORS;
+        nChambers = RTRKConstants.NCHAMBERS;
+        nLayers   = RTRKConstants.NLAYERS;
         this.fillStripLists();
         //        this.fillPlaneLists();
     }
@@ -114,8 +114,8 @@ public final class RtrkStripFactory {
          * * number of strip in AB**
          */
         
-        int nAB = (int) (2 * xHalf / RtrkConstants.PITCH);
-        int nAC = (int) (2 * yHalf / RtrkConstants.PITCH);
+        int nAB = (int) (2 * xHalf / RTRKConstants.PITCH);
+        int nAC = (int) (2 * yHalf / RTRKConstants.PITCH);
         
         int nStrips = nAB + nAC;
         
@@ -190,9 +190,9 @@ public final class RtrkStripFactory {
             DY = -yHalf;
         }
         // ID of the strip
-        int nS =  (int) (DY / RtrkConstants.PITCH);
+        int nS =  (int) (DY / RTRKConstants.PITCH);
         int nCStrip = nS + (cStrip - 1);
-        double c = nCStrip * RtrkConstants.PITCH;
+        double c = nCStrip * RTRKConstants.PITCH;
         
         // Take 2 points in the strip straight line. They needs to define Line object
         //u strips
@@ -305,9 +305,9 @@ public final class RtrkStripFactory {
                         if ((layer) % 2 != 0) { //u strip
                             DY = -yHalf;
                         }
-                        int nS =  (int) (DY / RtrkConstants.PITCH);
+                        int nS =  (int) (DY / RTRKConstants.PITCH);
                         int nCStrip = nS + (cStrip - 1);
-                        double c = nCStrip * RtrkConstants.PITCH;
+                        double c = nCStrip * RTRKConstants.PITCH;
                         if (((layer) % 2 == 0 && c>-xHalf && c<xHalf)||((layer) % 2 != 0 && c>-yHalf && c<yHalf))
                         {
                             Line3d line = this.createStrip(sector, region,layer, strip);
@@ -336,7 +336,7 @@ public final class RtrkStripFactory {
     public Line3D toLocal(int sector, Line3D global) {
         Line3D local = new Line3D();
         local.copy(global);
-        local.rotateY((-1+sector*2)*Math.toRadians(1.5*RtrkConstants.HORIZONTHAL_OPENING_ANGLE+270));
+        local.rotateY((-1+sector*2)*Math.toRadians(1.5*RTRKConstants.HORIZONTHAL_OPENING_ANGLE+270));
         return local;
     }
     
@@ -363,9 +363,9 @@ public final class RtrkStripFactory {
                         if (layer % 2 != 0) { //u strip
                             DY = -yHalf;
                         }
-                        int nS =  (int) (DY / RtrkConstants.PITCH);
+                        int nS =  (int) (DY / RTRKConstants.PITCH);
                         int nCStrip = nS + (cStrip - 1);
-                        double c = nCStrip * RtrkConstants.PITCH;
+                        double c = nCStrip * RTRKConstants.PITCH;
                         if ((layer % 2 == 0 && c>-xHalf && c<xHalf)||(layer % 2 != 0 && c>-yHalf && c<yHalf))
                         {
                             Plane3D plane = this.createPLane(sector, region, layer, strip);
@@ -431,11 +431,11 @@ public final class RtrkStripFactory {
     public static void main(String[] args) {
         DatabaseConstantProvider cp = new DatabaseConstantProvider(11, "default");
         
-        RtrkConstants.connect(cp);
+        RTRKConstants.connect(cp);
         
-        RtrkGeant4Factory factory = new RtrkGeant4Factory(cp,1);
+        RTRKGeant4Factory factory = new RTRKGeant4Factory(cp,1);
         
-        RtrkStripFactory factory2 = new RtrkStripFactory(cp,1);
+        RTRKStripFactory factory2 = new RTRKStripFactory(cp,1);
         
         //        Plane3D plane = factory2.getPlane(6, 1, 200);
         //System.out.println(plane.toString());

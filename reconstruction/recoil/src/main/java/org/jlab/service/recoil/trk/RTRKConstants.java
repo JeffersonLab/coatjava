@@ -4,7 +4,7 @@ package org.jlab.service.recoil.trk;
  *
  * @author bondi, devita,niccolai
  */
-public class RtrkConstants {
+public class RTRKConstants {
     
     // geometry
     public final static int NSECTOR  = 2;

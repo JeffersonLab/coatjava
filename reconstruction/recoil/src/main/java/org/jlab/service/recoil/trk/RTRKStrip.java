@@ -16,7 +16,7 @@ import org.jlab.io.base.DataEvent;
  *
  * @author bondi, devita, niccolai
  */
-public class RtrkStrip implements Comparable {
+public class RTRKStrip implements Comparable {
     
     private DetectorDescriptor  desc = new DetectorDescriptor(DetectorType.RTRK);
     
@@ -34,11 +34,11 @@ public class RtrkStrip implements Comparable {
     private double      time = 0;
     
     
-    public RtrkStrip(int sector, int layer, int component){
+    public RTRKStrip(int sector, int layer, int component){
         this.desc.setSectorLayerComponent(sector, layer, component);
     }
     
-    public RtrkStrip(int sector, int layer, int component, int ADC, int TDC){
+    public RTRKStrip(int sector, int layer, int component, int ADC, int TDC){
         this.desc.setSectorLayerComponent(sector, layer, component);
         this.ADC = ADC;
         this.TDC = TDC;
@@ -133,7 +133,7 @@ public class RtrkStrip implements Comparable {
         this.status = status;
     }
     
-    public boolean isNeighbour(RtrkStrip strip){
+    public boolean isNeighbour(RTRKStrip strip){
         if(strip.getDescriptor().getSector()==this.desc.getSector()&&
             strip.getDescriptor().getLayer()==this.desc.getLayer()){
             int s1 = strip.getDescriptor().getComponent();
@@ -143,13 +143,13 @@ public class RtrkStrip implements Comparable {
         return false;
     }
     
-    public boolean isInTime(RtrkStrip strip) {
-        return Math.abs(this.getTime() - strip.getTime()) < RtrkConstants.COINCTIME;
+    public boolean isInTime(RTRKStrip strip) {
+        return Math.abs(this.getTime() - strip.getTime()) < RTRKConstants.COINCTIME;
     }
     
     @Override
     public int compareTo(Object o) {
-        RtrkStrip ob = (RtrkStrip) o;
+        RTRKStrip ob = (RTRKStrip) o;
         if(ob.getDescriptor().getSector()     < this.desc.getSector())    return  1;
         if(ob.getDescriptor().getSector()     > this.desc.getSector())    return -1;
         if(ob.getDescriptor().getLayer()      < this.desc.getLayer())     return  1;
@@ -159,9 +159,9 @@ public class RtrkStrip implements Comparable {
         return -1;
     }
     
-    public static List<RtrkStrip> getStrips(DataEvent event, RtrkStripFactory factory, ConstantsManager ccdb) {
+    public static List<RTRKStrip> getStrips(DataEvent event, RTRKStripFactory factory, ConstantsManager ccdb) {
         
-        List<RtrkStrip> strips = new ArrayList<>();
+        List<RTRKStrip> strips = new ArrayList<>();
         
         if(event.hasBank("RTRK::adc")){
             RawDataBank bank = new RawDataBank("RTRK::adc");
@@ -174,19 +174,19 @@ public class RtrkStrip implements Comparable {
                 int     adc = bank.getInt("ADC", i);
                 double time = bank.getFloat("time", i);
                 
-                RtrkStrip  strip = new RtrkStrip(sector,  layer,   comp);
+                RTRKStrip  strip = new RTRKStrip(sector,  layer,   comp);
                 
 //                strip.setTriggerPhase(triggerPhase);
 strip.setId(bank.trueIndex(i)+1);
 strip.setADC(adc);
 strip.setTDC((int) time);
-strip.setEnergy(strip.ADC*RtrkConstants.ADCTOENERGY);
-strip.setTime(strip.TDC*RtrkConstants.TDCTOTIME);
+strip.setEnergy(strip.ADC*RTRKConstants.ADCTOENERGY);
+strip.setTime(strip.TDC*RTRKConstants.TDCTOTIME);
 strip.setLine(factory.getStrip(sector, layer, comp));
 strip.setChamber(factory.getChamberIndex(comp)+1);
 strip.setStatus(0);
 
-if(strip.getEnergy()>RtrkConstants.THRESHOLD) strips.add(strip);
+if(strip.getEnergy()>RTRKConstants.THRESHOLD) strips.add(strip);
 
             }
         }
