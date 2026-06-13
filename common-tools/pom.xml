@@ -30,6 +30,7 @@
     <module>clas-tracking</module>
     <module>clas-decay-tools</module>
     <module>coat-libs</module>
+    <module>clas-ai-validation</module>
   </modules>
 
 </project>
