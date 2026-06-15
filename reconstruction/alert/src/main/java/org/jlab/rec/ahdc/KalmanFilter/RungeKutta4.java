@@ -103,8 +103,7 @@ public class RungeKutta4 {
 	}
 
 	private double[] f(double[] y) {
-		double charge = 1.0; // the charge should by given by the particle object
-                             // for now, we assume it is a proton
+		double charge = particle.charge();
 		double pModuleInverse = 1.0 / Math.sqrt(y[3] * y[3] + y[4] * y[4] + y[5] * y[5]);
 		double k = charge * PhysicsConstants.speedOfLight() * 10 * pModuleInverse;
 
@@ -133,13 +132,14 @@ public class RungeKutta4 {
 	private void energyLoss(
 			double[] yIn, double h, org.jlab.clas.tracking.kalmanfilter.Material material) {
 	    double mass = particle.mass() * 1000; //particle mass defined in GeV, converted to MeV
+		int charge = particle.charge();
 
 		h /= 10; // h defined in mm, converted to cm
 		double mom = Math.sqrt(yIn[3] * yIn[3] + yIn[4] * yIn[4] + yIn[5] * yIn[5]);
 		double E = Math.sqrt(mom * mom + mass * mass);
 		//material::getEloss(double p, double m)  uses GeV and cm
 		//see common-tools/clas-tracking/src/main/java/org/jlab/clas/tracking/kalmanfilter/Material.java
-		double dedx = material.getEloss(mom/1000, mass/1000) * 1000;//Momentum, mass input in GeV, output in GeV/cm, converted to MeV/cm
+		double dedx = material.getEloss(mom/1000, mass/1000, charge) * 1000;//Momentum, mass input in GeV, output in GeV/cm, converted to MeV/cm
 		double DeltaE = dedx * h;
 
 		stepper.dEdx += DeltaE;

@@ -63,10 +63,15 @@ public class HitFinder {
      * @param event the {@link DataEvent} containing hits.
      * @param atof the {@link Detector} representing the atof geometry to match
      * the sector/layer/component to x/y/z.
+     * @param startTime the event start time
+     * @param atofTimeOffsetsTable the constant table with time offsets
+     * @param atofEffectiveVelocityTable the constant table with effective velocity
+     * @param Run the run number corresponding to the event for run-dependent slope correction
      */
     public void findHits(DataEvent event, Detector atof, Float startTime,
                          IndexedTable atofTimeOffsetsTable,
-                         IndexedTable atofEffectiveVelocityTable) {
+                         IndexedTable atofEffectiveVelocityTable,
+                         int Run) {
         //For each event a list of bar hits and a list of wedge hits are filled
         this.barHits.clear();
         this.wedgeHits.clear();
@@ -92,7 +97,7 @@ public class HitFinder {
             int tot = bank.getInt("ToT", i);
 
             //Building a Hit
-            ATOFHit hit = new ATOFHit(sector, layer, component, order, tdc, tot, startTime, atof, atofTimeOffsetsTable);
+            ATOFHit hit = new ATOFHit(sector, layer, component, order, tdc, tot, startTime, atof, atofTimeOffsetsTable, Run);
             if (hit.getEnergy() < 0.01) {
                 continue; //energy threshold
             }

@@ -113,6 +113,7 @@ rgl = glob.glob('./singles/full/ALERT*.json')
 rgl.extend(glob.glob('./singles/full/AHDC*.json'))
 rgl.extend(glob.glob('./singles/full/ATOF*.json'))
 rgl = [os.path.basename(x)[:-5] for x in rgl]
+rgl.remove('AHDC::wf')
 calib.extend(rgl)
 mon.extend(rgl)
 dst.extend(rgl)
