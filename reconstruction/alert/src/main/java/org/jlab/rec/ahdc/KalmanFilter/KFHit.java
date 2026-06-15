@@ -15,8 +15,15 @@ public interface KFHit {
 	public RealVector getMeasurementVector();
 	/** Return the measurement noise matrix for this this KFHit */
 	public RealMatrix getMeasurementNoiseMatrix();
-	/** Compute the measure for a given state vector */
-	public RealVector getProjectionFunction(RealVector x);
-	/** Compute the Jacobian matrix of the {@link #getProjectionFunction(RealVector)} with respect of the components of the state vector */
+	/** Compute the measurement for a given state vector */
+	public RealVector getProjectionVector(RealVector x);
+	/** Compute the Jacobian matrix of the {@link #getProjectionVector(RealVector)} with respect of the components of the state vector */
 	public RealMatrix getProjectionMatrix(RealVector x);
+
+	/**
+	 * Compute the innovation by subtracting {@link #getMeasurementVector()} and {@link #getProjectionVector(RealVector)} 
+	 * @param x current state estimation
+	 * @return return the innovation vector
+	 */
+	public RealVector getInnovationVector(RealVector x);
 }

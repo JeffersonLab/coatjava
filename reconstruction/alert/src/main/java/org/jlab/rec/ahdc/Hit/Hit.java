@@ -219,9 +219,16 @@ public class Hit implements Comparable<Hit>, KFHit {
 
 	// Projection function
 	@Override
-	public RealVector getProjectionFunction(RealVector x) {
+	public RealVector getProjectionVector(RealVector x) {
 		double d = this.distance(new Point3D(x.getEntry(0), x.getEntry(1), x.getEntry(2)));
 		return MatrixUtils.createRealVector(new double[]{d});
+	}
+
+	@Override
+	public RealVector getInnovationVector(RealVector x) {
+		RealVector measured = getMeasurementVector();
+		RealVector predicted = getProjectionVector(x);
+		return measured.subtract(predicted);
 	}
 
 	// Jacobian matrix of the measurement with respect to (x, y, z, px, py, pz)
@@ -247,8 +254,8 @@ public class Hit implements Comparable<Hit>, KFHit {
 		x_plus.setEntry(i, x_plus.getEntry(i) + h);
 		x_minus.setEntry(i, x_minus.getEntry(i) - h);
 
-		double doca_plus  = this.getProjectionFunction(x_plus).getEntry(0);
-		double doca_minus = this.getProjectionFunction(x_minus).getEntry(0);
+		double doca_plus  = this.getProjectionVector(x_plus).getEntry(0);
+		double doca_minus = this.getProjectionVector(x_minus).getEntry(0);
 
 		return (doca_plus - doca_minus) / (2 * h);
 	}

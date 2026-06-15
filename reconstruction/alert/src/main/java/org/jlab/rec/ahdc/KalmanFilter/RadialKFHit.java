@@ -54,7 +54,7 @@ public class RadialKFHit implements KFHit {
 	
 	// Projection function
 	@Override
-	public RealVector getProjectionFunction(RealVector x) {
+	public RealVector getProjectionVector(RealVector x) {
 
 		double xx = x.getEntry(0);
 		double yy = x.getEntry(1);
@@ -100,6 +100,29 @@ public class RadialKFHit implements KFHit {
 						{dphidx, dphidy, dphidz, dphidpx, dphidpy, dphidpz},
 						{dzdx, dzdy, dzdz, dzdpx, dzdpy, dzdpz}
 				});
+	}
+
+	@Override
+	public RealVector getInnovationVector(RealVector x) {
+		RealVector measured = getMeasurementVector();
+		RealVector predicted = getProjectionVector(x);
+
+		double measuredRadius = measured.getEntry(0);
+		double measuredPhi = measured.getEntry(1);
+		double measuredZ = measured.getEntry(2);
+
+		double predictedRadius = predicted.getEntry(0);
+		double predictedPhi = predicted.getEntry(1);
+		double predictedZ = predicted.getEntry(2);
+
+		double dr = measuredRadius - predictedRadius;
+		double dz = measuredZ - predictedZ;
+		double dphi = Math.atan2(
+			Math.sin(measuredPhi - predictedPhi),
+			Math.cos(measuredPhi - predictedPhi)
+		); // this ensures, we obtain an angle between -pi and pi
+
+		return MatrixUtils.createRealVector(new double[]{dr, dphi, dz});
 	}
 	
 }

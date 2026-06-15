@@ -3,6 +3,8 @@ package org.jlab.rec.ahdc.KalmanFilter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealMatrix;
@@ -11,7 +13,6 @@ import org.jlab.clas.pdg.PDGParticle;
 import org.jlab.clas.tracking.kalmanfilter.Material;
 import org.jlab.rec.ahdc.Hit.Hit;
 import org.jlab.rec.alert.Track.Track;
-
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.geom.base.Component;
 import org.jlab.geom.detector.alert.ATOF.AlertTOFDetector;
@@ -31,6 +32,8 @@ import org.jlab.geom.prim.Point3D;
 public class KalmanFilter {
 
 	public KalmanFilter(PDGParticle particle, int Niter) {this.particle = particle; this.Niter = Niter;}
+
+	static final Logger LOGGER = Logger.getLogger(KalmanFilter.class.getName());
 
 	HashMap<String, Material> materialHashMap = MaterialMap.generateMaterials();
 
@@ -217,8 +220,7 @@ public class KalmanFilter {
 			    
 			}//end of loop on track candidates
 		} catch (Exception e) {
-			e.printStackTrace();
-			//System.out.println("Error in Kalman Filter");
+			LOGGER.log(Level.FINE, "Kalman Filter propagation failed...", e);
 		}
 	}
 	public void set_Niter(int Niter) {this.Niter = Niter;}

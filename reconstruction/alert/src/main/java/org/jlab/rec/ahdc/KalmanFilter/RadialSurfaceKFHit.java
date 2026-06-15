@@ -5,7 +5,6 @@ import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
-import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
 
 /**
@@ -46,7 +45,7 @@ public class RadialSurfaceKFHit implements KFHit {
 	
 	// Projection function
 	@Override
-	public RealVector getProjectionFunction(RealVector x) {
+	public RealVector getProjectionVector(RealVector x) {
 
 		double xx = x.getEntry(0);
 		double yy = x.getEntry(1);
@@ -74,6 +73,13 @@ public class RadialSurfaceKFHit implements KFHit {
 				new double[][]{
 						{drdx, drdy, drdz, drdpx, drdpy, drdpz}
 				});
+	}
+
+	@Override
+	public RealVector getInnovationVector(RealVector x) {
+		RealVector measured = getMeasurementVector();
+		RealVector predicted = getProjectionVector(x);
+		return measured.subtract(predicted);
 	}
 	
 }
