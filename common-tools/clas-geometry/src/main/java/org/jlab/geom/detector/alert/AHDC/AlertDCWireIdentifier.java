@@ -34,11 +34,11 @@ public class AlertDCWireIdentifier {
     public AlertDCWireIdentifier(int _sector, int _layer, int _component) {
         sector = _sector;
         layer = _layer;
-        component = _layer;
+        component = _component;
         num = slc2wire(_sector, _layer, _component);
     }
 
-    /** Get unique number id. Number from 1 to 576 */
+    /** Get unique number id. Number between 0 and 575 */
     public int getNumber() { return num;}
 
     /** Get sector id. Numbering start at 1 */
@@ -171,7 +171,7 @@ public class AlertDCWireIdentifier {
     /**
      * Convert layer number (from 0 to 7) to the superlayer-layer id (11,21,...,51)
      * 
-     * @param digit between 1 and 8
+     * @param digit between 0 and 7
      * @return layer number between (11,21,...,51)
      */
     public static int number2layer(int num) {
