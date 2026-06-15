@@ -38,12 +38,16 @@ public class AlertDCWireIdentifier {
         num = slc2wire(_sector, _layer, _component);
     }
 
+    /** Get unique number id. Number from 1 to 576 */
     public int getNumber() { return num;}
 
+    /** Get sector id. Numbering start at 1 */
     public int getSectorId() {return sector;}
 
+    /** Get layer id. Numbering start at 1 */
     public int getLayerId() {return layer;}
 
+    /** Get component id. Numbering start at 1 */
     public int getComponentId() {return component;}
  
     /**
@@ -235,7 +239,7 @@ public class AlertDCWireIdentifier {
 
     /**
      * 
-     * @param _layer_num between 1 and 8
+     * @param _layer_num between 0 and 7
      * @return the radius of the _layer. See {@link #layer2Radius(int)}
      */
     public static double layerNum2Radius(int _layer_num) {
