@@ -32,6 +32,7 @@ public class Hit implements Comparable<Hit>, KFHit {
 	private double  x;
 	private double  y;
 	private double  residual;
+	private double  residual_LR;
 	private int	trackId;
 
     //updated constructor with ADC
@@ -160,6 +161,14 @@ public class Hit implements Comparable<Hit>, KFHit {
 		this.residual = resid;
 	}
 
+	public double getResidual_LR() {
+		return residual_LR;
+	}
+
+	public void setResidual_LR(double resid) {
+		this.residual_LR = resid;
+	}
+
 	/** Set calibrated ToT */
 	public void setToT(double _tot) {
 		this.tot = _tot;
@@ -257,13 +266,32 @@ public class Hit implements Comparable<Hit>, KFHit {
 	}
 
 	public static void main(String[] args) {
-		AlertDCDetector factory = (new AlertDCFactory()).createDetectorCLAS(new DatabaseConstantProvider());
+		int run = 22712;
+		String variation = "default";
+		DatabaseConstantProvider cp = new DatabaseConstantProvider(run, variation);
+		cp.loadTable("/geometry/alert/ahdc/layer_alignment");
+		cp.loadTable("/geometry/alert/ahdc/wire_alignment");
+		String upstream_rotZ = "/geometry/alert/ahdc/layer_alignment/upstream_rotZ";
+
+		System.out.println(cp.getDouble(upstream_rotZ, 0));
+		System.out.println(cp.getDouble(upstream_rotZ, 1));
+		System.out.println(cp.getDouble(upstream_rotZ, 2));
+		System.out.println(cp.getDouble(upstream_rotZ, 3));
+		System.out.println(cp.getDouble(upstream_rotZ, 4));
+		System.out.println(cp.getDouble(upstream_rotZ, 5));
+		System.out.println(cp.getDouble(upstream_rotZ, 6));
+		System.out.println(cp.getDouble(upstream_rotZ, 7));
+
+
+		AlertDCDetector AHDCdet = (new AlertDCFactory()).createDetectorCLAS(cp);
+		//AHDCdet.print();
+
 		System.out.println("Run test: comparison between two hits.");
 		Hit h1 = new Hit(1,1,1,1,0,0,0);
 		Hit h2 = new Hit(1,1,1,47,0,0,0);
 		Hit h3 = new Hit(1,2,1,47,0,0,0);
-		h1.setWirePosition(factory);
-		h2.setWirePosition(factory);
+		h1.setWirePosition(AHDCdet);
+		h2.setWirePosition(AHDCdet);
 		System.out.println("h1 : " + h1);
 		System.out.println("h2 : " + h2);
 		System.out.println("h3 : " + h3);
@@ -272,31 +300,6 @@ public class Hit implements Comparable<Hit>, KFHit {
 		System.out.println("h2 compare to h1 : " + h2.compareTo(h1));
 		System.out.println("h1 compare to h3 : " + h1.compareTo(h3));
 
-		System.out.println("/////////////////////////"); 
-		System.out.println("Test AHDC geometry"); 
-		System.out.println(""); 
-		System.out.println("s  : sector"); 
-		System.out.println("sl : super layer"); 
-		System.out.println("l  : layer"); 
-		System.out.println("c  : component"); 
-		System.out.println("/////////////////////////"); 
-		System.out.println("------------------------------------------------------------------------------"); 
-		System.out.println("                |            origin            |             end"); 
-		System.out.println("------------------------------------------------------------------------------"); 
-		System.out.println("s   sl  l   c   |     x         y        z     |     x        y        z"); 
-		System.out.println("------------------------------------------------------------------------------");
-		for (int s = 1; s <= factory.getNumSectors(); s++) {
-			for (int sl = 1; sl <= factory.getSector(s).getNumSuperlayers(); sl++) {
-				for (int l = 1; l <= factory.getSector(s).getSuperlayer(sl).getNumLayers(); l++) {
-					for (int c = 1; c <= factory.getSector(s).getSuperlayer(sl).getLayer(l).getNumComponents(); c++) {
-						Line3D line = factory.getSector(s).getSuperlayer(sl).getLayer(l).getComponent(c).getLine();
-						Point3D end = line.end();
-						Point3D origin = line.origin();
-						System.out.printf("%2d  %2d  %2d  %2d  |  %7.3f  %7.3f  %7.3f  |  %7.3f  %7.3f  %7.3f\n", s, sl, l, c, origin.x(), origin.y(), origin.z(), end.x(), end.y(), end.z());
-					}
-				}
-			}
-		}
     }
 
 }

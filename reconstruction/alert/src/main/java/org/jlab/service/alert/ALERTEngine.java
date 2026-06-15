@@ -16,7 +16,6 @@ import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.utils.groups.IndexedTable;
-import org.jlab.geom.base.Detector;
 import org.jlab.geom.detector.alert.ATOF.AlertTOFDetector;
 import org.jlab.geom.detector.alert.ATOF.AlertTOFFactory;
 import org.jlab.io.base.DataBank;
@@ -141,6 +140,8 @@ public class ALERTEngine extends ReconstructionEngine {
     @Override
     public void detectorChanged(int run) {
         DatabaseConstantProvider cp = new DatabaseConstantProvider(run, "default");
+        cp.loadTable("/geometry/alert/ahdc/layer_alignment");
+        cp.loadTable("/geometry/alert/ahdc/wire_alignment");
         ATOF = (new AlertTOFFactory()).createDetectorCLAS(cp);
         AHDC = (new AlertDCFactory()).createDetectorCLAS(cp);
     }
@@ -352,7 +353,6 @@ public class ALERTEngine extends ReconstructionEngine {
         /// ---------------------------------------------------------------------------------------
         /// Track matching using AI ---------------------------------------------------------------
 
-        if (event == null)  return false; // TODO: is it useful?
         if (!event.hasBank("AHDC::track")) return false;
 
         DataBank bank_AHDCtracks = event.getBank("AHDC::track");
@@ -572,8 +572,9 @@ public class ALERTEngine extends ReconstructionEngine {
                     double doca = hitBank.getDouble("doca", hit_row);
                     double time = hitBank.getDouble("time", hit_row);
                     double tot = hitBank.getDouble("timeOverThreshold", hit_row);
-                    // warning : adc is the calibrated one, we need the adc for the Kalman filter
-                    Hit hit = new Hit(id, superlayer, layer, wire, doca, adc, time);
+                    // use raw adc in the Kalman Filter
+                    double gainCorr = ahdcAdcGainsTable.getDoubleValue("gainCorr", 1, 10*superlayer+layer, wire);
+                    Hit hit = new Hit(id, superlayer, layer, wire, doca, adc/gainCorr, time);
                     hit.setWirePosition(AHDC);
                     hit.setTrackId(trackid);
                     hit.setADC(adc);
@@ -796,7 +797,7 @@ public class ALERTEngine extends ReconstructionEngine {
 
         int    nEvent     = 0;
         int    maxEvent   = 1000;
-        int    myEvent    = 3;
+        //int    myEvent    = 3;
         String inputFile  = "alert_out_update.hipo";
         String outputFile = "output.hipo";
 
