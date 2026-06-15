@@ -32,6 +32,8 @@ public class EBio {
             dHeader.setRun(bank.getInt("run", 0));
             dHeader.setEvent(bank.getInt("event", 0));
             dHeader.setTrigger(bank.getLong("trigger", 0));
+            dHeader.setTorus(bank.getFloat("torus", 0));
+            dHeader.setSolenoid(bank.getFloat("solenoid", 0));
         }
 
         // helicity:

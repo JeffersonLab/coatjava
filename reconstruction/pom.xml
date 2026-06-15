@@ -4,13 +4,13 @@
 
   <groupId>org.jlab.clas12</groupId>
   <artifactId>reconstruction</artifactId>
-  <version>13.7.1-SNAPSHOT</version>
+  <version>14.1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <parent>
     <groupId>org.jlab.clas</groupId>
     <artifactId>coatjava</artifactId>
-    <version>13.7.1-SNAPSHOT</version>
+    <version>14.1.0-SNAPSHOT</version>
   </parent>
 
   <modules>
@@ -36,7 +36,6 @@
     <module>urwt</module>
     <module>alert</module>
     <module>bg</module>
-    <module>postproc</module>
     <module>recoil</module>
     <module>calib</module>
     <module>uber</module>

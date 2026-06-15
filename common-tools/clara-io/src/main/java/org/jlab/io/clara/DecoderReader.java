@@ -14,11 +14,7 @@ import org.jlab.jnp.hipo4.data.Event;
 import org.json.JSONObject;
 
 /**
- * Combined with DecoderWriter, a port of the standard "decoder" to CLARA.
- * 
- * 1. Convert EVIO to HIPO
- * 2. CCDB translation tables, c/s/c -> s/l/c/o
- * 3. Pulse extraction, e.g., Mode-1 FADC250
+ * The CLAS decoder.  Requires EVIO input.
  * 
  * @author baltzell
  */

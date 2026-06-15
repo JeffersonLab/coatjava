@@ -1,6 +1,5 @@
 package org.jlab.rec.ft;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -52,14 +51,15 @@ public class FTEBEngine extends ReconstructionEngine {
         };
         requireConstants(Arrays.asList(tables));
         this.getConstantsManager().setVariation("default");
-
         this.registerOutputBank("FT::particles");
-
         return true;
     }
 
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public void detectorChanged(int runNumber) {}
+
+    @Override
+    public boolean processDataEventUser(DataEvent event) {
         
         int run = this.setRunConditionsParameters(event);
         if (run>=0) {

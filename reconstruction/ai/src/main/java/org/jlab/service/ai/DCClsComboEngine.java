@@ -59,6 +59,9 @@ public class DCClsComboEngine extends ReconstructionEngine {
     }
 
     @Override
+    public void detectorChanged(int run){}
+
+    @Override
     public boolean init() {
         System.setProperty("ai.djl.pytorch.num_interop_threads", "1");
         System.setProperty("ai.djl.pytorch.num_threads", "1");
@@ -116,7 +119,7 @@ public class DCClsComboEngine extends ReconstructionEngine {
     }
     
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         
         //// 6-cluster combo prediction
         // load clusters from bank HitBasedTrkg::Clusters         

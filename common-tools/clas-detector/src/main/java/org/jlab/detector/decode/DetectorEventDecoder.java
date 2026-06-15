@@ -28,11 +28,14 @@ public class DetectorEventDecoder {
     List<DetectorType> keysTrans    = null;
     List<DetectorType> keysFitter   = null;
     List<DetectorType> keysFilter   = null;
+    List<DetectorType> keysMicromega= null;
 
     private int runNumber = 10;
 
     private ExtendedFADCFitter extendedFitter = new ExtendedFADCFitter();
     private MVTFitter mvtFitter = new MVTFitter();
+
+    private TranslationTable translator = new TranslationTable();
 
     public DetectorEventDecoder(boolean development){
         if(development==true){
@@ -40,6 +43,17 @@ public class DetectorEventDecoder {
         } else {
             this.initDecoder();
         }
+    }
+
+    public DetectorEventDecoder(){
+        this.initDecoder();
+    }
+
+    public DetectorEventDecoder(DetectorEventDecoder d) {
+        translationManager = d.translationManager;
+        fitterManager = d.fitterManager;
+        scalerManager = d.scalerManager;
+        initDecoder(false);
     }
 
     public void setTimestamp(String timestamp) {
@@ -55,6 +69,11 @@ public class DetectorEventDecoder {
     }
 
     public void setRunNumber(int run){
+        if (run != this.runNumber) {
+            translator = new TranslationTable();
+            for (int i=0; i<keysTrans.size(); i++)
+                translator.add(keysTrans.get(i), translationManager.getConstants(run, tablesTrans.get(i)));
+        }
         this.runNumber = run;
     }
 
@@ -72,10 +91,6 @@ public class DetectorEventDecoder {
                 getValue()).floatValue();
     }
 
-    public DetectorEventDecoder(){
-        this.initDecoder();
-    }
-
     public final void initDecoderDev(){
         keysTrans = Arrays.asList(new DetectorType[]{ DetectorType.HTCC,DetectorType.BST,DetectorType.RTPC} );
         tablesTrans = Arrays.asList(new String[]{ "/daq/tt/clasdev/htcc","/daq/tt/clasdev/svt","/daq/tt/clasdev/rtpc" });
@@ -87,7 +102,11 @@ public class DetectorEventDecoder {
                                                       "/runcontrol/helicity","/daq/config/scalers/dsc1"}));
     }
 
-    public final void initDecoder(){
+    public final void initDecoder() {
+        initDecoder(true);
+    }
+
+    public final void initDecoder(boolean initializeManagers){
 
         // Detector translation table
         keysTrans = Arrays.asList(new DetectorType[]{DetectorType.FTCAL,DetectorType.FTHODO,DetectorType.FTTRK,DetectorType.LTCC,DetectorType.ECAL,DetectorType.FTOF,
@@ -101,7 +120,6 @@ public class DetectorEventDecoder {
             "/daq/tt/rf","/daq/tt/bmt","/daq/tt/fmt","/daq/tt/rich2","/daq/tt/hel","/daq/tt/band","/daq/tt/rtpc",
             "/daq/tt/raster","/daq/tt/atof","/daq/tt/ahdc"
         });
-        translationManager.init(tablesTrans);
         
         // ADC waveform fitter translation table
         keysFitter   = Arrays.asList(new DetectorType[]{DetectorType.FTCAL,DetectorType.FTHODO,DetectorType.FTTRK,DetectorType.FTOF,DetectorType.LTCC,
@@ -114,15 +132,20 @@ public class DetectorEventDecoder {
             "/daq/config/fmt","/daq/fadc/hel","/daq/fadc/rf","/daq/fadc/band","/daq/fadc/raster",
             "/daq/config/ahdc"
         });
-        fitterManager.init(tablesFitter);
 
         // Data filter list
         keysFilter   = Arrays.asList(new DetectorType[]{DetectorType.DC});
-
-        scalerManager.init(Arrays.asList(new String[]{"/runcontrol/fcup","/runcontrol/slm","/runcontrol/hwp",
-                                                      "/runcontrol/helicity","/daq/config/scalers/dsc1"}));
         
-        checkTables();
+        keysMicromega = Arrays.asList(new DetectorType[]{DetectorType.BMT,DetectorType.FMT,DetectorType.FTTRK});
+
+        if (initializeManagers) {
+            translationManager.init(tablesTrans);
+            fitterManager.init(tablesFitter);
+            scalerManager.init(Arrays.asList(new String[]{"/runcontrol/fcup","/runcontrol/slm","/runcontrol/hwp",
+                                                          "/runcontrol/helicity","/daq/config/scalers/dsc1"}));
+            checkTables();
+        }
+
     }
 
     public void checkTables() {
@@ -140,44 +163,21 @@ public class DetectorEventDecoder {
      */
     public void translate(List<DetectorDataDgtz>  detectorData){
 
-        // Preload CCDB tables:
-        ArrayList<IndexedTable> tables = new ArrayList<>();
-        for (String name : tablesTrans) {
-            tables.add(translationManager.getConstants(runNumber, name));
-        }
+        for (DetectorDataDgtz d : detectorData) {
 
-        for (DetectorDataDgtz data : detectorData) {
+            // Get the hardware indexing for this detector data object:
+            long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(d.getDescriptor().getCrate(),
+                d.getDescriptor().getSlot(), d.getDescriptor().getChannel());
 
-            // Get the hardware indexing for this detector hit:
-            int crate    = data.getDescriptor().getCrate();
-            int slot     = data.getDescriptor().getSlot();
-            int channel  = data.getDescriptor().getChannel();
-            long hash    = IndexedTable.DEFAULT_GENERATOR.hashCode(crate,slot,channel);
-            
-            // Try to find it in the translation tables:
-            for (int j=0; j<tablesTrans.size(); ++j) {
+            if (translator.hasEntryByHash(hash)) {
 
-                IndexedTable t = tables.get(j);
+                // The tanslated detector indexing:
+                List<Integer> x = translator.getIntegersByHash(hash);
 
-                // Found it; now set the detector indexing for this hit:
-                if (t.hasEntryByHash(hash)) {
-
-                    int sector    = t.getIntValueByHash(0, hash);
-                    int layer     = t.getIntValueByHash(1, hash);
-                    int component = t.getIntValueByHash(2, hash);
-                    int order     = t.getIntValueByHash(3, hash);
-
-                    data.getDescriptor().setSectorLayerComponent(sector, layer, component);
-                    data.getDescriptor().setOrder(order);
-                    data.getDescriptor().setType(keysTrans.get(j));
-
-                    for(int i = 0; i < data.getADCSize(); i++) data.getADCData(i).setOrder(order);
-                    for(int i = 0; i < data.getTDCSize(); i++) data.getTDCData(i).setOrder(order);
-
-                    // Assume there's only one instance of this crate/slot/channel
-                    // in all translation tables, and we found it, so stop:
-                    break;
-                }
+                // Set the translated detector indexing:
+                d.getDescriptor().setSectorLayerComponentOrderType(x.get(0),x.get(1),x.get(2),x.get(3),x.get(4));
+                for (int i=0; i<d.getADCSize(); i++) d.getADCData(i).setOrder(x.get(3));
+                for (int i=0; i<d.getTDCSize(); i++) d.getTDCData(i).setOrder(x.get(3));
             }
         }
     }
@@ -191,69 +191,63 @@ public class DetectorEventDecoder {
         }
 
         for(DetectorDataDgtz data : detectorData){
+            if (data.getADCSize() == 0) continue;
             int crate    = data.getDescriptor().getCrate();
             int slot     = data.getDescriptor().getSlot();
             int channel  = data.getDescriptor().getChannel();
             long hash    = IndexedTable.DEFAULT_GENERATOR.hashCode(crate,slot,channel);
             long hash0   = IndexedTable.DEFAULT_GENERATOR.hashCode(0,0,0);
+            boolean ismm = keysMicromega.contains(data.getDescriptor().getType());
+
             for (int j=0; j<keysFitter.size(); ++j) {
                 IndexedTable daq = tables.get(j);
                 DetectorType type = keysFitter.get(j);
                 //custom MM fitter
-            	if( ( (type == DetectorType.BMT)&&(data.getDescriptor().getType().getName().equals("BMT")) )
-                 || ( (type == DetectorType.FMT)&&(data.getDescriptor().getType().getName().equals("FMT")) )
-                 //|| ( (type == DetectorType.AHDC)&&(data.getDescriptor().getType().getName().equals("AHDC")) )
-                 || ( (type == DetectorType.FTTRK)&&(data.getDescriptor().getType().getName().equals("FTTRK")) ) ){
+                if (ismm && data.getDescriptor().getType() == type) {
                     short adcOffset = (short) daq.getDoubleValueByHash("adc_offset", hash0);
                     double fineTimeStampResolution = (byte) daq.getDoubleValueByHash("dream_clock", hash0);
                     double samplingTime = (byte) daq.getDoubleValueByHash("sampling_time", hash0);
                     int sparseSample = daq.getIntValueByHash("sparse", hash0);
-                    if (data.getADCSize() > 0) {
-                        ADCData adc = data.getADCData(0);
-                        mvtFitter.fit(adcOffset, fineTimeStampResolution, samplingTime, adc.getPulseArray(), adc.getTimeStamp(), sparseSample);
-                        adc.setHeight((short) (mvtFitter.adcMax));
-                        adc.setTime((int) (mvtFitter.timeMax));
-                        adc.setIntegral((int) (mvtFitter.integral));
-                        adc.setTimeStamp(mvtFitter.timestamp);
+                    ADCData adc = data.getADCData(0);
+                    mvtFitter.fit(adcOffset, fineTimeStampResolution, samplingTime, adc.getPulseArray(), adc.getTimeStamp(), sparseSample);
+                    adc.setHeight((short) (mvtFitter.adcMax));
+                    adc.setTime((int) (mvtFitter.timeMax));
+                    adc.setIntegral((int) (mvtFitter.integral));
+                    adc.setTimeStamp(mvtFitter.timestamp);
+                    // first one wins:
+                    break;
+                }
+                else if(daq.hasEntryByHash(hash)==true){
+                    int nsa = daq.getIntValueByHash("nsa", hash);
+                    int nsb = daq.getIntValueByHash("nsb", hash);
+                    int tet = daq.getIntValueByHash("tet", hash);
+                    int ped = 0;
+                    if(data.getDescriptor().getType() == DetectorType.RF && type == DetectorType.RF) {
+                        ped = daq.getIntValueByHash("pedestal", hash);
                     }
-                } else {
-                    if(daq.hasEntryByHash(hash)==true){
-                        int nsa = daq.getIntValueByHash("nsa", hash);
-                        int nsb = daq.getIntValueByHash("nsb", hash);
-                        int tet = daq.getIntValueByHash("tet", hash);
-                        int ped = 0;
-                        if(type == DetectorType.RF&&data.getDescriptor().getType().getName().equals("RF")) {
-                            ped = daq.getIntValueByHash("pedestal", hash);
-                        }
-                        if(data.getADCSize()>0){
-                            for(int i = 0; i < data.getADCSize(); i++){
-                                ADCData adc = data.getADCData(i);
-                                if(adc.getPulseSize()>0){
-                                    try {
-                                        extendedFitter.fit(nsa, nsb, tet, ped, adc.getPulseArray());
-                                    } catch (Exception e) {
-                                        System.out.println(">>>> error : fitting pulse "
-                                                            +  crate + " / " + slot + " / " + channel);
-                                    }
-                                    int adc_corrected = extendedFitter.adc + extendedFitter.ped*(nsa+nsb);
-                                    adc.setHeight((short) this.extendedFitter.pulsePeakValue);
-                                    adc.setIntegral(adc_corrected);
-                                    adc.setTimeWord(this.extendedFitter.t0);
-                                    adc.setPedestal((short) this.extendedFitter.ped);
-                                }
+                    for(int i = 0; i < data.getADCSize(); i++){
+                        ADCData adc = data.getADCData(i);
+                        if(adc.getPulseSize()>0){
+                            try {
+                                extendedFitter.fit(nsa, nsb, tet, ped, adc.getPulseArray());
+                            } catch (Exception e) {
+                                System.out.println(">>>> error : fitting pulse "
+                                    +  crate + " / " + slot + " / " + channel);
                             }
+                            int adc_corrected = extendedFitter.adc + extendedFitter.ped*(nsa+nsb);
+                            adc.setHeight((short) this.extendedFitter.pulsePeakValue);
+                            adc.setIntegral(adc_corrected);
+                            adc.setTimeWord(this.extendedFitter.t0);
+                            adc.setPedestal((short) this.extendedFitter.ped);
                         }
-                        if(data.getADCSize()>0){
-                            for(int i = 0; i < data.getADCSize(); i++){
-                                    data.getADCData(i).setADC(nsa, nsb);
-                            }
-                        }
+                        data.getADCData(i).setADC(nsa, nsb);
                     }
+                    // first one wins:
+                    break;
                 }
             }
         }
     }
-
 
     public void filterTDCs(List<DetectorDataDgtz>  detectorData){
         int maxMultiplicity = 1;

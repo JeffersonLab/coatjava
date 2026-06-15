@@ -294,6 +294,8 @@ public class TrackCandListFinder {
                 
                 if(cand.get_Vtx0() != null){
                     Point3D VTCS = cand.get(cand.size()-1).getCoordsInTiltedSector(cand.get_Vtx0().x(), cand.get_Vtx0().y(), cand.get_Vtx0().z());
+                    finalSV.k = measSurfaces.size()-1;
+                    kFZRef.finalStateVec = finalSV;                    
                     double deltaPathToVtx =  kFZRef.getDeltaPathToVtx(sector, VTCS.z());
 
                     List<org.jlab.rec.dc.trajectory.StateVec> kfStateVecsAlongTrajectory = setKFStateVecsAlongTrajectory(kFZRef, deltaPathToVtx);

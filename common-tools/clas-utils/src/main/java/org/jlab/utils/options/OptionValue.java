@@ -55,6 +55,6 @@ public class OptionValue {
     }
 
     public boolean isDefault() {
-        return this.optionValue.equals(this.optionDefault);
+        return this.optionValue==null || this.optionValue.equals(this.optionDefault);
     }
 }
