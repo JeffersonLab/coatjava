@@ -229,8 +229,8 @@ public class AlertDCFactory implements Factory<AlertDCDetector, AlertDCSector, A
 			p_10.rotateZ(wire_rotZ + downstream_rotZ);
 			p_11.rotateZ(wire_rotZ + downstream_rotZ);
 
-			lPoint.rotateZ(upstream_rotZ);
-			rPoint.rotateZ(downstream_rotZ);
+			lPoint.rotateZ(wire_rotZ + upstream_rotZ);
+			rPoint.rotateZ(wire_rotZ + downstream_rotZ);
 			wireLine = new Line3D(lPoint, rPoint);
 
 
