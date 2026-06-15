@@ -37,8 +37,8 @@ public final class MUCALGeant4Factory extends Geant4Factory {
 
         for (int sector = 1; sector <= 2; sector++) {
                 List<G4Trd> layerVolume = createPanel(provider, sector, 1);
-                for (G4Trd paddle : layerVolume) {
-                    paddle.setMother(motherVolume);
+                for (G4Trd crystal : layerVolume) {
+                    crystal.setMother(motherVolume);
                 }
                 // layerVolume.setMother(motherVolume);
         }
@@ -50,9 +50,9 @@ public final class MUCALGeant4Factory extends Geant4Factory {
     private List<G4Trd> createPanel(ConstantProvider cp, int sector, int layer) {
 
 
-        List<G4Trd> paddles = this.createLayer(cp, layer);
+        List<G4Trd> crystals = this.createLayer(cp, layer);
 
-        return paddles;
+        return crystals;
     }
     private List<G4Trd> createLayer(ConstantProvider cp, int layer) {
 
@@ -73,7 +73,7 @@ public final class MUCALGeant4Factory extends Geant4Factory {
         double centerX, centerY, x12, x22, y12, y22, rad1, rad2, rad3, rad4, rxy;
         double centerZ, thetaX, thetaY, radius, posX, posY, posZ, dx1, dx2, dz;
         String vname;
-        List<G4Trd> paddleVolumes = new ArrayList<>();
+        List<G4Trd> crystalVolumes = new ArrayList<>();
 
         for(int iX = 0; iX < nCrystal; iX++)
 	    {
@@ -114,31 +114,31 @@ public final class MUCALGeant4Factory extends Geant4Factory {
                 crvolume.makeSensitive();
                 crvolume.rotate("zyx",0, thetaX, thetaY);
                 crvolume.translate(posX, posY, posZ);
-                paddleVolumes.add(crvolume);
+                crystalVolumes.add(crvolume);
             }
 
             }
         }
 
-        return paddleVolumes;
+        return crystalVolumes;
     }
 
-    public G4Trd getComponent(int sector, int layer, int paddle) {
+    public G4Trd getComponent(int sector, int layer, int crystal) {
         int ivolume = (sector - 1) * 3 + layer - 1;
 
         if (sector >= 1 && sector <= 6
                 && layer >= 1 && layer <= 3) {
 
             List<Geant4Basic> panel = motherVolume.getChildren().get(ivolume).getChildren();
-            int npaddles = panel.size();
+            int ncrystals = panel.size();
 
-            if (paddle >= 1 && paddle <= npaddles) {
-                return (G4Trd) panel.get(paddle - 1);
+            if (crystal >= 1 && crystal <= ncrystals) {
+                return (G4Trd) panel.get(crystal - 1);
             }
         }
 
         System.err.println("ERROR!!!");
-        System.err.println("Component: sector: " + sector + ", layer: " + layer + ", paddle: " + paddle + " doesn't exist");
+        System.err.println("Component: sector: " + sector + ", layer: " + layer + ", crystal: " + crystal + " doesn't exist");
         throw new IndexOutOfBoundsException();
     }
     
