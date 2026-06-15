@@ -16,7 +16,6 @@ import org.jlab.clas.reco.ReconstructionEngine;
 import org.jlab.clas.swimtools.Swim;
 import org.jlab.detector.calib.utils.DatabaseConstantProvider;
 import org.jlab.utils.groups.IndexedTable;
-import org.jlab.geom.base.Detector;
 import org.jlab.geom.detector.alert.ATOF.AlertTOFDetector;
 import org.jlab.geom.detector.alert.ATOF.AlertTOFFactory;
 import org.jlab.io.base.DataBank;
@@ -354,7 +353,6 @@ public class ALERTEngine extends ReconstructionEngine {
         /// ---------------------------------------------------------------------------------------
         /// Track matching using AI ---------------------------------------------------------------
 
-        if (event == null)  return false; // TODO: is it useful?
         if (!event.hasBank("AHDC::track")) return false;
 
         DataBank bank_AHDCtracks = event.getBank("AHDC::track");
@@ -799,7 +797,7 @@ public class ALERTEngine extends ReconstructionEngine {
 
         int    nEvent     = 0;
         int    maxEvent   = 1000;
-        int    myEvent    = 3;
+        //int    myEvent    = 3;
         String inputFile  = "alert_out_update.hipo";
         String outputFile = "output.hipo";
 
