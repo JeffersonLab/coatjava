@@ -5,22 +5,14 @@
  */
 package org.jlab.detector.geant4.v2;
 
-import eu.mihosoft.vrl.v3d.Vector3d;
 import org.jlab.detector.volume.Geant4Basic;
 import org.jlab.detector.volume.G4Trd;
-import org.jlab.detector.volume.G4Box;
 import java.util.ArrayList;
 import java.util.List;
-import org.jlab.detector.base.DetectorType;
-import org.jlab.detector.base.GeometryFactory;
-import org.jlab.detector.units.SystemOfUnits.Length;
 
 import static org.jlab.detector.units.SystemOfUnits.Length;
 import org.jlab.detector.volume.G4World;
 import org.jlab.geom.base.ConstantProvider;
-import org.jlab.geom.prim.Plane3D;
-import org.jlab.geom.prim.Trap3D;
-import org.jlab.geometry.prim.Line3d;
 
 /**
  *
