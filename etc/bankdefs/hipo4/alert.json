@@ -229,6 +229,10 @@
         "type": "D",
         "info": "residual (mm) calculated by the Kalman Filter"
       }, {
+        "name": "residual_LR",
+        "type": "D",
+        "info": "residual Left-Right (mm) calculated by the Kalman Filter and used for the AHDC alignment"
+      }, {
         "name": "time",
         "type": "D",
         "info": "calibrated time (ns)"
