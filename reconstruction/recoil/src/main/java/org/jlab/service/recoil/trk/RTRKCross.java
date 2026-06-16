@@ -1,7 +1,8 @@
-package org.jlab.service.recoil;
+package org.jlab.service.recoil.trk;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.jlab.detector.geant4.v2.recoil.trk.RTRKConstants;
 import org.jlab.geom.prim.Plane3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
@@ -10,8 +11,8 @@ import org.jlab.geom.prim.Vector3D;
  * recoil V-W clusters
  * @author devita, niccolai
  */
-public class RecoilCross {
-
+public class RTRKCross {
+    
     private int id;
     
     private int sector;
@@ -26,17 +27,15 @@ public class RecoilCross {
     private double  time;
     private int     status;
     
-    
-    
-    public RecoilCross(RecoilCluster c1, RecoilCluster c2) {
+    public RTRKCross(RTRKCluster c1, RTRKCluster c2) {
         
-	Vector3D  dir = c1.getLine().direction().cross(c2.getLine().direction());
+        Vector3D  dir = c1.getLine().direction().cross(c2.getLine().direction());
         Plane3D plane = new Plane3D(c1.getLine().origin(), c1.getLine().direction().cross(dir));
         Point3D point = new Point3D();
         int nint = plane.intersectionSegment(c2.getLine(), point);
         if(nint==1) {
             this.sector = c1.getSector();
-            this.region = (c1.getLayer()-1)/(RecoilConstants.NLAYER/RecoilConstants.NREGION)+1;
+            this.region = (c1.getLayer()-1)/(RTRKConstants.NLAYERS/RTRKConstants.NREGIONS)+1;
             this.cross  = point;
             this.energy = c1.getEnergy() + c2.getEnergy();
             this.time   = (c1.getTime() + c2.getTime())/2;
@@ -44,11 +43,11 @@ public class RecoilCross {
             this.cluster2 = c2.getId();
         }
     }
-
+    
     public void setId(int id) {
         this.id = id;
     }
-
+    
     public int getId() {
         return id;
     }
@@ -68,19 +67,19 @@ public class RecoilCross {
     public int getCluster1() {
         return cluster1;
     }
-
+    
     public int getCluster2() {
         return cluster2;
     }
-
+    
     public Point3D point() {
         return cross;
-    }   
-
+    }
+    
     public double getEnergy() {
         return energy;
     }
-
+    
     public double getTime() {
         return time;
     }
@@ -88,21 +87,21 @@ public class RecoilCross {
     public int getStatus() {
         return status;
     }
-
-    public static List<RecoilCross> createCrosses(List<RecoilCluster> clusters) {
+    
+    public static List<RTRKCross> createCrosses(List<RTRKCluster> clusters) {
         
-        List<RecoilCross> crosses = new ArrayList<>();
+        List<RTRKCross> crosses = new ArrayList<>();
         
-        for(int is=0; is<RecoilConstants.NSECTOR; is++) {
-            for(int ir=0; ir<RecoilConstants.NREGION; ir++) {
-                List<RecoilCluster> clustersV = RecoilCluster.getClusters(clusters, is+1, (RecoilConstants.NLAYER/RecoilConstants.NREGION)*ir+1);
-                List<RecoilCluster> clustersW = RecoilCluster.getClusters(clusters, is+1, (RecoilConstants.NLAYER/RecoilConstants.NREGION)*ir+2);
+        for(int is=0; is<RTRKConstants.NSECTORS; is++) {
+            for(int ir=0; ir<RTRKConstants.NREGIONS; ir++) {
+                List<RTRKCluster> clustersV = RTRKCluster.getClusters(clusters, is+1, (RTRKConstants.NLAYERS/RTRKConstants.NREGIONS)*ir+1);
+                List<RTRKCluster> clustersW = RTRKCluster.getClusters(clusters, is+1, (RTRKConstants.NLAYERS/RTRKConstants.NREGIONS)*ir+2);
                 
-                for(RecoilCluster v : clustersV) {
-                    for(RecoilCluster w : clustersW) {
+                for(RTRKCluster v : clustersV) {
+                    for(RTRKCluster w : clustersW) {
                         
                         if(v.getChamber()==w.getChamber()) {
-                            RecoilCross cross = new RecoilCross(v, w);
+                            RTRKCross cross = new RTRKCross(v, w);
                             if(cross.point()!=null) crosses.add(cross);
                             cross.setId(crosses.size());
                         }
