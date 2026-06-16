@@ -12,7 +12,6 @@ import org.jlab.rec.ahdc.PreCluster.PreCluster;
 import org.jlab.rec.alert.Track.Track;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class RecoBankWriter {
 
@@ -29,6 +28,7 @@ public class RecoBankWriter {
 			bank.setInt("wire", i, hitList.get(i).getWireId());
 			bank.setDouble("doca", i, hitList.get(i).getDoca());
 			bank.setDouble("residual", i, hitList.get(i).getResidual());
+			bank.setDouble("residual_LR", i, hitList.get(i).getResidual_LR());
 			bank.setDouble("time", i, hitList.get(i).getTime());
 			bank.setInt("adc", i, (int) hitList.get(i).getADC());
 			bank.setDouble("timeOverThreshold", i, hitList.get(i).getToT());

@@ -145,6 +145,7 @@ public class KalmanFilter {
 			    for (Hit hit : AHDC_hits) {
                     PostFitPropagator.predict(hit, true);
 					hit.setResidual(PostFitPropagator.residual(hit)); // output: residual
+					hit.setResidual_LR(PostFitPropagator.residual_LR(hit)); // output: residual LR
 			    }
 
 				// Fill values for AHDC::kftrack

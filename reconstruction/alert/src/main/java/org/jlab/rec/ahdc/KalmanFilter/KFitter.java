@@ -7,6 +7,7 @@ import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.jlab.clas.pdg.PhysicsConstants;
 import org.jlab.clas.tracking.kalmanfilter.Material;
+import org.jlab.geom.prim.Line3D;
 import org.jlab.geom.prim.Point3D;
 import org.jlab.rec.ahdc.Hit.Hit;
 
@@ -118,6 +119,20 @@ public class KFitter {
 	public double residual(Hit hit) {
 		double d = hit.distance( new Point3D( stateEstimation.getEntry(0), stateEstimation.getEntry(1), stateEstimation.getEntry(2) ) );
 		return hit.getDoca()-d;
+	}
+
+	// specific to AHDC hits
+	public double residual_LR(Hit hit) {
+		Line3D line = hit.getLine().distance( new Point3D( stateEstimation.getEntry(0), stateEstimation.getEntry(1), stateEstimation.getEntry(2) ) );
+		//Point3D A = line.origin(); // point on the wire line
+		Point3D B = line.end(); // point on the track
+		Point3D C = line.lerpPoint(hit.getDoca()/line.length()); // measurement point on [AB)
+
+		double phiC = Math.atan2(C.y(), C.x()); // between -pi and pi rad
+		double phiB = Math.atan2(B.y(), B.x());
+		//double phiA = Math.atan2(A.y(), A.x());
+
+		return Math.signum(phiC - phiB)*Math.abs(hit.getDoca()-line.length());
 	}
 
     public void ResetErrorCovariance(final RealMatrix initialErrorCovariance){

@@ -205,6 +205,35 @@ public class AlertDCFactory implements Factory<AlertDCDetector, AlertDCSector, A
 			Point3D p_9  = new Point3D(px_9, py_9, z_end);
 			Point3D p_10 = new Point3D(px_10, py_10, z_end);
 			Point3D p_11 = new Point3D(px_11, py_11, z_end);
+
+			// !!! 	Alignment correction
+			int layer_row = AlertDCWireIdentifier.layer2number((superlayerId+1)*10 + (layerId+1));
+			double upstream_rotZ = Math.toRadians(cp.getDouble("/geometry/alert/ahdc/layer_alignment/upstream_rotZ", layer_row));
+			double downstream_rotZ = Math.toRadians(cp.getDouble("/geometry/alert/ahdc/layer_alignment/downstream_rotZ", layer_row));
+			int wire_row = AlertDCWireIdentifier.slc2wire(sectorId+1, (superlayerId+1)*10 + (layerId+1), wireId+1);
+			double wire_rotZ = Math.toRadians(cp.getDouble("/geometry/alert/ahdc/wire_alignment/rotZ", wire_row));
+
+			//System.out.printf("%d %d %d, %f , %f, %f\n",sectorId+1, (superlayerId+1)*10 + (layerId+1), wireId+1, Math.toDegrees(upstream_rotZ), Math.toDegrees(downstream_rotZ), Math.toDegrees(wire_rotZ));
+
+			p_0.rotateZ(wire_rotZ + upstream_rotZ);
+			p_1.rotateZ(wire_rotZ + upstream_rotZ);
+			p_2.rotateZ(wire_rotZ + upstream_rotZ);
+			p_3.rotateZ(wire_rotZ + upstream_rotZ);
+			p_4.rotateZ(wire_rotZ + upstream_rotZ);
+			p_5.rotateZ(wire_rotZ + upstream_rotZ);
+
+			p_6.rotateZ(wire_rotZ + downstream_rotZ);
+			p_7.rotateZ(wire_rotZ + downstream_rotZ);
+			p_8.rotateZ(wire_rotZ + downstream_rotZ);
+			p_9.rotateZ(wire_rotZ + downstream_rotZ);
+			p_10.rotateZ(wire_rotZ + downstream_rotZ);
+			p_11.rotateZ(wire_rotZ + downstream_rotZ);
+
+			lPoint.rotateZ(wire_rotZ + upstream_rotZ);
+			rPoint.rotateZ(wire_rotZ + downstream_rotZ);
+			wireLine = new Line3D(lPoint, rPoint);
+
+
 			// defining a cell around a wireLine, must be counter-clockwise!
 			firstF.add(p_0);
 			firstF.add(p_5);
