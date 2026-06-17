@@ -154,20 +154,20 @@ public class DetectorEventDecoder {
 
         tableFitter.put(DetectorType.FTCAL,  "/daq/fadc/ftcal");
         tableFitter.put(DetectorType.FTHODO, "/daq/fadc/fthodo");
-        tableFitter.put(DetectorType.FTTRK,  "/daq/fadc/fttrk");
+        tableFitter.put(DetectorType.FTTRK,  "/daq/config/fttrk");
         tableFitter.put(DetectorType.FTOF,   "/daq/fadc/ftof");
         tableFitter.put(DetectorType.LTCC,   "/daq/fadc/ltcc");
         tableFitter.put(DetectorType.ECAL,   "/daq/fadc/ec");
         tableFitter.put(DetectorType.HTCC,   "/daq/fadc/htcc");
         tableFitter.put(DetectorType.CTOF,   "/daq/fadc/ctof");
         tableFitter.put(DetectorType.CND,    "/daq/fadc/cnd");
-        tableFitter.put(DetectorType.BMT,    "/daq/fadc/bmt");
-        tableFitter.put(DetectorType.FMT,    "/daq/fadc/fmt");
+        tableFitter.put(DetectorType.BMT,    "/daq/config/bmt");
+        tableFitter.put(DetectorType.FMT,    "/daq/config/fmt");
         tableFitter.put(DetectorType.HEL,    "/daq/fadc/hel");
         tableFitter.put(DetectorType.RF,     "/daq/fadc/rf");
         tableFitter.put(DetectorType.BAND,   "/daq/fadc/band");
         tableFitter.put(DetectorType.RASTER, "/daq/fadc/raster");
-        tableFitter.put(DetectorType.AHDC,   "/daq/fadc/ahdc");
+        tableFitter.put(DetectorType.AHDC,   "/daq/config/ahdc");
         
         if (initializeManagers) {
             translationManager.init(tableTrans.values().stream().collect(Collectors.toList()));
