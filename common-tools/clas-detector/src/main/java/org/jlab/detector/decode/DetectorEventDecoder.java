@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.jlab.detector.banks.RawBank.OrderType;
+import org.jlab.detector.base.DetectorDescriptor;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.decode.DetectorDataDgtz.ADCData;
@@ -220,7 +221,8 @@ public class DetectorEventDecoder {
 
             if (data.getADCSize() == 0) continue;
 
-            DetectorType type = data.getDescriptor().getType();
+            final DetectorDescriptor desc = data.getDescriptor();
+            final DetectorType type = desc.getType();
 
             if (!tablesFitter.containsKey(type)) continue;
 
@@ -228,10 +230,10 @@ public class DetectorEventDecoder {
 
             // For Micromegas, assume crate/slot/channel=0/0/0 for table lookup:
             if (keysMicromega.contains(type)) {
-                short adcOffset = (short) daqTable.getDoubleValueByHash("adc_offset", hash0);
-                double fineTimeStampResolution = (byte) daqTable.getDoubleValueByHash("dream_clock", hash0);
-                double samplingTime = (byte) daqTable.getDoubleValueByHash("sampling_time", hash0);
-                int sparseSample = daqTable.getIntValueByHash("sparse", hash0);
+                final short adcOffset = (short) daqTable.getDoubleValueByHash("adc_offset", hash0);
+                final double fineTimeStampResolution = (byte) daqTable.getDoubleValueByHash("dream_clock", hash0);
+                final double samplingTime = (byte) daqTable.getDoubleValueByHash("sampling_time", hash0);
+                final int sparseSample = daqTable.getIntValueByHash("sparse", hash0);
                 ADCData adc = data.getADCData(0);
                 mvtFitter.fit(adcOffset, fineTimeStampResolution, samplingTime, adc.getPulseArray(), adc.getTimeStamp(), sparseSample);
                 adc.setHeight((short) (mvtFitter.adcMax));
@@ -242,28 +244,32 @@ public class DetectorEventDecoder {
 
             // Otherwise, use crate/slot/channel to find the table entry:
             else {
-                long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(
-                        data.getDescriptor().getCrate(),
-                        data.getDescriptor().getSlot(),
-                        data.getDescriptor().getChannel());
+                
+                final long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(
+                    desc.getCrate(), desc.getSlot(), desc.getChannel());
+                
                 if (daqTable.hasEntryByHash(hash)) {
-                    int nsa = daqTable.getIntValueByHash("nsa", hash);
-                    int nsb = daqTable.getIntValueByHash("nsb", hash);
-                    int tet = daqTable.getIntValueByHash("tet", hash);
+                    final int nsa = daqTable.getIntValueByHash("nsa", hash);
+                    final int nsb = daqTable.getIntValueByHash("nsb", hash);
+                    final int tet = daqTable.getIntValueByHash("tet", hash);
                     int ped = 0;
-                    if (data.getDescriptor().getType() == DetectorType.RF && type == DetectorType.RF)  {
+                    if (type == DetectorType.RF)  {
                         ped = daqTable.getIntValueByHash("pedestal", hash);
                     }
-                    for (int i = 0; i < data.getADCSize(); i++) {
+                    final int nadc = data.getADCSize();
+                    for (int i = 0; i < nadc; i++) {
                         ADCData adc = data.getADCData(i);
                         if(adc.getPulseSize()>0){
                             try {
                                 extendedFitter.fit(nsa, nsb, tet, ped, adc.getPulseArray());
                             } catch (Exception e) {
-                                System.err.println(">>>> error : fitting pulse "+data.getDescriptor().getCrate()+
-                                    " / "+data.getDescriptor().getSlot()+" / "+data.getDescriptor().getChannel());
+                                System.err.println(">>>> error : fitting pulse "+desc.getCrate()+
+                                    " / "+desc.getSlot()+" / "+desc.getChannel());
                             }
+                            adc.setIntegral(extendedFitter.adc + extendedFitter.ped*(nsa+nsb));
                             adc.setHeight((short) this.extendedFitter.pulsePeakValue);
+                            adc.setTimeWord(this.extendedFitter.t0);
+                            adc.setPedestal((short) this.extendedFitter.ped);
                         }
                         data.getADCData(i).setADC(nsa, nsb);
                     }
