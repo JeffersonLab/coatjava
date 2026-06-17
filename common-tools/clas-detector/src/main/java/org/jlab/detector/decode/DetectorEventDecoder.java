@@ -95,10 +95,6 @@ public class DetectorEventDecoder {
                 getValue()).floatValue();
     }
 
-    public DetectorEventDecoder(){
-        this.initDecoder();
-    }
-
     public final void initDecoderDev() {
         tableTrans.put(DetectorType.HTCC, "/daq/tt/clasdev/htcc");
         tableTrans.put(DetectorType.BST, "/daq/tt/clasdev/svt");
@@ -174,8 +170,8 @@ public class DetectorEventDecoder {
             "/runcontrol/slm","/runcontrol/hwp","/runcontrol/helicity","/daq/config/scalers/dsc1"}));
 
         if (initializeManagers) {
-            translationManager.init(tablesTrans);
-            fitterManager.init(tablesFitter);
+            translationManager.init(tableTrans.values().stream().collect(Collectors.toList()));
+            fitterManager.init(tableFitter.values().stream().collect(Collectors.toList()));
             scalerManager.init(Arrays.asList(new String[]{"/runcontrol/fcup","/runcontrol/slm","/runcontrol/hwp",
                                                           "/runcontrol/helicity","/daq/config/scalers/dsc1"}));
             checkTables();
