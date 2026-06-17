@@ -172,7 +172,7 @@ public class DetectorEventDecoder {
         if (initializeManagers) {
             translationManager.init(tableTrans.values().stream().collect(Collectors.toList()));
             fitterManager.init(tableFitter.values().stream().collect(Collectors.toList()));
-            scalerManager.init("/runcontrol/slm","/runcontrol/hwp","/runcontrol/helicity","/daq/config/scalers/dsc1");
+            scalerManager.init("/runcontrol/fcup","/runcontrol/slm","/runcontrol/hwp","/runcontrol/helicity","/daq/config/scalers/dsc1");
             checkTables();
         }
     }
