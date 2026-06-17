@@ -20,6 +20,10 @@
 
   <repositories>
     <repository>
+      <id>gitlab-maven</id>
+      <url>https://code.jlab.org/api/v4/projects/864/packages/maven/</url>
+    </repository>
+    <repository>
       <id>clas12maven</id>
       <url>https://clasweb.jlab.org/.clas12maven</url>
     </repository>
