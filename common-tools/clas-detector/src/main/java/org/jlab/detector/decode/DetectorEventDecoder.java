@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.jlab.detector.banks.RawBank.OrderType;
+import org.jlab.detector.base.DetectorDescriptor;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.detector.calib.utils.ConstantsManager;
 import org.jlab.detector.decode.DetectorDataDgtz.ADCData;
@@ -205,61 +206,64 @@ public class DetectorEventDecoder {
 
     public void fitPulses(List<DetectorDataDgtz>  detectorData){
 
+        final long hash0 = IndexedTable.DEFAULT_GENERATOR.hashCode(0,0,0);
+
         for (DetectorDataDgtz data : detectorData) {
 
             if (data.getADCSize() == 0) continue;
-            int crate    = data.getDescriptor().getCrate();
-            int slot     = data.getDescriptor().getSlot();
-            int channel  = data.getDescriptor().getChannel();
-            long hash    = IndexedTable.DEFAULT_GENERATOR.hashCode(crate,slot,channel);
-            long hash0   = IndexedTable.DEFAULT_GENERATOR.hashCode(0,0,0);
-            boolean ismm = micromegaTypes.contains(data.getDescriptor().getType());
 
-            for (DetectorType type : fitterTables.keySet()) {
+            final DetectorDescriptor desc = data.getDescriptor();
+            final DetectorType type = desc.getType();
 
-                IndexedTable daq = fitterTables.get(type);
-                //custom MM fitter
-                if (ismm && data.getDescriptor().getType() == type) {
-                    short adcOffset = (short) daq.getDoubleValueByHash("adc_offset", hash0);
-                    double fineTimeStampResolution = (byte) daq.getDoubleValueByHash("dream_clock", hash0);
-                    double samplingTime = (byte) daq.getDoubleValueByHash("sampling_time", hash0);
-                    int sparseSample = daq.getIntValueByHash("sparse", hash0);
-                    ADCData adc = data.getADCData(0);
-                    mvtFitter.fit(adcOffset, fineTimeStampResolution, samplingTime, adc.getPulseArray(), adc.getTimeStamp(), sparseSample);
-                    adc.setHeight((short) (mvtFitter.adcMax));
-                    adc.setTime((int) (mvtFitter.timeMax));
-                    adc.setIntegral((int) (mvtFitter.integral));
-                    adc.setTimeStamp(mvtFitter.timestamp);
-                    // first one wins:
-                    break;
-                }
-                else if(daq.hasEntryByHash(hash)==true){
-                    int nsa = daq.getIntValueByHash("nsa", hash);
-                    int nsb = daq.getIntValueByHash("nsb", hash);
-                    int tet = daq.getIntValueByHash("tet", hash);
+            if (!fitterTables.containsKey(type)) continue;
+
+            IndexedTable daqTable = fitterTables.get(type);
+
+            // For Micromegas, assume crate/slot/channel=0/0/0 for table lookup:
+            if (micromegaTypes.contains(type)) {
+                final short adcOffset = (short) daqTable.getDoubleValueByHash("adc_offset", hash0);
+                final double fineTimeStampResolution = (byte) daqTable.getDoubleValueByHash("dream_clock", hash0);
+                final double samplingTime = (byte) daqTable.getDoubleValueByHash("sampling_time", hash0);
+                final int sparseSample = daqTable.getIntValueByHash("sparse", hash0);
+                ADCData adc = data.getADCData(0);
+                mvtFitter.fit(adcOffset, fineTimeStampResolution, samplingTime, adc.getPulseArray(), adc.getTimeStamp(), sparseSample);
+                adc.setHeight((short) (mvtFitter.adcMax));
+                adc.setTime((int) (mvtFitter.timeMax));
+                adc.setIntegral((int) (mvtFitter.integral));
+                adc.setTimeStamp(mvtFitter.timestamp);
+            }
+
+             // Otherwise, use crate/slot/channel to find the table entry:
+            else {
+                
+                final long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(
+                    desc.getCrate(), desc.getSlot(), desc.getChannel());
+                
+                if (daqTable.hasEntryByHash(hash)) {
+                    final int nsa = daqTable.getIntValueByHash("nsa", hash);
+                    final int nsb = daqTable.getIntValueByHash("nsb", hash);
+                    final int tet = daqTable.getIntValueByHash("tet", hash);
                     int ped = 0;
-                    if(data.getDescriptor().getType() == DetectorType.RF && type == DetectorType.RF) {
-                        ped = daq.getIntValueByHash("pedestal", hash);
+                    if (type == DetectorType.RF)  {
+                        ped = daqTable.getIntValueByHash("pedestal", hash);
                     }
-                    for(int i = 0; i < data.getADCSize(); i++){
+                    final int nadc = data.getADCSize();
+                    for (int i = 0; i < nadc; i++) {
                         ADCData adc = data.getADCData(i);
                         if(adc.getPulseSize()>0){
                             try {
                                 extendedFitter.fit(nsa, nsb, tet, ped, adc.getPulseArray());
                             } catch (Exception e) {
-                                System.out.println(">>>> error : fitting pulse "
-                                    +  crate + " / " + slot + " / " + channel);
+                                System.err.println(">>>> error : fitting pulse "+desc.getCrate()+
+                                    " / "+desc.getSlot()+" / "+desc.getChannel());
                             }
-                            int adc_corrected = extendedFitter.adc + extendedFitter.ped*(nsa+nsb);
+                            adc.setIntegral(extendedFitter.adc + extendedFitter.ped*(nsa+nsb));
                             adc.setHeight((short) this.extendedFitter.pulsePeakValue);
-                            adc.setIntegral(adc_corrected);
                             adc.setTimeWord(this.extendedFitter.t0);
                             adc.setPedestal((short) this.extendedFitter.ped);
                         }
                         data.getADCData(i).setADC(nsa, nsb);
                     }
-                    // first one wins:
-                    break;
                 }
             }
         }
