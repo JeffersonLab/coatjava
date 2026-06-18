@@ -4,110 +4,110 @@
 
   <groupId>org.jlab.clas12.detector</groupId>
   <artifactId>clas12detector-uber</artifactId>
-  <version>14.1.0-SNAPSHOT</version>
+  <version>14.1.1-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <parent>
     <groupId>org.jlab.clas12</groupId>
     <artifactId>reconstruction</artifactId>
-    <version>14.1.0-SNAPSHOT</version>
+    <version>14.1.1-SNAPSHOT</version>
   </parent>
 
   <dependencies>
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>clas-reco</artifactId>
-      <version>14.1.0-SNAPSHOT</version>
+      <version>14.1.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.jlab.clas</groupId>
       <artifactId>swim-tools</artifactId>
-      <version>14.1.0-SNAPSHOT</version>
+      <version>14.1.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.jlab.clas12.detector</groupId>
       <artifactId>clas12detector-dc</artifactId>
-      <version>14.1.0-SNAPSHOT</version>
+      <version>14.1.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.jlab.clas12.detector</groupId>
       <artifactId>clas12detector-ec</artifactId>
-      <version>14.1.0-SNAPSHOT</version>
+      <version>14.1.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.jlab.clas12.detector</groupId>
       <artifactId>clas12detector-tof</artifactId>
-      <version>14.1.0-SNAPSHOT</version>
+      <version>14.1.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.jlab.clas12.detector</groupId>
       <artifactId>clas12detector-htcc</artifactId>
-      <version>14.1.0-SNAPSHOT</version>
+      <version>14.1.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.jlab.clas12.detector</groupId>
       <artifactId>clas12detector-ltcc</artifactId>
-      <version>14.1.0-SNAPSHOT</version>
+      <version>14.1.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.jlab.clas12.detector</groupId>
       <artifactId>clas12detector-ft</artifactId>
-      <version>14.1.0-SNAPSHOT</version>
+      <version>14.1.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.jlab.clas12.detector</groupId>
       <artifactId>clas12detector-cnd</artifactId>
-      <version>14.1.0-SNAPSHOT</version>
+      <version>14.1.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.jlab.clas12.detector</groupId>
       <artifactId>clas12detector-band</artifactId>
-      <version>14.1.0-SNAPSHOT</version>
+      <version>14.1.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.jlab.clas12.detector</groupId>
       <artifactId>clas12detector-cvt</artifactId>
-      <version>14.1.0-SNAPSHOT</version>
+      <version>14.1.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.jlab.clas12.detector</groupId>
       <artifactId>clas12detector-raster</artifactId>
-      <version>14.1.0-SNAPSHOT</version>
+      <version>14.1.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.jlab.clas12.detector</groupId>
       <artifactId>clas12detector-vtx</artifactId>
-      <version>14.1.0-SNAPSHOT</version>
+      <version>14.1.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.jlab.clas12.detector</groupId>
       <artifactId>clas12detector-calib</artifactId>
-      <version>14.1.0-SNAPSHOT</version>
+      <version>14.1.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.jlab.clas12.detector</groupId>
       <artifactId>clas12detector-rtpc</artifactId>
-      <version>14.1.0-SNAPSHOT</version>
+      <version>14.1.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.jlab.clas12.detector</groupId>
       <artifactId>clas12detector-rich</artifactId>
-      <version>14.1.0-SNAPSHOT</version>
+      <version>14.1.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.jlab.clas12.detector</groupId>
       <artifactId>clas12detector-eb</artifactId>
-      <version>14.1.0-SNAPSHOT</version>
+      <version>14.1.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.jlab.clas12.detector</groupId>
       <artifactId>clas12detector-mltn</artifactId>
-      <version>14.1.0-SNAPSHOT</version>
+      <version>14.1.1-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.jlab.clas12.detector</groupId>
       <artifactId>clas12detector-fmt</artifactId>
-      <version>14.1.0-SNAPSHOT</version>
+      <version>14.1.1-SNAPSHOT</version>
     </dependency>
   </dependencies>
 
