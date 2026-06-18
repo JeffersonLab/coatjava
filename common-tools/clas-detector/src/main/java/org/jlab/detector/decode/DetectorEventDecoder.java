@@ -204,67 +204,61 @@ public class DetectorEventDecoder {
         }
     }
 
-    public void fitPulses(List<DetectorDataDgtz>  detectorData){
+    private void fitPulses(DetectorDataDgtz data, IndexedTable config) {
+        final DetectorDescriptor desc = data.getDescriptor();
+        final DetectorType type = desc.getType();
+        final long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(
+            desc.getCrate(), desc.getSlot(), desc.getChannel());
+        final int nsa = config.getIntValueByHash("nsa", hash);
+        final int nsb = config.getIntValueByHash("nsb", hash);
+        final int tet = config.getIntValueByHash("tet", hash);
+        int ped = 0;
+        if (type == DetectorType.RF)  {
+            ped = config.getIntValueByHash("pedestal", hash);
+        }
+        final int nadc = data.getADCSize();
+        for (int i = 0; i < nadc; i++) {
+            ADCData adc = data.getADCData(i);
+            if(adc.getPulseSize()>0){
+                try {
+                    extendedFitter.fit(nsa, nsb, tet, ped, adc.getPulseArray());
+                } catch (Exception e) {
+                    System.err.println(">>>> error : fitting pulse "+desc.getCrate()+
+                        " / "+desc.getSlot()+" / "+desc.getChannel());
+                }
+                adc.setIntegral(extendedFitter.adc + extendedFitter.ped*(nsa+nsb));
+                adc.setHeight((short) this.extendedFitter.pulsePeakValue);
+                adc.setTimeWord(this.extendedFitter.t0);
+                adc.setPedestal((short) this.extendedFitter.ped);
+            }
+            data.getADCData(i).setADC(nsa, nsb);
+        }
+    }
 
+    private void fitMicromegaPulses(DetectorDataDgtz data, IndexedTable config) {
         final long hash0 = IndexedTable.DEFAULT_GENERATOR.hashCode(0,0,0);
-
-        for (DetectorDataDgtz data : detectorData) {
-
-            if (data.getADCSize() == 0) continue;
-
-            final DetectorDescriptor desc = data.getDescriptor();
-            final DetectorType type = desc.getType();
-
-            if (!fitterTables.containsKey(type)) continue;
-
-            IndexedTable daqTable = fitterTables.get(type);
-
-            // For Micromegas, assume crate/slot/channel=0/0/0 for table lookup:
-            if (micromegaTypes.contains(type)) {
-                final short adcOffset = (short) daqTable.getDoubleValueByHash("adc_offset", hash0);
-                final double fineTimeStampResolution = (byte) daqTable.getDoubleValueByHash("dream_clock", hash0);
-                final double samplingTime = (byte) daqTable.getDoubleValueByHash("sampling_time", hash0);
-                final int sparseSample = daqTable.getIntValueByHash("sparse", hash0);
-                ADCData adc = data.getADCData(0);
+        final short adcOffset = (short) config.getDoubleValueByHash("adc_offset", hash0);
+        final double fineTimeStampResolution = (byte) config.getDoubleValueByHash("dream_clock", hash0);
+        final double samplingTime = (byte) config.getDoubleValueByHash("sampling_time", hash0);
+        final int sparseSample = config.getIntValueByHash("sparse", hash0);
+        ADCData adc = data.getADCData(0);
                 mvtFitter.fit(adcOffset, fineTimeStampResolution, samplingTime, adc.getPulseArray(), adc.getTimeStamp(), sparseSample);
                 adc.setHeight((short) (mvtFitter.adcMax));
                 adc.setTime((int) (mvtFitter.timeMax));
                 adc.setIntegral((int) (mvtFitter.integral));
                 adc.setTimeStamp(mvtFitter.timestamp);
-            }
+    }
 
-             // Otherwise, use crate/slot/channel to find the table entry:
-            else {
-                
-                final long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(
-                    desc.getCrate(), desc.getSlot(), desc.getChannel());
-                
-                if (daqTable.hasEntryByHash(hash)) {
-                    final int nsa = daqTable.getIntValueByHash("nsa", hash);
-                    final int nsb = daqTable.getIntValueByHash("nsb", hash);
-                    final int tet = daqTable.getIntValueByHash("tet", hash);
-                    int ped = 0;
-                    if (type == DetectorType.RF)  {
-                        ped = daqTable.getIntValueByHash("pedestal", hash);
-                    }
-                    final int nadc = data.getADCSize();
-                    for (int i = 0; i < nadc; i++) {
-                        ADCData adc = data.getADCData(i);
-                        if(adc.getPulseSize()>0){
-                            try {
-                                extendedFitter.fit(nsa, nsb, tet, ped, adc.getPulseArray());
-                            } catch (Exception e) {
-                                System.err.println(">>>> error : fitting pulse "+desc.getCrate()+
-                                    " / "+desc.getSlot()+" / "+desc.getChannel());
-                            }
-                            adc.setIntegral(extendedFitter.adc + extendedFitter.ped*(nsa+nsb));
-                            adc.setHeight((short) this.extendedFitter.pulsePeakValue);
-                            adc.setTimeWord(this.extendedFitter.t0);
-                            adc.setPedestal((short) this.extendedFitter.ped);
-                        }
-                        data.getADCData(i).setADC(nsa, nsb);
-                    }
-                }
+    public void fitPulses(List<DetectorDataDgtz>  detectorData){
+        for (DetectorDataDgtz data : detectorData) {
+            if (data.getADCSize() == 0) continue;
+            final DetectorType type = data.getDescriptor().getType();
+            final IndexedTable daqTable = fitterTables.getOrDefault(type,null);
+            if (daqTable != null) {
+                if (micromegaTypes.contains(type))
+                    fitMicromegaPulses(data, daqTable);
+                else
+                    fitPulses(data, daqTable);
             }
         }
     }
