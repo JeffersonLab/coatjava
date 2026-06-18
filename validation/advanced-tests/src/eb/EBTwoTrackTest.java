@@ -13,7 +13,7 @@ import org.jlab.io.hipo.HipoDataSource;
 import org.jlab.detector.base.DetectorType;
 import org.jlab.clas.pdg.PDGDatabase;
 
-import org.jlab.analysis.math.ClasMath;
+import org.jlab.clas.detector.DetectorResponse;
 
 /**
  *
@@ -554,7 +554,7 @@ public class EBTwoTrackTest {
             if (pid==hadronPDG) {
                 final double px=recPartBank.getFloat("px",ii);
                 final double py=recPartBank.getFloat("py",ii);
-                final int sector = ClasMath.getSectorFromPhi(Math.atan2(py,px));
+                final int sector = DetectorResponse.getSector(Math.atan2(py,px));
                 nHadronsSector[sector-1]++;
                 if (sector==hadronSector || (pid==11 && sector==electronSector)) {
                     nFtFd++;
@@ -601,7 +601,7 @@ public class EBTwoTrackTest {
                 for (int ii=0; ii<ctrkBank.rows(); ii++) {
                     if (ctrkBank.getInt("q",ii)>0) {
                         final double phi0 = ctrkBank.getFloat("phi0",ii);
-                        final int sector = ClasMath.getSectorFromPhi(phi0);
+                        final int sector = DetectorResponse.getSector(phi0);
                         if (sector == hadronSector)
                             nPosTracks++;
                     }
@@ -645,7 +645,7 @@ public class EBTwoTrackTest {
                     px = recSciBank.getFloat("x",recSciMap.get(ii).get(0));
                     py = recSciBank.getFloat("y",recSciMap.get(ii).get(0));
                 }
-                final int sector = ClasMath.getSectorFromPhi(Math.atan2(py,px));
+                final int sector = DetectorResponse.getSector(Math.atan2(py,px));
 
                 if (pid==11 && sector==electronSector) {
                     if (!foundElectron) nElectronsSector[sector-1]++;

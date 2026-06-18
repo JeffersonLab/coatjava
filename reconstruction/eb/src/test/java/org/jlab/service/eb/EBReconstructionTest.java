@@ -4,7 +4,6 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 import org.jlab.analysis.physics.TestEvent;
-import org.jlab.analysis.math.ClasMath;
 import org.jlab.clas.swimtools.MagFieldsEngine;
 import cnuphys.magfield.MagneticFields;
 import org.jlab.detector.base.DetectorType;
@@ -105,6 +104,12 @@ public class EBReconstructionTest {
         return true;
     }
 
+    static boolean isWithinXPercent(double X, double val, double standard) {
+        if(standard >= 0 && val > (1.0 - (X/100.0))*standard && val < (1.0 + (X/100.0))*standard) return true;
+        else if(standard < 0 && val < (1.0 - (X/100.0))*standard && val > (1.0 + (X/100.0))*standard) return true;
+        return false;
+    }
+
     @Test
     public void testEBReconstruction() {
         System.setProperty("CLAS12DIR", "../../");
@@ -120,10 +125,10 @@ public class EBReconstructionTest {
         assertEquals(hasValidRefs(photonEvent,"REC::Calorimeter","REC::Particle","pindex"),true);
         // additional EC reco. tests:
         assertEquals(photonEvent.getBank("RECHB::Particle").rows(), 1);
-        assertEquals(ClasMath.isWithinXPercent(25.0, photonEvent.getBank("RECHB::Particle").getFloat("px", 0), 1.057), true);
+        assertEquals(isWithinXPercent(25.0, photonEvent.getBank("RECHB::Particle").getFloat("px", 0), 1.057), true);
         assertEquals(photonEvent.getBank("RECHB::Particle").getFloat("py", 0) > -0.15, true);
         assertEquals(photonEvent.getBank("RECHB::Particle").getFloat("py", 0) < 0.15, true);
-        assertEquals(ClasMath.isWithinXPercent(25.0, photonEvent.getBank("RECHB::Particle").getFloat("pz", 0), 2.266), true);
+        assertEquals(isWithinXPercent(25.0, photonEvent.getBank("RECHB::Particle").getFloat("pz", 0), 2.266), true);
 
         DataEvent electronEvent = TestEvent.get(DetectorType.DC);
         processAllEngines(electronEvent);
