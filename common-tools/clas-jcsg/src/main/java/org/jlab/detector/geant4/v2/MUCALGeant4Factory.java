@@ -3,6 +3,8 @@ package org.jlab.detector.geant4.v2;
 import java.util.List;
 import java.util.ArrayList;
 import org.jlab.detector.volume.Geant4Basic;
+import org.jlab.detector.units.SystemOfUnits.Length;
+import org.jlab.detector.volume.G4Pgon;
 import org.jlab.detector.volume.G4Trd;
 import org.jlab.detector.volume.G4World;
 import org.jlab.geom.base.ConstantProvider;
@@ -15,11 +17,19 @@ import static org.jlab.detector.units.SystemOfUnits.Length;
 public final class MUCALGeant4Factory extends Geant4Factory {
     
     public MUCALGeant4Factory(ConstantProvider provider) {
-        motherVolume = new G4World("ddvcs_ecal");
+        motherVolume = new G4World("root");
+        int nplanes = 4;
+        double phiStart = Math.toRadians(0.0);
+        double phiTotal = Math.toRadians(360.0);
+        double[] mucal_iradius = {301.0*Length.mm, 72.8*Length.mm, 81.5*Length.mm, 98.7*Length.mm};
+        double[] mucal_oradius = {301.1*Length.mm, 360.6*Length.mm, 401.0*Length.mm, 98.8*Length.mm};
+        double[] mucal_zpos_root = {520.0*Length.mm, 625.0*Length.mm, 696.0*Length.mm, 836.0*Length.mm};
+        G4Pgon mucalVolume = new G4Pgon("mucalVolume", phiStart, phiTotal, nplanes, nplanes, mucal_zpos_root, mucal_iradius, mucal_oradius);
+        mucalVolume.setMother(motherVolume);
         for (int sector = 1; sector <= 2; sector++) {
             List<G4Trd> layerVolume = createPanel(provider, sector, 1);
             for (G4Trd crystal : layerVolume) {
-                crystal.setMother(motherVolume);
+                crystal.setMother(mucalVolume);
             }
             // layerVolume.setMother(motherVolume);
         }
