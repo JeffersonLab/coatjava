@@ -279,7 +279,7 @@ public class RICHPMTReconstruction {
 
         for(int ihit=0; ihit<hits.size(); ihit++) {
             RICHHit hit = hits.get(ihit);
-                if(hit.get_cluster()==0)  {                       // this hit is not yet associated with a cluster
+            if(hit.get_cluster()==0)  {                       // this hit is not yet associated with a cluster
                 if(debugMode>=2)System.out.println("  Check hit "+hit.get_id()+" "+hit.get_pmt()+" "+hit.get_anode()+" "+hit.get_Time());
 
                 for(int jclus=0; jclus<allclusters.size(); jclus++) {
@@ -313,45 +313,50 @@ public class RICHPMTReconstruction {
 
 
     // ----------------
-    public ArrayList<RICHCluster> selectGoodClusters(ArrayList<RICHCluster> allclusters) {
+    public ArrayList<RICHCluster> selectGoodClusters(ArrayList<RICHCluster> allClusters) {
     // ----------------
 
         int debugMode = 0;
-        ArrayList<RICHCluster> clusters = new ArrayList();
+        ArrayList<RICHCluster> mergedClusters = new ArrayList();
+        ArrayList<RICHCluster> selectedClusters = new ArrayList();
         if(debugMode>=2) System.out.println("\nSelecting good clusters");
 
-        int nclu = 0;
-        for(int i=0; i<allclusters.size(); i++) {
-            if(allclusters.get(i).isgoodCluster()) {
-                RICHCluster goodclu = allclusters.get(i);
-                int merge = 0 ;
-                for (int j=0; j<clusters.size(); j++){
-                    if(clusters.get(j).get(0).get_pmt() == goodclu.get(0).get_pmt()){
-                        clusters.get(j).merge(goodclu);
-                        merge = 1;
-                        if(debugMode>=1)System.out.format(" merge clu %d %d  xyz %7.2f %7.2f %7.2f  to %d %d \n",i,goodclu.get_id(),goodclu.get_x(), goodclu.get_y(), goodclu.get_z(), j,clusters.get(j).get_id());
-                    }
+        Collections.sort(allClusters);
+        for(int i=0; i<allClusters.size(); i++) {
+            RICHCluster cluster = allClusters.get(i);
+            for (int j=0; j<mergedClusters.size(); j++){
+                if(mergedClusters.get(j).overlaps(cluster)){
+                    mergedClusters.get(j).merge(cluster);
+                    if(debugMode>=1)System.out.format(" merge clu %d %d  xyz %7.2f %7.2f %7.2f  to %d %d \n",i,cluster.get_id(),cluster.get_x(), cluster.get_y(), cluster.get_z(), j,mergedClusters.get(j).get_id());
+                    break;
                 }
-                if(merge==0){
-                    nclu++;
-                    goodclu.set_id(nclu);
-                    clusters.add(goodclu);
-                }
-          }else{
-                // cancel hit to cluster link
-                RICHCluster badclu = allclusters.get(i);
-                for(int j = 0; j< badclu.size(); j++) {
-                    badclu.get(j).set_cluster(0);
-                }
+            }
+        }
+        // reset all ids
+        for(int i=0; i<allClusters.size(); i++) {
+            RICHCluster cluster = allClusters.get(i);
+            for(int j = 0; j< cluster.size(); j++) {
+                cluster.get(j).set_cluster(0);
+            }
+        }
+        // and reassign them
+        for(int i=0; i<mergedClusters.size(); i++) {
+            RICHCluster cluster = allClusters.get(i);
+            if(cluster.isgoodCluster()){
+                selectedClusters.add(cluster);
+                for(int j = 0; j< cluster.size(); j++) {
+                    if(cluster.get(j).get_cluster()==0)
+                        cluster.get(j).set_cluster(selectedClusters.size());
+                }   
             }
         }
 
         if(debugMode>=1){
             System.out.format("-------------------------\n");
-            System.out.format("List of selected Clusters %4d \n",clusters.size());
+            System.out.format("List of selected Clusters %4d \n",goodClusters.size());
             System.out.format("-------------------------\n");
-            for(int i=0; i<clusters.size(); i++) {
-                clusters.get(i).showCluster();
+            for(int i=0; i<goodClusters.size(); i++) {
+                goodClusters.get(i).showCluster();
             }
         }
 
@@ -364,7 +369,7 @@ public class RICHPMTReconstruction {
             }
         }*/
 
-        return clusters;
+        return goodClusters;
     }
 
 

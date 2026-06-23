@@ -3,7 +3,7 @@ package org.jlab.rec.rich;
 import java.util.ArrayList;
 import org.jlab.geom.prim.Point3D;
 
-public class RICHCluster extends ArrayList<RICHHit> {
+public class RICHCluster extends ArrayList<RICHHit> implements Comparable<RICHCluster> {
 
     /**
      * A cluster in the RICH consists of an array of anodes in one PMT
@@ -329,14 +329,25 @@ public class RICHCluster extends ArrayList<RICHHit> {
 
         for(int i=0; i<clu.size(); i++){
             RICHHit rhit = clu.get(i);
-            rhit.set_cluster(this.get_id());
-            int already = 0;
-            for (int j=0; j<this.size(); j++){ 
-                if(rhit.get_id() == this.get(j).get_id())already=1;
+            if(!this.contains(rhit)) {
+                rhit.set_cluster(this.get_id());
+                this.add(rhit);
             }
-            if(already==0)this.add(rhit);
         }
 
+    }
+
+
+    // ----------------
+    public boolean overlaps(RICHCluster clu) {
+    // ----------------
+
+        for(int i=0; i<clu.size(); i++){
+            RICHHit rhit = clu.get(i);
+            if(this.contains(rhit) || this.containsHit(rhit))
+                return true;
+        }
+        return false;
     }
 
     // ----------------
@@ -345,6 +356,7 @@ public class RICHCluster extends ArrayList<RICHHit> {
         // checks if the hit belongs to any nonet around its already associated hits
 
         boolean addFlag = false;
+        if(this.get(0).get_sector()!=hit.get_sector())return addFlag;
         if(this.get(0).get_pmt()!=hit.get_pmt())return addFlag;
 
         for(int j = 0; j< this.size(); j++) {
@@ -358,15 +370,23 @@ public class RICHCluster extends ArrayList<RICHHit> {
 
 
     // ----------------
+    @Override
     public int compareTo(RICHCluster ocluster) {
     // ----------------
         //System.out.println(" --> comp "+this.get_channel()+" "+this.get_charge()+" "+ocluster.get_channel()+" "+ocluster.get_charge());
-        if(this.get_charge() == ocluster.get_charge())return 0;
-        if(this.get_charge() > ocluster.get_charge()){
+        if(this.get(0).get_sector()!=ocluster.get(0).get_sector())
+            return this.get(0).get_sector()<ocluster.get(0).get_sector() ? 1 : -1;
+        
+        if(this.get(0).get_pmt()!=ocluster.get(0).get_pmt())
+            return this.get(0).get_pmt()<ocluster.get(0).get_pmt() ? 1 : -1;
+        
+        if(this.get_size() == ocluster.get_size())
+            return 0;
+        else if(this.get_size() > ocluster.get_size())
             return 1;
-        }else{
+        else
             return -1;
-        }
+        
     }
 
        
