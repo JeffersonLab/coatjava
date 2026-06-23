@@ -204,18 +204,13 @@ public class DetectorEventDecoder {
         }
     }
 
-    private void fitPulses(DetectorDataDgtz data, IndexedTable config) {
-        final DetectorDescriptor desc = data.getDescriptor();
-        final DetectorType type = desc.getType();
-        final long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(
-            desc.getCrate(), desc.getSlot(), desc.getChannel());
-        final int nsa = config.getIntValueByHash("nsa", hash);
-        final int nsb = config.getIntValueByHash("nsb", hash);
-        final int tet = config.getIntValueByHash("tet", hash);
-        int ped = 0;
-        if (type == DetectorType.RF)  {
-            ped = config.getIntValueByHash("pedestal", hash);
-        }
+    private void fitPulses(DetectorDataDgtz data, IndexedTable cfg) {
+        final DetectorDescriptor dd = data.getDescriptor();
+        final long hash = IndexedTable.DEFAULT_GENERATOR.hashCode(dd.getCrate(), dd.getSlot(), dd.getChannel());
+        final int nsa = cfg.getIntValueByHash("nsa", hash);
+        final int nsb = cfg.getIntValueByHash("nsb", hash);
+        final int tet = cfg.getIntValueByHash("tet", hash);
+        final int ped = dd.getType() == DetectorType.RF ? cfg.getIntValueByHash("pedestal", hash) : 0;
         final int nadc = data.getADCSize();
         for (int i = 0; i < nadc; i++) {
             ADCData adc = data.getADCData(i);
@@ -223,8 +218,8 @@ public class DetectorEventDecoder {
                 try {
                     extendedFitter.fit(nsa, nsb, tet, ped, adc.getPulseArray());
                 } catch (Exception e) {
-                    System.err.println(">>>> error : fitting pulse "+desc.getCrate()+
-                        " / "+desc.getSlot()+" / "+desc.getChannel());
+                    System.err.println(">>>> error : fitting pulse "+dd.getCrate()+
+                        " / "+dd.getSlot()+" / "+dd.getChannel());
                 }
                 adc.setIntegral(extendedFitter.adc + extendedFitter.ped*(nsa+nsb));
                 adc.setHeight((short) this.extendedFitter.pulsePeakValue);
@@ -235,18 +230,18 @@ public class DetectorEventDecoder {
         }
     }
 
-    private void fitMicromegaPulses(DetectorDataDgtz data, IndexedTable config) {
+    private void fitMicromegaPulses(DetectorDataDgtz data, IndexedTable cfg) {
         final long hash0 = IndexedTable.DEFAULT_GENERATOR.hashCode(0,0,0);
-        final short adcOffset = (short) config.getDoubleValueByHash("adc_offset", hash0);
-        final double fineTimeStampResolution = (byte) config.getDoubleValueByHash("dream_clock", hash0);
-        final double samplingTime = (byte) config.getDoubleValueByHash("sampling_time", hash0);
-        final int sparseSample = config.getIntValueByHash("sparse", hash0);
+        final short adcOffset = (short) cfg.getDoubleValueByHash("adc_offset", hash0);
+        final double fineTimeStampResolution = (byte) cfg.getDoubleValueByHash("dream_clock", hash0);
+        final double samplingTime = (byte) cfg.getDoubleValueByHash("sampling_time", hash0);
+        final int sparseSample = cfg.getIntValueByHash("sparse", hash0);
         ADCData adc = data.getADCData(0);
-                mvtFitter.fit(adcOffset, fineTimeStampResolution, samplingTime, adc.getPulseArray(), adc.getTimeStamp(), sparseSample);
-                adc.setHeight((short) (mvtFitter.adcMax));
-                adc.setTime((int) (mvtFitter.timeMax));
-                adc.setIntegral((int) (mvtFitter.integral));
-                adc.setTimeStamp(mvtFitter.timestamp);
+        mvtFitter.fit(adcOffset, fineTimeStampResolution, samplingTime, adc.getPulseArray(), adc.getTimeStamp(), sparseSample);
+        adc.setHeight((short) (mvtFitter.adcMax));
+        adc.setTime((int) (mvtFitter.timeMax));
+        adc.setIntegral((int) (mvtFitter.integral));
+        adc.setTimeStamp(mvtFitter.timestamp);
     }
 
     public void fitPulses(List<DetectorDataDgtz>  detectorData){
