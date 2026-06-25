@@ -91,6 +91,9 @@ public class CVTEngine extends ReconstructionEngine {
     private double rcut = 120.0;
     private double z0cut = 10;
     
+    public double BMTCMATCH=100;
+    public double BMTZMATCH=20;
+    
     public CVTEngine(String name) {
         super(name, "ziegler", "6.0");
     }
@@ -131,7 +134,9 @@ public class CVTEngine extends ReconstructionEngine {
                                            bmtcmaxclussize, 
                                            bmtzmaxclussize,
                                            rcut,
-                                           z0cut);
+                                           z0cut,
+                                           this.BMTCMATCH,
+                                           this.BMTZMATCH);
 
         this.initConstantsTables();
         this.registerBanks();
@@ -296,7 +301,7 @@ public class CVTEngine extends ReconstructionEngine {
         IndexedTable bmtStripVoltage    = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_strip_voltage");
         IndexedTable bmtStripThreshold  = this.getConstantsManager().getConstants(run, "/calibration/mvt/bmt_strip_voltage_thresholds");
         IndexedTable beamPos            = this.getConstantsManager().getConstants(run, "/geometry/beam/position");
-        IndexedTable adcStatus            = this.getConstantsManager().getConstants(run, "/calibration/svt/adcstatus");
+        IndexedTable adcStatus          = this.getConstantsManager().getConstants(run, "/calibration/svt/adcstatus");
         
         double[] xyBeam = CVTReconstruction.getBeamSpot(event, beamPos);
         double xB = xyBeam[0];
@@ -493,6 +498,11 @@ public class CVTEngine extends ReconstructionEngine {
         if (this.getEngineConfigString("z0cut")!=null)
             this.z0cut = Double.valueOf(this.getEngineConfigString("z0cut"));
         
+        if (this.getEngineConfigString("bmtcmatch")!=null)
+            this.BMTCMATCH = Double.valueOf(this.getEngineConfigString("bmtcmatch"));
+        
+        if (this.getEngineConfigString("bmtzmatch")!=null)
+            this.BMTZMATCH = Double.valueOf(this.getEngineConfigString("bmtzmatch"));
     }
 
 
