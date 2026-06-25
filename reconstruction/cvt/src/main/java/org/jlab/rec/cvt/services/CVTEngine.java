@@ -19,7 +19,6 @@ import org.jlab.rec.cvt.hit.Hit;
 import org.jlab.rec.cvt.patternrec.SVTSeeder;
 import org.jlab.rec.cvt.patternrec.SeedExtender;
 import org.jlab.rec.cvt.track.Seed;
-import org.jlab.rec.cvt.track.StraightTrack;
 import org.jlab.rec.cvt.track.Track;
 import org.jlab.utils.groups.IndexedTable;
 
