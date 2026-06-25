@@ -49,7 +49,7 @@ public class SeedExtender {
         if(ktrj==null) return matches;
         
         Map<Long, List<Cross>> crs = new HashMap<>();
-        for(Cross c : bmtCrosses) {
+        for(Cross c : bmtCrosses) { 
             long seclayr = key(c.getSector(), c.getCluster1().getLayer()+6);
             crs
                 .computeIfAbsent(seclayr, k -> new ArrayList<>())
@@ -114,14 +114,16 @@ public class SeedExtender {
         boolean pass = false;
         if(closest==null)
             return pass;
-        double metric = 10; 
+        double metric = Double.POSITIVE_INFINITY; 
         int layer = closest.getCluster1().getLayer();
         if(layer==1 || layer==4 || layer==6) {
-            metric = 10;
+            metric = Constants.getInstance().BMTCMATCH;
         } else {
-            metric = 2;
+            metric = Constants.getInstance().BMTZMATCH;
         }
-        
+        if(Constants.getInstance().seedingDebugMode) {
+                System.out.println("minDelta "+minDelta+" "+closest.toString());
+            }
         if(minDelta < metric)
             pass = true;
         
@@ -174,7 +176,7 @@ public class SeedExtender {
 
         if(Constants.getInstance().seedingDebugMode)
             System.out.println("KF status ... failed "+kf.setFitFailed+" ndf "+kf.NDF+" helix "+kf.getHelix());
-        if (kf.setFitFailed == false && kf.NDF>0 && kf.getHelix()!=null) { 
+        if (kf.setFitFailed == false && kf.getHelix()!=null) { 
             seed.getHelix().setDCA(kf.getHelix().getD0());
             seed.getHelix().setCurvature(kf.getHelix().getOmega());
             seed.getHelix().setTanDip(kf.getHelix().getTanL());
@@ -223,10 +225,18 @@ public class SeedExtender {
     }
     
     public void extendSeedToBMT(Seed seed, List<Cross> bMTCrosses) {
+        if(Constants.getInstance().seedingDebugMode) {
+            System.out.println("************************* Extending seed to BMT *************************");
+        }
         Map<Integer, Surface> surfaceMap = new HashMap<>();
         Helix helix = seed.getHelix().getKFHelix();
         RoadSurfaces.mapRoadSurfaces(helix, surfaceMap);
-        if(surfaceMap==null) return;
+        if(surfaceMap==null) {
+            if(Constants.getInstance().seedingDebugMode) {
+                System.out.println("Surface Map is null !!!!!! ");
+            }
+            return;
+        }
         List<Cross> matchedBMTCrosses = match2BMTCrosses(seed, surfaceMap,bMTCrosses);
         if(matchedBMTCrosses.isEmpty()) return;
         Seed sclone = seed.clone();
