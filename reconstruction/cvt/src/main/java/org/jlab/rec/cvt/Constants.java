@@ -73,7 +73,8 @@ public class Constants {
     public boolean KFfailRecovery = true;
     public boolean KFfailRecovMisCls = true;
     public boolean gemcIgnBMT0ADC = false;
-     
+    public double BMTCMATCH=100;
+    public double BMTZMATCH=20;
     // CONSTANTS USED IN RECONSTRUCTION
     //---------------------------------    
     public static final double LIGHTVEL = PhysicsConstants.speedOfLight()*1e-5;  // velocity of light (mm/ns) - conversion factor from radius in mm to momentum in GeV/c 
@@ -543,6 +544,71 @@ public class Constants {
         return MagneticFields.getInstance().getScaleFactor(MagneticFields.FieldType.SOLENOID);
     }
     
+    public synchronized void initialize(String engine,
+                                        boolean isCosmics,
+                                        boolean svtOnly,
+                                        String excludeLayers,
+                                        String excludeBMTLayers,
+                                        int removeRegion,
+                                        int beamSpotConstraint,
+                                        double beamSpotRadius,
+                                        String targetMaterial,
+                                        boolean elosPrecorrection,
+                                        boolean svtSeeding,
+                                        boolean timeCuts,
+                                        boolean hvCuts,
+                                        boolean useSVTTimingCuts,
+                                        boolean removeOverlappingSeeds,
+                                        boolean flagSeeds,
+                                        boolean gemcIgnBMT0ADC,
+                                        boolean KFfailRecovery,
+                                        boolean KFfailRecovMisCls, 
+                                        String matrixLibrary,
+                                        boolean useOnlyTruth,
+                                        boolean useSVTLinkerSeeder,
+                                        double docacut,
+                                        double docacutsum,
+                                        int svtmaxclussize,
+                                        int bmtcmaxclussize,
+                                        int bmtzmaxclussize,
+                                        double rcut,
+                                        double z0cut,
+                                        double bmtcmatch,
+                                        double bmtzmatch) {
+        if (!ConstantsLoaded) {
+            this.isCosmics = isCosmics;
+            this.svtOnly      = svtOnly;
+            this.setUsedLayers(excludeLayers);
+            this.setBMTExclude(excludeBMTLayers);
+            this.removeRegion = removeRegion;
+            this.beamSpotConstraint = beamSpotConstraint;
+            this.beamRadius = beamSpotRadius;
+            this.setTargetMaterial(targetMaterial);
+            this.preElossCorrection = elosPrecorrection;
+            this.svtSeeding = svtSeeding;
+            this.timeCuts = timeCuts;
+            this.bmtHVCuts = hvCuts;
+            this.useSVTTimingCuts = useSVTTimingCuts;
+            this.removeOverlappingSeeds = removeOverlappingSeeds;
+            this.flagSeeds = flagSeeds;
+            this.gemcIgnBMT0ADC = gemcIgnBMT0ADC;
+            this.KFfailRecovery = KFfailRecovery;
+            this.KFfailRecovMisCls = KFfailRecovMisCls;
+            this.setMatLib(matrixLibrary);
+            this.useOnlyTruthHits=useOnlyTruth;
+            this.svtLinkerSeeding = useSVTLinkerSeeder;
+            SVTParameters.setMAXDOCA2STRIP(docacut);
+            SVTParameters.setMAXDOCA2STRIPS(docacutsum);
+            this.setSvtmaxclussize(svtmaxclussize);
+            this.setBmtcmaxclussize(bmtcmaxclussize);
+            this.setBmtzmaxclussize(bmtzmaxclussize);
+            this.setRCUT(rcut);
+            this.setZRANGE(z0cut);
+            this.BMTCMATCH = bmtcmatch;
+            this.BMTCMATCH = bmtzmatch;
+            ConstantsLoaded = true;
+        }
+    }
     public synchronized void initialize(String engine,
                                         boolean isCosmics,
                                         boolean svtOnly,
