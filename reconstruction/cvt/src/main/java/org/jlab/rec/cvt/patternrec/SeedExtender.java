@@ -175,8 +175,8 @@ public class SeedExtender {
         kf.runFitter();
 
         if(Constants.getInstance().seedingDebugMode)
-            System.out.println("KF status ... failed "+kf.setFitFailed+" ndf "+kf.NDF+" helix "+kf.getHelix());
-        if (kf.setFitFailed == false && kf.getHelix()!=null) { 
+            System.out.println("KF status ... failed "+kf.setFitFailed+" helix "+kf.getHelix());
+        if (kf.setFitFailed == false && kf.getHelix()!= null) { 
             seed.getHelix().setDCA(kf.getHelix().getD0());
             seed.getHelix().setCurvature(kf.getHelix().getOmega());
             seed.getHelix().setTanDip(kf.getHelix().getTanL());
