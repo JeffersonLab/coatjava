@@ -37,7 +37,7 @@ jobs:
   download_test_data:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/cache@v5
+      - uses: actions/cache@v5.0.5
         id: cache
         with:
           key: raw_test_data # fixed key will always hit; clear cache to trigger cache miss
@@ -215,7 +215,7 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           name: build_ubuntu-latest
-      - uses: actions/cache/restore@v5
+      - uses: actions/cache/restore@v5.0.5
         with:
           key: raw_test_data
           path: |
@@ -248,7 +248,7 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           name: build_ubuntu-latest
-      - uses: actions/cache/restore@v5
+      - uses: actions/cache/restore@v5.0.5
         with:
           key: raw_test_data
           path: |
