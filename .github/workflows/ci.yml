@@ -1,5 +1,3 @@
-# https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
-
 name: Coatjava-CI
 
 on:
@@ -7,10 +5,6 @@ on:
   push:
     branches: [ development ]
     tags: [ '*' ]
-  schedule:
-    # NOTE: From what I read, the email notification for cron can only go
-    #       to the last committer of this file!!!!!
-    - cron: '0 22 * * *'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
