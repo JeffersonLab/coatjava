@@ -114,10 +114,10 @@ public class QadbBin<T> extends DaqScalersSequence {
   public long getTimestampMax() { return this.timestampMax; }
 
   /** @return minimum event number for this bin */
-  public long getEventNumMin() { return this.evnumMin; }
+  public int getEventNumMin() { return this.evnumMin; }
 
   /** @return maximum event number for this bin */
-  public long getEventNumMax() { return this.evnumMax; }
+  public int getEventNumMax() { return this.evnumMax; }
 
   /** @return the beam charge, not gated by DAQ, for this bin */
   public double getBeamCharge() { return this.charge; }
