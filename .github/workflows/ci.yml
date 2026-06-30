@@ -225,6 +225,7 @@ jobs:
       - name: untar build
         run: |
           tar xzvf clara.tar.gz
+          tar xzvf coatjava.tar.gz
       - name: run test
         run: |
           ls -lhtr
