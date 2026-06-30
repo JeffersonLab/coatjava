@@ -287,6 +287,7 @@ if $downloadData; then
     lfs)
       notify_retrieval 'validation data' 'lfs'
       download_lfs validation/advanced-tests/data
+      download_lfs etc/data/sqlite
       ;;
     *)
       echo 'ERROR: option `--lfs` must be used when using `--data`' >&2
