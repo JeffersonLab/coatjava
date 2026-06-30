@@ -20,7 +20,7 @@ env:
   java_distribution: zulu
   javadoc_version: 25 # newer than `JAVA_VERSION` for better javadoc
   groovy_version: 4.x
-  CCDB_CONNECTION: 'sqlite:////home/runner/work/coatjava/coatjava/coatjava/etc/data/sqlite/ccdb.sqlite'
+  CCDB_CONNECTION: 'sqlite:///${{ github.workspace }}/coatjava/etc/data/sqlite/ccdb.sqlite'
   nthreads: 1
 
 jobs:
