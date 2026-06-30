@@ -66,12 +66,6 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
           cache: maven
-      - name: setup cvmfs
-        uses: cvmfs-contrib/github-action-cvmfs@v5
-        with:
-          cvmfs_repositories: 'oasis.opensciencegrid.org'
-      - name: cvmfs
-        run: ls /cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/ccdb/ccdb_latest.sqlite
       - name: bump version to tag if tag trigger
         if: ${{ github.ref_type == 'tag' }}
         run: libexec/version-bump.sh ${{ github.ref_name }}
