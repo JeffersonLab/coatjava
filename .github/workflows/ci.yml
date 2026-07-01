@@ -1,5 +1,3 @@
-# https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
-
 name: Coatjava-CI
 
 on:
@@ -7,10 +5,6 @@ on:
   push:
     branches: [ development ]
     tags: [ '*' ]
-  schedule:
-    # NOTE: From what I read, the email notification for cron can only go
-    #       to the last committer of this file!!!!!
-    - cron: '0 22 * * *'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
@@ -26,7 +20,7 @@ env:
   java_distribution: zulu
   javadoc_version: 25 # newer than `JAVA_VERSION` for better javadoc
   groovy_version: 4.x
-  CCDB_CONNECTION: 'sqlite:////cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/ccdb/ccdb_latest.sqlite'
+  CCDB_CONNECTION: 'sqlite:///${{ github.workspace }}/coatjava/etc/data/sqlite/ccdb.sqlite'
   nthreads: 1
 
 jobs:
@@ -72,12 +66,6 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
           cache: maven
-      - name: setup cvmfs
-        uses: cvmfs-contrib/github-action-cvmfs@v5
-        with:
-          cvmfs_repositories: 'oasis.opensciencegrid.org'
-      - name: cvmfs
-        run: ls /cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/ccdb/ccdb_latest.sqlite
       - name: bump version to tag if tag trigger
         if: ${{ github.ref_type == 'tag' }}
         run: libexec/version-bump.sh ${{ github.ref_name }}
@@ -108,12 +96,6 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
           cache: maven
-      - name: setup cvmfs
-        uses: cvmfs-contrib/github-action-cvmfs@v5
-        with:
-          cvmfs_repositories: 'oasis.opensciencegrid.org'
-      - name: cvmfs
-        run: ls /cvmfs/oasis.opensciencegrid.org/jlab/hallb/clas12/sw/noarch/data/ccdb/ccdb_latest.sqlite
       - name: bump version to tag if tag trigger
         if: ${{ github.ref_type == 'tag' }}
         run: libexec/version-bump.sh ${{ github.ref_name }}
@@ -160,9 +142,6 @@ jobs:
           java-version: ${{ matrix.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
           cache: maven
-      - uses: cvmfs-contrib/github-action-cvmfs@v5
-        with:
-          cvmfs_repositories: 'oasis.opensciencegrid.org'
       - name: unit tests
         run: ./build-coatjava.sh --lfs --unittests --no-progress -T${{ env.nthreads }}
       - name: collect jacoco report
@@ -187,9 +166,6 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
           cache: maven
-      - uses: cvmfs-contrib/github-action-cvmfs@v5
-        with:
-          cvmfs_repositories: 'oasis.opensciencegrid.org'
       - uses: actions/download-artifact@v8
         with:
           name: build_ubuntu-latest
@@ -209,9 +185,6 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
           cache: maven
-      - uses: cvmfs-contrib/github-action-cvmfs@v5
-        with:
-          cvmfs_repositories: 'oasis.opensciencegrid.org'
       - uses: actions/download-artifact@v8
         with:
           name: build_ubuntu-latest
@@ -241,10 +214,6 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
           cache: maven
-      - name: setup cvmfs
-        uses: cvmfs-contrib/github-action-cvmfs@v5
-        with:
-          cvmfs_repositories: 'oasis.opensciencegrid.org'
       - uses: actions/download-artifact@v8
         with:
           name: build_ubuntu-latest
@@ -256,6 +225,7 @@ jobs:
       - name: untar build
         run: |
           tar xzvf clara.tar.gz
+          tar xzvf coatjava.tar.gz
       - name: run test
         run: |
           ls -lhtr
@@ -298,9 +268,6 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           name: build_${{ matrix.runner }}
-      - uses: cvmfs-contrib/github-action-cvmfs@v5
-        with:
-          cvmfs_repositories: 'oasis.opensciencegrid.org'
       - name: untar build
         run: |
           tar xzvf coatjava.tar.gz
@@ -329,9 +296,6 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           name: build_macos
-      - uses: cvmfs-contrib/github-action-cvmfs@v5
-        with:
-          cvmfs_repositories: 'oasis.opensciencegrid.org'
       - name: untar build
         run: |
           tar xzvf coatjava.tar.gz
