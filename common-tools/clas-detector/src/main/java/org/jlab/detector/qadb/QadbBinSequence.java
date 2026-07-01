@@ -5,6 +5,10 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Iterator;
+import java.nio.file.Path;
+import java.nio.file.Files;
+import java.io.BufferedWriter;
+import java.io.IOException;
 
 import org.jlab.detector.scalers.DaqScalersSequence;
 
@@ -92,6 +96,8 @@ public class QadbBinSequence<T> extends DaqScalersSequence implements Iterable<Q
     logger.fine("  number of QADB bins = " + this.qaBins.size());
   }
 
+  // ----------------------------------------------------------------------------------
+
   /**
    * alternative constructor, with no {@link QadbBin#data} initialization parameter
    * <p>
@@ -101,6 +107,44 @@ public class QadbBinSequence<T> extends DaqScalersSequence implements Iterable<Q
    */
   public QadbBinSequence(List<String> filenames, int binWidth) {
     this(filenames, binWidth, (binNum)->null);
+  }
+
+  // ----------------------------------------------------------------------------------
+
+  /**
+   * alternative constructor, which reads bin specification file produced by {@link QadbBinSequence#writeBinSpec};
+   * no charge info will be read, this is just for bin _boundary_ info only
+   * @param file_name the path to the bin specification file
+   */
+  public QadbBinSequence(String file_name) {
+    Path path = Path.of(file_name);
+    try {
+      List<String> lines = Files.readAllLines(path);
+      int lineNum = 0;
+      for(String rawLine : lines) {
+        lineNum++;
+        String line     = rawLine.trim();
+        String[] tokens = line.split("\\s+");
+        if(tokens.length != 5) // must match number of columns in `writeBinSpec`
+          throw new RuntimeException("Malformed line " + lineNum + " in " + path + ": " + rawLine);
+        try {
+          var binNum        = Integer.parseInt(tokens[0]); // columns must be consistent with `writeBinSpec`
+          var evnumMin      = Integer.parseInt(tokens[1]);
+          var evnumMax      = Integer.parseInt(tokens[2]);
+          var timestampMin  = Long.parseLong(tokens[3]);
+          var timestampMax  = Long.parseLong(tokens[4]);
+          QadbBin.BinType binType;
+          if(binNum == 0)                   binType = QadbBin.BinType.FIRST;
+          else if(binNum == lines.size()-1) binType = QadbBin.BinType.LAST;
+          else                              binType = QadbBin.BinType.INTERMEDIATE;
+          this.qaBins.add(new QadbBin<T>(binNum, binType, evnumMin, evnumMax, timestampMin, timestampMax));
+        } catch(NumberFormatException e) {
+          throw new RuntimeException("Malformed line " + lineNum + " in " + path + ": " + rawLine, e);
+        }
+      }
+    } catch (IOException e) {
+      throw new RuntimeException("failed to read file " + file_name, e);
+    }
   }
 
   // ----------------------------------------------------------------------------------
@@ -159,6 +203,32 @@ public class QadbBinSequence<T> extends DaqScalersSequence implements Iterable<Q
    */
   public void correctUpperBound(int evnumMax, long timestampMax) {
     this.getBin(this.size()-1).correctUpperBound(evnumMax, timestampMax);
+  }
+
+  // ----------------------------------------------------------------------------------
+
+  /**
+   * write a bin specification file
+   * @param file_name the path to the file
+   */
+  public void writeBinSpec(String file_name) {
+    Path path = Path.of(file_name);
+    try(BufferedWriter writer = Files.newBufferedWriter(path)) {
+      for(var bin : qaBins) {
+        writer.write(
+            String.format("%d %d %d %d %d",
+              bin.getBinNum(),
+              bin.getEventNumMin(),  bin.getEventNumMax(),
+              bin.getTimestampMin(), bin.getTimestampMax()
+              // if you modifiy these columns, update the reader (constructor) too
+              )
+            );
+        writer.newLine();
+      }
+    }
+    catch(IOException e) {
+      throw new RuntimeException("Failed to write QadbBinSequence to " + file_name, e);
+    }
   }
 
   // ----------------------------------------------------------------------------------
@@ -241,6 +311,11 @@ public class QadbBinSequence<T> extends DaqScalersSequence implements Iterable<Q
     System.out.println(">>> QA BINS <<<");
     for(var bin : seq)
       bin.print((data) -> String.format("%30s %d", "counted tag-0 events:", data), true);
+
+    // write bin specification file, then read it and write it again (they should be the same)
+    seq.writeBinSpec("qadb_bin_spec.dat");
+    QadbBinSequence<Void> seq_redux = new QadbBinSequence<>("qadb_bin_spec.dat");
+    seq_redux.writeBinSpec("qadb_bin_spec_redux.dat");
   }
 
 }

@@ -104,6 +104,27 @@ public class QadbBin<T> extends DaqScalersSequence {
 
   // ----------------------------------------------------------------------------------
 
+  /**
+   * construct a single bin, with bin _boundary_ info only (no charge info)
+   * @param binNum the bin number, in the {@link QadbBinSequence} which contains this bin
+   * @param binType the bin type (see {@link BinType})
+   * @param evnumMin the minimum event number
+   * @param evnumMax the maximum event number
+   * @param timestampMin the minimum timestamp
+   * @param timestampMax the maximum timestamp
+   */
+  public QadbBin(int binNum, BinType binType, int evnumMin, int evnumMax, long timestampMin, long timestampMax)
+  {
+    this.binNum       = binNum;
+    this.binType      = binType;
+    this.evnumMin     = evnumMin;
+    this.evnumMax     = evnumMax;
+    this.timestampMin = timestampMin;
+    this.timestampMax = timestampMax;
+  }
+
+  // ----------------------------------------------------------------------------------
+
   /** @return the bin number for this bin */
   public int getBinNum() { return this.binNum; }
 
