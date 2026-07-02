@@ -282,7 +282,7 @@ public class CommonToolBar extends JToolBar implements ActionListener, ItemListe
 	/**
 	 * Add a toolBar listener
 	 * 
-	 * @param ToolBarListener the listener to add
+	 * @param listener the listener to add
 	 */
 	public void addToolBarListener(IToolBarListener listener) {
 
@@ -298,7 +298,7 @@ public class CommonToolBar extends JToolBar implements ActionListener, ItemListe
 	/**
 	 * Remove a ToolBarListener.
 	 * 
-	 * @param ToolBarListener the ToolBarListener to remove.
+	 * @param listener the ToolBarListener to remove.
 	 */
 
 	public void removeToolBarListener(IToolBarListener listener) {

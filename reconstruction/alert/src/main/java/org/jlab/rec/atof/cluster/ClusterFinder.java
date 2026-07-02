@@ -125,7 +125,7 @@ public class ClusterFinder {
     }
 
     /**
-     * Builds clusters in the {@link DateEvent} using hits found and stored in a
+     * Builds clusters in the {@link DataEvent} using hits found and stored in a
      * {@link HitFinder}.
      *
      * @param hitfinder the {@link HitFinder} containing the hits that were
@@ -206,7 +206,7 @@ public class ClusterFinder {
     }
 
     /**
-     * Builds clusters in the {@link DateEvent} using hits found and stored in a
+     * Builds clusters in the {@link DataEvent} using hits found and stored in a
      * {@link HitFinder}.
      *
      * @param event the {@link DataEvent} containing the clusters to be built

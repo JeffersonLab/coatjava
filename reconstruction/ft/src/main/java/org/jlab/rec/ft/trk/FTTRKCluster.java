@@ -73,7 +73,7 @@ import org.jlab.rec.ft.FTConstants;
 	
 	/**
 	 * 
-	 * @param set the layer of the cluster (1...4)
+	 * @param _Layer the layer of the cluster (1...4)
 	 */
 	public void set_Layer(int _Layer) {
 		this._Layer = _Layer;
