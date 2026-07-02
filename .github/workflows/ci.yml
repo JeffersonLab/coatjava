@@ -421,6 +421,11 @@ jobs:
       - test_coatjava
       - test_run-groovy
       - generate_documentation
+      - spotbugs
+      - test_decoder
+      - test_clara
+      - test_coatjava_macos
+      - unit_tests
     runs-on: ubuntu-latest
     steps:
       - name: pass
