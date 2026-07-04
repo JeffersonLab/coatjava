@@ -18,7 +18,6 @@ env:
   JAVA_VERSION: 21 # must be consistent with POM; see also dependabot config for any version limits
   JAVA_VERSION_LATEST: 25 # the latest `JAVA_VERSION` that we test with CI
   java_distribution: zulu
-  javadoc_version: 25 # newer than `JAVA_VERSION` for better javadoc
   groovy_version: 4.x
   CCDB_CONNECTION: 'sqlite:///${{ github.workspace }}/coatjava/etc/data/sqlite/ccdb.sqlite'
   nthreads: 1
@@ -353,7 +352,7 @@ jobs:
       - name: set up JDK
         uses: actions/setup-java@v5
         with:
-          java-version: ${{ env.javadoc_version }}
+          java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.java_distribution }}
           cache: maven
       - name: build coatjava javadocs # javadoc:aggregate output dir cannot be controlled, so assume the latest "standard" path and `mv` it
