@@ -76,7 +76,7 @@ public class Quaternion {
 	/** 
 	 * Multiplication between two Quaternions
 	 * @param qb the one that multiply
-	 * @param result of the multiplication 
+	 * @return result of the multiplication 
 	 */
 	public Quaternion multiply(Quaternion qb) {
 		Quaternion qa = this;

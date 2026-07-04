@@ -608,8 +608,8 @@ public class PlotParameters {
 	/**
 	 * Manually set the y range
 	 * 
-	 * @param xmin the minimum y
-	 * @param xmax the maximum y
+	 * @param ymin the minimum y
+	 * @param ymax the maximum y
 	 */
 	public void setYRange(double ymin, double ymax) {
 		setYLimitsMethod(LimitsMethod.MANUALLIMITS);

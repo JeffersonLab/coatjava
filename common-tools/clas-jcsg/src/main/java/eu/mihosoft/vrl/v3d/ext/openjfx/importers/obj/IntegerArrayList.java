@@ -359,7 +359,7 @@ public class IntegerArrayList extends AbstractList<Integer>
      *
      * @param index index of the element to return
      * @return the element at the specified position in this list
-     * @throws IndexOutOfBoundsException {@inheritDoc}
+     * @throws IndexOutOfBoundsException
      */
     @Override public Integer get(int index) {
         rangeCheck(index);
@@ -373,7 +373,7 @@ public class IntegerArrayList extends AbstractList<Integer>
      * @param index   index of the element to replace
      * @param element element to be stored at the specified position
      * @return the element previously at the specified position
-     * @throws IndexOutOfBoundsException {@inheritDoc}
+     * @throws IndexOutOfBoundsException
      */
     @Override public Integer set(int index, Integer element) {
         rangeCheck(index);
@@ -401,7 +401,7 @@ public class IntegerArrayList extends AbstractList<Integer>
      *
      * @param index   index at which the specified element is to be inserted
      * @param element element to be inserted
-     * @throws IndexOutOfBoundsException {@inheritDoc}
+     * @throws IndexOutOfBoundsException
      */
     @Override public void add(int index, Integer element) {
         rangeCheckForAdd(index);
@@ -420,7 +420,7 @@ public class IntegerArrayList extends AbstractList<Integer>
      *
      * @param index the index of the element to be removed
      * @return the element that was removed from the list
-     * @throws IndexOutOfBoundsException {@inheritDoc}
+     * @throws IndexOutOfBoundsException
      */
     @Override public Integer remove(int index) {
         rangeCheck(index);
@@ -512,7 +512,7 @@ public class IntegerArrayList extends AbstractList<Integer>
      * @param index index at which to insert the first element from the specified collection
      * @param c     collection containing elements to be added to this list
      * @return <tt>true</tt> if this list changed as a result of the call
-     * @throws IndexOutOfBoundsException {@inheritDoc}
+     * @throws IndexOutOfBoundsException
      * @throws NullPointerException      if the specified collection is null
      */
     @Override public boolean addAll(int index, Collection<? extends Integer> c) {
@@ -688,7 +688,7 @@ public class IntegerArrayList extends AbstractList<Integer>
      * </p>
      * <p>The returned list iterator is <a href="#fail-fast"><i>fail-fast</i></a>.
      *
-     * @throws IndexOutOfBoundsException {@inheritDoc}
+     * @throws IndexOutOfBoundsException
      */
     @Override public ListIterator<Integer> listIterator(int index) {
         if (index < 0 || index > size)
@@ -841,8 +841,8 @@ public class IntegerArrayList extends AbstractList<Integer>
      * that change the size of this list, or otherwise perturb it in such a fashion that iterations in progress may
      * yield incorrect results.)
      *
-     * @throws IndexOutOfBoundsException {@inheritDoc}
-     * @throws IllegalArgumentException  {@inheritDoc}
+     * @throws IndexOutOfBoundsException
+     * @throws IllegalArgumentException
      */
     @Override public List<Integer> subList(int fromIndex, int toIndex) {
         subListRangeCheck(fromIndex, toIndex, size);

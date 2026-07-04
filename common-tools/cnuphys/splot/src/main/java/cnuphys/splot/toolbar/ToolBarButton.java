@@ -18,9 +18,9 @@ public class ToolBarButton extends JButton {
 	/**
 	 * Constructor
 	 * 
-	 * @param container     the owner container.
 	 * @param imageFileName the name if the file holding the icon
 	 * @param toolTip       a string for a tool tip
+         * @param actionCommand
 	 */
 	public ToolBarButton(String imageFileName, String toolTip, String actionCommand) {
 		super();

@@ -303,16 +303,6 @@ import org.jlab.rec.ft.FTConstants;
             this._StripSegment = _StripSegment;
         }
 
-
-
-        /**
-         * 
-         * @param Z  z-coordinate of a point in the local coordinate system of a module
-         * @return the average resolution for a group of strips in a cluster
-         * 
-         */
-
-
         private int _AssociatedCrossID;
         private int _AssociatedTrackID;
 

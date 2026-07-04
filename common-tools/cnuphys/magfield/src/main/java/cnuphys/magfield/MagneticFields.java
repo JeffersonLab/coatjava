@@ -1568,7 +1568,7 @@ public class MagneticFields {
 	 * Converts the clas (lab) 3D coordinates to sector 3D coordinates to
 	 *
 	 * @param sector the 1-based sector [1..6]
-	 * @param lab    will hold the lab 3D Cartesian coordinates (modified)
+         * @param sect
 	 * @param x      the lab x coordinate
 	 * @param y      the lab y coordinate
 	 * @param z      the lab z coordinate

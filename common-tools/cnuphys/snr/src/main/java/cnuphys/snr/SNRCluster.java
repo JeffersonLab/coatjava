@@ -54,7 +54,6 @@ public class SNRCluster {
 	/**
 	 * Add a segment (candidate) start wire
 	 * @param wire the zero-based wire, for CLAS12 [0..111]
-	 * @param numMissing the number of missing layers required
 	 */
 	public void addSegmentStart(int wire) {
 		segmentStartList.add(wire);

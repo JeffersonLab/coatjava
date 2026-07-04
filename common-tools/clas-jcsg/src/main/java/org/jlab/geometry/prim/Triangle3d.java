@@ -91,7 +91,7 @@ public class Triangle3d {
     }
 
     /**
-     * @author pdavies
+     * written by pdavies
      */
 	public Vector3d center() {
 		double x = 0;
@@ -107,7 +107,7 @@ public class Triangle3d {
 	}
 
 	/**
-	 * @author pdavies
+	 * written by pdavies
 	 */
 	public Vector3d point(int index) {
 		if( index < 0 || index > 2 )
