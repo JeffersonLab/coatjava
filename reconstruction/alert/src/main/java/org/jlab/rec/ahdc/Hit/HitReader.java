@@ -2,6 +2,7 @@ package org.jlab.rec.ahdc.Hit;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import org.jlab.io.base.DataBank;
 import org.jlab.io.base.DataEvent;
@@ -21,6 +22,38 @@ public class HitReader {
     private ArrayList<Hit>     _AHDCHits;
     private ArrayList<TrueHit> _TrueAHDCHits;
     private boolean sim = false;
+
+    /**
+     * t0-calibration pass, enabled with {@code -Dahdc.t0calib=true}. In this mode the
+     * per-wire {@code t0} is replaced by {@link #T0_CALIB_T0} (0 by default) and the
+     * per-wire acceptance window ([t_min,t_max], ADC, ToT, pedestal) is skipped, so the
+     * full leading-edge drift-time peak is retained in {@code AHDC::hits} for offline t0
+     * extraction; only the {@code wfType <= 2} good-waveform cut is kept.
+     *
+     * <p>With {@code t0 = 0} the time fed to the T2D is uncalibrated, so DOCA/tracking is
+     * approximate. If track finding collapses, set a nominal in-range t0 with
+     * {@code -Dahdc.t0calib.t0=<ns>} (e.g. the per-detector edge ~190): the time window
+     * stays disabled while the T2D input is kept sane.
+     */
+    private static final boolean T0_CALIB    = Boolean.getBoolean("ahdc.t0calib");
+    private static final double  T0_CALIB_T0 = Double.parseDouble(System.getProperty("ahdc.t0calib.t0", "0"));
+
+    private static final Logger LOGGER = Logger.getLogger(HitReader.class.getName());
+
+    // Log once at class load so the recook log shows whether the t0-calibration
+    // pass is active and at which fixed t0 — i.e. that -Dahdc.t0calib /
+    // -Dahdc.t0calib.t0 were picked up by the JVM.
+    static {
+        if (T0_CALIB) {
+            LOGGER.info(String.format(
+                "AHDC t0-calibration pass ENABLED (-Dahdc.t0calib=true): time = leadingEdgeTime - t0 - startTime "
+                + "with fixed t0 = %.3f ns (-Dahdc.t0calib.t0); per-wire [t_min,t_max]/ADC/ToT/pedestal cuts "
+                + "DISABLED, only wfType<=2 kept.", T0_CALIB_T0));
+        } else {
+            LOGGER.info("AHDC t0-calibration pass DISABLED (-Dahdc.t0calib not set): using CCDB per-wire t0 "
+                + "and the full hit-acceptance cuts.");
+        }
+    }
 
     /**
      * Constructs a HitReader and eagerly populates the hit lists from the given event.
@@ -135,8 +168,11 @@ public class HitReader {
 			double adcOffset         = bankDGTZ.getFloat("ped", i);
 			int    wfType            = bankDGTZ.getShort("wfType", i);
 
-			// Time calibration
-			double t0   = timeOffsetsTable.getDoubleValue("t0", sector, number, wire);
+			// Time calibration. In the t0-calibration pass use a fixed t0 (0 by default)
+			// instead of the CCDB per-wire value, so the histogrammed quantity is the raw
+			// (leadingEdgeTime - startTime) whose leading edge defines t0.
+			double t0   = T0_CALIB ? T0_CALIB_T0
+			                       : timeOffsetsTable.getDoubleValue("t0", sector, number, wire);
 			double time = leadingEdgeTime - t0 - startTime;
 
 			// ToT correction
@@ -156,12 +192,16 @@ public class HitReader {
 				double ped_min = rawHitCutsTable.getDoubleValueByHash("ped_min", hash);
 				double ped_max = rawHitCutsTable.getDoubleValueByHash("ped_max", hash);
 
+				// In the t0-calibration pass keep only the good-waveform cut so the full
+				// leading-edge / drift-time peak survives; the per-wire [t_min,t_max] /
+				// ADC / ToT / pedestal window is exactly what would otherwise delete the
+				// peak used for the calibration.
 				boolean passCuts =
-					(wfType <= 2) &&
-					(adcRaw >= adc_min) && (adcRaw <= adc_max) &&
+					(wfType <= 2) && (T0_CALIB ||
+					((adcRaw >= adc_min) && (adcRaw <= adc_max) &&
 					(time   >= t_min)   && (time   <= t_max) &&
 					(timeOverThreshold >= tot_min) && (timeOverThreshold <= tot_max) &&
-					(adcOffset >= ped_min) && (adcOffset <= ped_max);
+					(adcOffset >= ped_min) && (adcOffset <= ped_max)));
 
 				if (!passCuts) continue;
 			}

@@ -224,6 +224,19 @@ public class ALERTEngine extends ReconstructionEngine {
 
         if (event.hasBank("AHDC::hits")) {
 
+            // Reprocessing guard: an already-cooked input carries the full stale
+            // AHDC track-finding chain (older schema). Drop every bank we are about
+            // to rewrite so the getBank() calls below never return a carried-in copy
+            // (which would decode to garbage or shadow the fresh reconstruction).
+            // AHDC::hits is excluded — AHDCEngine just regenerated it fresh.
+            for (String staleBank : new String[]{
+                    "AHDC::preclusters", "AHDC::clusters", "AHDC::track",
+                    "AHDC::interclusters", "AHDC::docaclusters", "AHDC::kftrack",
+                    "AHDC::mc", "AHDC::ai:prediction",
+                    "ALERT::projections", "ALERT::ai:projections", "ALERT::prePID"}) {
+                if (event.hasBank(staleBank)) event.removeBank(staleBank);
+            }
+
             // I) Reconstruct Hit list from AHDC::hits bank
             DataBank ahdcHitBank = event.getBank("AHDC::hits");
             ArrayList<Hit> AHDC_Hits = new ArrayList<>();

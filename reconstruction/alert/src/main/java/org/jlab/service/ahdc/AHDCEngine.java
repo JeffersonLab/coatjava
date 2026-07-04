@@ -72,6 +72,19 @@ public class AHDCEngine extends ReconstructionEngine {
     @Override
     public boolean processDataEventUser(DataEvent event) {
 
+        // Reprocessing guard: an already-cooked input carries stale AHDC::adc and
+        // AHDC::hits banks (old schema), and usually no AHDC::wf to regenerate adc
+        // from. The extractor below only rebuilds AHDC::adc when AHDC::wf has rows,
+        // so without waveforms the stale AHDC::adc would survive; decoded with the
+        // current schema its columns are misaligned, yielding garbage wire/layer
+        // values and a null geometry lookup (NullPointerException in
+        // Hit.setWirePosition, via ALERTEngine). Drop both up front: AHDC::adc is
+        // rebuilt fresh below when AHDC::wf is present, and AHDC::hits is rebuilt
+        // only from a valid AHDC::adc. With no AHDC::wf both stay removed and AHDC
+        // reconstruction is skipped cleanly.
+        if (event.hasBank("AHDC::adc"))  event.removeBank("AHDC::adc");
+        if (event.hasBank("AHDC::hits")) event.removeBank("AHDC::hits");
+
         ahdcExtractor.update(30, null, event, "AHDC::wf", "AHDC::adc");
 
         if (event.hasBank("RUN::config")) {
