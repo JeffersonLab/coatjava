@@ -25,7 +25,7 @@ public class SplitLogManager extends LogManager {
 
   /**
    * add a new {@link Logger} instance
-   * @param name the name of the logger
+   * @param logger the logger
    * @return {@code true} if the argument logger was registered successfully, {@code false} if a logger of that name already exists
    */
   @Override

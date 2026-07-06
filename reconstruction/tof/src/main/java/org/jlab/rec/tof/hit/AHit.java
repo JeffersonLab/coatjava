@@ -462,7 +462,6 @@ public abstract class AHit implements Comparable<AHit> {
      * 1=L, 2=R; for CTOF 1=U, 2=D )
      *
      * @param superlayer
-     * @param TrkPosInf
      * @param TW01
      * @param TW02
      * @param TW11

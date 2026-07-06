@@ -130,7 +130,7 @@ public class GeneratedParticleRecord implements Serializable {
 	 * The total energy in GeV. This requires that we specify what particle this
 	 * is.
 	 * 
-	 * @param lundid
+	 * @param lundId
 	 *            the lundid of the particle
 	 * @return the total energy in GeV
 	 */
@@ -143,7 +143,7 @@ public class GeneratedParticleRecord implements Serializable {
 	 * Get the kinetic energy in GeV. This requires that we specify what
 	 * particle this is.
 	 * 
-	 * @param lundid
+	 * @param lundId
 	 *            the lundid of the particle
 	 * 
 	 * @return the kinetic energy in GeV
@@ -161,7 +161,6 @@ public class GeneratedParticleRecord implements Serializable {
 	
 	/**
 	 * Records a reduced precision String version as a hash key
-	 * @param rpr the GeneratedParticleRecord
 	 * @return a reduced precision String version
 	 */
 	public String hashKey() {

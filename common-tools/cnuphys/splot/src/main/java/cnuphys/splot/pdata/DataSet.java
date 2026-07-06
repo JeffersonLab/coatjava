@@ -512,7 +512,7 @@ public class DataSet extends DefaultTableModel {
 	/**
 	 * Has any data been added
 	 * 
-	 * @return <code>true<.code> if any data has been added.
+	 * @return {@code true} if any data has been added.
 	 */
 	public boolean dataAdded() {
 		for (DataColumn col : _columns) {

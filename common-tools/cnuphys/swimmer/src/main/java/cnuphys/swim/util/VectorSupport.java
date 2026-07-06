@@ -182,8 +182,6 @@ public class VectorSupport {
 	 * 
 	 * @param v
 	 *            the vector (of any length)
-	 * @param numDec
-	 *            the number of decimal places for each coordinate.
 	 * @return a String representation of the vector
 	 */
 	public static String toString(double v[]) {

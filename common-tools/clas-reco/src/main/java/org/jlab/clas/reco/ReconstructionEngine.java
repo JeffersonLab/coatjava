@@ -259,7 +259,6 @@ public abstract class ReconstructionEngine implements Engine {
      * @param group      config parameter group.
      * @param key        the key of the config parameter.
      * @return parameter: String value
-     * @throws ClasEngineException org.jlab.clara.clas engine exception
      */
     protected String getStringConfigParameter(String jsonString,
                                               String group,

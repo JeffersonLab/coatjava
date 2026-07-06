@@ -75,8 +75,9 @@ public class ChamberTest {
 	/**
 	 * Create a test chamber--rectangular with uniform rectangular cells.
 	 * 
+         * @param detectorTest
 	 * @param index    the index in the DetectorTest collection
-	 * @param name     the name of the chamber.
+         * @param parameters
 	 * @param boundary the rectangular boundary in world coordinates.
 	 */
 	public ChamberTest(DetectorTest detectorTest, int index, NoiseReductionParameters parameters,
@@ -335,7 +336,6 @@ public class ChamberTest {
 	 * @param g
 	 * @param world
 	 * @param local
-	 * @param candidates
 	 */
 	protected void drawLeftSegmentCandidates(Graphics g, Rectangle2D.Double world, Rectangle local) {
 		
@@ -366,7 +366,6 @@ public class ChamberTest {
 	 * @param g
 	 * @param world
 	 * @param local
-	 * @param candidates
 	 */
 	protected void drawRightSegmentCandidates(Graphics g, Rectangle2D.Double world, Rectangle local) {
 		
@@ -832,8 +831,6 @@ public class ChamberTest {
 	/**
 	 * Generate hits from a straight line track
 	 * 
-	 * @param world the world system.
-	 * @param local the local system.
 	 * @param tt    the track used to generate hits.
 	 */
 	public void hitsFromTrack(TrackTest tt) {

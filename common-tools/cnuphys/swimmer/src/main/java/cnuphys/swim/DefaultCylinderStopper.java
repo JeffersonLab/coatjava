@@ -43,7 +43,6 @@ public class DefaultCylinderStopper implements IStopper {
 	 * @param sMax            maximal path length in meters
 	 * @param targetCylinder       target Cylinder
 	 * @param accuracy        the accuracy in meters
-	 * @param normalDirection <code></code> if going smaller to larger rho
 	 */
 	public DefaultCylinderStopper(double[] u0, double s0, double sMax, Cylinder targetCylinder, double accuracy) {
 

@@ -225,7 +225,7 @@ public class TrackVec extends Matrix {
      * 
      * @param X
      * @param Z
-     * @param t <0 going to lab, >0 going to tilted system
+     * @param t {@code <0} going to lab, {@code >0} going to tilted system
      * @return 
      */
     public double[] tilt(double X, double Z, int t) {
