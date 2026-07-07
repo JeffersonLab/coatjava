@@ -23,7 +23,7 @@ import org.json.JSONObject;
  * 3. Writes HEL::flip, RUN/HEL::scaler, and RUN::unix to new tag-1 events
  * 4. Runs post-processing, writing tag-1 information to all events 
  * 5. Adds .hipo to the output filename, if necessary
- *
+ * 6. Outputs a parallel file of select trigger bits with a raw schema
  * @author baltzell
  */
 public class Clas12Writer extends HipoToHipoWriter {
@@ -33,6 +33,8 @@ public class Clas12Writer extends HipoToHipoWriter {
     ConstantsManager conman;
     SchemaFactory fullSchema;
     boolean postprocess;
+    HipoWriterSorted rawWriter;
+    long rawTriggerMask;
 
     private void init(JSONObject opts) {
         fullSchema = new SchemaFactory();
@@ -42,6 +44,7 @@ public class Clas12Writer extends HipoToHipoWriter {
         conman = new ConstantsManager();
         conman.init("/runcontrol/hwp","/runcontrol/helicity");
         postprocess = opts.optBoolean("postprocess", false);
+        rawTriggerMask = opts.optLong("rawTriggerMask", -1);
         if (opts.has("variation")) conman.setVariation(opts.getString("variation"));
         if (opts.has("timestamp")) conman.setTimeStamp(opts.getString("timestamp"));
     }
@@ -53,6 +56,11 @@ public class Clas12Writer extends HipoToHipoWriter {
             HipoWriterSorted w = new HipoWriterSorted();
             super.configure(w, opts);
             w.open(file.toString().endsWith(".hipo") ? file.toString() : file.toString()+".hipo");
+            if (rawTriggerMask > 0) {
+                rawWriter = new HipoWriterSorted();
+                rawWriter.getSchemaFactory().copy(fullSchema);
+                rawWriter.open("raw_"+file.toString().substring(file.toString().indexOf("_")));
+            }
             return w;
         } catch (Exception e) {
             throw new EventWriterException(e);
@@ -64,6 +72,14 @@ public class Clas12Writer extends HipoToHipoWriter {
         Event t = serial.read((Event)event);
         if (!t.isEmpty()) writer.addEvent(t, 1);
         super.writeEvent(event);
+        if (rawTriggerMask > 0) {
+            if (runConfig.getRows() > 0) {
+                if ((runConfig.getLong("trigger",0) & rawTriggerMask) != 0) {
+                    rawWriter.addEvent((Event)event);
+                }
+            }
+            if (!t.isEmpty()) rawWriter.addEvent(t, 1);
+        }
     }
 
     @Override
@@ -72,6 +88,7 @@ public class Clas12Writer extends HipoToHipoWriter {
         super.closeWriter();
         if (postprocess) postprocess();
         serial.clear();
+        if (rawTriggerMask > 0) rawWriter.close();
     }
  
     /**
