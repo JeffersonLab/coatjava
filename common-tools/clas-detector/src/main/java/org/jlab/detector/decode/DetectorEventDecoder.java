@@ -231,11 +231,10 @@ public class DetectorEventDecoder {
     }
 
     private void fitMicromegaPulses(DetectorDataDgtz data, IndexedTable cfg) {
-        final long hash0 = IndexedTable.DEFAULT_GENERATOR.hashCode(0,0,0);
-        final short adcOffset = (short) cfg.getDoubleValueByHash("adc_offset", hash0);
-        final double fineTimeStampResolution = (byte) cfg.getDoubleValueByHash("dream_clock", hash0);
-        final double samplingTime = (byte) cfg.getDoubleValueByHash("sampling_time", hash0);
-        final int sparseSample = cfg.getIntValueByHash("sparse", hash0);
+        final short adcOffset = (short) cfg.getDoubleValueByHash("adc_offset", 0L);
+        final double fineTimeStampResolution = (byte) cfg.getDoubleValueByHash("dream_clock", 0L);
+        final double samplingTime = (byte) cfg.getDoubleValueByHash("sampling_time", 0L);
+        final int sparseSample = cfg.getIntValueByHash("sparse", 0L);
         ADCData adc = data.getADCData(0);
         mvtFitter.fit(adcOffset, fineTimeStampResolution, samplingTime, adc.getPulseArray(), adc.getTimeStamp(), sparseSample);
         adc.setHeight((short) (mvtFitter.adcMax));
