@@ -525,7 +525,10 @@ public class ALERTEngine extends ReconstructionEngine {
         if (!event.hasBank("AHDC::hits")) {return false;}
 
         /// tmp: misalignement with respect to the center of the AHDC (mm)
-        double clas_alignement = +75;
+        double torus = runBank.getFloat("torus", 0);
+        // inbending  --> torus -1 --> 10.6 GeV run
+        // outbending --> torus +1 --> 2.24 GeV run
+        double clas_alignement = (torus > 0) ? +67 : +36 ; // this is the opposite value of the ahdc alignement with respect to CLAS that is a negative number
         double atof_alignement = 0;
 
         /// Read the electron vertex
@@ -538,17 +541,21 @@ public class ALERTEngine extends ReconstructionEngine {
                 if (recBank.getInt("pid", row) == 11) {
                     vz_electron = 10*recBank.getFloat("vz",row); // conversion in mm
                     IsVertexDefined = true;
-                    
 
-                    //double px = recBank.getFloat("px",row);
-                    //double py = recBank.getFloat("py",row);
-                    //double pz = recBank.getFloat("pz",row);
-                    //double p = Math.sqrt(px*px+py*py+pz*pz);
-                    //double theta = Math.acos(pz/p);
-                    
-                    // set the resolutions on r and z! to be done
-                    vz_error2[0] = 0.09; // should depend on p and theta
-                    vz_error2[2] = 64; // should depend on p and theta
+                    int status = recBank.getShort("status", row);
+
+                    // If the electron is not from the FT, we can assign a finite resolution
+                    if (Math.abs(status) / 1000 != 1) {
+                        //double px = recBank.getFloat("px",row);
+                        //double py = recBank.getFloat("py",row);
+                        //double pz = recBank.getFloat("pz",row);
+                        //double p = Math.sqrt(px*px+py*py+pz*pz);
+                        //double theta = Math.acos(pz/p);
+                        
+                        // set the resolutions on r and z! to be done
+                        vz_error2[0] = 0.09; // should depend on p and theta
+                        vz_error2[2] = 64; // should depend on p and theta
+                    }
 
                     break; // only look at the first electron
                 }
