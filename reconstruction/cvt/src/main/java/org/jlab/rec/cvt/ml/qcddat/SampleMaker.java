@@ -29,9 +29,6 @@ import org.jlab.rec.cvt.banks.HitReader;
  */
 public class SampleMaker extends ReconstructionEngine {
 
-
-    private int Run = -1;
-
     private String svtHitBank;
     
     public SampleMaker(String name) {
@@ -42,7 +39,9 @@ public class SampleMaker extends ReconstructionEngine {
         super("CVTQCDDATEngine", "ziegler", "6.0");
     }
 
-    
+    @Override
+    public void detectorChanged(int run) {}
+
     @Override
     public boolean init() {   
         this.initConstantsTables();
@@ -70,10 +69,8 @@ public class SampleMaker extends ReconstructionEngine {
         return run;
     }
 
-    
-    
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
        
         int run = this.getRun(event); 
         Swim swimmer = new Swim();
@@ -195,8 +192,4 @@ public class SampleMaker extends ReconstructionEngine {
     public String getSvtHitBank() {
         return this.svtHitBank;
     }
-    
-    
-    
-
 }
