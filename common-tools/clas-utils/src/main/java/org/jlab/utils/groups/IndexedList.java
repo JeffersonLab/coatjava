@@ -146,7 +146,6 @@ public class IndexedList<T> {
      * @return the item with the hash, null if not found
      */
     public T getItemByHash(long hash){
-        if (!this.collection.containsKey(hash)) return null;
         return this.collection.get(hash);
     }
 
