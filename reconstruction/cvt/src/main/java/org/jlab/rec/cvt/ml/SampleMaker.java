@@ -29,7 +29,9 @@ import org.jlab.utils.groups.IndexedTable;
  */
 public class SampleMaker extends ReconstructionEngine {
 
-
+    @Override
+    public void detectorChanged(int run) {}
+    
     /**
      * @param docacutsum the docacutsum to set
      */
@@ -101,7 +103,6 @@ public class SampleMaker extends ReconstructionEngine {
         super("CVTEngine", "ziegler", "6.0");
     }
 
-    
     @Override
     public boolean init() {        
         this.loadConfiguration();
@@ -285,7 +286,7 @@ public class SampleMaker extends ReconstructionEngine {
     }
     
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         
         Swim swimmer = new Swim();
         
@@ -692,7 +693,5 @@ public class SampleMaker extends ReconstructionEngine {
         
         
     }
-
-    
 
 }
