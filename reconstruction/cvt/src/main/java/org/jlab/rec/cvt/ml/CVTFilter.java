@@ -30,6 +30,8 @@ import org.jlab.utils.groups.IndexedTable;
  */
 public class CVTFilter extends ReconstructionEngine {
 
+    @Override
+    public void detectorChanged(int run) {}
 
     /**
      * @param docacutsum the docacutsum to set
@@ -37,8 +39,6 @@ public class CVTFilter extends ReconstructionEngine {
     public void setDocacutsum(double docacutsum) {
         this.docacutsum = docacutsum;
     }
-
-    private int Run = -1;
 
     private String svtHitBank;
     private String svtClusterBank;
@@ -277,7 +277,7 @@ public class CVTFilter extends ReconstructionEngine {
     }
     
     @Override
-    public boolean processDataEvent(DataEvent event) {
+    public boolean processDataEventUser(DataEvent event) {
         
         Swim swimmer = new Swim();
         
@@ -463,7 +463,6 @@ public class CVTFilter extends ReconstructionEngine {
         
     }
 
-
     public void initConstantsTables() {
         String[] tables = new String[]{
             "/calibration/svt/status",
@@ -583,7 +582,6 @@ public class CVTFilter extends ReconstructionEngine {
         return cvtCovMatBank;
     }
     
-    
     public void printConfiguration() {            
         
         System.out.println("["+this.getName()+"] run with cosmics setting set to "+Constants.getInstance().isCosmics);        
@@ -613,10 +611,6 @@ public class CVTFilter extends ReconstructionEngine {
         System.out.println("["+this.getName()+"] max btm-z  cluster size "+this.getBmtzmaxclussize());
         System.out.println("["+this.getName()+"] helix radius cut (mm) "+this.rcut);
         System.out.println("["+this.getName()+"] z0 cut (mm from target edges) "+this.z0cut); 
-        
-        
     }
-
-    
 
 }
